@@ -45,5 +45,5 @@ graphic:
     normal_offset: 0
     color: {0.0, 0.0, 0.0, 1}
     stabilize: true
-    #split_lamada: 1
+    split_lamada: 1
     split_num: 4

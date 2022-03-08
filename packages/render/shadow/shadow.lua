@@ -59,7 +59,7 @@ local csm_setting = {
     --stabilize		= shadowcfg.stabilize,
 	split_num		= shadowcfg.split_num,
 	cross_delta		= shadowcfg.cross_delta or 0.005,
-	split_weight	= shadowcfg.split_weight or 0.7,
+	split_weight	= shadowcfg.split_weight or 0.5,
 	split_frustums	= {nil, nil, nil, nil},
 	fb_index		= fbmgr.create(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size)),
 }
@@ -76,8 +76,8 @@ local function gen_ratios(distances)
 	return ratios
 end
 
-if shadowcfg.split_lamada then
-	csm_setting.split_lamada = shadowcfg.split_lamada and math.max(0, math.min(1, shadowcfg.split_lamada)) or nil
+if shadowcfg.split_weight then
+	csm_setting.split_weight = shadowcfg.split_weight and math.max(0, math.min(1, shadowcfg.split_weight)) or nil
 else
 	local ratio_list
 	
@@ -167,14 +167,13 @@ function ishadow.shadowmap_size()
 end
 
 function ishadow.calc_split_frustums(view_frustum)
-	local lambda = csm_setting.split_lamada
+	local split_weight = csm_setting.split_weight
 	local frustums = csm_setting.split_frustums
 	local view_nearclip, view_farclip = view_frustum.n, view_frustum.f
 	local clip_range = view_farclip - view_nearclip
 	local split_num = csm_setting.split_num
 
-	if lambda then
-		local l = csm_setting.split_weight
+	if split_weight then
 		local ratio = view_farclip/view_nearclip
 		local num_sclies = split_num*2
 
@@ -183,7 +182,7 @@ function ishadow.calc_split_frustums(view_frustum)
 		for i=1, split_num do
 			local idx = (i-1)*2
 			local si = (idx+1) / num_sclies
-			local farclip = l*(view_nearclip*(ratio^si)) + (1-l)*(view_nearclip + (clip_range)*si)
+			local farclip = split_weight*(view_nearclip*(ratio^si)) + (1-split_weight)*(view_nearclip + clip_range*si)
 			frustums[i] = split_new_frustum(view_frustum, nearclip, farclip)
 			nearclip = farclip * cross_multipler
 		end
