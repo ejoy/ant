@@ -244,7 +244,8 @@ function fs.relative(path, base)
 end
 
 function fs.pairs(path)
-    local list = vfs.list(path._value)
+    local value = path._value:gsub("(.-)/?$", "%1")
+    local list = vfs.list(value .. "/")
     if not list then
         return function ()
         end

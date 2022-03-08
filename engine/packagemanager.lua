@@ -94,7 +94,7 @@ local function detect()
 end
 
 local function initialize()
-    for path in fs.pairs(fs.path'/pkg') do
+    for path in fs.pairs(fs.path'/pkg/') do
         register_package(path)
     end
     for _, info in pairs(registered) do
