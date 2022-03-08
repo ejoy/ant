@@ -31,13 +31,14 @@ uniform vec4 u_omni_param;
 
 //#define PACK_RGBA8
 
-#ifdef PACK_RGBA8
+#ifdef LINEAR_SHADOW
 #define SHADOW_SAMPLER2D	SAMPLER2D
 #define shadow_sampler_type sampler2D 
 #else
 #define SHADOW_SAMPLER2D	SAMPLER2DSHADOW
 #define shadow_sampler_type sampler2DShadow
 #endif
+
 #ifdef ENABLE_SHADOW
 SHADOW_SAMPLER2D(s_shadowmap, 8);
 SHADOW_SAMPLER2D(s_omni_shadowmap, 9);
@@ -74,17 +75,20 @@ float hardShadow(
 
 	// float visibility = step(receiver, occluder);
 	// return visibility;
-#ifdef PACK_RGBA8
-	// when use multi sampler case, no need to check border
-	vec2 tc = clamp(_shadowCoord.xy, 0.0, 1.0);
-	float receiver = (_shadowCoord.z-_bias);
-	float occluder = unpackRgbaToFloat(texture2D(_sampler, tc));
-	return step(receiver, occluder);
-#else
+
+	// NOTE: below code is same as this
+
+#ifdef LINEAR_SHADOW
+	vec2 texCoord = _shadowCoord.xy/_shadowCoord.w;
+	float receiver = (_shadowCoord.z-_bias)/_shadowCoord.w;
+	float occluder = texture2D(_sampler, texCoord).x;
+	float visibility = step(receiver, occluder);
+	return visibility;
+#else //
 	vec4 coord = _shadowCoord;
 	coord.z -= _bias;
 	return shadow2DProj(_sampler, coord);
-#endif
+#endif //LINEAR_SHADOW
 }
 
 int select_cascade(float distanceVS)
@@ -104,34 +108,49 @@ int select_cascade(float distanceVS)
 	return 0;
 }
 
-vec4 get_color_coverage(int cascadeidx)
+int calc_shadow_coord(float distanceVS, vec4 posWS, out vec4 shadowcoord)
 {
-	float coverage = 0.8;
-	mat4 color_coverages = mat4(
-		coverage, 0.0, 0.0, 1.0,
-		0.0, coverage, 0.0, 1.0,
-		0.0, 0.0, coverage, 1.0,
-		coverage, coverage, 0.0, 1.0);
+	// //TODO: NEED optimize! pass 'offset' and 'scale' to replace calculating pos projection in light space
+	// for (int ii = 3; ii >= 0; --ii){
+	// 	mat4 m = u_csm_matrix[ii];
+	// 	vec4 v = mul(m, posWS);
+	// 	vec4 t = v / v.w;
+	// 	float fidx = float(ii);
+	// 	if (0.25 * fidx <= t.x && t.x <= 0.25 * (fidx+1) &&
+	// 		0.0 < t.y && t.y < 1.0 && 0.0 <= t.z && t.z <= 1.0){
+	// 		shadowcoord = v;
+	// 	}
+	// }
 
-	return color_coverages[cascadeidx];
-}
+	// return shadowcoord;
 
-vec4 calc_shadow_coord(float distanceVS, vec4 posWS)
-{
-	vec4 shadowcoord = vec4_splat(0.0);
-	//TODO: NEED optimize! pass 'offset' and 'scale' to replace calculating pos projection in light space
-	for (int ii = 3; ii >= 0; --ii){
-		mat4 m = u_csm_matrix[ii];
-		vec4 v = mul(m, posWS);
-		vec4 t = v / v.w;
-		float fidx = float(ii);
-		if (0.25 * fidx <= t.x && t.x <= 0.25 * (fidx+1) &&
-			0.0 < t.y && t.y < 1.0 && 0.0 <= t.z && t.z <= 1.0){
-			shadowcoord = v;
-		}
+	vec4 coords[4] = {
+		mul(u_csm_matrix[0], posWS),
+		mul(u_csm_matrix[1], posWS),
+		mul(u_csm_matrix[2], posWS),
+		mul(u_csm_matrix[3], posWS),
+	};
+
+	// cascade shadow is store in [n*s, s] texture 2d
+	bool selection0 = all(lessThan(coords[0], vec2(0.249, 0.999))) && all(greaterThan(coords[0], vec2(0.001, 0.001)));
+	bool selection1 = all(lessThan(coords[1], vec2(0.499, 0.999))) && all(greaterThan(coords[1], vec2(0.249, 0.001)));
+	bool selection2 = all(lessThan(coords[2], vec2(0.749, 0.999))) && all(greaterThan(coords[2], vec2(0.499, 0.001)));
+	bool selection3 = all(lessThan(coords[3], vec2(0.999, 0.999))) && all(greaterThan(coords[3], vec2(0.999, 0.001)));
+	int cascadeidx = -1;
+	if (selection0){
+		cascadeidx = 0;
+	} else if (selection1){
+		cascadeidx = 1;
+	} else if (selection2){
+		cascadeidx = 2;
+	} else if (selection3){
+		cascadeidx = 3;
+	} else {
+		return -1;
 	}
 
-	return shadowcoord;
+	shadowcoord = coords[cascadeidx];
+	return cascadeidx;
 }
 
 
@@ -157,8 +176,12 @@ vec3 calc_shadow_color(float visibility, vec3 scenecolor)
 
 vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor)
 {
-	vec4 shadowcoord = calc_shadow_coord(distanceVS, posWS);
-	float visibility = saturate(hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias));
+	vec4 shadowcoord = vec4_splat(0.0);
+	int cascadeidx = calc_shadow_coord(distanceVS, posWS, shadowcoord);
+	if (cascadeidx < 0)
+		return scenecolor;	// not in shadow
+
+	float visibility = hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias);
 	return calc_shadow_color(visibility, scenecolor);
 }
 
