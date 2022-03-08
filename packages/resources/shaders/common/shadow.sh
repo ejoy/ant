@@ -93,22 +93,13 @@ float hardShadow(
 
 int select_cascade(float distanceVS)
 {
-	if (distanceVS < u_csm_split_distances[0])
-		return 0;
-		
-	if (distanceVS < u_csm_split_distances[1])
-		return 1;
-		
-	if (distanceVS < u_csm_split_distances[2])
-		return 2;
-		
-	if (distanceVS < u_csm_split_distances[3])
-		return 3;
-	
-	return 0;
+	vec4 v = step(vec4_splat(distanceVS), u_csm_split_distances);
+	int idx = int(dot(v, vec4_splat(1.0)));
+	int m[5] = {-1, 3, 2, 1, 0};
+	return m[idx];
 }
 
-int calc_shadow_coord(float distanceVS, vec4 posWS, out vec4 shadowcoord)
+int calc_shadow_coord(vec4 posWS, out vec4 shadowcoord)
 {
 	// //TODO: NEED optimize! pass 'offset' and 'scale' to replace calculating pos projection in light space
 	// for (int ii = 3; ii >= 0; --ii){
@@ -153,7 +144,7 @@ int calc_shadow_coord(float distanceVS, vec4 posWS, out vec4 shadowcoord)
 	return cascadeidx;
 }
 
-
+#define SHADOW_COVERAGE_DEBUG
 
 #ifdef SHADOW_COVERAGE_DEBUG
 static const vec4 g_colors[4] = {
@@ -164,25 +155,30 @@ static const vec4 g_colors[4] = {
 };
 #endif //SHADOW_COVERAGE_DEBUG
 
-vec3 calc_shadow_color(float visibility, vec3 scenecolor)
-{
-	vec3 shadow_scenecolor = mix(u_shadow_color, scenecolor, visibility);
-#ifdef SHADOW_COVERAGE_DEBUG
-	shadow_scenecolor *= g_colors[cidx];
-#endif //SHADOW_COVERAGE_DEBUG
-
-	return shadow_scenecolor;
-}
+//#define USE_VIEW_SPACE_DISTANCE
 
 vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor)
 {
 	vec4 shadowcoord = vec4_splat(0.0);
-	int cascadeidx = calc_shadow_coord(distanceVS, posWS, shadowcoord);
+#ifdef USE_VIEW_SPACE_DISTANCE
+	int cascadeidx = select_cascade(distanceVS);
 	if (cascadeidx < 0)
 		return scenecolor;	// not in shadow
+	shadowcoord = mul(u_csm_matrix[cascadeidx], posWS);
+#else //!USE_VIEW_SPACE_DISTANCE
+	int cascadeidx = calc_shadow_coord(posWS, shadowcoord);
+	if (cascadeidx < 0)
+		return scenecolor;	// not in shadow
+#endif //USE_VIEW_SPACE_DISTANCE
 
 	float visibility = hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias);
-	return calc_shadow_color(visibility, scenecolor);
+	vec3 finalcolor = mix(u_shadow_color, scenecolor, visibility);
+
+#ifdef SHADOW_COVERAGE_DEBUG
+	finalcolor *= g_colors[cascadeidx];
+#endif //SHADOW_COVERAGE_DEBUG
+
+	return finalcolor;
 }
 
 vec4 calc_omni_shadow_coord(vec4 posWS)
@@ -205,7 +201,7 @@ vec3 omni_shadow_visibility(vec4 posWS, vec3 scenecolor)
 {
 	vec4 shadowcoord = calc_omni_shadow_coord(posWS);
 	float visibility = hardShadow(s_omni_shadowmap, shadowcoord, u_shadowmap_bias);
-	return calc_shadow_color(visibility, scenecolor);
+	return mix(u_shadow_color, scenecolor, visibility);
 }
 
 #endif //__SHADER_SHADOW_SH__
