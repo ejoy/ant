@@ -188,25 +188,25 @@ local function check_shadow_matrix()
 		print(string.format("origin ndc space with crop:%s", math3d.tostring(origin_NDC_With_Crop)))
 		------------------------------------------------------------------------------------------------------------------------
 		-- read the shadow map back
-		if ishadow.depth_type() == "linear" then
-			local size = ishadow.shadowmap_size()
-			local fb = fbmgr.get(se.render_target.fb_idx)
-			local memory_handle, width, height, pitch = irender.read_render_buffer_content({w=size,h=size}, "RGBA8", fb[1].rbidx, true)
+		-- if ishadow.depth_type() == "linear" then
+		-- 	local size = ishadow.shadowmap_size()
+		-- 	local fb = fbmgr.get(se.render_target.fb_idx)
+		-- 	local memory_handle, width, height, pitch = irender.read_render_buffer_content({w=size,h=size}, "RGBA8", fb[1].rbidx, true)
 
-			local depth = pt[3]
-			local x, y = pt[1], pt[2]
-			local fx, fy = math.floor(x * width), math.floor(y * height)
-			local cx, cy = math.ceil(x * width), math.ceil(y * height)
+		-- 	local depth = pt[3]
+		-- 	local x, y = pt[1], pt[2]
+		-- 	local fx, fy = math.floor(x * width), math.floor(y * height)
+		-- 	local cx, cy = math.ceil(x * width), math.ceil(y * height)
 
-			local depth0 = memory_handle[fy*pitch+fx]
-			local depth1 = memory_handle[fy*pitch+cx]
+		-- 	local depth0 = memory_handle[fy*pitch+fx]
+		-- 	local depth1 = memory_handle[fy*pitch+cx]
 
-			local depth2 = memory_handle[cy*pitch+fx]
-			local depth3 = memory_handle[cy*pitch+cx]
+		-- 	local depth2 = memory_handle[cy*pitch+fx]
+		-- 	local depth3 = memory_handle[cy*pitch+cx]
 
-			print("depth:", depth)
-			print("depth0:", depth0, "depth1:", depth1, "depth2:", depth2, "depth3:", depth3)
-		end
+		-- 	print("depth:", depth)
+		-- 	print("depth0:", depth0, "depth1:", depth1, "depth2:", depth2, "depth3:", depth3)
+		-- end
 	end
 end
 

@@ -30,7 +30,6 @@ interface "ishadow"
     .method "fb_index"
     .method "shadowmap_size"
 
-    .method "depth_type"
     .method "bias"
     .method "normal_offset"
     .method "shadow_param"

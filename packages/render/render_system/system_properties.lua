@@ -210,9 +210,9 @@ local function update_csm_properties()
 	system_properties["u_csm_split_distances"].v = split_distances
 	system_properties["s_shadowmap"].texture.handle = fbmgr.get_rb(ishadow.fb_index(), 1).handle
 
-	if ishadow.depth_type() == "linear" then
-		system_properties["u_depth_scale_offset"].id = ishadow.shadow_depth_scale_offset()
-	end
+	-- if ishadow.depth_type() == "linear" then
+	-- 	system_properties["u_depth_scale_offset"].id = ishadow.shadow_depth_scale_offset()
+	-- end
 
 	system_properties["u_shadow_param1"].v = ishadow.shadow_param()
 	system_properties["u_shadow_param2"].v = ishadow.color()
