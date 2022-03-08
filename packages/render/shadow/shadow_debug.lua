@@ -39,10 +39,11 @@ local function find_csm_entity(index)
 	end
 end
 
+local debug_entities = {}
 local function create_debug_entity()
 	do
 		local splitnum = ishadow.split_num()
-		ecs.create_entity {
+		debug_entities[#debug_entities+1] = ecs.create_entity {
 			policy = {
 				"ant.render|simplerender",
 			},
@@ -60,7 +61,7 @@ local function create_debug_entity()
 		local camera = mc_e.camera
 		for idx, f in ipairs(ishadow.split_frustums()) do
 			local vp = math3d.mul(math3d.projmat(f), camera.viewmat)
-			ientity.create_frustum_entity(
+			debug_entities[#debug_entities+1] = ientity.create_frustum_entity(
 				math3d.frustum_points(vp), "frusutm:main_view", frustum_colors[idx]
 			)
 		end
@@ -73,8 +74,8 @@ local function create_debug_entity()
 		local frustum_points = math3d.frustum_points(c.viewprojmat)
 		local color = frustum_colors[idx]
 
-		ientity.create_frustum_entity(frustum_points, "frusutm:" .. se.name, color)
-		ientity.create_axis_entity(ce.scene.srt, "csm_axis:" .. idx, color)
+		debug_entities[#debug_entities+1] = ientity.create_frustum_entity(frustum_points, "frusutm:" .. se.name, color)
+		debug_entities[#debug_entities+1] = ientity.create_axis_entity(ce.scene.srt, "csm_axis:" .. idx, color)
 	end
 end
 
@@ -225,6 +226,10 @@ local keypress_mb = world:sub{"keyboard"}
 function shadowdbg_sys:camera_usage()
 	for _, key, press, state in keypress_mb:unpack() do
 		if key == "SPACE" and press == 0 then
+			for _, eid in ipairs(debug_entities) do
+				world:remove_entity(eid)
+			end
+			debug_entities = {}
 			log_split_distance()
 			create_debug_entity()
 		elseif key == "L" and press == 0 then
