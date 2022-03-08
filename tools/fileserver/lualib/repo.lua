@@ -86,7 +86,9 @@ end
 
 -- map path in repo to realpath (replace mountpoint)
 function repo:realpath(filepath)
-	return access.realpath(self, filepath)
+	local rp = access.realpath(self, filepath)
+	assert(rp ~= nil)
+	return rp
 end
 
 function repo:virtualpath(pathname)
@@ -114,7 +116,7 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 		if is_resource(fullname) then
 			table.insert(hashs, string.format("r invalid %s", name))
 		else
-			if type == "v" or lfs.is_directory(access.realpath(self, fullname)) then
+			if type == "v" or lfs.is_directory(self:realpath(fullname)) then
 				local hash = repo_build_dir(self, fullname .. '/', cache, namehashcache)
 				table.insert(hashs, string.format("d %s %s", hash, name))
 			else
@@ -291,7 +293,11 @@ local function read_ref(self, hash)
 			local timestamp = tonumber(ts)
 			if timestamp then
 				-- It's a file
-				local realname = self:realpath(name)
+				-- TODO
+				local realname = access.realpath(self, name)
+				if not realname then
+					realname = self._root / name
+				end
 				if not realname:string():match "%?" and lfs.is_regular_file(realname) and lfs.last_write_time(realname) == timestamp then
 					cache[name] = { hash = hash , timestamp = timestamp }
 					table.insert(items, line)

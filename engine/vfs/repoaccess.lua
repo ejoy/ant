@@ -46,6 +46,12 @@ function access.readmount(repo)
 	local mountpoint = {}
 	local mountname = {}
 	local function addmount(name, path)
+		if name:sub(1,1) ~= "/" then
+			name = "/"..name
+		end
+		if name:sub(-1) == "/" then
+			name = name:sub(1,-2)
+		end
 		mountpoint[name] = path
 		mountname[#mountname+1] = name
 	end
@@ -88,9 +94,6 @@ function access.readmount(repo)
 		else
 			assert_syntax(#tokens == 2)
 			local path = lfs.absolute(lfs.path(tokens[2]))
-			if name:sub(1,1) ~= "/" then
-				name = "/"..name
-			end
 			addmount(name, path)
 		end
 		::continue::
@@ -119,7 +122,6 @@ function access.realpath(repo, pathname)
 			return repo._mountpoint[mpath] / pathname:sub(n+1)
 		end
 	end
-	return repo._root / pathname:sub(2)
 end
 
 function access.virtualpath(repo, pathname)
@@ -140,30 +142,23 @@ end
 function access.list_files(repo, filepath)
 	local rpath = access.realpath(repo, filepath)
 	local files = {}
-	if lfs.exists(rpath) then
-		for name in lfs.pairs(rpath) do
-			local filename = name:filename():string()
-			if filename:sub(1,1) ~= '.' then	-- ignore .xxx file
-				files[filename] = "l"
+	if rpath then
+		if lfs.exists(rpath) then
+			for name in lfs.pairs(rpath) do
+				local filename = name:filename():string()
+				if filename:sub(1,1) ~= '.' then	-- ignore .xxx file
+					files[filename] = "l"
+				end
 			end
 		end
-	end
-	local ignorepaths = rpath / ".ignore"
-	local f = io.open(ignorepaths:string(), "rb")
-	if f then
-		for name in f:lines() do
-			files[name] = nil
-		end
-		f:close()
-	end
-	if filepath:sub(-1) ~= "/" then
-		filepath = filepath.."/"
 	end
 	if filepath == '/' then
 		-- root path
 		for mountname in pairs(repo._mountpoint) do
-			local name = mountname:match "^/([^/]+)/?"
-			files[name] = "v"
+			if mountname ~= "" then
+				local name = mountname:match "^/([^/]+)/?"
+				files[name] = "v"
+			end
 		end
 	else
 		local n = #filepath
