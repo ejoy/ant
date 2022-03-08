@@ -106,9 +106,11 @@ local function get_package(entry_path, readmount)
     end
     local packages = {}
     for _, name in ipairs(repo._mountname) do
-        vfs.mount(name, repo._mountpoint[name]:string())
-        if not (name:match "/pkg/ant%." and skip_package(name)) then
-            packages[#packages + 1] = {name = name, path = repo._mountpoint[name]}
+        if #name > 1 then
+            vfs.mount(name, repo._mountpoint[name]:string())
+            if not (name:match "/pkg/ant%." and skip_package(name)) then
+                packages[#packages + 1] = {name = name, path = repo._mountpoint[name]}
+            end
         end
     end
     global_data.repo = repo
@@ -246,7 +248,7 @@ function m:init_world()
     local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
     stat_window = iRmlUi.open "bgfx_stat.rml"
 end
-local mouse_pos_y
+local mouse_pos_x
 local mouse_pos_y
 function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
