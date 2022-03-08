@@ -30,7 +30,7 @@ uniform vec4 u_omni_param;
 #define u_omni_count u_omni_param.x
 
 //#define PACK_RGBA8
-
+#define LINEAR_SHADOW
 #ifdef LINEAR_SHADOW
 #define SHADOW_SAMPLER2D	SAMPLER2D
 #define shadow_sampler_type sampler2D 
@@ -126,7 +126,7 @@ int calc_shadow_coord(vec4 posWS, out vec4 shadowcoord)
 	bool selection0 = all(lessThan(coords[0], vec2(0.249, 0.999))) && all(greaterThan(coords[0], vec2(0.001, 0.001)));
 	bool selection1 = all(lessThan(coords[1], vec2(0.499, 0.999))) && all(greaterThan(coords[1], vec2(0.249, 0.001)));
 	bool selection2 = all(lessThan(coords[2], vec2(0.749, 0.999))) && all(greaterThan(coords[2], vec2(0.499, 0.001)));
-	bool selection3 = all(lessThan(coords[3], vec2(0.999, 0.999))) && all(greaterThan(coords[3], vec2(0.999, 0.001)));
+	bool selection3 = all(lessThan(coords[3], vec2(0.999, 0.999))) && all(greaterThan(coords[3], vec2(0.749, 0.001)));
 	int cascadeidx = -1;
 	if (selection0){
 		cascadeidx = 0;
