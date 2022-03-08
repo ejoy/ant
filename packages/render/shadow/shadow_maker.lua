@@ -159,6 +159,12 @@ local function calc_shadow_camera(maincamera, frustum, lightdir, shadowmap_size,
 	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, shadowcamera)
 end
 
+local function calc_split_distance(frustum)
+	local corners_VS = math3d.frustum_points(math3d.projmat(frustum))
+	local minv, maxv = math3d.minmax(corners_VS)
+	return math3d.index(maxv, 3)
+end
+
 local function update_shadow_camera(dl, maincamera)
 	local lightdir = iom.get_direction(dl)
 	local setting = ishadow.setting()
@@ -169,7 +175,7 @@ local function update_shadow_camera(dl, maincamera)
 		local csm = qe.csm
 		local cf = csmfrustums[csm.index]
 		calc_shadow_camera(maincamera, cf, lightdir, setting.shadowmap_size, setting.stabilize, qe.camera_ref)
-		csm.split_distance_VS = cf.f - viewfrustum.n
+		csm.split_distance_VS = calc_split_distance(cf)
 	end
 end
 
