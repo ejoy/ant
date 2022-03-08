@@ -316,7 +316,7 @@ function m.showLog(name, current_log)
     local end_idx = current_log.vtor_index[v_end_idx][1]
     for i = start_idx, end_idx do
         local color
-        item = current_log[i]
+        local item = current_log[i]
         if item.level == LEVEL_INFO then
             imgui.widget.Image(icons.ICON_INFO.handle, icons.ICON_INFO.texinfo.width, icons.ICON_INFO.texinfo.height)
         elseif item.level == LEVEL_WARN then
@@ -367,7 +367,7 @@ function m.show()
     end
 end
 function m.close_log()
-    logfile_handle:close()
+    --logfile_handle:close()
 end
 return function(asset_mgr)
     icons = require "common.icons"(asset_mgr)

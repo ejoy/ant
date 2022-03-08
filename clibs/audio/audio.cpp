@@ -172,7 +172,7 @@ laudio_bank_name(lua_State* L) {
 		char temp[256];
 		int retrieved;
 		ed->getPath(temp, 256, &retrieved);
-		lua_pushlstring(L, temp, retrieved);
+		lua_pushlstring(L, temp, retrieved - 1);
 		return 1;
 	}
 	return 0;
@@ -186,7 +186,7 @@ laudio_event_name(lua_State* L) {
 		char temp[256];
 		int retrieved;
 		ed->getPath(temp, 256, &retrieved);
-		lua_pushlstring(L, temp, retrieved);
+		lua_pushlstring(L, temp, retrieved - 1);
 		return 1;
 	}
 	return 0;

@@ -30,6 +30,14 @@ function ia.stop(event)
     audio.stop(event)
 end
 
+function ia.get_event_list(b)
+    return audio.get_event_list(b)
+end
+
+function ia.get_event_name(se)
+    return audio.get_event_name(se)
+end
+
 local sound_attack_
 local sound_click_
 

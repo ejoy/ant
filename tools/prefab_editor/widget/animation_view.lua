@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
+local iaudio    = ecs.import.interface "ant.audio|audio_interface"
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local ies       = ecs.import.interface "ant.scene|ifilter_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
@@ -374,7 +375,7 @@ end
 
 local event_id = 1
 local function add_event(et)
-    if not current_clip then return end
+    --if not current_clip then return end
     event_id = event_id + 1
     local event_name = et..tostring(event_id)
     local new_event = {
@@ -385,6 +386,7 @@ local function add_event(et)
             slot_name = "",
             slot_eid = nil,
         } or nil,
+        sound_event = (et == "Sound") and "" or nil,
         breakable = (et == "Effect") and false or nil,
         breakable_ui = (et == "Effect") and {false} or nil,
         life_time = (et == "Effect") and 2 or nil,
@@ -457,7 +459,7 @@ local shape_type = {
 }
 
 local function show_events()
-    if anim_state.selected_frame >= 0 and current_clip then
+    if anim_state.selected_frame >= 0 then -- and current_clip then
         imgui.cursor.SameLine()
         if imgui.widget.Button("AddEvent") then
             imgui.windows.OpenPopup("AddKeyEvent")
@@ -512,6 +514,8 @@ local function do_record(collision, eid)
     collision.size = {scale[1] / factor, scale[2] / factor, scale[3] / factor}
 end
 
+local sound_event_list = {}
+
 local function show_current_event()
     if not current_event then return end
     imgui.widget.PropertyLabel("EventType")
@@ -560,9 +564,44 @@ local function show_current_event()
             dirty = true
         end
     elseif current_event.event_type == "Sound" then
-        if imgui.widget.Button("SelectSound") then
+        if imgui.widget.Button("SelectBank") then
+            local path = uiutils.get_open_file_path("Bank", "bank")
+            if path then
+                local lfs = require "filesystem.local"
+                local rp = lfs.relative(lfs.path(path), global_data.project_root)
+                local fullpath = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
+                local bank = iaudio.load_bank(fullpath)
+                if not bank then
+                    print("LoadBank Faied. :", fullpath)
+                end
+                local bankname = fullpath:sub(1, -5) .. "strings.bank"
+                local bank_string = iaudio.load_bank(bankname)
+                if not bank_string then
+                    print("LoadBank Faied. :", bankname)
+                end
+                local event_list = iaudio.get_event_list(bank)
+                sound_event_list = {}
+                for _, v in ipairs(event_list) do
+                    sound_event_list[#sound_event_list + 1] = iaudio.get_event_name(v)
+                end
+                current_event.asset_path_ui.text = fullpath
+                current_event.asset_path = fullpath
+                dirty = true
+            end
         end
-        imgui.widget.Text("SoundPath : ")
+        imgui.widget.Text("BankPath : " .. current_event.asset_path)
+        imgui.widget.Text("SoundEvent : " .. current_event.sound_event)
+        imgui.cursor.Separator();
+        for _, se in ipairs(sound_event_list) do
+            if imgui.widget.Selectable(se, current_event.sound_event == se, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                current_event.sound_event = se
+                if (imgui.util.IsMouseDoubleClicked(0)) then
+                    local sound = iaudio.create(se)
+                    iaudio.play(sound)
+                    iaudio.destroy(sound)
+                end
+            end
+        end
     elseif current_event.event_type == "Effect" then
         if imgui.widget.Button("SelectEffect") then
             local path = uiutils.get_open_file_path("Prefab", "prefab")
@@ -1233,14 +1272,14 @@ function m.show()
                 on_move_clip(move_type, anim_state.selected_clip_index, move_delta)
             end
             imgui.cursor.Separator()
-            if imgui.table.Begin("EventColumns", 7, imgui.flags.Table {'Resizable', 'ScrollY'}) then
+            if imgui.table.Begin("EventColumns", 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
                 imgui.table.SetupColumn("Bones", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
                 imgui.table.SetupColumn("Event", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                imgui.table.SetupColumn("Event(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                imgui.table.SetupColumn("Clip", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                imgui.table.SetupColumn("Clip(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                imgui.table.SetupColumn("Group", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                imgui.table.SetupColumn("Group(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+                imgui.table.SetupColumn("Event(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 2.0)
+                -- imgui.table.SetupColumn("Clip", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+                -- imgui.table.SetupColumn("Clip(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+                -- imgui.table.SetupColumn("Group", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+                -- imgui.table.SetupColumn("Group(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
                 imgui.table.HeadersRow()
 
                 imgui.table.NextColumn()
@@ -1261,29 +1300,29 @@ function m.show()
                 show_current_event()
                 imgui.windows.EndChild()
                 
-                imgui.table.NextColumn()
-                child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##show_clips", child_width, child_height, false)
-                show_clips()
-                imgui.windows.EndChild()
+                -- imgui.table.NextColumn()
+                -- child_width, child_height = imgui.windows.GetContentRegionAvail()
+                -- imgui.windows.BeginChild("##show_clips", child_width, child_height, false)
+                -- show_clips()
+                -- imgui.windows.EndChild()
 
-                imgui.table.NextColumn()
-                child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##show_current_clip", child_width, child_height, false)
-                show_current_clip()
-                imgui.windows.EndChild()
+                -- imgui.table.NextColumn()
+                -- child_width, child_height = imgui.windows.GetContentRegionAvail()
+                -- imgui.windows.BeginChild("##show_current_clip", child_width, child_height, false)
+                -- show_current_clip()
+                -- imgui.windows.EndChild()
 
-                imgui.table.NextColumn()
-                child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##show_groups", child_width, child_height, false)
-                show_groups()
-                imgui.windows.EndChild()
+                -- imgui.table.NextColumn()
+                -- child_width, child_height = imgui.windows.GetContentRegionAvail()
+                -- imgui.windows.BeginChild("##show_groups", child_width, child_height, false)
+                -- show_groups()
+                -- imgui.windows.EndChild()
                 
-                imgui.table.NextColumn()
-                child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##show_current_group", child_width, child_height, false)
-                show_current_group()
-                imgui.windows.EndChild()
+                -- imgui.table.NextColumn()
+                -- child_width, child_height = imgui.windows.GetContentRegionAvail()
+                -- imgui.windows.BeginChild("##show_current_group", child_width, child_height, false)
+                -- show_current_group()
+                -- imgui.windows.EndChild()
 
                 imgui.table.End()
             end

@@ -13,6 +13,8 @@ interface "audio_interface"
     .method "destroy"
     .method "load_bank"
     .method "create"
+    .method "get_event_list"
+    .method "get_event_name"
 
 component "sound_event"
     .type "lua"
