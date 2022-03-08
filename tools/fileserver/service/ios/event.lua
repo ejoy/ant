@@ -4,9 +4,16 @@ local usbmuxd = require "usbmuxd"
 
 local devices = {}
 
-local function notify(MessageType, info)
-    print('IOS Device '..MessageType, info.sn)
-    ltask.send(info.sid, MessageType)
+local function notify(event)
+    local MessageType = event.MessageType
+    local DeviceID = event.DeviceID
+    local info = devices[DeviceID]
+    if info then
+        print('IOS Device '..MessageType, info.sn)
+        ltask.send(info.sid, MessageType)
+    else
+        print('IOS Device '..MessageType, "Not found " .. DeviceID)
+    end
 end
 
 local eventfd, err = socket.connect(usbmuxd.get_address())
@@ -35,11 +42,11 @@ while true do
             devices[event.DeviceID] = info
         end
         info.sn = event.Properties.SerialNumber
-        notify(event.MessageType, info)
+        notify(event)
     elseif event.MessageType == 'Detached' then
-        notify(event.MessageType, devices[event.DeviceID])
+        notify(event)
     elseif event.MessageType == 'Paired' then
-        notify(event.MessageType, devices[event.DeviceID])
+        notify(event)
     else
         error('Unknown message: ' .. event.MessageType)
     end
