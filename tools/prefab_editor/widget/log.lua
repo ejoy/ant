@@ -15,10 +15,6 @@ local log_tags = {
     "All",
     "Engine",
     "Editor",
-    "Network",
-    "Thread",
-    "FileSrv",
-    "FileWatch",
     "Runtime",
     "Server",
     "Console"
