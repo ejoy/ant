@@ -1,4 +1,5 @@
 / ${project}
 engine engine
 @pkg packages
+@pkg ../../packages
 @pkg-one ${project}
