@@ -69,14 +69,6 @@ public:
 	/// @return True if the string was parsed without error, false otherwise.
 	static bool InstanceElementText(Element* parent, const std::string& text);
 
-	/// Register the instancer to be used for all event listeners.
-	/// @lifetime The instancer must be kept alive until after the call to Rml::Shutdown, or until a new instancer is set.
-	static void RegisterEventListenerInstancer(EventListenerInstancer* instancer);
-	/// Instance an event listener with the given string. This is used for instancing listeners for the on* events from RML.
-	/// @param[in] value The parameters to the event listener.
-	/// @return The instanced event listener.
-	static EventListener* InstanceEventListener(Element* element, const std::string& type, const std::string& code, bool use_capture);
-
 	/// Register an instancer for data views.
 	/// Structural views start a special XML parsing procedure when encountering a declaration of the view. Instead of instancing
 	/// children elements, the raw inner XML/RML contents are submitted to the initializing procedure of the view.

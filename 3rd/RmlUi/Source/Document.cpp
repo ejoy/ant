@@ -8,10 +8,10 @@
 #include "../Include/RmlUi/FileInterface.h"
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Log.h"
+#include "../Include/RmlUi/Plugin.h"
 #include "ElementStyle.h"
 #include "StyleSheetFactory.h"
 #include "DataModel.h"
-#include "PluginRegistry.h"
 #include "HtmlParser.h"
 #include <fstream>
 
@@ -22,12 +22,10 @@ Document::Document(const Size& _dimensions)
 	, dimensions(_dimensions)
 {
 	style_sheet = nullptr;
-	PluginRegistry::NotifyDocumentCreate(this);
 }
 
 Document::~Document() {
 	body.RemoveAllEvents();
-	PluginRegistry::NotifyDocumentDestroy(this);
 }
 
 using namespace std::literals;
@@ -244,11 +242,11 @@ const std::shared_ptr<StyleSheet>& Document::GetStyleSheet() const {
 }
 
 void Document::LoadInlineScript(const std::string& content, const std::string& source_path, int source_line) {
-	PluginRegistry::NotifyLoadInlineScript(this, content, source_path, source_line);
+	GetPlugin()->OnLoadInlineScript(this, content, source_path, source_line);
 }
 
 void Document::LoadExternalScript(const std::string& source_path) {
-	PluginRegistry::NotifyLoadExternalScript(this, source_path);
+	GetPlugin()->OnLoadExternalScript(this, source_path);
 }
 
 void Document::UpdateDataModel(bool clear_dirty_variables) {

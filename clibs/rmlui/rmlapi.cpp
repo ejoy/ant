@@ -26,6 +26,7 @@ struct RmlInterface {
     FontEngine      m_font;
     File            m_file;
     Renderer        m_renderer;
+	lua_plugin      m_plugin;
     RmlInterface(RmlContext* context)
         : m_font(context)
         , m_file()
@@ -34,6 +35,7 @@ struct RmlInterface {
         Rml::SetFontEngineInterface(&m_font);
         Rml::SetFileInterface(&m_file);
         Rml::SetRenderInterface(&m_renderer);
+		Rml::SetPlugin(&m_plugin);
     }
 };
 
@@ -47,7 +49,6 @@ struct RmlWrapper {
 };
 
 static RmlWrapper* g_wrapper = nullptr;
-static lua_plugin* g_plugin = nullptr;
 
 static void
 lua_pushobject(lua_State* L, void* handle) {
@@ -102,18 +103,31 @@ struct EventListener final : public Rml::EventListener {
 static int
 lDocumentCreate(lua_State* L) {
 	luabind::setthread(L);
-	std::string url = lua_checkstdstring(L, 1);
 	Rml::Size dimensions(
-		(float)luaL_checkinteger(L, 2),
-		(float)luaL_checkinteger(L, 3)
+		(float)luaL_checkinteger(L, 1),
+		(float)luaL_checkinteger(L, 2)
 	);
 	Rml::Document* doc = new Rml::Document(dimensions);
-	if (!doc->Load(url)) {
-		delete doc;
-		return 0;
-	}
 	lua_pushlightuserdata(L, doc);
 	return 1;
+}
+
+static int
+lDocumentLoad(lua_State* L) {
+	luabind::setthread(L);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	std::string url = lua_checkstdstring(L, 2);
+	bool ok = doc->Load(url);
+	lua_pushboolean(L, ok);
+	return 1;
+}
+
+static int
+lDocumentDestroy(lua_State* L) {
+	luabind::setthread(L);
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	delete doc;
+	return 0;
 }
 
 static int
@@ -391,7 +405,6 @@ lRmlInitialise(lua_State* L) {
     if (!Rml::Initialise()){
         return luaL_error(L, "Failed to Initialise RmlUi.");
     }
-	Rml::RegisterPlugin(g_plugin);
     return 0;
 }
 
@@ -447,7 +460,7 @@ int lDataModelSet(lua_State* L);
 int lDataModelDirty(lua_State* L);
 
 lua_plugin* get_lua_plugin() {
-    return g_plugin;
+    return &g_wrapper->interface.m_plugin;
 }
 
 extern "C"
@@ -457,7 +470,6 @@ __declspec(dllexport)
 int
 luaopen_rmlui(lua_State* L) {
 	luaL_checkversion(L);
-	g_plugin = new lua_plugin;
 	luaL_Reg l[] = {
 		{ "DataModelCreate", lDataModelCreate },
 		{ "DataModelRelease", lDataModelRelease },
@@ -466,6 +478,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "DataModelSet", lDataModelSet },
 		{ "DataModelDirty", lDataModelDirty },
 		{ "DocumentCreate", lDocumentCreate },
+		{ "DocumentLoad", lDocumentLoad },
+		{ "DocumentDestroy", lDocumentDestroy },
 		{ "DocumentUpdate", lDocumentUpdate },
 		{ "DocumentSetDimensions", lDocumentSetDimensions},
 		{ "DocumentElementFromPoint", lDocumentElementFromPoint },

@@ -1,4 +1,7 @@
 local rmlui = require "rmlui"
+local event = require "core.event"
+local environment = require "core.environment"
+local createSandbox = require "core.sandbox.create"
 
 local elementFromPoint = rmlui.DocumentElementFromPoint
 local getBody = rmlui.DocumentGetBody
@@ -18,20 +21,42 @@ local function round(x)
     return math.floor(x*screen_ratio+0.5)
 end
 
+local function notifyDocumentCreate(document)
+	local globals = createSandbox()
+	event("OnDocumentCreate", document, globals)
+	globals.window.document = globals.document
+	environment[document] = globals
+end
+
+local function notifyDocumentDestroy(document)
+	event("OnDocumentDestroy", document)
+	environment[document] = nil
+end
+
 function m.open(url)
-    local doc = rmlui.DocumentCreate(url, width, height)
-    if doc then
-        table.insert(documents, 1, doc)
-        return doc
+    local doc = rmlui.DocumentCreate(width, height)
+    if not doc then
+        return
     end
+    table.insert(documents, 1, doc)
+    notifyDocumentCreate(doc)
+    local ok = rmlui.DocumentLoad(doc, url)
+    if not ok then
+        m.close(doc)
+        return
+    end
+    return doc
 end
 
 function m.onload(doc)
+    --TODO
     dispatchEvent(getBody(doc), "load", {})
 end
 
 function m.close(doc)
     dispatchEvent(getBody(doc), "unload", {})
+    notifyDocumentDestroy(doc)
+    rmlui.DocumentDestroy(doc)
     for i, d in ipairs(documents) do
         if d == doc then
             table.remove(documents, i)

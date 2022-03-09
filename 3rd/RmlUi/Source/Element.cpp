@@ -44,13 +44,13 @@
 #include "../Include/RmlUi/EventListener.h"
 #include "../Include/RmlUi/Time.h"
 #include "../Include/RmlUi/Event.h"
+#include "../Include/RmlUi/Plugin.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
 #include "ElementStyle.h"
 #include "EventDispatcher.h"
 #include "ElementBackgroundImage.h"
-#include "PluginRegistry.h"
 #include "PropertiesIterator.h"
 #include "StyleSheetParser.h"
 #include "StyleSheetNode.h"
@@ -697,7 +697,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
 	{
 		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n')
 		{
-			EventListener* listener = Factory::InstanceEventListener(this, pair.first.substr(2), pair.second, false);
+			EventListener* listener = GetPlugin()->OnCreateEventListener(this, pair.first.substr(2), pair.second, false);
 			if (listener) {
 				AddEventListener(listener);
 			}

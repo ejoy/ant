@@ -20,8 +20,6 @@ for _, name in ipairs(ltask.call(ServiceBgfxMain, "APIS")) do
 	end
 end
 
-rmlui.RmlRegisterEevent(require "core.callback")
-
 local _, last = ltask.now()
 local function getDelta()
     local _, now = ltask.now()
@@ -55,6 +53,7 @@ function S.initialize(t)
     ServiceWorld = t.service_world
     require "font" (t.font_mgr)
     initRender(t)
+    rmlui.RmlRegisterEevent(require "core.callback")
     ltask.fork(Render)
 end
 

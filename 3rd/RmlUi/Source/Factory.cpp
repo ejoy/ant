@@ -33,13 +33,11 @@
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/ElementUtilities.h"
-#include "../Include/RmlUi/EventListenerInstancer.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/Log.h"
 #include "DataControllerDefault.h"
 #include "DataViewDefault.h"
-#include "PluginRegistry.h"
 #include "PropertyParserColour.h"
 #include "StyleSheetFactory.h"
 #include "HtmlParser.h"
@@ -62,9 +60,6 @@ static StructuralDataViewInstancerMap structural_data_view_instancers;
 
 // Structural data view names.
 static std::vector<std::string> structural_data_view_attribute_names;
-
-// Event listener instancer.
-static EventListenerInstancer* event_listener_instancer = nullptr;
 
 // Default instancers are constructed and destroyed on Initialise and Shutdown, respectively.
 struct DefaultInstancers {
@@ -101,10 +96,6 @@ bool Factory::Initialise()
 {
 	default_instancers = std::make_unique<DefaultInstancers>();
 
-	// No default event listener instancer
-	if (!event_listener_instancer)
-		event_listener_instancer = nullptr;
-
 	// Data binding views
 	RegisterDataViewInstancer(&default_instancers->data_view_attribute,      "attr",    false);
 	RegisterDataViewInstancer(&default_instancers->data_view_attribute_if,   "attrif",  false);
@@ -129,9 +120,6 @@ void Factory::Shutdown()
 	data_view_instancers.clear();
 	structural_data_view_instancers.clear();
 	structural_data_view_attribute_names.clear();
-
-	event_listener_instancer = nullptr;
-
 	default_instancers.reset();
 }
 // TODO: remove this function, duplicate code in Document.cpp
@@ -320,22 +308,6 @@ bool Factory::InstanceElementText(Element* parent, const std::string& str)
 	}
 	
 	return true;
-}
-
-// Register an instancer for all event listeners
-void Factory::RegisterEventListenerInstancer(EventListenerInstancer* instancer)
-{
-	event_listener_instancer = instancer;
-}
-
-// Instance an event listener with the given string
-EventListener* Factory::InstanceEventListener(Element* element, const std::string& type, const std::string& code, bool use_capture)
-{
-	// If we have an event listener instancer, use it
-	if (event_listener_instancer)
-		return event_listener_instancer->InstanceEventListener(element, type, code, use_capture);
-
-	return nullptr;
 }
 
 void Factory::RegisterDataViewInstancer(DataViewInstancer* instancer, const std::string& name, bool is_structural_view)
