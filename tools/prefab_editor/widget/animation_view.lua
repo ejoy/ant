@@ -65,13 +65,60 @@ local all_collision = {}
 
 local clip_index = 0
 local group_index = 0
-
+local key_event = {}
 local function find_index(t, item)
     for i, c in ipairs(t) do
         if c == item then
             return i
         end
     end
+end
+
+local function do_to_runtime_event(evs)
+    local list = {}
+    for _, ev in ipairs(evs) do
+        local col_eid = ev.collision and ev.collision.col_eid or -1
+        list[#list + 1] = {
+            event_type = ev.event_type,
+            name = ev.name,
+            asset_path = ev.asset_path,
+            sound_event = ev.sound_event,
+            breakable = ev.breakable,
+            life_time = ev.life_time,
+            move = ev.move,
+            msg_content = ev.msg_content,
+            link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid and (ev.link_info.slot_eid > 0 and ev.link_info.slot_eid or nil) or nil },
+            collision = (col_eid ~= -1) and {
+                col_eid = col_eid,
+                name = world[col_eid].name,
+                shape_type = ev.collision.shape_type,
+                position = ev.collision.position,
+                size = ev.collision.size,
+                enable = ev.collision.enable,
+                tid = ev.collision.tid,
+            } or nil
+        }
+    end
+    return list
+end
+
+local function to_runtime_event(ke)
+    local temp = {}
+    for key, value in pairs(ke) do
+        if #value > 0 then
+            temp[#temp + 1] = tonumber(key)
+        end
+    end
+    table.sort(temp, function(a, b) return a < b end)
+    local event = {}
+    for i, frame_idx in ipairs(temp) do
+        event[#event + 1] = {
+            time = frame_idx / sample_ratio,
+            event_list = do_to_runtime_event(ke[tostring(frame_idx)])
+        }
+    end
+    return event
+    --runtime_event.collider = current_clip.collider
 end
 
 local function get_runtime_animations(eid)
@@ -107,6 +154,7 @@ local function anim_group_stop_effect(eid)
 end
 
 local function anim_play(e, anim_state, play)
+    anim_state.key_event = to_runtime_event(key_event)
     local group_e = get_anim_group_eid(e, current_anim.name)
     if not group_e then return end
     for _, anim_e in ipairs(group_e) do
@@ -298,51 +346,6 @@ local function to_runtime_group(runtime_clips, group)
     return {name = group.name, group = true, subclips = groupclips}
 end
 
-local function do_to_runtime_event(evs)
-    local list = {}
-    for _, ev in ipairs(evs) do
-        local col_eid = ev.collision and ev.collision.col_eid or -1
-        list[#list + 1] = {
-            event_type = ev.event_type,
-            name = ev.name,
-            asset_path = ev.asset_path,
-            breakable = ev.breakable,
-            life_time = ev.life_time,
-            move = ev.move,
-            msg_content = ev.msg_content,
-            link_info = ev.link_info and {slot_name = ev.link_info.slot_name, slot_eid = ev.link_info.slot_eid and (ev.link_info.slot_eid > 0 and ev.link_info.slot_eid or nil) or nil },
-            collision = (col_eid ~= -1) and {
-                col_eid = col_eid,
-                name = world[col_eid].name,
-                shape_type = ev.collision.shape_type,
-                position = ev.collision.position,
-                size = ev.collision.size,
-                enable = ev.collision.enable,
-                tid = ev.collision.tid,
-            } or nil
-        }
-    end
-    return list
-end
-
-local function to_runtime_event(key_event)
-    local temp = {}
-    for key, value in pairs(key_event) do
-        if #value > 0 then
-            temp[#temp + 1] = tonumber(key)
-        end
-    end
-    table.sort(temp, function(a, b) return a < b end)
-    local event = {}
-    for i, frame_idx in ipairs(temp) do
-        event[#event + 1] = {
-            time = frame_idx / sample_ratio,
-            event_list = do_to_runtime_event(key_event[tostring(frame_idx)])
-        }
-    end
-    return event
-    --runtime_event.collider = current_clip.collider
-end
 
 local function to_runtime_clip()
     local runtime_clips = {}
@@ -374,6 +377,7 @@ local function set_event_dirty(num)
 end
 
 local event_id = 1
+
 local function add_event(et)
     --if not current_clip then return end
     event_id = event_id + 1
@@ -407,7 +411,9 @@ local function add_event(et)
         } or nil
     }
     current_event = new_event
-    local event_list = anim_state.current_event_list
+    local key = tostring(anim_state.selected_frame)
+    if not key_event[key] then key_event[key] = {} end
+    local event_list = key_event[key]--anim_state.current_event_list
     event_list[#event_list + 1] = new_event
     set_event_dirty(1)
 end
@@ -596,9 +602,7 @@ local function show_current_event()
             if imgui.widget.Selectable(se, current_event.sound_event == se, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                 current_event.sound_event = se
                 if (imgui.util.IsMouseDoubleClicked(0)) then
-                    local sound = iaudio.create(se)
-                    iaudio.play(sound)
-                    iaudio.destroy(sound)
+                    iaudio.play(se)
                 end
             end
         end
@@ -785,6 +789,10 @@ local function get_clips_filename()
     return string.sub(prefab_filename, 1, -8) .. ".clips"
 end
 
+function m.save_keyevent()
+    local prefab_filename = prefab_mgr:get_current_filename()
+    utils.write_file(prefab_filename:sub(1, -8) .. ".lua", "return " .. utils.table_to_string(to_runtime_event(key_event)))
+end
 function m.save_clip(path)
     to_runtime_clip()
     local clips = get_runtime_clips()
@@ -1238,8 +1246,8 @@ function m.show()
             end
             if all_clips then
                 imgui.cursor.SameLine()
-                if imgui.widget.Button("SaveClip") then
-                    m.save_clip()
+                if imgui.widget.Button("SaveEvent") then
+                    m.save_keyevent()
                 end
             end
             imgui.cursor.SameLine()
