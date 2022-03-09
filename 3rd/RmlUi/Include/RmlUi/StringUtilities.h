@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_STRINGUTILITIES_H
 #define RMLUI_CORE_STRINGUTILITIES_H
 
-#include "Platform.h"
 #include "Types.h"
 
 namespace Rml {
@@ -40,6 +39,15 @@ namespace Rml {
  */
 
 class StringView;
+
+// Tell the compiler of printf-like functions, warns on incorrect usage.
+#if defined __MINGW32__
+#  define RMLUI_ATTRIBUTE_FORMAT_PRINTF(i, f) __attribute__((format (__MINGW_PRINTF_FORMAT, i, f)))
+#elif defined __GNUC__ || defined __clang__
+#  define RMLUI_ATTRIBUTE_FORMAT_PRINTF(i, f) __attribute__((format (printf, i, f)))
+#else
+#  define RMLUI_ATTRIBUTE_FORMAT_PRINTF(i, f)
+#endif
 
 /// Construct a string using sprintf-style syntax.
 std::string CreateString(size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(2,3);

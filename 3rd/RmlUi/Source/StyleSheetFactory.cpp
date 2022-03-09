@@ -50,7 +50,7 @@ static StyleSheetFactory* instance = nullptr;
 
 StyleSheetFactory::StyleSheetFactory()
 {
-	RMLUI_ASSERT(instance == nullptr);
+	assert(instance == nullptr);
 	instance = this;
 }
 

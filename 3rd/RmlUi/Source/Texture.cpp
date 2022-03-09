@@ -33,7 +33,7 @@ using TextureMap = std::unordered_map<std::string, std::shared_ptr<Texture>>;
 static TextureMap textures;
 
 void Texture::Shutdown() {
-#ifdef RMLUI_DEBUG
+#if !defined NDEBUG
 	// All textures not owned by the database should have been released at this point.
 	int num_leaks_file = 0;
 	for (auto& texture : textures) {

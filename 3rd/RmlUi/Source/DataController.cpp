@@ -53,10 +53,10 @@ DataControllers::~DataControllers()
 {}
 
 void DataControllers::Add(DataControllerPtr controller) {
-	RMLUI_ASSERT(controller);
+	assert(controller);
 
 	Element* element = controller->GetElement();
-	RMLUI_ASSERTMSG(element, "Invalid controller, make sure it is valid before adding");
+	assert(element);
 	if (!element)
 		return;
 

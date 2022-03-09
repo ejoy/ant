@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_FACTORY_H
 #define RMLUI_CORE_FACTORY_H
 
-#include "Platform.h"
 #include "Types.h"
 #include <string>
 

@@ -60,7 +60,7 @@ struct DefaultStyleSheetParsers {
 StyleSheetSpecification::StyleSheetSpecification()
 	: properties()
 {
-	RMLUI_ASSERT(instance == nullptr);
+	assert(instance == nullptr);
 	instance = this;
 
 	default_parsers.reset(new DefaultStyleSheetParsers);
@@ -68,7 +68,7 @@ StyleSheetSpecification::StyleSheetSpecification()
 
 StyleSheetSpecification::~StyleSheetSpecification()
 {
-	RMLUI_ASSERT(instance == this);
+	assert(instance == this);
 	instance = nullptr;
 }
 

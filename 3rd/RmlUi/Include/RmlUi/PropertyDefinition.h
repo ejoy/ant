@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_PROPERTYDEFINITION_H
 #define RMLUI_CORE_PROPERTYDEFINITION_H
 
-#include "Platform.h"
 #include "Property.h"
 #include "PropertyParser.h"
 

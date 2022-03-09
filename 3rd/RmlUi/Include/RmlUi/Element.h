@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_ELEMENT_H
 #define RMLUI_CORE_ELEMENT_H
 
-#include "Platform.h"
 #include "Layout.h"
 #include "ComputedValues.h"
 #include "ObserverPtr.h"

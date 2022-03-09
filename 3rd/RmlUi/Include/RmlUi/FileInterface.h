@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_FILEINTERFACE_H
 #define RMLUI_CORE_FILEINTERFACE_H
 
-#include "Platform.h"
 #include "Types.h"
 #include "Traits.h"
 

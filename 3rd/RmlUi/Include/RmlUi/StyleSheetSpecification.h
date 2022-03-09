@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_STYLESHEETSPECIFICATION_H
 #define RMLUI_CORE_STYLESHEETSPECIFICATION_H
 
-#include "Platform.h"
 #include "PropertySpecification.h"
 #include "Types.h"
 

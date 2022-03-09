@@ -1,5 +1,4 @@
 #include "../Include/RmlUi/Node.h"
-#include "../Include/RmlUi/Debug.h"
 #include "../Include/RmlUi/Element.h"
 #include <yoga/YGNode.h>
 

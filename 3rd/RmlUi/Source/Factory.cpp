@@ -260,7 +260,7 @@ public:
 // Instances a single text element containing a string.
 bool Factory::InstanceElementText(Element* parent, const std::string& str)
 {
-	RMLUI_ASSERT(parent);
+	assert(parent);
 
 	if (std::all_of(str.begin(), str.end(), &StringUtilities::IsWhitespace))
 		return true;
@@ -337,7 +337,7 @@ void Factory::RegisterDataControllerInstancer(DataControllerInstancer* instancer
 
 DataViewPtr Factory::InstanceDataView(const std::string& type_name, Element* element, bool is_structural_view)
 {
-	RMLUI_ASSERT(element);
+	assert(element);
 
 	if (is_structural_view)
 	{

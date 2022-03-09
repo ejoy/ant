@@ -128,7 +128,7 @@ bool DataViews::Update(DataModel& model, const DirtyVariables& dirty_variables)
 
 		for (DataView* view : dirty_views)
 		{
-			RMLUI_ASSERT(view);
+			assert(view);
 			if (!view)
 				continue;
 

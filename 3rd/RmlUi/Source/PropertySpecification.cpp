@@ -27,7 +27,6 @@
  */
 
 #include "../Include/RmlUi/PropertySpecification.h"
-#include "../Include/RmlUi/Debug.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/PropertyDictionary.h"
@@ -318,7 +317,7 @@ bool PropertySpecification::ParseShorthandDeclaration(PropertyDictionary& dictio
 
 		for (int i = 0; i < 4; i++)
 		{
-			RMLUI_ASSERT(shorthand_definition->items[i].type == ShorthandItemType::Property);
+			assert(shorthand_definition->items[i].type == ShorthandItemType::Property);
 			Property new_property;
 			int value_index = box_side_to_value_index[i];
 			if (!shorthand_definition->items[i].property_definition->ParseValue(new_property, property_values[value_index]))

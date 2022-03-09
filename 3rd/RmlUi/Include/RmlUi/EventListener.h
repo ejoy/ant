@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Platform.h"
 #include "ObserverPtr.h"
 
 namespace Rml {

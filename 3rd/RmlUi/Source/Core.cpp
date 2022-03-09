@@ -49,7 +49,7 @@ static Plugin* plugin = nullptr;
 static bool initialised = false;
 
 bool Initialise() {
-	RMLUI_ASSERTMSG(!initialised, "Rml::Initialise() called, but RmlUi is already initialised!");
+	assert(!initialised);
 	if (!render_interface) {
 		Log::Message(Log::Level::Error, "No render interface set!");
 		return false;
@@ -74,7 +74,7 @@ bool Initialise() {
 }
 
 void Shutdown() {
-	RMLUI_ASSERTMSG(initialised, "Rml::Shutdown() called, but RmlUi is not initialised!");
+	assert(initialised);
 
 	Factory::Shutdown();
 	StyleSheetFactory::Shutdown();

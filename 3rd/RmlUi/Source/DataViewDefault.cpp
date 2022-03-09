@@ -57,7 +57,7 @@ bool DataViewCommon::Initialize(DataModel& model, Element* element, const std::s
 }
 
 std::vector<std::string> DataViewCommon::GetVariableNameList() const {
-	RMLUI_ASSERT(expression);
+	assert(expression);
 	return expression->GetVariableNameList();
 }
 
@@ -66,7 +66,7 @@ const std::string& DataViewCommon::GetModifier() const {
 }
 
 DataExpression& DataViewCommon::GetExpression() {
-	RMLUI_ASSERT(expression);
+	assert(expression);
 	return *expression;
 }
 
@@ -259,11 +259,8 @@ bool DataViewVisible::Update(DataModel& model)
 DataViewText::DataViewText(Element* element) : DataView(element)
 {}
 
-bool DataViewText::Initialize(DataModel& model, Element* element, const std::string& RMLUI_UNUSED_PARAMETER(expression), const std::string& RMLUI_UNUSED_PARAMETER(modifier))
+bool DataViewText::Initialize(DataModel& model, Element* element, const std::string&, const std::string&)
 {
-	RMLUI_UNUSED(expression);
-	RMLUI_UNUSED(modifier);
-
 	ElementText* element_text = dynamic_cast<ElementText*>(element);
 	if (!element_text)
 		return false;
@@ -315,7 +312,7 @@ bool DataViewText::Update(DataModel& model)
 
 		for (DataEntry& entry : data_entries)
 		{
-			RMLUI_ASSERT(entry.data_expression);
+			assert(entry.data_expression);
 			Variant variant;
 			bool result = entry.data_expression->Run(expression_interface, variant);
 			const std::string value = VariantHelper::ToString(variant);
@@ -331,7 +328,7 @@ bool DataViewText::Update(DataModel& model)
 	{
 		if (Element* element = GetElement())
 		{
-			RMLUI_ASSERTMSG(dynamic_cast<ElementText*>(element), "Somehow the element type was changed from ElementText since construction of the view. Should not be possible?");
+			assert(dynamic_cast<ElementText*>(element));
 
 			if (ElementText* text_element = static_cast<ElementText*>(element))
 			{
@@ -355,7 +352,7 @@ std::vector<std::string> DataViewText::GetVariableNameList() const
 
 	for (const DataEntry& entry : data_entries)
 	{
-		RMLUI_ASSERT(entry.data_expression);
+		assert(entry.data_expression);
 
 		std::vector<std::string> entry_list = entry.data_expression->GetVariableNameList();
 		full_list.insert(full_list.end(),
@@ -499,7 +496,7 @@ bool DataViewFor::Update(DataModel& model)
 
 			elements[i]->SetInnerRML(rml_contents);
 
-			RMLUI_ASSERT(i < (int)elements.size());
+			assert(i < (int)elements.size());
 		}
 		if (i >= size)
 		{
@@ -516,7 +513,7 @@ bool DataViewFor::Update(DataModel& model)
 }
 
 std::vector<std::string> DataViewFor::GetVariableNameList() const {
-	RMLUI_ASSERT(!container_address.empty());
+	assert(!container_address.empty());
 	return std::vector<std::string>{ container_address.front().name };
 }
 

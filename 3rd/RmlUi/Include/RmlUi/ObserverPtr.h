@@ -31,8 +31,6 @@
 
 #include <utility>
 #include <type_traits>
-#include "Platform.h"
-#include "Debug.h"
 
 namespace Rml {
 
@@ -42,7 +40,7 @@ struct ObserverPtrBlock {
 };
 
 inline void DeallocateObserverPtrBlockIfEmpty(ObserverPtrBlock* block) {
-	RMLUI_ASSERT(block->num_observers >= 0);
+	assert(block->num_observers >= 0);
 	if (block->num_observers == 0 && block->pointed_to_object == nullptr) {
 		delete block;
 	}

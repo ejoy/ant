@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Platform.h"
 #include <variant>
 #include <string>
 

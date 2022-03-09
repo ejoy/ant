@@ -300,7 +300,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 
 bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, const std::string& properties)
 {
-	RMLUI_ASSERT(!stream);
+	assert(!stream);
 	Stream stream_owner("<unknown>", (const uint8_t*)properties.c_str(), properties.size());
 	stream = &stream_owner;
 	PropertySpecificationParser parser(parsed_properties, StyleSheetSpecification::GetPropertySpecification());

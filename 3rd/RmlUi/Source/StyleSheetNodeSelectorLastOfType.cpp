@@ -40,11 +40,8 @@ StyleSheetNodeSelectorLastOfType::~StyleSheetNodeSelectorLastOfType()
 }
 
 // Returns true if the element is the last DOM child in its parent.
-bool StyleSheetNodeSelectorLastOfType::IsApplicable(const Element* element, int RMLUI_UNUSED_PARAMETER(a), int RMLUI_UNUSED_PARAMETER(b))
+bool StyleSheetNodeSelectorLastOfType::IsApplicable(const Element* element, int, int)
 {
-	RMLUI_UNUSED(a);
-	RMLUI_UNUSED(b);
-
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;

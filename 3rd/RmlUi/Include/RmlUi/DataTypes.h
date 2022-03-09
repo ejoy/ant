@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_DATADEFINITIONS_H
 #define RMLUI_CORE_DATADEFINITIONS_H
 
-#include "Platform.h"
 #include "Types.h"
 
 namespace Rml {

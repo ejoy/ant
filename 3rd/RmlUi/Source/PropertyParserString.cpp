@@ -39,10 +39,8 @@ PropertyParserString::~PropertyParserString()
 }
 
 // Called to parse a RCSS string declaration.
-bool PropertyParserString::ParseValue(Property& property, const std::string& value, const ParameterMap& RMLUI_UNUSED_PARAMETER(parameters)) const
+bool PropertyParserString::ParseValue(Property& property, const std::string& value, const ParameterMap&) const
 {
-	RMLUI_UNUSED(parameters);
-
 	property.value = value;
 	property.unit = Property::STRING;
 

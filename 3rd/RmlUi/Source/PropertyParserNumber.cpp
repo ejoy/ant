@@ -61,10 +61,8 @@ PropertyParserNumber::~PropertyParserNumber()
 {}
 
 // Called to parse a RCSS number declaration.
-bool PropertyParserNumber::ParseValue(Property& property, const std::string& value, const ParameterMap& RMLUI_UNUSED_PARAMETER(parameters)) const
+bool PropertyParserNumber::ParseValue(Property& property, const std::string& value, const ParameterMap&) const
 {
-	RMLUI_UNUSED(parameters);
-
 	// Find the beginning of the unit string in 'value'.
 	size_t unit_pos = 0;
 	for (size_t i = value.size(); i--;)

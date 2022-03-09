@@ -28,7 +28,6 @@
 
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/Log.h"
-#include "../Include/RmlUi/Debug.h"
 #include <algorithm>
 #include <stdio.h>
 #include <stdarg.h>
@@ -47,7 +46,7 @@ static int FormatString(std::string& string, size_t max_size, const char* format
 
 	int length = vsnprintf(buffer_ptr, max_size, format, argument_list);
 	buffer_ptr[length >= 0 ? length : max_size] = '\0';
-#ifdef RMLUI_DEBUG
+#if !defined NDEBUG
 	if (length == -1)
 	{
 		Log::Message(Log::Level::Warning, "FormatString: std::string truncated to %d bytes when processing %s", max_size, format);
@@ -294,7 +293,7 @@ StringView::StringView()
 
 StringView::StringView(const char* p_begin, const char* p_end) : p_begin(p_begin), p_end(p_end)
 {
-	RMLUI_ASSERT(p_end >= p_begin);
+	assert(p_end >= p_begin);
 }
 StringView::StringView(const std::string& string) : p_begin(string.data()), p_end(string.data() + string.size())
 {}
@@ -317,7 +316,7 @@ StringIteratorU8::StringIteratorU8(const std::string& string, size_t offset) : v
 StringIteratorU8::StringIteratorU8(const std::string& string, size_t offset, size_t count) : view(string, 0, offset + count), p(string.data() + offset)
 {}
 StringIteratorU8& StringIteratorU8::operator++() {
-	RMLUI_ASSERT(p < view.end());
+	assert(p < view.end());
 	++p;
 	SeekForward();
 	return *this;

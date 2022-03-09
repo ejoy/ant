@@ -106,7 +106,7 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 			if (p0.GetType() == p1.GetType()) {
 				p0.ConvertToGenericType();
 				p1.ConvertToGenericType();
-				RMLUI_ASSERT(p0.index() == p1.index());
+				assert(p0.index() == p1.index());
 				continue;
 			}
 			if (shorter.size() < longer.size()) {
@@ -126,7 +126,7 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 		return true;
 	}
 
-	RMLUI_ASSERT(t0.size() == t1.size());
+	assert(t0.size() == t1.size());
 	for (size_t i = 0; i < t0.size(); ++i) {
 		if (t0[i].index() != t1[i].index()) {
 			return t0.Combine(element, i) && t1.Combine(element, i);
@@ -230,7 +230,7 @@ float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const
 		key0 = (key1 == 0 ? 0 : key1 - 1);
 	}
 
-	RMLUI_ASSERT(key0 >= 0 && key0 < (int)keys.size() && key1 >= 0 && key1 < (int)keys.size());
+	assert(key0 >= 0 && key0 < (int)keys.size() && key1 >= 0 && key1 < (int)keys.size());
 
 	float alpha = 0.0f;
 

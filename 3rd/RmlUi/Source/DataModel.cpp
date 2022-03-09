@@ -71,7 +71,7 @@ static DataAddress ParseAddress(const std::string& address_str)
 		// TODO: Abort on invalid characters among [ ] and after the last found bracket?
 	}
 
-	RMLUI_ASSERT(!address.empty() && !address[0].name.empty());
+	assert(!address.empty() && !address[0].name.empty());
 
 	return address;
 }
@@ -129,7 +129,7 @@ DataModel::DataModel()
 
 DataModel::~DataModel()
 {
-	RMLUI_ASSERT(attached_elements.empty());
+	assert(attached_elements.empty());
 }
 
 void DataModel::AddView(DataViewPtr view) {
@@ -315,14 +315,14 @@ bool DataModel::GetVariableInto(const DataAddress& address, Variant& out_value) 
 
 void DataModel::DirtyVariable(const std::string& variable_name)
 {
-	RMLUI_ASSERTMSG(LegalVariableName(variable_name) == nullptr, "Illegal variable name provided. Only top-level variables can be dirtied.");
-	RMLUI_ASSERTMSG(variables.count(variable_name) == 1, "In DirtyVariable: Variable name not found among added variables.");
+	assert(LegalVariableName(variable_name) == nullptr);
+	assert(variables.count(variable_name) == 1);
 	dirty_variables.emplace(variable_name);
 }
 
 bool DataModel::IsVariableDirty(const std::string& variable_name) const
 {
-	RMLUI_ASSERTMSG(LegalVariableName(variable_name) == nullptr, "Illegal variable name provided. Only top-level variables can be dirtied.");
+	assert(LegalVariableName(variable_name) == nullptr);
 	return dirty_variables.count(variable_name) == 1;
 }
 

@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_PROPERTY_H
 #define RMLUI_CORE_PROPERTY_H
 
-#include "Platform.h"
 #include "Colour.h"
 #include "Types.h"
 #include "Animation.h"

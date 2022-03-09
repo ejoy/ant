@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_PROPERTYDICTIONARY_H
 #define RMLUI_CORE_PROPERTYDICTIONARY_H
 
-#include "Platform.h"
 #include "Property.h"
 
 namespace Rml {

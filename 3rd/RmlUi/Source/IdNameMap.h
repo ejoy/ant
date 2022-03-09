@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_IDNAMEMAP_H
 #define RMLUI_CORE_IDNAMEMAP_H
 
-#include "../Include/RmlUi/Platform.h"
 #include "../Include/RmlUi/Types.h"
 #include <algorithm>
 
@@ -54,7 +53,7 @@ public:
 			name_map.resize(1 + (size_t)id);
 		name_map[(size_t)id] = name;
 		bool inserted = reverse_map.emplace(name, id).second;
-		RMLUI_ASSERT(inserted);
+		assert(inserted);
 		(void)inserted;
 	}
 
@@ -81,7 +80,7 @@ public:
 	ID GetOrCreateId(const std::string& name)
 	{
 		// All predefined properties must be set before possibly adding custom properties here
-		RMLUI_ASSERT(name_map.size() == reverse_map.size());
+		assert(name_map.size() == reverse_map.size());
 
 		ID next_id = static_cast<ID>(name_map.size());
 

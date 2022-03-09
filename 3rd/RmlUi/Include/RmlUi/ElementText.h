@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_ELEMENTTEXT_H
 #define RMLUI_CORE_ELEMENTTEXT_H
 
-#include "Platform.h"
 #include "Element.h"
 #include "Geometry.h"
 #include "FontEngineInterface.h"

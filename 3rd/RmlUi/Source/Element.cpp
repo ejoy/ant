@@ -73,11 +73,11 @@ Element::Element(Document* owner, const std::string& tag)
 	, owner_document(owner)
 	, meta(new ElementMeta(this))
 {
-	RMLUI_ASSERT(tag == StringUtilities::ToLower(tag));
+	assert(tag == StringUtilities::ToLower(tag));
 }
 
 Element::~Element() {
-	RMLUI_ASSERT(parent == nullptr);
+	assert(parent == nullptr);
 	SetDataModel(nullptr);
 	for (auto& child : children) {
 		child->SetParent(nullptr);
@@ -449,7 +449,7 @@ void Element::SetInnerRML(const std::string& rml) {
 }
 
 Element* Element::AppendChild(ElementPtr child) {
-	RMLUI_ASSERT(child);
+	assert(child);
 	Element* child_ptr = child.get();
 	GetLayout().InsertChild(child->GetLayout(), (uint32_t)children.size());
 	children.insert(children.end(), std::move(child));
@@ -460,7 +460,7 @@ Element* Element::AppendChild(ElementPtr child) {
 }
 
 Element* Element::InsertBefore(ElementPtr child, Element* adjacent_element) {
-	RMLUI_ASSERT(child);
+	assert(child);
 	size_t child_index = 0;
 	bool found_child = false;
 	if (adjacent_element)
@@ -858,7 +858,7 @@ std::string Element::GetOuterRML() const {
 }
 
 void Element::SetDataModel(DataModel* new_data_model)  {
-	RMLUI_ASSERTMSG(!data_model || !new_data_model, "We must either attach a new data model, or detach the old one.");
+	assert(!data_model || !new_data_model);
 
 	if (data_model == new_data_model)
 		return;
@@ -876,9 +876,9 @@ void Element::SetDataModel(DataModel* new_data_model)  {
 }
 
 void Element::SetParent(Element* _parent) {
-	RMLUI_ASSERT(!parent || !_parent);
+	assert(!parent || !_parent);
 	if (parent) {
-		RMLUI_ASSERT(GetOwnerDocument() == parent->GetOwnerDocument());
+		assert(GetOwnerDocument() == parent->GetOwnerDocument());
 	}
 
 	parent = _parent;

@@ -200,10 +200,8 @@ static int HexToDecimal(char hex_digit) {
 }
 
 // Called to parse a RCSS colour declaration.
-bool PropertyParserColour::ParseValue(Property& property, const std::string& value, const ParameterMap& RMLUI_UNUSED_PARAMETER(parameters)) const
+bool PropertyParserColour::ParseValue(Property& property, const std::string& value, const ParameterMap&) const
 {
-	RMLUI_UNUSED(parameters);
-
 	if (value.empty())
 		return false;
 

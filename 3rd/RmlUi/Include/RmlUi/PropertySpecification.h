@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_PROPERTYSPECIFICATION_H
 #define RMLUI_CORE_PROPERTYSPECIFICATION_H
 
-#include "Platform.h"
 #include "Types.h"
 #include "PropertyIdSet.h"
 #include "ID.h"
