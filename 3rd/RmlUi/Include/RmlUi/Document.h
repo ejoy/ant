@@ -70,7 +70,6 @@ public:
 	Element* ElementFromPoint(Point pt) const;
 	
 	void Update();
-	void Render();
 	std::unique_ptr<ElementDocument> body;
 
 public:

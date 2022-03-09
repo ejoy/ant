@@ -49,7 +49,7 @@ public:
 	float GetBaseline();
 
 protected:
-	void OnRender() override;
+	void Render() override;
 	void OnChange(const PropertyIdSet& properties) override;
 
 	const Property* GetProperty(PropertyId id);

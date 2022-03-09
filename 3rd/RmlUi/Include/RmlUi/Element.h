@@ -279,7 +279,7 @@ protected:
 	void UpdateProperties();
 	void OnAttributeChange(const ElementAttributes& changed_attributes);
 
-	void OnRender() override;
+	void Render() override;
 	void OnChange(const PropertyIdSet& changed_properties) override;
 
 protected:

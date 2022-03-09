@@ -29,7 +29,7 @@ namespace Rml {
 		Element* GetParentNode() const;
 		void DirtyLayout();
 
-		virtual void OnRender() = 0;
+		virtual void Render() = 0;
 		virtual void OnChange(const PropertyIdSet& properties) = 0;
 
 	protected:

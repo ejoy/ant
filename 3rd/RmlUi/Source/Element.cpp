@@ -114,7 +114,7 @@ void Element::UpdateProperties() {
 	}
 }
 
-void Element::OnRender() {
+void Element::Render() {
 	if (!IsVisible()) {
 		return;
 	}
@@ -125,7 +125,7 @@ void Element::OnRender() {
 
 	size_t i = 0;
 	for (; i < stacking_context.size() && stacking_context[i]->GetZIndex() < 0; ++i) {
-		stacking_context[i]->OnRender();
+		stacking_context[i]->Render();
 	}
 	SetRednerStatus();
 	if (geometry_background && *geometry_background) {
@@ -135,7 +135,7 @@ void Element::OnRender() {
 		geometry_image->Render();
 	}
 	for (; i < stacking_context.size(); ++i) {
-		stacking_context[i]->OnRender();
+		stacking_context[i]->Render();
 	}
 }
 

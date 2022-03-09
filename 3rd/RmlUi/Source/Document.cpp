@@ -402,11 +402,7 @@ void Document::Update() {
 		body->GetLayout().CalculateLayout(dimensions);
 	}
 	body->UpdateLayout();
-	Render();
-}
-
-void Document::Render() {
-	body->OnRender();
+	body->Render();
 }
 
 Element* Document::ElementFromPoint(Point pt) const {

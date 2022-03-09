@@ -82,7 +82,7 @@ float ElementText::GetOpacity() {
 	return parent->GetOpacity();
 }
 
-void ElementText::OnRender() {
+void ElementText::Render() {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 	if (font_face_handle == 0)
 		return;
