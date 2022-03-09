@@ -230,7 +230,7 @@ static float ComputeFontsize(const Property* property, Element* element) {
 		return fontSize * property->GetFloat();
 	}
 	if (property->unit == Property::REM) {
-		if (element == element->GetOwnerDocument()->body.get()) {
+		if (element == element->GetOwnerDocument()->GetBody()) {
 			return property->GetFloat() * 16;
 		}
 	}
@@ -525,10 +525,10 @@ Element* Element::GetElementById(const std::string& id) {
 	if (id == "#self")
 		return this;
 	else if (id == "#document")
-		return GetOwnerDocument()->body.get();
+		return GetOwnerDocument()->GetBody();
 	else if (id == "#parent")
 		return this->parent;
-	Element* search_root = GetOwnerDocument()->body.get();
+	Element* search_root = GetOwnerDocument()->GetBody();
 	if (search_root == nullptr)
 		search_root = this;
 		

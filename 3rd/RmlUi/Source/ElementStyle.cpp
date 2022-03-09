@@ -58,7 +58,7 @@ float ComputeProperty(FloatValue fv, Element* e) {
 	case Property::EM:
 		return fv.value * e->GetFontSize();
 	case Property::REM:
-		return fv.value * e->GetOwnerDocument()->body->GetFontSize();
+		return fv.value * e->GetOwnerDocument()->GetBody()->GetFontSize();
 	case Property::DEG:
 		return fv.value * (std::numbers::pi_v<float> / 180.0f);
 	case Property::VW:

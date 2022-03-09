@@ -154,7 +154,7 @@ static int
 lDocumentGetBody(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	Rml::Element* e = doc->body.get();
+	Rml::Element* e = doc->GetBody();
 	lua_pushlightuserdata(L, e);
 	return 1;
 }
@@ -177,7 +177,7 @@ static int
 lDocumentAddEventListener(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	ElementAddEventListener(doc->body.get(), lua_checkstdstring(L, 2), lua_toboolean(L, 4), L, 3);
+	ElementAddEventListener(doc->GetBody(), lua_checkstdstring(L, 2), lua_toboolean(L, 4), L, 3);
 	return 0;
 }
 
@@ -185,7 +185,7 @@ static int
 lDocumentGetElementById(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	lua_pushobject(L, doc->body->GetElementById(lua_checkstdstring(L, 2)));
+	lua_pushobject(L, doc->GetBody()->GetElementById(lua_checkstdstring(L, 2)));
 	return 1;
 }
 
@@ -210,7 +210,7 @@ static int
 lDocumentDispatchEvent(lua_State* L) {
 	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	bool propagating = ElementDispatchEvent(doc->body.get(), lua_checkstdstring(L, 2), false, false, L, 3);
+	bool propagating = ElementDispatchEvent(doc->GetBody(), lua_checkstdstring(L, 2), false, false, L, 3);
 	lua_pushboolean(L, propagating);
 	return 1;
 }
