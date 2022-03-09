@@ -10,8 +10,8 @@ local needcleanup, type, address
 
 if is_ios() then
 	local clean_up_next_time = platform.setting("clean_up_next_time")
-	if clean_up_next_time ~= "0" then
-		platform.setting("clean_up_next_time", "0")
+	if clean_up_next_time == true then
+		platform.setting("clean_up_next_time", false)
 		needcleanup = true
 	end
 	type = platform.setting "server_type"
