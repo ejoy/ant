@@ -201,6 +201,7 @@ public:
 	std::string GetInnerRML() const;
 	std::string GetOuterRML() const;
 	void SetInnerRML(const std::string& rml);
+	bool createTextNode(const std::string& str);
 
 	//@}
 

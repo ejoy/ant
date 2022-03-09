@@ -54,6 +54,8 @@
 #include "PropertiesIterator.h"
 #include "StyleSheetParser.h"
 #include "StyleSheetNode.h"
+#include "StyleSheetFactory.h"
+#include "HtmlParser.h"
 #include <algorithm>
 #include <cmath>
 #include <yoga/YGNode.h>
@@ -437,15 +439,180 @@ int Element::GetNumChildren() const {
 	return (int)children.size();
 }
 
-void Element::SetInnerRML(const std::string& rml) {
-// 	RMLUI_ZoneScopedC(0x6495ED);
-// 
-// 	// Remove all DOM children.
-// 	while ((int)children.size() > num_non_dom_children)
-// 		RemoveChild(children.front().get());
+// TODO: remove this function, duplicate code in Document.cpp
+static bool isDataViewElement(Element* e) {
+	for (const std::string& name : Factory::GetStructuralDataViewAttributeNames()) {
+		if (e->GetTagName() == name) {
+			return true;
+		}
+	}
+	return false;
+}
 
-	if (!rml.empty())
-		Factory::InstanceElementText(this, rml);
+class EmbedHtmlHandler : public HtmlHandler {
+	Document*				m_doc{ nullptr };
+	ElementAttributes		m_attributes;
+	std::shared_ptr<StyleSheet> m_style_sheet;
+	std::stack<Element*>	m_stack;
+	Element*				m_parent{ nullptr };
+	Element*				m_current{ nullptr };
+	size_t					m_line{ 0 };
+	bool				    m_inner_xml = false;
+public:
+	EmbedHtmlHandler(Element* current)
+		: m_current{ current }
+	{
+		m_doc = m_current->GetOwnerDocument();
+	}
+	void OnInnerXML(bool inner) override { m_inner_xml = inner; }
+	bool IsEmbed() override { return true; }
+	void OnDocumentEnd() override {
+		if (m_style_sheet) {
+			m_doc->SetStyleSheet(std::move(m_style_sheet));
+		}
+	}
+	void OnElementBegin(const char* szName) override {
+		if (m_inner_xml) {
+			return;
+		}
+		m_attributes.clear();
+		if (!m_current) {
+			return;
+		}
+		m_stack.push(m_current);
+		m_parent = m_current;
+		m_current = new Element(m_doc, szName);
+	}
+	void OnElementClose() override {
+		if (m_inner_xml) {
+			return;
+		}
+		if (m_parent && m_current) {
+			m_parent->AppendChild(ElementPtr(m_current));
+		}
+	}
+	void OnElementEnd(const  char* szName, const std::string& inner_xml_data) override {
+		if (!m_current || m_inner_xml) {
+			return;
+		}
+
+		if (!inner_xml_data.empty()) {
+			ElementUtilities::ApplyStructuralDataViews(m_current, inner_xml_data);
+		}
+
+		if (m_stack.empty()) {
+			m_current = nullptr;
+		}
+		else {
+			m_current = m_stack.top();
+			m_stack.pop();
+		}
+	}
+	void OnCloseSingleElement(const  char* szName) override {
+		OnElementEnd(szName, {});
+	}
+	void OnAttribute(const char* szName, const char* szValue) override {
+		if (m_inner_xml) {
+			return;
+		}
+		if (m_current) {
+			m_current->SetAttribute(szName, szValue);
+		}
+		else {
+			m_attributes.emplace(szName, szValue);
+		}
+	}
+	void OnTextEnd(const char* szValue) override {
+		if (m_inner_xml) {
+			return;
+		}
+		if (m_current) {
+			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
+				return;
+			}
+			m_current->createTextNode(szValue);
+		}
+	}
+	
+	void OnStyleBegin(unsigned int line) override {
+		m_line = line;
+	}
+	void LoadInlineStyle(const std::string& content, const std::string& source_path, int line) {
+		std::unique_ptr<StyleSheet> inline_sheet = std::make_unique<StyleSheet>();
+		auto stream = std::make_unique<Stream>(source_path, (const uint8_t*)content.data(), content.size());
+		if (inline_sheet->LoadStyleSheet(stream.get(), line)) {
+			if (m_style_sheet) {
+				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*inline_sheet);
+				m_style_sheet = combined_sheet;
+			}
+			else
+				m_style_sheet = std::move(inline_sheet);
+		}
+		stream.reset();
+	}
+	void LoadExternalStyle(const std::string& source_path) {
+		std::shared_ptr<StyleSheet> sub_sheet = StyleSheetFactory::GetStyleSheet(source_path);
+		if (sub_sheet) {
+			if (m_style_sheet) {
+				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*sub_sheet);
+				m_style_sheet = std::move(combined_sheet);
+			}
+			else
+				m_style_sheet = sub_sheet;
+		}
+		else
+			Log::Message(Log::Level::Error, "Failed to load style sheet %s.", source_path.c_str());
+	}
+	void OnStyleEnd(const char* szValue) override {
+		auto it = m_attributes.find("path");
+		if (it == m_attributes.end()) {
+			LoadInlineStyle(szValue, m_doc->GetSourceURL(), m_line);
+		}
+		else {
+			LoadExternalStyle(it->second);
+		}
+	}
+};
+
+void Element::SetInnerRML(const std::string& rml) {
+	if (rml.empty()) {
+		return;
+	}
+	HtmlParser parser;
+	EmbedHtmlHandler handler(parent);
+	parser.Parse(rml, &handler);
+}
+
+bool Element::createTextNode(const std::string& str) {
+	if (std::all_of(str.begin(), str.end(), &StringUtilities::IsWhitespace))
+		return true;
+	bool has_data_expression = false;
+	bool inside_brackets = false;
+	char previous = 0;
+	for (const char c : str) {
+		if (inside_brackets) {
+			if (c == '}' && previous == '}') {
+				has_data_expression = true;
+				break;
+			}
+		}
+		else if (c == '{' && previous == '{') {
+				inside_brackets = true;
+		}
+		previous = c;
+	}
+	TextPtr text(new ElementText(GetOwnerDocument(), str));
+	if (!text) {
+		Log::Message(Log::Level::Error, "Failed to instance text element '%s', instancer returned nullptr.", str.c_str());
+		return false;
+	}
+	if (has_data_expression) {
+		ElementAttributes attributes;
+		attributes.emplace("data-text", std::string());
+		text->SetAttributes(attributes);
+	}
+	AppendChild(std::move(text));
+	return true;
 }
 
 Element* Element::AppendChild(ElementPtr child) {

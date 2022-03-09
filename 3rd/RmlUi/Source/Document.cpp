@@ -139,7 +139,7 @@ public:
 			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
 				return;
 			}
-			Factory::InstanceElementText(m_current, szValue);
+			m_current->createTextNode(szValue);
 		}
 	}
 	void OnComment(const char* szText) override {}
