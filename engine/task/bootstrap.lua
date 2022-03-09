@@ -88,9 +88,7 @@ package.searchpath = function(name, path, sep, dirsep)
 		})
 		name = file
 	else
-		path = path:gsub("%$%{([^}]*)%}", {
-			package = "/pkg/startup",
-		})
+		path = path:gsub("%$%{([^}]*)%}[^;]*;", "")
 	end
 	return rawsearchpath(name, path, sep, dirsep)
 end
