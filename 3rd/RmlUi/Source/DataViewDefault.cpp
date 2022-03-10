@@ -152,7 +152,7 @@ bool DataViewStyle::Update(DataModel& model)
 		const Property* p = element->GetStyle()->GetLocalProperty(StyleSheetSpecification::GetPropertyId(property_name));
 		if (!p || p->ToString() != value)
 		{
-			element->SetPropertyImmediate(property_name, value);
+			element->SetProperty(property_name, value);
 			result = true;
 		}
 	}
