@@ -62,25 +62,6 @@ public:
 	Element(Document* owner, const std::string& tag);
 	virtual ~Element();
 
-	/** @name Classes
-	 */
-	//@{
-	/// Sets or removes a class on the element.
-	/// @param[in] class_name The name of the class to add or remove from the class list.
-	/// @param[in] activate True if the class is to be added, false to be removed.
-	void SetClass(const std::string& class_name, bool activate);
-	/// Checks if a class is set on the element.
-	/// @param[in] class_name The name of the class to check for.
-	/// @return True if the class is set on the element, false otherwise.
-	bool IsClassSet(const std::string& class_name) const;
-	/// Specifies the entire list of classes for this element. This will replace any others specified.
-	/// @param[in] class_names The list of class names to set on the style, separated by spaces.
-	void SetClassNames(const std::string& class_names);
-	/// Return the active class list.
-	/// @return The space-separated list of classes active on the element.
-	std::string GetClassNames() const;
-	//@}
-
 	/// Returns the active style sheet for this element. This may be nullptr.
 	/// @return The element's style sheet.
 	virtual const std::shared_ptr<StyleSheet>& GetStyleSheet() const;
@@ -131,13 +112,6 @@ public:
 	/// @param[in-out] point The point to project in, and the resulting projected point out.
 	/// @return True on success, false if transformation matrix is singular.
 	bool Project(Point& point) const noexcept;
-	
-	///@}
-
-	void SetPseudoClass(PseudoClass pseudo_class, bool activate);
-	bool IsPseudoClassSet(PseudoClassSet pseudo_class) const;
-	PseudoClassSet GetActivePseudoClasses() const;
-
 
 	/** @name Attributes
 	 */
@@ -273,6 +247,14 @@ public:
 
 	Size GetScrollOffset() const;
 
+	void SetPseudoClass(PseudoClass pseudo_class, bool activate);
+	bool IsPseudoClassSet(PseudoClassSet pseudo_class) const;
+	PseudoClassSet GetActivePseudoClasses() const;
+	void SetClass(const std::string& class_name, bool activate);
+	bool IsClassSet(const std::string& class_name) const;
+	void SetClassNames(const std::string& class_names);
+	std::string GetClassNames() const;
+
 protected:
 	void Update();
 
@@ -345,6 +327,8 @@ protected:
 	ElementAnimationList animations;
 
 	ElementStyle style;
+	std::vector<std::string> classes;
+	PseudoClassSet pseudo_classes = 0;
 	Style::ComputedValues computed_values;
 	std::vector<EventListener*> listeners;
 

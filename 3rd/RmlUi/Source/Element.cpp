@@ -135,61 +135,35 @@ void Element::Render() {
 	}
 }
 
-void Element::SetClass(const std::string& class_name, bool activate)
-{
-	style.SetClass(class_name, activate);
-}
-
-bool Element::IsClassSet(const std::string& class_name) const
-{
-	return style.IsClassSet(class_name);
-}
-
-void Element::SetClassNames(const std::string& class_names)
-{
-	SetAttribute("class", class_names);
-}
-
-std::string Element::GetClassNames() const
-{
-	return style.GetClassNames();
-}
-
-const std::shared_ptr<StyleSheet>& Element::GetStyleSheet() const
-{
+const std::shared_ptr<StyleSheet>& Element::GetStyleSheet() const {
 	if (Document * document = GetOwnerDocument())
 		return document->GetStyleSheet();
 	static std::shared_ptr<StyleSheet> null_style_sheet;
 	return null_style_sheet;
 }
 
-std::string Element::GetAddress(bool include_pseudo_classes, bool include_parents) const
-{
+std::string Element::GetAddress(bool include_pseudo_classes, bool include_parents) const {
 	std::string address(tag);
 
-	if (!id.empty())
-	{
+	if (!id.empty()) {
 		address += "#";
 		address += id;
 	}
 
-	std::string classes = style.GetClassNames();
-	if (!classes.empty())
-	{
+	std::string classes = GetClassNames();
+	if (!classes.empty()) {
 		classes = StringUtilities::Replace(classes, ' ', '.');
 		address += ".";
 		address += classes;
 	}
 
-	if (include_pseudo_classes)
-	{
+	if (include_pseudo_classes) {
 		PseudoClassSet pseudo_classes = GetActivePseudoClasses();
 		if (pseudo_classes & PseudoClass::Active) { address += ":active"; }
 		if (pseudo_classes & PseudoClass::Hover) { address += ":hover"; }
 	}
 
-	if (include_parents && parent)
-	{
+	if (include_parents && parent) {
 		address += " < ";
 		return address + parent->GetAddress(include_pseudo_classes, true);
 	}
@@ -338,21 +312,6 @@ bool Element::Project(Point& point) const noexcept {
 		return true;
 	}
 	return false;
-}
-
-void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate)
-{
-	style.SetPseudoClass(pseudo_class, activate);
-}
-
-bool Element::IsPseudoClassSet(PseudoClassSet pseudo_class) const
-{
-	return style.IsPseudoClassSet(pseudo_class);
-}
-
-PseudoClassSet Element::GetActivePseudoClasses() const
-{
-	return style.GetActivePseudoClasses();
 }
 
 void Element::SetAttribute(const std::string& name, const std::string& value) {
@@ -832,7 +791,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
 
 	it = changed_attributes.find("class");
 	if (it != changed_attributes.end()) {
-		style.SetClassNames(it->second);
+		SetClassNames(it->second);
 	}
 
 	it = changed_attributes.find("style");
@@ -1638,6 +1597,62 @@ Size Element::GetScrollOffset() const {
 	};
 	layout.UpdateScrollOffset(scrollOffset, metrics);
 	return scrollOffset;
+}
+
+void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate) {
+	PseudoClassSet old = pseudo_classes;
+	if (activate)
+		pseudo_classes = pseudo_classes | pseudo_class;
+	else
+		pseudo_classes = pseudo_classes & ~pseudo_class;
+	if (old != pseudo_classes) {
+		style.DirtyDefinition();
+	}
+}
+
+bool Element::IsPseudoClassSet(PseudoClassSet pseudo_class) const {
+	return (pseudo_class & ~pseudo_classes) == 0;
+}
+
+PseudoClassSet Element::GetActivePseudoClasses() const {
+	return pseudo_classes;
+}
+
+void Element::SetClass(const std::string& class_name, bool activate) {
+	std::vector<std::string>::iterator class_location = std::find(classes.begin(), classes.end(), class_name);
+	if (activate) {
+		if (class_location == classes.end()) {
+			classes.push_back(class_name);
+			style.DirtyDefinition();
+		}
+	}
+	else {
+		if (class_location != classes.end()) {
+			classes.erase(class_location);
+			style.DirtyDefinition();
+		}
+	}
+}
+
+bool Element::IsClassSet(const std::string& class_name) const {
+	return std::find(classes.begin(), classes.end(), class_name) != classes.end();
+}
+
+void Element::SetClassNames(const std::string& class_names) {
+	classes.clear();
+	StringUtilities::ExpandString(classes, class_names, ' ');
+	style.DirtyDefinition();
+}
+
+std::string Element::GetClassNames() const {
+	std::string class_names;
+	for (size_t i = 0; i < classes.size(); i++) {
+		if (i != 0) {
+			class_names += " ";
+		}
+		class_names += classes[i];
+	}
+	return class_names;
 }
 
 } // namespace Rml

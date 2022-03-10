@@ -1,31 +1,3 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
 #include "../Include/RmlUi/ElementStyle.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Document.h"
@@ -114,11 +86,9 @@ float ComputePropertyH(const Property* property, Element* e) {
 	return ComputePropertyH(property->ToFloatValue(), e);
 }
 
-ElementStyle::ElementStyle(Element* _element)
-{
+ElementStyle::ElementStyle(Element* _element) {
 	definition = nullptr;
 	element = _element;
-
 	definition_dirty = true;
 }
 
@@ -131,8 +101,7 @@ const Property* ElementStyle::GetLocalProperty(PropertyId id) const {
 	return nullptr;
 }
 
-const Property* ElementStyle::GetProperty(PropertyId id) const
-{
+const Property* ElementStyle::GetProperty(PropertyId id) const {
 	const Property* local_property = GetLocalProperty(id);
 	if (local_property)
 		return local_property;
@@ -283,78 +252,6 @@ void ElementStyle::UpdateDefinition() {
 	}
 }
 
-void ElementStyle::SetPseudoClass(PseudoClass pseudo_class, bool activate) {
-	PseudoClassSet old = pseudo_classes;
-	if (activate)
-		pseudo_classes = pseudo_classes | pseudo_class;
-	else
-		pseudo_classes = pseudo_classes & ~pseudo_class;
-	if (old != pseudo_classes) {
-		DirtyDefinition();
-	}
-}
-
-bool ElementStyle::IsPseudoClassSet(PseudoClassSet pseudo_class) const {
-	return (pseudo_class & ~pseudo_classes) == 0;
-}
-
-PseudoClassSet ElementStyle::GetActivePseudoClasses() const {
-	return pseudo_classes;
-}
-
-// Sets or removes a class on the element.
-void ElementStyle::SetClass(const std::string& class_name, bool activate)
-{
-	std::vector<std::string>::iterator class_location = std::find(classes.begin(), classes.end(), class_name);
-
-	if (activate)
-	{
-		if (class_location == classes.end())
-		{
-			classes.push_back(class_name);
-			DirtyDefinition();
-		}
-	}
-	else
-	{
-		if (class_location != classes.end())
-		{
-			classes.erase(class_location);
-			DirtyDefinition();
-		}
-	}
-}
-
-// Checks if a class is set on the element.
-bool ElementStyle::IsClassSet(const std::string& class_name) const
-{
-	return std::find(classes.begin(), classes.end(), class_name) != classes.end();
-}
-
-// Specifies the entire list of classes for this element. This will replace any others specified.
-void ElementStyle::SetClassNames(const std::string& class_names)
-{
-	classes.clear();
-	StringUtilities::ExpandString(classes, class_names, ' ');
-	DirtyDefinition();
-}
-
-// Returns the list of classes specified for this element.
-std::string ElementStyle::GetClassNames() const
-{
-	std::string class_names;
-	for (size_t i = 0; i < classes.size(); i++)
-	{
-		if (i != 0)
-		{
-			class_names += " ";
-		}
-		class_names += classes[i];
-	}
-
-	return class_names;
-}
-
 bool ElementStyle::SetProperty(PropertyId id, const Property& property) {
 	Property new_property = property;
 	new_property.definition = StyleSheetSpecification::GetProperty(id);
@@ -367,8 +264,7 @@ bool ElementStyle::SetProperty(PropertyId id, const Property& property) {
 	return true;
 }
 
-bool ElementStyle::SetPropertyImmediate(PropertyId id, const Property& property)
-{
+bool ElementStyle::SetPropertyImmediate(PropertyId id, const Property& property) {
 	Property new_property = property;
 	new_property.definition = StyleSheetSpecification::GetProperty(id);
 	if (!new_property.definition)
@@ -378,37 +274,28 @@ bool ElementStyle::SetPropertyImmediate(PropertyId id, const Property& property)
 	return true;
 }
 
-// Removes a local property override on the element.
-void ElementStyle::RemoveProperty(PropertyId id)
-{
+void ElementStyle::RemoveProperty(PropertyId id) {
 	int size_before = inline_properties.GetNumProperties();
 	inline_properties.RemoveProperty(id);
-
 	if (inline_properties.GetNumProperties() != size_before)
 		DirtyProperty(id);
 }
 
-void ElementStyle::DirtyDefinition()
-{
+void ElementStyle::DirtyDefinition() {
 	definition_dirty = true;
 }
 
-void ElementStyle::DirtyInheritedProperties()
-{
+void ElementStyle::DirtyInheritedProperties() {
 	dirty_properties |= StyleSheetSpecification::GetRegisteredInheritedProperties();
 }
 
-void ElementStyle::DirtyChildDefinitions()
-{
+void ElementStyle::DirtyChildDefinitions() {
 	for (int i = 0; i < element->GetNumChildren(); i++)
 		element->GetChild(i)->GetStyle()->DirtyDefinition();
 }
 
-void ElementStyle::DirtyPropertiesWithUnitRecursive(Property::Unit unit)
-{
-	// Dirty all the properties of this element that use the unit.
-	for (auto it = Iterate(); !it.AtEnd(); ++it)
-	{
+void ElementStyle::DirtyPropertiesWithUnitRecursive(Property::Unit unit) {
+	for (auto it = Iterate(); !it.AtEnd(); ++it) {
 		auto name_property_pair = *it;
 		PropertyId id = name_property_pair.first;
 		const Property& property = name_property_pair.second;
@@ -416,15 +303,12 @@ void ElementStyle::DirtyPropertiesWithUnitRecursive(Property::Unit unit)
 			DirtyProperty(id);
 		}
 	}
-
-	// Now dirty all of our descendant's properties that use the unit.
 	int num_children = element->GetNumChildren();
 	for (int i = 0; i < num_children; ++i)
 		element->GetChild(i)->GetStyle()->DirtyPropertiesWithUnitRecursive(unit);
 }
 
-bool ElementStyle::AnyPropertiesDirty() const 
-{
+bool ElementStyle::AnyPropertiesDirty() const {
 	return !dirty_properties.Empty(); 
 }
 
@@ -443,15 +327,11 @@ PropertiesIterator ElementStyle::Iterate() const {
 	return PropertiesIterator(it_style_begin, it_style_end, it_definition, it_definition_end);
 }
 
-// Sets a single property as dirty.
-void ElementStyle::DirtyProperty(PropertyId id)
-{
+void ElementStyle::DirtyProperty(PropertyId id) {
 	dirty_properties.Insert(id);
 }
 
-// Sets a list of properties as dirty.
-void ElementStyle::DirtyProperties(const PropertyIdSet& properties)
-{
+void ElementStyle::DirtyProperties(const PropertyIdSet& properties) {
 	dirty_properties |= properties;
 }
 
@@ -461,7 +341,6 @@ PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
 
 	bool dirty_em_properties = false;
 
-	// Always do font-size first if dirty, because of em-relative values
 	if (dirty_properties.Contains(PropertyId::FontSize)) {
 		if (element->UpdataFontSize()) {
 			dirty_em_properties = true;
