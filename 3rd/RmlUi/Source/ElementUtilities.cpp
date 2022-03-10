@@ -34,7 +34,6 @@
 #include "DataController.h"
 #include "DataModel.h"
 #include "DataView.h"
-#include "ElementStyle.h"
 #include <limits>
 
 namespace Rml {

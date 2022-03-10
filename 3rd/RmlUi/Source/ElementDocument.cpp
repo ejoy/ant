@@ -1,6 +1,5 @@
 #include "../Include/RmlUi/ElementDocument.h"
 #include "../Include/RmlUi/PropertyIdSet.h"
-#include "ElementStyle.h"
 
 namespace Rml {
 	ElementDocument::ElementDocument(Document* owner)

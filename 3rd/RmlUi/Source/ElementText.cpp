@@ -27,7 +27,6 @@
  */
 
 #include "../Include/RmlUi/ElementText.h"
-#include "ElementStyle.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementUtilities.h"

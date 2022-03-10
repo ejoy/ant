@@ -9,7 +9,6 @@
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/Plugin.h"
-#include "ElementStyle.h"
 #include "StyleSheetFactory.h"
 #include "DataModel.h"
 #include "HtmlParser.h"

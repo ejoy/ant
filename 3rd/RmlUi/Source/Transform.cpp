@@ -1,7 +1,6 @@
 #include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/StringUtilities.h"
-#include "ElementStyle.h"
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/compatibility.hpp>

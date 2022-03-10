@@ -27,7 +27,6 @@
  */
 
 #include "ElementAnimation.h"
-#include "ElementStyle.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"

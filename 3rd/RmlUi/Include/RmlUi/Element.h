@@ -37,6 +37,7 @@
 #include "Tween.h"
 #include "Geometry.h"
 #include "Node.h"
+#include "ElementStyle.h"
 #include <glm/glm.hpp>
 
 namespace Rml {
@@ -48,7 +49,6 @@ class ElementStyle;
 class PropertyDictionary;
 class StyleSheet;
 class Geometry;
-struct ElementMeta;
 
 /**
 	A generic element in the DOM tree.
@@ -183,7 +183,7 @@ public:
 
 	/// Gets the object representing the declarations of an element's style attributes.
 	/// @return The element's style.
-	ElementStyle* GetStyle() const;
+	ElementStyle* GetStyle();
 
 	/// Gets the document this element belongs to.
 	/// @return This element's document.
@@ -344,7 +344,8 @@ protected:
 
 	ElementAnimationList animations;
 
-	ElementMeta* meta;
+	ElementStyle style;
+	Style::ComputedValues computed_values;
 	std::vector<EventListener*> listeners;
 
 	std::unique_ptr<Geometry> geometry_background;

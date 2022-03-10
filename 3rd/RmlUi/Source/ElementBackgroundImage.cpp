@@ -27,7 +27,6 @@
  */
 
 #include "ElementBackgroundImage.h"
-#include "ElementStyle.h"
 #include "../Include/RmlUi/Texture.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Geometry.h"

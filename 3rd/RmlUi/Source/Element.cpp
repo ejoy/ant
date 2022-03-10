@@ -48,7 +48,6 @@
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
-#include "ElementStyle.h"
 #include "EventDispatcher.h"
 #include "ElementBackgroundImage.h"
 #include "PropertiesIterator.h"
@@ -64,16 +63,11 @@
 
 namespace Rml {
 
-struct ElementMeta {
-	ElementMeta(Element* el) : style(el) {}
-	ElementStyle style;
-	Style::ComputedValues computed_values;
-};
 
 Element::Element(Document* owner, const std::string& tag)
 	: tag(tag)
 	, owner_document(owner)
-	, meta(new ElementMeta(this))
+	, style(this)
 {
 	assert(tag == StringUtilities::ToLower(tag));
 }
@@ -107,9 +101,9 @@ void Element::Update() {
 }
 
 void Element::UpdateProperties() {
-	meta->style.UpdateDefinition();
-	if (meta->style.AnyPropertiesDirty()) {
-		PropertyIdSet dirty_properties = meta->style.ComputeValues(meta->computed_values);
+	style.UpdateDefinition();
+	if (style.AnyPropertiesDirty()) {
+		PropertyIdSet dirty_properties = style.ComputeValues(computed_values);
 		if (!dirty_properties.Empty()) {
 			OnChange(dirty_properties);
 		}
@@ -143,12 +137,12 @@ void Element::Render() {
 
 void Element::SetClass(const std::string& class_name, bool activate)
 {
-	meta->style.SetClass(class_name, activate);
+	style.SetClass(class_name, activate);
 }
 
 bool Element::IsClassSet(const std::string& class_name) const
 {
-	return meta->style.IsClassSet(class_name);
+	return style.IsClassSet(class_name);
 }
 
 void Element::SetClassNames(const std::string& class_names)
@@ -158,7 +152,7 @@ void Element::SetClassNames(const std::string& class_names)
 
 std::string Element::GetClassNames() const
 {
-	return meta->style.GetClassNames();
+	return style.GetClassNames();
 }
 
 const std::shared_ptr<StyleSheet>& Element::GetStyleSheet() const
@@ -179,7 +173,7 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 		address += id;
 	}
 
-	std::string classes = meta->style.GetClassNames();
+	std::string classes = style.GetClassNames();
 	if (!classes.empty())
 	{
 		classes = StringUtilities::Replace(classes, ' ', '.');
@@ -241,7 +235,7 @@ static float ComputeFontsize(const Property* property, Element* element) {
 
 bool Element::UpdataFontSize() {
 	float new_size = font_size;
-	if (auto p = meta->style.GetLocalProperty(PropertyId::FontSize))
+	if (auto p = style.GetLocalProperty(PropertyId::FontSize))
 		new_size = ComputeFontsize(p, this);
 	else if (parent) {
 		new_size = parent->GetFontSize();
@@ -265,7 +259,7 @@ bool Element::SetProperty(const std::string& name, const std::string& value) {
 		return false;
 	}
 	for (auto& property : properties.GetProperties()) {
-		if (!meta->style.SetProperty(property.first, property.second))
+		if (!style.SetProperty(property.first, property.second))
 			return false;
 	}
 	return true;
@@ -278,18 +272,18 @@ bool Element::SetPropertyImmediate(const std::string& name, const std::string& v
 		return false;
 	}
 	for (auto& property : properties.GetProperties()) {
-		if (!meta->style.SetPropertyImmediate(property.first, property.second))
+		if (!style.SetPropertyImmediate(property.first, property.second))
 			return false;
 	}
 	return true;
 }
 
 bool Element::SetProperty(PropertyId id, const Property& property) {
-	return meta->style.SetProperty(id, property);
+	return style.SetProperty(id, property);
 }
 
 bool Element::SetPropertyImmediate(PropertyId id, const Property& property) {
-	return meta->style.SetPropertyImmediate(id, property);
+	return style.SetPropertyImmediate(id, property);
 }
 
 void Element::RemoveProperty(const std::string& name) {
@@ -299,23 +293,23 @@ void Element::RemoveProperty(const std::string& name) {
 		return;
 	}
 	for (auto property_id : properties) {
-		meta->style.RemoveProperty(property_id);
+		style.RemoveProperty(property_id);
 	}
 }
 
 void Element::RemoveProperty(PropertyId id)
 {
-	meta->style.RemoveProperty(id);
+	style.RemoveProperty(id);
 }
 
 const Property* Element::GetProperty(const std::string& name) const
 {
-	return meta->style.GetProperty(StyleSheetSpecification::GetPropertyId(name));
+	return style.GetProperty(StyleSheetSpecification::GetPropertyId(name));
 }
 
 const Property* Element::GetProperty(PropertyId id) const
 {
-	return meta->style.GetProperty(id);
+	return style.GetProperty(id);
 }
 
 bool Element::Project(Point& point) const noexcept {
@@ -348,17 +342,17 @@ bool Element::Project(Point& point) const noexcept {
 
 void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate)
 {
-	meta->style.SetPseudoClass(pseudo_class, activate);
+	style.SetPseudoClass(pseudo_class, activate);
 }
 
 bool Element::IsPseudoClassSet(PseudoClassSet pseudo_class) const
 {
-	return meta->style.IsPseudoClassSet(pseudo_class);
+	return style.IsPseudoClassSet(pseudo_class);
 }
 
 PseudoClassSet Element::GetActivePseudoClasses() const
 {
-	return meta->style.GetActivePseudoClasses();
+	return style.GetActivePseudoClasses();
 }
 
 void Element::SetAttribute(const std::string& name, const std::string& value) {
@@ -400,7 +394,6 @@ void Element::SetAttributes(const ElementAttributes& _attributes)
 	attributes.reserve(attributes.size() + _attributes.size());
 	for (auto& pair : _attributes)
 		attributes[pair.first] = pair.second;
-
 	OnAttributeChange(_attributes);
 }
 
@@ -419,9 +412,9 @@ void Element::SetId(const std::string& _id)
 	SetAttribute("id", _id);
 }
 
-ElementStyle* Element::GetStyle() const
+ElementStyle* Element::GetStyle()
 {
-	return &meta->style;
+	return &style;
 }
 
 Document* Element::GetOwnerDocument() const {
@@ -607,9 +600,7 @@ bool Element::createTextNode(const std::string& str) {
 		return false;
 	}
 	if (has_data_expression) {
-		ElementAttributes attributes;
-		attributes.emplace("data-text", std::string());
-		text->SetAttributes(attributes);
+		text->SetAttribute("data-text", std::string());
 	}
 	AppendChild(std::move(text));
 	return true;
@@ -832,38 +823,31 @@ DataModel* Element::GetDataModel() const {
 	return data_model;
 }
 
-void Element::OnAttributeChange(const ElementAttributes& changed_attributes)
-{
+void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
 	auto it = changed_attributes.find("id");
-	if (it != changed_attributes.end())
-	{
+	if (it != changed_attributes.end()) {
 		id = it->second;
-		meta->style.DirtyDefinition();
+		style.DirtyDefinition();
 	}
 
 	it = changed_attributes.find("class");
-	if (it != changed_attributes.end())
-	{
-		meta->style.SetClassNames(it->second);
+	if (it != changed_attributes.end()) {
+		style.SetClassNames(it->second);
 	}
 
 	it = changed_attributes.find("style");
-	if (it != changed_attributes.end())
-	{
+	if (it != changed_attributes.end()) {
 		PropertyDictionary properties;
 		StyleSheetParser parser;
 		parser.ParseProperties(properties, it->second);
 
-		for (const auto& name_value : properties.GetProperties())
-		{
-			meta->style.SetProperty(name_value.first, name_value.second);
+		for (const auto& name_value : properties.GetProperties()) {
+			style.SetProperty(name_value.first, name_value.second);
 		}
 	}
 	
-	for (const auto& pair: changed_attributes)
-	{
-		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n')
-		{
+	for (const auto& pair: changed_attributes) {
+		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n') {
 			EventListener* listener = GetPlugin()->OnCreateEventListener(this, pair.first.substr(2), pair.second, false);
 			if (listener) {
 				AddEventListener(listener);
@@ -986,7 +970,7 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 
 const Style::ComputedValues& Element::GetComputedValues() const
 {
-	return meta->computed_values;
+	return computed_values;
 }
 
 std::string Element::GetInnerRML() const {
@@ -1053,8 +1037,8 @@ void Element::SetParent(Element* _parent) {
 
 	if (parent) {
 		// We need to update our definition and make sure we inherit the properties of our new parent.
-		meta->style.DirtyDefinition();
-		meta->style.DirtyInheritedProperties();
+		style.DirtyDefinition();
+		style.DirtyInheritedProperties();
 	}
 
 	// The transform state may require recalculation.
@@ -1162,7 +1146,7 @@ void Element::StartAnimation(PropertyId property_id, const Property* start_value
 bool Element::AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween)
 {
 	if (!target_value)
-		target_value = meta->style.GetProperty(property_id);
+		target_value = style.GetProperty(property_id);
 	if (!target_value)
 		return false;
 	ElementAnimation* animation = nullptr;
@@ -1265,7 +1249,7 @@ void Element::HandleAnimationProperty()
 	}
 	dirty_animation = false;
 
-	const AnimationList& animation_list = meta->computed_values.animation;
+	const AnimationList& animation_list = computed_values.animation;
 	bool element_has_animations = (!animation_list.empty() || !animations.empty());
 	StyleSheet* stylesheet = nullptr;
 

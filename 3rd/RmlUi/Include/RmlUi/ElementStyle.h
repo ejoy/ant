@@ -29,10 +29,10 @@
 #ifndef RMLUI_CORE_ELEMENTSTYLE_H
 #define RMLUI_CORE_ELEMENTSTYLE_H
 
-#include "../Include/RmlUi/ComputedValues.h"
-#include "../Include/RmlUi/Types.h"
-#include "../Include/RmlUi/PropertyIdSet.h"
-#include "../Include/RmlUi/PropertyDictionary.h"
+#include "ComputedValues.h"
+#include "Types.h"
+#include "PropertyIdSet.h"
+#include "PropertyDictionary.h"
 
 namespace Rml {
 
