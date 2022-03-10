@@ -30,14 +30,15 @@ namespace luabind {
 	struct global {
 		static inline T v = T();
 	};
-	inline void setthread(lua_State* L) {
-		global<lua_State*>::v = L;
-	}
-	inline lua_State* getthread() {
-		return global<lua_State*>::v;
+	inline void init(lua_State* L) {
+		if (global<lua_State*>::v) {
+			return;
+		}
+		global<lua_State*>::v = lua_newthread(L);
+		lua_setfield(L, LUA_REGISTRYINDEX, "LUABIND_THREAD");
 	}
 	inline bool invoke(call_t f) {
-		lua_State* L = getthread();
+		lua_State* L = global<lua_State*>::v;
 		if (!lua_checkstack(L, 3)) {
 			errfunc("stack overflow");
 			return false;
