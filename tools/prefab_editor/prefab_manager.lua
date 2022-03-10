@@ -631,7 +631,8 @@ function m:add_effect(filename)
     }
     local tpl = utils.deep_copy(template)
     tpl.data.on_ready = function (e)
-        local inst = world:entity(e).effect_instance
+        w:sync("effect_instance:in", e)
+        local inst = e.effect_instance
         if inst.handle == -1 then
             print("create effect faild : ", tostring(effekseer))
         end
