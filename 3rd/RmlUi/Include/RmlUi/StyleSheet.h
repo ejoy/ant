@@ -69,7 +69,7 @@ public:
 	bool LoadStyleSheet(Stream* stream, int begin_line_number = 1);
 
 	/// Combines this style sheet with another one, producing a new sheet.
-	std::shared_ptr<StyleSheet> CombineStyleSheet(const StyleSheet& sheet) const;
+	void CombineStyleSheet(const StyleSheet& sheet);
 	/// Builds the node index for a combined style sheet.
 	void BuildNodeIndex();
 

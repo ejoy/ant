@@ -70,23 +70,18 @@ bool StyleSheet::LoadStyleSheet(Stream* stream, int begin_line_number)
 }
 
 /// Combines this style sheet with another one, producing a new sheet
-std::shared_ptr<StyleSheet> StyleSheet::CombineStyleSheet(const StyleSheet& other_sheet) const
+void StyleSheet::CombineStyleSheet(const StyleSheet& other_sheet)
 {
-	std::shared_ptr<StyleSheet> new_sheet = std::make_shared<StyleSheet>();
-	
-	new_sheet->root = root->DeepCopy();
-	new_sheet->root->MergeHierarchy(other_sheet.root.get(), specificity_offset);
+	root->MergeHierarchy(other_sheet.root.get(), specificity_offset);
 
 	// Any matching @keyframe names are overridden as per CSS rules
-	new_sheet->keyframes.reserve(keyframes.size() + other_sheet.keyframes.size());
-	new_sheet->keyframes = keyframes;
+	keyframes.reserve(keyframes.size() + other_sheet.keyframes.size());
 	for (auto& other_keyframes : other_sheet.keyframes)
 	{
-		new_sheet->keyframes[other_keyframes.first] = other_keyframes.second;
+		keyframes[other_keyframes.first] = other_keyframes.second;
 	}
 
-	new_sheet->specificity_offset = specificity_offset + other_sheet.specificity_offset;
-	return new_sheet;
+	specificity_offset += other_sheet.specificity_offset;
 }
 
 // Builds the node index for a combined style sheet.

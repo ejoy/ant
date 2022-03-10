@@ -101,21 +101,6 @@ void StyleSheetNode::MergeHierarchy(StyleSheetNode* node, int specificity_offset
 	}
 }
 
-std::unique_ptr<StyleSheetNode> StyleSheetNode::DeepCopy(StyleSheetNode* in_parent) const
-{
-	auto node = std::make_unique<StyleSheetNode>(in_parent, tag, id, class_names, pseudo_classes, structural_selectors, child_combinator);
-
-	node->properties = properties;
-	node->children.resize(children.size());
-	
-	for (size_t i = 0; i < children.size(); i++)
-	{
-		node->children[i] = children[i]->DeepCopy(node.get());
-	}
-
-	return node;
-}
-
 // Builds up a style sheet's index recursively.
 void StyleSheetNode::BuildIndex(StyleSheet::NodeIndex& styled_node_index)
 {

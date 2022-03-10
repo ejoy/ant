@@ -138,7 +138,7 @@ public:
 			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
 				return;
 			}
-			m_current->createTextNode(szValue);
+			m_current->CreateTextNode(szValue);
 		}
 	}
 	void OnComment(const char* szText) override {}
@@ -162,8 +162,7 @@ public:
 		auto stream = std::make_unique<Stream>(source_path, (const uint8_t*)content.data(), content.size());
 		if (inline_sheet->LoadStyleSheet(stream.get(), line)) {
 			if (m_style_sheet) {
-				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*inline_sheet);
-				m_style_sheet = combined_sheet;
+				m_style_sheet->CombineStyleSheet(*inline_sheet);
 			}
 			else
 				m_style_sheet = std::move(inline_sheet);
@@ -174,8 +173,7 @@ public:
 		std::shared_ptr<StyleSheet> sub_sheet = StyleSheetFactory::GetStyleSheet(source_path);
 		if (sub_sheet) {
 			if (m_style_sheet) {
-				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*sub_sheet);
-				m_style_sheet = std::move(combined_sheet);
+				m_style_sheet->CombineStyleSheet(*sub_sheet);
 			}
 			else
 				m_style_sheet = sub_sheet;
@@ -233,7 +231,7 @@ void Document::SetStyleSheet(std::shared_ptr<StyleSheet> _style_sheet) {
 		style_sheet->BuildNodeIndex();
 	}
 
-	body.GetStyle()->DirtyDefinition();
+	body.DirtyDefinition();
 }
 
 const std::shared_ptr<StyleSheet>& Document::GetStyleSheet() const {
@@ -298,7 +296,7 @@ void Document::SetDimensions(const Size& _dimensions) {
 	if (dimensions != _dimensions) {
 		dirty_dimensions = true;
 		dimensions = _dimensions;
-		body.GetStyle()->DirtyPropertiesWithUnitRecursive(Property::VIEW_LENGTH);
+		body.DirtyPropertiesWithUnitRecursive(Property::VIEW_LENGTH);
 	}
 }
 

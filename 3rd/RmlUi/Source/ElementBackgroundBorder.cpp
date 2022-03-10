@@ -30,6 +30,7 @@
 #include "../Include/RmlUi/Layout.h"
 #include "../Include/RmlUi/ComputedValues.h"
 #include "../Include/RmlUi/Element.h"
+#include "../Include/RmlUi/ElementStyle.h"
 
 namespace Rml {
 

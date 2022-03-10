@@ -30,6 +30,7 @@
 #include "../Include/RmlUi/ID.h"
 #include "../Include/RmlUi/Property.h"
 #include "../Include/RmlUi/ElementText.h"
+#include "../Include/RmlUi/ElementStyle.h"
 #include <yoga/YGNodePrint.h>
 
 namespace Rml {

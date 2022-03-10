@@ -71,8 +71,6 @@ public:
 
 	/// Merges an entire tree hierarchy into our hierarchy.
 	void MergeHierarchy(StyleSheetNode* node, int specificity_offset = 0);
-	/// Copy this node including all descendent nodes.
-	std::unique_ptr<StyleSheetNode> DeepCopy(StyleSheetNode* parent = nullptr) const;
 	/// Recursively set structural volatility.
 	bool SetStructurallyVolatileRecursive(bool ancestor_is_structurally_volatile);
 	/// Builds up a style sheet's index recursively.

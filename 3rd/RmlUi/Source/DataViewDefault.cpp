@@ -149,7 +149,7 @@ bool DataViewStyle::Update(DataModel& model)
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
 		const std::string value = VariantHelper::ToString(variant);
-		const Property* p = element->GetStyle()->GetLocalProperty(StyleSheetSpecification::GetPropertyId(property_name));
+		const Property* p = element->GetLocalProperty(StyleSheetSpecification::GetPropertyId(property_name));
 		if (!p || p->ToString() != value)
 		{
 			element->SetProperty(property_name, value);

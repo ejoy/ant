@@ -50,7 +50,6 @@
 
 namespace Rml {
 
-// Common classes
 class Document;
 class Element;
 class ElementText;
@@ -64,29 +63,18 @@ struct Transition;
 struct TransitionList;
 enum class PropertyId : uint8_t;
 
-// Types for external interfaces.
 using FileHandle = uintptr_t;
 using FontFaceHandle = uintptr_t;
 using TextEffectsHandle = uintptr_t;
 
-using DocumentPtr = std::unique_ptr<Document>;
 using ElementPtr = std::unique_ptr<Element>;
-using TextPtr = ElementPtr;// std::unique_ptr<ElementText>;
-
-// Container types for common classes
 using ElementList = std::vector< Element* >;
 using OwnedElementList = std::vector< ElementPtr >;
 using VariantList = std::vector< Variant >;
 using ElementAnimationList = std::vector< ElementAnimation >;
-
-using AttributeNameList = std::unordered_set< std::string >;
 using PropertyMap = std::unordered_map< PropertyId, Property >;
-
 using ElementAttributes = std::unordered_map< std::string, std::string >;
-
 using AnimationList = std::vector<Animation>;
-
-// Additional smart pointers
 using TransformPtr = std::shared_ptr< Transform >;
 
 // Data binding types

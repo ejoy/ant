@@ -1,32 +1,3 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
-  
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/Core.h"
@@ -45,16 +16,17 @@
 #include "../Include/RmlUi/Time.h"
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/Plugin.h"
+#include "../Include/RmlUi/ElementStyle.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
 #include "ElementBackgroundBorder.h"
 #include "EventDispatcher.h"
 #include "ElementBackgroundImage.h"
-#include "PropertiesIterator.h"
 #include "StyleSheetParser.h"
 #include "StyleSheetNode.h"
 #include "StyleSheetFactory.h"
 #include "HtmlParser.h"
+#include "ElementDefinition.h"
 #include <algorithm>
 #include <cmath>
 #include <yoga/YGNode.h>
@@ -63,13 +35,12 @@
 
 namespace Rml {
 
-
 Element::Element(Document* owner, const std::string& tag)
 	: tag(tag)
 	, owner_document(owner)
-	, style(this)
 {
 	assert(tag == StringUtilities::ToLower(tag));
+	assert(owner);
 }
 
 Element::~Element() {
@@ -101,11 +72,11 @@ void Element::Update() {
 }
 
 void Element::UpdateProperties() {
-	style.UpdateDefinition();
-	if (style.AnyPropertiesDirty()) {
-		PropertyIdSet dirty_properties = style.ComputeValues(computed_values);
-		if (!dirty_properties.Empty()) {
-			OnChange(dirty_properties);
+	UpdateDefinition();
+	if (!dirty_properties.Empty()) {
+		PropertyIdSet properties = ComputeValues(computed_values);
+		if (!properties.Empty()) {
+			OnChange(properties);
 		}
 	}
 }
@@ -209,7 +180,7 @@ static float ComputeFontsize(const Property* property, Element* element) {
 
 bool Element::UpdataFontSize() {
 	float new_size = font_size;
-	if (auto p = style.GetLocalProperty(PropertyId::FontSize))
+	if (auto p = GetLocalProperty(PropertyId::FontSize))
 		new_size = ComputeFontsize(p, this);
 	else if (parent) {
 		new_size = parent->GetFontSize();
@@ -233,7 +204,7 @@ bool Element::SetProperty(const std::string& name, const std::string& value) {
 		return false;
 	}
 	for (auto& property : properties.GetProperties()) {
-		if (!style.SetProperty(property.first, property.second))
+		if (!SetProperty(property.first, property.second))
 			return false;
 	}
 	return true;
@@ -246,18 +217,10 @@ bool Element::SetPropertyImmediate(const std::string& name, const std::string& v
 		return false;
 	}
 	for (auto& property : properties.GetProperties()) {
-		if (!style.SetPropertyImmediate(property.first, property.second))
+		if (!SetPropertyImmediate(property.first, property.second))
 			return false;
 	}
 	return true;
-}
-
-bool Element::SetProperty(PropertyId id, const Property& property) {
-	return style.SetProperty(id, property);
-}
-
-bool Element::SetPropertyImmediate(PropertyId id, const Property& property) {
-	return style.SetPropertyImmediate(id, property);
 }
 
 void Element::RemoveProperty(const std::string& name) {
@@ -267,23 +230,12 @@ void Element::RemoveProperty(const std::string& name) {
 		return;
 	}
 	for (auto property_id : properties) {
-		style.RemoveProperty(property_id);
+		RemoveProperty(property_id);
 	}
 }
 
-void Element::RemoveProperty(PropertyId id)
-{
-	style.RemoveProperty(id);
-}
-
-const Property* Element::GetProperty(const std::string& name) const
-{
-	return style.GetProperty(StyleSheetSpecification::GetPropertyId(name));
-}
-
-const Property* Element::GetProperty(PropertyId id) const
-{
-	return style.GetProperty(id);
+const Property* Element::GetProperty(const std::string& name) const {
+	return GetProperty(StyleSheetSpecification::GetPropertyId(name));
 }
 
 bool Element::Project(Point& point) const noexcept {
@@ -321,8 +273,7 @@ void Element::SetAttribute(const std::string& name, const std::string& value) {
 	OnAttributeChange(changed_attributes);
 }
 
-const std::string* Element::GetAttribute(const std::string& name) const
-{
+const std::string* Element::GetAttribute(const std::string& name) const {
 	auto it = attributes.find(name);
 	if (it == attributes.end()) {
 		return nullptr;
@@ -330,13 +281,11 @@ const std::string* Element::GetAttribute(const std::string& name) const
 	return &it->second;
 }
 
-bool Element::HasAttribute(const std::string& name) const
-{
+bool Element::HasAttribute(const std::string& name) const {
 	return attributes.find(name) != attributes.end();
 }
 
-void Element::RemoveAttribute(const std::string& name)
-{
+void Element::RemoveAttribute(const std::string& name) {
 	auto it = attributes.find(name);
 	if (it != attributes.end())
 	{
@@ -348,32 +297,23 @@ void Element::RemoveAttribute(const std::string& name)
 	}
 }
 
-void Element::SetAttributes(const ElementAttributes& _attributes)
-{
+void Element::SetAttributes(const ElementAttributes& _attributes) {
 	attributes.reserve(attributes.size() + _attributes.size());
 	for (auto& pair : _attributes)
 		attributes[pair.first] = pair.second;
 	OnAttributeChange(_attributes);
 }
 
-const std::string& Element::GetTagName() const
-{
+const std::string& Element::GetTagName() const {
 	return tag;
 }
 
-const std::string& Element::GetId() const
-{
+const std::string& Element::GetId() const {
 	return id;
 }
 
-void Element::SetId(const std::string& _id)
-{
+void Element::SetId(const std::string& _id) {
 	SetAttribute("id", _id);
-}
-
-ElementStyle* Element::GetStyle()
-{
-	return &style;
 }
 
 Document* Element::GetOwnerDocument() const {
@@ -383,7 +323,6 @@ Document* Element::GetOwnerDocument() const {
 Element* Element::GetChild(int index) const {
 	if (index < 0 || index >= (int) children.size())
 		return nullptr;
-
 	return children[index].get();
 }
 
@@ -482,7 +421,7 @@ public:
 			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
 				return;
 			}
-			m_current->createTextNode(szValue);
+			m_current->CreateTextNode(szValue);
 		}
 	}
 	
@@ -494,8 +433,7 @@ public:
 		auto stream = std::make_unique<Stream>(source_path, (const uint8_t*)content.data(), content.size());
 		if (inline_sheet->LoadStyleSheet(stream.get(), line)) {
 			if (m_style_sheet) {
-				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*inline_sheet);
-				m_style_sheet = combined_sheet;
+				m_style_sheet->CombineStyleSheet(*inline_sheet);
 			}
 			else
 				m_style_sheet = std::move(inline_sheet);
@@ -506,8 +444,7 @@ public:
 		std::shared_ptr<StyleSheet> sub_sheet = StyleSheetFactory::GetStyleSheet(source_path);
 		if (sub_sheet) {
 			if (m_style_sheet) {
-				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*sub_sheet);
-				m_style_sheet = std::move(combined_sheet);
+				m_style_sheet->CombineStyleSheet(*sub_sheet);
 			}
 			else
 				m_style_sheet = sub_sheet;
@@ -535,7 +472,7 @@ void Element::SetInnerRML(const std::string& rml) {
 	parser.Parse(rml, &handler);
 }
 
-bool Element::createTextNode(const std::string& str) {
+bool Element::CreateTextNode(const std::string& str) {
 	if (std::all_of(str.begin(), str.end(), &StringUtilities::IsWhitespace))
 		return true;
 	bool has_data_expression = false;
@@ -553,7 +490,7 @@ bool Element::createTextNode(const std::string& str) {
 		}
 		previous = c;
 	}
-	TextPtr text(new ElementText(GetOwnerDocument(), str));
+	ElementPtr text(new ElementText(GetOwnerDocument(), str));
 	if (!text) {
 		Log::Message(Log::Level::Error, "Failed to instance text element '%s', instancer returned nullptr.", str.c_str());
 		return false;
@@ -580,12 +517,9 @@ Element* Element::InsertBefore(ElementPtr child, Element* adjacent_element) {
 	assert(child);
 	size_t child_index = 0;
 	bool found_child = false;
-	if (adjacent_element)
-	{
-		for (child_index = 0; child_index < children.size(); child_index++)
-		{
-			if (children[child_index].get() == adjacent_element)
-			{
+	if (adjacent_element) {
+		for (child_index = 0; child_index < children.size(); child_index++) {
+			if (children[child_index].get() == adjacent_element) {
 				found_child = true;
 				break;
 			}
@@ -594,8 +528,7 @@ Element* Element::InsertBefore(ElementPtr child, Element* adjacent_element) {
 
 	Element* child_ptr = nullptr;
 
-	if (found_child)
-	{
+	if (found_child) {
 		child_ptr = child.get();
 
 		GetLayout().InsertChild(child->GetLayout(), (uint32_t)child_index);
@@ -604,8 +537,7 @@ Element* Element::InsertBefore(ElementPtr child, Element* adjacent_element) {
 		DirtyStackingContext();
 		DirtyStructure();
 	}
-	else
-	{
+	else {
 		child_ptr = AppendChild(std::move(child));
 	}	
 
@@ -615,11 +547,9 @@ Element* Element::InsertBefore(ElementPtr child, Element* adjacent_element) {
 ElementPtr Element::RemoveChild(Element* child) {
 	size_t child_index = 0;
 
-	for (auto itr = children.begin(); itr != children.end(); ++itr)
-	{
+	for (auto itr = children.begin(); itr != children.end(); ++itr) {
 		// Add the element to the delete list
-		if (itr->get() == child)
-		{
+		if (itr->get() == child) {
 			ElementPtr detached_child = std::move(*itr);
 			children.erase(itr);
 
@@ -654,18 +584,16 @@ Element* Element::GetElementById(const std::string& id) {
 	SearchQueue search_queue;
 	search_queue.push(search_root);
 
-	while (!search_queue.empty())
-	{
+	while (!search_queue.empty()) {
 		Element* element = search_queue.front();
 		search_queue.pop();
 		
-		if (element->GetId() == id)
-		{
+		if (GetId() == id) {
 			return element;
 		}
 		
-		for (int i = 0; i < element->GetNumChildren(); i++)
-			search_queue.push(element->GetChild(i));
+		for (int i = 0; i < GetNumChildren(); i++)
+			search_queue.push(GetChild(i));
 	}
 	return nullptr;
 }
@@ -677,52 +605,44 @@ void Element::GetElementsByTagName(ElementList& elements, const std::string& tag
 	for (int i = 0; i < GetNumChildren(); ++i)
 		search_queue.push(GetChild(i));
 
-	while (!search_queue.empty())
-	{
+	while (!search_queue.empty()) {
 		Element* element = search_queue.front();
 		search_queue.pop();
 
-		if (element->GetTagName() == tag)
+		if (GetTagName() == tag)
 			elements.push_back(element);
 
-		for (int i = 0; i < element->GetNumChildren(); i++)
-			search_queue.push(element->GetChild(i));
+		for (int i = 0; i < GetNumChildren(); i++)
+			search_queue.push(GetChild(i));
 	}
 }
 
-void Element::GetElementsByClassName(ElementList& elements, const std::string& class_name)
-{
+void Element::GetElementsByClassName(ElementList& elements, const std::string& class_name) {
 	// Breadth first search on elements for the corresponding id
 	typedef std::queue< Element* > SearchQueue;
 	SearchQueue search_queue;
 	for (int i = 0; i < GetNumChildren(); ++i)
 		search_queue.push(GetChild(i));
 
-	while (!search_queue.empty())
-	{
+	while (!search_queue.empty()) {
 		Element* element = search_queue.front();
 		search_queue.pop();
 
-		if (element->IsClassSet(class_name))
+		if (IsClassSet(class_name))
 			elements.push_back(element);
 
-		for (int i = 0; i < element->GetNumChildren(); i++)
-			search_queue.push(element->GetChild(i));
+		for (int i = 0; i < GetNumChildren(); i++)
+			search_queue.push(GetChild(i));
 	}
 }
 
-static Element* QuerySelectorMatchRecursive(const StyleSheetNodeListRaw& nodes, Element* element)
-{
-	for (int i = 0; i < element->GetNumChildren(); i++)
-	{
+static Element* QuerySelectorMatchRecursive(const StyleSheetNodeListRaw& nodes, Element* element) {
+	for (int i = 0; i < element->GetNumChildren(); i++) {
 		Element* child = element->GetChild(i);
-
-		for (const StyleSheetNode* node : nodes)
-		{
+		for (const StyleSheetNode* node : nodes) {
 			if (node->IsApplicable(child, false))
 				return child;
 		}
-
 		Element* matching_element = QuerySelectorMatchRecursive(nodes, child);
 		if (matching_element)
 			return matching_element;
@@ -731,27 +651,20 @@ static Element* QuerySelectorMatchRecursive(const StyleSheetNodeListRaw& nodes, 
 	return nullptr;
 }
 
-static void QuerySelectorAllMatchRecursive(ElementList& matching_elements, const StyleSheetNodeListRaw& nodes, Element* element)
-{
-	for (int i = 0; i < element->GetNumChildren(); i++)
-	{
+static void QuerySelectorAllMatchRecursive(ElementList& matching_elements, const StyleSheetNodeListRaw& nodes, Element* element) {
+	for (int i = 0; i < element->GetNumChildren(); i++) {
 		Element* child = element->GetChild(i);
-
-		for (const StyleSheetNode* node : nodes)
-		{
-			if (node->IsApplicable(child, false))
-			{
+		for (const StyleSheetNode* node : nodes) {
+			if (node->IsApplicable(child, false)) {
 				matching_elements.push_back(child);
 				break;
 			}
 		}
-
 		QuerySelectorAllMatchRecursive(matching_elements, nodes, child);
 	}
 }
 
-Element* Element::QuerySelector(const std::string& selectors)
-{
+Element* Element::QuerySelector(const std::string& selectors) {
 	StyleSheetNode root_node;
 	StyleSheetNodeListRaw leaf_nodes = StyleSheetParser::ConstructNodes(root_node, selectors);
 
@@ -786,7 +699,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
 	auto it = changed_attributes.find("id");
 	if (it != changed_attributes.end()) {
 		id = it->second;
-		style.DirtyDefinition();
+		DirtyDefinition();
 	}
 
 	it = changed_attributes.find("class");
@@ -801,7 +714,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
 		parser.ParseProperties(properties, it->second);
 
 		for (const auto& name_value : properties.GetProperties()) {
-			style.SetProperty(name_value.first, name_value.second);
+			SetProperty(name_value.first, name_value.second);
 		}
 	}
 	
@@ -905,18 +818,15 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		}
 	}
 
-	if (changed_properties.Contains(PropertyId::Overflow))
-	{
+	if (changed_properties.Contains(PropertyId::Overflow)) {
 		DirtyClip();
 	}
 
-	if (changed_properties.Contains(PropertyId::Animation))
-	{
+	if (changed_properties.Contains(PropertyId::Animation)) {
 		dirty_animation = true;
 	}
 
-	if (changed_properties.Contains(PropertyId::Transition))
-	{
+	if (changed_properties.Contains(PropertyId::Transition)) {
 		dirty_transition = true;
 	}
 
@@ -927,8 +837,7 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 	}
 }
 
-const Style::ComputedValues& Element::GetComputedValues() const
-{
+const Style::ComputedValues& Element::GetComputedValues() const {
 	return computed_values;
 }
 
@@ -996,8 +905,8 @@ void Element::SetParent(Element* _parent) {
 
 	if (parent) {
 		// We need to update our definition and make sure we inherit the properties of our new parent.
-		style.DirtyDefinition();
-		style.DirtyInheritedProperties();
+		DirtyDefinition();
+		DirtyInheritedProperties();
 	}
 
 	// The transform state may require recalculation.
@@ -1005,28 +914,22 @@ void Element::SetParent(Element* _parent) {
 	DirtyClip();
 	DirtyPerspective();
 
-	if (!parent)
-	{
+	if (!parent) {
 		if (data_model)
 			SetDataModel(nullptr);
 	}
-	else 
-	{
+	else {
 		auto it = attributes.find("data-model");
-		if (it == attributes.end())
-		{
+		if (it == attributes.end()) {
 			SetDataModel(parent->data_model);
 		}
-		else if (parent->data_model)
-		{
+		else if (parent->data_model) {
 			std::string const& name = it->second;
 			Log::Message(Log::Level::Error, "Nested data models are not allowed. Data model '%s' given in element %s.", name.c_str(), GetAddress().c_str());
 		}
-		else if (Document* document = GetOwnerDocument())
-		{
+		else if (Document* document = GetOwnerDocument()) {
 			std::string const& name = it->second;
-			if (DataModel* model = document->GetDataModelPtr(name))
-			{
+			if (DataModel* model = document->GetDataModelPtr(name)) {
 				model->AttachModelRootElement(this);
 				SetDataModel(model);
 			}
@@ -1064,7 +967,7 @@ void Element::DirtyStructure() {
 void Element::UpdateStructure() {
 	if (dirty_structure) {
 		dirty_structure = false;
-		GetStyle()->DirtyDefinition();
+		DirtyDefinition();
 	}
 }
 
@@ -1102,10 +1005,9 @@ void Element::StartAnimation(PropertyId property_id, const Property* start_value
 	}
 }
 
-bool Element::AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween)
-{
+bool Element::AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween) {
 	if (!target_value)
-		target_value = style.GetProperty(property_id);
+		target_value = GetProperty(property_id);
 	if (!target_value)
 		return false;
 	ElementAnimation* animation = nullptr;
@@ -1120,8 +1022,7 @@ bool Element::AddAnimationKeyTime(PropertyId property_id, const Property* target
 	return animation->AddKey(time, *target_value, *this, tween, false);
 }
 
-bool Element::StartTransition(const Transition& transition, const Property& start_value, const Property & target_value, bool remove_when_complete)
-{
+bool Element::StartTransition(const Transition& transition, const Property& start_value, const Property & target_value, bool remove_when_complete) {
 	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == transition.id; });
 
 	if (it != animations.end() && !it->IsTransition())
@@ -1606,7 +1507,7 @@ void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate) {
 	else
 		pseudo_classes = pseudo_classes & ~pseudo_class;
 	if (old != pseudo_classes) {
-		style.DirtyDefinition();
+		DirtyDefinition();
 	}
 }
 
@@ -1623,13 +1524,13 @@ void Element::SetClass(const std::string& class_name, bool activate) {
 	if (activate) {
 		if (class_location == classes.end()) {
 			classes.push_back(class_name);
-			style.DirtyDefinition();
+			DirtyDefinition();
 		}
 	}
 	else {
 		if (class_location != classes.end()) {
 			classes.erase(class_location);
-			style.DirtyDefinition();
+			DirtyDefinition();
 		}
 	}
 }
@@ -1641,7 +1542,7 @@ bool Element::IsClassSet(const std::string& class_name) const {
 void Element::SetClassNames(const std::string& class_names) {
 	classes.clear();
 	StringUtilities::ExpandString(classes, class_names, ' ');
-	style.DirtyDefinition();
+	DirtyDefinition();
 }
 
 std::string Element::GetClassNames() const {
@@ -1655,4 +1556,356 @@ std::string Element::GetClassNames() const {
 	return class_names;
 }
 
-} // namespace Rml
+void Element::DirtyPropertiesWithUnitRecursive(Property::Unit unit) {
+	DirtyProperties(unit);
+	for (auto& child : children) {
+		child->DirtyPropertiesWithUnitRecursive(unit);
+	}
+}
+
+const Property* Element::GetLocalProperty(PropertyId id) const {
+	const Property* property = inline_properties.GetProperty(id);
+	if (property)
+		return property;
+	if (definition)
+		return definition->GetProperty(id);
+	return nullptr;
+}
+
+const Property* Element::GetProperty(PropertyId id) const {
+	const Property* local_property = GetLocalProperty(id);
+	if (local_property)
+		return local_property;
+	const PropertyDefinition* property = StyleSheetSpecification::GetProperty(id);
+	if (!property)
+		return nullptr;
+	if (property->IsInherited()) {
+		Element* parent = GetParentNode();
+		while (parent) {
+			const Property* parent_property = parent->GetLocalProperty(id);
+			if (parent_property)
+				return parent_property;
+			parent = parent->GetParentNode();
+		}
+	}
+	return property->GetDefaultValue();
+}
+
+const Property* Element::GetPropertyByDefinition(PropertyId id, const ElementDefinition* definition) const {
+	const Property* property = definition->GetProperty(id);
+	if (property)
+		return property;
+	property = inline_properties.GetProperty(id);
+	if (property)
+		return property;
+	const PropertyDefinition* propertyDef = StyleSheetSpecification::GetProperty(id);
+	if (!propertyDef)
+		return nullptr;
+	if (propertyDef->IsInherited()) {
+		Element* parent = GetParentNode();
+		while (parent) {
+			const Property* parent_property = parent->GetLocalProperty(id);
+			if (parent_property)
+				return parent_property;
+			parent = parent->GetParentNode();
+		}
+	}
+	return propertyDef->GetDefaultValue();
+}
+
+void Element::TransitionPropertyChanges(PropertyIdSet& properties, const ElementDefinition* new_definition) {
+	const Property* transition_property = GetPropertyByDefinition(PropertyId::Transition, new_definition);
+	if (!transition_property) {
+		return;
+	}
+	auto transition_list = transition_property->GetTransitionList();
+	if (transition_list.none) {
+		return;
+	}
+	auto add_transition = [&](const Transition& transition) {
+		const Property* from = GetProperty(transition.id);
+		const Property* to = GetPropertyByDefinition(transition.id, new_definition);
+		if (from && to && (from->unit == to->unit) && (*from != *to)) {
+			return StartTransition(transition, *from, *to, true);
+		}
+		return false;
+	};
+	if (transition_list.all) {
+		Transition transition = transition_list.transitions[0];
+		for (auto it = properties.begin(); it != properties.end(); ) {
+			transition.id = *it;
+			if (add_transition(transition))
+				it = properties.Erase(it);
+			else
+				++it;
+		}
+	}
+	else {
+		for (auto& transition : transition_list.transitions) {
+			if (properties.Contains(transition.id)) {
+				if (add_transition(transition))
+					properties.Erase(transition.id);
+			}
+		}
+	}
+}
+
+bool Element::TransitionPropertyChanges(PropertyId id, const Property& property) {
+	const Property* transition_property = GetProperty(PropertyId::Transition);
+	if (!transition_property) {
+		return false;
+	}
+	auto transition_list = transition_property->GetTransitionList();
+	if (transition_list.none) {
+		return false;
+	}
+	auto add_transition = [&](const Transition& transition) {
+		const Property* from = GetProperty(id);
+		if (from && (from->unit == property.unit) && (*from != property)) {
+			return StartTransition(transition, *from, property, false);
+		}
+		return false;
+	};
+	if (transition_list.all) {
+		Transition transition = transition_list.transitions[0];
+		transition.id = id;
+		return add_transition(transition);
+	}
+	else {
+		bool ok = false;
+		for (auto& transition : transition_list.transitions) {
+			if (transition.id == id) {
+				ok = ok || add_transition(transition);
+			}
+		}
+		return ok;
+	}
+}
+
+void Element::UpdateDefinition() {
+	if (dirty_definition) {
+		dirty_definition = false;
+
+		std::shared_ptr<ElementDefinition> new_definition;
+		
+		if (auto& style_sheet = GetStyleSheet()) {
+			new_definition = style_sheet->GetElementDefinition(this);
+		}
+		
+		// Switch the property definitions if the definition has changed.
+		if (new_definition != definition) {
+			PropertyIdSet changed_properties;
+			
+			if (definition)
+				changed_properties = definition->GetPropertyIds();
+
+			if (new_definition)
+				changed_properties |= new_definition->GetPropertyIds();
+
+			if (definition && new_definition) {
+				for (PropertyId id : changed_properties) {
+					const Property* p0 = GetProperty(id);
+					const Property* p1 = GetPropertyByDefinition(id, new_definition.get());
+					if (p0 && p1 && *p0 == *p1)
+						changed_properties.Erase(id);
+				}
+				if (!changed_properties.Empty()) {
+					TransitionPropertyChanges(changed_properties, new_definition.get());
+				}
+			}
+			definition = new_definition;
+			DirtyProperties(changed_properties);
+		}
+
+		// Even if the definition was not changed, the child definitions may have changed as a result of anything that
+		// could change the definition of this element, such as a new pseudo class.
+		DirtyChildDefinitions();
+	}
+}
+
+bool Element::SetProperty(PropertyId id, const Property& property) {
+	Property new_property = property;
+	new_property.definition = StyleSheetSpecification::GetProperty(id);
+	if (!new_property.definition)
+		return false;
+	if (!TransitionPropertyChanges(id, new_property)) {
+		inline_properties.SetProperty(id, new_property);
+		DirtyProperty(id);
+	}
+	return true;
+}
+
+bool Element::SetPropertyImmediate(PropertyId id, const Property& property) {
+	Property new_property = property;
+	new_property.definition = StyleSheetSpecification::GetProperty(id);
+	if (!new_property.definition)
+		return false;
+	inline_properties.SetProperty(id, new_property);
+	DirtyProperty(id);
+	return true;
+}
+
+void Element::RemoveProperty(PropertyId id) {
+	int size_before = inline_properties.GetNumProperties();
+	inline_properties.RemoveProperty(id);
+	if (inline_properties.GetNumProperties() != size_before)
+		DirtyProperty(id);
+}
+
+void Element::DirtyDefinition() {
+	dirty_definition = true;
+}
+
+void Element::DirtyInheritedProperties() {
+	dirty_properties |= StyleSheetSpecification::GetRegisteredInheritedProperties();
+}
+
+void Element::DirtyChildDefinitions() {
+	for (auto& child : children) {
+		child->DirtyDefinition();
+	}
+}
+
+void Element::DirtyProperties(Property::Unit unit) {
+	ForeachProperties([&](PropertyId id, const Property& property){
+		if (property.unit & unit) {
+			DirtyProperty(id);
+		}
+	});
+}
+
+void Element::ForeachProperties(std::function<void(PropertyId id, const Property& property)> f) {
+	PropertyIdSet mark;
+	for (auto& [id, property] : inline_properties.GetProperties()) {
+		mark.Insert(id);
+		f(id, property);
+	}
+	if (definition) {
+		for (auto& [id, property] : definition->GetProperties().GetProperties()) {
+			if (!mark.Contains(id)) {
+				f(id, property);
+			}
+		}
+	}
+}
+
+void Element::DirtyProperty(PropertyId id) {
+	dirty_properties.Insert(id);
+}
+
+void Element::DirtyProperties(const PropertyIdSet& properties) {
+	dirty_properties |= properties;
+}
+
+PropertyIdSet Element::ComputeValues(Style::ComputedValues& values) {
+	if (dirty_properties.Empty())
+		return PropertyIdSet();
+
+	bool dirty_em_properties = false;
+
+	if (dirty_properties.Contains(PropertyId::FontSize)) {
+		if (UpdataFontSize()) {
+			dirty_em_properties = true;
+			dirty_properties.Insert(PropertyId::LineHeight);
+		}
+	}
+
+	ForeachProperties([&](PropertyId id, const Property& property){
+		if (dirty_em_properties && property.unit == Property::EM)
+			dirty_properties.Insert(id);
+		if (!dirty_properties.Contains(id)) {
+			return;
+		}
+
+		switch (id) {
+		case PropertyId::Left:
+		case PropertyId::Top:
+		case PropertyId::Right:
+		case PropertyId::Bottom:
+		case PropertyId::MarginLeft:
+		case PropertyId::MarginTop:
+		case PropertyId::MarginRight:
+		case PropertyId::MarginBottom:
+		case PropertyId::PaddingLeft:
+		case PropertyId::PaddingTop:
+		case PropertyId::PaddingRight:
+		case PropertyId::PaddingBottom:
+		case PropertyId::BorderLeftWidth:
+		case PropertyId::BorderTopWidth:
+		case PropertyId::BorderRightWidth:
+		case PropertyId::BorderBottomWidth:
+		case PropertyId::Height:
+		case PropertyId::Width:
+		case PropertyId::MaxHeight:
+		case PropertyId::MinHeight:
+		case PropertyId::MaxWidth:
+		case PropertyId::MinWidth:
+		case PropertyId::Position:
+		case PropertyId::Display:
+		case PropertyId::Overflow:
+		case PropertyId::AlignContent:
+		case PropertyId::AlignItems:
+		case PropertyId::AlignSelf:
+		case PropertyId::Direction:
+		case PropertyId::FlexDirection:
+		case PropertyId::FlexWrap:
+		case PropertyId::JustifyContent:
+		case PropertyId::AspectRatio:
+		case PropertyId::Flex:
+		case PropertyId::FlexBasis:
+		case PropertyId::FlexGrow:
+		case PropertyId::FlexShrink:
+			GetLayout().SetProperty(id, &property, this);
+			break;
+		case PropertyId::BorderTopColor:
+			values.border_color.top = property.GetColor();
+			break;
+		case PropertyId::BorderRightColor:
+			values.border_color.right = property.GetColor();
+			break;
+		case PropertyId::BorderBottomColor:
+			values.border_color.bottom = property.GetColor();
+			break;
+		case PropertyId::BorderLeftColor:
+			values.border_color.left = property.GetColor();
+			break;
+		case PropertyId::BorderTopLeftRadius:
+			values.border_radius.topLeft = property.ToFloatValue();
+			break;
+		case PropertyId::BorderTopRightRadius:
+			values.border_radius.topRight = property.ToFloatValue();
+			break;
+		case PropertyId::BorderBottomRightRadius:
+			values.border_radius.bottomRight = property.ToFloatValue();
+			break;
+		case PropertyId::BorderBottomLeftRadius:
+			values.border_radius.bottomLeft = property.ToFloatValue();
+			break;
+		case PropertyId::BackgroundColor:
+			values.background_color = property.GetColor();
+			break;
+		case PropertyId::Transition:
+			values.transition = property.GetTransitionList();
+			break;
+		case PropertyId::Animation:
+			values.animation = property.GetAnimationList();
+			break;
+		default:
+			break;
+		}
+	});
+
+	// Next, pass inheritable dirty properties onto our children
+	PropertyIdSet dirty_inherited_properties = (dirty_properties & StyleSheetSpecification::GetRegisteredInheritedProperties());
+	if (!dirty_inherited_properties.Empty()) {
+		for (auto& child : children) {
+			child->DirtyProperties(dirty_inherited_properties);
+		}
+	}
+
+	PropertyIdSet result(std::move(dirty_properties));
+	dirty_properties.Clear();
+	return result;
+}
+
+}
