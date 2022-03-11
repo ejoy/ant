@@ -24,6 +24,7 @@ struct program {
 		}
 		return UINT16_MAX;
 	}
+	~program();
 };
 
 struct effekseer_ctx

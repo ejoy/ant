@@ -65,7 +65,7 @@ local all_collision = {}
 
 local clip_index = 0
 local group_index = 0
-local key_event = {}
+local anim_key_event = {}
 local function find_index(t, item)
     for i, c in ipairs(t) do
         if c == item then
@@ -154,7 +154,6 @@ local function anim_group_stop_effect(eid)
 end
 
 local function anim_play(e, anim_state, play)
-    anim_state.key_event = to_runtime_event(key_event)
     local group_e = get_anim_group_eid(e, current_anim.name)
     if not group_e then return end
     for _, anim_e in ipairs(group_e) do
@@ -197,46 +196,6 @@ local function anim_group_pause(eid, p)
     end
 end
 
-local widget_utils  = require "widget.utils"
-
-local function set_current_anim(anim_name)
-    if not edit_anims[current_e][anim_name] then
-        local msg = anim_name .. " not exist."
-        logger.error({tag = "Editor", message = msg})
-        widget_utils.message_box({title = "AnimationError", info = msg})
-        return false
-    end
-
-    if current_anim and current_anim.collider then
-        for _, col in ipairs(current_anim.collider) do
-            if col.collider then
-                ies.set_state(world:entity(col.eid), "visible", false)
-            end
-        end
-    end
-    current_anim = edit_anims[current_e][anim_name]
-    if current_anim.collider then
-        for _, col in ipairs(current_anim.collider) do
-            if col.collider then
-                ies.set_state(world:entity(col.eid), "visible", true)
-            end
-        end
-    end
-    anim_state.anim_name = current_anim.name
-    anim_state.key_event = current_clip and current_clip.key_event or {}
-    anim_state.duration = current_anim.duration
-    current_collider = nil
-    current_event = nil
-    
-    anim_play(current_e, {name = anim_name, loop = ui_loop[1], manual = false}, iani.play)
-    anim_group_set_time(current_e, 0)
-    anim_group_pause(current_e, not anim_state.is_playing)
-    -- if not iani.is_playing(current_e) then
-    --     anim_group_pause(current_e, false)
-    -- end
-    return true
-end
-
 local default_collider_define = {
     ["sphere"]  = {{origin = {0, 0, 0, 1}, radius = 0.1}},
     ["box"]     = {{origin = {0, 0, 0, 1}, size = {0.05, 0.05, 0.05}}},
@@ -252,7 +211,7 @@ local function get_collider(shape_type, def)
 end
 
 local function from_runtime_event(runtime_event)
-    local key_event = {}
+    local ke = {}
     for _, ev in ipairs(runtime_event) do
         for _, e in ipairs(ev.event_list) do
             e.name_ui = {text = e.name}
@@ -280,9 +239,9 @@ local function from_runtime_event(runtime_event)
                 e.msg_content_ui = {text = e.msg_content}
             end
         end
-        key_event[tostring(math.floor(ev.time * sample_ratio))] = ev.event_list
+        ke[tostring(math.floor(ev.time * sample_ratio))] = ev.event_list
     end
-    return key_event
+    return ke
 end
 
 local function from_runtime_clip(runtime_clip)
@@ -376,6 +335,46 @@ local function set_event_dirty(num)
     end
 end
 
+local widget_utils  = require "widget.utils"
+
+local function set_current_anim(anim_name)
+    local anim = edit_anims[current_e][anim_name]
+    if not anim or current_anim == anim then
+        local msg = anim_name .. " not exist."
+        logger.error({tag = "Editor", message = msg})
+        widget_utils.message_box({title = "AnimationError", info = msg})
+        return false
+    end
+
+    if current_anim and current_anim.collider then
+        for _, col in ipairs(current_anim.collider) do
+            if col.collider then
+                ies.set_state(world:entity(col.eid), "visible", false)
+            end
+        end
+    end
+    current_anim = anim
+    if current_anim.collider then
+        for _, col in ipairs(current_anim.collider) do
+            if col.collider then
+                ies.set_state(world:entity(col.eid), "visible", true)
+            end
+        end
+    end
+    anim_state.anim_name = current_anim.name
+    anim_state.key_event = current_anim.key_event
+    anim_key_event = current_anim.key_event
+    anim_state.duration = current_anim.duration
+    current_event = nil
+    
+    anim_play(current_e, {name = anim_name, loop = ui_loop[1], manual = false}, iani.play)
+    anim_group_set_time(current_e, 0)
+    anim_group_pause(current_e, not anim_state.is_playing)
+    set_event_dirty(-1)
+    return true
+end
+
+
 local event_id = 1
 
 local function add_event(et)
@@ -412,11 +411,11 @@ local function add_event(et)
     }
     current_event = new_event
     local key = tostring(anim_state.selected_frame)
-    if not key_event[key] then
-        key_event[key] = {}
-        anim_state.current_event_list = key_event[key]
+    if not anim_key_event[key] then
+        anim_key_event[key] = {}
+        anim_state.current_event_list = anim_key_event[key]
     end
-    local event_list = key_event[key]--anim_state.current_event_list
+    local event_list = anim_key_event[key]--anim_state.current_event_list
     event_list[#event_list + 1] = new_event
     set_event_dirty(1)
 end
@@ -458,8 +457,8 @@ local function delete_event(idx)
 end
 
 local function clear_event()
-    current_clip.key_event[tostring(anim_state.selected_frame)] = {}
-    anim_state.current_event_list = current_clip.key_event[tostring(anim_state.selected_frame)]
+    anim_key_event[tostring(anim_state.selected_frame)] = {}
+    anim_state.current_event_list = anim_key_event[tostring(anim_state.selected_frame)]
     set_event_dirty(1)
 end
 
@@ -723,20 +722,20 @@ local function on_move_keyframe(frame_idx, move_type)
     if not frame_idx or anim_state.selected_frame == frame_idx then return end
     local old_selected_frame = anim_state.selected_frame
     anim_state.selected_frame = frame_idx
-    local ke = key_event[tostring(frame_idx)]
+    local ke = anim_key_event[tostring(frame_idx)]
     anim_state.current_event_list = ke and ke or {}
-    if not current_clip or not current_clip.key_event then return end
+    --if not current_clip or not current_clip.key_event then return end
     local newkey = tostring(anim_state.selected_frame)
     if move_type == 0 then
         local oldkey = tostring(old_selected_frame)
-        current_clip.key_event[newkey] = current_clip.key_event[oldkey]
-        current_clip.key_event[oldkey] = {}
+        anim_key_event[newkey] = anim_key_event[oldkey]
+        anim_key_event[oldkey] = {}
         to_runtime_clip()
     else
-        if not current_clip.key_event[newkey] then
-            current_clip.key_event[newkey] = {}
+        if not anim_key_event[newkey] then
+            anim_key_event[newkey] = {}
         end
-        anim_state.current_event_list = current_clip.key_event[newkey]
+        anim_state.current_event_list = anim_key_event[newkey]
         update_collision()
         current_event = nil
     end
@@ -796,7 +795,7 @@ end
 
 function m.save_keyevent()
     local prefab_filename = prefab_mgr:get_current_filename()
-    utils.write_file(prefab_filename:sub(1, -8) .. ".lua", "return " .. utils.table_to_string(to_runtime_event(key_event)))
+    utils.write_file(prefab_filename:sub(1, -8) .. ".lua", "return " .. utils.table_to_string(to_runtime_event(anim_key_event)))
 end
 function m.save_clip(path)
     to_runtime_clip()
@@ -1400,7 +1399,8 @@ local function construct_edit_animations(eid)
         edit_anim[key] = {
             name = key,
             duration = anim._handle:duration(),
-            clips = anim_clips[key]
+            --clips = anim_clips[key],
+            key_event = {}
         }
         edit_anim.name_list[#edit_anim.name_list + 1] = key
         if not anim_group_eid[anim] then
