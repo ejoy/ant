@@ -10,7 +10,8 @@ uniform vec4 u_build_ibl_param;
 #define WORKGROUP_THREADS 8
 #endif //WORKGROUP_THREADS
 
-#include "pbr/pbr.sh"
+#define MIN_ROUGHNESS 0.04
+
 #include "common/common.sh"
 
 void calc_TB(vec3 N, out vec3 T, out vec3 B)
@@ -27,14 +28,6 @@ vec3 transform_TBN(vec3 v, vec3 T, vec3 B, vec3 N)
 {
     //careful here for using mat3 build by T, B, N in different platform, so just multipy v with T, B, N can skip this platform relate issue
     return T*v.x + B*v.y + N*v.z;
-}
-
-vec3 spherecoord2dir(vec3 N, float sin_theta, float cos_theta, float sin_phi, float cos_phi)
-{
-    vec3 dir_LS = normalize(vec3(sin_theta * cos_phi, sin_theta * sin_phi, cos_theta));
-    vec3 T, B;
-    calc_TB(N, T, B);
-    return transform_TBN(dir_LS, T, B, N);
 }
 
 // Mipmap Filtered Samples (GPU Gems 3, 20.4)
@@ -99,39 +92,94 @@ float D_GGX_ibl(float NdotH, float roughness) {
     return k * k * (1.0 / M_PI);
 }
 
-vec4 importance_sample_GGX(int sampleidx, vec3 N, float roughness)
+struct MicrofacetDistributionSample
 {
-    vec2 hp2d = hammersley2d(sampleidx, u_sample_count);
+    float pdf;
+    float cos_theta;
+    float sin_theta;
+    float phi;
+};
 
-    float alpha = roughness * roughness;
-    float cos_theta = saturate(sqrt((1.0 - hp2d.y) / (1.0 + (alpha*alpha - 1.0) * hp2d.y)));
-    float sin_theta = sqrt(1.0 - cos_theta*cos_theta);
-    float phi = 2.0 * M_PI * hp2d.x;
-    float cos_phi = cos(phi);
-    float sin_phi = sin(phi);
-
-    float pdf = D_GGX_ibl(cos_theta, alpha) / 4.0;
-
-    vec3 dir = spherecoord2dir(N, sin_theta, cos_theta, sin_phi, cos_phi);
-    return vec4(dir, pdf);
+vec3 sample2dir(MicrofacetDistributionSample sample)
+{
+    float cos_phi = cos(sample.phi), sin_phi = sin(sample.phi);
+    return normalize(vec3(
+        sample.sin_theta * cos_phi,
+        sample.sin_theta * sin_phi,
+        sample.cos_theta));
 }
 
-vec4 importance_sample_irradiance(int sampleidx, vec3 N)
+vec3 tangent2world(vec3 dir_TS, vec3 normal_WS)
+{
+    vec3 T, B;
+    calc_TB(normal_WS, T, B);
+    return transform_TBN(dir_TS, T, B, normal_WS);
+}
+
+float D_GGX(float NdotH, float roughness) {
+    float a = NdotH * roughness;
+    float k = roughness / (1.0 - NdotH * NdotH + a * a);
+    return k * k * (1.0 / M_PI);
+}
+
+// GGX microfacet distribution
+// https://www.cs.cornell.edu/~srm/publications/EGSR07-btdf.html
+// This implementation is based on https://bruop.github.io/ibl/,
+//  https://www.tobias-franke.eu/log/2014/03/30/notes_on_importance_sampling.html
+// and https://developer.nvidia.com/gpugems/GPUGems3/gpugems3_ch20.html
+MicrofacetDistributionSample GGX(vec2 xi, float roughness)
+{
+    MicrofacetDistributionSample ggx;
+
+    // evaluate sampling equations
+    float alpha = roughness * roughness;
+    ggx.cos_theta = saturate(sqrt((1.0 - xi.y) / (1.0 + (alpha * alpha - 1.0) * xi.y)));
+    ggx.sin_theta = sqrt(1.0 - ggx.cos_theta * ggx.cos_theta);
+    ggx.phi = 2.0 * M_PI * xi.x;
+
+    // evaluate GGX pdf (for half vector)
+    ggx.pdf = D_GGX(ggx.cos_theta, alpha);
+
+    // Apply the Jacobian to obtain a pdf that is parameterized by l
+    // see https://bruop.github.io/ibl/
+    // Typically you'd have the following:
+    // float pdf = D_GGX(NoH, roughness) * NoH / (4.0 * VoH);
+    // but since V = N => VoH == NoH
+    ggx.pdf /= 4.0;
+
+    return ggx;
+}
+
+vec4 importance_sample_GGX(int sampleidx, vec3 N, float roughness)
+{
+    vec2 xi = hammersley2d(sampleidx, u_sample_count);
+    MicrofacetDistributionSample sample = GGX(xi, roughness);
+    return vec4(tangent2world(sample2dir(sample), N), sample.pdf);
+}
+
+MicrofacetDistributionSample Lambertian(vec2 xi)
+{
+    MicrofacetDistributionSample lambertian;
+
+    // Cosine weighted hemisphere sampling
+    // http://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/2D_Sampling_with_Multidimensional_Transformations.html#Cosine-WeightedHemisphereSampling
+    lambertian.cos_theta = sqrt(1.0 - xi.y);
+    lambertian.sin_theta = sqrt(xi.y); // equivalent to `sqrt(1.0 - cos_theta*cos_theta)`;
+    lambertian.phi = 2.0 * M_PI * xi.x;
+
+    lambertian.pdf = lambertian.cos_theta / M_PI; // evaluation for solid angle, therefore drop the sin_theta
+
+    return lambertian;
+}
+
+vec4 importance_sample_Lambertian(int sampleidx, vec3 N)
 {
     // generate a quasi monte carlo point in the unit square [0.1)^2
-    vec2 hp2d = hammersley2d(sampleidx, u_sample_count);
+    vec2 xi = hammersley2d(sampleidx, u_sample_count);
     // generate the points on the hemisphere with a fitting mapping for
     
     // Cosine weighted hemisphere sampling
     // http://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/2D_Sampling_with_Multidimensional_Transformations.html#Cosine-WeightedHemisphereSampling
-    float cos_theta = sqrt(1.0 - hp2d.y);
-    float sin_theta = sqrt(hp2d.y); // equivalent to `sqrt(1.0 - cos_theta*cos_theta)`;
-    float phi = 2.0 * M_PI * hp2d.x;
-
-    float cos_phi = cos(phi);
-    float sin_phi = sin(phi);
-
-    vec3 dir = spherecoord2dir(N, sin_theta, cos_theta, sin_phi, cos_phi);
-    float pdf = cos_theta / M_PI;
-    return vec4(dir, pdf);
+    MicrofacetDistributionSample sample = Lambertian(xi);
+    return vec4(tangent2world(sample2dir(sample), N), sample.pdf);
 }

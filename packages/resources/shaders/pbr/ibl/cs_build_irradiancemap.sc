@@ -18,7 +18,7 @@ void main()
     vec3 N = id2dir(gl_GlobalInvocationID, u_face_texture_size);
 
     for (int sampleidx=0; sampleidx < int(u_sample_count); ++sampleidx){
-        vec4 H = importance_sample_irradiance(sampleidx, N);
+        vec4 H = importance_sample_Lambertian(sampleidx, N);
         vec3 H_dir = H.xyz;
         float pdf = H.w;
 
