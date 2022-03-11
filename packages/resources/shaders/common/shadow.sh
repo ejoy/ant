@@ -30,7 +30,7 @@ uniform vec4 u_omni_param;
 #define u_omni_count u_omni_param.x
 
 #define USE_VIEW_SPACE_DISTANCE
-#define SHADOW_COVERAGE_DEBUG
+//#define SHADOW_COVERAGE_DEBUG
 //#define PACK_RGBA8
 //#define LINEAR_SHADOW
 #ifdef LINEAR_SHADOW
