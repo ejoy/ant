@@ -412,7 +412,10 @@ local function add_event(et)
     }
     current_event = new_event
     local key = tostring(anim_state.selected_frame)
-    if not key_event[key] then key_event[key] = {} end
+    if not key_event[key] then
+        key_event[key] = {}
+        anim_state.current_event_list = key_event[key]
+    end
     local event_list = key_event[key]--anim_state.current_event_list
     event_list[#event_list + 1] = new_event
     set_event_dirty(1)
@@ -720,6 +723,8 @@ local function on_move_keyframe(frame_idx, move_type)
     if not frame_idx or anim_state.selected_frame == frame_idx then return end
     local old_selected_frame = anim_state.selected_frame
     anim_state.selected_frame = frame_idx
+    local ke = key_event[tostring(frame_idx)]
+    anim_state.current_event_list = ke and ke or {}
     if not current_clip or not current_clip.key_event then return end
     local newkey = tostring(anim_state.selected_frame)
     if move_type == 0 then

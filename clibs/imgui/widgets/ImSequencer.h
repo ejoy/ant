@@ -29,8 +29,8 @@ namespace ImSequencer
        float current_time{ 0.0f };
        bool is_playing{ false };
        float speed{ 1.0f };
-       
-       std::vector<clip_range>  clip_rangs;
+       std::vector<bool> event_flags;
+       //std::vector<clip_range>  clip_rangs;
        //imgui
        bool expand{ false };
    };
