@@ -4,9 +4,12 @@
 
 #include "common/sphere_coord.sh"
 #include "pbr/ibl/common.sh"
-#include "pbr/ibl/source.sh"
 
-IMAGE2D_ARRAY_WR(s_irradiance, rgba16f, 1);
+#include "common/sphere_coord.sh"
+
+SAMPLERCUBE(s_source, 0);
+
+IMAGE2D_ARRAY_WR(s_irradiance, rgba32f, 1);
 
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
@@ -23,7 +26,7 @@ void main()
         lod += u_lod_bias;
 
         // sample lambertian at a lower resolution to avoid fireflies
-        vec3 lambertian = sample_source(s_source, H_dir, lod).rgb;
+        vec3 lambertian = textureCubeLod(s_source, H_dir, lod).rgb;
 
         //// the below operations cancel each other out
         // float NdotH = clamp(dot(N, H), 0.0, 1.0);

@@ -3,9 +3,11 @@
 
 #include "common/sphere_coord.sh"
 #include "pbr/ibl/common.sh"
-#include "pbr/ibl/source.sh"
+#include "common/sphere_coord.sh"
 
-IMAGE2D_ARRAY_WR(s_prefilter, rgba16f, 1);
+SAMPLERCUBE(s_source, 0);
+
+IMAGE2D_ARRAY_WR(s_prefilter, rgba32f, 1);
 
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
@@ -35,7 +37,7 @@ void main()
                 // without this the roughness=0 lod is too high (taken from original implementation)
                 lod = u_lod_bias;
             }
-            color += vec4(sample_source(s_source, L, lod).rgb * NdotL, NdotL);
+            color += vec4(textureCubeLod(s_source, L, lod).rgb * NdotL, NdotL);
         }
     }
 
