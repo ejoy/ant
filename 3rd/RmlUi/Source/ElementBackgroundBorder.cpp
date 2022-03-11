@@ -57,9 +57,9 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	
 	const Layout::Metrics& metrics = element->GetMetrics();
 
-	float outlineWidth = ComputeProperty(element->GetProperty(PropertyId::OutlineWidth), element);
+	float outlineWidth = ComputeProperty(element->GetComputedProperty(PropertyId::OutlineWidth), element);
 	if (outlineWidth > 0.f) {
-		Color outlineColor = element->GetProperty(PropertyId::OutlineColor)->GetColor();
+		Color outlineColor = element->GetComputedProperty(PropertyId::OutlineColor)->GetColor();
 		geometry.AddRect(Rect {Point{}, metrics.frame.size}, outlineWidth, outlineColor);
 	}
 

@@ -192,7 +192,7 @@ bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Elem
 }
 
 
-bool ElementAnimation::AddKey(float target_time, const Property & in_property, Element& element, Tween tween, bool remove) {
+bool ElementAnimation::AddKey(float target_time, const Property & in_property, Element& element, Tween tween) {
 	if (!IsInitalized()) {
 		Log::Message(Log::Level::Warning, "Element animation was not initialized properly, can't add key.");
 		return false;
@@ -201,7 +201,6 @@ bool ElementAnimation::AddKey(float target_time, const Property & in_property, E
 		return false;
 	}
 	duration = target_time;
-	remove_when_complete = remove;
 	return true;
 }
 
@@ -295,12 +294,7 @@ void ElementAnimation::Release(Element& element) {
 		break;
 	case ElementAnimationOrigin::Animation:
 	case ElementAnimationOrigin::Transition:
-		if (remove_when_complete) {
-			element.RemoveProperty(GetPropertyId());
-		}
-		else {
-			element.SetProperty(GetPropertyId(), keys.back().prop);
-		}
+		element.RemoveAnimationProperty(GetPropertyId());
 		break;
 	}
 }

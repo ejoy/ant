@@ -92,7 +92,7 @@ StyleSheetNode* StyleSheetNode::GetOrCreateChildNode(std::string&& tag, std::str
 void StyleSheetNode::MergeHierarchy(StyleSheetNode* node, int specificity_offset)
 {
 	// Merge the other node's properties into ours.
-	properties.Merge(node->properties, specificity_offset);
+	node->MergeProperties(properties, specificity_offset);
 
 	for (const auto& other_child : node->children)
 	{
@@ -105,8 +105,7 @@ void StyleSheetNode::MergeHierarchy(StyleSheetNode* node, int specificity_offset
 void StyleSheetNode::BuildIndex(StyleSheet::NodeIndex& styled_node_index)
 {
 	// If this has properties defined, then we insert it into the styled node index.
-	if(properties.GetNumProperties() > 0)
-	{
+	if (!properties.empty()) {
 		// The keys of the node index is a hashed combination of tag and id. These are used for fast lookup of applicable nodes.
 		size_t node_hash = StyleSheet::NodeHash(tag, id);
 		StyleSheet::NodeList& nodes = styled_node_index[node_hash];
@@ -157,20 +156,37 @@ bool StyleSheetNode::EqualRequirements(const std::string& _tag, const std::strin
 	return true;
 }
 
-// Returns the specificity of this node.
 int StyleSheetNode::GetSpecificity() const
 {
 	return specificity;
 }
 
-// Imports properties from a single rule definition (ie, with a shared specificity) into the node's
-// properties.
-void StyleSheetNode::ImportProperties(const PropertyDictionary& _properties, int rule_specificity)
-{
-	properties.Import(_properties, specificity + rule_specificity);
+
+static void SetProperty(PropertyDictionary& properties, PropertyId id, const Property& property, int specificity) {
+	auto iterator = properties.find(id);
+	if (iterator != properties.end() && iterator->second.specificity > specificity)
+		return;
+	Property& new_property = (properties[id] = property);
+	new_property.specificity = specificity;
 }
 
-// Returns the node's default properties.
+void StyleSheetNode::ImportProperties(const PropertyDictionary& _properties, int rule_specificity) {
+	int property_specificity = specificity + rule_specificity;
+	for (const auto& pair : _properties) {
+		const PropertyId id = pair.first;
+		const Property& property = pair.second;
+		SetProperty(properties, id, property, property_specificity > 0 ? property_specificity : property.specificity);
+	}
+}
+
+void StyleSheetNode::MergeProperties(PropertyDictionary& _properties, int specificity_offset) const {
+	for (const auto& pair : properties) {
+		const PropertyId id = pair.first;
+		const Property& property = pair.second;
+		SetProperty(_properties, id, property, property.specificity + specificity_offset);
+	}
+}
+
 const PropertyDictionary& StyleSheetNode::GetProperties() const
 {
 	return properties;

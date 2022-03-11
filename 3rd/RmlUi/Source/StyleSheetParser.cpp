@@ -37,6 +37,7 @@
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/StringUtilities.h"
+#include "../Include/RmlUi/Types.h"
 #include <algorithm>
 #include <string.h>
 
@@ -113,10 +114,10 @@ static void PostprocessKeyframes(KeyframesMap& keyframes_map)
 		std::sort(blocks.begin(), blocks.end(), [](const KeyframeBlock& a, const KeyframeBlock& b) { return a.normalized_time < b.normalized_time; });
 
 		// Add all property names specified by any block
-		if(blocks.size() > 0) property_ids.reserve(blocks.size() * blocks[0].properties.GetNumProperties());
+		if(blocks.size() > 0) property_ids.reserve(blocks.size() * blocks[0].properties.size());
 		for(auto& block : blocks)
 		{
-			for (auto& property : block.properties.GetProperties())
+			for (auto& property : block.properties)
 				property_ids.push_back(property.first);
 		}
 		// Remove duplicate property names
@@ -135,7 +136,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 		Log::Message(Log::Level::Warning, "Invalid keyframes identifier '%s' at %s:%d", identifier.c_str(), stream->GetSourceURL().c_str(), line_number);
 		return false;
 	}
-	if (properties.GetNumProperties() == 0)
+	if (properties.empty())
 		return true;
 
 	std::vector<std::string> rule_list;

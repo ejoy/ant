@@ -27,7 +27,6 @@
  */
 
 #include "../Include/RmlUi/StyleSheet.h"
-#include "ElementDefinition.h"
 #include "StyleSheetFactory.h"
 #include "StyleSheetNode.h"
 #include "StyleSheetParser.h"
@@ -35,6 +34,8 @@
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
+#include "../Include/RmlUi/Types.h"
+#include "../Include/RmlUi/Property.h"
 #include <algorithm>
 
 namespace Rml {
@@ -112,7 +113,7 @@ size_t StyleSheet::NodeHash(const std::string& tag, const std::string& id)
 }
 
 // Returns the compiled element definition for a given element hierarchy.
-std::shared_ptr<ElementDefinition> StyleSheet::GetElementDefinition(const Element* element) const
+std::shared_ptr<PropertyDictionary> StyleSheet::GetElementDefinition(const Element* element) const
 {
 	// See if there are any styles defined for this element.
 	// Using static to avoid allocations. Make sure we don't call this function recursively.
@@ -173,12 +174,16 @@ std::shared_ptr<ElementDefinition> StyleSheet::GetElementDefinition(const Elemen
 	auto cache_iterator = node_cache.find(seed);
 	if (cache_iterator != node_cache.end())
 	{
-		std::shared_ptr<ElementDefinition>& definition = (*cache_iterator).second;
+		std::shared_ptr<PropertyDictionary>& definition = (*cache_iterator).second;
 		return definition;
 	}
 
+	auto new_definition = std::make_shared<PropertyDictionary>();
+	for (auto const& node : applicable_nodes) {
+		node->MergeProperties(*new_definition);
+	}
+
 	// Create the new definition and add it to our cache.
-	auto new_definition = std::make_shared<ElementDefinition>(applicable_nodes);
 	node_cache[seed] = new_definition;
 
 	return new_definition;

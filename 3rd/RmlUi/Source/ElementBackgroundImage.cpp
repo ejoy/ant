@@ -39,14 +39,14 @@ namespace Rml {
 void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge) {
 	geometry.Release();
 
-	const Property* image = element->GetProperty(PropertyId::BackgroundImage);
+	const Property* image = element->GetComputedProperty(PropertyId::BackgroundImage);
 	if (image->unit != Property::STRING) {
 		// "none"
 		return;
 	}
 
 	Layout::Metrics const& metrics = element->GetMetrics();
-	Style::BoxType origin = (Style::BoxType)element->GetProperty(PropertyId::BackgroundOrigin)->GetKeyword();
+	Style::BoxType origin = (Style::BoxType)element->GetComputedProperty(PropertyId::BackgroundOrigin)->GetKeyword();
 
 	Rect surface = Rect{ {0, 0}, metrics.frame.size };
 	if (surface.size.IsEmpty()) {
@@ -67,15 +67,15 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		return;
 	}
 
-	SamplerFlag repeat = (SamplerFlag)element->GetProperty(PropertyId::BackgroundRepeat)->GetKeyword();
-	Style::BackgroundSize backgroundSize = (Style::BackgroundSize)element->GetProperty(PropertyId::BackgroundSize)->GetKeyword();
+	SamplerFlag repeat = (SamplerFlag)element->GetComputedProperty(PropertyId::BackgroundRepeat)->GetKeyword();
+	Style::BackgroundSize backgroundSize = (Style::BackgroundSize)element->GetComputedProperty(PropertyId::BackgroundSize)->GetKeyword();
 	Size texSize {
-		ComputePropertyW(element->GetProperty(PropertyId::BackgroundSizeX), element),
-		ComputePropertyH(element->GetProperty(PropertyId::BackgroundSizeY), element)
+		ComputePropertyW(element->GetComputedProperty(PropertyId::BackgroundSizeX), element),
+		ComputePropertyH(element->GetComputedProperty(PropertyId::BackgroundSizeY), element)
 	};
 	Point texPosition {
-		ComputePropertyW(element->GetProperty(PropertyId::BackgroundPositionX), element),
-		ComputePropertyH(element->GetProperty(PropertyId::BackgroundPositionY), element)
+		ComputePropertyW(element->GetComputedProperty(PropertyId::BackgroundPositionX), element),
+		ComputePropertyH(element->GetComputedProperty(PropertyId::BackgroundPositionY), element)
 	};
 
 	std::string path = image->GetString();

@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_STYLESHEETNODE_H
 #define RMLUI_CORE_STYLESHEETNODE_H
 
-#include "../Include/RmlUi/PropertyDictionary.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/Types.h"
 #include <tuple>
@@ -76,13 +75,8 @@ public:
 	/// Builds up a style sheet's index recursively.
 	void BuildIndex(StyleSheet::NodeIndex& styled_node_index);
 
-	/// Imports properties from a single rule definition into the node's properties and sets the
-	/// appropriate specificity on them. Any existing attributes sharing a key with a new attribute
-	/// will be overwritten if they are of a lower specificity.
-	/// @param[in] properties The properties to import.
-	/// @param[in] rule_specificity The specificity of the importing rule.
 	void ImportProperties(const PropertyDictionary& properties, int rule_specificity);
-	/// Returns the node's default properties.
+	void MergeProperties(PropertyDictionary& properties, int specificity_offset = 0) const;
 	const PropertyDictionary& GetProperties() const;
 
 	/// Returns true if this node is applicable to the given element, given its IDs, classes and heritage.

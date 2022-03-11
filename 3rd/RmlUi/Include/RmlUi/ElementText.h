@@ -51,7 +51,7 @@ protected:
 	void Render() override;
 	void OnChange(const PropertyIdSet& properties) override;
 
-	const Property* GetProperty(PropertyId id);
+	const Property* GetComputedProperty(PropertyId id);
 	float GetOpacity();
 
 private:

@@ -30,12 +30,11 @@
 #define RMLUI_CORE_STYLESHEET_H
 
 #include "Traits.h"
-#include "PropertyDictionary.h"
+#include "Types.h"
 
 namespace Rml {
 
 class Element;
-class ElementDefinition;
 class StyleSheetNode;
 class Stream;
 
@@ -78,7 +77,7 @@ public:
 
 	/// Returns the compiled element definition for a given element hierarchy. A reference count will be added for the
 	/// caller, so another should not be added. The definition should be released by removing the reference count.
-	std::shared_ptr<ElementDefinition> GetElementDefinition(const Element* element) const;
+	std::shared_ptr<PropertyDictionary> GetElementDefinition(const Element* element) const;
 
 	/// Retrieve the hash key used to look-up applicable nodes in the node index.
 	static size_t NodeHash(const std::string& tag, const std::string& id);
@@ -100,7 +99,7 @@ private:
 	// Map of all styled nodes, that is, they have one or more properties.
 	NodeIndex styled_node_index;
 
-	using ElementDefinitionCache = std::unordered_map< size_t, std::shared_ptr<ElementDefinition> >;
+	using ElementDefinitionCache = std::unordered_map< size_t, std::shared_ptr<PropertyDictionary> >;
 	// Index of node sets to element definitions.
 	mutable ElementDefinitionCache node_cache;
 };

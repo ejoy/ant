@@ -29,7 +29,6 @@
 #include "../Include/RmlUi/PropertySpecification.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
-#include "../Include/RmlUi/PropertyDictionary.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "PropertyShorthandDefinition.h"
 #include "IdNameMap.h"
@@ -271,7 +270,7 @@ bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& diction
 	if (!property_definition->ParseValue(new_property, property_values[0]))
 		return false;
 	
-	dictionary.SetProperty(property_id, new_property);
+	dictionary[property_id] = new_property;
 	return true;
 }
 
@@ -323,7 +322,7 @@ bool PropertySpecification::ParseShorthandDeclaration(PropertyDictionary& dictio
 			if (!shorthand_definition->items[i].property_definition->ParseValue(new_property, property_values[value_index]))
 				return false;
 
-			dictionary.SetProperty(shorthand_definition->items[i].property_definition->GetId(), new_property);
+			dictionary[shorthand_definition->items[i].property_definition->GetId()] = new_property;
 		}
 	}
 	else if (shorthand_definition->type == ShorthandType::RecursiveRepeat)
@@ -398,7 +397,7 @@ bool PropertySpecification::ParseShorthandDeclaration(PropertyDictionary& dictio
 				return false;
 			}
 
-			dictionary.SetProperty(shorthand_definition->items[property_index].property_id, new_property);
+			dictionary[shorthand_definition->items[property_index].property_id] = new_property;
 
 			// Increment the value index, unless we're replicating the last value and we're up to the last value.
 			if (shorthand_definition->type != ShorthandType::Replicate ||

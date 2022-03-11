@@ -37,7 +37,6 @@ namespace Rml {
 
 class StyleSheetSpecification;
 class PropertyDefinition;
-class PropertyDictionary;
 class PropertyIdNameMap;
 class ShorthandIdNameMap;
 struct ShorthandDefinition;

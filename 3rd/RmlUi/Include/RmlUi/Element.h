@@ -8,7 +8,6 @@
 #include "Tween.h"
 #include "Geometry.h"
 #include "Node.h"
-#include "PropertyDictionary.h"
 #include "PropertyIdSet.h"
 #include <glm/glm.hpp>
 
@@ -17,10 +16,8 @@ namespace Rml {
 class DataModel;
 class EventListener;
 class Document;
-class PropertyDictionary;
 class StyleSheet;
 class Geometry;
-class ElementDefinition;
 
 class Element : public Node, public EnableObserverPtr<Element> {
 public:
@@ -35,11 +32,6 @@ public:
 	float GetFontSize() const;
 	float GetOpacity();
 	bool UpdataFontSize();
-
-	bool SetProperty(const std::string& name, const std::string& value);
-	bool SetPropertyImmediate(const std::string& name, const std::string& value);
-	void RemoveProperty(const std::string& name);
-	const Property* GetProperty(const std::string& name) const;
 
 	void SetAttribute(const std::string& name, const std::string& value);
 	const std::string* GetAttribute(const std::string& name) const;
@@ -96,22 +88,32 @@ public:
 	void DirtyPropertiesWithUnitRecursive(Property::Unit unit);
 
 	void UpdateDefinition();
-	bool SetProperty(PropertyId id, const Property& property);
-	bool SetPropertyImmediate(PropertyId id, const Property& property);
-	void RemoveProperty(PropertyId id);
-	const Property* GetProperty(PropertyId id) const;
-	const Property* GetLocalProperty(PropertyId id) const;
 	void DirtyDefinition();
 	void DirtyInheritedProperties();
 	void DirtyProperties(Property::Unit unit);
-	PropertyIdSet ComputeValues(Style::ComputedValues& values);
 	void ForeachProperties(std::function<void(PropertyId id, const Property& property)> f);
-	void DirtyChildDefinitions();
 	void DirtyProperty(PropertyId id);
 	void DirtyProperties(const PropertyIdSet& properties);
-	const Property* GetPropertyByDefinition(PropertyId id, const ElementDefinition* definition) const;
-	void TransitionPropertyChanges(PropertyIdSet & properties, const ElementDefinition * new_definition);
-	bool TransitionPropertyChanges(PropertyId id, const Property& property);
+
+	bool SetProperty(PropertyId id, const Property& property);
+	bool SetProperty(const std::string& name, const std::string& value);
+	bool SetPropertyImmediate(PropertyId id, const Property& property);
+	bool SetPropertyImmediate(const std::string& name, const std::string& value);
+	bool SetAnimationProperty(PropertyId id, const Property& property);
+
+	void RemoveProperty(PropertyId id);
+	void RemoveProperty(const std::string& name);
+	void RemoveAnimationProperty(PropertyId id);
+
+	const Property* GetProperty(PropertyId id) const;
+	const Property* GetProperty(const std::string& name) const;
+	const Property* GetComputedProperty(PropertyId id) const;
+	const Property* GetComputedLocalProperty(PropertyId id) const;
+	const Property* GetAnimationProperty(PropertyId id) const;
+	const Property* GetTransitionProperty(const PropertyDictionary* def) const;
+
+	void TransitionPropertyChanges(PropertyIdSet & properties, const PropertyDictionary * new_definition);
+	void TransitionPropertyChanges(PropertyId id, const Property& property);
 
 protected:
 	void Update();
@@ -133,8 +135,8 @@ protected:
 	void UpdateClip();
 
 	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property);
-	bool AddAnimationKeyTime(PropertyId property_id, const Property * target_value, float time, Tween tween);
-	bool StartTransition(const Transition& transition, const Property& start_value, const Property& target_value, bool remove_when_complete);
+	bool AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween);
+	bool StartTransition(const Transition& transition, const Property& start_value, const Property& target_value);
 	void HandleTransitionProperty();
 	void HandleAnimationProperty();
 	void AdvanceAnimations();
@@ -159,8 +161,9 @@ protected:
 	std::unique_ptr<Geometry> geometry_image;
 	Geometry::Path padding_edge;
 	float font_size = 16.f;
-	PropertyDictionary inline_properties;
-	std::shared_ptr<ElementDefinition> definition;
+	PropertyDictionary                  animation_properties;
+	PropertyDictionary                  inline_properties;
+	std::shared_ptr<PropertyDictionary> definition_properties;
 	PropertyIdSet dirty_properties;
 	glm::mat4x4 transform;
 	struct Clip {

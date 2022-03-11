@@ -34,7 +34,6 @@
 
 namespace Rml {
 
-class PropertyDictionary;
 class Stream;
 class StyleSheetNode;
 class AbstractPropertyParser;
