@@ -19,7 +19,6 @@ local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local joint_utils = require "widget.joint_utils"
 local utils     = require "common.utils"
-local vfs       = require "vfs"
 local access    = require "vfs.repoaccess"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
@@ -55,13 +54,11 @@ local event_type = {
 }
 
 local current_event
-local current_collider
 local current_clip
 local anim_group_eid = {}
 local anim_clips = {}
 local all_clips = {}
 local all_groups = {}
-local all_collision = {}
 
 local clip_index = 0
 local group_index = 0
@@ -154,6 +151,7 @@ local function anim_group_stop_effect(eid)
 end
 
 local function anim_play(e, anim_state, play)
+    anim_state.key_event = to_runtime_event(anim_key_event)
     local group_e = get_anim_group_eid(e, current_anim.name)
     if not group_e then return end
     for _, anim_e in ipairs(group_e) do
@@ -436,7 +434,6 @@ local function delete_collider(collider)
             table.remove(current_clip.collider, i)
         end
     end
-    current_collider = nil
     if event_dirty then
         set_event_dirty(-1)
     else
@@ -575,7 +572,6 @@ local function show_current_event()
         if imgui.widget.Button("SelectBank") then
             local path = uiutils.get_open_file_path("Bank", "bank")
             if path then
-                local lfs = require "filesystem.local"
                 local rp = lfs.relative(lfs.path(path), global_data.project_root)
                 local fullpath = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
                 local bank = iaudio.load_bank(fullpath)
@@ -612,7 +608,6 @@ local function show_current_event()
         if imgui.widget.Button("SelectEffect") then
             local path = uiutils.get_open_file_path("Prefab", "prefab")
             if path then
-                local lfs         = require "filesystem.local"
                 local rp = lfs.relative(lfs.path(path), global_data.project_root)
                 local path = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
                 current_event.asset_path_ui.text = path
@@ -1096,7 +1091,6 @@ function m.clear()
     all_clips = {}
     all_groups = {}
     anim_group_eid = {}
-    current_collider = nil
     current_event = nil
     current_clip = nil
 end
@@ -1152,7 +1146,6 @@ function m.show()
                     if glb_filename then
                         external_anim_list = {}
                         current_external_anim = nil
-                        local vfs = require "vfs"
                         anim_glb_path = "/" .. access.virtualpath(global_data.repo, fs.path(glb_filename))
                         rc.compile(anim_glb_path)
                         local external_path = rc.compile(anim_glb_path .. "|animations")
