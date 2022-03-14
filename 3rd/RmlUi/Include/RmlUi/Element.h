@@ -96,21 +96,21 @@ public:
 	void DirtyProperties(const PropertyIdSet& properties);
 
 	bool SetProperty(PropertyId id, const Property& property);
-	bool SetProperty(const std::string& name, const std::string& value);
 	bool SetPropertyImmediate(PropertyId id, const Property& property);
 	bool SetPropertyImmediate(const std::string& name, const std::string& value);
 	bool SetAnimationProperty(PropertyId id, const Property& property);
 
 	void RemoveProperty(PropertyId id);
-	void RemoveProperty(const std::string& name);
 	void RemoveAnimationProperty(PropertyId id);
 
 	const Property* GetProperty(PropertyId id) const;
-	const Property* GetProperty(const std::string& name) const;
 	const Property* GetComputedProperty(PropertyId id) const;
 	const Property* GetComputedLocalProperty(PropertyId id) const;
 	const Property* GetAnimationProperty(PropertyId id) const;
 	const Property* GetTransitionProperty(const PropertyDictionary* def) const;
+
+	void SetProperty(const std::string& name, std::optional<std::string> value = {});
+	std::optional<std::string> GetProperty(const std::string& name) const;
 
 	void TransitionPropertyChanges(PropertyIdSet & properties, const PropertyDictionary * new_definition);
 	void TransitionPropertyChanges(PropertyId id, const Property& property);

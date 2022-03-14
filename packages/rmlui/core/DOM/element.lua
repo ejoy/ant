@@ -21,7 +21,7 @@ function style_mt:__index(name)
 end
 function style_mt:__newindex(name, value)
     if value == nil then
-        rmlui.ElementRemoveProperty(self._handle, name)
+        rmlui.ElementSetProperty(self._handle, name)
     elseif type(value) == "string" then
         rmlui.ElementSetProperty(self._handle, name, value)
     else

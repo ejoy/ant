@@ -138,21 +138,18 @@ DataViewValue::DataViewValue(Element* element) : DataViewAttribute(element, "val
 DataViewStyle::DataViewStyle(Element* element) : DataViewCommon(element)
 {}
 
-bool DataViewStyle::Update(DataModel& model)
-{
+bool DataViewStyle::Update(DataModel& model) {
 	const std::string& property_name = GetModifier();
 	bool result = false;
 	Variant variant;
 	Element* element = GetElement();
 	DataExpressionInterface expr_interface(&model, element);
 	
-	if (element && GetExpression().Run(expr_interface, variant))
-	{
-		const std::string value = VariantHelper::ToString(variant);
-		const Property* p = element->GetProperty(property_name);
-		if (!p || p->ToString() != value)
-		{
-			element->SetProperty(property_name, value);
+	if (element && GetExpression().Run(expr_interface, variant)) {
+		std::optional<std::string> newValue = VariantHelper::ToStringOpt(variant);
+		std::optional<std::string> oldValue = element->GetProperty(property_name);
+		if (newValue != oldValue) {
+			element->SetProperty(property_name, newValue);
 			result = true;
 		}
 	}

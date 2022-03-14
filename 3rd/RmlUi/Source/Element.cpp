@@ -221,19 +221,6 @@ float Element::GetOpacity() {
 	return property->GetFloat();
 }
 
-bool Element::SetProperty(const std::string& name, const std::string& value) {
-	PropertyDictionary properties;
-	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value)) {
-		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.c_str());
-		return false;
-	}
-	for (auto& property : properties) {
-		if (!SetProperty(property.first, property.second))
-			return false;
-	}
-	return true;
-}
-
 bool Element::SetPropertyImmediate(const std::string& name, const std::string& value) {
 	PropertyDictionary properties;
 	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value)) {
@@ -245,17 +232,6 @@ bool Element::SetPropertyImmediate(const std::string& name, const std::string& v
 			return false;
 	}
 	return true;
-}
-
-void Element::RemoveProperty(const std::string& name) {
-	PropertyIdSet properties;
-	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name)) {
-		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
-		return;
-	}
-	for (auto property_id : properties) {
-		RemoveProperty(property_id);
-	}
 }
 
 bool Element::Project(Point& point) const noexcept {
@@ -1586,8 +1562,47 @@ const Property* Element::GetComputedLocalProperty(PropertyId id) const {
 	return nullptr;
 }
 
-const Property* Element::GetProperty(const std::string& name) const {
-	return GetProperty(StyleSheetSpecification::GetPropertyId(name));
+
+void Element::SetProperty(const std::string& name, std::optional<std::string> value) {
+	if (value) {
+		PropertyDictionary properties;
+		if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value.value())) {
+			Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.value().c_str());
+			return;
+		}
+		for (auto& property : properties) {
+			SetProperty(property.first, property.second);
+		}
+	}
+	else {
+		PropertyIdSet properties;
+		if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name)) {
+			Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
+			return;
+		}
+		for (auto property_id : properties) {
+			RemoveProperty(property_id);
+		}
+	}
+}
+
+std::optional<std::string> Element::GetProperty(const std::string& name) const {
+	PropertyIdSet properties;
+	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name)) {
+		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
+		return {};
+	}
+	std::string res;
+	for (auto property_id : properties) {
+		const Property* property = GetProperty(property_id);
+		if (property) {
+			if (!res.empty()) {
+				res += " ";
+			}
+			res += property->ToString();
+		}
+	}
+	return res;
 }
 
 const Property* Element::GetAnimationProperty(PropertyId id) const {

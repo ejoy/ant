@@ -304,11 +304,11 @@ lElementGetParent(lua_State* L) {
 static int
 lElementGetProperty(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	const Rml::Property* prop = e->GetProperty(lua_checkstdstring(L, 2));
+	std::optional<std::string> prop = e->GetProperty(lua_checkstdstring(L, 2));
 	if (!prop) {
 		return 0;
 	}
-	lua_pushstdstring(L, prop->ToString());
+	lua_pushstdstring(L, prop.value());
 	return 1;
 }
 
@@ -316,13 +316,6 @@ static int
 lElementRemoveAttribute(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	e->RemoveAttribute(lua_checkstdstring(L, 2));
-	return 0;
-}
-
-static int
-lElementRemoveProperty(lua_State* L) {
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	e->RemoveProperty(lua_checkstdstring(L, 2));
 	return 0;
 }
 
@@ -337,10 +330,14 @@ static int
 lElementSetProperty(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	std::string name = lua_checkstdstring(L, 2);
-	std::string value = lua_checkstdstring(L, 3);
-	bool ok = e->SetProperty(name, value);
-	lua_pushboolean(L, ok);
-	return 1;
+	if (lua_isnoneornil(L, 3)) {
+		e->SetProperty(name);
+	}
+	else {
+		std::string value = lua_checkstdstring(L, 3);
+		e->SetProperty(name, value);
+	}
+	return 0;
 }
 
 static int
@@ -469,7 +466,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementGetParent", lElementGetParent },
 		{ "ElementGetProperty", lElementGetProperty },
 		{ "ElementRemoveAttribute", lElementRemoveAttribute },
-		{ "ElementRemoveProperty", lElementRemoveProperty },
 		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
 		{ "ElementSetPropertyImmediate", lElementSetPropertyImmediate },
