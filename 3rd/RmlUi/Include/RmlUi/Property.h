@@ -1,33 +1,4 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
-#ifndef RMLUI_CORE_PROPERTY_H
-#define RMLUI_CORE_PROPERTY_H
+#pragma once
 
 #include "Colour.h"
 #include "Types.h"
@@ -52,58 +23,64 @@ using PropertyVariant = std::variant<
 	AnimationList
 >;
 
-/**
-	@author Peter Curry
- */
-
 class Property {
 public:
-	enum Unit
-	{
-		UNKNOWN = 1 << 0,
-		KEYWORD = 1 << 1,           // generic keyword; fetch as < int >
-		STRING = 1 << 2,            // generic string; fetch as < std::string >
-
-		// Absolute values.
-		NUMBER = 1 << 3,            // number unsuffixed; fetch as < float >
-		PX = 1 << 4,                // number suffixed by 'px'; fetch as < float >
-		DEG = 1 << 5,               // number suffixed by 'deg'; fetch as < float >
-		RAD = 1 << 6,               // number suffixed by 'rad'; fetch as < float >
-		COLOUR = 1 << 7,            // colour; fetch as < Color >
-
-		// Relative values.
-		EM = 1 << 9,                // number suffixed by 'em'; fetch as < float >
-		PERCENT = 1 << 10,          // number suffixed by '%'; fetch as < float >
-		REM = 1 << 11,              // number suffixed by 'rem'; fetch as < float >
-		VW = 1 << 20,
-		VH = 1 << 21,
-		VMIN = 1 << 22,
-		VMAX = 1 << 23,
-
-		// Values based on pixels-per-inch.
-		INCH = 1 << 12,             // number suffixed by 'in'; fetch as < float >
-		CM = 1 << 13,               // number suffixed by 'cm'; fetch as < float >
-		MM = 1 << 14,               // number suffixed by 'mm'; fetch as < float >
-		PT = 1 << 15,               // number suffixed by 'pt'; fetch as < float >
-		PC = 1 << 16,               // number suffixed by 'pc'; fetch as < float >
-
-		TRANSFORM = 1 << 17,        // transform; fetch as < TransformPtr >, may be empty
-		TRANSITION = 1 << 18,       // transition; fetch as < TransitionList >
-		ANIMATION = 1 << 19,        // animation; fetch as < AnimationList >
-
-		VIEW_LENGTH = VW | VH | VMIN | VMAX,
-		LENGTH = PX | INCH | CM | MM | PT | PC | EM | REM | VIEW_LENGTH,
-		LENGTH_PERCENT = LENGTH | PERCENT,
-		NUMBER_LENGTH_PERCENT = NUMBER | LENGTH | PERCENT,
+	enum class Unit : uint8_t {
+		UNKNOWN = 0,
+		KEYWORD,          // generic keyword; fetch as < int >
+		STRING,           // generic string; fetch as < std::string >
+		NUMBER,           // number unsuffixed; fetch as < float >
+		PX,               // number suffixed by 'px'; fetch as < float >
+		DEG,              // number suffixed by 'deg'; fetch as < float >
+		RAD,              // number suffixed by 'rad'; fetch as < float >
+		COLOUR,           // colour; fetch as < Color >
+		EM,               // number suffixed by 'em'; fetch as < float >
+		PERCENT,          // number suffixed by '%'; fetch as < float >
+		REM,              // number suffixed by 'rem'; fetch as < float >
+		VW,
+		VH,
+		VMIN,
+		VMAX,
+		INCH,             // number suffixed by 'in'; fetch as < float >
+		CM,               // number suffixed by 'cm'; fetch as < float >
+		MM,               // number suffixed by 'mm'; fetch as < float >
+		PT,               // number suffixed by 'pt'; fetch as < float >
+		PC,               // number suffixed by 'pc'; fetch as < float >
+		TRANSFORM,        // transform; fetch as < TransformPtr >, may be empty
+		TRANSITION,       // transition; fetch as < TransitionList >
+		ANIMATION,        // animation; fetch as < AnimationList >
 	};
+
+	template <typename T>
+	static constexpr  uint32_t Mark(T p0) {
+		return 1 << (uint32_t)p0;
+	}
+
+	template <typename T, typename ...Args>
+	static constexpr uint32_t Mark(T p0, Args... args) {
+		return Mark(p0) | Mark(args...);
+	}
+
+	enum class UnitMark : uint32_t {
+		Number              = Mark(Unit::NUMBER),
+		ViewLength          = Mark(Unit::VW, Unit::VH, Unit::VMIN, Unit::VMAX),
+		Length              = Mark(Unit::PX, Unit::INCH, Unit::CM, Unit::MM, Unit::PT, Unit::PC, Unit::EM, Unit::REM) | (uint32_t)ViewLength,
+		LengthPercent       = Mark(Unit::PERCENT) | (uint32_t)Length,
+		NumberLengthPercent = Mark(Unit::NUMBER) | (uint32_t)LengthPercent,
+		Angle               = Mark(Unit::DEG, Unit::RAD),
+		Rem                 = Mark(Unit::REM),
+	};
+
+	static constexpr bool Contains(UnitMark mark, Unit unit) {
+		return (uint32_t(mark) & Mark(unit)) != 0;
+	}
 
 	Property();
 
 	template < typename PropertyType >
-	Property(PropertyType value, Unit unit, int specificity = -1)
+	Property(PropertyType value, Unit unit)
 		: value(value)
 		, unit(unit)
-		, specificity(specificity)
 	{}
 
 	std::string ToString() const;
@@ -128,16 +105,13 @@ public:
 
 	PropertyVariant value;
 	Unit unit;
-	int specificity;
-	const PropertyDefinition* definition = nullptr;
 };
 
 struct FloatValue {
-	FloatValue() noexcept : value(0.f), unit(Property::UNKNOWN) {}
+	FloatValue() noexcept : value(0.f), unit(Property::Unit::UNKNOWN) {}
 	FloatValue(float v, Property::Unit unit) : value(v), unit(unit) {}
 	float value;
 	Property::Unit unit;
 };
 
-} // namespace Rml
-#endif
+}

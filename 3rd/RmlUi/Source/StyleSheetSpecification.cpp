@@ -44,11 +44,11 @@ namespace Rml {
 static StyleSheetSpecification* instance = nullptr;
 
 struct DefaultStyleSheetParsers {
-	PropertyParserNumber number = PropertyParserNumber(Property::NUMBER);
-	PropertyParserNumber length = PropertyParserNumber(Property::LENGTH, Property::PX);
-	PropertyParserNumber length_percent = PropertyParserNumber(Property::LENGTH_PERCENT, Property::PX);
-	PropertyParserNumber number_length_percent = PropertyParserNumber(Property::NUMBER_LENGTH_PERCENT, Property::PX);
-	PropertyParserNumber angle = PropertyParserNumber(Property::RAD | Property::DEG, Property::RAD);
+	PropertyParserNumber number = PropertyParserNumber(Property::UnitMark::Number);
+	PropertyParserNumber length = PropertyParserNumber(Property::UnitMark::Length, Property::Unit::PX);
+	PropertyParserNumber length_percent = PropertyParserNumber(Property::UnitMark::LengthPercent, Property::Unit::PX);
+	PropertyParserNumber number_length_percent = PropertyParserNumber(Property::UnitMark::NumberLengthPercent, Property::Unit::PX);
+	PropertyParserNumber angle = PropertyParserNumber(Property::UnitMark::Angle, Property::Unit::RAD);
 	PropertyParserKeyword keyword = PropertyParserKeyword();
 	PropertyParserString string = PropertyParserString();
 	PropertyParserAnimation animation = PropertyParserAnimation(PropertyParserAnimation::ANIMATION_PARSER);

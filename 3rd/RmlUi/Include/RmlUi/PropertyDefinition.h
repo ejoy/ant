@@ -71,7 +71,7 @@ public:
 
 private:
 	PropertyId id;
-	Property default_value;
+	std::optional<Property> default_value;
 	bool inherited;
 	struct ParserState {
 		PropertyParser* parser;

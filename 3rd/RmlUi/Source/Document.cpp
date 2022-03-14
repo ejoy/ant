@@ -296,7 +296,7 @@ void Document::SetDimensions(const Size& _dimensions) {
 	if (dimensions != _dimensions) {
 		dirty_dimensions = true;
 		dimensions = _dimensions;
-		body.DirtyPropertiesWithUnitRecursive(Property::VIEW_LENGTH);
+		body.DirtyPropertiesWithUnitRecursive(Property::UnitMark::ViewLength);
 	}
 }
 

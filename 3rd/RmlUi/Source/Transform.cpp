@@ -187,47 +187,47 @@ struct PrepareVisitor {
 	void operator()(Scale3D&) { }
 	void operator()(DecomposedMatrix4&) { }
 	void operator()(TranslateX& p) {
-		p.x = { ComputePropertyW(p.x, &e), Property::PX };
+		p.x = { ComputePropertyW(p.x, &e), Property::Unit::PX };
 	}
 	void operator()(TranslateY& p) {
-		p.y = { ComputePropertyH(p.y, &e), Property::PX };
+		p.y = { ComputePropertyH(p.y, &e), Property::Unit::PX };
 	}
 	void operator()(TranslateZ& p) {
-		p.z = { ComputeProperty(p.z, &e), Property::PX };
+		p.z = { ComputeProperty(p.z, &e), Property::Unit::PX };
 	}
 	void operator()(Translate2D& p) {
-		p.x = { ComputePropertyW(p.x, &e), Property::PX };
-		p.y = { ComputePropertyH(p.y, &e), Property::PX };
+		p.x = { ComputePropertyW(p.x, &e), Property::Unit::PX };
+		p.y = { ComputePropertyH(p.y, &e), Property::Unit::PX };
 	}
 	void operator()(Translate3D& p) {
-		p.x = { ComputePropertyW(p.x, &e), Property::PX };
-		p.y = { ComputePropertyH(p.y, &e), Property::PX };
-		p.z = { ComputeProperty(p.z, &e), Property::PX };
+		p.x = { ComputePropertyW(p.x, &e), Property::Unit::PX };
+		p.y = { ComputePropertyH(p.y, &e), Property::Unit::PX };
+		p.z = { ComputeProperty(p.z, &e), Property::Unit::PX };
 	}
 	void operator()(RotateX& p) {
-		p.angle = { ComputeProperty(p.angle, &e), Property::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), Property::Unit::RAD };
 	}
 	void operator()(RotateY& p) {
-		p.angle = { ComputeProperty(p.angle, &e), Property::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), Property::Unit::RAD };
 	}
 	void operator()(RotateZ& p) {
-		p.angle = { ComputeProperty(p.angle, &e), Property::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), Property::Unit::RAD };
 	}
 	void operator()(Rotate2D& p) {
-		p.angle = { ComputeProperty(p.angle, &e), Property::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), Property::Unit::RAD };
 	}
 	void operator()(Rotate3D& p) {
-		p.angle = { ComputeProperty(p.angle, &e), Property::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), Property::Unit::RAD };
 	}
 	void operator()(SkewX& p) {
-		p.x = { ComputeProperty(p.x, &e), Property::RAD };
+		p.x = { ComputeProperty(p.x, &e), Property::Unit::RAD };
 	}
 	void operator()(SkewY& p) {
-		p.y = { ComputeProperty(p.y, &e), Property::RAD };
+		p.y = { ComputeProperty(p.y, &e), Property::Unit::RAD };
 	}
 	void operator()(Skew2D& p) {
-		p.x = { ComputeProperty(p.x, &e), Property::RAD };
-		p.y = { ComputeProperty(p.y, &e), Property::RAD };
+		p.x = { ComputeProperty(p.x, &e), Property::Unit::RAD };
+		p.y = { ComputeProperty(p.y, &e), Property::Unit::RAD };
 	}
 	void operator()(Matrix3D& p) {
 		auto d = decompose((const glm::mat4x4&)p);

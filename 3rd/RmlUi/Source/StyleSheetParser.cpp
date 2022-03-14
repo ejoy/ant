@@ -201,8 +201,8 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				if (token == '{')
 				{
 					// Read the attributes
-					PropertyDictionary properties;
-					PropertySpecificationParser parser(properties, StyleSheetSpecification::GetPropertySpecification());
+					StyleSheetPropertyDictionary properties;
+					PropertySpecificationParser parser(properties.prop, StyleSheetSpecification::GetPropertySpecification());
 					if (!ReadProperties(parser))
 						continue;
 
@@ -312,7 +312,7 @@ bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, co
 
 StyleSheetNodeListRaw StyleSheetParser::ConstructNodes(StyleSheetNode& root_node, const std::string& selectors)
 {
-	const PropertyDictionary empty_properties;
+	const StyleSheetPropertyDictionary empty_properties;
 
 	std::vector<std::string> selector_list;
 	StringUtilities::ExpandString(selector_list, selectors);
@@ -429,7 +429,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 	return true;
 }
 
-StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::string rule_name, const PropertyDictionary& properties, int rule_specificity)
+StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::string rule_name, const StyleSheetPropertyDictionary& properties, int rule_specificity)
 {
 	StyleSheetNode* leaf_node = node;
 

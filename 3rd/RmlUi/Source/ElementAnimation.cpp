@@ -40,7 +40,8 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 	if (alpha > 1.f) alpha = 1.f;
 	if (alpha < 0.f) alpha = 0.f;
 
-	if ((p0.unit & Property::NUMBER_LENGTH_PERCENT) && (p1.unit & Property::NUMBER_LENGTH_PERCENT))
+
+	if (Property::Contains(Property::UnitMark::NumberLengthPercent, p0.unit) && Property::Contains(Property::UnitMark::NumberLengthPercent, p1.unit))
 	{
 		assert(p0.unit == p1.unit);
 		// If we have the same units, we can just interpolate regardless of what the value represents.
@@ -51,23 +52,23 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 		return Property{ f, p0.unit };
 	}
 
-	if (p0.unit == Property::COLOUR && p1.unit == Property::COLOUR)
+	if (p0.unit == Property::Unit::COLOUR && p1.unit == Property::Unit::COLOUR)
 	{
 		Color c0 = p0.GetColor();
 		Color c1 = p1.GetColor();
-		return Property{ ColorInterpolate(c0, c1, alpha), Property::COLOUR };
+		return Property{ ColorInterpolate(c0, c1, alpha), Property::Unit::COLOUR };
 	}
 
-	if (p0.unit == Property::TRANSFORM && p1.unit == Property::TRANSFORM)
+	if (p0.unit == Property::Unit::TRANSFORM && p1.unit == Property::Unit::TRANSFORM)
 	{
 		auto& t0 = p0.GetTransformPtr();
 		auto& t1 = p1.GetTransformPtr();
 		auto t = t0->Interpolate(*t1, alpha);
 		if (!t) {
 			Log::Message(Log::Level::Error, "Transform primitives can not be interpolated.");
-			return Property{ t0, Property::TRANSFORM };
+			return Property{ t0, Property::Unit::TRANSFORM };
 		}
-		return Property{ TransformPtr(std::move(t)), Property::TRANSFORM };
+		return Property{ TransformPtr(std::move(t)), Property::Unit::TRANSFORM };
 	}
 
 	// Fall back to discrete interpolation for incompatible units.
@@ -137,7 +138,7 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 static bool PrepareTransforms(AnimationKey& key, Element& element) {
 	auto& prop0 = key.in;
 	auto& prop1 = key.out;
-	if (prop0.unit != Property::TRANSFORM || prop1.unit != Property::TRANSFORM) {
+	if (prop0.unit != Property::Unit::TRANSFORM || prop1.unit != Property::Unit::TRANSFORM) {
 		return false;
 	}
 	if (!prop0.Has<TransformPtr>()) {
@@ -163,16 +164,13 @@ ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigi
 	, animation_complete(false)
 	, origin(origin)
 {
-	if (!current_value.definition) {
-		Log::Message(Log::Level::Warning, "Property in animation key did not have a definition (while adding key '%s').", current_value.ToString().c_str());
-	}
 	InternalAddKey(0.0f, current_value, element, Tween{});
 }
 
 
 bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween)
 {
-	if (out_prop.unit == Property::ANIMATION || out_prop.unit == Property::TRANSITION || out_prop.unit == Property::STRING) {
+	if (out_prop.unit == Property::Unit::ANIMATION || out_prop.unit == Property::Unit::TRANSITION || out_prop.unit == Property::Unit::STRING) {
 		Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", out_prop.ToString().c_str());
 		return false;
 	}
@@ -181,7 +179,7 @@ bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Elem
 	Property const& in_prop = first ? out_prop: keys.back().prop;
 	keys.emplace_back(time, in_prop, out_prop, tween);
 	bool result = true;
-	if (!first && out_prop.unit == Property::TRANSFORM) {
+	if (!first && out_prop.unit == Property::Unit::TRANSFORM) {
 		result = PrepareTransforms(keys.back(), element);
 	}
 	if (!result) {

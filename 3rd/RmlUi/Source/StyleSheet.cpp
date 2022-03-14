@@ -113,7 +113,7 @@ size_t StyleSheet::NodeHash(const std::string& tag, const std::string& id)
 }
 
 // Returns the compiled element definition for a given element hierarchy.
-std::shared_ptr<PropertyDictionary> StyleSheet::GetElementDefinition(const Element* element) const
+std::shared_ptr<StyleSheetPropertyDictionary> StyleSheet::GetElementDefinition(const Element* element) const
 {
 	// See if there are any styles defined for this element.
 	// Using static to avoid allocations. Make sure we don't call this function recursively.
@@ -174,11 +174,11 @@ std::shared_ptr<PropertyDictionary> StyleSheet::GetElementDefinition(const Eleme
 	auto cache_iterator = node_cache.find(seed);
 	if (cache_iterator != node_cache.end())
 	{
-		std::shared_ptr<PropertyDictionary>& definition = (*cache_iterator).second;
+		std::shared_ptr<StyleSheetPropertyDictionary>& definition = (*cache_iterator).second;
 		return definition;
 	}
 
-	auto new_definition = std::make_shared<PropertyDictionary>();
+	auto new_definition = std::make_shared<StyleSheetPropertyDictionary>();
 	for (auto const& node : applicable_nodes) {
 		node->MergeProperties(*new_definition);
 	}

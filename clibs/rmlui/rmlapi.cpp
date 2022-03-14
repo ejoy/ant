@@ -345,9 +345,8 @@ lElementSetPropertyImmediate(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	std::string name = lua_checkstdstring(L, 2);
 	std::string value = lua_checkstdstring(L, 3);
-	bool ok = e->SetPropertyImmediate(name, value);
-	lua_pushboolean(L, ok);
-	return 1;
+	e->SetPropertyImmediate(name, value);
+	return 0;
 }
 
 static int

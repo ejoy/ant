@@ -8,37 +8,37 @@ namespace Rml {
 float ComputeProperty(FloatValue fv, Element* e) {
 	static constexpr float PixelsPerInch = 96.0f;
 	switch (fv.unit) {
-	case Property::NUMBER:
-	case Property::PX:
-	case Property::RAD:
+	case Property::Unit::NUMBER:
+	case Property::Unit::PX:
+	case Property::Unit::RAD:
 		return fv.value;
-	case Property::EM:
+	case Property::Unit::EM:
 		return fv.value * e->GetFontSize();
-	case Property::REM:
+	case Property::Unit::REM:
 		return fv.value * e->GetOwnerDocument()->GetBody()->GetFontSize();
-	case Property::DEG:
+	case Property::Unit::DEG:
 		return fv.value * (std::numbers::pi_v<float> / 180.0f);
-	case Property::VW:
+	case Property::Unit::VW:
 		return fv.value * e->GetOwnerDocument()->GetDimensions().w * 0.01f;
-	case Property::VH:
+	case Property::Unit::VH:
 		return fv.value * e->GetOwnerDocument()->GetDimensions().h * 0.01f;
-	case Property::VMIN: {
+	case Property::Unit::VMIN: {
 		auto const& size = e->GetOwnerDocument()->GetDimensions();
 		return fv.value * std::min(size.w, size.h) * 0.01f;
 	}
-	case Property::VMAX: {
+	case Property::Unit::VMAX: {
 		auto const& size = e->GetOwnerDocument()->GetDimensions();
 		return fv.value * std::max(size.w, size.h) * 0.01f;
 	}
-	case Property::INCH: // inch
+	case Property::Unit::INCH: // inch
 		return fv.value * PixelsPerInch;
-	case Property::CM: // centimeter
+	case Property::Unit::CM: // centimeter
 		return fv.value * PixelsPerInch * (1.0f / 2.54f);
-	case Property::MM: // millimeter
+	case Property::Unit::MM: // millimeter
 		return fv.value * PixelsPerInch * (1.0f / 25.4f);
-	case Property::PT: // point
+	case Property::Unit::PT: // point
 		return fv.value * PixelsPerInch * (1.0f / 72.0f);
-	case Property::PC: // pica
+	case Property::Unit::PC: // pica
 		return fv.value * PixelsPerInch * (1.0f / 6.0f);
 	default:
 		return 0.0f;
@@ -46,14 +46,14 @@ float ComputeProperty(FloatValue fv, Element* e) {
 }
 
 float ComputePropertyW(FloatValue fv, Element* e) {
-	if (fv.unit == Property::PERCENT) {
+	if (fv.unit == Property::Unit::PERCENT) {
 		return fv.value * e->GetMetrics().frame.size.w * 0.01f;
 	}
 	return ComputeProperty(fv, e);
 }
 
 float ComputePropertyH(FloatValue fv, Element* e) {
-	if (fv.unit == Property::PERCENT) {
+	if (fv.unit == Property::Unit::PERCENT) {
 		return fv.value * e->GetMetrics().frame.size.h * 0.01f;
 	}
 	return ComputeProperty(fv, e);

@@ -558,7 +558,7 @@ Style::TextDecorationLine ElementText::GetTextDecorationLine() {
 
 Color ElementText::GetTextDecorationColor() {
 	const Property* property = GetComputedProperty(PropertyId::TextDecorationColor);
-	if (property->unit == Property::KEYWORD) {
+	if (property->unit == Property::Unit::KEYWORD) {
 		// CurrentColor
 		auto stroke = GetTextStroke();
 		if (stroke) {
