@@ -31,15 +31,31 @@
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "PropertyShorthandDefinition.h"
-#include "IdNameMap.h"
 #include <limits.h>
 #include <stdint.h>
 
 namespace Rml {
 
-PropertySpecification::PropertySpecification() :
-	properties(), shorthands(),
-	property_map(std::make_unique<PropertyIdNameMap>()), shorthand_map(std::make_unique<ShorthandIdNameMap>())
+template <typename T>
+void MapAdd(std::unordered_map<std::string, T>& map, const std::string& name, T id) {
+	bool inserted = map.emplace(name, id).second;
+	assert(inserted);
+	(void)inserted;
+}
+
+template <typename T>
+T MapGet(std::unordered_map<std::string, T> const& map, const std::string& name)  {
+	auto it = map.find(name);
+	if (it != map.end())
+		return it->second;
+	return T::Invalid;
+}
+
+PropertySpecification::PropertySpecification()
+	: properties()
+	, shorthands()
+	, property_map()
+	, shorthand_map()
 {
 }
 
@@ -48,77 +64,48 @@ PropertySpecification::~PropertySpecification()
 }
 
 PropertyDefinition& PropertySpecification::RegisterProperty(PropertyId id, const std::string& property_name, bool inherited, const std::string& default_value) {
-	assert (id != PropertyId::Invalid);
-	property_map->AddPair(id, property_name);
+	assert (id < PropertyId::NumDefinedIds);
+	MapAdd(property_map, property_name, id);
 	size_t index = (size_t)id;
-	if (index < properties.size()) 	{
-		if (properties[index]) {
-			Log::Message(Log::Level::Error, "While registering property '%s': The property is already registered.", property_name.c_str());
-			return *properties[index];
-		}
-	}
-	else {
-		properties.resize((index*3)/2 + 1);
+	if (properties[index]) {
+		Log::Message(Log::Level::Error, "While registering property '%s': The property is already registered.", property_name.c_str());
+		return *properties[index];
 	}
 	properties[index] = std::make_unique<PropertyDefinition>(id, default_value, inherited);
-	property_ids.Insert(id);
 	if (inherited)
 		property_ids_inherited.Insert(id);
 	return *properties[index];
 }
 
 PropertyDefinition& PropertySpecification::RegisterProperty(PropertyId id, const std::string& property_name, bool inherited) {
-	assert (id != PropertyId::Invalid);
-	property_map->AddPair(id, property_name);
+	assert (id < PropertyId::NumDefinedIds);
+	MapAdd(property_map, property_name, id);
 	size_t index = (size_t)id;
-	if (index < properties.size()) {
-		if (properties[index]) {
-			Log::Message(Log::Level::Error, "While registering property '%s': The property is already registered.", property_name.c_str());
-			return *properties[index];
-		}
-	}
-	else {
-		properties.resize((index*3)/2 + 1);
+	if (properties[index]) {
+		Log::Message(Log::Level::Error, "While registering property '%s': The property is already registered.", property_name.c_str());
+		return *properties[index];
 	}
 	properties[index] = std::make_unique<PropertyDefinition>(id, inherited);
-	property_ids.Insert(id);
 	if (inherited)
 		property_ids_inherited.Insert(id);
 	return *properties[index];
 }
 
-const PropertyDefinition* PropertySpecification::GetProperty(PropertyId id) const
-{
-	if (id == PropertyId::Invalid || (size_t)id >= properties.size())
+const PropertyDefinition* PropertySpecification::GetPropertyDefinition(PropertyId id) const {
+	if (id >= PropertyId::NumDefinedIds)
 		return nullptr;
-
 	return properties[(size_t)id].get();
 }
 
-const PropertyDefinition* PropertySpecification::GetProperty(const std::string& property_name) const
-{
-	return GetProperty(property_map->GetId(property_name));
-}
-
 // Fetches a list of the names of all registered property definitions.
-const PropertyIdSet& PropertySpecification::GetRegisteredProperties(void) const
-{
-	return property_ids;
-}
-
-// Fetches a list of the names of all registered property definitions.
-const PropertyIdSet& PropertySpecification::GetRegisteredInheritedProperties(void) const
-{
+const PropertyIdSet& PropertySpecification::GetRegisteredInheritedProperties(void) const {
 	return property_ids_inherited;
 }
 
 // Registers a shorthand property definition.
-ShorthandId PropertySpecification::RegisterShorthand(const std::string& shorthand_name, const std::string& property_names, ShorthandType type, ShorthandId id)
-{
-	if (id == ShorthandId::Invalid)
-		id = shorthand_map->GetOrCreateId(shorthand_name);
-	else
-		shorthand_map->AddPair(id, shorthand_name);
+ShorthandId PropertySpecification::RegisterShorthand(const std::string& shorthand_name, const std::string& property_names, ShorthandType type, ShorthandId id) {
+	assert (id < ShorthandId::NumDefinedIds);
+	MapAdd(shorthand_map, shorthand_name, id);
 
 	std::vector<std::string> property_list;
 	StringUtilities::ExpandString(property_list, StringUtilities::ToLower(property_names));
@@ -138,22 +125,22 @@ ShorthandId PropertySpecification::RegisterShorthand(const std::string& shorthan
 			name.pop_back();
 		}
 
-		PropertyId property_id = property_map->GetId(name);
+		PropertyId property_id = MapGet(property_map, name);
 		if (property_id != PropertyId::Invalid)
 		{
 			// We have a valid property
-			if (const PropertyDefinition* property = GetProperty(property_id))
+			if (const PropertyDefinition* property = GetPropertyDefinition(property_id))
 				item = ShorthandItem(property_id, property, optional);
 		}
 		else
 		{
 			// Otherwise, we must be a shorthand
-			ShorthandId shorthand_id = shorthand_map->GetId(name);
+			ShorthandId shorthand_id = MapGet(shorthand_map, name);
 
 			// Test for valid shorthand id. The recursive types (and only those) can hold other shorthands.
 			if (shorthand_id != ShorthandId::Invalid && (type == ShorthandType::RecursiveRepeat || type == ShorthandType::RecursiveCommaSeparated))
 			{
-				if (const ShorthandDefinition * shorthand = GetShorthand(shorthand_id))
+				if (const ShorthandDefinition * shorthand = GetShorthandDefinition(shorthand_id))
 					item = ShorthandItem(shorthand_id, shorthand, optional);
 			}
 		}
@@ -170,42 +157,25 @@ ShorthandId PropertySpecification::RegisterShorthand(const std::string& shorthan
 	property_shorthand->type = type;
 
 	const size_t index = (size_t)id;
-
-	if (index < shorthands.size())
+	// We don't want to owerwrite an existing entry.
+	if (shorthands[index])
 	{
-		// We don't want to owerwrite an existing entry.
-		if (shorthands[index])
-		{
-			Log::Message(Log::Level::Error, "The shorthand '%s' already exists, ignoring.", shorthand_name.c_str());
-			return ShorthandId::Invalid;
-		}
+		Log::Message(Log::Level::Error, "The shorthand '%s' already exists, ignoring.", shorthand_name.c_str());
+		return ShorthandId::Invalid;
 	}
-	else
-	{
-		// Resize vector to hold the new index
-		shorthands.resize((index * 3) / 2 + 1);
-	}
-
 	shorthands[index] = std::move(property_shorthand);
 	return id;
 }
 
 // Returns a shorthand definition.
-const ShorthandDefinition* PropertySpecification::GetShorthand(ShorthandId id) const
-{
-	if (id == ShorthandId::Invalid || (size_t)id >= shorthands.size())
+const ShorthandDefinition* PropertySpecification::GetShorthandDefinition(ShorthandId id) const {
+	if (id >= ShorthandId::NumDefinedIds)
 		return nullptr;
-
 	return shorthands[(size_t)id].get();
 }
 
-const ShorthandDefinition* PropertySpecification::GetShorthand(const std::string& shorthand_name) const
-{
-	return GetShorthand(shorthand_map->GetId(shorthand_name));
-}
-
 void PropertySpecification::ParseShorthandDeclaration(PropertyIdSet& set, ShorthandId shorthand_id) const {
-	const ShorthandDefinition* shorthand_definition = GetShorthand(shorthand_id);
+	const ShorthandDefinition* shorthand_definition = GetShorthandDefinition(shorthand_id);
 	for (size_t i = 0; i < shorthand_definition->items.size(); ++i) {
 		const ShorthandItem& item = shorthand_definition->items[i];
 		if (item.type == ShorthandItemType::Property)
@@ -218,14 +188,14 @@ void PropertySpecification::ParseShorthandDeclaration(PropertyIdSet& set, Shorth
 bool PropertySpecification::ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) const
 {
 	// Try as a property first
-	PropertyId property_id = property_map->GetId(property_name);
+	PropertyId property_id = MapGet(property_map, property_name);
 	if (property_id != PropertyId::Invalid) {
 		set.Insert(property_id);
 		return true;
 	}
 
 	// Then, as a shorthand
-	ShorthandId shorthand_id = shorthand_map->GetId(property_name);
+	ShorthandId shorthand_id = MapGet(shorthand_map, property_name);
 	if (shorthand_id != ShorthandId::Invalid) {
 		ParseShorthandDeclaration(set, shorthand_id);
 		return true;
@@ -237,7 +207,7 @@ bool PropertySpecification::ParsePropertyDeclaration(PropertyIdSet& set, const s
 bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value) const
 {
 	// Try as a property first
-	PropertyId property_id = property_map->GetId(property_name);
+	PropertyId property_id = MapGet(property_map, property_name);
 	if (property_id != PropertyId::Invalid) {
 		if (ParsePropertyDeclaration(dictionary, property_id, property_value)) {
 			return true;
@@ -245,7 +215,7 @@ bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& diction
 	}
 
 	// Then, as a shorthand
-	ShorthandId shorthand_id = shorthand_map->GetId(property_name);
+	ShorthandId shorthand_id = MapGet(shorthand_map, property_name);
 	if (shorthand_id != ShorthandId::Invalid) {
 		if (ParseShorthandDeclaration(dictionary, shorthand_id, property_value)){
 			return true;
@@ -258,7 +228,7 @@ bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& diction
 bool PropertySpecification::ParsePropertyDeclaration(PropertyDictionary& dictionary, PropertyId property_id, const std::string& property_value) const
 {
 	// Parse as a single property.
-	const PropertyDefinition* property_definition = GetProperty(property_id);
+	const PropertyDefinition* property_definition = GetPropertyDefinition(property_id);
 	if (!property_definition)
 		return false;
 
@@ -282,7 +252,7 @@ bool PropertySpecification::ParseShorthandDeclaration(PropertyDictionary& dictio
 		return false;
 
 	// Parse as a shorthand.
-	const ShorthandDefinition* shorthand_definition = GetShorthand(shorthand_id);
+	const ShorthandDefinition* shorthand_definition = GetShorthandDefinition(shorthand_id);
 	if (!shorthand_definition)
 		return false;
 

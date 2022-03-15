@@ -111,7 +111,7 @@ public:
 		else if (szName == "style"sv) {
 			auto it = m_attributes.find("path");
 			if (it != m_attributes.end()) {
-				LoadExternalStyle(it->second);
+				StyleSheetFactory::CombineStyleSheet(m_style_sheet, it->second);
 			}
 		}
 		else {
@@ -157,37 +157,13 @@ public:
 	void OnStyleBegin(unsigned int line) override {
 		m_line = line;
 	}
-	void LoadInlineStyle(const std::string& content, const std::string& source_path, int line) {
-		std::unique_ptr<StyleSheet> inline_sheet = std::make_unique<StyleSheet>();
-		auto stream = std::make_unique<Stream>(source_path, (const uint8_t*)content.data(), content.size());
-		if (inline_sheet->LoadStyleSheet(stream.get(), line)) {
-			if (m_style_sheet) {
-				m_style_sheet->CombineStyleSheet(*inline_sheet);
-			}
-			else
-				m_style_sheet = std::move(inline_sheet);
-		}
-		stream.reset();
-	}
-	void LoadExternalStyle(const std::string& source_path) {
-		std::shared_ptr<StyleSheet> sub_sheet = StyleSheetFactory::GetStyleSheet(source_path);
-		if (sub_sheet) {
-			if (m_style_sheet) {
-				m_style_sheet->CombineStyleSheet(*sub_sheet);
-			}
-			else
-				m_style_sheet = sub_sheet;
-		}
-		else
-			Log::Message(Log::Level::Error, "Failed to load style sheet %s.", source_path.c_str());
-	}
 	void OnStyleEnd(const char* szValue) override {
 		auto it = m_attributes.find("path");
-		if (it == m_attributes.end()) {
-			LoadInlineStyle(szValue, m_doc.GetSourceURL(), m_line);
+		if (it != m_attributes.end()) {
+			StyleSheetFactory::CombineStyleSheet(m_style_sheet, it->second);
 		}
 		else {
-			LoadExternalStyle(it->second);
+			StyleSheetFactory::CombineStyleSheet(m_style_sheet, szValue, m_doc.GetSourceURL(), m_line);
 		}
 	}
 };

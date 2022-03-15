@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Types.h"
-#include "TextEffect.h"
+#include <stdint.h>
 
 namespace Rml { namespace Style {
 

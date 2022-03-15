@@ -64,30 +64,14 @@ public:
 	// Returns a property definition.
 	/// @param[in] property_name The name of the desired property.
 	/// @return The appropriate property definition if it could be found, nullptr otherwise.
-	static const PropertyDefinition* GetProperty(const std::string& property_name);
-	static const PropertyDefinition* GetProperty(PropertyId id);
+	static const PropertyDefinition* GetPropertyDefinition(PropertyId id);
 
-	/// Returns the id set of all registered property definitions.
-	static const PropertyIdSet& GetRegisteredProperties();
 	/// Returns the id set of all registered inherited property definitions.
 	static const PropertyIdSet& GetRegisteredInheritedProperties();
-
-	/// Returns a shorthand definition.
-	/// @param[in] shorthand_name The name of the desired shorthand.
-	/// @return The appropriate shorthand definition if it could be found, nullptr otherwise.
-	static const ShorthandDefinition* GetShorthand(const std::string& shorthand_name);
-	static const ShorthandDefinition* GetShorthand(ShorthandId id);
 
 	static bool ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name);
 	static bool ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value);
 
-	static PropertyId GetPropertyId(const std::string& property_name);
-	static ShorthandId GetShorthandId(const std::string& shorthand_name);
-	static const std::string& GetPropertyName(PropertyId id);
-	static const std::string& GetShorthandName(ShorthandId id);
-
-	// Get the underlying property ids associated by a shorthand.
-	static PropertyIdSet GetShorthandUnderlyingProperties(ShorthandId id);
 
 	static const PropertySpecification& GetPropertySpecification();
 

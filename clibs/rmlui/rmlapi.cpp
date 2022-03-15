@@ -4,7 +4,6 @@
 #include "RmlUi/Element.h"
 #include "RmlUi/Document.h"
 #include "RmlUi/EventListener.h"
-#include "RmlUi/PropertyDictionary.h"
 #include "RmlUi/StyleSheetSpecification.h"
 #include "RmlUi/Time.h"
 

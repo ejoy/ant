@@ -37,7 +37,6 @@
 #include "PropertyParserString.h"
 #include "PropertyParserTransform.h"
 #include "PropertyShorthandDefinition.h"
-#include "IdNameMap.h"
 
 namespace Rml {
 
@@ -131,35 +130,14 @@ PropertyParser* StyleSheetSpecification::GetParser(const std::string& parser_nam
 }
 
 // Returns a property definition.
-const PropertyDefinition* StyleSheetSpecification::GetProperty(const std::string& property_name)
+const PropertyDefinition* StyleSheetSpecification::GetPropertyDefinition(PropertyId id)
 {
-	return instance->properties.GetProperty(property_name);
-}
-
-const PropertyDefinition* StyleSheetSpecification::GetProperty(PropertyId id)
-{
-	return instance->properties.GetProperty(id);
-}
-
-const PropertyIdSet& StyleSheetSpecification::GetRegisteredProperties()
-{
-	return instance->properties.GetRegisteredProperties();
+	return instance->properties.GetPropertyDefinition(id);
 }
 
 const PropertyIdSet & StyleSheetSpecification::GetRegisteredInheritedProperties()
 {
 	return instance->properties.GetRegisteredInheritedProperties();
-}
-
-// Returns a shorthand definition.
-const ShorthandDefinition* StyleSheetSpecification::GetShorthand(const std::string& shorthand_name)
-{
-	return instance->properties.GetShorthand(shorthand_name);
-}
-
-const ShorthandDefinition* StyleSheetSpecification::GetShorthand(ShorthandId id)
-{
-	return instance->properties.GetShorthand(id);
 }
 
 bool StyleSheetSpecification::ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name)
@@ -170,48 +148,6 @@ bool StyleSheetSpecification::ParsePropertyDeclaration(PropertyIdSet& set, const
 bool StyleSheetSpecification::ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value)
 {
 	return instance->properties.ParsePropertyDeclaration(dictionary, property_name, property_value);
-}
-
-PropertyId StyleSheetSpecification::GetPropertyId(const std::string& property_name)
-{
-	return instance->properties.property_map->GetId(property_name);
-}
-
-ShorthandId StyleSheetSpecification::GetShorthandId(const std::string& shorthand_name)
-{
-	return instance->properties.shorthand_map->GetId(shorthand_name);
-}
-
-const std::string& StyleSheetSpecification::GetPropertyName(PropertyId id)
-{
-	return instance->properties.property_map->GetName(id);
-}
-
-const std::string& StyleSheetSpecification::GetShorthandName(ShorthandId id)
-{
-	return instance->properties.shorthand_map->GetName(id);
-}
-
-PropertyIdSet StyleSheetSpecification::GetShorthandUnderlyingProperties(ShorthandId id)
-{
-	PropertyIdSet result;
-	const ShorthandDefinition* shorthand = instance->properties.GetShorthand(id);
-	if (!shorthand)
-		return result;
-
-	for (auto& item : shorthand->items)
-	{
-		if (item.type == ShorthandItemType::Property)
-		{
-			result.Insert(item.property_id);
-		}
-		else if (item.type == ShorthandItemType::Shorthand)
-		{
-			// When we have a shorthand pointing to another shorthands, call us recursively. Add the union of the previous result and new properties.
-			result |= GetShorthandUnderlyingProperties(item.shorthand_id);
-		}
-	}
-	return result;
 }
 
 const PropertySpecification& StyleSheetSpecification::GetPropertySpecification()

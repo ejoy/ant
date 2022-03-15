@@ -52,7 +52,6 @@ private:
 
 public:
 	PropertyIdSet() {
-		static_assert((size_t)PropertyId::Invalid == 0, "PropertyIdSet makes an assumption that PropertyId::Invalid is zero.");
 	}
 
 	void Insert(PropertyId id) {

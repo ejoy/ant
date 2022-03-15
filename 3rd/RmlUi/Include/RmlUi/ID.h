@@ -36,14 +36,12 @@ namespace Rml {
 
 enum class ShorthandId : uint8_t
 {
-	Invalid,
-
 	/*
 	  The following values define the shorthand ids for the main stylesheet specification.
 	  These values must not be used in places that have their own property specification,
 	  such as font-effects.
 	*/
-	Margin,
+	Margin = 0,
 	Padding,
 	BorderWidth,
 	BorderColor,
@@ -66,19 +64,18 @@ enum class ShorthandId : uint8_t
 	Outline,
 
 	NumDefinedIds,
+	Invalid,
 };
 
 
 enum class PropertyId : uint8_t
 {
-	Invalid,
-
 	/*
 	  The following values define the property ids for the main stylesheet specification.
 	  These values must not be used in places that have their own property specification,
 	  such as font-effects.
 	*/
-	MarginTop,
+	MarginTop = 0,
 	MarginRight,
 	MarginBottom,
 	MarginLeft,
@@ -176,6 +173,8 @@ enum class PropertyId : uint8_t
 	ScrollTop,
 
 	NumDefinedIds,
+	Invalid,
+
 };
 
 } // namespace Rml

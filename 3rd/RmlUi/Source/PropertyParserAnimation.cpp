@@ -310,22 +310,11 @@ static bool ParseTransition(Property & property, const std::vector<std::string>&
 				}
 				else
 				{
-					// Must be a property name or shorthand, expand now
-					if (auto shorthand = StyleSheetSpecification::GetShorthand(argument))
-					{
-						PropertyIdSet underlying_properties = StyleSheetSpecification::GetShorthandUnderlyingProperties(shorthand->id);
-						target_property_names |= underlying_properties;
-					}
-					else if (auto definition = StyleSheetSpecification::GetProperty(argument))
-					{
-						// Single property
-						target_property_names.Insert(definition->GetId());
-					}
-					else
-					{
-						// Unknown property name
+					PropertyIdSet properties;
+					if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, argument)) {
 						return false;
 					}
+					target_property_names |= properties;
 				}
 			}
 		}

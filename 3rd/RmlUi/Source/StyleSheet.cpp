@@ -36,6 +36,8 @@
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Property.h"
+#include "../Include/RmlUi/Log.h"
+#include "../Include/RmlUi/Stream.h"
 #include <algorithm>
 
 namespace Rml {
@@ -63,11 +65,14 @@ StyleSheet::~StyleSheet()
 {
 }
 
-bool StyleSheet::LoadStyleSheet(Stream* stream, int begin_line_number)
-{
+bool StyleSheet::LoadStyleSheet(Stream* stream, int begin_line_number) {
 	StyleSheetParser parser;
 	specificity_offset = parser.Parse(root.get(), stream, *this, keyframes, begin_line_number);
-	return specificity_offset >= 0;
+	bool ok = specificity_offset >= 0;
+	if (!ok) {
+		Log::Message(Log::Level::Error, "Failed to load style sheet in %s.", stream->GetSourceURL().c_str());
+	}
+	return ok;
 }
 
 /// Combines this style sheet with another one, producing a new sheet

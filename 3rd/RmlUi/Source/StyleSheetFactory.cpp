@@ -91,24 +91,46 @@ void StyleSheetFactory::Shutdown()
 	}
 }
 
-std::shared_ptr<StyleSheet> StyleSheetFactory::GetStyleSheet(const std::string& sheet_name)
-{
-	// Look up the sheet definition in the cache
-	StyleSheets::iterator itr = instance->stylesheets.find(sheet_name);
-	if (itr != instance->stylesheets.end())
-	{
+std::shared_ptr<StyleSheet> StyleSheetFactory::LoadStyleSheet(const std::string& source_path) {
+	StyleSheets::iterator itr = instance->stylesheets.find(source_path);
+	if (itr != instance->stylesheets.end()) {
 		return (*itr).second;
 	}
-
-	// Don't currently have the sheet, attempt to load it
-	std::shared_ptr<StyleSheet> sheet = instance->LoadStyleSheet(sheet_name);
-	if (!sheet)
+	Stream stream(source_path);
+	std::shared_ptr<StyleSheet> sheet = std::make_shared<StyleSheet>();
+	if (!sheet->LoadStyleSheet(&stream)) {
 		return nullptr;
-
-	// Add it to the cache, and add a reference count so the cache will keep hold of it.
-	instance->stylesheets[sheet_name] = sheet;
-
+	}
+	instance->stylesheets.emplace(source_path, sheet);
 	return sheet;
+}
+
+std::shared_ptr<StyleSheet> StyleSheetFactory::LoadStyleSheet(const std::string& content, const std::string& source_path, int line) {
+	Stream stream(source_path, (const uint8_t*)content.data(), content.size());
+	std::shared_ptr<StyleSheet> sheet = std::make_shared<StyleSheet>();
+	if (!sheet->LoadStyleSheet(&stream, line)) {
+		return nullptr;
+	}
+	return sheet;
+}
+
+void StyleSheetFactory::CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, std::shared_ptr<StyleSheet> subsheet) {
+	if (subsheet) {
+		if (sheet) {
+			sheet->CombineStyleSheet(*subsheet);
+		}
+		else {
+			sheet = subsheet;
+		}
+	}
+}
+
+void StyleSheetFactory::CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, const std::string& source_path) {
+	CombineStyleSheet(sheet, LoadStyleSheet(source_path));
+}
+
+void StyleSheetFactory::CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, const std::string& content, const std::string& source_path, int line) {
+	CombineStyleSheet(sheet, LoadStyleSheet(content, source_path, line));
 }
 
 // Clear the style sheet cache.
@@ -195,24 +217,6 @@ StructuralSelector StyleSheetFactory::GetSelector(const std::string& name)
 	}
 
 	return StructuralSelector(it->second, a, b);
-}
-
-std::shared_ptr<StyleSheet> StyleSheetFactory::LoadStyleSheet(const std::string& sheet)
-{
-	std::shared_ptr<StyleSheet> new_style_sheet;
-
-	// Open stream, construct new sheet and pass the stream into the sheet
-	// TODO: Make this support ASYNC
-	auto stream = std::make_unique<Stream>(sheet);
-	if (stream)
-	{
-		new_style_sheet = std::make_shared<StyleSheet>();
-		if (!new_style_sheet->LoadStyleSheet(stream.get()))
-		{
-			new_style_sheet = nullptr;
-		}
-	}
-	return new_style_sheet;
 }
 
 } // namespace Rml

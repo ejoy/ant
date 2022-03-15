@@ -37,8 +37,6 @@ namespace Rml {
 
 class StyleSheetSpecification;
 class PropertyDefinition;
-class PropertyIdNameMap;
-class ShorthandIdNameMap;
 struct ShorthandDefinition;
 
 enum class ShorthandType
@@ -80,11 +78,8 @@ public:
 	/// Returns a property definition.
 	/// @param[in] id The id of the desired property.
 	/// @return The appropriate property definition if it could be found, nullptr otherwise.
-	const PropertyDefinition* GetProperty(PropertyId id) const;
-	const PropertyDefinition* GetProperty(const std::string& property_name) const;
+	const PropertyDefinition* GetPropertyDefinition(PropertyId id) const;
 
-	/// Returns the id set of all registered property definitions.
-	const PropertyIdSet& GetRegisteredProperties() const;
 	/// Returns the id set of all registered inherited property definitions.
 	const PropertyIdSet& GetRegisteredInheritedProperties() const;
 
@@ -94,12 +89,11 @@ public:
 	/// @param[in] type The type of shorthand to declare.
 	/// @param[in] id If 'Invalid' then automatically assigns a new id, otherwise assigns the given id.
 	/// @param True if all the property names exist, false otherwise.
-	ShorthandId RegisterShorthand(const std::string& shorthand_name, const std::string& property_names, ShorthandType type, ShorthandId id = ShorthandId::Invalid);
+	ShorthandId RegisterShorthand(const std::string& shorthand_name, const std::string& property_names, ShorthandType type, ShorthandId id);
 	/// Returns a shorthand definition.
 	/// @param[in] shorthand_name The name of the desired shorthand.
 	/// @return The appropriate shorthand definition if it could be found, nullptr otherwise.
-	const ShorthandDefinition* GetShorthand(ShorthandId id) const;
-	const ShorthandDefinition* GetShorthand(const std::string& shorthand_name) const;
+	const ShorthandDefinition* GetShorthandDefinition(ShorthandId id) const;
 
 	bool ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) const;
 	bool ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value) const;
@@ -108,16 +102,12 @@ public:
 	bool ParseShorthandDeclaration(PropertyDictionary& dictionary, ShorthandId shorthand_id, const std::string& property_value) const;
 
 private:
-	using Properties = std::vector< std::unique_ptr<PropertyDefinition> >;
-	using Shorthands = std::vector< std::unique_ptr<ShorthandDefinition> >;
+	std::array<std::unique_ptr<PropertyDefinition>,  (size_t)PropertyId::NumDefinedIds>  properties;
+	std::array<std::unique_ptr<ShorthandDefinition>, (size_t)ShorthandId::NumDefinedIds> shorthands;
 
-	Properties properties;
-	Shorthands shorthands;
+	std::unordered_map<std::string, PropertyId> property_map;
+	std::unordered_map<std::string, ShorthandId> shorthand_map;
 
-	std::unique_ptr<PropertyIdNameMap> property_map;
-	std::unique_ptr<ShorthandIdNameMap> shorthand_map;
-
-	PropertyIdSet property_ids;
 	PropertyIdSet property_ids_inherited;
 
 	bool ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) const;
