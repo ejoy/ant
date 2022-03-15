@@ -1052,23 +1052,18 @@ void Element::HandleTransitionProperty() {
 	dirty_transition = false;
 
 	// Remove all transitions that are no longer in our local list
-	const TransitionList& keep_transitions = GetComputedValues().transition;
-
-	if (keep_transitions.all)
-		return;
+	const TransitionList* keep_transitions = GetTransition();
 
 	auto it_remove = animations.end();
 
-	if (keep_transitions.none) {
-		// All transitions should be removed, but only touch the animations that originate from the 'transition' property.
-		// Move all animations to be erased in a valid state at the end of the list, and erase later.
+	if (!keep_transitions || keep_transitions->none) {
 		it_remove = std::partition(animations.begin(), animations.end(),
 			[](const ElementAnimation& animation) -> bool { return !animation.IsTransition(); }
 		);
 	}
-	else {
+	else if (!keep_transitions->all) {
 		// Only remove the transitions that are not in our keep list.
-		const auto& keep_transitions_list = keep_transitions.transitions;
+		const auto& keep_transitions_list = keep_transitions->transitions;
 
 		it_remove = std::partition(animations.begin(), animations.end(),
 			[&keep_transitions_list](const ElementAnimation& animation) -> bool {
@@ -1081,6 +1076,9 @@ void Element::HandleTransitionProperty() {
 				return keep_animation;
 			}
 		);
+	}
+	else {
+		return;
 	}
 
 	// We can decide what to do with cancelled transitions here.
@@ -1197,7 +1195,7 @@ void Element::UpdateTransform() {
 		origin2d = origin2d - parent->GetScrollOffset();
 	}
 	glm::vec3 origin(origin2d.x, origin2d.y, 0);
-	auto computedTransform = GetComputedProperty(PropertyId::Transform)->GetTransformPtr();
+	auto computedTransform = GetComputedProperty(PropertyId::Transform)->Get<TransformPtr>();
 	if (computedTransform && !computedTransform->empty()) {
 		glm::vec3 transform_origin = origin + glm::vec3 {
 			ComputePropertyW(GetComputedProperty(PropertyId::TransformOriginX), this),
@@ -1620,20 +1618,25 @@ const Property* Element::GetComputedProperty(PropertyId id) const {
 	return propertyDef->GetDefaultValue();
 }
 
-const Property* Element::GetTransitionProperty(const PropertyDictionary& def) const {
+const TransitionList* Element::GetTransition(const PropertyDictionary* def) const {
 	const Property* property = PropertyDictionaryGet(inline_properties, PropertyId::Transition);
-	if (property)
-		return property;
-	return PropertyDictionaryGet(def, PropertyId::Transition);
+	if (!property) {
+		if (def) {
+			property = PropertyDictionaryGet(*def, PropertyId::Transition);
+		}
+		else {
+			property = PropertyDictionaryGet(definition_properties->prop, PropertyId::Transition);
+		}
+	}
+	if (!property) {
+		return nullptr;
+	}
+	return &property->Get<TransitionList>();
 }
 
-void Element::TransitionPropertyChanges(PropertyIdSet& properties, const PropertyDictionary& new_definition) {
-	const Property* transition_property = GetTransitionProperty(new_definition);
-	if (!transition_property) {
-		return;
-	}
-	auto transition_list = transition_property->GetTransitionList();
-	if (transition_list.none) {
+void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const PropertyDictionary& new_definition) {
+	const TransitionList* transition_list = GetTransition(&new_definition);
+	if (!transition_list || transition_list->none) {
 		return;
 	}
 	auto add_transition = [&](const Transition& transition) {
@@ -1644,50 +1647,37 @@ void Element::TransitionPropertyChanges(PropertyIdSet& properties, const Propert
 		}
 		return false;
 	};
-	if (transition_list.all) {
-		Transition transition = transition_list.transitions[0];
-		for (auto it = properties.begin(); it != properties.end(); ) {
+	if (transition_list->all) {
+		Transition transition = transition_list->transitions[0];
+		for (auto it = properties.begin(); it != properties.end(); ++it) {
 			transition.id = *it;
-			if (add_transition(transition))
-				it = properties.Erase(it);
-			else
-				++it;
+			add_transition(transition);
 		}
 	}
 	else {
-		for (auto& transition : transition_list.transitions) {
+		for (auto& transition : transition_list->transitions) {
 			if (properties.Contains(transition.id)) {
-				if (add_transition(transition))
-					properties.Erase(transition.id);
+				add_transition(transition);
 			}
 		}
 	}
 }
 
-void Element::TransitionPropertyChanges(PropertyId id, const Property& property) {
-	const Property* transition_property = GetTransitionProperty(definition_properties->prop);
-	if (!transition_property) {
+void Element::TransitionPropertyChanges(const TransitionList* transition_list, PropertyId id, const Property& old_property) {
+	const Property* new_property = GetComputedProperty(id);
+	if (!new_property || (new_property->unit != old_property.unit) || (*new_property == old_property)) {
 		return;
 	}
-	auto transition_list = transition_property->GetTransitionList();
-	if (transition_list.none) {
-		return;
-	}
-	auto add_transition = [&](const Transition& transition) {
-		const Property* from = GetComputedProperty(id);
-		if (from && (from->unit == property.unit) && (*from != property)) {
-			StartTransition(transition, *from, property);
-		}
-	};
-	if (transition_list.all) {
-		Transition transition = transition_list.transitions[0];
+	if (transition_list->all) {
+		Transition transition = transition_list->transitions[0];
 		transition.id = id;
-		add_transition(transition);
+		StartTransition(transition, old_property, *new_property);
 	}
 	else {
-		for (auto& transition : transition_list.transitions) {
+		for (auto& transition : transition_list->transitions) {
 			if (transition.id == id) {
-				add_transition(transition);
+				StartTransition(transition, old_property, *new_property);
+				break;
 			}
 		}
 	}
@@ -1738,9 +1728,18 @@ void Element::UpdateDefinition() {
 }
 
 void Element::SetProperty(PropertyId id, const Property& property) {
-	TransitionPropertyChanges(id, property);
+	const TransitionList* transition_list = GetTransition();
+	if (!transition_list || transition_list->none) {
+		inline_properties[id] = property;
+		DirtyProperty(id);
+		return;
+	}
+	const Property* old_property = GetComputedProperty(id);
 	inline_properties[id] = property;
 	DirtyProperty(id);
+	if (old_property) {
+		TransitionPropertyChanges(transition_list, id, *old_property);
+	}
 }
 
 void Element::SetAnimationProperty(PropertyId id, const Property& property) {
@@ -1754,9 +1753,19 @@ void Element::SetPropertyImmediate(PropertyId id, const Property& property) {
 }
 
 void Element::RemoveProperty(PropertyId id) {
-	//TODO 需要触发动画
+	const TransitionList* transition_list = GetTransition();
+	if (!transition_list || transition_list->none) {
+		if (inline_properties.erase(id)) {
+			DirtyProperty(id);
+		}
+		return;
+	}
+	const Property* old_property = GetComputedProperty(id);
 	if (inline_properties.erase(id)) {
 		DirtyProperty(id);
+	}
+	if (old_property) {
+		TransitionPropertyChanges(transition_list, id, *old_property);
 	}
 }
 
@@ -1893,11 +1902,8 @@ void Element::UpdateProperties() {
 		case PropertyId::BackgroundColor:
 			computed_values.background_color = property.GetColor();
 			break;
-		case PropertyId::Transition:
-			computed_values.transition = property.GetTransitionList();
-			break;
 		case PropertyId::Animation:
-			computed_values.animation = property.GetAnimationList();
+			computed_values.animation = property.Get<AnimationList>();
 			break;
 		default:
 			break;

@@ -90,12 +90,35 @@ public:
 	Color           GetColor() const;
 	int             GetKeyword() const;
 	std::string     GetString() const;
-	TransformPtr&   GetTransformPtr();
-	TransitionList& GetTransitionList();
-	AnimationList&  GetAnimationList();
-	TransformPtr const&   GetTransformPtr() const;
-	TransitionList const& GetTransitionList() const;
-	AnimationList const&  GetAnimationList() const;
+
+
+	template <typename T>
+	struct TypeUnit {};
+	template <> struct TypeUnit<TransitionList> { static const Unit unit = Unit::TRANSITION; };
+	template <> struct TypeUnit<TransformPtr> { static const Unit unit = Unit::TRANSFORM; };
+	template <> struct TypeUnit<AnimationList> { static const Unit unit = Unit::ANIMATION; };
+
+	template <typename T>
+	T& Get() {
+		Unit checkunit = TypeUnit<T>::unit;
+		if (checkunit == unit) {
+			return std::get<T>(value);
+		}
+		assert(checkunit == unit);
+		static T dummy {};
+		return dummy;
+	}
+
+	template <typename T>
+	const T& Get() const {
+		Unit checkunit = TypeUnit<T>::unit;
+		if (checkunit == unit) {
+			return std::get<T>(value);
+		}
+		assert(checkunit == unit);
+		static T dummy {};
+		return dummy;
+	}
 
 	template <typename T>
 	bool Has() const { return std::holds_alternative<T>(value); }

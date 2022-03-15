@@ -61,8 +61,8 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 
 	if (p0.unit == Property::Unit::TRANSFORM && p1.unit == Property::Unit::TRANSFORM)
 	{
-		auto& t0 = p0.GetTransformPtr();
-		auto& t1 = p1.GetTransformPtr();
+		auto& t0 = p0.Get<TransformPtr>();
+		auto& t1 = p1.Get<TransformPtr>();
 		auto t = t0->Interpolate(*t1, alpha);
 		if (!t) {
 			Log::Message(Log::Level::Error, "Transform primitives can not be interpolated.");
@@ -147,8 +147,8 @@ static bool PrepareTransforms(AnimationKey& key, Element& element) {
 	if (!prop1.Has<TransformPtr>()) {
 		prop1.value = std::make_shared<Transform>();
 	}
-	auto& t0 = prop0.GetTransformPtr();
-	auto& t1 = prop1.GetTransformPtr();
+	auto& t0 = prop0.Get<TransformPtr>();
+	auto& t1 = prop1.Get<TransformPtr>();
 	return PrepareTransformPair(*t0, *t1, element);
 }
 

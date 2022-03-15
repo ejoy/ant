@@ -20,7 +20,6 @@ enum class BackgroundSize : uint8_t { Auto, Cover, Contain };
 enum class PointerEvents : uint8_t { None, Auto };
 
 struct ComputedValues {
-	TransitionList transition;
 	AnimationList animation;
 	EdgeInsets<Color> border_color;
 	CornerInsets<FloatValue> border_radius{};

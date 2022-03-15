@@ -83,7 +83,6 @@ public:
 
 	void ImportProperties(const StyleSheetPropertyDictionary& properties, int rule_specificity);
 	void MergeProperties(StyleSheetPropertyDictionary& properties, int specificity_offset = 0) const;
-	const PropertyDictionary& GetProperties() const;
 
 	/// Returns true if this node is applicable to the given element, given its IDs, classes and heritage.
 	bool IsApplicable(const Element* element, bool skip_id_tag) const;

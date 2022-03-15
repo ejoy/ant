@@ -195,11 +195,6 @@ void StyleSheetNode::MergeProperties(StyleSheetPropertyDictionary& _properties, 
 	}
 }
 
-const PropertyDictionary& StyleSheetNode::GetProperties() const
-{
-	return properties.prop;
-}
-
 inline bool StyleSheetNode::Match(const Element* element) const
 {
 	if (!tag.empty() && tag != element->GetTagName())

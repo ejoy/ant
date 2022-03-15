@@ -108,13 +108,13 @@ public:
 	const Property* GetComputedProperty(PropertyId id) const;
 	const Property* GetComputedLocalProperty(PropertyId id) const;
 	const Property* GetAnimationProperty(PropertyId id) const;
-	const Property* GetTransitionProperty(const PropertyDictionary& def) const;
+	const TransitionList* GetTransition(const PropertyDictionary* def = nullptr) const;
 
 	void SetProperty(const std::string& name, std::optional<std::string> value = {});
 	std::optional<std::string> GetProperty(const std::string& name) const;
 
-	void TransitionPropertyChanges(PropertyIdSet & properties, const PropertyDictionary& new_definition);
-	void TransitionPropertyChanges(PropertyId id, const Property& property);
+	void TransitionPropertyChanges(const PropertyIdSet & properties, const PropertyDictionary& new_definition);
+	void TransitionPropertyChanges(const TransitionList* transition_list, PropertyId id, const Property& old_property);
 
 protected:
 	void Update();
