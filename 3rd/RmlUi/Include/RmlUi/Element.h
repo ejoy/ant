@@ -70,7 +70,6 @@ public:
 	void QuerySelectorAll(ElementList& elements, const std::string& selectors);
 
 	DataModel* GetDataModel() const;
-	const Style::ComputedValues& GetComputedValues() const;
 
 	void UpdateLayout();
 	void SetParent(Element* parent);
@@ -156,7 +155,6 @@ protected:
 	ElementAnimationList animations;
 	std::vector<std::string> classes;
 	PseudoClassSet pseudo_classes = 0;
-	Style::ComputedValues computed_values;
 	std::vector<EventListener*> listeners;
 	std::unique_ptr<Geometry> geometry_background;
 	std::unique_ptr<Geometry> geometry_image;

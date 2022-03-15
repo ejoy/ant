@@ -831,10 +831,6 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 	}
 }
 
-const Style::ComputedValues& Element::GetComputedValues() const {
-	return computed_values;
-}
-
 std::string Element::GetInnerRML() const {
 	std::string rml;
 	for (auto& child : children) {
@@ -1096,17 +1092,6 @@ void Element::HandleAnimationProperty() {
 	}
 	dirty_animation = false;
 
-	const AnimationList& animation_list = computed_values.animation;
-	bool element_has_animations = (!animation_list.empty() || !animations.empty());
-	StyleSheet* stylesheet = nullptr;
-
-	if (element_has_animations)
-		stylesheet = GetStyleSheet().get();
-
-	if (!stylesheet) {
-		return;
-	}
-
 	// Remove existing animations
 	{
 		auto it_remove = std::partition(animations.begin(), animations.end(), 
@@ -1118,6 +1103,21 @@ void Element::HandleAnimationProperty() {
 	}
 
 	// Start animations
+	const Property* property = GetComputedProperty(PropertyId::Animation);
+	if (!property) {
+		return;
+	}
+	const AnimationList& animation_list = property->Get<AnimationList>();
+	bool element_has_animations = (!animation_list.empty() || !animations.empty());
+	StyleSheet* stylesheet = nullptr;
+
+	if (element_has_animations)
+		stylesheet = GetStyleSheet().get();
+
+	if (!stylesheet) {
+		return;
+	}
+
 	for (const auto& animation : animation_list) {
 		const Keyframes* keyframes_ptr = stylesheet->GetKeyframes(animation.name);
 		if (keyframes_ptr && keyframes_ptr->blocks.size() >= 1 && !animation.paused) {
@@ -1874,36 +1874,6 @@ void Element::UpdateProperties() {
 		case PropertyId::FlexGrow:
 		case PropertyId::FlexShrink:
 			GetLayout().SetProperty(id, &property, this);
-			break;
-		case PropertyId::BorderTopColor:
-			computed_values.border_color.top = property.GetColor();
-			break;
-		case PropertyId::BorderRightColor:
-			computed_values.border_color.right = property.GetColor();
-			break;
-		case PropertyId::BorderBottomColor:
-			computed_values.border_color.bottom = property.GetColor();
-			break;
-		case PropertyId::BorderLeftColor:
-			computed_values.border_color.left = property.GetColor();
-			break;
-		case PropertyId::BorderTopLeftRadius:
-			computed_values.border_radius.topLeft = property.ToFloatValue();
-			break;
-		case PropertyId::BorderTopRightRadius:
-			computed_values.border_radius.topRight = property.ToFloatValue();
-			break;
-		case PropertyId::BorderBottomRightRadius:
-			computed_values.border_radius.bottomRight = property.ToFloatValue();
-			break;
-		case PropertyId::BorderBottomLeftRadius:
-			computed_values.border_radius.bottomLeft = property.ToFloatValue();
-			break;
-		case PropertyId::BackgroundColor:
-			computed_values.background_color = property.GetColor();
-			break;
-		case PropertyId::Animation:
-			computed_values.animation = property.Get<AnimationList>();
 			break;
 		default:
 			break;

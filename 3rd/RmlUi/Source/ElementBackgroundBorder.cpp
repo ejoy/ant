@@ -37,9 +37,19 @@ namespace Rml {
 static const auto PI = acosf(-1);
 
 void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path& paddingEdge) {
-	const Style::ComputedValues& computed = element->GetComputedValues();
-	EdgeInsets<Color> border_color = computed.border_color;
-	Color background_color = computed.background_color;
+	EdgeInsets<Color> border_color {
+		element->GetComputedProperty(PropertyId::BorderLeftColor)->GetColor(),
+		element->GetComputedProperty(PropertyId::BorderTopColor)->GetColor(),
+		element->GetComputedProperty(PropertyId::BorderRightColor)->GetColor(),
+		element->GetComputedProperty(PropertyId::BorderBottomColor)->GetColor(),
+	};
+	CornerInsets<float> border_radius {
+		ComputePropertyW(element->GetComputedProperty(PropertyId::BorderTopLeftRadius)->ToFloatValue(), element),
+		ComputePropertyH(element->GetComputedProperty(PropertyId::BorderTopRightRadius)->ToFloatValue(), element),
+		ComputePropertyW(element->GetComputedProperty(PropertyId::BorderBottomRightRadius)->ToFloatValue(), element),
+		ComputePropertyH(element->GetComputedProperty(PropertyId::BorderBottomLeftRadius)->ToFloatValue(), element),
+	};
+	Color background_color = element->GetComputedProperty(PropertyId::BackgroundColor)->GetColor();
 	float opacity = element->GetOpacity();
 	if (opacity < 1) {
 		ColorApplyOpacity(background_color, opacity);
@@ -47,13 +57,6 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 			ColorApplyOpacity(border_color[i], opacity);
 		}
 	}
-
-	CornerInsets<float> border_radius {
-		ComputePropertyW(computed.border_radius.topLeft, element),
-		ComputePropertyH(computed.border_radius.topRight, element),
-		ComputePropertyW(computed.border_radius.bottomRight, element),
-		ComputePropertyH(computed.border_radius.bottomLeft, element),
-	};
 	
 	const Layout::Metrics& metrics = element->GetMetrics();
 
@@ -105,7 +108,7 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 		{ border_radius.bottomLeft, metrics.frame.size.h },
 	};
 
-	geometry.AddQuad(quadLeft, computed.border_color.left);
+	geometry.AddQuad(quadLeft, border_color.left);
 	Geometry::Path topLeftOuter;
 	topLeftOuter.DrawArc(
 		{ border_radius.topLeft, border_radius.topLeft },
@@ -128,9 +131,9 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 			metrics.borderWidth.top
 		});
 	}
-	geometry.AddArc(topLeftOuter, topLeftInner, computed.border_color.left);
+	geometry.AddArc(topLeftOuter, topLeftInner, border_color.left);
 
-	geometry.AddQuad(quadTop, computed.border_color.top);
+	geometry.AddQuad(quadTop, border_color.top);
 	Geometry::Path topRightOuter;
 	topRightOuter.DrawArc(
 		{ metrics.frame.size.w - border_radius.topRight, border_radius.topRight },
@@ -153,9 +156,9 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 			metrics.borderWidth.top
 		});
 	}
-	geometry.AddArc(topRightOuter, topRightInner, computed.border_color.top);
+	geometry.AddArc(topRightOuter, topRightInner, border_color.top);
 
-	geometry.AddQuad(quadRight, computed.border_color.right);
+	geometry.AddQuad(quadRight, border_color.right);
 	Geometry::Path bottomRightOuter;
 	bottomRightOuter.DrawArc(
 		{ metrics.frame.size.w - border_radius.bottomRight, metrics.frame.size.h - border_radius.bottomRight },
@@ -178,9 +181,9 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 			metrics.frame.size.h - metrics.borderWidth.bottom
 		});
 	}
-	geometry.AddArc(bottomRightOuter, bottomRightInner, computed.border_color.right);
+	geometry.AddArc(bottomRightOuter, bottomRightInner, border_color.right);
 
-	geometry.AddQuad(quadBottom, computed.border_color.bottom);
+	geometry.AddQuad(quadBottom, border_color.bottom);
 	Geometry::Path bottomLeftOuter;
 	bottomLeftOuter.DrawArc(
 		{ border_radius.bottomLeft, metrics.frame.size.h - border_radius.bottomLeft },
@@ -203,7 +206,7 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 			metrics.frame.size.h - metrics.borderWidth.bottom
 		});
 	}
-	geometry.AddArc(bottomLeftOuter, bottomLeftInner, computed.border_color.bottom);
+	geometry.AddArc(bottomLeftOuter, bottomLeftInner, border_color.bottom);
 
 	paddingEdge.clear();
 	paddingEdge.append(topLeftInner);
