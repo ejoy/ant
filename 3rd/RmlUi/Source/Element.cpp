@@ -418,7 +418,7 @@ void Element::SetInnerRML(const std::string& rml) {
 		return;
 	}
 	HtmlParser parser;
-	EmbedHtmlHandler handler(parent);
+	EmbedHtmlHandler handler(this);
 	parser.Parse(rml, &handler);
 }
 
