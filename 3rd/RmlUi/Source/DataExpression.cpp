@@ -850,10 +850,10 @@ private:
 		case Instruction::Not:       R = Variant(!VariantHelper::Get<bool>(R));                     break;
 		case Instruction::And:       R = Variant(VariantHelper::Get<bool>(L) && VariantHelper::Get<bool>(R));     break;
 		case Instruction::Or:        R = Variant(VariantHelper::Get<bool>(L) || VariantHelper::Get<bool>(R));     break;
-		case Instruction::Less:      R = Variant(VariantHelper::Get<float>(L) < VariantHelper::Get<float>(R));  break;
-		case Instruction::LessEq:    R = Variant(VariantHelper::Get<float>(L) <= VariantHelper::Get<float>(R)); break;
-		case Instruction::Greater:   R = Variant(VariantHelper::Get<float>(L) > VariantHelper::Get<float>(R));  break;
-		case Instruction::GreaterEq: R = Variant(VariantHelper::Get<float>(L) >= VariantHelper::Get<float>(R)); break;
+		case Instruction::Less:      R = Variant(VariantHelper::ConvertGet<float>(L) < VariantHelper::ConvertGet<float>(R));  break;
+		case Instruction::LessEq:    R = Variant(VariantHelper::ConvertGet<float>(L) <= VariantHelper::ConvertGet<float>(R)); break;
+		case Instruction::Greater:   R = Variant(VariantHelper::ConvertGet<float>(L) > VariantHelper::ConvertGet<float>(R));  break;
+		case Instruction::GreaterEq: R = Variant(VariantHelper::ConvertGet<float>(L) >= VariantHelper::ConvertGet<float>(R)); break;
 		case Instruction::Equal:
 		{
 			if (AnyString(L, R))
