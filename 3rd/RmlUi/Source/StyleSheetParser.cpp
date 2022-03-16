@@ -32,7 +32,6 @@
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
-#include "../Include/RmlUi/PropertySpecification.h"
 #include "../Include/RmlUi/Stream.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
@@ -57,15 +56,12 @@ private:
 	// The dictionary to store the properties in.
 	PropertyDictionary& properties;
 
-	// The specification used to parse the values. Normally the default stylesheet specification.
-	const PropertySpecification& specification;
-
 public:
-	PropertySpecificationParser(PropertyDictionary& properties, const PropertySpecification& specification) : properties(properties), specification(specification) {}
+	PropertySpecificationParser(PropertyDictionary& properties) : properties(properties) {}
 
 	bool Parse(const std::string& name, const std::string& value) override
 	{
-		return specification.ParsePropertyDeclaration(properties, name, value);
+		return StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value);
 	}
 };
 
@@ -202,7 +198,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				{
 					// Read the attributes
 					StyleSheetPropertyDictionary properties;
-					PropertySpecificationParser parser(properties.prop, StyleSheetSpecification::GetPropertySpecification());
+					PropertySpecificationParser parser(properties.prop);
 					if (!ReadProperties(parser))
 						continue;
 
@@ -260,7 +256,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				{
 					// Each keyframe in keyframes has its own block which is processed here
 					PropertyDictionary properties;
-					PropertySpecificationParser parser(properties, StyleSheetSpecification::GetPropertySpecification());
+					PropertySpecificationParser parser(properties);
 					if(!ReadProperties(parser))
 						continue;
 
@@ -304,7 +300,7 @@ bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, co
 	assert(!stream);
 	Stream stream_owner("<unknown>", (const uint8_t*)properties.c_str(), properties.size());
 	stream = &stream_owner;
-	PropertySpecificationParser parser(parsed_properties, StyleSheetSpecification::GetPropertySpecification());
+	PropertySpecificationParser parser(parsed_properties);
 	bool success = ReadProperties(parser);
 	stream = nullptr;
 	return success;

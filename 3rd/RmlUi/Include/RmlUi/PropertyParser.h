@@ -44,8 +44,6 @@ using ParameterMap = std::unordered_map< std::string, int >;
 class PropertyParser
 {
 public:
-	virtual ~PropertyParser() {}
-
 	/// Called to parse a RCSS declaration.
 	/// @param[out] property The property to set the parsed value on.
 	/// @param[in] value The raw value defined for this property.

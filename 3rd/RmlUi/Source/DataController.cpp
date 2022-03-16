@@ -44,8 +44,6 @@ bool DataController::IsValid() const {
 	return static_cast<bool>(attached_element);
 }
 
-
-
 DataControllers::DataControllers()
 {}
 

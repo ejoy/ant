@@ -18,8 +18,8 @@ public:
 	const std::string& GetSourceURL() const;
 	void SetStyleSheet(std::shared_ptr<StyleSheet> style_sheet);
 	const std::shared_ptr<StyleSheet>& GetStyleSheet() const;
-	virtual void LoadInlineScript(const std::string& content, const std::string& source_path, int source_line);
-	virtual void LoadExternalScript(const std::string& source_path);
+	void LoadInlineScript(const std::string& content, const std::string& source_path, int source_line);
+	void LoadExternalScript(const std::string& source_path);
 	void SetDimensions(const Size& dimensions);
 	const Size& GetDimensions();
 	Element* ElementFromPoint(Point pt);
