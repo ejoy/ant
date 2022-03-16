@@ -354,15 +354,6 @@ lElementSetProperty(lua_State* L) {
 }
 
 static int
-lElementSetPropertyImmediate(lua_State* L) {
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	std::string name = lua_checkstdstring(L, 2);
-	std::string value = lua_checkstdstring(L, 3);
-	e->SetPropertyImmediate(name, value);
-	return 0;
-}
-
-static int
 lElementProject(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::Point pt(
@@ -480,7 +471,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementRemoveAttribute", lElementRemoveAttribute },
 		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
-		{ "ElementSetPropertyImmediate", lElementSetPropertyImmediate },
 		{ "ElementSetPseudoClass", lElementSetPseudoClass },
 		{ "ElementGetClassName", lElementGetClassName },
 		{ "ElementSetClassName", lElementSetClassName },

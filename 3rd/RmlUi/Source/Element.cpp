@@ -223,17 +223,6 @@ float Element::GetOpacity() {
 	return property->GetFloat();
 }
 
-void Element::SetPropertyImmediate(const std::string& name, const std::string& value) {
-	PropertyDictionary properties;
-	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value)) {
-		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.c_str());
-		return;
-	}
-	for (auto& property : properties) {
-		SetPropertyImmediate(property.first, property.second);
-	}
-}
-
 bool Element::Project(Point& point) const noexcept {
 	if (!inv_transform) {
 		have_inv_transform = 0.f != glm::determinant(transform);
@@ -1685,11 +1674,6 @@ void Element::SetProperty(PropertyId id, const Property& property) {
 
 void Element::SetAnimationProperty(PropertyId id, const Property& property) {
 	animation_properties[id] = property;
-	DirtyProperty(id);
-}
-
-void Element::SetPropertyImmediate(PropertyId id, const Property& property) {
-	inline_properties[id] = property;
 	DirtyProperty(id);
 }
 

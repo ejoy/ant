@@ -98,8 +98,6 @@ public:
 	void DirtyProperties(const PropertyIdSet& properties);
 
 	void SetProperty(PropertyId id, const Property& property);
-	void SetPropertyImmediate(PropertyId id, const Property& property);
-	void SetPropertyImmediate(const std::string& name, const std::string& value);
 	void SetAnimationProperty(PropertyId id, const Property& property);
 
 	void RemoveProperty(PropertyId id);
