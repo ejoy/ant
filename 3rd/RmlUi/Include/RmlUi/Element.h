@@ -83,8 +83,8 @@ public:
 	PseudoClassSet GetActivePseudoClasses() const;
 	void SetClass(const std::string& class_name, bool activate);
 	bool IsClassSet(const std::string& class_name) const;
-	void SetClassNames(const std::string& class_names);
-	std::string GetClassNames() const;
+	void SetClassName(const std::string& class_names);
+	std::string GetClassName() const;
 	void DirtyPropertiesWithUnitRecursive(Property::UnitMark mark);
 
 	void UpdateDefinition();

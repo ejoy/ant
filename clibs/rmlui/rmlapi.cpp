@@ -197,7 +197,7 @@ static int
 lDocumentGetSourceURL(lua_State *L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	const std::string &url = doc->GetSourceURL();
-	lua_pushlstring(L, url.c_str(), url.length());
+	lua_pushstdstring(L, url);
 	return 1;
 }
 
@@ -234,10 +234,27 @@ lElementSetPseudoClass(lua_State* L) {
 }
 
 static int
+lElementGetClassName(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	auto r = e->GetClassName();
+	if (r.empty()) {
+		return 0;
+	}
+	lua_pushstdstring(L, r);
+	return 1;
+}
+
+static int
+lElementSetClassName(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->SetClassName(lua_checkstdstring(L, 2));
+	return 0;
+}
+
+static int
 lElementGetInnerRML(lua_State *L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	const std::string &rml = e->GetInnerRML();
-	lua_pushlstring(L, rml.c_str(), rml.length());
+	lua_pushstdstring(L, e->GetInnerRML());
 	return 1;
 }
 
@@ -248,7 +265,7 @@ lElementGetAttribute(lua_State* L) {
 	if (!attr) {
 		return 0;
 	}
-	lua_pushlstring(L, attr->data(), attr->size());
+	lua_pushstdstring(L, *attr);
 	return 1;
 }
 
@@ -468,6 +485,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementSetProperty", lElementSetProperty },
 		{ "ElementSetPropertyImmediate", lElementSetPropertyImmediate },
 		{ "ElementSetPseudoClass", lElementSetPseudoClass },
+		{ "ElementGetClassName", lElementGetClassName },
+		{ "ElementSetClassName", lElementSetClassName },
 		{ "ElementProject", lElementProject },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },

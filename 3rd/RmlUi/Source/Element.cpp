@@ -145,7 +145,7 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 		address += id;
 	}
 
-	std::string classes = GetClassNames();
+	std::string classes = GetClassName();
 	if (!classes.empty()) {
 		classes = StringUtilities::Replace(classes, ' ', '.');
 		address += ".";
@@ -654,7 +654,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
 
 	it = changed_attributes.find("class");
 	if (it != changed_attributes.end()) {
-		SetClassNames(it->second);
+		SetClassName(it->second);
 	}
 
 	it = changed_attributes.find("style");
@@ -1467,13 +1467,13 @@ bool Element::IsClassSet(const std::string& class_name) const {
 	return std::find(classes.begin(), classes.end(), class_name) != classes.end();
 }
 
-void Element::SetClassNames(const std::string& class_names) {
+void Element::SetClassName(const std::string& class_names) {
 	classes.clear();
 	StringUtilities::ExpandString(classes, class_names, ' ');
 	DirtyDefinition();
 }
 
-std::string Element::GetClassNames() const {
+std::string Element::GetClassName() const {
 	std::string class_names;
 	for (size_t i = 0; i < classes.size(); i++) {
 		if (i != 0) {

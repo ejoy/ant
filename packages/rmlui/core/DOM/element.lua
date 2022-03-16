@@ -30,6 +30,9 @@ function style_mt:__newindex(name, value)
 end
 
 local property_init = {}
+local property_getter = {}
+local property_setter = {}
+
 function property_init:addEventListener()
     local handle = self._handle
     return function(type, listener, useCapture)
@@ -67,8 +70,6 @@ function property_init:attributes()
     return setmetatable({_handle = self._handle}, attribute_mt)
 end
 
-local property_getter = {}
-
 for name, init in pairs(property_init) do
     property_getter[name] = function (self)
         local v = init(self)
@@ -97,6 +98,14 @@ function property_getter:clientHeight()
     return h
 end
 
+function property_getter:className()
+    return rmlui.ElementGetClassNames(self._handle)
+end
+
+function property_setter:className(v)
+    rmlui.ElementSetClassNames(self._handle, v)
+end
+
 local property_mt = {}
 function property_mt:__index(name)
     if name == "setPropertyImmediate" then
@@ -111,6 +120,10 @@ function property_mt:__index(name)
 end
 
 function property_mt:__newindex(name, value)
+    local setter = property_setter[name]
+    if setter then
+        return setter(self, value)
+    end
     if property_getter[name] then
         error("element property `" .. name .. "` readonly.")
     end
