@@ -19,7 +19,7 @@ struct LuaPushVariantVisitor {
 		lua_pushnumber(L, p);
 	}
 	void operator()(int const& p) {
-		lua_pushnumber(L, p);
+		lua_pushinteger(L, p);
 	}
 	void operator()(std::string const& p) {
 		lua_pushlstring(L, p.c_str(), p.length());
@@ -46,7 +46,11 @@ lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
 		*variant = (bool)lua_toboolean(L, index);
 		break;
 	case LUA_TNUMBER:
-		*variant = (float)lua_tonumber(L, index);
+		if (lua_isboolean(L, index)) {
+			*variant = (int)lua_tointeger(L, index);
+		} else {
+			*variant = (float)lua_tonumber(L, index);
+		}
 		break;
 	case LUA_TSTRING:
 		*variant = std::string(lua_tostring(L, index));
