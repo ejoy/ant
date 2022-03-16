@@ -19,9 +19,8 @@ namespace EffekseerRendererBGFX
 
 	::Effekseer::MaterialRef MaterialLoader::LoadAcutually(::Effekseer::MaterialFile& materialFile, ::Effekseer::CompiledMaterialBinary* binary)
 	{
-		//	auto deviceType = graphicsDevice_->GetDeviceType();
 
-		auto instancing = false; // deviceType == OpenGLDeviceType::OpenGL3 || deviceType == OpenGLDeviceType::OpenGLES3;
+		auto instancing = false;
 
 		auto material = ::Effekseer::MakeRefPtr<::Effekseer::Material>();
 		material->IsSimpleVertex = materialFile.GetIsSimpleVertex();

@@ -27,7 +27,6 @@
  */
 
 #include "ElementAnimation.h"
-#include "ElementStyle.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
@@ -41,7 +40,8 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 	if (alpha > 1.f) alpha = 1.f;
 	if (alpha < 0.f) alpha = 0.f;
 
-	if ((p0.unit & Property::NUMBER_LENGTH_PERCENT) && (p1.unit & Property::NUMBER_LENGTH_PERCENT))
+
+	if (Property::Contains(Property::UnitMark::NumberLengthPercent, p0.unit) && Property::Contains(Property::UnitMark::NumberLengthPercent, p1.unit))
 	{
 		assert(p0.unit == p1.unit);
 		// If we have the same units, we can just interpolate regardless of what the value represents.
@@ -52,23 +52,23 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 		return Property{ f, p0.unit };
 	}
 
-	if (p0.unit == Property::COLOUR && p1.unit == Property::COLOUR)
+	if (p0.unit == Property::Unit::COLOUR && p1.unit == Property::Unit::COLOUR)
 	{
 		Color c0 = p0.GetColor();
 		Color c1 = p1.GetColor();
-		return Property{ ColorInterpolate(c0, c1, alpha), Property::COLOUR };
+		return Property{ ColorInterpolate(c0, c1, alpha), Property::Unit::COLOUR };
 	}
 
-	if (p0.unit == Property::TRANSFORM && p1.unit == Property::TRANSFORM)
+	if (p0.unit == Property::Unit::TRANSFORM && p1.unit == Property::Unit::TRANSFORM)
 	{
-		auto& t0 = p0.GetTransformPtr();
-		auto& t1 = p1.GetTransformPtr();
+		auto& t0 = p0.Get<TransformPtr>();
+		auto& t1 = p1.Get<TransformPtr>();
 		auto t = t0->Interpolate(*t1, alpha);
 		if (!t) {
 			Log::Message(Log::Level::Error, "Transform primitives can not be interpolated.");
-			return Property{ t0, Property::TRANSFORM };
+			return Property{ t0, Property::Unit::TRANSFORM };
 		}
-		return Property{ TransformPtr(std::move(t)), Property::TRANSFORM };
+		return Property{ TransformPtr(std::move(t)), Property::Unit::TRANSFORM };
 	}
 
 	// Fall back to discrete interpolation for incompatible units.
@@ -106,7 +106,7 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 			if (p0.GetType() == p1.GetType()) {
 				p0.ConvertToGenericType();
 				p1.ConvertToGenericType();
-				RMLUI_ASSERT(p0.index() == p1.index());
+				assert(p0.index() == p1.index());
 				continue;
 			}
 			if (shorter.size() < longer.size()) {
@@ -126,7 +126,7 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 		return true;
 	}
 
-	RMLUI_ASSERT(t0.size() == t1.size());
+	assert(t0.size() == t1.size());
 	for (size_t i = 0; i < t0.size(); ++i) {
 		if (t0[i].index() != t1[i].index()) {
 			return t0.Combine(element, i) && t1.Combine(element, i);
@@ -138,7 +138,7 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 static bool PrepareTransforms(AnimationKey& key, Element& element) {
 	auto& prop0 = key.in;
 	auto& prop1 = key.out;
-	if (prop0.unit != Property::TRANSFORM || prop1.unit != Property::TRANSFORM) {
+	if (prop0.unit != Property::Unit::TRANSFORM || prop1.unit != Property::Unit::TRANSFORM) {
 		return false;
 	}
 	if (!prop0.Has<TransformPtr>()) {
@@ -147,8 +147,8 @@ static bool PrepareTransforms(AnimationKey& key, Element& element) {
 	if (!prop1.Has<TransformPtr>()) {
 		prop1.value = std::make_shared<Transform>();
 	}
-	auto& t0 = prop0.GetTransformPtr();
-	auto& t1 = prop1.GetTransformPtr();
+	auto& t0 = prop0.Get<TransformPtr>();
+	auto& t1 = prop1.Get<TransformPtr>();
 	return PrepareTransformPair(*t0, *t1, element);
 }
 
@@ -164,16 +164,13 @@ ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigi
 	, animation_complete(false)
 	, origin(origin)
 {
-	if (!current_value.definition) {
-		Log::Message(Log::Level::Warning, "Property in animation key did not have a definition (while adding key '%s').", current_value.ToString().c_str());
-	}
 	InternalAddKey(0.0f, current_value, element, Tween{});
 }
 
 
 bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween)
 {
-	if (out_prop.unit == Property::ANIMATION || out_prop.unit == Property::TRANSITION || out_prop.unit == Property::STRING) {
+	if (out_prop.unit == Property::Unit::ANIMATION || out_prop.unit == Property::Unit::TRANSITION || out_prop.unit == Property::Unit::STRING) {
 		Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", out_prop.ToString().c_str());
 		return false;
 	}
@@ -182,7 +179,7 @@ bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Elem
 	Property const& in_prop = first ? out_prop: keys.back().prop;
 	keys.emplace_back(time, in_prop, out_prop, tween);
 	bool result = true;
-	if (!first && out_prop.unit == Property::TRANSFORM) {
+	if (!first && out_prop.unit == Property::Unit::TRANSFORM) {
 		result = PrepareTransforms(keys.back(), element);
 	}
 	if (!result) {
@@ -193,7 +190,7 @@ bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Elem
 }
 
 
-bool ElementAnimation::AddKey(float target_time, const Property & in_property, Element& element, Tween tween, bool remove) {
+bool ElementAnimation::AddKey(float target_time, const Property & in_property, Element& element, Tween tween) {
 	if (!IsInitalized()) {
 		Log::Message(Log::Level::Warning, "Element animation was not initialized properly, can't add key.");
 		return false;
@@ -202,7 +199,6 @@ bool ElementAnimation::AddKey(float target_time, const Property & in_property, E
 		return false;
 	}
 	duration = target_time;
-	remove_when_complete = remove;
 	return true;
 }
 
@@ -230,7 +226,7 @@ float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const
 		key0 = (key1 == 0 ? 0 : key1 - 1);
 	}
 
-	RMLUI_ASSERT(key0 >= 0 && key0 < (int)keys.size() && key1 >= 0 && key1 < (int)keys.size());
+	assert(key0 >= 0 && key0 < (int)keys.size() && key1 >= 0 && key1 < (int)keys.size());
 
 	float alpha = 0.0f;
 
@@ -296,12 +292,7 @@ void ElementAnimation::Release(Element& element) {
 		break;
 	case ElementAnimationOrigin::Animation:
 	case ElementAnimationOrigin::Transition:
-		if (remove_when_complete) {
-			element.RemoveProperty(GetPropertyId());
-		}
-		else {
-			element.SetProperty(GetPropertyId(), keys.back().prop);
-		}
+		element.RemoveAnimationProperty(GetPropertyId());
 		break;
 	}
 }

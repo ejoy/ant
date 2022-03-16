@@ -51,9 +51,12 @@ public:
 	/// Shutdown style manager
 	static void Shutdown();
 
-	/// Gets the named sheet, retrieving it from the cache if its already been loaded
-	/// @param sheet name of sheet to load
-	static std::shared_ptr<StyleSheet> GetStyleSheet(const std::string& sheet);
+	static std::shared_ptr<StyleSheet> LoadStyleSheet(const std::string& source_path);
+	static std::shared_ptr<StyleSheet> LoadStyleSheet(const std::string& content, const std::string& source_path, int line);
+
+	static void CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, std::shared_ptr<StyleSheet> subsheet);
+	static void CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, const std::string& source_path);
+	static void CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, const std::string& content, const std::string& source_path, int line);
 
 	/// Clear the style sheet cache.
 	static void ClearStyleSheetCache();
@@ -66,9 +69,6 @@ public:
 private:
 	StyleSheetFactory();
 	~StyleSheetFactory();
-
-	// Loads an individual style sheet
-	std::shared_ptr<StyleSheet> LoadStyleSheet(const std::string& sheet);
 
 	// Individual loaded stylesheets
 	typedef std::unordered_map<std::string, std::shared_ptr<StyleSheet>> StyleSheets;

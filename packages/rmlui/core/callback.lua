@@ -1,7 +1,5 @@
 local console = require "core.sandbox.console"
-local createSandbox = require "core.sandbox.create"
 local filemanager = require "core.filemanager"
-local event = require "core.event"
 local createElement = require "core.DOM.element"
 local createEvent = require "core.DOM.event"
 local environment = require "core.environment"
@@ -21,16 +19,6 @@ local function invoke(f, ...)
 		console.warn(err)
 	end
 	return ok, err
-end
-function m.OnDocumentCreate(document)
-	local globals = createSandbox()
-	event("OnDocumentCreate", document, globals)
-	globals.window.document = globals.document
-	environment[document] = globals
-end
-function m.OnDocumentDestroy(document)
-	event("OnDocumentDestroy", document)
-	environment[document] = nil
 end
 function m.OnLoadInlineScript(document, content, source_path, source_line)
     local _ <close> = fs.switch_sync()

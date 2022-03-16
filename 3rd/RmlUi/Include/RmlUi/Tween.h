@@ -29,7 +29,6 @@
 #define RMLUI_CORE_TWEEN_H
 
 #include "Types.h"
-#include "Platform.h"
 
 namespace Rml {
 

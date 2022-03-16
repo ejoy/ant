@@ -32,11 +32,11 @@
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
-#include "../Include/RmlUi/PropertySpecification.h"
 #include "../Include/RmlUi/Stream.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/StringUtilities.h"
+#include "../Include/RmlUi/Types.h"
 #include <algorithm>
 #include <string.h>
 
@@ -56,15 +56,12 @@ private:
 	// The dictionary to store the properties in.
 	PropertyDictionary& properties;
 
-	// The specification used to parse the values. Normally the default stylesheet specification.
-	const PropertySpecification& specification;
-
 public:
-	PropertySpecificationParser(PropertyDictionary& properties, const PropertySpecification& specification) : properties(properties), specification(specification) {}
+	PropertySpecificationParser(PropertyDictionary& properties) : properties(properties) {}
 
 	bool Parse(const std::string& name, const std::string& value) override
 	{
-		return specification.ParsePropertyDeclaration(properties, name, value);
+		return StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value);
 	}
 };
 
@@ -113,10 +110,10 @@ static void PostprocessKeyframes(KeyframesMap& keyframes_map)
 		std::sort(blocks.begin(), blocks.end(), [](const KeyframeBlock& a, const KeyframeBlock& b) { return a.normalized_time < b.normalized_time; });
 
 		// Add all property names specified by any block
-		if(blocks.size() > 0) property_ids.reserve(blocks.size() * blocks[0].properties.GetNumProperties());
+		if(blocks.size() > 0) property_ids.reserve(blocks.size() * blocks[0].properties.size());
 		for(auto& block : blocks)
 		{
-			for (auto& property : block.properties.GetProperties())
+			for (auto& property : block.properties)
 				property_ids.push_back(property.first);
 		}
 		// Remove duplicate property names
@@ -135,7 +132,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 		Log::Message(Log::Level::Warning, "Invalid keyframes identifier '%s' at %s:%d", identifier.c_str(), stream->GetSourceURL().c_str(), line_number);
 		return false;
 	}
-	if (properties.GetNumProperties() == 0)
+	if (properties.empty())
 		return true;
 
 	std::vector<std::string> rule_list;
@@ -200,8 +197,8 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				if (token == '{')
 				{
 					// Read the attributes
-					PropertyDictionary properties;
-					PropertySpecificationParser parser(properties, StyleSheetSpecification::GetPropertySpecification());
+					StyleSheetPropertyDictionary properties;
+					PropertySpecificationParser parser(properties.prop);
 					if (!ReadProperties(parser))
 						continue;
 
@@ -259,7 +256,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				{
 					// Each keyframe in keyframes has its own block which is processed here
 					PropertyDictionary properties;
-					PropertySpecificationParser parser(properties, StyleSheetSpecification::GetPropertySpecification());
+					PropertySpecificationParser parser(properties);
 					if(!ReadProperties(parser))
 						continue;
 
@@ -300,10 +297,10 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 
 bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, const std::string& properties)
 {
-	RMLUI_ASSERT(!stream);
+	assert(!stream);
 	Stream stream_owner("<unknown>", (const uint8_t*)properties.c_str(), properties.size());
 	stream = &stream_owner;
-	PropertySpecificationParser parser(parsed_properties, StyleSheetSpecification::GetPropertySpecification());
+	PropertySpecificationParser parser(parsed_properties);
 	bool success = ReadProperties(parser);
 	stream = nullptr;
 	return success;
@@ -311,7 +308,7 @@ bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, co
 
 StyleSheetNodeListRaw StyleSheetParser::ConstructNodes(StyleSheetNode& root_node, const std::string& selectors)
 {
-	const PropertyDictionary empty_properties;
+	const StyleSheetPropertyDictionary empty_properties;
 
 	std::vector<std::string> selector_list;
 	StringUtilities::ExpandString(selector_list, selectors);
@@ -428,7 +425,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 	return true;
 }
 
-StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::string rule_name, const PropertyDictionary& properties, int rule_specificity)
+StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::string rule_name, const StyleSheetPropertyDictionary& properties, int rule_specificity)
 {
 	StyleSheetNode* leaf_node = node;
 

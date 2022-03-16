@@ -19,6 +19,11 @@ LUA2STRUCT(struct effekseer_ctx, viewid, square_max_count, sprite_programs, mode
 LUA2STRUCT(struct program, prog, uniforms);
 LUA2STRUCT(struct program::uniform, handle, name);
 
+program::~program()
+{
+	BGFX(destroy_program)({ (uint16_t)prog });
+}
+
 namespace EffekseerRendererBGFX {
 extern bgfx_view_id_t g_view_id;
 }
@@ -27,11 +32,13 @@ static effekseer_ctx* g_effekseer = nullptr;
 static std::string g_current_path = "";
 static lua_State* g_current_lua_state = nullptr;
 static std::unordered_map<std::string, int32_t> g_effect_cache_;
+
 struct path_data
 {
 	std::string origin; 
 	std::string result;
 };
+
 static int
 lget_ant_file_path(lua_State* L) {
 	struct path_data* pd = (struct path_data*)lua_touserdata(L, 1);
@@ -66,6 +73,7 @@ struct fx_data
 	bgfx_program_handle_t* prog;
 	std::unordered_map<std::string, bgfx_uniform_handle_t>* uniforms;
 };
+
 static int
 lload_fx(lua_State* L) {
 	struct fx_data* fd = (struct fx_data*)lua_touserdata(L, 1);
@@ -259,6 +267,7 @@ static void get_effect_from_lua(lua_State* L, int32_t& effectid, int32_t& playid
 		playid = lua_tointeger(L, 2);
 	}
 }
+
 static int
 lupdate_transform(lua_State* L) {
 	int32_t eidx = -1;

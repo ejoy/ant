@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Platform.h"
 #include "Traits.h"
 #include "Types.h"
 

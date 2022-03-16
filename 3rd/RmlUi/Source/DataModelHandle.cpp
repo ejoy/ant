@@ -45,7 +45,7 @@ void DataModelHandle::DirtyVariable(const std::string& variable_name) {
 DataModelConstructor::DataModelConstructor() : model(nullptr) {}
 
 DataModelConstructor::DataModelConstructor(DataModel* model) : model(model) {
-	RMLUI_ASSERT(model);
+	assert(model);
 }
 
 DataModelHandle DataModelConstructor::GetModelHandle() const {

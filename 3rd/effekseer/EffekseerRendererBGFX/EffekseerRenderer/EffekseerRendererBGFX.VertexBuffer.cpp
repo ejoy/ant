@@ -28,7 +28,7 @@ bgfx_transient_vertex_buffer_t* VertexBuffer::GetInterface()
 void VertexBuffer::Lock()
 {
 	assert(!m_isLock);
-
+	assert(!m_ringBufferLock);
 	m_isLock = true;
 	m_offset = 0;
 	m_vertexRingStart = 0;
@@ -36,8 +36,13 @@ void VertexBuffer::Lock()
 
 bool VertexBuffer::RingBufferLock(int32_t size, int32_t& offset, void*& data, int32_t alignment)
 {
+	assert(!m_isLock);
+	assert(!m_ringBufferLock);
+	assert(m_isDynamic);
+
 	BGFX(alloc_transient_vertex_buffer)(&m_transient_vertex_buffer, size / m_layout.stride, &m_layout);
 	data = m_transient_vertex_buffer.data;
+	m_ringBufferLock = true;
 	return true;
 }
 
@@ -51,7 +56,10 @@ bool VertexBuffer::TryRingBufferLock(int32_t size, int32_t& offset, void*& data,
 
 void VertexBuffer::Unlock()
 {
-	return;
+	assert(m_isLock || m_ringBufferLock);
+	m_resource = nullptr;
+	m_isLock = false;
+	m_ringBufferLock = false;
 }
 
 bool VertexBuffer::IsValid()

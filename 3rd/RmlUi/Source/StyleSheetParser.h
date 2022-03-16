@@ -34,9 +34,9 @@
 
 namespace Rml {
 
-class PropertyDictionary;
 class Stream;
 class StyleSheetNode;
+class StyleSheetPropertyDictionary;
 class AbstractPropertyParser;
 using StyleSheetNodeListRaw = std::vector<StyleSheetNode*>;
 
@@ -84,7 +84,7 @@ private:
 	// @param properties The dictionary of properties
 	// @param rule_specificity The specifity of the rule
 	// @return The leaf node of the rule
-	static StyleSheetNode* ImportProperties(StyleSheetNode* node, std::string rule_name, const PropertyDictionary& properties, int rule_specificity);
+	static StyleSheetNode* ImportProperties(StyleSheetNode* node, std::string rule_name, const StyleSheetPropertyDictionary& properties, int rule_specificity);
 
 	// Attempts to parse a @keyframes block
 	bool ParseKeyframeBlock(KeyframesMap & keyframes_map, const std::string & identifier, const std::string & rules, const PropertyDictionary & properties);

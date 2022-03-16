@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_PROPERTYDEFINITION_H
 #define RMLUI_CORE_PROPERTYDEFINITION_H
 
-#include "Platform.h"
 #include "Property.h"
 #include "PropertyParser.h"
 
@@ -72,7 +71,7 @@ public:
 
 private:
 	PropertyId id;
-	Property default_value;
+	std::optional<Property> default_value;
 	bool inherited;
 	struct ParserState {
 		PropertyParser* parser;

@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_DATACONTROLLERDEFAULT_H
 #define RMLUI_CORE_DATACONTROLLERDEFAULT_H
 
-#include "../Include/RmlUi/Platform.h"
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/EventListener.h"
 #include "../Include/RmlUi/DataVariable.h"

@@ -1,4 +1,9 @@
 <rml><head>
+<style>
+* {
+	pointer-events: none;
+}
+</style>
 <script type="text/x-lua">
 window.createModel "basics" {
 	title = "Hello World"

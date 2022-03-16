@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_TRANSFORM_H
 #define RMLUI_CORE_TRANSFORM_H
 
-#include "Platform.h"
 #include "Types.h"
 #include "Property.h"
 #include <variant>
@@ -50,26 +49,26 @@ struct Matrix3D : glm::mat4x4 {
 };
 
 struct TranslateX {
-	FloatValue x = { 0.f, Property::PX };
+	FloatValue x = { 0.f, Property::Unit::PX };
 };
 
 struct TranslateY {
-	FloatValue y = { 0.f, Property::PX };
+	FloatValue y = { 0.f, Property::Unit::PX };
 };
 
 struct TranslateZ {
-	FloatValue z = { 0.f, Property::PX };
+	FloatValue z = { 0.f, Property::Unit::PX };
 };
 
 struct Translate2D {
-	FloatValue x = { 0.f, Property::PX };
-	FloatValue y = { 0.f, Property::PX };
+	FloatValue x = { 0.f, Property::Unit::PX };
+	FloatValue y = { 0.f, Property::Unit::PX };
 };
 
 struct Translate3D {
-	FloatValue x = { 0.f, Property::PX };
-	FloatValue y = { 0.f, Property::PX };
-	FloatValue z = { 0.f, Property::PX };
+	FloatValue x = { 0.f, Property::Unit::PX };
+	FloatValue y = { 0.f, Property::Unit::PX };
+	FloatValue z = { 0.f, Property::Unit::PX };
 };
 
 struct ScaleX {
@@ -96,38 +95,38 @@ struct Scale3D {
 };
 
 struct RotateX {
-	FloatValue angle = { 0.f, Property::RAD };
+	FloatValue angle = { 0.f, Property::Unit::RAD };
 };
 
 struct RotateY {
-	FloatValue angle = { 0.f, Property::RAD };
+	FloatValue angle = { 0.f, Property::Unit::RAD };
 };
 
 struct RotateZ {
-	FloatValue angle = { 0.f, Property::RAD };
+	FloatValue angle = { 0.f, Property::Unit::RAD };
 };
 
 struct Rotate2D {
-	FloatValue angle = { 0.f, Property::RAD };
+	FloatValue angle = { 0.f, Property::Unit::RAD };
 };
 
 struct Rotate3D {
 	glm::vec3 axis = glm::vec3(0, 0, 1);
-	FloatValue angle = { 0.f, Property::RAD };
+	FloatValue angle = { 0.f, Property::Unit::RAD };
 };
 
 struct SkewX {
-	FloatValue x = { 0.f, Property::RAD };
+	FloatValue x = { 0.f, Property::Unit::RAD };
 };
 struct SkewY {
-	FloatValue y = { 0.f, Property::RAD };
+	FloatValue y = { 0.f, Property::Unit::RAD };
 };
 struct Skew2D {
-	FloatValue x = { 0.f, Property::RAD };
-	FloatValue y = { 0.f, Property::RAD };
+	FloatValue x = { 0.f, Property::Unit::RAD };
+	FloatValue y = { 0.f, Property::Unit::RAD };
 };
 struct Perspective {
-	FloatValue distance = { 0.f, Property::PX };
+	FloatValue distance = { 0.f, Property::Unit::PX };
 };
 
 struct DecomposedMatrix4 {

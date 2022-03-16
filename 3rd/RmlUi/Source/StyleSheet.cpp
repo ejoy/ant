@@ -27,7 +27,6 @@
  */
 
 #include "../Include/RmlUi/StyleSheet.h"
-#include "ElementDefinition.h"
 #include "StyleSheetFactory.h"
 #include "StyleSheetNode.h"
 #include "StyleSheetParser.h"
@@ -35,6 +34,10 @@
 #include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
+#include "../Include/RmlUi/Types.h"
+#include "../Include/RmlUi/Property.h"
+#include "../Include/RmlUi/Log.h"
+#include "../Include/RmlUi/Stream.h"
 #include <algorithm>
 
 namespace Rml {
@@ -62,31 +65,29 @@ StyleSheet::~StyleSheet()
 {
 }
 
-bool StyleSheet::LoadStyleSheet(Stream* stream, int begin_line_number)
-{
+bool StyleSheet::LoadStyleSheet(Stream* stream, int begin_line_number) {
 	StyleSheetParser parser;
 	specificity_offset = parser.Parse(root.get(), stream, *this, keyframes, begin_line_number);
-	return specificity_offset >= 0;
+	bool ok = specificity_offset >= 0;
+	if (!ok) {
+		Log::Message(Log::Level::Error, "Failed to load style sheet in %s.", stream->GetSourceURL().c_str());
+	}
+	return ok;
 }
 
 /// Combines this style sheet with another one, producing a new sheet
-std::shared_ptr<StyleSheet> StyleSheet::CombineStyleSheet(const StyleSheet& other_sheet) const
+void StyleSheet::CombineStyleSheet(const StyleSheet& other_sheet)
 {
-	std::shared_ptr<StyleSheet> new_sheet = std::make_shared<StyleSheet>();
-	
-	new_sheet->root = root->DeepCopy();
-	new_sheet->root->MergeHierarchy(other_sheet.root.get(), specificity_offset);
+	root->MergeHierarchy(other_sheet.root.get(), specificity_offset);
 
 	// Any matching @keyframe names are overridden as per CSS rules
-	new_sheet->keyframes.reserve(keyframes.size() + other_sheet.keyframes.size());
-	new_sheet->keyframes = keyframes;
+	keyframes.reserve(keyframes.size() + other_sheet.keyframes.size());
 	for (auto& other_keyframes : other_sheet.keyframes)
 	{
-		new_sheet->keyframes[other_keyframes.first] = other_keyframes.second;
+		keyframes[other_keyframes.first] = other_keyframes.second;
 	}
 
-	new_sheet->specificity_offset = specificity_offset + other_sheet.specificity_offset;
-	return new_sheet;
+	specificity_offset += other_sheet.specificity_offset;
 }
 
 // Builds the node index for a combined style sheet.
@@ -117,7 +118,7 @@ size_t StyleSheet::NodeHash(const std::string& tag, const std::string& id)
 }
 
 // Returns the compiled element definition for a given element hierarchy.
-std::shared_ptr<ElementDefinition> StyleSheet::GetElementDefinition(const Element* element) const
+std::shared_ptr<StyleSheetPropertyDictionary> StyleSheet::GetElementDefinition(const Element* element) const
 {
 	// See if there are any styles defined for this element.
 	// Using static to avoid allocations. Make sure we don't call this function recursively.
@@ -178,12 +179,16 @@ std::shared_ptr<ElementDefinition> StyleSheet::GetElementDefinition(const Elemen
 	auto cache_iterator = node_cache.find(seed);
 	if (cache_iterator != node_cache.end())
 	{
-		std::shared_ptr<ElementDefinition>& definition = (*cache_iterator).second;
+		std::shared_ptr<StyleSheetPropertyDictionary>& definition = (*cache_iterator).second;
 		return definition;
 	}
 
+	auto new_definition = std::make_shared<StyleSheetPropertyDictionary>();
+	for (auto const& node : applicable_nodes) {
+		node->MergeProperties(*new_definition);
+	}
+
 	// Create the new definition and add it to our cache.
-	auto new_definition = std::make_shared<ElementDefinition>(applicable_nodes);
 	node_cache[seed] = new_definition;
 
 	return new_definition;

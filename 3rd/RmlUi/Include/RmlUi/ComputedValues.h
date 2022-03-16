@@ -1,9 +1,6 @@
 #pragma once
 
-#include "Types.h"
-#include "Animation.h"
-#include "TextEffect.h"
-#include "Property.h"
+#include <stdint.h>
 
 namespace Rml { namespace Style {
 
@@ -18,13 +15,5 @@ enum class Drag : uint8_t { None, Drag, DragDrop, Block, Clone };
 enum class BoxType : uint8_t { PaddingBox, BorderBox, ContentBox };
 enum class BackgroundSize : uint8_t { Auto, Cover, Contain };
 enum class PointerEvents : uint8_t { None, Auto };
-
-struct ComputedValues {
-	TransitionList transition;
-	AnimationList animation;
-	EdgeInsets<Color> border_color;
-	CornerInsets<FloatValue> border_radius{};
-	Color background_color = ColorFromSRGB(255, 255, 255, 0);
-};
 
 }}

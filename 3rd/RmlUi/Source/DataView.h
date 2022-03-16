@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_DATAVIEW_H
 #define RMLUI_CORE_DATAVIEW_H
 
-#include "../Include/RmlUi/Platform.h"
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Traits.h"
 #include "../Include/RmlUi/DataTypes.h"

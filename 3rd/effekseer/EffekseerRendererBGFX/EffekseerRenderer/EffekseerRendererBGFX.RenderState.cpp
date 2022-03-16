@@ -8,26 +8,12 @@ namespace EffekseerRendererBGFX {
 RenderState::RenderState(RendererImplemented* renderer)
 	: m_renderer(renderer)
 {
-	//if (m_renderer->GetDeviceType() == OpenGLDeviceType::OpenGL3 || m_renderer->GetDeviceType() == OpenGLDeviceType::OpenGLES3)
-	//{
-	//	GLExt::glGenSamplers(Effekseer::TextureSlotMax, m_samplers.data());
-	//}
 
-	//GLint frontFace = 0;
-	//glGetIntegerv(GL_FRONT_FACE, &frontFace);
-
-	//if (GL_CW == frontFace)
-	//{
-	//	m_isCCW = false;
-	//}
 }
 
 RenderState::~RenderState()
 {
-	//if (m_renderer->GetDeviceType() == OpenGLDeviceType::OpenGL3 || m_renderer->GetDeviceType() == OpenGLDeviceType::OpenGLES3)
-	//{
-	//	GLExt::glDeleteSamplers(Effekseer::TextureSlotMax, m_samplers.data());
-	//}
+
 }
 
 void RenderState::Update(bool forced)

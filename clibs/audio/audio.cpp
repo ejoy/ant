@@ -121,7 +121,7 @@ laudio_load_bank(lua_State* L) {
 static int
 laudio_unload_bank(lua_State* L) {
 	if (lua_type(L, 1) == LUA_TLIGHTUSERDATA) {
-		audio::instance().unload_bank((FMOD::Studio::Bank*)lua_topointer(L, 1));
+		audio::instance().unload_bank((FMOD::Studio::Bank*)lua_touserdata(L, 1));
 	}
 	return 0;
 }
@@ -156,7 +156,7 @@ static int
 laudio_event_count(lua_State* L) {
 	FMOD::Studio::Bank* bank = nullptr;
 	if (lua_type(L, 1) == LUA_TLIGHTUSERDATA) {
-		bank = (FMOD::Studio::Bank*)lua_topointer(L, 1);
+		bank = (FMOD::Studio::Bank*)lua_touserdata(L, 1);
 	}
 	int count;
 	audio::instance().get_event_count(bank, &count);
@@ -168,7 +168,7 @@ static int
 laudio_bank_name(lua_State* L) {
 	FMOD::Studio::Bank* ed = nullptr;
 	if (lua_type(L, 1) == LUA_TLIGHTUSERDATA) {
-		ed = (FMOD::Studio::Bank*)lua_topointer(L, 1);
+		ed = (FMOD::Studio::Bank*)lua_touserdata(L, 1);
 		char temp[256];
 		int retrieved;
 		ed->getPath(temp, 256, &retrieved);
@@ -182,7 +182,7 @@ static int
 laudio_event_name(lua_State* L) {
 	FMOD::Studio::EventDescription* ed = nullptr;
 	if (lua_type(L, 1) == LUA_TLIGHTUSERDATA) {
-		ed = (FMOD::Studio::EventDescription*)lua_topointer(L, 1);
+		ed = (FMOD::Studio::EventDescription*)lua_touserdata(L, 1);
 		char temp[256];
 		int retrieved;
 		ed->getPath(temp, 256, &retrieved);
@@ -196,7 +196,7 @@ static int
 laudio_event_list(lua_State* L) {
 	FMOD::Studio::Bank* bank = nullptr;
 	if (lua_type(L, 1) == LUA_TLIGHTUSERDATA) {
-		bank = (FMOD::Studio::Bank*)lua_topointer(L, 1);
+		bank = (FMOD::Studio::Bank*)lua_touserdata(L, 1);
 	}
 	int count;
 	audio::instance().get_event_count(bank, &count);
@@ -224,7 +224,7 @@ laudio_create_event(lua_State* L) {
 static int
 laudio_destroy_event(lua_State* L) {
 	if (lua_type(L, 1) == LUA_TLIGHTUSERDATA) {
-		auto* event_inst = (FMOD::Studio::EventInstance*)lua_topointer(L, 1);
+		auto* event_inst = (FMOD::Studio::EventInstance*)lua_touserdata(L, 1);
 		if (event_inst) {
 			event_inst->release();
 		}
@@ -235,7 +235,7 @@ laudio_destroy_event(lua_State* L) {
 static int
 laudio_play(lua_State* L) {
 	if (lua_type(L, 1) == LUA_TLIGHTUSERDATA) {
-		auto* event_inst = (FMOD::Studio::EventInstance*)lua_topointer(L, 1);
+		auto* event_inst = (FMOD::Studio::EventInstance*)lua_touserdata(L, 1);
 		if (event_inst) {
 			event_inst->start();
 		}
@@ -246,7 +246,7 @@ laudio_play(lua_State* L) {
 static int
 laudio_stop(lua_State* L) {
 	if (lua_type(L, 1) == LUA_TLIGHTUSERDATA) {
-		auto* event_inst = (FMOD::Studio::EventInstance*)lua_topointer(L, 1);
+		auto* event_inst = (FMOD::Studio::EventInstance*)lua_touserdata(L, 1);
 		auto immediate = lua_toboolean(L, 2);
 		if (event_inst) {
 			event_inst->stop(immediate ? FMOD_STUDIO_STOP_IMMEDIATE : FMOD_STUDIO_STOP_ALLOWFADEOUT);

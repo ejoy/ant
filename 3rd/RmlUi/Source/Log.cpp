@@ -22,8 +22,4 @@ void Log::Message(Level level, const char* fmt, ...) {
 	fprintf(stderr,"%s\n", buffer);
 }
 
-void Assert(const char* msg, const char* file, int line) {
-	Log::Message(Log::Level::Assert, "%s\n%s:%d", msg, file, line);
-}
-
 }

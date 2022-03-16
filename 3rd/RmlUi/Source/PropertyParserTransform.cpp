@@ -33,9 +33,9 @@
 namespace Rml {
 
 PropertyParserTransform::PropertyParserTransform()
-	: number(Property::NUMBER)
-	, length(Property::LENGTH_PERCENT, Property::PX)
-	, angle(Property::RAD | Property::DEG, Property::RAD)
+	: number(Property::UnitMark::Number)
+	, length(Property::UnitMark::LengthPercent, Property::Unit::PX)
+	, angle(Property::UnitMark::Angle, Property::Unit::RAD)
 {
 }
 
@@ -49,7 +49,7 @@ bool PropertyParserTransform::ParseValue(Property& property, const std::string& 
 	if(value == "none")
 	{
 		property.value = TransformPtr();
-		property.unit = Property::TRANSFORM;
+		property.unit = Property::Unit::TRANSFORM;
 		return true;
 	}
 
@@ -186,7 +186,7 @@ bool PropertyParserTransform::ParseValue(Property& property, const std::string& 
 	}
 	
 	property.value = std::move(transform);
-	property.unit = Property::TRANSFORM;
+	property.unit = Property::Unit::TRANSFORM;
 
 	return true;
 }

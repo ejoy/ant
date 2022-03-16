@@ -40,11 +40,8 @@ StyleSheetNodeSelectorFirstOfType::~StyleSheetNodeSelectorFirstOfType()
 }
 
 // Returns true if the element is the first DOM child in its parent of its type.
-bool StyleSheetNodeSelectorFirstOfType::IsApplicable(const Element* element, int RMLUI_UNUSED_PARAMETER(a), int RMLUI_UNUSED_PARAMETER(b))
+bool StyleSheetNodeSelectorFirstOfType::IsApplicable(const Element* element, int, int)
 {
-	RMLUI_UNUSED(a);
-	RMLUI_UNUSED(b);
-
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;

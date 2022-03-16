@@ -35,25 +35,25 @@ namespace Rml {
 
 static const std::unordered_map<std::string, Property::Unit> g_property_unit_string_map =
 {
-	{"", Property::NUMBER},
-	{"%", Property::PERCENT},
-	{"px", Property::PX},
-	{"em", Property::EM},
-	{"rem", Property::REM},
-	{"in", Property::INCH},
-	{"cm", Property::CM},
-	{"mm", Property::MM},
-	{"pt", Property::PT},
-	{"pc", Property::PC},
-	{"deg", Property::DEG},
-	{"rad", Property::RAD},
-	{"vw", Property::VW},
-	{"vh", Property::VH},
-	{"vmin", Property::VMIN},
-	{"vmax", Property::VMAX},
+	{"", Property::Unit::NUMBER},
+	{"%", Property::Unit::PERCENT},
+	{"px", Property::Unit::PX},
+	{"em", Property::Unit::EM},
+	{"rem", Property::Unit::REM},
+	{"in", Property::Unit::INCH},
+	{"cm", Property::Unit::CM},
+	{"mm", Property::Unit::MM},
+	{"pt", Property::Unit::PT},
+	{"pc", Property::Unit::PC},
+	{"deg", Property::Unit::DEG},
+	{"rad", Property::Unit::RAD},
+	{"vw", Property::Unit::VW},
+	{"vh", Property::Unit::VH},
+	{"vmin", Property::Unit::VMIN},
+	{"vmax", Property::Unit::VMAX},
 };
 
-PropertyParserNumber::PropertyParserNumber(int units, Property::Unit zero_unit)
+PropertyParserNumber::PropertyParserNumber(Property::UnitMark units, Property::Unit zero_unit)
 	: units(units), zero_unit(zero_unit)
 {}
 
@@ -61,10 +61,8 @@ PropertyParserNumber::~PropertyParserNumber()
 {}
 
 // Called to parse a RCSS number declaration.
-bool PropertyParserNumber::ParseValue(Property& property, const std::string& value, const ParameterMap& RMLUI_UNUSED_PARAMETER(parameters)) const
+bool PropertyParserNumber::ParseValue(Property& property, const std::string& value, const ParameterMap&) const
 {
-	RMLUI_UNUSED(parameters);
-
 	// Find the beginning of the unit string in 'value'.
 	size_t unit_pos = 0;
 	for (size_t i = value.size(); i--;)
@@ -97,7 +95,7 @@ bool PropertyParserNumber::ParseValue(Property& property, const std::string& val
 
 	const Property::Unit unit = it->second;
 
-	if (unit & units)
+	if (Property::Contains(units, unit))
 	{
 		property.value = float_value;
 		property.unit = unit;
@@ -106,9 +104,9 @@ bool PropertyParserNumber::ParseValue(Property& property, const std::string& val
 
 	// Detected unit not allowed.
 	// However, we allow a value of "0" if zero_unit is set and no unit specified (that is, unit is a pure NUMBER).
-	if (unit == Property::NUMBER)
+	if (unit == Property::Unit::NUMBER)
 	{
-		if (zero_unit != Property::UNKNOWN && float_value == 0.0f)
+		if (zero_unit != Property::Unit::UNKNOWN && float_value == 0.0f)
 		{
 			property.unit = zero_unit;
 			property.value = 0.0f;

@@ -6,17 +6,15 @@
 #include "RmlUi/Plugin.h"
 
 class lua_event_listener;
-class lua_event_listener_instancer;
 
 namespace Rml {
 class Element;
+class EventListener;
 class Document;
 }
 
 enum class LuaEvent : int {
-	OnDocumentCreate = 2,
-	OnDocumentDestroy,
-	OnLoadInlineScript,
+	OnLoadInlineScript = 2,
 	OnLoadExternalScript,
 	OnEvent,
 	OnEventAttach,
@@ -27,10 +25,7 @@ enum class LuaEvent : int {
 class lua_plugin final : public Rml::Plugin {
 public:
 	~lua_plugin();
-	void OnInitialise() override;
-	void OnShutdown() override;
-	void OnDocumentCreate(Rml::Document* document) override;
-	void OnDocumentDestroy(Rml::Document* document) override;
+	Rml::EventListener* OnCreateEventListener(Rml::Element* element, const std::string& type, const std::string& code, bool use_capture) override;
 	void OnLoadInlineScript(Rml::Document* document, const std::string& content, const std::string& source_path, int source_line) override;
 	void OnLoadExternalScript(Rml::Document* document, const std::string& source_path) override;
 
@@ -42,7 +37,6 @@ public:
 	void pushevent(lua_State* L, const Rml::Event& event);
 
 	luaref reference = 0;
-	lua_event_listener_instancer* event_listener_instancer = nullptr;
 };
 
 lua_plugin* get_lua_plugin();

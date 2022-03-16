@@ -4,8 +4,6 @@
 
 namespace EffekseerRendererBGFX
 {
-::Effekseer::Backend::GraphicsDeviceRef CreateGraphicsDevice(/*OpenGLDeviceType deviceType, bool isExtensionsEnabled = true*/);
-
 ::Effekseer::TextureLoaderRef CreateTextureLoader(
 	Effekseer::Backend::GraphicsDeviceRef graphicsDevice,
 	::Effekseer::FileInterface* fileInterface = nullptr,
@@ -18,9 +16,6 @@ using RendererRef = ::Effekseer::RefPtr<Renderer>;
 
 ::Effekseer::MaterialLoaderRef CreateMaterialLoader(Renderer*,
 	::Effekseer::FileInterface* fileInterface = nullptr);
-
-Effekseer::Backend::TextureRef CreateTexture(Effekseer::Backend::GraphicsDeviceRef graphicsDevice,
-	bgfx_texture_handle_t buffer, bool hasMipmap, const std::function<void()>& onDisposed);
 
 struct bgfx_context
 {

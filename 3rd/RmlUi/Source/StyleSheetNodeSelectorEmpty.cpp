@@ -40,11 +40,8 @@ StyleSheetNodeSelectorEmpty::~StyleSheetNodeSelectorEmpty()
 }
 
 // Returns true if the element has no DOM children.
-bool StyleSheetNodeSelectorEmpty::IsApplicable(const Element* element, int RMLUI_UNUSED_PARAMETER(a), int RMLUI_UNUSED_PARAMETER(b))
+bool StyleSheetNodeSelectorEmpty::IsApplicable(const Element* element, int, int)
 {
-	RMLUI_UNUSED(a);
-	RMLUI_UNUSED(b);
-
 	for (int i = 0; i < element->GetNumChildren(); ++i)
 	{
 		if (element->GetChild(i)->IsVisible())

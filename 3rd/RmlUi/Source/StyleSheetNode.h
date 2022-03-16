@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_STYLESHEETNODE_H
 #define RMLUI_CORE_STYLESHEETNODE_H
 
-#include "../Include/RmlUi/PropertyDictionary.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/Types.h"
 #include <tuple>
@@ -57,6 +56,12 @@ using StyleSheetNodeList = std::vector< std::unique_ptr<StyleSheetNode> >;
 	@author Pete / Lloyd
  */
 
+class StyleSheetPropertyDictionary {
+public:
+	PropertyDictionary                  prop;
+	std::unordered_map<PropertyId, int> spec;
+};
+
 class StyleSheetNode
 {
 public:
@@ -71,21 +76,13 @@ public:
 
 	/// Merges an entire tree hierarchy into our hierarchy.
 	void MergeHierarchy(StyleSheetNode* node, int specificity_offset = 0);
-	/// Copy this node including all descendent nodes.
-	std::unique_ptr<StyleSheetNode> DeepCopy(StyleSheetNode* parent = nullptr) const;
 	/// Recursively set structural volatility.
 	bool SetStructurallyVolatileRecursive(bool ancestor_is_structurally_volatile);
 	/// Builds up a style sheet's index recursively.
 	void BuildIndex(StyleSheet::NodeIndex& styled_node_index);
 
-	/// Imports properties from a single rule definition into the node's properties and sets the
-	/// appropriate specificity on them. Any existing attributes sharing a key with a new attribute
-	/// will be overwritten if they are of a lower specificity.
-	/// @param[in] properties The properties to import.
-	/// @param[in] rule_specificity The specificity of the importing rule.
-	void ImportProperties(const PropertyDictionary& properties, int rule_specificity);
-	/// Returns the node's default properties.
-	const PropertyDictionary& GetProperties() const;
+	void ImportProperties(const StyleSheetPropertyDictionary& properties, int rule_specificity);
+	void MergeProperties(StyleSheetPropertyDictionary& properties, int specificity_offset = 0) const;
 
 	/// Returns true if this node is applicable to the given element, given its IDs, classes and heritage.
 	bool IsApplicable(const Element* element, bool skip_id_tag) const;
@@ -126,7 +123,7 @@ private:
 	// node with a lower value.
 	int specificity = 0;
 
-	PropertyDictionary properties;
+	StyleSheetPropertyDictionary properties;
 
 	StyleSheetNodeList children;
 };

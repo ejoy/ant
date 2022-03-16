@@ -69,7 +69,7 @@ DataControllerEvent::~DataControllerEvent()
 
 bool DataControllerEvent::Initialize(DataModel& model, Element* element, const std::string& expression_str, const std::string& modifier)
 {
-	RMLUI_ASSERT(element);
+	assert(element);
 	listener = std::make_unique<DataControllerEventListener>(modifier, false, expression_str);
 	DataExpressionInterface expr_interface(&model, element);
 	if (!listener->Parse(expr_interface, true)) {

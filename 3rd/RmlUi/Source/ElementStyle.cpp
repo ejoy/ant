@@ -1,48 +1,5 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
-#include "ElementStyle.h"
-#include "../Include/RmlUi/Core.h"
+#include "../Include/RmlUi/ElementStyle.h"
 #include "../Include/RmlUi/Document.h"
-#include "../Include/RmlUi/ElementUtilities.h"
-#include "../Include/RmlUi/FontEngineInterface.h"
-#include "../Include/RmlUi/Log.h"
-#include "../Include/RmlUi/Property.h"
-#include "../Include/RmlUi/PropertyDefinition.h"
-#include "../Include/RmlUi/PropertyDictionary.h"
-#include "../Include/RmlUi/PropertyIdSet.h"
-#include "../Include/RmlUi/StyleSheet.h"
-#include "../Include/RmlUi/StyleSheetSpecification.h"
-#include "../Include/RmlUi/Transform.h"
-#include "../Include/RmlUi/ElementText.h"
-#include "../Include/RmlUi/StringUtilities.h"
-#include "ElementDefinition.h"
-#include "PropertiesIterator.h"
 #include <algorithm>
 #include <numbers>
 
@@ -51,37 +8,37 @@ namespace Rml {
 float ComputeProperty(FloatValue fv, Element* e) {
 	static constexpr float PixelsPerInch = 96.0f;
 	switch (fv.unit) {
-	case Property::NUMBER:
-	case Property::PX:
-	case Property::RAD:
+	case Property::Unit::NUMBER:
+	case Property::Unit::PX:
+	case Property::Unit::RAD:
 		return fv.value;
-	case Property::EM:
+	case Property::Unit::EM:
 		return fv.value * e->GetFontSize();
-	case Property::REM:
-		return fv.value * e->GetOwnerDocument()->body->GetFontSize();
-	case Property::DEG:
+	case Property::Unit::REM:
+		return fv.value * e->GetOwnerDocument()->GetBody()->GetFontSize();
+	case Property::Unit::DEG:
 		return fv.value * (std::numbers::pi_v<float> / 180.0f);
-	case Property::VW:
+	case Property::Unit::VW:
 		return fv.value * e->GetOwnerDocument()->GetDimensions().w * 0.01f;
-	case Property::VH:
+	case Property::Unit::VH:
 		return fv.value * e->GetOwnerDocument()->GetDimensions().h * 0.01f;
-	case Property::VMIN: {
+	case Property::Unit::VMIN: {
 		auto const& size = e->GetOwnerDocument()->GetDimensions();
 		return fv.value * std::min(size.w, size.h) * 0.01f;
 	}
-	case Property::VMAX: {
+	case Property::Unit::VMAX: {
 		auto const& size = e->GetOwnerDocument()->GetDimensions();
 		return fv.value * std::max(size.w, size.h) * 0.01f;
 	}
-	case Property::INCH: // inch
+	case Property::Unit::INCH: // inch
 		return fv.value * PixelsPerInch;
-	case Property::CM: // centimeter
+	case Property::Unit::CM: // centimeter
 		return fv.value * PixelsPerInch * (1.0f / 2.54f);
-	case Property::MM: // millimeter
+	case Property::Unit::MM: // millimeter
 		return fv.value * PixelsPerInch * (1.0f / 25.4f);
-	case Property::PT: // point
+	case Property::Unit::PT: // point
 		return fv.value * PixelsPerInch * (1.0f / 72.0f);
-	case Property::PC: // pica
+	case Property::Unit::PC: // pica
 		return fv.value * PixelsPerInch * (1.0f / 6.0f);
 	default:
 		return 0.0f;
@@ -89,14 +46,14 @@ float ComputeProperty(FloatValue fv, Element* e) {
 }
 
 float ComputePropertyW(FloatValue fv, Element* e) {
-	if (fv.unit == Property::PERCENT) {
+	if (fv.unit == Property::Unit::PERCENT) {
 		return fv.value * e->GetMetrics().frame.size.w * 0.01f;
 	}
 	return ComputeProperty(fv, e);
 }
 
 float ComputePropertyH(FloatValue fv, Element* e) {
-	if (fv.unit == Property::PERCENT) {
+	if (fv.unit == Property::Unit::PERCENT) {
 		return fv.value * e->GetMetrics().frame.size.h * 0.01f;
 	}
 	return ComputeProperty(fv, e);
@@ -112,474 +69,6 @@ float ComputePropertyW(const Property* property, Element* e) {
 
 float ComputePropertyH(const Property* property, Element* e) {
 	return ComputePropertyH(property->ToFloatValue(), e);
-}
-
-ElementStyle::ElementStyle(Element* _element)
-{
-	definition = nullptr;
-	element = _element;
-
-	definition_dirty = true;
-}
-
-const Property* ElementStyle::GetLocalProperty(PropertyId id) const {
-	const Property* property = inline_properties.GetProperty(id);
-	if (property)
-		return property;
-	if (definition)
-		return definition->GetProperty(id);
-	return nullptr;
-}
-
-const Property* ElementStyle::GetProperty(PropertyId id) const
-{
-	const Property* local_property = GetLocalProperty(id);
-	if (local_property)
-		return local_property;
-	const PropertyDefinition* property = StyleSheetSpecification::GetProperty(id);
-	if (!property)
-		return nullptr;
-	if (property->IsInherited()) {
-		Element* parent = element->GetParentNode();
-		while (parent) {
-			const Property* parent_property = parent->GetStyle()->GetLocalProperty(id);
-			if (parent_property)
-				return parent_property;
-			parent = parent->GetParentNode();
-		}
-	}
-	return property->GetDefaultValue();
-}
-
-const Property* ElementStyle::GetPropertyByDefinition(PropertyId id, const ElementDefinition* definition) const {
-	const Property* property = definition->GetProperty(id);
-	if (property)
-		return property;
-	property = inline_properties.GetProperty(id);
-	if (property)
-		return property;
-	const PropertyDefinition* propertyDef = StyleSheetSpecification::GetProperty(id);
-	if (!propertyDef)
-		return nullptr;
-	if (propertyDef->IsInherited()) {
-		Element* parent = element->GetParentNode();
-		while (parent) {
-			const Property* parent_property = parent->GetStyle()->GetLocalProperty(id);
-			if (parent_property)
-				return parent_property;
-			parent = parent->GetParentNode();
-		}
-	}
-	return propertyDef->GetDefaultValue();
-}
-
-void ElementStyle::TransitionPropertyChanges(PropertyIdSet& properties, const ElementDefinition* new_definition) {
-	const Property* transition_property = GetPropertyByDefinition(PropertyId::Transition, new_definition);
-	if (!transition_property) {
-		return;
-	}
-	auto transition_list = transition_property->GetTransitionList();
-	if (transition_list.none) {
-		return;
-	}
-	auto add_transition = [&](const Transition& transition) {
-		const Property* from = GetProperty(transition.id);
-		const Property* to = GetPropertyByDefinition(transition.id, new_definition);
-		if (from && to && (from->unit == to->unit) && (*from != *to)) {
-			return element->StartTransition(transition, *from, *to, true);
-		}
-		return false;
-	};
-	if (transition_list.all) {
-		Transition transition = transition_list.transitions[0];
-		for (auto it = properties.begin(); it != properties.end(); ) {
-			transition.id = *it;
-			if (add_transition(transition))
-				it = properties.Erase(it);
-			else
-				++it;
-		}
-	}
-	else {
-		for (auto& transition : transition_list.transitions) {
-			if (properties.Contains(transition.id)) {
-				if (add_transition(transition))
-					properties.Erase(transition.id);
-			}
-		}
-	}
-}
-
-bool ElementStyle::TransitionPropertyChanges(PropertyId id, const Property& property) {
-	const Property* transition_property = GetProperty(PropertyId::Transition);
-	if (!transition_property) {
-		return false;
-	}
-	auto transition_list = transition_property->GetTransitionList();
-	if (transition_list.none) {
-		return false;
-	}
-	auto add_transition = [&](const Transition& transition) {
-		const Property* from = GetProperty(id);
-		if (from && (from->unit == property.unit) && (*from != property)) {
-			return element->StartTransition(transition, *from, property, false);
-		}
-		return false;
-	};
-	if (transition_list.all) {
-		Transition transition = transition_list.transitions[0];
-		transition.id = id;
-		return add_transition(transition);
-	}
-	else {
-		bool ok = false;
-		for (auto& transition : transition_list.transitions) {
-			if (transition.id == id) {
-				ok = ok || add_transition(transition);
-			}
-		}
-		return ok;
-	}
-}
-
-void ElementStyle::UpdateDefinition() {
-	if (definition_dirty) {
-		definition_dirty = false;
-
-		std::shared_ptr<ElementDefinition> new_definition;
-		
-		if (auto& style_sheet = element->GetStyleSheet()) {
-			new_definition = style_sheet->GetElementDefinition(element);
-		}
-		
-		// Switch the property definitions if the definition has changed.
-		if (new_definition != definition) {
-			PropertyIdSet changed_properties;
-			
-			if (definition)
-				changed_properties = definition->GetPropertyIds();
-
-			if (new_definition)
-				changed_properties |= new_definition->GetPropertyIds();
-
-			if (definition && new_definition) {
-				for (PropertyId id : changed_properties) {
-					const Property* p0 = GetProperty(id);
-					const Property* p1 = GetPropertyByDefinition(id, new_definition.get());
-					if (p0 && p1 && *p0 == *p1)
-						changed_properties.Erase(id);
-				}
-				if (!changed_properties.Empty()) {
-					TransitionPropertyChanges(changed_properties, new_definition.get());
-				}
-			}
-			definition = new_definition;
-			DirtyProperties(changed_properties);
-		}
-
-		// Even if the definition was not changed, the child definitions may have changed as a result of anything that
-		// could change the definition of this element, such as a new pseudo class.
-		DirtyChildDefinitions();
-	}
-}
-
-void ElementStyle::SetPseudoClass(PseudoClass pseudo_class, bool activate) {
-	PseudoClassSet old = pseudo_classes;
-	if (activate)
-		pseudo_classes = pseudo_classes | pseudo_class;
-	else
-		pseudo_classes = pseudo_classes & ~pseudo_class;
-	if (old != pseudo_classes) {
-		DirtyDefinition();
-	}
-}
-
-bool ElementStyle::IsPseudoClassSet(PseudoClassSet pseudo_class) const {
-	return (pseudo_class & ~pseudo_classes) == 0;
-}
-
-PseudoClassSet ElementStyle::GetActivePseudoClasses() const {
-	return pseudo_classes;
-}
-
-// Sets or removes a class on the element.
-void ElementStyle::SetClass(const std::string& class_name, bool activate)
-{
-	std::vector<std::string>::iterator class_location = std::find(classes.begin(), classes.end(), class_name);
-
-	if (activate)
-	{
-		if (class_location == classes.end())
-		{
-			classes.push_back(class_name);
-			DirtyDefinition();
-		}
-	}
-	else
-	{
-		if (class_location != classes.end())
-		{
-			classes.erase(class_location);
-			DirtyDefinition();
-		}
-	}
-}
-
-// Checks if a class is set on the element.
-bool ElementStyle::IsClassSet(const std::string& class_name) const
-{
-	return std::find(classes.begin(), classes.end(), class_name) != classes.end();
-}
-
-// Specifies the entire list of classes for this element. This will replace any others specified.
-void ElementStyle::SetClassNames(const std::string& class_names)
-{
-	classes.clear();
-	StringUtilities::ExpandString(classes, class_names, ' ');
-	DirtyDefinition();
-}
-
-// Returns the list of classes specified for this element.
-std::string ElementStyle::GetClassNames() const
-{
-	std::string class_names;
-	for (size_t i = 0; i < classes.size(); i++)
-	{
-		if (i != 0)
-		{
-			class_names += " ";
-		}
-		class_names += classes[i];
-	}
-
-	return class_names;
-}
-
-bool ElementStyle::SetProperty(PropertyId id, const Property& property) {
-	Property new_property = property;
-	new_property.definition = StyleSheetSpecification::GetProperty(id);
-	if (!new_property.definition)
-		return false;
-	if (!TransitionPropertyChanges(id, new_property)) {
-		inline_properties.SetProperty(id, new_property);
-		DirtyProperty(id);
-	}
-	return true;
-}
-
-bool ElementStyle::SetPropertyImmediate(PropertyId id, const Property& property)
-{
-	Property new_property = property;
-	new_property.definition = StyleSheetSpecification::GetProperty(id);
-	if (!new_property.definition)
-		return false;
-	inline_properties.SetProperty(id, new_property);
-	DirtyProperty(id);
-	return true;
-}
-
-// Removes a local property override on the element.
-void ElementStyle::RemoveProperty(PropertyId id)
-{
-	int size_before = inline_properties.GetNumProperties();
-	inline_properties.RemoveProperty(id);
-
-	if (inline_properties.GetNumProperties() != size_before)
-		DirtyProperty(id);
-}
-
-void ElementStyle::DirtyDefinition()
-{
-	definition_dirty = true;
-}
-
-void ElementStyle::DirtyInheritedProperties()
-{
-	dirty_properties |= StyleSheetSpecification::GetRegisteredInheritedProperties();
-}
-
-void ElementStyle::DirtyChildDefinitions()
-{
-	for (int i = 0; i < element->GetNumChildren(); i++)
-		element->GetChild(i)->GetStyle()->DirtyDefinition();
-}
-
-void ElementStyle::DirtyPropertiesWithUnitRecursive(Property::Unit unit)
-{
-	// Dirty all the properties of this element that use the unit.
-	for (auto it = Iterate(); !it.AtEnd(); ++it)
-	{
-		auto name_property_pair = *it;
-		PropertyId id = name_property_pair.first;
-		const Property& property = name_property_pair.second;
-		if (property.unit & unit) {
-			DirtyProperty(id);
-		}
-	}
-
-	// Now dirty all of our descendant's properties that use the unit.
-	int num_children = element->GetNumChildren();
-	for (int i = 0; i < num_children; ++i)
-		element->GetChild(i)->GetStyle()->DirtyPropertiesWithUnitRecursive(unit);
-}
-
-bool ElementStyle::AnyPropertiesDirty() const 
-{
-	return !dirty_properties.Empty(); 
-}
-
-PropertiesIterator ElementStyle::Iterate() const {
-	// Note: Value initialized iterators are only guaranteed to compare equal in C++14, and only for iterators satisfying the ForwardIterator requirements.
-#ifdef _MSC_VER
-	// Null forward iterator supported since VS 2015
-	static_assert(_MSC_VER >= 1900, "Visual Studio 2015 or higher required, see comment.");
-#else
-	static_assert(__cplusplus >= 201402L, "C++14 or higher required, see comment.");
-#endif
-
-	const PropertyMap& property_map = inline_properties.GetProperties();
-	auto it_style_begin = property_map.begin();
-	auto it_style_end = property_map.end();
-
-	PropertyMap::const_iterator it_definition{}, it_definition_end{};
-	if (definition)
-	{
-		const PropertyMap& definition_properties = definition->GetProperties().GetProperties();
-		it_definition = definition_properties.begin();
-		it_definition_end = definition_properties.end();
-	}
-	return PropertiesIterator(it_style_begin, it_style_end, it_definition, it_definition_end);
-}
-
-// Sets a single property as dirty.
-void ElementStyle::DirtyProperty(PropertyId id)
-{
-	dirty_properties.Insert(id);
-}
-
-// Sets a list of properties as dirty.
-void ElementStyle::DirtyProperties(const PropertyIdSet& properties)
-{
-	dirty_properties |= properties;
-}
-
-PropertyIdSet ElementStyle::ComputeValues(Style::ComputedValues& values) {
-	if (dirty_properties.Empty())
-		return PropertyIdSet();
-
-	bool dirty_em_properties = false;
-
-	// Always do font-size first if dirty, because of em-relative values
-	if (dirty_properties.Contains(PropertyId::FontSize)) {
-		if (element->UpdataFontSize()) {
-			dirty_em_properties = true;
-			dirty_properties.Insert(PropertyId::LineHeight);
-		}
-	}
-
-	for (auto it = Iterate(); !it.AtEnd(); ++it) {
-		auto name_property_pair = *it;
-		const PropertyId id = name_property_pair.first;
-		const Property* p = &name_property_pair.second;
-
-		if (dirty_em_properties && p->unit == Property::EM)
-			dirty_properties.Insert(id);
-		if (!dirty_properties.Contains(id)) {
-			continue;
-		}
-
-		switch (id) {
-		case PropertyId::Left:
-		case PropertyId::Top:
-		case PropertyId::Right:
-		case PropertyId::Bottom:
-		case PropertyId::MarginLeft:
-		case PropertyId::MarginTop:
-		case PropertyId::MarginRight:
-		case PropertyId::MarginBottom:
-		case PropertyId::PaddingLeft:
-		case PropertyId::PaddingTop:
-		case PropertyId::PaddingRight:
-		case PropertyId::PaddingBottom:
-		case PropertyId::BorderLeftWidth:
-		case PropertyId::BorderTopWidth:
-		case PropertyId::BorderRightWidth:
-		case PropertyId::BorderBottomWidth:
-		case PropertyId::Height:
-		case PropertyId::Width:
-		case PropertyId::MaxHeight:
-		case PropertyId::MinHeight:
-		case PropertyId::MaxWidth:
-		case PropertyId::MinWidth:
-		case PropertyId::Position:
-		case PropertyId::Display:
-		case PropertyId::Overflow:
-		case PropertyId::AlignContent:
-		case PropertyId::AlignItems:
-		case PropertyId::AlignSelf:
-		case PropertyId::Direction:
-		case PropertyId::FlexDirection:
-		case PropertyId::FlexWrap:
-		case PropertyId::JustifyContent:
-		case PropertyId::AspectRatio:
-		case PropertyId::Flex:
-		case PropertyId::FlexBasis:
-		case PropertyId::FlexGrow:
-		case PropertyId::FlexShrink:
-			element->GetLayout().SetProperty(id, p, element);
-			break;
-		case PropertyId::BorderTopColor:
-			values.border_color.top = p->GetColor();
-			break;
-		case PropertyId::BorderRightColor:
-			values.border_color.right = p->GetColor();
-			break;
-		case PropertyId::BorderBottomColor:
-			values.border_color.bottom = p->GetColor();
-			break;
-		case PropertyId::BorderLeftColor:
-			values.border_color.left = p->GetColor();
-			break;
-		case PropertyId::BorderTopLeftRadius:
-			values.border_radius.topLeft = p->ToFloatValue();
-			break;
-		case PropertyId::BorderTopRightRadius:
-			values.border_radius.topRight = p->ToFloatValue();
-			break;
-		case PropertyId::BorderBottomRightRadius:
-			values.border_radius.bottomRight = p->ToFloatValue();
-			break;
-		case PropertyId::BorderBottomLeftRadius:
-			values.border_radius.bottomLeft = p->ToFloatValue();
-			break;
-
-		case PropertyId::BackgroundColor:
-			values.background_color = p->GetColor();
-			break;
-
-		case PropertyId::Transition:
-			values.transition = p->GetTransitionList();
-			break;
-		case PropertyId::Animation:
-			values.animation = p->GetAnimationList();
-			break;
-		default:
-			break;
-		}
-	}
-
-	// Next, pass inheritable dirty properties onto our children
-	PropertyIdSet dirty_inherited_properties = (dirty_properties & StyleSheetSpecification::GetRegisteredInheritedProperties());
-	if (!dirty_inherited_properties.Empty()) {
-		for (int i = 0; i < element->GetNumChildren(); i++) {
-			auto child = element->GetChild(i);
-			child->GetStyle()->dirty_properties |= dirty_inherited_properties;
-		}
-	}
-
-	PropertyIdSet result(std::move(dirty_properties));
-	dirty_properties.Clear();
-	return result;
 }
 
 } // namespace Rml

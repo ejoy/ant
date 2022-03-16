@@ -24,40 +24,21 @@
 #include "../../EffekseerRendererCommon/TextureLoaderGL.h"
 #endif
 
-//#include "ShaderHeader/ad_model_distortion_ps.h"
-//#include "ShaderHeader/ad_sprite_distortion_vs.h"
-//#include "ShaderHeader/ad_model_lit_ps.h"
-//#include "ShaderHeader/ad_sprite_lit_vs.h"
-//#include "ShaderHeader/ad_model_unlit_ps.h"
-//#include "ShaderHeader/ad_sprite_unlit_vs.h"
-//
-//#include "ShaderHeader/model_distortion_ps.h"
-//#include "ShaderHeader/sprite_distortion_vs.h"
-//#include "ShaderHeader/model_lit_ps.h"
-//#include "ShaderHeader/sprite_lit_vs.h"
-//#include "ShaderHeader/model_unlit_ps.h"
-//#include "ShaderHeader/sprite_unlit_vs.h"
-
 #include "GraphicsDevice.h"
 
 namespace EffekseerRendererBGFX
 {
 
-::Effekseer::Backend::GraphicsDeviceRef CreateGraphicsDevice(/*OpenGLDeviceType deviceType, bool isExtensionsEnabled*/)
-{
-	return Effekseer::MakeRefPtr<Backend::GraphicsDevice>(/*deviceType, isExtensionsEnabled*/);
-}
-
 ::Effekseer::TextureLoaderRef CreateTextureLoader(::Effekseer::FileInterface* fileInterface, ::Effekseer::ColorSpaceType colorSpaceType)
 {
-	auto gd = new Backend::GraphicsDevice(/*OpenGLDeviceType::OpenGL2*/);
+	auto bgfxgd = new Backend::GraphicsDevice();
 #ifdef __EFFEKSEER_RENDERER_INTERNAL_LOADER__
-	auto ret = ::Effekseer::TextureLoaderRef(new EffekseerRenderer::TextureLoader(gd, fileInterface));
-	ES_SAFE_RELEASE(gd);
+	auto ret = ::Effekseer::TextureLoaderRef(new EffekseerRenderer::TextureLoader(bgfxgd, fileInterface));
+	ES_SAFE_RELEASE(bgfxgd);
 	return ret;
 #else
-	auto ret = ::Effekseer::TextureLoaderRef(new TextureLoader(gd, fileInterface));
-	ES_SAFE_RELEASE(gd);
+	auto ret = ::Effekseer::TextureLoaderRef(new TextureLoader(bgfxgd, fileInterface));
+	ES_SAFE_RELEASE(bgfxgd);
 	return ret;
 #endif
 }
@@ -74,10 +55,9 @@ namespace EffekseerRendererBGFX
 #endif
 }
 
-::Effekseer::ModelLoaderRef CreateModelLoader(::Effekseer::FileInterface* fileInterface/*, OpenGLDeviceType deviceType*/)
+::Effekseer::ModelLoaderRef CreateModelLoader(::Effekseer::FileInterface* fileInterface)
 {
-	auto gd = ::Effekseer::MakeRefPtr<Backend::GraphicsDevice>(/*OpenGLDeviceType::OpenGL2*/);
-	auto ret = Effekseer::MakeRefPtr<EffekseerRendererBGFX::ModelLoader>(gd, fileInterface);// ::Effekseer::MakeRefPtr<EffekseerRenderer::ModelLoader>(gd, fileInterface);
+	auto ret = Effekseer::MakeRefPtr<EffekseerRendererBGFX::ModelLoader>(::Effekseer::MakeRefPtr<Backend::GraphicsDevice>(), fileInterface);
 	return ret;
 }
 
@@ -87,24 +67,16 @@ namespace EffekseerRendererBGFX
 	return ::Effekseer::MakeRefPtr<MaterialLoader>(renderer, fileInterface);
 }
 
-Effekseer::Backend::TextureRef CreateTexture(Effekseer::Backend::GraphicsDeviceRef graphicsDevice, bgfx_texture_handle_t buffer, bool hasMipmap, const std::function<void()>& onDisposed)
-{
-	auto gd = graphicsDevice.DownCast<Backend::GraphicsDevice>();
-	return gd->CreateTexture(buffer, hasMipmap, onDisposed);
-}
-
 std::vector<bgfx_context> Renderer::s_bgfx_sprite_context_;
 
-RendererRef Renderer::Create(int32_t squareMaxCount/*, OpenGLDeviceType deviceType, bool isExtensionsEnabled*/)
+RendererRef Renderer::Create(int32_t squareMaxCount)
 {
-	return Create(CreateGraphicsDevice(/*deviceType, isExtensionsEnabled*/), squareMaxCount);
+	return Create(Effekseer::MakeRefPtr<Backend::GraphicsDevice>(), squareMaxCount);
 }
 
 RendererRef Renderer::Create(Effekseer::Backend::GraphicsDeviceRef graphicsDevice, int32_t squareMaxCount)
 {
-	auto g = graphicsDevice.DownCast<Backend::GraphicsDevice>();
-
-	auto renderer = ::Effekseer::MakeRefPtr<RendererImplemented>(squareMaxCount, g);
+	auto renderer = ::Effekseer::MakeRefPtr<RendererImplemented>(squareMaxCount, graphicsDevice.DownCast<Backend::GraphicsDevice>());
 	if (renderer->Initialize())
 	{
 		return renderer;
@@ -554,21 +526,7 @@ void RendererImplemented::SetIndexBuffer(IndexBuffer* indexBuffer)
 	//	indexBufferCurrentStride_ = m_currentVertexArray->GetIndexBuffer()->GetStride();
 	//}
 }
-/*
-void RendererImplemented::SetIndexBuffer(bgfx_dynamic_index_buffer_handle_t indexBuffer)
-{
-	//if (m_currentVertexArray == nullptr || m_currentVertexArray->GetIndexBuffer() == nullptr)
-	//{
-	//	//GLExt::glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
-	//	bgfx::setIndexBuffer(indexBuffer);
-	//	indexBufferCurrentStride_ = 4;
-	//}
-	//else
-	//{
-	//	indexBufferCurrentStride_ = m_currentVertexArray->GetIndexBuffer()->GetStride();
-	//}
-}
-*/
+
 void RendererImplemented::SetVertexBuffer(const Effekseer::Backend::VertexBufferRef& vertexBuffer, int32_t stride)
 {
 	auto vb = static_cast<Backend::VertexBuffer*>(vertexBuffer.Get());

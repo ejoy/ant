@@ -1,31 +1,3 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/Factory.h"
@@ -36,31 +8,24 @@
 #include "../Include/RmlUi/FileInterface.h"
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Log.h"
-#include "ElementStyle.h"
-#include "EventDispatcher.h"
+#include "../Include/RmlUi/Plugin.h"
 #include "StyleSheetFactory.h"
 #include "DataModel.h"
-#include "PluginRegistry.h"
 #include "HtmlParser.h"
-#include <set>
 #include <fstream>
 
 namespace Rml {
 
 Document::Document(const Size& _dimensions)
-	: body(new ElementDocument(this))
+	: body(this)
 	, dimensions(_dimensions)
 {
 	style_sheet = nullptr;
-	PluginRegistry::NotifyDocumentCreate(this);
 }
 
 Document::~Document() {
-	body->RemoveAllEvents();
-	PluginRegistry::NotifyDocumentDestroy(this);
-	body.reset();
+	body.RemoveAllEvents();
 }
-
 
 using namespace std::literals;
 
@@ -101,7 +66,7 @@ public:
 		m_attributes.clear();
 
 		if (!m_current && szName == "body"sv) {
-			m_current = m_doc.body.get();
+			m_current = m_doc.GetBody();
 			return;
 		}
 		if (!m_current) {
@@ -146,7 +111,7 @@ public:
 		else if (szName == "style"sv) {
 			auto it = m_attributes.find("path");
 			if (it != m_attributes.end()) {
-				LoadExternalStyle(it->second);
+				StyleSheetFactory::CombineStyleSheet(m_style_sheet, it->second);
 			}
 		}
 		else {
@@ -173,7 +138,7 @@ public:
 			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
 				return;
 			}
-			Factory::InstanceElementText(m_current, szValue);
+			m_current->CreateTextNode(szValue);
 		}
 	}
 	void OnComment(const char* szText) override {}
@@ -192,122 +157,69 @@ public:
 	void OnStyleBegin(unsigned int line) override {
 		m_line = line;
 	}
-	void LoadInlineStyle(const std::string& content, const std::string& source_path, int line) {
-		std::unique_ptr<StyleSheet> inline_sheet = std::make_unique<StyleSheet>();
-		auto stream = std::make_unique<Stream>(source_path, (const uint8_t*)content.data(), content.size());
-		if (inline_sheet->LoadStyleSheet(stream.get(), line)) {
-			if (m_style_sheet) {
-				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*inline_sheet);
-				m_style_sheet = combined_sheet;
-			}
-			else
-				m_style_sheet = std::move(inline_sheet);
-		}
-		stream.reset();
-	}
-	void LoadExternalStyle(const std::string& source_path) {
-		std::shared_ptr<StyleSheet> sub_sheet = StyleSheetFactory::GetStyleSheet(source_path);
-		if (sub_sheet) {
-			if (m_style_sheet) {
-				std::shared_ptr<StyleSheet> combined_sheet = m_style_sheet->CombineStyleSheet(*sub_sheet);
-				m_style_sheet = std::move(combined_sheet);
-			}
-			else
-				m_style_sheet = sub_sheet;
-		}
-		else
-			Log::Message(Log::Level::Error, "Failed to load style sheet %s.", source_path.c_str());
-	}
 	void OnStyleEnd(const char* szValue) override {
 		auto it = m_attributes.find("path");
-		if (it == m_attributes.end()) {
-			LoadInlineStyle(szValue, m_doc.GetSourceURL(), m_line);
+		if (it != m_attributes.end()) {
+			StyleSheetFactory::CombineStyleSheet(m_style_sheet, it->second);
 		}
 		else {
-			LoadExternalStyle(it->second);
+			StyleSheetFactory::CombineStyleSheet(m_style_sheet, szValue, m_doc.GetSourceURL(), m_line);
 		}
 	}
 };
 
 bool Document::Load(const std::string& path) {
-	try {
-		std::ifstream input(GetFileInterface()->GetPath(path));
-		if (!input) {
-			return false;
-		}
-		std::string data((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
-		input.close();
+	std::ifstream input(GetFileInterface()->GetPath(path));
+	if (!input) {
+		return false;
+	}
+	std::string data((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+	input.close();
+	source_url = path;
 
-		source_url = path;
+	try {
 		HtmlParser parser;
 		DocumentHtmlHandler handler(*this);
 		parser.Parse(data, &handler);
-		body->UpdateProperties();
-		UpdateDataModel(false);
-		Update();
 	}
 	catch (HtmlParserException& e) {
 		Log::Message(Log::Level::Error, "%s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
 		return false;
 	}
+
+	body.UpdateProperties();
+	UpdateDataModel(false);
+	Update();
 	return true;
 }
 
-const std::string& Document::GetSourceURL() const
-{
+const std::string& Document::GetSourceURL() const {
 	return source_url;
 }
 
-// Sets the style sheet this document, and all of its children, uses.
-void Document::SetStyleSheet(std::shared_ptr<StyleSheet> _style_sheet)
-{
+void Document::SetStyleSheet(std::shared_ptr<StyleSheet> _style_sheet) {
 	if (style_sheet == _style_sheet)
 		return;
 
 	style_sheet = std::move(_style_sheet);
 	
-	if (style_sheet)
-	{
+	if (style_sheet) {
 		style_sheet->BuildNodeIndex();
 	}
 
-	body->GetStyle()->DirtyDefinition();
+	body.DirtyDefinition();
 }
 
-// Returns the document's style sheet.
-const std::shared_ptr<StyleSheet>& Document::GetStyleSheet() const
-{
+const std::shared_ptr<StyleSheet>& Document::GetStyleSheet() const {
 	return style_sheet;
 }
 
-ElementPtr Document::CreateElement(const std::string& name)
-{
-	ElementPtr element(new Element(this, name));
-	return element;
+void Document::LoadInlineScript(const std::string& content, const std::string& source_path, int source_line) {
+	GetPlugin()->OnLoadInlineScript(this, content, source_path, source_line);
 }
 
-// Create a text element.
-TextPtr Document::CreateTextNode(const std::string& str)
-{
-	TextPtr text(new ElementText(this, str));
-	if (!text)
-	{
-		Log::Message(Log::Level::Error, "Failed to create text element, instancer didn't return a derivative of ElementText.");
-		return nullptr;
-	}
-	return text;
-}
-
-// Default load inline script implementation
-void Document::LoadInlineScript(const std::string& content, const std::string& source_path, int source_line)
-{
-	PluginRegistry::NotifyLoadInlineScript(this, content, source_path, source_line);
-}
-
-// Default load external script implementation
-void Document::LoadExternalScript(const std::string& source_path)
-{
-	PluginRegistry::NotifyLoadExternalScript(this, source_path);
+void Document::LoadExternalScript(const std::string& source_path) {
+	GetPlugin()->OnLoadExternalScript(this, source_path);
 }
 
 void Document::UpdateDataModel(bool clear_dirty_variables) {
@@ -315,32 +227,6 @@ void Document::UpdateDataModel(bool clear_dirty_variables) {
 		data_model.second->Update(clear_dirty_variables);
 	}
 }
-
-using ElementSet = std::set<Element*>;
-
-using ElementObserverList = std::vector< ObserverPtr<Element> >;
-
-class ElementObserverListBackInserter {
-public:
-	using iterator_category = std::output_iterator_tag;
-	using value_type = void;
-	using difference_type = void;
-	using pointer = void;
-	using reference = void;
-	using container_type = ElementObserverList;
-
-	ElementObserverListBackInserter(ElementObserverList& elements) : elements(&elements) {}
-	ElementObserverListBackInserter& operator=(Element* element) {
-		elements->push_back(element->GetObserverPtr());
-		return *this;
-	}
-	ElementObserverListBackInserter& operator*() { return *this; }
-	ElementObserverListBackInserter& operator++() { return *this; }
-	ElementObserverListBackInserter& operator++(int) { return *this; }
-
-private:
-	ElementObserverList* elements;
-};
 
 DataModelConstructor Document::CreateDataModel(const std::string& name) {
 	auto result = data_models.emplace(name, std::make_unique<DataModel>());
@@ -386,7 +272,7 @@ void Document::SetDimensions(const Size& _dimensions) {
 	if (dimensions != _dimensions) {
 		dirty_dimensions = true;
 		dimensions = _dimensions;
-		body->GetStyle()->DirtyPropertiesWithUnitRecursive(Property::VIEW_LENGTH);
+		body.DirtyPropertiesWithUnitRecursive(Property::UnitMark::ViewLength);
 	}
 }
 
@@ -396,21 +282,25 @@ const Size& Document::GetDimensions() {
 
 void Document::Update() {
 	UpdateDataModel(true);
-	body->Update();
-	if (dirty_dimensions || body->GetLayout().IsDirty()) {
+	body.Update();
+	if (dirty_dimensions || body.GetLayout().IsDirty()) {
 		dirty_dimensions = false;
-		body->GetLayout().CalculateLayout(dimensions);
+		body.GetLayout().CalculateLayout(dimensions);
 	}
-	body->UpdateLayout();
-	Render();
+	body.UpdateLayout();
+	body.Render();
 }
 
-void Document::Render() {
-	body->OnRender();
+Element* Document::ElementFromPoint(Point pt) {
+	return body.ElementFromPoint(pt);
 }
 
-Element* Document::ElementFromPoint(Point pt) const {
-	return body->ElementFromPoint(pt);
+Element* Document::GetBody() {
+	return &body;
 }
 
-} // namespace Rml
+const Element* Document::GetBody() const {
+	return &body;
+}
+
+}

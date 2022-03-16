@@ -4,7 +4,6 @@
 #include "RmlUi/Element.h"
 #include "RmlUi/Document.h"
 #include "RmlUi/EventListener.h"
-#include "RmlUi/PropertyDictionary.h"
 #include "RmlUi/StyleSheetSpecification.h"
 #include "RmlUi/Time.h"
 
@@ -26,6 +25,7 @@ struct RmlInterface {
     FontEngine      m_font;
     File            m_file;
     Renderer        m_renderer;
+	lua_plugin      m_plugin;
     RmlInterface(RmlContext* context)
         : m_font(context)
         , m_file()
@@ -34,6 +34,7 @@ struct RmlInterface {
         Rml::SetFontEngineInterface(&m_font);
         Rml::SetFileInterface(&m_file);
         Rml::SetRenderInterface(&m_renderer);
+		Rml::SetPlugin(&m_plugin);
     }
 };
 
@@ -47,7 +48,6 @@ struct RmlWrapper {
 };
 
 static RmlWrapper* g_wrapper = nullptr;
-static lua_plugin* g_plugin = nullptr;
 
 static void
 lua_pushobject(lua_State* L, void* handle) {
@@ -101,24 +101,33 @@ struct EventListener final : public Rml::EventListener {
 
 static int
 lDocumentCreate(lua_State* L) {
-	luabind::setthread(L);
-	std::string url = lua_checkstdstring(L, 1);
 	Rml::Size dimensions(
-		(float)luaL_checkinteger(L, 2),
-		(float)luaL_checkinteger(L, 3)
+		(float)luaL_checkinteger(L, 1),
+		(float)luaL_checkinteger(L, 2)
 	);
 	Rml::Document* doc = new Rml::Document(dimensions);
-	if (!doc->Load(url)) {
-		delete doc;
-		return 0;
-	}
 	lua_pushlightuserdata(L, doc);
 	return 1;
 }
 
 static int
+lDocumentLoad(lua_State* L) {
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	std::string url = lua_checkstdstring(L, 2);
+	bool ok = doc->Load(url);
+	lua_pushboolean(L, ok);
+	return 1;
+}
+
+static int
+lDocumentDestroy(lua_State* L) {
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	delete doc;
+	return 0;
+}
+
+static int
 lDocumentUpdate(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	doc->Update();
 	return 0;
@@ -126,7 +135,6 @@ lDocumentUpdate(lua_State* L) {
 
 static int
 lDocumentSetDimensions(lua_State *L){
-	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	doc->SetDimensions(Rml::Size(
 		(float)luaL_checkinteger(L, 2),
@@ -137,7 +145,6 @@ lDocumentSetDimensions(lua_State *L){
 
 static int
 lDocumentElementFromPoint(lua_State *L){
-	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	Rml::Element* e = doc->ElementFromPoint(Rml::Point(
 		(float)luaL_checknumber(L, 2),
@@ -152,9 +159,8 @@ lDocumentElementFromPoint(lua_State *L){
 
 static int
 lDocumentGetBody(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	Rml::Element* e = doc->body.get();
+	Rml::Element* e = doc->GetBody();
 	lua_pushlightuserdata(L, e);
 	return 1;
 }
@@ -175,32 +181,28 @@ ElementDispatchEvent(Rml::Element* e, const std::string& type, bool interruptibl
 
 static int
 lDocumentAddEventListener(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	ElementAddEventListener(doc->body.get(), lua_checkstdstring(L, 2), lua_toboolean(L, 4), L, 3);
+	ElementAddEventListener(doc->GetBody(), lua_checkstdstring(L, 2), lua_toboolean(L, 4), L, 3);
 	return 0;
 }
 
 static int
 lDocumentGetElementById(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	lua_pushobject(L, doc->body->GetElementById(lua_checkstdstring(L, 2)));
+	lua_pushobject(L, doc->GetBody()->GetElementById(lua_checkstdstring(L, 2)));
 	return 1;
 }
 
 static int
 lDocumentGetSourceURL(lua_State *L) {
-	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	const std::string &url = doc->GetSourceURL();
-	lua_pushlstring(L, url.c_str(), url.length());
+	lua_pushstdstring(L, url);
 	return 1;
 }
 
 static int
 lElementAddEventListener(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	ElementAddEventListener(e, lua_checkstdstring(L, 2), lua_toboolean(L, 4), L, 3);
 	return 0;
@@ -208,16 +210,14 @@ lElementAddEventListener(lua_State* L) {
 
 static int
 lDocumentDispatchEvent(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	bool propagating = ElementDispatchEvent(doc->body.get(), lua_checkstdstring(L, 2), false, false, L, 3);
+	bool propagating = ElementDispatchEvent(doc->GetBody(), lua_checkstdstring(L, 2), false, false, L, 3);
 	lua_pushboolean(L, propagating);
 	return 1;
 }
 
 static int
 lElementDispatchEvent(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	bool propagating = ElementDispatchEvent(e, lua_checkstdstring(L, 2), true, true, L, 3);
 	lua_pushboolean(L, propagating);
@@ -226,7 +226,6 @@ lElementDispatchEvent(lua_State* L) {
 
 static int
 lElementSetPseudoClass(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	const char* lst[] = { "hover", "active", NULL };
 	Rml::PseudoClass pseudoClass = (Rml::PseudoClass)(1 + luaL_checkoption(L, 2, NULL, lst));
@@ -235,29 +234,40 @@ lElementSetPseudoClass(lua_State* L) {
 }
 
 static int
-lElementGetInnerRML(lua_State *L) {
-	luabind::setthread(L);
+lElementGetClassName(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	const std::string &rml = e->GetInnerRML();
-	lua_pushlstring(L, rml.c_str(), rml.length());
+	lua_pushstdstring(L, e->GetClassName());
+	return 1;
+}
+
+static int
+lElementSetClassName(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->SetClassName(lua_checkstdstring(L, 2));
+	e->UpdateDefinition();
+	return 0;
+}
+
+static int
+lElementGetInnerRML(lua_State *L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	lua_pushstdstring(L, e->GetInnerRML());
 	return 1;
 }
 
 static int
 lElementGetAttribute(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	const std::string* attr = e->GetAttribute(lua_checkstdstring(L, 2));
 	if (!attr) {
 		return 0;
 	}
-	lua_pushlstring(L, attr->data(), attr->size());
+	lua_pushstdstring(L, *attr);
 	return 1;
 }
 
 static int
 lElementGetBounds(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	const Rml::Layout::Metrics& metrics = e->GetMetrics();
 	lua_pushnumber(L, metrics.frame.origin.x);
@@ -269,7 +279,6 @@ lElementGetBounds(lua_State* L) {
 
 static int
 lElementGetChildren(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	if (lua_type(L, 2) != LUA_TNUMBER) {
 		lua_pushinteger(L, e->GetNumChildren());
@@ -285,7 +294,6 @@ lElementGetChildren(lua_State* L) {
 
 static int
 lElementGetOwnerDocument(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::Document* doc = e->GetOwnerDocument();
 	if (!doc) {
@@ -297,7 +305,6 @@ lElementGetOwnerDocument(lua_State* L) {
 
 static int
 lElementGetParent(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::Element* parent = e->GetParentNode();
 	if (!parent) {
@@ -309,35 +316,24 @@ lElementGetParent(lua_State* L) {
 
 static int
 lElementGetProperty(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	const Rml::Property* prop = e->GetProperty(lua_checkstdstring(L, 2));
+	std::optional<std::string> prop = e->GetProperty(lua_checkstdstring(L, 2));
 	if (!prop) {
 		return 0;
 	}
-	lua_pushstdstring(L, prop->ToString());
+	lua_pushstdstring(L, prop.value());
 	return 1;
 }
 
 static int
 lElementRemoveAttribute(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	e->RemoveAttribute(lua_checkstdstring(L, 2));
 	return 0;
 }
 
 static int
-lElementRemoveProperty(lua_State* L) {
-	luabind::setthread(L);
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	e->RemoveProperty(lua_checkstdstring(L, 2));
-	return 0;
-}
-
-static int
 lElementSetAttribute(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	e->SetAttribute(lua_checkstdstring(L, 2), lua_checkstdstring(L, 3));
 	return 0;
@@ -345,29 +341,29 @@ lElementSetAttribute(lua_State* L) {
 
 static int
 lElementSetProperty(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	std::string name = lua_checkstdstring(L, 2);
-	std::string value = lua_checkstdstring(L, 3);
-	bool ok = e->SetProperty(name, value);
-	lua_pushboolean(L, ok);
-	return 1;
+	if (lua_isnoneornil(L, 3)) {
+		e->SetProperty(name);
+	}
+	else {
+		std::string value = lua_checkstdstring(L, 3);
+		e->SetProperty(name, value);
+	}
+	return 0;
 }
 
 static int
 lElementSetPropertyImmediate(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	std::string name = lua_checkstdstring(L, 2);
 	std::string value = lua_checkstdstring(L, 3);
-	bool ok = e->SetPropertyImmediate(name, value);
-	lua_pushboolean(L, ok);
-	return 1;
+	e->SetPropertyImmediate(name, value);
+	return 0;
 }
 
 static int
 lElementProject(lua_State* L) {
-	luabind::setthread(L);
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::Point pt(
 		(float)luaL_checknumber(L, 2),
@@ -383,7 +379,6 @@ lElementProject(lua_State* L) {
 
 static int
 lRmlInitialise(lua_State* L) {
-	luabind::setthread(L);
     if (g_wrapper) {
         return luaL_error(L, "RmlUi has been initialized.");
     }
@@ -391,13 +386,11 @@ lRmlInitialise(lua_State* L) {
     if (!Rml::Initialise()){
         return luaL_error(L, "Failed to Initialise RmlUi.");
     }
-	Rml::RegisterPlugin(g_plugin);
     return 0;
 }
 
 static int
 lRmlShutdown(lua_State* L) {
-	luabind::setthread(L);
     Rml::Shutdown();
     if (g_wrapper) {
         delete g_wrapper;
@@ -408,7 +401,6 @@ lRmlShutdown(lua_State* L) {
 
 static int
 lRmlRegisterEevent(lua_State* L) {
-	luabind::setthread(L);
 	lua_plugin* plugin = get_lua_plugin();
 	plugin->register_event(L);
 	return 0;
@@ -447,7 +439,7 @@ int lDataModelSet(lua_State* L);
 int lDataModelDirty(lua_State* L);
 
 lua_plugin* get_lua_plugin() {
-    return g_plugin;
+    return &g_wrapper->interface.m_plugin;
 }
 
 extern "C"
@@ -457,7 +449,7 @@ __declspec(dllexport)
 int
 luaopen_rmlui(lua_State* L) {
 	luaL_checkversion(L);
-	g_plugin = new lua_plugin;
+	luabind::init(L);
 	luaL_Reg l[] = {
 		{ "DataModelCreate", lDataModelCreate },
 		{ "DataModelRelease", lDataModelRelease },
@@ -466,6 +458,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "DataModelSet", lDataModelSet },
 		{ "DataModelDirty", lDataModelDirty },
 		{ "DocumentCreate", lDocumentCreate },
+		{ "DocumentLoad", lDocumentLoad },
+		{ "DocumentDestroy", lDocumentDestroy },
 		{ "DocumentUpdate", lDocumentUpdate },
 		{ "DocumentSetDimensions", lDocumentSetDimensions},
 		{ "DocumentElementFromPoint", lDocumentElementFromPoint },
@@ -484,11 +478,12 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementGetParent", lElementGetParent },
 		{ "ElementGetProperty", lElementGetProperty },
 		{ "ElementRemoveAttribute", lElementRemoveAttribute },
-		{ "ElementRemoveProperty", lElementRemoveProperty },
 		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
 		{ "ElementSetPropertyImmediate", lElementSetPropertyImmediate },
 		{ "ElementSetPseudoClass", lElementSetPseudoClass },
+		{ "ElementGetClassName", lElementGetClassName },
+		{ "ElementSetClassName", lElementSetClassName },
 		{ "ElementProject", lElementProject },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },

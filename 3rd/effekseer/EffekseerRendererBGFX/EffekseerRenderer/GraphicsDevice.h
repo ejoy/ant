@@ -87,9 +87,9 @@ class GraphicsDevice
 	: public Effekseer::Backend::GraphicsDevice
 {
 public:
-	GraphicsDevice(/*OpenGLDeviceType deviceType, bool isExtensionsEnabled = true*/);
+	GraphicsDevice() = default;
 
-	~GraphicsDevice() override;
+	~GraphicsDevice() override = default;
 
 	Effekseer::Backend::VertexBufferRef CreateVertexBuffer(int32_t size, const void* initialData, bool isDynamic) override;
 
@@ -101,32 +101,12 @@ public:
 
 	Effekseer::Backend::TextureRef CreateDepthTexture(const Effekseer::Backend::DepthTextureParameter& param) override;
 
-	Effekseer::Backend::UniformBufferRef CreateUniformBuffer(int32_t size, const void* initialData) override;
-
-	Effekseer::Backend::VertexLayoutRef CreateVertexLayout(const Effekseer::Backend::VertexLayoutElement* elements, int32_t elementCount) override;
-
 	Effekseer::Backend::RenderPassRef CreateRenderPass(Effekseer::FixedSizeVector<Effekseer::Backend::TextureRef, Effekseer::Backend::RenderTargetMax>& textures, Effekseer::Backend::TextureRef& depthTexture) override;
-
-	Effekseer::Backend::ShaderRef CreateShaderFromKey(const char* key) override;
-
-	Effekseer::Backend::ShaderRef CreateShaderFromCodes(const char* vsCode, const char* psCode, Effekseer::Backend::UniformLayoutRef layout) override;
-
-	Effekseer::Backend::PipelineStateRef CreatePipelineState(const Effekseer::Backend::PipelineStateParameter& param) override;
-
-	void Draw(const Effekseer::Backend::DrawParameter& drawParam) override;
-
-	void BeginRenderPass(Effekseer::Backend::RenderPassRef& renderPass, bool isColorCleared, bool isDepthCleared, Effekseer::Color clearColor) override;
-
-	void EndRenderPass() override;
-
-	bool UpdateUniformBuffer(Effekseer::Backend::UniformBufferRef& buffer, int32_t size, int32_t offset, const void* data) override;
 
 	std::string GetDeviceName() const override
 	{
-		return "OpenGL";
+		return "BGFX";
 	}
-
-	Effekseer::Backend::TextureRef CreateTexture(bgfx_texture_handle_t buffer, bool hasMipmap, const std::function<void()>& onDisposed);
 };
 
 } // namespace Backend

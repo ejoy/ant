@@ -34,14 +34,13 @@
 #include "DataController.h"
 #include "DataModel.h"
 #include "DataView.h"
-#include "ElementStyle.h"
 #include <limits>
 
 namespace Rml {
 
 static bool ApplyDataViewsControllersInternal(Element* element, const bool construct_structural_view, const std::string& structural_view_inner_rml)
 {
-	RMLUI_ASSERT(element);
+	assert(element);
 	bool result = false;
 
 	// If we have an active data model, check the attributes for any data bindings

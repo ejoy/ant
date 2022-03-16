@@ -30,13 +30,13 @@
 #define RMLUI_CORE_STYLESHEET_H
 
 #include "Traits.h"
-#include "PropertyDictionary.h"
+#include "Types.h"
 
 namespace Rml {
 
 class Element;
-class ElementDefinition;
 class StyleSheetNode;
+class StyleSheetPropertyDictionary;
 class Stream;
 
 struct KeyframeBlock {
@@ -69,7 +69,7 @@ public:
 	bool LoadStyleSheet(Stream* stream, int begin_line_number = 1);
 
 	/// Combines this style sheet with another one, producing a new sheet.
-	std::shared_ptr<StyleSheet> CombineStyleSheet(const StyleSheet& sheet) const;
+	void CombineStyleSheet(const StyleSheet& sheet);
 	/// Builds the node index for a combined style sheet.
 	void BuildNodeIndex();
 
@@ -78,7 +78,7 @@ public:
 
 	/// Returns the compiled element definition for a given element hierarchy. A reference count will be added for the
 	/// caller, so another should not be added. The definition should be released by removing the reference count.
-	std::shared_ptr<ElementDefinition> GetElementDefinition(const Element* element) const;
+	std::shared_ptr<StyleSheetPropertyDictionary> GetElementDefinition(const Element* element) const;
 
 	/// Retrieve the hash key used to look-up applicable nodes in the node index.
 	static size_t NodeHash(const std::string& tag, const std::string& id);
@@ -100,7 +100,7 @@ private:
 	// Map of all styled nodes, that is, they have one or more properties.
 	NodeIndex styled_node_index;
 
-	using ElementDefinitionCache = std::unordered_map< size_t, std::shared_ptr<ElementDefinition> >;
+	using ElementDefinitionCache = std::unordered_map< size_t, std::shared_ptr<StyleSheetPropertyDictionary> >;
 	// Index of node sets to element definitions.
 	mutable ElementDefinitionCache node_cache;
 };

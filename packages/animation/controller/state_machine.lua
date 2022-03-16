@@ -233,7 +233,8 @@ local function do_play(eid, anim, real_clips, anim_state)
 		anim_state.init = true
 		anim_state.eid = {}
 		anim_state.animation = anim
-		anim_state.event_state = { next_index = 1, keyframe_events = real_clips and real_clips[1][2].key_event or {} }
+		anim_state.event_state = { next_index = 1, keyframe_events = anim_state.key_event }
+		-- anim_state.event_state = { next_index = 1, keyframe_events = real_clips and real_clips[1][2].key_event or {} }
 		anim_state.clip_state = { current = {clip_index = 1, clips = real_clips}, clips = e._animation.anim_clips or {}}
 		anim_state.play_state = { ratio = start_ratio, previous_ratio = start_ratio, speed = realspeed, play = true, loop = anim_state.loop, manual_update = anim_state.manual}
 		

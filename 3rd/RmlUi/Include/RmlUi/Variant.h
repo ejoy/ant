@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Platform.h"
 #include <variant>
 #include <string>
+#include <optional>
 
 namespace Rml {
 
@@ -56,6 +56,26 @@ namespace VariantHelper {
 	};
 	inline std::string ToString(const Variant& variant) {
 		return std::visit(ToStringVisitor {}, variant);
+	}
+	struct ToStringOptVisitor {
+		std::optional<std::string> operator()(std::monostate const& v) {
+			return {};
+		}
+		std::optional<std::string> operator()(bool const& v) {
+			return v? "true": "false";
+		}
+		std::optional<std::string> operator()(float const& v) {
+			return std::to_string(v);
+		}
+		std::optional<std::string> operator()(int const& v) {
+			return std::to_string(v);
+		}
+		std::optional<std::string> operator()(std::string const& v) {
+			return v;
+		}
+	};
+	inline std::optional<std::string> ToStringOpt(const Variant& variant) {
+		return std::visit(ToStringOptVisitor {}, variant);
 	}
 }
 

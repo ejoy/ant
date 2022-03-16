@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Platform.h"
 #include "Types.h"
 
 namespace Rml {
@@ -10,7 +9,6 @@ public:
 	enum class Level {
 		Always,
 		Error,
-		Assert,
 		Warning,
 		Info,
 		Debug,

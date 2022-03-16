@@ -30,7 +30,6 @@
 
 #include "Types.h"
 #include "ID.h"
-#include "Debug.h"
 #include <bitset>
 
 namespace Rml {
@@ -53,11 +52,10 @@ private:
 
 public:
 	PropertyIdSet() {
-		static_assert((size_t)PropertyId::Invalid == 0, "PropertyIdSet makes an assumption that PropertyId::Invalid is zero.");
 	}
 
 	void Insert(PropertyId id) {
-		RMLUI_ASSERT(size_t(id) < N);
+		assert(size_t(id) < N);
 		defined_ids.set((size_t)id);
 	}
 
@@ -65,7 +63,7 @@ public:
 		defined_ids.reset();
 	}
 	void Erase(PropertyId id) {
-		RMLUI_ASSERT(size_t(id) < N);
+		assert(size_t(id) < N);
 		defined_ids.reset((size_t)id);
 	}
 
@@ -169,7 +167,7 @@ PropertyIdSetIterator PropertyIdSet::end() const {
 }
 
 PropertyIdSetIterator PropertyIdSet::Erase(PropertyIdSetIterator it) {
-	RMLUI_ASSERT(it.container == this && it.id_index < N);
+	assert(it.container == this && it.id_index < N);
 	defined_ids.reset(it.id_index);
 	++it;
 	return it;

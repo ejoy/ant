@@ -40,10 +40,9 @@ PropertyDefinition::PropertyDefinition(PropertyId id, bool _inherited)
 }
 
 PropertyDefinition::PropertyDefinition(PropertyId id, const std::string& _default_value, bool _inherited) 
-	: id(id), default_value(_default_value, Property::UNKNOWN)
+	: id(id), default_value(Property(_default_value, Property::Unit::UNKNOWN))
 {
 	inherited = _inherited;
-	default_value.definition = this;
 }
 
 PropertyDefinition::~PropertyDefinition()
@@ -68,11 +67,12 @@ PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name
 	}
 	parsers.push_back(new_parser);
 
-	if (default_value.definition && default_value.unit == Property::UNKNOWN) {
-		std::string unparsed_value = std::get<std::string>(default_value.value);
-		if (!new_parser.parser->ParseValue(default_value, unparsed_value, new_parser.parameters)) {
-			default_value.value = unparsed_value;
-			default_value.unit = Property::UNKNOWN;
+	if (default_value && default_value->unit == Property::Unit::UNKNOWN) {
+		Property& def = default_value.value();
+		std::string unparsed_value = std::get<std::string>(def.value);
+		if (!new_parser.parser->ParseValue(def, unparsed_value, new_parser.parameters)) {
+			def.value = unparsed_value;
+			def.unit = Property::Unit::UNKNOWN;
 		}
 	}
 
@@ -86,12 +86,11 @@ bool PropertyDefinition::ParseValue(Property& property, const std::string& value
 	{
 		if (parsers[i].parser->ParseValue(property, value, parsers[i].parameters))
 		{
-			property.definition = this;
 			return true;
 		}
 	}
 
-	property.unit = Property::UNKNOWN;
+	property.unit = Property::Unit::UNKNOWN;
 	return false;
 }
 
@@ -102,10 +101,10 @@ bool PropertyDefinition::IsInherited() const
 }
 
 const Property* PropertyDefinition::GetDefaultValue() const {
-	if (!default_value.definition) {
+	if (!default_value) {
 		return nullptr;
 	}
-	return &default_value;
+	return &default_value.value();
 }
 
 PropertyId PropertyDefinition::GetId() const

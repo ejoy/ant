@@ -28,7 +28,6 @@
 #ifndef RMLUI_CORE_FONTENGINEINTERFACE_H
 #define RMLUI_CORE_FONTENGINEINTERFACE_H
 
-#include "Platform.h"
 #include "Types.h"
 #include "ComputedValues.h"
 #include "Geometry.h"

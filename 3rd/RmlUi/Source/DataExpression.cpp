@@ -191,19 +191,18 @@ public:
 	}
 
 	Program ReleaseProgram() {
-		RMLUI_ASSERT(!parse_error);
+		assert(!parse_error);
 		return std::move(program);
 	}
 	AddressList ReleaseAddresses() {
-		RMLUI_ASSERT(!parse_error);
+		assert(!parse_error);
 		return std::move(variable_addresses);
 	}
 
 	void Emit(Instruction instruction, Variant data = Variant())
 	{
-		RMLUI_ASSERTMSG(instruction != Instruction::Push && instruction != Instruction::Pop &&
-			instruction != Instruction::Arguments && instruction != Instruction::Variable && instruction != Instruction::Assign,
-			"Use the Push(), Pop(), Arguments(), Variable(), and Assign() procedures for stack manipulation and variable instructions.");
+		assert(instruction != Instruction::Push && instruction != Instruction::Pop &&
+			instruction != Instruction::Arguments && instruction != Instruction::Variable && instruction != Instruction::Assign);
 		program.push_back(InstructionData{ instruction, std::move(data) });
 	}
 	void Push() {
@@ -685,7 +684,7 @@ namespace Parse {
 	}
 	static void Function(DataParser& parser, Instruction function_type, const std::string& func_name)
 	{
-		RMLUI_ASSERT(function_type == Instruction::EventFnc);
+		assert(function_type == Instruction::EventFnc);
 
 		// We already matched the variable name (and '|' for transform functions)
 		if (parser.Look() == '(')

@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_CORE_H
 #define RMLUI_CORE_CORE_H
 
-#include "Platform.h"
 #include "Types.h"
 
 namespace Rml {
@@ -47,7 +46,8 @@ void SetFileInterface(FileInterface* file_interface);
 FileInterface* GetFileInterface();
 void SetFontEngineInterface(FontEngineInterface* font_interface);
 FontEngineInterface* GetFontEngineInterface();
-void RegisterPlugin(Plugin* plugin);
+void SetPlugin(Plugin* plugin);
+Plugin* GetPlugin();
 
 }
 

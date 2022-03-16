@@ -27,7 +27,6 @@
  */
 
 #include "../Include/RmlUi/ElementText.h"
-#include "ElementStyle.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementUtilities.h"
@@ -36,6 +35,7 @@
 #include "../Include/RmlUi/Property.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/StringUtilities.h"
+#include "../Include/RmlUi/ElementStyle.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Rml {
@@ -68,11 +68,11 @@ const std::string& ElementText::GetText() const
 	return text;
 }
 
-const Property* ElementText::GetProperty(PropertyId id) {
+const Property* ElementText::GetComputedProperty(PropertyId id) {
 	if (!parent) {
 		return nullptr;
 	}
-	return parent->GetProperty(id);
+	return parent->GetComputedProperty(id);
 }
 
 float ElementText::GetOpacity() {
@@ -82,7 +82,7 @@ float ElementText::GetOpacity() {
 	return parent->GetOpacity();
 }
 
-void ElementText::OnRender() {
+void ElementText::Render() {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 	if (font_face_handle == 0)
 		return;
@@ -362,7 +362,7 @@ void ElementText::UpdateDecoration(const FontFaceHandle font_face_handle) {
 
 static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation)
 {
-	RMLUI_ASSERT(token_begin != string_end);
+	assert(token_begin != string_end);
 
 	token.reserve(string_end - token_begin + token.size());
 
@@ -511,7 +511,7 @@ Size ElementText::Measure(float minWidth, float maxWidth, float minHeight, float
 
 float ElementText::GetLineHeight() {
 	float line_height = (float)GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle());
-	const Property* property = GetProperty(PropertyId::LineHeight);
+	const Property* property = GetComputedProperty(PropertyId::LineHeight);
 	return line_height * property->GetFloat();
 }
 
@@ -524,15 +524,15 @@ float ElementText::GetBaseline() {
 }
 
 Style::TextAlign ElementText::GetAlign() {
-	const Property* property = GetProperty(PropertyId::TextAlign);
+	const Property* property = GetComputedProperty(PropertyId::TextAlign);
 	return (Style::TextAlign)property->GetKeyword();
 }
 
 std::optional<TextShadow> ElementText::GetTextShadow() {
 	TextShadow shadow {
-		ComputeProperty(GetProperty(PropertyId::TextShadowH), parent),
-		ComputeProperty(GetProperty(PropertyId::TextShadowV), parent),
-		GetProperty(PropertyId::TextShadowColor)->GetColor(),
+		ComputeProperty(GetComputedProperty(PropertyId::TextShadowH), parent),
+		ComputeProperty(GetComputedProperty(PropertyId::TextShadowV), parent),
+		GetComputedProperty(PropertyId::TextShadowColor)->GetColor(),
 	};
 	if (shadow.offset_h || shadow.offset_v) {
 		return shadow;
@@ -542,8 +542,8 @@ std::optional<TextShadow> ElementText::GetTextShadow() {
 
 std::optional<TextStroke> ElementText::GetTextStroke() {
 	TextStroke stroke{
-		ComputeProperty(GetProperty(PropertyId::TextStrokeWidth), parent),
-		GetProperty(PropertyId::TextStrokeColor)->GetColor(),
+		ComputeProperty(GetComputedProperty(PropertyId::TextStrokeWidth), parent),
+		GetComputedProperty(PropertyId::TextStrokeColor)->GetColor(),
 	};
 	if (stroke.width) {
 		return stroke;
@@ -552,13 +552,13 @@ std::optional<TextStroke> ElementText::GetTextStroke() {
 }
 
 Style::TextDecorationLine ElementText::GetTextDecorationLine() {
-	const Property* property = GetProperty(PropertyId::TextDecorationLine);
+	const Property* property = GetComputedProperty(PropertyId::TextDecorationLine);
 	return (Style::TextDecorationLine)property->GetKeyword();
 }
 
 Color ElementText::GetTextDecorationColor() {
-	const Property* property = GetProperty(PropertyId::TextDecorationColor);
-	if (property->unit == Property::KEYWORD) {
+	const Property* property = GetComputedProperty(PropertyId::TextDecorationColor);
+	if (property->unit == Property::Unit::KEYWORD) {
 		// CurrentColor
 		auto stroke = GetTextStroke();
 		if (stroke) {
@@ -572,22 +572,22 @@ Color ElementText::GetTextDecorationColor() {
 }
 
 Style::TextTransform ElementText::GetTextTransform() {
-	const Property* property = GetProperty(PropertyId::TextTransform);
+	const Property* property = GetComputedProperty(PropertyId::TextTransform);
 	return (Style::TextTransform)property->GetKeyword();
 }
 
 Style::WhiteSpace ElementText::GetWhiteSpace() {
-	const Property* property = GetProperty(PropertyId::WhiteSpace);
+	const Property* property = GetComputedProperty(PropertyId::WhiteSpace);
 	return (Style::WhiteSpace)property->GetKeyword();
 }
 
 Style::WordBreak ElementText::GetWordBreak() {
-	const Property* property = GetProperty(PropertyId::WordBreak);
+	const Property* property = GetComputedProperty(PropertyId::WordBreak);
 	return (Style::WordBreak)property->GetKeyword();
 }
 
 Color ElementText::GetTextColor() {
-	const Property* property = GetProperty(PropertyId::Color);
+	const Property* property = GetComputedProperty(PropertyId::Color);
 	return property->GetColor();
 }
 
@@ -596,9 +596,9 @@ FontFaceHandle ElementText::GetFontFaceHandle() {
 		return font_handle;
 	}
 	dirty_font = false;
-	std::string family = StringUtilities::ToLower(GetProperty(PropertyId::FontFamily)->GetString());
-	Style::FontStyle style   = (Style::FontStyle)GetProperty(PropertyId::FontStyle)->GetKeyword();
-	Style::FontWeight weight = (Style::FontWeight)GetProperty(PropertyId::FontWeight)->GetKeyword();
+	std::string family = StringUtilities::ToLower(GetComputedProperty(PropertyId::FontFamily)->GetString());
+	Style::FontStyle style   = (Style::FontStyle)GetComputedProperty(PropertyId::FontStyle)->GetKeyword();
+	Style::FontWeight weight = (Style::FontWeight)GetComputedProperty(PropertyId::FontWeight)->GetKeyword();
 	int size = (int)parent->GetFontSize();
 	font_handle = GetFontEngineInterface()->GetFontFaceHandle(family, style, weight, size);
 	if (font_handle == 0) {

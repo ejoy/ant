@@ -36,7 +36,6 @@
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Texture.h"
 #include "../Include/RmlUi/Log.h"
-#include "PluginRegistry.h"
 #include "StyleSheetFactory.h"
 #include "StyleSheetParser.h"
 
@@ -45,11 +44,12 @@ namespace Rml {
 static RenderInterface* render_interface = nullptr;
 static FileInterface* file_interface = nullptr;
 static FontEngineInterface* font_interface = nullptr;
+static Plugin* plugin = nullptr;
 
 static bool initialised = false;
 
 bool Initialise() {
-	RMLUI_ASSERTMSG(!initialised, "Rml::Initialise() called, but RmlUi is already initialised!");
+	assert(!initialised);
 	if (!render_interface) {
 		Log::Message(Log::Level::Error, "No render interface set!");
 		return false;
@@ -62,18 +62,20 @@ bool Initialise() {
 		Log::Message(Log::Level::Error, "No font interface set!");
 		return false;
 	}
+	if (!plugin) {
+		Log::Message(Log::Level::Error, "No plugin set!");
+		return false;
+	}
 	StyleSheetSpecification::Initialise();
 	StyleSheetFactory::Initialise();
 	Factory::Initialise();
-	PluginRegistry::NotifyInitialise();
 	initialised = true;
 	return true;
 }
 
 void Shutdown() {
-	RMLUI_ASSERTMSG(initialised, "Rml::Shutdown() called, but RmlUi is not initialised!");
+	assert(initialised);
 
-	PluginRegistry::NotifyShutdown();
 	Factory::Shutdown();
 	StyleSheetFactory::Shutdown();
 	StyleSheetSpecification::Shutdown();
@@ -109,10 +111,12 @@ FontEngineInterface* GetFontEngineInterface() {
 	return font_interface;
 }
 
-void RegisterPlugin(Plugin* plugin) {
-	if (initialised)
-		plugin->OnInitialise();
-	PluginRegistry::RegisterPlugin(plugin);
+void SetPlugin(Plugin* _plugin) {
+	plugin = _plugin;
+}
+
+Plugin* GetPlugin() {
+	return plugin;
 }
 
 }

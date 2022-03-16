@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_ELEMENTANIMATION_H
 #define RMLUI_CORE_ELEMENTANIMATION_H
 
-#include "../Include/RmlUi/Platform.h"
 #include "../Include/RmlUi/Property.h"
 #include "../Include/RmlUi/Tween.h"
 #include "../Include/RmlUi/ID.h"
@@ -70,7 +69,6 @@ private:
 	float time_since_iteration_start = 0;
 	int current_iteration = 0;
 	bool reverse_direction = false;
-	bool remove_when_complete = true;
 	bool animation_complete = true;
 	ElementAnimationOrigin origin = ElementAnimationOrigin::User;
 
@@ -81,7 +79,7 @@ public:
 	ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element,
 		double start_world_time, float duration, int num_iterations, bool alternate_direction);
 
-	bool AddKey(float target_time, const Property & property, Element & element, Tween tween, bool remove_when_complete);
+	bool AddKey(float target_time, const Property & property, Element & element, Tween tween);
 
 	Property UpdateAndGetProperty(double time, Element& element);
 

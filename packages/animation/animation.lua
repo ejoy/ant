@@ -8,6 +8,7 @@ local animodule 	= require "hierarchy".animation
 
 local ani_sys 		= ecs.system "animation_system"
 local timer 		= ecs.import.interface "ant.timer|itimer"
+local iaudio    	= ecs.import.interface "ant.audio|audio_interface"
 
 local function get_current_anim_time(task)
 	return task.play_state.ratio * task.animation._handle:duration()
@@ -27,7 +28,9 @@ local function process_keyframe_event(task)
 	end
 	while not event_state.finish and current_events.time <= current_time do
 		for _, event in ipairs(current_events.event_list) do
-			if event.event_type == "Collision" then
+			if event.event_type == "Sound" then
+				iaudio.play(event.sound_event)
+			elseif event.event_type == "Collision" then
 				local collision = event.collision
 				if collision and collision.col_eid and collision.col_eid ~= -1 then
 					local eid = collision.col_eid
