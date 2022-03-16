@@ -1006,7 +1006,7 @@ bool DataExpressionInterface::SetValue(const DataAddress& address, const Variant
 	return result;
 }
 
-bool DataExpressionInterface::EventCallback(const std::string& name, const VariantList& arguments)
+bool DataExpressionInterface::EventCallback(const std::string& name, const std::vector<Variant>& arguments)
 {
 	if (!data_model || !event)
 		return false;

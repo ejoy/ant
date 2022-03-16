@@ -30,6 +30,7 @@
 #define RMLUI_CORE_DATADEFINITIONS_H
 
 #include "Types.h"
+#include "Variant.h"
 
 namespace Rml {
 
@@ -37,7 +38,7 @@ class VariableDefinition;
 class DataModelHandle;
 class DataVariable;
 
-using DataEventFunc = std::function<void(DataModelHandle, Event&, const VariantList&)>;
+using DataEventFunc = std::function<void(DataModelHandle, Event&, const std::vector<Variant>&)>;
 
 using DirtyVariables = std::unordered_set<std::string>;
 

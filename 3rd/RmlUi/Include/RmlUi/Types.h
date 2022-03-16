@@ -46,7 +46,6 @@
 #include "Traits.h"
 #include "Colour.h"
 #include "ObserverPtr.h"
-#include "Variant.h"
 
 namespace Rml {
 
@@ -70,7 +69,6 @@ using TextEffectsHandle = uintptr_t;
 using ElementPtr = std::unique_ptr<Element>;
 using ElementList = std::vector< Element* >;
 using OwnedElementList = std::vector< ElementPtr >;
-using VariantList = std::vector< Variant >;
 using ElementAnimationList = std::vector< ElementAnimation >;
 using PropertyDictionary = std::unordered_map< PropertyId, Property >;
 using ElementAttributes = std::unordered_map< std::string, std::string >;

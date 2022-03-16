@@ -19,7 +19,7 @@ struct LuaPushVariantVisitor {
 		lua_pushnumber(L, p);
 	}
 	void operator()(int const& p) {
-		lua_pushinteger(L, p);
+		lua_pushnumber(L, p);
 	}
 	void operator()(std::string const& p) {
 		lua_pushlstring(L, p.c_str(), p.length());
@@ -46,11 +46,7 @@ lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
 		*variant = (bool)lua_toboolean(L, index);
 		break;
 	case LUA_TNUMBER:
-		if (lua_isinteger(L, index)) {
-			*variant = (int)lua_tointeger(L, index);
-		} else {
-			*variant = (float)lua_tonumber(L, index);
-		}
+		*variant = (float)lua_tonumber(L, index);
 		break;
 	case LUA_TSTRING:
 		*variant = std::string(lua_tostring(L, index));
@@ -207,7 +203,7 @@ BindVariable(struct LuaDataModel* D, lua_State* L) {
 	lua_rawset(dataL, 1);
 	const char* key = lua_tostring(L, -1);
 	if (lua_type(dataL, D->top) == LUA_TFUNCTION) {
-		D->constructor.BindEventCallback(key, [=](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& list) {
+		D->constructor.BindEventCallback(key, [=](Rml::DataModelHandle, Rml::Event& event, const std::vector<Rml::Variant>& list) {
 			luabind::invoke([&](lua_State* L){
 				lua_pushvalue(dataL, id);
 				lua_xmove(dataL, L, 1);

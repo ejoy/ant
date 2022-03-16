@@ -10,6 +10,7 @@
 #include "Node.h"
 #include "PropertyIdSet.h"
 #include <glm/glm.hpp>
+#include <optional>
 
 namespace Rml {
 
