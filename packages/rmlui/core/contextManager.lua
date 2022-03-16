@@ -17,6 +17,17 @@ local width, height = 1, 1
 local screen_ratio = 1.0
 local documents = {}
 
+local focusDocument
+local focusElement
+local activeDocument
+local activeElement
+local hoverDocument
+local hoverElement = {}
+local mouseX, mouseY
+local MOUSE_DOWN <const> = 1
+local MOUSE_MOVE <const> = 2
+local MOUSE_UP   <const> = 3
+
 local function round(x)
     return math.floor(x*screen_ratio+0.5)
 end
@@ -38,7 +49,7 @@ function m.open(url)
     if not doc then
         return
     end
-    table.insert(documents, 1, doc)
+    documents[#documents+1] = doc
     notifyDocumentCreate(doc)
     local ok = rmlui.DocumentLoad(doc, url)
     if not ok then
@@ -63,16 +74,16 @@ function m.close(doc)
             break
         end
     end
+    if focusDocument == doc then
+        focusElement = nil
+    end
+    if activeDocument == doc then
+        activeElement = nil
+    end
+    if hoverDocument == doc then
+        hoverElement = {}
+    end
 end
-
-
-local focusElement
-local activeElement
-local hoverElement = {}
-local mouseX, mouseY
-local MOUSE_DOWN <const> = 1
-local MOUSE_MOVE <const> = 2
-local MOUSE_UP   <const> = 3
 
 local function walkElement(e)
     local r = {}
@@ -87,13 +98,12 @@ local function walkElement(e)
     return r
 end
 
-local function createMouseEvent(e, button, x, y)
+local function createMouseEvent(doc, e, button, x, y)
     local ev = {
         button = button >= 0 and button or nil,
         x = x,
         y = y,
     }
-    local doc = getOwnerDocument(e)
     local body = getBody(doc)
     ev.clientX, ev.clientY = x, y
     ev.offsetX, ev.offsetY = project(e, x, y)
@@ -108,18 +118,21 @@ local function cancelActive()
     for _, element in ipairs(activeElement) do
         setPseudoClass(element, "active", false)
     end
+    activeDocument = nil
     activeElement = nil
 end
 
-local function setActive(e)
+local function setActive(doc, e)
     cancelActive()
+    activeDocument = doc
     activeElement = walkElement(e)
     for _, element in ipairs(activeElement) do
         setPseudoClass(element, "active", true)
     end
 end
 
-local function setFocus(e)
+local function setFocus(doc, e)
+    focusDocument = doc
     focusElement = e
 end
 
@@ -131,7 +144,7 @@ local function diff(a, b, f)
     end
 end
 
-local function updateHover(newHover, event)
+local function updateHover(doc, newHover, event)
     local oldHover = hoverElement
     diff(oldHover, newHover, function (element)
         if dispatchEvent(element, "mouseout", event) then
@@ -143,6 +156,7 @@ local function updateHover(newHover, event)
             setPseudoClass(element, "hover", true)
         end
     end)
+    hoverDocument = doc
     hoverElement = newHover
 end
 
@@ -150,36 +164,36 @@ local function fromPoint(x, y)
     for _, doc in ipairs(documents) do
         local e = elementFromPoint(doc, x, y)
         if e then
-            return e
+            return doc, e
         end
     end
 end
 
-local function processMouseDown(e, button, x, y)
-    setFocus(e)
-    setActive(e)
-    local event = createMouseEvent(e, button, x, y)
+local function processMouseDown(doc, e, button, x, y)
+    setFocus(doc, e)
+    setActive(doc, e)
+    local event = createMouseEvent(doc, e, button, x, y)
     dispatchEvent(e, "mousedown", event)
 end
 
-local function processMouseUp(e, button, x, y)
-    local event = createMouseEvent(e, button, x, y)
+local function processMouseUp(doc, e, button, x, y)
+    local event = createMouseEvent(doc, e, button, x, y)
     local cancelled = not dispatchEvent(e, "mouseup", event)
     if cancelled then
         return
     end
-    if focusElement  == e then
+    if focusElement == e then
         dispatchEvent(e, "click", event)
     end
 end
 
-local function processMouseMove(e, button, x, y)
-    local event = createMouseEvent(e, button, x, y)
+local function processMouseMove(doc, e, button, x, y)
+    local event = createMouseEvent(doc, e, button, x, y)
     local cancelled = not dispatchEvent(e, "mousemove", event)
     if cancelled then
         return
     end
-    updateHover(walkElement(e), event)
+    updateHover(doc, walkElement(e), event)
 end
 
 function m.process_mouse(x, y, button, state)
@@ -200,9 +214,9 @@ function m.process_mouse(x, y, button, state)
     else
         return
     end
-    local e = fromPoint(x, y)
+    local doc, e = fromPoint(x, y)
     if e then
-        process(e, button, x, y)
+        process(doc, e, button, x, y)
         return true
     end
 end
