@@ -1579,7 +1579,7 @@ const TransitionList* Element::GetTransition(const PropertyDictionary* def) cons
 		if (def) {
 			property = PropertyDictionaryGet(*def, PropertyId::Transition);
 		}
-		else {
+		else if (definition_properties) {
 			property = PropertyDictionaryGet(definition_properties->prop, PropertyId::Transition);
 		}
 	}
