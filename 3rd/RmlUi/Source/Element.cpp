@@ -93,18 +93,20 @@ Element::~Element() {
 
 void Element::Update() {
 	UpdateStructure();
+	UpdateDefinition();
+	UpdateProperties();
 	HandleTransitionProperty();
 	HandleAnimationProperty();
-	AdvanceAnimations();
-	UpdateProperties();
-	if (dirty_animation) {
-		HandleAnimationProperty();
-		AdvanceAnimations();
-		UpdateProperties();
-	}
 	UpdateStackingContext();
 	for (auto& child : children) {
 		child->Update();
+	}
+}
+
+void Element::UpdateAnimations() {
+	AdvanceAnimations();
+	for (auto& child : children) {
+		child->UpdateAnimations();
 	}
 }
 
@@ -1104,36 +1106,20 @@ void Element::AdvanceAnimations() {
 		return;
 	}
 	double time = Time::Now();
-
 	for (auto& animation : animations) {
 		Property property = animation.UpdateAndGetProperty(time, *this);
 		if (property.unit != Property::Unit::UNKNOWN)
 			SetAnimationProperty(animation.GetPropertyId(), property);
 	}
-
-	// Move all completed animations to the end of the list
 	auto it_completed = std::partition(animations.begin(), animations.end(), [](const ElementAnimation& animation) { return !animation.IsComplete(); });
-
-	//std::vector<EventDictionary> dictionary_list;
 	std::vector<bool> is_transition;
-	//dictionary_list.reserve(animations.end() - it_completed);
 	is_transition.reserve(animations.end() - it_completed);
-
 	for (auto it = it_completed; it != animations.end(); ++it) {
-		//const std::string& property_name = StyleSheetSpecification::GetPropertyName(it->GetPropertyId());
-		//dictionary_list.emplace_back();
-		//dictionary_list.back().emplace("property", property_name);
 		is_transition.push_back(it->IsTransition());
-
 		it->Release(*this);
 	}
-
-	// Need to erase elements before submitting event, as iterators might be invalidated when calling external code.
 	animations.erase(it_completed, animations.end());
-
-	// TODO
-	//for (size_t i = 0; i < dictionary_list.size(); i++)
-	//	DispatchEvent(is_transition[i] ? "transitionend" : "animationend", dictionary_list[i], false, true);
+	UpdateProperties();
 }
 
 void Element::DirtyPerspective() {
@@ -1776,7 +1762,6 @@ void Element::DirtyProperties(const PropertyIdSet& properties) {
 }
 
 void Element::UpdateProperties() {
-	UpdateDefinition();
 	if (dirty_properties.Empty()) {
 		return;
 	}

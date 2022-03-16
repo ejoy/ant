@@ -283,6 +283,7 @@ const Size& Document::GetDimensions() {
 void Document::Update() {
 	UpdateDataModel(true);
 	body.Update();
+	body.UpdateAnimations();
 	if (dirty_dimensions || body.GetLayout().IsDirty()) {
 		dirty_dimensions = false;
 		body.GetLayout().CalculateLayout(dimensions);

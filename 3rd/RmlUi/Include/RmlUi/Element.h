@@ -71,6 +71,7 @@ public:
 
 	DataModel* GetDataModel() const;
 
+	void Update();
 	void UpdateLayout();
 	void SetParent(Element* parent);
 	Element* ElementFromPoint(Point point);
@@ -116,7 +117,7 @@ public:
 	void TransitionPropertyChanges(const TransitionList* transition_list, PropertyId id, const Property& old_property);
 
 protected:
-	void Update();
+	void UpdateAnimations();
 	void UpdateProperties();
 	void OnAttributeChange(const ElementAttributes& changed_attributes);
 	void Render() override;

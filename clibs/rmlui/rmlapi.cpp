@@ -244,7 +244,7 @@ static int
 lElementSetClassName(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	e->SetClassName(lua_checkstdstring(L, 2));
-	e->UpdateDefinition();
+	e->Update();
 	return 0;
 }
 
