@@ -1748,9 +1748,15 @@ void Element::DirtyProperties(Property::UnitMark mark) {
 
 void Element::ForeachProperties(std::function<void(PropertyId id, const Property& property)> f) {
 	PropertyIdSet mark;
-	for (auto& [id, property] : inline_properties) {
+	for (auto& [id, property] : animation_properties) {
 		mark.Insert(id);
 		f(id, property);
+	}
+	for (auto& [id, property] : inline_properties) {
+		if (!mark.Contains(id)) {
+			mark.Insert(id);
+			f(id, property);
+		}
 	}
 	if (definition_properties) {
 		for (auto& [id, property] : definition_properties->prop) {

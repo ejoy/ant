@@ -99,11 +99,11 @@ function property_getter:clientHeight()
 end
 
 function property_getter:className()
-    return rmlui.ElementGetClassNames(self._handle)
+    return rmlui.ElementGetClassName(self._handle)
 end
 
 function property_setter:className(v)
-    rmlui.ElementSetClassNames(self._handle, v)
+    rmlui.ElementSetClassName(self._handle, v)
 end
 
 local property_mt = {}

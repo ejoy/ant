@@ -236,11 +236,7 @@ lElementSetPseudoClass(lua_State* L) {
 static int
 lElementGetClassName(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	auto r = e->GetClassName();
-	if (r.empty()) {
-		return 0;
-	}
-	lua_pushstdstring(L, r);
+	lua_pushstdstring(L, e->GetClassName());
 	return 1;
 }
 
