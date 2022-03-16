@@ -46,7 +46,7 @@ lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
 		*variant = (bool)lua_toboolean(L, index);
 		break;
 	case LUA_TNUMBER:
-		if (lua_isboolean(L, index)) {
+		if (lua_isinteger(L, index)) {
 			*variant = (int)lua_tointeger(L, index);
 		} else {
 			*variant = (float)lua_tonumber(L, index);
