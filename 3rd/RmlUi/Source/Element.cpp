@@ -529,12 +529,12 @@ Element* Element::GetElementById(const std::string& id) {
 		Element* element = search_queue.front();
 		search_queue.pop();
 		
-		if (GetId() == id) {
+		if (element->GetId() == id) {
 			return element;
 		}
 		
-		for (int i = 0; i < GetNumChildren(); i++)
-			search_queue.push(GetChild(i));
+		for (int i = 0; i < element->GetNumChildren(); i++)
+			search_queue.push(element->GetChild(i));
 	}
 	return nullptr;
 }
@@ -756,6 +756,14 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		DirtyTransform();
 		if (clip.type != Clip::Type::None) {
 			DirtyClip();
+		}
+	}
+
+	if (changed_properties.Contains(PropertyId::ScrollLeft) ||
+		changed_properties.Contains(PropertyId::ScrollTop))
+	{
+		for (auto& child : children) {
+			child->DirtyTransform();
 		}
 	}
 
