@@ -320,16 +320,24 @@ static bool ParseTransition(Property & property, const std::vector<std::string>&
 		}
 
 		// Validate the parsed transition
-		if (target_property_names.Empty() || transition.duration <= 0.0f || transition.reverse_adjustment_factor < 0.0f || transition.reverse_adjustment_factor > 1.0f
-			|| (transition_list.all && target_property_names.Size() != 1))
-		{
+		if (transition.duration <= 0.0f || transition.reverse_adjustment_factor < 0.0f || transition.reverse_adjustment_factor > 1.0f) {
 			return false;
 		}
 
-		for (const auto& property_name : target_property_names)
-		{
-			transition.id = property_name;
+		if (transition_list.all) {
+			if (!target_property_names.Empty()) {
+				return false;
+			}
 			transition_list.transitions.push_back(transition);
+		}
+		else {
+			if (target_property_names.Empty()) {
+				return false;
+			}
+			for (const auto& property_name : target_property_names) {
+				transition.id = property_name;
+				transition_list.transitions.push_back(transition);
+			}
 		}
 	}
 
