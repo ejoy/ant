@@ -292,11 +292,15 @@ local function select_obj(pc, render_target)
 	local eid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
 	if eid then
 		local e = world:entity(eid)
-		log.info("pick entity id: ", eid, e.name)
-		local cb = pc.picked_callback
-		if cb then
-			cb(eid, pc)
+		local n = ""
+		if e then
+			local cb = pc.picked_callback
+			if cb then
+				cb(eid, pc)
+			end
+			n = e.name
 		end
+		log.info("pick entity id: ", eid, n)
 	else
 		log.info("not found any eid")
 	end
