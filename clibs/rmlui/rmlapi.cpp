@@ -284,6 +284,19 @@ lElementSetScrollTop(lua_State* L) {
 }
 
 static int
+lElementSetScrollInsets(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::EdgeInsets<float> insets = {
+		(float)luaL_checknumber(L, 2),
+		(float)luaL_checknumber(L, 3),
+		(float)luaL_checknumber(L, 4),
+		(float)luaL_checknumber(L, 5),
+	};
+	e->SetScrollInsets(insets);
+	return 0;
+}
+
+static int
 lElementGetInnerHTML(lua_State *L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	lua_pushstdstring(L, e->GetInnerHTML());
@@ -534,6 +547,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementGetScrollTop", lElementGetScrollTop },
 		{ "ElementSetScrollLeft", lElementSetScrollLeft },
 		{ "ElementSetScrollTop", lElementSetScrollTop },
+		{ "ElementSetScrollInsets", lElementSetScrollInsets },
 		{ "ElementGetInnerHTML", lElementGetInnerHTML },
 		{ "ElementSetInnerHTML", lElementSetInnerHTML },
 		{ "ElementAppendChild", lElementAppendChild },

@@ -70,6 +70,13 @@ function property_init:appendChild()
     end
 end
 
+function property_init:scrollInsets()
+    local handle = self._handle
+    return function (l, t, r, b)
+        rmlui.ElementSetScrollInsets(handle, l, t, r, b)
+    end
+end
+
 function property_init:style()
     return setmetatable({_handle = self._handle}, style_mt)
 end

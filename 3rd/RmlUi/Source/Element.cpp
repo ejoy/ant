@@ -1416,6 +1416,21 @@ void Element::SetScrollTop(float v) {
 	SetProperty(PropertyId::ScrollTop, &value);
 }
 
+void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return;
+	}
+	metrics.scrollInsets = insets;
+	Size offset = GetScrollOffset();
+	layout.UpdateScrollOffset(offset, metrics);
+
+	Property left(offset.w, Property::Unit::PX);
+	SetProperty(PropertyId::ScrollLeft, &left);
+
+	Property top(offset.h, Property::Unit::PX);
+	SetProperty(PropertyId::ScrollTop, &top);
+}
+
 void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate) {
 	PseudoClassSet old = pseudo_classes;
 	if (activate)

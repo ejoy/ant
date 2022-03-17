@@ -14,21 +14,24 @@
             }
             #scroll {
                 overflow: scroll;
-                transition: all 0.5s linear-in;
+                transition: all 0.2s linear-in;
             }
         </style>
         <script type="text/x-lua">
+            local e
+            function init()
+                e = document.getElementById "scroll"
+                e.scrollInsets(0,100,0,100)
+            end
             function up()
-                local e = document.getElementById "scroll"
-                e.scrollTop = e.scrollTop - 30
+                e.scrollTop = e.scrollTop - 40
             end
             function down()
-                local e = document.getElementById "scroll"
-                e.scrollTop = e.scrollTop + 30
+                e.scrollTop = e.scrollTop + 40
             end
         </script>
     </head>
-    <body>
+    <body onload="init()">
         <view id="scroll">
             <p>Test 1</p>
             <p>Test 2</p>

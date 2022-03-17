@@ -82,6 +82,7 @@ public:
 	float GetScrollTop() const;
 	void SetScrollLeft(float v);
 	void SetScrollTop(float v);
+	void SetScrollInsets(const EdgeInsets<float>& insets);
 
 	void SetPseudoClass(PseudoClass pseudo_class, bool activate);
 	bool IsPseudoClassSet(PseudoClassSet pseudo_class) const;

@@ -15,7 +15,7 @@ public:
 		Rect content;
 		EdgeInsets<float> paddingWidth{};
 		EdgeInsets<float> borderWidth{};
-		EdgeInsets<float> scrollInset{};
+		EdgeInsets<float> scrollInsets{};
 		bool visible = true;
 
 		bool operator==(const Metrics& rhs) const {
