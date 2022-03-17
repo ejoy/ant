@@ -68,11 +68,28 @@ struct StyleSheetSpecificationInstance {
 	PropertyIdSet property_ids_inherited;
 };
 
+static std::string convert(const std::string& s) {
+	std::string r;
+	auto f = s.find_first_not_of('-', 0);
+	auto l = s.find_first_of('-', f);
+	while (std::string::npos != f || std::string::npos != l) {
+		auto ss = s.substr(f, l - f);
+		if (!ss.empty()) {
+			if (!r.empty()) {
+				ss[0] = std::toupper(ss[0]);
+			}
+			r += ss;
+		}
+		f = s.find_first_not_of('-', l);
+		l = s.find_first_of('-', f);
+	}
+	return r;
+}
+
 template <typename T>
 void MapAdd(std::unordered_map<std::string, T>& map, const std::string& name, T id) {
-	bool inserted = map.emplace(name, id).second;
-	assert(inserted);
-	(void)inserted;
+	map.emplace(name, id);
+	map.emplace(convert(name), id);
 }
 
 template <typename T>

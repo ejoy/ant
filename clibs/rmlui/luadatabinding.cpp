@@ -207,7 +207,7 @@ BindVariable(struct LuaDataModel* D, lua_State* L) {
 	lua_rawset(dataL, 1);
 	const char* key = lua_tostring(L, -1);
 	if (lua_type(dataL, D->top) == LUA_TFUNCTION) {
-		D->constructor.BindEventCallback(key, [=](Rml::DataModelHandle, Rml::Event& event, const Rml::VariantList& list) {
+		D->constructor.BindEventCallback(key, [=](Rml::DataModelHandle, Rml::Event& event, const std::vector<Rml::Variant>& list) {
 			luabind::invoke([&](lua_State* L){
 				lua_pushvalue(dataL, id);
 				lua_xmove(dataL, L, 1);

@@ -4,6 +4,7 @@
 #include "luabind.h"
 #include "luaref.h"
 #include "RmlUi/Plugin.h"
+#include "RmlUi/Variant.h"
 
 class lua_event_listener;
 

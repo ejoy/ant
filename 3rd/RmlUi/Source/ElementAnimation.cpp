@@ -292,7 +292,7 @@ void ElementAnimation::Release(Element& element) {
 		break;
 	case ElementAnimationOrigin::Animation:
 	case ElementAnimationOrigin::Transition:
-		element.RemoveAnimationProperty(GetPropertyId());
+		element.SetAnimationProperty(GetPropertyId());
 		break;
 	}
 }

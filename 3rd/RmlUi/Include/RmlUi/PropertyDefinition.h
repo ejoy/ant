@@ -31,6 +31,7 @@
 
 #include "Property.h"
 #include "PropertyParser.h"
+#include <optional>
 
 namespace Rml {
 

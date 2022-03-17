@@ -10,6 +10,7 @@
 #include "Node.h"
 #include "PropertyIdSet.h"
 #include <glm/glm.hpp>
+#include <optional>
 
 namespace Rml {
 
@@ -71,6 +72,7 @@ public:
 
 	DataModel* GetDataModel() const;
 
+	void Update();
 	void UpdateLayout();
 	void SetParent(Element* parent);
 	Element* ElementFromPoint(Point point);
@@ -95,13 +97,8 @@ public:
 	void DirtyProperty(PropertyId id);
 	void DirtyProperties(const PropertyIdSet& properties);
 
-	void SetProperty(PropertyId id, const Property& property);
-	void SetPropertyImmediate(PropertyId id, const Property& property);
-	void SetPropertyImmediate(const std::string& name, const std::string& value);
-	void SetAnimationProperty(PropertyId id, const Property& property);
-
-	void RemoveProperty(PropertyId id);
-	void RemoveAnimationProperty(PropertyId id);
+	void SetProperty(PropertyId id, const Property* property = nullptr);
+	void SetAnimationProperty(PropertyId id, const Property* property = nullptr);
 
 	const Property* GetProperty(PropertyId id) const;
 	const Property* GetComputedProperty(PropertyId id) const;
@@ -116,7 +113,7 @@ public:
 	void TransitionPropertyChanges(const TransitionList* transition_list, PropertyId id, const Property& old_property);
 
 protected:
-	void Update();
+	void UpdateAnimations();
 	void UpdateProperties();
 	void OnAttributeChange(const ElementAttributes& changed_attributes);
 	void Render() override;
@@ -133,6 +130,7 @@ protected:
 	void DirtyTransform();
 	void DirtyClip();
 	void UpdateClip();
+	void UpdateProperty(PropertyId id, const Property* property = nullptr);
 
 	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property);
 	bool AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween);

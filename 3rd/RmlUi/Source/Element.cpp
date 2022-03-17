@@ -93,18 +93,20 @@ Element::~Element() {
 
 void Element::Update() {
 	UpdateStructure();
+	UpdateDefinition();
+	UpdateProperties();
 	HandleTransitionProperty();
 	HandleAnimationProperty();
-	AdvanceAnimations();
-	UpdateProperties();
-	if (dirty_animation) {
-		HandleAnimationProperty();
-		AdvanceAnimations();
-		UpdateProperties();
-	}
 	UpdateStackingContext();
 	for (auto& child : children) {
 		child->Update();
+	}
+}
+
+void Element::UpdateAnimations() {
+	AdvanceAnimations();
+	for (auto& child : children) {
+		child->UpdateAnimations();
 	}
 }
 
@@ -219,17 +221,6 @@ bool Element::UpdataFontSize() {
 float Element::GetOpacity() {
 	const Property* property = GetComputedProperty(PropertyId::Opacity);
 	return property->GetFloat();
-}
-
-void Element::SetPropertyImmediate(const std::string& name, const std::string& value) {
-	PropertyDictionary properties;
-	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value)) {
-		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.c_str());
-		return;
-	}
-	for (auto& property : properties) {
-		SetPropertyImmediate(property.first, property.second);
-	}
 }
 
 bool Element::Project(Point& point) const noexcept {
@@ -664,7 +655,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
 		parser.ParseProperties(properties, it->second);
 
 		for (const auto& name_value : properties) {
-			SetProperty(name_value.first, name_value.second);
+			SetProperty(name_value.first, &name_value.second);
 		}
 	}
 	
@@ -951,7 +942,7 @@ bool Element::AddAnimationKeyTime(PropertyId property_id, const Property* target
 		target_value = GetComputedProperty(property_id);
 	if (!target_value)
 		return false;
-	SetProperty(property_id, *target_value);
+	SetProperty(property_id, target_value);
 	ElementAnimation* animation = nullptr;
 	for (auto& existing_animation : animations) {
 		if (existing_animation.GetPropertyId() == property_id) {
@@ -993,7 +984,7 @@ bool Element::StartTransition(const Transition& transition, const Property& star
 		animations.erase(it);
 		return false;
 	}
-	SetAnimationProperty(transition.id, start_value);
+	SetAnimationProperty(transition.id, &start_value);
 	return true;
 }
 
@@ -1104,36 +1095,20 @@ void Element::AdvanceAnimations() {
 		return;
 	}
 	double time = Time::Now();
-
 	for (auto& animation : animations) {
 		Property property = animation.UpdateAndGetProperty(time, *this);
 		if (property.unit != Property::Unit::UNKNOWN)
-			SetAnimationProperty(animation.GetPropertyId(), property);
+			SetAnimationProperty(animation.GetPropertyId(), &property);
 	}
-
-	// Move all completed animations to the end of the list
 	auto it_completed = std::partition(animations.begin(), animations.end(), [](const ElementAnimation& animation) { return !animation.IsComplete(); });
-
-	//std::vector<EventDictionary> dictionary_list;
 	std::vector<bool> is_transition;
-	//dictionary_list.reserve(animations.end() - it_completed);
 	is_transition.reserve(animations.end() - it_completed);
-
 	for (auto it = it_completed; it != animations.end(); ++it) {
-		//const std::string& property_name = StyleSheetSpecification::GetPropertyName(it->GetPropertyId());
-		//dictionary_list.emplace_back();
-		//dictionary_list.back().emplace("property", property_name);
 		is_transition.push_back(it->IsTransition());
-
 		it->Release(*this);
 	}
-
-	// Need to erase elements before submitting event, as iterators might be invalidated when calling external code.
 	animations.erase(it_completed, animations.end());
-
-	// TODO
-	//for (size_t i = 0; i < dictionary_list.size(); i++)
-	//	DispatchEvent(is_transition[i] ? "transitionend" : "animationend", dictionary_list[i], false, true);
+	UpdateProperties();
 }
 
 void Element::DirtyPerspective() {
@@ -1516,7 +1491,7 @@ void Element::SetProperty(const std::string& name, std::optional<std::string> va
 			return;
 		}
 		for (auto& property : properties) {
-			SetProperty(property.first, property.second);
+			SetProperty(property.first, &property.second);
 		}
 	}
 	else {
@@ -1526,7 +1501,7 @@ void Element::SetProperty(const std::string& name, std::optional<std::string> va
 			return;
 		}
 		for (auto property_id : properties) {
-			RemoveProperty(property_id);
+			SetProperty(property_id);
 		}
 	}
 }
@@ -1682,52 +1657,40 @@ void Element::UpdateDefinition() {
 	}
 }
 
-void Element::SetProperty(PropertyId id, const Property& property) {
-	const TransitionList* transition_list = GetTransition();
-	if (!transition_list || transition_list->none) {
-		inline_properties[id] = property;
-		DirtyProperty(id);
+void Element::UpdateProperty(PropertyId id, const Property* property) {
+	if (property) {
+		inline_properties[id] = *property;
+	}
+	else if (!inline_properties.erase(id)) {
 		return;
 	}
-	const Property* old_property = GetComputedProperty(id);
-	inline_properties[id] = property;
-	DirtyProperty(id);
-	if (old_property) {
-		TransitionPropertyChanges(transition_list, id, *old_property);
-	}
-}
-
-void Element::SetAnimationProperty(PropertyId id, const Property& property) {
-	animation_properties[id] = property;
 	DirtyProperty(id);
 }
 
-void Element::SetPropertyImmediate(PropertyId id, const Property& property) {
-	inline_properties[id] = property;
-	DirtyProperty(id);
-}
-
-void Element::RemoveProperty(PropertyId id) {
+void Element::SetProperty(PropertyId id, const Property* newProperty) {
 	const TransitionList* transition_list = GetTransition();
 	if (!transition_list || transition_list->none) {
-		if (inline_properties.erase(id)) {
-			DirtyProperty(id);
-		}
+		UpdateProperty(id, newProperty);
 		return;
 	}
-	const Property* old_property = GetComputedProperty(id);
-	if (inline_properties.erase(id)) {
-		DirtyProperty(id);
+	const Property* ptrProperty = GetComputedProperty(id);
+	if (!ptrProperty) {
+		UpdateProperty(id, newProperty);
+		return;
 	}
-	if (old_property) {
-		TransitionPropertyChanges(transition_list, id, *old_property);
-	}
+	Property oldProperty = *ptrProperty;
+	UpdateProperty(id, newProperty);
+	TransitionPropertyChanges(transition_list, id, oldProperty);
 }
 
-void Element::RemoveAnimationProperty(PropertyId id) {
-	if (animation_properties.erase(id)) {
-		DirtyProperty(id);
+void Element::SetAnimationProperty(PropertyId id, const Property* property) {
+	if (property) {
+		animation_properties[id] = *property;
 	}
+	else if (!animation_properties.erase(id)) {
+		return;
+	}
+	DirtyProperty(id);
 }
 
 void Element::DirtyDefinition() {
@@ -1776,7 +1739,6 @@ void Element::DirtyProperties(const PropertyIdSet& properties) {
 }
 
 void Element::UpdateProperties() {
-	UpdateDefinition();
 	if (dirty_properties.Empty()) {
 		return;
 	}

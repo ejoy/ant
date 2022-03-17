@@ -37,8 +37,8 @@ public:
 private:
 	using DataModels = std::unordered_map<std::string, std::unique_ptr<DataModel>>;
 
-	ElementDocument body;
 	DataModels data_models;
+	ElementDocument body;
 	std::string source_url;
 	std::shared_ptr<StyleSheet> style_sheet;
 	Size dimensions;

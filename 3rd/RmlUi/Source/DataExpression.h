@@ -48,7 +48,7 @@ public:
     DataAddress ParseAddress(const std::string& address_str) const;
     Variant GetValue(const DataAddress& address) const;
     bool SetValue(const DataAddress& address, const Variant& value) const;
-    bool EventCallback(const std::string& name, const VariantList& arguments);
+    bool EventCallback(const std::string& name, const std::vector<Variant>& arguments);
 
 private:
     DataModel* data_model = nullptr;
