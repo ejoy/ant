@@ -112,6 +112,13 @@ function property_setter:className(v)
     rmlui.ElementSetAttribute(self._handle, "class", v)
 end
 
+function property_getter:innerHTML()
+    return rmlui.ElementGetInnerHTML(self._handle)
+end
+function property_setter:innerHTML(v)
+    rmlui.ElementSetInnerHTML(self._handle, v)
+end
+
 function property_getter:scrollLeft()
     return rmlui.ElementGetScrollLeft(self._handle)
 end

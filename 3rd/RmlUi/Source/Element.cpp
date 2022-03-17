@@ -404,7 +404,7 @@ public:
 	}
 };
 
-void Element::SetInnerRML(const std::string& rml) {
+void Element::SetInnerHTML(const std::string& rml) {
 	if (rml.empty()) {
 		return;
 	}
@@ -787,20 +787,20 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 	}
 }
 
-std::string Element::GetInnerRML() const {
+std::string Element::GetInnerHTML() const {
 	std::string rml;
 	for (auto& child : children) {
 		if (child->GetType() == Node::Type::Text) {
 			rml += ((ElementText&)*child).GetText();
 		}
 		else {
-			rml += child->GetOuterRML();
+			rml += child->GetOuterHTML();
 		}
 	}
 	return rml;
 }
 
-std::string Element::GetOuterRML() const {
+std::string Element::GetOuterHTML() const {
 	std::string rml;
 	rml += "<";
 	rml += tag;
@@ -811,7 +811,7 @@ std::string Element::GetOuterRML() const {
 	}
 	if (!children.empty()) {
 		rml += ">";
-		rml += GetInnerRML();
+		rml += GetInnerHTML();
 		rml += "</";
 		rml += tag;
 		rml += ">";

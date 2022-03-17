@@ -262,10 +262,17 @@ lElementSetScrollTop(lua_State* L) {
 }
 
 static int
-lElementGetInnerRML(lua_State *L) {
+lElementGetInnerHTML(lua_State *L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	lua_pushstdstring(L, e->GetInnerRML());
+	lua_pushstdstring(L, e->GetInnerHTML());
 	return 1;
+}
+
+static int
+lElementSetInnerHTML(lua_State *L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->SetInnerHTML(lua_checkstdstring(L, 2));
+	return 0;
 }
 
 static int
@@ -474,7 +481,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentGetBody", lDocumentGetBody },
 		{ "ElementAddEventListener", lElementAddEventListener },
 		{ "ElementDispatchEvent", lElementDispatchEvent },
-		{ "ElementGetInnerRML", lElementGetInnerRML },
 		{ "ElementGetAttribute", lElementGetAttribute },
 		{ "ElementGetBounds", lElementGetBounds },
 		{ "ElementGetChildren", lElementGetChildren },
@@ -489,6 +495,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementGetScrollTop", lElementGetScrollTop },
 		{ "ElementSetScrollLeft", lElementSetScrollLeft },
 		{ "ElementSetScrollTop", lElementSetScrollTop },
+		{ "ElementGetInnerHTML", lElementGetInnerHTML },
+		{ "ElementSetInnerHTML", lElementSetInnerHTML },
 		{ "ElementProject", lElementProject },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },

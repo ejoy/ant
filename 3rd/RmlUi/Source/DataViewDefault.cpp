@@ -197,7 +197,7 @@ bool DataViewRml::Update(DataModel & model)
 		std::string new_rml = VariantHelper::ToString(variant);
 		if (new_rml != previous_rml)
 		{
-			element->SetInnerRML(new_rml);
+			element->SetInnerHTML(new_rml);
 			previous_rml = std::move(new_rml);
 			result = true;
 		}
@@ -490,7 +490,7 @@ bool DataViewFor::Update(DataModel& model)
 			Element* new_element = element->GetParentNode()->InsertBefore(std::move(new_element_ptr), element);
 			elements.push_back(new_element);
 
-			elements[i]->SetInnerRML(rml_contents);
+			elements[i]->SetInnerHTML(rml_contents);
 
 			assert(i < (int)elements.size());
 		}

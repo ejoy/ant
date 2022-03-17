@@ -50,9 +50,9 @@ public:
 	Element* GetChild(int index) const;
 	int GetNumChildren() const;
 
-	std::string GetInnerRML() const;
-	std::string GetOuterRML() const;
-	void SetInnerRML(const std::string& rml);
+	std::string GetInnerHTML() const;
+	std::string GetOuterHTML() const;
+	void SetInnerHTML(const std::string& rml);
 	bool CreateTextNode(const std::string& str);
 
 	void AddEventListener(EventListener* listener);
