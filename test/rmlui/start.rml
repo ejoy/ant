@@ -49,8 +49,13 @@
                 e.style.backgroundColor = "green"
                 e.className = oldClassName
             end
-            function start.setting()
+            function start.setting(event)
                 start.show = not start.show
+                local e = event.target
+                local btn = document.createElement "button"
+                local label = document.createTextNode "Test Button"
+                e.parentNode.appendChild(btn)
+                btn.appendChild(label)
             end
             function start.exit()
             end

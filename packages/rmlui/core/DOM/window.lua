@@ -79,7 +79,7 @@ local function createWindow(document, source)
     function mt:__newindex(name, f)
         if name == "onload" then
             rawset(self, "onload", f)
-            self.addEventListener("load", f)
+            self:addEventListener("load", f)
         end
     end
     return setmetatable(window, mt)

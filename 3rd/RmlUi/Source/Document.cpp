@@ -9,6 +9,7 @@
 #include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/Plugin.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include "StyleSheetFactory.h"
 #include "DataModel.h"
 #include "HtmlParser.h"
@@ -74,7 +75,7 @@ public:
 		}
 		m_stack.push(m_current);
 		m_parent = m_current;
-		m_current = new Element(&m_doc, szName);
+		m_current = m_doc.CreateElement(szName).release();
 	}
 	void OnElementClose() override {
 		if (m_inner_xml) {
@@ -138,7 +139,10 @@ public:
 			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
 				return;
 			}
-			m_current->CreateTextNode(szValue);
+			auto text = m_doc.CreateTextNode(szValue);
+			if (text) {
+				m_current->AppendChild(std::move(text));
+			}
 		}
 	}
 	void OnComment(const char* szText) override {}
@@ -302,6 +306,35 @@ Element* Document::GetBody() {
 
 const Element* Document::GetBody() const {
 	return &body;
+}
+
+ElementPtr Document::CreateElement(const std::string& tag){
+	return ElementPtr(new Element(this, tag));
+}
+
+ElementPtr Document::CreateTextNode(const std::string& str) {
+	if (std::all_of(str.begin(), str.end(), &StringUtilities::IsWhitespace))
+		return nullptr;
+	bool has_data_expression = false;
+	bool inside_brackets = false;
+	char previous = 0;
+	for (const char c : str) {
+		if (inside_brackets) {
+			if (c == '}' && previous == '}') {
+				has_data_expression = true;
+				break;
+			}
+		}
+		else if (c == '{' && previous == '{') {
+				inside_brackets = true;
+		}
+		previous = c;
+	}
+	ElementPtr e(new ElementText(this, str));
+	if (has_data_expression) {
+		e->SetAttribute("data-text", std::string());
+	}
+	return e;
 }
 
 }

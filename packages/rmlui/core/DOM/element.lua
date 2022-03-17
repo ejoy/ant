@@ -35,7 +35,7 @@ local property_setter = {}
 
 function property_init:addEventListener()
     local handle = self._handle
-    return function(type, listener, useCapture)
+    return function (type, listener, useCapture)
         rmlui.ElementAddEventListener(handle, type, listener, useCapture)
     end
 end
@@ -60,6 +60,14 @@ function property_init:childNodes()
         children[i] = constructor(self._document, child)
     end
     return children
+end
+
+function property_init:appendChild()
+    local handle = self._handle
+    return function (child)
+        child._owner = nil
+        rmlui.ElementAppendChild(handle, child._handle)
+    end
 end
 
 function property_init:style()
@@ -152,17 +160,29 @@ function property_mt:__newindex(name, value)
     rawset(self, name, value)
 end
 
-function constructor(document, handle)
-    return setmetatable({_handle = handle, _document = document}, property_mt)
+function constructor(document, handle, owner)
+    return setmetatable({
+        _handle = handle,
+        _document = document,
+        _owner = owner,
+    }, property_mt)
 end
 
 local pool = {}
 
 function event.OnDocumentDestroy(handle)
+    if not pool[handle] then
+        return
+    end
+    for h, e in pairs(pool[handle]) do
+        if e._owner then
+            rmlui.ElementDelete(h)
+        end
+    end
     pool[handle] = nil
 end
 
-return function (handle, document)
+return function (handle, document, owner)
     if handle == nil then
         return
     end
@@ -176,7 +196,7 @@ return function (handle, document)
     end
     local o = _pool[handle]
     if not o then
-        o = constructor(document, handle)
+        o = constructor(document, handle, owner)
         _pool[handle] = o
     end
     return o

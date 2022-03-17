@@ -53,7 +53,6 @@ public:
 	std::string GetInnerHTML() const;
 	std::string GetOuterHTML() const;
 	void SetInnerHTML(const std::string& rml);
-	bool CreateTextNode(const std::string& str);
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);

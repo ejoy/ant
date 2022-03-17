@@ -29,6 +29,7 @@
 #include "DataViewDefault.h"
 #include "DataExpression.h"
 #include "DataModel.h"
+#include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/Factory.h"
@@ -472,7 +473,7 @@ bool DataViewFor::Update(DataModel& model)
 	{
 		if (i >= num_elements)
 		{
-			ElementPtr new_element_ptr(new Element(element->GetOwnerDocument(), element->GetTagName()));
+			ElementPtr new_element_ptr = element->GetOwnerDocument()->CreateElement(element->GetTagName());
 			new_element_ptr->SetAttributes(attributes);
 
 			DataAddress iterator_address;

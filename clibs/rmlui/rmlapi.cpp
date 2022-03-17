@@ -165,6 +165,28 @@ lDocumentGetBody(lua_State* L) {
 	return 1;
 }
 
+static int
+lDocumentCreateElement(lua_State* L) {
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	Rml::ElementPtr e = doc->CreateElement(lua_checkstdstring(L, 2));
+	if (!e) {
+		return 0;
+	}
+	lua_pushlightuserdata(L, e.release());
+	return 1;
+}
+
+static int
+lDocumentCreateTextNode(lua_State* L) {
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	Rml::ElementPtr e = doc->CreateTextNode(lua_checkstdstring(L, 2));
+	if (!e) {
+		return 0;
+	}
+	lua_pushlightuserdata(L, e.release());
+	return 1;
+}
+
 static void
 ElementAddEventListener(Rml::Element* e, const std::string& name, bool userCapture, lua_State* L, int idx) {
 	luaL_checktype(L, 3, LUA_TFUNCTION);
@@ -298,6 +320,14 @@ lElementGetBounds(lua_State* L) {
 }
 
 static int
+lElementAppendChild(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::Element* child = lua_checkobject<Rml::Element>(L, 2);
+	e->AppendChild(Rml::ElementPtr(child));
+	return 0;
+}
+
+static int
 lElementGetChildren(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	if (lua_type(L, 2) != LUA_TNUMBER) {
@@ -386,6 +416,13 @@ lElementProject(lua_State* L) {
 	lua_pushnumber(L, pt.x);
 	lua_pushnumber(L, pt.y);
 	return 2;
+}
+
+static int
+lElementDelete(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	delete e;
+	return 0;
 }
 
 static int
@@ -479,6 +516,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentGetElementById", lDocumentGetElementById },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentGetBody", lDocumentGetBody },
+		{ "DocumentCreateElement", lDocumentCreateElement },
+		{ "DocumentCreateTextNode", lDocumentCreateTextNode },
 		{ "ElementAddEventListener", lElementAddEventListener },
 		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetAttribute", lElementGetAttribute },
@@ -497,6 +536,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementSetScrollTop", lElementSetScrollTop },
 		{ "ElementGetInnerHTML", lElementGetInnerHTML },
 		{ "ElementSetInnerHTML", lElementSetInnerHTML },
+		{ "ElementAppendChild", lElementAppendChild },
+		{ "ElementDelete", lElementDelete },
 		{ "ElementProject", lElementProject },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },

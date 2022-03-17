@@ -1,0 +1,48 @@
+<rml>
+    <head>
+        <style>
+            body {
+                font: 500% "宋体";
+                flex-direction: row;
+                margin: 100px;
+            }
+            button {
+                background-color: #222222;
+            }
+            button:hover {
+                background-color: #f22222;
+            }
+            #scroll {
+                overflow: scroll;
+                transition: all 0.5s linear-in;
+            }
+        </style>
+        <script type="text/x-lua">
+            function up()
+                local e = document.getElementById "scroll"
+                e.scrollTop = e.scrollTop - 30
+            end
+            function down()
+                local e = document.getElementById "scroll"
+                e.scrollTop = e.scrollTop + 30
+            end
+        </script>
+    </head>
+    <body>
+        <view id="scroll">
+            <p>Test 1</p>
+            <p>Test 2</p>
+            <p>Test 3</p>
+            <p>Test 4</p>
+            <p>Test 5</p>
+            <p>Test 6</p>
+            <p>Test 7</p>
+            <p>Test 8</p>
+            <p>Test 9</p>
+        </view>
+        <view>
+            <button onclick="up()">↑</button>
+            <button onclick="down()">↓</button>
+        </view>
+    </body>
+</rml>

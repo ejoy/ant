@@ -33,6 +33,8 @@ public:
 
 	Element* GetBody();
 	const Element* GetBody() const;
+	ElementPtr CreateElement(const std::string& tag);
+	ElementPtr CreateTextNode(const std::string& str);
 
 private:
 	using DataModels = std::unordered_map<std::string, std::unique_ptr<DataModel>>;

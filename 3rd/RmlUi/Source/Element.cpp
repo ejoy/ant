@@ -350,7 +350,7 @@ public:
 		}
 		m_stack.push(m_current);
 		m_parent = m_current;
-		m_current = new Element(m_doc, szName);
+		m_current = m_doc->CreateElement(szName).release();
 	}
 	void OnElementClose() override {
 		if (m_inner_xml) {
@@ -399,7 +399,10 @@ public:
 			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
 				return;
 			}
-			m_current->CreateTextNode(szValue);
+			auto text = m_doc->CreateTextNode(szValue);
+			if (text) {
+				m_current->AppendChild(std::move(text));
+			}
 		}
 	}
 };
@@ -411,36 +414,6 @@ void Element::SetInnerHTML(const std::string& rml) {
 	HtmlParser parser;
 	EmbedHtmlHandler handler(this);
 	parser.Parse(rml, &handler);
-}
-
-bool Element::CreateTextNode(const std::string& str) {
-	if (std::all_of(str.begin(), str.end(), &StringUtilities::IsWhitespace))
-		return true;
-	bool has_data_expression = false;
-	bool inside_brackets = false;
-	char previous = 0;
-	for (const char c : str) {
-		if (inside_brackets) {
-			if (c == '}' && previous == '}') {
-				has_data_expression = true;
-				break;
-			}
-		}
-		else if (c == '{' && previous == '{') {
-				inside_brackets = true;
-		}
-		previous = c;
-	}
-	ElementPtr text(new ElementText(GetOwnerDocument(), str));
-	if (!text) {
-		Log::Message(Log::Level::Error, "Failed to instance text element '%s', instancer returned nullptr.", str.c_str());
-		return false;
-	}
-	if (has_data_expression) {
-		text->SetAttribute("data-text", std::string());
-	}
-	AppendChild(std::move(text));
-	return true;
 }
 
 Element* Element::AppendChild(ElementPtr child) {
