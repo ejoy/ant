@@ -98,26 +98,30 @@ function property_getter:clientHeight()
     return h
 end
 
+function property_getter:id()
+    return rmlui.ElementGetAttribute(self._handle, "id") or ""
+end
+function property_setter:id(v)
+    rmlui.ElementSetAttribute(self._handle, "id", v)
+end
+
 function property_getter:className()
-    return rmlui.ElementGetClassName(self._handle)
+    return rmlui.ElementGetAttribute(self._handle, "class") or ""
+end
+function property_setter:className(v)
+    rmlui.ElementSetAttribute(self._handle, "class", v)
 end
 
 function property_getter:scrollLeft()
     return rmlui.ElementGetScrollLeft(self._handle)
 end
-
-function property_getter:scrollTop()
-    return rmlui.ElementGetScrollTop(self._handle)
-end
-
-function property_setter:className(v)
-    rmlui.ElementSetClassName(self._handle, v)
-end
-
 function property_setter:scrollLeft(v)
     return rmlui.ElementSetScrollLeft(self._handle, v)
 end
 
+function property_getter:scrollTop()
+    return rmlui.ElementGetScrollTop(self._handle)
+end
 function property_setter:scrollTop(v)
     return rmlui.ElementSetScrollTop(self._handle, v)
 end

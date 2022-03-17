@@ -234,21 +234,6 @@ lElementSetPseudoClass(lua_State* L) {
 }
 
 static int
-lElementGetClassName(lua_State* L) {
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	lua_pushstdstring(L, e->GetClassName());
-	return 1;
-}
-
-static int
-lElementSetClassName(lua_State* L) {
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	e->SetClassName(lua_checkstdstring(L, 2));
-	e->Update();
-	return 0;
-}
-
-static int
 lElementGetScrollLeft(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	lua_pushnumber(L, e->GetScrollLeft());
@@ -500,8 +485,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
 		{ "ElementSetPseudoClass", lElementSetPseudoClass },
-		{ "ElementGetClassName", lElementGetClassName },
-		{ "ElementSetClassName", lElementSetClassName },
 		{ "ElementGetScrollLeft", lElementGetScrollLeft },
 		{ "ElementGetScrollTop", lElementGetScrollTop },
 		{ "ElementSetScrollLeft", lElementSetScrollLeft },

@@ -640,12 +640,13 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
 	auto it = changed_attributes.find("id");
 	if (it != changed_attributes.end()) {
 		id = it->second;
-		DirtyDefinition();
+		Update();
 	}
 
 	it = changed_attributes.find("class");
 	if (it != changed_attributes.end()) {
 		SetClassName(it->second);
+		Update();
 	}
 
 	it = changed_attributes.find("style");
