@@ -1403,12 +1403,44 @@ Size Element::GetScrollOffset() const {
 	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
 		return {0,0};
 	}
-	Size scrollOffset {
+	return {
 		GetComputedProperty(PropertyId::ScrollLeft)->GetFloat(),
 		GetComputedProperty(PropertyId::ScrollTop)->GetFloat()
 	};
-	layout.UpdateScrollOffset(scrollOffset, metrics);
-	return scrollOffset;
+}
+
+float Element::GetScrollLeft() const {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return 0;
+	}
+	return GetComputedProperty(PropertyId::ScrollLeft)->GetFloat();
+}
+
+float Element::GetScrollTop() const {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return 0;
+	}
+	return GetComputedProperty(PropertyId::ScrollTop)->GetFloat();
+}
+
+void Element::SetScrollLeft(float v) {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return;
+	}
+	Size offset { v, 0 };
+	layout.UpdateScrollOffset(offset, metrics);
+	Property value(offset.w, Property::Unit::PX);
+	SetProperty(PropertyId::ScrollLeft, &value);
+}
+
+void Element::SetScrollTop(float v) {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return;
+	}
+	Size offset { 0, v };
+	layout.UpdateScrollOffset(offset, metrics);
+	Property value(offset.h, Property::Unit::PX);
+	SetProperty(PropertyId::ScrollTop, &value);
 }
 
 void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate) {

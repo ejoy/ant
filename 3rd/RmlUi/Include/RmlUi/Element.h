@@ -79,6 +79,10 @@ public:
 	void SetRednerStatus();
 
 	Size GetScrollOffset() const;
+	float GetScrollLeft() const;
+	float GetScrollTop() const;
+	void SetScrollLeft(float v);
+	void SetScrollTop(float v);
 
 	void SetPseudoClass(PseudoClass pseudo_class, bool activate);
 	bool IsPseudoClassSet(PseudoClassSet pseudo_class) const;

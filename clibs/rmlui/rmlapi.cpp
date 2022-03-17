@@ -249,6 +249,34 @@ lElementSetClassName(lua_State* L) {
 }
 
 static int
+lElementGetScrollLeft(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	lua_pushnumber(L, e->GetScrollLeft());
+	return 1;
+}
+
+static int
+lElementGetScrollTop(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	lua_pushnumber(L, e->GetScrollTop());
+	return 1;
+}
+
+static int
+lElementSetScrollLeft(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->SetScrollLeft((float)luaL_checknumber(L, 2));
+	return 0;
+}
+
+static int
+lElementSetScrollTop(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->SetScrollTop((float)luaL_checknumber(L, 2));
+	return 0;
+}
+
+static int
 lElementGetInnerRML(lua_State *L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	lua_pushstdstring(L, e->GetInnerRML());
@@ -474,6 +502,10 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementSetPseudoClass", lElementSetPseudoClass },
 		{ "ElementGetClassName", lElementGetClassName },
 		{ "ElementSetClassName", lElementSetClassName },
+		{ "ElementGetScrollLeft", lElementGetScrollLeft },
+		{ "ElementGetScrollTop", lElementGetScrollTop },
+		{ "ElementSetScrollLeft", lElementSetScrollLeft },
+		{ "ElementSetScrollTop", lElementSetScrollTop },
 		{ "ElementProject", lElementProject },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
