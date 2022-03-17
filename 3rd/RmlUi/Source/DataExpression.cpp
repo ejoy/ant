@@ -840,11 +840,30 @@ private:
 		{
 			if (AnyString(L, R))
 				R = Variant(VariantHelper::ToString(L) + VariantHelper::ToString(R));
-			else
-				R = Variant(VariantHelper::Get<float>(L) + VariantHelper::Get<float>(R));
+			else {
+				//R = Variant(VariantHelper::Get<float>(L) + VariantHelper::Get<float>(R));
+				auto value = (VariantHelper::Has<float>(L) ? VariantHelper::Get<float>(L) : VariantHelper::Get<int>(L)) + (VariantHelper::Has<float>(R) ? VariantHelper::Get<float>(R) : VariantHelper::Get<int>(R));
+				if (VariantHelper::Has<int>(L) && VariantHelper::Has<int>(R)) {
+					R = Variant((int)value);
+				}
+				else {
+					R = Variant(value);
+				}
+			}
 		}
 		break;
-		case Instruction::Subtract:  R = Variant(VariantHelper::Get<float>(L) - VariantHelper::Get<float>(R));  break;
+		case Instruction::Subtract:
+		{
+			//R = Variant(VariantHelper::Get<float>(L) - VariantHelper::Get<float>(R));
+			auto value = (VariantHelper::Has<float>(L) ? VariantHelper::Get<float>(L) : VariantHelper::Get<int>(L)) - (VariantHelper::Has<float>(R) ? VariantHelper::Get<float>(R) : VariantHelper::Get<int>(R));
+			if (VariantHelper::Has<int>(L) && VariantHelper::Has<int>(R)) {
+				R = Variant((int)value);
+			}
+			else {
+				R = Variant(value);
+			}
+		}
+		break;
 		case Instruction::Multiply:  R = Variant(VariantHelper::Get<float>(L) * VariantHelper::Get<float>(R));  break;
 		case Instruction::Divide:    R = Variant(VariantHelper::Get<float>(L) / VariantHelper::Get<float>(R));  break;
 		case Instruction::Not:       R = Variant(!VariantHelper::Get<bool>(R));                     break;

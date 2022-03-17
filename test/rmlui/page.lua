@@ -39,8 +39,9 @@ function page_meta:update_virtual_pages(items)
             local row = math.floor(idx/self.col)
             local col = math.fmod(idx, self.col)
             vitems[#vitems + 1] = {
-                left = tostring(offset + col * (self.item_size + gapx) + gapx) .. 'px',
-                top = tostring(row * (self.item_size + gapy) + gapy) .. 'px',
+                left = offset + col * (self.item_size + gapx) + gapx,
+                top = row * (self.item_size + gapy) + gapy,
+                row = row,
                 data = items[index + idx]
             }
         end
@@ -55,12 +56,14 @@ end
 
 function page_meta.create(size, source)
     local item_size = source.item_size
+    local row = math.floor(size[2] / item_size)
+    source.row_count = row
     local page = {
         current_page = 1,
         contain_size = size or {0,0},
         item_size    = item_size,
         col          = math.floor(size[1] / item_size),
-        row          = math.floor(size[2] / item_size),
+        row          = row,
         pos          = 0,
         drag         = {mouse_pos = 0, anchor = 0, delta = 0},
         data_source  = source,
@@ -111,7 +114,12 @@ function page_meta:on_drag(event)
     if event.button then
         self.drag.delta = event.x - self.drag.mouse_pos
         self.pos = self.drag.anchor + self.drag.delta
-        event.current:setPropertyImmediate("left", tostring(math.floor(self.pos)) .. 'px')
+        --event.current:setPropertyImmediate("left", tostring(math.floor(self.pos)) .. 'px')
+        local e = event.current
+        local oldClassName = e.className
+        e.className = e.className .. " notransition"
+        e.style.left = tostring(math.floor(self.pos)) .. 'px'
+        e.className = oldClassName
     else
         self.drag.delta = 0
     end
