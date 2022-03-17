@@ -56,4 +56,4 @@ std::shared_ptr<Texture> Texture::Fetch(const std::string& path) {
 	return resource;
 }
 
-} // namespace Rml
+}

@@ -54,5 +54,5 @@ public:
 	virtual std::string GetPath(const std::string& path) = 0;
 };
 
-} // namespace Rml
+}
 #endif

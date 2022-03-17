@@ -52,7 +52,7 @@ public:
 
 	std::string GetInnerHTML() const;
 	std::string GetOuterHTML() const;
-	void SetInnerHTML(const std::string& rml);
+	void SetInnerHTML(const std::string& html);
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);

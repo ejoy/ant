@@ -85,5 +85,5 @@ protected:
 DataVariable MakeLiteralIntVariable(int value);
 
 
-} // namespace Rml
+}
 #endif

@@ -82,5 +82,5 @@ private:
 	SelectorMap selectors;
 };
 
-} // namespace Rml
+}
 #endif

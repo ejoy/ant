@@ -58,5 +58,5 @@ private:
 	ColourMap html_colours;
 };
 
-} // namespace Rml
+}
 #endif

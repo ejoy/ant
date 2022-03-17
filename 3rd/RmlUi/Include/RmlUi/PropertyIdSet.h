@@ -173,5 +173,5 @@ PropertyIdSetIterator PropertyIdSet::Erase(PropertyIdSetIterator it) {
 	return it;
 }
 
-} // namespace Rml
+}
 #endif

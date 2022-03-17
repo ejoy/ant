@@ -183,10 +183,10 @@ bool DataViewClass::Update(DataModel& model)
 }
 
 
-DataViewRml::DataViewRml(Element* element) : DataViewCommon(element)
+DataViewHtml::DataViewHtml(Element* element) : DataViewCommon(element)
 {}
 
-bool DataViewRml::Update(DataModel & model)
+bool DataViewHtml::Update(DataModel & model)
 {
 	bool result = false;
 	Variant variant;
@@ -195,11 +195,11 @@ bool DataViewRml::Update(DataModel & model)
 
 	if (element && GetExpression().Run(expr_interface, variant))
 	{
-		std::string new_rml = VariantHelper::ToString(variant);
-		if (new_rml != previous_rml)
+		std::string new_html = VariantHelper::ToString(variant);
+		if (new_html != previous_html)
 		{
-			element->SetInnerHTML(new_rml);
-			previous_rml = std::move(new_rml);
+			element->SetInnerHTML(new_html);
+			previous_html = std::move(new_html);
 			result = true;
 		}
 	}
@@ -395,9 +395,9 @@ std::string DataViewText::BuildText() const
 DataViewFor::DataViewFor(Element* element) : DataView(element)
 {}
 
-bool DataViewFor::Initialize(DataModel& model, Element* element, const std::string& in_expression, const std::string& in_rml_content)
+bool DataViewFor::Initialize(DataModel& model, Element* element, const std::string& in_expression, const std::string& in_html_content)
 {
-	rml_contents = in_rml_content;
+	html_contents = in_html_content;
 
 	std::vector<std::string> iterator_container_pair;
 	StringUtilities::ExpandString(iterator_container_pair, in_expression, ':');
@@ -491,7 +491,7 @@ bool DataViewFor::Update(DataModel& model)
 			Element* new_element = element->GetParentNode()->InsertBefore(std::move(new_element_ptr), element);
 			elements.push_back(new_element);
 
-			elements[i]->SetInnerHTML(rml_contents);
+			elements[i]->SetInnerHTML(html_contents);
 
 			assert(i < (int)elements.size());
 		}
@@ -519,4 +519,4 @@ void DataViewFor::Release()
 	delete this;
 }
 
-} // namespace Rml
+}

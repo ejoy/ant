@@ -76,5 +76,5 @@ private:
     AddressList addresses;
 };
 
-} // namespace Rml
+}
 #endif

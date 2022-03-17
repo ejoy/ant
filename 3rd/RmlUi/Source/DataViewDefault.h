@@ -97,14 +97,14 @@ public:
 };
 
 
-class DataViewRml final : public DataViewCommon {
+class DataViewHtml final : public DataViewCommon {
 public:
-	DataViewRml(Element* element);
+	DataViewHtml(Element* element);
 
 	bool Update(DataModel& model) override;
 
 private:
-	std::string previous_rml;
+	std::string previous_html;
 };
 
 
@@ -154,7 +154,7 @@ class DataViewFor final : public DataView {
 public:
 	DataViewFor(Element* element);
 
-	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& inner_rml) override;
+	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& inner_html) override;
 
 	bool Update(DataModel& model) override;
 
@@ -167,11 +167,11 @@ private:
 	DataAddress container_address;
 	std::string iterator_name;
 	std::string iterator_index_name;
-	std::string rml_contents;
+	std::string html_contents;
 	ElementAttributes attributes;
 
 	ElementList elements;
 };
 
-} // namespace Rml
+}
 #endif

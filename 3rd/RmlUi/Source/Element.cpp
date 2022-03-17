@@ -407,13 +407,13 @@ public:
 	}
 };
 
-void Element::SetInnerHTML(const std::string& rml) {
-	if (rml.empty()) {
+void Element::SetInnerHTML(const std::string& html) {
+	if (html.empty()) {
 		return;
 	}
 	HtmlParser parser;
 	EmbedHtmlHandler handler(this);
-	parser.Parse(rml, &handler);
+	parser.Parse(html, &handler);
 }
 
 Element* Element::AppendChild(ElementPtr child) {
@@ -761,38 +761,38 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 }
 
 std::string Element::GetInnerHTML() const {
-	std::string rml;
+	std::string html;
 	for (auto& child : children) {
 		if (child->GetType() == Node::Type::Text) {
-			rml += ((ElementText&)*child).GetText();
+			html += ((ElementText&)*child).GetText();
 		}
 		else {
-			rml += child->GetOuterHTML();
+			html += child->GetOuterHTML();
 		}
 	}
-	return rml;
+	return html;
 }
 
 std::string Element::GetOuterHTML() const {
-	std::string rml;
-	rml += "<";
-	rml += tag;
+	std::string html;
+	html += "<";
+	html += tag;
 	for (auto& pair : attributes) {
 		auto& name = pair.first;
 		auto& value = pair.second;
-		rml += " " + name + "=\"" + value + "\"";
+		html += " " + name + "=\"" + value + "\"";
 	}
 	if (!children.empty()) {
-		rml += ">";
-		rml += GetInnerHTML();
-		rml += "</";
-		rml += tag;
-		rml += ">";
+		html += ">";
+		html += GetInnerHTML();
+		html += "</";
+		html += tag;
+		html += ">";
 	}
 	else {
-		rml += " />";
+		html += " />";
 	}
-	return rml;
+	return html;
 }
 
 void Element::SetDataModel(DataModel* new_data_model)  {

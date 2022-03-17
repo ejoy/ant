@@ -111,5 +111,5 @@ public:
 	virtual void GenerateString(FontFaceHandle face_handle, TextEffectsHandle text_effects_handle, LineList& lines, const Color& colour, Geometry& geometry);
 };
 
-} // namespace Rml
+}
 #endif

@@ -216,4 +216,4 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	geometry.AddPolygon(paddingEdge, background_color);
 }
 
-} // namespace Rml
+}

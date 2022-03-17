@@ -67,5 +67,5 @@ struct ShorthandDefinition
 	ShorthandType type;
 };
 
-} // namespace Rml
+}
 #endif

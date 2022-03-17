@@ -71,5 +71,5 @@ inline bool operator!=(const Transition& a, const Transition& b) { return !(a ==
 inline bool operator==(const TransitionList& a, const TransitionList& b) { return a.none == b.none && a.all == b.all && a.transitions == b.transitions; }
 inline bool operator!=(const TransitionList& a, const TransitionList& b) { return !(a == b); }
 
-} // namespace Rml
+}
 #endif

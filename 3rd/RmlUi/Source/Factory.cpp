@@ -46,66 +46,48 @@
 
 namespace Rml {
 
-// Data view instancers.
 using DataViewInstancerMap = std::unordered_map< std::string, DataViewInstancer* >;
-static DataViewInstancerMap data_view_instancers;
-
-// Data controller instancers.
 using DataControllerInstancerMap = std::unordered_map< std::string, DataControllerInstancer* >;
-static DataControllerInstancerMap data_controller_instancers;
-
-// Structural data view instancers.
 using StructuralDataViewInstancerMap = std::unordered_map< std::string, DataViewInstancer* >;
-static StructuralDataViewInstancerMap structural_data_view_instancers;
 
-// Structural data view names.
+static DataViewInstancerMap data_view_instancers;
+static DataControllerInstancerMap data_controller_instancers;
+static StructuralDataViewInstancerMap structural_data_view_instancers;
 static std::vector<std::string> structural_data_view_attribute_names;
 
-// Default instancers are constructed and destroyed on Initialise and Shutdown, respectively.
 struct DefaultInstancers {
-	// Data binding views
 	DataViewInstancerDefault<DataViewAttribute> data_view_attribute;
 	DataViewInstancerDefault<DataViewAttributeIf> data_view_attribute_if;
 	DataViewInstancerDefault<DataViewClass> data_view_class;
 	DataViewInstancerDefault<DataViewIf> data_view_if;
 	DataViewInstancerDefault<DataViewVisible> data_view_visible;
-	DataViewInstancerDefault<DataViewRml> data_view_rml;
+	DataViewInstancerDefault<DataViewHtml> data_view_html;
 	DataViewInstancerDefault<DataViewStyle> data_view_style;
 	DataViewInstancerDefault<DataViewText> data_view_text;
 	DataViewInstancerDefault<DataViewValue> data_view_value;
-
 	DataViewInstancerDefault<DataViewFor> structural_data_view_for;
-
-	// Data binding controllers
 	DataControllerInstancerDefault<DataControllerEvent> data_controller_event;
 };
 
 static std::unique_ptr<DefaultInstancers> default_instancers;
 
-bool Factory::Initialise()
-{
+bool Factory::Initialise() {
 	default_instancers = std::make_unique<DefaultInstancers>();
-
-	// Data binding views
 	RegisterDataViewInstancer(&default_instancers->data_view_attribute,      "attr",    false);
 	RegisterDataViewInstancer(&default_instancers->data_view_attribute_if,   "attrif",  false);
 	RegisterDataViewInstancer(&default_instancers->data_view_class,          "class",   false);
 	RegisterDataViewInstancer(&default_instancers->data_view_if,             "if",      false);
 	RegisterDataViewInstancer(&default_instancers->data_view_visible,        "visible", false);
-	RegisterDataViewInstancer(&default_instancers->data_view_rml,            "rml",     false);
+	RegisterDataViewInstancer(&default_instancers->data_view_html,           "html",    false);
 	RegisterDataViewInstancer(&default_instancers->data_view_style,          "style",   false);
 	RegisterDataViewInstancer(&default_instancers->data_view_text,           "text",    false);
 	RegisterDataViewInstancer(&default_instancers->data_view_value,          "value",   false);
 	RegisterDataViewInstancer(&default_instancers->structural_data_view_for, "for",     true );
-
-	// Data binding controllers
 	RegisterDataControllerInstancer(&default_instancers->data_controller_event, "event");
-
 	return true;
 }
 
-void Factory::Shutdown()
-{
+void Factory::Shutdown() {
 	data_controller_instancers.clear();
 	data_view_instancers.clear();
 	structural_data_view_instancers.clear();
@@ -113,17 +95,14 @@ void Factory::Shutdown()
 	default_instancers.reset();
 }
 
-void Factory::RegisterDataViewInstancer(DataViewInstancer* instancer, const std::string& name, bool is_structural_view)
-{
+void Factory::RegisterDataViewInstancer(DataViewInstancer* instancer, const std::string& name, bool is_structural_view) {
 	bool inserted = false;
-	if (is_structural_view)
-	{
+	if (is_structural_view) {
 		inserted = structural_data_view_instancers.emplace(name, instancer).second;
 		if (inserted)
 			structural_data_view_attribute_names.push_back(std::string("data-") + name);
 	}
-	else
-	{
+	else {
 		inserted = data_view_instancers.emplace(name, instancer).second;
 	}
 	
@@ -131,25 +110,20 @@ void Factory::RegisterDataViewInstancer(DataViewInstancer* instancer, const std:
 		Log::Message(Log::Level::Warning, "Could not register data view instancer '%s'. The given name is already registered.", name.c_str());
 }
 
-void Factory::RegisterDataControllerInstancer(DataControllerInstancer* instancer, const std::string& name)
-{
+void Factory::RegisterDataControllerInstancer(DataControllerInstancer* instancer, const std::string& name) {
 	bool inserted = data_controller_instancers.emplace(name, instancer).second;
 	if (!inserted)
 		Log::Message(Log::Level::Warning, "Could not register data controller instancer '%s'. The given name is already registered.", name.c_str());
 }
 
-DataViewPtr Factory::InstanceDataView(const std::string& type_name, Element* element, bool is_structural_view)
-{
+DataViewPtr Factory::InstanceDataView(const std::string& type_name, Element* element, bool is_structural_view) {
 	assert(element);
-
-	if (is_structural_view)
-	{
+	if (is_structural_view) {
 		auto it = structural_data_view_instancers.find(type_name);
 		if (it != structural_data_view_instancers.end())
 			return it->second->InstanceView(element);
 	}
-	else
-	{
+	else {
 		auto it = data_view_instancers.find(type_name);
 		if (it != data_view_instancers.end())
 			return it->second->InstanceView(element);
@@ -157,22 +131,19 @@ DataViewPtr Factory::InstanceDataView(const std::string& type_name, Element* ele
 	return nullptr;
 }
 
-DataControllerPtr Factory::InstanceDataController(Element* element, const std::string& type_name)
-{
+DataControllerPtr Factory::InstanceDataController(Element* element, const std::string& type_name) {
 	auto it = data_controller_instancers.find(type_name);
 	if (it != data_controller_instancers.end())
 		return it->second->InstanceController(element);
 	return DataControllerPtr();
 }
 
-bool Factory::IsStructuralDataView(const std::string& type_name)
-{
+bool Factory::IsStructuralDataView(const std::string& type_name) {
 	return structural_data_view_instancers.find(type_name) != structural_data_view_instancers.end();
 }
 
-const std::vector<std::string>& Factory::GetStructuralDataViewAttributeNames()
-{
+const std::vector<std::string>& Factory::GetStructuralDataViewAttributeNames() {
 	return structural_data_view_attribute_names;
 }
 
-} // namespace Rml
+}

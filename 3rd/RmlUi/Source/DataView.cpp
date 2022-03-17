@@ -158,4 +158,4 @@ bool DataViews::Update(DataModel& model, const DirtyVariables& dirty_variables)
 	return result;
 }
 
-} // namespace Rml
+}

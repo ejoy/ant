@@ -83,4 +83,4 @@ void FontEngineInterface::GenerateString(FontFaceHandle /*face_handle*/, TextEff
 }
 
 
-} // namespace Rml
+}

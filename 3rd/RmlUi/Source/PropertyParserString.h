@@ -53,5 +53,5 @@ public:
 	bool ParseValue(Property& property, const std::string& value, const ParameterMap& parameters) const override;
 };
 
-} // namespace Rml
+}
 #endif

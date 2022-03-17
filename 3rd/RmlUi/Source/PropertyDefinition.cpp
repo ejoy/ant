@@ -112,4 +112,4 @@ PropertyId PropertyDefinition::GetId() const
 	return id;
 }
 
-} // namespace Rml
+}

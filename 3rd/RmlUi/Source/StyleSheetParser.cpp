@@ -588,4 +588,4 @@ bool StyleSheetParser::ReadCharacter(char& buffer)
 	return false;
 }
 
-} // namespace Rml
+}

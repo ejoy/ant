@@ -65,4 +65,4 @@ bool StyleSheetNodeSelectorFirstChild::IsApplicable(const Element* element, int,
 	return false;
 }
 
-} // namespace Rml
+}

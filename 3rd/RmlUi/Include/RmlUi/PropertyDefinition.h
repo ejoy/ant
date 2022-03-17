@@ -81,5 +81,5 @@ private:
 	std::vector< ParserState > parsers;
 };
 
-} // namespace Rml
+}
 #endif

@@ -101,5 +101,5 @@ private:
 	bool ReadCharacter(char& buffer);
 };
 
-} // namespace Rml
+}
 #endif

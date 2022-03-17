@@ -85,4 +85,4 @@ void DataControllerEvent::Release()
 	delete this;
 }
 
-} // namespace Rml
+}

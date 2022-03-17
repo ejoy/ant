@@ -49,5 +49,5 @@ public:
 	bool IsApplicable(const Element* element, int a, int b) override;
 };
 
-} // namespace Rml
+}
 #endif

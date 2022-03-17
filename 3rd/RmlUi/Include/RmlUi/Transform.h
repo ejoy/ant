@@ -188,5 +188,5 @@ public:
 	bool Combine(Element& e, size_t start);
 };
 
-} // namespace Rml
+}
 #endif

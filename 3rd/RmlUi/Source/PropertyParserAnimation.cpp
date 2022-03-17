@@ -370,4 +370,4 @@ bool PropertyParserAnimation::ParseValue(Property & property, const std::string 
 	return result;
 }
 
-} // namespace Rml
+}

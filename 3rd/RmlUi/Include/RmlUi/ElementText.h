@@ -89,5 +89,5 @@ private:
 	FontFaceHandle font_handle = 0;
 };
 
-} // namespace Rml
+}
 #endif

@@ -607,4 +607,4 @@ FontFaceHandle ElementText::GetFontFaceHandle() {
 	return font_handle;
 }
 
-} // namespace Rml
+}

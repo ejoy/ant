@@ -48,5 +48,5 @@ public:
 	virtual void SetClipRect(glm::vec4 r[2]) = 0;
 };
 
-} // namespace Rml
+}
 #endif

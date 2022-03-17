@@ -194,4 +194,4 @@ std::shared_ptr<StyleSheetPropertyDictionary> StyleSheet::GetElementDefinition(c
 	return new_definition;
 }
 
-} // namespace Rml
+}

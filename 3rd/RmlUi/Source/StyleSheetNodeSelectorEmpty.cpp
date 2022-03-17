@@ -51,4 +51,4 @@ bool StyleSheetNodeSelectorEmpty::IsApplicable(const Element* element, int, int)
 	return true;
 }
 
-} // namespace Rml
+}

@@ -60,4 +60,4 @@ bool DataModelConstructor::BindVariable(const std::string& name, DataVariable da
 	return model->BindVariable(name, data_variable);
 }
 
-} // namespace Rml
+}

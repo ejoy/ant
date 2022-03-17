@@ -40,5 +40,5 @@ struct ElementBackgroundImage {
 	static void GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge);
 };
 
-} // namespace Rml
+}
 #endif

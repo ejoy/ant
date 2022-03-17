@@ -66,4 +66,4 @@ bool StyleSheetNodeSelectorNthOfType::IsApplicable(const Element* element, int a
 	return IsNth(a, b, element_index);
 }
 
-} // namespace Rml
+}

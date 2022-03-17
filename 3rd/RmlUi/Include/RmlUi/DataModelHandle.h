@@ -62,6 +62,6 @@ private:
 	DataModel* model;
 };
 
-} // namespace Rml
+}
 
 #endif

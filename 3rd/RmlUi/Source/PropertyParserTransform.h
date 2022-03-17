@@ -67,5 +67,5 @@ private:
 	PropertyParserNumber number, length, angle;
 };
 
-} // namespace Rml
+}
 #endif

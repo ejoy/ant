@@ -93,5 +93,5 @@ private:
 	YGNodeRef node;
 };
 
-} // namespace Rml
+}
 #endif

@@ -219,4 +219,4 @@ StructuralSelector StyleSheetFactory::GetSelector(const std::string& name)
 	return StructuralSelector(it->second, a, b);
 }
 
-} // namespace Rml
+}

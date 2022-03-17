@@ -73,9 +73,9 @@ public:
 	// @param[in] model The data model the view will be attached to.
 	// @param[in] element The element which spawned the view.
 	// @param[in] expression The value of the element's 'data-' attribute which spawned the view (see above).
-	// @param[in] modifier_or_inner_rml The modifier for the given view type (see above), or the inner rml contents for structural data views.
+	// @param[in] modifier_or_inner_html The modifier for the given view type (see above), or the inner html contents for structural data views.
 	// @return True on success.
-	virtual bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier_or_inner_rml) = 0;
+	virtual bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier_or_inner_html) = 0;
 
 	// Update the data view.
 	// Returns true if the update resulted in a document change.
@@ -126,5 +126,5 @@ private:
 	NameViewMap name_view_map;
 };
 
-} // namespace Rml
+}
 #endif

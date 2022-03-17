@@ -128,5 +128,5 @@ private:
 	StyleSheetNodeList children;
 };
 
-} // namespace Rml
+}
 #endif

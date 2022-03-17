@@ -56,5 +56,5 @@ protected:
 	bool IsNth(int a, int b, int count);
 };
 
-} // namespace Rml
+}
 #endif

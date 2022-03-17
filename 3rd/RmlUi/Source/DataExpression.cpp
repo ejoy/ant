@@ -1020,4 +1020,4 @@ bool DataExpressionInterface::EventCallback(const std::string& name, const std::
 	return true;
 }
 
-} // namespace Rml
+}

@@ -177,5 +177,5 @@ enum class PropertyId : uint8_t
 
 };
 
-} // namespace Rml
+}
 #endif

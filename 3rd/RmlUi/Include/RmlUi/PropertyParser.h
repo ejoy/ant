@@ -52,5 +52,5 @@ public:
 	virtual bool ParseValue(Property& property, const std::string& value, const ParameterMap& parameters) const = 0;
 };
 
-} // namespace Rml
+}
 #endif

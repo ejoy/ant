@@ -60,5 +60,5 @@ private:
 	Property::Unit zero_unit;
 };
 
-} // namespace Rml
+}
 #endif
