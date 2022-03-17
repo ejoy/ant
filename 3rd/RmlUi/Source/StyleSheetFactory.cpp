@@ -1,120 +1,14 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
 #include "StyleSheetFactory.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/Stream.h"
-#include "StyleSheetNode.h"
-#include "StyleSheetNodeSelectorNthChild.h"
-#include "StyleSheetNodeSelectorNthLastChild.h"
-#include "StyleSheetNodeSelectorNthOfType.h"
-#include "StyleSheetNodeSelectorNthLastOfType.h"
-#include "StyleSheetNodeSelectorFirstChild.h"
-#include "StyleSheetNodeSelectorLastChild.h"
-#include "StyleSheetNodeSelectorFirstOfType.h"
-#include "StyleSheetNodeSelectorLastOfType.h"
-#include "StyleSheetNodeSelectorOnlyChild.h"
-#include "StyleSheetNodeSelectorOnlyOfType.h"
-#include "StyleSheetNodeSelectorEmpty.h"
 #include "../Include/RmlUi/Log.h"
+#include "StyleSheetNode.h"
+#include "StyleSheetNodeSelector.h"
 
 namespace Rml {
 
-static StyleSheetFactory* instance = nullptr;
-
-StyleSheetFactory::StyleSheetFactory()
-{
-	assert(instance == nullptr);
-	instance = this;
-}
-
-StyleSheetFactory::~StyleSheetFactory()
-{
-	instance = nullptr;
-}
-
-bool StyleSheetFactory::Initialise()
-{
-	new StyleSheetFactory();
-
-	instance->selectors["nth-child"] = new StyleSheetNodeSelectorNthChild();
-	instance->selectors["nth-last-child"] = new StyleSheetNodeSelectorNthLastChild();
-	instance->selectors["nth-of-type"] = new StyleSheetNodeSelectorNthOfType();
-	instance->selectors["nth-last-of-type"] = new StyleSheetNodeSelectorNthLastOfType();
-	instance->selectors["first-child"] = new StyleSheetNodeSelectorFirstChild();
-	instance->selectors["last-child"] = new StyleSheetNodeSelectorLastChild();
-	instance->selectors["first-of-type"] = new StyleSheetNodeSelectorFirstOfType();
-	instance->selectors["last-of-type"] = new StyleSheetNodeSelectorLastOfType();
-	instance->selectors["only-child"] = new StyleSheetNodeSelectorOnlyChild();
-	instance->selectors["only-of-type"] = new StyleSheetNodeSelectorOnlyOfType();
-	instance->selectors["empty"] = new StyleSheetNodeSelectorEmpty();
-
-	return true;
-}
-
-void StyleSheetFactory::Shutdown()
-{
-	if (instance != nullptr)
-	{
-		ClearStyleSheetCache();
-
-		for (SelectorMap::iterator i = instance->selectors.begin(); i != instance->selectors.end(); ++i)
-			delete (*i).second;
-
-		delete instance;
-	}
-}
-
-std::shared_ptr<StyleSheet> StyleSheetFactory::LoadStyleSheet(const std::string& source_path) {
-	StyleSheets::iterator itr = instance->stylesheets.find(source_path);
-	if (itr != instance->stylesheets.end()) {
-		return (*itr).second;
-	}
-	Stream stream(source_path);
-	std::shared_ptr<StyleSheet> sheet = std::make_shared<StyleSheet>();
-	if (!sheet->LoadStyleSheet(&stream)) {
-		return nullptr;
-	}
-	instance->stylesheets.emplace(source_path, sheet);
-	return sheet;
-}
-
-std::shared_ptr<StyleSheet> StyleSheetFactory::LoadStyleSheet(const std::string& content, const std::string& source_path, int line) {
-	Stream stream(source_path, (const uint8_t*)content.data(), content.size());
-	std::shared_ptr<StyleSheet> sheet = std::make_shared<StyleSheet>();
-	if (!sheet->LoadStyleSheet(&stream, line)) {
-		return nullptr;
-	}
-	return sheet;
-}
-
-void StyleSheetFactory::CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, std::shared_ptr<StyleSheet> subsheet) {
+static void Combine(std::shared_ptr<StyleSheet>& sheet, std::shared_ptr<StyleSheet> subsheet) {
 	if (subsheet) {
 		if (sheet) {
 			sheet->CombineStyleSheet(*subsheet);
@@ -125,33 +19,65 @@ void StyleSheetFactory::CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, st
 	}
 }
 
-void StyleSheetFactory::CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, const std::string& source_path) {
-	CombineStyleSheet(sheet, LoadStyleSheet(source_path));
+class StyleSheetFactoryInstance {
+public:
+	~StyleSheetFactoryInstance();
+	std::shared_ptr<StyleSheet> LoadStyleSheet(const std::string& source_path);
+	std::shared_ptr<StyleSheet> LoadStyleSheet(const std::string& content, const std::string& source_path, int line);
+	StructuralSelector GetSelector(const std::string& name);
+
+	std::unordered_map<std::string, StyleSheetNodeSelector*> selectors = {
+		{ "nth-child", new StyleSheetNodeSelectorNthChild() },
+		{ "nth-last-child", new StyleSheetNodeSelectorNthLastChild() },
+		{ "nth-of-type", new StyleSheetNodeSelectorNthOfType() },
+		{ "nth-last-of-type", new StyleSheetNodeSelectorNthLastOfType() },
+		{ "first-child", new StyleSheetNodeSelectorFirstChild() },
+		{ "last-child", new StyleSheetNodeSelectorLastChild() },
+		{ "first-of-type", new StyleSheetNodeSelectorFirstOfType() },
+		{ "last-of-type", new StyleSheetNodeSelectorLastOfType() },
+		{ "only-child", new StyleSheetNodeSelectorOnlyChild() },
+		{ "only-of-type", new StyleSheetNodeSelectorOnlyOfType() },
+		{ "empty", new StyleSheetNodeSelectorEmpty() },
+	};
+	std::unordered_map<std::string, std::shared_ptr<StyleSheet>> stylesheets;
+};
+
+StyleSheetFactoryInstance::~StyleSheetFactoryInstance() {
+	for (auto [_, selector] : selectors) {
+		delete selector;
+	}
 }
 
-void StyleSheetFactory::CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, const std::string& content, const std::string& source_path, int line) {
-	CombineStyleSheet(sheet, LoadStyleSheet(content, source_path, line));
+std::shared_ptr<StyleSheet> StyleSheetFactoryInstance::LoadStyleSheet(const std::string& source_path) {
+	auto itr = stylesheets.find(source_path);
+	if (itr != stylesheets.end()) {
+		return (*itr).second;
+	}
+	Stream stream(source_path);
+	std::shared_ptr<StyleSheet> sheet = std::make_shared<StyleSheet>();
+	if (!sheet->LoadStyleSheet(&stream)) {
+		return nullptr;
+	}
+	stylesheets.emplace(source_path, sheet);
+	return sheet;
 }
 
-// Clear the style sheet cache.
-void StyleSheetFactory::ClearStyleSheetCache()
-{
-	instance->stylesheets.clear();
-	instance->stylesheet_cache.clear();
+std::shared_ptr<StyleSheet> StyleSheetFactoryInstance::LoadStyleSheet(const std::string& content, const std::string& source_path, int line) {
+	Stream stream(source_path, (const uint8_t*)content.data(), content.size());
+	std::shared_ptr<StyleSheet> sheet = std::make_shared<StyleSheet>();
+	if (!sheet->LoadStyleSheet(&stream, line)) {
+		return nullptr;
+	}
+	return sheet;
 }
 
-// Returns one of the available node selectors.
-StructuralSelector StyleSheetFactory::GetSelector(const std::string& name)
-{
-	SelectorMap::const_iterator it;
+StructuralSelector StyleSheetFactoryInstance::GetSelector(const std::string& name) {
 	const size_t parameter_start = name.find('(');
-
-	if (parameter_start == std::string::npos)
-		it = instance->selectors.find(name);
-	else
-		it = instance->selectors.find(name.substr(0, parameter_start));
-
-	if (it == instance->selectors.end())
+	auto it = (parameter_start == std::string::npos)
+			? selectors.find(name)
+			: selectors.find(name.substr(0, parameter_start))
+			;
+	if (it == selectors.end())
 		return StructuralSelector(nullptr, 0, 0);
 
 	// Parse the 'a' and 'b' values.
@@ -217,6 +143,40 @@ StructuralSelector StyleSheetFactory::GetSelector(const std::string& name)
 	}
 
 	return StructuralSelector(it->second, a, b);
+}
+
+static StyleSheetFactoryInstance* instance = nullptr;
+
+void StyleSheetFactory::Initialise() {
+	if (!instance) {
+		instance = new StyleSheetFactoryInstance();
+	}
+}
+
+void StyleSheetFactory::Shutdown() {
+	if (instance) {
+		delete instance;
+	}
+}
+
+std::shared_ptr<StyleSheet> StyleSheetFactory::LoadStyleSheet(const std::string& source_path) {
+	return instance->LoadStyleSheet(source_path);
+}
+
+std::shared_ptr<StyleSheet> StyleSheetFactory::LoadStyleSheet(const std::string& content, const std::string& source_path, int line) {
+	return instance->LoadStyleSheet(content, source_path, line);
+}
+
+void StyleSheetFactory::CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, const std::string& source_path) {
+	Combine(sheet, instance->LoadStyleSheet(source_path));
+}
+
+void StyleSheetFactory::CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, const std::string& content, const std::string& source_path, int line) {
+	Combine(sheet, instance->LoadStyleSheet(content, source_path, line));
+}
+
+StructuralSelector StyleSheetFactory::GetSelector(const std::string& name) {
+	return instance->GetSelector(name);
 }
 
 }

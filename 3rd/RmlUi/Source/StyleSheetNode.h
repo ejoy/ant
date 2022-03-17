@@ -35,7 +35,7 @@
 
 namespace Rml {
 
-class StyleSheetNodeSelector;
+struct StyleSheetNodeSelector;
 
 struct StructuralSelector {
 	StructuralSelector(StyleSheetNodeSelector* selector, int a, int b) : selector(selector), a(a), b(b) {}

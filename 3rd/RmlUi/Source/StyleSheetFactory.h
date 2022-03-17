@@ -1,86 +1,22 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
-#ifndef RMLUI_CORE_STYLESHEETFACTORY_H
-#define RMLUI_CORE_STYLESHEETFACTORY_H
+#pragma once
 
 #include "../Include/RmlUi/Types.h"
 
 namespace Rml {
 
 class StyleSheet;
-class StyleSheetNodeSelector;
+struct StyleSheetNodeSelector;
 struct StructuralSelector;
 
-/**
-	Creates stylesheets on the fly as needed. The factory keeps a cache of built sheets for optimisation.
-
-	@author Lloyd Weehuizen
- */
-
-class StyleSheetFactory
-{
+class StyleSheetFactory {
 public:
-	/// Initialise the style factory
-	static bool Initialise();
-	/// Shutdown style manager
+	static void Initialise();
 	static void Shutdown();
-
 	static std::shared_ptr<StyleSheet> LoadStyleSheet(const std::string& source_path);
 	static std::shared_ptr<StyleSheet> LoadStyleSheet(const std::string& content, const std::string& source_path, int line);
-
-	static void CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, std::shared_ptr<StyleSheet> subsheet);
 	static void CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, const std::string& source_path);
 	static void CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, const std::string& content, const std::string& source_path, int line);
-
-	/// Clear the style sheet cache.
-	static void ClearStyleSheetCache();
-
-	/// Returns one of the available node selectors.
-	/// @param name[in] The name of the desired selector.
-	/// @return The selector registered with the given name, or nullptr if none exists.
 	static StructuralSelector GetSelector(const std::string& name);
-
-private:
-	StyleSheetFactory();
-	~StyleSheetFactory();
-
-	// Individual loaded stylesheets
-	typedef std::unordered_map<std::string, std::shared_ptr<StyleSheet>> StyleSheets;
-	StyleSheets stylesheets;
-
-	// Cache of combined style sheets
-	StyleSheets stylesheet_cache;
-
-	// Custom complex selectors available for style sheets.
-	typedef std::unordered_map< std::string, StyleSheetNodeSelector* > SelectorMap;
-	SelectorMap selectors;
 };
 
 }
-#endif
