@@ -40,8 +40,6 @@ namespace Rml {
 struct Keyword {
 	enum Type { NONE, TWEEN, ALL, ALTERNATE, INFINITE, PAUSED } type;
 	Tween tween;
-	Keyword(Tween tween) : type(TWEEN), tween(tween) {}
-	Keyword(Type type) : type(type) {}
 
 	bool ValidTransition() const {
 		return type == NONE || type == TWEEN || type == ALL;
@@ -53,58 +51,45 @@ struct Keyword {
 
 
 static const std::unordered_map<std::string, Keyword> keywords = {
-		{"none", {Keyword::NONE} },
-		{"all", {Keyword::ALL}},
-		{"alternate", {Keyword::ALTERNATE}},
-		{"infinite", {Keyword::INFINITE}},
-		{"paused", {Keyword::PAUSED}},
-
-		{"back-in", {Tween{Tween::Back, Tween::In}}},
-		{"back-out", {Tween{Tween::Back, Tween::Out}}},
-		{"back-in-out", {Tween{Tween::Back, Tween::InOut}}},
-
-		{"bounce-in", {Tween{Tween::Bounce, Tween::In}}},
-		{"bounce-out", {Tween{Tween::Bounce, Tween::Out}}},
-		{"bounce-in-out", {Tween{Tween::Bounce, Tween::InOut}}},
-
-		{"circular-in", {Tween{Tween::Circular, Tween::In}}},
-		{"circular-out", {Tween{Tween::Circular, Tween::Out}}},
-		{"circular-in-out", {Tween{Tween::Circular, Tween::InOut}}},
-
-		{"cubic-in", {Tween{Tween::Cubic, Tween::In}}},
-		{"cubic-out", {Tween{Tween::Cubic, Tween::Out}}},
-		{"cubic-in-out", {Tween{Tween::Cubic, Tween::InOut}}},
-
-		{"elastic-in", {Tween{Tween::Elastic, Tween::In}}},
-		{"elastic-out", {Tween{Tween::Elastic, Tween::Out}}},
-		{"elastic-in-out", {Tween{Tween::Elastic, Tween::InOut}}},
-
-		{"exponential-in", {Tween{Tween::Exponential, Tween::In}}},
-		{"exponential-out", {Tween{Tween::Exponential, Tween::Out}}},
-		{"exponential-in-out", {Tween{Tween::Exponential, Tween::InOut}}},
-
-		{"linear-in", {Tween{Tween::Linear, Tween::In}}},
-		{"linear-out", {Tween{Tween::Linear, Tween::Out}}},
-		{"linear-in-out", {Tween{Tween::Linear, Tween::InOut}}},
-
-		{"quadratic-in", {Tween{Tween::Quadratic, Tween::In}}},
-		{"quadratic-out", {Tween{Tween::Quadratic, Tween::Out}}},
-		{"quadratic-in-out", {Tween{Tween::Quadratic, Tween::InOut}}},
-
-		{"quartic-in", {Tween{Tween::Quartic, Tween::In}}},
-		{"quartic-out", {Tween{Tween::Quartic, Tween::Out}}},
-		{"quartic-in-out", {Tween{Tween::Quartic, Tween::InOut}}},
-
-		{"quintic-in", {Tween{Tween::Quintic, Tween::In}}},
-		{"quintic-out", {Tween{Tween::Quintic, Tween::Out}}},
-		{"quintic-in-out", {Tween{Tween::Quintic, Tween::InOut}}},
-
-		{"sine-in", {Tween{Tween::Sine, Tween::In}}},
-		{"sine-out", {Tween{Tween::Sine, Tween::Out}}},
-		{"sine-in-out", {Tween{Tween::Sine, Tween::InOut}}},
+	{"none", {Keyword::NONE} },
+	{"all", {Keyword::ALL}},
+	{"alternate", {Keyword::ALTERNATE}},
+	{"infinite", {Keyword::INFINITE}},
+	{"paused", {Keyword::PAUSED}},
+	{"back-in",            {Keyword::TWEEN, {Tween::Type::Back, Tween::Direction::In}}},
+	{"back-out",           {Keyword::TWEEN, {Tween::Type::Back, Tween::Direction::Out}}},
+	{"back-in-out",        {Keyword::TWEEN, {Tween::Type::Back, Tween::Direction::InOut}}},
+	{"bounce-in",          {Keyword::TWEEN, {Tween::Type::Bounce, Tween::Direction::In}}},
+	{"bounce-out",         {Keyword::TWEEN, {Tween::Type::Bounce, Tween::Direction::Out}}},
+	{"bounce-in-out",      {Keyword::TWEEN, {Tween::Type::Bounce, Tween::Direction::InOut}}},
+	{"circular-in",        {Keyword::TWEEN, {Tween::Type::Circular, Tween::Direction::In}}},
+	{"circular-out",       {Keyword::TWEEN, {Tween::Type::Circular, Tween::Direction::Out}}},
+	{"circular-in-out",    {Keyword::TWEEN, {Tween::Type::Circular, Tween::Direction::InOut}}},
+	{"cubic-in",           {Keyword::TWEEN, {Tween::Type::Cubic, Tween::Direction::In}}},
+	{"cubic-out",          {Keyword::TWEEN, {Tween::Type::Cubic, Tween::Direction::Out}}},
+	{"cubic-in-out",       {Keyword::TWEEN, {Tween::Type::Cubic, Tween::Direction::InOut}}},
+	{"elastic-in",         {Keyword::TWEEN, {Tween::Type::Elastic, Tween::Direction::In}}},
+	{"elastic-out",        {Keyword::TWEEN, {Tween::Type::Elastic, Tween::Direction::Out}}},
+	{"elastic-in-out",     {Keyword::TWEEN, {Tween::Type::Elastic, Tween::Direction::InOut}}},
+	{"exponential-in",     {Keyword::TWEEN, {Tween::Type::Exponential, Tween::Direction::In}}},
+	{"exponential-out",    {Keyword::TWEEN, {Tween::Type::Exponential, Tween::Direction::Out}}},
+	{"exponential-in-out", {Keyword::TWEEN, {Tween::Type::Exponential, Tween::Direction::InOut}}},
+	{"linear-in",          {Keyword::TWEEN, {Tween::Type::Linear, Tween::Direction::In}}},
+	{"linear-out",         {Keyword::TWEEN, {Tween::Type::Linear, Tween::Direction::Out}}},
+	{"linear-in-out",      {Keyword::TWEEN, {Tween::Type::Linear, Tween::Direction::InOut}}},
+	{"quadratic-in",       {Keyword::TWEEN, {Tween::Type::Quadratic, Tween::Direction::In}}},
+	{"quadratic-out",      {Keyword::TWEEN, {Tween::Type::Quadratic, Tween::Direction::Out}}},
+	{"quadratic-in-out",   {Keyword::TWEEN, {Tween::Type::Quadratic, Tween::Direction::InOut}}},
+	{"quartic-in",         {Keyword::TWEEN, {Tween::Type::Quartic, Tween::Direction::In}}},
+	{"quartic-out",        {Keyword::TWEEN, {Tween::Type::Quartic, Tween::Direction::Out}}},
+	{"quartic-in-out",     {Keyword::TWEEN, {Tween::Type::Quartic, Tween::Direction::InOut}}},
+	{"quintic-in",         {Keyword::TWEEN, {Tween::Type::Quintic, Tween::Direction::In}}},
+	{"quintic-out",        {Keyword::TWEEN, {Tween::Type::Quintic, Tween::Direction::Out}}},
+	{"quintic-in-out",     {Keyword::TWEEN, {Tween::Type::Quintic, Tween::Direction::InOut}}},
+	{"sine-in",            {Keyword::TWEEN, {Tween::Type::Sine, Tween::Direction::In}}},
+	{"sine-out",           {Keyword::TWEEN, {Tween::Type::Sine, Tween::Direction::Out}}},
+	{"sine-in-out",        {Keyword::TWEEN, {Tween::Type::Sine, Tween::Direction::InOut}}},
 };
-
-
 
 
 PropertyParserAnimation::PropertyParserAnimation(Type type) : type(type)
