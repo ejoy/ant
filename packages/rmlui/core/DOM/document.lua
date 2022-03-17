@@ -14,7 +14,7 @@ local function constructor(handle)
     function mt.createTextNode(text)
         return createElement(rmlui.DocumentCreateTextNode(handle, text), handle, true)
     end
-    return setmetatable({}, mt)
+    return setmetatable({_handle = handle}, mt)
 end
 
 local pool = {}
