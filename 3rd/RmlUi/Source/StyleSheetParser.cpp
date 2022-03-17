@@ -42,29 +42,6 @@
 
 namespace Rml {
 
-class AbstractPropertyParser {
-public:
-	virtual bool Parse(const std::string& name, const std::string& value) = 0;
-};
-
-/*
- *  PropertySpecificationParser just passes the parsing to a property specification. Usually
- *    the main stylesheet specification.
-*/
-class PropertySpecificationParser final : public AbstractPropertyParser {
-private:
-	// The dictionary to store the properties in.
-	PropertyDictionary& properties;
-
-public:
-	PropertySpecificationParser(PropertyDictionary& properties) : properties(properties) {}
-
-	bool Parse(const std::string& name, const std::string& value) override
-	{
-		return StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value);
-	}
-};
-
 StyleSheetParser::StyleSheetParser()
 {
 	line_number = 0;
@@ -198,8 +175,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				{
 					// Read the attributes
 					StyleSheetPropertyDictionary properties;
-					PropertySpecificationParser parser(properties.prop);
-					if (!ReadProperties(parser))
+					if (!ReadProperties(properties.prop))
 						continue;
 
 					std::vector<std::string> rule_name_list;
@@ -256,8 +232,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				{
 					// Each keyframe in keyframes has its own block which is processed here
 					PropertyDictionary properties;
-					PropertySpecificationParser parser(properties);
-					if(!ReadProperties(parser))
+					if(!ReadProperties(properties))
 						continue;
 
 					if (!ParseKeyframeBlock(keyframes, at_rule_name, pre_token_str, properties))
@@ -300,8 +275,7 @@ bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, co
 	assert(!stream);
 	Stream stream_owner("<unknown>", (const uint8_t*)properties.c_str(), properties.size());
 	stream = &stream_owner;
-	PropertySpecificationParser parser(parsed_properties);
-	bool success = ReadProperties(parser);
+	bool success = ReadProperties(parsed_properties);
 	stream = nullptr;
 	return success;
 }
@@ -326,7 +300,7 @@ StyleSheetNodeListRaw StyleSheetParser::ConstructNodes(StyleSheetNode& root_node
 	return leaf_nodes;
 }
 
-bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
+bool StyleSheetParser::ReadProperties(PropertyDictionary& properties)
 {
 	std::string name;
 	std::string value;
@@ -376,7 +350,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 				{
 					value = StringUtilities::StripWhitespace(value);
 
-					if (!property_parser.Parse(name, value))
+					if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value))
 						Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream->GetSourceURL().c_str(), line_number);
 
 					name.clear();
@@ -414,7 +388,7 @@ bool StyleSheetParser::ReadProperties(AbstractPropertyParser& property_parser)
 	{
 		value = StringUtilities::StripWhitespace(value);
 
-		if (!property_parser.Parse(name, value))
+		if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value))
 			Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream->GetSourceURL().c_str(), line_number);
 	}
 	else if (!name.empty() || !value.empty())
