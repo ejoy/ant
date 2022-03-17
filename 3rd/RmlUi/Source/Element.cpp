@@ -2,8 +2,7 @@
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Document.h"
-#include "../Include/RmlUi/ElementUtilities.h"
-#include "../Include/RmlUi/Factory.h"
+#include "../Include/RmlUi/DataUtilities.h"
 #include "../Include/RmlUi/PropertyIdSet.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
@@ -317,7 +316,7 @@ int Element::GetNumChildren() const {
 
 // TODO: remove this function, duplicate code in Document.cpp
 static bool isDataViewElement(Element* e) {
-	for (const std::string& name : Factory::GetStructuralDataViewAttributeNames()) {
+	for (const std::string& name : DataUtilities::GetStructuralDataViewAttributeNames()) {
 		if (e->GetTagName() == name) {
 			return true;
 		}
@@ -366,7 +365,7 @@ public:
 		}
 
 		if (!inner_xml_data.empty()) {
-			ElementUtilities::ApplyStructuralDataViews(m_current, inner_xml_data);
+			DataUtilities::ApplyStructuralDataViews(m_current, inner_xml_data);
 		}
 
 		if (m_stack.empty()) {
@@ -396,7 +395,7 @@ public:
 			return;
 		}
 		if (m_current) {
-			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
+			if (isDataViewElement(m_current) && DataUtilities::ApplyStructuralDataViews(m_current, szValue)) {
 				return;
 			}
 			auto text = m_doc->CreateTextNode(szValue);
@@ -807,7 +806,7 @@ void Element::SetDataModel(DataModel* new_data_model)  {
 	data_model = new_data_model;
 
 	if (data_model)
-		ElementUtilities::ApplyDataViewsControllers(this);
+		DataUtilities::ApplyDataViewsControllers(this);
 
 	for (ElementPtr& child : children)
 		child->SetDataModel(new_data_model);

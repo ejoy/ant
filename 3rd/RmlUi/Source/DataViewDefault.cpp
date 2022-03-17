@@ -32,7 +32,6 @@
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/ElementText.h"
-#include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/Variant.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Log.h"

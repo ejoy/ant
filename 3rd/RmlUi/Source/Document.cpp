@@ -1,12 +1,11 @@
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementText.h"
-#include "../Include/RmlUi/Factory.h"
+#include "../Include/RmlUi/DataUtilities.h"
 #include "../Include/RmlUi/Stream.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/DataModelHandle.h"
 #include "../Include/RmlUi/FileInterface.h"
-#include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/Plugin.h"
 #include "../Include/RmlUi/StringUtilities.h"
@@ -31,7 +30,7 @@ Document::~Document() {
 using namespace std::literals;
 
 static bool isDataViewElement(Element* e) {
-	for (const std::string& name : Factory::GetStructuralDataViewAttributeNames()) {
+	for (const std::string& name : DataUtilities::GetStructuralDataViewAttributeNames()) {
 		if (e->GetTagName() == name) {
 			return true;
 		}
@@ -91,7 +90,7 @@ public:
 		}
 
 		if (!inner_xml_data.empty()) {
-			ElementUtilities::ApplyStructuralDataViews(m_current, inner_xml_data);
+			DataUtilities::ApplyStructuralDataViews(m_current, inner_xml_data);
 		}
 
 		if (m_stack.empty()) {
@@ -136,7 +135,7 @@ public:
 			return;
 		}
 		if (m_current) {
-			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
+			if (isDataViewElement(m_current) && DataUtilities::ApplyStructuralDataViews(m_current, szValue)) {
 				return;
 			}
 			auto text = m_doc.CreateTextNode(szValue);
