@@ -80,7 +80,7 @@
                 },
                 item_size = 200,
                 --按下到释放的时间小于0.5秒时显示详细信息
-                interval = 500,
+                interval = 200,
                 show_detail = false,
                 -- 详细信息面板高度
                 detail_height = 120,
@@ -99,6 +99,7 @@
                 current_time = 0,
                 page_drag = false,
                 list_drag = false,
+                draging = false,
                 item_list = {
                     {id=100, icon0="correct.png", icon1="correct.png"},
                     {id=101, icon0="correct.png", icon1="correct.png"},
@@ -143,6 +144,7 @@
                 console.log("pagemousedown")
                 page_proxy:on_mousedown(event)
                 start.page_drag = true
+                start.draging = false
             end
             
             function start.pagedrag(event)
@@ -175,7 +177,8 @@
             end
             function start.page_item_up(event, id, row, top)
                 console.log("page_item_click, row, top", id, row, top)
-                if start.current_time - start.item_down_time <= start.interval then
+                if start.current_time - start.item_down_time <= start.interval and not start.draging then
+                    console.log("start.draging: ", start.draging)
                     if start.selected_id ~= id then
                         show_detail(true, id, row, top)
                     else

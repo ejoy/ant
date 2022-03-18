@@ -120,6 +120,7 @@ function page_meta:on_drag(event)
         e.className = e.className .. " notransition"
         e.style.left = tostring(math.floor(self.pos)) .. 'px'
         e.className = oldClassName
+        self.data_source.draging = true
     else
         self.drag.delta = 0
     end
