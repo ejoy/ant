@@ -77,6 +77,20 @@ function property_init:scrollInsets()
     end
 end
 
+function property_init:getAttribute()
+    local handle = self._handle
+    return function (name)
+        return rmlui.ElementGetAttribute(handle, name)
+    end
+end
+
+function property_init:setAttribute()
+    local handle = self._handle
+    return function (name, value)
+        rmlui.ElementGetAttribute(handle, name, value)
+    end
+end
+
 function property_init:style()
     return setmetatable({_handle = self._handle}, style_mt)
 end
