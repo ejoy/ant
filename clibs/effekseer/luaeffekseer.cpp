@@ -27,7 +27,7 @@ program::~program()
 static effekseer_ctx* g_effekseer = nullptr;
 static std::string g_current_path = "";
 static lua_State* g_current_lua_state = nullptr;
-static std::unordered_map<std::string, int32_t> g_effect_cache_;
+static std::unordered_map<std::string, int32_t> g_effect_cache;
 
 struct path_data
 {
@@ -206,16 +206,16 @@ lcreate(lua_State* L) {
 	if (lua_type(L, 1) == LUA_TSTRING && lua_type(L, 2) == LUA_TSTRING) {
 		size_t sz;
 		std::string filename = std::string(lua_tolstring(L, 2, &sz));
-		if (auto it = g_effect_cache_.find(filename); it == g_effect_cache_.end()) {
+		if (auto it = g_effect_cache.find(filename); it == g_effect_cache.end()) {
 			g_current_path = filename.substr(0, filename.rfind('/') + 1);
 			const char* data = lua_tolstring(L, 1, &sz);
 			auto eidx = g_effekseer->create_effect(data, (int32_t)sz);
 			if (eidx == -1) {
 				return luaL_error(L, "create effect failed.");
 			}
-			g_effect_cache_.insert(std::pair<std::string, int32_t>(filename, eidx));
+			g_effect_cache.insert(std::pair<std::string, int32_t>(filename, eidx));
 		}
-		lua_pushinteger(L, g_effect_cache_[filename]);
+		lua_pushinteger(L, g_effect_cache[filename]);
 		return 1;
 	}
 	return 0;
@@ -229,12 +229,12 @@ ldestroy(lua_State* L) {
 			for (auto& effect : g_effekseer->effects_) {
 				effect.destroy();
 			}
-			g_effect_cache_.clear();
+			g_effect_cache.clear();
 		} else {
 			g_effekseer->destroy_effect(eidx);
-			for (auto it = g_effect_cache_.begin(); it != g_effect_cache_.end(); ++it) {
+			for (auto it = g_effect_cache.begin(); it != g_effect_cache.end(); ++it) {
 				if (eidx == it->second) {
-					g_effect_cache_.erase(it);
+					g_effect_cache.erase(it);
 					break;
 				}
 			}
