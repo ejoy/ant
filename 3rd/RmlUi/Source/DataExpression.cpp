@@ -799,6 +799,23 @@ private:
 			return std::holds_alternative<std::string>(v1) || std::holds_alternative<std::string>(v2);
 		};
 
+		auto Compute = [](const Instruction op, const Variant& l, const Variant& r) {
+			auto lv = (VariantHelper::Has<float>(l) ? VariantHelper::Get<float>(l) : VariantHelper::Get<int>(l));
+			auto rv = (VariantHelper::Has<float>(r) ? VariantHelper::Get<float>(r) : VariantHelper::Get<int>(r));
+			float value = 0.0f;
+			switch (op) {
+			case Instruction::Add: value = lv + rv; break;
+			case Instruction::Subtract: value = lv - rv; break;
+			case Instruction::Multiply: value = lv * rv; break;
+			default: break;
+			}
+			if (VariantHelper::Has<int>(l) && VariantHelper::Has<int>(r)) {
+				return Variant((int)value);
+			} else {
+				return Variant(value);
+			}
+		};
+
 		switch (instruction)
 		{
 		case Instruction::Push:
@@ -842,29 +859,12 @@ private:
 				R = Variant(VariantHelper::ToString(L) + VariantHelper::ToString(R));
 			else {
 				//R = Variant(VariantHelper::Get<float>(L) + VariantHelper::Get<float>(R));
-				auto value = (VariantHelper::Has<float>(L) ? VariantHelper::Get<float>(L) : VariantHelper::Get<int>(L)) + (VariantHelper::Has<float>(R) ? VariantHelper::Get<float>(R) : VariantHelper::Get<int>(R));
-				if (VariantHelper::Has<int>(L) && VariantHelper::Has<int>(R)) {
-					R = Variant((int)value);
-				}
-				else {
-					R = Variant(value);
-				}
+				R = Compute(instruction, L, R);
 			}
 		}
 		break;
-		case Instruction::Subtract:
-		{
-			//R = Variant(VariantHelper::Get<float>(L) - VariantHelper::Get<float>(R));
-			auto value = (VariantHelper::Has<float>(L) ? VariantHelper::Get<float>(L) : VariantHelper::Get<int>(L)) - (VariantHelper::Has<float>(R) ? VariantHelper::Get<float>(R) : VariantHelper::Get<int>(R));
-			if (VariantHelper::Has<int>(L) && VariantHelper::Has<int>(R)) {
-				R = Variant((int)value);
-			}
-			else {
-				R = Variant(value);
-			}
-		}
-		break;
-		case Instruction::Multiply:  R = Variant(VariantHelper::Get<float>(L) * VariantHelper::Get<float>(R));  break;
+		case Instruction::Subtract:  R = Compute(instruction, L, R); break;
+		case Instruction::Multiply:  R = Compute(instruction, L, R); break;
 		case Instruction::Divide:    R = Variant(VariantHelper::Get<float>(L) / VariantHelper::Get<float>(R));  break;
 		case Instruction::Not:       R = Variant(!VariantHelper::Get<bool>(R));                     break;
 		case Instruction::And:       R = Variant(VariantHelper::Get<bool>(L) && VariantHelper::Get<bool>(R));     break;
