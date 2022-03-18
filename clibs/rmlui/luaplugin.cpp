@@ -60,12 +60,22 @@ void lua_plugin::OnLoadExternalScript(Rml::Document* document, const std::string
 	});
 }
 
+void lua_plugin::OnCreateElement(Rml::Document* document, Rml::Element* element, const std::string& tag) {
+	luabind::invoke([&](lua_State* L) {
+		lua_pushlightuserdata(L, (void*)document);
+		lua_pushlightuserdata(L, (void*)element);
+		lua_pushlstring(L, tag.data(), tag.size());
+		call(L, LuaEvent::OnCreateElement, 3);
+	});
+}
+
 void lua_plugin::register_event(lua_State* L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lua_settop(L, 1);
 	reference = luaref_init(L);
 	ref_function(reference, L, "OnLoadInlineScript");
 	ref_function(reference, L, "OnLoadExternalScript");
+	ref_function(reference, L, "OnCreateElement");
 	ref_function(reference, L, "OnEvent");
 	ref_function(reference, L, "OnEventAttach");
 	ref_function(reference, L, "OnEventDetach");

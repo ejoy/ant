@@ -35,6 +35,7 @@ public:
 	const Element* GetBody() const;
 	ElementPtr CreateElement(const std::string& tag);
 	ElementPtr CreateTextNode(const std::string& str);
+	void DefineCustomElement(const std::string& name);
 
 private:
 	using DataModels = std::unordered_map<std::string, std::unique_ptr<DataModel>>;
@@ -43,6 +44,7 @@ private:
 	ElementDocument body;
 	std::string source_url;
 	std::shared_ptr<StyleSheet> style_sheet;
+	std::unordered_set<std::string> custom_element;
 	Size dimensions;
 	bool dirty_dimensions = false;
 };

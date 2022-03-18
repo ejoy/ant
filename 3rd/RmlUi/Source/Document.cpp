@@ -308,7 +308,11 @@ const Element* Document::GetBody() const {
 }
 
 ElementPtr Document::CreateElement(const std::string& tag){
-	return ElementPtr(new Element(this, tag));
+	ElementPtr e(new Element(this, tag));
+	if (e && custom_element.find(tag) != custom_element.end()) {
+		GetPlugin()->OnCreateElement(this, e.get(), tag);
+	}
+	return e;
 }
 
 ElementPtr Document::CreateTextNode(const std::string& str) {
@@ -334,6 +338,10 @@ ElementPtr Document::CreateTextNode(const std::string& str) {
 		e->SetAttribute("data-text", std::string());
 	}
 	return e;
+}
+
+void Document::DefineCustomElement(const std::string& name) {
+	custom_element.emplace(name);
 }
 
 }

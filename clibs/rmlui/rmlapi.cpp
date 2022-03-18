@@ -187,6 +187,13 @@ lDocumentCreateTextNode(lua_State* L) {
 	return 1;
 }
 
+static int
+lDocumentDefineCustomElement(lua_State* L) {
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	doc->DefineCustomElement(lua_checkstdstring(L, 2));
+	return 0;
+}
+
 static void
 ElementAddEventListener(Rml::Element* e, const std::string& name, bool userCapture, lua_State* L, int idx) {
 	luaL_checktype(L, 3, LUA_TFUNCTION);
@@ -531,6 +538,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentGetBody", lDocumentGetBody },
 		{ "DocumentCreateElement", lDocumentCreateElement },
 		{ "DocumentCreateTextNode", lDocumentCreateTextNode },
+		{ "DocumentDefineCustomElement", lDocumentDefineCustomElement },
 		{ "ElementAddEventListener", lElementAddEventListener },
 		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetAttribute", lElementGetAttribute },

@@ -75,6 +75,25 @@ local function createWindow(document, source)
             data = data,
         })
     end
+    local ctors = {}
+    local customElements = {}
+    function customElements.define(name, ctor)
+        if ctors[name] then
+            error "Already contains a custom element with the same name."
+        end
+        if not name:match "[a-z][0-9a-z_%-]*-[0-9a-z_%-]*" then
+            error "Invalid custom element name."
+        end
+        if type(ctor) ~= "function" then
+            error "Invalid constructor."
+        end
+        ctors[name] = ctor
+        rmlui.DocumentDefineCustomElement(document, name)
+    end
+    function customElements.get(name)
+        return ctors[name]
+    end
+    window.customElements = customElements
     local mt = {}
     function mt:__newindex(name, f)
         if name == "onload" then

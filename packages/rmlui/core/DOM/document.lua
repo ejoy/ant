@@ -3,18 +3,17 @@ local event = require "core.event"
 local createElement = require "core.DOM.element"
 
 local function constructor(handle)
-    local mt = {}
-    mt.__index = mt
-    function mt.getElementById(id)
+    local doc = {_handle = handle}
+    function doc.getElementById(id)
         return createElement(rmlui.DocumentGetElementById(handle, id), handle)
     end
-    function mt.createElement(tag)
+    function doc.createElement(tag)
         return createElement(rmlui.DocumentCreateElement(handle, tag), handle, true)
     end
-    function mt.createTextNode(text)
+    function doc.createTextNode(text)
         return createElement(rmlui.DocumentCreateTextNode(handle, text), handle, true)
     end
-    return setmetatable({_handle = handle}, mt)
+    return doc
 end
 
 local pool = {}
