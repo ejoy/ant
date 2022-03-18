@@ -115,7 +115,9 @@ function imaterial.set_property(e, who, what)
 		error(("global property could not been set:%s"):format(who))
 	end
 	local ro = e.render_object
-	imaterial.set_property_directly(ro.properties, who, what)
+	if ro then
+		imaterial.set_property_directly(ro.properties, who, what)
+	end
 end
 
 function imaterial.get_property(e, who)
