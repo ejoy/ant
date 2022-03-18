@@ -96,7 +96,7 @@
                 selected_row = 10000,
                 row_count = 0,
                 item_down_time = 0,
-                time = 0,
+                current_time = 0,
                 page_drag = false,
                 list_drag = false,
                 item_list = {
