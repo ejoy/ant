@@ -24,10 +24,6 @@ program::~program()
 	BGFX(destroy_program)({ (uint16_t)prog });
 }
 
-namespace EffekseerRendererBGFX {
-extern bgfx_view_id_t g_view_id;
-}
-
 static effekseer_ctx* g_effekseer = nullptr;
 static std::string g_current_path = "";
 static lua_State* g_current_lua_state = nullptr;
@@ -110,7 +106,6 @@ void load_fx(const std::string& vspath, const std::string& fspath, bgfx_program_
 effekseer_ctx::effekseer_ctx(lua_State* L, int idx)
 {
 	lua_struct::unpack(L, idx, *this);
-	EffekseerRendererBGFX::g_view_id = viewid;
 }
 
 bool effekseer_ctx::init()
@@ -147,6 +142,7 @@ bool effekseer_ctx::init()
 	if (!renderer_.Get()) {
 		return false;
 	}
+	renderer_->SetViewID(viewid);
 	manager_ = ::Effekseer::Manager::Create(square_max_count);
 	if (!manager_.Get()) {
 		return false;
