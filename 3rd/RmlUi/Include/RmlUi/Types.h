@@ -43,7 +43,6 @@
 #include <unordered_set>
 #include <variant>
 #include <cstdlib>
-#include "Traits.h"
 #include "Colour.h"
 #include "ObserverPtr.h"
 
@@ -77,9 +76,9 @@ using TransformPtr = std::shared_ptr< Transform >;
 
 // Data binding types
 class DataView;
-using DataViewPtr = std::unique_ptr<DataView, Releaser<DataView>>;
+using DataViewPtr = std::unique_ptr<DataView>;
 class DataController;
-using DataControllerPtr = std::unique_ptr<DataController, Releaser<DataController>>;
+using DataControllerPtr = std::unique_ptr<DataController>;
 
 enum class Character : char32_t { Null, Replacement = 0xfffd };
 

@@ -52,9 +52,6 @@ protected:
 	const std::string& GetModifier() const;
 	DataExpression& GetExpression();
 
-	// Delete this
-	void Release() override;
-
 private:
 	std::string modifier;
 	DataExpressionPtr expression;
@@ -133,9 +130,6 @@ public:
 	bool Update(DataModel& model) override;
 	std::vector<std::string> GetVariableNameList() const override;
 
-protected:
-	void Release() override;
-
 private:
 	std::string BuildText() const;
 
@@ -159,9 +153,6 @@ public:
 	bool Update(DataModel& model) override;
 
 	std::vector<std::string> GetVariableNameList() const override;
-
-protected:
-	void Release() override;
 
 private:
 	DataAddress container_address;

@@ -69,11 +69,6 @@ DataExpression& DataViewCommon::GetExpression() {
 	return *expression;
 }
 
-void DataViewCommon::Release()
-{
-	delete this;
-}
-
 
 DataViewAttribute::DataViewAttribute(Element* element) : DataViewCommon(element)
 {}
@@ -360,11 +355,6 @@ std::vector<std::string> DataViewText::GetVariableNameList() const
 	return full_list;
 }
 
-void DataViewText::Release()
-{
-	delete this;
-}
-
 std::string DataViewText::BuildText() const
 {
 	size_t reserve_size = text.size();
@@ -511,11 +501,6 @@ bool DataViewFor::Update(DataModel& model)
 std::vector<std::string> DataViewFor::GetVariableNameList() const {
 	assert(!container_address.empty());
 	return std::vector<std::string>{ container_address.front().name };
-}
-
-void DataViewFor::Release()
-{
-	delete this;
 }
 
 }

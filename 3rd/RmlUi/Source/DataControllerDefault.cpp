@@ -80,9 +80,4 @@ bool DataControllerEvent::Initialize(DataModel& model, Element* element, const s
 	return true;
 }
 
-void DataControllerEvent::Release()
-{
-	delete this;
-}
-
 }

@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_STYLESHEET_H
 #define RMLUI_CORE_STYLESHEET_H
 
-#include "Traits.h"
 #include "Types.h"
 
 namespace Rml {
@@ -56,7 +55,7 @@ using KeyframesMap = std::unordered_map<std::string, Keyframes>;
 	@author Lloyd Weehuizen
  */
 
-class StyleSheet : public NonCopyMoveable
+class StyleSheet
 {
 public:
 	typedef std::vector< StyleSheetNode* > NodeList;
@@ -64,6 +63,9 @@ public:
 
 	StyleSheet();
 	virtual ~StyleSheet();
+
+	StyleSheet(const StyleSheet&) = delete;
+	StyleSheet& operator=(const StyleSheet&) = delete;
 
 	/// Loads a style from a CSS definition.
 	bool LoadStyleSheet(Stream* stream, int begin_line_number = 1);

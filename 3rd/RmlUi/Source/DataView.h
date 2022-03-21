@@ -30,7 +30,6 @@
 #define RMLUI_CORE_DATAVIEW_H
 
 #include "../Include/RmlUi/Types.h"
-#include "../Include/RmlUi/Traits.h"
 #include "../Include/RmlUi/DataTypes.h"
 
 namespace Rml {
@@ -39,11 +38,14 @@ class Element;
 class DataModel;
 
 
-class DataViewInstancer : public NonCopyMoveable {
+class DataViewInstancer {
 public:
 	DataViewInstancer() {}
 	virtual ~DataViewInstancer() {}
 	virtual DataViewPtr InstanceView(Element* element) = 0;
+
+	DataViewInstancer(const DataViewInstancer&) = delete;
+	DataViewInstancer& operator=(const DataViewInstancer&) = delete;
 };
 
 template<typename T>
@@ -65,7 +67,7 @@ public:
 	The modifier may or may not be required depending on the data view.
  */
 
-class DataView : public Releasable {
+class DataView {
 public:
 	virtual ~DataView();
 
@@ -103,10 +105,13 @@ private:
 
 
 
-class DataViews : NonCopyMoveable {
+class DataViews {
 public:
 	DataViews();
 	~DataViews();
+
+	DataViews(const DataViews&) = delete;
+	DataViews& operator=(const DataViews&) = delete;
 
 	void Add(DataViewPtr view);
 

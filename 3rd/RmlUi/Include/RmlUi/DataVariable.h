@@ -30,7 +30,6 @@
 #define RMLUI_CORE_DATAVARIABLE_H
 
 #include "Types.h"
-#include "Traits.h"
 #include "Variant.h"
 #include "DataTypes.h"
 
