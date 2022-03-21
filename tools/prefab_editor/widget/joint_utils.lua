@@ -6,6 +6,11 @@ local m = {
 }
 
 function m:get_joints(e)
+    if not e then
+        if self.current_skeleton then
+            return self.joint_list[self.current_skeleton._handle]
+        end
+    end
     if not e.skeleton or not e.skeleton._handle then
         return
     end
@@ -115,9 +120,9 @@ function m:get_current_skeleton()
     return self.current_skeleton
 end
 
-function m:update_pose()
+function m:update_pose(root_mat)
     if self.update_joint_pose then
-        self.update_joint_pose()
+        self.update_joint_pose(root_mat)
     end
 end
 

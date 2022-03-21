@@ -542,6 +542,9 @@ function m:on_prefab_ready(prefab)
     for _, e in ipairs(self.entities) do
         add_to_hierarchy(e)
     end
+    
+    local srt = self.prefab_template[1].data.scene.srt
+    self.root_mat = math3d.ref(math3d.matrix(srt))
 end
 
 function m:open(filename)
@@ -767,7 +770,9 @@ end
 function m:get_current_filename()
     return self.prefab_filename
 end
-
+function m:get_root_mat()
+    return self.root_mat
+end
 function m.set_anim_view(aview)
     anim_view = aview
 end

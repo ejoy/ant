@@ -590,5 +590,5 @@ function m:widget()
 end
 
 function m.end_animation()
-    joint_utils:update_pose()
+    joint_utils:update_pose(prefab_mgr:get_root_mat() or math3d.matrix{})
 end
