@@ -433,7 +433,7 @@ function m:handle_event()
             hierarchy:set_parent(target, v1)
             local sourceWorldMat = iom.worldmat(world:entity(target))
             local targetWorldMat = v1 and iom.worldmat(world:entity(v1)) or mc.IDENTITY_MAT
-            iom.set_srt_matrix(target, math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
+            iom.set_srt_matrix(world:entity(target), math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
             ecs.method.set_parent(target, v1)
             local isslot
             if v1 then
