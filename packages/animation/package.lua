@@ -8,5 +8,6 @@ return {
 		"ant.render",
 		"ant.timer",
 		"ant.math",
+		"ant.audio",
     }
 }
