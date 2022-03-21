@@ -283,7 +283,8 @@ const Size& Document::GetDimensions() {
 	return dimensions;
 }
 
-void Document::Update() {
+void Document::Update(double delta) {
+    elapsed_time += delta;
 	UpdateDataModel(true);
 	body.Update();
 	body.UpdateAnimations();
@@ -342,6 +343,10 @@ ElementPtr Document::CreateTextNode(const std::string& str) {
 
 void Document::DefineCustomElement(const std::string& name) {
 	custom_element.emplace(name);
+}
+
+double Document::GetCurrentTime() {
+	return elapsed_time / 1000;
 }
 
 }

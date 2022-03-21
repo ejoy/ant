@@ -4,8 +4,6 @@
 #include "RmlUi/Element.h"
 #include "RmlUi/Document.h"
 #include "RmlUi/EventListener.h"
-#include "RmlUi/StyleSheetSpecification.h"
-#include "RmlUi/Time.h"
 
 #include "luaplugin.h"
 #include "luabind.h"
@@ -129,7 +127,8 @@ lDocumentDestroy(lua_State* L) {
 static int
 lDocumentUpdate(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	doc->Update();
+	double delta = luaL_checknumber(L, 2);
+	doc->Update(delta);
 	return 0;
 }
 
@@ -475,13 +474,6 @@ lRmlRegisterEevent(lua_State* L) {
 }
 
 static int
-lRmlTimeUpdate(lua_State* L) {
-	double delta = luaL_checknumber(L, 1);
-	Rml::Time::Update(delta);
-	return 0;
-}
-
-static int
 lRenderBegin(lua_State* L) {
     if (g_wrapper) {
         g_wrapper->interface.m_renderer.Begin();
@@ -566,7 +558,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "RmlInitialise", lRmlInitialise },
 		{ "RmlShutdown", lRmlShutdown },
 		{ "RmlRegisterEevent", lRmlRegisterEevent },
-		{ "RmlTimeUpdate", lRmlTimeUpdate },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

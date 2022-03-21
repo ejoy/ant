@@ -23,19 +23,18 @@ public:
 	void SetDimensions(const Size& dimensions);
 	const Size& GetDimensions();
 	Element* ElementFromPoint(Point pt);
-	void Update();
-
+	void Update(double delta);
 	DataModelConstructor CreateDataModel(const std::string& name);
 	DataModelConstructor GetDataModel(const std::string& name);
 	bool RemoveDataModel(const std::string& name);
 	void UpdateDataModel(bool clear_dirty_variables);
 	DataModel* GetDataModelPtr(const std::string& name) const;
-
 	Element* GetBody();
 	const Element* GetBody() const;
 	ElementPtr CreateElement(const std::string& tag);
 	ElementPtr CreateTextNode(const std::string& str);
 	void DefineCustomElement(const std::string& name);
+	double GetCurrentTime();
 
 private:
 	using DataModels = std::unordered_map<std::string, std::unique_ptr<DataModel>>;
@@ -46,6 +45,7 @@ private:
 	std::shared_ptr<StyleSheet> style_sheet;
 	std::unordered_set<std::string> custom_element;
 	Size dimensions;
+    double elapsed_time = 0.;
 	bool dirty_dimensions = false;
 };
 

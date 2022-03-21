@@ -12,7 +12,6 @@
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/EventListener.h"
-#include "../Include/RmlUi/Time.h"
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/Plugin.h"
 #include "../Include/RmlUi/ElementStyle.h"
@@ -899,7 +898,7 @@ void Element::StartAnimation(PropertyId property_id, const Property* start_value
 		value = *default_value;
 	}
 	ElementAnimationOrigin origin = (initiated_by_animation_property ? ElementAnimationOrigin::Animation : ElementAnimationOrigin::User);
-	double start_time = Time::Now() + (double)delay;
+	double start_time = GetOwnerDocument()->GetCurrentTime() + (double)delay;
 
 	ElementAnimation animation{ property_id, origin, value, *this, start_time, 0.0f, num_iterations, alternate_direction };
 	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == property_id; });
@@ -943,7 +942,7 @@ bool Element::StartTransition(const Transition& transition, const Property& star
 		return false;
 
 	float duration = transition.duration;
-	double start_time = Time::Now() + (double)transition.delay;
+	double start_time = GetOwnerDocument()->GetCurrentTime() + (double)transition.delay;
 
 	if (it == animations.end()) {
 		// Add transition as new animation
@@ -1075,7 +1074,7 @@ void Element::AdvanceAnimations() {
 	if (animations.empty()) {
 		return;
 	}
-	double time = Time::Now();
+	double time = GetOwnerDocument()->GetCurrentTime();
 	for (auto& animation : animations) {
 		Property property = animation.UpdateAndGetProperty(time, *this);
 		if (property.unit != Property::Unit::UNKNOWN)

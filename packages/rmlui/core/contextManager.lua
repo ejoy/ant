@@ -347,9 +347,9 @@ function m.set_dimensions(w, h, ratio)
     end
 end
 
-function m.update()
+function m.update(delta)
     for _, doc in ipairs(documents) do
-        rmlui.DocumentUpdate(doc)
+        rmlui.DocumentUpdate(doc, delta)
     end
 end
 
