@@ -192,7 +192,7 @@ bool Document::Load(const std::string& path) {
 
 	body.UpdateProperties();
 	UpdateDataModel(false);
-	Update();
+	body.Update();
 	return true;
 }
 
