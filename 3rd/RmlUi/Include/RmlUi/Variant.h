@@ -17,6 +17,11 @@ using Variant = std::variant<
 
 namespace VariantHelper {
 	template <typename T>
+	bool Has(const Variant& variant) {
+		return std::holds_alternative<float>(variant);
+	}
+
+	template <typename T>
 	T Get(const Variant& variant, T def = T{}) {
 		if (const T* r = std::get_if<T>(&variant)) {
 			return *r;

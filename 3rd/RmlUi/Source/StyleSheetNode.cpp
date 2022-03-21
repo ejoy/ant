@@ -305,4 +305,4 @@ void StyleSheetNode::CalculateAndSetSpecificity()
 		specificity += parent->specificity;
 }
 
-} // namespace Rml
+}

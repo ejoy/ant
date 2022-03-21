@@ -50,5 +50,5 @@ struct DataAddressEntry {
 };
 using DataAddress = std::vector<DataAddressEntry>;
 
-} // namespace Rml
+}
 #endif

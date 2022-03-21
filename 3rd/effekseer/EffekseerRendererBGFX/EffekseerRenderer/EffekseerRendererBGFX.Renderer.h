@@ -31,6 +31,9 @@ protected:
 	virtual ~Renderer() {}
 public:
 	bgfx_encoder_t* encoder_{ nullptr };
+	bgfx_view_id_t view_id_{ 0 };
+	void SetViewID(bgfx_view_id_t vid) { view_id_ = vid; }
+	bgfx_view_id_t GetViewID() const { return view_id_; }
 	void SetCurrentEncoder(bgfx_encoder_t* encoder) { encoder_ = encoder; }
 	bgfx_encoder_t* GetCurrentEncoder() const { return encoder_; }
 	static std::vector<bgfx_context> s_bgfx_sprite_context_;

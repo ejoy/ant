@@ -27,7 +27,7 @@
  */
 
 #include "../Include/RmlUi/Core.h"
-#include "../Include/RmlUi/Factory.h"
+#include "../Include/RmlUi/DataUtilities.h"
 #include "../Include/RmlUi/FileInterface.h"
 #include "../Include/RmlUi/FontEngineInterface.h"
 #include "../Include/RmlUi/Plugin.h"
@@ -68,7 +68,7 @@ bool Initialise() {
 	}
 	StyleSheetSpecification::Initialise();
 	StyleSheetFactory::Initialise();
-	Factory::Initialise();
+	DataUtilities::Initialise();
 	initialised = true;
 	return true;
 }
@@ -76,7 +76,7 @@ bool Initialise() {
 void Shutdown() {
 	assert(initialised);
 
-	Factory::Shutdown();
+	DataUtilities::Shutdown();
 	StyleSheetFactory::Shutdown();
 	StyleSheetSpecification::Shutdown();
 	Texture::Shutdown();

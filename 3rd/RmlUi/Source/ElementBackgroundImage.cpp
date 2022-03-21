@@ -136,4 +136,4 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	}
 }
 
-} // namespace Rml
+}

@@ -57,5 +57,5 @@ private:
     std::unique_ptr<DataControllerEventListener> listener;
 };
 
-} // namespace Rml
+}
 #endif

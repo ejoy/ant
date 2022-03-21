@@ -49,6 +49,18 @@ function m.OnLoadExternalScript(document, source_path)
 	end
 	invoke(f)
 end
+function m.OnCreateElement(document, element, name)
+	local globals = environment[document]
+	if not globals then
+		return
+	end
+	local window = globals.window
+	local ctor = window.customElements.get(name)
+	if not ctor then
+		return
+	end
+	ctor(createElement(element, document))
+end
 function m.OnEvent(ev, e)
 	local delegate = events[ev]
 	if not delegate then

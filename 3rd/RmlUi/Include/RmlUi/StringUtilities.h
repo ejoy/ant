@@ -184,5 +184,5 @@ private:
 	inline void SeekBack();
 };
 
-} // namespace Rml
+}
 #endif

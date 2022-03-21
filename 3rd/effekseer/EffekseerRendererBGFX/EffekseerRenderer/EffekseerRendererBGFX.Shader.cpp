@@ -3,8 +3,6 @@
 #include "EffekseerRendererBGFX.Renderer.h"
 
 namespace EffekseerRendererBGFX {
-bgfx_view_id_t g_view_id = 0;
-
 Shader::Shader(Renderer* renderer, bgfx_program_handle_t programHandle, std::unordered_map<std::string, bgfx_uniform_handle_t>&& uniforms)
 	: m_vertexConstantBuffer(nullptr)
 	, m_pixelConstantBuffer(nullptr)
@@ -48,7 +46,7 @@ void Shader::EndScene()
 
 void Shader::Submit()
 {
-	BGFX(encoder_submit)(m_renderer->GetCurrentEncoder(), g_view_id, m_program, 0, BGFX_DISCARD_ALL);
+	BGFX(encoder_submit)(m_renderer->GetCurrentEncoder(), m_renderer->GetViewID(), m_program, 0, BGFX_DISCARD_ALL);
 }
 
 void Shader::SetVertexConstantBufferSize(int32_t size)

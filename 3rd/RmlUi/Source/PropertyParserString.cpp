@@ -47,4 +47,4 @@ bool PropertyParserString::ParseValue(Property& property, const std::string& val
 	return true;
 }
 
-} // namespace Rml
+}

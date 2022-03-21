@@ -2,8 +2,7 @@
 #include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/Document.h"
-#include "../Include/RmlUi/ElementUtilities.h"
-#include "../Include/RmlUi/Factory.h"
+#include "../Include/RmlUi/DataUtilities.h"
 #include "../Include/RmlUi/PropertyIdSet.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
@@ -317,7 +316,7 @@ int Element::GetNumChildren() const {
 
 // TODO: remove this function, duplicate code in Document.cpp
 static bool isDataViewElement(Element* e) {
-	for (const std::string& name : Factory::GetStructuralDataViewAttributeNames()) {
+	for (const std::string& name : DataUtilities::GetStructuralDataViewAttributeNames()) {
 		if (e->GetTagName() == name) {
 			return true;
 		}
@@ -350,7 +349,7 @@ public:
 		}
 		m_stack.push(m_current);
 		m_parent = m_current;
-		m_current = new Element(m_doc, szName);
+		m_current = m_doc->CreateElement(szName).release();
 	}
 	void OnElementClose() override {
 		if (m_inner_xml) {
@@ -366,7 +365,7 @@ public:
 		}
 
 		if (!inner_xml_data.empty()) {
-			ElementUtilities::ApplyStructuralDataViews(m_current, inner_xml_data);
+			DataUtilities::ApplyStructuralDataViews(m_current, inner_xml_data);
 		}
 
 		if (m_stack.empty()) {
@@ -396,51 +395,24 @@ public:
 			return;
 		}
 		if (m_current) {
-			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
+			if (isDataViewElement(m_current) && DataUtilities::ApplyStructuralDataViews(m_current, szValue)) {
 				return;
 			}
-			m_current->CreateTextNode(szValue);
+			auto text = m_doc->CreateTextNode(szValue);
+			if (text) {
+				m_current->AppendChild(std::move(text));
+			}
 		}
 	}
 };
 
-void Element::SetInnerRML(const std::string& rml) {
-	if (rml.empty()) {
+void Element::SetInnerHTML(const std::string& html) {
+	if (html.empty()) {
 		return;
 	}
 	HtmlParser parser;
 	EmbedHtmlHandler handler(this);
-	parser.Parse(rml, &handler);
-}
-
-bool Element::CreateTextNode(const std::string& str) {
-	if (std::all_of(str.begin(), str.end(), &StringUtilities::IsWhitespace))
-		return true;
-	bool has_data_expression = false;
-	bool inside_brackets = false;
-	char previous = 0;
-	for (const char c : str) {
-		if (inside_brackets) {
-			if (c == '}' && previous == '}') {
-				has_data_expression = true;
-				break;
-			}
-		}
-		else if (c == '{' && previous == '{') {
-				inside_brackets = true;
-		}
-		previous = c;
-	}
-	ElementPtr text(new ElementText(GetOwnerDocument(), str));
-	if (!text) {
-		Log::Message(Log::Level::Error, "Failed to instance text element '%s', instancer returned nullptr.", str.c_str());
-		return false;
-	}
-	if (has_data_expression) {
-		text->SetAttribute("data-text", std::string());
-	}
-	AppendChild(std::move(text));
-	return true;
+	parser.Parse(html, &handler);
 }
 
 Element* Element::AppendChild(ElementPtr child) {
@@ -529,12 +501,12 @@ Element* Element::GetElementById(const std::string& id) {
 		Element* element = search_queue.front();
 		search_queue.pop();
 		
-		if (GetId() == id) {
+		if (element->GetId() == id) {
 			return element;
 		}
 		
-		for (int i = 0; i < GetNumChildren(); i++)
-			search_queue.push(GetChild(i));
+		for (int i = 0; i < element->GetNumChildren(); i++)
+			search_queue.push(element->GetChild(i));
 	}
 	return nullptr;
 }
@@ -640,12 +612,13 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
 	auto it = changed_attributes.find("id");
 	if (it != changed_attributes.end()) {
 		id = it->second;
-		DirtyDefinition();
+		Update();
 	}
 
 	it = changed_attributes.find("class");
 	if (it != changed_attributes.end()) {
 		SetClassName(it->second);
+		Update();
 	}
 
 	it = changed_attributes.find("style");
@@ -759,6 +732,14 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		}
 	}
 
+	if (changed_properties.Contains(PropertyId::ScrollLeft) ||
+		changed_properties.Contains(PropertyId::ScrollTop))
+	{
+		for (auto& child : children) {
+			child->DirtyTransform();
+		}
+	}
+
 	if (changed_properties.Contains(PropertyId::Overflow)) {
 		DirtyClip();
 	}
@@ -778,39 +759,39 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 	}
 }
 
-std::string Element::GetInnerRML() const {
-	std::string rml;
+std::string Element::GetInnerHTML() const {
+	std::string html;
 	for (auto& child : children) {
 		if (child->GetType() == Node::Type::Text) {
-			rml += ((ElementText&)*child).GetText();
+			html += ((ElementText&)*child).GetText();
 		}
 		else {
-			rml += child->GetOuterRML();
+			html += child->GetOuterHTML();
 		}
 	}
-	return rml;
+	return html;
 }
 
-std::string Element::GetOuterRML() const {
-	std::string rml;
-	rml += "<";
-	rml += tag;
+std::string Element::GetOuterHTML() const {
+	std::string html;
+	html += "<";
+	html += tag;
 	for (auto& pair : attributes) {
 		auto& name = pair.first;
 		auto& value = pair.second;
-		rml += " " + name + "=\"" + value + "\"";
+		html += " " + name + "=\"" + value + "\"";
 	}
 	if (!children.empty()) {
-		rml += ">";
-		rml += GetInnerRML();
-		rml += "</";
-		rml += tag;
-		rml += ">";
+		html += ">";
+		html += GetInnerHTML();
+		html += "</";
+		html += tag;
+		html += ">";
 	}
 	else {
-		rml += " />";
+		html += " />";
 	}
-	return rml;
+	return html;
 }
 
 void Element::SetDataModel(DataModel* new_data_model)  {
@@ -825,7 +806,7 @@ void Element::SetDataModel(DataModel* new_data_model)  {
 	data_model = new_data_model;
 
 	if (data_model)
-		ElementUtilities::ApplyDataViewsControllers(this);
+		DataUtilities::ApplyDataViewsControllers(this);
 
 	for (ElementPtr& child : children)
 		child->SetDataModel(new_data_model);
@@ -1395,12 +1376,59 @@ Size Element::GetScrollOffset() const {
 	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
 		return {0,0};
 	}
-	Size scrollOffset {
+	return {
 		GetComputedProperty(PropertyId::ScrollLeft)->GetFloat(),
 		GetComputedProperty(PropertyId::ScrollTop)->GetFloat()
 	};
-	layout.UpdateScrollOffset(scrollOffset, metrics);
-	return scrollOffset;
+}
+
+float Element::GetScrollLeft() const {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return 0;
+	}
+	return GetComputedProperty(PropertyId::ScrollLeft)->GetFloat();
+}
+
+float Element::GetScrollTop() const {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return 0;
+	}
+	return GetComputedProperty(PropertyId::ScrollTop)->GetFloat();
+}
+
+void Element::SetScrollLeft(float v) {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return;
+	}
+	Size offset { v, 0 };
+	layout.UpdateScrollOffset(offset, metrics);
+	Property value(offset.w, Property::Unit::PX);
+	SetProperty(PropertyId::ScrollLeft, &value);
+}
+
+void Element::SetScrollTop(float v) {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return;
+	}
+	Size offset { 0, v };
+	layout.UpdateScrollOffset(offset, metrics);
+	Property value(offset.h, Property::Unit::PX);
+	SetProperty(PropertyId::ScrollTop, &value);
+}
+
+void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
+	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+		return;
+	}
+	metrics.scrollInsets = insets;
+	Size offset = GetScrollOffset();
+	layout.UpdateScrollOffset(offset, metrics);
+
+	Property left(offset.w, Property::Unit::PX);
+	SetProperty(PropertyId::ScrollLeft, &left);
+
+	Property top(offset.h, Property::Unit::PX);
+	SetProperty(PropertyId::ScrollTop, &top);
 }
 
 void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate) {

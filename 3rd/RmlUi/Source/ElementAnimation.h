@@ -94,5 +94,5 @@ public:
 };
 
 
-} // namespace Rml
+}
 #endif

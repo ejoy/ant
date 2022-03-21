@@ -2,16 +2,18 @@ local rmlui = require "rmlui"
 local event = require "core.event"
 local createElement = require "core.DOM.element"
 
-local mt = {}
-local m = {}
-mt.__index = m
-
-function m:getElementById(id)
-    return createElement(rmlui.DocumentGetElementById(self._handle, id), self._handle)
-end
-
 local function constructor(handle)
-    return setmetatable({_handle = handle}, mt)
+    local doc = {_handle = handle}
+    function doc.getElementById(id)
+        return createElement(rmlui.DocumentGetElementById(handle, id), handle)
+    end
+    function doc.createElement(tag)
+        return createElement(rmlui.DocumentCreateElement(handle, tag), handle, true)
+    end
+    function doc.createTextNode(text)
+        return createElement(rmlui.DocumentCreateTextNode(handle, text), handle, true)
+    end
+    return doc
 end
 
 local pool = {}

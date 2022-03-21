@@ -354,4 +354,4 @@ bool DataModel::Update(bool clear_dirty_variables)
 	return result;
 }
 
-} // namespace Rml
+}

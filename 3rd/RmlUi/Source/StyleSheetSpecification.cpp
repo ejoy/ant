@@ -756,10 +756,10 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 
 	RegisterProperty(PropertyId::PointerEvents, "pointer-events", "auto", false)
 		.AddParser("keyword", "none, auto");
-	RegisterProperty(PropertyId::ScrollLeft, "scroll-left", "0", false)
-		.AddParser("number");
-	RegisterProperty(PropertyId::ScrollTop, "scroll-top", "0", false)
-		.AddParser("number");
+	RegisterProperty(PropertyId::ScrollLeft, "scroll-left", "0px", false)
+		.AddParser("length");
+	RegisterProperty(PropertyId::ScrollTop, "scroll-top", "0px", false)
+		.AddParser("length");
 }
 
 static StyleSheetSpecificationInstance* instance = nullptr;

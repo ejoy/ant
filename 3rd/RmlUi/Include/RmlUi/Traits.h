@@ -69,6 +69,6 @@ public:
 	}
 };
 
-} // namespace Rml
+}
 
 #endif	// RMLUI_CORE_TRAITS_H

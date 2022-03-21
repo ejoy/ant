@@ -267,7 +267,7 @@ inline Point operator*(const Point& lhs, const Point& rhs) {
 inline Size operator*(const Size& lhs, float rhs) {
 	return Size(lhs.w * rhs, lhs.h * rhs);
 }
-} // namespace Rml
+}
 
 
 namespace std {

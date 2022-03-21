@@ -50,10 +50,9 @@ public:
 	Element* GetChild(int index) const;
 	int GetNumChildren() const;
 
-	std::string GetInnerRML() const;
-	std::string GetOuterRML() const;
-	void SetInnerRML(const std::string& rml);
-	bool CreateTextNode(const std::string& str);
+	std::string GetInnerHTML() const;
+	std::string GetOuterHTML() const;
+	void SetInnerHTML(const std::string& html);
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);
@@ -79,6 +78,11 @@ public:
 	void SetRednerStatus();
 
 	Size GetScrollOffset() const;
+	float GetScrollLeft() const;
+	float GetScrollTop() const;
+	void SetScrollLeft(float v);
+	void SetScrollTop(float v);
+	void SetScrollInsets(const EdgeInsets<float>& insets);
 
 	void SetPseudoClass(PseudoClass pseudo_class, bool activate);
 	bool IsPseudoClassSet(PseudoClassSet pseudo_class) const;

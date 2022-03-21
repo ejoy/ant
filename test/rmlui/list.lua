@@ -54,11 +54,15 @@ function list_meta:on_drag(event)
     if event.button then
         self.drag.delta = ((self.direction == 0) and event.x or event.y) - self.drag.mouse_pos
         self.pos = self.drag.anchor + self.drag.delta
+        local e = event.current
+        local oldClassName = e.className
+        e.className = e.className .. " notransition"
         if self.direction == 0 then
-            event.current:setPropertyImmediate("left", tostring(math.floor(self.pos)) .. 'px')
+            e.style.left = tostring(math.floor(self.pos)) .. 'px'
         else
-            event.current:setPropertyImmediate("top", tostring(math.floor(self.pos)) .. 'px')
+            e.style.top = tostring(math.floor(self.pos)) .. 'px'
         end
+        e.className = oldClassName
     end
 end
 

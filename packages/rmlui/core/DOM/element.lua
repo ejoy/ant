@@ -35,7 +35,7 @@ local property_setter = {}
 
 function property_init:addEventListener()
     local handle = self._handle
-    return function(type, listener, useCapture)
+    return function (type, listener, useCapture)
         rmlui.ElementAddEventListener(handle, type, listener, useCapture)
     end
 end
@@ -60,6 +60,35 @@ function property_init:childNodes()
         children[i] = constructor(self._document, child)
     end
     return children
+end
+
+function property_init:appendChild()
+    local handle = self._handle
+    return function (child)
+        child._owner = nil
+        rmlui.ElementAppendChild(handle, child._handle)
+    end
+end
+
+function property_init:scrollInsets()
+    local handle = self._handle
+    return function (l, t, r, b)
+        rmlui.ElementSetScrollInsets(handle, l, t, r, b)
+    end
+end
+
+function property_init:getAttribute()
+    local handle = self._handle
+    return function (name)
+        return rmlui.ElementGetAttribute(handle, name)
+    end
+end
+
+function property_init:setAttribute()
+    local handle = self._handle
+    return function (name, value)
+        rmlui.ElementGetAttribute(handle, name, value)
+    end
 end
 
 function property_init:style()
@@ -98,12 +127,39 @@ function property_getter:clientHeight()
     return h
 end
 
-function property_getter:className()
-    return rmlui.ElementGetClassName(self._handle)
+function property_getter:id()
+    return rmlui.ElementGetAttribute(self._handle, "id") or ""
+end
+function property_setter:id(v)
+    rmlui.ElementSetAttribute(self._handle, "id", v)
 end
 
+function property_getter:className()
+    return rmlui.ElementGetAttribute(self._handle, "class") or ""
+end
 function property_setter:className(v)
-    rmlui.ElementSetClassName(self._handle, v)
+    rmlui.ElementSetAttribute(self._handle, "class", v)
+end
+
+function property_getter:innerHTML()
+    return rmlui.ElementGetInnerHTML(self._handle)
+end
+function property_setter:innerHTML(v)
+    rmlui.ElementSetInnerHTML(self._handle, v)
+end
+
+function property_getter:scrollLeft()
+    return rmlui.ElementGetScrollLeft(self._handle)
+end
+function property_setter:scrollLeft(v)
+    return rmlui.ElementSetScrollLeft(self._handle, v)
+end
+
+function property_getter:scrollTop()
+    return rmlui.ElementGetScrollTop(self._handle)
+end
+function property_setter:scrollTop(v)
+    return rmlui.ElementSetScrollTop(self._handle, v)
 end
 
 local property_mt = {}
@@ -125,17 +181,29 @@ function property_mt:__newindex(name, value)
     rawset(self, name, value)
 end
 
-function constructor(document, handle)
-    return setmetatable({_handle = handle, _document = document}, property_mt)
+function constructor(document, handle, owner)
+    return setmetatable({
+        _handle = handle,
+        _document = document,
+        _owner = owner,
+    }, property_mt)
 end
 
 local pool = {}
 
 function event.OnDocumentDestroy(handle)
+    if not pool[handle] then
+        return
+    end
+    for h, e in pairs(pool[handle]) do
+        if e._owner then
+            rmlui.ElementDelete(h)
+        end
+    end
     pool[handle] = nil
 end
 
-return function (handle, document)
+return function (handle, document, owner)
     if handle == nil then
         return
     end
@@ -149,7 +217,7 @@ return function (handle, document)
     end
     local o = _pool[handle]
     if not o then
-        o = constructor(document, handle)
+        o = constructor(document, handle, owner)
         _pool[handle] = o
     end
     return o

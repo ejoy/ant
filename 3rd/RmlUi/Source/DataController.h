@@ -114,5 +114,5 @@ private:
 };
 
 
-} // namespace Rml
+}
 #endif

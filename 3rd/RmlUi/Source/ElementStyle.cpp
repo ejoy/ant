@@ -71,4 +71,4 @@ float ComputePropertyH(const Property* property, Element* e) {
 	return ComputePropertyH(property->ToFloatValue(), e);
 }
 
-} // namespace Rml
+}

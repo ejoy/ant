@@ -297,4 +297,4 @@ void ElementAnimation::Release(Element& element) {
 	}
 }
 
-} // namespace Rml
+}

@@ -1,14 +1,14 @@
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/ElementText.h"
-#include "../Include/RmlUi/Factory.h"
+#include "../Include/RmlUi/DataUtilities.h"
 #include "../Include/RmlUi/Stream.h"
 #include "../Include/RmlUi/StyleSheet.h"
 #include "../Include/RmlUi/Core.h"
 #include "../Include/RmlUi/DataModelHandle.h"
 #include "../Include/RmlUi/FileInterface.h"
-#include "../Include/RmlUi/ElementUtilities.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/Plugin.h"
+#include "../Include/RmlUi/StringUtilities.h"
 #include "StyleSheetFactory.h"
 #include "DataModel.h"
 #include "HtmlParser.h"
@@ -30,7 +30,7 @@ Document::~Document() {
 using namespace std::literals;
 
 static bool isDataViewElement(Element* e) {
-	for (const std::string& name : Factory::GetStructuralDataViewAttributeNames()) {
+	for (const std::string& name : DataUtilities::GetStructuralDataViewAttributeNames()) {
 		if (e->GetTagName() == name) {
 			return true;
 		}
@@ -74,7 +74,7 @@ public:
 		}
 		m_stack.push(m_current);
 		m_parent = m_current;
-		m_current = new Element(&m_doc, szName);
+		m_current = m_doc.CreateElement(szName).release();
 	}
 	void OnElementClose() override {
 		if (m_inner_xml) {
@@ -90,7 +90,7 @@ public:
 		}
 
 		if (!inner_xml_data.empty()) {
-			ElementUtilities::ApplyStructuralDataViews(m_current, inner_xml_data);
+			DataUtilities::ApplyStructuralDataViews(m_current, inner_xml_data);
 		}
 
 		if (m_stack.empty()) {
@@ -135,10 +135,13 @@ public:
 			return;
 		}
 		if (m_current) {
-			if (isDataViewElement(m_current) && ElementUtilities::ApplyStructuralDataViews(m_current, szValue)) {
+			if (isDataViewElement(m_current) && DataUtilities::ApplyStructuralDataViews(m_current, szValue)) {
 				return;
 			}
-			m_current->CreateTextNode(szValue);
+			auto text = m_doc.CreateTextNode(szValue);
+			if (text) {
+				m_current->AppendChild(std::move(text));
+			}
 		}
 	}
 	void OnComment(const char* szText) override {}
@@ -302,6 +305,43 @@ Element* Document::GetBody() {
 
 const Element* Document::GetBody() const {
 	return &body;
+}
+
+ElementPtr Document::CreateElement(const std::string& tag){
+	ElementPtr e(new Element(this, tag));
+	if (e && custom_element.find(tag) != custom_element.end()) {
+		GetPlugin()->OnCreateElement(this, e.get(), tag);
+	}
+	return e;
+}
+
+ElementPtr Document::CreateTextNode(const std::string& str) {
+	if (std::all_of(str.begin(), str.end(), &StringUtilities::IsWhitespace))
+		return nullptr;
+	bool has_data_expression = false;
+	bool inside_brackets = false;
+	char previous = 0;
+	for (const char c : str) {
+		if (inside_brackets) {
+			if (c == '}' && previous == '}') {
+				has_data_expression = true;
+				break;
+			}
+		}
+		else if (c == '{' && previous == '{') {
+				inside_brackets = true;
+		}
+		previous = c;
+	}
+	ElementPtr e(new ElementText(this, str));
+	if (has_data_expression) {
+		e->SetAttribute("data-text", std::string());
+	}
+	return e;
+}
+
+void Document::DefineCustomElement(const std::string& name) {
+	custom_element.emplace(name);
 }
 
 }

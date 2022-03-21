@@ -38,5 +38,5 @@ struct ElementBackgroundBorder {
 	static void GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path& paddingEdge);
 };
 
-} // namespace Rml
+}
 #endif

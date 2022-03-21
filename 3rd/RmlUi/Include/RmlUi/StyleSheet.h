@@ -105,5 +105,5 @@ private:
 	mutable ElementDefinitionCache node_cache;
 };
 
-} // namespace Rml
+}
 #endif

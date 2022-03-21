@@ -31,7 +31,6 @@
 #include "StyleSheetNode.h"
 #include "StyleSheetParser.h"
 #include "../Include/RmlUi/Element.h"
-#include "../Include/RmlUi/Factory.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Types.h"
@@ -194,4 +193,4 @@ std::shared_ptr<StyleSheetPropertyDictionary> StyleSheet::GetElementDefinition(c
 	return new_definition;
 }
 
-} // namespace Rml
+}

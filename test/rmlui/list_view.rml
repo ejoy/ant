@@ -35,6 +35,18 @@
                 flex-direction: column;
                 align-items:center;
             }
+            .page {
+                transition: left 0.5s linear-out; 
+            }
+            .list {
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                transition: top 0.5s linear-out;
+            }
+            .notransition {
+                transition: none;
+            }
         </style>
         <script type="text/x-lua" >
             console.log("before createModel")
@@ -67,10 +79,27 @@
                     {id=124, icon0="correct.png", icon1="correct.png"},
                 },
                 item_size = 200,
+                --按下到释放的时间小于0.5秒时显示详细信息
+                interval = 200,
+                show_detail = false,
+                -- 详细信息面板高度
+                detail_height = 120,
+                -- 详细信息面板开始位置
+                detail_top = 0,
+                page_width = 667,
+                page_height = 720,
                 view_items = {},
                 virtual_pages = {},
                 current_page = 0,
-                selected_id = 100,
+                selected_id = 0,
+                --TODO: 当前选中行，从0开始，初始化一个很大的值
+                selected_row = 10000,
+                row_count = 0,
+                item_down_time = 0,
+                current_time = 0,
+                page_drag = false,
+                list_drag = false,
+                draging = false,
                 item_list = {
                     {id=100, icon0="correct.png", icon1="correct.png"},
                     {id=101, icon0="correct.png", icon1="correct.png"},
@@ -98,44 +127,81 @@
                 },
                 list_item_width = 667,
                 list_item_height = 50,
-                list_container_width = 667,
-                list_container_height = 750,
+                list_width = 667,
+                list_height = 750,
             }
+            --是否应该显示Detail信息计时
+            local function update_time()
+                start.current_time = start.current_time + 1
+            end
+            window.setInterval(update_time, 1)
+
             local listclass = require "list"
             local pageclass = require "page"
-            -- window size : 1336 750
-            local list_proxy = listclass.create(1, {start.list_container_width, start.list_container_height}, #start.item_list, {start.list_item_width, start.list_item_height})
-            local page_proxy = pageclass.create({667, 720}, start)
+            local list_proxy = listclass.create(1, {start.list_width, start.list_height}, #start.item_list, {start.list_item_width, start.list_item_height})
+            local page_proxy = pageclass.create({start.page_width, start.page_height}, start)
             function start.pagemousedown(event)
                 console.log("pagemousedown")
                 page_proxy:on_mousedown(event)
+                start.page_drag = true
+                start.draging = false
             end
             
             function start.pagedrag(event)
-                --console.log("pagedrag")
-                page_proxy:on_drag(event)
+                if start.page_drag then
+                    console.log("pagedrag")
+                    page_proxy:on_drag(event)
+                end
             end
 
             function start.pagemouseup(event)
                 console.log("pagemouseup")
                 page_proxy:on_mouseup(event)
                 start.current_page = page_proxy:get_current_page() - 1
+                start.page_drag = false
             end
-
-            function start.page_item_click(event, id)
-                console.log("page_item_click", id)
-                start.selected_id = id
+            local function show_detail(show, id, row, top)
+                if show then
+                    start.selected_id = id
+                    start.selected_row = row
+                    start.detail_top = top
+                else
+                    start.selected_id = 0
+                    --TODO: max value 1000
+                    start.selected_row = 10000
+                end
+                start.show_detail = show
+            end
+            function start.page_item_down()
+                start.item_down_time = start.current_time
+            end
+            function start.page_item_up(event, id, row, top)
+                console.log("page_item_click, row, top", id, row, top)
+                if start.current_time - start.item_down_time <= start.interval and not start.draging then
+                    console.log("start.draging: ", start.draging)
+                    if start.selected_id ~= id then
+                        show_detail(true, id, row, top)
+                    else
+                        show_detail(not start.show_detail, id, row, top)
+                    end
+                else
+                    show_detail(false, 0, 0, 0)
+                end
             end
 
             function start.listmousedown(event)
+                start.list_drag = true
                 list_proxy:on_mousedown(event)
             end
 
             function start.listdrag(event)
-                list_proxy:on_drag(event)
+                if start.list_drag then
+                    ist_proxy:on_drag(event)
+                end
             end
 
             function start.listmouseup(event)
+                start.list_drag = false
                 list_proxy:on_mouseup(event)
             end
 
@@ -150,19 +216,23 @@
     <body>
         <div class="panel" data-model="start">
             <div class="column" style="overflow: hidden; justify-content: flex-start; align-items: flex-start; width:50%; height: 100%;">
-                <div style="width:100%; height:720px;">
-                    <div style="transition: left 0.5s linear-out; width:100%; height:100%;" data-event-mousedown="pagemousedown()" data-event-mouseup="pagemouseup()" data-event-mousemove="pagedrag()">
+                <div style="width:100%;" data-style-height="page_height+'px'">
+                    <div class="page" style="left:0px; width:100%; height:100%;" data-style-top="(selected_row == (row_count - 1) ? (0-detail_height) : 0) + 'px'" data-event-mousedown="pagemousedown()" data-event-mouseup="pagemouseup()" data-event-mousemove="pagedrag()">
                         <div style="flex-direction: row; justify-content: center; width:100%; height:100%;">
                             <div style="width:100%; height:100%;" data-for="virtual_pages">
                                 <div style="position: absolute; width:100%; height:100%; background-color: rgba(0, 200, 200, 255); border: 2px red; top: 0%;" data-style-left="(it_index + 1) * 100 + '%'"/>
                             </div>
                         </div>
-                        <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_click(it.data.id)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left" data-style-top="it.top" data-for="view_items">
+                        <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_down()" data-event-mouseup="page_item_up(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="((it.row > selected_row) ? (it.top + detail_height) : it.top) + 'px'" data-for="view_items">
                             <div class="item-bg" data-style-background-image="it.data.icon0"/>
                             <div>{{it.data.id}}</div>
                         </div>
+                        <div style="position: absolute; width: 100%; background-color: rgba(0, 100, 150, 255);" data-style-left="current_page * page_width + 'px'" data-style-height="detail_height+'px'" data-style-top="detail_top+item_size+'px'" data-if="show_detail">
+                            Item Detail
+                        </div>
                     </div>
                 </div>
+                <!-- 当前页指示 -->
                 <div style='flex-direction: row; justify-content: center; width:100%; height:30px;'>
                     <div data-for="virtual_pages">
                         <div style="width:20px; height:20px; background-size:cover;" data-style-background-image="it_index == current_page ? 'common/page1.png' : 'common/page0.png'"/>
@@ -170,7 +240,7 @@
                 </div>
             </div>
             <div style="width:100%; height: 50%; overflow: hidden;">
-                <div class="column" style="transition: top 0.5s linear-out; justify-content: flex-start; background-color: rgba(100, 100, 100, 255);" data-style-width="list_container_width + 'px'" data-style-height="list_container_height + 'px'" data-event-mousedown="listmousedown()" data-event-mouseup="listmouseup()" data-event-mousemove="listdrag()">
+                <div class="list" style="background-color: rgba(100, 100, 100, 255);" data-style-width="list_width + 'px'" data-style-height="list_height + 'px'" data-event-mousedown="listmousedown()" data-event-mouseup="listmouseup()" data-event-mousemove="listdrag()">
                     <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="item_list">
                         <div class="item-bg" data-style-background-image="it.icon0"/>
                         <div>{{it.id}}</div>

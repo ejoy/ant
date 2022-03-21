@@ -299,8 +299,12 @@ function iani.play_group(eid, anim_state)
 	do_play(eid, real_clips[1][1], real_clips, anim_state);
 end
 
-function iani.get_duration(eid)
-	return world:entity(eid)._animation._current.animation._handle:duration()
+function iani.get_duration(eid, anim_name)
+	if not anim_name then
+		return world:entity(eid)._animation._current.animation._handle:duration()
+	else
+		return world:entity(eid).animation[anim_name]._handle:duration()
+	end
 end
 
 function iani.get_clip_duration(e, name)

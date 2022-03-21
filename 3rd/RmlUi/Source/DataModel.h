@@ -89,5 +89,5 @@ private:
 };
 
 
-} // namespace Rml
+}
 #endif

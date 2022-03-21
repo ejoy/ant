@@ -300,7 +300,7 @@ void clamp(Size& s, Rect r) {
 }
 
 void Layout::UpdateScrollOffset(Size& scrollOffset, Layout::Metrics const& metrics) const {
-	clamp(scrollOffset, metrics.content + metrics.scrollInset - EdgeInsets<float> {0, 0, metrics.frame.size.w, metrics.frame.size.h});
+	clamp(scrollOffset, metrics.content + metrics.scrollInsets - EdgeInsets<float> {0, 0, metrics.frame.size.w, metrics.frame.size.h});
 }
 
 Layout::Overflow Layout::GetOverflow() const {

@@ -37,7 +37,6 @@ namespace Rml {
 class Stream;
 class StyleSheetNode;
 class StyleSheetPropertyDictionary;
-class AbstractPropertyParser;
 using StyleSheetNodeListRaw = std::vector<StyleSheetNode*>;
 
 /**
@@ -76,7 +75,7 @@ private:
 
 	// Parses properties from the parse buffer.
 	// @param property_parser An abstract parser which specifies how the properties are parsed and stored.
-	bool ReadProperties(AbstractPropertyParser& property_parser);
+	bool ReadProperties(PropertyDictionary& properties);
 
 	// Import properties into the stylesheet node
 	// @param node Node to import into
@@ -102,5 +101,5 @@ private:
 	bool ReadCharacter(char& buffer);
 };
 
-} // namespace Rml
+}
 #endif
