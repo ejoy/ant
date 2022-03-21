@@ -21,6 +21,8 @@ function page_meta:update_virtual_pages(items)
     local count_per_page = self.row * self.col
     local gapx = math.floor(math.fmod(self.contain_size[1], self.item_size) / (self.col + 1))
     local gapy = math.floor(math.fmod(self.contain_size[2], self.item_size) / (self.row + 1))
+    self.data_source.gapx = gapx
+    self.data_source.gapy = gapy
     local offset = 0
     local index = 1
     local total_item_count = #items

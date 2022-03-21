@@ -79,6 +79,8 @@
                     {id=124, icon0="correct.png", icon1="correct.png"},
                 },
                 item_size = 200,
+                gapx = 0,
+                gapy = 0,
                 --按下到释放的时间小于0.5秒时显示详细信息
                 interval = 200,
                 show_detail = false,
@@ -86,6 +88,7 @@
                 detail_height = 120,
                 -- 详细信息面板开始位置
                 detail_top = 0,
+                page_top = 0,
                 page_width = 667,
                 page_height = 720,
                 view_items = {},
@@ -161,15 +164,19 @@
                 start.page_drag = false
             end
             local function show_detail(show, id, row, top)
+                local offset = 0
                 if show then
                     start.selected_id = id
                     start.selected_row = row
                     start.detail_top = top
+                    local dy = start.page_height - ((row + 1) * (start.item_size + start.gapy) + start.detail_height)
+                    offset = (dy >= 0) and 0 or dy
                 else
                     start.selected_id = 0
                     --TODO: max value 1000
                     start.selected_row = 10000
                 end
+                start.page_top = offset
                 start.show_detail = show
             end
             function start.page_item_down()
@@ -217,7 +224,7 @@
         <div class="panel" data-model="start">
             <div class="column" style="overflow: hidden; justify-content: flex-start; align-items: flex-start; width:50%; height: 100%;">
                 <div style="width:100%;" data-style-height="page_height+'px'">
-                    <div class="page" style="left:0px; width:100%; height:100%;" data-style-top="(selected_row == (row_count - 1) ? (0-detail_height) : 0) + 'px'" data-event-mousedown="pagemousedown()" data-event-mouseup="pagemouseup()" data-event-mousemove="pagedrag()">
+                    <div class="page" style="left:0px; width:100%; height:100%;" data-style-top="page_top + 'px'" data-event-mousedown="pagemousedown()" data-event-mouseup="pagemouseup()" data-event-mousemove="pagedrag()">
                         <div style="flex-direction: row; justify-content: center; width:100%; height:100%;">
                             <div style="width:100%; height:100%;" data-for="virtual_pages">
                                 <div style="position: absolute; width:100%; height:100%; background-color: rgba(0, 200, 200, 255); border: 2px red; top: 0%;" data-style-left="(it_index + 1) * 100 + '%'"/>

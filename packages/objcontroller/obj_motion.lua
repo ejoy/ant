@@ -96,7 +96,7 @@ function iobj_motion.set_rotation(e, rot)
             viewdir = math3d.todirection(rot)
         end
 
-        local _srt = math3d.inverse(math3d.lookto(srt.t, viewdir, rc.updir))
+        local _srt = math3d.inverse(math3d.lookto(srt.t, viewdir, scene.updir))
         local s, r, t = math3d.srt(_srt)
         set_srt(srt, s, r, t)
     else
