@@ -4,5 +4,6 @@ return {
         "ant.asset",
         "ant.geometry",
         "ant.math",
+        "ant.render",
     }
 }
