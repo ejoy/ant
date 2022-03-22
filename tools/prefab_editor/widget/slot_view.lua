@@ -12,6 +12,12 @@ local hierarchy = require "hierarchy_edit"
 local BaseView = require "widget.view_class".BaseView
 local SlotView = require "widget.view_class".SlotView
 
+local follow_flag = {
+    "pos",
+    "scale|pos",
+    "scale|rot|pos"
+}
+
 function SlotView:_init()
     BaseView._init(self)
     self.slot = uiproperty.Group({label="Slot", flags=imgui.flags.TreeNode{"DefaultOpen"}}, {
@@ -26,17 +32,25 @@ function SlotView:_init()
                     world:entity(self.eid).slot.joint_name = name
                 end,
             }),
-            uiproperty.Int({label="FollowFlag"}, {
+            uiproperty.Combo({label="FollowFlag", options={}}, {
                 getter = function()
                     local tp = hierarchy:get_template(self.eid)
-                    return tp.template.data.slot.follow_flag
+                    return follow_flag[tp.template.data.slot.follow_flag or 1]
                 end,
-                setter = function(flag)
+                setter = function(flag_name)
+                    local flag = 1
+                    if flag_name == follow_flag[1] then
+                        flag = 1
+                    elseif flag_name == follow_flag[2] then
+                        flag = 2
+                    elseif flag_name == follow_flag[3] then
+                        flag = 3
+                    end
                     local tp = hierarchy:get_template(self.eid)
                     tp.template.data.slot.follow_flag = flag
                     world:entity(self.eid).slot.follow_flag = flag
                 end,
-            })
+            }),
         }
     )
 end
@@ -54,8 +68,10 @@ function SlotView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
 
     local fj = self.slot:find_property_by_label "FollowJoint"
-    
     fj:set_options(joint_name_list)
+
+    local ff = self.slot:find_property_by_label "FollowFlag"
+    ff:set_options(follow_flag)
 
     self:update()
     return true
