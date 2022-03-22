@@ -33,7 +33,7 @@ function SlotView:_init()
                 end,
                 setter = function(flag)
                     local tp = hierarchy:get_template(self.eid)
-                    tp.template.data.follow_flag = flag
+                    tp.template.data.slot.follow_flag = flag
                     world:entity(self.eid).slot.follow_flag = flag
                 end,
             })
