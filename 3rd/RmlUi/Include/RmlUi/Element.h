@@ -20,6 +20,7 @@ class Document;
 class StyleSheet;
 class Geometry;
 class StyleSheetPropertyDictionary;
+struct HtmlElement;
 
 class Element : public Node, public EnableObserverPtr<Element> {
 public:
@@ -53,6 +54,9 @@ public:
 	std::string GetInnerHTML() const;
 	std::string GetOuterHTML() const;
 	void SetInnerHTML(const std::string& html);
+	void SetOuterHTML(const std::string& html);
+	void InstanceOuter(const HtmlElement& html);
+	void InstanceInner(const HtmlElement& html);
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);
@@ -147,6 +151,7 @@ protected:
 	std::string id;
 	Document* owner_document;
 	DataModel* data_model = nullptr;
+	std::unique_ptr<HtmlElement> outer_html;
 	ElementAttributes attributes;
 	OwnedElementList children;
 	float z_index = 0;

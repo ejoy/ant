@@ -1,27 +1,12 @@
 #pragma once
 
+#include <map>
 #include <string>
 #include <stack>
+#include <vector>
+#include <variant>
 
-class HtmlHandler {
-public:
-    virtual void OnDocumentBegin() {}
-    virtual void OnDocumentEnd() {}
-    virtual void OnElementBegin(const char* szName) {}
-    virtual void OnElementClose() {}
-    virtual void OnElementEnd(const  char* szName, const std::string& inner_xml_data = {}) {}
-    virtual void OnCloseSingleElement(const  char* szName) {}
-    virtual void OnAttribute(const char* szName, const char* szValue) {}
-    virtual void OnTextBegin() {}
-    virtual void OnTextEnd(const char* szValue) {}
-    virtual void OnComment(const char* szText) {}
-    virtual void OnScriptBegin(unsigned int line) {}
-    virtual void OnScriptEnd(const char* szValue) {}
-    virtual void OnStyleBegin(unsigned int line) {}
-    virtual void OnStyleEnd(const char* szValue) {}
-    virtual void OnInnerXML(bool inner) {}
-    virtual bool IsEmbed() { return false; }
-};
+namespace Rml {
 
 enum class HtmlError {
     SPE_OK = 0,
@@ -69,20 +54,29 @@ private:
     unsigned int m_column;
 };
 
+using HtmlString = std::string;
+using HtmlAttributes = std::map<HtmlString, HtmlString>;
+using HtmlPosition = std::tuple<unsigned int, unsigned int>;
+
+struct HtmlElement;
+using HtmlNode = std::variant<HtmlElement, HtmlString>;
+
+struct HtmlElement {
+    HtmlString            tag;
+    HtmlPosition          position;
+    HtmlAttributes        attributes;
+    std::vector<HtmlNode> children;
+};
+
 class HtmlParser {
 public:
-    void Parse(std::string_view stream, HtmlHandler* handler);
+    HtmlElement Parse(std::string_view stream);
 
 private:
-    std::stack<std::string> m_stack_items;
     unsigned int m_line   = 0;
     unsigned int m_column = 0;
-    HtmlHandler* m_handler = nullptr;
     std::string_view m_buf;
     size_t           m_pos;
-    bool             m_inner_xml_data = false;
-	size_t           m_inner_xml_data_begin;
-	size_t           m_inner_xml_stack_index;
     void UndoChar();
     char GetChar();
     void SkipWhiteSpace();
@@ -92,9 +86,11 @@ private:
     void ThrowException(HtmlError code);
     void RethrowException(HtmlParserException& e, HtmlError nCheckCode, HtmlError nSubstituteCode);
 
-    void EnterOpenElement(char c);
-    void EnterClosingElement();
+    bool EnterOpenElement(std::stack<HtmlElement*>& stack, char c);
+    void EnterClosingElement(std::stack<HtmlElement*>& stack);
     void EnterComment();
     void EnterEntity(void* pData);
-    void EnterAttribute(void* pAttr, char c);
+    void EnterAttribute(HtmlString& name, HtmlString& value, char c);
 };
+
+}

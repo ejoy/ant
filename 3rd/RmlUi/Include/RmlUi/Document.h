@@ -9,6 +9,7 @@ class StyleSheet;
 class DataModel;
 class DataModelConstructor;
 class Factory;
+struct HtmlElement;
 
 class Document {
 public:
@@ -16,10 +17,11 @@ public:
 	virtual ~Document();
 	bool Load(const std::string& path);
 	const std::string& GetSourceURL() const;
-	void SetStyleSheet(std::shared_ptr<StyleSheet> style_sheet);
 	const std::shared_ptr<StyleSheet>& GetStyleSheet() const;
-	void LoadInlineScript(const std::string& content, const std::string& source_path, int source_line);
+	void LoadInlineScript(const std::string& content, int source_line);
 	void LoadExternalScript(const std::string& source_path);
+	void LoadInlineStyle(const std::string& content, int source_line);
+	void LoadExternalStyle(const std::string& source_path);
 	void SetDimensions(const Size& dimensions);
 	const Size& GetDimensions();
 	Element* ElementFromPoint(Point pt);
@@ -35,6 +37,7 @@ public:
 	ElementPtr CreateTextNode(const std::string& str);
 	void DefineCustomElement(const std::string& name);
 	double GetCurrentTime();
+	void Instance(const HtmlElement& html);
 
 private:
 	using DataModels = std::unordered_map<std::string, std::unique_ptr<DataModel>>;

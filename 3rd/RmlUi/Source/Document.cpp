@@ -27,150 +27,6 @@ Document::~Document() {
 	body.RemoveAllEvents();
 }
 
-using namespace std::literals;
-
-static bool isDataViewElement(Element* e) {
-	for (const std::string& name : DataUtilities::GetStructuralDataViewAttributeNames()) {
-		if (e->GetTagName() == name) {
-			return true;
-		}
-	}
-	return false;
-}
-
-class DocumentHtmlHandler: public HtmlHandler {
-	Document&             m_doc;
-	ElementAttributes     m_attributes;
-	std::shared_ptr<StyleSheet> m_style_sheet;
-	std::stack<Element*>  m_stack;
-	Element*              m_parent = nullptr;
-	Element*              m_current = nullptr;
-	size_t                m_line = 0;
-	bool				  m_inner_xml = false;
-
-public:
-	DocumentHtmlHandler(Document& doc)
-		: m_doc(doc)
-	{}
-	void OnInnerXML(bool inner) override { m_inner_xml = inner; }
-	void OnDocumentBegin() override {}
-	void OnDocumentEnd() override {
-		if (m_style_sheet) {
-			m_doc.SetStyleSheet(std::move(m_style_sheet));
-		}
-	}
-	void OnElementBegin(const char* szName) override {
-		if (m_inner_xml) {
-			return;
-		}
-		m_attributes.clear();
-
-		if (!m_current && szName == "body"sv) {
-			m_current = m_doc.GetBody();
-			return;
-		}
-		if (!m_current) {
-			return;
-		}
-		m_stack.push(m_current);
-		m_parent = m_current;
-		m_current = m_doc.CreateElement(szName).release();
-	}
-	void OnElementClose() override {
-		if (m_inner_xml) {
-			return;
-		}
-		if (m_parent && m_current) {
-			m_parent->AppendChild(ElementPtr(m_current));
-		}
-	}
-	void OnElementEnd(const  char* szName, const std::string& inner_xml_data) override {
-		if (!m_current || m_inner_xml) {
-			return;
-		}
-
-		if (!inner_xml_data.empty()) {
-			DataUtilities::ApplyStructuralDataViews(m_current, inner_xml_data);
-		}
-
-		if (m_stack.empty()) {
-			m_current = nullptr;
-		}
-		else {
-			m_current = m_stack.top();
-			m_stack.pop();
-		}
-	}
-	void OnCloseSingleElement(const  char* szName) override {
-		if (szName == "script"sv) {
-			auto it = m_attributes.find("path");
-			if (it != m_attributes.end()) {
-				m_doc.LoadExternalScript(it->second);
-			}
-		}
-		else if (szName == "style"sv) {
-			auto it = m_attributes.find("path");
-			if (it != m_attributes.end()) {
-				StyleSheetFactory::CombineStyleSheet(m_style_sheet, it->second);
-			}
-		}
-		else {
-			OnElementEnd(szName, {});
-		}
-	}
-	void OnAttribute(const char* szName, const char* szValue) override {
-		if (m_inner_xml) {
-			return;
-		}
-		if (m_current) {
-			m_current->SetAttribute(szName, szValue);
-		}
-		else {
-			m_attributes.emplace(szName, szValue);
-		}
-	}
-	void OnTextBegin() override {}
-	void OnTextEnd(const char* szValue) override {
-		if (m_inner_xml) {
-			return;
-		}
-		if (m_current) {
-			if (isDataViewElement(m_current) && DataUtilities::ApplyStructuralDataViews(m_current, szValue)) {
-				return;
-			}
-			auto text = m_doc.CreateTextNode(szValue);
-			if (text) {
-				m_current->AppendChild(std::move(text));
-			}
-		}
-	}
-	void OnComment(const char* szText) override {}
-	void OnScriptBegin(unsigned int line) override {
-		m_line = line;
-	}
-	void OnScriptEnd(const char* szValue) override {
-		auto it = m_attributes.find("path");
-		if (it == m_attributes.end()) {
-			m_doc.LoadInlineScript(szValue, m_doc.GetSourceURL(), m_line);
-		}
-		else {
-			m_doc.LoadExternalScript(it->second);
-		}
-	}
-	void OnStyleBegin(unsigned int line) override {
-		m_line = line;
-	}
-	void OnStyleEnd(const char* szValue) override {
-		auto it = m_attributes.find("path");
-		if (it != m_attributes.end()) {
-			StyleSheetFactory::CombineStyleSheet(m_style_sheet, it->second);
-		}
-		else {
-			StyleSheetFactory::CombineStyleSheet(m_style_sheet, szValue, m_doc.GetSourceURL(), m_line);
-		}
-	}
-};
-
 bool Document::Load(const std::string& path) {
 	std::ifstream input(GetFileInterface()->GetPath(path));
 	if (!input) {
@@ -182,8 +38,8 @@ bool Document::Load(const std::string& path) {
 
 	try {
 		HtmlParser parser;
-		DocumentHtmlHandler handler(*this);
-		parser.Parse(data, &handler);
+		HtmlElement dom = parser.Parse(data);
+		Instance(dom);
 	}
 	catch (HtmlParserException& e) {
 		Log::Message(Log::Level::Error, "%s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
@@ -196,33 +52,70 @@ bool Document::Load(const std::string& path) {
 	return true;
 }
 
-const std::string& Document::GetSourceURL() const {
-	return source_url;
+void Document::Instance(const HtmlElement& html) {
+	assert(html.children.size() == 1);
+	auto const& rootHtml = std::get<HtmlElement>(html.children[0]);
+	assert(rootHtml.children.size() == 2);
+	auto const& headHtml = std::get<HtmlElement>(rootHtml.children[0]);
+	auto const& bodyHtml = std::get<HtmlElement>(rootHtml.children[1]);
+	
+	style_sheet.reset(new StyleSheet);
+
+	for (auto const& node : headHtml.children) {
+		auto element = std::get_if<HtmlElement>(&node);
+		if (element) {
+			if (element->tag == "script") {
+				if (element->children.size() > 0) {
+					LoadInlineScript(std::get<HtmlString>(element->children[0]), std::get<0>(element->position));
+				}
+				else {
+					auto it = element->attributes.find("path");
+					if (it != element->attributes.end()) {
+						LoadExternalScript(it->second);
+					}
+				}
+			}
+			else if (element->tag == "style") {
+				if (element->children.size() > 0) {
+					LoadInlineStyle(std::get<HtmlString>(element->children[0]), std::get<0>(element->position));
+				}
+				else {
+					auto it = element->attributes.find("path");
+					if (it != element->attributes.end()) {
+						LoadExternalStyle(it->second);
+					}
+				}
+			}
+		}
+	}
+	style_sheet->BuildNodeIndex();
+
+	body.InstanceOuter(bodyHtml);
+	body.DirtyDefinition();
 }
 
-void Document::SetStyleSheet(std::shared_ptr<StyleSheet> _style_sheet) {
-	if (style_sheet == _style_sheet)
-		return;
-
-	style_sheet = std::move(_style_sheet);
-	
-	if (style_sheet) {
-		style_sheet->BuildNodeIndex();
-	}
-
-	body.DirtyDefinition();
+const std::string& Document::GetSourceURL() const {
+	return source_url;
 }
 
 const std::shared_ptr<StyleSheet>& Document::GetStyleSheet() const {
 	return style_sheet;
 }
 
-void Document::LoadInlineScript(const std::string& content, const std::string& source_path, int source_line) {
-	GetPlugin()->OnLoadInlineScript(this, content, source_path, source_line);
+void Document::LoadInlineScript(const std::string& content, int source_line) {
+	GetPlugin()->OnLoadInlineScript(this, content, GetSourceURL(), source_line);
 }
 
 void Document::LoadExternalScript(const std::string& source_path) {
 	GetPlugin()->OnLoadExternalScript(this, source_path);
+}
+
+void Document::LoadInlineStyle(const std::string& content, int source_line) {
+	StyleSheetFactory::CombineStyleSheet(style_sheet, content, GetSourceURL(), source_line);
+}
+
+void Document::LoadExternalStyle(const std::string& source_path) {
+	StyleSheetFactory::CombineStyleSheet(style_sheet, source_path);
 }
 
 void Document::UpdateDataModel(bool clear_dirty_variables) {

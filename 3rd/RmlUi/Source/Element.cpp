@@ -313,105 +313,81 @@ int Element::GetNumChildren() const {
 	return (int)children.size();
 }
 
-// TODO: remove this function, duplicate code in Document.cpp
-static bool isDataViewElement(Element* e) {
-	for (const std::string& name : DataUtilities::GetStructuralDataViewAttributeNames()) {
-		if (e->GetTagName() == name) {
-			return true;
-		}
-	}
-	return false;
-}
-
-class EmbedHtmlHandler : public HtmlHandler {
-	Document*				m_doc{ nullptr };
-	ElementAttributes		m_attributes;
-	std::stack<Element*>	m_stack;
-	Element*				m_parent{ nullptr };
-	Element*				m_current{ nullptr };
-	bool					m_inner_xml = false;
-public:
-	EmbedHtmlHandler(Element* current)
-		: m_current{ current }
-	{
-		m_doc = m_current->GetOwnerDocument();
-	}
-	void OnInnerXML(bool inner) override { m_inner_xml = inner; }
-	bool IsEmbed() override { return true; }
-	void OnElementBegin(const char* szName) override {
-		if (m_inner_xml) {
-			return;
-		}
-		m_attributes.clear();
-		if (!m_current) {
-			return;
-		}
-		m_stack.push(m_current);
-		m_parent = m_current;
-		m_current = m_doc->CreateElement(szName).release();
-	}
-	void OnElementClose() override {
-		if (m_inner_xml) {
-			return;
-		}
-		if (m_parent && m_current) {
-			m_parent->AppendChild(ElementPtr(m_current));
-		}
-	}
-	void OnElementEnd(const  char* szName, const std::string& inner_xml_data) override {
-		if (!m_current || m_inner_xml) {
-			return;
-		}
-
-		if (!inner_xml_data.empty()) {
-			DataUtilities::ApplyStructuralDataViews(m_current, inner_xml_data);
-		}
-
-		if (m_stack.empty()) {
-			m_current = nullptr;
-		}
-		else {
-			m_current = m_stack.top();
-			m_stack.pop();
-		}
-	}
-	void OnCloseSingleElement(const  char* szName) override {
-		OnElementEnd(szName, {});
-	}
-	void OnAttribute(const char* szName, const char* szValue) override {
-		if (m_inner_xml) {
-			return;
-		}
-		if (m_current) {
-			m_current->SetAttribute(szName, szValue);
-		}
-		else {
-			m_attributes.emplace(szName, szValue);
-		}
-	}
-	void OnTextEnd(const char* szValue) override {
-		if (m_inner_xml) {
-			return;
-		}
-		if (m_current) {
-			if (isDataViewElement(m_current) && DataUtilities::ApplyStructuralDataViews(m_current, szValue)) {
-				return;
-			}
-			auto text = m_doc->CreateTextNode(szValue);
-			if (text) {
-				m_current->AppendChild(std::move(text));
-			}
-		}
-	}
-};
-
 void Element::SetInnerHTML(const std::string& html) {
 	if (html.empty()) {
 		return;
 	}
-	HtmlParser parser;
-	EmbedHtmlHandler handler(this);
-	parser.Parse(html, &handler);
+	try {
+		HtmlParser parser;
+		HtmlElement dom = parser.Parse(html);
+		InstanceInner(dom);
+	}
+	catch (HtmlParserException& e) {
+		Log::Message(Log::Level::Error, "%s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
+		return;
+	}
+}
+
+void Element::SetOuterHTML(const std::string& html) {
+	if (html.empty()) {
+		return;
+	}
+	try {
+		HtmlParser parser;
+		HtmlElement dom = parser.Parse(html);
+		InstanceOuter(dom);
+	}
+	catch (HtmlParserException& e) {
+		Log::Message(Log::Level::Error, "%s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
+		return;
+	}
+}
+
+template<class> inline constexpr bool always_false_v = false;
+
+void Element::InstanceOuter(const HtmlElement& html) {
+	tag = html.tag;
+	attributes.clear();
+	for (auto const& [name, value] : html.attributes) {
+		attributes[name] = value;
+	}
+	OnAttributeChange(attributes);
+
+	if (attributes.find("data-for") != attributes.end()) {
+		outer_html.reset(new HtmlElement(html));
+		for (auto it = outer_html->attributes.begin(); it != outer_html->attributes.end(); ++it) {
+			if (it->first == "data-for") {
+				outer_html->attributes.erase(it);
+				break;
+			}
+		}
+		return;
+	}
+	InstanceInner(html);
+}
+
+void Element::InstanceInner(const HtmlElement& html) {
+	for (auto const& node : html.children) {
+		std::visit([this](auto&& arg) {
+			using T = std::decay_t<decltype(arg)>;
+			if constexpr (std::is_same_v<T, HtmlElement>) {
+				ElementPtr e = owner_document->CreateElement(arg.tag);
+				if (e) {
+					e->InstanceOuter(arg);
+					AppendChild(std::move(e));
+				}
+			}
+			else if constexpr (std::is_same_v<T, HtmlString>) {
+				ElementPtr e = owner_document->CreateTextNode(arg);
+				if (e) {
+					AppendChild(std::move(e));
+				}
+			}
+			else {
+				static_assert(always_false_v<T>, "non-exhaustive visitor!");
+			}
+		}, node);
+	}
 }
 
 Element* Element::AppendChild(ElementPtr child) {
@@ -804,8 +780,16 @@ void Element::SetDataModel(DataModel* new_data_model)  {
 
 	data_model = new_data_model;
 
-	if (data_model)
-		DataUtilities::ApplyDataViewsControllers(this);
+	if (data_model) {
+		if (attributes.find("data-for") != attributes.end()) {
+			if (outer_html) {
+				DataUtilities::ApplyDataViewFor(this, *outer_html);
+			}
+		}
+		else {
+			DataUtilities::ApplyDataViewsControllers(this);
+		}
+	}
 
 	for (ElementPtr& child : children)
 		child->SetDataModel(new_data_model);

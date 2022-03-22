@@ -384,35 +384,28 @@ std::string DataViewText::BuildText() const
 DataViewFor::DataViewFor(Element* element) : DataView(element)
 {}
 
-bool DataViewFor::Initialize(DataModel& model, Element* element, const std::string& in_expression, const std::string& in_html_content)
-{
-	html_contents = in_html_content;
+bool DataViewFor::Initialize(DataModel& model, Element* element, const std::string& in_expression, const HtmlElement& outer_html) {
+	html = &outer_html;
 
 	std::vector<std::string> iterator_container_pair;
 	StringUtilities::ExpandString(iterator_container_pair, in_expression, ':');
 
-	if (iterator_container_pair.empty() || iterator_container_pair.size() > 2 || iterator_container_pair.front().empty() || iterator_container_pair.back().empty())
-	{
+	if (iterator_container_pair.empty() || iterator_container_pair.size() > 2 || iterator_container_pair.front().empty() || iterator_container_pair.back().empty()) {
 		Log::Message(Log::Level::Warning, "Invalid syntax in data-for '%s'", in_expression.c_str());
 		return false;
 	}
 
-	if (iterator_container_pair.size() == 2)
-	{
+	if (iterator_container_pair.size() == 2) {
 		std::vector<std::string> iterator_index_pair;
 		StringUtilities::ExpandString(iterator_index_pair, iterator_container_pair.front(), ',');
-
-		if (iterator_index_pair.empty())
-		{
+		if (iterator_index_pair.empty()) {
 			Log::Message(Log::Level::Warning, "Invalid syntax in data-for '%s'", in_expression.c_str());
 			return false;
 		}
-		else if (iterator_index_pair.size() == 1)
-		{
+		else if (iterator_index_pair.size() == 1) {
 			iterator_name = iterator_index_pair.front();
 		}
-		else if (iterator_index_pair.size() == 2)
-		{
+		else if (iterator_index_pair.size() == 2) {
 			iterator_name = iterator_index_pair.front();
 			iterator_index_name = iterator_index_pair.back();
 		}
@@ -420,37 +413,20 @@ bool DataViewFor::Initialize(DataModel& model, Element* element, const std::stri
 
 	if (iterator_name.empty())
 		iterator_name = "it";
-
 	if (iterator_index_name.empty())
 		iterator_index_name = "it_index";
-
 	const std::string& container_name = iterator_container_pair.back();
-
 	container_address = model.ResolveAddress(container_name, element);
 	if (container_address.empty())
 		return false;
-
 	element->SetVisible(false);
-
-	// Copy over the attributes, but remove the 'data-for' which would otherwise recreate the data-for loop on all constructed children recursively.
-	attributes = element->GetAttributes();
-	for (auto it = attributes.begin(); it != attributes.end(); ++it)
-	{
-		if (it->first == "data-for")
-		{
-			attributes.erase(it);
-			break;
-		}
-	}
-
 	return true;
 }
 
 
-bool DataViewFor::Update(DataModel& model)
-{
+bool DataViewFor::Update(DataModel& model) {
 	DataVariable variable = model.GetVariable(container_address);
-	if (!variable)
+	if (!variable || !html)
 		return false;
 
 	bool result = false;
@@ -458,13 +434,8 @@ bool DataViewFor::Update(DataModel& model)
 	const int num_elements = (int)elements.size();
 	Element* element = GetElement();
 
-	for (int i = 0; i < std::max(size, num_elements); i++)
-	{
-		if (i >= num_elements)
-		{
-			ElementPtr new_element_ptr = element->GetOwnerDocument()->CreateElement(element->GetTagName());
-			new_element_ptr->SetAttributes(attributes);
-
+	for (int i = 0; i < std::max(size, num_elements); i++) {
+		if (i >= num_elements) {
 			DataAddress iterator_address;
 			iterator_address.reserve(container_address.size() + 1);
 			iterator_address = container_address;
@@ -474,18 +445,15 @@ bool DataViewFor::Update(DataModel& model)
 				{"literal"}, {"int"}, {i}
 			};
 
+			ElementPtr new_element_ptr = element->GetOwnerDocument()->CreateElement(element->GetTagName());
+			new_element_ptr->InstanceOuter(*html);
 			model.InsertAlias(new_element_ptr.get(), iterator_name, std::move(iterator_address));
 			model.InsertAlias(new_element_ptr.get(), iterator_index_name, std::move(iterator_index_address));
-
 			Element* new_element = element->GetParentNode()->InsertBefore(std::move(new_element_ptr), element);
 			elements.push_back(new_element);
-
-			elements[i]->SetInnerHTML(html_contents);
-
 			assert(i < (int)elements.size());
 		}
-		if (i >= size)
-		{
+		if (i >= size) {
 			model.EraseAliases(elements[i]);
 			elements[i]->GetParentNode()->RemoveChild(elements[i]).reset();
 			elements[i] = nullptr;

@@ -4,10 +4,8 @@
 #include <string.h>
 #include <list>
 
-struct HtmlAttribute {
-	std::string m_name;
-	std::string m_value;
-};
+namespace Rml {
+
 struct HtmlEntity {
 	const char* m_entity;
 	char m_value;
@@ -83,10 +81,13 @@ static bool IsCharNameValid(char c) {
 	return false;
 }
 
-void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
+HtmlElement HtmlParser::Parse(std::string_view stream) {
+	HtmlElement root;
+    std::stack<HtmlElement*> stack;
+	stack.push(&root);
+
 	m_buf = stream;
 	m_pos = 0;
-	m_handler = handler;
 	m_line = 0;
 	m_column = 0;
 
@@ -98,11 +99,7 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 		st_style,
 		st_open,
 		st_analys,
-		st_element,
 		st_close,
-		st_remark,
-		st_cdata,
-		st_entity,
 		st_finish,
 		st_finish_extra, 
 	};
@@ -111,7 +108,6 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 	std::string temp;
 	std::string accum;
 	bool open = false;
-	m_handler->OnDocumentBegin();
 	while (!IsEOF()) {
 		char c = GetChar();
 
@@ -145,33 +141,24 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 				break;
 			case '/':
 				state = st_close;
-				EnterClosingElement();
-				if (m_stack_items.empty() && !handler->IsEmbed()) {
+				EnterClosingElement(stack);
+				if (stack.empty()) {
 					state = st_finish;
 					break;
 				}
 				state = st_ready;
 				break;
 			default:
-				state = st_element;
-				EnterOpenElement(c);
-				//assert(!m_stack_items.empty());
-				open = true;
-				if (!handler->IsEmbed()) {
-					if (m_stack_items.top() == "script") {
+				state = st_ready;
+				if (EnterOpenElement(stack, c)) {
+					HtmlElement& current = *stack.top();
+					open = true;
+					if (current.tag == "script") {
 						state = st_script;
-						m_handler->OnScriptBegin(GetLine());
 					}
-					else if (m_stack_items.top() == "style") {
+					else if (current.tag == "style") {
 						state = st_style;
-						m_handler->OnStyleBegin(GetLine());
 					}
-					else {
-						state = st_ready;
-					}
-				}
-				else {
-					state = st_ready;
 				}
 				break;
 			}
@@ -180,7 +167,6 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 		case st_analys: {
 			switch (c) {
 			case '-':
-				state = st_remark;
 				EnterComment();
 				state = st_ready;
 				break;
@@ -203,8 +189,6 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 			case '&':
 				if (!open)
 					ThrowException(HtmlError::SPE_ENTITY_DOC_OPEN);
-				m_handler->OnTextBegin();
-				state = st_entity;
 				EnterEntity(&temp);
 				accum += temp;
 				state = st_text;
@@ -212,7 +196,6 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 			default:
 				if (!open)
 					ThrowException(HtmlError::SPE_TEXT_BEFORE_ROOT);
-				m_handler->OnTextBegin();
 				accum += c;
 				state = st_text;
 				break;
@@ -230,12 +213,13 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 					&& m_buf[m_pos + 5] == 'p'
 					&& m_buf[m_pos + 6] == 't'
 					&& m_buf[m_pos + 7] == '>') {
-					m_handler->OnScriptEnd(accum.c_str());
-					m_pos += 8;
+					m_pos += 1;
+					HtmlElement& current = *stack.top();
+					current.children.emplace_back(HtmlString{accum});
 					accum.erase();
+					EnterClosingElement(stack);
 					open = false;
-					m_stack_items.pop();
-					if (m_stack_items.empty()) {
+					if (stack.empty()) {
 						state = st_finish;
 						break;
 					}
@@ -259,12 +243,13 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 				 && m_buf[m_pos + 4] == 'l'
 				 && m_buf[m_pos + 5] == 'e'
 				 && m_buf[m_pos + 6] == '>') {
-					m_handler->OnStyleEnd(accum.c_str());
-					m_pos += 7;
+					m_pos += 1;
+					HtmlElement& current = *stack.top();
+					current.children.emplace_back(HtmlString{accum});
 					accum.erase();
+					EnterClosingElement(stack);
 					open = false;
-					m_stack_items.pop();
-					if (m_stack_items.empty()) {
+					if (stack.empty()) {
 						state = st_finish;
 						break;
 					}
@@ -280,13 +265,14 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 			break;
 		case st_text:
 			switch (c) {
-			case '<':
-				m_handler->OnTextEnd(accum.c_str());
+			case '<': {
+				HtmlElement& current = *stack.top();
+				current.children.emplace_back(HtmlString{accum});
 				accum.erase();
 				state = st_open;
 				break;
+			}
 			case '&':
-				state = st_entity;
 				EnterEntity(&temp);
 				accum = accum + temp;
 				state = st_text;
@@ -327,21 +313,26 @@ void HtmlParser::Parse(std::string_view stream, HtmlHandler* handler) {
 		ThrowException(HtmlError::SPE_EMPTY);
 		break;
 	case st_ready:
-		if (m_stack_items.size() != 0)
+		if (stack.size() != 1)
 			ThrowException(HtmlError::SPE_ROOT_CLOSE);
 		break;
 	case st_text:
 		ThrowException(HtmlError::SPE_TEXT_AFTER_ROOT);
 		break;
 	}
-
-	m_handler->OnDocumentEnd();
+	return root;
 }
 
-void HtmlParser::EnterOpenElement(char c) {
-	if (!::IsFirstNameValid(c))
+bool HtmlParser::EnterOpenElement(std::stack<HtmlElement*>& stack, char c) {
+	if (!IsFirstNameValid(c))
 		ThrowException(HtmlError::SPE_ELEMENT_NAME);
-	std::list<std::string> listAttrNames;
+
+	HtmlElement& element = std::get<HtmlElement>(
+		stack.top()->children.emplace_back(HtmlElement{})
+	);
+	stack.push(&element);
+	element.position = {GetLine(), GetColumn()};
+
 	std::string accum;
 	accum = c;
 
@@ -349,18 +340,16 @@ void HtmlParser::EnterOpenElement(char c) {
 	TEState state = st_name;
 
 	try {
-		while (true) {
+		for (;;) {
 			char c = GetChar();
 			switch (state) {
 			case st_name:
 				switch (c) {
 				case '>':
-					m_handler->OnElementBegin(accum.c_str());
-					m_stack_items.push(accum);
-					m_handler->OnElementClose();
-					return;
+					element.tag = accum;
+					return true;
 				case '/':
-					m_handler->OnElementBegin(accum.c_str());
+					element.tag = accum;
 					state = st_single;
 					break;
 				case ' ':
@@ -368,12 +357,11 @@ void HtmlParser::EnterOpenElement(char c) {
 				case '\n':
 				case '\r':
 					SkipWhiteSpace();
-					m_handler->OnElementBegin(accum.c_str());
-					m_stack_items.push(accum);
+					element.tag = accum;
 					state = st_end_name;
 					break;
 				default:
-					if (!::IsCharNameValid(c))
+					if (!IsCharNameValid(c))
 						ThrowException(HtmlError::SPE_ELEMENT_NAME);
 					else
 						accum += c;
@@ -381,18 +369,16 @@ void HtmlParser::EnterOpenElement(char c) {
 				break;
 			case st_end_name:
 				if (c == '/') {
-					m_stack_items.pop();
 					state = st_single;
 				}
 				else {
-					HtmlAttribute attr;
-					EnterAttribute(&attr, c);
-					for (auto i = listAttrNames.begin(); i != listAttrNames.end(); i++) {
-						if (strcmp((*i).c_str(), attr.m_name.c_str()) == 0)
+					HtmlString name, value;
+					EnterAttribute(name, value, c);
+					for (auto const& [n, _] : element.attributes) {
+						if (n == name)
 							ThrowException(HtmlError::SPE_DUBLICATE_ATTRIBUTE);
 					}
-					listAttrNames.push_back(attr.m_name);
-					m_handler->OnAttribute(attr.m_name.c_str(), attr.m_value.c_str());
+					element.attributes.emplace(name, value);
 					SkipWhiteSpace();
 					state = st_end_attr;
 				}
@@ -400,29 +386,18 @@ void HtmlParser::EnterOpenElement(char c) {
 			case st_end_attr:
 				switch (c) {
 				case '/':
-					m_stack_items.pop();
 					state = st_single;
 					break;
 				case '>':
-					m_handler->OnElementClose();
-					if (auto it = std::find(listAttrNames.begin(), listAttrNames.end(), std::string("data-for")); it != listAttrNames.end()) {
-						if (!m_inner_xml_data) {
-							m_inner_xml_data = true;
-							m_inner_xml_data_begin = m_pos;
-							m_inner_xml_stack_index = m_stack_items.size();
-							m_handler->OnInnerXML(true);
-						}
-					}
-					return;
+					return true;
 				default:
-					HtmlAttribute attr;
-					EnterAttribute(&attr, c);
-					for (auto i = listAttrNames.begin(); i != listAttrNames.end(); i++) {
-						if (strcmp((*i).c_str(), attr.m_name.c_str()) == 0)
+					HtmlString name, value;
+					EnterAttribute(name, value, c);
+					for (auto const& [n, _] : element.attributes) {
+						if (n == name)
 							ThrowException(HtmlError::SPE_DUBLICATE_ATTRIBUTE);
 					}
-					listAttrNames.push_back(attr.m_name);
-					m_handler->OnAttribute(attr.m_name.c_str(), attr.m_value.c_str());
+					element.attributes.emplace(name, value);
 					SkipWhiteSpace();
 					state = st_end_attr;
 				}
@@ -436,9 +411,8 @@ void HtmlParser::EnterOpenElement(char c) {
 					ThrowException(HtmlError::SPE_WHITESPASE_CLOSE);
 					break;
 				case '>':
-					m_handler->OnElementClose();
-					m_handler->OnCloseSingleElement(accum.c_str());
-					return;
+					stack.pop();
+					return false;
 				default:
 					ThrowException(HtmlError::SPE_MISSING_CLOSING);
 					break;
@@ -449,11 +423,12 @@ void HtmlParser::EnterOpenElement(char c) {
 	}
 	catch (HtmlParserException& e) {
 		RethrowException(e, HtmlError::SPE_EOF, HtmlError::SPE_MISSING_CLOSING);
+		return false;
 	}
 }
 
-void HtmlParser::EnterClosingElement() {
-	if (m_stack_items.size() == 0)
+void HtmlParser::EnterClosingElement(std::stack<HtmlElement*>& stack) {
+	if (stack.empty())
 		ThrowException(HtmlError::SPE_MATCH);
 	size_t tag_begin = m_pos - 1;
 	typedef enum { st_begin, st_name, st_end } TEState;
@@ -467,7 +442,7 @@ void HtmlParser::EnterClosingElement() {
 			case st_begin:
 				if (IsSpace(c))
 					ThrowException(HtmlError::SPE_WHITESPASE_CLOSE);
-				if (!::IsFirstNameValid(c))
+				if (!IsFirstNameValid(c))
 					ThrowException(HtmlError::SPE_ELEMENT_NAME);
 				accum += c;
 				state = st_name;
@@ -475,17 +450,10 @@ void HtmlParser::EnterClosingElement() {
 			case st_name:
 				switch (c) {
 				case '>':
-					if (m_stack_items.top() != accum)
+					if (stack.top()->tag != accum)
 						ThrowException(HtmlError::SPE_MATCH);
-					if (m_inner_xml_data && m_stack_items.size() == m_inner_xml_stack_index) {
-						inner_xml_data = std::string(&m_buf[m_inner_xml_data_begin], tag_begin - m_inner_xml_data_begin - 1);
-						m_inner_xml_data = false;
-						m_handler->OnInnerXML(false);
-					}
-					m_handler->OnElementEnd(accum.c_str(), inner_xml_data);
-					m_stack_items.pop();
+					stack.pop();
 					return;
-					break;
 				case ' ':
 				case '\t':
 				case '\n':
@@ -494,7 +462,7 @@ void HtmlParser::EnterClosingElement() {
 					state = st_end;
 					break;
 				default:
-					if (!::IsCharNameValid(c))
+					if (!IsCharNameValid(c))
 						ThrowException(HtmlError::SPE_ELEMENT_NAME);
 					accum += c;
 				}
@@ -502,12 +470,10 @@ void HtmlParser::EnterClosingElement() {
 			case st_end:
 				if (c != '>')
 					ThrowException(HtmlError::SPE_MISSING_CLOSING);
-				if (m_stack_items.top() != accum)
+				if (stack.top()->tag != accum)
 					ThrowException(HtmlError::SPE_MATCH);
-				m_handler->OnElementEnd(accum.c_str());
-				m_stack_items.pop();
+				stack.pop();
 				return;
-				break;
 			}
 		}
 	}
@@ -545,7 +511,7 @@ void HtmlParser::EnterComment() {
 			case st_finish:
 				if (c != '>')
 					ThrowException(HtmlError::SPE_MISSING_CLOSING);
-				m_handler->OnComment(accum.c_str());
+				// Comment: accum
 				return;
 			}
 		}
@@ -578,7 +544,7 @@ void HtmlParser::EnterEntity(void* value) {
 				if (c == 'x')
 					state = st_hex;
 				else {
-					if (!::IsDigit(c))
+					if (!IsDigit(c))
 						ThrowException(HtmlError::SPE_REF_SYMBOL);
 					else {
 						accum += c;
@@ -587,13 +553,13 @@ void HtmlParser::EnterEntity(void* value) {
 				}
 				break;
 			case st_dec:
-				if (!::IsDigit(c))
+				if (!IsDigit(c))
 					ThrowException(HtmlError::SPE_REF_SYMBOL);
 				else
 					accum += c;
 				break;
 			case st_hex:
-				if (!::IsHexDigit(c))
+				if (!IsHexDigit(c))
 					ThrowException(HtmlError::SPE_REF_SYMBOL);
 				else
 					accum += c;
@@ -649,12 +615,10 @@ void HtmlParser::EnterEntity(void* value) {
 	}
 }
 
-void HtmlParser::EnterAttribute(void* attr, char c) {
-	HtmlAttribute* attribute = (HtmlAttribute*)attr;
-	if (!::IsFirstNameValid(c))
+void HtmlParser::EnterAttribute(HtmlString& name, HtmlString& value, char c) {
+	if (!IsFirstNameValid(c))
 		ThrowException(HtmlError::SPE_ATTR_NAME);
-	attribute->m_name = c;
-	attribute->m_value.clear();
+	name = c;
 	typedef enum { st_name, st_end_name, st_begin_value, st_value } TEState;
 	TEState state = st_name;
 	char open = 0;
@@ -679,9 +643,9 @@ void HtmlParser::EnterAttribute(void* attr, char c) {
 					state = st_end_name;
 					break;
 				default:
-					if (!::IsCharNameValid(c))
+					if (!IsCharNameValid(c))
 						ThrowException(HtmlError::SPE_ATTR_NAME);
-					attribute->m_name += c;
+					name += c;
 				}
 				break;
 			case st_end_name:
@@ -707,7 +671,7 @@ void HtmlParser::EnterAttribute(void* attr, char c) {
 // 					attribute->m_value += temp;
 // 					break;
 // 				default:
-					attribute->m_value += c;
+					value += c;
 //				}
 			}
 		}
@@ -781,4 +745,6 @@ void HtmlParser::RethrowException(HtmlParserException& e, HtmlError nCheckCode, 
 	if (e.GetCode() == nCheckCode)
 		e.m_code = nSubstituteCode;
 	throw e;
+}
+
 }
