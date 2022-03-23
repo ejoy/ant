@@ -384,9 +384,7 @@ std::string DataViewText::BuildText() const
 DataViewFor::DataViewFor(Element* element) : DataView(element)
 {}
 
-bool DataViewFor::Initialize(DataModel& model, Element* element, const std::string& in_expression, const HtmlElement& outer_html) {
-	html = &outer_html;
-
+bool DataViewFor::Initialize(DataModel& model, Element* element, const std::string& in_expression, const std::string&) {
 	std::vector<std::string> iterator_container_pair;
 	StringUtilities::ExpandString(iterator_container_pair, in_expression, ':');
 
@@ -420,50 +418,39 @@ bool DataViewFor::Initialize(DataModel& model, Element* element, const std::stri
 	if (container_address.empty())
 		return false;
 	element->SetVisible(false);
+	element->RemoveAttribute("data-for");
 	return true;
 }
 
 
 bool DataViewFor::Update(DataModel& model) {
 	DataVariable variable = model.GetVariable(container_address);
-	if (!variable || !html)
+	if (!variable)
 		return false;
 
-	bool result = false;
-	const int size = variable.Size();
-	const int num_elements = (int)elements.size();
+	size_t size = (size_t)variable.Size();
 	Element* element = GetElement();
 
-	for (int i = 0; i < std::max(size, num_elements); i++) {
-		if (i >= num_elements) {
-			DataAddress iterator_address;
-			iterator_address.reserve(container_address.size() + 1);
-			iterator_address = container_address;
-			iterator_address.push_back(DataAddressEntry(i));
-
-			DataAddress iterator_index_address = {
-				{"literal"}, {"int"}, {i}
-			};
-
-			ElementPtr new_element_ptr = element->GetOwnerDocument()->CreateElement(element->GetTagName());
-			new_element_ptr->InstanceOuter(*html);
-			model.InsertAlias(new_element_ptr.get(), iterator_name, std::move(iterator_address));
-			model.InsertAlias(new_element_ptr.get(), iterator_index_name, std::move(iterator_index_address));
-			Element* new_element = element->GetParentNode()->InsertBefore(std::move(new_element_ptr), element);
-			elements.push_back(new_element);
-			assert(i < (int)elements.size());
-		}
-		if (i >= size) {
-			model.EraseAliases(elements[i]);
-			elements[i]->GetParentNode()->RemoveChild(elements[i]).reset();
-			elements[i] = nullptr;
-		}
+	for (size_t i = num_elements; i < size; ++i) {
+		DataAddress iterator_address;
+		iterator_address.reserve(container_address.size() + 1);
+		iterator_address = container_address;
+		iterator_address.push_back(DataAddressEntry((int)i));
+		DataAddress iterator_index_address = {
+			{"literal"}, {"int"}, {(int)i}
+		};
+		ElementPtr sibling = element->Clone();
+		model.InsertAlias(sibling.get(), iterator_name, std::move(iterator_address));
+		model.InsertAlias(sibling.get(), iterator_index_name, std::move(iterator_index_address));
+		element->GetParentNode()->InsertBefore(std::move(sibling), element);
 	}
-
-	if (num_elements > size)
-		elements.resize(size);
-
-	return result;
+	for (size_t i = size; i < num_elements; ++i) {
+		Element* sibling = element->GetPreviousSibling();
+		model.EraseAliases(sibling);
+		element->GetParentNode()->RemoveChild(sibling);
+	}
+	num_elements = size;
+	return true;
 }
 
 std::vector<std::string> DataViewFor::GetVariableNameList() const {

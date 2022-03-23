@@ -147,8 +147,7 @@ private:
 class DataViewFor final : public DataView {
 public:
 	DataViewFor(Element* element);
-	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override { return false; };
-	bool Initialize(DataModel& model, Element* element, const std::string& expression, const HtmlElement& outer_html);
+	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
 	bool Update(DataModel& model) override;
 	std::vector<std::string> GetVariableNameList() const override;
 
@@ -156,8 +155,7 @@ private:
 	DataAddress container_address;
 	std::string iterator_name;
 	std::string iterator_index_name;
-	const HtmlElement* html;
-	ElementList elements;
+	size_t num_elements = 0;
 };
 
 }

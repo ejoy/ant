@@ -280,13 +280,6 @@ void Element::RemoveAttribute(const std::string& name) {
 	}
 }
 
-void Element::SetAttributes(const ElementAttributes& _attributes) {
-	attributes.reserve(attributes.size() + _attributes.size());
-	for (auto& pair : _attributes)
-		attributes[pair.first] = pair.second;
-	OnAttributeChange(_attributes);
-}
-
 const std::string& Element::GetTagName() const {
 	return tag;
 }
@@ -352,17 +345,6 @@ void Element::InstanceOuter(const HtmlElement& html) {
 		attributes[name] = value;
 	}
 	OnAttributeChange(attributes);
-
-	if (attributes.find("data-for") != attributes.end()) {
-		outer_html.reset(new HtmlElement(html));
-		for (auto it = outer_html->attributes.begin(); it != outer_html->attributes.end(); ++it) {
-			if (it->first == "data-for") {
-				outer_html->attributes.erase(it);
-				break;
-			}
-		}
-		return;
-	}
 	InstanceInner(html);
 }
 
@@ -390,8 +372,23 @@ void Element::InstanceInner(const HtmlElement& html) {
 	}
 }
 
-Element* Element::AppendChild(ElementPtr child) {
-	assert(child);
+ElementPtr Element::Clone(bool deep) const {
+	ElementPtr e = owner_document->CreateElement(tag);
+	if (e) {
+		for (auto const& [name, value] : attributes) {
+			e->attributes[name] = value;
+		}
+		e->OnAttributeChange(attributes);
+		if (deep) {
+			for (auto const& child : children) {
+				e->AppendChild(child->Clone(true));
+			}
+		}
+	}
+	return e;
+}
+
+Element* Element::AppendChild(ElementPtr child) { 
 	Element* child_ptr = child.get();
 	GetLayout().InsertChild(child->GetLayout(), (uint32_t)children.size());
 	children.insert(children.end(), std::move(child));
@@ -401,126 +398,88 @@ Element* Element::AppendChild(ElementPtr child) {
 	return child_ptr;
 }
 
-Element* Element::InsertBefore(ElementPtr child, Element* adjacent_element) {
-	assert(child);
-	size_t child_index = 0;
-	bool found_child = false;
-	if (adjacent_element) {
-		for (child_index = 0; child_index < children.size(); child_index++) {
-			if (children[child_index].get() == adjacent_element) {
-				found_child = true;
-				break;
-			}
+ElementPtr Element::RemoveChild(Element* child) {
+	size_t index = GetChildIndex(child);
+	if (index == -1) {
+		return nullptr;
+	}
+	ElementPtr detached_child = std::move(children[index]);
+	children.erase(children.begin() + index);
+	detached_child->SetParent(nullptr);
+	GetLayout().RemoveChild(child->GetLayout());
+	DirtyStackingContext();
+	DirtyStructure();
+	return detached_child;
+}
+
+size_t Element::GetChildIndex(Element* child) const {
+	for (size_t i = 0; i < children.size(); ++i) {
+		if (children[i].get() == child) {
+			return i;
 		}
 	}
+	return size_t(-1);
+}
 
-	Element* child_ptr = nullptr;
-
-	if (found_child) {
-		child_ptr = child.get();
-
-		GetLayout().InsertChild(child->GetLayout(), (uint32_t)child_index);
-		children.insert(children.begin() + child_index, std::move(child));
-		child_ptr->SetParent(this);
-		DirtyStackingContext();
-		DirtyStructure();
+Element* Element::InsertBefore(ElementPtr child, Element* adjacent_element) {
+	size_t index = GetChildIndex(adjacent_element);
+	if (index == -1) {
+		return AppendChild(std::move(child));
 	}
-	else {
-		child_ptr = AppendChild(std::move(child));
-	}	
 
+	Element* child_ptr = child.get();
+	GetLayout().InsertChild(child->GetLayout(), (uint32_t)index);
+	children.insert(children.begin() + index, std::move(child));
+	child_ptr->SetParent(this);
+	DirtyStackingContext();
+	DirtyStructure();	
 	return child_ptr;
 }
 
-ElementPtr Element::RemoveChild(Element* child) {
-	size_t child_index = 0;
-
-	for (auto itr = children.begin(); itr != children.end(); ++itr) {
-		// Add the element to the delete list
-		if (itr->get() == child) {
-			ElementPtr detached_child = std::move(*itr);
-			children.erase(itr);
-
-			detached_child->SetParent(nullptr);
-
-			GetLayout().RemoveChild(child->GetLayout());
-			DirtyStackingContext();
-			DirtyStructure();
-
-			return detached_child;
-		}
-
-		child_index++;
+Element* Element::GetPreviousSibling() {
+	if (!parent) {
+		return nullptr;
 	}
-
-	return nullptr;
+	size_t index = parent->GetChildIndex(this);
+	if (index == -1) {
+		return nullptr;
+	}
+	if (index == 0) {
+		return nullptr;
+	}
+	return parent->children[index-1].get();
 }
 
 Element* Element::GetElementById(const std::string& id) {
-	if (id == "#self")
+	if (GetId() == id) {
 		return this;
-	else if (id == "#document")
-		return GetOwnerDocument()->GetBody();
-	else if (id == "#parent")
-		return this->parent;
-	Element* search_root = GetOwnerDocument()->GetBody();
-	if (search_root == nullptr)
-		search_root = this;
-		
-	// Breadth first search on elements for the corresponding id
-	typedef std::queue<Element*> SearchQueue;
-	SearchQueue search_queue;
-	search_queue.push(search_root);
-
-	while (!search_queue.empty()) {
-		Element* element = search_queue.front();
-		search_queue.pop();
-		
-		if (element->GetId() == id) {
-			return element;
+	}
+	for (auto& child : children) {
+		Element* e = child->GetElementById(id);
+		if (e) {
+			return e;
 		}
-		
-		for (int i = 0; i < element->GetNumChildren(); i++)
-			search_queue.push(element->GetChild(i));
 	}
 	return nullptr;
 }
 
 void Element::GetElementsByTagName(ElementList& elements, const std::string& tag) {
-	// Breadth first search on elements for the corresponding id
-	typedef std::queue< Element* > SearchQueue;
-	SearchQueue search_queue;
-	for (int i = 0; i < GetNumChildren(); ++i)
-		search_queue.push(GetChild(i));
-
-	while (!search_queue.empty()) {
-		Element* element = search_queue.front();
-		search_queue.pop();
-
-		if (GetTagName() == tag)
-			elements.push_back(element);
-
-		for (int i = 0; i < GetNumChildren(); i++)
-			search_queue.push(GetChild(i));
+	if (GetTagName() == tag) {
+		elements.push_back(this);
+	}
+	for (auto& child : children) {
+		child->GetElementsByTagName(elements, tag);
 	}
 }
 
 void Element::GetElementsByClassName(ElementList& elements, const std::string& class_name) {
-	// Breadth first search on elements for the corresponding id
-	typedef std::queue< Element* > SearchQueue;
-	SearchQueue search_queue;
-	for (int i = 0; i < GetNumChildren(); ++i)
-		search_queue.push(GetChild(i));
-
-	while (!search_queue.empty()) {
-		Element* element = search_queue.front();
-		search_queue.pop();
-
-		if (IsClassSet(class_name))
-			elements.push_back(element);
-
-		for (int i = 0; i < GetNumChildren(); i++)
-			search_queue.push(GetChild(i));
+	if (GetTagName() == tag) {
+		if (IsClassSet(class_name)) {
+			elements.push_back(this);
+		}
+	}
+	for (auto& child : children) {
+		child->GetElementsByClassName(elements, class_name);
 	}
 }
 
@@ -555,27 +514,20 @@ static void QuerySelectorAllMatchRecursive(ElementList& matching_elements, const
 Element* Element::QuerySelector(const std::string& selectors) {
 	StyleSheetNode root_node;
 	StyleSheetNodeListRaw leaf_nodes = StyleSheetParser::ConstructNodes(root_node, selectors);
-
-	if (leaf_nodes.empty())
-	{
+	if (leaf_nodes.empty()) {
 		Log::Message(Log::Level::Warning, "Query selector '%s' is empty. In element %s", selectors.c_str(), GetAddress().c_str());
 		return nullptr;
 	}
-
 	return QuerySelectorMatchRecursive(leaf_nodes, this);
 }
 
-void Element::QuerySelectorAll(ElementList& elements, const std::string& selectors)
-{
+void Element::QuerySelectorAll(ElementList& elements, const std::string& selectors) {
 	StyleSheetNode root_node;
 	StyleSheetNodeListRaw leaf_nodes = StyleSheetParser::ConstructNodes(root_node, selectors);
-
-	if (leaf_nodes.empty())
-	{
+	if (leaf_nodes.empty()) {
 		Log::Message(Log::Level::Warning, "Query selector '%s' is empty. In element %s", selectors.c_str(), GetAddress().c_str());
 		return;
 	}
-
 	QuerySelectorAllMatchRecursive(elements, leaf_nodes, this);
 }
 
@@ -780,19 +732,25 @@ void Element::SetDataModel(DataModel* new_data_model)  {
 
 	data_model = new_data_model;
 
+	if (!data_model) {
+		for (ElementPtr& child : children) {
+			child->SetDataModel(nullptr);
+		}
+		return;
+	}
+
 	if (data_model) {
 		if (attributes.find("data-for") != attributes.end()) {
-			if (outer_html) {
-				DataUtilities::ApplyDataViewFor(this, *outer_html);
-			}
+			DataUtilities::ApplyDataViewFor(this);
 		}
 		else {
 			DataUtilities::ApplyDataViewsControllers(this);
+			for (ElementPtr& child : children) {
+				child->SetDataModel(new_data_model);
+			}
 		}
 	}
 
-	for (ElementPtr& child : children)
-		child->SetDataModel(new_data_model);
 }
 
 void Element::SetParent(Element* _parent) {

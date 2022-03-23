@@ -40,19 +40,17 @@ class ElementText final : public Element {
 public:
 	ElementText(Document* owner, const std::string& text);
 	virtual ~ElementText();
-
 	void SetText(const std::string& text);
 	const std::string& GetText() const;
-
 	Size Measure(float minWidth, float maxWidth, float minHeight, float maxHeight);
 	float GetBaseline();
 
 protected:
 	void Render() override;
 	void OnChange(const PropertyIdSet& properties) override;
-
 	const Property* GetComputedProperty(PropertyId id);
 	float GetOpacity();
+	ElementPtr Clone(bool deep = true) const override;
 
 private:
 	void UpdateTextEffects();

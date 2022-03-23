@@ -6,46 +6,26 @@
 #include "DataView.h"
 #include "DataControllerDefault.h"
 #include "DataViewDefault.h"
-#include "HtmlParser.h"
 
 namespace Rml {
 
-using DataViewInstancerMap = std::unordered_map< std::string, DataViewInstancer* >;
-using DataControllerInstancerMap = std::unordered_map< std::string, DataControllerInstancer* >;
-using StructuralDataViewInstancerMap = std::unordered_map< std::string, DataViewInstancer* >;
-
-static DataViewInstancerMap data_view_instancers;
-static DataControllerInstancerMap data_controller_instancers;
-
-struct DefaultInstancers {
-	DataViewInstancerDefault<DataViewAttribute> data_view_attribute;
-	DataViewInstancerDefault<DataViewAttributeIf> data_view_attribute_if;
-	DataViewInstancerDefault<DataViewClass> data_view_class;
-	DataViewInstancerDefault<DataViewIf> data_view_if;
-	DataViewInstancerDefault<DataViewVisible> data_view_visible;
-	DataViewInstancerDefault<DataViewHtml> data_view_html;
-	DataViewInstancerDefault<DataViewStyle> data_view_style;
-	DataViewInstancerDefault<DataViewText> data_view_text;
-	DataViewInstancerDefault<DataViewValue> data_view_value;
-	DataControllerInstancerDefault<DataControllerEvent> data_controller_event;
+static std::map<std::string, DataViewInstancer*> data_view_instancers = {
+	{"attr",    new DataViewInstancerDefault<DataViewAttribute>() },
+	{"attrif",  new DataViewInstancerDefault<DataViewAttributeIf>() },
+	{"class",   new DataViewInstancerDefault<DataViewClass>() },
+	{"if",      new DataViewInstancerDefault<DataViewIf>() },
+	{"visible", new DataViewInstancerDefault<DataViewVisible>() },
+	{"html",    new DataViewInstancerDefault<DataViewHtml>() },
+	{"style",   new DataViewInstancerDefault<DataViewStyle>() },
+	{"text",    new DataViewInstancerDefault<DataViewText>() },
+	{"value",   new DataViewInstancerDefault<DataViewValue>() },
 };
 
-static std::unique_ptr<DefaultInstancers> default_instancers;
-
-static void RegisterDataViewInstancer(DataViewInstancer* instancer, const std::string& name) {
-	bool inserted = data_view_instancers.emplace(name, instancer).second;
-	if (!inserted)
-		Log::Message(Log::Level::Warning, "Could not register data view instancer '%s'. The given name is already registered.", name.c_str());
-}
-
-static void RegisterDataControllerInstancer(DataControllerInstancer* instancer, const std::string& name) {
-	bool inserted = data_controller_instancers.emplace(name, instancer).second;
-	if (!inserted)
-		Log::Message(Log::Level::Warning, "Could not register data controller instancer '%s'. The given name is already registered.", name.c_str());
-}
+static std::map<std::string, DataControllerInstancer*> data_controller_instancers = {
+	{"event", new DataControllerInstancerDefault<DataControllerEvent>() },
+};
 
 static DataViewPtr InstanceDataView(const std::string& type_name, Element* element) {
-	assert(element);
 	auto it = data_view_instancers.find(type_name);
 	if (it != data_view_instancers.end())
 		return it->second->InstanceView(element);
@@ -56,28 +36,22 @@ static DataControllerPtr InstanceDataController(Element* element, const std::str
 	auto it = data_controller_instancers.find(type_name);
 	if (it != data_controller_instancers.end())
 		return it->second->InstanceController(element);
-	return DataControllerPtr();
+	return nullptr;
 }
 
 bool DataUtilities::Initialise() {
-	default_instancers = std::make_unique<DefaultInstancers>();
-	RegisterDataViewInstancer(&default_instancers->data_view_attribute,      "attr");
-	RegisterDataViewInstancer(&default_instancers->data_view_attribute_if,   "attrif");
-	RegisterDataViewInstancer(&default_instancers->data_view_class,          "class");
-	RegisterDataViewInstancer(&default_instancers->data_view_if,             "if");
-	RegisterDataViewInstancer(&default_instancers->data_view_visible,        "visible");
-	RegisterDataViewInstancer(&default_instancers->data_view_html,           "html");
-	RegisterDataViewInstancer(&default_instancers->data_view_style,          "style");
-	RegisterDataViewInstancer(&default_instancers->data_view_text,           "text");
-	RegisterDataViewInstancer(&default_instancers->data_view_value,          "value");
-	RegisterDataControllerInstancer(&default_instancers->data_controller_event, "event");
 	return true;
 }
 
 void DataUtilities::Shutdown() {
+	for (auto& [_, instancer] : data_view_instancers) {
+		delete instancer;
+	}
+	for (auto& [_, instancer] : data_controller_instancers) {
+		delete instancer;
+	}
 	data_controller_instancers.clear();
 	data_view_instancers.clear();
-	default_instancers.reset();
 }
 
 void DataUtilities::ApplyDataViewsControllers(Element* element) {
@@ -117,7 +91,7 @@ void DataUtilities::ApplyDataViewsControllers(Element* element) {
 	}
 }
 
-void DataUtilities::ApplyDataViewFor(Element* element, const HtmlElement& inner_html) {
+void DataUtilities::ApplyDataViewFor(Element* element) {
 	DataModel* data_model = element->GetDataModel();
 	if (!data_model) {
 		return;
@@ -125,7 +99,7 @@ void DataUtilities::ApplyDataViewFor(Element* element, const HtmlElement& inner_
 	for (auto const& [name, value] : element->GetAttributes()) {
 		if (name == "data-for") {
 			if (auto view = std::make_unique<DataViewFor>(element)) {
-				if (view->Initialize(*data_model, element, value, inner_html)) {
+				if (view->Initialize(*data_model, element, value, {})) {
 					data_model->AddView(std::move(view));
 					return;
 				}

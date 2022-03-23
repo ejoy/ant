@@ -606,4 +606,8 @@ FontFaceHandle ElementText::GetFontFaceHandle() {
 	return font_handle;
 }
 
+ElementPtr ElementText::Clone(bool deep) const {
+	return owner_document->CreateTextNode(text);
+}
+
 }
