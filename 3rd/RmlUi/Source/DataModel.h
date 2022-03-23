@@ -78,18 +78,13 @@ public:
 private:
 	std::unique_ptr<DataViews> views;
 	std::unique_ptr<DataControllers> controllers;
-
 	std::unordered_map<std::string, DataVariable> variables;
 	DirtyVariables dirty_variables;
-
 	std::unordered_map<std::string, DataEventFunc> event_callbacks;
-
 	using ScopedAliases = std::unordered_map<Element*, std::unordered_map<std::string, DataAddress>>;
 	ScopedAliases aliases;
-
 	std::unordered_set<Element*> attached_elements;
 };
-
 
 }
 #endif

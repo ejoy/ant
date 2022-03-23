@@ -37,7 +37,6 @@ namespace Rml {
 class Stream;
 class StyleSheetNode;
 class StyleSheetPropertyDictionary;
-using StyleSheetNodeListRaw = std::vector<StyleSheetNode*>;
 
 /**
 	Helper class for parsing a style sheet into its memory representation.
@@ -62,12 +61,6 @@ public:
 	/// @param properties The properties to parse
 	/// @return True if the parse was successful, or false if an error occured.
 	bool ParseProperties(PropertyDictionary& parsed_properties, const std::string& properties);
-
-	// Converts a selector query to a tree of nodes.
-	// @param root_node Node to construct into.
-	// @param selectors The selector rules as a string value.
-	// @return The list of leaf nodes in the constructed tree, which are all owned by the root node.
-	static StyleSheetNodeListRaw ConstructNodes(StyleSheetNode& root_node, const std::string& selectors);
 
 private:
 	Stream* stream;

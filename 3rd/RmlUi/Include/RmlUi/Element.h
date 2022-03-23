@@ -73,8 +73,6 @@ public:
 	Element* GetElementById(const std::string& id);
 	void GetElementsByTagName(ElementList& elements, const std::string& tag);
 	void GetElementsByClassName(ElementList& elements, const std::string& class_name);
-	Element* QuerySelector(const std::string& selector);
-	void QuerySelectorAll(ElementList& elements, const std::string& selectors);
 
 	DataModel* GetDataModel() const;
 

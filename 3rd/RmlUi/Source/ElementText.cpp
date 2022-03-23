@@ -359,8 +359,7 @@ void ElementText::UpdateDecoration(const FontFaceHandle font_face_handle) {
 	}
 }
 
-static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation)
-{
+static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation) {
 	assert(token_begin != string_end);
 
 	token.reserve(string_end - token_begin + token.size());
@@ -449,8 +448,7 @@ static bool BuildToken(std::string& token, const char*& token_begin, const char*
 	return false;
 }
 
-static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline)
-{
+static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline) {
 	bool last_token = (token_begin == string_end);
 	if (collapse_white_space && !last_token) {
 		last_token = true;

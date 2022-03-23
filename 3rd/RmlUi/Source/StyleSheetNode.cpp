@@ -120,24 +120,6 @@ void StyleSheetNode::BuildIndex(StyleSheet::NodeIndex& styled_node_index)
 	}
 }
 
-bool StyleSheetNode::SetStructurallyVolatileRecursive(bool ancestor_is_structural_pseudo_class)
-{
-	// If any ancestor or descendant is a structural pseudo class, then we are structurally volatile.
-	bool self_is_structural_pseudo_class = (!structural_selectors.empty());
-
-	// Check our children for structural pseudo-classes.
-	bool descendant_is_structural_pseudo_class = false;
-	for (auto& child : children)
-	{
-		if (child->SetStructurallyVolatileRecursive(self_is_structural_pseudo_class || ancestor_is_structural_pseudo_class))
-			descendant_is_structural_pseudo_class = true;
-	}
-
-	is_structurally_volatile = (self_is_structural_pseudo_class || ancestor_is_structural_pseudo_class || descendant_is_structural_pseudo_class);
-
-	return (self_is_structural_pseudo_class || descendant_is_structural_pseudo_class);
-}
-
 bool StyleSheetNode::EqualRequirements(const std::string& _tag, const std::string& _id, const std::vector<std::string>& _class_names, PseudoClassSet _pseudo_classes, const StructuralSelectorList& _structural_selectors, bool _child_combinator) const
 {
 	if (tag != _tag)
@@ -277,12 +259,6 @@ bool StyleSheetNode::IsApplicable(const Element* const in_element, bool skip_id_
 
 	return true;
 }
-
-bool StyleSheetNode::IsStructurallyVolatile() const
-{
-	return is_structurally_volatile;
-}
-
 
 void StyleSheetNode::CalculateAndSetSpecificity()
 {

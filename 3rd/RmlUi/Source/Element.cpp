@@ -483,54 +483,6 @@ void Element::GetElementsByClassName(ElementList& elements, const std::string& c
 	}
 }
 
-static Element* QuerySelectorMatchRecursive(const StyleSheetNodeListRaw& nodes, Element* element) {
-	for (int i = 0; i < element->GetNumChildren(); i++) {
-		Element* child = element->GetChild(i);
-		for (const StyleSheetNode* node : nodes) {
-			if (node->IsApplicable(child, false))
-				return child;
-		}
-		Element* matching_element = QuerySelectorMatchRecursive(nodes, child);
-		if (matching_element)
-			return matching_element;
-	}
-
-	return nullptr;
-}
-
-static void QuerySelectorAllMatchRecursive(ElementList& matching_elements, const StyleSheetNodeListRaw& nodes, Element* element) {
-	for (int i = 0; i < element->GetNumChildren(); i++) {
-		Element* child = element->GetChild(i);
-		for (const StyleSheetNode* node : nodes) {
-			if (node->IsApplicable(child, false)) {
-				matching_elements.push_back(child);
-				break;
-			}
-		}
-		QuerySelectorAllMatchRecursive(matching_elements, nodes, child);
-	}
-}
-
-Element* Element::QuerySelector(const std::string& selectors) {
-	StyleSheetNode root_node;
-	StyleSheetNodeListRaw leaf_nodes = StyleSheetParser::ConstructNodes(root_node, selectors);
-	if (leaf_nodes.empty()) {
-		Log::Message(Log::Level::Warning, "Query selector '%s' is empty. In element %s", selectors.c_str(), GetAddress().c_str());
-		return nullptr;
-	}
-	return QuerySelectorMatchRecursive(leaf_nodes, this);
-}
-
-void Element::QuerySelectorAll(ElementList& elements, const std::string& selectors) {
-	StyleSheetNode root_node;
-	StyleSheetNodeListRaw leaf_nodes = StyleSheetParser::ConstructNodes(root_node, selectors);
-	if (leaf_nodes.empty()) {
-		Log::Message(Log::Level::Warning, "Query selector '%s' is empty. In element %s", selectors.c_str(), GetAddress().c_str());
-		return;
-	}
-	QuerySelectorAllMatchRecursive(elements, leaf_nodes, this);
-}
-
 DataModel* Element::GetDataModel() const {
 	return data_model;
 }

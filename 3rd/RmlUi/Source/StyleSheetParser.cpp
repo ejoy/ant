@@ -279,26 +279,6 @@ bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, co
 	return success;
 }
 
-StyleSheetNodeListRaw StyleSheetParser::ConstructNodes(StyleSheetNode& root_node, const std::string& selectors)
-{
-	const StyleSheetPropertyDictionary empty_properties;
-
-	std::vector<std::string> selector_list;
-	StringUtilities::ExpandString(selector_list, selectors);
-
-	StyleSheetNodeListRaw leaf_nodes;
-
-	for (const std::string& selector : selector_list)
-	{
-		StyleSheetNode* leaf_node = ImportProperties(&root_node, selector, empty_properties, 0);
-
-		if (leaf_node != &root_node)
-			leaf_nodes.push_back(leaf_node);
-	}
-
-	return leaf_nodes;
-}
-
 bool StyleSheetParser::ReadProperties(PropertyDictionary& properties)
 {
 	std::string name;
