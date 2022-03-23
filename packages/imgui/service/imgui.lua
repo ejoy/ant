@@ -85,10 +85,10 @@ local MousePosX, MousePosY = 0, 0
 local DOWN <const> = {true}
 
 local KeyModifiers = {
-	[imgui.enum.Key.ModCtrl]  = 1,
-	[imgui.enum.Key.ModShift] = 2,
-	[imgui.enum.Key.ModAlt]   = 4,
-	[imgui.enum.Key.ModSuper] = 8,
+	[imgui.enum.Key.ModCtrl]  = 0,
+	[imgui.enum.Key.ModShift] = 1,
+	[imgui.enum.Key.ModAlt]   = 2,
+	[imgui.enum.Key.ModSuper] = 4,
 }
 
 local function updateIO()

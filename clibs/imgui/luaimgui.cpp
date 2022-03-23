@@ -156,14 +156,21 @@ static int lPairsInputEvents(lua_State* L) {
 			lua_pushinteger(L, e->MouseButton.Down);
 			return 4;
 		case ImGuiInputEventType_Key:
+		{
 			if (io.WantCaptureKeyboard) {
 				break;
 			}
 			lua_pushinteger(L, ++event_n);
 			lua_pushstring(L, "Key");
-			lua_pushinteger(L, e->Key.Key - ImGuiKey_KeysData_OFFSET + 1);
+			auto key = e->Key.Key;
+			if (key >= ImGuiKey_ModCtrl) {
+				lua_pushinteger(L, key);
+			} else {
+				lua_pushinteger(L, key - ImGuiKey_KeysData_OFFSET + 1);
+			}
 			lua_pushinteger(L, e->Key.Down);
 			return 4;
+		}
 		case ImGuiInputEventType_MouseViewport:
 		case ImGuiInputEventType_Char:
 		case ImGuiInputEventType_Focus:
