@@ -10,6 +10,7 @@ function m:get_joints(e)
         if self.current_skeleton then
             return self.joint_list[self.current_skeleton._handle]
         end
+        return
     end
     if not e.skeleton or not e.skeleton._handle then
         return
