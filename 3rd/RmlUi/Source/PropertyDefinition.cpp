@@ -61,7 +61,7 @@ PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name
 	if (!parser_parameters.empty())
 	{
 		std::vector<std::string> parameter_list;
-		StringUtilities::ExpandString(parameter_list, StringUtilities::ToLower(parser_parameters));
+		StringUtilities::ExpandString(parameter_list, StringUtilities::ToLower(parser_parameters), ',');
 		for (size_t i = 0; i < parameter_list.size(); i++)
 			new_parser.parameters[parameter_list[i]] = (int) i;
 	}

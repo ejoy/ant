@@ -112,7 +112,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 		return true;
 
 	std::vector<std::string> rule_list;
-	StringUtilities::ExpandString(rule_list, rules);
+	StringUtilities::ExpandString(rule_list, rules, ',');
 
 	std::vector<float> rule_values;
 	rule_values.reserve(rule_list.size());
@@ -178,7 +178,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 						continue;
 
 					std::vector<std::string> rule_name_list;
-					StringUtilities::ExpandString(rule_name_list, pre_token_str);
+					StringUtilities::ExpandString(rule_name_list, pre_token_str, ',');
 
 					// Add style nodes to the root of the tree
 					for (size_t i = 0; i < rule_name_list.size(); i++)
@@ -479,25 +479,20 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::st
 	return leaf_node;
 }
 
-char StyleSheetParser::FindToken(std::string& buffer, const char* tokens, bool remove_token)
-{
+char StyleSheetParser::FindToken(std::string& buffer, const char* tokens, bool remove_token) {
 	buffer.clear();
 	char character;
-	while (ReadCharacter(character))
-	{
-		if (strchr(tokens, character) != nullptr)
-		{
+	while (ReadCharacter(character)) {
+		if (strchr(tokens, character) != nullptr) {
 			if (remove_token)
 				stream->Next();
 			return character;
 		}
-		else
-		{
+		else {
 			buffer += character;
 			stream->Next();
 		}
 	}
-
 	return 0;
 }
 

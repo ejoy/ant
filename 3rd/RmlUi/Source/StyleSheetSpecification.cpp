@@ -149,7 +149,7 @@ ShorthandId StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, c
 	MapAdd(shorthand_map, shorthand_name, id);
 
 	std::vector<std::string> property_list;
-	StringUtilities::ExpandString(property_list, StringUtilities::ToLower(property_names));
+	StringUtilities::ExpandString(property_list, StringUtilities::ToLower(property_names), ',');
 
 	std::unique_ptr<ShorthandDefinition> property_shorthand(new ShorthandDefinition());
 
@@ -336,7 +336,7 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyDictiona
 	}
 	else if (shorthand_definition->type == ShorthandType::RecursiveCommaSeparated) {
 		std::vector<std::string> subvalues;
-		StringUtilities::ExpandString(subvalues, property_value);
+		StringUtilities::ExpandString(subvalues, property_value, ',');
 
 		size_t num_optional = 0;
 		for (auto& item : shorthand_definition->items)

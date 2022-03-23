@@ -83,7 +83,7 @@ public:
 	void MergeProperties(StyleSheetPropertyDictionary& properties, int specificity_offset = 0) const;
 
 	/// Returns true if this node is applicable to the given element, given its IDs, classes and heritage.
-	bool IsApplicable(const Element* element, bool skip_id_tag) const;
+	bool IsApplicable(const Element* element) const;
 
 	/// Returns the specificity of this node.
 	int GetSpecificity() const;

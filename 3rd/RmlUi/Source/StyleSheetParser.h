@@ -44,8 +44,7 @@ class StyleSheetPropertyDictionary;
 	@author Lloyd Weehuizen
  */
 
-class StyleSheetParser
-{
+class StyleSheetParser {
 public:
 	StyleSheetParser();
 	~StyleSheetParser();
