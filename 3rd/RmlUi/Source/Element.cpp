@@ -55,14 +55,14 @@ static PropertyIdSet PropertyDictionaryDiff(const PropertyDictionary& dict0, con
 	for (auto& [id, p0] : dict0) {
 		mark.Insert(id);
 		const Property* p1 = PropertyDictionaryGet(dict1, id);
-		if (p1 && p0 != *p1) {
+		if (!p1 || p0 != *p1) {
 			ids.Insert(id);
 		}
 	}
 	for (auto& [id, p1] : dict1) {
 		if (!mark.Contains(id)) {
 			const Property* p0 = PropertyDictionaryGet(dict0, id);
-			if (p0 && p1 != *p0) {
+			if (!p0 || p1 != *p0) {
 				ids.Insert(id);
 			}
 		}
@@ -356,6 +356,7 @@ void Element::InstanceInner(const HtmlElement& html) {
 				ElementPtr e = owner_document->CreateElement(arg.tag);
 				if (e) {
 					e->InstanceOuter(arg);
+					e->NotifyCustomElement();
 					AppendChild(std::move(e));
 				}
 			}
@@ -384,8 +385,13 @@ ElementPtr Element::Clone(bool deep) const {
 				e->AppendChild(child->Clone(true));
 			}
 		}
+		e->NotifyCustomElement();
 	}
 	return e;
+}
+
+void Element::NotifyCustomElement() {
+	owner_document->NotifyCustomElement(this);
 }
 
 Element* Element::AppendChild(ElementPtr child) { 

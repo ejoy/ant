@@ -171,6 +171,7 @@ lDocumentCreateElement(lua_State* L) {
 	if (!e) {
 		return 0;
 	}
+	e->NotifyCustomElement();
 	lua_pushlightuserdata(L, e.release());
 	return 1;
 }
@@ -438,6 +439,17 @@ lElementProject(lua_State* L) {
 }
 
 static int
+lElementClone(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::ElementPtr r = e->Clone();
+	if (!r) {
+		return 0;
+	}
+	lua_pushlightuserdata(L, r.release());
+	return 1;
+}
+
+static int
 lElementDelete(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	delete e;
@@ -553,6 +565,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementAppendChild", lElementAppendChild },
 		{ "ElementDelete", lElementDelete },
 		{ "ElementProject", lElementProject },
+		{ "ElementClone", lElementClone },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
 		{ "RmlInitialise", lRmlInitialise },

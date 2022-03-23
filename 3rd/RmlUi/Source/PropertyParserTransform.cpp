@@ -46,9 +46,9 @@ PropertyParserTransform::~PropertyParserTransform()
 // Called to parse a RCSS transform declaration.
 bool PropertyParserTransform::ParseValue(Property& property, const std::string& value, const ParameterMap& /*parameters*/) const
 {
-	if(value == "none")
+	if (value == "none")
 	{
-		property.value = TransformPtr();
+		property.value = std::make_shared<Transform>();
 		property.unit = Property::Unit::TRANSFORM;
 		return true;
 	}

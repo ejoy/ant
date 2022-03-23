@@ -57,6 +57,7 @@ public:
 	void InstanceOuter(const HtmlElement& html);
 	void InstanceInner(const HtmlElement& html);
 	virtual ElementPtr Clone(bool deep = true) const;
+	void NotifyCustomElement();
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);

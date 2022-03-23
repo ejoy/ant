@@ -202,11 +202,13 @@ const Element* Document::GetBody() const {
 }
 
 ElementPtr Document::CreateElement(const std::string& tag){
-	ElementPtr e(new Element(this, tag));
-	if (e && custom_element.find(tag) != custom_element.end()) {
-		GetPlugin()->OnCreateElement(this, e.get(), tag);
+	return ElementPtr(new Element(this, tag));
+}
+
+void Document::NotifyCustomElement(Element* e){
+	if (custom_element.find(e->GetTagName()) != custom_element.end()) {
+		GetPlugin()->OnCreateElement(this, e, e->GetTagName());
 	}
-	return e;
 }
 
 ElementPtr Document::CreateTextNode(const std::string& str) {

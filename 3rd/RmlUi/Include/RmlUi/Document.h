@@ -35,6 +35,7 @@ public:
 	const Element* GetBody() const;
 	ElementPtr CreateElement(const std::string& tag);
 	ElementPtr CreateTextNode(const std::string& str);
+	void NotifyCustomElement(Element* e);
 	void DefineCustomElement(const std::string& name);
 	double GetCurrentTime();
 	void Instance(const HtmlElement& html);
