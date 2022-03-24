@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Types.h"
-#include "PropertyFloatValue.h"
+#include "PropertyFloat.h"
 #include <variant>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -20,26 +20,26 @@ struct Matrix3D : glm::mat4x4 {
 };
 
 struct TranslateX {
-	PropertyFloatValue x = { 0.f, PropertyUnit::PX };
+	PropertyFloat x = { 0.f, PropertyUnit::PX };
 };
 
 struct TranslateY {
-	PropertyFloatValue y = { 0.f, PropertyUnit::PX };
+	PropertyFloat y = { 0.f, PropertyUnit::PX };
 };
 
 struct TranslateZ {
-	PropertyFloatValue z = { 0.f, PropertyUnit::PX };
+	PropertyFloat z = { 0.f, PropertyUnit::PX };
 };
 
 struct Translate2D {
-	PropertyFloatValue x = { 0.f, PropertyUnit::PX };
-	PropertyFloatValue y = { 0.f, PropertyUnit::PX };
+	PropertyFloat x = { 0.f, PropertyUnit::PX };
+	PropertyFloat y = { 0.f, PropertyUnit::PX };
 };
 
 struct Translate3D {
-	PropertyFloatValue x = { 0.f, PropertyUnit::PX };
-	PropertyFloatValue y = { 0.f, PropertyUnit::PX };
-	PropertyFloatValue z = { 0.f, PropertyUnit::PX };
+	PropertyFloat x = { 0.f, PropertyUnit::PX };
+	PropertyFloat y = { 0.f, PropertyUnit::PX };
+	PropertyFloat z = { 0.f, PropertyUnit::PX };
 };
 
 struct ScaleX {
@@ -66,38 +66,38 @@ struct Scale3D {
 };
 
 struct RotateX {
-	PropertyFloatValue angle = { 0.f, PropertyUnit::RAD };
+	PropertyFloat angle = { 0.f, PropertyUnit::RAD };
 };
 
 struct RotateY {
-	PropertyFloatValue angle = { 0.f, PropertyUnit::RAD };
+	PropertyFloat angle = { 0.f, PropertyUnit::RAD };
 };
 
 struct RotateZ {
-	PropertyFloatValue angle = { 0.f, PropertyUnit::RAD };
+	PropertyFloat angle = { 0.f, PropertyUnit::RAD };
 };
 
 struct Rotate2D {
-	PropertyFloatValue angle = { 0.f, PropertyUnit::RAD };
+	PropertyFloat angle = { 0.f, PropertyUnit::RAD };
 };
 
 struct Rotate3D {
 	glm::vec3 axis = glm::vec3(0, 0, 1);
-	PropertyFloatValue angle = { 0.f, PropertyUnit::RAD };
+	PropertyFloat angle = { 0.f, PropertyUnit::RAD };
 };
 
 struct SkewX {
-	PropertyFloatValue x = { 0.f, PropertyUnit::RAD };
+	PropertyFloat x = { 0.f, PropertyUnit::RAD };
 };
 struct SkewY {
-	PropertyFloatValue y = { 0.f, PropertyUnit::RAD };
+	PropertyFloat y = { 0.f, PropertyUnit::RAD };
 };
 struct Skew2D {
-	PropertyFloatValue x = { 0.f, PropertyUnit::RAD };
-	PropertyFloatValue y = { 0.f, PropertyUnit::RAD };
+	PropertyFloat x = { 0.f, PropertyUnit::RAD };
+	PropertyFloat y = { 0.f, PropertyUnit::RAD };
 };
 struct Perspective {
-	PropertyFloatValue distance = { 0.f, PropertyUnit::PX };
+	PropertyFloat distance = { 0.f, PropertyUnit::PX };
 };
 
 struct DecomposedMatrix4 {
@@ -223,6 +223,7 @@ public:
 	Transform Interpolate(const Transform& other, float alpha) const;
 	glm::mat4x4 GetMatrix(Element& e) const;
 	bool Combine(Element& e, size_t start);
+	std::string ToString() const;
 };
 
 }

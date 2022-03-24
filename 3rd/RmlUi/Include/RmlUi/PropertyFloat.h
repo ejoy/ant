@@ -1,13 +1,13 @@
 #pragma once
 
 #include <stdint.h>
+#include <string>
 
 namespace Rml {
 
+class Element;
+
 enum class PropertyUnit : uint8_t {
-	UNKNOWN = 0,
-	KEYWORD,          // generic keyword; fetch as < int >
-	STRING,           // generic string; fetch as < std::string >
 	NUMBER,           // number unsuffixed; fetch as < float >
 	PX,               // number suffixed by 'px'; fetch as < float >
 	DEG,              // number suffixed by 'deg'; fetch as < float >
@@ -25,19 +25,21 @@ enum class PropertyUnit : uint8_t {
 	MM,               // number suffixed by 'mm'; fetch as < float >
 	PT,               // number suffixed by 'pt'; fetch as < float >
 	PC,               // number suffixed by 'pc'; fetch as < float >
-	TRANSFORM,        // transform; fetch as < Transform >, may be empty
-	TRANSITION,       // transition; fetch as < TransitionList >
-	ANIMATION,        // animation; fetch as < AnimationList >
 };
 
-struct PropertyFloatValue {
-	PropertyFloatValue() noexcept : value(0.f), unit(PropertyUnit::UNKNOWN) {}
-	PropertyFloatValue(float v, PropertyUnit unit) : value(v), unit(unit) {}
+struct PropertyFloat {
+	PropertyFloat(float v, PropertyUnit unit);
+	std::string ToString() const;
+	float Compute(const Element* e) const;
+	float ComputeW(const Element* e) const;
+	float ComputeH(const Element* e) const;
+	PropertyFloat Interpolate(const PropertyFloat& p1, float alpha) const;
+
 	float value;
 	PropertyUnit unit;
 };
 
-inline bool operator==(const PropertyFloatValue& l, const PropertyFloatValue& r) {
+inline bool operator==(const PropertyFloat& l, const PropertyFloat& r) {
 	return (l.unit == r.unit) && (l.value == r.value);
 }
 

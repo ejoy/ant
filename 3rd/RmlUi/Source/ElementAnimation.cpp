@@ -35,42 +35,6 @@
 
 namespace Rml {
 
-static Property InterpolateProperties(const Property& p0, const Property& p1, float alpha, Element& element)
-{
-	if (alpha > 1.f) alpha = 1.f;
-	if (alpha < 0.f) alpha = 0.f;
-
-
-	if (Property::Contains(Property::UnitMark::NumberLengthPercent, p0.unit) && Property::Contains(Property::UnitMark::NumberLengthPercent, p1.unit))
-	{
-		assert(p0.unit == p1.unit);
-		// If we have the same units, we can just interpolate regardless of what the value represents.
-		// Or if we have distinct units but no definition, all bets are off. This shouldn't occur, just interpolate values.
-		float f0 = p0.GetFloat();
-		float f1 = p1.GetFloat();
-		float f = (1.0f - alpha) * f0 + alpha * f1;
-		return Property{ f, p0.unit };
-	}
-
-	if (p0.unit == PropertyUnit::COLOUR && p1.unit == PropertyUnit::COLOUR)
-	{
-		Color c0 = p0.GetColor();
-		Color c1 = p1.GetColor();
-		return Property{ ColorInterpolate(c0, c1, alpha), PropertyUnit::COLOUR };
-	}
-
-	if (p0.unit == PropertyUnit::TRANSFORM && p1.unit == PropertyUnit::TRANSFORM)
-	{
-		auto& t0 = p0.Get<Transform>();
-		auto& t1 = p1.Get<Transform>();
-		auto t = t0.Interpolate(t1, alpha);
-		return Property{ Transform(std::move(t)), PropertyUnit::TRANSFORM };
-	}
-
-	// Fall back to discrete interpolation for incompatible units.
-	return alpha != 1.f ? p0 : p1;
-}
-
 //
 // see
 //   https://www.w3.org/TR/css-transforms-1/#interpolation-of-transforms
@@ -134,14 +98,8 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 static bool PrepareTransforms(AnimationKey& key, Element& element) {
 	auto& prop0 = key.in;
 	auto& prop1 = key.out;
-	if (prop0.unit != PropertyUnit::TRANSFORM || prop1.unit != PropertyUnit::TRANSFORM) {
+	if (!prop0.Has<Transform>() || !prop1.Has<Transform>()) {
 		return false;
-	}
-	if (!prop0.Has<Transform>()) {
-		prop0.value = Transform {};
-	}
-	if (!prop1.Has<Transform>()) {
-		prop1.value = Transform {};
 	}
 	auto& t0 = prop0.Get<Transform>();
 	auto& t1 = prop1.Get<Transform>();
@@ -164,9 +122,8 @@ ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigi
 }
 
 
-bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween)
-{
-	if (out_prop.unit == PropertyUnit::ANIMATION || out_prop.unit == PropertyUnit::TRANSITION || out_prop.unit == PropertyUnit::STRING) {
+bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween) {
+	if (!out_prop.AllowInterpolate()) {
 		Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", out_prop.ToString().c_str());
 		return false;
 	}
@@ -175,7 +132,7 @@ bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Elem
 	Property const& in_prop = first ? out_prop: keys.back().prop;
 	keys.emplace_back(time, in_prop, out_prop, tween);
 	bool result = true;
-	if (!first && out_prop.unit == PropertyUnit::TRANSFORM) {
+	if (!first && out_prop.Has<Transform>()) {
 		result = PrepareTransforms(keys.back(), element);
 	}
 	if (!result) {
@@ -198,8 +155,7 @@ bool ElementAnimation::AddKey(float target_time, const Property & in_property, E
 	return true;
 }
 
-float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const
-{
+float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const {
 	float t = time_since_iteration_start;
 
 	if (reverse_direction)
@@ -244,11 +200,11 @@ float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const
 	return alpha;
 }
 
-Property ElementAnimation::UpdateAndGetProperty(double world_time, Element& element)
+void ElementAnimation::UpdateAndGetProperty(double world_time, Element& element)
 {
 	float dt = float(world_time - last_update_world_time);
 	if (keys.size() < 2 || animation_complete || dt <= 0.0f)
-		return Property{};
+		return;
 
 	dt = std::min(dt, 0.1f);
 
@@ -276,7 +232,12 @@ Property ElementAnimation::UpdateAndGetProperty(double world_time, Element& elem
 
 	int key = -1;
 	float alpha = GetInterpolationFactorAndKeys(&key);
-	return InterpolateProperties(keys[key].in, keys[key].out, alpha, element);
+	if (alpha > 1.f) alpha = 1.f;
+	if (alpha < 0.f) alpha = 0.f;
+	const Property& p0 = keys[key].in;
+	const Property& p1 = keys[key].out;
+	Property p2 = p0.Interpolate(p1, alpha);
+	element.SetAnimationProperty(GetPropertyId(), &p2);
 }
 
 void ElementAnimation::Release(Element& element) {

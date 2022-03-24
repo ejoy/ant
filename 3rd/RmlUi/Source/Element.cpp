@@ -14,7 +14,6 @@
 #include "../Include/RmlUi/EventListener.h"
 #include "../Include/RmlUi/Event.h"
 #include "../Include/RmlUi/Plugin.h"
-#include "../Include/RmlUi/ElementStyle.h"
 #include "../Include/RmlUi/Property.h"
 #include "DataModel.h"
 #include "ElementAnimation.h"
@@ -68,6 +67,26 @@ static PropertyIdSet PropertyDictionaryDiff(const PropertyDictionary& dict0, con
 		}
 	}
 	return ids;
+}
+
+static PropertyFloat ComputeOrigin(const Property* p) {
+	if (p->Has<PropertyKeyword>()) {
+		switch (p->Get<PropertyKeyword>()) {
+		default:
+		case 0 /* left/top     */: return { 0.0f, PropertyUnit::PERCENT };
+		case 1 /* center       */: return { 50.0f, PropertyUnit::PERCENT };
+		case 2 /* right/bottom */: return { 100.0f, PropertyUnit::PERCENT };
+		}
+	}
+	return p->Get<PropertyFloat>();
+}
+
+static glm::vec3 PerspectiveOrigin(Element* e) {
+	const Property* originX = e->GetComputedProperty(PropertyId::PerspectiveOriginX);
+	const Property* originY = e->GetComputedProperty(PropertyId::PerspectiveOriginY);
+	float x = ComputeOrigin(originX).ComputeW(e);
+	float y = ComputeOrigin(originY).ComputeH(e);
+	return { x, y, 0.f };
 }
 
 Element::Element(Document* owner, const std::string& tag)
@@ -167,7 +186,7 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 }
 
 bool Element::IsPointWithinElement(Point point) {
-	bool ignorePointerEvents = Style::PointerEvents(GetComputedProperty(PropertyId::PointerEvents)->GetKeyword()) == Style::PointerEvents::None;
+	bool ignorePointerEvents = Style::PointerEvents(GetComputedProperty(PropertyId::PointerEvents)->Get<PropertyKeyword>()) == Style::PointerEvents::None;
 	if (ignorePointerEvents) {
 		return false;
 	}
@@ -183,23 +202,24 @@ float Element::GetFontSize() const {
 }
 
 static float ComputeFontsize(const Property* property, Element* element) {
-	if (property->unit == PropertyUnit::PERCENT || property->unit == PropertyUnit::EM) {
+	PropertyFloat fv = property->Get<PropertyFloat>();
+	if (fv.unit == PropertyUnit::PERCENT || fv.unit == PropertyUnit::EM) {
 		float fontSize = 16.f;
 		Element* parent = element->GetParentNode();
 		if (parent) {
 			fontSize = parent->GetFontSize();
 		}
-		if (property->unit == PropertyUnit::PERCENT) {
-			return fontSize * 0.01f * property->GetFloat();
+		if (fv.unit == PropertyUnit::PERCENT) {
+			return fontSize * 0.01f * fv.value;
 		}
-		return fontSize * property->GetFloat();
+		return fontSize * fv.value;
 	}
-	if (property->unit == PropertyUnit::REM) {
+	if (fv.unit == PropertyUnit::REM) {
 		if (element == element->GetOwnerDocument()->GetBody()) {
-			return property->GetFloat() * 16;
+			return fv.value * 16;
 		}
 	}
-	return ComputeProperty(property, element);
+	return fv.Compute(element);
 }
 
 bool Element::UpdataFontSize() {
@@ -218,7 +238,7 @@ bool Element::UpdataFontSize() {
 
 float Element::GetOpacity() {
 	const Property* property = GetComputedProperty(PropertyId::Opacity);
-	return property->GetFloat();
+	return property->Get<PropertyFloat>().value;
 }
 
 bool Element::Project(Point& point) const noexcept {
@@ -546,8 +566,8 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 	if (changed_properties.Contains(PropertyId::ZIndex)) {
 		float new_z_index = 0;
 		const Property* property = GetComputedProperty(PropertyId::ZIndex);
-		if (property->unit != PropertyUnit::KEYWORD) {
-			new_z_index = property->GetFloat();
+		if (property->Has<PropertyFloat>()) {
+			new_z_index = property->Get<PropertyFloat>().value;
 		}
 		if (z_index != new_z_index) {
 			z_index = new_z_index;
@@ -790,17 +810,10 @@ void Element::UpdateStructure() {
 }
 
 void Element::StartAnimation(PropertyId property_id, const Property* start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property) {
-	Property value;
-	if (start_value) {
-		value = *start_value;
-	}
-	else if (auto default_value = GetComputedProperty(property_id)) {
-		value = *default_value;
-	}
 	ElementAnimationOrigin origin = (initiated_by_animation_property ? ElementAnimationOrigin::Animation : ElementAnimationOrigin::User);
 	double start_time = GetOwnerDocument()->GetCurrentTime() + (double)delay;
 
-	ElementAnimation animation{ property_id, origin, value, *this, start_time, 0.0f, num_iterations, alternate_direction };
+	ElementAnimation animation{ property_id, origin, *start_value, *this, start_time, 0.0f, num_iterations, alternate_direction };
 	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == property_id; });
 	if (it == animations.end()) {
 		if (animation.IsInitalized()) {
@@ -835,7 +848,7 @@ bool Element::AddAnimationKeyTime(PropertyId property_id, const Property* target
 	return animation->AddKey(time, *target_value, *this, tween);
 }
 
-bool Element::StartTransition(const Transition& transition, const Property& start_value, const Property & target_value) {
+bool Element::StartTransition(const Transition& transition, const Property& start_value, const Property& target_value) {
 	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == transition.id; });
 
 	if (it != animations.end() && !it->IsTransition())
@@ -953,8 +966,18 @@ void Element::HandleAnimationProperty() {
 			bool has_from_key = (blocks[0].normalized_time == 0);
 			bool has_to_key = (blocks.back().normalized_time == 1);
 			// If the first key defines initial conditions for a given property, use those values, else, use this element's current values.
-			for (PropertyId id : property_ids)
-				StartAnimation(id, (has_from_key ? PropertyDictionaryGet(blocks[0].properties, id) : nullptr), animation.num_iterations, animation.alternate, animation.delay, true);
+			for (PropertyId id : property_ids) {
+				const Property* start = nullptr;
+				if (has_from_key) {
+					start = PropertyDictionaryGet(blocks[0].properties, id);
+				}
+				if (!start) {
+					start = GetComputedProperty(id);
+				}
+				if (start) {
+					StartAnimation(id, start, animation.num_iterations, animation.alternate, animation.delay, true);
+				}
+			}
 			// Add middle keys: Need to skip the first and last keys if they set the initial and end conditions, respectively.
 			for (int i = (has_from_key ? 1 : 0); i < (int)blocks.size() + (has_to_key ? -1 : 0); i++) {
 				// Add properties of current key to animation
@@ -976,9 +999,7 @@ void Element::AdvanceAnimations() {
 	}
 	double time = GetOwnerDocument()->GetCurrentTime();
 	for (auto& animation : animations) {
-		Property property = animation.UpdateAndGetProperty(time, *this);
-		if (property.unit != PropertyUnit::UNKNOWN)
-			SetAnimationProperty(animation.GetPropertyId(), &property);
+		animation.UpdateAndGetProperty(time, *this);
 	}
 	auto it_completed = std::partition(animations.begin(), animations.end(), [](const ElementAnimation& animation) { return !animation.IsComplete(); });
 	std::vector<bool> is_transition;
@@ -1008,9 +1029,9 @@ void Element::UpdateTransform() {
 	auto computedTransform = GetComputedProperty(PropertyId::Transform)->Get<Transform>();
 	if (!computedTransform.empty()) {
 		glm::vec3 transform_origin = origin + glm::vec3 {
-			ComputePropertyW(GetComputedProperty(PropertyId::TransformOriginX), this),
-			ComputePropertyH(GetComputedProperty(PropertyId::TransformOriginY), this),
-			ComputeProperty (GetComputedProperty(PropertyId::TransformOriginZ), this),
+			ComputeOrigin(GetComputedProperty(PropertyId::TransformOriginX)).ComputeW(this),
+			ComputeOrigin(GetComputedProperty(PropertyId::TransformOriginY)).ComputeH(this),
+			ComputeOrigin(GetComputedProperty(PropertyId::TransformOriginZ)).Compute (this),
 		};
 		new_transform = glm::translate(transform_origin) * computedTransform.GetMatrix(*this) * glm::translate(-transform_origin);
 	}
@@ -1036,14 +1057,14 @@ void Element::UpdatePerspective() {
 	if (!dirty_perspective)
 		return;
 	dirty_perspective = false;
-	float distance = ComputeProperty(GetComputedProperty(PropertyId::Perspective), this);
+	const Property* p = GetComputedProperty(PropertyId::Perspective);
+	if (!p->Has<PropertyFloat>()) {
+		return;
+	}
+	float distance = p->Get<PropertyFloat>().Compute(this);
 	bool changed = false;
 	if (distance > 0.0f) {
-		glm::vec3 origin {
-			ComputePropertyW(GetComputedProperty(PropertyId::PerspectiveOriginX), this),
-			ComputePropertyH(GetComputedProperty(PropertyId::PerspectiveOriginY), this),
-			0.f,
-		};
+		glm::vec3 origin = PerspectiveOrigin(this);
 		// Equivalent to: translate(origin) * perspective(distance) * translate(-origin)
 		glm::mat4x4 new_perspective = {
 			{ 1, 0, 0, 0 },
@@ -1276,8 +1297,8 @@ Size Element::GetScrollOffset() const {
 		return {0,0};
 	}
 	return {
-		GetComputedProperty(PropertyId::ScrollLeft)->GetFloat(),
-		GetComputedProperty(PropertyId::ScrollTop)->GetFloat()
+		GetComputedProperty(PropertyId::ScrollLeft)->Get<PropertyFloat>().Compute(this),
+		GetComputedProperty(PropertyId::ScrollTop)->Get<PropertyFloat>().Compute(this)
 	};
 }
 
@@ -1285,14 +1306,14 @@ float Element::GetScrollLeft() const {
 	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
 		return 0;
 	}
-	return GetComputedProperty(PropertyId::ScrollLeft)->GetFloat();
+	return GetComputedProperty(PropertyId::ScrollLeft)->Get<PropertyFloat>().Compute(this);
 }
 
 float Element::GetScrollTop() const {
 	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
 		return 0;
 	}
-	return GetComputedProperty(PropertyId::ScrollTop)->GetFloat();
+	return GetComputedProperty(PropertyId::ScrollTop)->Get<PropertyFloat>().Compute(this);
 }
 
 void Element::SetScrollLeft(float v) {
@@ -1472,7 +1493,11 @@ const Property* Element::GetComputedProperty(PropertyId id) const {
 			parent = parent->GetParentNode();
 		}
 	}
-	return propertyDef->GetDefaultValue();
+	auto const& def = propertyDef->GetDefaultValue();
+	if (def) {
+		return &def.value();
+	}
+	return nullptr;
 }
 
 const TransitionList* Element::GetTransition(const PropertyDictionary* def) const {
@@ -1499,7 +1524,7 @@ void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const P
 	auto add_transition = [&](const Transition& transition) {
 		const Property* from = GetComputedProperty(transition.id);
 		const Property* to = PropertyDictionaryGet(new_definition, transition.id);
-		if (from && to && (from->unit == to->unit) && (*from != *to)) {
+		if (from && to && (*from != *to)) {
 			return StartTransition(transition, *from, *to);
 		}
 		return false;
@@ -1522,7 +1547,7 @@ void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const P
 
 void Element::TransitionPropertyChanges(const TransitionList* transition_list, PropertyId id, const Property& old_property) {
 	const Property* new_property = GetComputedProperty(id);
-	if (!new_property || (new_property->unit != old_property.unit) || (*new_property == old_property)) {
+	if (!new_property || (*new_property == old_property)) {
 		return;
 	}
 	if (transition_list->all) {
@@ -1586,7 +1611,7 @@ void Element::UpdateDefinition() {
 
 void Element::UpdateProperty(PropertyId id, const Property* property) {
 	if (property) {
-		inline_properties[id] = *property;
+		inline_properties.insert_or_assign(id, *property);
 	}
 	else if (!inline_properties.erase(id)) {
 		return;
@@ -1612,7 +1637,7 @@ void Element::SetProperty(PropertyId id, const Property* newProperty) {
 
 void Element::SetAnimationProperty(PropertyId id, const Property* property) {
 	if (property) {
-		animation_properties[id] = *property;
+		animation_properties.insert_or_assign(id, *property);
 	}
 	else if (!animation_properties.erase(id)) {
 		return;
@@ -1630,7 +1655,7 @@ void Element::DirtyInheritedProperties() {
 
 void Element::DirtyProperties(Property::UnitMark mark) {
 	ForeachProperties([&](PropertyId id, const Property& property){
-		if (Property::Contains(mark, property.unit)) {
+		if (property.Has<PropertyFloat>() && Property::Contains(mark, property.Get<PropertyFloat>().unit)) {
 			DirtyProperty(id);
 		}
 	});
@@ -1679,7 +1704,7 @@ void Element::UpdateProperties() {
 	}
 
 	ForeachProperties([&](PropertyId id, const Property& property){
-		if (dirty_em_properties && property.unit == PropertyUnit::EM)
+		if (dirty_em_properties && property.Has<PropertyFloat>() && property.Get<PropertyFloat>().unit == PropertyUnit::EM)
 			dirty_properties.Insert(id);
 		if (!dirty_properties.Contains(id)) {
 			return;

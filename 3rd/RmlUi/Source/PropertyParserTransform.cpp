@@ -1,63 +1,32 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2014 Markus Schöngart
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
 #include "PropertyParserTransform.h"
 #include "../Include/RmlUi/Transform.h"
+#include "../Include/RmlUi/Property.h"
 #include <string.h>
 
 namespace Rml {
 
 PropertyParserTransform::PropertyParserTransform()
 	: number(Property::UnitMark::Number)
-	, length(Property::UnitMark::LengthPercent, PropertyUnit::PX)
-	, angle(Property::UnitMark::Angle, PropertyUnit::RAD)
+	, length(Property::UnitMark::LengthPercent)
+	, angle(Property::UnitMark::Angle)
 {
 }
 
-PropertyParserTransform::~PropertyParserTransform()
-{
-}
-
-// Called to parse a RCSS transform declaration.
-bool PropertyParserTransform::ParseValue(Property& property, const std::string& value, const ParameterMap& /*parameters*/) const
-{
-	if (value == "none")
-	{
-		property.value = Transform {};
-		property.unit = PropertyUnit::TRANSFORM;
-		return true;
+std::optional<Property> PropertyParserTransform::ParseValue(const std::string& value, const ParameterMap& /*parameters*/) const {
+	if (value == "none") {
+		return Transform {};
 	}
 
 	Transform transform {};
 
 	char const* next = value.c_str();
 
-	PropertyFloatValue args[16];
+	PropertyFloat args[16] = {
+		{0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER},
+		{0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER},
+		{0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER},
+		{0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER}, {0.f, PropertyUnit::NUMBER},
+	};
 
 	const PropertyParser* angle1[] = { &angle };
 	const PropertyParser* angle2[] = { &angle, &angle };
@@ -181,18 +150,16 @@ bool PropertyParserTransform::ParseValue(Property& property, const std::string& 
 		}
 		else
 		{
-			return false;
+			return {};
 		}
 	}
-	
-	property.value = std::move(transform);
-	property.unit = PropertyUnit::TRANSFORM;
 
-	return true;
+	return std::move(transform);
+
 }
 
 // Scan a string for a parameterized keyword with a certain number of numeric arguments.
-bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const char* keyword, const PropertyParser** parsers, PropertyFloatValue* args, int nargs) const
+bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const char* keyword, const PropertyParser** parsers, PropertyFloat* args, int nargs) const
 {
 	out_bytes_read = 0;
 	int total_bytes_read = 0, bytes_read = 0;
@@ -250,20 +217,19 @@ bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const c
 	/* parse the arguments */
 	for (int i = 0; i < nargs; ++i)
 	{
-		Property prop;
-
 		bytes_read = 0;
-		if (sscanf(str, " %[^,)] %n", arg, &bytes_read), bytes_read
-			&& parsers[i]->ParseValue(prop, std::string(arg), ParameterMap()))
-		{
-			args[i] = prop.ToFloatValue();
-			str += bytes_read;
-			total_bytes_read += bytes_read;
+		sscanf(str, " %[^,)] %n", arg, &bytes_read);
+		if (bytes_read == 0) {
+			return {};
 		}
-		else
-		{
-			return false;
+		auto prop = parsers[i]->ParseValue(std::string(arg), ParameterMap());
+		if (!prop) {
+			return {};
 		}
+
+		args[i] = prop.value().Get<PropertyFloat>();
+		str += bytes_read;
+		total_bytes_read += bytes_read;
 
 		/* find the comma */
 		if (i < nargs - 1)

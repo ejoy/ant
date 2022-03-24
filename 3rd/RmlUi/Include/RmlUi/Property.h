@@ -6,14 +6,15 @@
 #include "Transform.h"
 #include <variant>
 #include <string>
-#include "PropertyFloatValue.h"
+#include "PropertyFloat.h"
 
 namespace Rml {
 
+using PropertyKeyword = int;
+
 using PropertyVariant = std::variant<
-	std::monostate,
-	float,
-	int,
+	PropertyFloat,
+	PropertyKeyword,
 	Color,
 	std::string,
 	Transform,
@@ -21,7 +22,7 @@ using PropertyVariant = std::variant<
 	AnimationList
 >;
 
-class Property {
+class Property : public PropertyVariant {
 public:
 	template <typename T>
 	static constexpr  uint32_t Mark(T p0) {
@@ -47,58 +48,33 @@ public:
 		return (uint32_t(mark) & Mark(unit)) != 0;
 	}
 
-	Property();
-
 	template < typename PropertyType >
-	Property(PropertyType value, PropertyUnit unit)
-		: value(value)
-		, unit(unit)
+	Property(PropertyType value)
+		: PropertyVariant(value)
+	{}
+
+	Property(float value, PropertyUnit unit)
+		: PropertyVariant(PropertyFloat{value, unit})
 	{}
 
 	std::string ToString() const;
-	PropertyFloatValue ToFloatValue() const;
-
-	float           GetFloat() const;
-	Color           GetColor() const;
-	int             GetKeyword() const;
-	std::string     GetString() const;
-
-
-	template <typename T>
-	struct TypeUnit {};
-	template <> struct TypeUnit<TransitionList> { static const PropertyUnit unit = PropertyUnit::TRANSITION; };
-	template <> struct TypeUnit<Transform> { static const PropertyUnit unit = PropertyUnit::TRANSFORM; };
-	template <> struct TypeUnit<AnimationList> { static const PropertyUnit unit = PropertyUnit::ANIMATION; };
+	Property    Interpolate(const Property& other, float alpha) const;
+	bool        AllowInterpolate() const;
 
 	template <typename T>
 	T& Get() {
-		PropertyUnit checkunit = TypeUnit<T>::unit;
-		if (checkunit == unit) {
-			return std::get<T>(value);
-		}
-		assert(checkunit == unit);
-		static T dummy {};
-		return dummy;
+		assert (Has<T>());
+		return std::get<T>(*this);
 	}
 
 	template <typename T>
 	const T& Get() const {
-		PropertyUnit checkunit = TypeUnit<T>::unit;
-		if (checkunit == unit) {
-			return std::get<T>(value);
-		}
-		assert(checkunit == unit);
-		static T dummy {};
-		return dummy;
+		assert (Has<T>());
+		return std::get<T>(*this);
 	}
 
 	template <typename T>
-	bool Has() const { return std::holds_alternative<T>(value); }
-
-	bool operator==(const Property& other) const { return unit == other.unit && value == other.value; }
-
-	PropertyVariant value;
-	PropertyUnit unit;
+	bool Has() const { return std::holds_alternative<T>(*this); }
 };
 
 }

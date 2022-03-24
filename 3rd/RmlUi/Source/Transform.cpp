@@ -1,7 +1,6 @@
 #include "../Include/RmlUi/Transform.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/StringUtilities.h"
-#include "../Include/RmlUi/ElementStyle.h"
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/compatibility.hpp>
@@ -97,30 +96,30 @@ struct MultiplyVisitor {
 	}
 	void operator()(const Transforms::TranslateX& p) {
 		glm::vec3 v{ 0 };
-		v.x = ComputePropertyW(p.x, &e);
+		v.x = p.x.ComputeW(&e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::TranslateY& p) {
 		glm::vec3 v{ 0 };
-		v.y = ComputePropertyH(p.y, &e);
+		v.y = p.y.ComputeH(&e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::TranslateZ& p) {
 		glm::vec3 v{ 0 };
-		v.z = ComputeProperty(p.z, &e);
+		v.z = p.z.Compute(&e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::Translate2D& p) {
 		glm::vec3 v{ 0 };
-		v.x = ComputePropertyW(p.x, &e);
-		v.y = ComputePropertyH(p.y, &e);
+		v.x = p.x.ComputeW(&e);
+		v.y = p.y.ComputeH(&e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::Translate3D& p) {
 		glm::vec3 v{ 0 };
-		v.x = ComputePropertyW(p.x, &e);
-		v.y = ComputePropertyH(p.y, &e);
-		v.z = ComputeProperty(p.z, &e);
+		v.x = p.x.ComputeW(&e);
+		v.y = p.y.ComputeH(&e);
+		v.z = p.z.Compute(&e);
 		matrix = glm::translate(matrix, v);
 	}
 	void operator()(const Transforms::ScaleX& p) {
@@ -139,39 +138,39 @@ struct MultiplyVisitor {
 		matrix = glm::scale(matrix, { p.x, p.y, p.z });
 	}
 	void operator()(const Transforms::RotateX& p) {
-		float angle = ComputeProperty(p.angle, &e);
+		float angle = p.angle.Compute(&e);
 		matrix = glm::rotate(matrix, angle, { 1, 0, 0 });
 	}
 	void operator()(const Transforms::RotateY& p) {
-		float angle = ComputeProperty(p.angle, &e);
+		float angle = p.angle.Compute(&e);
 		matrix = glm::rotate(matrix, angle, { 0, 1, 0 });
 	}
 	void operator()(const Transforms::RotateZ& p) {
-		float angle = ComputeProperty(p.angle, &e);
+		float angle = p.angle.Compute(&e);
 		matrix = glm::rotate(matrix, angle, { 0, 0, 1 });
 	}
 	void operator()(const Transforms::Rotate2D& p) {
-		float angle = ComputeProperty(p.angle, &e);
+		float angle = p.angle.Compute(&e);
 		matrix = glm::rotate(matrix, angle, { 0, 0, 1 });
 	}
 	void operator()(const Transforms::Rotate3D& p) {
-		float angle = ComputeProperty(p.angle, &e);
+		float angle = p.angle.Compute(&e);
 		matrix = glm::rotate(matrix, angle, p.axis);
 	}
 	void operator()(const Transforms::SkewX& p) {
-		matrix *= skew(ComputeProperty(p.x, &e), 0);
+		matrix *= skew(p.x.Compute(&e), 0);
 	}
 	void operator()(const Transforms::SkewY& p) {
-		matrix *= skew(0, ComputeProperty(p.y, &e));
+		matrix *= skew(0, p.y.Compute(&e));
 	}
 	void operator()(const Transforms::Skew2D& p) {
-		matrix *= skew(ComputeProperty(p.x, &e), ComputeProperty(p.y, &e));
+		matrix *= skew(p.x.Compute(&e), p.y.Compute(&e));
 	}
 	void operator()(const Transforms::DecomposedMatrix4& p) {
 		matrix *= compose(p.translation, p.scale, p.skew, p.perspective, p.quaternion);
 	}
 	void operator()(const Transforms::Perspective& p) {
-		float distance = ComputeProperty(p.distance, &e);
+		float distance = p.distance.Compute(&e);
 		matrix *= perspective(distance);
 	}
 };
@@ -187,47 +186,47 @@ struct PrepareVisitor {
 	void operator()(Scale3D&) { }
 	void operator()(DecomposedMatrix4&) { }
 	void operator()(TranslateX& p) {
-		p.x = { ComputePropertyW(p.x, &e), PropertyUnit::PX };
+		p.x = { p.x.ComputeW(&e), PropertyUnit::PX };
 	}
 	void operator()(TranslateY& p) {
-		p.y = { ComputePropertyH(p.y, &e), PropertyUnit::PX };
+		p.y = { p.y.ComputeH(&e), PropertyUnit::PX };
 	}
 	void operator()(TranslateZ& p) {
-		p.z = { ComputeProperty(p.z, &e), PropertyUnit::PX };
+		p.z = { p.z.Compute(&e), PropertyUnit::PX };
 	}
 	void operator()(Translate2D& p) {
-		p.x = { ComputePropertyW(p.x, &e), PropertyUnit::PX };
-		p.y = { ComputePropertyH(p.y, &e), PropertyUnit::PX };
+		p.x = { p.x.ComputeW(&e), PropertyUnit::PX };
+		p.y = { p.y.ComputeH(&e), PropertyUnit::PX };
 	}
 	void operator()(Translate3D& p) {
-		p.x = { ComputePropertyW(p.x, &e), PropertyUnit::PX };
-		p.y = { ComputePropertyH(p.y, &e), PropertyUnit::PX };
-		p.z = { ComputeProperty(p.z, &e), PropertyUnit::PX };
+		p.x = { p.x.ComputeW(&e), PropertyUnit::PX };
+		p.y = { p.y.ComputeH(&e), PropertyUnit::PX };
+		p.z = { p.z.Compute(&e), PropertyUnit::PX };
 	}
 	void operator()(RotateX& p) {
-		p.angle = { ComputeProperty(p.angle, &e), PropertyUnit::RAD };
+		p.angle = { p.angle.Compute(&e), PropertyUnit::RAD };
 	}
 	void operator()(RotateY& p) {
-		p.angle = { ComputeProperty(p.angle, &e), PropertyUnit::RAD };
+		p.angle = { p.angle.Compute(&e), PropertyUnit::RAD };
 	}
 	void operator()(RotateZ& p) {
-		p.angle = { ComputeProperty(p.angle, &e), PropertyUnit::RAD };
+		p.angle = { p.angle.Compute(&e), PropertyUnit::RAD };
 	}
 	void operator()(Rotate2D& p) {
-		p.angle = { ComputeProperty(p.angle, &e), PropertyUnit::RAD };
+		p.angle = { p.angle.Compute(&e), PropertyUnit::RAD };
 	}
 	void operator()(Rotate3D& p) {
-		p.angle = { ComputeProperty(p.angle, &e), PropertyUnit::RAD };
+		p.angle = { p.angle.Compute(&e), PropertyUnit::RAD };
 	}
 	void operator()(SkewX& p) {
-		p.x = { ComputeProperty(p.x, &e), PropertyUnit::RAD };
+		p.x = { p.x.Compute(&e), PropertyUnit::RAD };
 	}
 	void operator()(SkewY& p) {
-		p.y = { ComputeProperty(p.y, &e), PropertyUnit::RAD };
+		p.y = { p.y.Compute(&e), PropertyUnit::RAD };
 	}
 	void operator()(Skew2D& p) {
-		p.x = { ComputeProperty(p.x, &e), PropertyUnit::RAD };
-		p.y = { ComputeProperty(p.y, &e), PropertyUnit::RAD };
+		p.x = { p.x.Compute(&e), PropertyUnit::RAD };
+		p.y = { p.y.Compute(&e), PropertyUnit::RAD };
 	}
 	void operator()(Matrix3D& p) {
 		auto d = decompose((const glm::mat4x4&)p);
@@ -240,7 +239,7 @@ struct PrepareVisitor {
 		else { ok = false; };
 	}
 	void operator()(Perspective& p) {
-		float distance = ComputeProperty(p.distance, &e);
+		float distance = p.distance.Compute(&e);
 		auto d = decompose(perspective(distance));
 		if (d) { t = d.value(); }
 		else { ok = false; };
@@ -262,7 +261,7 @@ struct InterpolateVisitor {
 	void interpolate(float& p0, const float& p1) {
 		p0 = glm::lerp(p0, p1, alpha);
 	}
-	void interpolate(PropertyFloatValue& p0, const PropertyFloatValue& p1) {
+	void interpolate(PropertyFloat& p0, const PropertyFloat& p1) {
 		assert(p0.unit == p1.unit);
 		interpolate(p0.value, p1.value);
 	}
@@ -315,32 +314,32 @@ struct InterpolateVisitor {
 
 struct ToStringVisitor {
 	std::string operator()(const Transforms::SkewX& p) {
-		return "skewX(" + ToString(p.x) + ")";
+		return "skewX(" + p.x.ToString() + ")";
 	}
 	std::string operator()(const Transforms::SkewY& p) {
-		return "skewY(" + ToString(p.y) + ")";
+		return "skewY(" + p.y.ToString() + ")";
 	}
 	std::string operator()(const Transforms::Skew2D& p) {
-		return "skew(" + ToString(p.x) + "," + ToString(p.y) + ")";
+		return "skew(" + p.x.ToString() + "," + p.y.ToString() + ")";
 	}
 	std::string operator()(const Transforms::RotateX& p) {
-		return "rotateX(" + ToString(p.angle) + ")";
+		return "rotateX(" + p.angle.ToString() + ")";
 	}
 	std::string operator()(const Transforms::RotateY& p) {
-		return "rotateY(" + ToString(p.angle) + ")";
+		return "rotateY(" + p.angle.ToString() + ")";
 	}
 	std::string operator()(const Transforms::RotateZ& p) {
-		return "rotateZ(" + ToString(p.angle) + ")";
+		return "rotateZ(" + p.angle.ToString() + ")";
 	}
 	std::string operator()(const Transforms::Rotate2D& p) {
-		return "rotate(" + ToString(p.angle) + ")";
+		return "rotate(" + p.angle.ToString() + ")";
 	}
 	std::string operator()(const Transforms::Rotate3D& p) {
 		return "rotate3d("
 			+ ToString(p.axis.x) + ","
 			+ ToString(p.axis.y) + ","
 			+ ToString(p.axis.z) + ","
-			+ ToString(p.angle)
+			+ p.angle.ToString()
 			+ ")";
 	}
 	std::string operator()(const Transforms::ScaleX& p) {
@@ -359,22 +358,22 @@ struct ToStringVisitor {
 		return "scale3d(" + ToString(p.x) + "," + ToString(p.y) + "," + ToString(p.z) + ")";
 	}
 	std::string operator()(const Transforms::TranslateX& p) {
-		return "translateX(" + ToString(p.x) + ")";
+		return "translateX(" + p.x.ToString() + ")";
 	}
 	std::string operator()(const Transforms::TranslateY& p) {
-		return "translateY(" + ToString(p.y) + ")";
+		return "translateY(" + p.y.ToString() + ")";
 	}
 	std::string operator()(const Transforms::TranslateZ& p) {
-		return "translateZ(" + ToString(p.z) + ")";
+		return "translateZ(" + p.z.ToString() + ")";
 	}
 	std::string operator()(const Transforms::Translate2D& p) {
-		return "translate(" + ToString(p.x) + "," + ToString(p.y) + ")";
+		return "translate(" + p.x.ToString() + "," + p.y.ToString() + ")";
 	}
 	std::string operator()(const Transforms::Translate3D& p) {
-		return "translate3d(" + ToString(p.x) + "," + ToString(p.y) + "," + ToString(p.z) + ")";
+		return "translate3d(" + p.x.ToString() + "," + p.y.ToString() + "," + p.z.ToString() + ")";
 	}
 	std::string operator()(const Transforms::Perspective& p) {
-		return "perspective(" + ToString(p.distance) + ")";
+		return "perspective(" + p.distance.ToString() + ")";
 	}
 	std::string operator()(const Transforms::Matrix2D& p) {
 		return "matrix("
@@ -439,14 +438,16 @@ struct GetTypeVisitor {
 	TransformType operator()(const Transforms::DecomposedMatrix4&) { return  TransformType::Matrix; }
 };
 
+static PropertyFloat zero = {0.f, PropertyUnit::NUMBER};
+
 struct ConvertToGenericTypeVisitor {
 	TransformPrimitive& t;
 	template <typename T>
 	void operator()(const T& p) { }
-	void operator()(const TranslateX& p) { t = Translate3D{ p.x, {}, {} }; }
-	void operator()(const TranslateY& p) { t = Translate3D{ {}, p.y, {} }; }
-	void operator()(const TranslateZ& p) { t = Translate3D{ {}, {}, p.z }; }
-	void operator()(const Translate2D& p) { t = Translate3D{ p.x, p.y, {} }; }
+	void operator()(const TranslateX& p) { t = Translate3D{ p.x, zero, zero }; }
+	void operator()(const TranslateY& p) { t = Translate3D{ zero, p.y, zero }; }
+	void operator()(const TranslateZ& p) { t = Translate3D{ zero, zero, p.z }; }
+	void operator()(const Translate2D& p) { t = Translate3D{ p.x, p.y, zero }; }
 	void operator()(const ScaleX& p) { t = Scale3D{ p.x, {}, {} }; }
 	void operator()(const ScaleY& p) { t = Scale3D{ {}, p.y, {} }; }
 	void operator()(const ScaleZ& p) { t = Scale3D{ {}, {}, p.z }; }
@@ -455,8 +456,8 @@ struct ConvertToGenericTypeVisitor {
 	void operator()(const RotateY& p) { t = Rotate3D{ {0,1,0}, p.angle }; }
 	void operator()(const RotateZ& p) { t = Rotate3D{ {0,0,1}, p.angle }; }
 	void operator()(const Rotate2D& p) { t = Rotate3D{ {0,0,1}, p.angle }; }
-	void operator()(const SkewX& p) { t = Skew2D{ p.x, {} }; }
-	void operator()(const SkewY& p) { t = Skew2D{ {}, p.y }; }
+	void operator()(const SkewX& p) { t = Skew2D{ p.x, zero }; }
+	void operator()(const SkewY& p) { t = Skew2D{ zero, p.y }; }
 };
 
 void TransformPrimitive::SetIdentity() {
@@ -489,7 +490,7 @@ TransformType TransformPrimitive::GetType() const {
 
 Transform Transform::Interpolate(const Transform& other, float alpha) const {
 	if (size() != other.size()) {
-		return *this;
+		return InterpolateFallback(*this, other, alpha);
 	}
 	Transform new_transform {};
 	new_transform.reserve(size());
@@ -523,6 +524,17 @@ bool Transform::Combine(Element& e, size_t start) {
 	erase(begin() + start, end());
 	emplace_back(std::move(d.value()));
 	return true;
+}
+
+std::string Transform::ToString() const {
+	std::string result;
+	for (auto const& t : *this) {
+		if (!result.empty()) {
+			result += ", ";
+		}
+		result += t.ToString();
+	}
+	return result;
 }
 
 }

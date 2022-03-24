@@ -159,8 +159,8 @@ static void SetProperty(StyleSheetPropertyDictionary& properties, PropertyId id,
 	if (it != properties.prop.end() && getSpecificity(properties, id) > specificity) {
 		return;
 	}
-	properties.prop[id] = property;
-	properties.spec[id] = specificity;
+	properties.prop.insert_or_assign(id, property);
+	properties.spec.insert_or_assign(id, specificity);
 }
 
 void StyleSheetNode::ImportProperties(const StyleSheetPropertyDictionary& _properties, int rule_specificity) {

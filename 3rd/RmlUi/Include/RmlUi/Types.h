@@ -265,6 +265,11 @@ inline Point operator*(const Point& lhs, const Point& rhs) {
 inline Size operator*(const Size& lhs, float rhs) {
 	return Size(lhs.w * rhs, lhs.h * rhs);
 }
+
+
+template <typename T>
+T InterpolateFallback(const T& p0, const T& p1, float alpha) { return alpha < 1.f ? p0 : p1; }
+
 }
 
 

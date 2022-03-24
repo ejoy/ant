@@ -50,10 +50,10 @@ struct StyleSheetSpecificationInstance {
 
 	std::unordered_map<std::string, PropertyParser*> parsers = {
 		{"number", new PropertyParserNumber(Property::UnitMark::Number)},
-		{"length", new PropertyParserNumber(Property::UnitMark::Length, PropertyUnit::PX)},
-		{"length_percent", new PropertyParserNumber(Property::UnitMark::LengthPercent, PropertyUnit::PX)},
-		{"number_length_percent", new PropertyParserNumber(Property::UnitMark::NumberLengthPercent, PropertyUnit::PX)},
-		{"angle", new PropertyParserNumber(Property::UnitMark::Angle, PropertyUnit::RAD)},
+		{"length", new PropertyParserNumber(Property::UnitMark::Length)},
+		{"length_percent", new PropertyParserNumber(Property::UnitMark::LengthPercent)},
+		{"number_length_percent", new PropertyParserNumber(Property::UnitMark::NumberLengthPercent)},
+		{"angle", new PropertyParserNumber(Property::UnitMark::Angle)},
 		{"keyword", new PropertyParserKeyword()},
 		{"string", new PropertyParserString()},
 		{"animation", new PropertyParserAnimation(PropertyParserAnimation::ANIMATION_PARSER)},
@@ -259,16 +259,13 @@ bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyDictionar
 	const PropertyDefinition* property_definition = GetPropertyDefinition(property_id);
 	if (!property_definition)
 		return false;
-
 	std::vector<std::string> property_values;
 	if (!ParsePropertyValues(property_values, property_value, false) || property_values.size() == 0)
 		return false;
-
-	Property new_property;
-	if (!property_definition->ParseValue(new_property, property_values[0]))
+	auto new_property = property_definition->ParseValue(property_values[0]);
+	if (!new_property)
 		return false;
-	
-	dictionary[property_id] = new_property;
+	dictionary.insert_or_assign(property_id, std::move(new_property.value()));
 	return true;
 }
 
@@ -310,12 +307,12 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyDictiona
 
 		for (int i = 0; i < 4; i++) {
 			assert(shorthand_definition->items[i].type == ShorthandItemType::Property);
-			Property new_property;
 			int value_index = box_side_to_value_index[i];
-			if (!shorthand_definition->items[i].property_definition->ParseValue(new_property, property_values[value_index]))
+			auto new_property = shorthand_definition->items[i].property_definition->ParseValue(property_values[value_index]);
+			if (!new_property)
 				return false;
 
-			dictionary[shorthand_definition->items[i].property_definition->GetId()] = new_property;
+			dictionary.insert_or_assign(shorthand_definition->items[i].property_definition->GetId(), std::move(new_property.value()));
 		}
 	}
 	else if (shorthand_definition->type == ShorthandType::RecursiveRepeat) {
@@ -369,9 +366,8 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyDictiona
 		size_t property_index = 0;
 
 		for (; value_index < property_values.size() && property_index < shorthand_definition->items.size(); property_index++) {
-			Property new_property;
-
-			if (!shorthand_definition->items[property_index].property_definition->ParseValue(new_property, property_values[value_index])) {
+			auto new_property = shorthand_definition->items[property_index].property_definition->ParseValue(property_values[value_index]);
+			if (!new_property) {
 				// This definition failed to parse; if we're falling through, try the next property. If there is no
 				// next property, then abort!
 				if (shorthand_definition->type == ShorthandType::FallThrough) {
@@ -381,7 +377,7 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyDictiona
 				return false;
 			}
 
-			dictionary[shorthand_definition->items[property_index].property_id] = new_property;
+			dictionary.insert_or_assign(shorthand_definition->items[property_index].property_id, std::move(new_property.value()));
 
 			// Increment the value index, unless we're replicating the last value and we're up to the last value.
 			if (shorthand_definition->type != ShorthandType::Replicate ||
@@ -598,7 +594,8 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 	
 	// Perspective and Transform specifications
 	RegisterProperty(PropertyId::Perspective, "perspective", "none", false)
-		.AddParser("keyword", "none").AddParser("length");
+		.AddParser("keyword", "none")
+		.AddParser("length");
 	RegisterProperty(PropertyId::PerspectiveOriginX, "perspective-origin-x", "50%", false)
 		.AddParser("keyword", "left, center, right")
 		.AddParser("length_percent");
@@ -614,7 +611,7 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 	RegisterProperty(PropertyId::TransformOriginY, "transform-origin-y", "50%", false)
 		.AddParser("keyword", "top, center, bottom")
 		.AddParser("length_percent");
-	RegisterProperty(PropertyId::TransformOriginZ, "transform-origin-z", "0", false)
+	RegisterProperty(PropertyId::TransformOriginZ, "transform-origin-z", "0px", false)
 		.AddParser("length");
 	RegisterShorthand(ShorthandId::TransformOrigin, "transform-origin", "transform-origin-x, transform-origin-y, transform-origin-z", ShorthandType::FallThrough);
 
