@@ -40,7 +40,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	geometry.Release();
 
 	const Property* image = element->GetComputedProperty(PropertyId::BackgroundImage);
-	if (image->unit != Property::Unit::STRING) {
+	if (image->unit != PropertyUnit::STRING) {
 		// "none"
 		return;
 	}

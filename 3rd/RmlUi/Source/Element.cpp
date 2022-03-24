@@ -183,18 +183,18 @@ float Element::GetFontSize() const {
 }
 
 static float ComputeFontsize(const Property* property, Element* element) {
-	if (property->unit == Property::Unit::PERCENT || property->unit == Property::Unit::EM) {
+	if (property->unit == PropertyUnit::PERCENT || property->unit == PropertyUnit::EM) {
 		float fontSize = 16.f;
 		Element* parent = element->GetParentNode();
 		if (parent) {
 			fontSize = parent->GetFontSize();
 		}
-		if (property->unit == Property::Unit::PERCENT) {
+		if (property->unit == PropertyUnit::PERCENT) {
 			return fontSize * 0.01f * property->GetFloat();
 		}
 		return fontSize * property->GetFloat();
 	}
-	if (property->unit == Property::Unit::REM) {
+	if (property->unit == PropertyUnit::REM) {
 		if (element == element->GetOwnerDocument()->GetBody()) {
 			return property->GetFloat() * 16;
 		}
@@ -546,7 +546,7 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 	if (changed_properties.Contains(PropertyId::ZIndex)) {
 		float new_z_index = 0;
 		const Property* property = GetComputedProperty(PropertyId::ZIndex);
-		if (property->unit != Property::Unit::KEYWORD) {
+		if (property->unit != PropertyUnit::KEYWORD) {
 			new_z_index = property->GetFloat();
 		}
 		if (z_index != new_z_index) {
@@ -977,7 +977,7 @@ void Element::AdvanceAnimations() {
 	double time = GetOwnerDocument()->GetCurrentTime();
 	for (auto& animation : animations) {
 		Property property = animation.UpdateAndGetProperty(time, *this);
-		if (property.unit != Property::Unit::UNKNOWN)
+		if (property.unit != PropertyUnit::UNKNOWN)
 			SetAnimationProperty(animation.GetPropertyId(), &property);
 	}
 	auto it_completed = std::partition(animations.begin(), animations.end(), [](const ElementAnimation& animation) { return !animation.IsComplete(); });
@@ -1005,14 +1005,14 @@ void Element::UpdateTransform() {
 		origin2d = origin2d - parent->GetScrollOffset();
 	}
 	glm::vec3 origin(origin2d.x, origin2d.y, 0);
-	auto computedTransform = GetComputedProperty(PropertyId::Transform)->Get<TransformPtr>();
-	if (computedTransform && !computedTransform->empty()) {
+	auto computedTransform = GetComputedProperty(PropertyId::Transform)->Get<Transform>();
+	if (!computedTransform.empty()) {
 		glm::vec3 transform_origin = origin + glm::vec3 {
 			ComputePropertyW(GetComputedProperty(PropertyId::TransformOriginX), this),
 			ComputePropertyH(GetComputedProperty(PropertyId::TransformOriginY), this),
 			ComputeProperty (GetComputedProperty(PropertyId::TransformOriginZ), this),
 		};
-		new_transform = glm::translate(transform_origin) * computedTransform->GetMatrix(*this) * glm::translate(-transform_origin);
+		new_transform = glm::translate(transform_origin) * computedTransform.GetMatrix(*this) * glm::translate(-transform_origin);
 	}
 	new_transform = glm::translate(new_transform, origin);
 	if (parent) {
@@ -1301,7 +1301,7 @@ void Element::SetScrollLeft(float v) {
 	}
 	Size offset { v, 0 };
 	layout.UpdateScrollOffset(offset, metrics);
-	Property value(offset.w, Property::Unit::PX);
+	Property value(offset.w, PropertyUnit::PX);
 	SetProperty(PropertyId::ScrollLeft, &value);
 }
 
@@ -1311,7 +1311,7 @@ void Element::SetScrollTop(float v) {
 	}
 	Size offset { 0, v };
 	layout.UpdateScrollOffset(offset, metrics);
-	Property value(offset.h, Property::Unit::PX);
+	Property value(offset.h, PropertyUnit::PX);
 	SetProperty(PropertyId::ScrollTop, &value);
 }
 
@@ -1323,10 +1323,10 @@ void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
 	Size offset = GetScrollOffset();
 	layout.UpdateScrollOffset(offset, metrics);
 
-	Property left(offset.w, Property::Unit::PX);
+	Property left(offset.w, PropertyUnit::PX);
 	SetProperty(PropertyId::ScrollLeft, &left);
 
-	Property top(offset.h, Property::Unit::PX);
+	Property top(offset.h, PropertyUnit::PX);
 	SetProperty(PropertyId::ScrollTop, &top);
 }
 
@@ -1679,7 +1679,7 @@ void Element::UpdateProperties() {
 	}
 
 	ForeachProperties([&](PropertyId id, const Property& property){
-		if (dirty_em_properties && property.unit == Property::Unit::EM)
+		if (dirty_em_properties && property.unit == PropertyUnit::EM)
 			dirty_properties.Insert(id);
 		if (!dirty_properties.Contains(id)) {
 			return;

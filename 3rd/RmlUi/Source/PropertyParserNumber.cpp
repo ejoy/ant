@@ -33,27 +33,27 @@
 
 namespace Rml {
 
-static const std::unordered_map<std::string, Property::Unit> g_property_unit_string_map =
+static const std::unordered_map<std::string, PropertyUnit> g_property_unit_string_map =
 {
-	{"", Property::Unit::NUMBER},
-	{"%", Property::Unit::PERCENT},
-	{"px", Property::Unit::PX},
-	{"em", Property::Unit::EM},
-	{"rem", Property::Unit::REM},
-	{"in", Property::Unit::INCH},
-	{"cm", Property::Unit::CM},
-	{"mm", Property::Unit::MM},
-	{"pt", Property::Unit::PT},
-	{"pc", Property::Unit::PC},
-	{"deg", Property::Unit::DEG},
-	{"rad", Property::Unit::RAD},
-	{"vw", Property::Unit::VW},
-	{"vh", Property::Unit::VH},
-	{"vmin", Property::Unit::VMIN},
-	{"vmax", Property::Unit::VMAX},
+	{"", PropertyUnit::NUMBER},
+	{"%", PropertyUnit::PERCENT},
+	{"px", PropertyUnit::PX},
+	{"em", PropertyUnit::EM},
+	{"rem", PropertyUnit::REM},
+	{"in", PropertyUnit::INCH},
+	{"cm", PropertyUnit::CM},
+	{"mm", PropertyUnit::MM},
+	{"pt", PropertyUnit::PT},
+	{"pc", PropertyUnit::PC},
+	{"deg", PropertyUnit::DEG},
+	{"rad", PropertyUnit::RAD},
+	{"vw", PropertyUnit::VW},
+	{"vh", PropertyUnit::VH},
+	{"vmin", PropertyUnit::VMIN},
+	{"vmax", PropertyUnit::VMAX},
 };
 
-PropertyParserNumber::PropertyParserNumber(Property::UnitMark units, Property::Unit zero_unit)
+PropertyParserNumber::PropertyParserNumber(Property::UnitMark units, PropertyUnit zero_unit)
 	: units(units), zero_unit(zero_unit)
 {}
 
@@ -93,7 +93,7 @@ bool PropertyParserNumber::ParseValue(Property& property, const std::string& val
 		return false;
 	}
 
-	const Property::Unit unit = it->second;
+	const PropertyUnit unit = it->second;
 
 	if (Property::Contains(units, unit))
 	{
@@ -104,9 +104,9 @@ bool PropertyParserNumber::ParseValue(Property& property, const std::string& val
 
 	// Detected unit not allowed.
 	// However, we allow a value of "0" if zero_unit is set and no unit specified (that is, unit is a pure NUMBER).
-	if (unit == Property::Unit::NUMBER)
+	if (unit == PropertyUnit::NUMBER)
 	{
-		if (zero_unit != Property::Unit::UNKNOWN && float_value == 0.0f)
+		if (zero_unit != PropertyUnit::UNKNOWN && float_value == 0.0f)
 		{
 			property.unit = zero_unit;
 			property.value = 0.0f;

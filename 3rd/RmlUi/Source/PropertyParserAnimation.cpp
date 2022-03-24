@@ -127,7 +127,7 @@ static bool ParseAnimation(Property & property, const std::vector<std::string>& 
 				{
 					if (animation_list.size() > 0) // The none keyword can not be part of multiple definitions
 						return false;
-					property = Property{ AnimationList{}, Property::Unit::ANIMATION };
+					property = Property{ AnimationList{}, PropertyUnit::ANIMATION };
 					return true;
 				}
 				break;
@@ -205,7 +205,7 @@ static bool ParseAnimation(Property & property, const std::vector<std::string>& 
 	}
 
 	property.value = std::move(animation_list);
-	property.unit = Property::Unit::ANIMATION;
+	property.unit = PropertyUnit::ANIMATION;
 
 	return true;
 }
@@ -242,7 +242,7 @@ static bool ParseTransition(Property & property, const std::vector<std::string>&
 				{
 					if (transition_list.transitions.size() > 0) // The none keyword can not be part of multiple definitions
 						return false;
-					property = Property{ TransitionList{true, false, {}}, Property::Unit::TRANSITION };
+					property = Property{ TransitionList{true, false, {}}, PropertyUnit::TRANSITION };
 					return true;
 				}
 				else if (it->second.type == Keyword::ALL)
@@ -327,7 +327,7 @@ static bool ParseTransition(Property & property, const std::vector<std::string>&
 	}
 
 	property.value = std::move(transition_list);
-	property.unit = Property::Unit::TRANSITION;
+	property.unit = PropertyUnit::TRANSITION;
 
 	return true;
 }

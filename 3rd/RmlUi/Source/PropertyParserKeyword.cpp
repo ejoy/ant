@@ -47,7 +47,7 @@ bool PropertyParserKeyword::ParseValue(Property& property, const std::string& va
 		return false;
 
 	property.value = iterator->second;
-	property.unit = Property::Unit::KEYWORD;
+	property.unit = PropertyUnit::KEYWORD;
 
 	return true;
 }

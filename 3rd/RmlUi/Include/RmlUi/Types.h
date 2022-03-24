@@ -72,7 +72,6 @@ using ElementAnimationList = std::vector< ElementAnimation >;
 using PropertyDictionary = std::unordered_map< PropertyId, Property >;
 using ElementAttributes = std::unordered_map< std::string, std::string >;
 using AnimationList = std::vector<Animation>;
-using TransformPtr = std::shared_ptr< Transform >;
 
 // Data binding types
 class DataView;

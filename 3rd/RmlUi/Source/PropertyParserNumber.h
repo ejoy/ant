@@ -42,7 +42,7 @@ namespace Rml {
 class PropertyParserNumber : public PropertyParser
 {
 public:
-	PropertyParserNumber(Property::UnitMark units, Property::Unit zero_unit = Property::Unit::UNKNOWN);
+	PropertyParserNumber(Property::UnitMark units, PropertyUnit zero_unit = PropertyUnit::UNKNOWN);
 	virtual ~PropertyParserNumber();
 
 	/// Called to parse a RCSS number declaration.
@@ -57,7 +57,7 @@ private:
 	Property::UnitMark units;
 
 	// If zero unit is set and pure numbers are not allowed, parsing of "0" is still allowed and assigned the given unit.
-	Property::Unit zero_unit;
+	PropertyUnit zero_unit;
 };
 
 }

@@ -187,47 +187,47 @@ struct PrepareVisitor {
 	void operator()(Scale3D&) { }
 	void operator()(DecomposedMatrix4&) { }
 	void operator()(TranslateX& p) {
-		p.x = { ComputePropertyW(p.x, &e), Property::Unit::PX };
+		p.x = { ComputePropertyW(p.x, &e), PropertyUnit::PX };
 	}
 	void operator()(TranslateY& p) {
-		p.y = { ComputePropertyH(p.y, &e), Property::Unit::PX };
+		p.y = { ComputePropertyH(p.y, &e), PropertyUnit::PX };
 	}
 	void operator()(TranslateZ& p) {
-		p.z = { ComputeProperty(p.z, &e), Property::Unit::PX };
+		p.z = { ComputeProperty(p.z, &e), PropertyUnit::PX };
 	}
 	void operator()(Translate2D& p) {
-		p.x = { ComputePropertyW(p.x, &e), Property::Unit::PX };
-		p.y = { ComputePropertyH(p.y, &e), Property::Unit::PX };
+		p.x = { ComputePropertyW(p.x, &e), PropertyUnit::PX };
+		p.y = { ComputePropertyH(p.y, &e), PropertyUnit::PX };
 	}
 	void operator()(Translate3D& p) {
-		p.x = { ComputePropertyW(p.x, &e), Property::Unit::PX };
-		p.y = { ComputePropertyH(p.y, &e), Property::Unit::PX };
-		p.z = { ComputeProperty(p.z, &e), Property::Unit::PX };
+		p.x = { ComputePropertyW(p.x, &e), PropertyUnit::PX };
+		p.y = { ComputePropertyH(p.y, &e), PropertyUnit::PX };
+		p.z = { ComputeProperty(p.z, &e), PropertyUnit::PX };
 	}
 	void operator()(RotateX& p) {
-		p.angle = { ComputeProperty(p.angle, &e), Property::Unit::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), PropertyUnit::RAD };
 	}
 	void operator()(RotateY& p) {
-		p.angle = { ComputeProperty(p.angle, &e), Property::Unit::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), PropertyUnit::RAD };
 	}
 	void operator()(RotateZ& p) {
-		p.angle = { ComputeProperty(p.angle, &e), Property::Unit::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), PropertyUnit::RAD };
 	}
 	void operator()(Rotate2D& p) {
-		p.angle = { ComputeProperty(p.angle, &e), Property::Unit::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), PropertyUnit::RAD };
 	}
 	void operator()(Rotate3D& p) {
-		p.angle = { ComputeProperty(p.angle, &e), Property::Unit::RAD };
+		p.angle = { ComputeProperty(p.angle, &e), PropertyUnit::RAD };
 	}
 	void operator()(SkewX& p) {
-		p.x = { ComputeProperty(p.x, &e), Property::Unit::RAD };
+		p.x = { ComputeProperty(p.x, &e), PropertyUnit::RAD };
 	}
 	void operator()(SkewY& p) {
-		p.y = { ComputeProperty(p.y, &e), Property::Unit::RAD };
+		p.y = { ComputeProperty(p.y, &e), PropertyUnit::RAD };
 	}
 	void operator()(Skew2D& p) {
-		p.x = { ComputeProperty(p.x, &e), Property::Unit::RAD };
-		p.y = { ComputeProperty(p.y, &e), Property::Unit::RAD };
+		p.x = { ComputeProperty(p.x, &e), PropertyUnit::RAD };
+		p.y = { ComputeProperty(p.y, &e), PropertyUnit::RAD };
 	}
 	void operator()(Matrix3D& p) {
 		auto d = decompose((const glm::mat4x4&)p);
@@ -262,7 +262,7 @@ struct InterpolateVisitor {
 	void interpolate(float& p0, const float& p1) {
 		p0 = glm::lerp(p0, p1, alpha);
 	}
-	void interpolate(FloatValue& p0, const FloatValue& p1) {
+	void interpolate(PropertyFloatValue& p0, const PropertyFloatValue& p1) {
 		assert(p0.unit == p1.unit);
 		interpolate(p0.value, p1.value);
 	}
@@ -487,20 +487,20 @@ TransformType TransformPrimitive::GetType() const {
 	return std::visit(GetTypeVisitor{}, static_cast<Transforms::Primitive const&>(*this));
 }
 
-std::unique_ptr<Transform> Transform::Interpolate(const Transform& other, float alpha) {
+Transform Transform::Interpolate(const Transform& other, float alpha) const {
 	if (size() != other.size()) {
-		return {};
+		return *this;
 	}
-	std::unique_ptr<Transform> new_transform(new Transform);
-	new_transform->reserve(size());
+	Transform new_transform {};
+	new_transform.reserve(size());
 	for (size_t i = 0; i < size(); ++i) {
 		TransformPrimitive p = (*this)[i];
 		if (!p.Interpolate(other[i], alpha)) {
 			return {};
 		}
-		new_transform->emplace_back(std::move(p));
+		new_transform.emplace_back(std::move(p));
 	}
-	return new_transform;
+	return std::move(new_transform);
 }
 
 glm::mat4x4 Transform::GetMatrix(Element& e) const {

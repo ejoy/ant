@@ -301,7 +301,7 @@ bool PropertyParserColour::ParseValue(Property& property, const std::string& val
 	}
 
 	property.value = colour;
-	property.unit = Property::Unit::COLOUR;
+	property.unit = PropertyUnit::COLOUR;
 
 	return true;
 }

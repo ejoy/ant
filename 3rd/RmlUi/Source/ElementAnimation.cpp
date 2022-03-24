@@ -52,23 +52,19 @@ static Property InterpolateProperties(const Property& p0, const Property& p1, fl
 		return Property{ f, p0.unit };
 	}
 
-	if (p0.unit == Property::Unit::COLOUR && p1.unit == Property::Unit::COLOUR)
+	if (p0.unit == PropertyUnit::COLOUR && p1.unit == PropertyUnit::COLOUR)
 	{
 		Color c0 = p0.GetColor();
 		Color c1 = p1.GetColor();
-		return Property{ ColorInterpolate(c0, c1, alpha), Property::Unit::COLOUR };
+		return Property{ ColorInterpolate(c0, c1, alpha), PropertyUnit::COLOUR };
 	}
 
-	if (p0.unit == Property::Unit::TRANSFORM && p1.unit == Property::Unit::TRANSFORM)
+	if (p0.unit == PropertyUnit::TRANSFORM && p1.unit == PropertyUnit::TRANSFORM)
 	{
-		auto& t0 = p0.Get<TransformPtr>();
-		auto& t1 = p1.Get<TransformPtr>();
-		auto t = t0->Interpolate(*t1, alpha);
-		if (!t) {
-			Log::Message(Log::Level::Error, "Transform primitives can not be interpolated.");
-			return Property{ t0, Property::Unit::TRANSFORM };
-		}
-		return Property{ TransformPtr(std::move(t)), Property::Unit::TRANSFORM };
+		auto& t0 = p0.Get<Transform>();
+		auto& t1 = p1.Get<Transform>();
+		auto t = t0.Interpolate(t1, alpha);
+		return Property{ Transform(std::move(t)), PropertyUnit::TRANSFORM };
 	}
 
 	// Fall back to discrete interpolation for incompatible units.
@@ -138,18 +134,18 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 static bool PrepareTransforms(AnimationKey& key, Element& element) {
 	auto& prop0 = key.in;
 	auto& prop1 = key.out;
-	if (prop0.unit != Property::Unit::TRANSFORM || prop1.unit != Property::Unit::TRANSFORM) {
+	if (prop0.unit != PropertyUnit::TRANSFORM || prop1.unit != PropertyUnit::TRANSFORM) {
 		return false;
 	}
-	if (!prop0.Has<TransformPtr>()) {
-		prop0.value = std::make_shared<Transform>();
+	if (!prop0.Has<Transform>()) {
+		prop0.value = Transform {};
 	}
-	if (!prop1.Has<TransformPtr>()) {
-		prop1.value = std::make_shared<Transform>();
+	if (!prop1.Has<Transform>()) {
+		prop1.value = Transform {};
 	}
-	auto& t0 = prop0.Get<TransformPtr>();
-	auto& t1 = prop1.Get<TransformPtr>();
-	return PrepareTransformPair(*t0, *t1, element);
+	auto& t0 = prop0.Get<Transform>();
+	auto& t1 = prop1.Get<Transform>();
+	return PrepareTransformPair(t0, t1, element);
 }
 
 ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element, double start_world_time, float duration, int num_iterations, bool alternate_direction)
@@ -170,7 +166,7 @@ ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigi
 
 bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween)
 {
-	if (out_prop.unit == Property::Unit::ANIMATION || out_prop.unit == Property::Unit::TRANSITION || out_prop.unit == Property::Unit::STRING) {
+	if (out_prop.unit == PropertyUnit::ANIMATION || out_prop.unit == PropertyUnit::TRANSITION || out_prop.unit == PropertyUnit::STRING) {
 		Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", out_prop.ToString().c_str());
 		return false;
 	}
@@ -179,7 +175,7 @@ bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Elem
 	Property const& in_prop = first ? out_prop: keys.back().prop;
 	keys.emplace_back(time, in_prop, out_prop, tween);
 	bool result = true;
-	if (!first && out_prop.unit == Property::Unit::TRANSFORM) {
+	if (!first && out_prop.unit == PropertyUnit::TRANSFORM) {
 		result = PrepareTransforms(keys.back(), element);
 	}
 	if (!result) {

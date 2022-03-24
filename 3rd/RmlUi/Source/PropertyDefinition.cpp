@@ -40,7 +40,7 @@ PropertyDefinition::PropertyDefinition(PropertyId id, bool _inherited)
 }
 
 PropertyDefinition::PropertyDefinition(PropertyId id, const std::string& _default_value, bool _inherited) 
-	: id(id), default_value(Property(_default_value, Property::Unit::UNKNOWN))
+	: id(id), default_value(Property(_default_value, PropertyUnit::UNKNOWN))
 {
 	inherited = _inherited;
 }
@@ -67,12 +67,12 @@ PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name
 	}
 	parsers.push_back(new_parser);
 
-	if (default_value && default_value->unit == Property::Unit::UNKNOWN) {
+	if (default_value && default_value->unit == PropertyUnit::UNKNOWN) {
 		Property& def = default_value.value();
 		std::string unparsed_value = std::get<std::string>(def.value);
 		if (!new_parser.parser->ParseValue(def, unparsed_value, new_parser.parameters)) {
 			def.value = unparsed_value;
-			def.unit = Property::Unit::UNKNOWN;
+			def.unit = PropertyUnit::UNKNOWN;
 		}
 	}
 
@@ -90,7 +90,7 @@ bool PropertyDefinition::ParseValue(Property& property, const std::string& value
 		}
 	}
 
-	property.unit = Property::Unit::UNKNOWN;
+	property.unit = PropertyUnit::UNKNOWN;
 	return false;
 }
 

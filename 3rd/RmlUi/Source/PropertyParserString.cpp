@@ -42,7 +42,7 @@ PropertyParserString::~PropertyParserString()
 bool PropertyParserString::ParseValue(Property& property, const std::string& value, const ParameterMap&) const
 {
 	property.value = value;
-	property.unit = Property::Unit::STRING;
+	property.unit = PropertyUnit::STRING;
 
 	return true;
 }

@@ -50,10 +50,10 @@ struct StyleSheetSpecificationInstance {
 
 	std::unordered_map<std::string, PropertyParser*> parsers = {
 		{"number", new PropertyParserNumber(Property::UnitMark::Number)},
-		{"length", new PropertyParserNumber(Property::UnitMark::Length, Property::Unit::PX)},
-		{"length_percent", new PropertyParserNumber(Property::UnitMark::LengthPercent, Property::Unit::PX)},
-		{"number_length_percent", new PropertyParserNumber(Property::UnitMark::NumberLengthPercent, Property::Unit::PX)},
-		{"angle", new PropertyParserNumber(Property::UnitMark::Angle, Property::Unit::RAD)},
+		{"length", new PropertyParserNumber(Property::UnitMark::Length, PropertyUnit::PX)},
+		{"length_percent", new PropertyParserNumber(Property::UnitMark::LengthPercent, PropertyUnit::PX)},
+		{"number_length_percent", new PropertyParserNumber(Property::UnitMark::NumberLengthPercent, PropertyUnit::PX)},
+		{"angle", new PropertyParserNumber(Property::UnitMark::Angle, PropertyUnit::RAD)},
 		{"keyword", new PropertyParserKeyword()},
 		{"string", new PropertyParserString()},
 		{"animation", new PropertyParserAnimation(PropertyParserAnimation::ANIMATION_PARSER)},

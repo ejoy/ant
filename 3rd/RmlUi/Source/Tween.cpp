@@ -124,9 +124,6 @@ bool Tween::operator==(const Tween& other) const {
 	return type == other.type && direction == other.direction;
 } 
 
-bool Tween::operator!=(const Tween& other) const {
-	return !(*this == other);
-}
 
 std::string Tween::to_string() const {
 	static const std::array<std::string, size_t(Type::Count)> type_str = {
