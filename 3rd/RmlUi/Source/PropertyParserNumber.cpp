@@ -104,6 +104,8 @@ std::optional<Property> PropertyParserNumber::ParseValue(const std::string& valu
 		case UnitMark::Length:
 		case UnitMark::LengthPercent:
 			return Property { 0.f, PropertyUnit::PX };
+		default:
+			break;
 		}
 	}
 	return {};

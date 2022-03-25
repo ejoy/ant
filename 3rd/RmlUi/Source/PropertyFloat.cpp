@@ -100,6 +100,8 @@ static PropertyFloat interpolate(const PropertyFloat& p0, const PropertyFloat& p
 	case PropertyUnit::VMIN: case PropertyUnit::VMAX:
 	case PropertyUnit::PERCENT:
 		return InterpolateFallback(p0, p1, alpha);
+	default:
+		break;
 	}
 	switch (p1.unit) {
 	case PropertyUnit::EM: case PropertyUnit::REM:
@@ -107,6 +109,8 @@ static PropertyFloat interpolate(const PropertyFloat& p0, const PropertyFloat& p
 	case PropertyUnit::VMIN: case PropertyUnit::VMAX:
 	case PropertyUnit::PERCENT:
 		return InterpolateFallback(p0, p1, alpha);
+	default:
+		break;
 	}
 
 	float a0 = p0.Compute(nullptr);

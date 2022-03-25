@@ -99,7 +99,6 @@ HtmlElement HtmlParser::Parse(std::string_view stream, bool inner) {
 		st_style,
 		st_open,
 		st_analys,
-		st_close,
 		st_finish,
 		st_finish_extra, 
 	};
@@ -140,7 +139,6 @@ HtmlElement HtmlParser::Parse(std::string_view stream, bool inner) {
 				state = st_analys;
 				break;
 			case '/':
-				state = st_close;
 				EnterClosingElement(stack);
 				if (stack.empty()) {
 					state = st_finish;
@@ -320,6 +318,8 @@ HtmlElement HtmlParser::Parse(std::string_view stream, bool inner) {
 			state = st_open;
 			break;
 		}
+		default:
+			break;
 		}
 	}
 	switch (state) {
@@ -332,6 +332,8 @@ HtmlElement HtmlParser::Parse(std::string_view stream, bool inner) {
 		break;
 	case st_text:
 		ThrowException(HtmlError::SPE_TEXT_AFTER_ROOT);
+		break;
+	default:
 		break;
 	}
 	return root;
@@ -444,7 +446,6 @@ bool HtmlParser::EnterOpenElement(std::stack<HtmlElement*>& stack, char c) {
 void HtmlParser::EnterClosingElement(std::stack<HtmlElement*>& stack) {
 	if (stack.empty())
 		ThrowException(HtmlError::SPE_MATCH);
-	size_t tag_begin = m_pos - 1;
 	typedef enum { st_begin, st_name, st_end } TEState;
 	std::string accum;
 	TEState state = st_begin;
@@ -622,6 +623,8 @@ void HtmlParser::EnterEntity(void* value) {
 			if (!found)
 				ThrowException(HtmlError::SPE_UNKNOWN_ENTITY);
 		}
+		default:
+			break;
 		}
 	}
 	catch (HtmlParserException& e) {
