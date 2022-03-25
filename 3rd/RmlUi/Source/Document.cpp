@@ -166,7 +166,10 @@ void Document::SetDimensions(const Size& _dimensions) {
 	if (dimensions != _dimensions) {
 		dirty_dimensions = true;
 		dimensions = _dimensions;
-		body.DirtyPropertiesWithUnitRecursive(Property::UnitMark::ViewLength);
+		body.DirtyPropertiesWithUnitRecursive(PropertyUnit::VW);
+		body.DirtyPropertiesWithUnitRecursive(PropertyUnit::VH);
+		body.DirtyPropertiesWithUnitRecursive(PropertyUnit::VMIN);
+		body.DirtyPropertiesWithUnitRecursive(PropertyUnit::VMAX);
 	}
 }
 

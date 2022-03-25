@@ -6,9 +6,9 @@
 namespace Rml {
 
 PropertyParserTransform::PropertyParserTransform()
-	: number(Property::UnitMark::Number)
-	, length(Property::UnitMark::LengthPercent)
-	, angle(Property::UnitMark::Angle)
+	: number(PropertyParserNumber::UnitMark::Number)
+	, length(PropertyParserNumber::UnitMark::LengthPercent)
+	, angle(PropertyParserNumber::UnitMark::Angle)
 {
 }
 

@@ -49,11 +49,11 @@ struct StyleSheetSpecificationInstance {
 	bool ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) const;
 
 	std::unordered_map<std::string, PropertyParser*> parsers = {
-		{"number", new PropertyParserNumber(Property::UnitMark::Number)},
-		{"length", new PropertyParserNumber(Property::UnitMark::Length)},
-		{"length_percent", new PropertyParserNumber(Property::UnitMark::LengthPercent)},
-		{"number_length_percent", new PropertyParserNumber(Property::UnitMark::NumberLengthPercent)},
-		{"angle", new PropertyParserNumber(Property::UnitMark::Angle)},
+		{"number", new PropertyParserNumber(PropertyParserNumber::UnitMark::Number)},
+		{"length", new PropertyParserNumber(PropertyParserNumber::UnitMark::Length)},
+		{"length_percent", new PropertyParserNumber(PropertyParserNumber::UnitMark::LengthPercent)},
+		{"number_length_percent", new PropertyParserNumber(PropertyParserNumber::UnitMark::NumberLengthPercent)},
+		{"angle", new PropertyParserNumber(PropertyParserNumber::UnitMark::Angle)},
 		{"string", new PropertyParserString()},
 		{"animation", new PropertyParserAnimation()},
 		{"transition", new PropertyParserTransition()},

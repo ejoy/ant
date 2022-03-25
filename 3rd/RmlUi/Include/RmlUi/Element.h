@@ -98,12 +98,11 @@ public:
 	bool IsClassSet(const std::string& class_name) const;
 	void SetClassName(const std::string& class_names);
 	std::string GetClassName() const;
-	void DirtyPropertiesWithUnitRecursive(Property::UnitMark mark);
+	void DirtyPropertiesWithUnitRecursive(PropertyUnit unit);
 
 	void UpdateDefinition();
 	void DirtyDefinition();
 	void DirtyInheritedProperties();
-	void DirtyProperties(Property::UnitMark mark);
 	void ForeachProperties(std::function<void(PropertyId id, const Property& property)> f);
 	void DirtyProperty(PropertyId id);
 	void DirtyProperties(const PropertyIdSet& properties);

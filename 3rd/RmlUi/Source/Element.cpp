@@ -1420,10 +1420,14 @@ std::string Element::GetClassName() const {
 	return class_names;
 }
 
-void Element::DirtyPropertiesWithUnitRecursive(Property::UnitMark mark) {
-	DirtyProperties(mark);
+void Element::DirtyPropertiesWithUnitRecursive(PropertyUnit unit) {
+	ForeachProperties([&](PropertyId id, const Property& property) {
+		if (property.Has<PropertyFloat>() && unit == property.Get<PropertyFloat>().unit) {
+			DirtyProperty(id);
+		}
+	});
 	for (auto& child : children) {
-		child->DirtyPropertiesWithUnitRecursive(mark);
+		child->DirtyPropertiesWithUnitRecursive(unit);
 	}
 }
 
@@ -1661,14 +1665,6 @@ void Element::DirtyDefinition() {
 
 void Element::DirtyInheritedProperties() {
 	dirty_properties |= StyleSheetSpecification::GetRegisteredInheritedProperties();
-}
-
-void Element::DirtyProperties(Property::UnitMark mark) {
-	ForeachProperties([&](PropertyId id, const Property& property){
-		if (property.Has<PropertyFloat>() && Property::Contains(mark, property.Get<PropertyFloat>().unit)) {
-			DirtyProperty(id);
-		}
-	});
 }
 
 void Element::ForeachProperties(std::function<void(PropertyId id, const Property& property)> f) {
