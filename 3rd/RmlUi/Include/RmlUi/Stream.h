@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Traits.h"
 #include "Types.h"
 
 namespace Rml {

@@ -76,8 +76,6 @@ public:
 
 	/// Merges an entire tree hierarchy into our hierarchy.
 	void MergeHierarchy(StyleSheetNode* node, int specificity_offset = 0);
-	/// Recursively set structural volatility.
-	bool SetStructurallyVolatileRecursive(bool ancestor_is_structurally_volatile);
 	/// Builds up a style sheet's index recursively.
 	void BuildIndex(StyleSheet::NodeIndex& styled_node_index);
 
@@ -85,14 +83,10 @@ public:
 	void MergeProperties(StyleSheetPropertyDictionary& properties, int specificity_offset = 0) const;
 
 	/// Returns true if this node is applicable to the given element, given its IDs, classes and heritage.
-	bool IsApplicable(const Element* element, bool skip_id_tag) const;
+	bool IsApplicable(const Element* element) const;
 
 	/// Returns the specificity of this node.
 	int GetSpecificity() const;
-	/// Returns true if this node employs a structural selector, and therefore generates element definitions that are
-	/// sensitive to sibling changes. 
-	/// @warning Result is only valid if structural volatility is set since any changes to the node tree.
-	bool IsStructurallyVolatile() const;
 
 private:
 	// Returns true if the requirements of this node equals the given arguments.
@@ -115,9 +109,6 @@ private:
 	PseudoClassSet pseudo_classes;
 	StructuralSelectorList structural_selectors; // Represents structural pseudo classes
 	bool child_combinator = false; // The '>' combinator: This node only matches if the element is a parent of the previous matching element.
-
-	// True if any ancestor, descendent, or self is a structural pseudo class.
-	bool is_structurally_volatile = true;
 
 	// A measure of specificity of this node; the attribute in a node with a higher value will override those of a
 	// node with a lower value.

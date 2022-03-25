@@ -65,11 +65,8 @@ struct TransitionList {
 };
 
 inline bool operator==(const Animation& a, const Animation& b) { return a.duration == b.duration && a.tween == b.tween && a.delay == b.delay && a.alternate == b.alternate && a.paused == b.paused && a.num_iterations == b.num_iterations && a.name == b.name; }
-inline bool operator!=(const Animation& a, const Animation& b) { return !(a == b); }
 inline bool operator==(const Transition& a, const Transition& b) { return a.id == b.id && a.tween == b.tween && a.duration == b.duration && a.delay == b.delay && a.reverse_adjustment_factor == b.reverse_adjustment_factor; }
-inline bool operator!=(const Transition& a, const Transition& b) { return !(a == b); }
 inline bool operator==(const TransitionList& a, const TransitionList& b) { return a.none == b.none && a.all == b.all && a.transitions == b.transitions; }
-inline bool operator!=(const TransitionList& a, const TransitionList& b) { return !(a == b); }
 
 }
 #endif

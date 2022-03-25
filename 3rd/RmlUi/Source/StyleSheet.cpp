@@ -94,7 +94,6 @@ void StyleSheet::BuildNodeIndex()
 {
 	styled_node_index.clear();
 	root->BuildIndex(styled_node_index);
-	root->SetStructurallyVolatileRecursive(false);
 }
 
 // Returns the Keyframes of the given name, or null if it does not exist.
@@ -117,8 +116,7 @@ size_t StyleSheet::NodeHash(const std::string& tag, const std::string& id)
 }
 
 // Returns the compiled element definition for a given element hierarchy.
-std::shared_ptr<StyleSheetPropertyDictionary> StyleSheet::GetElementDefinition(const Element* element) const
-{
+std::shared_ptr<StyleSheetPropertyDictionary> StyleSheet::GetElementDefinition(const Element* element) const {
 	// See if there are any styles defined for this element.
 	// Using static to avoid allocations. Make sure we don't call this function recursively.
 	static std::vector< const StyleSheetNode* > applicable_nodes;
@@ -136,28 +134,23 @@ std::shared_ptr<StyleSheetPropertyDictionary> StyleSheet::GetElementDefinition(c
 	node_hash[1] = NodeHash(tag, std::string());
 
 	// If we don't have an id, we can safely skip nodes that define an id. Otherwise, we also check the id nodes.
-	if (!id.empty())
-	{
+	if (!id.empty()) {
 		num_hashes = 4;
 		node_hash[2] = NodeHash(std::string(), id);
 		node_hash[3] = NodeHash(tag, id);
 	}
 
 	// The hashes are keys into a set of applicable nodes (given tag and id).
-	for (int i = 0; i < num_hashes; i++)
-	{
+	for (int i = 0; i < num_hashes; i++) {
 		auto it_nodes = styled_node_index.find(node_hash[i]);
-		if (it_nodes != styled_node_index.end())
-		{
+		if (it_nodes != styled_node_index.end()) {
 			const NodeList& nodes = it_nodes->second;
 
 			// Now see if we satisfy all of the requirements not yet tested: classes, pseudo classes, structural selectors, 
 			// and the full requirements of parent nodes. What this involves is traversing the style nodes backwards, 
 			// trying to match nodes in the element's hierarchy to nodes in the style hierarchy.
-			for (StyleSheetNode* node : nodes)
-			{
-				if (node->IsApplicable(element, true))
-				{
+			for (StyleSheetNode* node : nodes) {
+				if (node->IsApplicable(element)) {
 					applicable_nodes.push_back(node);
 				}
 			}
@@ -176,8 +169,7 @@ std::shared_ptr<StyleSheetPropertyDictionary> StyleSheet::GetElementDefinition(c
 		HashCombine(seed, node);
 
 	auto cache_iterator = node_cache.find(seed);
-	if (cache_iterator != node_cache.end())
-	{
+	if (cache_iterator != node_cache.end()) {
 		std::shared_ptr<StyleSheetPropertyDictionary>& definition = (*cache_iterator).second;
 		return definition;
 	}

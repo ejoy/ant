@@ -49,12 +49,12 @@ function sys:update_slot()
         --TODO: slot.offset_srt is duplicate with entity.scene.srt, not need to keep this srt in slot
         local slot = v.slot
         local follow_flag = assert(slot.follow_flag)
-        if follow_flag == 1 or follow_flag == 2 then
-            if cache == nil then
-                cache = find_animation_entities()
-            end
-            local e = cache[v.scene.parent]
-            if e then
+        if cache == nil then
+            cache = find_animation_entities()
+        end
+        local e = cache[v.scene.parent]
+        if e then
+            if follow_flag == 1 or follow_flag == 2 then
                 local ske = e.skeleton
                 slot.joint_index = ske._handle:joint_index(slot.joint_name)
                     if slot.joint_index then
@@ -62,22 +62,23 @@ function sys:update_slot()
                     if follow_flag == 1 then
                         v.scene.slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
                     else
-                        local r, t = math3d.index(adjust_mat, 3, 4)
-                        r = math3d.torotation(r)
+                        -- local r, t = math3d.index(adjust_mat, 3, 4)
+                        -- r = math3d.torotation(r)
+                        -- fixed rotation bug
+                        local _, r, t = math3d.srt(adjust_mat)
                         v.scene.slot_matrix = math3d.matrix{r=r, t=t}
                     end
                 end
+            elseif follow_flag == 3 then
+                v.scene.slot_matrix = calc_pose_mat(e.pose_result, slot)
+            else
+                error [[
+                    "invalid slot, 'follow_flag' only 1/2/3 is valid
+                    1: skip scale&rotation, base on parent
+                    2: skip scale, base on parent
+                    3: follow joint matrix. base on itself, it assume slot entity has 'pose_result' component"
+                ]]
             end
-        elseif follow_flag == 3 then
-            w:sync("skeleton:in pose_result:in", v)
-            v.scene.slot_matrix = calc_pose_mat(v.pose_result, slot)
-        else
-            error [[
-                "invalid slot, 'follow_flag' only 1/2/3 is valid
-                1: skip scale&rotation, base on parent
-                2: skip scale, base on parent
-                3: follow joint matrix. base on itself, it assume slot entity has 'pose_result' component"
-            ]]
         end
     end
 

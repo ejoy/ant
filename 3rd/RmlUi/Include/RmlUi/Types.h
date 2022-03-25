@@ -43,7 +43,6 @@
 #include <unordered_set>
 #include <variant>
 #include <cstdlib>
-#include "Traits.h"
 #include "Colour.h"
 #include "ObserverPtr.h"
 
@@ -73,13 +72,12 @@ using ElementAnimationList = std::vector< ElementAnimation >;
 using PropertyDictionary = std::unordered_map< PropertyId, Property >;
 using ElementAttributes = std::unordered_map< std::string, std::string >;
 using AnimationList = std::vector<Animation>;
-using TransformPtr = std::shared_ptr< Transform >;
 
 // Data binding types
 class DataView;
-using DataViewPtr = std::unique_ptr<DataView, Releaser<DataView>>;
+using DataViewPtr = std::unique_ptr<DataView>;
 class DataController;
-using DataControllerPtr = std::unique_ptr<DataController, Releaser<DataController>>;
+using DataControllerPtr = std::unique_ptr<DataController>;
 
 enum class Character : char32_t { Null, Replacement = 0xfffd };
 
@@ -267,6 +265,11 @@ inline Point operator*(const Point& lhs, const Point& rhs) {
 inline Size operator*(const Size& lhs, float rhs) {
 	return Size(lhs.w * rhs, lhs.h * rhs);
 }
+
+
+template <typename T>
+T InterpolateFallback(const T& p0, const T& p1, float alpha) { return alpha < 1.f ? p0 : p1; }
+
 }
 
 

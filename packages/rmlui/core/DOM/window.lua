@@ -81,7 +81,7 @@ local function createWindow(document, source)
         if ctors[name] then
             error "Already contains a custom element with the same name."
         end
-        if not name:match "[a-z][0-9a-z_%-]*-[0-9a-z_%-]*" then
+        if not name:match "[a-z][0-9a-z_%-]*" then
             error "Invalid custom element name."
         end
         if type(ctor) ~= "function" then

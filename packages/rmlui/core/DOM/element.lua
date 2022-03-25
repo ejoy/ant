@@ -1,7 +1,7 @@
 local rmlui = require "rmlui"
 local event = require "core.event"
 
-local constructor
+local createElement
 
 local attribute_mt = {}
 function attribute_mt:__index(name)
@@ -48,7 +48,7 @@ end
 function property_init:parentNode()
     local parent = rmlui.ElementGetParent(self._handle)
     if parent then
-        return constructor(self._document, parent)
+        return createElement(parent, self._document)
     end
 end
 
@@ -57,7 +57,7 @@ function property_init:childNodes()
     local children = {}
     for i = 1, n do
         local child = assert(rmlui.ElementGetChildren(self._handle, i-1))
-        children[i] = constructor(self._document, child)
+        children[i] = createElement(child, self._document)
     end
     return children
 end
@@ -67,6 +67,14 @@ function property_init:appendChild()
     return function (child)
         child._owner = nil
         rmlui.ElementAppendChild(handle, child._handle)
+    end
+end
+
+function property_init:cloneNode()
+    local document = self._document
+    local handle = self._handle
+    return function ()
+        return createElement(rmlui.ElementClone(handle), document, true)
     end
 end
 
@@ -181,7 +189,7 @@ function property_mt:__newindex(name, value)
     rawset(self, name, value)
 end
 
-function constructor(document, handle, owner)
+local function constructor(document, handle, owner)
     return setmetatable({
         _handle = handle,
         _document = document,
@@ -203,7 +211,7 @@ function event.OnDocumentDestroy(handle)
     pool[handle] = nil
 end
 
-return function (handle, document, owner)
+function createElement(handle, document, owner)
     if handle == nil then
         return
     end
@@ -222,3 +230,5 @@ return function (handle, document, owner)
     end
     return o
 end
+
+return createElement

@@ -30,7 +30,6 @@
 #define RMLUI_CORE_DATAMODEL_H
 
 #include "../Include/RmlUi/Types.h"
-#include "../Include/RmlUi/Traits.h"
 #include "../Include/RmlUi/DataTypes.h"
 #include "../Include/RmlUi/DataVariable.h"
 
@@ -41,10 +40,13 @@ class DataControllers;
 class Element;
 
 
-class DataModel : NonCopyMoveable {
+class DataModel {
 public:
 	DataModel();
 	~DataModel();
+
+	DataModel(const DataModel&) = delete;
+	DataModel& operator=(const DataModel&) = delete;
 
 	void AddView(DataViewPtr view);
 	void AddController(DataControllerPtr controller);
@@ -76,18 +78,13 @@ public:
 private:
 	std::unique_ptr<DataViews> views;
 	std::unique_ptr<DataControllers> controllers;
-
 	std::unordered_map<std::string, DataVariable> variables;
 	DirtyVariables dirty_variables;
-
 	std::unordered_map<std::string, DataEventFunc> event_callbacks;
-
 	using ScopedAliases = std::unordered_map<Element*, std::unordered_map<std::string, DataAddress>>;
 	ScopedAliases aliases;
-
 	std::unordered_set<Element*> attached_elements;
 };
-
 
 }
 #endif

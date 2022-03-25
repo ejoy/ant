@@ -11,9 +11,8 @@ class DataUtilities {
 public:
 	static bool Initialise();
 	static void Shutdown();
-	static const std::vector<std::string>& GetStructuralDataViewAttributeNames();
-	static bool ApplyDataViewsControllers(Element* element);
-	static bool ApplyStructuralDataViews(Element* element, const std::string& inner_html);
+	static void ApplyDataViewsControllers(Element* element);
+	static void ApplyDataViewFor(Element* element);
 };
 
 }

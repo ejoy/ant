@@ -20,6 +20,7 @@ class Document;
 class StyleSheet;
 class Geometry;
 class StyleSheetPropertyDictionary;
+struct HtmlElement;
 
 class Element : public Node, public EnableObserverPtr<Element> {
 public:
@@ -39,7 +40,6 @@ public:
 	const std::string* GetAttribute(const std::string& name) const;
 	bool HasAttribute(const std::string& name) const;
 	void RemoveAttribute(const std::string& name);
-	void SetAttributes(const ElementAttributes& attributes);
 	const ElementAttributes& GetAttributes() const { return attributes; }
 
 	bool Project(Point& point) const noexcept;
@@ -53,6 +53,11 @@ public:
 	std::string GetInnerHTML() const;
 	std::string GetOuterHTML() const;
 	void SetInnerHTML(const std::string& html);
+	void SetOuterHTML(const std::string& html);
+	void InstanceOuter(const HtmlElement& html);
+	void InstanceInner(const HtmlElement& html);
+	virtual ElementPtr Clone(bool deep = true) const;
+	void NotifyCustomElement();
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);
@@ -60,14 +65,15 @@ public:
 	void RemoveAllEvents();
 	std::vector<EventListener*> const& GetEventListeners() const;
 
-	Element* AppendChild(ElementPtr element);
-	Element* InsertBefore(ElementPtr element, Element* adjacent_element);
+	Element*   AppendChild(ElementPtr element);
 	ElementPtr RemoveChild(Element* element);
+	size_t     GetChildIndex(Element* child) const;
+	Element*   InsertBefore(ElementPtr element, Element* adjacent_element);
+	Element*   GetPreviousSibling();
+
 	Element* GetElementById(const std::string& id);
 	void GetElementsByTagName(ElementList& elements, const std::string& tag);
 	void GetElementsByClassName(ElementList& elements, const std::string& class_name);
-	Element* QuerySelector(const std::string& selector);
-	void QuerySelectorAll(ElementList& elements, const std::string& selectors);
 
 	DataModel* GetDataModel() const;
 

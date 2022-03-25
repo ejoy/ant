@@ -1,36 +1,7 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2014 Markus Schöngart
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
-#ifndef RMLUI_CORE_TRANSFORM_H
-#define RMLUI_CORE_TRANSFORM_H
+#pragma once
 
 #include "Types.h"
-#include "Property.h"
+#include "PropertyFloat.h"
 #include <variant>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -49,26 +20,26 @@ struct Matrix3D : glm::mat4x4 {
 };
 
 struct TranslateX {
-	FloatValue x = { 0.f, Property::Unit::PX };
+	PropertyFloat x = { 0.f, PropertyUnit::PX };
 };
 
 struct TranslateY {
-	FloatValue y = { 0.f, Property::Unit::PX };
+	PropertyFloat y = { 0.f, PropertyUnit::PX };
 };
 
 struct TranslateZ {
-	FloatValue z = { 0.f, Property::Unit::PX };
+	PropertyFloat z = { 0.f, PropertyUnit::PX };
 };
 
 struct Translate2D {
-	FloatValue x = { 0.f, Property::Unit::PX };
-	FloatValue y = { 0.f, Property::Unit::PX };
+	PropertyFloat x = { 0.f, PropertyUnit::PX };
+	PropertyFloat y = { 0.f, PropertyUnit::PX };
 };
 
 struct Translate3D {
-	FloatValue x = { 0.f, Property::Unit::PX };
-	FloatValue y = { 0.f, Property::Unit::PX };
-	FloatValue z = { 0.f, Property::Unit::PX };
+	PropertyFloat x = { 0.f, PropertyUnit::PX };
+	PropertyFloat y = { 0.f, PropertyUnit::PX };
+	PropertyFloat z = { 0.f, PropertyUnit::PX };
 };
 
 struct ScaleX {
@@ -95,38 +66,38 @@ struct Scale3D {
 };
 
 struct RotateX {
-	FloatValue angle = { 0.f, Property::Unit::RAD };
+	PropertyFloat angle = { 0.f, PropertyUnit::RAD };
 };
 
 struct RotateY {
-	FloatValue angle = { 0.f, Property::Unit::RAD };
+	PropertyFloat angle = { 0.f, PropertyUnit::RAD };
 };
 
 struct RotateZ {
-	FloatValue angle = { 0.f, Property::Unit::RAD };
+	PropertyFloat angle = { 0.f, PropertyUnit::RAD };
 };
 
 struct Rotate2D {
-	FloatValue angle = { 0.f, Property::Unit::RAD };
+	PropertyFloat angle = { 0.f, PropertyUnit::RAD };
 };
 
 struct Rotate3D {
 	glm::vec3 axis = glm::vec3(0, 0, 1);
-	FloatValue angle = { 0.f, Property::Unit::RAD };
+	PropertyFloat angle = { 0.f, PropertyUnit::RAD };
 };
 
 struct SkewX {
-	FloatValue x = { 0.f, Property::Unit::RAD };
+	PropertyFloat x = { 0.f, PropertyUnit::RAD };
 };
 struct SkewY {
-	FloatValue y = { 0.f, Property::Unit::RAD };
+	PropertyFloat y = { 0.f, PropertyUnit::RAD };
 };
 struct Skew2D {
-	FloatValue x = { 0.f, Property::Unit::RAD };
-	FloatValue y = { 0.f, Property::Unit::RAD };
+	PropertyFloat x = { 0.f, PropertyUnit::RAD };
+	PropertyFloat y = { 0.f, PropertyUnit::RAD };
 };
 struct Perspective {
-	FloatValue distance = { 0.f, Property::Unit::PX };
+	PropertyFloat distance = { 0.f, PropertyUnit::PX };
 };
 
 struct DecomposedMatrix4 {
@@ -136,6 +107,72 @@ struct DecomposedMatrix4 {
 	glm::vec3 scale = glm::vec3(1, 1, 1);
 	glm::vec3 skew = glm::vec3(0, 0, 0);
 };
+
+inline bool operator==(const TranslateX& l, const TranslateX& r) {
+	return l.x == r.x;
+}
+inline bool operator==(const TranslateY& l, const TranslateY& r) {
+	return l.y == r.y;
+}
+inline bool operator==(const TranslateZ& l, const TranslateZ& r) {
+	return l.z == r.z;
+}
+inline bool operator==(const Translate2D& l, const Translate2D& r) {
+	return (l.x == r.x) && (l.y == r.y);
+}
+inline bool operator==(const Translate3D& l, const Translate3D& r) {
+	return (l.x == r.x) && (l.y == r.y) && (l.z == r.z);
+}
+inline bool operator==(const ScaleX& l, const ScaleX& r) {
+	return l.x == r.x;
+}
+inline bool operator==(const ScaleY& l, const ScaleY& r) {
+	return l.y == r.y;
+}
+inline bool operator==(const ScaleZ& l, const ScaleZ& r) {
+	return l.z == r.z;
+}
+inline bool operator==(const Scale2D& l, const Scale2D& r) {
+	return (l.x == r.x) && (l.y == r.y);
+}
+inline bool operator==(const Scale3D& l, const Scale3D& r) {
+	return (l.x == r.x) && (l.y == r.y) && (l.z == r.z);
+}
+inline bool operator==(const RotateX& l, const RotateX& r) {
+	return l.angle == r.angle;
+}
+inline bool operator==(const RotateY& l, const RotateY& r) {
+	return l.angle == r.angle;
+}
+inline bool operator==(const RotateZ& l, const RotateZ& r) {
+	return l.angle == r.angle;
+}
+inline bool operator==(const Rotate2D& l, const Rotate2D& r) {
+	return l.angle == r.angle;
+}
+inline bool operator==(const Rotate3D& l, const Rotate3D& r) {
+	return (l.angle == r.angle) && (l.axis == r.axis);
+}
+inline bool operator==(const SkewX& l, const SkewX& r) {
+	return l.x == r.x;
+}
+inline bool operator==(const SkewY& l, const SkewY& r) {
+	return l.y == r.y;
+}
+inline bool operator==(const Skew2D& l, const Skew2D& r) {
+	return (l.x == r.x) && (l.y == r.y);
+}
+inline bool operator==(const Perspective& l, const Perspective& r) {
+	return l.distance == r.distance;
+}
+inline bool operator==(const DecomposedMatrix4& l, const DecomposedMatrix4& r) {
+	return (l.perspective == r.perspective)
+		&& (l.quaternion == r.quaternion)
+		&& (l.translation == r.translation)
+		&& (l.scale == r.scale)
+		&& (l.skew == r.skew)
+		;
+}
 
 using Primitive = std::variant<
 	Matrix2D,
@@ -162,7 +199,7 @@ using Primitive = std::variant<
 	DecomposedMatrix4
 >;
 
-} // namespace Transforms
+}
 
 enum class TransformType {
 	Scale, Translate, Rotate, Skew, Matrix
@@ -183,10 +220,10 @@ struct TransformPrimitive : public Transforms::Primitive {
 
 class Transform : public std::vector<TransformPrimitive> {
 public:
-	std::unique_ptr<Transform> Interpolate(const Transform& other, float alpha);
+	Transform Interpolate(const Transform& other, float alpha) const;
 	glm::mat4x4 GetMatrix(Element& e) const;
 	bool Combine(Element& e, size_t start);
+	std::string ToString() const;
 };
 
 }
-#endif

@@ -3,6 +3,7 @@ local world = ecs.world
 local w = world.w
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
+local prefab_mgr = ecs.require "prefab_manager"
 local hierarchy = require "hierarchy_edit"
 local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
@@ -822,7 +823,7 @@ function m.bind(eid)
         end
     end
     if not joint_utils.update_joint_pose then
-        joint_utils.update_joint_pose = function()
+        joint_utils.update_joint_pose = function(root_mat)
             if not joints_list then
                 return
             end
@@ -838,8 +839,8 @@ function m.bind(eid)
                     if joint.mesh then
                         local mesh_e = world:entity(joint.mesh)
                         if mesh_e then
-                            iom.set_srt_matrix(mesh_e, math3d.mul(mc.R2L_MAT, pose_result:joint(joint.index)))
-                            iom.set_scale(mesh_e, joint_scale)   
+                            iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, pose_result:joint(joint.index))))
+                            iom.set_scale(mesh_e, joint_scale)
                         end
                     end
                 end

@@ -31,6 +31,7 @@
 
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Variant.h"
+#include "HtmlParser.h"
 #include "DataView.h"
 
 namespace Rml {
@@ -51,9 +52,6 @@ public:
 protected:
 	const std::string& GetModifier() const;
 	DataExpression& GetExpression();
-
-	// Delete this
-	void Release() override;
 
 private:
 	std::string modifier;
@@ -133,9 +131,6 @@ public:
 	bool Update(DataModel& model) override;
 	std::vector<std::string> GetVariableNameList() const override;
 
-protected:
-	void Release() override;
-
 private:
 	std::string BuildText() const;
 
@@ -149,28 +144,18 @@ private:
 	std::vector<DataEntry> data_entries;
 };
 
-
 class DataViewFor final : public DataView {
 public:
 	DataViewFor(Element* element);
-
-	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& inner_html) override;
-
+	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
 	bool Update(DataModel& model) override;
-
 	std::vector<std::string> GetVariableNameList() const override;
-
-protected:
-	void Release() override;
 
 private:
 	DataAddress container_address;
 	std::string iterator_name;
 	std::string iterator_index_name;
-	std::string html_contents;
-	ElementAttributes attributes;
-
-	ElementList elements;
+	size_t num_elements = 0;
 };
 
 }

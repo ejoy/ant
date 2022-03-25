@@ -30,7 +30,6 @@
 #define RMLUI_CORE_DATAMODELHANDLE_H
 
 #include "Types.h"
-#include "Traits.h"
 #include "DataTypes.h"
 #include "DataVariable.h"
 

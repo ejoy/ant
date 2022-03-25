@@ -30,7 +30,6 @@
 #define RMLUI_CORE_DATACONTROLLER_H
 
 #include "../Include/RmlUi/Types.h"
-#include "../Include/RmlUi/Traits.h"
 
 namespace Rml {
 
@@ -38,11 +37,14 @@ class Element;
 class DataModel;
 
 
-class DataControllerInstancer : public NonCopyMoveable {
+class DataControllerInstancer {
 public:
     DataControllerInstancer() {}
     virtual ~DataControllerInstancer() {}
     virtual DataControllerPtr InstanceController(Element* element) = 0;
+
+	DataControllerInstancer(const DataControllerInstancer&) = delete;
+	DataControllerInstancer& operator=(const DataControllerInstancer&) = delete;
 };
 
 template<typename T>
@@ -73,7 +75,7 @@ public:
 
  */
 
-class DataController : public Releasable {
+class DataController {
 public:
 	virtual ~DataController();
 
@@ -99,10 +101,13 @@ private:
 };
 
 
-class DataControllers : NonCopyMoveable {
+class DataControllers {
 public:
     DataControllers();
     ~DataControllers();
+
+	DataControllers(const DataControllers&) = delete;
+	DataControllers& operator=(const DataControllers&) = delete;
 
 	void Add(DataControllerPtr controller);
 

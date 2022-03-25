@@ -193,65 +193,6 @@ namespace ImSequencer
 		ImVec2 sz = ImVec2(canvas_size.x + canvas_pos.x, pos.y + ItemHeight - 1);
 		draw_list->AddRectFilled(pos, sz, 0x7F614D45, 0);
 		draw_list->PushClipRect(childFramePos + ImVec2(float(legendWidth), 0.f - ItemHeight), childFramePos + childFrameSize);
-		// draw clip_ranges
-// 		for (int i = 0; i < current_anim->clip_rangs.size(); i++) {
-// 			auto start = current_anim->clip_rangs[i].start;
-// 			auto end = current_anim->clip_rangs[i].end;
-// 			if (start == -1 || end == -1 || end < start) {
-// 				continue;
-// 			}
-// 			ImVec2 pos = ImVec2(contentMin.x + legendWidth - firstFrameUsed * framePixelWidth, contentMin.y + 1);
-// 			pos.x -= 0.5 * framePixelWidth;
-// 			ImVec2 slotP1(pos.x + start * framePixelWidth, pos.y + 2);
-// 			ImVec2 slotP2(pos.x + end * framePixelWidth + framePixelWidth, pos.y + ItemHeight - 2);
-// 			ImVec2 slotP3(pos.x + end * framePixelWidth + framePixelWidth, pos.y + ItemHeight - 2);
-// 			unsigned int color = 0xFFAA8080;
-// 			unsigned int slotColor = color | 0xFF000000;
-// 			unsigned int slotColorHalf = (color & 0xFFFFFF) | 0x40000000;
-// 
-// 			if (slotP1.x <= (canvas_size.x + contentMin.x) && slotP2.x >= (contentMin.x + legendWidth)) {
-// 				if (range_index == i) {
-// 					draw_list->AddRectFilled(slotP1, slotP3, slotColorHalf, 2);
-// 					draw_list->AddRectFilled(slotP1, slotP2, slotColor, 2);
-// 				}
-// 				else {
-// 					draw_list->AddRect(slotP1, slotP3, slotColorHalf, 2);
-// 					draw_list->AddRect(slotP1, slotP2, slotColor, 2);
-// 				}
-// 			}
-// 			if (ImRect(slotP1, slotP2).Contains(io.MousePos) && io.MouseDoubleClicked[0]) {
-// 				;// DoubleClick(i);
-// 			}
-// 			ImRect rects[3] = { ImRect(slotP1, ImVec2(slotP1.x + framePixelWidth / 2, slotP2.y))
-// 				, ImRect(ImVec2(slotP2.x - framePixelWidth / 2, slotP1.y), slotP2)
-// 				, ImRect(slotP1, slotP2) };
-// 
-// 			const unsigned int quadColor[] = { 0xFFFFFFFF, 0xFFFFFFFF, slotColor + (/*selected*/false ? 0 : 0x202020) };
-// 			if (!movingEntry) {
-// 				for (int j = 2; j >= 0; j--) {
-// 					ImRect& rc = rects[j];
-// 					if (!rc.Contains(io.MousePos))
-// 						continue;
-// 					if (range_index == i) {
-// 						draw_list->AddRectFilled(rc.Min, rc.Max, quadColor[j], 2);
-// 					}
-// 				}
-// 
-// 				for (int j = 0; j < 3; j++) {
-// 					ImRect& rc = rects[j];
-// 					if (!rc.Contains(io.MousePos))
-// 						continue;
-// 					if (!ImRect(childFramePos, childFramePos + childFrameSize).Contains(io.MousePos))
-// 						continue;
-// 					if (range_index == i && !MovingCurrentFrame) {
-// 						movingEntry = true;
-// 						movingPos = cx;
-// 						movingPart = j + 1;
-// 						break;
-// 					}
-// 				}
-// 			}
-// 		}
 
 		// vertical frame lines in content area
 		for (int i = GetFrameMin(); i <= GetFrameMax(); i += frameStep) {
@@ -282,61 +223,6 @@ namespace ImSequencer
 
 		// slots
 		customHeight = 0;
-// 		for (int i = 0; i < current_anim->clip_rangs.size(); i++) {
-// 			auto start = current_anim->clip_rangs[i].start;
-// 			auto end = current_anim->clip_rangs[i].end;
-// 			ImVec2 pos = ImVec2(contentMin.x + legendWidth - firstFrameUsed * framePixelWidth, contentMin.y + 1);
-// 			pos.x -= 0.5 * framePixelWidth;
-// 			ImVec2 slotP1(pos.x + start * framePixelWidth, pos.y + 2);
-// 			ImVec2 slotP2(pos.x + end * framePixelWidth + framePixelWidth, pos.y + ItemHeight - 2);
-// 			ImVec2 slotP3(pos.x + end * framePixelWidth + framePixelWidth, pos.y + ItemHeight - 2);
-// 			unsigned int color = 0xFFAA8080;
-// 			unsigned int slotColor = color | 0xFF000000;
-// 			unsigned int slotColorHalf = (color & 0xFFFFFF) | 0x40000000;
-// 
-// 			if (slotP1.x <= (canvas_size.x + contentMin.x) && slotP2.x >= (contentMin.x + legendWidth)) {
-// 				if (range_index == i) {
-// 					draw_list->AddRectFilled(slotP1, slotP3, slotColorHalf, 2);
-// 					draw_list->AddRectFilled(slotP1, slotP2, slotColor, 2);
-// 				} else {
-// 					draw_list->AddRect(slotP1, slotP3, slotColorHalf, 2);
-// 					draw_list->AddRect(slotP1, slotP2, slotColor, 2);
-// 				}
-// 			}
-// 			if (ImRect(slotP1, slotP2).Contains(io.MousePos) && io.MouseDoubleClicked[0]) {
-// 				;// DoubleClick(i);
-// 			}
-// 			ImRect rects[3] = { ImRect(slotP1, ImVec2(slotP1.x + framePixelWidth / 2, slotP2.y))
-// 				, ImRect(ImVec2(slotP2.x - framePixelWidth / 2, slotP1.y), slotP2)
-// 				, ImRect(slotP1, slotP2) };
-// 
-// 			const unsigned int quadColor[] = { 0xFFFFFFFF, 0xFFFFFFFF, slotColor + (/*selected*/false ? 0 : 0x202020) };
-// 			if (!movingEntry) {
-// 				for (int j = 2; j >= 0; j--) {
-// 					ImRect& rc = rects[j];
-// 					if (!rc.Contains(io.MousePos))
-// 						continue;
-// 					if (range_index == i) {
-// 						draw_list->AddRectFilled(rc.Min, rc.Max, quadColor[j], 2);
-// 					}
-// 				}
-// 
-// 				for (int j = 0; j < 3; j++) {
-// 					ImRect& rc = rects[j];
-// 					if (!rc.Contains(io.MousePos))
-// 						continue;
-// 					if (!ImRect(childFramePos, childFramePos + childFrameSize).Contains(io.MousePos))
-// 						continue;
-// 					if (range_index == i) {
-// 						movingEntry = true;
-// 						movingPos = cx;
-// 						movingPart = j + 1;
-// 						break;
-// 					}
-// 				}
-// 			}
-// 		}
-
 		// moving
 		if (movingEntry) {
 			ImGui::CaptureMouseFromApp();
@@ -360,29 +246,6 @@ namespace ImSequencer
 					}
 				}
 			}
-// 			else {
-// 				if (std::abs(diffFrame) > 0 && range_index >= 0) {
-// 					int* start = &current_anim->clip_rangs[range_index].start;
-// 					int* end = &current_anim->clip_rangs[range_index].end;
-// 					int& l = *start;
-// 					int& r = *end;
-// 					if (movingPart & 1)
-// 						l += diffFrame;
-// 					if (movingPart & 2)
-// 						r += diffFrame;
-// 					if (l < 0) {
-// 						if (movingPart & 2)
-// 							r -= l;
-// 						l = 0;
-// 					}
-// 					if (movingPart & 1 && l > r)
-// 						l = r;
-// 					if (movingPart & 2 && r < l)
-// 						r = l;
-// 					move_type = movingPart;
-// 					move_delta = diffFrame;
-// 				}
-// 			}
 			if (!io.MouseDown[0]) {
 				movingEntry = false;
 			}

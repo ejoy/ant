@@ -30,7 +30,6 @@
 #include "../Include/RmlUi/Layout.h"
 #include "../Include/RmlUi/ComputedValues.h"
 #include "../Include/RmlUi/Element.h"
-#include "../Include/RmlUi/ElementStyle.h"
 
 namespace Rml {
 
@@ -38,18 +37,18 @@ static const auto PI = acosf(-1);
 
 void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path& paddingEdge) {
 	EdgeInsets<Color> border_color {
-		element->GetComputedProperty(PropertyId::BorderLeftColor)->GetColor(),
-		element->GetComputedProperty(PropertyId::BorderTopColor)->GetColor(),
-		element->GetComputedProperty(PropertyId::BorderRightColor)->GetColor(),
-		element->GetComputedProperty(PropertyId::BorderBottomColor)->GetColor(),
+		element->GetComputedProperty(PropertyId::BorderLeftColor)->Get<Color>(),
+		element->GetComputedProperty(PropertyId::BorderTopColor)->Get<Color>(),
+		element->GetComputedProperty(PropertyId::BorderRightColor)->Get<Color>(),
+		element->GetComputedProperty(PropertyId::BorderBottomColor)->Get<Color>(),
 	};
 	CornerInsets<float> border_radius {
-		ComputePropertyW(element->GetComputedProperty(PropertyId::BorderTopLeftRadius)->ToFloatValue(), element),
-		ComputePropertyH(element->GetComputedProperty(PropertyId::BorderTopRightRadius)->ToFloatValue(), element),
-		ComputePropertyW(element->GetComputedProperty(PropertyId::BorderBottomRightRadius)->ToFloatValue(), element),
-		ComputePropertyH(element->GetComputedProperty(PropertyId::BorderBottomLeftRadius)->ToFloatValue(), element),
+		element->GetComputedProperty(PropertyId::BorderTopLeftRadius)->Get<PropertyFloat>().ComputeW(element),
+		element->GetComputedProperty(PropertyId::BorderTopRightRadius)->Get<PropertyFloat>().ComputeH(element),
+		element->GetComputedProperty(PropertyId::BorderBottomRightRadius)->Get<PropertyFloat>().ComputeW(element),
+		element->GetComputedProperty(PropertyId::BorderBottomLeftRadius)->Get<PropertyFloat>().ComputeH(element),
 	};
-	Color background_color = element->GetComputedProperty(PropertyId::BackgroundColor)->GetColor();
+	Color background_color = element->GetComputedProperty(PropertyId::BackgroundColor)->Get<Color>();
 	float opacity = element->GetOpacity();
 	if (opacity < 1) {
 		ColorApplyOpacity(background_color, opacity);
@@ -60,9 +59,9 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	
 	const Layout::Metrics& metrics = element->GetMetrics();
 
-	float outlineWidth = ComputeProperty(element->GetComputedProperty(PropertyId::OutlineWidth), element);
+	float outlineWidth = element->GetComputedProperty(PropertyId::OutlineWidth)->Get<PropertyFloat>().Compute(element);
 	if (outlineWidth > 0.f) {
-		Color outlineColor = element->GetComputedProperty(PropertyId::OutlineColor)->GetColor();
+		Color outlineColor = element->GetComputedProperty(PropertyId::OutlineColor)->Get<Color>();
 		geometry.AddRect(Rect {Point{}, metrics.frame.size}, outlineWidth, outlineColor);
 	}
 

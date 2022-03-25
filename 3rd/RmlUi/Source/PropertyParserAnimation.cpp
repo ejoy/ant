@@ -1,32 +1,3 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2018 Michael R. P. Ragazzon
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
-
 #include "PropertyParserAnimation.h"
 #include "PropertyShorthandDefinition.h"
 #include "../Include/RmlUi/PropertyDefinition.h"
@@ -34,6 +5,7 @@
 #include "../Include/RmlUi/StringUtilities.h"
 #include "../Include/RmlUi/StyleSheetSpecification.h"
 #include "../Include/RmlUi/Tween.h"
+#include "../Include/RmlUi/Property.h"
 
 namespace Rml {
 
@@ -48,7 +20,6 @@ struct Keyword {
 		return type == NONE || type == TWEEN || type == ALTERNATE || type == INFINITE || type == PAUSED;
 	}
 };
-
 
 static const std::unordered_map<std::string, Keyword> keywords = {
 	{"none", {Keyword::NONE} },
@@ -97,12 +68,10 @@ PropertyParserAnimation::PropertyParserAnimation(Type type) : type(type)
 }
 
 
-static bool ParseAnimation(Property & property, const std::vector<std::string>& animation_values)
-{
+static std::optional<Property> ParseAnimation(const std::vector<std::string>& animation_values) {
 	AnimationList animation_list;
 
-	for (const std::string& single_animation_value : animation_values)
-	{
+	for (const std::string& single_animation_value : animation_values) {
 		Animation animation;
 
 		std::vector<std::string> arguments;
@@ -126,9 +95,8 @@ static bool ParseAnimation(Property & property, const std::vector<std::string>& 
 				case Keyword::NONE:
 				{
 					if (animation_list.size() > 0) // The none keyword can not be part of multiple definitions
-						return false;
-					property = Property{ AnimationList{}, Property::Unit::ANIMATION };
-					return true;
+						return {};
+					return AnimationList{};
 				}
 				break;
 				case Keyword::TWEEN:
@@ -139,7 +107,7 @@ static bool ParseAnimation(Property & property, const std::vector<std::string>& 
 					break;
 				case Keyword::INFINITE:
 					if (num_iterations_found)
-						return false;
+						return {};
 					animation.num_iterations = -1;
 					num_iterations_found = true;
 					break;
@@ -198,32 +166,24 @@ static bool ParseAnimation(Property & property, const std::vector<std::string>& 
 		// Validate the parsed transition
 		if (animation.name.empty() || animation.duration <= 0.0f || (animation.num_iterations < -1 || animation.num_iterations == 0))
 		{
-			return false;
+			return {};
 		}
 
 		animation_list.push_back(std::move(animation));
 	}
-
-	property.value = std::move(animation_list);
-	property.unit = Property::Unit::ANIMATION;
-
-	return true;
+	return std::move(animation_list);
 }
 
 
-static bool ParseTransition(Property & property, const std::vector<std::string>& transition_values)
-{
+static std::optional<Property> ParseTransition(const std::vector<std::string>& transition_values) {
 	TransitionList transition_list{ false, false, {} };
 
-	for (const std::string& single_transition_value : transition_values)
-	{
-
+	for (const std::string& single_transition_value : transition_values) {
 		Transition transition;
 		PropertyIdSet target_property_names;
 
 		std::vector<std::string> arguments;
 		StringUtilities::ExpandString(arguments, single_transition_value, ' ');
-
 
 		bool duration_found = false;
 		bool delay_found = false;
@@ -241,9 +201,8 @@ static bool ParseTransition(Property & property, const std::vector<std::string>&
 				if (it->second.type == Keyword::NONE)
 				{
 					if (transition_list.transitions.size() > 0) // The none keyword can not be part of multiple definitions
-						return false;
-					property = Property{ TransitionList{true, false, {}}, Property::Unit::TRANSITION };
-					return true;
+						return {};
+					return TransitionList{true, false, {}};
 				}
 				else if (it->second.type == Keyword::ALL)
 				{
@@ -290,14 +249,14 @@ static bool ParseTransition(Property & property, const std::vector<std::string>&
 							transition.reverse_adjustment_factor = number;
 						}
 						else
-							return false;
+							return {};
 					}
 				}
 				else
 				{
 					PropertyIdSet properties;
 					if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, argument)) {
-						return false;
+						return {};
 					}
 					target_property_names |= properties;
 				}
@@ -306,18 +265,18 @@ static bool ParseTransition(Property & property, const std::vector<std::string>&
 
 		// Validate the parsed transition
 		if (transition.duration <= 0.0f || transition.reverse_adjustment_factor < 0.0f || transition.reverse_adjustment_factor > 1.0f) {
-			return false;
+			return {};
 		}
 
 		if (transition_list.all) {
 			if (!target_property_names.Empty()) {
-				return false;
+				return {};
 			}
 			transition_list.transitions.push_back(transition);
 		}
 		else {
 			if (target_property_names.Empty()) {
-				return false;
+				return {};
 			}
 			for (const auto& property_name : target_property_names) {
 				transition.id = property_name;
@@ -326,33 +285,21 @@ static bool ParseTransition(Property & property, const std::vector<std::string>&
 		}
 	}
 
-	property.value = std::move(transition_list);
-	property.unit = Property::Unit::TRANSITION;
-
-	return true;
+	return std::move(transition_list);
 }
 
 
-bool PropertyParserAnimation::ParseValue(Property & property, const std::string & value, const ParameterMap & /*parameters*/) const
-{
+std::optional<Property> PropertyParserAnimation::ParseValue(const std::string & value, const ParameterMap & /*parameters*/) const {
 	std::vector<std::string> list_of_values;
-	{
-		auto lowercase_value = StringUtilities::ToLower(value);
-		StringUtilities::ExpandString(list_of_values, lowercase_value, ',');
+	auto lowercase_value = StringUtilities::ToLower(value);
+	StringUtilities::ExpandString(list_of_values, lowercase_value, ',');
+	if (type == ANIMATION_PARSER) {
+		return ParseAnimation(list_of_values);
 	}
-
-	bool result = false;
-
-	if (type == ANIMATION_PARSER)
-	{
-		result = ParseAnimation(property, list_of_values);
+	else if (type == TRANSITION_PARSER) {
+		return ParseTransition(list_of_values);
 	}
-	else if (type == TRANSITION_PARSER)
-	{
-		result = ParseTransition(property, list_of_values);
-	}
-
-	return result;
+	return {};
 }
 
 }

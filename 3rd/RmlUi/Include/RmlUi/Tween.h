@@ -13,7 +13,6 @@ public:
 	Tween(Type type, Direction direction);
 	float operator()(float t) const;
 	bool operator==(const Tween& other) const;
-	bool operator!=(const Tween& other) const;
 	std::string to_string() const;
 
 private:

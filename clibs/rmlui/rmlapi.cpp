@@ -4,8 +4,6 @@
 #include "RmlUi/Element.h"
 #include "RmlUi/Document.h"
 #include "RmlUi/EventListener.h"
-#include "RmlUi/StyleSheetSpecification.h"
-#include "RmlUi/Time.h"
 
 #include "luaplugin.h"
 #include "luabind.h"
@@ -129,7 +127,8 @@ lDocumentDestroy(lua_State* L) {
 static int
 lDocumentUpdate(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	doc->Update();
+	double delta = luaL_checknumber(L, 2);
+	doc->Update(delta);
 	return 0;
 }
 
@@ -172,6 +171,7 @@ lDocumentCreateElement(lua_State* L) {
 	if (!e) {
 		return 0;
 	}
+	e->NotifyCustomElement();
 	lua_pushlightuserdata(L, e.release());
 	return 1;
 }
@@ -439,6 +439,17 @@ lElementProject(lua_State* L) {
 }
 
 static int
+lElementClone(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::ElementPtr r = e->Clone();
+	if (!r) {
+		return 0;
+	}
+	lua_pushlightuserdata(L, r.release());
+	return 1;
+}
+
+static int
 lElementDelete(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	delete e;
@@ -471,13 +482,6 @@ static int
 lRmlRegisterEevent(lua_State* L) {
 	lua_plugin* plugin = get_lua_plugin();
 	plugin->register_event(L);
-	return 0;
-}
-
-static int
-lRmlTimeUpdate(lua_State* L) {
-	double delta = luaL_checknumber(L, 1);
-	Rml::Time::Update(delta);
 	return 0;
 }
 
@@ -561,12 +565,12 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementAppendChild", lElementAppendChild },
 		{ "ElementDelete", lElementDelete },
 		{ "ElementProject", lElementProject },
+		{ "ElementClone", lElementClone },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
 		{ "RmlInitialise", lRmlInitialise },
 		{ "RmlShutdown", lRmlShutdown },
 		{ "RmlRegisterEevent", lRmlRegisterEevent },
-		{ "RmlTimeUpdate", lRmlTimeUpdate },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

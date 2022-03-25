@@ -50,9 +50,6 @@ public:
 
     bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
 
-protected:
-    void Release() override;
-
 private:
     std::unique_ptr<DataControllerEventListener> listener;
 };

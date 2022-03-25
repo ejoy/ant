@@ -231,7 +231,6 @@ DataAddress DataModel::ResolveAddress(const std::string& address_str, Element* e
 		return address;
 
 	// Look for a variable alias for the first name.
-	
 	Element* ancestor = element;
 	while (ancestor && ancestor->GetDataModel() == this)
 	{
