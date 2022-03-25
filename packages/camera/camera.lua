@@ -168,9 +168,7 @@ local cameraview_sys = ecs.system "camera_view_system"
 
 local function update_camera(e)
     local camera = e.camera
-    local worldmat = e.scene._worldmat
-    local pos, dir = math3d.index(worldmat, 4, 3)
-    camera.viewmat = math3d.lookto(pos, dir, camera.updir)
+    camera.viewmat = math3d.inverse(e.scene._worldmat)
     camera.projmat = math3d.projmat(camera.frustum)
     camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
