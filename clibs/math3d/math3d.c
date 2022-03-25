@@ -1952,6 +1952,42 @@ lpoints_radius(lua_State *L){
 }
 
 static int
+lplane(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	float *tmp = alloc_vec4(L, LS);
+
+	const float* point = vector_from_index(L, LS, 1);
+	const float* normal = vector_from_index(L, LS, 2);
+
+	tmp[0] = normal[0];
+	tmp[1] = normal[1];
+	tmp[2] = normal[2];
+	tmp[3] = math3d_dot(point, normal);
+	return 1;
+}
+
+static int
+lplane_ray(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float* ray_o = vector_from_index(L, LS, 1);
+	const float* ray_d = vector_from_index(L, LS, 2);
+
+	const float* plane = vector_from_index(L, LS, 3);
+	//t = (d - o dot n) / (d1 dot n)
+	float dot_do = math3d_dot(ray_d, ray_o);
+
+	//ray direction is parrall to plane normal, not interset
+	if (fabs(dot_do) < 1e-7){
+		lua_pushnumber(L, 0.f);
+	} else {
+		const float dis = plane[3];
+		float t = (dis - math3d_dot(ray_o, plane)) / dot_do;
+		lua_pushnumber(L, t);
+	}
+	return 1;
+}
+
+static int
 lfrustum_calc_near_far(lua_State *L){
 	struct lastack *LS = GETLS(L);
 	const float* planes[6];
@@ -2040,6 +2076,10 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 		{ "points_center",	lpoints_center},
 		{ "points_radius",	lpoints_radius},
 		{ "points_aabb",	lpoints_aabb},
+		
+		//plane
+		{ "plane",			lplane},
+		{ "plane_ray",		lplane_ray},
 
 		//aabb
 		{ "aabb", 				 laabb},

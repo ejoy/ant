@@ -275,3 +275,24 @@ print "test matrix decompose to s, r, t"
 print_mat(r2l_mat)
 print_mat(r2l_mat1)
 print_mat(r2l_mat2)
+
+
+print "-----plane test-----"
+do
+	local plane_pos = math3d.vector(0, 3, 0)
+	local plane_dir = math3d.vector(0, 10, 0)
+	local plane = math3d.plane(plane_pos, plane_dir)
+
+	local ray = {o = math3d.vector(0, 10, 0), d = math3d.vector(2, 3, 4)}
+	local tt = math3d.plane_ray(ray.o, ray.d, plane)
+	if tt == 0 then
+		print "plane parallel with ray"
+	elseif tt < 0 then
+		print "plane intersetion in ray backward"
+	else
+		print "plane intersetion with plane front face"
+	end
+
+	local intersetion_pt = math3d.muladd(ray.o, tt, ray.dir)
+	print(math3d.tostring(intersetion_pt))
+end
