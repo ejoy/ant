@@ -17,7 +17,7 @@ end
 
 local ServiceWindow = ltask.queryservice "ant.window|window"
 ltask.send(ServiceWindow, "subscribe", "init", "exit")
-ltask.send(ServiceWindow, "subscribe", "mouse_wheel", "mouse", "touch", "keyboard", "char", "size")
+ltask.send(ServiceWindow, "subscribe", "mouse_wheel", "mouse", "touch", "keyboard", "char", "size", "gesture")
 local resizeQueue = {}
 
 local S = {}
@@ -108,6 +108,7 @@ function S.init(nwh, context, width, height)
 	S.mouse_wheel	= ev.mouse_wheel
 	S.mouse 		= ev.mouse
 	S.touch			= ev.touch
+	S.gesture		= ev.gesture
 	S.keyboard		= ev.keyboard
 	S.char			= ev.char
 	S.size			= function (ww, hh)
@@ -126,6 +127,7 @@ end
 S.mouse_wheel = function () end
 S.mouse = function () end
 S.touch = function () end
+S.gesture = function () end
 S.keyboard = function () end
 S.char = function () end
 S.size = function (w,h)

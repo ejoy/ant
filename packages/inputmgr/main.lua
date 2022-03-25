@@ -14,6 +14,9 @@ local function create(world, type)
     function ev.touch(state, data)
         world:pub {"touch", touch_state[state] or "UNKNOWN", data}
     end
+    function ev.gesture(...)
+        world:pub {"gesture", ...}
+    end
     function ev.keyboard(key, press, state)
         world:pub {"keyboard", keymap[key], press, {
             CTRL	= (state & 0x01) ~= 0,
