@@ -951,7 +951,6 @@ function gizmo:select_gizmo(x, y)
 end
 
 local keypress_mb = world:sub{"keyboard"}
-local prefab_mgr  = ecs.require "prefab_manager"
 local last_mouse_pos_x = 0
 local last_mouse_pos_y = 0
 local function on_mouse_move()

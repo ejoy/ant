@@ -30,6 +30,7 @@
 #define RMLUI_CORE_PROPERTYSHORTHANDDEFINITION_H
 
 #include "../Include/RmlUi/ID.h"
+#include <vector>
 
 namespace Rml {
 
@@ -60,11 +61,10 @@ struct ShorthandItem {
 // A list of shorthands or properties
 using ShorthandItemList = std::vector< ShorthandItem >;
 
-struct ShorthandDefinition
-{
+struct ShorthandDefinition {
 	ShorthandId id;
-	ShorthandItemList items; 
 	ShorthandType type;
+	ShorthandItemList items; 
 };
 
 }

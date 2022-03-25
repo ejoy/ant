@@ -138,7 +138,6 @@ public:
 	}
 
 private:
-
 	inline void ProceedToNextValid()
 	{
 		for (; id_index < size_t(PropertyId::NumDefinedIds); ++id_index)
@@ -153,7 +152,6 @@ private:
 
 	friend PropertyIdSetIterator PropertyIdSet::Erase(PropertyIdSetIterator);
 };
-
 
 
 PropertyIdSetIterator PropertyIdSet::begin() const {

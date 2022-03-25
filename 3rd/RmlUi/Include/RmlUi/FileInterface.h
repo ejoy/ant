@@ -30,7 +30,6 @@
 #define RMLUI_CORE_FILEINTERFACE_H
 
 #include "Types.h"
-#include "Traits.h"
 
 namespace Rml {
 
@@ -44,7 +43,7 @@ namespace Rml {
 	@author Peter Curry
  */
 
-class FileInterface : public NonCopyMoveable
+class FileInterface
 {
 public:
 	virtual FileHandle Open(const std::string& path) = 0;

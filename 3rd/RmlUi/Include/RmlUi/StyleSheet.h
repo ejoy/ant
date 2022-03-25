@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_STYLESHEET_H
 #define RMLUI_CORE_STYLESHEET_H
 
-#include "Traits.h"
 #include "Types.h"
 
 namespace Rml {
@@ -56,14 +55,16 @@ using KeyframesMap = std::unordered_map<std::string, Keyframes>;
 	@author Lloyd Weehuizen
  */
 
-class StyleSheet : public NonCopyMoveable
-{
+class StyleSheet {
 public:
 	typedef std::vector< StyleSheetNode* > NodeList;
 	typedef std::unordered_map< size_t, NodeList > NodeIndex;
 
 	StyleSheet();
 	virtual ~StyleSheet();
+
+	StyleSheet(const StyleSheet&) = delete;
+	StyleSheet& operator=(const StyleSheet&) = delete;
 
 	/// Loads a style from a CSS definition.
 	bool LoadStyleSheet(Stream* stream, int begin_line_number = 1);
@@ -74,11 +75,13 @@ public:
 	void BuildNodeIndex();
 
 	/// Returns the Keyframes of the given name, or null if it does not exist.
-	Keyframes* GetKeyframes(const std::string& name);
+	const Keyframes* GetKeyframes(const std::string& name) const;
 
 	/// Returns the compiled element definition for a given element hierarchy. A reference count will be added for the
 	/// caller, so another should not be added. The definition should be released by removing the reference count.
 	std::shared_ptr<StyleSheetPropertyDictionary> GetElementDefinition(const Element* element) const;
+
+	void Reset() {}
 
 	/// Retrieve the hash key used to look-up applicable nodes in the node index.
 	static size_t NodeHash(const std::string& tag, const std::string& id);

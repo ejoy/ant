@@ -20,7 +20,7 @@ local setting 	= import_package "ant.settings".setting
 local curve_world = setting:data().graphic.curve_world
 local cw_enable = curve_world.enable
 
-local pickup_material
+local pickup_materials = {}
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
@@ -236,7 +236,9 @@ end
 
 function pickup_sys:init()
 	create_pick_entity()
-	pickup_material = imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
+	pickup_materials.opacity	= imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
+	pickup_materials.translucent= imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
+	pickup_materials.ui 		= pickup_materials.translucent
 end
 
 function pickup_sys:entity_init()
@@ -271,9 +273,10 @@ function pickup_sys:update_camera()
 			local main_camera = world:entity(irq.main_camera())
 			local mc_viewmat = main_camera.camera.viewmat
 			local mc_inv_viewmat = math3d.inverse(mc_viewmat)
-			
-			imaterial.set_property_directly(pickup_material.properties, "u_viewcamera_viewmat", mc_viewmat)
-			imaterial.set_property_directly(pickup_material.properties, "u_viewcamera_inv_viewmat", mc_inv_viewmat)
+			for _, pm in pairs(pickup_materials) do
+				imaterial.set_property_directly(pm.properties, "u_viewcamera_viewmat", mc_viewmat)
+				imaterial.set_property_directly(pm.properties, "u_viewcamera_inv_viewmat", mc_inv_viewmat)
+			end
 		end
 	end
 end
@@ -333,14 +336,17 @@ end
 function pickup_sys:end_filter()
 	for e in w:select "filter_result:in render_object:in filter_material:out id:in" do
 		local fr = e.filter_result
+		local st = e.render_object.fx.setting.surfacetype
 		local fm = e.filter_material
 		local qe = w:singleton("pickup_queue", "primitive_filter:in")
 		for _, fn in ipairs(qe.primitive_filter) do
 			if fr[fn] then
+				local m = assert(pickup_materials[st])
+				local state = e.render_object.state
 				fm[fn] = {
-					fx			= pickup_material.fx,
-					properties	= get_properties(e.id, pickup_material.properties),
-					state		= pickup_material.state,
+					fx			= m.fx,
+					properties	= get_properties(e.id, m.properties),
+					state		= irender.check_primitive_mode_state(state, m.state),
 				}
 			end
 		end

@@ -32,7 +32,6 @@
 #include "../Include/RmlUi/Geometry.h"
 #include "../Include/RmlUi/Document.h"
 #include "../Include/RmlUi/Core.h"
-#include "../Include/RmlUi/ElementStyle.h"
 
 namespace Rml {
 
@@ -40,13 +39,13 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	geometry.Release();
 
 	const Property* image = element->GetComputedProperty(PropertyId::BackgroundImage);
-	if (image->unit != Property::Unit::STRING) {
+	if (!image->Has<std::string>()) {
 		// "none"
 		return;
 	}
 
 	Layout::Metrics const& metrics = element->GetMetrics();
-	Style::BoxType origin = (Style::BoxType)element->GetComputedProperty(PropertyId::BackgroundOrigin)->GetKeyword();
+	Style::BoxType origin = (Style::BoxType)element->GetComputedProperty(PropertyId::BackgroundOrigin)->Get<PropertyKeyword>();
 
 	Rect surface = Rect{ {0, 0}, metrics.frame.size };
 	if (surface.size.IsEmpty()) {
@@ -67,18 +66,18 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		return;
 	}
 
-	SamplerFlag repeat = (SamplerFlag)element->GetComputedProperty(PropertyId::BackgroundRepeat)->GetKeyword();
-	Style::BackgroundSize backgroundSize = (Style::BackgroundSize)element->GetComputedProperty(PropertyId::BackgroundSize)->GetKeyword();
+	SamplerFlag repeat = (SamplerFlag)element->GetComputedProperty(PropertyId::BackgroundRepeat)->Get<PropertyKeyword>();
+	Style::BackgroundSize backgroundSize = (Style::BackgroundSize)element->GetComputedProperty(PropertyId::BackgroundSize)->Get<PropertyKeyword>();
 	Size texSize {
-		ComputePropertyW(element->GetComputedProperty(PropertyId::BackgroundSizeX), element),
-		ComputePropertyH(element->GetComputedProperty(PropertyId::BackgroundSizeY), element)
+		element->GetComputedProperty(PropertyId::BackgroundSizeX)->Get<PropertyFloat>().ComputeW(element),
+		element->GetComputedProperty(PropertyId::BackgroundSizeY)->Get<PropertyFloat>().ComputeH(element)
 	};
 	Point texPosition {
-		ComputePropertyW(element->GetComputedProperty(PropertyId::BackgroundPositionX), element),
-		ComputePropertyH(element->GetComputedProperty(PropertyId::BackgroundPositionY), element)
+		element->GetComputedProperty(PropertyId::BackgroundPositionX)->Get<PropertyFloat>().ComputeW(element),
+		element->GetComputedProperty(PropertyId::BackgroundPositionY)->Get<PropertyFloat>().ComputeH(element)
 	};
 
-	std::string path = image->GetString();
+	std::string path = image->Get<std::string>();
 	auto texture = Texture::Fetch(path);
 	geometry.SetTexture(texture);
 	geometry.SetSamplerFlag(repeat);

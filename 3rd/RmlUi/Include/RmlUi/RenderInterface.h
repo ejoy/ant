@@ -29,7 +29,6 @@
 #ifndef RMLUI_CORE_RENDERINTERFACE_H
 #define RMLUI_CORE_RENDERINTERFACE_H
 
-#include "Traits.h"
 #include "Texture.h"
 #include "Geometry.h"
 #include "Types.h"
@@ -37,7 +36,7 @@
 
 namespace Rml {
 
-class RenderInterface : public NonCopyMoveable {
+class RenderInterface {
 public:
 	virtual void RenderGeometry(Vertex* vertices, size_t num_vertices, Index* indices, size_t num_indices, TextureHandle texture, SamplerFlag flags) = 0;
 	virtual bool LoadTexture(TextureHandle& handle, Size& dimensions, const std::string& path) = 0;

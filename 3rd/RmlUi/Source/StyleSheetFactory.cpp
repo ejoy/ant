@@ -8,14 +8,9 @@
 
 namespace Rml {
 
-static void Combine(std::shared_ptr<StyleSheet>& sheet, std::shared_ptr<StyleSheet> subsheet) {
+static void Combine(StyleSheet& sheet, std::shared_ptr<StyleSheet> subsheet) {
 	if (subsheet) {
-		if (sheet) {
-			sheet->CombineStyleSheet(*subsheet);
-		}
-		else {
-			sheet = subsheet;
-		}
+		sheet.CombineStyleSheet(*subsheet);
 	}
 }
 
@@ -159,19 +154,11 @@ void StyleSheetFactory::Shutdown() {
 	}
 }
 
-std::shared_ptr<StyleSheet> StyleSheetFactory::LoadStyleSheet(const std::string& source_path) {
-	return instance->LoadStyleSheet(source_path);
-}
-
-std::shared_ptr<StyleSheet> StyleSheetFactory::LoadStyleSheet(const std::string& content, const std::string& source_path, int line) {
-	return instance->LoadStyleSheet(content, source_path, line);
-}
-
-void StyleSheetFactory::CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, const std::string& source_path) {
+void StyleSheetFactory::CombineStyleSheet(StyleSheet& sheet, const std::string& source_path) {
 	Combine(sheet, instance->LoadStyleSheet(source_path));
 }
 
-void StyleSheetFactory::CombineStyleSheet(std::shared_ptr<StyleSheet>& sheet, const std::string& content, const std::string& source_path, int line) {
+void StyleSheetFactory::CombineStyleSheet(StyleSheet& sheet, const std::string& content, const std::string& source_path, int line) {
 	Combine(sheet, instance->LoadStyleSheet(content, source_path, line));
 }
 

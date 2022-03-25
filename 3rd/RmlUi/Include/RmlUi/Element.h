@@ -20,13 +20,14 @@ class Document;
 class StyleSheet;
 class Geometry;
 class StyleSheetPropertyDictionary;
+struct HtmlElement;
 
 class Element : public Node, public EnableObserverPtr<Element> {
 public:
 	Element(Document* owner, const std::string& tag);
 	virtual ~Element();
 
-	virtual const std::shared_ptr<StyleSheet>& GetStyleSheet() const;
+	const StyleSheet& GetStyleSheet() const;
 	std::string GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
 	bool IsPointWithinElement(Point point);
 
@@ -39,7 +40,6 @@ public:
 	const std::string* GetAttribute(const std::string& name) const;
 	bool HasAttribute(const std::string& name) const;
 	void RemoveAttribute(const std::string& name);
-	void SetAttributes(const ElementAttributes& attributes);
 	const ElementAttributes& GetAttributes() const { return attributes; }
 
 	bool Project(Point& point) const noexcept;
@@ -53,6 +53,11 @@ public:
 	std::string GetInnerHTML() const;
 	std::string GetOuterHTML() const;
 	void SetInnerHTML(const std::string& html);
+	void SetOuterHTML(const std::string& html);
+	void InstanceOuter(const HtmlElement& html);
+	void InstanceInner(const HtmlElement& html);
+	virtual ElementPtr Clone(bool deep = true) const;
+	void NotifyCustomElement();
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);
@@ -60,14 +65,16 @@ public:
 	void RemoveAllEvents();
 	std::vector<EventListener*> const& GetEventListeners() const;
 
-	Element* AppendChild(ElementPtr element);
-	Element* InsertBefore(ElementPtr element, Element* adjacent_element);
+	Element*   AppendChild(ElementPtr element);
 	ElementPtr RemoveChild(Element* element);
+	size_t     GetChildIndex(Element* child) const;
+	Element*   InsertBefore(ElementPtr element, Element* adjacent_element);
+	Element*   GetPreviousSibling();
+	void       RemoveAllChildren();
+
 	Element* GetElementById(const std::string& id);
 	void GetElementsByTagName(ElementList& elements, const std::string& tag);
 	void GetElementsByClassName(ElementList& elements, const std::string& class_name);
-	Element* QuerySelector(const std::string& selector);
-	void QuerySelectorAll(ElementList& elements, const std::string& selectors);
 
 	DataModel* GetDataModel() const;
 
@@ -91,12 +98,11 @@ public:
 	bool IsClassSet(const std::string& class_name) const;
 	void SetClassName(const std::string& class_names);
 	std::string GetClassName() const;
-	void DirtyPropertiesWithUnitRecursive(Property::UnitMark mark);
+	void DirtyPropertiesWithUnitRecursive(PropertyUnit unit);
 
 	void UpdateDefinition();
 	void DirtyDefinition();
 	void DirtyInheritedProperties();
-	void DirtyProperties(Property::UnitMark mark);
 	void ForeachProperties(std::function<void(PropertyId id, const Property& property)> f);
 	void DirtyProperty(PropertyId id);
 	void DirtyProperties(const PropertyIdSet& properties);

@@ -9,7 +9,8 @@ namespace Rml {
 	void ElementDocument::OnChange(const PropertyIdSet& changed_properties) {
 		Element::OnChange(changed_properties);
 		// If the document's font-size has been changed, we need to dirty all rem properties.
-		if (changed_properties.Contains(PropertyId::FontSize))
-			DirtyPropertiesWithUnitRecursive(Property::UnitMark::Rem);
+		if (changed_properties.Contains(PropertyId::FontSize)) {
+			DirtyPropertiesWithUnitRecursive(PropertyUnit::REM);
+		}
 	}
 }

@@ -67,7 +67,7 @@ namespace StringUtilities
 	/// @param[out] string_list Resulting list of values.
 	/// @param[in] string std::string to expand.
 	/// @param[in] delimiter Delimiter found between entries in the string list.
-	void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter = ',');
+	void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter);
 	/// Expands character-delimited list of values with custom quote characters.
 	/// @param[out] string_list Resulting list of values.
 	/// @param[in] string std::string to expand.

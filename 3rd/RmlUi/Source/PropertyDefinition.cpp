@@ -33,82 +33,65 @@
 
 namespace Rml {
 
-PropertyDefinition::PropertyDefinition(PropertyId id, bool _inherited) 
+PropertyDefinition::PropertyDefinition(PropertyId id, bool inherited) 
 	: id(id)
-{
-	inherited = _inherited;
-}
+	, inherited(inherited)
+{ }
 
-PropertyDefinition::PropertyDefinition(PropertyId id, const std::string& _default_value, bool _inherited) 
-	: id(id), default_value(Property(_default_value, Property::Unit::UNKNOWN))
-{
-	inherited = _inherited;
-}
+PropertyDefinition::PropertyDefinition(PropertyId id, const std::string& unparsed_default, bool inherited) 
+	: id(id)
+	, unparsed_default(unparsed_default)
+	, inherited(inherited)
+{ }
 
-PropertyDefinition::~PropertyDefinition()
-{
-}
-
-PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name, const std::string& parser_parameters) {
-	ParserState new_parser;
-
-	new_parser.parser = StyleSheetSpecification::GetParser(parser_name);
-	if (new_parser.parser == nullptr) {
+PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name) {
+	PropertyParser* new_parser = StyleSheetSpecification::GetParser(parser_name);
+	if (new_parser == nullptr) {
 		Log::Message(Log::Level::Error, "Property was registered with invalid parser '%s'.", parser_name.c_str());
 		return *this;
 	}
-
-	if (!parser_parameters.empty())
-	{
-		std::vector<std::string> parameter_list;
-		StringUtilities::ExpandString(parameter_list, StringUtilities::ToLower(parser_parameters));
-		for (size_t i = 0; i < parameter_list.size(); i++)
-			new_parser.parameters[parameter_list[i]] = (int) i;
-	}
 	parsers.push_back(new_parser);
-
-	if (default_value && default_value->unit == Property::Unit::UNKNOWN) {
-		Property& def = default_value.value();
-		std::string unparsed_value = std::get<std::string>(def.value);
-		if (!new_parser.parser->ParseValue(def, unparsed_value, new_parser.parameters)) {
-			def.value = unparsed_value;
-			def.unit = Property::Unit::UNKNOWN;
-		}
+	if (!default_value && !unparsed_default.empty()) {
+		default_value = new_parser->ParseValue(unparsed_default);
 	}
-
 	return *this;
 }
 
-// Called when parsing a RCSS declaration.
-bool PropertyDefinition::ParseValue(Property& property, const std::string& value) const
-{
-	for (size_t i = 0; i < parsers.size(); i++)
-	{
-		if (parsers[i].parser->ParseValue(property, value, parsers[i].parameters))
-		{
-			return true;
-		}
-	}
+PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name, const std::string& parser_parameters) {
+	assert(parser_name == "keyword");
 
-	property.unit = Property::Unit::UNKNOWN;
-	return false;
+	PropertyParser* new_parser = StyleSheetSpecification::GetKeywordParser(parser_parameters);
+	if (new_parser == nullptr) {
+		Log::Message(Log::Level::Error, "Property was registered with invalid parser '%s'.", parser_name.c_str());
+		return *this;
+	}
+	parsers.push_back(new_parser);
+	if (!default_value && !unparsed_default.empty()) {
+		default_value = new_parser->ParseValue(unparsed_default);
+	}
+	return *this;
 }
 
-// Returns true if this property is inherited from a parent to child elements.
-bool PropertyDefinition::IsInherited() const
-{
+std::optional<Property> PropertyDefinition::ParseValue(const std::string& value) const {
+	for (auto parser : parsers) {
+		auto property = parser->ParseValue(value);
+		if (property) {
+			return std::move(property);
+		}
+	}
+	return {};
+
+}
+
+bool PropertyDefinition::IsInherited() const {
 	return inherited;
 }
 
-const Property* PropertyDefinition::GetDefaultValue() const {
-	if (!default_value) {
-		return nullptr;
-	}
-	return &default_value.value();
+const std::optional<Property>& PropertyDefinition::GetDefaultValue() const {
+	return default_value;
 }
 
-PropertyId PropertyDefinition::GetId() const
-{
+PropertyId PropertyDefinition::GetId() const {
 	return id;
 }
 

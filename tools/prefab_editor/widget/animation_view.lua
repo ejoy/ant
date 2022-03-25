@@ -337,12 +337,14 @@ local widget_utils  = require "widget.utils"
 
 local function set_current_anim(anim_name)
     local anim = edit_anims[current_e][anim_name]
-    if not anim or current_anim == anim then
+    if not anim then
         local msg = anim_name .. " not exist."
         logger.error({tag = "Editor", message = msg})
         widget_utils.message_box({title = "AnimationError", info = msg})
         return false
     end
+    
+    if current_anim == anim then return false end
 
     if current_anim and current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
