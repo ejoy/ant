@@ -1968,6 +1968,17 @@ lplane(lua_State *L){
 
 static int
 lplane_ray(lua_State *L){
+	/*
+        ray: [o, d1], p(t) = o + t*d1, o is ray origin and d1 is the ray direction
+        plane: [n, d], p dot n = d, p is a point in plane, which we want; n is the normal, d is the origin point to plane distance, is a scalar
+        
+        we assume ray and plane interset, so p(t) is plane's p:
+            p(t) dot n = d
+            (o+t*d1) dot n = d
+        if we calculate t, we get the intersetion point:
+            o dot n + t * (d1 dot n) = d
+            t = (d - o dot n) / (d1 dot n)
+    */
 	struct lastack *LS = GETLS(L);
 	const float* ray_o = vector_from_index(L, LS, 1);
 	const float* ray_d = vector_from_index(L, LS, 2);
