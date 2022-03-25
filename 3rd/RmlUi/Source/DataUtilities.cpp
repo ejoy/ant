@@ -1,10 +1,10 @@
 #include "../Include/RmlUi/DataUtilities.h"
 #include "../Include/RmlUi/Element.h"
 #include "../Include/RmlUi/Log.h"
-#include "DataController.h"
+#include "DataEvent.h"
 #include "DataModel.h"
 #include "DataView.h"
-#include "DataControllerDefault.h"
+#include "DataEvent.h"
 #include "DataViewDefault.h"
 
 namespace Rml {
@@ -21,10 +21,6 @@ static std::map<std::string, DataViewInstancer*> data_view_instancers = {
 	{"value",   new DataViewInstancerDefault<DataViewValue>() },
 };
 
-static std::map<std::string, DataControllerInstancer*> data_controller_instancers = {
-	{"event", new DataControllerInstancerDefault<DataControllerEvent>() },
-};
-
 static DataViewPtr InstanceDataView(const std::string& type_name, Element* element) {
 	auto it = data_view_instancers.find(type_name);
 	if (it != data_view_instancers.end())
@@ -32,10 +28,10 @@ static DataViewPtr InstanceDataView(const std::string& type_name, Element* eleme
 	return nullptr;
 }
 
-static DataControllerPtr InstanceDataController(Element* element, const std::string& type_name) {
-	auto it = data_controller_instancers.find(type_name);
-	if (it != data_controller_instancers.end())
-		return it->second->InstanceController(element);
+static DataEventPtr InstanceDataController(Element* element, const std::string& type_name) {
+	if (type_name == "event") {
+		return DataEventPtr(new DataEvent(element));
+	}
 	return nullptr;
 }
 
@@ -47,10 +43,6 @@ void DataUtilities::Shutdown() {
 	for (auto& [_, instancer] : data_view_instancers) {
 		delete instancer;
 	}
-	for (auto& [_, instancer] : data_controller_instancers) {
-		delete instancer;
-	}
-	data_controller_instancers.clear();
 	data_view_instancers.clear();
 }
 
@@ -75,16 +67,17 @@ void DataUtilities::ApplyDataViewsControllers(Element* element) {
 					data_model->AddView(std::move(view));
 				}
 				else {
-					Log::Message(Log::Level::Warning, "Could not add data-%s view to element: %s", type_name.c_str(), element->GetAddress().c_str());
+					Log::Message(Log::Level::Warning, "Could not add data-%s to element: %s", type_name.c_str(), element->GetAddress().c_str());
 				}
 				continue;
 			}
-			if (DataControllerPtr controller = InstanceDataController(element, type_name)) {
-				if (controller->Initialize(*data_model, element, value, modifier)) {
-					data_model->AddController(std::move(controller));
+			if (type_name == "event") {
+				DataEventPtr event(new DataEvent(element));
+				if (event->Initialize(*data_model, element, value, modifier)) {
+					data_model->AddEvent(std::move(event));
 				}
 				else {
-					Log::Message(Log::Level::Warning, "Could not add data-%s controller to element: %s", type_name.c_str(), element->GetAddress().c_str());
+					Log::Message(Log::Level::Warning, "Could not add data-%s to element: %s", type_name.c_str(), element->GetAddress().c_str());
 				}
 			}
 		}
