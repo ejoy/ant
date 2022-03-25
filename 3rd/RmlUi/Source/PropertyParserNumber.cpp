@@ -59,6 +59,15 @@ std::optional<Property> PropertyParserNumber::ParseValue(const std::string& valu
 	if (Property::Contains(units, unit)) {
 		return Property { float_value, unit };
 	}
+	if (unit == PropertyUnit::NUMBER && float_value == 0.f) {
+		switch (units) {
+		case Property::UnitMark::Angle:
+			return Property { 0.f, PropertyUnit::RAD };
+		case Property::UnitMark::Length:
+		case Property::UnitMark::LengthPercent:
+			return Property { 0.f, PropertyUnit::PX };
+		}
+	}
 	return {};
 }
 
