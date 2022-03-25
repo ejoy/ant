@@ -6,13 +6,13 @@
 namespace Rml {
 
 PropertyParserTransform::PropertyParserTransform()
-	: number(Property::UnitMark::Number)
-	, length(Property::UnitMark::LengthPercent)
-	, angle(Property::UnitMark::Angle)
+	: number(PropertyParserNumber::UnitMark::Number)
+	, length(PropertyParserNumber::UnitMark::LengthPercent)
+	, angle(PropertyParserNumber::UnitMark::Angle)
 {
 }
 
-std::optional<Property> PropertyParserTransform::ParseValue(const std::string& value, const ParameterMap& /*parameters*/) const {
+std::optional<Property> PropertyParserTransform::ParseValue(const std::string& value) const {
 	if (value == "none") {
 		return Transform {};
 	}
@@ -222,7 +222,7 @@ bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const c
 		if (bytes_read == 0) {
 			return {};
 		}
-		auto prop = parsers[i]->ParseValue(std::string(arg), ParameterMap());
+		auto prop = parsers[i]->ParseValue(std::string(arg));
 		if (!prop) {
 			return {};
 		}

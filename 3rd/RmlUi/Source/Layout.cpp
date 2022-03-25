@@ -179,7 +179,7 @@ void Layout::SetProperty(PropertyId id, const Property* property, Element* eleme
 		SetIntProperty(node, id, property->Get<PropertyKeyword>());
 		return;
 	}
-	auto fv = property->Get<PropertyFloat>();
+	auto const& fv = property->Get<PropertyFloat>();
 	if (fv.unit == PropertyUnit::PERCENT) {
 		SetPercentProperty(node, id, fv.value);
 	}

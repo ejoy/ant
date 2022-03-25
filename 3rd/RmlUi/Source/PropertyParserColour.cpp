@@ -167,7 +167,7 @@ static int HexToDecimal(char hex_digit) {
 	return -1;
 }
 
-std::optional<Property> PropertyParserColour::ParseValue(const std::string& value, const ParameterMap&) const {
+std::optional<Property> PropertyParserColour::ParseValue(const std::string& value) const {
 	if (value.empty())
 		return {};
 

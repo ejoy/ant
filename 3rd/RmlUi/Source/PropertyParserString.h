@@ -6,7 +6,7 @@ namespace Rml {
 
 class PropertyParserString : public PropertyParser {
 public:
-	std::optional<Property> ParseValue(const std::string& value, const ParameterMap& parameters) const override;
+	std::optional<Property> ParseValue(const std::string& value) const override;
 };
 
 }

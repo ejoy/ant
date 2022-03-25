@@ -125,7 +125,7 @@ bool Tween::operator==(const Tween& other) const {
 } 
 
 
-std::string Tween::to_string() const {
+std::string Tween::ToString() const {
 	static const std::array<std::string, size_t(Type::Count)> type_str = {
 		{ "none", "back", "bounce", "circular", "cubic", "elastic", "exponential", "linear", "quadratic", "quartic", "quintic", "sine" }
 	};

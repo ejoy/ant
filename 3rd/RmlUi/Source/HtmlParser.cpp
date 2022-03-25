@@ -81,7 +81,7 @@ static bool IsCharNameValid(char c) {
 	return false;
 }
 
-HtmlElement HtmlParser::Parse(std::string_view stream) {
+HtmlElement HtmlParser::Parse(std::string_view stream, bool inner) {
 	HtmlElement root;
     std::stack<HtmlElement*> stack;
 	stack.push(&root);
@@ -99,15 +99,14 @@ HtmlElement HtmlParser::Parse(std::string_view stream) {
 		st_style,
 		st_open,
 		st_analys,
-		st_close,
 		st_finish,
 		st_finish_extra, 
 	};
-	TEState state = st_begin;
+	TEState state = inner? st_ready: st_begin;
+	bool open = inner;
 
 	std::string temp;
 	std::string accum;
-	bool open = false;
 	while (!IsEOF()) {
 		char c = GetChar();
 
@@ -140,7 +139,6 @@ HtmlElement HtmlParser::Parse(std::string_view stream) {
 				state = st_analys;
 				break;
 			case '/':
-				state = st_close;
 				EnterClosingElement(stack);
 				if (stack.empty()) {
 					state = st_finish;
@@ -308,6 +306,22 @@ HtmlElement HtmlParser::Parse(std::string_view stream) {
 		}
 	}
 
+	if (inner) {
+		switch (state) {
+		case st_begin:
+			state = st_open;
+			break;
+		case st_text: {
+			HtmlElement& current = *stack.top();
+			current.children.emplace_back(HtmlString{ accum });
+			accum.erase();
+			state = st_open;
+			break;
+		}
+		default:
+			break;
+		}
+	}
 	switch (state) {
 	case st_begin:
 		ThrowException(HtmlError::SPE_EMPTY);
@@ -318,6 +332,8 @@ HtmlElement HtmlParser::Parse(std::string_view stream) {
 		break;
 	case st_text:
 		ThrowException(HtmlError::SPE_TEXT_AFTER_ROOT);
+		break;
+	default:
 		break;
 	}
 	return root;
@@ -430,7 +446,6 @@ bool HtmlParser::EnterOpenElement(std::stack<HtmlElement*>& stack, char c) {
 void HtmlParser::EnterClosingElement(std::stack<HtmlElement*>& stack) {
 	if (stack.empty())
 		ThrowException(HtmlError::SPE_MATCH);
-	size_t tag_begin = m_pos - 1;
 	typedef enum { st_begin, st_name, st_end } TEState;
 	std::string accum;
 	TEState state = st_begin;
@@ -608,6 +623,8 @@ void HtmlParser::EnterEntity(void* value) {
 			if (!found)
 				ThrowException(HtmlError::SPE_UNKNOWN_ENTITY);
 		}
+		default:
+			break;
 		}
 	}
 	catch (HtmlParserException& e) {

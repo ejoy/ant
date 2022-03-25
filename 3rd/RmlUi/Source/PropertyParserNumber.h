@@ -7,11 +7,18 @@ namespace Rml {
 
 class PropertyParserNumber : public PropertyParser {
 public:
-	PropertyParserNumber(Property::UnitMark units);
-	std::optional<Property> ParseValue(const std::string& value, const ParameterMap& parameters) const override;
+	enum class UnitMark {
+		Number,
+		Length,
+		LengthPercent,
+		NumberLengthPercent,
+		Angle,
+	};
 
+	PropertyParserNumber(UnitMark units);
+	std::optional<Property> ParseValue(const std::string& value) const override;
 private:
-	Property::UnitMark units;
+	UnitMark units;
 };
 
 }

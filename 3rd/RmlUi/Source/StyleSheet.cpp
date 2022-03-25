@@ -97,7 +97,7 @@ void StyleSheet::BuildNodeIndex()
 }
 
 // Returns the Keyframes of the given name, or null if it does not exist.
-Keyframes * StyleSheet::GetKeyframes(const std::string & name)
+const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const
 {
 	auto it = keyframes.find(name);
 	if (it != keyframes.end())

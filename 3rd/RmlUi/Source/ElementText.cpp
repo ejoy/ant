@@ -304,6 +304,9 @@ void ElementText::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	}
 	dirty_geometry = false;
 	dirty_decoration = true;
+	for (auto& line : lines) {
+		line.position = line.position + metrics.frame.origin;
+	}
 	Color color = GetTextColor();
 	ColorApplyOpacity(color, GetOpacity());
 	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, color, geometry);
@@ -499,7 +502,7 @@ Size ElementText::Measure(float minWidth, float maxWidth, float minHeight, float
 			default: break;
 			}
 		}
-		line.position = metrics.frame.origin + Point(start_width, start_height);
+		line.position = Point(start_width, start_height);
 	}
 	height = std::max(minHeight, height);
 	return Size(width, height);

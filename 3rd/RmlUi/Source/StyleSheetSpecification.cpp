@@ -49,18 +49,18 @@ struct StyleSheetSpecificationInstance {
 	bool ParsePropertyValues(std::vector<std::string>& values_list, const std::string& values, bool split_values) const;
 
 	std::unordered_map<std::string, PropertyParser*> parsers = {
-		{"number", new PropertyParserNumber(Property::UnitMark::Number)},
-		{"length", new PropertyParserNumber(Property::UnitMark::Length)},
-		{"length_percent", new PropertyParserNumber(Property::UnitMark::LengthPercent)},
-		{"number_length_percent", new PropertyParserNumber(Property::UnitMark::NumberLengthPercent)},
-		{"angle", new PropertyParserNumber(Property::UnitMark::Angle)},
-		{"keyword", new PropertyParserKeyword()},
+		{"number", new PropertyParserNumber(PropertyParserNumber::UnitMark::Number)},
+		{"length", new PropertyParserNumber(PropertyParserNumber::UnitMark::Length)},
+		{"length_percent", new PropertyParserNumber(PropertyParserNumber::UnitMark::LengthPercent)},
+		{"number_length_percent", new PropertyParserNumber(PropertyParserNumber::UnitMark::NumberLengthPercent)},
+		{"angle", new PropertyParserNumber(PropertyParserNumber::UnitMark::Angle)},
 		{"string", new PropertyParserString()},
-		{"animation", new PropertyParserAnimation(PropertyParserAnimation::ANIMATION_PARSER)},
-		{"transition", new PropertyParserAnimation(PropertyParserAnimation::TRANSITION_PARSER)},
+		{"animation", new PropertyParserAnimation()},
+		{"transition", new PropertyParserTransition()},
 		{"color", new PropertyParserColour()},
 		{"transform", new PropertyParserTransform()},
 	};
+	std::unordered_map<std::string, PropertyParser*> keyword_parsers;
 	std::array<std::unique_ptr<PropertyDefinition>,  (size_t)PropertyId::NumDefinedIds>  properties;
 	std::array<std::unique_ptr<ShorthandDefinition>, (size_t)ShorthandId::NumDefinedIds> shorthands;
 	std::unordered_map<std::string, PropertyId> property_map;
@@ -102,6 +102,9 @@ T MapGet(std::unordered_map<std::string, T> const& map, const std::string& name)
 
 StyleSheetSpecificationInstance::~StyleSheetSpecificationInstance() {
 	for (auto [_, parser] : parsers) {
+		delete parser;
+	}
+	for (auto [_, parser] : keyword_parsers) {
 		delete parser;
 	}
 }
@@ -780,6 +783,21 @@ PropertyParser* StyleSheetSpecification::GetParser(const std::string& parser_nam
 	if (iterator == instance->parsers.end())
 		return nullptr;
 	return (*iterator).second;
+}
+
+PropertyParser* StyleSheetSpecification::GetKeywordParser(const std::string& parser_parameters) {
+	auto it = instance->keyword_parsers.find(parser_parameters);
+	if (it != instance->keyword_parsers.end()) {
+		return it->second;
+	}
+	PropertyParserKeyword* new_parser = new PropertyParserKeyword();
+	std::vector<std::string> parameter_list;
+	StringUtilities::ExpandString(parameter_list, StringUtilities::ToLower(parser_parameters), ',');
+	for (size_t i = 0; i < parameter_list.size(); i++) {
+		new_parser->parameters[parameter_list[i]] = (int) i;
+	}
+	instance->keyword_parsers.emplace(parser_parameters, new_parser);
+	return new_parser;
 }
 
 const PropertyDefinition* StyleSheetSpecification::GetPropertyDefinition(PropertyId id) {

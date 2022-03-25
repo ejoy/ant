@@ -55,8 +55,7 @@ using KeyframesMap = std::unordered_map<std::string, Keyframes>;
 	@author Lloyd Weehuizen
  */
 
-class StyleSheet
-{
+class StyleSheet {
 public:
 	typedef std::vector< StyleSheetNode* > NodeList;
 	typedef std::unordered_map< size_t, NodeList > NodeIndex;
@@ -76,11 +75,13 @@ public:
 	void BuildNodeIndex();
 
 	/// Returns the Keyframes of the given name, or null if it does not exist.
-	Keyframes* GetKeyframes(const std::string& name);
+	const Keyframes* GetKeyframes(const std::string& name) const;
 
 	/// Returns the compiled element definition for a given element hierarchy. A reference count will be added for the
 	/// caller, so another should not be added. The definition should be released by removing the reference count.
 	std::shared_ptr<StyleSheetPropertyDictionary> GetElementDefinition(const Element* element) const;
+
+	void Reset() {}
 
 	/// Retrieve the hash key used to look-up applicable nodes in the node index.
 	static size_t NodeHash(const std::string& tag, const std::string& id);

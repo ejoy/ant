@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ElementDocument.h"
+#include "StyleSheet.h"
 
 namespace Rml {
 
@@ -17,7 +18,7 @@ public:
 	virtual ~Document();
 	bool Load(const std::string& path);
 	const std::string& GetSourceURL() const;
-	const std::shared_ptr<StyleSheet>& GetStyleSheet() const;
+	const StyleSheet& GetStyleSheet() const;
 	void LoadInlineScript(const std::string& content, int source_line);
 	void LoadExternalScript(const std::string& source_path);
 	void LoadInlineStyle(const std::string& content, int source_line);
@@ -46,7 +47,7 @@ private:
 	DataModels data_models;
 	ElementDocument body;
 	std::string source_url;
-	std::shared_ptr<StyleSheet> style_sheet;
+	StyleSheet style_sheet;
 	std::unordered_set<std::string> custom_element;
 	Size dimensions;
     double elapsed_time = 0.;

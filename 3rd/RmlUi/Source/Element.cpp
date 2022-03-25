@@ -152,7 +152,7 @@ void Element::Render() {
 	}
 }
 
-const std::shared_ptr<StyleSheet>& Element::GetStyleSheet() const {
+const StyleSheet& Element::GetStyleSheet() const {
 	return GetOwnerDocument()->GetStyleSheet();
 }
 
@@ -328,11 +328,12 @@ int Element::GetNumChildren() const {
 
 void Element::SetInnerHTML(const std::string& html) {
 	if (html.empty()) {
+		RemoveAllChildren();
 		return;
 	}
 	try {
 		HtmlParser parser;
-		HtmlElement dom = parser.Parse(html);
+		HtmlElement dom = parser.Parse(html, true);
 		InstanceInner(dom);
 	}
 	catch (HtmlParserException& e) {
@@ -343,11 +344,14 @@ void Element::SetInnerHTML(const std::string& html) {
 
 void Element::SetOuterHTML(const std::string& html) {
 	if (html.empty()) {
+		tag.clear();
+		attributes.clear();
+		RemoveAllChildren();
 		return;
 	}
 	try {
 		HtmlParser parser;
-		HtmlElement dom = parser.Parse(html);
+		HtmlElement dom = parser.Parse(html, false);
 		InstanceOuter(dom);
 	}
 	catch (HtmlParserException& e) {
@@ -369,6 +373,7 @@ void Element::InstanceOuter(const HtmlElement& html) {
 }
 
 void Element::InstanceInner(const HtmlElement& html) {
+	RemoveAllChildren();
 	for (auto const& node : html.children) {
 		std::visit([this](auto&& arg) {
 			using T = std::decay_t<decltype(arg)>;
@@ -474,6 +479,16 @@ Element* Element::GetPreviousSibling() {
 		return nullptr;
 	}
 	return parent->children[index-1].get();
+}
+
+void Element::RemoveAllChildren() {
+	for (auto& child : children) {
+		child->SetParent(nullptr);
+	}
+	children.clear();
+	GetLayout().RemoveAllChildren();
+	DirtyStackingContext();
+	DirtyStructure();
 }
 
 Element* Element::GetElementById(const std::string& id) {
@@ -949,17 +964,15 @@ void Element::HandleAnimationProperty() {
 	}
 	const AnimationList& animation_list = property->Get<AnimationList>();
 	bool element_has_animations = (!animation_list.empty() || !animations.empty());
-	StyleSheet* stylesheet = nullptr;
 
-	if (element_has_animations)
-		stylesheet = GetStyleSheet().get();
-
-	if (!stylesheet) {
+	if (!element_has_animations) {
 		return;
 	}
 
+	const StyleSheet& stylesheet = GetStyleSheet();
+
 	for (const auto& animation : animation_list) {
-		const Keyframes* keyframes_ptr = stylesheet->GetKeyframes(animation.name);
+		const Keyframes* keyframes_ptr = stylesheet.GetKeyframes(animation.name);
 		if (keyframes_ptr && keyframes_ptr->blocks.size() >= 1 && !animation.paused) {
 			auto& property_ids = keyframes_ptr->property_ids;
 			auto& blocks = keyframes_ptr->blocks;
@@ -1407,10 +1420,14 @@ std::string Element::GetClassName() const {
 	return class_names;
 }
 
-void Element::DirtyPropertiesWithUnitRecursive(Property::UnitMark mark) {
-	DirtyProperties(mark);
+void Element::DirtyPropertiesWithUnitRecursive(PropertyUnit unit) {
+	ForeachProperties([&](PropertyId id, const Property& property) {
+		if (property.Has<PropertyFloat>() && unit == property.Get<PropertyFloat>().unit) {
+			DirtyProperty(id);
+		}
+	});
 	for (auto& child : children) {
-		child->DirtyPropertiesWithUnitRecursive(mark);
+		child->DirtyPropertiesWithUnitRecursive(unit);
 	}
 }
 
@@ -1570,10 +1587,7 @@ void Element::UpdateDefinition() {
 		return;
 	}
 	dirty_definition = false;
-	std::shared_ptr<StyleSheetPropertyDictionary> new_definition;
-	if (auto& style_sheet = GetStyleSheet()) {
-		new_definition = style_sheet->GetElementDefinition(this);
-	}
+	std::shared_ptr<StyleSheetPropertyDictionary> new_definition = GetStyleSheet().GetElementDefinition(this);
 	if (new_definition != definition_properties) {
 		if (definition_properties && new_definition) {
 			PropertyIdSet changed_properties = PropertyDictionaryDiff(definition_properties->prop, new_definition->prop);
@@ -1651,14 +1665,6 @@ void Element::DirtyDefinition() {
 
 void Element::DirtyInheritedProperties() {
 	dirty_properties |= StyleSheetSpecification::GetRegisteredInheritedProperties();
-}
-
-void Element::DirtyProperties(Property::UnitMark mark) {
-	ForeachProperties([&](PropertyId id, const Property& property){
-		if (property.Has<PropertyFloat>() && Property::Contains(mark, property.Get<PropertyFloat>().unit)) {
-			DirtyProperty(id);
-		}
-	});
 }
 
 void Element::ForeachProperties(std::function<void(PropertyId id, const Property& property)> f) {

@@ -27,7 +27,7 @@ public:
 	Element(Document* owner, const std::string& tag);
 	virtual ~Element();
 
-	virtual const std::shared_ptr<StyleSheet>& GetStyleSheet() const;
+	const StyleSheet& GetStyleSheet() const;
 	std::string GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
 	bool IsPointWithinElement(Point point);
 
@@ -70,6 +70,7 @@ public:
 	size_t     GetChildIndex(Element* child) const;
 	Element*   InsertBefore(ElementPtr element, Element* adjacent_element);
 	Element*   GetPreviousSibling();
+	void       RemoveAllChildren();
 
 	Element* GetElementById(const std::string& id);
 	void GetElementsByTagName(ElementList& elements, const std::string& tag);
@@ -97,12 +98,11 @@ public:
 	bool IsClassSet(const std::string& class_name) const;
 	void SetClassName(const std::string& class_names);
 	std::string GetClassName() const;
-	void DirtyPropertiesWithUnitRecursive(Property::UnitMark mark);
+	void DirtyPropertiesWithUnitRecursive(PropertyUnit unit);
 
 	void UpdateDefinition();
 	void DirtyDefinition();
 	void DirtyInheritedProperties();
-	void DirtyProperties(Property::UnitMark mark);
 	void ForeachProperties(std::function<void(PropertyId id, const Property& property)> f);
 	void DirtyProperty(PropertyId id);
 	void DirtyProperties(const PropertyIdSet& properties);

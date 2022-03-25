@@ -44,36 +44,37 @@ PropertyDefinition::PropertyDefinition(PropertyId id, const std::string& unparse
 	, inherited(inherited)
 { }
 
-PropertyDefinition::~PropertyDefinition()
-{ }
-
-PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name, const std::string& parser_parameters) {
-	ParserState new_parser;
-
-	new_parser.parser = StyleSheetSpecification::GetParser(parser_name);
-	if (new_parser.parser == nullptr) {
+PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name) {
+	PropertyParser* new_parser = StyleSheetSpecification::GetParser(parser_name);
+	if (new_parser == nullptr) {
 		Log::Message(Log::Level::Error, "Property was registered with invalid parser '%s'.", parser_name.c_str());
 		return *this;
 	}
+	parsers.push_back(new_parser);
+	if (!default_value && !unparsed_default.empty()) {
+		default_value = new_parser->ParseValue(unparsed_default);
+	}
+	return *this;
+}
 
-	if (!parser_parameters.empty()) {
-		std::vector<std::string> parameter_list;
-		StringUtilities::ExpandString(parameter_list, StringUtilities::ToLower(parser_parameters), ',');
-		for (size_t i = 0; i < parameter_list.size(); i++)
-			new_parser.parameters[parameter_list[i]] = (int) i;
+PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name, const std::string& parser_parameters) {
+	assert(parser_name == "keyword");
+
+	PropertyParser* new_parser = StyleSheetSpecification::GetKeywordParser(parser_parameters);
+	if (new_parser == nullptr) {
+		Log::Message(Log::Level::Error, "Property was registered with invalid parser '%s'.", parser_name.c_str());
+		return *this;
 	}
 	parsers.push_back(new_parser);
-
 	if (!default_value && !unparsed_default.empty()) {
-		default_value = new_parser.parser->ParseValue(unparsed_default, new_parser.parameters);
+		default_value = new_parser->ParseValue(unparsed_default);
 	}
-
 	return *this;
 }
 
 std::optional<Property> PropertyDefinition::ParseValue(const std::string& value) const {
-	for (size_t i = 0; i < parsers.size(); i++) {
-		auto property = parsers[i].parser->ParseValue(value, parsers[i].parameters);
+	for (auto parser : parsers) {
+		auto property = parser->ParseValue(value);
 		if (property) {
 			return std::move(property);
 		}
