@@ -70,7 +70,7 @@ struct HtmlElement {
 
 class HtmlParser {
 public:
-    HtmlElement Parse(std::string_view stream);
+    HtmlElement Parse(std::string_view stream, bool inner);
 
 private:
     unsigned int m_line   = 0;

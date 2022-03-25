@@ -70,6 +70,7 @@ public:
 	size_t     GetChildIndex(Element* child) const;
 	Element*   InsertBefore(ElementPtr element, Element* adjacent_element);
 	Element*   GetPreviousSibling();
+	void       RemoveAllChildren();
 
 	Element* GetElementById(const std::string& id);
 	void GetElementsByTagName(ElementList& elements, const std::string& tag);

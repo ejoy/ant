@@ -81,7 +81,7 @@ static bool IsCharNameValid(char c) {
 	return false;
 }
 
-HtmlElement HtmlParser::Parse(std::string_view stream) {
+HtmlElement HtmlParser::Parse(std::string_view stream, bool inner) {
 	HtmlElement root;
     std::stack<HtmlElement*> stack;
 	stack.push(&root);
@@ -103,11 +103,11 @@ HtmlElement HtmlParser::Parse(std::string_view stream) {
 		st_finish,
 		st_finish_extra, 
 	};
-	TEState state = st_begin;
+	TEState state = inner? st_ready: st_begin;
+	bool open = inner;
 
 	std::string temp;
 	std::string accum;
-	bool open = false;
 	while (!IsEOF()) {
 		char c = GetChar();
 
@@ -308,6 +308,20 @@ HtmlElement HtmlParser::Parse(std::string_view stream) {
 		}
 	}
 
+	if (inner) {
+		switch (state) {
+		case st_begin:
+			state = st_open;
+			break;
+		case st_text: {
+			HtmlElement& current = *stack.top();
+			current.children.emplace_back(HtmlString{ accum });
+			accum.erase();
+			state = st_open;
+			break;
+		}
+		}
+	}
 	switch (state) {
 	case st_begin:
 		ThrowException(HtmlError::SPE_EMPTY);

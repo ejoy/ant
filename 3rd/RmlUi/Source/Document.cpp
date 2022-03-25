@@ -36,7 +36,7 @@ bool Document::Load(const std::string& path) {
 
 	try {
 		HtmlParser parser;
-		HtmlElement dom = parser.Parse(data);
+		HtmlElement dom = parser.Parse(data, false);
 		Instance(dom);
 	}
 	catch (HtmlParserException& e) {

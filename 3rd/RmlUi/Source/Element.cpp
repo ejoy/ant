@@ -328,11 +328,12 @@ int Element::GetNumChildren() const {
 
 void Element::SetInnerHTML(const std::string& html) {
 	if (html.empty()) {
+		RemoveAllChildren();
 		return;
 	}
 	try {
 		HtmlParser parser;
-		HtmlElement dom = parser.Parse(html);
+		HtmlElement dom = parser.Parse(html, true);
 		InstanceInner(dom);
 	}
 	catch (HtmlParserException& e) {
@@ -343,11 +344,14 @@ void Element::SetInnerHTML(const std::string& html) {
 
 void Element::SetOuterHTML(const std::string& html) {
 	if (html.empty()) {
+		tag.clear();
+		attributes.clear();
+		RemoveAllChildren();
 		return;
 	}
 	try {
 		HtmlParser parser;
-		HtmlElement dom = parser.Parse(html);
+		HtmlElement dom = parser.Parse(html, false);
 		InstanceOuter(dom);
 	}
 	catch (HtmlParserException& e) {
@@ -369,6 +373,7 @@ void Element::InstanceOuter(const HtmlElement& html) {
 }
 
 void Element::InstanceInner(const HtmlElement& html) {
+	RemoveAllChildren();
 	for (auto const& node : html.children) {
 		std::visit([this](auto&& arg) {
 			using T = std::decay_t<decltype(arg)>;
@@ -474,6 +479,16 @@ Element* Element::GetPreviousSibling() {
 		return nullptr;
 	}
 	return parent->children[index-1].get();
+}
+
+void Element::RemoveAllChildren() {
+	for (auto& child : children) {
+		child->SetParent(nullptr);
+	}
+	children.clear();
+	GetLayout().RemoveAllChildren();
+	DirtyStackingContext();
+	DirtyStructure();
 }
 
 Element* Element::GetElementById(const std::string& id) {
