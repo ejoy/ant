@@ -164,6 +164,18 @@ local function open_proj(path)
     end
 end
 
+local function OnOpen()
+    local path = choose_project_dir()
+    if path then
+        local projname = open_proj(path)
+        if projname == nil then
+            projname = lfs.path(path):filename():string() .. "(folder)"
+        end
+        editor_setting.update_lastproj(projname:gsub("/pkg/", ""), path, false)
+        editor_setting.save()
+    end
+end
+
 local function choose_project()
     if global_data.project_root then return end
     local setting = editor_setting.setting
@@ -199,15 +211,7 @@ local function choose_project()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button "Open" then
-            local path = choose_project_dir()
-            if path then
-                local projname = open_proj(path)
-                if projname == nil then
-                    projname = lfs.path(path):filename():string() .. "(folder)"
-                end
-                editor_setting.update_lastproj(projname:gsub("/pkg/", ""), path, false)
-                editor_setting.save()
-            end
+            OnOpen()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button "Quit" then
@@ -526,6 +530,8 @@ function m:handle_event()
     for _, key, press, state in event_keyboard:unpack() do
         if key == "DELETE" and press == 1 then
             world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
+        elseif state.CTRL and key == "O" and press == 1 then
+            OnOpen()
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save_prefab()
         elseif state.CTRL and key == "R" and press == 1 then

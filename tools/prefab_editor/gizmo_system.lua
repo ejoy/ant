@@ -1069,7 +1069,6 @@ function gizmo_sys:handle_event()
 		if what == "LEFT" then
 			gizmo:reset_move_axis_color()
 			if gizmo.mode == gizmo_const.ROTATE then
-				--gizmo:hide_rotate_fan()
 				if local_space then
 					if gizmo.target_eid then
 						iom.set_rotation(world:entity(gizmo.root_eid), iom.get_rotation(gizmo.target_eid))
