@@ -62,13 +62,10 @@ static const std::unordered_map<std::string, Keyword> keywords = {
 	{"sine-in-out",        {Keyword::TWEEN, {Tween::Type::Sine, Tween::Direction::InOut}}},
 };
 
+std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& value) const {
+	std::vector<std::string> animation_values;
+	StringUtilities::ExpandString(animation_values, StringUtilities::ToLower(value), ',');
 
-PropertyParserAnimation::PropertyParserAnimation(Type type) : type(type)
-{
-}
-
-
-static std::optional<Property> ParseAnimation(const std::vector<std::string>& animation_values) {
 	AnimationList animation_list;
 
 	for (const std::string& single_animation_value : animation_values) {
@@ -174,8 +171,10 @@ static std::optional<Property> ParseAnimation(const std::vector<std::string>& an
 	return std::move(animation_list);
 }
 
+std::optional<Property> PropertyParserTransition::ParseValue(const std::string& value) const {
+	std::vector<std::string> transition_values;
+	StringUtilities::ExpandString(transition_values, StringUtilities::ToLower(value), ',');
 
-static std::optional<Property> ParseTransition(const std::vector<std::string>& transition_values) {
 	TransitionList transition_list{ false, false, {} };
 
 	for (const std::string& single_transition_value : transition_values) {
@@ -286,20 +285,6 @@ static std::optional<Property> ParseTransition(const std::vector<std::string>& t
 	}
 
 	return std::move(transition_list);
-}
-
-
-std::optional<Property> PropertyParserAnimation::ParseValue(const std::string & value, const ParameterMap & /*parameters*/) const {
-	std::vector<std::string> list_of_values;
-	auto lowercase_value = StringUtilities::ToLower(value);
-	StringUtilities::ExpandString(list_of_values, lowercase_value, ',');
-	if (type == ANIMATION_PARSER) {
-		return ParseAnimation(list_of_values);
-	}
-	else if (type == TRANSITION_PARSER) {
-		return ParseTransition(list_of_values);
-	}
-	return {};
 }
 
 }

@@ -27,7 +27,7 @@ public:
 	Element(Document* owner, const std::string& tag);
 	virtual ~Element();
 
-	virtual const std::shared_ptr<StyleSheet>& GetStyleSheet() const;
+	const StyleSheet& GetStyleSheet() const;
 	std::string GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
 	bool IsPointWithinElement(Point point);
 

@@ -19,9 +19,7 @@ namespace Rml {
 Document::Document(const Size& _dimensions)
 	: body(this)
 	, dimensions(_dimensions)
-{
-	style_sheet = nullptr;
-}
+{ }
 
 Document::~Document() {
 	body.RemoveAllEvents();
@@ -59,7 +57,7 @@ void Document::Instance(const HtmlElement& html) {
 	auto const& headHtml = std::get<HtmlElement>(rootHtml.children[0]);
 	auto const& bodyHtml = std::get<HtmlElement>(rootHtml.children[1]);
 	
-	style_sheet.reset(new StyleSheet);
+	style_sheet.Reset();
 
 	for (auto const& node : headHtml.children) {
 		auto element = std::get_if<HtmlElement>(&node);
@@ -88,7 +86,7 @@ void Document::Instance(const HtmlElement& html) {
 			}
 		}
 	}
-	style_sheet->BuildNodeIndex();
+	style_sheet.BuildNodeIndex();
 
 	body.InstanceOuter(bodyHtml);
 	body.DirtyDefinition();
@@ -98,7 +96,7 @@ const std::string& Document::GetSourceURL() const {
 	return source_url;
 }
 
-const std::shared_ptr<StyleSheet>& Document::GetStyleSheet() const {
+const StyleSheet& Document::GetStyleSheet() const {
 	return style_sheet;
 }
 

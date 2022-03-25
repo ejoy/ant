@@ -12,7 +12,7 @@ PropertyParserTransform::PropertyParserTransform()
 {
 }
 
-std::optional<Property> PropertyParserTransform::ParseValue(const std::string& value, const ParameterMap& /*parameters*/) const {
+std::optional<Property> PropertyParserTransform::ParseValue(const std::string& value) const {
 	if (value == "none") {
 		return Transform {};
 	}
@@ -222,7 +222,7 @@ bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const c
 		if (bytes_read == 0) {
 			return {};
 		}
-		auto prop = parsers[i]->ParseValue(std::string(arg), ParameterMap());
+		auto prop = parsers[i]->ParseValue(std::string(arg));
 		if (!prop) {
 			return {};
 		}

@@ -152,7 +152,7 @@ void Element::Render() {
 	}
 }
 
-const std::shared_ptr<StyleSheet>& Element::GetStyleSheet() const {
+const StyleSheet& Element::GetStyleSheet() const {
 	return GetOwnerDocument()->GetStyleSheet();
 }
 
@@ -949,17 +949,15 @@ void Element::HandleAnimationProperty() {
 	}
 	const AnimationList& animation_list = property->Get<AnimationList>();
 	bool element_has_animations = (!animation_list.empty() || !animations.empty());
-	StyleSheet* stylesheet = nullptr;
 
-	if (element_has_animations)
-		stylesheet = GetStyleSheet().get();
-
-	if (!stylesheet) {
+	if (!element_has_animations) {
 		return;
 	}
 
+	const StyleSheet& stylesheet = GetStyleSheet();
+
 	for (const auto& animation : animation_list) {
-		const Keyframes* keyframes_ptr = stylesheet->GetKeyframes(animation.name);
+		const Keyframes* keyframes_ptr = stylesheet.GetKeyframes(animation.name);
 		if (keyframes_ptr && keyframes_ptr->blocks.size() >= 1 && !animation.paused) {
 			auto& property_ids = keyframes_ptr->property_ids;
 			auto& blocks = keyframes_ptr->blocks;
@@ -1570,10 +1568,7 @@ void Element::UpdateDefinition() {
 		return;
 	}
 	dirty_definition = false;
-	std::shared_ptr<StyleSheetPropertyDictionary> new_definition;
-	if (auto& style_sheet = GetStyleSheet()) {
-		new_definition = style_sheet->GetElementDefinition(this);
-	}
+	std::shared_ptr<StyleSheetPropertyDictionary> new_definition = GetStyleSheet().GetElementDefinition(this);
 	if (new_definition != definition_properties) {
 		if (definition_properties && new_definition) {
 			PropertyIdSet changed_properties = PropertyDictionaryDiff(definition_properties->prop, new_definition->prop);
