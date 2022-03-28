@@ -363,13 +363,12 @@ void DataModel::Update(bool clear_dirty_variables) {
 
 		// Sort by the element's depth in the document tree so that any structural changes due to a changed variable are reflected in the element's children.
 		// Eg. the 'data-for' view will remove children if any of its data variable array size is reduced.
-		std::sort(dirty_views.begin(), dirty_views.end(), [](auto&& left, auto&& right) { return left->GetElementDepth() < right->GetElementDepth(); });
+		std::sort(dirty_views.begin(), dirty_views.end(), [](auto&& left, auto&& right) { return left->GetDepth() < right->GetDepth(); });
 
 		for (DataView* view : dirty_views) {
 			assert(view);
 			if (!view)
 				continue;
-
 			if (view->IsValid())
 				view->Update(*this);
 		}

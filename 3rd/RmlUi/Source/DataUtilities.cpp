@@ -1,5 +1,6 @@
 #include "../Include/RmlUi/DataUtilities.h"
 #include "../Include/RmlUi/Element.h"
+#include "../Include/RmlUi/ElementText.h"
 #include "../Include/RmlUi/Log.h"
 #include "DataEvent.h"
 #include "DataModel.h"
@@ -8,30 +9,6 @@
 #include "DataViewDefault.h"
 
 namespace Rml {
-
-static std::map<std::string, DataViewInstancer*> data_view_instancers = {
-	{"if",      new DataViewInstancerDefault<DataViewIf>() },
-	{"style",   new DataViewInstancerDefault<DataViewStyle>() },
-	{"text",    new DataViewInstancerDefault<DataViewText>() },
-};
-
-static DataViewPtr InstanceDataView(const std::string& type_name, Element* element) {
-	auto it = data_view_instancers.find(type_name);
-	if (it != data_view_instancers.end())
-		return it->second->InstanceView(element);
-	return nullptr;
-}
-
-bool DataUtilities::Initialise() {
-	return true;
-}
-
-void DataUtilities::Shutdown() {
-	for (auto& [_, instancer] : data_view_instancers) {
-		delete instancer;
-	}
-	data_view_instancers.clear();
-}
 
 void DataUtilities::ApplyDataViewsControllers(Element* element) {
 	DataModel* data_model = element->GetDataModel();
@@ -49,17 +26,26 @@ void DataUtilities::ApplyDataViewsControllers(Element* element) {
 			if (modifier_offset < name.size()) {
 				modifier = name.substr(modifier_offset);
 			}
-			if (DataViewPtr view = InstanceDataView(type_name, element)) {
-				if (view->Initialize(*data_model, element, value, modifier)) {
+			if (type_name == "if") {
+				auto view = std::make_unique<DataViewIf>(element);
+				if (view->Initialize(*data_model, value)) {
 					data_model->AddView(std::move(view));
 				}
 				else {
 					Log::Message(Log::Level::Warning, "Could not add data-%s to element: %s", type_name.c_str(), element->GetAddress().c_str());
 				}
-				continue;
 			}
-			if (type_name == "event") {
-				DataEventPtr event(new DataEvent(element));
+			else if (type_name == "style") {
+				auto view = std::make_unique<DataViewStyle>(element, modifier);
+				if (view->Initialize(*data_model, value)) {
+					data_model->AddView(std::move(view));
+				}
+				else {
+					Log::Message(Log::Level::Warning, "Could not add data-%s to element: %s", type_name.c_str(), element->GetAddress().c_str());
+				}
+			}
+			else if (type_name == "event") {
+				auto event = std::make_unique<DataEvent>(element);
 				if (event->Initialize(*data_model, element, value, modifier)) {
 					data_model->AddEvent(std::move(event));
 				}
@@ -78,15 +64,29 @@ void DataUtilities::ApplyDataViewFor(Element* element) {
 	}
 	for (auto const& [name, value] : element->GetAttributes()) {
 		if (name == "data-for") {
-			if (auto view = std::make_unique<DataViewFor>(element)) {
-				if (view->Initialize(*data_model, element, value, {})) {
-					data_model->AddView(std::move(view));
-					return;
-				}
-				else {
-					Log::Message(Log::Level::Warning, "Could not add data-for view to element: %s", element->GetAddress().c_str());
-				}
+			auto view = std::make_unique<DataViewFor>(element);
+			if (view->Initialize(*data_model, value)) {
+				data_model->AddView(std::move(view));
 			}
+			else {
+				Log::Message(Log::Level::Warning, "Could not add data-for view to element: %s", element->GetAddress().c_str());
+			}
+			return;
+		}
+	}
+}
+
+void DataUtilities::ApplyDataViewText(ElementText* element) {
+	DataModel* data_model = element->GetDataModel();
+	if (!data_model) {
+		return;
+	}
+	if (auto view = std::make_unique<DataViewText>(element)) {
+		if (view->Initialize(*data_model)) {
+			data_model->AddView(std::move(view));
+		}
+		else {
+			Log::Message(Log::Level::Warning, "Could not add data-text view to element: %s", element->GetAddress().c_str());
 		}
 	}
 }

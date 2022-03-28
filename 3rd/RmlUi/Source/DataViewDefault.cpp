@@ -1,31 +1,3 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
 #include "DataViewDefault.h"
 #include "DataExpression.h"
 #include "DataModel.h"
@@ -38,49 +10,31 @@
 
 namespace Rml {
 
-DataViewCommon::DataViewCommon(Element* element, std::string override_modifier)
+DataViewStyle::DataViewStyle(Element* element, const std::string& modifier)
 	: DataView(element)
-	, modifier(std::move(override_modifier))
+	, modifier(modifier)
 {}
 
-bool DataViewCommon::Initialize(DataModel& model, Element* element, const std::string& expression_str, const std::string& in_modifier) {
-	// The modifier can be overriden in the constructor
-	if (modifier.empty())
-		modifier = in_modifier;
-
+bool DataViewStyle::Initialize(DataModel& model, const std::string& expression_str) {
 	expression = std::make_unique<DataExpression>(expression_str);
-	DataExpressionInterface expr_interface(&model, element);
-
+	DataExpressionInterface expr_interface(&model, element.get());
 	bool result = expression->Parse(expr_interface, false);
 	return result;
 }
 
-std::vector<std::string> DataViewCommon::GetVariableNameList() const {
+std::vector<std::string> DataViewStyle::GetVariableNameList() const {
 	assert(expression);
 	return expression->GetVariableNameList();
 }
 
-const std::string& DataViewCommon::GetModifier() const {
-	return modifier;
-}
-
-DataExpression& DataViewCommon::GetExpression() {
-	assert(expression);
-	return *expression;
-}
-
-DataViewStyle::DataViewStyle(Element* element)
-	: DataViewCommon(element)
-{}
-
 bool DataViewStyle::Update(DataModel& model) {
-	const std::string& property_name = GetModifier();
+	const std::string& property_name = modifier;
 	bool result = false;
 	Variant variant;
 	Element* element = GetElement();
 	DataExpressionInterface expr_interface(&model, element);
 	
-	if (element && GetExpression().Run(expr_interface, variant)) {
+	if (element && expression->Run(expr_interface, variant)) {
 		std::optional<std::string> newValue = VariantHelper::ToStringOpt(variant);
 		std::optional<std::string> oldValue = element->GetProperty(property_name);
 		if (newValue != oldValue) {
@@ -92,8 +46,20 @@ bool DataViewStyle::Update(DataModel& model) {
 }
 
 DataViewIf::DataViewIf(Element* element)
-	: DataViewCommon(element)
+	: DataView(element)
 {}
+
+bool DataViewIf::Initialize(DataModel& model, const std::string& expression_str) {
+	expression = std::make_unique<DataExpression>(expression_str);
+	DataExpressionInterface expr_interface(&model, element.get());
+	bool result = expression->Parse(expr_interface, false);
+	return result;
+}
+
+std::vector<std::string> DataViewIf::GetVariableNameList() const {
+	assert(expression);
+	return expression->GetVariableNameList();
+}
 
 bool DataViewIf::Update(DataModel& model) {
 	bool result = false;
@@ -101,7 +67,7 @@ bool DataViewIf::Update(DataModel& model) {
 	Element* element = GetElement();
 	DataExpressionInterface expr_interface(&model, element);
 
-	if (element && GetExpression().Run(expr_interface, variant))
+	if (element && expression->Run(expr_interface, variant))
 	{
 		const bool value = VariantHelper::Get<bool>(variant);
 		// fixed nested data-if for same variant bug
@@ -113,11 +79,90 @@ bool DataViewIf::Update(DataModel& model) {
 	return result;
 }
 
-DataViewText::DataViewText(Element* element) : DataView(element)
+DataViewFor::DataViewFor(Element* element)
+	: DataView(element)
 {}
 
-bool DataViewText::Initialize(DataModel& model, Element* element, const std::string&, const std::string&) {
-	ElementText* element_text = dynamic_cast<ElementText*>(element);
+bool DataViewFor::Initialize(DataModel& model, const std::string& in_expression) {
+	std::vector<std::string> iterator_container_pair;
+	StringUtilities::ExpandString(iterator_container_pair, in_expression, ':');
+
+	if (iterator_container_pair.empty() || iterator_container_pair.size() > 2 || iterator_container_pair.front().empty() || iterator_container_pair.back().empty()) {
+		Log::Message(Log::Level::Warning, "Invalid syntax in data-for '%s'", in_expression.c_str());
+		return false;
+	}
+
+	if (iterator_container_pair.size() == 2) {
+		std::vector<std::string> iterator_index_pair;
+		StringUtilities::ExpandString(iterator_index_pair, iterator_container_pair.front(), ',');
+		if (iterator_index_pair.empty()) {
+			Log::Message(Log::Level::Warning, "Invalid syntax in data-for '%s'", in_expression.c_str());
+			return false;
+		}
+		else if (iterator_index_pair.size() == 1) {
+			iterator_name = iterator_index_pair.front();
+		}
+		else if (iterator_index_pair.size() == 2) {
+			iterator_name = iterator_index_pair.front();
+			iterator_index_name = iterator_index_pair.back();
+		}
+	}
+
+	if (iterator_name.empty())
+		iterator_name = "it";
+	if (iterator_index_name.empty())
+		iterator_index_name = "it_index";
+	const std::string& container_name = iterator_container_pair.back();
+	container_address = model.ResolveAddress(container_name, element.get());
+	if (container_address.empty())
+		return false;
+	element->SetVisible(false);
+	element->RemoveAttribute("data-for");
+	return true;
+}
+
+bool DataViewFor::Update(DataModel& model) {
+	DataVariable variable = model.GetVariable(container_address);
+	if (!variable)
+		return false;
+
+	size_t size = (size_t)variable.Size();
+	Element* element = GetElement();
+
+	for (size_t i = num_elements; i < size; ++i) {
+		DataAddress iterator_address;
+		iterator_address.reserve(container_address.size() + 1);
+		iterator_address = container_address;
+		iterator_address.push_back(DataAddressEntry((int)i));
+		DataAddress iterator_index_address = {
+			{"literal"}, {"int"}, {(int)i}
+		};
+		ElementPtr sibling = element->Clone();
+		model.InsertAlias(sibling.get(), iterator_name, std::move(iterator_address));
+		model.InsertAlias(sibling.get(), iterator_index_name, std::move(iterator_index_address));
+		element->GetParentNode()->InsertBefore(std::move(sibling), element);
+	}
+	for (size_t i = size; i < num_elements; ++i) {
+		Element* sibling = element->GetPreviousSibling();
+		model.EraseAliases(sibling);
+		element->GetParentNode()->RemoveChild(sibling);
+	}
+	num_elements = size;
+	return true;
+}
+
+std::vector<std::string> DataViewFor::GetVariableNameList() const {
+	assert(!container_address.empty());
+	return std::vector<std::string>{ container_address.front().name };
+}
+
+
+DataViewText::DataViewText(Element* element)
+	: DataView(element)
+{}
+
+bool DataViewText::Initialize(DataModel& model) {
+	ElementText* element_text = dynamic_cast<ElementText*>(element.get());
 	if (!element_text)
 		return false;
 
@@ -125,7 +170,7 @@ bool DataViewText::Initialize(DataModel& model, Element* element, const std::str
 	
 	text.reserve(in_text.size());
 
-	DataExpressionInterface expression_interface(&model, element);
+	DataExpressionInterface expression_interface(&model, element.get());
 
 	size_t previous_close_brackets = 0;
 	size_t begin_brackets = 0;
@@ -230,84 +275,6 @@ std::string DataViewText::BuildText() const {
 		result += text.substr(previous_index);
 
 	return result;
-}
-
-DataViewFor::DataViewFor(Element* element)
-	: DataView(element)
-{}
-
-bool DataViewFor::Initialize(DataModel& model, Element* element, const std::string& in_expression, const std::string&) {
-	std::vector<std::string> iterator_container_pair;
-	StringUtilities::ExpandString(iterator_container_pair, in_expression, ':');
-
-	if (iterator_container_pair.empty() || iterator_container_pair.size() > 2 || iterator_container_pair.front().empty() || iterator_container_pair.back().empty()) {
-		Log::Message(Log::Level::Warning, "Invalid syntax in data-for '%s'", in_expression.c_str());
-		return false;
-	}
-
-	if (iterator_container_pair.size() == 2) {
-		std::vector<std::string> iterator_index_pair;
-		StringUtilities::ExpandString(iterator_index_pair, iterator_container_pair.front(), ',');
-		if (iterator_index_pair.empty()) {
-			Log::Message(Log::Level::Warning, "Invalid syntax in data-for '%s'", in_expression.c_str());
-			return false;
-		}
-		else if (iterator_index_pair.size() == 1) {
-			iterator_name = iterator_index_pair.front();
-		}
-		else if (iterator_index_pair.size() == 2) {
-			iterator_name = iterator_index_pair.front();
-			iterator_index_name = iterator_index_pair.back();
-		}
-	}
-
-	if (iterator_name.empty())
-		iterator_name = "it";
-	if (iterator_index_name.empty())
-		iterator_index_name = "it_index";
-	const std::string& container_name = iterator_container_pair.back();
-	container_address = model.ResolveAddress(container_name, element);
-	if (container_address.empty())
-		return false;
-	element->SetVisible(false);
-	element->RemoveAttribute("data-for");
-	return true;
-}
-
-
-bool DataViewFor::Update(DataModel& model) {
-	DataVariable variable = model.GetVariable(container_address);
-	if (!variable)
-		return false;
-
-	size_t size = (size_t)variable.Size();
-	Element* element = GetElement();
-
-	for (size_t i = num_elements; i < size; ++i) {
-		DataAddress iterator_address;
-		iterator_address.reserve(container_address.size() + 1);
-		iterator_address = container_address;
-		iterator_address.push_back(DataAddressEntry((int)i));
-		DataAddress iterator_index_address = {
-			{"literal"}, {"int"}, {(int)i}
-		};
-		ElementPtr sibling = element->Clone();
-		model.InsertAlias(sibling.get(), iterator_name, std::move(iterator_address));
-		model.InsertAlias(sibling.get(), iterator_index_name, std::move(iterator_index_address));
-		element->GetParentNode()->InsertBefore(std::move(sibling), element);
-	}
-	for (size_t i = size; i < num_elements; ++i) {
-		Element* sibling = element->GetPreviousSibling();
-		model.EraseAliases(sibling);
-		element->GetParentNode()->RemoveChild(sibling);
-	}
-	num_elements = size;
-	return true;
-}
-
-std::vector<std::string> DataViewFor::GetVariableNameList() const {
-	assert(!container_address.empty());
-	return std::vector<std::string>{ container_address.front().name };
 }
 
 }

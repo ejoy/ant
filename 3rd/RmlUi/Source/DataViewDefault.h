@@ -1,36 +1,8 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
-#ifndef RMLUI_CORE_DATAVIEWDEFAULT_H
-#define RMLUI_CORE_DATAVIEWDEFAULT_H
+#pragma once
 
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/Variant.h"
+#include "DataExpression.h"
 #include "HtmlParser.h"
 #include "DataView.h"
 
@@ -40,57 +12,31 @@ class Element;
 class DataExpression;
 using DataExpressionPtr = std::unique_ptr<DataExpression>;
 
-class DataViewCommon : public DataView {
+class DataViewStyle final : public DataView {
 public:
-	DataViewCommon(Element* element, std::string override_modifier = std::string());
-	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
+	DataViewStyle(Element* element, const std::string& modifier);
+	bool Initialize(DataModel& model, const std::string& expression);
 	std::vector<std::string> GetVariableNameList() const override;
-
-protected:
-	const std::string& GetModifier() const;
-	DataExpression& GetExpression();
-
+	bool Update(DataModel& model) override;
 private:
 	std::string modifier;
 	DataExpressionPtr expression;
 };
 
-class DataViewStyle final : public DataViewCommon {
-public:
-	DataViewStyle(Element* element);
-	bool Update(DataModel& model) override;
-};
-
-class DataViewIf final : public DataViewCommon {
+class DataViewIf final : public DataView {
 public:
 	DataViewIf(Element* element);
-	bool Update(DataModel& model) override;
-};
-
-class DataViewText final : public DataView {
-public:
-	DataViewText(Element* in_element);
-	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
-	bool Update(DataModel& model) override;
+	bool Initialize(DataModel& model, const std::string& expression);
 	std::vector<std::string> GetVariableNameList() const override;
-
+	bool Update(DataModel& model) override;
 private:
-	std::string BuildText() const;
-
-	struct DataEntry {
-		size_t index = 0; // Index into 'text'
-		DataExpressionPtr data_expression;
-		std::string value;
-	};
-
-	std::string text;
-	std::vector<DataEntry> data_entries;
+	DataExpressionPtr expression;
 };
 
 class DataViewFor final : public DataView {
 public:
 	DataViewFor(Element* element);
-	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
+	bool Initialize(DataModel& model, const std::string& expression);
 	bool Update(DataModel& model) override;
 	std::vector<std::string> GetVariableNameList() const override;
 
@@ -101,5 +47,22 @@ private:
 	size_t num_elements = 0;
 };
 
+class DataViewText final : public DataView {
+public:
+	DataViewText(Element* element);
+	bool Initialize(DataModel& model);
+	bool Update(DataModel& model) override;
+	std::vector<std::string> GetVariableNameList() const override;
+
+private:
+	std::string BuildText() const;
+	struct DataEntry {
+		size_t index = 0; // Index into 'text'
+		DataExpressionPtr data_expression;
+		std::string value;
+	};
+	std::string text;
+	std::vector<DataEntry> data_entries;
+};
+
 }
-#endif

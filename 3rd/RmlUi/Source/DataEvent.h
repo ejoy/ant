@@ -20,7 +20,7 @@ public:
     Element* GetElement() const;
 
 private:
-	ObserverPtr<Element> attached_element;
+	ObserverPtr<Element> element;
     std::unique_ptr<DataEventListener> listener;
 };
 

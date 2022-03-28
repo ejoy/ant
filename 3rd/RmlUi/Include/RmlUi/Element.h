@@ -129,6 +129,7 @@ protected:
 	void OnAttributeChange(const ElementAttributes& changed_attributes);
 	void Render() override;
 	void OnChange(const PropertyIdSet& changed_properties) override;
+	virtual void InitDataModel();
 	void SetDataModel(DataModel* new_data_model);
 	void UpdateStackingContext();
 	void DirtyStackingContext();

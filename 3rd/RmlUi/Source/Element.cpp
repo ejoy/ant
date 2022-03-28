@@ -714,36 +714,33 @@ std::string Element::GetOuterHTML() const {
 	return html;
 }
 
-void Element::SetDataModel(DataModel* new_data_model)  {
-	assert(!data_model || !new_data_model);
 
+void Element::InitDataModel() {
+	if (attributes.find("data-for") != attributes.end()) {
+		DataUtilities::ApplyDataViewFor(this);
+	}
+	else {
+		DataUtilities::ApplyDataViewsControllers(this);
+		for (ElementPtr& child : children) {
+			child->SetDataModel(data_model);
+		}
+	}
+}
+
+void Element::SetDataModel(DataModel* new_data_model) {
+	assert(!data_model || !new_data_model);
 	if (data_model == new_data_model)
 		return;
-
 	if (data_model)
 		data_model->OnElementRemove(this);
-
 	data_model = new_data_model;
-
 	if (!data_model) {
 		for (ElementPtr& child : children) {
 			child->SetDataModel(nullptr);
 		}
 		return;
 	}
-
-	if (data_model) {
-		if (attributes.find("data-for") != attributes.end()) {
-			DataUtilities::ApplyDataViewFor(this);
-		}
-		else {
-			DataUtilities::ApplyDataViewsControllers(this);
-			for (ElementPtr& child : children) {
-				child->SetDataModel(new_data_model);
-			}
-		}
-	}
-
+	InitDataModel();
 }
 
 void Element::SetParent(Element* _parent) {

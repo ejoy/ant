@@ -37,6 +37,7 @@
         <script type="text/x-lua" >
             local start = window.createModel "start" {
                 show = false,
+                label = "新游戏"
             }
             function start.new(event)
                 console.log(event.target.id)
@@ -71,7 +72,7 @@
     </head>
     <body>
         <div id="test" data-model="start">
-            <button id = "new" data-event-click="new()">新游戏</button>
+            <button id = "new" data-event-click="new()">{{label}}</button>
             <button data-event-click="load()">载入游戏</button>
             <button data-event-click="setting()">设置</button>
             <button data-if="show">隐藏菜单</button>

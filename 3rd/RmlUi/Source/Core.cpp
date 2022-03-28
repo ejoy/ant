@@ -68,7 +68,6 @@ bool Initialise() {
 	}
 	StyleSheetSpecification::Initialise();
 	StyleSheetFactory::Initialise();
-	DataUtilities::Initialise();
 	initialised = true;
 	return true;
 }
@@ -76,7 +75,6 @@ bool Initialise() {
 void Shutdown() {
 	assert(initialised);
 
-	DataUtilities::Shutdown();
 	StyleSheetFactory::Shutdown();
 	StyleSheetSpecification::Shutdown();
 	Texture::Shutdown();

@@ -213,28 +213,7 @@ void Document::NotifyCustomElement(Element* e){
 }
 
 ElementPtr Document::CreateTextNode(const std::string& str) {
-	if (std::all_of(str.begin(), str.end(), &StringUtilities::IsWhitespace))
-		return nullptr;
-	bool has_data_expression = false;
-	bool inside_brackets = false;
-	char previous = 0;
-	for (const char c : str) {
-		if (inside_brackets) {
-			if (c == '}' && previous == '}') {
-				has_data_expression = true;
-				break;
-			}
-		}
-		else if (c == '{' && previous == '{') {
-				inside_brackets = true;
-		}
-		previous = c;
-	}
-	ElementPtr e(new ElementText(this, str));
-	if (has_data_expression) {
-		e->SetAttribute("data-text", std::string());
-	}
-	return e;
+	return ElementPtr(new ElementText(this, str));
 }
 
 void Document::DefineCustomElement(const std::string& name) {

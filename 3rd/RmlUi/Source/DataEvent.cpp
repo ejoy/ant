@@ -26,7 +26,7 @@ struct DataEventListener : public EventListener {
 };
 
 DataEvent::DataEvent(Element* element)
-	: attached_element(element->GetObserverPtr())
+	: element(element->GetObserverPtr())
 {}
 
 DataEvent::~DataEvent() {
@@ -50,7 +50,7 @@ bool DataEvent::Initialize(DataModel& model, Element* element, const std::string
 }
 
 Element* DataEvent::GetElement() const {
-	return attached_element.get();
+	return element.get();
 }
 
 }

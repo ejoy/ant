@@ -5,29 +5,32 @@
 
 namespace Rml {
 
+static int GetElementDepth(Element* e) {
+	int depth = 0;
+	for (Element* parent = e->GetParentNode(); parent; parent = parent->GetParentNode()) {
+		depth++;
+	}
+	return depth;
+}
+
 Element* DataView::GetElement() const {
-	Element* result = attached_element.get();
+	Element* result = element.get();
 	if (!result)
 		Log::Message(Log::Level::Warning, "Could not retrieve element in view, was it destroyed?");
 	return result;
 }
 
-int DataView::GetElementDepth() const {
-	return element_depth;
+int DataView::GetDepth() const {
+	return depth;
 }
 
 bool DataView::IsValid() const {
-	return static_cast<bool>(attached_element);
+	return static_cast<bool>(element);
 }
 
 DataView::DataView(Element* element)
-	: attached_element(element->GetObserverPtr())
-	, element_depth(0)
-{
-	if (element) {
-		for (Element* parent = element->GetParentNode(); parent; parent = parent->GetParentNode())
-			element_depth += 1;
-	}
-}
+	: element(element->GetObserverPtr())
+	, depth(GetElementDepth(element))
+{ }
 
 }

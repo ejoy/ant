@@ -52,6 +52,7 @@ protected:
 	float GetOpacity();
 	ElementPtr Clone(bool deep = true) const override;
 	void UpdateLayout() override;
+	void InitDataModel() override;
 
 private:
 	void UpdateTextEffects();

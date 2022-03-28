@@ -34,6 +34,7 @@
 #include "../Include/RmlUi/Property.h"
 #include "../Include/RmlUi/Log.h"
 #include "../Include/RmlUi/StringUtilities.h"
+#include "../Include/RmlUi/DataUtilities.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Rml {
@@ -612,6 +613,27 @@ FontFaceHandle ElementText::GetFontFaceHandle() {
 
 ElementPtr ElementText::Clone(bool deep) const {
 	return owner_document->CreateTextNode(text);
+}
+
+void ElementText::InitDataModel() {
+	bool has_data_expression = false;
+	bool inside_brackets = false;
+	char previous = 0;
+	for (const char c : text) {
+		if (inside_brackets) {
+			if (c == '}' && previous == '}') {
+				has_data_expression = true;
+				break;
+			}
+		}
+		else if (c == '{' && previous == '{') {
+			inside_brackets = true;
+		}
+		previous = c;
+	}
+	if (has_data_expression) {
+		DataUtilities::ApplyDataViewText(this);
+	}
 }
 
 }
