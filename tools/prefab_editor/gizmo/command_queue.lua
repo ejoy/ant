@@ -15,16 +15,16 @@ function cmd_queue:undo()
 	local cmd = queue.pop_last(self.cmd_undo)
 	if not cmd then return end
 	if cmd.action == gizmo_const.SCALE then
-		iom.set_scale(cmd.eid, cmd.oldvalue)
+		iom.set_scale(world:entity(cmd.eid), cmd.oldvalue)
 	elseif cmd.action == gizmo_const.ROTATE then
-		iom.set_rotation(cmd.eid, cmd.oldvalue)
+		iom.set_rotation(world:entity(cmd.eid), cmd.oldvalue)
 		if gizmo.mode ~= gizmo_const.SELECT and localSpace then
-			iom.set_rotation(cmd.eid, cmd.oldvalue)
+			iom.set_rotation(world:entity(cmd.eid), cmd.oldvalue)
 		end
 	elseif cmd.action == gizmo_const.MOVE then
-		iom.set_position(cmd.eid, cmd.oldvalue)
+		iom.set_position(world:entity(cmd.eid), cmd.oldvalue)
 		if gizmo.mode ~= gizmo_const.SELECT then
-			iom.set_position(cmd.eid, cmd.oldvalue)
+			iom.set_position(world:entity(cmd.eid), cmd.oldvalue)
 		end
 	end
 	gizmo:set_position()
@@ -37,16 +37,16 @@ function cmd_queue:redo()
 	local cmd = queue.pop_last(self.cmd_redo)
 	if not cmd then return end
 	if cmd.action == gizmo_const.SCALE then
-		iom.set_scale(cmd.eid, cmd.newvalue)
+		iom.set_scale(world:entity(cmd.eid), cmd.newvalue)
 	elseif cmd.action == gizmo_const.ROTATE then
-		iom.set_rotation(cmd.eid, cmd.newvalue)
+		iom.set_rotation(world:entity(cmd.eid), cmd.newvalue)
 		if gizmo.mode ~= gizmo_const.SELECT and localSpace then
-			iom.set_rotation(cmd.eid, cmd.newvalue)
+			iom.set_rotation(world:entity(cmd.eid), cmd.newvalue)
 		end
 	elseif cmd.action == gizmo_const.MOVE then
-		iom.set_position(cmd.eid, cmd.newvalue)
+		iom.set_position(world:entity(cmd.eid), cmd.newvalue)
 		if gizmo.mode ~= gizmo_const.SELECT then
-			iom.set_position(cmd.eid, cmd.newvalue)
+			iom.set_position(world:entity(cmd.eid), cmd.newvalue)
 		end
 	end
 	gizmo:set_position()

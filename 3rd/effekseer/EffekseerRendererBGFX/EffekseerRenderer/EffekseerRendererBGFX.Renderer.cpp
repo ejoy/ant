@@ -305,18 +305,6 @@ bool RendererImplemented::Initialize()
 
 	GetImpl()->CreateProxyTextures(this);
 
-	// Transpiled shader for OpenGL 3.x is transposed
-// 	if (true/*GetDeviceType() == OpenGLDeviceType::OpenGL3 || GetDeviceType() == OpenGLDeviceType::OpenGLES3*/)
-// 	{
-// 		shader_unlit_->SetIsTransposeEnabled(true);
-// 		shader_distortion_->SetIsTransposeEnabled(true);
-// 		shader_lit_->SetIsTransposeEnabled(true);
-// 
-// 		shader_ad_unlit_->SetIsTransposeEnabled(true);
-// 		shader_ad_lit_->SetIsTransposeEnabled(true);
-// 		shader_ad_distortion_->SetIsTransposeEnabled(true);
-// 	}
-
 	return true;
 }
 
