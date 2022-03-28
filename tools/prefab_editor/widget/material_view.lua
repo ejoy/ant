@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 --[[
     TODO:
@@ -207,6 +208,7 @@ local function create_property_ui(n, p, mv)
                 for i=1, #value do
                     pp[i] = value[i]
                 end
+                imaterial.set_property(world:entity(mv.eid), n, pp)
                 mv.need_reload = true
             end
         })
@@ -224,6 +226,7 @@ local function create_property_ui(n, p, mv)
                     for ii=1, #value do
                         ppp[ii] = value[ii]
                     end
+                    imaterial.set_property(world:entity(mv.eid), n, pp)
                     mv.need_reload = true
                 end
             })
@@ -265,6 +268,16 @@ local LIT_options<const> = {
     "lit",
     "unlit",
 }
+
+local function get_pbr_factor(t)
+    local pbrfactor = t.u_pbr_factor
+    if pbrfactor == nil then
+        pbrfactor = {1, 1, 0, 0}
+        t.u_pbr_factor = pbrfactor
+    end
+
+    return pbrfactor
+end
 
 local function build_properties_ui(mv)
     local t = material_template(assert(mv.eid))
@@ -377,6 +390,7 @@ local function build_properties_ui(mv)
                     end,
                     setter = function (value)
                         set_factor("basecolor", value)
+                        imaterial.set_property(world:entity(mv.eid), "u_basecolor_factor", value)
                     end
                 })
             )
@@ -391,12 +405,9 @@ local function build_properties_ui(mv)
                             return pbrfactor and pbrfactor[2] or 0.0
                         end,
                         setter = function (value)
-                            local pbrfactor = t.u_pbr_factor
-                            if pbrfactor == nil then
-                                pbrfactor = {}
-                                t.u_pbr_factor = pbrfactor
-                            end
+                            local pbrfactor = get_pbr_factor(t)
                             pbrfactor[1] = value
+                            imaterial.set_property(world:entity(mv.eid), "u_pbr_factor", pbrfactor)
                         end
                     }),
                     uiproperty.Float({label="roughness"}, {
@@ -405,12 +416,9 @@ local function build_properties_ui(mv)
                             return pbrfactor and pbrfactor[1] or 0.0
                         end,
                         setter = function (value)
-                            local pbrfactor = t.u_pbr_factor
-                            if pbrfactor == nil then
-                                pbrfactor = {}
-                                t.u_pbr_factor = pbrfactor
-                            end
+                            local pbrfactor = get_pbr_factor(t)
                             pbrfactor[2] = value
+                            imaterial.set_property(world:entity(mv.eid), "u_pbr_factor", pbrfactor)
                         end,
                     })
                 })
@@ -431,6 +439,7 @@ local function build_properties_ui(mv)
                 end,
                 setter = function (value)
                     set_factor("emissive", value)
+                    imaterial.set_property(world:entity(mv.eid), "u_emissive_factor", value)
                 end
             })
         ))
@@ -450,12 +459,9 @@ local function build_properties_ui(mv)
                     return pbrfactor and pbrfactor[3] or 0.0
                 end,
                 setter = function (value)
-                    local pbrfactor = t.u_pbr_factor
-                    if pbrfactor == nil then
-                        pbrfactor = {}
-                        t.u_pbr_factor = pbrfactor
-                    end
+                    local pbrfactor = get_pbr_factor(t)
                     pbrfactor[3] = value
+                    imaterial.set_property(world:entity(mv.eid), "u_pbr_factor", pbrfactor)
                 end
             })
         })
@@ -467,12 +473,9 @@ local function build_properties_ui(mv)
                 return pbrfactor and pbrfactor[4] or 0.0
             end,
             setter = function (value)
-                local pbrfactor = t.u_pbr_factor
-                if pbrfactor == nil then
-                    pbrfactor = {}
-                    t.u_pbr_factor = pbrfactor
-                end
+                local pbrfactor = get_pbr_factor(t)
                 pbrfactor[4] = value
+                imaterial.set_property(world:entity(mv.eid), "u_pbr_factor", pbrfactor)
             end
         })
     else
@@ -914,8 +917,7 @@ function MaterialView:enable_properties_ui(eid)
 end
 
 function MaterialView:update()
-    local e = self.eid
-    if e then
+    if self.eid then
         BaseView.update(self)
         self.material:update()
     end
