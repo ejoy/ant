@@ -21,8 +21,8 @@ public:
 
 private:
 	PropertyId id;
-	std::string unparsed_default;
 	std::vector<PropertyParser*> parsers;
+	std::optional<std::string> unparsed_default;
 	std::optional<Property> default_value;
 	bool inherited;
 };
