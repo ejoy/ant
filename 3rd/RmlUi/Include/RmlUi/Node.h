@@ -19,7 +19,7 @@ namespace Rml {
 		void SetType(Type type);
 		Type GetType();
 		bool UpdateVisible();
-		void UpdateMetrics(Rect& child);
+		void UpdateMetrics(const Rect& child);
 		Layout& GetLayout();
 		const Layout::Metrics& GetMetrics() const;
 

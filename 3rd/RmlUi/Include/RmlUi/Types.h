@@ -76,8 +76,8 @@ using AnimationList = std::vector<Animation>;
 // Data binding types
 class DataView;
 using DataViewPtr = std::unique_ptr<DataView>;
-class DataController;
-using DataControllerPtr = std::unique_ptr<DataController>;
+class DataEvent;
+using DataEventPtr = std::unique_ptr<DataEvent>;
 
 enum class Character : char32_t { Null, Replacement = 0xfffd };
 

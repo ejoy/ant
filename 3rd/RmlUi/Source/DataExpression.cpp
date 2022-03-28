@@ -959,8 +959,7 @@ DataExpression::DataExpression(std::string expression) : expression(expression)
 DataExpression::~DataExpression()
 {}
 
-bool DataExpression::Parse(const DataExpressionInterface& expression_interface, bool is_assignment_expression)
-{
+bool DataExpression::Parse(const DataExpressionInterface& expression_interface, bool is_assignment_expression) {
 	DataParser parser(expression, expression_interface);
 	if (!parser.Parse(is_assignment_expression))
 		return false;
@@ -971,8 +970,7 @@ bool DataExpression::Parse(const DataExpressionInterface& expression_interface, 
 	return true;
 }
 
-bool DataExpression::Run(const DataExpressionInterface& expression_interface, Variant& out_value)
-{
+bool DataExpression::Run(const DataExpressionInterface& expression_interface, Variant& out_value) {
 	DataInterpreter interpreter(program, addresses, expression_interface);
 	
 	if (!interpreter.Run())
@@ -982,12 +980,10 @@ bool DataExpression::Run(const DataExpressionInterface& expression_interface, Va
 	return true;
 }
 
-std::vector<std::string> DataExpression::GetVariableNameList() const
-{
+std::vector<std::string> DataExpression::GetVariableNameList() const {
 	std::vector<std::string> list;
 	list.reserve(addresses.size());
-	for (const DataAddress& address : addresses)
-	{
+	for (const DataAddress& address : addresses) {
 		if (!address.empty())
 			list.push_back(address[0].name);
 	}
@@ -997,25 +993,21 @@ std::vector<std::string> DataExpression::GetVariableNameList() const
 DataExpressionInterface::DataExpressionInterface(DataModel* data_model, Element* element, Event* event) : data_model(data_model), element(element), event(event)
 {}
 
-DataAddress DataExpressionInterface::ParseAddress(const std::string& address_str) const
-{
+DataAddress DataExpressionInterface::ParseAddress(const std::string& address_str) const {
 	return data_model ? data_model->ResolveAddress(address_str, element) : DataAddress();
 }
-Variant DataExpressionInterface::GetValue(const DataAddress& address) const
-{
+
+Variant DataExpressionInterface::GetValue(const DataAddress& address) const {
 	Variant result;
-	if (data_model)
-	{
+	if (data_model) {
 		data_model->GetVariableInto(address, result);
 	}
 	return result;
 }
 
-bool DataExpressionInterface::SetValue(const DataAddress& address, const Variant& value) const
-{
+bool DataExpressionInterface::SetValue(const DataAddress& address, const Variant& value) const {
 	bool result = false;
-	if (data_model && !address.empty())
-	{
+	if (data_model && !address.empty()) {
 		if (DataVariable variable = data_model->GetVariable(address))
 			result = variable.Set(value);
 
@@ -1025,8 +1017,7 @@ bool DataExpressionInterface::SetValue(const DataAddress& address, const Variant
 	return result;
 }
 
-bool DataExpressionInterface::EventCallback(const std::string& name, const std::vector<Variant>& arguments)
-{
+bool DataExpressionInterface::EventCallback(const std::string& name, const std::vector<Variant>& arguments) {
 	if (!data_model || !event)
 		return false;
 

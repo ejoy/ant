@@ -79,7 +79,8 @@ public:
 	DataModel* GetDataModel() const;
 
 	void Update();
-	void UpdateLayout();
+	void CalculateLayout();
+	virtual void UpdateLayout();
 	void SetParent(Element* parent);
 	Element* ElementFromPoint(Point point);
 	void SetRednerStatus();

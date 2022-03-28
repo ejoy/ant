@@ -40,13 +40,10 @@ class Element;
 class DataExpression;
 using DataExpressionPtr = std::unique_ptr<DataExpression>;
 
-
 class DataViewCommon : public DataView {
 public:
 	DataViewCommon(Element* element, std::string override_modifier = std::string());
-
 	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
-
 	std::vector<std::string> GetVariableNameList() const override;
 
 protected:
@@ -58,76 +55,22 @@ private:
 	DataExpressionPtr expression;
 };
 
-
-class DataViewAttribute : public DataViewCommon {
-public:
-	DataViewAttribute(Element* element);
-	DataViewAttribute(Element* element, std::string override_attribute);
-
-	bool Update(DataModel& model) override;
-};
-
-class DataViewAttributeIf final : public DataViewCommon {
-public:
-	DataViewAttributeIf(Element* element);
-
-	bool Update(DataModel& model) override;
-};
-
-class DataViewValue final : public DataViewAttribute {
-public:
-	DataViewValue(Element* element);
-};
-
 class DataViewStyle final : public DataViewCommon {
 public:
 	DataViewStyle(Element* element);
-
 	bool Update(DataModel& model) override;
 };
-
-
-class DataViewClass final : public DataViewCommon {
-public:
-	DataViewClass(Element* element);
-
-	bool Update(DataModel& model) override;
-};
-
-
-class DataViewHtml final : public DataViewCommon {
-public:
-	DataViewHtml(Element* element);
-
-	bool Update(DataModel& model) override;
-
-private:
-	std::string previous_html;
-};
-
 
 class DataViewIf final : public DataViewCommon {
 public:
 	DataViewIf(Element* element);
-
 	bool Update(DataModel& model) override;
 };
-
-
-class DataViewVisible final : public DataViewCommon {
-public:
-	DataViewVisible(Element* element);
-
-	bool Update(DataModel& model) override;
-};
-
 
 class DataViewText final : public DataView {
 public:
 	DataViewText(Element* in_element);
-
 	bool Initialize(DataModel& model, Element* element, const std::string& expression, const std::string& modifier) override;
-
 	bool Update(DataModel& model) override;
 	std::vector<std::string> GetVariableNameList() const override;
 

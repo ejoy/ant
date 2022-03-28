@@ -186,7 +186,7 @@ void Document::Update(double delta) {
 		dirty_dimensions = false;
 		body.GetLayout().CalculateLayout(dimensions);
 	}
-	body.UpdateLayout();
+	body.CalculateLayout();
 	body.Render();
 }
 

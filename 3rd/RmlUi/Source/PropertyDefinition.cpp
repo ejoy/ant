@@ -35,6 +35,7 @@ namespace Rml {
 
 PropertyDefinition::PropertyDefinition(PropertyId id, bool inherited) 
 	: id(id)
+	, unparsed_default()
 	, inherited(inherited)
 { }
 
@@ -51,8 +52,8 @@ PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name
 		return *this;
 	}
 	parsers.push_back(new_parser);
-	if (!default_value && !unparsed_default.empty()) {
-		default_value = new_parser->ParseValue(unparsed_default);
+	if (!default_value && unparsed_default) {
+		default_value = new_parser->ParseValue(unparsed_default.value());
 	}
 	return *this;
 }
@@ -66,8 +67,8 @@ PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name
 		return *this;
 	}
 	parsers.push_back(new_parser);
-	if (!default_value && !unparsed_default.empty()) {
-		default_value = new_parser->ParseValue(unparsed_default);
+	if (!default_value && unparsed_default) {
+		default_value = new_parser->ParseValue(unparsed_default.value());
 	}
 	return *this;
 }

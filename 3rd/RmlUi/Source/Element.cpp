@@ -1126,21 +1126,25 @@ void Element::UpdateGeometry() {
 	}
 }
 
-void Element::UpdateLayout() {
+void Element::CalculateLayout() {
 	if (layout.HasNewLayout() && Node::UpdateVisible()) {
-		DirtyTransform();
-		DirtyClip();
-		dirty_background = true;
-		dirty_image = true;
-		Rect content {};
-		for (auto& child : children) {
-			child->UpdateLayout();
-			if (child->IsVisible()) {
-				content.Union(child->GetMetrics().content);
-			}
-		}
-		Node::UpdateMetrics(content);
+		UpdateLayout();
 	}
+}
+
+void Element::UpdateLayout() {
+	DirtyTransform();
+	DirtyClip();
+	dirty_background = true;
+	dirty_image = true;
+	Rect content {};
+	for (auto& child : children) {
+		child->CalculateLayout();
+		if (child->IsVisible()) {
+			content.Union(child->GetMetrics().content);
+		}
+	}
+	Node::UpdateMetrics(content);
 }
 
 Element* Element::ElementFromPoint(Point point) {

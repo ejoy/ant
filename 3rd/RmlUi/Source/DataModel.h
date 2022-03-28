@@ -35,10 +35,7 @@
 
 namespace Rml {
 
-class DataViews;
-class DataControllers;
 class Element;
-
 
 class DataModel {
 public:
@@ -49,10 +46,9 @@ public:
 	DataModel& operator=(const DataModel&) = delete;
 
 	void AddView(DataViewPtr view);
-	void AddController(DataControllerPtr controller);
+	void AddEvent(DataEventPtr event);
 
 	bool BindVariable(const std::string& name, DataVariable variable);
-
 	bool BindEventCallback(const std::string& name, DataEventFunc event_func);
 
 	bool InsertAlias(Element* element, const std::string& alias_name, DataAddress replace_with_address);
@@ -73,11 +69,17 @@ public:
 
 	void OnElementRemove(Element* element);
 
-	bool Update(bool clear_dirty_variables);
+	void Update(bool clear_dirty_variables);
 
 private:
-	std::unique_ptr<DataViews> views;
-	std::unique_ptr<DataControllers> controllers;
+	using DataViewList = std::vector<DataViewPtr>;
+	using NameViewMap = std::unordered_multimap<std::string, DataView*>;
+	DataViewList views;
+	DataViewList views_to_add;
+	DataViewList views_to_remove;
+	NameViewMap name_view_map;
+
+    std::unordered_multimap<Element*, DataEventPtr> events;
 	std::unordered_map<std::string, DataVariable> variables;
 	DirtyVariables dirty_variables;
 	std::unordered_map<std::string, DataEventFunc> event_callbacks;
