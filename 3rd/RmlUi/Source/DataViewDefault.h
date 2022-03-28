@@ -17,8 +17,10 @@ public:
 	DataViewStyle(Element* element, const std::string& modifier);
 	bool Initialize(DataModel& model, const std::string& expression);
 	std::vector<std::string> GetVariableNameList() const override;
+	bool IsValid() const override;
 	bool Update(DataModel& model) override;
 private:
+	ObserverPtr<Element> element;
 	std::string modifier;
 	DataExpressionPtr expression;
 };
@@ -28,8 +30,10 @@ public:
 	DataViewIf(Element* element);
 	bool Initialize(DataModel& model, const std::string& expression);
 	std::vector<std::string> GetVariableNameList() const override;
+	bool IsValid() const override;
 	bool Update(DataModel& model) override;
 private:
+	ObserverPtr<Element> element;
 	DataExpressionPtr expression;
 };
 
@@ -39,8 +43,10 @@ public:
 	bool Initialize(DataModel& model, const std::string& expression);
 	bool Update(DataModel& model) override;
 	std::vector<std::string> GetVariableNameList() const override;
+	bool IsValid() const override;
 
 private:
+	ObserverPtr<Element> element;
 	DataAddress container_address;
 	std::string iterator_name;
 	std::string iterator_index_name;
@@ -53,6 +59,7 @@ public:
 	bool Initialize(DataModel& model);
 	bool Update(DataModel& model) override;
 	std::vector<std::string> GetVariableNameList() const override;
+	bool IsValid() const override;
 
 private:
 	std::string BuildText() const;
@@ -61,6 +68,7 @@ private:
 		DataExpressionPtr data_expression;
 		std::string value;
 	};
+	ObserverPtr<Element> element;
 	std::string text;
 	std::vector<DataEntry> data_entries;
 };

@@ -32,6 +32,7 @@
 #include "../Include/RmlUi/Types.h"
 #include "../Include/RmlUi/DataTypes.h"
 #include "../Include/RmlUi/DataVariable.h"
+#include <set>
 
 namespace Rml {
 
@@ -76,7 +77,6 @@ private:
 	using NameViewMap = std::unordered_multimap<std::string, DataView*>;
 	DataViewList views;
 	DataViewList views_to_add;
-	DataViewList views_to_remove;
 	NameViewMap name_view_map;
 
     std::unordered_multimap<Element*, DataEventPtr> events;

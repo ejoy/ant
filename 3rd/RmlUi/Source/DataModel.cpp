@@ -319,15 +319,6 @@ ElementList DataModel::GetAttachedModelRootElements() const {
 
 void DataModel::OnElementRemove(Element* element) {
 	EraseAliases(element);
-	for (auto it = views.begin(); it != views.end();) {
-		auto& view = *it;
-		if (view && view->GetElement() == element) {
-			views_to_remove.push_back(std::move(view));
-			it = views.erase(it);
-		}
-		else
-			++it;
-	}
 	events.erase(element);
 	attached_elements.erase(element);
 }
@@ -335,6 +326,7 @@ void DataModel::OnElementRemove(Element* element) {
 void DataModel::Update(bool clear_dirty_variables) {
 	// View updates may result in newly added views, thus we do it recursively but with an upper limit.
 	//   Without the loop, newly added views won't be updated until the next Update() call.
+	std::set<DataView*> views_to_remove;
 	for(int i = 0; i == 0 || (!views_to_add.empty() && i < 10); i++) {
 		std::vector<DataView*> dirty_views;
 
@@ -371,20 +363,24 @@ void DataModel::Update(bool clear_dirty_variables) {
 				continue;
 			if (view->IsValid())
 				view->Update(*this);
+			else {
+				views_to_remove.insert(view);
+			}
 		}
 
-		// Destroy views marked for destruction
-		// @performance: Horrible...
 		if (!views_to_remove.empty()) {
-			for (const auto& view : views_to_remove) {
-				for (auto it = name_view_map.begin(); it != name_view_map.end(); ) {
-					if (it->second == view.get())
-						it = name_view_map.erase(it);
-					else
-						++it;
-				}
+			for (auto it = views.begin(); it != views.end(); ) {
+				if (views_to_remove.contains(it->get()))
+					it = views.erase(it);
+				else
+					++it;
 			}
-
+			for (auto it = name_view_map.begin(); it != name_view_map.end(); ) {
+				if (views_to_remove.contains(it->second))
+					it = name_view_map.erase(it);
+				else
+					++it;
+			}
 			views_to_remove.clear();
 		}
 	}
