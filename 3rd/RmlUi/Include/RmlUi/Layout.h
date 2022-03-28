@@ -50,7 +50,7 @@ public:
 
 	bool HasNewLayout() const;
 	bool UpdateVisible(Layout::Metrics& metrics);
-	void UpdateMetrics(Layout::Metrics& metrics, Rect& child);
+	void UpdateMetrics(Layout::Metrics& metrics, const Rect& child);
 	void UpdateScrollOffset(Size& scrollOffset, Layout::Metrics const& metrics) const;
 	Overflow GetOverflow() const;
 	void SetVisible(bool visible);

@@ -223,6 +223,13 @@ void ElementText::AddLine(const std::string& line, Point position) {
 	dirty_geometry = true;
 }
 
+void ElementText::UpdateLayout() {
+	for (auto& line : lines) {
+		line.position = line.position + metrics.frame.origin;
+	}
+	Node::UpdateMetrics(Rect {});
+}
+
 void ElementText::OnChange(const PropertyIdSet& changed_properties) {
 	bool layout_changed = false;
 
@@ -304,9 +311,6 @@ void ElementText::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	}
 	dirty_geometry = false;
 	dirty_decoration = true;
-	for (auto& line : lines) {
-		line.position = line.position + metrics.frame.origin;
-	}
 	Color color = GetTextColor();
 	ColorApplyOpacity(color, GetOpacity());
 	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, color, geometry);

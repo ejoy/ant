@@ -253,7 +253,7 @@ bool Layout::UpdateVisible(Layout::Metrics& metrics) {
 	return true;
 }
 
-void Layout::UpdateMetrics(Layout::Metrics& metrics, Rect& child) {
+void Layout::UpdateMetrics(Layout::Metrics& metrics, const Rect& child) {
 	metrics.frame = Rect{
 		Point {
 			YGValueToFloat(YGNodeLayoutGetLeft(node)),

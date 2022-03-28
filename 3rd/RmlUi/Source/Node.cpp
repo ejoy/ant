@@ -19,7 +19,7 @@ bool Node::UpdateVisible() {
 	return layout.UpdateVisible(metrics);
 }
 
-void Node::UpdateMetrics(Rect& child) {
+void Node::UpdateMetrics(const Rect& child) {
 	layout.UpdateMetrics(metrics, child);
 }
 
