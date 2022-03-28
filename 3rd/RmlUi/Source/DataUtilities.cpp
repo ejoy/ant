@@ -10,28 +10,15 @@
 namespace Rml {
 
 static std::map<std::string, DataViewInstancer*> data_view_instancers = {
-	{"attr",    new DataViewInstancerDefault<DataViewAttribute>() },
-	{"attrif",  new DataViewInstancerDefault<DataViewAttributeIf>() },
-	{"class",   new DataViewInstancerDefault<DataViewClass>() },
 	{"if",      new DataViewInstancerDefault<DataViewIf>() },
-	{"visible", new DataViewInstancerDefault<DataViewVisible>() },
-	{"html",    new DataViewInstancerDefault<DataViewHtml>() },
 	{"style",   new DataViewInstancerDefault<DataViewStyle>() },
 	{"text",    new DataViewInstancerDefault<DataViewText>() },
-	{"value",   new DataViewInstancerDefault<DataViewValue>() },
 };
 
 static DataViewPtr InstanceDataView(const std::string& type_name, Element* element) {
 	auto it = data_view_instancers.find(type_name);
 	if (it != data_view_instancers.end())
 		return it->second->InstanceView(element);
-	return nullptr;
-}
-
-static DataEventPtr InstanceDataController(Element* element, const std::string& type_name) {
-	if (type_name == "event") {
-		return DataEventPtr(new DataEvent(element));
-	}
 	return nullptr;
 }
 

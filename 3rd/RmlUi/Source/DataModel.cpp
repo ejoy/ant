@@ -118,16 +118,15 @@ static std::string DataAddressToString(const DataAddress& address) {
 	return result;
 }
 
-DataModel::DataModel() {
-	views = std::make_unique<DataViews>();
-}
+DataModel::DataModel()
+{}
 
 DataModel::~DataModel() {
 	assert(attached_elements.empty());
 }
 
 void DataModel::AddView(DataViewPtr view) {
-	views->Add(std::move(view));
+	views_to_add.push_back(std::move(view));
 }
 
 void DataModel::AddEvent(DataEventPtr event) {
@@ -260,12 +259,10 @@ DataVariable DataModel::GetVariable(const DataAddress& address) const {
 		return DataVariable();
 
 	auto it = variables.find(address.front().name);
-	if (it != variables.end())
-	{
+	if (it != variables.end()) {
 		DataVariable variable = it->second;
 
-		for (int i = 1; i < (int)address.size() && variable; i++)
-		{
+		for (int i = 1; i < (int)address.size() && variable; i++) {
 			variable = variable.Child(address[i]);
 			if (!variable)
 				return DataVariable();
@@ -285,8 +282,7 @@ DataVariable DataModel::GetVariable(const DataAddress& address) const {
 
 const DataEventFunc* DataModel::GetEventCallback(const std::string& name) {
 	auto it = event_callbacks.find(name);
-	if (it == event_callbacks.end())
-	{
+	if (it == event_callbacks.end()) {
 		Log::Message(Log::Level::Warning, "Could not find data event callback '%s' in data model.", name.c_str());
 		return nullptr;
 	}
@@ -323,16 +319,79 @@ ElementList DataModel::GetAttachedModelRootElements() const {
 
 void DataModel::OnElementRemove(Element* element) {
 	EraseAliases(element);
-	views->OnElementRemove(element);
+	for (auto it = views.begin(); it != views.end();) {
+		auto& view = *it;
+		if (view && view->GetElement() == element) {
+			views_to_remove.push_back(std::move(view));
+			it = views.erase(it);
+		}
+		else
+			++it;
+	}
 	events.erase(element);
 	attached_elements.erase(element);
 }
 
-bool DataModel::Update(bool clear_dirty_variables) {
-	const bool result = views->Update(*this, dirty_variables);
+void DataModel::Update(bool clear_dirty_variables) {
+	// View updates may result in newly added views, thus we do it recursively but with an upper limit.
+	//   Without the loop, newly added views won't be updated until the next Update() call.
+	for(int i = 0; i == 0 || (!views_to_add.empty() && i < 10); i++) {
+		std::vector<DataView*> dirty_views;
+
+		if (!views_to_add.empty()) {
+			views.reserve(views.size() + views_to_add.size());
+			for (auto&& view : views_to_add) {
+				dirty_views.push_back(view.get());
+				for (const std::string& variable_name : view->GetVariableNameList())
+					name_view_map.emplace(variable_name, view.get());
+
+				views.push_back(std::move(view));
+			}
+			views_to_add.clear();
+		}
+
+		for (const std::string& variable_name : dirty_variables) {
+			auto pair = name_view_map.equal_range(variable_name);
+			for (auto it = pair.first; it != pair.second; ++it)
+				dirty_views.push_back(it->second);
+		}
+
+		// Remove duplicate entries
+		std::sort(dirty_views.begin(), dirty_views.end());
+		auto it_remove = std::unique(dirty_views.begin(), dirty_views.end());
+		dirty_views.erase(it_remove, dirty_views.end());
+
+		// Sort by the element's depth in the document tree so that any structural changes due to a changed variable are reflected in the element's children.
+		// Eg. the 'data-for' view will remove children if any of its data variable array size is reduced.
+		std::sort(dirty_views.begin(), dirty_views.end(), [](auto&& left, auto&& right) { return left->GetElementDepth() < right->GetElementDepth(); });
+
+		for (DataView* view : dirty_views) {
+			assert(view);
+			if (!view)
+				continue;
+
+			if (view->IsValid())
+				view->Update(*this);
+		}
+
+		// Destroy views marked for destruction
+		// @performance: Horrible...
+		if (!views_to_remove.empty()) {
+			for (const auto& view : views_to_remove) {
+				for (auto it = name_view_map.begin(); it != name_view_map.end(); ) {
+					if (it->second == view.get())
+						it = name_view_map.erase(it);
+					else
+						++it;
+				}
+			}
+
+			views_to_remove.clear();
+		}
+	}
+
 	if (clear_dirty_variables)
 		dirty_variables.clear();
-	return result;
 }
 
 }
