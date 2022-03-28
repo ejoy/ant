@@ -1985,7 +1985,7 @@ lplane_ray(lua_State *L){
 
 	const float* plane = vector_from_index(L, LS, 3);
 	//t = (d - o dot n) / (d1 dot n)
-	float dot_do = math3d_dot(ray_d, ray_o);
+	float dot_do = math3d_dot(ray_d, plane);
 
 	//ray direction is parrall to plane normal, not interset
 	if (fabs(dot_do) < 1e-7){
