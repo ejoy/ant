@@ -203,7 +203,7 @@
 
             function start.listdrag(event)
                 if start.list_drag then
-                    ist_proxy:on_drag(event)
+                    list_proxy:on_drag(event)
                 end
             end
 
