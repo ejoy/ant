@@ -673,7 +673,7 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 	}
 
 	for (auto& child : children) {
-		if (child->GetType() == Node::Type::Text) {
+		if (ElementText* textChild = dynamic_cast<ElementText*>(child.get())) {
 			child->OnChange(changed_properties);
 		}
 	}
@@ -682,8 +682,8 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 std::string Element::GetInnerHTML() const {
 	std::string html;
 	for (auto& child : children) {
-		if (child->GetType() == Node::Type::Text) {
-			html += ((ElementText&)*child).GetText();
+		if (ElementText* textChild = dynamic_cast<ElementText*>(child.get())) {
+			html += textChild->GetText();
 		}
 		else {
 			html += child->GetOuterHTML();

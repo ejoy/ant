@@ -10,14 +10,7 @@ namespace Rml {
 
     class Node {
 	public:
-		enum class Type {
-			Unset,
-			Element,
-			Text,
-		};
 		virtual ~Node();
-		void SetType(Type type);
-		Type GetType();
 		bool UpdateVisible();
 		void UpdateMetrics(const Rect& child);
 		Layout& GetLayout();
@@ -33,7 +26,6 @@ namespace Rml {
 		virtual void OnChange(const PropertyIdSet& properties) = 0;
 
 	protected:
-		Type type = Type::Unset;
 		Layout layout;
 		Layout::Metrics metrics;
 		Element* parent = nullptr;

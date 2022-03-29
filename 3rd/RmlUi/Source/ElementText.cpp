@@ -47,7 +47,6 @@ ElementText::ElementText(Document* owner, const std::string& text_)
 	, text(text_)
 	, decoration() 
 {
-	Node::SetType(Node::Type::Text);
 	GetLayout().SetElementText(this);
 	DirtyLayout();
 }

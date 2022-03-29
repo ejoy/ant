@@ -7,14 +7,6 @@ namespace Rml {
 Node::~Node()
 {}
 
-void Node::SetType(Type type_) {
-	type = type_;
-}
-
-Node::Type Node::GetType() {
-	return type;
-}
-
 bool Node::UpdateVisible() {
 	return layout.UpdateVisible(metrics);
 }
