@@ -37,9 +37,9 @@
 [submodule "3rd/bee.lua"]
 	path = 3rd/bee.lua
 	url = https://github.com/actboy168/bee.lua
-[submodule "3rd/effekseer2"]
-	path = 3rd/effekseer2
-	url = https://github.com/effekseer/Effekseer.git
 [submodule "packages/efk/efkbgfx"]
 	path = packages/efk/efkbgfx
 	url = https://github.com/cloudwu/efkbgfx.git
+[submodule "3rd/Effekseer"]
+	path = 3rd/Effekseer
+	url = https://github.com/effekseer/Effekseer.git
