@@ -399,7 +399,7 @@ local function build_properties_ui(mv)
         properties[#properties+1] = uiproperty.Group({label="metallic_roughness"}, 
             add_textre_ui("s_metallic_roughness", "metallic_roughness",
                 uiproperty.Group({label="Factor", dim=4}, {
-                    uiproperty.Float({label="metallic", min=0.0, max=1.0, step=0.02}, {
+                    uiproperty.Float({label="metallic", min=0.0, max=1.0, speed=0.02}, {
                         getter = function ()
                             local pbrfactor = t.u_pbr_factor
                             return pbrfactor and pbrfactor[2] or 0.0
@@ -410,7 +410,7 @@ local function build_properties_ui(mv)
                             imaterial.set_property(world:entity(mv.eid), "u_pbr_factor", pbrfactor)
                         end
                     }),
-                    uiproperty.Float({label="roughness", min=0.0, max=1.0, step=0.02}, {
+                    uiproperty.Float({label="roughness", min=0.0, max=1.0, speed=0.02}, {
                         getter = function ()
                             local pbrfactor = t.u_pbr_factor
                             return pbrfactor and pbrfactor[1] or 0.0
@@ -453,7 +453,7 @@ local function build_properties_ui(mv)
                     fx_setting("ALPHAMODE_MASK", value and 1 or nil)
                 end
             }),
-            uiproperty.Float({label="cutoff value", min=0.0, max=1.0, step=0.02}, {
+            uiproperty.Float({label="cutoff value", min=0.0, max=1.0, speed=0.02}, {
                 getter = function ()
                     local pbrfactor = t.u_pbr_factor
                     return pbrfactor and pbrfactor[3] or 0.0
@@ -467,7 +467,7 @@ local function build_properties_ui(mv)
         })
         
 
-        properties[#properties+1] = uiproperty.Float({label="occlusion strength", min=0.0, max=1.0, step=0.02},{
+        properties[#properties+1] = uiproperty.Float({label="occlusion strength", min=0.0, max=1.0, speed=0.02},{
             getter = function ()
                 local pbrfactor = t.u_pbr_factor
                 return pbrfactor and pbrfactor[4] or 0.0
