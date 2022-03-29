@@ -121,13 +121,14 @@ public:
 	void SetDataModel(DataModel* data_model) override;
 	Node* Clone(bool deep = true) const override;
 	void Render() override;
-	void OnChange(const PropertyIdSet& changed_properties) override;
 	float GetZIndex() const override;
 	Element* ElementFromPoint(Point point) override;
 	std::string GetInnerHTML() const override;
 	std::string GetOuterHTML() const override;
 	void SetInnerHTML(const std::string& html) override;
 	void SetOuterHTML(const std::string& html) override;
+
+	virtual void ChangedProperties(const PropertyIdSet& changed_properties);
 
 protected:
 	void OnAttributeChange(const ElementAttributes& changed_attributes);

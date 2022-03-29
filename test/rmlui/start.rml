@@ -1,8 +1,10 @@
 <rml>
     <head>
         <style>
-            div {
+            body {
                 font: 300% "宋体";
+            }
+            div {
                 margin-left: 60%;
                 margin-right: 10%;
                 margin-top: 10%;

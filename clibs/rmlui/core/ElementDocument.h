@@ -7,6 +7,6 @@ namespace Rml {
 	public:
 		ElementDocument(Document* owner);
 	protected:
-		void OnChange(const PropertyIdSet& changed_properties) override;
+		void ChangedProperties(const PropertyIdSet& changed_properties) override;
 	};
 }

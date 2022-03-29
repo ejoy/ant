@@ -20,7 +20,7 @@ Text::Text(Document* owner, const std::string& text_)
 	, text(text_)
 	, decoration() 
 {
-	GetLayout().SetElementText(this);
+	GetLayout().InitTextNode(this);
 	DirtyLayout();
 }
 
@@ -203,7 +203,7 @@ void Text::CalculateLayout() {
 	Node::UpdateMetrics(Rect {});
 }
 
-void Text::OnChange(const PropertyIdSet& changed_properties) {
+void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 	bool layout_changed = false;
 
 	if (changed_properties.Contains(PropertyId::FontFamily) ||

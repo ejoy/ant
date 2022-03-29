@@ -40,7 +40,7 @@ public:
 	Layout& operator=(const Layout&) = delete;
 	Layout& operator=(Layout&&) = delete;
 
-	void SetElementText(Text* element);
+	void InitTextNode(Text* text);
 	void CalculateLayout(Size const& size);
 	void SetProperty(PropertyId id, const Property* property, Element* element);
 	

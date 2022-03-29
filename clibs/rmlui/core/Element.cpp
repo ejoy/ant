@@ -422,8 +422,8 @@ void Element::NotifyCustomElement() {
 void Element::AppendChild(Node* node) { 
 	GetLayout().InsertChild(node->GetLayout(), (uint32_t)children.size());
 	childnodes.emplace_back(node);
-	if (!dynamic_cast<Text*>(node)) {
-		children.emplace_back(dynamic_cast<Element*>(node));
+	if (Element* e = dynamic_cast<Element*>(node)) {
+		children.emplace_back(e);
 	}
 	node->SetParentNode(this);
 	DirtyStackingContext();
@@ -467,8 +467,8 @@ void Element::InsertBefore(Node* node, Node* adjacent) {
 
 	GetLayout().InsertChild(node->GetLayout(), (uint32_t)index);
 	childnodes.emplace(childnodes.begin() + index, node);
-	if (!dynamic_cast<Text*>(node)) {
-		children.emplace_back(dynamic_cast<Element*>(node));
+	if (Element* e = dynamic_cast<Element*>(node)) {
+		children.emplace_back(e);
 	}
 	node->SetParentNode(this);
 	DirtyStackingContext();
@@ -566,7 +566,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
 	}
 }
 
-void Element::OnChange(const PropertyIdSet& changed_properties) {
+void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 	const bool border_radius_changed = (
 		changed_properties.Contains(PropertyId::BorderTopLeftRadius) ||
 		changed_properties.Contains(PropertyId::BorderTopRightRadius) ||
@@ -677,8 +677,8 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 	}
 
 	for (auto& child : childnodes) {
-		if (Text* textChild = dynamic_cast<Text*>(child.get())) {
-			child->OnChange(changed_properties);
+		if (Text* text = dynamic_cast<Text*>(child.get())) {
+			text->ChangedProperties(changed_properties);
 		}
 	}
 }
@@ -1770,7 +1770,7 @@ void Element::UpdateProperties() {
 	}
 
 	if (!dirty_properties.Empty()) {
-		OnChange(dirty_properties);
+		ChangedProperties(dirty_properties);
 		dirty_properties.Clear();
 	}
 }

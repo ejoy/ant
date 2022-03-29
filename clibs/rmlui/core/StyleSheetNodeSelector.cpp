@@ -30,9 +30,6 @@ bool StyleSheetNodeSelectorFirstChild::IsApplicable(const Element* element, int,
 		Element* child = parent->GetChild(child_index);
 		if (child == element)
 			return true;
-		// If this child is not a text element, then the selector fails; this element is non-trivial.
-		if (dynamic_cast< Text* >(child) == nullptr && child->IsVisible())
-			return false;
 		// Otherwise, skip over the text element to find the last non-trivial element.
 		child_index++;
 	}
@@ -68,9 +65,6 @@ bool StyleSheetNodeSelectorLastChild::IsApplicable(const Element* element, int, 
 		Element* child = parent->GetChild(child_index);
 		if (child == element)
 			return true;
-		// If this child is not a text element, then the selector fails; this element is non-trivial.
-		if (dynamic_cast< Text* >(child) == nullptr && child->IsVisible())
-			return false;
 		// Otherwise, skip over the text element to find the last non-trivial element.
 		child_index--;
 	}
@@ -104,9 +98,6 @@ bool StyleSheetNodeSelectorNthChild::IsApplicable(const Element* element, int a,
 	int element_index = 1;
 	for (int i = 0; i < parent->GetNumChildren(); i++) {
 		Element* child = parent->GetChild(i);
-		// Skip text nodes.
-		if (dynamic_cast< Text* >(child) != nullptr)
-			continue;
 		// If we've found our element, then break; the current index is our element's index.
 		if (child == element)
 			break;
@@ -126,9 +117,6 @@ bool StyleSheetNodeSelectorNthLastChild::IsApplicable(const Element* element, in
 	int element_index = 1;
 	for (int i = parent->GetNumChildren() - 1; i >= 0; --i) {
 		Element* child = parent->GetChild(i);
-		// Skip text nodes.
-		if (dynamic_cast< Text* >(child) != nullptr)
-			continue;
 		// If we've found our element, then break; the current index is our element's index.
 		if (child == element)
 			break;
@@ -187,7 +175,7 @@ bool StyleSheetNodeSelectorOnlyChild::IsApplicable(const Element* element, int, 
 		if (child == element)
 			continue;
 		// Skip the child if it is trivial.
-		if (dynamic_cast< const Text* >(element) != nullptr || !child->IsVisible())
+		if (!child->IsVisible())
 			continue;
 		return false;
 	}

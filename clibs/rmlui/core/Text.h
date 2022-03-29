@@ -15,6 +15,7 @@ public:
 	const std::string& GetText() const;
 	Size Measure(float minWidth, float maxWidth, float minHeight, float maxHeight);
 	float GetBaseline();
+	void ChangedProperties(const PropertyIdSet& properties);
 
 protected:
 	const Property* GetComputedProperty(PropertyId id);
@@ -25,7 +26,6 @@ protected:
 	Node* Clone(bool deep = true) const override;
 	void CalculateLayout() override;
 	void Render() override;
-	void OnChange(const PropertyIdSet& properties) override;
 	float GetZIndex() const override;
 	Element* ElementFromPoint(Point point) override;
 	std::string GetInnerHTML() const override;

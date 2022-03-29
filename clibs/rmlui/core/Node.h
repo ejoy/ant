@@ -27,7 +27,6 @@ namespace Rml {
 		virtual Node* Clone(bool deep = true) const = 0;
 		virtual void CalculateLayout() = 0;
 		virtual void Render() = 0;
-		virtual void OnChange(const PropertyIdSet& properties) = 0;
 		virtual float GetZIndex() const = 0;
 		virtual Element* ElementFromPoint(Point point) = 0;
 		virtual std::string GetInnerHTML() const = 0;

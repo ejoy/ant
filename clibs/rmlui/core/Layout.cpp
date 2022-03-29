@@ -225,8 +225,8 @@ static float BaselineFunc(YGNodeRef node, float width, float height) {
 	return element->GetBaseline();
 }
 
-void Layout::SetElementText(Text* element) {
-	YGNodeSetContext(node, element);
+void Layout::InitTextNode(Text* text) {
+	YGNodeSetContext(node, text);
 	YGNodeSetMeasureFunc(node, MeasureFunc);
 	YGNodeSetIsReferenceBaseline(node, true);
 	YGNodeSetBaselineFunc(node, BaselineFunc);
