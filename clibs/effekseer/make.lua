@@ -2,7 +2,7 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
-local EffekseerDir = Ant3rd .. "effekseer"
+local EffekseerDir = Ant3rd .. "old_effekseer"
 
 lm:source_set "source_effekseer" {
     includes = {
