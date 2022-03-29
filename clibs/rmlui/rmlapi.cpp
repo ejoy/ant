@@ -318,6 +318,20 @@ lElementSetInnerHTML(lua_State *L) {
 }
 
 static int
+lElementGetOuterHTML(lua_State *L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	lua_pushstdstring(L, e->GetOuterHTML());
+	return 1;
+}
+
+static int
+lElementSetOuterHTML(lua_State *L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->SetOuterHTML(lua_checkstdstring(L, 2));
+	return 0;
+}
+
+static int
 lElementGetAttribute(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	const std::string* attr = e->GetAttribute(lua_checkstdstring(L, 2));
@@ -562,6 +576,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementSetScrollInsets", lElementSetScrollInsets },
 		{ "ElementGetInnerHTML", lElementGetInnerHTML },
 		{ "ElementSetInnerHTML", lElementSetInnerHTML },
+		{ "ElementGetOuterHTML", lElementGetOuterHTML },
+		{ "ElementSetOuterHTML", lElementSetOuterHTML },
 		{ "ElementAppendChild", lElementAppendChild },
 		{ "ElementDelete", lElementDelete },
 		{ "ElementProject", lElementProject },

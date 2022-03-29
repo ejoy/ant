@@ -156,6 +156,13 @@ function property_setter:innerHTML(v)
     rmlui.ElementSetInnerHTML(self._handle, v)
 end
 
+function property_getter:outerHTML()
+    return rmlui.ElementGetOuterHTML(self._handle)
+end
+function property_setter:outerHTML(v)
+    rmlui.ElementSetOuterHTML(self._handle, v)
+end
+
 function property_getter:scrollLeft()
     return rmlui.ElementGetScrollLeft(self._handle)
 end
@@ -187,6 +194,10 @@ function property_mt:__newindex(name, value)
         error("element property `" .. name .. "` readonly.")
     end
     rawset(self, name, value)
+end
+
+function property_mt:__tostring()
+    return rmlui.ElementGetOuterHTML(self._handle)
 end
 
 local function constructor(document, handle, owner)
