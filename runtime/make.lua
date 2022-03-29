@@ -36,8 +36,7 @@ for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
     end
 end
 
-lm.EfkDir = "../../../3rd/"
-lm:import "../packages/efk/efkbgfx/make.lua"
+lm:import "../packages/efk/make.lua"
 
 lm:copy "copy_mainlua" {
     input = "common/main.lua",
