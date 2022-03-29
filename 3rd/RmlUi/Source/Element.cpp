@@ -1123,20 +1123,29 @@ void Element::UpdateGeometry() {
 	}
 }
 
-void Element::CalculateLayout() {
+void Element::UpdateLayout() {
 	if (layout.HasNewLayout() && Node::UpdateVisible()) {
-		UpdateLayout();
+		CalculateLayout();
 	}
 }
 
-void Element::UpdateLayout() {
+void Element::UpdateRender() {
+	UpdateTransform();
+	UpdatePerspective();
+	UpdateClip();
+	for (auto& child : children) {
+		child->UpdateRender();
+	}
+}
+
+void Element::CalculateLayout() {
 	DirtyTransform();
 	DirtyClip();
 	dirty_background = true;
 	dirty_image = true;
 	Rect content {};
 	for (auto& child : children) {
-		child->CalculateLayout();
+		child->UpdateLayout();
 		if (child->IsVisible()) {
 			content.Union(child->GetMetrics().content);
 		}
@@ -1148,21 +1157,17 @@ Element* Element::ElementFromPoint(Point point) {
 	if (!IsVisible()) {
 		return nullptr;
 	}
-	bool overflowVisible = GetLayout().GetOverflow() == Layout::Overflow::Visible;
-	if (!overflowVisible && !IsPointWithinElement(point)) {
-		return nullptr;
-	}
 	UpdateStackingContext();
-	for (auto iter = stacking_context.rbegin(); iter != stacking_context.rend();++iter) {
+	for (auto iter = stacking_context.rbegin(); iter != stacking_context.rend() && (*iter)->GetZIndex() >= 0; ++iter) {
 		Element* res = (*iter)->ElementFromPoint(point);
 		if (res) {
 			return res;
 		}
 	}
-	if (overflowVisible && !IsPointWithinElement(point)) {
-		return nullptr;
+	if (IsPointWithinElement(point)) {
+		return this;
 	}
-	return this;
+	return nullptr;
 }
 
 static glm::u16vec4 UnionScissor(const glm::u16vec4& a, glm::u16vec4& b) {

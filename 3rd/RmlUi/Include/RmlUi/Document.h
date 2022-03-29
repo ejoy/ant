@@ -27,6 +27,7 @@ public:
 	const Size& GetDimensions();
 	Element* ElementFromPoint(Point pt);
 	void Update(double delta);
+	void UpdateLayout();
 	DataModelConstructor CreateDataModel(const std::string& name);
 	DataModelConstructor GetDataModel(const std::string& name);
 	bool RemoveDataModel(const std::string& name);

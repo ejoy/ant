@@ -9,7 +9,6 @@ local dispatchEvent = rmlui.ElementDispatchEvent
 local getParent = rmlui.ElementGetParent
 local setPseudoClass = rmlui.ElementSetPseudoClass
 local project = rmlui.ElementProject
-local getOwnerDocument = rmlui.ElementGetOwnerDocument
 
 local m = {}
 

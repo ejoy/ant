@@ -223,7 +223,7 @@ void ElementText::AddLine(const std::string& line, Point position) {
 	dirty_geometry = true;
 }
 
-void ElementText::UpdateLayout() {
+void ElementText::CalculateLayout() {
 	for (auto& line : lines) {
 		line.position = line.position + metrics.frame.origin;
 	}

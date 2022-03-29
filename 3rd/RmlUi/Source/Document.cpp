@@ -47,6 +47,8 @@ bool Document::Load(const std::string& path) {
 	body.UpdateProperties();
 	UpdateDataModel(false);
 	body.Update();
+	UpdateLayout();
+	body.UpdateRender();
 	return true;
 }
 
@@ -182,12 +184,16 @@ void Document::Update(double delta) {
 	UpdateDataModel(true);
 	body.Update();
 	body.UpdateAnimations();
+	UpdateLayout();
+	body.Render();
+}
+
+void Document::UpdateLayout() {
 	if (dirty_dimensions || body.GetLayout().IsDirty()) {
 		dirty_dimensions = false;
 		body.GetLayout().CalculateLayout(dimensions);
 	}
-	body.CalculateLayout();
-	body.Render();
+	body.UpdateLayout();
 }
 
 Element* Document::ElementFromPoint(Point pt) {

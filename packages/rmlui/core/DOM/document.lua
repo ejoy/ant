@@ -13,6 +13,9 @@ local function constructor(handle)
     function doc.createTextNode(text)
         return createElement(rmlui.DocumentCreateTextNode(handle, text), handle, true)
     end
+    function doc.elementFromPoint(x, y)
+        return createElement(rmlui.DocumentElementFromPoint(handle, x, y), handle)
+    end
     return doc
 end
 

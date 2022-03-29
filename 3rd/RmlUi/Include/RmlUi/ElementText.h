@@ -51,7 +51,7 @@ protected:
 	const Property* GetComputedProperty(PropertyId id);
 	float GetOpacity();
 	ElementPtr Clone(bool deep = true) const override;
-	void UpdateLayout() override;
+	void CalculateLayout() override;
 	void InitDataModel() override;
 
 private:
