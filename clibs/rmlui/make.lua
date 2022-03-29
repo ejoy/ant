@@ -16,15 +16,16 @@ lm:source_set "yoga" {
 }
 
 lm:source_set "rmlui_core" {
-    rootdir = Ant3rd .. "rmlui",
     includes = {
-        "Include",
+        "core",
+        ".",
         Ant3rd .. "glm",
         Ant3rd .. "yoga",
     },
     defines = "GLM_FORCE_QUAT_DATA_XYZW",
     sources = {
-        "Source/*.cpp",
+        "core/*.cpp",
+        "databinding/*.cpp",
     }
 }
 
@@ -39,13 +40,14 @@ lm:source_set "source_rmlui" {
         Ant3rd .. "bgfx/include",
         Ant3rd .. "bx/include",
         Ant3rd .. "glm",
-        Ant3rd .. "rmlui/Include",
         Ant3rd .. "bgfx/3rdparty",
         Ant3rd .. "yoga",
         "../luabind",
+        "core",
+        ".",
     },
     sources = {
-        "*.cpp",
+        "binding/*.cpp",
     },
     windows = {
         links = "user32"
