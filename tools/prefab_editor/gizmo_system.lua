@@ -78,7 +78,7 @@ end
 function gizmo:update_position(worldpos)
 	local newpos
 	if worldpos then
-		local pid = world:entity(gizmo.target_eid).scene.parent
+		local pid = world:entity(gizmo.target_eid).scene.pid
 		local parent_e
 		if pid then
 			for e in w:select "scene:in" do
@@ -1088,8 +1088,10 @@ function gizmo_sys:handle_event()
 					elseif gizmo.mode == gizmo_const.ROTATE then
 						cmd_queue:record({action = gizmo_const.ROTATE, eid = target, oldvalue = math3d.totable(last_rotate), newvalue = math3d.totable(iom.get_rotation(world:entity(target)))})
 					elseif gizmo.mode == gizmo_const.MOVE then
-						local parent = world:entity(gizmo.target_eid).scene.parent
+						local parent = world:entity(gizmo.target_eid).scene.pid
 						local pw = parent and iom.worldmat(world:entity(parent)) or nil
+						local s, r, t = math3d.srt(pw)
+						local st, rt, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
 						local localPos = last_gizmo_pos
 						if pw then
 							localPos = math3d.totable(math3d.transform(math3d.inverse(pw), last_gizmo_pos, 1))
