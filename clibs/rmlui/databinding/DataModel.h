@@ -52,10 +52,10 @@ public:
 	bool BindVariable(const std::string& name, DataVariable variable);
 	bool BindEventCallback(const std::string& name, DataEventFunc event_func);
 
-	bool InsertAlias(Element* element, const std::string& alias_name, DataAddress replace_with_address);
-	bool EraseAliases(Element* element);
+	bool InsertAlias(Node* element, const std::string& alias_name, DataAddress replace_with_address);
+	bool EraseAliases(Node* element);
 
-	DataAddress ResolveAddress(const std::string& address_str, Element* element) const;
+	DataAddress ResolveAddress(const std::string& address_str, Node* element) const;
 	const DataEventFunc* GetEventCallback(const std::string& name);
 
 	DataVariable GetVariable(const DataAddress& address) const;
@@ -83,7 +83,7 @@ private:
 	std::unordered_map<std::string, DataVariable> variables;
 	DirtyVariables dirty_variables;
 	std::unordered_map<std::string, DataEventFunc> event_callbacks;
-	using ScopedAliases = std::unordered_map<Element*, std::unordered_map<std::string, DataAddress>>;
+	using ScopedAliases = std::unordered_map<Node*, std::unordered_map<std::string, DataAddress>>;
 	ScopedAliases aliases;
 	std::unordered_set<Element*> attached_elements;
 };

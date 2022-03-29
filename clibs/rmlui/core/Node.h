@@ -3,9 +3,9 @@
 #include "Layout.h"
 #include <memory>
 #include <vector>
-#include <glm/glm.hpp>
 
 namespace Rml {
+	class DataModel;
 	class Element;
 
     class Node {
@@ -18,16 +18,27 @@ namespace Rml {
 
 		bool IsVisible() const;
 		void SetVisible(bool visible);
-		void SetParentNode(Element* parent);
 		Element* GetParentNode() const;
 		void DirtyLayout();
+		DataModel* GetDataModel() const;
 
+		virtual void SetParentNode(Element* parent) = 0;
+		virtual void SetDataModel(DataModel* data_model) = 0;
+		virtual Node* Clone(bool deep = true) const = 0;
+		virtual void CalculateLayout() = 0;
 		virtual void Render() = 0;
 		virtual void OnChange(const PropertyIdSet& properties) = 0;
+		virtual float GetZIndex() const = 0;
+		virtual Element* ElementFromPoint(Point point) = 0;
+		virtual std::string GetInnerHTML() const = 0;
+		virtual std::string GetOuterHTML() const = 0;
+		virtual void SetInnerHTML(const std::string& html) = 0;
+		virtual void SetOuterHTML(const std::string& html) = 0;
 
 	protected:
 		Layout layout;
 		Layout::Metrics metrics;
 		Element* parent = nullptr;
+		DataModel* data_model = nullptr;
     };
 }

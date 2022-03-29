@@ -6,7 +6,7 @@
 namespace Rml {
 
 class Element;
-class ElementText;
+class Text;
 
 class Layout {
 public:
@@ -40,7 +40,7 @@ public:
 	Layout& operator=(const Layout&) = delete;
 	Layout& operator=(Layout&&) = delete;
 
-	void SetElementText(ElementText* element);
+	void SetElementText(Text* element);
 	void CalculateLayout(Size const& size);
 	void SetProperty(PropertyId id, const Property* property, Element* element);
 	

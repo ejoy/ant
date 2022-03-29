@@ -20,7 +20,6 @@ struct Rect {
     }
 };
 
-class FileInterface2;
 class FontInterface;
 class Renderer;
 class System;

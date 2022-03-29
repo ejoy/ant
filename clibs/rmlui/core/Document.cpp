@@ -1,5 +1,5 @@
 #include "core/Document.h"
-#include "core/ElementText.h"
+#include "core/Text.h"
 #include "databinding/DataUtilities.h"
 #include "core/Stream.h"
 #include "core/StyleSheet.h"
@@ -208,8 +208,8 @@ const Element* Document::GetBody() const {
 	return &body;
 }
 
-ElementPtr Document::CreateElement(const std::string& tag){
-	return ElementPtr(new Element(this, tag));
+Element* Document::CreateElement(const std::string& tag){
+	return new Element(this, tag);
 }
 
 void Document::NotifyCustomElement(Element* e){
@@ -218,8 +218,8 @@ void Document::NotifyCustomElement(Element* e){
 	}
 }
 
-ElementPtr Document::CreateTextNode(const std::string& str) {
-	return ElementPtr(new ElementText(this, str));
+Text* Document::CreateTextNode(const std::string& str) {
+	return new Text(this, str);
 }
 
 void Document::DefineCustomElement(const std::string& name) {

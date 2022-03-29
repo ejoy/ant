@@ -184,7 +184,7 @@ bool DataModel::BindEventCallback(const std::string& name, DataEventFunc event_f
 	return true;
 }
 
-bool DataModel::InsertAlias(Element* element, const std::string& alias_name, DataAddress replace_with_address) {
+bool DataModel::InsertAlias(Node* element, const std::string& alias_name, DataAddress replace_with_address) {
 	if (replace_with_address.empty() || replace_with_address.front().name.empty())
 	{
 		Log::Message(Log::Level::Warning, "Could not add alias variable '%s' to data model, replacement address invalid.", alias_name.c_str());
@@ -205,11 +205,11 @@ bool DataModel::InsertAlias(Element* element, const std::string& alias_name, Dat
 	return true;
 }
 
-bool DataModel::EraseAliases(Element* element) {
+bool DataModel::EraseAliases(Node* element) {
 	return aliases.erase(element) == 1;
 }
 
-DataAddress DataModel::ResolveAddress(const std::string& address_str, Element* element) const {
+DataAddress DataModel::ResolveAddress(const std::string& address_str, Node* element) const {
 	DataAddress address = ParseAddress(address_str);
 
 	if (address.empty())
@@ -222,7 +222,7 @@ DataAddress DataModel::ResolveAddress(const std::string& address_str, Element* e
 		return address;
 
 	// Look for a variable alias for the first name.
-	Element* ancestor = element;
+	Node* ancestor = element;
 	while (ancestor && ancestor->GetDataModel() == this)
 	{
 		auto it_element = aliases.find(ancestor);

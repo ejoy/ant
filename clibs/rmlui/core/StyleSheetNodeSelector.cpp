@@ -1,6 +1,6 @@
 #include "StyleSheetNodeSelector.h"
 #include "core/Element.h"
-#include "core/ElementText.h"
+#include "core/Text.h"
 
 namespace Rml {
 
@@ -31,7 +31,7 @@ bool StyleSheetNodeSelectorFirstChild::IsApplicable(const Element* element, int,
 		if (child == element)
 			return true;
 		// If this child is not a text element, then the selector fails; this element is non-trivial.
-		if (dynamic_cast< ElementText* >(child) == nullptr && child->IsVisible())
+		if (dynamic_cast< Text* >(child) == nullptr && child->IsVisible())
 			return false;
 		// Otherwise, skip over the text element to find the last non-trivial element.
 		child_index++;
@@ -69,7 +69,7 @@ bool StyleSheetNodeSelectorLastChild::IsApplicable(const Element* element, int, 
 		if (child == element)
 			return true;
 		// If this child is not a text element, then the selector fails; this element is non-trivial.
-		if (dynamic_cast< ElementText* >(child) == nullptr && child->IsVisible())
+		if (dynamic_cast< Text* >(child) == nullptr && child->IsVisible())
 			return false;
 		// Otherwise, skip over the text element to find the last non-trivial element.
 		child_index--;
@@ -105,7 +105,7 @@ bool StyleSheetNodeSelectorNthChild::IsApplicable(const Element* element, int a,
 	for (int i = 0; i < parent->GetNumChildren(); i++) {
 		Element* child = parent->GetChild(i);
 		// Skip text nodes.
-		if (dynamic_cast< ElementText* >(child) != nullptr)
+		if (dynamic_cast< Text* >(child) != nullptr)
 			continue;
 		// If we've found our element, then break; the current index is our element's index.
 		if (child == element)
@@ -127,7 +127,7 @@ bool StyleSheetNodeSelectorNthLastChild::IsApplicable(const Element* element, in
 	for (int i = parent->GetNumChildren() - 1; i >= 0; --i) {
 		Element* child = parent->GetChild(i);
 		// Skip text nodes.
-		if (dynamic_cast< ElementText* >(child) != nullptr)
+		if (dynamic_cast< Text* >(child) != nullptr)
 			continue;
 		// If we've found our element, then break; the current index is our element's index.
 		if (child == element)
@@ -187,7 +187,7 @@ bool StyleSheetNodeSelectorOnlyChild::IsApplicable(const Element* element, int, 
 		if (child == element)
 			continue;
 		// Skip the child if it is trivial.
-		if (dynamic_cast< const ElementText* >(element) != nullptr || !child->IsVisible())
+		if (dynamic_cast< const Text* >(element) != nullptr || !child->IsVisible())
 			continue;
 		return false;
 	}

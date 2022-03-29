@@ -1,32 +1,4 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
-#include "core/ElementText.h"
+#include "core/Text.h"
 #include "core/Core.h"
 #include "core/Document.h"
 #include "core/FontEngineInterface.h"
@@ -35,6 +7,7 @@
 #include "core/Log.h"
 #include "core/StringUtilities.h"
 #include "databinding/DataUtilities.h"
+#include "databinding/DataModelHandle.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace Rml {
@@ -42,8 +15,8 @@ namespace Rml {
 static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation);
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline);
 
-ElementText::ElementText(Document* owner, const std::string& text_)
-	: Element(owner, "#text")
+Text::Text(Document* owner, const std::string& text_)
+	: Node()
 	, text(text_)
 	, decoration() 
 {
@@ -51,36 +24,36 @@ ElementText::ElementText(Document* owner, const std::string& text_)
 	DirtyLayout();
 }
 
-ElementText::~ElementText()
+Text::~Text()
 { }
 
-void ElementText::SetText(const std::string& _text) {
+void Text::SetText(const std::string& _text) {
 	if (text != _text) {
 		text = _text;
 		DirtyLayout();
 	}
 }
 
-const std::string& ElementText::GetText() const
+const std::string& Text::GetText() const
 {
 	return text;
 }
 
-const Property* ElementText::GetComputedProperty(PropertyId id) {
+const Property* Text::GetComputedProperty(PropertyId id) {
 	if (!parent) {
 		return nullptr;
 	}
 	return parent->GetComputedProperty(id);
 }
 
-float ElementText::GetOpacity() {
+float Text::GetOpacity() {
 	if (!parent) {
 		return 1.f;
 	}
 	return parent->GetOpacity();
 }
 
-void ElementText::Render() {
+void Text::Render() {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 	if (font_face_handle == 0)
 		return;
@@ -100,7 +73,7 @@ void ElementText::Render() {
 	}
 }
 
-bool ElementText::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix) {
+bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix) {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 
 	// Initialise the output variables.
@@ -212,25 +185,25 @@ bool ElementText::GenerateLine(std::string& line, int& line_length, float& line_
 	return true;
 }
 
-void ElementText::ClearLines() {
+void Text::ClearLines() {
 	lines.clear();
 	dirty_geometry = true;
 	dirty_decoration = true;
 }
 
-void ElementText::AddLine(const std::string& line, Point position) {
+void Text::AddLine(const std::string& line, Point position) {
 	lines.push_back(Line { line, position, 0 });
 	dirty_geometry = true;
 }
 
-void ElementText::CalculateLayout() {
+void Text::CalculateLayout() {
 	for (auto& line : lines) {
 		line.position = line.position + metrics.frame.origin;
 	}
 	Node::UpdateMetrics(Rect {});
 }
 
-void ElementText::OnChange(const PropertyIdSet& changed_properties) {
+void Text::OnChange(const PropertyIdSet& changed_properties) {
 	bool layout_changed = false;
 
 	if (changed_properties.Contains(PropertyId::FontFamily) ||
@@ -282,7 +255,7 @@ void ElementText::OnChange(const PropertyIdSet& changed_properties) {
 	}
 }
 
-void ElementText::UpdateTextEffects() {
+void Text::UpdateTextEffects() {
 	if (!dirty_effects || GetFontFaceHandle() == 0)
 		return;
 	dirty_effects = false;
@@ -305,7 +278,7 @@ void ElementText::UpdateTextEffects() {
 	}
 }
 
-void ElementText::UpdateGeometry(const FontFaceHandle font_face_handle) {
+void Text::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	if (!dirty_geometry) {
 		return;
 	}
@@ -316,7 +289,7 @@ void ElementText::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, color, geometry);
 }
 
-void ElementText::UpdateDecoration(const FontFaceHandle font_face_handle) {
+void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 	if (!dirty_decoration) {
 		return;
 	}
@@ -470,7 +443,7 @@ static bool LastToken(const char* token_begin, const char* string_end, bool coll
 	return last_token;
 }
 
-Size ElementText::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {
+Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {
 	ClearLines();
 	if (GetFontFaceHandle() == 0) {
 		return Size(0, 0);
@@ -512,26 +485,26 @@ Size ElementText::Measure(float minWidth, float maxWidth, float minHeight, float
 	return Size(width, height);
 }
 
-float ElementText::GetLineHeight() {
+float Text::GetLineHeight() {
 	float line_height = (float)GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle());
 	const Property* property = GetComputedProperty(PropertyId::LineHeight);
-	return line_height * property->Get<PropertyFloat>().Compute(this);
+	return line_height * property->Get<PropertyFloat>().Compute(parent);
 }
 
 
-float ElementText::GetBaseline() {
+float Text::GetBaseline() {
 	float line_height = GetLineHeight();
 	return line_height / 2.0f
 		+ GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle()) / 2.0f
 		- GetFontEngineInterface()->GetBaseline(GetFontFaceHandle());
 }
 
-Style::TextAlign ElementText::GetAlign() {
+Style::TextAlign Text::GetAlign() {
 	const Property* property = GetComputedProperty(PropertyId::TextAlign);
 	return (Style::TextAlign)property->Get<PropertyKeyword>();
 }
 
-std::optional<TextShadow> ElementText::GetTextShadow() {
+std::optional<TextShadow> Text::GetTextShadow() {
 	TextShadow shadow {
 		GetComputedProperty(PropertyId::TextShadowH)->Get<PropertyFloat>().Compute(parent),
 		GetComputedProperty(PropertyId::TextShadowV)->Get<PropertyFloat>().Compute(parent),
@@ -543,7 +516,7 @@ std::optional<TextShadow> ElementText::GetTextShadow() {
 	return {};
 }
 
-std::optional<TextStroke> ElementText::GetTextStroke() {
+std::optional<TextStroke> Text::GetTextStroke() {
 	TextStroke stroke{
 		GetComputedProperty(PropertyId::TextStrokeWidth)->Get<PropertyFloat>().Compute(parent),
 		GetComputedProperty(PropertyId::TextStrokeColor)->Get<Color>(),
@@ -554,12 +527,12 @@ std::optional<TextStroke> ElementText::GetTextStroke() {
 	return {};
 }
 
-Style::TextDecorationLine ElementText::GetTextDecorationLine() {
+Style::TextDecorationLine Text::GetTextDecorationLine() {
 	const Property* property = GetComputedProperty(PropertyId::TextDecorationLine);
 	return (Style::TextDecorationLine)property->Get<PropertyKeyword>();
 }
 
-Color ElementText::GetTextDecorationColor() {
+Color Text::GetTextDecorationColor() {
 	const Property* property = GetComputedProperty(PropertyId::TextDecorationColor);
 	if (property->Has<PropertyKeyword>()) {
 		// CurrentColor
@@ -574,27 +547,27 @@ Color ElementText::GetTextDecorationColor() {
 	return property->Get<Color>();
 }
 
-Style::TextTransform ElementText::GetTextTransform() {
+Style::TextTransform Text::GetTextTransform() {
 	const Property* property = GetComputedProperty(PropertyId::TextTransform);
 	return (Style::TextTransform)property->Get<PropertyKeyword>();
 }
 
-Style::WhiteSpace ElementText::GetWhiteSpace() {
+Style::WhiteSpace Text::GetWhiteSpace() {
 	const Property* property = GetComputedProperty(PropertyId::WhiteSpace);
 	return (Style::WhiteSpace)property->Get<PropertyKeyword>();
 }
 
-Style::WordBreak ElementText::GetWordBreak() {
+Style::WordBreak Text::GetWordBreak() {
 	const Property* property = GetComputedProperty(PropertyId::WordBreak);
 	return (Style::WordBreak)property->Get<PropertyKeyword>();
 }
 
-Color ElementText::GetTextColor() {
+Color Text::GetTextColor() {
 	const Property* property = GetComputedProperty(PropertyId::Color);
 	return property->Get<Color>();
 }
 
-FontFaceHandle ElementText::GetFontFaceHandle() {
+FontFaceHandle Text::GetFontFaceHandle() {
 	if (!dirty_font) {
 		return font_handle;
 	}
@@ -610,11 +583,31 @@ FontFaceHandle ElementText::GetFontFaceHandle() {
 	return font_handle;
 }
 
-ElementPtr ElementText::Clone(bool deep) const {
-	return owner_document->CreateTextNode(text);
+void Text::SetParentNode(Element* _parent) {
+	assert(!parent || !_parent);
+	if (parent) {
+		assert(_parent->GetOwnerDocument() == parent->GetOwnerDocument());
+	}
+
+	parent = _parent;
+
+	if (!parent) {
+		if (data_model)
+			SetDataModel(nullptr);
+	}
+	else {
+		SetDataModel(parent->GetDataModel());
+	}
 }
 
-void ElementText::InitDataModel() {
+void Text::SetDataModel(DataModel* new_data_model) {
+	assert(!data_model || !new_data_model);
+	if (data_model == new_data_model)
+		return;
+	data_model = new_data_model;
+	if (!data_model) {
+		return;
+	}
 	bool has_data_expression = false;
 	bool inside_brackets = false;
 	char previous = 0;
@@ -635,4 +628,31 @@ void ElementText::InitDataModel() {
 	}
 }
 
+Node* Text::Clone(bool deep) const {
+	return GetParentNode()->GetOwnerDocument()->CreateTextNode(text);
+}
+
+float Text::GetZIndex() const {
+	return 0;
+}
+
+Element* Text::ElementFromPoint(Point point) {
+	return nullptr;
+}
+
+std::string Text::GetInnerHTML() const {
+	return GetText();
+}
+
+std::string Text::GetOuterHTML() const {
+	return GetText();
+}
+
+void Text::SetInnerHTML(const std::string& html) {
+	SetText(html);
+}
+
+void Text::SetOuterHTML(const std::string& html) {
+	SetText(html);
+}
 }

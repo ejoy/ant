@@ -5,8 +5,8 @@
 
 namespace Rml {
 
-class Element;
 class DataModel;
+class Node;
 
 class DataView {
 public:
@@ -16,7 +16,7 @@ public:
 	int GetDepth() const;
 	
 protected:
-	DataView(Element* element);
+	DataView(Node* node);
 	int depth;
 };
 

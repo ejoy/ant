@@ -29,7 +29,7 @@
 #include "core/Layout.h"
 #include "core/ID.h"
 #include "core/Property.h"
-#include "core/ElementText.h"
+#include "core/Text.h"
 #include <yoga/YGNodePrint.h>
 
 namespace Rml {
@@ -189,7 +189,7 @@ void Layout::SetProperty(PropertyId id, const Property* property, Element* eleme
 }
 
 static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-	auto* element = static_cast<ElementText*>(YGNodeGetContext(node));
+	auto* element = static_cast<Text*>(YGNodeGetContext(node));
 	float minWidth = 0;
 	float maxWidth = std::numeric_limits<float>::max();
 	float minHeight = 0;
@@ -221,11 +221,11 @@ static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, 
 }
 
 static float BaselineFunc(YGNodeRef node, float width, float height) {
-	auto* element = static_cast<ElementText*>(YGNodeGetContext(node));
+	auto* element = static_cast<Text*>(YGNodeGetContext(node));
 	return element->GetBaseline();
 }
 
-void Layout::SetElementText(ElementText* element) {
+void Layout::SetElementText(Text* element) {
 	YGNodeSetContext(node, element);
 	YGNodeSetMeasureFunc(node, MeasureFunc);
 	YGNodeSetIsReferenceBaseline(node, true);

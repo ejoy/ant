@@ -1,5 +1,5 @@
 #include "core/Element.h"
-#include "core/ElementText.h"
+#include "core/Text.h"
 #include "core/Core.h"
 #include "core/Document.h"
 #include "databinding/DataUtilities.h"
@@ -101,7 +101,7 @@ Element::~Element() {
 	assert(parent == nullptr);
 	SetDataModel(nullptr);
 	for (auto& child : children) {
-		child->SetParent(nullptr);
+		child->SetParentNode(nullptr);
 	}
 	for (const auto& listener : listeners) {
 		listener->OnDetach(this);
@@ -319,7 +319,7 @@ Document* Element::GetOwnerDocument() const {
 Element* Element::GetChild(int index) const {
 	if (index < 0 || index >= (int) children.size())
 		return nullptr;
-	return children[index].get();
+	return children[index];
 }
 
 int Element::GetNumChildren() const {
@@ -378,17 +378,17 @@ void Element::InstanceInner(const HtmlElement& html) {
 		std::visit([this](auto&& arg) {
 			using T = std::decay_t<decltype(arg)>;
 			if constexpr (std::is_same_v<T, HtmlElement>) {
-				ElementPtr e = owner_document->CreateElement(arg.tag);
+				Element* e = owner_document->CreateElement(arg.tag);
 				if (e) {
 					e->InstanceOuter(arg);
 					e->NotifyCustomElement();
-					AppendChild(std::move(e));
+					AppendChild(e);
 				}
 			}
 			else if constexpr (std::is_same_v<T, HtmlString>) {
-				ElementPtr e = owner_document->CreateTextNode(arg);
+				Text* e = owner_document->CreateTextNode(arg);
 				if (e) {
-					AppendChild(std::move(e));
+					AppendChild(e);
 				}
 			}
 			else {
@@ -398,15 +398,15 @@ void Element::InstanceInner(const HtmlElement& html) {
 	}
 }
 
-ElementPtr Element::Clone(bool deep) const {
-	ElementPtr e = owner_document->CreateElement(tag);
+Node* Element::Clone(bool deep) const {
+	Element* e = owner_document->CreateElement(tag);
 	if (e) {
 		for (auto const& [name, value] : attributes) {
 			e->attributes[name] = value;
 		}
 		e->OnAttributeChange(attributes);
 		if (deep) {
-			for (auto const& child : children) {
+			for (auto const& child : childnodes) {
 				e->AppendChild(child->Clone(true));
 			}
 		}
@@ -419,71 +419,79 @@ void Element::NotifyCustomElement() {
 	owner_document->NotifyCustomElement(this);
 }
 
-Element* Element::AppendChild(ElementPtr child) { 
-	Element* child_ptr = child.get();
-	GetLayout().InsertChild(child->GetLayout(), (uint32_t)children.size());
-	children.insert(children.end(), std::move(child));
-	child_ptr->SetParent(this);
-	DirtyStackingContext();
-	DirtyStructure();
-	return child_ptr;
-}
-
-ElementPtr Element::RemoveChild(Element* child) {
-	size_t index = GetChildIndex(child);
-	if (index == -1) {
-		return nullptr;
+void Element::AppendChild(Node* node) { 
+	GetLayout().InsertChild(node->GetLayout(), (uint32_t)children.size());
+	childnodes.emplace_back(node);
+	if (!dynamic_cast<Text*>(node)) {
+		children.emplace_back(dynamic_cast<Element*>(node));
 	}
-	ElementPtr detached_child = std::move(children[index]);
-	children.erase(children.begin() + index);
-	detached_child->SetParent(nullptr);
-	GetLayout().RemoveChild(child->GetLayout());
+	node->SetParentNode(this);
 	DirtyStackingContext();
 	DirtyStructure();
-	return detached_child;
 }
 
-size_t Element::GetChildIndex(Element* child) const {
-	for (size_t i = 0; i < children.size(); ++i) {
-		if (children[i].get() == child) {
+void Element::RemoveChild(Node* node) {
+	size_t index = GetChildNodeIndex(node);
+	if (index == -1) {
+		return;
+	}
+	NodePtr detached_child = std::move(childnodes[index]);
+	children.erase(children.begin() + index);
+	for (auto it = children.begin(); it != children.end(); ++it) {
+		if (*it == node) {
+			children.erase(it);
+			break;
+		}
+	}
+	node->SetParentNode(nullptr);
+	GetLayout().RemoveChild(node->GetLayout());
+	DirtyStackingContext();
+	DirtyStructure();
+}
+
+size_t Element::GetChildNodeIndex(Node* node) const {
+	for (size_t i = 0; i < childnodes.size(); ++i) {
+		if (childnodes[i].get() == node) {
 			return i;
 		}
 	}
 	return size_t(-1);
 }
 
-Element* Element::InsertBefore(ElementPtr child, Element* adjacent_element) {
-	size_t index = GetChildIndex(adjacent_element);
+void Element::InsertBefore(Node* node, Node* adjacent) {
+	size_t index = GetChildNodeIndex(adjacent);
 	if (index == -1) {
-		return AppendChild(std::move(child));
+		AppendChild(node);
+		return;
 	}
 
-	Element* child_ptr = child.get();
-	GetLayout().InsertChild(child->GetLayout(), (uint32_t)index);
-	children.insert(children.begin() + index, std::move(child));
-	child_ptr->SetParent(this);
+	GetLayout().InsertChild(node->GetLayout(), (uint32_t)index);
+	childnodes.emplace(childnodes.begin() + index, node);
+	if (!dynamic_cast<Text*>(node)) {
+		children.emplace_back(dynamic_cast<Element*>(node));
+	}
+	node->SetParentNode(this);
 	DirtyStackingContext();
-	DirtyStructure();	
-	return child_ptr;
+	DirtyStructure();
 }
 
-Element* Element::GetPreviousSibling() {
+Node* Element::GetPreviousSibling() {
 	if (!parent) {
 		return nullptr;
 	}
-	size_t index = parent->GetChildIndex(this);
+	size_t index = parent->GetChildNodeIndex(this);
 	if (index == -1) {
 		return nullptr;
 	}
 	if (index == 0) {
 		return nullptr;
 	}
-	return parent->children[index-1].get();
+	return parent->childnodes[index-1].get();
 }
 
 void Element::RemoveAllChildren() {
 	for (auto& child : children) {
-		child->SetParent(nullptr);
+		child->SetParentNode(nullptr);
 	}
 	children.clear();
 	GetLayout().RemoveAllChildren();
@@ -522,10 +530,6 @@ void Element::GetElementsByClassName(ElementList& elements, const std::string& c
 	for (auto& child : children) {
 		child->GetElementsByClassName(elements, class_name);
 	}
-}
-
-DataModel* Element::GetDataModel() const {
-	return data_model;
 }
 
 void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
@@ -672,8 +676,8 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 		dirty_transition = true;
 	}
 
-	for (auto& child : children) {
-		if (ElementText* textChild = dynamic_cast<ElementText*>(child.get())) {
+	for (auto& child : childnodes) {
+		if (Text* textChild = dynamic_cast<Text*>(child.get())) {
 			child->OnChange(changed_properties);
 		}
 	}
@@ -682,12 +686,7 @@ void Element::OnChange(const PropertyIdSet& changed_properties) {
 std::string Element::GetInnerHTML() const {
 	std::string html;
 	for (auto& child : children) {
-		if (ElementText* textChild = dynamic_cast<ElementText*>(child.get())) {
-			html += textChild->GetText();
-		}
-		else {
-			html += child->GetOuterHTML();
-		}
+		html += child->GetOuterHTML();
 	}
 	return html;
 }
@@ -715,18 +714,6 @@ std::string Element::GetOuterHTML() const {
 }
 
 
-void Element::InitDataModel() {
-	if (attributes.find("data-for") != attributes.end()) {
-		DataUtilities::ApplyDataViewFor(this);
-	}
-	else {
-		DataUtilities::ApplyDataViewsControllers(this);
-		for (ElementPtr& child : children) {
-			child->SetDataModel(data_model);
-		}
-	}
-}
-
 void Element::SetDataModel(DataModel* new_data_model) {
 	assert(!data_model || !new_data_model);
 	if (data_model == new_data_model)
@@ -735,22 +722,29 @@ void Element::SetDataModel(DataModel* new_data_model) {
 		data_model->OnElementRemove(this);
 	data_model = new_data_model;
 	if (!data_model) {
-		for (ElementPtr& child : children) {
+		for (auto& child : childnodes) {
 			child->SetDataModel(nullptr);
 		}
 		return;
 	}
-	InitDataModel();
+	if (attributes.find("data-for") != attributes.end()) {
+		DataUtilities::ApplyDataViewFor(this);
+	}
+	else {
+		DataUtilities::ApplyDataViewsControllers(this);
+		for (auto& child : childnodes) {
+			child->SetDataModel(data_model);
+		}
+	}
 }
 
-void Element::SetParent(Element* _parent) {
+void Element::SetParentNode(Element* _parent) {
 	assert(!parent || !_parent);
 	if (parent) {
 		assert(GetOwnerDocument() == parent->GetOwnerDocument());
 	}
 
 	parent = _parent;
-	Node::SetParentNode(parent);
 
 	if (parent) {
 		// We need to update our definition and make sure we inherit the properties of our new parent.
@@ -796,11 +790,11 @@ void Element::UpdateStackingContext() {
 	dirty_stacking_context = false;
 	stacking_context.clear();
 	stacking_context.reserve(children.size());
-	for (auto& child : children) {
+	for (auto& child : childnodes) {
 		stacking_context.push_back(child.get());
 	}
 	std::stable_sort(stacking_context.begin(), stacking_context.end(),
-		[](const Element* lhs, const Element* rhs) {
+		[](auto&& lhs, auto&& rhs) {
 			return lhs->GetZIndex() < rhs->GetZIndex();
 		}
 	);

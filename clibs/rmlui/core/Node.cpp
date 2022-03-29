@@ -47,4 +47,8 @@ void Node::DirtyLayout() {
 	layout.MarkDirty();
 }
 
+DataModel* Node::GetDataModel() const {
+	return data_model;
+}
+
 }

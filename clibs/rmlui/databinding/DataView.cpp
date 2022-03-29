@@ -3,7 +3,7 @@
 
 namespace Rml {
 
-static int GetElementDepth(Element* e) {
+static int GetNodeDepth(Node* e) {
 	int depth = 0;
 	for (Element* parent = e->GetParentNode(); parent; parent = parent->GetParentNode()) {
 		depth++;
@@ -11,8 +11,8 @@ static int GetElementDepth(Element* e) {
 	return depth;
 }
 
-DataView::DataView(Element* element)
-	: depth(GetElementDepth(element))
+DataView::DataView(Node* node)
+	: depth(GetNodeDepth(node))
 { }
 
 int DataView::GetDepth() const {

@@ -1,6 +1,6 @@
 #include "databinding/DataUtilities.h"
 #include "core/Element.h"
-#include "core/ElementText.h"
+#include "core/Text.h"
 #include "core/Log.h"
 #include "databinding/DataEvent.h"
 #include "databinding/DataModel.h"
@@ -76,7 +76,7 @@ void DataUtilities::ApplyDataViewFor(Element* element) {
 	}
 }
 
-void DataUtilities::ApplyDataViewText(ElementText* element) {
+void DataUtilities::ApplyDataViewText(Text* element) {
 	DataModel* data_model = element->GetDataModel();
 	if (!data_model) {
 		return;
@@ -86,7 +86,8 @@ void DataUtilities::ApplyDataViewText(ElementText* element) {
 			data_model->AddView(std::move(view));
 		}
 		else {
-			Log::Message(Log::Level::Warning, "Could not add data-text view to element: %s", element->GetAddress().c_str());
+			//TODO
+			//Log::Message(Log::Level::Warning, "Could not add data-text view to element: %s", element->GetAddress().c_str());
 		}
 	}
 }

@@ -55,7 +55,7 @@ private:
 
 class DataViewText final : public DataView {
 public:
-	DataViewText(Element* element);
+	DataViewText(Text* element);
 	bool Initialize(DataModel& model);
 	bool Update(DataModel& model) override;
 	std::vector<std::string> GetVariableNameList() const override;
@@ -68,7 +68,7 @@ private:
 		DataExpressionPtr data_expression;
 		std::string value;
 	};
-	ObserverPtr<Element> element;
+	ObserverPtr<Text> element;
 	std::string text;
 	std::vector<DataEntry> data_entries;
 };

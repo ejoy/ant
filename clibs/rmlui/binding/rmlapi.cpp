@@ -167,23 +167,23 @@ lDocumentGetBody(lua_State* L) {
 static int
 lDocumentCreateElement(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	Rml::ElementPtr e = doc->CreateElement(lua_checkstdstring(L, 2));
+	Rml::Element* e = doc->CreateElement(lua_checkstdstring(L, 2));
 	if (!e) {
 		return 0;
 	}
 	e->NotifyCustomElement();
-	lua_pushlightuserdata(L, e.release());
+	lua_pushlightuserdata(L, e);
 	return 1;
 }
 
 static int
 lDocumentCreateTextNode(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	Rml::ElementPtr e = doc->CreateTextNode(lua_checkstdstring(L, 2));
+	Rml::Text* e = doc->CreateTextNode(lua_checkstdstring(L, 2));
 	if (!e) {
 		return 0;
 	}
-	lua_pushlightuserdata(L, e.release());
+	lua_pushlightuserdata(L, e);
 	return 1;
 }
 
@@ -357,7 +357,7 @@ static int
 lElementAppendChild(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::Element* child = lua_checkobject<Rml::Element>(L, 2);
-	e->AppendChild(Rml::ElementPtr(child));
+	e->AppendChild(child);
 	return 0;
 }
 
@@ -455,11 +455,11 @@ lElementProject(lua_State* L) {
 static int
 lElementClone(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	Rml::ElementPtr r = e->Clone();
+	Rml::Node* r = e->Clone();
 	if (!r) {
 		return 0;
 	}
-	lua_pushlightuserdata(L, r.release());
+	lua_pushlightuserdata(L, r);
 	return 1;
 }
 

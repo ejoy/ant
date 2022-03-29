@@ -31,7 +31,6 @@ public:
 	std::string GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
 	bool IsPointWithinElement(Point point);
 
-	float GetZIndex() const;
 	float GetFontSize() const;
 	float GetOpacity();
 	bool UpdataFontSize();
@@ -50,13 +49,8 @@ public:
 	Element* GetChild(int index) const;
 	int GetNumChildren() const;
 
-	std::string GetInnerHTML() const;
-	std::string GetOuterHTML() const;
-	void SetInnerHTML(const std::string& html);
-	void SetOuterHTML(const std::string& html);
 	void InstanceOuter(const HtmlElement& html);
 	void InstanceInner(const HtmlElement& html);
-	virtual ElementPtr Clone(bool deep = true) const;
 	void NotifyCustomElement();
 
 	void AddEventListener(EventListener* listener);
@@ -65,25 +59,21 @@ public:
 	void RemoveAllEvents();
 	std::vector<EventListener*> const& GetEventListeners() const;
 
-	Element*   AppendChild(ElementPtr element);
-	ElementPtr RemoveChild(Element* element);
-	size_t     GetChildIndex(Element* child) const;
-	Element*   InsertBefore(ElementPtr element, Element* adjacent_element);
-	Element*   GetPreviousSibling();
-	void       RemoveAllChildren();
+	void   AppendChild(Node* node);
+	void   RemoveChild(Node* node);
+	size_t GetChildNodeIndex(Node* node) const;
+	void   InsertBefore(Node* child, Node* adjacent);
+	Node*  GetPreviousSibling();
+	void   RemoveAllChildren();
 
 	Element* GetElementById(const std::string& id);
 	void GetElementsByTagName(ElementList& elements, const std::string& tag);
 	void GetElementsByClassName(ElementList& elements, const std::string& class_name);
 
-	DataModel* GetDataModel() const;
-
 	void Update();
 	virtual void CalculateLayout();
 	void UpdateLayout();
 	void UpdateRender();
-	void SetParent(Element* parent);
-	Element* ElementFromPoint(Point point);
 	void SetRednerStatus();
 
 	Size GetScrollOffset() const;
@@ -124,14 +114,23 @@ public:
 	void TransitionPropertyChanges(const PropertyIdSet & properties, const PropertyDictionary& new_definition);
 	void TransitionPropertyChanges(const TransitionList* transition_list, PropertyId id, const Property& old_property);
 
-protected:
-	void UpdateAnimations();
 	void UpdateProperties();
-	void OnAttributeChange(const ElementAttributes& changed_attributes);
+	void UpdateAnimations();
+
+	void SetParentNode(Element* parent) override;
+	void SetDataModel(DataModel* data_model) override;
+	Node* Clone(bool deep = true) const override;
 	void Render() override;
 	void OnChange(const PropertyIdSet& changed_properties) override;
-	virtual void InitDataModel();
-	void SetDataModel(DataModel* new_data_model);
+	float GetZIndex() const override;
+	Element* ElementFromPoint(Point point) override;
+	std::string GetInnerHTML() const override;
+	std::string GetOuterHTML() const override;
+	void SetInnerHTML(const std::string& html) override;
+	void SetOuterHTML(const std::string& html) override;
+
+protected:
+	void OnAttributeChange(const ElementAttributes& changed_attributes);
 	void UpdateStackingContext();
 	void DirtyStackingContext();
 	void DirtyStructure();
@@ -155,11 +154,11 @@ protected:
 	std::string tag;
 	std::string id;
 	Document* owner_document;
-	DataModel* data_model = nullptr;
 	ElementAttributes attributes;
-	OwnedElementList children;
+	std::vector<Element*> children;
+	std::vector<NodePtr> childnodes;
 	float z_index = 0;
-	ElementList stacking_context;
+	std::vector<Node*> stacking_context;
 	std::unique_ptr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
 	mutable std::unique_ptr<glm::mat4x4> inv_transform;
@@ -199,8 +198,6 @@ protected:
 	bool dirty_background = false;
 	bool dirty_image = false;
 	bool dirty_definition = true;
-
-	friend class Rml::Document;
 };
 
 }

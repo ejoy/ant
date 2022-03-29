@@ -43,7 +43,7 @@ using AddressList = std::vector<DataAddress>;
 class DataExpressionInterface {
 public:
     DataExpressionInterface() = default;
-    DataExpressionInterface(DataModel* data_model, Element* element, Event* event = nullptr);
+    DataExpressionInterface(DataModel* data_model, Node* element, Event* event = nullptr);
 
     DataAddress ParseAddress(const std::string& address_str) const;
     Variant GetValue(const DataAddress& address) const;
@@ -52,7 +52,7 @@ public:
 
 private:
     DataModel* data_model = nullptr;
-    Element* element = nullptr;
+    Node* element = nullptr;
     Event* event = nullptr;
 };
 

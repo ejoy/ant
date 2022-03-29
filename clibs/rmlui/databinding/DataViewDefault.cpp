@@ -3,7 +3,7 @@
 #include "databinding/DataModel.h"
 #include "core/Document.h"
 #include "core/Element.h"
-#include "core/ElementText.h"
+#include "core/Text.h"
 #include "core/Variant.h"
 #include "core/Log.h"
 #include "core/StringUtilities.h"
@@ -145,13 +145,13 @@ bool DataViewFor::Update(DataModel& model) {
 		DataAddress iterator_index_address = {
 			{"literal"}, {"int"}, {(int)i}
 		};
-		ElementPtr sibling = element->Clone();
-		model.InsertAlias(sibling.get(), iterator_name, std::move(iterator_address));
-		model.InsertAlias(sibling.get(), iterator_index_name, std::move(iterator_index_address));
-		element->GetParentNode()->InsertBefore(std::move(sibling), element.get());
+		Node* sibling = element->Clone();
+		model.InsertAlias(sibling, iterator_name, std::move(iterator_address));
+		model.InsertAlias(sibling, iterator_index_name, std::move(iterator_index_address));
+		element->GetParentNode()->InsertBefore(sibling, element.get());
 	}
 	for (size_t i = size; i < num_elements; ++i) {
-		Element* sibling = element->GetPreviousSibling();
+		Node* sibling = element->GetPreviousSibling();
 		model.EraseAliases(sibling);
 		element->GetParentNode()->RemoveChild(sibling);
 	}
@@ -168,18 +168,13 @@ bool DataViewFor::IsValid() const {
 	return static_cast<bool>(element);
 }
 
-DataViewText::DataViewText(Element* element)
+DataViewText::DataViewText(Text* element)
 	: DataView(element)
 	, element(element->GetObserverPtr())
 {}
 
 bool DataViewText::Initialize(DataModel& model) {
-	ElementText* element_text = dynamic_cast<ElementText*>(element.get());
-	if (!element_text)
-		return false;
-
-	const std::string& in_text = element_text->GetText();
-	
+	const std::string& in_text = element->GetText();
 	text.reserve(in_text.size());
 
 	DataExpressionInterface expression_interface(&model, element.get());
@@ -233,7 +228,7 @@ bool DataViewText::Update(DataModel& model) {
 	}
 
 	if (entries_modified) {
-		if (ElementText* text_element = static_cast<ElementText*>(element.get())) {
+		if (Text* text_element = static_cast<Text*>(element.get())) {
 			std::string new_text = BuildText();
 			text_element->SetText(new_text);
 		}

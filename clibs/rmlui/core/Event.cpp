@@ -22,8 +22,7 @@ Element* Event::GetTargetElement() const {
 	return target_element;
 }
 
-void Event::SetPhase(EventPhase _phase)
-{
+void Event::SetPhase(EventPhase _phase) {
 	phase = _phase;
 }
 

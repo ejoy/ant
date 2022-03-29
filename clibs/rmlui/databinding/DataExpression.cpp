@@ -990,7 +990,10 @@ std::vector<std::string> DataExpression::GetVariableNameList() const {
 	return list;
 }
 
-DataExpressionInterface::DataExpressionInterface(DataModel* data_model, Element* element, Event* event) : data_model(data_model), element(element), event(event)
+DataExpressionInterface::DataExpressionInterface(DataModel* data_model, Node* element, Event* event)
+	: data_model(data_model)
+	, element(element)
+	, event(event)
 {}
 
 DataAddress DataExpressionInterface::ParseAddress(const std::string& address_str) const {

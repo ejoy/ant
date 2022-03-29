@@ -50,9 +50,10 @@ namespace Rml {
 
 class Document;
 class Element;
-class ElementText;
+class Text;
 class ElementAnimation;
 class Event;
+class Node;
 class Property;
 class Transform;
 class PropertyIdSet;
@@ -65,12 +66,12 @@ using FileHandle = uintptr_t;
 using FontFaceHandle = uintptr_t;
 using TextEffectsHandle = uintptr_t;
 
+using NodePtr = std::unique_ptr<Node>;
 using ElementPtr = std::unique_ptr<Element>;
-using ElementList = std::vector< Element* >;
-using OwnedElementList = std::vector< ElementPtr >;
-using ElementAnimationList = std::vector< ElementAnimation >;
-using PropertyDictionary = std::unordered_map< PropertyId, Property >;
-using ElementAttributes = std::unordered_map< std::string, std::string >;
+using ElementList = std::vector<Element*>;
+using ElementAnimationList = std::vector<ElementAnimation>;
+using PropertyDictionary = std::unordered_map<PropertyId, Property>;
+using ElementAttributes = std::unordered_map<std::string, std::string>;
 using AnimationList = std::vector<Animation>;
 
 // Data binding types

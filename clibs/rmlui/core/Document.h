@@ -5,7 +5,7 @@
 
 namespace Rml {
 
-class ElementText;
+class Text;
 class StyleSheet;
 class DataModel;
 class DataModelConstructor;
@@ -35,8 +35,8 @@ public:
 	DataModel* GetDataModelPtr(const std::string& name) const;
 	Element* GetBody();
 	const Element* GetBody() const;
-	ElementPtr CreateElement(const std::string& tag);
-	ElementPtr CreateTextNode(const std::string& str);
+	Element*     CreateElement(const std::string& tag);
+	Text* CreateTextNode(const std::string& str);
 	void NotifyCustomElement(Element* e);
 	void DefineCustomElement(const std::string& name);
 	double GetCurrentTime();
