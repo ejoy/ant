@@ -5371,11 +5371,15 @@ luaopen_bgfx(lua_State *L) {
 		{ "encoder_end", lendEncoder },
 		{ "encoder_init", NULL },
 
+		{ "CINTERFACE", NULL },
+
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
 	lua_pushvalue(L, -1);
 	lua_pushcclosure(L, linitEncoder, 1);
 	lua_setfield(L, -2, "encoder_init");
+	lua_pushlightuserdata(L, bgfx_get_interface(BGFX_API_VERSION));
+	lua_setfield(L, -2, "CINTERFACE");
 	return 1;
 }
