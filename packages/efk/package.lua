@@ -1,3 +1,3 @@
 return {
-    name = "ant.ekf",
+    name = "ant.efk",
 }
