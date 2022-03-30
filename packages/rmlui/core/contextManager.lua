@@ -6,7 +6,7 @@ local createSandbox = require "core.sandbox.create"
 local elementFromPoint = rmlui.DocumentElementFromPoint
 local getBody = rmlui.DocumentGetBody
 local dispatchEvent = rmlui.ElementDispatchEvent
-local getParent = rmlui.ElementGetParent
+local getParent = rmlui.NodeGetParent
 local setPseudoClass = rmlui.ElementSetPseudoClass
 local project = rmlui.ElementProject
 

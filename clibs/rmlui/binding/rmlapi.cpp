@@ -1,9 +1,10 @@
 #include <lua.hpp>
 
 #include <core/Core.h>
-#include <core/Element.h>
 #include <core/Document.h>
+#include <core/Element.h>
 #include <core/EventListener.h>
+#include <core/Text.h>
 
 #include "luaplugin.h"
 #include "luabind.h"
@@ -75,6 +76,14 @@ lua_pushstdstring(lua_State* L, const std::string& str) {
 	lua_pushlstring(L, str.data(), str.size());
 }
 
+static int
+lua_pushRmlNode(lua_State* L, const Rml::Node* node) {
+	lua_pushlightuserdata(L, const_cast<Rml::Node*>(node));
+	lua_pushinteger(L, (lua_Integer)node->GetType());
+	return 2;
+}
+
+	
 namespace {
 
 struct EventListener final : public Rml::EventListener {
@@ -365,13 +374,12 @@ static int
 lElementGetChildren(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	if (lua_type(L, 2) != LUA_TNUMBER) {
-		lua_pushinteger(L, e->GetNumChildren());
+		lua_pushinteger(L, e->GetNumChildNodes());
 		return 1;
 	}
-	Rml::Element* child = e->GetChild((int)lua_tointeger(L, 2));
+	Rml::Node* child = e->GetChildNode((size_t)luaL_checkinteger(L, 2));
 	if (child) {
-		lua_pushlightuserdata(L, child);
-		return 1;
+		return lua_pushRmlNode(L, child);
 	}
 	return 0;
 }
@@ -384,17 +392,6 @@ lElementGetOwnerDocument(lua_State* L) {
 		return 0;
 	}
 	lua_pushlightuserdata(L, doc);
-	return 1;
-}
-
-static int
-lElementGetParent(lua_State* L) {
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	Rml::Element* parent = e->GetParentNode();
-	if (!parent) {
-		return 0;
-	}
-	lua_pushlightuserdata(L, parent);
 	return 1;
 }
 
@@ -453,19 +450,43 @@ lElementProject(lua_State* L) {
 }
 
 static int
-lElementClone(lua_State* L) {
+lElementDelete(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	Rml::Node* r = e->Clone();
-	if (!r) {
+	delete e;
+	return 0;
+}
+
+static int
+lNodeGetParent(lua_State* L) {
+	Rml::Node* e = lua_checkobject<Rml::Node>(L, 1);
+	Rml::Element* parent = e->GetParentNode();
+	if (!parent) {
 		return 0;
 	}
-	lua_pushlightuserdata(L, r);
+	lua_pushlightuserdata(L, parent);
 	return 1;
 }
 
 static int
-lElementDelete(lua_State* L) {
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+lNodeClone(lua_State* L) {
+	Rml::Node* e = lua_checkobject<Rml::Node>(L, 1);
+	Rml::Node* r = e->Clone();
+	if (!r) {
+		return 0;
+	}
+	return lua_pushRmlNode(L, r);
+}
+
+static int
+lTextGetText(lua_State* L) {
+	Rml::Text* e = lua_checkobject<Rml::Text>(L, 1);
+	lua_pushstdstring(L, e->GetText());
+	return 1;
+}
+
+static int
+lTextDelete(lua_State* L) {
+	Rml::Text* e = lua_checkobject<Rml::Text>(L, 1);
 	delete e;
 	return 0;
 }
@@ -563,7 +584,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementGetBounds", lElementGetBounds },
 		{ "ElementGetChildren", lElementGetChildren },
 		{ "ElementGetOwnerDocument", lElementGetOwnerDocument },
-		{ "ElementGetParent", lElementGetParent },
 		{ "ElementGetProperty", lElementGetProperty },
 		{ "ElementRemoveAttribute", lElementRemoveAttribute },
 		{ "ElementSetAttribute", lElementSetAttribute },
@@ -581,7 +601,10 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementAppendChild", lElementAppendChild },
 		{ "ElementDelete", lElementDelete },
 		{ "ElementProject", lElementProject },
-		{ "ElementClone", lElementClone },
+		{ "NodeGetParent", lNodeGetParent },
+		{ "NodeClone", lNodeClone },
+		{ "TextGetText", lTextGetText },
+		{ "TextDelete", lTextDelete },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
 		{ "RmlInitialise", lRmlInitialise },

@@ -11,7 +11,7 @@ namespace Rml {
     class Node {
 	public:
 		enum class Type {
-			Text,
+			Text = 0,
 			Element,
 		};
 		Node(Type type);

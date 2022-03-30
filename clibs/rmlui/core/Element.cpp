@@ -315,14 +315,24 @@ Document* Element::GetOwnerDocument() const {
 	return owner_document;
 }
 
-Element* Element::GetChild(int index) const {
-	if (index < 0 || index >= (int) children.size())
+Element* Element::GetChild(size_t index) const {
+	if (index < 0 || index >= children.size())
 		return nullptr;
 	return children[index];
 }
 
-int Element::GetNumChildren() const {
-	return (int)children.size();
+size_t Element::GetNumChildren() const {
+	return children.size();
+}
+
+Node* Element::GetChildNode(size_t index) const {
+	if (index < 0 || index >= childnodes.size())
+		return nullptr;
+	return childnodes[index].get();
+}
+
+size_t Element::GetNumChildNodes() const {
+	return childnodes.size();
 }
 
 void Element::SetInnerHTML(const std::string& html) {

@@ -1,7 +1,7 @@
 local rmlui = require "rmlui"
 local event = require "core.event"
 
-local createElement
+local constructorElement
 
 local attribute_mt = {}
 function attribute_mt:__index(name)
@@ -41,23 +41,18 @@ function property_init:addEventListener()
 end
 
 function property_init:ownerDocument()
-    local createDocument = require "core.DOM.document"
-    return createDocument(self._document)
-end
-
-function property_init:parentNode()
-    local parent = rmlui.ElementGetParent(self._handle)
-    if parent then
-        return createElement(parent, self._document)
-    end
+    local constructorDocument = require "core.DOM.document"
+    return constructorDocument(self._document)
 end
 
 function property_init:childNodes()
+    local document = self._document
+    local handle = self._handle
+    local constructorNode = require "core.DOM.node"
     local n = rmlui.ElementGetChildren(self._handle)
     local children = {}
     for i = 1, n do
-        local child = assert(rmlui.ElementGetChildren(self._handle, i-1))
-        children[i] = createElement(child, self._document)
+        children[i] = constructorNode(document, false, rmlui.ElementGetChildren(handle, i-1))
     end
     return children
 end
@@ -73,8 +68,9 @@ end
 function property_init:cloneNode()
     local document = self._document
     local handle = self._handle
+    local constructorNode = require "core.DOM.node"
     return function ()
-        return createElement(rmlui.ElementClone(handle), document, true)
+        return constructorNode(document, true, rmlui.NodeClone(handle))
     end
 end
 
@@ -113,6 +109,12 @@ for name, init in pairs(property_init) do
         rawset(self, name, v)
         return v
     end
+end
+
+function property_getter:parentNode()
+    local document = self._document
+    local handle = self._handle
+    return constructorElement(document, false, rmlui.NodeGetParent(handle))
 end
 
 function property_getter:clientLeft()
@@ -191,7 +193,7 @@ function property_mt:__newindex(name, value)
         return setter(self, value)
     end
     if property_getter[name] then
-        error("element property `" .. name .. "` readonly.")
+        error("property `" .. name .. "` readonly.")
     end
     rawset(self, name, value)
 end
@@ -222,12 +224,9 @@ function event.OnDocumentDestroy(handle)
     pool[handle] = nil
 end
 
-function createElement(handle, document, owner)
+function constructorElement(document, owner, handle)
     if handle == nil then
         return
-    end
-    if not document then
-        document = rmlui.ElementGetOwnerDocument(handle)
     end
     local _pool = pool[document]
     if not _pool then
@@ -242,4 +241,4 @@ function createElement(handle, document, owner)
     return o
 end
 
-return createElement
+return constructorElement

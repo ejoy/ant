@@ -50,8 +50,6 @@ public:
 	const std::string& GetId() const;
 	void SetId(const std::string& id);
 	Document* GetOwnerDocument() const;
-	Element* GetChild(int index) const;
-	int GetNumChildren() const;
 
 	void InstanceOuter(const HtmlElement& html);
 	void InstanceInner(const HtmlElement& html);
@@ -69,6 +67,12 @@ public:
 	void   InsertBefore(Node* child, Node* adjacent);
 	Node*  GetPreviousSibling();
 	void   RemoveAllChildren();
+
+	Element* GetChild(size_t index) const;
+	size_t GetNumChildren() const;
+
+	Node* GetChildNode(size_t index) const;
+	size_t GetNumChildNodes() const;
 
 	Element* GetElementById(const std::string& id);
 	void GetElementsByTagName(ElementList& elements, const std::string& tag);

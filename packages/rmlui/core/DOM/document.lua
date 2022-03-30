@@ -1,20 +1,21 @@
 local rmlui = require "rmlui"
 local event = require "core.event"
-local createElement = require "core.DOM.element"
+local constructorElement = require "core.DOM.element"
+local constructorTextNode = require "core.DOM.text"
 
 local function constructor(handle)
     local doc = {_handle = handle}
     function doc.getElementById(id)
-        return createElement(rmlui.DocumentGetElementById(handle, id), handle)
+        return constructorElement(handle, false, rmlui.DocumentGetElementById(handle, id))
     end
     function doc.createElement(tag)
-        return createElement(rmlui.DocumentCreateElement(handle, tag), handle, true)
+        return constructorElement(handle, true, rmlui.DocumentCreateElement(handle, tag))
     end
     function doc.createTextNode(text)
-        return createElement(rmlui.DocumentCreateTextNode(handle, text), handle, true)
+        return constructorTextNode(handle, true, rmlui.DocumentCreateTextNode(handle, text))
     end
     function doc.elementFromPoint(x, y)
-        return createElement(rmlui.DocumentElementFromPoint(handle, x, y), handle)
+        return constructorElement(handle, false, rmlui.DocumentElementFromPoint(handle, x, y))
     end
     return doc
 end
