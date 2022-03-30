@@ -1,10 +1,10 @@
 #pragma once
 
 #include <core/Variant.h>
-#include <databinding/DataExpression.h>
 #include <core/HtmlParser.h>
-#include <databinding/DataView.h>
 #include <core/ObserverPtr.h>
+#include <databinding/DataView.h>
+#include <databinding/DataExpression.h>
 
 namespace Rml {
 

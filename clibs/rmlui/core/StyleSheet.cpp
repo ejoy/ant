@@ -31,7 +31,6 @@
 #include <core/StyleSheetNode.h>
 #include <core/StyleSheetParser.h>
 #include <core/Element.h>
-#include <core/PropertyDefinition.h>
 #include <core/StyleSheetSpecification.h>
 #include <core/Property.h>
 #include <core/Log.h>

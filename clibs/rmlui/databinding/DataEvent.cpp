@@ -1,6 +1,5 @@
 #include <databinding/DataEvent.h>
 #include <core/Element.h>
-#include <core/Log.h>
 #include <core/Event.h>
 #include <databinding/DataExpression.h>
 #include <databinding/DataModel.h>
@@ -10,10 +9,10 @@ namespace Rml {
 struct DataEventListener : public EventListener {
 	DataEventListener(const std::string& type, bool use_capture, const std::string& expression_str)
 		: EventListener(type, use_capture)
-		, expression(expression_str)
+		, expression_str(expression_str)
 	{ }
 	bool Parse(const DataExpressionInterface& expression_interface, bool is_assignment_expression) {
-		return expression.Parse(expression_interface, is_assignment_expression);
+		return expression.Parse(expression_interface, expression_str, is_assignment_expression);
 	}
 	void OnDetach(Element *) override {}
 	void ProcessEvent(Event& event) override {
@@ -23,6 +22,7 @@ struct DataEventListener : public EventListener {
 		expression.Run(expr_interface, unused_value_out);
 	}
 	DataExpression expression;
+	std::string expression_str;
 };
 
 DataEvent::DataEvent(Element* element)

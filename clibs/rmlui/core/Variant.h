@@ -6,7 +6,6 @@
 
 namespace Rml {
 
-
 using Variant = std::variant<
 	std::monostate,
 	bool,

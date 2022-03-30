@@ -18,9 +18,9 @@ DataViewStyle::DataViewStyle(Element* element, const std::string& modifier)
 {}
 
 bool DataViewStyle::Initialize(DataModel& model, const std::string& expression_str) {
-	expression = std::make_unique<DataExpression>(expression_str);
+	expression = std::make_unique<DataExpression>();
 	DataExpressionInterface expr_interface(&model, element.get());
-	bool result = expression->Parse(expr_interface, false);
+	bool result = expression->Parse(expr_interface, expression_str, false);
 	return result;
 }
 
@@ -56,9 +56,9 @@ DataViewIf::DataViewIf(Element* element)
 {}
 
 bool DataViewIf::Initialize(DataModel& model, const std::string& expression_str) {
-	expression = std::make_unique<DataExpression>(expression_str);
+	expression = std::make_unique<DataExpression>();
 	DataExpressionInterface expr_interface(&model, element.get());
-	bool result = expression->Parse(expr_interface, false);
+	bool result = expression->Parse(expr_interface, expression_str, false);
 	return result;
 }
 
@@ -193,9 +193,9 @@ bool DataViewText::Initialize(DataModel& model) {
 
 		DataEntry entry;
 		entry.index = text.size();
-		entry.data_expression = std::make_unique<DataExpression>(std::string(in_text.begin() + begin_name, in_text.begin() + end_name));
-
-		if (entry.data_expression->Parse(expression_interface, false))
+		entry.data_expression = std::make_unique<DataExpression>();
+		std::string expression_str(in_text.begin() + begin_name, in_text.begin() + end_name);
+		if (entry.data_expression->Parse(expression_interface, expression_str, false))
 			data_entries.push_back(std::move(entry));
 
 		previous_close_brackets = end_name + 2;

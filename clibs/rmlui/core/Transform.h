@@ -1,8 +1,8 @@
 #pragma once
 
-#include <core/Types.h>
 #include <core/PropertyFloat.h>
 #include <variant>
+#include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 

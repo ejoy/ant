@@ -30,12 +30,13 @@
 #include <core/StyleSheetFactory.h>
 #include <core/StyleSheetNode.h>
 #include <core/Log.h>
-#include <core/PropertyDefinition.h>
+#include <core/Property.h>
 #include <core/Stream.h>
 #include <core/StyleSheet.h>
 #include <core/StyleSheetSpecification.h>
 #include <core/StringUtilities.h>
 #include <algorithm>
+#include <assert.h>
 #include <string.h>
 
 namespace Rml {

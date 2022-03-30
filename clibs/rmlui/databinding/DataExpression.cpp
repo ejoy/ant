@@ -954,29 +954,25 @@ private:
 };
 
 
-DataExpression::DataExpression(std::string expression) : expression(expression)
+DataExpression::DataExpression()
 {}
 
 DataExpression::~DataExpression()
 {}
 
-bool DataExpression::Parse(const DataExpressionInterface& expression_interface, bool is_assignment_expression) {
+bool DataExpression::Parse(const DataExpressionInterface& expression_interface, const std::string& expression, bool is_assignment_expression) {
 	DataParser parser(expression, expression_interface);
 	if (!parser.Parse(is_assignment_expression))
 		return false;
-
 	program = parser.ReleaseProgram();
 	addresses = parser.ReleaseAddresses();
-
 	return true;
 }
 
 bool DataExpression::Run(const DataExpressionInterface& expression_interface, Variant& out_value) {
 	DataInterpreter interpreter(program, addresses, expression_interface);
-	
 	if (!interpreter.Run())
 		return false;
-
 	out_value = interpreter.Result();
 	return true;
 }

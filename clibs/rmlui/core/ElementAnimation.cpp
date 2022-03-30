@@ -28,7 +28,6 @@
 
 #include <core/ElementAnimation.h>
 #include <core/Element.h>
-#include <core/PropertyDefinition.h>
 #include <core/StyleSheetSpecification.h>
 #include <core/Transform.h>
 #include <core/Log.h>

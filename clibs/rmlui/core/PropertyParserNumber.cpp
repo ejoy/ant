@@ -1,6 +1,6 @@
 #include <core/PropertyParserNumber.h>
 #include <core/StringUtilities.h>
-
+#include <unordered_map>
 #include <stdlib.h>
 
 namespace Rml {

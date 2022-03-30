@@ -1,12 +1,12 @@
 #pragma once
 
 #include <core/Property.h>
-#include <core/PropertyParser.h>
 #include <optional>
 
 namespace Rml {
 
 class Property;
+class PropertyParser;
 
 class PropertyDefinition final {
 public:
