@@ -4,6 +4,10 @@
 
 namespace Rml {
 
+Node::Node(Type type)
+	: type(type)
+{}
+
 Node::~Node()
 {}
 
@@ -49,6 +53,10 @@ void Node::DirtyLayout() {
 
 DataModel* Node::GetDataModel() const {
 	return data_model;
+}
+
+Node::Type Node::GetType() const {
+	return type;
 }
 
 }

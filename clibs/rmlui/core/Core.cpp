@@ -27,10 +27,7 @@
  */
 
 #include "core/Core.h"
-#include "core/FileInterface.h"
-#include "core/FontEngineInterface.h"
-#include "core/Plugin.h"
-#include "core/RenderInterface.h"
+#include "core/Interface.h"
 #include "core/StyleSheetSpecification.h"
 #include "core/Types.h"
 #include "core/Texture.h"

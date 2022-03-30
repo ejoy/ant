@@ -44,7 +44,6 @@
 #include <variant>
 #include <cstdlib>
 #include "Colour.h"
-#include "ObserverPtr.h"
 
 namespace Rml {
 
@@ -62,14 +61,9 @@ struct Transition;
 struct TransitionList;
 enum class PropertyId : uint8_t;
 
-using FileHandle = uintptr_t;
-using FontFaceHandle = uintptr_t;
-using TextEffectsHandle = uintptr_t;
-
 using NodePtr = std::unique_ptr<Node>;
 using ElementPtr = std::unique_ptr<Element>;
 using ElementList = std::vector<Element*>;
-using ElementAnimationList = std::vector<ElementAnimation>;
 using PropertyDictionary = std::unordered_map<PropertyId, Property>;
 using ElementAttributes = std::unordered_map<std::string, std::string>;
 using AnimationList = std::vector<Animation>;

@@ -163,7 +163,7 @@ protected:
 	std::unique_ptr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
 	mutable std::unique_ptr<glm::mat4x4> inv_transform;
-	ElementAnimationList animations;
+	std::vector<ElementAnimation> animations;
 	std::vector<std::string> classes;
 	PseudoClassSet pseudo_classes = 0;
 	std::vector<EventListener*> listeners;

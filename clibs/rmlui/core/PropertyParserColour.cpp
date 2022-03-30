@@ -169,7 +169,7 @@ static int HexToDecimal(char hex_digit) {
 
 std::optional<Property> PropertyParserColour::ParseValue(const std::string& value) const {
 	if (value.empty())
-		return {};
+		return std::nullopt;
 
 	Color colour(0,0,0,255);
 
@@ -198,7 +198,7 @@ std::optional<Property> PropertyParserColour::ParseValue(const std::string& valu
 						break;
 
 			default:
-				return {};
+				return std::nullopt;
 		}
 
 		uint8_t sRGB[4];
@@ -206,7 +206,7 @@ std::optional<Property> PropertyParserColour::ParseValue(const std::string& valu
 			int tens = HexToDecimal(hex_values[i][0]);
 			int ones = HexToDecimal(hex_values[i][1]);
 			if (tens == -1 || ones == -1)
-				return {};
+				return std::nullopt;
 			sRGB[i] = (tens * 16 + ones);
 		}
 		colour = ColorFromSRGB(sRGB[0], sRGB[1], sRGB[2], sRGB[3]);
@@ -218,7 +218,7 @@ std::optional<Property> PropertyParserColour::ParseValue(const std::string& valu
 
 		size_t find = value.find('(');
 		if (find == std::string::npos)
-			return {};
+			return std::nullopt;
 
 		size_t begin_values = find + 1;
 
@@ -228,12 +228,12 @@ std::optional<Property> PropertyParserColour::ParseValue(const std::string& valu
 		if (value.size() > 3 && value[3] == 'a')
 		{
 			if (values.size() != 4)
-				return {};
+				return std::nullopt;
 		}
 		else
 		{
 			if (values.size() != 3)
-				return {};
+				return std::nullopt;
 
 			values.push_back("255");
 		}
@@ -258,7 +258,7 @@ std::optional<Property> PropertyParserColour::ParseValue(const std::string& valu
 		// Check for the specification of an HTML colour.
 		auto iterator = html_colours.find(StringUtilities::ToLower(value));
 		if (iterator == html_colours.end())
-			return {};
+			return std::nullopt;
 		else
 			colour = (*iterator).second;
 	}

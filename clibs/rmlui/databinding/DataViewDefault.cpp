@@ -7,6 +7,7 @@
 #include "core/Variant.h"
 #include "core/Log.h"
 #include "core/StringUtilities.h"
+#include "core/ObserverPtr.h"
 
 namespace Rml {
 

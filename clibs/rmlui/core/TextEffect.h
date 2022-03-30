@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Types.h"
+#include "core/Colour.h"
 #include <variant>
 #include <vector>
 

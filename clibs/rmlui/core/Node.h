@@ -10,6 +10,11 @@ namespace Rml {
 
     class Node {
 	public:
+		enum class Type {
+			Text,
+			Element,
+		};
+		Node(Type type);
 		virtual ~Node();
 		bool UpdateVisible();
 		void UpdateMetrics(const Rect& child);
@@ -18,9 +23,10 @@ namespace Rml {
 
 		bool IsVisible() const;
 		void SetVisible(bool visible);
-		Element* GetParentNode() const;
 		void DirtyLayout();
+		Element* GetParentNode() const;
 		DataModel* GetDataModel() const;
+		Type GetType() const;
 
 		virtual void SetParentNode(Element* parent) = 0;
 		virtual void SetDataModel(DataModel* data_model) = 0;
@@ -39,5 +45,6 @@ namespace Rml {
 		Layout::Metrics metrics;
 		Element* parent = nullptr;
 		DataModel* data_model = nullptr;
+		Type type;
     };
 }

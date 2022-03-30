@@ -1,5 +1,5 @@
 #include "core/Texture.h"
-#include "core/RenderInterface.h"
+#include "core/Interface.h"
 #include "core/Core.h"
 #include "core/Log.h"
 

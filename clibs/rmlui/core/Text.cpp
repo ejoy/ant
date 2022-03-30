@@ -1,8 +1,7 @@
 #include "core/Text.h"
 #include "core/Core.h"
 #include "core/Document.h"
-#include "core/FontEngineInterface.h"
-#include "core/RenderInterface.h"
+#include "core/Interface.h"
 #include "core/Property.h"
 #include "core/Log.h"
 #include "core/StringUtilities.h"
@@ -16,7 +15,7 @@ static bool BuildToken(std::string& token, const char*& token_begin, const char*
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline);
 
 Text::Text(Document* owner, const std::string& text_)
-	: Node()
+	: Node(Node::Type::Text)
 	, text(text_)
 	, decoration() 
 {
@@ -513,7 +512,7 @@ std::optional<TextShadow> Text::GetTextShadow() {
 	if (shadow.offset_h || shadow.offset_v) {
 		return shadow;
 	}
-	return {};
+	return std::nullopt;
 }
 
 std::optional<TextStroke> Text::GetTextStroke() {
@@ -524,7 +523,7 @@ std::optional<TextStroke> Text::GetTextStroke() {
 	if (stroke.width) {
 		return stroke;
 	}
-	return {};
+	return std::nullopt;
 }
 
 Style::TextDecorationLine Text::GetTextDecorationLine() {
@@ -584,19 +583,12 @@ FontFaceHandle Text::GetFontFaceHandle() {
 }
 
 void Text::SetParentNode(Element* _parent) {
-	assert(!parent || !_parent);
-	if (parent) {
-		assert(_parent->GetOwnerDocument() == parent->GetOwnerDocument());
-	}
-
 	parent = _parent;
-
-	if (!parent) {
-		if (data_model)
-			SetDataModel(nullptr);
+	if (parent) {
+		SetDataModel(parent->GetDataModel());
 	}
 	else {
-		SetDataModel(parent->GetDataModel());
+		SetDataModel(nullptr);
 	}
 }
 

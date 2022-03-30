@@ -80,7 +80,7 @@ std::optional<Property> PropertyDefinition::ParseValue(const std::string& value)
 			return std::move(property);
 		}
 	}
-	return {};
+	return std::nullopt;
 
 }
 

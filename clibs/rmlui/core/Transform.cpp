@@ -74,7 +74,7 @@ static glm::mat4x4 perspective(float distance) {
 static std::optional<DecomposedMatrix4> decompose(const glm::mat4x4& m) {
 	DecomposedMatrix4 d;
 	if (!glm::decompose(m, d.scale, d.quaternion, d.translation, d.skew, d.perspective)) {
-		return {};
+		return std::nullopt;
 	}
 	return d;
 }

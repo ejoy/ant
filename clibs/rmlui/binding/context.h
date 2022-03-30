@@ -1,8 +1,8 @@
 #pragma once
 
 #include <bgfx/c99/bgfx.h>
-#include <core/Element.h>
-#include <core/Plugin.h>
+#include "core/Element.h"
+#include "core/Interface.h"
 #include <string>
 #include "luaplugin.h"
 

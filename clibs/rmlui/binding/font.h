@@ -2,7 +2,7 @@
 #include "context.h"
 #include "fonteffect.h"
 
-#include "core/FontEngineInterface.h"
+#include "core/Interface.h"
 #include "core/Texture.h"
 #include <unordered_map>
 #include <vector>

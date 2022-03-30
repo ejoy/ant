@@ -1,7 +1,7 @@
 #include "core/Stream.h"
 #include "core/Log.h"
 #include "core/Core.h"
-#include "core/FileInterface.h"
+#include "core/Interface.h"
 #include <stdio.h>
 #include <string.h>
 

@@ -10,8 +10,8 @@ extern "C" {
 
 #include "databinding/DataModelHandle.h"
 #include "databinding/DataVariable.h"
-#include <core/Element.h>
-#include <core/Document.h>
+#include "core/Element.h"
+#include "core/Document.h"
 
 struct LuaPushVariantVisitor {
 	lua_State* L;

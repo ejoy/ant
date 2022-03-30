@@ -2,8 +2,8 @@
 #include "render.h"
 #include "../bgfx/bgfx_interface.h"
 
-#include <core/Core.h>
-#include <core/FileInterface.h>
+#include "core/Core.h"
+#include "core/Interface.h"
 #include <cassert>
 
 #ifdef RMLUI_MATRIX_ROW_MAJOR

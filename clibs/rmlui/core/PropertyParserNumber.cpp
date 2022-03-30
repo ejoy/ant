@@ -58,13 +58,13 @@ std::optional<Property> PropertyParserNumber::ParseValue(const std::string& valu
 	float float_value = strtof(str_number.c_str(), &str_end);
 	if (str_number.c_str() == str_end) {
 		// Number conversion failed
-		return {};
+		return std::nullopt;
 	}
 
 	const auto it = g_property_unit_string_map.find(str_unit);
 	if (it == g_property_unit_string_map.end()) {
 		// Invalid unit name
-		return {};
+		return std::nullopt;
 	}
 
 	const PropertyUnit unit = it->second;
@@ -108,7 +108,7 @@ std::optional<Property> PropertyParserNumber::ParseValue(const std::string& valu
 			break;
 		}
 	}
-	return {};
+	return std::nullopt;
 }
 
 }

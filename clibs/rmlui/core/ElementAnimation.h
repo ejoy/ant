@@ -57,8 +57,7 @@ struct AnimationKey {
 // Transition: Animation started by the 'transition' property
 enum class ElementAnimationOrigin : uint8_t { User, Animation, Transition };
 
-class ElementAnimation
-{
+class ElementAnimation {
 private:
 	PropertyId property_id = PropertyId::Invalid;
 	float duration = 0;           // for a single iteration
@@ -80,9 +79,7 @@ public:
 		double start_world_time, float duration, int num_iterations, bool alternate_direction);
 
 	bool AddKey(float target_time, const Property & property, Element & element, Tween tween);
-
 	void UpdateAndGetProperty(double time, Element& element);
-
 	PropertyId GetPropertyId() const { return property_id; }
 	float GetDuration() const { return duration; }
 	bool IsComplete() const { return animation_complete; }
@@ -92,7 +89,6 @@ public:
 	ElementAnimationOrigin GetOrigin() const { return origin; }
 	void Release(Element& element);
 };
-
 
 }
 #endif

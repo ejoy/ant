@@ -150,7 +150,7 @@ std::optional<Property> PropertyParserTransform::ParseValue(const std::string& v
 		}
 		else
 		{
-			return {};
+			return std::nullopt;
 		}
 	}
 
@@ -220,11 +220,11 @@ bool PropertyParserTransform::Scan(int& out_bytes_read, const char* str, const c
 		bytes_read = 0;
 		sscanf(str, " %[^,)] %n", arg, &bytes_read);
 		if (bytes_read == 0) {
-			return {};
+			return false;
 		}
 		auto prop = parsers[i]->ParseValue(std::string(arg));
 		if (!prop) {
-			return {};
+			return false;
 		}
 
 		args[i] = prop.value().Get<PropertyFloat>();

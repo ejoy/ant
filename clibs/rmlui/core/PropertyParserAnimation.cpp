@@ -92,7 +92,7 @@ std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& v
 				case Keyword::NONE:
 				{
 					if (animation_list.size() > 0) // The none keyword can not be part of multiple definitions
-						return {};
+						return std::nullopt;
 					return AnimationList{};
 				}
 				break;
@@ -104,7 +104,7 @@ std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& v
 					break;
 				case Keyword::INFINITE:
 					if (num_iterations_found)
-						return {};
+						return std::nullopt;
 					animation.num_iterations = -1;
 					num_iterations_found = true;
 					break;
@@ -163,7 +163,7 @@ std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& v
 		// Validate the parsed transition
 		if (animation.name.empty() || animation.duration <= 0.0f || (animation.num_iterations < -1 || animation.num_iterations == 0))
 		{
-			return {};
+			return std::nullopt;
 		}
 
 		animation_list.push_back(std::move(animation));
@@ -200,7 +200,7 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 				if (it->second.type == Keyword::NONE)
 				{
 					if (transition_list.transitions.size() > 0) // The none keyword can not be part of multiple definitions
-						return {};
+						return std::nullopt;
 					return TransitionList{true, false, {}};
 				}
 				else if (it->second.type == Keyword::ALL)
@@ -248,14 +248,14 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 							transition.reverse_adjustment_factor = number;
 						}
 						else
-							return {};
+							return std::nullopt;
 					}
 				}
 				else
 				{
 					PropertyIdSet properties;
 					if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, argument)) {
-						return {};
+						return std::nullopt;
 					}
 					target_property_names |= properties;
 				}
@@ -264,18 +264,18 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 
 		// Validate the parsed transition
 		if (transition.duration <= 0.0f || transition.reverse_adjustment_factor < 0.0f || transition.reverse_adjustment_factor > 1.0f) {
-			return {};
+			return std::nullopt;
 		}
 
 		if (transition_list.all) {
 			if (!target_property_names.Empty()) {
-				return {};
+				return std::nullopt;
 			}
 			transition_list.transitions.push_back(transition);
 		}
 		else {
 			if (target_property_names.Empty()) {
-				return {};
+				return std::nullopt;
 			}
 			for (const auto& property_name : target_property_names) {
 				transition.id = property_name;

@@ -1,10 +1,10 @@
 #include "pch.h"
 
-#include <core/Plugin.h>
-#include <core/Document.h>
-#include <core/Stream.h>
-#include <core/Event.h>
-#include <core/EventListener.h>
+#include "core/Interface.h"
+#include "core/Document.h"
+#include "core/Stream.h"
+#include "core/Event.h"
+#include "core/EventListener.h"
 
 extern "C" {
 #include "lua.h"

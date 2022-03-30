@@ -5,6 +5,7 @@
 #include "databinding/DataExpression.h"
 #include "core/HtmlParser.h"
 #include "databinding/DataView.h"
+#include "core/ObserverPtr.h"
 
 namespace Rml {
 

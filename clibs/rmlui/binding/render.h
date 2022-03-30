@@ -1,7 +1,7 @@
 #pragma once
 #include "font.h"
 
-#include <core/RenderInterface.h>
+#include "core/Interface.h"
 #include <algorithm>
 #include <unordered_map>
 #include <bgfx/c99/bgfx.h>

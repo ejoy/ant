@@ -2,7 +2,7 @@
 
 #include "Element.h"
 #include "Geometry.h"
-#include "FontEngineInterface.h"
+#include "core/Interface.h"
 #include <optional>
 
 namespace Rml {

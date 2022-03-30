@@ -7,13 +7,12 @@
 #include "core/PropertyDefinition.h"
 #include "core/StyleSheetSpecification.h"
 #include "core/Transform.h"
-#include "core/RenderInterface.h"
+#include "core/Interface.h"
 #include "core/Stream.h"
 #include "core/Log.h"
 #include "core/StringUtilities.h"
 #include "core/EventListener.h"
 #include "core/Event.h"
-#include "core/Plugin.h"
 #include "core/Property.h"
 #include "databinding/DataModel.h"
 #include "ElementAnimation.h"
@@ -90,7 +89,8 @@ static glm::vec3 PerspectiveOrigin(Element* e) {
 }
 
 Element::Element(Document* owner, const std::string& tag)
-	: tag(tag)
+	: Node(Node::Type::Element)
+	, tag(tag)
 	, owner_document(owner)
 {
 	assert(tag == StringUtilities::ToLower(tag));
@@ -290,8 +290,7 @@ bool Element::HasAttribute(const std::string& name) const {
 
 void Element::RemoveAttribute(const std::string& name) {
 	auto it = attributes.find(name);
-	if (it != attributes.end())
-	{
+	if (it != attributes.end()) {
 		attributes.erase(it);
 
 		ElementAttributes changed_attributes;
@@ -739,20 +738,13 @@ void Element::SetDataModel(DataModel* new_data_model) {
 }
 
 void Element::SetParentNode(Element* _parent) {
-	assert(!parent || !_parent);
-	if (parent) {
-		assert(GetOwnerDocument() == parent->GetOwnerDocument());
-	}
-
 	parent = _parent;
 
 	if (parent) {
-		// We need to update our definition and make sure we inherit the properties of our new parent.
 		DirtyDefinition();
 		DirtyInheritedProperties();
 	}
 
-	// The transform state may require recalculation.
 	DirtyTransform();
 	DirtyClip();
 	DirtyPerspective();
@@ -1475,7 +1467,7 @@ std::optional<std::string> Element::GetProperty(const std::string& name) const {
 	PropertyIdSet properties;
 	if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name)) {
 		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
-		return {};
+		return std::nullopt;
 	}
 	std::string res;
 	for (auto property_id : properties) {

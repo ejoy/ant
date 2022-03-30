@@ -3,7 +3,7 @@
 
 #include "luabind.h"
 #include "luaref.h"
-#include "core/Plugin.h"
+#include "core/Interface.h"
 #include "core/Variant.h"
 
 class lua_event_listener;

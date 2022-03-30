@@ -64,7 +64,7 @@ namespace VariantHelper {
 	}
 	struct ToStringOptVisitor {
 		std::optional<std::string> operator()(std::monostate const& v) {
-			return {};
+			return std::nullopt;
 		}
 		std::optional<std::string> operator()(bool const& v) {
 			return v? "true": "false";
