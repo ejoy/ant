@@ -121,7 +121,7 @@ PropertyDefinition& StyleSheetSpecificationInstance::RegisterProperty(PropertyId
 	}
 	properties[index] = std::make_unique<PropertyDefinition>(id, default_value, inherited);
 	if (inherited)
-		property_ids_inherited.Insert(id);
+		property_ids_inherited.insert(id);
 	return *properties[index];
 }
 
@@ -135,7 +135,7 @@ PropertyDefinition& StyleSheetSpecificationInstance::RegisterProperty(PropertyId
 	}
 	properties[index] = std::make_unique<PropertyDefinition>(id, inherited);
 	if (inherited)
-		property_ids_inherited.Insert(id);
+		property_ids_inherited.insert(id);
 	return *properties[index];
 }
 
@@ -216,7 +216,7 @@ void StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyIdSet& s
 	for (size_t i = 0; i < shorthand_definition->items.size(); ++i) {
 		const ShorthandItem& item = shorthand_definition->items[i];
 		if (item.type == ShorthandItemType::Property)
-			set.Insert(item.property_id);
+			set.insert(item.property_id);
 		else if (item.type == ShorthandItemType::Shorthand)
 			ParseShorthandDeclaration(set, item.shorthand_id);
 	}
@@ -226,7 +226,7 @@ bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyIdSet& se
 	// Try as a property first
 	PropertyId property_id = MapGet(property_map, property_name);
 	if (property_id != PropertyId::Invalid) {
-		set.Insert(property_id);
+		set.insert(property_id);
 		return true;
 	}
 

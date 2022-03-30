@@ -205,10 +205,10 @@ void Text::CalculateLayout() {
 void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 	bool layout_changed = false;
 
-	if (changed_properties.Contains(PropertyId::FontFamily) ||
-		changed_properties.Contains(PropertyId::FontWeight) ||
-		changed_properties.Contains(PropertyId::FontStyle) ||
-		changed_properties.Contains(PropertyId::FontSize))
+	if (changed_properties.contains(PropertyId::FontFamily) ||
+		changed_properties.contains(PropertyId::FontWeight) ||
+		changed_properties.contains(PropertyId::FontStyle) ||
+		changed_properties.contains(PropertyId::FontSize))
 	{
 		DirtyLayout();
 		dirty_decoration = true;
@@ -217,16 +217,16 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 		layout_changed = true;
 	}
 
-	if (changed_properties.Contains(PropertyId::TextShadowH) ||
-		changed_properties.Contains(PropertyId::TextShadowV) ||
-		changed_properties.Contains(PropertyId::TextShadowColor) ||
-		changed_properties.Contains(PropertyId::TextStrokeWidth) ||
-		changed_properties.Contains(PropertyId::TextStrokeColor))
+	if (changed_properties.contains(PropertyId::TextShadowH) ||
+		changed_properties.contains(PropertyId::TextShadowV) ||
+		changed_properties.contains(PropertyId::TextShadowColor) ||
+		changed_properties.contains(PropertyId::TextStrokeWidth) ||
+		changed_properties.contains(PropertyId::TextStrokeColor))
 	{
 		dirty_effects = true;
 	}
 
-	if (changed_properties.Contains(PropertyId::LineHeight)) {
+	if (changed_properties.contains(PropertyId::LineHeight)) {
 		DirtyLayout();
 		dirty_decoration = true;
 		layout_changed = true;
@@ -236,13 +236,13 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 		return;
 	}
 
-	if (changed_properties.Contains(PropertyId::TextDecorationLine)) {
+	if (changed_properties.contains(PropertyId::TextDecorationLine)) {
 		dirty_decoration = true;
 	}
-	if (changed_properties.Contains(PropertyId::Opacity)) {
+	if (changed_properties.contains(PropertyId::Opacity)) {
 		dirty_effects = true;
 	}
-	if (changed_properties.Contains(PropertyId::Color) || changed_properties.Contains(PropertyId::Opacity)) {
+	if (changed_properties.contains(PropertyId::Color) || changed_properties.contains(PropertyId::Opacity)) {
 		dirty_geometry = true;
 		if (!dirty_decoration) {
 			Color col = GetTextDecorationColor();

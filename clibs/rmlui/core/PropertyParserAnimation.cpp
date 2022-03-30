@@ -267,13 +267,13 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 		}
 
 		if (transition_list.all) {
-			if (!target_property_names.Empty()) {
+			if (!target_property_names.empty()) {
 				return std::nullopt;
 			}
 			transition_list.transitions.push_back(transition);
 		}
 		else {
-			if (target_property_names.Empty()) {
+			if (target_property_names.empty()) {
 				return std::nullopt;
 			}
 			for (const auto& property_name : target_property_names) {

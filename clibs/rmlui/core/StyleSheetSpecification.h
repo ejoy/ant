@@ -1,11 +1,11 @@
 #pragma once
 
 #include <core/Types.h>
+#include <core/PropertyIdSet.h>
 
 namespace Rml {
 
 class PropertyDefinition;
-class PropertyIdSet;
 class PropertyParser;
 
 class StyleSheetSpecification {

@@ -42,7 +42,7 @@ static const Property* PropertyDictionaryGet(const PropertyDictionary& dict, Pro
 static PropertyIdSet PropertyDictionaryGetIds(const PropertyDictionary& dict) {
 	PropertyIdSet ids;
 	for (auto& [id, _] : dict) {
-		ids.Insert(id);
+		ids.insert(id);
 	}
 	return ids;
 }
@@ -51,17 +51,17 @@ static PropertyIdSet PropertyDictionaryDiff(const PropertyDictionary& dict0, con
 	PropertyIdSet mark;
 	PropertyIdSet ids;
 	for (auto& [id, p0] : dict0) {
-		mark.Insert(id);
+		mark.insert(id);
 		const Property* p1 = PropertyDictionaryGet(dict1, id);
 		if (!p1 || p0 != *p1) {
-			ids.Insert(id);
+			ids.insert(id);
 		}
 	}
 	for (auto& [id, p1] : dict1) {
-		if (!mark.Contains(id)) {
+		if (!mark.contains(id)) {
 			const Property* p0 = PropertyDictionaryGet(dict0, id);
 			if (!p0 || p1 != *p0) {
-				ids.Insert(id);
+				ids.insert(id);
 			}
 		}
 	}
@@ -567,13 +567,13 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
 
 void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 	const bool border_radius_changed = (
-		changed_properties.Contains(PropertyId::BorderTopLeftRadius) ||
-		changed_properties.Contains(PropertyId::BorderTopRightRadius) ||
-		changed_properties.Contains(PropertyId::BorderBottomRightRadius) ||
-		changed_properties.Contains(PropertyId::BorderBottomLeftRadius)
+		changed_properties.contains(PropertyId::BorderTopLeftRadius) ||
+		changed_properties.contains(PropertyId::BorderTopRightRadius) ||
+		changed_properties.contains(PropertyId::BorderBottomRightRadius) ||
+		changed_properties.contains(PropertyId::BorderBottomLeftRadius)
 		);
 
-	if (changed_properties.Contains(PropertyId::Display)) {
+	if (changed_properties.contains(PropertyId::Display)) {
 		// Due to structural pseudo-classes, this may change the element definition in siblings and parent.
 		// However, the definitions will only be changed on the next update loop which may result in jarring behavior for one @frame.
 		// A possible workaround is to add the parent to a list of elements that need to be updated again.
@@ -581,7 +581,7 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 			parent->DirtyStructure();
 	}
 
-	if (changed_properties.Contains(PropertyId::ZIndex)) {
+	if (changed_properties.contains(PropertyId::ZIndex)) {
 		float new_z_index = 0;
 		const Property* property = GetComputedProperty(PropertyId::ZIndex);
 		if (property->Has<PropertyFloat>()) {
@@ -596,58 +596,58 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 	}
 
 	if (border_radius_changed ||
-		changed_properties.Contains(PropertyId::BackgroundColor) ||
-		changed_properties.Contains(PropertyId::BackgroundImage) ||
-		changed_properties.Contains(PropertyId::Opacity))
+		changed_properties.contains(PropertyId::BackgroundColor) ||
+		changed_properties.contains(PropertyId::BackgroundImage) ||
+		changed_properties.contains(PropertyId::Opacity))
 	{
 		dirty_background = true;
 	}
 
 	if (border_radius_changed ||
-		changed_properties.Contains(PropertyId::BorderTopWidth) ||
-		changed_properties.Contains(PropertyId::BorderRightWidth) ||
-		changed_properties.Contains(PropertyId::BorderBottomWidth) ||
-		changed_properties.Contains(PropertyId::BorderLeftWidth) ||
-		changed_properties.Contains(PropertyId::BorderTopColor) ||
-		changed_properties.Contains(PropertyId::BorderRightColor) ||
-		changed_properties.Contains(PropertyId::BorderBottomColor) ||
-		changed_properties.Contains(PropertyId::BorderLeftColor) ||
-		changed_properties.Contains(PropertyId::Opacity))
+		changed_properties.contains(PropertyId::BorderTopWidth) ||
+		changed_properties.contains(PropertyId::BorderRightWidth) ||
+		changed_properties.contains(PropertyId::BorderBottomWidth) ||
+		changed_properties.contains(PropertyId::BorderLeftWidth) ||
+		changed_properties.contains(PropertyId::BorderTopColor) ||
+		changed_properties.contains(PropertyId::BorderRightColor) ||
+		changed_properties.contains(PropertyId::BorderBottomColor) ||
+		changed_properties.contains(PropertyId::BorderLeftColor) ||
+		changed_properties.contains(PropertyId::Opacity))
 	{
 		dirty_background = true;
 	}
 
-	if (changed_properties.Contains(PropertyId::OutlineWidth) ||
-		changed_properties.Contains(PropertyId::OutlineColor))
+	if (changed_properties.contains(PropertyId::OutlineWidth) ||
+		changed_properties.contains(PropertyId::OutlineColor))
 	{
 		dirty_background = true;
 	}
 
 	if (border_radius_changed ||
-		changed_properties.Contains(PropertyId::BackgroundImage) ||
-		changed_properties.Contains(PropertyId::BackgroundOrigin) ||
-		changed_properties.Contains(PropertyId::BackgroundSize) ||
-		changed_properties.Contains(PropertyId::BackgroundSizeX) ||
-		changed_properties.Contains(PropertyId::BackgroundSizeY) ||
-		changed_properties.Contains(PropertyId::BackgroundPositionX) ||
-		changed_properties.Contains(PropertyId::BackgroundPositionY) ||
-		changed_properties.Contains(PropertyId::BackgroundRepeat) ||
-		changed_properties.Contains(PropertyId::Opacity))
+		changed_properties.contains(PropertyId::BackgroundImage) ||
+		changed_properties.contains(PropertyId::BackgroundOrigin) ||
+		changed_properties.contains(PropertyId::BackgroundSize) ||
+		changed_properties.contains(PropertyId::BackgroundSizeX) ||
+		changed_properties.contains(PropertyId::BackgroundSizeY) ||
+		changed_properties.contains(PropertyId::BackgroundPositionX) ||
+		changed_properties.contains(PropertyId::BackgroundPositionY) ||
+		changed_properties.contains(PropertyId::BackgroundRepeat) ||
+		changed_properties.contains(PropertyId::Opacity))
 	{
 		dirty_image = true;
 	}
 
-	if (changed_properties.Contains(PropertyId::Perspective) ||
-		changed_properties.Contains(PropertyId::PerspectiveOriginX) ||
-		changed_properties.Contains(PropertyId::PerspectiveOriginY))
+	if (changed_properties.contains(PropertyId::Perspective) ||
+		changed_properties.contains(PropertyId::PerspectiveOriginX) ||
+		changed_properties.contains(PropertyId::PerspectiveOriginY))
 	{
 		DirtyPerspective();
 	}
 
-	if (changed_properties.Contains(PropertyId::Transform) ||
-		changed_properties.Contains(PropertyId::TransformOriginX) ||
-		changed_properties.Contains(PropertyId::TransformOriginY) ||
-		changed_properties.Contains(PropertyId::TransformOriginZ))
+	if (changed_properties.contains(PropertyId::Transform) ||
+		changed_properties.contains(PropertyId::TransformOriginX) ||
+		changed_properties.contains(PropertyId::TransformOriginY) ||
+		changed_properties.contains(PropertyId::TransformOriginZ))
 	{
 		DirtyTransform();
 		if (clip.type != Clip::Type::None) {
@@ -655,23 +655,23 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 		}
 	}
 
-	if (changed_properties.Contains(PropertyId::ScrollLeft) ||
-		changed_properties.Contains(PropertyId::ScrollTop))
+	if (changed_properties.contains(PropertyId::ScrollLeft) ||
+		changed_properties.contains(PropertyId::ScrollTop))
 	{
 		for (auto& child : children) {
 			child->DirtyTransform();
 		}
 	}
 
-	if (changed_properties.Contains(PropertyId::Overflow)) {
+	if (changed_properties.contains(PropertyId::Overflow)) {
 		DirtyClip();
 	}
 
-	if (changed_properties.Contains(PropertyId::Animation)) {
+	if (changed_properties.contains(PropertyId::Animation)) {
 		dirty_animation = true;
 	}
 
-	if (changed_properties.Contains(PropertyId::Transition)) {
+	if (changed_properties.contains(PropertyId::Transition)) {
 		dirty_transition = true;
 	}
 
@@ -1470,7 +1470,8 @@ std::optional<std::string> Element::GetProperty(const std::string& name) const {
 		return std::nullopt;
 	}
 	std::string res;
-	for (auto property_id : properties) {
+	
+  for (const auto& property_id : properties) {
 		const Property* property = GetProperty(property_id);
 		if (property) {
 			if (!res.empty()) {
@@ -1540,14 +1541,14 @@ void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const P
 	};
 	if (transition_list->all) {
 		Transition transition = transition_list->transitions[0];
-		for (auto it = properties.begin(); it != properties.end(); ++it) {
-			transition.id = *it;
+		for (auto const& id : properties) {
+			transition.id = id;
 			add_transition(transition);
 		}
 	}
 	else {
 		for (auto& transition : transition_list->transitions) {
-			if (properties.Contains(transition.id)) {
+			if (properties.contains(transition.id)) {
 				add_transition(transition);
 			}
 		}
@@ -1585,10 +1586,10 @@ void Element::UpdateDefinition() {
 			PropertyIdSet changed_properties = PropertyDictionaryDiff(definition_properties->prop, new_definition->prop);
 			for (PropertyId id : changed_properties) {
 				if (PropertyDictionaryGet(inline_properties, id)) {
-					changed_properties.Erase(id);
+					changed_properties.erase(id);
 				}
 			}
-			if (!changed_properties.Empty()) {
+			if (!changed_properties.empty()) {
 				TransitionPropertyChanges(changed_properties, new_definition->prop);
 			}
 			definition_properties = new_definition;
@@ -1662,18 +1663,18 @@ void Element::DirtyInheritedProperties() {
 void Element::ForeachProperties(std::function<void(PropertyId id, const Property& property)> f) {
 	PropertyIdSet mark;
 	for (auto& [id, property] : animation_properties) {
-		mark.Insert(id);
+		mark.insert(id);
 		f(id, property);
 	}
 	for (auto& [id, property] : inline_properties) {
-		if (!mark.Contains(id)) {
-			mark.Insert(id);
+		if (!mark.contains(id)) {
+			mark.insert(id);
 			f(id, property);
 		}
 	}
 	if (definition_properties) {
 		for (auto& [id, property] : definition_properties->prop) {
-			if (!mark.Contains(id)) {
+			if (!mark.contains(id)) {
 				f(id, property);
 			}
 		}
@@ -1681,7 +1682,7 @@ void Element::ForeachProperties(std::function<void(PropertyId id, const Property
 }
 
 void Element::DirtyProperty(PropertyId id) {
-	dirty_properties.Insert(id);
+	dirty_properties.insert(id);
 }
 
 void Element::DirtyProperties(const PropertyIdSet& properties) {
@@ -1689,22 +1690,22 @@ void Element::DirtyProperties(const PropertyIdSet& properties) {
 }
 
 void Element::UpdateProperties() {
-	if (dirty_properties.Empty()) {
+	if (dirty_properties.empty()) {
 		return;
 	}
 
 	bool dirty_em_properties = false;
-	if (dirty_properties.Contains(PropertyId::FontSize)) {
+	if (dirty_properties.contains(PropertyId::FontSize)) {
 		if (UpdataFontSize()) {
 			dirty_em_properties = true;
-			dirty_properties.Insert(PropertyId::LineHeight);
+			dirty_properties.insert(PropertyId::LineHeight);
 		}
 	}
 
 	ForeachProperties([&](PropertyId id, const Property& property){
 		if (dirty_em_properties && property.Has<PropertyFloat>() && property.Get<PropertyFloat>().unit == PropertyUnit::EM)
-			dirty_properties.Insert(id);
-		if (!dirty_properties.Contains(id)) {
+			dirty_properties.insert(id);
+		if (!dirty_properties.contains(id)) {
 			return;
 		}
 
@@ -1755,15 +1756,15 @@ void Element::UpdateProperties() {
 
 	// Next, pass inheritable dirty properties onto our children
 	PropertyIdSet dirty_inherited_properties = (dirty_properties & StyleSheetSpecification::GetRegisteredInheritedProperties());
-	if (!dirty_inherited_properties.Empty()) {
+	if (!dirty_inherited_properties.empty()) {
 		for (auto& child : children) {
 			child->DirtyProperties(dirty_inherited_properties);
 		}
 	}
 
-	if (!dirty_properties.Empty()) {
+	if (!dirty_properties.empty()) {
 		ChangedProperties(dirty_properties);
-		dirty_properties.Clear();
+		dirty_properties.clear();
 	}
 }
 

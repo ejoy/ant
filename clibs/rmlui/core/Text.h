@@ -4,11 +4,10 @@
 #include <core/ObserverPtr.h>
 #include <core/Geometry.h>
 #include <core/Interface.h>
+#include <core/PropertyIdSet.h>
 #include <optional>
 
 namespace Rml {
-
-class PropertyIdSet;
 
 class Text final : public Node, public EnableObserverPtr<Text> {
 public:
