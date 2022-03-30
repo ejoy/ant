@@ -26,9 +26,10 @@
  *
  */
 
-#include "core/StringUtilities.h"
-#include "core/Log.h"
+#include <core/StringUtilities.h>
+#include <core/Log.h>
 #include <algorithm>
+#include <assert.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>

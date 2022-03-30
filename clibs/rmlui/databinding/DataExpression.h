@@ -29,12 +29,12 @@
 #ifndef RMLUI_CORE_DATAEXPRESSION_H
 #define RMLUI_CORE_DATAEXPRESSION_H
 
-#include "core/Types.h"
-#include "databinding/DataTypes.h"
+#include <databinding/DataTypes.h>
 
 namespace Rml {
 
 class Element;
+class Node;
 class DataModel;
 struct InstructionData;
 using Program = std::vector<InstructionData>;

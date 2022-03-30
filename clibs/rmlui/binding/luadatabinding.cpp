@@ -1,17 +1,14 @@
 #include "pch.h"
 
-extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-}
+#include <lua.hpp>
 
 #include "luaplugin.h"
 #include "luabind.h"
 
-#include "databinding/DataModelHandle.h"
-#include "databinding/DataVariable.h"
-#include "core/Element.h"
-#include "core/Document.h"
+#include <databinding/DataModelHandle.h>
+#include <databinding/DataVariable.h>
+#include <core/Element.h>
+#include <core/Document.h>
 
 struct LuaPushVariantVisitor {
 	lua_State* L;

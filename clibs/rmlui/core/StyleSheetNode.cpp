@@ -26,10 +26,10 @@
  *
  */
 
-#include "StyleSheetNode.h"
-#include "core/Element.h"
-#include "StyleSheetFactory.h"
-#include "StyleSheetNodeSelector.h"
+#include <core/StyleSheetNode.h>
+#include <core/Element.h>
+#include <core/StyleSheetFactory.h>
+#include <core/StyleSheetNodeSelector.h>
 #include <algorithm>
 #include <bit>
 

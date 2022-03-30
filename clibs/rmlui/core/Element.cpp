@@ -1,28 +1,28 @@
-#include "core/Element.h"
-#include "core/Text.h"
-#include "core/Core.h"
-#include "core/Document.h"
-#include "databinding/DataUtilities.h"
-#include "core/PropertyIdSet.h"
-#include "core/PropertyDefinition.h"
-#include "core/StyleSheetSpecification.h"
-#include "core/Transform.h"
-#include "core/Interface.h"
-#include "core/Stream.h"
-#include "core/Log.h"
-#include "core/StringUtilities.h"
-#include "core/EventListener.h"
-#include "core/Event.h"
-#include "core/Property.h"
-#include "databinding/DataModel.h"
-#include "ElementAnimation.h"
-#include "ElementBackgroundBorder.h"
-#include "EventDispatcher.h"
-#include "ElementBackgroundImage.h"
-#include "StyleSheetParser.h"
-#include "StyleSheetNode.h"
-#include "StyleSheetFactory.h"
-#include "HtmlParser.h"
+#include <core/Element.h>
+#include <core/Core.h>
+#include <core/Document.h>
+#include <core/ElementAnimation.h>
+#include <core/ElementBackgroundBorder.h>
+#include <core/ElementBackgroundImage.h>
+#include <core/Event.h>
+#include <core/EventDispatcher.h>
+#include <core/EventListener.h>
+#include <core/HtmlParser.h>
+#include <core/Interface.h>
+#include <core/Log.h>
+#include <core/Property.h>
+#include <core/PropertyDefinition.h>
+#include <core/PropertyIdSet.h>
+#include <core/Stream.h>
+#include <core/StringUtilities.h>
+#include <core/StyleSheetFactory.h>
+#include <core/StyleSheetNode.h>
+#include <core/StyleSheetParser.h>
+#include <core/StyleSheetSpecification.h>
+#include <core/Text.h>
+#include <core/Transform.h>
+#include <databinding/DataModel.h>
+#include <databinding/DataUtilities.h>
 #include <algorithm>
 #include <cmath>
 #include <yoga/YGNode.h>
@@ -434,7 +434,7 @@ void Element::RemoveChild(Node* node) {
 	if (index == -1) {
 		return;
 	}
-	NodePtr detached_child = std::move(childnodes[index]);
+	auto detached_child = std::move(childnodes[index]);
 	children.erase(children.begin() + index);
 	for (auto it = children.begin(); it != children.end(); ++it) {
 		if (*it == node) {

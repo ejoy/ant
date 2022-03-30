@@ -29,9 +29,9 @@
 #ifndef RMLUI_CORE_ELEMENTANIMATION_H
 #define RMLUI_CORE_ELEMENTANIMATION_H
 
-#include "core/Property.h"
-#include "core/Tween.h"
-#include "core/ID.h"
+#include <core/Property.h>
+#include <core/Tween.h>
+#include <core/ID.h>
 
 
 namespace Rml {

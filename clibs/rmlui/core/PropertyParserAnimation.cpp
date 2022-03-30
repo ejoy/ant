@@ -1,11 +1,11 @@
-#include "PropertyParserAnimation.h"
-#include "PropertyShorthandDefinition.h"
-#include "core/PropertyDefinition.h"
-#include "core/PropertyIdSet.h"
-#include "core/StringUtilities.h"
-#include "core/StyleSheetSpecification.h"
-#include "core/Tween.h"
-#include "core/Property.h"
+#include <core/PropertyParserAnimation.h>
+#include <core/PropertyShorthandDefinition.h>
+#include <core/PropertyDefinition.h>
+#include <core/PropertyIdSet.h>
+#include <core/StringUtilities.h>
+#include <core/StyleSheetSpecification.h>
+#include <core/Tween.h>
+#include <core/Property.h>
 
 namespace Rml {
 

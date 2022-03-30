@@ -26,12 +26,13 @@
  *
  */
 
-#include "databinding/DataExpression.h"
-#include "databinding/DataModelHandle.h"
-#include "core/Variant.h"
-#include "core/Log.h"
-#include "core/StringUtilities.h"
-#include "databinding/DataModel.h"
+#include <databinding/DataExpression.h>
+#include <databinding/DataModelHandle.h>
+#include <core/Variant.h>
+#include <core/Log.h>
+#include <core/StringUtilities.h>
+#include <databinding/DataModel.h>
+#include <assert.h>
 #include <stack>
 
 #ifdef _MSC_VER

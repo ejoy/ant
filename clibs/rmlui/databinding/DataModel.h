@@ -29,14 +29,21 @@
 #ifndef RMLUI_CORE_DATAMODEL_H
 #define RMLUI_CORE_DATAMODEL_H
 
-#include "core/Types.h"
-#include "databinding/DataTypes.h"
-#include "databinding/DataVariable.h"
-#include <set>
+#include <databinding/DataTypes.h>
+#include <databinding/DataVariable.h>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace Rml {
 
 class Element;
+class Node;
+
+class DataView;
+using DataViewPtr = std::unique_ptr<DataView>;
+class DataEvent;
+using DataEventPtr = std::unique_ptr<DataEvent>;
 
 class DataModel {
 public:
@@ -66,7 +73,7 @@ public:
 
 	// Elements declaring 'data-model' need to be attached.
 	void AttachModelRootElement(Element* element);
-	ElementList GetAttachedModelRootElements() const;
+	std::vector<Element*> GetAttachedModelRootElements() const;
 
 	void OnElementRemove(Element* element);
 

@@ -26,12 +26,12 @@
  *
  */
 
-#include "ElementBackgroundImage.h"
-#include "core/Texture.h"
-#include "core/Element.h"
-#include "core/Geometry.h"
-#include "core/Document.h"
-#include "core/Core.h"
+#include <core/ElementBackgroundImage.h>
+#include <core/Texture.h>
+#include <core/Element.h>
+#include <core/Geometry.h>
+#include <core/Document.h>
+#include <core/Core.h>
 
 namespace Rml {
 

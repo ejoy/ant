@@ -1,8 +1,7 @@
 #pragma once
 
-#include "core/Types.h"
-#include "core/EventListener.h"
-#include "databinding/DataVariable.h"
+#include <core/EventListener.h>
+#include <databinding/DataVariable.h>
 
 namespace Rml {
 

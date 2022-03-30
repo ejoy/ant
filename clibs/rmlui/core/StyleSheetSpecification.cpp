@@ -1,15 +1,17 @@
-#include "core/StyleSheetSpecification.h"
-#include "core/PropertyIdSet.h"
-#include "core/PropertyDefinition.h"
-#include "core/Log.h"
-#include "core/StringUtilities.h"
-#include "PropertyParserNumber.h"
-#include "PropertyParserAnimation.h"
-#include "PropertyParserColour.h"
-#include "PropertyParserKeyword.h"
-#include "PropertyParserString.h"
-#include "PropertyParserTransform.h"
-#include "PropertyShorthandDefinition.h"
+#include <core/StyleSheetSpecification.h>
+#include <core/PropertyIdSet.h>
+#include <core/PropertyDefinition.h>
+#include <core/Log.h>
+#include <core/StringUtilities.h>
+#include <core/PropertyParserNumber.h>
+#include <core/PropertyParserAnimation.h>
+#include <core/PropertyParserColour.h>
+#include <core/PropertyParserKeyword.h>
+#include <core/PropertyParserString.h>
+#include <core/PropertyParserTransform.h>
+#include <core/PropertyShorthandDefinition.h>
+#include <array>
+#include <memory>
 
 namespace Rml {
 

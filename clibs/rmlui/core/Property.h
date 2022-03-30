@@ -1,16 +1,16 @@
 #pragma once
 
-#include "Colour.h"
-#include "Types.h"
-#include "Animation.h"
-#include "Transform.h"
+#include <core/Colour.h>
+#include <core/Animation.h>
+#include <core/Transform.h>
 #include <variant>
 #include <string>
-#include "PropertyFloat.h"
+#include <core/PropertyFloat.h>
 
 namespace Rml {
 
 using PropertyKeyword = int;
+using AnimationList = std::vector<Animation>;
 
 using PropertyVariant = std::variant<
 	PropertyFloat,
@@ -52,5 +52,8 @@ public:
 	template <typename T>
 	bool Has() const { return std::holds_alternative<T>(*this); }
 };
+
+template <typename T>
+T InterpolateFallback(const T& p0, const T& p1, float alpha) { return alpha < 1.f ? p0 : p1; }
 
 }

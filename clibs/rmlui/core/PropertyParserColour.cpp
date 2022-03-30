@@ -1,8 +1,9 @@
-#include "PropertyParserColour.h"
-#include "core/StringUtilities.h"
-#include "core/Property.h"
+#include <core/PropertyParserColour.h>
+#include <core/StringUtilities.h>
+#include <core/Property.h>
 #include <string.h>
 #include <unordered_map>
+#include <algorithm>
 
 namespace Rml {
 

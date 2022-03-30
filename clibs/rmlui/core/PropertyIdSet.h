@@ -28,9 +28,9 @@
 #ifndef RMLUI_CORE_PROPERTYIDSET_H
 #define RMLUI_CORE_PROPERTYIDSET_H
 
-#include "Types.h"
-#include "ID.h"
+#include <core/ID.h>
 #include <bitset>
+#include <assert.h>
 
 namespace Rml {
 

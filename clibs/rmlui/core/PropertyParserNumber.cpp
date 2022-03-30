@@ -1,5 +1,5 @@
-#include "PropertyParserNumber.h"
-#include "core/StringUtilities.h"
+#include <core/PropertyParserNumber.h>
+#include <core/StringUtilities.h>
 
 #include <stdlib.h>
 

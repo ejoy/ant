@@ -29,9 +29,8 @@
 #ifndef RMLUI_CORE_DATAMODELHANDLE_H
 #define RMLUI_CORE_DATAMODELHANDLE_H
 
-#include "core/Types.h"
-#include "databinding/DataTypes.h"
-#include "databinding/DataVariable.h"
+#include <databinding/DataTypes.h>
+#include <databinding/DataVariable.h>
 
 namespace Rml {
 

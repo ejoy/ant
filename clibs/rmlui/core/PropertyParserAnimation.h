@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/PropertyParser.h"
+#include <core/PropertyParser.h>
 
 namespace Rml {
 

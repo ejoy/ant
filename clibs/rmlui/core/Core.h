@@ -29,8 +29,6 @@
 #ifndef RMLUI_CORE_CORE_H
 #define RMLUI_CORE_CORE_H
 
-#include "Types.h"
-
 namespace Rml {
 
 class Plugin;

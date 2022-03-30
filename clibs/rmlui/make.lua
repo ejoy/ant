@@ -17,7 +17,6 @@ lm:source_set "yoga" {
 
 lm:source_set "rmlui_core" {
     includes = {
-        "core",
         ".",
         Ant3rd .. "glm",
         Ant3rd .. "yoga",
@@ -25,28 +24,45 @@ lm:source_set "rmlui_core" {
     defines = "GLM_FORCE_QUAT_DATA_XYZW",
     sources = {
         "core/*.cpp",
+    }
+}
+
+lm:source_set "rmlui_databinding" {
+    includes = {
+        ".",
+        Ant3rd .. "glm",
+        Ant3rd .. "yoga",
+    },
+    defines = "GLM_FORCE_QUAT_DATA_XYZW",
+    sources = {
         "databinding/*.cpp",
+    }
+}
+
+lm:source_set "rmlui_binding" {
+    includes = {
+        ".",
+        LuaInclude,
+        Ant3rd .. "bgfx/include",
+        Ant3rd .. "bx/include",
+        Ant3rd .. "bgfx/3rdparty",
+        Ant3rd .. "glm",
+        Ant3rd .. "yoga",
+        "../luabind",
+    },
+    defines = "GLM_FORCE_QUAT_DATA_XYZW",
+    sources = {
+        "binding/*.cpp",
     }
 }
 
 lm:source_set "source_rmlui" {
     deps = {
         "yoga",
-        "rmlui_core",
         "luabind",
-    },
-    includes = {
-        LuaInclude,
-        Ant3rd .. "bgfx/include",
-        Ant3rd .. "bx/include",
-        Ant3rd .. "glm",
-        Ant3rd .. "bgfx/3rdparty",
-        Ant3rd .. "yoga",
-        "../luabind",
-        ".",
-    },
-    sources = {
-        "binding/*.cpp",
+        "rmlui_core",
+        "rmlui_databinding",
+        "rmlui_binding",
     },
     windows = {
         links = "user32"

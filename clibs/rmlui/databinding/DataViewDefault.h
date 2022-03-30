@@ -1,14 +1,14 @@
 #pragma once
 
-#include "core/Types.h"
-#include "core/Variant.h"
-#include "databinding/DataExpression.h"
-#include "core/HtmlParser.h"
-#include "databinding/DataView.h"
-#include "core/ObserverPtr.h"
+#include <core/Variant.h>
+#include <databinding/DataExpression.h>
+#include <core/HtmlParser.h>
+#include <databinding/DataView.h>
+#include <core/ObserverPtr.h>
 
 namespace Rml {
 
+class Text;
 class Element;
 class DataExpression;
 using DataExpressionPtr = std::unique_ptr<DataExpression>;

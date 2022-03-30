@@ -26,10 +26,10 @@
  *
  */
 
-#include "core/PropertyDefinition.h"
-#include "core/Log.h"
-#include "core/StyleSheetSpecification.h"
-#include "core/StringUtilities.h"
+#include <core/PropertyDefinition.h>
+#include <core/Log.h>
+#include <core/StyleSheetSpecification.h>
+#include <core/StringUtilities.h>
 
 namespace Rml {
 

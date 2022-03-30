@@ -26,8 +26,9 @@
  *
  */
 
-#include "databinding/DataModelHandle.h"
-#include "databinding/DataModel.h"
+#include <databinding/DataModelHandle.h>
+#include <databinding/DataModel.h>
+#include <assert.h>
 
 namespace Rml {
 

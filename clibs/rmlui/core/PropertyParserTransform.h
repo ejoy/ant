@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/PropertyParser.h"
-#include "PropertyParserNumber.h"
+#include <core/PropertyParser.h>
+#include <core/PropertyParserNumber.h>
 
 namespace Rml {
 

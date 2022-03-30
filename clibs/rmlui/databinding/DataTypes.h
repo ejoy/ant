@@ -29,14 +29,18 @@
 #ifndef RMLUI_CORE_DATADEFINITIONS_H
 #define RMLUI_CORE_DATADEFINITIONS_H
 
-#include "core/Types.h"
-#include "core/Variant.h"
+#include <core/Variant.h>
+#include <functional>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
 namespace Rml {
 
 class VariableDefinition;
 class DataModelHandle;
 class DataVariable;
+class Event;
 
 using DataEventFunc = std::function<void(DataModelHandle, Event&, const std::vector<Variant>&)>;
 

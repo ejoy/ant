@@ -1,5 +1,5 @@
-#include "core/ElementDocument.h"
-#include "core/PropertyIdSet.h"
+#include <core/ElementDocument.h>
+#include <core/PropertyIdSet.h>
 
 namespace Rml {
 	ElementDocument::ElementDocument(Document* owner)

@@ -2,7 +2,7 @@
 #include "context.h"
 #include "lua2struct.h"
 
-#include "lua.hpp"
+#include <lua.hpp>
 
 LUA2STRUCT(struct RmlContext, font_mgr, shader, default_tex, font_tex, viewid, layout);
 LUA2STRUCT(struct texture_desc, width, height, texid);

@@ -26,10 +26,10 @@
  *
  */
 
-#include "EventDispatcher.h"
-#include "core/Element.h"
-#include "core/Event.h"
-#include "core/EventListener.h"
+#include <core/EventDispatcher.h>
+#include <core/Element.h>
+#include <core/Event.h>
+#include <core/EventListener.h>
 #include <algorithm>
 
 namespace Rml {

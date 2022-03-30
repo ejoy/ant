@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Types.h"
-#include "PropertyFloat.h"
+#include <core/Types.h>
+#include <core/PropertyFloat.h>
 #include <variant>
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>

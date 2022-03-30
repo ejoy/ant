@@ -26,18 +26,18 @@
  *
  */
 
-#include "core/StyleSheet.h"
-#include "StyleSheetFactory.h"
-#include "StyleSheetNode.h"
-#include "StyleSheetParser.h"
-#include "core/Element.h"
-#include "core/PropertyDefinition.h"
-#include "core/StyleSheetSpecification.h"
-#include "core/Types.h"
-#include "core/Property.h"
-#include "core/Log.h"
-#include "core/Stream.h"
+#include <core/StyleSheet.h>
+#include <core/StyleSheetFactory.h>
+#include <core/StyleSheetNode.h>
+#include <core/StyleSheetParser.h>
+#include <core/Element.h>
+#include <core/PropertyDefinition.h>
+#include <core/StyleSheetSpecification.h>
+#include <core/Property.h>
+#include <core/Log.h>
+#include <core/Stream.h>
 #include <algorithm>
+#include <array>
 
 namespace Rml {
 

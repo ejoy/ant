@@ -1,7 +1,7 @@
-#include "core/Log.h"
-#include "core/Core.h"
-
+#include <core/Log.h>
+#include <core/Core.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 namespace Rml {
 

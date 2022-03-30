@@ -29,8 +29,7 @@
 #ifndef RMLUI_CORE_ELEMENTDECORATION_H
 #define RMLUI_CORE_ELEMENTDECORATION_H
 
-#include "core/Types.h"
-#include "core/Geometry.h"
+#include <core/Geometry.h>
 
 namespace Rml {
 

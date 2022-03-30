@@ -29,8 +29,7 @@
 #ifndef RMLUI_CORE_STYLESHEETNODE_H
 #define RMLUI_CORE_STYLESHEETNODE_H
 
-#include "core/StyleSheet.h"
-#include "core/Types.h"
+#include <core/StyleSheet.h>
 #include <tuple>
 
 namespace Rml {

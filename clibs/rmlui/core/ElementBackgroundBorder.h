@@ -29,10 +29,11 @@
 #ifndef RMLUI_CORE_ELEMENTBACKGROUNDBORDER_H
 #define RMLUI_CORE_ELEMENTBACKGROUNDBORDER_H
 
-#include "core/Types.h"
-#include "core/Geometry.h"
+#include <core/Geometry.h>
 
 namespace Rml {
+
+class Element;
 
 struct ElementBackgroundBorder {
 	static void GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path& paddingEdge);

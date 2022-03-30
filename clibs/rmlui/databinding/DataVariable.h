@@ -29,9 +29,8 @@
 #ifndef RMLUI_CORE_DATAVARIABLE_H
 #define RMLUI_CORE_DATAVARIABLE_H
 
-#include "core/Types.h"
-#include "core/Variant.h"
-#include "databinding/DataTypes.h"
+#include <core/Variant.h>
+#include <databinding/DataTypes.h>
 
 namespace Rml {
 

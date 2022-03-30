@@ -1,13 +1,13 @@
 #include "pch.h"
 
-#include "core/Interface.h"
-#include "core/Document.h"
-#include "core/Stream.h"
-#include "core/Event.h"
-#include "core/EventListener.h"
+#include <core/Interface.h>
+#include <core/Document.h>
+#include <core/Stream.h>
+#include <core/Event.h>
+#include <core/EventListener.h>
 
 extern "C" {
-#include "lua.h"
+#include <lua.h>
 #include "lauxlib.h"
 #include "lualib.h"
 }

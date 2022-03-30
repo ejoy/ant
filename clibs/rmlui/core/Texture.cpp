@@ -1,7 +1,7 @@
-#include "core/Texture.h"
-#include "core/Interface.h"
-#include "core/Core.h"
-#include "core/Log.h"
+#include <core/Texture.h>
+#include <core/Interface.h>
+#include <core/Core.h>
+#include <core/Log.h>
 
 namespace Rml {
 

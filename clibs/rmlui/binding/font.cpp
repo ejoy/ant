@@ -7,8 +7,8 @@ extern "C"{
 #include "../font/font_manager.h"
 }
 
-#include "core/Core.h"
-#include "core/StringUtilities.h"
+#include <core/Core.h>
+#include <core/StringUtilities.h>
 #include <cassert>
 #include <cstring>
 #include <variant>

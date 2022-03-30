@@ -28,9 +28,10 @@
 #ifndef RMLUI_CORE_ANIMATION_H
 #define RMLUI_CORE_ANIMATION_H
 
-#include "Types.h"
-#include "Tween.h"
-#include "ID.h"
+#include <core/Tween.h>
+#include <core/ID.h>
+#include <string>
+#include <vector>
 
 namespace Rml {
 

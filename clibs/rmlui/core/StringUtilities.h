@@ -29,7 +29,8 @@
 #ifndef RMLUI_CORE_STRINGUTILITIES_H
 #define RMLUI_CORE_STRINGUTILITIES_H
 
-#include "Types.h"
+#include <string>
+#include <vector>
 
 namespace Rml {
 
@@ -59,6 +60,8 @@ template <typename  T>
 T FromString(const std::string& str, T def = T{});
 template <typename  T>
 std::string ToString(const T& v);
+
+enum class Character : char32_t { Null, Replacement = 0xfffd };
 
 namespace StringUtilities
 {

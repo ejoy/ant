@@ -31,6 +31,7 @@
 
 #include <utility>
 #include <type_traits>
+#include <assert.h>
 
 namespace Rml {
 

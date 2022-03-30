@@ -1,11 +1,14 @@
 #pragma once
 
-#include "Element.h"
-#include "Geometry.h"
-#include "core/Interface.h"
+#include <core/Node.h>
+#include <core/ObserverPtr.h>
+#include <core/Geometry.h>
+#include <core/Interface.h>
 #include <optional>
 
 namespace Rml {
+
+class PropertyIdSet;
 
 class Text final : public Node, public EnableObserverPtr<Text> {
 public:

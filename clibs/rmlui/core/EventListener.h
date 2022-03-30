@@ -1,6 +1,7 @@
 #pragma once
 
-#include "ObserverPtr.h"
+#include <core/ObserverPtr.h>
+#include <string>
 
 namespace Rml {
 

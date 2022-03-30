@@ -1,4 +1,4 @@
-#include "HtmlParser.h"
+#include <core/HtmlParser.h>
 
 #include <assert.h>
 #include <string.h>

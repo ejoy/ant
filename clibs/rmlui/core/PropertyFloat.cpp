@@ -1,6 +1,6 @@
-#include "core/PropertyFloat.h"
-#include "core/Document.h"
-#include "core/Element.h"
+#include <core/PropertyFloat.h>
+#include <core/Document.h>
+#include <core/Element.h>
 #include <numbers>
 #include <glm/gtx/compatibility.hpp>
 

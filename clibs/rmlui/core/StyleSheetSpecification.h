@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Types.h"
+#include <core/Types.h>
+#include <core/PropertyIdSet.h>
 
 namespace Rml {
 

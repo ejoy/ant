@@ -3,8 +3,8 @@
 
 #include "luabind.h"
 #include "luaref.h"
-#include "core/Interface.h"
-#include "core/Variant.h"
+#include <core/Interface.h>
+#include <core/Variant.h>
 
 class lua_event_listener;
 
@@ -12,6 +12,7 @@ namespace Rml {
 class Element;
 class EventListener;
 class Document;
+class Event;
 }
 
 enum class LuaEvent : int {

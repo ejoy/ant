@@ -26,14 +26,13 @@
  *
  */
 
-#include "core/Core.h"
-#include "core/Interface.h"
-#include "core/StyleSheetSpecification.h"
-#include "core/Types.h"
-#include "core/Texture.h"
-#include "core/Log.h"
-#include "StyleSheetFactory.h"
-#include "StyleSheetParser.h"
+#include <core/Core.h>
+#include <core/Interface.h>
+#include <core/StyleSheetSpecification.h>
+#include <core/Texture.h>
+#include <core/Log.h>
+#include <core/StyleSheetFactory.h>
+#include <core/StyleSheetParser.h>
 
 namespace Rml {
 

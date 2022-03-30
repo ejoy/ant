@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Element.h"
+#include <core/Element.h>
 
 namespace Rml {
 	class ElementDocument : public Element {

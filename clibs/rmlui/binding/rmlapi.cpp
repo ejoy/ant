@@ -1,9 +1,9 @@
 #include <lua.hpp>
 
-#include "core/Core.h"
-#include "core/Element.h"
-#include "core/Document.h"
-#include "core/EventListener.h"
+#include <core/Core.h>
+#include <core/Element.h>
+#include <core/Document.h>
+#include <core/EventListener.h>
 
 #include "luaplugin.h"
 #include "luabind.h"

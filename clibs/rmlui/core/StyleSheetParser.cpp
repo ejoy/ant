@@ -26,16 +26,15 @@
  *
  */
 
-#include "StyleSheetParser.h"
-#include "StyleSheetFactory.h"
-#include "StyleSheetNode.h"
-#include "core/Log.h"
-#include "core/PropertyDefinition.h"
-#include "core/Stream.h"
-#include "core/StyleSheet.h"
-#include "core/StyleSheetSpecification.h"
-#include "core/StringUtilities.h"
-#include "core/Types.h"
+#include <core/StyleSheetParser.h>
+#include <core/StyleSheetFactory.h>
+#include <core/StyleSheetNode.h>
+#include <core/Log.h>
+#include <core/PropertyDefinition.h>
+#include <core/Stream.h>
+#include <core/StyleSheet.h>
+#include <core/StyleSheetSpecification.h>
+#include <core/StringUtilities.h>
 #include <algorithm>
 #include <string.h>
 

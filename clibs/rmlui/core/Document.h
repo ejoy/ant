@@ -1,7 +1,10 @@
 #pragma once
 
-#include "ElementDocument.h"
-#include "StyleSheet.h"
+#include <core/ElementDocument.h>
+#include <core/StyleSheet.h>
+#include <unordered_map>
+#include <unordered_set>
+#include <memory>
 
 namespace Rml {
 
@@ -29,13 +32,12 @@ public:
 	void Update(double delta);
 	void UpdateLayout();
 	DataModelConstructor CreateDataModel(const std::string& name);
-	DataModelConstructor GetDataModel(const std::string& name);
 	bool RemoveDataModel(const std::string& name);
 	void UpdateDataModel(bool clear_dirty_variables);
 	DataModel* GetDataModelPtr(const std::string& name) const;
 	Element* GetBody();
 	const Element* GetBody() const;
-	Element*     CreateElement(const std::string& tag);
+	Element* CreateElement(const std::string& tag);
 	Text* CreateTextNode(const std::string& str);
 	void NotifyCustomElement(Element* e);
 	void DefineCustomElement(const std::string& name);
@@ -43,15 +45,13 @@ public:
 	void Instance(const HtmlElement& html);
 
 private:
-	using DataModels = std::unordered_map<std::string, std::unique_ptr<DataModel>>;
-
-	DataModels data_models;
 	ElementDocument body;
 	std::string source_url;
 	StyleSheet style_sheet;
 	std::unordered_set<std::string> custom_element;
+	std::unordered_map<std::string, std::unique_ptr<DataModel>> data_models;
 	Size dimensions;
-    double elapsed_time = 0.;
+	double elapsed_time = 0.;
 	bool dirty_dimensions = false;
 };
 

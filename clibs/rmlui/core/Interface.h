@@ -1,10 +1,11 @@
 #pragma once
 
-#include "core/Types.h"
-#include "core/Texture.h"
-#include "core/Geometry.h"
-#include "core/ComputedValues.h"
-#include "core/TextEffect.h"
+#include <core/Types.h>
+#include <core/Texture.h>
+#include <core/Geometry.h>
+#include <core/ComputedValues.h>
+#include <core/TextEffect.h>
+#include <core/StringUtilities.h>
 #include <glm/glm.hpp>
 
 namespace Rml {

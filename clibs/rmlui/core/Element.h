@@ -1,26 +1,30 @@
 #pragma once
 
-#include "Layout.h"
-#include "ComputedValues.h"
-#include "ObserverPtr.h"
-#include "Property.h"
-#include "Types.h"
-#include "Tween.h"
-#include "Geometry.h"
-#include "Node.h"
-#include "PropertyIdSet.h"
-#include <glm/glm.hpp>
+#include <core/Layout.h>
+#include <core/ComputedValues.h>
+#include <core/ObserverPtr.h>
+#include <core/Property.h>
+#include <core/Types.h>
+#include <core/Tween.h>
+#include <core/Geometry.h>
+#include <core/Node.h>
+#include <core/PropertyIdSet.h>
 #include <optional>
 
 namespace Rml {
 
 class DataModel;
-class EventListener;
 class Document;
-class StyleSheet;
+class Element;
+class ElementAnimation;
+class EventListener;
 class Geometry;
+class StyleSheet;
 class StyleSheetPropertyDictionary;
 struct HtmlElement;
+
+using ElementList = std::vector<Element*>;
+using ElementAttributes = std::unordered_map<std::string, std::string>;
 
 class Element : public Node, public EnableObserverPtr<Element> {
 public:
@@ -71,7 +75,6 @@ public:
 	void GetElementsByClassName(ElementList& elements, const std::string& class_name);
 
 	void Update();
-	virtual void CalculateLayout();
 	void UpdateLayout();
 	void UpdateRender();
 	void SetRednerStatus();
@@ -120,6 +123,7 @@ public:
 	void SetParentNode(Element* parent) override;
 	void SetDataModel(DataModel* data_model) override;
 	Node* Clone(bool deep = true) const override;
+	void CalculateLayout() override;
 	void Render() override;
 	float GetZIndex() const override;
 	Element* ElementFromPoint(Point point) override;
@@ -157,7 +161,7 @@ protected:
 	Document* owner_document;
 	ElementAttributes attributes;
 	std::vector<Element*> children;
-	std::vector<NodePtr> childnodes;
+	std::vector<std::unique_ptr<Node>> childnodes;
 	float z_index = 0;
 	std::vector<Node*> stacking_context;
 	std::unique_ptr<glm::mat4x4> perspective;

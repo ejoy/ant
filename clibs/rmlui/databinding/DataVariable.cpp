@@ -26,8 +26,8 @@
  *
  */
 
-#include "databinding/DataVariable.h"
-#include "core/Log.h"
+#include <databinding/DataVariable.h>
+#include <core/Log.h>
 
 namespace Rml {
 

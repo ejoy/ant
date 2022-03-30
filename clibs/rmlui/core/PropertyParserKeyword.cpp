@@ -1,6 +1,6 @@
-#include "PropertyParserKeyword.h"
-#include "core/StringUtilities.h"
-#include "core/Property.h"
+#include <core/PropertyParserKeyword.h>
+#include <core/StringUtilities.h>
+#include <core/Property.h>
 
 namespace Rml {
 

@@ -1,5 +1,5 @@
-#include "PropertyParserString.h"
-#include "core/Property.h"
+#include <core/PropertyParserString.h>
+#include <core/Property.h>
 
 namespace Rml {
 

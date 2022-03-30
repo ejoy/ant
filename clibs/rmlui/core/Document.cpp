@@ -1,16 +1,16 @@
-#include "core/Document.h"
-#include "core/Text.h"
-#include "databinding/DataUtilities.h"
-#include "core/Stream.h"
-#include "core/StyleSheet.h"
-#include "core/Core.h"
-#include "databinding/DataModelHandle.h"
-#include "core/Interface.h"
-#include "core/Log.h"
-#include "core/StringUtilities.h"
-#include "StyleSheetFactory.h"
-#include "databinding/DataModel.h"
-#include "HtmlParser.h"
+#include <core/Document.h>
+#include <core/Core.h>
+#include <core/Interface.h>
+#include <core/Log.h>
+#include <core/Stream.h>
+#include <core/StyleSheet.h>
+#include <core/Text.h>
+#include <core/StringUtilities.h>
+#include <core/StyleSheetFactory.h>
+#include <databinding/DataModel.h>
+#include <databinding/DataModelHandle.h>
+#include <databinding/DataUtilities.h>
+#include <core/HtmlParser.h>
 #include <fstream>
 
 namespace Rml {
@@ -128,15 +128,7 @@ DataModelConstructor Document::CreateDataModel(const std::string& name) {
 	bool inserted = result.second;
 	if (inserted)
 		return DataModelConstructor(result.first->second.get());
-
 	Log::Message(Log::Level::Error, "Data model name '%s' already exists.", name.c_str());
-	return DataModelConstructor();
-}
-
-DataModelConstructor Document::GetDataModel(const std::string& name) {
-	if (DataModel* model = GetDataModelPtr(name))
-		return DataModelConstructor(model);
-	Log::Message(Log::Level::Error, "Data model name '%s' could not be found.", name.c_str());
 	return DataModelConstructor();
 }
 
@@ -211,14 +203,14 @@ Element* Document::CreateElement(const std::string& tag){
 	return new Element(this, tag);
 }
 
+Text* Document::CreateTextNode(const std::string& str) {
+	return new Text(this, str);
+}
+
 void Document::NotifyCustomElement(Element* e){
 	if (custom_element.find(e->GetTagName()) != custom_element.end()) {
 		GetPlugin()->OnCreateElement(this, e, e->GetTagName());
 	}
-}
-
-Text* Document::CreateTextNode(const std::string& str) {
-	return new Text(this, str);
 }
 
 void Document::DefineCustomElement(const std::string& name) {

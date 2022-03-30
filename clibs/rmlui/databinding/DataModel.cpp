@@ -26,12 +26,14 @@
  *
  */
 
-#include "databinding/DataModel.h"
-#include "core/Element.h"
-#include "core/Log.h"
-#include "core/StringUtilities.h"
-#include "databinding/DataEvent.h"
-#include "databinding/DataView.h"
+#include <databinding/DataModel.h>
+#include <core/Element.h>
+#include <core/Log.h>
+#include <core/StringUtilities.h>
+#include <databinding/DataEvent.h>
+#include <databinding/DataView.h>
+#include <algorithm>
+#include <set>
 
 namespace Rml {
 

@@ -26,10 +26,10 @@
  *
  */
 
-#include "ElementBackgroundBorder.h"
-#include "core/Layout.h"
-#include "core/ComputedValues.h"
-#include "core/Element.h"
+#include <core/ElementBackgroundBorder.h>
+#include <core/Layout.h>
+#include <core/ComputedValues.h>
+#include <core/Element.h>
 
 namespace Rml {
 

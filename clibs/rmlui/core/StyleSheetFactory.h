@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/Types.h"
+#include <string>
 
 namespace Rml {
 

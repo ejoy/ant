@@ -1,80 +1,13 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
+#pragma once
 
-#ifndef RMLUI_CORE_TYPES_H
-#define RMLUI_CORE_TYPES_H
-
-#include <utility>
-#include <vector>
-#include <string>
-#include <stack>
-#include <list>
-#include <functional>
-#include <queue>
-#include <array>
 #include <unordered_map>
-#include <memory>
-#include <set>
-#include <unordered_set>
-#include <variant>
-#include <cstdlib>
-#include "Colour.h"
 
 namespace Rml {
 
-class Document;
-class Element;
-class Text;
-class ElementAnimation;
-class Event;
-class Node;
 class Property;
-class Transform;
-class PropertyIdSet;
-struct Animation;
-struct Transition;
-struct TransitionList;
 enum class PropertyId : uint8_t;
 
-using NodePtr = std::unique_ptr<Node>;
-using ElementPtr = std::unique_ptr<Element>;
-using ElementList = std::vector<Element*>;
 using PropertyDictionary = std::unordered_map<PropertyId, Property>;
-using ElementAttributes = std::unordered_map<std::string, std::string>;
-using AnimationList = std::vector<Animation>;
-
-// Data binding types
-class DataView;
-using DataViewPtr = std::unique_ptr<DataView>;
-class DataEvent;
-using DataEventPtr = std::unique_ptr<DataEvent>;
-
-enum class Character : char32_t { Null, Replacement = 0xfffd };
 
 typedef uint8_t PseudoClassSet;
 
@@ -261,23 +194,4 @@ inline Size operator*(const Size& lhs, float rhs) {
 	return Size(lhs.w * rhs, lhs.h * rhs);
 }
 
-
-template <typename T>
-T InterpolateFallback(const T& p0, const T& p1, float alpha) { return alpha < 1.f ? p0 : p1; }
-
 }
-
-
-namespace std {
-// Hash specialization for enum class types (required on some older compilers)
-template <> struct hash<::Rml::PropertyId> {
-	using utype = typename ::std::underlying_type<::Rml::PropertyId>::type;
-	size_t operator() (const ::Rml::PropertyId& t) const { std::hash<utype> h; return h(static_cast<utype>(t)); }
-};
-template <> struct hash<::Rml::Character> {
-	using utype = typename ::std::underlying_type<::Rml::Character>::type;
-	size_t operator() (const ::Rml::Character& t) const { std::hash<utype> h; return h(static_cast<utype>(t)); }
-};
-}
-
-#endif
