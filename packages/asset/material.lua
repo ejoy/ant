@@ -321,6 +321,8 @@ function ima.stop(e)
 	local ps = e.material_animation.play_state
     if ps.target_e then
 		imaterial.set_property(world:entity(ps.target_e), e.material_animation.property, ps.restore_value)
+		ps.target_e = nil
+		ps.playing = false
 	end
 end
 
@@ -392,6 +394,8 @@ local function step_material_anim(mat_anim, delta_time)
 			play_state.current_time = 0
 		else
 			play_state.playing = false
+			imaterial.set_property(world:entity(play_state.target_e), mat_anim.property, play_state.restore_value)
+			play_state.target_e = nil
 		end
 	end
 end

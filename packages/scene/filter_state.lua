@@ -7,7 +7,6 @@ local STATE_TYPE = {
 	main_view 	= 0x00000001,
 	cast_shadow	= 0x00000002,
 	selectable	= 0x00000004,
-
 	--
 	lightmap	= 0x00000010,
 	--

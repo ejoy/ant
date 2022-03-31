@@ -591,7 +591,7 @@ local function on_remove_entity(e)
     end
     hierarchy:del(e)
 end
-
+local ima = ecs.import.interface "ant.asset|imaterial_animation"
 function m:reset_prefab()
     camera_mgr.clear()
     for _, e in ipairs(self.entities) do

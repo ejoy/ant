@@ -362,6 +362,7 @@ function gizmo_sys:post_init()
 				on_ready = function (e)
 					w:sync("render_object:in", e)
 					ifs.set_state(e, "main_view", false)
+					ifs.set_state(e, "selectable", false)
 					imaterial.set_property(e, "u_color", color)
 					w:sync("render_object_update:out", e)
 				end
@@ -743,7 +744,9 @@ local function show_rotate_fan(rotAxis, startAngle, deltaAngle)
 	e3.render_object.ib.num = num
 
 	ifs.set_state(world:entity(rotAxis.eid[3]), "main_view", e3.render_object.ib.num > 0)
+	ifs.set_state(world:entity(rotAxis.eid[3]), "selectable", e3.render_object.ib.num > 0)
 	ifs.set_state(world:entity(rotAxis.eid[4]), "main_view", e4.render_object.ib.num > 0)
+	ifs.set_state(world:entity(rotAxis.eid[4]), "selectable", e4.render_object.ib.num > 0)
 end
 
 local function rotate_gizmo(x, y)
@@ -1090,8 +1093,6 @@ function gizmo_sys:handle_event()
 					elseif gizmo.mode == gizmo_const.MOVE then
 						local parent = world:entity(gizmo.target_eid).scene.pid
 						local pw = parent and iom.worldmat(world:entity(parent)) or nil
-						local s, r, t = math3d.srt(pw)
-						local st, rt, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
 						local localPos = last_gizmo_pos
 						if pw then
 							localPos = math3d.totable(math3d.transform(math3d.inverse(pw), last_gizmo_pos, 1))

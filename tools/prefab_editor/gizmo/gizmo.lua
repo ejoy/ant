@@ -60,6 +60,11 @@ function gizmo:highlight_axis_or_plane(axis)
 	end
 end
 
+local function set_visible(e, b)
+	ies.set_state(world:entity(e), "main_view", b)
+	ies.set_state(world:entity(e), "selectable", b)
+end
+
 function gizmo:click_axis(axis)
 	if not axis then return end
 
@@ -90,10 +95,9 @@ function gizmo:click_axis(axis)
 			gray_axis(self.rz)
 		end
 	else
-		local state = "main_view"
-		ies.set_state(world:entity(self.tyz.eid[1]), state, false)
-		ies.set_state(world:entity(self.txy.eid[1]), state, false)
-		ies.set_state(world:entity(self.tzx.eid[1]), state, false)
+		set_visible(self.tyz.eid[1], false)
+		set_visible(self.txy.eid[1], false)
+		set_visible(self.tzx.eid[1], false)
 		if axis == self.tx then
 			gray_axis(self.ty)
 			gray_axis(self.tz)
@@ -108,22 +112,18 @@ function gizmo:click_axis(axis)
 end
 
 function gizmo:click_plane(axis)
-	local state = "main_view"
-	local etxy = world:entity(self.txy.eid[1])
-	local etyz = world:entity(self.tyz.eid[1])
-	local etzx = world:entity(self.tzx.eid[1])
 	if axis == self.tyz then
 		gray_axis(self.tx)
-		ies.set_state(etxy, state, false)
-		ies.set_state(etzx, state, false)
+		set_visible(self.txy.eid[1], false)
+		set_visible(self.tzx.eid[1], false)
 	elseif axis == self.txy then
 		gray_axis(self.tz)
-		ies.set_state(etyz, state, false)
-		ies.set_state(etzx, state, false)
+		set_visible(self.tyz.eid[1], false)
+		set_visible(self.tzx.eid[1], false)
 	elseif axis == self.tzx then
 		gray_axis(self.ty)
-		ies.set_state(etxy, state, false)
-		ies.set_state(etyz, state, false)
+		set_visible(self.txy.eid[1], false)
+		set_visible(self.tyz.eid[1], false)
 	end
 end
 
@@ -138,56 +138,52 @@ function gizmo:click_axis_or_plane(axis)
 end
 
 function gizmo:hide_rotate_fan()
-	local state = "main_view"
 	if not self.rx.eid then return end
-	ies.set_state(world:entity(self.rx.eid[3]), state, false)
-	ies.set_state(world:entity(self.rx.eid[4]), state, false)
-	ies.set_state(world:entity(self.ry.eid[3]), state, false)
-	ies.set_state(world:entity(self.ry.eid[4]), state, false)
-	ies.set_state(world:entity(self.rz.eid[3]), state, false)
-	ies.set_state(world:entity(self.rz.eid[4]), state, false)
-	ies.set_state(world:entity(self.rw.eid[3]), state, false)
-	ies.set_state(world:entity(self.rw.eid[4]), state, false)
+	set_visible(self.rx.eid[3], false)
+	set_visible(self.rx.eid[4], false)
+	set_visible(self.ry.eid[3], false)
+	set_visible(self.ry.eid[4], false)
+	set_visible(self.rz.eid[3], false)
+	set_visible(self.rz.eid[4], false)
+	set_visible(self.rw.eid[3], false)
+	set_visible(self.rw.eid[4], false)
 end
 
 function gizmo:show_move(show)
-	local state = "main_view"
 	if not self.tx.eid then return end
-	ies.set_state(world:entity(self.tx.eid[1]), state, show)
-	ies.set_state(world:entity(self.tx.eid[2]), state, show)
-	ies.set_state(world:entity(self.ty.eid[1]), state, show)
-	ies.set_state(world:entity(self.ty.eid[2]), state, show)
-	ies.set_state(world:entity(self.tz.eid[1]), state, show)
-	ies.set_state(world:entity(self.tz.eid[2]), state, show)
+	set_visible(self.tx.eid[1], show)
+	set_visible(self.tx.eid[2], show)
+	set_visible(self.ty.eid[1], show)
+	set_visible(self.ty.eid[2], show)
+	set_visible(self.tz.eid[1], show)
+	set_visible(self.tz.eid[2], show)
 	--
 	if not self.txy.eid then return end
-	ies.set_state(world:entity(self.txy.eid[1]), state, show)
-	ies.set_state(world:entity(self.tyz.eid[1]), state, show)
-	ies.set_state(world:entity(self.tzx.eid[1]), state, show)
+	set_visible(self.txy.eid[1], show)
+	set_visible(self.tyz.eid[1], show)
+	set_visible(self.tzx.eid[1], show)
 end
 
 function gizmo:show_rotate(show)
-	local state = "main_view"
 	if not self.rx.eid then return end
-	ies.set_state(world:entity(self.rx.eid[1]), state, show)
-	ies.set_state(world:entity(self.rx.eid[2]), state, show)
-	ies.set_state(world:entity(self.ry.eid[1]), state, show)
-	ies.set_state(world:entity(self.ry.eid[2]), state, show)
-	ies.set_state(world:entity(self.rz.eid[1]), state, show)
-	ies.set_state(world:entity(self.rz.eid[2]), state, show)
-	ies.set_state(world:entity(self.rw.eid[1]), state, show)
+	set_visible(self.rx.eid[1], show)
+	set_visible(self.rx.eid[2], show)
+	set_visible(self.ry.eid[1], show)
+	set_visible(self.ry.eid[2], show)
+	set_visible(self.rz.eid[1], show)
+	set_visible(self.rz.eid[2], show)
+	set_visible(self.rw.eid[1], show)
 end
 
 function gizmo:show_scale(show)
-	local state = "main_view"
 	if not self.sx.eid then return end
-	ies.set_state(world:entity(self.sx.eid[1]), state, show)
-	ies.set_state(world:entity(self.sx.eid[2]), state, show)
-	ies.set_state(world:entity(self.sy.eid[1]), state, show)
-	ies.set_state(world:entity(self.sy.eid[2]), state, show)
-	ies.set_state(world:entity(self.sz.eid[1]), state, show)
-	ies.set_state(world:entity(self.sz.eid[2]), state, show)
-	ies.set_state(world:entity(self.uniform_scale_eid), state, show)
+	set_visible(self.sx.eid[1], show)
+	set_visible(self.sx.eid[2], show)
+	set_visible(self.sy.eid[1], show)
+	set_visible(self.sy.eid[2], show)
+	set_visible(self.sz.eid[1], show)
+	set_visible(self.sz.eid[2], show)
+	set_visible(self.uniform_scale_eid, show)
 end
 
 function gizmo:show_by_state(show)
@@ -217,15 +213,12 @@ function gizmo:reset_move_axis_color()
 	imaterial.set_property(world:entity(self.tz.eid[1]), uname, self.tz.color)
 	imaterial.set_property(world:entity(self.tz.eid[2]), uname, self.tz.color)
 	--plane
-	local etxy = world:entity(self.txy.eid[1])
-	local etyz = world:entity(self.tyz.eid[1])
-	local etzx = world:entity(self.tzx.eid[1])
-	ies.set_state(etxy, "main_view", self.target_eid ~= nil)
-	ies.set_state(etyz, "main_view", self.target_eid ~= nil)
-	ies.set_state(etzx, "main_view", self.target_eid ~= nil)
-	imaterial.set_property(etxy, uname, self.txy.color)
-	imaterial.set_property(etyz, uname, self.tyz.color)
-	imaterial.set_property(etzx, uname, self.tzx.color)
+	set_visible(self.txy.eid[1], self.target_eid ~= nil)
+	set_visible(self.tyz.eid[1], self.target_eid ~= nil)
+	set_visible(self.tzx.eid[1], self.target_eid ~= nil)
+	imaterial.set_property(world:entity(self.txy.eid[1]), uname, self.txy.color)
+	imaterial.set_property(world:entity(self.tyz.eid[1]), uname, self.tyz.color)
+	imaterial.set_property(world:entity(self.tzx.eid[1]), uname, self.tzx.color)
 end
 
 function gizmo:reset_rotate_axis_color()

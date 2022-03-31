@@ -236,6 +236,7 @@ end
 
 function pickup_sys:init()
 	create_pick_entity()
+	pickup_materials.opacity_skin	= imaterial.load '/pkg/ant.resources/materials/pickup_opacity_skin.material'
 	pickup_materials.opacity	= imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
 	pickup_materials.translucent= imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
 	pickup_materials.ui 		= pickup_materials.translucent
@@ -342,6 +343,10 @@ function pickup_sys:end_filter()
 		for _, fn in ipairs(qe.primitive_filter) do
 			if fr[fn] then
 				local m = assert(pickup_materials[st])
+				w:sync("skeleton?in", e)
+				if e.skeleton then
+					m = pickup_materials[st.."_skin"]
+				end
 				local state = e.render_object.state
 				fm[fn] = {
 					fx			= m.fx,
