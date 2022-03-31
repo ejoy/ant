@@ -3,6 +3,7 @@
 #include <core/Types.h>
 #include <core/Color.h>
 #include <memory>
+#include <vector>
 #include <stdint.h>
 
 namespace Rml {

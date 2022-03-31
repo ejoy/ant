@@ -2,6 +2,7 @@
 
 #include <core/Types.h>
 #include <yoga/Yoga.h>
+#include <string>
 
 namespace Rml {
 

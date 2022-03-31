@@ -5,6 +5,7 @@
 #include <core/ObserverPtr.h>
 #include <databinding/DataView.h>
 #include <databinding/DataExpression.h>
+#include <memory>
 
 namespace Rml {
 
