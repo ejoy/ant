@@ -1,11 +1,8 @@
 local console = require "core.sandbox.console"
 local filemanager = require "core.filemanager"
-local constructorElement = require "core.DOM.element"
-local createEvent = require "core.DOM.event"
+local constructor = require "core.DOM.constructor"
 local environment = require "core.environment"
 local fs = require "filesystem"
-require "core.DOM.document"
-require "core.DOM.window"
 
 local m = {}
 
@@ -59,7 +56,7 @@ function m.OnCreateElement(document, element, name)
 	if not ctor then
 		return
 	end
-	ctor(constructorElement(document, false, element))
+	ctor(constructor.Element(document, false, element))
 end
 function m.OnEvent(ev, e)
 	local delegate = events[ev]
@@ -68,7 +65,7 @@ function m.OnEvent(ev, e)
 	end
 	local f = delegate[1]
 	if delegate[2] then
-		debug.setupvalue(f, delegate[2], createEvent(e))
+		debug.setupvalue(f, delegate[2], constructor.Event(e))
 	end
 	invoke(f)
 end
@@ -83,7 +80,7 @@ function m.OnEventAttach(ev, document, element, source)
 		console.warn(err)
 		return
 	end
-	local ok, f = invoke(payload, constructorElement(document, false, element))
+	local ok, f = invoke(payload, constructor.Element(document, false, element))
 	if not ok then
 		return
 	end

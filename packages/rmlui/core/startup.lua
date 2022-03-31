@@ -8,6 +8,8 @@ local contextManager = require "core.contextManager"
 local initRender = require "core.initRender"
 local ltask = require "ltask"
 
+require "core.DOM.constructor":init()
+
 local quit
 
 local ServiceWindow = ltask.queryservice "ant.window|window"

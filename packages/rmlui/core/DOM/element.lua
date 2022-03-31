@@ -1,5 +1,6 @@
 local rmlui = require "rmlui"
 local event = require "core.event"
+local constructor = require "core.DOM.constructor"
 
 local constructorElement
 
@@ -41,20 +42,29 @@ function property_init:addEventListener()
 end
 
 function property_init:ownerDocument()
-    local constructorDocument = require "core.DOM.document"
-    return constructorDocument(self._document)
+    return constructor.Document(self._document)
+end
+
+local childnodes_mt = {}
+function childnodes_mt:__len()
+    return rmlui.ElementGetChildren(self._handle)
+end
+function childnodes_mt:__index(i)
+    return constructor.Node(self._document, false, rmlui.ElementGetChildren(self._handle, i-1))
+end
+function childnodes_mt:__pairs()
+    local i = 0
+    return function ()
+        i = i + 1
+        return self[i]
+    end
 end
 
 function property_init:childNodes()
-    local document = self._document
-    local handle = self._handle
-    local constructorNode = require "core.DOM.node"
-    local n = rmlui.ElementGetChildren(self._handle)
-    local children = {}
-    for i = 1, n do
-        children[i] = constructorNode(document, false, rmlui.ElementGetChildren(handle, i-1))
-    end
-    return children
+    return setmetatable({
+        _document = self._document,
+        _handle = self._handle,
+    }, childnodes_mt)
 end
 
 function property_init:appendChild()
@@ -68,9 +78,8 @@ end
 function property_init:cloneNode()
     local document = self._document
     local handle = self._handle
-    local constructorNode = require "core.DOM.node"
     return function ()
-        return constructorNode(document, true, rmlui.NodeClone(handle))
+        return constructor.Node(document, true, rmlui.NodeClone(handle))
     end
 end
 
@@ -202,14 +211,6 @@ function property_mt:__tostring()
     return rmlui.ElementGetOuterHTML(self._handle)
 end
 
-local function constructor(document, handle, owner)
-    return setmetatable({
-        _handle = handle,
-        _document = document,
-        _owner = owner,
-    }, property_mt)
-end
-
 local pool = {}
 
 function event.OnDocumentDestroy(handle)
@@ -235,7 +236,11 @@ function constructorElement(document, owner, handle)
     end
     local o = _pool[handle]
     if not o then
-        o = constructor(document, handle, owner)
+        o = setmetatable({
+            _handle = handle,
+            _document = document,
+            _owner = owner,
+        }, property_mt)
         _pool[handle] = o
     end
     return o

@@ -1,7 +1,8 @@
 local rmlui = require "rmlui"
 local event = require "core.event"
+local constructor = require "core.DOM.constructor"
 
-local constructorTextNode
+local constructorText
 
 local property_init = {}
 local property_getter = {}
@@ -11,9 +12,8 @@ local property_setter = {}
 function property_init:cloneNode()
     local document = self._document
     local handle = self._handle
-    local constructorNode = require "core.DOM.node"
     return function ()
-        return constructorNode(document, true, rmlui.NodeClone(handle))
+        return constructor.Node(document, true, rmlui.NodeClone(handle))
     end
 end
 
@@ -28,8 +28,7 @@ end
 function property_getter:parentNode()
     local document = self._document
     local handle = self._handle
-    local constructorElement = require "core.DOM.element"
-    return constructorElement(document, false, rmlui.NodeGetParent(handle))
+    return constructor.Element(document, false, rmlui.NodeGetParent(handle))
 end
 
 function property_getter:textContent()
@@ -59,14 +58,6 @@ function property_mt:__tostring()
     return rmlui.TextGetText(self._handle)
 end
 
-local function constructor(document, handle, owner)
-    return setmetatable({
-        _handle = handle,
-        _document = document,
-        _owner = owner,
-    }, property_mt)
-end
-
 local pool = {}
 
 function event.OnDocumentDestroy(handle)
@@ -81,7 +72,7 @@ function event.OnDocumentDestroy(handle)
     pool[handle] = nil
 end
 
-function constructorTextNode(document, owner, handle)
+function constructorText(document, owner, handle)
     if handle == nil then
         return
     end
@@ -92,10 +83,14 @@ function constructorTextNode(document, owner, handle)
     end
     local o = _pool[handle]
     if not o then
-        o = constructor(document, handle, owner)
+        o = setmetatable({
+            _handle = handle,
+            _document = document,
+            _owner = owner,
+        }, property_mt)
         _pool[handle] = o
     end
     return o
 end
 
-return constructorTextNode
+return constructorText

@@ -3,8 +3,8 @@ local event = require "core.event"
 local timer = require "core.timer"
 local task = require "core.task"
 local contextManager = require "core.contextManager"
-local createEvent = require "core.DOM.event"
 local createExternWindow = require "core.externWindow"
+local constructor = require "core.DOM.constructor"
 
 local datamodels = {}
 local datamodel_mt = {
@@ -16,7 +16,7 @@ function datamodel_mt:__newindex(k, v)
     if type(v) == "function" then
         local ov = v
         v = function(e,...)
-            ov(createEvent(e), ...)
+            ov(constructor.Event(e), ...)
         end
     end
     rmlui.DataModelSet(self,k,v)
@@ -67,7 +67,7 @@ local function createWindow(document, source)
         t:remove()
     end
     function window.addEventListener(type, listener, useCapture)
-        rmlui.DocumentAddEventListener(document, type, function(e) listener(createEvent(e)) end, useCapture)
+        rmlui.DocumentAddEventListener(document, type, function(e) listener(constructor.Event(e)) end, useCapture)
     end
     function window.postMessage(data)
         rmlui.DocumentDispatchEvent(document, "message", {
