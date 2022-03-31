@@ -5,19 +5,13 @@ local runtime = false
 
 local RuntimeBacklist = {
     filedialog = true,
-    filewatch = true,
     imgui = true,
-    subprocess = true,
-    bake = true,
     audio = true,
-    gesture = lm.os ~= "ios",
 }
 
 local EditorBacklist = {
     firmware = true,
-    bake = true,
     audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os ~= "windows"),
-    gesture = lm.os ~= "ios",
 }
 
 local RuntimeModules = {}
@@ -29,11 +23,13 @@ for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
         if not RuntimeBacklist[name] or not EditorBacklist[name] then
             lm:import(("../clibs/%s/make.lua"):format(name))
         end
-        if not RuntimeBacklist[name] then
-            RuntimeModules[#RuntimeModules + 1] = "source_" .. name
-        end
-        if not EditorBacklist[name] then
-            EditorModules[#EditorModules + 1] = "source_" .. name
+        if lm:has("source_" .. name) then
+            if not RuntimeBacklist[name] then
+                RuntimeModules[#RuntimeModules + 1] = "source_" .. name
+            end
+            if not EditorBacklist[name] then
+                EditorModules[#EditorModules + 1] = "source_" .. name
+            end
         end
     end
 end
