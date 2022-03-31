@@ -1,6 +1,14 @@
 local lm = require "luamake"
 
-lm.EfkDir = "../../../../3rd/"
-lm:import "efkbgfx/efkmatc/make.lua"
-lm:import "efkbgfx/renderer/make.lua"
-lm:import "efkbgfx/shaders/make.lua"
+local rootdir = "../../../../"
+lm.EfkDir       = rootdir .. "3rd/"
+lm.BgfxDir      = lm.EfkDir .. "bgfx"
+lm.BxDir        = lm.EfkDir .. "bx"
+lm.BimgDir      = lm.EfkDir .. "bimg"
+lm.BgfxBinDir   = lm.bindir
+lm.LuaInclude   = rootdir .. "clibs/lua/"
+lm:import "efkbgfx/luabinding/make.lua"
+
+lm:source_set "source_efk" {
+    deps = {"source_effekseer_callback"}
+}

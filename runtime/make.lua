@@ -21,22 +21,27 @@ local EditorBacklist = {
 local RuntimeModules = {}
 local EditorModules = {}
 
-for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
-    if fs.exists(path / "make.lua") then
-        local name = path:stem():string()
-        if not RuntimeBacklist[name] or not EditorBacklist[name] then
-            lm:import(("../clibs/%s/make.lua"):format(name))
-        end
-        if not RuntimeBacklist[name] then
-            RuntimeModules[#RuntimeModules + 1] = "source_" .. name
-        end
-        if not EditorBacklist[name] then
-            EditorModules[#EditorModules + 1] = "source_" .. name
-        end
+local function checkAddModule(name, makefile)
+    if not RuntimeBacklist[name] or not EditorBacklist[name] then
+        lm:import(makefile)
+    end
+    if not RuntimeBacklist[name] then
+        RuntimeModules[#RuntimeModules + 1] = "source_" .. name
+    end
+    if not EditorBacklist[name] then
+        EditorModules[#EditorModules + 1] = "source_" .. name
     end
 end
 
-lm:import "../packages/efk/make.lua"
+for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
+    if fs.exists(path / "make.lua") then
+        local name = path:stem():string()
+        local makefile = ("../clibs/%s/make.lua"):format(name)
+        checkAddModule(name, makefile)
+    end
+end
+
+checkAddModule("efk", "../packages/efk/make.lua")
 
 lm:copy "copy_mainlua" {
     input = "common/main.lua",
