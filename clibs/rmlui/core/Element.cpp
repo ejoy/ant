@@ -315,16 +315,6 @@ Document* Element::GetOwnerDocument() const {
 	return owner_document;
 }
 
-Element* Element::GetChild(size_t index) const {
-	if (index < 0 || index >= children.size())
-		return nullptr;
-	return children[index];
-}
-
-size_t Element::GetNumChildren() const {
-	return children.size();
-}
-
 Node* Element::GetChildNode(size_t index) const {
 	if (index < 0 || index >= childnodes.size())
 		return nullptr;
@@ -441,7 +431,7 @@ void Element::AppendChild(Node* node) {
 
 void Element::RemoveChild(Node* node) {
 	size_t index = GetChildNodeIndex(node);
-	if (index == -1) {
+	if (index == size_t(-1)) {
 		return;
 	}
 	auto detached_child = std::move(childnodes[index]);
@@ -469,7 +459,7 @@ size_t Element::GetChildNodeIndex(Node* node) const {
 
 void Element::InsertBefore(Node* node, Node* adjacent) {
 	size_t index = GetChildNodeIndex(adjacent);
-	if (index == -1) {
+	if (index == size_t(-1)) {
 		AppendChild(node);
 		return;
 	}
@@ -489,7 +479,7 @@ Node* Element::GetPreviousSibling() {
 		return nullptr;
 	}
 	size_t index = parent->GetChildNodeIndex(this);
-	if (index == -1) {
+	if (index == size_t(-1)) {
 		return nullptr;
 	}
 	if (index == 0) {

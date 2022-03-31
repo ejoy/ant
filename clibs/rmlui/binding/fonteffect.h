@@ -10,11 +10,11 @@ extern "C"{
 
 struct RmlContext;
 
-enum FontEffectType : uint8_t {
-    FE_None		= 0,
-    FE_Outline	= 0x01,
-    FE_Shadow 	= 0x02,
-    FE_FontTex  = 0x08,
+enum class FontEffect {
+    None,
+    Outline,
+    Shadow,
+    Image,
 };
 
 struct Property{
@@ -34,7 +34,7 @@ static const std::string DEFAULT_FONT_TEX_NAME("?FONT_TEX");
 
 class SDFFontEffect {
 public:
-    SDFFontEffect(uint16_t texid, int8_t eo, FontEffectType t)
+    SDFFontEffect(uint16_t texid, int8_t eo, FontEffect t)
         : mTexID(texid)
         , mFEType(t)
         , mEdgeValueOffset(eo)
@@ -43,7 +43,7 @@ public:
     virtual ~SDFFontEffect() {}
     
     uint16_t GetTexID() const           { return mTexID; }
-    FontEffectType GetType()  const     { return mFEType;}
+    FontEffect GetType()  const     { return mFEType;}
 
     float GetDistMultiplier() const     { return mDistMultiplier; }
     void SetDistMultiplier(float d)     { mDistMultiplier = d;}
@@ -89,10 +89,10 @@ protected:
 
     const shader_info&
     GetShaderInfo(const shader &s) const {
-        switch (uint16_t(mFEType)){
-        case (FE_Outline|FE_FontTex):       return s.font_outline;
-        case (FE_Shadow|FE_FontTex):        return s.font_shadow;
-        case (FE_FontTex):                  return s.font;
+        switch (mFEType) {
+        case FontEffect::Outline:       return s.font_outline;
+        case FontEffect::Shadow:        return s.font_shadow;
+        case FontEffect::None:          return s.font;
         default: assert(false &&"invalid"); return s.font;
         }
     }
@@ -100,7 +100,7 @@ protected:
 
 private:
     const uint16_t          mTexID;
-    const FontEffectType    mFEType;
+    const FontEffect        mFEType;
     int8_t mEdgeValueOffset;
     float mDistMultiplier;
 };
@@ -108,18 +108,17 @@ private:
 ///default//////////////////////////////////////////////////////////////////
 class SDFFontEffectDefault : public SDFFontEffect{
 public:
-    SDFFontEffectDefault(uint16_t texid, bool simpletex = false) : SDFFontEffect(texid, 0, simpletex ? FE_None : FE_FontTex){}
+    SDFFontEffectDefault(uint16_t texid, bool simpletex = false) : SDFFontEffect(texid, 0, simpletex ? FontEffect::Image : FontEffect::None){}
     virtual std::string GenerateKey() const override {
         return DEFAULT_FONT_TEX_NAME;
     }
 };
 
 ///outline//////////////////////////////////////////////////////////////////
-template<FontEffectType FE_TYPE>
 class TSDFFontEffectOutline : public SDFFontEffect{
 public:
     TSDFFontEffectOutline(uint16_t texid, float w, int8_t eo, Rml::Color c)
-    : SDFFontEffect(texid, eo, FE_TYPE)
+    : SDFFontEffect(texid, eo, FontEffect::Outline)
     , mWidth(w)
     , mcolor(c)
     { }
@@ -128,7 +127,7 @@ public:
         std::ostringstream oss;
         
         oss << std::setprecision(std::numeric_limits<long double>::digits10 + 1) 
-            << DEFAULT_FONT_TEX_NAME.c_str() << GetType()<< mWidth
+            << DEFAULT_FONT_TEX_NAME.c_str() << (int)GetType()<< mWidth
             << *(uint32_t*)&mcolor;
         return oss.str();
     }
@@ -159,7 +158,7 @@ private:
 class SDFFontEffectShadow : public SDFFontEffect{
 public:
 SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Point &offset, Rml::Color c)
-    : SDFFontEffect(texid, eo, FontEffectType(FE_Shadow|FE_FontTex))
+    : SDFFontEffect(texid, eo, FontEffect::Shadow)
     , moffset(offset)
     , mcolor(c)
     { }
@@ -169,7 +168,7 @@ SDFFontEffectShadow(uint16_t texid, int8_t eo, const Rml::Point &offset, Rml::Co
         std::ostringstream oss;
         
         oss << std::setprecision(std::numeric_limits<long double>::digits10 + 1) 
-            << DEFAULT_FONT_TEX_NAME.c_str() << GetType()<< moffset.x << moffset.y
+            << DEFAULT_FONT_TEX_NAME.c_str() << (int)GetType()<< moffset.x << moffset.y
             << *(uint32_t*)&mcolor;
         return oss.str();
     }

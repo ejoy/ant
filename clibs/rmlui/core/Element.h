@@ -68,8 +68,10 @@ public:
 	Node*  GetPreviousSibling();
 	void   RemoveAllChildren();
 
-	Element* GetChild(size_t index) const;
-	size_t GetNumChildren() const;
+	auto const& Children() const { return children; }
+	auto const& ChildNodes() const { return childnodes; }
+	auto&       Children() { return children; }
+	auto&       ChildNodes() { return childnodes; }
 
 	Node* GetChildNode(size_t index) const;
 	size_t GetNumChildNodes() const;

@@ -76,7 +76,7 @@ struct TextEffectVisitor {
     void operator() (Rml::TextStroke const& t) {
         font_manager* F = context->font_mgr;
         int8_t edgevalue_offset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
-        result = new TSDFFontEffectOutline<FontEffectType(FE_Outline|FE_FontTex)>(
+        result = new TSDFFontEffectOutline(
             context->font_tex.texid,
             t.width,
             edgevalue_offset,

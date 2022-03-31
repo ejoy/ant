@@ -501,7 +501,7 @@ Transform Transform::Interpolate(const Transform& other, float alpha) const {
 		}
 		new_transform.emplace_back(std::move(p));
 	}
-	return std::move(new_transform);
+	return new_transform;
 }
 
 glm::mat4x4 Transform::GetMatrix(Element& e) const {

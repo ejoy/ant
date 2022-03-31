@@ -4,6 +4,15 @@
 
 namespace Rml {
 
+template <typename T>
+struct reversion_wrapper {
+	auto begin() { return std::rbegin(iterable); }
+	auto end () { return std::rend(iterable); }
+	T& iterable;
+};
+template <typename T>
+reversion_wrapper<T> reverse(T&& iterable) { return { iterable }; }
+
 static bool IsNth(int a, int b, int count) {
 	int x = count;
 	x -= b;
@@ -13,8 +22,8 @@ static bool IsNth(int a, int b, int count) {
 }
 
 bool StyleSheetNodeSelectorEmpty::IsApplicable(const Element* element, int, int) {
-	for (int i = 0; i < element->GetNumChildren(); ++i) {
-		if (element->GetChild(i)->IsVisible())
+	for (const Element* child : element->Children()) {
+		if (child->IsVisible())
 			return false;
 	}
 	return true;
@@ -24,14 +33,10 @@ bool StyleSheetNodeSelectorFirstChild::IsApplicable(const Element* element, int,
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
-	int child_index = 0;
-	while (child_index < parent->GetNumChildren()) {
-		// If this child (the first non-text child) is our element, then the selector succeeds.
-		Element* child = parent->GetChild(child_index);
+	for (const Element* child : parent->Children()) {
 		if (child == element)
 			return true;
-		// Otherwise, skip over the text element to find the last non-trivial element.
-		child_index++;
+		return false;
 	}
 	return false;
 }
@@ -40,17 +45,11 @@ bool StyleSheetNodeSelectorFirstOfType::IsApplicable(const Element* element, int
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
-	int child_index = 0;
-	while (child_index < parent->GetNumChildren()) {
-		// If this child is our element, then it's the first one we've found with our tag; the selector succeeds.
-		Element* child = parent->GetChild(child_index);
+	for (const Element* child : parent->Children()) {
 		if (child == element)
 			return true;
-		// Otherwise, if this child shares our element's tag, then our element is not the first tagged child; the
-		// selector fails.
 		if (child->GetTagName() == element->GetTagName() && child->IsVisible())
 			return false;
-		child_index++;
 	}
 	return false;
 }
@@ -59,14 +58,10 @@ bool StyleSheetNodeSelectorLastChild::IsApplicable(const Element* element, int, 
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
-	int child_index = parent->GetNumChildren() - 1;
-	while (child_index >= 0) {
-		// If this child (the last non-text child) is our element, then the selector succeeds.
-		Element* child = parent->GetChild(child_index);
+	for (const Element* child : reverse(parent->Children())) {
 		if (child == element)
 			return true;
-		// Otherwise, skip over the text element to find the last non-trivial element.
-		child_index--;
+		return false;
 	}
 	return false;
 }
@@ -75,17 +70,11 @@ bool StyleSheetNodeSelectorLastOfType::IsApplicable(const Element* element, int,
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
-	int child_index = parent->GetNumChildren() - 1;
-	while (child_index >= 0) {
-		// If this child is our element, then it's the first one we've found with our tag; the selector succeeds.
-		Element* child = parent->GetChild(child_index);
+	for (const Element* child : reverse(parent->Children())) {
 		if (child == element)
 			return true;
-		// Otherwise, if this child shares our element's tag, then our element is not the first tagged child; the
-		// selector fails.
 		if (child->GetTagName() == element->GetTagName() && child->IsVisible())
 			return false;
-		child_index--;
 	}
 	return false;
 }
@@ -94,14 +83,10 @@ bool StyleSheetNodeSelectorNthChild::IsApplicable(const Element* element, int a,
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
-	// Start counting elements until we find this one.
 	int element_index = 1;
-	for (int i = 0; i < parent->GetNumChildren(); i++) {
-		Element* child = parent->GetChild(i);
-		// If we've found our element, then break; the current index is our element's index.
+	for (const Element* child : parent->Children()) {
 		if (child == element)
 			break;
-		// Skip nodes without a display type.
 		if (!child->IsVisible())
 			continue;
 		element_index++;
@@ -113,11 +98,8 @@ bool StyleSheetNodeSelectorNthLastChild::IsApplicable(const Element* element, in
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
-	// Start counting elements until we find this one.
 	int element_index = 1;
-	for (int i = parent->GetNumChildren() - 1; i >= 0; --i) {
-		Element* child = parent->GetChild(i);
-		// If we've found our element, then break; the current index is our element's index.
+	for (const Element* child : reverse(parent->Children())) {
 		if (child == element)
 			break;
 		if (!child->IsVisible())
@@ -131,14 +113,10 @@ bool StyleSheetNodeSelectorNthLastOfType::IsApplicable(const Element* element, i
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
-	// Start counting elements until we find this one.
 	int element_index = 1;
-	for (int i = parent->GetNumChildren() - 1; i >= 0; --i) {
-		Element* child = parent->GetChild(i);
-		// If we've found our element, then break; the current index is our element's index.
+	for (const Element* child : reverse(parent->Children())) {
 		if (child == element)
 			break;
-		// Skip nodes that don't share our tag.
 		if (child->GetTagName() != element->GetTagName() || !child->IsVisible())
 			continue;
 		element_index++;
@@ -150,14 +128,10 @@ bool StyleSheetNodeSelectorNthOfType::IsApplicable(const Element* element, int a
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
-	// Start counting elements until we find this one.
 	int element_index = 1;
-	for (int i = 0; i < parent->GetNumChildren(); ++i) {
-		Element* child = parent->GetChild(i);
-		// If we've found our element, then break; the current index is our element's index.
+	for (const Element* child : parent->Children()) {
 		if (child == element)
 			break;
-		// Skip nodes that don't share our tag.
 		if (child->GetTagName() != element->GetTagName() || !child->IsVisible())
 			continue;
 		element_index++;
@@ -169,12 +143,9 @@ bool StyleSheetNodeSelectorOnlyChild::IsApplicable(const Element* element, int, 
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
-	for (int i = 0; i < parent->GetNumChildren(); ++i) {
-		Element* child = parent->GetChild(i);
-		// Skip the child if it is our element.
+	for (const Element* child : parent->Children()) {
 		if (child == element)
 			continue;
-		// Skip the child if it is trivial.
 		if (!child->IsVisible())
 			continue;
 		return false;
@@ -186,15 +157,11 @@ bool StyleSheetNodeSelectorOnlyOfType::IsApplicable(const Element* element, int,
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
-	for (int i = 0; i < parent->GetNumChildren(); ++i) {
-		Element* child = parent->GetChild(i);
-		// Skip the child if it is our element.
+	for (const Element* child : parent->Children()) {
 		if (child == element)
 			continue;
-		// Skip the child if it does not share our tag.
 		if (child->GetTagName() != element->GetTagName() || !child->IsVisible())
 			continue;
-		// We've found a similarly-tagged child to our element; selector fails.
 		return false;
 	}
 	return true;

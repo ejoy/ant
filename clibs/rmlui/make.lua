@@ -5,6 +5,8 @@ dofile "../common.lua"
 lm:import "../font/make.lua"
 lm:import "../luabind/build.lua"
 
+lm.warnings = "error"
+
 lm:source_set "yoga" {
     rootdir = Ant3rd .. "yoga",
     includes = {
