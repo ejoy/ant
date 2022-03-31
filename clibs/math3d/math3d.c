@@ -2116,12 +2116,17 @@ init_math3d_api(lua_State *L, struct math3d_api *bs) {
 
 		//primitive
 		{ "point2plane",	lpoint2plane},
+
+		{ "CINTERFACE", NULL },
+
 		{ NULL, NULL },
 	};
 
 	luaL_newlibtable(L,l);
 	lua_pushlightuserdata(L, bs);
 	luaL_setfuncs(L,l,1);
+	lua_pushlightuserdata(L, bs);
+	lua_setfield(L, -2, "CINTERFACE");
 }
 
 // util function
