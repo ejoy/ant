@@ -384,7 +384,7 @@ local function build_properties_ui(mv)
 
         properties[#properties+1] = uiproperty.Group({label="basecolor"},
             add_textre_ui("s_basecolor", "basecolor", 
-                uiproperty.Float({label="Factor", dim=4}, {
+                uiproperty.Float({label="Factor", dim=4, min=0.0, max=1.0, speed=0.02}, {
                     getter = function ()
                         return get_factor "basecolor"
                     end,

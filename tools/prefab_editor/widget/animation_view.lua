@@ -1112,6 +1112,19 @@ local function clear_add_animation_cache()
     current_external_anim = nil
 end
 
+local ui_showskeleton = {false}
+local function show_skeleton(b)
+    local _, joints_list = joint_utils:get_joints(world:entity(current_e))
+    if not joints_list then
+        return
+    end
+    for _, joint in ipairs(joints_list) do
+        if joint.mesh then
+            ies.set_state(world:entity(joint.mesh), "main_view", b)
+        end
+    end
+end
+
 function m.show()
     if not current_e then return end
     local reload = false
@@ -1242,6 +1255,10 @@ function m.show()
             imgui.cursor.SameLine()
             if imgui.widget.Checkbox("loop", ui_loop) then
                 anim_group_set_loop(current_e, ui_loop[1])
+            end
+            imgui.cursor.SameLine()
+            if imgui.widget.Checkbox("showskeleton", ui_showskeleton) then
+                show_skeleton(ui_showskeleton[1])
             end
             if all_clips then
                 imgui.cursor.SameLine()

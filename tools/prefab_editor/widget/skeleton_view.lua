@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
-local prefab_mgr = ecs.require "prefab_manager"
+local ies       = ecs.import.interface "ant.scene|ifilter_state"
 local hierarchy = require "hierarchy_edit"
 local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
@@ -778,6 +778,7 @@ local function create_bone_entity(joint_name)
 				end
 				ifs.set_state(e, "auxgeom", true)
                 w:sync("render_object_update:out", e)
+                ies.set_state(e, "main_view", false)
 			end
         }
     }

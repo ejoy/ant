@@ -60,6 +60,8 @@ local bgfx              = require "bgfx"
 local m = ecs.system 'gui_system'
 local drag_file = nil
 
+local ima = ecs.import.interface "ant.asset|imaterial_animation"
+
 local function on_new_project(path)
     new_project.set_path(path)
     new_project.gen_mount()
@@ -247,10 +249,19 @@ local function choose_project()
     end
 end
 
+local highlight_anim
 local stat_window
 function m:init_world()
     local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
     stat_window = iRmlUi.open "bgfx_stat.rml"
+    highlight_anim = ima.create("highlight", "u_basecolor_factor", {
+        {time = 0, value = {1, 1, 1, 1}},
+        {time = 300, value = {1, 5, 1, 1}},
+        {time = 500, value = {1, 10, 1, 1}},
+        {time = 700, value = {1, 5, 1, 1}},
+        {time = 1000, value = {1, 1, 1, 1}},
+    })
+
 end
 local mouse_pos_x
 local mouse_pos_y
@@ -352,6 +363,9 @@ local function on_target(old, new)
         if e.light then
             light_gizmo.bind(new)
         end
+        if highlight_anim then
+            ima.play(world:entity(highlight_anim), new, false)
+        end
     end
     world:pub {"UpdateAABB", new}
     anim_view.bind(new)
@@ -372,8 +386,6 @@ end
 local cmd_queue = ecs.require "gizmo.command_queue"
 local event_update_aabb = world:sub {"UpdateAABB"}
 
-
-
 function hierarchy:set_adaptee_visible(nd, b, recursion)
     local adaptee = self:get_select_adaptee(nd.eid)
     for _, e in ipairs(adaptee) do
@@ -391,6 +403,7 @@ local function update_visible(node, visible)
         ies.set_state(world:entity(e), "main_view", visible)
     end
 end
+
 function m:handle_event()
     for _, _, _, x, y in event_mouse:unpack() do
         mouse_pos_x = x
