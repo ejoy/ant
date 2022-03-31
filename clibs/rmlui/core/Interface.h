@@ -46,7 +46,7 @@ public:
 	virtual int GetBaseline(FontFaceHandle handle) = 0;
 	virtual void GetUnderline(FontFaceHandle handle, float& position, float &thickness) = 0;
 	virtual int GetStringWidth(FontFaceHandle handle, const std::string& string, Character prior_character = Character::Null) = 0;
-	virtual void GenerateString(FontFaceHandle face_handle, TextEffectsHandle text_effects_handle, LineList& lines, const Color& colour, Geometry& geometry) = 0;
+	virtual void GenerateString(FontFaceHandle face_handle, TextEffectsHandle text_effects_handle, LineList& lines, const Color& color, Geometry& geometry) = 0;
 };
 
 class FileInterface {

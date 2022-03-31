@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/Colour.h>
+#include <core/Color.h>
 #include <core/Animation.h>
 #include <core/Transform.h>
 #include <variant>

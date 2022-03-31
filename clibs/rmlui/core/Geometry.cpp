@@ -251,8 +251,8 @@ void Geometry::AddPolygon(const Path& points, Color col) {
 	Index offset = (Index)vsz;
 	for (size_t i = 0; i < points_count - 2; ++i) {
 		idx[0] = offset + 0;
-		idx[1] = offset + i + 1;
-		idx[2] = offset + i + 2;
+		idx[1] = offset + (Rml::Index)i + 1;
+		idx[2] = offset + (Rml::Index)i + 2;
 		idx += 3;
 	}
 }

@@ -25,7 +25,7 @@ FE(Rml::TextureHandle th){
 
 static bool
 is_font_tex(SDFFontEffect *fe) { 
-    return fe ? (fe->GetType() & FE_FontTex) != 0 : false;
+    return fe ? (fe->GetType() != FontEffect::Image) != 0 : false;
 }
 
 static uint32_t getTextureFlags(Rml::SamplerFlag flags) {
@@ -64,10 +64,18 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::I
         shader::ShaderType st;
         if (fe){
             switch (fe->GetType()){
-            case FontEffectType(FE_Outline|FE_FontTex): st = mScissorRect.needShaderClipRect ? shader::ST_font_outline_cr : shader::ST_font_outline; break;
-            case FontEffectType(FE_Shadow|FE_FontTex): st = mScissorRect.needShaderClipRect ? shader::ST_font_shadow_cr : shader::ST_font_shadow; break;
-            case FontEffectType(FE_None|FE_FontTex): st = mScissorRect.needShaderClipRect ? shader::ST_font_cr : shader::ST_font; break;
-            case FontEffectType::FE_None: st = mScissorRect.needShaderClipRect ? shader::ST_image_cr : shader::ST_image; break;
+            case FontEffect::Outline:
+                st = mScissorRect.needShaderClipRect ? shader::ST_font_outline_cr : shader::ST_font_outline;
+                break;
+            case FontEffect::Shadow:
+                st = mScissorRect.needShaderClipRect ? shader::ST_font_shadow_cr : shader::ST_font_shadow;
+                break;
+            case FontEffect::None:
+                st = mScissorRect.needShaderClipRect ? shader::ST_font_cr : shader::ST_font;
+                break;
+            case FontEffect::Image:
+                st = mScissorRect.needShaderClipRect ? shader::ST_image_cr : shader::ST_image;
+                break;
             default: st = shader::ST_count;
             }
         } else {

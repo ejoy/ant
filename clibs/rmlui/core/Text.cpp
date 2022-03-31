@@ -245,10 +245,10 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 	if (changed_properties.contains(PropertyId::Color) || changed_properties.contains(PropertyId::Opacity)) {
 		dirty_geometry = true;
 		if (!dirty_decoration) {
-			Color col = GetTextDecorationColor();
-			ColorApplyOpacity(col, GetOpacity());
+			Color color = GetTextDecorationColor();
+			color.ApplyOpacity(GetOpacity());
 			for (auto& vtx : decoration.GetVertices()) {
-				vtx.col = col;
+				vtx.col = color;
 			}
 		}
 	}
@@ -263,11 +263,11 @@ void Text::UpdateTextEffects() {
 	auto stroke = GetTextStroke();
 	TextEffects text_effects;
 	if (shadow) {
-		ColorApplyOpacity(shadow->color, GetOpacity());
+		shadow->color.ApplyOpacity(GetOpacity());
 		text_effects.emplace_back(shadow.value());
 	}
 	if (stroke) {
-		ColorApplyOpacity(stroke->color, GetOpacity());
+		stroke->color.ApplyOpacity(GetOpacity());
 		text_effects.emplace_back(stroke.value());
 	}
 	TextEffectsHandle new_text_effects_handle = GetFontEngineInterface()->PrepareTextEffects(GetFontFaceHandle(), text_effects);
@@ -284,7 +284,7 @@ void Text::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	dirty_geometry = false;
 	dirty_decoration = true;
 	Color color = GetTextColor();
-	ColorApplyOpacity(color, GetOpacity());
+	color.ApplyOpacity(GetOpacity());
 	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, color, geometry);
 }
 
@@ -299,7 +299,7 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 		return;
 	}
 	Color color = GetTextDecorationColor();
-	ColorApplyOpacity(color, GetOpacity());
+	color.ApplyOpacity(GetOpacity());
 	for (const Line& line : lines) {
 		Point position = line.position;
 		float width = (float)line.width;

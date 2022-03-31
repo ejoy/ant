@@ -81,8 +81,8 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	auto texture = Texture::Fetch(path);
 	geometry.SetTexture(texture);
 	geometry.SetSamplerFlag(repeat);
-	Color colour(255, 255, 255, 255);
-	ColorApplyOpacity(colour, element->GetOpacity());
+	Color color(255, 255, 255, 255);
+	color.ApplyOpacity(element->GetOpacity());
 
 	if (texSize.IsEmpty()) {
 		texSize = texture->GetDimensions();
@@ -126,11 +126,11 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	if (paddingEdge.size() == 0 
 		|| (origin == Style::BoxType::ContentBox && metrics.paddingWidth != EdgeInsets<float>{})
 	) {
-		geometry.AddRectFilled(surface, colour);
+		geometry.AddRectFilled(surface, color);
 		geometry.UpdateUV(4, surface, uv);
 	}
 	else {
-		geometry.AddPolygon(paddingEdge, colour);
+		geometry.AddPolygon(paddingEdge, color);
 		geometry.UpdateUV(paddingEdge.size(), surface, uv);
 	}
 }

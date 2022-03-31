@@ -78,7 +78,7 @@ std::optional<Property> PropertyDefinition::ParseValue(const std::string& value)
 	for (auto parser : parsers) {
 		auto property = parser->ParseValue(value);
 		if (property) {
-			return std::move(property);
+			return property;
 		}
 	}
 	return std::nullopt;

@@ -76,7 +76,7 @@ struct TextEffectVisitor {
     void operator() (Rml::TextStroke const& t) {
         font_manager* F = context->font_mgr;
         int8_t edgevalue_offset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
-        result = new TSDFFontEffectOutline<FontEffectType(FE_Outline|FE_FontTex)>(
+        result = new TSDFFontEffectOutline(
             context->font_tex.texid,
             t.width,
             edgevalue_offset,
@@ -200,7 +200,7 @@ int FontEngine::GenerateString(
     Rml::TextEffectsHandle text_effects_handle,
     const std::string& string, const
     Rml::Point& position,
-    const Rml::Color& colour,
+    const Rml::Color& color,
     Rml::Geometry& geometry) {
 
     const auto& res = FindOrAddFontResource(text_effects_handle);
@@ -235,7 +235,7 @@ int FontEngine::GenerateString(
         geometry.AddRectFilled(
             { x0 * scale, y0 * scale, g.w * scale, g.h * scale },
             { u0 * fonttexel.x, v0 * fonttexel.y ,og.w * fonttexel.x , og.h * fonttexel.y },
-            colour
+            color
         );
 
         //x += g.advance_x + (dim.x - olddim.x);
@@ -245,10 +245,10 @@ int FontEngine::GenerateString(
     return x - int(position.x + 0.5f);
 }
 
-void FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandle text_effects_handle, Rml::LineList& lines, const Rml::Color& colour, Rml::Geometry& geometry){
+void FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandle text_effects_handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry){
     geometry.Release();
     for (size_t i = 0; i < lines.size(); ++i) {
         Rml::Line& line = lines[i];
-        line.width = GenerateString(handle, text_effects_handle, line.text, line.position, colour, geometry);
+        line.width = GenerateString(handle, text_effects_handle, line.text, line.position, color, geometry);
     }
 }

@@ -2,6 +2,7 @@
 #include <utility>
 #include <numbers>
 #include <array>
+#include <math.h>
 
 namespace Rml {
 

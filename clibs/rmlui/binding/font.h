@@ -36,8 +36,8 @@ public:
 
 	virtual void GetUnderline(Rml::FontFaceHandle handle, float& position, float &thickness)override;
 	virtual int GetStringWidth(Rml::FontFaceHandle handle, const std::string& string, Rml::Character prior_character = Rml::Character::Null)override;
-	int GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandle text_effects_handle, const std::string& string, const Rml::Point& position, const Rml::Color& colour, Rml::Geometry& geometry);
-	virtual void GenerateString(Rml::FontFaceHandle face_handle, Rml::TextEffectsHandle text_effects_handle, Rml::LineList& lines, const Rml::Color& colour, Rml::Geometry& geometry) override;
+	int GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandle text_effects_handle, const std::string& string, const Rml::Point& position, const Rml::Color& color, Rml::Geometry& geometry);
+	virtual void GenerateString(Rml::FontFaceHandle face_handle, Rml::TextEffectsHandle text_effects_handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry) override;
 
 private:
 	struct font_glyph

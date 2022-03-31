@@ -51,9 +51,9 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	Color background_color = element->GetComputedProperty(PropertyId::BackgroundColor)->Get<Color>();
 	float opacity = element->GetOpacity();
 	if (opacity < 1) {
-		ColorApplyOpacity(background_color, opacity);
+		background_color.ApplyOpacity(opacity);
 		for (int i = 0; i < 4; ++i) {
-			ColorApplyOpacity(border_color[i], opacity);
+			border_color[i].ApplyOpacity(opacity);
 		}
 	}
 	

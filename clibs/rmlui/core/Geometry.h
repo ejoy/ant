@@ -1,8 +1,9 @@
 #pragma once
 
 #include <core/Types.h>
-#include <core/Colour.h>
+#include <core/Color.h>
 #include <memory>
+#include <vector>
 #include <stdint.h>
 
 namespace Rml {

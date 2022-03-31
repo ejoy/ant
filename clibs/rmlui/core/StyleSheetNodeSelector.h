@@ -5,6 +5,7 @@ namespace Rml {
 class Element;
 
 struct StyleSheetNodeSelector {
+	virtual ~StyleSheetNodeSelector() {}
 	virtual bool IsApplicable(const Element* element, int a, int b) = 0;
 };
 
