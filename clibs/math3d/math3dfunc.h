@@ -63,8 +63,8 @@ void math3d_aabb_points(struct lastack *LS, const float *aabb, float *points[8])
 void math3d_aabb_expand(struct lastack *LS, const float *aabb, const float e[4]);
 
 //frustum
-void math3d_frustum_planes(struct lastack *LS, const float m[16], float *planes[6]);
-void math3d_frustum_points(struct lastack *LS, const float m[16], float *points[8]);
+void math3d_frustum_planes(struct lastack *LS, const float m[16], float *planes[6], int homogeneous_depth);
+void math3d_frustum_points(struct lastack *LS, const float m[16], float *points[8], int homogeneous_depth);
 int math3d_frustum_intersect_aabb(struct lastack *LS, const float* planes[6], const float *aabb);
 void math3d_frusutm_aabb(struct lastack *LS, const float* points[8], float *aabb);
 void math3d_frustum_center(struct lastack *LS, const float *points[8], float *center);

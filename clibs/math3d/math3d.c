@@ -25,6 +25,10 @@
 #define MAT_PERSPECTIVE 0
 #define MAT_ORTHO 1
 
+struct refobject {
+	int64_t id;
+};
+
 static int g_default_homogeneous_depth = 0;
 static int g_origin_bottom_left = 0;
 
@@ -37,11 +41,6 @@ getlen(lua_State *L, int index) {
 		return len;
 	}
 	return luaL_error(L, "lua_len returns %s", lua_typename(L, lua_type(L, -1)));
-}
-
-int
-math3d_homogeneous_depth() {
-	return g_default_homogeneous_depth;
 }
 
 int
@@ -68,7 +67,8 @@ LUAID(lua_State *L, int index) {
 
 static inline struct lastack *
 GETLS(lua_State *L) {
-	return math3d_getLS(L);
+	struct math3d_api *bs = lua_touserdata(L, lua_upvalueindex(1));
+	return bs->LS;
 }
 
 static void
@@ -81,7 +81,7 @@ finalize(lua_State *L, lua_CFunction gc) {
 
 static int
 boxstack_gc(lua_State *L) {
-	struct boxstack *bs = lua_touserdata(L, 1);
+	struct math3d_api *bs = lua_touserdata(L, 1);
 	if (bs->LS) {
 		lastack_delete(bs->LS);
 		bs->LS = NULL;
@@ -91,7 +91,7 @@ boxstack_gc(lua_State *L) {
 
 static const void *
 refobj_meta(lua_State *L) {
-	struct boxstack *bs = lua_touserdata(L, lua_upvalueindex(1));
+	struct math3d_api *bs = lua_touserdata(L, lua_upvalueindex(1));
 	return bs->refmeta;
 }
 
@@ -1839,7 +1839,7 @@ lfrustum_planes(lua_State *L){
 		planes[i] = alloc_vec4(L, LS);
 		lua_seti(L, -2, i+1);
 	}
-	math3d_frustum_planes(LS, m, planes);
+	math3d_frustum_planes(LS, m, planes, g_default_homogeneous_depth);
 
 	return 1;
 }
@@ -1913,7 +1913,7 @@ lfrustum_points(lua_State *L){
 		points[i] = alloc_vec4(L, LS);
 		lua_seti(L, -2, i+1);
 	}
-	math3d_frustum_points(LS, m, points);
+	math3d_frustum_points(LS, m, points, g_default_homogeneous_depth);
 	return 1;
 }
 
@@ -2023,14 +2023,14 @@ lpoint2plane(lua_State *L){
 
 static int
 lvalue_ptr(lua_State *L){
-	struct lastack *LS = GETLS(L);
+	struct math3d_api *api = (struct math3d_api *)lua_touserdata(L, lua_upvalueindex(1));
 	int type;
-	lua_pushlightuserdata(L, (void*)math3d_from_lua_id(L, LS, 1, &type));
+	lua_pushlightuserdata(L, (void*)math3d_from_lua_id(L, api, 1, &type));
 	return 1;
 }
 
 static void
-init_math3d_api(lua_State *L, struct boxstack *bs) {
+init_math3d_api(lua_State *L, struct math3d_api *bs) {
 		luaL_Reg l[] = {
 		{ "ref", NULL },
 		{ "tostring", ltostring },
@@ -2124,6 +2124,37 @@ init_math3d_api(lua_State *L, struct boxstack *bs) {
 	luaL_setfuncs(L,l,1);
 }
 
+// util function
+
+static const float *
+math3d_from_lua_(lua_State *L, struct lastack *LS, int index, int type) {
+	switch(type) {
+	case LINEAR_TYPE_MAT:
+		return matrix_from_index(L, LS, index);
+	case LINEAR_TYPE_VEC4:
+		return vector_from_index(L, LS, index);
+	case LINEAR_TYPE_QUAT:
+		return quat_from_index(L, LS, index);
+	default:
+		luaL_error(L, "Invalid math3d object type %d", type);
+	}
+	return NULL;
+}
+
+static const float *
+math3d_from_lua_id_(lua_State *L, struct lastack *LS, int index, int *type) {
+	int64_t id = get_id(L, index, lua_type(L, index));
+	*type = LINEAR_TYPE_NONE;
+	return lastack_value(LS, id, type);
+}
+
+static void
+math3d_push_(lua_State *L, struct lastack *LS, const float *v, int type) {
+	lastack_pushobject(LS, v, type);
+	int64_t id = lastack_pop(LS);
+	lua_pushlightuserdata(L, (void *)id);
+}
+
 LUAMOD_API int
 luaopen_math3d(lua_State *L) {
 	luaL_checkversion(L);
@@ -2138,9 +2169,12 @@ luaopen_math3d(lua_State *L) {
 	luaL_newlibtable(L,ref_mt);
 	int refmeta = lua_gettop(L);
 
-	struct boxstack * bs = lua_newuserdatauv(L, sizeof(struct boxstack), 0);
+	struct math3d_api * bs = lua_newuserdatauv(L, sizeof(struct math3d_api), 0);
 	bs->LS = lastack_new();
 	bs->refmeta = lua_topointer(L, refmeta);
+	bs->from_lua = math3d_from_lua_;
+	bs->from_lua_id = math3d_from_lua_id_;
+	bs->push = math3d_push_;
 	finalize(L, boxstack_gc);
 	lua_setfield(L, LUA_REGISTRYINDEX, MATH3D_STACK);
 
@@ -2157,28 +2191,4 @@ luaopen_math3d(lua_State *L) {
 	lua_setfield(L, -2, "ref");
 
 	return 1;
-}
-
-// util function
-
-const float *
-math3d_from_lua(lua_State *L, struct lastack *LS, int index, int type) {
-	switch(type) {
-	case LINEAR_TYPE_MAT:
-		return matrix_from_index(L, LS, index);
-	case LINEAR_TYPE_VEC4:
-		return vector_from_index(L, LS, index);
-	case LINEAR_TYPE_QUAT:
-		return quat_from_index(L, LS, index);
-	default:
-		luaL_error(L, "Invalid math3d object type %d", type);
-	}
-	return NULL;
-}
-
-const float *
-math3d_from_lua_id(lua_State *L, struct lastack *LS, int index, int *type) {
-	int64_t id = get_id(L, index, lua_type(L, index));
-	*type = LINEAR_TYPE_NONE;
-	return lastack_value(LS, id, type);
 }
