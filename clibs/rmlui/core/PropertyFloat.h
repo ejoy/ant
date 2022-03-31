@@ -12,7 +12,7 @@ enum class PropertyUnit : uint8_t {
 	PX,               // number suffixed by 'px'; fetch as < float >
 	DEG,              // number suffixed by 'deg'; fetch as < float >
 	RAD,              // number suffixed by 'rad'; fetch as < float >
-	COLOUR,           // colour; fetch as < Color >
+	COLOUR,           // color; fetch as < Color >
 	EM,               // number suffixed by 'em'; fetch as < float >
 	PERCENT,          // number suffixed by '%'; fetch as < float >
 	REM,              // number suffixed by 'rem'; fetch as < float >
