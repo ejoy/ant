@@ -1,8 +1,6 @@
 local lm = require "luamake"
 
 if lm.os ~= "ios" then
-    lm:phony "source_gesture" {
-    }
     return
 end
 

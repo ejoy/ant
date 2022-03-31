@@ -10,12 +10,14 @@ local RuntimeBacklist = {
     subprocess = true,
     bake = true,
     audio = true,
+    gesture = lm.os ~= "ios",
 }
 
 local EditorBacklist = {
     firmware = true,
     bake = true,
-    audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os ~= "windows")
+    audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os ~= "windows"),
+    gesture = lm.os ~= "ios",
 }
 
 local RuntimeModules = {}
