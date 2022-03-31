@@ -4017,7 +4017,6 @@ create_fb_mrt(lua_State *L) {
 			attachments[i].numLayers = lua_getfield(L, -1, "numlayer") == LUA_TNUMBER ? (uint16_t)lua_tointeger(L, -1) : 1;
 			lua_pop(L, 1);
 		}
-		lua_pop(L, 1);
 	}
 	return BGFX(create_frame_buffer_from_attachment)(n, attachments, destroy);
 }
