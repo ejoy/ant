@@ -58,8 +58,8 @@ private:
 
 	bool dirty_geometry = true;
 	bool dirty_decoration = true;
-	bool dirty_effects = false;
-	bool dirty_font = false;
+	bool dirty_effects = true;
+	bool dirty_font = true;
 
 	std::string text;
 	LineList lines;

@@ -81,7 +81,6 @@ public:
 	void GetElementsByClassName(ElementList& elements, const std::string& class_name);
 
 	void Update();
-	void UpdateLayout();
 	void UpdateRender();
 	void SetRednerStatus();
 

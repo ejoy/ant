@@ -18,6 +18,7 @@ namespace Rml {
 		virtual ~Node();
 		bool UpdateVisible();
 		void UpdateMetrics(const Rect& child);
+		void UpdateLayout();
 		Layout& GetLayout();
 		const Layout::Metrics& GetMetrics() const;
 

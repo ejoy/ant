@@ -100,7 +100,7 @@ Element::Element(Document* owner, const std::string& tag)
 Element::~Element() {
 	assert(parent == nullptr);
 	SetDataModel(nullptr);
-	for (auto& child : children) {
+	for (auto& child : childnodes) {
 		child->SetParentNode(nullptr);
 	}
 	for (const auto& listener : listeners) {
@@ -419,7 +419,7 @@ void Element::NotifyCustomElement() {
 }
 
 void Element::AppendChild(Node* node) { 
-	GetLayout().InsertChild(node->GetLayout(), (uint32_t)children.size());
+	GetLayout().InsertChild(node->GetLayout(), (uint32_t)childnodes.size());
 	childnodes.emplace_back(node);
 	if (Element* e = dynamic_cast<Element*>(node)) {
 		children.emplace_back(e);
@@ -435,11 +435,13 @@ void Element::RemoveChild(Node* node) {
 		return;
 	}
 	auto detached_child = std::move(childnodes[index]);
-	children.erase(children.begin() + index);
-	for (auto it = children.begin(); it != children.end(); ++it) {
-		if (*it == node) {
-			children.erase(it);
-			break;
+	childnodes.erase(childnodes.begin() + index);
+	if (Element* e = dynamic_cast<Element*>(node)) {
+		for (auto it = children.begin(); it != children.end(); ++it) {
+			if (*it == e) {
+				children.erase(it);
+				break;
+			}
 		}
 	}
 	node->SetParentNode(nullptr);
@@ -489,10 +491,11 @@ Node* Element::GetPreviousSibling() {
 }
 
 void Element::RemoveAllChildren() {
-	for (auto& child : children) {
+	for (auto& child : childnodes) {
 		child->SetParentNode(nullptr);
 	}
 	children.clear();
+	childnodes.clear();
 	GetLayout().RemoveAllChildren();
 	DirtyStackingContext();
 	DirtyStructure();
@@ -684,7 +687,7 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 
 std::string Element::GetInnerHTML() const {
 	std::string html;
-	for (auto& child : children) {
+	for (auto& child : childnodes) {
 		html += child->GetOuterHTML();
 	}
 	return html;
@@ -699,7 +702,7 @@ std::string Element::GetOuterHTML() const {
 		auto& value = pair.second;
 		html += " " + name + "=\"" + value + "\"";
 	}
-	if (!children.empty()) {
+	if (!childnodes.empty()) {
 		html += ">";
 		html += GetInnerHTML();
 		html += "</";
@@ -781,7 +784,7 @@ void Element::UpdateStackingContext() {
 	}
 	dirty_stacking_context = false;
 	stacking_context.clear();
-	stacking_context.reserve(children.size());
+	stacking_context.reserve(childnodes.size());
 	for (auto& child : childnodes) {
 		stacking_context.push_back(child.get());
 	}
@@ -1109,12 +1112,6 @@ void Element::UpdateGeometry() {
 	}
 }
 
-void Element::UpdateLayout() {
-	if (layout.HasNewLayout() && Node::UpdateVisible()) {
-		CalculateLayout();
-	}
-}
-
 void Element::UpdateRender() {
 	UpdateTransform();
 	UpdatePerspective();
@@ -1130,7 +1127,7 @@ void Element::CalculateLayout() {
 	dirty_background = true;
 	dirty_image = true;
 	Rect content {};
-	for (auto& child : children) {
+	for (auto& child : childnodes) {
 		child->UpdateLayout();
 		if (child->IsVisible()) {
 			content.Union(child->GetMetrics().content);
@@ -1754,7 +1751,6 @@ void Element::UpdateProperties() {
 		}
 	});
 
-	// Next, pass inheritable dirty properties onto our children
 	PropertyIdSet dirty_inherited_properties = (dirty_properties & StyleSheetSpecification::GetRegisteredInheritedProperties());
 	if (!dirty_inherited_properties.empty()) {
 		for (auto& child : children) {

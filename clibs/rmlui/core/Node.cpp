@@ -59,4 +59,10 @@ Node::Type Node::GetType() const {
 	return type;
 }
 
+void Node::UpdateLayout() {
+	if (layout.HasNewLayout() && UpdateVisible()) {
+		CalculateLayout();
+	}
+}
+
 }
