@@ -12,8 +12,7 @@ local ientity 	= ecs.import.interface "ant.render|ientity"
 local ilight 	= ecs.import.interface "ant.render|ilight"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local imesh		= ecs.import.interface "ant.asset|imesh"
-
+local ima 		= ecs.import.interface "ant.asset|imaterial_animation"
 local igui		= ecs.import.interface "tools.prefab_editor|igui"
 
 
@@ -24,7 +23,6 @@ local gizmo 	= ecs.require "gizmo.gizmo"
 local inspector = ecs.require "widget.inspector"
 
 local hierarchy = require "hierarchy_edit"
-local global_data= require "common.global_data"
 local gizmo_const= require "gizmo.const"
 
 local math3d = require "math3d"
@@ -1135,6 +1133,9 @@ function gizmo_sys:handle_event()
 				if hierarchy:get_template(eid) then
 					gizmo:set_target(eid)
 				end
+			end
+			if ima.highlight_anim then
+				ima.play(world:entity(ima.highlight_anim), eid, false)
 			end
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then

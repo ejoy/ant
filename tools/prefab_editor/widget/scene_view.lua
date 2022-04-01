@@ -2,14 +2,11 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
-local icamera = ecs.import.interface "ant.camera|icamera"
 local assetmgr  = import_package "ant.asset"
 local icons = require "common.icons"(assetmgr)
 local gizmo = ecs.require "gizmo.gizmo"
 
 local imgui     = require "imgui"
-local math3d    = require "math3d"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy_edit"
@@ -107,7 +104,7 @@ local function get_icon_by_object_type(node)
         end
     end
 end
-
+local ima 		= ecs.import.interface "ant.asset|imaterial_animation"
 local function show_scene_node(node)
     imgui.table.NextRow();
     imgui.table.NextColumn();
@@ -116,6 +113,9 @@ local function show_scene_node(node)
         if imgui.util.IsItemClicked() then
             if is_editable(e) then
                 gizmo:set_target(e)
+            end
+            if ima.highlight_anim then
+                ima.play(world:entity(ima.highlight_anim), e, false)
             end
         end
 

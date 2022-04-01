@@ -241,16 +241,15 @@ local function choose_project()
     end
 end
 
-local highlight_anim
 local stat_window
 function m:init_world()
     local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
     stat_window = iRmlUi.open "bgfx_stat.rml"
-    highlight_anim = ima.create("highlight", "u_basecolor_factor", {
+    ima.highlight_anim = ima.create("highlight", "u_basecolor_factor", {
         {time = 0, value = {1, 1, 1, 1}},
-        {time = 300, value = {1, 5, 1, 1}},
-        {time = 500, value = {1, 10, 1, 1}},
-        {time = 700, value = {1, 5, 1, 1}},
+        {time = 300, value = {2, 2, 2, 1}},
+        {time = 500, value = {5, 5, 5, 1}},
+        {time = 700, value = {2, 2, 2, 1}},
         {time = 1000, value = {1, 1, 1, 1}},
     })
 end
@@ -353,9 +352,6 @@ local function on_target(old, new)
 
         if e.light then
             light_gizmo.bind(new)
-        end
-        if highlight_anim then
-            ima.play(world:entity(highlight_anim), new, false)
         end
     end
     world:pub {"UpdateAABB", new}
@@ -548,7 +544,7 @@ function m:handle_event()
         prefab_mgr:create(what, type)
     end
     for _, what in reset_editor:unpack() do
-        ima.stop(world:entity(highlight_anim))
+        ima.stop(world:entity(ima.highlight_anim))
     end
 end
 
