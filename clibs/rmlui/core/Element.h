@@ -127,6 +127,9 @@ public:
 	void UpdateProperties();
 	void UpdateAnimations();
 
+	const EdgeInsets<float>& GetPadding() const;
+	const EdgeInsets<float>& GetBorder() const;
+
 	void SetParentNode(Element* parent) override;
 	void SetDataModel(DataModel* data_model) override;
 	Node* Clone(bool deep = true) const override;
@@ -138,6 +141,7 @@ public:
 	std::string GetOuterHTML() const override;
 	void SetInnerHTML(const std::string& html) override;
 	void SetOuterHTML(const std::string& html) override;
+	const Rect& GetContentRect() const override;
 
 	virtual void ChangedProperties(const PropertyIdSet& changed_properties);
 
@@ -156,7 +160,7 @@ protected:
 	void UpdateClip();
 	void UpdateProperty(PropertyId id, const Property* property = nullptr);
 
-	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property);
+	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay);
 	bool AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween);
 	bool StartTransition(PropertyId id, const Transition& transition, const Property& start_value, const Property& target_value);
 	void HandleTransitionProperty();
@@ -179,15 +183,18 @@ protected:
 	PseudoClassSet pseudo_classes = 0;
 	std::vector<EventListener*> listeners;
 	std::unique_ptr<Geometry> geometry_background;
-	std::unique_ptr<Geometry> geometry_image;
-	Geometry::Path padding_edge;
+	std::unique_ptr<TextureGeometry> geometry_image;
 	float font_size = 16.f;
 	PropertyDictionary animation_properties;
 	PropertyDictionary inline_properties;
 	std::shared_ptr<StyleSheetPropertyDictionary> definition_properties;
 	PropertyIdSet dirty_properties;
 	glm::mat4x4 transform;
-	EdgeInsets<float> scrollInsets{};
+	Rect content_rect;
+	EdgeInsets<float> padding{};
+	EdgeInsets<float> border{};
+	EdgeInsets<float> scroll_insets{};
+	Geometry::Path padding_edge;
 	struct Clip {
 		enum class Type : uint8_t {
 			None,

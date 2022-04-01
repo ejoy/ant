@@ -1,31 +1,3 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
 #include <core/Layout.h>
 #include <core/ID.h>
 #include <core/Property.h>
@@ -240,50 +212,20 @@ void Layout::MarkDirty() {
 	YGNodeMarkDirty(node);
 }
 
-bool Layout::HasNewLayout() const {
-	return YGNodeGetHasNewLayout(node);
-}
-
-bool Layout::UpdateVisible(Layout::Metrics& metrics) {
-	metrics.visible = YGNodeStyleGetDisplay(node) != YGDisplayNone;
-	if (!metrics.visible) {
-		YGNodeSetHasNewLayout(node, false);
+bool Layout::HasNewLayout() {
+	if (!YGNodeGetHasNewLayout(node)) {
 		return false;
 	}
-	return true;
-}
-
-void Layout::UpdateMetrics(Layout::Metrics& metrics, const Rect& child) {
-	metrics.frame = Rect{
-		Point {
-			YGValueToFloat(YGNodeLayoutGetLeft(node)),
-			YGValueToFloat(YGNodeLayoutGetTop(node))
-		},
-		Size {
-			YGValueToFloat(YGNodeLayoutGetWidth(node)),
-			YGValueToFloat(YGNodeLayoutGetHeight(node))
-		}
-	};
-	metrics.borderWidth = {
-		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeLeft)),
-		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeTop)),
-		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeRight)),
-		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeBottom))
-	};
-	metrics.paddingWidth = {
-		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeLeft)),
-		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeTop)),
-		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeRight)),
-		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeBottom))
-	};
-	Rect r = metrics.frame;
-	r.Union(child);
-	metrics.content = r;
 	YGNodeSetHasNewLayout(node, false);
+	return true;
 }
 
 Layout::Overflow Layout::GetOverflow() const {
 	return (Layout::Overflow)YGNodeStyleGetOverflow(node);
+}
+
+bool Layout::IsVisible() const {
+	return YGNodeStyleGetDisplay(node) != YGDisplayNone;
 }
 
 void Layout::SetVisible(bool visible) {
@@ -293,6 +235,37 @@ void Layout::SetVisible(bool visible) {
 	else {
 		YGNodeStyleSetDisplay(node, YGDisplayNone);
 	}
+}
+
+Rect Layout::GetBounds() const {
+	return {
+		Point {
+			YGValueToFloat(YGNodeLayoutGetLeft(node)),
+			YGValueToFloat(YGNodeLayoutGetTop(node))
+		},
+		Size {
+			YGValueToFloat(YGNodeLayoutGetWidth(node)),
+			YGValueToFloat(YGNodeLayoutGetHeight(node))
+		}
+	};
+}
+
+EdgeInsets<float> Layout::GetPadding() const {
+	return {
+		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeLeft)),
+		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeTop)),
+		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeRight)),
+		YGValueToFloat(YGNodeLayoutGetPadding(node, YGEdgeBottom))
+	};
+}
+
+EdgeInsets<float> Layout::GetBorder() const {
+	return {
+		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeLeft)),
+		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeTop)),
+		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeRight)),
+		YGValueToFloat(YGNodeLayoutGetBorder(node, YGEdgeBottom))
+	};
 }
 
 }

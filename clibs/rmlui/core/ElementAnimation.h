@@ -52,10 +52,9 @@ struct AnimationKey {
 };
 
 // The origin is tracked for determining its behavior when adding and removing animations.
-// User: Animation started by the Element API
 // Animation: Animation started by the 'animation' property
 // Transition: Animation started by the 'transition' property
-enum class ElementAnimationOrigin : uint8_t { User, Animation, Transition };
+enum class ElementAnimationOrigin : uint8_t { Animation, Transition };
 
 class ElementAnimation {
 public:
@@ -67,7 +66,6 @@ public:
 	bool IsComplete() const { return animation_complete; }
 	bool IsTransition() const { return origin == ElementAnimationOrigin::Transition; }
 	bool IsInitalized() const { return !keys.empty(); }
-	ElementAnimationOrigin GetOrigin() const { return origin; }
 	void Release(Element& element);
 private:
 	bool InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween);

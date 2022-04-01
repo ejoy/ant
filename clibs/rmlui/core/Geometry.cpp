@@ -5,8 +5,6 @@
 
 namespace Rml {
 
-Geometry::Geometry()
-{}
 
 void Geometry::Render() {
 	if (vertices.empty() || indices.empty())
@@ -16,8 +14,8 @@ void Geometry::Render() {
 		vertices.size(),
 		&indices[0],
 		indices.size(),
-		texture ? texture->GetHandle() : 0,
-		flags
+		0,
+		SamplerFlag::Unset
 	);
 }
 
@@ -27,14 +25,6 @@ std::vector<Vertex>& Geometry::GetVertices() {
 
 std::vector<Index>& Geometry::GetIndices() {
 	return indices;
-}
-
-void Geometry::SetTexture(std::shared_ptr<Texture> _texture) {
-	texture = _texture;
-}
-
-void Geometry::SetSamplerFlag(SamplerFlag _flags) {
-	flags = _flags;
 }
 
 void Geometry::Release() {
@@ -289,6 +279,30 @@ void Geometry::Path::DrawArc(const Point& center, float radius_a, float radius_b
 		const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
 		points.push_back(center + Point(cosf(a) * radius_a, sinf(a) * radius_b));
 	}
+}
+
+void TextureGeometry::SetTexture(std::shared_ptr<Texture> _texture, SamplerFlag _flags) {
+	texture = _texture;
+	flags = _flags;
+}
+
+void TextureGeometry::Render() {
+	if (vertices.empty() || indices.empty())
+		return;
+	GetRenderInterface()->RenderGeometry(
+		&vertices[0],
+		vertices.size(),
+		&indices[0],
+		indices.size(),
+		texture ? texture->GetHandle() : 0,
+		flags
+	);
+}
+
+void TextureGeometry::Release() {
+	Geometry::Release();
+	texture.reset();
+	flags = SamplerFlag::Unset;
 }
 
 }

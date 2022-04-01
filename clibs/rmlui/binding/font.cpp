@@ -201,10 +201,10 @@ int FontEngine::GenerateString(
     const std::string& string, const
     Rml::Point& position,
     const Rml::Color& color,
-    Rml::Geometry& geometry) {
+    Rml::TextureGeometry& geometry) {
 
     const auto& res = FindOrAddFontResource(text_effects_handle);
-    geometry.SetTexture(res.tex);
+    geometry.SetTexture(res.tex, Rml::SamplerFlag::Unset);
 
     auto& vertices = geometry.GetVertices();
     auto& indices = geometry.GetIndices();
@@ -245,7 +245,7 @@ int FontEngine::GenerateString(
     return x - int(position.x + 0.5f);
 }
 
-void FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandle text_effects_handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry){
+void FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandle text_effects_handle, Rml::LineList& lines, const Rml::Color& color, Rml::TextureGeometry& geometry){
     geometry.Release();
     for (size_t i = 0; i < lines.size(); ++i) {
         Rml::Line& line = lines[i];

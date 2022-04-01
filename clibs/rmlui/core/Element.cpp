@@ -189,7 +189,7 @@ bool Element::IsPointWithinElement(Point point) {
 	if (ignorePointerEvents) {
 		return false;
 	}
-	return Project(point) && Rect { {}, GetMetrics().frame.size }.Contains(point);
+	return Project(point) && Rect { {}, GetBounds().size }.Contains(point);
 }
 
 float Element::GetZIndex() const {
@@ -809,11 +809,10 @@ void Element::UpdateStructure() {
 	}
 }
 
-void Element::StartAnimation(PropertyId property_id, const Property* start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property) {
-	ElementAnimationOrigin origin = (initiated_by_animation_property ? ElementAnimationOrigin::Animation : ElementAnimationOrigin::User);
+void Element::StartAnimation(PropertyId property_id, const Property* start_value, int num_iterations, bool alternate_direction, float delay) {
 	double start_time = GetOwnerDocument()->GetCurrentTime() + (double)delay;
 
-	ElementAnimation animation{ property_id, origin, *start_value, *this, start_time, 0.0f, num_iterations, alternate_direction };
+	ElementAnimation animation{ property_id, ElementAnimationOrigin::Animation, *start_value, *this, start_time, 0.0f, num_iterations, alternate_direction };
 	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == property_id; });
 	if (it == animations.end()) {
 		if (animation.IsInitalized()) {
@@ -941,7 +940,7 @@ void Element::HandleAnimationProperty() {
 	// Remove existing animations
 	{
 		auto it_remove = std::partition(animations.begin(), animations.end(), 
-			[](const ElementAnimation & animation) { return animation.GetOrigin() != ElementAnimationOrigin::Animation; }
+			[](const ElementAnimation & animation) { return animation.IsTransition(); }
 		);
 		for (auto it = it_remove; it != animations.end(); ++it)
 			it->Release(*this);
@@ -979,7 +978,7 @@ void Element::HandleAnimationProperty() {
 					start = GetComputedProperty(id);
 				}
 				if (start) {
-					StartAnimation(id, start, animation.num_iterations, animation.alternate, animation.transition.delay, true);
+					StartAnimation(id, start, animation.num_iterations, animation.alternate, animation.transition.delay);
 				}
 			}
 			// Add middle keys: Need to skip the first and last keys if they set the initial and end conditions, respectively.
@@ -1025,7 +1024,7 @@ void Element::UpdateTransform() {
 		return;
 	dirty_transform = false;
 	glm::mat4x4 new_transform(1);
-	Point origin2d = GetMetrics().frame.origin;
+	Point origin2d = GetBounds().origin;
 	if (parent) {
 		origin2d = origin2d - parent->GetScrollOffset();
 	}
@@ -1110,7 +1109,7 @@ void Element::UpdateGeometry() {
 	}
 	if (dirty_image) {
 		if (!geometry_image) {
-			geometry_image.reset(new Geometry);
+			geometry_image.reset(new TextureGeometry);
 		}
 		ElementBackgroundImage::GenerateGeometry(this, *geometry_image, padding_edge);
 		dirty_image = false;
@@ -1127,6 +1126,8 @@ void Element::UpdateRender() {
 }
 
 void Element::CalculateLayout() {
+	padding = GetLayout().GetPadding();
+	border = GetLayout().GetBorder();
 	DirtyTransform();
 	DirtyClip();
 	dirty_background = true;
@@ -1135,10 +1136,11 @@ void Element::CalculateLayout() {
 	for (auto& child : childnodes) {
 		child->UpdateLayout();
 		if (child->IsVisible()) {
-			content.Union(child->GetMetrics().content);
+			content.Union(child->GetContentRect());
 		}
 	}
-	Node::UpdateMetrics(content);
+	content_rect = GetBounds();
+	content_rect.Union(content);
 }
 
 Element* Element::ElementFromPoint(Point point) {
@@ -1204,7 +1206,7 @@ void Element::UpdateClip() {
 		}
 		return;
 	}
-	Size size = GetMetrics().frame.size;
+	Size size = GetBounds().size;
 	if (size.IsEmpty()) {
 		clip.type = Clip::Type::None;
 		if (parent) {
@@ -1347,7 +1349,7 @@ void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
 	if (GetLayout().GetOverflow() != Layout::Overflow::Scroll) {
 		return;
 	}
-	scrollInsets = insets;
+	scroll_insets = insets;
 	Size offset = GetScrollOffset();
 	UpdateScrollOffset(offset);
 
@@ -1375,8 +1377,8 @@ void clamp(Size& s, Rect r) {
 }
 
 void Element::UpdateScrollOffset(Size& scrollOffset) const {
-	auto const& m = GetMetrics();
-	clamp(scrollOffset, m.content + scrollInsets - EdgeInsets<float> {0, 0, m.frame.size.w, m.frame.size.h});
+	auto const& bounds = GetBounds();
+	clamp(scrollOffset, content_rect + scroll_insets - EdgeInsets<float> {0, 0, bounds.size.w, bounds.size.h});
 }
 
 void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate) {
@@ -1801,6 +1803,18 @@ void Element::UpdateProperties() {
 		ChangedProperties(dirty_properties);
 		dirty_properties.clear();
 	}
+}
+
+const Rect& Element::GetContentRect() const {
+	return content_rect;
+}
+
+const EdgeInsets<float>& Element::GetPadding() const {
+	return padding;
+}
+
+const EdgeInsets<float>& Element::GetBorder() const {
+	return border;
 }
 
 }

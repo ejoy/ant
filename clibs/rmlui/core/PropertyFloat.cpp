@@ -76,14 +76,14 @@ float PropertyFloat::Compute(const Element* e) const {
 
 float PropertyFloat::ComputeW(const Element* e) const {
 	if (unit == PropertyUnit::PERCENT) {
-		return value * e->GetMetrics().frame.size.w * 0.01f;
+		return value * e->GetBounds().size.w * 0.01f;
 	}
 	return Compute(e);
 }
 
 float PropertyFloat::ComputeH(const Element* e) const {
 	if (unit == PropertyUnit::PERCENT) {
-		return value * e->GetMetrics().frame.size.h * 0.01f;
+		return value * e->GetBounds().size.h * 0.01f;
 	}
 	return Compute(e);
 }

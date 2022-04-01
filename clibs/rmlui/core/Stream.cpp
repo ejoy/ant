@@ -51,10 +51,10 @@ static Stream::View ReadAll(const std::string& filename) {
 		return {};
 	}
 	size_t len = GetFileInterface()->Length(handle);
-	void* buf = malloc(len);
+	uint8_t* buf = new uint8_t[len];
 	len = GetFileInterface()->Read(buf, len, handle);
 	GetFileInterface()->Close(handle);
-	return {(const uint8_t*)buf, len, true};
+	return {buf, len, true};
 }
 
 Stream::Stream(const std::string& filename)

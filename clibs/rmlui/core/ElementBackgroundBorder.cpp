@@ -57,18 +57,19 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 		}
 	}
 	
-	const Layout::Metrics& metrics = element->GetMetrics();
+	const auto& bounds = element->GetBounds();
+	const auto& border = element->GetBorder();
 
 	float outlineWidth = element->GetComputedProperty(PropertyId::OutlineWidth)->Get<PropertyFloat>().Compute(element);
 	if (outlineWidth > 0.f) {
 		Color outlineColor = element->GetComputedProperty(PropertyId::OutlineColor)->Get<Color>();
-		geometry.AddRect(Rect {Point{}, metrics.frame.size}, outlineWidth, outlineColor);
+		geometry.AddRect(Rect {Point{}, bounds.size}, outlineWidth, outlineColor);
 	}
 
-	bool topLeftInnerRounded     = metrics.borderWidth.left  < border_radius.topLeft     && metrics.borderWidth.top    < border_radius.topLeft;
-	bool topRightInnerRounded    = metrics.borderWidth.right < border_radius.topRight    && metrics.borderWidth.top    < border_radius.topRight;
-	bool bottomRightInnerRounded = metrics.borderWidth.right < border_radius.bottomRight && metrics.borderWidth.bottom < border_radius.bottomRight;
-	bool bottomLeftInnerRounded  = metrics.borderWidth.left  < border_radius.bottomLeft  && metrics.borderWidth.bottom < border_radius.bottomLeft;
+	bool topLeftInnerRounded     = border.left  < border_radius.topLeft     && border.top    < border_radius.topLeft;
+	bool topRightInnerRounded    = border.right < border_radius.topRight    && border.top    < border_radius.topRight;
+	bool bottomRightInnerRounded = border.right < border_radius.bottomRight && border.bottom < border_radius.bottomRight;
+	bool bottomLeftInnerRounded  = border.left  < border_radius.bottomLeft  && border.bottom < border_radius.bottomLeft;
 	auto topLeftInnerRadius = [&](float v) {
 		return topLeftInnerRounded ? std::max(v, border_radius.topLeft) : v;
 	};
@@ -84,27 +85,27 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 
 	Quad quadLeft = {
 		{ 0, border_radius.topLeft },
-		{ metrics.borderWidth.left, topLeftInnerRadius(metrics.borderWidth.top) },
-		{ metrics.borderWidth.left, metrics.frame.size.h - bottomLeftInnerRadius(metrics.borderWidth.bottom) },
-		{ 0, metrics.frame.size.h - border_radius.bottomLeft }
+		{ border.left, topLeftInnerRadius(border.top) },
+		{ border.left, bounds.size.h - bottomLeftInnerRadius(border.bottom) },
+		{ 0, bounds.size.h - border_radius.bottomLeft }
 	};
 	Quad quadTop = {
 		{ border_radius.topLeft, 0 },
-		{ metrics.frame.size.w - border_radius.topRight, 0 },
-		{ metrics.frame.size.w - topRightInnerRadius(metrics.borderWidth.right), metrics.borderWidth.top },
-		{ topLeftInnerRadius(metrics.borderWidth.left), metrics.borderWidth.top },
+		{ bounds.size.w - border_radius.topRight, 0 },
+		{ bounds.size.w - topRightInnerRadius(border.right), border.top },
+		{ topLeftInnerRadius(border.left), border.top },
 	};
 	Quad quadRight = {
-		{ metrics.frame.size.w - metrics.borderWidth.right,  topRightInnerRadius(metrics.borderWidth.top) },
-		{ metrics.frame.size.w, border_radius.topRight },
-		{ metrics.frame.size.w, metrics.frame.size.h - border_radius.bottomRight },
-		{ metrics.frame.size.w - metrics.borderWidth.right, metrics.frame.size.h - bottomRightInnerRadius(metrics.borderWidth.bottom) },
+		{ bounds.size.w - border.right,  topRightInnerRadius(border.top) },
+		{ bounds.size.w, border_radius.topRight },
+		{ bounds.size.w, bounds.size.h - border_radius.bottomRight },
+		{ bounds.size.w - border.right, bounds.size.h - bottomRightInnerRadius(border.bottom) },
 	};
 	Quad quadBottom = {
-		{ bottomLeftInnerRadius(metrics.borderWidth.left), metrics.frame.size.h - metrics.borderWidth.bottom },
-		{ metrics.frame.size.w - bottomRightInnerRadius(metrics.borderWidth.right), metrics.frame.size.h - metrics.borderWidth.bottom },
-		{ metrics.frame.size.w - border_radius.bottomRight, metrics.frame.size.h },
-		{ border_radius.bottomLeft, metrics.frame.size.h },
+		{ bottomLeftInnerRadius(border.left), bounds.size.h - border.bottom },
+		{ bounds.size.w - bottomRightInnerRadius(border.right), bounds.size.h - border.bottom },
+		{ bounds.size.w - border_radius.bottomRight, bounds.size.h },
+		{ border_radius.bottomLeft, bounds.size.h },
 	};
 
 	geometry.AddQuad(quadLeft, border_color.left);
@@ -119,15 +120,15 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	if (topLeftInnerRounded) {
 		topLeftInner.DrawArc(
 			{ border_radius.topLeft, border_radius.topLeft },
-			border_radius.topLeft - metrics.borderWidth.left,
-			border_radius.topLeft - metrics.borderWidth.top,
+			border_radius.topLeft - border.left,
+			border_radius.topLeft - border.top,
 			PI, PI * 1.5f
 		);
 	}
 	else {
 		topLeftInner.emplace({
-			metrics.borderWidth.left,
-			metrics.borderWidth.top
+			border.left,
+			border.top
 		});
 	}
 	geometry.AddArc(topLeftOuter, topLeftInner, border_color.left);
@@ -135,7 +136,7 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	geometry.AddQuad(quadTop, border_color.top);
 	Geometry::Path topRightOuter;
 	topRightOuter.DrawArc(
-		{ metrics.frame.size.w - border_radius.topRight, border_radius.topRight },
+		{ bounds.size.w - border_radius.topRight, border_radius.topRight },
 		border_radius.topRight,
 		border_radius.topRight,
 		PI * 1.5f, PI * 2.f
@@ -143,16 +144,16 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	Geometry::Path topRightInner;
 	if (topRightInnerRounded) {
 		topRightInner.DrawArc(
-			{ metrics.frame.size.w - border_radius.topRight, border_radius.topRight },
-			border_radius.topRight - metrics.borderWidth.right,
-			border_radius.topRight - metrics.borderWidth.top,
+			{ bounds.size.w - border_radius.topRight, border_radius.topRight },
+			border_radius.topRight - border.right,
+			border_radius.topRight - border.top,
 			PI * 1.5f, PI * 2.f
 		);
 	}
 	else {
 		topRightInner.emplace({
-			metrics.frame.size.w - metrics.borderWidth.right,
-			metrics.borderWidth.top
+			bounds.size.w - border.right,
+			border.top
 		});
 	}
 	geometry.AddArc(topRightOuter, topRightInner, border_color.top);
@@ -160,7 +161,7 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	geometry.AddQuad(quadRight, border_color.right);
 	Geometry::Path bottomRightOuter;
 	bottomRightOuter.DrawArc(
-		{ metrics.frame.size.w - border_radius.bottomRight, metrics.frame.size.h - border_radius.bottomRight },
+		{ bounds.size.w - border_radius.bottomRight, bounds.size.h - border_radius.bottomRight },
 		border_radius.bottomRight,
 		border_radius.bottomRight,
 		0, PI * 0.5f
@@ -168,16 +169,16 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	Geometry::Path bottomRightInner;
 	if (bottomRightInnerRounded) {
 		bottomRightInner.DrawArc(
-			{ metrics.frame.size.w - border_radius.bottomRight, metrics.frame.size.h - border_radius.bottomRight },
-			border_radius.bottomRight - metrics.borderWidth.right,
-			border_radius.bottomRight - metrics.borderWidth.bottom,
+			{ bounds.size.w - border_radius.bottomRight, bounds.size.h - border_radius.bottomRight },
+			border_radius.bottomRight - border.right,
+			border_radius.bottomRight - border.bottom,
 			0, PI * 0.5f
 		);
 	}
 	else {
 		bottomRightInner.emplace({
-			metrics.frame.size.w - metrics.borderWidth.right,
-			metrics.frame.size.h - metrics.borderWidth.bottom
+			bounds.size.w - border.right,
+			bounds.size.h - border.bottom
 		});
 	}
 	geometry.AddArc(bottomRightOuter, bottomRightInner, border_color.right);
@@ -185,7 +186,7 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	geometry.AddQuad(quadBottom, border_color.bottom);
 	Geometry::Path bottomLeftOuter;
 	bottomLeftOuter.DrawArc(
-		{ border_radius.bottomLeft, metrics.frame.size.h - border_radius.bottomLeft },
+		{ border_radius.bottomLeft, bounds.size.h - border_radius.bottomLeft },
 		border_radius.bottomLeft,
 		border_radius.bottomLeft,
 		PI * 0.5f, PI
@@ -193,16 +194,16 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	Geometry::Path bottomLeftInner;
 	if (bottomLeftInnerRounded) {
 		bottomLeftInner.DrawArc(
-			{ border_radius.bottomLeft, metrics.frame.size.h - border_radius.bottomLeft },
-			border_radius.bottomLeft - metrics.borderWidth.left,
-			border_radius.bottomLeft - metrics.borderWidth.bottom,
+			{ border_radius.bottomLeft, bounds.size.h - border_radius.bottomLeft },
+			border_radius.bottomLeft - border.left,
+			border_radius.bottomLeft - border.bottom,
 			PI * 0.5f, PI
 		);
 	}
 	else {
 		bottomLeftInner.emplace({
-			metrics.borderWidth.left,
-			metrics.frame.size.h - metrics.borderWidth.bottom
+			border.left,
+			bounds.size.h - border.bottom
 		});
 	}
 	geometry.AddArc(bottomLeftOuter, bottomLeftInner, border_color.bottom);

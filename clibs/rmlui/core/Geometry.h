@@ -28,14 +28,12 @@ struct Texture;
 
 class Geometry {
 public:
-	Geometry();
+	Geometry() = default;
 	Geometry(const Geometry&) = delete;
 	Geometry& operator=(const Geometry&) = delete;
+	std::vector<Vertex>& GetVertices();
+	std::vector<Index>& GetIndices();
 	void Render();
-	std::vector< Vertex >& GetVertices();
-	std::vector< Index >& GetIndices();
-	void SetTexture(std::shared_ptr<Texture> texture);
-	void SetSamplerFlag(SamplerFlag flags);
 	void Release();
 	explicit operator bool() const;
 
@@ -60,9 +58,19 @@ public:
 	void UpdateUV(size_t count, const Rect& surface, const Rect& uv);
 	void Reserve(size_t idx_count, size_t vtx_count);
 
-private:
+protected:
 	std::vector<Vertex> vertices;
 	std::vector<Index> indices;
+};
+
+class TextureGeometry: public Geometry {
+public:
+	TextureGeometry() = default;
+	void SetTexture(std::shared_ptr<Texture> texture, SamplerFlag flags);
+	void Render();
+	void Release();
+
+private:
 	std::shared_ptr<Texture> texture; 
 	SamplerFlag flags = SamplerFlag::Unset;
 };

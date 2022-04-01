@@ -11,14 +11,6 @@ Node::Node(Type type)
 Node::~Node()
 {}
 
-bool Node::UpdateVisible() {
-	return layout.UpdateVisible(metrics);
-}
-
-void Node::UpdateMetrics(const Rect& child) {
-	layout.UpdateMetrics(metrics, child);
-}
-
 Layout& Node::GetLayout() {
 	return layout;
 }
@@ -27,19 +19,11 @@ const Layout& Node::GetLayout() const {
 	return layout;
 }
 
-const Layout::Metrics& Node::GetMetrics() const {
-	return metrics;
-}
-
 bool Node::IsVisible() const {
-	return metrics.visible;
+	return visible;
 }
 
 void Node::SetVisible(bool visible) {
-// fixed nested data-if for same variant bug
-// 	if (IsVisible() == visible) {
-// 		return;
-// 	}
 	layout.SetVisible(visible);
 }
 
@@ -64,9 +48,17 @@ Node::Type Node::GetType() const {
 }
 
 void Node::UpdateLayout() {
-	if (layout.HasNewLayout() && UpdateVisible()) {
-		CalculateLayout();
+	if (layout.HasNewLayout()) {
+		visible = layout.IsVisible();
+		if (visible) {
+			bounds = layout.GetBounds();
+			CalculateLayout();
+		}
 	}
+}
+
+const Rect& Node::GetBounds() const {
+	return bounds;
 }
 
 }

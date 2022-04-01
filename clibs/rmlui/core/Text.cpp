@@ -32,8 +32,7 @@ void Text::SetText(const std::string& _text) {
 	}
 }
 
-const std::string& Text::GetText() const
-{
+const std::string& Text::GetText() const {
 	return text;
 }
 
@@ -183,22 +182,10 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 	return true;
 }
 
-void Text::ClearLines() {
-	lines.clear();
-	dirty_geometry = true;
-	dirty_decoration = true;
-}
-
-void Text::AddLine(const std::string& line, Point position) {
-	lines.push_back(Line { line, position, 0 });
-	dirty_geometry = true;
-}
-
 void Text::CalculateLayout() {
 	for (auto& line : lines) {
-		line.position = line.position + GetMetrics().frame.origin;
+		line.position = line.position + GetBounds().origin;
 	}
-	Node::UpdateMetrics(Rect {});
 }
 
 void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
@@ -442,7 +429,10 @@ static bool LastToken(const char* token_begin, const char* string_end, bool coll
 }
 
 Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {
-	ClearLines();
+	lines.clear();
+	dirty_geometry = true;
+	dirty_decoration = true;
+
 	if (GetFontFaceHandle() == 0) {
 		return Size(0, 0);
 	}
@@ -460,7 +450,7 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 		float line_width;
 		int line_length;
 		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line);
-		AddLine(line, Point(line_width, height + baseline));
+		lines.push_back(Line { line, Point(line_width, height + baseline), 0 });
 		width = std::max(width, line_width);
 		height += line_height;
 		first_line = false;
@@ -488,7 +478,6 @@ float Text::GetLineHeight() {
 	const Property* property = GetComputedProperty(PropertyId::LineHeight);
 	return line_height * property->Get<PropertyFloat>().Compute(parent);
 }
-
 
 float Text::GetBaseline() {
 	float line_height = GetLineHeight();
@@ -646,4 +635,9 @@ void Text::SetInnerHTML(const std::string& html) {
 void Text::SetOuterHTML(const std::string& html) {
 	SetText(html);
 }
+
+const Rect& Text::GetContentRect() const {
+	return GetBounds();
+}
+
 }

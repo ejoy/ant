@@ -34,16 +34,13 @@ protected:
 	std::string GetOuterHTML() const override;
 	void SetInnerHTML(const std::string& html) override;
 	void SetOuterHTML(const std::string& html) override;
+	const Rect& GetContentRect() const override;
 
 private:
 	void UpdateTextEffects();
 	void UpdateGeometry(const FontFaceHandle font_face_handle);
 	void UpdateDecoration(const FontFaceHandle font_face_handle);
-
 	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix);
-	void ClearLines();
-	void AddLine(const std::string& line, Point position);
-
 	float GetLineHeight();
 	Style::TextAlign GetAlign();
 	std::optional<TextShadow> GetTextShadow();
@@ -58,7 +55,7 @@ private:
 
 	std::string text;
 	LineList lines;
-	Geometry geometry;
+	TextureGeometry geometry;
 	Geometry decoration;
 	TextEffectsHandle text_effects_handle = 0;
 	FontFaceHandle font_handle = 0;

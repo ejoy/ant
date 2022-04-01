@@ -35,7 +35,7 @@
 
 namespace Rml {
 
-void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge) {
+void ElementBackgroundImage::GenerateGeometry(Element* element, TextureGeometry& geometry, Geometry::Path const& paddingEdge) {
 	geometry.Release();
 
 	const Property* image = element->GetComputedProperty(PropertyId::BackgroundImage);
@@ -44,22 +44,25 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		return;
 	}
 
-	Layout::Metrics const& metrics = element->GetMetrics();
+	const auto& bounds = element->GetBounds();
+	const auto& border = element->GetBorder();
+	const auto& padding = element->GetPadding();
+
 	Style::BoxType origin = (Style::BoxType)element->GetComputedProperty(PropertyId::BackgroundOrigin)->Get<PropertyKeyword>();
 
-	Rect surface = Rect{ {0, 0}, metrics.frame.size };
+	Rect surface = Rect{ {0, 0}, bounds.size };
 	if (surface.size.IsEmpty()) {
 		return;
 	}
 
 	switch (origin) {
 	case Style::BoxType::PaddingBox:
-		surface = surface - metrics.borderWidth;
+		surface = surface - border;
 		break;
 	case Style::BoxType::BorderBox:
 		break;
 	case Style::BoxType::ContentBox:
-		surface = surface - metrics.borderWidth - metrics.paddingWidth;
+		surface = surface - border - padding;
 		break;
 	}
 	if (surface.size.IsEmpty()) {
@@ -79,8 +82,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 
 	std::string path = image->Get<std::string>();
 	auto texture = Texture::Fetch(path);
-	geometry.SetTexture(texture);
-	geometry.SetSamplerFlag(repeat);
+	geometry.SetTexture(texture, repeat);
 	Color color = Color::FromSRGB(255, 255, 255, 255);
 	color.ApplyOpacity(element->GetOpacity());
 
@@ -124,7 +126,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	}
 
 	if (paddingEdge.size() == 0 
-		|| (origin == Style::BoxType::ContentBox && metrics.paddingWidth != EdgeInsets<float>{})
+		|| (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{})
 	) {
 		geometry.AddRectFilled(surface, color);
 		geometry.UpdateUV(4, surface, uv);

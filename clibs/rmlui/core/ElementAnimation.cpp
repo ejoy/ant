@@ -121,7 +121,6 @@ ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigi
 	InternalAddKey(0.0f, current_value, element, Tween{});
 }
 
-
 bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween) {
 	if (!out_prop.AllowInterpolate()) {
 		Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", out_prop.ToString().c_str());
@@ -141,7 +140,6 @@ bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Elem
 	}
 	return result;
 }
-
 
 bool ElementAnimation::AddKey(float target_time, const Property & in_property, Element& element, Tween tween) {
 	if (!IsInitalized()) {
@@ -165,10 +163,8 @@ float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const {
 	int key1 = -1;
 
 	{
-		for (int i = 0; i < (int)keys.size(); i++)
-		{
-			if (keys[i].time >= t)
-			{
+		for (int i = 0; i < (int)keys.size(); i++) {
+			if (keys[i].time >= t) {
 				key1 = i;
 				break;
 			}
@@ -179,52 +175,39 @@ float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const {
 	}
 
 	assert(key0 >= 0 && key0 < (int)keys.size() && key1 >= 0 && key1 < (int)keys.size());
-
 	float alpha = 0.0f;
 
 	{
 		const float t0 = keys[key0].time;
 		const float t1 = keys[key1].time;
-
 		const float eps = 1e-3f;
-
 		if (t1 - t0 > eps)
 			alpha = (t - t0) / (t1 - t0);
-
 		alpha = std::clamp(alpha, 0.0f, 1.0f);
 	}
 
 	alpha = keys[key1].tween(alpha);
-
 	if (out_key) *out_key = key1;
 	return alpha;
 }
 
-void ElementAnimation::UpdateAndGetProperty(double world_time, Element& element)
-{
+void ElementAnimation::UpdateAndGetProperty(double world_time, Element& element) {
 	float dt = float(world_time - last_update_world_time);
 	if (keys.size() < 2 || animation_complete || dt <= 0.0f)
 		return;
 
 	dt = std::min(dt, 0.1f);
-
 	last_update_world_time = world_time;
 	time_since_iteration_start += dt;
 
-	if (time_since_iteration_start >= duration)
-	{
-		// Next iteration
+	if (time_since_iteration_start >= duration) {
 		current_iteration += 1;
-
-		if (num_iterations == -1 || (current_iteration >= 0 && current_iteration < num_iterations))
-		{
+		if (num_iterations == -1 || (current_iteration >= 0 && current_iteration < num_iterations)) {
 			time_since_iteration_start -= duration;
-
 			if (alternate_direction)
 				reverse_direction = !reverse_direction;
 		}
-		else
-		{
+		else {
 			animation_complete = true;
 			time_since_iteration_start = duration;
 		}
@@ -244,14 +227,7 @@ void ElementAnimation::Release(Element& element) {
 	if (!IsInitalized()) {
 		return;
 	}
-	switch (GetOrigin()) {
-	case ElementAnimationOrigin::User:
-		break;
-	case ElementAnimationOrigin::Animation:
-	case ElementAnimationOrigin::Transition:
-		element.SetAnimationProperty(GetPropertyId());
-		break;
-	}
+	element.SetAnimationProperty(GetPropertyId());
 }
 
 }

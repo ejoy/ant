@@ -354,11 +354,11 @@ lElementGetAttribute(lua_State* L) {
 static int
 lElementGetBounds(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	const Rml::Layout::Metrics& metrics = e->GetMetrics();
-	lua_pushnumber(L, metrics.frame.origin.x);
-	lua_pushnumber(L, metrics.frame.origin.y);
-	lua_pushnumber(L, metrics.frame.size.w);
-	lua_pushnumber(L, metrics.frame.size.h);
+	const Rml::Rect& bounds = e->GetBounds();
+	lua_pushnumber(L, bounds.origin.x);
+	lua_pushnumber(L, bounds.origin.y);
+	lua_pushnumber(L, bounds.size.w);
+	lua_pushnumber(L, bounds.size.h);
 	return 4;
 }
 

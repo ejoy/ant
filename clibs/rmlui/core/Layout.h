@@ -14,14 +14,6 @@ enum class PropertyId : uint8_t;
 
 class Layout {
 public:
-	struct Metrics {
-		Rect frame;
-		Rect content;
-		EdgeInsets<float> paddingWidth{};
-		EdgeInsets<float> borderWidth{};
-		bool visible = true;
-	};
-
 	enum class Overflow : uint8_t {
 		Visible,
 		Hidden,
@@ -44,11 +36,15 @@ public:
 	void MarkDirty();
 	std::string ToString() const;
 
-	bool HasNewLayout() const;
-	bool UpdateVisible(Layout::Metrics& metrics);
-	void UpdateMetrics(Layout::Metrics& metrics, const Rect& child);
+	bool HasNewLayout();
 	Overflow GetOverflow() const;
+
+	bool IsVisible() const;
 	void SetVisible(bool visible);
+
+	Rect GetBounds() const;
+	EdgeInsets<float> GetPadding() const;
+	EdgeInsets<float> GetBorder() const;
 
 	void InsertChild(Layout const& child, uint32_t index);
 	void SwapChild(Layout const& child, uint32_t index);
