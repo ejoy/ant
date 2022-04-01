@@ -29,8 +29,8 @@
 #ifndef RMLUI_CORE_STYLESHEET_H
 #define RMLUI_CORE_STYLESHEET_H
 
-#include <core/Types.h>
 #include <core/ID.h>
+#include <core/PropertyDictionary.h>
 #include <memory>
 #include <unordered_map>
 #include <vector>

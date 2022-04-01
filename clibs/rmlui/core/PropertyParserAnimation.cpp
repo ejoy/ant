@@ -5,6 +5,7 @@
 #include <core/StyleSheetSpecification.h>
 #include <core/Tween.h>
 #include <core/Property.h>
+#include <unordered_map>
 
 namespace Rml {
 
@@ -96,7 +97,7 @@ std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& v
 				}
 				break;
 				case Keyword::TWEEN:
-					animation.tween = it->second.tween;
+					animation.transition.tween = it->second.tween;
 					break;
 				case Keyword::ALTERNATE:
 					animation.alternate = true;
@@ -129,12 +130,12 @@ std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& v
 						if (!duration_found)
 						{
 							duration_found = true;
-							animation.duration = number;
+							animation.transition.duration = number;
 						}
 						else if (!delay_found)
 						{
 							delay_found = true;
-							animation.delay = number;
+							animation.transition.delay = number;
 						}
 						else
 							return false;
@@ -160,7 +161,7 @@ std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& v
 		}
 
 		// Validate the parsed transition
-		if (animation.name.empty() || animation.duration <= 0.0f || (animation.num_iterations < -1 || animation.num_iterations == 0))
+		if (animation.name.empty() || animation.transition.duration <= 0.0f || (animation.num_iterations < -1 || animation.num_iterations == 0))
 		{
 			return std::nullopt;
 		}
@@ -174,111 +175,91 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 	std::vector<std::string> transition_values;
 	StringUtilities::ExpandString(transition_values, StringUtilities::ToLower(value), ',');
 
-	TransitionList transition_list{ false, false, {} };
+	bool all = false;
+	TransitionList transition_list;
 
 	for (const std::string& single_transition_value : transition_values) {
 		Transition transition;
-		PropertyIdSet target_property_names;
+		PropertyIdSet target_property_ids;
 
 		std::vector<std::string> arguments;
 		StringUtilities::ExpandString(arguments, single_transition_value, ' ');
 
 		bool duration_found = false;
 		bool delay_found = false;
-		bool reverse_adjustment_factor_found = false;
 
-		for (auto& argument : arguments)
-		{
+		for (auto& argument : arguments) {
 			if (argument.empty())
 				continue;
 
 			// See if we have a <keyword> or <tween> specifier as defined in keywords
 			auto it = keywords.find(argument);
-			if (it != keywords.end() && it->second.ValidTransition())
-			{
-				if (it->second.type == Keyword::NONE)
-				{
+			if (it != keywords.end() && it->second.ValidTransition()) {
+				if (it->second.type == Keyword::NONE) {
 					if (transition_list.transitions.size() > 0) // The none keyword can not be part of multiple definitions
 						return std::nullopt;
-					return TransitionList{true, false, {}};
+					return TransitionNone {};
 				}
-				else if (it->second.type == Keyword::ALL)
-				{
+				else if (it->second.type == Keyword::ALL) {
 					if (transition_list.transitions.size() > 0) // The all keyword can not be part of multiple definitions
 						return false;
-					transition_list.all = true;
+					all = true;
 				}
-				else if (it->second.type == Keyword::TWEEN)
-				{
+				else if (it->second.type == Keyword::TWEEN) {
 					transition.tween = it->second.tween;
 				}
 			}
-			else
-			{
+			else {
 				// Either <duration>, <delay> or a <property name>
 				float number = 0.0f;
 				int count = 0;
 
-				if (sscanf(argument.c_str(), "%fs%n", &number, &count) == 1)
-				{
+				if (sscanf(argument.c_str(), "%fs%n", &number, &count) == 1) {
 					// Found a number, if there was an 's' unit, count will be positive
-					if (count > 0)
-					{
+					if (count > 0) {
 						// Duration or delay was assigned
-						if (!duration_found)
-						{
+						if (!duration_found) {
 							duration_found = true;
 							transition.duration = number;
 						}
-						else if (!delay_found)
-						{
+						else if (!delay_found) {
 							delay_found = true;
 							transition.delay = number;
 						}
 						else
 							return false;
 					}
-					else
-					{
-						// No 's' unit means reverse adjustment factor was found
-						if (!reverse_adjustment_factor_found)
-						{
-							reverse_adjustment_factor_found = true;
-							transition.reverse_adjustment_factor = number;
-						}
-						else
-							return std::nullopt;
+					else {
+						return std::nullopt;
 					}
 				}
-				else
-				{
+				else {
 					PropertyIdSet properties;
 					if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, argument)) {
 						return std::nullopt;
 					}
-					target_property_names |= properties;
+					target_property_ids |= properties;
 				}
 			}
 		}
 
 		// Validate the parsed transition
-		if (transition.duration <= 0.0f || transition.reverse_adjustment_factor < 0.0f || transition.reverse_adjustment_factor > 1.0f) {
+		if (transition.duration <= 0.0f) {
 			return std::nullopt;
 		}
 
-		if (transition_list.all) {
-			if (!target_property_names.empty()) {
+		if (all) {
+			if (!target_property_ids.empty()) {
 				return std::nullopt;
 			}
-			transition_list.transitions.push_back(transition);
+			return TransitionAll {transition};
 		}
 		else {
-			if (target_property_names.empty()) {
+			if (target_property_ids.empty()) {
 				return std::nullopt;
 			}
-			for (const auto& property_name : target_property_names) {
-				transition.id = property_name;
-				transition_list.transitions.push_back(transition);
+			for (const auto& id : target_property_ids) {
+				transition_list.transitions.emplace(id, transition);
 			}
 		}
 	}

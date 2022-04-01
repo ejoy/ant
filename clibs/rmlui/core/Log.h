@@ -1,10 +1,12 @@
 #pragma once
 
+#include <stdint.h>
+
 namespace Rml {
 
 class Log {
 public:
-	enum class Level {
+	enum class Level : uint8_t {
 		Always,
 		Error,
 		Warning,

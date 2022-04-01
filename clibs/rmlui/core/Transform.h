@@ -201,7 +201,7 @@ using Primitive = std::variant<
 
 }
 
-enum class TransformType {
+enum class TransformType : uint8_t {
 	Scale, Translate, Rotate, Skew, Matrix
 };
 

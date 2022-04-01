@@ -7,7 +7,7 @@ namespace Rml {
 
 class PropertyParserNumber : public PropertyParser {
 public:
-	enum class UnitMark {
+	enum class UnitMark : uint8_t {
 		Number,
 		Length,
 		LengthPercent,

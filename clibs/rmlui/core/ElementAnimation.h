@@ -58,26 +58,8 @@ struct AnimationKey {
 enum class ElementAnimationOrigin : uint8_t { User, Animation, Transition };
 
 class ElementAnimation {
-private:
-	PropertyId property_id = PropertyId::Invalid;
-	float duration = 0;           // for a single iteration
-	int num_iterations = 0;       // -1 for infinity
-	bool alternate_direction = 0; // between iterations
-	std::vector<AnimationKey> keys;
-	double last_update_world_time = 0;
-	float time_since_iteration_start = 0;
-	int current_iteration = 0;
-	bool reverse_direction = false;
-	bool animation_complete = true;
-	ElementAnimationOrigin origin = ElementAnimationOrigin::User;
-
-	bool InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween);
-	float GetInterpolationFactorAndKeys(int* out_key) const;
-
 public:
-	ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element,
-		double start_world_time, float duration, int num_iterations, bool alternate_direction);
-
+	ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element, double start_world_time, float duration, int num_iterations, bool alternate_direction);
 	bool AddKey(float target_time, const Property & property, Element & element, Tween tween);
 	void UpdateAndGetProperty(double time, Element& element);
 	PropertyId GetPropertyId() const { return property_id; }
@@ -85,9 +67,23 @@ public:
 	bool IsComplete() const { return animation_complete; }
 	bool IsTransition() const { return origin == ElementAnimationOrigin::Transition; }
 	bool IsInitalized() const { return !keys.empty(); }
-	float GetInterpolationFactor() const { return GetInterpolationFactorAndKeys(nullptr); }
 	ElementAnimationOrigin GetOrigin() const { return origin; }
 	void Release(Element& element);
+private:
+	bool InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween);
+	float GetInterpolationFactorAndKeys(int* out_key) const;
+private:
+	PropertyId property_id;
+	float duration;           // for a single iteration
+	int num_iterations;       // -1 for infinity
+	bool alternate_direction; // between iterations
+	std::vector<AnimationKey> keys;
+	double last_update_world_time;
+	float time_since_iteration_start;
+	int current_iteration;
+	bool reverse_direction;
+	bool animation_complete;
+	ElementAnimationOrigin origin;
 };
 
 }

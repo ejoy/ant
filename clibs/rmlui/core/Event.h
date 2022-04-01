@@ -6,7 +6,7 @@ namespace Rml {
 
 class Element;
 
-enum class EventPhase { None, Capture = 1, Target = 2, Bubble = 4 };
+enum class EventPhase : uint8_t { None, Capture = 1, Target = 2, Bubble = 4 };
 
 class Event final {
 public:

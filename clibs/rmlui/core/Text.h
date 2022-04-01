@@ -56,18 +56,17 @@ private:
 	Color GetTextColor();
 	FontFaceHandle GetFontFaceHandle();
 
-	bool dirty_geometry = true;
-	bool dirty_decoration = true;
-	bool dirty_effects = true;
-	bool dirty_font = true;
-
 	std::string text;
 	LineList lines;
 	Geometry geometry;
 	Geometry decoration;
-	bool decoration_under = true;
 	TextEffectsHandle text_effects_handle = 0;
 	FontFaceHandle font_handle = 0;
+	bool decoration_under = true;
+	bool dirty_geometry = true;
+	bool dirty_decoration = true;
+	bool dirty_effects = true;
+	bool dirty_font = true;
 };
 
 }

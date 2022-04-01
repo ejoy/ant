@@ -2,14 +2,9 @@
 
 #include <assert.h>
 #include <string.h>
-#include <list>
+#include <map>
 
 namespace Rml {
-
-struct HtmlEntity {
-	const char* m_entity;
-	char m_value;
-};
 
 static const char* g_ErrorList[] = {
 	"No error",
@@ -43,7 +38,7 @@ const char* HtmlParserException::what() const noexcept {
 	return g_ErrorList[(size_t)m_code];
 }
 
-const HtmlEntity g_ListEntity[] = {
+const std::map<std::string, char> g_ListEntity = {
 	{ "amp", '&'  },
 	{ "lt",  '<'  },
 	{ "gt",  '>'  },
@@ -612,16 +607,11 @@ void HtmlParser::EnterEntity(void* value) {
 			ret = (char)ucs;
 			break;
 		case st_text: {
-			bool found = false;
-			for (auto& entity : g_ListEntity) {
-				if (strcmp(accum.c_str(), entity.m_entity) == 0) {
-					ret = entity.m_value;
-					found = true;
-					break;
-				}
-			}
-			if (!found)
+			auto iter = g_ListEntity.find(accum);
+			if (iter == g_ListEntity.end()) {
 				ThrowException(HtmlError::SPE_UNKNOWN_ENTITY);
+			}
+			ret = iter->second;
 		}
 		default:
 			break;

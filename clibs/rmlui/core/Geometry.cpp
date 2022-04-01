@@ -98,7 +98,7 @@ static Point PointClamp(const Point& v, const Point& mn, const Point& mx) {
 }
 
 void Geometry::AddRectFilled(const Rect& rect, Color col) {
-	if (col.a == 0) {
+	if (!col.IsVisible()) {
 		return;
 	}
 	if (rect.size.w == 0 || rect.size.h == 0) {
@@ -113,7 +113,7 @@ void Geometry::AddRectFilled(const Rect& rect, Color col) {
 }
 
 void Geometry::AddQuad(const Quad& quad, Color col) {
-	if (col.a == 0) {
+	if (!col.IsVisible()) {
 		return;
 	}
 	if (quad.a == quad.b && quad.c == quad.d) {
@@ -131,7 +131,7 @@ void Geometry::AddQuad(const Quad& quad, Color col) {
 }
 
 void Geometry::AddRectFilled(const Rect& rect, const Rect& uv, Color col) {
-	if (col.a == 0) {
+	if (!col.IsVisible()) {
 		return;
 	}
 	if (rect.size.w == 0 || rect.size.h == 0) {

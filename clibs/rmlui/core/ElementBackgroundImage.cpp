@@ -81,7 +81,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	auto texture = Texture::Fetch(path);
 	geometry.SetTexture(texture);
 	geometry.SetSamplerFlag(repeat);
-	Color color(255, 255, 255, 255);
+	Color color = Color::FromSRGB(255, 255, 255, 255);
 	color.ApplyOpacity(element->GetOpacity());
 
 	if (texSize.IsEmpty()) {

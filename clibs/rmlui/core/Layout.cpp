@@ -174,7 +174,7 @@ static void SetIntProperty(YGNodeRef node, PropertyId id, int v) {
 	}
 }
 
-void Layout::SetProperty(PropertyId id, const Property* property, Element* element) {
+void Layout::SetProperty(PropertyId id, const Property* property, const Element* element) {
 	if (property->Has<PropertyKeyword>()) {
 		SetIntProperty(node, id, property->Get<PropertyKeyword>());
 		return;
@@ -280,26 +280,6 @@ void Layout::UpdateMetrics(Layout::Metrics& metrics, const Rect& child) {
 	r.Union(child);
 	metrics.content = r;
 	YGNodeSetHasNewLayout(node, false);
-}
-
-template <typename T>
-void clamp(T& v, T min, T max) {
-	assert(min <= max);
-	if (v < min) {
-		v = min;
-	}
-	else if (v > max) {
-		v = max;
-	}
-}
-
-void clamp(Size& s, Rect r) {
-	clamp(s.w, r.left(), r.right());
-	clamp(s.h, r.top(), r.bottom());
-}
-
-void Layout::UpdateScrollOffset(Size& scrollOffset, Layout::Metrics const& metrics) const {
-	clamp(scrollOffset, metrics.content + metrics.scrollInsets - EdgeInsets<float> {0, 0, metrics.frame.size.w, metrics.frame.size.h});
 }
 
 Layout::Overflow Layout::GetOverflow() const {

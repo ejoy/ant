@@ -1,7 +1,7 @@
 #pragma once
 
-#include <core/Types.h>
 #include <core/PropertyIdSet.h>
+#include <core/PropertyDictionary.h>
 
 namespace Rml {
 

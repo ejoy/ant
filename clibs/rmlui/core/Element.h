@@ -9,6 +9,7 @@
 #include <core/Geometry.h>
 #include <core/Node.h>
 #include <core/PropertyIdSet.h>
+#include <core/PropertyDictionary.h>
 #include <optional>
 
 namespace Rml {
@@ -90,6 +91,7 @@ public:
 	void SetScrollLeft(float v);
 	void SetScrollTop(float v);
 	void SetScrollInsets(const EdgeInsets<float>& insets);
+	void UpdateScrollOffset(Size& scrollOffset) const;
 
 	void SetPseudoClass(PseudoClass pseudo_class, bool activate);
 	bool IsPseudoClassSet(PseudoClassSet pseudo_class) const;
@@ -114,13 +116,13 @@ public:
 	const Property* GetComputedProperty(PropertyId id) const;
 	const Property* GetComputedLocalProperty(PropertyId id) const;
 	const Property* GetAnimationProperty(PropertyId id) const;
-	const TransitionList* GetTransition(const PropertyDictionary* def = nullptr) const;
+	const Transitions* GetTransition(const PropertyDictionary* def = nullptr) const;
 
 	void SetProperty(const std::string& name, std::optional<std::string> value = {});
 	std::optional<std::string> GetProperty(const std::string& name) const;
 
 	void TransitionPropertyChanges(const PropertyIdSet & properties, const PropertyDictionary& new_definition);
-	void TransitionPropertyChanges(const TransitionList* transition_list, PropertyId id, const Property& old_property);
+	void TransitionPropertyChanges(const Transitions* transitions, PropertyId id, const Property& old_property);
 
 	void UpdateProperties();
 	void UpdateAnimations();
@@ -156,7 +158,7 @@ protected:
 
 	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay, bool initiated_by_animation_property);
 	bool AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween);
-	bool StartTransition(const Transition& transition, const Property& start_value, const Property& target_value);
+	bool StartTransition(PropertyId id, const Transition& transition, const Property& start_value, const Property& target_value);
 	void HandleTransitionProperty();
 	void HandleAnimationProperty();
 	void AdvanceAnimations();
@@ -180,13 +182,14 @@ protected:
 	std::unique_ptr<Geometry> geometry_image;
 	Geometry::Path padding_edge;
 	float font_size = 16.f;
-	PropertyDictionary                  animation_properties;
-	PropertyDictionary                  inline_properties;
+	PropertyDictionary animation_properties;
+	PropertyDictionary inline_properties;
 	std::shared_ptr<StyleSheetPropertyDictionary> definition_properties;
 	PropertyIdSet dirty_properties;
 	glm::mat4x4 transform;
+	EdgeInsets<float> scrollInsets{};
 	struct Clip {
-		enum class Type {
+		enum class Type : uint8_t {
 			None,
 			Scissor,
 			Shader,

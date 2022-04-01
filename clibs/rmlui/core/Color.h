@@ -1,29 +1,28 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <glm/gtc/color_space.hpp>
 #include <string>
+#include <stdint.h>
 
 namespace Rml {
 
-class Color : public glm::u8vec4 {
+class Color {
 public:
-	constexpr Color()
-		: glm::u8vec4(0,0,0,255)
-	{ }
-
-	constexpr Color(glm::u8 r, glm::u8 g, glm::u8 b, glm::u8 a)
-		: glm::u8vec4(r, g, b, a)
-	{ }
-
-	constexpr Color(glm::u8vec4&& v)
-		: glm::u8vec4(std::forward<glm::u8vec4>(v))
-	{ }
-
-	static Color FromSRGB(glm::u8 r, glm::u8 g, glm::u8 b, glm::u8 a);
+	Color();
+	static Color FromSRGB(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 	std::string ToString() const;
 	Color Interpolate(const Color& c1, float alpha) const;
 	void ApplyOpacity(float opacity);
+	bool IsVisible() const;
+	bool operator==(const Color& r) const;
+
+	uint8_t r = 0;
+	uint8_t g = 0;
+	uint8_t b = 0;
+	uint8_t a = 255;
+
+private:
+	Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 };
+
 
 }

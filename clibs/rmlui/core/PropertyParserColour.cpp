@@ -172,7 +172,7 @@ std::optional<Property> PropertyParserColour::ParseValue(const std::string& valu
 	if (value.empty())
 		return std::nullopt;
 
-	Color color(0,0,0,255);
+	Color color = Color::FromSRGB(0,0,0,255);
 
 	if (value[0] == '#') {
 		char hex_values[4][2] = { {'f', 'f'},

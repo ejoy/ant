@@ -10,7 +10,7 @@ namespace Rml {
 
     class Node {
 	public:
-		enum class Type {
+		enum class Type : uint8_t {
 			Text = 0,
 			Element,
 		};
@@ -20,6 +20,7 @@ namespace Rml {
 		void UpdateMetrics(const Rect& child);
 		void UpdateLayout();
 		Layout& GetLayout();
+		const Layout& GetLayout() const;
 		const Layout::Metrics& GetMetrics() const;
 
 		bool IsVisible() const;
@@ -41,11 +42,13 @@ namespace Rml {
 		virtual void SetInnerHTML(const std::string& html) = 0;
 		virtual void SetOuterHTML(const std::string& html) = 0;
 
-	protected:
+	private:
 		Layout layout;
 		Layout::Metrics metrics;
+	protected:
 		Element* parent = nullptr;
 		DataModel* data_model = nullptr;
+	private:
 		Type type;
     };
 }

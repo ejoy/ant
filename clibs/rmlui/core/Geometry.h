@@ -8,7 +8,7 @@
 
 namespace Rml {
 
-enum class SamplerFlag {
+enum class SamplerFlag : uint8_t {
 	Repeat,
 	RepeatX,
 	RepeatY,

@@ -153,7 +153,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 	line_number = begin_line_number;
 	stream = _stream;
 
-	enum class State { Global, AtRuleIdentifier, KeyframeBlock, Invalid };
+	enum class State : uint8_t { Global, AtRuleIdentifier, KeyframeBlock, Invalid };
 	State state = State::Global;
 
 	// At-rules given by the following syntax in global space: @identifier name { block }

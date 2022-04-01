@@ -12,7 +12,6 @@
 #include <core/Log.h>
 #include <core/Property.h>
 #include <core/PropertyDefinition.h>
-#include <core/PropertyIdSet.h>
 #include <core/Stream.h>
 #include <core/StringUtilities.h>
 #include <core/StyleSheetFactory.h>
@@ -849,8 +848,8 @@ bool Element::AddAnimationKeyTime(PropertyId property_id, const Property* target
 	return animation->AddKey(time, *target_value, *this, tween);
 }
 
-bool Element::StartTransition(const Transition& transition, const Property& start_value, const Property& target_value) {
-	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == transition.id; });
+bool Element::StartTransition(PropertyId id, const Transition& transition, const Property& start_value, const Property& target_value) {
+	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == id; });
 
 	if (it != animations.end() && !it->IsTransition())
 		return false;
@@ -861,24 +860,20 @@ bool Element::StartTransition(const Transition& transition, const Property& star
 	if (it == animations.end()) {
 		// Add transition as new animation
 		animations.emplace_back(
-			transition.id, ElementAnimationOrigin::Transition, start_value, *this, start_time, 0.0f, 1, false 
+			id, ElementAnimationOrigin::Transition, start_value, *this, start_time, 0.0f, 1, false 
 		);
 		it = (animations.end() - 1);
 	}
 	else {
-		// Compress the duration based on the progress of the current animation
-		float f = it->GetInterpolationFactor();
-		f = 1.0f - (1.0f - f)*transition.reverse_adjustment_factor;
-		duration = duration * f;
 		// Replace old transition
-		*it = ElementAnimation{ transition.id, ElementAnimationOrigin::Transition, start_value, *this, start_time, 0.0f, 1, false };
+		*it = ElementAnimation{ id, ElementAnimationOrigin::Transition, start_value, *this, start_time, 0.0f, 1, false };
 	}
 
 	if (!it->AddKey(duration, target_value, *this, transition.tween)) {
 		animations.erase(it);
 		return false;
 	}
-	SetAnimationProperty(transition.id, &start_value);
+	SetAnimationProperty(id, &start_value);
 	return true;
 }
 
@@ -889,32 +884,42 @@ void Element::HandleTransitionProperty() {
 	dirty_transition = false;
 
 	// Remove all transitions that are no longer in our local list
-	const TransitionList* keep_transitions = GetTransition();
-
+	const Transitions* keep_transitions = GetTransition();
 	auto it_remove = animations.end();
 
-	if (!keep_transitions || keep_transitions->none) {
-		it_remove = std::partition(animations.begin(), animations.end(),
-			[](const ElementAnimation& animation) -> bool { return !animation.IsTransition(); }
-		);
+	if (!keep_transitions) {
+		static Transitions dummy = TransitionNone {};
+		keep_transitions = &dummy;
 	}
-	else if (!keep_transitions->all) {
-		// Only remove the transitions that are not in our keep list.
-		const auto& keep_transitions_list = keep_transitions->transitions;
 
-		it_remove = std::partition(animations.begin(), animations.end(),
-			[&keep_transitions_list](const ElementAnimation& animation) -> bool {
-				if (!animation.IsTransition())
-					return true;
-				auto it = std::find_if(keep_transitions_list.begin(), keep_transitions_list.end(),
-					[&animation](const Transition& transition) { return animation.GetPropertyId() == transition.id; }
-				);
-				bool keep_animation = (it != keep_transitions_list.end());
-				return keep_animation;
-			}
-		);
-	}
-	else {
+	std::visit([&](auto&& arg) {
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, TransitionNone>) {
+			it_remove = std::partition(animations.begin(), animations.end(),
+				[](const ElementAnimation& animation) -> bool { return !animation.IsTransition(); }
+			);
+		}
+		else if constexpr (std::is_same_v<T, TransitionAll>) {
+		}
+		else if constexpr (std::is_same_v<T, TransitionList>) {
+			// Only remove the transitions that are not in our keep list.
+			const auto& keep_transitions_list = arg.transitions;
+			it_remove = std::partition(animations.begin(), animations.end(),
+				[&keep_transitions_list](const ElementAnimation& animation) -> bool {
+					if (!animation.IsTransition())
+						return true;
+					auto it = keep_transitions_list.find(animation.GetPropertyId());
+					bool keep_animation = (it != keep_transitions_list.end());
+					return keep_animation;
+				}
+			);
+		}
+		else {
+			static_assert(always_false_v<T>, "non-exhaustive visitor!");
+		}
+	}, *keep_transitions);
+
+	if (it_remove == animations.end()) {
 		return;
 	}
 
@@ -974,20 +979,20 @@ void Element::HandleAnimationProperty() {
 					start = GetComputedProperty(id);
 				}
 				if (start) {
-					StartAnimation(id, start, animation.num_iterations, animation.alternate, animation.delay, true);
+					StartAnimation(id, start, animation.num_iterations, animation.alternate, animation.transition.delay, true);
 				}
 			}
 			// Add middle keys: Need to skip the first and last keys if they set the initial and end conditions, respectively.
 			for (int i = (has_from_key ? 1 : 0); i < (int)blocks.size() + (has_to_key ? -1 : 0); i++) {
 				// Add properties of current key to animation
-				float time = blocks[i].normalized_time * animation.duration;
+				float time = blocks[i].normalized_time * animation.transition.duration;
 				for (auto& property : blocks[i].properties)
-					AddAnimationKeyTime(property.first, &property.second, time, animation.tween);
+					AddAnimationKeyTime(property.first, &property.second, time, animation.transition.tween);
 			}
 			// If the last key defines end conditions for a given property, use those values, else, use this element's current values.
-			float time = animation.duration;
+			float time = animation.transition.duration;
 			for (PropertyId id : property_ids)
-				AddAnimationKeyTime(id, (has_to_key ? PropertyDictionaryGet(blocks.back().properties, id) : nullptr), time, animation.tween);
+				AddAnimationKeyTime(id, (has_to_key ? PropertyDictionaryGet(blocks.back().properties, id) : nullptr), time, animation.transition.tween);
 		}
 	}
 }
@@ -1020,7 +1025,7 @@ void Element::UpdateTransform() {
 		return;
 	dirty_transform = false;
 	glm::mat4x4 new_transform(1);
-	Point origin2d = metrics.frame.origin;
+	Point origin2d = GetMetrics().frame.origin;
 	if (parent) {
 		origin2d = origin2d - parent->GetScrollOffset();
 	}
@@ -1295,7 +1300,7 @@ std::vector<EventListener*> const& Element::GetEventListeners() const {
 }
 
 Size Element::GetScrollOffset() const {
-	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+	if (GetLayout().GetOverflow() != Layout::Overflow::Scroll) {
 		return {0,0};
 	}
 	return {
@@ -1305,52 +1310,73 @@ Size Element::GetScrollOffset() const {
 }
 
 float Element::GetScrollLeft() const {
-	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+	if (GetLayout().GetOverflow() != Layout::Overflow::Scroll) {
 		return 0;
 	}
 	return GetComputedProperty(PropertyId::ScrollLeft)->Get<PropertyFloat>().Compute(this);
 }
 
 float Element::GetScrollTop() const {
-	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+	if (GetLayout().GetOverflow() != Layout::Overflow::Scroll) {
 		return 0;
 	}
 	return GetComputedProperty(PropertyId::ScrollTop)->Get<PropertyFloat>().Compute(this);
 }
 
 void Element::SetScrollLeft(float v) {
-	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+	if (GetLayout().GetOverflow() != Layout::Overflow::Scroll) {
 		return;
 	}
 	Size offset { v, 0 };
-	layout.UpdateScrollOffset(offset, metrics);
+	UpdateScrollOffset(offset);
 	Property value(offset.w, PropertyUnit::PX);
 	SetProperty(PropertyId::ScrollLeft, &value);
 }
 
 void Element::SetScrollTop(float v) {
-	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+	if (GetLayout().GetOverflow() != Layout::Overflow::Scroll) {
 		return;
 	}
 	Size offset { 0, v };
-	layout.UpdateScrollOffset(offset, metrics);
+	UpdateScrollOffset(offset);
 	Property value(offset.h, PropertyUnit::PX);
 	SetProperty(PropertyId::ScrollTop, &value);
 }
 
 void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
-	if (layout.GetOverflow() != Layout::Overflow::Scroll) {
+	if (GetLayout().GetOverflow() != Layout::Overflow::Scroll) {
 		return;
 	}
-	metrics.scrollInsets = insets;
+	scrollInsets = insets;
 	Size offset = GetScrollOffset();
-	layout.UpdateScrollOffset(offset, metrics);
+	UpdateScrollOffset(offset);
 
 	Property left(offset.w, PropertyUnit::PX);
 	SetProperty(PropertyId::ScrollLeft, &left);
 
 	Property top(offset.h, PropertyUnit::PX);
 	SetProperty(PropertyId::ScrollTop, &top);
+}
+
+template <typename T>
+void clamp(T& v, T min, T max) {
+	assert(min <= max);
+	if (v < min) {
+		v = min;
+	}
+	else if (v > max) {
+		v = max;
+	}
+}
+
+void clamp(Size& s, Rect r) {
+	clamp(s.w, r.left(), r.right());
+	clamp(s.h, r.top(), r.bottom());
+}
+
+void Element::UpdateScrollOffset(Size& scrollOffset) const {
+	auto const& m = GetMetrics();
+	clamp(scrollOffset, m.content + scrollInsets - EdgeInsets<float> {0, 0, m.frame.size.w, m.frame.size.h});
 }
 
 void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate) {
@@ -1507,7 +1533,7 @@ const Property* Element::GetComputedProperty(PropertyId id) const {
 	return nullptr;
 }
 
-const TransitionList* Element::GetTransition(const PropertyDictionary* def) const {
+const Transitions* Element::GetTransition(const PropertyDictionary* def) const {
 	const Property* property = PropertyDictionaryGet(inline_properties, PropertyId::Transition);
 	if (!property) {
 		if (def) {
@@ -1520,56 +1546,69 @@ const TransitionList* Element::GetTransition(const PropertyDictionary* def) cons
 	if (!property) {
 		return nullptr;
 	}
-	return &property->Get<TransitionList>();
+	return &property->Get<Transitions>();
 }
 
 void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const PropertyDictionary& new_definition) {
-	const TransitionList* transition_list = GetTransition(&new_definition);
-	if (!transition_list || transition_list->none) {
+	const Transitions* transitions = GetTransition(&new_definition);
+	if (!transitions) {
 		return;
 	}
-	auto add_transition = [&](const Transition& transition) {
-		const Property* from = GetComputedProperty(transition.id);
-		const Property* to = PropertyDictionaryGet(new_definition, transition.id);
+	
+	auto add_transition = [&](PropertyId id, const Transition& transition) {
+		const Property* from = GetComputedProperty(id);
+		const Property* to = PropertyDictionaryGet(new_definition, id);
 		if (from && to && (*from != *to)) {
-			return StartTransition(transition, *from, *to);
+			return StartTransition(id, transition, *from, *to);
 		}
 		return false;
 	};
-	if (transition_list->all) {
-		Transition transition = transition_list->transitions[0];
-		for (auto const& id : properties) {
-			transition.id = id;
-			add_transition(transition);
+
+	std::visit([&](auto&& arg) {
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, TransitionNone>) {
 		}
-	}
-	else {
-		for (auto& transition : transition_list->transitions) {
-			if (properties.contains(transition.id)) {
-				add_transition(transition);
+		else if constexpr (std::is_same_v<T, TransitionAll>) {
+			for (auto const& id : properties) {
+				add_transition(id, arg);
 			}
 		}
-	}
+		else if constexpr (std::is_same_v<T, TransitionList>) {
+			for (auto const& [id, transition] : arg.transitions) {
+				if (properties.contains(id)) {
+					add_transition(id, transition);
+				}
+			}
+		}
+		else {
+			static_assert(always_false_v<T>, "non-exhaustive visitor!");
+		}
+	}, *transitions);
 }
 
-void Element::TransitionPropertyChanges(const TransitionList* transition_list, PropertyId id, const Property& old_property) {
+void Element::TransitionPropertyChanges(const Transitions* transitions, PropertyId id, const Property& old_property) {
 	const Property* new_property = GetComputedProperty(id);
 	if (!new_property || (*new_property == old_property)) {
 		return;
 	}
-	if (transition_list->all) {
-		Transition transition = transition_list->transitions[0];
-		transition.id = id;
-		StartTransition(transition, old_property, *new_property);
-	}
-	else {
-		for (auto& transition : transition_list->transitions) {
-			if (transition.id == id) {
-				StartTransition(transition, old_property, *new_property);
-				break;
+	
+	std::visit([&](auto&& arg) {
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, TransitionNone>) {
+		}
+		else if constexpr (std::is_same_v<T, TransitionAll>) {
+			StartTransition(id, arg, old_property, *new_property);
+		}
+		else if constexpr (std::is_same_v<T, TransitionList>) {
+			auto iter = arg.transitions.find(id);
+			if (iter != arg.transitions.end()) {
+				StartTransition(id, iter->second, old_property, *new_property);
 			}
 		}
-	}
+		else {
+			static_assert(always_false_v<T>, "non-exhaustive visitor!");
+		}
+	}, *transitions);
 }
 
 void Element::UpdateDefinition() {
@@ -1624,8 +1663,8 @@ void Element::UpdateProperty(PropertyId id, const Property* property) {
 }
 
 void Element::SetProperty(PropertyId id, const Property* newProperty) {
-	const TransitionList* transition_list = GetTransition();
-	if (!transition_list || transition_list->none) {
+	const Transitions* transitions = GetTransition();
+	if (!transitions || std::holds_alternative<TransitionNone>(*transitions)) {
 		UpdateProperty(id, newProperty);
 		return;
 	}
@@ -1636,7 +1675,7 @@ void Element::SetProperty(PropertyId id, const Property* newProperty) {
 	}
 	Property oldProperty = *ptrProperty;
 	UpdateProperty(id, newProperty);
-	TransitionPropertyChanges(transition_list, id, oldProperty);
+	TransitionPropertyChanges(transitions, id, oldProperty);
 }
 
 void Element::SetAnimationProperty(PropertyId id, const Property* property) {

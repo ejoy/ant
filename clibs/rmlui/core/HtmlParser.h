@@ -8,7 +8,7 @@
 
 namespace Rml {
 
-enum class HtmlError {
+enum class HtmlError : uint8_t {
     SPE_OK = 0,
     SPE_EMPTY,
     SPE_INVALID_FORMAT,

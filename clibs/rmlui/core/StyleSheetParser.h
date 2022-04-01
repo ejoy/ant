@@ -30,6 +30,7 @@
 #define RMLUI_CORE_STYLESHEETPARSER_H
 
 #include <core/StyleSheet.h>
+#include <core/PropertyDictionary.h>
 
 namespace Rml {
 

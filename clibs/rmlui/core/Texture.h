@@ -2,6 +2,7 @@
 
 #include <core/Types.h>
 #include <memory>
+#include <string>
 
 namespace Rml {
 

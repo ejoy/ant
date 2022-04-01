@@ -3,11 +3,14 @@
 #include <core/Types.h>
 #include <yoga/Yoga.h>
 #include <string>
+#include <stdint.h>
 
 namespace Rml {
 
 class Element;
 class Text;
+class Property;
+enum class PropertyId : uint8_t;
 
 class Layout {
 public:
@@ -16,18 +19,10 @@ public:
 		Rect content;
 		EdgeInsets<float> paddingWidth{};
 		EdgeInsets<float> borderWidth{};
-		EdgeInsets<float> scrollInsets{};
 		bool visible = true;
-
-		bool operator==(const Metrics& rhs) const {
-			return std::tie(frame, paddingWidth, borderWidth, visible) == std::tie(rhs.frame, rhs.paddingWidth, rhs.borderWidth, visible);
-		}
-		bool operator!=(const Metrics& rhs) const {
-			return !(*this == rhs);
-		}
 	};
 
-	enum class Overflow {
+	enum class Overflow : uint8_t {
 		Visible,
 		Hidden,
 		Scroll,
@@ -43,7 +38,7 @@ public:
 
 	void InitTextNode(Text* text);
 	void CalculateLayout(Size const& size);
-	void SetProperty(PropertyId id, const Property* property, Element* element);
+	void SetProperty(PropertyId id, const Property* property, const Element* element);
 	
 	bool IsDirty();
 	void MarkDirty();
@@ -52,7 +47,6 @@ public:
 	bool HasNewLayout() const;
 	bool UpdateVisible(Layout::Metrics& metrics);
 	void UpdateMetrics(Layout::Metrics& metrics, const Rect& child);
-	void UpdateScrollOffset(Size& scrollOffset, Layout::Metrics const& metrics) const;
 	Overflow GetOverflow() const;
 	void SetVisible(bool visible);
 

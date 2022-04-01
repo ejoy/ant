@@ -15,7 +15,7 @@ class Document;
 class Event;
 }
 
-enum class LuaEvent : int {
+enum class LuaEvent : uint8_t {
 	OnLoadInlineScript = 2,
 	OnLoadExternalScript,
 	OnCreateElement,

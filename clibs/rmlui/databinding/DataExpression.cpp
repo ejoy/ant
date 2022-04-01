@@ -65,7 +65,7 @@ class DataParser;
 		S+  Push to stack S.
 		S-  Pop stack S (returns the popped value).
 */
-enum class Instruction {    
+enum class Instruction : uint8_t {
 	                        // Assignment (register/stack) = Read (register R/L/C, instruction data D, or stack)
 	Push         = 'P',     //      S+ = R
 	Pop          = 'o',     // <R/L/C> = S-  (D determines R/L/C)
@@ -90,7 +90,7 @@ enum class Instruction {
 	Assign       = 'A',     //       DataModel.SetVariable(D, R)
 };
 
-enum class Register {
+enum class Register : uint8_t {
 	R,
 	L,
 	C

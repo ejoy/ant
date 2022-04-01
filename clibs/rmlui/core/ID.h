@@ -28,7 +28,6 @@ enum class ShorthandId : uint8_t {
 	Outline,
 
 	NumDefinedIds,
-	Invalid,
 };
 
 enum class PropertyId : uint8_t {
@@ -129,8 +128,6 @@ enum class PropertyId : uint8_t {
 	ScrollTop,
 
 	NumDefinedIds,
-	Invalid,
-
 };
 
 }

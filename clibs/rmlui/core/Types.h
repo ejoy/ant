@@ -1,15 +1,9 @@
 #pragma once
 
-#include <unordered_map>
 #include <stdint.h>
-#include <core/Property.h>
+#include <algorithm>
 
 namespace Rml {
-
-class Property;
-enum class PropertyId : uint8_t;
-
-using PropertyDictionary = std::unordered_map<PropertyId, Property>;
 
 typedef uint8_t PseudoClassSet;
 

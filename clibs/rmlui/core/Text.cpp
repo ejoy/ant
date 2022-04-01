@@ -17,7 +17,6 @@ static bool LastToken(const char* token_begin, const char* string_end, bool coll
 Text::Text(Document* owner, const std::string& text_)
 	: Node(Node::Type::Text)
 	, text(text_)
-	, decoration() 
 {
 	GetLayout().InitTextNode(this);
 	DirtyLayout();
@@ -197,7 +196,7 @@ void Text::AddLine(const std::string& line, Point position) {
 
 void Text::CalculateLayout() {
 	for (auto& line : lines) {
-		line.position = line.position + metrics.frame.origin;
+		line.position = line.position + GetMetrics().frame.origin;
 	}
 	Node::UpdateMetrics(Rect {});
 }

@@ -23,6 +23,10 @@ Layout& Node::GetLayout() {
 	return layout;
 }
 
+const Layout& Node::GetLayout() const {
+	return layout;
+}
+
 const Layout::Metrics& Node::GetMetrics() const {
 	return metrics;
 }
