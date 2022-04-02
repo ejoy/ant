@@ -187,7 +187,7 @@ protected:
 	float font_size = 16.f;
 	PropertyDictionary animation_properties;
 	PropertyDictionary inline_properties;
-	std::shared_ptr<StyleSheetPropertyDictionary> definition_properties;
+	SharedPtr<StyleSheetPropertyDictionary> definition_properties;
 	PropertyIdSet dirty_properties;
 	glm::mat4x4 transform;
 	Rect content_rect;

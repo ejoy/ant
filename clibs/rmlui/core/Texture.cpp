@@ -30,7 +30,7 @@ const Size& Texture::GetDimensions() const {
 	return dimensions;
 }
 
-using TextureMap = std::unordered_map<std::string, std::shared_ptr<Texture>>;
+using TextureMap = std::unordered_map<std::string, SharedPtr<Texture>>;
 static TextureMap textures;
 
 void Texture::Shutdown() {
@@ -47,12 +47,12 @@ void Texture::Shutdown() {
 	textures.clear();
 }
 
-std::shared_ptr<Texture> Texture::Fetch(const std::string& path) {
+SharedPtr<Texture> Texture::Fetch(const std::string& path) {
 	auto iterator = textures.find(path);
 	if (iterator != textures.end()) {
 		return iterator->second;
 	}
-	auto resource = std::make_shared<Texture>(path);
+	auto resource = MakeShared<Texture>(path);
 	textures[path] = resource;
 	return resource;
 }

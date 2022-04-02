@@ -1618,7 +1618,7 @@ void Element::UpdateDefinition() {
 		return;
 	}
 	dirty_definition = false;
-	std::shared_ptr<StyleSheetPropertyDictionary> new_definition = GetStyleSheet().GetElementDefinition(this);
+	SharedPtr<StyleSheetPropertyDictionary> new_definition = GetStyleSheet().GetElementDefinition(this);
 	if (new_definition != definition_properties) {
 		if (definition_properties && new_definition) {
 			PropertyIdSet changed_properties = PropertyDictionaryDiff(definition_properties->prop, new_definition->prop);

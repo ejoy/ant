@@ -281,7 +281,7 @@ void Geometry::Path::DrawArc(const Point& center, float radius_a, float radius_b
 	}
 }
 
-void TextureGeometry::SetTexture(std::shared_ptr<Texture> _texture, SamplerFlag _flags) {
+void TextureGeometry::SetTexture(SharedPtr<Texture> _texture, SamplerFlag _flags) {
 	texture = _texture;
 	flags = _flags;
 }

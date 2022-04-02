@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/Types.h>
+#include <core/SharedPtr.h>
 #include <memory>
 #include <string>
 
@@ -15,7 +16,7 @@ public:
 	TextureHandle GetHandle() const;
 	const Size& GetDimensions() const;
 	static void Shutdown();
-	static std::shared_ptr<Texture> Fetch(const std::string& path);
+	static SharedPtr<Texture> Fetch(const std::string& path);
 private:
 	std::string source;
 	TextureHandle handle;

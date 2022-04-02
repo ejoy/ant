@@ -2,6 +2,7 @@
 
 #include <core/Types.h>
 #include <core/Color.h>
+#include <core/SharedPtr.h>
 #include <memory>
 #include <vector>
 #include <stdint.h>
@@ -66,12 +67,12 @@ protected:
 class TextureGeometry: public Geometry {
 public:
 	TextureGeometry() = default;
-	void SetTexture(std::shared_ptr<Texture> texture, SamplerFlag flags);
+	void SetTexture(SharedPtr<Texture> texture, SamplerFlag flags);
 	void Render();
 	void Release();
 
 private:
-	std::shared_ptr<Texture> texture; 
+	SharedPtr<Texture> texture; 
 	SamplerFlag flags = SamplerFlag::Unset;
 };
 

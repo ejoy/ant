@@ -8,7 +8,8 @@
 
 namespace Rml {
 
-static void Combine(StyleSheet& sheet, std::shared_ptr<StyleSheet> subsheet) {
+template <typename T>
+static void Combine(StyleSheet& sheet, const T& subsheet) {
 	if (subsheet) {
 		sheet.CombineStyleSheet(*subsheet);
 	}
@@ -17,8 +18,8 @@ static void Combine(StyleSheet& sheet, std::shared_ptr<StyleSheet> subsheet) {
 class StyleSheetFactoryInstance {
 public:
 	~StyleSheetFactoryInstance();
-	std::shared_ptr<StyleSheet> LoadStyleSheet(const std::string& source_path);
-	std::shared_ptr<StyleSheet> LoadStyleSheet(const std::string& content, const std::string& source_path, int line);
+	StyleSheet* LoadStyleSheet(const std::string& source_path);
+	std::unique_ptr<StyleSheet> LoadStyleSheet(const std::string& content, const std::string& source_path, int line);
 	StructuralSelector GetSelector(const std::string& name);
 
 	std::unordered_map<std::string, StyleSheetNodeSelector*> selectors = {
@@ -34,7 +35,7 @@ public:
 		{ "only-of-type", new StyleSheetNodeSelectorOnlyOfType() },
 		{ "empty", new StyleSheetNodeSelectorEmpty() },
 	};
-	std::unordered_map<std::string, std::shared_ptr<StyleSheet>> stylesheets;
+	std::unordered_map<std::string, std::unique_ptr<StyleSheet>> stylesheets;
 };
 
 StyleSheetFactoryInstance::~StyleSheetFactoryInstance() {
@@ -43,23 +44,23 @@ StyleSheetFactoryInstance::~StyleSheetFactoryInstance() {
 	}
 }
 
-std::shared_ptr<StyleSheet> StyleSheetFactoryInstance::LoadStyleSheet(const std::string& source_path) {
+StyleSheet* StyleSheetFactoryInstance::LoadStyleSheet(const std::string& source_path) {
 	auto itr = stylesheets.find(source_path);
 	if (itr != stylesheets.end()) {
-		return (*itr).second;
+		return (*itr).second.get();
 	}
 	Stream stream(source_path);
-	std::shared_ptr<StyleSheet> sheet = std::make_shared<StyleSheet>();
+	auto sheet = std::make_unique<StyleSheet>();
 	if (!sheet->LoadStyleSheet(&stream)) {
 		return nullptr;
 	}
-	stylesheets.emplace(source_path, sheet);
-	return sheet;
+	auto res = stylesheets.emplace(source_path, std::move(sheet));
+	return res.first->second.get();
 }
 
-std::shared_ptr<StyleSheet> StyleSheetFactoryInstance::LoadStyleSheet(const std::string& content, const std::string& source_path, int line) {
+std::unique_ptr<StyleSheet> StyleSheetFactoryInstance::LoadStyleSheet(const std::string& content, const std::string& source_path, int line) {
 	Stream stream(source_path, (const uint8_t*)content.data(), content.size());
-	std::shared_ptr<StyleSheet> sheet = std::make_shared<StyleSheet>();
+	auto sheet = std::make_unique<StyleSheet>();
 	if (!sheet->LoadStyleSheet(&stream, line)) {
 		return nullptr;
 	}

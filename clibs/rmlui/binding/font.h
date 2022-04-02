@@ -44,7 +44,7 @@ private:
 	GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og = nullptr);
 
 	struct FontResource {
-		std::shared_ptr<Rml::Texture> tex;
+		Rml::SharedPtr<Rml::Texture> tex;
 		SDFFontEffect *fe;
 	};
 	const FontResource& FindOrAddFontResource(Rml::TextEffectsHandle font_effects_handle);

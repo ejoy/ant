@@ -31,6 +31,7 @@
 
 #include <core/ID.h>
 #include <core/PropertyDictionary.h>
+#include <core/SharedPtr.h>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -83,7 +84,7 @@ public:
 
 	/// Returns the compiled element definition for a given element hierarchy. A reference count will be added for the
 	/// caller, so another should not be added. The definition should be released by removing the reference count.
-	std::shared_ptr<StyleSheetPropertyDictionary> GetElementDefinition(const Element* element) const;
+	SharedPtr<StyleSheetPropertyDictionary> GetElementDefinition(const Element* element) const;
 
 	void Reset() {}
 
@@ -107,7 +108,7 @@ private:
 	// Map of all styled nodes, that is, they have one or more properties.
 	NodeIndex styled_node_index;
 
-	using ElementDefinitionCache = std::unordered_map< size_t, std::shared_ptr<StyleSheetPropertyDictionary> >;
+	using ElementDefinitionCache = std::unordered_map< size_t, SharedPtr<StyleSheetPropertyDictionary> >;
 	// Index of node sets to element definitions.
 	mutable ElementDefinitionCache node_cache;
 };
