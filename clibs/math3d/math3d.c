@@ -2038,10 +2038,17 @@ lvalue_ptr(lua_State *L){
 
 static int
 lconstant(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	if (lua_getfield(L, 1, "type") != LUA_TSTRING)
-		return luaL_error(L, "Need .type");
-	const char *tname = lua_tostring(L, -1);
+	const char *tname = NULL;
+	if (lua_type(L, 1) == LUA_TSTRING) {
+		tname = lua_tostring(L, 1);
+		lua_settop(L, 2);
+	} else {
+		luaL_checktype(L, 1, LUA_TTABLE);
+		if (lua_getfield(L, 1, "type") != LUA_TSTRING)
+			return luaL_error(L, "Need .type");
+		tname = lua_tostring(L, -1);
+		lua_settop(L, 1);
+	}
 	int i;
 	for (i=0;i<LINEAR_TYPE_COUNT;i++) {
 		if (strcmp(tname, lastack_typename(i)) == 0)
@@ -2050,25 +2057,26 @@ lconstant(lua_State *L) {
 	if (i == LINEAR_TYPE_COUNT) {
 		return luaL_error(L, "Unknown type %s", tname);
 	}
-	lua_pop(L, 1);
-	if (lua_rawlen(L, 1) == 0) {
+	if (lua_isnil(L, -1) || lua_rawlen(L, -1) == 0) {
 		lua_pushlightuserdata(L, STACKID(lastack_constant(i)));
 		return 1;
 	}
+
 	int64_t id = 0;
+	struct lastack * LS = GETLS(L);
 
 	switch (i) {
 	case LINEAR_TYPE_MAT:
-		id = new_object_(L, LINEAR_TYPE_MAT, matrix_from_table, 16);
+		id = matrix_from_table(L, LS, -1);
 		break;
 	case LINEAR_TYPE_VEC4:
-		id = new_object_(L, LINEAR_TYPE_VEC4, vector_from_table, 4);
+		id = vector_from_table(L, LS, -1);
 		break;
 	case LINEAR_TYPE_QUAT:
-		id = new_object_(L, LINEAR_TYPE_QUAT, quat_from_table, 4);
+		id = quat_from_table(L, LS, -1);
 		break;
 	}
-	lua_pushlightuserdata(L, STACKID(lastack_mark(GETLS(L), id)));
+	lua_pushlightuserdata(L, STACKID(lastack_mark(LS, id)));
 	return 1;
 }
 
