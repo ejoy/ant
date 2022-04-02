@@ -1,5 +1,19 @@
 local math3d = require "math3d"
 
+do
+	print "---- constant -------"
+	local iv = math3d.constant { type = "v4" }
+	print(math3d.tostring(iv))
+	local qv = math3d.constant { type = "quat" }
+	print(math3d.tostring(qv))
+	local mv = math3d.constant { type = "mat" }
+	print(math3d.tostring(mv))
+
+	local vec = math3d.constant { type = "v4", 1,2,3,4 }
+	print(math3d.tostring(vec))
+
+end
+
 local ref1 = math3d.ref()
 
 ref1.m = { s = 10, r = { axis = {1,0,0}, r = math.rad(60) },  t = { 1,2,3 } }
