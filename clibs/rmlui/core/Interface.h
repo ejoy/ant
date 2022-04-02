@@ -5,7 +5,6 @@
 #include <core/Geometry.h>
 #include <core/ComputedValues.h>
 #include <core/TextEffect.h>
-#include <core/StringUtilities.h>
 #include <glm/glm.hpp>
 
 namespace Rml {
@@ -45,7 +44,7 @@ public:
 	virtual int GetLineHeight(FontFaceHandle handle) = 0;
 	virtual int GetBaseline(FontFaceHandle handle) = 0;
 	virtual void GetUnderline(FontFaceHandle handle, float& position, float &thickness) = 0;
-	virtual int GetStringWidth(FontFaceHandle handle, const std::string& string, Character prior_character = Character::Null) = 0;
+	virtual int GetStringWidth(FontFaceHandle handle, const std::string& string) = 0;
 	virtual void GenerateString(FontFaceHandle face_handle, TextEffectsHandle text_effects_handle, LineList& lines, const Color& color, TextureGeometry& geometry) = 0;
 };
 

@@ -109,13 +109,10 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 	{
 		std::string token;
 		const char* next_token_begin = token_begin;
-		Character previous_codepoint = Character::Null;
-		if (!line.empty())
-			previous_codepoint = StringUtilities::ToCharacter(StringUtilities::SeekBackwardUTF8(&line.back(), line.data()));
 
 		// Generate the next token and determine its pixel-length.
 		bool break_line = BuildToken(token, next_token_begin, string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline, text_transform_property);
-		int token_width = font_engine_interface->GetStringWidth(font_face_handle, token, previous_codepoint);
+		int token_width = font_engine_interface->GetStringWidth(font_face_handle, token);
 
 		// If we're breaking to fit a line box, check if the token can fit on the line before we add it.
 		if (break_at_line)
@@ -138,7 +135,7 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 						next_token_begin = token_begin;
 						const char* partial_string_end = StringUtilities::SeekBackwardUTF8(token_begin + i, token_begin);
 						break_line = BuildToken(token, next_token_begin, partial_string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline, text_transform_property);
-						token_width = font_engine_interface->GetStringWidth(font_face_handle, token, previous_codepoint);
+						token_width = font_engine_interface->GetStringWidth(font_face_handle, token);
 
 						if (force_loop_break_after_next || token_width <= max_token_width)
 						{

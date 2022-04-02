@@ -35,7 +35,7 @@ public:
 	virtual int GetBaseline(Rml::FontFaceHandle handle)override;
 
 	virtual void GetUnderline(Rml::FontFaceHandle handle, float& position, float &thickness)override;
-	virtual int GetStringWidth(Rml::FontFaceHandle handle, const std::string& string, Rml::Character prior_character = Rml::Character::Null)override;
+	virtual int GetStringWidth(Rml::FontFaceHandle handle, const std::string& string)override;
 	int GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandle text_effects_handle, const std::string& string, const Rml::Point& position, const Rml::Color& color, Rml::TextureGeometry& geometry);
 	virtual void GenerateString(Rml::FontFaceHandle face_handle, Rml::TextEffectsHandle text_effects_handle, Rml::LineList& lines, const Rml::Color& color, Rml::TextureGeometry& geometry) override;
 

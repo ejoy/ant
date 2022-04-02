@@ -159,7 +159,7 @@ void FontEngine::GetUnderline(Rml::FontFaceHandle handle, float& position, float
     F->font_manager_underline(F, face.fontid, face.pixelsize, &position, &thickness);
 }
 
-int FontEngine::GetStringWidth(Rml::FontFaceHandle handle, const std::string& string, Rml::Character prior_character /*= Character::Null*/){
+int FontEngine::GetStringWidth(Rml::FontFaceHandle handle, const std::string& string){
     size_t idx = static_cast<size_t>(handle)-1;
     const auto &face = mFontFaces[idx];
 
