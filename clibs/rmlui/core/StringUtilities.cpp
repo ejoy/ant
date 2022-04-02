@@ -220,13 +220,13 @@ void StringUtilities::ExpandString(std::vector<std::string>& string_list, const 
 
 std::string StringUtilities::StripWhitespace(const std::string& string)
 {
-	return StripWhitespace(StringView(string));
+	return StripWhitespace(std::string_view(string));
 }
 
-std::string StringUtilities::StripWhitespace(StringView string)
+std::string StringUtilities::StripWhitespace(std::string_view string)
 {
-	const char* start = string.begin();
-	const char* end = string.end();
+	auto start = string.begin();
+	auto end = string.end();
 
 	while (start < end && IsWhitespace(*start))
 		start++;
@@ -285,36 +285,7 @@ Character StringUtilities::ToCharacter(const char* p)
 	return static_cast<Character>(code);
 }
 
-StringView::StringView()
-{
-	const char* empty_string = "";
-	p_begin = empty_string;
-	p_end = empty_string;
-}
-
-StringView::StringView(const char* p_begin, const char* p_end) : p_begin(p_begin), p_end(p_end)
-{
-	assert(p_end >= p_begin);
-}
-StringView::StringView(const std::string& string) : p_begin(string.data()), p_end(string.data() + string.size())
-{}
-StringView::StringView(const std::string& string, size_t offset) : p_begin(string.data() + offset), p_end(string.data() + string.size())
-{}
-StringView::StringView(const std::string& string, size_t offset, size_t count) : p_begin(string.data() + offset), p_end(string.data() + std::min<size_t>(offset + count, string.size()))
-{}
-
-bool StringView::operator==(const StringView& other) const { 
-	return size() == other.size() && strncmp(p_begin, other.p_begin, size()) == 0; 
-}
-
-
-StringIteratorU8::StringIteratorU8(const char* p_begin, const char* p, const char* p_end) : view(p_begin, p_end), p(p) 
-{}
-StringIteratorU8::StringIteratorU8(const std::string& string) : view(string), p(string.data())
-{}
-StringIteratorU8::StringIteratorU8(const std::string& string, size_t offset) : view(string), p(string.data() + offset)
-{}
-StringIteratorU8::StringIteratorU8(const std::string& string, size_t offset, size_t count) : view(string, 0, offset + count), p(string.data() + offset)
+StringIteratorU8::StringIteratorU8(const std::string& string) : view(string), p(view.begin())
 {}
 StringIteratorU8& StringIteratorU8::operator++() {
 	assert(p < view.end());

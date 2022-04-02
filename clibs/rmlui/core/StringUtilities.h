@@ -39,8 +39,6 @@ namespace Rml {
 	@author Lloyd Weehuizen
  */
 
-class StringView;
-
 // Tell the compiler of printf-like functions, warns on incorrect usage.
 #if defined __MINGW32__
 #  define RMLUI_ATTRIBUTE_FORMAT_PRINTF(i, f) __attribute__((format (__MINGW_PRINTF_FORMAT, i, f)))
@@ -98,21 +96,23 @@ namespace StringUtilities
 	std::string StripWhitespace(const std::string& string);
 
 	/// Strip whitespace characters from the beginning and end of a string.
-	std::string StripWhitespace(StringView string);
+	std::string StripWhitespace(std::string_view string);
 
 	// Decode the first code point in a zero-terminated UTF-8 string.
 	Character ToCharacter(const char* p);
 
 
 	// Seek forward in a UTF-8 string, skipping continuation bytes.
-	inline const char* SeekForwardUTF8(const char* p, const char* p_end)
+	template <typename T>
+	inline T SeekForwardUTF8(T p, T p_end)
 	{
 		while (p != p_end && (*p & 0b1100'0000) == 0b1000'0000)
 			++p;
 		return p;
 	}
 	// Seek backward in a UTF-8 string, skipping continuation bytes.
-	inline const char* SeekBackwardUTF8(const char* p, const char* p_begin)
+	template <typename T>
+	inline T SeekBackwardUTF8(T p, T p_begin)
 	{
 		while ((p + 1) != p_begin && (*p & 0b1100'0000) == 0b1000'0000)
 			--p;
@@ -120,68 +120,32 @@ namespace StringUtilities
 	}
 }
 
-/*
-	A poor man's string view. 
-	
-	The string view is agnostic to the underlying encoding, any operation will strictly operate on bytes.
-*/
-
-class StringView {
-public:
-	StringView();
-	StringView(const char* p_begin, const char* p_end);
-	StringView(const std::string& string);
-	StringView(const std::string& string, size_t offset);
-	StringView(const std::string& string, size_t offset, size_t count);
-
-	// std::string comparison to another view
-	bool operator==(const StringView& other) const;
-	inline bool operator!=(const StringView& other) const { return !(*this == other); }
-
-	inline const char* begin() const { return p_begin; }
-	inline const char* end() const { return p_end; }
-
-	inline size_t size() const { return size_t(p_end - p_begin); }
-
-	explicit inline operator std::string() const {
-		return std::string(p_begin, p_end);
-	}
-
-private:
-	const char* p_begin;
-	const char* p_end;
-};
-
-
 class StringIteratorU8 {
 public:
-	StringIteratorU8(const char* p_begin, const char* p, const char* p_end);
 	StringIteratorU8(const std::string& string);
-	StringIteratorU8(const std::string& string, size_t offset);
-	StringIteratorU8(const std::string& string, size_t offset, size_t count);
 
 	// Seeks forward to the next UTF-8 character. Iterator must be valid.
 	StringIteratorU8& operator++();
 	
 	// Returns the codepoint at the current position. The iterator must be dereferencable.
-	inline Character operator*() const { return StringUtilities::ToCharacter(p); }
+	inline Character operator*() const { return StringUtilities::ToCharacter(get()); }
 
 	// Returns false when the iterator is located just outside the valid part of the string.
-	explicit inline operator bool() const { return (p != view.begin() - 1) && (p != view.end()); }
+	explicit inline operator bool() const { return p != view.end(); }
 
 	bool operator==(const StringIteratorU8& other) const { return p == other.p; }
 	bool operator!=(const StringIteratorU8& other) const { return !(*this == other); }
 
 	// Return a pointer to the current position.
-	inline const char* get() const { return p; }
+	inline const char* get() const { return &*p; }
 
 	// Return offset from the beginning of string. Note: Can return negative if decremented.
 	std::ptrdiff_t offset() const { return p - view.begin(); }
 
 private:
-	StringView view;
+	std::string_view view;
 	// 'p' can be dereferenced if and only if inside [view.begin, view.end)
-	const char* p;
+	std::string_view::iterator p;
 
 	inline void SeekForward();
 	inline void SeekBack();
