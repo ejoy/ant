@@ -15,6 +15,7 @@ lm:source_set "lua_source" {
         "!utf8_lua.c",
     },
     windows = {
+        defines = "LUA_BUILD_AS_DLL",
     },
     macos = {
         visibility = "default",
