@@ -9,6 +9,8 @@
 
 namespace Rml {
 
+using MaterialHandle = uintptr_t;
+
 enum class SamplerFlag : uint8_t {
 	Repeat,
 	RepeatX,
@@ -30,10 +32,12 @@ struct Texture;
 class Geometry {
 public:
 	Geometry() = default;
+	~Geometry();
 	Geometry(const Geometry&) = delete;
 	Geometry& operator=(const Geometry&) = delete;
 	std::vector<Vertex>& GetVertices();
 	std::vector<Index>& GetIndices();
+	void SetMaterial(MaterialHandle material);
 	void Render();
 	void Release();
 	explicit operator bool() const;
@@ -62,18 +66,7 @@ public:
 protected:
 	std::vector<Vertex> vertices;
 	std::vector<Index> indices;
-};
-
-class TextureGeometry: public Geometry {
-public:
-	TextureGeometry() = default;
-	void SetTexture(SharedPtr<Texture> texture, SamplerFlag flags);
-	void Render();
-	void Release();
-
-private:
-	SharedPtr<Texture> texture; 
-	SamplerFlag flags = SamplerFlag::Unset;
+	MaterialHandle material = 0;
 };
 
 }

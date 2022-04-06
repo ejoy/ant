@@ -183,7 +183,7 @@ protected:
 	PseudoClassSet pseudo_classes = 0;
 	std::vector<EventListener*> listeners;
 	std::unique_ptr<Geometry> geometry_background;
-	std::unique_ptr<TextureGeometry> geometry_image;
+	std::unique_ptr<Geometry> geometry_image;
 	float font_size = 16.f;
 	PropertyDictionary animation_properties;
 	PropertyDictionary inline_properties;

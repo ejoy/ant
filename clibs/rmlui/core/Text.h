@@ -55,9 +55,8 @@ private:
 
 	std::string text;
 	LineList lines;
-	TextureGeometry geometry;
+	Geometry geometry;
 	Geometry decoration;
-	TextEffectsHandle text_effects_handle = 0;
 	FontFaceHandle font_handle = 0;
 	bool decoration_under = true;
 	bool dirty_geometry = true;

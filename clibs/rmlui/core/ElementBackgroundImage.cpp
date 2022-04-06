@@ -31,11 +31,12 @@
 #include <core/Element.h>
 #include <core/Geometry.h>
 #include <core/Document.h>
+#include <core/Interface.h>
 #include <core/Core.h>
 
 namespace Rml {
 
-void ElementBackgroundImage::GenerateGeometry(Element* element, TextureGeometry& geometry, Geometry::Path const& paddingEdge) {
+void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge) {
 	geometry.Release();
 
 	const Property* image = element->GetComputedProperty(PropertyId::BackgroundImage);
@@ -82,7 +83,9 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, TextureGeometry&
 
 	std::string path = image->Get<std::string>();
 	auto texture = Texture::Fetch(path);
-	geometry.SetTexture(texture, repeat);
+	auto material = GetRenderInterface()->CreateTextureMaterial(texture->GetHandle(), repeat);
+	geometry.SetMaterial(material);
+
 	Color color = Color::FromSRGB(255, 255, 255, 255);
 	color.ApplyOpacity(element->GetOpacity());
 

@@ -1109,7 +1109,7 @@ void Element::UpdateGeometry() {
 	}
 	if (dirty_image) {
 		if (!geometry_image) {
-			geometry_image.reset(new TextureGeometry);
+			geometry_image.reset(new Geometry);
 		}
 		ElementBackgroundImage::GenerateGeometry(this, *geometry_image, padding_edge);
 		dirty_image = false;

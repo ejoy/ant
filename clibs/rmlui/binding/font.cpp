@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "font.h"
 #include "render.h"
-#include "fonteffect.h"
 
 extern "C"{
 #include "../font/font_manager.h"
@@ -12,21 +11,6 @@ extern "C"{
 #include <cassert>
 #include <cstring>
 #include <variant>
-
-bool FontEngine::IsFontTexResource(const std::string &sourcename) const{
-    return SDFFontEffect::IsFontTexResource(sourcename);
-}
-
-Rml::TextureHandle FontEngine::GetFontTexHandle(const std::string &sourcename, Rml::Size& texture_dimensions) const{
-    auto itfound = mFontResources.find(sourcename);
-    if (itfound == mFontResources.end()){
-        return Rml::TextureHandle(0);
-    }
-
-    texture_dimensions.w = (float)mcontext->font_tex.width;
-    texture_dimensions.h = (float)mcontext->font_tex.height;
-    return Rml::TextureHandle(itfound->second.fe);
-}
 
 static inline int
 load_fontid(struct font_manager *F, const std::string &family){
@@ -56,48 +40,6 @@ Rml::FontFaceHandle FontEngine::GetFontFaceHandle(const std::string& family, Rml
     return static_cast<Rml::FontFaceHandle>(0);
 }
 
-struct TextEffectVisitor {
-    const RmlContext* context = 0;
-    const SDFFontEffect* result = 0;
-
-    TextEffectVisitor(const RmlContext* ctx)
-    : context(ctx)
-    { }
-    void operator() (Rml::TextShadow const& t) {
-        font_manager* F = context->font_mgr;
-        int8_t edgevalue_offset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
-        result = new SDFFontEffectShadow(
-            context->font_tex.texid,
-            edgevalue_offset,
-            Rml::Point(t.offset_h, t.offset_v),
-            t.color
-        );
-    }
-    void operator() (Rml::TextStroke const& t) {
-        font_manager* F = context->font_mgr;
-        int8_t edgevalue_offset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
-        result = new TSDFFontEffectOutline(
-            context->font_tex.texid,
-            t.width,
-            edgevalue_offset,
-            t.color
-        );
-    }
-};
-
-Rml::TextEffectsHandle FontEngine::PrepareTextEffects(Rml::FontFaceHandle handle, const Rml::TextEffects& text_effects){
-    if (text_effects.empty()) {
-        return Rml::TextEffectsHandle(&mDefaultFontEffect);
-    }
-    if (text_effects.size() != 1){
-        assert(false && "not support more than one font effect in single text");
-        return 0;
-    }
-    TextEffectVisitor visitor(mcontext);
-    std::visit(visitor, text_effects[0]);
-    return Rml::TextEffectsHandle(visitor.result);
-}
-
 int FontEngine::GetSize(Rml::FontFaceHandle handle){
     size_t idx = static_cast<size_t>(handle) - 1;
     const auto &face = mFontFaces[idx];
@@ -114,8 +56,7 @@ FontEngine::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og_
         uint8_t *buffer = new uint8_t[bufsize];
         memset(buffer, 0, bufsize);
         if (NULL == F->font_manager_update(F, face.fontid, codepoint, &og, buffer)){
-            SDFFontEffectDefault t(mcontext->font_tex.texid);
-            ri->UpdateTexture(Rml::TextureHandle(&t), Rect{og.u, og.v, og.w, og.h}, buffer);
+            ri->UpdateTexture(mcontext->font_tex.texid, Rect{og.u, og.v, og.w, og.h}, buffer);
         } else {
             delete []buffer;
         }
@@ -172,22 +113,6 @@ int FontEngine::GetStringWidth(Rml::FontFaceHandle handle, const std::string& st
     return width;
 }
 
-const FontEngine::FontResource& 
-FontEngine::FindOrAddFontResource(Rml::TextEffectsHandle font_effects_handle){
-    auto sdffe = reinterpret_cast<SDFFontEffect*>(font_effects_handle);
-    std::string key = sdffe->GenerateKey();
-
-    auto itfound = mFontResources.find(key);
-	if (itfound == mFontResources.end()){
-        auto result = mFontResources.emplace(key, FontResource{ nullptr, sdffe });
-        FontEngine::FontResource& resource = result.first->second;
-        resource.tex.reset(new Rml::Texture(key));
-        return resource;
-    }
-
-    return itfound->second;
-}
-
 // why 32768, which want to use vs_uifont.sc shader to render font
 // and vs_uifont.sc also use in runtime font render.
 // the runtime font renderer store vertex position in int16
@@ -197,21 +122,10 @@ FontEngine::FindOrAddFontResource(Rml::TextEffectsHandle font_effects_handle){
 
 int FontEngine::GenerateString(
     Rml::FontFaceHandle handle,
-    Rml::TextEffectsHandle text_effects_handle,
-    const std::string& string, const
-    Rml::Point& position,
+    const std::string& string,
+    const Rml::Point& position,
     const Rml::Color& color,
-    Rml::TextureGeometry& geometry) {
-
-    const auto& res = FindOrAddFontResource(text_effects_handle);
-    geometry.SetTexture(res.tex, Rml::SamplerFlag::Unset);
-
-    auto& vertices = geometry.GetVertices();
-    auto& indices = geometry.GetIndices();
-
-    vertices.reserve(string.size() * 4);
-    indices.reserve(string.size() * 6);
-
+    Rml::Geometry& geometry) {
     const size_t fontidx = static_cast<size_t>(handle) - 1;
     const auto& face = mFontFaces[fontidx];
 
@@ -245,10 +159,15 @@ int FontEngine::GenerateString(
     return x - int(position.x + 0.5f);
 }
 
-void FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::TextEffectsHandle text_effects_handle, Rml::LineList& lines, const Rml::Color& color, Rml::TextureGeometry& geometry){
-    geometry.Release();
+void FontEngine::GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry){
+    auto& vertices = geometry.GetVertices();
+    auto& indices = geometry.GetIndices();
+    vertices.clear();
+    indices.clear();
     for (size_t i = 0; i < lines.size(); ++i) {
         Rml::Line& line = lines[i];
-        line.width = GenerateString(handle, text_effects_handle, line.text, line.position, color, geometry);
+        vertices.reserve(vertices.size() + line.text.size() * 4);
+        indices.reserve(indices.size() + line.text.size() * 6);
+        line.width = GenerateString(handle, line.text, line.position, color, geometry);
     }
 }
