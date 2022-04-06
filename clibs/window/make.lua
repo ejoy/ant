@@ -2,9 +2,8 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
-lm:source_set "source_window" {
+lm:lua_source "window" {
     includes = {
-        LuaInclude,
         Ant3rd.."bee.lua/3rd/lua-seri",
     },
     sources = {
@@ -29,8 +28,4 @@ lm:source_set "source_window" {
             "ios/ios_window.m",
         },
     }
-}
-
-lm:lua_dll "window" {
-    deps = "source_window"
 }

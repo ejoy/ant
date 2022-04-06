@@ -1,16 +1,7 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
-lm:source_set "source_fastio" {
-    includes = {
-        LuaInclude,
-    },
+lm:lua_source "fastio" {
     sources = {
         "fastio.cpp",
     },
-}
-
-lm:lua_dll "fastio" {
-    deps = "source_fastio",
 }

@@ -4,7 +4,7 @@ dofile "../common.lua"
 
 lm.rootdir = Ant3rd.."bee.lua"
 
-lm:source_set "source_bee" {
+lm:source_set "bee" {
     includes = {
         "bee/nonstd",
         "."
@@ -51,7 +51,7 @@ lm:source_set "source_bee" {
     }
 }
 
-lm:source_set "source_bee" {
+lm:lua_source "bee" {
     includes = {
         "3rd/lua",
         "3rd/lua-seri",
@@ -112,20 +112,5 @@ lm:source_set "source_bee" {
         sources = {
             "!binding/lua_unicode.cpp",
         }
-    }
-}
-
-lm:lua_dll "bee" {
-    deps = "source_bee",
-    export_luaopen = "off",
-    includes = {
-        "3rd/lua",
-        "3rd/lua-seri",
-    },
-    sources = {
-        "3rd/lua-seri/*.c",
-    },
-    linux = {
-        flags = "-fPIC"
     }
 }

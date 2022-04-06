@@ -41,10 +41,9 @@ lm:source_set "rmlui_databinding" {
     }
 }
 
-lm:source_set "rmlui_binding" {
+lm:lua_source "rmlui_binding" {
     includes = {
         ".",
-        LuaInclude,
         Ant3rd .. "bgfx/include",
         Ant3rd .. "bx/include",
         Ant3rd .. "bgfx/3rdparty",
@@ -58,7 +57,7 @@ lm:source_set "rmlui_binding" {
     }
 }
 
-lm:source_set "source_rmlui" {
+lm:source_set "rmlui" {
     deps = {
         "yoga",
         "luabind",
@@ -68,11 +67,5 @@ lm:source_set "source_rmlui" {
     },
     windows = {
         links = "user32"
-    }
-}
-
-lm:lua_dll "rmlui" {
-    deps = {
-        "source_rmlui",
     }
 }

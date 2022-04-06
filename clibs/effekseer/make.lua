@@ -4,12 +4,11 @@ dofile "../common.lua"
 
 local EffekseerDir = Ant3rd .. "effekseer"
 
-lm:source_set "source_effekseer" {
+lm:lua_source "effekseer" {
     includes = {
         EffekseerDir.."/Effekseer",
         EffekseerDir.."/EffekseerRendererBGFX",
         "../luabind",
-        LuaInclude,
         BgfxInclude,
         Ant3rd .."glm",
     },
@@ -28,8 +27,4 @@ lm:source_set "source_effekseer" {
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
     },
-}
-
-lm:lua_dll "effekseer" {
-    deps = "source_effekseer",
 }

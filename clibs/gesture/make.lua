@@ -6,9 +6,8 @@ end
 
 dofile "../common.lua"
 
-lm:source_set "source_gesture" {
+lm:lua_source "gesture" {
     includes = {
-        LuaInclude,
         "../window",
         Ant3rd.."bee.lua/3rd/lua-seri",
     },
