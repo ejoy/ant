@@ -10,7 +10,6 @@ local fs        = require "filesystem"
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
-local cr        = import_package "ant.compile_resource"
 
 local assetmgr  = import_package "ant.asset"
 
@@ -18,54 +17,86 @@ local itimer    = ecs.import.interface "ant.timer|itimer"
 
 local efk_sys = ecs.system "efk_system"
 
-local function KEY(modeltype, shadertype, stage)
-    return ("%s_%s_%s"):format(modeltype, shadertype, stage)
-end
-
 local FxFiles = {}
 do
-    local shadertypes = {"unlit", "lit", "distortion"}
-    for _, modeltype in ipairs{"sprite", "model"} do
-        for _, shadertype in ipairs(shadertypes) do
-            local function to_fxfile()
-                local vskey = KEY(modeltype, shadertype, "vs")
-                local fskey = KEY(modeltype, shadertype, "ps")
-                return {
-                    vs = ("/pkg/ant.efk/efkbgfx/shaders/%s.fx.sc"):format(vskey),
-                    fs = ("/pkg/ant.efk/efkbgfx/shaders/%s.fx.sc"):format(fskey),
-                }
-            end
-            
-            local fxname = modeltype .. "_" .. shadertype
-            FxFiles[fxname] = assetmgr.load_fx(to_fxfile())
-        end
+    local FxNames = {
+        sprite_unlit ={
+            vs = "sprite_unlit_vs.fx.sc",
+            fs = "model_unlit_ps.fx.sc",
+            varying_path = "sprite_Unlit_varying.def.sc",
+        },
+        sprite_lit = {
+            vs = "sprite_lit_vs.fx.sc", 
+            fs = "model_lit_ps.fx.sc",
+            varying_path = "sprite_Lit_varying.def.sc",
+        },
+        sprite_distortion = {
+            vs = "sprite_distortion_vs.fx.sc", 
+            fs = "model_distortion_ps.fx.sc",
+            varying_path = "sprite_BackDistortion_varying.def.sc",
+        },
+        sprite_adv_unlit = {
+            vs = "ad_sprite_unlit_vs.fx.sc", 
+            fs = "ad_model_unlit_ps.fx.sc",
+            varying_path = "sprite_AdvancedUnlit_varying.def.sc",
+        },
+        sprite_adv_lit = {
+            vs = "ad_sprite_lit_vs.fx.sc", 
+            fs = "ad_model_lit_ps.fx.sc",
+            varying_path = "sprite_AdvancedLit_varying.def.sc",
+        },
+        sprite_adv_distortion = {
+            vs = "ad_sprite_distortion_vs.fx.sc", 
+            fs = "ad_model_distortion_ps.fx.sc",
+            varying_path = "sprite_AdvancedBackDistortion_varying.def.sc",
+        },
+
+        model_unlit = {
+            vs = "model_unlit_vs.fx.sc", 
+            fs = "model_unlit_ps.fx.sc",
+            varying_path = "model_Unlit_varying.def.sc",
+        },
+        model_lit = {
+            vs = "model_lit_vs.fx.sc", 
+            fs = "model_lit_ps.fx.sc",
+            varying_path = "model_Lit_varying.def.sc",
+        },
+        model_distortion = {
+            vs = "model_distortion_vs.fx.sc", 
+            fs = "model_distortion_ps.fx.sc",
+            varying_path = "model_BackDistortion_varying.def.sc",
+        },
+        model_adv_unlit = {
+            vs = "ad_model_unlit_vs.fx.sc", 
+            fs = "ad_model_unlit_ps.fx.sc",
+            varying_path = "model_AdvancedUnlit_varying.def.sc",
+        },
+        model_adv_lit = {
+            vs = "ad_model_lit_vs.fx.sc", 
+            fs = "ad_model_lit_ps.fx.sc",
+            varying_path = "model_Advancedlit_varying.def.sc",
+        },
+        model_adv_distortion = {
+            vs = "ad_model_distortion_vs.fx.sc",
+            fs = "ad_model_distortion_ps.fx.sc",
+            varying_path = "model_AdvancedBackDistortion_varying.def.sc",
+        },
+    }
+
+    for name, fx in pairs(FxNames) do
+        local pkgpath = "/pkg/ant.efk/efkbgfx/shaders/"
+        FxFiles[name] = assetmgr.load_fx{
+            vs = pkgpath .. fx.vs,
+            fs = pkgpath .. fx.fs,
+            varying_path = pkgpath .. fx.varying_path,
+        }
     end
 end
-
-local STAGES<const> = {
-    vs = "vs",
-    fs = "ps",
-}
 
 local function shader_load(materialfile, shadername, stagetype)
     assert(materialfile == nil)
-    local modeltype, shadertype = shadername:match "(%w+)_(%w+)"
-    local key = ""
-    if modeltype == nil then
-        key = "ad_"
-        modeltype, shadertype = shadername:match "(%w+)_adv_(%w+)"
-    end
-
-    if modeltype == nil then
-        error(("invalid name:%s, %s"):format(shadername, stagetype))
-    end
-
-    if modeltype ~= "sprite" and modeltype ~= "model" then
-        error(("model type: %s, should only be : 'sprite' or 'model'"):format(modeltype))
-    end
-
-    key = key .. KEY(modeltype, shadertype, STAGES[stagetype])
-    return cr.load_shader(ShaderFiles[key])
+    local fx = assert(FxFiles[shadername], ("unkonw shader name:%s"):format(shadername))
+    return fx[stagetype]
 end
 
 
