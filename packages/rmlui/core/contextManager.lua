@@ -252,7 +252,7 @@ local function dispatchTouchEvent(e, name)
 end
 
 local function processTouchStart(touch)
-    local e = fromPoint(touch.x, touch.y)
+    local _, e = fromPoint(touch.x, touch.y)
     if e then
         touch.target = e
         touch.changed = true
