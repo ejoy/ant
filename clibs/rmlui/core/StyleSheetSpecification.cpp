@@ -609,8 +609,6 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 
 	RegisterProperty(PropertyId::TextAlign, "text-align", "left", true)
 		.AddParser("keyword", "left, right, center, justify");
-	RegisterProperty(PropertyId::TextTransform, "text-transform", "none", true)
-		.AddParser("keyword", "none, capitalize, uppercase, lowercase");
 	RegisterProperty(PropertyId::WhiteSpace, "white-space", "normal", true)
 		.AddParser("keyword", "normal, pre, nowrap, pre-wrap, pre-line");
 	RegisterProperty(PropertyId::WordBreak, "word-break", "normal", true)

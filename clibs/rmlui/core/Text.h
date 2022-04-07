@@ -47,7 +47,6 @@ private:
 	std::optional<TextStroke> GetTextStroke();
 	Style::TextDecorationLine GetTextDecorationLine();
 	Color GetTextDecorationColor();
-	Style::TextTransform GetTextTransform();
 	Style::WhiteSpace GetWhiteSpace();
 	Style::WordBreak GetWordBreak();
 	Color GetTextColor();
