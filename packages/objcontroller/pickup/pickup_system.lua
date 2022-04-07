@@ -336,8 +336,14 @@ function pickup_sys:pickup()
 end
 
 local function which_material(st, isskin)
-	st = st .. (isskin and "" or "_skin")
-	return pickup_materials[st]
+	if isskin then
+		st = st .. "_skin"
+	end
+	local m = pickup_materials[st]
+	if m == nil then
+		error(("invalid surface type:"):format(st))
+	end
+	return m
 end
 
 function pickup_sys:end_filter()
@@ -348,7 +354,7 @@ function pickup_sys:end_filter()
 		local qe = w:singleton("pickup_queue", "primitive_filter:in")
 		for _, fn in ipairs(qe.primitive_filter) do
 			if fr[fn] then
-				local m = assert(which_material(st, e.skinning))
+				local m = which_material(st, e.skinning)
 				local state = e.render_object.state
 				fm[fn] = {
 					fx			= m.fx,
