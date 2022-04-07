@@ -49,6 +49,11 @@ public:
 		const mybase& bitset;
 	};
 
+	enumset() = default;
+	enumset(mybase&& base)
+		: mybase(std::forward<mybase>(base))
+	{}
+
 	void insert(T v) {
 		assert(size_t(v) < N);
 		mybase::set((size_t)v);
@@ -76,7 +81,7 @@ public:
 
 	enumset operator&(const enumset& other) const {
 		mybase result = (const mybase&)(*this) & (const mybase&)other;
-		return enumset(result);
+		return enumset(std::move(result));
 	}
 
     const_iterator begin() const {

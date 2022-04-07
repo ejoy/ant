@@ -7,8 +7,8 @@ extern "C" {
 #include <lua-seri.h>
 }
 
-std::queue<void*> g_queue;
-std::mutex        g_mutex;
+static std::queue<void*> g_queue;
+static std::mutex        g_mutex;
 
 static void queue_push(void* data) {
     std::unique_lock<std::mutex> _(g_mutex);
