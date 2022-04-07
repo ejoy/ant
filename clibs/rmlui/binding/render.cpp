@@ -11,22 +11,6 @@ error "need matrix type as column major"
 #endif //RMLUI_MATRIX_ROW_MAJOR
 
 #define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
-Renderer::Renderer(const RmlContext* context)
-    : mcontext(context)
-    , mEncoder(nullptr){
-    BGFX(set_view_mode)(mcontext->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
-}
-
-static inline SDFFontEffect*
-FE(Rml::TextureHandle th){
-    return reinterpret_cast<SDFFontEffect*>(th);
-}
-
-
-static bool
-is_font_tex(SDFFontEffect *fe) { 
-    return fe ? (fe->GetType() != FontEffect::Image) != 0 : false;
-}
 
 static uint32_t getTextureFlags(Rml::SamplerFlag flags) {
     switch (flags) {
@@ -44,7 +28,176 @@ static uint32_t getTextureFlags(Rml::SamplerFlag flags) {
     }
 }
 
-void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::TextureHandle texture, Rml::SamplerFlag flags) {
+class TextureUniform {
+public:
+    TextureUniform(uint16_t id, uint16_t tex)
+        : id(id)
+        , tex(tex)
+    {}
+    void Submit(bgfx_encoder_t* encoder, uint32_t flags = UINT32_MAX) {
+        BGFX(encoder_set_texture)(encoder, 0, {id}, {tex}, flags);
+    }
+private:
+    uint16_t id;
+    uint16_t tex;
+};
+
+class Uniform {
+public:
+    Uniform(uint16_t id)
+        : id(id)
+    {}
+    void Submit(bgfx_encoder_t* encoder, float v0, float v1 = 0.f, float v2 = 0.f, float v3 = 0.f) {
+        glm::vec4 vec = {v0, v1, v2, v3};
+        BGFX(encoder_set_uniform)(encoder, {id}, &vec, 1);
+    }
+    void Submit(bgfx_encoder_t* encoder, glm::vec4 vec[2]) {
+        BGFX(encoder_set_uniform)(encoder, {id}, vec, 2);
+    }
+private:
+    uint16_t id;
+};
+
+class ColorUniform: public Uniform {
+public:
+    ColorUniform(uint16_t id, Rml::Color color)
+        : Uniform(id)
+        , color(color)
+    {}
+    void Submit(bgfx_encoder_t* encoder) {
+        Uniform::Submit(encoder, 
+            color.r / 255.f,
+            color.g / 255.f,
+            color.b / 255.f,
+            color.a / 255.f
+        );
+    }
+private:
+    Rml::Color color;
+};
+
+class Material {
+public:
+    virtual ~Material() {};
+    virtual void     Submit(bgfx_encoder_t* encoder) = 0;
+    virtual uint16_t Program(const RenderState& state, const shader& s) = 0;
+};
+
+class TextureMaterial: public Material {
+public:
+    TextureMaterial(shader const& s, uint16_t texid, Rml::SamplerFlag flags)
+        : tex_uniform(s.find_uniform("s_tex"), texid)
+        , flags(getTextureFlags(flags))
+    { }
+    void Submit(bgfx_encoder_t* encoder) override {
+        tex_uniform.Submit(encoder, flags);
+    }
+    uint16_t Program(const RenderState& state, const shader& s) override {
+        return state.needShaderClipRect
+            ? s.image_cr
+            : s.image
+            ;
+    }
+private:
+    TextureUniform tex_uniform;
+    uint32_t flags;
+};
+
+class TextMaterial: public Material {
+public:
+    TextMaterial(const shader& s, struct font_manager* F, uint16_t texid, int8_t edgeValueOffset = 0, float width = 0.f)
+        : tex_uniform(s.find_uniform("s_tex"), texid)
+        , mask_uniform(s.find_uniform("u_mask"))
+        , mask_0(F->font_manager_sdf_mask(F) - F->font_manager_sdf_distance(F, edgeValueOffset))
+        , mask_2(width)
+    { }
+    void Submit(bgfx_encoder_t* encoder) override {
+        tex_uniform.Submit(encoder);
+        const float distMultiplier = 1.f;
+        mask_uniform.Submit(encoder, mask_0, distMultiplier, mask_2);
+    }
+    uint16_t Program(const RenderState& state, const shader& s) override {
+        return state.needShaderClipRect
+            ? s.font_cr
+            : s.font
+            ;
+    }
+protected:
+    TextureUniform tex_uniform;
+    Uniform mask_uniform;
+    float mask_0;
+    float mask_2;
+};
+
+class TextStrokeMaterial: public TextMaterial {
+public:
+    TextStrokeMaterial(const shader& s, struct font_manager* F, uint16_t texid, int8_t edgeValueOffset, Rml::Color color, float width)
+        : TextMaterial(s, F, texid, edgeValueOffset, width)
+        , color_uniform(s.find_uniform("u_effect_color"), color)
+    {}
+    void Submit(bgfx_encoder_t* encoder) override {
+        TextMaterial::Submit(encoder);
+        color_uniform.Submit(encoder);
+    }
+    uint16_t Program(const RenderState& state, const shader& s) override {
+        return state.needShaderClipRect
+            ? s.font_outline_cr
+            : s.font_outline
+            ;
+    }
+protected:
+    ColorUniform color_uniform;
+};
+
+class TextShadowMaterial: public TextMaterial {
+public:
+    TextShadowMaterial(const shader& s, struct font_manager* F, uint16_t texid, int8_t edgeValueOffset, Rml::Color color, Rml::Point offset)
+        : TextMaterial(s, F, texid, edgeValueOffset)
+        , color_uniform(s.find_uniform("u_effect_color"), color)
+        , offset_uniform(s.find_uniform("u_shadow_offset"))
+        , offset(offset)
+    {}
+    void Submit(bgfx_encoder_t* encoder) override {
+        TextMaterial::Submit(encoder);
+        color_uniform.Submit(encoder);
+        offset_uniform.Submit(encoder, offset.x / FONT_MANAGER_TEXSIZE, offset.y / FONT_MANAGER_TEXSIZE);
+    }
+    uint16_t Program(const RenderState& state, const shader& s) override {
+        return state.needShaderClipRect
+            ? s.font_shadow_cr
+            : s.font_shadow
+            ;
+    }
+protected:
+    ColorUniform color_uniform;
+    Uniform offset_uniform;
+    Rml::Point offset;
+};
+
+Renderer::Renderer(const RmlContext* context)
+    : mcontext(context)
+    , mEncoder(nullptr)
+    , default_tex_mat(std::make_unique<TextureMaterial>(
+        mcontext->shader,
+        uint16_t(mcontext->default_tex.texid),
+        Rml::SamplerFlag::Unset
+    ))
+    , default_font_mat(std::make_unique<TextMaterial>(
+        mcontext->shader,
+        mcontext->font_mgr,
+        mcontext->font_tex.texid
+    ))
+    , clip_uniform(std::make_unique<Uniform>(
+        mcontext->shader.find_uniform("u_clip_rect")
+    ))
+{
+    BGFX(set_view_mode)(mcontext->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
+}
+
+Renderer::~Renderer()
+{}
+
+void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::MaterialHandle mat) {
     BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, (uint32_t)num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
@@ -59,65 +212,17 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::I
     memcpy(tib.data, indices, num_indices * sizeof(Rml::Index));
     BGFX(encoder_set_transient_index_buffer)(mEncoder, &tib, 0, (uint32_t)num_indices);
 
-    auto fe = FE(texture);
-    auto get_shader = [&](){
-        shader::ShaderType st;
-        if (fe){
-            switch (fe->GetType()){
-            case FontEffect::Outline:
-                st = mScissorRect.needShaderClipRect ? shader::ST_font_outline_cr : shader::ST_font_outline;
-                break;
-            case FontEffect::Shadow:
-                st = mScissorRect.needShaderClipRect ? shader::ST_font_shadow_cr : shader::ST_font_shadow;
-                break;
-            case FontEffect::None:
-                st = mScissorRect.needShaderClipRect ? shader::ST_font_cr : shader::ST_font;
-                break;
-            case FontEffect::Image:
-                st = mScissorRect.needShaderClipRect ? shader::ST_image_cr : shader::ST_image;
-                break;
-            default: st = shader::ST_count;
-            }
-        } else {
-            st = mScissorRect.needShaderClipRect ? shader::ST_image_cr : shader::ST_image;
-        }
+    submitScissorRect(mEncoder);
 
-        return mcontext->shader.get_shader(st);
-    };
+    Material* material = mat
+        ? reinterpret_cast<Material*>(mat)
+        : default_tex_mat.get()
+        ;
+    material->Submit(mEncoder);
 
-    auto si = get_shader();
-
-    PropertyMap properties;
-    if (is_font_tex(fe)) {
-        fe->GetProperties(mcontext->font_mgr, si, properties);
-    } else {
-        Property p;
-        p.uniform_idx = si.find_uniform("s_tex");
-        p.texid = fe ? fe->GetTexID() : uint16_t(mcontext->default_tex.texid);
-        p.stage = 0;
-        properties.emplace("s_tex", p);
-    }
-
-    for (auto it : properties){
-        const auto& v = it.second;
-        if(v.uniform_idx == UINT16_MAX)
-            continue;
-
-        static const std::string tex_property_name = "s_tex";
-        if (tex_property_name == it.first){
-            BGFX(encoder_set_texture)(mEncoder, 
-                v.stage, {v.uniform_idx}, {v.texid}, getTextureFlags(flags));
-        } else {
-            BGFX(encoder_set_uniform)(mEncoder, {v.uniform_idx}, v.value, 1);
-        }
-    }
-
-    mScissorRect.submitScissorRect(mEncoder, si);
+    auto prog = material->Program(state, mcontext->shader);
     const uint8_t discard_flags = ~BGFX_DISCARD_TRANSFORM;
-    BGFX(encoder_submit)(mEncoder,mcontext->viewid, { (uint16_t)si.prog }, 0, discard_flags);
-    // #ifdef _DEBUG
-    // mScissorRect.drawDebugScissorRect(mEncoder, mcontext->viewid, mcontext->shader.debug_draw.prog);
-    // #endif //_DEBUG
+    BGFX(encoder_submit)(mEncoder, mcontext->viewid, { prog }, 0, discard_flags);
 }
 
 void Renderer::Begin(){
@@ -130,8 +235,8 @@ void Renderer::Frame(){
 }
 
 #ifdef _DEBUG
-void Renderer::ScissorRect::drawDebugScissorRect(bgfx_encoder_t *encoder, uint16_t viewid, uint16_t progid){
-    if (!needShaderClipRect)
+void Renderer::drawDebugScissorRect(bgfx_encoder_t *encoder, uint16_t viewid, uint16_t progid){
+    if (!state.needShaderClipRect)
         return;
 
     glm::mat4 m(1.f);
@@ -149,7 +254,7 @@ void Renderer::ScissorRect::drawDebugScissorRect(bgfx_encoder_t *encoder, uint16
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, 4, &debugLayout);
 
-    memcpy(tvb.data, &rectVerteices, sizeof(glm::vec2)*4);
+    memcpy(tvb.data, &state.rectVerteices, sizeof(glm::vec2)*4);
     BGFX(encoder_set_transient_vertex_buffer)(encoder, 0, &tvb, 0, 4);
 
     bgfx_transient_index_buffer_t tib;
@@ -164,32 +269,29 @@ void Renderer::ScissorRect::drawDebugScissorRect(bgfx_encoder_t *encoder, uint16
 }
 #endif //_DEBUG
 
-void Renderer::ScissorRect::setShaderScissorRect(bgfx_encoder_t* encoder, const glm::vec4 r[2]){
-    needShaderClipRect = true;
-    lastScissorId = UINT16_MAX;
-    rectVerteices[0] = r[0];
-    rectVerteices[1] = r[1];
+void Renderer::setShaderScissorRect(bgfx_encoder_t* encoder, const glm::vec4 r[2]){
+    state.needShaderClipRect = true;
+    state.lastScissorId = UINT16_MAX;
+    state.rectVerteices[0] = r[0];
+    state.rectVerteices[1] = r[1];
     BGFX(encoder_set_scissor_cached)(encoder, UINT16_MAX);
 }
 
-void Renderer::ScissorRect::setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r) {
-    needShaderClipRect = false;
+void Renderer::setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r) {
+    state.needShaderClipRect = false;
     if (r == nullptr){
-        lastScissorId = UINT16_MAX;
+        state.lastScissorId = UINT16_MAX;
         BGFX(encoder_set_scissor_cached)(encoder, UINT16_MAX);
     } else {
-        lastScissorId = BGFX(encoder_set_scissor)(encoder, r->x, r->y, r->z, r->w);
+        state.lastScissorId = BGFX(encoder_set_scissor)(encoder, r->x, r->y, r->z, r->w);
     }
 }
 
-void Renderer::ScissorRect::submitScissorRect(bgfx_encoder_t* encoder, const shader_info &si){
-    if (needShaderClipRect) {
-        auto uniformIdx = si.find_uniform("u_clip_rect");
-        if (uniformIdx != UINT16_MAX) {
-            BGFX(encoder_set_uniform)(encoder, { uniformIdx }, rectVerteices, sizeof(rectVerteices) / sizeof(rectVerteices[0]));
-        }
+void Renderer::submitScissorRect(bgfx_encoder_t* encoder){
+    if (state.needShaderClipRect) {
+        clip_uniform->Submit(encoder, state.rectVerteices);
     } else {
-        BGFX(encoder_set_scissor_cached)(encoder, lastScissorId);
+        BGFX(encoder_set_scissor_cached)(encoder, state.lastScissorId);
     }
 }
 
@@ -198,23 +300,18 @@ void Renderer::SetTransform(const glm::mat4x4& transform) {
 }
 
 void Renderer::SetClipRect() {
-    mScissorRect.setScissorRect(mEncoder, nullptr);
+    setScissorRect(mEncoder, nullptr);
 }
 
 void Renderer::SetClipRect(const glm::u16vec4& r) {
-    mScissorRect.setScissorRect(mEncoder, &r);
+    setScissorRect(mEncoder, &r);
 }
 
 void Renderer::SetClipRect(glm::vec4 r[2]) {
-    mScissorRect.setShaderScissorRect(mEncoder, r);
+    setShaderScissorRect(mEncoder, r);
 }
 
 bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, const std::string& path){
-    auto ifont = static_cast<FontEngine*>(Rml::GetFontEngineInterface());
-    if (ifont->IsFontTexResource(path)){
-        handle = ifont->GetFontTexHandle(path, dimensions);
-        return true;
-    }
     Rml::FileInterface* ifile = Rml::GetFileInterface();
 	Rml::FileHandle fh = ifile->Open(path);
 	if (!fh)
@@ -232,28 +329,82 @@ bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, co
 	if (th.idx != UINT16_MAX){
 		dimensions.w = info.width;
 		dimensions.h = info.height;
-        handle = Rml::TextureHandle(new SDFFontEffectDefault(th.idx, true));
+        handle = th.idx;
         return true;
 	}
 	return false;
 }
 
-bool Renderer::UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8_t *buffer){
-    const bgfx_texture_handle_t th = {FE(texhandle)->GetTexID()};
-
+bool Renderer::UpdateTexture(Rml::TextureHandle texture, const Rect &rt, uint8_t *buffer){
+    bgfx_texture_handle_t th = { uint16_t(texture) };
     if (!BGFX_HANDLE_IS_VALID(th))
         return false;
-
     const uint32_t bytes = (uint32_t)rt.w * rt.h;
     auto mem = BGFX(make_ref)(buffer, bytes);
     BGFX(update_texture_2d)(th, 0, 0, rt.x, rt.y, rt.w, rt.h, mem, rt.w);
     return true;
 }
 
-void Renderer::ReleaseTexture(Rml::TextureHandle texhandle) {
-    auto fe = FE(texhandle);
-    if (!is_font_tex(fe)){
-        BGFX(destroy_texture)({fe->GetTexID()});
-        delete fe;
+void Renderer::ReleaseTexture(Rml::TextureHandle texture) {
+    bgfx_texture_handle_t th = { uint16_t(texture) };
+    if (!BGFX_HANDLE_IS_VALID(th)) {
+        BGFX(destroy_texture)(th);
+    }
+}
+
+Rml::MaterialHandle Renderer::CreateTextureMaterial(Rml::TextureHandle texture, Rml::SamplerFlag flags) {
+    bgfx_texture_handle_t th = { uint16_t(texture) };
+    if (!BGFX_HANDLE_IS_VALID(th)) {
+        th = { uint16_t(mcontext->default_tex.texid) };
+    }
+    auto material = std::make_unique<TextureMaterial>(mcontext->shader, th.idx, flags);
+    return reinterpret_cast<Rml::MaterialHandle>(material.release());
+}
+
+struct TextEffectVisitor {
+    const RmlContext* context;
+    Rml::MaterialHandle operator() (Rml::TextStroke const& t) {
+        font_manager* F = context->font_mgr;
+        int8_t edgevalueOffset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
+        auto material = std::make_unique<TextStrokeMaterial>(
+            context->shader,
+            F,
+            context->font_tex.texid,
+            edgevalueOffset,
+            t.color,
+            t.width
+        );
+        return reinterpret_cast<Rml::MaterialHandle>(material.release());
+    }
+    Rml::MaterialHandle operator() (Rml::TextShadow const& t) {
+        font_manager* F = context->font_mgr;
+        int8_t edgevalueOffset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
+        auto material = std::make_unique<TextShadowMaterial>(
+            context->shader,
+            F,
+            context->font_tex.texid,
+            edgevalueOffset,
+            t.color,
+            Rml::Point(t.offset_h, t.offset_v)
+        );
+        return reinterpret_cast<Rml::MaterialHandle>(material.release());
+    }
+};
+
+Rml::MaterialHandle Renderer::CreateFontMaterial(const Rml::TextEffects& effects) {
+    if (effects.empty()) {
+        return reinterpret_cast<Rml::MaterialHandle>(default_font_mat.get());
+    }
+    if (effects.size() != 1){
+        assert(false && "not support more than one font effect in single text");
+        return reinterpret_cast<Rml::MaterialHandle>(default_font_mat.get());
+    }
+    return std::visit(TextEffectVisitor{mcontext}, effects[0]);
+}
+
+void Renderer::DestroyMaterial(Rml::MaterialHandle mat) {
+    Material* material = reinterpret_cast<Material*>(mat);
+    if (default_font_mat.get() != material) {
+        delete material;
     }
 }

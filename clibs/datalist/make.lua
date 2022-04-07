@@ -1,14 +1,7 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
-lm:source_set "source_datalist" {
-    includes = LuaInclude,
+lm:lua_source "datalist" {
     sources = {
         "datalist.c",
     }
-}
-
-lm:lua_dll "datalist" {
-    deps = "source_datalist"
 }

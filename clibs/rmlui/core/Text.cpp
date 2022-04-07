@@ -253,11 +253,8 @@ void Text::UpdateTextEffects() {
 		stroke->color.ApplyOpacity(GetOpacity());
 		text_effects.emplace_back(stroke.value());
 	}
-	TextEffectsHandle new_text_effects_handle = GetFontEngineInterface()->PrepareTextEffects(GetFontFaceHandle(), text_effects);
-	if (new_text_effects_handle != text_effects_handle) {
-		text_effects_handle = new_text_effects_handle;
-		dirty_geometry = true;
-	}
+	auto material = GetRenderInterface()->CreateFontMaterial(text_effects);
+	geometry.SetMaterial(material);
 }
 
 void Text::UpdateGeometry(const FontFaceHandle font_face_handle) {
@@ -268,7 +265,7 @@ void Text::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	dirty_decoration = true;
 	Color color = GetTextColor();
 	color.ApplyOpacity(GetOpacity());
-	GetFontEngineInterface()->GenerateString(font_face_handle, text_effects_handle, lines, color, geometry);
+	GetFontEngineInterface()->GenerateString(font_face_handle, lines, color, geometry);
 }
 
 void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {

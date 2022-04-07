@@ -12,8 +12,3 @@ if lm.os == "windows" then
         BgfxInclude[#BgfxInclude+1] = Ant3rd .. "bx/include/compat/mingw"
     end
 end
-
-LuaInclude = {
-    "../lua",
-}
-

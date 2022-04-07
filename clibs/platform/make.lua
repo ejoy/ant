@@ -2,9 +2,8 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
-lm:source_set "source_platform" {
+lm:lua_source "platform" {
     includes = {
-        LuaInclude,
         BgfxInclude,
     },
     sources = {
@@ -42,12 +41,5 @@ lm:source_set "source_platform" {
             "ios/setting.mm",
             "ios/NetReachability.m",
         }
-    }
-}
-
-lm:lua_dll "platform" {
-    deps = "source_platform",
-    msvc = {
-        ldflags = "-export:luaopen_platform_timer"
     }
 }

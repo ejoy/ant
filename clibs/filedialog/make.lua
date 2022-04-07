@@ -1,16 +1,10 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
 if lm.os == "ios" then
-    lm:phony "source_filedialog" {
-    }
     return
 end
-lm:source_set "source_filedialog" {
-    includes = {
-        LuaInclude,
-    },
+
+lm:lua_source "filedialog" {
     windows = {
         sources =  "filedialog.cpp",
         links = {
@@ -21,8 +15,4 @@ lm:source_set "source_filedialog" {
     macos = {
         sources =  "filedialog.mm",
     }
-}
-
-lm:lua_dll "filedialog" {
-    deps = "source_filedialog"
 }

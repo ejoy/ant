@@ -14,8 +14,7 @@ void Geometry::Render() {
 		vertices.size(),
 		&indices[0],
 		indices.size(),
-		0,
-		SamplerFlag::Unset
+		material
 	);
 }
 
@@ -27,9 +26,21 @@ std::vector<Index>& Geometry::GetIndices() {
 	return indices;
 }
 
+Geometry::~Geometry() {
+	Release();
+}
+
 void Geometry::Release() {
 	vertices.clear();
 	indices.clear();
+	SetMaterial(0);
+}
+
+void Geometry::SetMaterial(MaterialHandle mat) {
+	if (material) {
+		GetRenderInterface()->DestroyMaterial(material);
+	}
+	material = mat;
 }
 
 Geometry::operator bool() const {
@@ -279,30 +290,6 @@ void Geometry::Path::DrawArc(const Point& center, float radius_a, float radius_b
 		const float a = a_min + ((float)i / (float)num_segments) * (a_max - a_min);
 		points.push_back(center + Point(cosf(a) * radius_a, sinf(a) * radius_b));
 	}
-}
-
-void TextureGeometry::SetTexture(SharedPtr<Texture> _texture, SamplerFlag _flags) {
-	texture = _texture;
-	flags = _flags;
-}
-
-void TextureGeometry::Render() {
-	if (vertices.empty() || indices.empty())
-		return;
-	GetRenderInterface()->RenderGeometry(
-		&vertices[0],
-		vertices.size(),
-		&indices[0],
-		indices.size(),
-		texture ? texture->GetHandle() : 0,
-		flags
-	);
-}
-
-void TextureGeometry::Release() {
-	Geometry::Release();
-	texture.reset();
-	flags = SamplerFlag::Unset;
 }
 
 }

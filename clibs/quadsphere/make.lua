@@ -1,15 +1,8 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
-lm:source_set "source_quadsphere" {
-    includes = LuaInclude,
+lm:lua_source "quadsphere" {
     sources = {
         "cubesphere.c",
         "quadsphere.cpp"
     }
-}
-
-lm:lua_dll "quadsphere" {
-    deps = "source_quadsphere"
 }

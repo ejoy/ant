@@ -23,12 +23,12 @@ for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
         if not RuntimeBacklist[name] or not EditorBacklist[name] then
             lm:import(("../clibs/%s/make.lua"):format(name))
         end
-        if lm:has("source_" .. name) then
+        if lm:has(name) then
             if not RuntimeBacklist[name] then
-                RuntimeModules[#RuntimeModules + 1] = "source_" .. name
+                RuntimeModules[#RuntimeModules + 1] = name
             end
             if not EditorBacklist[name] then
-                EditorModules[#EditorModules + 1] = "source_" .. name
+                EditorModules[#EditorModules + 1] = name
             end
         end
     end
@@ -40,6 +40,7 @@ lm:copy "copy_mainlua" {
 }
 
 lm:source_set "ant_common" {
+    deps = "lua_source",
     includes = {
         "../clibs/lua",
         "../3rd/bgfx/include",

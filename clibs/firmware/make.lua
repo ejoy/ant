@@ -1,7 +1,5 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
 lm:build {
     "$luamake", "lua", "@embed.lua", "$in",
     "@.", "FirmwareBootstrap",
@@ -32,13 +30,8 @@ lm:phony {
     output = "firmware.cpp",
 }
 
-lm:source_set "source_firmware" {
-    includes = LuaInclude,
+lm:source_set "firmware" {
     sources = {
         "firmware.cpp",
     }
-}
-
-lm:lua_dll "firmware" {
-    deps = "source_firmware"
 }
