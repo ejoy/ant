@@ -30,7 +30,7 @@ lm:phony {
     output = "firmware.cpp",
 }
 
-lm:source_set "firmware" {
+lm:lua_source "firmware" {
     sources = {
         "firmware.cpp",
     }

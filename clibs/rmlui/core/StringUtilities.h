@@ -89,7 +89,7 @@ namespace StringUtilities
 	/// Checks if a given value is a whitespace character.
 	inline bool IsWhitespace(const char x)
 	{
-		return (x == '\r' || x == '\n' || x == ' ' || x == '\t');
+		return (x == '\r' || x == '\n' || x == ' ' || x == '\t' || x == '\f');
 	}
 
 	/// Strip whitespace characters from the beginning and end of a string.

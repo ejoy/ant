@@ -252,7 +252,7 @@ local function dispatchTouchEvent(e, name)
 end
 
 local function processTouchStart(touch)
-    local e = fromPoint(touch.x, touch.y)
+    local _, e = fromPoint(touch.x, touch.y)
     if e then
         touch.target = e
         touch.changed = true
@@ -347,9 +347,11 @@ function m.set_dimensions(w, h, ratio)
 end
 
 function m.update(delta)
+    rmlui.RenderBegin()
     for _, doc in ipairs(documents) do
         rmlui.DocumentUpdate(doc, delta)
     end
+    rmlui.RenderFrame()
 end
 
 return m

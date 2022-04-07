@@ -522,17 +522,13 @@ lRmlRegisterEevent(lua_State* L) {
 
 static int
 lRenderBegin(lua_State* L) {
-    if (g_wrapper) {
-        g_wrapper->interface.m_renderer.Begin();
-    }
-    return 0;
+	Rml::GetRenderInterface()->Begin();
+	return 0;
 }
 
 static int
 lRenderFrame(lua_State* L){
-    if (g_wrapper){
-        g_wrapper->interface.m_renderer.Frame();
-    }
+	Rml::GetRenderInterface()->End();
     return 0;
 }
 

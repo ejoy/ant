@@ -11,7 +11,7 @@
 
 namespace Rml {
 
-static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation);
+static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline);
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline);
 
 Text::Text(Document* owner, const std::string& text_)
@@ -84,7 +84,6 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 
 	// Determine how we are processing white-space while formatting the text.
 	Style::WhiteSpace white_space_property = GetWhiteSpace();
-	Style::TextTransform text_transform_property = GetTextTransform();
 	Style::WordBreak word_break = GetWordBreak();
 
 	bool collapse_white_space = white_space_property == Style::WhiteSpace::Normal ||
@@ -111,7 +110,7 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 		const char* next_token_begin = token_begin;
 
 		// Generate the next token and determine its pixel-length.
-		bool break_line = BuildToken(token, next_token_begin, string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline, text_transform_property);
+		bool break_line = BuildToken(token, next_token_begin, string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline);
 		int token_width = font_engine_interface->GetStringWidth(font_face_handle, token);
 
 		// If we're breaking to fit a line box, check if the token can fit on the line before we add it.
@@ -134,7 +133,7 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 						token.clear();
 						next_token_begin = token_begin;
 						const char* partial_string_end = StringUtilities::SeekBackwardUTF8(token_begin + i, token_begin);
-						break_line = BuildToken(token, next_token_begin, partial_string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline, text_transform_property);
+						break_line = BuildToken(token, next_token_begin, partial_string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline);
 						token_width = font_engine_interface->GetStringWidth(font_face_handle, token);
 
 						if (force_loop_break_after_next || token_width <= max_token_width)
@@ -317,7 +316,7 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 	}
 }
 
-static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline, Style::TextTransform text_transformation) {
+static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline) {
 	assert(token_begin != string_end);
 
 	token.reserve(string_end - token_begin + token.size());
@@ -391,14 +390,6 @@ static bool BuildToken(std::string& token, const char*& token_begin, const char*
 				token += ' ';
 		}
 		else {
-			if (text_transformation == Style::TextTransform::Uppercase) {
-				if (character >= 'a' && character <= 'z')
-					character += ('A' - 'a');
-			}
-			else if (text_transformation == Style::TextTransform::Lowercase) {
-				if (character >= 'A' && character <= 'Z')
-					character -= ('A' - 'a');
-			}
 			token += character;
 		}
 		++token_begin;
@@ -526,11 +517,6 @@ Color Text::GetTextDecorationColor() {
 		}
 	}
 	return property->Get<Color>();
-}
-
-Style::TextTransform Text::GetTextTransform() {
-	const Property* property = GetComputedProperty(PropertyId::TextTransform);
-	return (Style::TextTransform)property->Get<PropertyKeyword>();
 }
 
 Style::WhiteSpace Text::GetWhiteSpace() {

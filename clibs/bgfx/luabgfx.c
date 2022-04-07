@@ -346,9 +346,17 @@ static void
 cb_trace_vargs(bgfx_callback_interface_t *self, const char *file, uint16_t line, const char *format, va_list ap) {
 	char tmp[MAX_LOGBUFFER];
 	int n = sprintf(tmp, "%s (%d): ", file, line);
+	int m = vsnprintf(tmp+n, sizeof(tmp)-n, format, ap);
 
-	n += vsnprintf(tmp+n, sizeof(tmp)-n, format, ap);
+	int warn = (m >= 10 && strncmp(tmp+n, "BGFX WARN ", 10) == 0);
+	if (warn) {
+		fputs(tmp, stderr);
+		fflush(stderr);
+		abort();
+		return;
+	}
 
+	n += m;
 	if (n > MAX_LOGBUFFER) {
 		// truncated
 		n = MAX_LOGBUFFER;
@@ -358,6 +366,7 @@ cb_trace_vargs(bgfx_callback_interface_t *self, const char *file, uint16_t line,
 		append_log(&(cb->lc), tmp, n);
 	} else {
 		fputs(tmp, stdout);
+		fflush(stdout);
 	}
 }
 

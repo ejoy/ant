@@ -56,7 +56,7 @@ FontEngine::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og_
         uint8_t *buffer = new uint8_t[bufsize];
         memset(buffer, 0, bufsize);
         if (NULL == F->font_manager_update(F, face.fontid, codepoint, &og, buffer)){
-            ri->UpdateTexture(mcontext->font_tex.texid, Rect{og.u, og.v, og.w, og.h}, buffer);
+            ri->UpdateTexture(mcontext->font_tex.texid, og.u, og.v, og.w, og.h, buffer);
         } else {
             delete []buffer;
         }

@@ -150,6 +150,7 @@ rehash(struct font_manager *F) {
 	}
 	F->count = 0;
 	int count = 0;
+	(void)count;
 	for (i=0;i<FONT_MANAGER_SLOTS;i++) {
 		int cp = F->slots[i].codepoint_ttf;
 		if (cp >= 0) {
