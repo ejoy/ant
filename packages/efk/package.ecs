@@ -1,0 +1,20 @@
+system "efk_system"
+    .implement "efk.lua"
+    .method "init"
+    .method "init_world"
+    .method "entity_init"
+    .method "data_changed"
+    .method "render_submit"
+
+component "efk".type "lua"
+policy "efk"
+    .require_system     "ant.efk|efk_system"
+    .require_interface  "ant.efk|iefk"
+    .component "efk"
+
+interface "iefk"
+    .implement "efk.lua"
+    .method "play"
+    .method "stop"
+
+

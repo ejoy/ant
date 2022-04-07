@@ -7,6 +7,10 @@ local renderbuffers = {}
 
 local viewid_bindings = {}
 
+local VALID_DEPTH_FMT<const> = {
+	"D24S8", "D24", "D24X8", "D32F",
+}
+
 function mgr.bind(viewid, fb_idx)
 	if not fb_idx then return end
 	viewid_bindings[viewid] = fb_idx
@@ -62,17 +66,20 @@ function mgr.create(...)
 		if #attachments == 0 then
 			error("need at least 1 render buffer to create framebuffer")
 		end
-		local i
+		local depth_idx
 		for idx, attachment in ipairs(attachments) do
 			local rb = mgr.get_rb(attachment.rbidx)
-			if rb.format[1] == "D" then
-				i = idx
-				break
+			if VALID_DEPTH_FMT[rb.format] then
+				if depth_idx == nil then
+					depth_idx = idx
+				else
+					error "too many depth attachment"
+				end
 			end
 		end
 
-		if i ~= nil and i ~= #attachments then
-			error(("depth buffer should put on the last render buffer:%d"):format(i))
+		if depth_idx ~= nil and depth_idx ~= #attachments then
+			error(("depth buffer should put on the last render buffer:%d"):format(depth_idx))
 		end
 	end
 	local attachments = {...}
@@ -211,6 +218,13 @@ function mgr.unbind_all_native_handle()
 	for k in pairs(nativehandles) do
 		nativehandles[k] = nil
 	end
+end
+
+function mgr.get_depth(fbidx)
+	local fb = mgr.get(fbidx)
+	local rb = mgr.get_rb(#fb)
+	assert(VALID_DEPTH_FMT[rb.format])
+	return rb
 end
 
 return mgr

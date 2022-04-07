@@ -15,7 +15,8 @@ local RuntimeBacklist = {
 local EditorBacklist = {
     firmware = true,
     bake = true,
-    audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os ~= "windows")
+    audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os ~= "windows"),
+    effekseer = true,
 }
 
 local RuntimeModules = {}

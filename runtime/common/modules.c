@@ -28,7 +28,9 @@ int luaopen_terrain(lua_State *L);
 int luaopen_font(lua_State *L);
 int luaopen_font_init(lua_State *L);
 int luaopen_font_truetype(lua_State *L);
-int luaopen_effekseer(lua_State* L);
+//int luaopen_effekseer(lua_State* L);
+int luaopen_efk(lua_State* L);
+int luaopen_effekseer_callback(lua_State* L);
 int luaopen_audio(lua_State* L);
 int luaopen_ltask(lua_State* L);
 int luaopen_ltask_bootstrap(lua_State* L);
@@ -77,7 +79,9 @@ void ant_loadmodules(lua_State* L) {
         { "rp3d.core", luaopen_rp3d_core },
         { "window", luaopen_window },
         { "terrain", luaopen_terrain},
-        { "effekseer", luaopen_effekseer},
+        //{ "effekseer", luaopen_effekseer},
+        { "efk", luaopen_efk},
+        { "effekseer.callback", luaopen_effekseer_callback},
 #if defined(_WIN32) && !defined(__MINGW32__)
         { "audio", luaopen_audio},
 #endif

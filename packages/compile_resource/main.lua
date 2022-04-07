@@ -15,10 +15,11 @@ local function read_file(filename)
 end
 
 return {
-    init = config.init,
-    read_file = read_file,
-    load_fx = fx.load,
-    compile = cm.compile,
-    compile_path = cm.compile_path,
+    init        = config.init,
+    read_file   = read_file,
+    load_fx     = fx.load,
+    unload_fx   = fx.unload,
+    compile     = cm.compile,
+    compile_path= cm.compile_path,
     compile_dir = cm.compile_dir,
 }
