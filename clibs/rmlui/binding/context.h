@@ -1,28 +1,16 @@
 #pragma once
 
-#include <bgfx/c99/bgfx.h>
-#include <core/Element.h>
-#include <core/Interface.h>
+#include <map>
 #include <string>
-#include "luaplugin.h"
+#include <stdint.h>
+#include <bgfx/c99/bgfx.h>
 
 struct font_namager;
 
-struct texture_desc{
+struct texture_desc {
     int width, height;
     uint32_t texid;
 };
-
-struct Rect {
-    int x, y, w, h;
-    bool isVaild() const {
-        return !(x == 0 && y == 0 && w == 0 && h == 0);
-    }
-};
-
-class FontInterface;
-class Renderer;
-class System;
 
 struct shader {
     std::map<std::string, uint16_t> uniforms;
@@ -52,6 +40,7 @@ struct shader {
 };
 
 struct lua_State;
+
 struct RmlContext {
     struct font_manager*  font_mgr;
     shader                shader;

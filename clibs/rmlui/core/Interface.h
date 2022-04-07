@@ -25,6 +25,8 @@ typedef std::vector<Line> LineList;
 
 class RenderInterface {
 public:
+	virtual void Begin() = 0;
+	virtual void End() = 0;
 	virtual void RenderGeometry(Vertex* vertices, size_t num_vertices, Index* indices, size_t num_indices, MaterialHandle mat) = 0;
 	virtual bool LoadTexture(TextureHandle& handle, Size& dimensions, const std::string& path) = 0;
 	virtual void ReleaseTexture(TextureHandle texture) = 0;

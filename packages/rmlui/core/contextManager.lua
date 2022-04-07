@@ -347,9 +347,11 @@ function m.set_dimensions(w, h, ratio)
 end
 
 function m.update(delta)
+    rmlui.RenderBegin()
     for _, doc in ipairs(documents) do
         rmlui.DocumentUpdate(doc, delta)
     end
+    rmlui.RenderFrame()
 end
 
 return m

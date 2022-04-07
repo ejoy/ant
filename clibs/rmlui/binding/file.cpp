@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "file.h"
 #include "luabind.h"
-#include "luabind.h"
+#include "luaplugin.h"
 
 #if defined(_WIN32)
 #include <Windows.h>

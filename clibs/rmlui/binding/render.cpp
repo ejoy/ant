@@ -225,12 +225,12 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::I
     BGFX(encoder_submit)(mEncoder, mcontext->viewid, { prog }, 0, discard_flags);
 }
 
-void Renderer::Begin(){
+void Renderer::Begin() {
     mEncoder = BGFX(encoder_begin)(false);
     assert(mEncoder);
 }
 
-void Renderer::Frame(){
+void Renderer::End() {
     BGFX(encoder_end)(mEncoder);
 }
 
@@ -335,13 +335,13 @@ bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, co
 	return false;
 }
 
-bool Renderer::UpdateTexture(Rml::TextureHandle texture, const Rect &rt, uint8_t *buffer){
+bool Renderer::UpdateTexture(Rml::TextureHandle texture, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *buffer){
     bgfx_texture_handle_t th = { uint16_t(texture) };
     if (!BGFX_HANDLE_IS_VALID(th))
         return false;
-    const uint32_t bytes = (uint32_t)rt.w * rt.h;
+    const uint32_t bytes = (uint32_t)w * h;
     auto mem = BGFX(make_ref)(buffer, bytes);
-    BGFX(update_texture_2d)(th, 0, 0, rt.x, rt.y, rt.w, rt.h, mem, rt.w);
+    BGFX(update_texture_2d)(th, 0, 0, x, y, w, h, mem, w);
     return true;
 }
 

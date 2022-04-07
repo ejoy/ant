@@ -1,9 +1,7 @@
 #pragma once
-#include "font.h"
 
+#include "font.h"
 #include <core/Interface.h>
-#include <algorithm>
-#include <unordered_map>
 #include <bgfx/c99/bgfx.h>
 
 struct RenderState {
@@ -20,6 +18,8 @@ class Renderer : public Rml::RenderInterface {
 public:
     Renderer(const RmlContext* context);
     ~Renderer();
+    void Begin() override;
+    void End() override;
     void RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::MaterialHandle mat) override;
     bool LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, const std::string& path) override;
     void ReleaseTexture(Rml::TextureHandle texture) override;
@@ -33,15 +33,12 @@ public:
 
 public:
     // will delete buffer
-    bool UpdateTexture(Rml::TextureHandle texhandle, const Rect &rt, uint8_t *buffer);
-    void Begin();
-    void Frame();
+    bool UpdateTexture(Rml::TextureHandle texhandle, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *buffer);
 
 public:
     void UpdateViewRect();
     // bool CalcScissorRectPlane(const glm::mat4 &transform, const Rect &rect, glm::vec4 planes[4]);
     // void SubmitScissorRect();
-
 
 private:
     void submitScissorRect(bgfx_encoder_t* encoder);
