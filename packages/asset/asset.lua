@@ -92,6 +92,7 @@ function assetmgr.load_fx(fx, setting)
 			newfx[p] = absolute_path(fx[p])
 		end
 	end
+	check_resolve_path "varying_path"
 	check_resolve_path "vs"
 	check_resolve_path "fs"
 	check_resolve_path "cs"

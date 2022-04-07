@@ -27,21 +27,22 @@ local function createStage(stageFile, setting)
 end
 
 local function initFX(fx)
-    fx.setting = mergeCfgSetting(fx.setting)
+    local s = mergeCfgSetting(fx.setting)
+    s.varying_path = fx.varying_path
     local res = {}
     local function updateStage(stage)
         if fx[stage] then
-            if not fx[stage]:match("/"..stage.."_[^/]*%.sc$") then
-                error "invalid shader file path."
-            end
+            s.stage = stage
             res[stage] =  {
-                createStage(fx[stage], fx.setting),
+                createStage(fx[stage], s),
             }
         end
     end
     updateStage "cs"
     updateStage "fs"
     updateStage "vs"
+    s.stage = nil
+    s.varying_path = nil
     res.setting = fx.setting
     return res
 end
@@ -119,14 +120,15 @@ local function createProgram(fx)
         return loadShader_(shader)
     end
 
+    local result = {}
     if fx.cs then
-        return createComputeProgram(loadFxShader "cs")
+        result.cs = loadFxShader "cs"
+        result.prog, result.uniforms = createComputeProgram(result.cs)
     else
-        return createRenderProgram(
-            loadFxShader "vs",
-            loadFxShader "fs"
-        )
+        result.vs, result.fs = loadFxShader "vs", loadFxShader "fs"
+        result.prog, result.uniforms = createRenderProgram(result.vs, result.fs)
     end
+    return result
 end
 
 local function load(fx)
@@ -136,8 +138,8 @@ local function load(fx)
     if res then
         return res
     end
-    res = {setting=fxsetting.adddef(fx.setting)}
-    res.prog, res.uniforms = createProgram(fx)
+    res = createProgram(fx)
+    res.setting = fxsetting.adddef(fx.setting)
     CACHE[schash] = res
     return res
 end

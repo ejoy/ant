@@ -90,6 +90,11 @@ function toolset.compile(config)
 		end
 	end
 
+	if config.varying_path then
+        commands[#commands+1] = "--varyingdef"
+        commands[#commands+1] = config.varying_path
+    end
+
 	print("shader compile:")
 	local cmdstring = {}
 	for _, c in ipairs(commands) do

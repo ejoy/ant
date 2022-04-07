@@ -88,14 +88,14 @@ local function compile_debug_shader(platform, renderer)
 end
 
 return function (input, output, setting)
-    local stage = input:string():match("/([cfv]s)_[^/]*%.sc$")
     local ok, err, deps = toolset.compile {
         platform = setting.os,
         renderer = setting.renderer,
         input = input,
         output = output / "main.bin",
         includes = {SHARER_INC},
-        stage = stage,
+        stage = assert(setting.stage),
+        varying_path = setting.varying_path,
         macros = get_macros(setting),
         debug = compile_debug_shader(setting.os, setting.renderer),
     }
