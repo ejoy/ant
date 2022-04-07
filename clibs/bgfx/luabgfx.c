@@ -4773,6 +4773,9 @@ lgetShaderUniforms(lua_State *L) {
 	uint16_t sid = BGFX_LUAHANDLE_ID(SHADER, luaL_checkinteger(L, 1));
 	bgfx_shader_handle_t shader = { sid };
 	uint16_t n = BGFX(get_shader_uniforms)(shader, NULL, 0);
+	if (n == 0){
+		return 0;
+	}
 	lua_createtable(L, n, 0);
 	bgfx_uniform_handle_t u[V(n)];
 	BGFX(get_shader_uniforms)(shader, u, n);	
