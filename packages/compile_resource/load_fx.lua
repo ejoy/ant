@@ -17,17 +17,25 @@ local function merge(a, b)
     return a
 end
 
+local function mergeCfgSetting(setting)
+    merge(setting, config.get "sc".setting)
+    return fxsetting.deldef(setting)
+end
+
+local function createStage(stageFile, setting)
+    return stageFile .. "?" .. stringify(setting)
+end
+
 local function initFX(fx)
+    fx.setting = mergeCfgSetting(fx.setting)
     local res = {}
-    merge(fx.setting, config.get "sc".setting)
-    res = fxsetting.deldef(res)
     local function updateStage(stage)
         if fx[stage] then
             if not fx[stage]:match("/"..stage.."_[^/]*%.sc$") then
                 error "invalid shader file path."
             end
             res[stage] =  {
-                fx[stage] .. "?" .. stringify(fx.setting),
+                createStage(fx[stage], fx.setting),
             }
         end
     end
@@ -96,27 +104,50 @@ local function read_shader(shader)
 	return data
 end
 
-local function loadShader(fx, stage)
-    local shader = fx[stage]
-    if shader == nil then
-        error(("invalid stage:%s in fx file"):format(stage))
-    end
+local function loadShader_(shader)
     local h = bgfx.create_shader(read_shader(shader))
     bgfx.set_name(h, shader[1])
     return h
 end
 
 local function createProgram(fx)
+    local function loadFxShader(stage)
+        local shader = fx[stage]
+        if shader == nil then
+            error(("invalid stage:%s in fx file"):format(stage))
+        end
+        return loadShader_(shader)
+    end
+
     if fx.cs then
-        return createComputeProgram(
-            loadShader(fx, "cs")
-        )
+        return createComputeProgram(loadFxShader "cs")
     else
         return createRenderProgram(
-            loadShader(fx, "vs"),
-            loadShader(fx, "fs")
+            loadFxShader "vs",
+            loadFxShader "fs"
         )
     end
+end
+
+local function loadShader(shaderFile, setting)
+    setting = mergeCfgSetting(setting or {})
+    local shader = {
+        createStage(shaderFile, setting)
+    }
+
+    local res = CACHE[shader[1]]
+    if res then
+        return res
+    end
+    res = {setting=fxsetting.adddef(setting)}
+    res.shader = loadShader_(shader)
+    res.uniforms = {}
+    uniform_info(res.shader, res.uniforms, {})
+    return res
+end
+
+local function unloadShader(res)
+    bgfx.destroy(assert(res.shader))
 end
 
 local function load(fx)
@@ -137,6 +168,8 @@ local function unload(res)
 end
 
 return {
+    load_shader = loadShader,
+    unload_shader = unloadShader,
     load = load,
     unload = unload,
 }
