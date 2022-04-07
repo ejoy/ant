@@ -7,7 +7,11 @@
 #include "efkbgfx/renderer/bgfxrenderer.h"
 #include "../../clibs/bgfx/bgfx_interface.h"
 
-struct efk_ctx {
+class efk_ctx {
+public:
+    efk_ctx() = default;
+    ~efk_ctx() = default;
+
     EffekseerRenderer::RendererRef renderer;
     Effekseer::ManagerRef manager;
 
@@ -43,6 +47,7 @@ lefkctx_destroy(lua_State *L){
     auto ctx = EC(L);
     ctx->manager.Reset();
     ctx->renderer.Reset();
+    ctx->~efk_ctx();
     return 0;
 }
 
@@ -137,9 +142,13 @@ lefk_create(lua_State *L){
         luaL_setfuncs(L, l, 0);
     }
     lua_setmetatable(L, -2);
-    
+
+    new (ctx) efk_ctx();
 
     ctx->renderer = EffekseerRendererBGFX::CreateRenderer(&efkArgs);
+    if (ctx->renderer == nullptr){
+        return luaL_error(L, "create efkbgfx renderer failed");
+    }
 	ctx->manager = Effekseer::Manager::Create(count);
 	ctx->manager->GetSetting()->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
 
