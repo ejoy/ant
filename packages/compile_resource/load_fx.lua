@@ -129,27 +129,6 @@ local function createProgram(fx)
     end
 end
 
-local function loadShader(shaderFile, setting)
-    setting = mergeCfgSetting(setting or {})
-    local shader = {
-        createStage(shaderFile, setting)
-    }
-
-    local res = CACHE[shader[1]]
-    if res then
-        return res
-    end
-    res = {setting=fxsetting.adddef(setting)}
-    res.shader = loadShader_(shader)
-    res.uniforms = {}
-    uniform_info(res.shader, res.uniforms, {})
-    return res
-end
-
-local function unloadShader(res)
-    bgfx.destroy(assert(res.shader))
-end
-
 local function load(fx)
     fx = initFX(fx)
     local schash = getHash(fx)
@@ -168,8 +147,6 @@ local function unload(res)
 end
 
 return {
-    load_shader = loadShader,
-    unload_shader = unloadShader,
     load = load,
     unload = unload,
 }
