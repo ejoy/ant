@@ -32,7 +32,7 @@ lm:source_set "glslang" {
         "../spirv-tools/source",
     },
     sources = {
-        "glslang/**.cpp",
+        "glslang/**/*.cpp",
         "!glslang/OSDependent/Windows/main.cpp",
         "!glslang/OSDependent/Web/*",
         "hlsl/*.cpp",
@@ -66,8 +66,8 @@ lm:source_set "glsl-optimizer" {
         "src/glsl",
     },
     sources = {
-        "src/**.cpp",
-        "src/**.c",
+        "src/**/*.cpp",
+        "src/**/*.c",
         "!src/node/*.cpp",
         "!src/getopt/*.c",
         "!src/glsl/main.cpp",
@@ -110,7 +110,7 @@ lm:source_set "spirv-opt" {
          "../spirv-headers/include",
     },
     sources = {
-        "source/**.cpp",
+        "source/**/*.cpp",
     },
     msvc = {
         flags = {

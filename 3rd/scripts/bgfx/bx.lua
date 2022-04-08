@@ -11,7 +11,7 @@ lm:source_set "bx" {
         "3rdparty"
     },
     sources = {
-        "src/**.cpp",
+        "src/**/*.cpp",
         "!src/amalgamated.cpp",
     },
     gcc = {

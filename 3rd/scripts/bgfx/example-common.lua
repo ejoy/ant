@@ -1,9 +1,9 @@
 local lm = require "luamake"
 
 local sources = {
-    "3rdparty/meshoptimizer/src/**.cpp",
-    "3rdparty/dear-imgui/**.cpp",
-    "examples/common/**.cpp",
+    "3rdparty/meshoptimizer/src/**/*.cpp",
+    "3rdparty/dear-imgui/**/*.cpp",
+    "examples/common/**/*.cpp",
 }
 
 lm:lib "example-common" {
@@ -27,7 +27,7 @@ lm:lib "example-common" {
     },
     macos = {
         sources = {
-            "examples/common/**.mm"
+            "examples/common/**/*.mm"
         }
     }
 }

@@ -11,7 +11,7 @@ lm:source_set "ozz-animation-json" {
 lm:source_set "ozz-animation-base" {
     rootdir = "../ozz-animation",
     includes = "include",
-    sources = "src/base/**.cc",
+    sources = "src/base/**/*.cc",
 }
 
 lm:source_set "ozz-animation-runtime" {

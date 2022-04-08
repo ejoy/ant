@@ -14,7 +14,7 @@ lm:lua_source "effekseer" {
     },
     sources = {
         "*.cpp",
-        EffekseerDir.."/**.cpp",
+        EffekseerDir.."/**/*.cpp",
     },
     msvc = {
         flags = {
