@@ -106,7 +106,7 @@ function m:create_slot()
         policy = {
             "ant.general|name",
             "ant.general|tag",
-            "ant.scene|slot",
+            "ant.animation|slot",
             "ant.scene|scene_object",
         },
         data = {

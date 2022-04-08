@@ -1,6 +1,5 @@
 local ecs = ...
 local w = ecs.world.w
-local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant

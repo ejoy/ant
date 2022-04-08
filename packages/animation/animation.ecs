@@ -22,7 +22,7 @@ pipeline "refine_animation_pose"
     .stage "do_ik"
 
 policy "animation"
-    .require_system "animation_system"
+    .require_system "ant.animation|animation_system"
     .component "skeleton"
     .component "animation"
     .component "pose_result"

@@ -7,5 +7,5 @@ component "slot"
     .type "lua"
 
 policy "slot"
-    .require_system "ant.scene|slot_system"
+    .require_system "ant.animation|slot_system"
     .component "slot"
