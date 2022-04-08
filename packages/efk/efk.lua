@@ -4,14 +4,19 @@ local w     = world.w
 
 local efk_cb    = require "effekseer.callback"
 local efk       = require "efk"
-
 local fs        = require "filesystem"
+local bgfx      = require "bgfx"
+local image     = require "image"
+local datalist  = require "datalist"
+local math3d    = require "math3d"
 
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
 
 local assetmgr  = import_package "ant.asset"
+
+local cr        = import_package "ant.compile_resource"
 
 local itimer    = ecs.import.interface "ant.timer|itimer"
 
@@ -99,13 +104,31 @@ local function shader_load(materialfile, shadername, stagetype)
     return fx[stagetype]
 end
 
-
 local TEXTURE_LOADED = {}
+local effect_file_root
 local function texture_load(texname, srgb)
     --TODO: need use srgb texture
-    local tex = assetmgr.resource(texname)
-    TEXTURE_LOADED[tex.handle] = tex
-    return tex.handle
+    local _ <close> = fs.switch_sync()
+    assert(effect_file_root)
+    local texpath = effect_file_root / texname
+    local cfgpath = texpath:string() .. "|main.cfg"
+
+    local filecontent = cr.read_file(texpath:string())
+    
+    local cfg = datalist.parse(cr.read_file(cfgpath))
+    local ti = cfg.info
+    if texname:lower():match "%.png$" then
+        if ti.format == "RG8" then
+            filecontent = image.png.gray2rgb(filecontent)
+        else
+            filecontent = image.convert(filecontent, "RGBA8")
+        end
+    end
+
+    local mem = bgfx.memory_buffer(filecontent)
+    local handle = bgfx.create_texture(mem, cfg.flag)
+    TEXTURE_LOADED[handle] = texpath
+    return handle
 end
 
 local function texture_unload(texhandle)
@@ -148,33 +171,65 @@ end
 
 function efk_sys:entity_init()
     for e in w:select "INIT efk:update" do
+        assert(type(e.efk) == "string")
+        effect_file_root = fs.path(e.efk):parent_path()
         e.efk = load_efk(e.efk)
+        effect_file_root = nil
     end
 end
 
 local mq_vr_mb = world:sub{"viewrect_changed", "main_queue"}
+local camera_changed = world:sub{"main_queue", "camera_changed"}
+local camera_frustum_mb
 
 local function update_framebuffer_texutre()
-    local mq = w:singleton("maiqn_queue", "render_target:in")
+    local mq = w:singleton("main_queue", "render_target:in camera_ref:in")
     local rt = mq.render_target
     local fb = fbmgr.get(rt.fb_idx)
-    efk_cb_handle.background = fbmgr.get_rb(fb[1]).handle
-    efk_cb_handle.depth = fbmgr.get_depth(fb).handle
+    efk_cb_handle.background = fb[1].handle
+
+    local ce = world:entity(mq.camera_ref)
+    local projmat = ce.camera.projmat
+    local col3, col4 = math3d.index(projmat, 3, 4)
+    local m33, m34 = math3d.index(col3, 3, 4)
+    local m43, m44 = math3d.index(col4, 3, 4)
+    efk_cb_handle.depth = {
+        handle = fbmgr.get_depth(rt.fb_idx).handle,
+        1.0, --depth buffer scale
+        0.0, --depth buffer offset
+        m33, m34,
+        m43, m44,
+    }
 end
 
 function efk_sys:init_world()
-    update_framebuffer_texutre()
+    local mq = w:singleton("main_queue", "camera_ref:in")
+    camera_frustum_mb = world:sub{"camera_changed", mq.cameraref, "frustum"}
+    --let it init
+    world:pub{"camera_changed", mq.cameraref, "frustum"}
 end
 
-function efk_sys:data_changed()
+function efk_sys:camera_usage()
+    for _, _, cameraref in camera_changed:unpack() do
+        camera_frustum_mb = world:sub{"camera_changed", cameraref, "frustum"}
+        update_framebuffer_texutre()
+    end
+
+    for _ in camera_frustum_mb:each() do
+        update_framebuffer_texutre()
+    end
+
     for _ in mq_vr_mb:each() do
-       update_framebuffer_texutre() 
+        update_framebuffer_texutre()
     end
 end
 
 --TODO: need remove, should put it on the ltask
 function efk_sys:render_submit()
-    efk_ctx:render(itimer.delta())
+    local mq = w:singleton("main_queue", "camera_ref:in")
+    local ce = world:entity(mq.camera_ref)
+    local camera = ce.camera
+    efk_ctx:render(math3d.value_ptr(camera.viewmat), math3d.value_ptr(camera.projmat), itimer.delta())
 end
 
 

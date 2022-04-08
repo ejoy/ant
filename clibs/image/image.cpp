@@ -4,13 +4,30 @@
 #include <bimg/bimg.h>
 #include <bx/error.h>
 #include <bx/readerwriter.h>
+#include <bx/pixelformat.h>
+#include <bimg/decode.h>
 #include "luabgfx.h"
 
 #include <vector>
 
 #include "lua2struct.h"
 
-LUA2STRUCT(bimg::TextureInfo, storageSize, width, height, depth, numLayers, numMips, bitsPerPixel, cubeMap);
+LUA2STRUCT(bimg::TextureInfo, format, storageSize, width, height, depth, numLayers, numMips, bitsPerPixel, cubeMap);
+
+namespace lua_struct {
+    template <>
+    inline void unpack<bimg::TextureFormat::Enum>(lua_State* L, int idx, bimg::TextureFormat::Enum& v, void*) {
+        luaL_checktype(L, idx, LUA_TTABLE);
+        const char* name;
+        unpack_field(L, idx, "format", name);
+        v = bimg::getFormat(name);
+    }
+    template <>
+    inline void pack<bimg::TextureFormat::Enum>(lua_State* L, bimg::TextureFormat::Enum const& fmt, void*) {
+        auto name = bimg::getName(fmt);
+        lua_pushstring(L, name);
+    }
+}
 
 struct encode_dds_info {
     bool srgb;
@@ -18,9 +35,14 @@ struct encode_dds_info {
 
 LUA2STRUCT(encode_dds_info, srgb);
 
+static inline struct memory*
+TO_MEM(lua_State *L, int idx){
+    return (struct memory *)luaL_checkudata(L, idx, "BGFX_MEMORY");
+}
+
 static int
 lparse(lua_State *L) {
-    struct memory *mem = (struct memory *)luaL_checkudata(L, 1, "BGFX_MEMORY");
+    auto mem = TO_MEM(L, 1);
     bool readcontent = lua_isnoneornil(L, 2);
     bx::Error err;
     bimg::ImageContainer imageContainer;
@@ -193,15 +215,116 @@ lget_format_name(lua_State *L){
     return 1;
 }
 
+static int32_t
+to_dds_file(bx::MemoryBlock *mb, bimg::ImageContainer *ic){
+    bx::MemoryWriter sw(mb);
+    bx::Error err;
+    return bimg::imageWriteDds(&sw, *ic, ic->m_data, (uint32_t)ic->m_size, &err);
+}
+
+static void
+push_dds_file(lua_State *L, bx::AllocatorI *allocator, bimg::ImageContainer *ic){
+    bx::MemoryBlock mb(allocator);
+    to_dds_file(&mb, ic);
+    lua_pushlstring(L, (const char*)mb.more(), mb.getSize());
+}
+
+static int
+lconvert(lua_State *L){
+    size_t bufsize = 0;
+    auto buf = luaL_checklstring(L, 1, &bufsize);
+    auto fmt = bimg::getFormat(luaL_checkstring(L, 2));
+
+    bx::DefaultAllocator allocator;
+    bimg::ImageContainer ic;
+    ic.m_allocator = &allocator;
+    bx::Error err;
+    auto img = bimg::imageParse(&allocator, buf, (uint32_t)bufsize, fmt, &err);
+    if (img){
+        push_dds_file(L, &allocator, img);
+        bimg::imageFree(img);
+        return 1;
+    }
+
+    return luaL_error(L, "bimg::imageParse failed");
+    
+}
+
+static inline int
+check_mem(lua_State *L, int memidx, int fmtidx, struct memory *& m, bimg::TextureFormat::Enum &fmt){
+    m = TO_MEM(L, 1);
+    fmt = bimg::getFormat(luaL_checkstring(L, 2));
+    const auto srcbytes = bimg::getBitsPerPixel(fmt) / 8;
+    if ( m->size % srcbytes != 0){
+        return luaL_error(L, "invalid format:%s, memory size:%d", bimg::getName(fmt), m->size);
+    }
+
+    return 1;
+}
+
+static int
+lpng_gray2rgb(lua_State *L){
+    size_t srcsize = 0;
+    auto src = luaL_checklstring(L, 1, &srcsize);
+    bx::DefaultAllocator allocator;
+    bimg::ImageContainer ic;
+    bx::Error err;
+    bimg::imageParse(ic, src, (uint32_t)srcsize, &err);
+
+    auto unpack = [](float* dst, const void* src){
+        const uint8_t* _src = (const uint8_t*)src;
+        dst[0] = dst[1] = dst[2] = bx::fromUnorm(_src[0], 255.0f);
+        if (_src[1] != 255 && _src[1] != 0){
+            int debug = 0;
+        }
+        dst[3] = bx::fromUnorm(_src[1], 255.0f);
+    };
+
+    auto dstimage = bimg::imageAlloc(&allocator,
+        bimg::TextureFormat::RGBA8,
+        ic.m_width,
+        ic.m_height,
+        ic.m_depth,
+        ic.m_numLayers,
+        ic.m_cubeMap,
+        ic.m_numMips > 1, nullptr);
+
+    const uint32_t srcbpp = bimg::getBitsPerPixel(ic.m_format);
+    const uint32_t dstbpp = bimg::getBitsPerPixel(bimg::TextureFormat::RGBA8);
+
+    bimg::imageConvert( dstimage->m_data, dstbpp, bx::packRgba8, 
+                        ic.m_data, srcbpp, unpack, 
+                        ic.m_width, ic.m_height, ic.m_depth,
+                        ic.m_width * (srcbpp/8), ic.m_width * (dstbpp/8));
+    push_dds_file(L, &allocator, dstimage);
+    bimg::imageFree(dstimage);
+    return 1;
+}
+
+static void
+create_png_lib(lua_State *L)    {
+    lua_newtable(L);
+    luaL_Reg pnglib[] = {
+        {"gray2rgb", lpng_gray2rgb},
+        {nullptr, nullptr},
+    };
+    luaL_setfuncs(L, pnglib, 0);
+}
+
 extern "C" int
 luaopen_image(lua_State* L) {
     luaL_Reg lib[] = {
-        { "parse", lparse },
-        { "encode_image", lencode_image},
+        { "parse",              lparse },
+        { "convert",            lconvert},
+        { "encode_image",       lencode_image},
         { "get_bits_pre_pixel", lget_bits_pre_pixel},
-        { "get_format_name", lget_format_name},
-        { NULL, NULL },
+        { "get_format_name",    lget_format_name},
+        { nullptr,              nullptr },
     };
     luaL_newlib(L, lib);
+    
+    create_png_lib(L);
+    lua_setfield(L, -2, "png");
+
     return 1;
 }

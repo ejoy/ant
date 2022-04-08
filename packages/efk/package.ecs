@@ -3,7 +3,7 @@ system "efk_system"
     .method "init"
     .method "init_world"
     .method "entity_init"
-    .method "data_changed"
+    .method "camera_usage"
     .method "render_submit"
 
 component "efk".type "lua"

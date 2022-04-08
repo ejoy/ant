@@ -24,6 +24,12 @@ end
 
 local sys = ecs.system "slot_system"
 
+function sys:start_frame()
+    for v in w:select "slot:in scene:in" do
+		v.scene.slot_matrix = nil
+	end
+end
+
 function sys:entity_init()
     for e in w:select "INIT slot:in skeleton:in" do
         local slot = e.slot

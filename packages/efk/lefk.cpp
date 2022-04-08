@@ -30,7 +30,12 @@ EC(lua_State *L){
 static int
 lefkctx_render(lua_State *L){
     auto ctx = EC(L);
-    auto delta = (float)luaL_checknumber(L, 2);
+    auto viewmat = (Effekseer::Matrix44*)lua_touserdata(L, 2);
+    auto projmat = (Effekseer::Matrix44*)lua_touserdata(L, 3);
+    auto delta = (float)luaL_checknumber(L, 4);
+
+    ctx->renderer->SetCameraMatrix(*viewmat);
+    ctx->renderer->SetProjectionMatrix(*projmat);
     ctx->manager->Update(delta);
     ctx->renderer->BeginRendering();
     Effekseer::Manager::DrawParameter drawParameter;
@@ -169,7 +174,6 @@ extern "C" int
 luaopen_efk(lua_State* L) {
     luaL_Reg lib[] = {
         { "create", lefk_create},
-        { "render", lefkctx_render},
         { nullptr, nullptr },
     };
     luaL_newlib(L, lib);

@@ -8,7 +8,7 @@ local renderbuffers = {}
 local viewid_bindings = {}
 
 local VALID_DEPTH_FMT<const> = {
-	"D24S8", "D24", "D24X8", "D32F",
+	D24S8 = true, D24 = true, D24X8 = true, D32F = true,
 }
 
 function mgr.bind(viewid, fb_idx)
@@ -222,7 +222,7 @@ end
 
 function mgr.get_depth(fbidx)
 	local fb = mgr.get(fbidx)
-	local rb = mgr.get_rb(#fb)
+	local rb = mgr.get_rb(fb[#fb].rbidx)
 	assert(VALID_DEPTH_FMT[rb.format])
 	return rb
 end
