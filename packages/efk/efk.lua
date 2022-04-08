@@ -146,15 +146,20 @@ function efk_sys:init()
         shader_load     = shader_load,
         texture_load    = texture_load,
         texture_unload  = texture_unload,
+        texture_map = {},
         error           = error_handle,
     }
 
-    efk_ctx = efk.create(
-        2000, viewidmgr.get "effect_view",
-        efk_cb.shader_load,
-        efk_cb.texture_load,
-        efk_cb.texture_get,
-        efk_cb.texture_unload, efk_cb_handle)
+    efk_ctx = efk.create{
+        max_count       = 2000,
+        viewid          = viewidmgr.get "effect_view",
+        shader_load     = efk_cb.shader_load,
+        texture_load    = efk_cb.texture_load,
+        texture_get     = efk_cb.texture_get,
+        texture_unload  = efk_cb.texture_unload,
+        texture_handle  = efk_cb.texture_handle,
+        callback        = efk_cb_handle,
+    }
 end
 
 local function read_file(filename)

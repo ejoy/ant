@@ -119,16 +119,32 @@ lefkctx_stop(lua_State *L){
 
 static int
 lefk_create(lua_State *L){
-    auto count = (int)luaL_checkinteger(L, 1);
-    EffekseerRendererBGFX::InitArgs efkArgs {
-        count, (bgfx_view_id_t)luaL_checkinteger(L, 2), bgfx_inf_,
-    };
+    luaL_checktype(L, 1, LUA_TTABLE);
 
-    efkArgs.shader_load = (decltype(efkArgs.shader_load))lua_touserdata(L, 3);
-    efkArgs.texture_load = (decltype(efkArgs.texture_load))lua_touserdata(L, 4);
-    efkArgs.texture_get = (decltype(efkArgs.texture_get))lua_touserdata(L, 5);
-    efkArgs.texture_unload = (decltype(efkArgs.texture_unload))lua_touserdata(L, 6);
-    efkArgs.ud = lua_touserdata(L, 7);
+    EffekseerRendererBGFX::InitArgs efkArgs;
+
+    auto get_field = [L](const char* name, int luatype, auto op){
+        auto ltype = lua_getfield(L, 1, name);
+        if (luatype == ltype){
+            op();
+        } else {
+            luaL_error(L, "invalid field:%s, miss match type:%s, %s", lua_typename(L, ltype), lua_typename(L, luatype));
+        }
+
+        lua_pop(L, 1);
+    };
+    
+    get_field("max_count", LUA_TNUMBER, [&](){efkArgs.squareMaxCount = (int)lua_tointeger(L, -1);});
+    get_field("viewid", LUA_TNUMBER, [&](){efkArgs.viewid = (bgfx_view_id_t)lua_tointeger(L, -1);});
+
+    efkArgs.bgfx = bgfx_inf_;
+
+    get_field("shader_load", LUA_TLIGHTUSERDATA, [&](){efkArgs.shader_load = (decltype(efkArgs.shader_load))lua_touserdata(L, -1);});
+    get_field("texture_load", LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_load = (decltype(efkArgs.texture_load))lua_touserdata(L, -1);});
+    get_field("texture_get", LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_get = (decltype(efkArgs.texture_get))lua_touserdata(L, -1);});
+    get_field("texture_unload", LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_unload = (decltype(efkArgs.texture_unload))lua_touserdata(L, -1);});
+    get_field("texture_handle", LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_handle = (decltype(efkArgs.texture_handle))lua_touserdata(L, -1);});
+    get_field("callback", LUA_TUSERDATA, [&](){efkArgs.ud = lua_touserdata(L, -1);});
 
     auto ctx = (efk_ctx*)lua_newuserdatauv(L, sizeof(efk_ctx), 0);
     if (luaL_newmetatable(L, "EFK_CTX")){
@@ -154,7 +170,7 @@ lefk_create(lua_State *L){
     if (ctx->renderer == nullptr){
         return luaL_error(L, "create efkbgfx renderer failed");
     }
-	ctx->manager = Effekseer::Manager::Create(count);
+	ctx->manager = Effekseer::Manager::Create(efkArgs.squareMaxCount);
 	ctx->manager->GetSetting()->SetCoordinateSystem(Effekseer::CoordinateSystem::LH);
 
     ctx->manager->SetModelRenderer(CreateModelRenderer(ctx->renderer, &efkArgs));
