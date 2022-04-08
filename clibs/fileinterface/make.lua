@@ -2,10 +2,7 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
-lm:source_set "source_fileinterface" {
-    includes = {
-        LuaInclude,
-    },
+lm:lua_source "source_fileinterface" {
 	defines = {
 		lm.test and "FILE_INTERFACE_TEST"
 	},
