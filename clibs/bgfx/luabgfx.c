@@ -101,6 +101,7 @@ struct callback {
 	bgfx_callback_interface_t base;
 	struct screenshot_queue ss;
 	struct log_cache lc;
+	uint32_t filterlog;
 	bool getlog;
 };
 
@@ -342,21 +343,36 @@ cb_fatal(bgfx_callback_interface_t *self, const char* filePath, uint16_t line, b
 	abort();
 }
 
+#define PREFIX(str, cstr) (memcmp(str, cstr"", sizeof(cstr)-1) == 0)
+
+static int
+trace_filter(const char *format, int level) {
+	if (level > 4)
+		return level;
+	if (!PREFIX(format, "BGFX "))
+		return 1;
+	if (level <= 1)
+		return 0;
+	format += 5;	// skip "BGFX "
+	if (PREFIX(format, "ASSERT ")) {
+		return 2;
+	}
+	if (level <=2)
+		return 0;
+	if (PREFIX(format, "WARN ")) {
+		return 3;
+	}
+	if (level <=3)
+		return 0;
+	return 4;
+}
+
 static void
 cb_trace_vargs(bgfx_callback_interface_t *self, const char *file, uint16_t line, const char *format, va_list ap) {
 	char tmp[MAX_LOGBUFFER];
 	int n = sprintf(tmp, "%s (%d): ", file, line);
-	int m = vsnprintf(tmp+n, sizeof(tmp)-n, format, ap);
 
-	int warn = (m >= 10 && strncmp(tmp+n, "BGFX WARN ", 10) == 0);
-	if (warn) {
-		fputs(tmp, stderr);
-		fflush(stderr);
-		abort();
-		return;
-	}
-
-	n += m;
+	n += vsnprintf(tmp+n, sizeof(tmp)-n, format, ap);
 	if (n > MAX_LOGBUFFER) {
 		// truncated
 		n = MAX_LOGBUFFER;
@@ -364,7 +380,8 @@ cb_trace_vargs(bgfx_callback_interface_t *self, const char *file, uint16_t line,
 	struct callback * cb = (struct callback *)self;
 	if (cb->getlog) {
 		append_log(&(cb->lc), tmp, n);
-	} else {
+	}
+	if (cb->filterlog > 0 && trace_filter(format, cb->filterlog)) {
 		fputs(tmp, stdout);
 		fflush(stdout);
 	}
@@ -632,6 +649,12 @@ linit(lua_State *L) {
 		read_boolean(L, 1, "debug", &init.debug);
 		read_boolean(L, 1, "profile", &init.profile);
 		read_boolean(L, 1, "getlog", &cb->getlog);
+		if (cb->getlog) {
+			cb->filterlog = 0;	// log none
+		} else {
+			cb->filterlog = 255;	// log all
+		}
+		read_uint32(L, 1, "loglevel", &cb->filterlog);
 
 		init.platformData.ndt = getfield(L, "ndt");
 		init.platformData.nwh = getfield(L, "nwh");
