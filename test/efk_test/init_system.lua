@@ -39,7 +39,7 @@ end
 function is:init_world()
     local mq = w:singleton("main_queue", "camera_ref:in")
     local ce = world:entity(mq.camera_ref)
-    iom.set_position(ce, math3d.vector(0.0, 0.0, -10.0))
+    iom.set_position(ce, math3d.vector(0.0, 0.0, 10.0))
     iom.set_direction(ce, math3d.vector(0.0, 0.0, -1.0))
 end
 

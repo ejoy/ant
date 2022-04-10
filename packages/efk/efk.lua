@@ -128,7 +128,7 @@ local function texture_load(texname, srgb)
     local mem = bgfx.memory_buffer(filecontent)
     local handle = bgfx.create_texture(mem, cfg.flag)
     TEXTURE_LOADED[handle] = texpath
-    return handle
+    return (handle & 0xffff)
 end
 
 local function texture_unload(texhandle)
@@ -140,19 +140,24 @@ local function error_handle(msg)
     error(msg)
 end
 
+local function texture_find(_, id)
+    return id
+end
+
+local effect_viewid<const> = viewidmgr.get "effect_view"
 local efk_cb_handle, efk_ctx
 function efk_sys:init()
     efk_cb_handle =  efk_cb.callback{
         shader_load     = shader_load,
         texture_load    = texture_load,
         texture_unload  = texture_unload,
-        texture_map = {},
+        texture_map     = setmetatable({}, {__index = texture_find}),
         error           = error_handle,
     }
 
     efk_ctx = efk.create{
         max_count       = 2000,
-        viewid          = viewidmgr.get "effect_view",
+        viewid          = effect_viewid,
         shader_load     = efk_cb.shader_load,
         texture_load    = efk_cb.texture_load,
         texture_get     = efk_cb.texture_get,
@@ -231,9 +236,11 @@ end
 
 --TODO: need remove, should put it on the ltask
 function efk_sys:render_submit()
-    local mq = w:singleton("main_queue", "camera_ref:in")
+    local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
     local ce = world:entity(mq.camera_ref)
     local camera = ce.camera
+    local vr = mq.render_target.view_rect
+    bgfx.set_view_rect(effect_viewid, vr.x, vr.y, vr.w, vr.h)
     efk_ctx:render(math3d.value_ptr(camera.viewmat), math3d.value_ptr(camera.projmat), itimer.delta())
 end
 
