@@ -1,10 +1,9 @@
 local lm = require "luamake"
 
 lm:source_set "bx" {
-    rootdir = "../bx/",
+    rootdir = BxDir,
     defines = {
         "__STDC_FORMAT_MACROS",
-        "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     },
     includes = {
         "include",

@@ -1,35 +1,29 @@
 local lm = require "luamake"
 
-lm:copy "copy_bgfx_shader" {
-    input = {
-        "../bgfx/src/bgfx_shader.sh",
-        "../bgfx/src/bgfx_compute.sh",
-        "../bgfx/examples/common/common.sh",
-        "../bgfx/examples/common/shaderlib.sh",
-    },
-    output = {
-        "../../packages/resources/shaders/bgfx_shader.sh",
-        "../../packages/resources/shaders/bgfx_compute.sh",
-        "../../packages/resources/shaders/common.sh",
-        "../../packages/resources/shaders/shaderlib.sh",
-    }
-}
+local function deepcopy(t)
+    local r = {}
+    for k, v in pairs(t) do
+        if type(v) == "table" then
+            r[k] = deepcopy(v)
+        else
+            r[k] = v
+        end
+    end
+    return r
+end
 
-lm:dll "bgfx-core" {
-    rootdir = "../bgfx/",
+local bgfxLib = {
+    rootdir = BgfxDir,
     deps = {
         "bx",
-        "bimg",
-        "copy_bgfx_shader"
+        "bimg"
     },
     defines = {
-        "BGFX_SHARED_LIB_BUILD=1",
         "BGFX_CONFIG_MAX_VIEWS=1024",
-        lm.mode == "debug" and "BGFX_CONFIG_DEBUG=1",
     },
     includes = {
-        "../bx/include",
-        "../bimg/include",
+        BxDir .. "include",
+        BimgDir .. "include",
         "3rdparty",
         "3rdparty/khronos",
         "include",
@@ -48,7 +42,6 @@ lm:dll "bgfx-core" {
     },
     windows = {
         includes = "3rdparty/dxsdk/include",
-        links = { "gdi32", "psapi", "user32" }
     },
     macos = {
         sources = {
@@ -57,7 +50,29 @@ lm:dll "bgfx-core" {
         },
         flags = {
             "-x", "objective-c++"
+        }
+    },
+    ios = {
+        defines = {
+            "BGFX_CONFIG_RENDERER_METAL=1",
         },
+        sources = {
+            "src/*.mm",
+            "!src/amalgamated.mm",
+        }
+    }
+}
+
+local bgfxDll = deepcopy(bgfxLib)
+table.insert(bgfxDll.defines, "BGFX_SHARED_LIB_BUILD=1")
+
+lm:lib "bgfx-lib" (bgfxLib)
+lm:src "bgfx-dll" (bgfxDll)
+lm:dll "bgfx-dll" {
+    windows = {
+        links = { "gdi32", "psapi", "user32" }
+    },
+    macos = {
         frameworks = {
             "Cocoa",
             "QuartzCore",

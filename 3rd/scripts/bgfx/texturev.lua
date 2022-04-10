@@ -1,8 +1,9 @@
 local lm = require "luamake"
+
 require "bgfx.example-common"
 
 lm:exe "texturev" {
-    rootdir = "../bgfx/",
+    rootdir = BgfxDir,
     deps = {
         "example-common",
         "bimg_decode",
@@ -12,8 +13,8 @@ lm:exe "texturev" {
         "bx",
     },
     includes = {
-        "../bx/include",
-        "../bimg/include",
+        BxDir .. "include",
+        BimgDir .. "include",
         "include",
         "3rdparty/iqa/include",
         "3rdparty",
@@ -23,7 +24,7 @@ lm:exe "texturev" {
         "tools/texturev/texturev.cpp",
     },
     windows = {
-        sources = "../scripts/utf8/utf8.rc",
+        deps = "bgfx-support-utf8",
         links = {
             "DelayImp",
             "comdlg32",

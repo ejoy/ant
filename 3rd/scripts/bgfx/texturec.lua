@@ -1,7 +1,7 @@
 local lm = require "luamake"
 
 lm:exe "texturec" {
-    rootdir = "../bimg/",
+    rootdir = BimgDir,
     deps = {
         "bimg_decode",
         "bimg_encode",
@@ -9,19 +9,16 @@ lm:exe "texturec" {
         "bx",
     },
     includes = {
-        "../bx/include",
-        "../bgfx/include",
+        BxDir .. "include",
+        BgfxDir .. "include",
         "include",
         "3rdparty/iqa/include"
-    },
-    defines = {
-        "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     },
     sources = {
         "tools/texturec/texturec.cpp",
     },
     windows = {
-        sources = "../scripts/utf8/utf8.rc",
+        deps = "bgfx-support-utf8",
         links = {
             "psapi"
         }
