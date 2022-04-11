@@ -4,7 +4,7 @@ lm:source_set "reactphysics3d" {
     rootdir = "../reactphysics3d",
     includes = "include",
     sources = {
-        "src/**.cpp"
+        "src/**/*.cpp"
     },
     msvc = {
         flags = {
