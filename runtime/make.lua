@@ -7,12 +7,13 @@ local RuntimeBacklist = {
     filedialog = true,
     imgui = true,
     audio = true,
+    effekseer = true,
 }
 
 local EditorBacklist = {
     firmware = true,
     audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os ~= "windows"),
-    effeskeer = true,
+    effekseer = true,
 }
 
 local RuntimeModules = {}
