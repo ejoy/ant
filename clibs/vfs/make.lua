@@ -1,14 +1,7 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
-lm:source_set "source_vfs" {
-    includes = LuaInclude,
+lm:lua_source "vfs" {
     sources = {
         "vfs.cpp",
     }
-}
-
-lm:lua_dll "vfs" {
-    deps = "source_vfs"
 }

@@ -21,10 +21,7 @@ lm:copy "copy_fmod" {
     output = outputpaths,
 }
 
-lm:source_set "source_audio" {
-    includes = {
-        LuaInclude,
-    },
+lm:lua_source "audio" {
     sources = {
         "*.cpp",
     },
@@ -59,8 +56,4 @@ lm:source_set "source_audio" {
     deps = {
         "copy_fmod",
     }
-}
-
-lm:lua_dll "audio" {
-    deps = "source_audio",
 }

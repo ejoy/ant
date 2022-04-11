@@ -1,8 +1,5 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
-lm:source_set "luabind" {
-    includes = LuaInclude,
+lm:lua_source "luabind" {
     sources = "luaref.cpp",
 }

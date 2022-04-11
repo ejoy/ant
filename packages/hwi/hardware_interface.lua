@@ -47,9 +47,14 @@ end
 local function bgfx_init(args)
 	nwh, w, h = args.nwh, args.width, args.height
 	--assert(nwh,"handle is nil")
-	
+
 	args.renderer = check_renderer(args.renderer)
-	args.getlog = args.getlog or true
+
+	local LOG_NONE  <const> = 1
+	local LOG_ERROR <const> = 2
+	local LOG_WARN  <const> = 3
+	local LOG_TRACE <const> = 4
+	args.loglevel = args.loglevel or LOG_WARN
 	if args.reset == nil then
 		flags = {
 			-- v = true,

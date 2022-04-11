@@ -17,9 +17,8 @@ lm:copy "copy_task_lua" {
     }
 }
 
-lm:source_set "source_ltask" {
+lm:lua_source "ltask" {
     deps = "copy_task_lua",
-    includes = LuaInclude,
     sources = {
         Ant3rd .. "ltask/src/*.c",
         "!" .. Ant3rd .. "ltask/src/main.c",
@@ -43,8 +42,4 @@ lm:source_set "source_ltask" {
         links = "pthread",
         visibility = "default",
     },
-}
-
-lm:lua_dll "ltask" {
-    deps = "source_ltask"
 }

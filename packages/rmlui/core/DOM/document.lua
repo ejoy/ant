@@ -1,17 +1,20 @@
 local rmlui = require "rmlui"
 local event = require "core.event"
-local createElement = require "core.DOM.element"
+local constructor = require "core.DOM.constructor"
 
-local function constructor(handle)
+local function constructorDocument(handle)
     local doc = {_handle = handle}
     function doc.getElementById(id)
-        return createElement(rmlui.DocumentGetElementById(handle, id), handle)
+        return constructor.Element(handle, false, rmlui.DocumentGetElementById(handle, id))
     end
     function doc.createElement(tag)
-        return createElement(rmlui.DocumentCreateElement(handle, tag), handle, true)
+        return constructor.Element(handle, true, rmlui.DocumentCreateElement(handle, tag))
     end
     function doc.createTextNode(text)
-        return createElement(rmlui.DocumentCreateTextNode(handle, text), handle, true)
+        return constructor.Text(handle, true, rmlui.DocumentCreateTextNode(handle, text))
+    end
+    function doc.elementFromPoint(x, y)
+        return constructor.Element(handle, false, rmlui.DocumentElementFromPoint(handle, x, y))
     end
     return doc
 end
@@ -19,7 +22,7 @@ end
 local pool = {}
 
 function event.OnDocumentCreate(document, globals)
-    local o = constructor(document)
+    local o = constructorDocument(document)
     globals.document = o
     pool[document] = o
 end

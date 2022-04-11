@@ -8,23 +8,17 @@ local rhwi      = import_package "ant.hwi"
 local asset_mgr = import_package "ant.asset"
 local mathpkg   = import_package "ant.math"
 
-local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
 local mc        = mathpkg.constant
 local effekseer_filename_mgr = ecs.import.interface "ant.effekseer|filename_mgr"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local ies       = ecs.import.interface "ant.scene|ifilter_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
-local icoll     = ecs.import.interface "ant.collision|icollider"
-local drawer    = ecs.import.interface "ant.render|iwidget_drawer"
 local isp 		= ecs.import.interface "ant.render|isystem_properties"
 local iwd       = ecs.import.interface "ant.render|iwidget_drawer"
-local icamera   = ecs.import.interface "ant.camera|icamera"
 
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
 local skeleton_view     = ecs.require "widget.skeleton_view"
-local material_view     = ecs.require "widget.material_view"
 local toolbar           = ecs.require "widget.toolbar"
 local mainview          = ecs.require "widget.main_view"
 local scene_view        = ecs.require "widget.scene_view"
@@ -35,7 +29,6 @@ local menu              = ecs.require "widget.menu"
 local gizmo             = ecs.require "gizmo.gizmo"
 local camera_mgr        = ecs.require "camera.camera_manager"
 
-local uiconfig          = require "widget.config"
 local widget_utils      = require "widget.utils"
 local log_widget        = require "widget.log"(asset_mgr)
 local console_widget    = require "widget.console"(asset_mgr)
@@ -44,7 +37,6 @@ local editor_setting    = require "editor_setting"
 
 local global_data       = require "common.global_data"
 local new_project       = require "common.new_project"
-local utils             = require "common.utils"
 local gizmo_const       = require "gizmo.const"
 
 local prefab_mgr        = ecs.require "prefab_manager"
@@ -59,6 +51,8 @@ local bgfx              = require "bgfx"
 
 local m = ecs.system 'gui_system'
 local drag_file = nil
+
+local ima = ecs.import.interface "ant.asset|imaterial_animation"
 
 local function on_new_project(path)
     new_project.set_path(path)
@@ -251,6 +245,13 @@ local stat_window
 function m:init_world()
     local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
     stat_window = iRmlUi.open "bgfx_stat.rml"
+    ima.highlight_anim = ima.create("highlight", "u_basecolor_factor", {
+        {time = 0, value = {1, 1, 1, 1}},
+        {time = 300, value = {2, 2, 2, 1}},
+        {time = 500, value = {5, 5, 5, 1}},
+        {time = 700, value = {2, 2, 2, 1}},
+        {time = 1000, value = {1, 1, 1, 1}},
+    })
 end
 local mouse_pos_x
 local mouse_pos_y
@@ -372,8 +373,6 @@ end
 local cmd_queue = ecs.require "gizmo.command_queue"
 local event_update_aabb = world:sub {"UpdateAABB"}
 
-
-
 function hierarchy:set_adaptee_visible(nd, b, recursion)
     local adaptee = self:get_select_adaptee(nd.eid)
     for _, e in ipairs(adaptee) do
@@ -391,6 +390,7 @@ local function update_visible(node, visible)
         ies.set_state(world:entity(e), "main_view", visible)
     end
 end
+local reset_editor = world:sub {"ResetEditor"}
 function m:handle_event()
     for _, _, _, x, y in event_mouse:unpack() do
         mouse_pos_x = x
@@ -543,6 +543,9 @@ function m:handle_event()
     for _, what, type in event_create:unpack() do
         prefab_mgr:create(what, type)
     end
+    for _, what in reset_editor:unpack() do
+        ima.stop(world:entity(ima.highlight_anim))
+    end
 end
 
 
@@ -596,5 +599,7 @@ function m:widget()
 end
 
 function m.end_animation()
+    -- if gizmo.target_eid and world:entity(gizmo.target_eid).skeleton then
+    -- end
     joint_utils:update_pose(prefab_mgr:get_root_mat() or math3d.matrix{})
 end

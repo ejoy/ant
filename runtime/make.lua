@@ -5,18 +5,14 @@ local runtime = false
 
 local RuntimeBacklist = {
     filedialog = true,
-    filewatch = true,
     imgui = true,
-    subprocess = true,
-    bake = true,
     audio = true,
 }
 
 local EditorBacklist = {
     firmware = true,
-    bake = true,
     audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os ~= "windows"),
-    effekseer = true,
+    effeskeer = true,
 }
 
 local RuntimeModules = {}
@@ -26,11 +22,13 @@ local function checkAddModule(name, makefile)
     if not RuntimeBacklist[name] or not EditorBacklist[name] then
         lm:import(makefile)
     end
-    if not RuntimeBacklist[name] then
-        RuntimeModules[#RuntimeModules + 1] = "source_" .. name
-    end
-    if not EditorBacklist[name] then
-        EditorModules[#EditorModules + 1] = "source_" .. name
+    if lm:has(name) then
+        if not RuntimeBacklist[name] then
+            RuntimeModules[#RuntimeModules + 1] = name
+        end
+        if not EditorBacklist[name] then
+            EditorModules[#EditorModules + 1] = name
+        end
     end
 end
 
@@ -50,6 +48,7 @@ lm:copy "copy_mainlua" {
 }
 
 lm:source_set "ant_common" {
+    deps = "lua_source",
     includes = {
         "../clibs/lua",
         "../3rd/bgfx/include",

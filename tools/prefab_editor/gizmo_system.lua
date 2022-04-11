@@ -12,8 +12,7 @@ local ientity 	= ecs.import.interface "ant.render|ientity"
 local ilight 	= ecs.import.interface "ant.render|ilight"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local imesh		= ecs.import.interface "ant.asset|imesh"
-
+local ima 		= ecs.import.interface "ant.asset|imaterial_animation"
 local igui		= ecs.import.interface "tools.prefab_editor|igui"
 
 
@@ -24,7 +23,6 @@ local gizmo 	= ecs.require "gizmo.gizmo"
 local inspector = ecs.require "widget.inspector"
 
 local hierarchy = require "hierarchy_edit"
-local global_data= require "common.global_data"
 local gizmo_const= require "gizmo.const"
 
 local math3d = require "math3d"
@@ -78,7 +76,7 @@ end
 function gizmo:update_position(worldpos)
 	local newpos
 	if worldpos then
-		local pid = world:entity(gizmo.target_eid).scene.parent
+		local pid = world:entity(gizmo.target_eid).scene.pid
 		local parent_e
 		if pid then
 			for e in w:select "scene:in" do
@@ -362,6 +360,7 @@ function gizmo_sys:post_init()
 				on_ready = function (e)
 					w:sync("render_object:in", e)
 					ifs.set_state(e, "main_view", false)
+					ifs.set_state(e, "selectable", false)
 					imaterial.set_property(e, "u_color", color)
 					w:sync("render_object_update:out", e)
 				end
@@ -743,7 +742,9 @@ local function show_rotate_fan(rotAxis, startAngle, deltaAngle)
 	e3.render_object.ib.num = num
 
 	ifs.set_state(world:entity(rotAxis.eid[3]), "main_view", e3.render_object.ib.num > 0)
+	ifs.set_state(world:entity(rotAxis.eid[3]), "selectable", e3.render_object.ib.num > 0)
 	ifs.set_state(world:entity(rotAxis.eid[4]), "main_view", e4.render_object.ib.num > 0)
+	ifs.set_state(world:entity(rotAxis.eid[4]), "selectable", e4.render_object.ib.num > 0)
 end
 
 local function rotate_gizmo(x, y)
@@ -1088,7 +1089,7 @@ function gizmo_sys:handle_event()
 					elseif gizmo.mode == gizmo_const.ROTATE then
 						cmd_queue:record({action = gizmo_const.ROTATE, eid = target, oldvalue = math3d.totable(last_rotate), newvalue = math3d.totable(iom.get_rotation(world:entity(target)))})
 					elseif gizmo.mode == gizmo_const.MOVE then
-						local parent = world:entity(gizmo.target_eid).scene.parent
+						local parent = world:entity(gizmo.target_eid).scene.pid
 						local pw = parent and iom.worldmat(world:entity(parent)) or nil
 						local localPos = last_gizmo_pos
 						if pw then
@@ -1132,6 +1133,9 @@ function gizmo_sys:handle_event()
 				if hierarchy:get_template(eid) then
 					gizmo:set_target(eid)
 				end
+			end
+			if ima.highlight_anim then
+				ima.play(world:entity(ima.highlight_anim), eid, false)
 			end
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then

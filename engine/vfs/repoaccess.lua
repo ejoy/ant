@@ -139,19 +139,50 @@ function access.virtualpath(repo, pathname)
 	end
 end
 
-function access.list_files(repo, filepath)
-	local rpath = access.realpath(repo, filepath)
-	local files = {}
-	if rpath then
-		if lfs.exists(rpath) then
-			for name in lfs.pairs(rpath) do
-				local filename = name:filename():string()
-				if filename:sub(1,1) ~= '.' then	-- ignore .xxx file
-					files[filename] = "l"
-				end
+local DefIgnoreFunc <const> = function() end
+
+local function vfsignore(path)
+	local f <close> = io.open((path / ".vfsignore"):string(), "r")
+	if not f then
+		return DefIgnoreFunc
+	end
+	local ignores = {}
+	for name in f:lines() do
+		ignores[#ignores+1] = name
+	end
+	return function (v)
+		for i = 1, #ignores do
+			if v:match(ignores[i]) then
+				return true
 			end
 		end
 	end
+end
+
+local function listfile(path)
+	if not path then
+		return {}
+	end
+	if not lfs.exists(path) then
+		return {}
+	end
+	local files = {}
+	local ignore = vfsignore(path)
+	for name in lfs.pairs(path) do
+		local filename = name:filename():string()
+		if filename:sub(1,1) ~= '.' -- ignore .xxx file
+			and not ignore(filename)
+		then
+			files[filename] = "l"
+		end
+	end
+	return files
+end
+
+function access.list_files(repo, filepath)
+	local rpath = access.realpath(repo, filepath)
+	local files = listfile(rpath)
+
 	if filepath == '/' then
 		-- root path
 		for mountname in pairs(repo._mountpoint) do

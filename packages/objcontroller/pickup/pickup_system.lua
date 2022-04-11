@@ -236,8 +236,10 @@ end
 
 function pickup_sys:init()
 	create_pick_entity()
-	pickup_materials.opacity	= imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
-	pickup_materials.translucent= imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
+	pickup_materials.opacity		= imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
+	pickup_materials.opacity_skin	= imaterial.load('/pkg/ant.resources/materials/pickup_opacity.material', {skinning="GPU"})
+	pickup_materials.translucent	= imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
+	pickup_materials.translucent_skin= imaterial.load('/pkg/ant.resources/materials/pickup_transparent.material', {skinning="GPU"})
 	pickup_materials.ui 		= pickup_materials.translucent
 end
 
@@ -269,15 +271,15 @@ end
 function pickup_sys:update_camera()
 	for e in w:select "pickup_queue visible pickup:in camera_ref:in" do
 		update_camera(e.camera_ref, e.pickup.clickpt)
-		if cw_enable then
-			local main_camera = world:entity(irq.main_camera())
-			local mc_viewmat = main_camera.camera.viewmat
-			local mc_inv_viewmat = math3d.inverse(mc_viewmat)
-			for _, pm in pairs(pickup_materials) do
-				imaterial.set_property_directly(pm.properties, "u_viewcamera_viewmat", mc_viewmat)
-				imaterial.set_property_directly(pm.properties, "u_viewcamera_inv_viewmat", mc_inv_viewmat)
-			end
-		end
+		-- if cw_enable then
+		-- 	local main_camera = world:entity(irq.main_camera())
+		-- 	local mc_viewmat = main_camera.camera.viewmat
+		-- 	local mc_inv_viewmat = math3d.inverse(mc_viewmat)
+		-- 	for _, pm in pairs(pickup_materials) do
+		-- 		imaterial.set_property_directly(pm.properties, "u_viewcamera_viewmat", mc_viewmat)
+		-- 		imaterial.set_property_directly(pm.properties, "u_viewcamera_inv_viewmat", mc_inv_viewmat)
+		-- 	end
+		-- end
 	end
 end
 
@@ -333,15 +335,26 @@ function pickup_sys:pickup()
 	end
 end
 
+local function which_material(st, isskin)
+	if isskin then
+		st = st .. "_skin"
+	end
+	local m = pickup_materials[st]
+	if m == nil then
+		error(("invalid surface type:"):format(st))
+	end
+	return m
+end
+
 function pickup_sys:end_filter()
-	for e in w:select "filter_result:in render_object:in filter_material:out id:in" do
+	for e in w:select "filter_result:in render_object:in filter_material:out id:in skinning?in" do
 		local fr = e.filter_result
 		local st = e.render_object.fx.setting.surfacetype
 		local fm = e.filter_material
 		local qe = w:singleton("pickup_queue", "primitive_filter:in")
 		for _, fn in ipairs(qe.primitive_filter) do
 			if fr[fn] then
-				local m = assert(pickup_materials[st])
+				local m = which_material(st, e.skinning)
 				local state = e.render_object.state
 				fm[fn] = {
 					fx			= m.fx,

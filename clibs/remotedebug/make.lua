@@ -1,10 +1,10 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
-
-lm:source_set "source_remotedebug" {
+lm:source_set "remotedebug" {
     cxx = "c++17", --TODO: clang does not support c++20
-    includes = LuaInclude,
+    includes = {
+        "../lua"
+    },
     defines = {
         "RLUA_DISABLE"
     },
@@ -15,8 +15,4 @@ lm:source_set "source_remotedebug" {
     windows = {
         links = "user32"
     }
-}
-
-lm:lua_dll "remotedebug" {
-    deps = "source_remotedebug"
 }

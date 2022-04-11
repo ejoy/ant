@@ -1,5 +1,4 @@
 local lm = require "luamake"
-local fs = require "bee.filesystem"
 
 local plat = (function ()
     if lm.os == "windows" then
@@ -20,7 +19,7 @@ if lm.os == "ios" then
     lm.arch = "arm64"
     EnableEditor = false
     if lm.mode == "release" then
-        lm.sys = "ios13.0"
+        lm.sys = "ios14.1"
     else
         lm.sys = "ios14.1"
     end

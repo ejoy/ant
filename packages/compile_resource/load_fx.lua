@@ -64,8 +64,11 @@ local function create_uniform(h, mark)
 end
 
 local function uniform_info(shader, uniforms, mark)
-    for _, h in ipairs(bgfx.get_shader_uniforms(shader)) do
-        uniforms[#uniforms+1] = create_uniform(h, mark)
+    local shader_uniforms = bgfx.get_shader_uniforms(shader)
+    if shader_uniforms then
+        for _, h in ipairs(shader_uniforms) do
+            uniforms[#uniforms+1] = create_uniform(h, mark)
+        end
     end
 end
 

@@ -171,7 +171,7 @@ math3d_decompose_scale(const float mat[16], float scale[4]) {
 void
 math3d_decompose_rot(const float mat[16], float quat[4]) {
 	glm::quat &q = *(glm::quat *)quat;
-	glm::mat rotMat(MAT(mat));
+	glm::mat4 rotMat(MAT(mat));
 	float scale[4];
 	if (math3d_decompose_scale(mat, scale) == 0) {
 		int ii;
@@ -183,7 +183,7 @@ math3d_decompose_rot(const float mat[16], float quat[4]) {
 }
 
 // see: https://github.com/microsoft/DirectXMath/blob/7c30ba5932e081ca4d64ba4abb8a8986a7444ec9/Inc/DirectXMathMatrix.inl#L1111
-static bool decompose(const glm::mat4& matrix, glm::vec3& scale, glm::quat& rotation, glm::vec3& translation)
+static bool inline decompose(const glm::mat4& matrix, glm::vec3& scale, glm::quat& rotation, glm::vec3& translation)
 {
 	bool result = true;
 
@@ -861,7 +861,7 @@ enum PlaneName{
 };
 
 void
-math3d_frustum_planes(struct lastack *LS, const float m[16], float *planes[6]){
+math3d_frustum_planes(struct lastack *LS, const float m[16], float *planes[6], int homogeneous_depth){
 	const auto &mat = MAT(m);
 	const auto& c0 = mat[0], &c1 = mat[1], & c2 = mat[2], & c3 = mat[3];
 
@@ -890,7 +890,7 @@ math3d_frustum_planes(struct lastack *LS, const float m[16], float *planes[6]){
 	topplane[3] = c3[3] - c3[1];
 
 	auto& nearplane = planes[PN_near];
-	if (math3d_homogeneous_depth()) {
+	if (homogeneous_depth) {
 		nearplane[0] = c0[3] + c0[2];
 		nearplane[1] = c1[3] + c1[2];
 		nearplane[2] = c2[3] + c2[2];
@@ -946,9 +946,9 @@ static const glm::vec4 ndc_points_NO[8] = {
 };
 
 void 
-math3d_frustum_points(struct lastack *LS, const float m[16], float *points[8]){
+math3d_frustum_points(struct lastack *LS, const float m[16], float *points[8], int homogeneous_depth){
 	auto invmat = glm::inverse(MAT(m));
-	const auto &pp = math3d_homogeneous_depth() ? ndc_points_NO : ndc_points_ZO;
+	const auto &pp = homogeneous_depth ? ndc_points_NO : ndc_points_ZO;
 	for (int ii = 0; ii < 8; ++ii){
 		auto &p = *((glm::vec4*)points[ii]);
 		p = invmat * pp[ii];

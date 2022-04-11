@@ -1,3 +1,5 @@
+do return end
+
 local lm = require "luamake"
 local fs = require "bee.filesystem"
 
@@ -51,9 +53,8 @@ lm:copy "copy_Meshbaker" {
     output = outputpaths,
 }
 
-lm:source_set "pathtracer_baker" {
+lm:lua_source "bake" {
     includes = {
-        LuaInclude,
         GLMInclude,
         "../luabind",
         "../bgfx",
@@ -70,11 +71,5 @@ lm:source_set "pathtracer_baker" {
 lm:source_set "radiosity_lightmapper" {
     sources = {
         "radiosity/lightmapper.cpp",
-    }
-}
-
-lm:lua_dll "bake" {
-    deps = {
-        "pathtracer_baker",
     }
 }

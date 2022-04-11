@@ -4,54 +4,54 @@ dofile "../common.lua"
 
 lm.rootdir = Ant3rd.."bee.lua"
 
-lm:source_set "source_bee" {
+lm:source_set "bee" {
     includes = {
         "bee/nonstd",
         "."
     },
     defines = "BEE_INLINE",
     sources = {
-        "bee/**.cpp",
+        "bee/**/*.cpp",
         "bee/nonstd/fmt/*.cc",
     },
     windows = {
         sources = {
-            "!bee/**_osx.cpp",
-            "!bee/**_linux.cpp",
-            "!bee/**_posix.cpp",
+            "!bee/**/*_osx.cpp",
+            "!bee/**/*_linux.cpp",
+            "!bee/**/*_posix.cpp",
         }
     },
     macos = {
         sources = {
-            "bee/**.mm",
-            "!bee/**_win.cpp",
-            "!bee/**_linux.cpp",
+            "bee/**/*.mm",
+            "!bee/**/*_win.cpp",
+            "!bee/**/*_linux.cpp",
         }
     },
     ios = {
         sources = {
-            "bee/**.mm",
-            "!bee/**_win.cpp",
-            "!bee/**_linux.cpp",
-            "!bee/fsevent/**",
+            "bee/**/*.mm",
+            "!bee/**/*_win.cpp",
+            "!bee/**/*_linux.cpp",
+            "!bee/fsevent/**/",
         }
     },
     linux = {
         flags = "-fPIC",
         sources = {
-            "!bee/**_win.cpp",
-            "!bee/**_osx.cpp",
+            "!bee/**/*_win.cpp",
+            "!bee/**/*_osx.cpp",
         }
     },
     android = {
         sources = {
-            "!bee/**_win.cpp",
-            "!bee/**_osx.cpp",
+            "!bee/**/*_win.cpp",
+            "!bee/**/*_osx.cpp",
         }
     }
 }
 
-lm:source_set "source_bee" {
+lm:lua_source "bee" {
     includes = {
         "3rd/lua",
         "3rd/lua-seri",
@@ -112,20 +112,5 @@ lm:source_set "source_bee" {
         sources = {
             "!binding/lua_unicode.cpp",
         }
-    }
-}
-
-lm:lua_dll "bee" {
-    deps = "source_bee",
-    export_luaopen = "off",
-    includes = {
-        "3rd/lua",
-        "3rd/lua-seri",
-    },
-    sources = {
-        "3rd/lua-seri/*.c",
-    },
-    linux = {
-        flags = "-fPIC"
     }
 }

@@ -116,7 +116,8 @@ local function frustum_changed(ce, name, value)
     local camera = assert(ce.camera)
     local f = camera.frustum
     if f.ortho then
-        error("ortho frustum can not set aspect")
+        --error("ortho frustum can not set aspect")
+        return
     end
     if f.aspect then
         f[name] = value

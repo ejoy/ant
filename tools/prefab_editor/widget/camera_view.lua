@@ -179,7 +179,7 @@ local function create_frustum_property(cv)
     return uiproperty.Group({label="Frustum", flags=0},{
         uiproperty.Bool({label="Ortho"}, {
             getter = function ()
-                return icamera.get_frustum(world:entity(cv.eid)).ortho ~= nil
+                return icamera.get_frustum(world:entity(cv.eid)).ortho
             end,
             setter = function (value)
                 set_frustum_item(cv.eid, 'ortho', value)

@@ -8,6 +8,8 @@ local contextManager = require "core.contextManager"
 local initRender = require "core.initRender"
 local ltask = require "ltask"
 
+require "core.DOM.constructor":init()
+
 local quit
 
 local ServiceWindow = ltask.queryservice "ant.window|window"
@@ -35,9 +37,7 @@ local function Render()
         if delta > 0 then
             timer.update(delta)
         end
-        rmlui.RenderBegin()
         contextManager.update(delta)
-        rmlui.RenderFrame()
         task.update()
         bgfx.encoder_frame()
     end

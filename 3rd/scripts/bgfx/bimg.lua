@@ -1,8 +1,7 @@
 local lm = require "luamake"
 
 lm:source_set "astc-codec" {
-    rootdir = "../bimg/3rdparty/astc-codec",
-    defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
+    rootdir = BimgDir .. "3rdparty/astc-codec",
     includes = {
         ".",
         "include"
@@ -35,11 +34,10 @@ lm:source_set "astc-codec" {
 }
 
 lm:source_set "bimg" {
-    rootdir = "../bimg/",
+    rootdir = BimgDir,
     deps = "astc-codec",
-    defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     includes = {
-        "../bx/include",
+        BxDir .. "include",
         "include",
         "3rdparty/astc-codec/include"
     },
@@ -55,10 +53,9 @@ lm:source_set "bimg" {
 }
 
 lm:source_set "bimg_decode" {
-    rootdir = "../bimg/",
-    defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
+    rootdir = BimgDir,
     includes = {
-        "../bx/include",
+        BxDir .. "include",
         "include",
         "3rdparty",
         "3rdparty/tinyexr/deps/miniz"
@@ -70,21 +67,19 @@ lm:source_set "bimg_decode" {
 }
 
 lm:source_set "bimg-iqa" {
-    rootdir = "../bimg/",
-    defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
+    rootdir = BimgDir,
     includes = "3rdparty/iqa/include",
     sources = "3rdparty/iqa/source/*.c",
 }
 
 lm:source_set "bimg_encode" {
-    rootdir = "../bimg/",
-    defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
+    rootdir = BimgDir,
     deps = {
         "astc-codec",
         "bimg-iqa",
     },
     includes = {
-        "../bx/include",
+        BxDir .. "include",
         "include",
         "3rdparty",
         "3rdparty/nvtt",
@@ -97,31 +92,9 @@ lm:source_set "bimg_encode" {
         "3rdparty/edtaa3/*.cpp",
         "3rdparty/etc1/*.cpp",
         "3rdparty/etc2/*.cpp",
-        "3rdparty/nvtt/**.cpp",
+        "3rdparty/nvtt/**/*.cpp",
         "3rdparty/pvrtc/*.cpp",
-        "3rdparty/astc/astc_lib.cpp",
-        "3rdparty/astc/astc_quantization.cpp",
-        "3rdparty/astc/astc_integer_sequence.cpp",
-        "3rdparty/astc/astc_weight_align.cpp",
-        "3rdparty/astc/astc_symbolic_physical.cpp",
-        "3rdparty/astc/astc_block_sizes2.cpp",
-        "3rdparty/astc/astc_decompress_symbolic.cpp",
-        "3rdparty/astc/astc_compress_symbolic.cpp",
-        "3rdparty/astc/astc_imageblock.cpp",
-        "3rdparty/astc/astc_partition_tables.cpp",
-        "3rdparty/astc/softfloat.cpp",
-        "3rdparty/astc/astc_color_unquantize.cpp",
-        "3rdparty/astc/astc_weight_quant_xfer_tables.cpp",
-        "3rdparty/astc/astc_compute_variance.cpp",
-        "3rdparty/astc/astc_find_best_partitioning.cpp",
-        "3rdparty/astc/astc_averages_and_directions.cpp",
-        "3rdparty/astc/mathlib.cpp",
-        "3rdparty/astc/astc_kmeans_partitioning.cpp",
-        "3rdparty/astc/astc_color_quantize.cpp",
-        "3rdparty/astc/astc_pick_best_endpoint_format.cpp",
-        "3rdparty/astc/astc_encoding_choice_error.cpp",
-        "3rdparty/astc/astc_ideal_endpoints_and_weights.cpp",
-        "3rdparty/astc/astc_percentile_tables.cpp",
+        "3rdparty/astc/*.cpp",
     },
     msvc = {
         flags = {

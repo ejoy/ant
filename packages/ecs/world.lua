@@ -164,36 +164,57 @@ function world:memory(async)
 end
 
 function world:entity(eid)
-	local v = self._entity_visitor[eid]
-	if not v then
-		return
-	end
-	return setmetatable({id=eid}, self._entity_mt)
+	return self._entity[eid]
 end
 
 function world:remove_entity(eid)
-	local v = self._entity_visitor[eid]
-	if not v then
-		return
+	self._entity[eid] = nil
+end
+
+local function create_entity_watcher(ecs)
+	local visitor = ecs:make_index "id"
+
+	local proxy_mt = {}
+	function proxy_mt:__index(name)
+		return visitor(self.id, name)
 	end
-	self.w:remove(v)
+	function proxy_mt:__newindex(name, value)
+		visitor(self.id, name, value)
+	end
+
+	local cached = {}
+	local cached_mt = {}
+	function cached_mt:__index(id)
+		local v = visitor[id]
+		if not v then
+			return
+		end
+		local proxy = setmetatable({id=id}, proxy_mt)
+		cached[id] = proxy
+		return proxy
+	end
+
+	local watcher_mt = {}
+	watcher_mt.__index = setmetatable(cached, cached_mt)
+	function watcher_mt:__newindex(id, e)
+		assert(e == nil, "Cannot modify entity")
+		local v = visitor[id]
+		if v then
+			ecs:remove(v)
+		end
+		cached[id] = nil
+	end
+	return setmetatable({}, watcher_mt)
 end
 
 local m = {}
 
 function m.new_world(config)
-	config.w:register {
+	local ecs = config.w
+	ecs:register {
 		name = "id",
 		type = "int64",
 	}
-	local entity_visitor = config.w:make_index "id"
-	local entity_mt = {}
-	function entity_mt:__index(name)
-		return entity_visitor(self.id, name)
-	end
-	function entity_mt:__newindex(name, value)
-		entity_visitor(self.id, name, value)
-	end
 
 	local w = setmetatable({
 		args = config,
@@ -205,9 +226,8 @@ function m.new_world(config)
 		_methods = {},
 		_frame = 0,
 		_maxid = 0,
-		_entity_visitor = entity_visitor,
-		_entity_mt = entity_mt,
-		w = config.w,
+		_entity = create_entity_watcher(ecs),
+		w = ecs,
 	}, world)
 
 	event.init(world)

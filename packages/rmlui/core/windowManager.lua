@@ -1,4 +1,4 @@
-local createWindow = require "core.DOM.window"
+local constructor = require "core.DOM.constructor"
 local contextManager = require "core.contextManager"
 local event = require "core.event"
 
@@ -9,7 +9,7 @@ local windows = {}
 function m.open(name, url)
     local doc = contextManager.open(url)
     if doc then
-        windows[name] = createWindow(doc, "extern")
+        windows[name] = constructor.Window(doc, "extern")
         event("OnDocumentExternName", doc, name)
         contextManager.onload(doc)
     end

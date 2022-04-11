@@ -2,7 +2,7 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
-lm:source_set "source_hierarchy" {
+lm:lua_source "hierarchy" {
     deps = {
         "ozz-animation-base",
         "ozz-animation-runtime",
@@ -11,7 +11,6 @@ lm:source_set "source_hierarchy" {
         "bx"
     },
     includes = {
-        LuaInclude,
         BgfxInclude,
         Ant3rd .. "ozz-animation/include",
         Ant3rd .. "glm",
@@ -26,8 +25,4 @@ lm:source_set "source_hierarchy" {
         "GLM_FORCE_QUAT_DATA_XYZW",
         "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
     },
-}
-
-lm:lua_dll "hierarchy" {
-    deps = "source_hierarchy",
 }

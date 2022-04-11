@@ -2,4 +2,4 @@
 
 #import <UIKit/UIKit.h>
 
-UIView* global_window;
+extern UIView* global_window;

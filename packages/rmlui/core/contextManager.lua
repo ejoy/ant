@@ -6,10 +6,9 @@ local createSandbox = require "core.sandbox.create"
 local elementFromPoint = rmlui.DocumentElementFromPoint
 local getBody = rmlui.DocumentGetBody
 local dispatchEvent = rmlui.ElementDispatchEvent
-local getParent = rmlui.ElementGetParent
+local getParent = rmlui.NodeGetParent
 local setPseudoClass = rmlui.ElementSetPseudoClass
 local project = rmlui.ElementProject
-local getOwnerDocument = rmlui.ElementGetOwnerDocument
 
 local m = {}
 
@@ -253,7 +252,7 @@ local function dispatchTouchEvent(e, name)
 end
 
 local function processTouchStart(touch)
-    local e = fromPoint(touch.x, touch.y)
+    local _, e = fromPoint(touch.x, touch.y)
     if e then
         touch.target = e
         touch.changed = true
@@ -348,9 +347,11 @@ function m.set_dimensions(w, h, ratio)
 end
 
 function m.update(delta)
+    rmlui.RenderBegin()
     for _, doc in ipairs(documents) do
         rmlui.DocumentUpdate(doc, delta)
     end
+    rmlui.RenderFrame()
 end
 
 return m

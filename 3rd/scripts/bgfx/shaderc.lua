@@ -1,7 +1,7 @@
 local lm = require "luamake"
 
 lm:source_set "fcpp" {
-    rootdir = "../bgfx/3rdparty/fcpp",
+    rootdir = BgfxDir .. "3rdparty/fcpp",
     defines = {
         "NINCLUDE=64",
         "NWORK=65536",
@@ -20,7 +20,7 @@ lm:source_set "fcpp" {
 }
 
 lm:source_set "glslang" {
-    rootdir = "../bgfx/3rdparty/glslang",
+    rootdir = BgfxDir .. "3rdparty/glslang",
     defines = {
         "ENABLE_OPT=1",
         "ENABLE_HLSL=1",
@@ -32,7 +32,7 @@ lm:source_set "glslang" {
         "../spirv-tools/source",
     },
     sources = {
-        "glslang/**.cpp",
+        "glslang/**/*.cpp",
         "!glslang/OSDependent/Windows/main.cpp",
         "!glslang/OSDependent/Web/*",
         "hlsl/*.cpp",
@@ -57,7 +57,7 @@ lm:source_set "glslang" {
 
 lm:source_set "glsl-optimizer" {
     cxx = "c++14",
-    rootdir = "../bgfx/3rdparty/glsl-optimizer",
+    rootdir = BgfxDir .. "3rdparty/glsl-optimizer",
     includes = {
         "src",
         "include",
@@ -66,8 +66,8 @@ lm:source_set "glsl-optimizer" {
         "src/glsl",
     },
     sources = {
-        "src/**.cpp",
-        "src/**.c",
+        "src/**/*.cpp",
+        "src/**/*.c",
         "!src/node/*.cpp",
         "!src/getopt/*.c",
         "!src/glsl/main.cpp",
@@ -101,7 +101,7 @@ lm:source_set "glsl-optimizer" {
 }
 
 lm:source_set "spirv-opt" {
-    rootdir = "../bgfx/3rdparty/spirv-tools",
+    rootdir = BgfxDir .. "3rdparty/spirv-tools",
     includes = {
         ".",
         "include",
@@ -110,7 +110,7 @@ lm:source_set "spirv-opt" {
          "../spirv-headers/include",
     },
     sources = {
-        "source/**.cpp",
+        "source/**/*.cpp",
     },
     msvc = {
         flags = {
@@ -125,7 +125,7 @@ lm:source_set "spirv-opt" {
 }
 
 lm:source_set "spirv-cross" {
-    rootdir = "../bgfx/3rdparty/spirv-cross",
+    rootdir = BgfxDir .. "3rdparty/spirv-cross",
     defines  = "SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS",
     includes = "include",
     sources = {
@@ -143,7 +143,7 @@ lm:source_set "spirv-cross" {
 }
 
 lm:exe "shaderc" {
-    rootdir = "../bgfx",
+    rootdir = BgfxDir,
     deps = {
         "bx",
         "fcpp",
@@ -152,13 +152,10 @@ lm:exe "shaderc" {
         "spirv-opt",
         "spirv-cross",
     },
-    defines = {
-        "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0),
-    },
     includes = {
-        "../bx/include",
-        "../bimg/include",
-        "../bgfx/include",
+        BxDir .. "include",
+        BimgDir .. "include",
+        BgfxDir .. "include",
         "3rdparty/webgpu/include",
          "3rdparty/dxsdk/include",
         "3rdparty/fcpp",
@@ -176,7 +173,7 @@ lm:exe "shaderc" {
         "src/shader*.cpp",
     },
     windows = {
-        sources = "../scripts/utf8/utf8.rc"
+        deps = "bgfx-support-utf8"
     },
     msvc = {
         flags = {

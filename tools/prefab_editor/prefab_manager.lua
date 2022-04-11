@@ -97,6 +97,14 @@ local function get_local_transform(tran, parent_eid)
     return {s = {ts[1], ts[2], ts[3]}, r = {tr[1], tr[2], tr[3], tr[4]}, t = {tt[1], tt[2], tt[3]}}
 end
 
+local function create_entity_with_parent(tpl, parent)
+    tpl.data.on_ready = function (e)
+        w:sync("scene:in", e)
+        e.scene.pid = parent
+    end
+    return ecs.create_entity(tpl)
+end
+
 local slot_entity_id = 1
 function m:create_slot()
     --if not gizmo.target_eid then return end
@@ -123,6 +131,8 @@ function m:create_slot()
     local tpl = utils.deep_copy(template)
     tpl.data.on_ready = function (e)
         hierarchy:update_slot_list(world)
+        w:sync("scene:in", e)
+        e.scene.pid = parent_eid
     end
     local new_entity = ecs.create_entity(tpl)
     slot_entity_id = slot_entity_id + 1
@@ -161,11 +171,13 @@ function m:create_collider(config)
     tpl.data.on_ready = function (e)
         e.collider = { [config.type] = define }
         imaterial.set_property(e, "u_color", {1, 0.5, 0.5, 0.8})
+        w:sync("scene:in", e)
+        e.scene.pid = self.root
     end
     return ecs.create_entity(tpl), template
 end
 
-local function create_simple_entity(name, srt)
+local function create_simple_entity(name, srt, parent)
     local template = {
 		policy = {
             "ant.general|name",
@@ -176,7 +188,7 @@ local function create_simple_entity(name, srt)
             scene = {srt = srt or {}}
 		},
     }
-    return ecs.create_entity(utils.deep_copy(template)), template
+    return create_entity_with_parent(utils.deep_copy(template), parent), template
 end
 
 function m:add_entity(new_entity, parent, temp, no_hierarchy)
@@ -227,8 +239,9 @@ function m:create(what, config)
         hierarchy:add(new_camera, {template = template}, self.root)
         self.entities[#self.entities+1] = new_camera
     elseif what == "empty" then
-        local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id())
-        self:add_entity(new_entity, gizmo.target_eid, temp)
+        local parent = gizmo.target_eid or self.root
+        local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id(), {}, parent)
+        self:add_entity(new_entity, parent, temp)
     elseif what == "geometry" then
         if config.type == "cube"
             or config.type == "cone"
@@ -249,9 +262,7 @@ function m:create(what, config)
                     name = config.type .. gen_geometry_id()
                 }
             }
-            local new_entity = ecs.create_entity(utils.deep_copy(template))
-
-            --imaterial.set_property(new_entity, "u_color", {1, 1, 1, 1})
+            local new_entity = create_entity_with_parent(utils.deep_copy(template), parent_eid or self.root)
             self:add_entity(new_entity, parent_eid, template)
             return new_entity
         elseif config.type == "cube(prefab)" then
@@ -339,7 +350,7 @@ function m:create(what, config)
                     }
                 }
             }
-            local shapetarrain = ecs.create_entity(utils.deep_copy(template))
+            local shapetarrain = create_entity_with_parent(utils.deep_copy(template), self.root)
             self:add_entity(shapetarrain, self.root, template)
         end
     elseif what == "light" then
@@ -498,7 +509,7 @@ function m:on_prefab_ready(prefab)
         local parent = find_e(entitys, world:entity(e).scene.parent)
         if pt.prefab then
             local prefab_name = pt.name or gen_prefab_name()
-            local sub_root = create_simple_entity(prefab_name)
+            local sub_root = create_simple_entity(prefab_name, {}, parent or self.root)
             ecs.method.set_parent(sub_root, parent)
             self.entities[#self.entities + 1] = sub_root
 
@@ -580,7 +591,7 @@ local function on_remove_entity(e)
     end
     hierarchy:del(e)
 end
-
+local ima = ecs.import.interface "ant.asset|imaterial_animation"
 function m:reset_prefab()
     camera_mgr.clear()
     for _, e in ipairs(self.entities) do
@@ -639,6 +650,9 @@ function m:add_effect(filename)
             print("create effect faild : ", tostring(effekseer))
         end
         inst.playid = effekseer.play(inst.handle, inst.playid)
+        w:sync("scene:in", e)
+        e.scene.pid = gizmo.target_eid
+        
     end
     self:add_entity(ecs.create_entity(tpl), gizmo.target_eid, template)
 end
@@ -657,7 +671,7 @@ function m:add_prefab(filename)
     local prefab = ecs.create_instance(prefab_filename)
     prefab.on_ready = function(inst)
         local prefab_name = gen_prefab_name()
-        local v_root = create_simple_entity(prefab_name)
+        local v_root = create_simple_entity(prefab_name, {}, parent)
         ecs.method.set_parent(v_root, parent)
         self.entities[#self.entities+1] = v_root
         local children = inst.tag["*"]

@@ -1,50 +1,22 @@
 local lm = require "luamake"
 
-local EnableEditor = lm.os ~= "ios"
+BgfxDir = "../bgfx/"
+BxDir = "../bx/"
+BimgDir = "../bimg/"
 
-lm.warnings = {
-    "error",
-    "on"
-}
+require "bgfx.init"
 
-lm.cxx = "c++17"
-
-lm.msvc = {
-    defines = "_CRT_SECURE_NO_WARNINGS",
-    includes = "../bx/include/compat/msvc",
-}
-
-lm.mingw = {
-    includes = "../bx/include/compat/mingw",
-}
-
-lm.macos = {
-    includes = "../bx/include/compat/osx",
-}
-
-lm.ios = {
-    includes = "../bx/include/compat/ios",
-    flags = {
-        "-fembed-bitcode",
-        "-Wno-unused-function"
+lm:copy "copy_bgfx_shader" {
+    input = {
+        BgfxDir .. "src/bgfx_shader.sh",
+        BgfxDir .. "src/bgfx_compute.sh",
+        BgfxDir .. "examples/common/common.sh",
+        BgfxDir .. "examples/common/shaderlib.sh",
+    },
+    output = {
+        "../../packages/resources/shaders/bgfx_shader.sh",
+        "../../packages/resources/shaders/bgfx_compute.sh",
+        "../../packages/resources/shaders/common.sh",
+        "../../packages/resources/shaders/shaderlib.sh",
     }
 }
-
-lm.clang = {
-    flags = {
-        "-Wno-tautological-constant-compare"
-    }
-}
-
-require "bgfx.bx"
-require "bgfx.bimg"
-require "bgfx.bgfx-lib"
-
-if not EnableEditor then
-    return
-end
-
-require "bgfx.bgfx-dll"
-require "bgfx.shaderc"
-require "bgfx.texturec"
-require "bgfx.texturev"

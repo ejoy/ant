@@ -1,19 +1,19 @@
+local rmlui = require "rmlui"
 local environment = require "core.environment"
+local constructor = require "core.DOM.constructor"
 
 return function (e)
 	if e.target then
-		local createElement = require "core.DOM.element"
-		e.target = createElement(e.target)
-		e.current = createElement(e.current)
+		local document = rmlui.ElementGetOwnerDocument(e.target)
+		e.target = constructor.Element(document, false, e.target)
+		e.current = constructor.Element(document, false, e.current)
 		if e.type == "message" then
-			local createWindow = require "core.DOM.window"
-			local document = e.target.ownerDocument._handle
 			if e.source == nil then
 				e.source = environment[document].window
 			elseif e.source == "extern" then
 				e.source = environment[document].window.extern
 			else
-				e.source = createWindow(e.source, document)
+				e.source = constructor.Window(e.source, document)
 			end
 		end
 	end

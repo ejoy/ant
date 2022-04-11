@@ -1,5 +1,22 @@
 local math3d = require "math3d"
 
+do
+	print "---- constant -------"
+	local iv = math3d.constant { type = "v4" }
+	print(math3d.tostring(iv))
+	local qv = math3d.constant { type = "quat" }
+	print(math3d.tostring(qv))
+	local mv = math3d.constant { type = "mat" }
+	print(math3d.tostring(mv))
+
+	local vec = math3d.constant { type = "v4", 1,2,3,4 }
+	print(math3d.tostring(vec))
+
+	local vec = math3d.constant ("v4", { 0,0,0,0 })
+	print(math3d.tostring(vec))
+
+end
+
 local ref1 = math3d.ref()
 
 ref1.m = { s = 10, r = { axis = {1,0,0}, r = math.rad(60) },  t = { 1,2,3 } }
@@ -247,7 +264,7 @@ do
 
 	local center = math3d.points_center(frustum_points)
 	local maxradius = math3d.points_radius(frustum_points, center)
-
+--[[
 	local frustum_aabb = math3d.frustum_aabb(frustum_points)
 
 	print("frusutm center:", math3d.tostring(center))
@@ -257,7 +274,7 @@ do
 	print("frusutm aabb min:", math3d.tostring(f_aabb_min), "max:", math3d.tostring(f_aabb_max))
 	local f_aabb_center, f_aabb_extents = math3d.aabb_center_extents(frustum_aabb)
 	print("frusutm aabb center:", math3d.tostring(f_aabb_center), "extents:", math3d.tostring(f_aabb_extents), "radius:", math3d.length(f_aabb_extents))
-
+]]
 	print "\t===AABB&minmax===="
 	local points = {
 		{1, 0, -1, -10},
