@@ -54,7 +54,7 @@ PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name
 	}
 	parsers.push_back(new_parser);
 	if (!default_value && unparsed_default) {
-		default_value = new_parser->ParseValue(unparsed_default.value());
+		default_value = new_parser->ParseValue(*unparsed_default);
 	}
 	return *this;
 }
@@ -69,7 +69,7 @@ PropertyDefinition& PropertyDefinition::AddParser(const std::string& parser_name
 	}
 	parsers.push_back(new_parser);
 	if (!default_value && unparsed_default) {
-		default_value = new_parser->ParseValue(unparsed_default.value());
+		default_value = new_parser->ParseValue(*unparsed_default);
 	}
 	return *this;
 }

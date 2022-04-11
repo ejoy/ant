@@ -1468,8 +1468,8 @@ const Property* Element::GetComputedLocalProperty(PropertyId id) const {
 void Element::SetProperty(const std::string& name, std::optional<std::string> value) {
 	if (value) {
 		PropertyDictionary properties;
-		if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value.value())) {
-			Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value.value().c_str());
+		if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, *value)) {
+			Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value->c_str());
 			return;
 		}
 		for (auto& property : properties) {
@@ -1530,7 +1530,7 @@ const Property* Element::GetComputedProperty(PropertyId id) const {
 	}
 	auto const& def = propertyDef->GetDefaultValue();
 	if (def) {
-		return &def.value();
+		return &*def;
 	}
 	return nullptr;
 }

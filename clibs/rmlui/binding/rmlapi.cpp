@@ -402,7 +402,7 @@ lElementGetProperty(lua_State* L) {
 	if (!prop) {
 		return 0;
 	}
-	lua_pushstdstring(L, prop.value());
+	lua_pushstdstring(L, *prop);
 	return 1;
 }
 

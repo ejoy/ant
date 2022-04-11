@@ -230,18 +230,18 @@ struct PrepareVisitor {
 	}
 	void operator()(Matrix3D& p) {
 		auto d = decompose((const glm::mat4x4&)p);
-		if (d) { t = d.value(); }
+		if (d) { t = *d; }
 		else { ok = false; };
 	}
 	void operator()(Matrix2D& p) {
 		auto d = decompose(matrix2d((const glm::mat3x2&)p));
-		if (d) { t = d.value(); }
+		if (d) { t = *d; }
 		else { ok = false; };
 	}
 	void operator()(Perspective& p) {
 		float distance = p.distance.Compute(&e);
 		auto d = decompose(perspective(distance));
-		if (d) { t = d.value(); }
+		if (d) { t = *d; }
 		else { ok = false; };
 	}
 };
@@ -522,7 +522,7 @@ bool Transform::Combine(Element& e, size_t start) {
 		return false;
 	}
 	erase(begin() + start, end());
-	emplace_back(std::move(d.value()));
+	emplace_back(std::move(*d));
 	return true;
 }
 

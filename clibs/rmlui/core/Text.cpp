@@ -246,11 +246,11 @@ void Text::UpdateTextEffects() {
 	TextEffects text_effects;
 	if (shadow) {
 		shadow->color.ApplyOpacity(GetOpacity());
-		text_effects.emplace_back(shadow.value());
+		text_effects.emplace_back(*shadow);
 	}
 	if (stroke) {
 		stroke->color.ApplyOpacity(GetOpacity());
-		text_effects.emplace_back(stroke.value());
+		text_effects.emplace_back(*stroke);
 	}
 	auto material = GetRenderInterface()->CreateFontMaterial(text_effects);
 	geometry.SetMaterial(material);

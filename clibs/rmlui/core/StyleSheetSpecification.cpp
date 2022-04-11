@@ -173,7 +173,7 @@ bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const st
 		auto property_id = MapGet(property_map, name);
 		if (property_id) {
 			// We have a valid property
-			if (const PropertyDefinition* property = GetPropertyDefinition(property_id.value())) {
+			if (const PropertyDefinition* property = GetPropertyDefinition(*property_id)) {
 				item = { property, optional };
 			}
 		}
@@ -183,7 +183,7 @@ bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const st
 
 			// Test for valid shorthand id. The recursive types (and only those) can hold other shorthands.
 			if (shorthand_id && (type == ShorthandType::RecursiveRepeat || type == ShorthandType::RecursiveCommaSeparated)) {
-				if (const ShorthandDefinition * shorthand = GetShorthandDefinition(shorthand_id.value())) {
+				if (const ShorthandDefinition * shorthand = GetShorthandDefinition(*shorthand_id)) {
 					item = { shorthand, optional };
 				}
 			}
@@ -193,7 +193,7 @@ bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const st
 			Log::Message(Log::Level::Error, "Shorthand property '%s' was registered with invalid property '%s'.", shorthand_name.c_str(), name.c_str());
 			return false;
 		}
-		property_shorthand->items.emplace_back(std::move(item.value()));
+		property_shorthand->items.emplace_back(std::move(*item));
 	}
 
 	property_shorthand->id = id;
@@ -236,12 +236,12 @@ void StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyIdSet& s
 bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) const {
 	auto property_id = MapGet(property_map, property_name);
 	if (property_id) {
-		set.insert(property_id.value());
+		set.insert(*property_id);
 		return true;
 	}
 	auto shorthand_id = MapGet(shorthand_map, property_name);
 	if (shorthand_id) {
-		ParseShorthandDeclaration(set, shorthand_id.value());
+		ParseShorthandDeclaration(set, *shorthand_id);
 		return true;
 	}
 	return false;
@@ -250,13 +250,13 @@ bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyIdSet& se
 bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value) const {
 	auto property_id = MapGet(property_map, property_name);
 	if (property_id) {
-		if (ParsePropertyDeclaration(dictionary, property_id.value(), property_value)) {
+		if (ParsePropertyDeclaration(dictionary, *property_id, property_value)) {
 			return true;
 		}
 	}
 	auto shorthand_id = MapGet(shorthand_map, property_name);
 	if (shorthand_id) {
-		if (ParseShorthandDeclaration(dictionary, shorthand_id.value(), property_value)){
+		if (ParseShorthandDeclaration(dictionary, *shorthand_id, property_value)){
 			return true;
 		}
 	}
@@ -274,7 +274,7 @@ bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyDictionar
 	auto new_property = property_definition->ParseValue(property_values[0]);
 	if (!new_property)
 		return false;
-	dictionary.insert_or_assign(property_id, std::move(new_property.value()));
+	dictionary.insert_or_assign(property_id, std::move(*new_property));
 	return true;
 }
 
@@ -325,7 +325,7 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyDictiona
 			if (!new_property) {
 				return false;
 			}
-			dictionary.insert_or_assign((*definition)->GetId(), std::move(new_property.value()));
+			dictionary.insert_or_assign((*definition)->GetId(), std::move(*new_property));
 		}
 	}
 	else if (shorthand_definition->type == ShorthandType::RecursiveRepeat) {
@@ -408,7 +408,7 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyDictiona
 				return false;
 			}
 
-			dictionary.insert_or_assign((*definition)->GetId(), std::move(new_property.value()));
+			dictionary.insert_or_assign((*definition)->GetId(), std::move(*new_property));
 
 			// Increment the value index, unless we're replicating the last value and we're up to the last value.
 			if (shorthand_definition->type != ShorthandType::Replicate ||
