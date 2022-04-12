@@ -20,7 +20,8 @@ fopen_(struct file_factory *ff, const char *filename, const char *mode) {
         return NULL;
     }
     const char *realname = lua_tostring(L, -1);
-    FILE *f = fopen(realname, mode);
+    FILE *f;
+    fopen_s(&f, realname, mode);
     lua_pop(L, 1);  // pop realname
     return (file_handle)f;
 }
@@ -41,8 +42,13 @@ fwrite_(struct file_factory *f, file_handle handle, const void *buffer, size_t s
 }
 
 static int
-fseek_(struct file_factory *f, file_handle handle, size_t offset) {
-    return fseek((FILE *)handle, offset, SEEK_SET); 
+fseek_(struct file_factory *f, file_handle handle, size_t offset, int origin) {
+    return fseek((FILE *)handle, (long int)offset, origin); 
+}
+
+static size_t
+ftell_(struct file_factory *f, file_handle handle) {
+    return ftell((FILE *)handle);
 }
 
 static int
@@ -58,6 +64,7 @@ lfactory(lua_State *L) {
         fread_,
         fwrite_,
         fseek_,
+        ftell_,
     };
 
     struct wrapper *f = (struct wrapper *)lua_newuserdatauv(L, sizeof(*f), 1);

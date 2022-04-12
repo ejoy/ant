@@ -39,6 +39,7 @@ int luaopen_ltask_exclusive(lua_State* L);
 int luaopen_vfs(lua_State* L);
 int luaopen_ecs_core(lua_State* L);
 int luaopen_fastio(lua_State* L);
+int luaopen_fileinterface(lua_State *L);
 #if BX_PLATFORM_IOS
 int luaopen_gesture(lua_State* L);
 #endif
@@ -82,6 +83,7 @@ void ant_loadmodules(lua_State* L) {
         //{ "effekseer", luaopen_effekseer},
         { "efk", luaopen_efk},
         { "effekseer.callback", luaopen_effekseer_callback},
+        {"fileinterface", luaopen_fileinterface},
 #if defined(_WIN32) && !defined(__MINGW32__)
         { "audio", luaopen_audio},
 #endif

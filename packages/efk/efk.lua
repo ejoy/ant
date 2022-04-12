@@ -9,6 +9,7 @@ local bgfx      = require "bgfx"
 local image     = require "image"
 local datalist  = require "datalist"
 local math3d    = require "math3d"
+local fileinterface = require "fileinterface"
 
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
@@ -98,6 +99,13 @@ do
     end
 end
 
+local function preopen(filename)
+    local _ <close> = fs.switch_sync()
+    return cr.compile(filename):string()
+end
+
+local filefactory = fileinterface.factory { preopen = preopen }
+
 local function shader_load(materialfile, shadername, stagetype)
     assert(materialfile == nil)
     local fx = assert(FxFiles[shadername], ("unkonw shader name:%s"):format(shadername))
@@ -105,17 +113,12 @@ local function shader_load(materialfile, shadername, stagetype)
 end
 
 local TEXTURE_LOADED = {}
-local effect_file_root
 local function texture_load(texname, srgb)
     --TODO: need use srgb texture
     local _ <close> = fs.switch_sync()
-    assert(effect_file_root)
-    local texpath = effect_file_root / texname
-    local cfgpath = texpath:string() .. "|main.cfg"
-
-    local filecontent = cr.read_file(texpath:string())
-    
-    local cfg = datalist.parse(cr.read_file(cfgpath))
+    assert(texname:match "^/pkg" ~= nil)
+    local filecontent = cr.read_file(texname)
+    local cfg = datalist.parse(cr.read_file(texname .. "|main.cfg"))
     local ti = cfg.info
     if texname:lower():match "%.png$" then
         if ti.format == "RG8" then
@@ -127,7 +130,7 @@ local function texture_load(texname, srgb)
 
     local mem = bgfx.memory_buffer(filecontent)
     local handle = bgfx.create_texture(mem, cfg.flag)
-    TEXTURE_LOADED[handle] = texpath
+    TEXTURE_LOADED[handle] = texname
     return (handle & 0xffff)
 end
 
@@ -163,7 +166,10 @@ function efk_sys:init()
         texture_get     = efk_cb.texture_get,
         texture_unload  = efk_cb.texture_unload,
         texture_handle  = efk_cb.texture_handle,
-        callback        = efk_cb_handle,
+        userdata        = {
+            callback = efk_cb_handle,
+            filefactory = filefactory,
+        }
     }
 end
 
@@ -175,7 +181,7 @@ end
 local function load_efk(filename)
     --TODO: not share every effect??
     return {
-        handle = efk_ctx:create_effect(read_file(filename))
+        handle = efk_ctx:create_effect(filename)
     }
 end
 

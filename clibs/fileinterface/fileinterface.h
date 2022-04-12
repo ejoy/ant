@@ -12,7 +12,8 @@ struct file_api {
 	void (*close)(struct file_factory *f, file_handle handle);
 	size_t (*read)(struct file_factory *f, file_handle handle, void *buffer, size_t sz);
 	size_t (*write)(struct file_factory *f, file_handle handle, const void *buffer, size_t sz);
-	int (*seek)(struct file_factory *f, file_handle handle, size_t offset);
+	int (*seek)(struct file_factory *f, file_handle handle, size_t offset, int origin);
+	size_t (*tell)(struct file_factory *f, file_handle handle);
 };
 
 struct file_interface {
@@ -45,8 +46,13 @@ file_write(struct file_interface *f, file_handle handle, const void *buffer, siz
 }
 
 static inline int
-file_seek(struct file_interface *f, file_handle handle, size_t offset) {
-	return f->api->seek(file_factory_(f), handle, offset);
+file_seek(struct file_interface *f, file_handle handle, size_t offset, int origin) {
+	return f->api->seek(file_factory_(f), handle, offset, origin);
+}
+
+static inline size_t
+file_tell(struct file_interface *f, file_handle handle) {
+	return f->api->tell(file_factory_(f), handle);
 }
 
 #endif
