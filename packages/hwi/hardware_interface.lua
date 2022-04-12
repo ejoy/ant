@@ -28,12 +28,10 @@ local function check_renderer(renderer)
 	return renderer
 end
 
-local flags = {}
-local w, h
-local nwh
+local init_args
 
-local function get_flags()
-	local t = {}	
+local function cvt_flags(flags)
+	local t = {}
 	for f, v in pairs(flags) do
 		if v == true then
 			t[#t+1] = f
@@ -45,71 +43,59 @@ local function get_flags()
 end
 
 local function bgfx_init(args)
-	nwh, w, h = args.nwh, args.width, args.height
-	--assert(nwh,"handle is nil")
-
-	args.renderer = check_renderer(args.renderer)
-
+	local fb = args.framebuffer
 	local LOG_NONE  <const> = 1
 	local LOG_ERROR <const> = 2
 	local LOG_WARN  <const> = 3
 	local LOG_TRACE <const> = 4
-	args.loglevel = args.loglevel or LOG_WARN
-	if args.reset == nil then
-		flags = {
+
+	init_args = {
+		nwh 	= args.nwh,
+		width 	= fb.width,
+		height 	= fb.height,
+		renderer= check_renderer(args.renderer),
+		loglevel= args.loglevel or LOG_WARN,
+		reset 	= args.reset or cvt_flags{
 			-- v = true,
 			--m = 4,
 			s = true,
 		}
-		args.reset = get_flags()
-	end
-	
-	bgfx.init(args)
+	}
+	bgfx.init(init_args)
+end
+
+function hw.init(args)
+	bgfx_init(args)
 	hw.get_caps()
 	math3d.set_homogeneous_depth(caps.homogeneousDepth)
 	math3d.set_origin_bottom_left(caps.originBottomLeft)
 end
 
-function hw.init(args)
-	bgfx_init(args)
-end
-
 function hw.dpi()
-	return platform.dpi(nwh)
+	return platform.dpi(init_args.nwh)
 end
 
 function hw.native_window()
-	return nwh
+	return init_args.nwh
 end
 
 function hw.screen_size()
-	return w, h
+	return init_args.width, init_args.height
 end
 
-function hw.reset(t, w_, h_)
-	if t then flags = t end
-	w = w_ or w
-	h = h_ or h
-	bgfx.reset(w, h, get_flags())
-end
-
-function hw.add_reset_flag(flag)
-	local f = flag:sub(1,1)
-	local v = flag:sub(2) or true
-	if flags[f] == v then
-		return
+function hw.reset(t, w, h)
+	if t then
+		init_args.reset = cvt_flags(t)
 	end
-	flags[f] = v
-	bgfx.reset(w, h, get_flags())
-end
-
-function hw.remove_reset_flag(flag)
-	local f = flag:sub(1,1)
-	if flags[f] ~= nil then
-		return
+	if w then
+		init_args.width = w
 	end
-	flags[f] = nil
-	bgfx.reset(w, h, get_flags())
+
+	if h then
+		init_args.height = h
+	end
+
+	bgfx.reset(init_args.width, init_args.height, init_args.reset)
 end
 
 local platform_relates = {

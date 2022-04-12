@@ -7,7 +7,12 @@ local cb = {}
 function cb.init(width, height, cfg)
     local ecs = cfg.ecs
     local m, world = worlds.create "prefab_editor" {
-        fbw=width, fbh=height,
+        framebuffer = {
+            width = width,
+            height = height,
+            ratio = 1,
+            scene_ratio = 1,
+        },
         viewport = {x=0, y=0, w=1, h=1},
         ecs = ecs,
     }

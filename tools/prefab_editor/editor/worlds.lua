@@ -2,7 +2,6 @@ local ecs      = import_package "ant.ecs"
 local inputmgr = import_package "ant.inputmgr"
 
 local function create_world(config)
-    config.viewport = {x=0, y=0, w=1, h=1}
     local world = ecs.new_world (config)
     local ev = inputmgr.create(world, "imgui")
     local m = {}

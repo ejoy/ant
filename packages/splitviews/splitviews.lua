@@ -29,10 +29,10 @@ end
 
 local function rect_from_ratio(rc, ratio)
     return {
-        x = rc.x + ratio.x * rc.w,
-        y = rc.y + ratio.y * rc.h,
-        w = rc.w * ratio.w,
-        h = rc.h * ratio.h,
+        x = math.floor(rc.x + ratio.x * rc.w),
+        y = math.floor(rc.y + ratio.y * rc.h),
+        w = math.max(1, math.floor(rc.w * ratio.w)),
+        h = math.max(1, math.floor(rc.h * ratio.h)),
     }
 end
 

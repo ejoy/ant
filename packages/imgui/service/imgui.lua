@@ -198,8 +198,12 @@ ltask.fork(function ()
     local nwh = imgui.Create(dispatch, w, h)
     rhwi.init {
         nwh = nwh,
-        width = init_width,
-        height = init_height,
+		framebuffer = {
+			width = init_width,
+			height = init_height,
+			scene_ratio = 1,
+			ui_ratio = 1,
+		}
     }
 	import_package "ant.compile_resource".init()
     bgfx.encoder_create()

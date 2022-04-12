@@ -16,6 +16,9 @@ animation:
     GPU:
       enable: true
 graphic:
+  framebuffer:
+    scene_ratio: 1.0
+    ratio: 0.65
   curve_world:
     enable: false
     type: "cylinder"

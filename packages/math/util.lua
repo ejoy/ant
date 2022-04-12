@@ -193,5 +193,21 @@ function util.is_rect_equal(lhs, rhs)
 			lhs.w == rhs.w and lhs.h == rhs.h
 end
 
+function util.calc_viewport(viewport, ratio)
+	if ratio == 1 then
+		return viewport
+	end
+	local function cvt(v)
+		return math.max(1, math.floor(v*ratio))
+	end
+
+	return {
+		x = viewport.x,
+		y = viewport.y,
+		w = cvt(viewport.w),
+		h = cvt(viewport.h),
+	}
+end
+
 return util
 

@@ -38,15 +38,16 @@ local function calc_viewport(fbw, fbh)
 	}
 end
 
-local function update_config(cfg, ww, hh)
-	cfg.fbw, cfg.fbh = ww, hh
-	cfg.viewport = calc_viewport(ww, hh)
+local function update_config(args, ww, hh)
+	local fb = args.framebuffer
+	fb.width, fb.height = ww, hh
+	args.viewport = calc_viewport(ww, hh)
 end
 
 local function check_size()
-	local args = world.args
-	if init_width ~= args.fbw or init_height ~= args.fbh then
-		update_config(args, init_width, init_height)
+	local fb = world.args.framebuffer
+	if init_width ~= fb.width or init_height ~= fb.height then
+		update_config(world.args, init_width, init_height)
 		do_size(init_width, init_height)
 		rhwi.reset(nil, init_width, init_height)
 	end
@@ -72,28 +73,34 @@ local function render()
 	end
 end
 
-local function check_load_framebuffer_size(w, h)
-	local fbw, fbh = setting:get "graphic/framebuffer/w", setting:get "graphic/framebuffer/h"
-	if fbw and fbh then
-		return fbw, fbh
-	else
-		local ratio = setting:get "graphic/framebuffer/ratio"
-		if ratio then
-			return math.floor(w * ratio + 0.5),
-			math.floor(h * ratio + 0.5)
-		end
+local function calc_fb_size(w, h, ratio)
+	if ratio == 1.0 then
+		return w, h
 	end
-	return w, h
+
+	return 	math.max(1, math.floor(w * ratio + 0.5)),
+			math.max(1, math.floor(h * ratio + 0.5))
 end
 
 function S.init(nwh, context, width, height)
-	init_width, init_height = check_load_framebuffer_size(width, height)
+	local scene_ratio = setting:get "graphic/framebuffer/scene_ratio" or 1.0
+	local ratio = setting:get "graphic/framebuffer/ratio" or 1.0
+	log.info(("framebuffer ratio:%2f, scene:%2f"):format(ratio, scene_ratio))
+
+	init_width, init_height = calc_fb_size(width, height, ratio)
+
 	log.info("framebuffer size:", init_width, init_height)
+
+	local framebuffer = {
+		width	= init_width,
+		height	= init_height,
+		ratio 	= ratio,
+		scene_ratio = scene_ratio,
+	}
 	rhwi.init {
 		nwh		= nwh,
 		context	= context,
-		width	= init_width,
-		height	= init_height,
+		framebuffer = framebuffer,
 	}
 	cr.init()
 	bgfx.set_debug "T"
@@ -102,6 +109,7 @@ function S.init(nwh, context, width, height)
 	import_package "ant.render".init_bgfx()
 	bgfx.encoder_begin()
 	encoderBegin = true
+	config.framebuffer = framebuffer
 	update_config(config, init_width, init_height)
 	world = ecs.new_world(config)
 	local ev 		= inputmgr.create(world, "win32")
@@ -112,7 +120,7 @@ function S.init(nwh, context, width, height)
 	S.keyboard		= ev.keyboard
 	S.char			= ev.char
 	S.size			= function (ww, hh)
-		init_width, init_height = check_load_framebuffer_size(ww, hh)
+		init_width, init_height = calc_fb_size(ww, hh, world.args.framebuffer.ratio)
 	end
 	do_size			= ev.size
 	world:pipeline_init()
