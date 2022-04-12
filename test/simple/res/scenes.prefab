@@ -5,4 +5,4 @@ prefab: $path ./plane.prefab
 ---
 prefab: $path ./light_directional.prefab
 ---
-prefab: $path ./Fox.glb|mesh.prefab
+prefab: $path ./Fox.model|mesh.prefab

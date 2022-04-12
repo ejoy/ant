@@ -4,6 +4,7 @@ local stringify = require "stringify"
 
 local config = {
     glb = {setting={},arguments=""},
+    model = {setting={},arguments=""},
     texture = {setting={},arguments=""},
     png = {setting={},arguments=""},
     sc = {setting={},arguments=""},
@@ -35,6 +36,7 @@ local function init()
     local caps = bgfx.get_caps()
     local renderer = caps.rendererType:lower()
     local texture = assert(texture_extensions[renderer])
+    set_setting("model", {})
     set_setting("glb", {})
     set_setting("sc", {
         os = os,
