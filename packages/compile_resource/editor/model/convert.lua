@@ -1,35 +1,23 @@
-local export_prefab = require "editor.model.export_prefab"
-local export_meshbin = require "editor.model.export_meshbin"
-local export_animation = require "editor.model.export_animation"
-local export_material = require "editor.model.export_material"
-local glbloader = require "editor.model.glTF.glb"
-local utility = require "editor.model.utility"
+local glb = require "editor.model.glb"
+local datalist = require "datalist"
+local fs = require "filesystem.local"
 
-local function build_scene_tree(gltfscene)
-    local scenetree = {}
-	for nidx, node in ipairs(gltfscene.nodes) do
-		if node.children then
-			for _, cnidx in ipairs(node.children) do
-				scenetree[cnidx] = nidx-1
-			end
-		end
-	end
-    return scenetree
+local function readdatalist(filepath)
+	local f = assert(fs.open(filepath, "r"))
+	local data = f:read "a"
+	f:close()
+	return datalist.parse(data,function(args)
+		return args[2]
+	end)
 end
 
-return function (input, output, _, tolocalpath)
-    utility.init(input, output)
-    local glbdata = glbloader.decode(input)
-    local exports = {}
-    assert(glbdata.version == 2)
-    exports.scenetree = build_scene_tree(glbdata.info)
-
-    export_meshbin(output, glbdata, exports)
-    export_material(output, glbdata, exports, tolocalpath)
-    export_animation(input, output, exports)
-    export_prefab(output, glbdata, exports, tolocalpath)
-    return true, {
-        input,
-        input .. ".patch"
-    }
+return function (input, output, _, localpath)
+	local config = readdatalist(input)
+    local path = localpath(config.path)
+    local ok, res = glb(path, output, nil, localpath)
+    if not ok then
+        return ok, res
+    end
+    table.insert(res, 1, input)
+    return ok, res
 end
