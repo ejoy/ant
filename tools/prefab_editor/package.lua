@@ -16,7 +16,7 @@ return {
         "ant.animation",
         "ant.collision",
         "ant.sky",
-        "ant.effekseer",
+        --"ant.effekseer",
         "ant.audio",
         "ant.inputmgr",
         "ant.ecs",

@@ -26,7 +26,7 @@ local widget_utils  = require "widget.utils"
 local bgfx          = require "bgfx"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
-local effekseer     = require "effekseer"
+--local effekseer     = require "effekseer"
 local subprocess    = import_package "ant.subprocess"
 
 local m = {
@@ -624,37 +624,38 @@ function m:reload()
 end
 
 function m:add_effect(filename)
-    if not self.root then
-        self:reset_prefab()
-    end
-    local template = {
-		policy = {
-            "ant.general|name",
-            "ant.scene|scene_object",
-            "ant.effekseer|effekseer",
-            "ant.general|tag"
-		},
-		data = {
-            name = "root",
-            tag = {"effect"},
-            scene = {srt = {}},
-            effekseer = filename,
-            effect_instance = {}
-		},
-    }
-    local tpl = utils.deep_copy(template)
-    tpl.data.on_ready = function (e)
-        w:sync("effect_instance:in", e)
-        local inst = e.effect_instance
-        if inst.handle == -1 then
-            print("create effect faild : ", tostring(effekseer))
-        end
-        inst.playid = effekseer.play(inst.handle, inst.playid)
-        w:sync("scene:in", e)
-        e.scene.pid = gizmo.target_eid
+    error "need implement new effect entity"
+    -- if not self.root then
+    --     self:reset_prefab()
+    -- end
+    -- local template = {
+	-- 	policy = {
+    --         "ant.general|name",
+    --         "ant.scene|scene_object",
+    --         --"ant.effekseer|effekseer",
+    --         "ant.general|tag"
+	-- 	},
+	-- 	data = {
+    --         name = "root",
+    --         tag = {"effect"},
+    --         scene = {srt = {}},
+    --         effekseer = filename,
+    --         effect_instance = {}
+	-- 	},
+    -- }
+    -- local tpl = utils.deep_copy(template)
+    -- tpl.data.on_ready = function (e)
+    --     w:sync("effect_instance:in", e)
+    --     local inst = e.effect_instance
+    --     if inst.handle == -1 then
+    --         print("create effect faild : ", tostring(effekseer))
+    --     end
+    --     inst.playid = effekseer.play(inst.handle, inst.playid)
+    --     w:sync("scene:in", e)
+    --     e.scene.pid = gizmo.target_eid
         
-    end
-    self:add_entity(ecs.create_entity(tpl), gizmo.target_eid, template)
+    -- end
+    -- self:add_entity(ecs.create_entity(tpl), gizmo.target_eid, template)
 end
 
 function m:add_prefab(filename)

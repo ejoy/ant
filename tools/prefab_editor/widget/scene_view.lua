@@ -97,11 +97,11 @@ local function get_icon_by_object_type(node)
         if e.slot then
             return icons.ICON_SLOT
         end
-        if e.effekseer then
-            return icons.ICON_PARTICLES3D
-        else
-            return icons.ICON_OBJECT
-        end
+        -- if e.effekseer then
+        --     return icons.ICON_PARTICLES3D
+        -- end
+
+        return icons.ICON_OBJECT
     end
 end
 local ima 		= ecs.import.interface "ant.asset|imaterial_animation"

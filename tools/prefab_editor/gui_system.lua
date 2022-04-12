@@ -9,7 +9,7 @@ local asset_mgr = import_package "ant.asset"
 local mathpkg   = import_package "ant.math"
 
 local mc        = mathpkg.constant
-local effekseer_filename_mgr = ecs.import.interface "ant.effekseer|filename_mgr"
+--local effekseer_filename_mgr = ecs.import.interface "ant.effekseer|filename_mgr"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local ies       = ecs.import.interface "ant.scene|ifilter_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
@@ -148,7 +148,8 @@ local function open_proj(path)
 
         if topname then
             global_data.package_path = topname .. "/"
-            effekseer_filename_mgr.add_path(global_data.package_path .. "res")
+            log.warn("need handle effect file")
+            --effekseer_filename_mgr.add_path(global_data.package_path .. "res")
             return topname
         else
             print("Can not add effekseer resource seacher path.")
@@ -235,7 +236,8 @@ local function choose_project()
             fw.add(global_data.project_root:string())
             local res_root_str = tostring(fs.path "":localpath())
             global_data.editor_root = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
-            effekseer_filename_mgr.add_path("/pkg/tools.prefab_editor/res")
+            log.warn("need handle effect file")
+            --effekseer_filename_mgr.add_path("/pkg/tools.prefab_editor/res")
         end
         imgui.windows.EndPopup()
     end
