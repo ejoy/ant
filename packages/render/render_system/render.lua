@@ -119,7 +119,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 				viewid		= viewidmgr.generate(view_queuename),
 				view_mode 	= "s",
 				clear_state	= default_clear_state,
-				view_rect	= view_rect,
+				view_rect	= {x=view_rect.x, y=view_rect.y, w=view_rect.w, h=view_rect.h, ratio=view_rect.ratio},
 				fb_idx		= fbidx,
 			},
 			[view_queuename]	= true,
@@ -175,7 +175,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 					depth = 1,
 				},
 				view_mode = "s",
-				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
+				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h, ratio=vr.ratio},
 				fb_idx = fbidx,
 			},
 			primitive_filter = {
@@ -229,7 +229,7 @@ function irender.create_main_queue(vr, camera_ref)
 				viewid = viewidmgr.get "main_view",
 				view_mode = "s",
 				clear_state = default_clear_state,
-				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
+				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h, ratio=vr.ratio},
 				fb_idx = fbidx,
 			},
 			primitive_filter = {

@@ -61,6 +61,7 @@ system "tonemapping_system"
     .implement "postprocess/tonemapping.lua"
     .method "init"
     .method "init_world"
+    .method "data_changed"
     .method "tonemapping"
 
 component "bloom_queue"

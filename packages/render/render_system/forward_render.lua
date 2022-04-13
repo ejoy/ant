@@ -12,7 +12,11 @@ local mu		= mathpkg.util
 local fr_sys = ecs.system "forward_render_system"
 
 function fr_sys:init()
-	local vr = mu.calc_viewport(world.args.viewport, world.args.framebuffer.scene_ratio)
+	local ratio = world.args.framebuffer.scene_ratio
+	local vr = mu.calc_viewport(world.args.viewport, ratio)
+	if ratio then
+		vr.ratio = ratio
+	end
 	local camera = icamera.create{
 		name = "default_camera",
 		frustum = default.frustum(vr.w/vr.h),

@@ -37,18 +37,16 @@ local function show_main_view()
             "PassthruCentralNode",
         })
 
-        for q in w:select "tonemapping_queue render_target:in" do
-            local rt = q.render_target.view_rect
-            --NOTE: the coordinate reture from BuilderGetCentralRect function is relative to full viewport
-            local x, y, ww, hh = imgui.dock.BuilderGetCentralRect "MainViewSpace"
-            local mp = imgui_vp.MainPos
-            x, y = x - mp[1], y - mp[2]
+        local vp = world.args.viewport
+        --NOTE: the coordinate reture from BuilderGetCentralRect function is relative to full viewport
+        local x, y, ww, hh = imgui.dock.BuilderGetCentralRect "MainViewSpace"
+        local mp = imgui_vp.MainPos
+        x, y = x - mp[1], y - mp[2]
 
-            if x ~= rt.x or y ~= rt.y or ww ~= rt.w or hh ~= rt.h then
-                local vp = world.args.viewport
-                vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
-                world:pub{"resize", ww, hh}
-            end
+        if x ~= vp.x or y ~= vp.y or ww ~= vp.w or hh ~= vp.h then
+            vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
+            world:pub{"world_viewport_changed", vp}
+            world:pub{"resize", ww, hh}
         end
     end
     imgui.windows.PopStyleVar(3)

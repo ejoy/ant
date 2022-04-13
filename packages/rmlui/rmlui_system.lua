@@ -8,8 +8,6 @@ local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 
 local font      = import_package "ant.font"
-local setting   = import_package "ant.settings".setting
-local screen_ratio=setting:get "graphic/framebuffer/ratio" or 1.0
 local ServiceRmlUi = ltask.spawn "ant.rmlui|rmlui"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local rmlui_sys = ecs.system "rmlui_system"
@@ -72,7 +70,7 @@ function rmlui_sys:entity_init()
         rt.view_rect = vr
         rt.fb_idx = tm_rt.fb_idx
         irq.update_rendertarget("rmlui_obj", rt)
-        ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, screen_ratio)
+        ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, world.args.framebuffer.ratio)
     end
 
     for _ in vr_changed_mb:each() do
@@ -80,7 +78,7 @@ function rmlui_sys:entity_init()
         if rml then
             local vr = irq.view_rect "tonemapping_queue"
             irq.set_view_rect("rmlui_obj", vr)
-            ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, screen_ratio)
+            ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, world.args.framebuffer.ratio)
         end
     end
 end

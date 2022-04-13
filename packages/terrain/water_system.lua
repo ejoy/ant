@@ -115,7 +115,7 @@ function water_sys:init_world()
             name = "copy_scene_queue",
             render_target = {
                 viewid = copy_scene_viewid,
-                view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
+                view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h, ratio=vr.ratio},
                 view_mode = "",
                 clear_state = {clear = ""},
                 fb_idx = create_fb(mqrt.fb_idx),

@@ -56,7 +56,7 @@ local cc_mb = world:sub{"main_queue", "camera_changed"}
 local exposure_mb
 
 function tm_sys:init_world()
-    local vr = irq.view_rect "main_queue"
+    local vp = world.args.viewport
     ecs.create_entity {
         policy = {
             "ant.render|postprocess_queue",
@@ -65,7 +65,7 @@ function tm_sys:init_world()
         data = {
             render_target = {
                 viewid     = tm_viewid,
-                view_rect   = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
+                view_rect   = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
                 view_mode = "",
                 clear_state = {
                     clear = "D", --clear z buffer for effect
@@ -81,6 +81,15 @@ function tm_sys:init_world()
     local eid = irq.main_camera()
     update_exposure(eid)
     exposure_mb = world:sub{"exposure_changed", eid}
+end
+
+local vp_changed_mb = world:sub{"world_viewport_changed"}
+
+function tm_sys:data_changed()
+    for _, vp in vp_changed_mb:unpack() do
+        irq.set_view_rect("tonemapping_queue", vp)
+        break
+    end
 end
 
 local ppi_scene_color = {

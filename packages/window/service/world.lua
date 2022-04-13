@@ -41,7 +41,16 @@ end
 local function update_config(args, ww, hh)
 	local fb = args.framebuffer
 	fb.width, fb.height = ww, hh
-	args.viewport = calc_viewport(ww, hh)
+
+	local vp = args.viewport
+	if vp == nil then
+		vp = {}
+		args.viewport = vp
+	end
+	vp.x, vp.y, vp.w, vp.h = 0, 0, ww, hh
+	if world then
+		world:pub{"world_viewport_changed", vp}
+	end
 end
 
 local function check_size()
@@ -112,6 +121,7 @@ function S.init(nwh, context, width, height)
 	config.framebuffer = framebuffer
 	update_config(config, init_width, init_height)
 	world = ecs.new_world(config)
+	world:pub{"world_viewport_changed", world.args.viewport}
 	local ev 		= inputmgr.create(world, "win32")
 	S.mouse_wheel	= ev.mouse_wheel
 	S.mouse 		= ev.mouse

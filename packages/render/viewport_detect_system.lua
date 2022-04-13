@@ -4,7 +4,6 @@ local w = world.w
 
 local fbmgr 	= require "framebuffer_mgr"
 
-local setting	= import_package "ant.settings".setting
 local mathpkg	= import_package "ant.math"
 local mu		= mathpkg.util
 
@@ -18,7 +17,7 @@ local function clear_cache()
 	fb_cache, rb_cache = {}, {}
 end
 
-local function resize_framebuffer(w, h, fbidx)
+local function resize_framebuffer(w, h, fbidx, ratio)
 	if fbidx == nil or fb_cache[fbidx] then
 		return 
 	end
@@ -33,6 +32,9 @@ local function resize_framebuffer(w, h, fbidx)
 		rbs[#rbs+1] = attachment
 		local c = rb_cache[rbidx]
 		if c == nil then
+			if ratio then
+				w, h = mu.cvt_size(w, ratio), mu.cvt_size(h, ratio)
+			end
 			changed = fbmgr.resize_rb(rbidx, w, h) or changed
 			rb_cache[rbidx] = changed
 		else
@@ -58,18 +60,11 @@ local function update_render_queue(q, viewsize)
 	if q.camera_ref then
 		icamera.set_frustum_aspect(world:entity(q.camera_ref), vr.w/vr.h)
 	end
-	resize_framebuffer(vr.w, vr.h, rt.fb_idx)
+	resize_framebuffer(vr.w, vr.h, rt.fb_idx, vr.ratio)
 	irq.update_rendertarget(q.queue_name, rt)
 end
 
-local function disable_resize()
-	return setting:get "graphic/framebuffer/w" ~= nil or setting:get "graphic/framebuffer/ratio" ~= nil
-end
-
 local function update_render_target(viewsize)
-	if disable_resize() then
-		return
-	end
 	clear_cache()
 	for qe in w:select "watch_screen_buffer render_target:in queue_name:in camera_ref?in" do
 		update_render_queue(qe, viewsize)
@@ -96,9 +91,6 @@ function vp_detect_sys:data_changed()
 	end
 
 	if new_fbw then
-		if not mu.is_rect_equal(irq.view_rect "tonemapping_queue", world.args.viewport) then
-			irq.set_view_rect("tonemapping_queue", world.args.viewport)
-		end
 		update_render_target{w=new_fbw, h=new_fbh}
 	end
 end
