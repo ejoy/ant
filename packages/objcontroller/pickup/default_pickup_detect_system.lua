@@ -2,6 +2,9 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
+local mathpkg = import_package "ant.math"
+local mu      = mathpkg.util
+
 local dpd_sys = ecs.system "default_pickup_detect_system"
 local ipu = ecs.import.interface "ant.objcontroller|ipickup"
 local topick_mb
@@ -15,9 +18,12 @@ function dpd_sys:init()
 end
 
 local function remap_xy(x, y)
-	local tmq = w:singleton("tonemapping_queue", "render_target:in")
-	local vr = tmq.render_target.view_rect
-	return x-vr.x, y-vr.y
+    local ratio = world.args.framebuffer.ratio
+    if ratio ~= nil and ratio ~= 1 then
+        x, y = mu.cvt_size(x, ratio), mu.cvt_size(y, ratio)
+    end
+	local vp = world.args.viewport
+	return x-vp.x, y-vp.y
 end
 
 function dpd_sys:data_changed()

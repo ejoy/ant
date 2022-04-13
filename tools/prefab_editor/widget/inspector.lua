@@ -152,7 +152,7 @@ local function update_current()
             end
         end
         if not current_panel then
-            if e.effekseer then
+            if e.efk then
                 current_panel = get_effect_panel()
             end
         end

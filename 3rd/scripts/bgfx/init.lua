@@ -32,7 +32,8 @@ lm.ios = {
 
 lm.clang = {
     flags = {
-        "-Wno-tautological-constant-compare"
+        "-Wno-tautological-constant-compare",
+        "-Wno-unused-but-set-variable",
     }
 }
 

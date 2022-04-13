@@ -82,11 +82,18 @@ lefkctx_render(lua_State *L){
     auto ctx = EC(L);
     auto viewmat = (Effekseer::Matrix44*)lua_touserdata(L, 2);
     auto projmat = (Effekseer::Matrix44*)lua_touserdata(L, 3);
-    auto delta = (float)luaL_checknumber(L, 4);
+    auto delta = (float)luaL_checknumber(L, 4) * 0.001f;
 
     ctx->renderer->SetCameraMatrix(*viewmat);
     ctx->renderer->SetProjectionMatrix(*projmat);
-    ctx->manager->Update(delta);
+	// Stabilize in a variable frame environment
+	float deltaFrames = delta * 60.0f;
+	int iterations = std::max(1, (int)roundf(deltaFrames));
+	float advance = deltaFrames / iterations;
+	for (int i = 0; i < iterations; i++) {
+        ctx->manager->Update(advance);
+	}
+    ctx->renderer->SetTime(ctx->renderer->GetTime() + delta);
     ctx->renderer->BeginRendering();
     Effekseer::Manager::DrawParameter drawParameter;
     drawParameter.ZNear = 0.0f;
@@ -166,6 +173,60 @@ lefkctx_stop(lua_State *L){
     return 0;
 }
 
+static int
+lefkctx_set_visible(lua_State* L) {
+	auto ctx = EC(L);
+	auto handle = (int)luaL_checkinteger(L, 2);
+	assert(check_effect_valid(ctx, handle));
+
+	bool visible = true;
+	if (lua_type(L, 3) == LUA_TBOOLEAN) {
+		visible = lua_toboolean(L, 3);
+	}
+    ctx->manager->SetShown(handle, visible);
+	return 0;
+}
+
+static int
+lefkctx_pause(lua_State* L) {
+	auto ctx = EC(L);
+	auto handle = (int)luaL_checkinteger(L, 2);
+	assert(check_effect_valid(ctx, handle));
+
+	bool pause = false;
+	if (lua_type(L, 3) == LUA_TBOOLEAN) {
+        pause = lua_toboolean(L, 3);
+	}
+    ctx->manager->SetPaused(handle, pause);
+	return 0;
+}
+
+static int
+lefkctx_set_time(lua_State* L) {
+	auto ctx = EC(L);
+	auto handle = (int)luaL_checkinteger(L, 2);
+	assert(check_effect_valid(ctx, handle));
+
+	int32_t frame = 0.0f;
+	if (lua_type(L, 3) == LUA_TNUMBER) {
+		frame = lua_tointeger(L, 3);
+	}
+    ctx->manager->SetPaused(handle, false);
+    ctx->manager->UpdateHandleToMoveToFrame(handle, frame);
+    ctx->manager->SetPaused(handle, true);
+	return 0;
+}
+
+static int
+lefkctx_set_speed(lua_State* L) {
+	auto ctx = EC(L);
+	auto handle = (int)luaL_checkinteger(L, 2);
+	assert(check_effect_valid(ctx, handle));
+
+    float speed = lua_tonumber(L, 3);
+    ctx->manager->SetSpeed(handle, speed);
+	return 0;
+}
 
 static int
 lefk_create(lua_State *L){
@@ -211,6 +272,10 @@ lefk_create(lua_State *L){
             {"destroy_effect",  lefkctx_destroy_effect},
             {"play",            lefkctx_play},
             {"stop",            lefkctx_stop},
+            {"set_visible",     lefkctx_set_visible},
+			{"pause",           lefkctx_pause},
+		    {"set_time",        lefkctx_set_time},
+            {"set_speed",       lefkctx_set_speed},
             {nullptr, nullptr},
         };
 

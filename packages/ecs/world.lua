@@ -70,7 +70,11 @@ function world:cpu_stat(what)
 	return cs
 end
 
-function world:print_cpu_stat()
+function world:reset_cpu_stat()
+	self._cpu_stat.total = {}
+end
+
+function world:print_cpu_stat(per)
 	local t = {}
 	for k, v in pairs(self._cpu_stat.total) do
 		t[#t+1] = {k, v}
@@ -82,8 +86,11 @@ function world:print_cpu_stat()
 		"",
 		"cpu stat"
 	}
-	for i, v in ipairs(t) do
-		s[#s+1] = ("\t%s - %d"):format(v[1], v[2])
+	per = per or 1
+	for _, v in ipairs(t) do
+		if v[2] > 0 then
+			s[#s+1] = ("\t%s - %.02fms"):format(v[1], v[2] / per)
+		end
 	end
 	print(table.concat(s, "\n"))
 end

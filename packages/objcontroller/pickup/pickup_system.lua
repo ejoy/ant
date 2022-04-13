@@ -50,9 +50,22 @@ local function find_camera(id)
 	return e.camera
 end
 
+local function cvt_clickpt(pt, ratio)
+	if ratio == nil or ratio == 1 then
+		return pt
+	end
+
+	return {
+		mu.cvt_size(pt[1], ratio),
+		mu.cvt_size(pt[2], ratio),
+	}
+end
+
 local function update_camera(pu_camera_ref, clickpt)
 	local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
-	local ndc2D = mu.pt2D_to_NDC(clickpt, mq.render_target.view_rect)
+	local main_vr = mq.render_target.view_rect
+	
+	local ndc2D = mu.pt2D_to_NDC(cvt_clickpt(clickpt, main_vr.ratio), main_vr)
 	local eye, at = mu.NDC_near_far_pt(ndc2D)
 
 	local maincamera = find_camera(mq.camera_ref)

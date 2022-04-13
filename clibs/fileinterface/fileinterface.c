@@ -20,8 +20,12 @@ fopen_(struct file_factory *ff, const char *filename, const char *mode) {
         return NULL;
     }
     const char *realname = lua_tostring(L, -1);
+#if defined(_WIN32)
     FILE *f;
     fopen_s(&f, realname, mode);
+#else
+    FILE *f = fopen(realname, mode);
+#endif
     lua_pop(L, 1);  // pop realname
     return (file_handle)f;
 }
