@@ -2,12 +2,13 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 ecs.require "widget.base_view"
+local iefk          = ecs.import.interface "ant.efk|iefk"
 local imgui         = require "imgui"
 local utils         = require "common.utils"
 local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local hierarchy     = require "hierarchy_edit"
-local effekseer     = require "effekseer"
+--local effekseer     = require "effekseer"
 local BaseView      = require "widget.view_class".BaseView
 local EffectView    = require "widget.view_class".EffectView
 local ui_auto_play  = {false}
@@ -19,17 +20,13 @@ end
 
 function EffectView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
-    for e in w:select "scene:in effekseer:in effect_instance:in" do
+    for e in w:select "scene:in efk:in" do
         if e.scene == world:entity(eid).scene then
-            self.speed:set_getter(function() return e.effect_instance.speed end)
+            -- self.speed:set_getter(function() return e.efk.speed end)
+            self.speed:set_getter(function() return 1 end)
             self.speed:set_setter(function(v) self:on_set_speed(v) end)
         end
     end
-    -- if world[eid].effekseer and world[eid].effect_instance then
-    --     --local tp = hierarchy:get_template(eid)
-    --     self.speed:set_getter(function() return world[eid].effect_instance.speed end)
-    --     self.speed:set_setter(function(v) self:on_set_speed(v) end)
-    -- end
     self:update()
     return true
 end
@@ -54,9 +51,10 @@ function EffectView:show()
     -- end
     imgui.widget.PropertyLabel("Play")
     if imgui.widget.Button("Play") then
-        local instance = world:entity(self.eid).effect_instance
-        instance.playid = effekseer.play(instance.handle, instance.playid)
-        effekseer.set_speed(instance.handle, instance.playid, instance.speed)
+        -- local instance = world:entity(self.eid).effect_instance
+        -- instance.playid = effekseer.play(instance.handle, instance.playid)
+        -- effekseer.set_speed(instance.handle, instance.playid, instance.speed)
+        iefk.play(world:entity(self.eid))
     end
 end
 
@@ -65,7 +63,7 @@ function EffectView:on_set_speed(value)
     template.template.data.speed = value
     local instance = world:entity(self.eid).effect_instance
     instance.speed = value
-    effekseer.set_speed(instance.handle, instance.playid, value)
+    -- effekseer.set_speed(instance.handle, instance.playid, value)
 end
 
 function EffectView:on_set_auto_play(value)
@@ -76,7 +74,7 @@ end
 function EffectView:on_set_loop(value)
     local instance = world:entity(self.eid).effect_instance
     instance.loop = value
-    effekseer.set_loop(instance.handle, instance.playid, value)
+    -- effekseer.set_loop(instance.handle, instance.playid, value)
 end
 
 return EffectView

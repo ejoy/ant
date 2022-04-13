@@ -82,11 +82,18 @@ lefkctx_render(lua_State *L){
     auto ctx = EC(L);
     auto viewmat = (Effekseer::Matrix44*)lua_touserdata(L, 2);
     auto projmat = (Effekseer::Matrix44*)lua_touserdata(L, 3);
-    auto delta = (float)luaL_checknumber(L, 4);
+    auto delta = (float)luaL_checknumber(L, 4) * 0.001f;
 
     ctx->renderer->SetCameraMatrix(*viewmat);
     ctx->renderer->SetProjectionMatrix(*projmat);
-    ctx->manager->Update(delta);
+	// Stabilize in a variable frame environment
+	float deltaFrames = delta * 60.0f;
+	int iterations = std::max(1, (int)roundf(deltaFrames));
+	float advance = deltaFrames / iterations;
+	for (int i = 0; i < iterations; i++) {
+        ctx->manager->Update(advance);
+	}
+    ctx->renderer->SetTime(ctx->renderer->GetTime() + delta);
     ctx->renderer->BeginRendering();
     Effekseer::Manager::DrawParameter drawParameter;
     drawParameter.ZNear = 0.0f;
