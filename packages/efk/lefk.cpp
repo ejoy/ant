@@ -173,6 +173,60 @@ lefkctx_stop(lua_State *L){
     return 0;
 }
 
+static int
+lefkctx_set_visible(lua_State* L) {
+	auto ctx = EC(L);
+	auto handle = (int)luaL_checkinteger(L, 2);
+	assert(check_effect_valid(ctx, handle));
+
+	bool visible = true;
+	if (lua_type(L, 3) == LUA_TBOOLEAN) {
+		visible = lua_toboolean(L, 3);
+	}
+    ctx->manager->SetShown(handle, visible);
+	return 0;
+}
+
+static int
+lefkctx_pause(lua_State* L) {
+	auto ctx = EC(L);
+	auto handle = (int)luaL_checkinteger(L, 2);
+	assert(check_effect_valid(ctx, handle));
+
+	bool pause = false;
+	if (lua_type(L, 3) == LUA_TBOOLEAN) {
+        pause = lua_toboolean(L, 3);
+	}
+    ctx->manager->SetPaused(handle, pause);
+	return 0;
+}
+
+static int
+lefkctx_set_time(lua_State* L) {
+	auto ctx = EC(L);
+	auto handle = (int)luaL_checkinteger(L, 2);
+	assert(check_effect_valid(ctx, handle));
+
+	int32_t frame = 0.0f;
+	if (lua_type(L, 3) == LUA_TNUMBER) {
+		frame = lua_tointeger(L, 3);
+	}
+    ctx->manager->SetPaused(handle, false);
+    ctx->manager->UpdateHandleToMoveToFrame(handle, frame);
+    ctx->manager->SetPaused(handle, true);
+	return 0;
+}
+
+static int
+lefkctx_set_speed(lua_State* L) {
+	auto ctx = EC(L);
+	auto handle = (int)luaL_checkinteger(L, 2);
+	assert(check_effect_valid(ctx, handle));
+
+    float speed = lua_tonumber(L, 3);
+    ctx->manager->SetSpeed(handle, speed);
+	return 0;
+}
 
 static int
 lefk_create(lua_State *L){
@@ -218,6 +272,10 @@ lefk_create(lua_State *L){
             {"destroy_effect",  lefkctx_destroy_effect},
             {"play",            lefkctx_play},
             {"stop",            lefkctx_stop},
+            {"set_visible",     lefkctx_set_visible},
+			{"pause",           lefkctx_pause},
+		    {"set_time",        lefkctx_set_time},
+            {"set_speed",       lefkctx_set_speed},
             {nullptr, nullptr},
         };
 
