@@ -13,12 +13,6 @@ local MaterialView = require "widget.view_class".MaterialView
 local SkyboxView  = require "widget.view_class".SkyboxView
 local size_str = {"16","32","64","128","256","512","1024"}
 local prefilter_size_str = {"256","512","1024"}
-function SkyboxView:_init()
-    MaterialView._init(self)
-    self.irradiance = uiproperty.Combo({label = "Irradiance", options = size_str},{})
-    self.prefilter  = uiproperty.Combo({label = "Prefilter", options = prefilter_size_str},{})
-    self.LUT        = uiproperty.Combo({label = "LUT", options = size_str},{})
-end
 
 local function set_ibl_value(eid, key, value)
     local sz = tonumber(value)
@@ -29,20 +23,36 @@ local function set_ibl_value(eid, key, value)
     prefab_mgr:reload()
 end
 
+function SkyboxView:_init()
+    MaterialView._init(self)
+    self.irradiance = uiproperty.Combo({label = "Irradiance", options = size_str},{
+        getter = function ()
+            return tostring(world:entity(self.eid).ibl.irradiance.size)
+        end,
+        setter = function (value)
+            set_ibl_value(self.eid, "irradiance", value)
+        end
+    })
+    self.prefilter  = uiproperty.Combo({label = "Prefilter", options = prefilter_size_str},{
+        getter = function()
+            return tostring(world:entity(self.eid).ibl.prefilter.size)
+        end,
+        setter = function()
+            return tostring(world:entity(self.eid).ibl.LUT.size)
+        end
+    })
+    self.LUT = uiproperty.Combo({label = "LUT", options = size_str},{
+        getter = function ()
+            return tostring(world:entity(self.eid).ibl.LUT.size)
+        end,
+        setter = function (value)
+            set_ibl_value(self.eid, "LUT", value)
+        end
+    })
+end
+
 function SkyboxView:set_model(eid)
     if not MaterialView.set_model(self, eid) then return false end
-    self.irradiance:set_getter(function() return tostring(world:entity(self.eid).ibl.irradiance.size) end)
-    self.irradiance:set_setter(function(value)
-        set_ibl_value(self.eid, "irradiance", value)
-    end)
-    self.prefilter:set_getter(function() return tostring(world:entity(self.eid).ibl.prefilter.size) end)
-    self.prefilter:set_setter(function(value)
-        set_ibl_value(self.eid, "prefilter", value)
-    end)
-    self.LUT:set_getter(function() return tostring(world:entity(self.eid).ibl.LUT.size) end)
-    self.LUT:set_setter(function(value)
-        set_ibl_value(self.eid, "LUT", value)
-    end)
     self:update()
     return true
 end
