@@ -36,8 +36,15 @@ local function createTexture(c)
             h = bgfx.create_texture3d(ti.width, ti.height, ti.depth, ti.numMips ~= 0, ti.numLayers, ti.format, c.flag, m)
         end
     else
+        local skip = 0
+        local width = c.info.width
+        local MaxWidth <const> = 512
+        while width > MaxWidth do
+            width = width // 2
+            skip = skip + 1
+        end
         local texdata = readall(c.path)
-        h = bgfx.create_texture(texdata, c.flag)
+        h = bgfx.create_texture(texdata, c.flag, skip)
     end
     bgfx.set_name(h, c.name)
     return h
