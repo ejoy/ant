@@ -41,7 +41,9 @@ for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
     end
 end
 
-checkAddModule("efk", "../packages/efk/make.lua")
+if lm.os == "windows" then
+    checkAddModule("efk", "../packages/efk/make.lua")
+end
 
 lm:copy "copy_mainlua" {
     input = "common/main.lua",

@@ -37,7 +37,8 @@ local bgfxLib = {
     },
     clang = {
         flags = {
-            "-Wno-unused-variable"
+            "-Wno-unused-variable",
+            "-Wno-unused-but-set-variable",
         }
     },
     windows = {

@@ -5,7 +5,7 @@ dofile "../common.lua"
 local source_name = lm.fileinterface_dynamic_lib and "source_fileinterface" or "fileinterface"
 lm:lua_source (source_name) {
     defines = {
-        lm.test and "FILE_INTERFACE_TEST" or "",
+        lm.test and "FILE_INTERFACE_TEST",
     },
     sources = {
         "fileinterface.c",
@@ -19,6 +19,6 @@ if lm.fileinterface_dynamic_lib then
             ldflags = {
                 "-export:luaopen_fileinterface_test"
             }
-        } or nil,
+        },
     }
 end

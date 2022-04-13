@@ -49,6 +49,11 @@ lm:source_set "bimg" {
         flags = {
             "-Wno-class-memaccess",
         }
+    },
+    clang = {
+        flags = {
+            "-Wno-unused-but-set-variable",
+        }
     }
 }
 
@@ -63,6 +68,11 @@ lm:source_set "bimg_decode" {
     sources = {
         "src/image_decode.cpp",
         "3rdparty/tinyexr/deps/miniz/miniz.c",
+    },
+    clang = {
+        flags = {
+            "-Wno-unused-but-set-variable",
+        }
     }
 }
 
