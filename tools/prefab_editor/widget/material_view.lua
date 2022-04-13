@@ -146,13 +146,6 @@ local function build_fx_ui(mv)
                     mv.need_reload = true
                 end,
             }),
-            uiproperty.Combo({label = "DepthType", options = DEPTH_TYPE_options}, {
-                getter = function () return setting_filed "depth_type" end,
-                setter = function(value)
-                    check_set_setting("depth_type", value)
-                    mv.need_reload = true
-                end,
-            })
         })
     })
 
