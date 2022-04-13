@@ -45,11 +45,11 @@ public:
 	void Instance(const HtmlElement& html);
 
 private:
-	ElementDocument body;
 	std::string source_url;
 	StyleSheet style_sheet;
 	std::unordered_set<std::string> custom_element;
 	std::unordered_map<std::string, std::unique_ptr<DataModel>> data_models;
+	ElementDocument body;
 	Size dimensions;
 	double elapsed_time = 0.;
 	bool dirty_dimensions = false;
