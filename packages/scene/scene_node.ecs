@@ -3,7 +3,6 @@ import "bounding.ecs"
 
 --SceneObject
 policy "scene_object"
-    .require_interface "ant.scene|ibounding"
     .require_system "ant.scene|bounding_system"
     .component "scene"
 
