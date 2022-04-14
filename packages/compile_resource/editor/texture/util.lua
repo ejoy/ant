@@ -41,12 +41,12 @@ local function gen_commands(commands, param, input, output)
 		print("not support HDR format right now")
 	end
 
-	local mipmap = param.mipmap
-	if mipmap ~= nil then
+	if param.mipmap ~= nil then
 		add_option(commands, "-m")
-		if mipmap ~= 0 then
-			add_option(commands, "--mipskip", tostring(mipmap))
-		end
+	end
+
+	if param.skip_mip ~= 0 then
+		add_option(commands, "--mipskip", tostring(param.skip_mip))
 	end
 end
 
