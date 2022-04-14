@@ -8,6 +8,7 @@ local declmgr   = renderpkg.declmgr
 local fs        = require "filesystem"
 local datalist  = require "datalist"
 local bgfx      = require "bgfx"
+local math3d    = require "math3d"
 
 local shape_types<const> = {
     "none", "grass", "dust",
@@ -139,7 +140,7 @@ do
     cubeib_handle = bgfx.create_index_buffer(m, "d")
 end
 
-local function to_mesh_buffer(vb)
+local function to_mesh_buffer(vb, aabb)
     local vbbin = table.concat(vb, "")
     local numv = #vbbin // layout.stride
     local numi = (numv // NUM_QUAD_VERTICES) * 6 --6 for one quad 2 triangles and 1 triangle for 3 indices
@@ -150,6 +151,7 @@ local function to_mesh_buffer(vb)
     end
 
     return {
+        bounding = {aabb = math3d.ref(aabb)},
         vb = {
             start = 0,
             num = numv,
@@ -231,12 +233,14 @@ end
 local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
     local vb = {}
     local minh, maxh = cterrainfileds.minheight, cterrainfileds.maxheight
+    local min_y, max_y = math.maxinteger, -math.maxinteger
     for ih=1, sectionsize do
         for iw=1, sectionsize do
             local field = cterrainfileds:get_field(sectionidx, iw, ih)
+            local h = assert(field.height) * unit
+            min_y, max_y = math.max(h, min_y), math.max(h, max_y)
             if field.type == "grass" or field.type == "dust" then
                 local x, z = cterrainfileds:get_offset(sectionidx)
-                local h = assert(field.height) * unit
                 local origin = {(iw-1+x)*unit, 0.0, (ih-1+z)*unit}
                 local extent = {unit, h, unit}
                 local uv0 = find_shape_uv(field.type, h, minh, maxh)
@@ -246,7 +250,9 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
     end
 
     if #vb > 0 then
-        return to_mesh_buffer(vb)
+        local min_x, min_z = cterrainfileds:get_offset(sectionidx)
+        local max_x, max_z = min_x + sectionsize * unit, min_z + sectionsize * unit
+        return to_mesh_buffer(vb, math3d.aabb(math3d.vector(min_x, min_y, max_z), math3d.vector(max_x, max_y, max_z)))
     end
 end
 
@@ -256,6 +262,8 @@ local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfi
     local vb = {}
     local color = cterrainfileds.edge.color
     local h = cterrainfileds.maxheight
+    local min_x, max_x = math.maxinteger, -math.maxinteger
+    local min_z, max_z = math.maxinteger, -math.maxinteger
     for ih=1, sectionsize do
         for iw=1, sectionsize do
             local field = cterrainfileds:get_field(sectionidx, iw, ih)
@@ -264,6 +272,8 @@ local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfi
                 for k, edge in pairs(edges) do
                     local e = edge.extent
                     local extent = {e[1], h, e[3]}
+                    min_x, max_x = math.min(min_x, e[1]), math.max(max_x, e[1])
+                    min_z, max_z = math.min(min_z, e[1]), math.max(max_z, e[3])
                     add_cube(vb, edge.origin, extent, color, DEFAULT_EDGE_UV, DEFAULT_EDGE_UV)
                 end
             end
@@ -271,7 +281,8 @@ local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfi
     end
 
     if #vb > 0 then
-        return to_mesh_buffer(vb)
+        return to_mesh_buffer(vb, 
+            math3d.aabb(math3d.vector(min_x, 0.0, min_z), math3d.vector(max_x, h, max_z)))
     end
 end
 
@@ -450,7 +461,7 @@ function shape_ts:entity_init()
                         },
                         data = {
                             scene = {
-                                srt = {}
+                                srt = {},
                             },
                             simplemesh  = terrain_mesh,
                             material    = shapematerial,
@@ -477,7 +488,7 @@ function shape_ts:entity_init()
                         },
                         data = {
                             scene = {
-                                srt = {}
+                                srt = {},
                             },
                             material    = edgematerial,
                             simplemesh  = edge_meshes,
