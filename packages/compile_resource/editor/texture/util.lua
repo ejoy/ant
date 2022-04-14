@@ -21,7 +21,9 @@ end
 local function gen_commands(commands, param, input, output)
 	add_option(commands, "-f", input:string())
 	add_option(commands, "-o", output:string())
-	add_option(commands, "-t", param.format)
+	if param.format then
+		add_option(commands, "-t", param.format)
+	end
 	add_option(commands, "-q", "fastest")
 
 	if param.maxsize then

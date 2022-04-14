@@ -30,7 +30,7 @@ return function (input, output, setting, localpath)
 	if param.path then
 		param.setting = setting
 		param.local_texpath = localpath(assert(param.path))
-		param.format = assert(which_format(setting.os, param))
+		param.format = which_format(setting.os, param)
 
 		dependfiles[#dependfiles+1] = param.local_texpath
 	else
