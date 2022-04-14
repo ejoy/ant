@@ -275,8 +275,8 @@ function efk_sys:render_submit()
         fbmgr.bind(effect_viewid, tm_rt.fb_idx)
         local vr = tm_rt.view_rect
         bgfx.set_view_rect(effect_viewid, vr.x, vr.y, vr.w, vr.h)
-        efk_ctx:render(math3d.value_ptr(camera.viewmat), math3d.value_ptr(camera.projmat), itimer.delta())
     end
+    efk_ctx:render(math3d.value_ptr(camera.viewmat), math3d.value_ptr(camera.projmat), itimer.delta())
 end
 
 local iefk = ecs.interface "iefk"
