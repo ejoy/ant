@@ -154,77 +154,110 @@ lefkctx_destroy_effect(lua_State *L){
     return 0;
 }
 
+static void ToMatrix43(const Effekseer::Matrix44& src, Effekseer::Matrix43& dst)
+{
+    for (int m = 0; m < 4; m++) {
+        for (int n = 0; n < 3; n++) {
+            dst.Value[m][n] = src.Values[m][n];
+        }
+    }
+}
+
+static int
+lefkctx_update_transform(lua_State* L) {
+	auto ctx = EC(L);
+	auto play_handle = (int)luaL_checkinteger(L, 2);
+    if (ctx->manager->Exists(play_handle)) {
+		Effekseer::Matrix43 effekMat;
+		auto effekMat44 = (Effekseer::Matrix44*)lua_touserdata(L, 3);
+		ToMatrix43(*effekMat44, effekMat);
+		ctx->manager->SetMatrix(play_handle, effekMat);
+    }
+	return 0;
+}
+
+static int
+lefkctx_is_alive(lua_State* L) {
+    auto ctx = EC(L);
+	auto play_handle = (int)luaL_checkinteger(L, 2);
+    lua_pushboolean(L, ctx->manager->Exists(play_handle));
+    return 1;
+}
+
 static int
 lefkctx_play(lua_State *L){
     auto ctx = EC(L);
     auto handle = (int)luaL_checkinteger(L, 2);
     assert(check_effect_valid(ctx, handle));
+	
+    Effekseer::Matrix43 effekMat;
+	auto effekMat44 = (Effekseer::Matrix44*)lua_touserdata(L, 3);
+	ToMatrix43(*effekMat44, effekMat);
+    auto play_handle = ctx->manager->Play(ctx->effects[handle].eff, 0, 0, 0);
+	ctx->manager->SetMatrix(play_handle, effekMat);
+	float speed = lua_tonumber(L, 4);
+	ctx->manager->SetSpeed(play_handle, speed);
 
-    auto effhandle = ctx->manager->Play(ctx->effects[handle].eff, 0, 0, 0);
-    lua_pushinteger(L, effhandle);
+    lua_pushinteger(L, play_handle);
     return 1;
 }
 
 static int
 lefkctx_stop(lua_State *L){
     auto ctx = EC(L);
-    auto effhandle = (Effekseer::Handle)luaL_checkinteger(L, 2);
-    ctx->manager->StopEffect(effhandle);
+    auto play_handle = (Effekseer::Handle)luaL_checkinteger(L, 2);
+    ctx->manager->StopEffect(play_handle);
     return 0;
 }
 
 static int
 lefkctx_set_visible(lua_State* L) {
 	auto ctx = EC(L);
-	auto handle = (int)luaL_checkinteger(L, 2);
-	assert(check_effect_valid(ctx, handle));
+	auto play_handle = (int)luaL_checkinteger(L, 2);
 
 	bool visible = true;
 	if (lua_type(L, 3) == LUA_TBOOLEAN) {
 		visible = lua_toboolean(L, 3);
 	}
-    ctx->manager->SetShown(handle, visible);
+    ctx->manager->SetShown(play_handle, visible);
 	return 0;
 }
 
 static int
 lefkctx_pause(lua_State* L) {
 	auto ctx = EC(L);
-	auto handle = (int)luaL_checkinteger(L, 2);
-	assert(check_effect_valid(ctx, handle));
+	auto play_handle = (int)luaL_checkinteger(L, 2);
 
 	bool pause = false;
 	if (lua_type(L, 3) == LUA_TBOOLEAN) {
         pause = lua_toboolean(L, 3);
 	}
-    ctx->manager->SetPaused(handle, pause);
+    ctx->manager->SetPaused(play_handle, pause);
 	return 0;
 }
 
 static int
 lefkctx_set_time(lua_State* L) {
 	auto ctx = EC(L);
-	auto handle = (int)luaL_checkinteger(L, 2);
-	assert(check_effect_valid(ctx, handle));
+	auto play_handle = (int)luaL_checkinteger(L, 2);
 
 	int32_t frame = 0.0f;
 	if (lua_type(L, 3) == LUA_TNUMBER) {
 		frame = lua_tointeger(L, 3);
 	}
-    ctx->manager->SetPaused(handle, false);
-    ctx->manager->UpdateHandleToMoveToFrame(handle, frame);
-    ctx->manager->SetPaused(handle, true);
+    ctx->manager->SetPaused(play_handle, false);
+    ctx->manager->UpdateHandleToMoveToFrame(play_handle, frame);
+    ctx->manager->SetPaused(play_handle, true);
 	return 0;
 }
 
 static int
 lefkctx_set_speed(lua_State* L) {
 	auto ctx = EC(L);
-	auto handle = (int)luaL_checkinteger(L, 2);
-	assert(check_effect_valid(ctx, handle));
+	auto play_handle = (int)luaL_checkinteger(L, 2);
 
     float speed = lua_tonumber(L, 3);
-    ctx->manager->SetSpeed(handle, speed);
+    ctx->manager->SetSpeed(play_handle, speed);
 	return 0;
 }
 
@@ -275,7 +308,9 @@ lefk_create(lua_State *L){
             {"set_visible",     lefkctx_set_visible},
 			{"pause",           lefkctx_pause},
 		    {"set_time",        lefkctx_set_time},
-            {"set_speed",       lefkctx_set_speed},
+			{"set_speed",       lefkctx_set_speed},
+			{"update_transform", lefkctx_update_transform},
+            {"is_alive",        lefkctx_is_alive},
             {nullptr, nullptr},
         };
 

@@ -10,16 +10,13 @@ local image     = require "image"
 local datalist  = require "datalist"
 local math3d    = require "math3d"
 local fileinterface = require "fileinterface"
-
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
-
 local assetmgr  = import_package "ant.asset"
-
 local cr        = import_package "ant.compile_resource"
-
 local itimer    = ecs.import.interface "ant.timer|itimer"
+local mc 		= import_package "ant.math".constant
 
 local efk_sys = ecs.system "efk_system"
 
@@ -178,10 +175,18 @@ local function read_file(filename)
     return f:read "a"
 end
 
+local efk_cache = {}
+
 local function load_efk(filename)
-    --TODO: not share every effect??
+    if not efk_cache[filename] then
+        efk_cache[filename] = efk_ctx:create_effect(filename)
+    end
     return {
-        handle = efk_ctx:create_effect(filename)
+        handle = efk_cache[filename],
+        speed = 1.0,
+        loop = false,
+        dynamic = false, --update efk world matrix every frame
+        worldmat = math3d.ref(math3d.matrix(mc.mat_identity))
     }
 end
 
@@ -240,22 +245,83 @@ function efk_sys:camera_usage()
     end
 end
 
+local event_scene = world:sub{"scene_changed"}
+
+function efk_sys:follow_transform_updated()
+    for v in w:select "efk:in scene:in" do
+        local efk = v.efk
+        if efk.play_handle and not efk_ctx:is_alive(efk.play_handle) then
+            if efk.loop then
+                efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene._worldmat), efk.speed)
+            else
+                efk.play_handle = nil
+            end
+        end
+        --TODO: layz update, handle scene_changed event?
+        if efk.play_handle and efk.dynamic then
+            efk.worldmat.m = v.scene._worldmat
+            efk_ctx:update_transform(efk.play_handle, math3d.value_ptr(v.scene._worldmat))
+        end
+    end
+end
+
 --TODO: need remove, should put it on the ltask
 function efk_sys:render_submit()
-    local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
+    local mq = w:singleton("main_queue", "camera_ref:in")
     local ce = world:entity(mq.camera_ref)
     local camera = ce.camera
-    local vr = mq.render_target.view_rect
-    bgfx.set_view_rect(effect_viewid, vr.x, vr.y, vr.w, vr.h)
-    efk_ctx:render(math3d.value_ptr(camera.viewmat), math3d.value_ptr(camera.projmat), itimer.delta())
+    for tm_q in w:select "tonemapping_queue render_target:in" do
+        local tm_rt = tm_q.render_target
+        fbmgr.bind(effect_viewid, tm_rt.fb_idx)
+        local vr = tm_rt.view_rect
+        bgfx.set_view_rect(effect_viewid, vr.x, vr.y, vr.w, vr.h)
+        efk_ctx:render(math3d.value_ptr(camera.viewmat), math3d.value_ptr(camera.projmat), itimer.delta())
+    end
 end
-
 
 local iefk = ecs.interface "iefk"
-function iefk.play(e, p)
-    return efk_ctx:play(e.efk.handle, p)
+function iefk.play(e)
+    e.efk.play_handle = efk_ctx:play(e.efk.handle, math3d.value_ptr(e.efk.worldmat), e.efk.speed)
 end
 
-function iefk.stop(efkhandle)
-    efk_ctx:stop(efkhandle)
+function iefk.pause(e, b)
+    if e.efk.play_handle then
+        efk_ctx:pause(e.efk.play_handle, b)
+    end
+end
+
+function iefk.set_time(e, t)
+    if e.efk.play_handle then
+        efk_ctx:set_time(e.efk.play_handle, t)
+    end
+end
+
+function iefk.set_speed(e, s)
+    if e.efk.play_handle then
+        efk_ctx:set_speed(e.efk.play_handle, s)
+    end
+end
+
+function iefk.set_visible(e, b)
+    if e.efk.play_handle then
+        efk_ctx:set_visible(e.efk.play_handle, b)
+    end
+end
+
+function iefk.set_loop(e, b)
+    e.efk.loop = b
+end
+
+function iefk.set_dynamic(e, b)
+    e.efk.dynamic = b
+end
+
+function iefk.destroy(e)
+    --efk_ctx:destroy(e.efk.play_handle)
+end
+
+function iefk.stop(e)
+    if e.efk.play_handle then
+        efk_ctx:stop(e.efk.play_handle)
+    end
 end
