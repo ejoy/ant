@@ -1,6 +1,7 @@
 colorspace: sRGB
 normalmap: false
 path: /pkg/ant.resources.binary/textures/cubemap/sky.dds
+mipmap: true
 sampler:
   MAG: LINEAR
   MIN: LINEAR
