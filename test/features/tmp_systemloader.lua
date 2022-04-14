@@ -86,7 +86,7 @@ function init_loader_sys:init()
 	-- 	}
     -- }
     --ientity.create_procedural_sky()
-    local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/headquater.glb|mesh.prefab"
+    --local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/headquater.glb|mesh.prefab"
     ecs.create_instance "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
     ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
     -- local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/offshore-pump.glb|mesh.prefab"

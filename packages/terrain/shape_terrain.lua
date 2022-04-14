@@ -151,7 +151,7 @@ local function to_mesh_buffer(vb, aabb)
     end
 
     return {
-        bounding = {aabb = math3d.ref(aabb)},
+        bounding = {aabb = aabb and math3d.ref(aabb) or nil},
         vb = {
             start = 0,
             num = numv,
@@ -238,7 +238,7 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
         for iw=1, sectionsize do
             local field = cterrainfileds:get_field(sectionidx, iw, ih)
             local h = assert(field.height) * unit
-            min_y, max_y = math.max(h, min_y), math.max(h, max_y)
+            min_y, max_y = math.min(h, min_y), math.max(h, max_y)
             if field.type == "grass" or field.type == "dust" then
                 local x, z = cterrainfileds:get_offset(sectionidx)
                 local origin = {(iw-1+x)*unit, 0.0, (ih-1+z)*unit}
@@ -251,8 +251,8 @@ local function build_section_mesh(sectionsize, sectionidx, unit, cterrainfileds)
 
     if #vb > 0 then
         local min_x, min_z = cterrainfileds:get_offset(sectionidx)
-        local max_x, max_z = min_x + sectionsize * unit, min_z + sectionsize * unit
-        return to_mesh_buffer(vb, math3d.aabb(math3d.vector(min_x, min_y, max_z), math3d.vector(max_x, max_y, max_z)))
+        local max_x, max_z = (min_x + sectionsize) * unit, (min_z + sectionsize) * unit
+        return to_mesh_buffer(vb, math3d.aabb(math3d.vector(min_x, min_y, min_z), math3d.vector(max_x, max_y, max_z)))
     end
 end
 
@@ -262,8 +262,6 @@ local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfi
     local vb = {}
     local color = cterrainfileds.edge.color
     local h = cterrainfileds.maxheight
-    local min_x, max_x = math.maxinteger, -math.maxinteger
-    local min_z, max_z = math.maxinteger, -math.maxinteger
     for ih=1, sectionsize do
         for iw=1, sectionsize do
             local field = cterrainfileds:get_field(sectionidx, iw, ih)
@@ -272,8 +270,6 @@ local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfi
                 for k, edge in pairs(edges) do
                     local e = edge.extent
                     local extent = {e[1], h, e[3]}
-                    min_x, max_x = math.min(min_x, e[1]), math.max(max_x, e[1])
-                    min_z, max_z = math.min(min_z, e[1]), math.max(max_z, e[3])
                     add_cube(vb, edge.origin, extent, color, DEFAULT_EDGE_UV, DEFAULT_EDGE_UV)
                 end
             end
@@ -281,8 +277,7 @@ local function build_section_edge_mesh(sectionsize, sectionidx, unit, cterrainfi
     end
 
     if #vb > 0 then
-        return to_mesh_buffer(vb, 
-            math3d.aabb(math3d.vector(min_x, 0.0, min_z), math3d.vector(max_x, h, max_z)))
+        return to_mesh_buffer(vb)
     end
 end
 
@@ -410,6 +405,12 @@ function cterrain_fields:init()
     self.minheight, self.maxheight = minheight, maxheight
 end
 
+local function calc_edge_aabb(aabb, thickness)
+    local center, extents = math3d.aabb_center_extents(aabb)
+    extents = math3d.add(extents, math3d.vector(thickness, thickness, thickness))
+    return math3d.aabb(math3d.sub(center, extents), math3d.add(center, extents))
+end
+
 function shape_ts:entity_init()
     for e in w:select "INIT shape_terrain:in materials:in id:in" do
         local st = e.shape_terrain
@@ -480,6 +481,7 @@ function shape_ts:entity_init()
 
                 local edge_meshes = build_section_edge_mesh(ss, sectionidx, unit, ctf)
                 if edge_meshes then
+                    edge_meshes.bounding = {aabb = math3d.ref(calc_edge_aabb(terrain_mesh.bounding.aabb, ctf.edge.thickness * unit))}
                     local ce = ecs.create_entity {
                         policy = {
                             "ant.scene|scene_object",
