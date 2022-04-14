@@ -26,9 +26,7 @@ local function gen_commands(commands, param, input, output)
 	end
 	add_option(commands, "-q", "fastest")
 
-	if param.maxsize then
-		add_option(commands, "--max", param.maxsize)
-	end
+	add_option(commands, "--max", param.maxsize and param.maxsize or 512)
 
 	if param.normalmap then
 		add_option(commands, "-n")
