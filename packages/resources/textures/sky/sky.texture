@@ -1,5 +1,4 @@
-colorspace: Linear
-format: RGBA16F
+colorspace: sRGB
 normalmap: false
 path: /pkg/ant.resources.binary/textures/cubemap/sky.dds
 sampler:
