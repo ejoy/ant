@@ -12,7 +12,7 @@ local hierarchy     = require "hierarchy_edit"
 local BaseView      = require "widget.view_class".BaseView
 local EffectView    = require "widget.view_class".EffectView
 local ui_auto_play  = {false}
-
+local ui_loop  = {false}
 function EffectView:_init()
     BaseView._init(self)
     self.speed = uiproperty.Float({label = "Speed", min = 0.01, max = 10.0, speed = 0.01}, {})
@@ -35,20 +35,21 @@ function EffectView:update()
     BaseView.update(self)
     self.speed:update()
     local template = hierarchy:get_template(self.eid)
-    ui_auto_play[1] = template.template.data.auto_play
+    --ui_auto_play[1] = template.template.data.auto_play
+    ui_loop[1] = template.template.data.loop
 end
 
 function EffectView:show()
     BaseView.show(self)
     self.speed:show()
-    imgui.widget.PropertyLabel("auto_play")
-    if imgui.widget.Checkbox("##auto_play", ui_auto_play) then
-        self:on_set_auto_play(ui_auto_play[1])
-    end
-    -- imgui.widget.PropertyLabel("loop")
-    -- if imgui.widget.Checkbox("##loop", ui_loop) then
-    --     self:on_set_loop(ui_loop[1])
+    -- imgui.widget.PropertyLabel("auto_play")
+    -- if imgui.widget.Checkbox("##auto_play", ui_auto_play) then
+    --     self:on_set_auto_play(ui_auto_play[1])
     -- end
+    imgui.widget.PropertyLabel("loop")
+    if imgui.widget.Checkbox("##loop", ui_loop) then
+        self:on_set_loop(ui_loop[1])
+    end
     imgui.widget.PropertyLabel("Play")
     if imgui.widget.Button("Play") then
         -- local instance = world:entity(self.eid).effect_instance
@@ -61,9 +62,9 @@ end
 function EffectView:on_set_speed(value)
     local template = hierarchy:get_template(self.eid)
     template.template.data.speed = value
-    local instance = world:entity(self.eid).effect_instance
+    local instance = world:entity(self.eid).efk
     instance.speed = value
-    -- effekseer.set_speed(instance.handle, instance.playid, value)
+    iefk.set_speed(world:entity(self.eid), value)
 end
 
 function EffectView:on_set_auto_play(value)
@@ -72,9 +73,9 @@ function EffectView:on_set_auto_play(value)
 end
 
 function EffectView:on_set_loop(value)
-    local instance = world:entity(self.eid).effect_instance
+    local instance = world:entity(self.eid).efk
     instance.loop = value
-    -- effekseer.set_loop(instance.handle, instance.playid, value)
+    iefk.set_loop(world:entity(self.eid), value)
 end
 
 return EffectView

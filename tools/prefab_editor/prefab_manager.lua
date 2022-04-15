@@ -7,26 +7,20 @@ local worldedit     = import_package "ant.editor".worldedit(world)
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
-local ies           = ecs.import.interface "ant.scene|ifilter_state"
 local ilight        = ecs.import.interface "ant.render|ilight"
 local imaterial     = ecs.import.interface "ant.asset|imaterial"
-local icamera_recorder = ecs.import.interface "ant.camera|icamera_recorder"
-local isp 		= ecs.import.interface "ant.render|isystem_properties"
+local iefk           = ecs.import.interface "ant.efk|iefk"
 local camera_mgr    = ecs.require "camera.camera_manager"
 local light_gizmo   = ecs.require "gizmo.light"
 local gizmo         = ecs.require "gizmo.gizmo"
-local geo_utils     = ecs.require "editor.geometry_utils"
 local editor_setting = require "editor_setting"
 local math3d 		= require "math3d"
 local fs            = require "filesystem"
 local lfs           = require "filesystem.local"
-local vfs           = require "vfs"
 local hierarchy     = require "hierarchy_edit"
 local widget_utils  = require "widget.utils"
-local bgfx          = require "bgfx"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
-local iefk           = ecs.import.interface "ant.efk|iefk"
 local subprocess    = import_package "ant.subprocess"
 
 local m = {
@@ -624,7 +618,6 @@ function m:reload()
 end
 
 function m:add_effect(filename)
-    -- error "need implement new effect entity"
     if not self.root then
         self:reset_prefab()
     end
@@ -640,20 +633,14 @@ function m:add_effect(filename)
             tag = {"effect"},
             scene = {srt = {}},
             efk = filename,
-            -- effect_instance = {}
 		},
     }
     local tpl = utils.deep_copy(template)
     tpl.data.on_ready = function (e)
+        w:sync("scene:in", e)
+        e.scene.pid = gizmo.target_eid
         w:sync("efk:in", e)
-        -- local inst = e.effect_instance
-        -- if inst.handle == -1 then
-        --     print("create effect faild : ", tostring(effekseer))
-        -- end
-        -- inst.playid = effekseer.play(inst.handle, inst.playid)
-        -- w:sync("scene:in", e)
-        -- e.scene.pid = gizmo.target_eid
-        iefk.play(e, {0,0,0})
+        iefk.play(e)
     end
     self:add_entity(ecs.create_entity(tpl), gizmo.target_eid, template)
 end
