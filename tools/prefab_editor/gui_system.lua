@@ -15,7 +15,7 @@ local ies       = ecs.import.interface "ant.scene|ifilter_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local isp 		= ecs.import.interface "ant.render|isystem_properties"
 local iwd       = ecs.import.interface "ant.render|iwidget_drawer"
-
+local iefk      = ecs.import.interface "ant.efk|iefk"
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
 local skeleton_view     = ecs.require "widget.skeleton_view"
@@ -461,9 +461,8 @@ function m:handle_event()
         if what == "visible" then
             e = world:entity(target.eid)
             hierarchy:set_visible(target, value, true)
-            if e.effect_instance then
-                local effekseer     = require "effekseer"
-                effekseer.set_visible(e.effect_instance.handle, e.effect_instance.playid, value)
+            if e.efk then
+                iefk.set_visible(e, value)
             elseif e.light then
                 world:pub{"component_changed", "light", e, "visible", value}
             else
