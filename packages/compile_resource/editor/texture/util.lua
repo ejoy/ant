@@ -26,7 +26,7 @@ local function gen_commands(commands, param, input, output)
 	end
 	add_option(commands, "-q", "fastest")
 
-	add_option(commands, "--max", param.maxsize and param.maxsize or 512)
+	add_option(commands, "--max", tostring(param.maxsize and param.maxsize or 512))
 
 	if param.normalmap then
 		add_option(commands, "-n")
@@ -39,11 +39,11 @@ local function gen_commands(commands, param, input, output)
 		print("not support HDR format right now")
 	end
 
-	if param.mipmap ~= nil then
+	--if param.mipmap ~= nil then
 		add_option(commands, "-m")
-	end
+	--end
 
-	if param.skip_mip ~= 0 then
+	if param.skip_mip then
 		add_option(commands, "--mipskip", tostring(param.skip_mip))
 	end
 end
@@ -102,6 +102,13 @@ return function (output, param)
 			TEXTUREC
 		}
 		gen_commands(commands, param, imgpath, binfile)
+		do
+			local ss = {}
+			for _, c in ipairs(commands) do
+				ss[#ss+1] = tostring(c)
+			end
+			print("convert texture command:", table.concat(ss, " "))
+		end
 		local success, msg = subprocess.spawn_process(commands)
 		if success then
 			if msg:upper():find("ERROR:", 1, true) then
