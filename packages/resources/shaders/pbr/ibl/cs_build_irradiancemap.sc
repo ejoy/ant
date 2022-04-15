@@ -15,7 +15,8 @@ NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
 {
     vec3 color = vec3_splat(0.0);
-    vec3 N = id2dir(gl_GlobalInvocationID, u_face_texture_size);
+    ivec3 isize = imageSize(s_irradiance);
+    vec3 N = id2dir(gl_GlobalInvocationID, vec2(isize.xy));
 
     for (int sampleidx=0; sampleidx < int(u_sample_count); ++sampleidx){
         vec4 H = importance_sample_Lambertian(sampleidx, N);

@@ -57,9 +57,12 @@ function cs2cm_sys:entity_ready()
 
         local ti = tex.texinfo
         if panorama_util.is_panorama_tex(ti) then
-            local cm_rbidx = panorama_util.check_create_cubemap_tex(ti, e.skybox.cubeme_rbidx, cm_flags)
+            if e.skybox.facesize == nil then
+                e.skybox.facesize = ti.height // 2
+            end
+            local facesize = e.skybox.facesize
+            local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cubeme_rbidx, cm_flags)
             e.skybox.cubeme_rbidx = cm_rbidx
-            local facesize = ti.height // 2
 
             local dispatcher = world:entity(cs2cm_convertor_eid)
             local dis = dispatcher.dispatch
@@ -93,11 +96,11 @@ function cs2cm_sys:entity_ready()
 end
 
 function cs2cm_sys:filter_ibl()
-    for e in w:select "filter_ibl ibl:in render_object:in" do
+    for e in w:select "filter_ibl ibl:in skybox:in render_object:in" do
         local se_ibl = e.ibl
         local tex = imaterial.get_property(e, "s_skybox").value.texture
         iibl.filter_all{
-			source 		= {handle = tex.handle, cubemap=true},
+			source 		= {handle = tex.handle, cubemap=true, facesize = e.skybox.facesize},
 			irradiance 	= se_ibl.irradiance,
 			prefilter 	= se_ibl.prefilter,
 			LUT			= se_ibl.LUT,

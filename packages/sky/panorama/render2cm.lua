@@ -106,9 +106,12 @@ function render2cm_sys:entity_ready()
 
         local ti = tex.texinfo
         if panorama_util.is_panorama_tex(ti) then
-            local cm_rbidx = panorama_util.check_create_cubemap_tex(ti, e.skybox.cubeme_rbidx, cubemap_flags)
+            if e.skybox.facesize == nil then
+                e.skybox.facesize = ti.height // 2
+            end
+            local facesize = e.skybox.facesize
+            local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cubeme_rbidx, cubemap_flags)
             e.skybox.cubeme_rbidx = cm_rbidx
-            local size = ti.height // 2
 
             local drawer = w:singleton("cvt_p2cm_drawer", "render_object:in")
             local ro = drawer.render_object

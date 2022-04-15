@@ -26,9 +26,9 @@ vec2 dir2spherecoord(vec3 v)
 		acos(v.y) / M_PI);
 }
 
-vec3 id2dir(ivec3 id, float size)
+vec3 id2dir(ivec3 id, vec2 size)
 {
-    vec2 uv = id.xy / size;
+    vec2 uv = (id.xy / size);
     uv = vec2(uv.x, 1.0-uv.y) * 2.0 - 1.0;
     int faceidx = id.z;
     return normalize(uvface2dir(uv, faceidx));

@@ -11,7 +11,7 @@ uniform vec4 u_param;
 #define u_image_height u_param.z
 #define u_image_size u_param.yz
 
-vec3 p2cm(ivec3 id, int size)
+vec3 p2cm(ivec3 id, vec2 size)
 {
 	vec3 dir = id2dir(id, size);
 	vec2 uv = dir2spherecoord(dir);
@@ -22,5 +22,5 @@ NUM_THREADS(32, 32, 1)
 void main()
 {
     ivec3 size = imageSize(s_cubemap_source);
-    imageStore(s_cubemap_source, ivec3(gl_GlobalInvocationID), vec4(p2cm(gl_GlobalInvocationID, size.x), 0.0));
+    imageStore(s_cubemap_source, ivec3(gl_GlobalInvocationID), vec4(p2cm(gl_GlobalInvocationID, vec2(size.xy)), 0.0));
 }

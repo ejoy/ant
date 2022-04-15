@@ -37,7 +37,7 @@ local cubemap_flags<const> = sampler.sampler_flag {
 }
 
 local ibl_textures = {
-    source = {stage=0, texture={handle=nil}},
+    source = {facesize = 0, stage=0, texture={handle=nil}},
     irradiance   = {
         handle = nil,
         size = 0,
@@ -130,7 +130,7 @@ function ibl_sys:render_preprocess()
     
         if properties.u_build_ibl_param then
             local ip_v = properties.u_build_ibl_param.value
-            ip_v.v = math3d.set_index(ip_v, 3, ibl_textures.irradiance.size)
+            ip_v.v = math3d.set_index(ip_v, 3, ibl_textures.source.facesize)
         end
 
         icompute.dispatch(ibl_viewid, dis)
@@ -146,7 +146,7 @@ function ibl_sys:render_preprocess()
         local ip = properties.u_build_ibl_param
         if ip then
             local ipv = ip.value
-            ipv.v = math3d.set_index(ipv, 3, prefilter.sample_count, prefilter.roughness)
+            ipv.v = math3d.set_index(ipv, 3, ibl_textures.source.facesize, prefilter.roughness)
         end
         local prefilter_stage<const> = 1
         properties.s_prefilter = icompute.create_image_property(ibl_textures.prefilter.handle, prefilter_stage, prefilter.mipidx, "w")
@@ -160,12 +160,6 @@ function ibl_sys:render_preprocess()
         local dis = e.dispatch
         local properties = dis.properties
         properties.s_LUT = icompute.create_image_property(ibl_textures.LUT.handle, LUT_stage, 0, "w")
-        local ip = properties.u_build_ibl_param
-        if ip then
-            local ipv = ip.value
-            ipv.v = math3d.set_index(ipv, 3, ibl_textures.LUT.size)
-        end
-
         icompute.dispatch(ibl_viewid, dis)
 
         w:remove(e)
@@ -188,6 +182,7 @@ local function build_ibl_textures(ibl)
     ibl_textures.intensity = ibl.intensity
 
     ibl_textures.source.texture.handle = ibl.source.handle
+    ibl_textures.source.facesize = assert(ibl.source.facesize)
 
     if ibl.irradiance.size ~= ibl_textures.irradiance.size then
         ibl_textures.irradiance.size = ibl.irradiance.size

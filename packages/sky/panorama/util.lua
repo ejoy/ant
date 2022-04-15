@@ -5,8 +5,7 @@ return {
     is_panorama_tex = function(texinfo)
         return texinfo.depth == 1 and texinfo.width == texinfo.height*2
     end,
-    check_create_cubemap_tex = function (ti, cm_rbidx, flags)
-        local facesize = ti.height // 2
+    check_create_cubemap_tex = function (facesize, cm_rbidx, flags)
         if cm_rbidx ~= nil then
             fbmgr.resize_rb(cm_rbidx, facesize)
         else

@@ -12,11 +12,12 @@ IMAGE2D_ARRAY_WR(s_prefilter, rgba32f, 1);
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
 {
-    if (any(gl_GlobalInvocationID.xy >= int(u_face_texture_size)))
+    ivec3 isize = imageSize(s_prefilter);
+    if (any(gl_GlobalInvocationID.xy >= isize.xy))
         return;
 
     vec4 color = vec4_splat(0.0);
-    vec3 N = id2dir(gl_GlobalInvocationID, u_face_texture_size);
+    vec3 N = id2dir(gl_GlobalInvocationID, vec2(isize.xy));
 
     for (int sampleidx=0; sampleidx < int(u_sample_count); ++sampleidx){
         vec4 H = importance_sample_GGX(sampleidx, N, u_roughness);

@@ -60,7 +60,8 @@ vec2 LUT(float NdotV, float roughness)
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
 {
-    vec2 uv = gl_GlobalInvocationID.xy / u_face_texture_size;
+    ivec2 isize = imageSize(s_LUT);
+    vec2 uv = gl_GlobalInvocationID.xy / vec2(isize);
     float NdotV = uv.x;
     float roughness = max(uv.y, MIN_ROUGHNESS);
 

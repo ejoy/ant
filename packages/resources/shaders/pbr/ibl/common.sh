@@ -3,7 +3,7 @@
 uniform vec4 u_build_ibl_param;
 #define u_sample_count      u_build_ibl_param.x
 #define u_lod_bias          u_build_ibl_param.y
-#define u_face_texture_size u_build_ibl_param.z
+#define u_cubemap_facesize  u_build_ibl_param.z
 #define u_roughness         u_build_ibl_param.w
 
 #ifndef WORKGROUP_THREADS
@@ -59,7 +59,7 @@ float compute_lod(float pdf)
 
     // https://cgg.mff.cuni.cz/~jaroslav/papers/2007-sketch-fis/Final_sap_0073.pdf
 
-    float lod = 0.5 * log2( 6.0 * float(u_face_texture_size) * float(u_face_texture_size) / (float(u_sample_count) * pdf));
+    float lod = 0.5 * log2( 6.0 * float(u_cubemap_facesize) * float(u_cubemap_facesize) / (float(u_sample_count) * pdf));
 
     return lod;
 }
