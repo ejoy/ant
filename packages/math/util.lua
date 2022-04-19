@@ -209,5 +209,9 @@ function util.calc_viewport(viewport, ratio)
 	}
 end
 
+function util.texture_uv(rect, size)
+	return {rect.x/size.w, rect.y/size.h, (rect.x+rect.w)/size.w, (rect.y+rect.h)/size.h}
+end
+
 return util
 

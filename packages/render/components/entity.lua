@@ -213,12 +213,18 @@ function ientity.create_grid_entity(name, width, height, unit, linewidth)
 end
 
 
-function ientity.plane_mesh()
+function ientity.plane_mesh(tex_uv)
+	local u0, v0, u1, v1
+	if tex_uv then
+		u0, v0, u1, v1 = tex_uv[1], tex_uv[2], tex_uv[3], tex_uv[4]
+	else
+		u0, v0, u1, v1 = 0, 0, 1, 1
+	end
 	local vb = {
-		-0.5, 0, 0.5, 0, 1, 0, 0, 1,	--left top
-		0.5,  0, 0.5, 0, 1, 0, 1, 1,	--right top
-		-0.5, 0,-0.5, 0, 1, 0, 0, 0,	--left bottom
-		0.5,  0,-0.5, 0, 1, 0, 1, 0,	--right bottom
+		-0.5, 0, 0.5, 0, 1, 0, u0, v1,	--left top
+		0.5,  0, 0.5, 0, 1, 0, u1, v1,	--right top
+		-0.5, 0,-0.5, 0, 1, 0, u0, v0,	--left bottom
+		0.5,  0,-0.5, 0, 1, 0, u1, v0,	--right bottom
 	}
 	return create_mesh({"p3|n3|t2", vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5})))
 end
