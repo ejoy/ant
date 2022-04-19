@@ -77,10 +77,6 @@ function tm_sys:init_world()
             tonemapping_queue = true,
         }
     }
-
-    local eid = irq.main_camera()
-    update_exposure(eid)
-    exposure_mb = world:sub{"exposure_changed", eid}
 end
 
 local vp_changed_mb = world:sub{"world_viewport_changed"}
