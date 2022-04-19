@@ -221,10 +221,10 @@ function ientity.plane_mesh(tex_uv)
 		u0, v0, u1, v1 = 0, 0, 1, 1
 	end
 	local vb = {
-		-0.5, 0, 0.5, 0, 1, 0, u0, v1,	--left top
-		0.5,  0, 0.5, 0, 1, 0, u1, v1,	--right top
-		-0.5, 0,-0.5, 0, 1, 0, u0, v0,	--left bottom
-		0.5,  0,-0.5, 0, 1, 0, u1, v0,	--right bottom
+		-0.5, 0, 0.5, 0, 1, 0, u0, v0,	--left top
+		 0.5, 0, 0.5, 0, 1, 0, u1, v0,	--right top
+		-0.5, 0,-0.5, 0, 1, 0, u0, v1,	--left bottom
+		 0.5, 0,-0.5, 0, 1, 0, u1, v1,	--right bottom
 	}
 	return create_mesh({"p3|n3|t2", vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5})))
 end
