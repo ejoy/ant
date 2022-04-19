@@ -181,6 +181,7 @@ interface "irenderqueue"
     .method "set_camera"
     .method "set_visible"
     .method "update_rendertarget"
+    .method "update_render_object"
 
 interface "ientity"
     .implement "components/entity.lua"

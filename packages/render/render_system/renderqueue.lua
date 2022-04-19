@@ -75,6 +75,13 @@ function irq.set_view_clear_stencil(queuename, stencil)
 	view_clear(rt.viewid, cs)
 end
 
+function irq.update_render_object(e, isentity)
+	if not isentity then
+		w:sync("render_object_update:out", e)
+	end
+	e.render_object_update = true
+end
+
 local clear_colornames<const> = {
 	"color1", "color2","color3","color4","color5","color6", "color7"
 }
