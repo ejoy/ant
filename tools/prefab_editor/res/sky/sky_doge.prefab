@@ -9,6 +9,7 @@ data:
     filter_state: main_view
     transform: {}
     ibl:
+        intensity: 1
         irradiance:
             size: 64
         prefilter:
@@ -16,4 +17,6 @@ data:
         LUT:
             size: 256
     material: /pkg/tools.prefab_editor/res/sky/sky_doge.material
-    skybox: {}
+    skybox:
+        facesize: 256
+        intensity: 1

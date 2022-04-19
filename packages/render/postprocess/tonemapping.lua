@@ -38,23 +38,6 @@ function tm_sys:init()
     }
 end
 
-local function update_exposure(eid)
-    local e = world:entity(eid)
-    local expo = e.exposure
-    assert(expo, "invalid camera without 'exposure' component")
-    if expo.type == "auto" then
-        tm_material = tm_auto_material
-    else
-        tm_material = tm_manual_material
-        assert(expo.type == "manual")
-        local ev = iexposure.exposure(eid)
-        imaterial.set_property_directly(tm_manual_material.properties, "u_exposure_param", {ev, 0.0, 0.0, 0.0})
-    end
-end
-
-local cc_mb = world:sub{"main_queue", "camera_changed"}
-local exposure_mb
-
 function tm_sys:init_world()
     local vp = world.args.viewport
     ecs.create_entity {
@@ -99,13 +82,6 @@ local ppi_bloom_color = {
 }
 
 local function update_properties()
-    for msg in cc_mb:each() do
-        exposure_mb = world:sub{"exposure_changed", msg[3]}
-    end
-    for msg in exposure_mb:each() do
-        update_exposure(msg[2])
-    end
-
     --TODO: we need something call frame graph, frame graph need two stage: compile and run, with virtual resource
     -- in compile stage, determine which postprocess stage is needed, and connect those virtual resources
     -- render target here, is one of the virtual resource

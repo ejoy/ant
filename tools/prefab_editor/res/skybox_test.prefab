@@ -9,7 +9,7 @@ data:
     scene:
         srt: {}
     ibl:
-        intensity: 12000
+        intensity: 1
         irradiance:
             size: 128
         prefilter:
@@ -20,4 +20,4 @@ data:
     simplemesh: false
     skybox:
         facesize: 256
-        intensity: 12000
+        intensity: 1
