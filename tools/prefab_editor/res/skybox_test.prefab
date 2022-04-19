@@ -19,4 +19,5 @@ data:
     material: /pkg/ant.resources/materials/sky/skybox2.material
     simplemesh: false
     skybox:
+        facesize: 256
         intensity: 12000
