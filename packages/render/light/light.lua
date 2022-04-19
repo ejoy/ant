@@ -6,6 +6,7 @@ local declmgr	= require "vertexdecl_mgr"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
+local iexposure = ecs.import.interface "ant.camera|iexposure"
 
 local setting	= import_package "ant.settings".setting
 local enable_cluster_shading = setting:data().graphic.lighting.cluster_shading ~= 0
@@ -239,6 +240,8 @@ ilight.count_visible_light = count_visible_light
 
 local function create_light_buffers()
 	local lights = {}
+	local mq = w:singleton("main_queue", "camera_ref:in")
+	local ev = iexposure.exposure(mq.camera_ref)
 	for e in w:select "light:in visible scene:in" do
 		local p	= math3d.tovalue(iom.get_position(e))
 		local d	= math3d.tovalue(math3d.inverse(iom.get_direction(e)))
@@ -246,12 +249,11 @@ local function create_light_buffers()
 		local t	= e.light.type
 		local enable<const> = 1
 		lights[#lights+1] = ('f'):rep(16):pack(
-			p[1], p[2], p[3],
-			e.light.range or math.maxinteger,
+			p[1], p[2], p[3], e.light.range or math.maxinteger,
 			d[1], d[2], d[3], enable,
-			c[1], c[2], c[3], c[4],
+			c[1], c[2], c[3], c[4],		--c[4] is no meaning
 			lighttypes[t],
-			e.light.intensity,
+			e.light.intensity * ev,
 			e.light.inner_cutoff or 0,
 			e.light.outter_cutoff or 0
 		)
