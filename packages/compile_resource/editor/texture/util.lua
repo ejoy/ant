@@ -26,7 +26,9 @@ local function gen_commands(commands, param, input, output)
 	end
 	add_option(commands, "-q", "fastest")
 
-	add_option(commands, "--max", tostring(param.maxsize and param.maxsize or 512))
+	if param.noresize == nil then
+		add_option(commands, "--max", tostring(param.maxsize and param.maxsize or 256))
+	end
 
 	if param.normalmap then
 		add_option(commands, "-n")
