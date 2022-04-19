@@ -69,7 +69,7 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
             simplemesh = imesh.init_mesh(ientity.plane_mesh(mu.texture_uv(tex_rect, tex_size)), true),
             material = "/pkg/ant.resources/materials/texture_plane.material",
             filter_state= "main_view",
-            scene   = { srt = {t={0, 5, 0}}},
+            scene   = { srt = {t={0, 5, 5}}},
             on_ready = function (e)
                 w:sync("render_object:in", e)
                 imaterial.set_property(e, "u_basecolor_factor", color)
@@ -85,10 +85,14 @@ function init_loader_sys:init()
     --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
-    ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
+    local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
+    p.on_ready = function (e)
+        iom.set_position(world:entity(e.root), {0, 5, 0})
+    end
+    world:create_object(p)
 
     create_texture_plane_entity(
-        {12000, 12000.0, 12000.0, 1.0}, 
+        {1, 1.0, 1.0, 1.0}, 
         "/pkg/ant.resources/textures/texture_plane.texture",
         {x=64, y=0, w=64, h=64}, {w=384, h=64})
 
