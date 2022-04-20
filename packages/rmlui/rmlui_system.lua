@@ -33,10 +33,8 @@ function rmlui_sys:init()
         },
     })
     iRmlUi.font_dir "/pkg/ant.resources.binary/ui/test/assets/font/"
-end
 
-function rmlui_sys:init_world()
-    -- need create in 'init_world' for 'entity_init' to get 'tonemapping_queue'
+    local vp = world.args.viewport
     ecs.create_entity{
         policy = {
             "ant.general|name",
@@ -46,7 +44,7 @@ function rmlui_sys:init_world()
         data = {
             rmlui_obj = true,
             render_target = {
-                view_rect = {x=0, y=0, w=1, h=1},
+                view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
                 viewid = ui_viewid,
                 view_mode = "s",
                 clear_state = {
@@ -59,27 +57,18 @@ function rmlui_sys:init_world()
     }
 end
 
-local vr_changed_mb = world:sub{"view_rect_changed", "tonemapping_queue"}
+local vp_changed_mb = world:sub{"world_viewport_changed"}
 
 function rmlui_sys:entity_init()
     for q in w:select "INIT rmlui_obj render_target:in" do
-        local tm_q = assert(w:singleton("tonemapping_queue", "render_target:in"))
-        local tm_rt = tm_q.render_target
-        local vr = tm_rt.view_rect
         local rt = q.render_target
-        rt.view_rect = vr
-        rt.fb_idx = tm_rt.fb_idx
-        irq.update_rendertarget("rmlui_obj", rt)
+        local vr = rt.view_rect
         ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, world.args.framebuffer.ratio)
     end
 
-    for _ in vr_changed_mb:each() do
-        local rml = w:singleton("rmlui_obj", "render_target:in")
-        if rml then
-            local vr = irq.view_rect "tonemapping_queue"
-            irq.set_view_rect("rmlui_obj", vr)
-            ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, world.args.framebuffer.ratio)
-        end
+    for _, vr in vp_changed_mb:unpack() do
+        irq.set_view_rect("rmlui_obj", vr)
+        ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, world.args.framebuffer.ratio)
     end
 end
 

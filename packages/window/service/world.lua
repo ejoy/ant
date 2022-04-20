@@ -116,8 +116,8 @@ function S.init(nwh, context, width, height)
 	encoderBegin = true
 	config.framebuffer = framebuffer
 	update_config(config, init_width, init_height)
-	log.info("main viewport:", world.args.viewport.x, world.args.viewport.y, world.args.viewport.w, world.args.viewport.h)
 	world = ecs.new_world(config)
+	log.info("main viewport:", world.args.viewport.x, world.args.viewport.y, world.args.viewport.w, world.args.viewport.h)
 	world:pub{"world_viewport_changed", world.args.viewport}
 	local ev 		= inputmgr.create(world, "win32")
 	S.mouse_wheel	= ev.mouse_wheel
