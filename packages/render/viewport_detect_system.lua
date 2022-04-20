@@ -47,7 +47,11 @@ end
 local function check_viewrect_size(vr, viewsize)
 	if viewsize and (vr.w ~= viewsize.w or vr.h ~= viewsize.h) then
 		local ratio = vr.ratio
-		vr.w, vr.h = mu.cvt_size(viewsize.w, ratio), mu.cvt_size(viewsize.h, ratio)
+		if ratio ~= nil and ratio ~= 1 then
+			vr.w, vr.h = mu.cvt_size(viewsize.w, ratio), mu.cvt_size(viewsize.h, ratio)
+		else
+			vr.w, vr.h = viewsize.w, viewsize.h
+		end
 	end
 end
 
