@@ -89,14 +89,19 @@ function util.NDC_near_far_pt(ndc2d)
 end
 
 function util.world_to_screen(vpmat, vr, posWS)
-	--local vp = icamera.calc_viewproj(camera_ref)
 	local posNDC = math3d.transformH(vpmat, posWS, 1)
 	local screenNDC = math3d.muladd(posNDC, 0.5, math3d.vector(0.5, 0.5, 0.0))
 	local sy = math3d.index(screenNDC, 2)
 	if not math3d.get_origin_bottom_left() then
 		screenNDC = math3d.set_index(screenNDC, 2, 1.0 - sy)
 	end
-	return math3d.mul(screenNDC, math3d.vector(vr.w, vr.h, 1.0))
+
+	local r = math3d.mul(screenNDC, math3d.vector(vr.w, vr.h, 1.0))
+	local ratio = vr.ratio
+	if ratio ~= nil and ratio ~= 1 then
+		return math3d.mul(ratio, r)
+	end
+	return r
 end
 
 function util.ndc_to_world(vpmat, ndc)
