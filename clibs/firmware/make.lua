@@ -1,22 +1,24 @@
 local lm = require "luamake"
 
+lm:rule "firmware_embed" {
+    "$luamake", "lua", "@embed.lua", "$in", "$out",
+    description = "Firmware Embed $in",
+}
+
 lm:build {
-    "$luamake", "lua", "@embed.lua", "$in",
-    "@.", "FirmwareBootstrap",
+    rule = "firmware_embed",
     input = "../../engine/firmware/bootstrap.lua",
     output = "FirmwareBootstrap.h",
 }
 
 lm:build {
-    "$luamake", "lua", "@embed.lua", "$in",
-    "@.", "FirmwareIo",
+    rule = "firmware_embed",
     input = "../../engine/firmware/io.lua",
     output = "FirmwareIo.h",
 }
 
 lm:build {
-    "$luamake", "lua", "@embed.lua", "$in",
-    "@.", "FirmwareVfs",
+    rule = "firmware_embed",
     input = "../../engine/firmware/vfs.lua",
     output = "FirmwareVfs.h",
 }
