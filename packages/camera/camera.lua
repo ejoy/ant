@@ -81,12 +81,6 @@ function ic.calc_projmat(ce)
     return math3d.projmat(camera.frustum)
 end
 
-function ic.world_to_screen(world_pos)
-    local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
-    local vp = ic.calc_viewproj(world:entity(mq.camera_ref))
-    return mu.world_to_screen(vp, mq.render_target.view_rect, world_pos)
-end
-
 function ic.calc_viewproj(ce)
     local scene = ce.scene
     local srt = scene.srt
