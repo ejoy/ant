@@ -1,4 +1,0 @@
-fx:
-  fs: /pkg/ant.resources/shaders/postprocess/fs_quad.sc
-  vs: /pkg/ant.resources/shaders/postprocess/vs_pp_quad.sc
-state: /pkg/ant.resources/materials/postprocess/postprocess.state
