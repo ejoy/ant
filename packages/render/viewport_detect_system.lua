@@ -17,7 +17,7 @@ local function clear_cache()
 	fb_cache, rb_cache = {}, {}
 end
 
-local function resize_framebuffer(w, h, fbidx, ratio)
+local function resize_framebuffer(w, h, fbidx)
 	if fbidx == nil or fb_cache[fbidx] then
 		return 
 	end
@@ -32,9 +32,6 @@ local function resize_framebuffer(w, h, fbidx, ratio)
 		rbs[#rbs+1] = attachment
 		local c = rb_cache[rbidx]
 		if c == nil then
-			if ratio then
-				w, h = mu.cvt_size(w, ratio), mu.cvt_size(h, ratio)
-			end
 			changed = fbmgr.resize_rb(rbidx, w, h) or changed
 			rb_cache[rbidx] = changed
 		else
@@ -47,20 +44,22 @@ local function resize_framebuffer(w, h, fbidx, ratio)
 	end
 end
 
+local function check_viewrect_size(vr, viewsize)
+	if viewsize and (vr.w ~= viewsize.w or vr.h ~= viewsize.h) then
+		local ratio = vr.ratio
+		vr.w, vr.h = mu.cvt_size(viewsize.w, ratio), mu.cvt_size(viewsize.h, ratio)
+	end
+end
+
 local function update_render_queue(q, viewsize)
 	local rt = q.render_target
 	local vr = rt.view_rect
-	if viewsize then
-		if vr.w == viewsize.w and vr.h == viewsize.h then
-			return
-		end
-		vr.w, vr.h = viewsize.w, viewsize.h
-	end
+	check_viewrect_size(vr, viewsize)
 
 	if q.camera_ref then
 		icamera.set_frustum_aspect(world:entity(q.camera_ref), vr.w/vr.h)
 	end
-	resize_framebuffer(vr.w, vr.h, rt.fb_idx, vr.ratio)
+	resize_framebuffer(vr.w, vr.h, rt.fb_idx)
 	irq.update_rendertarget(q.queue_name, rt)
 end
 

@@ -6,6 +6,7 @@ local ecs       = import_package "ant.ecs"
 local rhwi      = import_package "ant.hwi"
 local cr        = import_package "ant.compile_resource"
 local setting	= import_package "ant.settings".setting
+local mu		= import_package "ant.math".util
 
 local bgfx      = require "bgfx"
 local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
@@ -83,12 +84,7 @@ local function render()
 end
 
 local function calc_fb_size(w, h, ratio)
-	if ratio == 1.0 then
-		return w, h
-	end
-
-	return 	math.max(1, math.floor(w * ratio + 0.5)),
-			math.max(1, math.floor(h * ratio + 0.5))
+	return mu.cvt_size(w, ratio), mu.cvt_size(h, ratio)
 end
 
 function S.init(nwh, context, width, height)
@@ -120,6 +116,7 @@ function S.init(nwh, context, width, height)
 	encoderBegin = true
 	config.framebuffer = framebuffer
 	update_config(config, init_width, init_height)
+	log.info("main viewport:", world.args.viewport.x, world.args.viewport.y, world.args.viewport.w, world.args.viewport.h)
 	world = ecs.new_world(config)
 	world:pub{"world_viewport_changed", world.args.viewport}
 	local ev 		= inputmgr.create(world, "win32")
