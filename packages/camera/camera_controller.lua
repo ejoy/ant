@@ -163,7 +163,7 @@ function cc_sys:data_changed()
     if motiontype and newx and newy then
         local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
         local dx, dy = dxdy(newx, newy, mq.render_target.view_rect)
-        if dx ~= 0.0 and dy ~= 0.0 then
+        if dx ~= 0.0 or dy ~= 0.0 then
             local ce = world:entity(mq.camera_ref)
             if motiontype == "rotate_point" then
                 mouse_lastx, mouse_lasty = newx, newy

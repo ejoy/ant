@@ -21,7 +21,7 @@ constant.YELLOW = {1, 1, 0, 1}
 constant.YELLOW_HALF = {0.5, 0.5, 0, 1}
 constant.GRAY_HALF = {0.5, 0.5, 0.5, 1}
 constant.GRAY   = {0.8, 0.8, 0.8, 1}
-constant.DEFAULT_INTENSITY = 12000
+constant.DEFAULT_INTENSITY = 1
 
 function constant.COLOR(c, intensity)
     intensity = intensity or constant.DEFAULT_INTENSITY

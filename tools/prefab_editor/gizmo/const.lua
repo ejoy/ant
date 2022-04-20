@@ -36,10 +36,4 @@ local m = {
     MOVE_HIT_RADIUS_PIXEL   = 10
 }
 
-local intensity<const> = 12000
-for k, c in pairs(m.COLOR) do
-    for i=1, 3 do
-        c[i] = c[i] * intensity
-    end
-end
 return m

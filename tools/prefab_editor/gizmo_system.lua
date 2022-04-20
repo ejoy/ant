@@ -162,7 +162,6 @@ local function create_arrow_widget(axis_root, axis_str)
 		cylindere_t = math3d.vector(0, 0, 0.5 * gizmo_const.AXIS_LEN)
 		color = gizmo_const.COLOR.Z
 	end
-	local colorintensity = 12000
 
 	local cylindereid = ecs.create_entity{
 		policy = {
