@@ -242,7 +242,7 @@ local function create_pick_entity()
 			name 		= "pickup_queue",
 			queue_name 	= "pickup_queue",
 			pickup_queue= true,
-			visible		= true,
+			visible		= false,
 		}
 	}
 end
