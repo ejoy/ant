@@ -143,7 +143,6 @@ private:
 template<typename T>
 class EnableObserverPtr {
 public:
-
 	ObserverPtr<T> GetObserverPtr() {
 		InitializeBlock();
 		return ObserverPtr<T>(block);
@@ -151,45 +150,29 @@ public:
 
 protected:
 	EnableObserverPtr() noexcept {
-		static_assert(std::is_base_of<EnableObserverPtr<T>, T>::value, "T must derive from EnableObserverPtr<T>.");
+		static_assert(std::is_base_of_v<EnableObserverPtr<T>, T>, "T must derive from EnableObserverPtr<T>.");
 	}
 
 	~EnableObserverPtr() noexcept {
-		if (block)
-		{
+		if (block) {
 			block->pointed_to_object = nullptr;
 			DeallocateObserverPtrBlockIfEmpty(block);
 		}
 	}
 
-	EnableObserverPtr(const EnableObserverPtr<T>&) noexcept {
-		// Do not copy or modify the block, it should always point to the same object.
-	}
-	EnableObserverPtr<T>& operator=(const EnableObserverPtr<T>&) noexcept { 
-		// Assignment should not do anything, the block must point to the initially constructed object.
-		return *this; 
-	}
-
-	EnableObserverPtr(EnableObserverPtr<T>&&) noexcept {
-		// Do not move or modify the block, it should always point to the same object.
-	}
-	EnableObserverPtr<T>& operator=(EnableObserverPtr<T>&&) noexcept {
-		// Assignment should not do anything, the block must point to the initially constructed object.
-		return *this;
-	}
+	EnableObserverPtr(const EnableObserverPtr<T>&) = delete;
+	EnableObserverPtr(EnableObserverPtr<T>&&) noexcept = delete;
+	EnableObserverPtr<T>& operator=(const EnableObserverPtr<T>&) = delete;
+	EnableObserverPtr<T>& operator=(EnableObserverPtr<T>&&) = delete;
 
 private:
-
-	inline void InitializeBlock()
-	{
-		if (!block)
-		{
+	inline void InitializeBlock() {
+		if (!block) {
 			block = new ObserverPtrBlock;
 			block->num_observers = 0;
 			block->pointed_to_object = static_cast<void*>(static_cast<T*>(this));
 		}
 	}
-
 	ObserverPtrBlock* block = nullptr;
 };
 

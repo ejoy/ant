@@ -204,7 +204,7 @@ void Layout::InitTextNode(Text* text) {
 	YGNodeSetBaselineFunc(node, BaselineFunc);
 }
 
-bool Layout::IsDirty() {
+bool Layout::IsDirty() const {
 	return YGNodeIsDirty(node);
 }
 

@@ -15,9 +15,8 @@ extern "C"{
 static inline int
 load_fontid(struct font_manager *F, const std::string &family){
     const char* name = "宋体";
-    if (!family.empty() && family != "rmlui-debugger-font")
+    if (!family.empty())
         name = family.c_str();
-    
     return F->font_manager_addfont_with_family(F, name);
 }
 

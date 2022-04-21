@@ -51,9 +51,6 @@ namespace Rml {
 /// Construct a string using sprintf-style syntax.
 std::string CreateString(size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(2,3);
 
-/// Format to a string using sprintf-style syntax.
-int FormatString(std::string& string, size_t max_size, const char* format, ...) RMLUI_ATTRIBUTE_FORMAT_PRINTF(3,4);
-
 template <typename  T>
 T FromString(const std::string& str, T def = T{});
 template <typename  T>
@@ -76,7 +73,7 @@ namespace StringUtilities
 	/// @param[in] quote_character Begin quote
 	/// @param[in] unquote_character End quote
 	/// @param[in] ignore_repeated_delimiters If true, repeated values of the delimiter will not add additional entries to the list.
-	void ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters = false);
+	void ExpandString2(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters = false);
 
 	/// Converts upper-case characters in string to lower-case.
 	std::string ToLower(const std::string& string);
@@ -94,9 +91,6 @@ namespace StringUtilities
 
 	/// Strip whitespace characters from the beginning and end of a string.
 	std::string StripWhitespace(const std::string& string);
-
-	/// Strip whitespace characters from the beginning and end of a string.
-	std::string StripWhitespace(std::string_view string);
 
 	// Decode the first code point in a zero-terminated UTF-8 string.
 	Character ToCharacter(const char* p);

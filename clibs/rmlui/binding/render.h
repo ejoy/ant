@@ -35,11 +35,6 @@ public:
     // will delete buffer
     bool UpdateTexture(Rml::TextureHandle texhandle, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *buffer);
 
-public:
-    void UpdateViewRect();
-    // bool CalcScissorRectPlane(const glm::mat4 &transform, const Rect &rect, glm::vec4 planes[4]);
-    // void SubmitScissorRect();
-
 private:
     void submitScissorRect(bgfx_encoder_t* encoder);
     void setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r);

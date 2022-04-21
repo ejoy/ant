@@ -62,14 +62,6 @@ static int FormatString(std::string& string, size_t max_size, const char* format
 	return length;
 }
 
-int FormatString(std::string& string, size_t max_size, const char* format, ...)
-{
-	va_list argument_list;
-	va_start(argument_list, format);
-	int result = FormatString(string, (int)max_size, format, argument_list);
-	va_end(argument_list);
-	return result;
-}
 std::string CreateString(size_t max_size, const char* format, ...)
 {
 	std::string result;
@@ -173,7 +165,7 @@ void StringUtilities::ExpandString(std::vector<std::string>& string_list, const 
 }
 
 
-void StringUtilities::ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters)
+void StringUtilities::ExpandString2(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters)
 {
 	int quote_mode_depth = 0;
 	const char* ptr = string.c_str();
@@ -218,25 +210,15 @@ void StringUtilities::ExpandString(std::vector<std::string>& string_list, const 
 		string_list.emplace_back(start_ptr, end_ptr + 1);
 }
 
-std::string StringUtilities::StripWhitespace(const std::string& string)
-{
-	return StripWhitespace(std::string_view(string));
-}
-
-std::string StringUtilities::StripWhitespace(std::string_view string)
-{
-	auto start = string.begin();
-	auto end = string.end();
-
+std::string StringUtilities::StripWhitespace(const std::string& s) {
+	auto start = s.begin();
+	auto end = s.end();
 	while (start < end && IsWhitespace(*start))
 		start++;
-
-	while (end > start&& IsWhitespace(*(end - 1)))
+	while (end > start && IsWhitespace(*(end - 1)))
 		end--;
-
 	if (start < end)
 		return std::string(start, end);
-
 	return std::string();
 }
 

@@ -32,7 +32,7 @@ public:
 	void CalculateLayout(Size const& size);
 	void SetProperty(PropertyId id, const Property* property, const Element* element);
 	
-	bool IsDirty();
+	bool IsDirty() const;
 	void MarkDirty();
 	std::string ToString() const;
 

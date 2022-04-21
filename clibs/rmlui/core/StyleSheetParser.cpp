@@ -401,7 +401,7 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::st
 	}
 
 	// Expand each individual node separated by spaces. Don't expand inside parenthesis because of structural selectors.
-	StringUtilities::ExpandString(nodes, rule_name, ' ', '(', ')', true);
+	StringUtilities::ExpandString2(nodes, rule_name, ' ', '(', ')', true);
 
 	// Create each node going down the tree
 	for (size_t i = 0; i < nodes.size(); i++)
