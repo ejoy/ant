@@ -3,6 +3,8 @@ local gesture
 local exclusive
 
 local S = {}
+
+local priority = {}
 local event = {
     init = {},
     exit = {},
@@ -16,49 +18,12 @@ local event = {
     update = {},
 }
 
-local priority_event = {
-    init = {},
-    exit = {},
-    size = {},
-    mouse_wheel = {},
-    mouse = {},
-    touch = {},
-    gesture = {},
-    keyboard = {},
-    char = {},
-    update = {},
-}
-
 for CMD, e in pairs(event) do
     S["send_"..CMD] = function (...)
         for i = 1, #e do
-            ltask.send(e[i], CMD, ...)
-        end
-    end
-end
-
-for CMD, e in pairs(event) do
-    S["send_"..CMD] = function (...)
-        for i = 1, #e do
-            ltask.send(e[i], CMD, ...)
-        end
-    end
-end
-
-S["priority_handle"] = function (CMD, ...)
-    local headled = false
-    local pe = priority_event[CMD]
-    for i = 1, #pe do
-        headled = ltask.call(pe[i], CMD, ...)
-        --print("priority_handle", CMD, headled)
-        if headled then
-            break
-        end
-    end
-    if not headled then
-        local e = event[CMD]
-        for i = 1, #e do
-            ltask.send(e[i], CMD, ...)
+            if ltask.send(e[i], CMD, ...) then
+                return
+            end
         end
     end
 end
@@ -74,7 +39,7 @@ local function gesture_dispatch(name, ...)
     if not name then
         return
     end
-    ltask.send(ltask.self(), "priority_handle", "gesture", name, ...)
+    ltask.send(ltask.self(), "send_gesture", name, ...)
     return true
 end
 
@@ -94,7 +59,7 @@ local function dispatch(CMD,...)
                 gesture_init()
             end
         end
-        ltask.send(ltask.self(), "priority_handle", CMD, ...)
+        ltask.send(ltask.self(), "send_"..CMD, ...)
     end
 end
 
@@ -134,69 +99,45 @@ function S.wait()
     multi_wait "quit"
 end
 
-function S.subscribe(...)
+function S.priority(v)
     local s = ltask.current_session()
-    local param = {...}
-    local priority
-    if #param > 0 then
-        param[1]:gsub("priority=(%w+)", function(match) priority = tonumber(match) end)
+    priority[s] = v
+end
+
+local function insert(t, s)
+    local function get_priority(ss)
+        return priority[ss] or 0
     end
-    for _, name in ipairs(param) do
-        local e = priority and priority_event[name] or event[name]
-        if e then
-            if not priority then
-                e[#e+1] = s.from
-            else
-                table.insert(e, priority, s.from)
-            end
+    local p = get_priority(s)
+    for i = #t, 1, -1 do
+        if p <= get_priority(t[i]) then
+            table.insert(t, i, s)
+            return
         end
     end
+    table.insert(t, s)
 end
 
-local function do_unsubscribe(events, ...)
-    local remove = false
+function S.subscribe(events)
     local s = ltask.current_session()
-    for _, name in ipairs {...} do
-        local e = events[name]
+    for _, name in ipairs(events) do
+        local e = event[name]
         if e then
-            for i, addr in ipairs(e) do
-                if addr == s.from then
-                    table.remove(e, i)
-                    remove = true
-                    break
-                end
-            end
-        end
-    end
-    return remove
-end
-
-function S.unsubscribe(...)
-    if do_unsubscribe(priority_event, ...) then
-        return
-    end
-    do_unsubscribe(event, ...)
-end
-
-local function do_unsubscribe_all(events)
-    local remove = false
-    local s = ltask.current_session()
-    for _, e in pairs(events) do
-        for i, addr in ipairs(e) do
-            if addr == s.from then
-                table.remove(e, i)
-                remove = true
-                break
-            end
+            insert(e, s.from)
         end
     end
 end
 
 function S.unsubscribe_all()
-    if do_unsubscribe_all(priority_event) then
-        return
+    local s = ltask.current_session()
+    for _, e in pairs(event) do
+        for i, addr in ipairs(e) do
+            if addr == s.from then
+                table.remove(e, i)
+                break
+            end
+        end
     end
-    do_unsubscribe_all(event)
 end
 
 return S

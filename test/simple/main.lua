@@ -15,7 +15,6 @@ import_package "ant.window".start {
     interface = {
         "ant.objcontroller|iobj_motion",
         "ant.animation|ianimation",
-        "ant.effekseer|effekseer_playback",
     },
     policy = {
         "ant.general|name",

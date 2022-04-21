@@ -75,6 +75,12 @@ S.touch = contextManager.process_touch
 S.gesture = contextManager.process_gesture
 S.update_context_size = contextManager.set_dimensions
 
-ltask.send(ServiceWindow, "subscribe", "priority=1", "mouse", "touch", "gesture")
+ltask.send(ServiceWindow, "priority", 1)
+
+ltask.send(ServiceWindow, "subscribe", {
+    "mouse",
+    "touch",
+    "gesture",
+})
 
 return S

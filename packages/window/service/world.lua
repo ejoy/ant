@@ -17,8 +17,17 @@ for _, name in ipairs(ltask.call(ServiceBgfxMain, "APIS")) do
 end
 
 local ServiceWindow = ltask.queryservice "ant.window|window"
-ltask.send(ServiceWindow, "subscribe", "init", "exit")
-ltask.send(ServiceWindow, "subscribe", "mouse_wheel", "mouse", "touch", "keyboard", "char", "size", "gesture")
+ltask.send(ServiceWindow, "subscribe", {
+	"init",
+	"exit",
+	"mouse_wheel",
+	"mouse",
+	"touch",
+	"keyboard",
+	"char",
+	"size",
+	"gesture"
+})
 local resizeQueue = {}
 
 local S = {}
