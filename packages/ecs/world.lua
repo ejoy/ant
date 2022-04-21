@@ -174,6 +174,13 @@ function world:entity(eid)
 	return self._entity[eid]
 end
 
+function world:debug_entity(eid)
+	local e = self._entity(eid)
+	if e then
+		return self.w:readall(e)
+	end
+end
+
 function world:remove_entity(eid)
 	self._entity[eid] = nil
 end
@@ -210,6 +217,9 @@ local function create_entity_watcher(ecs)
 			ecs:remove(v)
 		end
 		cached[id] = nil
+	end
+	function watcher_mt:__call(id)
+		return visitor[id]
 	end
 	return setmetatable({}, watcher_mt)
 end
