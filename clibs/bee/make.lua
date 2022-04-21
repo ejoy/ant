@@ -9,7 +9,6 @@ lm:source_set "bee" {
         "bee/nonstd",
         "."
     },
-    defines = "BEE_INLINE",
     sources = {
         "bee/**/*.cpp",
         "bee/nonstd/fmt/*.cc",
@@ -57,9 +56,6 @@ lm:lua_source "bee" {
         "3rd/lua-seri",
         "bee/nonstd",
         "."
-    },
-    defines = {
-        "BEE_INLINE",
     },
     sources = "binding/*.cpp",
     windows = {
