@@ -4,7 +4,7 @@ dofile "../common.lua"
 
 lm:lua_source "image" {
     deps = {
-        "bimg_decode",
+        "bimg-decode",
         "bimg",
         "bx",
     },

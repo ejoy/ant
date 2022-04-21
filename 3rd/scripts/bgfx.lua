@@ -1,17 +1,17 @@
 local lm = require "luamake"
 
-BgfxDir = "../bgfx/"
-BxDir = "../bx/"
-BimgDir = "../bimg/"
+lm.BgfxDir = lm:path "../bgfx/"
+lm.BxDir = lm:path "../bx/"
+lm.BimgDir = lm:path "../bimg/"
 
-require "bgfx.init"
+lm:import "bgfx"
 
 lm:copy "copy_bgfx_shader" {
     input = {
-        BgfxDir .. "src/bgfx_shader.sh",
-        BgfxDir .. "src/bgfx_compute.sh",
-        BgfxDir .. "examples/common/common.sh",
-        BgfxDir .. "examples/common/shaderlib.sh",
+        lm.BgfxDir .. "src/bgfx_shader.sh",
+        lm.BgfxDir .. "src/bgfx_compute.sh",
+        lm.BgfxDir .. "examples/common/common.sh",
+        lm.BgfxDir .. "examples/common/shaderlib.sh",
     },
     output = {
         "../../packages/resources/shaders/bgfx_shader.sh",

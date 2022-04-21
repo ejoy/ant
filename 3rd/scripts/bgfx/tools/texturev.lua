@@ -1,22 +1,19 @@
 local lm = require "luamake"
 
-require "bgfx.example-common"
+require "examples.common"
+require "utf8.support-utf8"
 
 lm:exe "texturev" {
-    rootdir = BgfxDir,
+    rootdir = lm.BgfxDir,
     deps = {
         "example-common",
-        "bimg_decode",
-        "bimg_encode",
+        "bimg-decode",
         "bgfx-lib",
-        "bimg",
-        "bx",
     },
     includes = {
-        BxDir .. "include",
-        BimgDir .. "include",
+        lm.BxDir / "include",
+        lm.BimgDir / "include",
         "include",
-        "3rdparty/iqa/include",
         "3rdparty",
         "examples/common",
     },
@@ -26,17 +23,14 @@ lm:exe "texturev" {
     windows = {
         deps = "bgfx-support-utf8",
         links = {
-            "DelayImp",
             "comdlg32",
             "gdi32",
-            "psapi",
             "user32",
-            "Shell32",
+            "shell32",
         }
     },
     macos = {
         frameworks = {
-            "Cocoa",
             "Metal",
             "QuartzCore",
             "OpenGL"

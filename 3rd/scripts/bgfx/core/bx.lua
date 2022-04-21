@@ -1,7 +1,7 @@
 local lm = require "luamake"
 
 lm:source_set "bx" {
-    rootdir = BxDir,
+    rootdir = lm.BxDir,
     defines = {
         "__STDC_FORMAT_MACROS",
     },
@@ -15,5 +15,17 @@ lm:source_set "bx" {
     },
     gcc = {
         flags = "-Wno-maybe-uninitialized"
+    },
+    linux = {
+        ldflags = "-pthread",
+        links = {
+            "m",
+            "dl"
+        }
+    },
+    macos = {
+        frameworks = {
+            "Cocoa"
+        }
     }
 }

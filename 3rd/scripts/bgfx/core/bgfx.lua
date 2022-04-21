@@ -9,11 +9,15 @@ local function deepcopy(t)
             r[k] = v
         end
     end
+    local mt = getmetatable(t)
+    if mt ~= nil then
+        setmetatable(r, mt)
+    end
     return r
 end
 
 local bgfxLib = {
-    rootdir = BgfxDir,
+    rootdir = lm.BgfxDir,
     deps = {
         "bx",
         "bimg"
@@ -22,8 +26,8 @@ local bgfxLib = {
         "BGFX_CONFIG_MAX_VIEWS=1024",
     },
     includes = {
-        BxDir .. "include",
-        BimgDir .. "include",
+        lm.BxDir / "include",
+        lm.BimgDir / "include",
         "3rdparty",
         "3rdparty/khronos",
         "include",
@@ -35,13 +39,13 @@ local bgfxLib = {
     msvc = {
         defines = "__STDC_FORMAT_MACROS",
     },
-    clang = {
-        flags = {
-            "-Wno-unused-variable",
-        }
-    },
     windows = {
         includes = "3rdparty/dxsdk/include",
+    },
+    linux = {
+        defines = {
+            "BGFX_CONFIG_RENDERER_VULKAN=1",
+        },
     },
     macos = {
         sources = {
@@ -70,7 +74,11 @@ lm:lib "bgfx-lib" (bgfxLib)
 lm:src "bgfx-dll" (bgfxDll)
 lm:dll "bgfx-dll" {
     windows = {
-        links = { "gdi32", "psapi", "user32" }
+        links = {
+            "gdi32",
+            "psapi",
+            "user32"
+        }
     },
     macos = {
         frameworks = {

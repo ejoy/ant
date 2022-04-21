@@ -1,7 +1,9 @@
 local lm = require "luamake"
 
+require "utf8.support-utf8"
+
 lm:source_set "fcpp" {
-    rootdir = BgfxDir .. "3rdparty/fcpp",
+    rootdir = lm.BgfxDir / "3rdparty/fcpp",
     defines = {
         "NINCLUDE=64",
         "NWORK=65536",
@@ -20,7 +22,7 @@ lm:source_set "fcpp" {
 }
 
 lm:source_set "glslang" {
-    rootdir = BgfxDir .. "3rdparty/glslang",
+    rootdir = lm.BgfxDir / "3rdparty/glslang",
     defines = {
         "ENABLE_OPT=1",
         "ENABLE_HLSL=1",
@@ -42,6 +44,9 @@ lm:source_set "glslang" {
     windows = {
         sources = "!glslang/OSDependent/Unix/*.cpp",
     },
+    linux = {
+        sources = "!glslang/OSDependent/Windows/*.cpp",
+    },
     macos = {
         sources = "!glslang/OSDependent/Windows/*.cpp",
     },
@@ -57,7 +62,7 @@ lm:source_set "glslang" {
 
 lm:source_set "glsl-optimizer" {
     cxx = "c++14",
-    rootdir = BgfxDir .. "3rdparty/glsl-optimizer",
+    rootdir = lm.BgfxDir / "3rdparty/glsl-optimizer",
     includes = {
         "src",
         "include",
@@ -101,7 +106,7 @@ lm:source_set "glsl-optimizer" {
 }
 
 lm:source_set "spirv-opt" {
-    rootdir = BgfxDir .. "3rdparty/spirv-tools",
+    rootdir = lm.BgfxDir / "3rdparty/spirv-tools",
     includes = {
         ".",
         "include",
@@ -125,8 +130,8 @@ lm:source_set "spirv-opt" {
 }
 
 lm:source_set "spirv-cross" {
-    rootdir = BgfxDir .. "3rdparty/spirv-cross",
-    defines  = "SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS",
+    rootdir = lm.BgfxDir / "3rdparty/spirv-cross",
+    defines = "SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS",
     includes = "include",
     sources = {
         "spirv_cfg.cpp",
@@ -143,7 +148,7 @@ lm:source_set "spirv-cross" {
 }
 
 lm:exe "shaderc" {
-    rootdir = BgfxDir,
+    rootdir = lm.BgfxDir,
     deps = {
         "bx",
         "fcpp",
@@ -153,11 +158,11 @@ lm:exe "shaderc" {
         "spirv-cross",
     },
     includes = {
-        BxDir .. "include",
-        BimgDir .. "include",
-        BgfxDir .. "include",
+        lm.BxDir / "include",
+        lm.BimgDir / "include",
+        lm.BgfxDir / "include",
         "3rdparty/webgpu/include",
-         "3rdparty/dxsdk/include",
+        "3rdparty/dxsdk/include",
         "3rdparty/fcpp",
         "3rdparty/glslang/glslang/Public",
         "3rdparty/glslang/glslang/Include",
@@ -178,11 +183,6 @@ lm:exe "shaderc" {
     msvc = {
         flags = {
             "/wd4819",
-        }
-    },
-    macos = {
-        frameworks = {
-            "Cocoa"
         }
     }
 }

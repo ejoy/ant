@@ -1,16 +1,18 @@
 local lm = require "luamake"
 
+require "utf8.support-utf8"
+
 lm:exe "texturec" {
-    rootdir = BimgDir,
+    rootdir = lm.BimgDir,
     deps = {
-        "bimg_decode",
-        "bimg_encode",
+        "bimg-decode",
+        "bimg-encode",
         "bimg",
         "bx",
     },
     includes = {
-        BxDir .. "include",
-        BgfxDir .. "include",
+        lm.BxDir / "include",
+        lm.BgfxDir / "include",
         "include",
         "3rdparty/iqa/include"
     },
@@ -21,11 +23,6 @@ lm:exe "texturec" {
         deps = "bgfx-support-utf8",
         links = {
             "psapi"
-        }
-    },
-    macos = {
-        frameworks = {
-            "Cocoa"
         }
     }
 }

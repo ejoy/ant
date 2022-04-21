@@ -1,23 +1,13 @@
 local lm = require "luamake"
 
 lm:source_set "astc-codec" {
-    rootdir = BimgDir .. "3rdparty/astc-codec",
+    rootdir = lm.BimgDir / "3rdparty/astc-codec",
     includes = {
         ".",
         "include"
     },
     sources = {
-        "src/decoder/astc_file.cc",
-        "src/decoder/codec.cc",
-        "src/decoder/endpoint_codec.cc",
-        "src/decoder/footprint.cc",
-        "src/decoder/integer_sequence_codec.cc",
-        "src/decoder/intermediate_astc_block.cc",
-        "src/decoder/logical_astc_block.cc",
-        "src/decoder/partition.cc",
-        "src/decoder/physical_astc_block.cc",
-        "src/decoder/quantization.cc",
-        "src/decoder/weight_infill.cc",
+        "src/decoder/*.cc",
     },
     gcc = {
         flags = {
@@ -34,10 +24,10 @@ lm:source_set "astc-codec" {
 }
 
 lm:source_set "bimg" {
-    rootdir = BimgDir,
+    rootdir = lm.BimgDir,
     deps = "astc-codec",
     includes = {
-        BxDir .. "include",
+        lm.BxDir / "include",
         "include",
         "3rdparty/astc-codec/include"
     },
@@ -52,10 +42,10 @@ lm:source_set "bimg" {
     }
 }
 
-lm:source_set "bimg_decode" {
-    rootdir = BimgDir,
+lm:source_set "bimg-decode" {
+    rootdir = lm.BimgDir,
     includes = {
-        BxDir .. "include",
+        lm.BxDir / "include",
         "include",
         "3rdparty",
         "3rdparty/tinyexr/deps/miniz"
@@ -67,19 +57,19 @@ lm:source_set "bimg_decode" {
 }
 
 lm:source_set "bimg-iqa" {
-    rootdir = BimgDir,
+    rootdir = lm.BimgDir,
     includes = "3rdparty/iqa/include",
     sources = "3rdparty/iqa/source/*.c",
 }
 
-lm:source_set "bimg_encode" {
-    rootdir = BimgDir,
+lm:source_set "bimg-encode" {
+    rootdir = lm.BimgDir,
     deps = {
         "astc-codec",
         "bimg-iqa",
     },
     includes = {
-        BxDir .. "include",
+        lm.BxDir / "include",
         "include",
         "3rdparty",
         "3rdparty/nvtt",
