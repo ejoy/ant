@@ -3399,6 +3399,7 @@ static struct enum_pair eHoveredFlags[] = {
 	ENUM(ImGuiHoveredFlags, AllowWhenBlockedByActiveItem),
 	ENUM(ImGuiHoveredFlags, AllowWhenOverlapped),
 	ENUM(ImGuiHoveredFlags, AllowWhenDisabled),
+	ENUM(ImGuiHoveredFlags, NoNavOverride),
 	ENUM(ImGuiHoveredFlags, RectOnly),
 	ENUM(ImGuiHoveredFlags, RootAndChildWindows),
 	{ NULL, 0 },
