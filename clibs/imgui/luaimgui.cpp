@@ -172,7 +172,7 @@ static int lPairsInputEvents(lua_State* L) {
 			return 4;
 		}
 		case ImGuiInputEventType_MouseViewport:
-		case ImGuiInputEventType_Char:
+		case ImGuiInputEventType_Text:
 		case ImGuiInputEventType_Focus:
 		default:
 			break;
