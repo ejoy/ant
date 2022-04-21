@@ -35,17 +35,17 @@ alloc_id "csm4"
 alloc_id "omni_Green"
 alloc_id "omni_Yellow"
 alloc_id "omni_Blue"
-alloc_id "omni_Red"
-alloc_id("panorama2cubmap", 6)
-alloc_id("build_ibl", 6)
-alloc_id "ibl"
+alloc_id "omni_Red"				--9
+alloc_id("panorama2cubmap", 6)	--[10, 15]
+alloc_id("build_ibl", 6)		--[16, 21]
+alloc_id "ibl"					--21
 alloc_id "depth"
 alloc_id "main_view"
 
 --start postprocess
 alloc_id "resolve"
 alloc_id "copy_scene"
-alloc_id "postprocess_obj"
+alloc_id "postprocess_obj"		--26
 alloc_id("bloom_ds", bloom_chain_count)
 alloc_id("bloom_us", bloom_chain_count)
 alloc_id "tonemapping"
