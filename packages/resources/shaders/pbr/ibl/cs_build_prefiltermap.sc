@@ -7,7 +7,7 @@
 
 SAMPLERCUBE(s_source, 0);
 
-IMAGE2D_ARRAY_WR(s_prefilter, rgba32f, 1);
+IMAGE2D_ARRAY_WR(s_prefilter, rgba16f, 1);
 
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
