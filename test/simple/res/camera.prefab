@@ -14,6 +14,11 @@ data:
       fov: 60
       n: 1
       type: mat
+  exposure:
+    type          : "manual"
+    aperture      : 16.0
+    shutter_speed : 0.008
+    ISO           : 100
   name: DEFAULT_CAMERA
 tag:
   camera
