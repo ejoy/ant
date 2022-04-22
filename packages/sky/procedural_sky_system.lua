@@ -275,7 +275,7 @@ local function init_procedural_sky(e)
 	skycomp.northdir = math3d.ref(math3d.vector(1, 0, 0, 0))
 	skycomp.updir  	= math3d.ref(math3d.vector(0, 1, 0, 0))
 	skycomp.sundir 	= math3d.ref(calc_sun_direction(skycomp))
-	skycomp.intensity = 12000
+	skycomp.intensity = 1
 	skycomp.sun_size = 0.02
 	skycomp.sun_bloom = 3.0
 end
