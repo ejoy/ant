@@ -21,7 +21,7 @@ local event = {
 for CMD, e in pairs(event) do
     S["send_"..CMD] = function (...)
         for i = 1, #e do
-            if ltask.send(e[i], CMD, ...) then
+            if ltask.call(e[i], CMD, ...) then
                 return
             end
         end
