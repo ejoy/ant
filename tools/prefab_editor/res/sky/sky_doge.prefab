@@ -9,7 +9,7 @@ data:
     filter_state: main_view
     transform: {}
     ibl:
-        intensity: 1
+        intensity: 6500
         irradiance:
             size: 64
         prefilter:

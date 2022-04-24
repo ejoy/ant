@@ -12,6 +12,7 @@ local ishadow	= ecs.import.interface "ant.render|ishadow"
 local ilight	= ecs.import.interface "ant.render|ilight"
 local itimer	= ecs.import.interface "ant.timer|itimer"
 local icamera	= ecs.import.interface "ant.camera|icamera"
+local iexposure = ecs.import.interface "ant.camera|iexposure"
 local iibl		= ecs.import.interface "ant.render|iibl"
 local icw		= ecs.import.interface "ant.render|icurve_world"
 
@@ -165,25 +166,28 @@ local function update_cluster_render_properties(vr, near, far)
 end
 
 
-local function update_lighting_properties(viewrect, camerapos, near, far)
+local function update_lighting_properties(viewrect, ce)
+	local camerapos = iom.get_position(ce)
+	local f = icamera.get_frustum(ce)
 	system_properties["u_eyepos"].id = camerapos
 	local cp = system_properties["u_camera_param"]
-	cp.v = math3d.set_index(cp, 1, near, far)
+	cp.v = math3d.set_index(cp, 1, f.n, f.f)
 	local nl = ilight.count_visible_light()
 	system_properties["u_light_count"].v = {nl, 0, 0, 0}
 
+	local ev = iexposure.exposure(ce)
 	local function update_ibl_tex(ibl)
 		system_properties["s_irradiance"].texture.handle= ibl.irradiance.handle
 		system_properties["s_prefilter"].texture.handle	= ibl.prefilter.handle
 		system_properties["s_LUT"].texture.handle		= ibl.LUT.handle
 		local ip = system_properties["u_ibl_param"]
-		ip.v = math3d.set_index(ip, 1, ibl.prefilter.mipmap_count, ibl.intensity)
+		ip.v = math3d.set_index(ip, 1, ibl.prefilter.mipmap_count, ibl.intensity * ev)
 	end
 	--TODO: this setting only do when ibl is change
 	update_ibl_tex(get_ibl())
 
 	if ilight.use_cluster_shading() then
-		update_cluster_render_properties(viewrect, near, far)
+		update_cluster_render_properties(viewrect, f.n, f.f)
 	else
 		local li = system_properties.b_light_info
 		li.stage = 12
@@ -249,10 +253,8 @@ end
 function isp.update()
 	update_timer_properties()
 	local cameraref = world:entity(main_camera_ref())
-	local camerapos = iom.get_position(cameraref)
-	local f = icamera.get_frustum(cameraref)
 	local mainrt = main_render_target()
-	update_lighting_properties(mainrt.view_rect, camerapos, f.n, f.f)
+	update_lighting_properties(mainrt.view_rect, cameraref)
 	update_shadow_properties()
 
 	update_curve_param(icw.param())
