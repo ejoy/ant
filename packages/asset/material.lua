@@ -64,6 +64,7 @@ local function update_uniform(p, dst)
 			end
 			p.set = set_uniform_array
 		else
+			assert(t == "number" and 4 <= #dst and #dst <= 16, "table content must be 4/16 number")
 			src.id = t2mid(dst)
 			p.set = set_uniform
 		end
