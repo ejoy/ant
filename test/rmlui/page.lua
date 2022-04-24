@@ -14,15 +14,19 @@ function page_meta:update_view_pages()
         view_page_idx = view_page_idx + 1
     end
     self.data_source.view_items = vitems
+    self.data_source.current_page = self.current_page - 1
+    if self.footer then
+        for i, child in ipairs(self.footer.childNodes) do
+            child.style.backgroundImage = (i == self.current_page) and 'common/page1.png' or 'common/page0.png'
+        end 
+    end
 end
 
 function page_meta:update_virtual_pages(items)
     local vpages = {}
     local count_per_page = self.row * self.col
-    local gapx = math.floor(math.fmod(self.contain_size[1], self.item_size) / (self.col + 1))
-    local gapy = math.floor(math.fmod(self.contain_size[2], self.item_size) / (self.row + 1))
-    self.data_source.gapx = gapx
-    self.data_source.gapy = gapy
+    local gapx = math.floor(math.fmod(self.width, self.item_size) / (self.col + 1))
+    local gapy = math.floor(math.fmod(self.height, self.item_size) / (self.row + 1))
     local offset = 0
     local index = 1
     local total_item_count = #items
@@ -48,47 +52,113 @@ function page_meta:update_virtual_pages(items)
             }
         end
         vpages[#vpages + 1] = new_page
-        offset = offset + self.contain_size[1]
+        offset = offset + self.width
         page_index = page_index + 1
         index = index + count_per_page
     end
+    self.gapx = gapx
+    self.gapy = gapy
     self.virtual_pages = vpages
-    self.data_source.virtual_pages = vpages
 end
 
-function page_meta.create(size, source)
-    local item_size = source.item_size
-    local row = math.floor(size[2] / item_size)
-    source.row_count = row
+function page_meta.create(e, desc, pagefooter)
     local page = {
         current_page = 1,
-        contain_size = size or {0,0},
-        item_size    = item_size,
-        col          = math.floor(size[1] / item_size),
-        row          = row,
         pos          = 0,
+        draging      = false,
+        interval     = 200,--按下到释放的时间小于0.5秒时显示详细信息
+        page_top     = 0,
+        gapx         = 0,
+        gapy         = 0,
         drag         = {mouse_pos = 0, anchor = 0, delta = 0},
-        data_source  = source,
-        virtual_pages = {}
+        virtual_pages = {},
+        row          = math.floor(desc.height / desc.item_size),
+        col          = math.floor(desc.width / desc.item_size),
+        width        = desc.width,
+        height       = desc.height,
+        item_size    = desc.item_size,
+        data_source  = desc.source,
     }
-    
     setmetatable(page, page_meta)
-    page:update_virtual_pages(source.items)
+    page:update_virtual_pages(desc.source.items)
     page:update_view_pages()
+
+    e.style.overflow = 'hidden'
+    local panel = e.childNodes[1]
+    panel.addEventListener('mousedown', function(event) page:on_mousedown(event) end)
+    panel.addEventListener('mousemove', function(event) page:on_drag(event) end)
+    panel.addEventListener('mouseup', function(event) page:on_mouseup(event) end)
+    page.view = e
+    page.panel = panel
+    page.view.style.width = page.width .. 'px'
+    page.view.style.height = page.height .. 'px'
+    page.panel.style.width = #page.virtual_pages * page.width .. 'px'
+    page.panel.style.height = (page.height - 30) .. 'px'
+    local footer = e.childNodes[2]
+    page.footer = footer
+    footer.style.flexDirection = 'row'
+    footer.style.justifyContent = 'center'
+    footer.style.width = '100%'
+    footer.style.height = '30px'
+    local page_count = #page.virtual_pages
+    for i = 1, page_count do
+        local newChild
+        for _, child in ipairs(pagefooter.childNodes) do
+            newChild = child.cloneNode()
+            newChild.style.backgroundImage = (i == page.current_page) and 'common/page1.png' or 'common/page0.png'
+            footer.appendChild(newChild)
+        end
+    end
     return page
 end
 
-function page_meta:set_contain_size(size)
-    self.contain_size = size
+function page_meta:set_size(width, height)
+    self.width = width
+    self.height = height
 end
 
 function page_meta:get_current_page()
     return self.current_page
 end
 
+function page_meta:on_item_down(id, row, top)
+    self.item_down_time = self.data_source.current_time
+end
+
+function page_meta:show_detail(show, id, row, top)
+    local offset = 0
+    if show then
+        self.data_source.selected_id = id
+        self.data_source.selected_row = row
+        self.data_source.detail_top = top
+        local dy = self.height - ((row + 1) * (self.item_size + self.gapy) + self.data_source.detail_height)
+        offset = (dy >= 0) and 0 or dy
+    else
+        self.data_source.selected_id = 0
+        --TODO: max value 1000
+        self.data_source.selected_row = 10000
+    end
+    self.panel.style.top = offset .. 'px'
+    self.data_source.show_detail = show
+end
+
+function page_meta:on_item_up(id, row, top)
+    if self.data_source.current_time - self.item_down_time <= self.interval and not self.draging then
+        --console.log("start.draging: ", self.draging)
+        if self.data_source.selected_id ~= id then
+            self:show_detail(true, id, row, top)
+        else
+            self:show_detail(not self.data_source.show_detail, id, row, top)
+        end
+    else
+        self:show_detail(false, 0, 0, 0)
+    end
+end
+
 function page_meta:on_mousedown(event)
     self.drag.mouse_pos = event.x
     self.drag.anchor = self.pos
+    self.draging = false
 end
 
 function page_meta:on_mouseup(event)
@@ -107,8 +177,8 @@ function page_meta:on_mouseup(event)
     if old_value ~= self.current_page then
         self:update_view_pages()
     end
-    self.pos = (1 - self.current_page) * self.contain_size[1]
-    event.current.style.left = tostring(self.pos) .. 'px'
+    self.pos = (1 - self.current_page) * self.width
+    self.panel.style.left = tostring(self.pos) .. 'px'
     return old_value ~= self.current_page
 end
 
@@ -117,12 +187,12 @@ function page_meta:on_drag(event)
         self.drag.delta = event.x - self.drag.mouse_pos
         self.pos = self.drag.anchor + self.drag.delta
         --event.current:setPropertyImmediate("left", tostring(math.floor(self.pos)) .. 'px')
-        local e = event.current
+        local e = self.panel--event.current
         local oldClassName = e.className
         e.className = e.className .. " notransition"
         e.style.left = tostring(math.floor(self.pos)) .. 'px'
         e.className = oldClassName
-        self.data_source.draging = true
+        self.draging = true
     else
         self.drag.delta = 0
     end
