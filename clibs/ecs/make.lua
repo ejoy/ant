@@ -10,4 +10,9 @@ lm:copy "copy_ecs_lua" {
 lm:lua_source "ecs" {
     deps = "copy_ecs_lua",
     sources = Ant3rd .. "luaecs/luaecs.c",
+    msvc = {
+        flags = {
+            "/wd4996",
+        }
+    }
 }
