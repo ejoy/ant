@@ -32,20 +32,15 @@ local default_exposure<const> = {
     -- NumBlades       = 5,
 }
 
-local function exposure(eid)
-    local e = world:entity(eid)
-    return e.exposure
-end
-
-local function _EV(e)
-    local N = e.aperture
-    local t = e.shutter_speed
-    local S = e.ISO
+local function _EV(exp)
+    local N = exp.aperture
+    local t = exp.shutter_speed
+    local S = exp.ISO
     return (N * N) / t * 100.0 / S
 end
 
-function ie.ev100(cref)
-    local e = exposure(cref)
+function ie.ev100(e)
+    local exp = e.exposure
     --[[
         With N = aperture, t = shutter speed and S = sensitivity(ISO),
         we can compute EV100 knowing that:
@@ -62,7 +57,7 @@ function ie.ev100(cref)
 
         Reference: https://en.wikipedia.org/wiki/Exposure_value
     ]]
-    return math.log(_EV(e), 2)
+    return math.log(_EV(exp), 2)
 end
 
 function ie.ev100_from_luminance(luminance)
@@ -105,11 +100,10 @@ function ie.ev100_from_illuminance(illuminance)
     return math.log(illuminance * C, 2)
 end
     
-function ie.exposure(cref)
+function ie.exposure(ce)
     -- This is equivalent to calling exposure(ev100(N, t, S))
     -- By merging the two calls we can remove extra pow()/log2() calls
-    local e = exposure(cref)
-    return 1.0 / (1.2 * _EV(e));
+    return 1.0 / (1.2 * _EV(ce.exposure));
 end
     
 function ie.exposure_from_ev100(ev100)
@@ -160,11 +154,10 @@ function ie.exposure_from_ev100(ev100)
     return 1.0 / (1.2 * 2.0^ev100)
 end
 
-function ie.luminance(cref)
+function ie.luminance(ce)
     -- This is equivalent to calling luminance(ev100(N, t, S))
     -- By merging the two calls we can remove extra pow()/log2() calls
-    local e = exposure(cref)
-    return _EV(e) * 0.125;
+    return _EV(ce.exposure) * 0.125;
 end
 
 function ie.luminance_from_ev100(ev100)
@@ -190,11 +183,10 @@ function ie.luminance_from_ev100(ev100)
     return 2.0^(ev100 - 3.0);
 end
 
-function ie.illuminance(cref)
+function ie.illuminance(ce)
     -- This is equivalent to calling illuminance(ev100(N, t, S))
     -- By merging the two calls we can remove extra pow()/log2() calls
-    local e = exposure(cref)
-    return 2.5 * _EV(e)
+    return 2.5 * _EV(ce.exposure)
 end
 
 function ie.illuminance_from_ev100(ev100)
@@ -220,12 +212,12 @@ function ie.illuminance_from_ev100(ev100)
 end
 
 for _, n in ipairs{"type", "aperture", "shutter_speed", "ISO"} do
-    ie[n] = function (cref)
-        return exposure(cref)[n]
+    ie[n] = function (ce)
+        return ce.exposure[n]
     end
 
-    ie["set_" .. n] = function (cref, v)
-        exposure(cref)[n] = v
-        world:pub{"exposure_changed", cref}
+    ie["set_" .. n] = function (ce, v)
+        ce.exposure[n] = v
+        world:pub{"exposure_changed", ce}
     end
 end
