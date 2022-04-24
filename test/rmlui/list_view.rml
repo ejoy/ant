@@ -148,6 +148,7 @@
             window.customElements.define("template", function(e)
                 e.style.display = "none"
             end)
+
             local pageclass = require "page"
             window.customElements.define("page", function(e)
                 start.page = pageclass.create(e, {
@@ -157,6 +158,7 @@
                     source = start
                 }, document.getElementById "pagefooter")
             end)
+
             local listclass = require "list"
             window.customElements.define("list", function(e)
                 local list = listclass.create(e, {
@@ -177,6 +179,7 @@
         <div class="panel" data-model="start">
             <page>
                 <div class="page">
+                    <!-- item 定义 -->
                     <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_down()" data-event-mouseup="page_item_up(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="((it.row > selected_row) ? (it.top + detail_height) : it.top) + 'px'" data-for="view_items">
                         <div class="item-bg" data-style-background-image="it.data.icon0"/>
                         <div>{{it.data.id}}</div>
