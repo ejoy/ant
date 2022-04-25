@@ -3,7 +3,7 @@ local event = require "core.event"
 local timer = require "core.timer"
 local task = require "core.task"
 local contextManager = require "core.contextManager"
-local createExternWindow = require "core.externWindow"
+local windowManager = require "core.windowManager"
 local constructor = require "core.DOM.constructor"
 
 local datamodels = {}
@@ -25,7 +25,7 @@ end
 local function createWindow(document, source)
     --TODO: pool
     local window = {}
-    local timer_object = setmetatable({}, {__mode="k"})
+    local timer_object = {}
     function window.createModel(name)
         return function (init)
             local model = rmlui.DataModelCreate(document, name, init)
@@ -39,7 +39,7 @@ local function createWindow(document, source)
         if not newdoc then
             return
         end
-        event("OnDocumentExternName", newdoc, document)
+        contextManager.onload(newdoc)
         return createWindow(newdoc, document)
     end
     function window.close()
@@ -48,6 +48,7 @@ local function createWindow(document, source)
             for t in pairs(timer_object) do
                 t:remove()
             end
+            timer_object = {}
         end)
     end
     function window.setTimeout(f, delay)
@@ -62,9 +63,11 @@ local function createWindow(document, source)
     end
     function window.clearTimeout(t)
         t:remove()
+        timer_object[t] = nil
     end
     function window.clearInterval(t)
         t:remove()
+        timer_object[t] = nil
     end
     function window.addEventListener(type, listener, useCapture)
         rmlui.DocumentAddEventListener(document, type, function(e) listener(constructor.Event(e)) end, useCapture)
@@ -74,6 +77,13 @@ local function createWindow(document, source)
             source = source,
             data = data,
         })
+    end
+    if source == nil then
+        window.extern = {
+            postMessage = function (data)
+                return windowManager.postExternMessage(document, data)
+            end
+        }
     end
     local ctors = {}
     local customElements = {}
@@ -107,7 +117,6 @@ end
 function event.OnDocumentCreate(document, globals)
     datamodels[document] = {}
     globals.window = createWindow(document)
-    rawset(globals.window, "extern", createExternWindow(document))
 end
 
 function event.OnDocumentDestroy(document)
