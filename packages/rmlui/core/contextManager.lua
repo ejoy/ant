@@ -160,7 +160,8 @@ local function updateHover(doc, newHover, event)
 end
 
 local function fromPoint(x, y)
-    for _, doc in ipairs(documents) do
+    for i = #documents, 1, -1 do
+        local doc = documents[i]
         local e = elementFromPoint(doc, x, y)
         if e then
             return doc, e
