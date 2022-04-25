@@ -84,14 +84,8 @@
                 show_detail = false,
                 -- 详细信息面板高度
                 detail_height = 120,
-                -- 详细信息面板开始位置
-                detail_top = 0,
                 view_items = {},
-                current_page = 0,
                 selected_id = 0,
-                --TODO: 当前选中行，从0开始，初始化一个很大的值
-                selected_row = 10000,
-                current_time = 0,
                 item_list = {
                     {id=100, icon0="correct.png", icon1="correct.png"},
                     {id=101, icon0="correct.png", icon1="correct.png"},
@@ -124,11 +118,7 @@
             }
             start.list_virtual_height = #start.item_list * start.list_item_height;
 
-            --是否应该显示Detail信息计时
-            local function update_time()
-                start.current_time = start.current_time + 1
-            end
-            window.setInterval(update_time, 1)
+            
 
             function start.page_item_down()
                 start.page:on_item_down()
@@ -151,29 +141,15 @@
 
             local pageclass = require "page"
             window.customElements.define("page", function(e)
-                local name = e.getAttribute("name")
-                console.log("----page name : ", name)
-                start.page = pageclass.create(e, {
-                    width       = start.page_width,
-                    height      = start.page_height,
-                    item_size   = start.item_size,
-                    source      = start
-                },
-                document.getElementById "pagefooter")
+                local page = pageclass.create(e, start, document.getElementById "pagefooter")
+                window.setInterval(function () page:update_time() end, 1)
+                start.page = page
             end)
 
             local listclass = require "list"
             window.customElements.define("list", function(e)
-                local name = e.getAttribute("name")
-                console.log("----list name : ", name)
-                local list = listclass.create(e, {
-                    direction   = 1, -- 0:horizontal, 1:vertical
-                    width       = start.list_width,
-                    height      = start.list_height,
-                    item_width  = start.list_item_width,
-                    item_height = start.list_item_height,
-                    item_count  = #start.item_list
-                })
+                local list = listclass.create(e)
+                list:set_item_count(#start.item_list)
             end)
         </script>
     </head>
@@ -182,23 +158,23 @@
             <div style='width:20px; height:20px; background-size:cover; background-image:"common/page0.png";'/>
         </template>
         <div class="panel" data-model="start">
-            <page name='p0'>
+            <page width='667' height='720' item_size='200' detail_height='120'>
                 <div class="page">
                     <!-- item 定义 -->
-                    <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_down()" data-event-mouseup="page_item_up(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="((it.row > selected_row) ? (it.top + detail_height) : it.top) + 'px'" data-for="view_items">
+                    <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_down()" data-event-mouseup="page_item_up(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="it.top+'px'" data-for="view_items">
                         <div class="item-bg" data-style-background-image="it.data.icon0"/>
                         <div>{{it.data.id}}</div>
                     </div>
                     <!-- 详细信息 -->
-                    <div style="position: absolute; width: 100%; background-color: rgba(0, 100, 150, 255);" data-style-left="current_page * page_width + 'px'" data-style-height="detail_height+'px'" data-style-top="detail_top+item_size+'px'" data-if="show_detail">
+                    <div id="detail" style="position: absolute; width: 100%; background-color: rgba(0, 100, 150, 255);" data-style-height="detail_height+'px'" data-if="show_detail">
                         Item Detail
                     </div>
                 </div>
                 <!-- 页面指示 -->
                 <div/>
             </page>
-            <div style='flex-direction: col; width:50%; height:100%;'>
-                <list name='l0'>
+            <div style='flex-direction: column; width:50%; height:100%;'>
+                <list direction='1' width='667' height='360' item_width='667' item_height='50'>
                     <div class="list">
                         <!-- item 定义 -->
                         <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="item_list">
@@ -207,7 +183,7 @@
                         </div>
                     </div>
                 </list>
-                <list name='l1' style='background-color: rgba(100, 200, 100, 255);'>
+                <list direction='1' width='667' height='360' item_width='667' item_height='50' style='background-color: rgba(100, 200, 100, 255);'>
                     <div class="list">
                         <!-- item 定义 -->
                         <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="item_list">

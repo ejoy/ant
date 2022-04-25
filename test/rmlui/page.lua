@@ -14,11 +14,14 @@ function page_meta:update_view_pages()
         view_page_idx = view_page_idx + 1
     end
     self.data_source.view_items = vitems
-    self.data_source.current_page = self.current_page - 1
+    --self.data_source.current_page = self.current_page - 1
     if self.footer then
         for i, child in ipairs(self.footer.childNodes) do
             child.style.backgroundImage = (i == self.current_page) and 'common/page1.png' or 'common/page0.png'
-        end 
+        end
+    end
+    if self.detail then
+        self.detail.style.left = (self.current_page - 1) * self.width .. 'px'
     end
 end
 
@@ -60,9 +63,15 @@ function page_meta:update_virtual_pages(items)
     self.gapy = gapy
     self.virtual_pages = vpages
 end
-
-function page_meta.create(e, desc, pagefooter)
+function page_meta:update_time()
+    self.current_time = self.current_time + 1
+end
+function page_meta.create(e, source, pagefooter)
+    local width = tonumber(e.getAttribute("width"))
+    local height = tonumber(e.getAttribute("height"))
+    local item_size = tonumber(e.getAttribute("item_size"))
     local page = {
+        current_time = 0,
         current_page = 1,
         pos          = 0,
         draging      = false,
@@ -72,15 +81,16 @@ function page_meta.create(e, desc, pagefooter)
         gapy         = 0,
         drag         = {mouse_pos = 0, anchor = 0, delta = 0},
         virtual_pages = {},
-        row          = math.floor(desc.height / desc.item_size),
-        col          = math.floor(desc.width / desc.item_size),
-        width        = desc.width,
-        height       = desc.height,
-        item_size    = desc.item_size,
-        data_source  = desc.source,
+        row          = math.floor(height / item_size),
+        col          = math.floor(width / item_size),
+        width        = width,
+        height       = height,
+        item_size    = item_size,
+        detail_height = tonumber(e.getAttribute("detail_height")),
+        data_source  = source,
     }
     setmetatable(page, page_meta)
-    page:update_virtual_pages(desc.source.items)
+    page:update_virtual_pages(source.items)
     page:update_view_pages()
 
     e.style.overflow = 'hidden'
@@ -88,6 +98,7 @@ function page_meta.create(e, desc, pagefooter)
     panel.addEventListener('mousedown', function(event) page:on_mousedown(event) end)
     panel.addEventListener('mousemove', function(event) page:on_drag(event) end)
     panel.addEventListener('mouseup', function(event) page:on_mouseup(event) end)
+    --page.detail = panel.getElementById "detail"
     page.view = e
     page.panel = panel
     page.view.style.width = page.width .. 'px'
@@ -122,36 +133,40 @@ function page_meta:get_current_page()
 end
 
 function page_meta:on_item_down(id, row, top)
-    self.item_down_time = self.data_source.current_time
+    self.item_down_time = self.current_time
 end
 
-function page_meta:show_detail(show, id, row, top)
+function page_meta:do_show_detail(show, id, row, top)
+    if not self.detail then
+        return
+    end
+    console.log("do_show_detail: ", id, show)
     local offset = 0
     if show then
         self.data_source.selected_id = id
-        self.data_source.selected_row = row
-        self.data_source.detail_top = top
-        local dy = self.height - ((row + 1) * (self.item_size + self.gapy) + self.data_source.detail_height)
+        self.detail.style.top = (top + self.item_size) .. 'px'
+        local dy = self.height - ((row + 1) * (self.item_size + self.gapy) + self.detail_height)
         offset = (dy >= 0) and 0 or dy
     else
         self.data_source.selected_id = 0
-        --TODO: max value 1000
-        self.data_source.selected_row = 10000
     end
     self.panel.style.top = offset .. 'px'
     self.data_source.show_detail = show
 end
 
 function page_meta:on_item_up(id, row, top)
-    if self.data_source.current_time - self.item_down_time <= self.interval and not self.draging then
-        --console.log("start.draging: ", self.draging)
+    if not self.detail then
+        return
+    end
+    if self.current_time - self.item_down_time <= self.interval and not self.draging then
+        console.log("old_id, current_id: ", self.data_source.selected_id, id)
         if self.data_source.selected_id ~= id then
-            self:show_detail(true, id, row, top)
+            self:do_show_detail(true, id, row, top)
         else
-            self:show_detail(not self.data_source.show_detail, id, row, top)
+            self:do_show_detail(not self.data_source.show_detail, id, row, top)
         end
     else
-        self:show_detail(false, 0, 0, 0)
+        self:do_show_detail(false, 0, 0, 0)
     end
 end
 

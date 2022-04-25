@@ -1,14 +1,14 @@
 local list_meta = {}
 list_meta.__index = list_meta
 
-function list_meta.create(e, desc)
+function list_meta.create(e)
     local list = {
-        direction   = desc.direction,
-        width       = desc.width,
-        height      = desc.height,
-        item_count  = desc.item_count,
-        item_width  = desc.item_width,
-        item_height = desc.item_height,
+        direction   = tonumber(e.getAttribute("direction")),
+        width       = tonumber(e.getAttribute("width")),
+        height      = tonumber(e.getAttribute("height")),
+        item_count  = 1,
+        item_width  = tonumber(e.getAttribute("item_width")),
+        item_height = tonumber(e.getAttribute("item_height")),
         pos         = 0,
         drag        = {mouse_pos = 0, anchor = 0, delta = 0}
     }
