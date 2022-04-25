@@ -136,7 +136,7 @@
 
             local pageclass = require "page"
             window.customElements.define("page", function(e)
-                local page = pageclass.create(e, start.page_0, document.getElementById "pagefooter")
+                local page = pageclass.create(e, start.page_0, document.getElementById "pagefooter", function () start("page_0") end)
                 window.setInterval(function () page:update_time() end, 1)
                 start.page = page
             end)

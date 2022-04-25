@@ -14,7 +14,6 @@ function page_meta:update_view_pages()
         view_page_idx = view_page_idx + 1
     end
     self.source.view_items = vitems
-    --self.source.current_page = self.current_page - 1
     if self.footer then
         for i, child in ipairs(self.footer.childNodes) do
             child.style.backgroundImage = (i == self.current_page) and 'common/page1.png' or 'common/page0.png'
@@ -23,6 +22,7 @@ function page_meta:update_view_pages()
     if self.detail then
         self.detail.style.left = (self.current_page - 1) * self.width .. self.unit
     end
+    self.dirty()
 end
 
 function page_meta:update_virtual_pages(items)
@@ -66,7 +66,7 @@ end
 function page_meta:update_time()
     self.current_time = self.current_time + 1
 end
-function page_meta.create(e, source, pagefooter)
+function page_meta.create(e, source, pagefooter, dirty)
     local width = tonumber(e.getAttribute("width"))
     local height = tonumber(e.getAttribute("height"))
     local item_size = tonumber(e.getAttribute("item_size"))
@@ -89,7 +89,8 @@ function page_meta.create(e, source, pagefooter)
         item_size    = item_size,
         detail_height = tonumber(e.getAttribute("detail_height")),
         source       = source,
-        unit         = unit
+        unit         = unit,
+        dirty        = dirty
     }
     setmetatable(page, page_meta)
     page:update_virtual_pages(source.items)
@@ -100,7 +101,6 @@ function page_meta.create(e, source, pagefooter)
     panel.addEventListener('mousedown', function(event) page:on_mousedown(event) end)
     panel.addEventListener('mousemove', function(event) page:on_drag(event) end)
     panel.addEventListener('mouseup', function(event) page:on_mouseup(event) end)
-    --page.detail = panel.getElementById "detail"
     page.view = e
     page.panel = panel
     page.view.style.width = width .. unit
@@ -154,6 +154,7 @@ function page_meta:do_show_detail(show, id, row, top)
     end
     self.panel.style.top = offset .. self.unit
     self.source.show_detail = show
+    self.dirty()
 end
 
 function page_meta:on_item_up(id, row, top)
@@ -203,8 +204,8 @@ function page_meta:on_drag(event)
     if event.button then
         self.drag.delta = event.x - self.drag.mouse_pos
         self.pos = self.drag.anchor + self.drag.delta
-        --event.current:setPropertyImmediate("left", tostring(math.floor(self.pos)) .. self.unit)
-        local e = self.panel--event.current
+        --console.log("self.pos : ", self.pos)
+        local e = self.panel
         local oldClassName = e.className
         e.className = e.className .. " notransition"
         e.style.left = tostring(math.floor(self.pos)) .. self.unit
