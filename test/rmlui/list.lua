@@ -1,7 +1,7 @@
 local list_meta = {}
 list_meta.__index = list_meta
 
-function list_meta.create(e)
+function list_meta.create(e, source)
     local list = {
         direction   = tonumber(e.getAttribute("direction")),
         width       = tonumber(e.getAttribute("width")),
@@ -10,7 +10,9 @@ function list_meta.create(e)
         item_width  = tonumber(e.getAttribute("item_width")),
         item_height = tonumber(e.getAttribute("item_height")),
         pos         = 0,
-        drag        = {mouse_pos = 0, anchor = 0, delta = 0}
+        drag        = {mouse_pos = 0, anchor = 0, delta = 0},
+        source      = source,
+        unit        = source.unit,
     }
     setmetatable(list, list_meta)
     e.style.overflow = 'hidden'
@@ -25,10 +27,10 @@ function list_meta.create(e)
 end
 
 function list_meta:update_size()
-    self.view.style.width = self.width .. 'px'
-    self.view.style.height = self.height .. 'px'
-    self.panel.style.width = self.width .. 'px'
-    self.panel.style.height = self.item_count * self.item_height .. 'px'
+    self.view.style.width = self.width .. self.unit
+    self.view.style.height = self.height .. self.unit
+    self.panel.style.width = self.width .. self.unit
+    self.panel.style.height = self.item_count * self.item_height .. self.unit
 end
 
 function list_meta:set_list_size(width, height)
@@ -65,9 +67,9 @@ function list_meta:on_mouseup(event)
     end
     if adjust then
         if self.direction == 0 then
-            self.panel.style.left = tostring(self.pos) .. 'px'
+            self.panel.style.left = tostring(self.pos) .. self.unit
         else
-            self.panel.style.top = tostring(self.pos) .. 'px'
+            self.panel.style.top = tostring(self.pos) .. self.unit
         end
     end
 end
@@ -80,9 +82,9 @@ function list_meta:on_drag(event)
         local oldClassName = e.className
         e.className = e.className .. " notransition"
         if self.direction == 0 then
-            e.style.left = tostring(math.floor(self.pos)) .. 'px'
+            e.style.left = tostring(math.floor(self.pos)) .. self.unit
         else
-            e.style.top = tostring(math.floor(self.pos)) .. 'px'
+            e.style.top = tostring(math.floor(self.pos)) .. self.unit
         end
         e.className = oldClassName
     end
