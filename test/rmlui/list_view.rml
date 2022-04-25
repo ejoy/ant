@@ -151,23 +151,28 @@
 
             local pageclass = require "page"
             window.customElements.define("page", function(e)
+                local name = e.getAttribute("name")
+                console.log("----page name : ", name)
                 start.page = pageclass.create(e, {
-                    width = start.page_width,
-                    height = start.page_height,
-                    item_size = start.item_size,
-                    source = start
-                }, document.getElementById "pagefooter")
+                    width       = start.page_width,
+                    height      = start.page_height,
+                    item_size   = start.item_size,
+                    source      = start
+                },
+                document.getElementById "pagefooter")
             end)
 
             local listclass = require "list"
             window.customElements.define("list", function(e)
+                local name = e.getAttribute("name")
+                console.log("----list name : ", name)
                 local list = listclass.create(e, {
-                    direction = 1, -- 0:horizontal, 1:vertical
-                    width = start.list_width,
-                    height = start.list_height,
-                    item_width = start.list_item_width,
+                    direction   = 1, -- 0:horizontal, 1:vertical
+                    width       = start.list_width,
+                    height      = start.list_height,
+                    item_width  = start.list_item_width,
                     item_height = start.list_item_height,
-                    item_count = #start.item_list
+                    item_count  = #start.item_list
                 })
             end)
         </script>
@@ -177,7 +182,7 @@
             <div style='width:20px; height:20px; background-size:cover; background-image:"common/page0.png";'/>
         </template>
         <div class="panel" data-model="start">
-            <page>
+            <page name='p0'>
                 <div class="page">
                     <!-- item 定义 -->
                     <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_down()" data-event-mouseup="page_item_up(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="((it.row > selected_row) ? (it.top + detail_height) : it.top) + 'px'" data-for="view_items">
@@ -192,15 +197,26 @@
                 <!-- 页面指示 -->
                 <div/>
             </page>
-            <list>
-                <div class="list">
-                    <!-- item 定义 -->
-                    <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="item_list">
-                        <div class="item-bg" data-style-background-image="it.icon0"/>
-                        <div>{{it.id}}</div>
+            <div style='flex-direction: col; width:50%; height:100%;'>
+                <list name='l0'>
+                    <div class="list">
+                        <!-- item 定义 -->
+                        <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="item_list">
+                            <div class="item-bg" data-style-background-image="it.icon0"/>
+                            <div>{{it.id}}</div>
+                        </div>
                     </div>
-                </div>
-            </list>
+                </list>
+                <list name='l1' style='background-color: rgba(100, 200, 100, 255);'>
+                    <div class="list">
+                        <!-- item 定义 -->
+                        <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="item_list">
+                            <div class="item-bg" data-style-background-image="it.icon0"/>
+                            <div>{{it.id}}</div>
+                        </div>
+                    </div>
+                </list>
+            </div>
         </div>
     </body>
 </rml>
