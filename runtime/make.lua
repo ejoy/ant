@@ -45,6 +45,8 @@ if lm.os == "windows" then
     checkAddModule("efk", "../packages/efk/make.lua")
 end
 
+checkAddModule("render", "../packages/render/make.lua")
+
 lm:copy "copy_mainlua" {
     input = "common/main.lua",
     output = "../"..lm.bindir,

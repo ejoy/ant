@@ -42,6 +42,7 @@ int luaopen_vfs(lua_State* L);
 int luaopen_ecs_core(lua_State* L);
 int luaopen_fastio(lua_State* L);
 int luaopen_fileinterface(lua_State *L);
+int luaopen_material(lua_State *L);
 #if BX_PLATFORM_IOS
 int luaopen_gesture(lua_State* L);
 #endif
@@ -97,6 +98,7 @@ void ant_loadmodules(lua_State* L) {
         { "ltask.exclusive", luaopen_ltask_exclusive},
         { "ecs.core", luaopen_ecs_core},
         { "fastio", luaopen_fastio},
+        { "render.material", luaopen_material},
 #if BX_PLATFORM_IOS
         { "gesture", luaopen_gesture },
 #endif
