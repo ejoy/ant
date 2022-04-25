@@ -1,0 +1,9 @@
+.pagestyle {
+    transition: left 0.5s linear-out; 
+}
+.liststyle {
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    transition: top 0.5s linear-out;
+}

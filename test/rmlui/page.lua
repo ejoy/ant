@@ -13,15 +13,15 @@ function page_meta:update_view_pages()
         end
         view_page_idx = view_page_idx + 1
     end
-    self.data_source.view_items = vitems
-    --self.data_source.current_page = self.current_page - 1
+    self.source.view_items = vitems
+    --self.source.current_page = self.current_page - 1
     if self.footer then
         for i, child in ipairs(self.footer.childNodes) do
             child.style.backgroundImage = (i == self.current_page) and 'common/page1.png' or 'common/page0.png'
         end
     end
     if self.detail then
-        self.detail.style.left = (self.current_page - 1) * self.width .. 'px'
+        self.detail.style.left = (self.current_page - 1) * self.width .. self.unit
     end
 end
 
@@ -70,6 +70,7 @@ function page_meta.create(e, source, pagefooter)
     local width = tonumber(e.getAttribute("width"))
     local height = tonumber(e.getAttribute("height"))
     local item_size = tonumber(e.getAttribute("item_size"))
+    local unit = source.unit
     local page = {
         current_time = 0,
         current_page = 1,
@@ -87,7 +88,8 @@ function page_meta.create(e, source, pagefooter)
         height       = height,
         item_size    = item_size,
         detail_height = tonumber(e.getAttribute("detail_height")),
-        data_source  = source,
+        source       = source,
+        unit         = unit
     }
     setmetatable(page, page_meta)
     page:update_virtual_pages(source.items)
@@ -101,10 +103,10 @@ function page_meta.create(e, source, pagefooter)
     --page.detail = panel.getElementById "detail"
     page.view = e
     page.panel = panel
-    page.view.style.width = page.width .. 'px'
-    page.view.style.height = page.height .. 'px'
-    page.panel.style.width = #page.virtual_pages * page.width .. 'px'
-    page.panel.style.height = (page.height - 30) .. 'px'
+    page.view.style.width = width .. unit
+    page.view.style.height = height .. unit
+    page.panel.style.width = #page.virtual_pages * width .. unit
+    page.panel.style.height = (height - 30) .. unit
     local footer = e.childNodes[2]
     page.footer = footer
     footer.style.flexDirection = 'row'
@@ -143,15 +145,15 @@ function page_meta:do_show_detail(show, id, row, top)
     console.log("do_show_detail: ", id, show)
     local offset = 0
     if show then
-        self.data_source.selected_id = id
-        self.detail.style.top = (top + self.item_size) .. 'px'
+        self.source.selected_id = id
+        self.detail.style.top = (top + self.item_size) .. self.unit
         local dy = self.height - ((row + 1) * (self.item_size + self.gapy) + self.detail_height)
         offset = (dy >= 0) and 0 or dy
     else
-        self.data_source.selected_id = 0
+        self.source.selected_id = 0
     end
-    self.panel.style.top = offset .. 'px'
-    self.data_source.show_detail = show
+    self.panel.style.top = offset .. self.unit
+    self.source.show_detail = show
 end
 
 function page_meta:on_item_up(id, row, top)
@@ -159,11 +161,11 @@ function page_meta:on_item_up(id, row, top)
         return
     end
     if self.current_time - self.item_down_time <= self.interval and not self.draging then
-        console.log("old_id, current_id: ", self.data_source.selected_id, id)
-        if self.data_source.selected_id ~= id then
+        console.log("old_id, current_id: ", self.source.selected_id, id)
+        if self.source.selected_id ~= id then
             self:do_show_detail(true, id, row, top)
         else
-            self:do_show_detail(not self.data_source.show_detail, id, row, top)
+            self:do_show_detail(not self.source.show_detail, id, row, top)
         end
     else
         self:do_show_detail(false, 0, 0, 0)
@@ -193,7 +195,7 @@ function page_meta:on_mouseup(event)
         self:update_view_pages()
     end
     self.pos = (1 - self.current_page) * self.width
-    self.panel.style.left = tostring(self.pos) .. 'px'
+    self.panel.style.left = tostring(self.pos) .. self.unit
     return old_value ~= self.current_page
 end
 
@@ -201,11 +203,11 @@ function page_meta:on_drag(event)
     if event.button then
         self.drag.delta = event.x - self.drag.mouse_pos
         self.pos = self.drag.anchor + self.drag.delta
-        --event.current:setPropertyImmediate("left", tostring(math.floor(self.pos)) .. 'px')
+        --event.current:setPropertyImmediate("left", tostring(math.floor(self.pos)) .. self.unit)
         local e = self.panel--event.current
         local oldClassName = e.className
         e.className = e.className .. " notransition"
-        e.style.left = tostring(math.floor(self.pos)) .. 'px'
+        e.style.left = tostring(math.floor(self.pos)) .. self.unit
         e.className = oldClassName
         self.draging = true
     else

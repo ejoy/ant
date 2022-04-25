@@ -35,90 +35,85 @@
                 flex-direction: column;
                 align-items:center;
             }
-            .page {
-                transition: left 0.5s linear-out; 
-            }
-            .list {
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-start;
-                transition: top 0.5s linear-out;
-            }
             .notransition {
                 transition: none;
             }
         </style>
+        <style path = "listpage_style.rcss"/>
         <script type="text/x-lua" >
             console.log("before createModel")
             local start = window.createModel "start" {
-                items = {
-                    {id=100, icon0="correct.png", icon1="correct.png"},
-                    {id=101, icon0="correct.png", icon1="correct.png"},
-                    {id=102, icon0="correct.png", icon1="correct.png"},
-                    {id=103, icon0="correct.png", icon1="correct.png"},
-                    {id=104, icon0="correct.png", icon1="correct.png"},
-                    {id=105, icon0="correct.png", icon1="correct.png"},
-                    {id=106, icon0="correct.png", icon1="correct.png"},
-                    {id=107, icon0="correct.png", icon1="correct.png"},
-                    {id=108, icon0="correct.png", icon1="correct.png"},
-                    {id=109, icon0="correct.png", icon1="correct.png"},
-                    {id=110, icon0="correct.png", icon1="correct.png"},
-                    {id=111, icon0="correct.png", icon1="correct.png"},
-                    {id=112, icon0="correct.png", icon1="correct.png"},
-                    {id=113, icon0="correct.png", icon1="correct.png"},
-                    {id=114, icon0="correct.png", icon1="correct.png"},
-                    {id=115, icon0="correct.png", icon1="correct.png"},
-                    {id=116, icon0="correct.png", icon1="correct.png"},
-                    {id=117, icon0="correct.png", icon1="correct.png"},
-                    {id=118, icon0="correct.png", icon1="correct.png"},
-                    {id=119, icon0="correct.png", icon1="correct.png"},
-                    {id=120, icon0="correct.png", icon1="correct.png"},
-                    {id=121, icon0="correct.png", icon1="correct.png"},
-                    {id=122, icon0="correct.png", icon1="correct.png"},
-                    {id=123, icon0="correct.png", icon1="correct.png"},
-                    {id=124, icon0="correct.png", icon1="correct.png"},
+                page_0 = {
+                    items = {
+                        {id=100, icon0="correct.png", icon1="correct.png"},
+                        {id=101, icon0="correct.png", icon1="correct.png"},
+                        {id=102, icon0="correct.png", icon1="correct.png"},
+                        {id=103, icon0="correct.png", icon1="correct.png"},
+                        {id=104, icon0="correct.png", icon1="correct.png"},
+                        {id=105, icon0="correct.png", icon1="correct.png"},
+                        {id=106, icon0="correct.png", icon1="correct.png"},
+                        {id=107, icon0="correct.png", icon1="correct.png"},
+                        {id=108, icon0="correct.png", icon1="correct.png"},
+                        {id=109, icon0="correct.png", icon1="correct.png"},
+                        {id=110, icon0="correct.png", icon1="correct.png"},
+                        {id=111, icon0="correct.png", icon1="correct.png"},
+                        {id=112, icon0="correct.png", icon1="correct.png"},
+                        {id=113, icon0="correct.png", icon1="correct.png"},
+                        {id=114, icon0="correct.png", icon1="correct.png"},
+                        {id=115, icon0="correct.png", icon1="correct.png"},
+                        {id=116, icon0="correct.png", icon1="correct.png"},
+                        {id=117, icon0="correct.png", icon1="correct.png"},
+                        {id=118, icon0="correct.png", icon1="correct.png"},
+                        {id=119, icon0="correct.png", icon1="correct.png"},
+                        {id=120, icon0="correct.png", icon1="correct.png"},
+                        {id=121, icon0="correct.png", icon1="correct.png"},
+                        {id=122, icon0="correct.png", icon1="correct.png"},
+                        {id=123, icon0="correct.png", icon1="correct.png"},
+                        {id=124, icon0="correct.png", icon1="correct.png"},
+                    },
+                    unit = 'px',
+                    selected_id = 0,
+                    view_items = {},
+                    show_detail = false,
+                    -- 详细信息面板高度
+                    detail_height = 120,
                 },
                 page_width = 667,
                 page_height = 720,
                 item_size = 200,
-                show_detail = false,
-                -- 详细信息面板高度
-                detail_height = 120,
-                view_items = {},
-                selected_id = 0,
-                item_list = {
-                    {id=100, icon0="correct.png", icon1="correct.png"},
-                    {id=101, icon0="correct.png", icon1="correct.png"},
-                    {id=102, icon0="correct.png", icon1="correct.png"},
-                    {id=103, icon0="correct.png", icon1="correct.png"},
-                    {id=104, icon0="correct.png", icon1="correct.png"},
-                    {id=105, icon0="correct.png", icon1="correct.png"},
-                    {id=106, icon0="correct.png", icon1="correct.png"},
-                    {id=107, icon0="correct.png", icon1="correct.png"},
-                    {id=108, icon0="correct.png", icon1="correct.png"},
-                    {id=109, icon0="correct.png", icon1="correct.png"},
-                    {id=110, icon0="correct.png", icon1="correct.png"},
-                    {id=111, icon0="correct.png", icon1="correct.png"},
-                    {id=112, icon0="correct.png", icon1="correct.png"},
-                    {id=113, icon0="correct.png", icon1="correct.png"},
-                    {id=114, icon0="correct.png", icon1="correct.png"},
-                    {id=115, icon0="correct.png", icon1="correct.png"},
-                    {id=116, icon0="correct.png", icon1="correct.png"},
-                    {id=117, icon0="correct.png", icon1="correct.png"},
-                    {id=118, icon0="correct.png", icon1="correct.png"},
-                    {id=119, icon0="correct.png", icon1="correct.png"},
-                    {id=120, icon0="correct.png", icon1="correct.png"},
-                    {id=121, icon0="correct.png", icon1="correct.png"},
-                    {id=122, icon0="correct.png", icon1="correct.png"},
+                list_0 = {
+                    items = {
+                        {id=100, icon0="correct.png", icon1="correct.png"},
+                        {id=101, icon0="correct.png", icon1="correct.png"},
+                        {id=102, icon0="correct.png", icon1="correct.png"},
+                        {id=103, icon0="correct.png", icon1="correct.png"},
+                        {id=104, icon0="correct.png", icon1="correct.png"},
+                        {id=105, icon0="correct.png", icon1="correct.png"},
+                        {id=106, icon0="correct.png", icon1="correct.png"},
+                        {id=107, icon0="correct.png", icon1="correct.png"},
+                        {id=108, icon0="correct.png", icon1="correct.png"},
+                        {id=109, icon0="correct.png", icon1="correct.png"},
+                        {id=110, icon0="correct.png", icon1="correct.png"},
+                        {id=111, icon0="correct.png", icon1="correct.png"},
+                        {id=112, icon0="correct.png", icon1="correct.png"},
+                        {id=113, icon0="correct.png", icon1="correct.png"},
+                        {id=114, icon0="correct.png", icon1="correct.png"},
+                        {id=115, icon0="correct.png", icon1="correct.png"},
+                        {id=116, icon0="correct.png", icon1="correct.png"},
+                        {id=117, icon0="correct.png", icon1="correct.png"},
+                        {id=118, icon0="correct.png", icon1="correct.png"},
+                        {id=119, icon0="correct.png", icon1="correct.png"},
+                        {id=120, icon0="correct.png", icon1="correct.png"},
+                        {id=121, icon0="correct.png", icon1="correct.png"},
+                        {id=122, icon0="correct.png", icon1="correct.png"},
+                    },
+                    unit = 'px',
                 },
                 list_item_width = 667,
                 list_item_height = 50,
                 list_width = 667,
                 list_height = 360,
             }
-            start.list_virtual_height = #start.item_list * start.list_item_height;
-
-            
 
             function start.page_item_down()
                 start.page:on_item_down()
@@ -141,15 +136,15 @@
 
             local pageclass = require "page"
             window.customElements.define("page", function(e)
-                local page = pageclass.create(e, start, document.getElementById "pagefooter")
+                local page = pageclass.create(e, start.page_0, document.getElementById "pagefooter")
                 window.setInterval(function () page:update_time() end, 1)
                 start.page = page
             end)
 
             local listclass = require "list"
             window.customElements.define("list", function(e)
-                local list = listclass.create(e)
-                list:set_item_count(#start.item_list)
+                local list = listclass.create(e, start.list_0)
+                list:set_item_count(#start.list_0.items)
             end)
         </script>
     </head>
@@ -159,14 +154,14 @@
         </template>
         <div class="panel" data-model="start">
             <page width='667' height='720' item_size='200' detail_height='120'>
-                <div class="page">
+                <div class="pagestyle">
                     <!-- item 定义 -->
-                    <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_down()" data-event-mouseup="page_item_up(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="it.top+'px'" data-for="view_items">
+                    <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="page_0.selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_down()" data-event-mouseup="page_item_up(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="it.top+'px'" data-for="page_0.view_items">
                         <div class="item-bg" data-style-background-image="it.data.icon0"/>
                         <div>{{it.data.id}}</div>
                     </div>
                     <!-- 详细信息 -->
-                    <div id="detail" style="position: absolute; width: 100%; background-color: rgba(0, 100, 150, 255);" data-style-height="detail_height+'px'" data-if="show_detail">
+                    <div id="detail" style="position: absolute; width: 100%; background-color: rgba(0, 100, 150, 255);" data-style-height="page_0.detail_height+'px'" data-if="page_0.show_detail">
                         Item Detail
                     </div>
                 </div>
@@ -175,18 +170,18 @@
             </page>
             <div style='flex-direction: column; width:50%; height:100%;'>
                 <list direction='1' width='667' height='360' item_width='667' item_height='50'>
-                    <div class="list">
+                    <div class="liststyle">
                         <!-- item 定义 -->
-                        <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="item_list">
+                        <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="list_0.items">
                             <div class="item-bg" data-style-background-image="it.icon0"/>
                             <div>{{it.id}}</div>
                         </div>
                     </div>
                 </list>
                 <list direction='1' width='667' height='360' item_width='667' item_height='50' style='background-color: rgba(100, 200, 100, 255);'>
-                    <div class="list">
+                    <div class="liststyle">
                         <!-- item 定义 -->
-                        <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="item_list">
+                        <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="list_0.items">
                             <div class="item-bg" data-style-background-image="it.icon0"/>
                             <div>{{it.id}}</div>
                         </div>
