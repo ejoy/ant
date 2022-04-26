@@ -73,3 +73,5 @@ component "meshskin".type "lua"
 
 component "meshskin_result".type "lua"
     .require_system "ant.asset|meshskin_system"
+
+import "cmaterial.ecs"

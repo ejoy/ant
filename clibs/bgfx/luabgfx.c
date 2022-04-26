@@ -4005,8 +4005,6 @@ create_fb_mrt(lua_State *L) {
 	for (i=0;i<n;i++) {
 		if (lua_geti(L, 1, i+1) == LUA_TNUMBER) {
 			attachments[i].handle.idx = BGFX_LUAHANDLE_ID(TEXTURE, lua_tointeger(L, -1));
-			lua_pop(L, 1);
-
 			attachments[i].access = BGFX_ACCESS_WRITE;
 			attachments[i].mip = 0;
 			attachments[i].layer = 0;
@@ -4056,6 +4054,7 @@ create_fb_mrt(lua_State *L) {
 			attachments[i].numLayers = lua_getfield(L, -1, "numlayer") == LUA_TNUMBER ? (uint16_t)lua_tointeger(L, -1) : 1;
 			lua_pop(L, 1);
 		}
+		lua_pop(L, 1);
 	}
 	return BGFX(create_frame_buffer_from_attachment)(n, attachments, destroy);
 }
@@ -5171,6 +5170,7 @@ lbeginEncoder(lua_State *L) {
 		luaL_error(L, "Call bgfx.encoder_init first");
 	}
 	struct encoder_holder *E = (struct encoder_holder *)lua_touserdata(L, -1);
+	lua_pop(L, 1);
 	E->encoder = BGFX(encoder_begin)(1);
 	return 0;
 }
@@ -5181,12 +5181,25 @@ lendEncoder(lua_State *L) {
 		luaL_error(L, "Call bgfx.encoder_init first");
 	}
 	struct encoder_holder *E = (struct encoder_holder *)lua_touserdata(L, -1);
+	lua_pop(L, 1);
 	if (E->encoder == NULL) {
 		luaL_error(L, "Call bgfx.encoder_begin first");
 	}
 	BGFX(encoder_end)(E->encoder);
 	E->encoder = NULL;
 	return 0;
+}
+
+static int
+lgetEncoder(lua_State *L){
+	if (lua_rawgetp(L, LUA_REGISTRYINDEX, ENCODER) != LUA_TUSERDATA) {
+		return luaL_error(L, "Call bgfx.encoder_init first");
+	}
+
+	struct encoder_holder *E = (struct encoder_holder *)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	lua_pushlightuserdata(L, E);
+	return 1;
 }
 
 static int
@@ -5409,9 +5422,10 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_image", lsetImage },
 		{ "execute_setter", lexecuteSetter },
 
-		{ "encoder_begin", lbeginEncoder },
-		{ "encoder_end", lendEncoder },
-		{ "encoder_init", NULL },
+		{ "encoder_begin",	lbeginEncoder },
+		{ "encoder_end", 	lendEncoder },
+		{ "encoder_get",	lgetEncoder},
+		{ "encoder_init", 	NULL },
 
 		{ "CINTERFACE", NULL },
 

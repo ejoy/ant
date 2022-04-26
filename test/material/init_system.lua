@@ -2,6 +2,8 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
+local bgfx = require "bgfx"
+
 local imesh     = ecs.import.interface "ant.asset|imesh"
 local irender   = ecs.import.interface "ant.render|irender"
 
@@ -12,12 +14,12 @@ local is = ecs.system "init_system"
 function is:init()
     ecs.create_entity{
         policy = {
-            "ant.render|simplerender",
+            "ant.test.material|simplerender2",
             "ant.general|name",
         },
         data = {
-            material_with_c = true,
-            c_material = "/pkg/ant.test.material/assets/test.material",
+            scene = {srt={}},
+            cmaterial = "/pkg/ant.test.material/assets/test.material",
             simplemesh = imesh.init_mesh({
                 ib = {
                     start = 0,
