@@ -25,13 +25,14 @@ function page_meta:update_view_pages()
     self.dirty()
 end
 
-function page_meta:update_virtual_pages(items)
+function page_meta:update_virtual_pages()
     local vpages = {}
     local count_per_page = self.row * self.col
     local gapx = math.floor(math.fmod(self.width, self.item_size) / (self.col + 1))
     local gapy = math.floor(math.fmod(self.height, self.item_size) / (self.row + 1))
     local offset = 0
     local index = 1
+    local items = self.source.items
     local total_item_count = #items
     local page_index = 0
     while index <= total_item_count do
@@ -63,9 +64,7 @@ function page_meta:update_virtual_pages(items)
     self.gapy = gapy
     self.virtual_pages = vpages
 end
-function page_meta:update_time()
-    self.current_time = self.current_time + 1
-end
+
 function page_meta.create(e, source, pagefooter, dirty)
     local width = tonumber(e.getAttribute("width"))
     local height = tonumber(e.getAttribute("height"))
@@ -93,8 +92,7 @@ function page_meta.create(e, source, pagefooter, dirty)
         dirty        = dirty
     }
     setmetatable(page, page_meta)
-    page:update_virtual_pages(source.items)
-    page:update_view_pages()
+    page:on_items_dirty()
 
     e.style.overflow = 'hidden'
     local panel = e.childNodes[1]
@@ -128,6 +126,11 @@ function page_meta.create(e, source, pagefooter, dirty)
     return page
 end
 
+function page_meta:on_items_dirty()
+    self:update_virtual_pages()
+    self:update_view_pages()
+end
+
 function page_meta:set_size(width, height)
     self.width = width
     self.height = height
@@ -137,8 +140,19 @@ function page_meta:get_current_page()
     return self.current_page
 end
 
-function page_meta:on_item_down(id, row, top)
-    self.item_down_time = self.current_time
+function page_meta:on_item_click(id, row, top)
+    if not self.detail then
+        return
+    end
+    if not self.draging then
+        if self.source.selected_id ~= id then
+            self:do_show_detail(true, id, row, top)
+        else
+            self:do_show_detail(not self.source.show_detail, id, row, top)
+        end
+    else
+        self:do_show_detail(false, 0, 0, 0)
+    end
 end
 
 function page_meta:do_show_detail(show, id, row, top)
@@ -157,21 +171,6 @@ function page_meta:do_show_detail(show, id, row, top)
     self.panel.style.top = offset .. self.unit
     self.source.show_detail = show
     self.dirty()
-end
-
-function page_meta:on_item_up(id, row, top)
-    if not self.detail then
-        return
-    end
-    if self.current_time - self.item_down_time <= self.interval and not self.draging then
-        if self.source.selected_id ~= id then
-            self:do_show_detail(true, id, row, top)
-        else
-            self:do_show_detail(not self.source.show_detail, id, row, top)
-        end
-    else
-        self:do_show_detail(false, 0, 0, 0)
-    end
 end
 
 function page_meta:on_mousedown(event)

@@ -27,11 +27,15 @@ function list_meta.create(e, source, dirty)
     return list
 end
 
+function list_meta:on_items_dirty()
+    self:update_size()
+end
+
 function list_meta:update_size()
     self.view.style.width = self.width .. self.unit
     self.view.style.height = self.height .. self.unit
     self.panel.style.width = self.width .. self.unit
-    self.panel.style.height = self.item_count * self.item_height .. self.unit
+    self.panel.style.height = #self.source.items * self.item_height .. self.unit
 end
 
 function list_meta:set_list_size(width, height)

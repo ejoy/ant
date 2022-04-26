@@ -114,13 +114,9 @@
                 list_width = 667,
                 list_height = 360,
             }
-
-            function start.page_item_down()
-                start.page:on_item_down()
-            end
-
-            function start.page_item_up(event, id, row, top)
-                start.page:on_item_up(id, row, top)
+            
+            function start.page_item_click(event, id, row, top)
+                start.page:on_item_click(id, row, top)
             end
 
             window.addEventListener('message', function(event)
@@ -136,22 +132,19 @@
 
             local pageclass = require "page"
             window.customElements.define("page", function(e)
-                local page = pageclass.create(e, start.page_0, document.getElementById "pagefooter", function () start("page_0") end)
-                window.setInterval(function () page:update_time() end, 1)
-                start.page = page
+                start.page = pageclass.create(e, start.page_0, document.getElementById "pagefooter", function () start("page_0") end)
             end)
 
             local listclass = require "list"
             window.customElements.define("list", function(e)
-                local list = listclass.create(e, start.list_0, function () start("list_0") end)
-                list:set_item_count(#start.list_0.items)
+                start.list = listclass.create(e, start.list_0, function () start("list_0") end)
             end)
         </script>
     </head>
     <body>
         <!--
         <template id="pageitem">
-            <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="page_0.selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_down()" data-event-mouseup="page_item_up(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="it.top+'px'" data-for="page_0.view_items">
+            <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="page_0.selected_id == it.data.id ? '2px green' : '0px green'" data-event-click="page_item_click(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="it.top+'px'" data-for="page_0.view_items">
                 <div class="item-bg" data-style-background-image="it.data.icon0"/>
                 <div>{{it.data.id}}</div>
             </div>
@@ -164,7 +157,7 @@
             <page width='667' height='720' item_size='200' detail_height='120'>
                 <div class="pagestyle">
                     <!-- item 定义 -->
-                    <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="page_0.selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_down()" data-event-mouseup="page_item_up(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="it.top+'px'" data-for="page_0.view_items">
+                    <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="page_0.selected_id == it.data.id ? '2px green' : '0px green'" data-event-click="page_item_click(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="it.top+'px'" data-for="page_0.view_items">
                         <div class="item-bg" data-style-background-image="it.data.icon0"/>
                         <div>{{it.data.id}}</div>
                     </div>
