@@ -83,6 +83,14 @@ function property_init:cloneNode()
     end
 end
 
+function property_init:getElementById()
+    local document = self._document
+    local handle = self._handle
+    return function (id)
+        return constructorElement(document, false, rmlui.ElementGetElementById(handle, id))
+    end
+end
+
 function property_init:scrollInsets()
     local handle = self._handle
     return function (l, t, r, b)

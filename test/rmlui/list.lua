@@ -1,7 +1,7 @@
 local list_meta = {}
 list_meta.__index = list_meta
 
-function list_meta.create(e, source)
+function list_meta.create(e, source, dirty)
     local list = {
         direction   = tonumber(e.getAttribute("direction")),
         width       = tonumber(e.getAttribute("width")),
@@ -13,6 +13,7 @@ function list_meta.create(e, source)
         drag        = {mouse_pos = 0, anchor = 0, delta = 0},
         source      = source,
         unit        = source.unit,
+        dirty       = dirty
     }
     setmetatable(list, list_meta)
     e.style.overflow = 'hidden'

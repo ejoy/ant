@@ -101,6 +101,9 @@ function page_meta.create(e, source, pagefooter, dirty)
     panel.addEventListener('mousedown', function(event) page:on_mousedown(event) end)
     panel.addEventListener('mousemove', function(event) page:on_drag(event) end)
     panel.addEventListener('mouseup', function(event) page:on_mouseup(event) end)
+    page.detail = panel.getElementById("detail")
+    page.detail.style.position = 'absolute'
+    page.detail.style.height = page.detail_height .. unit
     page.view = e
     page.panel = panel
     page.view.style.width = width .. unit
@@ -142,7 +145,6 @@ function page_meta:do_show_detail(show, id, row, top)
     if not self.detail then
         return
     end
-    console.log("do_show_detail: ", id, show)
     local offset = 0
     if show then
         self.source.selected_id = id
@@ -162,7 +164,6 @@ function page_meta:on_item_up(id, row, top)
         return
     end
     if self.current_time - self.item_down_time <= self.interval and not self.draging then
-        console.log("old_id, current_id: ", self.source.selected_id, id)
         if self.source.selected_id ~= id then
             self:do_show_detail(true, id, row, top)
         else

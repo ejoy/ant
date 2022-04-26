@@ -457,6 +457,17 @@ lElementDelete(lua_State* L) {
 }
 
 static int
+lElementGetElementById(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::Element* element = e->GetElementById(lua_checkstdstring(L, 2));
+	if (!element) {
+		return 0;
+	}
+	lua_pushlightuserdata(L, element);
+	return 1;
+}
+
+static int
 lNodeGetParent(lua_State* L) {
 	Rml::Node* e = lua_checkobject<Rml::Node>(L, 1);
 	Rml::Element* parent = e->GetParentNode();
@@ -595,6 +606,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementGetOuterHTML", lElementGetOuterHTML },
 		{ "ElementSetOuterHTML", lElementSetOuterHTML },
 		{ "ElementAppendChild", lElementAppendChild },
+		{ "ElementGetElementById", lElementGetElementById },
 		{ "ElementDelete", lElementDelete },
 		{ "ElementProject", lElementProject },
 		{ "NodeGetParent", lNodeGetParent },

@@ -143,12 +143,20 @@
 
             local listclass = require "list"
             window.customElements.define("list", function(e)
-                local list = listclass.create(e, start.list_0)
+                local list = listclass.create(e, start.list_0, function () start("list_0") end)
                 list:set_item_count(#start.list_0.items)
             end)
         </script>
     </head>
     <body>
+        <!--
+        <template id="pageitem">
+            <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="page_0.selected_id == it.data.id ? '2px green' : '0px green'" data-event-mousedown="page_item_down()" data-event-mouseup="page_item_up(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="it.top+'px'" data-for="page_0.view_items">
+                <div class="item-bg" data-style-background-image="it.data.icon0"/>
+                <div>{{it.data.id}}</div>
+            </div>
+        </template>
+        -->
         <template id="pagefooter">
             <div style='width:20px; height:20px; background-size:cover; background-image:"common/page0.png";'/>
         </template>
@@ -161,7 +169,7 @@
                         <div>{{it.data.id}}</div>
                     </div>
                     <!-- 详细信息 -->
-                    <div id="detail" style="position: absolute; width: 100%; background-color: rgba(0, 100, 150, 255);" data-style-height="page_0.detail_height+'px'" data-if="page_0.show_detail">
+                    <div id="detail" style="width: 100%; background-color: rgba(0, 100, 150, 255);" data-if="page_0.show_detail">
                         Item Detail
                     </div>
                 </div>
