@@ -1,0 +1,6 @@
+system "cmaterial_system"
+    .implement "cmaterial.lua"
+    .method "component_init"
+    .method "entity_init"
+
+component "cmaterial".type "lua"

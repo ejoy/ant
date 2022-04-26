@@ -58,21 +58,7 @@ function irender.check_primitive_mode_state(state, template_state)
 	return bgfx.make_state(ts)
 end
 
-function irender.draw(vid, ri, mat)
-	ri:set_transform()
-
-	local _mat = mat or ri
-
-	bgfx.set_state(_mat.state)
-	bgfx.set_stencil(_mat.stencil)
-	local properties = _mat.properties
-	if properties then
-		for n, p in pairs(properties) do
-			p:set()
-		end
-	end
-	local ib, vb = ri.ib, ri.vb
-
+local function update_mesh(vb, ib)
 	if ib and ib.num ~= 0 then
 		bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
 	end
@@ -86,8 +72,34 @@ function irender.draw(vid, ri, mat)
 			bgfx.set_vertex_count(num_v)
 		end
 	end
+end
 
-	bgfx.submit(vid, _mat.fx.prog, 0)
+function irender.draw(vid, ri, mat)
+	ri:set_transform()
+
+	local prog
+	if ri.material then
+		local m = ri.material
+		--assert(type(mat) == "nil" or type(mat) == "userdata")
+		m{}
+		prog = m:progid()
+	else
+		local _mat = mat or ri
+
+		bgfx.set_state(_mat.state)
+		bgfx.set_stencil(_mat.stencil)
+		local properties = _mat.properties
+		if properties then
+			for n, p in pairs(properties) do
+				p:set()
+			end
+		end
+		prog = _mat.fx.prog
+	end
+
+	update_mesh(ri.vb, ri.ib)
+
+	bgfx.submit(vid, prog, 0)
 end
 
 function irender.get_main_view_rendertexture()

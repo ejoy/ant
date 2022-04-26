@@ -27,9 +27,14 @@ struct attrib {
 	} v;
 };
 
+struct encoder_holder {
+	bgfx_encoder_t *encoder;
+};
+
 struct attrib_arena {
 	bgfx_interface_vtbl_t *bgfx;
 	struct math3d_api *math;
+	struct encoder_holder* eh;
 	uint16_t cap;
 	uint16_t n;
 	uint16_t freelist;
@@ -56,10 +61,11 @@ struct material_instance {
 };
 
 struct attrib_arena *
-arena_new(lua_State *L, bgfx_interface_vtbl_t *bgfx, struct math3d_api *mapi) {
+arena_new(lua_State *L, bgfx_interface_vtbl_t *bgfx, struct math3d_api *mapi, struct encoder_holder *h) {
 	struct attrib_arena * a = (struct attrib_arena *)lua_newuserdatauv(L, sizeof(struct attrib_arena), 1);
 	a->bgfx = bgfx;
 	a->math = mapi;
+	a->eh = h;
 	a->cap = 0;
 	a->n = 0;
 	a->freelist = INVALID_ATTRIB;
@@ -398,6 +404,13 @@ lmaterial_instance(lua_State *L) {
 	return 1;
 }
 
+static int
+lmaterial_progid(lua_State *L){
+	struct material* m = (struct material *)luaL_checkudata(L, 1, "ANT_MATERIAL");
+	lua_pushinteger(L, m->prog.idx);
+	return 1;
+}
+
 static struct attrib *
 fetch_attrib(lua_State *L, struct material *mat, struct attrib_arena *arena, int n, int *num) {
 	uint16_t attrib = mat->attrib;
@@ -602,7 +615,7 @@ apply_attrib(lua_State *L, struct attrib_arena * cobject_, struct attrib *a, int
 		bgfx_texture_handle_t tex;
 		lua_geti(L, texture_index, a->v.t.handle);
 		tex.idx = luaL_optinteger(L, -1, UINT16_MAX) & 0xffff;
-		BGFX(set_texture)(a->v.t.stage, a->handle, tex, UINT32_MAX);
+		BGFX(encoder_set_texture)(cobject_->eh->encoder, a->v.t.stage, a->handle, tex, UINT32_MAX);
 		return a->next;
 	}
 	struct attrib_arena * arena = cobject_;
@@ -611,7 +624,7 @@ apply_attrib(lua_State *L, struct attrib_arena * cobject_, struct attrib *a, int
 		// todo: set uniform
 		int t;
 		const float * v = math3d_value(CAPI_MATH3D, a->v.m, &t);
-		BGFX(set_uniform)(a->handle, v, 1);
+		BGFX(encoder_set_uniform)(cobject_->eh->encoder, a->handle, v, 1);
 		return a->next;
 	}
 	// multiple uniforms
@@ -635,7 +648,7 @@ apply_attrib(lua_State *L, struct attrib_arena * cobject_, struct attrib *a, int
 		next = &arena->a[a->next];
 		++n;
 	} while (a->next != INVALID_ATTRIB && BGFX_EQUAL(next->handle, a->handle));
-	BGFX(set_uniform)(a->handle, buffer, n);
+	BGFX(encoder_set_uniform)(cobject_->eh->encoder, a->handle, buffer, n);
 	return a->next;
 }
 
@@ -810,10 +823,11 @@ lmaterial_new(lua_State *L) {
 
 	if (luaL_newmetatable(L, "ANT_MATERIAL")) {
 		luaL_Reg l[] = {
-			{ "__gc", lmaterial_gc },
-			{ "attribs", lmaterial_attribs },
-			{ "instance", lmaterial_instance },
-			{ NULL, NULL },
+			{ "__gc",		lmaterial_gc },
+			{ "attribs", 	lmaterial_attribs },
+			{ "instance", 	lmaterial_instance },
+			{ "progid", 	lmaterial_progid},
+			{ NULL, 		NULL },
 		};
 		luaL_setfuncs(L, l, 0);
 		lua_pushvalue(L, -1);
@@ -878,7 +892,12 @@ lattribs_new(lua_State *L) {
 		return luaL_error(L, "Need math3d api");
 	struct math3d_api *mapi = lua_touserdata(L, -1);
 	lua_pop(L, 1);
-	arena_new(L, bgfx, mapi);
+
+	if (lua_getfield(L, 1, "encoder") != LUA_TLIGHTUSERDATA)
+		return luaL_error(L, "Need encoder holder");
+	struct encoder_holder *eh = lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	arena_new(L, bgfx, mapi, eh);
 	return 1;
 }
 
