@@ -37,7 +37,7 @@ policy "material"
     .component "material"
 
 interface "imaterial_animation"
-    .implement "material.lua"
+    .implement "material_animation.lua"
     .method "create"
     .method "stop"
     .method "add"
