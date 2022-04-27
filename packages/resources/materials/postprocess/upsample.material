@@ -1,6 +1,6 @@
 fx:
   fs: /pkg/ant.resources/shaders/postprocess/bloom/fs_upsample.sc
-  vs: /pkg/ant.resources/shaders/postprocess/vs_pp_quad.sc
+  vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
 properties:
   s_scene_color:
     stage: 0

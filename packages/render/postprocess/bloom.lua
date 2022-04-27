@@ -38,7 +38,9 @@ function bloom_sys:init()
             },
             data = {
                 name = name,
-                simplemesh = imesh.init_mesh(ientity.fullquad_mesh()),
+                simplemesh = {
+                    vb = {num = 3,}
+                },
                 material = material,
                 filter_state = "",
                 scene = {srt={}},

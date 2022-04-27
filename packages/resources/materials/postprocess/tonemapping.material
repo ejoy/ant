@@ -1,5 +1,5 @@
 fx:
-  vs: /pkg/ant.resources/shaders/postprocess/vs_pp_quad.sc
+  vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
   fs: /pkg/ant.resources/shaders/postprocess/fs_tonemapping.sc
   setting:
     lighting: off
