@@ -1,5 +1,4 @@
 {
-    "$schema": "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json",
     "runtime": {
         "plugin": "misc/lsp-plugin.lua",
         "special": {
@@ -8,7 +7,9 @@
     },
     "diagnostics": {
         "disable": [
-            "different-requires"
+            "different-requires",
+            "close-non-object",
+            "need-check-nil"
         ],
         "globals": [
             "__EDITOR__"
