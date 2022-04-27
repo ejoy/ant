@@ -20,16 +20,4 @@ if not path_mt.localpath then
     end
 end
 
-function fs.appdata_path()
-    if platform.OS == 'Windows' then
-        return fs.path(os.getenv "LOCALAPPDATA")
-    elseif platform.OS == 'Linux' then
-        return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share"))
-    elseif platform.OS == 'macOS' then
-        return fs.path(fs.appdata_path(), os.getenv "HOME" .. "/Library/Caches")
-    else
-        error "unimplemented"
-    end
-end
-
 return fs
