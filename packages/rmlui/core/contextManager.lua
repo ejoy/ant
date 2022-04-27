@@ -43,6 +43,12 @@ local function notifyDocumentDestroy(document)
 	environment[document] = nil
 end
 
+local function invalidElement(doc, e)
+    local res = {}
+    event("InvalidElement", doc, e, res)
+    return res.ok
+end
+
 function m.open(url)
     local doc = rmlui.DocumentCreate(width, height)
     if not doc then
@@ -231,7 +237,10 @@ local function push(t, v)
     t[#t+1] = v
 end
 
-local function dispatchTouchEvent(e, name)
+local function dispatchTouchEvent(doc, e, name)
+    if not invalidElement(doc, e) then
+        return
+    end
     local event = {
         changedTouches = {},
         targetTouches = {},
@@ -253,8 +262,9 @@ local function dispatchTouchEvent(e, name)
 end
 
 local function processTouchStart(touch)
-    local _, e = fromPoint(touch.x, touch.y)
+    local doc, e = fromPoint(touch.x, touch.y)
     if e then
+        touch.target_doc = doc
         touch.target = e
         touch.changed = true
         touchData[touch.id] = touch
@@ -307,7 +317,7 @@ function m.process_touch(state, touches)
     end
     for _, touch in pairs(touchData) do
         if touch.changed then
-            dispatchTouchEvent(touch.target, name)
+            dispatchTouchEvent(touch.target_doc, touch.target, name)
         end
     end
     for _, touch in pairs(touchData) do
