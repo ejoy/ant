@@ -29,8 +29,8 @@ function is:init()
                 vb = {
                     start = 0,
                     num = 4,
-                    handles = {
-                        bgfx.create_vertex_buffer(bgfx.memory_buffer("ffff", {
+                    {
+                        handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("ffff", {
                             100, 200, 0.0, 0.0,
                             100, 132, 0.0, 1.0,
                             420, 200, 1.0, 0.0,
