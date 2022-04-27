@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <luabgfx.h>
+
 #define INVALID_ATTRIB 0xffff
 #define DEFAULT_ARENA_SIZE 256
 
@@ -738,15 +740,28 @@ lapply_attrib(lua_State *L) {
 	return 0;
 }
 
+static int
+lget_attrib(lua_State *L){
+	const char* key = luaL_checkstring(L, 2);
+	if (strcmp(key, "prog") == 0){
+		struct material *mat = (struct material *)lua_touserdata(L, lua_upvalueindex(1));
+		lua_pushinteger(L, BGFX_LUAHANDLE(PROGRAM, mat->prog));
+		return 1;
+	}
+
+	return luaL_error(L, "invalid key:%s", key);
+}
+
 // 1: material
 // 2: lookup table
 // 3: cobject
 static void
 gen_material_metatable(lua_State *L) {
 	luaL_Reg l[] = {
-		{ "__newindex", lset_attrib },
-		{ "__gc", lcollect_attrib },
-		{ "__call", lapply_attrib },
+		{ "__newindex", lset_attrib		},
+		{ "__gc", 		lcollect_attrib	},
+		{ "__call", 	lapply_attrib	},
+		{ "__index",	lget_attrib		},
 		{ NULL, NULL },
 	};
 	luaL_newlibtable(L, l);
@@ -826,7 +841,6 @@ lmaterial_new(lua_State *L) {
 			{ "__gc",		lmaterial_gc },
 			{ "attribs", 	lmaterial_attribs },
 			{ "instance", 	lmaterial_instance },
-			{ "progid", 	lmaterial_progid},
 			{ NULL, 		NULL },
 		};
 		luaL_setfuncs(L, l, 0);

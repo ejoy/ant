@@ -82,7 +82,7 @@ function irender.draw(vid, ri, mat)
 		local m = ri.material
 		--assert(type(mat) == "nil" or type(mat) == "userdata")
 		m{}
-		prog = m:progid()
+		prog = m.prog
 	else
 		local _mat = mat or ri
 

@@ -11,8 +11,8 @@ local rmat = require "render.material"
 
 local COBJ = rmat.cobject {
     bgfx = assert(bgfx.CINTERFACE) ,
-	math3d = assert(math3d.CINTERFACE),
-    encoder = assert(bgfx.getEncoder),
+    math3d = assert(math3d.CINTERFACE),
+    encoder = assert(bgfx.encoder_get()),
 }
 
 local cmat_sys = ecs.system "cmaterial_system"
