@@ -25,7 +25,7 @@ end
 local function createWindow(document, source)
     --TODO: pool
     local window = {}
-    local timer_object = {}
+    local timer_object = setmetatable({}, {__mode = "k"})
     function window.createModel(name)
         return function (init)
             local model = rmlui.DataModelCreate(document, name, init)
@@ -48,7 +48,6 @@ local function createWindow(document, source)
             for t in pairs(timer_object) do
                 t:remove()
             end
-            timer_object = {}
         end)
     end
     function window.setTimeout(f, delay)
@@ -63,11 +62,9 @@ local function createWindow(document, source)
     end
     function window.clearTimeout(t)
         t:remove()
-        timer_object[t] = nil
     end
     function window.clearInterval(t)
         t:remove()
-        timer_object[t] = nil
     end
     function window.addEventListener(type, listener, useCapture)
         rmlui.DocumentAddEventListener(document, type, function(e) listener(constructor.Event(e)) end, useCapture)
