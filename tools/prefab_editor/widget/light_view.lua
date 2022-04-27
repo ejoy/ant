@@ -93,7 +93,7 @@ end
 
 function LightView:on_set_color(...)
     local template = hierarchy:get_template(self.eid)
-    template.template.data.color = ...
+    template.template.data.light.color = ...
     ilight.set_color(world:entity(self.eid), ...)
 end
 
@@ -103,7 +103,7 @@ end
 
 function LightView:on_set_intensity(value)
     local template = hierarchy:get_template(self.eid)
-    template.template.data.intensity = value
+    template.template.data.light.intensity = value
     ilight.set_intensity(world:entity(self.eid), value)
     light_gizmo.update_gizmo()
 end
@@ -114,7 +114,7 @@ end
 
 function LightView:on_set_range(value)
     local template = hierarchy:get_template(self.eid)
-    template.template.data.range = value
+    template.template.data.light.range = value
     ilight.set_range(world:entity(self.eid), value)
     light_gizmo.update_gizmo()
 end
@@ -126,7 +126,7 @@ end
 function LightView:on_set_inner_radian(value)
     local template = hierarchy:get_template(self.eid)
     local radian = math.rad(value)
-    template.template.data.inner_radian = radian
+    template.template.data.light.inner_radian = radian
     ilight.set_inner_radian(world:entity(self.eid), radian)
     light_gizmo.update_gizmo()
 end
@@ -138,11 +138,11 @@ end
 function LightView:on_set_outter_radian(value)
     local template = hierarchy:get_template(self.eid)
     local radian = math.rad(value)
-    if radian < template.template.data.inner_radian then
-        radian = template.template.data.inner_radian
+    if radian < template.template.data.light.inner_radian then
+        radian = template.template.data.light.inner_radian
         self.subproperty.outter_radian:update()
     end
-    template.template.data.outter_radian = radian
+    template.template.data.light.outter_radian = radian
     ilight.set_outter_radian(world:entity(self.eid), radian)
     light_gizmo.update_gizmo()
 end
