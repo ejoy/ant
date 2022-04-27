@@ -3070,6 +3070,13 @@ ENCODER_API(lsetIndexBuffer) {
 	return 0;
 }
 
+ENCODER_API(lsetVertexCount)
+{
+	int count = (int)luaL_checkinteger(L, 1);
+	BGFX_ENCODER(set_vertex_count, encoder, count);
+	return 0;
+}
+
 ENCODER_API(lsetTransform) {
 	int n = lua_gettop(L);
 	if (n == 1) {
@@ -5191,6 +5198,7 @@ linitEncoder(lua_State *L) {
 		{ "set_state", lsetState_encoder },
 		{ "set_vertex_buffer", lsetVertexBuffer_encoder },
 		{ "set_index_buffer", lsetIndexBuffer_encoder },
+		{ "set_vertex_count", lsetVertexCount_encoder},
 		{ "set_transform", lsetTransform_encoder },
 		{ "set_transform_cached", lsetTransformCached_encoder },
 		{ "set_multi_transforms", lsetMultiTransforms_encoder },

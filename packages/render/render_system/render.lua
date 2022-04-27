@@ -79,7 +79,12 @@ function irender.draw(vid, ri, mat)
 
 	local start_v, num_v = vb.start, vb.num
 	if num_v ~= 0 then
-		bgfx.set_vertex_buffer(vb.handles, start_v, num_v)
+		local handles = vb.handles
+		if #handles > 0 then
+			bgfx.set_vertex_buffer(handles, start_v, num_v)
+		else
+			bgfx.set_vertex_count(num_v)
+		end
 	end
 
 	bgfx.submit(vid, _mat.fx.prog, 0)
