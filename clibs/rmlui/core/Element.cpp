@@ -418,6 +418,10 @@ void Element::NotifyCustomElement() {
 }
 
 void Element::AppendChild(Node* node) { 
+	Element* p = node->GetParentNode();
+	if (p) {
+		p->RemoveChild(node).release();
+	}
 	GetLayout().InsertChild(node->GetLayout(), (uint32_t)childnodes.size());
 	childnodes.emplace_back(node);
 	if (Element* e = dynamic_cast<Element*>(node)) {
@@ -428,10 +432,10 @@ void Element::AppendChild(Node* node) {
 	DirtyStructure();
 }
 
-void Element::RemoveChild(Node* node) {
+std::unique_ptr<Node> Element::RemoveChild(Node* node) {
 	size_t index = GetChildNodeIndex(node);
 	if (index == size_t(-1)) {
-		return;
+		return nullptr;
 	}
 	auto detached_child = std::move(childnodes[index]);
 	childnodes.erase(childnodes.begin() + index);
@@ -447,6 +451,7 @@ void Element::RemoveChild(Node* node) {
 	GetLayout().RemoveChild(node->GetLayout());
 	DirtyStackingContext();
 	DirtyStructure();
+	return std::move(detached_child);
 }
 
 size_t Element::GetChildNodeIndex(Node* node) const {
