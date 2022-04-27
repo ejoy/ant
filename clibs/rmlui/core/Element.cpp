@@ -451,7 +451,7 @@ std::unique_ptr<Node> Element::RemoveChild(Node* node) {
 	GetLayout().RemoveChild(node->GetLayout());
 	DirtyStackingContext();
 	DirtyStructure();
-	return std::move(detached_child);
+	return detached_child;
 }
 
 size_t Element::GetChildNodeIndex(Node* node) const {
