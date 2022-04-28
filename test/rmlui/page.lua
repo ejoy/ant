@@ -153,7 +153,6 @@ function page_meta:update_contianer()
         local page = self.container[pid]
         local rid = math.ceil((remain == 0 and count_per_page or remain) / self.col)
         local row = page[rid]
-        console.log("---index, pid, rid ", index, pid, rid)
         row.appendChild(self.item_renderer(index))
     end
 end
