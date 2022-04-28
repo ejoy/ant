@@ -130,7 +130,7 @@ function render2cm_sys:entity_ready()
                 local q = w:singleton(fn, "render_target:in")
                 local rt = q.render_target
                 local vr = rt.view_rect
-                vr.x, vr.y, vr.w, vr.h = 0, 0, size, size
+                vr.x, vr.y, vr.w, vr.h = 0, 0, facesize, facesize
                 rt.viewid = cvt_p2cm_viewid + faceidx
                 rt.fb_idx = fbidx
                 irq.update_rendertarget(fn, rt)
