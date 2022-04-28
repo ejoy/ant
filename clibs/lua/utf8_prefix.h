@@ -1,8 +1,15 @@
 #ifndef _LUAUTF8_PREFIX_H_
 #define _LUAUTF8_PREFIX_H_
 
-#if !defined(lua_c) && !defined(luac_c)
+#if defined(__cplusplus)
+extern "C" {
+#endif
 #include "utf8_crt.h"
+#if defined(__cplusplus)
+}
+#endif
+
+#if !defined(lua_c) && !defined(luac_c)
 #if !defined(lundump_c)
 #include <Windows.h>
 #endif
@@ -43,5 +50,9 @@
 #define FormatMessageA(...) utf8_FormatMessageA(__VA_ARGS__)
 
 #endif
+
+#define lua_writestring(s,l)      utf8_ConsoleWrite(s,(int)l)
+#define lua_writeline()           utf8_ConsoleNewLine()
+#define lua_writestringerror(s,p) utf8_ConsoleError(s,p)
 
 #endif

@@ -44,10 +44,10 @@
 #endif			/* } */
 
 #include "luai_devent.h"
+#include <stdlib.h>
 
 #if !defined(NDEBUG)
 
-#include <stdlib.h>
 #include "lauxlib.h"
 
 #if defined(lua_assert)
