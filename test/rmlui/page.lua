@@ -42,8 +42,19 @@ function page_meta:update_virtual_pages()
 end
 
 function page_meta.create(document, e, item_count, item_renderer, detail_renderer)
-    local width = tonumber(e.getAttribute("width"))
-    local height = tonumber(e.getAttribute("height"))
+    local width
+    local height
+    local unit = {}
+    local width_str = e.getAttribute("width")
+    local height_str = e.getAttribute("height")
+    for r in width_str:gmatch("%d+") do
+        unit[#unit + 1] = width_str:sub(#r + 1, #width_str)
+        width = tonumber(r)
+    end
+    for r in height_str:gmatch("%d+") do
+        unit[#unit + 1] = height_str:sub(#r + 1, #height_str)
+        height = tonumber(r)
+    end
     local row = tonumber(e.getAttribute("row"))
     local col = tonumber(e.getAttribute("col"))
     local page_count = math.ceil(item_count / (row * col))
@@ -62,19 +73,20 @@ function page_meta.create(document, e, item_count, item_renderer, detail_rendere
         detail_renderer = detail_renderer,
         pages           = {},
         container       = {},
-        document        = document
+        document        = document,
+        unit            = unit
     }
     setmetatable(page, page_meta)
     e.style.overflow = 'hidden'
     e.style.border = '2px green'
-    e.style.width = width .. 'px'
-    e.style.height = height .. 'px'
+    e.style.width = width .. unit[1]
+    e.style.height = height .. unit[2]
     page.view = e
     local panel = e.childNodes[1]
     panel.addEventListener('mousedown', function(event) page:on_mousedown(event) end)
     panel.addEventListener('mousemove', function(event) page:on_drag(event) end)
     panel.addEventListener('mouseup', function(event) page:on_mouseup(event) end)
-    panel.style.height = (height - 30) .. 'px'
+    panel.style.height = (height - 30) .. unit[2]
     panel.style.flexDirection = 'row'
     panel.style.alignItems = 'center'
     panel.style.justifyContent = 'flex-start'
@@ -130,12 +142,12 @@ function page_meta:update_contianer()
         page_e.style.flexDirection = 'column'
         page_e.style.alignItems = 'center'
         page_e.style.justifyContent = 'space-evenly'
-        page_e.style.width = self.width .. 'px'
-        page_e.style.height = self.height .. 'px'
+        page_e.style.width = self.width .. self.unit[1]
+        page_e.style.height = self.height .. self.unit[2]
         local row = {}
         for r = 1, self.row do
             local row_e = self.document.createElement "div"
-            row_e.style.width = self.width .. 'px'
+            row_e.style.width = self.width .. self.unit[1]
             row_e.style.flexDirection = 'row'
             row_e.style.alignItems = 'center'
             row_e.style.justifyContent = 'space-evenly'
@@ -147,7 +159,8 @@ function page_meta:update_contianer()
         self.container[#self.container + 1] = row
     end
     local count_per_page = self.row * self.col
-    for index = 1, self.item_count do
+    local ic = self.page_count * count_per_page
+    for index = 1, ic do
         local pid = math.ceil(index / count_per_page)
         local remain = index % count_per_page
         local page = self.container[pid]
@@ -160,7 +173,7 @@ end
 function page_meta:on_dirty(item_count)
     self.item_count = item_count
     self.page_count = math.ceil(item_count / (self.row * self.col))
-    self.panel.style.width = self.page_count * self.width .. 'px'
+    self.panel.style.width = self.page_count * self.width .. self.unit[1]
     self:update_contianer()
     self:update_footer()
 end
@@ -230,7 +243,7 @@ function page_meta:on_mouseup(event)
         self:update_footer_status()
     end
     self.pos = (1 - self.current_page) * self.width
-    self.panel.style.left = tostring(self.pos) .. 'px'
+    self.panel.style.left = tostring(self.pos) .. self.unit[1]
     return old_value ~= self.current_page
 end
 
@@ -241,7 +254,7 @@ function page_meta:on_drag(event)
         local e = self.panel
         local oldClassName = e.className
         e.className = e.className .. " notransition"
-        e.style.left = tostring(math.floor(self.pos)) .. 'px'
+        e.style.left = tostring(math.floor(self.pos)) .. self.unit[1]
         e.className = oldClassName
         self.draging = true
     else

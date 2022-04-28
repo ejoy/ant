@@ -162,10 +162,10 @@
                 local item = document.createElement "div"
                 item.style.width = '120px'
                 item.style.height = '120px'
-                item.style.border = '2px blue'
                 if index > #start.items then
-                    return document.createElement "div"
+                    return item
                 end
+                item.style.border = '2px blue'
                 local c0 = document.createElement "div"
                 c0.style.width = '50px'
                 c0.style.height = '50px'
@@ -236,10 +236,10 @@
     </head>
     <body>
         <div class="panel" data-model="start">
-            <page width='667' height='720' row='3' col='3'>
+            <page width='667px' height='720px' row='3' col='3'>
                 <div class="pagestyle"/>
             </page>
-            <list direction='1' width='667' height='720' item_width='667' item_height='50'>
+            <list direction='1' width='667px' height='720px' item_width='667px' item_height='50px'>
                 <div class="liststyle">
                 </div>
             </list>

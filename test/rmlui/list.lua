@@ -2,18 +2,48 @@ local list_meta = {}
 list_meta.__index = list_meta
 
 function list_meta.create(document, e, item_count, item_renderer)
+    local width
+    local height
+    local unit = {}
+    local width_str = e.getAttribute("width")
+    local height_str = e.getAttribute("height")
+    for r in width_str:gmatch("%d+") do
+        unit[#unit + 1] = width_str:sub(#r + 1, #width_str)
+        width = tonumber(r)
+    end
+    for r in height_str:gmatch("%d+") do
+        unit[#unit + 1] = height_str:sub(#r + 1, #height_str)
+        height = tonumber(r)
+    end
+
+    local item_width
+    local item_height
+    local item_unit = {}
+    local item_width_str = e.getAttribute("item_width")
+    local item_height_str = e.getAttribute("item_height")
+    for r in item_width_str:gmatch("%d+") do
+        item_unit[#item_unit + 1] = item_width_str:sub(#r + 1, #item_width_str)
+        item_width = tonumber(r)
+    end
+    for r in item_height_str:gmatch("%d+") do
+        item_unit[#item_unit + 1] = item_height_str:sub(#r + 1, #item_height_str)
+        item_height = tonumber(r)
+    end
+    
     local list = {
         direction   = tonumber(e.getAttribute("direction")),
-        width       = tonumber(e.getAttribute("width")),
-        height      = tonumber(e.getAttribute("height")),
+        width       = width,
+        height      = height,
         item_count  = item_count,
-        item_width  = tonumber(e.getAttribute("item_width")),
-        item_height = tonumber(e.getAttribute("item_height")),
+        item_width  = item_width,
+        item_height = item_height,
         pos         = 0,
         drag        = {mouse_pos = 0, anchor = 0, delta = 0},
         item_renderer = item_renderer,
         items       = {},
-        document    = document
+        document    = document,
+        unit        = unit,
+        item_unit   = item_unit,
     }
     setmetatable(list, list_meta)
     e.style.overflow = 'hidden'
@@ -32,10 +62,10 @@ function list_meta:on_dirty(item_count)
         self.panel.removeChild(e)
     end
     self.item_count = item_count or self.item_count
-    self.view.style.width = self.width .. 'px'
-    self.view.style.height = self.height .. 'px'
-    self.panel.style.width = self.width .. 'px'
-    self.panel.style.height = self.item_count * self.item_height .. 'px'
+    self.view.style.width = self.width .. self.unit[1]
+    self.view.style.height = self.height .. self.unit[2]
+    self.panel.style.width = self.width .. self.unit[1]
+    self.panel.style.height = self.item_count * self.item_height .. self.item_unit[2]
     self.items = {}
     for index = 1, self.item_count do
         local e = self.item_renderer(index)
@@ -78,9 +108,9 @@ function list_meta:on_mouseup(event)
     end
     if adjust then
         if self.direction == 0 then
-            self.panel.style.left = tostring(self.pos) .. 'px'
+            self.panel.style.left = tostring(self.pos) .. self.unit[1]
         else
-            self.panel.style.top = tostring(self.pos) .. 'px'
+            self.panel.style.top = tostring(self.pos) .. self.unit[2]
         end
     end
 end
@@ -93,9 +123,9 @@ function list_meta:on_drag(event)
         local oldClassName = e.className
         e.className = e.className .. " notransition"
         if self.direction == 0 then
-            e.style.left = tostring(math.floor(self.pos)) .. 'px'
+            e.style.left = tostring(math.floor(self.pos)) .. self.unit[1]
         else
-            e.style.top = tostring(math.floor(self.pos)) .. 'px'
+            e.style.top = tostring(math.floor(self.pos)) .. self.unit[2]
         end
         e.className = oldClassName
     end
