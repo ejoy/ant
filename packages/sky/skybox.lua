@@ -12,9 +12,9 @@ local skybox_sys = ecs.system "skybox_system"
 
 function skybox_sys:component_init()
 	w:clear "skybox_changed"
-	for e in w:select "INIT skybox:in simplemesh:out skybox_changed?out" do
+	for e in w:select "INIT skybox:in simplemesh:out owned_mesh_buffer?out skybox_changed?out" do
 		local vb, ib = geo.box(1, true, false)
-		e.simplemesh = imesh.init_mesh({
+		e.simplemesh = imesh.init_mesh{
 			vb = {
 				start = 0,
 				num = 8,
@@ -28,7 +28,8 @@ function skybox_sys:component_init()
 				num = #ib,
 				memory = {"w", ib},
 			}
-		}, true)
+		}
+		e.owned_mesh_buffer = true
 		e.skybox_changed = true
 	end
 end

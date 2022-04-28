@@ -49,7 +49,7 @@ function widget_drawer_sys:init()
 		},
 		data = {
 			scene = {srt = {}},
-			simplemesh = imesh.init_mesh(create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num)),
+			simplemesh = create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num),
 			material = "/pkg/ant.resources/materials/line.material",
 			filter_state = "main_view",
 			widget_drawer = wd,

@@ -58,7 +58,7 @@ local function create_mesh(vb_lst, ib, aabb)
 			memory = {"w", ib},
 		}
 	end
-	return mesh
+	return imesh.init_mesh(mesh)
 end
 
 ientity.create_mesh = create_mesh
@@ -302,18 +302,6 @@ function ientity.quad_mesh(rect)
 	return quad_mesh(rect)
 end
 
-local simple_fullquad_mesh<const> = {
-        vb = {
-            start = 0, num = 3,
-            {
-                handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}), declmgr.get "p3".handle)
-            },
-        }
-}
-function ientity.simple_fullquad_mesh()
-	return simple_fullquad_mesh
-end
-
 function ientity.create_quad_entity(rect, material, name)
 	return create_simple_render_entity(name, material, quad_mesh(rect))
 end
@@ -464,7 +452,8 @@ function ientity.create_skybox(material)
 			},
 			name = "sky_box",
 			skybox = {},
-			simplemesh = imesh.init_mesh(get_skybox_mesh(), true),
+			owned_mesh_buffer = true,
+			simplemesh = get_skybox_mesh(),
 		}
 	}
 end
@@ -530,7 +519,8 @@ function ientity.create_procedural_sky(settings)
 				}
 			},
 			filter_state = "main_view",
-			simplemesh = imesh.init_mesh(create_sky_mesh(32, 32), true),
+			owned_mesh_buffer = true,
+			simplemesh = create_sky_mesh(32, 32),
 			name = "procedural sky",
 		}
 	}
@@ -544,7 +534,7 @@ function ientity.create_gamma_test_entity()
         },
         data = {
             material = "/pkg/ant.resources/materials/gamma_test.material",
-            simplemesh = imesh.init_mesh({
+            simplemesh = {
                 ib = {
                     start = 0,
                     num = 6,
@@ -553,8 +543,8 @@ function ientity.create_gamma_test_entity()
                 vb = {
                     start = 0,
                     num = 4,
-                    handles = {
-                        bgfx.create_vertex_buffer(bgfx.memory_buffer("ffff", {
+                    {
+                        handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("ffff", {
                             100, 200, 0.0, 0.0,
                             100, 132, 0.0, 1.0,
                             420, 200, 1.0, 0.0,
@@ -562,7 +552,8 @@ function ientity.create_gamma_test_entity()
                         }), declmgr.get "p2|t2".handle)
                     }
                 }
-            }, true),
+            },
+			owned_mesh_buffer = true,
             scene = {srt = {}},
             filter_state = "main_view",
         }

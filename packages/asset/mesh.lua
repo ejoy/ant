@@ -38,10 +38,7 @@ function imesh.create_ib(ib)
 	return ext_meshbin.proxy_ib(ib)
 end
 
-function imesh.init_mesh(mesh, owned_mesh_buffer)
-	mesh.owned_mesh_buffer = owned_mesh_buffer
-	return ext_meshbin.init(mesh)
-end
+imesh.init_mesh = ext_meshbin.init
 
 local ms = ecs.system "mesh_system"
 

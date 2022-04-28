@@ -108,22 +108,26 @@ end
 local ev = world:sub {"show_name"}
 
 function fontsys:component_init()
-    for e in w:select "INIT font:in simplemesh:out" do
+    for e in w:select "INIT font:in simplemesh:out owned_mesh_buffer?out" do
         lfont.import(e.font.file)
         e.font.id = lfont.name(e.font.name)
 
-        e.simplemesh = imesh.init_mesh({
+        e.simplemesh = {
             vb = {
                 start = 0,
                 num = 0,
-                bgfx.transient_buffer(declformat),
+                {
+                    handle = bgfx.transient_buffer(declformat),
+                }
+                
             },
             ib = {
                 start = 0,
                 num = 0,
                 handle = irender.quad_ib()
             }
-        }, true)
+        }
+        e.owned_mesh_buffer = true
     end
     for e in w:select "INIT show_config:in" do
         if e.show_config.location_offset then

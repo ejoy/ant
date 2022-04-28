@@ -66,7 +66,8 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
         },
         data = {
             name = "test_texture_plane",
-            simplemesh = imesh.init_mesh(ientity.plane_mesh(mu.texture_uv(tex_rect, tex_size)), true),
+            simplemesh = imesh.init_mesh(ientity.plane_mesh(mu.texture_uv(tex_rect, tex_size))),
+            owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/texture_plane.material",
             filter_state= "main_view",
             scene   = { srt = {t={0, 5, 5}}},

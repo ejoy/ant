@@ -203,7 +203,7 @@ local function create_frustum_entity(eid)
         },
         data = {
             on_ready = onready,
-            simplemesh = imesh.init_mesh({
+            simplemesh = imesh.init_mesh{
                 vb = {
                     start = 0,
                     num = 8,
@@ -217,7 +217,8 @@ local function create_frustum_entity(eid)
                     num = #frustum_ib,
                     memory = {"w", frustum_ib},
                 }
-            }, true),
+            },
+            owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/line_color.material",
             scene = {srt={}},
             filter_state = "main_view|auxgeom",
@@ -237,7 +238,7 @@ local function create_frustum_entity(eid)
             "ant.general|name",
         },
         data = {
-            simplemesh = imesh.init_mesh({
+            simplemesh = imesh.init_mesh{
                 vb = {
                     start = 0,
                     num = 3,
@@ -250,7 +251,8 @@ local function create_frustum_entity(eid)
                         }}
                     }
                 }
-            }, true),
+            },
+            owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/singlecolor.material",
             filter_state = "main_view|auxgeom",
             scene = {srt={

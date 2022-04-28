@@ -31,7 +31,8 @@ local function create_view_buffer_entity()
 		},
 		data = {
 			name = "pick_buffer_entity",
-			simplemesh = imesh.init_mesh(ientity.quad_mesh{x=0,y=0,w=120, h=120}, true),
+			owned_mesh_buffer = true,
+			simplemesh = ientity.quad_mesh{x=0,y=0,w=120, h=120},
 			material = "/pkg/ant.resources/materials/texquad.material",
 			material_setting = {POS_IN_RECT=1},
 			filter_state = "main_view",

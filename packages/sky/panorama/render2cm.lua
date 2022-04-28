@@ -65,9 +65,9 @@ function render2cm_sys:init()
             "ant.general|name",
         },
         data = {
-            simplemesh = ientity.simple_fullquad_mesh(),
-            material = "/pkg/ant.sky/panorama/render2cm.material",
+            simplemesh = {vb={num=3}},
             scene = {srt={}},
+            material = "/pkg/ant.sky/panorama/render2cm.material",
             filter_state = "",
             cvt_p2cm_drawer = true,
             name = "cvt_p2cm_drawer",
@@ -80,7 +80,7 @@ function render2cm_sys:init()
             "ant.general|name",
         },
         data = {
-            simplemesh = ientity.simple_fullquad_mesh(),
+            simplemesh = {vb={num=3}},
             material = "/pkg/ant.sky/panorama/filter_ibl.material",
             scene = {srt={}},
             filter_state = "",
