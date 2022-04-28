@@ -44,8 +44,8 @@ function m.bind(eid)
     if m.current_gizmo then
         m.update_gizmo()
         local er = world:entity(m.current_gizmo.root)
-        iom.set_position(er, iom.get_position(eid))
-        iom.set_rotation(er, iom.get_rotation(eid))
+        iom.set_position(er, iom.get_position(ec))
+        iom.set_rotation(er, iom.get_rotation(ec))
         er.name = ec.name
         m.show(true)
     end

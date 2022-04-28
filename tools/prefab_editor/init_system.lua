@@ -60,9 +60,11 @@ local function init_camera()
     icamera.set_frustum(e, f)
 end
 
+local light_gizmo = ecs.require "gizmo.light"
 function m:init_world()
     irq.set_view_clear_color("main_queue", 0x353535ff)--0xa0a0a0ff
     init_camera()
+    light_gizmo.init()
 end
 
 function m:post_init()

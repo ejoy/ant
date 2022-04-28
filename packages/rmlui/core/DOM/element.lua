@@ -233,6 +233,13 @@ function event.OnDocumentDestroy(handle)
     pool[handle] = nil
 end
 
+function event.InvalidElement(doc, e, res)
+    if not pool[doc] or not pool[doc][e] then
+        return
+    end
+    res.ok = true
+end
+
 function constructorElement(document, owner, handle)
     if handle == nil then
         return
