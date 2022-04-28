@@ -170,11 +170,6 @@ function efk_sys:init()
     }
 end
 
-local function read_file(filename)
-    local f<close> = fs.open(fs.path(filename), "rb")
-    return f:read "a"
-end
-
 local efk_cache = {}
 
 local function load_efk(filename)
@@ -193,9 +188,7 @@ end
 function efk_sys:entity_init()
     for e in w:select "INIT efk:update" do
         assert(type(e.efk) == "string")
-        effect_file_root = fs.path(e.efk):parent_path()
         e.efk = load_efk(e.efk)
-        effect_file_root = nil
     end
 end
 

@@ -227,8 +227,10 @@ local function seri_material(exports, mode, materialidx)
     if materialidx then
         local mi = assert(exports.material[materialidx+1])
         local materialinfo = generate_material(mi, mode)
-        save_material(materialinfo)
-        return materialinfo.filename
+        if materialinfo then
+            save_material(materialinfo)
+            return materialinfo.filename
+        end
     end
 
     if default_material_info == nil then
@@ -239,7 +241,7 @@ local function seri_material(exports, mode, materialidx)
     end
 
     local materialinfo = generate_material(default_material_info, mode)
-    if materialinfo.filename ~= default_material_path then
+    if materialinfo and materialinfo.filename ~= default_material_path then
         save_material(materialinfo)
         return materialinfo.filename
     end
@@ -268,6 +270,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
         local data = {
             scene       = {srt=transform or {}},
             mesh        = serialize.path(meshfile),
+---@diagnostic disable-next-line: need-check-nil
             material    = serialize.path(materialfile:string()),
             name        = node.name or "",
             filter_state= DEFAULT_STATE,
@@ -324,7 +327,6 @@ local function find_mesh_nodes(gltfscene, scenenodes, meshnodes)
 end
 
 return function(output, glbdata, exports, localpath)
-    tolocalpath = localpath
     prefab = {}
 
     local gltfscene = glbdata.info

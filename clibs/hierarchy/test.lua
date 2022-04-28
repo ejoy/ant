@@ -59,9 +59,11 @@ assert(child_1 == nil)
 child:add_child("child_1")
 
 child_1 = child:get_child(1)
+assert(child_1 ~= nil)
 print(child_1:name())
 
 child:add_child("child_2")
+assert(child_1 ~= nil)
 child_1:add_child("child_1_1")
 
 
@@ -95,7 +97,7 @@ print_tree(root, "")
 print('===============================')
 
 local function print_build(tr)
-    local result = hierarchy.build(tr);
+    local result = skeleton.build(tr);
     for idx, vv in ipairs(result) do
         print("idx in result : ", idx)
         print("value ");
@@ -106,4 +108,4 @@ local function print_build(tr)
 end
 
 print_build(root)
-assert(hierarchy.invalid(new))	-- Invalid node
+assert(skeleton.invalid(new))	-- Invalid node
