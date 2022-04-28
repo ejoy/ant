@@ -857,22 +857,25 @@ lmaterial_new(lua_State *L) {
 static int
 lprogram_new(lua_State *L) {
 	CAPI_INIT(L, 1);
-	int vs = (int)luaL_checkinteger(L, 2);
-	int fs = (int)luaL_optinteger(L, 3, 0xffff);
-	bgfx_shader_handle_t vsh = { vs & 0xffff };
-	bgfx_shader_handle_t fsh = { fs & 0xffff };
+	const int vs = (int)luaL_checkinteger(L, 2);
+	const int iscompute = lua_isnoneornil(L, 4) ? 0 : lua_toboolean(L, 4);
+	const int fs = iscompute ? BGFX_INVALID_HANDLE : (int)luaL_optinteger(L, 3, 0xffff);
+	const bgfx_shader_handle_t vsh = { vs & 0xffff };
+	const bgfx_shader_handle_t fsh = { fs & 0xffff };
 	int n = BGFX(get_shader_uniforms)(vsh, NULL, 0);
 	if (!BGFX_INVALID(fsh)) {
 		n += BGFX(get_shader_uniforms)(fsh, NULL, 0);
 	}
 	struct program * p = (struct program *)lua_newuserdatauv(L, sizeof(struct program) + (n-1) * sizeof(bgfx_uniform_handle_t), 2);
 	p->n_uniform = n;
-	p->prog = BGFX(create_program)(vsh, fsh, false);
+	p->prog = iscompute ? BGFX(create_compute_program)(vsh, false) : BGFX(create_program)(vsh, fsh, false);
 	if (BGFX_INVALID(p->prog))
 		return luaL_error(L, "Create Program fail");
+
 	int r = BGFX(get_shader_uniforms)(vsh, p->u, n);
 	if (!BGFX_INVALID(fsh))
 		BGFX(get_shader_uniforms)(fsh, p->u + r, n - r);
+
 	remove_duplicate_uniform(p, r);
 	if (luaL_newmetatable(L, "ANT_PROGRAM")) {
 		luaL_Reg l[] = {
