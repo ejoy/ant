@@ -67,6 +67,21 @@ function property_init:childNodes()
     }, childnodes_mt)
 end
 
+function property_init:dispatchEvent()
+    local handle = self._handle
+    return function (eventname, event)
+        rmlui.ElementDispatchEvent(handle, eventname, event)
+    end
+end
+
+function property_init:removeChild()
+    local handle = self._handle
+    return function (child)
+        child._owner = nil
+        rmlui.ElementRemoveChild(handle, child._handle)
+    end
+end
+
 function property_init:appendChild()
     local handle = self._handle
     return function (child)
