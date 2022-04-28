@@ -158,7 +158,7 @@
                 e.style.display = "none"
             end)
 
-            local function item_renderer(index)
+            local function page_item_renderer(index)
                 local item = document.createElement "div"
                 item.style.width = '120px'
                 item.style.height = '120px'
@@ -185,7 +185,7 @@
                 return item
             end
             
-            local function item_detail_renderer(e)
+            local function page_item_detail_renderer(e)
                 local detail = document.createElement "div"
                 detail.style.width = '120px'
                 detail.style.height = '200px'
@@ -195,11 +195,42 @@
 
             local pageclass = require "page"
             window.customElements.define("page", function(e)
-                start.page = pageclass.create(document, e, #start.items, item_renderer, item_detail_renderer)
+                start.page = pageclass.create(document, e, #start.items, page_item_renderer, page_item_detail_renderer)
             end)
+
+            local function list_item_renderer(index)
+                local item = document.createElement "div"
+                item.style.width = '100%'
+                item.style.height = '50px'
+                item.style.border = '2px blue'
+                item.style.flexDirection = 'row'
+                item.style.alignItems = 'center'
+                item.style.justifyContent = 'space-evenly'
+                if index > #start.items then
+                    return document.createElement "div"
+                end
+                local c1 = document.createElement "div"
+                c1.innerHTML = tostring(start.items[index].id)
+                item.appendChild(c1)
+
+                local c0 = document.createElement "div"
+                c0.style.width = '50px'
+                c0.style.height = '50px'
+                c0.style.backgroundSize = 'cover'
+                c0.style.backgroundImage = start.items[index].icon0
+                item.appendChild(c0)
+                item.addEventListener('click', function()
+                    if start.list.selected then
+                        start.list.selected.style.border = '2px blue'
+                    end
+                    item.style.border = '2px red'
+                    start.list.selected = item
+                end)
+                return item
+            end
             local listclass = require "list"
             window.customElements.define("list", function(e)
-                start.list = listclass.create(e, start.list_0, function () start("list_0") end)
+                start.list = listclass.create(document, e, #start.items, list_item_renderer)
             end)
         </script>
     </head>
@@ -208,6 +239,10 @@
             <page width='667' height='720' row='3' col='3'>
                 <div class="pagestyle"/>
             </page>
+            <list direction='1' width='667' height='720' item_width='667' item_height='50'>
+                <div class="liststyle">
+                </div>
+            </list>
         </div>
     </body>
 </rml>

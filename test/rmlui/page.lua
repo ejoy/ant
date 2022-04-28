@@ -87,7 +87,7 @@ function page_meta.create(document, e, item_count, item_renderer, detail_rendere
     footer.style.justifyContent = 'center'
     footer.style.width = '100%'
     footer.style.height = '30px'
-    page:on_page_dirty(item_count)
+    page:on_dirty(item_count)
     return page
 end
 
@@ -158,7 +158,7 @@ function page_meta:update_contianer()
     end
 end
 
-function page_meta:on_page_dirty(item_count)
+function page_meta:on_dirty(item_count)
     self.item_count = item_count
     self.page_count = math.ceil(item_count / (self.row * self.col))
     self.panel.style.width = self.page_count * self.width .. 'px'
