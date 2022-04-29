@@ -851,6 +851,41 @@ lmaterial_new(lua_State *L) {
 	return 1;
 }
 
+static bgfx_uniform_handle_t*
+find_valid_uniform(lua_State *L, struct attrib_arena * cobject_, bgfx_shader_handle_t h0, bgfx_shader_handle_t h1, int *count){
+#define MAX_UNIFORM_NAME_COUNT 256
+	static bgfx_uniform_handle_t s_uniforms[MAX_UNIFORM_NAME_COUNT] = {BGFX_INVALID_HANDLE};
+
+	int n = BGFX(get_shader_uniforms)(h0, s_uniforms, MAX_UNIFORM_NAME_COUNT);
+	if (!BGFX_INVALID(h1)) {
+		n += BGFX(get_shader_uniforms)(h1, s_uniforms + n, MAX_UNIFORM_NAME_COUNT - n);
+	}
+
+	if (n > MAX_UNIFORM_NAME_COUNT){
+		luaL_error(L, "Too many uniform in vs and fs, max uniform count is: %d", MAX_UNIFORM_NAME_COUNT);
+	}
+
+	lua_newtable(L);
+
+	for (int ii=0; ii<n; ++ii){
+		bgfx_uniform_info_t info;
+		BGFX(get_uniform_info)(s_uniforms[ii], &info);
+		lua_pushinteger(L, s_uniforms[ii].idx);
+		lua_setfield(L, -2, info.name);
+	}
+
+	lua_pushnil(L);
+	while (lua_next(L, -2) != 0) {
+		s_uniforms[*count++].idx = (uint16_t)lua_tointeger(L, -1);
+		lua_pop(L, 1);
+	}
+
+	lua_remove(L, -1);	// remove this hash table
+	return s_uniforms;
+
+#undef MAX_UNIFORM_NAME_COUNT
+}
+
 // 1 : cobject
 // 2 : bgfx_shader_handle_t vs
 // 3 : bgfx_shader_handle_t fs (optional)
@@ -859,24 +894,21 @@ lprogram_new(lua_State *L) {
 	CAPI_INIT(L, 1);
 	const int vs = (int)luaL_checkinteger(L, 2);
 	const int iscompute = lua_isnoneornil(L, 4) ? 0 : lua_toboolean(L, 4);
-	const int fs = iscompute ? BGFX_INVALID_HANDLE : (int)luaL_optinteger(L, 3, 0xffff);
+	const int fs = iscompute ? UINT16_MAX : (int)luaL_optinteger(L, 3, 0xffff);
 	const bgfx_shader_handle_t vsh = { vs & 0xffff };
 	const bgfx_shader_handle_t fsh = { fs & 0xffff };
-	int n = BGFX(get_shader_uniforms)(vsh, NULL, 0);
-	if (!BGFX_INVALID(fsh)) {
-		n += BGFX(get_shader_uniforms)(fsh, NULL, 0);
-	}
+
+	int n = 0;
+	bgfx_uniform_handle_t *uniforms = find_valid_uniform(L, cobject_, vsh, fsh, &n);
 	struct program * p = (struct program *)lua_newuserdatauv(L, sizeof(struct program) + (n-1) * sizeof(bgfx_uniform_handle_t), 2);
+	memcpy(p->u, uniforms, sizeof(bgfx_uniform_handle_t)*n);
 	p->n_uniform = n;
+
 	p->prog = iscompute ? BGFX(create_compute_program)(vsh, false) : BGFX(create_program)(vsh, fsh, false);
 	if (BGFX_INVALID(p->prog))
 		return luaL_error(L, "Create Program fail");
 
-	int r = BGFX(get_shader_uniforms)(vsh, p->u, n);
-	if (!BGFX_INVALID(fsh))
-		BGFX(get_shader_uniforms)(fsh, p->u + r, n - r);
-
-	remove_duplicate_uniform(p, r);
+	remove_duplicate_uniform(p, p->n_uniform);
 	if (luaL_newmetatable(L, "ANT_PROGRAM")) {
 		luaL_Reg l[] = {
 //			{ "__gc", lprogram_delete },
