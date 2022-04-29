@@ -20,25 +20,22 @@ function is:init()
         data = {
             scene = {srt={}},
             cmaterial = "/pkg/ant.test.material/assets/test.material",
-            simplemesh = imesh.init_mesh({
-                ib = {
-                    start = 0,
-                    num = 6,
-                    handle = irender.quad_ib(),
-                },
+            simplemesh = imesh.init_mesh{
                 vb = {
                     start = 0,
                     num = 4,
                     {
-                        handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("ffff", {
-                            100, 200, 0.0, 0.0,
-                            100, 132, 0.0, 1.0,
-                            420, 200, 1.0, 0.0,
-                            420, 132, 1.0, 1.0,
-                        }), declmgr.get "p2|t2".handle)
+                        declname = "p2|t2",
+                        memory = {"ffff", {
+                            -0.1,  0.1, 0.0, 0.0,
+                             0.1,  0.1, 0.0, 1.0,
+                             0.1, -0.1, 1.0, 0.0,
+                            -0.1, -0.1, 1.0, 1.0,
+                        }},
                     }
                 }
-            }, true),
+            },
+            owned_mesh_buffer = true,
             filter_state = "main_view",
             name = "test_material",
         }
