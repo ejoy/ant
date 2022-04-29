@@ -613,17 +613,15 @@ lcollect_attrib(lua_State *L) {
 static uint16_t
 apply_attrib(lua_State *L, struct attrib_arena * cobject_, struct attrib *a, int texture_index) {
 	if (a->type == ATTRIB_SAMPLER) {
-		// todo: set texture
 		bgfx_texture_handle_t tex;
 		lua_geti(L, texture_index, a->v.t.handle);
-		tex.idx = luaL_optinteger(L, -1, UINT16_MAX) & 0xffff;
+		tex.idx = luaL_optinteger(L, -1, a->v.t.handle) & 0xffff;
 		BGFX(encoder_set_texture)(cobject_->eh->encoder, a->v.t.stage, a->handle, tex, UINT32_MAX);
 		return a->next;
 	}
 	struct attrib_arena * arena = cobject_;
 	struct attrib *next = &arena->a[a->next];
 	if (a->next == INVALID_ATTRIB || !BGFX_EQUAL(next->handle, a->handle)) {
-		// todo: set uniform
 		int t;
 		const float * v = math3d_value(CAPI_MATH3D, a->v.m, &t);
 		BGFX(encoder_set_uniform)(cobject_->eh->encoder, a->handle, v, 1);
@@ -874,10 +872,8 @@ find_valid_uniform(lua_State *L, struct attrib_arena * cobject_, bgfx_shader_han
 		lua_setfield(L, -2, info.name);
 	}
 
-	lua_pushnil(L);
-	while (lua_next(L, -2) != 0) {
-		s_uniforms[*count++].idx = (uint16_t)lua_tointeger(L, -1);
-		lua_pop(L, 1);
+	for (lua_pushnil(L); lua_next(L, -2) != 0; lua_pop(L, 1)) {
+		s_uniforms[(*count)++].idx = (uint16_t)lua_tointeger(L, -1);
 	}
 
 	lua_remove(L, -1);	// remove this hash table
