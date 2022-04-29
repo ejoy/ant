@@ -711,6 +711,8 @@ lapply_attrib(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TTABLE);
 	struct material *mat = (struct material *)lua_touserdata(L, lua_upvalueindex(1));
 	int cobject_index =  lua_upvalueindex(3);
+	CAPI_INIT(L, cobject_index);
+	BGFX(encoder_set_state)(cobject_->eh->encoder, mat->state, mat->rgba);
 	bgfx_uniform_handle_t mat_uniform[MAX_UNIFORM_NUM];
 	if (mi->patch_attrib == INVALID_ATTRIB) {
 		apply_material_attribs(L, cobject_index, 2, mat->attrib, mat_uniform);
