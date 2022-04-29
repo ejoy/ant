@@ -75,6 +75,11 @@ local function update_uniform(p, dst)
 end
 
 function imaterial.set_property_directly(properties, who, what)
+	if type(properties) == "userdata" then
+		local material = properties
+		material[who] = what
+		return
+	end
 	local p = properties[who]
 	if p == nil then
 		log.warn(("entity do not have property:%s"):format(who))
@@ -117,7 +122,7 @@ function imaterial.set_property(e, who, what)
 	end
 	local ro = e.render_object
 	if ro then
-		imaterial.set_property_directly(ro.properties, who, what)
+		imaterial.set_property_directly(ro.material or ro.properties, who, what)
 	end
 end
 
