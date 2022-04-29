@@ -2,13 +2,9 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local bgfx = require "bgfx"
-
 local imesh     = ecs.import.interface "ant.asset|imesh"
-local irender   = ecs.import.interface "ant.render|irender"
+local imateral  = ecs.import.interface "ant.asset|imaterial"
 
-local renderpkg = import_package "ant.render"
-local declmgr = renderpkg.declmgr
 local is = ecs.system "init_system"
 
 function is:init()
@@ -38,6 +34,11 @@ function is:init()
             owned_mesh_buffer = true,
             filter_state = "main_view",
             name = "test_material",
+            on_ready = function (e)
+                w:sync("render_object:in", e)
+                local math3d = require "math3d"
+                imateral.set_property(e, "u_color", math3d.vector(1, 0, 0, 1))
+            end
         }
     }
 end
