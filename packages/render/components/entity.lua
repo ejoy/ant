@@ -76,16 +76,11 @@ local function create_simple_render_entity(name, material, mesh, srt, color, hid
 			scene 		= {srt = srt or {}},
 			material	= material,
 			simplemesh	= imesh.init_mesh(mesh, true),
-			filter_state= "main_view|auxgeom",
+			filter_state= hide and "auxgeom" or "main_view|auxgeom",
 			name		= name or gen_test_name(),
 			on_ready = function(e)
 				w:sync("render_object:in", e)
-				if imaterial.has_property(e, "u_color") then
-					imaterial.set_property(e, "u_color", color or {1,1,1,1})
-				end
-				ifs.set_state(e, "main_view", not hide)
-				ifs.set_state(e, "auxgeom", true)
-				w:sync("render_object_update:out", e)
+				imaterial.set_property(e, "u_color", color or {1,1,1,1})
 			end
 		}
 	}
@@ -677,9 +672,7 @@ function ientity.create_arrow_entity(srt, headratio, color, material)
 			name = "arrow",
 			on_ready = function (e)
 				w:sync("render_object:in", e)
-				if imaterial.has_property(e, "u_color") then
-					imaterial.set_property(e, "u_color", color)
-				end
+				imaterial.set_property(e, "u_color", color)
 			end
 		}
 	}

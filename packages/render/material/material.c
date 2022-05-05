@@ -32,7 +32,7 @@ struct attrib {
 					uint32_t handle;
 					uint8_t stage;
 				} t;
-			} v;
+			};
 		}u;
 
 		// image/buffer
@@ -136,8 +136,8 @@ static inline uint16_t
 clear_attrib(struct attrib_arena *arena, uint16_t id) {
 	struct attrib *a = &arena->a[id];
 	if (a->type == ATTRIB_UNIFORM) {
-		math3d_unmark_id(arena->math, a->u.v.m);
-		a->u.v.m = 0;
+		math3d_unmark_id(arena->math, a->u.m);
+		a->u.m = 0;
 	}
 	id = a->next;
 	arena_return(arena, a);
@@ -293,10 +293,10 @@ static void
 attrib_value(lua_State *L, struct attrib *a) {
 	switch (a->type){
 		case ATTRIB_UNIFORM:
-			lua_pushlightuserdata(L, (void *)a->u.v.m);
+			lua_pushlightuserdata(L, (void *)a->u.m);
 			break;
 		case ATTRIB_SAMPLER:
-			lua_pushfstring(L, "s%d:%x", a->u.v.t.stage, a->u.v.t.handle);
+			lua_pushfstring(L, "s%d:%x", a->u.t.stage, a->u.t.handle);
 			break;
 		case ATTRIB_IMAGE:
 			lua_pushfstring(L, "i%d:%x:%d:%d", a->r.stage, a->r.handle, a->r.mip, a->r.access);
@@ -396,14 +396,14 @@ gen_uniform_attrib(lua_State *L, int arena_index, const bgfx_uniform_info_t *inf
 		a->type = ATTRIB_SAMPLER;
 		if (lua_getfield(L, -1, "stage") != LUA_TNUMBER)
 			luaL_error(L, "Need texture stage");
-		a->u.v.t.stage = lua_tointeger(L, -1) & 0xff;
+		a->u.t.stage = lua_tointeger(L, -1) & 0xff;
 		if (lua_getfield(L, -2, "handle") != LUA_TNUMBER)
 			luaL_error(L, "Need texture handle");
-		a->u.v.t.handle = (uint32_t)lua_tointeger(L, -1);
+		a->u.t.handle = (uint32_t)lua_tointeger(L, -1);
 		lua_pop(L, 2);
 	} else {
 		a->type = ATTRIB_UNIFORM;
-		a->u.v.m = math3d_mark_id(L, mapi, -1);
+		a->u.m = math3d_mark_id(L, mapi, -1);
 	}
 	lua_pop(L, 1);
 	return a;
@@ -466,22 +466,27 @@ fetch_attrib(lua_State *L, struct material *mat, struct attrib_arena *arena, int
 	return ret;
 }
 
+static inline int
+is_uniform_attrib(struct attrib *a){
+	return a->type == ATTRIB_SAMPLER || a->type == ATTRIB_UNIFORM;
+}
+
 static uint16_t *
-find_attrib(struct material_instance *mi, struct attrib_arena *arena, bgfx_uniform_handle_t u) {
+find_attrib_ref(struct material_instance *mi, struct attrib_arena *arena, struct attrib* a) {
 	uint16_t *ret = &mi->patch_attrib;
 	while (*ret != INVALID_ATTRIB) {
-		struct attrib * a = &arena->a[*ret];
-		if (BGFX_EQUAL(u, a->u.handle)) {
+		struct attrib * ra = &arena->a[*ret];
+		if (a == ra){
 			return ret;
 		}
-		ret = &a->next;
+		ret = &ra->next;
 	}
 	return NULL;
 }
 
 static void
-unset_instance_attrib(struct material_instance *mi, struct attrib_arena *arena, bgfx_uniform_handle_t u, int n) {
-	uint16_t * ref = find_attrib(mi, arena, u);
+unset_instance_attrib(struct material_instance *mi, struct attrib_arena *arena, struct attrib *a, int n) {
+	uint16_t * ref = find_attrib_ref(mi, arena, a);
 	if (ref == NULL)
 		return;
 	int i;
@@ -496,11 +501,11 @@ static void
 set_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int index) {
 	switch (a->type){
 		case ATTRIB_UNIFORM:
-			math3d_unmark_id(arena->math, a->u.v.m);
-			a->u.v.m = math3d_mark_id(L, arena->math, index);
+			math3d_unmark_id(arena->math, a->u.m);
+			a->u.m = math3d_mark_id(L, arena->math, index);
 			break;
 		case ATTRIB_SAMPLER:
-			a->u.v.t.handle = (uint32_t)luaL_checkinteger(L, index);
+			a->u.t.handle = (uint32_t)luaL_checkinteger(L, index);
 			break;
 		case ATTRIB_IMAGE:
 		case ATTRIB_BUFFER:
@@ -536,7 +541,7 @@ static struct attrib *
 new_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_arena *arena, int cobject_index, struct attrib *a, int value_index) {
 	struct attrib * new_attrib = arena_alloc(L, cobject_index);
 	*new_attrib = *a;
-	new_attrib->u.v.m = 0;	// unmark will ignore 0
+	new_attrib->u.m = 0;	// unmark will ignore 0
 	new_attrib->next = INVALID_ATTRIB;
 	set_attrib(L, arena, new_attrib, value_index);
 	return new_attrib;
@@ -544,8 +549,7 @@ new_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_ar
 
 static void
 set_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_arena *arena, struct attrib * a, int value_index, int n) {
-	bgfx_uniform_handle_t u = a->u.handle;
-	uint16_t * ref = find_attrib(mi, arena, u);
+	uint16_t * ref = find_attrib_ref(mi, arena, a);
 	if (ref == NULL) {
 		if (n == 1) {
 			struct attrib * na = new_instance_attrib(L, mi, arena, lua_upvalueindex(3), a, value_index);
@@ -593,9 +597,8 @@ lset_attrib(lua_State *L) {
 	lua_pop(L, 1);
 	int n;
 	struct attrib * a = fetch_attrib(L, mat, arena, index, &n);
-	bgfx_uniform_handle_t handle = a->u.handle;
 	if (lua_type(L, 3) == LUA_TNIL) {
-		unset_instance_attrib(mi, arena, handle, n);
+		unset_instance_attrib(mi, arena, a, n);
 	} else {
 		set_instance_attrib(L, mi, arena, a, 3, n);
 	}
@@ -648,18 +651,58 @@ lcollect_attrib(lua_State *L) {
 
 static uint16_t
 apply_attrib(lua_State *L, struct attrib_arena * cobject_, struct attrib *a, int texture_index) {
-	if (a->type == ATTRIB_SAMPLER) {
+	if (a->type == ATTRIB_SAMPLER || a->type == ATTRIB_IMAGE) {
 		bgfx_texture_handle_t tex;
-		lua_geti(L, texture_index, a->u.v.t.handle);
-		tex.idx = luaL_optinteger(L, -1, a->u.v.t.handle) & 0xffff;
-		BGFX(encoder_set_texture)(cobject_->eh->encoder, a->u.v.t.stage, a->u.handle, tex, UINT32_MAX);
+		lua_geti(L, texture_index, a->u.t.handle);
+		tex.idx = luaL_optinteger(L, -1, a->u.t.handle) & 0xffff;
+		if (a->type == ATTRIB_SAMPLER){
+			BGFX(encoder_set_texture)(cobject_->eh->encoder, a->u.t.stage, a->u.handle, tex, UINT32_MAX);
+		} else {
+			BGFX(encoder_set_image)(cobject_->eh->encoder, a->r.stage, tex, a->r.mip, a->r.access, BGFX_TEXTURE_FORMAT_UNKNOWN);
+		}
 		return a->next;
+	}
+
+	if (a->type == ATTRIB_BUFFER){
+		const uint16_t id = a->r.handle & 0xffff;
+		const uint16_t type = a->r.handle >> 16;
+		switch(type) {
+		case BGFX_HANDLE_VERTEX_BUFFER: {
+			bgfx_vertex_buffer_handle_t handle = { id };
+			BGFX(encoder_set_compute_vertex_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
+			break;
+		}
+		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:
+		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: {
+			bgfx_dynamic_vertex_buffer_handle_t handle = { id };
+			BGFX(encoder_set_compute_dynamic_vertex_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
+			break;
+		}
+		case BGFX_HANDLE_INDEX_BUFFER: {
+			bgfx_index_buffer_handle_t handle = { id };
+			BGFX(encoder_set_compute_index_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
+			break;
+		}
+		case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32:
+		case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER: {
+			bgfx_dynamic_index_buffer_handle_t handle = { id };
+			BGFX(encoder_set_compute_dynamic_index_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
+			break;
+		}
+		case BGFX_HANDLE_INDIRECT_BUFFER: {
+			bgfx_indirect_buffer_handle_t handle = { id };
+			BGFX(encoder_set_compute_indirect_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
+			break;
+		}
+		default:
+			return luaL_error(L, "Invalid buffer type %d", type);
+		}
 	}
 	struct attrib_arena * arena = cobject_;
 	struct attrib *next = &arena->a[a->next];
 	if (a->next == INVALID_ATTRIB || !BGFX_EQUAL(next->u.handle, a->u.handle)) {
 		int t;
-		const float * v = math3d_value(CAPI_MATH3D, a->u.v.m, &t);
+		const float * v = math3d_value(CAPI_MATH3D, a->u.m, &t);
 		BGFX(encoder_set_uniform)(cobject_->eh->encoder, a->u.handle, v, 1);
 		return a->next;
 	}
@@ -670,7 +713,7 @@ apply_attrib(lua_State *L, struct attrib_arena * cobject_, struct attrib *a, int
 	do {
 		int t;
 		int stride;
-		const float * v = math3d_value(CAPI_MATH3D, a->u.v.m, &t);
+		const float * v = math3d_value(CAPI_MATH3D, a->u.m, &t);
 		if (t == LINEAR_TYPE_MAT) {
 			stride = 16;
 		} else {
@@ -784,6 +827,8 @@ lget_attrib(lua_State *L){
 		lua_pushinteger(L, BGFX_LUAHANDLE(PROGRAM, mat->prog));
 		return 1;
 	}
+
+
 
 	return luaL_error(L, "invalid key:%s", key);
 }

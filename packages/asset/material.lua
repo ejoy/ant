@@ -1,6 +1,6 @@
-local ecs = ...
+local ecs	= ...
 local world = ecs.world
-local w = world.w
+local w		= world.w
 
 local math3d		= require "math3d"
 local bgfx			= require "bgfx"
