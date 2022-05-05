@@ -508,8 +508,34 @@ set_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int index
 			a->u.t.handle = (uint32_t)luaL_checkinteger(L, index);
 			break;
 		case ATTRIB_IMAGE:
-		case ATTRIB_BUFFER:
-			a->r.handle = (uint32_t)luaL_checkinteger(L, index);
+			luaL_checktype(L, index, LUA_TTABLE);
+			lua_getfield(L, index, "mip");
+			a->r.mip = (uint8_t)lua_tointeger(L, -1);
+			lua_pop(L, 1);
+		//walk through
+		case ATTRIB_BUFFER: {
+			luaL_checktype(L, index, LUA_TTABLE);
+			lua_getfield(L, index, "access");
+			const char* access = lua_tostring(L, 1);
+			if (strcmp(access, "w") == 0){
+				a->r.access = BGFX_ACCESS_WRITE;
+			} else if (strcmp(access, "r") == 0){
+				a->r.access = BGFX_ACCESS_READ;
+			} else if (strcmp(access, "rw") == 0){
+				a->r.access = BGFX_ACCESS_READWRITE;
+			} else {
+				luaL_error(L, "Invalid access type:%s", access);
+			}
+			lua_pop(L, 1);	// access
+
+			lua_getfield(L, index, "stage");
+			a->r.stage = (uint8_t)lua_tointeger(L, -1);
+			lua_pop(L, 1);	// stage
+
+			lua_getfield(L, index, "handle");
+			a->r.handle = (uint32_t)luaL_checkinteger(L, -1);
+			lua_pop(L, 1); // handle
+		}
 			break;
 		default:
 			luaL_error(L, "Invalid attribute type:%d", a->type);
