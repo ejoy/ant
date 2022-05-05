@@ -40,9 +40,11 @@ local function load_cmaterial(r, m, setting)
             end
     
             if p.stage then
-                local tex = p.texture or p.image
-                if tex then
-                    properties[k] = {stage=p.stage, handle=tex.handle}
+                --TODO: material file import should put texture&image data struct directly, but not convert here
+                if p.texture then
+                    properties[k] = {stage=p.stage, handle=p.texture.handle, type='t'}
+                elseif p.image then
+                    properties[k] = {stage=p.stage, handle=p.image.handle, type='b', mip = assert(p.mip), access = p.access or "w"}
                 end
             else
                 if type(p[1]) == "table" then
@@ -58,17 +60,8 @@ local function load_cmaterial(r, m, setting)
         end
     end
 
-    if fx.setting.lighting == "on" then
-        properties["b_light_info"]              = {stage=0, handle=nil, type='b'}
-        if sd:data().graphic.lighting.cluster_shading ~= 1 then
-            properties["b_light_grids"]         = {stage=0, handle=nil, type='b'}
-            properties["b_light_index_lists"]   = {stage=0, handle=nil, type='b'}
-        end
-	end
-
     local mat = prog:material(m.state, properties)
     r.material = mat:instance()
-
     --TODO: need remove
     r.fx        = fx
     r.state     = m.state
