@@ -516,7 +516,7 @@ set_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int index
 		case ATTRIB_BUFFER: {
 			luaL_checktype(L, index, LUA_TTABLE);
 			lua_getfield(L, index, "access");
-			const char* access = lua_tostring(L, 1);
+			const char* access = lua_tostring(L, -1);
 			if (strcmp(access, "w") == 0){
 				a->r.access = BGFX_ACCESS_WRITE;
 			} else if (strcmp(access, "r") == 0){
