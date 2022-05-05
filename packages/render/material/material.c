@@ -516,7 +516,7 @@ set_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int index
 		case ATTRIB_BUFFER: {
 			luaL_checktype(L, index, LUA_TTABLE);
 			lua_getfield(L, index, "access");
-			const char* access = lua_tostring(L, 1);
+			const char* access = lua_tostring(L, -1);
 			if (strcmp(access, "w") == 0){
 				a->r.access = BGFX_ACCESS_WRITE;
 			} else if (strcmp(access, "r") == 0){
@@ -681,6 +681,7 @@ apply_attrib(lua_State *L, struct attrib_arena * cobject_, struct attrib *a, int
 		bgfx_texture_handle_t tex;
 		lua_geti(L, texture_index, a->u.t.handle);
 		tex.idx = luaL_optinteger(L, -1, a->u.t.handle) & 0xffff;
+		lua_pop(L, 1);
 		if (a->type == ATTRIB_SAMPLER){
 			BGFX(encoder_set_texture)(cobject_->eh->encoder, a->u.t.stage, a->u.handle, tex, UINT32_MAX);
 		} else {
