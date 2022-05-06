@@ -236,7 +236,7 @@
     </head>
     <body>
         <div class="panel" data-model="start">
-            <page width='667px' height='720px' row='3' col='3'>
+            <page width='85.33vmin' height='66.00vmin' footerheight='4.00vmin' row='3' col='3'>
                 <div class="pagestyle"/>
             </page>
             <list direction='1' width='667px' height='720px' item_width='667px' item_height='50px'>

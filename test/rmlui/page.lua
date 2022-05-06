@@ -1,60 +1,7 @@
 local page_meta = {}
 page_meta.__index = page_meta
 
-function page_meta:update_virtual_pages()
-    local vpages = {}
-    local count_per_page = self.row * self.col
-    local gapx = math.floor(math.fmod(self.width, self.item_size) / (self.col + 1))
-    local gapy = math.floor(math.fmod(self.height, self.item_size) / (self.row + 1))
-    local offset = 0
-    local index = 1
-    local items = self.source.items
-    local total_item_count = #items
-    local page_index = 0
-    while index <= total_item_count do
-        local index_offset = page_index * count_per_page
-        local remain = total_item_count - index + 1
-        local new_page = {
-            start_index = 1 + index_offset,
-            end_index = (remain > count_per_page) and (index_offset + count_per_page) or (index_offset + remain),
-            vitems = {}
-        }
-        local current_count = new_page.end_index - new_page.start_index
-        local vitems = new_page.vitems
-        for idx = 0, current_count do
-            local row = math.floor(idx/self.col)
-            local col = math.fmod(idx, self.col)
-            vitems[#vitems + 1] = {
-                left = offset + col * (self.item_size + gapx) + gapx,
-                top = row * (self.item_size + gapy) + gapy,
-                row = row,
-                data = items[index + idx]
-            }
-        end
-        vpages[#vpages + 1] = new_page
-        offset = offset + self.width
-        page_index = page_index + 1
-        index = index + count_per_page
-    end
-    self.gapx = gapx
-    self.gapy = gapy
-    self.virtual_pages = vpages
-end
-
 function page_meta.create(document, e, item_count, item_renderer, detail_renderer)
-    local width
-    local height
-    local unit = {}
-    local width_str = e.getAttribute("width")
-    local height_str = e.getAttribute("height")
-    for r in width_str:gmatch("%d+") do
-        unit[#unit + 1] = width_str:sub(#r + 1, #width_str)
-        width = tonumber(r)
-    end
-    for r in height_str:gmatch("%d+") do
-        unit[#unit + 1] = height_str:sub(#r + 1, #height_str)
-        height = tonumber(r)
-    end
     local row = tonumber(e.getAttribute("row"))
     local col = tonumber(e.getAttribute("col"))
     local page_count = math.ceil(item_count / (row * col))
@@ -65,8 +12,8 @@ function page_meta.create(document, e, item_count, item_renderer, detail_rendere
         drag            = {mouse_pos = 0, anchor = 0, delta = 0},
         row             = row,
         col             = col,
-        width           = width,
-        height          = height,
+        width           = e.getAttribute("width"),
+        height          = e.getAttribute("height"),
         page_count      = page_count,
         item_count      = item_count,
         item_renderer   = item_renderer,
@@ -74,19 +21,15 @@ function page_meta.create(document, e, item_count, item_renderer, detail_rendere
         pages           = {},
         container       = {},
         document        = document,
-        unit            = unit
     }
     setmetatable(page, page_meta)
     e.style.overflow = 'hidden'
-    e.style.border = '2px green'
-    e.style.width = width .. unit[1]
-    e.style.height = height .. unit[2]
-    page.view = e
+    e.style.width = page.width
     local panel = e.childNodes[1]
     panel.addEventListener('mousedown', function(event) page:on_mousedown(event) end)
     panel.addEventListener('mousemove', function(event) page:on_drag(event) end)
     panel.addEventListener('mouseup', function(event) page:on_mouseup(event) end)
-    panel.style.height = (height - 30) .. unit[2]
+    panel.style.height = page.height
     panel.style.flexDirection = 'row'
     panel.style.alignItems = 'center'
     panel.style.justifyContent = 'flex-start'
@@ -98,7 +41,7 @@ function page_meta.create(document, e, item_count, item_renderer, detail_rendere
     footer.style.flexDirection = 'row'
     footer.style.justifyContent = 'center'
     footer.style.width = '100%'
-    footer.style.height = '30px'
+    footer.style.height = e.getAttribute("footerheight")
     page:on_dirty(item_count)
     return page
 end
@@ -142,12 +85,12 @@ function page_meta:update_contianer()
         page_e.style.flexDirection = 'column'
         page_e.style.alignItems = 'center'
         page_e.style.justifyContent = 'space-evenly'
-        page_e.style.width = self.width .. self.unit[1]
-        page_e.style.height = self.height .. self.unit[2]
+        page_e.style.width = self.width
+        page_e.style.height = self.height
         local row = {}
         for r = 1, self.row do
             local row_e = self.document.createElement "div"
-            row_e.style.width = self.width .. self.unit[1]
+            row_e.style.width = self.width
             row_e.style.flexDirection = 'row'
             row_e.style.alignItems = 'center'
             row_e.style.justifyContent = 'space-evenly'
@@ -173,14 +116,8 @@ end
 function page_meta:on_dirty(item_count)
     self.item_count = item_count
     self.page_count = math.ceil(item_count / (self.row * self.col))
-    self.panel.style.width = self.page_count * self.width .. self.unit[1]
     self:update_contianer()
     self:update_footer()
-end
-
-function page_meta:set_size(width, height)
-    self.width = width
-    self.height = height
 end
 
 function page_meta:get_current_page()
@@ -209,15 +146,14 @@ function page_meta:do_show_detail(show, id, row, top)
     local offset = 0
     if show then
         self.source.selected_id = id
-        self.detail.style.top = (top + self.item_size) .. self.unit
-        local dy = self.height - ((row + 1) * (self.item_size + self.gapy) + self.detail_height)
+        self.detail.style.top = (top + self.item_size) .. 'px'
+        local dy = self.panel.childNodes[1].clientHeight - ((row + 1) * (self.item_size + self.gapy) + self.detail_height)
         offset = (dy >= 0) and 0 or dy
     else
         self.source.selected_id = 0
     end
-    self.panel.style.top = offset .. self.unit
+    self.panel.style.top = offset .. 'px'
     self.source.show_detail = show
-    --self.dirty()
 end
 
 function page_meta:on_mousedown(event)
@@ -242,8 +178,8 @@ function page_meta:on_mouseup(event)
     if old_value ~= self.current_page then
         self:update_footer_status()
     end
-    self.pos = (1 - self.current_page) * self.width
-    self.panel.style.left = tostring(self.pos) .. self.unit[1]
+    self.pos = (1 - self.current_page) * self.panel.childNodes[1].clientWidth
+    self.panel.style.left = tostring(self.pos) .. 'px'
     return old_value ~= self.current_page
 end
 
@@ -254,7 +190,7 @@ function page_meta:on_drag(event)
         local e = self.panel
         local oldClassName = e.className
         e.className = e.className .. " notransition"
-        e.style.left = tostring(math.floor(self.pos)) .. self.unit[1]
+        e.style.left = tostring(math.floor(self.pos)) .. 'px'
         e.className = oldClassName
         self.draging = true
     else
