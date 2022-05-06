@@ -163,6 +163,7 @@
                 item.style.width = '120px'
                 item.style.height = '120px'
                 if index > #start.items then
+                    --item.outerHTML = [[<div style = "width: 120px; height: 120px;" />]]
                     return item
                 end
                 item.style.border = '2px blue'
@@ -180,17 +181,18 @@
                         start.page.selected.style.border = '2px blue'
                     end
                     item.style.border = '2px red'
+                    start.page:on_item_click(item)
                     start.page.selected = item
                 end)
                 return item
             end
             
-            local function page_item_detail_renderer(e)
+            local function page_item_detail_renderer(index)
                 local detail = document.createElement "div"
-                detail.style.width = '120px'
-                detail.style.height = '200px'
+                detail.style.width = '100%'
+                detail.style.height = '100px'
                 detail.style.border = '2px blue'
-                return item
+                return detail
             end
 
             local pageclass = require "page"

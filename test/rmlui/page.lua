@@ -80,6 +80,7 @@ function page_meta:update_contianer()
     end
     self.pages = {}
     self.container = {}
+    self.item_map = {}
     for i = 1, self.page_count do
         local page_e = self.document.createElement "div"
         page_e.style.flexDirection = 'column'
@@ -101,15 +102,24 @@ function page_meta:update_contianer()
         self.pages[#self.pages + 1] = page_e
         self.container[#self.container + 1] = row
     end
+    local cid = 0
+    local last_rid = 0
     local count_per_page = self.row * self.col
-    local ic = self.page_count * count_per_page
-    for index = 1, ic do
+    local icount = self.page_count * count_per_page
+    for index = 1, icount do
         local pid = math.ceil(index / count_per_page)
         local remain = index % count_per_page
         local page = self.container[pid]
         local rid = math.ceil((remain == 0 and count_per_page or remain) / self.col)
-        local row = page[rid]
-        row.appendChild(self.item_renderer(index))
+        if last_rid ~= rid then
+            last_rid = rid
+            cid = 1
+        else
+            cid = cid + 1
+        end
+        local item = self.item_renderer(index)
+        self.item_map[item] = {index = index, page = pid, row = rid, col = cid}
+        page[rid].appendChild(item)
     end
 end
 
@@ -127,36 +137,32 @@ function page_meta:get_current_page()
     return self.current_page
 end
 
-function page_meta:on_item_click(id, row, top)
-    if not self.detail then
-        return
-    end
+function page_meta:on_item_click(item)
     if not self.draging then
-        if self.source.selected_id ~= id then
-            self:do_show_detail(true, id, row, top)
+        if self.selected ~= item then
+            self:do_show_detail(item, true)
         else
-            self:do_show_detail(not self.source.show_detail, id, row, top)
+            self:do_show_detail(item, not self.show_detail)
         end
     else
-        self:do_show_detail(false, 0, 0, 0)
+        self:do_show_detail(item, false)
     end
 end
 
-function page_meta:do_show_detail(show, id, row, top)
-    if not self.detail then
-        return
-    end
+function page_meta:do_show_detail(item, show)
     local offset = 0
+    if self.detail then
+        local parent = self.detail.parentNode
+        parent.removeChild(self.detail)
+        self.detail = nil
+    end
     if show then
-        self.source.selected_id = id
-        self.detail.style.top = (top + self.item_size) .. 'px'
-        local dy = self.panel.childNodes[1].clientHeight - ((row + 1) * (self.item_size + self.gapy) + self.detail_height)
-        offset = (dy >= 0) and 0 or dy
-    else
-        self.source.selected_id = 0
+        local map = self.item_map[item]
+        self.detail = self.detail_renderer(map.index)
+        self.pages[map.page].appendChild(self.detail, map.row)
     end
     self.panel.style.top = offset .. 'px'
-    self.source.show_detail = show
+    self.show_detail = show
 end
 
 function page_meta:on_mousedown(event)

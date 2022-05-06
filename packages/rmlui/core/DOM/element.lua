@@ -84,9 +84,9 @@ end
 
 function property_init:appendChild()
     local handle = self._handle
-    return function (child)
+    return function (child, index)
         child._owner = nil
-        rmlui.ElementAppendChild(handle, child._handle)
+        rmlui.ElementAppendChild(handle, child._handle, index)
     end
 end
 
