@@ -681,6 +681,7 @@ apply_attrib(lua_State *L, struct attrib_arena * cobject_, struct attrib *a, int
 		bgfx_texture_handle_t tex;
 		lua_geti(L, texture_index, a->u.t.handle);
 		tex.idx = luaL_optinteger(L, -1, a->u.t.handle) & 0xffff;
+		lua_pop(L, 1);
 		if (a->type == ATTRIB_SAMPLER){
 			BGFX(encoder_set_texture)(cobject_->eh->encoder, a->u.t.stage, a->u.handle, tex, UINT32_MAX);
 		} else {
