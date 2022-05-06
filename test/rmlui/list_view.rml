@@ -195,7 +195,8 @@
 
             local pageclass = require "page"
             window.customElements.define("page", function(e)
-                start.page = pageclass.create(document, e, #start.items, page_item_renderer, page_item_detail_renderer)
+                start.page = pageclass.create(document, e, page_item_renderer, page_item_detail_renderer)
+                start.page:on_dirty(#start.items)
             end)
 
             local function list_item_renderer(index)
@@ -236,13 +237,8 @@
     </head>
     <body>
         <div class="panel" data-model="start">
-            <page width='85.33vmin' height='66.00vmin' footerheight='4.00vmin' row='3' col='3'>
-                <div class="pagestyle"/>
-            </page>
-            <list direction='1' width='667px' height='720px' item_width='667px' item_height='50px'>
-                <div class="liststyle">
-                </div>
-            </list>
+            <page width='85.33vmin' height='66.00vmin' footerheight='4.00vmin' row='3' col='3'/>
+            <list direction='1' width='667px' height='720px' item_width='667px' item_height='50px'/>
         </div>
     </body>
 </rml>

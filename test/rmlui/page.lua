@@ -1,10 +1,10 @@
 local page_meta = {}
 page_meta.__index = page_meta
 
-function page_meta.create(document, e, item_count, item_renderer, detail_renderer)
+function page_meta.create(document, e, item_renderer, detail_renderer)
     local row = tonumber(e.getAttribute("row"))
     local col = tonumber(e.getAttribute("col"))
-    local page_count = math.ceil(item_count / (row * col))
+    local page_count = 0--math.ceil(item_count / (row * col))
     local page = {
         current_page    = 1,
         pos             = 0,
@@ -15,7 +15,6 @@ function page_meta.create(document, e, item_count, item_renderer, detail_rendere
         width           = e.getAttribute("width"),
         height          = e.getAttribute("height"),
         page_count      = page_count,
-        item_count      = item_count,
         item_renderer   = item_renderer,
         detail_renderer = detail_renderer,
         pages           = {},
@@ -25,7 +24,9 @@ function page_meta.create(document, e, item_count, item_renderer, detail_rendere
     setmetatable(page, page_meta)
     e.style.overflow = 'hidden'
     e.style.width = page.width
-    local panel = e.childNodes[1]
+    local panel = document.createElement "div"
+    e.appendChild(panel)
+    panel.className = "pagestyle"
     panel.addEventListener('mousedown', function(event) page:on_mousedown(event) end)
     panel.addEventListener('mousemove', function(event) page:on_drag(event) end)
     panel.addEventListener('mouseup', function(event) page:on_mouseup(event) end)
@@ -42,7 +43,6 @@ function page_meta.create(document, e, item_count, item_renderer, detail_rendere
     footer.style.justifyContent = 'center'
     footer.style.width = '100%'
     footer.style.height = e.getAttribute("footerheight")
-    page:on_dirty(item_count)
     return page
 end
 
@@ -114,6 +114,9 @@ function page_meta:update_contianer()
 end
 
 function page_meta:on_dirty(item_count)
+    if item_count <= 0 then
+        return
+    end
     self.item_count = item_count
     self.page_count = math.ceil(item_count / (self.row * self.col))
     self:update_contianer()

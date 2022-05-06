@@ -47,7 +47,9 @@ function list_meta.create(document, e, item_count, item_renderer)
     }
     setmetatable(list, list_meta)
     e.style.overflow = 'hidden'
-    local panel = e.childNodes[1]
+    local panel = document.createElement "div"
+    e.appendChild(panel)
+    panel.className = "liststyle"
     panel.addEventListener('mousedown', function(event) list:on_mousedown(event) end)
     panel.addEventListener('mousemove', function(event) list:on_drag(event) end)
     panel.addEventListener('mouseup', function(event) list:on_mouseup(event) end)
