@@ -82,15 +82,6 @@ local default_collider_define = {
     ["capsule"] = {{origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}}
 }
 
-local function get_local_transform(tran, parent_eid)
-    if not parent_eid then return tran end
-    local parent_worldmat = iom.worldmat(parent_eid)
-    local worldmat = math3d.matrix(tran)
-    local s, r, t = math3d.srt(math3d.mul(math3d.inverse(parent_worldmat), worldmat))
-    local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
-    return {s = {ts[1], ts[2], ts[3]}, r = {tr[1], tr[2], tr[3], tr[4]}, t = {tt[1], tt[2], tt[3]}}
-end
-
 local slot_entity_id = 1
 function m:create_slot()
     --if not gizmo.target_eid then return end
@@ -170,25 +161,12 @@ end
 
 function m:add_entity(new_entity, parent, temp, no_hierarchy)
     self.entities[#self.entities+1] = new_entity
-    ecs.method.set_parent(new_entity, parent or self.root)
+    parent = parent or self.root
+    ecs.method.set_parent(new_entity, parent)
     if not no_hierarchy then
-        hierarchy:add(new_entity, {template = temp}, parent)--world[new_entity].parent)
+        hierarchy:add(new_entity, {template = temp}, parent)
     end
 end
-
--- function m:find_entity(e)
---     if not e.scene then
---         w:sync("scene:in", e)
---     end
---     for _, entity in ipairs(self.entities) do
---         if not entity.scene then
---             w:sync("scene:in", entity)
---         end
---         if entity.scene.id == e.scene.id then
---             return entity
---         end
---     end
--- end
 
 local function create_default_light(lt)
     return ilight.create{
@@ -217,7 +195,7 @@ function m:create(what, config)
         self.entities[#self.entities+1] = new_camera
     elseif what == "empty" then
         local parent = gizmo.target_eid or self.root
-        local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id(), {}, parent)
+        local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id())
         self:add_entity(new_entity, parent, temp)
     elseif what == "geometry" then
         if config.type == "cube"
@@ -354,17 +332,6 @@ local function set_select_adapter(entity_set, mount_root)
     end
 end
 
-local function remove_entitys(entities)
-    for _, e in ipairs(entities) do
-        world:remove_entity(e)
-    end
-end
-
-local function get_prefab(filename)
-    assetmgr.unload(filename)
-    return worldedit:prefab_template(filename)
-end
-
 local FBXTOGLB
 function m:open_fbx(filename)
     if not FBXTOGLB then
@@ -454,7 +421,7 @@ function m:on_prefab_ready(prefab)
         local parent = find_e(entitys, world:entity(e).scene.parent)
         if pt.prefab then
             local prefab_name = pt.name or gen_prefab_name()
-            local sub_root = create_simple_entity(prefab_name, {}, parent or self.root)
+            local sub_root = create_simple_entity(prefab_name)
             ecs.method.set_parent(sub_root, parent)
             self.entities[#self.entities + 1] = sub_root
 
@@ -536,7 +503,7 @@ local function on_remove_entity(e)
     end
     hierarchy:del(e)
 end
-local ima = ecs.import.interface "ant.asset|imaterial_animation"
+
 function m:reset_prefab()
     camera_mgr.clear()
     for _, e in ipairs(self.entities) do
@@ -608,7 +575,7 @@ function m:add_prefab(filename)
     local prefab = ecs.create_instance(prefab_filename)
     prefab.on_ready = function(inst)
         local prefab_name = gen_prefab_name()
-        local v_root = create_simple_entity(prefab_name, {}, parent)
+        local v_root = create_simple_entity(prefab_name)
         ecs.method.set_parent(v_root, parent)
         self.entities[#self.entities+1] = v_root
         local children = inst.tag["*"]

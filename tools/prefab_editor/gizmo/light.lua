@@ -72,11 +72,11 @@ function m.highlight(b)
 
     if b then
         for _, eid in ipairs(m.current_gizmo.eid) do
-            imaterial.set_property(eid, "u_color", gizmo_const.COLOR.HIGHLIGHT)
+            imaterial.set_property(world:entity(eid), "u_color", gizmo_const.COLOR.HIGHLIGHT)
         end
     else
         for _, eid in ipairs(m.current_gizmo.eid) do
-            imaterial.set_property(eid, "u_color", gizmo_const.COLOR.GRAY)
+            imaterial.set_property(world:entity(eid), "u_color", gizmo_const.COLOR.GRAY)
         end
     end
 end
@@ -124,7 +124,7 @@ end
 
 local function update_point_gizmo()
     local root = m.point.root
-    local radius = m.current_light and ilight.range(m.current_light) or 1.0
+    local radius = m.current_light and ilight.range(world:entity(m.current_light)) or 1.0
     
     if #m.point.eid == 0 then
         local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {}, "light gizmo circle", gizmo_const.COLOR.GRAY, true)
@@ -145,8 +145,8 @@ local function update_spot_gizmo()
     local range = 1.0
     local radian = 10
     if m.current_light then
-        range = ilight.range(m.current_light)
-        radian = ilight.outter_radian(m.current_light) or 10
+        range = ilight.range(world:entity(m.current_light))
+        radian = ilight.outter_radian(world:entity(m.current_light)) or 10
     end
     local radius = range * math.tan(radian * 0.5)
     if #m.spot.eid == 0 then
@@ -166,7 +166,7 @@ local function update_spot_gizmo()
         m.spot.eid = {line0, line1, line2, line3, line4, c0}
     else
         update_circle_vb(m.spot.eid[6], radius)
-        iom.set_position(m.spot.eid[6], {0, 0, range})
+        iom.set_position(world:entity(m.spot.eid[6]), {0, 0, range})
 
         local function update_vb(eid, tp2)
             local vbdesc = world:entity(eid).render_object.vb
@@ -209,7 +209,7 @@ end
 local inited = false
 function m.init()
     if inited then return end
-    create_directional_gizmo(m.current_light and iom.get_position(m.current_light) or nil, m.current_light and iom.get_rotation(m.current_light) or nil)
+    create_directional_gizmo(m.current_light and iom.get_position(world:entity(m.current_light)) or nil, m.current_light and iom.get_rotation(world:entity(m.current_light)) or nil)
     m.point.root = create_gizmo_root()
     update_point_gizmo()
     m.spot.root = create_gizmo_root()
