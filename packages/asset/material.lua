@@ -15,11 +15,11 @@ local CMATOBJ		= rmat.cobject {
 }
 
 local function texture_value(stage)
-	return {stage=stage, value=nil, handle=nil}
+	return {stage=stage, value=nil, handle=nil, type='t'}
 end
 
 local function buffer_value(stage, access)
-	return {stage=stage, access=access, value=nil}
+	return {stage=stage, access=access, value=nil, type='b'}
 end
 
 local SYS_ATTRIBS = rmat.system_attribs(CMATOBJ, {
