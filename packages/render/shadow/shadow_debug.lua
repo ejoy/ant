@@ -25,10 +25,10 @@ local quadsize = 192
 local quadmaterial = "/pkg/ant.resources/materials/texquad.material"
 
 local frustum_colors = {
-	mc.COLOR(mc.RED),
-	mc.COLOR(mc.GREEN),
-	mc.COLOR(mc.BLUE),
-	mc.COLOR(mc.YELLOW),
+	mc.RED,
+	mc.GREEN,
+	mc.BLUE,
+	mc.YELLOW,
 }
 
 local function find_csm_entity(index)

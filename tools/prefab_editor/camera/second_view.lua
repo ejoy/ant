@@ -189,11 +189,10 @@ local function create_frustum_entity(eid)
         }
     }
 
-    local color = mc.COLOR(mc.YELLOW_HALF, ilight.default_intensity "point")
     local function onready(e)
         w:sync("id:in", e)
         ecs.method.set_parent(e.id, frustum_root)
-        imaterial.set_property(e, "u_color", color)
+        imaterial.set_property(e, "u_color", mc.YELLOW_HALF)
     end
 
     ecs.create_entity{
