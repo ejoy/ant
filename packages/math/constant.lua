@@ -54,10 +54,10 @@ constant.NYAXIS     = math3d.constant("v4", constant.T_NYAXIS)
 constant.ZAXIS      = math3d.constant("v4", constant.T_ZAXIS)
 constant.NZAXIS     = math3d.constant("v4", constant.T_NZAXIS)
 
-constant.IDENTITY_MAT   = math3d.constant("m4",     constant.T_IDENTITY_MAT)
+constant.IDENTITY_MAT   = math3d.constant("mat",     constant.T_IDENTITY_MAT)
 constant.IDENTITY_QUAT  = math3d.constant("quat",   constant.T_IDENTITY_QUAT)
 
-constant.R2L_MAT    = math3d.constant("m4", {
+constant.R2L_MAT    = math3d.constant("mat", {
     1.0, 0.0, 0.0, 0.0,
     0.0, 1.0, 0.0, 0.0,
     0.0, 0.0,-1.0, 0.0,

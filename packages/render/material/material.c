@@ -289,10 +289,20 @@ get_state(lua_State *L, int idx, uint64_t *pstate, uint32_t *prgba) {
 
 static inline uint8_t
 to_attrib_type(lua_State *L, int index){
+	const int datatype = lua_type(L, index);
+	if (datatype == LUA_TNIL){
+		luaL_error(L, "Invalid attrib value, value type is nil");
+	}
+
+	if (datatype == LUA_TUSERDATA || datatype == LUA_TLIGHTUSERDATA){
+		// math3d data
+		return ATTRIB_UNIFORM;
+	}
+
 	const int lt = lua_getfield(L, index, "type");
 	if (lt != LUA_TSTRING){
 		lua_pop(L, 1);
-		luaL_error(L, "invalid attrib value, type is not string");
+		luaL_error(L, "Invalid attrib value, 'type' filed:%s, is not string", lua_typename(L, lt));
 	}
 	const char  c = lua_tostring(L, -1)[0];
 	lua_pop(L, 1);
@@ -394,7 +404,7 @@ set_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int index
 				math3d_unmark_id(arena->math, a->u.m);
 				a->u.m = math3d_mark_id(L, arena->math, -1);
 				lua_pop(L, 1);
-			} else if (datatype == LUA_TLIGHTUSERDATA){
+			} else if (datatype == LUA_TLIGHTUSERDATA || datatype == LUA_TUSERDATA){
 				math3d_unmark_id(arena->math, a->u.m);
 				a->u.m = math3d_mark_id(L, arena->math, index);
 			} else {
@@ -406,7 +416,7 @@ set_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int index
 			const int datatype = lua_type(L, index);
 			if (datatype == LUA_TTABLE){
 				lua_getfield(L, index, "value");
-				a->u.t.handle = (uint32_t)luaL_checkinteger(L, index);
+				a->u.t.handle = (uint32_t)luaL_optinteger(L, index, UINT16_MAX);
 				lua_pop(L, 1);
 			} else if (datatype == LUA_TNUMBER) {
 				a->u.t.handle = (uint32_t)luaL_checkinteger(L, index);
@@ -439,8 +449,8 @@ set_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int index
 			a->r.stage = (uint8_t)lua_tointeger(L, -1);
 			lua_pop(L, 1);	// stage
 
-			lua_getfield(L, index, "handle");
-			a->r.handle = (uint32_t)luaL_checkinteger(L, -1);
+			lua_getfield(L, index, "value");
+			a->r.handle = (uint32_t)luaL_optinteger(L, -1, UINT16_MAX);
 			lua_pop(L, 1); // handle
 		}
 			break;
@@ -453,8 +463,6 @@ set_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int index
 static struct attrib*
 gen_attrib(lua_State *L, int arena_index, int data_index){
 	struct attrib *a = arena_alloc(L, arena_index);
-	luaL_checktype(L, data_index, LUA_TTABLE);
-
 	a->type = to_attrib_type(L, data_index);
 
 	struct attrib_arena * arena = (struct attrib_arena *)lua_touserdata(L, arena_index);
@@ -507,14 +515,11 @@ set_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_ar
 				lua_geti(L, value_index, i+1);
 				if (a == NULL)
 					luaL_error(L, "Invalid material attrib");
-				struct attrib * new_attrib = new_instance_attrib(L, mi, arena, lua_upvalueindex(3), a, -1);
-				new_attrib->next = last_id;
-				last_id = attrib_id(arena, new_attrib);
+				struct attrib * na = new_instance_attrib(L, mi, arena, lua_upvalueindex(3), a, -1);
+				na->next = last_id;
+				last_id = attrib_id(arena, na);
 				lua_pop(L, 1);
-				if (a->next == INVALID_ATTRIB)
-					a = NULL;
-				else
-					a = &arena->a[a->next];
+				a = (a->next == INVALID_ATTRIB) ? NULL : &arena->a[a->next];
 			}
 			mi->patch_attrib = last_id;
 		}
@@ -910,15 +915,14 @@ lsystem_attribs_new(lua_State *L){
 
 	struct system_attribs *sa = (struct system_attribs*)lua_newuserdatauv(L, sizeof(struct system_attribs), 1);
 	lua_newtable(L);	// -3
-#define SYS_ATTRIB_LOOKUP_TABLE_IDX -3
+	const int lookup_idx = lua_gettop(L);
 	for (lua_pushnil(L); lua_next(L, 2) != 0; lua_pop(L, 1)) {
 		const char* name = lua_tostring(L, -2);
 		struct attrib* a = gen_attrib(L, 1, -1);
 		const uint16_t id = attrib_id(cobject_, a);
 		lua_pushinteger(L, id);
-		lua_setfield(L, SYS_ATTRIB_LOOKUP_TABLE_IDX, name);
+		lua_setfield(L, lookup_idx, name);
 	}
-#undef SYS_ATTRIB_LOOKUP_TABLE_IDX
 
 	lua_setiuservalue(L, -2, 1);	// lookup table in -1, push lookup table as 'system_attribs' No.1 uservalue
 	return 1;
