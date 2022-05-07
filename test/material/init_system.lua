@@ -10,12 +10,12 @@ local is = ecs.system "init_system"
 function is:init()
     ecs.create_entity{
         policy = {
-            "ant.test.material|simplerender2",
+            "ant.test.material|simplerender",
             "ant.general|name",
         },
         data = {
             scene = {srt={}},
-            cmaterial = "/pkg/ant.test.material/assets/test.material",
+            material = "/pkg/ant.test.material/assets/test.material",
             simplemesh = imesh.init_mesh{
                 vb = {
                     start = 0,
