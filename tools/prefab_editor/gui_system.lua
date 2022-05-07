@@ -383,12 +383,12 @@ end
 
 local function update_visible(node, visible)
     ies.set_state(world:entity(node.eid), "main_view", visible)
-    for _, n in ipairs(node.children) do
-        update_visible(n, visible)
+    for _, nd in ipairs(node.children) do
+        update_visible(nd, visible)
     end
     local adaptee = hierarchy:get_select_adaptee(node.eid)
-    for _, e in ipairs(adaptee) do
-        ies.set_state(world:entity(e), "main_view", visible)
+    for _, eid in ipairs(adaptee) do
+        ies.set_state(world:entity(eid), "main_view", visible)
     end
 end
 local reset_editor = world:sub {"ResetEditor"}
@@ -412,7 +412,6 @@ function m:handle_event()
     end
     for _, what, target, v1, v2 in entity_event:unpack() do
         local transform_dirty = true
-        local template = hierarchy:get_template(target)
         if what == "move" then
             gizmo:set_position(v2)
             cmd_queue:record {action = gizmo_const.MOVE, eid = target, oldvalue = v1, newvalue = v2}
@@ -424,7 +423,7 @@ function m:handle_event()
             cmd_queue:record {action = gizmo_const.SCALE, eid = target, oldvalue = v1, newvalue = v2}
         elseif what == "name" or what == "tag" then
             transform_dirty = false
-            if what == "name" then 
+            if what == "name" then
                 hierarchy:update_display_name(target, v1)
                 if world:entity(target).collider then
                     hierarchy:update_collider_list(world)
@@ -457,9 +456,8 @@ function m:handle_event()
         end
     end
     for _, what, target, value in hierarchy_event:unpack() do
-        local e = target
         if what == "visible" then
-            e = world:entity(target.eid)
+            local e = world:entity(target.eid)
             hierarchy:set_visible(target, value, true)
             if e.efk then
                 iefk.set_visible(e, value)
@@ -469,27 +467,27 @@ function m:handle_event()
                 update_visible(target, value)
             end
             for ie in w:select "scene:in ibl:in" do
-                if ie.scene.parent == e then
+                if ie.scene.parent == target.eid then
                     isp.enable_ibl(value)
                     break
                 end
             end
         elseif what == "lock" then
-            hierarchy:set_lock(e, value)
+            hierarchy:set_lock(target, value)
         elseif what == "delete" then
             if world:entity(gizmo.target_eid).collider then
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
-            prefab_mgr:remove_entity(e)
+            prefab_mgr:remove_entity(target)
             update_heightlight_aabb()
         elseif what == "movetop" then
-            hierarchy:move_top(e)
+            hierarchy:move_top(target)
         elseif what == "moveup" then
-            hierarchy:move_up(e)
+            hierarchy:move_up(target)
         elseif what == "movedown" then
-            hierarchy:move_down(e)
+            hierarchy:move_down(target)
         elseif what == "movebottom" then
-            hierarchy:move_bottom(e)
+            hierarchy:move_bottom(target)
         end
     end
     
