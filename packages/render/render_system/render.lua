@@ -77,29 +77,12 @@ end
 function irender.draw(vid, ri, mat)
 	ri:set_transform()
 
-	local prog
-	if ri.material then
-		local m = ri.material
-		--assert(type(mat) == "nil" or type(mat) == "userdata")
-		m{}
-		prog = m.prog
-	else
-		local _mat = mat or ri
-
-		bgfx.set_state(_mat.state)
-		bgfx.set_stencil(_mat.stencil)
-		local properties = _mat.properties
-		if properties then
-			for n, p in pairs(properties) do
-				p:set()
-			end
-		end
-		prog = _mat.fx.prog
-	end
+	local _mat = mat or ri
+	ri.material{}
 
 	update_mesh(ri.vb, ri.ib)
 
-	bgfx.submit(vid, prog, 0)
+	bgfx.submit(vid, _mat.fx.prog, 0)
 end
 
 function irender.get_main_view_rendertexture()

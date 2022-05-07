@@ -6,12 +6,7 @@ local bgfx = require "bgfx"
 local ic = ecs.interface "icompute"
 
 function ic.dispatch(viewid, ds)
-	local properties = ds.properties
-	if properties then
-		for n, p in pairs(properties) do
-			p:set()
-		end
-	end
+	ds.material{}
 
 	local s = ds.size
 	bgfx.dispatch(viewid, ds.fx.prog, s[1], s[2], s[3])

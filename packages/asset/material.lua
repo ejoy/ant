@@ -2,8 +2,88 @@ local ecs	= ...
 local world = ecs.world
 local w		= world.w
 
+local mathpkg = import_package "ant.math"
+local mc = mathpkg.constant
+
 local math3d		= require "math3d"
 local bgfx			= require "bgfx"
+local rmat			= require "render.material"
+local CMATOBJ		= rmat.cobject {
+    bgfx = assert(bgfx.CINTERFACE) ,
+    math3d = assert(math3d.CINTERFACE),
+    encoder = assert(bgfx.encoder_get()),
+}
+
+local function texture_value(stage)
+	return {stage=stage, value=nil, handle=nil}
+end
+
+local function buffer_value(stage, access)
+	return {stage=stage, access=access, value=nil}
+end
+
+local SYS_ATTRIBS = rmat.system_attribs(CMATOBJ, {
+	--camera
+	u_eyepos				= mc.ZERO_PT,
+	u_exposure_param		= math3d.vector(16.0, 0.008, 100.0, 0.0),
+	u_camera_param			= mc.ZERO,
+	--lighting
+	u_cluster_size			= mc.ZERO,
+	u_cluster_shading_param	= mc.ZERO,
+	u_light_count			= mc.ZERO,
+	b_light_grids			= buffer_value(-1, "r"),
+	b_light_index_lists		= buffer_value(-1, "r"),
+	b_light_info			= buffer_value(-1, "r"),
+	u_time					= mc.ZERO,
+
+	--IBL
+	u_ibl_param				= mc.ZERO,
+	s_irradiance			= texture_value(5),
+	s_prefilter				= texture_value(6),
+	s_LUT					= texture_value(7),
+
+	--curve world
+	--[[
+		u_curveworld_param = (flat, base, exp, amp)
+		dirWS = mul(u_invView, dirVS)
+		dis = length(u_eyepos-posWS);
+		offsetWS = (amp*((dis-flat)/base)^exp) * dirWS
+		posWS = posWS + offsetWS
+	]]
+	u_curveworld_param		= mc.ZERO,	-- flat distance, base distance, exp, amplification
+	u_curveworld_dir		= mc.ZAXIS,	-- dir in view space
+
+	-- shadow
+	--   csm
+	u_csm_matrix 		= {
+		mc.IDENTITY_MAT,
+		mc.IDENTITY_MAT,
+		mc.IDENTITY_MAT,
+		mc.IDENTITY_MAT,
+	},
+	u_csm_split_distances= mc.ZERO,
+	u_depth_scale_offset = mc.ZERO,
+	u_shadow_param1		 = mc.ZERO,
+	u_shadow_param2		 = mc.ZERO,
+	s_shadowmap			 = texture_value(8),
+
+	--   omni
+	u_omni_matrix = {
+		mc.IDENTITY_MAT,
+		mc.IDENTITY_MAT,
+		mc.IDENTITY_MAT,
+		mc.IDENTITY_MAT,
+	},
+
+	u_tetra_normal_Green	= mc.ZERO,
+	u_tetra_normal_Yellow	= mc.ZERO,
+	u_tetra_normal_Blue		= mc.ZERO,
+	u_tetra_normal_Red		= mc.ZERO,
+
+	s_omni_shadowmap	= texture_value(9),
+})
+
+local sd			= import_package "ant.setting".setting
 
 local assetmgr		= require "asset"
 local ext_material	= require "ext_material"
@@ -23,151 +103,12 @@ end
 
 local imaterial = ecs.interface "imaterial"
 
-local function set_uniform(p)
-	return bgfx.set_uniform(p.handle, p.value)
-end
-
-local function set_uniform_array(p)
-	return bgfx.set_uniform(p.handle, table.unpack(p.value))
-end
-
-local function set_texture(p)
-	local v = p.value
-	return bgfx.set_texture(v.stage, p.handle, v.texture.handle, v.texture.flags)
-end
-
-local function set_buffer(p)
-	local v = p.value
-	return bgfx.set_buffer(v.stage, v.handle, v.access)
-end
-
-local function set_image(p)
-    local v = p.value
-    bgfx.set_image(v.stage, v.image.handle, v.mip, v.access)
-end
-
-local function update_uniform(p, dst)
-	local src = p.value
-	if type(dst) == "table" then
-		local t = type(dst[1])
-		local function t2mid(v)
-			return #v == 4 and math3d.vector(v) or math3d.matrix(v)
-		end
-		if t == "table" or t == "userdata" then
-			if #src ~= #dst then
-				error(("invalid uniform data, #src:%d ~= #dst:%d"):format(#src, #dst))
-			end
-			local to_v = t == "table" and t2mid or function(dv) return dv end
-
-			for i=1, #src do
-				src[i].id = to_v(dst[i])
-			end
-			p.set = set_uniform_array
-		else
-			assert(t == "number" and 4 <= #dst and #dst <= 16, "table content must be 4/16 number")
-			src.id = t2mid(dst)
-			p.set = set_uniform
-		end
-	else
-		src.id = dst
-		p.set = set_uniform
-	end
-end
-
-function imaterial.set_property_directly(properties, who, what)
-	if type(properties) == "userdata" then
-		local material = properties
-		material[who] = what
-		return
-	end
-	local p = properties[who]
-	if p == nil then
-		log.warn(("entity do not have property:%s"):format(who))
-		return
-	end
-
-	local t = p.type
-	if t == "s" or t == "i" then
-		if type(what) ~= "table" then
-			error(("texture property must resource data:%s"):format(who))
-		end
-
-		if p.ref then
-			p.ref = nil
-		end
-		p.value = what
-	else
-		--must be uniform: vector or matrix
-		if p.ref then
-			p.ref = nil
-			local v = p.value
-			if type(v) == "table" then
-				p.value = {}
-				for i=1, #v do
-					p.value[i] = math3d.ref(v[i])
-				end
-			else
-				p.value = math3d.ref(v)
-			end
-		end
-
-		update_uniform(p, what)
-	end
-end
-
-
 function imaterial.set_property(e, who, what)
-	if ecs.import.interface "ant.render|isystem_properties".get(who) then
-		error(("global property could not been set:%s"):format(who))
-	end
-	local ro = e.render_object
-	if ro then
-		imaterial.set_property_directly(ro.material or ro.properties, who, what)
-	end
+	e.render_object.material[who] = what
 end
 
 function imaterial.get_property(e, who)
-	local ro = e.render_object
-	return ro.properties and ro.properties[who] or nil
-end
-
-function imaterial.has_property(e, who)
-	return imaterial.get_property(e, who) ~= nil
-end
-
-function imaterial.get_setting(e)
-	local ro = e.render_object
-	return ro.fx.setting
-end
-
-local function which_type(u)
-	local t = type(u)
-	if t == "table" then
-		if u.access then
-			return u.image and "i" or "b"
-		end
-		return u.stage and "s" or "array"
-	end
-
-	assert(t == "userdata")
-	return "u"
-end
-
-local set_funcs<const> = {
-	s		= set_texture,
-	i		= set_image,
-	b		= set_buffer,
-	array	= set_uniform_array,
-	u		= set_uniform,
-}
-
-local function which_set_func(u)
-	local t = which_type(u)
-	return set_funcs[t]
-end
-
-function imaterial.property_set_func(t)
-	return set_funcs[t]
+	return e.render_object.material[who]
 end
 
 local function init_material(mm)
@@ -178,102 +119,87 @@ local function init_material(mm)
 end
 
 local function to_v(t)
-	if t == nil then
-		return
-	end
 	assert(type(t) == "table")
-	if t.stage then
-		return t
+	local function to_math_v(v)
+		return #v == 4 and math3d.vector(v) or math3d.matrix(v)
 	end
 	if type(t[1]) == "number" then
-		return #t == 4 and math3d.ref(math3d.vector(t)) or math3d.ref(math3d.matrix(t))
+		return to_math_v(t)
 	end
 	local res = {}
 	for i, v in ipairs(t) do
-		if type(v) == "table" then
-			res[i] = #v == 4 and math3d.ref(math3d.vector(v)) or math3d.ref(math3d.matrix(v))
-		else
-			res[i] = v
-		end
+		res[i] = to_math_v(v)
 	end
 	return res
 end
 
+local function to_t(t, handle)
+	local v = {stage=assert(t.stage), handle=handle}
+	if t.texture then
+		v.handle = t.texture.handle
+		v.type = 't'
+	elseif t.image then
+		v.handle = t.image.handle
+		v.type = 'i'
+	else
+		error "invalid uniform value"
+	end
+	return v
+end
+
+local DEF_PROPERTIES<const> = {}
 
 local function generate_properties(fx, properties)
-	if fx == nil then
-		return nil
-	end
-
 	local uniforms = fx.uniforms
-	local isp 		= ecs.import.interface "ant.render|isystem_properties"
-	local new_properties
-	properties = properties or {}
+	local new_properties = {}
+	properties = properties or DEF_PROPERTIES
 	if uniforms and #uniforms > 0 then
-		new_properties = {}
 		for _, u in ipairs(uniforms) do
 			local n = u.name
 			if not n:match "@data" then
 				local v
 				if "s_lightmap" == n then
-					v = {stage = 8, texture={}}
+					v = {stage = 8, handle = u.handle, value = nil, type = 't'}
 				else
-					v = to_v(properties[n]) or isp.get(n)
-					if v == nil then
-						error(("not found property:%s"):format(n))
-					end
+					local pv = properties[n]
+					v = pv.stage and to_t(pv, u.handle) or to_v(pv)
 				end
 
-				new_properties[n] = {
-					value	= v,
-					handle	= u.handle,
-					type	= which_type(v),
-					set		= which_set_func(v),
-					ref		= true,
-				}
+				new_properties[n] = v
 			end
 		end
 	end
 
-	--TODO: right now, bgfx shaderc tool would not save buffer binding to uniforom info after shader compiled(currentlly only sampler/const buffer will save in uniform infos), just work around it right now
-
 	local setting = fx.setting
 	if setting.lighting == "on" then
-		new_properties = new_properties or {}
-		local ilight = ecs.import.interface "ant.render|ilight"
-
-		local buffer_names = {"b_light_info"}
-		if ilight.use_cluster_shading() then
-			buffer_names[#buffer_names+1] = "b_light_grids"
-			buffer_names[#buffer_names+1] = "b_light_index_lists"
-		end
-
-		for _, n in ipairs(buffer_names) do
-			local v = isp.get(n)
-			new_properties[n] = {
-				value	= v,
-				set		= imaterial.property_set_func "b",
-				type 	= "b",
-				ref		= true,
-			}
+		new_properties["b_light_info"] = {type = 'b'}
+		if sd:data().graphic.cluster_shading ~= 0 then
+			new_properties["b_light_grids"] = {type='b'}
+			new_properties["b_light_index_lists"] = {type='b'}
 		end
 	end
 	return new_properties
 end
 
-local function build_material(m, ro)
-	ro.fx 			= m.fx
-	ro.properties 	= generate_properties(m.fx, m.properties)
-	ro.state 		= m.state
-	ro.stencil		= m.stencil
+local function build_material(mc)
+	local properties= generate_properties(mc.fx, mc.properties)
+	local material = rmat.material(CMATOBJ, properties)
+	return {
+		material = material:instance(),
+		--TODO: need remove
+		fx 			= mc.fx,
+		state 		= mc.state,
+		stencil		= mc.stencil,
+	}
 end
 
 function imaterial.load(mp, setting)
 	local mm = assetmgr.resource(mp)
+	return build_material(load_material(mm, {}, setting))
+end
 
-	local mr = {}
-	build_material(load_material(mm, {}, setting), mr)
-	return mr
+function imaterial.system_attribs()
+	return SYS_ATTRIBS
 end
 
 local ms = ecs.system "material_system"
@@ -281,7 +207,6 @@ function ms:component_init()
 	w:clear "material_result"
     for e in w:select "INIT material:in material_setting?in material_result:new" do
 		local mm = load_material(init_material(e.material), {}, e.material_setting)
-		e.material_result = {}
-		build_material(mm, e.material_result)
+		e.material_result = build_material(mm)
 	end
 end

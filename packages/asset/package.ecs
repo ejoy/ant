@@ -2,11 +2,7 @@ interface "imaterial"
     .implement "material.lua"
     .method "load"
     .method "set_property"
-    .method "set_property_directly"
     .method "get_property"
-    .method "has_property"
-    .method "property_set_func"
-    .method "get_setting"
 
 interface "imesh"
     .implement "mesh.lua"
@@ -73,5 +69,3 @@ component "meshskin".type "lua"
 
 component "meshskin_result".type "lua"
     .require_system "ant.asset|meshskin_system"
-
-import "cmaterial.ecs"
