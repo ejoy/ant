@@ -100,6 +100,10 @@ function hierarchy:set_parent(eid, peid)
     self.all[eid] = removed_node
 end
 
+function hierarchy:get_parent(eid)
+    return self.all[eid].parent
+end
+
 local function find_policy(t, policy)
     for i, v in ipairs(t) do
         if v == policy then

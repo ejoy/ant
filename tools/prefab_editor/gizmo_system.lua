@@ -76,16 +76,8 @@ end
 function gizmo:update_position(worldpos)
 	local newpos
 	if worldpos then
-		local pid = world:entity(gizmo.target_eid).scene.pid
-		local parent_e
-		if pid then
-			for e in w:select "scene:in" do
-				if e.scene.id == pid then
-					parent_e = e
-					break
-				end
-			end
-		end
+		local pid = hierarchy:get_parent(gizmo.target_eid)
+		local parent_e = pid and world:entity(pid) or nil
 		local parent_worldmat = parent_e and iom.worldmat(parent_e) or nil
 		local localPos
 		if not parent_worldmat then
@@ -526,7 +518,7 @@ local function select_axis(x, y)
 	local vpmat = world:entity(irq.main_camera()).camera.viewprojmat
 
 	local gizmo_obj_pos = iom.get_position(world:entity(gizmo.root_eid))
-	local start = mu.world_to_screen(mc, mqvr, gizmo_obj_pos)
+	local start = mu.world_to_screen(vpmat, mqvr, gizmo_obj_pos)
 	uniform_scale = false
 	-- uniform scale
 	local hp = math3d.vector(x, y, 0)
@@ -1088,7 +1080,7 @@ function gizmo_sys:handle_event()
 					elseif gizmo.mode == gizmo_const.ROTATE then
 						cmd_queue:record({action = gizmo_const.ROTATE, eid = target, oldvalue = math3d.totable(last_rotate), newvalue = math3d.totable(iom.get_rotation(world:entity(target)))})
 					elseif gizmo.mode == gizmo_const.MOVE then
-						local parent = world:entity(gizmo.target_eid).scene.pid
+						local parent = hierarchy:get_parent(gizmo.target_eid)
 						local pw = parent and iom.worldmat(world:entity(parent)) or nil
 						local localPos = last_gizmo_pos
 						if pw then

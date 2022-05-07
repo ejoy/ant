@@ -91,14 +91,6 @@ local function get_local_transform(tran, parent_eid)
     return {s = {ts[1], ts[2], ts[3]}, r = {tr[1], tr[2], tr[3], tr[4]}, t = {tt[1], tt[2], tt[3]}}
 end
 
-local function create_entity_with_parent(tpl, parent)
-    tpl.data.on_ready = function (e)
-        w:sync("scene:in", e)
-        e.scene.pid = parent
-    end
-    return ecs.create_entity(tpl)
-end
-
 local slot_entity_id = 1
 function m:create_slot()
     --if not gizmo.target_eid then return end
@@ -121,14 +113,7 @@ function m:create_slot()
             tag = {auto_name},
         }
     }
-
-    local tpl = utils.deep_copy(template)
-    tpl.data.on_ready = function (e)
-        hierarchy:update_slot_list(world)
-        w:sync("scene:in", e)
-        e.scene.pid = parent_eid
-    end
-    local new_entity = ecs.create_entity(tpl)
+    local new_entity = ecs.create_entity(utils.deep_copy(template))
     slot_entity_id = slot_entity_id + 1
     self:add_entity(new_entity, parent_eid, template)
 end
@@ -165,13 +150,11 @@ function m:create_collider(config)
     tpl.data.on_ready = function (e)
         e.collider = { [config.type] = define }
         imaterial.set_property(e, "u_color", {1, 0.5, 0.5, 0.8})
-        w:sync("scene:in", e)
-        e.scene.pid = self.root
     end
     return ecs.create_entity(tpl), template
 end
 
-local function create_simple_entity(name, srt, parent)
+local function create_simple_entity(name, srt)
     local template = {
 		policy = {
             "ant.general|name",
@@ -182,7 +165,7 @@ local function create_simple_entity(name, srt, parent)
             scene = {srt = srt or {}}
 		},
     }
-    return create_entity_with_parent(utils.deep_copy(template), parent), template
+    return ecs.create_entity(utils.deep_copy(template)), template
 end
 
 function m:add_entity(new_entity, parent, temp, no_hierarchy)
@@ -256,7 +239,7 @@ function m:create(what, config)
                     name = config.type .. gen_geometry_id()
                 }
             }
-            local new_entity = create_entity_with_parent(utils.deep_copy(template), parent_eid or self.root)
+            local new_entity = ecs.create_entity(utils.deep_copy(template))
             self:add_entity(new_entity, parent_eid, template)
             return new_entity
         elseif config.type == "cube(prefab)" then
@@ -344,7 +327,7 @@ function m:create(what, config)
                     }
                 }
             }
-            local shapetarrain = create_entity_with_parent(utils.deep_copy(template), self.root)
+            local shapetarrain = ecs.create_entity(utils.deep_copy(template))
             self:add_entity(shapetarrain, self.root, template)
         end
     elseif what == "light" then
@@ -363,10 +346,6 @@ function m:create(what, config)
         local entities = ecs.create_instance(gd.editor_package_path .. "res/particle.prefab")
         self:add_entity(entities[1], gizmo.target_eid, entities)
     end
-end
-
-function m:internal_remove(toremove)
-    
 end
 
 local function set_select_adapter(entity_set, mount_root)
@@ -436,34 +415,6 @@ local function split(str)
     local r = {}
     str:gsub('[^|]*', function (w) r[#r+1] = w end)
     return r
-end
-
-local function get_filename(pathname)
-    pathname = pathname:lower()
-    return pathname:match "[/]?([^/]*)$"
-end
-
-local function convert_path(path, glb_filename)
-    if fs.path(path):is_absolute() then return path end
-    local new_path
-    if glb_filename then
-        local pretty = tostring(lfs.path(path))
-        if string.sub(path, 1, 2) == "./" then
-            pretty = string.sub(path, 3)
-        end
-        new_path = glb_filename .. "|" .. pretty
-    else
-        -- local op_path = path
-        -- local spec = string.find(path, '|')
-        -- if spec then
-        --     op_path = string.sub(path, 1, spec - 1)
-        -- end
-        -- new_path = tostring(lfs.relative(current_dir / lfs.path(op_path), new_dir))
-        -- if spec then
-        --     new_path = new_path .. string.sub(path, spec)
-        -- end
-    end
-    return new_path
 end
 
 local nameidx = 0
@@ -637,8 +588,6 @@ function m:add_effect(filename)
     }
     local tpl = utils.deep_copy(template)
     tpl.data.on_ready = function (e)
-        w:sync("scene:in", e)
-        e.scene.pid = gizmo.target_eid
         w:sync("efk:in", e)
         iefk.play(e)
     end
@@ -647,7 +596,7 @@ end
 
 function m:add_prefab(filename)
     local prefab_filename = filename
-    if string.sub(filename,-4) == ".glb" then
+    if string.sub(filename, -4) == ".glb" then
         prefab_filename = filename .. "|mesh.prefab"
     end
     
@@ -683,26 +632,6 @@ function m:add_prefab(filename)
     function prefab:on_message(msg) end
     function prefab:on_update() end
     world:create_object(prefab)
-end
-
-function m:recreate_entity(eid)
-    local prefab = hierarchy:get_template(eid)
-    world:rebuild_entity(eid, prefab.template)
-    
-    local scale = 1
-    local col = world[eid].collider
-    if col then
-        if col.sphere then
-            scale = col.sphere[1].radius * 100
-        elseif col.box then
-            local size = col.box[1].size
-            scale = {size[1] * 200, size[2] * 200, size[3] * 200}
-        else
-        end
-        imaterial.set_property(eid, "u_color", {1, 0.5, 0.5, 0.5})
-    end
-    world:pub {"EntityRecreate", eid}
-    -- return new_eid
 end
 
 function m:save_prefab(path)
