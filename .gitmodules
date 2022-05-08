@@ -1,45 +1,45 @@
 [submodule "3rd/bgfx"]
 	path = 3rd/bgfx
-	url = https://github.com/bkaradzic/bgfx.git
+	url = git@github.com:bkaradzic/bgfx.git
 [submodule "3rd/bx"]
 	path = 3rd/bx
-	url = https://github.com/bkaradzic/bx.git
+	url = git@github.com:bkaradzic/bx.git
 [submodule "3rd/bimg"]
 	path = 3rd/bimg
-	url = https://github.com/bkaradzic/bimg.git
+	url = git@github.com:bkaradzic/bimg.git
 [submodule "3rd/ozz-animation"]
 	path = 3rd/ozz-animation
-	url = https://github.com/guillaumeblanc/ozz-animation.git
+	url = git@github.com:guillaumeblanc/ozz-animation.git
 [submodule "3rd/glm"]
 	path = 3rd/glm
-	url = https://github.com/g-truc/glm.git
+	url = git@github.com:g-truc/glm.git
 [submodule "packages/resources.binary"]
 	path = packages/resources.binary
 	url = https://gz-tea.ejoy.com/git/Ant/assets.git
 [submodule "3rd/imgui"]
 	path = 3rd/imgui
-	url = https://github.com/ocornut/imgui
+	url = git@github.com:ocornut/imgui.git
 [submodule "3rd/reactphysics3d"]
 	path = 3rd/reactphysics3d
-	url = https://github.com/DanielChappuis/reactphysics3d.git
+	url = git@github.com:DanielChappuis/reactphysics3d.git
 [submodule "3rd/yoga"]
 	path = 3rd/yoga
-	url = https://github.com/facebook/yoga
+	url = git@github.com:facebook/yoga.git
 [submodule "3rd/ltask"]
 	path = 3rd/ltask
-	url = https://github.com/cloudwu/ltask
+	url = git@github.com:cloudwu/ltask.git
 [submodule "3rd/luaecs"]
 	path = 3rd/luaecs
-	url = https://github.com/cloudwu/luaecs
+	url = git@github.com:cloudwu/luaecs.git
 [submodule "3rd/SDL"]
 	path = 3rd/SDL
-	url = https://github.com/libsdl-org/SDL
+	url = git@github.com:libsdl-org/SDL.git
 [submodule "3rd/bee.lua"]
 	path = 3rd/bee.lua
-	url = https://github.com/actboy168/bee.lua
+	url = git@github.com:actboy168/bee.lua.git
 [submodule "packages/efk/efkbgfx"]
 	path = packages/efk/efkbgfx
-	url = https://github.com/junjie020/efkbgfx.git
+	url = git@github.com:junjie020/efkbgfx.git
 [submodule "3rd/Effekseer"]
 	path = 3rd/Effekseer
-	url = https://github.com/effekseer/Effekseer.git
+	url = git@github.com:effekseer/Effekseer.git
