@@ -137,9 +137,13 @@ al_attrib_next_id(struct attrib_arena* arena, uint16_t id){
 }
 
 static inline struct attrib*
-al_attrib_next(struct attrib_arena *arena, uint16_t id){
-	struct attrib* a = al_attrib(arena, id);
+al_next_attrib(struct attrib_arena *arena, struct attrib* a){
 	return a->next == INVALID_ATTRIB ? NULL : al_attrib(arena, a->next);
+}
+
+static inline struct attrib*
+al_attrib_next(struct attrib_arena *arena, uint16_t id){
+	return al_next_attrib(arena, al_attrib(arena, id));
 }
 
 static inline int
@@ -593,61 +597,27 @@ new_attrib(lua_State *L, int arena_index, int data_index, uint16_t attribtype){
 	return a;
 }
 
-static struct attrib*
-gen_attrib(lua_State *L, int arena_index, int data_index){;
-	const uint16_t type = to_attrib_type(L, data_index);
-	struct attrib_arena * arena = (struct attrib_arena *)lua_touserdata(L, arena_index);
-	
-	if (type == ATTRIB_UNIFORM || type == ATTRIB_SAMPLER){
-		lua_getfield(L, data_index, "value");
-		const int n = (int)lua_rawlen(L, -1);
-		if (n > 0){
-			struct attrib * prev = NULL;
-			for (int i=0; i<n; ++i){
-				lua_geti(L, -1, i+1);
-				struct attrib* a = new_attrib(L, arena_index, -1, type);
-				if (prev){
-					prev->next = al_attrib_id(arena, a);
-				}
-				lua_pop(L, 1);
-			}
-			lua_pop(L, 1);
-			return prev;
-		}
-		lua_pop(L, 1);
-	}
-
-	return new_attrib(L, arena_index, data_index, type);
-}
-
-static inline struct attrib*
-next_attrib(struct attrib_arena *arena, struct attrib *a){
-	return (a->next == INVALID_ATTRIB) ? NULL : &arena->a[a->next];
-}
-
 static void
 replace_instance_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int value_index) {
 	const uint16_t n = al_attrib_num(arena, a);
 	if (n == 1) {
 		update_attrib(L, arena, a, value_index);
 	} else {
-		int i;
-		for (i=0;i<n;i++) {
-			if (a == NULL)
-				luaL_error(L, "Replace attrib error");
+		for (int i=0;i<n;i++) {
+			assert(a && "Invalid attrib");
 			lua_geti(L, value_index, i+1);
 			update_attrib(L, arena, a, -1);
 			lua_pop(L, 1);
-			a = next_attrib(arena, a);
+			a = al_next_attrib(arena, a);
 		}
 	}
 }
 
 static uint16_t
-create_attirb(lua_State *L, int arena_idx, int value_index, int num, uint16_t id, uint16_t type) {
+load_attrib(lua_State *L, int arena_idx, int value_index, int num, uint16_t id, uint16_t type) {
 	struct attrib_arena* arena = (struct attrib_arena*)lua_touserdata(L, arena_idx);
 	if (num == 1) {
-		struct attrib * na = new_attrib(L, lua_upvalueindex(3), value_index, type);
+		struct attrib * na = new_attrib(L, arena_idx, value_index, type);
 		na->next = id;
 		return al_attrib_id(arena, na);
 	}
@@ -661,6 +631,25 @@ create_attirb(lua_State *L, int arena_idx, int value_index, int num, uint16_t id
 		lua_pop(L, 1);
 	}
 	return id;
+}
+
+static inline uint16_t
+count_data_num(lua_State *L, int data_index, uint16_t type){
+	uint16_t n = 1;
+	if (is_uniform_attrib(type)){
+		if (LUA_TTABLE == lua_getfield(L, data_index, "value")){
+			n = (uint16_t)lua_rawlen(L, -1);
+		}
+		lua_pop(L, 1);
+	}
+	return n;
+}
+
+static uint16_t
+load_attrib_from_data(lua_State *L, int arena_idx, int data_index, uint16_t id) {
+	const uint16_t type = to_attrib_type(L, data_index);
+	const int n = count_data_num(L, data_index, type);
+	return load_attrib(L, arena_idx, data_index, id, n, type);
 }
 
 static void
@@ -679,9 +668,8 @@ set_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_ar
 		}
 		#endif //_DEBUG
 
-		
 		const int arena_idx = lua_upvalueindex(3);
-		create_attirb(L, arena_idx, value_index, n, mi->patch_attrib, a->type);
+		mi->patch_attrib = load_attrib(L, arena_idx, value_index, n, mi->patch_attrib, a->type);
 	} else {
 		replace_instance_attrib(L, arena, al_attrib(arena, pid), value_index);
 	}
@@ -944,7 +932,7 @@ lmaterial_new(lua_State *L) {
 	const int sa_lookup_idx = lua_gettop(L);
 	for (lua_pushnil(L); lua_next(L, 3) != 0; lua_pop(L, 1)) {
 		const char* key = lua_tostring(L, -2);
-		struct attrib* a;
+		struct attrib* a = NULL;
 		if (LUA_TNIL != lua_getfield(L, lookup_idx, key)){
 			a = arena_alloc(L, 1);
 			// system attribs
@@ -953,7 +941,8 @@ lmaterial_new(lua_State *L) {
 			lua_pop(L, 1);
 		} else {
 			lua_pop(L, 1);
-			a = gen_attrib(L, 1, -1);
+			uint16_t id = load_attrib_from_data(L, 1, -1, *pattrib);
+			a = al_attrib(cobject_, id);
 		}
 		uint16_t id = al_attrib_id(cobject_, a);
 		*pattrib = id;
@@ -1011,8 +1000,7 @@ lsystem_attribs_new(lua_State *L){
 	const int lookup_idx = lua_gettop(L);
 	for (lua_pushnil(L); lua_next(L, 2) != 0; lua_pop(L, 1)) {
 		const char* name = lua_tostring(L, -2);
-		struct attrib* a = gen_attrib(L, 1, -1);
-		const uint16_t id = al_attrib_id(cobject_, a);
+		const uint16_t id = load_attrib_from_data(L, 1, -1, INVALID_ATTRIB);
 		lua_pushinteger(L, id);
 		lua_setfield(L, lookup_idx, name);
 	}
