@@ -84,6 +84,8 @@ function page_meta:update_contianer()
     self.pages = {}
     self.container = {}
     self.item_map = {}
+    self.index_map = {}
+    self.selected = nil
     for i = 1, self.page_count do
         local page_e = self.document.createElement "div"
         page_e.style.flexDirection = 'column'
@@ -121,9 +123,24 @@ function page_meta:update_contianer()
             cid = cid + 1
         end
         local item = self.item_renderer(index)
-        self.item_map[item] = {index = index, page = pid, row = rid, col = cid}
         page[rid].appendChild(item)
+        local item_info = {index = index, page = pid, row = rid, col = cid, item = item}
+        self.item_map[item] = item_info
+        self.index_map[#self.index_map + 1] = item_info
     end
+end
+
+function page_meta:set_selected(item)
+    self.selected = item
+end
+
+function page_meta:get_selected()
+    return self.selected
+end
+
+function page_meta:get_item_info(index)
+    assert(index > 0 and index <= #self.index_map)
+    return self.index_map[index]
 end
 
 function page_meta:on_dirty(item_count)

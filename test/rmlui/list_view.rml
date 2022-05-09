@@ -177,12 +177,13 @@
                 c1.innerHTML = tostring(start.items[index].id)
                 item.appendChild(c1)
                 item.addEventListener('click', function()
-                    if start.page.selected then
-                        start.page.selected.style.border = '2px blue'
+                    local last_selected = start.page:get_selected();
+                    if last_selected then
+                        last_selected.style.border = '2px blue'
                     end
                     item.style.border = '2px red'
                     start.page:on_item_click(item)
-                    start.page.selected = item
+                    start.page:set_selected(item)
                 end)
                 return item
             end
