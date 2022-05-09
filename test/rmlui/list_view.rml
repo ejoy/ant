@@ -178,6 +178,7 @@
                 item.appendChild(c1)
                 item.addEventListener('click', function()
                     local last_selected = start.page:get_selected();
+                    --local same = (last_selected == item)
                     if last_selected then
                         last_selected.style.border = '2px blue'
                         start.page:show_detail(last_selected, false)
@@ -185,6 +186,7 @@
                     item.style.border = '2px red'
                     start.page:show_detail(item, true)
                     start.page:set_selected(item)
+                    start.page:on_dirty(3)
                 end)
                 return item
             end
@@ -200,7 +202,7 @@
             local pageclass = require "page"
             window.customElements.define("page", function(e)
                 start.page = pageclass.create(document, e, page_item_renderer, page_item_detail_renderer)
-                start.page:on_dirty(#start.items)
+                start.page:on_dirty_all(#start.items)
             end)
 
             local function list_item_renderer(index)

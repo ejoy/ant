@@ -131,7 +131,11 @@ function page_meta:update_contianer()
 end
 
 function page_meta:set_selected(item)
+    if self.selected == item then
+        return false
+    end
     self.selected = item
+    return true
 end
 
 function page_meta:get_selected()
@@ -143,7 +147,15 @@ function page_meta:get_item_info(index)
     return self.index_map[index]
 end
 
-function page_meta:on_dirty(item_count)
+function page_meta:on_dirty(index)
+    local map = self.index_map[index]
+    local parent = self.pages[map.page].childNodes[map.row]
+    parent.removeChild(map.item)
+    map.item = self.item_renderer(map.index)
+    parent.appendChild(map.item, map.col - 1)
+end
+
+function page_meta:on_dirty_all(item_count)
     if item_count <= 0 then
         return
     end
