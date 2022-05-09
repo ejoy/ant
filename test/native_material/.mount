@@ -1,0 +1,12 @@
+engine engine
+@pkg-one packages/math
+@pkg-one packages/hwi
+@pkg-one packages/settings
+@pkg-one packages/serialize
+@pkg-one packages/compile_resource
+@pkg-one packages/resources
+@pkg-one packages/resources.binary
+@pkg-one packages/subprocess
+
+/ ${project}
+@pkg-one ${project}
