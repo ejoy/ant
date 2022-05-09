@@ -30,7 +30,7 @@ local function check(properties)
 			if v.stage == nil then
 				local function which_uniform_type(mv)
 					local vv = math3d.tovalue(mv)
-					return #vv == 16 and "m4" or "v"
+					return #vv == 16 and "m4" or "v4"
 				end
 				if type(v.value) == "table" then
 					n = #v.value
