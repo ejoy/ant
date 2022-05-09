@@ -157,20 +157,7 @@ function page_meta:get_current_page()
     return self.current_page
 end
 
-function page_meta:on_item_click(item)
-    if not self.draging then
-        if self.selected ~= item then
-            self:do_show_detail(item, true)
-        else
-            self:do_show_detail(item, not self.show_detail)
-        end
-    else
-        self:do_show_detail(item, false)
-    end
-end
-
-function page_meta:do_show_detail(item, show)
-    local offset = 0
+function page_meta:show_detail(item, show)
     if self.detail then
         local parent = self.detail.parentNode
         parent.removeChild(self.detail)
@@ -181,8 +168,6 @@ function page_meta:do_show_detail(item, show)
         self.detail = self.detail_renderer(map.index)
         self.pages[map.page].appendChild(self.detail, map.row)
     end
-    self.panel.style.top = offset .. 'px'
-    self.show_detail = show
 end
 
 function page_meta:on_mousedown(event)

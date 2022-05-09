@@ -180,9 +180,10 @@
                     local last_selected = start.page:get_selected();
                     if last_selected then
                         last_selected.style.border = '2px blue'
+                        start.page:show_detail(last_selected, false)
                     end
                     item.style.border = '2px red'
-                    start.page:on_item_click(item)
+                    start.page:show_detail(item, true)
                     start.page:set_selected(item)
                 end)
                 return item
