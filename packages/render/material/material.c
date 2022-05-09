@@ -520,12 +520,28 @@ unset_instance_attrib(struct material_instance *mi, struct attrib_arena *arena, 
 	}
 }
 
+static inline bgfx_uniform_handle_t
+fetch_handle_value(lua_State *L, int index){
+	const int htype = lua_getfield(L, index, "handle");
+	bgfx_uniform_handle_t h = BGFX_INVALID_HANDLE;
+	if (htype != LUA_TNIL){
+		if (htype == LUA_TNUMBER){
+			h.idx = (uint16_t)lua_tonumber(L, -1);
+		} else {
+			luaL_error(L, "Uniform attrib 'handle' must be number:%s", lua_typename(L, htype));
+		}
+	}
+	lua_pop(L, 1);
+	return h;
+}
+
 static void
 update_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int index) {
 	switch (a->type){
 		case ATTRIB_UNIFORM:{
 			const int datatype = lua_type(L, index);
 			if (datatype == LUA_TTABLE){
+				a->u.handle = fetch_handle_value(L, index);
 				const int lt = lua_getfield(L, index, "value");
 				if (lt != LUA_TLIGHTUSERDATA || lt != LUA_TUSERDATA){
 					luaL_error(L, "Invalid math uniform 'value' field, math3d value is required");
@@ -534,6 +550,7 @@ update_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int in
 				a->u.m = math3d_mark_id(L, arena->math, -1);
 				lua_pop(L, 1);
 			} else if (datatype == LUA_TLIGHTUSERDATA || datatype == LUA_TUSERDATA){
+				assert(a->u.handle.idx != UINT16_MAX);
 				math3d_unmark_id(arena->math, a->u.m);
 				a->u.m = math3d_mark_id(L, arena->math, index);
 			} else {
@@ -550,10 +567,13 @@ update_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int in
 				a->r.stage = (uint8_t)lua_tointeger(L, -1);
 				lua_pop(L, 1);	// stage
 
+				a->u.handle = fetch_handle_value(L, index);
+
 				lua_getfield(L, index, "value");
 				a->u.t.handle = (uint32_t)luaL_optinteger(L, index, UINT16_MAX);
 				lua_pop(L, 1);
 			} else if (datatype == LUA_TNUMBER) {
+				assert(a->u.handle.idx != UINT16_MAX);
 				a->u.t.handle = (uint32_t)luaL_checkinteger(L, index);
 			} else {
 				luaL_error(L, "Invalid data for 'texture' value, type:%s, should be table with 'value' field, or bgfx texture handle", lua_typename(L, datatype));
@@ -724,6 +744,7 @@ set_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_ar
 static int
 lset_attrib(lua_State *L) {
 	struct material_instance * mi = (struct	material_instance *)lua_touserdata(L, 1);
+	return 0;
 	const char* attribname = luaL_checkstring(L, 2);
 	const int arena_idx = lua_upvalueindex(2);
 	struct attrib_arena * arena = (struct attrib_arena *)lua_touserdata(L, arena_idx);
