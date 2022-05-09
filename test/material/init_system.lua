@@ -10,7 +10,7 @@ local is = ecs.system "init_system"
 function is:init()
     ecs.create_entity{
         policy = {
-            "ant.test.material|simplerender",
+            "ant.render|simplerender",
             "ant.general|name",
         },
         data = {

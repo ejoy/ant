@@ -175,27 +175,27 @@ function cfs:init_world()
 
     --build
     local be = w:singleton("cluster_build_aabb", "dispatch:in")
-    local buildproperties = be.dispatch.properties
-    buildproperties.b_cluster_AABBs    = icompute.create_buffer_property(cluster_buffers.AABB, "build")
-    buildproperties.b_light_info       = icompute.create_buffer_property(cluster_buffers.light_info, "build")
+    local bm = be.dispatch.material
+    bm.b_cluster_AABBs    = icompute.create_buffer_property(cluster_buffers.AABB, "build")
+    bm.b_light_info       = icompute.create_buffer_property(cluster_buffers.light_info, "build")
 
     --cull
     local ce = w:singleton("cluster_cull_light", "dispatch:in")
-    local cullproperties = ce.dispatch.properties
+    local cm = ce.dispatch.material
 
-    cullproperties.b_cluster_AABBs       = icompute.create_buffer_property(cluster_buffers.AABB, "cull")
-    cullproperties.b_global_index_count  = icompute.create_buffer_property(cluster_buffers.global_index_count, "cull")
-    cullproperties.b_light_grids         = icompute.create_buffer_property(cluster_buffers.light_grids, "cull")
-    cullproperties.b_light_index_lists   = icompute.create_buffer_property(cluster_buffers.light_index_lists, "cull")
-    cullproperties.b_light_info          = icompute.create_buffer_property(cluster_buffers.light_info, "cull")
+    cm.b_cluster_AABBs       = icompute.create_buffer_property(cluster_buffers.AABB, "cull")
+    cm.b_global_index_count  = icompute.create_buffer_property(cluster_buffers.global_index_count, "cull")
+    cm.b_light_grids         = icompute.create_buffer_property(cluster_buffers.light_grids, "cull")
+    cm.b_light_index_lists   = icompute.create_buffer_property(cluster_buffers.light_index_lists, "cull")
+    cm.b_light_info          = icompute.create_buffer_property(cluster_buffers.light_info, "cull")
 
     --render
     local cr = w:object("cluster_render", 1)
-    local renderproperties = cr.properties
+    local rm = cr.material
 
-    renderproperties.b_light_grids          = icompute.create_buffer_property(cluster_buffers.light_grids, "render")
-    renderproperties.b_light_index_lists    = icompute.create_buffer_property(cluster_buffers.light_index_lists, "render")
-    renderproperties.b_light_info           = icompute.create_buffer_property(cluster_buffers.light_info, "render")
+    rm.b_light_grids          = icompute.create_buffer_property(cluster_buffers.light_grids, "render")
+    rm.b_light_index_lists    = icompute.create_buffer_property(cluster_buffers.light_index_lists, "render")
+    rm.b_light_info           = icompute.create_buffer_property(cluster_buffers.light_info, "render")
 end
 
 local function cull_lights(viewid)

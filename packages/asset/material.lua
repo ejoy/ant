@@ -118,6 +118,22 @@ local function init_material(mm)
 	return ext_material.init(mm)
 end
 
+local function to_t(t, handle)
+	local v = {stage=assert(t.stage), handle=handle}
+	if t.texture then
+		v.handle = t.texture.handle
+		v.type = 't'
+	elseif t.image then
+		v.handle = t.image.handle
+		v.mip = t.mip
+		v.access = t.access
+		v.type = 'i'
+	else
+		error "invalid uniform value"
+	end
+	return v
+end
+
 local function to_v(t)
 	assert(type(t) == "table")
 	local function to_math_v(v)
@@ -131,20 +147,6 @@ local function to_v(t)
 		res[i] = to_math_v(v)
 	end
 	return res
-end
-
-local function to_t(t, handle)
-	local v = {stage=assert(t.stage), handle=handle}
-	if t.texture then
-		v.handle = t.texture.handle
-		v.type = 't'
-	elseif t.image then
-		v.handle = t.image.handle
-		v.type = 'i'
-	else
-		error "invalid uniform value"
-	end
-	return v
 end
 
 local DEF_PROPERTIES<const> = {}
@@ -162,7 +164,12 @@ local function generate_properties(fx, properties)
 					v = {stage = 8, handle = u.handle, value = nil, type = 't'}
 				else
 					local pv = properties[n]
-					v = pv.stage and to_t(pv, u.handle) or to_v(pv)
+					if pv then
+						v = pv.stage and to_t(pv, u.handle) or to_v(pv)
+					else
+						v = mc.ZERO
+					end
+					
 				end
 
 				new_properties[n] = v
@@ -181,9 +188,12 @@ local function generate_properties(fx, properties)
 	return new_properties
 end
 
-local function build_material(mc)
+local function build_material(mc, filename)
+	if filename:match "downsample.material" then
+		print ""
+	end
 	local properties= generate_properties(mc.fx, mc.properties)
-	local material = rmat.material(CMATOBJ, properties)
+	local material = rmat.material(CMATOBJ, mc.state, properties, filename)
 	return {
 		material = material:instance(),
 		--TODO: need remove
@@ -195,7 +205,7 @@ end
 
 function imaterial.load(mp, setting)
 	local mm = assetmgr.resource(mp)
-	return build_material(load_material(mm, {}, setting))
+	return build_material(load_material(mm, {}, setting), mp)
 end
 
 function imaterial.system_attribs()
@@ -207,6 +217,6 @@ function ms:component_init()
 	w:clear "material_result"
     for e in w:select "INIT material:in material_setting?in material_result:new" do
 		local mm = load_material(init_material(e.material), {}, e.material_setting)
-		e.material_result = build_material(mm)
+		e.material_result = build_material(mm, e.material)
 	end
 end

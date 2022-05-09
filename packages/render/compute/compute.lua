@@ -69,6 +69,6 @@ function cs:entity_init()
 		local d = e.dispatch
         -- no state for compute shader
 		d.fx		= mr.fx
-		d.properties= mr.properties
+		d.material  = mr.material
 	end
 end
