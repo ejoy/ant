@@ -36,6 +36,7 @@ struct encoder_holder {
 struct attrib {
 	uint16_t type;
 	uint16_t next;
+	uint16_t patch;
 	union {
 		// vec4/mat4/texture
 		struct uniform
@@ -111,6 +112,7 @@ al_init_attrib(struct attrib_arena* arena, struct attrib *a){
 
 	a->type = ATTRIB_NONE;
 	a->next = INVALID_ATTRIB;
+	a->patch = INVALID_ATTRIB;
 	a->u.handle.idx = UINT16_MAX;
 	a->u.m 	= 0;
 }
@@ -221,7 +223,6 @@ lut_find_stack(lua_State *L, int lut_idx, int value_idx){
 static inline int
 mi_is_patch_attrib(struct attrib_arena *arena, struct material_instance *mi, uint16_t pid){
 	for (uint16_t id = mi->patch_attrib; id != INVALID_ATTRIB; id = al_attrib_next_uniform_id(arena, id, NULL)) {
-		assert(al_attrib_is_uniform(arena, al_attrib(arena, id)));
 		if (id == pid)
 			return 1;
 	}
@@ -229,32 +230,20 @@ mi_is_patch_attrib(struct attrib_arena *arena, struct material_instance *mi, uin
 	return 0;
 }
 
-static inline uint16_t
-mi_find_material_atrrib(struct attrib_arena *arena, struct material *mat, struct material_instance *mi,  uint16_t id) {
-	assert(mi_is_patch_attrib(arena, mi, id));
-	struct attrib *pa = al_attrib(arena, id);
-	for (uint16_t id = mat->attrib; id != INVALID_ATTRIB; id = al_attrib_next_uniform_id(arena, id, NULL)){
-		struct attrib* a = al_attrib(arena, id);
-		if (al_attrib_uniform_handle_equal(arena, a, pa))
-			return id;
-	}
-
-	return INVALID_ATTRIB;
+static inline struct attrib*
+mi_patch_attrib(struct attrib_arena *arena, struct material_instance *mi, uint16_t pid){
+	assert(mi_is_patch_attrib(arena, mi, pid));
+	struct attrib* pa = al_attrib(arena, pid);
+	return (pa->patch != INVALID_ATTRIB) ? al_attrib(arena, pa->patch) : NULL;
 }
 
 static inline uint16_t
-mi_find_patch_attrib(struct material_instance *mi, struct attrib_arena *arena, struct attrib* a) {
-	assert(!mi_is_patch_attrib(arena, mi, al_attrib_id(arena, a)) && "attrib 'a' should be pointer to material attirb not material instance attrib");
-	if (!al_attrib_is_uniform(arena, a)){
-		return INVALID_ATTRIB;
-	}
-
-	for (uint16_t pid = mi->patch_attrib; pid != INVALID_ATTRIB; ){
-		struct attrib * ra = al_attrib(arena, pid);
-		assert(al_attrib_is_uniform(arena, ra));
-		if (al_attrib_uniform_handle_equal(arena, a, ra))
+mi_find_patch_attrib(struct attrib_arena *arena, struct material_instance *mi, uint16_t id){
+	assert(id != INVALID_ATTRIB);
+	for (uint16_t pid = mi->patch_attrib; pid != INVALID_ATTRIB; pid = al_attrib_next_uniform_id(arena, pid, NULL)){
+		struct attrib *pa = al_attrib(arena, pid);
+		if (pa->patch == id)
 			return pid;
-		pid = ra->next;
 	}
 
 	return INVALID_ATTRIB;
@@ -927,7 +916,6 @@ lapply_attrib(lua_State *L) {
 
 		for (uint16_t pid = mi->patch_attrib; pid != INVALID_ATTRIB; pid = al_attrib_next_id(arena, pid)){
 			struct attrib* pa = al_attrib(arena, pid);
-			assert(al_attrib_is_uniform(arena, pa));
 			for (int i=0; i<num_attrib; ++i){
 				struct attrib* a = al_attrib(arena, ids[i]);
 				if (al_attrib_uniform_handle_equal(arena, pa, a)){
