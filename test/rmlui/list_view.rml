@@ -142,7 +142,9 @@
                 },
                 page = {}
             }
-            
+            window.setInterval(function()
+                start.page:on_dirty_all(#start.items)
+            end, 2000)
             function start.page_item_click(event, id, row, top)
                 start.page:on_item_click(id, row, top)
             end
@@ -177,8 +179,9 @@
                 c1.innerHTML = tostring(start.items[index].id)
                 item.appendChild(c1)
                 item.addEventListener('click', function()
+                    console.log("----click item")
+                    --[[
                     local last_selected = start.page:get_selected();
-                    --local same = (last_selected == item)
                     if last_selected then
                         last_selected.style.border = '2px blue'
                         start.page:show_detail(last_selected, false)
@@ -186,7 +189,7 @@
                     item.style.border = '2px red'
                     start.page:show_detail(item, true)
                     start.page:set_selected(item)
-                    start.page:on_dirty(3)
+                    --]]
                 end)
                 return item
             end
