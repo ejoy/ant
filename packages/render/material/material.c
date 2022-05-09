@@ -392,7 +392,7 @@ lmaterial_attribs(lua_State *L) {
 							return luaL_error(L, "Invalid multiple uniform");
 						uniform_value(L, a);
 						lua_rawseti(L, -2, i+1);
-						a = al_attrib(arena, a->next);
+						a = al_next_attrib(arena, a);
 					}
 				}
 				lua_setfield(L, result_index, info.name);
@@ -452,11 +452,28 @@ get_state(lua_State *L, int idx, uint64_t *pstate, uint32_t *prgba) {
 }
 
 static inline uint8_t
-to_attrib_type(lua_State *L, int index){
+fetch_attrib_type(lua_State *L, int index){
+	const int tt = lua_type(L, index);
+	// math3d value
+	if (tt == LUA_TLIGHTUSERDATA || tt == LUA_TUSERDATA){
+		return ATTRIB_UNIFORM;
+	}
+
+	if (tt != LUA_TTABLE){
+		luaL_error(L, "Invalid value type:%s, should be math3d value or table like: {type='u', value=xxx, handle=xxx}", lua_typename(L, tt));
+		return ATTRIB_NONE;
+	}
 	const int lt = lua_getfield(L, index, "type");
+	if (lt == LUA_TNIL){
+		lua_pop(L, 1);
+		if (lua_rawlen(L, index) > 0){
+			return ATTRIB_UNIFORM;
+		}
+	}
 	if (lt != LUA_TSTRING){
 		lua_pop(L, 1);
 		luaL_error(L, "Invalid attrib value, 'type' filed:%s, is not string", lua_typename(L, lt));
+		return ATTRIB_NONE;
 	}
 	const char  c = lua_tostring(L, -1)[0];
 	lua_pop(L, 1);
@@ -466,7 +483,6 @@ to_attrib_type(lua_State *L, int index){
 		case 'i': return ATTRIB_IMAGE;
 		case 'b': return ATTRIB_BUFFER;
 		case 'u':
-		case '\0':
 		// could not be ATTRIB_REF
 		default: return ATTRIB_UNIFORM;
 	}
@@ -573,20 +589,6 @@ update_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int in
 	}
 }
 
-static inline int
-is_uniform_array(lua_State *L, uint16_t uniformtype, int data_index){
-	if ((uniformtype == ATTRIB_UNIFORM || uniformtype == ATTRIB_SAMPLER) && (LUA_TTABLE == lua_type(L, data_index))){
-		int n = 0;
-		if (LUA_TTABLE == lua_getfield(L, data_index, "value")){
-			n = (int)lua_rawlen(L, data_index);
-		}
-		lua_pop(L, 1);
-		return n;
-	}
-
-	return 0;
-}
-
 static struct attrib*
 new_attrib(lua_State *L, int arena_index, int data_index, uint16_t attribtype){
 	struct attrib* a = arena_alloc(L, arena_index);
@@ -613,43 +615,72 @@ replace_instance_attrib(lua_State *L, struct attrib_arena *arena, struct attrib 
 	}
 }
 
-static uint16_t
-load_attrib(lua_State *L, int arena_idx, int value_index, int num, uint16_t id, uint16_t type) {
+static inline uint16_t
+load_attrib_array(lua_State *L, int arena_idx, int data_idx, int num, uint16_t id, uint16_t type){
 	struct attrib_arena* arena = (struct attrib_arena*)lua_touserdata(L, arena_idx);
-	if (num == 1) {
-		struct attrib * na = new_attrib(L, arena_idx, value_index, type);
-		na->next = id;
-		return al_attrib_id(arena, na);
-	}
-
-	luaL_checktype(L, value_index, LUA_TTABLE);
 	for (int i=0; i<num; ++i){
-		lua_geti(L, value_index, i+1);
+		lua_geti(L, data_idx, i+1);
 		struct attrib* a = new_attrib(L, arena_idx, -1, type);
 		a->next = id;
 		id = al_attrib_id(arena, a);
 		lua_pop(L, 1);
 	}
+
 	return id;
+}
+
+static uint16_t
+load_attrib(lua_State *L, int arena_idx, int data_idx, int num, uint16_t id, uint16_t type) {
+	struct attrib_arena* arena = (struct attrib_arena*)lua_touserdata(L, arena_idx);
+	if (num == 1) {
+		struct attrib * na = new_attrib(L, arena_idx, data_idx, type);
+		na->next = id;
+		return al_attrib_id(arena, na);
+	}
+
+	luaL_checktype(L, data_idx, LUA_TTABLE);
+
+	const int n = (int)lua_rawlen(L, data_idx);
+	if (n > 0){
+		assert(n == num);
+		return load_attrib_array(L, arena_idx, data_idx, num, id, type);
+	}
+
+	if (LUA_TTABLE == lua_getfield(L, data_idx, "value")){
+		id = load_attrib_array(L, arena_idx, data_idx, num, id, type);
+		lua_pop(L, 1);
+		return id;
+	}
+
+	lua_pop(L, 1);
+	luaL_error(L, "Invalid multi uniform value, table field 'value' should be table");
+	return INVALID_ATTRIB;
 }
 
 static inline uint16_t
 count_data_num(lua_State *L, int data_index, uint16_t type){
 	uint16_t n = 1;
 	if (is_uniform_attrib(type)){
-		if (LUA_TTABLE == lua_getfield(L, data_index, "value")){
-			n = (uint16_t)lua_rawlen(L, -1);
+		if (LUA_TTABLE == lua_type(L, data_index)){
+			const int nn = (int)lua_rawlen(L, data_index);
+			if (nn > 0){
+				n = nn;
+			} else {
+				if (LUA_TTABLE == lua_getfield(L, data_index, "value"))
+					n = (uint16_t)lua_rawlen(L, -1);
+				lua_pop(L, 1);
+			}
+			
 		}
-		lua_pop(L, 1);
 	}
 	return n;
 }
 
 static uint16_t
 load_attrib_from_data(lua_State *L, int arena_idx, int data_index, uint16_t id) {
-	const uint16_t type = to_attrib_type(L, data_index);
+	const uint16_t type = fetch_attrib_type(L, data_index);
 	const int n = count_data_num(L, data_index, type);
-	return load_attrib(L, arena_idx, data_index, id, n, type);
+	return load_attrib(L, arena_idx, data_index, n, id, type);
 }
 
 static void

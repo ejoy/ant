@@ -56,13 +56,10 @@ local SYS_ATTRIBS = rmat.system_attribs(CMATOBJ, {
 	-- shadow
 	--   csm
 	u_csm_matrix 		= {
-		type = "u",
-		value = {
-			mc.IDENTITY_MAT,
-			mc.IDENTITY_MAT,
-			mc.IDENTITY_MAT,
-			mc.IDENTITY_MAT,
-		}
+		mc.IDENTITY_MAT,
+		mc.IDENTITY_MAT,
+		mc.IDENTITY_MAT,
+		mc.IDENTITY_MAT,
 	},
 	u_csm_split_distances= mc.ZERO,
 	u_depth_scale_offset = mc.ZERO,
@@ -72,13 +69,10 @@ local SYS_ATTRIBS = rmat.system_attribs(CMATOBJ, {
 
 	--   omni
 	u_omni_matrix = {
-		type = "u",
-		value = {
-			mc.IDENTITY_MAT,
-			mc.IDENTITY_MAT,
-			mc.IDENTITY_MAT,
-			mc.IDENTITY_MAT,
-		},
+		mc.IDENTITY_MAT,
+		mc.IDENTITY_MAT,
+		mc.IDENTITY_MAT,
+		mc.IDENTITY_MAT,
 	},
 
 	u_tetra_normal_Green	= mc.ZERO,
@@ -89,7 +83,7 @@ local SYS_ATTRIBS = rmat.system_attribs(CMATOBJ, {
 	s_omni_shadowmap	= texture_value(9),
 })
 
-local sd			= import_package "ant.setting".setting
+local sd			= import_package "ant.settings".setting
 
 local assetmgr		= require "asset"
 local ext_material	= require "ext_material"
