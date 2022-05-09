@@ -163,5 +163,10 @@ function vfs.resource(urllst)
     return folder
 end
 
-vfs.sync.resource = vfs.resource
-vfs.async.resource = vfs.resource
+if vfs.sync then
+    vfs.sync.resource = vfs.resource
+end
+
+if vfs.async then
+    vfs.async.resource = vfs.resource
+end
