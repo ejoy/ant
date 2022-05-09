@@ -74,11 +74,6 @@ struct attrib_arena {
 	struct attrib *a;
 };
 
-//uv1: lookup table, [name: id]
-struct system_attribs {
-	uint16_t attrib;
-};
-
 //uv1: material instance metatable
 //uv2: cobject
 //uv3: lookup table, [name: id]
@@ -427,6 +422,12 @@ hex2n(lua_State *L, char c) {
 
 static inline void
 get_state(lua_State *L, int idx, uint64_t *pstate, uint32_t *prgba) {
+	// compute shader
+	if (lua_isnoneornil(L, idx)){
+		*pstate = 0;
+		*prgba = 0;
+		return;
+	}
 	size_t sz;
 	const uint8_t * data = (const uint8_t *)luaL_checklstring(L, idx, &sz);
 	if (sz != 16 && sz != 24) {
@@ -525,7 +526,10 @@ update_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int in
 		case ATTRIB_UNIFORM:{
 			const int datatype = lua_type(L, index);
 			if (datatype == LUA_TTABLE){
-				lua_getfield(L, index, "value");
+				const int lt = lua_getfield(L, index, "value");
+				if (lt != LUA_TLIGHTUSERDATA || lt != LUA_TUSERDATA){
+					luaL_error(L, "Invalid math uniform 'value' field, math3d value is required");
+				}
 				math3d_unmark_id(arena->math, a->u.m);
 				a->u.m = math3d_mark_id(L, arena->math, -1);
 				lua_pop(L, 1);
@@ -540,7 +544,9 @@ update_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int in
 		case ATTRIB_SAMPLER:
 			const int datatype = lua_type(L, index);
 			if (datatype == LUA_TTABLE){
-				lua_getfield(L, index, "stage");
+				if (LUA_TNUMBER != lua_getfield(L, index, "stage")){
+					luaL_error(L, "Invalid sampler 'stage' field, number is needed");
+				}
 				a->r.stage = (uint8_t)lua_tointeger(L, -1);
 				lua_pop(L, 1);	// stage
 
@@ -555,13 +561,17 @@ update_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int in
 			break;
 		case ATTRIB_IMAGE:
 			luaL_checktype(L, index, LUA_TTABLE);
-			lua_getfield(L, index, "mip");
+			if (LUA_TNUMBER != lua_getfield(L, index, "mip")){
+				luaL_error(L, "Invalid image 'mip' field, number is need");
+			}
 			a->r.mip = (uint8_t)lua_tointeger(L, -1);
 			lua_pop(L, 1);
 		//walk through
 		case ATTRIB_BUFFER: {
 			luaL_checktype(L, index, LUA_TTABLE);
-			lua_getfield(L, index, "access");
+			if (LUA_TSTRING != lua_getfield(L, index, "access")){
+				luaL_error(L, "Invalid image/buffer 'access' field, r/w/rw is required");
+			}
 			const char* access = lua_tostring(L, -1);
 			if (strcmp(access, "w") == 0){
 				a->r.access = BGFX_ACCESS_WRITE;
@@ -574,7 +584,9 @@ update_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int in
 			}
 			lua_pop(L, 1);	// access
 
-			lua_getfield(L, index, "stage");
+			if (LUA_TNUMBER != lua_getfield(L, index, "stage")){
+				luaL_error(L, "Invalid image/buffer 'stage' field, number is need");
+			}
 			a->r.stage = (uint8_t)lua_tointeger(L, -1);
 			lua_pop(L, 1);	// stage
 
@@ -684,7 +696,7 @@ load_attrib_from_data(lua_State *L, int arena_idx, int data_index, uint16_t id) 
 }
 
 static void
-set_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_arena *arena, struct attrib * a, int value_index) {
+set_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_arena *arena, int arena_idx, struct attrib * a, int value_index) {
 	uint16_t pid = mi_find_patch_attrib(mi, arena, a);
 	if (pid == INVALID_ATTRIB) {
 		const int n = al_attrib_num(arena, a);
@@ -698,8 +710,6 @@ set_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_ar
 			}
 		}
 		#endif //_DEBUG
-
-		const int arena_idx = lua_upvalueindex(3);
 		mi->patch_attrib = load_attrib(L, arena_idx, value_index, n, mi->patch_attrib, a->type);
 	} else {
 		replace_instance_attrib(L, arena, al_attrib(arena, pid), value_index);
@@ -714,9 +724,12 @@ set_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_ar
 static int
 lset_attrib(lua_State *L) {
 	struct material_instance * mi = (struct	material_instance *)lua_touserdata(L, 1);
-	struct attrib_arena * arena = (struct attrib_arena *)lua_touserdata(L, lua_upvalueindex(2));
+	const char* attribname = luaL_checkstring(L, 2);
+	const int arena_idx = lua_upvalueindex(2);
+	struct attrib_arena * arena = (struct attrib_arena *)lua_touserdata(L, arena_idx);
+	lua_getiuservalue(L, lua_upvalueindex(1), 3);
 	lua_pushvalue(L, 2);
-	if (lua_rawget(L, lua_upvalueindex(3)) != LUA_TNUMBER) {
+	if (lua_rawget(L, -2) != LUA_TNUMBER) {
 		return luaL_error(L, "set invalid attrib %s", luaL_tolstring(L, 2, NULL));
 	}
 	const int id = (int)lua_tointeger(L, -1);
@@ -730,7 +743,7 @@ lset_attrib(lua_State *L) {
 	if (lua_type(L, 3) == LUA_TNIL) {
 		unset_instance_attrib(mi, arena, a);
 	} else {
-		set_instance_attrib(L, mi, arena, a, 3);
+		set_instance_attrib(L, mi, arena, arena_idx, a, 3);
 	}
 	return 0;
 }
@@ -936,6 +949,7 @@ lmaterial_new(lua_State *L) {
 	uint64_t state;
 	uint32_t rgba;
 	get_state(L, 2, &state, &rgba);
+	const char* filename = lua_tostring(L, 4);
 	lua_settop(L, 3);
 	struct math3d_api *mapi = CAPI_MATH3D;
 	struct attrib_arena * arena = CAPI_ARENA;
@@ -958,13 +972,15 @@ lmaterial_new(lua_State *L) {
 	lua_newtable(L);
 	const int lookup_idx = lua_gettop(L);
 
-	lua_getiuservalue(L, 1, 1);	//system attribs
-	lua_getiuservalue(L, -1, 1); //lookup table
+	//system attrib table
+	if (lua_getiuservalue(L, 1, 1) != LUA_TTABLE){
+		luaL_error(L, "Invalid cobject");
+	}
 	const int sa_lookup_idx = lua_gettop(L);
 	for (lua_pushnil(L); lua_next(L, 3) != 0; lua_pop(L, 1)) {
 		const char* key = lua_tostring(L, -2);
 		struct attrib* a = NULL;
-		if (LUA_TNIL != lua_getfield(L, lookup_idx, key)){
+		if (LUA_TNIL != lua_getfield(L, sa_lookup_idx, key)){
 			a = arena_alloc(L, 1);
 			// system attribs
 			a->type = ATTRIB_REF;
@@ -982,9 +998,9 @@ lmaterial_new(lua_State *L) {
 		lua_pushinteger(L, id);
 		lua_setfield(L, lookup_idx, key);
 	}
-	lua_pop(L, 2);	//system attribs, lookup table
+	lua_pop(L, 1);	//system attrib table
 
-	lua_setiuservalue(L, -2, 3);			// push lookup table as uv3
+	lua_setiuservalue(L, -2, 3);	// push lookup table as uv3
 
 	if (luaL_newmetatable(L, "ANT_MATERIAL")) {
 		luaL_Reg l[] = {
@@ -1026,7 +1042,6 @@ lsystem_attribs_new(lua_State *L){
 	CAPI_INIT(L, 1);
 	luaL_checktype(L, 2, LUA_TTABLE);
 
-	struct system_attribs *sa = (struct system_attribs*)lua_newuserdatauv(L, sizeof(struct system_attribs), 1);
 	lua_newtable(L);
 	const int lookup_idx = lua_gettop(L);
 	for (lua_pushnil(L); lua_next(L, 2) != 0; lua_pop(L, 1)) {
@@ -1036,7 +1051,7 @@ lsystem_attribs_new(lua_State *L){
 		lua_setfield(L, lookup_idx, name);
 	}
 
-	lua_setiuservalue(L, -2, 1);	// lookup table in -1, push lookup table as 'system_attribs' No.1 uservalue
+	lua_setiuservalue(L, 1, 1);	// system attrib table as cobject 1 user value
 	return 1;
 }
 
