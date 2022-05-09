@@ -86,11 +86,12 @@ function page_meta:update_contianer()
     self.item_map = {}
     self.index_map = {}
     self.selected = nil
+    self.detail = nil
     for i = 1, self.page_count do
         local page_e = self.document.createElement "div"
         page_e.style.flexDirection = 'column'
         page_e.style.alignItems = 'center'
-        page_e.style.justifyContent = 'space-evenly'
+        page_e.style.justifyContent = 'flex-start'
         page_e.style.width = self.width
         page_e.style.height = self.height
         local row = {}
@@ -170,15 +171,18 @@ function page_meta:get_current_page()
 end
 
 function page_meta:show_detail(item, show)
-    if self.detail then
-        local parent = self.detail.parentNode
-        parent.removeChild(self.detail)
-        self.detail = nil
-    end
     if show then
         local map = self.item_map[item]
-        self.detail = self.detail_renderer(map.index)
-        self.pages[map.page].appendChild(self.detail, map.row)
+        if map then
+            self.detail = self.detail_renderer(map.index)
+            self.pages[map.page].appendChild(self.detail, map.row)   
+        end
+    else
+        if self.detail then
+            local parent = self.detail.parentNode
+            parent.removeChild(self.detail)
+            self.detail = nil
+        end
     end
 end
 
