@@ -925,12 +925,25 @@ lapply_attrib(lua_State *L) {
 	return 0;
 }
 
+static int
+lget_attrib(lua_State *L){
+	struct material_instance* mi = (struct material_instance*)lua_touserdata(L, 1);
+	const char* what = luaL_checkstring(L, 2);
+	if (strcmp(what, "material") == 0){
+		lua_pushvalue(L, lua_upvalueindex(1));
+		return 1;
+	}
+
+	return 0;
+}
+
 // 1: material
 // 2: cobject
 static void
 create_material_instance_metatable(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "__newindex", lset_attrib		},
+		{ "__index",	lget_attrib		},
 		{ "__gc", 		lcollect_attrib	},
 		{ "__call", 	lapply_attrib	},
 		{ NULL, 		NULL },
