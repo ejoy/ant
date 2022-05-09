@@ -543,7 +543,7 @@ update_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int in
 			if (datatype == LUA_TTABLE){
 				a->u.handle = fetch_handle_value(L, index);
 				const int lt = lua_getfield(L, index, "value");
-				if (lt != LUA_TLIGHTUSERDATA || lt != LUA_TUSERDATA){
+				if (lt != LUA_TLIGHTUSERDATA && lt != LUA_TUSERDATA){
 					luaL_error(L, "Invalid math uniform 'value' field, math3d value is required");
 				}
 				math3d_unmark_id(arena->math, a->u.m);
