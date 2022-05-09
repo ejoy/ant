@@ -3,6 +3,7 @@ interface "imaterial"
     .method "load"
     .method "set_property"
     .method "get_property"
+    .method "system_attribs"
 
 interface "imesh"
     .implement "mesh.lua"
