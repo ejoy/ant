@@ -1,3 +1,6 @@
+#if !defined(LUA_CORE)
+#define LUA_CORE
+#endif
 #include "lua.h"
 
 #if LUA_VERSION_NUM >= 504

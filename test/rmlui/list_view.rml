@@ -113,6 +113,34 @@
                 list_item_height = 50,
                 list_width = 667,
                 list_height = 360,
+                items = {
+                        {id=100, icon0="correct.png", icon1="correct.png"},
+                        {id=101, icon0="correct.png", icon1="correct.png"},
+                        {id=102, icon0="correct.png", icon1="correct.png"},
+                        {id=103, icon0="correct.png", icon1="correct.png"},
+                        {id=104, icon0="correct.png", icon1="correct.png"},
+                        {id=105, icon0="correct.png", icon1="correct.png"},
+                        {id=106, icon0="correct.png", icon1="correct.png"},
+                        {id=107, icon0="correct.png", icon1="correct.png"},
+                        {id=108, icon0="correct.png", icon1="correct.png"},
+                        {id=109, icon0="correct.png", icon1="correct.png"},
+                        {id=110, icon0="correct.png", icon1="correct.png"},
+                        {id=111, icon0="correct.png", icon1="correct.png"},
+                        {id=112, icon0="correct.png", icon1="correct.png"},
+                        {id=113, icon0="correct.png", icon1="correct.png"},
+                        {id=114, icon0="correct.png", icon1="correct.png"},
+                        {id=115, icon0="correct.png", icon1="correct.png"},
+                        {id=116, icon0="correct.png", icon1="correct.png"},
+                        {id=117, icon0="correct.png", icon1="correct.png"},
+                        {id=118, icon0="correct.png", icon1="correct.png"},
+                        {id=119, icon0="correct.png", icon1="correct.png"},
+                        {id=120, icon0="correct.png", icon1="correct.png"},
+                        {id=121, icon0="correct.png", icon1="correct.png"},
+                        {id=122, icon0="correct.png", icon1="correct.png"},
+                        {id=123, icon0="correct.png", icon1="correct.png"},
+                        {id=124, icon0="correct.png", icon1="correct.png"},
+                },
+                page = {}
             }
             
             function start.page_item_click(event, id, row, top)
@@ -130,65 +158,93 @@
                 e.style.display = "none"
             end)
 
+            local function page_item_renderer(index)
+                local item = document.createElement "div"
+                item.style.width = '120px'
+                item.style.height = '120px'
+                if index > #start.items then
+                    --item.outerHTML = [[<div style = "width: 120px; height: 120px;" />]]
+                    return item
+                end
+                item.style.border = '2px blue'
+                local c0 = document.createElement "div"
+                c0.style.width = '50px'
+                c0.style.height = '50px'
+                c0.style.backgroundSize = 'cover'
+                c0.style.backgroundImage = start.items[index].icon0
+                item.appendChild(c0)
+                local c1 = document.createElement "div"
+                c1.innerHTML = tostring(start.items[index].id)
+                item.appendChild(c1)
+                item.addEventListener('click', function()
+                    local last_selected = start.page:get_selected();
+                    --local same = (last_selected == item)
+                    if last_selected then
+                        last_selected.style.border = '2px blue'
+                        start.page:show_detail(last_selected, false)
+                    end
+                    item.style.border = '2px red'
+                    start.page:show_detail(item, true)
+                    start.page:set_selected(item)
+                    start.page:on_dirty(3)
+                end)
+                return item
+            end
+            
+            local function page_item_detail_renderer(index)
+                local detail = document.createElement "div"
+                detail.style.width = '100%'
+                detail.style.height = '100px'
+                detail.style.border = '2px blue'
+                return detail
+            end
+
             local pageclass = require "page"
             window.customElements.define("page", function(e)
-                start.page = pageclass.create(e, start.page_0, document.getElementById "pagefooter", function () start("page_0") end)
+                start.page = pageclass.create(document, e, page_item_renderer, page_item_detail_renderer)
+                start.page:on_dirty_all(#start.items)
             end)
 
+            local function list_item_renderer(index)
+                local item = document.createElement "div"
+                item.style.width = '100%'
+                item.style.height = '50px'
+                item.style.border = '2px blue'
+                item.style.flexDirection = 'row'
+                item.style.alignItems = 'center'
+                item.style.justifyContent = 'space-evenly'
+                if index > #start.items then
+                    return document.createElement "div"
+                end
+                local c1 = document.createElement "div"
+                c1.innerHTML = tostring(start.items[index].id)
+                item.appendChild(c1)
+
+                local c0 = document.createElement "div"
+                c0.style.width = '50px'
+                c0.style.height = '50px'
+                c0.style.backgroundSize = 'cover'
+                c0.style.backgroundImage = start.items[index].icon0
+                item.appendChild(c0)
+                item.addEventListener('click', function()
+                    if start.list.selected then
+                        start.list.selected.style.border = '2px blue'
+                    end
+                    item.style.border = '2px red'
+                    start.list.selected = item
+                end)
+                return item
+            end
             local listclass = require "list"
             window.customElements.define("list", function(e)
-                start.list = listclass.create(e, start.list_0, function () start("list_0") end)
+                start.list = listclass.create(document, e, #start.items, list_item_renderer)
             end)
         </script>
     </head>
     <body>
-        <!--
-        <template id="pageitem">
-            <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="page_0.selected_id == it.data.id ? '2px green' : '0px green'" data-event-click="page_item_click(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="it.top+'px'" data-for="page_0.view_items">
-                <div class="item-bg" data-style-background-image="it.data.icon0"/>
-                <div>{{it.data.id}}</div>
-            </div>
-        </template>
-        -->
-        <template id="pagefooter">
-            <div style='width:20px; height:20px; background-size:cover; background-image:"common/page0.png";'/>
-        </template>
         <div class="panel" data-model="start">
-            <page width='667' height='720' item_size='200' detail_height='120'>
-                <div class="pagestyle">
-                    <!-- item 定义 -->
-                    <div style="position: absolute; background-color: rgba(255, 120, 120, 255);" data-style-border="page_0.selected_id == it.data.id ? '2px green' : '0px green'" data-event-click="page_item_click(it.data.id, it.row, it.top)" data-style-width="item_size+'px'" data-style-height="item_size+'px'" data-style-left="it.left+'px'" data-style-top="it.top+'px'" data-for="page_0.view_items">
-                        <div class="item-bg" data-style-background-image="it.data.icon0"/>
-                        <div>{{it.data.id}}</div>
-                    </div>
-                    <!-- 详细信息 -->
-                    <div id="detail" style="width: 100%; background-color: rgba(0, 100, 150, 255);" data-if="page_0.show_detail">
-                        Item Detail
-                    </div>
-                </div>
-                <!-- 页面指示 -->
-                <div/>
-            </page>
-            <div style='flex-direction: column; width:50%; height:100%;'>
-                <list direction='1' width='667' height='360' item_width='667' item_height='50'>
-                    <div class="liststyle">
-                        <!-- item 定义 -->
-                        <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="list_0.items">
-                            <div class="item-bg" data-style-background-image="it.icon0"/>
-                            <div>{{it.id}}</div>
-                        </div>
-                    </div>
-                </list>
-                <list direction='1' width='667' height='360' item_width='667' item_height='50' style='background-color: rgba(100, 200, 100, 255);'>
-                    <div class="liststyle">
-                        <!-- item 定义 -->
-                        <div class="item-display" style="width:100%;" data-style-height="list_item_height + 'px'" data-for="list_0.items">
-                            <div class="item-bg" data-style-background-image="it.icon0"/>
-                            <div>{{it.id}}</div>
-                        </div>
-                    </div>
-                </list>
-            </div>
+            <page width='85.33vmin' height='66.00vmin' footerheight='4.00vmin' row='3' col='3'/>
+            <list direction='1' width='667px' height='720px' item_width='667px' item_height='50px'/>
         </div>
     </body>
 </rml>

@@ -46,7 +46,7 @@ local function node_context_menu(eid)
         end
         local current_visible = hierarchy:is_visible(eid)
         if imgui.widget.Selectable(current_visible and "Hide" or "Show", false) then
-            world:pub { "HierarchyEvent", "visible", eid, not current_visible }
+            world:pub { "HierarchyEvent", "visible", hierarchy:get_node(eid), not current_visible }
         end
         imgui.cursor.Separator()
         imgui.windows.BeginDisabled(is_delete_disable())
@@ -109,43 +109,43 @@ local function show_scene_node(node)
     imgui.table.NextRow();
     imgui.table.NextColumn();
     local function select_or_move(nd)
-        local e = nd.eid
+        local eid = nd.eid
         if imgui.util.IsItemClicked() then
-            if is_editable(e) then
-                gizmo:set_target(e)
+            if is_editable(eid) then
+                gizmo:set_target(eid)
             end
             if ima.highlight_anim then
-                ima.play(world:entity(ima.highlight_anim), e, false)
+                ima.play(world:entity(ima.highlight_anim), eid, false)
             end
         end
 
         if imgui.widget.BeginDragDropSource() then
-            source_e = e
-            imgui.widget.SetDragDropPayload("DragNode", tostring(e))
+            source_e = eid
+            imgui.widget.SetDragDropPayload("DragNode", tostring(eid))
             imgui.widget.EndDragDropSource()
         end
         if imgui.widget.BeginDragDropTarget() then
             local payload = imgui.widget.AcceptDragDropPayload("DragNode")
             if payload then
                 --source_e = tonumber(payload)
-                target_e = e
+                target_e = eid
             end
             imgui.widget.EndDragDropTarget()
         end
     end
     local function lock_visible(nd)
-        local e = nd.eid
+        local eid = nd.eid
         imgui.table.NextColumn();
-        imgui.util.PushID(tostring(e))
-        local current_lock = hierarchy:is_locked(e)
+        imgui.util.PushID(tostring(eid))
+        local current_lock = hierarchy:is_locked(eid)
         local icon = current_lock and icons.ICON_LOCK or icons.ICON_UNLOCK
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
-            world:pub { "HierarchyEvent", "lock", e, not current_lock }
+            world:pub { "HierarchyEvent", "lock", eid, not current_lock }
         end
         imgui.util.PopID()
         imgui.table.NextColumn();
-        imgui.util.PushID(tostring(e))
-        local current_visible = hierarchy:is_visible(e)
+        imgui.util.PushID(tostring(eid))
+        local current_visible = hierarchy:is_visible(eid)
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
             world:pub { "HierarchyEvent", "visible", nd, not current_visible }

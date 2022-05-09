@@ -366,7 +366,16 @@ static int
 lElementAppendChild(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::Element* child = lua_checkobject<Rml::Element>(L, 2);
-	e->AppendChild(child);
+	auto index = (uint32_t)luaL_optinteger(L, 3, e->GetNumChildNodes());
+	e->AppendChild(child, index);
+	return 0;
+}
+
+static int
+lElementRemoveChild(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::Element* child = lua_checkobject<Rml::Element>(L, 2);
+	e->RemoveChild(child);
 	return 0;
 }
 
@@ -606,6 +615,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementGetOuterHTML", lElementGetOuterHTML },
 		{ "ElementSetOuterHTML", lElementSetOuterHTML },
 		{ "ElementAppendChild", lElementAppendChild },
+		{ "ElementRemoveChild", lElementRemoveChild },
 		{ "ElementGetElementById", lElementGetElementById },
 		{ "ElementDelete", lElementDelete },
 		{ "ElementProject", lElementProject },

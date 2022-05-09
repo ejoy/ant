@@ -417,12 +417,15 @@ void Element::NotifyCustomElement() {
 	owner_document->NotifyCustomElement(this);
 }
 
-void Element::AppendChild(Node* node) { 
+void Element::AppendChild(Node* node, uint32_t index) {
 	Element* p = node->GetParentNode();
 	if (p) {
 		p->RemoveChild(node).release();
 	}
-	GetLayout().InsertChild(node->GetLayout(), (uint32_t)childnodes.size());
+	if (index > childnodes.size()) {
+		index = (uint32_t)childnodes.size();
+	}
+	GetLayout().InsertChild(node->GetLayout(), index);
 	childnodes.emplace_back(node);
 	if (Element* e = dynamic_cast<Element*>(node)) {
 		children.emplace_back(e);

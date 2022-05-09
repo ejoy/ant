@@ -7,33 +7,24 @@ if lm.mode == "debug" and lm.target == "x64" and lm.compiler == "msvc" then
 end
 
 lm:source_set "lua_source" {
-    sources = {
-        "*.c",
-        "!linit.c",
-        "!lua.c",
-        "!luac.c",
-        "!utf8_lua.c",
-    },
+    sources = "onelua.c",
+    defines = "MAKE_LIB",
     windows = {
         defines = "LUA_BUILD_AS_DLL",
     },
     macos = {
         visibility = "default",
         defines = "LUA_USE_MACOSX",
-        sources = {
-            "!utf8_*.c"
-        }
-    },
-    ios = {
-        sources = {
-            "!utf8_*.c"
-        }
     }
 }
 
 lm:source_set "lua_source" {
     sources = {
-        "linit.c",
-    },
+        "utf8_crt.c",
+    }
+}
+
+lm:source_set "lua_source" {
+    sources = "linit.c",
     defines = "ANT_LIBRARIES"
 }

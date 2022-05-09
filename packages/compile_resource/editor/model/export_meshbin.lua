@@ -214,14 +214,8 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 
 	local buffer = {}
 	local numv = gltfutil.num_vertices(prim, gltfscene)
-	local function check_index_attrib_cvt()
-		for idx, l in ipairs(layouts) do
-			if l:sub(1, 1) == 'i' and l:sub(6, 6) == 'u' then
-				return idx
-			end
-		end
-	end
-	local change_index_attrib = check_index_attrib_cvt()
+
+	local change_index_attrib = -1
 	for iv=0, numv-1 do
 		for idx, d in ipairs(layoutdesc) do
 			local l = layouts[idx]
@@ -230,14 +224,17 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 			local t = l:sub(1, 1)
 			if t == 'p' or t == 'n' or t == 'T' or t == 'b' then
 				v = r2l_vec(v, l)
-			elseif change_index_attrib then
-				v = jointidx_fmt:pack(v:byte(1), v:byte(2), v:byte(3), v:byte(4))
+			elseif t == 'i' then
+				if l:sub(6, 6) == 'u' then
+					v = jointidx_fmt:pack(v:byte(1), v:byte(2), v:byte(3), v:byte(4))
+					change_index_attrib = idx
+				end
 			end
 			buffer[#buffer+1] = v
 		end
 	end
 
-	if change_index_attrib then
+	if change_index_attrib ~= -1 then
 		layouts[change_index_attrib] = layouts[change_index_attrib]:sub(1, 5) .. 'i'
 	end
 
@@ -334,6 +331,69 @@ local function export_skinbin(gltfscene, bindata, exports)
 	end
 	exports.node_joints = nodejoints
 end
+
+-- local function check_front_face(vb, ib)
+-- 	local function read_memory(m, fmt, offset)
+-- 		offset = offset or 1
+-- 		local d, o = m[1], m[2]
+-- 		return fmt:unpack(d, offset)
+-- 	end
+
+	
+-- 	local i1, i2, i3
+-- 	if ib then
+-- 		local fmt = ib.flag == '' and "HHH" or "III"
+-- 		i1, i2, i3 = read_memory(ib.memory, fmt)
+-- 	else
+-- 		i1, i2, i3 = 1, 2, 3
+-- 	end
+
+-- 	assert(#vb == 1 and vb[1].declname:match "p")
+-- 	local b = vb[1]
+	
+
+-- 	local stride_offset = 0
+-- 	local fmt
+-- 	do
+-- 		for d in b.declname:gmatch "[^|]" do
+-- 			if d:sub(1, 1) == 'p' then
+-- 				local t = d:sub(6, 6)
+-- 				local m<const> = {
+-- 					['f'] = 'f',
+-- 					['u'] = 'B',
+-- 					['i'] = 'h',
+-- 				}
+-- 				local n = math.floor(tonumber(d:sub(2, 2)))
+-- 				fmt = m[t]:rep(n)
+-- 				break
+-- 			end
+
+-- 			stride_offset = stride_offset + declmgr.elem_size(d)
+-- 		end
+-- 	end
+
+-- 	local stride = declmgr.layout_stride(b.declname)
+-- 	if fmt == nil then
+-- 		error "invalid vertex buffer"
+-- 	end
+
+-- 	local function vertex_offset(idx)
+-- 		return idx * stride + stride_offset
+-- 	end
+-- 	local v1 = {read_memory(b.memory, fmt, vertex_offset(i1))}
+-- 	local v2 = {read_memory(b.memory, fmt, vertex_offset(i2))}
+-- 	local v3 = {read_memory(b.memory, fmt, vertex_offset(i3))}
+
+-- 	--left hand check
+-- 	v1[3] = 0.0
+-- 	v2[3] = 0.0
+-- 	v3[3] = 0.0
+-- 	local e1 = math3d.sub(v2, v1)
+-- 	local e2 = math3d.sub(v3, v1)
+-- 	math3d.cross(e1, e2)
+
+-- end
+
 
 local function export_meshbin(gltfscene, bindata, exports)
 	exports.mesh = {}

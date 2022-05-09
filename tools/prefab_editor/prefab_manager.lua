@@ -82,23 +82,6 @@ local default_collider_define = {
     ["capsule"] = {{origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}}
 }
 
-local function get_local_transform(tran, parent_eid)
-    if not parent_eid then return tran end
-    local parent_worldmat = iom.worldmat(parent_eid)
-    local worldmat = math3d.matrix(tran)
-    local s, r, t = math3d.srt(math3d.mul(math3d.inverse(parent_worldmat), worldmat))
-    local ts, tr, tt = math3d.totable(s), math3d.totable(r), math3d.totable(t)
-    return {s = {ts[1], ts[2], ts[3]}, r = {tr[1], tr[2], tr[3], tr[4]}, t = {tt[1], tt[2], tt[3]}}
-end
-
-local function create_entity_with_parent(tpl, parent)
-    tpl.data.on_ready = function (e)
-        w:sync("scene:in", e)
-        e.scene.pid = parent
-    end
-    return ecs.create_entity(tpl)
-end
-
 local slot_entity_id = 1
 function m:create_slot()
     --if not gizmo.target_eid then return end
@@ -121,14 +104,7 @@ function m:create_slot()
             tag = {auto_name},
         }
     }
-
-    local tpl = utils.deep_copy(template)
-    tpl.data.on_ready = function (e)
-        hierarchy:update_slot_list(world)
-        w:sync("scene:in", e)
-        e.scene.pid = parent_eid
-    end
-    local new_entity = ecs.create_entity(tpl)
+    local new_entity = ecs.create_entity(utils.deep_copy(template))
     slot_entity_id = slot_entity_id + 1
     self:add_entity(new_entity, parent_eid, template)
 end
@@ -165,13 +141,11 @@ function m:create_collider(config)
     tpl.data.on_ready = function (e)
         e.collider = { [config.type] = define }
         imaterial.set_property(e, "u_color", {1, 0.5, 0.5, 0.8})
-        w:sync("scene:in", e)
-        e.scene.pid = self.root
     end
     return ecs.create_entity(tpl), template
 end
 
-local function create_simple_entity(name, srt, parent)
+local function create_simple_entity(name, srt)
     local template = {
 		policy = {
             "ant.general|name",
@@ -182,30 +156,17 @@ local function create_simple_entity(name, srt, parent)
             scene = {srt = srt or {}}
 		},
     }
-    return create_entity_with_parent(utils.deep_copy(template), parent), template
+    return ecs.create_entity(utils.deep_copy(template)), template
 end
 
 function m:add_entity(new_entity, parent, temp, no_hierarchy)
     self.entities[#self.entities+1] = new_entity
-    ecs.method.set_parent(new_entity, parent or self.root)
+    parent = parent or self.root
+    ecs.method.set_parent(new_entity, parent)
     if not no_hierarchy then
-        hierarchy:add(new_entity, {template = temp}, parent)--world[new_entity].parent)
+        hierarchy:add(new_entity, {template = temp}, parent)
     end
 end
-
--- function m:find_entity(e)
---     if not e.scene then
---         w:sync("scene:in", e)
---     end
---     for _, entity in ipairs(self.entities) do
---         if not entity.scene then
---             w:sync("scene:in", entity)
---         end
---         if entity.scene.id == e.scene.id then
---             return entity
---         end
---     end
--- end
 
 local function create_default_light(lt)
     return ilight.create{
@@ -234,7 +195,7 @@ function m:create(what, config)
         self.entities[#self.entities+1] = new_camera
     elseif what == "empty" then
         local parent = gizmo.target_eid or self.root
-        local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id(), {}, parent)
+        local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id())
         self:add_entity(new_entity, parent, temp)
     elseif what == "geometry" then
         if config.type == "cube"
@@ -256,7 +217,7 @@ function m:create(what, config)
                     name = config.type .. gen_geometry_id()
                 }
             }
-            local new_entity = create_entity_with_parent(utils.deep_copy(template), parent_eid or self.root)
+            local new_entity = ecs.create_entity(utils.deep_copy(template))
             self:add_entity(new_entity, parent_eid, template)
             return new_entity
         elseif config.type == "cube(prefab)" then
@@ -344,7 +305,7 @@ function m:create(what, config)
                     }
                 }
             }
-            local shapetarrain = create_entity_with_parent(utils.deep_copy(template), self.root)
+            local shapetarrain = ecs.create_entity(utils.deep_copy(template))
             self:add_entity(shapetarrain, self.root, template)
         end
     elseif what == "light" then
@@ -365,25 +326,10 @@ function m:create(what, config)
     end
 end
 
-function m:internal_remove(toremove)
-    
-end
-
 local function set_select_adapter(entity_set, mount_root)
     for _, e in ipairs(entity_set) do
         hierarchy:add_select_adapter(e, mount_root)
     end
-end
-
-local function remove_entitys(entities)
-    for _, e in ipairs(entities) do
-        world:remove_entity(e)
-    end
-end
-
-local function get_prefab(filename)
-    assetmgr.unload(filename)
-    return worldedit:prefab_template(filename)
 end
 
 local FBXTOGLB
@@ -438,34 +384,6 @@ local function split(str)
     return r
 end
 
-local function get_filename(pathname)
-    pathname = pathname:lower()
-    return pathname:match "[/]?([^/]*)$"
-end
-
-local function convert_path(path, glb_filename)
-    if fs.path(path):is_absolute() then return path end
-    local new_path
-    if glb_filename then
-        local pretty = tostring(lfs.path(path))
-        if string.sub(path, 1, 2) == "./" then
-            pretty = string.sub(path, 3)
-        end
-        new_path = glb_filename .. "|" .. pretty
-    else
-        -- local op_path = path
-        -- local spec = string.find(path, '|')
-        -- if spec then
-        --     op_path = string.sub(path, 1, spec - 1)
-        -- end
-        -- new_path = tostring(lfs.relative(current_dir / lfs.path(op_path), new_dir))
-        -- if spec then
-        --     new_path = new_path .. string.sub(path, spec)
-        -- end
-    end
-    return new_path
-end
-
 local nameidx = 0
 local function gen_prefab_name() nameidx = nameidx + 1 return "prefab" .. nameidx end
 
@@ -503,7 +421,7 @@ function m:on_prefab_ready(prefab)
         local parent = find_e(entitys, world:entity(e).scene.parent)
         if pt.prefab then
             local prefab_name = pt.name or gen_prefab_name()
-            local sub_root = create_simple_entity(prefab_name, {}, parent or self.root)
+            local sub_root = create_simple_entity(prefab_name)
             ecs.method.set_parent(sub_root, parent)
             self.entities[#self.entities + 1] = sub_root
 
@@ -585,7 +503,7 @@ local function on_remove_entity(e)
     end
     hierarchy:del(e)
 end
-local ima = ecs.import.interface "ant.asset|imaterial_animation"
+
 function m:reset_prefab()
     camera_mgr.clear()
     for _, e in ipairs(self.entities) do
@@ -637,8 +555,6 @@ function m:add_effect(filename)
     }
     local tpl = utils.deep_copy(template)
     tpl.data.on_ready = function (e)
-        w:sync("scene:in", e)
-        e.scene.pid = gizmo.target_eid
         w:sync("efk:in", e)
         iefk.play(e)
     end
@@ -647,7 +563,7 @@ end
 
 function m:add_prefab(filename)
     local prefab_filename = filename
-    if string.sub(filename,-4) == ".glb" then
+    if string.sub(filename, -4) == ".glb" then
         prefab_filename = filename .. "|mesh.prefab"
     end
     
@@ -659,7 +575,7 @@ function m:add_prefab(filename)
     local prefab = ecs.create_instance(prefab_filename)
     prefab.on_ready = function(inst)
         local prefab_name = gen_prefab_name()
-        local v_root = create_simple_entity(prefab_name, {}, parent)
+        local v_root = create_simple_entity(prefab_name)
         ecs.method.set_parent(v_root, parent)
         self.entities[#self.entities+1] = v_root
         local children = inst.tag["*"]
@@ -683,26 +599,6 @@ function m:add_prefab(filename)
     function prefab:on_message(msg) end
     function prefab:on_update() end
     world:create_object(prefab)
-end
-
-function m:recreate_entity(eid)
-    local prefab = hierarchy:get_template(eid)
-    world:rebuild_entity(eid, prefab.template)
-    
-    local scale = 1
-    local col = world[eid].collider
-    if col then
-        if col.sphere then
-            scale = col.sphere[1].radius * 100
-        elseif col.box then
-            local size = col.box[1].size
-            scale = {size[1] * 200, size[2] * 200, size[3] * 200}
-        else
-        end
-        imaterial.set_property(eid, "u_color", {1, 0.5, 0.5, 0.5})
-    end
-    world:pub {"EntityRecreate", eid}
-    -- return new_eid
 end
 
 function m:save_prefab(path)

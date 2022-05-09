@@ -62,7 +62,7 @@ public:
 	void RemoveAllEvents();
 	std::vector<EventListener*> const& GetEventListeners() const;
 
-	void   AppendChild(Node* node);
+	void   AppendChild(Node* node, uint32_t index = 0xffffffff);
 	std::unique_ptr<Node> RemoveChild(Node* node);
 	size_t GetChildNodeIndex(Node* node) const;
 	void   InsertBefore(Node* child, Node* adjacent);
