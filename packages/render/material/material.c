@@ -733,7 +733,7 @@ lset_attrib(lua_State *L) {
 		return luaL_error(L, "set invalid attrib %s", luaL_tolstring(L, 2, NULL));
 	}
 	const int id = (int)lua_tointeger(L, -1);
-	lua_pop(L, 1);
+	lua_pop(L, 2);	//
 
 	struct attrib * a = al_attrib(arena, id);
 	if (!al_attrib_is_uniform(arena, a)){
