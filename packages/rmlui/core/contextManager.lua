@@ -152,12 +152,12 @@ end
 local function updateHover(doc, newHover, event)
     local oldHover = hoverElement
     diff(oldHover, newHover, function (element)
-        if dispatchEvent(element, "mouseout", event) then
+        if invalidElement(doc, element) and dispatchEvent(element, "mouseout", event) then
             setPseudoClass(element, "hover", false)
         end
     end)
     diff(newHover, oldHover, function (element)
-        if dispatchEvent(element, "mouseover", event) then
+        if invalidElement(doc, element) and dispatchEvent(element, "mouseover", event) then
             setPseudoClass(element, "hover", true)
         end
     end)
