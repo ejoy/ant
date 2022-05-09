@@ -43,7 +43,7 @@ local function notifyDocumentDestroy(document)
 	environment[document] = nil
 end
 
-local function invalidElement(doc, e)
+local function validElement(doc, e)
     local res = {}
     event("InvalidElement", doc, e, res)
     return res.ok
@@ -152,12 +152,12 @@ end
 local function updateHover(doc, newHover, event)
     local oldHover = hoverElement
     diff(oldHover, newHover, function (element)
-        if invalidElement(doc, element) and dispatchEvent(element, "mouseout", event) then
+        if validElement(doc, element) and dispatchEvent(element, "mouseout", event) then
             setPseudoClass(element, "hover", false)
         end
     end)
     diff(newHover, oldHover, function (element)
-        if invalidElement(doc, element) and dispatchEvent(element, "mouseover", event) then
+        if validElement(doc, element) and dispatchEvent(element, "mouseover", event) then
             setPseudoClass(element, "hover", true)
         end
     end)
@@ -238,7 +238,7 @@ local function push(t, v)
 end
 
 local function dispatchTouchEvent(doc, e, name)
-    if not invalidElement(doc, e) then
+    if not validElement(doc, e) then
         return
     end
     local event = {
