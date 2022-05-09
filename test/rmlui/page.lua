@@ -150,10 +150,18 @@ end
 
 function page_meta:on_dirty(index)
     local map = self.index_map[index]
+    self:show_detail(map.item, false)
+    if self.selected == map.item then
+        self.selected = nil
+    end
+    self.item_map[map.item] = nil
     local parent = self.pages[map.page].childNodes[map.row]
     parent.removeChild(map.item)
-    map.item = self.item_renderer(map.index)
-    parent.appendChild(map.item, map.col - 1)
+    --
+    local new_item = self.item_renderer(map.index)
+    self.item_map[new_item] = map
+    map.item = new_item
+    parent.appendChild(new_item, map.col - 1)
 end
 
 function page_meta:on_dirty_all(item_count)
@@ -171,17 +179,22 @@ function page_meta:get_current_page()
 end
 
 function page_meta:show_detail(item, show)
+    local map = self.item_map[item]
+    if not map then
+        return
+    end
     if show then
-        local map = self.item_map[item]
-        if map then
+        if not map.detail then
             self.detail = self.detail_renderer(map.index)
-            self.pages[map.page].appendChild(self.detail, map.row)   
+            self.pages[map.page].appendChild(self.detail, map.row)
+            map.detail = true
         end
     else
-        if self.detail then
+        if map.detail and self.detail then
             local parent = self.detail.parentNode
             parent.removeChild(self.detail)
             self.detail = nil
+            map.detail = false
         end
     end
 end
