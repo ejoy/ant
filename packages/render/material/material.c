@@ -597,32 +597,45 @@ fetch_math_value(lua_State *L, struct attrib_arena* arena, struct attrib* a, int
 
 static inline void
 fetch_sampler(lua_State *L, struct attrib* a, int index){
-	const int datatype = lua_type(L, index);
-	if (datatype == LUA_TTABLE){
+	const int lt = lua_type(L, index);
+	if (lt == LUA_TTABLE){
 		a->u.t.stage	= fetch_stage(L, index);
 		a->u.t.handle	= fetch_value_handle(L, index);
-	} else if (datatype == LUA_TNUMBER) {
+	} else if (lt == LUA_TNUMBER) {
 		a->u.t.handle = (uint32_t)luaL_checkinteger(L, index);
 	} else {
-		luaL_error(L, "Invalid data for 'texture' value, type:%s, should be table with 'value' field, or bgfx texture handle", lua_typename(L, datatype));
+		luaL_error(L, "Invalid type for 'texture':%s, bgfx texture handle or table:{stage=0, value=bgfxhandle}", lua_typename(L, lt));
 	}
 }
 
 static inline void
 fetch_image(lua_State *L, struct attrib* a, int index){
-	luaL_checktype(L, index, LUA_TTABLE);
-	a->r.mip	= fetch_mip(L, index);
-	a->r.access	= fetch_access(L, index);
-	a->r.stage	= fetch_stage(L, index);
-	a->r.handle = fetch_value_handle(L, index);
+	const int lt = lua_type(L, index);
+	if (lt == LUA_TTABLE){
+		a->r.mip	= fetch_mip(L, index);
+		a->r.access	= fetch_access(L, index);
+		a->r.stage	= fetch_stage(L, index);
+		a->r.handle = fetch_value_handle(L, index);
+	} else if (lt == LUA_TNUMBER){
+		a->u.t.handle = (uint32_t)luaL_checkinteger(L, index);
+	} else {
+		luaL_error(L, "Invalid type for 'image':%s, bgfx texture handle or table:{stage=0, value=bgfxhandle, mip=0, access='r'}", lua_typename(L, lt));
+	}
+
 }
 
 static inline void
 fetch_buffer(lua_State *L, struct attrib* a, int index){
-	luaL_checktype(L, index, LUA_TTABLE);
-	a->r.access	= fetch_access(L, index);
-	a->r.stage	= fetch_stage(L, index);
-	a->r.handle = fetch_value_handle(L, index);
+	const int lt = lua_type(L, index);
+	if (lt == LUA_TTABLE){
+		a->r.access	= fetch_access(L, index);
+		a->r.stage	= fetch_stage(L, index);
+		a->r.handle = fetch_value_handle(L, index);
+	} else if (lt == LUA_TNUMBER){
+		a->u.t.handle = (uint32_t)luaL_checkinteger(L, index);
+	} else {
+		luaL_error(L, "Invalid type for 'image':%s, bgfx buffer(dynamic/static) handle or table:{stage=0, value=bufferhandle, access='r'}", lua_typename(L, lt));
+	}
 }
 
 static void
