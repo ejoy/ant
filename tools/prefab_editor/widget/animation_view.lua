@@ -790,15 +790,16 @@ local function get_clips_filename()
     return string.sub(prefab_filename, 1, -8) .. ".event"
 end
 
-function m.save_keyevent()
-    local prefab_filename = prefab_mgr:get_current_filename()
+function m.save_keyevent(filename)
+    local prefab_filename = filename or prefab_mgr:get_current_filename():sub(1, -8) .. ".event"
     --utils.write_file(prefab_filename:sub(1, -8) .. ".lua", "return " .. utils.table_to_string(to_runtime_event(anim_key_event)))
-    utils.write_file(prefab_filename:sub(1, -8) .. ".event", stringify(to_runtime_event(anim_key_event)))
+    utils.write_file(prefab_filename, stringify(to_runtime_event(anim_key_event)))
 end
 function m.save_clip(path)
-    to_runtime_clip()
-    local clips = get_runtime_clips()
-    if not clips or #clips < 1 then return end
+    m.save_keyevent(path)
+    -- to_runtime_clip()
+    -- local clips = get_runtime_clips()
+    -- if not clips or #clips < 1 then return end
     
     -- local clip_filename = path
     -- if not clip_filename then
@@ -1393,8 +1394,11 @@ function m.load_clips()
                 for _, ev in ipairs(evs.event_list) do
                     if ev.link_info then
                         local slot_eid = hierarchy.slot_list[ev.link_info.slot_name]
-                        assert(slot_eid)
-                        ev.link_info.slot_eid = slot_eid
+                        if slot_eid then
+                            ev.link_info.slot_eid = slot_eid
+                        else
+                            ev.link_info.slot_name = ""
+                        end
                     end
                 end
             end
@@ -1417,10 +1421,14 @@ local function construct_edit_animations(eid)
     local parentNode = hierarchy:get_node(hierarchy:get_node(eid).parent)
     
     local events = m.load_clips()
-    local keyevents = #events > 0 and from_runtime_event(events) or {}
-    if #events > 0 then
-        set_event_dirty(-1)
+    local keyevents = {}
+    if events then
+        keyevents = #events > 0 and from_runtime_event(events) or {}
+        if #events > 0 then
+            set_event_dirty(-1)
+        end
     end
+    
 
     for key, anim in pairs(animations) do
         if not anim_clips[key] then

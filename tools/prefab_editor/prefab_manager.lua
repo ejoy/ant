@@ -644,7 +644,7 @@ function m:save_prefab(path)
         return
     end
     utils.write_file(filename, stringify(new_template))
-    anim_view.save_clip(string.sub(filename, 1, -8) .. ".clips")
+    anim_view.save_clip(string.sub(filename, 1, -8) .. ".event")
     self:open(filename)
     world:pub {"ResourceBrowser", "dirty"}
 end
