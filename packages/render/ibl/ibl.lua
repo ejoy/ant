@@ -10,6 +10,8 @@ local sampler = renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
 local icompute = ecs.import.interface "ant.render|icompute"
+local iexposure = ecs.import.interface "ant.camera|iexposure"
+
 local ibl_viewid = viewidmgr.get "ibl"
 
 local thread_group_size<const> = 8
@@ -37,7 +39,7 @@ local cubemap_flags<const> = sampler.sampler_flag {
 }
 
 local ibl_textures = {
-    source = {facesize = 0, stage=0, texture={handle=nil}},
+    source = {facesize = 0, stage=0, handle=nil},
     irradiance   = {
         handle = nil,
         size = 0,
@@ -120,18 +122,40 @@ local function create_LUT_entity()
         "LUT_builder", "/pkg/ant.resources/materials/ibl/build_LUT.material", dispatchsize)
 end
 
+local ibl_mb = world:sub{"ibl_changed"}
+local exp_mb = world:sub{"exposure_changed"}
+
+local function update_ibl_param(intensity)
+    local sa = imaterial.system_attribs()
+    local mq = w:singleton("main_queue", "camera_ref:in")
+    local ce = world:entity(mq.camera_ref)
+    local ev = iexposure.exposure(ce)
+
+    intensity = intensity or 1
+    intensity = intensity * ibl_textures.intensity * ev
+    sa:update("u_ibl_param", math3d.vector(ibl_textures.prefilter.mipmap_count, intensity))
+end
+
+function ibl_sys:data_changed()
+    for _, enable in ibl_mb:unpack() do
+        update_ibl_param(enable and 1.0 or 0.0)
+    end
+
+    for _ in exp_mb:each() do
+        update_ibl_param()
+    end
+end
+
+local sample_count<const> = 512
+
 function ibl_sys:render_preprocess()
     local source_tex = ibl_textures.source
     for e in w:select "irradiance_builder dispatch:in" do
         local dis = e.dispatch
-        local properties = dis.properties
-        imaterial.set_property_directly(properties, "s_source", source_tex)
-        properties.s_irradiance = icompute.create_image_property(ibl_textures.irradiance.handle, 1, 0, "w")
-    
-        if properties.u_build_ibl_param then
-            local ip_v = properties.u_build_ibl_param.value
-            ip_v.v = math3d.set_index(ip_v, 3, ibl_textures.source.facesize)
-        end
+        local material = dis.material
+        material.s_source = source_tex
+        material.s_irradiance = icompute.create_image_property(ibl_textures.irradiance.handle, 1, 0, "w")
+        material.u_build_ibl_param = math3d.vector(sample_count, 0, ibl_textures.source.facesize, 0.0)
 
         icompute.dispatch(ibl_viewid, dis)
         w:remove(e)
@@ -139,17 +163,13 @@ function ibl_sys:render_preprocess()
 
     for e in w:select "prefilter_builder dispatch:in prefilter:in" do
         local dis = e.dispatch
-        local properties = dis.properties
-        imaterial.set_property_directly(properties, "s_source", source_tex)
+        local material = dis.material
+        material.s_source = source_tex
 
         local prefilter = e.prefilter
-        local ip = properties.u_build_ibl_param
-        if ip then
-            local ipv = ip.value
-            ipv.v = math3d.set_index(ipv, 3, ibl_textures.source.facesize, prefilter.roughness)
-        end
+        material.u_build_ibl_param = math3d.vector(sample_count, 0, ibl_textures.source.facesize, prefilter.roughness)
         local prefilter_stage<const> = 1
-        properties.s_prefilter = icompute.create_image_property(ibl_textures.prefilter.handle, prefilter_stage, prefilter.mipidx, "w")
+        material.s_prefilter = icompute.create_image_property(ibl_textures.prefilter.handle, prefilter_stage, prefilter.mipidx, "w")
 
         icompute.dispatch(ibl_viewid, dis)
         w:remove(e)
@@ -158,8 +178,8 @@ function ibl_sys:render_preprocess()
     local LUT_stage<const> = 0
     for e in w:select "LUT_builder dispatch:in" do
         local dis = e.dispatch
-        local properties = dis.properties
-        properties.s_LUT = icompute.create_image_property(ibl_textures.LUT.handle, LUT_stage, 0, "w")
+        local material = dis.material
+        material.s_LUT = icompute.create_image_property(ibl_textures.LUT.handle, LUT_stage, 0, "w")
         icompute.dispatch(ibl_viewid, dis)
 
         w:remove(e)
@@ -212,12 +232,18 @@ local function create_ibl_entities(ibl)
     create_LUT_entity()
 end
 
+local function update_ibl_texture_info()
+    local sa = imaterial.system_attribs()
+    sa:update("s_irradiance", ibl_textures.irradiance.handle)
+    sa:update("s_prefilter", ibl_textures.prefilter.handle)
+    sa:update("s_LUT",  ibl_textures.LUT.handle)
+
+    update_ibl_param()
+end
+
 function iibl.filter_all(ibl)
     build_ibl_textures(ibl)
     create_ibl_entities(ibl)
-end
 
---TODO: template usage
-function iibl.get_ibl_textures()
-    return ibl_textures
+    update_ibl_texture_info()
 end

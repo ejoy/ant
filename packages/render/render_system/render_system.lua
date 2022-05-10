@@ -2,12 +2,12 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local bgfx = require "bgfx"
-
-local isp		= ecs.import.interface "ant.render|isystem_properties"
+local bgfx 		= require "bgfx"
+local math3d 	= require "math3d"
 local irender	= ecs.import.interface "ant.render|irender"
 local ies		= ecs.import.interface "ant.scene|ifilter_state"
-local icamera	= ecs.import.interface "ant.camera|icamera"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local itimer	= ecs.import.interface "ant.timer|itimer"
 local render_sys = ecs.system "render_system"
 
 local viewidmgr = require "viewid_mgr"
@@ -60,8 +60,18 @@ function render_sys:entity_init()
 	end
 end
 
+local time_param = math3d.ref(math3d.vector(0.0, 0.0, 0.0, 0.0))
+local starttime = itimer.current()
+
+local function update_timer_param()
+	local sa = imaterial.system_attribs()
+	local timepassed = itimer.current()-starttime
+	time_param.v = math3d.set_index(time_param, 1, timepassed*0.001, itimer.delta()*0.001)
+	sa:update("u_time", time_param)
+end
+
 function render_sys:commit_system_properties()
-	isp.update()
+	update_timer_param()
 end
 
 local function has_filter_tag(t, filter)

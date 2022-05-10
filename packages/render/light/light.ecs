@@ -41,6 +41,7 @@ system "light_system"
     .method "update_system_properties"
     .method "component_init"
     .method "entity_init"
+    .method "init_world"
     .method "entity_remove"
 
 policy "light"

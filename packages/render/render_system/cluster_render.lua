@@ -3,10 +3,12 @@ local world = ecs.world
 local w = world.w
 
 local bgfx      = require "bgfx"
+local math3d    = require "math3d"
 local declmgr   = require "vertexdecl_mgr"
 local viewidmgr = require "viewid_mgr"
 local ilight    = ecs.import.interface "ant.render|ilight"
 local icompute  = ecs.import.interface "ant.render|icompute"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local cfs = ecs.system "cluster_forward_system"
 
@@ -167,11 +169,23 @@ function cfs:init()
     }
 end
 
+local function update_render_info()
+    -- we assume all the buffer will not change
+    local sa = imaterial.system_attribs()
+    sa:update("b_light_grids",          assert(cluster_buffers.light_grids.handle))
+    sa:update("b_light_index_lists",    assert(cluster_buffers.light_index_lists.handle))
+    sa:update("b_light_info",           assert(cluster_buffers.light_info.handle))
+
+    sa:update("u_cluster_size",         math3d.vector(cluster_size))
+end
+
 function cfs:init_world()
     local mq = w:singleton("main_queue", "camera_ref:in")
     camera_frustum_mb = world:sub{"camera_changed", mq.camera_ref}
 
     cluster_buffers.light_info.handle = ilight.light_buffer()
+
+    update_render_info()
 
     --build
     local be = w:singleton("cluster_build_aabb", "dispatch:in")
@@ -188,14 +202,6 @@ function cfs:init_world()
     cm.b_light_grids         = icompute.create_buffer_property(cluster_buffers.light_grids, "cull")
     cm.b_light_index_lists   = icompute.create_buffer_property(cluster_buffers.light_index_lists, "cull")
     cm.b_light_info          = icompute.create_buffer_property(cluster_buffers.light_info, "cull")
-
-    --render
-    local cr = w:object("cluster_render", 1)
-    local rm = cr.material
-
-    rm.b_light_grids          = icompute.create_buffer_property(cluster_buffers.light_grids, "render")
-    rm.b_light_index_lists    = icompute.create_buffer_property(cluster_buffers.light_index_lists, "render")
-    rm.b_light_info           = icompute.create_buffer_property(cluster_buffers.light_info, "render")
 end
 
 local function cull_lights(viewid)
@@ -225,6 +231,22 @@ function cfs:entity_remove()
     end
 end
 
+local function update_shading_param(ce)
+    local f = ce.camera.frustum
+    local near, far = f.n, f.f
+    local num_depth_slices = cluster_size[3]
+	local log_farnear = math.log(far/near, 2)
+	local log_near = math.log(near, 2)
+
+    local mq = w:singleton("main_queue", "render_target:in")
+    local vr = mq.render_target.view_rect
+
+    local sa = imaterial.system_attribs()
+	sa:update("u_cluster_shading_param", math3d.vector(
+		num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
+		vr.w / cluster_size[1], vr.h/cluster_size[2]))
+end
+
 function cfs:data_changed()
     if not ilight.use_cluster_shading() then
         return
@@ -235,8 +257,9 @@ function cfs:data_changed()
         camera_frustum_mb = world:sub{"camera_changed", msg[3]}
     end
 
-    for _ in camera_frustum_mb:each() do
+    for _, ceid in camera_frustum_mb:unpack() do
         build_cluster_aabb_struct(main_viewid)
+        update_shading_param(world:entity(ceid))
     end
 
     if rebuild_light_index_list then

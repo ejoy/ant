@@ -79,19 +79,8 @@ local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_siz
 	maxextent[1], maxextent[2] = newmax[1], newmax[2]
 end
 
-local function light_matrix(center_WS, lightdir)
-	if math3d.isequal(mc.ZAXIS, lightdir) then
-		return math3d.set_columns(mc.IDENTITY_MAT, mc.XAXIS, mc.YAXIS, mc.ZAXIS, center_WS)
-	end
-
-	if math3d.isequal(mc.NZAXIS, lightdir) then
-		return math3d.set_columns(mc.IDENTITY_MAT, mc.XAXIS, mc.NYAXIS, mc.NZAXIS, center_WS)
-	end
-	local yaxis = math3d.cross(mc.ZAXIS, lightdir)
-	local xaxis = math3d.cross(yaxis, lightdir)
-
-	return math3d.set_columns(mc.IDENTITY_MAT, xaxis, yaxis, lightdir, center_WS)
-end
+local csm_matrices		= {mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT}
+local split_distances_VS	= {0, 0, 0, 0}
 
 local function update_camera_matrices(camera, lightmat)
 	camera.viewmat	= math3d.inverse(lightmat)	--just transpose?
@@ -99,18 +88,17 @@ local function update_camera_matrices(camera, lightmat)
 	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
-local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, sc_eid)
+local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, shadow_ce)
 	local center_WS = math3d.points_center(corners_WS)
 	local min_extent, max_extent
 
-	local se = world:entity(sc_eid)
-	local srt = se.scene.srt
+	local srt = shadow_ce.scene.srt
 	srt.r.q = math3d.torotation(lightdir)
 	srt.t.v = center_WS
 	local lightmat = math3d.matrix(srt)
-	se.scene._worldmat = lightmat
+	shadow_ce.scene._worldmat = lightmat
 
-	local camera = se.camera
+	local camera = shadow_ce.camera
 	if stabilize then
 		local radius = math3d.points_radius(corners_WS, center_WS)
 		--radius = math.ceil(radius * 16.0) / 16.0	-- round to 16
@@ -152,17 +140,21 @@ local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_s
 	end
 end
 
-local function calc_shadow_camera(maincamera, frustum, lightdir, shadowmap_size, stabilize, sc_eid)
+local function calc_shadow_camera(maincamera, frustum, lightdir, shadowmap_size, stabilize, shadow_ce)
 	local vp = math3d.mul(math3d.projmat(frustum), maincamera.viewmat)
 
 	local corners_WS = math3d.frustum_points(vp)
-	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, sc_eid)
+	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, shadow_ce)
 end
 
 local function calc_split_distance(frustum)
 	local corners_VS = math3d.frustum_points(math3d.projmat(frustum))
 	local minv, maxv = math3d.minmax(corners_VS)
 	return math3d.index(maxv, 3)
+end
+
+local function calc_csm_matrix_attrib(csmidx, vp)
+	return math3d.mul(ishadow.crop_matrix(csmidx), vp)
 end
 
 local function update_shadow_camera(dl, maincamera)
@@ -174,8 +166,10 @@ local function update_shadow_camera(dl, maincamera)
 	for qe in w:select "csm_queue camera_ref:in csm:in" do
 		local csm = qe.csm
 		local cf = csmfrustums[csm.index]
-		calc_shadow_camera(maincamera, cf, lightdir, setting.shadowmap_size, setting.stabilize, qe.camera_ref)
-		csm.split_distance_VS = calc_split_distance(cf)
+		local shadow_ce = world:entity(qe.camera_ref)
+		calc_shadow_camera(maincamera, cf, lightdir, setting.shadowmap_size, setting.stabilize, shadow_ce)
+		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
+		split_distances_VS[csm.index] = calc_split_distance(cf)
 	end
 end
 
@@ -332,6 +326,20 @@ function sm:data_changed()
 	end
 end
 
+local function commit_csm_matrices_attribs()
+	local sa = imaterial.system_attribs()
+	sa:update("u_csm_matrix", csm_matrices)
+	sa:update("u_csm_split_distances", split_distances_VS)
+end
+
+function sm:init_world()
+	local sa = imaterial.system_attribs()
+	sa:update("s_shadowmap", fbmgr.get_rb(ishadow.fb_index(), 1).handle)
+
+	sa:update("u_shadow_param1", math3d.vector(ishadow.shadow_param()))
+	sa:update("u_shadow_param2", ishadow.color())
+end
+
 function sm:update_camera()
 	local dl = w:singleton("csm_directional_light", "light:in scene:in")
 	if dl then
@@ -341,12 +349,16 @@ function sm:update_camera()
 			update_shadow_camera(dl, camera.camera)
 			shadow_camera_rebuild = false
 		else
-			for qe in w:select "csm_queue camera_ref:in" do
+			for qe in w:select "csm_queue csm:in camera_ref:in" do
 				local cref = qe.camera_ref
 				local camera = world:entity(cref)
 				update_camera_matrices(camera.camera, camera.scene._worldmat)
+				local idx = qe.csm.index
+				csm_matrices[idx] = calc_csm_matrix_attrib(idx, camera.viewprojmat)
 			end
 		end
+
+		commit_csm_matrices_attribs()
 	end
 end
 
@@ -413,7 +425,6 @@ local function which_material(skinning)
 	return skinning and gpu_skinning_material or shadow_material
 end
 
-local bgfx = require "bgfx"
 local omni_stencils = {
 	[0] = bgfx.make_stencil{
 		TEST="EQUAL",
