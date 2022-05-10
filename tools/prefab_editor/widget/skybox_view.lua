@@ -59,7 +59,7 @@ function SkyboxView:_init()
                 local ibl_t = iblT(self.eid)
                 ibl_t.intensity = value
                 world:entity(self.eid).ibl.intensity = value
-                iibl.get_ibl().intensity = value
+                iibl.set_ibl_intensity(value)
                 -- prefab_mgr:save_prefab()
                 -- prefab_mgr:reload()
             end,

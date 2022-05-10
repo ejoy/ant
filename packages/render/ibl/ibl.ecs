@@ -1,12 +1,13 @@
 system "ibl_system"
     .implement "ibl/ibl.lua"
+    .method "data_changed"
     .method "render_preprocess"
 
 interface "iibl"
     .implement "ibl/ibl.lua"
     .method "get_ibl"
+    .method "set_ibl_intensity"
     .method "filter_all"
-    .method "get_ibl_textures"
 
 component "irradiance_builder"
 component "prefilter_builder"
