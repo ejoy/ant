@@ -1099,20 +1099,51 @@ lcobject_new(lua_State *L) {
 }
 
 static int
+lsa_update(lua_State *L){
+	luaL_checktype(L, 1, LUA_TTABLE);
+	const char* name = luaL_checkstring(L, 2);
+	if (LUA_TNUMBER != lua_getfield(L, 1, name)){
+		lua_pop(L, 1);
+		return luaL_error(L, "Invalid system attrib:%s", name);
+	}
+	
+	const int arena_idx = lua_upvalueindex(1);
+	struct attrib_arena* arena = (struct attrib_arena*)lua_touserdata(L, arena_idx);
+	const uint16_t id = (uint16_t)lua_tointeger(L, -1);
+	struct attrib* a = al_attrib(arena, id);
+	update_attrib(L, arena, a, 3);
+	lua_pop(L, 1);
+	return 0;
+}
+
+static int
 lsystem_attribs_new(lua_State *L){
-	CAPI_INIT(L, 1);
+	const int arena_idx = 1;
+	CAPI_INIT(L, arena_idx);
 	luaL_checktype(L, 2, LUA_TTABLE);
 
 	lua_newtable(L);
 	const int lookup_idx = lua_gettop(L);
 	for (lua_pushnil(L); lua_next(L, 2) != 0; lua_pop(L, 1)) {
 		const char* name = lua_tostring(L, -2);
-		const uint16_t id = load_attrib_from_data(L, 1, -1, INVALID_ATTRIB);
+		const uint16_t id = load_attrib_from_data(L, arena_idx, -1, INVALID_ATTRIB);
 		lua_pushinteger(L, id);
 		lua_setfield(L, lookup_idx, name);
 	}
 
-	lua_setiuservalue(L, 1, 1);	// system attrib table as cobject 1 user value
+	if (luaL_newmetatable(L, "ANT_SYSTEM_ATTRIBS")){
+		luaL_Reg l[] = {
+			{"update", 	lsa_update},
+			{NULL,		NULL},
+		};
+		lua_pushvalue(L, 1);	//push cobject as upvalue 1
+		luaL_setfuncs(L, l , 1);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+	}
+
+	lua_pushvalue(L, -1);		// system attrib table
+	lua_setiuservalue(L, 1, 1);	// set system attrib table as cobject 1 user value
 	return 1;
 }
 

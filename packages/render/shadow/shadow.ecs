@@ -13,6 +13,7 @@ system "shadow_system"
     .method "update_camera"
     --.method "refine_filter"
     .method "refine_camera"
+    .method "commit_system_properties"
     .method "render_submit"
 
 system "shadow_primitive_system"

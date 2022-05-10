@@ -22,16 +22,17 @@ local function buffer_value(stage, access)
 	return {stage=stage, access=access, value=nil, type='b'}
 end
 
+local function which_uniform_type(mv)
+	local vv = math3d.tovalue(mv)
+	return #vv == 16 and "m4" or "v4"
+end
+
 local function check(properties)
 	for k, v in pairs(properties) do
 		if v.type == "u" or v.type == "s" then
 			local n = 1
 			local ut
 			if v.stage == nil then
-				local function which_uniform_type(mv)
-					local vv = math3d.tovalue(mv)
-					return #vv == 16 and "m4" or "v4"
-				end
 				if type(v.value) == "table" then
 					n = #v.value
 					ut = which_uniform_type(v.value[1])
@@ -57,9 +58,9 @@ local SYS_ATTRIBS = rmat.system_attribs(CMATOBJ, check{
 	u_cluster_size			= {type="u", value=mc.ZERO},
 	u_cluster_shading_param	= {type="u", value=mc.ZERO},
 	u_light_count			= {type="u", value=mc.ZERO},
-	b_light_grids			= buffer_value(-1, "r"),
-	b_light_index_lists		= buffer_value(-1, "r"),
-	b_light_info			= buffer_value(-1, "r"),
+	b_light_grids			= buffer_value(10, "r"),
+	b_light_index_lists		= buffer_value(11, "r"),
+	b_light_info			= buffer_value(12, "r"),
 	u_time					= {type="u", value=mc.ZERO},
 
 	--IBL

@@ -7,6 +7,7 @@ local mathpkg   = import_package "ant.math"
 local mu, mc    = mathpkg.util, mathpkg.constant
 
 local defcomp 	= import_package "ant.general".default
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local ic = ecs.interface "icamera"
 
@@ -168,8 +169,18 @@ local function update_camera(e)
     camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
+local function update_camera_info(ce)
+    local sa = imaterial.system_attribs()
+    local camerapos = iom.get_position(ce)
+	local f = ic.get_frustum(ce)
+	sa:update("u_eyepos", camerapos)
+	sa:update("u_camera_param", math3d.vector(f.n, f.f, 0.0, 0.0))
+end
+
 function cameraview_sys:update_mainview_camera()
     for v in w:select "main_queue camera_ref:in" do
-        update_camera(world:entity(v.camera_ref))
+        local ce = world:entity(v.camera_ref)
+        update_camera(ce)
+        update_camera_info(ce)
     end
 end

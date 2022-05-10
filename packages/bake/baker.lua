@@ -15,17 +15,14 @@ local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
 
 local mathpkg   = import_package "ant.math"
-local mu        = mathpkg.uitl
+local mu, mc    = mathpkg.uitl, mathpkg.constant
 
 local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local icamera   = ecs.import.interface "ant.camera|icamera"
 local ics       = ecs.import.interface "ant.render|icluster_render"
-local isp       = ecs.import.interface "ant.render|isystem_properties"
 
-local mathpkg   = import_package "ant.math"
-local mc        = mathpkg.constant
 
 local bake_fbw, bake_fbh, fb_hemi_unit_size = bake.framebuffer_size()
 local fb_hemi_half_size<const> = fb_hemi_unit_size/2

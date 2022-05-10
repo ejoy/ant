@@ -13,7 +13,6 @@ local mc        = mathpkg.constant
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local ies       = ecs.import.interface "ant.scene|ifilter_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
-local isp 		= ecs.import.interface "ant.render|isystem_properties"
 local iwd       = ecs.import.interface "ant.render|iwidget_drawer"
 local iefk      = ecs.import.interface "ant.efk|iefk"
 local resource_browser  = ecs.require "widget.resource_browser"

@@ -7,6 +7,7 @@ local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local iexposure = ecs.import.interface "ant.camera|iexposure"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local setting	= import_package "ant.settings".setting
 local enable_cluster_shading = setting:data().graphic.lighting.cluster_shading ~= 0
@@ -269,8 +270,10 @@ local light_buffer = bgfx.create_dynamic_vertex_buffer(1, declmgr.get "t40".hand
 
 local function update_light_buffers()
 	local lights = create_light_buffers()
+	local count = #lights
 	if #lights > 0 then
 		bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
+		return count
 	end
 end
 
@@ -327,6 +330,13 @@ function lightsys:entity_init()
 	end
 end
 
+function lightsys:init_world()
+	if not ilight.use_cluster_shading() then
+		local sa = imaterial.system_attribs()
+		sa:update("b_light_info", ilight.light_buffer())
+	end
+end
+
 function lightsys:entity_remove()
 	for _ in w:select "REMOVED light" do
 		setChanged()
@@ -336,6 +346,8 @@ end
 
 function lightsys:update_system_properties()
 	if isChanged() then
-		update_light_buffers()
+		local count = update_light_buffers()
+		local sa = imaterial.system_attribs()
+		sa:update("u_light_count", math3d.vector(count, 0, 0, 0))
 	end
 end
