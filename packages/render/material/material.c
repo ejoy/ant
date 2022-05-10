@@ -63,8 +63,9 @@ struct attrib {
 	};
 };
 
-// uv1: system attribs
-// uv2: material invalid attrib list
+// uv1: attrib buffer
+// uv2: system attribs
+// uv3: material invalid attrib list
 struct attrib_arena {
 	bgfx_interface_vtbl_t *bgfx;
 	struct math3d_api *math;
@@ -101,7 +102,7 @@ arena_new(lua_State *L, bgfx_interface_vtbl_t *bgfx, struct math3d_api *mapi, st
 	a->a = NULL;
 	//invalid material attrib list
 	lua_newtable(L);
-	lua_setiuservalue(L, -2, 2);
+	lua_setiuservalue(L, -2, 3);	//set invalid table as uv 3
 	return a;
 }
 
@@ -257,34 +258,34 @@ mi_submit(struct attrib_arena *arena, struct material *mat, struct material_inst
 /////////////////////////////////////////////////////////////////////////////
 struct attrib *
 arena_alloc(lua_State *L, int idx) {
-	struct attrib_arena * a = (struct attrib_arena *)lua_touserdata(L, idx);
+	struct attrib_arena * arena = (struct attrib_arena *)lua_touserdata(L, idx);
 	struct attrib *ret;
-	if (a->freelist != INVALID_ATTRIB) {
-		ret = &a->a[a->freelist];
-		a->freelist = ret->next;
-	} else if (a->n < a->cap) {
-		ret = &a->a[a->n];
-		a->n++;
-	} else if (a->cap == 0) {
+	if (arena->freelist != INVALID_ATTRIB) {
+		ret = al_attrib(arena, arena->freelist);
+		arena->freelist = ret->next;
+	} else if (arena->n < arena->cap) {
+		ret = al_attrib(arena, arena->n);
+		arena->n++;
+	} else if (arena->cap == 0) {
 		// new arena
-		struct attrib * arena = (struct attrib *)lua_newuserdatauv(L, sizeof(struct attrib) * DEFAULT_ARENA_SIZE, 0);
+		struct attrib * al = (struct attrib *)lua_newuserdatauv(L, sizeof(struct attrib) * DEFAULT_ARENA_SIZE, 0);
 		lua_setiuservalue(L, idx, 1);
-		a->a = arena;
-		a->cap = DEFAULT_ARENA_SIZE;
-		a->n = 1;
-		ret = a->a;
+		arena->a = al;
+		arena->cap = DEFAULT_ARENA_SIZE;
+		arena->n = 1;
+		ret = arena->a;
 	} else {
 		// resize arena
-		int newcap = a->cap * 2;
+		int newcap = arena->cap * 2;
 		if (newcap > INVALID_ATTRIB)
 			luaL_error(L, "Too many attribs");
-		struct attrib * arena = (struct attrib *)lua_newuserdatauv(L, sizeof(struct attrib) * newcap, 0);
-		memcpy(arena, a->a, sizeof(struct attrib) * a->n);
-		a->a = arena;
+		struct attrib * al = (struct attrib *)lua_newuserdatauv(L, sizeof(struct attrib) * newcap, 0);
+		memcpy(al, arena->a, sizeof(struct attrib) * arena->n);
+		arena->a = al;
 		lua_setiuservalue(L, idx, 1);
-		ret = &a->a[a->n++];
+		ret = al_attrib(arena, arena->n++);
 	}
-	al_init_attrib(a, ret);
+	al_init_attrib(arena, ret);
 	return ret;
 }
 
@@ -350,8 +351,11 @@ static int
 lmaterial_attribs(lua_State *L) {
 	struct material *mat = (struct material *)luaL_checkudata(L, 1, "ANT_MATERIAL");
 	lua_settop(L, 1);
-	int t = lua_getiuservalue(L, 1, 2);
-	CAPI_INIT(L, 2);
+	if (LUA_TUSERDATA != lua_getiuservalue(L, 1, 2)){
+		return luaL_error(L, "Invalid material, uservalue in 2 is not 'cobject'");
+	}
+	const int arena_idx = 2;
+	CAPI_INIT(L, arena_idx);
 	struct attrib_arena *arena = CAPI_ARENA;
 	lua_newtable(L);
 	int result_index = lua_gettop(L);
@@ -445,7 +449,9 @@ static int
 lmaterial_instance(lua_State *L) {
 	struct material_instance * mi = (struct material_instance *)lua_newuserdatauv(L, sizeof(*mi), 0);
 	mi->patch_attrib = INVALID_ATTRIB;
-	lua_getiuservalue(L, 1, 1);		// push material instance metatable
+	if (LUA_TTABLE != lua_getiuservalue(L, 1, 1)){	// push material instance metatable
+		return luaL_error(L, "Invalid material object, uservalue in 1 is not material instance metatable");
+	}
 	int n = (int)lua_rawlen(L, -1);	// free instance attrib
 	if (n > 0) {
 		lua_getfield(L, -1, "__gc");
@@ -706,52 +712,6 @@ update_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int da
 }
 
 static inline uint16_t
-load_attrib_array(lua_State *L, int arena_idx, int data_idx, int num, uint16_t id, uint16_t type){
-	struct attrib_arena* arena = (struct attrib_arena*)lua_touserdata(L, arena_idx);
-	for (int i=0; i<num; ++i){
-		lua_geti(L, data_idx, i+1);
-		struct attrib* a = arena_alloc(L, arena_idx);
-		a->type = type;
-		fetch_attrib(L, arena, a, -1);
-		a->next = id;
-		id = al_attrib_id(arena, a);
-		lua_pop(L, 1);
-	}
-
-	return id;
-}
-
-static uint16_t
-load_attrib(lua_State *L, int arena_idx, int data_idx, int num, uint16_t id, uint16_t type) {
-	struct attrib_arena* arena = (struct attrib_arena*)lua_touserdata(L, arena_idx);
-	if (num == 1) {
-		struct attrib * na = arena_alloc(L, arena_idx);
-		na->type = type;
-		na->next = id;
-		fetch_attrib(L, arena, na, data_idx);
-		return al_attrib_id(arena, na);
-	}
-
-	luaL_checktype(L, data_idx, LUA_TTABLE);
-
-	const int n = (int)lua_rawlen(L, data_idx);
-	if (n > 0){
-		assert(n == num);
-		return load_attrib_array(L, arena_idx, data_idx, num, id, type);
-	}
-
-	if (LUA_TTABLE == lua_getfield(L, data_idx, "value")){
-		id = load_attrib_array(L, arena_idx, data_idx, num, id, type);
-		lua_pop(L, 1);
-		return id;
-	}
-
-	lua_pop(L, 1);
-	luaL_error(L, "Invalid multi uniform value, table field 'value' should be table");
-	return INVALID_ATTRIB;
-}
-
-static inline uint16_t
 count_data_num(lua_State *L, int data_index, uint16_t type){
 	uint16_t n = 1;
 	if (is_uniform_attrib(type)){
@@ -815,7 +775,9 @@ lset_attrib(lua_State *L) {
 	const char* attribname = luaL_checkstring(L, 2);
 	const int arena_idx = lua_upvalueindex(2);
 	struct attrib_arena * arena = (struct attrib_arena *)lua_touserdata(L, arena_idx);
-	lua_getiuservalue(L, lua_upvalueindex(1), 3);
+	if (LUA_TTABLE != lua_getiuservalue(L, lua_upvalueindex(1), 3)){
+		return luaL_error(L, "Invalid uservalue in function upvalue 1, need a lookup table in material uservalue 3");
+	}
 	lua_pushvalue(L, 2);
 	if (lua_rawget(L, -2) != LUA_TNUMBER) {
 		return luaL_error(L, "set invalid attrib %s", luaL_tolstring(L, 2, NULL));
@@ -837,7 +799,7 @@ lmaterial_gc(lua_State *L) {
 	struct material *mat = (struct material *)lua_touserdata(L, 1);
 	// material_instance metatable
 	if (lua_getiuservalue(L, 1, 1) != LUA_TTABLE) {
-		return 0;
+		return luaL_error(L, "Invalid material data in uservalue 1, should be material instance metatable");
 	}
 	int free_instance = (int)lua_rawlen(L, -1);
 	int instance_index = lua_gettop(L);
@@ -845,7 +807,10 @@ lmaterial_gc(lua_State *L) {
 		return 0;
 	}
 	lua_getupvalue(L, -1, 2);	// cobject
-	lua_getiuservalue(L, -1, 2);// material invalid attrib list table
+	assert(lua_type(L, -1) == LUA_TUSERDATA);
+	if (LUA_TTABLE == lua_getiuservalue(L, -1, 3)){// material invalid attrib list table
+		luaL_error(L, "Invalid uservalue in 'cobject', uservalue in 3 should ba invalid material atrrib table");
+	}
 	int n = (int)lua_rawlen(L, -1);
 	if (mat->attrib != INVALID_ATTRIB) {
 		lua_pushinteger(L, mat->attrib);
@@ -1041,7 +1006,8 @@ create_material_instance_metatable(lua_State *L) {
 // 3: uniforms (table)
 static int
 lmaterial_new(lua_State *L) {
-	CAPI_INIT(L, 1);
+	const int arena_idx = 1;
+	CAPI_INIT(L, arena_idx);
 	uint64_t state;
 	uint32_t rgba;
 	get_state(L, 2, &state, &rgba);
@@ -1069,7 +1035,7 @@ lmaterial_new(lua_State *L) {
 	const int lookup_idx = lua_gettop(L);
 
 	//system attrib table
-	if (lua_getiuservalue(L, 1, 1) != LUA_TTABLE){
+	if (lua_getiuservalue(L, arena_idx, 2) != LUA_TTABLE){
 		luaL_error(L, "Invalid cobject");
 	}
 	const int sa_lookup_idx = lua_gettop(L);
@@ -1140,10 +1106,9 @@ lsa_update(lua_State *L){
 		lua_pop(L, 1);
 		return luaL_error(L, "Invalid system attrib:%s", name);
 	}
-	
+	const uint16_t id = (uint16_t)lua_tointeger(L, -1);
 	const int arena_idx = lua_upvalueindex(1);
 	struct attrib_arena* arena = (struct attrib_arena*)lua_touserdata(L, arena_idx);
-	const uint16_t id = (uint16_t)lua_tointeger(L, -1);
 	struct attrib* a = al_attrib(arena, id);
 	update_attrib(L, arena, a, 3);
 	lua_pop(L, 1);
@@ -1178,7 +1143,7 @@ lsystem_attribs_new(lua_State *L){
 	lua_setmetatable(L, -2);
 
 	lua_pushvalue(L, -1);		// system attrib table
-	lua_setiuservalue(L, 1, 1);	// set system attrib table as cobject 1 user value
+	lua_setiuservalue(L, 1, 2);	// set system attrib table as cobject 1 user value
 	return 1;
 }
 

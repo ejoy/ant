@@ -135,7 +135,7 @@ end
 local imaterial = ecs.interface "imaterial"
 
 function imaterial.set_property(e, who, what)
-	--e.render_object.material[who] = what
+	e.render_object.material[who] = what
 end
 
 function imaterial.get_property(e, who)
@@ -170,14 +170,18 @@ local function to_v(t)
 	local function to_math_v(v)
 		return #v == 4 and math3d.vector(v) or math3d.matrix(v)
 	end
+
+	local v = {type="u"}
 	if type(t[1]) == "number" then
-		return to_math_v(t)
+		v.value = to_math_v(t)
+	else
+		local res = {}
+		for i, v in ipairs(t) do
+			res[i] = to_math_v(v)
+		end
+		v.value = res
 	end
-	local res = {}
-	for i, v in ipairs(t) do
-		res[i] = to_math_v(v)
-	end
-	return res
+	return v
 end
 
 local DEF_PROPERTIES<const> = {}
