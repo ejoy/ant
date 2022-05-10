@@ -150,13 +150,13 @@ local function anim_group_stop_effect(eid)
     end
 end
 
-local function anim_play(e, anim_state, play)
-    anim_state.key_event = to_runtime_event(anim_key_event)
+local function anim_play(e, state, play)
+    state.key_event = to_runtime_event(anim_key_event)
     local group_e = get_anim_group_eid(e, current_anim.name)
     if not group_e then return end
     for _, anim_e in ipairs(group_e) do
         iom.set_position(world:entity(hierarchy:get_node(hierarchy:get_node(anim_e).parent).parent), {0.0,0.0,0.0})
-        play(anim_e, anim_state)
+        play(anim_e, state)
     end
 end
 
@@ -305,25 +305,25 @@ end
 
 
 local function to_runtime_clip()
-    local runtime_clips = {}
-    for _, clip in ipairs(all_clips) do
-        if clip.range[1] >= 0 and clip.range[2] >= clip.range[1] then
-            runtime_clips[#runtime_clips + 1] = {
-                anim_name = clip.anim_name,
-                name = clip.name,
-                range = {clip.range[1] / sample_ratio, clip.range[2] / sample_ratio},
-                speed = clip.speed or 1.0,
-                key_event = to_runtime_event(clip.key_event)
-            }
-        end
-    end
-    for _, group in ipairs(all_groups) do
-        runtime_clips[#runtime_clips + 1] = to_runtime_group(all_clips, group)
-    end
-    if #runtime_clips < 1  then return end
-    if current_e then
-        anim_group_set_clips(current_e, runtime_clips)
-    end
+    -- local runtime_clips = {}
+    -- for _, clip in ipairs(all_clips) do
+    --     if clip.range[1] >= 0 and clip.range[2] >= clip.range[1] then
+    --         runtime_clips[#runtime_clips + 1] = {
+    --             anim_name = clip.anim_name,
+    --             name = clip.name,
+    --             range = {clip.range[1] / sample_ratio, clip.range[2] / sample_ratio},
+    --             speed = clip.speed or 1.0,
+    --             key_event = to_runtime_event(clip.key_event)
+    --         }
+    --     end
+    -- end
+    -- for _, group in ipairs(all_groups) do
+    --     runtime_clips[#runtime_clips + 1] = to_runtime_group(all_clips, group)
+    -- end
+    -- if #runtime_clips < 1  then return end
+    -- if current_e then
+    --     anim_group_set_clips(current_e, runtime_clips)
+    -- end
 end
 
 local function set_event_dirty(num)
@@ -608,7 +608,7 @@ local function show_current_event()
         end
     elseif current_event.event_type == "Effect" then
         if imgui.widget.Button("SelectEffect") then
-            local path = uiutils.get_open_file_path("Prefab", "prefab")
+            local path = uiutils.get_open_file_path("Effect", "efk")
             if path then
                 local rp = lfs.relative(lfs.path(path), global_data.project_root)
                 local path = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
@@ -787,12 +787,13 @@ local stringify     = import_package "ant.serialize".stringify
 
 local function get_clips_filename()
     local prefab_filename = prefab_mgr:get_current_filename()
-    return string.sub(prefab_filename, 1, -8) .. ".clips"
+    return string.sub(prefab_filename, 1, -8) .. ".event"
 end
 
 function m.save_keyevent()
     local prefab_filename = prefab_mgr:get_current_filename()
-    utils.write_file(prefab_filename:sub(1, -8) .. ".lua", "return " .. utils.table_to_string(to_runtime_event(anim_key_event)))
+    --utils.write_file(prefab_filename:sub(1, -8) .. ".lua", "return " .. utils.table_to_string(to_runtime_event(anim_key_event)))
+    utils.write_file(prefab_filename:sub(1, -8) .. ".event", stringify(to_runtime_event(anim_key_event)))
 end
 function m.save_clip(path)
     to_runtime_clip()
@@ -1366,32 +1367,42 @@ function m.load_clips()
             local f = assert(fs.open(path))
             local data = f:read "a"
             f:close()
-            local clips = datalist.parse(data)
-            for _, clip in ipairs(clips) do
-                if clip.key_event then
-                    for _, ke in pairs(clip.key_event) do
-                        for _, e in ipairs(ke.event_list) do
-                            if e.collision and e.collision.shape_type ~= "None" then
-                                if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
-                                    local eid = prefab_mgr:create("collider", {tag = e.collision.tag, type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
-                                    world:entity(eid).name = e.collision.name
-                                    world:entity(eid).tag = e.collision.tag
-                                    imaterial.set_property(eid, "u_color", e.collision.color or {1.0,0.5,0.5,0.8})
-                                    hierarchy:update_collider_list(world)
-                                end
-                                e.collision.col_eid = hierarchy.collider_list[e.collision.name]
-                                e.collision.name = nil
-                            end
-                        end
+            local events = datalist.parse(data)
+            -- for _, clip in ipairs(clips) do
+            --     if clip.key_event then
+            --         for _, ke in pairs(clips) do
+            --             for _, e in ipairs(ke.event_list) do
+            --                 if e.collision and e.collision.shape_type ~= "None" then
+            --                     if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
+            --                         local eid = prefab_mgr:create("collider", {tag = e.collision.tag, type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
+            --                         world:entity(eid).name = e.collision.name
+            --                         world:entity(eid).tag = e.collision.tag
+            --                         imaterial.set_property(eid, "u_color", e.collision.color or {1.0,0.5,0.5,0.8})
+            --                         hierarchy:update_collider_list(world)
+            --                     end
+            --                     e.collision.col_eid = hierarchy.collider_list[e.collision.name]
+            --                     e.collision.name = nil
+            --                 end
+            --             end
+            --         end
+            --     end
+            -- end
+            hierarchy:update_slot_list(world)
+            --from_runtime_clip(clips)
+            for _, evs in pairs(events) do
+                for _, ev in ipairs(evs.event_list) do
+                    if ev.link_info then
+                        local slot_eid = hierarchy.slot_list[ev.link_info.slot_name]
+                        assert(slot_eid)
+                        ev.link_info.slot_eid = slot_eid
                     end
                 end
             end
-            hierarchy:update_slot_list(world)
-            from_runtime_clip(clips)
-            set_event_dirty(-1)
+            -- set_event_dirty(-1)
+            return events
         end
     end
-    to_runtime_clip()
+    -- to_runtime_clip()
 end
 
 local function construct_edit_animations(eid)
@@ -1404,6 +1415,13 @@ local function construct_edit_animations(eid)
     local edit_anim = edit_anims[eid]
     local animations = get_runtime_animations(eid)
     local parentNode = hierarchy:get_node(hierarchy:get_node(eid).parent)
+    
+    local events = m.load_clips()
+    local keyevents = #events > 0 and from_runtime_event(events) or {}
+    if #events > 0 then
+        set_event_dirty(-1)
+    end
+
     for key, anim in pairs(animations) do
         if not anim_clips[key] then
             anim_clips[key] = {}
@@ -1412,7 +1430,7 @@ local function construct_edit_animations(eid)
             name = key,
             duration = anim._handle:duration(),
             --clips = anim_clips[key],
-            key_event = {}
+            key_event = keyevents
         }
         edit_anim.name_list[#edit_anim.name_list + 1] = key
         if not anim_group_eid[anim] then
@@ -1430,7 +1448,6 @@ local function construct_edit_animations(eid)
     end
     table.sort(edit_anim.name_list)
     set_current_anim(edit_anim.birth)
-    m.load_clips()
     joint_map[eid], joint_list[eid] = joint_utils:get_joints(world:entity(eid))
     e._animation.joint_list = joint_list
     hierarchy:update_slot_list(world)

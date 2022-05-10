@@ -256,6 +256,9 @@ function efk_sys:follow_transform_updated()
             else
                 efk.play_handle = nil
             end
+        elseif efk.do_play  then
+            efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene._worldmat), efk.speed)
+            efk.do_play = false
         end
         --TODO: layz update, handle scene_changed event?
         if efk.play_handle and efk.dynamic then
@@ -280,8 +283,44 @@ function efk_sys:render_submit()
 end
 
 local iefk = ecs.interface "iefk"
+
+function iefk.create(filename, config)
+    local config = config or {
+        play_on_create = false,
+        loop = false,
+        speed = 1.0,
+        srt = {}
+    }
+    local template = {
+		policy = {
+            "ant.general|name",
+            "ant.scene|scene_object",
+            "ant.efk|efk",
+            "ant.general|tag"
+		},
+		data = {
+            name = "root",
+            tag = {"effect"},
+            scene = {srt = config.srt or {}},
+            efk = filename,
+            on_ready = function (e)
+                if config.play_on_create then
+                    w:sync("efk:in", e)
+                    iefk.play(e)
+                end
+                iefk.set_loop(e, config.loop or false)
+                iefk.set_speed(e, config.speed or 1.0)
+            end
+		},
+    }
+    return ecs.create_entity(template)
+end
+
 function iefk.play(e)
-    e.efk.play_handle = efk_ctx:play(e.efk.handle, math3d.value_ptr(e.efk.worldmat), e.efk.speed)
+    --e.efk.play_handle = efk_ctx:play(e.efk.handle, math3d.value_ptr(e.efk.worldmat), e.efk.speed)
+    e.efk.do_play = true
+    -- w:sync("scene:in", e)
+    -- e.efk.play_handle = efk_ctx:play(e.efk.handle, math3d.value_ptr(e.scene._worldmat), e.efk.speed)
 end
 
 function iefk.pause(e, b)

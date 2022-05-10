@@ -8,6 +8,7 @@ local animodule 	= require "hierarchy".animation
 
 local ani_sys 		= ecs.system "animation_system"
 local timer 		= ecs.import.interface "ant.timer|itimer"
+local iefk          = ecs.import.interface "ant.efk|iefk"
 -- local iaudio    	= ecs.import.interface "ant.audio|audio_interface"
 
 local function get_current_anim_time(task)
@@ -40,23 +41,26 @@ local function process_keyframe_event(task)
 				end
 			elseif event.event_type == "Effect" then
 				if not event.effect and event.asset_path ~= "" then
-					event.effect = world:prefab_instance(event.asset_path)
-					local eeid = world:prefab_event(event.effect, "get_eid", "effect")
-					local effect = eeid and world[eeid].effect_instance or nil
-					if effect then
-						effect.auto_play = false
+					event.effect = iefk.create(event.asset_path, {play_on_create = true})
+					-- local eeid = world:prefab_event(event.effect, "get_eid", "effect")
+					-- local effect = eeid and world[eeid].effect_instance or nil
+					-- if effect then
+					-- 	effect.auto_play = false
+					-- end
+					-- world:prefab_event(event.effect, "set_parent", "effect", event.link_info.slot_eid)
+					if event.link_info.slot_eid then
+						ecs.method.set_parent(event.effect, event.link_info.slot_eid)
 					end
-					world:prefab_event(event.effect, "set_parent", "effect", event.link_info.slot_eid)
-				end
-				if event.effect then
-					local parent = world:prefab_event(event.effect, "get_parent", "effect")
-					if event.link_info.slot_eid and parent ~= event.link_info.slot_eid then
-						world:prefab_event(event.effect, "set_parent", "effect", event.link_info.slot_eid)
-					end
-					world:prefab_event(event.effect, "play_effect", "effect", false, false)
-					if task.play_state.play then
-						world:prefab_event(event.effect, "speed", "effect", task.play_state.speed or 1.0)
-					end
+				elseif event.effect then
+					iefk.play(world:entity(event.effect))
+					-- local parent = world:prefab_event(event.effect, "get_parent", "effect")
+					-- if event.link_info.slot_eid and parent ~= event.link_info.slot_eid then
+					-- 	world:prefab_event(event.effect, "set_parent", "effect", event.link_info.slot_eid)
+					-- end
+					-- world:prefab_event(event.effect, "play_effect", "effect", false, false)
+					-- if task.play_state.play then
+					-- 	world:prefab_event(event.effect, "speed", "effect", task.play_state.speed or 1.0)
+					-- end
 				end
 			elseif event.event_type == "Move" then
 				for _, eid in ipairs(task.eid) do

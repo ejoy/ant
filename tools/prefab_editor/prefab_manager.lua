@@ -101,10 +101,14 @@ function m:create_slot()
                 follow_flag = 1,
             },
             name = auto_name,
-            tag = {auto_name},
+            tag = {auto_name}
         }
     }
-    local new_entity = ecs.create_entity(utils.deep_copy(template))
+    local tpl = utils.deep_copy(template)
+    tpl.data.on_ready = function (e)
+        hierarchy:update_slot_list(world)
+    end
+    local new_entity = ecs.create_entity(tpl)
     slot_entity_id = slot_entity_id + 1
     self:add_entity(new_entity, parent_eid, template)
 end
@@ -212,6 +216,7 @@ function m:create(what, config)
                 data = {
                     scene = {srt = {}},
                     filter_state = "main_view|selectable",
+                    --material = "/pkg/ant.resources/materials/outline/scale.material",
                     material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
                     name = config.type .. gen_geometry_id()

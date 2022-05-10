@@ -325,7 +325,7 @@ local highlight_aabb = {
     min = nil,
     max = nil,
 }
-local function update_heightlight_aabb(e)
+local function update_highlight_aabb(e)
     if e then
         local ro = world:entity(e).render_object
         if ro and ro.aabb then
@@ -361,7 +361,7 @@ local function on_target(old, new)
 end
 
 local function on_update(e)
-    update_heightlight_aabb(e)
+    update_highlight_aabb(e)
     if not e then return end
     if world:entity(e).camera then
         camera_mgr.update_frustrum(e)
@@ -398,7 +398,7 @@ function m:handle_event()
         mouse_pos_y = y
     end
     for _, e in event_update_aabb:unpack() do
-        update_heightlight_aabb(e)
+        update_highlight_aabb(e)
     end
     for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then
@@ -427,11 +427,13 @@ function m:handle_event()
                 hierarchy:update_display_name(target, v1)
                 if world:entity(target).collider then
                     hierarchy:update_collider_list(world)
-                end
-            else
-                if world:entity(target).slot then
+                elseif world:entity(target).slot then
                     hierarchy:update_slot_list(world)
                 end
+            -- else
+            --     if world:entity(target).slot then
+            --         hierarchy:update_slot_list(world)
+            --     end
             end
         elseif what == "parent" then
             hierarchy:set_parent(target, v1)
@@ -479,7 +481,7 @@ function m:handle_event()
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(target)
-            update_heightlight_aabb()
+            update_highlight_aabb()
         elseif what == "movetop" then
             hierarchy:move_top(target)
         elseif what == "moveup" then
@@ -496,11 +498,11 @@ function m:handle_event()
     end
     for _, filename in event_open_prefab:unpack() do
         prefab_mgr:open(filename)
-        update_heightlight_aabb()
+        update_highlight_aabb()
     end
     for _, filename in event_open_fbx:unpack() do
         prefab_mgr:open_fbx(filename)
-        update_heightlight_aabb()
+        update_highlight_aabb()
     end
     for _, filename in event_add_prefab:unpack() do
         if string.sub(filename, -4) == ".efk" then

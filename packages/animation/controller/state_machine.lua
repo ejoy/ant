@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local timer = ecs.import.interface "ant.timer|itimer"
+local iefk	= ecs.import.interface "ant.efk|iefk"
 local fs 	= require "filesystem"
 local lfs	= require "filesystem.local"
 local datalist  = require "datalist"
@@ -389,7 +389,8 @@ function iani.set_time(eid, second)
 			for _, ev in ipairs(events.event_list) do
 				if ev.event_type == "Effect" then
 					if ev.effect then
-						world:prefab_event(ev.effect, "time", "effect", current_time - events.time, false)
+						-- world:prefab_event(ev.effect, "time", "effect", current_time - events.time, false)
+						-- iefk.set_time(world:entity(ev.effect), current_time - events.time)
 					end
 				end
 			end

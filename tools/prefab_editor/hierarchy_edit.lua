@@ -233,8 +233,8 @@ function hierarchy:update_slot_list(world)
     local slot_list = {["None"] = -1}
     for _, value in pairs(self.all) do
         if world:entity(value.eid).slot then
-            local tagname = value.template.template.data.tag
-            local slot_name = #tagname > 0 and tagname[1] or ""
+            local tagname = value.template.template.data.name--value.template.template.data.tag--
+            local slot_name = tagname--#tagname > 0 and tagname[1] or ""
             slot_list[slot_name] = value.eid
         end
     end

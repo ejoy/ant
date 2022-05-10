@@ -15,6 +15,7 @@ policy "efk"
 
 interface "iefk"
     .implement "efk.lua"
+    .method "create"
     .method "play"
     .method "stop"
     .method "pause"
