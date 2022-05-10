@@ -248,6 +248,13 @@ function event.OnDocumentDestroy(handle)
     pool[handle] = nil
 end
 
+function event.OnDestroyNode(handle, node)
+    if not pool[handle] then
+        return
+    end
+    pool[handle][node] = nil
+end
+
 function event.InvalidElement(doc, e, res)
     if not pool[doc] or not pool[doc][e] then
         return

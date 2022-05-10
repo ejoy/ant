@@ -2,6 +2,7 @@ local console = require "core.sandbox.console"
 local filemanager = require "core.filemanager"
 local constructor = require "core.DOM.constructor"
 local environment = require "core.environment"
+local event = require "core.event"
 local fs = require "filesystem"
 
 local m = {}
@@ -57,6 +58,9 @@ function m.OnCreateElement(document, element, name)
 		return
 	end
 	ctor(constructor.Element(document, false, element))
+end
+function m.OnDestroyNode(document, node)
+	event("OnDestroyNode", document, node)
 end
 function m.OnEvent(ev, e)
 	local delegate = events[ev]

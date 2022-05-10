@@ -9,6 +9,7 @@
 class lua_event_listener;
 
 namespace Rml {
+class Node;
 class Element;
 class EventListener;
 class Document;
@@ -19,6 +20,7 @@ enum class LuaEvent : uint8_t {
 	OnLoadInlineScript = 2,
 	OnLoadExternalScript,
 	OnCreateElement,
+	OnDestroyNode,
 	OnEvent,
 	OnEventAttach,
 	OnEventDetach,
@@ -32,6 +34,7 @@ public:
 	void OnLoadInlineScript(Rml::Document* document, const std::string& content, const std::string& source_path, int source_line) override;
 	void OnLoadExternalScript(Rml::Document* document, const std::string& source_path) override;
 	void OnCreateElement(Rml::Document* document, Rml::Element* element, const std::string& tag) override;
+	void OnDestroyNode(Rml::Document* document, Rml::Node* node) override;
 
 	void register_event(lua_State* L);
 	int  ref(lua_State* L);

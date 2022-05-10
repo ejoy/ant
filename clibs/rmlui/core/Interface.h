@@ -9,6 +9,7 @@
 
 namespace Rml {
 
+class Node;
 class Element;
 class EventListener;
 class Document;
@@ -66,6 +67,7 @@ public:
 	virtual void OnLoadInlineScript(Document* document, const std::string& content, const std::string& source_path, int source_line) = 0;
 	virtual void OnLoadExternalScript(Document* document, const std::string& source_path) = 0;
 	virtual void OnCreateElement(Document* document, Element* element, const std::string& tag) = 0;
+	virtual void OnDestroyNode(Document* document, Node* node) = 0;
 };
 
 }

@@ -69,6 +69,14 @@ void lua_plugin::OnCreateElement(Rml::Document* document, Rml::Element* element,
 	});
 }
 
+void lua_plugin::OnDestroyNode(Rml::Document* document, Rml::Node* node) {
+	luabind::invoke([&](lua_State* L) {
+		lua_pushlightuserdata(L, (void*)document);
+		lua_pushlightuserdata(L, (void*)node);
+		call(L, LuaEvent::OnDestroyNode, 2);
+	});
+}
+
 void lua_plugin::register_event(lua_State* L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lua_settop(L, 1);
@@ -76,6 +84,7 @@ void lua_plugin::register_event(lua_State* L) {
 	ref_function(reference, L, "OnLoadInlineScript");
 	ref_function(reference, L, "OnLoadExternalScript");
 	ref_function(reference, L, "OnCreateElement");
+	ref_function(reference, L, "OnDestroyNode");
 	ref_function(reference, L, "OnEvent");
 	ref_function(reference, L, "OnEventAttach");
 	ref_function(reference, L, "OnEventDetach");

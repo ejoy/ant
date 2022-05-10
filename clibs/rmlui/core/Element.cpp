@@ -97,6 +97,7 @@ Element::Element(Document* owner, const std::string& tag)
 }
 
 Element::~Element() {
+	GetPlugin()->OnDestroyNode(GetOwnerDocument(), this);
 	assert(parent == nullptr);
 	SetDataModel(nullptr);
 	for (auto& child : childnodes) {
