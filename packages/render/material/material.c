@@ -1029,8 +1029,7 @@ lmaterial_new(lua_State *L) {
 	mat->state = state;
 	mat->rgba = rgba;
 	mat->attrib = INVALID_ATTRIB;
-	uint16_t *pattrib = &mat->attrib;
-	
+
 	lua_newtable(L);
 	const int lookup_idx = lua_gettop(L);
 
@@ -1041,22 +1040,19 @@ lmaterial_new(lua_State *L) {
 	const int sa_lookup_idx = lua_gettop(L);
 	for (lua_pushnil(L); lua_next(L, 3) != 0; lua_pop(L, 1)) {
 		const char* key = lua_tostring(L, -2);
-		struct attrib* a = NULL;
 		if (LUA_TNIL != lua_getfield(L, sa_lookup_idx, key)){
-			a = arena_alloc(L, 1);
+			struct attrib* a = arena_alloc(L, arena_idx);
 			a->type = ATTRIB_REF;
 			a->ref = (uint16_t)lua_tointeger(L, -1);
+			a->next = mat->attrib;
+			mat->attrib = al_attrib_id(arena, a);
 			lua_pop(L, 1);
 		} else {
 			lua_pop(L, 1);
-			uint16_t id = load_attrib_from_data(L, 1, -1, *pattrib);
-			a = al_attrib(cobject_, id);
+			mat->attrib = load_attrib_from_data(L, arena_idx, -1, mat->attrib);
 		}
-		uint16_t id = al_attrib_id(cobject_, a);
-		*pattrib = id;
-		pattrib = &a->next;
 
-		lua_pushinteger(L, id);
+		lua_pushinteger(L, mat->attrib);
 		lua_setfield(L, lookup_idx, key);
 	}
 	lua_pop(L, 1);	//system attrib table
