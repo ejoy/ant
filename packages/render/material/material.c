@@ -658,12 +658,32 @@ create_attrib(lua_State *L, int arena_idx, int n, uint16_t id, uint16_t attribty
 		na->next = id;
 		na->patch = patchid;
 		if (is_uniform_attrib(attribtype)){
-			assert(h.idx != UINT16_MAX);
 			na->u.handle = h;
 		}
 		id = al_attrib_id(arena, na);
 	}
 	return id;
+}
+
+static inline int
+begin_fetch_attrib_array(lua_State *L, int data_idx, int* didx){
+	const int lt = lua_getfield(L, data_idx, "value");
+	if (lt == LUA_TNIL){
+		*didx = data_idx;
+		lua_pop(L, 1);
+	} else {
+		assert(lt == LUA_TTABLE);
+		*didx = -1;
+	}
+
+	return lt;
+}
+
+static inline void
+end_fetch_attrib_array(lua_State *L, int ltype){
+	if (ltype != LUA_TNIL){
+		lua_pop(L, 1);
+	}
 }
 
 static void
@@ -672,13 +692,16 @@ update_attrib(lua_State *L, struct attrib_arena *arena, struct attrib *a, int da
 	if (n == 1) {
 		fetch_attrib(L, arena, a, data_idx);
 	} else {
+		int didx;
+		const int lt = begin_fetch_attrib_array(L, data_idx, &didx);
 		for (int i=0;i<n;i++) {
 			assert(a && "Invalid attrib");
-			lua_geti(L, data_idx, i+1);
+			lua_geti(L, didx, i+1);
 			fetch_attrib(L, arena, a, -1);
 			lua_pop(L, 1);
 			a = al_next_attrib(arena, a);
 		}
+		end_fetch_attrib_array(L, lt);
 	}
 }
 
@@ -1055,8 +1078,6 @@ lmaterial_new(lua_State *L) {
 		struct attrib* a = NULL;
 		if (LUA_TNIL != lua_getfield(L, sa_lookup_idx, key)){
 			a = arena_alloc(L, 1);
-			// system attribs
-			al_init_attrib(arena, a);
 			a->type = ATTRIB_REF;
 			a->ref = (uint16_t)lua_tointeger(L, -1);
 			lua_pop(L, 1);
@@ -1154,6 +1175,7 @@ lsystem_attribs_new(lua_State *L){
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
 	}
+	lua_setmetatable(L, -2);
 
 	lua_pushvalue(L, -1);		// system attrib table
 	lua_setiuservalue(L, 1, 1);	// set system attrib table as cobject 1 user value

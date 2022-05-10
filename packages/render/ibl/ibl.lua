@@ -192,6 +192,11 @@ function iibl.get_ibl()
     return ibl_textures
 end
 
+function iibl.set_ibl_intensity(intensity)
+    ibl_textures.intensity = intensity
+    update_ibl_param()
+end
+
 local function build_ibl_textures(ibl)
     local function check_destroy(handle)
         if handle then
