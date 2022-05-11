@@ -153,7 +153,7 @@ function init_loader_sys:init()
     -- function p:on_ready()
     --     local e = self.tag.cube[1]
     --     w:sync("render_object:in", e)
-    --     imaterial.set_property_directly(e.render_object.properties, "u_color", {0.8, 0, 0.8, 1.0})
+    --     e.render_object.material.u_color = math3d.vector(0.8, 0, 0.8, 1.0)
     -- end
 
     --world:create_object(p)

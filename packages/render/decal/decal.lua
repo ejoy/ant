@@ -67,6 +67,7 @@ function ds:follow_transform_updated()
         local viewmat = math3d.inverse(mm)
         local projmat = math3d.projmat(d.frustum)
         local viewprojmat = math3d.mul(projmat, viewmat)
-        imaterial.set_property_directly(ro.properties, "u_decal_mat", math3d.mul(viewprojmat, ro.worldmat))
+        local material = ro.material
+        material.u_decal_mat = math3d.mul(viewprojmat, ro.worldmat)
     end
 end

@@ -8,6 +8,7 @@ local sampler   = renderpkg.sampler
 
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
+local math3d    = require "math3d"
 
 local ientity   = ecs.import.interface "ant.render|ientity"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
@@ -116,7 +117,7 @@ function render2cm_sys:entity_ready()
             local drawer = w:singleton("cvt_p2cm_drawer", "render_object:in")
             local ro = drawer.render_object
             ro.worldmat = mc.IDENTITY_MAT
-            imaterial.set_property_directly(ro.properties, "s_tex", {stage=0, texture=tex})
+            ro.material.s_tex = tex.handle
 
             for idx, fn in ipairs(face_queues) do
                 local faceidx = idx-1
@@ -135,7 +136,7 @@ function render2cm_sys:entity_ready()
                 rt.fb_idx = fbidx
                 irq.update_rendertarget(fn, rt)
 
-                imaterial.set_property_directly(ro.properties, "u_param", {faceidx, 0.0, 0.0, 0.0})
+                ro.material.u_param = math3d.vector(faceidx, 0.0, 0.0, 0.0)
 
                 irender.draw(rt.viewid, ro)
 

@@ -58,8 +58,8 @@ function lm_sys:init()
     default_lm = assetmgr.resource "/pkg/ant.resources/textures/black.texture"
 end
 
-local function update_lm_texture(properties, handle)
-    imaterial.set_property_directly(properties, "s_lightmap", {stage=8, texture={handle=handle}})
+local function update_lm_texture(material, handle)
+    
 end
 
 function lm_sys:entity_init()
@@ -72,7 +72,7 @@ function lm_sys:entity_init()
             if bi then
                 bi.texture = assetmgr.resource(bi.texture_path)
                 for _, fm in pairs(e.filter_material) do
-                    update_lm_texture(fm.properties, bi.texture_path)
+                    fm.material.s_lightmap = bi.texture.handle
                 end
             end
         end

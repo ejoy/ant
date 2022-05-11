@@ -100,6 +100,6 @@ local w     = world.w
 --     local tq = w:singleton("copy_scene", "render_object:in")
 --     local ro = tq.render_object
 --     local imaterial = ecs.import.interface "ant.asset|imaterial"
---     imaterial.set_property_directly(ro.properties, "s_tex", {stage=0, texture={handle=ppi[1].handle}})
+--     ro.material.s_tex = ppi[1].handle
 --     irender.draw(rt.viewid, ro)
 -- end

@@ -53,20 +53,14 @@ function ids.set_targets(targets)
     end
 end
 
-local input0 = {
-    stage = 0,
-    texture = {handle=nil}
-}
-
 function ids.downsample(targets)
     local drawer = w:singleton("downsample_drawer", "render_object:in")
     local ro = drawer.render_object
-
+    local material = ro.material
     for i=1, #targets do
         local target = targets[i]
         local viewid = target.viewid
-        input0.texture.handle = target.handle
-        imaterial.set_property_directly(ro.properties, "s_scene_color", input0)
+        material.s_scene_color = target.handle
         irender.draw(viewid, ro)
     end
 

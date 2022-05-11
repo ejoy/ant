@@ -71,29 +71,14 @@ function tm_sys:data_changed()
     end
 end
 
-local ppi_scene_color = {
-    stage = 0,
-    texture={handle=nil},
-}
-
-local ppi_bloom_color = {
-    stage = 2,
-    texture={handle=nil}
-}
-
 local function update_properties()
     --TODO: we need something call frame graph, frame graph need two stage: compile and run, with virtual resource
     -- in compile stage, determine which postprocess stage is needed, and connect those virtual resources
     -- render target here, is one of the virtual resource
     local pp = w:singleton("postprocess", "postprocess_input:in")
     local ppi = pp.postprocess_input
-    ppi_scene_color.texture.handle = assert(ppi.scene_color_handle)
-    imaterial.set_property_directly(tm_material.properties, "s_scene_color", ppi_scene_color)
-
-    if tm_material.properties["s_bloom_color"] and ppi.bloom_color_handle then
-        ppi_bloom_color.texture.handle = ppi.bloom_color_handle
-        imaterial.set_property_directly(tm_material.properties, "s_bloom_color", ppi_bloom_color)
-    end
+    tm_material.material.s_scene_color = assert(ppi.scene_color_handle)
+    tm_material.material.s_bloom_color = ppi.bloom_color_handle
 end
 
 function tm_sys:tonemapping()

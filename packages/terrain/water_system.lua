@@ -190,19 +190,12 @@ function water_sys:data_changed()
     end
 end
 
-local copy_tex = {
-    stage = 0,
-    texture = {handle=nil}
-}
-
 function water_sys:render_submit()
     local csq = w:singleton("copy_scene_queue", "render_target:in")
     local csq_rt = csq.render_target
 
-    copy_tex.texture.handle = queue_rb_handle("main_queue", 1)
-
     local cs_obj = w:singleton("copy_scene_drawer", "render_object:in")
     local ro = cs_obj.render_object
-    imaterial.set_property_directly(ro.properties, "s_tex", copy_tex)
+    ro.material.s_tex = queue_rb_handle("main_queue", 1)
     irender.draw(csq_rt.viewid, ro)
 end

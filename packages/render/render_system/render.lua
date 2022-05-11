@@ -77,8 +77,8 @@ end
 function irender.draw(vid, ri, mat)
 	ri:set_transform()
 
-	local _mat = mat or ri
-	ri.material{}
+	local _mat = mat or ri.material
+	_mat{}
 
 	update_mesh(ri.vb, ri.ib)
 

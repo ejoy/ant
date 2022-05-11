@@ -289,8 +289,8 @@ function pickup_sys:update_camera()
 		-- 	local mc_viewmat = main_camera.camera.viewmat
 		-- 	local mc_inv_viewmat = math3d.inverse(mc_viewmat)
 		-- 	for _, pm in pairs(pickup_materials) do
-		-- 		imaterial.set_property_directly(pm.properties, "u_viewcamera_viewmat", mc_viewmat)
-		-- 		imaterial.set_property_directly(pm.properties, "u_viewcamera_inv_viewmat", mc_inv_viewmat)
+		--		pm.u_viewcamera_viewmat = mc_viewmat
+		--		pm.u_viewcamera_inv_viewmat = mc_inv_viewmat
 		-- 	end
 		-- end
 	end

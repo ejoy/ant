@@ -69,7 +69,7 @@ function cs2cm_sys:entity_ready()
             local properties = dis.properties
 
             local cm_rbhandle = fbmgr.get_rb(cm_rbidx).handle
-            imaterial.set_property_directly(properties, "s_source", {stage=0, texture=tex})
+            dis.material.s_source = tex.handle
             properties.s_cubemap_source = icompute.create_image_property(cm_rbhandle, 1, 0, "w")
 
             local s = dis.size

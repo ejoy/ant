@@ -211,22 +211,22 @@ function bloom_sys:entity_remove()
 end
 
 local scenecolor_property = {
-    stage = 0,
-    mip = 0,
-    access = "r",
-    image = {handle=nil}
+    stage   = 0,
+    mip     = 0,
+    access  = "r",
+    handle  = nil,
 }
 
 local function do_bloom_sample(viewid, drawer, ppi_handle, next_mip)
     local ro = drawer.render_object
-
+    local material = ro.material
     local rbhandle = fbmgr.get_rb(fbmgr.get_byviewid(viewid)[1].rbidx).handle
     for i=1, bloom_chain_count do
         local mip = next_mip()
-        scenecolor_property.image.handle = ppi_handle
+        scenecolor_property.handle = ppi_handle
         scenecolor_property.mip = mip
 
-        imaterial.set_property_directly(ro.properties, "s_scene_color", scenecolor_property)
+        material.s_scene_color = scenecolor_property
 
         local bloom_param = ro.properties["u_bloom_param"].value
         bloom_param.v = math3d.set_index(bloom_param, 1, mip)

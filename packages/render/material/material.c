@@ -623,7 +623,7 @@ fetch_image(lua_State *L, struct attrib* a, int index){
 		a->r.stage	= fetch_stage(L, index);
 		a->r.handle = fetch_value_handle(L, index);
 	} else if (lt == LUA_TNUMBER){
-		a->u.t.handle = (uint32_t)luaL_checkinteger(L, index);
+		a->r.handle = (uint32_t)luaL_checkinteger(L, index);
 	} else {
 		luaL_error(L, "Invalid type for 'image':%s, bgfx texture handle or table:{stage=0, value=bgfxhandle, mip=0, access='r'}", lua_typename(L, lt));
 	}
@@ -638,7 +638,7 @@ fetch_buffer(lua_State *L, struct attrib* a, int index){
 		a->r.stage	= fetch_stage(L, index);
 		a->r.handle = fetch_value_handle(L, index);
 	} else if (lt == LUA_TNUMBER){
-		a->u.t.handle = (uint32_t)luaL_checkinteger(L, index);
+		a->r.handle = (uint32_t)luaL_checkinteger(L, index);
 	} else {
 		luaL_error(L, "Invalid type for 'image':%s, bgfx buffer(dynamic/static) handle or table:{stage=0, value=bufferhandle, access='r'}", lua_typename(L, lt));
 	}
@@ -759,6 +759,8 @@ lmaterial_set_attrib(lua_State *L){
 
 	if (LUA_TNIL == lua_getfield(L, lut_idx, attribname)){
 		mat->attrib = load_attrib_from_data(L, arena_idx, 3, mat->attrib);
+		lua_pushinteger(L, mat->attrib);
+		lua_setfield(L, lut_idx, attribname);
 	} else {
 		const uint16_t id = (uint16_t)lua_tointeger(L, -1);
 		struct attrib_arena* arena = (struct attrib_arena*)lua_touserdata(L, arena_idx);

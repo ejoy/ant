@@ -137,11 +137,6 @@ end
 
 local main_viewid = viewidmgr.get "main_view"
 
-local function build_cluster_aabb_struct(viewid)
-    local e = w:singleton("cluster_build_aabb", "dispatch:in")
-    icompute.dispatch(viewid, e.dispatch)
-end
-
 local cr_camera_mb      = world:sub{"main_queue", "camera_changed"}
 local camera_frustum_mb
 
@@ -166,9 +161,33 @@ local function update_render_info()
     sa:update("u_cluster_size",         math3d.vector(cluster_size))
 end
 
+local function update_shading_param(ce)
+    local f = ce.camera.frustum
+    local near, far = f.n, f.f
+    local num_depth_slices = cluster_size[3]
+	local log_farnear = math.log(far/near, 2)
+	local log_near = math.log(near, 2)
+
+    local mq = w:singleton("main_queue", "render_target:in")
+    local vr = mq.render_target.view_rect
+
+    local sa = imaterial.system_attribs()
+	sa:update("u_cluster_shading_param", math3d.vector(
+		num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
+		vr.w / cluster_size[1], vr.h/cluster_size[2]))
+end
+
+local function build_cluster_aabb_struct(viewid, ceid)
+    update_shading_param(world:entity(ceid))
+
+    local e = w:singleton("cluster_build_aabb", "dispatch:in")
+    icompute.dispatch(viewid, e.dispatch)
+end
+
 function cfs:init_world()
     local mq = w:singleton("main_queue", "camera_ref:in")
-    camera_frustum_mb = world:sub{"camera_changed", mq.camera_ref}
+    local ceid = mq.camera_ref
+    camera_frustum_mb = world:sub{"camera_changed", ceid}
 
     cluster_buffers.light_info.handle = ilight.light_buffer()
 
@@ -179,6 +198,8 @@ function cfs:init_world()
     local bmo= be.dispatch.material.material_obj
     bmo:set_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "build"))
     bmo:set_attrib("b_light_info",          icompute.create_buffer_property(cluster_buffers.light_info, "build"))
+
+    build_cluster_aabb_struct(main_viewid, ceid)
 
     --cull
     local ce = w:singleton("cluster_cull_light", "dispatch:in")
@@ -217,35 +238,19 @@ function cfs:entity_remove()
     end
 end
 
-local function update_shading_param(ce)
-    local f = ce.camera.frustum
-    local near, far = f.n, f.f
-    local num_depth_slices = cluster_size[3]
-	local log_farnear = math.log(far/near, 2)
-	local log_near = math.log(near, 2)
-
-    local mq = w:singleton("main_queue", "render_target:in")
-    local vr = mq.render_target.view_rect
-
-    local sa = imaterial.system_attribs()
-	sa:update("u_cluster_shading_param", math3d.vector(
-		num_depth_slices / log_farnear, -num_depth_slices * log_near / log_farnear,
-		vr.w / cluster_size[1], vr.h/cluster_size[2]))
-end
-
 function cfs:data_changed()
     if not ilight.use_cluster_shading() then
         return
     end
 
     for msg in cr_camera_mb:each() do
-        build_cluster_aabb_struct(main_viewid)
+        local ceid = msg[3]
         camera_frustum_mb = world:sub{"camera_changed", msg[3]}
+        build_cluster_aabb_struct(main_viewid, ceid)
     end
 
     for _, ceid in camera_frustum_mb:unpack() do
-        build_cluster_aabb_struct(main_viewid)
-        update_shading_param(world:entity(ceid))
+        build_cluster_aabb_struct(main_viewid, ceid)
     end
 
     if rebuild_light_index_list then
