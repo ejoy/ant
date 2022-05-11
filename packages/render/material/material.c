@@ -742,7 +742,7 @@ load_attrib_from_data(lua_State *L, int arena_idx, int data_index, uint16_t id) 
 
 static inline int
 check_uniform_num(struct attrib_arena *arena, struct attrib *a, int n){
-	if (n > 1 && al_attrib_is_uniform(arena, a)){
+	if (al_attrib_is_uniform(arena, a)){
 		bgfx_uniform_info_t info;
 		struct attrib_arena* cobject_ = arena;
 		BGFX(get_uniform_info)(a->u.handle, &info);
@@ -771,7 +771,6 @@ set_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_ar
 static int
 lset_attrib(lua_State *L) {
 	struct material_instance * mi = (struct	material_instance *)lua_touserdata(L, 1);
-	return 0;
 	const char* attribname = luaL_checkstring(L, 2);
 	const int arena_idx = lua_upvalueindex(2);
 	struct attrib_arena * arena = (struct attrib_arena *)lua_touserdata(L, arena_idx);

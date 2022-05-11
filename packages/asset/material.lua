@@ -165,13 +165,17 @@ local function to_t(t, handle)
 	return v
 end
 
-local function to_v(t)
+local function to_math_v(v)
+	return #v == 4 and math3d.vector(v) or math3d.matrix(v)
+end
+
+local function to_v(t, h)
 	assert(type(t) == "table")
-	local function to_math_v(v)
-		return #v == 4 and math3d.vector(v) or math3d.matrix(v)
+	if t.stage then
+		return to_t(t, h)
 	end
 
-	local v = {type="u"}
+	local v = {type="u", handle=h}
 	if type(t[1]) == "number" then
 		v.value = to_math_v(t)
 	else
@@ -198,13 +202,8 @@ local function generate_properties(fx, properties)
 				if "s_lightmap" == n then
 					v = {stage = 8, handle = u.handle, value = nil, type = 't'}
 				else
-					local pv = properties[n]
-					if pv then
-						v = pv.stage and to_t(pv, u.handle) or to_v(pv)
-					else
-						v = mc.ZERO
-					end
-					
+					local pv = properties[n] or {0.0, 0.0, 0.0, 0.0}
+					v = to_v(pv, u.handle)
 				end
 
 				new_properties[n] = v
