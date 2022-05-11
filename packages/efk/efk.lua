@@ -265,7 +265,6 @@ function efk_sys:follow_transform_updated()
                 if efk.do_play then
                     efk.do_play = nil
                 elseif efk.do_settime then
-                    efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene._worldmat), efk.speed)
                     efk_ctx:set_time(efk.play_handle, efk.do_settime)
                     efk.do_settime = nil
                 end
@@ -337,7 +336,6 @@ function iefk.set_time(e, t)
     if e.efk.do_settime then
         return
     end
-    print("----iefk.set_time")
     if e.efk.play_handle then
         efk_ctx:set_time(e.efk.play_handle, t)
     else

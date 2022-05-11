@@ -611,12 +611,13 @@ local function show_current_event()
         end
     elseif current_event.event_type == "Effect" then
         if imgui.widget.Button("SelectEffect") then
-            local path = uiutils.get_open_file_path("Effect", "efk")
-            if path then
-                local rp = lfs.relative(lfs.path(path), global_data.project_root)
-                local path = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
-                current_event.asset_path_ui.text = path
-                current_event.asset_path = path
+            local rpath = uiutils.get_open_file_path("Effect", "efk")
+            if rpath then
+                -- local rp = lfs.relative(lfs.path(path), global_data.project_root)
+                -- local path = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
+                local pkgpath = access.virtualpath(global_data.repo, fs.path(rpath))
+                current_event.asset_path_ui.text = pkgpath
+                current_event.asset_path = pkgpath
                 dirty = true
             end
         end
@@ -1291,9 +1292,11 @@ function m.show()
         local move_delta
         for k, v in pairs(imgui_message) do
             if k == "pause" then
-                anim_group_pause(current_e, true)
-                anim_state.current_frame = v
-                anim_group_set_time(current_e, v / sample_ratio)
+                if anim_state.current_frame ~= v then
+                    anim_group_pause(current_e, true)
+                    anim_state.current_frame = v
+                    anim_group_set_time(current_e, v / sample_ratio)   
+                end
             elseif k == "selected_frame" then
                 new_frame_idx = v
             elseif k == "move_type" then
