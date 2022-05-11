@@ -152,10 +152,10 @@ end
 local function to_t(t, handle)
 	local v = {stage=assert(t.stage), handle=handle}
 	if t.texture then
-		v.handle = t.texture.handle
+		v.value = t.texture.handle
 		v.type = 't'
 	elseif t.image then
-		v.handle = t.image.handle
+		v.value = t.image.handle
 		v.mip = t.mip
 		v.access = t.access
 		v.type = 'i'
