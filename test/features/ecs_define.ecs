@@ -11,6 +11,7 @@ import "@ant.splitviews"
 import "@ant.asset"
 import "@ant.heightmap"
 import "@ant.audio"
+import "@ant.efk"
 
 system "init_loader_system"
     .implement "tmp_systemloader.lua"

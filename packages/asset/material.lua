@@ -8,11 +8,7 @@ local mc = mathpkg.constant
 local math3d		= require "math3d"
 local bgfx			= require "bgfx"
 local rmat			= require "render.material"
-local CMATOBJ		= rmat.cobject {
-    bgfx = assert(bgfx.CINTERFACE) ,
-    math3d = assert(math3d.CINTERFACE),
-    encoder = assert(bgfx.encoder_get()),
-}
+local CMATOBJ		= require "cmatobj"
 
 local function texture_value(stage)
 	return {stage=stage, value=nil, handle=nil, type='t'}
@@ -114,8 +110,6 @@ local SYS_ATTRIBS = rmat.system_attribs(CMATOBJ, check{
 	s_omni_shadowmap	= texture_value(9),
 })
 
-local sd			= import_package "ant.settings".setting
-
 local assetmgr		= require "asset"
 local ext_material	= require "ext_material"
 
@@ -149,79 +143,6 @@ local function init_material(mm)
 	return ext_material.init(mm)
 end
 
-local function to_t(t, handle)
-	local v = {stage=assert(t.stage), handle=handle}
-	if t.texture then
-		v.value = t.texture.handle
-		v.type = 't'
-	elseif t.image then
-		v.value = t.image.handle
-		v.mip = t.mip
-		v.access = t.access
-		v.type = 'i'
-	else
-		error "invalid uniform value"
-	end
-	return v
-end
-
-local function to_math_v(v)
-	return #v == 4 and math3d.vector(v) or math3d.matrix(v)
-end
-
-local function to_v(t, h)
-	assert(type(t) == "table")
-	if t.stage then
-		return to_t(t, h)
-	end
-
-	local v = {type="u", handle=h}
-	if type(t[1]) == "number" then
-		v.value = to_math_v(t)
-	else
-		local res = {}
-		for i, v in ipairs(t) do
-			res[i] = to_math_v(v)
-		end
-		v.value = res
-	end
-	return v
-end
-
-local DEF_PROPERTIES<const> = {}
-
-local function generate_properties(fx, properties)
-	local uniforms = fx.uniforms
-	local new_properties = {}
-	properties = properties or DEF_PROPERTIES
-	if uniforms and #uniforms > 0 then
-		for _, u in ipairs(uniforms) do
-			local n = u.name
-			if not n:match "@data" then
-				local v
-				if "s_lightmap" == n then
-					v = {stage = 8, handle = u.handle, value = nil, type = 't'}
-				else
-					local pv = properties[n] or {0.0, 0.0, 0.0, 0.0}
-					v = to_v(pv, u.handle)
-				end
-
-				new_properties[n] = v
-			end
-		end
-	end
-
-	local setting = fx.setting
-	if setting.lighting == "on" then
-		new_properties["b_light_info"] = {type = 'b'}
-		if sd:data().graphic.cluster_shading ~= 0 then
-			new_properties["b_light_grids"] = {type='b'}
-			new_properties["b_light_index_lists"] = {type='b'}
-		end
-	end
-	return new_properties
-end
-
 local function build_material(mc, filename)
 	local properties= generate_properties(mc.fx, mc.properties)
 	local material = rmat.material(CMATOBJ, mc.state, properties, filename)
@@ -235,8 +156,8 @@ local function build_material(mc, filename)
 end
 
 function imaterial.load(mp, setting)
-	local mm = assetmgr.resource(mp)
-	return build_material(load_material(mm, {}, setting), mp)
+	return assetmgr.resource(mp, setting)
+	---return build_material(load_material(mm, {}, setting))
 end
 
 function imaterial.system_attribs()
@@ -246,8 +167,8 @@ end
 local ms = ecs.system "material_system"
 function ms:component_init()
 	w:clear "material_result"
-    for e in w:select "INIT material:in material_setting?in material_result:new" do
-		local mm = load_material(init_material(e.material), {}, e.material_setting)
-		e.material_result = build_material(mm, e.material)
+    for e in w:select "INIT material:in material_result:new" do
+		--local mm = load_material(init_material(e.material), {})
+		e.material_result = build_material(init_material(e.material), e.material)
 	end
 end

@@ -13,5 +13,6 @@ return {
         "ant.splitviews",
         "ant.render",
         "ant.objcontroller",
+        "ant.efk",
     }
 }

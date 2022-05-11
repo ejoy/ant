@@ -2,8 +2,8 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local bgfx = require "bgfx"
-
+local bgfx      = require "bgfx"
+local math3d    = require "math3d"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender   = ecs.import.interface "ant.render|irender"
 local declmgr   = require "vertexdecl_mgr"
@@ -159,7 +159,7 @@ local function add_polylines(polymesh, line_width, color, material)
         data = {
             polyline = {
                 width = line_width,
-                color = color,
+                color = math3d.ref(math3d.vector(color)),
             },
             scene = {srt={}},
             simplemesh  = polymesh,
@@ -169,7 +169,7 @@ local function add_polylines(polymesh, line_width, color, material)
             on_ready = function (e)
                 w:sync("polyline:in render_object:in", e)
                 local pl = e.polyline
-                imaterial.set_property(e, "u_line_info", {pl.width, 0.0, 0.0, 0.0})
+                imaterial.set_property(e, "u_line_info", math3d.vector(pl.width, 0.0, 0.0, 0.0))
                 imaterial.set_property(e, "u_color", pl.color)
             end
         },

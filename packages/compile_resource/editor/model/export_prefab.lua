@@ -185,8 +185,6 @@ local function add_animation(gltfscene, exports, nodeidx, policy, data)
             --skinning
             data.meshskin = serialize.path(f)
             policy[#policy+1] = "ant.animation|skinning"
-
-            data.material_setting = { skinning = "GPU"}
         -- else
         --     policy[#policy+1] = "ant.scene|slot"
         --     local idx = assert(exports.node_joints[nodeidx], "node index is not one of the skeleton struct:" .. nodeidx)

@@ -2,7 +2,7 @@ fx:
   fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
   vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
   setting:
-    surfacetype: background
+    surfacetype: translucent
     lighting: off
     WITH_COLOR_ATTRIB: 1
 state:

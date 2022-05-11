@@ -38,7 +38,6 @@ function skybox_sys:entity_init()
 	for e in w:select "skybox_changed skybox:in render_object:in" do
 		local sb = e.skybox
 		local ro = e.render_object
-		local p = assert(ro.properties.u_skybox_param.value)
-		p.v = math3d.set_index(p, 1, sb.intensity)
+		ro.material.u_skybox_param = math3d.vector(sb.intensity, 0.0, 0.0, 0.0)
 	end
 end

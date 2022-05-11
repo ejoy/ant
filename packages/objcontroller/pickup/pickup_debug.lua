@@ -7,6 +7,9 @@ local math3d = require "math3d"
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
 
+local mathpkg	= import_package "ant.math"
+local mu		= mathpkg.util
+
 local ientity   = ecs.import.interface "ant.render|ientity"
 local imesh     = ecs.import.interface "ant.asset|imesh"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
@@ -32,9 +35,8 @@ local function create_view_buffer_entity()
 		data = {
 			name = "pick_buffer_entity",
 			owned_mesh_buffer = true,
-			simplemesh = ientity.quad_mesh{x=0,y=0,w=120, h=120},
+			simplemesh = ientity.quad_mesh(mu.texture_uv{x=0,y=0,w=120, h=120}),
 			material = "/pkg/ant.resources/materials/texquad.material",
-			material_setting = {POS_IN_RECT=1},
 			filter_state = "main_view",
 			scene = {srt={}},
 			on_ready = function (e)

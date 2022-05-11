@@ -73,9 +73,9 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
             scene   = { srt = {t={0, 5, 5}}},
             on_ready = function (e)
                 w:sync("render_object:in", e)
-                imaterial.set_property(e, "u_basecolor_factor", color)
+                imaterial.set_property(e, "u_basecolor_factor", math3d.vector(color))
                 local texobj = assetmgr.resource(tex)
-                imaterial.set_property(e, "s_basecolor", {texture=texobj, stage=0})
+                imaterial.set_property(e, "s_basecolor", texobj.handle)
             end
         }
     }

@@ -328,9 +328,9 @@ function ientity.create_frustum_entity(frustum_points, name, color)
 end
 
 local function axis_mesh(color)
-	local r = color or mc.RED
-	local g = color or mc.GREEN
-	local b = color or mc.BLUE
+	local r = color or math3d.tovalue(mc.RED)
+	local g = color or math3d.tovalue(mc.GREEN)
+	local b = color or math3d.tovalue(mc.BLUE)
 	local axis_vb = {
 		0, 0, 0, r[1], r[2], r[3], r[4],
 		1, 0, 0, r[1], r[2], r[3], r[4],
@@ -358,8 +358,7 @@ function ientity.create_screen_axis_entity(srt, screen_3dobj, name, color, mater
 		data = {
 			screen_3dobj = screen_3dobj,
 			scene 		= {srt = srt or {}},
-			material	= material or "/pkg/ant.resources/materials/line_background.material",
-			material_setting = {surfacetype="translucent"},
+			material	= "/pkg/ant.resources/materials/line_background.material",
 			simplemesh	= imesh.init_mesh(mesh, true),
 			filter_state= "main_view|auxgeom",
 			name		= name,

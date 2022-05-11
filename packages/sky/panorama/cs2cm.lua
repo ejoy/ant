@@ -100,7 +100,7 @@ function cs2cm_sys:filter_ibl()
         local se_ibl = e.ibl
         local tex = imaterial.get_property(e, "s_skybox").value.texture
         iibl.filter_all{
-			source 		= {handle = tex.handle, cubemap=true, facesize = e.skybox.facesize},
+			source 		= {handle = tex.handle, facesize = e.skybox.facesize},
 			irradiance 	= se_ibl.irradiance,
 			prefilter 	= se_ibl.prefilter,
 			LUT			= se_ibl.LUT,

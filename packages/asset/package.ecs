@@ -26,7 +26,6 @@ component "mesh_result".type "lua"
 
 component "material_result".type "lua"
     .require_system "ant.asset|material_system"
-component "material_setting".type "lua"
 component "material".type "lua"
     .require_system "ant.asset|material_system"
 policy "material"
