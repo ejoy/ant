@@ -108,6 +108,20 @@ get_id(lua_State *L, int index, int ltype) {
 	return luaL_argerror(L, index, "Need ref userdata");
 }
 
+static int64_t
+get_id_api(lua_State *L, int index, int ltype) {
+	if (ltype == LUA_TLIGHTUSERDATA) {
+		return (int64_t)lua_touserdata(L, index);
+	} else if (ltype == LUA_TUSERDATA) {
+		if (lua_rawlen(L, index) != sizeof(struct refobject)) {
+			return luaL_argerror(L, index, "Invalid ref userdata");
+		}
+		struct refobject * ref = lua_touserdata(L, index);
+		return ref->id;
+	}
+	return luaL_argerror(L, index, "Need ref userdata");
+}
+
 static int
 lref(lua_State *L) {
 	lua_settop(L, 1);
@@ -2200,7 +2214,7 @@ math3d_from_lua_(lua_State *L, struct lastack *LS, int index, int type) {
 
 static const float *
 math3d_from_lua_id_(lua_State *L, struct lastack *LS, int index, int *type) {
-	int64_t id = get_id(L, index, lua_type(L, index));
+	int64_t id = get_id_api(L, index, lua_type(L, index));
 	*type = LINEAR_TYPE_NONE;
 	return lastack_value(LS, id, type);
 }
@@ -2214,7 +2228,7 @@ math3d_push_(lua_State *L, struct lastack *LS, const float *v, int type) {
 
 static int64_t
 math3d_mark_id_(lua_State *L, struct lastack *LS, int idx) {
-	int64_t id = get_id(L, idx, lua_type(L, idx));
+	int64_t id = get_id_api(L, idx, lua_type(L, idx));
 	return lastack_mark(LS, id);
 }
 
