@@ -240,6 +240,22 @@ local function do_play(eid, anim, real_clips, anim_state)
 		
 		world:pub{"animation", anim_state.name, "play", anim_state.owner}
 	end
+	--TODO: clear keyevent effct
+	local all_events = e._animation._current.event_state.keyframe_events
+	if all_events then
+		for _, events in ipairs(all_events) do
+			for _, ev in ipairs(events.event_list) do
+				if ev.event_type == "Effect" then
+					if ev.effect then
+						iefk.stop(world:entity(ev.effect))
+						world:remove_entity(ev.effect)
+					end
+				end
+			end
+		end
+	end
+	e._animation._current.event_state.keyframe_events = nil
+	--
 	e._animation._current = anim_state
 	anim_state.eid[#anim_state.eid + 1] = eid
 	if not e.animation[anim_name] then
@@ -389,9 +405,7 @@ function iani.set_time(eid, second)
 			for _, ev in ipairs(events.event_list) do
 				if ev.event_type == "Effect" then
 					if ev.effect then
-						-- world:prefab_event(ev.effect, "time", "effect", current_time - events.time, false)
-						local timetoframe = (current_time - events.time) * 60
-						iefk.set_time(world:entity(ev.effect), timetoframe)
+						iefk.set_time(world:entity(ev.effect), (current_time - events.time) * 60)
 					end
 				end
 			end
