@@ -613,8 +613,6 @@ local function show_current_event()
         if imgui.widget.Button("SelectEffect") then
             local rpath = uiutils.get_open_file_path("Effect", "efk")
             if rpath then
-                -- local rp = lfs.relative(lfs.path(path), global_data.project_root)
-                -- local path = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
                 local pkgpath = access.virtualpath(global_data.repo, fs.path(rpath))
                 current_event.asset_path_ui.text = pkgpath
                 current_event.asset_path = pkgpath

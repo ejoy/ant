@@ -241,9 +241,9 @@ lefkctx_set_time(lua_State* L) {
 	auto ctx = EC(L);
 	auto play_handle = (int)luaL_checkinteger(L, 2);
 
-	int32_t frame = 0.0f;
+	float frame = 0.0f;
 	if (lua_type(L, 3) == LUA_TNUMBER) {
-		frame = lua_tointeger(L, 3);
+		frame = (float)lua_tonumber(L, 3);
 	}
     ctx->manager->SetPaused(play_handle, false);
     ctx->manager->UpdateHandleToMoveToFrame(play_handle, frame);
