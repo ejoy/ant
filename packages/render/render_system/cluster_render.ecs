@@ -11,6 +11,11 @@ system "cluster_forward_system"
     .method "data_changed"
     .method "render_preprocess"
 
+policy "cluster_render"
+    .require_policy "ant.render|forward_render"
+    .require_system "ant.render|cluster_forward_system"
+    .require_interface "ant.render|icompute"
+
 
 component "cluster_build_aabb"
 component "cluster_cull_light"

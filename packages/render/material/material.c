@@ -761,6 +761,7 @@ lmaterial_set_attrib(lua_State *L){
 		mat->attrib = load_attrib_from_data(L, arena_idx, 3, mat->attrib);
 	} else {
 		const uint16_t id = (uint16_t)lua_tointeger(L, -1);
+		struct attrib_arena* arena = (struct attrib_arena*)lua_touserdata(L, arena_idx);
 		update_attrib(L, arena, al_attrib(arena, id), 3);
 	}
 	lua_pop(L, 1);
@@ -877,85 +878,93 @@ linstance_gc(lua_State *L) {
 
 static void
 apply_attrib(lua_State *L, struct attrib_arena * cobject_, struct attrib *a, int texture_index) {
-	if (a->type == ATTRIB_REF){
-		struct attrib *ra = al_attrib(cobject_, a->ref);
-		apply_attrib(L, cobject_, ra, texture_index);
-	}
-	if (a->type == ATTRIB_SAMPLER || a->type == ATTRIB_IMAGE) {
-		bgfx_texture_handle_t tex;
-		lua_geti(L, texture_index, a->u.t.handle);
-		tex.idx = luaL_optinteger(L, -1, a->u.t.handle) & 0xffff;
-		lua_pop(L, 1);
-		if (a->type == ATTRIB_SAMPLER){
-			BGFX(encoder_set_texture)(cobject_->eh->encoder, a->u.t.stage, a->u.handle, tex, UINT32_MAX);
-		} else {
-			BGFX(encoder_set_image)(cobject_->eh->encoder, a->r.stage, tex, a->r.mip, a->r.access, BGFX_TEXTURE_FORMAT_UNKNOWN);
-		}
-	}
-
-	if (a->type == ATTRIB_BUFFER){
-		const uint16_t id = a->r.handle & 0xffff;
-		const uint16_t type = a->r.handle >> 16;
-		switch(type) {
-		case BGFX_HANDLE_VERTEX_BUFFER: {
-			bgfx_vertex_buffer_handle_t handle = { id };
-			BGFX(encoder_set_compute_vertex_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
+	switch(a->type){
+		case ATTRIB_REF:
+			apply_attrib(L, cobject_, al_attrib(cobject_, a->ref), texture_index);
 			break;
-		}
-		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:
-		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: {
-			bgfx_dynamic_vertex_buffer_handle_t handle = { id };
-			BGFX(encoder_set_compute_dynamic_vertex_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
-			break;
-		}
-		case BGFX_HANDLE_INDEX_BUFFER: {
-			bgfx_index_buffer_handle_t handle = { id };
-			BGFX(encoder_set_compute_index_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
-			break;
-		}
-		case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32:
-		case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER: {
-			bgfx_dynamic_index_buffer_handle_t handle = { id };
-			BGFX(encoder_set_compute_dynamic_index_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
-			break;
-		}
-		case BGFX_HANDLE_INDIRECT_BUFFER: {
-			bgfx_indirect_buffer_handle_t handle = { id };
-			BGFX(encoder_set_compute_indirect_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
-			break;
-		}
-		default:
-			luaL_error(L, "Invalid buffer type %d", type);
-		}
-	}
-	struct attrib_arena * arena = cobject_;
-
-	const uint16_t n = al_attrib_num(arena, a);
-	// most case is n == 1
-	if (n == 1){
-		int t;
-		const float * v = math3d_value(CAPI_MATH3D, a->u.m, &t);
-		BGFX(encoder_set_uniform)(cobject_->eh->encoder, a->u.handle, v, 1);
-	} else {
-		// multiple uniforms
-		float buffer[MAX_UNIFORM_NUM * 16];
-		float *ptr = buffer;
-		
-		for (uint16_t i=0; i<n; ++i){
-			int t;
-			int stride;
-			const float * v = math3d_value(CAPI_MATH3D, a->u.m, &t);
-			if (t == LINEAR_TYPE_MAT) {
-				stride = 16;
+		case ATTRIB_SAMPLER:
+		case ATTRIB_IMAGE:{
+			bgfx_texture_handle_t tex;
+			lua_geti(L, texture_index, a->u.t.handle);
+			tex.idx = luaL_optinteger(L, -1, a->u.t.handle) & 0xffff;
+			lua_pop(L, 1);
+			if (a->type == ATTRIB_SAMPLER){
+				BGFX(encoder_set_texture)(cobject_->eh->encoder, a->u.t.stage, a->u.handle, tex, UINT32_MAX);
 			} else {
-				stride = 4;
+				BGFX(encoder_set_image)(cobject_->eh->encoder, a->r.stage, tex, a->r.mip, a->r.access, BGFX_TEXTURE_FORMAT_UNKNOWN);
 			}
-			if (ptr + stride - buffer > MAX_UNIFORM_NUM * 16)
-				luaL_error(L, "Too many uniforms %d", n);
-			memcpy(ptr, v, stride * sizeof(float));
-			ptr += stride;
-		}
-		BGFX(encoder_set_uniform)(cobject_->eh->encoder, a->u.handle, buffer, n);
+		}	break;
+
+		case ATTRIB_BUFFER: {
+			const uint16_t id = a->r.handle & 0xffff;
+			const uint16_t btype = a->r.handle >> 16;
+			switch(btype) {
+			case BGFX_HANDLE_VERTEX_BUFFER: {
+				bgfx_vertex_buffer_handle_t handle = { id };
+				BGFX(encoder_set_compute_vertex_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
+				break;
+			}
+			case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:
+			case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: {
+				bgfx_dynamic_vertex_buffer_handle_t handle = { id };
+				BGFX(encoder_set_compute_dynamic_vertex_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
+				break;
+			}
+			case BGFX_HANDLE_INDEX_BUFFER: {
+				bgfx_index_buffer_handle_t handle = { id };
+				BGFX(encoder_set_compute_index_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
+				break;
+			}
+			case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32:
+			case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER: {
+				bgfx_dynamic_index_buffer_handle_t handle = { id };
+				BGFX(encoder_set_compute_dynamic_index_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
+				break;
+			}
+			case BGFX_HANDLE_INDIRECT_BUFFER: {
+				bgfx_indirect_buffer_handle_t handle = { id };
+				BGFX(encoder_set_compute_indirect_buffer)(cobject_->eh->encoder, a->r.stage, handle, a->r.access);
+				break;
+			}
+			default:
+				luaL_error(L, "Invalid buffer type %d", btype);
+				break;
+			}
+		}	break;
+		case ATTRIB_UNIFORM: {
+			struct attrib_arena * arena = cobject_;
+
+			const uint16_t n = al_attrib_num(arena, a);
+			// most case is n == 1
+			if (n == 1){
+				int t;
+				const float * v = math3d_value(CAPI_MATH3D, a->u.m, &t);
+				BGFX(encoder_set_uniform)(cobject_->eh->encoder, a->u.handle, v, 1);
+			} else {
+				// multiple uniforms
+				float buffer[MAX_UNIFORM_NUM * 16];
+				float *ptr = buffer;
+				
+				for (uint16_t i=0; i<n; ++i){
+					int t;
+					int stride;
+					const float * v = math3d_value(CAPI_MATH3D, a->u.m, &t);
+					if (t == LINEAR_TYPE_MAT) {
+						stride = 16;
+					} else {
+						stride = 4;
+					}
+					if (ptr + stride - buffer > MAX_UNIFORM_NUM * 16)
+						luaL_error(L, "Too many uniforms %d", n);
+					memcpy(ptr, v, stride * sizeof(float));
+					ptr += stride;
+				}
+				BGFX(encoder_set_uniform)(cobject_->eh->encoder, a->u.handle, buffer, n);
+			}
+		}	break;
+		default:
+			luaL_error(L, "Invalid attrib type:%d", a->type);
+			break;
 	}
 }
 
@@ -978,25 +987,17 @@ linstance_apply_attrib(lua_State *L) {
 			apply_attrib(L, arena, a, texture_index);
 		}
 	} else {
-		uint16_t ids[MAX_UNIFORM_NUM];
 		uint16_t num_attrib = 0;
 		for (uint16_t id = mat->attrib; id != INVALID_ATTRIB; id = al_attrib_next_id(arena, id)){
-			ids[num_attrib++] = id;
-		}
-
-		for (uint16_t pid = mi->patch_attrib; pid != INVALID_ATTRIB; pid = al_attrib_next_id(arena, pid)){
-			struct attrib* pa = al_attrib(arena, pid);
-			for (int i=0; i<num_attrib; ++i){
-				struct attrib* a = al_attrib(arena, ids[i]);
-				if (al_attrib_uniform_handle_equal(arena, pa, a)){
-					ids[i] = pid;
+			uint16_t apply_id = id;
+			for (uint16_t pid = mi->patch_attrib; pid != INVALID_ATTRIB; pid = al_attrib_next_id(arena, pid)){
+				struct attrib* pa = al_attrib(arena, pid);
+				if (pa->patch == id){
+					apply_id = pid;
 					break;
 				}
 			}
-		}
-
-		for (int i=0; i<num_attrib; ++i){
-			struct attrib *a = al_attrib(arena, ids[i]);
+			struct attrib *a = al_attrib(arena, apply_id);
 			apply_attrib(L, arena, a, texture_index);
 		}
 	}
