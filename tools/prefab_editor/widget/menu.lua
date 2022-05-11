@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local w = world.w
 
 local widget_utils      = require "widget.utils"
 local prefab_mgr        = ecs.require "prefab_manager"

@@ -315,6 +315,7 @@ local event_add_prefab      = world:sub {"AddPrefabOrEffect"}
 local event_resource_browser= world:sub {"ResourceBrowser"}
 local event_window_title    = world:sub {"WindowTitle"}
 local event_create          = world:sub {"Create"}
+local event_light           = world:sub {"DefaultLight"}
 local event_gizmo           = world:sub {"Gizmo"}
 local event_mouse           = world:sub {"mouse"}
 local light_gizmo = ecs.require "gizmo.light"
@@ -542,6 +543,9 @@ function m:handle_event()
 
     for _, what, type in event_create:unpack() do
         prefab_mgr:create(what, type)
+    end
+    for _, enable in event_light:unpack() do
+        prefab_mgr:set_default_light(enable)
     end
     for _, what in reset_editor:unpack() do
         ima.stop(world:entity(ima.highlight_anim))

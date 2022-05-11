@@ -187,6 +187,31 @@ local function create_default_light(lt)
         outter_radian   = math.rad(45)
     }
 end
+
+function m:set_default_light(enable)
+    if enable then
+        if not self.default_light then
+            local newlight, _ = create_default_light("directional")
+            self.default_light = newlight
+            if not self.skybox then
+                self.skybox = ecs.create_instance("res/skybox_test.prefab")
+            end
+        end
+    else
+        if self.default_light then
+            world:remove_entity(self.default_light)
+            self.default_light = nil
+        end
+        if self.skybox then
+            world:remove_entity(self.skybox.root)
+            local all_entitys = self.skybox.tag["*"]
+            for _, e in ipairs(all_entitys) do
+                world:remove_entity(e)
+            end
+            self.skybox = nil
+        end
+    end
+end
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()
@@ -235,27 +260,6 @@ function m:create(what, config)
             m:add_prefab(gd.editor_package_path .. "res/sphere.prefab")
         elseif config.type == "torus(prefab)" then
             m:add_prefab(gd.editor_package_path .. "res/torus.prefab")
-        end
-    elseif what == "enable_default_light" then
-        if not self.default_light then
-            local newlight, _ = create_default_light("directional")
-            self.default_light = newlight
-            if not self.skybox then
-                self.skybox = ecs.create_instance("res/skybox_test.prefab")
-            end
-        end
-    elseif what == "disable_default_light" then
-        if self.default_light then
-            world:remove_entity(self.default_light)
-            self.default_light = nil
-        end
-        if self.skybox then
-            world:remove_entity(self.skybox.root)
-            local all_entitys = self.skybox.tag["*"]
-            for _, e in ipairs(all_entitys) do
-                world:remove_entity(e)
-            end
-            self.skybox = nil
         end
     elseif what == "terrain" then
         if config.type == "shape" then

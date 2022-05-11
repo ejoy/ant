@@ -46,14 +46,15 @@ function m:init()
     if editor_setting.setting.camera == nil then
         editor_setting.update_camera_setting(0.1)
     end
-    world:pub{"camera_controller", "move_speed", editor_setting.setting.camera.speed}
+    world:pub { "camera_controller", "move_speed", editor_setting.setting.camera.speed }
+    world:pub { "DefaultLight", true }
 end
 
 local function init_camera()
     local mq = w:singleton("main_queue", "camera_ref:in")
-    local eye, at = math3d.vector(5, 5, 5, 1), mc.ZERO_PT
+    local eye, at = math3d.vector(10, 10, 10, 1), mc.ZERO_PT
     local e = world:entity(mq.camera_ref)
-    iom.set_position(e, {5, 5, 5, 1})
+    iom.set_position(e, {10, 10, 10, 1})
     iom.set_direction(e, math3d.normalize(math3d.sub(at, eye)))
     local f = icamera.get_frustum(e)
     f.n, f.f = 1, 1000

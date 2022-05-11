@@ -727,6 +727,9 @@ end
 local fs        = require "filesystem"
 local datalist  = require "datalist"
 function m.load(path)
+    if not current_skeleton then
+        return
+    end
     if fs.exists(fs.path(path)) then
         local path = fs.path(path):localpath()
         local f = assert(fs.open(path))

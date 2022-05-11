@@ -29,7 +29,7 @@ end
 local LAST_main_camera
 
 local localSpace = {}
-local defaultLight = { false }
+local defaultLight = { true }
 local camera_speed = {0.1, speed=0.05, min=0.01, max=10}
 local icons = require "common.icons"(assetmgr)
 function m.show()
@@ -66,8 +66,7 @@ function m.show()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("DefaultLight", defaultLight) then
-            local action = defaultLight[1] and "enable_default_light" or "disable_default_light"
-            world:pub { "Create", action }
+            world:pub { "DefaultLight", defaultLight[1] }
         end
 
         imgui.cursor.SameLine()
