@@ -1369,6 +1369,30 @@ function m.show()
     end
 end
 
+function m.load_events(filename)
+    local path = string.sub(filename, 1, -6) .. ".event"
+    local f = fs.open(fs.path(path))
+    if not f then
+        return
+    end
+    local data = f:read "a"
+    f:close()
+    local events = datalist.parse(data)
+    hierarchy:update_slot_list(world)
+    for _, evs in pairs(events) do
+        for _, ev in ipairs(evs.event_list) do
+            if ev.link_info then
+                local slot_eid = hierarchy.slot_list[ev.link_info.slot_name]
+                if slot_eid then
+                    ev.link_info.slot_eid = slot_eid
+                else
+                    ev.link_info.slot_name = ""
+                end
+            end
+        end
+    end
+    return events
+end
 function m.load_clips()
     if #all_clips == 0 then
         local clips_filename = get_clips_filename();
@@ -1429,24 +1453,25 @@ local function construct_edit_animations(eid)
     local animations = get_runtime_animations(eid)
     local parentNode = hierarchy:get_node(hierarchy:get_node(eid).parent)
     
-    local events = m.load_clips()
-    local keyevents = {}
-    if events then
-        keyevents = #events > 0 and from_runtime_event(events) or {}
-        if #events > 0 then
-            set_event_dirty(-1)
-        end
-    end
+    -- local events = m.load_clips()
+    -- local keyevents = {}
+    -- if events then
+    --     keyevents = #events > 0 and from_runtime_event(events) or {}
+    --     if #events > 0 then
+    --         set_event_dirty(-1)
+    --     end
+    -- end
 
     for key, anim in pairs(animations) do
         if not anim_clips[key] then
             anim_clips[key] = {}
         end
+        local events = m.load_events(tostring(anim))
         edit_anim[key] = {
             name = key,
             duration = anim._handle:duration(),
             --clips = anim_clips[key],
-            key_event = keyevents
+            key_event = events and from_runtime_event(events) or {}
         }
         edit_anim.name_list[#edit_anim.name_list + 1] = key
         if not anim_eid_group[anim] then
@@ -1466,7 +1491,10 @@ local function construct_edit_animations(eid)
     set_current_anim(edit_anim.birth)
     joint_map, joint_list = joint_utils:get_joints(world:entity(eid))
     e._animation.joint_list = joint_list
+
     hierarchy:update_slot_list(world)
+
+    set_event_dirty(-1)
 end
 
 function m.bind(eid)

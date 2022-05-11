@@ -244,6 +244,9 @@ lefkctx_set_time(lua_State* L) {
 	float frame = 0.0f;
 	if (lua_type(L, 3) == LUA_TNUMBER) {
 		frame = (float)lua_tonumber(L, 3);
+        if (frame < 0.0f) {
+            frame = 0.0f;
+        }
 	}
     ctx->manager->SetPaused(play_handle, false);
     ctx->manager->UpdateHandleToMoveToFrame(play_handle, frame);
