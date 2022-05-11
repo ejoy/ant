@@ -126,10 +126,11 @@ local function check_light_index_list()
     if lil.handle ~= oldhandle then
         assert(lil.handle)
         local ce = w:singleton("cluster_cull_light", "dispatch:in")
-        ce.dispatch.properties.b_light_index_lists.handle = lil.handle
+        local mo = ce.dispatch.material.material_obj
+        mo:set_attrib("b_light_index_lists", lil.handle)
 
-        local cr = w:object("cluster_render", 1)
-        cr.properties.b_light_index_lists.handle = lil.handle
+        local sa = imaterial.system_attribs()
+        sa:update("b_light_index_lists",    lil.handle)
     end
     return true
 end
@@ -153,20 +154,6 @@ function cfs:init()
         "cluster_cull_light",
         "/pkg/ant.resources/materials/cluster_light_cull.material",
         {1, 1, cluster_cull_light_size})
-
-    ecs.create_entity {
-        policy = {
-            "ant.render|cluster_render_entity",
-            "ant.general|name",
-        },
-        data = {
-            name = "cluster_render_entity",
-            cluster_render = {
-                properties = {},
-                cluster_size = cluster_size,
-            },
-        }
-    }
 end
 
 local function update_render_info()
@@ -190,17 +177,17 @@ function cfs:init_world()
     --build
     local be = w:singleton("cluster_build_aabb", "dispatch:in")
     local bmo= be.dispatch.material.material_obj
-    bmo:new_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "build"))
-    bmo:new_attrib("b_light_info",          icompute.create_buffer_property(cluster_buffers.light_info, "build"))
+    bmo:set_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "build"))
+    bmo:set_attrib("b_light_info",          icompute.create_buffer_property(cluster_buffers.light_info, "build"))
 
     --cull
     local ce = w:singleton("cluster_cull_light", "dispatch:in")
     local cmo = ce.dispatch.material.material_obj
-    cmo:new_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "cull"))
-    cmo:new_attrib("b_global_index_count",  icompute.create_buffer_property(cluster_buffers.global_index_count, "cull"))
-    cmo:new_attrib("b_light_grids",         icompute.create_buffer_property(cluster_buffers.light_grids, "cull"))
-    cmo:new_attrib("b_light_index_lists",   icompute.create_buffer_property(cluster_buffers.light_index_lists, "cull"))
-    cmo:new_attrib("b_light_info",          icompute.create_buffer_property(cluster_buffers.light_info, "cull"))
+    cmo:set_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "cull"))
+    cmo:set_attrib("b_global_index_count",  icompute.create_buffer_property(cluster_buffers.global_index_count, "cull"))
+    cmo:set_attrib("b_light_grids",         icompute.create_buffer_property(cluster_buffers.light_grids, "cull"))
+    cmo:set_attrib("b_light_index_lists",   icompute.create_buffer_property(cluster_buffers.light_index_lists, "cull"))
+    cmo:set_attrib("b_light_info",          icompute.create_buffer_property(cluster_buffers.light_info, "cull"))
 end
 
 local function cull_lights(viewid)

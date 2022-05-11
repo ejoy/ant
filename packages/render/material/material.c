@@ -742,7 +742,7 @@ load_attrib_from_data(lua_State *L, int arena_idx, int data_index, uint16_t id) 
 }
 
 static int
-lmaterial_new_attrib(lua_State *L){
+lmaterial_set_attrib(lua_State *L){
 	struct material* mat = (struct material*)luaL_checkudata(L, 1, "ANT_MATERIAL");
 	if (LUA_TUSERDATA != lua_getiuservalue(L, 1, 2)) {	// get cobject
 		return luaL_error(L, "Invalid material object, not found cobject in uservalue 2");
@@ -755,12 +755,15 @@ lmaterial_new_attrib(lua_State *L){
 	const int lut_idx = lua_gettop(L);
 
 	const char* attribname = luaL_checkstring(L, 2);
-	if (LUA_TNIL != lua_getfield(L, lut_idx, attribname)){
-		luaL_error(L, "material object already has attrib:%s", attribname);
+	luaL_checktype(L, 3, LUA_TTABLE);
+
+	if (LUA_TNIL == lua_getfield(L, lut_idx, attribname)){
+		mat->attrib = load_attrib_from_data(L, arena_idx, 3, mat->attrib);
+	} else {
+		const uint16_t id = (uint16_t)lua_tointeger(L, -1);
+		update_attrib(L, arena, al_attrib(arena, id), 3);
 	}
 	lua_pop(L, 1);
-	luaL_checktype(L, 3, LUA_TTABLE);
-	mat->attrib = load_attrib_from_data(L, arena_idx, 3, mat->attrib);
 	return 0;
 }
 
@@ -1099,7 +1102,7 @@ lmaterial_new(lua_State *L) {
 			{ "__gc",		lmaterial_gc },
 			{ "attribs", 	lmaterial_attribs },
 			{ "instance", 	lmaterial_instance },
-			{ "new_attrib",	lmaterial_new_attrib},
+			{ "set_attrib",	lmaterial_set_attrib},
 			{ NULL, 		NULL },
 		};
 		luaL_setfuncs(L, l, 0);
