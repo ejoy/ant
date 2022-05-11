@@ -77,12 +77,12 @@ end
 function irender.draw(vid, ri, mat)
 	ri:set_transform()
 
-	local _mat = mat or ri.material
-	_mat{}
+	local m = mat or ri
+	m.material{}
 
 	update_mesh(ri.vb, ri.ib)
 
-	bgfx.submit(vid, _mat.fx.prog, 0)
+	bgfx.submit(vid, m.fx.prog, 0)
 end
 
 function irender.get_main_view_rendertexture()

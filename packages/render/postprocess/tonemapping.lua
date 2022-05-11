@@ -12,6 +12,9 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local imesh     = ecs.import.interface "ant.asset|imesh"
 local iexposure = ecs.import.interface "ant.camera|iexposure"
 
+local setting   = import_package "ant.settings".setting
+local enable_bloom = setting:get "graphic/postprocess/bloom/enable"
+
 local tm_viewid<const> = viewidmgr.get "tonemapping"
 local tm_materialfile<const> = "/pkg/ant.resources/materials/postprocess/tonemapping.material"
 local tm_auto_material, tm_manual_material
@@ -78,7 +81,9 @@ local function update_properties()
     local pp = w:singleton("postprocess", "postprocess_input:in")
     local ppi = pp.postprocess_input
     tm_material.material.s_scene_color = assert(ppi.scene_color_handle)
-    tm_material.material.s_bloom_color = ppi.bloom_color_handle
+    if enable_bloom then
+        tm_material.material.s_bloom_color = ppi.bloom_color_handle
+    end
 end
 
 function tm_sys:tonemapping()

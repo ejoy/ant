@@ -788,7 +788,7 @@ set_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_ar
 	if (pid == INVALID_ATTRIB) {
 		const int n = al_attrib_num(arena, a);
 		assert(check_uniform_num(arena, a, n));
-		pid = create_attrib(L, arena_idx, n, mi->patch_attrib, a->type, a->patch, a->u.handle);
+		pid = create_attrib(L, arena_idx, n, mi->patch_attrib, a->type, al_attrib_id(arena, a), a->u.handle);
 		mi->patch_attrib = pid;
 	}
 	update_attrib(L, arena, al_attrib(arena, pid), value_index);
