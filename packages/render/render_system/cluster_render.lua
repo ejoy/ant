@@ -189,19 +189,18 @@ function cfs:init_world()
 
     --build
     local be = w:singleton("cluster_build_aabb", "dispatch:in")
-    local bm = be.dispatch.material
-    bm.b_cluster_AABBs    = icompute.create_buffer_property(cluster_buffers.AABB, "build")
-    bm.b_light_info       = icompute.create_buffer_property(cluster_buffers.light_info, "build")
+    local bmo= be.dispatch.material.material_obj
+    bmo:new_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "build"))
+    bmo:new_attrib("b_light_info",          icompute.create_buffer_property(cluster_buffers.light_info, "build"))
 
     --cull
     local ce = w:singleton("cluster_cull_light", "dispatch:in")
-    local cm = ce.dispatch.material
-
-    cm.b_cluster_AABBs       = icompute.create_buffer_property(cluster_buffers.AABB, "cull")
-    cm.b_global_index_count  = icompute.create_buffer_property(cluster_buffers.global_index_count, "cull")
-    cm.b_light_grids         = icompute.create_buffer_property(cluster_buffers.light_grids, "cull")
-    cm.b_light_index_lists   = icompute.create_buffer_property(cluster_buffers.light_index_lists, "cull")
-    cm.b_light_info          = icompute.create_buffer_property(cluster_buffers.light_info, "cull")
+    local cmo = ce.dispatch.material.material_obj
+    cmo:new_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "cull"))
+    cmo:new_attrib("b_global_index_count",  icompute.create_buffer_property(cluster_buffers.global_index_count, "cull"))
+    cmo:new_attrib("b_light_grids",         icompute.create_buffer_property(cluster_buffers.light_grids, "cull"))
+    cmo:new_attrib("b_light_index_lists",   icompute.create_buffer_property(cluster_buffers.light_index_lists, "cull"))
+    cmo:new_attrib("b_light_info",          icompute.create_buffer_property(cluster_buffers.light_info, "cull"))
 end
 
 local function cull_lights(viewid)

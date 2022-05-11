@@ -36,7 +36,7 @@ function ic.create_buffer_property(bufferdesc, which_stage)
     local access = which_stage .. "_access"
     return {
         type    = "b",
-        handle  = bufferdesc.handle,
+        value  = bufferdesc.handle,
         stage   = bufferdesc[stage],
         access  = bufferdesc[access],
     }
@@ -45,7 +45,7 @@ end
 function ic.create_image_property(handle, stage, mip, access)
     return {
         type    = "i",
-        handle  = handle,
+        value  = handle,
         stage   = stage,
         mip     = mip,
         access  = access

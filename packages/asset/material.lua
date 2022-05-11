@@ -223,9 +223,6 @@ local function generate_properties(fx, properties)
 end
 
 local function build_material(mc, filename)
-	if filename:match "downsample.material" then
-		print ""
-	end
 	local properties= generate_properties(mc.fx, mc.properties)
 	local material = rmat.material(CMATOBJ, mc.state, properties, filename)
 	return {
