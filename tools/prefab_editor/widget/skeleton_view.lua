@@ -719,7 +719,7 @@ function m.save(path)
             clip.amplitude_rot_ui = nil
         end
     end
-    utils.write_file(filename, stringify({name = current_anim.name, duration = current_anim.duration, joint_anims = joint_anims, sample_ratio = sample_ratio}))
+    utils.write_file(filename, stringify({name = current_anim.name, duration = current_anim.duration, joint_anims = joint_anims, sample_ratio = sample_ratio, skeleton = tostring(current_skeleton)}))
     if file_path ~= filename then
         file_path = filename
     end

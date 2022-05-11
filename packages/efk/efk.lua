@@ -181,6 +181,7 @@ local function load_efk(filename)
         speed = 1.0,
         loop = false,
         dynamic = false, --update efk world matrix every frame
+        visible = true,
         worldmat = math3d.ref(math3d.matrix(mc.mat_identity))
     }
 end
@@ -243,20 +244,32 @@ local event_scene = world:sub{"scene_changed"}
 function efk_sys:follow_transform_updated()
     for v in w:select "efk:in scene:in" do
         local efk = v.efk
-        if efk.play_handle and not efk_ctx:is_alive(efk.play_handle) then
-            if efk.loop then
-                efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene._worldmat), efk.speed)
-            else
-                efk.play_handle = nil
+        if efk.play_handle then
+            if not efk_ctx:is_alive(efk.play_handle) then
+                if efk.loop then
+                    efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene._worldmat), efk.speed)
+                else
+                    efk.play_handle = nil
+                end
             end
-        elseif efk.do_play  then
-            efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene._worldmat), efk.speed)
-            efk.do_play = false
-        end
-        --TODO: layz update, handle scene_changed event?
-        if efk.play_handle and efk.dynamic then
-            efk.worldmat.m = v.scene._worldmat
-            efk_ctx:update_transform(efk.play_handle, math3d.value_ptr(v.scene._worldmat))
+            --TODO: layz update, handle scene_changed event?
+            if efk.dynamic then
+                efk.worldmat.m = v.scene._worldmat
+                efk_ctx:update_transform(efk.play_handle, math3d.value_ptr(v.scene._worldmat))
+            end
+        else
+            if efk.visible then
+                if efk.do_play or efk.do_settime then
+                    efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene._worldmat), efk.speed)
+                end
+                if efk.do_play then
+                    efk.do_play = nil
+                elseif efk.do_settime then
+                    efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene._worldmat), efk.speed)
+                    efk_ctx:set_time(efk.play_handle, efk.do_settime)
+                    efk.do_settime = nil
+                end
+            end
         end
     end
 end
@@ -310,10 +323,8 @@ function iefk.create(filename, config)
 end
 
 function iefk.play(e)
-    --e.efk.play_handle = efk_ctx:play(e.efk.handle, math3d.value_ptr(e.efk.worldmat), e.efk.speed)
+    iefk.stop(e)
     e.efk.do_play = true
-    -- w:sync("scene:in", e)
-    -- e.efk.play_handle = efk_ctx:play(e.efk.handle, math3d.value_ptr(e.scene._worldmat), e.efk.speed)
 end
 
 function iefk.pause(e, b)
@@ -323,18 +334,26 @@ function iefk.pause(e, b)
 end
 
 function iefk.set_time(e, t)
+    if e.efk.do_settime then
+        return
+    end
+    print("----iefk.set_time")
     if e.efk.play_handle then
         efk_ctx:set_time(e.efk.play_handle, t)
+    else
+        e.efk.do_settime = t
     end
 end
 
 function iefk.set_speed(e, s)
+    e.efk.speed = s
     if e.efk.play_handle then
         efk_ctx:set_speed(e.efk.play_handle, s)
     end
 end
 
 function iefk.set_visible(e, b)
+    e.efk.visible = b
     if e.efk.play_handle then
         efk_ctx:set_visible(e.efk.play_handle, b)
     end
@@ -355,5 +374,6 @@ end
 function iefk.stop(e)
     if e.efk.play_handle then
         efk_ctx:stop(e.efk.play_handle)
+        e.efk.play_handle = nil
     end
 end

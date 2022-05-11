@@ -27,7 +27,7 @@ local rc        = import_package "ant.compile_resource"
 local global_data = require "common.global_data"
 
 local m = {}
-local edit_anims = {}
+local edit_anims
 local current_e
 local imgui_message
 local current_anim
@@ -55,7 +55,7 @@ local event_type = {
 
 local current_event
 local current_clip
-local anim_group_eid = {}
+local anim_eid_group = {}
 local anim_clips = {}
 local all_clips = {}
 local all_groups = {}
@@ -124,7 +124,7 @@ end
 
 local function get_anim_group_eid(eid, name)
     local anims = get_runtime_animations(eid)
-    return anim_group_eid[anims[name]]
+    return anim_eid_group[anims[name]]
 end
 
 local function anim_group_set_clips(eid, clips)
@@ -134,26 +134,29 @@ local function anim_group_set_clips(eid, clips)
         iani.set_clips(anim_eid, clips)
     end
 end
-local function anim_group_set_time(e, t)
-    local group_e = get_anim_group_eid(e, current_anim.name)
-    if not group_e then return end
-    for _, anim_e in ipairs(group_e) do
-        iani.set_time(anim_e, t)
-    end
+local function anim_group_set_time(eid, t)
+    iani.set_time(eid, t)
+    -- local group_e = get_anim_group_eid(eid, current_anim.name)
+    -- if not group_e then return end
+    -- for _, anim_e in ipairs(group_e) do
+    --     iani.set_time(anim_e, t)
+    -- end
 end
 
 local function anim_group_stop_effect(eid)
-    local group_eid = get_anim_group_eid(eid, current_anim.name)
-    if not group_eid then return end
-    for _, anim_eid in ipairs(group_eid) do
-        iani.stop_effect(anim_eid)
-    end
+    iani.stop_effect(eid)
+    -- local group_eid = get_anim_group_eid(eid, current_anim.name)
+    -- if not group_eid then return end
+    -- for _, anim_eid in ipairs(group_eid) do
+    --     iani.stop_effect(anim_eid)
+    -- end
 end
 
-local function anim_play(e, state, play)
+local function anim_play(eid, state, play)
     state.key_event = to_runtime_event(anim_key_event)
-    local group_e = get_anim_group_eid(e, current_anim.name)
+    local group_e = get_anim_group_eid(eid, current_anim.name)
     if not group_e then return end
+    iom.set_position(world:entity(hierarchy:get_node(hierarchy:get_node(eid).parent).parent), {0.0,0.0,0.0})
     for _, anim_e in ipairs(group_e) do
         iom.set_position(world:entity(hierarchy:get_node(hierarchy:get_node(anim_e).parent).parent), {0.0,0.0,0.0})
         play(anim_e, state)
@@ -161,11 +164,12 @@ local function anim_play(e, state, play)
 end
 
 local function anim_group_set_loop(eid, ...)
-    local group_eid = get_anim_group_eid(eid, current_anim.name)
-    if not group_eid then return end
-    for _, anim_eid in ipairs(group_eid) do
-        iani.set_loop(anim_eid, ...)
-    end
+    iani.set_loop(eid, ...)
+    -- local group_eid = get_anim_group_eid(eid, current_anim.name)
+    -- if not group_eid then return end
+    -- for _, anim_eid in ipairs(group_eid) do
+    --     iani.set_loop(anim_eid, ...)
+    -- end
 end
 
 local function anim_group_delete(eid, anim_name)
@@ -180,18 +184,17 @@ local function anim_group_delete(eid, anim_name)
         if template.template.data.animation_birth == anim_name then
             template.template.data.animation_birth = next(animation_map) or ""
         end
-        if edit_anims[anim_eid] then
-            local name_idx = find_index(edit_anims[anim_eid].name_list, anim_name)
-            table.remove(edit_anims[anim_eid].name_list, name_idx)
-        end
     end
+    local name_idx = find_index(edit_anims.name_list, anim_name)
+    table.remove(edit_anims.name_list, name_idx)
 end
 
 local function anim_group_pause(eid, p)
-    local group_eid = get_anim_group_eid(eid, current_anim.name)
-    for _, anim_eid in ipairs(group_eid) do
-        iani.pause(anim_eid, p)
-    end
+    iani.pause(eid, p)
+    -- local group_eid = get_anim_group_eid(eid, current_anim.name)
+    -- for _, anim_eid in ipairs(group_eid) do
+    --     iani.pause(anim_eid, p)
+    -- end
 end
 
 local default_collider_define = {
@@ -336,7 +339,7 @@ end
 local widget_utils  = require "widget.utils"
 
 local function set_current_anim(anim_name)
-    local anim = edit_anims[current_e][anim_name]
+    local anim = edit_anims[anim_name]
     if not anim then
         local msg = anim_name .. " not exist."
         logger.error({tag = "Editor", message = msg})
@@ -791,9 +794,12 @@ local function get_clips_filename()
 end
 
 function m.save_keyevent(filename)
+    local revent = to_runtime_event(anim_key_event)
+    if #revent < 1 then
+        return
+    end
     local prefab_filename = filename or prefab_mgr:get_current_filename():sub(1, -8) .. ".event"
-    --utils.write_file(prefab_filename:sub(1, -8) .. ".lua", "return " .. utils.table_to_string(to_runtime_event(anim_key_event)))
-    utils.write_file(prefab_filename, stringify(to_runtime_event(anim_key_event)))
+    utils.write_file(prefab_filename, stringify(revent))
 end
 function m.save_clip(path)
     m.save_keyevent(path)
@@ -1094,9 +1100,10 @@ function m.clear()
     current_anim = nil
     all_clips = {}
     all_groups = {}
-    anim_group_eid = {}
+    anim_eid_group = {}
     current_event = nil
     current_clip = nil
+    edit_anims = nil
 end
 
 local anim_name = ""
@@ -1134,224 +1141,225 @@ function m.show()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     for _ in uiutils.imgui_windows("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
-    --if imgui.windows.Begin ("Animation", imgui.flags.Window {'AlwaysAutoResize'}) then
-        if edit_anims[current_e] then
-            if current_anim then
-                anim_state.is_playing = iani.is_playing(current_e)
-                if anim_state.is_playing then
-                    anim_state.current_frame = math.floor(iani.get_time(current_e) * sample_ratio)
+        if current_anim then
+            anim_state.is_playing = iani.is_playing(current_e)
+            if anim_state.is_playing then
+                anim_state.current_frame = math.floor(iani.get_time(current_e) * sample_ratio)
+            end
+        end
+        imgui.cursor.SameLine()
+        local title = "Add Animation"
+        if imgui.widget.Button("Add") then
+            anim_path = ""
+            imgui.windows.OpenPopup(title)
+        end
+        local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize"})
+        if change then
+            imgui.widget.Text("Name : ")
+            imgui.cursor.SameLine()
+            if imgui.widget.InputText("##Name", ui_anim_name) then
+                anim_name = tostring(ui_anim_name.text)
+            end
+            imgui.widget.Text("Path : " .. anim_glb_path)
+            imgui.cursor.SameLine()
+            local origin_name
+            if imgui.widget.Button("...") then
+                local localpath = uiutils.get_open_file_path("Animation", "anim")
+                if localpath then
+                    anim_path = access.virtualpath(global_data.repo, fs.path(localpath))
                 end
+                -- local glb_filename = uiutils.get_open_file_path("Animation", "glb")
+                -- if glb_filename then
+                --     external_anim_list = {}
+                --     current_external_anim = nil
+                --     anim_glb_path = "/" .. access.virtualpath(global_data.repo, fs.path(glb_filename))
+                --     rc.compile(anim_glb_path)
+                --     local external_path = rc.compile(anim_glb_path .. "|animations")
+                --     for path in fs.pairs(external_path) do
+                --         if path:equal_extension ".ozz" then
+                --             local filename = path:filename():string()
+                --             if filename ~= "skeleton.ozz" then
+                --                 external_anim_list[#external_anim_list + 1] = filename
+                --             end
+                --         end
+                --     end
+                -- end
+            end
+            -- if #external_anim_list > 0 then
+            --     imgui.cursor.Separator()
+            --     for _, external_anim in ipairs(external_anim_list) do
+            --         if imgui.widget.Selectable(external_anim, current_external_anim and (current_external_anim == external_anim), 0, 0, imgui.flags.Selectable {"DontClosePopups"}) then
+            --             current_external_anim = external_anim
+            --             anim_path = anim_glb_path .. "|animations/" .. external_anim
+            --             if #anim_name < 1 then
+            --                 anim_name = fs.path(anim_path):stem():string()
+            --             end
+            --         end
+            --     end
+            -- end
+            imgui.cursor.Separator()
+            if imgui.widget.Button("  OK  ") then
+                if #anim_name > 0 and #anim_path > 0 then
+                    local update = true
+                    local anims = get_runtime_animations(current_e)
+                    if anims[anim_name] then
+                        local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
+                        uiutils.confirm_dialog(confirm)
+                        if confirm.answer and confirm.answer == 0 then
+                            update = false
+                        end
+                    end
+                    if update then
+                        local group_eid = get_anim_group_eid(current_e, current_anim.name)
+                        --TODO: set for group eid
+                        for _, eid in ipairs(group_eid) do
+                            local template = hierarchy:get_template(eid)
+                            template.template.data.animation[anim_name] = anim_path
+                            world:entity(eid).animation[anim_name] = anim_path
+                        end
+                        --TODO:reload
+                        reload = true
+                    end
+                end
+                clear_add_animation_cache()
+                imgui.windows.CloseCurrentPopup()
             end
             imgui.cursor.SameLine()
-            local title = "Add Animation"
-            if imgui.widget.Button("Add") then
-                anim_path = ""
-                imgui.windows.OpenPopup(title)
+            if imgui.widget.Button("Cancel") then
+                clear_add_animation_cache()
+                imgui.windows.CloseCurrentPopup()
             end
-            local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize"})
-            if change then
-                imgui.widget.Text("Name : ")
-                imgui.cursor.SameLine()
-                if imgui.widget.InputText("##Name", ui_anim_name) then
-                    anim_name = tostring(ui_anim_name.text)
-                end
-                imgui.widget.Text("Path : " .. anim_glb_path)
-                imgui.cursor.SameLine()
-                local origin_name
-                if imgui.widget.Button("...") then
-                    local glb_filename = uiutils.get_open_file_path("Animation", "glb")
-                    if glb_filename then
-                        external_anim_list = {}
-                        current_external_anim = nil
-                        anim_glb_path = "/" .. access.virtualpath(global_data.repo, fs.path(glb_filename))
-                        rc.compile(anim_glb_path)
-                        local external_path = rc.compile(anim_glb_path .. "|animations")
-                        for path in fs.pairs(external_path) do
-                            if path:equal_extension ".ozz" then
-                                local filename = path:filename():string()
-                                if filename ~= "skeleton.ozz" then
-                                    external_anim_list[#external_anim_list + 1] = filename
-                                end
-                            end
-                        end
-                    end
-                end
-                if #external_anim_list > 0 then
-                    imgui.cursor.Separator()
-                    for _, external_anim in ipairs(external_anim_list) do
-                        if imgui.widget.Selectable(external_anim, current_external_anim and (current_external_anim == external_anim), 0, 0, imgui.flags.Selectable {"DontClosePopups"}) then
-                            current_external_anim = external_anim
-                            anim_path = anim_glb_path .. "|animations/" .. external_anim
-                            if #anim_name < 1 then
-                                anim_name = fs.path(anim_path):stem():string()
-                            end
-                        end
-                    end
-                end
-                imgui.cursor.Separator()
-                if imgui.widget.Button("  OK  ") then
-                    if #anim_name > 0 and #anim_path > 0 then
-                        local update = true
-                        local anims = get_runtime_animations(current_e)
-                        if anims[anim_name] then
-                            local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
-                            uiutils.confirm_dialog(confirm)
-                            if confirm.answer and confirm.answer == 0 then
-                                update = false
-                            end
-                        end
-                        if update then
-                            local group_eid = get_anim_group_eid(current_e, current_anim.name)
-                            --TODO: set for group eid
-                            for _, eid in ipairs(group_eid) do
-                                local template = hierarchy:get_template(eid)
-                                template.template.data.animation[anim_name] = anim_path
-                                world:entity(eid).animation[anim_name] = anim_path
-                            end
-                            --TODO:reload
-                            reload = true
-                        end
-                    end
-                    clear_add_animation_cache()
-                    imgui.windows.CloseCurrentPopup()
-                end
-                imgui.cursor.SameLine()
-                if imgui.widget.Button("Cancel") then
-                    clear_add_animation_cache()
-                    imgui.windows.CloseCurrentPopup()
-                end
-                imgui.windows.EndPopup()
-            end
+            imgui.windows.EndPopup()
+        end
 
-            imgui.cursor.SameLine()
-            if imgui.widget.Button("Remove") then
-                anim_group_delete(current_e, current_anim.name)
-                local nextanim = edit_anims[current_e].name_list[1]
-                if nextanim then
-                    set_current_anim(nextanim)
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("Remove") then
+            anim_group_delete(current_e, current_anim.name)
+            local nextanim = edit_anims.name_list[1]
+            if nextanim then
+                set_current_anim(nextanim)
+                set_current_clip(nil)
+            end
+            reload = true
+        end
+        imgui.cursor.SameLine()
+        imgui.cursor.PushItemWidth(150)
+        if imgui.widget.BeginCombo("##AnimationList", {current_anim.name, flags = imgui.flags.Combo {}}) then
+            for _, name in ipairs(edit_anims.name_list) do
+                if imgui.widget.Selectable(name, current_anim.name == name) then
+                    set_current_anim(name)
                     set_current_clip(nil)
                 end
-                reload = true
             end
+            imgui.widget.EndCombo()
+        end
+        imgui.cursor.PopItemWidth()
+        imgui.cursor.SameLine()
+        local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
+        if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
+            if anim_state.is_playing then
+                anim_group_pause(current_e, true)
+            else
+                anim_play(current_e, {name = current_anim.name, loop = ui_loop[1], manual = false}, iani.play)
+            end
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Checkbox("loop", ui_loop) then
+            anim_group_set_loop(current_e, ui_loop[1])
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Checkbox("showskeleton", ui_showskeleton) then
+            show_skeleton(ui_showskeleton[1])
+        end
+        if all_clips then
             imgui.cursor.SameLine()
-            imgui.cursor.PushItemWidth(150)
-            if imgui.widget.BeginCombo("##AnimationList", {current_anim.name, flags = imgui.flags.Combo {}}) then
-                for _, name in ipairs(edit_anims[current_e].name_list) do
-                    if imgui.widget.Selectable(name, current_anim.name == name) then
-                        set_current_anim(name)
-                        set_current_clip(nil)
-                    end
-                end
-                imgui.widget.EndCombo()
+            if imgui.widget.Button("SaveEvent") then
+                m.save_keyevent()
             end
-            imgui.cursor.PopItemWidth()
-            imgui.cursor.SameLine()
-            local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
-            if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
-                if anim_state.is_playing then
-                    anim_group_pause(current_e, true)
-                else
-                    anim_play(current_e, {name = current_anim.name, loop = ui_loop[1], manual = false}, iani.play)
-                end
+        end
+        imgui.cursor.SameLine()
+        local current_time = iani.get_time(current_e)
+        imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
+        imgui_message = {}
+        imgui.widget.Sequencer(edit_anims, anim_state, imgui_message)
+        -- clear dirty flag
+        anim_state.clip_range_dirty = 0
+        set_event_dirty(0)
+        --
+        local move_type
+        local new_frame_idx
+        local move_delta
+        for k, v in pairs(imgui_message) do
+            if k == "pause" then
+                anim_group_pause(current_e, true)
+                anim_state.current_frame = v
+                anim_group_set_time(current_e, v / sample_ratio)
+            elseif k == "selected_frame" then
+                new_frame_idx = v
+            elseif k == "move_type" then
+                move_type = v
+            elseif k == "move_delta" then
+                move_delta = v
             end
-            imgui.cursor.SameLine()
-            if imgui.widget.Checkbox("loop", ui_loop) then
-                anim_group_set_loop(current_e, ui_loop[1])
-            end
-            imgui.cursor.SameLine()
-            if imgui.widget.Checkbox("showskeleton", ui_showskeleton) then
-                show_skeleton(ui_showskeleton[1])
-            end
-            if all_clips then
-                imgui.cursor.SameLine()
-                if imgui.widget.Button("SaveEvent") then
-                    m.save_keyevent()
-                end
-            end
-            imgui.cursor.SameLine()
-            local current_time = iani.get_time(current_e)
-            imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
-            imgui_message = {}
-            imgui.widget.Sequencer(edit_anims[current_e], anim_state, imgui_message)
-            -- clear dirty flag
-            anim_state.clip_range_dirty = 0
-            set_event_dirty(0)
-            --
-            local move_type
-            local new_frame_idx
-            local move_delta
-            for k, v in pairs(imgui_message) do
-                if k == "pause" then
-                    anim_group_pause(current_e, true)
-                    anim_state.current_frame = v
-                    anim_group_set_time(current_e, v / sample_ratio)
-                elseif k == "selected_frame" then
-                    new_frame_idx = v
-                elseif k == "move_type" then
-                    move_type = v
-                elseif k == "move_delta" then
-                    move_delta = v
-                end
-            end
-            on_move_keyframe(new_frame_idx, move_type)
-            if move_type and move_type ~= 0 then
-                on_move_clip(move_type, anim_state.selected_clip_index, move_delta)
-            end
-            imgui.cursor.Separator()
-            if imgui.table.Begin("EventColumns", 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
-                imgui.table.SetupColumn("Bones", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                imgui.table.SetupColumn("Event", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                imgui.table.SetupColumn("Event(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 2.0)
-                -- imgui.table.SetupColumn("Clip", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                -- imgui.table.SetupColumn("Clip(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                -- imgui.table.SetupColumn("Group", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                -- imgui.table.SetupColumn("Group(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-                imgui.table.HeadersRow()
+        end
+        on_move_keyframe(new_frame_idx, move_type)
+        if move_type and move_type ~= 0 then
+            on_move_clip(move_type, anim_state.selected_clip_index, move_delta)
+        end
+        imgui.cursor.Separator()
+        if imgui.table.Begin("EventColumns", 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
+            imgui.table.SetupColumn("Bones", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+            imgui.table.SetupColumn("Event", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+            imgui.table.SetupColumn("Event(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 2.0)
+            -- imgui.table.SetupColumn("Clip", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+            -- imgui.table.SetupColumn("Clip(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+            -- imgui.table.SetupColumn("Group", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+            -- imgui.table.SetupColumn("Group(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
+            imgui.table.HeadersRow()
 
-                imgui.table.NextColumn()
-                local child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##show_joints", child_width, child_height, false)
-                joint_utils:show_joints(joint_map[current_e].root)
-                imgui.windows.EndChild()
+            imgui.table.NextColumn()
+            local child_width, child_height = imgui.windows.GetContentRegionAvail()
+            imgui.windows.BeginChild("##show_joints", child_width, child_height, false)
+            joint_utils:show_joints(joint_map.root)
+            imgui.windows.EndChild()
 
-                imgui.table.NextColumn()
-                child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##show_events", child_width, child_height, false)
-                show_events()
-                imgui.windows.EndChild()
+            imgui.table.NextColumn()
+            child_width, child_height = imgui.windows.GetContentRegionAvail()
+            imgui.windows.BeginChild("##show_events", child_width, child_height, false)
+            show_events()
+            imgui.windows.EndChild()
 
-                imgui.table.NextColumn()
-                child_width, child_height = imgui.windows.GetContentRegionAvail()
-                imgui.windows.BeginChild("##show_current_event", child_width, child_height, false)
-                show_current_event()
-                imgui.windows.EndChild()
-                
-                -- imgui.table.NextColumn()
-                -- child_width, child_height = imgui.windows.GetContentRegionAvail()
-                -- imgui.windows.BeginChild("##show_clips", child_width, child_height, false)
-                -- show_clips()
-                -- imgui.windows.EndChild()
+            imgui.table.NextColumn()
+            child_width, child_height = imgui.windows.GetContentRegionAvail()
+            imgui.windows.BeginChild("##show_current_event", child_width, child_height, false)
+            show_current_event()
+            imgui.windows.EndChild()
+            
+            -- imgui.table.NextColumn()
+            -- child_width, child_height = imgui.windows.GetContentRegionAvail()
+            -- imgui.windows.BeginChild("##show_clips", child_width, child_height, false)
+            -- show_clips()
+            -- imgui.windows.EndChild()
 
-                -- imgui.table.NextColumn()
-                -- child_width, child_height = imgui.windows.GetContentRegionAvail()
-                -- imgui.windows.BeginChild("##show_current_clip", child_width, child_height, false)
-                -- show_current_clip()
-                -- imgui.windows.EndChild()
+            -- imgui.table.NextColumn()
+            -- child_width, child_height = imgui.windows.GetContentRegionAvail()
+            -- imgui.windows.BeginChild("##show_current_clip", child_width, child_height, false)
+            -- show_current_clip()
+            -- imgui.windows.EndChild()
 
-                -- imgui.table.NextColumn()
-                -- child_width, child_height = imgui.windows.GetContentRegionAvail()
-                -- imgui.windows.BeginChild("##show_groups", child_width, child_height, false)
-                -- show_groups()
-                -- imgui.windows.EndChild()
-                
-                -- imgui.table.NextColumn()
-                -- child_width, child_height = imgui.windows.GetContentRegionAvail()
-                -- imgui.windows.BeginChild("##show_current_group", child_width, child_height, false)
-                -- show_current_group()
-                -- imgui.windows.EndChild()
+            -- imgui.table.NextColumn()
+            -- child_width, child_height = imgui.windows.GetContentRegionAvail()
+            -- imgui.windows.BeginChild("##show_groups", child_width, child_height, false)
+            -- show_groups()
+            -- imgui.windows.EndChild()
+            
+            -- imgui.table.NextColumn()
+            -- child_width, child_height = imgui.windows.GetContentRegionAvail()
+            -- imgui.windows.BeginChild("##show_current_group", child_width, child_height, false)
+            -- show_current_group()
+            -- imgui.windows.EndChild()
 
-                imgui.table.End()
-            end
+            imgui.table.End()
         end
     end
     if reload then
@@ -1411,12 +1419,12 @@ end
 
 local function construct_edit_animations(eid)
     local e = world:entity(eid)
-    edit_anims[eid] = {
+    edit_anims = {
         id          = e.scene.id,
         name_list   = {},
         birth       = e.animation_birth,
     }
-    local edit_anim = edit_anims[eid]
+    local edit_anim = edit_anims
     local animations = get_runtime_animations(eid)
     local parentNode = hierarchy:get_node(hierarchy:get_node(eid).parent)
     
@@ -1428,7 +1436,6 @@ local function construct_edit_animations(eid)
             set_event_dirty(-1)
         end
     end
-    
 
     for key, anim in pairs(animations) do
         if not anim_clips[key] then
@@ -1441,29 +1448,28 @@ local function construct_edit_animations(eid)
             key_event = keyevents
         }
         edit_anim.name_list[#edit_anim.name_list + 1] = key
-        if not anim_group_eid[anim] then
-            anim_group_eid[anim] = {}
+        if not anim_eid_group[anim] then
+            anim_eid_group[anim] = {}
         end
-        
+        local current_group = anim_eid_group[anim]
         for _, child in ipairs(parentNode.children) do
             local handle = get_runtime_animations(child.eid)
             if handle and handle._handle == animations._handle then
-                if not find_index(anim_group_eid[anim], child.eid)  then
-                    anim_group_eid[anim][#anim_group_eid[anim] + 1] = child.eid
+                if not find_index(current_group, child.eid)  then
+                    current_group[#current_group + 1] = child.eid
                 end
             end
         end
     end
     table.sort(edit_anim.name_list)
     set_current_anim(edit_anim.birth)
-    joint_map[eid], joint_list[eid] = joint_utils:get_joints(world:entity(eid))
+    joint_map, joint_list = joint_utils:get_joints(world:entity(eid))
     e._animation.joint_list = joint_list
     hierarchy:update_slot_list(world)
 end
 
 function m.bind(eid)
     if not eid then
-        --current_e = e
         return
     end
     if not world:entity(eid).animation then
@@ -1472,7 +1478,7 @@ function m.bind(eid)
     if current_e ~= eid then
         current_e = eid
     end
-    if not edit_anims[eid] then
+    if not edit_anims then
         construct_edit_animations(eid)
     end
 end
