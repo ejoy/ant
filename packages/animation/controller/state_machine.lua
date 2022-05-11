@@ -390,7 +390,8 @@ function iani.set_time(eid, second)
 				if ev.event_type == "Effect" then
 					if ev.effect then
 						-- world:prefab_event(ev.effect, "time", "effect", current_time - events.time, false)
-						-- iefk.set_time(world:entity(ev.effect), current_time - events.time)
+						local timetoframe = (current_time - events.time) * 30
+						iefk.set_time(world:entity(ev.effect), timetoframe)
 					end
 				end
 			end
