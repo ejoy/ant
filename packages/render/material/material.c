@@ -92,7 +92,7 @@ struct material_instance {
 
 struct attrib_arena *
 arena_new(lua_State *L, bgfx_interface_vtbl_t *bgfx, struct math3d_api *mapi, struct encoder_holder *h) {
-	struct attrib_arena * a = (struct attrib_arena *)lua_newuserdatauv(L, sizeof(struct attrib_arena), 2);
+	struct attrib_arena * a = (struct attrib_arena *)lua_newuserdatauv(L, sizeof(struct attrib_arena), 3);
 	a->bgfx = bgfx;
 	a->math = mapi;
 	a->eh = h;
@@ -845,23 +845,27 @@ lmaterial_gc(lua_State *L) {
 	}
 	lua_getupvalue(L, -1, 2);	// cobject
 	assert(lua_type(L, -1) == LUA_TUSERDATA);
-	if (LUA_TTABLE == lua_getiuservalue(L, -1, 3)){// material invalid attrib list table
+	if (LUA_TTABLE != lua_getiuservalue(L, -1, 3)){// material invalid attrib list table
 		luaL_error(L, "Invalid uservalue in 'cobject', uservalue in 3 should ba invalid material atrrib table");
 	}
+	const int iml_idx = lua_gettop(L);
 	int n = (int)lua_rawlen(L, -1);
 	if (mat->attrib != INVALID_ATTRIB) {
 		lua_pushinteger(L, mat->attrib);
-		lua_rawseti(L, -2, ++n);
+		lua_rawseti(L, iml_idx, ++n);
 		mat->attrib = INVALID_ATTRIB;
 	}
-	lua_pop(L, 2);				// cobject, material invalid attrib list
 
 	//push material instance invalid attrib list to material invalid attrib list table
 	int i;
 	for (i=0;i<free_instance;i++) {
-		lua_rawgeti(L, instance_index, i+1);
-		lua_rawseti(L, -2, ++n);
+		if ( LUA_TNUMBER != lua_rawgeti(L, instance_index, i+1)){
+			luaL_error(L, "Invalid data in invalid material instance table, number excepted");
+		}
+		lua_rawseti(L, iml_idx, ++n);
 	}
+
+	lua_pop(L, 2);				// cobject, material invalid attrib list
 	return 0;
 }
 
