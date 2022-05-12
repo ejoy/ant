@@ -165,8 +165,8 @@ function page_meta:on_dirty(index)
 end
 
 function page_meta:on_dirty_all(item_count)
-    if item_count <= 0 then
-        return
+    if item_count < 0 then
+        item_count = 0
     end
     self.item_count = item_count
     self.page_count = math.ceil(item_count / (self.row * self.col))
