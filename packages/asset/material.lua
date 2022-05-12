@@ -18,7 +18,11 @@ function imaterial.get_property(e, who)
 end
 
 function imaterial.load(mp, setting)
-	return assetmgr.resource(url.create(mp, setting))
+	local material = assetmgr.resource(url.create(mp, setting))
+	return {
+		material= material.object:instance(),
+		fx		= material.fx
+	}
 end
 
 function imaterial.load_url(u)
@@ -34,6 +38,6 @@ local ms = ecs.system "material_system"
 function ms:component_init()
 	w:clear "material_result"
 	for e in w:select "INIT material:in material_setting?in material_result:new" do
-		e.material_result = imaterial.load(e.material, e.material_setting)
+		e.material_result = assetmgr.resource(url.create(e.material, e.material_setting))
 	end
 end

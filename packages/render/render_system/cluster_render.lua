@@ -195,7 +195,7 @@ function cfs:init_world()
 
     --build
     local be = w:singleton("cluster_build_aabb", "dispatch:in")
-    local bmo= be.dispatch.material.material_obj
+    local bmo= be.dispatch.material:get_material()
     bmo:set_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "build"))
     bmo:set_attrib("b_light_info",          icompute.create_buffer_property(cluster_buffers.light_info, "build"))
 
@@ -203,7 +203,7 @@ function cfs:init_world()
 
     --cull
     local ce = w:singleton("cluster_cull_light", "dispatch:in")
-    local cmo = ce.dispatch.material.material_obj
+    local cmo = ce.dispatch.material:get_material()
     cmo:set_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "cull"))
     cmo:set_attrib("b_global_index_count",  icompute.create_buffer_property(cluster_buffers.global_index_count, "cull"))
     cmo:set_attrib("b_light_grids",         icompute.create_buffer_property(cluster_buffers.light_grids, "cull"))

@@ -37,7 +37,8 @@ end
 local function to_v(t, h)
 	assert(type(t) == "table")
 	if t.stage then
-		return to_t(t, h)
+		t.handle = h
+		return t
 	end
 
 	local v = {type="u", handle=h}
@@ -112,8 +113,7 @@ local function init(material, setting)
     end
 
     material.properties = generate_properties(material.fx, material.properties)
-    local matobj = rmat.material(CMATOBJ, material.state, material.properties)
-    material.instance = matobj:instance()
+    material.object = rmat.material(CMATOBJ, material.state, material.properties)
     return material
 end
 

@@ -748,10 +748,8 @@ lmaterial_set_attrib(lua_State *L){
 	return 0;
 }
 
-static int
-lmaterial_get_state(lua_State *L){
-	struct material* mat = (struct material*)luaL_checkudata(L, 1, "ANT_MATERIAL");
-	
+static inline int 
+push_material_state(lua_State *L, struct material *mat){
 	uint64_t state = mat->state;
 	uint32_t rgba = mat->rgba;
 	uint8_t temp[24];
@@ -768,6 +766,12 @@ lmaterial_get_state(lua_State *L){
 		lua_pushlstring(L, (const char *)temp, 16);
 	}
 	return 1;
+}
+
+static int
+lmaterial_get_state(lua_State *L){
+	struct material* mat = (struct material*)luaL_checkudata(L, 1, "ANT_MATERIAL");
+	return push_material_state(L, mat);
 }
 
 
@@ -1008,15 +1012,18 @@ linstance_apply_attrib(lua_State *L) {
 }
 
 static int
-linstance_get_attrib(lua_State *L){
+linstance_get_material(lua_State *L){
 	struct material_instance* mi = (struct material_instance*)lua_touserdata(L, 1);
-	const char* what = luaL_checkstring(L, 2);
-	if (strcmp(what, "material_obj") == 0){
-		lua_pushvalue(L, lua_upvalueindex(1));	// upvalue 1 is material object
-		return 1;
-	}
+	lua_pushvalue(L, lua_upvalueindex(1));	// upvalue 1 is material object
+	return 1;
+}
 
-	return luaL_error(L, "Not support material instance key:%s", what);
+static int
+linstance_get_state(lua_State *L){
+	struct material_instance* mi = (struct material_instance*)lua_touserdata(L, 1);
+	lua_pushvalue(L, lua_upvalueindex(1));	// upvalue 1 is material object
+	struct material * mat = (struct material*)lua_touserdata(L, -1);
+	return push_material_state(L, mat);
 }
 
 // 1: material
@@ -1024,15 +1031,18 @@ linstance_get_attrib(lua_State *L){
 static void
 create_material_instance_metatable(lua_State *L) {
 	luaL_Reg l[] = {
-		{ "__gc", 		linstance_gc		},
-		{ "__newindex", linstance_set_attrib},
-		{ "__index",	linstance_get_attrib},
-		{ "__call", 	linstance_apply_attrib},
+		{ "__gc", 			linstance_gc		},
+		{ "__newindex", 	linstance_set_attrib},
+		{ "__call", 		linstance_apply_attrib},
+		{ "get_material",	linstance_get_material},
+		{ "get_state",		linstance_get_state},
 		{ NULL, 		NULL },
 	};
 	luaL_newlibtable(L, l);
 	lua_insert(L, -3);
 	luaL_setfuncs(L, l, 2);
+	lua_pushvalue(L, -1);
+	lua_setfield(L, -1, "__index");
 }
 
 static inline uint16_t

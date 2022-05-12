@@ -54,11 +54,8 @@ end
 local cs = ecs.system "compute_system"
 function cs:entity_init()
 	for e in w:select "INIT material_result:in dispatch:in" do
-		local mr = e.material_result
-		local d = e.dispatch
         -- no state for compute shader
-        d.material  = mr.material
-        --TODO: need remove
-		d.fx		= mr.fx
+        e.dispatch.material = e.material_result.object:instance()
+        e.dispatch.fx       = e.material_result.fx
 	end
 end

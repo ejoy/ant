@@ -50,13 +50,8 @@ function render_sys:entity_init()
 	end
 
 	for e in w:select "INIT material_result:in render_object:in" do
-		local ro = e.render_object
-		local mr = e.material_result
-		ro.material	= mr.material
-		--TODO: need remove
-		ro.fx			= mr.fx
-		ro.state		= mr.state
-		ro.stencil		= mr.stencil
+		e.render_object.material = e.material_result.object:instance()
+        e.render_object.fx     = e.material_result.fx
 	end
 end
 
