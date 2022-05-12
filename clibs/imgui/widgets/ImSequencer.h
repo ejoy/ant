@@ -35,7 +35,7 @@ namespace ImSequencer
        bool expand{ false };
    };
    extern bool new_anim;
-   extern std::unordered_map<int, std::unordered_map<std::string, anim_detail>> anim_info;
+   extern std::unordered_map<std::string, anim_detail> anim_info;
 
    void Sequencer(bool& pause, int& current_frame, int& selected_entry, int& move_type, int& range_index, int& move_delta);
 

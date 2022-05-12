@@ -1754,7 +1754,7 @@ namespace ImSequencer
 {
 	extern int anim_fps;
 	extern anim_detail* current_anim;
-	extern std::unordered_map<int, std::unordered_map<std::string, anim_detail>> anim_info;
+	extern std::unordered_map<std::string, anim_detail> anim_info;
 }
 
 static int
@@ -1812,8 +1812,8 @@ wSequencer(lua_State* L) {
 		lua_pushnil(L);
 		while (lua_next(L, 1) != 0) {
 			const char* anim_name = lua_tostring(L, -2);
-			auto it = ImSequencer::anim_info[id].find(anim_name);
-			if (it != ImSequencer::anim_info[id].end()) {
+			auto it = ImSequencer::anim_info.find(anim_name);
+			if (it != ImSequencer::anim_info.end()) {
 				auto& item = it->second;
 				if (lua_type(L, -1) == LUA_TTABLE) {
 					init_clip_ranges(item);
@@ -1826,68 +1826,59 @@ wSequencer(lua_State* L) {
 	static int current_frame = 0;
 	static std::string current_anim_name;
 	static int selected_clip_index = -1;
-	static int current_id = -1;
 	if (lua_type(L, 1) == LUA_TTABLE) {
-		auto id = read_field_int(L, "id", -1, 1);
 		auto birth = read_field_string(L, "birth", "", 1);
-		if (current_id != id) {
-			current_id = id;
-			if (ImSequencer::anim_info.find(id) == ImSequencer::anim_info.end()) {
-				auto& current_anim_info = ImSequencer::anim_info[id];
+		if (ImSequencer::anim_info.empty()) {
+			lua_pushnil(L);
+			while (lua_next(L, 1) != 0) {
+				const char* anim_name = lua_tostring(L, -2);
+				if (lua_type(L, -1) == LUA_TTABLE) {
+					auto duration = (float)read_field_float(L, "duration", 0.0f, -1);
+					if (duration > 0.0f) {
+						ImSequencer::anim_info.insert({ std::string(anim_name), ImSequencer::anim_detail{} });
+						auto& item = ImSequencer::anim_info[anim_name];
+						item.duration = duration;
+						init_clip_ranges(item);
+					}
+				}
+				lua_pop(L, 1);
+			}
+			current_anim_name = birth;
+			ImSequencer::current_anim = &ImSequencer::anim_info[birth];
+		}
+		std::string anim_name = read_field_string(L, "anim_name", nullptr, 2);
+		if (current_anim_name != anim_name) {
+			current_anim_name = anim_name;
+			ImSequencer::current_anim = &ImSequencer::anim_info[current_anim_name];
+		}
+		ImSequencer::current_anim->is_playing = read_field_boolean(L, "is_playing", false, 2);
+		current_frame = read_field_int(L, "current_frame", 0, 2);
+		selected_frame = read_field_int(L, "selected_frame", 0, 2);
+		auto event_dirty_num = read_field_int(L, "event_dirty", 0, 2);
+		// add or remove key event
+		if (event_dirty_num == 1) {
+			if (lua_getfield(L, 2, "current_event_list") == LUA_TTABLE
+				&& selected_frame >= 0) {
+				if (!ImSequencer::current_anim->event_flags.empty()) {
+					ImSequencer::current_anim->event_flags[selected_frame] = ((int)lua_rawlen(L, -1) > 0);
+				}
+			}
+			lua_pop(L, 1);
+		} else if (event_dirty_num == -1) {
+			auto duration = read_field_float(L, "duration", 0, 2);
+			auto event_flags = std::vector((int)std::ceil(duration * ImSequencer::anim_fps), false);
+			if (lua_getfield(L, 2, "key_event") == LUA_TTABLE) {
 				lua_pushnil(L);
-				while (lua_next(L, 1) != 0) {
-					const char* anim_name = lua_tostring(L, -2);
-					if (lua_type(L, -1) == LUA_TTABLE) {
-						auto duration = (float)read_field_float(L, "duration", 0.0f, -1);
-						if (duration > 0.0f) {
-							current_anim_info.insert({ std::string(anim_name), ImSequencer::anim_detail{} });
-							auto& item = current_anim_info[anim_name];
-							item.duration = duration;
-							init_clip_ranges(item);
-						}
+				while (lua_next(L, -2) != 0) {
+					const char* frame_index = lua_tostring(L, -2);
+					if (lua_type(L, -1) == LUA_TTABLE && (int)lua_rawlen(L, -1) > 0) {
+						event_flags[std::atoi(frame_index)] = true;
 					}
 					lua_pop(L, 1);
 				}
-				current_anim_name = birth;
-				ImSequencer::current_anim = &ImSequencer::anim_info[id][birth];
 			}
-		}
-		auto iter = ImSequencer::anim_info.find(id);
-		if (iter != ImSequencer::anim_info.end()) {
-			std::string anim_name = read_field_string(L, "anim_name", nullptr, 2);
-			if (current_anim_name != anim_name) {
-				current_anim_name = anim_name;
-				ImSequencer::current_anim = &iter->second[current_anim_name];
-			}
-			ImSequencer::current_anim->is_playing = read_field_boolean(L, "is_playing", false, 2);
-			current_frame = read_field_int(L, "current_frame", 0, 2);
-			selected_frame = read_field_int(L, "selected_frame", 0, 2);
-			auto event_dirty_num = read_field_int(L, "event_dirty", 0, 2);
-			// add or remove key event
-			if (event_dirty_num == 1) {
-				if (lua_getfield(L, 2, "current_event_list") == LUA_TTABLE
-					&& selected_frame >= 0) {
-					if (!ImSequencer::current_anim->event_flags.empty()) {
-						ImSequencer::current_anim->event_flags[selected_frame] = ((int)lua_rawlen(L, -1) > 0);
-					}
-				}
-				lua_pop(L, 1);
-			} else if (event_dirty_num == -1) {
-				auto duration = read_field_float(L, "duration", 0, 2);
-				auto event_flags = std::vector((int)std::ceil(duration * ImSequencer::anim_fps), false);
-				if (lua_getfield(L, 2, "key_event") == LUA_TTABLE) {
-					lua_pushnil(L);
-					while (lua_next(L, -2) != 0) {
-						const char* frame_index = lua_tostring(L, -2);
-						if (lua_type(L, -1) == LUA_TTABLE && (int)lua_rawlen(L, -1) > 0) {
-							event_flags[std::atoi(frame_index)] = true;
-						}
-						lua_pop(L, 1);
-					}
-				}
-				lua_pop(L, 1);
-				ImSequencer::current_anim->event_flags = std::move(event_flags);
-			}
+			lua_pop(L, 1);
+			ImSequencer::current_anim->event_flags = std::move(event_flags);
 		}
 	}
 
@@ -1973,7 +1964,6 @@ wSimpleSequencer(lua_State* L) {
 		if (dirty) {
 			ImSimpleSequencer::bone_anim.duration = (float)read_field_float(L, "duration", 0.0f, 1);
 			selected_frame = read_field_int(L, "selected_frame", 0, 1);
-			auto clip_dirty_num = read_field_int(L, "clip_range_dirty", 0, 1);
 			selected_layer_index = read_field_int(L, "selected_layer_index", 0, 1) - 1;
 			selected_clip_index = read_field_int(L, "selected_clip_index", 0, 1) - 1;
 		}
