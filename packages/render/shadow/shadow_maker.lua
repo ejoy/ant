@@ -438,19 +438,23 @@ local omni_stencils = {
 
 local s = ecs.system "shadow_primitive_system"
 
+local material_cache = {}
+
 function s:end_filter()
     for e in w:select "filter_result:in render_object:in skinning?in filter_material:in" do
-        local rc = e.render_object
+        local ro = e.render_object
 		local m = which_material(e.skinning)
+		local om = m.material
 		local fm = e.filter_material
 		local fr = e.filter_result
+		local rm = ro.material
+		local fx = m.fx
 		for qe in w:select "csm_queue primitive_filter:in" do
 			for _, fn in ipairs(qe.primitive_filter) do
 				if fr[fn] then
 					fm[fn] = {
-						fx = m.fx,
-						properties = m.properties,
-						state = irender.check_primitive_mode_state(rc.state, m.state),
+						fx = fx,
+						material = irender.check_copy_material(om, rm, material_cache)
 					}
 				end
 			end

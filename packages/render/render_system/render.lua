@@ -58,6 +58,28 @@ function irender.check_primitive_mode_state(state, template_state)
 	return bgfx.make_state(ts)
 end
 
+function irender.check_copy_material(m, om, cache)
+	local mobj = m:get_material()
+	local state = mobj:get_state()
+	local ostate = om:get_state()
+
+	local nstate = irender.check_primitive_mode_state(state, ostate)
+	if state == nstate then
+		return m
+	end
+
+	if nil == cache[mobj] then
+		cache[mobj] = {}
+	end
+
+	local cc = cache[mobj]
+	if nil == cc[nstate] then
+		cc[nstate] = mobj:copy(state)
+	end
+
+	return cc[nstate]:instance()
+end
+
 local function update_mesh(vb, ib)
 	if ib and ib.num ~= 0 then
 		bgfx.set_index_buffer(ib.handle, ib.start, ib.num)

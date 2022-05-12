@@ -49,19 +49,20 @@ function s:data_changed()
     end
 end
 
+local material_cache = {}
+
 function s:end_filter()
     if irender.use_pre_depth() then
         for e in w:select "filter_result:in render_object:in filter_material:in skinning?in" do
             local m = assert(which_material(e.skinning))
+            local mi = m.material
             local fr = e.filter_result
-            local state = e.render_object.state
             local qe = w:singleton("pre_depth_queue", "primitive_filter:in")
             for _, fn in ipairs(qe.primitive_filter) do
                 if fr[fn] then
                     e.filter_material[fn] = {
-                        fx          = m.fx,
-                        properties  = m.properties,
-                        state       = check_set_pre_depth_state(state)
+                        material = irender.check_copy_material(m, e.render_object.material, material_cache),
+                        fx = m.fx,
                     }
                 end
             end

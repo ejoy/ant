@@ -29,22 +29,6 @@ local function packeid_as_rgba(eid)
             ((eid & 0xff000000) >> 24) / 0xff}    -- rgba
 end
 
-local function get_properties(id, properties)
-	local p = {
-		u_id = setmetatable({
-			value = math3d.ref(math3d.vector(packeid_as_rgba(id)))
-		},
-		{__index=properties.u_id}),
-	}
-
-	if curve_world.enable then
-		p.u_viewcamera_viewmat 		= properties.u_viewcamera_viewmat
-		p.u_viewcamera_inv_viewmat 	= properties.u_viewcamera_inv_viewmat
-		p.u_curveworld_param 		= properties.u_curveworld_param
-	end
-	return p
-end
-
 local function find_camera(id)
 	local e = world:entity(id)
 	return e.camera
@@ -359,6 +343,30 @@ local function which_material(st, isskin)
 	return m
 end
 
+local material_cache = {}
+
+local function create_material(m, om)
+	local mobj = m:get_material()
+	local state = mobj:get_state()
+	local ostate = om:get_state()
+
+	local nstate = irender.check_primitive_mode_state(state, ostate)
+	if state == nstate then
+		return m
+	end
+
+	if nil == material_cache[mobj] then
+		material_cache[mobj] = {}
+	end
+
+	local cc = material_cache[mobj]
+	if nil == cc[nstate] then
+		cc[nstate] = mobj:copy(state)
+	end
+
+	return cc[nstate]:instance()
+end
+
 function pickup_sys:end_filter()
 	for e in w:select "filter_result:in render_object:in filter_material:out id:in skinning?in" do
 		local fr = e.filter_result
@@ -368,11 +376,11 @@ function pickup_sys:end_filter()
 		for _, fn in ipairs(qe.primitive_filter) do
 			if fr[fn] then
 				local m = which_material(st, e.skinning)
-				local state = e.render_object.state
+				local nm = create_material(m.material, e.render_object.material)
+				nm.u_id = math3d.vector(packeid_as_rgba(e.id))
 				fm[fn] = {
-					fx			= m.fx,
-					properties	= get_properties(e.id, m.properties),
-					state		= irender.check_primitive_mode_state(state, m.state),
+					material = nm,
+					fx = nm.fx,
 				}
 			end
 		end
