@@ -86,9 +86,9 @@ local function generate_properties(fx, properties)
 	return new_properties
 end
 
-local function init(material)
+local function init(material, setting)
     material.fx.setting = load(material.fx.setting)
-    material.fx = assetmgr.load_fx(material.fx)
+    material.fx = assetmgr.load_fx(material.fx, setting)
 
     if material.state then
         material.state = bgfx.make_state(load(material.state))
@@ -116,8 +116,18 @@ local function init(material)
     return material
 end
 
-local function loader(filename)
-    return init(load(filename))
+local function split_url(url)
+	local f, s = url:match "([^?]+)%?(.+)"
+	local setting = {}
+	s:gsub("([^=&]*)=([^=&]*)", function(k ,v)
+        setting[k] = v
+    end)
+	return f, setting
+end
+
+local function loader(url)
+	local f, s = split_url(url)
+    return init(load(f), s)
 end
 
 local function unloader()

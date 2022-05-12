@@ -111,21 +111,6 @@ local SYS_ATTRIBS = rmat.system_attribs(CMATOBJ, check{
 })
 
 local assetmgr		= require "asset"
-local ext_material	= require "ext_material"
-
-local function load_material(m, c, setting)
-	local fx = assetmgr.load_fx(m.fx, setting)
-	local properties = m.properties
-	if not properties and #fx.uniforms > 0 then
-		properties = {}
-	end
-	c.fx			= fx
-	c.properties	= properties
-	c.state			= m.state
-	c.stencil		= m.stencil
-	return c
-end
-
 local imaterial = ecs.interface "imaterial"
 
 function imaterial.set_property(e, who, what)
@@ -136,28 +121,33 @@ function imaterial.get_property(e, who)
 	return e.render_object.material[who]
 end
 
-local function init_material(mm)
-	if type(mm) == "string" then
-		return assetmgr.resource(mm)
+local function stringify_setting(s)
+	if s == nil then
+		return ""
 	end
-	return ext_material.init(mm)
+	local kk = {}
+	for k in pairs(s) do
+		kk[#kk+1] = k
+	end
+	table.sort(kk)
+	local ss = {}
+	for _, k in ipairs(kk) do
+		local v = s[k]
+		ss[#ss+1] = k.."="..v
+	end
+	return table.concat(ss, "&")
 end
 
-local function build_material(mc, filename)
-	local properties= generate_properties(mc.fx, mc.properties)
-	local material = rmat.material(CMATOBJ, mc.state, properties, filename)
-	return {
-		material = material:instance(),
-		--TODO: need remove
-		fx 			= mc.fx,
-		state 		= mc.state,
-		stencil		= mc.stencil,
-	}
+function imaterial.create_url(mp, s)
+	return mp .. "?" .. stringify_setting(s)
 end
 
 function imaterial.load(mp, setting)
-	return assetmgr.resource(mp, setting)
-	---return build_material(load_material(mm, {}, setting))
+	return assetmgr.resource(imaterial.create_url(mp, setting))
+end
+
+function imaterial.load_url(url)
+	return assetmgr.resource(url)
 end
 
 function imaterial.system_attribs()
@@ -165,10 +155,10 @@ function imaterial.system_attribs()
 end
 
 local ms = ecs.system "material_system"
+
 function ms:component_init()
 	w:clear "material_result"
-    for e in w:select "INIT material:in material_result:new" do
-		--local mm = load_material(init_material(e.material), {})
-		e.material_result = build_material(init_material(e.material), e.material)
+	for e in w:select "INIT material:in material_setting?in material_result:new" do
+		e.material_result = imaterial.load(e.material, e.material_setting)
 	end
 end

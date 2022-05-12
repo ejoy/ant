@@ -1,9 +1,12 @@
 interface "imaterial"
     .implement "material.lua"
     .method "load"
+    .method "load_url"
+    .method "create_url"
     .method "set_property"
     .method "get_property"
     .method "system_attribs"
+    
 
 interface "imesh"
     .implement "mesh.lua"
@@ -53,6 +56,8 @@ policy "material_animation"
 
 component "mesh".type "lua"
     .require_system "ant.asset|mesh_system"
+
+component "material_setting".type "lua"
 
 component "simplemesh".type "lua"
     .require_system "ant.asset|mesh_system"
