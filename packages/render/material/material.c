@@ -1068,6 +1068,23 @@ fetch_material_attrib_value(lua_State *L, struct attrib_arena* arena, int arena_
 	return lastid;
 }
 
+static int
+lmaterial_copy(lua_State *L){
+	struct material* temp_mat = (struct material*)lua_touserdata(L, 1);
+	struct material* new_mat = (struct material*)lua_newuserdatauv(L, sizeof(material), 3);
+	new_mat->attrib = temp_mat->attrib;
+	if (!lua_isnoneornil(L, 2)){
+		get_state(L, 2, &new_mat->state, &new_mat->rgba);
+	}
+
+	for (int i=0; i<3; ++i){
+		lua_getiuservalue(L, 1, i+1);
+		lua_setiuservalue(L, -1, i+1);
+	}
+	
+	return 1;
+}
+
 // 1: cobject
 // 2: render state (string)
 // 3: uniforms (table)
@@ -1119,6 +1136,7 @@ lmaterial_new(lua_State *L) {
 			{ "instance", 	lmaterial_instance },
 			{ "set_attrib",	lmaterial_set_attrib},
 			{ "get_state",	lmaterial_get_state},
+			{ "copy",		lmaterial_copy},
 			{ NULL, 		NULL },
 		};
 		luaL_setfuncs(L, l, 0);
