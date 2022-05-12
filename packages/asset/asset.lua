@@ -1,6 +1,7 @@
 local cr = import_package "ant.compile_resource"
 local setting = import_package "ant.settings".setting
 local resource = require "resource"
+local url	= import_package "ant.url"
 
 local assetmgr = {}
 
@@ -29,12 +30,13 @@ local function initialize()
 		return
 	end
 	initialized = true
-	local function loader(filename, data)
+	local function loader(fileurl, data)
+		local filename = url.parse(fileurl)
 		local ext = filename:match "[^.]*$"
 		local world = data
 		local res
 		push_currentpath(filename)
-		res = require_ext(ext).loader(filename, world)
+		res = require_ext(ext).loader(fileurl, world)
 		pop_currentpath()
 		return res
 	end

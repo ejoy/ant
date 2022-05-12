@@ -2,6 +2,8 @@ local ecs	= ...
 local world = ecs.world
 local w		= world.w
 
+local url = import_package "ant.url"
+
 local assetmgr		= require "asset"
 local sa			= require "system_attribs"
 
@@ -15,33 +17,12 @@ function imaterial.get_property(e, who)
 	return e.render_object.material[who]
 end
 
-local function stringify_setting(s)
-	if s == nil then
-		return ""
-	end
-	local kk = {}
-	for k in pairs(s) do
-		kk[#kk+1] = k
-	end
-	table.sort(kk)
-	local ss = {}
-	for _, k in ipairs(kk) do
-		local v = s[k]
-		ss[#ss+1] = k.."="..v
-	end
-	return table.concat(ss, "&")
-end
-
-function imaterial.create_url(mp, s)
-	return mp .. "?" .. stringify_setting(s)
-end
-
 function imaterial.load(mp, setting)
-	return assetmgr.resource(imaterial.create_url(mp, setting))
+	return assetmgr.resource(url.create(mp, setting))
 end
 
-function imaterial.load_url(url)
-	return assetmgr.resource(url)
+function imaterial.load_url(u)
+	return assetmgr.resource(u)
 end
 
 function imaterial.system_attribs()

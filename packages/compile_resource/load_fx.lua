@@ -1,12 +1,12 @@
-local bgfx = require "bgfx"
-local lfs = require "filesystem.local"
-local stringify = require "stringify"
-local compile = require "compile"
-local config = require "config"
+local bgfx      = require "bgfx"
+local lfs       = require "filesystem.local"
+local compile   = require "compile"
+local config    = require "config"
 local fxsetting = require "editor.fx.setting"
 
-local CACHE = {}
+local url       = import_package "ant.url"
 
+local CACHE = {}
 
 local function merge(a, b)
     for k, v in pairs(b) do
@@ -22,10 +22,6 @@ local function mergeCfgSetting(setting)
     return fxsetting.deldef(setting)
 end
 
-local function createStage(stageFile, setting)
-    return stageFile .. "?" .. stringify(setting)
-end
-
 local function initFX(fx)
     local s = mergeCfgSetting(fx.setting)
     s.varying_path = fx.varying_path
@@ -34,7 +30,7 @@ local function initFX(fx)
         if fx[stage] then
             s.stage = stage
             res[stage] =  {
-                createStage(fx[stage], s),
+                url.create(fx[stage], s),
             }
         end
     end

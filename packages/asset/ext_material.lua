@@ -5,6 +5,7 @@ local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local sd        = import_package "ant.settings".setting
 local use_cluster_shading = sd:data().graphic.cluster_shading ~= 0
+local url		= import_package "ant.url"
 
 local CMATOBJ   = require "cmatobj"
 local rmat      = require "render.material"
@@ -116,17 +117,8 @@ local function init(material, setting)
     return material
 end
 
-local function split_url(url)
-	local f, s = url:match "([^?]+)%?(.+)"
-	local setting = {}
-	s:gsub("([^=&]*)=([^=&]*)", function(k ,v)
-        setting[k] = v
-    end)
-	return f, setting
-end
-
-local function loader(url)
-	local f, s = split_url(url)
+local function loader(fileurl)
+	local f, s = url.parse(fileurl)
     return init(load(f), s)
 end
 
