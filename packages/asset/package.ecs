@@ -2,8 +2,8 @@ interface "imaterial"
     .implement "material.lua"
     .method "load"
     .method "load_url"
+    .method "load_res"
     .method "set_property"
-    .method "get_property"
     .method "system_attribs"
     
 

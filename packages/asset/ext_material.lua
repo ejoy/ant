@@ -14,22 +14,6 @@ local function load(filename)
     return type(filename) == "string" and serialize.parse(filename, cr.read_file(filename)) or filename
 end
 
-local function to_t(t, handle)
-	local v = {stage=assert(t.stage), handle=handle}
-	if t.texture then
-		v.value = t.texture.handle
-		v.type = 't'
-	elseif t.image then
-		v.value = t.image.handle
-		v.mip = t.mip
-		v.access = t.access
-		v.type = 'i'
-	else
-		error "invalid uniform value"
-	end
-	return v
-end
-
 local function to_math_v(v)
 	return #v == 4 and math3d.vector(v) or math3d.matrix(v)
 end
@@ -73,6 +57,18 @@ local function generate_properties(fx, properties)
 				end
 
 				new_properties[n] = v
+			end
+		end
+	end
+
+	for k, v in pairs(properties) do
+		if new_properties[k] == nil then
+			if v.image or v.buffer then
+				assert(v.access and v.stage)
+				if v.image then
+					assert(v.mip)
+				end
+				new_properties[k] = v
 			end
 		end
 	end

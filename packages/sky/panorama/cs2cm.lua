@@ -11,6 +11,8 @@ local viewidmgr = renderpkg.viewidmgr
 local fbmgr     = renderpkg.fbmgr
 local sampler   = renderpkg.sampler
 
+local assetmgr  = import_package "ant.asset"
+
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local icompute  = ecs.import.interface "ant.render|icompute"
 local iibl      = ecs.import.interface "ant.render|iibl"
@@ -53,24 +55,25 @@ local cm_flags = sampler.sampler_flag{
 
 function cs2cm_sys:entity_ready()
     for e in w:select "skybox_changed skybox:in render_object:in filter_ibl?out" do
-        local tex = imaterial.get_property(e, "s_skybox").value.texture
-
+        w:sync("material:in material_setting?in", e)
+        local res = imaterial.load_res(e.material, e.material_setting)
+        local tex = assetmgr.resource(res.properties.s_skybox.texture)
         local ti = tex.texinfo
         if panorama_util.is_panorama_tex(ti) then
             if e.skybox.facesize == nil then
                 e.skybox.facesize = ti.height // 2
             end
             local facesize = e.skybox.facesize
-            local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cubeme_rbidx, cm_flags)
-            e.skybox.cubeme_rbidx = cm_rbidx
+            local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cm_rbidx, cm_flags)
+            e.skybox.cm_rbidx = cm_rbidx
 
             local dispatcher = world:entity(cs2cm_convertor_eid)
             local dis = dispatcher.dispatch
-            local properties = dis.properties
+            local material = dis.material
 
             local cm_rbhandle = fbmgr.get_rb(cm_rbidx).handle
-            dis.material.s_source = tex.handle
-            properties.s_cubemap_source = icompute.create_image_property(cm_rbhandle, 1, 0, "w")
+            material.s_source = tex.handle
+            material.s_cubemap_source = icompute.create_image_property(cm_rbhandle, 1, 0, "w")
 
             local s = dis.size
             s[1], s[2], s[3] = facesize // thread_group_size, facesize // thread_group_size, 6
@@ -89,7 +92,7 @@ function cs2cm_sys:entity_ready()
 
             fbmgr.destroy(fbidx, true)
 
-            imaterial.set_property(e, "s_skybox", {stage=0, texture={handle=cm_rbhandle}})
+            imaterial.set_property(e, "s_skybox", cm_rbhandle)
         end
         e.filter_ibl = true
     end
@@ -98,9 +101,10 @@ end
 function cs2cm_sys:filter_ibl()
     for e in w:select "filter_ibl ibl:in skybox:in render_object:in" do
         local se_ibl = e.ibl
-        local tex = imaterial.get_property(e, "s_skybox").value.texture
+        local sb = e.skybox
+        local cm_rbhandle = fbmgr.get_rb(sb.cm_rbidx).handle
         iibl.filter_all{
-			source 		= {handle = tex.handle, facesize = e.skybox.facesize},
+			source 		= {handle=cm_rbhandle, facesize=sb.facesize},
 			irradiance 	= se_ibl.irradiance,
 			prefilter 	= se_ibl.prefilter,
 			LUT			= se_ibl.LUT,

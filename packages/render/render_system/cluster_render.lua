@@ -126,7 +126,7 @@ local function check_light_index_list()
     if lil.handle ~= oldhandle then
         assert(lil.handle)
         local ce = w:singleton("cluster_cull_light", "dispatch:in")
-        local mo = ce.dispatch.material.material_obj
+        local mo = ce.dispatch.material:get_material()
         mo:set_attrib("b_light_index_lists", lil.handle)
 
         local sa = imaterial.system_attribs()

@@ -72,9 +72,9 @@ function ColliderView:on_set_color(...)
 end
 
 function ColliderView:on_get_color()
-    local rc = imaterial.get_property(world:entity(self.eid), "u_color")
-    local color = math3d.totable(rc.value)
-    return {color[1], color[2], color[3], color[4]}
+    log.warn("should not call imaterial.get_property, matieral properties should edit from material view")
+    -- local color = math3d.totable(rc.value)
+    return {0.0, 0.0, 0.0, 0.0}--{color[1], color[2], color[3], color[4]}
 end
 
 function ColliderView:update()

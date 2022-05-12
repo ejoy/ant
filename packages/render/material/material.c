@@ -733,7 +733,6 @@ lmaterial_set_attrib(lua_State *L){
 	const int lut_idx = lua_gettop(L);
 
 	const char* attribname = luaL_checkstring(L, 2);
-	luaL_checktype(L, 3, LUA_TTABLE);
 
 	if (LUA_TNIL == lua_getfield(L, lut_idx, attribname)){
 		mat->attrib = load_attrib_from_data(L, arena_idx, 3, mat->attrib);

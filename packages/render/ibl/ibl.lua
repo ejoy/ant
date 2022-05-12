@@ -129,7 +129,7 @@ local function update_ibl_param(intensity)
 
     intensity = intensity or 1
     intensity = intensity * ibl_textures.intensity * ev
-    sa:update("u_ibl_param", math3d.vector(ibl_textures.prefilter.mipmap_count, intensity))
+    sa:update("u_ibl_param", math3d.vector(ibl_textures.prefilter.mipmap_count, intensity, 0.0 ,0.0))
 end
 
 function ibl_sys:data_changed()
@@ -202,7 +202,7 @@ local function build_ibl_textures(ibl)
 
     ibl_textures.intensity = ibl.intensity
 
-    ibl_textures.source.texture.handle = ibl.source.handle
+    ibl_textures.source.handle = assert(ibl.source.handle)
     ibl_textures.source.facesize = assert(ibl.source.facesize)
 
     if ibl.irradiance.size ~= ibl_textures.irradiance.size then

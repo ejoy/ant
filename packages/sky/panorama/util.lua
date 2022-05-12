@@ -13,5 +13,5 @@ return {
         end
 
         return cm_rbidx
-    end
+    end,
 }

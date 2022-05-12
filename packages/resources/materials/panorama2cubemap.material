@@ -9,4 +9,6 @@ properties:
     texture: /pkg/ant.resources/textures/black.texture
   s_cubemap_source:
     stage: 1
-    texture: /pkg/ant.resources/textures/black.texture
+    mip: 0
+    access: w
+    image: /pkg/ant.resources/textures/black.texture

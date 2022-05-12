@@ -6,6 +6,8 @@ local renderpkg = import_package "ant.render"
 local viewidmgr, fbmgr = renderpkg.viewidmgr, renderpkg.fbmgr
 local sampler   = renderpkg.sampler
 
+local assetmgr  = import_package "ant.asset"
+
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 local math3d    = require "math3d"
@@ -103,7 +105,8 @@ local cubemap_flags<const> = sampler.sampler_flag {
 
 function render2cm_sys:entity_ready()
     for e in w:select "skybox_changed skybox:in render_object:in filter_ibl?out" do
-        local tex = imaterial.get_property(e, "s_skybox").value.texture
+        local res = imaterial.load_res(e.material, e.material_setting)
+        local tex = assetmgr.resource(res.properties.s_skybox.texture)
 
         local ti = tex.texinfo
         if panorama_util.is_panorama_tex(ti) then
@@ -111,8 +114,8 @@ function render2cm_sys:entity_ready()
                 e.skybox.facesize = ti.height // 2
             end
             local facesize = e.skybox.facesize
-            local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cubeme_rbidx, cubemap_flags)
-            e.skybox.cubeme_rbidx = cm_rbidx
+            local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cm_rbidx, cubemap_flags)
+            e.skybox.cm_rbidx = cm_rbidx
 
             local drawer = w:singleton("cvt_p2cm_drawer", "render_object:in")
             local ro = drawer.render_object
@@ -143,7 +146,7 @@ function render2cm_sys:entity_ready()
                 local keep_rbs<const> = true
                 fbmgr.destroy(fbidx, keep_rbs)
             end
-            imaterial.set_property(e, "s_skybox", {stage=0, texture={handle=fbmgr.get_rb(cm_rbidx).handle}})
+            imaterial.set_property(e, "s_skybox", fbmgr.get_rb(cm_rbidx).handle)
             e.filter_ibl = true
         end
     end
@@ -242,17 +245,17 @@ local function build_LUT_map(source_tex, LUT, size)
 end
 
 function render2cm_sys:filter_ibl()
-    for e in w:select "filter_ibl ibl:in render_object:in" do
-        local source_tex = imaterial.get_property(e, "s_skybox").value
-        local ibl_textures = iibl.get_ibl_textures()
-        ibl_textures.intensity = 12000
+    for e in w:select "filter_ibl ibl:in skybox:in render_object:in" do
+        local source_tex = fbmgr.get_rb(e.skybox.cm_rbidx).handle
+        local ibl = iibl.get_ibl()
+        ibl.intensity = 12000
 
         local irradiance_face_size<const> = 32
-        build_irradiance_map(source_tex, ibl_textures.irradiance, irradiance_face_size)
+        build_irradiance_map(source_tex, ibl.irradiance, irradiance_face_size)
         local prefilter_face_size<const> = 256
-        build_prefilter_map(source_tex, ibl_textures.prefilter, prefilter_face_size)
+        build_prefilter_map(source_tex, ibl.prefilter, prefilter_face_size)
         local LUT_size<const> = 256
-        build_LUT_map(source_tex, ibl_textures.LUT, LUT_size)
+        build_LUT_map(source_tex, ibl.LUT, LUT_size)
     end
     w:clear "filter_ibl"
 end
