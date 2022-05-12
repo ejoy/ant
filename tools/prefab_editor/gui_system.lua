@@ -309,7 +309,6 @@ local drop_files_event      = world:sub {"OnDropFiles"}
 local entity_event          = world:sub {"EntityEvent"}
 local event_keyboard        = world:sub {"keyboard"}
 local event_open_prefab     = world:sub {"OpenPrefab"}
-local event_preopen_prefab  = world:sub {"PreOpenPrefab"}
 local event_open_fbx        = world:sub {"OpenFBX"}
 local event_add_prefab      = world:sub {"AddPrefabOrEffect"}
 local event_resource_browser= world:sub {"ResourceBrowser"}
@@ -357,8 +356,6 @@ local function on_target(old, new)
         end
     end
     world:pub {"UpdateAABB", new}
-    anim_view.bind(new)
-    skeleton_view.bind(new)
 end
 
 local function on_update(e)
@@ -494,9 +491,6 @@ function m:handle_event()
         end
     end
     
-    for _, filename in event_preopen_prefab:unpack() do
-        anim_view:clear()
-    end
     for _, filename in event_open_prefab:unpack() do
         prefab_mgr:open(filename)
         update_highlight_aabb()

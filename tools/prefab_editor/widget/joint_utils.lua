@@ -5,18 +5,14 @@ local m = {
     joint_list = {},
 }
 
-function m:get_joints(e)
-    if not e then
-        if self.current_skeleton then
-            return self.joint_list[self.current_skeleton._handle]
-        end
+function m:get_joints(skeleton)
+    if not skeleton and not self.skeleton then
         return
     end
-    if not e.skeleton or not e.skeleton._handle then
-        return
+    if not self.skeleton then
+        self.skeleton = skeleton
     end
-    self.current_skeleton = e.skeleton
-    local ske = e.skeleton._handle
+    local ske = self.skeleton._handle
     if self.joint_map[ske] and self.joint_list[ske] then
         return self.joint_map[ske], self.joint_list[ske]
     end
@@ -118,7 +114,7 @@ function m:set_current_joint(ske, name)
 end
 
 function m:get_current_skeleton()
-    return self.current_skeleton
+    return self.skeleton
 end
 
 function m:update_pose(root_mat)

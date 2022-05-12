@@ -481,7 +481,6 @@ end
 
 function m:open(filename)
     self:reset_prefab()
-    world:pub {"PreOpenPrefab", filename}
     self.prefab_filename = filename
     self.prefab_template = serialize.parse(filename, cr.read_file(filename))
 
@@ -491,7 +490,8 @@ function m:open(filename)
     
     prefab.on_ready = function(instance)
         self:on_prefab_ready(instance)
-        anim_view.load_clips()
+        hierarchy:update_slot_list(world)
+        anim_view.on_prefab_load(self.entities)
     end
     
     function prefab:on_message(msg) end
@@ -643,12 +643,12 @@ function m:save_prefab(path)
             widget_utils.message_box({title = "SaveError", info = msg})
         else
             utils.write_file(filename, stringify(new_template))
-            anim_view.save_clip()
+            anim_view.save_keyevent()
         end
         return
     end
     utils.write_file(filename, stringify(new_template))
-    anim_view.save_clip(string.sub(filename, 1, -8) .. ".event")
+    anim_view.save_keyevent(string.sub(filename, 1, -8) .. ".event")
     self:open(filename)
     world:pub {"ResourceBrowser", "dirty"}
 end

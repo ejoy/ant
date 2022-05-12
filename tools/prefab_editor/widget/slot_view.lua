@@ -59,7 +59,7 @@ local joint_name_list = {}
 
 function SlotView:set_model(eid)
     if #joint_name_list < 1 then
-        local joint_list = joint_utils:get_joints()
+        local _, joint_list = joint_utils:get_joints()
         if joint_list then
             for _, joint in ipairs(joint_list) do
                 joint_name_list[#joint_name_list+1] = joint.name

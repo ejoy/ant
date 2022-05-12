@@ -537,9 +537,8 @@ function m.new()
     end
 end
 
-local reset_editor = world:sub {"ResetEditor"}
 local ui_loop = {true}
-local function reset()
+function m.clear()
     if current_skeleton and current_joint then
         joint_utils:set_current_joint(current_skeleton, nil)
     end
@@ -560,9 +559,6 @@ local function reset()
     joint_utils.update_joint_pose = nil
 end
 function m.show()
-    for _ in reset_editor:unpack() do
-        reset()
-    end
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
@@ -788,23 +784,16 @@ local function create_bone_entity(joint_name)
     return ecs.create_entity(template)
 end
 
-function m.bind(eid)
-    if not eid then
-        return
-    end
-    local e = world:entity(eid)
-    if not e.skeleton then
-        return
-    end
+function m.init(skeleton)
     if #anim_e == 0 then
         for ske_e in w:select "id:in skeleton:in animation:in" do
-            if ske_e.skeleton == e.skeleton then
+            if ske_e.skeleton == skeleton then
                 anim_e[#anim_e + 1] = ske_e.id
             end
         end
     end
     if not current_skeleton then
-        current_skeleton = e.skeleton
+        current_skeleton = skeleton
     end
     if not joint_utils.on_select_joint then
         joint_utils.on_select_joint = function(old, new)
@@ -851,7 +840,7 @@ function m.bind(eid)
             end
         end
     end
-    joints_map, joints_list = joint_utils:get_joints(e)
+    joints_map, joints_list = joint_utils:get_joints(skeleton)
     for _, joint in ipairs(joints_list) do
         if not joint.mesh then
             joint.mesh = create_bone_entity(joint.name)

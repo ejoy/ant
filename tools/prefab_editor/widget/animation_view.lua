@@ -1,12 +1,11 @@
 local ecs = ...
 local world = ecs.world
-local w = world.w
 
 local iaudio    = ecs.import.interface "ant.audio|audio_interface"
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local ies       = ecs.import.interface "ant.scene|ifilter_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local skeleton_view = ecs.require "widget.skeleton_view"
 local prefab_mgr = ecs.require "prefab_manager"
 local gizmo     = ecs.require "gizmo.gizmo"
 local asset_mgr = import_package "ant.asset"
@@ -23,12 +22,10 @@ local access    = require "vfs.repoaccess"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local datalist  = require "datalist"
-local rc        = import_package "ant.compile_resource"
 local global_data = require "common.global_data"
 
 local m = {}
 local edit_anims
-local current_e
 local imgui_message
 local current_anim
 local sample_ratio = 50.0
@@ -42,7 +39,6 @@ local anim_state = {
     anim_name = "",
     key_event = {},
     event_dirty = 0,
-    clip_range_dirty = 0,
     selected_clip_index = 0,
     current_event_list = {}
 }
@@ -56,12 +52,6 @@ local event_type = {
 local current_event
 local current_clip
 local anim_eid_group = {}
-local anim_clips = {}
-local all_clips = {}
-local all_groups = {}
-
-local clip_index = 0
-local group_index = 0
 local anim_key_event = {}
 local function find_index(t, item)
     for i, c in ipairs(t) do
@@ -127,37 +117,13 @@ local function get_anim_group_eid(eid, name)
     return anim_eid_group[anims[name]]
 end
 
-local function anim_group_set_clips(eid, clips)
-    local group_eid = get_anim_group_eid(eid, current_anim.name)
-    if not group_eid then return end
-    for _, anim_eid in ipairs(group_eid) do
-        iani.set_clips(anim_eid, clips)
-    end
-end
 local function anim_group_set_time(eid, t)
     iani.set_time(eid, t)
-    -- local group_e = get_anim_group_eid(eid, current_anim.name)
-    -- if not group_e then return end
-    -- for _, anim_e in ipairs(group_e) do
-    --     iani.set_time(anim_e, t)
-    -- end
 end
 
-local function anim_group_stop_effect(eid)
-    iani.stop_effect(eid)
-    -- local group_eid = get_anim_group_eid(eid, current_anim.name)
-    -- if not group_eid then return end
-    -- for _, anim_eid in ipairs(group_eid) do
-    --     iani.stop_effect(anim_eid)
-    -- end
-end
-
-local function anim_play(eid, state, play)
+local function anim_play(state, play)
     state.key_event = to_runtime_event(anim_key_event)
-    local group_e = get_anim_group_eid(eid, current_anim.name)
-    if not group_e then return end
-    iom.set_position(world:entity(hierarchy:get_node(hierarchy:get_node(eid).parent).parent), {0.0,0.0,0.0})
-    for _, anim_e in ipairs(group_e) do
+    for _, anim_e in ipairs(current_anim.eid_list) do
         iom.set_position(world:entity(hierarchy:get_node(hierarchy:get_node(anim_e).parent).parent), {0.0,0.0,0.0})
         play(anim_e, state)
     end
@@ -165,17 +131,10 @@ end
 
 local function anim_group_set_loop(eid, ...)
     iani.set_loop(eid, ...)
-    -- local group_eid = get_anim_group_eid(eid, current_anim.name)
-    -- if not group_eid then return end
-    -- for _, anim_eid in ipairs(group_eid) do
-    --     iani.set_loop(anim_eid, ...)
-    -- end
 end
 
-local function anim_group_delete(eid, anim_name)
-    local group_eid = get_anim_group_eid(eid, anim_name)
-    if not group_eid then return end
-    for _, anim_eid in ipairs(group_eid) do
+local function anim_group_delete(anim_name)
+    for _, anim_eid in ipairs(current_anim.eid_list) do
         local template = hierarchy:get_template(anim_eid)
         local animation_map = template.template.data.animation
         animation_map[anim_name] = nil
@@ -191,10 +150,6 @@ end
 
 local function anim_group_pause(eid, p)
     iani.pause(eid, p)
-    -- local group_eid = get_anim_group_eid(eid, current_anim.name)
-    -- for _, anim_eid in ipairs(group_eid) do
-    --     iani.pause(anim_eid, p)
-    -- end
 end
 
 local default_collider_define = {
@@ -245,95 +200,13 @@ local function from_runtime_event(runtime_event)
     return ke
 end
 
-local function from_runtime_clip(runtime_clip)
-    all_clips = {}
-    all_groups = {}
-    for _, clip in ipairs(runtime_clip) do
-        if clip.range then
-            local start_frame = math.floor(clip.range[1] * sample_ratio)
-            local end_frame = math.floor(clip.range[2] * sample_ratio)
-            local new_clip = {
-                anim_name = clip.anim_name,
-                name = clip.name,
-                speed = clip.speed or 1.0,
-                range = {start_frame, end_frame},
-                key_event = from_runtime_event(clip.key_event),
-                name_ui = {text = clip.name, flags = imgui.flags.InputText{"EnterReturnsTrue"}},
-                range_ui = {start_frame, end_frame, speed = 1},
-                speed_ui = {clip.speed or 1.0, speed = 0.02, min = 0.01, max = 100}
-            }
-            local clips = anim_clips[clip.anim_name] or {}
-            clips[#clips + 1] = new_clip
-            all_clips[#all_clips+1] = new_clip
-        end
-    end
-    
-    for _, clip in ipairs(runtime_clip) do
-        if not clip.range then
-            local subclips = {}
-            for _, v in ipairs(clip.subclips) do
-                subclips[#subclips + 1] = all_clips[v]
-            end
-            all_groups[#all_groups + 1] = {
-                name = clip.name,
-                group = true,
-                clips = subclips,
-                name_ui = {text = clip.name, flags = imgui.flags.InputText{"EnterReturnsTrue"}}
-            }
-        end
-    end
-    table.sort(all_groups, function(a, b) return string.lower(tostring(a.name)) < string.lower(tostring(b.name)) end)
-    table.sort(all_clips, function(a, b) return string.lower(tostring(a.name)) < string.lower(tostring(b.name)) end)
-    clip_index = #all_clips
-    group_index = #all_groups
-end
-
-local function get_runtime_clips()
-    if not current_e then return end
-    return world:entity(current_e)._animation.anim_clips
-end
-
 local function get_runtime_events()
     if not current_clip then return end;
     return current_clip.key_event
 end
 
-local function to_runtime_group(runtime_clips, group)
-    local groupclips = {}
-    for _, clip in ipairs(group.clips) do
-        groupclips[#groupclips + 1] = find_index(runtime_clips, clip)
-    end
-    return {name = group.name, group = true, subclips = groupclips}
-end
-
-
-local function to_runtime_clip()
-    -- local runtime_clips = {}
-    -- for _, clip in ipairs(all_clips) do
-    --     if clip.range[1] >= 0 and clip.range[2] >= clip.range[1] then
-    --         runtime_clips[#runtime_clips + 1] = {
-    --             anim_name = clip.anim_name,
-    --             name = clip.name,
-    --             range = {clip.range[1] / sample_ratio, clip.range[2] / sample_ratio},
-    --             speed = clip.speed or 1.0,
-    --             key_event = to_runtime_event(clip.key_event)
-    --         }
-    --     end
-    -- end
-    -- for _, group in ipairs(all_groups) do
-    --     runtime_clips[#runtime_clips + 1] = to_runtime_group(all_clips, group)
-    -- end
-    -- if #runtime_clips < 1  then return end
-    -- if current_e then
-    --     anim_group_set_clips(current_e, runtime_clips)
-    -- end
-end
-
 local function set_event_dirty(num)
     anim_state.event_dirty = num
-    if num ~= 0 then
-        to_runtime_clip()
-    end
 end
 
 local widget_utils  = require "widget.utils"
@@ -370,9 +243,9 @@ local function set_current_anim(anim_name)
     anim_state.duration = current_anim.duration
     current_event = nil
     
-    anim_play(current_e, {name = anim_name, loop = ui_loop[1], manual = false}, iani.play)
-    anim_group_set_time(current_e, 0)
-    anim_group_pause(current_e, not anim_state.is_playing)
+    anim_play({name = anim_name, loop = ui_loop[1], manual = false}, iani.play)
+    anim_group_set_time(anim.eid_list[1], 0)
+    anim_group_pause(anim.eid_list[1], not anim_state.is_playing)
     set_event_dirty(-1)
     return true
 end
@@ -663,31 +536,24 @@ local function show_current_event()
     end
 end
 
-local function set_clips_dirty(update)
-    anim_state.clip_range_dirty = 1
-    if update then
-        to_runtime_clip()
-    end
-end
-
 function m.on_remove_entity(eid)
     local dirty = false
-    for _, clip in ipairs(all_clips) do
-        if clip.key_event then
-            for _, ke in pairs(clip.key_event) do
-                for _, e in ipairs(ke) do
-                    if e.collision and e.collision.col_eid and e.collision.col_eid == eid then
-                        e.collision.col_eid = -1
-                        e.collision.shape_type = "None"
-                        e.collision.position = nil
-                        e.collision.size = nil
-                        e.collision.enable = false
-                        dirty = true
-                    end
-                end
-            end
-        end
-    end
+    -- for _, clip in ipairs(all_clips) do
+    --     if clip.key_event then
+    --         for _, ke in pairs(clip.key_event) do
+    --             for _, e in ipairs(ke) do
+    --                 if e.collision and e.collision.col_eid and e.collision.col_eid == eid then
+    --                     e.collision.col_eid = -1
+    --                     e.collision.shape_type = "None"
+    --                     e.collision.position = nil
+    --                     e.collision.size = nil
+    --                     e.collision.enable = false
+    --                     dirty = true
+    --                 end
+    --             end
+    --         end
+    --     end
+    -- end
     if dirty then
         set_event_dirty(-1)
     end
@@ -729,7 +595,6 @@ local function on_move_keyframe(frame_idx, move_type)
         local oldkey = tostring(old_selected_frame)
         anim_key_event[newkey] = anim_key_event[oldkey]
         anim_key_event[oldkey] = {}
-        to_runtime_clip()
     else
         if not anim_key_event[newkey] then
             anim_key_event[newkey] = {}
@@ -800,309 +665,14 @@ function m.save_keyevent(filename)
     local prefab_filename = filename or prefab_mgr:get_current_filename():sub(1, -8) .. ".event"
     utils.write_file(prefab_filename, stringify(revent))
 end
-function m.save_clip(path)
-    m.save_keyevent(path)
-    -- to_runtime_clip()
-    -- local clips = get_runtime_clips()
-    -- if not clips or #clips < 1 then return end
-    
-    -- local clip_filename = path
-    -- if not clip_filename then
-    --     clip_filename = get_clips_filename()
-    -- end
-    
-    -- local copy_clips = utils.deep_copy(clips)
-    -- for _, clip in ipairs(copy_clips) do
-    --     if clip.key_event then
-    --         for _, key_ev in ipairs(clip.key_event) do
-    --             for _, ev in ipairs(key_ev.event_list) do
-    --                 if ev.effect then
-    --                     world:prefab_event(ev.effect, "remove", "*")
-    --                     ev.effect = nil
-    --                 end
-    --                 if ev.link_info and ev.link_info.slot_eid then
-    --                     ev.link_info.slot_eid = nil
-    --                 end
-    --                 if ev.collision and ev.collision.col_eid then
-    --                     if ev.collision.col_eid ~= -1 then
-    --                         local rc = imaterial.get_property(ev.collision.col_eid, "u_color")
-    --                         local color = math3d.totable(rc.value)
-    --                         ev.collision.color = {color[1],color[2],color[3],color[4]}
-    --                         ev.collision.tag = world[ev.collision.col_eid].tag
-    --                     end
-    --                     ev.collision.col_eid = nil
-    --                 end
-
-    --             end
-    --         end
-    --     end
-    -- end
-    -- utils.write_file(clip_filename, stringify(copy_clips))
-    -- copy_clips.slot_list = {}
-    -- for k, v in pairs(hierarchy.slot_list) do
-    --     if type(v) == "table" then
-    --         local ts, tr, tp
-    --         w:sync("slot?in", v)
-    --         if v.slot then
-    --             ts = {1,1,1}
-    --             tr = {0,0,0,1}
-    --             tp = {0,0,0}
-    --         else
-    --              ts = math3d.tovalue(iom.get_scale(v))
-    --              tr = math3d.tovalue(iom.get_rotation(v))
-    --              tp = math3d.tovalue(iom.get_position(v))
-    --         end
-    --         copy_clips.slot_list[#copy_clips.slot_list + 1] = {tag = k, name = v.name, scale = {ts[1], ts[2], ts[3]}, rotate = {tr[1], tr[2], tr[3], tr[4]}, position = {tp[1], tp[2], tp[3]}}
-    --     end
-    -- end
-    -- utils.write_file(string.sub(clip_filename, 1, -7) .. ".lua", "return " .. utils.table_to_string(copy_clips))
-end
-
-local function set_current_clip(clip)
-    if current_clip == clip then return end
-    
-    anim_group_stop_effect(current_e)
-
-    if clip then
-        if not set_current_anim(clip.anim_name) then
-            return
-        end
-        anim_state.selected_clip_index = find_index(current_anim.clips, clip)
-        clip.name_ui.text = clip.name
-    end
-    current_clip = clip
-    anim_state.current_event_list = {}
-    current_event = nil
-    anim_state.selected_frame = -1
-end
-
-local function show_clips()
-    imgui.widget.PropertyLabel(" ")
-    if imgui.widget.Button("NewClip") then
-        local key = "Clip" .. clip_index
-        clip_index = clip_index + 1
-        local new_clip = {
-            anim_name = current_anim.name,
-            name = key,
-            range = {-1, -1},
-            speed = 1.0,
-            key_event = {},
-            name_ui = {text = key, flags = imgui.flags.InputText{"EnterReturnsTrue"}},
-            speed_ui = {1.0, speed = 0.02, min = 0.01, max = 100},
-            range_ui = {-1, -1, speed = 1}
-        }
-        current_anim.clips[#current_anim.clips + 1] = new_clip
-        table.sort(current_anim.clips, function(a, b) return a.range[2] < b.range[1] end)
-        all_clips[#all_clips+1] = new_clip
-        --table.sort(all_clips, function(a, b) return a.range[2] < b.range[1] end)
-        table.sort(all_clips, function(a, b) return string.lower(tostring(a.name)) < string.lower(tostring(b.name)) end)
-        set_current_clip(new_clip)
-        set_clips_dirty(true)
-    end
-    local delete_index
-    local anim_name
-    for i, cs in ipairs(all_clips) do
-        if imgui.widget.Selectable(cs.name, current_clip and (current_clip.name == cs.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-            set_current_clip(cs)
-            if imgui.util.IsMouseDoubleClicked(0) then
-                anim_play(current_e, {name = cs.name, loop = ui_loop[1], manual = false}, iani.play_clip)
-                anim_group_set_loop(current_e, ui_loop[1])
-            end
-        end
-        if current_clip and (current_clip.name == cs.name) then
-            if imgui.windows.BeginPopupContextItem(cs.name) then
-                if imgui.widget.Selectable("Delete", false) then
-                    delete_index = i
-                end
-                imgui.windows.EndPopup()
-            end
-        end
-    end
-    if delete_index then
-        local anim_name = current_clip
-        local delete_clip = all_clips[delete_index]
-        if all_groups then
-            for _, group in ipairs(all_groups) do
-                local found = find_index(group.clips, delete_clip)
-                if found then
-                    table.remove(group.clips, found)
-                end
-            end
-        end
-        local found = find_index(current_anim.clips, delete_clip)
-        if found then
-            table.remove(current_anim.clips, found)
-        end
-        table.remove(all_clips, delete_index)
-        set_current_clip(nil)
-        set_clips_dirty(true)
-    end
-end
-
-local current_group
-
-local function show_groups()
-    imgui.widget.PropertyLabel(" ")
-    if imgui.widget.Button("NewGroup") then
-        local key = "Group" .. group_index
-        group_index = group_index + 1
-        all_groups[#all_groups + 1] = {
-            name = key,
-            group = true,
-            name_ui = {text = key, flags = imgui.flags.InputText{"EnterReturnsTrue"}},
-            clips ={}
-        }
-        table.sort(all_groups, function(a, b) return string.lower(tostring(a.name)) < string.lower(tostring(b.name)) end)
-        set_clips_dirty(true)
-    end
-    local delete_group
-    for i, gp in ipairs(all_groups) do
-        if imgui.widget.Selectable(gp.name, current_group and (current_group.name == gp.name), 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-            gp.name_ui.text = gp.name
-            current_group = gp
-            if imgui.util.IsMouseDoubleClicked(0) then
-                anim_play(current_e, {name = gp.name, loop = ui_loop[1], manual = false}, iani.play_group)
-                anim_group_set_loop(current_e, ui_loop[1])
-            end
-        end
-        if current_group and (current_group.name == gp.name) then
-            if imgui.windows.BeginPopupContextItem(gp.name) then
-                if imgui.widget.Selectable("Delete", false) then
-                    delete_group = i
-                end
-                imgui.windows.EndPopup()
-            end
-        end
-    end
-    if delete_group then
-        table.remove(all_groups, delete_group)
-        current_group = nil
-        set_clips_dirty(true)
-    end
-end
-
-local function clip_exist(name)
-    for _, v in ipairs(all_clips) do
-        if v.name == name then
-            return true
-        end
-    end
-end
-local function group_exist(name)
-    for _, v in ipairs(all_groups) do
-        if v.name == name then
-            return true
-        end
-    end
-end
-local function show_current_clip()
-    if not current_clip then return end
-    imgui.widget.PropertyLabel("AnimName")
-    imgui.widget.Text(current_clip.anim_name)
-    imgui.widget.PropertyLabel("ClipName")
-    if imgui.widget.InputText("##ClipName", current_clip.name_ui) then
-        local new_name = tostring(current_clip.name_ui.text)
-        if clip_exist(new_name) then
-            widget_utils.message_box({title = "NameError", info = "clip " .. new_name .. " existed!"})
-            current_clip.name_ui.text = current_clip.name
-        else
-            current_clip.name = new_name
-            set_clips_dirty(true)
-        end
-    end
-
-    imgui.widget.PropertyLabel("Speed")
-    if imgui.widget.DragFloat("##Speed", current_clip.speed_ui) then
-        current_clip.speed = current_clip.speed_ui[1]
-        set_clips_dirty(true)
-    end
-
-    imgui.widget.PropertyLabel("Range")
-    --local clip_index = find_index(all_clips, current_clip)
-    local min_value, max_value = min_max_range_value()
-    local old_range = {current_clip.range_ui[1], current_clip.range_ui[2]}
-    if imgui.widget.DragInt("##Range", current_clip.range_ui) then
-        local range_ui = current_clip.range_ui
-        if old_range[1] ~= range_ui[1] then
-            if range_ui[1] < min_value then
-                range_ui[1] = min_value
-            elseif range_ui[1] > range_ui[2] then
-                range_ui[1] = range_ui[2]
-            end
-        elseif old_range[2] ~= range_ui[2] then
-            if range_ui[2] > max_value  then
-                range_ui[2] = max_value
-            elseif range_ui[2] < range_ui[1]  then
-                range_ui[2] = range_ui[1]
-            end
-        end
-        current_clip.range = {range_ui[1], range_ui[2]}
-        set_clips_dirty(true)
-    end
-end
-
-local current_group_clip
-local current_clip_label
-local function show_current_group()
-    if not current_group then return end
-    imgui.widget.PropertyLabel("Name")
-    if imgui.widget.InputText("##Name", current_group.name_ui) then
-        local new_name = tostring(current_group.name_ui.text)
-        if group_exist(new_name) then
-            widget_utils.message_box({title = "NameError", info = "group " .. new_name .. " existed!"})
-            current_group.name_ui.text = current_group.name
-        else
-            current_group.name = new_name
-            set_clips_dirty(true)
-        end
-    end
-    if imgui.widget.Button("AddClip") then
-        imgui.windows.OpenPopup("AddClipPop")
-    end
-    
-    if imgui.windows.BeginPopup("AddClipPop") then
-        for _, clip in ipairs(all_clips) do
-            if imgui.widget.MenuItem(clip.name) then
-                current_group.clips[#current_group.clips + 1] = clip
-                set_clips_dirty(true)
-            end
-        end
-        imgui.windows.EndPopup()
-    end
-    local delete_clip
-    for i, cs in ipairs(current_group.clips) do
-        local unique_prefix = tostring(i) .. "."
-        local label = unique_prefix .. cs.name
-        if imgui.widget.Selectable(label, current_group_clip and (current_clip_label == label)) then
-            current_group_clip = cs
-            current_clip_label = unique_prefix .. current_group_clip.name
-            set_current_clip(cs)
-        end
-        if current_group_clip and (current_clip_label == label) then
-            if imgui.windows.BeginPopupContextItem(label) then
-                if imgui.widget.Selectable("Delete", false) then
-                    delete_clip = i
-                end
-                imgui.windows.EndPopup()
-            end
-        end
-    end
-    if delete_clip then
-        table.remove(current_group.clips, delete_clip)
-        set_clips_dirty(true)
-        current_clip_label = nil
-    end
-end
 
 function m.clear()
-    current_e = nil
     current_anim = nil
-    all_clips = {}
-    all_groups = {}
     anim_eid_group = {}
     current_event = nil
     current_clip = nil
     edit_anims = nil
+    skeleton_view.clear()
 end
 
 local anim_name = ""
@@ -1122,7 +692,7 @@ end
 
 local ui_showskeleton = {false}
 local function show_skeleton(b)
-    local _, joints_list = joint_utils:get_joints(world:entity(current_e))
+    local _, joints_list = joint_utils:get_joints()
     if not joints_list then
         return
     end
@@ -1134,16 +704,18 @@ local function show_skeleton(b)
 end
 
 function m.show()
-    if not current_e then return end
+    if not current_anim then return end
+    local anim_e = current_anim.eid_list[1]
+    if not anim_e then return end
     local reload = false
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     for _ in uiutils.imgui_windows("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         if current_anim then
-            anim_state.is_playing = iani.is_playing(current_e)
+            anim_state.is_playing = iani.is_playing(anim_e)
             if anim_state.is_playing then
-                anim_state.current_frame = math.floor(iani.get_time(current_e) * sample_ratio)
+                anim_state.current_frame = math.floor(iani.get_time(anim_e) * sample_ratio)
             end
         end
         imgui.cursor.SameLine()
@@ -1200,7 +772,7 @@ function m.show()
             if imgui.widget.Button("  OK  ") then
                 if #anim_name > 0 and #anim_path > 0 then
                     local update = true
-                    local anims = get_runtime_animations(current_e)
+                    local anims = get_runtime_animations(anim_e)
                     if anims[anim_name] then
                         local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
                         uiutils.confirm_dialog(confirm)
@@ -1209,7 +781,7 @@ function m.show()
                         end
                     end
                     if update then
-                        local group_eid = get_anim_group_eid(current_e, current_anim.name)
+                        local group_eid = get_anim_group_eid(anim_e, current_anim.name)
                         --TODO: set for group eid
                         for _, eid in ipairs(group_eid) do
                             local template = hierarchy:get_template(eid)
@@ -1233,11 +805,10 @@ function m.show()
 
         imgui.cursor.SameLine()
         if imgui.widget.Button("Remove") then
-            anim_group_delete(current_e, current_anim.name)
+            anim_group_delete(current_anim.name)
             local nextanim = edit_anims.name_list[1]
             if nextanim then
                 set_current_anim(nextanim)
-                set_current_clip(nil)
             end
             reload = true
         end
@@ -1247,7 +818,6 @@ function m.show()
             for _, name in ipairs(edit_anims.name_list) do
                 if imgui.widget.Selectable(name, current_anim.name == name) then
                     set_current_anim(name)
-                    set_current_clip(nil)
                 end
             end
             imgui.widget.EndCombo()
@@ -1257,32 +827,29 @@ function m.show()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
             if anim_state.is_playing then
-                anim_group_pause(current_e, true)
+                anim_group_pause(anim_e, true)
             else
-                anim_play(current_e, {name = current_anim.name, loop = ui_loop[1], manual = false}, iani.play)
+                anim_play({name = current_anim.name, loop = ui_loop[1], manual = false}, iani.play)
             end
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("loop", ui_loop) then
-            anim_group_set_loop(current_e, ui_loop[1])
+            anim_group_set_loop(anim_e, ui_loop[1])
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("showskeleton", ui_showskeleton) then
             show_skeleton(ui_showskeleton[1])
         end
-        if all_clips then
-            imgui.cursor.SameLine()
-            if imgui.widget.Button("SaveEvent") then
-                m.save_keyevent()
-            end
+        imgui.cursor.SameLine()
+        if imgui.widget.Button("SaveEvent") then
+            m.save_keyevent()
         end
         imgui.cursor.SameLine()
-        local current_time = iani.get_time(current_e)
+        local current_time = iani.get_time(anim_e)
         imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
         imgui_message = {}
         imgui.widget.Sequencer(edit_anims, anim_state, imgui_message)
         -- clear dirty flag
-        anim_state.clip_range_dirty = 0
         set_event_dirty(0)
         --
         local move_type
@@ -1291,9 +858,9 @@ function m.show()
         for k, v in pairs(imgui_message) do
             if k == "pause" then
                 if anim_state.current_frame ~= v then
-                    anim_group_pause(current_e, true)
+                    anim_group_pause(anim_e, true)
                     anim_state.current_frame = v
-                    anim_group_set_time(current_e, v / sample_ratio)   
+                    anim_group_set_time(anim_e, v / sample_ratio)   
                 end
             elseif k == "selected_frame" then
                 new_frame_idx = v
@@ -1312,10 +879,6 @@ function m.show()
             imgui.table.SetupColumn("Bones", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
             imgui.table.SetupColumn("Event", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
             imgui.table.SetupColumn("Event(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 2.0)
-            -- imgui.table.SetupColumn("Clip", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-            -- imgui.table.SetupColumn("Clip(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-            -- imgui.table.SetupColumn("Group", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
-            -- imgui.table.SetupColumn("Group(Detail)", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
             imgui.table.HeadersRow()
 
             imgui.table.NextColumn()
@@ -1335,30 +898,6 @@ function m.show()
             imgui.windows.BeginChild("##show_current_event", child_width, child_height, false)
             show_current_event()
             imgui.windows.EndChild()
-            
-            -- imgui.table.NextColumn()
-            -- child_width, child_height = imgui.windows.GetContentRegionAvail()
-            -- imgui.windows.BeginChild("##show_clips", child_width, child_height, false)
-            -- show_clips()
-            -- imgui.windows.EndChild()
-
-            -- imgui.table.NextColumn()
-            -- child_width, child_height = imgui.windows.GetContentRegionAvail()
-            -- imgui.windows.BeginChild("##show_current_clip", child_width, child_height, false)
-            -- show_current_clip()
-            -- imgui.windows.EndChild()
-
-            -- imgui.table.NextColumn()
-            -- child_width, child_height = imgui.windows.GetContentRegionAvail()
-            -- imgui.windows.BeginChild("##show_groups", child_width, child_height, false)
-            -- show_groups()
-            -- imgui.windows.EndChild()
-            
-            -- imgui.table.NextColumn()
-            -- child_width, child_height = imgui.windows.GetContentRegionAvail()
-            -- imgui.windows.BeginChild("##show_current_group", child_width, child_height, false)
-            -- show_current_group()
-            -- imgui.windows.EndChild()
 
             imgui.table.End()
         end
@@ -1393,122 +932,42 @@ function m.load_events(filename)
     end
     return events
 end
-function m.load_clips()
-    if #all_clips == 0 then
-        local clips_filename = get_clips_filename();
-        if fs.exists(fs.path(clips_filename)) then
-            local path = fs.path(clips_filename):localpath()
-            local f = assert(fs.open(path))
-            local data = f:read "a"
-            f:close()
-            local events = datalist.parse(data)
-            -- for _, clip in ipairs(clips) do
-            --     if clip.key_event then
-            --         for _, ke in pairs(clips) do
-            --             for _, e in ipairs(ke.event_list) do
-            --                 if e.collision and e.collision.shape_type ~= "None" then
-            --                     if not hierarchy.collider_list or not hierarchy.collider_list[e.collision.name] then
-            --                         local eid = prefab_mgr:create("collider", {tag = e.collision.tag, type = e.collision.shape_type, define = utils.deep_copy(default_collider_define[e.collision.shape_type]), parent = prefab_mgr.root, add_to_hierarchy = true})
-            --                         world:entity(eid).name = e.collision.name
-            --                         world:entity(eid).tag = e.collision.tag
-            --                         imaterial.set_property(eid, "u_color", e.collision.color or {1.0,0.5,0.5,0.8})
-            --                         hierarchy:update_collider_list(world)
-            --                     end
-            --                     e.collision.col_eid = hierarchy.collider_list[e.collision.name]
-            --                     e.collision.name = nil
-            --                 end
-            --             end
-            --         end
-            --     end
-            -- end
-            hierarchy:update_slot_list(world)
-            --from_runtime_clip(clips)
-            for _, evs in pairs(events) do
-                for _, ev in ipairs(evs.event_list) do
-                    if ev.link_info then
-                        local slot_eid = hierarchy.slot_list[ev.link_info.slot_name]
-                        if slot_eid then
-                            ev.link_info.slot_eid = slot_eid
-                        else
-                            ev.link_info.slot_name = ""
-                        end
-                    end
-                end
-            end
-            -- set_event_dirty(-1)
-            return events
-        end
-    end
-    -- to_runtime_clip()
-end
 
-local function construct_edit_animations(eid)
-    local e = world:entity(eid)
-    edit_anims = {
-        id          = e.scene.id,
-        name_list   = {},
-        birth       = e.animation_birth,
-    }
-    local edit_anim = edit_anims
-    local animations = get_runtime_animations(eid)
-    local parentNode = hierarchy:get_node(hierarchy:get_node(eid).parent)
-    
-    -- local events = m.load_clips()
-    -- local keyevents = {}
-    -- if events then
-    --     keyevents = #events > 0 and from_runtime_event(events) or {}
-    --     if #events > 0 then
-    --         set_event_dirty(-1)
-    --     end
-    -- end
-
-    for key, anim in pairs(animations) do
-        if not anim_clips[key] then
-            anim_clips[key] = {}
+function m.on_prefab_load(entities)
+    local editanims = { name_list = {} }
+    local skeleton
+    for _, eid in ipairs(entities) do
+        local e = world:entity(eid)
+        local animations = e.animation
+        if not editanims.birth and e.animation_birth then
+            editanims.birth = e.animation_birth
         end
-        local events = m.load_events(tostring(anim))
-        edit_anim[key] = {
-            name = key,
-            duration = anim._handle:duration(),
-            --clips = anim_clips[key],
-            key_event = events and from_runtime_event(events) or {}
-        }
-        edit_anim.name_list[#edit_anim.name_list + 1] = key
-        if not anim_eid_group[anim] then
-            anim_eid_group[anim] = {}
+        if not skeleton and e.skeleton then
+            skeleton = e.skeleton
         end
-        local current_group = anim_eid_group[anim]
-        for _, child in ipairs(parentNode.children) do
-            local handle = get_runtime_animations(child.eid)
-            if handle and handle._handle == animations._handle then
-                if not find_index(current_group, child.eid)  then
-                    current_group[#current_group + 1] = child.eid
+        if animations then
+            for key, anim in pairs(animations) do
+                if not editanims[key] then
+                    local events = m.load_events(tostring(anim))
+                    editanims[key] = {
+                        name = key,
+                        duration = anim._handle:duration(),
+                        key_event = events and from_runtime_event(events) or {},
+                        eid_list = {}
+                    }
+                    editanims.name_list[#editanims.name_list + 1] = key
                 end
+                local edit_anim = editanims[key]
+                edit_anim.eid_list[#edit_anim.eid_list + 1] = eid
             end
         end
     end
-    table.sort(edit_anim.name_list)
-    set_current_anim(edit_anim.birth)
-    joint_map, joint_list = joint_utils:get_joints(world:entity(eid))
-    e._animation.joint_list = joint_list
-
-    hierarchy:update_slot_list(world)
-
-    set_event_dirty(-1)
-end
-
-function m.bind(eid)
-    if not eid then
-        return
-    end
-    if not world:entity(eid).animation then
-        return
-    end
-    if current_e ~= eid then
-        current_e = eid
-    end
-    if not edit_anims then
-        construct_edit_animations(eid)
+    if #editanims.name_list > 0 then
+        edit_anims = editanims
+        table.sort(edit_anims.name_list)
+        set_current_anim(edit_anims.birth)
+        skeleton_view.init(skeleton)
+        joint_map, joint_list = joint_utils:get_joints()
     end
 end
 
