@@ -196,30 +196,6 @@ al_attrib_num(struct attrib_arena* arena, struct attrib *a){
 	return c;
 }
 
-//lookup table:[name, attrib_id]///////////////////////////////////////////
-static inline void
-lut_create(lua_State *L, int value_idx){
-
-}
-
-
-static inline uint16_t
-lut_find_name(lua_State *L, int lut_idx, const char* name){
-	const int ltype = lua_getfield(L, lut_idx, name);
-	const uint16_t id = (ltype != LUA_TNUMBER) ? (uint16_t)lua_tonumber(L, -1) : INVALID_ATTRIB;
-	lua_pop(L, 1);
-	return id;
-}
-
-static inline uint16_t
-lut_find_stack(lua_State *L, int lut_idx, int value_idx){
-	lua_pushvalue(L, value_idx);
-	const int ltype = lua_rawget(L, lut_idx);
-	const uint16_t id = (ltype != LUA_TNUMBER) ? (uint16_t)lua_tonumber(L, -1) : INVALID_ATTRIB;
-	lua_pop(L, 1);
-	return id;
-}
-
 //material instance: mi_*////////////////////////////////////////////////////////////////////////////
 static inline int
 mi_is_patch_attrib(struct attrib_arena *arena, struct material_instance *mi, uint16_t pid){
@@ -248,11 +224,6 @@ mi_find_patch_attrib(struct attrib_arena *arena, struct material_instance *mi, u
 	}
 
 	return INVALID_ATTRIB;
-}
-
-static void
-mi_submit(struct attrib_arena *arena, struct material *mat, struct material_instance *mi){
-
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -410,6 +381,13 @@ hex2n(lua_State *L, char c) {
 	else if (c>='a' && c<='f')
 		return c-'a' + 10;
 	return luaL_error(L, "Invalid state %c", c);
+}
+
+static inline void
+byte2hex(uint8_t c, uint8_t *t) {
+	static char *hex = "0123456789ABCDEF";
+	t[0] = hex[c>>4];
+	t[1] = hex[c&0xf];
 }
 
 static inline void
@@ -770,6 +748,28 @@ lmaterial_set_attrib(lua_State *L){
 	return 0;
 }
 
+static int
+lmaterial_get_state(lua_State *L){
+	struct material* mat = (struct material*)luaL_checkudata(L, 1, "ANT_MATERIAL");
+	
+	uint64_t state = mat->state;
+	uint32_t rgba = mat->rgba;
+	uint8_t temp[24];
+	int i;
+	for (i=0;i<8;i++) {
+		byte2hex((state >> ((7-i) * 8)) & 0xff, &temp[i*2]);
+	}
+	if (rgba) {
+		for (i=0;i<4;i++) {
+			byte2hex( (rgba >> ((3-i) * 8)) & 0xff, &temp[16+i*2]);
+		}
+		lua_pushlstring(L, (const char *)temp, 24);
+	} else {
+		lua_pushlstring(L, (const char *)temp, 16);
+	}
+	return 1;
+}
+
 
 static inline int
 check_uniform_num(struct attrib_arena *arena, struct attrib *a, int n){
@@ -1065,7 +1065,6 @@ lmaterial_new(lua_State *L) {
 	uint64_t state;
 	uint32_t rgba;
 	get_state(L, 2, &state, &rgba);
-	const char* filename = lua_tostring(L, 4);
 	lua_settop(L, 3);
 	struct math3d_api *mapi = CAPI_MATH3D;
 	struct attrib_arena * arena = CAPI_ARENA;
@@ -1106,6 +1105,7 @@ lmaterial_new(lua_State *L) {
 			{ "attribs", 	lmaterial_attribs },
 			{ "instance", 	lmaterial_instance },
 			{ "set_attrib",	lmaterial_set_attrib},
+			{ "get_state",	lmaterial_get_state},
 			{ NULL, 		NULL },
 		};
 		luaL_setfuncs(L, l, 0);
