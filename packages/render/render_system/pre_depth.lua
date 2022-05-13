@@ -51,13 +51,6 @@ end
 
 local material_cache = {__mode="k"}
 
-local function gen_new_state(t_ts, t_os)
-    t_ts.PT           = t_os.PT
-	t_ts.CULL         = t_os.CULL
-	t_ts.DEPTH_TEST   = "LESS"
-    t_ts.WRITE_MASK   = "Z"
-end
-
 function s:end_filter()
     if irender.use_pre_depth() then
         for e in w:select "filter_result:in render_object:in filter_material:in skinning?in" do

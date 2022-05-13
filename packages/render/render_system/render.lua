@@ -50,7 +50,7 @@ function irender.layer_names()
 	return LAYER_NAMES
 end
 
-function irender.check_copy_material(tm, om, g, cache)
+function irender.check_copy_material(tm, om, cache)
 	local ts = tm:get_state()
 	local os = om:get_state()
 

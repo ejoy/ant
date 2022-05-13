@@ -2,7 +2,7 @@ fx:
     vs: /pkg/ant.resources/shaders/simple/quad/vs_simplequad.sc
     fs: /pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc
     setting:
-        surfacetype: opacity
+        surfacetype: translucent
         lighting: off
 properties:
     u_color: {1, 1, 1, 1}
