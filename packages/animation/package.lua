@@ -9,5 +9,6 @@ return {
 		"ant.timer",
 		"ant.math",
 		"ant.audio",
+		"ant.efk",
     }
 }
