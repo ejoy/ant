@@ -343,29 +343,7 @@ local function which_material(st, isskin)
 	return m
 end
 
-local material_cache = {}
-
-local function create_material(m, om)
-	local mobj = m:get_material()
-	local state = mobj:get_state()
-	local ostate = om:get_state()
-
-	local nstate = irender.check_primitive_mode_state(state, ostate)
-	if state == nstate then
-		return m
-	end
-
-	if nil == material_cache[mobj] then
-		material_cache[mobj] = {}
-	end
-
-	local cc = material_cache[mobj]
-	if nil == cc[nstate] then
-		cc[nstate] = mobj:copy(state)
-	end
-
-	return cc[nstate]:instance()
-end
+local material_cache = {__mode="k"}
 
 function pickup_sys:end_filter()
 	for e in w:select "filter_result:in render_object:in filter_material:out id:in skinning?in" do
@@ -376,7 +354,7 @@ function pickup_sys:end_filter()
 		for _, fn in ipairs(qe.primitive_filter) do
 			if fr[fn] then
 				local m = which_material(st, e.skinning)
-				local nm = create_material(m.material, e.render_object.material)
+				local nm = irender.check_copy_material(m.material, e.render_object.material, material_cache)
 				nm.u_id = math3d.vector(packeid_as_rgba(e.id))
 				fm[fn] = {
 					material = nm,

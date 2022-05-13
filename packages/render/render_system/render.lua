@@ -50,7 +50,7 @@ function irender.layer_names()
 	return LAYER_NAMES
 end
 
-function irender.check_primitive_mode_state(state, template_state)
+local function check_primitive_mode_state(state, template_state)
 	local s = bgfx.parse_state(state)
 	local ts = bgfx.parse_state(template_state)
 	ts.PT = s.PT
@@ -63,7 +63,7 @@ function irender.check_copy_material(m, om, cache)
 	local state = mobj:get_state()
 	local ostate = om:get_state()
 
-	local nstate = irender.check_primitive_mode_state(state, ostate)
+	local nstate = check_primitive_mode_state(state, ostate)
 	if state == nstate then
 		return m
 	end

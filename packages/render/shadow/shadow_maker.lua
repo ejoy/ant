@@ -79,8 +79,8 @@ local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_siz
 	maxextent[1], maxextent[2] = newmax[1], newmax[2]
 end
 
-local csm_matrices		= {mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT}
-local split_distances_VS	= {0, 0, 0, 0}
+local csm_matrices			= {mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT}
+local split_distances_VS	= math3d.ref(math3d.vector(0, 0, 0, 0))
 
 local function update_camera_matrices(camera, lightmat)
 	camera.viewmat	= math3d.inverse(lightmat)	--just transpose?
@@ -438,7 +438,7 @@ local omni_stencils = {
 
 local s = ecs.system "shadow_primitive_system"
 
-local material_cache = {}
+local material_cache = {__mode="k"}
 
 function s:end_filter()
     for e in w:select "filter_result:in render_object:in skinning?in filter_material:in" do

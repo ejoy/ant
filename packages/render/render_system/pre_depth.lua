@@ -49,7 +49,7 @@ function s:data_changed()
     end
 end
 
-local material_cache = {}
+local material_cache = {__mode="k"}
 
 function s:end_filter()
     if irender.use_pre_depth() then
@@ -61,7 +61,7 @@ function s:end_filter()
             for _, fn in ipairs(qe.primitive_filter) do
                 if fr[fn] then
                     e.filter_material[fn] = {
-                        material = irender.check_copy_material(m, e.render_object.material, material_cache),
+                        material = irender.check_copy_material(mi, e.render_object.material, material_cache),
                         fx = m.fx,
                     }
                 end

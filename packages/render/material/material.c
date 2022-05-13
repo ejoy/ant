@@ -10,6 +10,13 @@
 
 #include <luabgfx.h>
 
+#ifdef _DEBUG
+#define verfiy(_CON)	assert(_CON)
+#else //!_DEBUG
+#define verfiy(_CON)	_CON
+#endif //_DEBUG
+
+
 #define INVALID_ATTRIB 0xffff
 #define DEFAULT_ARENA_SIZE 256
 
@@ -773,6 +780,13 @@ lmaterial_get_state(lua_State *L){
 	return push_material_state(L, mat);
 }
 
+static int
+lmaterial_set_state(lua_State *L){
+	struct material* mat = (struct material*)luaL_checkudata(L, 1, "ANT_MATERIAL");
+	get_state(L, 2, &mat->state, &mat->rgba);
+	return 0;
+}
+
 
 static inline int
 check_uniform_num(struct attrib_arena *arena, struct attrib *a, int n){
@@ -1071,16 +1085,29 @@ fetch_material_attrib_value(lua_State *L, struct attrib_arena* arena, int arena_
 static int
 lmaterial_copy(lua_State *L){
 	struct material* temp_mat = (struct material*)lua_touserdata(L, 1);
-	struct material* new_mat = (struct material*)lua_newuserdatauv(L, sizeof(material), 3);
+	struct material* new_mat = (struct material*)lua_newuserdatauv(L, sizeof(*new_mat), 3);
 	new_mat->attrib = temp_mat->attrib;
 	if (!lua_isnoneornil(L, 2)){
 		get_state(L, 2, &new_mat->state, &new_mat->rgba);
+	} else {
+		new_mat->state = temp_mat->state;
+		new_mat->rgba = temp_mat->rgba;
 	}
 
 	for (int i=0; i<3; ++i){
+		#ifdef _DEBUG
+		static int types[] = {LUA_TTABLE, LUA_TUSERDATA, LUA_TTABLE};
+		const int lt = 
+		#endif //_DEBUG
 		lua_getiuservalue(L, 1, i+1);
-		lua_setiuservalue(L, -1, i+1);
+		#ifdef _DEBUG
+		assert(lt == types[i]);
+		#endif //_DEBUG
+		lua_setiuservalue(L, -2, i+1);
 	}
+
+	verfiy(lua_getmetatable(L, 1));
+	lua_setmetatable(L, -2);
 	
 	return 1;
 }
@@ -1136,6 +1163,7 @@ lmaterial_new(lua_State *L) {
 			{ "instance", 	lmaterial_instance },
 			{ "set_attrib",	lmaterial_set_attrib},
 			{ "get_state",	lmaterial_get_state},
+			{ "set_state",	lmaterial_set_state},
 			{ "copy",		lmaterial_copy},
 			{ NULL, 		NULL },
 		};
