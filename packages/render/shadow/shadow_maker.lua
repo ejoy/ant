@@ -351,8 +351,9 @@ function sm:update_camera()
 		else
 			for qe in w:select "csm_queue csm:in camera_ref:in" do
 				local cref = qe.camera_ref
-				local camera = world:entity(cref)
-				update_camera_matrices(camera.camera, camera.scene._worldmat)
+				local ce = world:entity(cref)
+				local camera = ce.camera
+				update_camera_matrices(camera, ce.scene._worldmat)
 				local idx = qe.csm.index
 				csm_matrices[idx] = calc_csm_matrix_attrib(idx, camera.viewprojmat)
 			end

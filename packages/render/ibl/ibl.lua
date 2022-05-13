@@ -150,22 +150,31 @@ function ibl_sys:render_preprocess()
         local dis = e.dispatch
         local material = dis.material
         material.s_source = source_tex
-        material.s_irradiance = icompute.create_image_property(ibl_textures.irradiance.handle, 1, 0, "w")
         material.u_build_ibl_param = math3d.vector(sample_count, 0, ibl_textures.source.facesize, 0.0)
+
+        -- there no binding attrib in material, but we just use this entity only once
+        local mobj = material:get_material()
+        mobj:set_attrib("s_irradiance", icompute.create_image_property(ibl_textures.irradiance.value, 1, 0, "w"))
 
         icompute.dispatch(ibl_viewid, dis)
         w:remove(e)
     end
 
+    local registered
     for e in w:select "prefilter_builder dispatch:in prefilter:in" do
         local dis = e.dispatch
         local material = dis.material
-        material.s_source = source_tex
+        local prefilter_stage<const> = 1
+        if registered == nil then
+            local matobj = material:get_material()
+            matobj:set_attrib("s_prefilter", {type='i', mip=0, access='w', stage=prefilter_stage})
+            registered = true
+        end
 
+        material.s_source = source_tex
         local prefilter = e.prefilter
         material.u_build_ibl_param = math3d.vector(sample_count, 0, ibl_textures.source.facesize, prefilter.roughness)
-        local prefilter_stage<const> = 1
-        material.s_prefilter = icompute.create_image_property(ibl_textures.prefilter.handle, prefilter_stage, prefilter.mipidx, "w")
+        material.s_prefilter = icompute.create_image_property(ibl_textures.prefilter.value, prefilter_stage, prefilter.mipidx, "w")
 
         icompute.dispatch(ibl_viewid, dis)
         w:remove(e)
@@ -175,7 +184,8 @@ function ibl_sys:render_preprocess()
     for e in w:select "LUT_builder dispatch:in" do
         local dis = e.dispatch
         local material = dis.material
-        material.s_LUT = icompute.create_image_property(ibl_textures.LUT.handle, LUT_stage, 0, "w")
+        local matobj = material:get_material()
+        matobj:set_attrib("s_LUT", icompute.create_image_property(ibl_textures.LUT.value, LUT_stage, 0, "w"))
         icompute.dispatch(ibl_viewid, dis)
 
         w:remove(e)
