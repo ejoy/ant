@@ -8,5 +8,6 @@ return {
         "ant.ecs",
         "ant.render",
         "ant.settings",
+        "ant.math",
     }
 }

@@ -4,5 +4,6 @@ return {
         "ant.compile_resource",
         "ant.asset",
         "ant.render",
+        "ant.math",
     }
 }
