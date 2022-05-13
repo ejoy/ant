@@ -50,34 +50,32 @@ function irender.layer_names()
 	return LAYER_NAMES
 end
 
-local function check_primitive_mode_state(state, template_state)
-	local s = bgfx.parse_state(state)
-	local ts = bgfx.parse_state(template_state)
-	ts.PT = s.PT
-	ts.CULL = s.CULL
-	return bgfx.make_state(ts)
-end
+function irender.check_copy_material(tm, om, g, cache)
+	local ts = tm:get_state()
+	local os = om:get_state()
 
-function irender.check_copy_material(m, om, cache)
-	local mobj = m:get_material()
-	local state = mobj:get_state()
-	local ostate = om:get_state()
-
-	local nstate = check_primitive_mode_state(state, ostate)
-	if state == nstate then
-		return m
+	local t_ts = bgfx.parse_state(ts)
+	local t_os = bgfx.parse_state(os)
+	
+	t_ts.PT           = t_os.PT
+	t_ts.CULL         = t_os.CULL
+	t_ts.DEPTH_TEST   = "LESS"
+	local ns = bgfx.make_state(t_ts)
+	if ts == ns then
+		return tm
 	end
 
+	local mobj = tm:get_material()
 	if nil == cache[mobj] then
 		cache[mobj] = {}
 	end
 
 	local cc = cache[mobj]
-	if nil == cc[nstate] then
-		cc[nstate] = mobj:copy(state)
+	if nil == cc[ns] then
+		cc[ns] = mobj:copy(ns)
 	end
 
-	return cc[nstate]:instance()
+	return cc[ns]:instance()
 end
 
 local function update_mesh(vb, ib)

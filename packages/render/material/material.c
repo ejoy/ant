@@ -1106,21 +1106,23 @@ lmaterial_copy(lua_State *L){
 		new_mat->rgba = temp_mat->rgba;
 	}
 
-	for (int i=0; i<3; ++i){
-		#ifdef _DEBUG
-		static int types[] = {LUA_TTABLE, LUA_TUSERDATA, LUA_TTABLE};
-		const int lt = 
-		#endif //_DEBUG
-		lua_getiuservalue(L, 1, i+1);
-		#ifdef _DEBUG
-		assert(lt == types[i]);
-		#endif //_DEBUG
-		lua_setiuservalue(L, -2, i+1);
-	}
+	//uv1
+	lua_pushvalue(L, -1);	// material
+	lua_getiuservalue(L, 1, 2); //cobject
+	create_material_instance_metatable(L);
+	lua_setiuservalue(L, -2, 1);
+
+	//uv2
+	lua_getiuservalue(L, 1, 2);
+	lua_setiuservalue(L, -2, 2);
+
+	//uv3
+	lua_getiuservalue(L, 1, 3);
+	lua_setiuservalue(L, -2, 3);
 
 	verfiy(lua_getmetatable(L, 1));
 	lua_setmetatable(L, -2);
-	
+
 	return 1;
 }
 
