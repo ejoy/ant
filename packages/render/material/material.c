@@ -1095,6 +1095,11 @@ fetch_material_attrib_value(lua_State *L, struct attrib_arena* arena, int arena_
 }
 
 static int
+lmaterial_type_gc(lua_State *L){
+	return 1;
+}
+
+static int
 lmaterial_copy(lua_State *L){
 	struct material* temp_mat = (struct material*)lua_touserdata(L, 1);
 	struct material* new_mat = (struct material*)lua_newuserdatauv(L, sizeof(*new_mat), 3);
@@ -1120,7 +1125,21 @@ lmaterial_copy(lua_State *L){
 	lua_getiuservalue(L, 1, 3);
 	lua_setiuservalue(L, -2, 3);
 
-	verfiy(lua_getmetatable(L, 1));
+	if (luaL_newmetatable(L, "ANT_TYPE_MATERIAL")) {
+		luaL_Reg l[] = {
+			{ "__gc",		lmaterial_type_gc },
+			{ "attribs", 	lmaterial_attribs },
+			{ "instance", 	lmaterial_instance },
+			{ "set_attrib",	lmaterial_set_attrib},
+			{ "get_state",	lmaterial_get_state},
+			{ "set_state",	lmaterial_set_state},
+			{ "copy",		lmaterial_copy},
+			{ NULL, 		NULL },
+		};
+		luaL_setfuncs(L, l, 0);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+	}
 	lua_setmetatable(L, -2);
 
 	return 1;
