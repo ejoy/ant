@@ -899,23 +899,31 @@ linstance_gc(lua_State *L) {
 
 #define MAX_UNIFORM_NUM 1024
 
+static inline bgfx_texture_handle_t
+check_get_texture_handle(lua_State *L, int texture_index, uint32_t handle){
+	bgfx_texture_handle_t tex;
+	lua_geti(L, texture_index, handle);
+	tex.idx = luaL_optinteger(L, -1, handle) & 0xffff;
+	lua_pop(L, 1);
+	return tex;
+}
+
 static void
 apply_attrib(lua_State *L, struct attrib_arena * cobject_, struct attrib *a, int texture_index) {
 	switch(a->type){
 		case ATTRIB_REF:
 			apply_attrib(L, cobject_, al_attrib(cobject_, a->ref), texture_index);
 			break;
-		case ATTRIB_SAMPLER:
-		case ATTRIB_IMAGE:{
-			bgfx_texture_handle_t tex;
-			lua_geti(L, texture_index, a->u.t.handle);
-			tex.idx = luaL_optinteger(L, -1, a->u.t.handle) & 0xffff;
-			lua_pop(L, 1);
-			if (a->type == ATTRIB_SAMPLER){
-				BGFX(encoder_set_texture)(cobject_->eh->encoder, a->u.t.stage, a->u.handle, tex, UINT32_MAX);
-			} else {
-				BGFX(encoder_set_image)(cobject_->eh->encoder, a->r.stage, tex, a->r.mip, a->r.access, BGFX_TEXTURE_FORMAT_UNKNOWN);
-			}
+		case ATTRIB_SAMPLER: {
+			const bgfx_texture_handle_t tex = check_get_texture_handle(L, texture_index, a->u.t.handle);
+			#ifdef _DEBUG
+			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
+			#endif //_DEBUG
+			BGFX(encoder_set_texture)(cobject_->eh->encoder, a->u.t.stage, a->u.handle, tex, UINT32_MAX);
+		}	break;
+		case ATTRIB_IMAGE: {
+			const bgfx_texture_handle_t tex = check_get_texture_handle(L, texture_index, a->r.handle);
+			BGFX(encoder_set_image)(cobject_->eh->encoder, a->r.stage, tex, a->r.mip, a->r.access, BGFX_TEXTURE_FORMAT_UNKNOWN);
 		}	break;
 
 		case ATTRIB_BUFFER: {
@@ -956,6 +964,10 @@ apply_attrib(lua_State *L, struct attrib_arena * cobject_, struct attrib *a, int
 		}	break;
 		case ATTRIB_UNIFORM: {
 			struct attrib_arena * arena = cobject_;
+
+			#ifdef _DEBUG
+			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
+			#endif //_DEBUG
 
 			const uint16_t n = al_attrib_num(arena, a);
 			// most case is n == 1

@@ -22,7 +22,7 @@ end
 
 local function check(properties)
 	for k, v in pairs(properties) do
-		if v.type == "u" or v.type == "s" then
+		if v.type == "u" or v.type == "t" then
 			local n = 1
 			local ut
 			if v.stage == nil then

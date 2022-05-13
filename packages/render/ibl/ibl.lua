@@ -39,18 +39,18 @@ local cubemap_flags<const> = sampler.sampler_flag {
 }
 
 local ibl_textures = {
-    source = {facesize = 0, stage=0, handle=nil},
+    source = {facesize = 0, stage=0, value=nil},
     irradiance   = {
-        handle = nil,
+        value = nil,
         size = 0,
     },
     prefilter    = {
-        handle = nil,
+        value = nil,
         size = 0,
         mipmap_count = 0,
     },
     LUT             = {
-        handle = nil,
+        value = nil,
         size = 0,
     }
 }
@@ -202,27 +202,27 @@ local function build_ibl_textures(ibl)
 
     ibl_textures.intensity = ibl.intensity
 
-    ibl_textures.source.handle = assert(ibl.source.handle)
+    ibl_textures.source.value = assert(ibl.source.value)
     ibl_textures.source.facesize = assert(ibl.source.facesize)
 
     if ibl.irradiance.size ~= ibl_textures.irradiance.size then
         ibl_textures.irradiance.size = ibl.irradiance.size
-        check_destroy(ibl_textures.irradiance.handle)
+        check_destroy(ibl_textures.irradiance.value)
 
-        ibl_textures.irradiance.handle = bgfx.create_texturecube(ibl_textures.irradiance.size, false, 1, "RGBA16F", flags)
+        ibl_textures.irradiance.value = bgfx.create_texturecube(ibl_textures.irradiance.size, false, 1, "RGBA16F", flags)
     end
 
     if ibl.prefilter.size ~= ibl_textures.prefilter.size then
         ibl_textures.prefilter.size = ibl.prefilter.size
-        check_destroy(ibl_textures.prefilter.handle)
-        ibl_textures.prefilter.handle = bgfx.create_texturecube(ibl_textures.prefilter.size, true, 1, "RGBA16F", cubemap_flags)
+        check_destroy(ibl_textures.prefilter.value)
+        ibl_textures.prefilter.value = bgfx.create_texturecube(ibl_textures.prefilter.size, true, 1, "RGBA16F", cubemap_flags)
         ibl_textures.prefilter.mipmap_count = math.log(ibl.prefilter.size, 2)+1
     end
 
     if ibl.LUT.size ~= ibl_textures.LUT.size then
         ibl_textures.LUT.size = ibl.LUT.size
-        check_destroy(ibl_textures.LUT.handle)
-        ibl_textures.LUT.handle = bgfx.create_texture2d(ibl_textures.LUT.size, ibl_textures.LUT.size, false, 1, "RG16F", flags)
+        check_destroy(ibl_textures.LUT.value)
+        ibl_textures.LUT.value = bgfx.create_texture2d(ibl_textures.LUT.size, ibl_textures.LUT.size, false, 1, "RG16F", flags)
     end
 end
 
@@ -235,9 +235,9 @@ end
 
 local function update_ibl_texture_info()
     local sa = imaterial.system_attribs()
-    sa:update("s_irradiance", ibl_textures.irradiance.handle)
-    sa:update("s_prefilter", ibl_textures.prefilter.handle)
-    sa:update("s_LUT",  ibl_textures.LUT.handle)
+    sa:update("s_irradiance", ibl_textures.irradiance.value)
+    sa:update("s_prefilter", ibl_textures.prefilter.value)
+    sa:update("s_LUT",  ibl_textures.LUT.value)
 
     update_ibl_param()
 end

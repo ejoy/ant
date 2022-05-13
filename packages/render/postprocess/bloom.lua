@@ -214,7 +214,7 @@ local scenecolor_property = {
     stage   = 0,
     mip     = 0,
     access  = "r",
-    handle  = nil,
+    value  = nil,
 }
 
 local function do_bloom_sample(viewid, drawer, ppi_handle, next_mip)
@@ -223,13 +223,11 @@ local function do_bloom_sample(viewid, drawer, ppi_handle, next_mip)
     local rbhandle = fbmgr.get_rb(fbmgr.get_byviewid(viewid)[1].rbidx).handle
     for i=1, bloom_chain_count do
         local mip = next_mip()
-        scenecolor_property.handle = ppi_handle
+        scenecolor_property.value = ppi_handle
         scenecolor_property.mip = mip
 
         material.s_scene_color = scenecolor_property
-
-        local bloom_param = ro.properties["u_bloom_param"].value
-        bloom_param.v = math3d.set_index(bloom_param, 1, mip)
+        material.u_bloom_param = math3d.vector(mip, 1.2, 15, 0)
         irender.draw(viewid, ro)
         ppi_handle = rbhandle
         viewid = viewid + 1

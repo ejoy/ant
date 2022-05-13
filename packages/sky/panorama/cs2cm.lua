@@ -104,7 +104,7 @@ function cs2cm_sys:filter_ibl()
         local sb = e.skybox
         local cm_rbhandle = fbmgr.get_rb(sb.cm_rbidx).handle
         iibl.filter_all{
-			source 		= {handle=cm_rbhandle, facesize=sb.facesize},
+			source 		= {value=cm_rbhandle, facesize=sb.facesize},
 			irradiance 	= se_ibl.irradiance,
 			prefilter 	= se_ibl.prefilter,
 			LUT			= se_ibl.LUT,
