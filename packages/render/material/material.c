@@ -70,10 +70,10 @@ struct attrib {
 	};
 };
 
-#define ARENA_UV_ATTRIB_BUFFER		1
-#define ARENA_UV_SYSTEM_ATTRIBS		2
-#define ARENA_UV_INVALID_LIST		3
-#define ARENA_UV_NUM				3
+#define COBJECT_UV_ATTRIB_BUFFER		1
+#define COBJECT_UV_SYSTEM_ATTRIBS		2
+#define COBJECT_UV_INVALID_LIST		3
+#define COBJECT_UV_NUM				3
 
 // uv1: attrib buffer
 // uv2: system attribs
@@ -119,7 +119,7 @@ arena_new(lua_State *L, bgfx_interface_vtbl_t *bgfx, struct math3d_api *mapi, st
 	a->a = NULL;
 	//invalid material attrib list
 	lua_newtable(L);
-	lua_setiuservalue(L, -2, ARENA_UV_NUM);	//set invalid table as uv 3
+	lua_setiuservalue(L, -2, COBJECT_UV_NUM);	//set invalid table as uv 3
 	return a;
 }
 
@@ -257,7 +257,7 @@ arena_alloc(lua_State *L, int idx) {
 	} else if (arena->cap == 0) {
 		// new arena
 		struct attrib * al = (struct attrib *)lua_newuserdatauv(L, sizeof(struct attrib) * DEFAULT_ARENA_SIZE, 0);
-		lua_setiuservalue(L, idx, ARENA_UV_ATTRIB_BUFFER);
+		lua_setiuservalue(L, idx, COBJECT_UV_ATTRIB_BUFFER);
 		arena->a = al;
 		arena->cap = DEFAULT_ARENA_SIZE;
 		arena->n = 1;
@@ -270,7 +270,7 @@ arena_alloc(lua_State *L, int idx) {
 		struct attrib * al = (struct attrib *)lua_newuserdatauv(L, sizeof(struct attrib) * newcap, 0);
 		memcpy(al, arena->a, sizeof(struct attrib) * arena->n);
 		arena->a = al;
-		lua_setiuservalue(L, idx, ARENA_UV_ATTRIB_BUFFER);
+		lua_setiuservalue(L, idx, COBJECT_UV_ATTRIB_BUFFER);
 		ret = al_attrib(arena, arena->n++);
 	}
 	al_init_attrib(arena, ret);
@@ -894,7 +894,7 @@ lmaterial_gc(lua_State *L) {
 	if (lua_getiuservalue(L, 1, MATERIAL_UV_COBJECT) != LUA_TUSERDATA){
 		return luaL_error(L, "Invalid material data, user value 1 is not 'cobject'");
 	}
-	if (LUA_TTABLE != lua_getiuservalue(L, -1, ARENA_UV_INVALID_LIST)){// material invalid attrib list table
+	if (LUA_TTABLE != lua_getiuservalue(L, -1, COBJECT_UV_INVALID_LIST)){// material invalid attrib list table
 		luaL_error(L, "Invalid uservalue in 'cobject', uservalue in 3 should ba invalid material atrrib table");
 	}
 	const int invalid_list_idx = lua_gettop(L);
@@ -1133,7 +1133,7 @@ lmaterial_type_gc(lua_State *L){
 		return luaL_error(L, "Invalid material subtype");
 	}
 
-	if (LUA_TTABLE != lua_getiuservalue(L, -1, ARENA_UV_INVALID_LIST)){
+	if (LUA_TTABLE != lua_getiuservalue(L, -1, COBJECT_UV_INVALID_LIST)){
 		return luaL_error(L, "Invalid cobject");
 	}
 
