@@ -6,5 +6,6 @@ return {
         "ant.general",
         "ant.render",
         "ant.sky",
+        "ant.efk",
     }
 }
