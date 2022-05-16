@@ -358,7 +358,7 @@ function pickup_sys:end_filter()
 				nm.u_id = math3d.vector(packeid_as_rgba(e.id))
 				fm[fn] = {
 					material = nm,
-					fx = nm.fx,
+					fx = m.fx,
 				}
 			end
 		end
