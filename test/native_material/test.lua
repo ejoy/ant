@@ -69,9 +69,29 @@ function s.init()
     local material = rmat.material(COBJ, state, properties)
     local mi = material:instance()
 
+    local state2 = bgfx.make_state{
+        ALPHA_REF = 0,
+        CULL = "NONE",
+        DEPTH_TEST = "LESS",
+        PT = "TRISTRIP",
+        WRITE_MASK = "RGBAZ",
+    }
+    local material2 = material:copy(state2)
+    local mi2 = material2:instance()
+
     bgfx.encoder_begin()
     mi{}
+    bgfx.submit(0, fx.prog, 0)
+    mi2{}
+    bgfx.submit(0, fx.prog, 0)
     bgfx.encoder_end()
+
+    mi = nil
+    mi2 = nil
+    material = nil
+    material2 = nil
+
+    collectgarbage "collect"
 end
 
 function s.render()

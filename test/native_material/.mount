@@ -7,6 +7,7 @@ engine engine
 @pkg-one packages/resources
 @pkg-one packages/resources.binary
 @pkg-one packages/subprocess
+@pkg-one packages/url
 
 / ${project}
 @pkg-one ${project}
