@@ -235,7 +235,7 @@ local function update_sky_parameters(e)
 	local hour = skycomp.which_hour
 	imaterial.set_property(e, "u_sunDirection", skycomp.sundir)
 	
-	imaterial.set_property(e, "u_sunLuminance", xyz2rgb(sun_luminance_fetch(hour)))
+	--imaterial.set_property(e, "u_sunLuminance", xyz2rgb(sun_luminance_fetch(hour)))
 	imaterial.set_property(e, "u_skyLuminanceXYZ", sky_luminance_fetch(hour))
 	shader_parameters.v = math3d.set_index(shader_parameters, 1, skycomp.sun_size, skycomp.sun_bloom, skycomp.intensity, hour)
 	imaterial.set_property(e, "u_parameters", shader_parameters)
