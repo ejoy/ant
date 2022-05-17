@@ -772,9 +772,7 @@ local function create_bone_entity(joint_name)
             name = joint_name,
             on_ready = function(e)
                 w:sync("render_object:in", e)
-				if imaterial.has_property(e, "u_basecolor_factor") then
-					imaterial.set_property(e, "u_basecolor_factor", bone_color)
-				end
+				imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
 				ifs.set_state(e, "auxgeom", true)
                 w:sync("render_object_update:out", e)
                 ies.set_state(e, "main_view", false)

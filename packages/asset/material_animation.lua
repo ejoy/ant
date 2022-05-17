@@ -56,6 +56,12 @@ function ima.play(e, target, loop)
 		return
 	end
 	ima.stop(e)
+	if ALREADY_LOG == nil then
+		log.warn("Could not get property from material, need code change")
+		ALREADY_LOG = true
+		return 
+	end
+	
 	local pro = imaterial.get_property(world:entity(target), e.material_animation.property)
 	if not pro then
 		return
