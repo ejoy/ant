@@ -10,6 +10,6 @@ lm:lua_source "render" {
     },
     sources = {
         "material/material.c",
-        "mesh/mesh.c",
+        --"mesh/mesh.c",
     }
 }
