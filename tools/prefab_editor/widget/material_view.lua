@@ -826,7 +826,17 @@ local default_files<const> = {
     ['/pkg/ant.resources/materials/states/translucent_cw.state']= true,
 }
 
+local function is_glb_resource()
+    local cp = prefab_mgr:get_current_filename()
+    if cp then
+        return cp:match "%.glb%|mesh%.prefab$" ~= nil
+    end
+end
+
 local function is_readonly_resource(p)
+    if is_glb_resource() then
+        return true
+    end
     return p:match ".glb|" or default_files[p]
 end
 
@@ -870,6 +880,7 @@ function MaterialView:set_model(eid)
         end
     end
     self.save.disable = is_readonly_resource(world:entity(eid).material)
+    self.saveas.disable = is_glb_resource()
     self.material.disable = prefab_mgr:get_current_filename() == nil
     self:enable_blend_setting_ui(eid)
     self:enable_properties_ui(eid)
