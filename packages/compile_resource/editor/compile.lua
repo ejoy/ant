@@ -126,9 +126,6 @@ local function compile_virtualfile(url)
     local keystring = input:string():lower() 
     local output = cfg.binpath / get_filename(keystring) / hash
     if not lfs.exists(output) or not do_build(output) then
-        if setting.varying_path then
-            setting.varying_path = fs.path(setting.varying_path):localpath():string()
-        end
         do_compile(cfg, setting, input, output)
         writefile(output / ".setting", serialize(setting))
         writefile(output / ".arguments", arguments)

@@ -87,7 +87,11 @@ local function compile_debug_shader(platform, renderer)
     end
 end
 
-return function (input, output, setting)
+return function (input, output, setting, localpath)
+    local vp = setting.varying_path
+    if vp then
+        vp = localpath(vp)
+    end
     local ok, err, deps = toolset.compile {
         platform = setting.os,
         renderer = setting.renderer,
@@ -95,7 +99,7 @@ return function (input, output, setting)
         output = output / "main.bin",
         includes = {SHARER_INC},
         stage = assert(setting.stage),
-        varying_path = setting.varying_path,
+        varying_path = vp,
         macros = get_macros(setting),
         debug = compile_debug_shader(setting.os, setting.renderer),
     }
