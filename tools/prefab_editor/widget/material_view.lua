@@ -799,6 +799,9 @@ function MaterialView:_init()
             local path = uiutils.get_saveas_path("Material", "material")
             if path then
                 local vpath = access.virtualpath(global_data.repo, fs.path(path))
+                if vpath == nil then
+                    error(("save path:%s, is not valid package"):format(path))
+                end
                 reload(self.eid, vpath)
                 if vpath == self.mat_file:get_path() then
                     assetmgr.unload(vpath)
