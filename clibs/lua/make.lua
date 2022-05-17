@@ -18,11 +18,13 @@ lm:source_set "lua_source" {
     }
 }
 
-lm:source_set "lua_source" {
-    sources = {
-        "utf8_crt.c",
+if lm.os == "windows" then
+    lm:source_set "lua_source" {
+        sources = {
+            "utf8_crt.c",
+        }
     }
-}
+end
 
 lm:source_set "lua_source" {
     sources = "linit.c",
