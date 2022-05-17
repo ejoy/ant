@@ -23,7 +23,6 @@ lm:lua_source "efk" {
         "lefk.cpp",
     },
     deps = {
-        "efxbgfx_shaders",
         "source_efkbgfx_lib",
         "source_effekseer_callback",
     },
