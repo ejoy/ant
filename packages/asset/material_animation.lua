@@ -59,19 +59,19 @@ function ima.play(e, target, loop)
 	if ALREADY_LOG == nil then
 		log.warn("Could not get property from material, need code change")
 		ALREADY_LOG = true
-		return 
 	end
-	
-	local pro = imaterial.get_property(world:entity(target), e.material_animation.property)
-	if not pro then
-		return
+	if false then
+		local pro = imaterial.get_property(world:entity(target), e.material_animation.property)
+		if not pro then
+			return
+		end
+		local ps = e.material_animation.play_state
+		ps.target_e = target
+		ps.loop = loop
+		ps.current_time = 0
+		ps.playing = true
+		ps.restore_value = (type(pro.value) == "userdata") and math3d.totable(pro.value) or pro.value
 	end
-	local ps = e.material_animation.play_state
-	ps.target_e = target
-	ps.loop = loop
-	ps.current_time = 0
-	ps.playing = true
-	ps.restore_value = (type(pro.value) == "userdata") and math3d.totable(pro.value) or pro.value
 end
 
 local ma_sys = ecs.system "material_animation_system"
