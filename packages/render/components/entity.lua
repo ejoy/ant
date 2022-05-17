@@ -80,7 +80,7 @@ local function create_simple_render_entity(name, material, mesh, srt, color, hid
 			name		= name or gen_test_name(),
 			on_ready = function(e)
 				w:sync("render_object:in", e)
-				imaterial.set_property(e, "u_color", color or {1,1,1,1})
+				imaterial.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
 			end
 		}
 	}
@@ -248,7 +248,7 @@ function ientity.create_prim_plane_entity(srt, materialpath, color, name, hide)
 			on_ready = function (e)
 				w:sync("render_object:in", e)
 				ifs.set_state(e, "main_view", not hide)
-				imaterial.set_property(e, "u_color", color)
+				imaterial.set_property(e, "u_color", math3d.vector(color))
 				w:sync("render_object_update:out", e)
 			end
 		},
@@ -671,7 +671,7 @@ function ientity.create_arrow_entity(srt, headratio, color, material)
 			name = "arrow",
 			on_ready = function (e)
 				w:sync("render_object:in", e)
-				imaterial.set_property(e, "u_color", color)
+				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
 		}
 	}

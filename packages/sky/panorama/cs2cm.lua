@@ -53,11 +53,15 @@ local cm_flags = sampler.sampler_flag{
     BLIT="BLIT_COMPUTEWRITE",
 }
 
+local function load_res_tex(e)
+    w:sync("material:in material_setting?in", e)
+    local res = imaterial.load_res(e.material, e.material_setting)
+    return assetmgr.resource(res.properties.s_skybox.texture)
+end
+
 function cs2cm_sys:entity_ready()
     for e in w:select "skybox_changed skybox:in render_object:in filter_ibl?out" do
-        w:sync("material:in material_setting?in", e)
-        local res = imaterial.load_res(e.material, e.material_setting)
-        local tex = assetmgr.resource(res.properties.s_skybox.texture)
+        local tex = load_res_tex(e)
         local ti = tex.texinfo
         if panorama_util.is_panorama_tex(ti) then
             if e.skybox.facesize == nil then
@@ -102,7 +106,8 @@ function cs2cm_sys:filter_ibl()
     for e in w:select "filter_ibl ibl:in skybox:in render_object:in" do
         local se_ibl = e.ibl
         local sb = e.skybox
-        local cm_rbhandle = fbmgr.get_rb(sb.cm_rbidx).handle
+        local cm_rbhandle = sb.cm_rbidx and fbmgr.get_rb(sb.cm_rbidx).handle or load_res_tex(e).handle
+
         iibl.filter_all{
 			source 		= {value=cm_rbhandle, facesize=sb.facesize},
 			irradiance 	= se_ibl.irradiance,
