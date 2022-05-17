@@ -28,11 +28,8 @@ int luaopen_terrain(lua_State *L);
 int luaopen_font(lua_State *L);
 int luaopen_font_init(lua_State *L);
 int luaopen_font_truetype(lua_State *L);
-//int luaopen_effekseer(lua_State* L);
-#if defined(_WIN32)
 int luaopen_efk(lua_State* L);
 int luaopen_effekseer_callback(lua_State* L);
-#endif
 int luaopen_audio(lua_State* L);
 int luaopen_ltask(lua_State* L);
 int luaopen_ltask_bootstrap(lua_State* L);
@@ -44,6 +41,7 @@ int luaopen_fastio(lua_State* L);
 int luaopen_fileinterface(lua_State *L);
 int luaopen_material(lua_State *L);
 //int luaopen_mesh(lua_State *L);
+int luaopen_image(lua_State* L);
 #if BX_PLATFORM_IOS
 int luaopen_gesture(lua_State* L);
 #endif
@@ -54,7 +52,6 @@ int luaopen_bee_filewatch(lua_State* L);
 int luaopen_bee_subprocess(lua_State* L);
 int luaopen_filedialog(lua_State* L);
 int luaopen_imgui(lua_State* L);
-int luaopen_image(lua_State* L);
 #endif
 
 void ant_loadmodules(lua_State* L) {
@@ -84,12 +81,9 @@ void ant_loadmodules(lua_State* L) {
         { "rp3d.core", luaopen_rp3d_core },
         { "window", luaopen_window },
         { "terrain", luaopen_terrain},
-        //{ "effekseer", luaopen_effekseer},
-#if defined(_WIN32)
         { "efk", luaopen_efk},
         { "effekseer.callback", luaopen_effekseer_callback},
-#endif
-        {"fileinterface", luaopen_fileinterface},
+        { "fileinterface", luaopen_fileinterface },
 #if defined(_WIN32) && !defined(__MINGW32__)
         { "audio", luaopen_audio},
 #endif
@@ -101,6 +95,7 @@ void ant_loadmodules(lua_State* L) {
         { "fastio", luaopen_fastio},
         { "render.material",    luaopen_material},
         //{ "render.mesh",        luaopen_mesh},
+        { "image", luaopen_image },
 #if BX_PLATFORM_IOS
         { "gesture", luaopen_gesture },
 #endif
@@ -111,7 +106,6 @@ void ant_loadmodules(lua_State* L) {
         { "bee.subprocess", luaopen_bee_subprocess },
         { "filedialog", luaopen_filedialog },
         { "imgui", luaopen_imgui },
-        { "image", luaopen_image },
 #endif
         { NULL, NULL },
     };
