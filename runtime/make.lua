@@ -41,9 +41,7 @@ for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
     end
 end
 
-if lm.os == "windows" then
-    checkAddModule("efk", "../packages/efk/make.lua")
-end
+checkAddModule("efk", "../packages/efk/make.lua")
 
 checkAddModule("render", "../packages/render/make.lua")
 
