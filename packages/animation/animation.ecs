@@ -9,6 +9,7 @@ system "animation_system"
     .method "do_refine"
     .method "end_animation"
     .method "sample_animation_pose"
+    .method "animation_ready"
     .method "entity_ready"
 
 pipeline "animation"

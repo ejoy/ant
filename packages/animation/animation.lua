@@ -139,24 +139,9 @@ local function build_transform(rc, skinning)
 	rc.set_transform = set_skinning_transform
 end
 
-function ani_sys:entity_ready()
-    for _, p, p0, p1 in event_set_clips:unpack() do
-		world:prefab_event(p, "set_clips", p0, p1)
-	end
-	for _, what, e, p0, p1, p2 in event_animation:unpack() do
-		if what == "play_group" then
-			iani.play_group(e, p0, p1, p2)
-		elseif what == "play_clip" then
-			iani.play_clip(e, p0, p1, p2)
-		elseif what == "step" then
-			w:sync("_animation:in", e)
-			iani.step(e._animation._current, p0, p1)
-		elseif what == "set_time" then
-			iani.set_time(e, p0)
-		end
-	end
-	for _, prefab in eventPrefabReady:unpack() do
-		local entitys = prefab.tag["*"]
+function ani_sys:animation_ready()
+	for e in w:select "prefab:in animation_init:in" do
+		local entitys = e.prefab.tag["*"]
 		local anim_e = {}
 		local anim
 		for _, eid in ipairs(entitys) do
@@ -182,7 +167,26 @@ function ani_sys:entity_ready()
 				play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = false, loop = false, manual_update = false }
 			}
 		end
-    end
+	end
+	w:clear "animation_init"
+end
+
+function ani_sys:entity_ready()
+    for _, p, p0, p1 in event_set_clips:unpack() do
+		world:prefab_event(p, "set_clips", p0, p1)
+	end
+	for _, what, e, p0, p1, p2 in event_animation:unpack() do
+		if what == "play_group" then
+			iani.play_group(e, p0, p1, p2)
+		elseif what == "play_clip" then
+			iani.play_clip(e, p0, p1, p2)
+		elseif what == "step" then
+			w:sync("_animation:in", e)
+			iani.step(e._animation._current, p0, p1)
+		elseif what == "set_time" then
+			iani.set_time(e, p0)
+		end
+	end
 end
 
 local mathadapter = import_package "ant.math.adapter"
