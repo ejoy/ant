@@ -33,6 +33,8 @@ local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local access    = require "vfs.repoaccess"
 
+local rb        = ecs.require "widget.resource_browser"
+
 local file_cache = {}
 
 local function read_datalist_file(p)
@@ -834,27 +836,47 @@ local function reload(e, mtl)
     prefab_mgr:reload()
 end
 
+local function check_disable_file_fetch_ui(matfile_ui)
+    local p = matfile_ui:find_property "fetch_material"
+    local f = rb.selected_file()
+    p.disable = f == nil or (not f:equal_extension ".material")
+end
+
+local function build_file_ui(mv)
+    return uiproperty.SameLineContainer({},{
+        uiproperty.Button({label="!", id="fetch_material"}, {
+            click = function ()
+                local f = rb.selected_file()
+                assert(f:match "%.material$")
+                local prefab = hierarchy:get_template(mv.eid)
+                prefab.template.data.material = f
+            end
+        }),
+        uiproperty.EditText({label="File", id="path"},{
+            getter = function()
+                local prefab = hierarchy:get_template(mv.eid)
+                return prefab.template.data.material
+            end,
+            setter = function (value)
+                local prefab = hierarchy:get_template(mv.eid)
+                prefab.template.data.material = value
+                mv.need_reload = true
+            end,
+        }),
+    })
+end
+
 function MaterialView:_init()
     BaseView._init(self)
     
-    self.mat_file       = uiproperty.ResourcePath({label = "File", extension = ".material"},{
-        getter = function()
-            local prefab = hierarchy:get_template(self.eid)
-            return prefab.template.data.material
-        end,
-        setter = function (value)
-            local prefab = hierarchy:get_template(self.eid)
-            prefab.template.data.material = value
-            self.need_reload = true
-        end,
-    })
+    self.mat_file = build_file_ui(self)
 
     self.fx         = build_fx_ui(self)
     self.state      = build_state_ui(self)
     self.save       = uiproperty.Button({label="Save"}, {
         click = function ()
-            local path = self.mat_file:get_path()
-            reload(self.eid, path)
+            local p = self.mat_file:find_property "path"
+            reload(self.eid, p.uidata.text)
         end,
     })
     self.saveas     = uiproperty.Button({label="Save As ..."}, {
@@ -911,7 +933,6 @@ function MaterialView:set_model(eid)
         return false
     end
 
-    self.mat_file.disable = false
     local t = material_template(eid)
     if t.fx.cs == nil then
         local cs = self.fx:find_property_by_label "cs"
@@ -934,9 +955,13 @@ function MaterialView:set_model(eid)
             self.properties:set_subproperty(ui_pp)
         end
     end
-    self.save.disable = is_readonly_resource(world:entity(eid).material)
+
+    local readonly_res = is_readonly_resource(hierarchy:get_template(eid).template.data.material)
+    self.mat_file.disable = readonly_res
+    self.save.disable = readonly_res
     self.saveas.disable = is_glb_resource()
     self.material.disable = prefab_mgr:get_current_filename() == nil
+    
     self:enable_properties_ui(eid)
 
     self:update()
@@ -978,12 +1003,14 @@ function MaterialView:update()
     if self.eid then
         BaseView.update(self)
         self.material:update()
+        
     end
 end
 
 function MaterialView:show()
     if self.eid then
         BaseView.show(self)
+        check_disable_file_fetch_ui(self.mat_file)
         self.material:show()
     end
 

@@ -19,14 +19,14 @@ local m = {
 }
 
 local resource_tree = nil
-local current_folder = {files = {}}
-local current_file = nil
+local selected_folder = {files = {}}
+local selected_file = nil
 
 local preview_images = {}
 local texture_detail = {}
 
 local function on_drop_files(files)
-    local current_path = lfs.path(tostring(current_folder[1]))
+    local current_path = lfs.path(tostring(selected_folder[1]))
     for k, v in pairs(files) do
         local path = lfs.path(v)
         local dst_path = current_path / tostring(path:filename())
@@ -64,8 +64,8 @@ local function construct_resource_tree(fspath)
         for _, item in ipairs(sorted_path) do
             if fs.is_directory(item) then
                 table.insert(tree.dirs, {item, construct_resource_tree(item), parent = {tree}})
-                if current_folder[1] == item then
-                    current_folder = tree.dirs[#tree.dirs]
+                if selected_folder[1] == item then
+                    selected_folder = tree.dirs[#tree.dirs]
                 end
             else
                 table.insert(tree.files, item)
@@ -118,8 +118,8 @@ function m.update_resource_tree(hiden_engine_res)
     for _, tree in ipairs(resource_tree.dirs) do
         set_parent(tree)
     end
-    if not current_folder[1] then
-        current_folder = resource_tree.dirs[1]
+    if not selected_folder[1] then
+        selected_folder = resource_tree.dirs[1]
     end
     m.dirty = false
 end
@@ -174,7 +174,7 @@ function m.show()
     local function do_show_browser(folder)
         for k, v in pairs(folder.dirs) do
             local dir_name = tostring(v[1]:filename())
-            local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((current_folder == v) and imgui.flags.TreeNode{"Selected"} or 0)
+            local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((selected_folder == v) and imgui.flags.TreeNode{"Selected"} or 0)
             local skip = false
             if not v.parent then
                 imgui.widget.Image(icons.ICON_ROOM_INSTANCE.handle, icons.ICON_ROOM_INSTANCE.texinfo.width, icons.ICON_ROOM_INSTANCE.texinfo.height)
@@ -183,10 +183,10 @@ function m.show()
             if (#v[2].dirs == 0) then
                 imgui.widget.TreeNode(dir_name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
             else
-                local adjust_flags = base_flags | (string.find(current_folder[1]._value, "/" .. dir_name) and imgui.flags.TreeNode {"DefaultOpen"} or 0)
+                local adjust_flags = base_flags | (string.find(selected_folder[1]._value, "/" .. dir_name) and imgui.flags.TreeNode {"DefaultOpen"} or 0)
                 if imgui.widget.TreeNode(dir_name, adjust_flags) then
                     if imgui.util.IsItemClicked() then
-                        current_folder = v
+                        selected_folder = v
                     end
                     skip = true
                     do_show_browser(v[2])
@@ -194,21 +194,21 @@ function m.show()
                 end
             end
             if not skip and imgui.util.IsItemClicked() then
-                current_folder = v
+                selected_folder = v
             end
         end 
     end
 
     for _ in uiutils.imgui_windows("ResourceBrowser", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 0, 6)
-        local _, split_dirs = path_split(current_folder[1]:string())
+        local _, split_dirs = path_split(selected_folder[1]:string())
         for i = 1, #split_dirs do
             if imgui.widget.Button("/" .. split_dirs[i]) then
-                if tostring(current_folder[1]:filename()) ~= split_dirs[i] then
-                    local lookup_dir = current_folder.parent
+                if tostring(selected_folder[1]:filename()) ~= split_dirs[i] then
+                    local lookup_dir = selected_folder.parent
                     while lookup_dir do
                         if tostring(lookup_dir[1]:filename()) == split_dirs[i] then
-                            current_folder = lookup_dir
+                            selected_folder = lookup_dir
                             lookup_dir = nil
                         else
                             lookup_dir = lookup_dir.parent
@@ -240,27 +240,27 @@ function m.show()
             imgui.table.NextColumn()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
             imgui.windows.BeginChild("##ResourceBrowserContent", child_width, child_height, false);
-            local folder = current_folder[2]
+            local folder = selected_folder[2]
             if folder then
-                rename_file(current_file)
+                rename_file(selected_file)
                 for _, path in pairs(folder.dirs) do
                     imgui.widget.Image(icons.ICON_FOLD.handle, icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
                     imgui.cursor.SameLine()
-                    if imgui.widget.Selectable(tostring(path[1]:filename()), current_file == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-                        current_file = path[1]
+                    if imgui.widget.Selectable(tostring(path[1]:filename()), selected_file == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                        selected_file = path[1]
                         if imgui.util.IsMouseDoubleClicked(0) then
-                            current_folder = path
+                            selected_folder = path
                         end
                     end
-                    if current_file == path[1] then
+                    if selected_file == path[1] then
                         if imgui.windows.BeginPopupContextItem(tostring(path[1]:filename())) then
                             if imgui.widget.Selectable("Delete", false) then
-                                lfs.remove(current_file:localpath())
-                                current_file = nil
+                                lfs.remove(selected_file:localpath())
+                                selected_file = nil
                             end
                             if imgui.widget.Selectable("Rename", false) then
                                 renaming = true
-                                new_filename.text = tostring(current_file:filename())
+                                new_filename.text = tostring(selected_file:filename())
                             end
                             imgui.windows.EndPopup()
                         end
@@ -270,8 +270,8 @@ function m.show()
                     local icon = icons.get_file_icon(path)
                     imgui.widget.Image(icon.handle, icon.texinfo.width, icon.texinfo.height)
                     imgui.cursor.SameLine()
-                    if imgui.widget.Selectable(tostring(path:filename()), current_file == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
-                        current_file = path
+                    if imgui.widget.Selectable(tostring(path:filename()), selected_file == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                        selected_file = path
                         if imgui.util.IsMouseDoubleClicked(0) then
                             local prefab_file
                             if path:equal_extension(".prefab") then
@@ -289,31 +289,31 @@ function m.show()
                             end
                         end
                         if path:equal_extension(".png") then
-                            if not preview_images[current_file] then
+                            if not preview_images[selected_file] then
                                 local pkg_path = path:string()
-                                preview_images[current_file] = assetmgr.resource(pkg_path, { compile = true })
+                                preview_images[selected_file] = assetmgr.resource(pkg_path, { compile = true })
                             end
                         end
 
                         if path:equal_extension(".texture") then
-                            if not texture_detail[current_file] then
+                            if not texture_detail[selected_file] then
                                 local pkg_path = path:string()
-                                texture_detail[current_file] = utils.readtable(pkg_path)
+                                texture_detail[selected_file] = utils.readtable(pkg_path)
                                 local t = assetmgr.resource(pkg_path)
                                 local s = t.sampler
-                                preview_images[current_file] = t._data
+                                preview_images[selected_file] = t._data
                             end
                         end
                     end
-                    if current_file == path then
+                    if selected_file == path then
                         if imgui.windows.BeginPopupContextItem(tostring(path:filename())) then
                             if imgui.widget.Selectable("Delete", false) then
-                                lfs.remove(current_file:localpath())
-                                current_file = nil
+                                lfs.remove(selected_file:localpath())
+                                selected_file = nil
                             end
                             if imgui.widget.Selectable("Rename", false) then
                                 renaming = true
-                                new_filename.text = tostring(current_file:filename())
+                                new_filename.text = tostring(selected_file:filename())
                             end
                             imgui.windows.EndPopup()
                         end
@@ -339,11 +339,11 @@ function m.show()
             imgui.table.NextColumn()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
             imgui.windows.BeginChild("##ResourceBrowserPreview", child_width, child_height, false);
-            if fs.path(current_file):equal_extension(".png") or fs.path(current_file):equal_extension(".texture") then
-                local preview = preview_images[current_file]
+            if fs.path(selected_file):equal_extension(".png") or fs.path(selected_file):equal_extension(".texture") then
+                local preview = preview_images[selected_file]
                 if preview then
-                    if texture_detail[current_file] then
-                        imgui.widget.Text("image:" .. texture_detail[current_file].path)
+                    if texture_detail[selected_file] then
+                        imgui.widget.Text("image:" .. texture_detail[selected_file].path)
                     end
                     -- imgui.deprecated.Columns(2, "PreviewColumns", true)
                     imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.bitsPerPixel)
@@ -356,7 +356,7 @@ function m.show()
                     end
                     imgui.widget.Image(preview.handle, width, height)
                     imgui.cursor.SameLine()
-                    local texture_info = texture_detail[current_file] 
+                    local texture_info = texture_detail[selected_file] 
                     if texture_info then
                         imgui.widget.Text(("Compress:\n  android: %s\n  ios: %s\n  windows: %s \nSampler:\n  MAG: %s\n  MIN: %s\n  MIP: %s\n  U: %s\n  V: %s"):format( 
                             texture_info.compress and texture_info.compress.android or "raw",
@@ -375,6 +375,14 @@ function m.show()
         imgui.table.End()
         end
     end
+end
+
+function m.selected_file()
+    return selected_file
+end
+
+function m.selected_folder()
+    return selected_folder
 end
 
 return m
