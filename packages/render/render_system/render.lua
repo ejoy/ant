@@ -50,32 +50,34 @@ function irender.layer_names()
 	return LAYER_NAMES
 end
 
-function irender.check_copy_material(tm, om, cache)
-	local ts = tm:get_state()
-	local os = om:get_state()
+local function def_state_op(dst_s, src_s)
+	dst_s.PT           = src_s.PT
+	dst_s.CULL         = src_s.CULL
+	dst_s.DEPTH_TEST   = "LESS"
+end
 
-	local t_ts = bgfx.parse_state(ts)
-	local t_os = bgfx.parse_state(os)
-	
-	t_ts.PT           = t_os.PT
-	t_ts.CULL         = t_os.CULL
-	t_ts.DEPTH_TEST   = "LESS"
-	local ns = bgfx.make_state(t_ts)
-	if ts == ns then
-		return tm
+function irender.create_material_from_template(template_material_obj, state, cache)
+	local mo = cache[template_material_obj]
+	if nil == mo then
+		mo = {}
+		cache[template_material_obj] = mo
 	end
 
-	local mobj = tm:get_material()
-	if nil == cache[mobj] then
-		cache[mobj] = {}
+	local m = mo[state]
+	if nil == m then
+		m = template_material_obj:copy(state)
+		mo[state] = m
 	end
 
-	local cc = cache[mobj]
-	if nil == cc[ns] then
-		cc[ns] = mobj:copy(ns)
-	end
+	return m
+end
 
-	return cc[ns]:instance()
+function irender.check_set_state(dst_m, src_m, state_op)
+	local t_dst_s = bgfx.parse_state(dst_m:get_state())
+	local t_src_s = bgfx.parse_state(src_m:get_state())
+	state_op = state_op or def_state_op
+	state_op(t_dst_s, t_src_s)
+	return bgfx.make_state(t_dst_s)
 end
 
 local function update_mesh(vb, ib)

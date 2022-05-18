@@ -353,12 +353,16 @@ function pickup_sys:end_filter()
 		local qe = w:singleton("pickup_queue", "primitive_filter:in")
 		for _, fn in ipairs(qe.primitive_filter) do
 			if fr[fn] then
-				local m = which_material(st, e.skinning)
-				local nm = irender.check_copy_material(m.material, e.render_object.material, material_cache)
-				nm.u_id = math3d.vector(packeid_as_rgba(e.id))
+				local mat = which_material(st, e.skinning)
+				local dst_mi = mat.material
+				local src_mi = e.render_object.material
+				local newstate = irender.check_set_state(dst_mi, src_mi)
+				local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
+				local new_mi = new_matobj:instance()
+				new_mi.u_id = math3d.vector(packeid_as_rgba(e.id))
 				fm[fn] = {
-					material = nm,
-					fx = m.fx,
+					material = new_mi,
+					fx = mat.fx,
 				}
 			end
 		end

@@ -456,17 +456,17 @@ function s:end_filter()
     for e in w:select "filter_result:in render_object:in skinning?in filter_material:in" do
         local ro = e.render_object
 		local m = which_material(e.skinning)
-		local om = m.material
+		local dst_mi, fx = m.material, m.fx
+		local newstate = irender.check_set_state(dst_mi, ro.material)
+		local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
 		local fm = e.filter_material
 		local fr = e.filter_result
-		local rm = ro.material
-		local fx = m.fx
 		for qe in w:select "csm_queue primitive_filter:in" do
 			for _, fn in ipairs(qe.primitive_filter) do
 				if fr[fn] then
 					fm[fn] = {
+						material = new_matobj:instance(),
 						fx = fx,
-						material = irender.check_copy_material(om, rm, material_cache)
 					}
 				end
 			end

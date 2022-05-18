@@ -55,14 +55,17 @@ function s:end_filter()
     if irender.use_pre_depth() then
         for e in w:select "filter_result:in render_object:in filter_material:in skinning?in" do
             local m = assert(which_material(e.skinning))
-            local mi = m.material
+            local dst_mi = m.material
+            local newstate = irender.check_set_state(dst_mi, e.render_object.material)
+            local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
             local fr = e.filter_result
             local qe = w:singleton("pre_depth_queue", "primitive_filter:in")
+            local fx = m.fx
             for _, fn in ipairs(qe.primitive_filter) do
                 if fr[fn] then
                     e.filter_material[fn] = {
-                        material = irender.check_copy_material(mi, e.render_object.material, material_cache),
-                        fx = m.fx,
+                        material = new_matobj:instance(),
+                        fx = fx,
                     }
                 end
             end
