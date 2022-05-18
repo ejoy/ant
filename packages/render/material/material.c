@@ -270,6 +270,7 @@ arena_alloc(lua_State *L, int idx) {
 		struct attrib * al = (struct attrib *)lua_newuserdatauv(L, sizeof(struct attrib) * newcap, 0);
 		memcpy(al, arena->a, sizeof(struct attrib) * arena->n);
 		arena->a = al;
+		arena->cap = newcap;
 		lua_setiuservalue(L, idx, COBJECT_UV_ATTRIB_BUFFER);
 		ret = al_attrib(arena, arena->n++);
 	}
