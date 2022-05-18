@@ -77,14 +77,14 @@ function ani_sys:sample_animation_pose()
 	for e in w:select "skeleton:in meshskin:in _animation:in" do
 		local task = e._animation._current
 		if task then
-			local pr = e.meshskin.pose_result
-			pr:setup(e.skeleton._handle)
 			local play_state = task.play_state
 			if not play_state.manual_update and play_state.play then
 				iani.step(task, delta_time * 0.001)
-				local ani = task.animation
-				pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, task.weight)
 			end
+			local ani = task.animation
+			local pr = e.meshskin.pose_result
+			pr:setup(e.skeleton._handle)
+			pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, task.weight)
 		end
 	end
 end
@@ -179,7 +179,7 @@ function ani_sys:entity_ready()
 					next_index = 1,
 					keyframe_events = anim._animation.keyframe_events and anim._animation.keyframe_events[anim_name] or {}
 				},
-				play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = true, loop = false, manual_update = false }
+				play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = false, loop = false, manual_update = false }
 			}
 		end
     end

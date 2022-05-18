@@ -814,7 +814,7 @@ function m.init(skeleton)
         end
     end
     if not joint_utils.update_joint_pose then
-        joint_utils.update_joint_pose = function(root_mat)
+        joint_utils.update_joint_pose = function(root_mat, joints_list)
             if not joints_list then
                 return
             end

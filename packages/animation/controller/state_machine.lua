@@ -345,39 +345,9 @@ end
 function iani.step(task, s_delta, absolute)
 	local play_state = task.play_state
 	local playspeed = play_state.manual_update and 1.0 or play_state.speed
-	--io.stdout:write("step ", tostring(s_delta), " ", tostring(playspeed), "\n")
 	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
 	local next_time = absolute and adjust_delta or (play_state.ratio * task.animation._handle:duration() + adjust_delta)
 	local duration = task.animation._handle:duration()
-	-- local clip_state = task.clip_state.current
-	-- local clips = clip_state.clips
-	-- if clips then
-	-- 	local index = clip_state.clip_index
-	-- 	if next_time > clips[index][2].range[2] then
-	-- 		local excess = next_time - clips[index][2].range[2]
-	-- 		if index >= #clips then
-	-- 			if not play_state.loop then
-	-- 				play_state.ratio = clips[#clips][2].range[2] / duration
-	-- 				play_state.play = false
-	-- 				return
-	-- 			end
-	-- 			index = 1
-	-- 		else
-	-- 			index = index + 1
-	-- 		end
-	-- 		clip_state.clip_index = index
-	-- 		if task.animation ~= clips[index][1] then
-	-- 			task.animation = clips[index][1]
-	-- 		end
-	-- 		play_state.ratio = (clips[index][2].range[1] + excess) / task.animation._handle:duration()
-			
-	-- 		task.event_state.keyframe_events = clips[index][2].key_event
-	-- 		play_state.speed = clips[index][2].speed
-	-- 	else
-	-- 		play_state.ratio = next_time / duration
-	-- 	end
-	-- 	return
-	-- end
 	if next_time > duration then
 		if not play_state.loop then
 			play_state.ratio = 1.0
