@@ -275,7 +275,7 @@ function offline.RESOURCE(id, paths)
 		return
 	end
 	for i = 2, #paths-1 do
-		local path = table.concat(paths, "/", 1, i) --TODO
+		local path = table.concat(paths, "#", 1, i) --TODO
 		hash = repo:get_resource(path)
 		if not hash then
 			response_id(id, nil)
@@ -641,7 +641,7 @@ function online.RESOURCE(id, paths)
 		return
 	end
 	for i = 2, #paths-1 do
-		local path = table.concat(paths, "/", 1, i) --TODO
+		local path = table.concat(paths, "#", 1, i) --TODO
 		hash = repo:get_resource(path)
 		if not hash then
 			request_file(id, "RESOURCE", path, "RESOURCE", paths)

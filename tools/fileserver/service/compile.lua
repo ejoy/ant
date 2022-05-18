@@ -11,17 +11,9 @@ local S = {}
 
 local function compile_url(pathstring)
     local lst = {}
-    local dir = {}
-    pathstring:gsub('[^/]+', function (w)
-        dir[#dir+1] = w
-        if w:match "%?" then
-            lst[#lst+1] = table.concat(dir, "/")
-            dir = {}
-        end
+    pathstring:gsub('[^#]+', function (w)
+        lst[#lst+1] = w
     end)
-    if #dir > 0 then
-        lst[#lst+1] = table.concat(dir, "/")
-    end
     return vfs.resource(lst)
 end
 
