@@ -1022,7 +1022,7 @@ apply_attrib(lua_State *L, struct attrib_arena * cobject_, struct attrib *a, int
 						luaL_error(L, "Too many uniforms %d", n);
 					memcpy(ptr, v, stride * sizeof(float));
 					ptr += stride;
-					na = al_next_attrib(arena, a);
+					na = al_next_attrib(arena, na);
 				}
 				BGFX(encoder_set_uniform)(cobject_->eh->encoder, a->u.handle, buffer, n);
 			}
