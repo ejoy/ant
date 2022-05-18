@@ -839,10 +839,12 @@ function MaterialView:_init()
     
     self.mat_file       = uiproperty.ResourcePath({label = "File", extension = ".material"},{
         getter = function()
-            return world:entity(self.eid).material
+            local prefab = hierarchy:get_template(self.eid)
+            return prefab.template.data.material
         end,
         setter = function (value)
-            world:entity(self.eid).material = value
+            local prefab = hierarchy:get_template(self.eid)
+            prefab.template.data.material = value
             self.need_reload = true
         end,
     })
