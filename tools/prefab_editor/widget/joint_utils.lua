@@ -119,7 +119,7 @@ end
 
 function m:update_pose(root_mat)
     if self.update_joint_pose then
-        self.update_joint_pose(root_mat)
+        self.update_joint_pose(root_mat, self.joint_list[self.skeleton._handle])
     end
 end
 

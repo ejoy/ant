@@ -182,7 +182,7 @@ local function load_efk(filename)
         loop = false,
         dynamic = false, --update efk world matrix every frame
         visible = true,
-        worldmat = math3d.ref(math3d.matrix(mc.mat_identity))
+        worldmat = math3d.ref(math3d.matrix(mc.IDENTITY_MAT))
     }
 end
 

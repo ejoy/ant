@@ -26,6 +26,7 @@ local global_data = require "common.global_data"
 
 local m = {}
 local edit_anims
+local anim_eid
 local imgui_message
 local current_anim
 local sample_ratio = 50.0
@@ -123,10 +124,11 @@ end
 
 local function anim_play(state, play)
     state.key_event = to_runtime_event(anim_key_event)
-    for _, anim_e in ipairs(current_anim.eid_list) do
-        iom.set_position(world:entity(hierarchy:get_node(hierarchy:get_node(anim_e).parent).parent), {0.0,0.0,0.0})
-        play(anim_e, state)
-    end
+    play(anim_eid, state)
+    -- for _, anim_eid in ipairs(current_anim.eid_list) do
+    --     iom.set_position(world:entity(hierarchy:get_node(hierarchy:get_node(anim_eid).parent).parent), {0.0,0.0,0.0})
+    --     play(anim_eid, state)
+    -- end
 end
 
 local function anim_group_set_loop(eid, ...)
@@ -134,15 +136,13 @@ local function anim_group_set_loop(eid, ...)
 end
 
 local function anim_group_delete(anim_name)
-    for _, anim_eid in ipairs(current_anim.eid_list) do
-        local template = hierarchy:get_template(anim_eid)
-        local animation_map = template.template.data.animation
-        animation_map[anim_name] = nil
-        local anims = get_runtime_animations(anim_eid)
-        anims[anim_name] = nil
-        if template.template.data.animation_birth == anim_name then
-            template.template.data.animation_birth = next(animation_map) or ""
-        end
+    local template = hierarchy:get_template(anim_eid)
+    local animation_map = template.template.data.animation
+    animation_map[anim_name] = nil
+    local anims = get_runtime_animations(anim_eid)
+    anims[anim_name] = nil
+    if template.template.data.animation_birth == anim_name then
+        template.template.data.animation_birth = next(animation_map) or ""
     end
     local name_idx = find_index(edit_anims.name_list, anim_name)
     table.remove(edit_anims.name_list, name_idx)
@@ -244,8 +244,8 @@ local function set_current_anim(anim_name)
     current_event = nil
     
     anim_play({name = anim_name, loop = ui_loop[1], manual = false}, iani.play)
-    anim_group_set_time(anim.eid_list[1], 0)
-    anim_group_pause(anim.eid_list[1], not anim_state.is_playing)
+    anim_group_set_time(anim_eid, 0)
+    anim_group_pause(anim_eid, not anim_state.is_playing)
     set_event_dirty(-1)
     return true
 end
@@ -667,6 +667,7 @@ function m.save_keyevent(filename)
 end
 
 function m.clear()
+    anim_eid = nil
     current_anim = nil
     anim_eid_group = {}
     current_event = nil
@@ -704,18 +705,16 @@ local function show_skeleton(b)
 end
 
 function m.show()
-    if not current_anim then return end
-    local anim_e = current_anim.eid_list[1]
-    if not anim_e then return end
+    if not current_anim or not anim_eid then return end
     local reload = false
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     for _ in uiutils.imgui_windows("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
         if current_anim then
-            anim_state.is_playing = iani.is_playing(anim_e)
+            anim_state.is_playing = iani.is_playing(anim_eid)
             if anim_state.is_playing then
-                anim_state.current_frame = math.floor(iani.get_time(anim_e) * sample_ratio)
+                anim_state.current_frame = math.floor(iani.get_time(anim_eid) * sample_ratio)
             end
         end
         imgui.cursor.SameLine()
@@ -772,7 +771,7 @@ function m.show()
             if imgui.widget.Button("  OK  ") then
                 if #anim_name > 0 and #anim_path > 0 then
                     local update = true
-                    local anims = get_runtime_animations(anim_e)
+                    local anims = get_runtime_animations(anim_eid)
                     if anims[anim_name] then
                         local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
                         uiutils.confirm_dialog(confirm)
@@ -781,7 +780,7 @@ function m.show()
                         end
                     end
                     if update then
-                        local group_eid = get_anim_group_eid(anim_e, current_anim.name)
+                        local group_eid = get_anim_group_eid(anim_eid, current_anim.name)
                         --TODO: set for group eid
                         for _, eid in ipairs(group_eid) do
                             local template = hierarchy:get_template(eid)
@@ -827,14 +826,14 @@ function m.show()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
         if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
             if anim_state.is_playing then
-                anim_group_pause(anim_e, true)
+                anim_group_pause(anim_eid, true)
             else
                 anim_play({name = current_anim.name, loop = ui_loop[1], manual = false}, iani.play)
             end
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("loop", ui_loop) then
-            anim_group_set_loop(anim_e, ui_loop[1])
+            anim_group_set_loop(anim_eid, ui_loop[1])
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("showskeleton", ui_showskeleton) then
@@ -845,7 +844,7 @@ function m.show()
             m.save_keyevent()
         end
         imgui.cursor.SameLine()
-        local current_time = iani.get_time(anim_e)
+        local current_time = iani.get_time(anim_eid)
         imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", anim_state.selected_frame, anim_state.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(anim_state.duration * sample_ratio), current_time, anim_state.duration))
         imgui_message = {}
         imgui.widget.Sequencer(edit_anims, anim_state, imgui_message)
@@ -858,9 +857,9 @@ function m.show()
         for k, v in pairs(imgui_message) do
             if k == "pause" then
                 if anim_state.current_frame ~= v then
-                    anim_group_pause(anim_e, true)
+                    anim_group_pause(anim_eid, true)
                     anim_state.current_frame = v
-                    anim_group_set_time(anim_e, v / sample_ratio)   
+                    anim_group_set_time(anim_eid, v / sample_ratio)   
                 end
             elseif k == "selected_frame" then
                 new_frame_idx = v
@@ -953,19 +952,19 @@ function m.on_prefab_load(entities)
                         name = key,
                         duration = anim._handle:duration(),
                         key_event = events and from_runtime_event(events) or {},
-                        eid_list = {}
                     }
                     editanims.name_list[#editanims.name_list + 1] = key
                 end
-                local edit_anim = editanims[key]
-                edit_anim.eid_list[#edit_anim.eid_list + 1] = eid
+                
             end
+            anim_eid = eid
+            break
         end
     end
     if #editanims.name_list > 0 then
         edit_anims = editanims
         table.sort(edit_anims.name_list)
-        set_current_anim(edit_anims.birth)
+        set_current_anim(edit_anims.birth or editanims.name_list[1])
         skeleton_view.init(skeleton)
         joint_map, joint_list = joint_utils:get_joints()
     end

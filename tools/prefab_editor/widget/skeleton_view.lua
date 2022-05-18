@@ -814,14 +814,14 @@ function m.init(skeleton)
         end
     end
     if not joint_utils.update_joint_pose then
-        joint_utils.update_joint_pose = function(root_mat)
+        joint_utils.update_joint_pose = function(root_mat, joints_list)
             if not joints_list then
                 return
             end
             local pose_result
-            for ee in w:select "skeleton:in pose_result:in" do
+            for ee in w:select "skeleton:in meshskin:in" do
                 if current_skeleton == ee.skeleton then
-                    pose_result = ee.pose_result
+                    pose_result = ee.meshskin.pose_result
                     break
                 end
             end
