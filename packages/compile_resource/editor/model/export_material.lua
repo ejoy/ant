@@ -293,6 +293,8 @@ return function (output, glbdata, exports, tolocalpath)
             setting["ALPHAMODE_MASK"] = 1
         end
 
+        setting.surfacetype = isopaque and "opacity" or "translucent"
+
         if mat.doubleSided then
             --default is CCW
             material.state.CULL = "NONE"
