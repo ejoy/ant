@@ -433,6 +433,7 @@ function m:handle_event()
             --     end
             end
         elseif what == "parent" then
+            v1 = v1 or prefab_mgr.root
             hierarchy:set_parent(target, v1)
             local sourceWorldMat = iom.worldmat(world:entity(target))
             local targetWorldMat = v1 and iom.worldmat(world:entity(v1)) or mc.IDENTITY_MAT

@@ -122,17 +122,18 @@ function m.get_open_file_path(filetype, extension)
     local dialog_info = {
         Owner = rhwi.native_window(),
         Title = "Open",
-        FileTypes = {filetype, extension}
+        FileTypes = extension and {filetype, extension} or filetype
     }
     local ok, path = filedialog.open(dialog_info)
     if ok then
-        local ext = "."..extension
-        path = string.gsub(path[1], "\\", "/") .. ext
-        local pos = string.find(path, "%"..ext)
-        if #path > pos + #ext - 1 then
-            path = string.sub(path, 1, pos + #ext - 1)
-        end
-        return path
+        -- local ext = "."..extension
+        -- path = string.gsub(path[1], "\\", "/") .. ext
+        -- local pos = string.find(path, "%"..ext)
+        -- if #path > pos + #ext - 1 then
+        --     path = string.sub(path, 1, pos + #ext - 1)
+        -- end
+        -- return path
+        return string.gsub(path[1], "\\", "/")
     end
 end
 

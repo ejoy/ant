@@ -16,6 +16,9 @@ local function get_current_anim_time(task)
 end
 
 local function process_keyframe_event(task)
+	if not task then
+		return
+	end
 	if task.play_state.manual_update or not task.play_state.play then return end
 	local event_state = task.event_state
 	local all_events = event_state.keyframe_events
@@ -42,25 +45,11 @@ local function process_keyframe_event(task)
 			elseif event.event_type == "Effect" then
 				if not event.effect and event.asset_path ~= "" then
 					event.effect = iefk.create(event.asset_path, {play_on_create = true})
-					-- local eeid = world:prefab_event(event.effect, "get_eid", "effect")
-					-- local effect = eeid and world[eeid].effect_instance or nil
-					-- if effect then
-					-- 	effect.auto_play = false
-					-- end
-					-- world:prefab_event(event.effect, "set_parent", "effect", event.link_info.slot_eid)
 					if event.link_info.slot_eid then
 						ecs.method.set_parent(event.effect, event.link_info.slot_eid)
 					end
 				elseif event.effect then
 					iefk.play(world:entity(event.effect))
-					-- local parent = world:prefab_event(event.effect, "get_parent", "effect")
-					-- if event.link_info.slot_eid and parent ~= event.link_info.slot_eid then
-					-- 	world:prefab_event(event.effect, "set_parent", "effect", event.link_info.slot_eid)
-					-- end
-					-- world:prefab_event(event.effect, "play_effect", "effect", false, false)
-					-- if task.play_state.play then
-					-- 	world:prefab_event(event.effect, "speed", "effect", task.play_state.speed or 1.0)
-					-- end
 				end
 			elseif event.event_type == "Move" then
 				for _, eid in ipairs(task.eid) do
@@ -83,31 +72,20 @@ end
 
 local iani = ecs.import.interface "ant.animation|ianimation"
 
-local function do_animation(poseresult, e, delta_time)
-	local task = e._animation._current
-	local play_state = task.play_state
-	if not play_state.manual_update and play_state.play then
-		-- TODO : refactor animation birth system
-		if task.init then
-			-- many eid shared same state, step state only once.
-			if task.eid and task.eid[1] == e.id then 
-				iani.step(task, delta_time * 0.001)
-			end
-		else
-			iani.step(task, delta_time * 0.001)
-		end
-	end
-	local ani = task.animation
-	poseresult:do_sample(ani._sampling_context, ani._handle, play_state.ratio, task.weight)
-end
-
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for e in w:select "id:in scene:in skeleton:in pose_result:in _animation:in" do
-		local ske = e.skeleton
-		local pr = e.pose_result
-		pr:setup(ske._handle)
-		do_animation(pr, e, delta_time)
+	for e in w:select "skeleton:in meshskin:in _animation:in" do
+		local task = e._animation._current
+		if task then
+			local pr = e.meshskin.pose_result
+			pr:setup(e.skeleton._handle)
+			local play_state = task.play_state
+			if not play_state.manual_update and play_state.play then
+				iani.step(task, delta_time * 0.001)
+				local ani = task.animation
+				pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, task.weight)
+			end
+		end
 	end
 end
 
@@ -115,34 +93,51 @@ function ani_sys:do_refine()
 end
 
 function ani_sys:end_animation()
-	for e in w:select "pose_result:in" do
-		local pr = e.pose_result
+	for e in w:select "meshskin:in" do
+		local pr = e.meshskin.pose_result
 		pr:fetch_result()
 		pr:end_animation()
 	end
 end
 
 function ani_sys:data_changed()
-	for e in w:select "id:in _animation:in scene:in" do
-		if e._animation._current.eid and e._animation._current.eid[1] == e.id then
-			process_keyframe_event(e._animation._current)
-		end
+	for e in w:select "_animation:in" do
+		process_keyframe_event(e._animation._current)
 	end
 end
 
 function ani_sys:component_init()
-	for e in w:select "INIT animation:in skeleton:update pose_result:out" do
+	for e in w:select "INIT animation:in skeleton:update meshskin:update" do
 		local ani = e.animation
 		for k, v in pairs(ani) do
 			ani[k] = assetmgr.resource(v, world)
 		end
 		e.skeleton = assetmgr.resource(e.skeleton)
 		local skehandle = e.skeleton._handle
-		e.pose_result = animodule.new_pose_result(#skehandle)
+		local pose_result = animodule.new_pose_result(#skehandle)
+		pose_result:setup(skehandle)
+		local skin = assetmgr.resource(e.meshskin)
+		local count = skin.joint_remap and skin.joint_remap:count() or pose_result:count()
+		e.meshskin = {
+			skin = skin,
+			pose_result = pose_result,
+			skinning_matrices = animodule.new_bind_pose(count),
+		}
 	end
 end
 local event_set_clips = world:sub{"SetClipsEvent"}
 local event_animation = world:sub{"AnimationEvent"}
+local eventPrefabReady = world:sub{"prefab_ready"}
+local bgfx = require "bgfx"
+local function set_skinning_transform(rc)
+	local sm = rc.skinning_matrices
+	bgfx.set_multi_transforms(sm:pointer(), sm:count())
+end
+
+local function build_transform(rc, skinning)
+	rc.skinning_matrices = skinning.skinning_matrices
+	rc.set_transform = set_skinning_transform
+end
 
 function ani_sys:entity_ready()
     for _, p, p0, p1 in event_set_clips:unpack() do
@@ -160,6 +155,34 @@ function ani_sys:entity_ready()
 			iani.set_time(e, p0)
 		end
 	end
+	for _, prefab in eventPrefabReady:unpack() do
+		local entitys = prefab.tag["*"]
+		local anim_e = {}
+		local anim
+		for _, eid in ipairs(entitys) do
+			local e = world:entity(eid)
+			if e._animation then
+				anim = e
+			elseif e.skinning then
+				anim_e[#anim_e + 1] = eid
+			end
+		end
+		if anim and #anim_e > 0 then
+			anim._animation.anim_e = anim_e
+			for _, eid in ipairs(anim_e) do
+				build_transform(world:entity(eid).render_object, anim.meshskin)
+			end
+			local anim_name = anim.animation_birth
+			anim._animation._current = {
+				animation = anim.animation[anim_name],
+				event_state = {
+					next_index = 1,
+					keyframe_events = anim._animation.keyframe_events and anim._animation.keyframe_events[anim_name] or {}
+				},
+				play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = true, loop = false, manual_update = false }
+			}
+		end
+    end
 end
 
 local mathadapter = import_package "ant.math.adapter"
