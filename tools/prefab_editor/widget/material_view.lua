@@ -837,9 +837,9 @@ local function reload(e, mtl)
 end
 
 local function check_disable_file_fetch_ui(matfile_ui)
-    local p = matfile_ui:find_property "fetch_material"
+    local fetch = matfile_ui:find_property "fetch_material"
     local f = rb.selected_file()
-    p.disable = f == nil or (not f:equal_extension ".material")
+    fetch.disable = f == nil or (not f:equal_extension ".material")
 end
 
 local function build_file_ui(mv)
@@ -847,7 +847,6 @@ local function build_file_ui(mv)
         uiproperty.Button({label="!", id="fetch_material"}, {
             click = function ()
                 local f = rb.selected_file()
-                assert(f:match "%.material$")
                 local prefab = hierarchy:get_template(mv.eid)
                 prefab.template.data.material = f
             end
@@ -876,7 +875,11 @@ function MaterialView:_init()
     self.save       = uiproperty.Button({label="Save"}, {
         click = function ()
             local p = self.mat_file:find_property "path"
-            reload(self.eid, p.uidata.text)
+            local filepath = p.value()
+            if filepath:match "^/pkg/" == nil then
+                log.warn("Invalid material path:", filepath)
+            end
+            reload(self.eid, filepath)
         end,
     })
     self.saveas     = uiproperty.Button({label="Save As ..."}, {
@@ -888,9 +891,6 @@ function MaterialView:_init()
                     error(("save path:%s, is not valid package"):format(path))
                 end
                 reload(self.eid, vpath)
-                if vpath == self.mat_file:get_path() then
-                    assetmgr.unload(vpath)
-                end
             end
         end
     })
@@ -957,7 +957,6 @@ function MaterialView:set_model(eid)
     end
 
     local readonly_res = is_readonly_resource(hierarchy:get_template(eid).template.data.material)
-    self.mat_file.disable = readonly_res
     self.save.disable = readonly_res
     self.saveas.disable = is_glb_resource()
     self.material.disable = prefab_mgr:get_current_filename() == nil

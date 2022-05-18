@@ -167,6 +167,10 @@ function EditText:update()
     self.uidata.text = self.modifier.getter()
 end
 
+function EditText:value()
+    return self.uidata.text
+end
+
 function EditText:show()
     if self:is_visible() then
         imgui.widget.PropertyLabel(self.label)
