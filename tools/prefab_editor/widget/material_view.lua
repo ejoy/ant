@@ -163,6 +163,10 @@ local function which_property_type(p)
         return "texture"
     end
 
+    if p.image then
+        return "image"
+    end
+
     local n = #p
     if n > 0 then
         local et = type(p[1])
@@ -188,6 +192,42 @@ local function create_property_ui(n, p, mv)
                 t.properties[n].texture = value
                 mv.need_reload = true
             end,
+        })
+    elseif tt == "image" then
+        return uiproperty.Group({label = n}, {
+            uiproperty.EditText({label="Image"},{
+                getter = function ()
+                    local t = material_template(mv.eid)
+                    return t.properties[n].image
+                end,
+                setter = function (value)
+                    local t = material_template(mv.eid)
+                    t.properties[n].image = value
+                    mv.need_reload = true
+                end,
+            }),
+            uiproperty.Int({lable="Mip"},{
+                getter = function ()
+                    local t = material_template(mv.eid)
+                    return t.properties[n].mip
+                end,
+                setter = function (value)
+                    local t = material_template(mv.eid)
+                    t.properties[n].mip = value
+                    mv.need_reload = true
+                end,
+            }),
+            uiproperty.EditText({label="Access"},{
+                getter = function ()
+                    local t = material_template(mv.eid)
+                    return t.properties[n].access
+                end,
+                setter = function (value)
+                    local t = material_template(mv.eid)
+                    t.properties[n].access = value
+                    mv.need_reload = true
+                end,
+            })
         })
     elseif tt == "v4" or tt == "m4" then
         return uiproperty.Float({label=n}, {
