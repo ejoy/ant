@@ -140,18 +140,18 @@ local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_s
 	end
 end
 
-local function calc_shadow_camera(maincamera, frustum, lightdir, shadowmap_size, stabilize, shadow_ce)
-	local vp = math3d.mul(math3d.projmat(frustum), maincamera.viewmat)
+local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, stabilize, shadow_ce)
+	local vp = math3d.mul(math3d.projmat(frustum), viewmat)
 
 	local corners_WS = math3d.frustum_points(vp)
 	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, shadow_ce)
 end
 
-local function calc_split_distance(frustum)
-	local corners_VS = math3d.frustum_points(math3d.projmat(frustum))
-	local minv, maxv = math3d.minmax(corners_VS)
-	return math3d.index(maxv, 3)
-end
+-- local function calc_split_distance(frustum)
+-- 	local corners_VS = math3d.frustum_points(math3d.projmat(frustum))
+-- 	local minv, maxv = math3d.minmax(corners_VS)
+-- 	return math3d.index(maxv, 3)
+-- end
 
 local function calc_csm_matrix_attrib(csmidx, vp)
 	return math3d.mul(ishadow.crop_matrix(csmidx), vp)
@@ -160,16 +160,14 @@ end
 local function update_shadow_camera(dl, maincamera)
 	local lightdir = iom.get_direction(dl)
 	local setting = ishadow.setting()
-	local viewfrustum = maincamera.frustum
-	local csmfrustums = ishadow.calc_split_frustums(viewfrustum)
-
+	local viewmat = maincamera.viewmat
 	for qe in w:select "csm_queue camera_ref:in csm:in" do
 		local csm = qe.csm
-		local cf = csmfrustums[csm.index]
+		local vf = csm.view_frustum
 		local shadow_ce = world:entity(qe.camera_ref)
-		calc_shadow_camera(maincamera, cf, lightdir, setting.shadowmap_size, setting.stabilize, shadow_ce)
+		calc_shadow_camera(viewmat, vf, lightdir, setting.shadowmap_size, setting.stabilize, shadow_ce)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
-		split_distances_VS[csm.index] = calc_split_distance(cf)
+		--split_distances_VS[csm.index] = vf.f
 	end
 end
 
@@ -225,7 +223,6 @@ local function create_csm_entity(index, vr, fbidx)
 		data = {
 			csm = {
 				index = index,
-				split_distance_VS = 0,
 			},
 			camera_ref = camera_ref,
 			render_target = {
@@ -269,10 +266,25 @@ end
 local shadow_camera_rebuild = false
 local mq_camera_mb = world:sub{"main_queue", "camera_changed"}
 local camera_scene_mb
-local camera_frusutm_mb
+local camera_changed_mb
 local function update_camera_changed_mailbox(camera_ref)
 	camera_scene_mb = world:sub{"scene_changed", camera_ref}
-	camera_frusutm_mb = world:sub{"camera_changed", camera_ref}
+	camera_changed_mb = world:sub{"camera_changed", camera_ref}
+end
+
+local function main_camera_changed(ceid)
+	local mc = world:entity(ceid)
+	local mccamera = mc.camera
+	local viewfrustum = mccamera.frustum
+	local csmfrustums = ishadow.calc_split_frustums(viewfrustum)
+	for cqe in w:select "csm:in" do
+		local csm = cqe.csm
+		local idx = csm.index
+		local cf = csmfrustums[csm.index]
+		csm.view_frustum = cf
+		split_distances_VS[idx] = cf.f
+	end
+	update_camera_changed_mailbox(ceid)
 end
 
 local function set_csm_visible(enable)
@@ -283,13 +295,12 @@ end
 
 function sm:entity_init()
 	for e in w:select "INIT main_queue camera_ref:in" do
-		update_camera_changed_mailbox(e.camera_ref)
+		main_camera_changed(e.camera_ref)
 		shadow_camera_rebuild = true
 	end
 
 	for msg in mq_camera_mb:each() do
-		local cameraref = msg[3]
-		update_camera_changed_mailbox(cameraref)
+		main_camera_changed(msg[3])
 		shadow_camera_rebuild = true
 	end
 
@@ -320,7 +331,7 @@ function sm:data_changed()
 			shadow_camera_rebuild = true
 		end
 
-		for _ in camera_frusutm_mb:each() do
+		for _ in camera_changed_mb:each() do
 			shadow_camera_rebuild = true
 		end
 	end
