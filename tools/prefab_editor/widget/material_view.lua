@@ -529,15 +529,24 @@ local PT_options<const> = {
     "TriangleStrip",
 }
 
+local NOT_SET<const> = "[NOT_SET]"
+
 local BLEND_options<const> = {
-    "ADD",
+    NOT_SET,
     "ALPHA",
+    "ADD",
     "DARKEN",
     "LIGHTEN",
     "MULTIPLY",
     "NORMAL",
     "SCREEN",
     "LINEAR_BURN",
+}
+
+local BLEND_ENABLE_options<const> = {
+    NOT_SET,
+    "INDEPENDENT",
+    "ALPHA_TO_COVERAGE",
 }
 
 local BLEND_FUNC_options<const> = {
@@ -618,6 +627,117 @@ local function create_simple_state_ui(t, l, en, mv, def_value)
     })
 end
 
+local function create_simple_combo_ui(label, options, id, name, mv)
+    return uiproperty.Combo({label=label, options=options, id}, {
+        getter = function ()
+            local s = state_template(mv.eid)
+            return s[name] or NOT_SET
+        end,
+        setter = function (value)
+            local s = state_template(mv.eid)
+            if value == NOT_SET then
+                s[name] = nil
+            else
+                s[name] = value
+            end
+            mv.need_reload = true
+        end
+    })
+end
+
+local function create_blend_function_ui(mv)
+    uiproperty.Group({label="Function", id="function"}, {
+        uiproperty.Bool({label="Use Separate Alpha"},{
+            getter = function ()
+                return mv.blend_use_alpha
+            end,
+            setter = function (value)
+                mv.blend_use_alpha = value
+            end,
+        }),
+        uiproperty.Combo({label="RGB Source", options=BLEND_FUNC_options, "src_rgb"}, {
+            getter = function ()
+                local t = material_template(mv.eid)
+                local f = t.state.BLEND_FUNC
+                if f == nil then
+                    return BLEND_FUNC_options[1]
+                end
+                local k = f:sub(1, 1)
+                return BLEND_FUNC_mapper[k]
+            end,
+            setter = function (value)
+                local t = material_template(mv.eid)
+                local f = t.state.BLEND_FUNC
+                if f then
+                    local d = f:sub(2, 2)
+                    t.state.BLEND_FUNC = BLEND_FUNC_remapper[value] .. d
+                    mv.need_reload = true
+                end
+            end,
+        }),
+        uiproperty.Combo({label="RGB Destination", options=BLEND_FUNC_options, id="dst_rgb"},{
+            getter = function ()
+                local t = material_template(mv.eid)
+                local f = t.state.BLEND_FUNC
+                if f == nil then
+                    return BLEND_FUNC_options[1]
+                end
+                local k = f:sub(2, 2)
+                return BLEND_FUNC_mapper[k]
+            end,
+            setter = function (value)
+                local t = material_template(mv.eid)
+                local f = t.state.BLEND_FUNC
+                if f then
+                    local s = f:sub(1, 1)
+                    t.state.BLEND_FUNC = s .. BLEND_FUNC_remapper[value]
+                    mv.need_reload = true
+                end
+            end,
+        }),
+        uiproperty.Combo({label="Alpha Source", options=BLEND_FUNC_options, disable=true, id="src_alpha"}, {
+            getter = function ()
+                local t = material_template(mv.eid)
+                local f = t.state.BLEND_FUNC
+                if f == nil then
+                    return BLEND_FUNC_options[1]
+                end
+                local k = f:sub(3, 3)
+                return BLEND_FUNC_mapper[k]
+            end,
+            setter = function (value)
+                local t = material_template(mv.eid)
+                local f = t.state.BLEND_FUNC
+                if f then
+                    local d = f:sub(4, 4)
+                    t.state.BLEND_FUNC = BLEND_FUNC_remapper[value] .. d
+                    mv.need_reload = true
+                end
+            end,
+        }),
+        uiproperty.Combo({label="Alpha Destination", options=BLEND_FUNC_options, disable=true, id="dst_alpha"},{
+            getter = function ()
+                local t = material_template(mv.eid)
+                local f = t.state.BLEND_FUNC
+                if f == nil or #f ~= 4 then
+                    return BLEND_FUNC_options[1]
+                end
+                local k = f:sub(3, 3)
+                return BLEND_FUNC_mapper[k]
+            end,
+            setter = function (value)
+                local t = material_template(mv.eid)
+                local f = t.state.BLEND_FUNC
+                if f and #f == 4 then
+                    local s = f:sub(4, 4)
+                    t.state.BLEND_FUNC = s .. BLEND_FUNC_remapper[value]
+                    mv.need_reload = true
+                end
+            end,
+        }),
+    })
+end
+
 local function create_write_mask_ui(en, mv)
     return uiproperty.Bool({label=en}, {
         getter = function ()
@@ -653,110 +773,11 @@ local function build_state_ui(mv)
         }),
 
         uiproperty.Group({label="Blend Setting", id="blend_setting"}, {
-            uiproperty.Bool({label="Enable", id="enable"}, {
-                getter = function()
-                    local s = state_template(mv.eid)
-                    return s.BLEND_ENABLE
-                end,
-                setter = function (value)
-                    local s = state_template(mv.eid)
-                    s.BLEND_ENABLE = value ~= nil
-                    mv:enable_blend_setting_ui(mv.eid)
-                    mv.need_reload = true
-                end,
-            }),
-            create_simple_state_ui("Combo",{label="Type", options=BLEND_options, id="type"}, "BLEND", mv, BLEND_options[1]),
-            create_simple_state_ui("Combo",{label="Equation", id="equation",options=BLEND_EQUATION_options}, "BLEND_EQUATION", mv, BLEND_EQUATION_options[1]),
-            uiproperty.Group({label="Function", id="function"}, {
-                uiproperty.Bool({label="Use Separate Alpha"},{
-                    getter = function ()
-                        return mv.blend_use_alpha
-                    end,
-                    setter = function (value)
-                        mv.blend_use_alpha = value
-                    end,
-                }),
-                uiproperty.Combo({label="RGB Source", options=BLEND_FUNC_options, "src_rgb"}, {
-                    getter = function ()
-                        local t = material_template(mv.eid)
-                        local f = t.state.BLEND_FUNC
-                        if f == nil then
-                            return BLEND_FUNC_options[1]
-                        end
-                        local k = f:sub(1, 1)
-                        return BLEND_FUNC_mapper[k]
-                    end,
-                    setter = function (value)
-                        local t = material_template(mv.eid)
-                        local f = t.state.BLEND_FUNC
-                        if f then
-                            local d = f:sub(2, 2)
-                            t.state.BLEND_FUNC = BLEND_FUNC_remapper[value] .. d
-                            mv.need_reload = true
-                        end
-                    end,
-                }),
-                uiproperty.Combo({label="RGB Destination", options=BLEND_FUNC_options, id="dst_rgb"},{
-                    getter = function ()
-                        local t = material_template(mv.eid)
-                        local f = t.state.BLEND_FUNC
-                        if f == nil then
-                            return BLEND_FUNC_options[1]
-                        end
-                        local k = f:sub(2, 2)
-                        return BLEND_FUNC_mapper[k]
-                    end,
-                    setter = function (value)
-                        local t = material_template(mv.eid)
-                        local f = t.state.BLEND_FUNC
-                        if f then
-                            local s = f:sub(1, 1)
-                            t.state.BLEND_FUNC = s .. BLEND_FUNC_remapper[value]
-                            mv.need_reload = true
-                        end
-                    end,
-                }),
-                uiproperty.Combo({label="Alpha Source", options=BLEND_FUNC_options, disable=true, id="src_alpha"}, {
-                    getter = function ()
-                        local t = material_template(mv.eid)
-                        local f = t.state.BLEND_FUNC
-                        if f == nil then
-                            return BLEND_FUNC_options[1]
-                        end
-                        local k = f:sub(3, 3)
-                        return BLEND_FUNC_mapper[k]
-                    end,
-                    setter = function (value)
-                        local t = material_template(mv.eid)
-                        local f = t.state.BLEND_FUNC
-                        if f then
-                            local d = f:sub(4, 4)
-                            t.state.BLEND_FUNC = BLEND_FUNC_remapper[value] .. d
-                            mv.need_reload = true
-                        end
-                    end,
-                }),
-                uiproperty.Combo({label="Alpha Destination", options=BLEND_FUNC_options, disable=true, id="dst_alpha"},{
-                    getter = function ()
-                        local t = material_template(mv.eid)
-                        local f = t.state.BLEND_FUNC
-                        if f == nil or #f ~= 4 then
-                            return BLEND_FUNC_options[1]
-                        end
-                        local k = f:sub(3, 3)
-                        return BLEND_FUNC_mapper[k]
-                    end,
-                    setter = function (value)
-                        local t = material_template(mv.eid)
-                        local f = t.state.BLEND_FUNC
-                        if f and #f == 4 then
-                            local s = f:sub(4, 4)
-                            t.state.BLEND_FUNC = s .. BLEND_FUNC_remapper[value]
-                            mv.need_reload = true
-                        end
-                    end,
-                }),
-            })
+            --TODO: just use BLEND state, not implement detail blend setting here
+            --create_simple_state_ui("Combo",{label="BlendEnable", options=BLEND_ENABLE_options, id="blend_enable"}, "BLEND_ENABLE", mv, "NOT_SET"),
+            --create_simple_state_ui("Combo",{label="Equation", id="equation",options=BLEND_EQUATION_options}, "BLEND_EQUATION", mv, BLEND_EQUATION_options[1]),
+            create_simple_combo_ui("Type", BLEND_options, "type", "BLEND", mv),
+            --create_blend_function_ui(mv)
         }),
         create_simple_state_ui("Float",{label ="Alpha Reference"}, "ALPHA_REF", mv, 0.0),
         create_simple_state_ui("Float",{label = "Point Size"}, "POINT_SIZE", mv, 0.0),
@@ -883,17 +904,6 @@ local function is_readonly_resource(p)
     return p:match ".glb|" or default_files[p]
 end
 
-function MaterialView:enable_blend_setting_ui(eid)
-    local s = state_template(eid)
-    if s then
-        local bs = self.state:find_property "blend_setting"
-        for _, p in ipairs(bs.subproperty) do
-            p.disable = not s.BLEND_ENABLE
-        end
-        bs:find_property "enable".disable = false
-    end
-end
-
 function MaterialView:set_model(eid)
     if not BaseView.set_model(self, eid) then 
         return false
@@ -925,7 +935,6 @@ function MaterialView:set_model(eid)
     self.save.disable = is_readonly_resource(world:entity(eid).material)
     self.saveas.disable = is_glb_resource()
     self.material.disable = prefab_mgr:get_current_filename() == nil
-    self:enable_blend_setting_ui(eid)
     self:enable_properties_ui(eid)
 
     self:update()

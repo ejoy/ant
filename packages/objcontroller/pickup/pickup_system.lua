@@ -351,11 +351,11 @@ function pickup_sys:end_filter()
 		local st = e.render_object.fx.setting.surfacetype
 		local fm = e.filter_material
 		local qe = w:singleton("pickup_queue", "primitive_filter:in")
+		local src_mi = e.render_object.material
 		for _, fn in ipairs(qe.primitive_filter) do
 			if fr[fn] then
 				local mat = which_material(st, e.skinning)
 				local dst_mi = mat.material
-				local src_mi = e.render_object.material
 				local newstate = irender.check_set_state(dst_mi, src_mi)
 				local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
 				local new_mi = new_matobj:instance()
