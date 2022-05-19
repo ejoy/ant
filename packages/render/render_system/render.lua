@@ -10,6 +10,7 @@ local graphic_setting=settingdata.graphic
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
+local declmgr		= require "vertexdecl_mgr"
 local samplerutil	= require "sampler"
 
 local function set_world_matrix(rc)
@@ -88,11 +89,7 @@ local function update_mesh(vb, ib)
 	local start_v, num_v = vb.start, vb.num
 	if num_v ~= 0 then
 		local handles = vb.handles
-		if #handles > 0 then
-			bgfx.set_vertex_buffer(handles, start_v, num_v)
-		else
-			bgfx.set_vertex_count(num_v)
-		end
+		bgfx.set_vertex_buffer(handles, start_v, num_v)
 	end
 end
 
@@ -368,4 +365,15 @@ end
 
 function irender.quad_ib_num()
 	return quad_ib_num
+end
+
+local fullquad_vbhandle = bgfx.create_vertex_buffer(bgfx.memory_buffer("f", {1.0, 1.0, 1.0}), declmgr.get "p1".handle)
+local fullquad<const> = {
+	vb = {
+		start = 0, num = 3,
+		{handle=fullquad_vbhandle}
+	}
+}
+function irender.full_quad()
+	return fullquad
 end

@@ -31,7 +31,7 @@ function tm_sys:init()
         },
         data = {
             name = "tonemapping_render_obj",
-            simplemesh = {vb = {num = 3,}},
+            simplemesh = irender.full_quad(),
             material = tm_materialfile,
             scene = {srt = {},},
             render_object   = {},
