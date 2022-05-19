@@ -63,7 +63,7 @@ vec3 get_normal_by_tbn(mat3 tbn, vec3 normal, vec2 texcoord)
 {
 #ifdef HAS_NORMAL_TEXTURE
 	vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
-	return instMul(normalTS, tbn);
+	return normalize(instMul(normalTS, tbn));
 #else //!HAS_NORMAL_TEXTURE
     return normal;
 #endif //HAS_NORMAL_TEXTURE
