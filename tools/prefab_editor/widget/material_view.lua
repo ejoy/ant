@@ -353,11 +353,11 @@ local function build_properties_ui(mv)
         end
 
         local function fx_setting(field, value)
-            if t.fx.settings then
+            if t.fx.setting then
                 if value then
-                    t.fx.settings[field] = value
+                    t.fx.setting[field] = value
                 else
-                    return t.fx.settings[field]
+                    return t.fx.setting[field]
                 end
             end
         end
@@ -455,7 +455,7 @@ local function build_properties_ui(mv)
             })
             uvmotion.disable = fx_setting "UV_MOTION" == nil
             return uiproperty.SameLineContainer({id="uv_motion"}, {
-                uiproperty.Bool({mode="label_right", label="##"},{
+                uiproperty.Bool({mode="label_right", label="##", id="uvm_check"},{
                     getter = function ()
                         return fx_setting "UV_MOTION" ~= nil
                     end,
@@ -1032,7 +1032,7 @@ function MaterialView:enable_properties_ui(eid)
     local t = material_template(eid)
     if is_pbr_material(t) then
         local p_ui = assert(self.material:find_property_by_label "Properties")
-        local unlit_mode<const> = t.fx.settings and t.fx.settings.MATERIAL_UNLIT ~= nil or false
+        local unlit_mode<const> = t.fx.setting and t.fx.setting.MATERIAL_UNLIT ~= nil or false
         
         local function disable_property(n, disable)
             local p = p_ui:find_property_by_label(n)
