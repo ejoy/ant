@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
+local math3d = require "math3d"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 --[[
@@ -147,12 +148,6 @@ local function build_fx_ui(mv)
         })
     })
 
-end
-
-local function create_uvmotion_ui(mv)
-    return uiproperty.Group({label="UV Motion"},{
-        uiproperty.Bool()
-    })
 end
 
 --TODO: hard code here, just check pbr material for show pbr ui
@@ -418,6 +413,70 @@ local function build_properties_ui(mv)
             end
             return tt
         end
+
+        local function create_uvmotion_ui()
+            local function update_uvmotion_in_material(u)
+                local e = world:entity(mv.eid)
+                local m = e.render_object.material
+                m.u_uvmotion = math3d.vector(u)
+            end
+
+            local function get_uvmotion()
+                local p = get_properties()
+                local u = p.u_uvmotion
+                if u == nil then
+                    return {0, 0, 1, 1}
+                end
+                return u
+            end
+            local uvmotion = uiproperty.Group({mode="label_right", label="UV Motion"}, {
+                uiproperty.Float({label="Speed", speed=0.005, dim=2}, {
+                    getter = function()
+                        local u = get_uvmotion()
+                        return {u[1], u[2]}
+                    end,
+                    setter = function (value)
+                        local u = get_properties().u_uvmotion
+                        u[1], u[2] = value[1], value[2]
+                        update_uvmotion_in_material(u)
+                    end,
+                }),
+                uiproperty.Float({label="Tile", speed=0.005, dim=2}, {
+                    getter = function ()
+                        local u = get_uvmotion()
+                        return {u[3], u[4]}
+                    end,
+                    setter = function (value)
+                        local u = get_properties().u_uvmotion
+                        u[3], u[4] = value[1], value[2]
+                        update_uvmotion_in_material(u)
+                    end,
+                })
+            })
+            uvmotion.disable = fx_setting "UV_MOTION" == nil
+            return uiproperty.SameLineContainer({id="uv_motion"}, {
+                uiproperty.Bool({mode="label_right", label="##"},{
+                    getter = function ()
+                        return fx_setting "UV_MOTION" ~= nil
+                    end,
+                    setter = function (value)
+                        uvmotion.disable = not value
+                        if value then
+                            fx_setting("UV_MOTION", 1)
+                            local p = get_properties()
+                            if p.u_uvmotion == nil then
+                                p.u_uvmotion = {0.0, 0.0, 1.0, 1.0}
+                            end
+                        else
+                            fx_setting("UV_MOTION", nil)
+                        end
+                    end,
+                }),
+                uvmotion,
+            })
+        end
+
+        properties[#properties+1] = create_uvmotion_ui()
 
         properties[#properties+1] = uiproperty.Group({label="basecolor"},
             add_textre_ui("s_basecolor", "basecolor", 
