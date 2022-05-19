@@ -23,7 +23,7 @@ local file_path
 local joints_map
 local joints_list
 local current_skeleton
-local joint_scale = 0.25
+local joint_scale = 0.5
 local sample_ratio = 50.0
 local anim_eid
 local current_joint
@@ -744,8 +744,8 @@ function m.load(path)
 end
 local ifs		= ecs.import.interface "ant.scene|ifilter_state"
 local imaterial	= ecs.import.interface "ant.asset|imaterial"
-local bone_color = math3d.ref(math3d.vector(0.2, 0.2, 1, 0.5))
-local bone_highlight_color = math3d.ref(math3d.vector(1.0, 0.2, 0.2, 0.5))
+local bone_color = math3d.ref(math3d.vector(0.4, 0.4, 1, 0.8))
+local bone_highlight_color = math3d.ref(math3d.vector(1.0, 0.4, 0.4, 0.8))
 local function create_bone_entity(joint_name)
     local template = {
         policy = {
