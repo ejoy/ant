@@ -159,7 +159,6 @@ interface "irender"
     .method "check_set_state"
     .method "create_material_from_template"
     .method "full_quad"
-    .method "check_copy_material"
     .method "is_msaa_buffer"
     .method "use_pre_depth"
 
