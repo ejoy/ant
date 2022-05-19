@@ -5,17 +5,13 @@ local m = {
     joint_list = {},
 }
 
-function m:get_joints(skeleton)
-    if not skeleton and not self.skeleton then
-        return
-    end
-    if not self.skeleton then
-        self.skeleton = skeleton
-    end
+function m:get_joints()
+    return self.joint_map, self.joint_list
+end
+
+function m:init(skeleton)
+    self.skeleton = skeleton
     local ske = self.skeleton._handle
-    if self.joint_map[ske] and self.joint_list[ske] then
-        return self.joint_map[ske], self.joint_list[ske]
-    end
     local new_list = {}
     local new_map = {root = nil, joint_map = {}}
     local function construct(current_joints, skeleton, joint_idx)
@@ -65,8 +61,8 @@ function m:get_joints(skeleton)
         end
     end
     setup_joint_list(new_map.root)
-    self.joint_list[ske] = new_list
-    self.joint_map[ske] = new_map
+    self.joint_list = new_list
+    self.joint_map = new_map
     return new_map, new_list
 end
 
@@ -81,7 +77,7 @@ function m:show_joints(root)
     local open = imgui.widget.TreeNode(root.name, flags)
     if imgui.util.IsItemClicked() then
         if self.on_select_joint then
-            self.on_select_joint(self.current_joint, root)    
+            self.on_select_joint(self.current_joint, root)
         end
         self.current_joint = root
     end
@@ -107,7 +103,7 @@ function m:set_current_joint(ske, name)
     local joint = self:get_joint_by_name(ske, name)
     if joint then
         if self.on_select_joint then
-            self.on_select_joint(self.current_joint, joint)    
+            self.on_select_joint(self.current_joint, joint)
         end
     end
     self.current_joint = joint
@@ -119,7 +115,7 @@ end
 
 function m:update_pose(root_mat)
     if self.update_joint_pose then
-        self.update_joint_pose(root_mat, self.joint_list[self.skeleton._handle])
+        self.update_joint_pose(root_mat, self.joint_list)
     end
 end
 

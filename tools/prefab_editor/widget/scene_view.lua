@@ -106,6 +106,9 @@ local function get_icon_by_object_type(node)
 end
 local ima 		= ecs.import.interface "ant.asset|imaterial_animation"
 local function show_scene_node(node)
+    if world:entity(node.eid).animation then
+        return
+    end
     imgui.table.NextRow();
     imgui.table.NextColumn();
     local function select_or_move(nd)

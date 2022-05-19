@@ -1,6 +1,6 @@
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
-
+local math3d = require "math3d"
 local m = {
     SELECT                  = 0,
     MOVE                    = 1,
@@ -17,9 +17,9 @@ local m = {
         Y_ALPHA           = {0, 1, 0, 0.5},
         Z_ALPHA           = {0, 0, 1, 0.5},
         GRAY              = {1, 1, 1, 1},
-        GRAY_ALPHA        = {1, 1, 1, 0.5},
-        HIGHLIGHT         = {1, 1, 0, 1},
-        HIGHLIGHT_ALPHA   = {1, 1, 0, 0.5},
+        GRAY_ALPHA        = math3d.ref(math3d.vector(1, 1, 1, 0.5)),
+        HIGHLIGHT         = math3d.ref(math3d.vector(1, 1, 0, 1)),
+        HIGHLIGHT_ALPHA   = math3d.ref(math3d.vector(1, 1, 0, 0.5)),
     },
     RIGHT_TOP               = 0,
     RIGHT_BOTTOM            = 1,

@@ -283,7 +283,7 @@ function gizmo_sys:post_init()
 	local plane_xy_eid = ientity.create_prim_plane_entity(
 		{t = {gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 0, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
-		gizmo.txy.color,
+		gizmo_const.COLOR.Z_ALPHA,
 		"plane_xy", true)
 	ecs.method.set_parent(plane_xy_eid, axis_root)
 	gizmo.txy.eid = {plane_xy_eid, plane_xy_eid}
@@ -291,7 +291,7 @@ function gizmo_sys:post_init()
 	local plane_yz_eid = ientity.create_prim_plane_entity(
 		{t = {0, gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)})},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
-		gizmo.tyz.color,
+		gizmo_const.COLOR.X_ALPHA,
 		"plane_yz", true)
 	ecs.method.set_parent(plane_yz_eid, axis_root)
 	gizmo.tyz.eid = {plane_yz_eid, plane_yz_eid}
@@ -299,7 +299,7 @@ function gizmo_sys:post_init()
 	local plane_zx_eid = ientity.create_prim_plane_entity(
 		{t = {gizmo_const.MOVE_PLANE_OFFSET, 0, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}},
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
-		gizmo.tzx.color,
+		gizmo_const.COLOR.Y_ALPHA,
 		"plane_zx", true)
 	ecs.method.set_parent(plane_zx_eid, axis_root)
 	gizmo.tzx.eid = {plane_zx_eid, plane_zx_eid}
@@ -309,7 +309,7 @@ function gizmo_sys:post_init()
 	local uniform_rot_eid = ientity.create_circle_entity(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {}, "rotate_gizmo_uniform", gizmo_const.COLOR.GRAY, true)
 	ecs.method.set_parent(uniform_rot_eid, uniform_rot_root)
 	local function create_rotate_fan(radius, circle_trans)
-		local mesh_eid = ientity.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, circle_trans, "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "rotate_mesh_gizmo_uniform", gizmo.txy.color, true)
+		local mesh_eid = ientity.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, circle_trans, "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "rotate_mesh_gizmo_uniform", gizmo_const.COLOR.Z_ALPHA, true)
 		ecs.method.set_parent(mesh_eid, axis_root)
 		return mesh_eid
 	end
@@ -526,7 +526,7 @@ local function select_axis(x, y)
 		local radius = math3d.length(math3d.sub(hp, start))
 		if radius < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
 			uniform_scale = true
-			local hlcolor = math3d.vector(gizmo_const.COLOR.HIGHLIGHT)
+			local hlcolor = gizmo_const.COLOR.HIGHLIGHT
 			imaterial.set_property(world:entity(gizmo.uniform_scale_eid), "u_color", hlcolor)
 			imaterial.set_property(world:entity(gizmo.sx.eid[1]), "u_color", hlcolor)
 			imaterial.set_property(world:entity(gizmo.sx.eid[2]), "u_color", hlcolor)
@@ -580,7 +580,7 @@ local function select_rotate_axis(x, y)
 		local dist = math3d.length(math3d.sub(gizmoPos, hitPosVec))
 		local adjust_axis_len = (axis == gizmo.rw) and gizmo_const.UNIFORM_ROT_AXIS_LEN or gizmo_const.AXIS_LEN
 		if math.abs(dist - gizmo_scale * adjust_axis_len) < gizmo_const.ROTATE_HIT_RADIUS * gizmo_scale then
-			local hlcolor = math3d.vector(gizmo_const.COLOR.HIGHLIGHT)
+			local hlcolor = gizmo_const.COLOR.HIGHLIGHT
 			imaterial.set_property(world:entity(axis.eid[1]), "u_color", hlcolor)
 			imaterial.set_property(world:entity(axis.eid[2]), "u_color", hlcolor)
 			return hitPosVec

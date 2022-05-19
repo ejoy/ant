@@ -25,7 +25,7 @@ local joints_list
 local current_skeleton
 local joint_scale = 0.25
 local sample_ratio = 50.0
-local anim_e = {}
+local anim_eid
 local current_joint
 local allanims = {}
 local current_anim
@@ -433,28 +433,19 @@ local function show_current_joint()
 end
 
 local function anim_play(anim_state, play)
-    for _, e in ipairs(anim_e) do
-        iom.set_position(world:entity(hierarchy:get_node(hierarchy:get_node(e).parent).parent), {0.0,0.0,0.0})
-        play(e, anim_state)
-    end
+    play(anim_eid, anim_state)
 end
 
 local function anim_pause(p)
-    for _, e in ipairs(anim_e) do
-        iani.pause(e, p)
-    end
+    iani.pause(anim_eid, p)
 end
 
 local function anim_set_loop(...)
-    for _, e in ipairs(anim_e) do
-        iani.set_loop(e, ...)
-    end
+    iani.set_loop(anim_eid, ...)
 end
 
 local function anim_set_time(t)
-    for _, e in ipairs(anim_e) do
-        iani.set_time(e, t)
-    end
+    iani.set_time(anim_eid, t)
 end
 local anim_name = ""
 local anim_duration = 30
@@ -474,9 +465,7 @@ local function create_animation(name, duration, joint_anims)
             _sampling_context = animation.new_sampling_context(1)
         }
         new_anim.raw_animation:setup(current_skeleton._handle, td)
-        for _, ae in ipairs(anim_e) do
-            world:entity(ae).animation[name] = new_anim
-        end
+        world:entity(anim_eid).animation[name] = new_anim
         local edit_anim = {
             name = name,
             dirty = true,
@@ -542,7 +531,7 @@ function m.clear()
     if current_skeleton and current_joint then
         joint_utils:set_current_joint(current_skeleton, nil)
     end
-    anim_e = {}
+    anim_eid = nil
     allanims = {}
     current_skeleton = nil
     current_anim = nil
@@ -597,10 +586,10 @@ function m.show()
             end
             imgui.cursor.PopItemWidth()
             imgui.cursor.SameLine()
-            if #anim_e > 0 then
-                current_anim.is_playing = iani.is_playing(anim_e[1])
+            if anim_eid then
+                current_anim.is_playing = iani.is_playing(anim_eid)
                 if current_anim.is_playing then
-                    current_anim.current_frame = math.floor(iani.get_time(anim_e[1]) * sample_ratio)
+                    current_anim.current_frame = math.floor(iani.get_time(anim_eid) * sample_ratio)
                 end
             end
             local icon = current_anim.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
@@ -617,7 +606,7 @@ function m.show()
             end
 
             imgui.cursor.SameLine()
-            local current_time = #anim_e > 0 and iani.get_time(anim_e[1]) or 0
+            local current_time = anim_eid and iani.get_time(anim_eid) or 0
             imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", current_anim.selected_frame, current_anim.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(current_anim.duration * sample_ratio), current_time, current_anim.duration))
         end
         if imgui.table.Begin("SkeletonColumns", 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
@@ -755,9 +744,8 @@ function m.load(path)
 end
 local ifs		= ecs.import.interface "ant.scene|ifilter_state"
 local imaterial	= ecs.import.interface "ant.asset|imaterial"
-local ldrtohdr <const> = 1--12000
-local bone_color = {0.2 * ldrtohdr, 0.2 * ldrtohdr, 1 * ldrtohdr, 0.5}
-local bone_highlight_color = {1.0 * ldrtohdr, 0.2 * ldrtohdr, 0.2 * ldrtohdr, 0.5}
+local bone_color = math3d.ref(math3d.vector(0.2, 0.2, 1, 0.5))
+local bone_highlight_color = math3d.ref(math3d.vector(1.0, 0.2, 0.2, 0.5))
 local function create_bone_entity(joint_name)
     local template = {
         policy = {
@@ -783,62 +771,60 @@ local function create_bone_entity(joint_name)
 end
 
 function m.init(skeleton)
-    if #anim_e == 0 then
-        for ske_e in w:select "id:in skeleton:in animation:in" do
-            if ske_e.skeleton == skeleton then
-                anim_e[#anim_e + 1] = ske_e.id
-            end
+    for e in w:select "id:in skeleton:in animation:in" do
+        if e.skeleton == skeleton then
+            anim_eid = e.id
         end
     end
-    if not current_skeleton then
-        current_skeleton = skeleton
-    end
-    if not joint_utils.on_select_joint then
-        joint_utils.on_select_joint = function(old, new)
-            if old and old.mesh then
-                imaterial.set_property(world:entity(old.mesh), "u_basecolor_factor", bone_color) 
-            end
-            if new then
-                imaterial.set_property(world:entity(new.mesh), "u_basecolor_factor", bone_highlight_color)
-                if current_anim then
-                    local layer_index = find_anim_by_name(new.name) or 0
-                    if layer_index ~= 0 then
-                        if #current_anim.joint_anims[layer_index].clips > 0 then
-                            current_anim.selected_clip_index = 1
-                        end
+    current_skeleton = skeleton
+    joint_utils.on_select_joint = function(old, new)
+        if old and old.mesh then
+            imaterial.set_property(world:entity(old.mesh), "u_basecolor_factor", bone_color) 
+        end
+        if new then
+            imaterial.set_property(world:entity(new.mesh), "u_basecolor_factor", bone_highlight_color)
+            if current_anim then
+                local layer_index = find_anim_by_name(new.name) or 0
+                if layer_index ~= 0 then
+                    if #current_anim.joint_anims[layer_index].clips > 0 then
+                        current_anim.selected_clip_index = 1
                     end
-                    current_anim.selected_layer_index = layer_index
-                    current_anim.dirty = true
                 end
+                current_anim.selected_layer_index = layer_index
+                current_anim.dirty = true
             end
         end
     end
-    if not joint_utils.update_joint_pose then
-        joint_utils.update_joint_pose = function(root_mat, joints_list)
-            if not joints_list then
-                return
+    joint_utils.update_joint_pose = function(root_mat, jlist)
+        if not jlist then
+            return
+        end
+        local pose_result
+        for ee in w:select "skeleton:in meshskin:in" do
+            if current_skeleton == ee.skeleton then
+                pose_result = ee.meshskin.pose_result
+                break
             end
-            local pose_result
-            for ee in w:select "skeleton:in meshskin:in" do
-                if current_skeleton == ee.skeleton then
-                    pose_result = ee.meshskin.pose_result
-                    break
-                end
-            end
-            if pose_result then
-                for _, joint in ipairs(joints_list) do
-                    if joint.mesh then
-                        local mesh_e = world:entity(joint.mesh)
-                        if mesh_e then
-                            iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, pose_result:joint(joint.index))))
-                            iom.set_scale(mesh_e, joint_scale)
-                        end
+        end
+        if pose_result then
+            for _, joint in ipairs(jlist) do
+                if joint.mesh then
+                    local mesh_e = world:entity(joint.mesh)
+                    if mesh_e then
+                        iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, pose_result:joint(joint.index))))
+                        iom.set_scale(mesh_e, joint_scale)
                     end
                 end
             end
         end
     end
-    joints_map, joints_list = joint_utils:get_joints(skeleton)
+    local _, list = joint_utils:get_joints()
+    for _, joint in ipairs(list) do
+        if joint.mesh then
+            world:remove_entity(joint.mesh)
+        end
+    end
+    joints_map, joints_list = joint_utils:init(skeleton)
     for _, joint in ipairs(joints_list) do
         if not joint.mesh then
             joint.mesh = create_bone_entity(joint.name)

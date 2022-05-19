@@ -4,26 +4,26 @@ local w = world.w
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local ies = ecs.import.interface "ant.scene|ifilter_state"
-
+local math3d = require "math3d"
 local gizmo_const = require "gizmo.const"
 local gizmo = {
     mode = gizmo_const.SELECT,
 	--move
-	tx = {dir = gizmo_const.DIR_X, color = gizmo_const.COLOR.X},
-	ty = {dir = gizmo_const.DIR_Y, color = gizmo_const.COLOR.Y},
-	tz = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR.Z},
-	txy = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR.Z_ALPHA, area = right_top},
-	tyz = {dir = gizmo_const.DIR_X, color = gizmo_const.COLOR.X_ALPHA, area = right_top},
-	tzx = {dir = gizmo_const.DIR_Y, color = gizmo_const.COLOR.Y_ALPHA, area = right_top},
+	tx = {dir = gizmo_const.DIR_X, color = math3d.ref(math3d.vector(gizmo_const.COLOR.X))},
+	ty = {dir = gizmo_const.DIR_Y, color = math3d.ref(math3d.vector(gizmo_const.COLOR.Y))},
+	tz = {dir = gizmo_const.DIR_Z, color = math3d.ref(math3d.vector(gizmo_const.COLOR.Z))},
+	txy = {dir = gizmo_const.DIR_Z, color = math3d.ref(math3d.vector(gizmo_const.COLOR.Z_ALPHA)), area = gizmo_const.RIGHT_TOP},
+	tyz = {dir = gizmo_const.DIR_X, color = math3d.ref(math3d.vector(gizmo_const.COLOR.X_ALPHA)), area = gizmo_const.RIGHT_TOP},
+	tzx = {dir = gizmo_const.DIR_Y, color = math3d.ref(math3d.vector(gizmo_const.COLOR.Y_ALPHA)), area = gizmo_const.RIGHT_TOP},
 	--rotate
-	rx = {dir = gizmo_const.DIR_X, color = gizmo_const.COLOR.X},
-	ry = {dir = gizmo_const.DIR_Y, color = gizmo_const.COLOR.Y},
-	rz = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR.Z},
-	rw = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR.GRAY},
+	rx = {dir = gizmo_const.DIR_X, color = math3d.ref(math3d.vector(gizmo_const.COLOR.X))},
+	ry = {dir = gizmo_const.DIR_Y, color = math3d.ref(math3d.vector(gizmo_const.COLOR.Y))},
+	rz = {dir = gizmo_const.DIR_Z, color = math3d.ref(math3d.vector(gizmo_const.COLOR.Z))},
+	rw = {dir = gizmo_const.DIR_Z, color = math3d.ref(math3d.vector(gizmo_const.COLOR.GRAY))},
 	--scale
-	sx = {dir = gizmo_const.DIR_X, color = gizmo_const.COLOR.X},
-	sy = {dir = gizmo_const.DIR_Y, color = gizmo_const.COLOR.Y},
-	sz = {dir = gizmo_const.DIR_Z, color = gizmo_const.COLOR.Z},
+	sx = {dir = gizmo_const.DIR_X, color = math3d.ref(math3d.vector(gizmo_const.COLOR.X))},
+	sy = {dir = gizmo_const.DIR_Y, color = math3d.ref(math3d.vector(gizmo_const.COLOR.Y))},
+	sz = {dir = gizmo_const.DIR_Z, color = math3d.ref(math3d.vector(gizmo_const.COLOR.Z))},
 }
 
 local function highlight_axis(axis)
@@ -240,7 +240,7 @@ function gizmo:reset_scale_axis_color()
 	imaterial.set_property(world:entity(self.sy.eid[2]), uname, self.sy.color)
 	imaterial.set_property(world:entity(self.sz.eid[1]), uname, self.sz.color)
 	imaterial.set_property(world:entity(self.sz.eid[2]), uname, self.sz.color)
-	imaterial.set_property(world:entity(self.uniform_scale_eid), uname, gizmo_const.COLOR.GRAY)
+	imaterial.set_property(world:entity(self.uniform_scale_eid), uname, math3d.vector(gizmo_const.COLOR.GRAY))
 end
 
 return gizmo
