@@ -1827,24 +1827,28 @@ wSequencer(lua_State* L) {
 	static std::string current_anim_name;
 	static int selected_clip_index = -1;
 	if (lua_type(L, 1) == LUA_TTABLE) {
-		auto birth = read_field_string(L, "birth", "", 1);
-		if (ImSequencer::anim_info.empty()) {
-			lua_pushnil(L);
-			while (lua_next(L, 1) != 0) {
-				const char* anim_name = lua_tostring(L, -2);
-				if (lua_type(L, -1) == LUA_TTABLE) {
-					auto duration = (float)read_field_float(L, "duration", 0.0f, -1);
-					if (duration > 0.0f) {
-						ImSequencer::anim_info.insert({ std::string(anim_name), ImSequencer::anim_detail{} });
-						auto& item = ImSequencer::anim_info[anim_name];
-						item.duration = duration;
-						init_clip_ranges(item);
+		auto dirty = read_field_boolean(L, "dirty", false, 1);
+		if (dirty) {
+			ImSequencer::anim_info.clear();
+			auto birth = read_field_string(L, "birth", "", 1);
+			if (ImSequencer::anim_info.empty()) {
+				lua_pushnil(L);
+				while (lua_next(L, 1) != 0) {
+					const char* anim_name = lua_tostring(L, -2);
+					if (lua_type(L, -1) == LUA_TTABLE) {
+						auto duration = (float)read_field_float(L, "duration", 0.0f, -1);
+						if (duration > 0.0f) {
+							ImSequencer::anim_info.insert({ std::string(anim_name), ImSequencer::anim_detail{} });
+							auto& item = ImSequencer::anim_info[anim_name];
+							item.duration = duration;
+							init_clip_ranges(item);
+						}
 					}
+					lua_pop(L, 1);
 				}
-				lua_pop(L, 1);
+				current_anim_name = birth;
+				ImSequencer::current_anim = &ImSequencer::anim_info[birth];
 			}
-			current_anim_name = birth;
-			ImSequencer::current_anim = &ImSequencer::anim_info[birth];
 		}
 		std::string anim_name = read_field_string(L, "anim_name", nullptr, 2);
 		if (current_anim_name != anim_name) {

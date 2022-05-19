@@ -849,6 +849,7 @@ function m.show()
         imgui_message = {}
         imgui.widget.Sequencer(edit_anims, anim_state, imgui_message)
         -- clear dirty flag
+        edit_anims.dirty = false
         set_event_dirty(0)
         --
         local move_type
@@ -933,7 +934,7 @@ function m.load_events(filename)
 end
 
 function m.on_prefab_load(entities)
-    local editanims = { name_list = {} }
+    local editanims = {dirty = true, name_list = {} }
     local skeleton
     for _, eid in ipairs(entities) do
         local e = world:entity(eid)
