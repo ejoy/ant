@@ -52,7 +52,7 @@ local function sortItems(a, b)
     return a.ID < b.ID
 end
 
-local test_cb
+local test_cb = {true}
 
 local function update(viewid)
     bgfx.set_view_clear(viewid, "CD", 0x303030ff, 1, 0)
@@ -95,21 +95,23 @@ local function update(viewid)
     end
 
     if imgui.windows.Begin ("test1", imgui.flags.Window {'AlwaysAutoResize'}) then
-        local cb = {true}
-        imgui.widget.Checkbox("abc1", cb)
+        imgui.widget.Checkbox("##abc1", test_cb)
+        imgui.cursor.SameLine()
 
+        imgui.windows.BeginDisabled(not test_cb[1])
         imgui.widget.InputFloat("bb", {1.0})
-        do  --checkbox test
-            if test_cb == nil then
-                test_cb = {false}
-            end
-            if test_cb[1] then
-                imgui.widget.Text "abababa"
-            else
-                imgui.widget.TextDisabled "abababa"
-            end
-             imgui.cursor.SameLine() imgui.widget.Checkbox("enable", test_cb)
-        end
+        imgui.windows.EndDisabled()
+        -- do  --checkbox test
+        --     if test_cb == nil then
+        --         test_cb = {false}
+        --     end
+        --     if test_cb[1] then
+        --         imgui.widget.Text "abababa"
+        --     else
+        --         imgui.widget.TextDisabled "abababa"
+        --     end
+        --      imgui.cursor.SameLine() imgui.widget.Checkbox("enable", test_cb)
+        -- end
 
         imgui.windows.BeginDisabled(true)
         if imgui.widget.TreeNode("Test", imgui.flags.TreeNode{"DefaultOpen"}) then

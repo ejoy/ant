@@ -21,16 +21,9 @@ function PropertyBase:_init(config, modifier)
     self.visible    = config.visible or true
     self.id         = config.id
     self.dim        = config.dim or 1
+    self.mode       = config.mode
     self.modifier = modifier or {}
     self.uidata = {speed = config.speed, min = config.min, max = config.max, flags = config.flags}
-end
-
-function PropertyBase:set_userdata(userdata)
-    self.userdata = userdata
-end
-
-function PropertyBase:set_label(label)
-    self.label = label
 end
 
 function PropertyBase:set_getter(getter)
@@ -72,12 +65,27 @@ function PropertyBase:update()
     end
 end
 
+function PropertyBase:the_label()
+    if self.mode == nil or self.mode == "label_left" then
+        imgui.widget.PropertyLabel(self.label)
+    end
+end
+
+function PropertyBase:get_label()
+    if self.mode == "label_right" then
+        return self.label
+    else
+        return "##" .. self.label
+    end
+end
+
+function PropertyBase:widget()
+end
+
 function PropertyBase:show()
     if self:is_visible() then
-        if self.label ~= "" then
-            imgui.widget.PropertyLabel(self.label)
-        end
-        if self.imgui_func("##" .. self.label, self.uidata) then
+        self:the_label()
+        if self:widget() then
             local d = self.uidata
             if self.dim == 1 then
                 self.modifier.setter(d[1])
@@ -89,30 +97,24 @@ function PropertyBase:show()
 end
 
 local Int = class("Int", PropertyBase)
-
-function Int:_init(config, modifier)
-    PropertyBase._init(self, config, modifier)
-    self.imgui_func = imgui.widget.DragInt
+function Int:widget()
+    return imgui.widget.DragInt(self:get_label(), self.uidata)
 end
 
 local Float = class("Float", PropertyBase)
-
-function Float:_init(config, modifier)
-    PropertyBase._init(self, config, modifier)
-    self.imgui_func = imgui.widget.DragFloat
+function Float:widget()
+    return imgui.widget.DragFloat(self:get_label(), self.uidata)
 end
 
 local Bool = class("Bool", PropertyBase)
-function Bool:_init(config, modifier)
-    PropertyBase._init(self, config, modifier)
-    self.imgui_func = imgui.widget.Checkbox
+function Bool:widget()
+    return imgui.widget.Checkbox(self:get_label(), self.uidata)
 end
 
 local Color = class("Color", PropertyBase)
 
-function Color:_init(config, modifier)
-    PropertyBase._init(self, config, modifier)
-    self.imgui_func = imgui.widget.ColorEdit
+function Color:widget()
+    return imgui.widget.ColorEdit(self:get_label(), self.uidata)
 end
 
 local Combo = class("Combo", PropertyBase)
@@ -132,10 +134,10 @@ end
 
 function Combo:show()
     if self:is_visible() then
-        imgui.widget.PropertyLabel(self.label)
+        self:the_label()
         imgui.util.PushID(tostring(self))
         local current_option = self.modifier.getter()
-        if imgui.widget.BeginCombo("##"..self.label, {current_option, flags = self.uidata.flags}) then
+        if imgui.widget.BeginCombo(self:get_label(), {current_option, flags = self.uidata.flags}) then
             for _, option in ipairs(self.options) do
                 if imgui.widget.Selectable(option, current_option == option) then
                     self.modifier.setter(option)
@@ -151,15 +153,14 @@ local EditText = class("EditText", PropertyBase)
 
 function EditText:_init(config, modifier)
     PropertyBase._init(self, config, modifier)
-    self.uidata = {text = ""}
+    self.uidata.text = ""
+end
 
-    self.imgui_func = function(label, uidata)
-        if self.readonly then
-            imgui.widget.Text(uidata.text)
-            return
-        end
-        
-        return imgui.widget.InputText(label, uidata)
+function EditText:widget()
+    if self.readonly then
+        return imgui.widget.Text(self.uidata.text)
+    else
+        return imgui.widget.InputText(self:get_label(), self.uidata)
     end
 end
 
@@ -174,7 +175,7 @@ end
 function EditText:show()
     if self:is_visible() then
         imgui.widget.PropertyLabel(self.label)
-        if self.imgui_func("##" .. self.label, self.uidata) then
+        if self:widget() then
             self.modifier.setter(tostring(self.uidata.text))
         end
     end
@@ -212,8 +213,7 @@ function ResourcePath:show()
     -- imgui.widget.Text(self.label)
     -- imgui.cursor.SameLine(uiconfig.PropertyIndent)
     imgui.widget.PropertyLabel(self.label)
-    if self.imgui_func("##" .. self.label, self.uidata) then
-    end
+    self:widget()
     if imgui.widget.BeginDragDropTarget() then
         local payload = imgui.widget.AcceptDragDropPayload("DragFile")
         if payload then

@@ -62,10 +62,6 @@ local function state_template(eid)
     return t.state
 end
 
-local DEPTH_TYPE_options<const> = {
-    "inv_z", "linear"
-}
-
 local function build_fx_ui(mv)
     local function shader_file_ui(st)
         return uiproperty.ResourcePath({label=st, extension = ".sc", readonly = true}, {
@@ -151,6 +147,12 @@ local function build_fx_ui(mv)
         })
     })
 
+end
+
+local function create_uvmotion_ui(mv)
+    return uiproperty.Group({label="UV Motion"},{
+        uiproperty.Bool()
+    })
 end
 
 --TODO: hard code here, just check pbr material for show pbr ui
