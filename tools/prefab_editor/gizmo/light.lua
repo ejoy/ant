@@ -76,7 +76,7 @@ function m.highlight(b)
         end
     else
         for _, eid in ipairs(m.current_gizmo.eid) do
-            imaterial.set_property(world:entity(eid), "u_color", gizmo_const.COLOR.GRAY)
+            imaterial.set_property(world:entity(eid), "u_color", math3d.vector(gizmo_const.COLOR.GRAY))
         end
     end
 end

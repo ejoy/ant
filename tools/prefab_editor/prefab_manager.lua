@@ -144,7 +144,7 @@ function m:create_collider(config)
     local tpl = utils.deep_copy(template)
     tpl.data.on_ready = function (e)
         e.collider = { [config.type] = define }
-        imaterial.set_property(e, "u_color", {1, 0.5, 0.5, 0.8})
+        imaterial.set_property(e, "u_color", math3d.vector(1, 0.5, 0.5, 0.8))
     end
     return ecs.create_entity(tpl), template
 end
