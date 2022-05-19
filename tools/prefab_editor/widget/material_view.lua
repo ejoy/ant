@@ -64,7 +64,7 @@ end
 
 local function build_fx_ui(mv)
     local function shader_file_ui(st)
-        return uiproperty.EditText({label=st, readonly = true}, {
+        return uiproperty.Text({label=st,}, {
             getter = function()
                 return material_template(mv.eid).fx[st]
             end,

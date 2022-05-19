@@ -149,6 +149,11 @@ function Combo:show()
     end
 end
 
+local Text = class("Text", PropertyBase)
+function Text:widget()
+    return imgui.widget.Text(self:get_label(), self.uidata)
+end
+
 local EditText = class("EditText", PropertyBase)
 
 function EditText:_init(config, modifier)
@@ -495,6 +500,7 @@ return {
     Float           = Float,
     Bool            = Bool,
     Color           = Color,
+    Text            = Text,
     EditText        = EditText,
     ResourcePath    = ResourcePath,
     TextureResource = TextureResource,

@@ -1,10 +1,5 @@
 {
-    "runtime": {
-        "plugin": "misc/lsp-plugin.lua",
-        "special": {
-            "import_package": "require"
-        }
-    },
+    "Lua.completion.autoRequire": false,
     "diagnostics": {
         "disable": [
             "different-requires",
@@ -15,12 +10,18 @@
             "__EDITOR__"
         ]
     },
+    "runtime": {
+        "plugin": "misc/lsp-plugin.lua",
+        "special": {
+            "import_package": "require"
+        }
+    },
     "workspace": {
-        "maxPreload": 100000,
         "ignoreDir": [
             "packages/animation/controller/state_machine.lua",
             "packages/editor/",
             "tools/prefab_editor/"
-        ]
+        ],
+        "maxPreload": 100000
     }
 }

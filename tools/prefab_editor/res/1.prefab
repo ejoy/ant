@@ -1,0 +1,34 @@
+---
+data:
+  name: Scene
+  scene:
+    srt: {}
+policy:
+  ant.general|name
+  ant.scene|scene_object
+---
+data:
+  filter_state: main_view|selectable|cast_shadow
+  material: /res/1.material
+  mesh: /pkg/ant.resources.binary/meshes/arrow.glb|meshes/Plane.001_P1.meshbin
+  name: Plane.001
+  scene:
+    srt:
+      s: {1.206127643585205, 1.206127643585205, 1.206127643585205}
+mount: 1
+policy:
+  ant.general|name
+  ant.render|render
+---
+data:
+  filter_state: main_view|selectable|cast_shadow
+  material: /res/2.material
+  mesh: /pkg/ant.resources.binary/meshes/arrow.glb|meshes/Plane.002_P1.meshbin
+  name: Plane.002
+  scene:
+    srt:
+      t: {0, 24.992876052856445, 0}
+mount: 1
+policy:
+  ant.general|name
+  ant.render|render
