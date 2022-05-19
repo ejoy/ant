@@ -57,10 +57,10 @@ end
 
 local time_param = math3d.ref(math3d.vector(0.0, 0.0, 0.0, 0.0))
 local starttime = itimer.current()
-
+local timepassed = 0.0
 local function update_timer_param()
 	local sa = imaterial.system_attribs()
-	local timepassed = itimer.current()-starttime
+	timepassed = timepassed + itimer.delta()
 	time_param.v = math3d.set_index(time_param, 1, timepassed*0.001, itimer.delta()*0.001)
 	sa:update("u_time", time_param)
 end
