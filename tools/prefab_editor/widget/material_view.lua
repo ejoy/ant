@@ -64,7 +64,7 @@ end
 
 local function build_fx_ui(mv)
     local function shader_file_ui(st)
-        return uiproperty.ResourcePath({label=st, extension = ".sc", readonly = true}, {
+        return uiproperty.EditText({label=st, readonly = true}, {
             getter = function()
                 return material_template(mv.eid).fx[st]
             end,
