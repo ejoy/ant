@@ -82,7 +82,7 @@ local function update_properties()
     local ppi = pp.postprocess_input
     tm_material.material.s_scene_color = assert(ppi.scene_color_handle)
     if enable_bloom then
-        tm_material.material.s_bloom_color = ppi.bloom_color_handle
+        tm_material.material.s_bloom_color = assert(ppi.bloom_color_handle)
     end
 end
 

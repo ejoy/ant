@@ -38,9 +38,7 @@ function bloom_sys:init()
             },
             data = {
                 name = name,
-                simplemesh = {
-                    vb = {num = 3,}
-                },
+                simplemesh = irender.full_quad(),
                 material = material,
                 filter_state = "",
                 scene = {srt={}},
