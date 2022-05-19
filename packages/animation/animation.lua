@@ -10,7 +10,8 @@ local ani_sys 		= ecs.system "animation_system"
 local timer 		= ecs.import.interface "ant.timer|itimer"
 local iefk          = ecs.import.interface "ant.efk|iefk"
 -- local iaudio    	= ecs.import.interface "ant.audio|audio_interface"
-
+local fs        = require "filesystem"
+local datalist  = require "datalist"
 local function get_current_anim_time(task)
 	return task.play_state.ratio * task.animation._handle:duration()
 end
@@ -125,9 +126,7 @@ function ani_sys:component_init()
 		}
 	end
 end
-local event_set_clips = world:sub{"SetClipsEvent"}
 local event_animation = world:sub{"AnimationEvent"}
-local eventPrefabReady = world:sub{"prefab_ready"}
 local bgfx = require "bgfx"
 local function set_skinning_transform(rc)
 	local sm = rc.skinning_matrices
@@ -139,48 +138,81 @@ local function build_transform(rc, skinning)
 	rc.set_transform = set_skinning_transform
 end
 
-function ani_sys:animation_ready()
-	for e in w:select "prefab:in animation_init:in" do
-		local entitys = e.prefab.tag["*"]
-		local anim_e = {}
-		local anim
-		for _, eid in ipairs(entitys) do
-			local e = world:entity(eid)
-			if e._animation then
-				anim = e
-			elseif e.skinning then
-				anim_e[#anim_e + 1] = eid
-			end
+local function load_events(filename, slot_eid)
+    local path = string.sub(filename, 1, -6) .. ".event"
+    local f = fs.open(fs.path(path))
+    if not f then
+        return {}
+    end
+    local data = f:read "a"
+    f:close()
+    local events = datalist.parse(data)
+    for _, evs in pairs(events) do
+        for _, ev in ipairs(evs.event_list) do
+            if ev.link_info then
+                local seid = slot_eid[ev.link_info.slot_name]
+                if seid then
+                    ev.link_info.slot_eid = seid
+                else
+                    ev.link_info.slot_name = ""
+                end
+            end
+        end
+    end
+    return events
+end
+
+local function init_prefab_anim(entity)
+	local entitys = entity.prefab.tag["*"]
+	local anim_eid = {}
+	local slot_eid = {}
+	local anim
+	for _, eid in ipairs(entitys) do
+		local e = world:entity(eid)
+		if e._animation then
+			anim = e
+		elseif e.skinning then
+			anim_eid[#anim_eid + 1] = eid
+		elseif e.slot then
+			slot_eid[e.name] = eid
 		end
-		if anim and #anim_e > 0 then
-			anim._animation.anim_e = anim_e
-			for _, eid in ipairs(anim_e) do
-				build_transform(world:entity(eid).render_object, anim.meshskin)
-			end
-			local anim_name = anim.animation_birth
-			anim._animation._current = {
-				animation = anim.animation[anim_name],
-				event_state = {
-					next_index = 1,
-					keyframe_events = anim._animation.keyframe_events and anim._animation.keyframe_events[anim_name] or {}
-				},
-				play_state = { ratio = 0.0, previous_ratio = 0.0, speed = 1.0, play = false, loop = false, manual_update = false }
+	end
+	if anim and #anim_eid > 0 then
+		for _, eid in ipairs(anim_eid) do
+			build_transform(world:entity(eid).render_object, anim.meshskin)
+		end
+		anim._animation.anim_eid = anim_eid
+		anim._animation.keyframe_events = {}
+		local events = anim._animation.keyframe_events
+		for key, value in pairs(anim.animation) do
+			events[key] = load_events(tostring(value), slot_eid)
+		end
+		local anim_name = anim.animation_birth
+		anim._animation._current = {
+			animation = anim.animation[anim_name],
+			event_state = { next_index = 1, keyframe_events = events[anim_name]},
+			play_state = {
+				ratio = 0.0,
+				previous_ratio = 0.0,
+				speed = 1.0,
+				play = false,
+				loop = false,
+				manual_update = false
 			}
-		end
+		}
+	end
+end
+
+function ani_sys:animation_ready()
+	for entity in w:select "prefab:in animation_init:in" do
+		init_prefab_anim(entity)
 	end
 	w:clear "animation_init"
 end
 
 function ani_sys:entity_ready()
-    for _, p, p0, p1 in event_set_clips:unpack() do
-		world:prefab_event(p, "set_clips", p0, p1)
-	end
-	for _, what, e, p0, p1, p2 in event_animation:unpack() do
-		if what == "play_group" then
-			iani.play_group(e, p0, p1, p2)
-		elseif what == "play_clip" then
-			iani.play_clip(e, p0, p1, p2)
-		elseif what == "step" then
+	for _, what, e, p0, p1 in event_animation:unpack() do
+		if what == "step" then
 			w:sync("_animation:in", e)
 			iani.step(e._animation._current, p0, p1)
 		elseif what == "set_time" then

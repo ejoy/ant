@@ -123,12 +123,7 @@ local function anim_group_set_time(eid, t)
 end
 
 local function anim_play(state, play)
-    state.key_event = to_runtime_event(anim_key_event)
     play(anim_eid, state)
-    -- for _, anim_eid in ipairs(current_anim.eid_list) do
-    --     iom.set_position(world:entity(hierarchy:get_node(hierarchy:get_node(anim_eid).parent).parent), {0.0,0.0,0.0})
-    --     play(anim_eid, state)
-    -- end
 end
 
 local function anim_group_set_loop(eid, ...)
@@ -908,47 +903,18 @@ function m.show()
     end
 end
 
-function m.load_events(filename)
-    local path = string.sub(filename, 1, -6) .. ".event"
-    local f = fs.open(fs.path(path))
-    if not f then
-        return
-    end
-    local data = f:read "a"
-    f:close()
-    local events = datalist.parse(data)
-    hierarchy:update_slot_list(world)
-    for _, evs in pairs(events) do
-        for _, ev in ipairs(evs.event_list) do
-            if ev.link_info then
-                local slot_eid = hierarchy.slot_list[ev.link_info.slot_name]
-                if slot_eid then
-                    ev.link_info.slot_eid = slot_eid
-                else
-                    ev.link_info.slot_name = ""
-                end
-            end
-        end
-    end
-    return events
-end
-
 function m.on_prefab_load(entities)
     local editanims = {dirty = true, name_list = {} }
     local skeleton
     for _, eid in ipairs(entities) do
         local e = world:entity(eid)
         local animations = e.animation
-        if not editanims.birth and e.animation_birth then
-            editanims.birth = e.animation_birth
-        end
-        if not skeleton and e.skeleton then
-            skeleton = e.skeleton
-        end
         if animations then
+            editanims.birth = e.animation_birth
+            skeleton = e.skeleton
             for key, anim in pairs(animations) do
                 if not editanims[key] then
-                    local events = m.load_events(tostring(anim))
+                    local events = e._animation.keyframe_events[key]
                     editanims[key] = {
                         name = key,
                         duration = anim._handle:duration(),
@@ -956,12 +922,12 @@ function m.on_prefab_load(entities)
                     }
                     editanims.name_list[#editanims.name_list + 1] = key
                 end
-                
             end
             anim_eid = eid
             break
         end
     end
+    hierarchy:update_slot_list(world)
     if #editanims.name_list > 0 then
         edit_anims = editanims
         table.sort(edit_anims.name_list)
