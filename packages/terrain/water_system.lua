@@ -156,16 +156,6 @@ function water_sys:entity_init()
     
 end
 
-local scene_tex = {
-    stage = 5,
-    texture = {handle=nil}
-}
-
-local scene_depth_tex = {
-    stage = 6,
-    texture = {handle=nil}
-}
-
 local function queue_rb_handle(qn, rbidx)
     local q = w:singleton(qn, "render_target:in")
     return fbmgr.get_rb(q.render_target.fb_idx, rbidx).handle
@@ -178,13 +168,13 @@ function water_sys:data_changed()
         local intensity = ilight.intensity(e)
         color[4] = intensity
 
-        scene_tex.texture.handle = queue_rb_handle("copy_scene_queue", 1)
-        scene_depth_tex.texture.handle = queue_rb_handle("main_queue", -1)  -- -1 for last rb index, here is depth buffer
+        local sh = queue_rb_handle("copy_scene_queue", 1)
+        local sdh = queue_rb_handle("main_queue", -1)  -- -1 for last rb index, here is depth buffer
         for we in w:select "water:in render_object:in" do
             imaterial.set_property(we, "u_directional_light_dir",   d)
-            imaterial.set_property(we, "u_direciontal_light_color", color)
-            imaterial.set_property(we, "s_scene",                   scene_tex)
-            imaterial.set_property(we, "s_scene_depth",             scene_depth_tex)
+            imaterial.set_property(we, "u_direciontal_light_color", math3d.vector(color))
+            imaterial.set_property(we, "s_scene",                   sh)
+            imaterial.set_property(we, "s_scene_depth",             sdh)
         end
         break
     end
