@@ -11,11 +11,9 @@ $input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT
 #include "common/utils.sh"
 #include "common/cluster_shading.sh"
 #include "common/constants.sh"
-#include "pbr/pbr.sh"
-
-#ifdef UV_MOTION
 #include "common/uvmotion.sh"
-#endif //UV_MOTION
+
+#include "pbr/pbr.sh"
 
 #ifdef ENABLE_SHADOW
 #include "common/shadow.sh"
@@ -126,12 +124,7 @@ material_info get_material_info(vec3 basecolor, vec2 uv)
 
 void main()
 {
-    vec2 uv =
-#ifdef UV_MOTION
-	uv_motion(v_texcoord0);
-#else //!UV_MOTION
-	v_texcoord0;
-#endif //UV_MOTION
+    vec2 uv = uv_motion(v_texcoord0);
 
     vec4 basecolor = get_basecolor(uv, 
 #ifdef WITH_COLOR_ATTRIB
@@ -144,19 +137,13 @@ void main()
     basecolor.a = u_alpha_mask_cutoff;
 #endif //ALPHAMODE_OPAQUE
 
-#ifdef ALPHAMODE_MASK
-    // Late discard to avoid samplig artifacts. See https://github.com/KhronosGroup/glTF-Sample-Viewer/issues/267
-    if(basecolor.a < u_alpha_mask_cutoff)
-        discard;
-    basecolor.a = 1.0;
-#endif //ALPHAMODE_MASK
-
+    vec4 emissivecolor = vec4_splat(0.0);
 #ifdef HAS_EMISSIVE_TEXTURE
-    basecolor.rgb += texture2D(s_emissive, uv).rgb * u_emissive_factor.rgb;
+    emissivecolor = texture2D(s_emissive, uv) * u_emissive_factor;
 #endif //HAS_EMISSIVE_TEXTURE
 
 #ifdef MATERIAL_UNLIT
-    gl_FragColor = basecolor;
+    gl_FragColor = basecolor + emissivecolor;
 #else //!MATERIAL_UNLIT
     vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
 
@@ -213,9 +200,9 @@ void main()
     }
 #else //!USING_LIGHTMAP
 
-    #ifdef ENABLE_SHADOW
+#ifdef ENABLE_SHADOW
 	color = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0), color);
-    #endif //ENABLE_SHADOW
+#endif //ENABLE_SHADOW
 
     // Calculate lighting contribution from image based lighting source (IBL)
 #ifdef ENABLE_IBL
@@ -230,8 +217,15 @@ void main()
     color  += lerp(color, color * ao, u_occlusion_strength);
 #endif //HAS_OCCLUSION_TEXTURE
 
+#ifdef ALPHAMODE_MASK
+    // Late discard to avoid samplig artifacts. See https://github.com/KhronosGroup/glTF-Sample-Viewer/issues/267
+    if(color.a < u_alpha_mask_cutoff)
+        discard;
+    color.a = 1.0;
+#endif //ALPHAMODE_MASK
+
 #endif //USING_LIGHTMAP
-    gl_FragColor = vec4(color, basecolor.a);
+    gl_FragColor = vec4(color, basecolor.a) + emissivecolor;
 #endif //MATERIAL_UNLIT
 
 
