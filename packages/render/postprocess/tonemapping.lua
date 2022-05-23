@@ -17,13 +17,8 @@ local enable_bloom = setting:get "graphic/postprocess/bloom/enable"
 
 local tm_viewid<const> = viewidmgr.get "tonemapping"
 local tm_materialfile<const> = "/pkg/ant.resources/materials/postprocess/tonemapping.material"
-local tm_auto_material, tm_manual_material
-local tm_material
 local tm_e
 function tm_sys:init()
-    tm_manual_material  = imaterial.load(tm_materialfile, {EXPOSURE_TYPE=1})
-    tm_auto_material    = imaterial.load(tm_materialfile, {EXPOSURE_TYPE=2})
-    tm_material = tm_manual_material
     tm_e = ecs.create_entity {
         policy = {
             "ant.general|name",
@@ -33,10 +28,11 @@ function tm_sys:init()
             name = "tonemapping_render_obj",
             simplemesh = irender.full_quad(),
             material = tm_materialfile,
+            material_setting = {
+                EXPOSURE_TYPE=1,
+            },
             scene = {srt = {},},
-            render_object   = {},
             filter_state = "",
-            visible = true,
         }
     }
 end
@@ -74,21 +70,21 @@ function tm_sys:data_changed()
     end
 end
 
-local function update_properties()
+local function update_properties(material)
     --TODO: we need something call frame graph, frame graph need two stage: compile and run, with virtual resource
     -- in compile stage, determine which postprocess stage is needed, and connect those virtual resources
     -- render target here, is one of the virtual resource
     local pp = w:singleton("postprocess", "postprocess_input:in")
     local ppi = pp.postprocess_input
-    tm_material.material.s_scene_color = assert(ppi.scene_color_handle)
+    material.s_scene_color = assert(ppi.scene_color_handle)
     if enable_bloom then
-        tm_material.material.s_bloom_color = assert(ppi.bloom_color_handle)
+        material.s_bloom_color = assert(ppi.bloom_color_handle)
     end
 end
 
 function tm_sys:tonemapping()
     local e = world:entity(tm_e)
     local ro = e.render_object
-    update_properties()
-    irender.draw(tm_viewid, ro, tm_material)
+    update_properties(ro.material)
+    irender.draw(tm_viewid, ro)
 end
