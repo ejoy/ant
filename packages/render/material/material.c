@@ -810,15 +810,35 @@ check_uniform_num(struct attrib_arena *arena, struct attrib *a, int n){
 }
 
 static inline void
-init_patch_id(struct attrib_arena* arena, uint16_t pid, uint16_t id, int n){
+init_instance_attrib(struct attrib_arena* arena, uint16_t pid, uint16_t id, int n){
 	uint16_t nid = id;
 	uint16_t npid = pid;
 	for (int i=0; i<n; ++i){
 		struct attrib* a = al_attrib(arena, nid);
 		struct attrib* pa = al_attrib(arena, npid);
-		
 		pa->patch = nid;
-		
+
+		switch (pa->type){
+			case ATTRIB_UNIFORM:
+				break;
+			case ATTRIB_SAMPLER:
+				pa->u.t.stage = a->u.t.stage;
+				break;
+			case ATTRIB_BUFFER:
+				pa->r.stage = a->r.stage;
+				pa->r.access = a->r.access;
+			// walk through
+			case ATTRIB_IMAGE:
+				pa->r.mip = a->r.mip;
+				break;
+			case ATTRIB_REF:
+				assert(false && "Invalid instance attrib to patch system attrib");
+				break;
+			default:
+				assert(false && "");
+				break;
+		}
+
 		nid = a->next;
 		npid = pa->next;
 	}
@@ -832,7 +852,7 @@ set_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_ar
 		const int n = al_attrib_num(arena, a);
 		assert(check_uniform_num(arena, a, n));
 		pid = create_attrib(L, arena_idx, n, mi->patch_attrib, a->type, a->u.handle);
-		init_patch_id(arena, pid, id, n);
+		init_instance_attrib(arena, pid, id, n);
 		mi->patch_attrib = pid;
 	}
 	update_attrib(L, arena, al_attrib(arena, pid), value_index);
