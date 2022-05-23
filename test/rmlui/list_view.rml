@@ -209,12 +209,13 @@
 
             local function list_item_renderer(index)
                 local item = document.createElement "div"
-                item.style.width = '100%'
-                item.style.height = '50px'
+                item.style.width = '400px'
+                item.style.height = '100px'
                 item.style.border = '2px blue'
                 item.style.flexDirection = 'row'
                 item.style.alignItems = 'center'
                 item.style.justifyContent = 'space-evenly'
+                item.style.backgroundColor = 'rgb(100,255,100)'
                 if index > #start.items then
                     return document.createElement "div"
                 end
@@ -246,7 +247,7 @@
     <body>
         <div class="panel" data-model="start">
             <page width='85.33vmin' height='66.00vmin' footerheight='4.00vmin' row='3' col='3'/>
-            <list direction='1' width='667px' height='720px' item_width='667px' item_height='50px'/>
+            <list direction='1' width='667px' height='720px'/>
         </div>
     </body>
 </rml>

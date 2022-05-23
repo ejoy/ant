@@ -2,48 +2,16 @@ local list_meta = {}
 list_meta.__index = list_meta
 
 function list_meta.create(document, e, item_count, item_renderer)
-    local width
-    local height
-    local unit = {}
-    local width_str = e.getAttribute("width")
-    local height_str = e.getAttribute("height")
-    for r in width_str:gmatch("%d+") do
-        unit[#unit + 1] = width_str:sub(#r + 1, #width_str)
-        width = tonumber(r)
-    end
-    for r in height_str:gmatch("%d+") do
-        unit[#unit + 1] = height_str:sub(#r + 1, #height_str)
-        height = tonumber(r)
-    end
-
-    local item_width
-    local item_height
-    local item_unit = {}
-    local item_width_str = e.getAttribute("item_width")
-    local item_height_str = e.getAttribute("item_height")
-    for r in item_width_str:gmatch("%d+") do
-        item_unit[#item_unit + 1] = item_width_str:sub(#r + 1, #item_width_str)
-        item_width = tonumber(r)
-    end
-    for r in item_height_str:gmatch("%d+") do
-        item_unit[#item_unit + 1] = item_height_str:sub(#r + 1, #item_height_str)
-        item_height = tonumber(r)
-    end
-    
     local list = {
         direction   = tonumber(e.getAttribute("direction")),
-        width       = width,
-        height      = height,
+        width       = e.getAttribute("width"),
+        height      = e.getAttribute("height"),
         item_count  = item_count,
-        item_width  = item_width,
-        item_height = item_height,
         pos         = 0,
         drag        = {mouse_pos = 0, anchor = 0, delta = 0},
         item_renderer = item_renderer,
         items       = {},
         document    = document,
-        unit        = unit,
-        item_unit   = item_unit,
     }
     setmetatable(list, list_meta)
     e.style.overflow = 'hidden'
@@ -64,10 +32,17 @@ function list_meta:on_dirty(item_count)
         self.panel.removeChild(e)
     end
     self.item_count = item_count or self.item_count
-    self.view.style.width = self.width .. self.unit[1]
-    self.view.style.height = self.height .. self.unit[2]
-    self.panel.style.width = self.width .. self.unit[1]
-    self.panel.style.height = self.item_count * self.item_height .. self.item_unit[2]
+    self.view.style.width = self.width
+    self.view.style.height = self.height
+    if self.direction == 0 then
+        self.panel.style.height = self.height
+        self.panel.style.flexDirection = 'row'
+    else
+        self.panel.style.width = self.width
+        self.panel.style.flexDirection = 'column'
+    end
+    self.panel.style.alignItems = 'center'
+    self.panel.style.justifyContent = 'flex-start'
     self.items = {}
     for index = 1, self.item_count do
         local e = self.item_renderer(index)
@@ -87,19 +62,13 @@ function list_meta:set_item_count(count)
     self:on_dirty()
 end
 
-function list_meta:set_item_size(width, height)
-    self.item_width = width
-    self.item_height = height
-    self:on_dirty()
-end
-
 function list_meta:on_mousedown(event)
     self.drag.mouse_pos = ((self.direction == 0) and event.x or event.y)
     self.drag.anchor = self.pos
 end
 
 function list_meta:on_mouseup(event)
-    local min = (self.direction == 0) and (self.width - self.item_count * self.item_width) or (self.height - self.item_count * self.item_height)
+    local min = (self.direction == 0) and (self.view.clientWidth - self.item_count * self.panel.childNodes[1].clientWidth) or (self.view.clientHeight - self.item_count * self.panel.childNodes[1].clientHeight)
     local adjust = false
     if self.pos > 0 then
         self.pos = 0
@@ -110,9 +79,9 @@ function list_meta:on_mouseup(event)
     end
     if adjust then
         if self.direction == 0 then
-            self.panel.style.left = tostring(self.pos) .. self.unit[1]
+            self.panel.style.left = tostring(self.pos) .. 'px'
         else
-            self.panel.style.top = tostring(self.pos) .. self.unit[2]
+            self.panel.style.top = tostring(self.pos) .. 'px'
         end
     end
 end
@@ -125,9 +94,9 @@ function list_meta:on_drag(event)
         local oldClassName = e.className
         e.className = e.className .. " notransition"
         if self.direction == 0 then
-            e.style.left = tostring(math.floor(self.pos)) .. self.unit[1]
+            e.style.left = tostring(math.floor(self.pos)) .. 'px'
         else
-            e.style.top = tostring(math.floor(self.pos)) .. self.unit[2]
+            e.style.top = tostring(math.floor(self.pos)) .. 'px'
         end
         e.className = oldClassName
     end
