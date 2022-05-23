@@ -151,7 +151,8 @@ function s:end_filter()
 		for e in w:select "filter_result:in render_object:in" do
 			local ro = e.render_object
 			local rom = ro.material
-			if ro.fx.setting.surfacetype == "opacity" then
+			local fn = e.filter_result
+			if fn["main_queue_opacity"] and ro.fx.setting.surfacetype == "opacity" then
 				rom:get_material():set_state(check_set_depth_state_as_equal(rom:get_state()))
 			end
 		end
