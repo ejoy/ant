@@ -17,9 +17,9 @@ vec4 wave(vec4 parameter, vec2 position, float time, inout vec3 tangent, inout v
 	float	wave_length		 = parameter.w;
 
 	float k  = PI2 / wave_length;
-	float c  = sqrt(9.8 / k);
+	float cc = sqrt(9.8 / k);
 	vec2  d  = normalize(parameter.xy);
-	float f  = k * (dot(d, position) - c * time);
+	float f  = k * (dot(d, position) - cc * time);
 	float a  = wave_steepness / k;
 	
 	float s = sin(f), c = cos(f);

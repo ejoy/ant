@@ -133,8 +133,8 @@ function water_sys:init_world()
             "ant.general|name",
         },
         data = {
-            simplemesh  = imesh.init_mesh(ientity.fullquad_mesh()),
-            material    = "/pkg/ant.resources/materials/texquad.material",
+            simplemesh  = irender.full_quad(),
+            material    = "/pkg/ant.resources/materials/fullquad.material",
             scene       = {srt={}},
             filter_state= "",
             name        = "copy_scene_drawer",
@@ -156,20 +156,23 @@ function water_sys:entity_init()
     
 end
 
-local function queue_rb_handle(qn, rbidx)
+local function queue_rb_handle(qn, idx)
     local q = w:singleton(qn, "render_target:in")
-    return fbmgr.get_rb(q.render_target.fb_idx, rbidx).handle
+    local fb = fbmgr.get(q.render_target.fb_idx)
+
+    idx = idx or #fb
+    return fbmgr.get_rb(fb[idx].rbidx).handle
 end
 
 function water_sys:data_changed()
-    for e in w:select "directional_light light:in" do
+    for e in w:select "directional_light light:in scene:in" do
         local d = iom.get_direction(e)
         local color = ilight.color(e)
         local intensity = ilight.intensity(e)
         color[4] = intensity
 
         local sh = queue_rb_handle("copy_scene_queue", 1)
-        local sdh = queue_rb_handle("main_queue", -1)  -- -1 for last rb index, here is depth buffer
+        local sdh = queue_rb_handle "main_queue" -- -1 for last rb index, here is depth buffer
         for we in w:select "water:in render_object:in" do
             imaterial.set_property(we, "u_directional_light_dir",   d)
             imaterial.set_property(we, "u_direciontal_light_color", math3d.vector(color))
