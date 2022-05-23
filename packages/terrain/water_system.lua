@@ -134,7 +134,7 @@ function water_sys:init_world()
         },
         data = {
             simplemesh  = irender.full_quad(),
-            material    = "/pkg/ant.resources/materials/fullquad.material",
+            material    = "/pkg/ant.resources/materials/fullscreen.material",
             scene       = {srt={}},
             filter_state= "",
             name        = "copy_scene_drawer",

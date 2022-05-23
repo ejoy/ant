@@ -1,17 +1,11 @@
 fx:
-  fs: /pkg/ant.resources/shaders/simple/quad/fs_mainview.sc
-  vs: /pkg/ant.resources/shaders/simple/quad/vs_texquad.sc
+  fs: /pkg/ant.resources/shaders/fullscreen/fs_fullscreen.sc
   setting:
+    surfacetype: translucent
     lighting: off
-    surfacetype: opacity
-    shadow_cast: off
-    shadow_receive: off
-    subsurface: off
-    skinning: UNKNOWN
-    depth_type: inv_z
-    POS_IN_RECT: 1
+  vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
 properties:
-  s_scene_color:
+  s_tex:
     stage: 0
     texture: /pkg/ant.resources/textures/black.texture
 state: /pkg/ant.resources/materials/states/quad.state
