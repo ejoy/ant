@@ -4,7 +4,7 @@ compress:
   ios: ASTC6x6
   windows: BC1
 normalmap: false
-path: /pkg/ant.resources.binary/textures/water/Caustic.png
+path: /pkg/ant.resources.binary/textures/water/PerlinNoise.png
 sampler:
   MAG: LINEAR
   MIN: LINEAR

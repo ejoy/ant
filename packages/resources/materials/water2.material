@@ -1,0 +1,27 @@
+fx:
+  vs: /pkg/ant.resources/shaders/water/vs_water_simple.sc
+  fs: /pkg/ant.resources/shaders/water/fs_water_simple.sc
+  setting:
+    surfacetype: translucent
+properties:
+  u_noise_scale_bais:     {0.0, 0.0, 0.0, 0.0}
+  u_distort_scale_bais:   {0.0, 0.0, 0.0, 0.0}
+  u_DepthGradientShallow: {0.0, 0.0, 0.0, 0.0}
+  u_DepthGradientDeep:    {0.0, 0.0, 0.0, 0.0}
+  u_FoamColor:            {0.0, 0.0, 0.0, 0.0}
+  u_distance_param:       {0.0, 0.0, 0.0, 0.0}
+  u_surface_param:        {0.0, 0.0, 0.0, 0.0}
+  s_SurfaceNoise:
+    stage: 0
+    texture: /pkg/ant.resources/textures/water/noise.texture
+  s_SurfaceDistortion:
+    stage: 1
+    texture: /pkg/ant.resources/textures/water/distortion.texture
+  s_scene_depth:
+    stage: 2
+    texture: /pkg/ant.resources/textures/black.texture
+
+state:
+  WRITE_MASK: RGBA
+  DEPTH_TEST: ALWAYS
+  BLEND: ALPHA
