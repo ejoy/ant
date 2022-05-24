@@ -11,8 +11,6 @@ local samplerutil=renderpkg.sampler
 local ilight    = ecs.import.interface "ant.render|ilight"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local imesh     = ecs.import.interface "ant.asset|imesh"
-local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 
 local bgfx      = require "bgfx"
@@ -21,7 +19,7 @@ local math3d    = require "math3d"
 local layout    = declmgr.get "p3"
 
 local water_sys = ecs.system "water_system"
-local layoutfmt = "fff"
+local layoutfmt<const> = "fffff"    --p3|t2
 
 --[[
     1-----2
@@ -30,23 +28,10 @@ local layoutfmt = "fff"
 ]]
 
 local function create_indices_buffer(gw, gh)
-    local fmt<const> = "IIIIII"
-    local s = #fmt * 4
-    local m = bgfx.memory_buffer(gw*gh*s)
-    local vn_w = gw+1
-    for ih=1, gh do
-        for iw=1, gw do
-            local idx = (ih-1)*gw+iw-1
-            local nl = ih*vn_w+(iw-1)
-            local v0, v1, v2, v3 = iw-1, nl, nl+1, iw
-            m[idx*s+1] = fmt:pack(v0, v1, v2, v2, v3, v0)
-        end
-    end
-
     return {
         start = 0,
         num = gw * gh * 6,
-        handle = bgfx.create_index_buffer(m, "d")
+        handle = irender.quad_ib(),
     }
 end
 
@@ -63,7 +48,8 @@ local function gen_water_grid_mesh(gw, gh, unit, height)
         for iw=0, gw do
             local vi = ih*vw+iw
             local midx= vi*stride+1
-            m[midx]   = layoutfmt:pack(iw, h, ih)
+            local u, v = ih/gw, ih/gh
+            m[midx]   = layoutfmt:pack(iw, h, ih, u, v)
         end
     end
     return {

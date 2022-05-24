@@ -9,8 +9,8 @@ data:
     grid_height: 1
     unit: 1
   simplemesh: true
-  material: /pkg/ant.resources/materials/water.material
-  filter_state: postprocess_obj
+  material: /pkg/ant.resources/materials/water2.material
+  filter_state: main_view
   scene:
     srt:
       s: 10
