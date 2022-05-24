@@ -1,7 +1,7 @@
 local list_meta = {}
 list_meta.__index = list_meta
 
-function list_meta.create(document, e, item_count, item_renderer)
+function list_meta.create(document, e, item_count, item_renderer, detail_renderer)
     local list = {
         direction   = tonumber(e.getAttribute("direction")),
         width       = e.getAttribute("width"),
@@ -10,7 +10,9 @@ function list_meta.create(document, e, item_count, item_renderer)
         pos         = 0,
         drag        = {mouse_pos = 0, anchor = 0, delta = 0},
         item_renderer = item_renderer,
-        items       = {},
+        detail_renderer = detail_renderer,
+        item_map       = {},
+        index_map      = {},
         document    = document,
     }
     setmetatable(list, list_meta)
@@ -28,8 +30,8 @@ function list_meta.create(document, e, item_count, item_renderer)
 end
 
 function list_meta:on_dirty(item_count)
-    for _, e in ipairs(self.items) do
-        self.panel.removeChild(e)
+    for _, it in ipairs(self.index_map) do
+        self.panel.removeChild(it.item)
     end
     self.item_count = item_count or self.item_count
     self.view.style.width = self.width
@@ -43,11 +45,14 @@ function list_meta:on_dirty(item_count)
     end
     self.panel.style.alignItems = 'center'
     self.panel.style.justifyContent = 'flex-start'
-    self.items = {}
+    self.item_map = {}
+    self.index_map = {}
     for index = 1, self.item_count do
-        local e = self.item_renderer(index)
-        self.panel.appendChild(e)
-        self.items[#self.items + 1] = e
+        local item = self.item_renderer(index)
+        self.panel.appendChild(item)
+        local item_info = {index = index, detail = false, item = item}
+        self.item_map[item] = item_info
+        self.index_map[#self.index_map + 1] = item_info
     end
 end
 
@@ -61,7 +66,33 @@ function list_meta:set_item_count(count)
     self.item_count = count
     self:on_dirty()
 end
-
+function list_meta:show_detail(it, show)
+    local iteminfo
+    if type(it) == "number" then
+        iteminfo = self.index_map[it]
+    else
+        iteminfo = self.item_map[it]
+    end
+     
+    if not iteminfo then
+        return
+    end
+    console.log(" show_detail ", show)
+    if show then
+        if not iteminfo.detail then
+            self.detail = self.detail_renderer(iteminfo.index)
+            iteminfo.item.parentNode.appendChild(self.detail, iteminfo.index)
+            iteminfo.detail = true
+        end
+    else
+        if iteminfo.detail and self.detail then
+            local parent = self.detail.parentNode
+            parent.removeChild(self.detail)
+            self.detail = nil
+            iteminfo.detail = false
+        end
+    end
+end
 function list_meta:on_mousedown(event)
     self.drag.mouse_pos = ((self.direction == 0) and event.x or event.y)
     self.drag.anchor = self.pos
