@@ -38,6 +38,7 @@ $input v_posCS v_distortUV v_noiseUV
 //     u_FoamMinDistance("Foam Minimum Distance", Float) = 0.04		
 // }
 
+#include "common/common.sh"
 #include "common/camera.sh"
 
 SAMPLER2D(s_SurfaceNoise,       0);
@@ -91,7 +92,7 @@ void main()
     
     // Retrieve the view-space normal of the surface behind the
     // pixel we are currently rendering.
-    vec3 existingNormal = texture2DProj(_CameraNormalsTexture, v_posCS);
+    //vec3 existingNormal = texture2DProj(_CameraNormalsTexture, v_posCS);
     
     // Modulate the amount of foam we display based on the difference
     // between the normals of our water surface and the object behind it.

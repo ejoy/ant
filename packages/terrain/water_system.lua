@@ -16,7 +16,7 @@ local irender   = ecs.import.interface "ant.render|irender"
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 
-local layout    = declmgr.get "p3"
+local layout    = declmgr.get "p3|t2"
 
 local water_sys = ecs.system "water_system"
 local layoutfmt<const> = "fffff"    --p3|t2
@@ -151,22 +151,22 @@ local function queue_rb_handle(qn, idx)
 end
 
 function water_sys:data_changed()
-    for e in w:select "directional_light light:in scene:in" do
-        local d = iom.get_direction(e)
-        local color = ilight.color(e)
-        local intensity = ilight.intensity(e)
-        color[4] = intensity
+    -- for e in w:select "directional_light light:in scene:in" do
+    --     local d = iom.get_direction(e)
+    --     local color = ilight.color(e)
+    --     local intensity = ilight.intensity(e)
+    --     color[4] = intensity
 
-        local sh = queue_rb_handle("copy_scene_queue", 1)
-        local sdh = queue_rb_handle "main_queue" -- -1 for last rb index, here is depth buffer
-        for we in w:select "water:in render_object:in" do
-            imaterial.set_property(we, "u_directional_light_dir",   d)
-            imaterial.set_property(we, "u_direciontal_light_color", math3d.vector(color))
-            imaterial.set_property(we, "s_scene",                   sh)
-            imaterial.set_property(we, "s_scene_depth",             sdh)
-        end
-        break
+    --local sh = queue_rb_handle("copy_scene_queue", 1)
+    local sdh = queue_rb_handle "main_queue" -- -1 for last rb index, here is depth buffer
+    for we in w:select "water:in render_object:in" do
+        -- imaterial.set_property(we, "u_directional_light_dir",   d)
+        -- imaterial.set_property(we, "u_direciontal_light_color", math3d.vector(color))
+        -- imaterial.set_property(we, "s_scene",                   sh)
+        imaterial.set_property(we, "s_scene_depth",             sdh)
     end
+    --     break
+    -- end
 end
 
 function water_sys:render_submit()

@@ -4,13 +4,13 @@ fx:
   setting:
     surfacetype: translucent
 properties:
-  u_noise_scale_bais:     {0.0, 0.0, 0.0, 0.0}
-  u_distort_scale_bais:   {0.0, 0.0, 0.0, 0.0}
-  u_DepthGradientShallow: {0.0, 0.0, 0.0, 0.0}
-  u_DepthGradientDeep:    {0.0, 0.0, 0.0, 0.0}
-  u_FoamColor:            {0.0, 0.0, 0.0, 0.0}
-  u_distance_param:       {0.0, 0.0, 0.0, 0.0}
-  u_surface_param:        {0.0, 0.0, 0.0, 0.0}
+  u_noise_scale_bais:     {1.0, 4.0, 0.0, 0.0}
+  u_distort_scale_bais:   {1.0, 1.0, 0.0, 0.0}
+  u_DepthGradientShallow: {0.325, 0.807, 0.971, 0.725}
+  u_DepthGradientDeep:    {0.086, 0.407, 1, 0.749}
+  u_FoamColor:            {1.0, 1.0, 1.0, 1.0}
+  u_distance_param:       {1.0, 0.04, 0.4, 0.0}  #u_DepthMaxDistance, u_FoamMinDistance, u_FoamMaxDistance
+  u_surface_param:        {0.03, 0.03, 0.0, 0.27}  #u_SurfaceNoiseScroll, u_SurfaceNoiseCutoff, u_SurfaceDistortionAmount
   s_SurfaceNoise:
     stage: 0
     texture: /pkg/ant.resources/textures/water/noise.texture

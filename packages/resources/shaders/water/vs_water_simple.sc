@@ -17,6 +17,4 @@ void main()
 
     v_distortUV = uv_scale_bais(a_texcoord0, u_distort_scale_bais);
     v_noiseUV   = uv_scale_bais(a_texcoord0, u_noise_scale_bais);
-
-    return o;
 }
