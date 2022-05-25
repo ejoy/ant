@@ -11,8 +11,103 @@
 
 namespace Rml {
 
-static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline);
-static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline);
+
+static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline) {
+	bool last_token = (token_begin == string_end);
+	if (collapse_white_space && !last_token) {
+		last_token = true;
+		const char* character = token_begin;
+		while (character != string_end) {
+			if (!StringUtilities::IsWhitespace(*character) || (break_at_endline && *character == '\n')) {
+				last_token = false;
+				break;
+			}
+			character++;
+		}
+	}
+	return last_token;
+}
+
+static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline) {
+	assert(token_begin != string_end);
+
+	token.reserve(string_end - token_begin + token.size());
+
+	// Check what the first character of the token is; all we need to know is if it is white-space or not.
+	bool parsing_white_space = StringUtilities::IsWhitespace(*token_begin);
+
+	// Loop through the string from the token's beginning until we find an end to the token. This can occur in various
+	// places, depending on the white-space processing;
+	//  - at the end of a section of non-white-space characters,
+	//  - at the end of a section of white-space characters, if we're not collapsing white-space,
+	//  - at an endline token, if we're breaking on endlines.
+	while (token_begin != string_end) {
+		bool force_non_whitespace = false;
+		char character = *token_begin;
+		const char* escape_begin = token_begin;
+
+		if (token_begin + 5 <= string_end
+			&& token_begin[0] == '&'
+			&& token_begin[1] == 'n'
+			&& token_begin[2] == 'b'
+			&& token_begin[3] == 's'
+			&& token_begin[4] == 'p'
+			&& token_begin[5] == ';'
+		) {
+			character = ' ';
+			force_non_whitespace = true;
+			token_begin += 5;
+		}
+
+		// Check for an endline token; if we're breaking on endlines and we find one, then return true to indicate a
+		// forced break.
+		if (break_at_endline && character == '\n') {
+			token += '\n';
+			token_begin++;
+			return true;
+		}
+
+		// If we've transitioned from white-space characters to non-white-space characters, or vice-versa, then check
+		// if should terminate the token; if we're not collapsing white-space, then yes (as sections of white-space are
+		// non-breaking), otherwise only if we've transitioned from characters to white-space.
+		bool white_space = !force_non_whitespace && StringUtilities::IsWhitespace(character);
+		if (white_space != parsing_white_space) {
+			if (!collapse_white_space) {
+				// Restore pointer to the beginning of the escaped token, if we processed an escape code.
+				token_begin = escape_begin;
+				return false;
+			}
+
+			// We're collapsing white-space; we only tokenise words, not white-space, so we're only done tokenising
+			// once we've begun parsing non-white-space and then found white-space.
+			if (!parsing_white_space) {
+				// However, if we are the last non-whitespace character in the string, and there are trailing
+				// whitespace characters after this token, then we need to append a single space to the end of this
+				// token.
+				if (token_begin != string_end && LastToken(token_begin, string_end, collapse_white_space, break_at_endline))
+					token += ' ';
+				return false;
+			}
+
+			// We've transitioned from white-space to non-white-space, so we append a single white-space character.
+			if (!first_token)
+				token += ' ';
+			parsing_white_space = false;
+		}
+
+		// If the current character is white-space, we'll append a space character to the token if we're not collapsing
+		// sections of white-space.
+		if (white_space) {
+			if (!collapse_white_space)
+				token += ' ';
+		}
+		else {
+			token += character;
+		}
+		++token_begin;
+	}
+	return false;
+}
 
 Text::Text(Document* owner, const std::string& text_)
 	: Node(Node::Type::Text)
@@ -314,103 +409,6 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 			color
 		);
 	}
-}
-
-static bool BuildToken(std::string& token, const char*& token_begin, const char* string_end, bool first_token, bool collapse_white_space, bool break_at_endline) {
-	assert(token_begin != string_end);
-
-	token.reserve(string_end - token_begin + token.size());
-
-	// Check what the first character of the token is; all we need to know is if it is white-space or not.
-	bool parsing_white_space = StringUtilities::IsWhitespace(*token_begin);
-
-	// Loop through the string from the token's beginning until we find an end to the token. This can occur in various
-	// places, depending on the white-space processing;
-	//  - at the end of a section of non-white-space characters,
-	//  - at the end of a section of white-space characters, if we're not collapsing white-space,
-	//  - at an endline token, if we're breaking on endlines.
-	while (token_begin != string_end) {
-		bool force_non_whitespace = false;
-		char character = *token_begin;
-		const char* escape_begin = token_begin;
-
-		if (token_begin + 5 <= string_end
-			&& token_begin[0] == '&'
-			&& token_begin[1] == 'n'
-			&& token_begin[2] == 'b'
-			&& token_begin[3] == 's'
-			&& token_begin[4] == 'p'
-			&& token_begin[5] == ';'
-		) {
-			character = ' ';
-			force_non_whitespace = true;
-			token_begin += 5;
-		}
-
-		// Check for an endline token; if we're breaking on endlines and we find one, then return true to indicate a
-		// forced break.
-		if (break_at_endline && character == '\n') {
-			token += '\n';
-			token_begin++;
-			return true;
-		}
-
-		// If we've transitioned from white-space characters to non-white-space characters, or vice-versa, then check
-		// if should terminate the token; if we're not collapsing white-space, then yes (as sections of white-space are
-		// non-breaking), otherwise only if we've transitioned from characters to white-space.
-		bool white_space = !force_non_whitespace && StringUtilities::IsWhitespace(character);
-		if (white_space != parsing_white_space) {
-			if (!collapse_white_space) {
-				// Restore pointer to the beginning of the escaped token, if we processed an escape code.
-				token_begin = escape_begin;
-				return false;
-			}
-
-			// We're collapsing white-space; we only tokenise words, not white-space, so we're only done tokenising
-			// once we've begun parsing non-white-space and then found white-space.
-			if (!parsing_white_space) {
-				// However, if we are the last non-whitespace character in the string, and there are trailing
-				// whitespace characters after this token, then we need to append a single space to the end of this
-				// token.
-				if (token_begin != string_end && LastToken(token_begin, string_end, collapse_white_space, break_at_endline))
-					token += ' ';
-				return false;
-			}
-
-			// We've transitioned from white-space to non-white-space, so we append a single white-space character.
-			if (!first_token)
-				token += ' ';
-			parsing_white_space = false;
-		}
-
-		// If the current character is white-space, we'll append a space character to the token if we're not collapsing
-		// sections of white-space.
-		if (white_space) {
-			if (!collapse_white_space)
-				token += ' ';
-		}
-		else {
-			token += character;
-		}
-		++token_begin;
-	}
-	return false;
-}
-
-static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline) {
-	bool last_token = (token_begin == string_end);
-	if (collapse_white_space && !last_token) {
-		last_token = true;
-		const char* character = token_begin;
-		while (character != string_end) {
-			if (!StringUtilities::IsWhitespace(*character) || (break_at_endline && *character == '\n')) {
-				last_token = false;
-				break;
-			}
-			character++;
-		}
-	}
-	return last_token;
 }
 
 Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {

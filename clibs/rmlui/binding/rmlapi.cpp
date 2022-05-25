@@ -380,6 +380,13 @@ lElementRemoveChild(lua_State* L) {
 }
 
 static int
+lElementRemoveAllChildren(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->RemoveAllChildren();
+	return 0;
+}
+
+static int
 lElementGetChildren(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	if (lua_type(L, 2) != LUA_TNUMBER) {
@@ -616,6 +623,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementSetOuterHTML", lElementSetOuterHTML },
 		{ "ElementAppendChild", lElementAppendChild },
 		{ "ElementRemoveChild", lElementRemoveChild },
+		{ "ElementRemoveAllChildren", lElementRemoveAllChildren},
 		{ "ElementGetElementById", lElementGetElementById },
 		{ "ElementDelete", lElementDelete },
 		{ "ElementProject", lElementProject },

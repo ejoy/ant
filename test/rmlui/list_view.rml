@@ -108,6 +108,7 @@
                         {id=122, icon0="correct.png", icon1="correct.png"},
                     },
                     unit = 'px',
+                    show_detail = false,
                 },
                 list_item_width = 667,
                 list_item_height = 50,
@@ -140,7 +141,8 @@
                         {id=123, icon0="correct.png", icon1="correct.png"},
                         {id=124, icon0="correct.png", icon1="correct.png"},
                 },
-                page = {}
+                page = {},
+                list = {}
             }
             --[[
             window.setInterval(function()
@@ -209,12 +211,13 @@
 
             local function list_item_renderer(index)
                 local item = document.createElement "div"
-                item.style.width = '100%'
-                item.style.height = '50px'
+                item.style.width = '400px'
+                item.style.height = '100px'
                 item.style.border = '2px blue'
                 item.style.flexDirection = 'row'
                 item.style.alignItems = 'center'
                 item.style.justifyContent = 'space-evenly'
+                item.style.backgroundColor = 'rgb(100,150,100)'
                 if index > #start.items then
                     return document.createElement "div"
                 end
@@ -230,23 +233,41 @@
                 item.appendChild(c0)
                 item.addEventListener('click', function()
                     if start.list.selected then
+                        console.log("---- show false")
                         start.list.selected.style.border = '2px blue'
+                        start.list:show_detail(start.list.selected, false)
                     end
-                    item.style.border = '2px red'
-                    start.list.selected = item
+                    if start.list.selected ~= item then
+                        item.style.border = '2px red'
+                        start.list:show_detail(item, true)
+                        start.list.selected = item
+                    end
                 end)
                 return item
             end
+            local function list_item_detail_renderer(index)
+                local detail = document.createElement "div"
+                detail.style.width = '100%'
+                detail.style.height = '100px'
+                detail.style.border = '2px blue'
+                return detail
+            end
             local listclass = require "list"
             window.customElements.define("list", function(e)
-                start.list = listclass.create(document, e, #start.items, list_item_renderer)
+                start.list = listclass.create(document, e, #start.items, list_item_renderer, list_item_detail_renderer)
             end)
+            --[[
+            window.setInterval(function()
+                start.list:on_dirty(#start.items)
+            end, 2000)
+                start.list.selected = nil
+            --]]
         </script>
     </head>
     <body>
         <div class="panel" data-model="start">
             <page width='85.33vmin' height='66.00vmin' footerheight='4.00vmin' row='3' col='3'/>
-            <list direction='1' width='667px' height='720px' item_width='667px' item_height='50px'/>
+            <list direction='1' width='667px' height='720px'/>
         </div>
     </body>
 </rml>
