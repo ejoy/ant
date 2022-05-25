@@ -258,7 +258,7 @@
             end)
             --[[
             window.setInterval(function()
-                start.list:on_dirty(#start.items)
+                start.list:on_dirty_all(#start.items)
             end, 2000)
                 start.list.selected = nil
             --]]

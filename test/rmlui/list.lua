@@ -36,11 +36,37 @@ function list_meta.create(document, e, item_count, item_renderer, detail_rendere
     panel.addEventListener('mouseup', function(event) list:on_mouseup(event) end)
     list.view = e
     list.panel = panel
-    list:on_dirty(item_count)
+    list:on_dirty_all(item_count)
     return list
 end
 
-function list_meta:on_dirty(item_count)
+function list_meta:set_selected(item)
+    if self.selected == item then
+        return false
+    end
+    self.selected = item
+    return true
+end
+
+function list_meta:get_selected()
+    return self.selected
+end
+
+function list_meta:on_dirty(index)
+    local iteminfo = self.index_map[index]
+    self:show_detail(iteminfo.item, false)
+    if self.selected == iteminfo.item then
+        self.selected = nil
+    end
+    self.item_map[iteminfo.item] = nil
+    self.panel.removeChild(iteminfo.item)
+    local new_item = self.item_renderer(index)
+    self.item_map[new_item] = iteminfo
+    iteminfo.item = new_item
+    self.panel.appendChild(new_item, index - 1)
+end
+
+function list_meta:on_dirty_all(item_count)
     self.panel.removeAllChild()
     self.item_count = item_count or self.item_count
     self.item_map = {}
