@@ -62,10 +62,10 @@ struct attrib_uniform {
 
 struct attrib_resource {
 	ATTRIB_HEARDER
-	uint32_t handle;
 	uint8_t stage;
 	uint8_t access;
 	uint8_t mip;
+	uint32_t handle;
 };
 
 struct attrib_ref {
