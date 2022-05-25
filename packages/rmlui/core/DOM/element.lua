@@ -82,6 +82,13 @@ function property_init:removeChild()
     end
 end
 
+function property_init:removeAllChild()
+    local handle = self._handle
+    return function ()
+        rmlui.ElementRemoveAllChildren(handle)
+    end
+end
+
 function property_init:appendChild()
     local handle = self._handle
     return function (child, index)

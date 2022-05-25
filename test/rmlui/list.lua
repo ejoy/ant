@@ -17,9 +17,20 @@ function list_meta.create(document, e, item_count, item_renderer, detail_rendere
     }
     setmetatable(list, list_meta)
     e.style.overflow = 'hidden'
+    e.style.width = list.width
+    e.style.height = list.height
     local panel = document.createElement "div"
     e.appendChild(panel)
     panel.className = "liststyle"
+    if list.direction == 0 then
+        panel.style.height = list.height
+        panel.style.flexDirection = 'row'
+    else
+        panel.style.width = list.width
+        panel.style.flexDirection = 'column'
+    end
+    panel.style.alignItems = 'center'
+    panel.style.justifyContent = 'flex-start'
     panel.addEventListener('mousedown', function(event) list:on_mousedown(event) end)
     panel.addEventListener('mousemove', function(event) list:on_drag(event) end)
     panel.addEventListener('mouseup', function(event) list:on_mouseup(event) end)
@@ -30,21 +41,8 @@ function list_meta.create(document, e, item_count, item_renderer, detail_rendere
 end
 
 function list_meta:on_dirty(item_count)
-    for _, it in ipairs(self.index_map) do
-        self.panel.removeChild(it.item)
-    end
+    self.panel.removeAllChild()
     self.item_count = item_count or self.item_count
-    self.view.style.width = self.width
-    self.view.style.height = self.height
-    if self.direction == 0 then
-        self.panel.style.height = self.height
-        self.panel.style.flexDirection = 'row'
-    else
-        self.panel.style.width = self.width
-        self.panel.style.flexDirection = 'column'
-    end
-    self.panel.style.alignItems = 'center'
-    self.panel.style.justifyContent = 'flex-start'
     self.item_map = {}
     self.index_map = {}
     for index = 1, self.item_count do
@@ -77,7 +75,6 @@ function list_meta:show_detail(it, show)
     if not iteminfo then
         return
     end
-    console.log(" show_detail ", show)
     if show then
         if not iteminfo.detail then
             self.detail = self.detail_renderer(iteminfo.index)
@@ -99,7 +96,11 @@ function list_meta:on_mousedown(event)
 end
 
 function list_meta:on_mouseup(event)
-    local min = (self.direction == 0) and (self.view.clientWidth - self.item_count * self.panel.childNodes[1].clientWidth) or (self.view.clientHeight - self.item_count * self.panel.childNodes[1].clientHeight)
+    local item = self.panel.childNodes[1]
+    local min = (self.direction == 0) and (self.view.clientWidth - self.item_count * item.clientWidth) or (self.view.clientHeight - self.item_count * item.clientHeight)
+    if min > 0 then
+        min = 0
+    end
     local adjust = false
     if self.pos > 0 then
         self.pos = 0

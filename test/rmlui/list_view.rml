@@ -141,7 +141,8 @@
                         {id=123, icon0="correct.png", icon1="correct.png"},
                         {id=124, icon0="correct.png", icon1="correct.png"},
                 },
-                page = {}
+                page = {},
+                list = {}
             }
             --[[
             window.setInterval(function()
@@ -255,6 +256,12 @@
             window.customElements.define("list", function(e)
                 start.list = listclass.create(document, e, #start.items, list_item_renderer, list_item_detail_renderer)
             end)
+            --[[
+            window.setInterval(function()
+                start.list:on_dirty(#start.items)
+            end, 2000)
+                start.list.selected = nil
+            --]]
         </script>
     </head>
     <body>
