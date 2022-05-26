@@ -78,6 +78,7 @@ policy "render_pipeline"
     .require_policy "ant.render|cluster_render"
     .require_policy "ant.render|postprocess"
 
+component "postprocess_obj"
 component "filter_result".type "lua"
 component "filter_created"
 component "camera_ref".type "lua"

@@ -2,11 +2,11 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local viewidmgr = require "viewid_mgr"
+local viewidmgr     = require "viewid_mgr"
+local fbmgr         = require "framebuffer_mgr"
 
-local ppobj_viewid = viewidmgr.get "postprocess_obj"
-local ies = ecs.import.interface "ant.scene|ifilter_state"
-local irq = ecs.import.interface "ant.render|irenderqueue"
+local ppobj_viewid<const>  = viewidmgr.get "postprocess_obj"
+local irq           = ecs.import.interface "ant.render|irenderqueue"
 
 local pp_obj_sys = ecs.system "postprocess_obj_system"
 
@@ -30,6 +30,8 @@ function pp_obj_sys:init_world()
         local mq_rt = mq.render_target
         local rt = {}
         copy_rendertarget(mq_rt, rt)
+        local main_fb = fbmgr.get(mq_rt.fb_idx)
+        rt.fb_idx = fbmgr.create(main_fb[1])
         rt.viewid = ppobj_viewid
         rt.clear_state.clear = ""
         ecs.create_entity{
@@ -43,7 +45,7 @@ function pp_obj_sys:init_world()
                 camera_ref      = mq.camera_ref,
                 render_target   = rt,
                 primitive_filter = {
-                    filter_type = "postprocess_obj",
+                    filter_type = "",
                     "opacity",
                     "translucent",
                 },
@@ -56,14 +58,6 @@ function pp_obj_sys:init_world()
             },
         }
     end
-
-    for e in w:select "render_object:in" do
-        if ies.has_state(e, "postprocess_obj") then
-            e.render_object_update = true
-            w:sync("render_object_update?out", e)
-        end
-    end
-
 end
 
 local mb_camera_changed = world:sub{"main_queue", "camera_changed"}

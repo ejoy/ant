@@ -145,9 +145,7 @@ end
 local function queue_rb_handle(qn, idx)
     local q = w:singleton(qn, "render_target:in")
     local fb = fbmgr.get(q.render_target.fb_idx)
-
-    idx = idx or #fb
-    return fbmgr.get_rb(fb[idx].rbidx).handle
+    return fb[idx or #fb].handle
 end
 
 function water_sys:data_changed()
@@ -158,23 +156,34 @@ function water_sys:data_changed()
     --     color[4] = intensity
 
     --local sh = queue_rb_handle("copy_scene_queue", 1)
+    -- local sdh = queue_rb_handle "main_queue" -- -1 for last rb index, here is depth buffer
+    -- for we in w:select "water:in render_object:in" do
+    --     -- imaterial.set_property(we, "u_directional_light_dir",   d)
+    --     -- imaterial.set_property(we, "u_direciontal_light_color", math3d.vector(color))
+    --     -- imaterial.set_property(we, "s_scene",                   sh)
+    --     imaterial.set_property(we, "s_scene_depth",             sdh)
+    -- end
+    --     break
+    -- end
+end
+
+local ppo_viewid<const> = viewidmgr.get "postprocess_obj"
+
+function water_sys:render_submit()
+    -- local csq = w:singleton("copy_scene_queue", "render_target:in")
+    -- local csq_rt = csq.render_target
+
+    -- local cs_obj = w:singleton("copy_scene_drawer", "render_object:in")
+    -- local ro = cs_obj.render_object
+    -- ro.material.s_tex = queue_rb_handle("main_queue", 1)
+    -- irender.draw(csq_rt.viewid, ro)
+
     local sdh = queue_rb_handle "main_queue" -- -1 for last rb index, here is depth buffer
     for we in w:select "water:in render_object:in" do
         -- imaterial.set_property(we, "u_directional_light_dir",   d)
         -- imaterial.set_property(we, "u_direciontal_light_color", math3d.vector(color))
         -- imaterial.set_property(we, "s_scene",                   sh)
         imaterial.set_property(we, "s_scene_depth",             sdh)
+        irender.draw(ppo_viewid, we.render_object)
     end
-    --     break
-    -- end
-end
-
-function water_sys:render_submit()
-    local csq = w:singleton("copy_scene_queue", "render_target:in")
-    local csq_rt = csq.render_target
-
-    local cs_obj = w:singleton("copy_scene_drawer", "render_object:in")
-    local ro = cs_obj.render_object
-    ro.material.s_tex = queue_rb_handle("main_queue", 1)
-    irender.draw(csq_rt.viewid, ro)
 end
