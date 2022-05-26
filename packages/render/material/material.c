@@ -22,12 +22,15 @@
 
 #define MAX_ATTRIB_NUM 256
 
-#define ATTRIB_UNIFORM	0
-#define ATTRIB_SAMPLER	1
-#define ATTRIB_IMAGE	2
-#define ATTRIB_BUFFER	3
-#define ATTRIB_REF		4
-#define ATTRIB_NONE		5
+enum ATTIRB_TYPE {
+	ATTRIB_UNIFORM= 0,
+	ATTRIB_SAMPLER,
+	ATTRIB_IMAGE,
+	ATTRIB_BUFFER,
+	ATTRIB_REF,
+	ATTRIB_COLOR_PAL,
+	ATTRIB_NONE,
+};
 
 #define CAPI_INIT(L, idx) struct attrib_arena * cobject_ = get_cobject(L, idx);
 #define CAPI_ARENA cobject_
@@ -57,6 +60,10 @@ struct attrib_uniform {
 			uint32_t handle;
 			uint8_t stage;
 		} t;
+		struct {
+			uint8_t pal;
+			uint8_t	color;
+		}cp;
 	};
 };
 
@@ -81,10 +88,20 @@ typedef union
 	struct attrib_ref		ref;
 }	attrib_type;
 
-#define COBJECT_UV_ATTRIB_BUFFER		1
-#define COBJECT_UV_SYSTEM_ATTRIBS		2
+#define COBJECT_UV_ATTRIB_BUFFER	1
+#define COBJECT_UV_SYSTEM_ATTRIBS	2
 #define COBJECT_UV_INVALID_LIST		3
 #define COBJECT_UV_NUM				3
+
+#define MAX_COLOR_PALETTE_COUNT		8
+#define MAX_COLOR_IN_PALETTE		256
+struct color{
+	float rgba[4];
+};
+
+struct color_palette{
+	struct color colors[MAX_COLOR_IN_PALETTE];
+};
 
 // uv1: attrib buffer
 // uv2: system attribs
@@ -96,7 +113,9 @@ struct attrib_arena {
 	uint16_t cap;
 	uint16_t n;
 	uint16_t freelist;
+	uint16_t cp_idx;
 	attrib_type *a;
+	struct color_palette color_palettes[MAX_COLOR_PALETTE_COUNT];
 };
 
 #define MATERIAL_UV_INSTANCE_MT	1
@@ -128,6 +147,8 @@ arena_new(lua_State *L, bgfx_interface_vtbl_t *bgfx, struct math3d_api *mapi, st
 	a->n = 0;
 	a->freelist = INVALID_ATTRIB;
 	a->a = NULL;
+	a->cp_idx = 0;
+	memset(&a->color_palettes, sizeof(a->color_palettes), 0);
 	//invalid material attrib list
 	lua_newtable(L);
 	lua_setiuservalue(L, -2, COBJECT_UV_NUM);	//set invalid table as uv 3
@@ -174,7 +195,7 @@ al_attrib_next(struct attrib_arena *arena, uint16_t id){
 
 static inline int
 is_uniform_attrib(uint16_t type){
-	return type == ATTRIB_UNIFORM || type == ATTRIB_SAMPLER;
+	return type == ATTRIB_UNIFORM || type == ATTRIB_SAMPLER || type == ATTRIB_COLOR_PAL;
 }
 
 static inline int
@@ -195,10 +216,10 @@ al_attrib_next_uniform_id(struct attrib_arena* arena, uint16_t id, uint16_t *cou
 	
 	attrib_type* a = al_attrib(arena, id);
 	uint16_t c = 1;
-	if (al_attrib_is_uniform(arena, a)){
+	if (a->h.type == ATTRIB_UNIFORM){
 		while (a->h.next != INVALID_ATTRIB){
 			attrib_type* na = al_attrib(arena, a->h.next);
-			if (!al_attrib_is_uniform(arena, na) ||
+			if (na->h.type != ATTRIB_UNIFORM ||
 				!al_attrib_uniform_handle_equal(arena, a, na))
 				break;
 			++c;
@@ -515,6 +536,7 @@ fetch_attrib_type(lua_State *L, int index){
 		case 't': return ATTRIB_SAMPLER;
 		case 'i': return ATTRIB_IMAGE;
 		case 'b': return ATTRIB_BUFFER;
+		case 'p': return ATTRIB_COLOR_PAL;
 		case 'u':
 		// could not be ATTRIB_REF
 		default: return ATTRIB_UNIFORM;
@@ -651,13 +673,43 @@ fetch_buffer(lua_State *L, attrib_type* a, int index){
 	}
 }
 
+static inline void
+fetch_color_pal(lua_State *L, struct attrib_arena *arena, attrib_type *a, int index){
+	luaL_checktype(L, index, LUA_TTABLE);
+	if (LUA_TTABLE != lua_getfield(L, index, "value")){
+		luaL_error(L, "Invalid color palette value, shoule be table");
+	} {
+		if (LUA_TNUMBER != lua_getfield(L, index, "pal")){
+			luaL_error(L, "Invalid color palette id value, should be color palette id");
+		}
+		const int pal = (int)lua_tointeger(L, -1);
+		if (pal < 0 || pal >= MAX_COLOR_PALETTE_COUNT){
+			luaL_error(L, "Invalid color palette id");
+		}
+		a->u.cp.pal = (uint8_t)pal;
+		lua_pop(L, 1);
+		
+		if (LUA_TNUMBER != lua_getfield(L, index, "color")){
+			luaL_error(L, "Invalid color index value, shoule be color index");
+		}
+		const int coloridx = (int)lua_tointeger(L, -1);
+		if (coloridx < 0 || coloridx >= MAX_COLOR_IN_PALETTE){
+			luaL_error(L, "Invalid color index");
+		}
+		a->u.cp.color = (uint8_t)coloridx;
+		lua_pop(L, 1);
+	}
+	lua_pop(L, 1);
+}
+
 static void
 fetch_attrib(lua_State *L, struct attrib_arena *arena, attrib_type *a, int index) {
 	switch (a->h.type){
-		case ATTRIB_UNIFORM:	fetch_math_value(L, arena, a, index);			break;
-		case ATTRIB_SAMPLER:	fetch_sampler(L, a, index);					break;
-		case ATTRIB_IMAGE:		fetch_image(L, a, index);						break;
-		case ATTRIB_BUFFER:		fetch_buffer(L, a, index);						break;
+		case ATTRIB_UNIFORM:	fetch_math_value(L, arena, a, index);				break;
+		case ATTRIB_SAMPLER:	fetch_sampler(L, a, index);							break;
+		case ATTRIB_IMAGE:		fetch_image(L, a, index);							break;
+		case ATTRIB_BUFFER:		fetch_buffer(L, a, index);							break;
+		case ATTRIB_COLOR_PAL:	fetch_color_pal(L, arena, a, index);				break;
 		default: luaL_error(L, "Attribute type:%d, could not update", a->h.type);	break;
 	}
 }
@@ -720,7 +772,7 @@ update_attrib(lua_State *L, struct attrib_arena *arena, attrib_type *a, int data
 static inline uint16_t
 count_data_num(lua_State *L, int data_index, uint16_t type){
 	uint16_t n = 1;
-	if (is_uniform_attrib(type)){
+	if (type == ATTRIB_UNIFORM){
 		if (LUA_TTABLE == lua_type(L, data_index)){
 			const int nn = (int)lua_rawlen(L, data_index);
 			if (nn > 0){
@@ -831,6 +883,7 @@ init_instance_attrib(struct attrib_arena* arena, uint16_t pid, uint16_t id, int 
 
 		switch (pa->h.type){
 			case ATTRIB_UNIFORM:
+			case ATTRIB_COLOR_PAL:
 				break;
 			case ATTRIB_SAMPLER:
 				pa->u.t.stage = a->u.t.stage;
@@ -1020,6 +1073,20 @@ apply_attrib(lua_State *L, struct attrib_arena * cobject_, attrib_type *a, int t
 			default:
 				luaL_error(L, "Invalid buffer type %d", btype);
 				break;
+			}
+		}	break;
+		case ATTRIB_COLOR_PAL:{
+			struct attrib_arena * arena = cobject_;
+			#ifdef _DEBUG
+			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
+			#endif //_DEBUG
+			const uint16_t n = al_attrib_num(arena, a);
+			if (n == 1) {
+				struct color_palette* cp = arena->color_palettes + a->u.cp.pal;
+				struct color* c = cp->colors+a->u.cp.color;
+				BGFX(encoder_set_uniform)(cobject_->eh->encoder, a->u.handle, c->rgba, 1);
+			} else {
+				luaL_error(L, "Not implement multi color pal");
 			}
 		}	break;
 		case ATTRIB_UNIFORM: {
@@ -1300,6 +1367,29 @@ lcobject_new(lua_State *L) {
 }
 
 static int
+lcolor_palette_new(lua_State *L){
+	struct attrib_arena* arena = (struct attrib_arena*)lua_touserdata(L, 1);
+	struct attrib_arena* cobject_ = arena;
+	if (!lua_isnoneornil(L, 2)){
+		luaL_checktype(L, 2, LUA_TTABLE);
+		const int n = (int)lua_rawlen(L, 2);
+		if (n > MAX_COLOR_IN_PALETTE){
+			return luaL_error(L, "Too many color for palette, max number is:%d", MAX_COLOR_IN_PALETTE);
+		}
+		struct color_palette* cp = arena->color_palettes + arena->cp_idx;
+		for (int i=0; i<n; ++i){
+			lua_geti(L, 2, i+1);
+			const float *v = math3d_from_lua(L, arena->math, -1, LINEAR_TYPE_VEC4);
+			struct color* c = cp->colors + i;
+			memcpy(c->rgba, v, sizeof(c->rgba));
+			lua_pop(L, 1);
+		}
+	}
+	lua_pushinteger(L, arena->cp_idx++);
+	return 1;
+}
+
+static int
 lsa_update(lua_State *L){
 	luaL_checktype(L, 1, LUA_TTABLE);
 	const char* name = luaL_checkstring(L, 2);
@@ -1348,6 +1438,39 @@ lsystem_attribs_new(lua_State *L){
 	return 1;
 }
 
+static inline struct color*
+get_color(lua_State *L, struct attrib_arena *arena, int palidx, int coloridx){
+	const uint8_t palid = (uint8_t)luaL_checkinteger(L, 2);
+	if (palid > MAX_COLOR_PALETTE_COUNT){
+		luaL_error(L, "Invalid color palette index");
+	}
+	const uint8_t colorid = (uint8_t)luaL_checkinteger(L, 3);
+	if (colorid > MAX_COLOR_IN_PALETTE){
+		luaL_error(L, "Invalid color index");
+	}
+
+	struct color_palette* cp = arena->color_palettes+palid;
+	return cp->colors+colorid;
+}
+
+static int
+lcolor_palette_get(lua_State *L){
+	struct attrib_arena* arena = (struct attrib_arena*)lua_touserdata(L, 1);
+	const struct color* c = get_color(L, arena, 2, 3);
+	math3d_push(L, arena->math, c->rgba, LINEAR_TYPE_VEC4);
+	return 1;
+}
+
+static int
+lcolor_palette_set(lua_State *L){
+	struct attrib_arena* arena = (struct attrib_arena*)lua_touserdata(L, 1);
+	struct color* c = get_color(L, arena, 2, 3);
+
+	const float* v = math3d_from_lua(L, arena->math, 4, LINEAR_TYPE_VEC4);
+	memcpy(c->rgba, v, sizeof(c->rgba));
+	return 0;
+}
+
 LUAMOD_API int
 luaopen_material(lua_State *L) {
 	luaL_checkversion(L);
@@ -1355,6 +1478,9 @@ luaopen_material(lua_State *L) {
 		{ "cobject", 		lcobject_new },
 		{ "material",		lmaterial_new},
 		{ "system_attribs", lsystem_attribs_new},
+		{ "color_palette",	lcolor_palette_new},
+		{ "color_palette_get",lcolor_palette_get},
+		{ "color_palette_set",lcolor_palette_set},
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

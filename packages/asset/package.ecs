@@ -5,6 +5,8 @@ interface "imaterial"
     .method "load_res"
     .method "set_property"
     .method "system_attribs"
+    .method "get_color_palette"
+    .method "set_color_palette"
     
 
 interface "imesh"

@@ -10,6 +10,8 @@ local url		= import_package "ant.url"
 local CMATOBJ   = require "cmatobj"
 local rmat      = require "render.material"
 
+local COLOR_PALETTES = require "color_palette"
+
 local function load(filename)
     return type(filename) == "string" and serialize.parse(filename, cr.read_file(filename)) or filename
 end
@@ -25,7 +27,20 @@ local function to_v(t, h)
 		return t
 	end
 
-	local v = {type="u", handle=h}
+	local v = {handle=h}
+	if t.index then
+		v.type = 'p'
+		local n = t.palette
+		local cp_idx = COLOR_PALETTES[n]
+		if cp_idx == nil then
+			error(("Invalid color palette:%s"):format(n))
+		end
+
+		v.value = {pal=cp_idx, color=t.index}
+		return v
+	end
+
+	v.type = 'u'
 	if type(t[1]) == "number" then
 		v.value = to_math_v(t)
 	else

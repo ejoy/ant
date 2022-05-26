@@ -16,6 +16,9 @@ local mc, mu = mathpkg.constant, mathpkg.util
 local camerapkg = import_package"ant.camera"
 local split_frustum = camerapkg.split_frustum
 
+local renderpkg = import_package "ant.render"
+local declmgr = renderpkg.declmgr
+
 local icamera = ecs.import.interface "ant.camera|icamera"
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 
@@ -81,6 +84,36 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
     }
 end
 
+local function color_palette_test()
+    local bgfx = require "bgfx"
+    return ecs.create_entity {
+        policy = {
+            "ant.render|simplerender",
+            "ant.general|name",
+        },
+        data = {
+            simplemesh = {
+                vb = {
+                    start = 0, num = 3,
+                    {
+                        handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {
+                            0.0, 0.0, 0.0, 
+                            0.0, 0.0, 1.0,
+                            1.0, 0.0, 0.0,
+                        }), declmgr.get "p3".handle)
+                    }
+                }
+            },
+            material = "/pkg/ant.resources/materials/color_palette_test.material",
+            filter_state = "main_view",
+            scene = {srt={}},
+            name = "color_pal_test",
+        }
+    }
+end
+
+local cp_eid
+
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
@@ -91,6 +124,8 @@ function init_loader_sys:init()
         iom.set_position(world:entity(e.root), {0, 5, 0})
     end
     world:create_object(p)
+
+    cp_eid = color_palette_test()
 
     create_texture_plane_entity(
         {1, 1.0, 1.0, 1.0}, 
@@ -220,8 +255,10 @@ local kb_mb = world:sub{"keyboard"}
 function init_loader_sys:entity_init()
     for _, key, press in kb_mb:unpack() do
         if key == "SPACE" and press == 0 then
-            local icw = ecs.import.interface "ant.render|icurve_world"
-            icw.enable(not icw.param().enable)
+            -- local icw = ecs.import.interface "ant.render|icurve_world"
+            -- icw.enable(not icw.param().enable)
+
+            imaterial.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
         end
     end
 end

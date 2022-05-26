@@ -6,6 +6,9 @@ local url = import_package "ant.url"
 
 local assetmgr		= require "asset"
 local sa			= require "system_attribs"
+local CMATOBJ		= require "cmatobj"
+local COLOR_PALETTES= require "color_palette"
+local rmat			= require "render.material"
 
 local imaterial = ecs.interface "imaterial"
 
@@ -31,6 +34,20 @@ end
 
 function imaterial.system_attribs()
 	return sa
+end
+
+local function get_palid(palname)
+	return assert(COLOR_PALETTES[palname], ("Invalid color palette name:%s"):format(palname))
+end
+
+function imaterial.set_color_palette(palname, coloridx, value)
+	local palid = get_palid(palname)
+	rmat.color_palette_set(CMATOBJ, palid, coloridx, value)
+end
+
+function imaterial.get_color_palette(palname, coloridx)
+	local palid = get_palid(palname)
+	return rmat.color_palette_get(CMATOBJ, palid, coloridx)
 end
 
 local ms = ecs.system "material_system"

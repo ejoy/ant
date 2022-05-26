@@ -1,0 +1,10 @@
+fx:
+  fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
+  vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
+  setting:
+    lighting: off
+properties:
+  u_color:
+    palette: "default"
+    index:  0
+state: /pkg/ant.resources/materials/states/default.state
