@@ -6,15 +6,11 @@ local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
 local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
-local samplerutil=renderpkg.sampler
 
-local ilight    = ecs.import.interface "ant.render|ilight"
-local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender   = ecs.import.interface "ant.render|irender"
 
 local bgfx      = require "bgfx"
-local math3d    = require "math3d"
 
 local layout    = declmgr.get "p3|t2"
 
@@ -64,71 +60,7 @@ local function gen_water_grid_mesh(gw, gh, unit, height)
     }
 end
 
-local copy_scene_viewid = viewidmgr.get "copy_scene"
-
-local function create_fb(mq_fbidx)
-    local clrrb = fbmgr.get_rb(mq_fbidx, 1)
-    return fbmgr.create{
-        rbidx=fbmgr.create_rb{
-            w = clrrb.w, h = clrrb.h,
-            layers = clrrb.layers, 
-            format = clrrb.format,
-            mipmap = true,
-            flags = samplerutil.sampler_flag {
-                RT="RT_ON",
-                MIN="LINEAR",
-                MAG="LINEAR",
-                U="CLAMP",
-                V="CLAMP",
-            },
-        }
-    }
-end
-
-
-function water_sys:init_world()
-    local mq = w:singleton("main_queue", "render_target:in")
-    local mqrt = mq.render_target
-    local vr = mqrt.view_rect
-    w:register{name="copy_scene_queue"}
-    ecs.create_entity{
-        policy = {
-            "ant.render|postprocess_queue",
-            "ant.render|watch_screen_buffer",
-            "ant.general|name",
-        },
-        data = {
-            name = "copy_scene_queue",
-            render_target = {
-                viewid = copy_scene_viewid,
-                view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h, ratio=vr.ratio},
-                view_mode = "",
-                clear_state = {clear = ""},
-                fb_idx = create_fb(mqrt.fb_idx),
-            },
-            queue_name = "copy_scene",
-            watch_screen_buffer = true,
-            copy_scene_queue = true,
-        }
-    }
-
-    w:register {name="copy_scene_drawer"}
-    ecs.create_entity{
-        policy = {
-            "ant.render|simplerender",
-            "ant.general|name",
-        },
-        data = {
-            simplemesh  = irender.full_quad(),
-            material    = "/pkg/ant.resources/materials/fullscreen.material",
-            scene       = {srt={}},
-            filter_state= "",
-            name        = "copy_scene_drawer",
-            copy_scene_drawer = true
-        }
-    }
-end
-
+local ppo_viewid<const> = viewidmgr.get "postprocess_obj"
 function water_sys:component_init()
     for e in w:select "INIT water:in simplemesh:out" do
         local water = e.water
@@ -138,52 +70,16 @@ function water_sys:component_init()
     end
 end
 
-function water_sys:entity_init()
-    
-end
-
 local function queue_rb_handle(qn, idx)
     local q = w:singleton(qn, "render_target:in")
     local fb = fbmgr.get(q.render_target.fb_idx)
     return fb[idx or #fb].handle
 end
 
-function water_sys:data_changed()
-    -- for e in w:select "directional_light light:in scene:in" do
-    --     local d = iom.get_direction(e)
-    --     local color = ilight.color(e)
-    --     local intensity = ilight.intensity(e)
-    --     color[4] = intensity
-
-    --local sh = queue_rb_handle("copy_scene_queue", 1)
-    -- local sdh = queue_rb_handle "main_queue" -- -1 for last rb index, here is depth buffer
-    -- for we in w:select "water:in render_object:in" do
-    --     -- imaterial.set_property(we, "u_directional_light_dir",   d)
-    --     -- imaterial.set_property(we, "u_direciontal_light_color", math3d.vector(color))
-    --     -- imaterial.set_property(we, "s_scene",                   sh)
-    --     imaterial.set_property(we, "s_scene_depth",             sdh)
-    -- end
-    --     break
-    -- end
-end
-
-local ppo_viewid<const> = viewidmgr.get "postprocess_obj"
-
 function water_sys:render_submit()
-    -- local csq = w:singleton("copy_scene_queue", "render_target:in")
-    -- local csq_rt = csq.render_target
-
-    -- local cs_obj = w:singleton("copy_scene_drawer", "render_object:in")
-    -- local ro = cs_obj.render_object
-    -- ro.material.s_tex = queue_rb_handle("main_queue", 1)
-    -- irender.draw(csq_rt.viewid, ro)
-
-    local sdh = queue_rb_handle "main_queue" -- -1 for last rb index, here is depth buffer
+    local sdh = queue_rb_handle "depth_resolver_queue"
     for we in w:select "water:in render_object:in" do
-        -- imaterial.set_property(we, "u_directional_light_dir",   d)
-        -- imaterial.set_property(we, "u_direciontal_light_color", math3d.vector(color))
-        -- imaterial.set_property(we, "s_scene",                   sh)
-        imaterial.set_property(we, "s_scene_depth",             sdh)
+        imaterial.set_property(we, "s_scene_depth", sdh)
         irender.draw(ppo_viewid, we.render_object)
     end
 end

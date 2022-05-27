@@ -1,0 +1,2 @@
+fx:
+  cs: /pkg/ant.resources/shaders/resolve/cs_msaa_depth_resolve.sc

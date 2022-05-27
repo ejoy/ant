@@ -164,6 +164,14 @@ local rb_flag = samplerutil.sampler_flag {
 	V="CLAMP",
 }
 
+local depth_flag = samplerutil.sampler_flag {
+	RT="RT_MSAA4",
+	MIN="POINT",
+	MAG="POINT",
+	U="CLAMP",
+	V="CLAMP",
+}
+
 function irender.create_pre_depth_queue(vr, camera_ref)
 	local depth_viewid = viewidmgr.get "depth"
 	local fbidx = fbmgr.create{
@@ -171,7 +179,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 			format = "D32F",
 			w = vr.w, h=vr.h,
 			layers = 1,
-			flags = rb_flag,
+			flags = depth_flag,
 		}
 	}
 
@@ -221,7 +229,7 @@ local function create_main_fb(fbsize)
 		end
 		return {rbidx=fbmgr.create_rb(
 			default_comp.render_buffer(
-				fbsize.w, fbsize.h, "D24S8", rb_flag)
+				fbsize.w, fbsize.h, "D32F", depth_flag)
 		)}
 	end
 	return fbmgr.create({
