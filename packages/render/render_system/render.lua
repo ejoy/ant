@@ -165,7 +165,7 @@ local rb_flag = sampler {
 }
 
 local depth_flag = sampler {
-	RT="RT_MSAA4|RT_MSAA_SAMPLE",
+	RT="RT_MSAA4",
 	MIN="POINT",
 	MAG="POINT",
 	U="CLAMP",
@@ -176,7 +176,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 	local depth_viewid = viewidmgr.get "depth"
 	local fbidx = fbmgr.create{
 		rbidx=fbmgr.create_rb{
-			format = "D24S8",
+			format = "D32F",
 			w = vr.w, h=vr.h,
 			layers = 1,
 			flags = depth_flag,
