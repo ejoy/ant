@@ -146,7 +146,7 @@ local function create_fb(rbs, viewid)
 
     return create_fb1(handles, viewid)
 end
-local sampleflag = sampler.sampler_flag{
+local sampleflag = sampler{
     RT="RT_MSAA4",
     MIN="LINEAR",
     MAG="LINEAR",

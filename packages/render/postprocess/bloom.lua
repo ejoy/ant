@@ -91,7 +91,7 @@ local function create_queue(viewid, vr, fbidx, queuename)
     }
 end
 
-local bloom_rb_flags = sampler.sampler_flag {
+local bloom_rb_flags = sampler {
     RT="RT_ON",
     MIN="LINEAR",
     MAG="LINEAR",

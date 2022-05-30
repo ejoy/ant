@@ -333,7 +333,7 @@ local function update_lightmap(eid)
 
     lm:save "lresult.tga"
 
-    local flags = sampler.sampler_flag {
+    local flags = sampler {
         MIN="LINEAR",
         MAG="LINEAR",
     }

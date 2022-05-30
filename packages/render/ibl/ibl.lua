@@ -20,7 +20,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local ibl_sys = ecs.system "ibl_system"
 
-local flags<const> = sampler.sampler_flag {
+local flags<const> = sampler {
     MIN="LINEAR",
     MAG="LINEAR",
     U="CLAMP",
@@ -28,7 +28,7 @@ local flags<const> = sampler.sampler_flag {
     BLIT="BLIT_COMPUTEWRITE",
 }
 
-local cubemap_flags<const> = sampler.sampler_flag {
+local cubemap_flags<const> = sampler {
     MIN="LINEAR",
     MAG="LINEAR",
     MIP="LINEAR",

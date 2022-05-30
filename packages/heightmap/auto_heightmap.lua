@@ -27,7 +27,7 @@ local rbsize<const>         = 128
 local hrbsize               = rbsize/2
 
 local renderinfo = {
-    flags = sampler.sampler_flag{
+    flags = sampler{
         RT="RT_ON",
         MIN="LINEAR",
         MAG="LINEAR",
@@ -35,12 +35,12 @@ local renderinfo = {
         V="CLAMP",
     },
     
-    blitflags = sampler.sampler_flag{
+    blitflags = sampler{
         MIN="LINEAR",
         MAG="LINEAR",
         U="CLAMP",
         V="CLAMP",
-        BLIT="BLIT_READWRITE"
+        BLIT="BLIT_AS_DST|BLIT_READBACK_ON"
     },
     
     init = function (ri)

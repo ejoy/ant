@@ -1,5 +1,3 @@
-local s = {}; s.__index = s
-
 local sample_types = {
 	U="u", V="v", W="w", 
 	MIN="-", MAG="+", MIP="*",
@@ -32,48 +30,41 @@ local sample_value = {
 	COMPARE_ALWAYS = '+',
 
 	-- RT
-	RT_ON='t', 
-	RT_READ="", RT_WRITE="w",
+	RT_ON	='t',
+	RT_MSAA_SAMPLE='s',
+	RT_READ	="", RT_WRITE="w",
 	RT_MSAA2="2", RT_MSAA4="4", RT_MSAA8="8", RT_MSAAX="x",
 
 	-- BLIT
-	BLIT_AS_DST = 'w', 
-	BLIT_READBACK_ON = 'r',
-	BLIT_READWRITE = 'wbr',
-	BLIT_COMPUTEREAD = '',
-	BLIT_COMPUTEWRITE = 'c',	
+	BLIT_AS_DST			= 'w',
+	BLIT_READBACK_ON	= 'r',
+	BLIT_COMPUTEREAD	= '',
+	BLIT_COMPUTEWRITE	= 'c',
 
 	--SAMPLE
 	SAMPLE_STENCIL='s', SAMPLE_DEPTH='d',
 }
 
-function s.sampler_flag(sampler)
-	if sampler == nil then
-		return nil
+return function (sampler)
+	local flag = {}
+	local function add_cfg(k, v)
+		flag[#flag+1] = k
+		flag[#flag+1] = v
 	end
-	local flag = ""
-
 	for k, v in pairs(sampler) do
+		local t = assert(sample_types[k], ("Invalid sample type:%s"):format(k))
 		if k == "BOARD_COLOR" then
-			flag = flag .. sample_types[k] .. v
+			add_cfg(t, v)
 		else
-			local value = sample_value[v]
-			if value == nil then
-				error("not support data, sample value : %s", v)
-			end
-	
-			if #value ~= 0 then
-				local type = sample_types[k]
-				if type == nil then
-					error("not support data, sample type : %s", k)
+			for it in v:gmatch "[^|]+" do
+				local value = sample_value[it]
+				if value == nil then
+					error("not support data, sample value : %s", it)
 				end
-				
-				flag = flag .. type .. value
+				add_cfg(t, value)
 			end
 		end
 	end
 
-	return flag
+	return table.concat(flag, "")
 end
-
-return s

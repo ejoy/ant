@@ -17,7 +17,7 @@ local world = ecs.world
 --     local fbw, fbh = ipp.main_rb_size(main_fbidx)
 --     local hfbw, hfbh = fbw/2, fbh/2
     
---     local flags = sampler.sampler_flag {
+--     local flags = sampler {
 --         RT="RT_ON",
 --         MIN="LINEAR",
 --         MAG="LINEAR",

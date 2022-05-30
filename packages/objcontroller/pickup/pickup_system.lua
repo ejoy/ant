@@ -9,7 +9,7 @@ local bgfx 		= require "bgfx"
 
 local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
-local samplerutil= renderpkg.sampler
+local sampler= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
 local irender   = ecs.import.interface "ant.render|irender"
@@ -131,8 +131,8 @@ local function blit_buffer_init(blit_buffer)
 		h = blit_buffer.h,
 		layers = 1,
 		format = "RGBA8",
-		flags = samplerutil.sampler_flag {
-			BLIT="BLIT_READWRITE",
+		flags = sampler {
+			BLIT="BLIT_AS_DST|BLIT_READBACK_ON",
 			MIN="POINT",
 			MAG="POINT",
 			U="CLAMP",
@@ -145,7 +145,7 @@ end
 local pickup_buffer_w<const>, pickup_buffer_h<const> = 8, 8
 local pickupviewid<const> = viewidmgr.get "pickup"
 
-local fb_renderbuffer_flag<const> = samplerutil.sampler_flag {
+local fb_renderbuffer_flag<const> = sampler {
 	RT="RT_ON",
 	MIN="POINT",
 	MAG="POINT",

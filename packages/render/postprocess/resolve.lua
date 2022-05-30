@@ -14,7 +14,7 @@ local w     = world.w
 
 -- local resolve_viewid = viewidmgr.get "resolve"
 
--- local rb_flag = samplerutil.sampler_flag {
+-- local rb_flag = samplerutil {
 -- 	RT="RT_ON",
 -- 	MIN="LINEAR",
 -- 	MAG="LINEAR",

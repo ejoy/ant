@@ -84,7 +84,7 @@ local setting = {
 local function create_hemisphere_weights_texture(weight_func)
     local weights = gen_hemisphere_weights(hemisize, weight_func)
 
-    local flags = sampler.sampler_flag {
+    local flags = sampler {
         MIN="POINT",
         MAG="POINT",
         U="CLAMP",
@@ -108,7 +108,7 @@ local function create_hemisphere_weights_texture(weight_func)
     return bgfx.create_texture2d(3*hemisize, hemisize, false, 1, "RG32F", flags, bgfx.memory_buffer("ff", weights))
 end
 
-local rb_flags = sampler.sampler_flag{
+local rb_flags = sampler{
     MIN="POINT",
     MAG="POINT",
     U="CLAMP",
@@ -160,12 +160,12 @@ local tex_reader = {
     get_image_memory = get_image_memory, 
     create_tex = function (w, h, fmt)
         fmt = fmt or "RGBA32F"
-        local flags = sampler.sampler_flag{
+        local flags = sampler{
                 MIN="POINT",
                 MAG="POINT",
                 U="CLAMP",
                 V="CLAMP",
-                BLIT="BLIT_READWRITE",
+                BLIT="BLIT_AS_DST|BLIT_READBACK_ON",
         }
         return bgfx.create_texture2d(w, h, false, 1, fmt, flags)
     end,
@@ -446,12 +446,12 @@ local storage = {
 }
 
 storage.__index = storage
-local storage_flags<const> = sampler.sampler_flag{
+local storage_flags<const> = sampler{
     MIN="POINT",
     MAG="POINT",
     U="CLAMP",
     V="CLAMP",
-    BLIT="BLIT_READWRITE",
+    BLIT="BLIT_AS_DST|BLIT_READBACK_ON",
 }
 
 function storage.new(hemix, hemiy, lm_w, lm_h)

@@ -7,7 +7,7 @@ local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
 local md_resolve_sys = ecs.system "msaa_depth_resolve_system"
 
-local depth_flags = sampler.sampler_flag {
+local depth_flags = sampler {
     RT="RT_ON",
 	MIN="POINT",
 	MAG="POINT",

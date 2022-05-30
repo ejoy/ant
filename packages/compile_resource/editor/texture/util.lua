@@ -1,4 +1,4 @@
-local samplerutil = import_package "ant.render".sampler
+local sampler = import_package "ant.render".sampler
 local stringify = import_package "ant.serialize".stringify
 
 local lfs = require "filesystem.local"
@@ -92,7 +92,7 @@ end
 return function (output, param)
 	local config = {
         sampler = fill_default_sampler(param.sampler),
-        flag	= samplerutil.sampler_flag(param.sampler),
+        flag	= sampler(param.sampler),
     }
     if param.colorspace == "sRGB" then
         config.flag = config.flag .. 'Sg'

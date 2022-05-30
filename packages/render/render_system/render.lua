@@ -11,7 +11,7 @@ local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local declmgr		= require "vertexdecl_mgr"
-local samplerutil	= require "sampler"
+local sampler	= require "sampler"
 
 local function set_world_matrix(rc)
 	bgfx.set_transform(rc.worldmat)
@@ -156,7 +156,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 	}
 end
 
-local rb_flag = samplerutil.sampler_flag {
+local rb_flag = sampler {
 	RT="RT_MSAA4",
 	MIN="LINEAR",
 	MAG="LINEAR",
@@ -164,8 +164,8 @@ local rb_flag = samplerutil.sampler_flag {
 	V="CLAMP",
 }
 
-local depth_flag = samplerutil.sampler_flag {
-	RT="RT_MSAA4",
+local depth_flag = sampler {
+	RT="RT_MSAA4|RT_MSAA_SAMPLE",
 	MIN="POINT",
 	MAG="POINT",
 	U="CLAMP",
@@ -176,7 +176,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 	local depth_viewid = viewidmgr.get "depth"
 	local fbidx = fbmgr.create{
 		rbidx=fbmgr.create_rb{
-			format = "D32F",
+			format = "D24S8",
 			w = vr.w, h=vr.h,
 			layers = 1,
 			flags = depth_flag,
@@ -318,8 +318,8 @@ function irender.read_render_buffer_content(format, rb_idx, force_read, size)
 		h = h,
 		layers = 1,
 		format = format,
-		flags = samplerutil.sampler_flag {
-			BLIT="BLIT_READWRITE",
+		flags = sampler {
+			BLIT="BLIT_AS_DST|BLIT_READBACK_ON",
 			MIN="POINT",
 			MAG="POINT",
 			U="CLAMP",

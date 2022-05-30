@@ -11,7 +11,7 @@ local viewidmgr = require "viewid_mgr"
 local bgfx		= require "bgfx"
 
 local fbmgr		= require "framebuffer_mgr"
-local samplerutil = require "sampler"
+local sampler	= require "sampler"
 local shadowcommon=require "shadow.common"
 
 local sm_bias_matrix = shadowcommon.sm_bias_matrix
@@ -30,7 +30,7 @@ local function get_render_buffers(width, height)
 			w=width,
 			h=height,
 			layers=1,
-			flags=samplerutil.sampler_flag{
+			flags=sampler{
 				RT="RT_ON",
 				MIN="LINEAR",
 				MAG="LINEAR",

@@ -19,7 +19,7 @@ local w = world.w
 
 local fbmgr         = require "framebuffer_mgr"
 local viewidmgr     = require "viewid_mgr"
-local samplerutil   = require "sampler"
+local sampler   = require "sampler"
 local shadowcommon  = require "shadow.common"
 
 local math3d        = require "math3d"
@@ -36,7 +36,7 @@ local function get_render_buffers(width, height)
         w=width,
         h=height,
         layers=1,
-        flags=samplerutil.sampler_flag{
+        flags=sampler{
             RT="RT_ON",
             MIN="LINEAR",
             MAG="LINEAR",

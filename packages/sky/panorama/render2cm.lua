@@ -93,7 +93,7 @@ function render2cm_sys:init()
     }
 end
 
-local cubemap_flags<const> = sampler.sampler_flag {
+local cubemap_flags<const> = sampler {
     MIN="LINEAR",
     MAG="LINEAR",
     MIP="LINEAR",

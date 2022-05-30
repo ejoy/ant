@@ -42,7 +42,7 @@ function cs2cm_sys:init()
 end
 
 local build_ibl_viewid = viewidmgr.get "build_ibl"
-local cm_flags = sampler.sampler_flag{
+local cm_flags = sampler{
     MIN="LINEAR",
     MAG="LINEAR",
     MIP="LINEAR",
