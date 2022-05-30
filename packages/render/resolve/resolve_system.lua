@@ -36,6 +36,15 @@ function md_resolve_sys:init()
                 },
                 compute = true,
                 depth_resolver = true,
+                on_ready = function (e)
+                    w:sync("dispatch:in", e)
+                    local material = e.dispatch.material
+                    local mobj = material:get_material()
+                    mobj:set_attrib("s_depth", {
+                        stage=1, access='w', mip=0,
+                        handle=nil,
+                    })
+                end
             }
         }
     end

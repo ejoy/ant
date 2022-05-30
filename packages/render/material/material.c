@@ -888,12 +888,12 @@ init_instance_attrib(struct attrib_arena* arena, uint16_t pid, uint16_t id, int 
 			case ATTRIB_SAMPLER:
 				pa->u.t.stage = a->u.t.stage;
 				break;
+			case ATTRIB_IMAGE:
+				pa->r.mip = a->r.mip;
+			// walk through
 			case ATTRIB_BUFFER:
 				pa->r.stage = a->r.stage;
 				pa->r.access = a->r.access;
-			// walk through
-			case ATTRIB_IMAGE:
-				pa->r.mip = a->r.mip;
 				break;
 			case ATTRIB_REF:
 				assert(false && "Invalid instance attrib to patch system attrib");
