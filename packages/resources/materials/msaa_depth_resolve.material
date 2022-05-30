@@ -1,2 +1,11 @@
 fx:
   cs: /pkg/ant.resources/shaders/resolve/cs_msaa_depth_resolve.sc
+properties:
+  s_msaa_depth:
+    stage: 0
+    texture: /pkg/ant.resources/textures/black.texture
+  s_depth:
+    stage: 1
+    access: w
+    mip: 0
+    image: /pkg/ant.resources/textures/black.texture

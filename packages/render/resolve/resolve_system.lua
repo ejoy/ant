@@ -8,7 +8,7 @@ local sampler   = require "sampler"
 local md_resolve_sys = ecs.system "msaa_depth_resolve_system"
 
 local depth_flags = sampler.sampler_flag {
-    RT="ON",
+    RT="RT_ON",
 	MIN="POINT",
 	MAG="POINT",
 	U="CLAMP",
@@ -43,7 +43,7 @@ end
 
 function md_resolve_sys.init_world()
     if is_msaa_depth then
-        local mq = w:singleton "main_queue render_target:in"
+        local mq = w:singleton("main_queue", "render_target:in")
         local mvr = mq.render_target.view_rect
         ecs.create_entity {
             policy = {
@@ -61,12 +61,14 @@ function md_resolve_sys.init_world()
                             flags=depth_flags,
                         }
                     },
+                    clear_state = {clear=""},
                     view_rect = {x=mvr.x, y=mvr.y, w=mvr.w, h=mvr.h, ratio=mvr.ratio},
                     view_mode = "",
                     viewid = resolve_viewid,
                 },
                 watch_screen_buffer = true,
                 name = "depth_resolver_queue",
+                depth_resolver_queue = true,
             }
         }
 
@@ -75,15 +77,16 @@ end
 
 function md_resolve_sys.render_preprocess()
     if is_msaa_depth then
-        local mq = w:singleton "main_queue render_queue:in"
+        local mq = w:singleton("main_queue", "render_target:in")
         local msaa_db = fbmgr.get_depth(mq.render_target.fb_idx)
 
-        local dq = w:singleton "depth_resolver_queue render_target:in"
+        local dq = w:singleton("depth_resolver_queue", "render_target:in")
         local db = fbmgr.get_depth(dq.render_target.fb_idx)
         
-        local drawer = w:singleton "depth_resolver dispatch:in"
-        drawer.material.s_msaa_depth    = msaa_db.handle
-        drawer.material.s_depth         = db.handle
+        local drawer = w:singleton("depth_resolver", "dispatch:in")
+        local material = drawer.dispatch.material
+        material.s_msaa_depth    = msaa_db.handle
+        material.s_depth         = db.handle
         icompute.dispatch(resolve_viewid, drawer.dispatch)
     end
 end
