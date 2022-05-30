@@ -1,0 +1,14 @@
+fx:
+  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
+  fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
+  setting:
+    MATERIAL_UNLIT: 1
+    HAS_BASECOLOR_TEXTURE: 1
+    ALPHAMODE_MASK: 1
+state: /pkg/ant.resources/materials/states/default.state
+properties:
+  s_basecolor:
+    stage: 0
+    texture: /pkg/ant.test.features/assets/textures/test_quad.texture
+  u_pbr_factor: {0.0, 0.0, 0.0, 0.0}  #x:metalic, y: roughness, z: mask
+  u_basecolor_factor:  {0.2, 0.2, 0.2, 1}

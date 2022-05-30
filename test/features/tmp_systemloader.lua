@@ -10,6 +10,8 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local imesh = ecs.import.interface "ant.asset|imesh"
 local assetmgr = import_package "ant.asset"
 
+local bgfx = require "bgfx"
+
 local mathpkg = import_package"ant.math"
 local mc, mu = mathpkg.constant, mathpkg.util
 
@@ -112,7 +114,7 @@ local function color_palette_test()
     }
 end
 
-local cp_eid
+local cp_eid, quad_eid
 
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
@@ -126,6 +128,9 @@ function init_loader_sys:init()
     world:create_object(p)
 
     cp_eid = color_palette_test()
+
+    quad_eid = ientity.create_quad_lines_entity("quads", {r=math3d.quaternion{0.0, math.pi*0.5, 0.0}}, 
+        "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
 
     create_texture_plane_entity(
         {1, 1.0, 1.0, 1.0}, 
@@ -258,7 +263,13 @@ function init_loader_sys:entity_init()
             -- local icw = ecs.import.interface "ant.render|icurve_world"
             -- icw.enable(not icw.param().enable)
 
-            imaterial.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
+            --imaterial.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
+
+            local e = world:entity(quad_eid)
+            ies.set_state(e, "main_view", true)
+            local ib = e.render_object.ib
+            local quad_2 = 2
+            ib.num = quad_2 * 6
         end
     end
 end

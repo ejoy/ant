@@ -676,3 +676,68 @@ function ientity.create_arrow_entity(srt, headratio, color, material)
 		}
 	}
 end
+
+function ientity.create_quad_lines_entity(name, srt, material, quadnum, width)
+    assert(quadnum > 0)
+    local hw = width * 0.5
+    local function create_vertex_buffer()
+        local x0, x1 = -hw, hw
+        local z = 0.0
+        local vertices = {}
+        local fmt = "fffff"
+        local u, v = 0.0, 0.0
+        for i=0, quadnum do
+            vertices[#vertices+1] = fmt:pack(x0, 0.0, z, u, v)
+            vertices[#vertices+1] = fmt:pack(x1, 0.0, z, u, v)
+
+            z = z + width
+            u, v = u+1.0, v+1.0
+        end
+
+        return bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(vertices)), declmgr.get "p3|t2".handle)
+    end
+
+	local function create_index_buffer()
+		--local def_ib<const> = 
+		local ib = {0, 2, 1, 2, 3, 1}
+		for i=2, quadnum do
+			local d = 2 * (i-1)
+			ib[#ib+1] = ib[1] + d
+			ib[#ib+1] = ib[2] + d
+			ib[#ib+1] = ib[3] + d
+
+			ib[#ib+1] = ib[4] + d
+			ib[#ib+1] = ib[5] + d
+			ib[#ib+1] = ib[6] + d
+		end
+
+		return bgfx.create_index_buffer(bgfx.memory_buffer("w", ib))
+	end
+
+    return ecs.create_entity {
+        policy = {
+            "ant.render|simplerender",
+            "ant.general|name",
+        },
+        data = {
+			scene = {srt=srt},
+			filter_state = "",
+            simplemesh = {
+                vb = {
+                    start = 0,
+                    num = (quadnum+1)*2,
+                    {
+                        handle = create_vertex_buffer()
+                    }
+                },
+                ib = {
+                    start = 0,
+                    num = 0,
+                    handle = create_index_buffer(),
+                }
+            },
+			material = material,
+			name = name,
+        }
+    }
+end
