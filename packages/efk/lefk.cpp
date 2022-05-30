@@ -105,15 +105,6 @@ lefkctx_render(lua_State *L){
 }
 
 static int
-lefkctx_destroy(lua_State *L){
-    auto ctx = EC(L);
-    ctx->manager.Reset();
-    ctx->renderer.Reset();
-    ctx->~efk_ctx();
-    return 0;
-}
-
-static int
 lefkctx_create_effect(lua_State *L){
     auto ctx = EC(L);
     auto filename = luaL_checkstring(L, 2);
@@ -195,7 +186,7 @@ lefkctx_play(lua_State *L){
 	ToMatrix43(*effekMat44, effekMat);
     auto play_handle = ctx->manager->Play(ctx->effects[handle].eff, 0, 0, 0);
 	ctx->manager->SetMatrix(play_handle, effekMat);
-	float speed = lua_tonumber(L, 4);
+	float speed = (float)lua_tonumber(L, 4);
 	ctx->manager->SetSpeed(play_handle, speed);
 
     lua_pushinteger(L, play_handle);
@@ -259,7 +250,7 @@ lefkctx_set_speed(lua_State* L) {
 	auto ctx = EC(L);
 	auto play_handle = (int)luaL_checkinteger(L, 2);
 
-    float speed = lua_tonumber(L, 3);
+    float speed = (float)lua_tonumber(L, 3);
     ctx->manager->SetSpeed(play_handle, speed);
 	return 0;
 }
@@ -302,7 +293,6 @@ lefk_create(lua_State *L){
         lua_pushvalue(L, -1);
         lua_setfield(L, -2, "__index");
         luaL_Reg l[] = {
-            {"__gc",            lefkctx_destroy},
             {"render",          lefkctx_render},
             {"create_effect",   lefkctx_create_effect},
             {"destroy_effect",  lefkctx_destroy_effect},
@@ -347,10 +337,20 @@ lefk_create(lua_State *L){
     return 1;
 }
 
+static int
+lefk_destroy(lua_State *L){
+    auto ctx = EC(L);
+    ctx->manager.Reset();
+    ctx->renderer.Reset();
+    ctx->~efk_ctx();
+    return 0;
+}
+
 extern "C" int
 luaopen_efk(lua_State* L) {
     luaL_Reg lib[] = {
         { "create", lefk_create},
+        { "destroy",lefk_destroy},
         { nullptr, nullptr },
     };
     luaL_newlib(L, lib);

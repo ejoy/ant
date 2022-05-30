@@ -170,6 +170,10 @@ function efk_sys:init()
     }
 end
 
+function efk_sys:exit()
+    efk.destroy(efk_ctx)
+end
+
 local efk_cache = {}
 
 local function load_efk(filename)

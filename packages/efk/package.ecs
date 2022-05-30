@@ -6,6 +6,7 @@ system "efk_system"
     .method "camera_usage"
     .method "follow_transform_updated"
     .method "render_submit"
+    .method "exit"
 
 component "efk".type "lua"
 policy "efk"

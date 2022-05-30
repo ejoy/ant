@@ -41,10 +41,16 @@ function S.update()
     bgfx.encoder_begin()
 	render()
     do
-        rhwi.frame()
+        bgfx.frame()
     end
     --world:pipeline_update_end()
     bgfx.encoder_end()
+end
+
+function S.size()
+end
+
+function S.mouse()
 end
 
 local function dispatch(CMD,...)
