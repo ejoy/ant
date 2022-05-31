@@ -139,7 +139,7 @@ struct material_instance {
 
 struct attrib_arena *
 arena_new(lua_State *L, bgfx_interface_vtbl_t *bgfx, struct math3d_api *mapi, struct encoder_holder *h) {
-	struct attrib_arena * a = (struct attrib_arena *)lua_newuserdatauv(L, sizeof(struct attrib_arena), 3);
+	struct attrib_arena * a = (struct attrib_arena *)lua_newuserdatauv(L, sizeof(struct attrib_arena), COBJECT_UV_NUM);
 	a->bgfx = bgfx;
 	a->math = mapi;
 	a->eh = h;
@@ -151,7 +151,7 @@ arena_new(lua_State *L, bgfx_interface_vtbl_t *bgfx, struct math3d_api *mapi, st
 	memset(&a->color_palettes, sizeof(a->color_palettes), 0);
 	//invalid material attrib list
 	lua_newtable(L);
-	lua_setiuservalue(L, -2, COBJECT_UV_NUM);	//set invalid table as uv 3
+	verfiy(lua_setiuservalue(L, -2, COBJECT_UV_INVALID_LIST));	//set invalid table as uv 3
 	return a;
 }
 
@@ -289,7 +289,7 @@ arena_alloc(lua_State *L, int idx) {
 	} else if (arena->cap == 0) {
 		// new arena
 		attrib_type * al = (attrib_type *)lua_newuserdatauv(L, sizeof(attrib_type) * DEFAULT_ARENA_SIZE, 0);
-		lua_setiuservalue(L, idx, COBJECT_UV_ATTRIB_BUFFER);
+		verfiy(lua_setiuservalue(L, idx, COBJECT_UV_ATTRIB_BUFFER));
 		arena->a = al;
 		arena->cap = DEFAULT_ARENA_SIZE;
 		arena->n = 1;
@@ -303,7 +303,7 @@ arena_alloc(lua_State *L, int idx) {
 		memcpy(al, arena->a, sizeof(attrib_type) * arena->n);
 		arena->a = al;
 		arena->cap = newcap;
-		lua_setiuservalue(L, idx, COBJECT_UV_ATTRIB_BUFFER);
+		verfiy(lua_setiuservalue(L, idx, COBJECT_UV_ATTRIB_BUFFER));
 		ret = al_attrib(arena, arena->n++);
 	}
 	al_init_attrib(arena, ret);
@@ -372,7 +372,7 @@ static int
 lmaterial_attribs(lua_State *L) {
 	struct material *mat = (struct material *)luaL_checkudata(L, 1, "ANT_MATERIAL");
 	lua_settop(L, 1);
-	if (LUA_TUSERDATA != lua_getiuservalue(L, 1, 2)){
+	if (LUA_TUSERDATA != lua_getiuservalue(L, 1, MATERIAL_UV_COBJECT)){
 		return luaL_error(L, "Invalid material, uservalue in 2 is not 'cobject'");
 	}
 	const int arena_idx = 2;
@@ -477,7 +477,7 @@ static int
 lmaterial_instance(lua_State *L) {
 	struct material_instance * mi = (struct material_instance *)lua_newuserdatauv(L, sizeof(*mi), 0);
 	mi->patch_attrib = INVALID_ATTRIB;
-	if (LUA_TTABLE != lua_getiuservalue(L, 1, 1)){	// push material instance metatable
+	if (LUA_TTABLE != lua_getiuservalue(L, 1, MATERIAL_UV_INSTANCE_MT)){	// push material instance metatable
 		return luaL_error(L, "Invalid material object, uservalue in 1 is not material instance metatable");
 	}
 	int n = (int)lua_rawlen(L, -1);	// free instance attrib
@@ -802,12 +802,12 @@ load_attrib_from_data(lua_State *L, int arena_idx, int data_index, uint16_t id) 
 static int
 lmaterial_set_attrib(lua_State *L){
 	struct material* mat = (struct material*)luaL_checkudata(L, 1, "ANT_MATERIAL");
-	if (LUA_TUSERDATA != lua_getiuservalue(L, 1, 2)) {	// get cobject
+	if (LUA_TUSERDATA != lua_getiuservalue(L, 1, MATERIAL_UV_COBJECT)) {	// get cobject
 		return luaL_error(L, "Invalid material object, not found cobject in uservalue 2");
 	}
 	const int arena_idx = lua_gettop(L);
 	
-	if (LUA_TTABLE != lua_getiuservalue(L, 1, 3)) {	// get material lookup table
+	if (LUA_TTABLE != lua_getiuservalue(L, 1, MATERIAL_UV_LUT)) {	// get material lookup table
 		return luaL_error(L, "Invalid material object, not found lookup table in uservalue 3");
 	}
 	const int lut_idx = lua_gettop(L);
@@ -936,7 +936,7 @@ linstance_set_attrib(lua_State *L) {
 	const int arena_idx = lua_upvalueindex(2);
 	struct attrib_arena * arena = (struct attrib_arena *)lua_touserdata(L, arena_idx);
 	// push materia lookup table in stack
-	if (LUA_TTABLE != lua_getiuservalue(L, lua_upvalueindex(1), 3)){
+	if (LUA_TTABLE != lua_getiuservalue(L, lua_upvalueindex(1), MATERIAL_UV_LUT)){
 		return luaL_error(L, "Invalid uservalue in function upvalue 1, need a lookup table in material uservalue 3");
 	}
 	lua_pushvalue(L, 2);	// push lookup key
@@ -1281,17 +1281,17 @@ lmaterial_copy(lua_State *L){
 
 	//uv1
 	lua_pushvalue(L, -1);	// material
-	lua_getiuservalue(L, 1, 2); //cobject
+	lua_getiuservalue(L, 1, MATERIAL_UV_COBJECT); //cobject
 	create_material_instance_metatable(L);
-	lua_setiuservalue(L, -2, MATERIAL_UV_INSTANCE_MT);
+	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_INSTANCE_MT));
 
 	//uv2
 	lua_getiuservalue(L, 1, MATERIAL_UV_COBJECT);
-	lua_setiuservalue(L, -2, MATERIAL_UV_COBJECT);
+	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_COBJECT));
 
 	//uv3
 	lua_getiuservalue(L, 1, MATERIAL_UV_LUT);
-	lua_setiuservalue(L, -2, MATERIAL_UV_LUT);
+	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_LUT));
 
 	set_material_matatable(L, "ANT_MATERIAL_TYPE", 1);
 
@@ -1317,10 +1317,10 @@ lmaterial_new(lua_State *L) {
 	lua_pushvalue(L, -1);	// material
 	lua_pushvalue(L, 1);	// cobject
 	create_material_instance_metatable(L);
-	lua_setiuservalue(L, -2, MATERIAL_UV_INSTANCE_MT);			// push material instance metatable as uv1
+	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_INSTANCE_MT));			// push material instance metatable as uv1
 
 	lua_pushvalue(L, 1);
-	lua_setiuservalue(L, -2, MATERIAL_UV_COBJECT);			// push cobject as uv2
+	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_COBJECT));			// push cobject as uv2
 
 	mat->state = state;
 	mat->rgba = rgba;
@@ -1330,7 +1330,7 @@ lmaterial_new(lua_State *L) {
 	const int lookup_idx = lua_gettop(L);
 
 	//system attrib table
-	if (lua_getiuservalue(L, arena_idx, 2) != LUA_TTABLE){
+	if (lua_getiuservalue(L, arena_idx, COBJECT_UV_SYSTEM_ATTRIBS) != LUA_TTABLE){
 		luaL_error(L, "Invalid cobject");
 	}
 	const int sa_lookup_idx = lua_gettop(L);
@@ -1340,7 +1340,7 @@ lmaterial_new(lua_State *L) {
 	}
 	lua_pop(L, 1);	//system attrib table
 
-	lua_setiuservalue(L, -2, MATERIAL_UV_LUT);	// push lookup table as uv3
+	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_LUT));	// push lookup table as uv3
 
 	set_material_matatable(L, "ANT_MATERIAL", 0);
 	return 1;
@@ -1434,7 +1434,7 @@ lsystem_attribs_new(lua_State *L){
 	lua_setmetatable(L, -2);
 
 	lua_pushvalue(L, -1);		// system attrib table
-	lua_setiuservalue(L, 1, 2);	// set system attrib table as cobject 1 user value
+	verfiy(lua_setiuservalue(L, 1, COBJECT_UV_SYSTEM_ATTRIBS));	// set system attrib table as cobject 1 user value
 	return 1;
 }
 
