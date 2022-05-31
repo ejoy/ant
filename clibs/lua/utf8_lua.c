@@ -1,3 +1,9 @@
+#if !defined(_WIN32)
+
+#include "lua.c"
+
+#else
+
 #define main(a, b) utf8_main(a, b)
 #include "lua.c"
 #undef main
@@ -56,5 +62,7 @@ int main() {
 	__wgetmainargs(&argc, &argv, &enpv, _CRT_glob, &si);
 	return wmain(argc, argv);
 }
+
+#endif
 
 #endif

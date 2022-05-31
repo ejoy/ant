@@ -1,6 +1,8 @@
 #ifndef _LUAUTF8_UTF8_CRT_H_
 #define _LUAUTF8_UTF8_CRT_H_
 
+#if defined(_WIN32)
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <wchar.h>
@@ -30,5 +32,7 @@ void utf8_ConsoleError(const char* fmt, const char* param);
 
 wchar_t* u2w(const char *str);
 char* w2u(const wchar_t *str);
+
+#endif
 
 #endif
