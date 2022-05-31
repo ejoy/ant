@@ -343,7 +343,7 @@ cb_fatal(bgfx_callback_interface_t *self, const char* filePath, uint16_t line, b
 	abort();
 }
 
-#define PREFIX(str, cstr) (memcmp(str, cstr"", sizeof(cstr)-1) == 0)
+#define PREFIX(str, cstr) (strncmp(str, cstr"", sizeof(cstr)-1) == 0)
 
 static int
 trace_filter(const char *format, int level) {
