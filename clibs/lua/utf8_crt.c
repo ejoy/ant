@@ -1,6 +1,10 @@
 #ifndef _CRT_SECURE_NO_WARNINGS
 #define _CRT_SECURE_NO_WARNINGS
 #endif
+
+
+#if defined(_WIN32)
+
 #include "utf8_crt.h"
 #include <malloc.h>
 #include <assert.h>
@@ -265,3 +269,5 @@ void utf8_ConsoleError(const char* fmt, const char* param) {
 	fflush(stderr);
 	free(s);
 }
+
+#endif
