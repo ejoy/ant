@@ -218,5 +218,9 @@ function util.texture_uv(rect, size)
 	return {rect.x/size.w, rect.y/size.h, (rect.x+rect.w)/size.w, (rect.y+rect.h)/size.h}
 end
 
+function util.copy_viewrect(vp)
+	return {x=vp.x, y=vp.y, w=vp.w, h=vp.h, ratio=vp.ratio}
+end
+
 return util
 

@@ -25,16 +25,12 @@ local ifs = ecs.interface "ifilter_state"
 
 ifs.filter_mask = filter_mask
 
-local function get_ro(e)
-	return e.render_object
-end
-
 function ifs.has_state(e, name)
-	return ((get_ro(e).filter_state) & STATE_TYPE[name]) ~= 0
+	return ((e.render_object.filter_state) & STATE_TYPE[name]) ~= 0
 end
 
 function ifs.set_state(e, name, v)
-	local ro = get_ro(e)
+	local ro = e.render_object
 	if not ro or not ro.filter_state then
 		return
 	end

@@ -173,7 +173,7 @@ local depth_flag = sampler {
 }
 
 function irender.create_pre_depth_queue(vr, camera_ref)
-	local depth_viewid = viewidmgr.get "depth"
+	local depth_viewid = viewidmgr.get "pre_depth"
 	local fbidx = fbmgr.create{
 		rbidx=fbmgr.create_rb{
 			format = "D32F",
@@ -223,7 +223,7 @@ end
 local function create_main_fb(fbsize)
 	local function get_depth_buffer()
 		if not graphic_setting.disable_pre_z then
-			local depth_viewid = viewidmgr.get "depth"
+			local depth_viewid = viewidmgr.get "pre_depth"
 			local depthfb = fbmgr.get_byviewid(depth_viewid)
 			return depthfb[#depthfb]
 		end

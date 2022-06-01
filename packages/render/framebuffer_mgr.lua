@@ -157,10 +157,13 @@ local function create_rb_handle(rb)
 		error(string.format("render buffer width or height should not be 0:%d, %d", rb.w, rb.h))
 	end
 
+	local mipmap = rb.mipmap or false
+	local layers = rb.layers or 1
+	local fmt, flags = assert(rb.format), assert(rb.flags)
 	if rb.cubemap then
-		return bgfx.create_texturecube(rb.size, rb.mipmap, rb.layers, rb.format, rb.flags)
+		return bgfx.create_texturecube(rb.size, mipmap, layers, fmt, flags)
 	end
-	return bgfx.create_texture2d(rb.w, rb.h, rb.mipmap, rb.layers, rb.format, rb.flags)
+	return bgfx.create_texture2d(rb.w, rb.h, mipmap, layers, fmt, flags)
 end
 
 function mgr.create_rb(rb)

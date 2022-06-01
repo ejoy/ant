@@ -39,7 +39,8 @@ alloc_id "omni_Red"				--9
 alloc_id("panorama2cubmap", 6)	--[10, 15]
 alloc_id("build_ibl", 6)		--[16, 21]
 alloc_id "ibl"					--21
-alloc_id "depth"
+alloc_id "pre_depth"
+alloc_id "scene_depth"
 alloc_id "main_view"
 
 --start postprocess

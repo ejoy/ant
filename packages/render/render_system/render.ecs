@@ -210,6 +210,11 @@ interface "ientity"
     .method "create_screen_axis_entity"
     .method "create_quad_lines_entity"
 
+component "scene_depth_queue"
+system "scene_depth_system"
+    .implement "render_system/pre_depth.lua"
+    .method "init_world"
+
 import "render_system/forward_render.ecs"
 import "render_system/cluster_render.ecs"
 
