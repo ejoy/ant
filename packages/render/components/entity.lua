@@ -687,11 +687,11 @@ function ientity.create_quad_lines_entity(name, srt, material, quadnum, width)
         local fmt = "fffff"
         local u, v = 0.0, 0.0
         for i=0, quadnum do
-            vertices[#vertices+1] = fmt:pack(x0, 0.0, z, u, v)
-            vertices[#vertices+1] = fmt:pack(x1, 0.0, z, u, v)
+            vertices[#vertices+1] = fmt:pack(x0, 0.0, z, 0.0, v)
+            vertices[#vertices+1] = fmt:pack(x1, 0.0, z, 1.0, v)
 
             z = z + width
-            u, v = u+1.0, v+1.0
+            v = v+1.0
         end
 
         return bgfx.create_vertex_buffer(bgfx.memory_buffer(table.concat(vertices)), declmgr.get "p3|t2".handle)
