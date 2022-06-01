@@ -677,7 +677,7 @@ function ientity.create_arrow_entity(srt, headratio, color, material)
 	}
 end
 
-function ientity.create_quad_lines_entity(name, srt, material, quadnum, width)
+function ientity.create_quad_lines_entity(name, srt, material, quadnum, width, hide)
     assert(quadnum > 0)
     local hw = width * 0.5
     local function create_vertex_buffer()
@@ -738,6 +738,10 @@ function ientity.create_quad_lines_entity(name, srt, material, quadnum, width)
             },
 			material = material,
 			name = name,
+			on_ready = function (e)
+				w:sync("render_object:in", e)
+				ifs.set_state(e, "main_view", not hide)
+			end
         }
     }
 end
