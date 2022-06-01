@@ -7,4 +7,5 @@ component "water".type "lua"
 
 policy "water"
     .require_system "ant.terrain|water_system"
+    .require_system "ant.render|scene_depth_system"
     .component "water"

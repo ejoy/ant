@@ -77,9 +77,9 @@ local function queue_rb_handle(qn, idx)
 end
 
 function water_sys:render_submit()
-    -- local sdh = queue_rb_handle "depth_resolver_queue"
-    -- for we in w:select "water:in render_object:in" do
-    --     imaterial.set_property(we, "s_scene_depth", sdh)
-    --     irender.draw(ppo_viewid, we.render_object)
-    -- end
+    local sdh = queue_rb_handle "scene_depth_queue"
+    for we in w:select "water:in render_object:in" do
+        imaterial.set_property(we, "s_scene_depth", sdh)
+        irender.draw(ppo_viewid, we.render_object)
+    end
 end
