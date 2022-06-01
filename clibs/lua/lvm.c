@@ -643,7 +643,7 @@ void luaV_concat (lua_State *L, int total) {
     int n = 2;  /* number of elements handled in this pass (at least 2) */
     if (!(ttisstring(s2v(top - 2)) || cvt2str(s2v(top - 2))) ||
         !tostring(L, s2v(top - 1)))
-      luaT_tryconcatTM(L);
+      luaT_tryconcatTM(L);  /* may invalidate 'top' */
     else if (isemptystr(s2v(top - 1)))  /* second operand is empty? */
       cast_void(tostring(L, s2v(top - 2)));  /* result is first operand */
     else if (isemptystr(s2v(top - 2))) {  /* first operand is empty string? */
@@ -656,8 +656,10 @@ void luaV_concat (lua_State *L, int total) {
       /* collect total length and number of strings */
       for (n = 1; n < total && tostring(L, s2v(top - n - 1)); n++) {
         size_t l = vslen(s2v(top - n - 1));
-        if (l_unlikely(l >= (MAX_SIZE/sizeof(char)) - tl))
+        if (l_unlikely(l >= (MAX_SIZE/sizeof(char)) - tl)) {
+          L->top = top - total;  /* pop strings to avoid wasting stack */
           luaG_runerror(L, "string length overflow");
+        }
         tl += l;
       }
       if (tl <= LUAI_MAXSHORTLEN) {  /* is result a short string? */
@@ -671,8 +673,8 @@ void luaV_concat (lua_State *L, int total) {
       }
       setsvalue2s(L, top - n, ts);  /* create result */
     }
-    total -= n-1;  /* got 'n' strings to create 1 new */
-    L->top -= n-1;  /* popped 'n' strings and pushed one */
+    total -= n - 1;  /* got 'n' strings to create one new */
+    L->top -= n - 1;  /* popped 'n' strings and pushed one */
   } while (total > 1);  /* repeat until only 1 result left */
 }
 
@@ -1177,7 +1179,7 @@ void luaV_execute (lua_State *L, CallInfo *ci) {
       printf("line: %d\n", luaG_getfuncline(cl->p, pcRel(pc, cl->p)));
     #endif
     lua_assert(base == ci->func + 1);
-    lua_assert(base <= L->top && L->top < L->stack_last);
+    lua_assert(base <= L->top && L->top <= L->stack_last);
     /* invalidate top for instructions not expecting it */
     lua_assert(isIT(i) || (cast_void(L->top = base), 1));
     vmdispatch (GET_OPCODE(i)) {
