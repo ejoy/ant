@@ -30,8 +30,6 @@ function pp_obj_sys:init_world()
         local mq_rt = mq.render_target
         local rt = {}
         copy_rendertarget(mq_rt, rt)
-        local main_fb = fbmgr.get(mq_rt.fb_idx)
-        rt.fb_idx = fbmgr.create(main_fb[1])
         rt.viewid = ppobj_viewid
         rt.clear_state.clear = ""
         ecs.create_entity{
