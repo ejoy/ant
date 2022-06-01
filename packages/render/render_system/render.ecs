@@ -137,7 +137,7 @@ system "start_frame_system"
     .method "start_frame"
 
 system "pre_depth_primitive_system"
-    .implement "render_system/pre_depth.lua"
+    .implement "render_system/depth.lua"
     .require_system "end_filter_system"
     .require_interface "ant.render|irender"
     .method "init"
@@ -212,7 +212,7 @@ interface "ientity"
 
 component "scene_depth_queue"
 system "scene_depth_system"
-    .implement "render_system/pre_depth.lua"
+    .implement "render_system/depth.lua"
     .method "init_world"
 
 import "render_system/forward_render.ecs"
