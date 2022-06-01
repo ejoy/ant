@@ -39,7 +39,7 @@ bool Document::Load(const std::string& path) {
 		Instance(dom);
 	}
 	catch (HtmlParserException& e) {
-		Log::Message(Log::Level::Error, "%s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
+		Log::Message(Log::Level::Error, "%s Parse error: %s Line: %d Column: %d", path.c_str(), e.what(), e.GetLine(), e.GetColumn());
 		return false;
 	}
 
