@@ -20,6 +20,7 @@ uniform vec4    u_exposure_param;
 // z_n = A*z_e+B/z_e ==> z_e = B / (z_n - A)
 
 // we are *LEFT* hand coordinate, and depth from [0, 1]
+// it's the same as gl_FragCoord.w
 float linear_depth(float nolinear_depth)
 {
 	//#if HOMOGENEOUS_DEPTH
@@ -33,6 +34,12 @@ float linear_depth(float nolinear_depth)
 	float A = u_proj[2][2];
 	float B = u_proj[2][3];
 	return B / (z_n - A);
+}
+
+vec2 screen_uv(vec2 fragcoord)
+{
+	vec2 xy = fragcoord.xy - u_viewRect.xy;
+	return xy / u_viewRect.zw;
 }
 
 #endif //_CAMERA_SH_

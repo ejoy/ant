@@ -60,8 +60,8 @@ where inverse function is:
 	see below: which_z()
 */
 
-uint which_cluster(vec3 fragcoord){
-	uint cluster_z     = uint(max(log2(linear_depth(fragcoord.z)) * u_slice_scale + u_slice_bias, 0.0));
+uint which_cluster(vec4 fragcoord){
+	uint cluster_z     = uint(max(log2(fragcoord.w) * u_slice_scale + u_slice_bias, 0.0));
 	vec2 xy = fragcoord.xy - u_viewRect.xy;
     uvec3 cluster_coord= uvec3(xy/u_tile_unit, cluster_z);
     return 	cluster_coord.x +

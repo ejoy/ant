@@ -75,15 +75,19 @@ vec4 alphaBlend(vec4 top, vec4 bottom)
 
 void main()
 {
+    vec2 uv = screen_uv(gl_FragCoord.xy);
     // Retrieve the current depth value of the surface behind the
     // pixel we are currently rendering.
-    float existingDepth01 = texture2DProj(s_scene_depth, v_posCS).r;
+    float existingDepth02 = texture2DProj(s_scene_depth, v_posCS).r;
+    float existingDepth01 = texture2D(s_scene_depth, uv.xy).r;
     // Convert the depth from non-linear 0...1 range to linear
     // depth, in Unity units.
     float scene_depthVS = linear_depth(existingDepth01);
 
+    gl_FragColor = vec4(existingDepth01, existingDepth02, 0.0, 1.0);
+
     // Difference, in Unity units, between the water's surface and the object behind it.
-    float obj_depthVS = v_posCS.w;
+    float obj_depthVS = gl_FragCoord.w;
     float depthDifference = scene_depthVS - obj_depthVS;
 
     // Calculate the color of the water based on the depth using our two gradient colors.

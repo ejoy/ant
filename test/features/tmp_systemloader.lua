@@ -121,6 +121,11 @@ function init_loader_sys:init()
     --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
+    local pp = ecs.create_instance "/pkg/ant.resources.binary/meshes/up_box.glb|mesh.prefab"
+    function pp.on_ready(e)
+        iom.set_scale(world:entity(e.root), 2.5)
+    end
+    world:create_object(pp)
     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
     p.on_ready = function (e)
         iom.set_position(world:entity(e.root), {0, 5, 0})
