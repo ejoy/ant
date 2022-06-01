@@ -44,7 +44,7 @@ local function gen_water_grid_mesh(gw, gh, unit, height)
         for iw=0, gw do
             local vi = ih*vw+iw
             local midx= vi*stride+1
-            local u, v = ih/gw, ih/gh
+            local u, v = iw/gw, ih/gh
             m[midx]   = layoutfmt:pack(iw, h, ih, u, v)
         end
     end
