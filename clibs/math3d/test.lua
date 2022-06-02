@@ -322,3 +322,39 @@ print "test matrix decompose to s, r, t"
 print_mat(r2l_mat)
 print_mat(r2l_mat1)
 print_mat(r2l_mat2)
+
+do
+	print "Reverse Z projection matrix:"
+	local frustum = {
+		l = -1.0, r = 1.0, t = 1.0, b = -1.0,
+		n = 1.0, f = 100
+	}
+	local invz_proj = math3d.projmat(frustum, true)
+	local proj = math3d.projmat(frustum)
+
+	local nearpt = math3d.vector(0.0, 0.0, 1.0, 1.0)
+	local farpt = math3d.vector(0.0, 0.0, 100.0, 1.0)
+	
+	local middlept = math3d.vector(0.0, 0.0, (1.0+100)*0.5, 1.0)
+	local quadpt = math3d.vector(0.0, 0.0, (1.0+100)*0.25, 1.0)
+	local pp0 = math3d.transform(invz_proj, nearpt, 1)
+	local pp1 = math3d.transform(invz_proj, farpt, 1)
+	local pp2 = math3d.transform(invz_proj, middlept, 1)
+	local pp3 = math3d.transform(invz_proj, quadpt, 1)
+	print "invz projection point:"
+	print(math3d.tostring(pp0))
+	print(math3d.tostring(pp1))
+	print(math3d.tostring(pp2))
+	print(math3d.tostring(pp3))
+
+	print "projection point:"
+	pp0 = math3d.transform(proj, nearpt, 	1)
+	pp1 = math3d.transform(proj, farpt, 	1)
+	pp2 = math3d.transform(proj, middlept, 	1)
+	pp3 = math3d.transform(proj, quadpt, 1)
+
+	print(math3d.tostring(pp0))
+	print(math3d.tostring(pp1))
+	print(math3d.tostring(pp2))
+	print(math3d.tostring(pp3))
+end
