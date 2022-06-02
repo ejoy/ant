@@ -1329,7 +1329,7 @@ ltransform_homogeneous_point(lua_State *L) {
 }
 
 static void
-create_proj_mat(lua_State *L, struct lastack *LS, int index) {
+create_proj_mat(lua_State *L, struct lastack *LS, int index, int inv_z) {
 	float left, right, top, bottom;
 	lua_getfield(L, index, "n");
 	float near = (float)luaL_optnumber(L, -1, 0.1f);
@@ -1372,6 +1372,11 @@ create_proj_mat(lua_State *L, struct lastack *LS, int index) {
 		lua_pop(L, 1);
 	}
 
+	if (inv_z){
+		float t = far;
+		far = near; near = t;
+	}
+
 	if (mattype == MAT_PERSPECTIVE) {
 		math3d_frustumLH(LS, left, right, bottom, top, near, far, g_default_homogeneous_depth);
 	} else {
@@ -1384,7 +1389,8 @@ static int
 lprojmat(lua_State *L) {
 	struct lastack *LS = GETLS(L);
 	luaL_checktype(L, 1, LUA_TTABLE);
-	create_proj_mat(L, LS, 1);
+	const int inv_z = lua_isnoneornil(L, 2) ? 0 : lua_toboolean(L, 2);
+	create_proj_mat(L, LS, 1, inv_z);
 	lua_pushlightuserdata(L, STACKID(lastack_pop(LS)));
 	return 1;
 }
