@@ -52,7 +52,7 @@ function sd_sys.init_world()
                 },
                 clear_state = {
                     clear = "D",
-                    depth = 1.0,
+                    depth = 0.0,
                 },
                 view_mode = pd_rt.view_mode,
             },

@@ -303,7 +303,7 @@ local function create_lightmap_queue()
                 view_mode = "s",
                 clear_state = {
                     color = 0x000000ff,
-                    depth = 1.0,
+                    depth = 0.0,
                     clear = "CD",
                 },
                 fb_idx = fbidx,

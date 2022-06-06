@@ -43,9 +43,9 @@ void main()
     float water_depth_weight = saturate(depth_diff / u_depth_max_distance);
     vec4 water_color = lerp(u_gradient_shallow_color, u_gradient_deep_color, water_depth_weight);
 
-    float foam_diff = saturate(depth_diff / u_foam_max_distance);
+    float foam_weight = saturate(depth_diff / u_foam_max_distance);
 
-    float noise_cutoff = foam_diff * u_noise_cutoff;
+    float noise_cutoff = foam_weight * u_noise_cutoff;
 
     vec2 distort = (texture2D(s_distortion, v_distortUV).xy * 2.0 - 1.0) * u_distortion_scale;
 

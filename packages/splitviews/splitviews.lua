@@ -8,6 +8,8 @@ local irender   = ecs.import.interface "ant.render|irender"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
+local INV_Z     = import_package "ant.settings".setting:data().graphic.inv_z
+
 local svs = ecs.system "splitviews_system"
 
 local orthoview
@@ -222,7 +224,7 @@ function svs:update_camera()
         local worldmat = scene._worldmat
         local d, p = math3d.index(worldmat, 3, 4)
         camera.viewmat = math3d.lookto(p, d, scene.updir)
-        camera.projmat = math3d.projmat(camera.frustum)
+        camera.projmat = math3d.projmat(camera.frustum, INV_Z)
         camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
     end
 end

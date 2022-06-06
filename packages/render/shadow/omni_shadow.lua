@@ -17,6 +17,8 @@ local w = world.w
     right now, this omni is disable
 ]]
 
+local INV_Z     = import_package "ant.settings".setting:data().graphic.inv_z
+
 local fbmgr         = require "framebuffer_mgr"
 local viewidmgr     = require "viewid_mgr"
 local sampler   = require "sampler"
@@ -232,7 +234,7 @@ function ios.create(point_eid)
                 },
                 clear_state = {
 					color = 0xffffffff,
-					depth = 1,
+					depth = 0,
 					stencil = 0,
 					clear = "DS",
 				},
@@ -286,7 +288,7 @@ end
 local function update_camera_matrices(camera)
     camera.viewmat	= math3d.inverse(camera.srt)
     camera.worldmat	= camera.srt
-    camera.projmat	= math3d.projmat(camera.frustum)
+    camera.projmat	= math3d.projmat(camera.frustum, INV_Z)
     camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 

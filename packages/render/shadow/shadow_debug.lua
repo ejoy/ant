@@ -5,6 +5,8 @@ local w 	= world.w
 local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
 
+local INV_Z     = import_package "ant.settings".setting:data().graphic.inv_z
+
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
 local irender   = ecs.import.interface "ant.render|irender"
@@ -60,7 +62,7 @@ local function create_debug_entity()
 		local mc_e = world:entity(irq.main_camera())
 		local camera = mc_e.camera
 		for idx, f in ipairs(ishadow.split_frustums()) do
-			local vp = math3d.mul(math3d.projmat(f), camera.viewmat)
+			local vp = math3d.mul(math3d.projmat(f, INV_Z), camera.viewmat)
 			debug_entities[#debug_entities+1] = ientity.create_frustum_entity(
 				math3d.frustum_points(vp), "frusutm:main_view", frustum_colors[idx]
 			)
@@ -119,7 +121,7 @@ local function check_shadow_matrix()
 		local ff = ishadow.calc_split_frustums(icamera.get_frustum(e.camera_ref))
 		local split_frustum_desc = ff[csm_index]
 		local viewmat = icamera.calc_viewmat(e.camera_ref)
-		local vp = math3d.mul(math3d.projmat(split_frustum_desc), viewmat)
+		local vp = math3d.mul(math3d.projmat(split_frustum_desc, INV_Z), viewmat)
 
 		local frustum_points = math3d.frustum_points(vp)
 		local center = math3d.points_center(frustum_points)
@@ -150,7 +152,7 @@ local function check_shadow_matrix()
 		frustum_desc.b, frustum_desc.t, 
 		frustum_desc.n, frustum_desc.f))
 
-		local newvp = math3d.mul(math3d.projmat(frustum_desc), math3d.lookto(center, lightdir))
+		local newvp = math3d.mul(math3d.projmat(frustum_desc, INV_Z), math3d.lookto(center, lightdir))
 		local new_light_frustum_points = math3d.frustum_points(newvp)
 		ientity.create_frustum_entity(new_light_frustum_points, "lua calc view frustum",  0xff0000ff)
 		

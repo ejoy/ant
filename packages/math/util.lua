@@ -1,5 +1,5 @@
 local util = {}
-util.__index = util
+
 
 local math3d = require "math3d"
 local constant = require "constant"

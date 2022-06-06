@@ -536,6 +536,14 @@ math3d_viewdir_to_quat(struct lastack *LS, const float v[3]) {
 }
 
 void
+math3d_perspectiveLH(struct lastack *LS, float fov, float aspect, float near, float far, int homogeneous_depth){
+	glm::mat4x4 &mat = allocmat(LS);
+	mat = homogeneous_depth ?
+		glm::perspectiveLH_NO(fov, aspect, near, far) :
+		glm::perspectiveLH_ZO(fov, aspect, near, far);
+}
+
+void
 math3d_frustumLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth) {
 	glm::mat4x4 &mat = allocmat(LS);
 	mat = homogeneous_depth ?

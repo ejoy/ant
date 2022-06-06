@@ -16,6 +16,7 @@ animation:
     GPU:
       enable: true
 graphic:
+  inv_z: true
   framebuffer:
     scene_ratio: 1
     ratio: 1

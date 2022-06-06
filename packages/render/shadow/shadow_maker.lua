@@ -14,6 +14,8 @@ local ishadow	= ecs.import.interface "ant.render|ishadow"
 local irender	= ecs.import.interface "ant.render|irender"
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local fbmgr		= require "framebuffer_mgr"
+
+local INV_Z     = import_package "ant.settings".setting:data().graphic.inv_z
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 
@@ -84,7 +86,7 @@ local split_distances_VS	= math3d.ref(math3d.vector(0, 0, 0, 0))
 
 local function update_camera_matrices(camera, lightmat)
 	camera.viewmat	= math3d.inverse(lightmat)	--just transpose?
-	camera.projmat	= math3d.projmat(camera.frustum)
+	camera.projmat	= math3d.projmat(camera.frustum, INV_Z)
 	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
@@ -141,7 +143,7 @@ local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_s
 end
 
 local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, stabilize, shadow_ce)
-	local vp = math3d.mul(math3d.projmat(frustum), viewmat)
+	local vp = math3d.mul(math3d.projmat(frustum, INV_Z), viewmat)
 
 	local corners_WS = math3d.frustum_points(vp)
 	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, shadow_ce)
@@ -185,7 +187,7 @@ local function create_clear_shadowmap_queue(fbidx)
 			render_target = {
 				clear_state = {
 					color = 0xffffffff,
-					depth = 1,
+					depth = 0,
 					clear = "D",
 				},
 				fb_idx = fbidx,

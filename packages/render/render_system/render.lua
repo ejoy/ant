@@ -54,7 +54,7 @@ end
 local function def_state_op(dst_s, src_s)
 	dst_s.PT           = src_s.PT
 	dst_s.CULL         = src_s.CULL
-	dst_s.DEPTH_TEST   = "LESS"
+	dst_s.DEPTH_TEST   = "GREATER"
 end
 
 function irender.create_material_from_template(template_material_obj, state, cache)
@@ -111,7 +111,7 @@ end
 
 local default_clear_state = {
 	color = graphic_setting.render.clear_color or 0x000000ff,
-	depth = 1.0,
+	depth = 0.0,
 	clear = "CD",
 }
 
@@ -199,7 +199,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 				viewid = depth_viewid,
 				clear_state = {
 					clear = "D",
-					depth = 1,
+					depth = 0,
 				},
 				view_mode = "s",
 				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h, ratio=vr.ratio},

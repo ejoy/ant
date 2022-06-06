@@ -210,7 +210,7 @@ local function create_pick_entity()
 				},
 				clear_state = {
 					color = 0,
-					depth = 1,
+					depth = 0,
 					stencil = 0,
 					clear = "CDS"
 				},

@@ -13,7 +13,7 @@ properties:
     u_dash_info: {1.0, 0.1, 0.025, 0.0}   #xyz: dash enable, dash round, dash ratio
 state:
     CULL: NONE
-    DEPTH_TEST: LESS
+    DEPTH_TEST: GREATER
     MSAA: true
     WRITE_MASK: RGBA
     BLEND: ALPHA

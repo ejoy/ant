@@ -324,7 +324,7 @@ print_mat(r2l_mat1)
 print_mat(r2l_mat2)
 
 do
-	print "Reverse Z projection matrix:"
+	print "Inverse Z projection matrix:"
 	local frustum = {
 		l = -1.0, r = 1.0, t = 1.0, b = -1.0,
 		n = 1.0, f = 100

@@ -1,4 +1,4 @@
-local default = {}; default.__index = default
+local default = {}
 
 local default_far_distance = 300
 local default_near_distance = 1

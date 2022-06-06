@@ -9,6 +9,8 @@ local mu, mc    = mathpkg.util, mathpkg.constant
 local defcomp 	= import_package "ant.general".default
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
+local INV_Z     = import_package "ant.settings".setting:data().graphic.inv_z
+
 local ic = ecs.interface "icamera"
 
 local defaultcamera<const> = {
@@ -165,7 +167,7 @@ local cameraview_sys = ecs.system "camera_view_system"
 local function update_camera(e)
     local camera = e.camera
     camera.viewmat = math3d.inverse(e.scene._worldmat)
-    camera.projmat = math3d.projmat(camera.frustum)
+    camera.projmat = math3d.projmat(camera.frustum, INV_Z)
     camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 

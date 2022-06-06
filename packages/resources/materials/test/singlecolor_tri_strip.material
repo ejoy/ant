@@ -8,7 +8,7 @@ properties:
 state:
   ALPHA_REF: 0
   CULL: CCW
-  DEPTH_TEST: LESS
+  DEPTH_TEST: GREATER
   MSAA: true
   PT: TRISTRIP
   WRITE_MASK: RGBAZ

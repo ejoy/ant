@@ -1328,61 +1328,47 @@ ltransform_homogeneous_point(lua_State *L) {
 	return 1;
 }
 
+static inline float
+read_number(lua_State *L, int index, const char* n, float opt){
+	lua_getfield(L, index, n);
+	const float num = (float)luaL_optnumber(L, -1, opt);
+	lua_pop(L, 1);
+	return num;
+}
+
 static void
 create_proj_mat(lua_State *L, struct lastack *LS, int index, int inv_z) {
-	float left, right, top, bottom;
-	lua_getfield(L, index, "n");
-	float near = (float)luaL_optnumber(L, -1, 0.1f);
-	lua_pop(L, 1);
-	lua_getfield(L, index, "f");
-	float far = (float)luaL_optnumber(L, -1, 100.0f);
-	lua_pop(L, 1);
+	const char* nn, *ff;
+	if (inv_z) {nn="f"; ff="n";}
+	else { nn="n"; ff="f";}
 
-	int mattype = MAT_PERSPECTIVE;
+	const float near = read_number(L, index, nn, 0.1f);
+	const float far = read_number(L, index, ff, 100.f);
+
 	if (lua_getfield(L, index, "fov") == LUA_TNUMBER) {
 		float fov = (float)lua_tonumber(L, -1);
 		lua_pop(L, 1);
-		lua_getfield(L, index, "aspect");
-		float aspect = (float)luaL_checknumber(L, -1);
-		lua_pop(L, 1);
-		float ymax = near * tanf(fov * ((float)M_PI / 360));
-		float xmax = ymax * aspect;
-		left = -xmax;
-		right = xmax;
-		bottom = -ymax;
-		top = ymax;
+
+		fov *= (float)M_PI / 180.f;
+
+		const float aspect = read_number(L, index, "aspect", 1.f);
+		math3d_perspectiveLH(LS, fov, aspect, near, far, g_default_homogeneous_depth);
 	} else {
 		lua_pop(L, 1); //pop "fov"
+
+		const float left = read_number(L, index, "l", -1.f);
+		const float right = read_number(L, index, "r", 1.f);
+
+		const float top = read_number(L, index, "t", 1.f);
+		const float bottom = read_number(L, index, "b", -1.f);
+
 		lua_getfield(L, index, "ortho");
-		if (lua_toboolean(L, -1)) {
-			mattype = MAT_ORTHO;
-		}
+		if (lua_toboolean(L, -1))
+			math3d_orthoLH(LS, left, right, bottom, top, near, far, g_default_homogeneous_depth);
+		else
+			math3d_frustumLH(LS, left, right, bottom, top, near, far, g_default_homogeneous_depth);
 		lua_pop(L, 1); //pop "ortho"
-		lua_getfield(L, index, "l");
-		left = (float)luaL_checknumber(L, -1);
-		lua_pop(L, 1);
-		lua_getfield(L, index, "r");
-		right = (float)luaL_checknumber(L, -1);
-		lua_pop(L, 1);
-		lua_getfield(L, index, "b");
-		bottom = (float)luaL_checknumber(L, -1);
-		lua_pop(L, 1);
-		lua_getfield(L, index, "t");
-		top = (float)luaL_checknumber(L, -1);
-		lua_pop(L, 1);
 	}
-
-	if (inv_z){
-		float t = far;
-		far = near; near = t;
-	}
-
-	if (mattype == MAT_PERSPECTIVE) {
-		math3d_frustumLH(LS, left, right, bottom, top, near, far, g_default_homogeneous_depth);
-	} else {
-		math3d_orthoLH(LS, left, right, bottom, top, near, far, g_default_homogeneous_depth);
-	}
-
 }
 
 static int

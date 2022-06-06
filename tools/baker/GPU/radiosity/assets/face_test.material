@@ -11,6 +11,6 @@ properties:
 state:
     ALPHA_REF: 0
     CULL: NONE
-    DEPTH_TEST: LESS
+    DEPTH_TEST: GREATER
     MSAA: true
     WRITE_MASK: RGBAZ

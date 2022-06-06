@@ -1,5 +1,4 @@
 local hw = {}
-hw.__index = hw
 
 local platform = require "platform"
 local bgfx     = require "bgfx"

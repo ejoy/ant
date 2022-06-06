@@ -51,7 +51,7 @@ function tm_sys:init_world()
                 view_mode = "",
                 clear_state = {
                     clear = "D", --clear z buffer for effect
-                    depth = 1
+                    depth = 0
                 },
             },
             queue_name = "tonemapping_queue",
