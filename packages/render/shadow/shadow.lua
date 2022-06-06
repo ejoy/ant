@@ -36,7 +36,7 @@ local function get_render_buffers(width, height)
 				MAG="LINEAR",
 				U="CLAMP",
 				V="CLAMP",
-				COMPARE="COMPARE_LEQUAL",
+				COMPARE="COMPARE_GEQUAL",
 				BOARD_COLOR="0",
 			},
 		}
