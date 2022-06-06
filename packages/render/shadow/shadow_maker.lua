@@ -15,7 +15,7 @@ local irender	= ecs.import.interface "ant.render|irender"
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local fbmgr		= require "framebuffer_mgr"
 
-local INV_Z     = import_package "ant.settings".setting:data().graphic.inv_z
+local INV_Z<const> = true
 -- local function create_crop_matrix(shadow)
 -- 	local view_camera = world.main_queue_camera(world)
 

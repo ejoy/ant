@@ -9,7 +9,7 @@ local mu, mc    = mathpkg.util, mathpkg.constant
 local defcomp 	= import_package "ant.general".default
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
-local INV_Z     = import_package "ant.settings".setting:data().graphic.inv_z
+local INV_Z<const> = true
 
 local ic = ecs.interface "icamera"
 

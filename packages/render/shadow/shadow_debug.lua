@@ -5,7 +5,7 @@ local w 	= world.w
 local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
 
-local INV_Z     = import_package "ant.settings".setting:data().graphic.inv_z
+local INV_Z<const> = true
 
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"

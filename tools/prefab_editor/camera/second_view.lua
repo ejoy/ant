@@ -10,7 +10,7 @@ local defaultcomp= import_package "ant.general".default
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 
-local INV_Z     = import_package "ant.settings".setting:data().graphic.inv_z
+local INV_Z<const> = true
 
 local math3d    = require "math3d"
 

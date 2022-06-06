@@ -17,7 +17,7 @@ local w = world.w
     right now, this omni is disable
 ]]
 
-local INV_Z     = import_package "ant.settings".setting:data().graphic.inv_z
+local INV_Z<const> = true
 
 local fbmgr         = require "framebuffer_mgr"
 local viewidmgr     = require "viewid_mgr"

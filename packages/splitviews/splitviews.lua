@@ -8,7 +8,7 @@ local irender   = ecs.import.interface "ant.render|irender"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
-local INV_Z     = import_package "ant.settings".setting:data().graphic.inv_z
+local INV_Z<const> = true
 
 local svs = ecs.system "splitviews_system"
 

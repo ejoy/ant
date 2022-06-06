@@ -41,7 +41,7 @@ function st_sys:init()
 			name = "mesh_root",
 		}
 	}
-	ecs.create_instance "/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab"
+	--ecs.create_instance "/pkg/ant.resources.binary/meshes/RiggedFigure.glb|mesh.prefab"
 
 	local ee = ecs.create_entity{
 		policy = {
@@ -60,7 +60,7 @@ function st_sys:init()
 			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
             debug_mesh_bounding = true,
 			on_ready = function (e)
-				imaterial.set_property(e, "u_basecolor_factor", {0.8, 0.8, 0.8, 1})
+				imaterial.set_property(e, "u_basecolor_factor", math3d.vector(0.8, 0.8, 0.8, 1))
 			end,
 		}
     }
