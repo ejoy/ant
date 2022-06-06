@@ -52,6 +52,10 @@ function list_meta:get_selected()
     return self.selected
 end
 
+function list_meta:get_item(index)
+    return self.index_map[index].item
+end
+
 function list_meta:on_dirty(index)
     local iteminfo = self.index_map[index]
     self:show_detail(iteminfo.item, false)

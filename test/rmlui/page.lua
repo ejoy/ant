@@ -35,7 +35,7 @@ function page_meta.create(document, e, item_renderer, detail_renderer)
     panel.addEventListener('touchend', function(event) page:on_mouseup(event) end)
     panel.style.height = page.height
     panel.style.flexDirection = 'row'
-    panel.style.alignItems = 'center'
+    panel.style.alignItems = 'flex-start'
     panel.style.justifyContent = 'flex-start'
     page.panel = panel
 
