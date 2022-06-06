@@ -89,6 +89,9 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	Color color = Color::FromSRGB(255, 255, 255, 255);
 	color.ApplyOpacity(element->GetOpacity());
 
+	if (!color.IsVisible())
+		return;
+
 	if (texSize.IsEmpty()) {
 		texSize = texture->GetDimensions();
 	}
