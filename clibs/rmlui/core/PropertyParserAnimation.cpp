@@ -161,7 +161,7 @@ std::optional<Property> PropertyParserAnimation::ParseValue(const std::string& v
 		}
 
 		// Validate the parsed transition
-		if (animation.name.empty() || animation.transition.duration <= 0.0f || (animation.num_iterations < -1 || animation.num_iterations == 0))
+		if (animation.name.empty() || (animation.num_iterations < -1 || animation.num_iterations == 0))
 		{
 			return std::nullopt;
 		}
