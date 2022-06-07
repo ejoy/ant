@@ -13,6 +13,6 @@ properties:
 state:
     ALPHA_REF: 0
     CULL: CW
-    DEPTH_TEST: LEQUAL
+    DEPTH_TEST: GEQUAL
     MSAA: true
     WRITE_MASK: RGBA
