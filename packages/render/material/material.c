@@ -10,6 +10,8 @@
 
 #include <luabgfx.h>
 
+#include "vla.h"
+
 #ifdef _DEBUG
 #define verfiy(_CON)	assert(_CON)
 #else //!_DEBUG
@@ -88,11 +90,6 @@ typedef union
 	struct attrib_ref		ref;
 }	attrib_type;
 
-#define COBJECT_UV_ATTRIB_BUFFER	1
-#define COBJECT_UV_SYSTEM_ATTRIBS	2
-#define COBJECT_UV_INVALID_LIST		3
-#define COBJECT_UV_NUM				3
-
 #define MAX_COLOR_PALETTE_COUNT		8
 #define MAX_COLOR_IN_PALETTE		256
 struct color{
@@ -103,6 +100,10 @@ struct color_palette{
 	struct color colors[MAX_COLOR_IN_PALETTE];
 };
 
+#define COBJECT_UV_ATTRIB_BUFFER	1
+#define COBJECT_UV_SYSTEM_ATTRIBS	2
+#define COBJECT_UV_INVALID_LIST		3
+#define COBJECT_UV_NUM				3
 // uv1: attrib buffer
 // uv2: system attribs
 // uv3: material invalid attrib list
@@ -118,19 +119,23 @@ struct attrib_arena {
 	struct color_palette color_palettes[MAX_COLOR_PALETTE_COUNT];
 };
 
-#define MATERIAL_UV_INSTANCE_MT	1
-#define MATERIAL_UV_COBJECT		2
-#define MATERIAL_UV_LUT			3
-#define MATERIAL_UV_NUM			3
+#define MATERIAL_UV_COBJECT			1
+#define MATERIAL_UV_LUT				2
+#define MATERIAL_UV_INVALID_LIST	3
+#define MATERIAL_UV_NUM				3
 
-//uv1: material instance metatable
-//uv2: cobject
-//uv3: lookup table, [name: id]
+//uv1: cobject
+//uv2: lookup table, [name: id]
+//uv3: invalid list handle
 struct material {
 	uint64_t state;
 	uint32_t rgba;
 	uint16_t attrib;
 };
+
+#define INSTANCE_UV_INVALID_LIST	1
+#define INSTANCE_UV_MATERIAL		2
+#define INSTANCE_UV_NUM				2
 
 //TODO: patch attrib list should include world matrix
 struct material_instance {
@@ -150,7 +155,7 @@ arena_new(lua_State *L, bgfx_interface_vtbl_t *bgfx, struct math3d_api *mapi, st
 	a->cp_idx = 0;
 	memset(&a->color_palettes, sizeof(a->color_palettes), 0);
 	//invalid material attrib list
-	lua_newtable(L);
+	vla_lua_new(L, 0, sizeof(uint16_t));
 	verfiy(lua_setiuservalue(L, -2, COBJECT_UV_INVALID_LIST));	//set invalid table as uv 3
 	return a;
 }
@@ -245,6 +250,25 @@ al_attrib_num(struct attrib_arena* arena, attrib_type *a){
 	return c;
 }
 
+static inline void
+al_attrib_return(struct attrib_arena * arena, attrib_type *a) {
+	uint16_t id = al_attrib_id(arena, a);
+	a->h.next = arena->freelist;
+	arena->freelist = id;
+}
+
+static inline uint16_t
+al_attrib_clear(struct attrib_arena *arena, uint16_t id) {
+	attrib_type *a = al_attrib(arena, id);
+	if (a->h.type == ATTRIB_UNIFORM) {
+		math3d_unmark_id(arena->math, a->u.m);
+		a->u.m = 0;
+	}
+	id = a->h.next;
+	al_attrib_return(arena, a);
+	return id;
+}
+
 //material instance: mi_*////////////////////////////////////////////////////////////////////////////
 static inline int
 mi_is_patch_attrib(struct attrib_arena *arena, struct material_instance *mi, uint16_t pid){
@@ -311,35 +335,13 @@ arena_alloc(lua_State *L, int idx) {
 }
 
 static void
-arena_return(struct attrib_arena * arena, attrib_type *a) {
-	uint16_t id = (uint16_t)(a - arena->a);
-	a->h.next = arena->freelist;
-	arena->freelist = id;
-}
-
-static inline uint16_t
-clear_attrib(struct attrib_arena *arena, uint16_t id) {
-	attrib_type *a = al_attrib(arena, id);
-	if (a->h.type == ATTRIB_UNIFORM) {
-		math3d_unmark_id(arena->math, a->u.m);
-		a->u.m = 0;
-	}
-	id = a->h.next;
-	arena_return(arena, a);
-	return id;
-}
-
-static void
-clear_unused_attribs(lua_State *L, struct attrib_arena *arena, int n) {
-	int i;
-	for (i=0;i<n;i++) {
-		lua_rawgeti(L, -1, i+1);
-		uint16_t id = (uint16_t)luaL_checkinteger(L, -1);
-		lua_pop(L, 1);
-		lua_pushnil(L);
-		lua_rawseti(L, -2, i+1);
+clear_unused_attribs(lua_State *L, struct attrib_arena *arena, vla_handle_t hlist) {
+	vla_using(list, uint16_t, hlist, L);
+	const int n = vla_size(list);
+	for (int i=0;i<n;++i) {
+		uint16_t id = list[i];
 		do {
-			id = clear_attrib(arena, id);
+			id = al_attrib_clear(arena, id);
 		} while (id != INVALID_ATTRIB);
 	}
 }
@@ -472,25 +474,28 @@ get_state(lua_State *L, int idx, uint64_t *pstate, uint32_t *prgba) {
 	*prgba = rgba;
 }
 
-// 1: material
-static int
-lmaterial_instance(lua_State *L) {
-	struct material_instance * mi = (struct material_instance *)lua_newuserdatauv(L, sizeof(*mi), 0);
-	mi->patch_attrib = INVALID_ATTRIB;
-	if (LUA_TTABLE != lua_getiuservalue(L, 1, MATERIAL_UV_INSTANCE_MT)){	// push material instance metatable
-		return luaL_error(L, "Invalid material object, uservalue in 1 is not material instance metatable");
+static inline vla_handle_t
+to_vla_handle(lua_State *L, int idx){
+	vla_handle_t hlist;
+	hlist.l = (struct vla_lua*)lua_touserdata(L, -1);
+	return hlist;
+}
+
+static inline void
+clear_material_attribs(lua_State *L, int mat_idx){
+	struct material* m = (struct material*)lua_touserdata(L, mat_idx);
+	
+	if (LUA_TUSERDATA != lua_getiuservalue(L, mat_idx, MATERIAL_UV_COBJECT)){
+		luaL_error(L, "Invalid material for cobject");
 	}
-	int n = (int)lua_rawlen(L, -1);	// free instance attrib
-	if (n > 0) {
-		lua_getfield(L, -1, "__gc");
-		if (lua_getupvalue(L, -1, 2) == NULL)
-			return luaL_error(L, "Invalid material metatable");
-		struct attrib_arena * arena = lua_touserdata(L, -1);
-		lua_pop(L, 2);
-		clear_unused_attribs(L, arena, n);
+	struct attrib_arena * arena = (struct attrib_arena *)lua_touserdata(L, -1);
+	lua_pop(L, 1);
+	if (LUA_TUSERDATA != lua_getiuservalue(L, mat_idx, MATERIAL_UV_INVALID_LIST)){
+		luaL_error(L, "Invalid material for invalid list handle");
 	}
-	lua_setmetatable(L, -2);
-	return 1;
+	vla_handle_t hlist = to_vla_handle(L, -1);
+	lua_pop(L, 1);
+	clear_unused_attribs(L, arena, hlist);
 }
 
 static void
@@ -500,7 +505,7 @@ unset_instance_attrib(struct material_instance *mi, struct attrib_arena *arena, 
 		const int num = al_attrib_num(arena, a);
 		uint16_t id = ref;
 		for (int i=0;i<num;i++) {
-			id = clear_attrib(arena, id);
+			id = al_attrib_clear(arena, id);
 		}
 	}
 }
@@ -956,42 +961,43 @@ linstance_set_attrib(lua_State *L) {
 }
 
 static void
-return_invalid_attrib_from_instance(lua_State *L, int mat_idx, int invalid_list_idx, int start){
-	//push material instance invalid attrib list to material invalid attrib list table
-		// material_instance metatable
-	if (lua_getiuservalue(L, mat_idx, MATERIAL_UV_INSTANCE_MT) != LUA_TTABLE) {
-		luaL_error(L, "Invalid material data in uservalue 1, should be material instance metatable");
+return_invalid_attrib_from_instance(lua_State *L, int mat_idx, vla_handle_t cobj_hlist){
+	if (LUA_TUSERDATA != lua_getiuservalue(L, mat_idx, MATERIAL_UV_INVALID_LIST)){
+		luaL_error(L, "Invalid material index:%d", mat_idx);
 	}
-	const int instance_idx = lua_gettop(L);
+	vla_handle_t mhlist = to_vla_handle(L, -1);
+	vla_using(mlist, uint16_t, mhlist, L);
+	vla_using(cobjlist, uint16_t, cobj_hlist, L);
+	for (int i=0;i<vla_size(mlist); ++i){
+		vla_push(cobjlist, mlist[i], L);
+	}
+}
 
-	const int num = (int)lua_rawlen(L, instance_idx);
-	for (int i=0;i<num;i++) {
-		if ( LUA_TNUMBER != lua_rawgeti(L, instance_idx, i+1)){
-			luaL_error(L, "Invalid data in invalid material instance table, number excepted");
-		}
-		lua_rawseti(L, invalid_list_idx, ++start);
+static inline vla_handle_t
+material_get_cobj_invalid_list(lua_State*L, int mat_idx){
+	if (lua_getiuservalue(L, 1, MATERIAL_UV_COBJECT) != LUA_TUSERDATA){
+		luaL_error(L, "Invalid material data, user value 1 is not 'cobject'");
 	}
+	if (LUA_TUSERDATA != lua_getiuservalue(L, -1, COBJECT_UV_INVALID_LIST)){// material invalid attrib list table
+		luaL_error(L, "Invalid uservalue in 'cobject', uservalue in 3 should ba invalid material atrrib table");
+	}
+	vla_handle_t cobj_hlist = to_vla_handle(L, -1);
+	lua_pop(L, 2);
+	return cobj_hlist;
 }
 
 static int
 lmaterial_gc(lua_State *L) {
 	struct material *mat = (struct material *)lua_touserdata(L, 1);
-	if (lua_getiuservalue(L, 1, MATERIAL_UV_COBJECT) != LUA_TUSERDATA){
-		return luaL_error(L, "Invalid material data, user value 1 is not 'cobject'");
-	}
-	if (LUA_TTABLE != lua_getiuservalue(L, -1, COBJECT_UV_INVALID_LIST)){// material invalid attrib list table
-		luaL_error(L, "Invalid uservalue in 'cobject', uservalue in 3 should ba invalid material atrrib table");
-	}
-	const int invalid_list_idx = lua_gettop(L);
-	int n = (int)lua_rawlen(L, -1);
+	vla_handle_t cobj_hlist = material_get_cobj_invalid_list(L, 1);
+
 	if (mat->attrib != INVALID_ATTRIB) {
-		lua_pushinteger(L, mat->attrib);
-		lua_rawseti(L, invalid_list_idx, ++n);
+		vla_using(cobjlist, uint16_t, cobj_hlist, L);
+		vla_push(cobjlist, mat->attrib, L);
 		mat->attrib = INVALID_ATTRIB;
 	}
 
-	return_invalid_attrib_from_instance(L, 1, invalid_list_idx, n);
-
+	return_invalid_attrib_from_instance(L, 1, cobj_hlist);
 	lua_pop(L, 2);				// cobject, material invalid attrib list
 	return 0;
 }
@@ -1184,23 +1190,33 @@ linstance_get_state(lua_State *L){
 	return push_material_state(L, mat);
 }
 
-// 1: material
-// 2: cobject
-static void
-create_material_instance_metatable(lua_State *L) {
-	luaL_Reg l[] = {
-		{ "__gc", 			linstance_gc		},
-		{ "__newindex", 	linstance_set_attrib},
-		{ "__call", 		linstance_apply_attrib},
-		{ "get_material",	linstance_get_material},
-		{ "get_state",		linstance_get_state},
-		{ NULL, 		NULL },
-	};
-	luaL_newlibtable(L, l);
-	lua_insert(L, -3);
-	luaL_setfuncs(L, l, 2);
-	lua_pushvalue(L, -1);
-	lua_setfield(L, -1, "__index");
+static int
+lmaterial_instance(lua_State *L) {
+	clear_material_attribs(L, 1);
+
+	struct material_instance * mi = (struct material_instance *)lua_newuserdatauv(L, sizeof(*mi), INSTANCE_UV_NUM);
+	mi->patch_attrib = INVALID_ATTRIB;
+	vla_lua_new(L, 0, sizeof(uint16_t));
+	verfiy(lua_setiuservalue(L, -2, INSTANCE_UV_INVALID_LIST));
+	lua_pushvalue(L, 1);
+	verfiy(lua_setiuservalue(L, -2, INSTANCE_UV_MATERIAL));
+
+	if (luaL_newmetatable(L, "ANT_MATERIAL_INSTANCE_MT")){
+		luaL_Reg l[] = {
+			{ "__gc", 			linstance_gc		},
+			{ "__newindex", 	linstance_set_attrib},
+			{ "__call", 		linstance_apply_attrib},
+			{ "get_material",	linstance_get_material},
+			{ "get_state",		linstance_get_state},
+			{ NULL, 		NULL },
+		};
+
+		luaL_setfuncs(L, l, 0);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+	}
+	lua_setmetatable(L, -2);
+	return 1;
 }
 
 static inline uint16_t
@@ -1228,19 +1244,9 @@ lmaterial_type_gc(lua_State *L){
 	struct material* submat = (struct material*)luaL_checkudata(L, 1, "ANT_MATERIAL_TYPE");
 	submat->attrib = INVALID_ATTRIB;
 
-	if (LUA_TUSERDATA != lua_getiuservalue(L, 1, MATERIAL_UV_COBJECT)){
-		return luaL_error(L, "Invalid material subtype");
-	}
-
-	if (LUA_TTABLE != lua_getiuservalue(L, -1, COBJECT_UV_INVALID_LIST)){
-		return luaL_error(L, "Invalid cobject");
-	}
-
-	const int invalid_list_idx = lua_gettop(L);
-	int n = (int)lua_rawlen(L, -1);
-	return_invalid_attrib_from_instance(L, 1, invalid_list_idx, n);
-
-	return 1;
+	vla_handle_t cobj_hlist = material_get_cobj_invalid_list(L, 1);
+	return_invalid_attrib_from_instance(L, 1, cobj_hlist);
+	return 0;
 }
 
 static int
@@ -1266,7 +1272,9 @@ set_material_matatable(lua_State *L, const char* mtname, int issubtype){
 	lua_setmetatable(L, -2);
 }
 
-
+//material type user value:
+//1. cobject
+//2. material lut
 static int
 lmaterial_copy(lua_State *L){
 	struct material* temp_mat = (struct material*)lua_touserdata(L, 1);
@@ -1280,16 +1288,10 @@ lmaterial_copy(lua_State *L){
 	}
 
 	//uv1
-	lua_pushvalue(L, -1);	// material
-	lua_getiuservalue(L, 1, MATERIAL_UV_COBJECT); //cobject
-	create_material_instance_metatable(L);
-	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_INSTANCE_MT));
-
-	//uv2
 	lua_getiuservalue(L, 1, MATERIAL_UV_COBJECT);
 	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_COBJECT));
 
-	//uv3
+	//uv2
 	lua_getiuservalue(L, 1, MATERIAL_UV_LUT);
 	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_LUT));
 
@@ -1313,12 +1315,6 @@ lmaterial_new(lua_State *L) {
 	struct attrib_arena * arena = CAPI_ARENA;
 	struct material *mat = (struct material *)lua_newuserdatauv(L, sizeof(*mat), MATERIAL_UV_NUM);
 
-	// push 2 up value for material_instance metatable functions
-	lua_pushvalue(L, -1);	// material
-	lua_pushvalue(L, 1);	// cobject
-	create_material_instance_metatable(L);
-	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_INSTANCE_MT));			// push material instance metatable as uv1
-
 	lua_pushvalue(L, 1);
 	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_COBJECT));			// push cobject as uv2
 
@@ -1341,6 +1337,9 @@ lmaterial_new(lua_State *L) {
 	lua_pop(L, 1);	//system attrib table
 
 	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_LUT));	// push lookup table as uv3
+
+	vla_lua_new(L, 0, sizeof(uint16_t));
+	verfiy(lua_setiuservalue(L, -2, MATERIAL_UV_INVALID_LIST));
 
 	set_material_matatable(L, "ANT_MATERIAL", 0);
 	return 1;
