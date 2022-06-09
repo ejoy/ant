@@ -10,7 +10,6 @@ local iani 	= ecs.interface "ianimation"
 local math3d = require "math3d"
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
-local tweenutils = require "tween_utils"
 local EditMode = false
 function iani.set_edit_mode(b)
 	EditMode = b
@@ -42,13 +41,13 @@ local Dir = {
 
 function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 	local function tween_push_anim_key(raw_anim, joint_name, clip, time, duration, to_pos, to_rot, poseMat, reverse)
-		if clip.tween == tweenutils.TWEEN_LINEAR then
+		if clip.tween == mu.TWEEN_LINEAR then
 			return
 		end
         local tween_step = 1.0 / TWEEN_SAMPLE
         for j = 1, TWEEN_SAMPLE - 1 do
 			local rj = reverse and (TWEEN_SAMPLE - j) or j
-            local tween_ratio = tweenutils.tween[clip.tween](rj * tween_step)
+            local tween_ratio = mu.tween[clip.tween](rj * tween_step)
             local tween_local_mat = math3d.matrix{
                 s = 1,
                 r = math3d.quaternion{math.rad(to_rot[1] * tween_ratio), math.rad(to_rot[2] * tween_ratio), math.rad(to_rot[3] * tween_ratio)},

@@ -2,14 +2,15 @@ local ecs = ...
 local world = ecs.world
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local timer     = ecs.import.interface "ant.timer|itimer"
-local tweenutils = require "tween_utils"
+local mathpkg	= import_package "ant.math"
+local mu	    = mathpkg.util
 local im_sys    = ecs.system "motion_system"
 local im        = ecs.interface "imotion"
 
 local all_motions = {}
 
 local testdecs0 = {
-    tween_type = tweenutils.TWEEN_LINEAR,
+    tween_type = mu.TWEEN_LINEAR,
     duration = 1.0,
     time = 0.0,
     from = {
@@ -23,7 +24,7 @@ local testdecs0 = {
 }
 
 local testdecs1 = {
-    tween_type = tweenutils.TWEEN_BOUNCE_OUT,
+    tween_type = mu.TWEEN_BOUNCE_OUT,
     duration = 0.5,
     time = 0.0,
     from = {
@@ -55,13 +56,13 @@ function im_sys:data_changed()
         local current = m.motions[m.current_midx]
         local ratio = current.time / current.duration
         if current.from.scale then
-            iom.set_scale(world:entity(eid), interp(tweenutils.tween[current.tween_type](ratio), current.from.scale, current.to.scale))
+            iom.set_scale(world:entity(eid), interp(mu.tween[current.tween_type](ratio), current.from.scale, current.to.scale))
         end
         if current.from.rotation then
-            iom.set_rotation(world:entity(eid), interp(tweenutils.tween[current.tween_type](ratio), current.from.rotation, current.to.rotation))
+            iom.set_rotation(world:entity(eid), interp(mu.tween[current.tween_type](ratio), current.from.rotation, current.to.rotation))
         end
         if current.from.postion then
-            iom.set_position(world:entity(eid), interp(tweenutils.tween[current.tween_type](ratio), current.from.postion, current.to.postion))
+            iom.set_position(world:entity(eid), interp(mu.tween[current.tween_type](ratio), current.from.postion, current.to.postion))
         end
         current.time = current.time + delta_time
         if current.time > current.duration then
