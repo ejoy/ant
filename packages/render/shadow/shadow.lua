@@ -23,12 +23,30 @@ local scale_offset = hwi.get_caps().homogeneousDepth and homogeneous_depth_scale
 
 local shadowcfg = setting:data().graphic.shadow
 
-local function get_render_buffers(width, height)
-	return {
+local function shadow_color()
+	local c = {0, 0, 0, 1}
+	for idx, v in ipairs(shadowcfg.color) do
+		c[idx] = v
+	end
+
+	return c
+end
+
+bgfx.set_palette_color(0, 1.0, 1.0, 1.0, 1.0)
+local csm_setting = {
+	shadowmap_size	= shadowcfg.size,
+	shadow_param	= {shadowcfg.bias, shadowcfg.normal_offset, 1/shadowcfg.size, 0},
+    color			= math3d.ref(math3d.vector(shadow_color())),
+    --stabilize		= shadowcfg.stabilize,
+	split_num		= shadowcfg.split_num,
+	cross_delta		= shadowcfg.cross_delta or 0.005,
+	split_weight	= shadowcfg.split_weight or 0.5,
+	split_frustums	= {nil, nil, nil, nil},
+	fb_index		= fbmgr.create{
 		rbidx=fbmgr.create_rb{
 			format = "D32F",
-			w=width,
-			h=height,
+			w=shadowcfg.size * shadowcfg.split_num,
+			h=shadowcfg.size,
 			layers=1,
 			flags=sampler{
 				RT="RT_ON",
@@ -40,28 +58,7 @@ local function get_render_buffers(width, height)
 				BOARD_COLOR="0",
 			},
 		}
-	}
-end
-
-local function shadow_color()
-	local c = {0, 0, 0, 1}
-	for idx, v in ipairs(shadowcfg.color) do
-		c[idx] = v
-	end
-
-	return c
-end
-
-local csm_setting = {
-	shadowmap_size	= shadowcfg.size,
-	shadow_param	= {shadowcfg.bias, shadowcfg.normal_offset, 1/shadowcfg.size, 0},
-    color			= math3d.ref(math3d.vector(shadow_color())),
-    --stabilize		= shadowcfg.stabilize,
-	split_num		= shadowcfg.split_num,
-	cross_delta		= shadowcfg.cross_delta or 0.005,
-	split_weight	= shadowcfg.split_weight or 0.5,
-	split_frustums	= {nil, nil, nil, nil},
-	fb_index		= fbmgr.create(get_render_buffers(shadowcfg.size * shadowcfg.split_num, shadowcfg.size)),
+	},
 }
 
 local function gen_ratios(distances)

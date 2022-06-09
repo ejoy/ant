@@ -119,7 +119,7 @@ local cp_eid, quad_eid
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
-    ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+    --ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
     local pp = ecs.create_instance "/pkg/ant.resources.binary/meshes/up_box.glb|mesh.prefab"
     function pp.on_ready(e)
@@ -132,15 +132,17 @@ function init_loader_sys:init()
     end
     world:create_object(p)
 
-    cp_eid = color_palette_test()
+    --cp_eid = color_palette_test()
 
-    quad_eid = ientity.create_quad_lines_entity("quads", {r=math3d.quaternion{0.0, math.pi*0.5, 0.0}}, 
-        "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
+    -- quad_eid = ientity.create_quad_lines_entity("quads", {r=math3d.quaternion{0.0, math.pi*0.5, 0.0}}, 
+    --     "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
 
-    create_texture_plane_entity(
-        {1, 1.0, 1.0, 1.0}, 
-        "/pkg/ant.resources/textures/texture_plane.texture",
-        {x=64, y=0, w=64, h=64}, {w=384, h=64})
+    -- create_texture_plane_entity(
+    --     {1, 1.0, 1.0, 1.0}, 
+    --     "/pkg/ant.resources/textures/texture_plane.texture",
+    --     {x=64, y=0, w=64, h=64}, {w=384, h=64})
+
+    --ecs.create_instance "/pkg/ant.resources.binary/meshes/world_simple.glb|mesh.prefab"
 
     --ientity.create_grid_entity_simple "grid"
 

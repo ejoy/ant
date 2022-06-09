@@ -18,7 +18,6 @@ function st_sys:init()
 			filter_state = "main_view|selectable|cast_shadow",
 			scene =  {
 				srt = {
-					s=100,
 					t={3, 1, 0, 0}
 				}
 			},
