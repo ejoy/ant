@@ -10,6 +10,7 @@ local iani 	= ecs.interface "ianimation"
 local math3d = require "math3d"
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
+local tweenutils = require "tween_utils"
 local EditMode = false
 function iani.set_edit_mode(b)
 	EditMode = b
@@ -20,14 +21,6 @@ local TYPE_REBOUND <const>	= 2
 local TYPE_SHAKE <const>	= 3
 
 local TWEEN_SAMPLE <const> 			= 15
-
-local TWEEN_LINEAR <const> 			= 1
-local TWEEN_CUBIC_IN <const> 		= 2
-local TWEEN_CUBIC_OUT <const> 		= 3
-local TWEEN_CUBIC_INOUT <const>		= 4
-local TWEEN_BOUNCE_IN <const> 		= 5
-local TWEEN_BOUNCE_OUT <const> 		= 6
-local TWEEN_BOUNCE_INOUT <const>	= 7
 
 local DIR_X <const> 	= 1
 local DIR_Y <const> 	= 2
@@ -47,59 +40,15 @@ local Dir = {
     math3d.ref(math3d.normalize(math3d.vector{1,1,1})),
 }
 
-local function bounce_time(time)
-    if time < 1 / 2.75 then
-        return 7.5625 * time * time
-    elseif time < 2 / 2.75 then
-        time = time - 1.5 / 2.75
-        return 7.5625 * time * time + 0.75
-    
-    elseif time < 2.5 / 2.75 then
-        time = time - 2.25 / 2.75
-        return 7.5625 * time * time + 0.9375
-    end
-    time = time - 2.625 / 2.75
-    return 7.5625 * time * time + 0.984375
-end
-
-local tween_func = {
-    function (time) return time end,
-    function (time) return time * time * time end,
-    function (time)
-        time = time - 1
-        return (time * time * time + 1)
-    end,
-    function (time)
-        time = time * 2
-        if time < 1 then
-            return 0.5 * time * time * time
-        end
-        time = time - 2;
-        return 0.5 * (time * time * time + 2)
-    end,
-    function (time) return 1 - bounce_time(1 - time) end,
-    function (time) return bounce_time(time) end,
-    function (time)
-        local newT = 0
-        if time < 0.5 then
-            time = time * 2;
-            newT = (1 - bounce_time(1 - time)) * 0.5
-        else
-            newT = bounce_time(time * 2 - 1) * 0.5 + 0.5
-        end
-        return newT
-    end,
-}
-
 function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 	local function tween_push_anim_key(raw_anim, joint_name, clip, time, duration, to_pos, to_rot, poseMat, reverse)
-		if clip.tween == TWEEN_LINEAR then
+		if clip.tween == tweenutils.TWEEN_LINEAR then
 			return
 		end
         local tween_step = 1.0 / TWEEN_SAMPLE
         for j = 1, TWEEN_SAMPLE - 1 do
 			local rj = reverse and (TWEEN_SAMPLE - j) or j
-            local tween_ratio = tween_func[clip.tween](rj * tween_step)
+            local tween_ratio = tweenutils.tween[clip.tween](rj * tween_step)
             local tween_local_mat = math3d.matrix{
                 s = 1,
                 r = math3d.quaternion{math.rad(to_rot[1] * tween_ratio), math.rad(to_rot[2] * tween_ratio), math.rad(to_rot[3] * tween_ratio)},
