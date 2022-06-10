@@ -47,7 +47,10 @@ local function getHash(fx)
     if fx.cs then
         return fx.cs[1]
     end
-    return fx.vs[1]..fx.fs[1]
+    if fx.fs then
+        return fx.vs[1]..fx.fs[1]
+    end
+    return fx.vs[1]
 end
 
 local function create_uniform(h, mark)
@@ -74,7 +77,9 @@ local function createRenderProgram(vs, fs)
         local uniforms = {}
         local mark = {}
         uniform_info(vs, uniforms, mark)
-        uniform_info(fs, uniforms, mark)
+        if fs then
+            uniform_info(fs, uniforms, mark)
+        end
         return prog, uniforms
     else
         error(string.format("create program failed, vs:%d, fs:%d", vs, fs))
@@ -113,10 +118,9 @@ end
 local function createProgram(fx)
     local function loadFxShader(stage)
         local shader = fx[stage]
-        if shader == nil then
-            error(("invalid stage:%s in fx file"):format(stage))
+        if shader then
+            return loadShader_(shader)
         end
-        return loadShader_(shader)
     end
 
     local result = {}
