@@ -82,13 +82,13 @@ float hardShadow(
 
 #ifdef LINEAR_SHADOW
 	vec2 texCoord = _shadowCoord.xy/_shadowCoord.w;
-	float receiver = (_shadowCoord.z-_bias)/_shadowCoord.w;
+	float receiver = (_shadowCoord.z+_bias)/_shadowCoord.w;
 	float occluder = texture2D(_sampler, texCoord).x;
-	float visibility = step(receiver, occluder);
+	float visibility = step(occluder, receiver);
 	return visibility;
 #else //
 	vec4 coord = _shadowCoord;
-	coord.z -= _bias;
+	coord.z += _bias;
 	return shadow2DProj(_sampler, coord);
 #endif //LINEAR_SHADOW
 }
