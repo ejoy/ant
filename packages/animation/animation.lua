@@ -12,9 +12,6 @@ local iefk          = ecs.import.interface "ant.efk|iefk"
 -- local iaudio    	= ecs.import.interface "ant.audio|audio_interface"
 local fs        = require "filesystem"
 local datalist  = require "datalist"
-local function get_current_anim_time(task)
-	return task.play_state.ratio * task.animation._handle:duration()
-end
 
 local function process_keyframe_event(task)
 	if not task then
@@ -26,7 +23,7 @@ local function process_keyframe_event(task)
 	local current_events = all_events and all_events[event_state.next_index] or nil
 	if not current_events then return end
 
-	local current_time = get_current_anim_time(task)
+	local current_time = task.play_state.ratio * task.animation._handle:duration()
 	if current_time < current_events.time and event_state.finish then
 		event_state.next_index = 1
 		event_state.finish = false
