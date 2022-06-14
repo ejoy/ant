@@ -13,12 +13,9 @@ local sampler= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
 local irender   = ecs.import.interface "ant.render|irender"
-local irq		= ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
-local setting 	= import_package "ant.settings".setting
-local curve_world = setting:data().graphic.curve_world
-local cw_enable = curve_world.enable
+local INV_Z<const> = true
 
 local pickup_materials = {}
 
@@ -52,6 +49,10 @@ local function update_camera(pu_camera_ref, clickpt)
 	local ndc2D = mu.pt2D_to_NDC(cvt_clickpt(clickpt, main_vr.ratio), main_vr)
 	local eye, at = mu.NDC_near_far_pt(ndc2D)
 
+	if INV_Z then
+		eye, at = at, eye
+	end
+
 	local maincamera = find_camera(mq.camera_ref)
 	local vp = maincamera.viewprojmat
 	local ivp = math3d.inverse(vp)
@@ -61,7 +62,7 @@ local function update_camera(pu_camera_ref, clickpt)
 	local camera = find_camera(pu_camera_ref)
 	local viewdir = math3d.normalize(math3d.sub(at, eye))
 	camera.viewmat = math3d.lookto(eye, viewdir, camera.updir)
-	camera.projmat = math3d.projmat(camera.frustum)
+	camera.projmat = math3d.projmat(camera.frustum, INV_Z)
 	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
@@ -182,7 +183,7 @@ local function create_pick_entity()
 			w = pickup_buffer_w,
 			h = pickup_buffer_h,
 			layers = 1,
-			format = "D24S8",
+			format = "D16F",
 			flags = fb_renderbuffer_flag,
 		}})
 
@@ -211,8 +212,7 @@ local function create_pick_entity()
 				clear_state = {
 					color = 0,
 					depth = 0,
-					stencil = 0,
-					clear = "CDS"
+					clear = "CD"
 				},
 				fb_idx = fbidx,
 			},
