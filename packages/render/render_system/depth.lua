@@ -104,10 +104,8 @@ function s:data_changed()
         end
 
         for _, _, ceid in mc_mb:unpack() do
-            local dq = w:singleton("pre_depth_queue", "camera_ref:update")
-            dq.camera_ref = ceid
-            local sdq = w:singleton("scene_depth_queue", "camera_ref:update")
-            sdq.camera_ref = ceid
+            w:singleton("pre_depth_queue", "camera_ref:out", {camera_ref = ceid})
+            w:singleton("scene_depth_queue", "camera_ref:out", {camera_ref = ceid})
         end
     end
 end
