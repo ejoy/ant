@@ -22,11 +22,25 @@ $input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT
 #endif //ENABLE_SHADOW
 
 // material properites
+#ifdef HAS_BASECOLOR_TEXTURE
 SAMPLER2D(s_basecolor,          0);
+#endif //HAS_BASECOLOR_TEXTURE
+
+#ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
 SAMPLER2D(s_metallic_roughness, 1);
+#endif //HAS_METALLIC_ROUGHNESS_TEXTURE
+
+#ifdef HAS_NORMAL_TEXTURE
 SAMPLER2D(s_normal,             2);
+#endif //HAS_NORMAL_TEXTURE
+
+#ifdef HAS_EMISSIVE_TEXTURE
 SAMPLER2D(s_emissive,           3);
+#endif //HAS_EMISSIVE_TEXTURE
+
+#ifdef HAS_OCCLUSION_TEXTURE
 SAMPLER2D(s_occlusion,          4);
+#endif //HAS_OCCLUSION_TEXTURE
 
 #ifdef USING_LIGHTMAP
 SAMPLER2D(s_lightmap,           8);
@@ -77,7 +91,7 @@ void get_metallic_roughness(out float metallic, out float roughness, vec2 uv)
     vec4 mrSample = texture2D(s_metallic_roughness, uv);
     roughness *= mrSample.g;
     metallic *= mrSample.b;
-#endif
+#endif //HAS_METALLIC_ROUGHNESS_TEXTURE
 
     roughness  = clamp(roughness, 0.0, 1.0);
     metallic   = clamp(metallic, 0.0, 1.0);
@@ -87,11 +101,10 @@ void main()
 {
     vec2 uv = uv_motion(v_texcoord0);
 
-    vec4 basecolor = get_basecolor(uv, 
 #ifdef WITH_COLOR_ATTRIB
-    v_color0);
+    vec4 basecolor = get_basecolor(uv, v_color0);
 #else //!WITH_COLOR_ATTRIB
-     vec4_splat(1.0));
+    vec4 basecolor = get_basecolor(uv, vec4_splat(1.0));
 #endif //WITH_COLOR_ATTRIB
 
 #ifdef ALPHAMODE_OPAQUE
@@ -144,6 +157,4 @@ void main()
 
     gl_FragColor = vec4(color, basecolor.a) + emissivecolor;
 #endif //MATERIAL_UNLIT
-
-
 }
