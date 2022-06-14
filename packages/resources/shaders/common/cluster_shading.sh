@@ -1,3 +1,5 @@
+#ifndef _CLUSTER_SHADING_SH_
+#define _CLUSTER_SHADING_SH_
 #include "bgfx_compute.sh"
 #include "common/lightdata.sh"
 #include "common/camera.sh"
@@ -131,3 +133,5 @@ float which_z(uint depth_slice, uint num_slice){
 	_LEN = _BUF.length();\
 }
 #endif //BGFX_SHADER_LANGUAGE_HLSL
+
+#endif //_CLUSTER_SHADING_SH_

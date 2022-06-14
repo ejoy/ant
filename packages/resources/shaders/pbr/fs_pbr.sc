@@ -12,6 +12,7 @@ $input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT
 #include "common/cluster_shading.sh"
 #include "common/constants.sh"
 #include "common/uvmotion.sh"
+#include "pbr/ibl.sh"
 
 #include "pbr/pbr.sh"
 
@@ -27,11 +28,6 @@ SAMPLER2D(s_normal,             2);
 SAMPLER2D(s_emissive,           3);
 SAMPLER2D(s_occlusion,          4);
 
-// IBL
-SAMPLERCUBE(s_irradiance,       5);
-SAMPLERCUBE(s_prefilter,        6);
-SAMPLER2D(s_LUT,                7);
-
 #ifdef USING_LIGHTMAP
 SAMPLER2D(s_lightmap,           8);
 #endif //USING_LIGHTMAP
@@ -43,10 +39,6 @@ uniform vec4 u_pbr_factor;
 #define u_roughness_factor   u_pbr_factor.y
 #define u_alpha_mask_cutoff  u_pbr_factor.z
 #define u_occlusion_strength u_pbr_factor.w
-
-uniform vec4 u_ibl_param;
-#define u_ibl_prefilter_mipmap_count    u_ibl_param.x
-#define u_ibl_indirect_intensity        u_ibl_param.y
 
 vec4 get_basecolor(vec2 texcoord, vec4 basecolor)
 {
@@ -91,37 +83,6 @@ void get_metallic_roughness(out float metallic, out float roughness, vec2 uv)
     metallic   = clamp(metallic, 0.0, 1.0);
 }
 
-vec3 get_IBL_radiance_Lambertian(vec3 n, vec3 diffuseColor)
-{
-    return textureCube(s_irradiance, n).rgb * diffuseColor;
-}
-
-vec3 get_IBL_radiance_GGX(vec3 N, vec3 V, float NdotV, float roughness, vec3 specular_color)
-{
-    float last_mipmap = u_ibl_prefilter_mipmap_count-1.0; //make roughness [0, 1] to [0, last_mipmap]
-    float lod = clamp(roughness*last_mipmap, 0.0, last_mipmap);
-    vec3 reflection = normalize(reflect(-V, N));
-
-    vec2 lut_uv = clamp(vec2(NdotV, roughness), vec2_splat(0.0), vec2_splat(1.0));
-    vec2 lut = texture2D(s_LUT, lut_uv).rg;
-    vec3 specular_light = textureCubeLod(s_prefilter, reflection, lod).rgb;
-    return specular_light * (specular_color * lut.x + lut.y);
-}
-
-material_info get_material_info(vec3 basecolor, vec2 uv)
-{
-    material_info mi;
-    get_metallic_roughness(mi.metallic, mi.roughness, uv);
-    // Roughness is authored as perceptual roughness; as is convention,
-    // convert to material roughness by squaring the perceptual roughness.
-    mi.alpha_roughness = mi.roughness * mi.roughness;
-
-    // Achromatic f0 based on IOR.
-    vec3 f0_ior = vec3_splat(MIN_ROUGHNESS);
-    calc_reflectance(f0_ior, basecolor, mi);
-    return mi;
-}
-
 void main()
 {
     vec2 uv = uv_motion(v_texcoord0);
@@ -145,86 +106,42 @@ void main()
 #ifdef MATERIAL_UNLIT
     gl_FragColor = basecolor + emissivecolor;
 #else //!MATERIAL_UNLIT
-    vec3 V = normalize(u_eyepos.xyz - v_posWS.xyz);
 
-#ifdef WITH_TANGENT_ATTRIB
+    vec3 posWS = v_posWS.xyz;
+    vec3 V = normalize(u_eyepos.xyz - posWS);
+#   ifdef WITH_TANGENT_ATTRIB
     vec3 N = get_normal(v_tangent, v_bitangent, v_normal, uv);
-#else //!WITH_TANGENT_ATTRIB
-    vec3 N = get_normal_by_tbn(tbn_from_world_pos(v_normal, v_posWS.xyz, uv), v_normal, uv);
-#endif //WITH_TANGENT_ATTRIB
+#   else //!WITH_TANGENT_ATTRIB
+    vec3 N = get_normal_by_tbn(tbn_from_world_pos(v_normal, posWS, uv), v_normal, uv);
+#   endif //WITH_TANGENT_ATTRIB
 
-    material_info mi = get_material_info(basecolor.rgb, uv);
+    float metallic, roughness;
+    get_metallic_roughness(metallic, roughness, uv);
+    material_info mi = init_material_info(metallic, roughness, basecolor, N, V);
 
     // LIGHTING
-    vec3 color = vec3_splat(0.0);
+    vec3 color = calc_direct_light(mi, gl_FragCoord, posWS);
 
-    float NdotV = clamp_dot(N, V);
+#   ifdef ENABLE_SHADOW
+	color = shadow_visibility(v_distanceVS, vec4(posWS, 1.0), color);
+#   endif //ENABLE_SHADOW
 
-#ifdef CLUSTER_SHADING
-	uint cluster_idx = which_cluster(gl_FragCoord);
+#   ifdef ENABLE_IBL
+    color += calc_indirect_light(mi);
+#   endif //ENABLE_IBL
 
-    uint cluster_count = u_cluster_size.x * u_cluster_size.y * u_cluster_size.z;
-    cluster_idx = clamp(cluster_idx, 0, cluster_count-1);
-	light_grid g; load_light_grid(b_light_grids, cluster_idx, g);
-	uint iend = g.offset + g.count;
-
-    //TODO: need fix
-    int directional_idx = -1;
-	for (uint ii=g.offset; ii<iend; ++ii)
-	{
-		uint ilight = b_light_index_lists[ii];
-#else //!CLUSTER_SHADING
-	for (uint ilight=0; ilight<u_light_count[0]; ++ilight)
-	{
-#endif //CLUSTER_SHADING
-        light_info l; load_light_info(b_lights, ilight, l);
-
-        #ifdef USING_LIGHTMAP
-        if (IS_DIRECTIONAL_LIGHT(l.type))
-        {
-            directional_idx = ilight;
-        }
-        else
-        #endif 
-        {
-            color += get_light_radiance(l, v_posWS.xyz, N, V, NdotV, mi);
-        }
-    }
-
-#ifdef USING_LIGHTMAP
-    if (directional_idx >= 0)
-    {
-        vec4 irradiance = texture2D(s_lightmap, v_texcoord1);
-        vec3 c = basecolor.rgb * irradiance.rgb * PI * 0.5;
-        color.rgb += c;
-    }
-#else //!USING_LIGHTMAP
-
-#ifdef ENABLE_SHADOW
-	color = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0), color);
-#endif //ENABLE_SHADOW
-
-    // Calculate lighting contribution from image based lighting source (IBL)
-#ifdef ENABLE_IBL
-    vec3 indirect_color =   get_IBL_radiance_GGX(N, V, NdotV, mi.roughness, mi.f0) +
-                            get_IBL_radiance_Lambertian(N, mi.albedo);
-    indirect_color *= u_ibl_indirect_intensity;
-    color += indirect_color;
-#endif //ENABLE_IBL
-
-#ifdef HAS_OCCLUSION_TEXTURE
+#   ifdef HAS_OCCLUSION_TEXTURE
     float ao = texture2D(s_occlusion,  uv).r;
     color  += lerp(color, color * ao, u_occlusion_strength);
-#endif //HAS_OCCLUSION_TEXTURE
+#   endif //HAS_OCCLUSION_TEXTURE
 
-#ifdef ALPHAMODE_MASK
+#   ifdef ALPHAMODE_MASK
     // Late discard to avoid samplig artifacts. See https://github.com/KhronosGroup/glTF-Sample-Viewer/issues/267
     if(color.a < u_alpha_mask_cutoff)
         discard;
     color.a = 1.0;
-#endif //ALPHAMODE_MASK
+#   endif //ALPHAMODE_MASK
 
-#endif //USING_LIGHTMAP
     gl_FragColor = vec4(color, basecolor.a) + emissivecolor;
 #endif //MATERIAL_UNLIT
 

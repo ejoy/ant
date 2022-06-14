@@ -119,12 +119,9 @@ void main()
 #endif //VIEW_WATER_WITHOUT_LIGHTING
 
     //This is a simple pbr lighting here, only consider directional lighting pass from CPU side
-    material_info mi;
-    mi.roughness = 0.2;
-    mi.alpha_roughness = mi.roughness * mi.roughness;
-    mi.metallic = 0.1;
-    
-    calc_reflectance(vec3_splat(MIN_ROUGHNESS), color, mi);
+	vec3 V = u_eyepos.xyz - v_posWS.xyz;
+    material_info mi = init_material_info(0.1, 0.2, color, N, V);
+
     light_info l;
 	l.pos = vec3(0.0, 0.0, 0.0);
 	l.enable = 1.0;
@@ -134,7 +131,5 @@ void main()
     l.dir       = u_directional_light_dir.xyz;
     l.intensity = u_direciontal_light_color.a;
 
-
-    vec3 V = u_eyepos.xyz - v_posWS.xyz;
-    gl_FragColor = vec4(get_light_radiance(l, v_posWS.xyz, N, V, dot(N, V), mi), 1.0);
+    gl_FragColor = vec4(get_light_radiance(l, v_posWS.xyz, mi), 1.0);
 }
