@@ -278,7 +278,7 @@ local function create_node_entity(gltfscene, nodeidx, parent, exports)
     }
 end
 
-local function create_animation_entity(exports, parent)
+local function create_animation_entity(exports, parent, withskin)
     if not exports.skeleton or #exports.skin < 1 then
         return
     end
@@ -292,7 +292,10 @@ local function create_animation_entity(exports, parent)
         scene = {srt={}},
     }
     data.skeleton = serialize.path(exports.skeleton)
-    data.meshskin = serialize.path(exports.skin[1])
+    if withskin then
+        policy[#policy+1] = "ant.animation|meshskin"
+        data.meshskin = serialize.path(exports.skin[1])
+    end
     data.animation = {}
     local anilst = {}
     for name, file in pairs(exports.animations) do
@@ -302,7 +305,7 @@ local function create_animation_entity(exports, parent)
     end
     table.sort(anilst)
     data.animation_birth = anilst[1]
-    data._animation = {}
+    data.anim_ctrl = {}
     return create_entity {
         policy = policy,
         data = data,
@@ -339,7 +342,6 @@ return function(output, glbdata, exports, localpath)
             name = scene.name or "Rootscene",
             scene = {srt={}}
         },
-        --parent = "root",
     }
 
     local meshnodes = {}
@@ -375,7 +377,44 @@ return function(output, glbdata, exports, localpath)
         check_create_node_entity(nodeidx)
     end
 
-    create_animation_entity(exports, rootid)
-
+    create_animation_entity(exports, rootid, true)
     utility.save_txt_file("./mesh.prefab", prefab)
+
+    local anilst = {}
+    local animation = {}
+    for name, file in pairs(exports.animations) do
+        local n = fix_invalid_name(name)
+        anilst[#anilst+1] = n
+        animation[n] = serialize.path(file)
+    end
+    table.sort(anilst)
+    local anim_prefab = {
+        {
+            policy = {
+                "ant.general|name",
+                "ant.scene|scene_object",
+            },
+            data = {
+                name = scene.name or "Rootscene",
+                scene = {srt={}}
+            },
+        },
+        {
+            policy = {
+                "ant.general|name",
+                "ant.scene|scene_object",
+                "ant.animation|animation",
+            },
+            data = {
+                name = "skeleton_animation",
+                scene = {srt={}},
+                skeleton = serialize.path(exports.skeleton),
+                animation = animation,
+                animation_birth = anilst[1],
+                anim_ctrl = {},
+            },
+            mount = 1,
+        }
+    }
+    utility.save_txt_file("./animation.prefab", anim_prefab)
 end
