@@ -45,7 +45,7 @@ function sd_sys.init_world()
                 viewid = viewidmgr.get "scene_depth",
                 fb_idx = fbmgr.create{
                     rbidx = fbmgr.create_rb{
-                        format = "D32F", layers = 1,
+                        format = "D16F", layers = 1,
                         w = pd_vr.w, h = pd_vr.h,
                         flags = sampler{RT="RT_ON",},
                     }

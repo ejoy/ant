@@ -8,7 +8,7 @@ local renderbuffers = {}
 local viewid_bindings = {}
 
 local VALID_DEPTH_FMT<const> = {
-	D24S8 = true, D24 = true, D24X8 = true, D32F = true,
+	D24S8 = true, D24 = true, D24X8 = true, D32F = true, D16F = true
 }
 
 function mgr.bind(viewid, fb_idx)

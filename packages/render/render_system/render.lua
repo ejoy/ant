@@ -176,7 +176,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 	local depth_viewid = viewidmgr.get "pre_depth"
 	local fbidx = fbmgr.create{
 		rbidx=fbmgr.create_rb{
-			format = "D32F",
+			format = "D16F",
 			w = vr.w, h=vr.h,
 			layers = 1,
 			flags = depth_flag,
