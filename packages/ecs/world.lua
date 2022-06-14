@@ -232,6 +232,7 @@ function m.new_world(config)
 		name = "id",
 		type = "int64",
 	}
+	ecs:group_init "group"
 
 	local w = setmetatable({
 		args = config,
