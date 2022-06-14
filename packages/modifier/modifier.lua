@@ -32,7 +32,8 @@ function modifier_sys:exit()
 
 end
 
-function imodifier.create_srt_modifier(target, generator)
+function imodifier.create_srt_modifier(target, generator, replace)
+    local init_mat = replace and mc.IDENTITY_MAT or math3d.ref(math3d.matrix(world:entity(target).scene.srt))
 	local template = {
 		policy = {
             "ant.general|name",
@@ -43,7 +44,7 @@ function imodifier.create_srt_modifier(target, generator)
             name = "",
             scene = {srt = {}},
             modifier = {
-                update = function(time) iom.set_srt_matrix(world:entity(target), generator(time)) end
+                update = function(time) iom.set_srt_matrix(world:entity(target), math3d.mul(init_mat, generator(time))) end
             },
 		},
     }
