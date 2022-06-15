@@ -30,7 +30,7 @@ end
 
 local function create_entity(w, group, data)
     data.id = getentityid(w)
-    data.group = group
+    data.group = (data.group or 0) | group
     w.w:new {
         create_entity = data
     }
