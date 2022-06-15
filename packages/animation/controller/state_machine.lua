@@ -139,9 +139,24 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
     end
     return raw_animation:build()
 end
+local assetmgr 		= import_package "ant.asset"
+
+local function get_anim_e(eid)
+	if type(eid) == "table" then
+		if eid.tag["*"] then
+			return world:entity(eid.tag["*"][2])
+		end
+	else
+		return world:entity(eid)
+	end
+end
+
+function iani.create(filename)
+	return ecs.create_instance(filename)
+end
 
 function iani.play(eid, anim_state)
-	local e = world:entity(eid)
+	local e = get_anim_e(eid)
 	local anim_name = anim_state.name
 	local anim = e.animation[anim_name]
 	if not anim then
@@ -168,29 +183,31 @@ function iani.play(eid, anim_state)
 		e.animation[anim_name] = anim
 	end
 	anim_state.animation = anim
-	anim_state.event_state = { next_index = 1, keyframe_events = e._animation.keyframe_events[anim_name] }
-	anim_state.play_state = { ratio = 0.0, previous_ratio = 0.0, play = true, speed = anim_state.speed or 1.0, loop = anim_state.loop, manual_update = anim_state.manual}
-	if e._animation._current then
-		local all_events = e._animation._current.event_state.keyframe_events
-		for _, events in ipairs(all_events) do
-			for _, ev in ipairs(events.event_list) do
-				if ev.event_type == "Effect" then
-					if ev.effect then
-						iefk.stop(world:entity(ev.effect))
-						--TODO: clear keyevent effct
-						--world:remove_entity(ev.effect)
+	anim_state.event_state = { next_index = 1, keyframe_events = e.anim_ctrl.keyframe_events[anim_name] }
+	anim_state.play_state = { ratio = 0.0, previous_ratio = 0.0, play = true, speed = anim_state.speed or 1.0, loop = anim_state.loop, manual_update = anim_state.manual, forwards = anim_state.forwards}
+	if e.anim_ctrl._current then
+		local all_events = e.anim_ctrl._current.event_state.keyframe_events
+		if all_events then
+			for _, events in ipairs(all_events) do
+				for _, ev in ipairs(events.event_list) do
+					if ev.event_type == "Effect" then
+						if ev.effect then
+							iefk.stop(world:entity(ev.effect))
+							--TODO: clear keyevent effct
+							--world:remove_entity(ev.effect)
+						end
 					end
 				end
-			end
+			end	
 		end
 	end
-	e._animation._current = anim_state
+	e.anim_ctrl._current = anim_state
 	world:pub{"animation", anim_state.name, "play", anim_state.owner}
 end
 
 function iani.get_duration(eid, anim_name)
 	if not anim_name then
-		return world:entity(eid)._animation._current.animation._handle:duration()
+		return world:entity(eid).anim_ctrl._current.animation._handle:duration()
 	else
 		return world:entity(eid).animation[anim_name]._handle:duration()
 	end
@@ -204,7 +221,7 @@ function iani.step(task, s_delta, absolute)
 	local duration = task.animation._handle:duration()
 	if next_time > duration then
 		if not play_state.loop then
-			play_state.ratio = 1.0
+			play_state.ratio = play_state.forwards and 1.0 or 0.0
 			play_state.play = false
 			world:pub{"animation", task.name, "stop", task.owner}
 		else
@@ -215,17 +232,13 @@ function iani.step(task, s_delta, absolute)
 	end
 end
 
-local function get_e(eid)
-	return world:entity(eid)
-end
-
 function iani.set_time(eid, second)
 	if not eid then return end
-	local e = get_e(eid)
-	iani.step(e._animation._current, second, true)
+	local e = get_anim_e(eid)
+	iani.step(e.anim_ctrl._current, second, true)
 	-- effect
 	local current_time = iani.get_time(eid);
-	local all_events = e._animation._current.event_state.keyframe_events
+	local all_events = e.anim_ctrl._current.event_state.keyframe_events
 	if all_events then
 		for _, events in ipairs(all_events) do
 			for _, ev in ipairs(events.event_list) do
@@ -241,8 +254,8 @@ end
 
 function iani.stop_effect(eid)
 	if not eid then return end
-	local e = get_e(eid)
-	local all_events = e._animation._current.event_state.keyframe_events
+	local e = get_anim_e(eid)
+	local all_events = e.anim_ctrl._current.event_state.keyframe_events
 	if all_events then
 		for _, events in ipairs(all_events) do
 			for _, ev in ipairs(events.event_list) do
@@ -258,36 +271,36 @@ end
 
 function iani.get_time(eid)
 	if not eid then return 0 end
-	local e = get_e(eid)
-	return e._animation._current.play_state.ratio * e._animation._current.animation._handle:duration()
+	local e = get_anim_e(eid)
+	return e.anim_ctrl._current.play_state.ratio * e.anim_ctrl._current.animation._handle:duration()
 end
 
 function iani.set_speed(eid, speed)
 	if not eid then return end
-	local e = get_e(eid)
-	e._animation._current.play_state.speed = speed
+	local e = get_anim_e(eid)
+	e.anim_ctrl._current.play_state.speed = speed
 end
 
 function iani.set_loop(eid, loop)
 	if not eid then return end
-	local e = get_e(eid)
-	e._animation._current.play_state.loop = loop
+	local e = get_anim_e(eid)
+	e.anim_ctrl._current.play_state.loop = loop
 end
 
 function iani.pause(eid, pause)
 	if not eid then return end
-	local e = get_e(eid)
-	e._animation._current.play_state.play = not pause
+	local e = get_anim_e(eid)
+	e.anim_ctrl._current.play_state.play = not pause
 end
 
 function iani.is_playing(eid)
 	if not eid then return end
-	local e = get_e(eid)
-	return e._animation._current.play_state.play
+	local e = get_anim_e(eid)
+	return e.anim_ctrl._current.play_state.play
 end
 
 function iani.get_collider(e, anim, time)
-	local events = e._animation.keyframe_events[anim]
+	local events = e.anim_ctrl.keyframe_events[anim]
 	if not events then return end
 	local colliders
 	for _, event in ipairs(events.event) do

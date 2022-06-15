@@ -1,0 +1,17 @@
+system "modifier_system"
+    .implement "modifier.lua"
+    .method "init"
+    .method "component_init"
+    .method "update_modifier"
+    .method "exit"
+
+component "modifier".type "lua"
+policy "modifier"
+    .require_system     "ant.modifier|modifier_system"
+    .require_interface  "ant.modifier|imodifier"
+    .component "modifier"
+
+interface "imodifier"
+    .implement "modifier.lua"
+    .method "create_bone_modifier"
+    .method "create_srt_modifier"

@@ -908,23 +908,25 @@ function m.on_prefab_load(entities)
     local skeleton
     for _, eid in ipairs(entities) do
         local e = world:entity(eid)
-        local animations = e.animation
-        if animations then
-            editanims.birth = e.animation_birth
-            skeleton = e.skeleton
-            for key, anim in pairs(animations) do
-                if not editanims[key] then
-                    local events = e._animation.keyframe_events[key]
-                    editanims[key] = {
-                        name = key,
-                        duration = anim._handle:duration(),
-                        key_event = events and from_runtime_event(events) or {},
-                    }
-                    editanims.name_list[#editanims.name_list + 1] = key
-                end
-            end
+        if e.anim_ctrl then
             anim_eid = eid
-            break
+            local animations = e.animation
+            if animations then
+                editanims.birth = e.animation_birth
+                skeleton = e.skeleton
+                for key, anim in pairs(animations) do
+                    if not editanims[key] then
+                        local events = e.anim_ctrl.keyframe_events[key]
+                        editanims[key] = {
+                            name = key,
+                            duration = anim._handle:duration(),
+                            key_event = events and from_runtime_event(events) or {},
+                        }
+                        editanims.name_list[#editanims.name_list + 1] = key
+                    end
+                end
+                break
+            end
         end
     end
     hierarchy:update_slot_list(world)

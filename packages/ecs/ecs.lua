@@ -87,11 +87,11 @@ return function (w, package)
             return w:_import(objname, package, name)
         end
     end
-    function ecs.create_entity(v)
-        return w:_create_entity(package, v)
+    function ecs.create_entity(v, group)
+        return w:_create_entity(package, group, v)
     end
-    function ecs.create_instance(v)
-        return w:_create_instance(package, v)
+    function ecs.create_instance(v, group)
+        return w:_create_instance(package, group, v)
     end
     w._ecs[package] = ecs
     return ecs

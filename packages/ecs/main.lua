@@ -28,15 +28,16 @@ local function getentityid(w)
     return w._maxid
 end
 
-local function create_entity(w, data)
+local function create_entity(w, group, data)
     data.id = getentityid(w)
+    data.group = group
     w.w:new {
         create_entity = data
     }
     return data.id
 end
 
-function world:_create_entity(package, v)
+function world:_create_entity(package, group, v)
     local res = policy.create(self, package, v.policy)
     local data = v.data
     for c, def in pairs(res.component_opt) do
@@ -50,12 +51,7 @@ function world:_create_entity(package, v)
             error(("component `%s` must exists"):format(c))
         end
     end
-    return create_entity(self, data)
-end
-
-function world:create_entity(v)
-    log.error("world:create_entity is deprecated, use ecs.create_entity instead.")
-    return self:_create_entity(nil, v)
+    return create_entity(self, group, data)
 end
 
 local function table_append(t, a)
@@ -63,7 +59,7 @@ local function table_append(t, a)
 end
 local table_insert = table.insert
 
-local function create_instance(w, prefab)
+local function create_instance(w, group, prefab)
     local entities = {}
     local mounts = {}
     local noparent = {}
@@ -71,9 +67,9 @@ local function create_instance(w, prefab)
         local v = prefab[i]
         local np
         if v.prefab then
-            entities[i], np = create_instance(w, v.prefab)
+            entities[i], np = create_instance(w, group, v.prefab)
         else
-            local e = create_entity(w, v.template)
+            local e = create_entity(w, group, v.template)
             entities[i], np = e, e
         end
         if v.mount then
@@ -211,10 +207,11 @@ local function create_tags(entities, template)
     return tags
 end
 
-local function create_scene_entity(w)
+local function create_scene_entity(w, group)
     local eid = getentityid(w)
     w.w:new {
         id = eid,
+        group = group,
         scene = {
             srt = {},
         }
@@ -251,7 +248,7 @@ function world:create_object(inner_proxy)
             on_update(inner_proxy)
         end
     end
-    local prefab = create_entity(w, proxy_entity)
+    local prefab = create_entity(w, inner_proxy.group, proxy_entity)
 
     if not on_update and not on_message then
         w:pub {"object_detach", prefab}
@@ -287,23 +284,19 @@ function world:create_object(inner_proxy)
     return outer_proxy
 end
 
-function world:_create_instance(package, filename, options)
+function world:_create_instance(package, group, filename, options)
     local w = self
     local detach = options and options.detach
     local template = create_template(w, package, detach, filename)
-    local root = create_scene_entity(w)
-    local prefab, noparent = create_instance(w, template)
+    local root = create_scene_entity(w, group)
+    local prefab, noparent = create_instance(w, group, template)
     w:multicast(noparent, "set_parent", root)
     run_action(w, prefab, template)
     return {
         root = root,
+        group = group,
         tag = create_tags(prefab, template)
     }
-end
-
-function world:create_instance(filename, options)
-    log.error("world:create_instance is deprecated, use ecs.create_instance instead.")
-    return self:_create_instance(nil, filename, options)
 end
 
 function world:detach_instance(instance)

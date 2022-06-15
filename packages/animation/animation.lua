@@ -72,15 +72,15 @@ local iani = ecs.import.interface "ant.animation|ianimation"
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for e in w:select "skeleton:in meshskin:in _animation:in" do
-		local task = e._animation._current
-		if task then
+	for e in w:select "skeleton:in anim_ctrl:in" do
+		local task = e.anim_ctrl._current
+		if task.animation then
 			local play_state = task.play_state
 			if not play_state.manual_update and play_state.play then
 				iani.step(task, delta_time * 0.001)
 			end
 			local ani = task.animation
-			local pr = e.meshskin.pose_result
+			local pr = e.anim_ctrl.pose_result
 			pr:setup(e.skeleton._handle)
 			pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, task.weight)
 		end
@@ -91,48 +91,17 @@ function ani_sys:do_refine()
 end
 
 function ani_sys:end_animation()
-	for e in w:select "meshskin:in" do
-		local pr = e.meshskin.pose_result
+	for e in w:select "anim_ctrl:in" do
+		local pr = e.anim_ctrl.pose_result
 		pr:fetch_result()
 		pr:end_animation()
 	end
 end
 
 function ani_sys:data_changed()
-	for e in w:select "_animation:in" do
-		process_keyframe_event(e._animation._current)
+	for e in w:select "anim_ctrl:in" do
+		process_keyframe_event(e.anim_ctrl._current)
 	end
-end
-
-function ani_sys:component_init()
-	for e in w:select "INIT animation:in skeleton:update meshskin:update" do
-		local ani = e.animation
-		for k, v in pairs(ani) do
-			ani[k] = assetmgr.resource(v, world)
-		end
-		e.skeleton = assetmgr.resource(e.skeleton)
-		local skehandle = e.skeleton._handle
-		local pose_result = animodule.new_pose_result(#skehandle)
-		pose_result:setup(skehandle)
-		local skin = assetmgr.resource(e.meshskin)
-		local count = skin.joint_remap and skin.joint_remap:count() or pose_result:count()
-		e.meshskin = {
-			skin = skin,
-			pose_result = pose_result,
-			skinning_matrices = animodule.new_bind_pose(count),
-		}
-	end
-end
-local event_animation = world:sub{"AnimationEvent"}
-local bgfx = require "bgfx"
-local function set_skinning_transform(rc)
-	local sm = rc.skinning_matrices
-	bgfx.set_multi_transforms(sm:pointer(), sm:count())
-end
-
-local function build_transform(rc, skinning)
-	rc.skinning_matrices = skinning.skinning_matrices
-	rc.set_transform = set_skinning_transform
 end
 
 local function load_events(filename, slot_eid)
@@ -158,36 +127,26 @@ local function load_events(filename, slot_eid)
     end
     return events
 end
-
-local function init_prefab_anim(entity)
-	local entitys = entity.prefab.tag["*"]
-	local anim_eid = {}
-	local slot_eid = {}
-	local anim
-	for _, eid in ipairs(entitys) do
-		local e = world:entity(eid)
-		if e._animation then
-			anim = e
-		elseif e.skinning then
-			anim_eid[#anim_eid + 1] = eid
-		elseif e.slot then
-			slot_eid[e.name] = eid
+function ani_sys:component_init()
+	for e in w:select "INIT animation:in skeleton:update anim_ctrl:in animation_birth:in" do
+		local ani = e.animation
+		for k, v in pairs(ani) do
+			ani[k] = assetmgr.resource(v, world)
 		end
-	end
-	if anim and #anim_eid > 0 then
-		for _, eid in ipairs(anim_eid) do
-			build_transform(world:entity(eid).render_object, anim.meshskin)
-		end
-		anim._animation.anim_eid = anim_eid
-		anim._animation.keyframe_events = {}
-		local events = anim._animation.keyframe_events
-		for key, value in pairs(anim.animation) do
-			events[key] = load_events(tostring(value), slot_eid)
-		end
-		local anim_name = anim.animation_birth
-		anim._animation._current = {
-			animation = anim.animation[anim_name],
-			event_state = { next_index = 1, keyframe_events = events[anim_name]},
+		e.skeleton = assetmgr.resource(e.skeleton)
+		local skehandle = e.skeleton._handle
+		local pose_result = animodule.new_pose_result(#skehandle)
+		pose_result:setup(skehandle)
+		e.anim_ctrl.pose_result = pose_result
+		e.anim_ctrl.keyframe_events = {}
+		-- local events = e.anim_ctrl.keyframe_events
+		-- for key, value in pairs(e.animation) do
+		-- 	events[key] = load_events(tostring(value), slot_eid)
+		-- end
+		local anim_name = e.animation_birth
+		e.anim_ctrl._current = {
+			animation = e.animation[anim_name],
+			event_state = { next_index = 1, keyframe_events = {}},--events[anim_name]},
 			play_state = {
 				ratio = 0.0,
 				previous_ratio = 0.0,
@@ -197,6 +156,47 @@ local function init_prefab_anim(entity)
 				manual_update = false
 			}
 		}
+	end
+	for e in w:select "INIT meshskin:update skeleton:in" do
+		local skin = assetmgr.resource(e.meshskin)
+		local count = skin.joint_remap and skin.joint_remap:count() or #e.skeleton._handle
+		e.meshskin = {
+			skin = skin,
+			skinning_matrices = animodule.new_bind_pose(count),
+		}
+	end
+end
+local event_animation = world:sub{"AnimationEvent"}
+local bgfx = require "bgfx"
+local function set_skinning_transform(rc)
+	local sm = rc.skinning_matrices
+	bgfx.set_multi_transforms(sm:pointer(), sm:count())
+end
+
+local function build_transform(rc, skinning)
+	rc.skinning_matrices = skinning.skinning_matrices
+	rc.set_transform = set_skinning_transform
+end
+
+local function init_prefab_anim(entity)
+	local entitys = entity.prefab.tag["*"]
+	local anim_eid = {}
+	-- local slot_eid = {}
+	local anim
+	for _, eid in ipairs(entitys) do
+		local e = world:entity(eid)
+		if e.meshskin then
+			anim = e
+		elseif e.skinning then
+			anim_eid[#anim_eid + 1] = eid
+		-- elseif e.slot then
+		-- 	slot_eid[e.name] = eid
+		end
+	end
+	if anim and #anim_eid > 0 then
+		for _, eid in ipairs(anim_eid) do
+			build_transform(world:entity(eid).render_object, anim.meshskin)
+		end
 	end
 end
 
@@ -210,8 +210,8 @@ end
 function ani_sys:entity_ready()
 	for _, what, e, p0, p1 in event_animation:unpack() do
 		if what == "step" then
-			w:sync("_animation:in", e)
-			iani.step(e._animation._current, p0, p1)
+			w:sync("anim_ctrl:in", e)
+			iani.step(e.anim_ctrl._current, p0, p1)
 		elseif what == "set_time" then
 			iani.set_time(e, p0)
 		end

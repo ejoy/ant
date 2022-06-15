@@ -28,6 +28,7 @@ component "widget_entity"
 component "initializing"
 
 pipeline "scene"
+    .stage "update_modifier"
     .stage "update_hierarchy"
     .stage "begin_filter"
     .stage "update_filter"
