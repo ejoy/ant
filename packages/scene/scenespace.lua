@@ -30,12 +30,6 @@ local function inherit_render_object(r, pr)
 end
 
 local current_changed = 1
-local current_sceneid = 0
-
-local function new_sceneid()
-	current_sceneid = current_sceneid + 1
-	return current_sceneid
-end
 
 local function update_worldmat_noparent(node)
 	local srt = node.srt
@@ -66,11 +60,6 @@ local function update_aabb(node)
 	end
 end
 
-local function isValidReference(reference)
-    assert(reference[2] == 1, "Not a reference")
-    return reference[1] ~= nil
-end
-
 function s:entity_init()
 	local needsync = false
 	for v in w:select "INIT scene:in scene_sorted?new" do
@@ -83,8 +72,6 @@ function s:entity_init()
 			scene.updir = math3d.ref(math3d.vector(scene.updir))
 		end
 		scene.changed = current_changed
-
-		scene.id = new_sceneid()
 		v.scene_sorted = true
 		needsync = true
 	end
@@ -99,35 +86,34 @@ function s:entity_init()
 		local e = world:entity(id)
 		if e then
 			e.scene.changed = current_changed
-			local parent = parentid and world:entity(parentid) or nil
-			if not parent then
-				e.scene.parent = nil
-			else
-				e.scene.parent = parent.scene.id
-			end
+			e.scene.parent = parentid
 			needsync = true
 		end
 	end
 
 	if needsync then
-		local cache = {}
-		for v in w:select "scene_sorted scene:in render_object?in INIT?in" do
+		local visited = {}
+		for v in w:select "scene_sorted scene:in id:in render_object?in INIT?in" do
 			local scene = v.scene
 			if scene.parent == nil then
-				cache[scene.id] = v.render_object or false
+				visited[v.id] = true
 			else
-				local parent = cache[scene.parent]
-				if parent ~= nil then
-					cache[scene.id] = v.render_object or false
-					if v.INIT then
-						local r = v.render_object
-						local pr = cache[scene.parent]
-						if r and pr then
-							inherit_render_object(r, pr)
+				local parent = world:entity(scene.parent)
+				if parent then
+					if visited[scene.parent] then
+						visited[v.id] = true
+						if v.INIT then
+							local r = v.render_object
+							local pr = parent.render_object
+							if r and pr then
+								inherit_render_object(r, pr)
+							end
 						end
+					else
+						v.scene_sorted = false -- yield
 					end
 				else
-					v.scene_sorted = false -- yield
+					error "Unexpected Error."
 				end
 			end
 		end
@@ -144,27 +130,31 @@ function s:update_transform()
 		e.scene.changed = current_changed
 	end
 
-	local cache = {}
-	for v in w:select "scene_sorted scene:in scene_changed?out" do
+	local visited = {}
+	for v in w:select "scene_sorted scene:in id:in scene_changed?out" do
 		local scene = v.scene
 		if scene.parent == nil then
-			cache[scene.id] = scene
+			visited[v.id] = true
 			update_worldmat_noparent(scene)
 			update_aabb(scene)
 			if scene.changed == current_changed then
 				v.scene_changed = true
 			end
 		else
-			local parent = cache[scene.parent]
+			local parent = world:entity(scene.parent)
 			if parent then
-				cache[scene.id] = scene
-				update_worldmat(scene, parent)
-				update_aabb(scene)
-				if scene.changed == current_changed then
-					v.scene_changed = true
+				if visited[scene.parent] then
+					visited[v.id] = true
+					update_worldmat(scene, parent.scene)
+					update_aabb(scene)
+					if scene.changed == current_changed then
+						v.scene_changed = true
+					end
+				else
+					v.scene_sorted = false -- yield
 				end
 			else
-				v.scene_sorted = false -- yield
+				error "Unexpected Error."
 			end
 		end
 	end
@@ -185,24 +175,28 @@ end
 function s:scene_remove()
 	w:clear "scene_changed"
 	if hasSceneRemove() then
-		local cache = {}
-		for v in w:select "scene_sorted scene:in REMOVED?in" do
+		local visited = {}
+		for v in w:select "scene_sorted scene:in id:in REMOVED?in" do
 			local scene = v.scene
 			if scene.parent == nil then
 				scene.REMOVED = v.REMOVED
-				cache[scene.id] = scene
+				visited[v.id] = true
 			else
-				local parent = cache[scene.parent]
+				local parent = world:entity(scene.parent)
 				if parent then
-					cache[scene.id] = scene
-					if v.REMOVED then
-						scene.REMOVED = true
-					elseif parent.REMOVED then
-						scene.REMOVED = true
-						w:remove(v)
+					if visited[scene.parent] then
+						visited[v.id] = true
+						if v.REMOVED then
+							scene.REMOVED = true
+						elseif parent.REMOVED then
+							scene.REMOVED = true
+							w:remove(v)
+						end
+					else
+						v.scene_sorted = false -- yield
 					end
 				else
-					v.scene_sorted = false -- yield
+					error "Unexpected Error."
 				end
 			end
 		end
@@ -213,7 +207,6 @@ function ecs.method.init_scene(eid)
 	local e = world:entity(eid)
 	e.scene_unsorted = true
 	local scene = e.scene
-	scene.id = new_sceneid()
 	if scene.srt then
 		scene.srt = mu.srt_obj(scene.srt)
 	end
