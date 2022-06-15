@@ -11,5 +11,4 @@ component "scene"
 
 component "scene_changed"
 component "scene_unsorted"
-component "scene_sorted"
-    .type "order"
+component "scene_sorted".type "order"

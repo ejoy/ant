@@ -11,22 +11,21 @@ local s = ecs.system "scenespace_system"
 
 local evParentChanged = world:sub {"parent_changed"}
 
-local function inherit_render_object(r, pr)
+local function inherit_state(r, pr)
 	if r.fx == nil then
 		r.fx = pr.fx
 	end
-	if r.state == nil then
-		r.state = pr.state
+	if r.material == nil then
+		r.material = pr.material
 	end
-	if r.properties == nil then
-		r.properties = pr.properties
-	end
-	local pstate = pr.entity_state
-	if pstate then
-		local MASK <const> = (1 << 32) - 1
-		local state = r.entity_state or 0
-		r.entity_state = ((state>>32) | state | pstate) & MASK
-	end
+
+	--TODO: need rewrite
+	-- local pstate = pr.filter_state
+	-- if pstate then
+	-- 	local MASK <const> = (1 << 32) - 1
+	-- 	local state = r.filter_state or 0
+	-- 	r.filter_state = ((state>>32) | state | pstate) & MASK
+	-- end
 end
 
 local current_changed = 1
@@ -71,20 +70,23 @@ local function isValidReference(reference)
     return reference[1] ~= nil
 end
 
+local function init_scene_comp(scene)
+	if scene.srt then
+		scene.srt = mu.srt_obj(scene.srt)
+	end
+	if scene.updir then
+		scene.updir = math3d.ref(math3d.vector(scene.updir))
+	end
+	scene.id = new_sceneid()
+end
+
 function s:entity_init()
 	local needsync = false
 	for v in w:select "INIT scene:in scene_sorted?new" do
 		local scene = v.scene
-		
-		if scene.srt then
-			scene.srt = mu.srt_obj(scene.srt)
-		end
-		if scene.updir then
-			scene.updir = math3d.ref(math3d.vector(scene.updir))
-		end
-		scene.changed = current_changed
+		init_scene_comp(scene)
 
-		scene.id = new_sceneid()
+		scene.changed = current_changed
 		v.scene_sorted = true
 		needsync = true
 	end
@@ -123,7 +125,7 @@ function s:entity_init()
 						local r = v.render_object
 						local pr = cache[scene.parent]
 						if r and pr then
-							inherit_render_object(r, pr)
+							inherit_state()
 						end
 					end
 				else
@@ -212,14 +214,7 @@ end
 function ecs.method.init_scene(eid)
 	local e = world:entity(eid)
 	e.scene_unsorted = true
-	local scene = e.scene
-	scene.id = new_sceneid()
-	if scene.srt then
-		scene.srt = mu.srt_obj(scene.srt)
-	end
-	if scene.updir then
-		scene.updir = math3d.ref(math3d.vector(scene.updir))
-	end
+	init_scene_comp(e.scene)
 end
 
 function ecs.method.set_parent(e, parent)
