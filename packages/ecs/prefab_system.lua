@@ -46,7 +46,7 @@ function m:data_changed()
     end
 end
 
-function m:entity_remove()
+function m:prefab_remove()
     for _, _, id in evPrefabDetach:unpack() do
         local prefab = world:entity(id)
         if prefab then
