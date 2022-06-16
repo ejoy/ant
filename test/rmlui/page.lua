@@ -87,6 +87,7 @@ function page_meta:update_contianer()
     self.index_map = {}
     self.selected = nil
     self.detail = nil
+    self.current_page = 1
     for i = 1, self.page_count do
         local page_e = self.document.createElement "div"
         page_e.style.flexDirection = 'column'
