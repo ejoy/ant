@@ -228,3 +228,15 @@ pipeline "render"
 
 import "ibl/ibl.ecs"
 import "curve_world/curve_world.ecs"
+
+component "view_visible"
+interface "igroup"
+    .implement "group.lua"
+    .method "default_group"
+    .method "enable"
+    .method "flush"
+
+system "group_system"
+    .implement "group.lua"
+    .method "init"
+    .method "start_frame"

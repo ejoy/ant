@@ -19,4 +19,3 @@ data:
     material: /pkg/tools.prefab_editor/res/sky/sky_doge.material
     skybox:
         facesize: 256
-        intensity: 1

@@ -121,14 +121,20 @@ function init_loader_sys:init()
     --point_light_test()
     --ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
-    local pp = ecs.create_instance "/pkg/ant.resources.binary/meshes/up_box.glb|mesh.prefab"
-    function pp.on_ready(e)
-        iom.set_scale(world:entity(e.root), 2.5)
-    end
-    world:create_object(pp)
-    local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
+    -- local pp = ecs.create_instance "/pkg/ant.resources.binary/meshes/up_box.glb|mesh.prefab"
+    -- function pp.on_ready(e)
+    --     iom.set_scale(world:entity(e.root), 2.5)
+    -- end
+    -- world:create_object(pp)
+    -- local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
+    -- p.on_ready = function (e)
+    --     iom.set_position(world:entity(e.root), {0, 5, 0})
+    -- end
+    -- world:create_object(p)
+
+    local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/headquater.glb|mesh.prefab"
     p.on_ready = function (e)
-        iom.set_position(world:entity(e.root), {0, 5, 0})
+        iom.set_scale(world:entity(e.root), 0.1)
     end
     world:create_object(p)
 
@@ -142,7 +148,45 @@ function init_loader_sys:init()
     --     "/pkg/ant.resources/textures/texture_plane.texture",
     --     {x=64, y=0, w=64, h=64}, {w=384, h=64})
 
-    --ecs.create_instance "/pkg/ant.resources.binary/meshes/world_simple.glb|mesh.prefab"
+    -- do
+    --     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/world_simple.glb|mesh.prefab"
+    --     p.on_ready = function (e)
+    --         iom.set_scale(world:entity(e.root), 0.1)
+    --     end
+    --     world:create_object(p)
+    -- end
+
+    -- do
+    --     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/plane.glb|mesh.prefab"
+    --     p.on_ready = function (e)
+    --         iom.set_scale(world:entity(e.root), 0.1)
+    --         local ivav = ecs.import.interface "ant.test.features|ivertex_attrib_visualizer"
+
+    --         local dl = w:singleton("directional_light", "scene:in")
+    --         local d = math3d.inverse(math3d.todirection(dl.scene.srt.r))
+    --         for _, ee in ipairs(e.tag["*"]) do
+    --             ivav.display_normal(world:entity(ee), d)
+    --         end
+            
+    --     end
+    --     world:create_object(p)
+    -- end
+
+    -- do
+    --     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/world_simple.glb|mesh.prefab"
+    --     p.on_ready = function (e)
+    --         iom.set_scale(world:entity(e.root), 0.1)
+    --         -- local ivav = ecs.import.interface "ant.test.features|ivertex_attrib_visualizer"
+
+    --         -- local dl = w:singleton("directional_light", "scene:in")
+    --         -- local d = math3d.inverse(math3d.todirection(dl.scene.srt.r))
+    --         -- for _, ee in ipairs(e.tag["*"]) do
+    --         --     ivav.display_normal(world:entity(ee), d)
+    --         -- end
+            
+    --     end
+    --     world:create_object(p)
+    -- end
 
     --ientity.create_grid_entity_simple "grid"
 
@@ -168,8 +212,33 @@ function init_loader_sys:init()
     -- }
     --ientity.create_procedural_sky()
     --local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/headquater.glb|mesh.prefab"
-    ecs.create_instance "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
-    ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
+    local g1 = ecs.create_group(1)
+    g1:create_entity{
+        policy = {
+            "ant.render|render",
+            "ant.general|name",
+        },
+        data = {
+            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+            material = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.001.material",
+            filter_state = "main_view",
+            scene = {srt={}},
+            on_ready = function (e)
+                w:sync("scene:in id:in", e)
+                iom.set_scale(e, 10)
+                g1:enable "view_visible"
+            end,
+            name = "test_group",
+        },
+    }
+
+    ecs.create_instance"/pkg/ant.test.features/assets/entities/skybox_test.prefab"
+    local p = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
+    p.on_ready = function (e)
+        local a_eid = ientity.create_arrow_entity({}, 0.3, math3d.vector(1.0, 0.0, 0.0, 1.0), "/pkg/ant.resources/materials/meshcolor.material")
+        ecs.method.set_parent(a_eid, e.tag["*"][1])
+    end
+    world:create_object(p)
     -- local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/offshore-pump.glb|mesh.prefab"
     -- function p.on_ready()
     --     iom.set_position(p.root, {3, 0.0, 0.0})

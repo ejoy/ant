@@ -53,4 +53,4 @@ graphic:
     split_lamada: 0.8
     split_num: 4
 debug:
-  show_bounding: true
+  show_bounding: false
