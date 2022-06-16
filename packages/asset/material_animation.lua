@@ -50,28 +50,33 @@ function ima.stop(e)
 		ps.playing = false
 	end
 end
-
+local cr        = import_package "ant.compile_resource"
+local serialize = import_package "ant.serialize"
 function ima.play(e, target, loop)
 	if not world:entity(target).render_object then
 		return
 	end
 	ima.stop(e)
-	if ALREADY_LOG == nil then
-		log.warn("Could not get property from material, need code change")
-		ALREADY_LOG = true
+	-- if ALREADY_LOG == nil then
+	-- 	log.warn("Could not get property from material, need code change")
+	-- 	ALREADY_LOG = true
+	-- end
+	
+	-- local pro = imaterial.get_property(world:entity(target), e.material_animation.property)
+	-- if not pro then
+	-- 	return
+	-- end
+	local ps = e.material_animation.play_state
+	if ps.target_e ~= target or not ps.restore_value then
+		local filename = world:entity(target).material
+		local mtl = serialize.parse(filename, cr.read_file(filename))
+		--local pro = mtl.properties[e.material_animation.property]
+		ps.restore_value = math3d.ref(math3d.vector(mtl.properties[e.material_animation.property]))--(type(pro.value) == "userdata") and math3d.totable(pro.value) or pro.value
 	end
-	if false then
-		local pro = imaterial.get_property(world:entity(target), e.material_animation.property)
-		if not pro then
-			return
-		end
-		local ps = e.material_animation.play_state
-		ps.target_e = target
-		ps.loop = loop
-		ps.current_time = 0
-		ps.playing = true
-		ps.restore_value = (type(pro.value) == "userdata") and math3d.totable(pro.value) or pro.value
-	end
+	ps.target_e = target
+	ps.loop = loop
+	ps.current_time = 0
+	ps.playing = true
 end
 
 local ma_sys = ecs.system "material_animation_system"
@@ -118,7 +123,7 @@ local function step_material_anim(mat_anim, delta_time)
 	end
 
 	local value, last = get_value(play_state.current_time)
-	imaterial.set_property(world:entity(play_state.target_e), mat_anim.property, value)
+	imaterial.set_property(world:entity(play_state.target_e), mat_anim.property, math3d.vector(value))
 	play_state.current_time = play_state.current_time + delta_time
 	if last then
 		if play_state.loop then

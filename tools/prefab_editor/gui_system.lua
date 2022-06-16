@@ -52,7 +52,7 @@ local m = ecs.system 'gui_system'
 local drag_file = nil
 
 local ima = ecs.import.interface "ant.asset|imaterial_animation"
-
+local imotion = ecs.import.interface "ant.animation|imotion"
 local function on_new_project(path)
     new_project.set_path(path)
     new_project.gen_mount()
@@ -248,10 +248,10 @@ function m:init_world()
     stat_window = iRmlUi.open "bgfx_stat.rml"
     ima.highlight_anim = ima.create("highlight", "u_basecolor_factor", {
         {time = 0, value = {1, 1, 1, 1}},
-        {time = 300, value = {2, 2, 2, 1}},
-        {time = 500, value = {5, 5, 5, 1}},
-        {time = 700, value = {2, 2, 2, 1}},
-        {time = 1000, value = {1, 1, 1, 1}},
+        {time = 150, value = {1.5, 1.5, 1.5, 1}},
+        {time = 400, value = {2, 2, 2, 1}},
+        -- {time = 450, value = {2, 2, 2, 1}},
+        -- {time = 600, value = {1, 1, 1, 1}},
     })
 end
 local mouse_pos_x

@@ -973,7 +973,8 @@ end
 local gizmo_event = world:sub{"Gizmo"}
 
 local function check_calc_aabb(eid)
-	local scene = world:entity(eid).scene
+	local entity = world:entity(eid)
+	local scene = entity.scene
 	if scene == nil then
 		return
 	end
@@ -984,8 +985,8 @@ local function check_calc_aabb(eid)
 	
 	local function build_scene()
 		local rt = {}
-		for ee in w:select "scene:in" do
-			local id = ee.scene.id
+		for ee in w:select "scene:in id:in" do
+			local id = ee.id
 			local pid = ee.scene.parent
 			if pid then
 				local c = rt[pid]
@@ -1014,7 +1015,7 @@ local function check_calc_aabb(eid)
 	end
 
 	local sceneaabb = math3d.ref(math3d.aabb())
-	build_aabb(scenetree[scene.id], sceneaabb)
+	build_aabb(scenetree[entity.id], sceneaabb)
 	return sceneaabb
 end
 
