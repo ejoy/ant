@@ -8,6 +8,7 @@ local irender	= ecs.import.interface "ant.render|irender"
 local ies		= ecs.import.interface "ant.scene|ifilter_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local itimer	= ecs.import.interface "ant.timer|itimer"
+local igroup	= ecs.import.interface "ant.render|igroup"
 local render_sys = ecs.system "render_system"
 
 local viewidmgr = require "viewid_mgr"
@@ -19,6 +20,8 @@ function render_sys:init()
 			bgfx.set_view_name(viewid, n .. "_" .. i)
 		end
 	end
+
+	igroup.enable(0)
 end
 
 function render_sys:component_init()
@@ -115,10 +118,11 @@ end
 local function submit_render_objects(viewid, filter, culltag)
 	for idx, fn in ipairs(filter) do
 		local s = culltag and
-			("%s %s:absent render_object:in filter_material?in"):format(fn, culltag[idx]) or
-			("%s render_object:in filter_material?in"):format(fn)
+			("view_visible %s %s:absent render_object:in filter_material:in"):format(fn, culltag[idx]) or
+			("view_visible %s render_object:in filter_material:in"):format(fn)
 
 		for e in w:select(s) do
+			w:sync("name?in", e)
 			irender.draw(viewid, e.render_object, e.filter_material[fn])
 		end
 	end
