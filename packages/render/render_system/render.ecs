@@ -233,6 +233,7 @@ component "view_visible"
 interface "igroup"
     .implement "group.lua"
     .method "default_group"
+    .method "disable"
     .method "enable"
     .method "flush"
 

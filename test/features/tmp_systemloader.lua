@@ -212,7 +212,7 @@ function init_loader_sys:init()
     -- }
     --ientity.create_procedural_sky()
     --local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/headquater.glb|mesh.prefab"
-    local g1 = ecs.create_group(1)
+    local g1 = ecs.group(1)
     g1:create_entity{
         policy = {
             "ant.render|render",
@@ -226,7 +226,6 @@ function init_loader_sys:init()
             on_ready = function (e)
                 w:sync("scene:in id:in", e)
                 iom.set_scale(e, 10)
-                g1:enable "view_visible"
             end,
             name = "test_group",
         },
