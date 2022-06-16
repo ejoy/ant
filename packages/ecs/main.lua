@@ -320,10 +320,10 @@ function world:_create_group(id)
     local api = {}
     mt.__index = api
     function api:create_entity(v)
-        return w:_create_entity(package, self.id, v)
+        return w:_create_entity(package, id, v)
     end
     function api:create_instance(v)
-        return w:_create_instance(package, self.id, v)
+        return w:_create_instance(package, id, v)
     end
     local function tags(tag)
         local t = group.tags[tag]
