@@ -51,7 +51,7 @@ local bgfx              = require "bgfx"
 local m = ecs.system 'gui_system'
 local drag_file = nil
 
-local ima = ecs.import.interface "ant.asset|imaterial_animation"
+local ima = ecs.import.interface "ant.animation|imaterial_animation"
 local imotion = ecs.import.interface "ant.animation|imotion"
 local function on_new_project(path)
     new_project.set_path(path)

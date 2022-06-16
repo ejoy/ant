@@ -7,6 +7,7 @@ local imodifier = ecs.interface "imodifier"
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local timer     = ecs.import.interface "ant.timer|itimer"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
+--local ima       = ecs.import.interface "ant.animation|imaterial_animation"
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
 local math3d    = require "math3d"
@@ -30,6 +31,36 @@ end
 
 function modifier_sys:exit()
 
+end
+
+function imodifier.create_mtl_modifier(target, uniformname, keyframes)
+    -- local ma = ima.create("", uniformname, keyframes)
+    -- local template = {
+	-- 	policy = {
+    --         "ant.general|name",
+    --         "ant.scene|scene_object",
+    --         "ant.modifier|modifier",
+	-- 	},
+	-- 	data = {
+    --         name = "",
+    --         scene = {srt = {}},
+    --         modifier = {
+    --             target = target,
+    --             continue = false,
+    --             update = function(self, time)
+    --                 if not self.continue then
+    --                     return
+    --                 end
+    --                 local value, running = generator(time)
+    --                 iom.set_srt_matrix(world:entity(self.target), value and math3d.mul(self.init_mat, value) or self.init_mat)
+    --                 self.continue = running
+    --             end
+    --         }
+    --     }
+    -- }
+    -- local eid = ecs.create_entity(template)
+    -- ecs.method.set_parent(eid, target)
+    -- return eid
 end
 
 function imodifier.create_srt_modifier(target, generator, replace)
@@ -67,7 +98,7 @@ function imodifier.start(m, anim_name, forwards)
     local mf = world:entity(m.eid).modifier
     mf.continue = true
     if m.anim then
-        mf.init_mat = mf.replace and mc.IDENTITY_MAT or math3d.ref(math3d.matrix(world:entity(mf.target).scene.srt))
+        --mf.init_mat = mf.replace and mc.IDENTITY_MAT or math3d.ref(math3d.matrix(world:entity(mf.target).scene.srt))
         iani.play(m.anim, {name = anim_name, forwards = forwards})
     end
 end

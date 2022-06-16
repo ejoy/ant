@@ -10,7 +10,7 @@ local ima = ecs.interface "imaterial_animation"
 function ima.create(name, property, frames)
     return ecs.create_entity{
         policy = {
-            "ant.asset|material_animation",
+            "ant.animation|material_animation",
             "ant.general|name",
         },
         data = {

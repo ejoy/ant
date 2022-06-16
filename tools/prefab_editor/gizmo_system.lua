@@ -12,7 +12,7 @@ local ientity 	= ecs.import.interface "ant.render|ientity"
 local ilight 	= ecs.import.interface "ant.render|ilight"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local ima 		= ecs.import.interface "ant.asset|imaterial_animation"
+local ima 		= ecs.import.interface "ant.animation|imaterial_animation"
 local igui		= ecs.import.interface "tools.prefab_editor|igui"
 
 

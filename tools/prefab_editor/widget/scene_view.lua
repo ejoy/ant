@@ -104,7 +104,7 @@ local function get_icon_by_object_type(node)
         return icons.ICON_OBJECT
     end
 end
-local ima 		= ecs.import.interface "ant.asset|imaterial_animation"
+local ima 		= ecs.import.interface "ant.animation|imaterial_animation"
 local function show_scene_node(node)
     if world:entity(node.eid).animation then
         return
