@@ -94,7 +94,7 @@ return function (w, package)
         return w:_create_instance(package, nil, v)
     end
     function ecs.group(id)
-        return w:_group(id)
+        return w:_create_group(id)
     end
     function ecs.group_flush()
         return w:_group_flush()
