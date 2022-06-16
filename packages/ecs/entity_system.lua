@@ -18,7 +18,6 @@ function m:entity_ready()
 end
 
 function m:update_world()
-    w:group_update()
     w:update()
     world._frame = world._frame+ 1
 end
