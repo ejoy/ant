@@ -87,11 +87,17 @@ return function (w, package)
             return w:_import(objname, package, name)
         end
     end
-    function ecs.create_entity(v, group)
-        return w:_create_entity(package, group, v)
+    function ecs.create_entity(v)
+        return w:_create_entity(package, nil, v)
     end
-    function ecs.create_instance(v, group)
-        return w:_create_instance(package, group, v)
+    function ecs.create_instance(v)
+        return w:_create_instance(package, nil, v)
+    end
+    function ecs.create_group(id)
+        return w:_create_group(id)
+    end
+    function ecs.group_flush()
+        return w:_group_flush()
     end
     w._ecs[package] = ecs
     return ecs
