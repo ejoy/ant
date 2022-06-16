@@ -11,8 +11,8 @@ local r2l_mat<const> = mc.R2L_MAT
 
 local function find_animation_entities()
     local cache = {}
-    for e in w:select "scene:in skeleton:in meshskin:in" do
-        cache[e.scene.id] = {
+    for e in w:select "scene:in id:in skeleton:in meshskin:in" do
+        cache[e.id] = {
             scene       = e.scene,
             skeleton    = e.skeleton,
             pose_result = e.meshskin.pose_result,

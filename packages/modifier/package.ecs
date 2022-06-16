@@ -13,5 +13,7 @@ policy "modifier"
 
 interface "imodifier"
     .implement "modifier.lua"
+    .method "start"
+    .method "stop"
     .method "create_bone_modifier"
     .method "create_srt_modifier"

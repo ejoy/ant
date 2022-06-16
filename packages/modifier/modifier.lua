@@ -46,9 +46,11 @@ function imodifier.create_srt_modifier(target, generator, replace)
             name = "",
             scene = {srt = {}},
             modifier = {
+                running = false,
                 update = function(time)
-                    local value = generator(time)
+                    local value, running = generator(time)
                     iom.set_srt_matrix(world:entity(target), value and math3d.mul(init_mat, value) or init_mat)
+                    return running
                 end
             },
 		},
@@ -58,24 +60,28 @@ function imodifier.create_srt_modifier(target, generator, replace)
     return eid
 end
 
--- function imodifier.start()
+function imodifier.start(m, anim_name, forwards)
+    world:entity(m.eid).modifier.running = true
+    if m.anim then
+        iani.play(m.anim, {name = anim_name, forwards = forwards})
+    end
+end
 
--- end
-
--- function imodifier.stop()
-
--- end
+function imodifier.stop(m)
+    world:entity(m.eid).modifier.running = false
+end
 
 function imodifier.create_bone_modifier(target, filename, bone_name)
     local anim_inst = ecs.create_instance(filename)
-    return imodifier.create_srt_modifier(target, function (time)
-        local all_e = anim_inst.tag["*"]
-        local anim = world:entity(all_e[2])
-        local pr = anim.anim_ctrl.pose_result
-        if anim.anim_ctrl._current.play_state.play then
-            return pr:joint(anim.skeleton._handle:joint_index(bone_name))
+    return {
+        eid = imodifier.create_srt_modifier(target, function (time)
+            local all_e = anim_inst.tag["*"]
+            local anim = world:entity(all_e[2])
+            local pr = anim.anim_ctrl.pose_result
+            return pr:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl._current.play_state.play
             --return math3d.mul(math3d.matrix(world:entity(all_e[1]).scene.srt), math3d.mul(mc.R2L_MAT, pr:joint(anim.skeleton._handle:joint_index(bone_name))))
-        end
-    end), anim_inst
+        end),
+        anim = anim_inst
+    }
 end
 
