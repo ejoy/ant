@@ -313,7 +313,7 @@ function world:detach_instance(instance)
     --Nothing to do
 end
 
-function world:_create_group(id)
+function world:_group(id)
     local w = self
     local group = w._group
     local mt = {}
