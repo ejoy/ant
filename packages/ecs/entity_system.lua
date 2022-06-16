@@ -10,6 +10,7 @@ function m:entity_create()
         initargs.INIT = true
         w:new(initargs)
     end
+    w:group_update()
     w:clear "create_entity"
 end
 
