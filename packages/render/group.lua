@@ -26,6 +26,7 @@ end
 local group_sys = ecs.system "group_system"
 function group_sys:init()
     def_group = ecs.group(def_group_id)
+    def_group:enable "view_visible"
 end
 
 function group_sys:start_frame()

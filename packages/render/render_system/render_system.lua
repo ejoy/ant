@@ -12,16 +12,10 @@ local igroup	= ecs.import.interface "ant.render|igroup"
 local render_sys = ecs.system "render_system"
 
 local viewidmgr = require "viewid_mgr"
-
-function render_sys:init()
-	for n, b in pairs(viewidmgr.all_bindings()) do
-		for i=0, b[2]-1 do
-			local viewid = b[1]+i
-			bgfx.set_view_name(viewid, n .. "_" .. i)
-		end
+for n, b in pairs(viewidmgr.all_bindings()) do
+	for viewid=b[1], b[1]+b[2] do
+		bgfx.set_view_name(viewid, n .. "_" .. viewid)
 	end
-
-	igroup.enable(0)
 end
 
 function render_sys:component_init()
