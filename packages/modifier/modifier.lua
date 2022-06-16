@@ -24,9 +24,7 @@ end
 function modifier_sys:update_modifier()
     local delta_time = timer.delta() * 0.001
     for e in w:select "modifier:in" do
-        if e.modifier.running then
-            e.modifier.running = e.modifier.update(delta_time)
-        end
+        e.modifier:update(delta_time)
     end
 end
 
@@ -35,7 +33,6 @@ function modifier_sys:exit()
 end
 
 function imodifier.create_srt_modifier(target, generator, replace)
-    local init_mat = replace and mc.IDENTITY_MAT or math3d.ref(math3d.matrix(world:entity(target).scene.srt))
 	local template = {
 		policy = {
             "ant.general|name",
@@ -46,11 +43,17 @@ function imodifier.create_srt_modifier(target, generator, replace)
             name = "",
             scene = {srt = {}},
             modifier = {
-                running = false,
-                update = function(time)
+                target = target,
+                continue = false,
+                replace = replace,
+                init_mat = replace and mc.IDENTITY_MAT or math3d.ref(math3d.matrix(world:entity(target).scene.srt)),
+                update = function(self, time)
+                    if not self.continue then
+                        return
+                    end
                     local value, running = generator(time)
-                    iom.set_srt_matrix(world:entity(target), value and math3d.mul(init_mat, value) or init_mat)
-                    return running
+                    iom.set_srt_matrix(world:entity(self.target), value and math3d.mul(self.init_mat, value) or self.init_mat)
+                    self.continue = running
                 end
             },
 		},
@@ -61,25 +64,25 @@ function imodifier.create_srt_modifier(target, generator, replace)
 end
 
 function imodifier.start(m, anim_name, forwards)
-    world:entity(m.eid).modifier.running = true
+    local mf = world:entity(m.eid).modifier
+    mf.continue = true
     if m.anim then
+        mf.init_mat = mf.replace and mc.IDENTITY_MAT or math3d.ref(math3d.matrix(world:entity(mf.target).scene.srt))
         iani.play(m.anim, {name = anim_name, forwards = forwards})
     end
 end
 
 function imodifier.stop(m)
-    world:entity(m.eid).modifier.running = false
+    world:entity(m.eid).modifier.continue = false
 end
 
 function imodifier.create_bone_modifier(target, filename, bone_name)
     local anim_inst = ecs.create_instance(filename)
     return {
         eid = imodifier.create_srt_modifier(target, function (time)
-            local all_e = anim_inst.tag["*"]
-            local anim = world:entity(all_e[2])
+            local anim = world:entity(anim_inst.tag["*"][2])
             local pr = anim.anim_ctrl.pose_result
             return pr:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl._current.play_state.play
-            --return math3d.mul(math3d.matrix(world:entity(all_e[1]).scene.srt), math3d.mul(mc.R2L_MAT, pr:joint(anim.skeleton._handle:joint_index(bone_name))))
         end),
         anim = anim_inst
     }
