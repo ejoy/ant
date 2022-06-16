@@ -372,6 +372,7 @@ function world:_group_flush()
     end
     group.dirty = nil
     local removed = {}
+    w.w:group_update()
     for tag, t in pairs(group.tags) do
         if t.dirty then
             t.dirty = nil
