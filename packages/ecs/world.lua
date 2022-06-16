@@ -245,6 +245,9 @@ function m.new_world(config)
 		_frame = 0,
 		_maxid = 0,
 		_entity = create_entity_watcher(ecs),
+		_group = {
+			tags = {}
+		},
 		w = ecs,
 	}, world)
 

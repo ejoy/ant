@@ -28,11 +28,19 @@ local function getentityid(w)
     return w._maxid
 end
 
+local function update_group_tag(w, data)
+    local groupid = data.group
+    for tag, t in pairs(w._group.tags) do
+        if t[groupid] then
+            data[tag] = true
+        end
+    end
+end
+
 local function create_entity(w, group, data)
     data.id = getentityid(w)
-    if group then
-        data.group = (data.group or 0) | group
-    end
+    data.group = group or 0
+    update_group_tag(w, data)
     w.w:new {
         create_entity = data
     }
@@ -213,7 +221,7 @@ local function create_scene_entity(w, group)
     local eid = getentityid(w)
     w.w:new {
         id = eid,
-        group = group,
+        group = group or 0,
         scene = {
             srt = {},
         }
@@ -303,6 +311,81 @@ end
 
 function world:detach_instance(instance)
     --Nothing to do
+end
+
+function world:_create_group(id)
+    local w = self
+    local group = w._group
+    local mt = {}
+    local api = {}
+    mt.__index = api
+    function api:create_entity(v)
+        return w:_create_entity(package, self.id, v)
+    end
+    function api:create_instance(v)
+        return w:_create_instance(package, self.id, v)
+    end
+    local function tags(tag)
+        local t = group.tags[tag]
+        if not t then
+            t = {
+                args = {},
+            }
+            group.tags[tag] = t
+        end
+        return t
+    end
+    function api:enable(tag)
+        local t = tags(tag)
+        if t[id] then
+            return
+        end
+        group.dirty = true
+        t.dirty = true
+        t[id] = true
+        table.insert(t.args, id)
+    end
+    function api:disable(tag)
+        local t = tags(tag)
+        if t[id] == nil then
+            return
+        end
+        group.dirty = true
+        t.dirty = true
+        t[id] = nil
+        for i = 1, #t.args do
+            local v = t.args[i]
+            if v == id then
+                table.remove(t.args, i)
+                break
+            end
+        end
+    end
+    return setmetatable({}, mt)
+end
+
+function world:_group_flush()
+    local w = self
+    local group = w._group
+    if not group.dirty then
+        return
+    end
+    group.dirty = nil
+    local removed = {}
+    for tag, t in pairs(group.tags) do
+        if t.dirty then
+            t.dirty = nil
+            if #t.args == 0 then
+                w.w:group_enable(tag)
+                removed[tag] = true
+            else
+                w.w:group_enable(tag, table.unpack(t.args))
+            end
+        end
+    end
+    for tag in pairs(removed) do
+        group.tags[tag] = nil
+    end
 end
 
 function world:call(e, name, ...)
