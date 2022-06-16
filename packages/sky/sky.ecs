@@ -32,7 +32,6 @@ component "skybox_changed"
 system "skybox_system"
     .implement "skybox.lua"
     .method "component_init"
-    .method "entity_init"
 
 pipeline "sky"
     .stage "convert_sky"

@@ -20,4 +20,3 @@ data:
     simplemesh: false
     skybox:
         facesize: 256
-        intensity: 1
