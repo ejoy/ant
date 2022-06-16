@@ -43,8 +43,11 @@ local function process_keyframe_event(task)
 			elseif event.event_type == "Effect" then
 				if not event.effect and event.asset_path ~= "" then
 					event.effect = iefk.create(event.asset_path, {play_on_create = true})
-					if event.link_info.slot_eid then
-						ecs.method.set_parent(event.effect, event.link_info.slot_eid)
+					if task.slot_eid then
+						local slot_eid = task.slot_eid[event.link_info.slot_name]
+						if slot_eid then
+							ecs.method.set_parent(event.effect, slot_eid)
+						end
 					end
 				elseif event.effect then
 					iefk.play(world:entity(event.effect))
@@ -104,7 +107,7 @@ function ani_sys:data_changed()
 	end
 end
 
-local function load_events(filename, slot_eid)
+local function load_events(filename)
     local path = string.sub(filename, 1, -6) .. ".event"
     local f = fs.open(fs.path(path))
     if not f then
@@ -112,21 +115,9 @@ local function load_events(filename, slot_eid)
     end
     local data = f:read "a"
     f:close()
-    local events = datalist.parse(data)
-    for _, evs in pairs(events) do
-        for _, ev in ipairs(evs.event_list) do
-            if ev.link_info then
-                local seid = slot_eid[ev.link_info.slot_name]
-                if seid then
-                    ev.link_info.slot_eid = seid
-                else
-                    ev.link_info.slot_name = ""
-                end
-            end
-        end
-    end
-    return events
+    return datalist.parse(data)
 end
+
 function ani_sys:component_init()
 	for e in w:select "INIT animation:in skeleton:update anim_ctrl:in animation_birth:in" do
 		local ani = e.animation
@@ -139,14 +130,14 @@ function ani_sys:component_init()
 		pose_result:setup(skehandle)
 		e.anim_ctrl.pose_result = pose_result
 		e.anim_ctrl.keyframe_events = {}
-		-- local events = e.anim_ctrl.keyframe_events
-		-- for key, value in pairs(e.animation) do
-		-- 	events[key] = load_events(tostring(value), slot_eid)
-		-- end
+		local events = e.anim_ctrl.keyframe_events
+		for key, value in pairs(e.animation) do
+			events[key] = load_events(tostring(value))
+		end
 		local anim_name = e.animation_birth
 		e.anim_ctrl._current = {
 			animation = e.animation[anim_name],
-			event_state = { next_index = 1, keyframe_events = {}},--events[anim_name]},
+			event_state = { next_index = 1, keyframe_events = events[anim_name] },
 			play_state = {
 				ratio = 0.0,
 				previous_ratio = 0.0,
@@ -181,7 +172,7 @@ end
 local function init_prefab_anim(entity)
 	local entitys = entity.prefab.tag["*"]
 	local anim_eid = {}
-	-- local slot_eid = {}
+	local slot_eid = {}
 	local anim
 	for _, eid in ipairs(entitys) do
 		local e = world:entity(eid)
@@ -189,14 +180,23 @@ local function init_prefab_anim(entity)
 			anim = e
 		elseif e.skinning then
 			anim_eid[#anim_eid + 1] = eid
-		-- elseif e.slot then
-		-- 	slot_eid[e.name] = eid
+		elseif e.slot then
+			slot_eid[e.name] = eid
 		end
 	end
-	if anim and #anim_eid > 0 then
+	if anim then
 		for _, eid in ipairs(anim_eid) do
 			build_transform(world:entity(eid).render_object, anim.meshskin)
 		end
+		-- local path = tostring(anim.meshskin.skin)
+		-- local pos = path:find("/meshes/") or path:find("|meshes/")
+		-- if pos then
+		-- 	local anim_path = path:sub(1, pos) .. "animation.prefab"
+		-- 	local default_anim = iani.create(anim_path)
+		-- 	ecs.method.set_parent(default_anim.root, entity.prefab.root)
+		-- 	anim.meshskin.animation = default_anim.tag["*"][2]
+		-- end
+		anim.anim_ctrl._current.slot_eid = slot_eid
 	end
 end
 
