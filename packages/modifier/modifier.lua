@@ -159,7 +159,7 @@ function imodifier.start(m, desc)
     mf.continue = true
     if m.anim_eid then
         if desc.name then
-            iani.play(world:entity(m.anim_eid), desc)
+            iani.play(m.anim_eid, desc)
         else
             ika.play(world:entity(m.anim_eid), desc)
         end
