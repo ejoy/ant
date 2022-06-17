@@ -3,15 +3,13 @@ system "cube_shape_terrain_system"
     .method "entity_init"
 
 component "shape_terrain".type "lua"
-    .require_system "ant.terrain|cube_shape_terrain_system"
 
 component "shape_terrain_drawer"
 component "shape_terrain_edge_drawer"
-component "materials".type "lua"
 
-interface "ishape_terrain"
-    .implement "cube_shape_terrain.lua"
-    .method "shape_types"
+-- interface "ishape_terrain"
+--     .implement "cube_shape_terrain.lua"
+--     .method "shape_types"
 
 interface "iterrain_road"
     .implement "terrain_road_system.lua"
@@ -23,13 +21,21 @@ system "terrain_road_system"
     .method "init"
     .method "entity_init"
 
+system "mesh_terrain_system"
+    .implement "mesh_terrain.lua"
+    .method "entity_init"
+
+interface "imeshshape"
+    .implement "mesh_terrain.lua"
+    .method "set"
+    .method "set_resource"
+
 policy "shape_terrain"
-    .require_system "ant.terrain|cube_shape_terrain_system"
+    .require_system "ant.terrain|mesh_terrain_system"
     .require_system "ant.terrain|terrain_road_system"
-    .require_interface "ant.terrain|ishape_terrain"
+    .require_interface "ant.terrain|imeshshape"
     .require_interface "ant.terrain|iterrain_road"
     .component "shape_terrain"
-    .component "materials"
 
 -- quad_strip
 component "quad_strip".type "lua"

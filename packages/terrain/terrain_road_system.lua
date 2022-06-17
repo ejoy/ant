@@ -3,9 +3,6 @@ local world = ecs.world
 local w     = world.w
 
 
-local ist   = ecs.import.interface "ant.terrain|ishape_terrain"
-local iom   = ecs.import.interface "ant.objcontroller|iobj_motion"
-
 local mathpkg=import_package "ant.math"
 local mc    = mathpkg.constant
 local math3d= require "math3d"
@@ -48,6 +45,7 @@ local rotators<const> = {
 
 local instance_id = 0
 local function instance(rt, parent, iiw, iih, unit)
+    unit = unit or 1
     local ss = resource_scale*unit
     local s = {ss, ss, ss}
     local t = {(iiw-1+0.5)*unit, 0.0, (iih-1+0.5)*unit} --0.5 for x/z offset from mesh center
@@ -65,16 +63,16 @@ function terrain_road_sys:entity_init()
     for e in w:select "INIT shape_terrain:in id:in" do
         local st = e.shape_terrain
         local ww, hh = st.width, st.height
-        local terrainfileds = st.terrain_fields
+        local roads = st.roads
         local unit = st.unit
 
         for iih=1, hh do
             for iiw=1, ww do
                 local idx = (iih-1)*ww+iiw
-                local field = terrainfileds[idx]
-                local rt = field.roadtype
-                if rt then
-                    field.instance_id = instance(rt, e.id, iiw, iih, unit)
+                local r = roads[idx]
+                if r then
+                    local rt = r.roadtype
+                    r.instance_id = instance(rt, e.id, iiw, iih, unit)
                 end
             end
         end
@@ -92,8 +90,8 @@ function itr.set_road(te, roadtype, iiw, iih)
     end
 
     local idx = (iih-1)*ww+iiw
-    local terrain_fields = st.terrain_fields
-    local field = terrain_fields[idx]
+    local roads = st.roads
+    local field = roads[idx]
     if field.instance_id then
         world:pub {"terrain_road", "road", "remove", field.instance_id}
     end

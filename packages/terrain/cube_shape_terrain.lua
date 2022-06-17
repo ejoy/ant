@@ -406,7 +406,7 @@ local function calc_edge_aabb(aabb, thickness)
 end
 
 function shape_ts:entity_init()
-    for e in w:select "INIT shape_terrain:in materials:in id:in" do
+    for e in w:select "INIT shape_terrain:in id:in" do
         local st = e.shape_terrain
 
         if st.terrain_fields == nil then

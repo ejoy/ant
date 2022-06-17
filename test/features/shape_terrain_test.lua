@@ -2,7 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local ist       = ecs.import.interface "ant.terrain|ishape_terrain"
+--local ist       = ecs.import.interface "ant.terrain|ishape_terrain"
 local icanvas   = ecs.import.interface "ant.terrain|icanvas"
 
 local shape_terrain_test_sys = ecs.system "shape_terrain_test_system"
@@ -27,23 +27,26 @@ local road_test = {
     " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
 }
 
-local function build_roads(ww, hh, fields)
+local function build_roads(ww, hh)
     if ww < 8 or hh < 8 then
         error "need at least w>=8 and h>=8 to test road"
     end
 
+    local roads = {}
     for iih=1, 8 do
         for iiw=1, 8 do
             local idx = (iih-1)*ww+iiw
             local idx1 = (iih-1)*8+iiw
             local rt = road_test[idx1]
 
-            fields[idx].type ="grass"
             if rt ~= " " then
-                fields[idx].roadtype = rt
+                roads[idx] = {
+                    roadtype = rt
+                }
             end
         end
     end
+    return roads
 end
 
 local function generate_terrain_fields(w, h)
@@ -333,10 +336,32 @@ local function create_canvas()
     }
 end
 
+local function generate_mesh_shape(ww, hh)
+    local mw, mh = 3, 3
+    local ms = {
+        meshes = {
+            "/pkg/ant.test.features/assets/entities/testmesh.prefab",
+            "/pkg/ant.test.features/assets/entities/testmesh.prefab",
+            "/pkg/ant.test.features/assets/entities/testmesh.prefab",
+            "/pkg/ant.test.features/assets/entities/testmesh.prefab",
+        },
+        w = 3, h = 3,
+    }
+
+    local www, hhh = ww // mw, hh // mh
+    for ih=1, hhh do
+        local ridx = (ih-1) * www
+        for iw=1, www do
+            ms[iw+ridx] = math.random(1, 4)
+        end
+    end
+
+    return ms
+end
+
 function shape_terrain_test_sys:init()
     local ww, hh = 32, 32 --256, 256--2, 2
-    local terrain_fields = generate_terrain_fields(ww, hh)
-    build_roads(ww, hh, terrain_fields)
+    local roads = build_roads(ww, hh)
     shape_terrain_test = ecs.create_entity{
         policy = {
             "ant.scene|scene_object",
@@ -351,20 +376,20 @@ function shape_terrain_test_sys:init()
                 }
             },
             shape_terrain = {
-                terrain_fields = terrain_fields,
+                roads = roads,
                 width = ww,
                 height = hh,
-                section_size = math.max(1, ww > 4 and ww//4 or ww//2),
-                unit = 2,
-                edge = {
-                    color = 0xffe5e5e5,
-                    thickness = 0.08,
-                },
+                -- cube_shape = {
+                --     fields = generate_terrain_fields(ww, hh),
+                --     section_size = math.max(1, ww > 4 and ww//4 or ww//2),
+                --     unit = 2,
+                --     edge = {
+                --         color = 0xffe5e5e5,
+                --         thickness = 0.08,
+                --     },
+                -- }
+                mesh_shape = generate_mesh_shape(ww, hh)
             },
-            materials = {
-                shape = "/pkg/ant.resources/materials/shape_terrain.material",
-                edge = "/pkg/ant.resources/materials/shape_terrain_edge.material",
-            }
         }
     }
 
