@@ -51,7 +51,7 @@ function imodifier.set_target(m, target)
     mf.init_value = math3d.ref(math3d.vector(mtl.properties[mf.property]))
 end
 
-function imodifier.create_mtl_modifier(target, property, keyframes)
+function imodifier.create_mtl_modifier(target, property, keyframes, keep)
     local ka = ika.create(keyframes)
 
     local function generator(time)
@@ -79,6 +79,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes)
                 continue = false,
                 property = property,
                 init_value = init_value,
+                keep = keep,
                 reset = function (self)
                     imaterial.set_property(world:entity(self.target), self.property, self.init_value)
                 end,
@@ -87,8 +88,11 @@ function imodifier.create_mtl_modifier(target, property, keyframes)
                         return
                     end
                     local value, running = generator(time)
-                    value = running and math3d.vector(value) or self.init_value
-                    imaterial.set_property(world:entity(self.target), self.property, value)
+                    local apply_value = math3d.vector(value)
+                    if not running and not self.keep then
+                        apply_value = self.init_value
+                    end
+                    imaterial.set_property(world:entity(self.target), self.property, apply_value)
                     self.continue = running
                 end
             }
@@ -98,11 +102,11 @@ function imodifier.create_mtl_modifier(target, property, keyframes)
     ecs.method.set_parent(eid, target)
     return {
         eid = eid,
-        anim = ka
+        anim_eid = ka
     }
 end
 
-function imodifier.create_srt_modifier(target, generator, replace)
+function imodifier.create_srt_modifier(target, generator, keep)
 	local template = {
 		policy = {
             "ant.general|name",
@@ -115,14 +119,18 @@ function imodifier.create_srt_modifier(target, generator, replace)
             modifier = {
                 target = target,
                 continue = false,
-                replace = replace,
-                init_value = replace and mc.IDENTITY_MAT or math3d.ref(math3d.matrix(world:entity(target).scene.srt)),
+                keep = keep,
+                init_value = math3d.ref(math3d.matrix(world:entity(target).scene.srt)),
                 update = function(self, time)
                     if not self.continue then
                         return
                     end
                     local value, running = generator(time)
-                    iom.set_srt_matrix(world:entity(self.target), value and math3d.mul(self.init_value, value) or self.init_value)
+                    local apply_value = math3d.mul(self.init_value, value)
+                    if not running and not self.keep then
+                        apply_value = self.init_value
+                    end
+                    iom.set_srt_matrix(world:entity(self.target), apply_value)
                     self.continue = running
                 end
             },
@@ -136,12 +144,11 @@ end
 function imodifier.start(m, desc)
     local mf = world:entity(m.eid).modifier
     mf.continue = true
-    if m.anim then
-        --mf.init_value = mf.replace and mc.IDENTITY_MAT or math3d.ref(math3d.matrix(world:entity(mf.target).scene.srt))
+    if m.anim_eid then
         if desc.name then
-            iani.play(world:entity(m.anim), desc)
+            iani.play(world:entity(m.anim_eid), desc)
         else
-            ika.play(world:entity(m.anim), desc)
+            ika.play(world:entity(m.anim_eid), desc)
         end
     end
 end
@@ -158,7 +165,7 @@ function imodifier.create_bone_modifier(target, filename, bone_name)
             local pr = anim.anim_ctrl.pose_result
             return pr:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl._current.play_state.play
         end),
-        anim = anim_inst
+        anim_eid = anim_inst
     }
 end
 
