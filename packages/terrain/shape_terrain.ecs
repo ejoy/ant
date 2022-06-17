@@ -1,16 +1,16 @@
-system "shape_terrain_system"
-    .implement "shape_terrain.lua"
+system "cube_shape_terrain_system"
+    .implement "cube_shape_terrain.lua"
     .method "entity_init"
 
 component "shape_terrain".type "lua"
-    .require_system "ant.terrain|shape_terrain_system"
+    .require_system "ant.terrain|cube_shape_terrain_system"
 
 component "shape_terrain_drawer"
 component "shape_terrain_edge_drawer"
 component "materials".type "lua"
 
 interface "ishape_terrain"
-    .implement "shape_terrain.lua"
+    .implement "cube_shape_terrain.lua"
     .method "shape_types"
 
 interface "iterrain_road"
@@ -24,7 +24,7 @@ system "terrain_road_system"
     .method "entity_init"
 
 policy "shape_terrain"
-    .require_system "ant.terrain|shape_terrain_system"
+    .require_system "ant.terrain|cube_shape_terrain_system"
     .require_system "ant.terrain|terrain_road_system"
     .require_interface "ant.terrain|ishape_terrain"
     .require_interface "ant.terrain|iterrain_road"

@@ -12,16 +12,10 @@ local math3d    = require "math3d"
 
 local shape_types<const> = {
     "none", "grass", "dust",
-    -- roads
-    "road_I0", "road_I1",   -- - |
-    "road_T0", "road_T1", "road_T2", "road_T3", -- T
-    "road_X0",
-    "road_C0", "road_C1", "road_C2", "road_C3", -- C
-    "road_O0", "road_O1", "road_O2", "road_O3", -- ==> ~ <== ^
 }
 
 
-local shape_ts = ecs.system "shape_terrain_system"
+local shape_ts = ecs.system "cube_shape_terrain_system"
 
 local function read_terrain_field(tf)
     if type(tf) == "string" then
