@@ -45,10 +45,20 @@ function imodifier.set_target(m, target)
     if mf.target then
         mf:reset()
     end
+    if mf.property then
+        -- material
+        local filename = world:entity(target).material
+        if not filename then
+            mf.target = nil
+            return
+        end
+        local mtl = serialize.parse(filename, cr.read_file(filename))
+        mf.init_value = math3d.ref(math3d.vector(mtl.properties[mf.property]))
+    else
+        -- srt
+        mf.init_value = math3d.ref(math3d.matrix(world:entity(target).scene.srt))
+    end
     mf.target = target
-    local filename = world:entity(target).material
-    local mtl = serialize.parse(filename, cr.read_file(filename))
-    mf.init_value = math3d.ref(math3d.vector(mtl.properties[mf.property]))
 end
 
 function imodifier.create_mtl_modifier(target, property, keyframes, keep)
@@ -84,7 +94,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep)
                     imaterial.set_property(world:entity(self.target), self.property, self.init_value)
                 end,
                 update = function(self, time)
-                    if not self.continue then
+                    if not self.continue or not self.target then
                         return
                     end
                     local value, running = generator(time)
@@ -121,8 +131,11 @@ function imodifier.create_srt_modifier(target, generator, keep)
                 continue = false,
                 keep = keep,
                 init_value = math3d.ref(math3d.matrix(world:entity(target).scene.srt)),
+                reset = function (self)
+                    iom.set_srt_matrix(world:entity(self.target), self.init_value)
+                end,
                 update = function(self, time)
-                    if not self.continue then
+                    if not self.continue or not self.target then
                         return
                     end
                     local value, running = generator(time)
