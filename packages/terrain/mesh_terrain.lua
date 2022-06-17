@@ -24,7 +24,7 @@ function mt_sys:entity_init()
         local tw, th = st.width, st.height
         local mw, mh = ms.w, ms.h
         local ww, hh = tw // mw, th //mh
-        local unit = st.unit or 1.0
+        local unit = st.unit
         assert(ww * hh == #ms, "Invalid mesh indices")
 
         local terrainid = e.id

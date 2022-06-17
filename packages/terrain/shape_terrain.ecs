@@ -11,16 +11,6 @@ component "shape_terrain_edge_drawer"
 --     .implement "cube_shape_terrain.lua"
 --     .method "shape_types"
 
-interface "iterrain_road"
-    .implement "terrain_road_system.lua"
-    .method "set_road"
-    .method "set_road_resource"
-
-system "terrain_road_system"
-    .implement "terrain_road_system.lua"
-    .method "init"
-    .method "entity_init"
-
 system "mesh_terrain_system"
     .implement "mesh_terrain.lua"
     .method "entity_init"
@@ -32,9 +22,7 @@ interface "imeshshape"
 
 policy "shape_terrain"
     .require_system "ant.terrain|mesh_terrain_system"
-    .require_system "ant.terrain|terrain_road_system"
     .require_interface "ant.terrain|imeshshape"
-    .require_interface "ant.terrain|iterrain_road"
     .component "shape_terrain"
 
 -- quad_strip

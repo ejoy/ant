@@ -2,117 +2,15 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
---local ist       = ecs.import.interface "ant.terrain|ishape_terrain"
 local icanvas   = ecs.import.interface "ant.terrain|icanvas"
 
 local shape_terrain_test_sys = ecs.system "shape_terrain_test_system"
-
---from w: [0, 8], h:[0, 8]
-local road_test = {
-    -- " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
-    -- " ", "O2", "I0", "I0", "C2",  " ",  " ",  " ",
-    -- " ",  " ",  " ",  " ", "I1",  " ",  " ",  " ",
-    -- " ",  " ", "O2", "I0", "X0", "I0", "I0", "O0",
-    -- " ",  " ",  " ",  " ", "I1",  " ",  " ",  " ",
-    -- " ",  " ", "C3", "I0", "X0", "I0", "O0",  " ",
-    -- " ",  " ", "C0", "I0", "C1",  " ",  " ",  " ",
-    -- " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
-    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
-    " ", "O2", "I0", "I0", "O0",  " ",  " ",  " ",
-    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
-    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
-    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
-    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
-    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
-    " ",  " ",  " ",  " ",  " ",  " ",  " ",  " ",
-}
-
-local function build_roads(ww, hh)
-    if ww < 8 or hh < 8 then
-        error "need at least w>=8 and h>=8 to test road"
-    end
-
-    local roads = {}
-    for iih=1, 8 do
-        for iiw=1, 8 do
-            local idx = (iih-1)*ww+iiw
-            local idx1 = (iih-1)*8+iiw
-            local rt = road_test[idx1]
-
-            if rt ~= " " then
-                roads[idx] = {
-                    roadtype = rt
-                }
-            end
-        end
-    end
-    return roads
-end
-
-local function generate_terrain_fields(w, h)
-    local shapetypes = ist.shape_types()
-
-    local fields = {}
-    for ih=1, h do
-        for iw=1, w do
-            local which = math.random(1, 3)
-            local height = math.random() * 0.05
-            fields[#fields+1] = {
-                type    = shapetypes[which],
-                height  = height,
-            }
-        end
-    end
-
-    return fields
-    -- local function build(stream)
-    --     local fields = {}
-    --     for _, t in ipairs(stream) do
-    --         fields[#fields+1] = {
-    --             type = shape_types[t],
-    --             --height = math.random() * 0.12,
-    --             height = 1.0
-    --         }
-    --     end
-    --     return fields
-    -- end
-    -- return build {
-    --     3, 2,
-    --     2, 2,
-    -- }
---     return build{
---         2, 1, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1,
---         1, 1, 2, 2, 2, 1, 1, 1, 2, 2, 1, 1, 1, 1, 1, 1,
---         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
---         3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-
---         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
---         2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2,
---         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
---         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-
---         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
---         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
---         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
---         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
--- --
---         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
---         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
---         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
---         2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
---     }
-end
 
 local function build_indicator_points1(height)
     return {
         {0.0, height, 0.0},
         {1.0, height, 0.0},
         {2.0, height, 0.0},
-        -- {2.0, height, 1.0},
-        -- {2.0, height, 2.0},
-        -- {1.0, height, 2.0},
-        -- {0.0, height, 2.0},
-        -- {0.0, height, 1.0},
     }
 end
 
@@ -361,7 +259,6 @@ end
 
 function shape_terrain_test_sys:init()
     local ww, hh = 32, 32 --256, 256--2, 2
-    local roads = build_roads(ww, hh)
     shape_terrain_test = ecs.create_entity{
         policy = {
             "ant.scene|scene_object",
@@ -376,9 +273,9 @@ function shape_terrain_test_sys:init()
                 }
             },
             shape_terrain = {
-                roads = roads,
                 width = ww,
                 height = hh,
+                unit = 2.0,
                 -- cube_shape = {
                 --     fields = generate_terrain_fields(ww, hh),
                 --     section_size = math.max(1, ww > 4 and ww//4 or ww//2),
@@ -399,23 +296,13 @@ function shape_terrain_test_sys:init()
     create_canvas()
 end
 
-local itr = ecs.import.interface "ant.terrain|iterrain_road"
-
 local kb_mb = world:sub{"keyboard"}
-
-local rotation = 0
 
 function shape_terrain_test_sys:data_changed()
     assert(shape_terrain_test)
     for msg in kb_mb:each() do
         local key, press = msg[2], msg[3]
-        if key == "SPACE" and press == 0 then
-            if rotation == 4 then
-                rotation = 0
-            end
-            itr.set_road(shape_terrain_test, "C" .. rotation, 1, 2)
-            rotation = rotation + 1
-        elseif key == "H" and press == 0 then
+        if key == "H" and press == 0 then
             if indicator then
                 w:remove(indicator)
             end
