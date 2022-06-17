@@ -93,12 +93,12 @@ function page_meta:update_contianer()
         page_e.style.flexDirection = 'column'
         page_e.style.alignItems = 'center'
         page_e.style.justifyContent = 'flex-start'
-        page_e.style.width = self.width
+        page_e.style.width = '100%'--self.width
         page_e.style.height = self.height
         local row = {}
         for r = 1, self.row do
             local row_e = self.document.createElement "div"
-            row_e.style.width = self.width
+            row_e.style.width = '100%'--self.width
             row_e.style.flexDirection = 'row'
             row_e.style.alignItems = 'center'
             row_e.style.justifyContent = 'space-evenly'
