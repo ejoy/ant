@@ -12,7 +12,7 @@ local ientity 	= ecs.import.interface "ant.render|ientity"
 local ilight 	= ecs.import.interface "ant.render|ilight"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local ima 		= ecs.import.interface "ant.animation|imaterial_animation"
+local imodifier = ecs.import.interface "ant.modifier|imodifier"
 local igui		= ecs.import.interface "tools.prefab_editor|igui"
 
 
@@ -1129,8 +1129,9 @@ function gizmo_sys:handle_event()
 					gizmo:set_target(eid)
 				end
 			end
-			if ima.highlight_anim then
-				ima.play(world:entity(ima.highlight_anim), eid, false)
+			if imodifier.highlight then
+				imodifier.set_target(imodifier.highlight, eid)
+                imodifier.start(imodifier.highlight, {})
 			end
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then

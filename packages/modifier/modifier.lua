@@ -7,7 +7,8 @@ local imodifier = ecs.interface "imodifier"
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local timer     = ecs.import.interface "ant.timer|itimer"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
---local ima       = ecs.import.interface "ant.animation|imaterial_animation"
+local ika       = ecs.import.interface "ant.animation|ikeyframe"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
 local math3d    = require "math3d"
@@ -33,34 +34,72 @@ function modifier_sys:exit()
 
 end
 
-function imodifier.create_mtl_modifier(target, uniformname, keyframes)
-    -- local ma = ima.create("", uniformname, keyframes)
-    -- local template = {
-	-- 	policy = {
-    --         "ant.general|name",
-    --         "ant.scene|scene_object",
-    --         "ant.modifier|modifier",
-	-- 	},
-	-- 	data = {
-    --         name = "",
-    --         scene = {srt = {}},
-    --         modifier = {
-    --             target = target,
-    --             continue = false,
-    --             update = function(self, time)
-    --                 if not self.continue then
-    --                     return
-    --                 end
-    --                 local value, running = generator(time)
-    --                 iom.set_srt_matrix(world:entity(self.target), value and math3d.mul(self.init_mat, value) or self.init_mat)
-    --                 self.continue = running
-    --             end
-    --         }
-    --     }
-    -- }
-    -- local eid = ecs.create_entity(template)
-    -- ecs.method.set_parent(eid, target)
-    -- return eid
+local cr        = import_package "ant.compile_resource"
+local serialize = import_package "ant.serialize"
+
+function imodifier.set_target(m, target)
+    local mf = world:entity(m.eid).modifier
+    if target == mf.target then
+        return
+    end
+    if mf.target then
+        mf:reset()
+    end
+    mf.target = target
+    local filename = world:entity(target).material
+    local mtl = serialize.parse(filename, cr.read_file(filename))
+    mf.init_value = math3d.ref(math3d.vector(mtl.properties[mf.property]))
+end
+
+function imodifier.create_mtl_modifier(target, property, keyframes)
+    local ka = ika.create(keyframes)
+
+    local function generator(time)
+        local kfanim = world:entity(ka).keyframe
+        return kfanim.play_state.current_value, kfanim.play_state.playing
+    end
+
+    local init_value
+    if target then
+        local filename = world:entity(target).material
+        local mtl = serialize.parse(filename, cr.read_file(filename))
+        init_value = math3d.ref(math3d.vector(mtl.properties[property]))
+    end
+    local template = {
+		policy = {
+            "ant.general|name",
+            "ant.scene|scene_object",
+            "ant.modifier|modifier",
+		},
+		data = {
+            name = "",
+            scene = {srt = {}},
+            modifier = {
+                target = target,
+                continue = false,
+                property = property,
+                init_value = init_value,
+                reset = function (self)
+                    imaterial.set_property(world:entity(self.target), self.property, self.init_value)
+                end,
+                update = function(self, time)
+                    if not self.continue then
+                        return
+                    end
+                    local value, running = generator(time)
+                    value = running and math3d.vector(value) or self.init_value
+                    imaterial.set_property(world:entity(self.target), self.property, value)
+                    self.continue = running
+                end
+            }
+        }
+    }
+    local eid = ecs.create_entity(template)
+    ecs.method.set_parent(eid, target)
+    return {
+        eid = eid,
+        anim = ka
+    }
 end
 
 function imodifier.create_srt_modifier(target, generator, replace)
@@ -77,13 +116,13 @@ function imodifier.create_srt_modifier(target, generator, replace)
                 target = target,
                 continue = false,
                 replace = replace,
-                init_mat = replace and mc.IDENTITY_MAT or math3d.ref(math3d.matrix(world:entity(target).scene.srt)),
+                init_value = replace and mc.IDENTITY_MAT or math3d.ref(math3d.matrix(world:entity(target).scene.srt)),
                 update = function(self, time)
                     if not self.continue then
                         return
                     end
                     local value, running = generator(time)
-                    iom.set_srt_matrix(world:entity(self.target), value and math3d.mul(self.init_mat, value) or self.init_mat)
+                    iom.set_srt_matrix(world:entity(self.target), value and math3d.mul(self.init_value, value) or self.init_value)
                     self.continue = running
                 end
             },
@@ -94,12 +133,16 @@ function imodifier.create_srt_modifier(target, generator, replace)
     return eid
 end
 
-function imodifier.start(m, anim_name, forwards)
+function imodifier.start(m, desc)
     local mf = world:entity(m.eid).modifier
     mf.continue = true
     if m.anim then
-        --mf.init_mat = mf.replace and mc.IDENTITY_MAT or math3d.ref(math3d.matrix(world:entity(mf.target).scene.srt))
-        iani.play(m.anim, {name = anim_name, forwards = forwards})
+        --mf.init_value = mf.replace and mc.IDENTITY_MAT or math3d.ref(math3d.matrix(world:entity(mf.target).scene.srt))
+        if desc.name then
+            iani.play(world:entity(m.anim), desc)
+        else
+            ika.play(world:entity(m.anim), desc)
+        end
     end
 end
 

@@ -104,7 +104,7 @@ local function get_icon_by_object_type(node)
         return icons.ICON_OBJECT
     end
 end
-local ima 		= ecs.import.interface "ant.animation|imaterial_animation"
+local imodifier 		= ecs.import.interface "ant.modifier|imodifier"
 local function show_scene_node(node)
     if world:entity(node.eid).animation then
         return
@@ -117,8 +117,9 @@ local function show_scene_node(node)
             if is_editable(eid) then
                 gizmo:set_target(eid)
             end
-            if ima.highlight_anim then
-                ima.play(world:entity(ima.highlight_anim), eid, false)
+            if imodifier.highlight then
+                imodifier.set_target(imodifier.highlight, eid)
+                imodifier.start(imodifier.highlight, {})
             end
         end
 

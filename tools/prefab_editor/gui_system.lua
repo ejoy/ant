@@ -51,8 +51,7 @@ local bgfx              = require "bgfx"
 local m = ecs.system 'gui_system'
 local drag_file = nil
 
-local ima = ecs.import.interface "ant.animation|imaterial_animation"
-local imotion = ecs.import.interface "ant.animation|imotion"
+local imodifier = ecs.import.interface "ant.modifier|imodifier"
 local function on_new_project(path)
     new_project.set_path(path)
     new_project.gen_mount()
@@ -246,7 +245,7 @@ local stat_window
 function m:init_world()
     local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
     stat_window = iRmlUi.open "bgfx_stat.rml"
-    ima.highlight_anim = ima.create("highlight", "u_basecolor_factor", {
+    imodifier.highlight = imodifier.create_mtl_modifier(nil, "u_basecolor_factor", {
         {time = 0, value = {1, 1, 1, 1}},
         {time = 150, value = {1.5, 1.5, 1.5, 1}},
         {time = 400, value = {2, 2, 2, 1}},
@@ -542,7 +541,7 @@ function m:handle_event()
         prefab_mgr:set_default_light(enable)
     end
     for _, what in reset_editor:unpack() do
-        ima.stop(world:entity(ima.highlight_anim))
+        imodifier.stop(imodifier.highlight)
     end
 end
 
