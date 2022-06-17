@@ -22,7 +22,7 @@ local widget_utils  = require "widget.utils"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local subprocess    = import_package "ant.subprocess"
-
+local anim_view
 local m = {
     entities = {}
 }
@@ -400,7 +400,7 @@ function m:on_prefab_ready(prefab)
     local entitys = prefab.tag["*"]
     local function find_e(entitys, id)
         for _, e in ipairs(entitys) do
-            if world:entity(e).scene.id == id then
+            if world:entity(e).id == id then
                 return e
             end
         end
@@ -409,13 +409,14 @@ function m:on_prefab_ready(prefab)
     local function sub_tree(e, idx)
         local st = {}
         local st_set = {}
-        st_set[world:entity(e).scene.id] = true
+        st_set[world:entity(e).id] = true
         for i = idx, #entitys do
-            local scene = world:entity(entitys[i]).scene
+            local entity = world:entity(entitys[i])
+            local scene = entity.scene
             if st_set[scene.parent] == nil then
                 break
             end
-            st_set[scene.id] = true
+            st_set[entity.id] = true
             st[#st + 1] = entitys[i]
         end
         return st
@@ -437,7 +438,7 @@ function m:on_prefab_ready(prefab)
             local children = sub_tree(parent, j)
             for _, child in ipairs(children) do
                 local ce = world:entity(child)
-                if ce.scene.parent == world:entity(parent).scene.id then
+                if ce.scene.parent == world:entity(parent).id then
                     ecs.method.set_parent(child, sub_root)
                 end
             end
@@ -598,7 +599,7 @@ function m:add_prefab(filename)
             end
         end
         for _, child in ipairs(children) do
-            if world:entity(child).scene.parent == world:entity(inst.root).scene.id then
+            if world:entity(child).scene.parent == world:entity(inst.root).id then
                 ecs.method.set_parent(child, v_root)
             end
         end

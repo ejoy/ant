@@ -12,7 +12,7 @@ local ientity 	= ecs.import.interface "ant.render|ientity"
 local ilight 	= ecs.import.interface "ant.render|ilight"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local ima 		= ecs.import.interface "ant.asset|imaterial_animation"
+local imodifier = ecs.import.interface "ant.modifier|imodifier"
 local igui		= ecs.import.interface "tools.prefab_editor|igui"
 
 
@@ -973,7 +973,8 @@ end
 local gizmo_event = world:sub{"Gizmo"}
 
 local function check_calc_aabb(eid)
-	local scene = world:entity(eid).scene
+	local entity = world:entity(eid)
+	local scene = entity.scene
 	if scene == nil then
 		return
 	end
@@ -984,8 +985,8 @@ local function check_calc_aabb(eid)
 	
 	local function build_scene()
 		local rt = {}
-		for ee in w:select "scene:in" do
-			local id = ee.scene.id
+		for ee in w:select "scene:in id:in" do
+			local id = ee.id
 			local pid = ee.scene.parent
 			if pid then
 				local c = rt[pid]
@@ -1014,7 +1015,7 @@ local function check_calc_aabb(eid)
 	end
 
 	local sceneaabb = math3d.ref(math3d.aabb())
-	build_aabb(scenetree[scene.id], sceneaabb)
+	build_aabb(scenetree[entity.id], sceneaabb)
 	return sceneaabb
 end
 
@@ -1128,8 +1129,9 @@ function gizmo_sys:handle_event()
 					gizmo:set_target(eid)
 				end
 			end
-			if ima.highlight_anim then
-				ima.play(world:entity(ima.highlight_anim), eid, false)
+			if imodifier.highlight then
+				imodifier.set_target(imodifier.highlight, eid)
+                imodifier.start(imodifier.highlight, {})
 			end
 		else
 			if not gizmo_seleted and not camera_mgr.select_frustum then
