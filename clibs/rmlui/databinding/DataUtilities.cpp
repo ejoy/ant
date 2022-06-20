@@ -35,6 +35,15 @@ void DataUtilities::ApplyDataViewsControllers(Element* element) {
 					Log::Message(Log::Level::Warning, "Could not add data-%s to element: %s", type_name.c_str(), element->GetAddress().c_str());
 				}
 			}
+			else if (type_name == "attr") {
+				auto view = std::make_unique<DataViewAttr>(element, modifier);
+				if (view->Initialize(*data_model, value)) {
+					data_model->AddView(std::move(view));
+				}
+				else {
+					Log::Message(Log::Level::Warning, "Could not add data-%s to element: %s", type_name.c_str(), element->GetAddress().c_str());
+				}
+			}
 			else if (type_name == "style") {
 				auto view = std::make_unique<DataViewStyle>(element, modifier);
 				if (view->Initialize(*data_model, value)) {

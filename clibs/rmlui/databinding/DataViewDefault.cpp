@@ -50,6 +50,46 @@ bool DataViewStyle::Update(DataModel& model) {
 	return result;
 }
 
+
+DataViewAttr::DataViewAttr(Element* element, const std::string& modifier)
+	: DataView(element)
+	, element(element->GetObserverPtr())
+	, modifier(modifier)
+{}
+
+bool DataViewAttr::Initialize(DataModel& model, const std::string& expression_str) {
+	expression = std::make_unique<DataExpression>();
+	DataExpressionInterface expr_interface(&model, element.get());
+	bool result = expression->Parse(expr_interface, expression_str, false);
+	return result;
+}
+
+std::vector<std::string> DataViewAttr::GetVariableNameList() const {
+	assert(expression);
+	return expression->GetVariableNameList();
+}
+
+bool DataViewAttr::IsValid() const {
+	return static_cast<bool>(element);
+}
+
+bool DataViewAttr::Update(DataModel& model) {
+	const std::string& property_name = modifier;
+	bool result = false;
+	Variant variant;
+	DataExpressionInterface expr_interface(&model, element.get());
+
+	if (element && expression->Run(expr_interface, variant)) {
+		auto newValue = VariantHelper::ToStringOpt(variant);
+		auto oldValue = element->GetAttribute(property_name);
+		if (!oldValue || *newValue != *oldValue) {
+			element->SetAttribute(property_name, *newValue);
+			result = true;
+		}
+	}
+	return result;
+}
+
 DataViewIf::DataViewIf(Element* element)
 	: DataView(element)
 	, element(element->GetObserverPtr())

@@ -27,6 +27,19 @@ private:
 	DataExpressionPtr expression;
 };
 
+class DataViewAttr final : public DataView {
+public:
+	DataViewAttr(Element* element, const std::string& modifier);
+	bool Initialize(DataModel& model, const std::string& expression);
+	std::vector<std::string> GetVariableNameList() const override;
+	bool IsValid() const override;
+	bool Update(DataModel& model) override;
+private:
+	ObserverPtr<Element> element;
+	std::string modifier;
+	DataExpressionPtr expression;
+};
+
 class DataViewIf final : public DataView {
 public:
 	DataViewIf(Element* element);
