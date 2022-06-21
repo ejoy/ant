@@ -485,6 +485,7 @@ local function build_properties_ui(mv)
                         return get_factor "basecolor"
                     end,
                     setter = function (value)
+                        value = math3d.vector({value[1], value[2], value[3], value[4]})
                         set_factor("basecolor", value)
                         imaterial.set_property(world:entity(mv.eid), "u_basecolor_factor", value)
                     end

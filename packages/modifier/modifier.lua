@@ -47,7 +47,7 @@ function imodifier.set_target(m, target)
     end
     if mf.property then
         -- material
-        local filename = world:entity(target).material
+        local filename = target and world:entity(target).material
         if not filename then
             mf.target = nil
             return
