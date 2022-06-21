@@ -122,9 +122,7 @@ function ani_sys:component_init()
 	for e in w:select "INIT animation:in skeleton:update anim_ctrl:in animation_birth:in" do
 		local ani = e.animation
 		for k, v in pairs(ani) do
-			if type(v) == "string" then
-				ani[k] = assetmgr.resource(v, world)
-			end
+			ani[k] = assetmgr.resource(v, world)
 		end
 		e.skeleton = assetmgr.resource(e.skeleton)
 		local skehandle = e.skeleton._handle
