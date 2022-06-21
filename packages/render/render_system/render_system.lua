@@ -13,7 +13,7 @@ local render_sys = ecs.system "render_system"
 
 local viewidmgr = require "viewid_mgr"
 for n, b in pairs(viewidmgr.all_bindings()) do
-	for viewid=b[1], b[1]+b[2] do
+	for viewid=b[1], b[1]+b[2]-1 do
 		bgfx.set_view_name(viewid, n .. "_" .. viewid)
 	end
 end
