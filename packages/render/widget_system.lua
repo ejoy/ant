@@ -72,12 +72,12 @@ local iwd = ecs.interface "iwidget_drawer"
 
 local DEFAULT_COLOR <const> = 0xffffff00
 
-local function offset_ib(start_vertex, ib)
-	local newib = {}
-	for _, idx in ipairs(ib) do
-		newib[#newib+1] = idx + start_vertex
+local function offset_ib(start_vertex, ib, startib, endib)
+	startib = startib or 1
+	endib = endib or #ib
+	for i=startib, endib do
+		ib[i] = ib[i] + start_vertex
 	end
-	return newib
 end
 
 local function append_buffers(vbfmt, vb, ibfmt, ib)
@@ -96,8 +96,10 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 	local numindices = #ib
 	if numindices ~= 0 then
 		local index_offset = ibdesc.num
-		local newib = index_offset == 0 and ib or offset_ib(vertex_offset, ib)
-		bgfx.update(ibdesc.handle, index_offset, bgfx.memory_buffer(ibfmt, newib))
+		if index_offset == 0 then
+			offset_ib(index_offset, ib)
+		end
+		bgfx.update(ibdesc.handle, index_offset, bgfx.memory_buffer(ibfmt, ib))
 		ibdesc.num = index_offset + numindices
 	end
 end
@@ -199,7 +201,13 @@ function rmb_sys:follow_transform_updated()
 			if ies.has_state(e, "main_view") and aabb then
 				local minv, maxv = math3d.index(aabb, 1, 2)
 				local aabb_shape = {min=math3d.tovalue(minv), max=math3d.tovalue(maxv)}
+				local voffset = #desc.vb//4
+				local ibstart = #desc.ib
 				geometry_drawer.draw_aabb_box(aabb_shape, DEFAULT_COLOR, nil, desc)
+
+				if voffset ~= 0 then
+					offset_ib(voffset, desc.ib, ibstart+1)
+				end
 			end
 		end
 	

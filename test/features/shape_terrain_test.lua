@@ -235,7 +235,7 @@ local function create_canvas()
 end
 
 local function generate_mesh_shape(ww, hh)
-    local mw, mh = 3, 3
+    local mw, mh = 2, 2
     local ms = {
         meshes = {
             "/pkg/ant.test.features/assets/entities/testmesh.prefab",
@@ -243,7 +243,7 @@ local function generate_mesh_shape(ww, hh)
             "/pkg/ant.test.features/assets/entities/testmesh.prefab",
             "/pkg/ant.test.features/assets/entities/testmesh.prefab",
         },
-        w = 3, h = 3,
+        w = mw, h = mh,
     }
 
     local www, hhh = ww // mw, hh // mh
@@ -258,7 +258,7 @@ local function generate_mesh_shape(ww, hh)
 end
 
 function shape_terrain_test_sys:init()
-    local ww, hh = 32, 32 --256, 256--2, 2
+    local ww, hh = 8, 8 --256, 256--2, 2
     shape_terrain_test = ecs.create_entity{
         policy = {
             "ant.scene|scene_object",
