@@ -73,7 +73,7 @@ function screen_3dobj_sys:camera_usage()
             assert(scene.parent == nil, "global_axes should not have any parent")
             local srt = scene.srt
             srt.t.v = posWS
-            scene._worldmat = math3d.matrix(srt)
+            scene._worldmat.m = math3d.matrix(srt)
             w:sync("render_object:in", e)
             e.render_object.worldmat = scene._worldmat
         end

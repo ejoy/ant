@@ -4,7 +4,7 @@ local w = world.w
 
 local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
-local mu = mathpkg.util
+local mu, mc = mathpkg.util, mathpkg.constant
 
 ----scenespace_system----
 local s = ecs.system "scenespace_system"
@@ -32,13 +32,7 @@ local current_changed = 1
 
 local function update_worldmat_noparent(node)
 	local srt = node.srt
-	local wm = srt and math3d.matrix(srt) or nil
-
-	local slotmat = node.slot_matrix
-	if slotmat then
-		wm = wm and math3d.mul(slotmat, wm) or slotmat
-	end
-	node._worldmat = wm
+	node._worldmat.m = srt and math3d.matrix(srt) or mc.IDENTITY_MAT
 end
 
 local function update_worldmat(node, parent)
@@ -47,15 +41,26 @@ local function update_worldmat(node, parent)
 	end
 	update_worldmat_noparent(node)
 	if parent._worldmat then
-		node._worldmat = node._worldmat and math3d.mul(parent._worldmat, node._worldmat) or parent._worldmat
+		node._worldmat.m = math3d.mul(parent._worldmat, node._worldmat)
 	end
 end
 
 local function update_aabb(node)
-	if node._worldmat == nil or node.aabb == nil then
-		node._aabb = nil
-	else
-		node._aabb = math3d.aabb_transform(node._worldmat, node.aabb)
+	if node.aabb then
+		node._aabb.m = math3d.aabb_transform(node._worldmat, node.aabb)
+	end
+end
+
+local function init_scene(scene)
+	if scene.srt then
+		scene.srt = mu.srt_obj(scene.srt)
+	end
+	if scene.updir then
+		scene.updir = math3d.ref(math3d.vector(scene.updir))
+	end
+	scene._worldmat = math3d.ref(mc.IDENTITY_MAT)
+	if scene.aabb then
+		scene._aabb = math3d.ref(math3d.aabb())
 	end
 end
 
@@ -63,14 +68,8 @@ function s:entity_init()
 	local needsync = false
 	for v in w:select "INIT scene:in scene_sorted?new" do
 		local scene = v.scene
-		
-		if scene.srt then
-			scene.srt = mu.srt_obj(scene.srt)
-		end
-		if scene.updir then
-			scene.updir = math3d.ref(math3d.vector(scene.updir))
-		end
 		scene.changed = current_changed
+		init_scene(scene)
 		v.scene_sorted = true
 		needsync = true
 	end
@@ -130,13 +129,13 @@ function s:update_transform()
 	end
 
 	local visited = {}
+	local sorted_scene = {}
 	for v in w:select "scene_sorted scene:in id:in scene_changed?out" do
 		local scene = v.scene
 		if scene.parent == nil then
 			visited[v.id] = true
-			update_worldmat_noparent(scene)
-			update_aabb(scene)
 			if scene.changed == current_changed then
+				sorted_scene[#sorted_scene+1] = {scene}
 				v.scene_changed = true
 			end
 		else
@@ -144,9 +143,8 @@ function s:update_transform()
 			if parent then
 				if visited[scene.parent] then
 					visited[v.id] = true
-					update_worldmat(scene, parent.scene)
-					update_aabb(scene)
 					if scene.changed == current_changed then
+						sorted_scene[#sorted_scene+1] = {scene, parent.scene}
 						v.scene_changed = true
 					end
 				else
@@ -157,6 +155,17 @@ function s:update_transform()
 			end
 		end
 	end
+
+	for _, ss in ipairs(sorted_scene) do
+		local scene, parent = ss[1], ss[2]
+		if parent == nil then
+			update_worldmat_noparent(scene)
+		else
+			update_worldmat(scene, parent)
+		end
+		update_aabb(scene)
+	end
+
 	for v in w:select "render_object:in scene:in" do
 		local r, n = v.render_object, v.scene
 		r.aabb = n._aabb
@@ -205,13 +214,7 @@ end
 function ecs.method.init_scene(eid)
 	local e = world:entity(eid)
 	e.scene_unsorted = true
-	local scene = e.scene
-	if scene.srt then
-		scene.srt = mu.srt_obj(scene.srt)
-	end
-	if scene.updir then
-		scene.updir = math3d.ref(math3d.vector(scene.updir))
-	end
+	init_scene(e.scene)
 end
 
 function ecs.method.set_parent(e, parent)

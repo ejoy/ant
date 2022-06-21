@@ -98,7 +98,7 @@ local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_s
 	srt.r.q = math3d.torotation(lightdir)
 	srt.t.v = center_WS
 	local lightmat = math3d.matrix(srt)
-	shadow_ce.scene._worldmat = lightmat
+	shadow_ce.scene._worldmat.m = lightmat
 
 	local camera = shadow_ce.camera
 	if stabilize then
