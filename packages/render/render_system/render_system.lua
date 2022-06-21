@@ -116,7 +116,6 @@ local function submit_render_objects(viewid, filter, culltag)
 			("view_visible %s render_object:in filter_material:in"):format(fn)
 
 		for e in w:select(s) do
-			w:sync("name?in", e)
 			irender.draw(viewid, e.render_object, e.filter_material[fn])
 		end
 	end
