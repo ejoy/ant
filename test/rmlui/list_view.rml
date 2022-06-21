@@ -208,9 +208,31 @@
                 start.page = pageclass.create(document, e, page_item_renderer, page_item_detail_renderer)
                 start.page:on_dirty_all(#start.items)
             end)
+            
+            start.testclick = function(event)
+                local item = event.target
+                if start.list.selected then
+                    start.list.selected.style.border = '2px blue'
+                    start.list:show_detail(start.list.selected, false)
+                end
+                if start.list.selected ~= item then
+                    item.style.border = '2px red'
+                    start.list:show_detail(item, true)
+                    start.list.selected = item
+                end
+            end
 
-            local function list_item_renderer(index)
+            local function list_item_renderer(parent)
                 local item = document.createElement "div"
+                item.style.width = '100%'
+                item.outerHTML = ([[
+                    <div style="width:100%; height:100px; border:2px blue; background-color:rgb(100,150,100); flex-direction: row; align-items: center; justify-content:space-evenly;" data-for="items" data-event-click="testclick()">
+                        <div>{{it.id}}</div>
+                        <div style="width:50px; height:50px;background-size:cover;" data-style-background-image="it.icon0"/>
+                    </div>
+                ]])
+                parent.appendChild(item)
+                --[[
                 item.style.width = '400px'
                 item.style.height = '100px'
                 item.style.border = '2px blue'
@@ -233,7 +255,6 @@
                 item.appendChild(c0)
                 item.addEventListener('click', function()
                     if start.list.selected then
-                        console.log("---- show false")
                         start.list.selected.style.border = '2px blue'
                         start.list:show_detail(start.list.selected, false)
                     end
@@ -243,13 +264,14 @@
                         start.list.selected = item
                     end
                 end)
-                return item
+                --]]
             end
             local function list_item_detail_renderer(index)
                 local detail = document.createElement "div"
                 detail.style.width = '100%'
                 detail.style.height = '100px'
-                detail.style.border = '2px blue'
+                detail.style.border = '2px yellow'
+                detail.innerHTML = "Detail"
                 return detail
             end
             local listclass = require "list"
