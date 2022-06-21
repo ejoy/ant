@@ -37,12 +37,27 @@ local function update_group_tag(w, data)
     end
 end
 
-local function create_entity(w, group, data)
+local function create_entity_by_data(w, group, data)
     data.id = getentityid(w)
     data.group = group or 0
     update_group_tag(w, data)
     w.w:new {
         create_entity = data
+    }
+    return data.id
+end
+
+local function create_entity_by_template(w, group, template)
+    local data = {
+        id = getentityid(w),
+        group = group or 0,
+    }
+    update_group_tag(w, data)
+    w.w:new {
+        create_entity_template = {
+            data = data,
+            template = template,
+        }
     }
     return data.id
 end
@@ -61,7 +76,7 @@ function world:_create_entity(package, group, v)
             error(("component `%s` must exists"):format(c))
         end
     end
-    return create_entity(self, group, data)
+    return create_entity_by_data(self, group, data)
 end
 
 local function table_append(t, a)
@@ -79,7 +94,7 @@ local function create_instance(w, group, prefab)
         if v.prefab then
             entities[i], np = create_instance(w, group, v.prefab)
         else
-            local e = create_entity(w, group, v.template)
+            local e = create_entity_by_template(w, group, v.template)
             entities[i], np = e, e
         end
         if v.mount then
@@ -125,31 +140,19 @@ local function create_entity_template(w, v)
             error(("component `%s` must exists"):format(c))
         end
     end
-    data.id = getentityid(w)
     return {
         action = v.action,
         mount = v.mount,
-        template = data,
+        template = w.w:template(data, serialize.pack),
         tag = v.tag,
     }
-end
-
-local function deepcopy(t)
-    if type(t) ~= "table" then
-        return t
-    end
-    local r = {}
-    for k, v in pairs(t) do
-        r[k] = deepcopy(v)
-    end
-    return r
 end
 
 local templates = {}
 
 local function create_template(w, filename)
     if templates[filename] then
-        return deepcopy(templates[filename])
+        return templates[filename]
     end
     local t = filename
     if type(filename) ~= "table" then
@@ -179,7 +182,8 @@ local function create_template(w, filename)
         else
             prefab[#prefab+1] = create_entity_template(w, v)
         end
-	end
+    end
+
     templates[filename] = prefab
     return prefab
 end
@@ -275,7 +279,7 @@ function world:create_object(inner_proxy)
             on_update(inner_proxy)
         end
     end
-    local prefab = create_entity(w, inner_proxy.group, proxy_entity)
+    local prefab = create_entity_by_data(w, inner_proxy.group, proxy_entity)
 
     if not on_update and not on_message then
         w:pub {"object_detach", prefab}

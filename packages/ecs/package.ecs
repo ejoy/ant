@@ -44,6 +44,8 @@ component "INIT"
 
 component "create_entity"
     .type "lua"
+component "create_entity_template"
+    .type "lua"
 
 component "prefab"
     .type "lua"
