@@ -8,7 +8,6 @@ local irender	= ecs.import.interface "ant.render|irender"
 local ies		= ecs.import.interface "ant.scene|ifilter_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local itimer	= ecs.import.interface "ant.timer|itimer"
-local igroup	= ecs.import.interface "ant.render|igroup"
 local render_sys = ecs.system "render_system"
 
 local viewidmgr = require "viewid_mgr"

@@ -13,4 +13,6 @@ function start_frame_sys:start_frame()
 		r.viewprojmat = nil
 	end
 	math3d.reset()
+	-- world:print_cpu_stat()
+	-- world:reset_cpu_stat()
 end
