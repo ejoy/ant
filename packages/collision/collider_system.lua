@@ -112,7 +112,7 @@ local collider_sys = ecs.system "collider_system"
 
 function collider_sys:update_collider_transform()
 	for v in w:select "scene_changed collider:in scene:in" do
-		local _, r, t = math3d.srt(v.scene._worldmat)
+		local _, r, t = math3d.srt(v.scene.worldmat)
 		if v.collider._handle then
 			set_obj_transform(v.collider._handle, t, r)
 		end

@@ -98,7 +98,7 @@ local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_s
 	srt.r.q = math3d.torotation(lightdir)
 	srt.t.v = center_WS
 	local lightmat = math3d.matrix(srt)
-	shadow_ce.scene._worldmat.m = lightmat
+	shadow_ce.scene.worldmat.m = lightmat
 
 	local camera = shadow_ce.camera
 	if stabilize then
@@ -366,7 +366,7 @@ function sm:update_camera()
 				local cref = qe.camera_ref
 				local ce = world:entity(cref)
 				local camera = ce.camera
-				update_camera_matrices(camera, ce.scene._worldmat)
+				update_camera_matrices(camera, ce.scene.worldmat)
 				local idx = qe.csm.index
 				csm_matrices[idx] = calc_csm_matrix_attrib(idx, camera.viewprojmat)
 			end

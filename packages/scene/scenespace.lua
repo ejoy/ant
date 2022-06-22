@@ -30,24 +30,24 @@ end
 
 local current_changed = 1
 
-local function update_worldmat_noparent(node)
-	local srt = node.srt
-	node._worldmat.m = srt and math3d.matrix(srt) or mc.IDENTITY_MAT
+local function update_worldmat_noparent(scene)
+	local srt = scene.srt
+	scene.worldmat.m = srt and math3d.matrix(srt) or mc.IDENTITY_MAT
 end
 
-local function update_worldmat(node, parent)
-	if parent.changed > node.changed then
-		node.changed = parent.changed
+local function update_worldmat(scene, parent)
+	if parent.changed > scene.changed then
+		scene.changed = parent.changed
 	end
-	update_worldmat_noparent(node)
-	if parent._worldmat then
-		node._worldmat.m = math3d.mul(parent._worldmat, node._worldmat)
+	update_worldmat_noparent(scene)
+	if parent.worldmat then
+		scene.worldmat.m = math3d.mul(parent.worldmat, scene.worldmat)
 	end
 end
 
-local function update_aabb(node)
-	if node.aabb then
-		node._aabb.m = math3d.aabb_transform(node._worldmat, node.aabb)
+local function update_aabb(scene)
+	if scene.aabb then
+		scene.scene_aabb.m = math3d.aabb_transform(scene.worldmat, scene.aabb)
 	end
 end
 
@@ -58,10 +58,7 @@ local function init_scene(scene)
 	if scene.updir then
 		scene.updir = math3d.ref(math3d.vector(scene.updir))
 	end
-	scene._worldmat = math3d.ref(mc.IDENTITY_MAT)
-	if scene.aabb then
-		scene._aabb = math3d.ref(math3d.aabb())
-	end
+	scene.worldmat = math3d.ref(mc.IDENTITY_MAT)
 end
 
 function s:entity_init()
@@ -72,6 +69,11 @@ function s:entity_init()
 		init_scene(scene)
 		v.scene_sorted = true
 		needsync = true
+	end
+
+	--TODO: need remove, render_object should not own 'worldmat'
+	for v in w:select "INIT scene:in render_object:in" do
+		v.render_object.worldmat = v.scene.worldmat
 	end
 
 	for v in w:select "scene_unsorted scene:in scene_sorted?new" do
@@ -167,12 +169,6 @@ function s:update_transform()
 				update_worldmat(scene, parent)
 			end
 			update_aabb(scene)
-		end
-
-		for v in w:select "render_object:in scene:in" do
-			local r, n = v.render_object, v.scene
-			r.aabb = n._aabb
-			r.worldmat = n._worldmat
 		end
 	end
 	current_changed = current_changed + 1

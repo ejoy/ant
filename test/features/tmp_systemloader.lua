@@ -132,11 +132,11 @@ function init_loader_sys:init()
     -- end
     -- world:create_object(p)
 
-    local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/headquater.glb|mesh.prefab"
-    p.on_ready = function (e)
-        iom.set_scale(world:entity(e.root), 0.1)
-    end
-    world:create_object(p)
+    -- local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/headquater.glb|mesh.prefab"
+    -- p.on_ready = function (e)
+    --     iom.set_scale(world:entity(e.root), 0.1)
+    -- end
+    -- world:create_object(p)
 
     --cp_eid = color_palette_test()
 
@@ -345,6 +345,9 @@ function init_loader_sys:entity_init()
             local ib = e.render_object.ib
             local quad_2 = 2
             ib.num = quad_2 * 6
+        elseif key == "LEFT" and press == 0 then
+            local d = w:singleton("directional_light", "scene:in id:in")
+            iom.set_position(d, {0, 1, 0})
         end
     end
 end

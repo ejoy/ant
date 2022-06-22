@@ -978,7 +978,7 @@ local function check_calc_aabb(eid)
 	if scene == nil then
 		return
 	end
-	local aabb = scene._aabb
+	local aabb = scene.scene_aabb
 	if aabb then
 		return aabb
 	end
@@ -995,7 +995,7 @@ local function check_calc_aabb(eid)
 					rt[pid] = c
 				end
 				w:sync("name?in", ee)
-				c[#c+1] = {id=id, aabb=ee.scene._aabb, name=ee.name}
+				c[#c+1] = {id=id, aabb=ee.scene.scene_aabb, name=ee.name}
 			end
 		end
 		return rt

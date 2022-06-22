@@ -83,7 +83,7 @@ function sys:follow_transform_updated()
                     3: follow joint matrix. base on itself, it assume slot entity has 'pose_result' component"
                 ]]
             end
-            local wm = v.scene._worldmat
+            local wm = v.scene.worldmat
             wm.m = math3d.mul(wm, slot_matrix)
         end
     end

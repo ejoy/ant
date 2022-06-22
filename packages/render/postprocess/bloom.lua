@@ -217,6 +217,8 @@ local scenecolor_property = {
 
 local function do_bloom_sample(viewid, drawer, ppi_handle, next_mip)
     local ro = drawer.render_object
+    local scene = drawer.scene
+    ro.worldmat = scene.worldmat
     local material = ro.material
     local rbhandle = fbmgr.get_rb(fbmgr.get_byviewid(viewid)[1].rbidx).handle
     for i=1, bloom_chain_count do

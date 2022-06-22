@@ -53,10 +53,10 @@ local fontsys = ecs.system "font_system"
 
 local vertical_mask<const> = math3d.ref(math3d.vector(0, 1, 0, 0))
 local function calc_aabb_pos(e, offset, offsetop)
-    local a_eid = e.render_object.attach_eid
+    local a_eid = e.scene.parent
     if a_eid then
         local ae = world:entity(a_eid)
-        local aabb = ae.render_object.aabb
+        local aabb = ae.scene.scene_aabb
         if aabb then
             local center, extent = math3d.aabb_center_extents(aabb)
             local pos = offsetop(center, extent)

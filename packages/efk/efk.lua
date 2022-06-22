@@ -251,20 +251,20 @@ function efk_sys:follow_transform_updated()
         if efk.play_handle then
             if not efk_ctx:is_alive(efk.play_handle) then
                 if efk.loop then
-                    efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene._worldmat), efk.speed)
+                    efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene.worldmat), efk.speed)
                 else
                     efk.play_handle = nil
                 end
             end
             --TODO: layz update, handle scene_changed event?
             if efk.dynamic then
-                efk.worldmat.m = v.scene._worldmat
-                efk_ctx:update_transform(efk.play_handle, math3d.value_ptr(v.scene._worldmat))
+                efk.worldmat.m = v.scene.worldmat
+                efk_ctx:update_transform(efk.play_handle, math3d.value_ptr(v.scene.worldmat))
             end
         else
             if efk.visible then
                 if efk.do_play or efk.do_settime then
-                    efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene._worldmat), efk.speed)
+                    efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene.worldmat), efk.speed)
                 end
                 if efk.do_play then
                     efk.do_play = nil

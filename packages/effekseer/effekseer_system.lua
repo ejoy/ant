@@ -220,8 +220,8 @@ function effekseer_sys:follow_transform_updated()
     end
 
     for v in w:select "effect_instance:in scene:in" do
-        v.effect_instance.worldmat = v.scene._worldmat
-        effekseer.update_transform(v.effect_instance.handle, v.effect_instance.playid, v.scene._worldmat)
+        v.effect_instance.worldmat = v.scene.worldmat
+        effekseer.update_transform(v.effect_instance.handle, v.effect_instance.playid, v.scene.worldmat)
     end
 end
 

@@ -221,7 +221,7 @@ function svs:update_camera()
         local cref = world:entity(ceid)
         local camera = cref.camera
         local scene = cref.scene
-        local worldmat = scene._worldmat
+        local worldmat = scene.worldmat
         local d, p = math3d.index(worldmat, 3, 4)
         camera.viewmat = math3d.lookto(p, d, scene.updir)
         camera.projmat = math3d.projmat(camera.frustum, INV_Z)

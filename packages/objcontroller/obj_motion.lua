@@ -111,7 +111,7 @@ end
 
 function iobj_motion.worldmat(e)
     local scene = e.scene
-    return scene._worldmat
+    return scene.worldmat
 end
 
 function iobj_motion.lookto(e, eyepos, viewdir, updir)

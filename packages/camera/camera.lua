@@ -156,7 +156,7 @@ function ic.focus_aabb(ce, aabb)
 end
 
 function ic.focus_obj(ce, e)
-    local aabb = e.scene._aabb
+    local aabb = e.scene.scene_aabb
     if aabb then
         ic.focus_aabb(ce, aabb)
     end
@@ -166,7 +166,7 @@ local cameraview_sys = ecs.system "camera_view_system"
 
 local function update_camera(e)
     local camera = e.camera
-    camera.viewmat = math3d.inverse(e.scene._worldmat)
+    camera.viewmat = math3d.inverse(e.scene.worldmat)
     camera.projmat = math3d.projmat(camera.frustum, INV_Z)
     camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end

@@ -99,11 +99,10 @@ end
 
 function second_camera_sys:update_camera()
     for svq in w:select "second_view visible camera_ref:in" do
-        local mc = world:entity(svq.camera_ref)
-		local camera, scene = mc.camera, mc.scene
+        local ce = world:entity(svq.camera_ref)
+		local camera, scene = ce.camera, ce.scene
 
-		local worldmat = scene._worldmat
-		local pos, dir = math3d.index(worldmat, 4, 3)
+		local pos, dir = math3d.index(scene.worldmat, 4, 3)
 		camera.viewmat = math3d.lookto(pos, dir, scene.updir)
 		camera.projmat = math3d.projmat(camera.frustum, INV_Z)
 		camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)

@@ -46,9 +46,13 @@ function render_sys:entity_init()
 		pf.exclude_type = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
 	end
 
-	for e in w:select "INIT material_result:in render_object:in" do
-		e.render_object.material = e.material_result.object:instance()
-        e.render_object.fx     = e.material_result.fx
+	for e in w:select "INIT material_result:in scene:in render_object:in" do
+		local ro = e.render_object
+		local mr = e.material_result
+		ro.material = mr.object:instance()
+        ro.fx     	= mr.fx
+		
+		ro.worldmat = e.scene.worldmat
 	end
 end
 
