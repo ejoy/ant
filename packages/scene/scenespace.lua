@@ -148,7 +148,7 @@ function s:update_transform()
 				if parent then
 					if visited[scene.parent] then
 						visited[v.id] = true
-						if scene.changed == current_changed then
+						if scene.changed == current_changed or parent.scene_changed then
 							sorted_scene[#sorted_scene+1] = {scene, parent.scene}
 							v.scene_changed = true
 						end
