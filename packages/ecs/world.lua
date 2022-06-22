@@ -74,9 +74,9 @@ function world:reset_cpu_stat()
 	self._cpu_stat.total = {}
 end
 
-function world:print_cpu_stat(per)
+local function print_cpu_stat(w, per)
 	local t = {}
-	for k, v in pairs(self._cpu_stat.total) do
+	for k, v in pairs(w._cpu_stat.total) do
 		t[#t+1] = {k, v}
 	end
 	table.sort(t, function (a, b)
@@ -88,11 +88,30 @@ function world:print_cpu_stat(per)
 	}
 	per = per or 1
 	for _, v in ipairs(t) do
-		if v[2] > 0 then
-			s[#s+1] = ("\t%s - %.02fms"):format(v[1], v[2] / per)
+		local m = v[2] / per
+		if m >= 0.01 then
+			s[#s+1] = ("\t%s - %.02fms"):format(v[1], m)
 		end
 	end
 	print(table.concat(s, "\n"))
+end
+
+function world:print_cpu_stat(skip, delta)
+	skip = skip or 0
+	delta = delta or 1
+
+	local w = self
+	local frame = w._cpu_stat.frame + 1
+	w._cpu_stat.frame = frame
+
+	if frame <= skip then
+		w:reset_cpu_stat()
+		return
+	elseif frame % delta ~= 0 then
+		return
+	end
+
+	print_cpu_stat(w, frame)
 end
 
 function world:pipeline_init()
@@ -239,7 +258,7 @@ function m.new_world(config)
 		_switchs = {},	-- for enable/disable
 		_memory = {},
 		_memory_stat = setmetatable({start={}, finish={}}, {__close = finish_memory_stat}),
-		_cpu_stat = setmetatable({total={}}, {__close = finish_cpu_stat}),
+		_cpu_stat = setmetatable({total={},frame=0}, {__close = finish_cpu_stat}),
 		_ecs = {},
 		_methods = {},
 		_frame = 0,
