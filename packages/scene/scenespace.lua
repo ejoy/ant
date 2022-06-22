@@ -123,53 +123,57 @@ end
 
 local evSceneChanged = world:sub {"scene_changed"}
 function s:update_transform()
+	local any_entity_changed
 	for _, eid in evSceneChanged:unpack() do
 		local e = world:entity(eid)
 		e.scene.changed = current_changed
+		any_entity_changed = true
 	end
 
-	local visited = {}
-	local sorted_scene = {}
-	for v in w:select "scene_sorted scene:in id:in scene_changed?out" do
-		local scene = v.scene
-		if scene.parent == nil then
-			visited[v.id] = true
-			if scene.changed == current_changed then
-				sorted_scene[#sorted_scene+1] = {scene}
-				v.scene_changed = true
-			end
-		else
-			local parent = world:entity(scene.parent)
-			if parent then
-				if visited[scene.parent] then
-					visited[v.id] = true
-					if scene.changed == current_changed then
-						sorted_scene[#sorted_scene+1] = {scene, parent.scene}
-						v.scene_changed = true
-					end
-				else
-					v.scene_sorted = false -- yield
+	if any_entity_changed then
+		local visited = {}
+		local sorted_scene = {}
+		for v in w:select "scene_sorted scene:in id:in scene_changed?out" do
+			local scene = v.scene
+			if scene.parent == nil then
+				visited[v.id] = true
+				if scene.changed == current_changed then
+					sorted_scene[#sorted_scene+1] = {scene}
+					v.scene_changed = true
 				end
 			else
-				error "Unexpected Error."
+				local parent = world:entity(scene.parent)
+				if parent then
+					if visited[scene.parent] then
+						visited[v.id] = true
+						if scene.changed == current_changed then
+							sorted_scene[#sorted_scene+1] = {scene, parent.scene}
+							v.scene_changed = true
+						end
+					else
+						v.scene_sorted = false -- yield
+					end
+				else
+					error "Unexpected Error."
+				end
 			end
 		end
-	end
 
-	for _, ss in ipairs(sorted_scene) do
-		local scene, parent = ss[1], ss[2]
-		if parent == nil then
-			update_worldmat_noparent(scene)
-		else
-			update_worldmat(scene, parent)
+		for _, ss in ipairs(sorted_scene) do
+			local scene, parent = ss[1], ss[2]
+			if parent == nil then
+				update_worldmat_noparent(scene)
+			else
+				update_worldmat(scene, parent)
+			end
+			update_aabb(scene)
 		end
-		update_aabb(scene)
-	end
 
-	for v in w:select "render_object:in scene:in" do
-		local r, n = v.render_object, v.scene
-		r.aabb = n._aabb
-		r.worldmat = n._worldmat
+		for v in w:select "render_object:in scene:in" do
+			local r, n = v.render_object, v.scene
+			r.aabb = n._aabb
+			r.worldmat = n._worldmat
+		end
 	end
 	current_changed = current_changed + 1
 end
