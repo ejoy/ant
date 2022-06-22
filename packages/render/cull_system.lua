@@ -10,13 +10,11 @@ local icp = ecs.interface "icull_primitive"
 
 local function cull(cull_tags, vp_mat)
 	local frustum_planes = math3d.frustum_planes(vp_mat)
-
-	for _, culltag in ipairs(cull_tags) do
-		w:clear(culltag)
-		for vv in w:select(("view_visible scene:in %s?out"):format(culltag)) do
-			local aabb = vv.scene.scene_aabb
-			if aabb and math3d.frustum_intersect_aabb(frustum_planes, aabb) < 0 then
-				vv[culltag] = true
+	for vv in w:select "scene_changed view_visible scene:in" do
+		local aabb = vv.scene.scene_aabb
+		if aabb and math3d.frustum_intersect_aabb(frustum_planes, aabb) < 0 then
+			for i=1, #cull_tags do
+				vv[cull_tags[i]] = true
 			end
 		end
 	end
