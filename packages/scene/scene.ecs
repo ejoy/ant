@@ -1,9 +1,21 @@
 import "@ant.objcontroller"
 import "@ant.general"
 
+component "scene_update"
+
+-- system "scene_update_system"
+--     .implement "scenespace.lua"
+--     .method "init"
+
+system "group_system"
+    .implement "scenespace.lua"
+    .method "start_frame"
+
 system "scenespace_system"
     .implement "scenespace.lua"
     .require_interface "ant.objcontroller|iobj_motion"
+    .require_system "ant.scene|group_system"
+    --.require_system "ant.scene|scene_update_system"
     .method "entity_init"
     .method "update_hierarchy"
     .method "update_transform"

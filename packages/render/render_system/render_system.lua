@@ -10,6 +10,12 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local itimer	= ecs.import.interface "ant.timer|itimer"
 local render_sys = ecs.system "render_system"
 
+local def_group_id<const> = 0
+local vg_sys = ecs.system "viewgroup_system"
+function vg_sys:init()
+    ecs.group(def_group_id):enable "view_visible"
+end
+
 local viewidmgr = require "viewid_mgr"
 for n, b in pairs(viewidmgr.all_bindings()) do
 	for viewid=b[1], b[1]+b[2]-1 do
