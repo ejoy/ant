@@ -59,7 +59,7 @@ function sd_sys.init_world()
             primitive_filter = copy_pf(pd.primitive_filter),
             queue_name = "scene_depth_queue",
             name = "scene_depth_queue",
-            visible = true,
+            visible = false,
             scene_depth_queue = true,
         }
     }
@@ -75,7 +75,6 @@ end
 
 
 local s = ecs.system "pre_depth_primitive_system"
-local w = world.w
 
 function s:init()
     if not irender.use_pre_depth() then

@@ -1891,25 +1891,24 @@ lfrustum_intersect_aabb_list(lua_State *L){
 	luaL_checktype(L, 2, LUA_TTABLE);
 	const int numelem = (int)lua_rawlen(L, 2);
 
-	const int visibleset_idx = 3;
-	luaL_checktype(L, visibleset_idx, LUA_TTABLE);
+	const int return_notvisible = lua_toboolean(L, 3);
 
-	int num_visible = 0;
-	
+	lua_createtable(L, numelem, 0);
+	int returnidx = 0;
 	for (int ii=0; ii<numelem; ++ii){
-		lua_geti(L, 2, ii+1);{
-			const float * aabb = (LUA_TNIL != lua_getfield(L, -1, "aabb")) ?
-				object_from_index(L, LS, -1, LINEAR_TYPE_MAT, matrix_from_table) : NULL;
-			lua_pop(L, 1);
-
-			if (aabb == NULL || math3d_frustum_intersect_aabb(LS, planes, aabb) >= 0){
-				lua_pushvalue(L, -1);
-				lua_seti(L, visibleset_idx, ++num_visible);
-			}
-		}
+		lua_geti(L, 2, ii+1);
+		const float* aabb = matrix_from_index(L, LS, -1);
 		lua_pop(L, 1);
+
+		int r = math3d_frustum_intersect_aabb(LS, planes, aabb) >= 0;
+		if (return_notvisible)
+			r = !r;
+
+		if (r){
+			lua_pushinteger(L, ii+1);
+			lua_seti(L, -2, ++returnidx);
+		}
 	}
-	lua_pushinteger(L, num_visible);
 	return 1;
 }
 

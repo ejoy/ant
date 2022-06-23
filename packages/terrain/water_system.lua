@@ -9,6 +9,7 @@ local viewidmgr = renderpkg.viewidmgr
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender   = ecs.import.interface "ant.render|irender"
+local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 local bgfx      = require "bgfx"
 
@@ -61,6 +62,11 @@ local function gen_water_grid_mesh(gw, gh, unit, height)
 end
 
 local ppo_viewid<const> = viewidmgr.get "postprocess_obj"
+
+function water_sys:init_world()
+    irq.set_visible("scene_depth_queue", true)
+end
+
 function water_sys:component_init()
     for e in w:select "INIT water:in simplemesh:out" do
         local water = e.water

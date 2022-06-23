@@ -97,7 +97,7 @@ component "need_touch"
 
 component "cull_tag".type "lua"
 policy "cull"
-    .require_system "cull_system"
+    .require_system "ant.render|cull_system"
     .component "cull_tag"
 
 policy "render_target"
@@ -124,6 +124,8 @@ system "render_system"
 system "cull_system"
     .implement "cull_system.lua"
     .require_system "ant.scene|scenespace_system"
+    .method "component_init"
+    .method "data_changed"
     .method "entity_ready"
     .method "cull"
 
