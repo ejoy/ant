@@ -98,7 +98,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep)
                         return
                     end
                     local value, running = generator(time)
-                    local apply_value = math3d.vector(value)
+                    local apply_value = value and math3d.vector(value) or self.init_value
                     if not running and not self.keep then
                         apply_value = self.init_value
                     end
@@ -159,6 +159,7 @@ function imodifier.start(m, desc)
     mf.continue = true
     if m.anim_eid then
         if desc.name then
+            mf.init_value = math3d.ref(math3d.matrix(world:entity(mf.target).scene.srt))
             iani.play(m.anim_eid, desc)
         else
             ika.play(world:entity(m.anim_eid), desc)
