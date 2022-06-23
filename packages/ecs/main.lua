@@ -28,19 +28,9 @@ local function getentityid(w)
     return w._maxid
 end
 
-local function update_group_tag(w, data)
-    local groupid = data.group
-    for tag, t in pairs(w._group.tags) do
-        if t[groupid] then
-            data[tag] = true
-        end
-    end
-end
-
 local function create_entity_by_data(w, group, data)
     data.id = getentityid(w)
     data.group = group or 0
-    update_group_tag(w, data)
     w.w:new {
         create_entity = data
     }
@@ -52,7 +42,6 @@ local function create_entity_by_template(w, group, template)
         id = getentityid(w),
         group = group or 0,
     }
-    update_group_tag(w, data)
     w.w:new {
         create_entity_template = {
             data = data,
