@@ -15,7 +15,9 @@ local function cull(cull_tags, vp_mat)
 		if aabb then
 			local culled = math3d.frustum_intersect_aabb(frustum_planes, aabb) < 0
 			for i=1, #cull_tags do
-				vv[cull_tags[i]] = culled
+				local ct = cull_tags[i]
+				vv[ct] = culled
+				w:sync(ct .. "?out", vv)
 			end
 		end
 	end
@@ -57,38 +59,38 @@ local camera_changed_mbs = {}
 
 local queue_cameras = {}
 function cull_sys:component_init()
-	for q in w:select "INIT visible queue_name:in cull_tag:in camera_ref:in" do
-		local qn = q.queue_name
-		local ceid = q.camera_ref
-		add_queue_tags(ceid, q.cull_tag)
-		queue_cameras[qn] = ceid
-		camera_changed_mbs[#camera_changed_mbs+1] = world:sub{qn, "camera_changed"}
-	end
+	-- for q in w:select "INIT visible queue_name:in cull_tag:in camera_ref:in" do
+	-- 	local qn = q.queue_name
+	-- 	local ceid = q.camera_ref
+	-- 	add_queue_tags(ceid, q.cull_tag)
+	-- 	queue_cameras[qn] = ceid
+	-- 	camera_changed_mbs[#camera_changed_mbs+1] = world:sub{qn, "camera_changed"}
+	-- end
 end
 
 function cull_sys:data_changed()
-	for i=1, #camera_changed_mbs do
-		for qn, _, ceid in camera_changed_mbs[i]:unpack() do
-			local old_ceid = queue_cameras[qn]
-			assert(ceid ~= old_ceid)
-			local q = w:singleton(qn, "cull_tag:in camera_ref:in")
-			if old_ceid then
-				remove_queue_tags(old_ceid, q.cull_tag)
-			end
-			queue_cameras[qn] = nil
+	-- for i=1, #camera_changed_mbs do
+	-- 	for qn, _, ceid in camera_changed_mbs[i]:unpack() do
+	-- 		local old_ceid = queue_cameras[qn]
+	-- 		assert(ceid ~= old_ceid)
+	-- 		local q = w:singleton(qn, "cull_tag:in camera_ref:in")
+	-- 		if old_ceid then
+	-- 			remove_queue_tags(old_ceid, q.cull_tag)
+	-- 		end
+	-- 		queue_cameras[qn] = nil
 
-			add_queue_tags(ceid, q.cull_tag)
-		end
-	end
+	-- 		add_queue_tags(ceid, q.cull_tag)
+	-- 	end
+	-- end
 
-	for _, qn, visible in qv_mb:unpack() do
-		local q = w:singleton(qn, "camera_ref:in cull_tag:in")
-		if visible then
-			add_queue_tags(q.camera_ref, q.cull_tag)
-		else
-			remove_queue_tags(q.camera_ref, q.cull_tag)
-		end
-	end
+	-- for _, qn, visible in qv_mb:unpack() do
+	-- 	local q = w:singleton(qn, "camera_ref:in cull_tag:in")
+	-- 	if visible then
+	-- 		add_queue_tags(q.camera_ref, q.cull_tag)
+	-- 	else
+	-- 		remove_queue_tags(q.camera_ref, q.cull_tag)
+	-- 	end
+	-- end
 end
 
 function cull_sys:entity_ready()
@@ -102,12 +104,27 @@ function cull_sys:entity_ready()
 	end
 end
 
+local function find_queue_tags()
+	local queue_cull_tags = {}
+	for qe in w:select "visible cull_tag:in queue_name:in camera_ref:in" do
+		local cref = qe.camera_ref
+		local camera = world:entity(cref).camera
+		local tags = queue_cull_tags[cref]
+		if tags == nil then
+			tags = {}
+			queue_cull_tags[cref] = tags
+		end
+		table.move(qe.cull_tag, 1, #qe.cull_tag, #tags+1, tags)
+	end
+	return queue_cull_tags
+end
+
 function cull_sys:cull()
 	if disable_cull then
 		return
 	end
 
-	for ceid, tags in pairs(queue_tags) do
+	for ceid, tags in pairs(find_queue_tags()) do
 		local camera = world:entity(ceid).camera
 		cull(tags, camera.viewprojmat)
 	end
