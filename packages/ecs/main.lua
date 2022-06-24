@@ -227,15 +227,26 @@ local function create_tags(entities, template)
     return tags
 end
 
+local function update_group_tag(w, data)
+    local groupid = data.group
+    for tag, t in pairs(w._group.tags) do
+        if t[groupid] then
+            data[tag] = true
+        end
+    end
+end
+
 local function create_scene_entity(w, group)
     local eid = getentityid(w)
-    w.w:new {
+    local data = {
         id = eid,
         group = group or 0,
         scene = {
             srt = {},
         }
     }
+    update_group_tag(w, data)
+    w.w:new(data)
     w:call(eid, "init_scene")
     return eid
 end
