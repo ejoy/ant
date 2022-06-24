@@ -332,7 +332,9 @@ end
 
 local kb_mb = world:sub{"keyboard"}
 
+local enable = 0
 function init_loader_sys:entity_init()
+    
     for _, key, press in kb_mb:unpack() do
         if key == "SPACE" and press == 0 then
             -- local icw = ecs.import.interface "ant.render|icurve_world"
@@ -340,11 +342,21 @@ function init_loader_sys:entity_init()
 
             --imaterial.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
 
-            local e = world:entity(quad_eid)
-            ies.set_state(e, "main_view", true)
-            local ib = e.render_object.ib
-            local quad_2 = 2
-            ib.num = quad_2 * 6
+            -- local e = world:entity(quad_eid)
+            -- ies.set_state(e, "main_view", true)
+            -- local ib = e.render_object.ib
+            -- local quad_2 = 2
+            -- ib.num = quad_2 * 6
+            
+            if enable == 1 then
+                ecs.group(1):enable "view_visible"
+                ecs.group(0):disable "view_visible"
+            else
+                ecs.group(0):enable "view_visible"
+                ecs.group(1):disable "view_visible"
+            end
+            enable = enable == 1 and 0 or 1
+
         elseif key == "LEFT" and press == 0 then
             local d = w:singleton("directional_light", "scene:in id:in")
             iom.set_position(d, {0, 1, 0})
