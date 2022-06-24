@@ -51,7 +51,7 @@ function qs_sys:entity_init()
         local speed = uvm.speed
         local tile = uvm.tile
         local quadstrip_mesh = iql.create_linestrip_mesh(qs.points, qs.width, qs.color, uvm.rotation, qs.loop)
-        local le = ecs.create_entity{
+        ecs.create_entity{
             policy = {
                 "ant.render|simplerender",
                 "ant.general|name",
@@ -60,7 +60,10 @@ function qs_sys:entity_init()
                 simplemesh = quadstrip_mesh,
                 material = e.material,
                 filter_state = "main_view",
-                scene = {srt={}},
+                scene = {
+                    srt = {},
+                    parent = e.id,
+                },
                 name = "polyline",
                 on_ready = function (le)
                     w:sync("render_object:in", le)
@@ -70,7 +73,5 @@ function qs_sys:entity_init()
                 end,
             }
         }
-
-        ecs.method.set_parent(le, e.id)
     end
 end

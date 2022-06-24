@@ -448,7 +448,7 @@ function shape_ts:entity_init()
                 
                 local terrain_mesh = build_section_mesh(ss, sectionidx, unit, ctf)
                 if terrain_mesh then
-                    local ce = ecs.create_entity{
+                    ecs.create_entity{
                         policy = {
                             "ant.scene|scene_object",
                             "ant.render|simplerender",
@@ -457,6 +457,7 @@ function shape_ts:entity_init()
                         data = {
                             scene = {
                                 srt = {},
+                                parent = e.id,
                             },
                             simplemesh  = terrain_mesh,
                             material    = shapematerial,
@@ -469,14 +470,12 @@ function shape_ts:entity_init()
                             end,
                         },
                     }
-
-                    ecs.method.set_parent(ce, e.id)
                 end
 
                 local edge_meshes = build_section_edge_mesh(ss, sectionidx, unit, ctf)
                 if edge_meshes then
                     edge_meshes.bounding = {aabb = math3d.ref(calc_edge_aabb(terrain_mesh.bounding.aabb, ctf.edge.thickness * unit))}
-                    local ce = ecs.create_entity {
+                    ecs.create_entity {
                         policy = {
                             "ant.scene|scene_object",
                             "ant.render|simplerender",
@@ -485,6 +484,7 @@ function shape_ts:entity_init()
                         data = {
                             scene = {
                                 srt = {},
+                                parent = e.id,
                             },
                             material    = edgematerial,
                             simplemesh  = edge_meshes,
@@ -497,7 +497,6 @@ function shape_ts:entity_init()
                             end,
                         },
                     }
-                    ecs.method.set_parent(ce, e.id)
                 end
             end
         end

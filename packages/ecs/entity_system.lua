@@ -25,8 +25,17 @@ function m:entity_create()
     for v in w:select "create_entity_template:in" do
         local initargs = v.create_entity_template
         initargs.data.INIT = true
+        if initargs.parent then
+            initargs.data.LAST_CREATE = true
+        end
         update_group_tag(initargs.data)
         w:template_instance(initargs.template, serialize.unpack, initargs.data)
+        if initargs.parent then
+            for e in w:select "LAST_CREATE scene:update" do
+                e.scene.parent = initargs.parent
+            end
+            w:clear "LAST_CREATE"
+        end
     end
     w:group_update()
     w:clear "create_entity"
@@ -37,7 +46,30 @@ function m:entity_ready()
     w:clear "INIT"
 end
 
+local evParentChanged = world:sub {"parent_changed"}
+
+local function rebuild(id)
+    local e = world._entity(id)
+    w:clone(e, {group = w:group_id(e)})
+    w:remove(e)
+end
+
+local function getentityid(id)
+    return w:readid(world._entity(id))
+end
+
 function m:update_world()
+	for _, id, parentid in evParentChanged:unpack() do
+		local e = world:entity(id)
+		if e then
+			e.scene_needsync = true
+			e.scene.parent = parentid
+            if getentityid(id) < getentityid(parentid) then
+                rebuild(id)
+            end
+		end
+	end
+    w:group_update()
     w:update()
     world._frame = world._frame+ 1
 end
