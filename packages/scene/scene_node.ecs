@@ -10,5 +10,4 @@ component "scene"
     .type "lua"
 
 component "scene_changed"
-component "scene_unsorted"
-component "scene_sorted".type "order"
+component "scene_needsync"

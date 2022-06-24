@@ -253,6 +253,7 @@ local function create_scene_entity(w, group)
     }
     update_group_tag(w, data)
     w.w:new(data)
+    w.w:group_update()
     w:call(eid, "init_scene")
     return eid
 end

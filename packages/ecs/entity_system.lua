@@ -46,7 +46,30 @@ function m:entity_ready()
     w:clear "INIT"
 end
 
+local evParentChanged = world:sub {"parent_changed"}
+
+local function rebuild(id)
+    local e = world._entity(id)
+    w:clone(e, {group = w:group_id(e)})
+    w:remove(e)
+end
+
+local function getentityid(id)
+    return w:readid(world._entity(id))
+end
+
 function m:update_world()
+	for _, id, parentid in evParentChanged:unpack() do
+		local e = world:entity(id)
+		if e then
+			e.scene_needsync = true
+			e.scene.parent = parentid
+            if getentityid(id) < getentityid(parentid) then
+                rebuild(id)
+            end
+		end
+	end
+    w:group_update()
     w:update()
     world._frame = world._frame+ 1
 end

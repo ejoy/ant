@@ -63,37 +63,26 @@ end
 
 function s:entity_init()
 	local needsync = false
-	for v in w:select "INIT scene:in scene_sorted?new" do
+	for v in w:select "INIT scene:in" do
 		local scene = v.scene
 		scene.changed = current_changed
 		init_scene(scene)
-		v.scene_sorted = true
 		needsync = true
 	end
+	for v in w:select "scene_needsync scene:in" do
+		v.scene.changed = current_changed
+		needsync = true
+	end
+	w:clear "scene_needsync"
 
 	--TODO: need remove, render_object should not own 'worldmat'
 	for v in w:select "INIT scene:in render_object:in" do
 		v.render_object.worldmat = v.scene.worldmat
 	end
 
-	for v in w:select "scene_unsorted scene:in scene_sorted?new" do
-		v.scene_sorted = true
-		v.scene.changed = current_changed
-	end
-	w:clear "scene_unsorted"
-
-	for _, id, parentid in evParentChanged:unpack() do
-		local e = world:entity(id)
-		if e then
-			e.scene.changed = current_changed
-			e.scene.parent = parentid
-			needsync = true
-		end
-	end
-
 	if needsync then
 		local visited = {}
-		for v in w:select "scene_sorted scene:in id:in render_object?in INIT?in" do
+		for v in w:select "scene:in id:in render_object?in INIT?in" do
 			local scene = v.scene
 			if scene.parent == nil then
 				visited[v.id] = true
@@ -110,7 +99,7 @@ function s:entity_init()
 							end
 						end
 					else
-						v.scene_sorted = false -- yield
+						error "Unexpected Error."
 					end
 				else
 					error "Unexpected Error."
@@ -135,7 +124,7 @@ function s:update_transform()
 	if any_entity_changed then
 		local visited = {}
 		local sorted_scene = {}
-		for v in w:select "scene_sorted scene:in id:in scene_changed?out" do
+		for v in w:select "scene:in id:in scene_changed?out" do
 			local scene = v.scene
 			if scene.parent == nil then
 				visited[v.id] = true
@@ -153,7 +142,7 @@ function s:update_transform()
 							v.scene_changed = true
 						end
 					else
-						v.scene_sorted = false -- yield
+						error "Unexpected Error."
 					end
 				else
 					error "Unexpected Error."
@@ -184,7 +173,7 @@ function s:scene_remove()
 	w:clear "scene_changed"
 	if hasSceneRemove() then
 		local visited = {}
-		for v in w:select "scene_sorted scene:in id:in REMOVED?in" do
+		for v in w:select "scene:in id:in REMOVED?in" do
 			local scene = v.scene
 			if scene.parent == nil then
 				scene.REMOVED = v.REMOVED
@@ -201,7 +190,7 @@ function s:scene_remove()
 							w:remove(v)
 						end
 					else
-						v.scene_sorted = false -- yield
+						error "Unexpected Error."
 					end
 				else
 					error "Unexpected Error."
@@ -213,7 +202,7 @@ end
 
 function ecs.method.init_scene(eid)
 	local e = world:entity(eid)
-	e.scene_unsorted = true
+	e.scene_needsync = true
 	init_scene(e.scene)
 end
 
