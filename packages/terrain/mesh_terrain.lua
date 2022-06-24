@@ -6,7 +6,8 @@ local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 local mt_sys = ecs.system "mesh_terrain_system"
 
 local function instance(pid, mp, centerpos)
-    local p = ecs.create_instance(mp, pid)
+    local p = ecs.create_instance(mp)
+    ecs.method.set_parent(p.root, pid)
     p.on_ready = function (ee)
         if centerpos then
             iom.set_position(world:entity(ee.root), centerpos)

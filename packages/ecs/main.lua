@@ -94,6 +94,7 @@ local function create_instance(w, group, prefab)
                 and v.mount <= #prefab
                 and not prefab[v.mount].prefab
             )
+            assert(v.mount < i)
             mounts[i] = np
         else
             if v.prefab then
@@ -239,8 +240,9 @@ local function update_group_tag(w, data)
     end
 end
 
-local function create_scene_entity(w, group, parent)
+local function create_scene_entity(w, group)
     local eid = getentityid(w)
+    local parent
     local data = {
         id = eid,
         group = group or 0,
@@ -319,10 +321,10 @@ function world:create_object(inner_proxy)
     return outer_proxy
 end
 
-function world:_create_instance(group, parent, filename)
+function world:_create_instance(group, filename)
     local w = self
     local template = create_template(w, filename)
-    local root = create_scene_entity(w, group, parent)
+    local root = create_scene_entity(w, group)
     local prefab, noparent = create_instance(w, group, template)
     for _, m in ipairs(noparent) do
         m.parent = root
@@ -348,8 +350,8 @@ function world:_create_group(id)
     function api:create_entity(v)
         return w:_create_entity(package, id, v)
     end
-    function api:create_instance(v, parent)
-        return w:_create_instance(id, parent, v)
+    function api:create_instance(v)
+        return w:_create_instance(id, v)
     end
     local function tags(tag)
         local t = group.tags[tag]

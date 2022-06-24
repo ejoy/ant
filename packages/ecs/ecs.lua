@@ -90,8 +90,8 @@ return function (w, package)
     function ecs.create_entity(v)
         return w:_create_entity(package, nil, v)
     end
-    function ecs.create_instance(v, parent)
-        return w:_create_instance(nil, parent, v)
+    function ecs.create_instance(v)
+        return w:_create_instance(nil, v)
     end
     function ecs.group(id)
         return w:_create_group(id)
