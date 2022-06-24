@@ -135,7 +135,7 @@ function s:update_transform()
 	if any_entity_changed then
 		local visited = {}
 		local sorted_scene = {}
-		for v in w:select "scene_sorted scene:in id:in scene_changed?out" do
+		for v in w:select "scene_sorted scene_update scene:in id:in scene_changed?out" do
 			local scene = v.scene
 			if scene.parent == nil then
 				visited[v.id] = true
@@ -146,6 +146,7 @@ function s:update_transform()
 			else
 				local parent = world:entity(scene.parent)
 				if parent then
+					assert(parent.scene_update)
 					if visited[scene.parent] then
 						visited[v.id] = true
 						if scene.changed == current_changed or parent.scene_changed then
@@ -160,7 +161,6 @@ function s:update_transform()
 				end
 			end
 		end
-
 		for _, ss in ipairs(sorted_scene) do
 			local scene, parent = ss[1], ss[2]
 			if parent == nil then
@@ -221,10 +221,11 @@ function ecs.method.set_parent(e, parent)
 	world:pub {"parent_changed", e, parent}
 end
 
--- local sceneupdate_sys = ecs.system "scene_update_system"
--- function sceneupdate_sys:init()
--- 	ecs.group(0):enable "scene_update"
--- end
+local sceneupdate_sys = ecs.system "scene_update_system"
+function sceneupdate_sys:init()
+	ecs.group(0):enable "scene_update"
+	ecs.group_flush()
+end
 
 local g_sys = ecs.system "group_system"
 function g_sys:start_frame()

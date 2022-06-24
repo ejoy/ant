@@ -3,9 +3,9 @@ import "@ant.general"
 
 component "scene_update"
 
--- system "scene_update_system"
---     .implement "scenespace.lua"
---     .method "init"
+system "scene_update_system"
+    .implement "scenespace.lua"
+    .method "init"
 
 system "group_system"
     .implement "scenespace.lua"
