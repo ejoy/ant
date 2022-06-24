@@ -215,7 +215,6 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 			visible 		= true,
 			pre_depth_queue = true,
 			watch_screen_buffer = true,
-			INIT			= true,
 		}
 	}
 end
