@@ -41,6 +41,7 @@ system "debug_system"
     .method "update_world"
 
 component "INIT"
+component "LAST_CREATE"
 
 component "create_entity"
     .type "lua"

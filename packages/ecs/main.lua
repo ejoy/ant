@@ -42,13 +42,14 @@ local function create_entity_by_template(w, group, template)
         id = getentityid(w),
         group = group or 0,
     }
-    w.w:new {
-        create_entity_template = {
-            data = data,
-            template = template,
-        }
+    local initargs = {
+        data = data,
+        template = template,
     }
-    return data.id
+    w.w:new {
+        create_entity_template = initargs
+    }
+    return data.id, initargs
 end
 
 function world:_create_entity(package, group, v)
@@ -83,8 +84,8 @@ local function create_instance(w, group, prefab)
         if v.prefab then
             entities[i], np = create_instance(w, group, v.prefab)
         else
-            local e = create_entity_by_template(w, group, v.template)
-            entities[i], np = e, e
+            local e, initargs = create_entity_by_template(w, group, v.template)
+            entities[i], np = e, initargs
         end
         if v.mount then
             assert(
@@ -106,9 +107,11 @@ local function create_instance(w, group, prefab)
         local v = prefab[i]
         if v.mount then
             if v.prefab then
-                w:multicast(mounts[i], "set_parent", entities[v.mount])
+                for _, m in ipairs(mounts[i]) do
+                    m.parent = entities[v.mount]
+                end
             else
-                w:call(mounts[i], "set_parent", entities[v.mount])
+                mounts[i].parent = entities[v.mount]
             end
         end
     end
@@ -236,13 +239,14 @@ local function update_group_tag(w, data)
     end
 end
 
-local function create_scene_entity(w, group)
+local function create_scene_entity(w, group, parent)
     local eid = getentityid(w)
     local data = {
         id = eid,
         group = group or 0,
         scene = {
             srt = {},
+            parent = parent,
         }
     }
     update_group_tag(w, data)
@@ -315,12 +319,14 @@ function world:create_object(inner_proxy)
     return outer_proxy
 end
 
-function world:_create_instance(group, filename)
+function world:_create_instance(group, parent, filename)
     local w = self
     local template = create_template(w, filename)
-    local root = create_scene_entity(w, group)
+    local root = create_scene_entity(w, group, parent)
     local prefab, noparent = create_instance(w, group, template)
-    w:multicast(noparent, "set_parent", root)
+    for _, m in ipairs(noparent) do
+        m.parent = root
+    end
     run_action(w, prefab, template)
     return {
         root = root,
@@ -342,8 +348,8 @@ function world:_create_group(id)
     function api:create_entity(v)
         return w:_create_entity(package, id, v)
     end
-    function api:create_instance(v)
-        return w:_create_instance(id, v)
+    function api:create_instance(v, parent)
+        return w:_create_instance(id, parent, v)
     end
     local function tags(tag)
         local t = group.tags[tag]

@@ -221,7 +221,10 @@ local function create_texture_item_entity(texpath, canvasentity)
                 }
             },
             material    = "/pkg/ant.resources/materials/canvas_texture.material",
-            scene       = {srt={}},
+            scene       = {
+                srt = {},
+                parent = canvas_id,
+            },
             filter_state= "main_view",
             name        = "canvas_texture" .. gen_texture_id(),
             canvas_item = "texture",
@@ -232,7 +235,6 @@ local function create_texture_item_entity(texpath, canvasentity)
 
                 --update parent
                 w:sync("id:in", e)
-                ecs.method.set_parent(e.id, canvas_id)
 
                 --update renderer_eid
                 local textures = canvas.textures

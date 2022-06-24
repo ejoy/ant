@@ -310,7 +310,10 @@ function iefk.create(filename, config)
 		data = {
             name = "root",
             tag = {"effect"},
-            scene = {srt = config.srt or {}},
+            scene = {
+                srt = config.srt or {},
+                parent = config.parent
+            },
             efk = filename,
             on_ready = function (e)
                 if config.play_on_create then

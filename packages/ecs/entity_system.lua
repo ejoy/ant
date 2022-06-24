@@ -25,8 +25,17 @@ function m:entity_create()
     for v in w:select "create_entity_template:in" do
         local initargs = v.create_entity_template
         initargs.data.INIT = true
+        if initargs.parent then
+            initargs.data.LAST_CREATE = true
+        end
         update_group_tag(initargs.data)
         w:template_instance(initargs.template, serialize.unpack, initargs.data)
+        if initargs.parent then
+            for e in w:select "LAST_CREATE scene:update" do
+                e.scene.parent = initargs.parent
+            end
+            w:clear "LAST_CREATE"
+        end
     end
     w:group_update()
     w:clear "create_entity"

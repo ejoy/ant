@@ -42,13 +42,17 @@ local function process_keyframe_event(task)
 				end
 			elseif event.event_type == "Effect" then
 				if not event.effect and event.asset_path ~= "" then
-					event.effect = iefk.create(event.asset_path, {play_on_create = true})
+					local parent
 					if task.slot_eid then
 						local slot_eid = task.slot_eid[event.link_info.slot_name]
 						if slot_eid then
-							ecs.method.set_parent(event.effect, slot_eid)
+							parent = slot_eid
 						end
 					end
+					event.effect = iefk.create(event.asset_path, {
+						play_on_create = true,
+						parent = parent,
+					})
 				elseif event.effect then
 					iefk.play(world:entity(event.effect))
 				end
@@ -192,8 +196,7 @@ local function init_prefab_anim(entity)
 		-- local pos = path:find("/meshes/") or path:find("|meshes/")
 		-- if pos then
 		-- 	local anim_path = path:sub(1, pos) .. "animation.prefab"
-		-- 	local default_anim = iani.create(anim_path)
-		-- 	ecs.method.set_parent(default_anim.root, entity.prefab.root)
+		-- 	local default_anim = iani.create(anim_path, {parent=entity.prefab.root})
 		-- 	anim.meshskin.animation = default_anim.tag["*"][2]
 		-- end
 		anim.anim_ctrl._current.slot_eid = slot_eid

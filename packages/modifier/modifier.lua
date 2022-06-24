@@ -83,7 +83,10 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep)
 		},
 		data = {
             name = "",
-            scene = {srt = {}},
+            scene = {
+                srt = {},
+                parent = target
+            },
             modifier = {
                 target = target,
                 continue = false,
@@ -109,7 +112,6 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep)
         }
     }
     local eid = ecs.create_entity(template)
-    ecs.method.set_parent(eid, target)
     return {
         eid = eid,
         anim_eid = ka
@@ -125,7 +127,10 @@ function imodifier.create_srt_modifier(target, generator, keep)
 		},
 		data = {
             name = "",
-            scene = {srt = {}},
+            scene = {
+                srt = {},
+                parent = target,
+            },
             modifier = {
                 target = target,
                 continue = false,
@@ -150,7 +155,6 @@ function imodifier.create_srt_modifier(target, generator, keep)
 		},
     }
     local eid = ecs.create_entity(template)
-    ecs.method.set_parent(eid, target)
     return eid
 end
 
