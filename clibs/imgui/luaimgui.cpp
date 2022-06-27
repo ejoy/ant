@@ -1975,7 +1975,7 @@ wSimpleSequencer(lua_State* L) {
 			if (dirty_layer == -1) {
 				ImSimpleSequencer::bone_anim.anim_layers.clear();
 			}
-			if (lua_getfield(L, 1, "joint_anims") == LUA_TTABLE) {
+			if (lua_getfield(L, 1, "target_anims") == LUA_TTABLE) {
 				int len = (int)lua_rawlen(L, -1);
 				for (int index = 0; index < len; index++) {
 					lua_pushinteger(L, index + 1);
@@ -1984,7 +1984,7 @@ wSimpleSequencer(lua_State* L) {
 						ImSimpleSequencer::anim_layer* layer = nullptr;
 						if (dirty_layer == -1) {
 							std::string_view nv;
-							if (lua_getfield(L, -1, "joint_name") == LUA_TSTRING) {
+							if (lua_getfield(L, -1, "target_name") == LUA_TSTRING) {
 								nv = lua_tostring(L, -1);
 							}
 							lua_pop(L, 1);

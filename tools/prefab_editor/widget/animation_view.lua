@@ -5,7 +5,7 @@ local iaudio    = ecs.import.interface "ant.audio|audio_interface"
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local ies       = ecs.import.interface "ant.scene|ifilter_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
-local skeleton_view = ecs.require "widget.skeleton_view"
+local keyframe_view = ecs.require "widget.keyframe_view"
 local prefab_mgr = ecs.require "prefab_manager"
 local gizmo     = ecs.require "gizmo.gizmo"
 local asset_mgr = import_package "ant.asset"
@@ -668,7 +668,7 @@ function m.clear()
     current_event = nil
     current_clip = nil
     edit_anims = nil
-    skeleton_view.clear()
+    keyframe_view.clear()
 end
 
 local anim_name = ""
@@ -934,7 +934,7 @@ function m.on_prefab_load(entities)
         edit_anims = editanims
         table.sort(edit_anims.name_list)
         set_current_anim(edit_anims.birth or editanims.name_list[1])
-        skeleton_view.init(skeleton)
+        keyframe_view.init(skeleton)
         joint_map, joint_list = joint_utils:get_joints()
     end
 end

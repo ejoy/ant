@@ -91,8 +91,7 @@ end
 
 function m:get_joint_by_name(ske, name)
     if not name then return end
-    local list = self.joint_list[ske._handle]
-    for _, value in ipairs(list) do
+    for _, value in ipairs(self.joint_list) do
         if value.name == name then
             return value
         end
