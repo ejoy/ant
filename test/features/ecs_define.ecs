@@ -116,4 +116,11 @@ system "water_test_system"
     .require_policy "ant.terrain|water"
     .method "init"
 
+system "terrain_entity_test_system"
+    .implement "terrain_entity_test.lua"
+    .method "init"
+    .method "init_world"
+    .method "data_changed"
+    .method "camera_usage"
+
 import "debug/vertex_attrib_visualizer.ecs"
