@@ -3106,20 +3106,20 @@ fCreate(lua_State *L) {
 }
 
 static int
-uCaptureKeyboardFromApp(lua_State * L) {
+uSetNextFrameWantCaptureKeyboard(lua_State * L) {
 	bool val = true;
 	if (lua_isboolean(L, 1))
 		val = lua_toboolean(L, 1);
-	ImGui::CaptureKeyboardFromApp(val);
+	ImGui::SetNextFrameWantCaptureKeyboard(val);
 	return 0;
 }
 
 static int
-uCaptureMouseFromApp(lua_State * L) {
+uSetNextFrameWantCaptureMouse(lua_State * L) {
 	bool val = true;
 	if (lua_isboolean(L, 1))
 		val = lua_toboolean(L, 1);
-	ImGui::CaptureMouseFromApp(val);
+	ImGui::SetNextFrameWantCaptureMouse(val);
 	return 0;
 }
 
@@ -4107,8 +4107,8 @@ luaopen_imgui(lua_State *L) {
 		{ "SetItemAllowOverlap", uSetItemAllowOverlap },
 		{ "LoadIniSettings", uLoadIniSettings },
 		{ "SaveIniSettings", uSaveIniSettings },
-		{ "CaptureKeyboardFromApp", uCaptureKeyboardFromApp },
-		{ "CaptureMouseFromApp", uCaptureMouseFromApp },
+		{ "SetNextFrameWantCaptureKeyboard", uSetNextFrameWantCaptureKeyboard },
+		{ "SetNextFrameWantCaptureMouse", uSetNextFrameWantCaptureMouse },
 		{ "IsMouseDoubleClicked", uIsMouseDoubleClicked},
 		{ "IsKeyPressed", uIsKeyPressed},
 		{ "PushID",uPushID},

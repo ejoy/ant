@@ -225,7 +225,7 @@ namespace ImSequencer
 		customHeight = 0;
 		// moving
 		if (movingEntry) {
-			ImGui::CaptureMouseFromApp();
+			ImGui::SetNextFrameWantCaptureMouse(true);
 			int diffFrame = int((cx - movingPos) / framePixelWidth);
 			movingPos += int(diffFrame * framePixelWidth);
 			if (io.KeyAlt/*move_keyframe*/) {
