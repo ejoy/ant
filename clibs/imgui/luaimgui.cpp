@@ -1975,7 +1975,7 @@ wSimpleSequencer(lua_State* L) {
 			if (dirty_layer == -1) {
 				ImSimpleSequencer::bone_anim.anim_layers.clear();
 			}
-			if (lua_getfield(L, 1, "joint_anims") == LUA_TTABLE) {
+			if (lua_getfield(L, 1, "target_anims") == LUA_TTABLE) {
 				int len = (int)lua_rawlen(L, -1);
 				for (int index = 0; index < len; index++) {
 					lua_pushinteger(L, index + 1);
@@ -1984,7 +1984,7 @@ wSimpleSequencer(lua_State* L) {
 						ImSimpleSequencer::anim_layer* layer = nullptr;
 						if (dirty_layer == -1) {
 							std::string_view nv;
-							if (lua_getfield(L, -1, "joint_name") == LUA_TSTRING) {
+							if (lua_getfield(L, -1, "target_name") == LUA_TSTRING) {
 								nv = lua_tostring(L, -1);
 							}
 							lua_pop(L, 1);
@@ -3106,20 +3106,20 @@ fCreate(lua_State *L) {
 }
 
 static int
-uCaptureKeyboardFromApp(lua_State * L) {
+uSetNextFrameWantCaptureKeyboard(lua_State * L) {
 	bool val = true;
 	if (lua_isboolean(L, 1))
 		val = lua_toboolean(L, 1);
-	ImGui::CaptureKeyboardFromApp(val);
+	ImGui::SetNextFrameWantCaptureKeyboard(val);
 	return 0;
 }
 
 static int
-uCaptureMouseFromApp(lua_State * L) {
+uSetNextFrameWantCaptureMouse(lua_State * L) {
 	bool val = true;
 	if (lua_isboolean(L, 1))
 		val = lua_toboolean(L, 1);
-	ImGui::CaptureMouseFromApp(val);
+	ImGui::SetNextFrameWantCaptureMouse(val);
 	return 0;
 }
 
@@ -4107,8 +4107,8 @@ luaopen_imgui(lua_State *L) {
 		{ "SetItemAllowOverlap", uSetItemAllowOverlap },
 		{ "LoadIniSettings", uLoadIniSettings },
 		{ "SaveIniSettings", uSaveIniSettings },
-		{ "CaptureKeyboardFromApp", uCaptureKeyboardFromApp },
-		{ "CaptureMouseFromApp", uCaptureMouseFromApp },
+		{ "SetNextFrameWantCaptureKeyboard", uSetNextFrameWantCaptureKeyboard },
+		{ "SetNextFrameWantCaptureMouse", uSetNextFrameWantCaptureMouse },
 		{ "IsMouseDoubleClicked", uIsMouseDoubleClicked},
 		{ "IsKeyPressed", uIsKeyPressed},
 		{ "PushID",uPushID},

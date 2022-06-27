@@ -9,7 +9,8 @@ local stringify     = import_package "ant.serialize".stringify
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local ilight        = ecs.import.interface "ant.render|ilight"
 local imaterial     = ecs.import.interface "ant.asset|imaterial"
-local iefk           = ecs.import.interface "ant.efk|iefk"
+local iefk          = ecs.import.interface "ant.efk|iefk"
+local imodifier     = ecs.import.interface "ant.modifier|imodifier"
 local camera_mgr    = ecs.require "camera.camera_manager"
 local light_gizmo   = ecs.require "gizmo.light"
 local gizmo         = ecs.require "gizmo.gizmo"
@@ -249,6 +250,10 @@ function m:create(what, config)
             }
             local new_entity = ecs.create_entity(utils.deep_copy(template))
             self:add_entity(new_entity, parent_eid, template)
+            if not self.test then
+                self.test = {}
+            end
+            self.test[#self.test + 1] = new_entity
             return new_entity
         elseif config.type == "cube(prefab)" then
             m:add_prefab(gd.editor_package_path .. "res/cube.prefab")
@@ -515,13 +520,14 @@ local function on_remove_entity(e)
 end
 
 function m:reset_prefab()
-    camera_mgr.clear()
+    --camera_mgr.clear()
     for _, e in ipairs(self.entities) do
         if not world:entity(e).scene.REMOVED then
             on_remove_entity(e)
             world:remove_entity(e)
         end
     end
+    imodifier.set_target(imodifier.highlight, nil)
     light_gizmo.clear()
     hierarchy:clear()
     anim_view.clear()

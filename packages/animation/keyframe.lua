@@ -1,7 +1,8 @@
 local ecs   = ...
 local world = ecs.world
 local w     = world.w
-
+local mathpkg	= import_package "ant.math"
+local mc, mu	= mathpkg.constant, mathpkg.util
 -- keyframe
 local ika = ecs.interface "ikeyframe"
 function ika.create(frames)
@@ -39,8 +40,19 @@ function ika.clear(e)
 end
 
 function ika.stop(e)
+	if not e then
+		return
+	end
 	local ps = e.keyframe.play_state
 	ps.playing = false
+end
+
+function ika.set_loop(e, loop)
+	if not e then
+		return
+	end
+	local ps = e.keyframe.play_state
+	ps.loop = loop
 end
 
 function ika.play(e, desc)
@@ -66,8 +78,9 @@ end
 
 local timer = ecs.import.interface "ant.timer|itimer"
 
-local function step_keyframe(kf_anim, delta_time)
-	if not kf_anim.play_state.playing then
+local function step_keyframe(e, delta_time, absolute)
+	local kf_anim = e.keyframe
+	if not kf_anim.play_state.playing and not absolute then
 		return
 	end
 	local frames = kf_anim.frames
@@ -86,21 +99,26 @@ local function step_keyframe(kf_anim, delta_time)
 			return v0 + (v1 - v0) * f
 		end
 	end
-	local function get_value(time)
+	local function update_value(time)
+		if time < frames[1].time then
+			return nil, false
+		end
 		local frame_count = #frames
 		for i = 1, frame_count do
 			if time < frames[i].time then
 				local factor = math.min((time - frames[i-1].time) / (frames[i].time - frames[i-1].time), 1.0)
+				if frames[i-1].tween then
+					factor = mu.tween[frames[i-1].tween](factor)
+				end
 				return lerp(frames[i-1].value, frames[i].value, factor), false
 			elseif i == frame_count then
 				return frames[i].value, true
 			end
 		end
 	end
-
-	local value, last = get_value(play_state.current_time)
+	play_state.current_time = absolute and delta_time or play_state.current_time + delta_time
+	local value, last = update_value(play_state.current_time)
 	play_state.current_value = value
-	play_state.current_time = play_state.current_time + delta_time
 	if last then
 		if play_state.loop then
 			play_state.current_time = 0
@@ -111,9 +129,30 @@ local function step_keyframe(kf_anim, delta_time)
 	end
 end
 
+function ika.set_time(e, t)
+	if not e then
+		return
+	end
+	step_keyframe(e, t, true)
+end
+
+function ika.get_time(e)
+	if not e then
+		return 0
+	end
+	return e.keyframe.play_state.current_time or 0
+end
+
+function ika.is_playing(e)
+	if not e then
+		return false
+	end
+	return e.keyframe.play_state.playing
+end
+
 function ma_sys.data_changed()
 	local delta_time = timer.delta()
 	for e in w:select "keyframe:in" do
-		step_keyframe(e.keyframe, delta_time)
+		step_keyframe(e, delta_time * 0.001)
 	end
 end

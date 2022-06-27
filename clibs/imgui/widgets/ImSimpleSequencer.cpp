@@ -283,7 +283,7 @@ namespace ImSimpleSequencer
 
 			// moving
 			if (is_active && movingEntry) {
-				ImGui::CaptureMouseFromApp();
+				ImGui::SetNextFrameWantCaptureMouse(true);
 				int diffFrame = int((cx - movingPos) / framePixelWidth);
 				movingPos += int(diffFrame * framePixelWidth);
 				if (is_active && std::abs(diffFrame) > 0 && range_index >= 0) {

@@ -37,35 +37,51 @@ end
 local cr        = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
 
+function imodifier.delete(m)
+    if not m then
+        return
+    end
+    local mf = world:entity(m.eid).modifier
+    if mf.target then
+        mf:reset()
+    end
+    world:remove_entity(m.eid)
+end
+
 function imodifier.set_target(m, target)
+    if not m then
+        return
+    end
     local mf = world:entity(m.eid).modifier
     if target == mf.target then
         return
     end
-    if mf.target then
-        mf:reset()
-    end
+    local iv
     if mf.property then
         -- material
         local filename = target and world:entity(target).material
         if not filename then
-            mf.target = nil
             return
         end
         local mtl = serialize.parse(filename, cr.read_file(filename))
-        mf.init_value = math3d.ref(math3d.vector(mtl.properties[mf.property]))
+        if not mtl.properties[mf.property] then
+            return
+        end
+        iv = math3d.ref(math3d.vector(mtl.properties[mf.property]))
     else
         -- srt
-        mf.init_value = math3d.ref(math3d.matrix(world:entity(target).scene.srt))
+        iv = math3d.ref(math3d.matrix(world:entity(target).scene.srt))
     end
+    if mf.target then
+        mf:reset()
+    end
+    mf.init_value = iv
     mf.target = target
 end
 
-function imodifier.create_mtl_modifier(target, property, keyframes, keep)
-    local ka = ika.create(keyframes)
-
-    local function generator(time)
-        local kfanim = world:entity(ka).keyframe
+function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreupdate)
+    local function get_value(ae, time)
+        local kfanim = world:entity(ae).keyframe
         return kfanim.play_state.current_value, kfanim.play_state.playing
     end
 
@@ -73,8 +89,12 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep)
     if target then
         local filename = world:entity(target).material
         local mtl = serialize.parse(filename, cr.read_file(filename))
+        assert(mtl.properties[property])
         init_value = math3d.ref(math3d.vector(mtl.properties[property]))
     end
+
+    local kfeid = ika.create(keyframes)
+
     local template = {
 		policy = {
             "ant.general|name",
@@ -93,16 +113,21 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep)
                 property = property,
                 init_value = init_value,
                 keep = keep,
+                foreupdate = foreupdate,
+                kfeid = kfeid,
                 reset = function (self)
                     imaterial.set_property(world:entity(self.target), self.property, self.init_value)
                 end,
                 update = function(self, time)
-                    if not self.continue or not self.target then
+                    if not self.target then
                         return
                     end
-                    local value, running = generator(time)
+                    if not self.foreupdate and not self.continue then
+                        return
+                    end
+                    local value, running = get_value(self.kfeid, time)
                     local apply_value = value and math3d.vector(value) or self.init_value
-                    if not running and not self.keep then
+                    if not running and not self.keep and not self.foreupdate then
                         apply_value = self.init_value
                     end
                     imaterial.set_property(world:entity(self.target), self.property, apply_value)
@@ -114,7 +139,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep)
     local eid = ecs.create_entity(template)
     return {
         eid = eid,
-        anim_eid = ka
+        anim_eid = kfeid
     }
 end
 
@@ -172,18 +197,21 @@ function imodifier.start(m, desc)
 end
 
 function imodifier.stop(m)
+    if not m then
+        return
+    end
     world:entity(m.eid).modifier.continue = false
 end
 
 function imodifier.create_bone_modifier(target, filename, bone_name)
-    local anim_inst = ecs.create_instance(filename)
+    local anim_prefab = ecs.create_instance(filename)
     return {
         eid = imodifier.create_srt_modifier(target, function (time)
-            local anim = world:entity(anim_inst.tag["*"][2])
+            local anim = world:entity(anim_prefab.tag["*"][2])
             local pr = anim.anim_ctrl.pose_result
             return pr:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl._current.play_state.play
         end),
-        anim_eid = anim_inst
+        anim_eid = anim_prefab
     }
 end
 

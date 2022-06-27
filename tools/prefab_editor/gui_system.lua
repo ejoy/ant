@@ -17,7 +17,7 @@ local iwd       = ecs.import.interface "ant.render|iwidget_drawer"
 local iefk      = ecs.import.interface "ant.efk|iefk"
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
-local skeleton_view     = ecs.require "widget.skeleton_view"
+local keyframe_view     = ecs.require "widget.keyframe_view"
 local toolbar           = ecs.require "widget.toolbar"
 local mainview          = ecs.require "widget.main_view"
 local scene_view        = ecs.require "widget.scene_view"
@@ -245,13 +245,13 @@ local stat_window
 function m:init_world()
     local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
     stat_window = iRmlUi.open "bgfx_stat.rml"
-    imodifier.highlight = imodifier.create_mtl_modifier(nil, "u_basecolor_factor", {
-        {time = 0, value = {1, 1, 1, 1}},
-        {time = 150, value = {1.5, 1.5, 1.5, 1}},
-        {time = 400, value = {2, 2, 2, 1}},
-        -- {time = 450, value = {2, 2, 2, 1}},
-        -- {time = 600, value = {1, 1, 1, 1}},
-    })
+    -- imodifier.highlight = imodifier.create_mtl_modifier(nil, "u_basecolor_factor", {
+    --     {time = 0, value = {1, 1, 1, 1}},
+    --     {time = 0.15, value = {1.5, 1.5, 1.5, 1}},
+    --     {time = 0.4, value = {2, 2, 2, 1}},
+    --     -- {time = 450, value = {2, 2, 2, 1}},
+    --     -- {time = 600, value = {1, 1, 1, 1}},
+    -- })
 end
 local mouse_pos_x
 local mouse_pos_y
@@ -269,7 +269,7 @@ function m:ui_update()
     inspector.show()
     resource_browser.show()
     anim_view.show()
-    skeleton_view.show()
+    keyframe_view.show()
     console_widget.show()
     log_widget.show()
     choose_project()
@@ -352,6 +352,9 @@ local function on_target(old, new)
         if e.light then
             light_gizmo.bind(new)
         end
+        if e.render_object then
+            keyframe_view.set_current_target(new)
+        end
     end
     world:pub {"UpdateAABB", new}
 end
@@ -388,6 +391,8 @@ local function update_visible(node, visible)
     end
 end
 local reset_editor = world:sub {"ResetEditor"}
+local test_m
+local test_m1
 function m:handle_event()
     for _, _, _, x, y in event_mouse:unpack() do
         mouse_pos_x = x
@@ -527,10 +532,15 @@ function m:handle_event()
         elseif state.CTRL and key == "O" and press == 1 then
             OnOpen()
         elseif state.CTRL and key == "S" and press == 1 then
+            -- test_m = imodifier.create_bone_modifier(test1.root, "/pkg/tools.prefab_editor/res/ueAnimat.glb|animation.prefab", "Bone")
+            -- iom.set_position(world:entity(test2.root), math3d.vector{0, 0, -5})
+            -- test_m1 = imodifier.create_bone_modifier(test2.root, "/pkg/tools.prefab_editor/res/ueAnimat.glb|animation.prefab", "Bone")
             prefab_mgr:save_prefab()
         elseif state.CTRL and key == "R" and press == 1 then
             anim_view:clear()
             prefab_mgr:reload()
+            -- imodifier.start(test_m, {name="confirm"})
+            -- imodifier.start(test_m1, {name="confirm"})
         end
     end
 
