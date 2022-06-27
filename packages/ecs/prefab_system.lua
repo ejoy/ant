@@ -11,11 +11,6 @@ local evObjectRemove  = world:sub {"object_remove"}
 local evPrefabDetach  = world:sub {"prefab_system", "detach"}
 local evPrefabRemove  = world:sub {"prefab_system", "remove"}
 
-local function isValidReference(reference)
-    assert(reference[2] == 1, "Not a reference")
-    return reference[1] ~= nil
-end
-
 function m:entity_init()
     for v in w:select "on_init:in" do
         v:on_init()
