@@ -63,10 +63,13 @@ end
 
 function s:entity_init()
 	local needsync = false
-	for v in w:select "INIT scene:in" do
+	for v in w:select "INIT scene:in render_object?in" do
 		local scene = v.scene
 		scene.changed = current_changed
 		init_scene(scene)
+		if v.render_object then
+			v.render_object.worldmat = v.scene.worldmat
+		end
 		needsync = true
 	end
 	for v in w:select "scene_needsync scene:in" do
@@ -74,11 +77,6 @@ function s:entity_init()
 		needsync = true
 	end
 	w:clear "scene_needsync"
-
-	--TODO: need remove, render_object should not own 'worldmat'
-	for v in w:select "INIT scene:in render_object:in" do
-		v.render_object.worldmat = v.scene.worldmat
-	end
 
 	if needsync then
 		local visited = {}
@@ -112,24 +110,31 @@ end
 function s:update_hierarchy()
 end
 
+local function update_scene_obj(scene, parent)
+	if parent == nil then
+		update_worldmat_noparent(scene)
+	else
+		update_worldmat(scene, parent)
+	end
+	update_aabb(scene)
+end
+
 local evSceneChanged = world:sub {"scene_changed"}
 function s:update_transform()
-	local any_entity_changed
+	local scene_need_update
 	for _, eid in evSceneChanged:unpack() do
 		local e = world:entity(eid)
 		e.scene.changed = current_changed
-		any_entity_changed = true
+		scene_need_update = true
 	end
 
-	if any_entity_changed then
+	if scene_need_update then
 		local visited = {}
-		local sorted_scene = {}
 		for v in w:select "scene_update scene:in id:in scene_changed?out" do
 			local scene = v.scene
 			if scene.parent == nil then
 				visited[v.id] = true
 				if scene.changed == current_changed then
-					sorted_scene[#sorted_scene+1] = {scene}
 					v.scene_changed = true
 				end
 			else
@@ -139,7 +144,6 @@ function s:update_transform()
 					if visited[scene.parent] then
 						visited[v.id] = true
 						if scene.changed == current_changed or parent.scene_changed then
-							sorted_scene[#sorted_scene+1] = {scene, parent.scene}
 							v.scene_changed = true
 						end
 					else
@@ -150,15 +154,12 @@ function s:update_transform()
 				end
 			end
 		end
-		for _, ss in ipairs(sorted_scene) do
-			local scene, parent = ss[1], ss[2]
-			if parent == nil then
-				update_worldmat_noparent(scene)
-			else
-				update_worldmat(scene, parent)
-			end
-			update_aabb(scene)
-		end
+	end
+
+	for e in w:select "scene_changed scene:in" do
+		local scene = e.scene
+		local parent = scene.parent and world:entity(scene.parent).scene or nil
+		update_scene_obj(scene, parent)
 	end
 	current_changed = current_changed + 1
 end
