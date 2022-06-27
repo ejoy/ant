@@ -27,6 +27,7 @@ system "entity_system"
     .method "entity_create"
     .method "entity_ready"
     .method "update_world"
+    .method "entity_remove"
 
 system "prefab_system"
     .implement "prefab_system.lua"

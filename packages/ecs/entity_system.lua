@@ -49,13 +49,14 @@ end
 local evParentChanged = world:sub {"parent_changed"}
 
 local function rebuild(id)
-    local e = world._entity(id)
+    local e = world._entity_visitor[id]
     w:clone(e, {group = w:group_id(e)})
     w:remove(e)
 end
 
 local function getentityid(id)
-    return w:readid(world._entity(id))
+    local e = world._entity_visitor[id]
+    return w:readid(e)
 end
 
 function m:update_world()
@@ -72,4 +73,10 @@ function m:update_world()
     w:group_update()
     w:update()
     world._frame = world._frame+ 1
+end
+
+function m:entity_remove()
+    for e in w:select "REMOVED id:in" do
+        world._entity[e.id] = nil
+    end
 end
