@@ -40,9 +40,7 @@ local function update_worldmat(scene, parent)
 		scene.changed = parent.changed
 	end
 	update_worldmat_noparent(scene)
-	if parent.worldmat then
-		scene.worldmat.m = math3d.mul(parent.worldmat, scene.worldmat)
-	end
+	scene.worldmat.m = math3d.mul(parent.worldmat, scene.worldmat)
 end
 
 local function update_aabb(scene)
@@ -79,25 +77,17 @@ function s:entity_init()
 	w:clear "scene_needsync"
 
 	if needsync then
-		local visited = {}
-		for v in w:select "scene:in id:in render_object?in INIT?in" do
+		for v in w:select "scene:in render_object?in INIT?in" do
 			local scene = v.scene
-			if scene.parent == nil then
-				visited[v.id] = true
-			else
+			if scene.parent then
 				local parent = world:entity(scene.parent)
 				if parent then
-					if visited[scene.parent] then
-						visited[v.id] = true
-						if v.INIT then
-							local r = v.render_object
-							local pr = parent.render_object
-							if r and pr then
-								inherit_state(r, pr)
-							end
+					if v.INIT then
+						local r = v.render_object
+						local pr = parent.render_object
+						if r and pr then
+							inherit_state(r, pr)
 						end
-					else
-						error "Unexpected Error."
 					end
 				else
 					error "Unexpected Error."
@@ -129,11 +119,9 @@ function s:update_transform()
 	end
 
 	if scene_need_update then
-		local visited = {}
-		for v in w:select "scene_update scene:in id:in scene_changed?out" do
+		for v in w:select "scene_update scene:in scene_changed?out" do
 			local scene = v.scene
 			if scene.parent == nil then
-				visited[v.id] = true
 				if scene.changed == current_changed then
 					v.scene_changed = true
 				end
@@ -141,13 +129,8 @@ function s:update_transform()
 				local parent = world:entity(scene.parent)
 				if parent then
 					assert(parent.scene_update)
-					if visited[scene.parent] then
-						visited[v.id] = true
-						if scene.changed == current_changed or parent.scene_changed then
-							v.scene_changed = true
-						end
-					else
-						error "Unexpected Error."
+					if scene.changed == current_changed or parent.scene_changed then
+						v.scene_changed = true
 					end
 				else
 					error "Unexpected Error."
@@ -173,25 +156,18 @@ end
 function s:scene_remove()
 	w:clear "scene_changed"
 	if hasSceneRemove() then
-		local visited = {}
-		for v in w:select "scene:in id:in REMOVED?in" do
+		for v in w:select "scene:in REMOVED?in" do
 			local scene = v.scene
 			if scene.parent == nil then
 				scene.REMOVED = v.REMOVED
-				visited[v.id] = true
 			else
 				local parent = world:entity(scene.parent)
 				if parent then
-					if visited[scene.parent] then
-						visited[v.id] = true
-						if v.REMOVED then
-							scene.REMOVED = true
-						elseif parent.REMOVED then
-							scene.REMOVED = true
-							w:remove(v)
-						end
-					else
-						error "Unexpected Error."
+					if v.REMOVED then
+						scene.REMOVED = true
+					elseif parent.REMOVED then
+						scene.REMOVED = true
+						w:remove(v)
 					end
 				else
 					error "Unexpected Error."
