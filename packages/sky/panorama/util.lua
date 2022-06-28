@@ -9,7 +9,7 @@ return {
         if cm_rbidx ~= nil then
             fbmgr.resize_rb(cm_rbidx, facesize)
         else
-            cm_rbidx = fbmgr.create_rb{format="RGBA32F", size=facesize, layers=1, mipmap=true, flags=flags, cubemap=true}
+            cm_rbidx = fbmgr.create_rb{format="RGBA16F", size=facesize, layers=1, mipmap=true, flags=flags, cubemap=true}
         end
 
         return cm_rbidx
