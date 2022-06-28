@@ -106,7 +106,8 @@ local function get_icon_by_object_type(node)
 end
 local imodifier 		= ecs.import.interface "ant.modifier|imodifier"
 local function show_scene_node(node)
-    if world:entity(node.eid).animation then
+    local e = world:entity(node.eid)
+    if not e or e.animation then
         return
     end
     imgui.table.NextRow();

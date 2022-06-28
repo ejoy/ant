@@ -167,7 +167,8 @@ local function create_arrow_widget(axis_root, axis_str)
 					s = {0.004, 0.1, 0.004},
 					r = local_rotator,
 					t = cylindere_t
-				}
+				},
+				parent = axis_root
 			},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
@@ -180,7 +181,6 @@ local function create_arrow_widget(axis_root, axis_str)
 			end
 		}
 	}
-	ecs.method.set_parent(cylindereid, axis_root)
 	local coneeid = ecs.create_entity{
 		policy = {
 			"ant.general|name",
@@ -188,7 +188,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 		data = {
 			filter_state = "main_view",
-			scene = {srt = {s = {0.02, 0.03, 0.02, 0}, r = local_rotator, t = cone_t}},
+			scene = {srt = {s = {0.02, 0.03, 0.02, 0}, r = local_rotator, t = cone_t}, parent = axis_root},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str,
@@ -200,7 +200,6 @@ local function create_arrow_widget(axis_root, axis_str)
 			end
 		}
 	}
-	ecs.method.set_parent(coneeid, axis_root)
 	if axis_str == "x" then
 		gizmo.tx.eid = {cylindereid, coneeid}
 	elseif axis_str == "y" then
@@ -257,11 +256,10 @@ function gizmo_sys:post_init()
 		},
 		data = {
 			name = "rot root",
-			scene = {srt = {}},
+			scene = {srt = {}, parent = axis_root},
 		},
 	}
 
-	ecs.method.set_parent(rot_circle_root, axis_root)
 	gizmo.rot_circle_root_eid = rot_circle_root
 
 	local uniform_rot_root = ecs.create_entity {
@@ -335,7 +333,7 @@ function gizmo_sys:post_init()
 	create_rotate_axis(gizmo.rz, {0, 0, gizmo_const.AXIS_LEN * 0.5}, {})
 	
 	-- scale axis
-	local function create_scale_cube(srt, color, axis_name)
+	local function create_scale_cube(srt, color, axis_name, parent)
 		local eid = ecs.create_entity {
 			policy = {
 				"ant.render|render",
@@ -344,7 +342,7 @@ function gizmo_sys:post_init()
 			},
 			data = {
 				filter_state = "main_view|selectable",
-				scene = {srt = srt},
+				scene = {srt = srt, parent = parent},
 				material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name,
@@ -361,12 +359,10 @@ function gizmo_sys:post_init()
 	end
 
 	-- scale axis cube
-	local cube_eid = create_scale_cube({s = gizmo_const.AXIS_CUBE_SCALE}, gizmo_const.COLOR.GRAY, "uniform scale")
-	ecs.method.set_parent(cube_eid, axis_root)
+	local cube_eid = create_scale_cube({s = gizmo_const.AXIS_CUBE_SCALE}, gizmo_const.COLOR.GRAY, "uniform scale", axis_root)
 	gizmo.uniform_scale_eid = cube_eid
 	local function create_scale_axis(axis, axis_end)
-		local cube_eid = create_scale_cube({t = axis_end, s = gizmo_const.AXIS_CUBE_SCALE}, axis.color, "scale axis")
-		ecs.method.set_parent(cube_eid, axis_root)
+		local cube_eid = create_scale_cube({t = axis_end, s = gizmo_const.AXIS_CUBE_SCALE}, axis.color, "scale axis", axis_root)
 		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, axis_end, "", axis.color, true)
 		ecs.method.set_parent(line_eid, axis_root)
 		axis.eid = {cube_eid, line_eid}
