@@ -147,10 +147,7 @@ local function create_template(w, filename)
     if templates[filename] then
         return templates[filename]
     end
-    local t = filename
-    if type(filename) ~= "table" then
-        t = serialize.parse(filename, cr.read_file(filename))
-    end
+    local t = serialize.parse(filename, cr.read_file(filename))
 	local prefab = {}
 	for _, v in ipairs(t) do
         if not w.__EDITOR__ and v.editor then
@@ -323,6 +320,9 @@ function world:create_object(inner_proxy)
 end
 
 function world:_create_instance(group, filename)
+    if type(filename) ~= "string" then
+        filename = tostring(filename)
+    end
     local w = self
     local template = create_template(w, filename)
     local root = create_scene_entity(w, group)
