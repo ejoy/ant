@@ -33,7 +33,9 @@ function rmlui_sys:init()
         },
     })
     iRmlUi.font_dir "/pkg/ant.resources.binary/ui/test/assets/font/"
+end
 
+function rmlui_sys:init_world()
     local vp = world.args.viewport
     ecs.create_entity{
         policy = {
@@ -67,8 +69,11 @@ function rmlui_sys:entity_init()
     end
 
     for _, vr in vp_changed_mb:unpack() do
-        irq.set_view_rect("rmlui_obj", vr)
-        ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, world.args.framebuffer.ratio)
+        local rml = w:singleton("rmlui_obj", "render_target:in")
+        if rml then
+            irq.set_view_rect("rmlui_obj", vr)
+            ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, world.args.framebuffer.ratio)
+        end
     end
 end
 
