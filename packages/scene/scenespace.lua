@@ -9,8 +9,6 @@ local mu, mc = mathpkg.util, mathpkg.constant
 ----scenespace_system----
 local s = ecs.system "scenespace_system"
 
-local evParentChanged = world:sub {"parent_changed"}
-
 local function inherit_state(r, pr)
 	if r.fx == nil then
 		r.fx = pr.fx
@@ -28,17 +26,12 @@ local function inherit_state(r, pr)
 	-- end
 end
 
-local current_changed = 1
-
 local function update_worldmat_noparent(scene)
 	local srt = scene.srt
 	scene.worldmat.m = srt and math3d.matrix(srt) or mc.IDENTITY_MAT
 end
 
 local function update_worldmat(scene, parent)
-	if parent.changed > scene.changed then
-		scene.changed = parent.changed
-	end
 	update_worldmat_noparent(scene)
 	scene.worldmat.m = math3d.mul(parent.worldmat, scene.worldmat)
 end
@@ -59,41 +52,29 @@ local function init_scene(scene)
 	scene.worldmat = math3d.ref(mc.IDENTITY_MAT)
 end
 
-function s:entity_init()
-	local needsync = false
-	for v in w:select "INIT scene:in render_object?in" do
-		local scene = v.scene
-		scene.changed = current_changed
-		init_scene(scene)
-		if v.render_object then
-			v.render_object.worldmat = v.scene.worldmat
-		end
-		needsync = true
-	end
-	for v in w:select "scene_needsync scene:in" do
-		v.scene.changed = current_changed
-		needsync = true
-	end
-	w:clear "scene_needsync"
-
-	if needsync then
-		for v in w:select "scene:in render_object?in INIT?in" do
-			local scene = v.scene
-			if scene.parent then
-				local parent = world:entity(scene.parent)
-				if parent then
-					if v.INIT then
-						local r = v.render_object
-						local pr = parent.render_object
-						if r and pr then
-							inherit_state(r, pr)
-						end
-					end
-				else
-					error "Unexpected Error."
+local function update_render_object(ro, scene)
+	if ro then
+		ro.worldmat = scene.worldmat
+		if scene.parent then
+			local parent = world:entity(scene.parent)
+			if parent then
+				local pr = parent.render_object
+				if pr then
+					inherit_state(ro, pr)
 				end
+			else
+				error "Unexpected Error."
 			end
 		end
+	end
+end
+
+function s:entity_init()
+	for v in w:select "INIT scene:in render_object?in scene_changed?out" do
+		local scene = v.scene
+		v.scene_changed = true
+		init_scene(scene)
+		update_render_object(v.render_object, scene)
 	end
 end
 
@@ -111,30 +92,26 @@ end
 
 local evSceneChanged = world:sub {"scene_changed"}
 function s:update_transform()
-	local scene_need_update
+	local entities_changed = {}
 	for _, eid in evSceneChanged:unpack() do
-		local e = world:entity(eid)
-		e.scene.changed = current_changed
-		scene_need_update = true
+		entities_changed[eid] = true
 	end
 
-	if scene_need_update then
-		for v in w:select "scene_update scene:in scene_changed?out" do
-			local scene = v.scene
-			if scene.parent == nil then
-				if scene.changed == current_changed then
+	for v in w:select "scene_update scene:in id:in scene_changed?out" do
+		local eid = v.id
+		if entities_changed[eid] then
+			v.scene_changed = true
+		end
+		local scene = v.scene
+		if scene.parent then
+			local parent = world:entity(scene.parent)
+			if parent then
+				assert(parent.scene_update)
+				if parent.scene_changed then
 					v.scene_changed = true
 				end
 			else
-				local parent = world:entity(scene.parent)
-				if parent then
-					assert(parent.scene_update)
-					if scene.changed == current_changed or parent.scene_changed then
-						v.scene_changed = true
-					end
-				else
-					error "Unexpected Error."
-				end
+				error "Unexpected Error."
 			end
 		end
 	end
@@ -144,7 +121,6 @@ function s:update_transform()
 		local parent = scene.parent and world:entity(scene.parent).scene or nil
 		update_scene_obj(scene, parent)
 	end
-	current_changed = current_changed + 1
 end
 
 local function hasSceneRemove()
@@ -179,7 +155,7 @@ end
 
 function ecs.method.init_scene(eid)
 	local e = world:entity(eid)
-	e.scene_needsync = true
+	e.scene_changed = true
 	init_scene(e.scene)
 end
 

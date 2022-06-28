@@ -63,7 +63,7 @@ function m:update_world()
 	for _, id, parentid in evParentChanged:unpack() do
 		local e = world:entity(id)
 		if e then
-			e.scene_needsync = true
+            e.scene_changed = true
 			e.scene.parent = parentid
             if getentityid(id) < getentityid(parentid) then
                 rebuild(id)
