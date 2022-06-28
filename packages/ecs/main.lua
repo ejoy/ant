@@ -143,14 +143,9 @@ end
 
 local templates = {}
 
-local function create_template(w, filename)
-    if templates[filename] then
-        return templates[filename]
-    end
-    local t = filename
-    if type(filename) ~= "table" then
-        t = serialize.parse(filename, cr.read_file(filename))
-    end
+local create_template
+
+local function create_template_(w, t)
 	local prefab = {}
 	for _, v in ipairs(t) do
         if not w.__EDITOR__ and v.editor then
@@ -176,9 +171,18 @@ local function create_template(w, filename)
             prefab[#prefab+1] = create_entity_template(w, v)
         end
     end
-
-    templates[filename] = prefab
     return prefab
+end
+
+function create_template(w, filename)
+    if type(filename) ~= "string" then
+        return create_template_(w, filename)
+    end
+    if not templates[filename] then
+        local t = serialize.parse(filename, cr.read_file(filename))
+        templates[filename] = create_template_(w, t)
+    end
+    return templates[filename]
 end
 
 local function run_action(w, entities, template)

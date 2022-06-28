@@ -43,6 +43,7 @@ system "debug_system"
 
 component "INIT"
 component "LAST_CREATE"
+component "CLONED"
 
 component "create_entity"
     .type "lua"
