@@ -88,6 +88,7 @@ function m:entity_create()
     end
     w:clear "create_entity"
     w:clear "create_entity_template"
+    w:group_update()
 
     for _, id, parentid in evParentChanged:unpack() do
         setParent(id, parentid)
