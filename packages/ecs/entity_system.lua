@@ -28,7 +28,7 @@ local function rebuild(id)
     local e = world._entity_visitor[id]
     w:clone(e, {group = w:group_id(e)})
     e.CLONED = true
-    w:sync("CLONED:out", e)
+    w:sync("CLONED?out", e)
 end
 
 local function setParent(id, parentid)
