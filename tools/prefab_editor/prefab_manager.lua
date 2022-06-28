@@ -225,7 +225,7 @@ function m:create(what, config)
         self.entities[#self.entities+1] = new_camera
     elseif what == "empty" then
         local parent = gizmo.target_eid or self.root
-        local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id(), parent)
+        local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id(), {}, parent)
         self:add_entity(new_entity, parent, temp)
     elseif what == "geometry" then
         if config.type == "cube"
@@ -436,7 +436,7 @@ function m:on_prefab_ready(prefab)
         local parent = find_e(entitys, world:entity(e).scene.parent)
         if pt.prefab then
             local prefab_name = pt.name or gen_prefab_name()
-            local sub_root = create_simple_entity(prefab_name, parent)
+            local sub_root = create_simple_entity(prefab_name, {}, parent)
             -- ecs.method.set_parent(sub_root, parent)
             self.entities[#self.entities + 1] = sub_root
 
@@ -592,7 +592,7 @@ function m:add_prefab(filename)
     local prefab = ecs.create_instance(prefab_filename)
     prefab.on_ready = function(inst)
         local prefab_name = gen_prefab_name()
-        local v_root = create_simple_entity(prefab_name, parent)
+        local v_root = create_simple_entity(prefab_name, {}, parent)
         -- ecs.method.set_parent(v_root, parent)
         self.entities[#self.entities+1] = v_root
         local children = inst.tag["*"]
