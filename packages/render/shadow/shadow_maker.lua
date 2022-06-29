@@ -93,8 +93,8 @@ local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_s
 	local center_WS = math3d.points_center(corners_WS)
 	local min_extent, max_extent
 
-	iom.set_r(shadow_ce, math3d.torotation(lightdir))
-	iom.set_t(shadow_ce, center_WS)
+	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
+	iom.set_position(shadow_ce, center_WS)
 	local lightmat = math3d.matrix(shadow_ce.scene)
 	shadow_ce.scene.worldmat.m = lightmat
 

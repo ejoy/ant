@@ -71,7 +71,7 @@ function screen_3dobj_sys:camera_usage()
             w:sync("scene:in", e)
             local scene = e.scene
             assert(scene.parent == nil, "global_axes should not have any parent")
-            iom.set_t(e, posWS)
+            iom.set_position(e, posWS)
             scene.worldmat.m = math3d.matrix(scene)
         end
 

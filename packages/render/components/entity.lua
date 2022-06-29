@@ -361,9 +361,13 @@ local function axis_mesh(color)
 	return create_mesh{"p3|c4", axis_vb}
 end
 
-function ientity.create_axis_entity(srt, name, color, material)
+function ientity.axis_entity_data(srt, name, color, material)
 	local mesh = axis_mesh(color)
-	return create_simple_render_entity(name, material or "/pkg/ant.resources/materials/line_background.material", mesh, srt, color)
+	return simple_render_entity_data(name, material or "/pkg/ant.resources/materials/line_background.material", mesh, srt, color)
+end
+
+function ientity.create_axis_entity(srt, name, color, material)
+	return ecs.create_entity(ientity.axis_entity_data(srt, name, color, material))
 end
 
 function ientity.create_screen_axis_entity(srt, screen_3dobj, name, color, material)
