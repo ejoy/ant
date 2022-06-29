@@ -33,6 +33,7 @@ static struct constant c_constant_table[LINEAR_TYPE_COUNT] = {
 	{ c_ident_mat, MATRIX },
 	{ c_ident_vec, VECTOR4 },	
 	{ c_ident_quat, VECTOR4 },
+	{ NULL, VECTOR4 },
 };
 
 struct stackid_ {
@@ -339,6 +340,7 @@ lastack_typename(int t) {
 		"mat",
 		"v4",
 		"quat",
+		"null",
 	};
 	if (t < 0 || t >= sizeof(type_names)/sizeof(type_names[0]))
 		return "unknown";

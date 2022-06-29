@@ -142,7 +142,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
     }
 end
 
-function imodifier.create_srt_modifier(target, generator, keep)
+function imodifier.create_srt_modifier(target, group_id, generator, keep)
 	local template = {
 		policy = {
             "ant.general|name",
@@ -177,7 +177,8 @@ function imodifier.create_srt_modifier(target, generator, keep)
             },
 		},
     }
-    local eid = ecs.create_entity(template)
+    local group = ecs.group(group_id)
+    local eid = group.create_entity(template)
     return eid
 end
 
@@ -201,10 +202,10 @@ function imodifier.stop(m)
     world:entity(m.eid).modifier.continue = false
 end
 
-function imodifier.create_bone_modifier(target, filename, bone_name)
+function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
     local anim_prefab = ecs.create_instance(filename)
     return {
-        eid = imodifier.create_srt_modifier(target, function (time)
+        eid = imodifier.create_srt_modifier(target, group_id, function (time)
             local anim = world:entity(anim_prefab.tag["*"][2])
             local pr = anim.anim_ctrl.pose_result
             return pr:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl._current.play_state.play

@@ -2,6 +2,8 @@ local math3d = require "math3d"
 
 do
 	print "---- constant -------"
+	local c = math3d.constant "null"
+	print(math3d.tostring(c))
 	local c = math3d.constant "v4"
 	print(math3d.tostring(c))
 	local c = math3d.constant "quat"
@@ -21,7 +23,6 @@ do
 
 	local vec = math3d.constant ("v4", { 0,0,0,0 })
 	print(math3d.tostring(vec))
-
 end
 
 local ref1 = math3d.ref()
