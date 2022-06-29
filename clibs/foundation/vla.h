@@ -106,3 +106,36 @@ vla_resize_(void *L, void **p, vla_handle_t *h, int n, int esize, int *lua_id) {
 #define vla_luaid(name, L) (lua_isnoneornil(L, name##_lua_) ? 0 : name##_lua_)
 
 #endif
+
+/*
+	// Use vla on Stack :
+
+	lua_State *L = NULL;
+
+	vla_stack_handle(handle, int);		// Create an int array on stack
+	vla_using(p, int, handle, L);		// Create an acessor (int *p) for data accessing.
+
+	int i;
+	for (i=0;i<1000;i++) {
+		vla_push(p, i, L);
+	}
+
+	assert(vla_size(p) == 1000);
+
+	int i;
+	for (i=0;i<1000;i++) {
+		assert(p[i] == i);
+	}
+
+	vla_close(p);	// close before return
+
+
+	// Use VLA on heap :
+
+	vla_handle_t handle2 = vla_new(int, 0, NULL);	// Create handle on heap
+	vla_using(p2, int, handle2, NULL);
+
+	// do something with p2
+
+	vla_close_handle(handle2);
+*/
