@@ -8,8 +8,8 @@ local math3d = require "math3d"
 
 local function init_scene_aabb(scene, bounding)
     if bounding then
-        scene.aabb = bounding.aabb
-        scene.scene_aabb = math3d.ref(math3d.aabb())
+        scene.aabb = math3d.mark(bounding.aabb)
+        scene.scene_aabb = math3d.mark(math3d.aabb())
     end
 end
 
