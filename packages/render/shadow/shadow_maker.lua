@@ -89,25 +89,13 @@ local function update_camera_matrices(camera, lightmat)
 	camera.projmat	= math3d.projmat(camera.frustum, INV_Z)
 	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
-
-local function set_r(srt, v)
-    math3d.unmark(srt.r)
-    srt.r = math3d.mark(math3d.quaternion(v))
-end
-
-local function set_t(srt, v)
-    math3d.unmark(srt.t)
-    srt.t = math3d.mark(math3d.vector(v))
-end
-
 local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, shadow_ce)
 	local center_WS = math3d.points_center(corners_WS)
 	local min_extent, max_extent
 
-	local srt = shadow_ce.scene
-	set_r(srt, math3d.torotation(lightdir))
-	set_t(srt, center_WS)
-	local lightmat = math3d.matrix(srt)
+	iom.set_r(shadow_ce, math3d.torotation(lightdir))
+	iom.set_t(shadow_ce, center_WS)
+	local lightmat = math3d.matrix(shadow_ce.scene)
 	shadow_ce.scene.worldmat.m = lightmat
 
 	local camera = shadow_ce.camera
