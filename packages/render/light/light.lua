@@ -273,8 +273,8 @@ local function update_light_buffers()
 	local count = #lights
 	if #lights > 0 then
 		bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
-		return count
 	end
+	return count
 end
 
 function ilight.light_buffer()

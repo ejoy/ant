@@ -1,9 +1,10 @@
 local ecs = ...
-local w = ecs.world.w
+local world = ecs.world
+local w = world.w
 local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
-
+local iom   = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 --TODO: this file need skeleton component, should move to animation package to fix circle dependence
 
@@ -40,7 +41,7 @@ function sys:entity_init()
 end
 
 local function calc_pose_mat(pose_result, slot)
-    local adjust_mat = math3d.mul(r2l_mat, pose_result:joint(slot.joint_index))
+    local adjust_mat = math3d.mul(r2l_mat, pose_result:joint(slot.joint_index)) --pose_result:joint(slot.joint_index) --
     if slot.offset_srt then
         local offset_mat = math3d.matrix(slot.offset_srt)
         adjust_mat = math3d.mul(adjust_mat, offset_mat)
@@ -49,20 +50,16 @@ local function calc_pose_mat(pose_result, slot)
 end
 
 function sys:follow_transform_updated()
-    local cache
-	for v in w:select "scene:in slot:in" do
+	for v in w:select "scene:in slot:in id:in" do
         --TODO: slot.offset_srt is duplicate with entity.scene.srt, not need to keep this srt in slot
         local slot = v.slot
         local follow_flag = assert(slot.follow_flag)
-        if cache == nil then
-            cache = find_animation_entities()
-        end
-        local e = cache[v.scene.parent]
-        if e then
+        if slot.anim_eid then
+            local e = world:entity(slot.anim_eid)
             local slot_matrix
             if follow_flag == 1 or follow_flag == 2 then
                 if slot.joint_index then
-                    local adjust_mat = calc_pose_mat(e.pose_result, slot)
+                    local adjust_mat = calc_pose_mat(e.anim_ctrl.pose_result, slot)
                     if follow_flag == 1 then
                         slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
                     else
@@ -74,7 +71,7 @@ function sys:follow_transform_updated()
                     end
                 end
             elseif follow_flag == 3 then
-                slot_matrix = calc_pose_mat(e.pose_result, slot)
+                slot_matrix = calc_pose_mat(e.anim_ctrl.pose_result, slot)
             else
                 error [[
                     "invalid slot, 'follow_flag' only 1/2/3 is valid
@@ -83,8 +80,11 @@ function sys:follow_transform_updated()
                     3: follow joint matrix. base on itself, it assume slot entity has 'pose_result' component"
                 ]]
             end
-            local wm = v.scene.worldmat
-            wm.m = math3d.mul(wm, slot_matrix)
+            if slot_matrix then
+                -- local wm = v.scene.worldmat
+                -- wm.m = math3d.mul(wm, slot_matrix)
+                iom.set_srt_matrix(v, slot_matrix)
+            end
         end
     end
 
