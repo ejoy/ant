@@ -9,5 +9,6 @@ lm:lua_source "scene" {
     },
     sources = {
         "scene.c"
-    }
+    },
+    depend = "foundation",
 }

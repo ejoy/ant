@@ -5,6 +5,7 @@ lm:source_set "foundation" {
         "../lua"
     },
     sources = {
-        "vla.c"
+        "vla.c",
+        "set.c"
     }
 }
