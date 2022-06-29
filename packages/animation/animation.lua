@@ -188,7 +188,16 @@ local function init_prefab_anim(entity)
 			slot_eid[e.name] = eid
 		end
 	end
+	
 	if anim then
+		local ske = anim.skeleton
+		for _, eid in pairs(slot_eid) do
+			local slot = world:entity(eid).slot
+			slot.anim_eid = anim.id
+			if slot.joint_name then
+				slot.joint_index = ske._handle:joint_index(slot.joint_name)	
+			end
+		end
 		for _, eid in ipairs(anim_eid) do
 			build_transform(world:entity(eid).render_object, anim.meshskin)
 		end
