@@ -222,7 +222,6 @@ local function create_texture_item_entity(texpath, canvasentity)
             },
             material    = "/pkg/ant.resources/materials/canvas_texture.material",
             scene       = {
-                srt = {},
                 parent = canvas_id,
             },
             filter_state= "main_view",

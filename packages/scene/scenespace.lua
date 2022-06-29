@@ -3,8 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local math3d = require "math3d"
-local mathpkg = import_package "ant.math"
-local mu, mc = mathpkg.util, mathpkg.constant
+local mc = import_package "ant.math".constant
 
 ----scenespace_system----
 local s = ecs.system "scenespace_system"
@@ -27,8 +26,7 @@ local function inherit_state(r, pr)
 end
 
 local function update_worldmat_noparent(scene)
-	local srt = scene.srt
-	scene.worldmat.m = srt and math3d.matrix(srt) or mc.IDENTITY_MAT
+	scene.worldmat.m = math3d.matrix(scene)
 end
 
 local function update_worldmat(scene, parent)
@@ -42,10 +40,18 @@ local function update_aabb(scene)
 	end
 end
 
-local function init_scene(scene)
-	if scene.srt then
-		scene.srt = mu.srt_obj(scene.srt)
+local function srt_obj(srt)
+	local s, r, t = srt.s, srt.r, srt.t
+	if type(s) == "number" then
+		s = {s, s, s}
 	end
+	srt.s = math3d.mark(s and math3d.vector(s) or mc.ONE)
+	srt.r = math3d.mark(r and math3d.quaternion(r) or mc.IDENTITY_QUAT)
+	srt.t = math3d.mark(t and math3d.vector(t) or mc.ZERO_PT)
+end
+
+local function init_scene(scene)
+	srt_obj(scene)
 	if scene.updir then
 		scene.updir = math3d.ref(math3d.vector(scene.updir))
 	end

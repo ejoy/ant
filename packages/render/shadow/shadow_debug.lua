@@ -50,7 +50,7 @@ local function create_debug_entity()
 				"ant.render|simplerender",
 			},
 			data = {
-				scene 		= {srt = {}},
+				scene 		= {},
 				material	= quadmaterial,
 				simplemesh	= imesh.init_mesh(ientity.quad_mesh{x=0, y=0, w=quadsize*splitnum, h=quadsize}, true),
 				filter_state= "main_view",
@@ -77,7 +77,7 @@ local function create_debug_entity()
 		local color = frustum_colors[idx]
 
 		debug_entities[#debug_entities+1] = ientity.create_frustum_entity(frustum_points, "frusutm:" .. se.name, color)
-		debug_entities[#debug_entities+1] = ientity.create_axis_entity(ce.scene.srt, "csm_axis:" .. idx, color)
+		debug_entities[#debug_entities+1] = ientity.create_axis_entity(ce.scene, "csm_axis:" .. idx, color)
 	end
 end
 

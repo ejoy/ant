@@ -298,7 +298,6 @@ function iefk.create(filename, config)
         play_on_create = false,
         loop = false,
         speed = 1.0,
-        srt = {}
     }
     local template = {
 		policy = {
@@ -311,7 +310,6 @@ function iefk.create(filename, config)
             name = "root",
             tag = {"effect"},
             scene = {
-                srt = config.srt or {},
                 parent = config.parent
             },
             efk = filename,

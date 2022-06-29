@@ -161,7 +161,7 @@ local function add_polylines(polymesh, line_width, color, material)
                 width = line_width,
                 color = math3d.ref(math3d.vector(color)),
             },
-            scene = {srt={}},
+            scene = {},
             simplemesh  = polymesh,
             material    = material,
             filter_state= "main_view",

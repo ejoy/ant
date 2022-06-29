@@ -20,7 +20,7 @@ function ds_sys:init()
         },
         data = {
             downsample_drawer = true,
-            scene 		= {srt={}},
+            scene 		= {},
             simplemesh  = imesh.init_mesh(ientity.fullquad_mesh()),
             material    = "/pkg/ant.resources/materials/downsample.material",
             filter_state= "main_view",

@@ -73,7 +73,11 @@ local function create_simple_render_entity(name, material, mesh, srt, color, hid
 			"ant.general|name",
 		},
 		data = {
-			scene 		= {srt = srt or {}},
+			scene 		= {
+				s = srt and srt.s or nil,
+				r = srt and srt.r or nil,
+				t = srt and srt.t or nil,
+			},
 			material	= material,
 			simplemesh	= imesh.init_mesh(mesh, true),
 			filter_state= hide and "auxgeom" or "main_view|auxgeom",
@@ -144,7 +148,7 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
 			"ant.general|name"
 		},
 		data = {
-			scene 		= {srt = {}},
+			scene 		= {},
 			material 	= materialpath,
 			filter_state= "main_view|auxgeom",
 			name 		= name or "GridMesh",
@@ -240,7 +244,11 @@ function ientity.create_prim_plane_entity(srt, materialpath, color, name, hide)
 			"ant.general|name",
 		},
 		data = {
-			scene 		= { srt = srt or {}},
+			scene 		= {
+				s = srt and srt.s or nil,
+				r = srt and srt.r or nil,
+				t = srt and srt.t or nil,
+			},
 			material 	= materialpath,
 			filter_state= "main_view",
 			name 		= name or "Plane",
@@ -357,7 +365,11 @@ function ientity.create_screen_axis_entity(srt, screen_3dobj, name, color, mater
 		},
 		data = {
 			screen_3dobj = screen_3dobj,
-			scene 		= {srt = srt or {}},
+			scene 		= {
+				s = srt and srt.s or nil,
+				r = srt and srt.r or nil,
+				t = srt and srt.t or nil,
+			},
 			material	= "/pkg/ant.resources/materials/line_background.material",
 			simplemesh	= imesh.init_mesh(mesh, true),
 			filter_state= "main_view|auxgeom",
@@ -436,7 +448,7 @@ function ientity.create_skybox(material)
 			"ant.general|name",
 		},
 		data = {
-			scene = {srt = {}},
+            scene = {},
 			material = material or "/pkg/ant.resources/materials/sky/skybox.material",
 			filter_state = "main_view",
 			ibl = {
@@ -492,7 +504,7 @@ function ientity.create_procedural_sky(settings)
 			"ant.general|name",
 		},
 		data = {
-			scene = {srt = {}},
+            scene = {},
 			material = "/pkg/ant.resources/materials/sky/procedural/procedural_sky.material",
 			procedural_sky = {
 				--attached_sun_light = attached_light(settings.attached_sun_light),
@@ -548,7 +560,7 @@ function ientity.create_gamma_test_entity()
                 }
             },
 			owned_mesh_buffer = true,
-            scene = {srt = {}},
+            scene = {},
             filter_state = "main_view",
         }
     }
@@ -667,7 +679,7 @@ function ientity.create_arrow_entity(srt, headratio, color, material)
 			simplemesh = arrow_mesh(headratio),
 			material = material,
 			filter_state = "main_view",
-			scene = {srt=srt},
+			scene = {s=srt.s,r=srt.r,t=srt.t},
 			name = "arrow",
 			on_ready = function (e)
 				w:sync("render_object:in", e)
@@ -720,7 +732,7 @@ function ientity.create_quad_lines_entity(name, srt, material, quadnum, width, h
             "ant.general|name",
         },
         data = {
-			scene = {srt=srt},
+			scene = {s=srt.s,r=srt.r,t=srt.t},
 			filter_state = "",
             simplemesh = {
                 vb = {
