@@ -44,6 +44,7 @@ end
 checkAddModule("efk", "../packages/efk/make.lua")
 
 checkAddModule("render", "../packages/render/make.lua")
+checkAddModule("scene", "../packages/scene/make.lua")
 
 lm:copy "copy_mainlua" {
     input = "common/main.lua",
