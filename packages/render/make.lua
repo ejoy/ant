@@ -7,10 +7,10 @@ lm:lua_source "render" {
         "../../clibs/bgfx",
         "../../clibs/lua",
         "../../clibs/math3d",
+        "../../clibs/foundation",
     },
     sources = {
         "material/material.c",
-        "material/vla.c",
         --"mesh/mesh.c",
-    }
+    },
 }
