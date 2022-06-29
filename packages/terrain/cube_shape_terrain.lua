@@ -456,7 +456,6 @@ function shape_ts:entity_init()
                         },
                         data = {
                             scene = {
-                                srt = {},
                                 parent = e.id,
                             },
                             simplemesh  = terrain_mesh,
@@ -483,7 +482,6 @@ function shape_ts:entity_init()
                         },
                         data = {
                             scene = {
-                                srt = {},
                                 parent = e.id,
                             },
                             material    = edgematerial,

@@ -221,25 +221,6 @@ function util.max(a, b)
 	return t
 end
 
-function util.srt_obj(srt)
-	if srt == nil then
-		return {
-			s = math3d.ref(constant.ONE),
-			r = math3d.ref(constant.IDENTITY_QUAT),
-			t = math3d.ref(constant.ZERO_PT),
-		}
-	end
-	local s = srt.s
-	if type(s) == "number" then
-		s = {s, s, s}
-	end
-	return {
-		s = math3d.ref(srt.s and math3d.vector(s) or constant.ONE),
-		r = math3d.ref(srt.r and math3d.quaternion(srt.r) or constant.IDENTITY_QUAT),
-		t = math3d.ref(srt.t and math3d.vector(srt.t) or constant.ZERO_PT),
-	}
-end
-
 function util.pt2d_in_rect(x, y, rt)
 	return rt.x <= x and rt.y <= y and x <=(rt.x+rt.w) and y <=(rt.y+rt.h)
 end

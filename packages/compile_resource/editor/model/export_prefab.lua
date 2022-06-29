@@ -289,7 +289,7 @@ local function create_animation_entity(exports, parent, withskin)
     }
     local data = {
         name = "skeleton_animation",
-        scene = {srt={}},
+        scene = {},
     }
     data.skeleton = serialize.path(exports.skeleton)
     if withskin then
@@ -340,7 +340,7 @@ return function(output, glbdata, exports, localpath)
         },
         data = {
             name = scene.name or "Rootscene",
-            scene = {srt={}}
+            scene = {},
         },
     }
 
@@ -396,7 +396,7 @@ return function(output, glbdata, exports, localpath)
             },
             data = {
                 name = scene.name or "Rootscene",
-                scene = {srt={}}
+                scene = {},
             },
         },
         {
@@ -407,7 +407,7 @@ return function(output, glbdata, exports, localpath)
             },
             data = {
                 name = "skeleton_animation",
-                scene = {srt={}},
+                scene = {},
                 skeleton = serialize.path(exports.skeleton),
                 animation = animation,
                 animation_birth = anilst[1],
