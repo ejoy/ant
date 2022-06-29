@@ -66,8 +66,8 @@ ientity.create_mesh = create_mesh
 local nameidx = 0
 local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
 
-local function create_simple_render_entity(name, material, mesh, srt, color, hide)
-	return ecs.create_entity {
+local function simple_render_entity_data(name, material, mesh, srt, color, hide)
+	return {
 		policy = {
 			"ant.render|simplerender",
 			"ant.general|name",
@@ -78,7 +78,7 @@ local function create_simple_render_entity(name, material, mesh, srt, color, hid
 			simplemesh	= imesh.init_mesh(mesh, true),
 			filter_state= hide and "auxgeom" or "main_view|auxgeom",
 			name		= name or gen_test_name(),
-			on_ready = function(e)
+			on_ready 	= function(e)
 				w:sync("render_object:in", e)
 				imaterial.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
 			end
@@ -86,13 +86,35 @@ local function create_simple_render_entity(name, material, mesh, srt, color, hid
 	}
 end
 
+local function create_simple_render_entity(name, material, mesh, srt, color, hide)
+	return ecs.create_entity(simple_render_entity_data(name, material, mesh, srt, color, hide))
+end
+
 ientity.create_simple_render_entity = create_simple_render_entity
+ientity.simple_render_entity_data = simple_render_entity_data
+
+local function grid_mesh_entity_data(name, materialpath, vb, ib)
+	return {
+		policy = {
+			"ant.render|simplerender",
+			"ant.general|name"
+		},
+		data = {
+			scene 		= {srt = {}},
+			material 	= materialpath,
+			filter_state= "main_view|auxgeom",
+			name 		= name or "GridMesh",
+			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
+			on_ready = function(e)
+				ifs.set_state(e, "auxgeom", true)
+				w:sync("render_object_update:out", e)
+			end
+		},
+	}
+end
 
 function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
-	local vb = {
-	}
-	local ib = {
-	}
+	local vb, ib = {}, {}
 	local gap = size / 20.0
 	local total_width = w * size
 	local total_height = h * size
@@ -138,23 +160,7 @@ function ientity.create_grid_mesh_entity(name, w, h, size, color, materialpath)
 		end
 	end
 
-	return vb, ecs.create_entity{
-		policy = {
-			"ant.render|simplerender",
-			"ant.general|name"
-		},
-		data = {
-			scene 		= {srt = {}},
-			material 	= materialpath,
-			filter_state= "main_view|auxgeom",
-			name 		= name or "GridMesh",
-			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
-			on_ready = function(e)
-				ifs.set_state(e, "auxgeom", true)
-				w:sync("render_object_update:out", e)
-			end
-		},
-	}
+	return vb, ecs.create_entity(grid_mesh_entity_data(name, materialpath, vb, ib))
 end
 
 function ientity.create_grid_entity_simple(name, w, h, unit, srt)
@@ -316,7 +322,7 @@ local frustum_ib = {
 	2, 6, 3, 7,
 }
 
-function ientity.create_frustum_entity(frustum_points, name, color)
+function ientity.frustum_entity_data(frustum_points, name, color)
 	local vb = {}
 	color = color or {1.0, 1.0, 1.0, 1.0}
 	for i=1, #frustum_points do
@@ -324,13 +330,18 @@ function ientity.create_frustum_entity(frustum_points, name, color)
 		table.move(p, 1, 3, #vb+1, vb)
 	end
 	local mesh = create_mesh({"p3", vb}, frustum_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, {}, color)
+
+	return simple_render_entity_data(name, "/pkg/ant.resources/materials/line_color.material", mesh, {}, color)
+end
+
+function ientity.create_frustum_entity(frustum_points, name, color)
+	return ecs.create_entity(ientity.frustum_entity_data(frustum_points, name, color))
 end
 
 local function axis_mesh(color)
-	local r = color or math3d.tovalue(mc.RED)
-	local g = color or math3d.tovalue(mc.GREEN)
-	local b = color or math3d.tovalue(mc.BLUE)
+	local r = math3d.tovalue(color or mc.RED)
+	local g = math3d.tovalue(color or mc.GREEN)
+	local b = math3d.tovalue(color or mc.BLUE)
 	local axis_vb = {
 		0, 0, 0, r[1], r[2], r[3], r[4],
 		1, 0, 0, r[1], r[2], r[3], r[4],
