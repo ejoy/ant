@@ -679,7 +679,7 @@ function ientity.create_arrow_entity(srt, headratio, color, material)
 			simplemesh = arrow_mesh(headratio),
 			material = material,
 			filter_state = "main_view",
-			scene = {srt=srt},
+			scene = {s=srt.s,r=srt.r,t=srt.t},
 			name = "arrow",
 			on_ready = function (e)
 				w:sync("render_object:in", e)
@@ -732,7 +732,7 @@ function ientity.create_quad_lines_entity(name, srt, material, quadnum, width, h
             "ant.general|name",
         },
         data = {
-			scene = {srt=srt},
+			scene = {s=srt.s,r=srt.r,t=srt.t},
 			filter_state = "",
             simplemesh = {
                 vb = {

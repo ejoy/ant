@@ -38,7 +38,7 @@ local function create_view_buffer_entity()
 			simplemesh = ientity.quad_mesh(mu.texture_uv{x=0,y=0,w=120, h=120}),
 			material = "/pkg/ant.resources/materials/texquad.material",
 			filter_state = "main_view",
-			scene = {srt={}},
+			scene = {},
 			on_ready = function (e)
 				local pq = w:singleton("pickup_queue", "render_target:in")
 				local rt = pq.render_target

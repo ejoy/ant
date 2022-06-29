@@ -41,7 +41,7 @@ function bloom_sys:init()
                 simplemesh = irender.full_quad(),
                 material = material,
                 filter_state = "",
-                scene = {srt={}},
+                scene = {},
             }
         }
     end
