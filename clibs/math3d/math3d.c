@@ -137,6 +137,22 @@ lref(lua_State *L) {
 	return 1;
 }
 
+static int
+lmark(lua_State *L) {
+	int64_t id = get_id(L, 1, lua_type(L, 1));
+	id = lastack_mark(GETLS(L), id);
+	lua_pushlightuserdata(L, STACKID(id));
+	return 1;
+}
+
+static int
+lunmark(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	int64_t id = (int64_t)lua_touserdata(L, 1);
+	lastack_unmark(GETLS(L), id);
+	return 0;
+}
+
 static int64_t
 assign_id(lua_State *L, struct lastack *LS, int index, int mtype, int ltype) {
 	switch (ltype) {
@@ -2089,6 +2105,8 @@ static void
 init_math3d_api(lua_State *L, struct math3d_api *bs) {
 		luaL_Reg l[] = {
 		{ "ref", NULL },
+		{ "mark", lmark },
+		{ "unmark", lunmark },
 		{ "constant", lconstant },
 		{ "tostring", ltostring },
 		{ "matrix", lmatrix },
