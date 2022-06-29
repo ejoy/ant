@@ -1077,9 +1077,9 @@ function m.init(skeleton)
             return
         end
         local pose_result
-        for ee in w:select "skeleton:in meshskin:in" do
+        for ee in w:select "skeleton:in anim_ctrl:in" do
             if current_skeleton == ee.skeleton then
-                pose_result = ee.meshskin.pose_result
+                pose_result = ee.anim_ctrl.pose_result
                 break
             end
         end

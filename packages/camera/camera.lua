@@ -53,10 +53,8 @@ function ic.create(info)
         policy = policy,
         data = {
             scene = {
-                srt = {
-                    r = math3d.torotation(math3d.vector(viewdir)),
-                    t = eyepos,
-                },
+                r = math3d.torotation(math3d.vector(viewdir)),
+                t = eyepos,
                 updir = updir,
             },
             exposure = exposure,
@@ -75,7 +73,7 @@ end
 
 function ic.calc_viewmat(ce)
     local scene = ce.scene
-    local srt = scene.srt
+    local srt = scene
     return math3d.lookto(srt.t, math3d.todirection(srt.r), scene.updir)
 end
 
@@ -86,7 +84,7 @@ end
 
 function ic.calc_viewproj(ce)
     local scene = ce.scene
-    local srt = scene.srt
+    local srt = scene
     local viewmat = math3d.lookto(srt.t, math3d.todirection(srt.r), scene.updir)
     local projmat = math3d.projmat(ce.camera.frustum)
     return math3d.mul(projmat, viewmat)

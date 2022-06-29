@@ -216,7 +216,7 @@ end
 
 local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
-    local transform = get_transform(node)
+    local srt = get_transform(node)
     local meshidx = node.mesh
     local mesh = gltfscene.meshes[meshidx+1]
 
@@ -233,7 +233,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
         end
 
         local data = {
-            scene       = {srt=transform or {}},
+            scene       = {s=srt.s,r=srt.r,t=srt.t},
             mesh        = serialize.path(meshfile),
 ---@diagnostic disable-next-line: need-check-nil
             material    = serialize.path(materialfile:string()),
@@ -260,7 +260,7 @@ end
 
 local function create_node_entity(gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
-    local transform = get_transform(node)
+    local srt = get_transform(node)
     local nname = node.name and fix_invalid_name(node.name) or ("node" .. nodeidx)
     local policy = {
         "ant.general|name",
@@ -268,7 +268,7 @@ local function create_node_entity(gltfscene, nodeidx, parent, exports)
     }
     local data = {
         name = nname,
-        scene = {srt=transform},
+        scene = {s=srt.s,r=srt.r,t=srt.t},
     }
     --add_animation(gltfscene, exports, nodeidx, policy, data)
     return create_entity {
@@ -289,7 +289,7 @@ local function create_animation_entity(exports, parent, withskin)
     }
     local data = {
         name = "skeleton_animation",
-        scene = {srt={}},
+        scene = {},
     }
     data.skeleton = serialize.path(exports.skeleton)
     if withskin then
@@ -340,7 +340,7 @@ return function(output, glbdata, exports, localpath)
         },
         data = {
             name = scene.name or "Rootscene",
-            scene = {srt={}}
+            scene = {},
         },
     }
 
@@ -396,7 +396,7 @@ return function(output, glbdata, exports, localpath)
             },
             data = {
                 name = scene.name or "Rootscene",
-                scene = {srt={}}
+                scene = {},
             },
         },
         {
@@ -407,7 +407,7 @@ return function(output, glbdata, exports, localpath)
             },
             data = {
                 name = "skeleton_animation",
-                scene = {srt={}},
+                scene = {},
                 skeleton = serialize.path(exports.skeleton),
                 animation = animation,
                 animation_birth = anilst[1],

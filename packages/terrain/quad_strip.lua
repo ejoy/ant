@@ -61,7 +61,6 @@ function qs_sys:entity_init()
                 material = e.material,
                 filter_state = "main_view",
                 scene = {
-                    srt = {},
                     parent = e.id,
                 },
                 name = "polyline",

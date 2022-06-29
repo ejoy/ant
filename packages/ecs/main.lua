@@ -251,7 +251,6 @@ local function create_scene_entity(w, group)
         id = eid,
         group = group or 0,
         scene = {
-            srt = {},
             parent = parent,
         }
     }

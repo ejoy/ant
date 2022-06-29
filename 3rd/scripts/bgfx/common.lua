@@ -3,7 +3,6 @@ local lm = require "luamake"
 lm.cxx = "c++17"
 
 lm.warnings = {
-    "error",
     "on"
 }
 

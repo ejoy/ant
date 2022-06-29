@@ -2,6 +2,13 @@ local math3d = require "math3d"
 
 do
 	print "---- constant -------"
+	local c = math3d.constant "v4"
+	print(math3d.tostring(c))
+	local c = math3d.constant "quat"
+	print(math3d.tostring(c))
+	local c = math3d.constant "mat"
+	print(math3d.tostring(c))
+
 	local iv = math3d.constant { type = "v4" }
 	print(math3d.tostring(iv))
 	local qv = math3d.constant { type = "quat" }
@@ -334,7 +341,7 @@ do
 
 	local nearpt = math3d.vector(0.0, 0.0, 1.0, 1.0)
 	local farpt = math3d.vector(0.0, 0.0, 100.0, 1.0)
-	
+
 	local middlept = math3d.vector(0.0, 0.0, (1.0+100)*0.5, 1.0)
 	local quadpt = math3d.vector(0.0, 0.0, (1.0+100)*0.25, 1.0)
 	local pp0 = math3d.transform(invz_proj, nearpt, 1)

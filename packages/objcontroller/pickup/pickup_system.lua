@@ -161,7 +161,7 @@ local function create_pick_entity()
 			"ant.general|name"
 		},
 		data = {
-			scene = {srt={}},
+			scene = {},
 			camera = {
 				frustum = {
 					type="mat", n=1, f=1000, fov=0.5, aspect=pickup_buffer_w / pickup_buffer_h

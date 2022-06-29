@@ -70,7 +70,7 @@ function imodifier.set_target(m, target)
         iv = math3d.ref(math3d.vector(mtl.properties[mf.property]))
     else
         -- srt
-        iv = math3d.ref(math3d.matrix(world:entity(target).scene.srt))
+        iv = math3d.ref(math3d.matrix(world:entity(target).scene))
     end
     if mf.target then
         mf:reset()
@@ -104,7 +104,6 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
 		data = {
             name = "",
             scene = {
-                srt = {},
                 parent = target
             },
             modifier = {
@@ -153,14 +152,13 @@ function imodifier.create_srt_modifier(target, generator, keep)
 		data = {
             name = "",
             scene = {
-                srt = {},
                 parent = target,
             },
             modifier = {
                 target = target,
                 continue = false,
                 keep = keep,
-                init_value = math3d.ref(math3d.matrix(world:entity(target).scene.srt)),
+                init_value = math3d.ref(math3d.matrix(world:entity(target).scene)),
                 reset = function (self)
                     iom.set_srt_matrix(world:entity(self.target), self.init_value)
                 end,
@@ -188,7 +186,7 @@ function imodifier.start(m, desc)
     mf.continue = true
     if m.anim_eid then
         if desc.name then
-            mf.init_value = math3d.ref(math3d.matrix(world:entity(mf.target).scene.srt))
+            mf.init_value = math3d.ref(math3d.matrix(world:entity(mf.target).scene))
             iani.play(m.anim_eid, desc)
         else
             ika.play(world:entity(m.anim_eid), desc)

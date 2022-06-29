@@ -31,7 +31,7 @@ function tm_sys:init()
             material_setting = {
                 EXPOSURE_TYPE=1,
             },
-            scene = {srt = {},},
+            scene = {},
             filter_state = "",
         }
     }

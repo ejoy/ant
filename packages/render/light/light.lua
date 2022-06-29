@@ -76,7 +76,9 @@ function ilight.create(light)
 		data = {
 			name		= light.name or "DEFAULT_LIGHT",
 			scene = {
-				srt = light.srt
+				light.srt.s,
+				light.srt.r,
+				light.srt.t,
 			},
 			make_shadow	= light.make_shadow,
 			light = {

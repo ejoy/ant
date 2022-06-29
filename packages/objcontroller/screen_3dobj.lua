@@ -57,6 +57,11 @@ local function calc_screen_pos(screen_3dobj, vr)
     return {sx, sy, 0.5}
 end
 
+local function set_t(srt, v)
+    math3d.unmark(srt.t)
+    srt.t = math3d.mark(math3d.vector(v))
+end
+
 function screen_3dobj_sys:camera_usage()
     if dirty then
         for e in w:select "screen_3dobj:in render_object:in" do
@@ -71,9 +76,8 @@ function screen_3dobj_sys:camera_usage()
             w:sync("scene:in", e)
             local scene = e.scene
             assert(scene.parent == nil, "global_axes should not have any parent")
-            local srt = scene.srt
-            srt.t.v = posWS
-            scene.worldmat.m = math3d.matrix(srt)
+            set_t(scene, posWS)
+            scene.worldmat.m = math3d.matrix(scene)
         end
 
         dirty = nil

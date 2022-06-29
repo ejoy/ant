@@ -128,9 +128,7 @@ local function create_downsample()
                 name = "tag",
                 mesh = ientity.create_mesh{"p1", {0, 0, 0, 0}},
                 material = material,
-                scene = {
-                    srt = mu.srt_obj(),
-                },
+                scene = {},
                 filter_state = "",  --force not include to any render queue
                 [tag] = true,
             }
