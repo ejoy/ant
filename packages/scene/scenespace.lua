@@ -25,15 +25,6 @@ local function inherit_state(r, pr)
 	-- end
 end
 
-local function update_worldmat_noparent(scene)
-	scene.worldmat.m = math3d.matrix(scene)
-end
-
-local function update_worldmat(scene, parent)
-	update_worldmat_noparent(scene)
-	scene.worldmat.m = math3d.mul(parent.worldmat, scene.worldmat)
-end
-
 local function update_aabb(scene)
 	if scene.aabb then
 		scene.scene_aabb.m = math3d.aabb_transform(scene.worldmat, scene.aabb)
@@ -88,11 +79,8 @@ function s:update_hierarchy()
 end
 
 local function update_scene_obj(scene, parent)
-	if parent == nil then
-		update_worldmat_noparent(scene)
-	else
-		update_worldmat(scene, parent)
-	end
+	local srt = math3d.matrix(scene)
+	scene.worldmat.m = parent and math3d.mul(parent.worldmat, srt) or srt
 	update_aabb(scene)
 end
 
