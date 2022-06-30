@@ -111,17 +111,12 @@ end
 function s:scene_remove()
 	w:clear "scene_changed"
 	if hasSceneRemove() then
-		for v in w:select "scene:in REMOVED?in" do
+		for v in w:select "scene:in id:in REMOVED?in" do
 			local scene = v.scene
-			if scene.parent == nil then
-				scene.REMOVED = v.REMOVED
-			else
+			if scene.parent ~= 0 then
 				local parent = world:entity(scene.parent)
 				if parent then
-					if v.REMOVED then
-						scene.REMOVED = true
-					elseif parent.REMOVED then
-						scene.REMOVED = true
+					if parent.REMOVED then
 						w:remove(v)
 					end
 				else

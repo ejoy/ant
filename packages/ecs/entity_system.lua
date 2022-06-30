@@ -37,7 +37,7 @@ local function setParent(id, parentid)
     end
     if parentid == nil then
         e.scene_changed = true
-        e.scene.parent = nil
+        e.scene.parent = 0
         return
     end
     local parent = world:entity(parentid)
