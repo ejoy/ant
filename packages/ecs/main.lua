@@ -136,7 +136,7 @@ local function create_entity_template(w, v)
     return {
         action = v.action,
         mount = v.mount,
-        template = w.w:template(data, serialize.pack),
+        template = w.w:template(data),
         tag = v.tag,
     }
 end
@@ -459,24 +459,24 @@ local function update_decl(self)
             goto continue
         end
         local type = info.type[1]
-        if type == "order" then
-            w:register {
-                name = name,
-                order = true
-            }
-        elseif type == "ref" then
+        if type == "lua" then
             w:register {
                 name = name,
                 type = "lua",
-                ref = true
+                marshal = serialize.pack,
+                unmarshal = serialize.unpack,
             }
         elseif type == "c" then
             info.field.name = name
             w:register(info.field)
+        elseif type == nil then
+            w:register {
+                name = name
+            }
         else
             w:register {
                 name = name,
-                type = type
+                type = type,
             }
         end
         ::continue::
