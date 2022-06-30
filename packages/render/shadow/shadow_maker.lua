@@ -89,14 +89,19 @@ local function update_camera_matrices(camera, lightmat)
 	camera.projmat	= math3d.projmat(camera.frustum, INV_Z)
 	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
+
+local function set_worldmat(srt, mat)
+	math3d.unmark(srt.worldmat)
+	srt.worldmat = math3d.mark(math3d.matrix(mat))
+end
+
 local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, shadow_ce)
 	local center_WS = math3d.points_center(corners_WS)
 	local min_extent, max_extent
 
 	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
 	iom.set_position(shadow_ce, center_WS)
-	local lightmat = math3d.matrix(shadow_ce.scene)
-	shadow_ce.scene.worldmat.m = lightmat
+	set_worldmat(shadow_ce.scene, shadow_ce.scene)
 
 	local camera = shadow_ce.camera
 	if stabilize then
@@ -105,14 +110,14 @@ local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_s
 		min_extent, max_extent = {-radius, -radius, -radius}, {radius, radius, radius}
 		keep_shadowmap_move_one_texel(min_extent, max_extent, shadowmap_size)
 	else
-		local minv, maxv = math3d.minmax(corners_WS, math3d.inverse(lightmat))
+		local minv, maxv = math3d.minmax(corners_WS, math3d.inverse(shadow_ce.scene.worldmat))
 		min_extent, max_extent = math3d.tovalue(minv), math3d.tovalue(maxv)
 	end
 
 	local f = camera.frustum
 	f.l, f.b, f.n = min_extent[1], min_extent[2], min_extent[3]
 	f.r, f.t, f.f = max_extent[1], max_extent[2], max_extent[3]
-	update_camera_matrices(camera, lightmat)
+	update_camera_matrices(camera, shadow_ce.scene.worldmat)
 
 	do
 		-- local ident_projmat = math3d.projmat{

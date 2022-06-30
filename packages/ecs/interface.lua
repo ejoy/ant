@@ -79,6 +79,7 @@ local attribute = {
 	component = {
 		"require_system",
 		"type",
+		"field",
 	},
 }
 

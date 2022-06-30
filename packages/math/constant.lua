@@ -64,4 +64,6 @@ constant.R2L_MAT    = math3d.constant("mat", {
     0.0, 0.0, 0.0, 1.0,
 })
 
+constant.NULL = math3d.constant "null"
+
 return constant

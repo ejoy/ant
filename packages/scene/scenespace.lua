@@ -27,7 +27,8 @@ end
 
 local function update_aabb(scene)
 	if scene.aabb then
-		scene.scene_aabb.m = math3d.aabb_transform(scene.worldmat, scene.aabb)
+		math3d.unmark(scene.scene_aabb)
+		scene.scene_aabb = math3d.mark(math3d.aabb_transform(scene.worldmat, scene.aabb))
 	end
 end
 
@@ -44,9 +45,9 @@ end
 local function init_scene(scene)
 	srt_obj(scene)
 	if scene.updir then
-		scene.updir = math3d.ref(math3d.vector(scene.updir))
+		scene.updir = math3d.mark(math3d.vector(scene.updir))
 	end
-	scene.worldmat = math3d.ref(mc.IDENTITY_MAT)
+	scene.worldmat = math3d.mark(mc.IDENTITY_MAT)
 end
 
 local function update_render_object(ro, scene)
@@ -80,7 +81,8 @@ end
 
 local function update_scene_obj(scene, parent)
 	local srt = math3d.matrix(scene)
-	scene.worldmat.m = parent and math3d.mul(parent.worldmat, srt) or srt
+	math3d.unmark(scene.worldmat)
+	scene.worldmat = math3d.mark(parent and math3d.mul(parent.worldmat, srt) or srt)
 	update_aabb(scene)
 end
 
@@ -109,6 +111,10 @@ function s:update_transform()
 		local scene = e.scene
 		local parent = scene.parent and world:entity(scene.parent).scene or nil
 		update_scene_obj(scene, parent)
+	end
+	for e in w:select "scene_changed scene:in render_object:in" do
+		e.render_object.worldmat = e.scene.worldmat
+        e.render_object.aabb = e.scene.scene_aabb
 	end
 end
 
