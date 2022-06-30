@@ -238,9 +238,9 @@ local function push(t, v)
 end
 
 local function dispatchTouchEvent(doc, e, name)
-    if not validElement(doc, e) then
-        return
-    end
+    -- if not validElement(doc, e) then
+    --     return
+    -- end
     local event = {
         changedTouches = {},
         targetTouches = {},

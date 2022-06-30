@@ -201,7 +201,11 @@ function page_meta:show_detail(item, show)
 end
 
 function page_meta:on_mousedown(event)
-    self.drag.mouse_pos = event.x
+    local posx = event.x
+    if not posx and event.targetTouches and #event.targetTouches > 0 then
+        posx = event.targetTouches[1].x
+    end
+    self.drag.mouse_pos = posx
     self.drag.anchor = self.pos
     self.draging = false
 end
@@ -228,8 +232,12 @@ function page_meta:on_mouseup(event)
 end
 
 function page_meta:on_drag(event)
-    if event.button then
-        self.drag.delta = event.x - self.drag.mouse_pos
+    local posx = event.x
+    if not posx and event.targetTouches and #event.targetTouches > 0 then
+        posx = event.targetTouches[1].x
+    end
+    if event.button or event.targetTouches then
+        self.drag.delta = posx - self.drag.mouse_pos
         self.pos = self.drag.anchor + self.drag.delta
         local e = self.panel
         local oldClassName = e.className
