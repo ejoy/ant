@@ -89,7 +89,10 @@ end
 local evSceneChanged = world:sub {"scene_changed"}
 function s:update_transform()
 	for _, eid in evSceneChanged:unpack() do
-		world:entity(eid).scene_changed = true
+		local e = world:entity(eid)
+		if e then
+			e.scene_changed = true
+		end
 	end
 
 	for v in w:select "scene_update scene:in id:in scene_changed?out" do
