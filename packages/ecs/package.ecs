@@ -24,6 +24,7 @@ pipeline "_update"
 
 system "entity_system"
     .implement "entity_system.lua"
+    .method "init"
     .method "entity_create"
     .method "entity_ready"
     .method "update_world"
