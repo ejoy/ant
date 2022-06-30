@@ -470,6 +470,9 @@ local function update_decl(self)
                 type = "lua",
                 ref = true
             }
+        elseif type == "c" then
+            info.field.name = name
+            w:register(info.field)
         else
             w:register {
                 name = name,
