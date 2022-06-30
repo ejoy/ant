@@ -452,23 +452,29 @@ end
 
 local function update_decl(self)
     local w = self.w
-    local decl = self._decl
-    local component = decl.component
-    for name, info in pairs(component) do
-        if name == "reference" then
-            goto continue
-        end
+    local component_class =  self._class.component
+    for name, info in pairs(self._decl.component) do
         local type = info.type[1]
+        local class = component_class[name] or {}
         if type == "lua" then
             w:register {
                 name = name,
                 type = "lua",
-                marshal = serialize.pack,
-                unmarshal = serialize.unpack,
+                init = class.init,
+                marshal = class.marshal or serialize.pack,
+                unmarshal = class.unmarshal or serialize.unpack,
             }
         elseif type == "c" then
-            info.field.name = name
-            w:register(info.field)
+            local t = {
+                name = name,
+                init = class.init,
+                marshal = class.marshal,
+                unmarshal = class.unmarshal,
+            }
+            for i, v in ipairs(info.field) do
+                t[i] = v
+            end
+            w:register(t)
         elseif type == nil then
             w:register {
                 name = name
@@ -479,7 +485,6 @@ local function update_decl(self)
                 type = type,
             }
         end
-        ::continue::
     end
 end
 
