@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local serialize = import_package "ant.serialize"
 
 local m = ecs.system "entity_system"
 

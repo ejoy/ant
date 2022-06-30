@@ -49,9 +49,7 @@ function copy.policy(v)
 	}
 end
 function copy.component(v)
-	return {
-		type = v.type[1]
-	}
+	return {}
 end
 function copy.system() return {} end
 function copy.interface() return {} end
@@ -155,10 +153,6 @@ local function init(w, config)
 			import_decl(w, k)
 		end
 	end
-	if config.update_decl then
-		config.update_decl(w)
-	end
-
 	local import = w._importor
 	for _, objname in ipairs(OBJECT) do
 		if config.ecs[objname] then
@@ -166,6 +160,9 @@ local function init(w, config)
 				import[objname](nil, k)
 			end
 		end
+	end
+	if config.update_decl then
+		config.update_decl(w)
 	end
 	w._initializing = false
 
