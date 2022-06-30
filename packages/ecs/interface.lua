@@ -77,9 +77,11 @@ local attribute = {
 		"component_opt",
 	},
 	component = {
+		"implement",
 		"require_system",
 		"type",
 		"field",
+		"method",
 	},
 }
 

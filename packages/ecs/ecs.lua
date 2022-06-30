@@ -72,6 +72,7 @@ return function (w, package)
     end
     register "system"
     register "interface"
+    register "component"
     function ecs.require(fullname)
         local pkg, file = splitname(fullname)
         if not pkg then

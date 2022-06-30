@@ -48,14 +48,13 @@ end
 
 
 function iobj_motion.set_direction(e, dir)
-    local rc = e.scene
-    local srt = rc
-    if rc.updir then
-        local _srt = math3d.inverse(math3d.lookto(srt.t, dir, rc.updir))
+    local scene = e.scene
+    if scene.updir ~= mc.NULL then
+        local _srt = math3d.inverse(math3d.lookto(scene.t, dir, scene.updir))
         local s, r, t = math3d.srt(_srt)
-        set_srt(srt, s, r, t)
+        set_srt(scene, s, r, t)
     else
-        set_r(srt, math3d.torotation(dir))
+        set_r(scene, math3d.torotation(dir))
     end
     set_changed(e)
 end
@@ -72,15 +71,14 @@ end
 
 function iobj_motion.set_view(e, pos, dir, updir)
     local scene = e.scene
-    local srt = scene
     if updir then
         math3d.unmark(scene.updir)
         scene.updir = math3d.mark(updir)
         local _srt = math3d.inverse(math3d.lookto(pos, dir, scene.updir))
         local s, r, t = math3d.srt(_srt)
-        set_srt(srt, s, r, t)
+        set_srt(scene, s, r, t)
     else
-        set_srt(srt, srt.s, math3d.torotation(dir), pos)
+        set_srt(scene, scene.s, math3d.torotation(dir), pos)
     end
     set_changed(e)
 end
@@ -102,7 +100,7 @@ end
 function iobj_motion.set_rotation(e, rot)
     local scene = e.scene
     local srt = scene
-    if scene.updir then
+    if scene.updir ~= mc.NULL then
         local viewdir
         if type(rot) == "table" then
             viewdir = math3d.todirection(math3d.quaternion{math.rad(rot[1]), math.rad(rot[2]), math.rad(rot[3])})
@@ -215,7 +213,7 @@ function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
         local srtmat = math3d.matrix(srt)
         local viewdir = math3d.normalize(rotate_forword_vector(srtmat, rotateX, rotateY))
         
-        if scene.updir then
+        if scene.updir ~= mc.NULL then
             srtmat = math3d.inverse(math3d.lookto(srt.t, viewdir, scene.updir))
         else
             local xaxis, yaxis
@@ -264,7 +262,7 @@ function iobj_motion.rotate(e, rotateX, rotateY)
         local scene = e.scene
         local srt = math3d.matrix(scene)
         srt = add_rotation(srt, rotateX, rotateY)
-        if scene.updir then
+        if scene.updir ~= mc.NULL then
             local viewdir, eyepos = math3d.index(srt, 3, 4)
             srt = math3d.inverse(math3d.lookto(eyepos, viewdir, scene.updir))
         end
@@ -285,7 +283,7 @@ function iobj_motion.rotate_around_point(e, targetpt, distance, rotateX, rotateY
         local dir = math3d.index(newsrt, 3)
         local eyepos = math3d.muladd(distance, math3d.inverse(dir), targetpt)
         newsrt = math3d.set_index(newsrt, 4, eyepos)
-        if rc.updir then
+        if rc.updir ~= mc.NULL then
             local viewdir, eyepos = srt[3], srt[4]
             newsrt = math3d.inverse(math3d.lookto(eyepos, viewdir, rc.updir))
         end

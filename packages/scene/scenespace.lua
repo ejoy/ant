@@ -26,34 +26,16 @@ local function inherit_state(r, pr)
 end
 
 local function update_aabb(scene)
-	if scene.aabb then
+	if scene.aabb ~= mc.NULL then
 		math3d.unmark(scene.scene_aabb)
 		scene.scene_aabb = math3d.mark(math3d.aabb_transform(scene.worldmat, scene.aabb))
 	end
 end
 
-local function srt_obj(srt)
-	local s, r, t = srt.s, srt.r, srt.t
-	if type(s) == "number" then
-		s = {s, s, s}
-	end
-	srt.s = math3d.mark(s and math3d.vector(s) or mc.ONE)
-	srt.r = math3d.mark(r and math3d.quaternion(r) or mc.IDENTITY_QUAT)
-	srt.t = math3d.mark(t and math3d.vector(t) or mc.ZERO_PT)
-end
-
-local function init_scene(scene)
-	srt_obj(scene)
-	if scene.updir then
-		scene.updir = math3d.mark(math3d.vector(scene.updir))
-	end
-	scene.worldmat = math3d.mark(mc.IDENTITY_MAT)
-end
-
 local function update_render_object(ro, scene)
 	if ro then
 		ro.worldmat = scene.worldmat
-		if scene.parent then
+		if scene.parent ~= 0 then
 			local parent = world:entity(scene.parent)
 			if parent then
 				local pr = parent.render_object
@@ -71,7 +53,6 @@ function s:entity_init()
 	for v in w:select "INIT scene:in render_object?in scene_changed?out" do
 		local scene = v.scene
 		v.scene_changed = true
-		init_scene(scene)
 		update_render_object(v.render_object, scene)
 	end
 end
@@ -89,12 +70,15 @@ end
 local evSceneChanged = world:sub {"scene_changed"}
 function s:update_transform()
 	for _, eid in evSceneChanged:unpack() do
-		world:entity(eid).scene_changed = true
+		local e = world:entity(eid)
+		if e then
+			e.scene_changed = true
+		end
 	end
 
 	for v in w:select "scene_update scene:in id:in scene_changed?out" do
 		local scene = v.scene
-		if scene.parent then
+		if scene.parent ~= 0 then
 			local parent = world:entity(scene.parent)
 			if parent then
 				assert(parent.scene_update)
@@ -107,9 +91,9 @@ function s:update_transform()
 		end
 	end
 
-	for e in w:select "scene_changed scene:in" do
+	for e in w:select "scene_changed scene:update" do
 		local scene = e.scene
-		local parent = scene.parent and world:entity(scene.parent).scene or nil
+		local parent = scene.parent ~= 0 and world:entity(scene.parent).scene or nil
 		update_scene_obj(scene, parent)
 	end
 	for e in w:select "scene_changed scene:in render_object:in" do
@@ -127,17 +111,12 @@ end
 function s:scene_remove()
 	w:clear "scene_changed"
 	if hasSceneRemove() then
-		for v in w:select "scene:in REMOVED?in" do
+		for v in w:select "scene:in id:in REMOVED?in" do
 			local scene = v.scene
-			if scene.parent == nil then
-				scene.REMOVED = v.REMOVED
-			else
+			if scene.parent ~= 0 then
 				local parent = world:entity(scene.parent)
 				if parent then
-					if v.REMOVED then
-						scene.REMOVED = true
-					elseif parent.REMOVED then
-						scene.REMOVED = true
+					if parent.REMOVED then
 						w:remove(v)
 					end
 				else
@@ -151,7 +130,6 @@ end
 function ecs.method.init_scene(eid)
 	local e = world:entity(eid)
 	e.scene_changed = true
-	init_scene(e.scene)
 end
 
 function ecs.method.set_parent(e, parent)

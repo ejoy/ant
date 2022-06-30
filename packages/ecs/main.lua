@@ -136,7 +136,7 @@ local function create_entity_template(w, v)
     return {
         action = v.action,
         mount = v.mount,
-        template = w.w:template(data, serialize.pack),
+        template = w.w:template(data),
         tag = v.tag,
     }
 end
@@ -452,34 +452,39 @@ end
 
 local function update_decl(self)
     local w = self.w
-    local decl = self._decl
-    local component = decl.component
-    for name, info in pairs(component) do
-        if name == "reference" then
-            goto continue
-        end
+    local component_class =  self._class.component
+    for name, info in pairs(self._decl.component) do
         local type = info.type[1]
-        if type == "order" then
-            w:register {
-                name = name,
-                order = true
-            }
-        elseif type == "ref" then
+        local class = component_class[name] or {}
+        if type == "lua" then
             w:register {
                 name = name,
                 type = "lua",
-                ref = true
+                init = class.init,
+                marshal = class.marshal or serialize.pack,
+                unmarshal = class.unmarshal or serialize.unpack,
             }
         elseif type == "c" then
-            info.field.name = name
-            w:register(info.field)
+            local t = {
+                name = name,
+                init = class.init,
+                marshal = class.marshal,
+                unmarshal = class.unmarshal,
+            }
+            for i, v in ipairs(info.field) do
+                t[i] = v
+            end
+            w:register(t)
+        elseif type == nil then
+            w:register {
+                name = name
+            }
         else
             w:register {
                 name = name,
-                type = type
+                type = type,
             }
         end
-        ::continue::
     end
 end
 

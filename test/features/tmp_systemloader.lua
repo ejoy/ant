@@ -226,6 +226,7 @@ function init_loader_sys:init()
             on_ready = function (e)
                 w:sync("scene:in id:in", e)
                 iom.set_scale(e, 10)
+                w:sync("scene:out", e)
             end,
             name = "test_group",
         },

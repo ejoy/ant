@@ -178,7 +178,7 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep)
 		},
     }
     local group = ecs.group(group_id)
-    local eid = group.create_entity(template)
+    local eid = group:create_entity(template)
     return eid
 end
 

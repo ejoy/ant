@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local serialize = import_package "ant.serialize"
 
 local m = ecs.system "entity_system"
 
@@ -38,7 +37,7 @@ local function setParent(id, parentid)
     end
     if parentid == nil then
         e.scene_changed = true
-        e.scene.parent = nil
+        e.scene.parent = 0
         return
     end
     local parent = world:entity(parentid)
@@ -78,7 +77,7 @@ function m:entity_create()
             initargs.data.LAST_CREATE = true
         end
         update_group_tag(initargs.data)
-        w:template_instance(initargs.template, serialize.unpack, initargs.data)
+        w:template_instance(initargs.template, initargs.data)
         if initargs.parent then
             for e in w:select "LAST_CREATE scene:update" do
                 e.scene.parent = initargs.parent
@@ -105,8 +104,23 @@ function m:update_world()
     world._frame = world._frame+ 1
 end
 
+local MethodRemove = {}
+
+function m:init()
+    for name, func in pairs(world._class.component) do
+        MethodRemove[name] = func.remove
+    end
+end
+
 function m:entity_remove()
-    for e in w:select "REMOVED id:in" do
-        world._entity[e.id] = nil
+    for v in w:select "REMOVED id:in" do
+        local e = world._entity[v.id]
+        for name, func in pairs(MethodRemove) do
+            local c = e[name]
+            if c then
+                func(c)
+            end
+        end
+        world._entity[v.id] = nil
     end
 end

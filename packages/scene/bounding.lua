@@ -14,11 +14,11 @@ local function init_scene_aabb(scene, bounding)
 end
 
 function bounding_sys:entity_init()
-    for v in w:select "INIT mesh:in scene:in" do
+    for v in w:select "INIT mesh:in scene:update" do
         init_scene_aabb(v.scene, v.mesh.bounding)
     end
 
-    for v in w:select "INIT simplemesh:in scene:in" do
+    for v in w:select "INIT simplemesh:in scene:update" do
         init_scene_aabb(v.scene, v.simplemesh.bounding)
     end
 
