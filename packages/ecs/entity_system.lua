@@ -78,7 +78,7 @@ function m:entity_create()
             initargs.data.LAST_CREATE = true
         end
         update_group_tag(initargs.data)
-        w:template_instance(initargs.template, serialize.unpack, initargs.data)
+        w:template_instance(initargs.template, initargs.data)
         if initargs.parent then
             for e in w:select "LAST_CREATE scene:update" do
                 e.scene.parent = initargs.parent
