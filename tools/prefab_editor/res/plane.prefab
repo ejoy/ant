@@ -5,8 +5,7 @@ data:
   name: "testplane"
   filter_state: main_view|selectable|cast_shadow
   scene:
-    srt:
-      s: {5, 1, 5, 0}
+    s: {5, 1, 5, 0}
 policy:
   ant.general|name
   ant.render|render

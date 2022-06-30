@@ -4,8 +4,7 @@ policy:
     ant.general|name
 data:
     scene:
-      srt:
-        s: 10
+      s: 10
     material: /pkg/ant.resources/materials/singlecolor.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
     filter_state: main_view|selectable
@@ -16,8 +15,7 @@ policy:
   ant.general|name
 data:
   scene:
-    srt:
-      t: {0, 10, 0, 1}
+    t: {0, 10, 0, 1}
   light:
     color: {0.8, 0.8, 0.8, 1}
     intensity: 12000

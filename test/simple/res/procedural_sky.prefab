@@ -9,11 +9,7 @@ data:
     turbidity: 2.15
     which_hour: 12
   filter_state: main_view
-  scene:
-    srt:
-      r: {0, 0, 0, 1}
-      s: {1, 1, 1, 0}
-      t: {0, 0, 0, 1}
+  scene: {}
 policy:
   ant.general|name
   ant.render|render

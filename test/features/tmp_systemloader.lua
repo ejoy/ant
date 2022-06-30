@@ -163,7 +163,7 @@ function init_loader_sys:init()
     --         local ivav = ecs.import.interface "ant.test.features|ivertex_attrib_visualizer"
 
     --         local dl = w:singleton("directional_light", "scene:in")
-    --         local d = math3d.inverse(math3d.todirection(dl.scene.srt.r))
+    --         local d = math3d.inverse(math3d.todirection(dl.scene.r))
     --         for _, ee in ipairs(e.tag["*"]) do
     --             ivav.display_normal(world:entity(ee), d)
     --         end
@@ -179,7 +179,7 @@ function init_loader_sys:init()
     --         -- local ivav = ecs.import.interface "ant.test.features|ivertex_attrib_visualizer"
 
     --         -- local dl = w:singleton("directional_light", "scene:in")
-    --         -- local d = math3d.inverse(math3d.todirection(dl.scene.srt.r))
+    --         -- local d = math3d.inverse(math3d.todirection(dl.scene.r))
     --         -- for _, ee in ipairs(e.tag["*"]) do
     --         --     ivav.display_normal(world:entity(ee), d)
     --         -- end

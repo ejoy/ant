@@ -5,7 +5,6 @@ policy:
     ant.general|name
 data:
     scene:
-      srt:
         s: 100
         t: {0, 3, 0, 1}
     material: /pkg/ant.resources/materials/singlecolor.material
@@ -21,8 +20,7 @@ data:
     simplemesh: false
     material: /pkg/ant.resources/materials/font/font.material
     filter_state: main_view|selectable
-    scene:
-      srt: {}
+    scene: {}
     font:
         file: /pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc
         name: 宋体
@@ -41,7 +39,6 @@ policy:
     ant.general|name
 data:
     scene:
-      srt:
         s: 100
         t: {0, 3, 5, 1}
     material: /pkg/ant.resources/materials/singlecolor.material
@@ -57,8 +54,7 @@ data:
     simplemesh: false
     material: /pkg/ant.resources/materials/font/font.material
     filter_state: main_view
-    scene:
-      srt: {}
+    scene: {}
     font:
         file: /pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc
         name: 宋体

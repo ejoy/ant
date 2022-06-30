@@ -21,7 +21,7 @@ local function gen_camera_name() cameraidx = cameraidx + 1 return "camera" .. ca
 function camera_mgr.create_camera()
     local mc = world:entity(irq.main_camera())
     local main_frustum = mc.camera.frustum
-    local srt = mc.scene.srt
+    local srt = mc.scene
     local template = {
         policy = {
             "ant.general|name",
@@ -39,10 +39,8 @@ function camera_mgr.create_camera()
             },
             name = gen_camera_name(),
             scene = {
-                srt = {
-                    r = math3d.tovalue(srt.r),
-                    t = {math3d.index(srt.t, 1, 2, 3)},
-                },
+                r = math3d.tovalue(srt.r),
+                t = {math3d.index(srt.t, 1, 2, 3)},
                 updir   = {0, 1, 0, 0},
             },
             tag = {"camera"},

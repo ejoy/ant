@@ -1,8 +1,7 @@
 ---
 data:
   name: Scene
-  scene:
-    srt: {}
+  scene: {}
 policy:
   ant.general|name
   ant.scene|scene_object
@@ -12,8 +11,7 @@ data:
   material: /pkg/ant.resources.binary/meshes/base/cone.glb|materials/lambert1.material
   mesh: /pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin
   name: pCone1
-  scene:
-    srt: {}
+  scene: {}
 mount: 1
 policy:
   ant.general|name

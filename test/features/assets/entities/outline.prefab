@@ -4,9 +4,8 @@ policy:
     ant.general|name
 data:
     scene:
-        srt:
-            s: 100
-            t: {0, 0, 8, 1}
+        s: 100
+        t: {0, 0, 8, 1}
     material: /pkg/ant.resources/materials/pbr_default.material
     mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
     filter_state: main_view|selectable

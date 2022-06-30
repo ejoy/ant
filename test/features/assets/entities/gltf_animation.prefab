@@ -28,9 +28,8 @@ policy:
     ant.animation|animation_controller.birth
     ant.general|name
 data:
-    scene: 
-        srt:
-            t: {-5, 0, 0, 1}
+    scene:
+        t: {-5, 0, 0, 1}
     mesh: "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/Beta_Surface_P1.meshbin"
     meshskin: "/pkg/ant.resources.binary/meshes/female/female.glb|meshes/skin2.skinbin"
     material: /pkg/ant.resources/materials/gpu_skin.material

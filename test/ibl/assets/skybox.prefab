@@ -7,8 +7,7 @@ data:
     name: skybox_test
     filter_state: main_view
     simplemesh: true
-    scene:
-        srt: {}
+    scene: {}
     ibl:
         intensity: 6500
         irradiance:

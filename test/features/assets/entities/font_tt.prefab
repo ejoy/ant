@@ -1,36 +1,33 @@
 ---
-policy:
-    ant.render|render
-    ant.general|name
 data:
-    scene:
-        srt:
-            s: 100
-            t: {0, 3, 0, 1}
-    material: /pkg/ant.resources/materials/singlecolor.material
-    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
-    filter_state: main_view|cast_shadow
-    name: slot_cube
+  filter_state: main_view|cast_shadow
+  material: /pkg/ant.resources/materials/singlecolor.material
+  mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin
+  name: slot_cube
+  scene:
+    s: 100
+    t: {0, 3, 0, 1}
+policy:
+  ant.render|render
+  ant.general|name
 ---
-policy:
-    ant.render|render
-    ant.render|show_name
-    ant.render|fontrender
-    ant.general|name
-data:
-    scene: {srt={}}
-    material: /pkg/ant.resources/materials/font/font.material
-    filter_state: main_view
-    font:
-        file: /pkg/ant.resources.binary/fonts/stxingka.ttf
-        family: 华文行楷
-        #style: Blod#|Italic #not support rightnow
-        size: 42
-    show_config:
-        location_type: aabb_bottom
-        location_offset: {0, -0.85, 0, 0}
-        description: 测试测试
-        #description: ABC
-        color: 0xff00ff00
 action:
-    show_name: 1
+  show_name: 1
+data:
+  filter_state: main_view
+  font:
+    family: "华文行楷"
+    file: /pkg/ant.resources.binary/fonts/stxingka.ttf
+    size: 42
+  material: /pkg/ant.resources/materials/font/font.material
+  scene: {}
+  show_config:
+    color: 4278255360
+    description: "测试测试"
+    location_offset: {0, -0.85, 0, 0}
+    location_type: aabb_bottom
+policy:
+  ant.render|render
+  ant.render|show_name
+  ant.render|fontrender
+  ant.general|name

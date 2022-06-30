@@ -481,7 +481,7 @@ function m:on_prefab_ready(prefab)
         add_to_hierarchy(e)
     end
     
-    local srt = self.prefab_template[1].data.scene.srt
+    local srt = self.prefab_template[1].data.scene
     self.root_mat = math3d.ref(math3d.matrix(srt))
 end
 

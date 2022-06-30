@@ -33,10 +33,10 @@ local function create_transform_property(cv)
             setter = function (value)
                 iom.set_scale(world:entity(cv.eid), value)
                 local ct = camera_template(cv.eid)
-                local s = ct.scene.srt.s
+                local s = ct.scene.s
                 if s == nil then
                     s = {}
-                    ct.scene.srt.s = s
+                    ct.scene.s = s
                 end
                 s[1], s[2], s[3] = value[1], value[2], value[3]
             end
@@ -51,10 +51,10 @@ local function create_transform_property(cv)
                 local q = math3d.quaternion{math.rad(value[1]), math.rad(value[2]), math.rad(value[3])}
                 iom.set_rotation(world:entity(cv.eid), q)
                 local ct = camera_template(cv.eid)
-                local r = ct.scene.srt.r
+                local r = ct.scene.r
                 if r == nil then
                     r = {}
-                    ct.scene.srt.r = r
+                    ct.scene.r = r
                 end
                 local qq = math3d.tovalue(q)
                 r[1], r[2], r[3], r[4] = qq[1], qq[2], qq[3], qq[4]
@@ -67,10 +67,10 @@ local function create_transform_property(cv)
             setter = function (value)
                 iom.set_position(world:entity(cv.eid), value)
                 local ct = camera_template(cv.eid)
-                local t = ct.scene.srt.t
+                local t = ct.scene.t
                 if t == nil then
                     t = {}
-                    ct.scene.srt.t = t
+                    ct.scene.t = t
                 end
                 t[1], t[2], t[3] = value[1], value[2], value[3]
             end

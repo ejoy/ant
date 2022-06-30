@@ -1,8 +1,7 @@
 ---
 data:
   name: Rootscene
-  scene:
-    srt: {}
+  scene: {}
 policy:
   ant.general|name
   ant.scene|scene_object
@@ -10,10 +9,7 @@ policy:
 data:
   name: node0
   scene:
-    srt:
-      r: {0, 0, 0, -1}
-      s: {0.009999999776482582, 0.009999999776482582, 0.009999999776482582}
-      t: {0, 0, 0}
+    s: 0.01
 mount: 1
 policy:
   ant.general|name
@@ -24,8 +20,7 @@ data:
   material: /pkg/tools.prefab_editor/res/Duck.glb|materials/blinn3-fx.material
   mesh: /pkg/tools.prefab_editor/res/Duck.glb|meshes/LOD3spShape_P1.meshbin
   name: ""
-  scene:
-    srt: {}
+  scene: {}
 mount: 2
 policy:
   ant.general|name

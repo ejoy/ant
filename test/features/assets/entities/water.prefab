@@ -13,7 +13,6 @@ data:
   filter_state: ""
   postprocess_obj: true
   scene:
-    srt:
-      s: 10
-      t: {-5, 0.0, -5}
+    s: 10
+    t: {-5, 0.0, -5}
   name: water_test

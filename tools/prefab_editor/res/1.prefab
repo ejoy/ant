@@ -1,8 +1,7 @@
 ---
 data:
   name: Scene
-  scene:
-    srt: {}
+  scene: {}
 policy:
   ant.general|name
   ant.scene|scene_object
@@ -13,8 +12,7 @@ data:
   mesh: /pkg/ant.resources.binary/meshes/arrow.glb|meshes/Plane.001_P1.meshbin
   name: Plane.001
   scene:
-    srt:
-      s: {1.206127643585205, 1.206127643585205, 1.206127643585205}
+    s: {1.206127643585205, 1.206127643585205, 1.206127643585205}
 mount: 1
 policy:
   ant.general|name
@@ -26,8 +24,7 @@ data:
   mesh: /pkg/ant.resources.binary/meshes/arrow.glb|meshes/Plane.002_P1.meshbin
   name: Plane.002
   scene:
-    srt:
-      t: {0, 24.992876052856445, 0}
+    t: {0, 24.992876052856445, 0}
 mount: 1
 policy:
   ant.general|name

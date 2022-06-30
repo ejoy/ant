@@ -1,8 +1,7 @@
 ---
 data:
   name: Scene
-  scene:
-    srt: {}
+  scene: {}
 policy:
   ant.general|name
   ant.scene|scene_object
@@ -13,9 +12,8 @@ data:
   mesh: /pkg/ant.test.features/asserts/glb/ground_01.glb|meshes/Plane.007_P1.meshbin
   name: Plane.007
   scene:
-    srt:
-      r: {0, 0.7071068286895752, 0, -0.7071068286895752}
-      s: {1.3333333730697632, 1, 1.3333333730697632}
+    r: {0, 0.7071068286895752, 0, -0.7071068286895752}
+    s: {1.3333333730697632, 1, 1.3333333730697632}
 mount: 1
 policy:
   ant.general|name

@@ -10,8 +10,7 @@ policy:
     ant.render|debug_mesh_bounding
 data:
     scene: 
-        srt:
-            t: {-5, 0, 5, 1}
+        t: {-5, 0, 5, 1}
     material: /pkg/ant.resources/materials/skin_model_sample.material
     animation:
         walk: /pkg/ant.resources.binary/meshes/ozz/animation1.ozz
