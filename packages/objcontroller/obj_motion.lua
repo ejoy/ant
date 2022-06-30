@@ -74,10 +74,8 @@ function iobj_motion.set_view(e, pos, dir, updir)
     local scene = e.scene
     local srt = scene
     if updir then
-        if scene.updir == nil then
-            scene.updir = math3d.ref(mc.YAXIS)
-        end
-        scene.updir.v = updir
+        math3d.unmark(scene.updir)
+        scene.updir = math3d.mark(updir)
         local _srt = math3d.inverse(math3d.lookto(pos, dir, scene.updir))
         local s, r, t = math3d.srt(_srt)
         set_srt(srt, s, r, t)
@@ -133,10 +131,8 @@ end
 function iobj_motion.lookto(e, eyepos, viewdir, updir)
     local scene = e.scene
     if updir then
-        if scene.updir == nil then
-            scene.updir = math3d.ref(mc.YAXIS)
-        end
-        scene.updir.v = updir
+        math3d.unmark(scene.updir)
+        scene.updir = math3d.mark(updir)
     end
     local srt = math3d.inverse(math3d.lookto(eyepos, viewdir, updir))
     local s, r, t = math3d.srt(srt)
