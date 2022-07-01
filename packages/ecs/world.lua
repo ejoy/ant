@@ -256,7 +256,6 @@ function m.new_world(config)
 		type = "int64",
 	}
 	ecs:group_init "group"
-
 	local w = setmetatable({
 		args = config,
 		_switchs = {},	-- for enable/disable

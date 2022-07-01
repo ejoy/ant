@@ -33,8 +33,10 @@ local resizeQueue = {}
 local S = {}
 
 local config = {
-	ecs = initargs
+	ecs = initargs,
+	DEBUG = require "bee.platform".DEBUG
 }
+
 local world
 local encoderBegin = false
 local quit
