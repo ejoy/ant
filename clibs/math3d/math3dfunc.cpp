@@ -681,6 +681,20 @@ math3d_dir2radian(struct lastack *LS, const float v[4], float radians[2]){
 	}
 }
 
+//plane
+float
+math3d_plane_normalize(struct lastack *LS, const float plane[4], float nplane[4]){
+	const float l = glm::length(VEC3(plane));
+	*(glm::vec4*)(nplane) = (*(glm::vec4*)plane) / l;
+	return l;
+}
+
+float
+math3d_plane_point_distance(struct lastack *LS, const float plane[4], const float point[4]){
+	assert(std::abs(1.f - glm::length(VEC3(plane))) < 1e-7);
+	return glm::dot(VEC3(plane), VEC3(point)) - plane[3];
+}
+
 //aabb
 #define AABB_MIN(_V) *((glm::vec4 *)(_V))
 #define AABB_MAX(_V) *((glm::vec4 *)(_V) + 1)
@@ -805,12 +819,12 @@ plane_intersect(const glm::vec4& plane, const float* aabb) {
 	}
 
 	// in front of the plane
-	if (minD > -plane.w) {
+	if (minD >= plane.w) {
 		return 1;
 	}
 
 	// in back of the plane
-	if (maxD < -plane.w) {
+	if (maxD <= plane.w) {
 		return -1;
 	}
 
@@ -919,6 +933,10 @@ math3d_frustum_planes(struct lastack *LS, const float m[16], float *planes[6], i
 	// normalize
 	for (int ii = 0; ii < 6; ++ii){
 		auto& p = *((glm::vec4*)planes[ii]);
+		// out plane defination: n dot p = d
+		// this extract is base: a*nx + b*ny + c*nz + d = 0
+		// we need to flip side of the 'd'
+		p[3] = -p[3];
 		auto len = glm::length(VEC3(planes[ii]));
 		if (glm::abs(len) >= glm::epsilon<float>())
 			p /= len;

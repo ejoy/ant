@@ -1979,6 +1979,7 @@ lpoints_radius(lua_State *L){
 	return 1;
 }
 
+//plane: p dot n = d, vec4: (nx, ny, nz, d)
 static int
 lplane(lua_State *L){
 	struct lastack *LS = GETLS(L);
@@ -2023,6 +2024,25 @@ lplane_ray(lua_State *L){
 		float t = (dis - math3d_dot(ray_o, plane)) / dot_do;
 		lua_pushnumber(L, t);
 	}
+	return 1;
+}
+
+static int
+lplane_normalize(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float* plane = vector_from_index(L, LS, 1);
+	float *tmp = alloc_vec4(L, LS);
+	math3d_plane_normalize(LS, plane, tmp);
+	return 1;
+}
+
+static int
+lplane_point_distance(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float *plane = vector_from_index(L, LS, 1);
+	const float *point = vector_from_index(L, LS, 2);
+
+	lua_pushnumber(L, math3d_plane_point_distance(LS, plane, point));
 	return 1;
 }
 
@@ -2166,6 +2186,8 @@ init_math3d_api(lua_State *L, struct math3d_api *bs) {
 		//plane
 		{ "plane",			lplane},
 		{ "plane_ray",		lplane_ray},
+		{ "plane_normalize",lplane_normalize},
+		{ "plane_point_distance", lplane_point_distance},
 
 		//aabb
 		{ "aabb", 				 laabb},

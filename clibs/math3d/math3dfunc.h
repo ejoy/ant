@@ -50,6 +50,11 @@ void math3d_quat_lerp(struct lastack *LS, const float v0[4], const float v1[4], 
 void math3d_quat_slerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]);
 void math3d_quat_to_euler(struct lastack *LS, const float q[4], float euler[4]);
 void math3d_dir2radian(struct lastack *LS, const float v[4], float radians[2]);
+
+//plane
+float math3d_plane_normalize(struct lastack *LS, const float plane[4], float nplane[4]);
+float math3d_plane_point_distance(struct lastack *LS, const float plane[4], const float point[4]);
+
 //aabb
 void math3d_aabb_append(struct lastack *LS, const float v[4], float *raabb);
 void math3d_aabb_merge(struct lastack *LS, const float *aabblhs, const float *aabbrhs, float *raabb);
