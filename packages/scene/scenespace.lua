@@ -76,7 +76,7 @@ function s:update_transform()
 		end
 	end
 
-	for v in w:select "scene_update scene:in id:in scene_changed?out" do
+	for v in w:select "scene_update scene:in scene_changed?out" do
 		local scene = v.scene
 		if scene.parent ~= 0 then
 			local parent = world:entity(scene.parent)
