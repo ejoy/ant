@@ -26,6 +26,11 @@ local function set_t(srt, v)
     srt.t = math3d.mark(math3d.vector(v))
 end
 
+local function set_mat(srt, v)
+    math3d.unmark(srt.mat)
+    srt.mat = math3d.mark(v)
+end
+
 local function set_srt(srt, s, r, t)
     set_s(srt, s)
     set_r(srt, r)
@@ -64,9 +69,12 @@ function iobj_motion.set_srt(e, s, r, t)
     set_changed(e)
 end
 
-function iobj_motion.set_srt_matrix(e, srt)
-    local s, r, t = math3d.srt(srt)
-    iobj_motion.set_srt(e, s, r, t)
+function iobj_motion.set_srt_matrix(e, mat)
+    set_s(e.scene, mc.ONE)
+    set_r(e.scene, mc.IDENTITY_QUAT)
+    set_t(e.scene, mc.ZERO_PT)
+    set_mat(e.scene, mat)
+    set_changed(e)
 end
 
 function iobj_motion.set_view(e, pos, dir, updir)

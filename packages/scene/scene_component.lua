@@ -16,12 +16,13 @@ local function init_scene(scene)
 	scene.s = math3d.mark(s and math3d.vector(s) or mc.ONE)
 	scene.r = math3d.mark(r and math3d.quaternion(r) or mc.IDENTITY_QUAT)
 	scene.t = math3d.mark(t and math3d.vector(t) or mc.ZERO_PT)
+	scene.mat = math3d.mark(mc.IDENTITY_MAT)
+	scene.worldmat = math3d.mark(mc.IDENTITY_MAT)
 	if scene.updir then
 		scene.updir = math3d.mark(math3d.vector(scene.updir))
     else
 		scene.updir = mc.NULL
 	end
-	scene.worldmat = math3d.mark(mc.IDENTITY_MAT)
 	scene.aabb = mc.NULL
 	scene.scene_aabb = mc.NULL
     scene.parent = scene.parent or 0
@@ -36,8 +37,9 @@ function m.remove(v)
     math3d.unmark(v.s)
     math3d.unmark(v.r)
     math3d.unmark(v.t)
-    math3d.unmark(v.updir)
+    math3d.unmark(v.mat)
     math3d.unmark(v.worldmat)
+    math3d.unmark(v.updir)
     math3d.unmark(v.aabb)
     math3d.unmark(v.scene_aabb)
 end
