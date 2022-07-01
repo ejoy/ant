@@ -76,8 +76,11 @@ local function create_debug_entity()
 		local frustum_points = math3d.frustum_points(c.viewprojmat)
 		local color = frustum_colors[idx]
 
-		debug_entities[#debug_entities+1] = ientity.create_frustum_entity(frustum_points, "frusutm:" .. se.name, color)
-		debug_entities[#debug_entities+1] = ientity.create_axis_entity(ce.scene, "csm_axis:" .. idx, color)
+		debug_entities[#debug_entities+1] = ecs.create_entity(ientity.frustum_entity_data(frustum_points, "frusutm:" .. se.name, color))
+
+		local d = ientity.axis_entity_data(ce.scene, "csm_axis:" .. idx, color)
+		d.data.on_ready = nil
+		debug_entities[#debug_entities+1] = ecs.create_entity(d)
 	end
 end
 
