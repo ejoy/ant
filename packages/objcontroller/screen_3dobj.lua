@@ -75,9 +75,10 @@ function screen_3dobj_sys:camera_usage()
             local posWS = mu.ndc_to_world(vp, posNDC)
             w:sync("scene:in", e)
             local scene = e.scene
-            assert(scene.parent == nil, "global_axes should not have any parent")
+            assert(scene.parent == 0, "global_axes should not have any parent")
             iom.set_position(e, posWS)
             set_worldmat(scene, scene)
+            w:sync("scene:out", e)
         end
 
         dirty = nil

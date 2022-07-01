@@ -37,7 +37,7 @@ local function setParent(id, parentid)
     end
     if parentid == nil then
         e.scene_changed = true
-        e.scene.parent = nil
+        e.scene.parent = 0
         return
     end
     local parent = world:entity(parentid)
@@ -104,8 +104,23 @@ function m:update_world()
     world._frame = world._frame+ 1
 end
 
+local MethodRemove = {}
+
+function m:init()
+    for name, func in pairs(world._class.component) do
+        MethodRemove[name] = func.remove
+    end
+end
+
 function m:entity_remove()
-    for e in w:select "REMOVED id:in" do
-        world._entity[e.id] = nil
+    for v in w:select "REMOVED id:in" do
+        local e = world._entity[v.id]
+        for name, func in pairs(MethodRemove) do
+            local c = e[name]
+            if c then
+                func(c)
+            end
+        end
+        world._entity[v.id] = nil
     end
 end

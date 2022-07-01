@@ -215,7 +215,20 @@ local function init_entity(w, ecs)
 
 	local proxy_mt = {}
 	function proxy_mt:__index(name)
-		return visitor(self.id, name)
+		local id = self.id
+		local t = visitor(id, name)
+		if type(t) ~= "table" or ecs:type(name) ~= "c" then
+			return t
+		end
+		local mt = {}
+		mt.__index = t
+		function mt:__newindex(k, v)
+			if t[k] ~= v then
+				t[k] = v
+				visitor(id, name, t)
+			end
+		end
+		return setmetatable({}, mt)
 	end
 	function proxy_mt:__newindex(name, value)
 		visitor(self.id, name, value)
@@ -243,7 +256,6 @@ function m.new_world(config)
 		type = "int64",
 	}
 	ecs:group_init "group"
-
 	local w = setmetatable({
 		args = config,
 		_switchs = {},	-- for enable/disable

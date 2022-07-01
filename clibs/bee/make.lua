@@ -4,6 +4,32 @@ dofile "../common.lua"
 
 lm.rootdir = Ant3rd.."bee.lua"
 
+local OS = {
+    "win",
+    "posix",
+    "osx",
+    "linux",
+    "netbsd",
+}
+
+local function need(lst)
+    local map = {}
+    if type(lst) == "table" then
+        for _, v in ipairs(lst) do
+            map[v] = true
+        end
+    else
+        map[lst] = true
+    end
+    local t = {}
+    for _, v in ipairs(OS) do
+        if not map[v] then
+            t[#t+1] = "!bee/**/*_"..v..".cpp"
+        end
+    end
+    return t
+end
+
 lm:source_set "bee" {
     includes = {
         "bee/nonstd",
@@ -14,38 +40,43 @@ lm:source_set "bee" {
         "bee/nonstd/fmt/*.cc",
     },
     windows = {
-        sources = {
-            "!bee/**/*_osx.cpp",
-            "!bee/**/*_linux.cpp",
-            "!bee/**/*_posix.cpp",
-        }
+        sources = need "win"
     },
     macos = {
         sources = {
             "bee/**/*.mm",
-            "!bee/**/*_win.cpp",
-            "!bee/**/*_linux.cpp",
+            need {
+                "osx",
+                "posix",
+            }
         }
     },
     ios = {
         sources = {
             "bee/**/*.mm",
-            "!bee/**/*_win.cpp",
-            "!bee/**/*_linux.cpp",
             "!bee/fsevent/**/",
+            need {
+                "osx",
+                "posix",
+            }
         }
     },
     linux = {
-        flags = "-fPIC",
-        sources = {
-            "!bee/**/*_win.cpp",
-            "!bee/**/*_osx.cpp",
+        sources = need {
+            "linux",
+            "posix",
         }
     },
     android = {
-        sources = {
-            "!bee/**/*_win.cpp",
-            "!bee/**/*_osx.cpp",
+        sources = need {
+            "linux",
+            "posix",
+        }
+    },
+    netbsd = {
+        sources = need {
+            "netbsd",
+            "posix",
         }
     }
 }

@@ -7,6 +7,7 @@ local rhwi      = import_package "ant.hwi"
 local cr        = import_package "ant.compile_resource"
 local setting	= import_package "ant.settings".setting
 local mu		= import_package "ant.math".util
+local platform  = require "bee.platform"
 
 local bgfx      = require "bgfx"
 local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
@@ -33,8 +34,10 @@ local resizeQueue = {}
 local S = {}
 
 local config = {
-	ecs = initargs
+	ecs = initargs,
+	DEBUG = platform.DEBUG or platform.os ~= "ios"
 }
+
 local world
 local encoderBegin = false
 local quit

@@ -3,6 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local math3d = require "math3d"
+local mc = import_package "ant.math".constant
 local setting = import_package "ant.settings".setting
 local disable_cull = setting:data().graphic.disable_cull
 
@@ -12,7 +13,7 @@ local function cull(cull_tags, vp_mat)
 	local frustum_planes = math3d.frustum_planes(vp_mat)
 	for vv in w:select "view_visible render_object scene:in" do
 		local aabb = vv.scene.scene_aabb
-		if aabb then
+		if aabb ~= mc.NULL then
 			local culled = math3d.frustum_intersect_aabb(frustum_planes, aabb) < 0
 			for i=1, #cull_tags do
 				local ct = cull_tags[i]

@@ -50,7 +50,7 @@ local function calc_pose_mat(pose_result, slot)
 end
 
 function sys:follow_transform_updated()
-	for v in w:select "scene:in slot:in id:in" do
+	for v in w:select "scene:update slot:in id:in" do
         --TODO: slot.offset_srt is duplicate with entity.scene, not need to keep this srt in slot
         local slot = v.slot
         local follow_flag = assert(slot.follow_flag)

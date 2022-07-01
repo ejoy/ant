@@ -505,6 +505,9 @@ function m.new_world(config)
             table.insert(cfg.system, "ant.ecs|debug_system")
         end
 	end
+    if config.DEBUG then
+        luaecs.check_select(true)
+    end
     config.w = luaecs.world()
     config.update_decl = update_decl
     local res = ecs.new_world(config)
