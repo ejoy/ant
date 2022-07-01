@@ -53,9 +53,11 @@ function system.solve(w)
 		mark[k] = true
 		return obj
 	end})
+	local context = w._ecs_context
 	for fullname, s in sortpairs(w._class.system) do
+		local decl = w._decl.system[fullname]
 		local packname, name = splitname(fullname)
-		local proxy = {}
+		local proxy = decl.c and context or {}
 		for step_name, func in pairs(s) do
 			table.insert(res[step_name], { func, proxy, name, step_name, packname })
 		end

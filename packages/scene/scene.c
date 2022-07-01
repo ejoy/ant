@@ -21,7 +21,7 @@ struct entity_id {
 };
 
 static int
-lupdate_changes(lua_State *L) {
+scene_changed(lua_State *L) {
 	struct ecs_context *ctx = (struct ecs_context *)lua_touserdata(L, 1);
 	struct scene *v;
 	int i;
@@ -33,7 +33,7 @@ lupdate_changes(lua_State *L) {
 			return luaL_error(L, "Entity id not found");
 		}
 		void * change = entity_sibling(ctx, COMPONENT_SCENE, i, TAG_CHANGE);
-		printf("Changes %d : %d %s\n", (int)e->id, (int)v->parent, change ? "true" : "false");
+		//printf("Changes %d : %d %s\n", (int)e->id, (int)v->parent, change ? "true" : "false");
 		if (change) {
 			set_insert(&change_set, e->id);
 		} else if (set_exist(&change_set, v->parent)) {
@@ -47,10 +47,10 @@ lupdate_changes(lua_State *L) {
 }
 
 LUAMOD_API int
-luaopen_scene_core(lua_State *L) {
+luaopen_system_scene(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "update_changes", lupdate_changes },
+		{ "scene_changed", scene_changed },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

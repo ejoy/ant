@@ -85,8 +85,12 @@ local function create_importor(w)
 			if objname == "policy" then
 				solve_policy(name, res)
 			end
-			if v.implement then
-				for _, impl in ipairs(v.implement) do
+			if v.implement and v.implement[1] then
+				local impl = v.implement[1]
+				if impl:sub(1,1) == ":" then
+					v.c = true
+					w._class.system[name] = require(impl:sub(2))
+				else
 					local pkg = v.packname
 					local file = impl:gsub("^(.*)%.lua$", "%1")
 					pm.findenv(package, pkg)
@@ -171,6 +175,11 @@ local function init(w, config)
 			solve_object(o, w, objname, fullname)
         end
     end
+	w._ecs_context = w.w:context {
+		"scene",
+		"id",
+		"scene_changed",
+	}
 	require "system".solve(w)
 end
 
