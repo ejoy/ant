@@ -61,9 +61,9 @@ function s:update_hierarchy()
 end
 
 local function update_scene_obj(scene, parent)
-	local srt = math3d.matrix(scene)
 	math3d.unmark(scene.worldmat)
-	scene.worldmat = math3d.mark(parent and math3d.mul(parent.worldmat, srt) or srt)
+	local mat = math3d.mul(scene.mat, math3d.matrix(scene))
+	scene.worldmat = math3d.mark(parent and math3d.mul(parent.worldmat, mat) or mat)
 	update_aabb(scene)
 end
 
