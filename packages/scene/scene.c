@@ -22,7 +22,7 @@ struct entity_id {
 };
 
 static int
-lupdate_changes(lua_State *L) {
+scene_changed(lua_State *L) {
 	struct ecs_context *ctx = (struct ecs_context *)lua_touserdata(L, 1);
 	int i;
 	struct set change_set;
@@ -53,10 +53,10 @@ lupdate_changes(lua_State *L) {
 }
 
 LUAMOD_API int
-luaopen_scene_core(lua_State *L) {
+luaopen_system_scene(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "update_changes", lupdate_changes },
+		{ "scene_changed", scene_changed },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

@@ -3,11 +3,9 @@ local world = ecs.world
 local w = world.w
 
 local math3d = require "math3d"
-local scenecore = require "scene.core"
 
 local mc = import_package "ant.math".constant
 
-----scenespace_system----
 local s = ecs.system "scenespace_system"
 
 local function inherit_state(r, pr)
@@ -17,14 +15,6 @@ local function inherit_state(r, pr)
 	if r.material == nil then
 		r.material = pr.material
 	end
-
-	--TODO: need rewrite
-	-- local pstate = pr.filter_state
-	-- if pstate then
-	-- 	local MASK <const> = (1 << 32) - 1
-	-- 	local state = r.filter_state or 0
-	-- 	r.filter_state = ((state>>32) | state | pstate) & MASK
-	-- end
 end
 
 local function update_aabb(scene)
@@ -51,16 +41,6 @@ local function update_render_object(ro, scene)
 	end
 end
 
-local su_ctx
-function s:init()
-	su_ctx = w:context{
-		"scene_update",
-		"scene",
-		"id",
-		"scene_changed"
-	}
-end
-
 function s:entity_init()
 	for v in w:select "INIT scene:in render_object?in scene_changed?out" do
 		local scene = v.scene
@@ -69,7 +49,6 @@ function s:entity_init()
 	end
 end
 
-
 local function update_scene_obj(scene, parent)
 	math3d.unmark(scene.worldmat)
 	local mat = math3d.mul(scene.mat, math3d.matrix(scene))
@@ -77,34 +56,35 @@ local function update_scene_obj(scene, parent)
 	update_aabb(scene)
 end
 
-local update_changes = scenecore.update_changes or function(_)
-	for v in w:select "scene_update scene:in scene_changed?out" do
-		local scene = v.scene
-		if scene.parent ~= 0 then
-			local parent = world:entity(scene.parent)
-			if parent then
-				assert(parent.scene_update)
-				if parent.scene_changed then
-					v.scene_changed = true
-				end
-			else
-				error "Unexpected Error."
-			end
-		end
-	end
-end
-
 local evSceneChanged = world:sub {"scene_changed"}
-function s:update_transform()
+
+function s:scene_init()
 	for _, eid in evSceneChanged:unpack() do
 		local e = world:entity(eid)
 		if e then
 			e.scene_changed = true
 		end
 	end
+end
 
-	update_changes(su_ctx)
+--function s:scene_changed()
+--	for v in w:select "scene_update scene:in scene_changed?out" do
+--		local scene = v.scene
+--		if scene.parent ~= 0 then
+--			local parent = world:entity(scene.parent)
+--			if parent then
+--				assert(parent.scene_update)
+--				if parent.scene_changed then
+--					v.scene_changed = true
+--				end
+--			else
+--				error "Unexpected Error."
+--			end
+--		end
+--	end
+--end
 
+function s:scene_update()
 	for e in w:select "scene_changed scene:update" do
 		local scene = e.scene
 		local parent = scene.parent ~= 0 and world:entity(scene.parent).scene or nil
