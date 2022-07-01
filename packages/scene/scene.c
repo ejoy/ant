@@ -7,9 +7,10 @@
 #include "luaecs.h"
 #include "set.h"
 
-#define COMPONENT_SCENE 1
-#define COMPONENT_ENTITYID 2
-#define TAG_CHANGE 3
+#define TAG_SCENE_UPDATE 1
+#define COMPONENT_SCENE 2
+#define COMPONENT_ENTITYID 3
+#define TAG_SCENE_CHANGED 4
 
 // todo:
 struct scene {
@@ -23,22 +24,27 @@ struct entity_id {
 static int
 lupdate_changes(lua_State *L) {
 	struct ecs_context *ctx = (struct ecs_context *)lua_touserdata(L, 1);
-	struct scene *v;
 	int i;
 	struct set change_set;
 	set_init(&change_set);
-	for (i=0;(v=(struct scene*)entity_iter(ctx, COMPONENT_SCENE, i));i++) {
-		struct entity_id * e = (struct entity_id *)entity_sibling(ctx, COMPONENT_SCENE, i, COMPONENT_ENTITYID);
-		if (e == NULL) {
-			return luaL_error(L, "Entity id not found");
-		}
-		void * change = entity_sibling(ctx, COMPONENT_SCENE, i, TAG_CHANGE);
-		printf("Changes %d : %d %s\n", (int)e->id, (int)v->parent, change ? "true" : "false");
-		if (change) {
+	for (i=0;entity_iter(ctx, TAG_SCENE_UPDATE, i);i++) {
+		//struct scene * s = (struct scene *)entity_sibling(ctx, TAG_SCENE_UPDATE, i, COMPONENT_SCENE);
+		//printf("Changes %d : %d %s\n", (int)e->id, (int)v->parent, change ? "true" : "false");
+		if (entity_sibling(ctx, TAG_SCENE_UPDATE, i, TAG_SCENE_CHANGED)) {
+			struct entity_id * e = (struct entity_id *)entity_sibling(ctx, TAG_SCENE_UPDATE, i, COMPONENT_ENTITYID);
+			if (e == NULL) {
+				return luaL_error(L, "Entity id not found");
+			}
 			set_insert(&change_set, e->id);
-		} else if (set_exist(&change_set, v->parent)) {
-			set_insert(&change_set, e->id);
-			entity_enable_tag(ctx, COMPONENT_SCENE, i, TAG_CHANGE);
+		} else {
+			struct scene * s = (struct scene *)entity_sibling(ctx, TAG_SCENE_UPDATE, i, COMPONENT_SCENE);
+			if (s){
+				if (set_exist(&change_set, s->parent)) {
+					struct entity_id * e = (struct entity_id *)entity_sibling(ctx, TAG_SCENE_UPDATE, i, COMPONENT_ENTITYID);
+					set_insert(&change_set, e->id);
+					entity_enable_tag(ctx, TAG_SCENE_UPDATE, i, TAG_SCENE_CHANGED);
+				}
+			}
 		}
 	}
 
@@ -81,9 +87,10 @@ w:register {
 }
 
 local context = w:context {
+	"scene_update",
 	"scene",
-	"entityid",
-	"change",
+	"id",
+	"scene_changed"
 }
 
 

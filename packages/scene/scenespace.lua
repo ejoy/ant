@@ -3,6 +3,8 @@ local world = ecs.world
 local w = world.w
 
 local math3d = require "math3d"
+local scenecore = require "scene.core"
+
 local mc = import_package "ant.math".constant
 
 ----scenespace_system----
@@ -49,6 +51,16 @@ local function update_render_object(ro, scene)
 	end
 end
 
+local su_ctx
+function s:init()
+	su_ctx = w:context{
+		"scene_update",
+		"scene",
+		"id",
+		"scene_changed"
+	}
+end
+
 function s:entity_init()
 	for v in w:select "INIT scene:in render_object?in scene_changed?out" do
 		local scene = v.scene
@@ -57,8 +69,6 @@ function s:entity_init()
 	end
 end
 
-function s:update_hierarchy()
-end
 
 local function update_scene_obj(scene, parent)
 	math3d.unmark(scene.worldmat)
@@ -67,15 +77,7 @@ local function update_scene_obj(scene, parent)
 	update_aabb(scene)
 end
 
-local evSceneChanged = world:sub {"scene_changed"}
-function s:update_transform()
-	for _, eid in evSceneChanged:unpack() do
-		local e = world:entity(eid)
-		if e then
-			e.scene_changed = true
-		end
-	end
-
+local update_changes = scenecore.update_changes or function(_)
 	for v in w:select "scene_update scene:in scene_changed?out" do
 		local scene = v.scene
 		if scene.parent ~= 0 then
@@ -90,6 +92,18 @@ function s:update_transform()
 			end
 		end
 	end
+end
+
+local evSceneChanged = world:sub {"scene_changed"}
+function s:update_transform()
+	for _, eid in evSceneChanged:unpack() do
+		local e = world:entity(eid)
+		if e then
+			e.scene_changed = true
+		end
+	end
+
+	update_changes(su_ctx)
 
 	for e in w:select "scene_changed scene:update" do
 		local scene = e.scene
