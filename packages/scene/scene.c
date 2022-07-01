@@ -7,6 +7,32 @@
 #include "luaecs.h"
 #include "set.h"
 
+struct ecs_context;
+struct bgfx_interface_vtbl_t;
+struct bgfx_encoder_t;
+struct math3d_api;
+
+struct bgfx_encoder_holder {
+	struct bgfx_encoder_t* encoder;
+};
+
+struct ecs_world {
+	struct ecs_context*           ecs;
+	struct bgfx_interface_vtbl_t* bgfx;
+	struct math3d_api*            math3d;
+	struct bgfx_encoder_holder*   encoder;
+};
+
+static struct ecs_world* getworld(lua_State* L, int idx) {
+	size_t sz = 0;
+	struct ecs_world* ctx = (struct ecs_world*)luaL_checklstring(L, idx, &sz);
+	if (sizeof(struct ecs_world) > sz) {
+		luaL_error(L, "invalid ecs_world");
+		return NULL;
+	}
+	return ctx;
+}
+
 #define TAG_SCENE_UPDATE 1
 #define COMPONENT_SCENE 2
 #define COMPONENT_ENTITYID 3
@@ -23,26 +49,28 @@ struct entity_id {
 
 static int
 scene_changed(lua_State *L) {
-	struct ecs_context *ctx = (struct ecs_context *)lua_touserdata(L, 1);
+	struct ecs_world* world = getworld(L, 1);
+	struct ecs_context* ecs = world->ecs;
+
 	int i;
 	struct set change_set;
 	set_init(&change_set);
-	for (i=0;entity_iter(ctx, TAG_SCENE_UPDATE, i);i++) {
-		//struct scene * s = (struct scene *)entity_sibling(ctx, TAG_SCENE_UPDATE, i, COMPONENT_SCENE);
+	for (i=0;entity_iter(ecs, TAG_SCENE_UPDATE, i);i++) {
+		//struct scene * s = (struct scene *)entity_sibling(ecs, TAG_SCENE_UPDATE, i, COMPONENT_SCENE);
 		//printf("Changes %d : %d %s\n", (int)e->id, (int)v->parent, change ? "true" : "false");
-		if (entity_sibling(ctx, TAG_SCENE_UPDATE, i, TAG_SCENE_CHANGED)) {
-			struct entity_id * e = (struct entity_id *)entity_sibling(ctx, TAG_SCENE_UPDATE, i, COMPONENT_ENTITYID);
+		if (entity_sibling(ecs, TAG_SCENE_UPDATE, i, TAG_SCENE_CHANGED)) {
+			struct entity_id * e = (struct entity_id *)entity_sibling(ecs, TAG_SCENE_UPDATE, i, COMPONENT_ENTITYID);
 			if (e == NULL) {
 				return luaL_error(L, "Entity id not found");
 			}
 			set_insert(&change_set, e->id);
 		} else {
-			struct scene * s = (struct scene *)entity_sibling(ctx, TAG_SCENE_UPDATE, i, COMPONENT_SCENE);
+			struct scene * s = (struct scene *)entity_sibling(ecs, TAG_SCENE_UPDATE, i, COMPONENT_SCENE);
 			if (s){
 				if (set_exist(&change_set, s->parent)) {
-					struct entity_id * e = (struct entity_id *)entity_sibling(ctx, TAG_SCENE_UPDATE, i, COMPONENT_ENTITYID);
+					struct entity_id * e = (struct entity_id *)entity_sibling(ecs, TAG_SCENE_UPDATE, i, COMPONENT_ENTITYID);
 					set_insert(&change_set, e->id);
-					entity_enable_tag(ctx, TAG_SCENE_UPDATE, i, TAG_SCENE_CHANGED);
+					entity_enable_tag(ecs, TAG_SCENE_UPDATE, i, TAG_SCENE_CHANGED);
 				}
 			}
 		}

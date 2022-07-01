@@ -116,6 +116,40 @@ local function import_decl(w, fullname)
 	w._decl:check()
 end
 
+local function toint(v)
+	local t = type(v)
+	if t == "userdata" then
+		local s = tostring(v):match "%a+: (%x+)"
+		return tonumber(s, 16)
+	end
+	assert(false)
+end
+
+local function cstruct(...)
+	local t = table.pack(...)
+	for i = 1, t.n do
+		t[i] = toint(t[i])
+	end
+	return string.pack("<"..("T"):rep(t.n), table.unpack(t))
+end
+
+local function create_context(w)
+	w._ecs_context = w.w:context {
+		"scene_update",
+		"scene",
+		"id",
+		"scene_changed",
+	}
+	local bgfx = require "bgfx"
+	local math3d = require "math3d"
+	w._ecs_world = cstruct(
+		w._ecs_context,
+		bgfx.CINTERFACE,
+		math3d.CINTERFACE,
+		bgfx.encoder_get()
+	)
+end
+
 local function init(w, config)
 	w._initializing = true
 	w._class = {}
@@ -175,12 +209,7 @@ local function init(w, config)
 			solve_object(o, w, objname, fullname)
         end
     end
-	w._ecs_context = w.w:context {
-		"scene_update",
-		"scene",
-		"id",
-		"scene_changed",
-	}
+	create_context(w)
 	require "system".solve(w)
 end
 
