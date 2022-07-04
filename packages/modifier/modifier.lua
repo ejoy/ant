@@ -68,9 +68,6 @@ function imodifier.set_target(m, target)
             return
         end
         iv = math3d.ref(math3d.vector(mtl.properties[mf.property]))
-    else
-        -- srt
-        iv = math3d.ref(math3d.matrix(world:entity(target).scene))
     end
     if mf.target then
         mf:reset()
@@ -158,20 +155,19 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep)
                 target = target,
                 continue = false,
                 keep = keep,
-                init_value = math3d.ref(math3d.matrix(world:entity(target).scene)),
                 reset = function (self)
-                    iom.set_srt_matrix(world:entity(self.target), self.init_value)
+                    iom.set_srt_offset_matrix(world:entity(self.target), mc.IDENTITY_MAT)
                 end,
                 update = function(self, time)
                     if not self.continue or not self.target then
                         return
                     end
                     local value, running = generator(time)
-                    local apply_value = math3d.mul(self.init_value, value)
+                    local apply_value = value
                     if not running and not self.keep then
-                        apply_value = self.init_value
+                        apply_value = mc.IDENTITY_MAT
                     end
-                    iom.set_srt_matrix(world:entity(self.target), apply_value)
+                    iom.set_srt_offset_matrix(world:entity(self.target), apply_value)
                     self.continue = running
                 end
             },
@@ -187,7 +183,6 @@ function imodifier.start(m, desc)
     mf.continue = true
     if m.anim_eid then
         if desc.name then
-            mf.init_value = math3d.ref(math3d.matrix(world:entity(mf.target).scene))
             iani.play(m.anim_eid, desc)
         else
             ika.play(world:entity(m.anim_eid), desc)
