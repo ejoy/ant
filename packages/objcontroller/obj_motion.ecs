@@ -15,6 +15,7 @@ interface "iobj_motion"
 
     .method "set_srt"
     .method "set_srt_matrix"
+    .method "set_srt_offset_matrix"
     .method "worldmat"
     .method "set_view"
 

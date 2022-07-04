@@ -77,6 +77,11 @@ function iobj_motion.set_srt_matrix(e, mat)
     set_changed(e)
 end
 
+function iobj_motion.set_srt_offset_matrix(e, mat)
+    set_mat(e.scene, mat)
+    set_changed(e)
+end
+
 function iobj_motion.set_view(e, pos, dir, updir)
     local scene = e.scene
     if updir then
