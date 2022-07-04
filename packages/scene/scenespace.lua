@@ -17,13 +17,6 @@ local function inherit_state(r, pr)
 	end
 end
 
-local function update_aabb(scene)
-	if scene.aabb ~= mc.NULL then
-		math3d.unmark(scene.scene_aabb)
-		scene.scene_aabb = math3d.mark(math3d.aabb_transform(scene.worldmat, scene.aabb))
-	end
-end
-
 local function update_render_object(ro, scene)
 	if ro then
 		ro.worldmat = scene.worldmat
@@ -49,13 +42,6 @@ function s:entity_init()
 	end
 end
 
-local function update_scene_obj(scene, parent)
-	math3d.unmark(scene.worldmat)
-	local mat = math3d.mul(scene.mat, math3d.matrix(scene))
-	scene.worldmat = math3d.mark(parent and math3d.mul(parent.worldmat, mat) or mat)
-	update_aabb(scene)
-end
-
 local evSceneChanged = world:sub {"scene_changed"}
 
 function s:scene_init()
@@ -67,28 +53,22 @@ function s:scene_init()
 	end
 end
 
---function s:scene_changed()
---	for v in w:select "scene_update scene:in scene_changed?out" do
---		local scene = v.scene
---		if scene.parent ~= 0 then
---			local parent = world:entity(scene.parent)
---			if parent then
---				assert(parent.scene_update)
---				if parent.scene_changed then
---					v.scene_changed = true
---				end
---			else
---				error "Unexpected Error."
---			end
---		end
---	end
---end
-
 function s:scene_update()
 	for e in w:select "scene_changed scene:update" do
 		local scene = e.scene
-		local parent = scene.parent ~= 0 and world:entity(scene.parent).scene or nil
-		update_scene_obj(scene, parent)
+		math3d.unmark(scene.worldmat)
+		if scene.parent ~= 0 then
+			local parentmat = world:entity(scene.parent).scene.worldmat
+			local mat = math3d.mul(scene.mat, math3d.matrix(scene))
+			scene.worldmat = math3d.mark(math3d.mul(parentmat, mat))
+		else
+			local mat = math3d.mul(scene.mat, math3d.matrix(scene))
+			scene.worldmat = math3d.mark(mat)
+		end
+		if scene.aabb ~= mc.NULL then
+			math3d.unmark(scene.scene_aabb)
+			scene.scene_aabb = math3d.mark(math3d.aabb_transform(scene.worldmat, scene.aabb))
+		end
 	end
 	for e in w:select "scene_changed scene:in render_object:in" do
 		e.render_object.worldmat = e.scene.worldmat
