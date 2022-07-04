@@ -34,7 +34,10 @@ function world_trans_sys:entity_init()
 	end
 end
 
-local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal", "ui"}
+local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
+for _, ln in ipairs(LAYER_NAMES) do
+	w:register{name=ln}
+end
 
 local QUEUE_TYPES <const> = {
     main_queue = LAYER_NAMES,
@@ -149,7 +152,6 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 				exclude_type = exclude,
 				table.unpack(surfacetypes),
 			},
-			cull_tag			= {},
 			visible 			= visible or false,
 			watch_screen_buffer	= true,
 		}
@@ -209,7 +211,6 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 				filter_type = "main_view",
 				table.unpack(QUEUE_TYPES["pre_depth_queue"]),
 			},
-			cull_tag 		= {},
 			queue_name 		= "pre_depth_queue",
 			name 			= "pre_depth_queue",
 			visible 		= true,
@@ -262,7 +263,6 @@ function irender.create_main_queue(vr, camera_ref)
 				filter_type = "main_view",
 				table.unpack(QUEUE_TYPES["main_queue"]),
 			},
-			cull_tag = {},
 			visible = true,
 			INIT = true,
 			main_queue = true,

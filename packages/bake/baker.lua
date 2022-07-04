@@ -311,7 +311,6 @@ local function create_lightmap_queue()
             visible = true,
             INIT = true,
             queue_name = "bake_lightmap_queue",
-            cull_tag = {},
         }
     }
 end

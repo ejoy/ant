@@ -21,8 +21,7 @@ local function copy_pf(pf)
     }
 
     for idx, v in ipairs(pf) do
-        local n = v:match "pre_depth_queue_(%w+)"
-        npf[idx] = assert(n)
+        npf[idx] = v
     end
 
     return npf
@@ -111,34 +110,26 @@ end
 
 local material_cache = {__mode="k"}
 
-local function update_scene_depth_status(e, fn, m)
-    e.filter_material[fn] = m
-    e[fn] = true
-    w:sync(fn .. ":out", e)
-end
-
 function s:end_filter()
     if irender.use_pre_depth() then
-        for e in w:select "filter_result:in render_object:in filter_material:in skinning?in" do
+        for e in w:select "filter_result pre_depth_queue_visible opacity render_object:in filter_material:in skinning?in" do
             local m = assert(which_material(e.skinning))
             local dst_mi = m.material
             local newstate = irender.check_set_state(dst_mi, e.render_object.material)
             local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
-            local fr = e.filter_result
-            local pdq = w:singleton("pre_depth_queue", "primitive_filter:in")
-            local sdq = w:singleton("scene_depth_queue", "primitive_filter:in")
-            local sdq_pf = sdq.primitive_filter
             local fx = m.fx
-            for idx, fn in ipairs(pdq.primitive_filter) do
-                if fr[fn] then
-                    local nm = {
-                        material = new_matobj:instance(),
-                        fx = fx,
-                    }
-                    e.filter_material[fn] = nm
-                    update_scene_depth_status(e, sdq_pf[idx], nm)
-                end
-            end
+
+            local fm = e.filter_material
+            local nm = {
+                material = new_matobj:instance(),
+                fx = fx,
+            }
+
+            fm["pre_depth_queue"] = nm
+            fm["scene_depth_queue"] = nm
+
+            e["scene_depth_queue_visible"] = true
+            w:sync("scene_depth_queue_visible?out", e)
         end
     end
 end

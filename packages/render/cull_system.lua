@@ -95,29 +95,23 @@ function cull_sys:data_changed()
 end
 
 function cull_sys:entity_ready()
-	for qe in w:select "filter_created primitive_filter:in cull_tag:in" do
-		local culltag = qe.cull_tag
-		for idx, fn in ipairs(qe.primitive_filter) do
-			local cn = fn .. "_cull"
-			w:register {name = cn}
-			culltag[idx] = cn
-		end
+	for qe in w:select "filter_created queue_name:in" do
+		w:register {name = qe.queue_name .. "_cull"}
 	end
 end
 
 local function find_queue_tags()
-	local queue_cull_tags = {}
-	for qe in w:select "visible cull_tag:in queue_name:in camera_ref:in" do
+	local cull_tags = {}
+	for qe in w:select "visible queue_name:in camera_ref:in" do
 		local cref = qe.camera_ref
-		local camera = world:entity(cref).camera
-		local tags = queue_cull_tags[cref]
+		local tags = cull_tags[cref]
 		if tags == nil then
 			tags = {}
-			queue_cull_tags[cref] = tags
+			cull_tags[cref] = tags
 		end
-		table.move(qe.cull_tag, 1, #qe.cull_tag, #tags+1, tags)
+		tags[#tags+1] = qe.queue_name .. "_cull"
 	end
-	return queue_cull_tags
+	return cull_tags
 end
 
 function cull_sys:cull()

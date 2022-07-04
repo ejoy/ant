@@ -2,7 +2,7 @@ fx:
   vs: /pkg/ant.resources/shaders/font/vs_uifont.sc
   fs: /pkg/ant.resources/shaders/font/fs_uifont.sc
   setting:
-    surfacetype: ui
+    surfacetype: ui_stage
 properties:
   s_tex:
     stage: 0

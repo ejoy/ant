@@ -243,7 +243,6 @@ local function create_csm_entity(index, vr, fbidx)
 				filter_type = "cast_shadow",
 				"opacity",
 			},
-			cull_tag = {},
 			visible = false,
 			queue_name = queuename,
 			csm_queue = true,
@@ -458,23 +457,18 @@ local s = ecs.system "shadow_primitive_system"
 local material_cache = {__mode="k"}
 
 function s:end_filter()
-    for e in w:select "filter_result:in render_object:in skinning?in filter_material:in" do
+    for e in w:select "filter_result opacity render_object:in skinning?in filter_material:in" do
         local ro = e.render_object
 		local m = which_material(e.skinning)
 		local dst_mi, fx = m.material, m.fx
 		local newstate = irender.check_set_state(dst_mi, ro.material)
 		local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
 		local fm = e.filter_material
-		local fr = e.filter_result
-		for qe in w:select "csm_queue primitive_filter:in" do
-			for _, fn in ipairs(qe.primitive_filter) do
-				if fr[fn] then
-					fm[fn] = {
-						material = new_matobj:instance(),
-						fx = fx,
-					}
-				end
-			end
+		for qe in w:select "csm_queue queue_name:in primitive_filter:in" do
+			fm[qe.queue_name] = {
+				material = new_matobj:instance(),
+				fx = fx,
+			}
 		end
 	end
 end

@@ -95,7 +95,7 @@ local function load_lightmap_material(mf, setting)
 end
 
 function lm_sys:end_filter()
-    for e in w:select "filter_result:in lightmap:in render_object:in filter_material:in material:in" do
+    for e in w:select "filter_result lightmap:in render_object:in filter_material:in material:in" do
         local lr_e = w:singleton("lightmapper", "lightmap_result:in")
 
         local r = lr_e and lr_e.lightmap_cache or {}
@@ -122,7 +122,7 @@ function lm_sys:end_filter()
 
                 update_lm_texture(bm.properties, lmhandle)
 
-                e.filter_material[fn] = {
+                e.filter_material["main_queue"] = {
                     fx          = bm.fx,
                     properties  = bm.properties,
                     state       = bm.state,

@@ -49,19 +49,19 @@ struct CullTabIDs{
 
 static int
 lcull(lua_State *L){
-	static uint16_t s_MaxCullTabs[16];
+	static uint16_t s_cull_tabs[16];
 	const int numtab = lua_rawlen(L, 2);
 	if (numtab == 0){
 		return 0;
 	}
 
-	if (numtab > sizeof(s_MaxCullTabs)/sizeof(s_MaxCullTabs[0])){
+	if (numtab > sizeof(s_cull_tabs)/sizeof(s_cull_tabs[0])){
 		return luaL_error(L, "Too many cull tabs");
 	}
 
 	for (int i=0; i<numtab; ++i){
 		lua_geti(L, i+1);
-		s_MaxCullTabs[i] = lua_tointegerx(L, -1);
+		s_cull_tabs[i] = lua_tointegerx(L, -1);
 		lua_pop(L, 1);
 	}
 
@@ -89,7 +89,7 @@ lcull(lua_State *L){
 			if (math3d_frustum_intersect_aabb(world->math->LS, planes, aabb) < 0){
 				struct entity_id * eid = (struct entity_id *)entity_sibling(ecs, TAG_VIEW_VISIBLE, i, COMPONENT_ENTITY_ID);
 				for (int ii=0; ii<numtab; ++ii){
-					entity_enable_tag(ecs, eid, i, s_MaxCullTabs[ii]);
+					entity_enable_tag(ecs, eid, i, s_cull_tabs[ii]);
 				}
 			}
 		}

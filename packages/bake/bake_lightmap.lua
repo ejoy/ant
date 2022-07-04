@@ -114,22 +114,23 @@ local function to_none_cull_state(state)
 	return bgfx.make_state(s)
 end
 
+local function has_filter_stage(pf, stage)
+    for _, fn in ipairs(pf) do
+        if fn == stage then
+            return true
+        end
+    end
+end
+
 function bake_lm_sys:end_filter()
-    for e in w:select "filter_result:in render_object:in filter_material:out" do
-        local fr = e.filter_result
+    for e in w:select "filter_result bake_lightmap_queue_visible render_object:in filter_material:out" do
         local le = w:singleton("bake_lightmap_queue", "primitive_filter:in")
-        for _, fn in ipairs(le.primitive_filter) do
-            if fr[fn] then
-                local fm = e.filter_material
-                local ro = e.render_object
-                local nm = load_bake_material(ro)
-                fm[fn] = {
-                    fx          = nm.fx,
-                    properties  = nm.properties,
-                    state       = to_none_cull_state(nm.state),
-                    stencil     = nm.stencil,
-                }
-            end
+        local ro = e.render_object
+        if has_filter_stage(le.primitive_filter, ro.setting.surfacetype) then
+            e.filter_material["bake_lightmap_queue"] = {
+                material    = load_bake_material(ro),
+                fx          = ro.fx,
+            }
         end
     end
 end

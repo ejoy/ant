@@ -35,13 +35,9 @@ end
 function render_sys:entity_init()
 	w:clear "filter_created"
 	for qe in w:select "INIT primitive_filter:in queue_name:in filter_created?out" do
+		w:register{name = qe.queue_name .. "_visible"}
+
 		local pf = qe.primitive_filter
-		local qn = qe.queue_name
-		for i=1, #pf do
-			local n = qn .. "_" .. pf[i]
-			pf[i] = n
-			w:register{name = n}
-		end
 
 		qe.filter_created = true
 		w:sync("filter_created?out", qe)
@@ -91,55 +87,54 @@ function render_sys:update_filter()
         local filterstate = ro.filter_state
 		local st = ro.fx.setting.surfacetype
 
-		local filter_result = {}
 		for qe in w:select "queue_name:in primitive_filter:in" do
 			local qn = qe.queue_name
-			local tag = ("%s_%s"):format(qn, st)
+			local function mark_tags(add)
+				e[st] = add
+				local qn_visible = qn .. "_visible"
+				e[qn_visible] = add
+				w:sync(("%s?out %s?out"):format(st, qn_visible), e)
+			end
 
 			local pf = qe.primitive_filter
-			if has_filter_tag(tag, pf) then
-				w:sync(tag .. "?in", e)
+			if has_filter_tag(st, pf) then
 				local add = ((filterstate & pf.filter_type) ~= 0) and ((filterstate & pf.exclude_type) == 0)
-				if add then
-					if not e[tag] then
-						filter_result[tag] = add
-						e[tag] = add
-						w:sync(tag .. "?out", e)
-					end
-				else
-					if e[tag] then
-						filter_result[tag] = add
-						e[tag] = add
-						w:sync(tag .. "?out", e)
-					end
-				end
+				mark_tags(add)
 			end
 		end
-		e.filter_result = filter_result
+		e.filter_result = true
     end
 end
 
-local function submit_render_objects(viewid, filter, culltag)
-	for idx, fn in ipairs(filter) do
-		local s = culltag and
-			("view_visible %s %s:absent render_object:in filter_material:in"):format(fn, culltag[idx]) or
-			("view_visible %s render_object:in filter_material:in"):format(fn)
+local select_cache = {}
 
-		for e in w:select(s) do
-			irender.draw(viewid, e.render_object, e.filter_material[fn])
+local function load_select_key(qn, fn)
+	local key = qn .. fn
+	local s = select_cache[key]
+	if nil == s then
+		s = ("view_visible %s_visible %s_cull:absent %s render_object:in filter_material:in"):format(qn, qn, fn)
+		select_cache[key] = s
+	end
+	return s
+end
+
+local function submit_render_objects(viewid, filter, qn)
+	for _, fn in ipairs(filter) do
+		for e in w:select(load_select_key(qn, fn)) do
+			irender.draw(viewid, e.render_object, e.filter_material[qn])
 		end
 	end
 end
 
 function render_sys:render_submit()
-	for qe in w:select "visible camera_ref:in render_target:in primitive_filter:in cull_tag?in" do
+	for qe in w:select "visible queue_name:in camera_ref:in render_target:in primitive_filter:in" do
 		local camera = world:entity(qe.camera_ref).camera
 		local rt = qe.render_target
 		local viewid = rt.viewid
 
 		bgfx.touch(viewid)
 		bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
-		submit_render_objects(viewid, qe.primitive_filter, qe.cull_tag)
+		submit_render_objects(viewid, qe.primitive_filter, qe.queue_name)
     end
 end
 
@@ -155,13 +150,10 @@ end
 
 function s:end_filter()
 	if irender.use_pre_depth() then
-		for e in w:select "filter_result:in render_object:in" do
+		for e in w:select "filter_result main_queue_visible opacity render_object:in" do
 			local ro = e.render_object
 			local rom = ro.material
-			local fn = e.filter_result
-			if fn["main_queue_opacity"] and ro.fx.setting.surfacetype == "opacity" then
-				rom:get_material():set_state(check_set_depth_state_as_equal(rom:get_state()))
-			end
+			rom:get_material():set_state(check_set_depth_state_as_equal(rom:get_state()))
 		end
 	end
 	w:clear "render_object_update"

@@ -95,10 +95,8 @@ policy "render_queue"
 
 component "need_touch"
 
-component "cull_tag".type "lua"
 policy "cull"
     .require_system "ant.render|cull_system"
-    .component "cull_tag"
 
 policy "render_target"
     .component "render_target"

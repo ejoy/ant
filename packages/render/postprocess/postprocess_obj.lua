@@ -47,7 +47,6 @@ function pp_obj_sys:init_world()
                     "opacity",
                     "translucent",
                 },
-                cull_tag    = {},
                 name = "postprocess_obj_queue",
                 postprocess_obj_queue = true,
                 queue_name = "postprocess_obj_queue",

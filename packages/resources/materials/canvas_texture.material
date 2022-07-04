@@ -5,7 +5,7 @@ fx:
     MATERIAL_UNLIT: 1
     lighting: off
     HAS_BASECOLOR_TEXTURE: 1
-    surfacetype: ui
+    surfacetype: ui_stage
 properties:
   s_basecolor:
     stage: 0

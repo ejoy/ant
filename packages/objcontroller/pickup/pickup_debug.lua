@@ -54,12 +54,11 @@ function pickup_debug_sys:init()
 end
 
 local function log_pickup_queue_entities()
-	for q in w:select "pickup_queue visible pickup:in primitive_filter:in cull_tag?in" do
+	for q in w:select "pickup_queue visible pickup:in primitive_filter:in" do
 		log.info "pickup queue entities:"
 		for idx, fn in ipairs(q.primitive_filter) do
-			local s = q.cull_tag and
-				("%s %s:absent render_object:in filter_material?in"):format(fn, q.cull_tag[idx]) or
-				("%s render_object:in filter_material?in"):format(fn)
+			local s =
+				("pickup_queue %s render_object:in filter_material?in"):format(fn)
 			log.info(("filter type:%s, select: %s"):format(fn, s))
 			local entities = {}
 			for e in w:select(s .. " id:in name?in") do

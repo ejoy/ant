@@ -220,9 +220,8 @@ local function create_pick_entity()
 				filter_type = "selectable",
 				"opacity",
 				"translucent",
-				"ui",
+				"ui_stage",
 			},
-			cull_tag	= {},
 			name 		= "pickup_queue",
 			queue_name 	= "pickup_queue",
 			pickup_queue= true,
@@ -345,26 +344,33 @@ end
 
 local material_cache = {__mode="k"}
 
+local function has_filter_stage(pf, stage)
+	for _, fn in ipairs(pf) do
+		if fn == stage then
+			return true
+		end
+	end
+end
+
 function pickup_sys:end_filter()
-	for e in w:select "filter_result:in render_object:in filter_material:out id:in skinning?in" do
-		local fr = e.filter_result
-		local st = e.render_object.fx.setting.surfacetype
+	for e in w:select "filter_result pickup_queue_visible render_object:in filter_material:out id:in skinning?in" do
+		local ro = e.render_object
+		local st = ro.fx.setting.surfacetype
 		local fm = e.filter_material
 		local qe = w:singleton("pickup_queue", "primitive_filter:in")
-		local src_mi = e.render_object.material
-		for _, fn in ipairs(qe.primitive_filter) do
-			if fr[fn] then
-				local mat = which_material(st, e.skinning)
-				local dst_mi = mat.material
-				local newstate = irender.check_set_state(dst_mi, src_mi)
-				local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
-				local new_mi = new_matobj:instance()
-				new_mi.u_id = math3d.vector(packeid_as_rgba(e.id))
-				fm[fn] = {
-					material = new_mi,
-					fx = mat.fx,
-				}
-			end
+
+		local src_mi = ro.material
+		if has_filter_stage(qe.primitive_filter, st) then
+			local mat = which_material(st, e.skinning)
+			local dst_mi = mat.material
+			local newstate = irender.check_set_state(dst_mi, src_mi)
+			local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
+			local new_mi = new_matobj:instance()
+			new_mi.u_id = math3d.vector(packeid_as_rgba(e.id))
+			fm["pickup_queue"] = {
+				material	= new_mi,
+				fx			= mat.fx,
+			}
 		end
 	end
 end
