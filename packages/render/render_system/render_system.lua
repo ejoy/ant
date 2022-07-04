@@ -4,6 +4,7 @@ local w = world.w
 
 local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
+local template	= import_package "ant.general".template
 local irender	= ecs.import.interface "ant.render|irender"
 local ies		= ecs.import.interface "ant.scene|ifilter_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
@@ -106,16 +107,12 @@ function render_sys:update_filter()
     end
 end
 
-local select_cache = {}
+local keys = template.keys
+local select_cache = template.new "view_visible %s_visible %s_cull:absent %s render_object:in filter_material:in"
 
 local function load_select_key(qn, fn)
-	local key = qn .. fn
-	local s = select_cache[key]
-	if nil == s then
-		s = ("view_visible %s_visible %s_cull:absent %s render_object:in filter_material:in"):format(qn, qn, fn)
-		select_cache[key] = s
-	end
-	return s
+	local k = keys[qn][qn][fn]
+	return select_cache[k]
 end
 
 local function submit_render_objects(viewid, filter, qn)

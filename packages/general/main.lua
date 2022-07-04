@@ -1,3 +1,4 @@
 return {
-    default = require "default"
+    default = require "default",
+    template = require "template",
 }
