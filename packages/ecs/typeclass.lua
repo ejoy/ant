@@ -126,24 +126,27 @@ local function toint(v)
 end
 
 local function cstruct(...)
-	local t = table.pack(...)
-	for i = 1, t.n do
-		t[i] = toint(t[i])
+	local ref = table.pack(...)
+	local t = {}
+	for i = 1, ref.n do
+		t[i] = toint(ref[i])
 	end
-	return string.pack("<"..("T"):rep(t.n), table.unpack(t))
+	return string.pack("<"..("T"):rep(ref.n), table.unpack(t))
+		, ref
 end
 
 local function create_context(w)
-	w._ecs_context = w.w:context {
+	local bgfx = require "bgfx"
+	local math3d = require "math3d"
+	local ecs_context = w.w:context {
 		"scene_update",
 		"scene",
 		"id",
 		"scene_changed",
 	}
-	local bgfx = require "bgfx"
-	local math3d = require "math3d"
-	w._ecs_world = cstruct(
-		w._ecs_context,
+	w._ecs_world,
+	w._ecs_ref = cstruct(
+		ecs_context,
 		bgfx.CINTERFACE,
 		math3d.CINTERFACE,
 		bgfx.encoder_get()
