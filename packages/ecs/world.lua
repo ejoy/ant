@@ -251,10 +251,6 @@ local m = {}
 
 function m.new_world(config)
 	local ecs = config.w
-	ecs:register {
-		name = "id",
-		type = "int64",
-	}
 	ecs:group_init "group"
 	local w = setmetatable({
 		args = config,
@@ -272,12 +268,13 @@ function m.new_world(config)
 		w = ecs,
 	}, world)
 
-	init_entity(w, ecs)
 
 	event.init(world)
 
 	-- load systems and components from modules
 	typeclass.init(w, config)
+
+	init_entity(w, ecs)
 
 	return w
 end

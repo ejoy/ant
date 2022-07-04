@@ -5,10 +5,14 @@ lm:lua_source "scene" {
         "../../clibs/lua",
         "../../clibs/math3d",
 		"../../clibs/foundation",
+		"../../clibs/ecs",
 		"../../3rd/luaecs",
     },
     sources = {
         "scene.c"
     },
-    depend = "foundation",
+    deps = {
+        "compile_ecs",
+        "foundation",
+    }
 }

@@ -138,12 +138,14 @@ end
 local function create_context(w)
 	local bgfx = require "bgfx"
 	local math3d = require "math3d"
-	local ecs_context = w.w:context {
-		"scene_update",
-		"scene",
-		"id",
-		"scene_changed",
-	}
+	local component = require "component"
+	local decl = w._decl.component
+	for i, c in ipairs(component) do
+		if not decl[c] then
+			component[i] = "REMOVED"
+		end
+	end
+	local ecs_context = w.w:context(component)
 	w._ecs_world,
 	w._ecs_ref = cstruct(
 		ecs_context,

@@ -19,8 +19,6 @@ pipeline "select"
 component "pickup_queue"
 component "pickup"
     .type "lua"
-component "pickupid"
-    .type "int"
 
 interface "ipickup"
     .implement "pickup/pickup_system.lua"

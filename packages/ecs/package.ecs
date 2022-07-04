@@ -46,6 +46,8 @@ component "INIT"
 component "LAST_CREATE"
 component "CLONED"
 
+component "id"
+    .type "int64"
 component "create_entity"
     .type "lua"
 component "create_entity_template"
