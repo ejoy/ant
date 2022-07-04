@@ -6,46 +6,7 @@
 
 #include "luaecs.h"
 #include "set.h"
-
-struct ecs_context;
-struct bgfx_interface_vtbl_t;
-struct bgfx_encoder_t;
-struct math3d_api;
-
-struct bgfx_encoder_holder {
-	struct bgfx_encoder_t* encoder;
-};
-
-struct ecs_world {
-	struct ecs_context*           ecs;
-	struct bgfx_interface_vtbl_t* bgfx;
-	struct math3d_api*            math3d;
-	struct bgfx_encoder_holder*   encoder;
-};
-
-static struct ecs_world* getworld(lua_State* L, int idx) {
-	size_t sz = 0;
-	struct ecs_world* ctx = (struct ecs_world*)luaL_checklstring(L, idx, &sz);
-	if (sizeof(struct ecs_world) > sz) {
-		luaL_error(L, "invalid ecs_world");
-		return NULL;
-	}
-	return ctx;
-}
-
-#define TAG_SCENE_UPDATE 1
-#define COMPONENT_SCENE 2
-#define COMPONENT_ENTITYID 3
-#define TAG_SCENE_CHANGED 4
-
-// todo:
-struct scene {
-	int64_t parent;
-};
-
-struct entity_id {
-	int64_t id;
-};
+#include "scene.h"
 
 static int
 scene_changed(lua_State *L) {

@@ -8,9 +8,11 @@ lm:lua_source "render" {
         "../../clibs/lua",
         "../../clibs/math3d",
         "../../clibs/foundation",
+        "../../clibs/scene",
     },
     sources = {
         "material/material.c",
         --"mesh/mesh.c",
+        --"cull.c",
     },
 }
