@@ -57,6 +57,15 @@ lm:import "3rd/scripts/reactphysics3d.lua"
 lm:import "3rd/scripts/sdl.lua"
 lm:import "runtime/make.lua"
 
+lm:runlua "compile_ecs" {
+    script = "projects/luamake/ecs.lua",
+    input = "packages/**/*.ecs",
+    output = {
+        "packages/ecs/component.lua",
+        "clibs/ecs/component.h",
+    }
+}
+
 if EnableEditor then
     lm:phony "tools" {
         deps = {

@@ -4,6 +4,7 @@
 #include <lauxlib.h>
 #include <stdint.h>
 
+#include "component.h"
 #include "luaecs.h"
 #include "set.h"
 
@@ -33,20 +34,6 @@ static struct ecs_world* getworld(lua_State* L, int idx) {
 	return ctx;
 }
 
-#define TAG_SCENE_UPDATE 1
-#define COMPONENT_SCENE 2
-#define COMPONENT_ENTITYID 3
-#define TAG_SCENE_CHANGED 4
-
-// todo:
-struct scene {
-	int64_t parent;
-};
-
-struct entity_id {
-	int64_t id;
-};
-
 static int
 scene_changed(lua_State *L) {
 	struct ecs_world* world = getworld(L, 1);
@@ -55,22 +42,22 @@ scene_changed(lua_State *L) {
 	int i;
 	struct set change_set;
 	set_init(&change_set);
-	for (i=0;entity_iter(ecs, TAG_SCENE_UPDATE, i);i++) {
+	for (i=0;entity_iter(ecs, COMPONENT_SCENE_UPDATE, i);i++) {
 		//struct scene * s = (struct scene *)entity_sibling(ecs, TAG_SCENE_UPDATE, i, COMPONENT_SCENE);
 		//printf("Changes %d : %d %s\n", (int)e->id, (int)v->parent, change ? "true" : "false");
-		if (entity_sibling(ecs, TAG_SCENE_UPDATE, i, TAG_SCENE_CHANGED)) {
-			struct entity_id * e = (struct entity_id *)entity_sibling(ecs, TAG_SCENE_UPDATE, i, COMPONENT_ENTITYID);
-			if (e == NULL) {
+		if (entity_sibling(ecs, COMPONENT_SCENE_UPDATE, i, COMPONENT_SCENE_CHANGED)) {
+			component_id* id = (component_id*)entity_sibling(ecs, COMPONENT_SCENE_UPDATE, i, COMPONENT_ID);
+			if (id == NULL) {
 				return luaL_error(L, "Entity id not found");
 			}
-			set_insert(&change_set, e->id);
+			set_insert(&change_set, *id);
 		} else {
-			struct scene * s = (struct scene *)entity_sibling(ecs, TAG_SCENE_UPDATE, i, COMPONENT_SCENE);
+			struct component_scene * s = (struct component_scene *)entity_sibling(ecs, COMPONENT_SCENE_UPDATE, i, COMPONENT_SCENE);
 			if (s){
 				if (set_exist(&change_set, s->parent)) {
-					struct entity_id * e = (struct entity_id *)entity_sibling(ecs, TAG_SCENE_UPDATE, i, COMPONENT_ENTITYID);
-					set_insert(&change_set, e->id);
-					entity_enable_tag(ecs, TAG_SCENE_UPDATE, i, TAG_SCENE_CHANGED);
+					component_id* id = (component_id*)entity_sibling(ecs, COMPONENT_SCENE_UPDATE, i, COMPONENT_ID);
+					set_insert(&change_set, *id);
+					entity_enable_tag(ecs, COMPONENT_SCENE_UPDATE, i, COMPONENT_SCENE_CHANGED);
 				}
 			}
 		}
