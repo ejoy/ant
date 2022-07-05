@@ -52,10 +52,10 @@ local csm_setting = {
 				RT="RT_ON",
 				MIN="LINEAR",
 				MAG="LINEAR",
-				U="CLAMP",
-				V="CLAMP",
+				U="BORDER",
+				V="BORDER",
 				COMPARE="COMPARE_GEQUAL",
-				BOARD_COLOR="0",
+				BOARD_COLOR="1",
 			},
 		}
 	},
