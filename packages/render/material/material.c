@@ -1553,6 +1553,8 @@ lstat(lua_State *L){
 	lua_newtable(L);
 	lua_pushinteger(L, arena->n);
 	lua_setfield(L, -2, "attrib_num");
+	lua_pushinteger(L, arena->cap);
+	lua_setfield(L, -2, "attrib_cap");
 	return 1;
 }
 

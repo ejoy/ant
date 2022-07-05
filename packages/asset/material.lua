@@ -52,9 +52,68 @@ end
 
 local ms = ecs.system "material_system"
 
+local function stat_material_info(verbose)
+	local materials = {}
+	local instances = {}
+	for e in w:select "material:in render_object:in filter_material:in" do
+		local function mark(mi, matpath)
+			if instances[mi] == nil then
+				instances[mi] = true
+				local mobj = mi:get_material()
+				if nil == materials[mobj] then
+					materials[mobj] = matpath
+				end
+			end
+		end
+
+		mark(e.render_object.material, e.material)
+		for _, m in pairs(e.filter_material) do
+			mark(m.material, e.material)
+		end
+	end
+
+	local material_attribs = {}
+	local material_paths = {}
+	for mobj, mpath in pairs(materials) do
+		local attribs = mobj:attribs()
+		table.move(attribs, 1, #attribs, #material_attribs+1, material_attribs)
+		material_paths[#material_paths+1] = mpath
+	end
+
+	local instance_attribs = {}
+	local numinstance = 0
+	for mi in pairs(instances) do
+		local attribs = mi:attribs()
+		table.move(attribs, 1, #attribs, #instance_attribs+1, instance_attribs)
+		numinstance = numinstance + 1
+	end
+
+	print("Material number: ", #material_paths, "material attribs: ", #material_attribs)
+	if verbose then
+		print "Material paths:"
+		for _, p in ipairs(material_paths) do
+			print(p)
+		end
+	end
+	print("Instance number: ", numinstance, "instance attribs: ", #instance_attribs)
+
+	local s = rmat.stat(CMATOBJ)
+	print("material cobject, attrib number:", s.attrib_num, "attrib cap:", s.attrib_cap)
+end
+
+local debug_material
 function ms:component_init()
 	w:clear "material_result"
+
 	for e in w:select "INIT material:in material_setting?in material_result:new" do
 		e.material_result = imaterial.load_res(e.material, e.material_setting)
+		debug_material = true
+	end
+end
+
+function ms:end_frame()
+	if debug_material then
+		stat_material_info()
+		debug_material = nil
 	end
 end

@@ -18,6 +18,7 @@ interface "imesh"
 system "material_system"
     .implement "material.lua"
     .method "component_init"
+    .method "end_frame"
 
 system "mesh_system"
     .implement "mesh.lua"
