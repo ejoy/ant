@@ -16,6 +16,9 @@ local function constructorDocument(handle)
     function doc.elementFromPoint(x, y)
         return constructor.Element(handle, false, rmlui.DocumentElementFromPoint(handle, x, y))
     end
+    function doc.getBody()
+        return constructor.Element(handle, false, rmlui.DocumentGetBody(handle))
+    end
     return doc
 end
 
