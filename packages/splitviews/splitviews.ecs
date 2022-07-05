@@ -4,3 +4,18 @@ system "splitviews_system"
     .method "entity_init"
     .method "data_changed"
     .method "update_camera"
+
+local q = {
+    "ortho_right_queue",
+    "ortho_left_queue",
+    "ortho_back_queue",
+    "ortho_front_queue",
+    "ortho_top_queue",
+    "ortho_bottom_queue",
+}
+for i=1, #q do
+    local n = q[i]
+    component (n)
+    component (n .. "_cull")
+    component (n .. "_visible")
+end

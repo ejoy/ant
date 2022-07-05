@@ -82,13 +82,15 @@ function render_sys:update_filter()
         local filterstate = ro.filter_state
 		local st = ro.fx.setting.surfacetype
 
+		e[st] = true
+		w:sync(st .. "?out", e)
+
 		for qe in w:select "queue_name:in primitive_filter:in" do
 			local qn = qe.queue_name
 			local function mark_tags(add)
-				e[st] = add
 				local qn_visible = qn .. "_visible"
 				e[qn_visible] = add
-				w:sync(("%s?out %s?out"):format(st, qn_visible), e)
+				w:sync(qn_visible .. "?out", e)
 			end
 
 			local pf = qe.primitive_filter

@@ -123,7 +123,6 @@ end
 function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, surfacetypes, visible)
 	surfacetypes = surfacetypes or QUEUE_TYPES["main_queue"]
 	filtertype = filtertype or "main_view"
-	w:register{name = view_queuename}
 
 	local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
 	ecs.create_entity {

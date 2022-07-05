@@ -47,7 +47,7 @@ function svs:init()
                 eyepos  = {0, 0, -5, 0},
                 ortho   = true,
             },
-            name = "ortho_front",
+            name = "ortho_front_queue",
             view_ratio = {
                 x = 0.5, y = 0, w = 0.5, h = 0.5,
             },
@@ -59,7 +59,7 @@ function svs:init()
                 eyepos  = {0, 0, 5, 0},
                 ortho   = true,
             },
-            name = "ortho_back",
+            name = "ortho_back_queue",
             view_ratio = {
                 x = 0.5, y = 0, w = 0.5, h = 0.5,
             },
@@ -71,7 +71,7 @@ function svs:init()
                 eyepos  = {-5, 0, 0, 0},
                 ortho   = true,
             },
-            name = "ortho_left",
+            name = "ortho_left_queue",
             view_ratio = {
                 x = 0, y = 0.5, w = 0.5, h = 0.5,
             },
@@ -83,7 +83,7 @@ function svs:init()
                 eyepos  = {5, 0, 0, 0},
                 ortho   = true,
             },
-            name = "ortho_right",
+            name = "ortho_right_queue",
             view_ratio = {
                 x = 0, y = 0.5, w = 0.5, h = 0.5,
             },
@@ -95,7 +95,7 @@ function svs:init()
                 eyepos  = {0, 5, 0, 0},
                 ortho   = true,
             },
-            name = "ortho_top",
+            name = "ortho_top_queue",
             view_ratio = {
                 x = 0.5, y = 0.5, w = 0.5, h = 0.5,
             },
@@ -107,7 +107,7 @@ function svs:init()
             eyepos  = {0, -5, 0, 0},
             ortho   = true,
             },
-            name = "ortho_bottom",
+            name = "ortho_bottom_queue",
             view_ratio = {
                 x = 0.5, y = 0.5, w = 0.5, h = 0.5,
             },
