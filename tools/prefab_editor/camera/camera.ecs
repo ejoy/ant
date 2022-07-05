@@ -22,6 +22,7 @@ system "second_view_frustum_system"
     .method "entity_remove"
 
 component "second_view"
+component "second_view_cull"
 component "second_view_frustum"
 
 
