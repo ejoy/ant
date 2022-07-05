@@ -55,6 +55,7 @@ int luaopen_filedialog(lua_State* L);
 int luaopen_imgui(lua_State* L);
 #endif
 int luaopen_system_scene(lua_State* L);
+int luaopen_system_cull(lua_State* L);
 
 void ant_loadmodules(lua_State* L) {
     static const luaL_Reg modules[] = {
@@ -111,6 +112,7 @@ void ant_loadmodules(lua_State* L) {
         { "imgui", luaopen_imgui },
 #endif
         { "system.scene", luaopen_system_scene },
+        { "cull.core", luaopen_system_cull},
         { NULL, NULL },
     };
 

@@ -5,7 +5,10 @@ local w = world.w
 local math3d = require "math3d"
 local mc = import_package "ant.math".constant
 local setting = import_package "ant.settings".setting
+local components = import_package "ant.ecs".components
 local disable_cull = setting:data().graphic.disable_cull
+
+local cullcore = require "cull.core"
 
 local icp = ecs.interface "icull_primitive"
 
@@ -95,9 +98,7 @@ function cull_sys:data_changed()
 end
 
 function cull_sys:entity_ready()
-	for qe in w:select "filter_created queue_name:in" do
-		w:register {name = qe.queue_name .. "_cull"}
-	end
+	
 end
 
 local function find_queue_tags()
@@ -114,6 +115,18 @@ local function find_queue_tags()
 	return cull_tags
 end
 
+local tag_ids = {}
+for idx, cc in ipairs(components) do
+	tag_ids[cc] = idx
+end
+local function build_tags(tags)
+	local t = {}
+	for i=1, #tags do
+		t[i] = assert(tag_ids[tags[i]])
+	end
+	return t
+end
+
 function cull_sys:cull()
 	if disable_cull then
 		return
@@ -121,6 +134,7 @@ function cull_sys:cull()
 
 	for ceid, tags in pairs(find_queue_tags()) do
 		local camera = world:entity(ceid).camera
-		cull(tags, camera.viewprojmat)
+		--cull(tags, camera.viewprojmat)
+		cullcore.cull(world._ecs_world, build_tags(tags), camera.viewprojmat)
 	end
 end

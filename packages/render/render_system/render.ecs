@@ -5,21 +5,26 @@ import "@ant.asset"
 import "@ant.objcontroller"
 
 component "pre_depth_queue"
+component "pre_depth_queue_cull"
 policy "pre_depth_queue"
     .require_system  "ant.render|pre_depth_primitive_system"
     .component   "pre_depth_queue"
 
+--TODO:shoule be remove, duplicate with pre_depth_queue
+component "scene_depth_queue"
+component "scene_depth_queue_cull"
+system "scene_depth_system"
+    .implement "render_system/depth.lua"
+    .method "init_world"
+
 component "main_queue"
+component "main_queue_cull"
 policy "main_queue"
     .component "main_queue"
 
 component "orthoview".type "lua"
 policy "orthoview_queue"
     .component "orthoview"
-
-component "view_queue"
-policy "view_queue"
-    .component "view_queue"
 
 system "world_transform_system"
     .implement "render_system/render.lua"
@@ -30,10 +35,8 @@ policy "render_object"
     .component_opt "filter_material"
 
 component "render_object_update"
-component "render_object"
-    .type "lua"
-component "filter_material"
-    .type "lua"
+component "render_object".type "lua"
+component "filter_material".type "lua"
 
 component "visible"
 
@@ -213,11 +216,6 @@ interface "ientity"
     .method "simple_render_entity_data"
     .method "frustum_entity_data"
     .method "axis_entity_data"
-
-component "scene_depth_queue"
-system "scene_depth_system"
-    .implement "render_system/depth.lua"
-    .method "init_world"
 
 import "render_system/forward_render.ecs"
 import "render_system/cluster_render.ecs"

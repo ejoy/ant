@@ -517,4 +517,6 @@ function m.new_world(config)
     return res
 end
 
+m.components = require "component"
+
 return m

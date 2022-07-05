@@ -3,54 +3,16 @@
 #include <stdint.h>
 
 #include "luaecs.h"
+#include "component.h"
 #include "scene.h"
+#include "math3d.h"
+#include "math3dfunc.h"
 
-struct CullTabIDs{
-	const char* name;
-	uint16_t id;
-};
-
-// //TODO: should be a dynamic array
-// struct CullTabIDs s_CullTabIDs[] = {
-// 	{"main_queue_foreground_cull"}
-// 	{"main_queue_opaticy_cull"},
-// 	{"main_queue_tranclucent_cull"},
-// 	{"main_queue_background_cull"},
-// 	{"main_queue_decal_cull"},
-// 	{"main_queue_ui_cull"},
-
-// 	{"scene_depth_foreground_cull"}
-// 	{"scene_depth_opaticy_cull"},
-// 	{"scene_depth_tranclucent_cull"},
-// 	{"scene_depth_background_cull"},
-
-// 	{"pre_depth_queue_opaticy_cull"},
-
-// 	{"pickup_queue_opaticy_cull"},
-// 	{"pickup_queue_tranclucent_cull"},
-
-// 	{"second_view_queue_foreground_cull"}
-// 	{"second_view_queue_opaticy_cull"},
-// 	{"second_view_queue_tranclucent_cull"},
-// 	{"second_view_queue_background_cull"},
-// 	{"second_view_queue_decal_cull"},
-// 	{"second_view_queue_ui_cull"},
-// };
-
-// static inline uint16_t 
-// to_tab_id(lua_State *L, const char* n){
-// 	for (int i=0; i<sizeof(s_CullTabIDs)/sizeof(s_CullTabIDs[0]); ++i){
-// 		if (strcmp(n, s_CullTabIDs[i].name) == 0)
-// 			return s_CullTabIDs[i].id;
-// 	}
-
-// 	return luaL_error(L, "Invalid cull tab name:%s", n);
-// }
-
+#define MATH3D(_FUNC, ...) world->math3d->_FUNC(world->math3d->LS, ...)
 static int
 lcull(lua_State *L){
 	static uint16_t s_cull_tabs[16];
-	const int numtab = lua_rawlen(L, 2);
+	const int numtab = (int)lua_rawlen(L, 2);
 	if (numtab == 0){
 		return 0;
 	}
@@ -60,40 +22,56 @@ lcull(lua_State *L){
 	}
 
 	for (int i=0; i<numtab; ++i){
-		lua_geti(L, i+1);
-		s_cull_tabs[i] = lua_tointegerx(L, -1);
+		lua_geti(L, 2, i+1);
+		s_cull_tabs[i] = (uint16_t)lua_tointeger(L, -1);
 		lua_pop(L, 1);
 	}
 
 	struct ecs_world* world = getworld(L, 1);
 	struct ecs_context* ecs = world->ecs;
 
-	const math3d_id vpid = math3d_mark_id(L, world->math, 3);
+	const math3d_id vpid = math3d_mark_id(L, world->math3d, 3);
 	int vpmat_type = LINEAR_TYPE_NONE;
-	const float* vpmat = math3d_value(world->math, vpid, &vpmat_type);
+	const float* vpmat = math3d_value(world->math3d, vpid, &vpmat_type);
 	if (vpmat_type != LINEAR_TYPE_MAT){
 		luaL_error(L, "Invalid math3d id, need matrix type:%d", vpmat_type);
 	}
 
-	float planes[6][4];
-	math3d_frustum_planes(world->math->LS, vpmat, planes, math3d_homogeneous_depth());
+	float planes[6][4];	float* pp[6] = {planes[0], planes[1], planes[2], planes[3], planes[4], planes[5]};
+	math3d_frustum_planes(world->math3d->LS, vpmat, pp, math3d_homogeneous_depth());
 
-	for (int i=0; entity_iter(ecs, TAG_VIEW_VISIBLE, i); ++i) {
-		if (entity_sibling(ecs, TAG_VIEW_VISIBLE, i, COMPONENT_RENDER_OBJECT)) {
-			struct scene * s = (struct scene *)entity_sibling(ecs, TAG_VIEW_VISIBLE, i, COMPONENT_SCENE);
+	for (int i=0; entity_iter(ecs, COMPONENT_VIEW_VISIBLE, i); ++i) {
+		if (entity_sibling(ecs, COMPONENT_VIEW_VISIBLE, i, COMPONENT_RENDER_OBJECT)) {
+			struct scene * s = (struct scene *)entity_sibling(ecs, COMPONENT_VIEW_VISIBLE, i, COMPONENT_SCENE);
+			if (s == NULL)
+				continue;
 			int type;
-			const float* aabb = math3d_value(world->math, s->scene_aabb, &type);
+			const float* aabb = math3d_value(world->math3d, s->scene_aabb, &type);
+			if (type == LINEAR_TYPE_NULL)
+				continue;
 			if (type != LINEAR_TYPE_MAT){
-				luaL_error(L, "Invalid scene_aabb, need matrix type:%d", type);
+				return luaL_error(L, "Invalid scene_aabb, need matrix type:%d", type);
 			}
-			if (math3d_frustum_intersect_aabb(world->math->LS, planes, aabb) < 0){
-				struct entity_id * eid = (struct entity_id *)entity_sibling(ecs, TAG_VIEW_VISIBLE, i, COMPONENT_ENTITY_ID);
+			const int culled = math3d_frustum_intersect_aabb(world->math3d->LS, pp, aabb) < 0;
+			component_id * id = (component_id *)entity_sibling(ecs, COMPONENT_VIEW_VISIBLE, i, COMPONENT_ID);
+			if (id == NULL){
+				return luaL_error(L, "Entity id not found");
+			}
+
+			if (culled){
 				for (int ii=0; ii<numtab; ++ii){
-					entity_enable_tag(ecs, eid, i, s_cull_tabs[ii]);
+					entity_enable_tag(ecs, COMPONENT_VIEW_VISIBLE, i, s_cull_tabs[ii]);
+				}
+			} else {
+				for (int ii=0; ii<numtab; ++ii){
+					entity_disable_tag(ecs, COMPONENT_VIEW_VISIBLE, i, s_cull_tabs[ii]);
 				}
 			}
+			
 		}
 	}
+
+	return 0;
 }
 
 

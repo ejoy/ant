@@ -33,6 +33,10 @@ struct refobject {
 static int g_default_homogeneous_depth = 0;
 static int g_origin_bottom_left = 0;
 
+int math3d_homogeneous_depth(){
+	return g_default_homogeneous_depth;
+}
+
 static size_t
 getlen(lua_State *L, int index) {
 	lua_len(L, index);
