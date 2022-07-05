@@ -65,6 +65,7 @@ local function loadComponents()
         else
             local t = info.type[1]
             if t == "lua" then
+                components[#components+1] = {name, "tag"}
             elseif t == "c" then
                 components[#components+1] = {name, "c", info.field}
             else
