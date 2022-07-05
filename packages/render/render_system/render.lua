@@ -35,9 +35,6 @@ function world_trans_sys:entity_init()
 end
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
-for _, ln in ipairs(LAYER_NAMES) do
-	w:register{name=ln}
-end
 
 local QUEUE_TYPES <const> = {
     main_queue = LAYER_NAMES,

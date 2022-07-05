@@ -34,14 +34,8 @@ function render_sys:component_init()
 end
 
 function render_sys:entity_init()
-	w:clear "filter_created"
-	for qe in w:select "INIT primitive_filter:in queue_name:in filter_created?out" do
-		w:register{name = qe.queue_name .. "_visible"}
-
+	for qe in w:select "INIT primitive_filter:in queue_name:in" do
 		local pf = qe.primitive_filter
-
-		qe.filter_created = true
-		w:sync("filter_created?out", qe)
 
 		pf._DEBUG_filter_type = pf.filter_type
 		pf.filter_type = ies.filter_mask(pf.filter_type)

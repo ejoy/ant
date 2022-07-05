@@ -18,6 +18,7 @@ pipeline "select"
 
 component "pickup_queue"
 component "pickup_queue_cull"
+component "pickup_queue_visible"
 component "pickup"
     .type "lua"
 

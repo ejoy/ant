@@ -23,6 +23,7 @@ system "second_view_frustum_system"
 
 component "second_view"
 component "second_view_cull"
+component "second_view_visible"
 component "second_view_frustum"
 
 

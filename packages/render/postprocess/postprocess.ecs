@@ -33,6 +33,7 @@ policy "postprocess_queue"
 
 component "postprocess_obj_queue"
 component "postprocess_obj_queue_cull"
+component "postprocess_obj_queue_visible"
 system "postprocess_obj_system"
     .implement "postprocess/postprocess_obj.lua"
     .method "init_world"
