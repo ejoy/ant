@@ -11,8 +11,6 @@ lm:lua_source "scene" {
     sources = {
         "scene.c"
     },
-    deps = {
-        "compile_ecs",
-        "foundation",
-    }
+    deps = "foundation",
+    objdeps = "compile_ecs",
 }

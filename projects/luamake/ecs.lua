@@ -1,3 +1,5 @@
+local packages, component_lua, component_h = ...
+
 local fs = require "bee.filesystem"
 
 local function createEnv(class)
@@ -19,7 +21,7 @@ local function createEnv(class)
         return function (name)
             local cc = {}
             c[name] = cc
-    
+
             local o = {}
             local mt = {}
             function mt:__index(key)
@@ -51,7 +53,7 @@ local function loadComponents()
     local function eval(filename)
         assert(loadfile(filename:string(), "t", env))()
     end
-    for file in fs.pairs("packages", "r") do
+    for file in fs.pairs(packages, "r") do
         if file:equal_extension "ecs" then
             eval(file)
         end
@@ -98,7 +100,7 @@ for _, info in ipairs(components) do
 end
 write "}"
 write ""
-writefile "packages/ecs/component.lua"
+writefile(component_lua)
 
 local TYPENAMES <const> = {
     int = "int32_t",
@@ -151,4 +153,4 @@ end
 
 write ""
 
-writefile "clibs/ecs/component.h"
+writefile(component_h)
