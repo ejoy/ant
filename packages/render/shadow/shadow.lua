@@ -32,7 +32,7 @@ local function shadow_color()
 	return c
 end
 
-bgfx.set_palette_color(0, 1.0, 1.0, 1.0, 1.0)
+bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
 local csm_setting = {
 	shadowmap_size	= shadowcfg.size,
 	shadow_param	= {shadowcfg.bias, shadowcfg.normal_offset, 1/shadowcfg.size, 0},
@@ -55,7 +55,7 @@ local csm_setting = {
 				U="BORDER",
 				V="BORDER",
 				COMPARE="COMPARE_GEQUAL",
-				BOARD_COLOR="1",
+				BOARD_COLOR="0",
 			},
 		}
 	},
