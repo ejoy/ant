@@ -274,5 +274,21 @@ namespace ecs_api {
         bool visit_entity(entity<Args...>& e, int i, lua_State* L) {
             return impl::visit_entity(ecs, i, e, L);
         }
+
+        template <typename ...Args>
+        bool has() {
+            entity<Args...> e;
+            for (int index = 0;; ++index) {
+                auto r = impl::visit_entity(ecs, index, e);
+                switch (r) {
+                case impl::visit_result::succ:
+                    return true;
+                case impl::visit_result::failed:
+                    break;
+                case impl::visit_result::eof:
+                    return false;
+                }
+            }
+        }
     };
 }

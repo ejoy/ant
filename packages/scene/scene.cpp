@@ -54,7 +54,7 @@ scene_changed(lua_State *L) {
 	auto math3d = w->math3d->LS;
 
 	// step.1
-	if (!ecs.iter<ecs::scene_needchange>(0)) {
+	if (!ecs.has<ecs::scene_needchange, ecs::scene>()) {
 		return 0;
 	}
 	flatset<int64_t> parents;
