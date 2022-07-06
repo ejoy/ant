@@ -115,8 +115,7 @@ local function init(material, setting)
             if v.texture then
                 v.type = 't'
                 v.value = assetmgr.resource(v.texture).handle
-            end
-            if v.image then
+			elseif v.image then
                 v.type = 'i'
                 v.value = assetmgr.resource(v.image).handle
             end

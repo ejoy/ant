@@ -131,6 +131,21 @@ function render_sys:render_submit()
     end
 end
 
+function render_sys:entity_remove()
+	for e in w:select "REMOVED render_object:in filter_material:in" do
+		local function release(m)
+			if m.material then
+				m.material:release()
+				m.material = nil
+			end
+		end
+		release(e.render_object)
+		for _, m in pairs(e.filter_material) do
+			release(m)
+		end
+	end
+end
+
 local s = ecs.system "end_filter_system"
 
 local function check_set_depth_state_as_equal(state)

@@ -19,8 +19,8 @@
 #endif //_DEBUG
 
 
-//#define INVALID_ATTRIB	0xffff
-#define INVALID_ATTRIB	0x0001ffff
+#define INVALID_ATTRIB	0xffff
+//#define INVALID_ATTRIB	0x0001ffff
 #define MAX_ATTRIB_CAPS	INVALID_ATTRIB
 #define DEFAULT_ARENA_SIZE 256
 
@@ -43,7 +43,7 @@ enum ATTIRB_TYPE {
 #define BGFX_INVALID(h) (h.idx == UINT16_MAX)
 #define BGFX_EQUAL(a,b) (a.idx == b.idx)
 
-typedef uint32_t attrib_id;
+typedef uint16_t attrib_id;
 
 struct encoder_holder {
 	bgfx_encoder_t *encoder;
@@ -115,8 +115,8 @@ struct attrib_arena {
 	bgfx_interface_vtbl_t *bgfx;
 	struct math3d_api *math;
 	struct encoder_holder* eh;
-	uint32_t cap;
-	uint32_t n;
+	uint16_t cap;
+	uint16_t n;
 	attrib_id freelist;
 	uint16_t cp_idx;
 	attrib_type *a;
@@ -1045,8 +1045,9 @@ static inline struct material_instance*
 to_instance(lua_State *L, int instanceidx){
 	return (struct material_instance*)luaL_checkudata(L, instanceidx, "ANT_INSTANCE_MT");
 }
+
 static int
-linstance_gc(lua_State *L) {
+linstance_release(lua_State *L) {
 	struct material_instance * mi = to_instance(L, 1);
 	if (mi->patch_attrib != INVALID_ATTRIB) {
 		if (LUA_TUSERDATA != lua_getiuservalue(L, 1, INSTANCE_UV_INVALID_LIST)){
@@ -1278,9 +1279,9 @@ lmaterial_instance(lua_State *L) {
 
 	if (luaL_newmetatable(L, "ANT_INSTANCE_MT")){
 		luaL_Reg l[] = {
-			{ "__gc", 			linstance_gc		},
 			{ "__newindex", 	linstance_set_attrib},
 			{ "__call", 		linstance_apply_attrib},
+			{ "release",		linstance_release},
 			{ "attribs",		linstance_attribs},
 			{ "get_material",	linstance_get_material},
 			{ "get_state",		linstance_get_state},
