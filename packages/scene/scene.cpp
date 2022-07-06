@@ -58,7 +58,7 @@ scene_changed(lua_State *L) {
 		return 0;
 	}
 	flatset<int64_t> parents;
-	for (auto& e : ecs.select<ecs::scene_needchange, ecs::scene>(L)) {
+	for (auto& e : ecs.select<ecs::scene_needchange, ecs::scene>()) {
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0) {
 			parents.insert(s.parent);

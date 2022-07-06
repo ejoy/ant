@@ -196,6 +196,7 @@ namespace ecs_api {
                         auto r = visit_entity(ctx, index, e);
                         switch (r) {
                         case visit_result::succ:
+                            e.index = index;
                             return;
                         case visit_result::failed:
                             index++;
