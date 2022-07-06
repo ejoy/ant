@@ -101,19 +101,19 @@ local function stat_material_info(verbose)
 	print("material cobject, attrib number:", s.attrib_num, "attrib cap:", s.attrib_cap)
 end
 
-local debug_material
+--local debug_material
 function ms:component_init()
 	w:clear "material_result"
 
 	for e in w:select "INIT material:in material_setting?in material_result:new" do
 		e.material_result = imaterial.load_res(e.material, e.material_setting)
-		debug_material = true
+		--debug_material = true
 	end
 end
 
 function ms:end_frame()
-	if debug_material then
-		stat_material_info()
-		debug_material = nil
-	end
+	-- if debug_material then
+	-- 	stat_material_info()
+	-- 	debug_material = nil
+	-- end
 end
