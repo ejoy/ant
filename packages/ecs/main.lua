@@ -252,12 +252,12 @@ local function create_scene_entity(w, group)
         group = group or 0,
         scene = {
             parent = parent,
-        }
+        },
+        scene_needchange = true
     }
     update_group_tag(w, data)
     w.w:new(data)
     w.w:group_update()
-    w:call(eid, "init_scene")
     return eid
 end
 
