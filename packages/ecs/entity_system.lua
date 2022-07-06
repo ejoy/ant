@@ -36,7 +36,7 @@ local function setParent(id, parentid)
         return
     end
     if parentid == nil then
-        e.scene_changed = true
+        e.scene_needchange = true
         e.scene.parent = 0
         return
     end
@@ -45,7 +45,7 @@ local function setParent(id, parentid)
         world:remove_entity(id)
         return
     end
-    e.scene_changed = true
+    e.scene_needchange = true
     e.scene.parent = parentid
     if needRebuild(id, parentid) then
         local r = {id, [id]=true}

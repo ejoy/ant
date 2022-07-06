@@ -1,1 +1,2 @@
-/component.h
+/ecs/component.h
+/ecs/component.hpp

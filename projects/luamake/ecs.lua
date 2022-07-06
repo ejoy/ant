@@ -113,45 +113,103 @@ local TYPENAMES <const> = {
     userdata = "intptr_t",
 }
 
-local id = 0
-local function write_id(name)
-    id = id + 1
-    write(("#define COMPONENT_%s %d"):format(name:upper(), id))
-end
-
-local function write_type(name, type)
-    write(("typedef %s component_%s;"):format(TYPENAMES[type], name))
-end
-
-local function write_cstruct(name, fields)
-    write(("struct component_%s {"):format(name))
-    for _, field in ipairs(fields) do
-        local name, typename = field:match "^([%w_]+):(%w+)$"
-        write(("\t%s %s;"):format(TYPENAMES[typename], name))
+do
+    local id = 0
+    local function write_id(name)
+        id = id + 1
+        write(("#define COMPONENT_%s %d"):format(name:upper(), id))
     end
-    write("};")
-end
 
-write "#pragma once"
-write ""
-write "#include <stdint.h>"
-write ""
-
-for _, info in ipairs(components) do
-    write_id(info[1])
-end
-
-write ""
-
-for _, info in ipairs(components) do
-    local name, type, field = info[1], info[2], info[3]
-    if type == "c" then
-        write_cstruct(name, field)
-    elseif type ~= "tag" then
-        write_type(name, type)
+    local function write_type(name, type)
+        write(("typedef %s component_%s;"):format(TYPENAMES[type], name))
     end
+
+    local function write_cstruct(name, fields)
+        write(("struct component_%s {"):format(name))
+        for _, field in ipairs(fields) do
+            local name, typename = field:match "^([%w_]+):(%w+)$"
+            write(("\t%s %s;"):format(TYPENAMES[typename], name))
+        end
+        write("};")
+    end
+
+    write "#pragma once"
+    write ""
+    write "#include <stdint.h>"
+    write ""
+    for _, info in ipairs(components) do
+        write_id(info[1])
+    end
+    write ""
+    for _, info in ipairs(components) do
+        local name, type, fields = info[1], info[2], info[3]
+        if type == "c" then
+            write_cstruct(name, fields)
+        elseif type ~= "tag" then
+            write_type(name, type)
+        end
+    end
+    write ""
+
+    writefile(component_h .. "/component.h")
 end
 
-write ""
+do
+    write "#pragma once"
+    write ""
+    write "#include <stdint.h>"
+    write ""
+    write "namespace ecs {"
+    write ""
+    write "struct REMOVED {};"
+    write ""
+    for _, info in ipairs(components) do
+        local name, type, fields = info[1], info[2], info[3]
+        if type == "c" then
+            write(("struct %s {"):format(name))
+            for _, field in ipairs(fields) do
+                local name, typename = field:match "^([%w_]+):(%w+)$"
+                write(("\t%s %s;"):format(TYPENAMES[typename], name))
+            end
+            write("};")
+            write ""
+        elseif type == "tag" then
+            write(("struct %s {};"):format(name))
+            write ""
+        else
+            write(("using %s = %s;"):format(name, TYPENAMES[type]))
+            write ""
+        end
+    end
+    write "}"
+    write ""
 
-writefile(component_h)
+    write "namespace ecs_api {"
+    write ""
+    write "struct component_id {"
+    write "\tinline static int id = 0;"
+    write "\tinline static int gen() {"
+    write "\t\treturn id++;"
+    write "\t}"
+    write "};"
+    write ""
+    write "template <typename T> struct component {};"
+    write ""
+    write "#define ECS_COMPONENT(NAME) \\"
+    write "template <> struct component<ecs::##NAME> { \\"
+    write "\tstatic inline const int id = component_id::gen(); \\"
+    write "\tstatic inline const char name[] = #NAME; \\"
+    write "};"
+    write ""
+    write("ECS_COMPONENT(REMOVED)")
+    for _, c in ipairs(components) do
+        write("ECS_COMPONENT("..c[1]..")")
+    end
+    write ""
+    write "#undef ECS_COMPONENT"
+    write ""
+    write "}"
+    write ""
+
+    writefile(component_h .. "/component.hpp")
+end

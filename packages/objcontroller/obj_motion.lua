@@ -8,7 +8,9 @@ local mc     = import_package "ant.math".constant
 local iobj_motion = ecs.interface "iobj_motion"
 
 local function set_changed(e)
-    world:pub {"scene_changed", assert(e.id)}
+    --TODO: opt performance
+    local v = world:entity(e.id)
+    v.scene_needchange = true
 end
 
 local function set_s(srt, v)

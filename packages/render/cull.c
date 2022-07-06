@@ -3,10 +3,24 @@
 #include <stdint.h>
 
 #include "luaecs.h"
-#include "component.h"
-#include "scene.h"
+#include "ecs/world.h"
+#include "ecs/component.h"
 #include "math3d.h"
 #include "math3dfunc.h"
+
+typedef int64_t math3d_id;
+
+struct scene {
+	int64_t     parent;
+    math3d_id s;
+    math3d_id r;
+    math3d_id t;
+    math3d_id mat;
+    math3d_id worldmat;
+    math3d_id updir;
+    math3d_id aabb;
+    math3d_id scene_aabb;
+};
 
 #define MATH3D(_FUNC, ...) world->math3d->_FUNC(world->math3d->LS, ...)
 static int

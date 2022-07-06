@@ -8,7 +8,6 @@ lm:lua_source "render" {
         "../../clibs/lua",
         "../../clibs/math3d",
         "../../clibs/foundation",
-        "../scene",
         "../../3rd/luaecs",
         "../../clibs/ecs",
     },

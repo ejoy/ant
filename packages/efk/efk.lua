@@ -243,8 +243,6 @@ function efk_sys:camera_usage()
     end
 end
 
-local event_scene = world:sub{"scene_changed"}
-
 function efk_sys:follow_transform_updated()
     for v in w:select "efk:in scene:in" do
         local efk = v.efk

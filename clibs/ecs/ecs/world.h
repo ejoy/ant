@@ -1,8 +1,11 @@
 #pragma once
 
-#include <stdint.h>
-#include <lua.h>
-#include <lauxlib.h>
+#if defined(__cplusplus)
+#	include <lua.hpp>
+#else
+#	include <lua.h>
+#	include <lauxlib.h>
+#endif
 
 struct ecs_context;
 struct bgfx_interface_vtbl_t;
@@ -20,22 +23,7 @@ struct ecs_world {
 	struct bgfx_encoder_holder*   encoder;
 };
 
-typedef int64_t math3d_id;
-
-struct scene {
-	int64_t     parent;
-    math3d_id s;
-    math3d_id r;
-    math3d_id t;
-    math3d_id mat;
-    math3d_id worldmat;
-    math3d_id updir;
-    math3d_id aabb;
-    math3d_id scene_aabb;
-};
-
-static inline struct ecs_world* 
-getworld(lua_State* L, int idx) {
+static inline struct ecs_world* getworld(lua_State* L, int idx) {
 	size_t sz = 0;
 	struct ecs_world* ctx = (struct ecs_world*)luaL_checklstring(L, idx, &sz);
 	if (sizeof(struct ecs_world) > sz) {

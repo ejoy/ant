@@ -26,5 +26,5 @@ component "scene"
     .method "marshal"
     .method "unmarshal"
 
+component "scene_needchange"
 component "scene_changed"
-component "scene_needsync"
