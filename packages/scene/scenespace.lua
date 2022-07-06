@@ -2,6 +2,9 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
+local math3d = require "math3d"
+
+
 local s = ecs.system "scenespace_system"
 
 local function inherit_state(r, pr)
@@ -30,12 +33,29 @@ local function update_render_object(ro, scene)
 	end
 end
 
+local function init_scene_aabb(scene, bounding)
+    if bounding then
+        scene.aabb = math3d.mark(bounding.aabb)
+        scene.scene_aabb = math3d.mark(math3d.aabb())
+    end
+end
+
 function s:entity_init()
 	for v in w:select "INIT scene:in render_object?in scene_needchange?out" do
 		local scene = v.scene
 		v.scene_needchange = true
 		update_render_object(v.render_object, scene)
 	end
+    for v in w:select "INIT mesh:in scene:update" do
+        init_scene_aabb(v.scene, v.mesh.bounding)
+    end
+    for v in w:select "INIT simplemesh:in scene:update" do
+        init_scene_aabb(v.scene, v.simplemesh.bounding)
+    end
+    --TODO: should move to render package
+    for v in w:select "INIT scene:in render_object:in" do
+        v.render_object.aabb = v.scene.scene_aabb
+    end
 end
 
 function s:scene_update()

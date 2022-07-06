@@ -5,7 +5,6 @@ import "pickup/pickup_debug.ecs"
 
 system "pickup_system"
     .implement "pickup/pickup_system.lua"
-    .require_system "ant.scene|scenespace_system"
     .method "init"
     .method "entity_init"
     .method "update_camera"
