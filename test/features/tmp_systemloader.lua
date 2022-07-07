@@ -213,6 +213,21 @@ function init_loader_sys:init()
     --ientity.create_procedural_sky()
     --local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/headquater.glb|mesh.prefab"
     local g1 = ecs.group(1)
+    local group_root = g1:create_entity{
+        policy = {
+            "ant.scene|scene_object",
+            "ant.general|name",
+        },
+        data = {
+            scene = {},
+            on_ready = function (e)
+                w:sync("scene:in id:in", e)
+                iom.set_position(e, math3d.vector(-20, 0, 0))
+                w:sync("scene:out", e)
+            end,
+            name = "test_group",
+        },
+    }
     g1:create_entity{
         policy = {
             "ant.render|render",
@@ -222,7 +237,9 @@ function init_loader_sys:init()
             mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.001.material",
             filter_state = "main_view",
-            scene = {srt={}},
+            scene = {
+                parent = group_root,
+            },
             on_ready = function (e)
                 w:sync("scene:in id:in", e)
                 iom.set_scale(e, 10)
@@ -333,7 +350,7 @@ end
 
 local kb_mb = world:sub{"keyboard"}
 
-local enable = 0
+local enable = 1
 function init_loader_sys:entity_init()
     
     for _, key, press in kb_mb:unpack() do
@@ -351,10 +368,20 @@ function init_loader_sys:entity_init()
             
             if enable == 1 then
                 ecs.group(1):enable "view_visible"
+                ecs.group(1):enable "scene_update"
+                ecs.group(1):enable "scene_needchange"
+
                 ecs.group(0):disable "view_visible"
+                ecs.group(0):disable "scene_update"
+                ecs.group(0):disable "scene_needchange"
             else
                 ecs.group(0):enable "view_visible"
+                ecs.group(0):enable "scene_update"
+                ecs.group(0):enable "scene_needchange"
+
                 ecs.group(1):disable "view_visible"
+                ecs.group(1):disable "scene_update"
+                ecs.group(1):disable "scene_needchange"
             end
             enable = enable == 1 and 0 or 1
 
