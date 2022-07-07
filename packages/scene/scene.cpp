@@ -54,18 +54,18 @@ scene_changed(lua_State *L) {
 	auto math3d = w->math3d->LS;
 
 	// step.1
-	if (!ecs.has<ecs::scene_needchange, ecs::scene>()) {
+	if (!ecs.has<ecs::scene_needchange, ecs::scene_update, ecs::scene>()) {
 		return 0;
 	}
 	flatset<int64_t> parents;
-	for (auto& e : ecs.select<ecs::scene_needchange, ecs::scene>()) {
+	for (auto& e : ecs.select<ecs::scene_needchange, ecs::scene_update, ecs::scene>()) {
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0) {
 			parents.insert(s.parent);
 		}
 		ecs.enable_tag<ecs::scene_changed>(e);
+		ecs.disable_tag<ecs::scene_needchange>(e);
 	}
-	ecs.clear_type<ecs::scene_needchange>();
 
 	// step.2
 	flatmap<int64_t, int64_t> worldmats;
@@ -93,7 +93,7 @@ scene_changed(lua_State *L) {
 	}
 
 	// step.3
-	for (auto& e : ecs.select<ecs::scene_changed, ecs::scene, ecs::id>(L)) {
+	for (auto& e : ecs.select<ecs::scene_changed, ecs::scene_update, ecs::scene, ecs::id>(L)) {
 		auto& id = e.get<ecs::id>();
 		auto& s = e.get<ecs::scene>();
 		
