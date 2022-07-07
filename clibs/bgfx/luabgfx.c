@@ -3142,6 +3142,31 @@ ENCODER_API(lallocTransform) {
 	return 1;
 }
 
+ENCODER_API(lallocTransformBulk) {
+	int num = luaL_checkinteger(L, 1);
+	bgfx_transform_t trans;
+	uint32_t id = BGFX_ENCODER(alloc_transform, encoder, &trans, num);
+	lua_pushinteger(L, id);
+	lua_pushlightuserdata(L, trans.data);
+	return 2;
+}
+
+static int
+lsetTransformBulk(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	int t = lua_type(L, 2);
+	int num = luaL_checkinteger(L, 3);
+	int offset = luaL_optinteger(L, 4, 0);
+	if (t == LUA_TUSERDATA || t == LUA_TLIGHTUSERDATA) {
+		float *data = lua_touserdata(L, 1);
+		void *mat = lua_touserdata(L, 2);
+		memcpy(data + 16 * offset, mat, 16 * sizeof(float) * num);
+	} else {
+		return luaL_error(L, "invalid type, need userdata/lightuserdata:%s", lua_typename(L,t));
+	}
+	return 0;
+}
+
 ENCODER_API(lsetTransformCached) {
 	int id = luaL_checkinteger(L, 1);
 	int num = luaL_optinteger(L, 2, 1);
@@ -5247,6 +5272,7 @@ linitEncoder(lua_State *L) {
 		{ "set_vertex_buffer", lsetVertexBuffer_encoder },
 		{ "set_index_buffer", lsetIndexBuffer_encoder },
 		{ "alloc_transform", lallocTransform_encoder },
+		{ "alloc_transform_bulk", lallocTransformBulk_encoder },
 		{ "set_transform", lsetTransform_encoder },
 		{ "set_transform_cached", lsetTransformCached_encoder },
 		{ "set_multi_transforms", lsetMultiTransforms_encoder },
@@ -5428,6 +5454,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_uniform_vector_command", lsetUniformVectorCommand },
 		{ "set_texture_command", lsetTextureCommand },
 		{ "set_buffer_command", lsetBufferCommand },
+		{ "set_transform_bulk", lsetTransformBulk },
 
 		// encoder apis
 		{ "touch", ltouch },
@@ -5438,6 +5465,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_vertex_buffer", lsetVertexBuffer },
 		{ "set_index_buffer", lsetIndexBuffer },
 		{ "alloc_transform", lallocTransform },
+		{ "alloc_transform_bulk", lallocTransformBulk },
 		{ "set_transform", lsetTransform },
 		{ "set_transform_cached", lsetTransformCached },
 		{ "set_multi_transforms", lsetMultiTransforms},
