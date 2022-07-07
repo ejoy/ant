@@ -1413,7 +1413,7 @@ ENCODER_API(lmultiSubmit) {
 	}
 	for (i=0; i<num-1; i++) {
 		BGFX_ENCODER(set_transform_cached, encoder, tid+i, 1);
-		BGFX_ENCODER(submit, encoder, vid, ph, depth, 0);	// discard null
+		BGFX_ENCODER(submit, encoder, vid, ph, depth, BGFX_DISCARD_TRANSFORM);
 	}
 	BGFX_ENCODER(set_transform_cached, encoder, tid+i, 1);
 	BGFX_ENCODER(submit, encoder, vid, ph, depth, BGFX_DISCARD_ALL);
