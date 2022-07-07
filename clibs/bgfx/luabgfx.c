@@ -1404,7 +1404,8 @@ ENCODER_API(lmultiSubmit) {
 	uint16_t progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	uint32_t tid = luaL_checkinteger(L, 3);
 	uint32_t num = luaL_checkinteger(L, 4);
-	uint32_t depth = luaL_optinteger(L, 5, 0);
+	int stride = luaL_optinteger(L, 5, 1);
+	uint32_t depth = luaL_optinteger(L, 6, 0);
 	bgfx_program_handle_t ph = { progid };
 	uint32_t i;
 
@@ -1412,10 +1413,11 @@ ENCODER_API(lmultiSubmit) {
 		return luaL_error(L, "num == 0");
 	}
 	for (i=0; i<num-1; i++) {
-		BGFX_ENCODER(set_transform_cached, encoder, tid+i, 1);
+		BGFX_ENCODER(set_transform_cached, encoder, tid, stride);
 		BGFX_ENCODER(submit, encoder, vid, ph, depth, BGFX_DISCARD_TRANSFORM);
+		tid += stride;
 	}
-	BGFX_ENCODER(set_transform_cached, encoder, tid+i, 1);
+	BGFX_ENCODER(set_transform_cached, encoder, tid, stride);
 	BGFX_ENCODER(submit, encoder, vid, ph, depth, BGFX_DISCARD_ALL);
 	return 0;
 }
