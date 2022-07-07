@@ -1404,7 +1404,8 @@ ENCODER_API(lmultiSubmit) {
 	uint16_t progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	uint32_t tid = luaL_checkinteger(L, 3);
 	uint32_t num = luaL_checkinteger(L, 4);
-	uint32_t depth = luaL_optinteger(L, 5, 0);
+	int stride = luaL_optinteger(L, 5, 1);
+	uint32_t depth = luaL_optinteger(L, 6, 0);
 	bgfx_program_handle_t ph = { progid };
 	uint32_t i;
 
@@ -1412,10 +1413,11 @@ ENCODER_API(lmultiSubmit) {
 		return luaL_error(L, "num == 0");
 	}
 	for (i=0; i<num-1; i++) {
-		BGFX_ENCODER(set_transform_cached, encoder, tid+i, 1);
-		BGFX_ENCODER(submit, encoder, vid, ph, depth, 0);	// discard null
+		BGFX_ENCODER(set_transform_cached, encoder, tid, stride);
+		BGFX_ENCODER(submit, encoder, vid, ph, depth, BGFX_DISCARD_TRANSFORM);
+		tid += stride;
 	}
-	BGFX_ENCODER(set_transform_cached, encoder, tid+i, 1);
+	BGFX_ENCODER(set_transform_cached, encoder, tid, stride);
 	BGFX_ENCODER(submit, encoder, vid, ph, depth, BGFX_DISCARD_ALL);
 	return 0;
 }
@@ -3138,6 +3140,31 @@ ENCODER_API(lallocTransform) {
 	}
 	lua_pushinteger(L, id);
 	return 1;
+}
+
+ENCODER_API(lallocTransformBulk) {
+	int num = luaL_checkinteger(L, 1);
+	bgfx_transform_t trans;
+	uint32_t id = BGFX_ENCODER(alloc_transform, encoder, &trans, num);
+	lua_pushinteger(L, id);
+	lua_pushlightuserdata(L, trans.data);
+	return 2;
+}
+
+static int
+lsetTransformBulk(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	int t = lua_type(L, 2);
+	int num = luaL_checkinteger(L, 3);
+	int offset = luaL_optinteger(L, 4, 0);
+	if (t == LUA_TUSERDATA || t == LUA_TLIGHTUSERDATA) {
+		float *data = lua_touserdata(L, 1);
+		void *mat = lua_touserdata(L, 2);
+		memcpy(data + 16 * offset, mat, 16 * sizeof(float) * num);
+	} else {
+		return luaL_error(L, "invalid type, need userdata/lightuserdata:%s", lua_typename(L,t));
+	}
+	return 0;
 }
 
 ENCODER_API(lsetTransformCached) {
@@ -5245,6 +5272,7 @@ linitEncoder(lua_State *L) {
 		{ "set_vertex_buffer", lsetVertexBuffer_encoder },
 		{ "set_index_buffer", lsetIndexBuffer_encoder },
 		{ "alloc_transform", lallocTransform_encoder },
+		{ "alloc_transform_bulk", lallocTransformBulk_encoder },
 		{ "set_transform", lsetTransform_encoder },
 		{ "set_transform_cached", lsetTransformCached_encoder },
 		{ "set_multi_transforms", lsetMultiTransforms_encoder },
@@ -5426,6 +5454,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_uniform_vector_command", lsetUniformVectorCommand },
 		{ "set_texture_command", lsetTextureCommand },
 		{ "set_buffer_command", lsetBufferCommand },
+		{ "set_transform_bulk", lsetTransformBulk },
 
 		// encoder apis
 		{ "touch", ltouch },
@@ -5436,6 +5465,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_vertex_buffer", lsetVertexBuffer },
 		{ "set_index_buffer", lsetIndexBuffer },
 		{ "alloc_transform", lallocTransform },
+		{ "alloc_transform_bulk", lallocTransformBulk },
 		{ "set_transform", lsetTransform },
 		{ "set_transform_cached", lsetTransformCached },
 		{ "set_multi_transforms", lsetMultiTransforms},
