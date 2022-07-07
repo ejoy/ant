@@ -104,6 +104,15 @@ function irender.draw(vid, ri, mat)
 	bgfx.submit(vid, m.fx.prog, 0)
 end
 
+--'num' and 'stride' unit is matrix
+function irender.multi_draw(vid, ri, mat, tid, num, stride)
+	bgfx.set_transform_cached(tid, num)
+	local m = mat or ri
+	m.material {}
+	update_mesh(ri.vb, ri.ib)
+	bgfx.multi_submit(vid, ri.fx.prog, tid, num, stride)
+end
+
 function irender.get_main_view_rendertexture()
 	local mq = w:singleton("main_queue", "render_target:in")
 	return fbmgr.get_rb(mq.render_target.fb_idx, 1).handle

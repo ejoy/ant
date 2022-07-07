@@ -105,17 +105,67 @@ end
 
 local keys = template.keys
 local select_cache = template.new "view_visible %s_visible %s_cull:absent %s render_object:in filter_material:in"
-
-local function load_select_key(qn, fn)
+local vs_select_cache = template.new "virtual_scene_tag view_visible %s_visible %s_cull:absent %s render_object:in filter_material:in"
+local function load_select_key(qn, fn, c)
 	local k = keys[qn][qn][fn]
-	return select_cache[k]
+	return c[k]
+end
+
+local function submit_filter(viewid, selkey, qn)
+	for e in w:select(selkey) do
+		irender.draw(viewid, e.render_object, e.filter_material[qn])
+	end
+end
+
+local function submit_virtual_scene_filter(viewid, selkey, qn)
+	local groups = setmetatable({}, {__index=function(t, k)
+		local tt = {}
+		t[k] = tt
+		return tt
+	end})
+	for e in w:select "view_visible virtual_scene:in scene:in" do
+		local s = e.scene
+		local g = groups[e.virtual_scene.group]
+		g[#g+1] = s.worldmat
+	end
+
+	for g, mats in pairs(groups) do
+		w:group_enable("virtual_scene_tag", g)
+		for ee in w:select(selkey) do
+			local ro = ee.render_object
+			local sm = ro.skinning_matrices
+			local tid, stride, num
+			if sm == nil then
+				local wm = ro.worldmat
+				local nm = {}
+				for i=1, #mats do
+					nm[i] = math3d.mul(mats[i], wm)
+				end
+				tid = bgfx.alloc_transform(table.unpack(nm))
+				stride = 1
+				num = #mats
+			else
+				local c = sm:count()
+				local handle
+				tid, handle = bgfx.alloc_transform_bulk(c*#mats)
+				for i=1, #mats do
+					local m = mats[i]
+					math3d.mul_matrix_bulk_data(m, sm:pointer(), c, handle, (i-1)*c)
+				end
+
+				stride = c
+				num = c * #mats
+			end
+
+			irender.multi_draw(viewid, ro, ee.filter_material[qn], tid, num, stride)
+		end
+	end
 end
 
 local function submit_render_objects(viewid, filter, qn)
 	for _, fn in ipairs(filter) do
-		for e in w:select(load_select_key(qn, fn)) do
-			irender.draw(viewid, e.render_object, e.filter_material[qn])
-		end
+		submit_filter(viewid, load_select_key(qn, fn, select_cache), qn)
+		submit_virtual_scene_filter(viewid, load_select_key(qn, fn, vs_select_cache), qn)
 	end
 end
 

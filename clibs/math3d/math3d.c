@@ -2074,6 +2074,26 @@ lpoint2plane(lua_State *L){
 }
 
 static int
+lmul_matrix_bulk_data(lua_State *L){
+	struct lastack *LS = GETLS(L);
+	const float* m = matrix_from_index(L, LS, 1);
+	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+	const float* bulk = lua_touserdata(L, 2);
+	const int bulk_num = (int)luaL_checkinteger(L, 3);
+
+	luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
+	float* r = lua_touserdata(L, 4);
+	const int offset = (int)luaL_optinteger(L, 5, 0);
+	r += offset;
+	for (int ii=0; ii<bulk_num;++ii){
+		math3d_mul_matrix(LS, m, bulk, r);
+		bulk += 16;
+		r += 16;
+	}
+	return 0;
+}
+
+static int
 lvalue_ptr(lua_State *L){
 	struct math3d_api *api = (struct math3d_api *)lua_touserdata(L, lua_upvalueindex(1));
 	int type;
@@ -2218,6 +2238,8 @@ init_math3d_api(lua_State *L, struct math3d_api *bs) {
 		//primitive
 		{ "point2plane",	lpoint2plane},
 
+		//utils
+		{ "mul_matrix_bulk_data",	lmul_matrix_bulk_data},
 		{ "CINTERFACE", NULL },
 
 		{ NULL, NULL },

@@ -79,3 +79,18 @@ local g_sys = ecs.system "group_system"
 function g_sys:start_frame()
 	ecs.group_flush()
 end
+
+local static_sceneobj = ecs.system "static_scene_object_system"
+function static_sceneobj:entity_init()
+	for e in w:select "INIT static_scene_object scene scene_update?out static_scene_object_update?out" do
+		e.scene_update = true
+		e.static_scene_object_update = true
+	end
+end
+
+function static_sceneobj:end_frame()
+	for e in w:select "static_scene_object_update static_scene_object scene_update?out" do
+		e.scene_update = nil
+	end
+	w:clear "static_scene_object_update"
+end

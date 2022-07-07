@@ -369,19 +369,15 @@ function init_loader_sys:entity_init()
             if enable == 1 then
                 ecs.group(1):enable "view_visible"
                 ecs.group(1):enable "scene_update"
-                ecs.group(1):enable "scene_needchange"
 
                 ecs.group(0):disable "view_visible"
                 ecs.group(0):disable "scene_update"
-                ecs.group(0):disable "scene_needchange"
             else
                 ecs.group(0):enable "view_visible"
                 ecs.group(0):enable "scene_update"
-                ecs.group(0):enable "scene_needchange"
 
                 ecs.group(1):disable "view_visible"
                 ecs.group(1):disable "scene_update"
-                ecs.group(1):disable "scene_needchange"
             end
             enable = enable == 1 and 0 or 1
 
