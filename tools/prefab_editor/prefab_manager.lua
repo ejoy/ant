@@ -96,7 +96,7 @@ function m:create_slot()
             "ant.scene|scene_object",
         },
         data = {
-            scene = {srt = {}},
+            scene = {},
             slot = {
                 joint_name = "None",
                 follow_flag = 1,
@@ -133,7 +133,7 @@ function m:create_collider(config, parent)
         data = {
             name = "collider" .. gen_geometry_id(),
             tag = config.tag or {"collider"},
-            scene = {srt = {s = scale}, parent = self.root},
+            scene = {s = scale, parent = self.root},
             filter_state = "main_view|selectable",
             material = "/pkg/ant.resources/materials/singlecolor_translucent.material",
             mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type],
@@ -150,7 +150,7 @@ function m:create_collider(config, parent)
     return ecs.create_entity(tpl), template
 end
 
-local function create_simple_entity(name, srt, parent)
+local function create_simple_entity(name, parent)
     local template = {
 		policy = {
             "ant.general|name",
@@ -158,7 +158,7 @@ local function create_simple_entity(name, srt, parent)
 		},
 		data = {
             name = name,
-            scene = {srt = srt or {}}
+            scene = {}
 		},
     }
     local tmp = utils.deep_copy(template)
@@ -194,9 +194,9 @@ function m:set_default_light(enable)
         if not self.default_light then
             local newlight, _ = create_default_light("directional")
             self.default_light = newlight
-            if not self.skybox then
-                self.skybox = ecs.create_instance("res/skybox_test.prefab")
-            end
+            -- if not self.skybox then
+            --     self.skybox = ecs.create_instance("res/skybox_test.prefab")
+            -- end
         end
     else
         if self.default_light then
@@ -225,7 +225,7 @@ function m:create(what, config)
         self.entities[#self.entities+1] = new_camera
     elseif what == "empty" then
         local parent = gizmo.target_eid or self.root
-        local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id(), {}, parent)
+        local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id(), parent)
         self:add_entity(new_entity, parent, temp)
     elseif what == "geometry" then
         if config.type == "cube"
@@ -240,7 +240,7 @@ function m:create(what, config)
                     "ant.general|name",
                 },
                 data = {
-                    scene = {srt = {}},
+                    scene = {},
                     filter_state = "main_view|selectable",
                     --material = "/pkg/ant.resources/materials/outline/scale.material",
                     material = "/pkg/ant.resources/materials/pbr_default.material",
@@ -436,7 +436,7 @@ function m:on_prefab_ready(prefab)
         local parent = find_e(entitys, world:entity(e).scene.parent)
         if pt.prefab then
             local prefab_name = pt.name or gen_prefab_name()
-            local sub_root = create_simple_entity(prefab_name, {}, parent)
+            local sub_root = create_simple_entity(prefab_name, parent)
             -- ecs.method.set_parent(sub_root, parent)
             self.entities[#self.entities + 1] = sub_root
 
@@ -565,7 +565,7 @@ function m:add_effect(filename)
 		data = {
             name = "root",
             tag = {"effect"},
-            scene = {srt = {}},
+            scene = {},
             efk = filename,
 		},
     }
@@ -592,7 +592,7 @@ function m:add_prefab(filename)
     local prefab = ecs.create_instance(prefab_filename)
     prefab.on_ready = function(inst)
         local prefab_name = gen_prefab_name()
-        local v_root = create_simple_entity(prefab_name, {}, parent)
+        local v_root = create_simple_entity(prefab_name, parent)
         -- ecs.method.set_parent(v_root, parent)
         self.entities[#self.entities+1] = v_root
         local children = inst.tag["*"]

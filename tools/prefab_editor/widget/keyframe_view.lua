@@ -1004,7 +1004,7 @@ local function create_bone_entity(joint_name)
             "ant.general|name",
         },
         data = {
-            scene = {srt = {s = joint_scale}},
+            scene = {s = joint_scale},
             filter_state = "main_view|selectable",
             material = "/pkg/tools.prefab_editor/res/materials/joint.material",
             mesh = "/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
