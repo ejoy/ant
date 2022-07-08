@@ -381,9 +381,9 @@ function ientity.create_screen_axis_entity(srt, screen_3dobj, name, color, mater
 		data = {
 			screen_3dobj = screen_3dobj,
 			scene 		= {
-				s = srt and srt.s or nil,
-				r = srt and srt.r or nil,
-				t = srt and srt.t or nil,
+				s = srt.s,
+				r = srt.r,
+				t = srt.t,
 			},
 			material	= "/pkg/ant.resources/materials/line_background.material",
 			simplemesh	= imesh.init_mesh(mesh, true),
