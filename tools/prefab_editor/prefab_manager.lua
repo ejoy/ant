@@ -605,11 +605,12 @@ function m:add_prefab(filename)
                 return
             end
         end
-        for _, child in ipairs(children) do
-            if world:entity(child).scene.parent == world:entity(inst.root).id then
-                ecs.method.set_parent(child, v_root)
-            end
-        end
+        -- for _, child in ipairs(children) do
+        --     if world:entity(child).scene.parent == world:entity(inst.root).id then
+        --         ecs.method.set_parent(child, v_root)
+        --     end
+        -- end
+        ecs.method.set_parent(inst.root, v_root)
         set_select_adapter(children, v_root)
         hierarchy:add(v_root, {filename = prefab_filename, name = prefab_name, children = children, editor = false}, parent)
     end
