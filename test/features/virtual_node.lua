@@ -77,7 +77,7 @@ local function create_static_group()
                 iom.set_scale(e, 3)
                 w:sync("scene:out", e)
             end,
-            static_scene_object=true,
+            standalone_scene_object=true,
             name = "virtual_node_p1",
         },
     }
@@ -99,7 +99,7 @@ local function create_static_group()
                 iom.set_position(e, math3d.vector(1, 2, 3))
                 w:sync("scene:out", e)
             end,
-            static_scene_object = true,
+            standalone_scene_object = true,
             name = "virtual_node",
         },
     }
@@ -129,7 +129,7 @@ local function create_dynamic_group()
     local p = dynamic_group:create_instance "/pkg/ant.test.features/assets/glb/inserter.glb|mesh.prefab"
     p.on_init = function ()
         for eid in ipairs(p.tag["*"]) do
-            world:entity(eid).static_scene_object = true
+            world:entity(eid).standalone_scene_object = true
         end
     end
     p.on_ready = function (e)
