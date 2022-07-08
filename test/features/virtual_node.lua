@@ -103,8 +103,6 @@ local function create_static_group()
             name = "virtual_node",
         },
     }
-
-    static_group:enable "view_visible"
 end
 
 local function create_dynamic_group()
@@ -118,7 +116,7 @@ local function create_dynamic_group()
             name = "virtual_scene_test1",
             scene = {
                 s = 0.1,
-                t = {2, 3, 2},
+                t = {0, 0, 0},
             },
             virtual_scene = {
                 group = dynamic_group_id,
@@ -136,7 +134,6 @@ local function create_dynamic_group()
         iom.set_scale(world:entity(e.root), 0.1)
     end
     world:create_object(p)
-    dynamic_group:enable "view_visible"
 end
 
 function vn_test_sys:init()

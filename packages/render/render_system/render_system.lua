@@ -105,7 +105,7 @@ end
 
 local keys = template.keys
 local select_cache = template.new "view_visible %s_visible %s_cull:absent %s render_object:in filter_material:in"
-local vs_select_cache = template.new "virtual_scene_tag view_visible %s_visible %s_cull:absent %s render_object:in filter_material:in"
+local vs_select_cache = template.new "virtual_scene_tag %s_visible %s_cull:absent %s render_object:in filter_material:in"
 local function load_select_key(qn, fn, c)
 	local k = keys[qn][qn][fn]
 	return c[k]
