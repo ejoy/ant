@@ -30,6 +30,7 @@ policy "animation"
     .component "anim_ctrl"
 
 policy "skinning"
+    .require_system "ant.animation|skinning_system"
     .component "skinning"
     .component "material_setting"
     .component "material"
