@@ -180,7 +180,7 @@ local function create_frustum_entity(eid)
             "ant.general|name"
         },
         data = {
-            scene = {srt={}},
+            scene = {},
             name = "second_view_frustum_root",
             second_view_frustum = true,
             on_ready = function (e)
@@ -221,7 +221,7 @@ local function create_frustum_entity(eid)
             },
             owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/line_color.material",
-            scene = {srt={}},
+            scene = {},
             filter_state = "main_view|auxgeom",
             name = "second_view_frustum",
             second_view_frustum = true,
@@ -256,9 +256,9 @@ local function create_frustum_entity(eid)
             owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/singlecolor.material",
             filter_state = "main_view|auxgeom",
-            scene = {srt={
+            scene = {
                 t = tri_bottomcenter,
-            }},
+            },
             name = "second_view_triangle",
             on_ready = onready,
             second_view_frustum = true,

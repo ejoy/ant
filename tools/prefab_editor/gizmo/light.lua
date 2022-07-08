@@ -89,7 +89,7 @@ local function create_gizmo_root(initpos, introt)
 		},
 		data = {
 			name = "gizmo root",
-            scene = {srt = {t = initpos or {0,0,0}, r = introt or {0,0,0,1}}},
+            scene = {t = initpos or {0,0,0}, r = introt or {0,0,0,1}},
             -- on_ready = function (e)
             --     ies.set_state(e, "visible", false)  
             -- end

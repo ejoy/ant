@@ -139,19 +139,19 @@ local function create_arrow_widget(axis_root, axis_str)
 	local local_rotator
 	local color
 	if axis_str == "x" then
-		cone_t = math3d.vector(gizmo_const.AXIS_LEN, 0, 0)
-		local_rotator = math3d.quaternion{0, 0, math.rad(-90)}
-		cylindere_t = math3d.vector(0.5 * gizmo_const.AXIS_LEN, 0, 0)
+		cone_t = {gizmo_const.AXIS_LEN, 0, 0}
+		local_rotator = {0, 0, math.rad(-90)}
+		cylindere_t = {0.5 * gizmo_const.AXIS_LEN, 0, 0}
 		color = gizmo_const.COLOR.X
 	elseif axis_str == "y" then
-		cone_t = math3d.vector(0, gizmo_const.AXIS_LEN, 0)
+		cone_t = {0, gizmo_const.AXIS_LEN, 0}
 		local_rotator = mc.IDENTITY_QUAT
-		cylindere_t = math3d.vector(0, 0.5 * gizmo_const.AXIS_LEN, 0)
+		cylindere_t = {0, 0.5 * gizmo_const.AXIS_LEN, 0}
 		color = gizmo_const.COLOR.Y
 	elseif axis_str == "z" then
-		cone_t = math3d.vector(0, 0, gizmo_const.AXIS_LEN)
-		local_rotator = math3d.quaternion{math.rad(90), 0, 0}
-		cylindere_t = math3d.vector(0, 0, 0.5 * gizmo_const.AXIS_LEN)
+		cone_t = {0, 0, gizmo_const.AXIS_LEN}
+		local_rotator = {math.rad(90), 0, 0}
+		cylindere_t = {0, 0, 0.5 * gizmo_const.AXIS_LEN}
 		color = gizmo_const.COLOR.Z
 	end
 
@@ -163,11 +163,9 @@ local function create_arrow_widget(axis_root, axis_str)
 		data = {
 			filter_state = "main_view",
 			scene = {
-				srt = {
-					s = {0.004, 0.1, 0.004},
-					r = local_rotator,
-					t = cylindere_t
-				},
+				s = {0.004, 0.1, 0.004},
+				r = local_rotator,
+				t = cylindere_t,
 				parent = axis_root
 			},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
@@ -188,7 +186,7 @@ local function create_arrow_widget(axis_root, axis_str)
 		},
 		data = {
 			filter_state = "main_view",
-			scene = {srt = {s = {0.02, 0.03, 0.02, 0}, r = local_rotator, t = cone_t}, parent = axis_root},
+			scene = {s = {0.02, 0.03, 0.02, 0}, r = local_rotator, t = cone_t, parent = axis_root},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str,
@@ -219,6 +217,7 @@ local function mouse_hit_plane(screen_pos, plane_info)
 end
 
 local function create_global_axes(srt)
+	--do return end
 	local off = 0.1
 	ientity.create_screen_axis_entity(srt, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")
 end
@@ -238,6 +237,7 @@ function gizmo:update_scale()
 end
 
 function gizmo_sys:post_init()
+	do return end
 	local axis_root = ecs.create_entity {
 		policy = {
 			"ant.general|name",
@@ -245,7 +245,7 @@ function gizmo_sys:post_init()
 		},
 		data = {
 			name = "axis root",
-			scene = {srt = {}},
+			scene = {},
 		},
 	}
 	gizmo.root_eid = axis_root
@@ -256,7 +256,7 @@ function gizmo_sys:post_init()
 		},
 		data = {
 			name = "rot root",
-			scene = {srt = {}, parent = axis_root},
+			scene = {parent = axis_root},
 		},
 	}
 
@@ -269,7 +269,7 @@ function gizmo_sys:post_init()
 		},
 		data = {
 			name = "rot root",
-			scene = {srt = {}},
+			scene = {},
 		},
 	}
 	gizmo.uniform_rot_root_eid = uniform_rot_root
@@ -342,7 +342,7 @@ function gizmo_sys:post_init()
 			},
 			data = {
 				filter_state = "main_view|selectable",
-				scene = {srt = srt, parent = parent},
+				scene = {s=srt.s, r=srt.r, t=srt.t, parent = parent},
 				material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name,
