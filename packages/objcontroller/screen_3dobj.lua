@@ -57,14 +57,9 @@ local function calc_screen_pos(screen_3dobj, vr)
     return {sx, sy, 0.5}
 end
 
-local function set_worldmat(srt, mat)
-	math3d.unmark(srt.worldmat)
-	srt.worldmat = math3d.mark(math3d.matrix(mat))
-end
-
 function screen_3dobj_sys:camera_usage()
     if dirty then
-        for e in w:select "screen_3dobj:in render_object:in id:in" do
+        for e in w:select "screen_3dobj:in render_object:in id:in scene:update" do
             local mcamera = world:entity(irq.main_camera())
             local vp = mcamera.camera.viewprojmat
             local vr = irq.view_rect "main_queue"
@@ -73,12 +68,10 @@ function screen_3dobj_sys:camera_usage()
             local posNDC = iom.screen_to_ndc(posScreen, vr)
         
             local posWS = mu.ndc_to_world(vp, posNDC)
-            w:sync("scene:in", e)
             local scene = e.scene
             assert(scene.parent == 0, "global_axes should not have any parent")
             iom.set_position(e, posWS)
-            set_worldmat(scene, scene)
-            w:sync("scene:out", e)
+            scene.worldmat = math3d.matrix(scene)
         end
 
         dirty = nil
