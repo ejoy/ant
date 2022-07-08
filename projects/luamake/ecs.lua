@@ -1,4 +1,17 @@
-local packages, component_lua, component_h = ...
+local argn = select("#", ...)
+if argn < 3 then
+    print [[
+at least 3 argument:
+ecs.lua component.lua component.h package1, package2, ...
+package1 and package2 are path to find *.ecs file
+    ]]
+    return
+end
+local component_lua, component_h = select(1, ...), select(2, ...)
+local packages = {}
+for i=3, select('#', ...) do
+    packages[i-2] = select(i, ...)
+end
 
 local fs = require "bee.filesystem"
 
@@ -51,13 +64,18 @@ local function loadComponents()
     local class = {}
     local env = createEnv(class)
     local function eval(filename)
+        print("ecs:", filename)
         assert(loadfile(filename:string(), "t", env))()
     end
-    for file in fs.pairs(packages, "r") do
-        if file:equal_extension "ecs" then
-            eval(file)
+    for _, pkgpath in ipairs(packages) do
+        print("pkg path:", pkgpath)
+        for file in fs.pairs(pkgpath, "r") do
+            if file:equal_extension "ecs" then
+                eval(file)
+            end
         end
     end
+
     local components = {}
     for name, info in pairs(class.component) do
         if not info.type then

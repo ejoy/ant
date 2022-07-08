@@ -57,22 +57,34 @@ lm:import "3rd/scripts/reactphysics3d.lua"
 lm:import "3rd/scripts/sdl.lua"
 lm:import "runtime/make.lua"
 
-lm:runlua "compile_ecs" {
-    script = "projects/luamake/ecs.lua",
-    args = {
-        "@packages",
+local function compile_ecs(editor)
+    local args = {
         "@packages/ecs/component.lua",
         "@clibs/ecs/ecs/",
-    },
-    inputs = "packages/**/*.ecs",
-    output = {
-        "packages/ecs/component.lua",
-        "clibs/ecs/ecs/component.h",
-        "clibs/ecs/ecs/component.hpp",
+        "@packages",
     }
-}
+    local inputs = {
+        "packages/**/*.ecs"
+    }
+    if editor then
+        inputs[#inputs+1] = "tools/prefab_editor/**/*.ecs"
+        args[#args+1] = "@tools/prefab_editor/"
+    end
+    lm:runlua "compile_ecs" {
+        script = "projects/luamake/ecs.lua",
+        args = args,
+        inputs = inputs,
+        output = {
+            "packages/ecs/component.lua",
+            "clibs/ecs/ecs/component.h",
+            "clibs/ecs/ecs/component.hpp",
+        }
+    }
+    
+end
 
 if EnableEditor then
+    compile_ecs(true)
     lm:phony "tools" {
         deps = {
             "gltf2ozz",
@@ -89,5 +101,6 @@ if EnableEditor then
     }
     lm:default "editor"
 else
+    compile_ecs()
     lm:default "runtime"
 end
