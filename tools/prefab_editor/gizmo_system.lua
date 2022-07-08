@@ -217,7 +217,6 @@ local function mouse_hit_plane(screen_pos, plane_info)
 end
 
 local function create_global_axes(srt)
-	--do return end
 	local off = 0.1
 	ientity.create_screen_axis_entity(srt, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")
 end
@@ -237,7 +236,6 @@ function gizmo:update_scale()
 end
 
 function gizmo_sys:post_init()
-	do return end
 	local axis_root = ecs.create_entity {
 		policy = {
 			"ant.general|name",
