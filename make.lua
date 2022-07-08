@@ -83,8 +83,9 @@ local function compile_ecs(editor)
     
 end
 
+compile_ecs(EnableEditor)
+
 if EnableEditor then
-    compile_ecs(true)
     lm:phony "tools" {
         deps = {
             "gltf2ozz",
@@ -101,6 +102,5 @@ if EnableEditor then
     }
     lm:default "editor"
 else
-    compile_ecs()
     lm:default "runtime"
 end

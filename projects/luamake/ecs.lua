@@ -64,11 +64,9 @@ local function loadComponents()
     local class = {}
     local env = createEnv(class)
     local function eval(filename)
-        print("ecs:", filename)
         assert(loadfile(filename:string(), "t", env))()
     end
     for _, pkgpath in ipairs(packages) do
-        print("pkg path:", pkgpath)
         for file in fs.pairs(pkgpath, "r") do
             if file:equal_extension "ecs" then
                 eval(file)
