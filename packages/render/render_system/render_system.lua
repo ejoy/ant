@@ -146,15 +146,14 @@ local function submit_virtual_scene_filter(viewid, selkey, qn)
 				num = #mats
 			else
 				local c = sm:count()
+				num = c * #mats
 				local handle
-				tid, handle = bgfx.alloc_transform_bulk(c*#mats)
+				tid, handle = bgfx.alloc_transform_bulk(num)
 				for i=1, #mats do
 					local m = mats[i]
 					math3d.mul_matrix_bulk_data(m, sm:pointer(), c, handle, (i-1)*c)
 				end
-
 				stride = c
-				num = c * #mats
 			end
 
 			irender.multi_draw(viewid, ro, ee.filter_material[qn], tid, num, stride)
