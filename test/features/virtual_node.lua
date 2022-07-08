@@ -137,6 +137,6 @@ local function create_dynamic_group()
 end
 
 function vn_test_sys:init()
-    --create_static_group()
+    create_static_group()
     create_dynamic_group()
 end
