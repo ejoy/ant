@@ -130,10 +130,10 @@ local TYPENAMES <const> = {
 }
 
 do
-    local id = 0
+    local id = 0x80000000
     local function write_id(name)
         id = id + 1
-        write(("#define COMPONENT_%s %d"):format(name:upper(), id))
+        write(("#define COMPONENT_%s 0x%08x"):format(name:upper(), id))
     end
 
     local function write_type(name, type)
@@ -200,7 +200,7 @@ do
     write "}"
     write ""
     write "struct ant_ecs_component_id {"
-    write "\tinline static int id = 0;"
+    write "\tinline static int id = 0x80000000;"
     write "\tinline static int gen() {"
     write "\t\treturn id++;"
     write "\t}"

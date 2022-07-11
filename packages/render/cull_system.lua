@@ -5,7 +5,6 @@ local w = world.w
 local math3d = require "math3d"
 local mc = import_package "ant.math".constant
 local setting = import_package "ant.settings".setting
-local components = import_package "ant.ecs".components
 local disable_cull = setting:data().graphic.disable_cull
 
 local cullcore = require "cull.core"
@@ -115,14 +114,10 @@ local function find_queue_tags()
 	return cull_tags
 end
 
-local tag_ids = {}
-for idx, cc in ipairs(components) do
-	tag_ids[cc] = idx
-end
 local function build_tags(tags)
 	local t = {}
-	for i=1, #tags do
-		t[i] = assert(tag_ids[tags[i]])
+	for i = 1, #tags do
+		t[i] = assert(world.w:component_id(tags[i]))
 	end
 	return t
 end
