@@ -175,8 +175,11 @@ function render_sys:render_submit()
 	end})
 	for e in w:select "view_visible hitch:in scene:in" do
 		local s = e.scene
-		local g = groups[e.hitch.group]
-		g[#g+1] = s.worldmat
+		local gid = e.hitch.group
+		if gid ~= 0 then
+			local g = groups[gid]
+			g[#g+1] = s.worldmat
+		end
 	end
 
 	local transforms = {
