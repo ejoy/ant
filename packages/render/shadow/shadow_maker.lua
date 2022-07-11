@@ -166,7 +166,7 @@ local function update_shadow_camera(dl, maincamera)
 	local lightdir = iom.get_direction(dl)
 	local setting = ishadow.setting()
 	local viewmat = maincamera.viewmat
-	for qe in w:select "csm_queue camera_ref:in csm:in" do
+	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
 		local vf = csm.view_frustum
 		local shadow_ce = world:entity(qe.camera_ref)
@@ -245,7 +245,6 @@ local function create_csm_entity(index, vr, fbidx)
 			},
 			visible = false,
 			queue_name = queuename,
-			csm_queue = true,
 			name = "csm" .. index,
 		},
 	}
@@ -292,7 +291,7 @@ local function main_camera_changed(ceid)
 end
 
 local function set_csm_visible(enable)
-	for v in w:select "csm_queue visible?out" do
+	for v in w:select "csm visible?out" do
 		v.visible = enable
 	end
 end
@@ -364,7 +363,7 @@ function sm:update_camera()
 			update_shadow_camera(dl, camera.camera)
 			shadow_camera_rebuild = false
 		else
-			for qe in w:select "csm_queue csm:in camera_ref:in" do
+			for qe in w:select "csm:in camera_ref:in" do
 				local cref = qe.camera_ref
 				local ce = world:entity(cref)
 				local camera = ce.camera
@@ -380,7 +379,7 @@ end
 
 function sm:refine_camera()
 	-- local setting = ishadow.setting()
-	-- for se in w:select "csm_queue primitive_filter:in"
+	-- for se in w:select "csm primitive_filter:in"
 	-- 	local se = world[eid]
 	-- assert(false && "should move code new ecs")
 	-- 		local filter = se.primitive_filter.result
@@ -464,7 +463,7 @@ function s:end_filter()
 		local newstate = irender.check_set_state(dst_mi, ro.material)
 		local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
 		local fm = e.filter_material
-		for qe in w:select "csm_queue queue_name:in primitive_filter:in" do
+		for qe in w:select "csm queue_name:in primitive_filter:in" do
 			fm[qe.queue_name] = {
 				material = new_matobj:instance(),
 				fx = fx,

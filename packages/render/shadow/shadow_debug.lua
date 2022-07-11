@@ -34,7 +34,7 @@ local frustum_colors = {
 }
 
 local function find_csm_entity(index)
-	for se in w:select "csm_queue csm:in" do
+	for se in w:select "csm:in" do
 		if se.csm.index == index then
 			return se.csm
 		end
@@ -69,7 +69,7 @@ local function create_debug_entity()
 		end
 	end
 	
-	for se in w:select "csm_queue csm:in camera_ref:in name:in" do
+	for se in w:select "csm:in camera_ref:in name:in" do
 		local idx = se.csm.index
 		local ce = world:entity(se.camera_ref)
 		local c = ce.camera
@@ -239,7 +239,7 @@ function shadowdbg_sys:camera_usage()
 			create_debug_entity()
 		elseif key == "L" and press == 0 then
 			local eids = {}
-			for se in w:select "csm_queue camera_ref:in csm:in" do
+			for se in w:select "csm:in camera_ref:in" do
 				eids[se.csm.index] = se.camera_ref
 			end
 			world:pub{"splitview", "change_camera", eids}
