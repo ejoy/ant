@@ -49,8 +49,7 @@ end
 local camera_changed_mb
 
 function tet_sys:init_world()
-    local qe = w:singleton("main_queue", "camera_ref:in")
-    camera_changed_mb = world:sub{"scene_changed", qe.camera_ref}
+    
 end
 
 local mq_cc_mb = world:sub{"main_queue", "camera_changed"}
@@ -72,9 +71,6 @@ local function update_group(ce)
 end
 
 function tet_sys:data_changed()
-    for _, _, ceid in mq_cc_mb:unpack() do
-        camera_changed_mb = world:sub{"scene_changed", ceid}
-    end
 end
 
 function tet_sys:camera_usage()
@@ -96,7 +92,11 @@ function tet_sys:camera_usage()
             end
         end
     end
-    for _, ceid in camera_changed_mb:unpack() do
-        update_group(world:entity(ceid))
+    if w:singleton "scene_changed" then
+        local mq = w:singleton("main_queue", "camera_ref:in")
+        local mc = world:entity(mq.camera_ref)
+        if mc.scene_changed then
+            update_group(mc)
+        end
     end
 end
