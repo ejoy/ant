@@ -6,9 +6,9 @@ local math3d= require "math3d"
 
 local iom   = ecs.import.interface "ant.objcontroller|iobj_motion"
 
-local vn_test_sys = ecs.system "virtual_node_test_system"
-local static_group_id<const> = 1000
-local dynamic_group_id<const> = 1001
+local hn_test_sys = ecs.system "hitch_node_test_system"
+local hitch_test_group_id<const> = 1000
+local skeleton_test_group_id<const> = 1001
 
 local function create_static_group()
     ecs.create_entity{
@@ -17,12 +17,12 @@ local function create_static_group()
             "ant.general|name",
         },
         data = {
-            name = "virtual_scene_test1",
+            name = "hitch_scene_test1",
             scene = {
                 t = {0, 3, 0},
             },
             hitch = {
-                group = static_group_id,
+                group = hitch_test_group_id,
             },
         }
     }
@@ -33,12 +33,12 @@ local function create_static_group()
             "ant.general|name",
         },
         data = {
-            name = "virtual_scene_test1",
+            name = "hitch_scene_test2",
             scene = {
                 t = {1, 2, 0},
             },
             hitch = {
-                group = static_group_id,
+                group = hitch_test_group_id,
             },
         }
     }
@@ -49,17 +49,17 @@ local function create_static_group()
             "ant.general|name",
         },
         data = {
-            name = "virtual_scene_test1",
+            name = "hitch_scene_test3",
             scene = {
                 t = {0, 0, 3},
             },
             hitch = {
-                group = static_group_id,
+                group = hitch_test_group_id,
             },
         }
     }
 
-    local static_group = ecs.group(static_group_id)
+    local static_group = ecs.group(hitch_test_group_id)
     --standalone sub tree
     local p1 = static_group:create_entity {
         policy = {
@@ -119,11 +119,11 @@ local function create_dynamic_group()
                 t = {0, 0, 0},
             },
             hitch = {
-                group = dynamic_group_id,
+                group = skeleton_test_group_id,
             },
         }
     }
-    local dynamic_group = ecs.group(dynamic_group_id)
+    local dynamic_group = ecs.group(skeleton_test_group_id)
     local p = dynamic_group:create_instance "/pkg/ant.test.features/assets/glb/inserter.glb|mesh.prefab"
     p.on_init = function ()
         for eid in ipairs(p.tag["*"]) do
@@ -136,7 +136,7 @@ local function create_dynamic_group()
     world:create_object(p)
 end
 
-function vn_test_sys:init()
+function hn_test_sys:init()
     create_static_group()
     create_dynamic_group()
 end
