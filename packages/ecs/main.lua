@@ -52,6 +52,52 @@ local function create_entity_by_template(w, group, template)
     return data.id, initargs
 end
 
+local function update_group_tag(w, data)
+    local groupid = data.group
+    for tag, t in pairs(w._group.tags) do
+        if t[groupid] then
+            data[tag] = true
+        end
+    end
+end
+
+local function create_scene_entity(w, group)
+    local eid = getentityid(w)
+    local parent
+    local data = {
+        id = eid,
+        group = group or 0,
+        scene = {
+            parent = parent,
+        },
+        scene_needchange = true
+    }
+    update_group_tag(w, data)
+    w.w:new(data)
+    w.w:group_update()
+    return eid
+end
+
+function world:_create_hitch(group, v)
+    local w = self
+    local eid = getentityid(w)
+    local data = {
+        id = eid,
+        group = group or 0,
+        scene = {
+            parent = v.parent,
+        },
+        scene_needchange = true,
+        virtual_scene = {
+            group = assert(v.children)
+        },
+    }
+    update_group_tag(w, data)
+    w.w:new(data)
+    w.w:group_update()
+    return eid
+end
+
 function world:_create_entity(package, group, v)
     local res = policy.create(self, package, v.policy)
     local data = v.data
@@ -235,32 +281,6 @@ local function create_tags(entities, template)
     return tags
 end
 
-local function update_group_tag(w, data)
-    local groupid = data.group
-    for tag, t in pairs(w._group.tags) do
-        if t[groupid] then
-            data[tag] = true
-        end
-    end
-end
-
-local function create_scene_entity(w, group)
-    local eid = getentityid(w)
-    local parent
-    local data = {
-        id = eid,
-        group = group or 0,
-        scene = {
-            parent = parent,
-        },
-        scene_needchange = true
-    }
-    update_group_tag(w, data)
-    w.w:new(data)
-    w.w:group_update()
-    return eid
-end
-
 function world:create_object(inner_proxy)
     local w = self
     local on_init = inner_proxy.on_init
@@ -351,6 +371,9 @@ function world:_create_group(id)
     local mt = {}
     local api = {}
     mt.__index = api
+    function api:create_hitch(v)
+        return w:_create_hitch(id, v)
+    end
     function api:create_entity(v)
         return w:_create_entity(package, id, v)
     end
