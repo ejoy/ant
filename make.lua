@@ -57,33 +57,20 @@ lm:import "3rd/scripts/reactphysics3d.lua"
 lm:import "3rd/scripts/sdl.lua"
 lm:import "runtime/make.lua"
 
-local function compile_ecs(editor)
-    local args = {
+lm:runlua "compile_ecs" {
+    script = "projects/luamake/ecs.lua",
+    args =  {
         "@packages/ecs/component.lua",
         "@clibs/ecs/ecs/",
         "@packages",
+    },
+    inputs = "packages/**/*.ecs",
+    output = {
+        "packages/ecs/component.lua",
+        "clibs/ecs/ecs/component.h",
+        "clibs/ecs/ecs/component.hpp",
     }
-    local inputs = {
-        "packages/**/*.ecs"
-    }
-    if editor then
-        inputs[#inputs+1] = "tools/prefab_editor/**/*.ecs"
-        args[#args+1] = "@tools/prefab_editor/"
-    end
-    lm:runlua "compile_ecs" {
-        script = "projects/luamake/ecs.lua",
-        args = args,
-        inputs = inputs,
-        output = {
-            "packages/ecs/component.lua",
-            "clibs/ecs/ecs/component.h",
-            "clibs/ecs/ecs/component.hpp",
-        }
-    }
-    
-end
-
-compile_ecs(EnableEditor)
+}
 
 if EnableEditor then
     lm:phony "tools" {
