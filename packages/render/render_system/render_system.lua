@@ -132,15 +132,14 @@ local function transform_find(t, id, ro, mats)
 			stride = 1
 			num = #mats
 		else
-			local c = sm:count()
-			num = c * #mats
+			stride = sm:count()
+			num = stride * #mats
 			local handle
 			tid, handle = bgfx.alloc_transform_bulk(num)
 			for i=1, #mats do
 				local m = mats[i]
-				math3d.mul_matrix_bulk_data(m, sm:pointer(), c, handle, (i-1)*c)
+				math3d.mul_matrix_bulk_data(m, sm:pointer(), stride, handle, (i-1)*stride)
 			end
-			stride = c
 		end
 
 		c = {tid, num, stride}
