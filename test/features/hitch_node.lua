@@ -10,7 +10,7 @@ local hn_test_sys = ecs.system "hitch_node_test_system"
 local hitch_test_group_id<const> = 1000
 local skeleton_test_group_id<const> = 1001
 
-local function create_static_group()
+local function create_simple_test_group()
     ecs.create_entity{
         policy = {
             "ant.scene|hitch_object",
@@ -105,7 +105,7 @@ local function create_static_group()
     }
 end
 
-local function create_dynamic_group()
+local function create_skeleton_test_group()
     --dynamic
     ecs.create_entity{
         policy = {
@@ -137,6 +137,6 @@ local function create_dynamic_group()
 end
 
 function hn_test_sys:init()
-    create_static_group()
-    create_dynamic_group()
+    create_simple_test_group()
+    create_skeleton_test_group()
 end
