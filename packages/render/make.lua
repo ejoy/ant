@@ -14,6 +14,6 @@ lm:lua_source "render" {
     sources = {
         "material/material.c",
         --"mesh/mesh.c",
-        "cull.c",
+        "cull.cpp",
     },
 }

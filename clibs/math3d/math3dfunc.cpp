@@ -51,6 +51,12 @@ allocvec4(struct lastack *LS) {
 	return *(glm::vec4 *)buf;
 }
 
+static inline glm::vec3 &
+allocvec3(struct lastack *LS) {
+	float * buf = lastack_allocvec4(LS);
+	return *(glm::vec3 *)buf;
+}
+
 void
 math3d_make_srt(struct lastack *LS, const float *scale, const float *rot, const float *translate) {
 	glm::mat4x4 &srt = allocmat(LS);
@@ -364,13 +370,13 @@ math3d_decompose_matrix(struct lastack *LS, const float *mat) {
 	const glm::mat4x4 &m = *(const glm::mat4x4 *)mat;
 
 	lastack_preallocfloat4(LS, 3);
-	float *trans = lastack_allocvec4(LS);
-	glm::quat &q = allocquat(LS);
-	float *scale = lastack_allocvec4(LS);
+	auto& trans = allocvec3(LS);
+	auto& q = allocquat(LS);
+	auto& scale = allocvec3(LS);
 	//decompose(m, *(glm::vec3*)scale, q, *(glm::vec3*)trans);
 	glm::vec3 skew;
 	glm::vec4 perspective;
-	glm::decompose(m, *(glm::vec3*)scale, q,*(glm::vec3*)trans, skew, perspective);
+	glm::decompose(m, scale, q, trans, skew, perspective);
 }
 
 float
@@ -380,19 +386,15 @@ math3d_length(const float *v) {
 
 void
 math3d_floor(struct lastack *LS, const float v[4]) {
-	float *vv = lastack_allocvec4(LS);
-	vv[0] = floor(v[0]);
-	vv[1] = floor(v[1]);
-	vv[2] = floor(v[2]);
+	auto& vv = allocvec4(LS);
+	vv = glm::floor(VEC(v));
 	vv[3] = 0;
 }
 
 void
 math3d_ceil(struct lastack *LS, const float v[4]) {
-	float *vv = lastack_allocvec4(LS);
-	vv[0] = ceil(v[0]);
-	vv[1] = ceil(v[1]);
-	vv[2] = ceil(v[2]);
+	auto& vv = allocvec4(LS);
+	vv = glm::ceil(VEC(v));
 	vv[3] = 0;
 }
 
@@ -403,12 +405,8 @@ math3d_dot(const float v1[4], const float v2[4]) {
 
 void
 math3d_cross(struct lastack *LS, const float v1[4], const float v2[4]) {
-	glm::vec3 c = glm::cross(VEC3(v1), VEC3(v2));
 	glm::vec4 &r = allocvec4(LS);
-	r[0] = c[0];
-	r[1] = c[1];
-	r[2] = c[2];
-	r[3] = 0;
+	r = glm::vec4(glm::cross(VEC3(v1), VEC3(v2)), 0.0);
 }
 
 void
@@ -972,11 +970,11 @@ static const glm::vec4 ndc_points_NO[8] = {
 };
 
 void 
-math3d_frustum_points(struct lastack *LS, const float m[16], float *points[8], int homogeneous_depth){
+math3d_frustum_points(struct lastack *LS, const float m[16], float* points[8], int homogeneous_depth){
 	auto invmat = glm::inverse(MAT(m));
 	const auto &pp = homogeneous_depth ? ndc_points_NO : ndc_points_ZO;
 	for (int ii = 0; ii < 8; ++ii){
-		auto &p = *((glm::vec4*)points[ii]);
+		auto &p = *(glm::vec4*)points[ii];
 		p = invmat * pp[ii];
 		p /= p.w;
 	}
@@ -1013,8 +1011,8 @@ math3d_frusutm_aabb(struct lastack *LS, const float* points[8], float *aabb){
 }
 
 void
-math3d_frustum_center(struct lastack *LS, const float *points[8], float *center){
-	auto &c = *(glm::vec4*)center;
+math3d_frustum_center(struct lastack *LS, const float* points[8], float *center){
+	auto &c = *(glm::vec4*)(center);
 	c = glm::vec4(0, 0, 0, 1);
 	for (int ii = 0; ii < 8; ++ii){
 		c += VEC(points[ii]);
@@ -1025,7 +1023,7 @@ math3d_frustum_center(struct lastack *LS, const float *points[8], float *center)
 }
 
 float
-math3d_frustum_max_radius(struct lastack *LS, const float *points[8], const float center[4]){
+math3d_frustum_max_radius(struct lastack *LS, const float* points[8], const float center[4]){
 	float maxradius = 0;
 	const auto &c = VEC(center);
 	for (int ii = 0; ii < 8; ++ii){
@@ -1036,7 +1034,7 @@ math3d_frustum_max_radius(struct lastack *LS, const float *points[8], const floa
 	return maxradius;
 }
 
-void math3d_frustum_calc_near_far(struct lastack *LS, const float *planes[6], float nearfar[2]){
+void math3d_frustum_calc_near_far(struct lastack *LS, const float* planes[6], float nearfar[2]){
 
 }
 
