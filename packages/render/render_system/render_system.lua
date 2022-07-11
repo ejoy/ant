@@ -105,7 +105,7 @@ end
 
 local keys = template.keys
 local select_cache = template.new "view_visible %s_visible %s_cull:absent %s render_object:in filter_material:in"
-local vs_select_cache = template.new "virtual_scene_tag %s_visible %s_cull:absent %s render_object:in filter_material:in id:in"
+local vs_select_cache = template.new "hitch_tag %s_visible %s_cull:absent %s render_object:in filter_material:in id:in"
 local function load_select_key(qn, fn, c)
 	local k = keys[qn][qn][fn]
 	return c[k]
@@ -151,7 +151,7 @@ end
 
 local function submit_virtual_scene_filter(viewid, selkey, qn, groups, transforms)
 	for g, mats in pairs(groups) do
-		w:group_enable("virtual_scene_tag", g)
+		w:group_enable("hitch_tag", g)
 		for ee in w:select(selkey) do
 			local ro = ee.render_object
 			local tid, num, stride = table.unpack(transforms:find(ee.id, ee.render_object, mats))
@@ -173,9 +173,9 @@ function render_sys:render_submit()
 		t[k] = tt
 		return tt
 	end})
-	for e in w:select "view_visible virtual_scene:in scene:in" do
+	for e in w:select "view_visible hitch:in scene:in" do
 		local s = e.scene
-		local g = groups[e.virtual_scene.group]
+		local g = groups[e.hitch.group]
 		g[#g+1] = s.worldmat
 	end
 

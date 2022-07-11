@@ -10,13 +10,13 @@ local scene_groups = setmetatable({}, {__index=function(t, k)
 end})
 
 function vs_sys:entity_init()
-    for e in w:select "INIT virtual_scene:in" do
-		local _ = scene_groups[e.virtual_scene.group]
+    for e in w:select "INIT hitch:in" do
+		local _ = scene_groups[e.hitch.group]
     end
 end
 
 function vs_sys:entity_remove()
-    for e in w:select "REMOVED virtual_scene:in" do
+    for e in w:select "REMOVED hitch:in" do
         
     end
 end

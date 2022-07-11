@@ -13,7 +13,7 @@ local dynamic_group_id<const> = 1001
 local function create_static_group()
     ecs.create_entity{
         policy = {
-            "ant.scene|virtual_scene_object",
+            "ant.scene|hitch_object",
             "ant.general|name",
         },
         data = {
@@ -21,7 +21,7 @@ local function create_static_group()
             scene = {
                 t = {0, 3, 0},
             },
-            virtual_scene = {
+            hitch = {
                 group = static_group_id,
             },
         }
@@ -29,7 +29,7 @@ local function create_static_group()
 
     ecs.create_entity{
         policy = {
-            "ant.scene|virtual_scene_object",
+            "ant.scene|hitch_object",
             "ant.general|name",
         },
         data = {
@@ -37,7 +37,7 @@ local function create_static_group()
             scene = {
                 t = {1, 2, 0},
             },
-            virtual_scene = {
+            hitch = {
                 group = static_group_id,
             },
         }
@@ -45,7 +45,7 @@ local function create_static_group()
 
     ecs.create_entity{
         policy = {
-            "ant.scene|virtual_scene_object",
+            "ant.scene|hitch_object",
             "ant.general|name",
         },
         data = {
@@ -53,7 +53,7 @@ local function create_static_group()
             scene = {
                 t = {0, 0, 3},
             },
-            virtual_scene = {
+            hitch = {
                 group = static_group_id,
             },
         }
@@ -109,7 +109,7 @@ local function create_dynamic_group()
     --dynamic
     ecs.create_entity{
         policy = {
-            "ant.scene|virtual_scene_object",
+            "ant.scene|hitch_object",
             "ant.general|name",
         },
         data = {
@@ -118,7 +118,7 @@ local function create_dynamic_group()
                 s = 0.1,
                 t = {0, 0, 0},
             },
-            virtual_scene = {
+            hitch = {
                 group = dynamic_group_id,
             },
         }
