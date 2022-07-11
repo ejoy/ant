@@ -268,26 +268,18 @@ end
 
 local shadow_camera_rebuild = false
 local mq_camera_mb = world:sub{"main_queue", "camera_changed"}
-local camera_scene_mb
 local camera_changed_mb
-local function update_camera_changed_mailbox(camera_ref)
-	camera_scene_mb = world:sub{"scene_changed", camera_ref}
-	camera_changed_mb = world:sub{"camera_changed", camera_ref}
-end
-
 local function main_camera_changed(ceid)
-	local mc = world:entity(ceid)
-	local mccamera = mc.camera
-	local viewfrustum = mccamera.frustum
-	local csmfrustums = ishadow.calc_split_frustums(viewfrustum)
+	local camera = world:entity(ceid).camera
+	local csmfrustums = ishadow.calc_split_frustums(camera.frustum)
 	for cqe in w:select "csm:in" do
 		local csm = cqe.csm
 		local idx = csm.index
-		local cf = csmfrustums[csm.index]
+		local cf = assert(csmfrustums[csm.index])
 		csm.view_frustum = cf
 		split_distances_VS[idx] = cf.f
 	end
-	update_camera_changed_mailbox(ceid)
+	camera_changed_mb = world:sub{"camera_changed", ceid}
 end
 
 local function set_csm_visible(enable)
@@ -330,10 +322,6 @@ end
 function sm:data_changed()
 	local dl = w:singleton("csm_directional_light", "light:in")
 	if dl then
-		for _ in camera_scene_mb:each() do
-			shadow_camera_rebuild = true
-		end
-
 		for _ in camera_changed_mb:each() do
 			shadow_camera_rebuild = true
 		end
@@ -357,10 +345,14 @@ end
 function sm:update_camera()
 	local dl = w:singleton("csm_directional_light", "light:in scene:in")
 	if dl then
+		local mq = w:singleton("main_queue", "camera_ref:in")
+		local mce = world:entity(mq.camera_ref)
+		if mce.scene_changed then
+			shadow_camera_rebuild = true
+		end
+
 		if shadow_camera_rebuild then
-			local mq = w:singleton("main_queue", "camera_ref:in")
-			local camera = world:entity(mq.camera_ref)
-			update_shadow_camera(dl, camera.camera)
+			update_shadow_camera(dl, mce.camera)
 			shadow_camera_rebuild = false
 		else
 			for qe in w:select "csm:in camera_ref:in" do

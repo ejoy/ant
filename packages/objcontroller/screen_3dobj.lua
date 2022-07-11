@@ -14,37 +14,6 @@ local math3d = require "math3d"
 
 local screen_3dobj_sys = ecs.system "screen_3dobj_system"
 
-local mc_mb = world:sub{"main_queue", "camera_changed"}
-local vr_mb = world:sub{"view_rect_changed", "main_queue"}
-local camera_mb
-local dirty
-
-function screen_3dobj_sys:entity_init()
-    for e in w:select "INIT screen_3dobj:in render_object:in" do
-        dirty = true
-    end
-end
-
-function screen_3dobj_sys:init_world()
-    camera_mb = world:sub{"scene_changed", irq.main_camera()}
-end
-
-function screen_3dobj_sys:data_changed()
-    for _ in camera_mb:each() do
-        dirty = true
-    end
-
-    for msg in mc_mb:each() do
-        local c = msg[3]
-        camera_mb = world:sub{"scene_changed", c}
-        dirty = true
-    end
-
-    for _ in vr_mb:each() do
-        dirty = true
-    end
-end
-
 local function calc_screen_pos(screen_3dobj, vr)
     local sp = screen_3dobj.screen_pos
     local sx, sy
@@ -58,22 +27,24 @@ local function calc_screen_pos(screen_3dobj, vr)
 end
 
 function screen_3dobj_sys:camera_usage()
-    if dirty then
-        for e in w:select "screen_3dobj:in render_object:in id:in scene:update" do
-            local mcamera = world:entity(irq.main_camera())
-            local vp = mcamera.camera.viewprojmat
-            local vr = irq.view_rect "main_queue"
-
-            local posScreen = calc_screen_pos(e.screen_3dobj, vr)
-            local posNDC = iom.screen_to_ndc(posScreen, vr)
-        
-            local posWS = mu.ndc_to_world(vp, posNDC)
-            local scene = e.scene
-            assert(scene.parent == 0, "global_axes should not have any parent")
-            iom.set_position(e, posWS)
-            scene.worldmat = math3d.matrix(scene)
+    if w:singleton "scene_changed" then
+        local mq = w:singleton("main_queue", "camera_ref:in")
+        local ce = world:entity(mq.camera_ref)
+        if ce.scene_changed then
+            local camera = ce.camera
+            for e in w:select "screen_3dobj:in render_object:in id:in scene:update" do
+                local vp = camera.viewprojmat
+                local vr = irq.view_rect "main_queue"
+    
+                local posScreen = calc_screen_pos(e.screen_3dobj, vr)
+                local posNDC = iom.screen_to_ndc(posScreen, vr)
+            
+                local posWS = mu.ndc_to_world(vp, posNDC)
+                local scene = e.scene
+                assert(scene.parent == 0, "global_axes should not have any parent")
+                iom.set_position(e, posWS)
+                scene.worldmat = math3d.matrix(scene)
+            end
         end
-
-        dirty = nil
     end
 end
