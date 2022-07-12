@@ -9,7 +9,7 @@ local OS = {
     "posix",
     "osx",
     "linux",
-    "netbsd",
+    "bsd",
 }
 
 local function need(lst)
@@ -70,12 +70,6 @@ lm:source_set "bee" {
     android = {
         sources = need {
             "linux",
-            "posix",
-        }
-    },
-    netbsd = {
-        sources = need {
-            "netbsd",
             "posix",
         }
     }
