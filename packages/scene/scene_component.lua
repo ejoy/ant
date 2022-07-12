@@ -16,7 +16,7 @@ local function init_scene(scene)
 	scene.s = math3d.mark(s and math3d.vector(s) or mc.ONE)
 	scene.r = math3d.mark(r and math3d.quaternion(r) or mc.IDENTITY_QUAT)
 	scene.t = math3d.mark(t and math3d.vector(t) or mc.ZERO_PT)
-	scene.mat = math3d.mark(mc.IDENTITY_MAT)
+	scene.mat = mc.NULL
 	scene.worldmat = math3d.mark(mc.IDENTITY_MAT)
 	if scene.updir then
 		scene.updir = math3d.mark(math3d.vector(scene.updir))

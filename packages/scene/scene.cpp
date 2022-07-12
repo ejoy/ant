@@ -101,6 +101,10 @@ scene_changed(lua_State *L) {
 		if (!mat) {
 			return luaL_error(L, "Unexpected Error.");
 		}
+		auto locmat = math3d::getvalue(math3d, s.mat, LINEAR_TYPE_MAT);
+		if (!locmat) {
+			math3d_mul_matrix(math3d, locmat, mat, mat);
+		}
 		if (s.parent != 0) {
 			auto parentmatid = worldmats.find(s.parent);
 			if (!parentmatid) {
