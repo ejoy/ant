@@ -11,52 +11,18 @@ local hitch_test_group_id<const> = 1000
 local skeleton_test_group_id<const> = 1001
 
 local function create_simple_test_group()
-    ecs.create_entity{
-        policy = {
-            "ant.scene|hitch_object",
-            "ant.general|name",
-        },
-        data = {
-            name = "hitch_scene_test1",
-            scene = {
-                t = {0, 3, 0},
-            },
-            hitch = {
-                group = hitch_test_group_id,
-            },
-        }
+    local defgroup = ecs.group(0)
+    defgroup:create_hitch{
+        t = {0, 3, 0},
+        children = hitch_test_group_id,
     }
-
-    ecs.create_entity{
-        policy = {
-            "ant.scene|hitch_object",
-            "ant.general|name",
-        },
-        data = {
-            name = "hitch_scene_test2",
-            scene = {
-                t = {1, 2, 0},
-            },
-            hitch = {
-                group = hitch_test_group_id,
-            },
-        }
+    defgroup:create_hitch{
+        t = {1, 2, 0},
+        children = hitch_test_group_id,
     }
-
-    ecs.create_entity{
-        policy = {
-            "ant.scene|hitch_object",
-            "ant.general|name",
-        },
-        data = {
-            name = "hitch_scene_test3",
-            scene = {
-                t = {0, 0, 3},
-            },
-            hitch = {
-                group = hitch_test_group_id,
-            },
-        }
+    defgroup:create_hitch{
+        t = {0, 0, 3},
+        children = hitch_test_group_id,
     }
 
     local static_group = ecs.group(hitch_test_group_id)
@@ -107,21 +73,10 @@ end
 
 local function create_skeleton_test_group()
     --dynamic
-    ecs.create_entity{
-        policy = {
-            "ant.scene|hitch_object",
-            "ant.general|name",
-        },
-        data = {
-            name = "virtual_scene_test1",
-            scene = {
-                s = 0.1,
-                t = {0, 0, 0},
-            },
-            hitch = {
-                group = skeleton_test_group_id,
-            },
-        }
+    ecs.create_hitch{
+        s = 0.1,
+        t = {0.0, 0.0, -5.0},
+        children = skeleton_test_group_id,
     }
     local dynamic_group = ecs.group(skeleton_test_group_id)
     local p = dynamic_group:create_instance "/pkg/ant.test.features/assets/glb/inserter.glb|mesh.prefab"

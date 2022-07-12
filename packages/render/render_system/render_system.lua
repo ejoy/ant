@@ -148,7 +148,7 @@ local function transform_find(t, id, ro, mats)
 	return c
 end
 
-local function submit_virtual_scene_filter(viewid, selkey, qn, groups, transforms)
+local function submit_hitch_filter(viewid, selkey, qn, groups, transforms)
 	for g, mats in pairs(groups) do
 		w:group_enable("hitch_tag", g)
 		for ee in w:select(selkey) do
@@ -162,7 +162,7 @@ end
 local function submit_render_objects(viewid, filter, qn, groups, transforms)
 	for _, fn in ipairs(filter) do
 		submit_filter(viewid, load_select_key(qn, fn, select_cache), qn)
-		submit_virtual_scene_filter(viewid, load_select_key(qn, fn, vs_select_cache), qn, groups, transforms)
+		submit_hitch_filter(viewid, load_select_key(qn, fn, vs_select_cache), qn, groups, transforms)
 	end
 end
 

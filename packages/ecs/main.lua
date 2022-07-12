@@ -85,10 +85,13 @@ function world:_create_hitch(group, v)
         id = eid,
         group = group or 0,
         scene = {
+            s = v.s,
+            r = v.r,
+            t = v.t,
             parent = v.parent,
         },
         scene_needchange = true,
-        virtual_scene = {
+        hitch = {
             group = assert(v.children)
         },
     }
