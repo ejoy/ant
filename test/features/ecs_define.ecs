@@ -125,7 +125,7 @@ system "terrain_entity_test_system"
     .method "camera_usage"
 
 system "hitch_node_test_system"
-    .implement "virtual_node.lua"
+    .implement "hitch_node.lua"
     .method "init"
 
 import "debug/vertex_attrib_visualizer.ecs"
