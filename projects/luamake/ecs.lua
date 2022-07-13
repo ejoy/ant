@@ -126,53 +126,13 @@ local TYPENAMES <const> = {
     word = "uint16_t",
     byte = "uint8_t",
     float = "float",
-    userdata = "intptr_t",
+    userdata = "int64_t",
 }
 
 do
-    local id = 0x80000000
-    local function write_id(name)
-        id = id + 1
-        write(("#define COMPONENT_%s 0x%08x"):format(name:upper(), id))
-    end
-
-    local function write_type(name, type)
-        write(("typedef %s component_%s;"):format(TYPENAMES[type], name))
-    end
-
-    local function write_cstruct(name, fields)
-        write(("struct component_%s {"):format(name))
-        for _, field in ipairs(fields) do
-            local name, typename = field:match "^([%w_]+):(%w+)$"
-            write(("\t%s %s;"):format(TYPENAMES[typename], name))
-        end
-        write("};")
-    end
-
     write "#pragma once"
     write ""
-    write "#include <stdint.h>"
-    write ""
-    for _, info in ipairs(components) do
-        write_id(info[1])
-    end
-    write ""
-    for _, info in ipairs(components) do
-        local name, type, fields = info[1], info[2], info[3]
-        if type == "c" then
-            write_cstruct(name, fields)
-        elseif type ~= "tag" then
-            write_type(name, type)
-        end
-    end
-    write ""
-
-    writefile(component_h .. "/component.h")
-end
-
-do
-    write "#pragma once"
-    write ""
+    write "#include \"ecs/select.h\""
     write "#include <stdint.h>"
     write ""
     write "namespace ant_ecs {"
@@ -211,10 +171,8 @@ do
 
     write "namespace ecs_api {"
     write ""
-    write "template <typename T> struct component {};"
-    write ""
     write "#define ECS_COMPONENT(NAME) \\"
-    write "template <> struct component<ecs::##NAME> { \\"
+    write "template <> struct component<ecs::NAME> { \\"
     write "\tstatic inline const int id = ant_ecs_component_id::gen(); \\"
     write "\tstatic inline const char name[] = #NAME; \\"
     write "};"

@@ -6,6 +6,9 @@ struct lua_State;
 #include <type_traits>
 
 namespace ecs_api {
+    template <typename T>
+    struct component {};
+
     template <typename ...Components>
     struct entity_;
 
