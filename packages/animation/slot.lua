@@ -53,13 +53,17 @@ function sys:update_slot()
 	for v in w:select "slot:in scene:update id:in" do
         --TODO: slot.offset_srt is duplicate with entity.scene, not need to keep this srt in slot
         local slot = v.slot
+        if not slot.joint_index and slot.joint_name and slot.anim_eid then
+            local ske = world:entity(slot.anim_eid).skeleton
+            slot.joint_index = ske._handle:joint_index(slot.joint_name)	
+        end
         local follow_flag = assert(slot.follow_flag)
-        if slot.anim_eid then
-            local e = world:entity(slot.anim_eid)
+        local pose_result = slot.anim_eid and world:entity(slot.anim_eid).anim_ctrl.pose_result or slot.pose_result
+        if pose_result then
             local slot_matrix
             if follow_flag == 1 or follow_flag == 2 then
                 if slot.joint_index then
-                    local adjust_mat = calc_pose_mat(e.anim_ctrl.pose_result, slot)
+                    local adjust_mat = calc_pose_mat(pose_result, slot)
                     if follow_flag == 1 then
                         slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
                     else
@@ -71,7 +75,7 @@ function sys:update_slot()
                     end
                 end
             elseif follow_flag == 3 then
-                slot_matrix = calc_pose_mat(e.anim_ctrl.pose_result, slot)
+                slot_matrix = calc_pose_mat(pose_result, slot)
             else
                 error [[
                     "invalid slot, 'follow_flag' only 1/2/3 is valid
