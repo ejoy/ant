@@ -84,6 +84,11 @@ local default_collider_define = {
 }
 
 local slot_entity_id = 1
+local group_id = 0
+local function get_group_id()
+    group_id = group_id + 1
+    return group_id
+end
 function m:create_slot()
     --if not gizmo.target_eid then return end
     local auto_name = "empty" .. slot_entity_id
@@ -93,7 +98,7 @@ function m:create_slot()
             "ant.general|name",
             "ant.general|tag",
             "ant.animation|slot",
-            "ant.scene|scene_object",
+            "ant.scene|hitch_object",
         },
         data = {
             scene = {},
@@ -102,7 +107,10 @@ function m:create_slot()
                 follow_flag = 1,
             },
             name = auto_name,
-            tag = {auto_name}
+            tag = {auto_name},
+            hitch = {
+                group = 0,
+            }
         }
     }
     local tpl = utils.deep_copy(template)
@@ -213,6 +221,7 @@ function m:set_default_light(enable)
         end
     end
 end
+
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()
@@ -245,12 +254,22 @@ function m:create(what, config)
                     --material = "/pkg/ant.resources/materials/outline/scale.material",
                     material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
-                    name = config.type .. gen_geometry_id()
+                    name = config.type .. gen_geometry_id(),
                 }
             }
             local tmp = utils.deep_copy(template)
-            tmp.data.scene.parent = parent_eid
-            local new_entity = ecs.create_entity(tmp)
+            local hitch = parent_eid and world:entity(parent_eid).hitch
+            local new_entity
+            if hitch then
+                if hitch.group == 0 then
+                    hitch.group = get_group_id()
+                end
+                new_entity = ecs.group(hitch.group):create_entity(tmp)
+            else
+                tmp.data.scene.parent = parent_eid
+                new_entity = ecs.create_entity(tmp)
+            end
+
             self:add_entity(new_entity, parent_eid, template)
             if not self.test then
                 self.test = {}
@@ -587,14 +606,26 @@ function m:add_prefab(filename)
     if not self.root then
         self:reset_prefab()
     end
-
+    local prefab
     local parent = gizmo.target_eid or self.root
-    local prefab = ecs.create_instance(prefab_filename)
+    -- local hitch = parent and world:entity(parent).hitch
+    -- if hitch then
+    --     if hitch.group == 0 then
+    --         hitch.group = get_group_id()
+    --     end
+    --     prefab = ecs.group(hitch.group):create_instance(prefab_filename)
+    -- else
+    --     prefab = ecs.create_instance(prefab_filename)
+    -- end
+    local group_id = get_group_id()
+    local v_root = ecs.create_hitch({parent = parent, children = group_id})
+    prefab = ecs.group(group_id):create_instance(prefab_filename)
+    self.entities[#self.entities+1] = v_root
     prefab.on_ready = function(inst)
         local prefab_name = gen_prefab_name()
-        local v_root = create_simple_entity(prefab_name, parent)
-        -- ecs.method.set_parent(v_root, parent)
-        self.entities[#self.entities+1] = v_root
+        iom.set_scale(world:entity(v_root), iom.get_scale(world:entity(inst.root)))
+        iom.set_rotation(world:entity(v_root), iom.get_rotation(world:entity(inst.root)))
+        iom.set_position(world:entity(v_root), iom.get_position(world:entity(inst.root)))
         local children = inst.tag["*"]
         if #children == 1 then
             local child = children[1]
@@ -605,12 +636,6 @@ function m:add_prefab(filename)
                 return
             end
         end
-        -- for _, child in ipairs(children) do
-        --     if world:entity(child).scene.parent == world:entity(inst.root).id then
-        --         ecs.method.set_parent(child, v_root)
-        --     end
-        -- end
-        ecs.method.set_parent(inst.root, v_root)
         set_select_adapter(children, v_root)
         hierarchy:add(v_root, {filename = prefab_filename, name = prefab_name, children = children, editor = false}, parent)
     end
