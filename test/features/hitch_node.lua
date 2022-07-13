@@ -27,6 +27,7 @@ local function create_simple_test_group()
 
     local static_group = ecs.group(hitch_test_group_id)
     --standalone sub tree
+    static_group:enable "scene_update"
     local p1 = static_group:create_entity {
         policy = {
             "ant.render|render",
@@ -79,14 +80,13 @@ local function create_skeleton_test_group()
         children = skeleton_test_group_id,
     }
     local dynamic_group = ecs.group(skeleton_test_group_id)
-    local p = dynamic_group:create_instance "/pkg/ant.test.features/assets/glb/inserter.glb|mesh.prefab"
+    dynamic_group:enable "scene_update"
+    local p = dynamic_group:create_instance "/pkg/ant.test.features/assets/glb/headquater.glb|mesh.prefab"
     p.on_init = function ()
-        for eid in ipairs(p.tag["*"]) do
+        world:entity(p.root).standalone_scene_object = true
+        for _, eid in ipairs(p.tag["*"]) do
             world:entity(eid).standalone_scene_object = true
         end
-    end
-    p.on_ready = function (e)
-        iom.set_scale(world:entity(e.root), 0.1)
     end
     world:create_object(p)
 end
