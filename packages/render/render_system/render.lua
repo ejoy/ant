@@ -93,11 +93,12 @@ local function update_mesh(vb, ib)
 	end
 end
 
+local dump<const> ={}
 function irender.draw(vid, ri, mat)
 	ri:set_transform()
 
 	local m = mat or ri
-	m.material{}
+	m.material(dump)
 
 	update_mesh(ri.vb, ri.ib)
 
@@ -108,7 +109,7 @@ end
 function irender.multi_draw(vid, ri, mat, tid, num, stride)
 	bgfx.set_transform_cached(tid, num)
 	local m = mat or ri
-	m.material {}
+	m.material(dump)
 	update_mesh(ri.vb, ri.ib)
 	local dnum = num // stride
 	bgfx.multi_submit(vid, ri.fx.prog, tid, dnum, stride)
