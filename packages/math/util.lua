@@ -246,6 +246,13 @@ function util.calc_viewport(viewport, ratio)
 	}
 end
 
+function util.remap_xy(x, y, ratio)
+	if ratio ~= nil and ratio ~= 1 then
+        x, y = util.cvt_size(x, ratio), util.cvt_size(y, ratio)
+    end
+    return x, y
+end
+
 function util.texture_uv(rect, size)
 	return {rect.x/size.w, rect.y/size.h, (rect.x+rect.w)/size.w, (rect.y+rect.h)/size.h}
 end
