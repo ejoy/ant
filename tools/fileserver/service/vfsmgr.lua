@@ -62,9 +62,9 @@ end
 local function watch_add(repo, repopath)
 	local paths = {}
 	local watchs = {}
-	watch_add_path(paths, repopath)
+	watch_add_path(paths, repopath:lexically_normal())
 	for _, lpath in pairs(repo._mountpoint) do
-		watch_add_path(paths, lpath)
+		watch_add_path(paths, lpath:lexically_normal())
 	end
 	for i = 1, #paths do
 		local path = paths[i]
@@ -101,9 +101,7 @@ local function update_watch()
 		if not type then
 			break
 		end
-		if type == 'error' then
-			goto continue
-		end
+		print(type, path)
 		path = fs.path(path)
 		if ignore_path(path) then
 			goto continue
