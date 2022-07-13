@@ -33,7 +33,6 @@ lcull(lua_State *L){
 
 	auto w = getworld(L, 1);
 	ecs_api::context ecs {w->ecs};
-	auto math3d = w->math3d->LS;
 
 	const math3d_id vpid = math3d_mark_id(L, w->math3d, 3);
 	int vpmat_type = LINEAR_TYPE_NONE;

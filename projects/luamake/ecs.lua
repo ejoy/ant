@@ -126,12 +126,13 @@ local TYPENAMES <const> = {
     word = "uint16_t",
     byte = "uint8_t",
     float = "float",
-    userdata = "intptr_t",
+    userdata = "int64_t",
 }
 
 do
     write "#pragma once"
     write ""
+    write "#include \"ecs/select.h\""
     write "#include <stdint.h>"
     write ""
     write "namespace ant_ecs {"
@@ -170,10 +171,8 @@ do
 
     write "namespace ecs_api {"
     write ""
-    write "template <typename T> struct component {};"
-    write ""
     write "#define ECS_COMPONENT(NAME) \\"
-    write "template <> struct component<ecs::##NAME> { \\"
+    write "template <> struct component<ecs::NAME> { \\"
     write "\tstatic inline const int id = ant_ecs_component_id::gen(); \\"
     write "\tstatic inline const char name[] = #NAME; \\"
     write "};"

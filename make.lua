@@ -67,7 +67,6 @@ lm:runlua "compile_ecs" {
     inputs = "packages/**/*.ecs",
     output = {
         "packages/ecs/component.lua",
-        "clibs/ecs/ecs/component.h",
         "clibs/ecs/ecs/component.hpp",
     }
 }
