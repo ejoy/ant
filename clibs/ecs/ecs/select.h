@@ -249,8 +249,8 @@ namespace ecs_api {
         }
 
         template <typename MainKey, typename ...SubKey>
-        void enable_tag(entity<MainKey, SubKey...>& e, int64_t id) {
-            entity_enable_tag(ecs, component<MainKey>::id, e.index, (int)id);
+        void enable_tag(entity<MainKey, SubKey...>& e, int id) {
+            entity_enable_tag(ecs, component<MainKey>::id, e.index, id);
         }
 
         template <typename Component, typename MainKey, typename ...SubKey>
@@ -259,8 +259,8 @@ namespace ecs_api {
         }
 
         template <typename MainKey, typename ...SubKey>
-        void disable_tag(entity<MainKey, SubKey...>& e, int64_t id) {
-            entity_disable_tag(ecs, component<MainKey>::id, e.index, (int)id);
+        void disable_tag(entity<MainKey, SubKey...>& e, int id) {
+            entity_disable_tag(ecs, component<MainKey>::id, e.index, id);
         }
 
         template <typename Component>
