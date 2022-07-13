@@ -1069,9 +1069,13 @@ linstance_release(lua_State *L) {
 static inline bgfx_texture_handle_t
 check_get_texture_handle(lua_State *L, int texture_index, uint32_t handle){
 	bgfx_texture_handle_t tex;
-	lua_geti(L, texture_index, handle);
-	tex.idx = luaL_optinteger(L, -1, handle) & 0xffff;
-	lua_pop(L, 1);
+	if (texture_index != 0){
+		lua_geti(L, texture_index, handle);
+		tex.idx = luaL_optinteger(L, -1, handle) & 0xffff;
+		lua_pop(L, 1);
+	} else {
+		tex.idx = handle;
+	}
 	return tex;
 }
 
@@ -1211,8 +1215,12 @@ linstance_attribs(lua_State *L){
 static int
 linstance_apply_attrib(lua_State *L) {
 	struct material_instance *mi = (struct material_instance *)lua_touserdata(L, 1);
-	const int texture_index = 2;
-	luaL_checktype(L, texture_index, LUA_TTABLE);
+	int texture_index = 0;
+	if (!lua_isnoneornil(L, 2)){
+		texture_index = 2;
+		luaL_checktype(L, 2, LUA_TTABLE);
+	}
+	
 	const int mat_idx = get_material_index(L, 1); // push material object
 	struct material *mat = (struct material *)lua_touserdata(L, mat_idx);
 	struct attrib_arena* arena = to_arena(L, get_cobject_index(L, mat_idx));	// push cobject
