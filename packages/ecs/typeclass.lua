@@ -119,8 +119,9 @@ end
 local function toint(v)
 	local t = type(v)
 	if t == "userdata" then
-		local s = tostring(v):match "%a+: (%x+)"
-		return tonumber(s, 16)
+		local s = tostring(v)
+		s = s:match "%a+: (%x+)" or s:match "%a+: 0x(%x+)"
+		return tonumber(assert(s), 16)
 	end
 	assert(false)
 end
