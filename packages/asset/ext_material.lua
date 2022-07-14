@@ -114,10 +114,10 @@ local function init(material, setting)
         for _, v in pairs(material.properties) do
             if v.texture then
                 v.type = 't'
-                v.value = assetmgr.resource(v.texture).handle
+                v.value = assetmgr.resource(v.texture).id
 			elseif v.image then
                 v.type = 'i'
-                v.value = assetmgr.resource(v.image).handle
+                v.value = assetmgr.resource(v.image).id
             end
         end
     end

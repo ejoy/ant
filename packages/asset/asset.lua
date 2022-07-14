@@ -107,5 +107,6 @@ end
 assetmgr.edit = resource.edit
 assetmgr.unload = resource.unload
 assetmgr.reload = resource.reload
+assetmgr.textures = require "texture_mgr".textures
 
 return assetmgr

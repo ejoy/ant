@@ -21,14 +21,14 @@ setmetatable(textures, mt)
 local function create(filename)
 	local res = ltask.call(ServiceResource, "texture_create", filename)
 	if res.uncomplete then
-		--ltask.fork(function()
+		ltask.fork(function()
 			local ok, handle = pcall(ltask.call, ServiceResource, "texture_complete", res.name)
 			if ok then
 				res.handle = handle
 				res.uncomplete = nil
 				textures[res.id] = res.handle
 			end
-		--end)
+		end)
 	else
 		textures[res.id] = res.handle
 	end

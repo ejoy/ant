@@ -11,7 +11,6 @@ local math3d	= require "math3d"
 local skybox_sys = ecs.system "skybox_system"
 
 function skybox_sys:component_init()
-	w:clear "skybox_changed"
 	for e in w:select "INIT skybox:in simplemesh:out owned_mesh_buffer?out skybox_changed?out" do
 		local vb, ib = geo.box(1, true, false)
 		e.simplemesh = imesh.init_mesh{

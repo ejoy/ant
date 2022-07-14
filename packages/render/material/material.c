@@ -1069,9 +1069,9 @@ linstance_release(lua_State *L) {
 static inline bgfx_texture_handle_t
 check_get_texture_handle(lua_State *L, int texture_index, uint32_t handle){
 	bgfx_texture_handle_t tex;
-	if (texture_index != 0){
+	if (texture_index != 0 && (0xffff0000 & handle) == 0){
 		lua_geti(L, texture_index, handle);
-		tex.idx = luaL_optinteger(L, -1, handle) & 0xffff;
+		tex.idx = (uint16_t)lua_tointeger(L, -1);
 		lua_pop(L, 1);
 	} else {
 		tex.idx = handle;

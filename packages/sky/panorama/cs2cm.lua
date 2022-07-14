@@ -60,45 +60,48 @@ local function load_res_tex(e)
 end
 
 function cs2cm_sys:entity_ready()
-    for e in w:select "skybox_changed skybox:in render_object:in filter_ibl?out" do
+    for e in w:select "skybox_changed:update skybox:in render_object:in filter_ibl?out" do
         local tex = load_res_tex(e)
-        local ti = tex.texinfo
-        if panorama_util.is_panorama_tex(ti) then
-            if e.skybox.facesize == nil then
-                e.skybox.facesize = ti.height // 2
+        if not tex.uncomplete then
+            e.skybox_changed = false
+            local ti = tex.texinfo
+            if panorama_util.is_panorama_tex(ti) then
+                if e.skybox.facesize == nil then
+                    e.skybox.facesize = ti.height // 2
+                end
+                local facesize = e.skybox.facesize
+                local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cm_rbidx, cm_flags)
+                e.skybox.cm_rbidx = cm_rbidx
+    
+                local dispatcher = world:entity(cs2cm_convertor_eid)
+                local dis = dispatcher.dispatch
+                local material = dis.material
+    
+                local cm_rbhandle = fbmgr.get_rb(cm_rbidx).handle
+                material.s_source = tex.handle
+                material.s_cubemap_source = icompute.create_image_property(cm_rbhandle, 1, 0, "w")
+    
+                local s = dis.size
+                s[1], s[2], s[3] = facesize // thread_group_size, facesize // thread_group_size, 6
+                icompute.dispatch(build_ibl_viewid, dis)
+    
+                --just generate mipmaps for cm_rbidx
+                local fbidx = fbmgr.create{
+                    rbidx = cm_rbidx,
+                    resolve = "g",
+                    layer = 0,
+                    mip = 0,
+                    numlayer = 1,
+                }
+                bgfx.set_view_frame_buffer(build_ibl_viewid, fbmgr.get(fbidx).handle)
+                bgfx.touch(build_ibl_viewid)
+    
+                fbmgr.destroy(fbidx, true)
+    
+                imaterial.set_property(e, "s_skybox", cm_rbhandle)
             end
-            local facesize = e.skybox.facesize
-            local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cm_rbidx, cm_flags)
-            e.skybox.cm_rbidx = cm_rbidx
-
-            local dispatcher = world:entity(cs2cm_convertor_eid)
-            local dis = dispatcher.dispatch
-            local material = dis.material
-
-            local cm_rbhandle = fbmgr.get_rb(cm_rbidx).handle
-            material.s_source = tex.handle
-            material.s_cubemap_source = icompute.create_image_property(cm_rbhandle, 1, 0, "w")
-
-            local s = dis.size
-            s[1], s[2], s[3] = facesize // thread_group_size, facesize // thread_group_size, 6
-            icompute.dispatch(build_ibl_viewid, dis)
-
-            --just generate mipmaps for cm_rbidx
-            local fbidx = fbmgr.create{
-                rbidx = cm_rbidx,
-                resolve = "g",
-                layer = 0,
-                mip = 0,
-                numlayer = 1,
-            }
-            bgfx.set_view_frame_buffer(build_ibl_viewid, fbmgr.get(fbidx).handle)
-            bgfx.touch(build_ibl_viewid)
-
-            fbmgr.destroy(fbidx, true)
-
-            imaterial.set_property(e, "s_skybox", cm_rbhandle)
+            e.filter_ibl = true
         end
-        e.filter_ibl = true
     end
 end
 

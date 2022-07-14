@@ -7,11 +7,13 @@ local setting		= import_package "ant.settings".setting
 local settingdata 	= setting:data()
 local graphic_setting=settingdata.graphic
 
+local assetmgr		= import_package "ant.asset"
+
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local declmgr		= require "vertexdecl_mgr"
-local sampler	= require "sampler"
+local sampler		= require "sampler"
 
 local function set_world_matrix(rc)
 	bgfx.set_transform(rc.worldmat)
@@ -97,7 +99,7 @@ function irender.draw(vid, ri, mat)
 	ri:set_transform()
 
 	local m = mat or ri
-	m.material()
+	m.material(assetmgr.textures)
 
 	update_mesh(ri.vb, ri.ib)
 
@@ -108,7 +110,7 @@ end
 function irender.multi_draw(vid, ri, mat, tid, num, stride)
 	bgfx.set_transform_cached(tid, num)
 	local m = mat or ri
-	m.material()
+	m.material(assetmgr.textures)
 	update_mesh(ri.vb, ri.ib)
 	local dnum = num // stride
 	bgfx.multi_submit(vid, ri.fx.prog, tid, dnum, stride)
