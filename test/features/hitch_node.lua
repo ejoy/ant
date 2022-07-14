@@ -72,6 +72,8 @@ local function create_simple_test_group()
     }
 end
 
+local change_hitch_eid
+
 local function create_skeleton_test_group()
     --dynamic
     ecs.create_hitch{
@@ -80,24 +82,42 @@ local function create_skeleton_test_group()
         children = skeleton_test_group_id,
     }
 
-    ecs.create_hitch{
+    change_hitch_eid = ecs.create_hitch{
         s = 0.1,
+        r = {0.0, 0.8, 0.0},
         t = {5.0, 0.0, 0.0},
         children = skeleton_test_group_id,
     }
     local dynamic_group = ecs.group(skeleton_test_group_id)
     dynamic_group:enable "scene_update"
-    local p = dynamic_group:create_instance "/pkg/ant.test.features/assets/glb/inserter.glb|mesh.prefab"
-    p.on_init = function ()
-        world:entity(p.root).standalone_scene_object = true
-        for _, eid in ipairs(p.tag["*"]) do
-            world:entity(eid).standalone_scene_object = true
+
+    local function create_obj(g, file)
+        local p = g:create_instance(file)
+        p.on_init = function ()
+            world:entity(p.root).standalone_scene_object = true
+            for _, eid in ipairs(p.tag["*"]) do
+                world:entity(eid).standalone_scene_object = true
+            end
         end
+        world:create_object(p)
     end
-    world:create_object(p)
+
+    create_obj(dynamic_group, "/pkg/ant.test.features/assets/glb/inserter.glb|mesh.prefab")
+    local d2g = ecs.group(skeleton_test_group_id+1)
+    d2g:enable "scene_update"
+    create_obj(d2g, "/pkg/ant.test.features/assets/glb/headquater.glb|mesh.prefab")
 end
 
 function hn_test_sys:init()
     --create_simple_test_group()
     create_skeleton_test_group()
+end
+
+local key_mb = world:sub {"keyboard"}
+function hn_test_sys:data_changed()
+    for _, key, press in key_mb:unpack() do
+        if key == "Y" and press == 0 then
+            world:entity(change_hitch_eid).hitch.group = skeleton_test_group_id+1
+        end
+    end
 end
