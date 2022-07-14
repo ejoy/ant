@@ -177,9 +177,10 @@ protected:
 Renderer::Renderer(const RmlContext* context)
     : mcontext(context)
     , mEncoder(nullptr)
+    , default_tex(CreateTexture(mcontext->default_tex))
     , default_tex_mat(std::make_unique<TextureMaterial>(
         mcontext->shader,
-        uint16_t(mcontext->default_tex.texid),
+        uint16_t(default_tex),
         Rml::SamplerFlag::Unset
     ))
     , default_font_mat(std::make_unique<TextMaterial>(
@@ -192,6 +193,7 @@ Renderer::Renderer(const RmlContext* context)
     ))
 {
     BGFX(set_view_mode)(mcontext->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
+    Rml::SetRenderInterface(this);
 }
 
 Renderer::~Renderer()
@@ -335,6 +337,16 @@ bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, co
 	return false;
 }
 
+Rml::TextureHandle Renderer::CreateTexture(const std::string& path) {
+    Rml::TextureHandle handle;
+    Rml::Size dimensions;
+    if (LoadTexture(handle, dimensions, path)) {
+        return handle;
+    }
+    assert(false);
+    return 0;
+}
+
 bool Renderer::UpdateTexture(Rml::TextureHandle texture, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *buffer){
     bgfx_texture_handle_t th = { uint16_t(texture) };
     if (!BGFX_HANDLE_IS_VALID(th))
@@ -355,7 +367,7 @@ void Renderer::ReleaseTexture(Rml::TextureHandle texture) {
 Rml::MaterialHandle Renderer::CreateTextureMaterial(Rml::TextureHandle texture, Rml::SamplerFlag flags) {
     bgfx_texture_handle_t th = { uint16_t(texture) };
     if (!BGFX_HANDLE_IS_VALID(th)) {
-        th = { uint16_t(mcontext->default_tex.texid) };
+        th = { uint16_t(default_tex) };
     }
     auto material = std::make_unique<TextureMaterial>(mcontext->shader, th.idx, flags);
     return reinterpret_cast<Rml::MaterialHandle>(material.release());

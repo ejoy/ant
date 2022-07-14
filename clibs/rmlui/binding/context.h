@@ -44,9 +44,9 @@ struct lua_State;
 struct RmlContext {
     struct font_manager*  font_mgr;
     shader                shader;
-    texture_desc          default_tex;
     texture_desc          font_tex;
     uint16_t              viewid;
     bgfx_vertex_layout_t* layout;
+    std::string           default_tex;
     RmlContext(lua_State *L, int idx);
 };

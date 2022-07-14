@@ -2,6 +2,7 @@
 #include "file.h"
 #include "luabind.h"
 #include "luaplugin.h"
+#include <core/Core.h>
 
 #if defined(_WIN32)
 #include <Windows.h>
@@ -20,12 +21,16 @@ std::wstring u2w(const std::string_view& str) {
 }
 #endif
 
+File::File(lua_plugin& plugin)
+    : plugin(plugin) {
+    Rml::SetFileInterface(this);
+}
+
 std::string File::GetPath(const std::string& path) {
-    lua_plugin* plugin = get_lua_plugin();
     std::string result;
     luabind::invoke([&](lua_State* L) {
         lua_pushlstring(L, path.data(), path.size());
-        plugin->call(L, LuaEvent::OnOpenFile, 1, 1);
+        plugin.call(L, LuaEvent::OnOpenFile, 1, 1);
         if (lua_type(L, -1) == LUA_TSTRING) {
             size_t sz = 0;
             const char* str = lua_tolstring(L, -1, &sz);

@@ -20,6 +20,12 @@ load_fontid(struct font_manager *F, const std::string &family){
     return F->font_manager_addfont_with_family(F, name);
 }
 
+FontEngine::FontEngine(const RmlContext* context)
+		: mcontext(context)
+{
+	Rml::SetFontEngineInterface(this);
+}
+
 Rml::FontFaceHandle FontEngine::GetFontFaceHandle(const std::string& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size){
     int fontid = load_fontid(mcontext->font_mgr, family);
 

@@ -7,7 +7,7 @@ cr.init()
 
 local m = {}
 
-local directorys  = {}
+local directorys  = { fs.path "/" }
 
 local function import_font(path)
     for p in fs.pairs(path) do

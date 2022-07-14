@@ -18,9 +18,7 @@ struct FontFace{
 
 class FontEngine : public Rml::FontEngineInterface {
 public:
-	FontEngine(const RmlContext* context)
-		: mcontext(context)
-		{}
+	FontEngine(const RmlContext* context);
 	virtual ~FontEngine() = default;
 
 	virtual Rml::FontFaceHandle GetFontFaceHandle(const std::string& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size)override;

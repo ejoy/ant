@@ -21,19 +21,16 @@
 #include <string.h>
 
 struct RmlInterface {
+	lua_plugin      m_plugin;
     FontEngine      m_font;
     File            m_file;
     Renderer        m_renderer;
-	lua_plugin      m_plugin;
-    RmlInterface(RmlContext* context)
-        : m_font(context)
-        , m_file()
+    RmlInterface(lua_State* L, RmlContext* context)
+        : m_plugin(L)
+		, m_font(context)
+        , m_file(m_plugin)
         , m_renderer(context)
     {
-        Rml::SetFontEngineInterface(&m_font);
-        Rml::SetFileInterface(&m_file);
-        Rml::SetRenderInterface(&m_renderer);
-		Rml::SetPlugin(&m_plugin);
     }
 };
 
@@ -42,7 +39,7 @@ struct RmlWrapper {
     RmlInterface interface;
     RmlWrapper(lua_State* L, int idx)
         : context(L, idx)
-        , interface(&context)
+        , interface(L, &context)
 	{}
 };
 
@@ -541,13 +538,6 @@ lRmlShutdown(lua_State* L) {
 }
 
 static int
-lRmlRegisterEevent(lua_State* L) {
-	lua_plugin* plugin = get_lua_plugin();
-	plugin->register_event(L);
-	return 0;
-}
-
-static int
 lRenderBegin(lua_State* L) {
 	Rml::GetRenderInterface()->Begin();
 	return 0;
@@ -635,7 +625,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "RenderFrame", lRenderFrame },
 		{ "RmlInitialise", lRmlInitialise },
 		{ "RmlShutdown", lRmlShutdown },
-		{ "RmlRegisterEevent", lRmlRegisterEevent },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

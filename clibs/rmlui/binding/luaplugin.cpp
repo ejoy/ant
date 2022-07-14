@@ -1,5 +1,6 @@
 #include "pch.h"
 
+#include <core/Core.h>
 #include <core/Interface.h>
 #include <core/Document.h>
 #include <core/Stream.h>
@@ -32,6 +33,11 @@ static int ref_function(luaref reference, lua_State* L, const char* funcname) {
 		luaL_error(L, "Missing %s", funcname);
 	}
 	return luaref_ref(reference, L);
+}
+
+lua_plugin::lua_plugin(lua_State* L) {
+	register_event(L);
+	Rml::SetPlugin(this);
 }
 
 lua_plugin::~lua_plugin() {
@@ -80,6 +86,9 @@ void lua_plugin::OnDestroyNode(Rml::Document* document, Rml::Node* node) {
 void lua_plugin::register_event(lua_State* L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lua_settop(L, 1);
+	lua_getfield(L, 1, "callback");
+	lua_remove(L, 1);
+	luaL_checktype(L, 1, LUA_TTABLE);
 	reference = luaref_init(L);
 	ref_function(reference, L, "OnLoadInlineScript");
 	ref_function(reference, L, "OnLoadExternalScript");

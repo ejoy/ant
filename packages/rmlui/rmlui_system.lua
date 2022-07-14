@@ -16,7 +16,6 @@ local iRmlUi = ecs.interface "irmlui"
 local ui_viewid<const> = viewidmgr.get "uiruntime"
 
 function rmlui_sys:init()
-    local default_texid = assetmgr.resource "/pkg/ant.resources/textures/default/1x1_white.texture".handle
     local ft_handle, ft_w, ft_h = font.texture()
 
     ltask.call(ServiceRmlUi, "initialize", {
@@ -27,10 +26,7 @@ function rmlui_sys:init()
             texid = ft_handle,
             width = ft_w, height = ft_h,
         },
-        default_tex = {
-            width = 1, height = 1,
-            texid = default_texid,
-        },
+        default_tex = "/pkg/ant.resources/textures/default/1x1_white.texture",
     })
     iRmlUi.font_dir "/pkg/ant.resources.binary/ui/test/assets/font/"
 
