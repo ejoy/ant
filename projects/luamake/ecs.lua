@@ -187,7 +187,7 @@ do
     write "\tstatic inline const bool tag = true; \\"
     write "};"
     write ""
-    write("ECS_COMPONENT(REMOVED)")
+    write("ECS_TAG(REMOVED)")
     for _, c in ipairs(components) do
         if c[2] == "tag" then
             write("ECS_TAG("..c[1]..")")
