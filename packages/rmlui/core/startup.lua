@@ -52,7 +52,6 @@ function S.initialize(t)
     ServiceWorld = t.service_world
     require "font" (t.font_mgr)
     initRender(t)
-    rmlui.RmlRegisterEevent(require "core.callback")
     ltask.fork(Render)
 end
 

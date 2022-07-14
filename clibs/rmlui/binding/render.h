@@ -31,6 +31,8 @@ public:
     Rml::MaterialHandle CreateFontMaterial(const Rml::TextEffects& effects) override;
     void DestroyMaterial(Rml::MaterialHandle mat) override;
 
+    Rml::TextureHandle CreateTexture(const std::string& path);
+
 public:
     // will delete buffer
     bool UpdateTexture(Rml::TextureHandle texhandle, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *buffer);
@@ -47,6 +49,7 @@ private:
     const RmlContext*   mcontext;
     bgfx_encoder_t*     mEncoder;
     RenderState         state;
+    Rml::TextureHandle  default_tex;
     std::unique_ptr<TextureMaterial> default_tex_mat;
     std::unique_ptr<TextMaterial> default_font_mat;
     std::unique_ptr<Uniform>      clip_uniform;

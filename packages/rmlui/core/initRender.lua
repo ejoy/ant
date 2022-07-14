@@ -61,5 +61,6 @@ return function(t)
     local layouhandle = declmgr.get "p2|c40niu|t20".handle
     t.layout  = layouhandle
     t.shader = create_shaders()
+    t.callback = require "core.callback"
     rmlui.RmlInitialise(t)
 end
