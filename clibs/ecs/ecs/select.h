@@ -13,8 +13,7 @@ namespace ecs_api {
     struct entity_;
 
     template <>
-    struct entity_<> {
-    };
+    struct entity_<> {};
 
     template <typename Component, typename ...Components>
     struct entity_<Component, Components...> : public entity_<Components...> {
@@ -153,12 +152,12 @@ namespace ecs_api {
                 if (visit_entity(ctx, 0, e, L)) {
                     return {ctx, L, e};
                 }
-            return {e};
-        }
-        iterator end() {
-            return {e};
-        }
-    };
+                return {e};
+            }
+            iterator end() {
+                return {e};
+            }
+        };
 
         template <typename ...Args>
         struct select_range {
