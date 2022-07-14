@@ -113,7 +113,7 @@ function S.texture_create(name)
     local c = texturebyname[name]
     if c then
         if c.output.uncomplete then
-            asyncCreateTexture(c.name)
+            asyncCreateTexture(c.output.name)
         end
         return c.output
     else
@@ -132,7 +132,7 @@ function S.texture_create(name)
         }
         texturebyname[name] = c
         texturebyid[id] = c
-        asyncCreateTexture(c.name)
+        asyncCreateTexture(c.output.name)
         return c.output
     end
 end
@@ -145,9 +145,9 @@ function S.texture_reload(id)
     if not c.output.uncomplete then
         return c.output
     end
-    asyncCreateTexture(c.name)
+    asyncCreateTexture(c.output.name)
     while true do
-        ltask.wait(c.name)
+        ltask.wait(c.output.name)
         if not c.output.uncomplete then
             return c.output
         end
@@ -195,7 +195,7 @@ ltask.fork(function ()
                 c.input = loadTexture(name)
             end
             c.output.handle = createTexture(c.input)
-            c.output.uncomplete = true
+            c.output.uncomplete = nil
             c.input = nil
             ltask.wakeup(name)
             ltask.sleep(0)
