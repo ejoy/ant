@@ -18,6 +18,7 @@ enum LinearType {
 struct lastack;
 
 int64_t lastack_constant(int cons);
+const float * lastack_ident_mat();
 int lastack_isconstant(int64_t id);
 int lastack_marked(int64_t id, int *type);
 int lastack_sametype(int64_t id1, int64_t id2);
@@ -38,7 +39,7 @@ float * lastack_allocmatrix(struct lastack *LS);
 float * lastack_allocmatrixn(struct lastack *LS, int n);
 void lastack_pushsrt(struct lastack *LS, const float *s, const float *r, const float *t);
 const float * lastack_value(struct lastack *LS, int64_t id, int *type);
-int lastack_pushref(struct lastack *LS, int64_t id);
+const float * lastack_pushref(struct lastack *LS, int64_t id);
 int64_t lastack_mark(struct lastack *LS, int64_t tempid);
 void lastack_unmark(struct lastack *LS, int64_t markid);
 int64_t lastack_pop(struct lastack *LS);
