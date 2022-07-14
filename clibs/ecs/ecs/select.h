@@ -245,6 +245,7 @@ namespace ecs_api {
 
         template <typename Component, typename MainKey, typename ...SubKey>
         void enable_tag(entity<MainKey, SubKey...>& e) {
+            static_assert(component<Component>::tag);
             entity_enable_tag(ecs, component<MainKey>::id, e.index, component<Component>::id);
         }
 
@@ -255,6 +256,7 @@ namespace ecs_api {
 
         template <typename Component, typename MainKey, typename ...SubKey>
         void disable_tag(entity<MainKey, SubKey...>& e) {
+            static_assert(component<Component>::tag);
             entity_disable_tag(ecs, component<MainKey>::id, e.index, component<Component>::id);
         }
 

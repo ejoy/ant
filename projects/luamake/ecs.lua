@@ -81,7 +81,7 @@ local function loadComponents()
         else
             local t = info.type[1]
             if t == "lua" then
-                components[#components+1] = {name, "tag"}
+                components[#components+1] = {name, "lua"}
             elseif t == "c" then
                 components[#components+1] = {name, "c", info.field}
             else
@@ -152,6 +152,9 @@ do
         elseif type == "tag" then
             write(("struct %s {};"):format(name))
             write ""
+        elseif type == "lua" then
+            write(("struct %s {};"):format(name))
+            write ""
         else
             write(("using %s = %s;"):format(name, TYPENAMES[type]))
             write ""
@@ -177,12 +180,24 @@ do
     write "\tstatic inline const char name[] = #NAME; \\"
     write "};"
     write ""
+    write "#define ECS_TAG(NAME) \\"
+    write "template <> struct component<ecs::NAME> { \\"
+    write "\tstatic inline const int id = ant_ecs_component_id::gen(); \\"
+    write "\tstatic inline const char name[] = #NAME; \\"
+    write "\tstatic inline const bool tag = true; \\"
+    write "};"
+    write ""
     write("ECS_COMPONENT(REMOVED)")
     for _, c in ipairs(components) do
-        write("ECS_COMPONENT("..c[1]..")")
+        if c[2] == "tag" then
+            write("ECS_TAG("..c[1]..")")
+        else
+            write("ECS_COMPONENT("..c[1]..")")
+        end
     end
     write ""
     write "#undef ECS_COMPONENT"
+    write "#undef ECS_TAG"
     write ""
     write "}"
     write ""
