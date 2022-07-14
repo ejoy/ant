@@ -2084,7 +2084,7 @@ lmul_matrix_bulk_data(lua_State *L){
 	luaL_checktype(L, 4, LUA_TLIGHTUSERDATA);
 	float* r = lua_touserdata(L, 4);
 	const int offset = (int)luaL_optinteger(L, 5, 0);
-	r += offset;
+	r += offset*16;
 	for (int ii=0; ii<bulk_num;++ii){
 		math3d_mul_matrix(LS, m, bulk, r);
 		bulk += 16;

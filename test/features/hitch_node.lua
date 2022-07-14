@@ -79,9 +79,15 @@ local function create_skeleton_test_group()
         t = {0.0, 0.0, -5.0},
         children = skeleton_test_group_id,
     }
+
+    ecs.create_hitch{
+        s = 0.1,
+        t = {5.0, 0.0, 0.0},
+        children = skeleton_test_group_id,
+    }
     local dynamic_group = ecs.group(skeleton_test_group_id)
     dynamic_group:enable "scene_update"
-    local p = dynamic_group:create_instance "/pkg/ant.test.features/assets/glb/headquater.glb|mesh.prefab"
+    local p = dynamic_group:create_instance "/pkg/ant.test.features/assets/glb/inserter.glb|mesh.prefab"
     p.on_init = function ()
         world:entity(p.root).standalone_scene_object = true
         for _, eid in ipairs(p.tag["*"]) do
@@ -92,6 +98,6 @@ local function create_skeleton_test_group()
 end
 
 function hn_test_sys:init()
-    create_simple_test_group()
+    --create_simple_test_group()
     create_skeleton_test_group()
 end
