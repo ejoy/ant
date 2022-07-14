@@ -18,14 +18,18 @@ all[root] = {}
 
 template.keys = root
 
-function template.new(fmt)
+function template.format(fmt)
+	return template.new(function(...) return string.format(fmt, ...) end)
+end
+
+function template.new(func)
 	local meta = {}
 	function meta:__index(keys)
 		local s
 		if type(keys) == "string" then
-			s = string.format(fmt, keys)
+			s = func(keys)
 		else
-			s = string.format(fmt, table.unpack(all[keys]))
+			s = func(table.unpack(all[keys]))
 		end
 		self[keys] = s
 		return s
@@ -40,8 +44,8 @@ return template
 local template = require "template"
 local keys = template.keys
 
-local t = template.new "view_visible %s %s:absent render_object:in filter_material:in"
-local t2 = template.new "view_visible %s:absent render_object:in filter_material:in"
+local t = template.format "view_visible %s %s:absent render_object:in filter_material:in"
+local t2 = template.format "view_visible %s:absent render_object:in filter_material:in"
 
 assert(t[keys.a.b] == "view_visible a b:absent render_object:in filter_material:in")
 assert(t2.xxx == "view_visible xxx:absent render_object:in filter_material:in")

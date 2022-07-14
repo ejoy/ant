@@ -1,9 +1,10 @@
+local ltask    = require "ltask"
 local cr       = import_package "ant.compile_resource"
 local bgfx     = require "bgfx"
 local datalist = require "datalist"
 local fastio   = require "fastio"
 
-local textures = {}
+cr.init()
 
 local mem_formats <const> = {
     RGBA8 = "bbbb",
@@ -50,7 +51,8 @@ local function createTexture(c)
     return h
 end
 
-local function loadTexture(name, urls)
+local function loadTexture(name)
+    local urls = cr.compile_path(name)
     local c = datalist.parse(readall_s(cr.compile_dir(urls, "main.cfg")))
     c.name = name
     if not c.value then
@@ -83,37 +85,122 @@ local DefaultTexture = createTexture {
     name = "<default>"
 }
 
+local texturebyname = {}
+local texturebyid = {}
 local queue = {}
+local token = {}
+
+local maxid = 0
+local function genId()
+    maxid = maxid + 1
+    return maxid
+end
+
+local function asyncCreateTexture(name)
+    queue[#queue+1] = name
+    if #queue == 1 then
+        ltask.wakeup(token)
+    end
+end
 
 local S = {}
 
-function S.texture_create(name, urls)
-    local res = textures[name]
-    if res then
-        return res
-    end
-    local c = loadTexture(name, urls)
-    if false then
-        queue[#queue+1] = c
-        return {
-            handle = DefaultTexture,
-            uncomplete = true,
-            texinfo = c.info,
-            sampler = c.sampler
+function S.texture_default()
+    return DefaultTexture
+end
+
+function S.texture_create(name)
+    local c = texturebyname[name]
+    if c then
+        if c.output.uncomplete then
+            asyncCreateTexture(c.name)
+        end
+        return c.output
+    else
+        local id = genId()
+        local res = loadTexture(name)
+        c = {
+            input = res,
+            output = {
+                id = id,
+                handle = DefaultTexture,
+                name = name,
+                uncomplete = true,
+                texinfo = res.info,
+                sampler = res.sampler,
+            },
         }
+        texturebyname[name] = c
+        texturebyid[id] = c
+        asyncCreateTexture(c.name)
+        return c.output
     end
-    return {
-        handle = createTexture(c),
-        texinfo = c.info,
-        sampler = c.sampler
-    }
+end
+
+function S.texture_reload(id)
+    local c = texturebyid[id]
+    if not c then
+        return
+    end
+    if not c.output.uncomplete then
+        return c.output
+    end
+    asyncCreateTexture(c.name)
+    while true do
+        ltask.wait(c.name)
+        if not c.output.uncomplete then
+            return c.output
+        end
+    end
 end
 
 function S.texture_complete(name)
+    while true do
+        local c = texturebyname[name]
+        if c and not c.output.uncomplete then
+            return c.output.handle
+        end
+        ltask.wait(name)
+    end
 end
 
-function S.texture_destroy(res)
-    bgfx.destroy(assert(res.handle))
+function S.texture_destroy(name)
+    local c = texturebyname[name]
+    if c then
+        assert(c.output.uncomplete == nil)
+        bgfx.destroy(c.output.handle)
+        c.output.handle = DefaultTexture
+        c.output.uncomplete = true
+        return
+    end
+    for i, n in ipairs(queue) do
+        if n == name then
+            table.remove(queue, i)
+            ltask.interrupt(name, "destroy")
+            break
+        end
+    end
 end
+
+ltask.fork(function ()
+    while true do
+        ltask.wait(token)
+        while true do
+            local name = table.remove(queue, 1)
+            if not name then
+                break
+            end
+            local c = texturebyname[name]
+            if not c.input then
+                c.input = loadTexture(name)
+            end
+            c.output.handle = createTexture(c.input)
+            c.output.uncomplete = true
+            c.input = nil
+            ltask.wakeup(name)
+            ltask.sleep(0)
+        end
+    end
+end)
 
 return S

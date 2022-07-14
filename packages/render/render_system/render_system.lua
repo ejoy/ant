@@ -48,7 +48,7 @@ function render_sys:entity_init()
 		local mr = e.material_result
 		ro.material = mr.object:instance()
         ro.fx     	= mr.fx
-		
+
 		ro.worldmat = e.scene.worldmat
 	end
 end
@@ -104,10 +104,10 @@ function render_sys:update_filter()
 end
 
 local keys = template.keys
-local select_cache = template.new "view_visible %s_visible %s_cull:absent %s render_object:in filter_material:in"
-local vs_select_cache = template.new "hitch_tag %s_visible %s_cull:absent %s render_object:in filter_material:in id:in"
+local select_cache = template.new (function(a,b) return string.format("view_visible %s_visible %s_cull:absent %s render_object:in filter_material:in", a, a, b) end)
+local vs_select_cache = template.new (function(a,b) return string.format("hitch_tag %s_visible %s_cull:absent %s render_object:in filter_material:in id:in", a, a, b) end)
 local function load_select_key(qn, fn, c)
-	local k = keys[qn][qn][fn]
+	local k = keys[qn][fn]
 	return c[k]
 end
 
