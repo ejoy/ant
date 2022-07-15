@@ -111,7 +111,7 @@ local function load_select_key(qn, fn, c)
 	return c[k]
 end
 
-local function submit_filter(viewid, selkey, qn)
+local function submit_filter(viewid, selkey, qn, transforms)
 	for e in w:select(selkey) do
 		irender.draw(viewid, e.render_object, e.filter_material[qn])
 	end
@@ -161,17 +161,40 @@ end
 
 local function submit_render_objects(viewid, filter, qn, groups, transforms)
 	for _, fn in ipairs(filter) do
-		submit_filter(viewid, load_select_key(qn, fn, select_cache), qn)
+		submit_filter(viewid, load_select_key(qn, fn, select_cache), qn, transforms)
 		submit_hitch_filter(viewid, load_select_key(qn, fn, vs_select_cache), qn, groups, transforms)
 	end
 end
 
+local group_mt = {__index=function(t, k)
+	local tt = {}
+	t[k] = tt
+	return tt
+end}
+
+w:register{
+	name = "render_args", type = "lua"
+}
+
+local filter_masks<const> = {
+	foreground	= 0x01,
+	opacity		= 0x02,
+	background	= 0x04,
+	tranclucent	= 0x08,
+	decal_stage	= 0x10,
+	ui_stage	= 0x20,
+}
+
+local function pack_filters(filter)
+	local m = 0
+	for _, fn in ipairs(filter) do
+		m = m | filter_masks[fn]
+	end
+	return m
+end
+
 function render_sys:render_submit()
-	local groups = setmetatable({}, {__index=function(t, k)
-		local tt = {}
-		t[k] = tt
-		return tt
-	end})
+	local groups = setmetatable({}, group_mt)
 	for e in w:select "view_visible hitch:in scene:in" do
 		local s = e.scene
 		local gid = e.hitch.group
@@ -185,14 +208,31 @@ function render_sys:render_submit()
 		find = transform_find
 	}
 
-	for qe in w:select "visible queue_name:in camera_ref:in render_target:in primitive_filter:in" do
-		local camera = world:entity(qe.camera_ref).camera
+	w:clear "render_args"
+	for qe in w:select "visible queue_name:in camera_ref:in render_target:in primitive_filter:in render_args:new" do
 		local rt = qe.render_target
 		local viewid = rt.viewid
 
 		bgfx.touch(viewid)
+		local camera = world:entity(qe.camera_ref).camera
 		bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
-		submit_render_objects(viewid, qe.primitive_filter, qe.queue_name, groups, transforms)
+
+		-- qe.render_args = {
+		-- 	queue_name			= w:component_id(qe.queue_name),
+		-- 	viewid				= viewid,
+		-- 	primitive_filter	= pack_filters(qe.primitive_filter),
+		-- }
+
+		qe.render_args = {
+			queue_name			= qe.queue_name,
+			viewid				= viewid,
+			primitive_filter	= qe.primitive_filter,
+		}
+	end
+
+	for e in w:select "render_args:in" do
+		local args = e.render_args
+		submit_render_objects(args.viewid, args.primitive_filter, args.queue_name, groups, transforms)
     end
 end
 
