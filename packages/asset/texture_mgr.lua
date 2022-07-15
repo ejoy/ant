@@ -1,8 +1,13 @@
 local ltask = require "ltask"
-local ServiceResource = ltask.uniqueservice "ant.compile_resource|resource"
-local DefaultTexture <const> = ltask.call(ServiceResource, "texture_default")
+local ServiceResource
+local DefaultTexture
 
 local textures = {}
+
+local function init()
+	ServiceResource = ltask.uniqueservice "ant.compile_resource|resource"
+	DefaultTexture = ltask.call(ServiceResource, "texture_default")
+end
 
 local mt = {}
 
@@ -42,6 +47,7 @@ local function destroy(res)
 end
 
 return {
+	init = init,
     create = create,
     destroy = destroy,
     textures = textures,

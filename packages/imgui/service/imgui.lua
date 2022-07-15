@@ -209,6 +209,7 @@ ltask.fork(function ()
     bgfx.encoder_create()
     bgfx.encoder_init()
 	renderpkg.init_bgfx()
+	assetmgr.init()
     bgfx.encoder_begin()
 
     local imgui_font = assetmgr.load_fx {

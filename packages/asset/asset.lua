@@ -1,7 +1,8 @@
 local cr = import_package "ant.compile_resource"
 local setting = import_package "ant.settings".setting
 local resource = require "resource"
-local url	= import_package "ant.url"
+local url = import_package "ant.url"
+local texture_mgr = require "texture_mgr"
 
 local assetmgr = {}
 
@@ -24,12 +25,7 @@ local function require_ext(ext)
 	return require("ext_" .. ext)
 end
 
-local initialized = false
 local function initialize()
-	if initialized then
-		return
-	end
-	initialized = true
 	local function loader(fileurl, data)
 		local filename = url.parse(fileurl)
 		local ext = filename:match "[^.]*$"
@@ -49,7 +45,6 @@ local function initialize()
 end
 
 function assetmgr.resource(path, world)
-	initialize()
 	local fullpath = absolute_path(path)
 	resource.load(fullpath, world, true)
 	return resource.proxy(fullpath)
@@ -104,9 +99,14 @@ function assetmgr.load_fx(fx, setting)
 	return cr.load_fx(newfx)
 end
 
+function assetmgr.init()
+	texture_mgr.init()
+	initialize()
+end
+
 assetmgr.edit = resource.edit
 assetmgr.unload = resource.unload
 assetmgr.reload = resource.reload
-assetmgr.textures = require "texture_mgr".textures
+assetmgr.textures = texture_mgr.textures
 
 return assetmgr
