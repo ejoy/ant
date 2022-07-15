@@ -49,7 +49,7 @@ local function create_mesh(vb_lst, ib, aabb)
 			declname = correct_layout,
 			memory = {flag, vb}
 		}
-		num = num + #vb / #flag
+		num = num + #vb // #flag
 	end
 	mesh.vb.num = num
 	if ib then

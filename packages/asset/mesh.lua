@@ -5,27 +5,27 @@ local w		= world.w
 local assetmgr 		= require "asset"
 local ext_meshbin 	= require "ext_meshbin"
 
+local meshcore		= require "render.mesh"
+
 local function create_rendermesh(mesh)
 	if mesh then
-		local handles = {}
-		local vb = {
-			start   = mesh.vb.start,
-			num     = mesh.vb.num,
-			handles = handles,
+		assert(1 == #mesh.vb)
+		local m = {
+			vb = {
+				start   = mesh.vb.start,
+				num     = mesh.vb.num,
+				handle 	= mesh.vb[1].handle
+			}
 		}
-		for _, v in ipairs(mesh.vb) do
-			handles[#handles+1] = v.handle
-		end
-		local ib
+
 		if mesh.ib then
-			ib = {
+			m.ib = {
 				start	= mesh.ib.start,
 				num 	= mesh.ib.num,
 				handle	= mesh.ib.handle,
 			}
 		end
-
-		return vb, ib
+		return meshcore.mesh(m)
 	end
 end
 
@@ -51,13 +51,13 @@ end
 function ms:entity_init()
 	for e in w:select "INIT mesh:in render_object:in" do
 		local ro = e.render_object
-		ro.vb, ro.ib = create_rendermesh(e.mesh)
+		ro.mesh = create_rendermesh(e.mesh)
 	end
 
 	for e in w:select "INIT simplemesh:in render_object:in owned_mesh_buffer?out" do
 		local sm = e.simplemesh
 		local ro = e.render_object
-		ro.vb, ro.ib = create_rendermesh(sm)
+		ro.mesh = create_rendermesh(sm)
 		e.owned_mesh_buffer = sm.owned_mesh_buffer
 	end
 end

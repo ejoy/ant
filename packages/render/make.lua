@@ -8,12 +8,13 @@ lm:lua_source "render" {
         "../../clibs/lua",
         "../../clibs/math3d",
         "../../clibs/foundation",
+        "../../clibs/luabind",
         "../../3rd/luaecs",
         "../../clibs/ecs",
     },
     sources = {
         "material/material.c",
-        --"mesh/mesh.c",
+        "mesh.cpp",
         "cull.cpp",
     },
 }

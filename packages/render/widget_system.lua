@@ -61,10 +61,9 @@ end
 function widget_drawer_sys:end_frame()
 	local e = w:singleton("widget_drawer", "render_object:in")
 	if e then
-		local rc = e.render_object
-		local vbdesc, ibdesc = rc.vb, rc.ib
-		vbdesc.start, vbdesc.num = 0, 0
-		ibdesc.start, ibdesc.num = 0, 0
+		local m = e.render_object.mesh
+		m:set_vb_range(0, 0)
+		m:set_ib_range(0, 0)
 	end
 end
 
