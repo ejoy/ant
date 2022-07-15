@@ -124,6 +124,7 @@ function S.init(nwh, context, width, height)
 	bgfx.encoder_create()
 	bgfx.encoder_init()
 	import_package "ant.render".init_bgfx()
+	import_package "ant.asset".init()
 	bgfx.encoder_begin()
 	encoderBegin = true
 	config.framebuffer = framebuffer

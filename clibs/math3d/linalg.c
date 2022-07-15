@@ -552,6 +552,11 @@ lastack_allocquat(struct lastack *LS) {
 }
 
 const float *
+lastack_ident_mat() {
+	return c_constant_table[LINEAR_TYPE_MAT].ptr;
+}
+
+const float *
 lastack_value(struct lastack *LS, int64_t ref, int *type) {
 	union stackid sid;
 	sid.i = ref;
@@ -594,16 +599,16 @@ lastack_value(struct lastack *LS, int64_t ref, int *type) {
 	}
 }
 
-int
+const float *
 lastack_pushref(struct lastack *LS, int64_t ref) {
 	union stackid id;
 	id.i = ref;
 	// check alive
-	const void *address = lastack_value(LS, id.i, NULL);
+	const float *address = lastack_value(LS, id.i, NULL);
 	if (address == NULL)
-		return 1;
+		return NULL;
 	push_id(LS, id);
-	return 0;
+	return address;
 }
 
 void

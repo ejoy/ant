@@ -68,9 +68,11 @@ static int pmain(lua_State *L) {
     int argc = (int)lua_tointeger(L, 1);
     RT_COMMAND argv = (RT_COMMAND)lua_touserdata(L, 2);
     luaL_checkversion(L);
+    lua_pushboolean(L, 1);
     lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
     luaL_openlibs(L);
     createargtable(L, argc, argv);
+    lua_gc(L, LUA_GCGEN, 0, 0);
     dostring(L, R"=(
 local supportFirmware = package.preload.firmware ~= nil
 if supportFirmware then

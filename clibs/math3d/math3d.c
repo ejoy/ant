@@ -932,7 +932,7 @@ lmul(lua_State *L) {
 		const float *lv = get_object(L, LS, 1, &type);
 		switch (type) {
 		case LINEAR_TYPE_MAT:
-			math3d_mul_matrix(LS, lv, matrix_from_index(L, LS, 2), lastack_allocmatrix(LS));
+			math3d_mul_matrix_stack(LS, lv, matrix_from_index(L, LS, 2));
 			break;
 		case LINEAR_TYPE_QUAT:
 			math3d_mul_quat(LS, lv, quat_from_index(L, LS, 2), lastack_allocquat(LS));

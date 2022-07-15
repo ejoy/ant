@@ -11,6 +11,8 @@ void math3d_make_srt(struct lastack *LS, const float *s, const float *r, const f
 void math3d_make_quat_from_euler(struct lastack *LS, float x, float y, float z);
 void math3d_make_quat_from_axis(struct lastack *LS, const float *axis, float radian);
 void math3d_mul_matrix(struct lastack *LS, const float lval[16], const float rval[16], float result[16]);
+// result on stack
+const float * math3d_mul_matrix_stack(struct lastack *LS, const float *lval, const float *rval);
 void math3d_mul_vec4(struct lastack *LS, const float lval[4], const float rval[4], float result[4]);
 void math3d_mul_quat(struct lastack *LS, const float lval[4], const float rval[4], float result[4]);
 void math3d_add_vec(struct lastack *LS, const float lhs[4], const float rhs[4], float r[4]);

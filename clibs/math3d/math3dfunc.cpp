@@ -2,6 +2,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 
 #include <cmath>
+#include <cstring>
 
 extern "C" {
 	#include "linalg.h"
@@ -108,6 +109,23 @@ void
 math3d_mul_matrix(struct lastack *LS, const float val0[16], const float val1[16], float result[16]) {
 	glm::mat4x4 &mat = *(glm::mat4x4 *)result;
 	mat = MAT(val0) * MAT(val1);
+}
+
+const float *
+math3d_mul_matrix_stack(struct lastack *LS, const float *lval, const float *rval) {
+	const float * imat = lastack_ident_mat();
+	if (lval == imat && rval == imat) {
+		return lastack_pushref(LS, lastack_constant(LINEAR_TYPE_MAT));
+	}
+	float * result = lastack_allocmatrix(LS);
+	if (lval == imat) {
+		memcpy(result, rval, 16 * sizeof(float));
+	} else if (rval == imat) {
+		memcpy(result, lval, 16 * sizeof(float));
+	} else {
+		math3d_mul_matrix(LS, lval, rval, result);
+	}
+	return result;
 }
 
 void
