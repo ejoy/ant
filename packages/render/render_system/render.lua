@@ -19,8 +19,10 @@ local function set_world_matrix(rc)
 	bgfx.set_transform(rc.worldmat)
 end
 
+--local iani = ecs.import.interface "ant.animation|ianimation"
 local function set_skinning_transform(rc)
-	local sm = rc.skinning_matrices
+	--local sm = iani.get_pose(rc.skinning_pose_id)
+	local sm = world:entity(rc.skinning_pose_id).meshskin.pose.matrices
 	bgfx.set_multi_transforms(sm:pointer(), sm:count())
 end
 
@@ -28,7 +30,7 @@ local world_trans_sys = ecs.system "world_transform_system"
 function world_trans_sys:entity_init()
 	for e in w:select "INIT render_object:in" do
 		local ro = e.render_object
-		if ro.skinning_matrices == nil then
+		if ro.skinning_pose_id == nil then
 			e.render_object.set_transform = set_world_matrix
 		else
 			e.render_object.set_transform = set_skinning_transform
