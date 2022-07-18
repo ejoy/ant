@@ -143,6 +143,13 @@ local assetmgr 		= import_package "ant.asset"
 
 local function get_anim_e(eid)
 	if type(eid) == "table" then
+		local entitys = eid.tag["*"]
+		for _, eid in ipairs(entitys) do
+			local e = world:entity(eid)
+			if e.anim_ctrl then
+				return e
+			end
+		end
 		if eid.tag["*"] then
 			return world:entity(eid.tag["*"][2])
 		end

@@ -168,12 +168,13 @@ local event_animation = world:sub{"AnimationEvent"}
 local bgfx = require "bgfx"
 local function set_skinning_transform(ro)
 	local sm = ro.skinning_pose.matrices
-	--local sm = world:entity(rc.skinning_pose_id).meshskin.matrices
-	bgfx.set_multi_transforms(sm:pointer(), sm:count())
+	if sm then
+		bgfx.set_multi_transforms(sm:pointer(), sm:count())
+	end
 end
 
 local function build_transform(ro, pose)
-	ro.skinning_pose = pose--skinning.pose_id
+	ro.skinning_pose = pose
 	ro.set_transform = set_skinning_transform
 end
 
@@ -181,10 +182,13 @@ local function init_prefab_anim(entity)
 	local entitys = entity.prefab.tag["*"]
 	local anim_eid = {}
 	local slot_eid = {}
+	local skin
 	local anim
 	for _, eid in ipairs(entitys) do
 		local e = world:entity(eid)
 		if e.meshskin then
+			skin = e
+		elseif e.anim_ctrl then
 			anim = e
 		elseif e.skinning then
 			anim_eid[#anim_eid + 1] = eid
@@ -193,21 +197,22 @@ local function init_prefab_anim(entity)
 		end
 	end
 	
-	if anim then
-		local ske = anim.skeleton
+	if skin then
+		local ske = skin.skeleton
 		for _, eid in pairs(slot_eid) do
 			local slot = world:entity(eid).slot
-			slot.anim_eid = anim.id
+			slot.anim_eid = skin.id
 			if slot.joint_name then
 				slot.joint_index = ske._handle:joint_index(slot.joint_name)	
 			end
 		end
-		--local pose_id = iani.create_pose()
-		-- for _, eid in ipairs(anim_eid) do
-		-- 	-- world:entity(eid).skinning.pose_id = anim.meshskin.pose_id
-		-- 	build_transform(world:entity(eid).render_object, anim.meshskin.pose)
-		-- end
-		-- anim.anim_ctrl._current.slot_eid = slot_eid
+		if anim then
+			skin.meshskin.pose.pose_result = anim.anim_ctrl.pose_result
+			anim.anim_ctrl._current.slot_eid = slot_eid
+		end
+		for _, eid in ipairs(anim_eid) do
+			build_transform(world:entity(eid).render_object, skin.meshskin.pose)
+		end
 	end
 end
 
