@@ -213,10 +213,11 @@ function iani.play(eid, anim_state)
 end
 
 function iani.get_duration(eid, anim_name)
+	local e = get_anim_e(eid)
 	if not anim_name then
-		return world:entity(eid).anim_ctrl._current.animation._handle:duration()
+		return e.anim_ctrl._current.animation._handle:duration()
 	else
-		return world:entity(eid).animation[anim_name]._handle:duration()
+		return e.animation[anim_name]._handle:duration()
 	end
 end
 
