@@ -183,6 +183,9 @@ void Document::UpdateLayout() {
 	if (dirty_dimensions || body.GetLayout().IsDirty()) {
 		dirty_dimensions = false;
 		body.GetLayout().CalculateLayout(dimensions);
+#if 0
+		printf("%s\n", body.GetLayout().ToString().c_str());
+#endif
 	}
 	body.UpdateLayout();
 }

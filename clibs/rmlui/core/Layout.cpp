@@ -13,6 +13,7 @@ static int YogaLogger(YGConfigRef config, YGNodeRef node, YGLogLevel level, cons
 static YGConfigRef createDefaultYogaConfig() {
 	YGConfigRef config = YGConfigNew();
 	YGConfigSetLogger(config, YogaLogger);
+	YGConfigSetPointScaleFactor(config, 0);
 	return config;
 }
 
@@ -58,7 +59,7 @@ void Layout::RemoveAllChildren() {
 
 std::string Layout::ToString() const {
 	std::string result;
-#ifdef DEBUG
+#if defined(DEBUG)
 	auto options = static_cast<YGPrintOptions>(YGPrintOptionsLayout | YGPrintOptionsStyle | YGPrintOptionsChildren);
 	facebook::yoga::YGNodeToString(result, node, options, 0);
 #endif

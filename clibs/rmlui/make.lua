@@ -12,6 +12,7 @@ lm:source_set "yoga" {
     includes = {
         ".",
     },
+    defines = lm.mode == "debug" and "DEBUG",
     sources = {
         "yoga/**/*.cpp",
     }
@@ -23,7 +24,10 @@ lm:source_set "rmlui_core" {
         Ant3rd .. "glm",
         Ant3rd .. "yoga",
     },
-    defines = "GLM_FORCE_QUAT_DATA_XYZW",
+    defines = {
+        "GLM_FORCE_QUAT_DATA_XYZW",
+        lm.mode == "debug" and "DEBUG",
+    },
     sources = {
         "core/*.cpp",
     }
