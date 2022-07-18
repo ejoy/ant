@@ -316,7 +316,7 @@ void Renderer::SetClipRect(glm::vec4 r[2]) {
 
 std::optional<Rml::TextureData> Renderer::CreateTexture(const std::string& path) {
     auto realpath = Rml::GetPlugin()->OnRealPath(path);
-	Rml::File f(path);
+	Rml::File f(realpath);
 	if (!f) {
 		return std::nullopt;
     }
