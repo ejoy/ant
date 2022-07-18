@@ -8,17 +8,17 @@
 #endif
 
 struct ecs_context;
-struct bgfx_interface_vtbl_t;
-struct bgfx_encoder_t;
+struct bgfx_interface_vtbl;
+struct bgfx_encoder_s;
 struct math3d_api;
 
 struct bgfx_encoder_holder {
-	struct bgfx_encoder_t* encoder;
+	struct bgfx_encoder_s* encoder;
 };
 
 struct ecs_world {
 	struct ecs_context*           ecs;
-	struct bgfx_interface_vtbl_t* bgfx;
+	struct bgfx_interface_vtbl*   bgfx;
 	struct math3d_api*            math3d;
 	struct bgfx_encoder_holder*   encoder;
 };

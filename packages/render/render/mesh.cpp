@@ -153,6 +153,16 @@ lmesh_set_ib_range(lua_State *L){
 }
 
 static int
+lmesh_get_vb(lua_State *L){
+    return 3;
+}
+
+static int
+lmesh_get_ib(lua_State *L){
+    return 3;
+}
+
+static int
 lnew_mesh(lua_State *L){
     auto m = (struct mesh*)lua_newuserdatauv(L, sizeof(struct mesh), 0);
     luaL_checktype(L, 1, LUA_TTABLE);
@@ -163,6 +173,8 @@ lnew_mesh(lua_State *L){
             { "submit", lmesh_submit},
             { "set_vb_range", lmesh_set_vb_range},
             { "set_ib_range", lmesh_set_ib_range},
+            { "get_vb",       lmesh_get_vb},
+            { "get_ib",       lmesh_get_ib},
 			{ nullptr, nullptr },
 		};
 
