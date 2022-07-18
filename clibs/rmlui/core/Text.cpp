@@ -132,10 +132,28 @@ const std::string& Text::GetText() const {
 }
 
 const Property* Text::GetComputedProperty(PropertyId id) {
-	if (!parent) {
-		return nullptr;
-	}
+	assert(parent);
 	return parent->GetComputedProperty(id);
+}
+
+template <>
+float Text::GetProperty<float>(PropertyId id, void* v) {
+	return GetComputedProperty(id)->Get<PropertyFloat>().Compute(parent);
+}
+
+template <>
+Color Text::GetProperty<Color>(PropertyId id, void* v) {
+	return GetComputedProperty(id)->Get<Color>();
+}
+
+template <>
+std::string Text::GetProperty<std::string>(PropertyId id, void* v) {
+	return GetComputedProperty(id)->Get<std::string>();
+}
+
+template <>
+int Text::GetProperty<int>(PropertyId id, void* v) {
+	return GetComputedProperty(id)->Get<PropertyKeyword>();
 }
 
 float Text::GetOpacity() {
@@ -178,8 +196,8 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 		return true;
 
 	// Determine how we are processing white-space while formatting the text.
-	Style::WhiteSpace white_space_property = GetWhiteSpace();
-	Style::WordBreak word_break = GetWordBreak();
+	Style::WhiteSpace white_space_property = GetProperty<Style::WhiteSpace>(PropertyId::WhiteSpace);
+	Style::WordBreak word_break = GetProperty<Style::WordBreak>(PropertyId::WordBreak);
 
 	bool collapse_white_space = white_space_property == Style::WhiteSpace::Normal ||
 								white_space_property == Style::WhiteSpace::Nowrap ||
@@ -427,7 +445,7 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 	float first_line = true;
 	float baseline = GetBaseline();
 
-	Style::TextAlign text_align = GetAlign();
+	Style::TextAlign text_align = GetProperty<Style::TextAlign>(PropertyId::TextAlign);
 	std::string line;
 	while (!finish && height < maxHeight) {
 		float line_width;
@@ -458,27 +476,21 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 
 float Text::GetLineHeight() {
 	float line_height = (float)GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle());
-	const Property* property = GetComputedProperty(PropertyId::LineHeight);
-	return line_height * property->Get<PropertyFloat>().Compute(parent);
+	float percent = GetProperty<float>(PropertyId::LineHeight);
+	return line_height * percent;
 }
 
 float Text::GetBaseline() {
-	float line_height = GetLineHeight();
-	return line_height / 2.0f
-		+ GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle()) / 2.0f
-		- GetFontEngineInterface()->GetBaseline(GetFontFaceHandle());
-}
-
-Style::TextAlign Text::GetAlign() {
-	const Property* property = GetComputedProperty(PropertyId::TextAlign);
-	return (Style::TextAlign)property->Get<PropertyKeyword>();
+	float line_height = (float)GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle());
+	float percent = GetProperty<float>(PropertyId::LineHeight);
+	return line_height * (1 + percent) / 2.0f - GetFontEngineInterface()->GetBaseline(GetFontFaceHandle());
 }
 
 std::optional<TextShadow> Text::GetTextShadow() {
 	TextShadow shadow {
-		GetComputedProperty(PropertyId::TextShadowH)->Get<PropertyFloat>().Compute(parent),
-		GetComputedProperty(PropertyId::TextShadowV)->Get<PropertyFloat>().Compute(parent),
-		GetComputedProperty(PropertyId::TextShadowColor)->Get<Color>(),
+		GetProperty<float>(PropertyId::TextShadowH),
+		GetProperty<float>(PropertyId::TextShadowV),
+		GetProperty<Color>(PropertyId::TextShadowColor),
 	};
 	if (shadow.offset_h || shadow.offset_v) {
 		return shadow;
@@ -488,8 +500,8 @@ std::optional<TextShadow> Text::GetTextShadow() {
 
 std::optional<TextStroke> Text::GetTextStroke() {
 	TextStroke stroke{
-		GetComputedProperty(PropertyId::TextStrokeWidth)->Get<PropertyFloat>().Compute(parent),
-		GetComputedProperty(PropertyId::TextStrokeColor)->Get<Color>(),
+		GetProperty<float>(PropertyId::TextStrokeWidth),
+		GetProperty<Color>(PropertyId::TextStrokeColor),
 	};
 	if (stroke.width) {
 		return stroke;
@@ -498,8 +510,7 @@ std::optional<TextStroke> Text::GetTextStroke() {
 }
 
 Style::TextDecorationLine Text::GetTextDecorationLine() {
-	const Property* property = GetComputedProperty(PropertyId::TextDecorationLine);
-	return (Style::TextDecorationLine)property->Get<PropertyKeyword>();
+	return GetProperty<Style::TextDecorationLine>(PropertyId::TextDecorationLine);
 }
 
 Color Text::GetTextDecorationColor() {
@@ -517,19 +528,8 @@ Color Text::GetTextDecorationColor() {
 	return property->Get<Color>();
 }
 
-Style::WhiteSpace Text::GetWhiteSpace() {
-	const Property* property = GetComputedProperty(PropertyId::WhiteSpace);
-	return (Style::WhiteSpace)property->Get<PropertyKeyword>();
-}
-
-Style::WordBreak Text::GetWordBreak() {
-	const Property* property = GetComputedProperty(PropertyId::WordBreak);
-	return (Style::WordBreak)property->Get<PropertyKeyword>();
-}
-
 Color Text::GetTextColor() {
-	const Property* property = GetComputedProperty(PropertyId::Color);
-	return property->Get<Color>();
+	return GetProperty<Color>(PropertyId::Color);
 }
 
 FontFaceHandle Text::GetFontFaceHandle() {
@@ -537,9 +537,9 @@ FontFaceHandle Text::GetFontFaceHandle() {
 		return font_handle;
 	}
 	dirty_font = false;
-	std::string family = StringUtilities::ToLower(GetComputedProperty(PropertyId::FontFamily)->Get<std::string>());
-	Style::FontStyle style   = (Style::FontStyle)GetComputedProperty(PropertyId::FontStyle)->Get<PropertyKeyword>();
-	Style::FontWeight weight = (Style::FontWeight)GetComputedProperty(PropertyId::FontWeight)->Get<PropertyKeyword>();
+	std::string family = StringUtilities::ToLower(GetProperty<std::string>(PropertyId::FontFamily));
+	Style::FontStyle style   = GetProperty<Style::FontStyle>(PropertyId::FontStyle);
+	Style::FontWeight weight = GetProperty<Style::FontWeight>(PropertyId::FontWeight);
 	int size = (int)parent->GetFontSize();
 	font_handle = GetFontEngineInterface()->GetFontFaceHandle(family, style, weight, size);
 	if (font_handle == 0) {

@@ -48,13 +48,11 @@ public:
 class FontEngineInterface {
 public:
 	virtual FontFaceHandle GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, int size) = 0;
-	virtual int GetSize(FontFaceHandle handle) = 0;
-	virtual int GetXHeight(FontFaceHandle handle) = 0;
 	virtual int GetLineHeight(FontFaceHandle handle) = 0;
 	virtual int GetBaseline(FontFaceHandle handle) = 0;
 	virtual void GetUnderline(FontFaceHandle handle, float& position, float &thickness) = 0;
 	virtual int GetStringWidth(FontFaceHandle handle, const std::string& string) = 0;
-	virtual void GenerateString(FontFaceHandle face_handle, LineList& lines, const Color& color, Geometry& geometry) = 0;
+	virtual void GenerateString(FontFaceHandle handle, LineList& lines, const Color& color, Geometry& geometry) = 0;
 };
 
 class Plugin {

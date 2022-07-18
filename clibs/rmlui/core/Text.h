@@ -21,6 +21,14 @@ public:
 
 protected:
 	const Property* GetComputedProperty(PropertyId id);
+	template <typename T>
+	T GetProperty(PropertyId id, std::enable_if<!std::is_enum<T>::value>::type* = 0);
+
+	template <typename ENUM>
+	ENUM GetProperty(PropertyId id, std::enable_if<std::is_enum<ENUM>::value>::type* = 0) {
+		return (ENUM)GetProperty<int>(id);
+	}
+
 	float GetOpacity();
 
 	void SetParentNode(Element* parent) override;
@@ -42,13 +50,10 @@ private:
 	void UpdateDecoration(const FontFaceHandle font_face_handle);
 	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix);
 	float GetLineHeight();
-	Style::TextAlign GetAlign();
 	std::optional<TextShadow> GetTextShadow();
 	std::optional<TextStroke> GetTextStroke();
 	Style::TextDecorationLine GetTextDecorationLine();
 	Color GetTextDecorationColor();
-	Style::WhiteSpace GetWhiteSpace();
-	Style::WordBreak GetWordBreak();
 	Color GetTextColor();
 	FontFaceHandle GetFontFaceHandle();
 

@@ -45,12 +45,6 @@ Rml::FontFaceHandle FontEngine::GetFontFaceHandle(const std::string& family, Rml
     return static_cast<Rml::FontFaceHandle>(0);
 }
 
-int FontEngine::GetSize(Rml::FontFaceHandle handle){
-    size_t idx = static_cast<size_t>(handle) - 1;
-    const auto &face = mFontFaces[idx];
-    return face.pixelsize;
-}
-
 struct font_glyph
 FontEngine::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og_){
     struct font_glyph g, og;
@@ -69,13 +63,6 @@ FontEngine::GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og_
     if (og_)
         *og_ = og;
     return g;
-}
-
-int FontEngine::GetXHeight(Rml::FontFaceHandle handle){
-    size_t idx = static_cast<size_t>(handle)-1;
-    const auto &face = mFontFaces[idx];
-    struct font_glyph g = GetGlyph(face, 'x');
-    return g.h;
 }
 
 int FontEngine::GetLineHeight(Rml::FontFaceHandle handle){

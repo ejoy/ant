@@ -20,15 +20,9 @@ class FontEngine : public Rml::FontEngineInterface {
 public:
 	FontEngine(const RmlContext* context);
 	virtual ~FontEngine() = default;
-
 	virtual Rml::FontFaceHandle GetFontFaceHandle(const std::string& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size)override;
-
-	virtual int GetSize(Rml::FontFaceHandle handle)override;
-	virtual int GetXHeight(Rml::FontFaceHandle handle)override;
-
 	virtual int GetLineHeight(Rml::FontFaceHandle handle)override;
 	virtual int GetBaseline(Rml::FontFaceHandle handle)override;
-
 	virtual void GetUnderline(Rml::FontFaceHandle handle, float& position, float &thickness)override;
 	virtual int GetStringWidth(Rml::FontFaceHandle handle, const std::string& string)override;
 	int GenerateString(Rml::FontFaceHandle handle, const std::string& string, const Rml::Point& position, const Rml::Color& color, Rml::Geometry& geometry);
