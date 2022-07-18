@@ -58,7 +58,7 @@ function sys:update_slot()
             slot.joint_index = ske._handle:joint_index(slot.joint_name)	
         end
         local follow_flag = assert(slot.follow_flag)
-        local pose_result = slot.anim_eid and world:entity(slot.anim_eid).anim_ctrl.pose_result or slot.pose_result
+        local pose_result = slot.pose and slot.pose.pose_result--slot.anim_eid and world:entity(slot.anim_eid).anim_ctrl.pose_result or slot.pose_result
         if pose_result then
             local slot_matrix
             if follow_flag == 1 or follow_flag == 2 then

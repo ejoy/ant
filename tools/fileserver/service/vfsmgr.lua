@@ -101,7 +101,6 @@ local function update_watch()
 		if not type then
 			break
 		end
-		print(type, path)
 		path = fs.path(path)
 		if ignore_path(path) then
 			goto continue

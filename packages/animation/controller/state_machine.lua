@@ -5,7 +5,7 @@ local iefk	= ecs.import.interface "ant.efk|iefk"
 local fs 	= require "filesystem"
 local lfs	= require "filesystem.local"
 local datalist  = require "datalist"
-local animation = require "hierarchy".animation
+local animodule = require "hierarchy".animation
 local iani 	= ecs.interface "ianimation"
 local math3d = require "math3d"
 local mathpkg	= import_package "ant.math"
@@ -170,10 +170,10 @@ function iani.play(eid, anim_state)
 			local duration = anim_data.duration
 			anim = {
 				_duration = duration,
-				_sampling_context = animation.new_sampling_context(1)
+				_sampling_context = animodule.new_sampling_context(1)
 			}
 			local ske = e.skeleton._handle
-			local raw_animation = animation.new_raw_animation()
+			local raw_animation = animodule.new_raw_animation()
 			raw_animation:setup(ske, duration)
 			anim._handle = iani.build_animation(ske, raw_animation, anim_data.joint_anims, anim_data.sample_ratio)
 		else
@@ -329,5 +329,50 @@ function iani.set_value(e, name, key, value)
 	node[key] = value
 	if sm.current == name then
 		set_state(e, name, 0)
+	end
+end
+
+local bgfx = require "bgfx"
+local function set_skinning_transform(ro)
+	local sm = ro.skinning_pose.matrices
+	if sm then
+		bgfx.set_multi_transforms(sm:pointer(), sm:count())
+	end
+end
+
+local function build_transform(ro, pose)
+	ro.skinning_pose = pose
+	ro.set_transform = set_skinning_transform
+end
+
+function iani.set_pose_to_prefab(instance, pose)
+	local entitys = instance.tag["*"]
+	for _, eid in ipairs(entitys) do
+		local e = world:entity(eid)
+		if e.skinning then
+			build_transform(world:entity(eid).render_object, pose)
+		elseif e.meshskin then
+			local count = e.meshskin.joint_remap and e.meshskin.joint_remap:count() or #e.skeleton._handle
+			pose.matrices = animodule.new_bind_pose(count)
+			e.meshskin.pose = pose
+		elseif e.slot then
+			e.slot.pose = pose
+		elseif e.animation then
+			pose.pose_result = e.anim_ctrl.pose_result
+		end
+	end
+end
+
+local anim_pose_mgr = {}
+
+function iani.create_pose()
+	local pose = {}
+	anim_pose_mgr[#anim_pose_mgr + 1] = pose
+	return pose
+end
+
+function iani.release_pose(pose)
+	if pose.pose then
+		pose.pose = nil
 	end
 end

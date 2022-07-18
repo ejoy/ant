@@ -35,30 +35,41 @@ namespace ecs_api {
     };
 
     namespace impl {
+        template <typename Component>
+        Component* sibling(ecs_context* ctx, int mainkey, int i) {
+            return (Component*)entity_sibling(ctx, mainkey, i, component<Component>::id);
+        }
+
+        template <typename Component>
+        Component* sibling(ecs_context* ctx, int mainkey, int i, lua_State* L) {
+            auto c = sibling<Component>(ctx, mainkey, i);
+            if (c == NULL) {
+                luaL_error(L, "No %s", component<Component>::name);
+            }
+            return c;
+        }
+
         template <typename ...Components>
-        struct visit_entity_sibling;
+        struct visit_entity_;
 
         template <>
-        struct visit_entity_sibling <> {
-            bool operator()(ecs_context* ctx, int mainkey, int i, entity_<>& e) { return true; }
-            void operator()(ecs_context* ctx, int mainkey, int i, entity_<>& e, lua_State* L) {}
+        struct visit_entity_ <> {
+            bool operator()(entity_<>& e, ecs_context* ctx, int mainkey, int i) { return true; }
+            void operator()(entity_<>& e, ecs_context* ctx, int mainkey, int i, lua_State* L) {}
         };
 
         template <typename Component, typename ...Components>
-        struct visit_entity_sibling<Component, Components...> {
-            bool operator()(ecs_context* ctx, int mainkey, int i, entity_<Component, Components...>& e) {
-                e.c = (Component*)entity_sibling(ctx, mainkey, i, component<Component>::id);
+        struct visit_entity_<Component, Components...> {
+            bool operator()(entity_<Component, Components...>& e, ecs_context* ctx, int mainkey, int i) {
+                e.c = sibling<Component>(ctx, mainkey, i);
                 if (e.c == NULL) {
                     return false;
                 }
-                return visit_entity_sibling<Components...>()(ctx, mainkey, i, e);
+                return visit_entity_<Components...>()(e, ctx, mainkey, i);
             }
-            void operator()(ecs_context* ctx, int mainkey, int i, entity_<Component, Components...>& e, lua_State* L) {
-                e.c = (Component*)entity_sibling(ctx, mainkey, i, component<Component>::id);
-                if (e.c == NULL) {
-                    luaL_error(L, "No %s", component<Component>::name);
-                }
-                return visit_entity_sibling<Components...>()(ctx, mainkey, i, e, L);
+            void operator()(entity_<Component, Components...>& e, ecs_context* ctx, int mainkey, int i, lua_State* L) {
+                e.c = sibling<Component>(ctx, mainkey, i, L);
+                return visit_entity_<Components...>()(e, ctx, mainkey, i, L);
             }
         };
 
@@ -70,12 +81,11 @@ namespace ecs_api {
 
         template <typename MainKey, typename ...SubKey>
         visit_result visit_entity(ecs_context* ctx, int i, entity_<MainKey, SubKey...>& e) {
-            int mainkey = component<MainKey>::id;
-            e.c = (MainKey*)entity_iter(ctx, mainkey, i);
+            e.c = (MainKey*)entity_iter(ctx, component<MainKey>::id, i);
             if (!e.c) {
                 return visit_result::eof;
             }
-            if (visit_entity_sibling<MainKey, SubKey...>()(ctx, mainkey, i, e)) {
+            if (visit_entity_<SubKey...>()(e, ctx, component<MainKey>::id, i)) {
                 return visit_result::succ;
             }
             else {
@@ -85,12 +95,11 @@ namespace ecs_api {
 
         template <typename MainKey, typename ...SubKey>
         bool visit_entity(ecs_context* ctx, int i, entity_<MainKey, SubKey...>& e, lua_State* L) {
-            int mainkey = component<MainKey>::id;
-            e.c = (MainKey*)entity_iter(ctx, mainkey, i);
+            e.c = (MainKey*)entity_iter(ctx, component<MainKey>::id, i);
             if (!e.c) {
                 return false;
             }
-            visit_entity_sibling<MainKey, SubKey...>()(ctx, mainkey, i, e, L);
+            visit_entity_<SubKey...>()(e, ctx, component<MainKey>::id, i, L);
             return true;
         }
 
@@ -238,29 +247,29 @@ namespace ecs_api {
         }
 
         template <typename Component, typename MainKey, typename ...SubKey>
-        Component* sibling(entity<MainKey, SubKey...>& e) {
-            return (Component*)entity_sibling(ecs, component<MainKey>::id, e.index, component<Component>::id);
+        Component* sibling(entity<MainKey, SubKey...> const& e) {
+            return impl::sibling<Component>(ecs, component<MainKey>::id, e.index);
         }
 
         template <typename Component, typename MainKey, typename ...SubKey>
-        void enable_tag(entity<MainKey, SubKey...>& e) {
+        void enable_tag(entity<MainKey, SubKey...> const& e) {
             static_assert(component<Component>::tag);
             entity_enable_tag(ecs, component<MainKey>::id, e.index, component<Component>::id);
         }
 
         template <typename MainKey, typename ...SubKey>
-        void enable_tag(entity<MainKey, SubKey...>& e, int id) {
+        void enable_tag(entity<MainKey, SubKey...> const& e, int id) {
             entity_enable_tag(ecs, component<MainKey>::id, e.index, id);
         }
 
         template <typename Component, typename MainKey, typename ...SubKey>
-        void disable_tag(entity<MainKey, SubKey...>& e) {
+        void disable_tag(entity<MainKey, SubKey...> const& e) {
             static_assert(component<Component>::tag);
             entity_disable_tag(ecs, component<MainKey>::id, e.index, component<Component>::id);
         }
 
         template <typename MainKey, typename ...SubKey>
-        void disable_tag(entity<MainKey, SubKey...>& e, int id) {
+        void disable_tag(entity<MainKey, SubKey...> const& e, int id) {
             entity_disable_tag(ecs, component<MainKey>::id, e.index, id);
         }
 
@@ -270,7 +279,7 @@ namespace ecs_api {
         }
 
         template <typename MainKey, typename ...SubKey>
-        void remove(entity<MainKey, SubKey...>& e) {
+        void remove(entity<MainKey, SubKey...> const& e) {
             entity_remove(ecs, component<MainKey>::id, e.index);
         }
 

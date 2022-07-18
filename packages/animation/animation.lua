@@ -152,25 +152,29 @@ function ani_sys:component_init()
 			}
 		}
 	end
-	for e in w:select "INIT meshskin:update skeleton:in" do
+	for e in w:select "INIT meshskin:update skeleton:update" do
+		e.skeleton = assetmgr.resource(e.skeleton)
 		local skin = assetmgr.resource(e.meshskin)
 		local count = skin.joint_remap and skin.joint_remap:count() or #e.skeleton._handle
+		local pose = iani.create_pose()
+		pose.matrices = animodule.new_bind_pose(count)
 		e.meshskin = {
 			skin = skin,
-			skinning_matrices = animodule.new_bind_pose(count),
+			pose = pose,
 		}
 	end
 end
 local event_animation = world:sub{"AnimationEvent"}
 local bgfx = require "bgfx"
-local function set_skinning_transform(rc)
-	local sm = rc.skinning_matrices
+local function set_skinning_transform(ro)
+	local sm = ro.skinning_pose.matrices
+	--local sm = world:entity(rc.skinning_pose_id).meshskin.matrices
 	bgfx.set_multi_transforms(sm:pointer(), sm:count())
 end
 
-local function build_transform(rc, skinning)
-	rc.skinning_matrices = skinning.skinning_matrices
-	rc.set_transform = set_skinning_transform
+local function build_transform(ro, pose)
+	ro.skinning_pose = pose--skinning.pose_id
+	ro.set_transform = set_skinning_transform
 end
 
 local function init_prefab_anim(entity)
@@ -198,17 +202,12 @@ local function init_prefab_anim(entity)
 				slot.joint_index = ske._handle:joint_index(slot.joint_name)	
 			end
 		end
-		for _, eid in ipairs(anim_eid) do
-			build_transform(world:entity(eid).render_object, anim.meshskin)
-		end
-		-- local path = tostring(anim.meshskin.skin)
-		-- local pos = path:find("/meshes/") or path:find("|meshes/")
-		-- if pos then
-		-- 	local anim_path = path:sub(1, pos) .. "animation.prefab"
-		-- 	local default_anim = iani.create(anim_path, {parent=entity.prefab.root})
-		-- 	anim.meshskin.animation = default_anim.tag["*"][2]
+		--local pose_id = iani.create_pose()
+		-- for _, eid in ipairs(anim_eid) do
+		-- 	-- world:entity(eid).skinning.pose_id = anim.meshskin.pose_id
+		-- 	build_transform(world:entity(eid).render_object, anim.meshskin.pose)
 		-- end
-		anim.anim_ctrl._current.slot_eid = slot_eid
+		-- anim.anim_ctrl._current.slot_eid = slot_eid
 	end
 end
 
