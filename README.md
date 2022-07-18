@@ -35,14 +35,6 @@ pacman -Syu mingw-w64-x86_64-gcc mingw-w64-x86_64-ninja
 - 安装xcode, ninja
 
 
-#### 关于模型的转换工具
-引擎支持直接支持glb（glTF文件的二进制，但不支持二进制的glTF格式）文件格式，需要使用FBX的话，可以使用FBX2glTF工具。
-
-- FBX2glTF
-下载[FBX2glTF](https://github.com/facebookincubator/FBX2glTF/releases),并放到3rd/bin目录下
-- glTF转glb工具
-https://github.com/KhronosGroup/glTF#gltf-tools
-
 ### 构建luamake
 
 ``` bash
@@ -86,6 +78,30 @@ luamake [target] -mode [debug/release] #-mode默认是release
 运行一个最简单的示例
 ``` bash
 bin/msvc/debug/lua.exe test/simple/main.lua
+```
+
+### 调试
+调试一个简单的示例。目前只支持在vscode下调试lua代码。
+- 安装vscode；
+- 安装**Lua Debug** 插件；
+
+配置一个调试用的配置：
+``` json
+{
+    "request": "launch",
+    "program": "${workspaceFolder}/test/simple/main.lua",
+    "type": "lua",
+    "name": "ant",
+    "preLaunchTask": "Clear terminal",
+    "stopOnEntry": false,
+    "console": "integratedTerminal",
+    "outputCapture": [],
+    "cwd": "${workspaceFolder}",
+    "luaVersion": "5.4",
+    "windows": {
+        "luaexe": "${workspaceRoot}/3rd/ant/bin/msvc/debug/lua.exe",
+    },
+},
 ```
 
 ### 关于ant目录结构
