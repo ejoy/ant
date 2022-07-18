@@ -97,13 +97,11 @@ local function color_palette_test()
             simplemesh = {
                 vb = {
                     start = 0, num = 3,
-                    {
-                        handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {
-                            0.0, 0.0, 0.0, 
-                            0.0, 0.0, 1.0,
-                            1.0, 0.0, 0.0,
-                        }), declmgr.get "p3".handle)
-                    }
+                    handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {
+                        0.0, 0.0, 0.0, 
+                        0.0, 0.0, 1.0,
+                        1.0, 0.0, 0.0,
+                    }), declmgr.get "p3".handle)
                 }
             },
             material = "/pkg/ant.resources/materials/color_palette_test.material",

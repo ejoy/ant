@@ -22,7 +22,7 @@ local function create_dynamic_mesh(layout, vb, ib)
 	local decl = declmgr.get(layout)
 	return {
 		vb = {
-			{handle=bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fffd", vb), decl.handle, "a")}
+			handle=bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fffd", vb), decl.handle, "a")
 		},
 		ib = {
 			handle = bgfx.create_dynamic_index_buffer(bgfx.memory_buffer("d", ib), "ad")
@@ -30,32 +30,27 @@ local function create_dynamic_mesh(layout, vb, ib)
 	}
 end
 
-local function create_mesh(vb_lst, ib, aabb)
-	local mesh = {
-		vb = {
-			start = 0,
-		},
+local function create_mesh(vbdata, ibdata, aabb)
+	local vb = {
+		start = 0,
 	}
+	local mesh = {vb = vb}
 
 	if aabb then
 		mesh.bounding = {aabb=aabb}
 	end
-	local num = 0
-	for i = 1, #vb_lst, 2 do
-		local layout, vb = vb_lst[i], vb_lst[i+1]
-		local correct_layout = declmgr.correct_layout(layout)
-		local flag = declmgr.vertex_desc_str(correct_layout)
-		mesh.vb[#mesh.vb+1] = {
-			declname = correct_layout,
-			memory = {flag, vb}
-		}
-		num = num + #vb // #flag
-	end
-	mesh.vb.num = num
-	if ib then
+	
+	local correct_layout = declmgr.correct_layout(vbdata[1])
+	local flag = declmgr.vertex_desc_str(correct_layout)
+
+	vb.num = #vbdata[2] // #flag
+	vb.declname = correct_layout
+	vb.memory = {flag, vbdata[2]}
+
+	if ibdata then
 		mesh.ib = {
-			start = 0, num = #ib,
-			memory = {"w", ib},
+			start = 0, num = #ibdata,
+			memory = {"w", ibdata},
 		}
 	end
 	return imesh.init_mesh(mesh)
@@ -564,14 +559,12 @@ function ientity.create_gamma_test_entity()
                 vb = {
                     start = 0,
                     num = 4,
-                    {
-                        handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("ffff", {
-                            100, 200, 0.0, 0.0,
-                            100, 132, 0.0, 1.0,
-                            420, 200, 1.0, 0.0,
-                            420, 132, 1.0, 1.0,
-                        }), declmgr.get "p2|t2".handle)
-                    }
+					handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("ffff", {
+						100, 200, 0.0, 0.0,
+						100, 132, 0.0, 1.0,
+						420, 200, 1.0, 0.0,
+						420, 132, 1.0, 1.0,
+					}), declmgr.get "p2|t2".handle)
                 }
             },
 			owned_mesh_buffer = true,
@@ -670,9 +663,7 @@ local function arrow_mesh(headratio, arrowlen, coneradius, cylinderradius)
 		vb = {
 			start = 0,
 			num = numv,
-			{
-				handle = bgfx.create_vertex_buffer(vb, layout.handle)
-			}
+			handle = bgfx.create_vertex_buffer(vb, layout.handle)
 		},
 		ib = {
 			start = 0,
@@ -753,9 +744,7 @@ function ientity.create_quad_lines_entity(name, srt, material, quadnum, width, h
                 vb = {
                     start = 0,
                     num = (quadnum+1)*2,
-                    {
-                        handle = create_vertex_buffer()
-                    }
+                    handle = create_vertex_buffer(),
                 },
                 ib = {
                     start = 0,

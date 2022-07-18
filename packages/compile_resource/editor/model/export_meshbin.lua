@@ -240,10 +240,8 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 
 	local bindata = table.concat(buffer, "")
 	return {
-		{
-			declname = table.concat(layouts, '|'),
-			memory = {bindata, 1, #bindata},
-		},
+		declname = table.concat(layouts, '|'),
+		memory = {bindata, 1, #bindata},
 		start = 0,
 		num = numv,
 	}

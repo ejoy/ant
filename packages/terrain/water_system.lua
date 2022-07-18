@@ -53,9 +53,7 @@ local function gen_water_grid_mesh(gw, gh, unit, height)
         vb = {
             start = 0,
             num = vw * vh,
-            {
-                handle = bgfx.create_vertex_buffer(m, layout.handle),
-            }
+            handle = bgfx.create_vertex_buffer(m, layout.handle),
         },
         ib = create_indices_buffer(gw, gh),
     }

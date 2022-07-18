@@ -208,10 +208,8 @@ local function create_frustum_entity(eid)
                 vb = {
                     start = 0,
                     num = 8,
-                    {
-                        declname = "p3",
-                        memory = {"fff", vb},
-                    },
+                    declname = "p3",
+                    memory = {"fff", vb},
                 },
                 ib = {
                     start = 0,
@@ -243,14 +241,12 @@ local function create_frustum_entity(eid)
                 vb = {
                     start = 0,
                     num = 3,
-                    {
-                        declname = "p3",
-                        memory = {"fff", {
-                            -tri_edge_len_half, 0.0, 0.0,
-                            0.0, tri_edge_height, 0.0,
-                            tri_edge_len_half, 0.0, 0.0,
-                        }}
-                    }
+                    declname = "p3",
+                    memory = {"fff", {
+                        -tri_edge_len_half, 0.0, 0.0,
+                        0.0, tri_edge_height, 0.0,
+                        tri_edge_len_half, 0.0, 0.0,
+                    }}
                 }
             },
             owned_mesh_buffer = true,

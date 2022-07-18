@@ -17,10 +17,8 @@ function skybox_sys:component_init()
 			vb = {
 				start = 0,
 				num = 8,
-				{
-					declname = "p3",
-					memory = {"fff", vb},
-				},
+				declname = "p3",
+				memory = {"fff", vb},
 			},
 			ib = {
 				start = 0,

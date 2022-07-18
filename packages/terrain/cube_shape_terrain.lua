@@ -149,9 +149,7 @@ local function to_mesh_buffer(vb, aabb)
         vb = {
             start = 0,
             num = numv,
-            {
-                handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vbbin), layout.handle),
-            }
+            handle = bgfx.create_vertex_buffer(bgfx.memory_buffer(vbbin), layout.handle),
         },
         ib = {
             start = 0,

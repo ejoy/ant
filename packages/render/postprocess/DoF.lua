@@ -75,7 +75,7 @@ local world = ecs.world
 --         ri.vb = {
 --             start = 0,
 --             num = (hfbw * hfbh) * 3,
---             handles = vb.handles
+--             handle = vb.handle
 --         }
 --     end
     

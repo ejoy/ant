@@ -210,9 +210,7 @@ local function create_texture_item_entity(texpath, canvasentity)
                 vb = {
                     start = 0,
                     num = 0,
-                    {
-                        handle = bufferhandle,
-                    }
+                    handle = bufferhandle,
                 },
                 ib = {
                     start = 0,

@@ -28,12 +28,8 @@ end
 
 local function init(mesh)
     local vb = mesh.vb
-    for idx, v in ipairs(vb) do
-        if type(v) == "userdata" then
-            vb[idx] = {handle=v}
-        else
-            setmetatable(v, proxy_vb)
-        end
+    if type(vb) ~= "userdata" then
+        setmetatable(vb, proxy_vb)
     end
 
     local ib = mesh.ib

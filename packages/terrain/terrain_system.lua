@@ -163,7 +163,7 @@
 -- 	rc.vb = {
 -- 		start	= vbstart,
 -- 		num		= sd.vb_num,
--- 		handles = cp.vb.handles,
+-- 		handle = cp.vb.handle,
 -- 	}
 -- 	rc.ib = cp.ib
 

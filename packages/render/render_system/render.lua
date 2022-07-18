@@ -391,7 +391,7 @@ local fullquad_vbhandle = bgfx.create_vertex_buffer(bgfx.memory_buffer("f", {1.0
 local fullquad<const> = {
 	vb = {
 		start = 0, num = 3,
-		{handle=fullquad_vbhandle}
+		handle=fullquad_vbhandle,
 	}
 }
 function irender.full_quad()

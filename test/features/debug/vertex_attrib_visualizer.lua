@@ -36,14 +36,12 @@ local function create_line_arrow_mesh(len)
         vb = {
             start = 0,
             num = 4,
-            {
-                handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {
-                    0.0, 0.0, 0.0,
-                    0.0, 0.0, len,
-                    -head_height, 0.0, len - head_len,
-                     head_height, 0.0, len - head_len,
-                }), declmgr.get "p3".handle)
-            },
+            handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {
+                0.0, 0.0, 0.0,
+                0.0, 0.0, len,
+                -head_height, 0.0, len - head_len,
+                    head_height, 0.0, len - head_len,
+            }), declmgr.get "p3".handle),
         },
         ib = {
             start = 0,

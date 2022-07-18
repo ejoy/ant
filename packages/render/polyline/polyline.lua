@@ -202,9 +202,7 @@ function ipl.create_linestrip_mesh(points, line_width, color, uv_rotation, loop)
         vb = {
             start = 0,
             num = numv,
-            {
-                handle = bgfx.create_vertex_buffer(vertices, stripline_desc.layout.handle),
-            }
+            handle = bgfx.create_vertex_buffer(vertices, stripline_desc.layout.handle),
         }
     }
 end
@@ -275,9 +273,7 @@ function ipl.create_linelist_mesh(pointlist, line_width, color)
         vb = {
             start = 0,
             num = numv,
-            {
-                handle = bgfx.create_vertex_buffer(vertices, linelist_desc.layout.handle)
-            }
+            handle = bgfx.create_vertex_buffer(vertices, linelist_desc.layout.handle),
         }
     }
 end

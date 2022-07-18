@@ -117,10 +117,7 @@ function fontsys:component_init()
             vb = {
                 start = 0,
                 num = 0,
-                {
-                    handle = bgfx.transient_buffer(declformat),
-                }
-                
+                handle = bgfx.transient_buffer(declformat),
             },
             ib = {
                 start = 0,

@@ -23,9 +23,7 @@ local function create_dynamic_buffer(layout, num_vertices, num_indices)
 		vb = {
 			start = 0,
 			num = 0,
-			{
-				handle=bgfx.create_dynamic_vertex_buffer(vb_size, declmgr.get(layout).handle, "a")
-			}
+			handle=bgfx.create_dynamic_vertex_buffer(vb_size, declmgr.get(layout).handle, "a")
 		},
 		ib = {
 			start = 0,

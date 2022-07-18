@@ -9,12 +9,12 @@ local meshcore		= require "render.mesh"
 
 local function create_rendermesh(mesh)
 	if mesh then
-		assert(1 == #mesh.vb)
+		assert(0 == #mesh.vb)
 		local m = {
 			vb = {
 				start   = mesh.vb.start,
 				num     = mesh.vb.num,
-				handle 	= mesh.vb[1].handle
+				handle 	= mesh.vb.handle
 			}
 		}
 
