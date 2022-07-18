@@ -104,7 +104,7 @@ function m.OnEventDetach(ev)
 	events[ev] = nil
 end
 
-function m.OnOpenFile(path)
+function m.OnRealPath(path)
     local _ <close> = fs.switch_sync()
 	return filemanager.realpath(path)
 end

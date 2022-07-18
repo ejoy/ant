@@ -10,7 +10,6 @@
 #include "luabind.h"
 
 #include "render.h"
-#include "file.h"
 #include "font.h"
 #include "context.h"
 
@@ -23,12 +22,10 @@
 struct RmlInterface {
 	lua_plugin      m_plugin;
     FontEngine      m_font;
-    File            m_file;
     Renderer        m_renderer;
     RmlInterface(lua_State* L, RmlContext* context)
         : m_plugin(L)
 		, m_font(context)
-        , m_file(m_plugin)
         , m_renderer(context)
     {
     }

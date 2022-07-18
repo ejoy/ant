@@ -2,6 +2,7 @@
 
 #include <core/Types.h>
 #include <core/SharedPtr.h>
+#include <core/Interface.h>
 #include <memory>
 #include <string>
 
@@ -9,7 +10,7 @@ namespace Rml {
 
 using TextureHandle = uintptr_t;
 
-struct Texture {
+struct Texture: public TextureData {
 public:
 	Texture(const std::string& path);
 	~Texture();
@@ -19,8 +20,6 @@ public:
 	static SharedPtr<Texture> Fetch(const std::string& path);
 private:
 	std::string source;
-	TextureHandle handle;
-	Size dimensions;
 };
 
 }

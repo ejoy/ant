@@ -40,8 +40,6 @@ bool Initialise();
 void Shutdown();
 void SetRenderInterface(RenderInterface* render_interface);
 RenderInterface* GetRenderInterface();
-void SetFileInterface(FileInterface* file_interface);
-FileInterface* GetFileInterface();
 void SetFontEngineInterface(FontEngineInterface* font_interface);
 FontEngineInterface* GetFontEngineInterface();
 void SetPlugin(Plugin* plugin);

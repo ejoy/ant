@@ -99,7 +99,7 @@ bin/msvc/debug/lua.exe test/simple/main.lua
     "cwd": "${workspaceFolder}",
     "luaVersion": "5.4",
     "windows": {
-        "luaexe": "${workspaceRoot}/3rd/ant/bin/msvc/debug/lua.exe",
+        "luaexe": "${workspaceRoot}/bin/msvc/debug/lua.exe",
     },
 },
 ```

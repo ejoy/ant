@@ -8,11 +8,13 @@ namespace Rml {
 
 Texture::Texture(const std::string& _source)
 	: source(_source) {
-	if (!GetRenderInterface()->LoadTexture(handle, dimensions, source)) {
+	auto data = GetRenderInterface()->CreateTexture(source);
+	if (!data) {
 		Log::Message(Log::Level::Warning, "Failed to load texture from %s.", source.c_str());
-		handle = 0;
-		dimensions = Size(0, 0);
+		return;
 	}
+	handle = data->handle;
+	dimensions = data->dimensions;
 }
 
 Texture::~Texture() {
