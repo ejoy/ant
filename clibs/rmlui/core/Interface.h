@@ -1,11 +1,11 @@
 #pragma once
 
 #include <core/Types.h>
-#include <core/Texture.h>
 #include <core/Geometry.h>
 #include <core/ComputedValues.h>
 #include <core/TextEffect.h>
 #include <glm/glm.hpp>
+#include <optional>
 
 namespace Rml {
 
@@ -14,8 +14,8 @@ class Element;
 class EventListener;
 class Document;
 
-using FileHandle = uintptr_t;
 using FontFaceHandle = uintptr_t;
+using TextureHandle = uintptr_t;
 
 struct Line {
 	std::string text;
@@ -24,12 +24,17 @@ struct Line {
 };
 typedef std::vector<Line> LineList;
 
+struct TextureData {
+	TextureHandle handle = 0;
+	Size          dimensions = {0, 0};
+};
+
 class RenderInterface {
 public:
 	virtual void Begin() = 0;
 	virtual void End() = 0;
 	virtual void RenderGeometry(Vertex* vertices, size_t num_vertices, Index* indices, size_t num_indices, MaterialHandle mat) = 0;
-	virtual bool LoadTexture(TextureHandle& handle, Size& dimensions, const std::string& path) = 0;
+	virtual std::optional<TextureData> CreateTexture(const std::string& path) = 0;
 	virtual void ReleaseTexture(TextureHandle texture) = 0;
 	virtual void SetTransform(const glm::mat4x4& transform) = 0;
 	virtual void SetClipRect() = 0;
@@ -52,15 +57,6 @@ public:
 	virtual void GenerateString(FontFaceHandle face_handle, LineList& lines, const Color& color, Geometry& geometry) = 0;
 };
 
-class FileInterface {
-public:
-	virtual FileHandle Open(const std::string& path) = 0;
-	virtual void Close(FileHandle file) = 0;
-	virtual size_t Read(void* buffer, size_t size, FileHandle file) = 0;
-	virtual size_t Length(FileHandle file) = 0;
-	virtual std::string GetPath(const std::string& path) = 0;
-};
-
 class Plugin {
 public:
 	virtual EventListener* OnCreateEventListener(Element* element, const std::string& type, const std::string& code, bool use_capture) = 0;
@@ -68,6 +64,7 @@ public:
 	virtual void OnLoadExternalScript(Document* document, const std::string& source_path) = 0;
 	virtual void OnCreateElement(Document* document, Element* element, const std::string& tag) = 0;
 	virtual void OnDestroyNode(Document* document, Node* node) = 0;
+	virtual std::string OnRealPath(const std::string& path) = 0;
 };
 
 }

@@ -24,7 +24,7 @@ enum class LuaEvent : uint8_t {
 	OnEvent,
 	OnEventAttach,
 	OnEventDetach,
-	OnOpenFile,
+	OnRealPath,
 };
 
 class lua_plugin final : public Rml::Plugin {
@@ -36,6 +36,7 @@ public:
 	void OnLoadExternalScript(Rml::Document* document, const std::string& source_path) override;
 	void OnCreateElement(Rml::Document* document, Rml::Element* element, const std::string& tag) override;
 	void OnDestroyNode(Rml::Document* document, Rml::Node* node) override;
+	std::string OnRealPath(const std::string& path) override;
 
 	void register_event(lua_State* L);
 	int  ref(lua_State* L);

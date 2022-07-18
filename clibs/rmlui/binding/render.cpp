@@ -4,6 +4,7 @@
 
 #include <core/Core.h>
 #include <core/Interface.h>
+#include <core/File.h>
 #include <cassert>
 
 #ifdef RMLUI_MATRIX_ROW_MAJOR
@@ -177,7 +178,7 @@ protected:
 Renderer::Renderer(const RmlContext* context)
     : mcontext(context)
     , mEncoder(nullptr)
-    , default_tex(CreateTexture(mcontext->default_tex))
+    , default_tex(CreateTexture(mcontext->default_tex)->handle)
     , default_tex_mat(std::make_unique<TextureMaterial>(
         mcontext->shader,
         uint16_t(default_tex),
@@ -313,38 +314,24 @@ void Renderer::SetClipRect(glm::vec4 r[2]) {
     setShaderScissorRect(mEncoder, r);
 }
 
-bool Renderer::LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, const std::string& path){
-    Rml::FileInterface* ifile = Rml::GetFileInterface();
-	Rml::FileHandle fh = ifile->Open(path);
-	if (!fh)
-		return false;
-	
-	const size_t bufsize = ifile->Length(fh);
-	
+std::optional<Rml::TextureData> Renderer::CreateTexture(const std::string& path) {
+    auto realpath = Rml::GetPlugin()->OnRealPath(path);
+	Rml::File f(path);
+	if (!f) {
+		return std::nullopt;
+    }
+	const size_t bufsize = f.Length();
     const bgfx_memory_t *mem = BGFX(alloc)((uint32_t)bufsize);
-	ifile->Read(mem->data, bufsize, fh);
-	ifile->Close(fh);
+	f.Read(mem->data, bufsize);
 
 	bgfx_texture_info_t info;
     const uint64_t flags = BGFX_TEXTURE_SRGB;
 	const bgfx_texture_handle_t th = BGFX(create_texture)(mem, flags, 1, &info);
-	if (th.idx != UINT16_MAX){
-		dimensions.w = info.width;
-		dimensions.h = info.height;
-        handle = th.idx;
-        return true;
+	if (th.idx == UINT16_MAX){
+		return std::nullopt;
 	}
-	return false;
-}
 
-Rml::TextureHandle Renderer::CreateTexture(const std::string& path) {
-    Rml::TextureHandle handle;
-    Rml::Size dimensions;
-    if (LoadTexture(handle, dimensions, path)) {
-        return handle;
-    }
-    assert(false);
-    return 0;
+    return Rml::TextureData {th.idx, {(float)info.width, (float)info.height}};
 }
 
 bool Renderer::UpdateTexture(Rml::TextureHandle texture, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *buffer){

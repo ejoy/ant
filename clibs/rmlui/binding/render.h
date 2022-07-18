@@ -21,7 +21,7 @@ public:
     void Begin() override;
     void End() override;
     void RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::MaterialHandle mat) override;
-    bool LoadTexture(Rml::TextureHandle& handle, Rml::Size& dimensions, const std::string& path) override;
+    std::optional<Rml::TextureData> CreateTexture(const std::string& path) override;
     void ReleaseTexture(Rml::TextureHandle texture) override;
     void SetTransform(const glm::mat4x4& transform) override;
     void SetClipRect() override;
@@ -30,8 +30,6 @@ public:
     Rml::MaterialHandle CreateTextureMaterial(Rml::TextureHandle texture, Rml::SamplerFlag flag) override;
     Rml::MaterialHandle CreateFontMaterial(const Rml::TextEffects& effects) override;
     void DestroyMaterial(Rml::MaterialHandle mat) override;
-
-    Rml::TextureHandle CreateTexture(const std::string& path);
 
 public:
     // will delete buffer

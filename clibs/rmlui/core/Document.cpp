@@ -25,7 +25,7 @@ Document::~Document() {
 }
 
 bool Document::Load(const std::string& path) {
-	std::ifstream input(GetFileInterface()->GetPath(path));
+	std::ifstream input(GetPlugin()->OnRealPath(path));
 	if (!input) {
 		return false;
 	}

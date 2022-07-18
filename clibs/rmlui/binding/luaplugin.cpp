@@ -83,6 +83,20 @@ void lua_plugin::OnDestroyNode(Rml::Document* document, Rml::Node* node) {
 	});
 }
 
+std::string lua_plugin::OnRealPath(const std::string& path) {
+    std::string realpath;
+    luabind::invoke([&](lua_State* L) {
+        lua_pushlstring(L, path.data(), path.size());
+        call(L, LuaEvent::OnRealPath, 1, 1);
+        if (lua_type(L, -1) == LUA_TSTRING) {
+            size_t sz = 0;
+            const char* str = lua_tolstring(L, -1, &sz);
+            realpath.assign(str, sz);
+        }
+    });
+    return realpath;
+}
+
 void lua_plugin::register_event(lua_State* L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lua_settop(L, 1);
@@ -97,7 +111,7 @@ void lua_plugin::register_event(lua_State* L) {
 	ref_function(reference, L, "OnEvent");
 	ref_function(reference, L, "OnEventAttach");
 	ref_function(reference, L, "OnEventDetach");
-	ref_function(reference, L, "OnOpenFile");
+	ref_function(reference, L, "OnRealPath");
 }
 
 int  lua_plugin::ref(lua_State* L) {
