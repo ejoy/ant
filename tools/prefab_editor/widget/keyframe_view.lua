@@ -1104,7 +1104,7 @@ function m.init(skeleton)
     joints_map, joints_list = joint_utils:init(skeleton)
     for _, joint in ipairs(joints_list) do
         if not joint.mesh then
-            joint.mesh = create_bone_entity(joint.name)
+            -- joint.mesh = create_bone_entity(joint.name)
         end
     end
 end

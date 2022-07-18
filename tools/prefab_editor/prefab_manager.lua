@@ -77,86 +77,45 @@ local geom_mesh_file = {
     ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin"
 }
 
-local default_collider_define = {
-    ["sphere"] = {{origin = {0, 0, 0, 1}, radius = 0.1}},
-    ["box"] = {{origin = {0, 0, 0, 1}, size = {0.05, 0.05, 0.05} }},
-    ["capsule"] = {{origin = {0, 0, 0, 1}, height = 1.0, radius = 0.25}}
-}
-
-local slot_entity_id = 1
 local group_id = 0
 local function get_group_id()
     group_id = group_id + 1
     return group_id
 end
-function m:create_slot()
-    --if not gizmo.target_eid then return end
-    local auto_name = "empty" .. slot_entity_id
+
+local hitch_id = 1
+function m:create_hitch(slot)
+    local auto_name = "hitch" .. hitch_id
     local parent_eid = gizmo.target_eid or self.root
     local template = {
         policy = {
             "ant.general|name",
-            "ant.general|tag",
-            "ant.animation|slot",
             "ant.scene|hitch_object",
         },
         data = {
-            scene = {},
-            slot = {
-                joint_name = "None",
-                follow_flag = 1,
-            },
             name = auto_name,
-            tag = {auto_name},
-            hitch = {
-                group = 0,
-            }
+            scene = { parent = parent_eid },
+            hitch = { group = 0 },
         }
     }
+    if slot then
+        template.policy[#template.policy + 1] = "ant.general|tag"
+        template.data.tag = { auto_name }
+        template.policy[#template.policy + 1] = "ant.animation|slot"
+        template.data.slot = {
+            joint_name = "None",
+            follow_flag = 1,
+        }
+    end
     local tpl = utils.deep_copy(template)
-    tpl.data.on_ready = function (e) hierarchy:update_slot_list(world) end
-    tpl.data.scene.parent = parent_eid
+    if slot then
+        tpl.data.on_ready = function (e) hierarchy:update_slot_list(world) end
+    end
     local new_entity = ecs.create_entity(tpl)
-    slot_entity_id = slot_entity_id + 1
+    hitch_id = hitch_id + 1
     self:add_entity(new_entity, parent_eid, template)
 end
 
-function m:create_collider(config, parent)
-    if config.type ~= "sphere" and config.type ~= "box" then return end
-    local scale = {}
-    local define = config.define or default_collider_define[config.type]
-    if config.type == "sphere" then
-        scale = define[1].radius * 100
-    elseif config.type == "box" then
-        local size = define[1].size
-        scale = {size[1] * 200, size[2] * 200, size[3] * 200}
-    elseif config.type == "capsule" then
-    end
-    local template = {
-        policy = {
-            "ant.general|name",
-            "ant.render|render",
-            "ant.general|tag",
-        },
-        data = {
-            name = "collider" .. gen_geometry_id(),
-            tag = config.tag or {"collider"},
-            scene = {s = scale, parent = self.root},
-            filter_state = "main_view|selectable",
-            material = "/pkg/ant.resources/materials/singlecolor_translucent.material",
-            mesh = (config.type == "box") and geom_mesh_file["cube"] or geom_mesh_file[config.type],
-            render_object = {},
-            filter_material = {}
-        }
-    }
-    local tpl = utils.deep_copy(template)
-    tpl.data.on_ready = function (e)
-        e.collider = { [config.type] = define }
-        imaterial.set_property(e, "u_color", math3d.vector(1, 0.5, 0.5, 0.8))
-    end
-    tpl.data.scene.parent = parent
-    return ecs.create_entity(tpl), template
-end
 
 local function create_simple_entity(name, parent)
     local template = {
@@ -166,12 +125,10 @@ local function create_simple_entity(name, parent)
 		},
 		data = {
             name = name,
-            scene = {}
+            scene = {parent = parent}
 		},
     }
-    local tmp = utils.deep_copy(template)
-    tmp.data.scene.parent = parent
-    return ecs.create_entity(tmp), template
+    return ecs.create_entity(utils.deep_copy(template)), template
 end
 
 function m:add_entity(new_entity, parent, temp, no_hierarchy)
@@ -226,8 +183,10 @@ function m:create(what, config)
     if not self.root then
         self:reset_prefab()
     end
-    if what == "slot" then
-        self:create_slot()
+    if what == "hitch" then
+        self:create_hitch()
+    elseif what == "slot" then
+        self:create_hitch(true)
     elseif what == "camera" then
         local new_camera, template = camera_mgr.create_camera()
         hierarchy:add(new_camera, {template = template}, self.root)
@@ -271,10 +230,6 @@ function m:create(what, config)
             end
 
             self:add_entity(new_entity, parent_eid, template)
-            if not self.test then
-                self.test = {}
-            end
-            self.test[#self.test + 1] = new_entity
             return new_entity
         elseif config.type == "cube(prefab)" then
             m:add_prefab(gd.editor_package_path .. "res/cube.prefab")
@@ -351,11 +306,6 @@ function m:create(what, config)
             light_gizmo.init()
             --create_light_billboard(newlight)
         end
-    elseif what == "collider" then
-        local new_entity, temp = self:create_collider(config, self.root)
-        self:add_entity(new_entity, self.root, temp, not config.add_to_hierarchy)
-        hierarchy:update_collider_list(world)
-        return new_entity
     end
 end
 
@@ -452,7 +402,8 @@ function m:on_prefab_ready(prefab)
     for i = 1, #self.prefab_template do
         local pt = self.prefab_template[i]
         local e = entitys[j]
-        local parent = find_e(entitys, world:entity(e).scene.parent)
+        local scene = world:entity(e).scene
+        local parent = scene and find_e(entitys, scene.parent)
         if pt.prefab then
             local prefab_name = pt.name or gen_prefab_name()
             local sub_root = create_simple_entity(prefab_name, parent)
@@ -608,15 +559,6 @@ function m:add_prefab(filename)
     end
     local prefab
     local parent = gizmo.target_eid or self.root
-    -- local hitch = parent and world:entity(parent).hitch
-    -- if hitch then
-    --     if hitch.group == 0 then
-    --         hitch.group = get_group_id()
-    --     end
-    --     prefab = ecs.group(hitch.group):create_instance(prefab_filename)
-    -- else
-    --     prefab = ecs.create_instance(prefab_filename)
-    -- end
     local group_id = get_group_id()
     local v_root = ecs.create_hitch({parent = parent, children = group_id})
     prefab = ecs.group(group_id):create_instance(prefab_filename)

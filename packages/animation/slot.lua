@@ -53,8 +53,8 @@ function sys:update_slot()
 	for v in w:select "slot:in scene:update id:in" do
         --TODO: slot.offset_srt is duplicate with entity.scene, not need to keep this srt in slot
         local slot = v.slot
-        if not slot.joint_index and slot.joint_name and slot.anim_eid then
-            local ske = world:entity(slot.anim_eid).skeleton
+        if not slot.joint_index and slot.joint_name and slot.pose then
+            local ske = slot.pose.skeleton
             slot.joint_index = ske._handle:joint_index(slot.joint_name)	
         end
         local follow_flag = assert(slot.follow_flag)

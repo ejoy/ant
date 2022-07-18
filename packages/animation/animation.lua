@@ -207,6 +207,7 @@ local function init_prefab_anim(entity)
 			end
 		end
 		if anim then
+			skin.meshskin.pose.skeleton = skin.skeleton
 			skin.meshskin.pose.pose_result = anim.anim_ctrl.pose_result
 			anim.anim_ctrl._current.slot_eid = slot_eid
 		end

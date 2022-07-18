@@ -278,39 +278,52 @@ local function create_node_entity(gltfscene, nodeidx, parent, exports)
     }
 end
 
-local function create_animation_entity(exports, parent, withskin)
+local function create_skin_entity(exports, parent, withanim)
     if not exports.skeleton or #exports.skin < 1 then
         return
     end
+    -- skin
     local policy = {
         "ant.general|name",
         "ant.scene|scene_object",
-        "ant.animation|animation",
+        "ant.animation|meshskin",
     }
     local data = {
-        name = "skeleton_animation",
+        name = "meshskin",
         scene = {},
     }
     data.skeleton = serialize.path(exports.skeleton)
-    if withskin then
-        policy[#policy+1] = "ant.animation|meshskin"
-        data.meshskin = serialize.path(exports.skin[1])
-    end
-    data.animation = {}
-    local anilst = {}
-    for name, file in pairs(exports.animations) do
-        local n = fix_invalid_name(name)
-        anilst[#anilst+1] = n
-        data.animation[n] = serialize.path(file)
-    end
-    table.sort(anilst)
-    data.animation_birth = anilst[1]
-    data.anim_ctrl = {}
-    return create_entity {
+    data.meshskin = serialize.path(exports.skin[1])
+    create_entity {
         policy = policy,
         data = data,
         parent = parent,
     }
+    -- animation
+    if withanim then
+        local policy = {
+            "ant.general|name",
+            "ant.animation|animation",
+        }
+        local data = {
+            name = "animation",
+        }
+        data.skeleton = serialize.path(exports.skeleton)
+        data.animation = {}
+        local anilst = {}
+        for name, file in pairs(exports.animations) do
+            local n = fix_invalid_name(name)
+            anilst[#anilst+1] = n
+            data.animation[n] = serialize.path(file)
+        end
+        table.sort(anilst)
+        data.animation_birth = anilst[1]
+        data.anim_ctrl = {}
+        create_entity {
+            policy = policy,
+            data = data,
+        }
+    end
 end
 
 local function find_mesh_nodes(gltfscene, scenenodes, meshnodes)
@@ -376,8 +389,7 @@ return function(output, glbdata, exports, localpath)
     for _, nodeidx in ipairs(meshnodes) do
         check_create_node_entity(nodeidx)
     end
-
-    create_animation_entity(exports, rootid, true)
+    create_skin_entity(exports, rootid, true)
     utility.save_txt_file("./mesh.prefab", prefab)
 
     local anilst = {}
@@ -392,28 +404,15 @@ return function(output, glbdata, exports, localpath)
         {
             policy = {
                 "ant.general|name",
-                "ant.scene|scene_object",
-            },
-            data = {
-                name = scene.name or "Rootscene",
-                scene = {},
-            },
-        },
-        {
-            policy = {
-                "ant.general|name",
-                "ant.scene|scene_object",
                 "ant.animation|animation",
             },
             data = {
-                name = "skeleton_animation",
-                scene = {},
+                name = "animation",
                 skeleton = serialize.path(exports.skeleton),
                 animation = animation,
                 animation_birth = anilst[1],
                 anim_ctrl = {},
             },
-            mount = 1,
         }
     }
     utility.save_txt_file("./animation.prefab", anim_prefab)
