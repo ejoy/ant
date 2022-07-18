@@ -694,45 +694,49 @@ end
 
 local function show_rotate_fan(rotAxis, startAngle, deltaAngle)
 	local e3 = world:entity(rotAxis.eid[3])
-	local e4 = world:entity(rotAxis.eid[4])
-	e3.render_object.ib.num = 0
-	e4.render_object.ib.num = 0
-	local start
-	local num
+	local e3_start, e3_num
 	local stepAngle = gizmo_const.ROTATE_SLICES / 360
+
 	if deltaAngle > 0 then
-		start = math.floor(startAngle * stepAngle) * 3
+		e3_start = math.floor(startAngle * stepAngle) * 3
 		local totalAngle = startAngle + deltaAngle
 		if totalAngle > 360 then
 			local extraAngle = (totalAngle - 360)
 			deltaAngle = deltaAngle - extraAngle
-			e4.render_object.ib.start = 0
-			e4.render_object.ib.num = math.floor(extraAngle * stepAngle) * 3
+
+			
+			local e4 = world:entity(rotAxis.eid[4])
+			local e4num = math.floor(extraAngle * stepAngle) * 3
+			e4.render_object.mesh:set_ib_range(0, e4num)
+			ifs.set_state(e4, "main_view", e4num > 0)
+			ifs.set_state(e4, "selectable", e4num > 0)
 		end
-		num = math.floor(deltaAngle * stepAngle + 1) * 3
+		e3_num = math.floor(deltaAngle * stepAngle + 1) * 3
 	else
 		local extraAngle = startAngle + deltaAngle
 		if extraAngle < 0 then
-			start = 0
-			num = math.floor(startAngle * stepAngle) * 3
-			e4.render_object.ib.start = math.floor((360 + extraAngle) * stepAngle) * 3
-			e4.render_object.ib.num = math.floor(-extraAngle * stepAngle + 1) * 3
+			e3_start = 0
+			e3_num = math.floor(startAngle * stepAngle) * 3
+
+			local e4 = world:entity(rotAxis.eid[4])
+			local e4start, e4num = math.floor((360 + extraAngle) * stepAngle) * 3, math.floor(-extraAngle * stepAngle + 1) * 3
+			e4.render_object.mesh:set_ib_range(e4start, e4num)
+			ifs.set_state(e4, "main_view", e4num > 0)
+			ifs.set_state(e4, "selectable", e4num > 0)
 		else
-			num = math.floor(-deltaAngle * stepAngle + 1) * 3
-			start = math.floor(startAngle * stepAngle) * 3 - num
-			if start < 0 then
-				num = num + start
-				start = 0
+			e3_num = math.floor(-deltaAngle * stepAngle + 1) * 3
+			e3_start = math.floor(startAngle * stepAngle) * 3 - e3_num
+			if e3_start < 0 then
+				e3_num = e3_num + e3_start
+				e3_start = 0
 			end
 		end
 	end
-	e3.render_object.ib.start = start
-	e3.render_object.ib.num = num
+	e3.render_object.mesh:set_ib_range(e3_start, e3_num)
 
-	ifs.set_state(world:entity(rotAxis.eid[3]), "main_view", e3.render_object.ib.num > 0)
-	ifs.set_state(world:entity(rotAxis.eid[3]), "selectable", e3.render_object.ib.num > 0)
-	ifs.set_state(world:entity(rotAxis.eid[4]), "main_view", e4.render_object.ib.num > 0)
-	ifs.set_state(world:entity(rotAxis.eid[4]), "selectable", e4.render_object.ib.num > 0)
+	local e3_visible = e3_num > 0
+	ifs.set_state(e3, "main_view", e3_visible)
+	ifs.set_state(e3, "selectable", e3_visible)
 end
 
 local function rotate_gizmo(x, y)

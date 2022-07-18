@@ -93,6 +93,7 @@ local function load_text(e)
     local textw, texth, num = lfont.prepare_text(fonttex_handle, sc.description, font.size, font.id)
     local x, y = text_start_pos(textw, texth, screenpos)
     local rc = e.render_object
+    assert(false, "need rewrite, not ib vb in render_object")
     local vb, ib = rc.vb, rc.ib
     vb.start, vb.num = 0, num*4
     local vbhandle = vb.handles[1]

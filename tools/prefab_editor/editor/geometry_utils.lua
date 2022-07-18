@@ -16,9 +16,11 @@ local function create_dynamic_mesh(layout, vb, ib)
 	local decl = declmgr.get(layout)
 	return {
 		vb = {
+			start = 0, num = 0,
 			{handle=bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fffd", vb), declmgr.get(layout).handle, "a")}
 		},
 		ib = {
+			start = 0, num = 0,
 			handle = bgfx.create_dynamic_index_buffer(bgfx.memory_buffer("w", ib), "a")
 		}
 	}

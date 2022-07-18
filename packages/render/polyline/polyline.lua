@@ -264,7 +264,7 @@ function ipl.create_linelist_mesh(pointlist, line_width, color)
     line_width = line_width or 1
 
     local vertices = generate_linelist_vertices(pointlist)
-    local numlines = numpoint / 2
+    local numlines = numpoint // 2
     local numv = numlines * 4
     return {
         ib = {
