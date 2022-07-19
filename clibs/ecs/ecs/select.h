@@ -72,8 +72,10 @@ namespace ecs_api {
                 if constexpr (sizeof...(Components) == 0) {
                     return true;
                 }
-                if (entity_<Components...>::init_sibling(ctx, component<Component>::id, i)) {
-                    return true;
+                else {
+                    if (entity_<Components...>::init_sibling(ctx, component<Component>::id, i)) {
+                        return true;
+                    }
                 }
             }
         }
