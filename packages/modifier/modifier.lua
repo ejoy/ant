@@ -203,7 +203,7 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
         eid = imodifier.create_srt_modifier(target, group_id, function (time)
             local anim = world:entity(anim_prefab.tag["*"][2])
             local pr = anim.anim_ctrl.pose_result
-            return pr:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl._current.play_state.play
+            return pr:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl.play_state.play
         end),
         anim_eid = anim_prefab
     }

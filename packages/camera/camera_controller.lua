@@ -27,9 +27,9 @@ local mouse_btn
 local mouse_state
 local move_speed_delta = 0.01
 local move_speed = 0.1
-local move_wheel_speed = 8
-local dxdy_speed = 30
-local key_move_speed = 10
+local move_wheel_speed = 6
+local dxdy_speed = 3
+local key_move_speed = 1.0
 
 local function calc_dxdy_speed()
     return move_speed * dxdy_speed
@@ -170,11 +170,11 @@ function cc_sys:data_changed()
                 iom.rotate_forward_vector(ce, dy, dx)
             elseif motiontype == "move_pan" then
                 if dx ~= 0 then
-                    iom.move_right(ce, -dx)
+                    iom.move_right(ce, -dx * 2.0)
                 end
 
                 if dy ~= 0 then
-                    iom.move_up(ce, dy)
+                    iom.move_up(ce, dy * 2.0)
                 end
                 mouse_lastx, mouse_lasty = newx, newy
             end

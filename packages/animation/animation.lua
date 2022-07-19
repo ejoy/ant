@@ -80,16 +80,12 @@ local iani = ecs.import.interface "ant.animation|ianimation"
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
 	for e in w:select "skeleton:in anim_ctrl:in" do
-		local task = e.anim_ctrl._current
-		if task.animation then
-			local play_state = task.play_state
+		local ctrl = e.anim_ctrl
+		if ctrl.animation then
+			local play_state = ctrl.play_state
 			if not play_state.manual_update and play_state.play then
-				iani.step(task, delta_time * 0.001)
+				iani.step(e, delta_time * 0.001)
 			end
-			local ani = task.animation
-			local pr = e.anim_ctrl.pose_result
-			pr:setup(e.skeleton._handle)
-			pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, task.weight)
 		end
 	end
 end
@@ -99,15 +95,18 @@ end
 
 function ani_sys:end_animation()
 	for e in w:select "anim_ctrl:in" do
-		local pr = e.anim_ctrl.pose_result
-		pr:fetch_result()
-		pr:end_animation()
+		if e.anim_ctrl.dirty then
+			local pr = e.anim_ctrl.pose_result
+			pr:fetch_result()
+			pr:end_animation()
+			e.anim_ctrl.dirty = false
+		end
 	end
 end
 
 function ani_sys:data_changed()
 	for e in w:select "anim_ctrl:in" do
-		process_keyframe_event(e.anim_ctrl._current)
+		process_keyframe_event(e.anim_ctrl)
 	end
 end
 
@@ -139,17 +138,15 @@ function ani_sys:component_init()
 			events[key] = load_events(tostring(value))
 		end
 		local anim_name = e.animation_birth
-		e.anim_ctrl._current = {
-			animation = e.animation[anim_name],
-			event_state = { next_index = 1, keyframe_events = events[anim_name] },
-			play_state = {
-				ratio = 0.0,
-				previous_ratio = 0.0,
-				speed = 1.0,
-				play = false,
-				loop = false,
-				manual_update = false
-			}
+		e.anim_ctrl.animation = e.animation[anim_name]
+		e.anim_ctrl.event_state = { next_index = 1, keyframe_events = events[anim_name] }
+		e.anim_ctrl.play_state = {
+			ratio = 0.0,
+			previous_ratio = 0.0,
+			speed = 1.0,
+			play = false,
+			loop = false,
+			manual_update = false
 		}
 	end
 	for e in w:select "INIT meshskin:update skeleton:update" do
@@ -209,7 +206,7 @@ local function init_prefab_anim(entity)
 		if anim then
 			skin.meshskin.pose.skeleton = skin.skeleton
 			skin.meshskin.pose.pose_result = anim.anim_ctrl.pose_result
-			anim.anim_ctrl._current.slot_eid = slot_eid
+			anim.anim_ctrl.slot_eid = slot_eid
 		end
 		for _, eid in ipairs(anim_eid) do
 			build_transform(world:entity(eid).render_object, skin.meshskin.pose)
@@ -228,7 +225,7 @@ function ani_sys:entity_ready()
 	for _, what, e, p0, p1 in event_animation:unpack() do
 		if what == "step" then
 			w:sync("anim_ctrl:in", e)
-			iani.step(e.anim_ctrl._current, p0, p1)
+			iani.step(e, p0, p1)
 		elseif what == "set_time" then
 			iani.set_time(e, p0)
 		end
