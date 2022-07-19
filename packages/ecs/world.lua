@@ -7,21 +7,18 @@ local world = {}
 world.__index = world
 
 function world:pipeline_func(what)
-	local list = system.lists(self, what)
-	if not list then
+	local funcs, symbols = system.lists(self, what)
+	if not funcs then
 		return function() end
 	end
-	local switch = system.list_switch(list)
-	self._switchs[what] = switch
+	local ecs_world = self._ecs_world
 	return function()
-		switch:update()
-		for i = 1, #list do
-			local v = list[i]
-			local f, proxy = v[1], v[2]
-			--local key = v[5] .. "|" .. v[3] .. "." .. v[4]
-			--local _ <close> = self:memory_stat(key)
-			--local _ <close> = self:cpu_stat(key)
-			f(proxy)
+		for i = 1, #funcs do
+			local f = funcs[i]
+			--local symbol = symbols[i]
+			--local _ <close> = self:memory_stat(symbol)
+			--local _ <close> = self:cpu_stat(symbol)
+			f(ecs_world)
 		end
 	end
 end
@@ -123,12 +120,6 @@ end
 
 function world:pipeline_exit()
 	self:pipeline_func "exit" ()
-end
-
-function world:enable_system(name, enable)
-	for _, switch in pairs(self._switchs) do
-		switch:enable(name, enable)
-	end
 end
 
 local function memstr(v)
@@ -255,7 +246,6 @@ function m.new_world(config)
 	ecs:group_init "group"
 	local w = setmetatable({
 		args = config,
-		_switchs = {},	-- for enable/disable
 		_memory = {},
 		_memory_stat = setmetatable({start={}, finish={}}, {__close = finish_memory_stat}),
 		_cpu_stat = setmetatable({total={},frame=0}, {__close = finish_cpu_stat}),
