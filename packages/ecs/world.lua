@@ -72,6 +72,7 @@ end
 
 function world:reset_cpu_stat()
 	self._cpu_stat.total = {}
+	self._cpu_stat.frame = 0
 end
 
 local function print_cpu_stat(w, per)
