@@ -86,6 +86,12 @@ function ani_sys:sample_animation_pose()
 			if not play_state.manual_update and play_state.play then
 				iani.step(e, delta_time * 0.001)
 			end
+			-- TODO: lazy sample
+			local pr = ctrl.pose_result
+			local ani = ctrl.animation
+			pr:setup(e.skeleton._handle)
+			pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, ctrl.weight)
+			ctrl.dirty = true
 		end
 	end
 end
@@ -95,11 +101,12 @@ end
 
 function ani_sys:end_animation()
 	for e in w:select "anim_ctrl:in" do
-		if e.anim_ctrl.dirty then
-			local pr = e.anim_ctrl.pose_result
+		local ctrl = e.anim_ctrl
+		if ctrl.dirty then
+			local pr = ctrl.pose_result
 			pr:fetch_result()
 			pr:end_animation()
-			e.anim_ctrl.dirty = false
+			ctrl.dirty = false
 		end
 	end
 end
