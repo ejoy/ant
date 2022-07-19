@@ -43,7 +43,6 @@ function S.update()
     do
         bgfx.frame()
     end
-    --world:pipeline_update_end()
     bgfx.encoder_end()
 end
 

@@ -99,7 +99,6 @@ public:
 	void SetClass(const std::string& class_name, bool activate);
 	bool IsClassSet(const std::string& class_name) const;
 	void SetClassName(const std::string& class_names);
-	std::string GetClassName() const;
 	void DirtyPropertiesWithUnitRecursive(PropertyUnit unit);
 
 	void UpdateDefinition();

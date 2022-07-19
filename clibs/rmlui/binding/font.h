@@ -2,43 +2,25 @@
 
 #include "context.h"
 #include <core/Interface.h>
-#include <core/Texture.h>
-#include <unordered_map>
-#include <vector>
-#include <cstdint>
+#include <stdint.h>
 
-extern "C"{
+extern "C" {
     #include "../font/font_manager.h"
 }
 
-struct FontFace{
-	int	fontid;
-	int pixelsize;
-};
+namespace Rml {
+	class FontEngine: public FontEngineInterface {
+	public:
+		FontEngine(const RmlContext* context);
+		virtual ~FontEngine() = default;
+		virtual FontFaceHandle GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, uint32_t size) override;
+		virtual int GetLineHeight(FontFaceHandle handle) override;
+		virtual int GetBaseline(FontFaceHandle handle) override;
+		virtual void GetUnderline(FontFaceHandle handle, float& position, float& thickness) override;
+		virtual int GetStringWidth(FontFaceHandle handle, const std::string& string) override;
+		virtual void GenerateString(FontFaceHandle handle, LineList& lines, const Color& color, Geometry& geometry) override;
 
-class FontEngine : public Rml::FontEngineInterface {
-public:
-	FontEngine(const RmlContext* context);
-	virtual ~FontEngine() = default;
-	virtual Rml::FontFaceHandle GetFontFaceHandle(const std::string& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, int size)override;
-	virtual int GetLineHeight(Rml::FontFaceHandle handle)override;
-	virtual int GetBaseline(Rml::FontFaceHandle handle)override;
-	virtual void GetUnderline(Rml::FontFaceHandle handle, float& position, float &thickness)override;
-	virtual int GetStringWidth(Rml::FontFaceHandle handle, const std::string& string)override;
-	int GenerateString(Rml::FontFaceHandle handle, const std::string& string, const Rml::Point& position, const Rml::Color& color, Rml::Geometry& geometry);
-	virtual void GenerateString(Rml::FontFaceHandle face_handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry) override;
-
-private:
-	struct font_glyph
-	GetGlyph(const FontFace &face, int codepoint, struct font_glyph *og = nullptr);
-
-private:
-    const RmlContext* mcontext;
-	struct fontinfo {
-		std::vector<uint8_t>buffer;
-		std::vector<int>	fontids;
+	private:
+		const RmlContext* mcontext;
 	};
-	std::unordered_map<std::string, fontinfo>	mFonts;
-	std::unordered_map<std::string, int>		mFontIDs;
-	std::vector<FontFace> mFontFaces;
-};
+}

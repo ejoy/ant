@@ -7,21 +7,30 @@ local world = {}
 world.__index = world
 
 function world:pipeline_func(what)
-	local list = system.lists(self, what)
-	if not list then
+	local funcs, symbols = system.lists(self, what)
+	if not funcs or #funcs == 0 then
 		return function() end
 	end
-	local switch = system.list_switch(list)
-	self._switchs[what] = switch
+	local ecs_world = self._ecs_world
+
+	local STAT <const> = false
+	if STAT and what == "_update" then
+		return function()
+			for i = 1, #funcs do
+				local f = funcs[i]
+				local symbol = symbols[i]
+				--local _ <close> = self:memory_stat(symbol)
+				local _ <close> = self:cpu_stat(symbol)
+				f(ecs_world)
+			end
+			self:print_cpu_stat(0, 10)
+		end
+	end
+
 	return function()
-		switch:update()
-		for i = 1, #list do
-			local v = list[i]
-			local f, proxy = v[1], v[2]
-			--local key = v[5] .. "|" .. v[3] .. "." .. v[4]
-			--local _ <close> = self:memory_stat(key)
-			--local _ <close> = self:cpu_stat(key)
-			f(proxy)
+		for i = 1, #funcs do
+			local f = funcs[i]
+			f(ecs_world)
 		end
 	end
 end
@@ -72,6 +81,7 @@ end
 
 function world:reset_cpu_stat()
 	self._cpu_stat.total = {}
+	self._cpu_stat.frame = 0
 end
 
 local function print_cpu_stat(w, per)
@@ -105,29 +115,22 @@ function world:print_cpu_stat(skip, delta)
 	w._cpu_stat.frame = frame
 
 	if frame <= skip then
-		w:reset_cpu_stat()
+		w._cpu_stat.total = {}
 		return
 	elseif frame % delta ~= 0 then
 		return
 	end
 
-	print_cpu_stat(w, frame)
+	print_cpu_stat(w, frame-skip)
 end
 
 function world:pipeline_init()
 	self:pipeline_func "_init" ()
 	self.pipeline_update = self:pipeline_func "_update"
-	self.pipeline_update_end = self:pipeline_func "update_end"
 end
 
 function world:pipeline_exit()
 	self:pipeline_func "exit" ()
-end
-
-function world:enable_system(name, enable)
-	for _, switch in pairs(self._switchs) do
-		switch:enable(name, enable)
-	end
 end
 
 local function memstr(v)
@@ -254,7 +257,6 @@ function m.new_world(config)
 	ecs:group_init "group"
 	local w = setmetatable({
 		args = config,
-		_switchs = {},	-- for enable/disable
 		_memory = {},
 		_memory_stat = setmetatable({start={}, finish={}}, {__close = finish_memory_stat}),
 		_cpu_stat = setmetatable({total={},frame=0}, {__close = finish_cpu_stat}),

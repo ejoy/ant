@@ -84,7 +84,6 @@ local function render()
 		do
 			rhwi.frame()
 		end
-		world:pipeline_update_end()
 		if quit then
 			ltask.wakeup(quit)
 			return

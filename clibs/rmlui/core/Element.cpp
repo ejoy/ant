@@ -164,11 +164,16 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 		address += id;
 	}
 
-	std::string classes = GetClassName();
-	if (!classes.empty()) {
-		classes = StringUtilities::Replace(classes, ' ', '.');
+	std::string class_names;
+	for (size_t i = 0; i < classes.size(); i++) {
+		if (i != 0) {
+			class_names += ".";
+		}
+		class_names += classes[i];
+	}
+	if (!class_names.empty()) {
 		address += ".";
-		address += classes;
+		address += class_names;
 	}
 
 	if (include_pseudo_classes) {
@@ -1433,17 +1438,6 @@ void Element::SetClassName(const std::string& class_names) {
 	classes.clear();
 	StringUtilities::ExpandString(classes, class_names, ' ');
 	DirtyDefinition();
-}
-
-std::string Element::GetClassName() const {
-	std::string class_names;
-	for (size_t i = 0; i < classes.size(); i++) {
-		if (i != 0) {
-			class_names += " ";
-		}
-		class_names += classes[i];
-	}
-	return class_names;
 }
 
 void Element::DirtyPropertiesWithUnitRecursive(PropertyUnit unit) {

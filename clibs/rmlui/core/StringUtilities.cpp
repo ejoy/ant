@@ -1,31 +1,3 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
 #include <core/StringUtilities.h>
 #include <core/Log.h>
 #include <algorithm>
@@ -36,8 +8,7 @@
 
 namespace Rml {
 
-static int FormatString(std::string& string, size_t max_size, const char* format, va_list argument_list)
-{
+static int FormatString(std::string& string, size_t max_size, const char* format, va_list argument_list) {
 	const int INTERNAL_BUFFER_SIZE = 1024;
 	static char buffer[INTERNAL_BUFFER_SIZE];
 	char* buffer_ptr = buffer;
@@ -48,8 +19,7 @@ static int FormatString(std::string& string, size_t max_size, const char* format
 	int length = vsnprintf(buffer_ptr, max_size, format, argument_list);
 	buffer_ptr[length >= 0 ? length : max_size] = '\0';
 #if !defined NDEBUG
-	if (length == -1)
-	{
+	if (length == -1) {
 		Log::Message(Log::Level::Warning, "FormatString: std::string truncated to %d bytes when processing %s", max_size, format);
 	}
 #endif
@@ -62,8 +32,7 @@ static int FormatString(std::string& string, size_t max_size, const char* format
 	return length;
 }
 
-std::string CreateString(size_t max_size, const char* format, ...)
-{
+std::string CreateString(size_t max_size, const char* format, ...) {
 	std::string result;
 	result.reserve(max_size);
 	va_list argument_list;
@@ -85,31 +54,7 @@ std::string StringUtilities::ToLower(const std::string& string) {
 	return str_lower;
 }
 
-std::string StringUtilities::Replace(std::string subject, const std::string& search, const std::string& replace)
-{
-	size_t pos = 0;
-	while ((pos = subject.find(search, pos)) != std::string::npos) {
-		subject.replace(pos, search.length(), replace);
-		pos += replace.length();
-	}
-	return subject;
-}
-
-std::string StringUtilities::Replace(std::string subject, char search, char replace)
-{
-	const size_t size = subject.size();
-	for (size_t i = 0; i < size; i++)
-	{
-		if (subject[i] == search)
-			subject[i] = replace;
-	}
-	return subject;
-}
-
-
-// Expands character-delimited list of values in a single string to a whitespace-trimmed list of values.
-void StringUtilities::ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter)
-{	
+void StringUtilities::ExpandString(std::vector<std::string>& string_list, const std::string& string, const char delimiter) {
 	char quote = 0;
 	bool last_char_delimiter = true;
 	const char* ptr = string.c_str();
@@ -165,8 +110,7 @@ void StringUtilities::ExpandString(std::vector<std::string>& string_list, const 
 }
 
 
-void StringUtilities::ExpandString2(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters)
-{
+void StringUtilities::ExpandString2(std::vector<std::string>& string_list, const std::string& string, const char delimiter, char quote_character, char unquote_character, bool ignore_repeated_delimiters) {
 	int quote_mode_depth = 0;
 	const char* ptr = string.c_str();
 	const char* start_ptr = nullptr;
@@ -221,65 +165,6 @@ std::string StringUtilities::StripWhitespace(const std::string& s) {
 		return std::string(start, end);
 	return std::string();
 }
-
-Character StringUtilities::ToCharacter(const char* p)
-{
-	if ((*p & (1 << 7)) == 0)
-		return static_cast<Character>(*p);
-
-	int num_bytes = 0;
-	int code = 0;
-
-	if ((*p & 0b1110'0000) == 0b1100'0000)
-	{
-		num_bytes = 2;
-		code = (*p & 0b0001'1111);
-	}
-	else if ((*p & 0b1111'0000) == 0b1110'0000)
-	{
-		num_bytes = 3;
-		code = (*p & 0b0000'1111);
-	}
-	else if ((*p & 0b1111'1000) == 0b1111'0000)
-	{
-		num_bytes = 4;
-		code = (*p & 0b0000'0111);
-	}
-	else
-	{
-		// Invalid begin byte
-		return Character::Null;
-	}
-
-	for (int i = 1; i < num_bytes; i++)
-	{
-		const char byte = *(p + i);
-		if ((byte & 0b1100'0000) != 0b1000'0000)
-		{
-			// Invalid continuation byte
-			++p;
-			return Character::Null;
-		}
-
-		code = ((code << 6) | (byte & 0b0011'1111));
-	}
-
-	return static_cast<Character>(code);
-}
-
-StringIteratorU8::StringIteratorU8(const std::string& string) : view(string), p(view.begin())
-{}
-StringIteratorU8& StringIteratorU8::operator++() {
-	assert(p < view.end());
-	++p;
-	SeekForward();
-	return *this;
-}
-
-inline void StringIteratorU8::SeekForward() {
-	p = StringUtilities::SeekForwardUTF8(p, view.end());
-}
-
 
 template <>
 float FromString<float>(const std::string& str, float def) {

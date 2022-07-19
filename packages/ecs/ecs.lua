@@ -88,9 +88,6 @@ return function (w, package)
             return w:_import(objname, package, name)
         end
     end
-    function ecs.create_hitch(v)
-        return w:_create_hitch(nil, v)
-    end
     function ecs.create_entity(v)
         return w:_create_entity(package, nil, v)
     end

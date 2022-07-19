@@ -12,17 +12,38 @@ local skeleton_test_group_id<const> = 1001
 
 local function create_simple_test_group()
     local defgroup = ecs.group(0)
-    defgroup:create_hitch{
-        t = {0, 3, 0},
-        children = hitch_test_group_id,
+    defgroup:create_entity {
+        policy = "ant.scene|hitch_object",
+        data = {
+            scene = {
+                t = {0, 3, 0},
+            },
+            hitch = {
+                group = hitch_test_group_id
+            },
+        }
     }
-    defgroup:create_hitch{
-        t = {1, 2, 0},
-        children = hitch_test_group_id,
+    defgroup:create_entity {
+        policy = "ant.scene|hitch_object",
+        data = {
+            scene = {
+                t = {1, 2, 0},
+            },
+            hitch = {
+                group = hitch_test_group_id
+            },
+        }
     }
-    defgroup:create_hitch{
-        t = {0, 0, 3},
-        children = hitch_test_group_id,
+    defgroup:create_entity {
+        policy = "ant.scene|hitch_object",
+        data = {
+            scene = {
+                t = {0, 0, 3},
+            },
+            hitch = {
+                group = hitch_test_group_id
+            },
+        }
     }
 
     local static_group = ecs.group(hitch_test_group_id)
@@ -76,18 +97,33 @@ local change_hitch_eid
 
 local function create_skeleton_test_group()
     --dynamic
-    ecs.create_hitch{
-        s = 0.1,
-        t = {0.0, 0.0, -5.0},
-        children = skeleton_test_group_id,
+    ecs.create_entity {
+        policy = "ant.scene|hitch_object",
+        data = {
+            scene = {
+                s = 0.1,
+                t = {0.0, 0.0, -5.0},
+            },
+            hitch = {
+                group = skeleton_test_group_id
+            },
+        }
     }
 
-    change_hitch_eid = ecs.create_hitch{
-        s = 0.1,
-        r = {0.0, 0.8, 0.0},
-        t = {5.0, 0.0, 0.0},
-        children = skeleton_test_group_id,
+    change_hitch_eid = ecs.create_entity {
+        policy = "ant.scene|hitch_object",
+        data = {
+            scene = {
+                s = 0.1,
+                r = {0.0, 0.8, 0.0},
+                t = {5.0, 0.0, 0.0},
+            },
+            hitch = {
+                group = skeleton_test_group_id
+            },
+        }
     }
+
     local dynamic_group = ecs.group(skeleton_test_group_id)
     dynamic_group:enable "scene_update"
 

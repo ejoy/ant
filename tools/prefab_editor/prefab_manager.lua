@@ -560,7 +560,13 @@ function m:add_prefab(filename)
     local prefab
     local parent = gizmo.target_eid or self.root
     local group_id = get_group_id()
-    local v_root = ecs.create_hitch({parent = parent, children = group_id})
+    local v_root = ecs.create_entity {
+        policy = "ant.scene|hitch_object",
+        data = {
+            scene = { parent = parent },
+            hitch = { group = group_id },
+        }
+    }
     prefab = ecs.group(group_id):create_instance(prefab_filename)
     self.entities[#self.entities+1] = v_root
     prefab.on_ready = function(inst)

@@ -51,25 +51,20 @@ end
 
 function sys:update_slot()
 	for v in w:select "slot:in scene:update id:in" do
-        --TODO: slot.offset_srt is duplicate with entity.scene, not need to keep this srt in slot
         local slot = v.slot
-        if not slot.joint_index and slot.joint_name and slot.pose then
-            local ske = slot.pose.skeleton
-            slot.joint_index = ske._handle:joint_index(slot.joint_name)	
-        end
-        local follow_flag = assert(slot.follow_flag)
-        local pose_result = slot.pose and slot.pose.pose_result--slot.anim_eid and world:entity(slot.anim_eid).anim_ctrl.pose_result or slot.pose_result
+        local pose_result = slot.pose and slot.pose.pose_result
         if pose_result then
+            if not slot.joint_index and slot.joint_name then
+                slot.joint_index = slot.pose.skeleton._handle:joint_index(slot.joint_name)
+            end
             local slot_matrix
+            local follow_flag = assert(slot.follow_flag)
             if follow_flag == 1 or follow_flag == 2 then
                 if slot.joint_index then
                     local adjust_mat = calc_pose_mat(pose_result, slot)
                     if follow_flag == 1 then
                         slot_matrix = math3d.set_index(mc.IDENTITY_MAT, 4, math3d.index(adjust_mat, 4))
                     else
-                        -- local r, t = math3d.index(adjust_mat, 3, 4)
-                        -- r = math3d.torotation(r)
-                        -- fixed rotation bug
                         local _, r, t = math3d.srt(adjust_mat)
                         slot_matrix = math3d.matrix{r=r, t=t}
                     end
@@ -85,9 +80,7 @@ function sys:update_slot()
                 ]]
             end
             if slot_matrix then
-                -- local wm = v.scene.worldmat
-                -- wm.m = math3d.mul(wm, slot_matrix)
-                iom.set_srt_matrix(v, slot_matrix)
+                iom.set_srt_offset_matrix(v, slot_matrix)
             end
         end
     end

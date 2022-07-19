@@ -78,29 +78,6 @@ local function create_scene_entity(w, group)
     return eid
 end
 
-function world:_create_hitch(group, v)
-    local w = self
-    local eid = getentityid(w)
-    local data = {
-        id = eid,
-        group = group or 0,
-        scene = {
-            s = v.s,
-            r = v.r,
-            t = v.t,
-            parent = v.parent,
-        },
-        scene_needchange = true,
-        hitch = {
-            group = assert(v.children)
-        },
-    }
-    update_group_tag(w, data)
-    w.w:new(data)
-    w.w:group_update()
-    return eid
-end
-
 function world:_create_entity(package, group, v)
     local res = policy.create(self, package, v.policy)
     local data = v.data
@@ -374,9 +351,6 @@ function world:_create_group(id)
     local mt = {}
     local api = {}
     mt.__index = api
-    function api:create_hitch(v)
-        return w:_create_hitch(id, v)
-    end
     function api:create_entity(v)
         return w:_create_entity(package, id, v)
     end

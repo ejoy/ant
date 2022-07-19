@@ -173,9 +173,7 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep)
             },
 		},
     }
-    local group = ecs.group(group_id)
-    local eid = group:create_entity(template)
-    return eid
+    return ecs.group(group_id):create_entity(template)
 end
 
 function imodifier.start(m, desc)
@@ -201,9 +199,9 @@ function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
     local anim_prefab = ecs.create_instance(filename)
     return {
         eid = imodifier.create_srt_modifier(target, group_id, function (time)
-            local anim = world:entity(anim_prefab.tag["*"][2])
+            local anim = world:entity(anim_prefab.tag["*"][1])
             local pr = anim.anim_ctrl.pose_result
-            return pr:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl._current.play_state.play
+            return pr:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl.play_state.play
         end),
         anim_eid = anim_prefab
     }

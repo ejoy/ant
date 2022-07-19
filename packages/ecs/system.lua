@@ -17,15 +17,11 @@ local function sortpairs(t)
     end
 end
 
-local function table_append(t, a)
-	table.move(a, 1, #a, #t+1, t)
-end
-
 local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-local function solve_depend(res, step, pipeline, what)
+local function solve_depend(funcs, symbols, step, pipeline, what)
 	local pl = pipeline[what]
 	if not pl or not pl.value then
 		return
@@ -36,11 +32,14 @@ local function solve_depend(res, step, pipeline, what)
 			if step[name] == false then
 				error(("pipeline has duplicate step `%s`"):format(name))
 			elseif step[name] ~= nil then
-				table_append(res, step[name])
+				for _, s in ipairs(step[name]) do
+					funcs[#funcs+1] = s.func
+					symbols[#symbols+1] = s.symbol
+				end
 				--step[name] = false
 			end
 		elseif type == "pipeline" then
-			solve_depend(res, step, pipeline, name)
+			solve_depend(funcs, symbols, step, pipeline, name)
 		end
 	end
 end
@@ -53,13 +52,13 @@ function system.solve(w)
 		mark[k] = true
 		return obj
 	end})
-	local ecs_world = w._ecs_world
 	for fullname, s in sortpairs(w._class.system) do
-		local decl = w._decl.system[fullname]
 		local packname, name = splitname(fullname)
-		local proxy = decl.c and ecs_world or {}
 		for step_name, func in pairs(s) do
-			table.insert(res[step_name], { func, proxy, name, step_name, packname })
+			table.insert(res[step_name], {
+				func = func,
+				symbol = packname .. "|" .. name .. "." .. step_name,
+			})
 		end
 	end
 	setmetatable(res, nil)
@@ -80,53 +79,26 @@ function system.solve(w)
 	w._systems = res
 end
 
+local function emptyfunc(info)
+	local lines = info.activelines
+	return next(lines, next(lines)) == nil
+end
+
 function system.lists(w, what)
-	local res = {}
-	solve_depend(res, w._systems, w._decl.pipeline, what)
-	return res
-end
-
-local switch_mt = {}; switch_mt.__index = switch_mt
-
-function switch_mt:enable(name, enable)
-	if enable ~= false then
-		enable = nil
-	end
-	if self[name] ~= enable then
-		self.__needupdate = true
-		self[name] = enable
-	end
-end
-
-function switch_mt:update()
-	if self.__needupdate then
-		local index = 1
-		local all = self.__all
-		local list = self.__list
-		for i = 1, #all do
-			local name = all[i][5] .. "|" .. all[i][3]
-			if self[name] ~= false then
-				-- enable it
-				list[index] = all[i]
-				index = index + 1
+	local funcs = {}
+	local symbols = {}
+	solve_depend(funcs, symbols, w._systems, w._decl.pipeline, what)
+	if w.args.DEBUG then
+		for i, f in ipairs(funcs) do
+			local info = debug.getinfo(f, "SL")
+			if info.what ~= "C" then
+				if emptyfunc(info) then
+					log.warn(("`%s` is an empty method. (%s:%d)"):format(symbols[i], info.source:sub(2), info.linedefined))
+				end
 			end
 		end
-		for i = index, #list do
-			list[i] = nil
-		end
-		self.__needupdate = nil
 	end
-end
-
-function system.list_switch(list)
-	local all_list = {}
-	for k,v in pairs(list) do
-		all_list[k] = v
-	end
-	return setmetatable({
-		__list = list,
-		__all = all_list,
-	} , switch_mt )
+	return funcs, symbols
 end
 
 return system
