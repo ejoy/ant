@@ -3,6 +3,7 @@ local serialize = import_package "ant.serialize"
 local math3d = require "math3d"
 local bgfx = require "bgfx"
 local declmgr = import_package "ant.render".declmgr
+local fs = require "filesystem"
 
 local proxy_vb = {}
 function proxy_vb:__index(k)
@@ -64,7 +65,11 @@ local function create_bounding(bounding)
 end
 
 local function loader(filename)
-    local c = cr.read_file(filename)
+    local c
+    do
+        local _ <close> = fs.switch_sync()
+        c = cr.read_file(filename)
+    end
     local mesh = serialize.unpack(c)
     create_bounding(mesh.bounding)
     return init(mesh)
