@@ -56,7 +56,7 @@ namespace lua_struct {
             v.t = decltype(v.t)(lua_touserdata(L, -1));
         } else if (type == LUA_TNUMBER){
             const auto handle = (uint32_t)lua_tointeger(L, -1);
-            auto subtype = BGFX_LUAHANDLE_SUBTYPE(handle);
+            auto subtype = (handle >> 16)&0xff;
             if (subtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER ||
                 subtype == BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS || 
                 subtype == BGFX_HANDLE_DYNAMIC_INDEX_BUFFER || 
@@ -175,9 +175,9 @@ lmesh_get_ib(lua_State *L){
     lua_pushinteger(L, m->ib.start);
     lua_pushinteger(L, m->ib.num);
     if (m->ib.type == mesh::BT_dynamic){
-        lua_pushinteger(L, BGFX_LUAHANDLE(DYNAMIC_VERTEX_BUFFER, m->ib.d));
+        lua_pushinteger(L, BGFX_LUAHANDLE(DYNAMIC_INDEX_BUFFER, m->ib.d));
     } else if (m->ib.type == mesh::BT_static){
-        lua_pushinteger(L, BGFX_LUAHANDLE(VERTEX_BUFFER, m->ib.s));
+        lua_pushinteger(L, BGFX_LUAHANDLE(INDEX_BUFFER, m->ib.s));
     } else if (m->ib.type == mesh::BT_transient) {
         lua_pushlightuserdata(L, m->ib.t);
     }
