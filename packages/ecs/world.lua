@@ -12,12 +12,24 @@ function world:pipeline_func(what)
 		return function() end
 	end
 	local ecs_world = self._ecs_world
+
+	local STAT <const> = false
+	if STAT and what == "_update" then
+		return function()
+			for i = 1, #funcs do
+				local f = funcs[i]
+				local symbol = symbols[i]
+				--local _ <close> = self:memory_stat(symbol)
+				local _ <close> = self:cpu_stat(symbol)
+				f(ecs_world)
+			end
+			self:print_cpu_stat(0, 10)
+		end
+	end
+
 	return function()
 		for i = 1, #funcs do
 			local f = funcs[i]
-			--local symbol = symbols[i]
-			--local _ <close> = self:memory_stat(symbol)
-			--local _ <close> = self:cpu_stat(symbol)
 			f(ecs_world)
 		end
 	end
@@ -103,13 +115,13 @@ function world:print_cpu_stat(skip, delta)
 	w._cpu_stat.frame = frame
 
 	if frame <= skip then
-		w:reset_cpu_stat()
+		w._cpu_stat.total = {}
 		return
 	elseif frame % delta ~= 0 then
 		return
 	end
 
-	print_cpu_stat(w, frame)
+	print_cpu_stat(w, frame-skip)
 end
 
 function world:pipeline_init()
