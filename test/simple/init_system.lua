@@ -36,7 +36,4 @@ function m:init_world()
     create_plane()
     irq.set_view_clear_color("main_queue", 0xff0000ff)
     ecs.create_instance "/res/scenes.prefab"
-    local camera = ecs.require "camera"
-    world:call(world:entity(camera.root), "set_position", {1, 1, 1})
-    camera:send "hello"
 end
