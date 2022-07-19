@@ -1,8 +1,4 @@
 ---
-prefab: $path ./procedural_sky.prefab
----
-prefab: $path ./plane.prefab
----
 prefab: $path ./light_directional.prefab
----
-prefab: $path ./Fox.model|mesh.prefab
+#---
+#prefab: $path ./Fox.model|mesh.prefab

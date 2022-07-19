@@ -29,7 +29,7 @@ void main()
 	v_viewDir = normalize(rayEnd.xyz - rayStart.xyz);
 	v_viewDir.y = abs(v_viewDir.y);
 
-	gl_Position = vec4(a_position.xy, 1.0, 1.0);
+	gl_Position = vec4(a_position.xy, 0.0, 1.0);
 
 	vec3 lightDir = u_sunDirection.xyz;
 	vec3 skyDir = vec3(0.0, 1.0, 0.0);
