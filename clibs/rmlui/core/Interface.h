@@ -14,7 +14,7 @@ class Element;
 class EventListener;
 class Document;
 
-using FontFaceHandle = uintptr_t;
+using FontFaceHandle = uint64_t;
 using TextureHandle = uintptr_t;
 
 struct Line {
@@ -47,7 +47,7 @@ public:
 
 class FontEngineInterface {
 public:
-	virtual FontFaceHandle GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, int size) = 0;
+	virtual FontFaceHandle GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, uint32_t size) = 0;
 	virtual int GetLineHeight(FontFaceHandle handle) = 0;
 	virtual int GetBaseline(FontFaceHandle handle) = 0;
 	virtual void GetUnderline(FontFaceHandle handle, float& position, float &thickness) = 0;

@@ -21,14 +21,13 @@
 
 struct RmlInterface {
 	lua_plugin      m_plugin;
-    FontEngine      m_font;
+    Rml::FontEngine m_font;
     Renderer        m_renderer;
     RmlInterface(lua_State* L, RmlContext* context)
         : m_plugin(L)
 		, m_font(context)
         , m_renderer(context)
-    {
-    }
+    {}
 };
 
 struct RmlWrapper {
