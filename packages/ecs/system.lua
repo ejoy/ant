@@ -80,9 +80,25 @@ function system.solve(w)
 	w._systems = res
 end
 
+local function emptyfunc(info)
+	local lines = info.activelines
+	return next(lines, next(lines)) == nil
+end
+
 function system.lists(w, what)
 	local res = {}
 	solve_depend(res, w._systems, w._decl.pipeline, what)
+	if w.args.DEBUG then
+		for _, v in ipairs(res) do
+			local info = debug.getinfo(v[1], "SL")
+			if info.what ~= "C" then
+				if emptyfunc(info) then
+					local key = v[5] .. "|" .. v[3] .. "." .. v[4]
+					log.warn(("`%s` is an empty method. (%s:%d)"):format(key, info.source:sub(2), info.linedefined))
+				end
+			end
+		end
+	end
 	return res
 end
 
