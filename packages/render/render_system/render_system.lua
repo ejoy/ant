@@ -219,7 +219,8 @@ function render_sys:render_submit()
 		bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
 
 		-- qe.render_args = {
-		-- 	queue_name			= w:component_id(qe.queue_name),
+		--  visible_id			= w:component_id(qe.queue_name .. "_visible"),
+		--  cull_id				= w:component_id(qe.queue_name .. "_cull"),
 		-- 	viewid				= viewid,
 		-- 	primitive_filter	= pack_filters(qe.primitive_filter),
 		-- }
@@ -230,6 +231,9 @@ function render_sys:render_submit()
 			primitive_filter	= qe.primitive_filter,
 		}
 	end
+
+	-- local rendercore = require "render.core"
+	-- rendercore.submit(world._ecs_world)
 
 	for e in w:select "render_args:in" do
 		local args = e.render_args
