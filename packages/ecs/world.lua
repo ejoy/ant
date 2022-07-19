@@ -8,7 +8,7 @@ world.__index = world
 
 function world:pipeline_func(what)
 	local funcs, symbols = system.lists(self, what)
-	if not funcs then
+	if not funcs or #funcs == 0 then
 		return function() end
 	end
 	local ecs_world = self._ecs_world
@@ -127,7 +127,6 @@ end
 function world:pipeline_init()
 	self:pipeline_func "_init" ()
 	self.pipeline_update = self:pipeline_func "_update"
-	self.pipeline_update_end = self:pipeline_func "update_end"
 end
 
 function world:pipeline_exit()
