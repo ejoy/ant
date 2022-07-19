@@ -154,11 +154,33 @@ lmesh_set_ib_range(lua_State *L){
 
 static int
 lmesh_get_vb(lua_State *L){
+    auto m = to_mesh(L, 1);
+    lua_pushinteger(L, m->vb.start);
+    lua_pushinteger(L, m->vb.num);
+    if (m->vb.type == mesh::BT_dynamic){
+        lua_pushinteger(L, BGFX_LUAHANDLE(DYNAMIC_VERTEX_BUFFER, m->vb.d));
+    } else if (m->vb.type == mesh::BT_static){
+        lua_pushinteger(L, BGFX_LUAHANDLE(VERTEX_BUFFER, m->vb.s));
+    } else if (m->vb.type == mesh::BT_transient) {
+        lua_pushlightuserdata(L, m->vb.t);
+    }
     return 3;
 }
 
 static int
 lmesh_get_ib(lua_State *L){
+    auto m = to_mesh(L, 1);
+    if (m->ib.type == mesh::BT_none)
+        return 0;
+    lua_pushinteger(L, m->ib.start);
+    lua_pushinteger(L, m->ib.num);
+    if (m->ib.type == mesh::BT_dynamic){
+        lua_pushinteger(L, BGFX_LUAHANDLE(DYNAMIC_VERTEX_BUFFER, m->ib.d));
+    } else if (m->ib.type == mesh::BT_static){
+        lua_pushinteger(L, BGFX_LUAHANDLE(VERTEX_BUFFER, m->ib.s));
+    } else if (m->ib.type == mesh::BT_transient) {
+        lua_pushlightuserdata(L, m->ib.t);
+    }
     return 3;
 }
 

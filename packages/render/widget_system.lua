@@ -83,21 +83,24 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 		return
 	end
 	local e = w:singleton("widget_drawer", "render_object:in")
-	local rc = e.render_object
-	local vbdesc, ibdesc = rc.vb, rc.ib
+	local m = e.render_object.mesh
+	local vbstart, vbnum, vbhandle = m:get_vb()
 
-	local vertex_offset = vbdesc.num
-	bgfx.update(vbdesc.handles[1], vertex_offset, bgfx.memory_buffer(vbfmt, vb));
-	vbdesc.num = vertex_offset + numvertices
+	local vertex_offset = vbnum
+	bgfx.update(vbhandle, vertex_offset, bgfx.memory_buffer(vbfmt, vb));
+	vbnum = vertex_offset + numvertices
+	m:set_vb_range(vbstart, vbnum)
 
 	local numindices = #ib
 	if numindices ~= 0 then
-		local index_offset = ibdesc.num
+		local ibstart, ibnum, ibhandle = m:get_ib()
+		local index_offset = ibnum
 		if index_offset == 0 then
 			offset_ib(index_offset, ib)
 		end
-		bgfx.update(ibdesc.handle, index_offset, bgfx.memory_buffer(ibfmt, ib))
-		ibdesc.num = index_offset + numindices
+		bgfx.update(ibhandle, index_offset, bgfx.memory_buffer(ibfmt, ib))
+		ibnum = index_offset + numindices
+		m:set_ib_range(ibstart, ibnum)
 	end
 end
 
