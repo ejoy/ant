@@ -239,10 +239,10 @@ function iani.step(anim_e, s_delta, absolute)
 	else
 		play_state.ratio = next_time / duration
 	end
-	-- local pr = ctrl.pose_result
-	-- pr:setup(anim_e.skeleton._handle)
-	-- pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, ctrl.weight)
-	-- ctrl.dirty = true
+	local pr = ctrl.pose_result
+	pr:setup(anim_e.skeleton._handle)
+	pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, ctrl.weight)
+	ctrl.dirty = true
 end
 
 function iani.set_time(eid, second)
