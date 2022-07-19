@@ -9,31 +9,6 @@ namespace ecs_api {
     template <typename T>
     struct component {};
 
-    template <typename ...Components>
-    struct entity_;
-
-    template <>
-    struct entity_<> {};
-
-    template <typename Component, typename ...Components>
-    struct entity_<Component, Components...> : public entity_<Components...> {
-        Component* c;
-        template <typename T>
-        T& get() {
-            if constexpr (std::is_same<T, Component>::value) {
-                return *c;
-            }
-            else {
-                return entity_<Components...>::template get<T>();
-            }
-        }
-    };
-
-    template <typename ...Components>
-    struct entity : public entity_<Components...> {
-        int index;
-    };
-
     namespace impl {
         template <typename Component>
         Component* sibling(ecs_context* ctx, int mainkey, int i) {
@@ -48,61 +23,100 @@ namespace ecs_api {
             }
             return c;
         }
+    }
 
-        template <typename ...Components>
-        struct visit_entity_;
+    template <typename ...Components>
+    struct entity_;
 
-        template <>
-        struct visit_entity_ <> {
-            bool operator()(entity_<>& e, ecs_context* ctx, int mainkey, int i) { return true; }
-            void operator()(entity_<>& e, ecs_context* ctx, int mainkey, int i, lua_State* L) {}
-        };
+    template <>
+    struct entity_<> {};
 
-        template <typename Component, typename ...Components>
-        struct visit_entity_<Component, Components...> {
-            bool operator()(entity_<Component, Components...>& e, ecs_context* ctx, int mainkey, int i) {
-                e.c = sibling<Component>(ctx, mainkey, i);
-                if (e.c == NULL) {
-                    return false;
-                }
-                return visit_entity_<Components...>()(e, ctx, mainkey, i);
-            }
-            void operator()(entity_<Component, Components...>& e, ecs_context* ctx, int mainkey, int i, lua_State* L) {
-                e.c = sibling<Component>(ctx, mainkey, i, L);
-                return visit_entity_<Components...>()(e, ctx, mainkey, i, L);
-            }
-        };
-
-        enum class visit_result {
-            succ,
-            failed,
-            eof,
-        };
-
-        template <typename MainKey, typename ...SubKey>
-        visit_result visit_entity(ecs_context* ctx, int i, entity_<MainKey, SubKey...>& e) {
-            e.c = (MainKey*)entity_iter(ctx, component<MainKey>::id, i);
-            if (!e.c) {
-                return visit_result::eof;
-            }
-            if (visit_entity_<SubKey...>()(e, ctx, component<MainKey>::id, i)) {
-                return visit_result::succ;
+    template <typename Component, typename ...Components>
+    struct entity_<Component, Components...> : public entity_<Components...> {
+    public:
+        template <typename T>
+        T& get() {
+            if constexpr (std::is_same<T, Component>::value) {
+                return *c;
             }
             else {
-                return visit_result::failed;
+                return entity_<Components...>::template get<T>();
             }
         }
 
-        template <typename MainKey, typename ...SubKey>
-        bool visit_entity(ecs_context* ctx, int i, entity_<MainKey, SubKey...>& e, lua_State* L) {
-            e.c = (MainKey*)entity_iter(ctx, component<MainKey>::id, i);
-            if (!e.c) {
+        bool init_sibling(ecs_context* ctx, int mainkey, int i) {
+            auto v = impl::sibling<Component>(ctx, mainkey, i);
+            if (!v) {
                 return false;
             }
-            visit_entity_<SubKey...>()(e, ctx, component<MainKey>::id, i, L);
+            c = v;
+            if constexpr (sizeof...(Components) > 0) {
+                return entity_<Components...>::init_sibling(ctx, mainkey, i);
+            }
             return true;
         }
+        void init_sibling(ecs_context* ctx, int mainkey, int i, lua_State* L) {
+            auto v = impl::sibling<Component>(ctx, mainkey, i, L);
+            c = v;
+            if constexpr (sizeof...(Components) > 0) {
+                return entity_<Components...>::init_sibling(ctx, mainkey, i, L);
+            }
+        }
+        bool init(ecs_context* ctx, int& i) {
+            for (;;++i) {
+                auto v = (Component*)entity_iter(ctx, component<Component>::id, i);
+                if (!v) {
+                    return false;
+                }
+                c = v;
+                if constexpr (sizeof...(Components) == 0) {
+                    return true;
+                }
+                if (entity_<Components...>::init_sibling(ctx, component<Component>::id, i)) {
+                    return true;
+                }
+            }
+        }
+        bool init(ecs_context* ctx, int i, lua_State* L) {
+            auto v = (Component*)entity_iter(ctx, component<Component>::id, i);
+            if (!v) {
+                return false;
+            }
+            c = v;
+            if constexpr (sizeof...(Components) > 0) {
+                entity_<Components...>::init_sibling(ctx, component<Component>::id, i, L);
+            }
+            return true;
+        }
+    private:
+        Component* c;
+    };
 
+    template <typename ...Components>
+    struct entity : public entity_<Components...> {
+    public:
+        int getid() const {
+            return index;
+        }
+        bool init(ecs_context* ctx, int& i) {
+            auto r = entity_<Components...>::init(ctx, i);
+            if (r) {
+                index = i;
+            }
+            return r;
+        }
+        bool init(ecs_context* ctx, int i, lua_State* L) {
+            auto r = entity_<Components...>::init(ctx, i, L);
+            if (r) {
+                index = i;
+            }
+            return r;
+        }
+    private:
+        int index;
+    };
+
+    namespace impl {
         template <typename ...Args>
         struct strict_select_range {
             struct iterator {
@@ -134,10 +148,7 @@ namespace ecs_api {
                 }
                 iterator& operator++() {
                     index++;
-                    if (visit_entity(ctx, index, e, L)) {
-                        e.index = index;
-                    }
-                    else {
+                    if (!e.init(ctx, index, L)) {
                         ctx = NULL;
                         L = NULL;
                     }
@@ -158,7 +169,7 @@ namespace ecs_api {
             {}
 
             iterator begin() {
-                if (visit_entity(ctx, 0, e, L)) {
+                if (e.init(ctx, 0, L)) {
                     return {ctx, L, e};
                 }
                 return {e};
@@ -203,19 +214,8 @@ namespace ecs_api {
                     return e;
                 }
                 void next() {
-                    for (;;) {
-                        auto r = visit_entity(ctx, index, e);
-                        switch (r) {
-                        case visit_result::succ:
-                            e.index = index;
-                            return;
-                        case visit_result::failed:
-                            index++;
-                            break;
-                        case visit_result::eof:
-                            ctx = NULL;
-                            return;
-                        }
+                    if (!e.init(ctx, index)) {
+                        ctx = NULL;
                     }
                 }
             };
@@ -248,29 +248,29 @@ namespace ecs_api {
 
         template <typename Component, typename MainKey, typename ...SubKey>
         Component* sibling(entity<MainKey, SubKey...> const& e) {
-            return impl::sibling<Component>(ecs, component<MainKey>::id, e.index);
+            return impl::sibling<Component>(ecs, component<MainKey>::id, e.getid());
         }
 
         template <typename Component, typename MainKey, typename ...SubKey>
         void enable_tag(entity<MainKey, SubKey...> const& e) {
             static_assert(component<Component>::tag);
-            entity_enable_tag(ecs, component<MainKey>::id, e.index, component<Component>::id);
+            entity_enable_tag(ecs, component<MainKey>::id, e.getid(), component<Component>::id);
         }
 
         template <typename MainKey, typename ...SubKey>
         void enable_tag(entity<MainKey, SubKey...> const& e, int id) {
-            entity_enable_tag(ecs, component<MainKey>::id, e.index, id);
+            entity_enable_tag(ecs, component<MainKey>::id, e.getid(), id);
         }
 
         template <typename Component, typename MainKey, typename ...SubKey>
         void disable_tag(entity<MainKey, SubKey...> const& e) {
             static_assert(component<Component>::tag);
-            entity_disable_tag(ecs, component<MainKey>::id, e.index, component<Component>::id);
+            entity_disable_tag(ecs, component<MainKey>::id, e.getid(), component<Component>::id);
         }
 
         template <typename MainKey, typename ...SubKey>
         void disable_tag(entity<MainKey, SubKey...> const& e, int id) {
-            entity_disable_tag(ecs, component<MainKey>::id, e.index, id);
+            entity_disable_tag(ecs, component<MainKey>::id, e.getid(), id);
         }
 
         template <typename Component>
@@ -280,7 +280,7 @@ namespace ecs_api {
 
         template <typename MainKey, typename ...SubKey>
         void remove(entity<MainKey, SubKey...> const& e) {
-            entity_remove(ecs, component<MainKey>::id, e.index);
+            entity_remove(ecs, component<MainKey>::id, e.getid());
         }
 
         template <typename ...Args>
@@ -294,24 +294,15 @@ namespace ecs_api {
         }
 
         template <typename ...Args>
-        bool visit_entity(entity<Args...>& e, int i, lua_State* L) {
-            return impl::visit_entity(ecs, i, e, L);
+        bool init_entity(entity<Args...>& e, int i, lua_State* L) {
+            return e.init(ecs, i, L);
         }
 
         template <typename ...Args>
         bool has() {
             entity<Args...> e;
-            for (int index = 0;; ++index) {
-                auto r = impl::visit_entity(ecs, index, e);
-                switch (r) {
-                case impl::visit_result::succ:
-                    return true;
-                case impl::visit_result::failed:
-                    break;
-                case impl::visit_result::eof:
-                    return false;
-                }
-            }
+            int index = 0;
+            return e.init(ecs, index);
         }
     };
 }
