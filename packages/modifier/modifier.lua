@@ -179,6 +179,7 @@ end
 function imodifier.start(m, desc)
     local mf = world:entity(m.eid).modifier
     mf.continue = true
+    mf.keep = desc.forwards
     if m.anim_eid then
         if desc.name then
             iani.play(m.anim_eid, desc)
