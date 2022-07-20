@@ -675,6 +675,16 @@ aabb_from_index(lua_State *L, struct math_context *M, int index) {
 }
 
 static inline math_t
+matrix_from_index(lua_State *L, struct math_context *M, int index) {
+	return object_from_index(L, M, index, MATH_TYPE_MAT, matrix_from_table);
+}
+
+static inline math_t
+quat_from_index(lua_State *L, struct math_context *M, int index) {
+	return object_from_index(L, M, index, MATH_TYPE_QUAT, quat_from_table);
+}
+
+static inline math_t
 frustum_planes_from_index(lua_State *L, struct math_context *M, int index){
 	math_t planes = object_from_index(L, M, index, MATH_TYPE_VEC4, vector_from_table);
 	if (math_size(M, planes) != 6)
@@ -690,14 +700,64 @@ frustum_points_from_index(lua_State *L, struct math_context *M, int index){
 	return points;
 }
 
-static inline math_t
-matrix_from_index(lua_State *L, struct math_context *M, int index) {
-	return object_from_index(L, M, index, MATH_TYPE_MAT, matrix_from_table);
+typedef math_t (*from_index)(lua_State *, struct math_context *, int);
+
+static math_t
+create_array(lua_State *L, struct math_context *M, int array_index, int type, int asize, int esize, from_index func) {
+	math_t result = math_import(M, NULL, type, asize);
+	float *v = math_init(M, result);
+	int i;
+	for (i=1;i<=asize;i++) {
+		lua_geti(L, array_index, i);
+		math_t e = func(L, M, -1);
+		lua_pop(L, 1);
+		memcpy(v, math_value(M, e), esize * sizeof(float));
+		v += esize;
+	}
+
+	return result;
 }
 
 static inline math_t
-quat_from_index(lua_State *L, struct math_context *M, int index) {
-	return object_from_index(L, M, index, MATH_TYPE_QUAT, quat_from_table);
+array_from_index(lua_State *L, struct math_context *M, int index, int type, int expsize) {
+	if (lua_isuserdata(L, index)) {
+		math_t id = get_id(L, M, index);
+		if (math_type(M, id) != type) {
+			luaL_error(L, "Type mismatch %s != %s", math_typename(type), math_typename(math_type(M, id)));
+		}
+		if (expsize != 0 && math_size(M, id) != expsize) {
+			luaL_error(L, "Size mismatch %d != %d", expsize, math_size(M, id));
+		}
+		return id;
+	}
+	luaL_checktype(L, index, LUA_TTABLE);
+	int n = lua_rawlen(L, index);
+	if (expsize != 0 && expsize != n) {
+		luaL_error(L, "Need size of table %d/%d", expsize, n);
+	}
+
+	from_index func;
+	int esize;
+
+	switch (type) {
+	case MATH_TYPE_VEC4:
+		func = vector_from_index;
+		esize = 4;
+		break;
+	case MATH_TYPE_MAT:
+		func = matrix_from_index;
+		esize = 16;
+		break;
+	case MATH_TYPE_QUAT:
+		func = quat_from_index;
+		esize = 4;
+		break;
+	default:
+		luaL_error(L, "Unsupport array type %s", math_typename(type));
+		return MATH_NULL;
+	}
+
+	return create_array(L, M, index, type, n, esize, func);
 }
 
 static math_t
@@ -783,6 +843,27 @@ lquaternion(lua_State *L) {
 	}
 
 	return new_object(L, MATH_TYPE_QUAT, quat_from_table, 4);
+}
+
+static int
+larray_vector(lua_State *L) {
+	struct math_context *M = GETMC(L);
+	lua_pushmath(L, array_from_index(L, M, 1, MATH_TYPE_VEC4, 0));
+	return 1;
+}
+
+static int
+larray_matrix(lua_State *L) {
+	struct math_context *M = GETMC(L);
+	lua_pushmath(L, array_from_index(L, M, 1, MATH_TYPE_MAT, 0));
+	return 1;
+}
+
+static int
+larray_quat(lua_State *L) {
+	struct math_context *M = GETMC(L);
+	lua_pushmath(L, array_from_index(L, M, 1, MATH_TYPE_QUAT, 0));
+	return 1;
 }
 
 static int
@@ -1726,20 +1807,6 @@ lfrustum_planes(lua_State *L) {
 	return 1;
 }
 
-// todo: use array instead of table
-static inline void
-fetch_vectors_from_table(lua_State *L, struct math_context * M, int index, int checknum, math_t * vectors) {
-	const size_t num = getlen(L, index);
-	if (num != checknum){
-		luaL_error(L, "table need contain %d planes:%d", checknum, num);
-	}
-	int ii;
-	for (ii = 0; ii < num; ++ii) {
-		lua_geti(L, index, ii+1);
-		vectors[ii] = vector_from_index(L, M, -1);
-		lua_pop(L, 1);
-	}
-}
 static int
 lfrustum_intersect_aabb(lua_State *L) {
 	struct math_context *M = GETMC(L);
@@ -2086,6 +2153,9 @@ init_math3d_api(lua_State *L, struct math3d_api *M) {
 		{ "matrix", lmatrix },
 		{ "vector", lvector },
 		{ "quaternion", lquaternion },
+		{ "array_vector", larray_vector },
+		{ "array_matrix", larray_matrix },
+		{ "array_quat", larray_quat },
 		{ "array_index", larray_index },
 		{ "array_size", larray_size },
 		{ "index", lindex },

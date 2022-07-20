@@ -374,3 +374,14 @@ do
 	print(math3d.tostring(pp2))
 	print(math3d.tostring(pp3))
 end
+
+print "==== array ====="
+do
+	local array = math3d.array_vector {
+		{ 1,2,3,4 },
+		math3d.vector ( 42, 0 , 0 ),
+	}
+	print(math3d.tostring(array))
+	assert(math3d.array_size(array) == 2)
+	print(math3d.tostring(math3d.array_index(array, 0)))
+end
