@@ -48,7 +48,7 @@ lcull(lua_State *L){
 	define_plane_array(const float*, cparr, planes);
 	math3d_frustum_planes(w->math3d->LS, vpmat, parr, math3d_homogeneous_depth());
 	for (auto e : ecs.select<ecs::view_visible, ecs::render_object, ecs::scene>()){
-		auto s = e.get<ecs::scene>();
+		auto& s = e.get<ecs::scene>();
 		int type;
 		const float* aabb = math3d_value(w->math3d, s.scene_aabb, &type);
 		if (type != LINEAR_TYPE_NULL){
@@ -58,11 +58,11 @@ lcull(lua_State *L){
 
 			if (math3d_frustum_intersect_aabb(w->math3d->LS, cparr, aabb) < 0){
 				for (int ii=0; ii<numtab; ++ii){
-					ecs.enable_tag(e, s_cull_tabs[ii]);
+					e.enable_tag(ecs, s_cull_tabs[ii]);
 				}
 			} else {
 				for (int ii=0; ii<numtab; ++ii){
-					ecs.disable_tag(e, s_cull_tabs[ii]);
+					e.disable_tag(ecs, s_cull_tabs[ii]);
 				}
 			}
 		}

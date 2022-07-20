@@ -66,8 +66,8 @@ scene_changed(lua_State *L) {
 		if (s.parent != 0) {
 			parents.insert(s.parent);
 		}
-		ecs.enable_tag<ecs::scene_changed>(e);
-		ecs.disable_tag<ecs::scene_needchange>(e);
+		e.enable_tag<ecs::scene_changed>(ecs);
+		e.disable_tag<ecs::scene_needchange>(ecs);
 	}
 
 	// step.2
@@ -76,20 +76,20 @@ scene_changed(lua_State *L) {
 	for (auto& e : ecs.select<ecs::scene_update, ecs::id>(L)) {
 		auto& id = e.get<ecs::id>();
 		if (parents.contains(id)) {
-			auto s = ecs.sibling<ecs::scene>(e);
+			auto s = e.sibling<ecs::scene>(ecs);
 			if (s) {
 				worldmats.insert_or_assign(id, s->worldmat);
 			}
 		}
-		if (ecs.sibling<ecs::scene_changed>(e)) {
+		if (e.sibling<ecs::scene_changed>(ecs)) {
 			change.insert(id);
 		}
 		else {
-			auto s = ecs.sibling<ecs::scene>(e);
+			auto s = e.sibling<ecs::scene>(ecs);
 			if (s && s->parent != 0) {
 				if (change.contains(s->parent)) {
 					change.insert(id);
-					ecs.enable_tag<ecs::scene_changed>(e);
+					e.enable_tag<ecs::scene_changed>(ecs);
 				}
 			}
 		}
@@ -151,9 +151,9 @@ scene_remove(lua_State *L) {
 	for (auto& e : ecs.select<ecs::scene>(L)) {
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0 && removed.contains(s.parent)) {
-			auto id = ecs.sibling<ecs::id>(e);
-			removed.insert(*id);
-			ecs.remove(e);
+			auto& id = e.sibling<ecs::id>(ecs, L);
+			removed.insert(id);
+			e.remove(ecs);
 		}
 	}
 	return 0;

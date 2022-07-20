@@ -34,13 +34,6 @@ namespace ecs_api {
     template <typename MainKey, typename ...SubKey>
     struct entity {
     public:
-        int getid() const {
-            return index;
-        }
-        template <typename T>
-        T& get() {
-            return *std::get<T*>(c);
-        }
         bool init(ecs_context* ctx, int& i) {
             auto r = init_components(ctx, i);
             if (r) {
@@ -54,6 +47,44 @@ namespace ecs_api {
                 index = i;
             }
             return r;
+        }
+        void remove(ecs_context* ctx) const {
+            entity_remove(ctx, component<MainKey>::id, index);
+        }
+        int getid() const {
+            return index;
+        }
+        template <typename T>
+        T& get() {
+            return *std::get<T*>(c);
+        }
+        template <typename T>
+        T const& get() const {
+            return *std::get<T*>(c);
+        }
+        template <typename T>
+        T* sibling(ecs_context* ctx) const {
+            return impl::sibling<T>(ctx, component<MainKey>::id, index);
+        }
+        template <typename T>
+        T& sibling(ecs_context* ctx, lua_State* L) const {
+            return *impl::sibling<T>(ctx, component<MainKey>::id, index, L);
+        }
+        template <typename Component>
+        void enable_tag(ecs_context* ctx) {
+            static_assert(component<Component>::tag);
+            entity_enable_tag(ctx, component<MainKey>::id, index, component<Component>::id);
+        }
+        void enable_tag(ecs_context* ctx, int id) {
+            entity_enable_tag(ctx, component<MainKey>::id, index, id);
+        }
+        template <typename Component>
+        void disable_tag(ecs_context* ctx) {
+            static_assert(component<Component>::tag);
+            entity_disable_tag(ctx, component<MainKey>::id, index, component<Component>::id);
+        }
+        void disable_tag(ecs_context* ctx, int id) {
+            entity_disable_tag(ctx, component<MainKey>::id, index, id);
         }
     private:
         template <std::size_t Is, typename Component, typename ...Components>
@@ -241,46 +272,13 @@ namespace ecs_api {
     struct context {
         ecs_context* ecs;
 
-        template <typename Component>
-        Component* iter(int index) {
-            return impl::iter<Component>(ecs, index);
-        }
-
-        template <typename Component, typename MainKey, typename ...SubKey>
-        Component* sibling(entity<MainKey, SubKey...> const& e) {
-            return impl::sibling<Component>(ecs, component<MainKey>::id, e.getid());
-        }
-
-        template <typename Component, typename MainKey, typename ...SubKey>
-        void enable_tag(entity<MainKey, SubKey...> const& e) {
-            static_assert(component<Component>::tag);
-            entity_enable_tag(ecs, component<MainKey>::id, e.getid(), component<Component>::id);
-        }
-
-        template <typename MainKey, typename ...SubKey>
-        void enable_tag(entity<MainKey, SubKey...> const& e, int id) {
-            entity_enable_tag(ecs, component<MainKey>::id, e.getid(), id);
-        }
-
-        template <typename Component, typename MainKey, typename ...SubKey>
-        void disable_tag(entity<MainKey, SubKey...> const& e) {
-            static_assert(component<Component>::tag);
-            entity_disable_tag(ecs, component<MainKey>::id, e.getid(), component<Component>::id);
-        }
-
-        template <typename MainKey, typename ...SubKey>
-        void disable_tag(entity<MainKey, SubKey...> const& e, int id) {
-            entity_disable_tag(ecs, component<MainKey>::id, e.getid(), id);
+        operator ecs_context*() {
+            return ecs;
         }
 
         template <typename Component>
         void clear_type() {
             entity_clear_type(ecs, component<Component>::id);
-        }
-
-        template <typename MainKey, typename ...SubKey>
-        void remove(entity<MainKey, SubKey...> const& e) {
-            entity_remove(ecs, component<MainKey>::id, e.getid());
         }
 
         template <typename ...Args>
@@ -291,11 +289,6 @@ namespace ecs_api {
         template <typename ...Args>
         auto select() {
             return impl::select_range<Args...>(ecs);
-        }
-
-        template <typename ...Args>
-        bool init_entity(entity<Args...>& e, int i, lua_State* L) {
-            return e.init(ecs, i, L);
         }
     };
 }
