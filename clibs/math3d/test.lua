@@ -35,6 +35,8 @@ do
 
 	ref1.m = { s = 10, r = { axis = {1,0,0}, r = math.rad(60) },  t = { 1,2,3 } }
 
+	ref1[4] = { 4,5,6 }
+
 	ref2 = math3d.ref()
 
 	ref2.v = math3d.vector(1,2,3,4)

@@ -398,10 +398,26 @@ ref_set_key(lua_State *L){
 	return 0;
 }
 
+static math_t set_index_object(lua_State *L, struct math_context *M, math_t id);
+
+static int
+ref_set_number(lua_State *L){
+	struct refobject *R = lua_touserdata(L, 1);
+	struct math_context *M = GETMC(L);
+	math_t oid = R->id;
+
+	R->id = math_mark(M, set_index_object(L, M, oid));
+	math_unmark(M, oid);
+
+	return 0;
+}
+
 static int
 lref_setter(lua_State *L) {
 	int type = lua_type(L, 2);
 	switch (type) {
+	case LUA_TNUMBER:
+		return ref_set_number(L);
 	case LUA_TSTRING:
 		return ref_set_key(L);
 	default:
@@ -731,7 +747,7 @@ array_from_index(lua_State *L, struct math_context *M, int index, int type, int 
 		return id;
 	}
 	luaL_checktype(L, index, LUA_TTABLE);
-	int n = lua_rawlen(L, index);
+	int n = (int)lua_rawlen(L, index);
 	if (expsize != 0 && expsize != n) {
 		luaL_error(L, "Need size of table %d/%d", expsize, n);
 	}

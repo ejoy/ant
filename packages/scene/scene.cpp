@@ -79,9 +79,12 @@ scene_changed(lua_State *L) {
 		s.worldmat = wm.idx;
 		worldmats.insert_or_assign(id, wm);
 
-		auto aabb = math3d_aabb_transform(math3d->MC, wm, to_math_t(s.aabb));
-		aabb = math_mark(math3d->MC, aabb);
-		s.scene_aabb = aabb.idx;
+		auto aabb = to_math_t(s.aabb);
+		if (!math_isnull(aabb)){
+			aabb = math3d_aabb_transform(math3d->MC, wm, aabb);
+			aabb = math_mark(math3d->MC, aabb);
+			s.scene_aabb = aabb.idx;
+		}
 	}
 
 	return 0;
