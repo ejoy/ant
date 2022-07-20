@@ -95,11 +95,12 @@ end
 
 function ani_sys:end_animation()
 	for e in w:select "anim_ctrl:in" do
-		if e.anim_ctrl.dirty then
-			local pr = e.anim_ctrl.pose_result
+		local ctrl = e.anim_ctrl
+		if ctrl.dirty then
+			local pr = ctrl.pose_result
 			pr:fetch_result()
 			pr:end_animation()
-			e.anim_ctrl.dirty = false
+			ctrl.dirty = false
 		end
 	end
 end

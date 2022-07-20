@@ -134,8 +134,14 @@ lmesh_submit(lua_State *L){
 static int
 lmesh_set_vb_range(lua_State *L){
     auto m = to_mesh(L, 1);
-    lua_struct::unpack(L, 2, m->vb.start);
-    lua_struct::unpack(L, 3, m->vb.num);
+    if (!lua_isnoneornil(L, 2)){
+        lua_struct::unpack(L, 2, m->vb.start);
+    }
+    
+    if (!lua_isnoneornil(L, 3)){
+        lua_struct::unpack(L, 3, m->vb.num);
+    }
+        
     return 0;
 }
 
@@ -143,8 +149,12 @@ static int
 lmesh_set_ib_range(lua_State *L){
     auto m = to_mesh(L, 1);
     if (m->ib.type != mesh::BT_none){
-        lua_struct::unpack(L, 2, m->vb.start);
-        lua_struct::unpack(L, 3, m->vb.num);
+        if (!lua_isnoneornil(L, 2)){
+            lua_struct::unpack(L, 2, m->ib.start);
+        }
+        if (!lua_isnoneornil(L, 3)){
+            lua_struct::unpack(L, 3, m->ib.num);
+        }
     } else {
         luaL_error(L, "mesh index buffer is empty");
     }

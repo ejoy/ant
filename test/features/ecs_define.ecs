@@ -61,7 +61,7 @@ system "init_loader_system"
     .method "init"
     .method "init_world"
     .method "entity_init"
-
+    .method "camera_usage"
 
 system "animation_test_system"
     .implement "animation_test.lua"

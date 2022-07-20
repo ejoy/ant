@@ -117,7 +117,7 @@ local cp_eid, quad_eid
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
-    --ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+    ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
 
     -- local pp = ecs.create_instance "/pkg/ant.resources.binary/meshes/up_box.glb|mesh.prefab"
     -- function pp.on_ready(e)
@@ -138,8 +138,8 @@ function init_loader_sys:init()
 
     --cp_eid = color_palette_test()
 
-    -- quad_eid = ientity.create_quad_lines_entity("quads", {r=math3d.quaternion{0.0, math.pi*0.5, 0.0}}, 
-    --     "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
+    quad_eid = ientity.create_quad_lines_entity("quads", {r=math3d.quaternion{0.0, math.pi*0.5, 0.0}}, 
+        "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
 
     -- create_texture_plane_entity(
     --     {1, 1.0, 1.0, 1.0}, 
@@ -348,21 +348,23 @@ end
 
 local kb_mb = world:sub{"keyboard"}
 
+local mouse_mb = world:sub{"mouse", "LEFT"}
+
 local enable = 1
 function init_loader_sys:entity_init()
     
     for _, key, press in kb_mb:unpack() do
-        if key == "SPACE" and press == 0 then
+        if key == "T" and press == 0 then
+            local e = world:entity(quad_eid)
+            ies.set_state(e, "main_view", true)
+
+            local quad_2 = 2
+            e.render_object.mesh:set_ib_range(nil, quad_2 * 6)
+        elseif key == "SPACE" and press == 0 then
             -- local icw = ecs.import.interface "ant.render|icurve_world"
             -- icw.enable(not icw.param().enable)
 
             --imaterial.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
-
-            -- local e = world:entity(quad_eid)
-            -- ies.set_state(e, "main_view", true)
-            -- local ib = e.render_object.ib
-            -- local quad_2 = 2
-            -- ib.num = quad_2 * 6
             
             if enable == 1 then
                 ecs.group(1):enable "view_visible"
@@ -383,5 +385,31 @@ function init_loader_sys:entity_init()
             local d = w:singleton("directional_light", "scene:in id:in")
             iom.set_position(d, {0, 1, 0})
         end
+    end
+
+
+end
+
+function init_loader_sys:camera_usage()
+    for _, _, state, x, y in mouse_mb:unpack() do
+        local mq = w:singleton("main_queue", "render_target:in camera_ref:in")
+        local ce = world:entity(mq.camera_ref)
+        local camera = ce.camera
+        local vpmat = camera.viewprojmat
+    
+        local vr = mq.render_target.view_rect
+        local nx, ny = mu.remap_xy(x, y, vr.ratio)
+        local ndcpt = mu.pt2D_to_NDC({nx, ny}, vr)
+        ndcpt[3] = 0
+        local p0 = mu.ndc_to_world(vpmat, ndcpt)
+        ndcpt[3] = 1
+        local p1 = mu.ndc_to_world(vpmat, ndcpt)
+    
+        local ray = {o = p0, d = math3d.sub(p0, p1)}
+    
+        local plane = math3d.vector(0, 1, 0, 0)
+        local r = math3d.muladd(ray.d, math3d.plane_ray(ray.o, ray.d, plane), ray.o)
+        
+        print("click:", x, y, math3d.tostring(r), "view_rect:", vr.x, vr.y, vr.w, vr.h)
     end
 end
