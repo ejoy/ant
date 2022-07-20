@@ -139,6 +139,9 @@ namespace ecs_api {
                     }
                     return index != o.index;
                 }
+                bool operator==(iterator const& o) const {
+                    return !(*this != o);
+                }
                 iterator& operator++() {
                     index++;
                     next();
@@ -198,6 +201,9 @@ namespace ecs_api {
                         return false;
                     }
                     return index != o.index;
+                }
+                bool operator==(iterator const& o) const {
+                    return !(*this != o);
                 }
                 iterator& operator++() {
                     index++;
@@ -290,13 +296,6 @@ namespace ecs_api {
         template <typename ...Args>
         bool init_entity(entity<Args...>& e, int i, lua_State* L) {
             return e.init(ecs, i, L);
-        }
-
-        template <typename ...Args>
-        bool has() {
-            entity<Args...> e;
-            int index = 0;
-            return e.init(ecs, index);
         }
     };
 }

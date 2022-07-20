@@ -54,11 +54,14 @@ scene_changed(lua_State *L) {
 	auto math3d = w->math3d->LS;
 
 	// step.1
-	if (!ecs.has<ecs::scene_needchange, ecs::scene_update, ecs::scene>()) {
+	auto selector = ecs.select<ecs::scene_needchange, ecs::scene_update, ecs::scene>();
+	auto it = selector.begin();
+	if (it == selector.end()) {
 		return 0;
 	}
 	flatset<int64_t> parents;
-	for (auto& e : ecs.select<ecs::scene_needchange, ecs::scene_update, ecs::scene>()) {
+	for (; it != selector.end(); ++it) {
+		auto& e = *it;
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0) {
 			parents.insert(s.parent);
