@@ -1470,7 +1470,7 @@ lcolor_palette_new(lua_State *L){
 		struct color_palette* cp = arena->color_palettes + arena->cp_idx;
 		for (int i=0; i<n; ++i){
 			lua_geti(L, 2, i+1);
-			const float *v = math3d_from_lua(L, arena->math, -1, MATH_TYPE_VEC4);
+			const float *v = math3d_value(arena->math, math3d_from_lua(L, arena->math, -1, MATH_TYPE_VEC4), NULL);
 			struct color* c = cp->colors + i;
 			memcpy(c->rgba, v, sizeof(c->rgba));
 			lua_pop(L, 1);
@@ -1556,7 +1556,7 @@ lcolor_palette_set(lua_State *L){
 	struct attrib_arena* arena = to_arena(L, 1);
 	struct color* c = get_color(L, arena, 2, 3);
 
-	const float* v = math3d_from_lua(L, arena->math, 4, MATH_TYPE_VEC4);
+	const float* v = math3d_value(arena->math, math3d_from_lua(L, arena->math, 4, MATH_TYPE_VEC4), NULL);
 	memcpy(c->rgba, v, sizeof(c->rgba));
 	return 0;
 }
