@@ -56,18 +56,28 @@ namespace ecs_api {
         }
         template <typename T>
         T& get() {
+            static_assert(!std::is_empty<T>::value);
             return *std::get<T*>(c);
         }
         template <typename T>
         T const& get() const {
+            static_assert(!std::is_empty<T>::value);
             return *std::get<T*>(c);
         }
         template <typename T>
-        T* sibling(ecs_context* ctx) const {
-            return impl::sibling<T>(ctx, component<MainKey>::id, index);
+        std::conditional_t<component<T>::tag, bool, T*>
+        sibling(ecs_context* ctx) const {
+            if constexpr (component<T>::tag) {
+                return !!impl::sibling<T>(ctx, component<MainKey>::id, index);
+            }
+            else {
+                static_assert(!std::is_empty<T>::value);
+                return impl::sibling<T>(ctx, component<MainKey>::id, index);
+            }
         }
         template <typename T>
         T& sibling(ecs_context* ctx, lua_State* L) const {
+            static_assert(!std::is_empty<T>::value);
             return *impl::sibling<T>(ctx, component<MainKey>::id, index, L);
         }
         template <typename Component>
@@ -87,13 +97,19 @@ namespace ecs_api {
             entity_disable_tag(ctx, component<MainKey>::id, index, id);
         }
     private:
+        template <std::size_t Is, typename T>
+        void assgin(T* v) {
+            if constexpr (!std::is_empty<T>::value) {
+                std::get<Is>(c) = v;
+            }
+        }
         template <std::size_t Is, typename Component, typename ...Components>
         bool init_sibling(ecs_context* ctx, int i) {
             auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i);
             if (!v) {
                 return false;
             }
-            std::get<Is>(c) = v;
+            assgin<Is>(v);
             if constexpr (sizeof...(Components) > 0) {
                 return init_sibling<Is+1, Components...>(ctx, i);
             }
@@ -105,7 +121,7 @@ namespace ecs_api {
                 if (!v) {
                     return false;
                 }
-                std::get<0>(c) = v;
+                assgin<0>(v);
                 if constexpr (sizeof...(SubKey) == 0) {
                     return true;
                 }
@@ -119,7 +135,7 @@ namespace ecs_api {
         template <std::size_t Is, typename Component, typename ...Components>
         void init_sibling(ecs_context* ctx, int i, lua_State* L) {
             auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i, L);
-            std::get<Is>(c) = v;
+            assgin<Is>(v);
             if constexpr (sizeof...(Components) > 0) {
                 init_sibling<Is+1, Components...>(ctx, i, L);
             }
@@ -129,7 +145,7 @@ namespace ecs_api {
             if (!v) {
                 return false;
             }
-            std::get<0>(c) = v;
+            assgin<0>(v);
             if constexpr (sizeof...(SubKey) > 0) {
                 init_sibling<1, SubKey...>(ctx, i, L);
             }
