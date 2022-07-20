@@ -30,6 +30,21 @@ function modifier_sys:update_modifier()
     end
 end
 
+local modifierevent = world:sub {"modifier"}
+function modifier_sys:entity_ready()
+    for _, m, desc in modifierevent:unpack() do
+        local mf = world:entity(m.eid).modifier
+        mf.continue = true
+        mf.keep = desc.forwards
+        if m.anim_eid then
+            if desc.name then
+                iani.play(m.anim_eid, desc)
+            else
+                ika.play(world:entity(m.anim_eid), desc)
+            end
+        end
+    end
+end
 function modifier_sys:exit()
 
 end
@@ -177,16 +192,7 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep)
 end
 
 function imodifier.start(m, desc)
-    local mf = world:entity(m.eid).modifier
-    mf.continue = true
-    mf.keep = desc.forwards
-    if m.anim_eid then
-        if desc.name then
-            iani.play(m.anim_eid, desc)
-        else
-            ika.play(world:entity(m.anim_eid), desc)
-        end
-    end
+    world:pub {"modifier", m, desc}
 end
 
 function imodifier.stop(m)

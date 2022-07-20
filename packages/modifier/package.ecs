@@ -3,6 +3,7 @@ system "modifier_system"
     .method "init"
     .method "component_init"
     .method "update_modifier"
+    .method "entity_ready"
     .method "exit"
 
 component "modifier".type "lua"
