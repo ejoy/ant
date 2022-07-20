@@ -2120,8 +2120,9 @@ lpoint2plane(lua_State *L){
 static int
 lvalue_ptr(lua_State *L){
 	struct math3d_api *api = (struct math3d_api *)lua_touserdata(L, lua_upvalueindex(1));
+	math_t id = math3d_from_lua_id(L, api, 1);
 	int type;
-	lua_pushlightuserdata(L, (void*)math3d_from_lua_id(L, api, 1, &type));
+	lua_pushlightuserdata(L, (void *)math3d_value(api, id, &type));
 	return 1;
 }
 
@@ -2286,7 +2287,7 @@ init_math3d_api(lua_State *L, struct math3d_api *M) {
 
 // util function
 
-static const float *
+static math_t
 math3d_from_lua_(lua_State *L, struct math_context *M, int index, int type) {
 	math_t r;
 	switch(type) {
@@ -2301,16 +2302,15 @@ math3d_from_lua_(lua_State *L, struct math_context *M, int index, int type) {
 		break;
 	default:
 		luaL_error(L, "Invalid math3d object type %d", type);
-		return NULL;
+		return MATH_NULL;
 	}
-	return math_value(M, r);
+	return r;
 }
 
-static const float *
-math3d_from_lua_id_(lua_State *L, struct math_context *M, int index, int *type) {
+static math_t
+math3d_from_lua_id_(lua_State *L, struct math_context *M, int index) {
 	math_t id = get_id_api(L, M, index);
-	*type = math_type(M, id);
-	return math_value(M, id);
+	return id;
 }
 
 static void

@@ -18,7 +18,8 @@ math3d_interface(lua_State *L) {
 
 static inline void *
 get_pointer(lua_State *L, struct math3d_api *api, int index, int type) {
-	return (void *)math3d_from_lua(L, api, index, type);
+	math_t id = math3d_from_lua(L, api, index, type);
+	return (void *)math3d_value(api, id,  &type);
 }
 
 static void *
@@ -167,8 +168,9 @@ check_elem_type(lua_State *L, struct math3d_api *api, int index) {
 		return lua_rawlen(L, index) >= 12 ? SET_Mat : SET_Vec;
 	}
 
+	math_t id = math3d_from_lua_id(L, api, index);
 	int type;
-	math3d_from_lua_id(L, api, index, &type);
+	math3d_value(api, id, &type);
 	return type == MATH_TYPE_MAT ? SET_Mat : SET_Vec;
 }
 

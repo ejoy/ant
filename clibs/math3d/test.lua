@@ -406,6 +406,15 @@ do
 	math3d.mul_array( { s = 42 }, mat_array, output_ref)
 
 	print(math3d.tostring(tmp))
+end
 
+do
+	math3d.reset()
+	for i = 1, 4096 do
+		math3d.matrix {}
+		math3d.vector { 0,0,0}
+	end
+	math3d.reset()
 
+	print(math3d.tostring(math3d.vector(0,0,0)))
 end

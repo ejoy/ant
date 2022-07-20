@@ -7,8 +7,8 @@
 struct math3d_api {
 	struct math_context * MC;
 	const void * refmeta;
-	const float * (*from_lua)(lua_State *L, struct math_context *MC, int index, int type);
-	const float * (*from_lua_id)(lua_State *L, struct math_context *MC, int index, int *type);
+	math_t (*from_lua)(lua_State *L, struct math_context *MC, int index, int type);
+	math_t (*from_lua_id)(lua_State *L, struct math_context *MC, int index);
 	float * (*getptr)(struct math_context *MC, math_t id, int *type);
 	void (*push)(lua_State *L, struct math_context *MC, const float *v, int type);
 	void (*ref)(lua_State *L, struct math_context *MC, const float *v, int type);
@@ -20,14 +20,14 @@ struct math3d_api {
 
 // binding functions
 
-static inline const float *
+static inline math_t
 math3d_from_lua(lua_State *L, struct math3d_api *M, int index, int type) {
 	return M->from_lua(L, M->MC, index, type);
 }
 
-static inline const float *
-math3d_from_lua_id(lua_State *L, struct math3d_api *M, int index, int *type) {
-	return M->from_lua_id(L, M->MC, index, type);
+static inline math_t
+math3d_from_lua_id(lua_State *L, struct math3d_api *M, int index) {
+	return M->from_lua_id(L, M->MC, index);
 }
 
 static inline void
