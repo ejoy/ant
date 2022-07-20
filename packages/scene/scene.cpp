@@ -68,29 +68,23 @@ scene_changed(lua_State *L) {
 		auto& id = e.get<ecs::id>();
 		auto& s = e.get<ecs::scene>();
 		
-		auto mat = math3d::pushsrt(math3d, s.s, s.r, s.t);
-		if (!mat) {
-			return luaL_error(L, "Unexpected Error.");
-		}
-		auto locmat = math3d::getvalue(math3d, s.mat, LINEAR_TYPE_MAT);
-		if (locmat) {
-			math3d_mul_matrix(math3d, mat, locmat, mat);
-		}
+		math_t mat = math3d_make_srt(math3d->MC, to_math_t(s.s), to_math_t(s.r), to_math_t(s.t));
+		mat = math3d_mul_matrix(math3d->MC, mat, to_math_t(s.mat));
 		if (s.parent != 0) {
 			auto parentmat = worldmats.find(s.parent);
 			if (!parentmat) {
 				return luaL_error(L, "Unexpected Error.");
 			}
-			wm = math3d_mul_matrix(math3d->MC, *parentmat, wm);
+			mat = math3d_mul_matrix(math3d->MC, *parentmat, mat);
 		}
 
-		wm = math_mark(math3d->MC, wm);
-		s.worldmat = wm.idx;
-		worldmats.insert_or_assign(id, wm);
+		mat = math_mark(math3d->MC, mat);
+		s.worldmat = mat.idx;
+		worldmats.insert_or_assign(id, mat);
 
 		auto aabb = to_math_t(s.aabb);
 		if (!math_isnull(aabb)){
-			aabb = math3d_aabb_transform(math3d->MC, wm, aabb);
+			aabb = math3d_aabb_transform(math3d->MC, mat, aabb);
 			aabb = math_mark(math3d->MC, aabb);
 			s.scene_aabb = aabb.idx;
 		}
