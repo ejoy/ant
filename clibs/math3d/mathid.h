@@ -87,6 +87,16 @@ math_isidentity(math_t id) {
 	return (!u.s.transient && u.s.frame == 0);
 }
 
+static inline int
+math_isref(struct math_context *ctx, math_t id) {
+	union {
+		math_t id;
+		struct math_id s;
+	} u;
+	u.id = id;
+	return (u.s.type == MATH_TYPE_REF);
+}
+
 int math_ref_size_(struct math_context *, struct math_id id);
 int math_ref_type_(struct math_context *, struct math_id id);
 

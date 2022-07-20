@@ -57,6 +57,12 @@ allocmat(struct math_context *M, math_t *id) {
 	return *(glm::mat4x4 *)buf;
 }
 
+static inline glm::mat4x4 &
+initmat(struct math_context *M, math_t id) {
+	float * buf = math_init(M, id);
+	return *(glm::mat4x4 *)buf;
+}
+
 static inline glm::quat &
 allocquat(struct math_context *M, math_t *id) {
 	*id = math_quat(M, NULL);
@@ -297,6 +303,41 @@ math3d_mul_matrix(struct math_context *M, math_t v1, math_t v2) {
 	glm::mat4x4 &mat = allocmat(M, &id);
 	mat = MAT(M, v1) * MAT(M, v2);
 	return id;
+}
+
+math_t
+math3d_mul_matrix_array(struct math_context *M, math_t mat, math_t array_mat, math_t output_ref) {
+	if (math_isidentity(mat)) {
+		// mul identity, copy array
+		if (math_isnull(output_ref)) {
+			return array_mat;
+		} else {
+			float * result = math_init(M, output_ref);
+			const float * source = math_value(M, array_mat);
+			int sz = math_size(M, array_mat);
+			int sz_output = math_size(M, output_ref);
+			if (sz_output < sz)
+				sz = sz_output;
+			memcpy(result, source, sz * 16 * sizeof(float));
+			return output_ref;
+		}
+	}
+
+	int sz = math_size(M, array_mat);
+	if (math_isnull(output_ref)) {
+		output_ref = math_import(M, NULL, MATH_TYPE_MAT, sz);
+	} else {
+		int output_sz = math_size(M, output_ref);
+		if (output_sz < sz)
+			sz = output_sz;
+	}
+	int i;
+	const glm::mat4x4 &m = MAT(M, mat);
+	for (i=0;i<sz;i++) {
+		glm::mat4x4 &mat = initmat(M, math_index(M, output_ref, i));
+		mat = m * MAT(M, math_index(M, array_mat, i));
+	}
+	return output_ref;
 }
 
 float

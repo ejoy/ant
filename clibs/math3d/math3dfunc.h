@@ -21,6 +21,7 @@ math_t math3d_sub_vec(struct math_context *, math_t v1, math_t v2);
 math_t math3d_mul_vec(struct math_context *, math_t v1, math_t v2);
 math_t math3d_mul_quat(struct math_context *, math_t v1, math_t v2);
 math_t math3d_mul_matrix(struct math_context *, math_t v1, math_t v2);
+math_t math3d_mul_matrix_array(struct math_context *M, math_t mat, math_t array_mat, math_t output_ref);
 float math3d_length(struct math_context *, math_t v);
 math_t math3d_floor(struct math_context *, math_t v);
 math_t math3d_ceil(struct math_context *, math_t v);

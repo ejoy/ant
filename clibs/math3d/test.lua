@@ -386,4 +386,26 @@ do
 	print(math3d.tostring(array))
 	assert(math3d.array_size(array) == 2)
 	print(math3d.tostring(math3d.array_index(array, 0)))
+
+	local mat_array = math3d.array_matrix {
+		{ t = { 1,2,3,4 } },
+		{ s = 2 },
+	}
+
+	print(math3d.tostring(mat_array))
+
+	local r = math3d.mul_array( { t = { 4,3,2,1 } } ,mat_array)
+
+	local tmp = math3d.array_matrix {
+		{},
+		{},
+	}
+	local output_ref = math3d.array_matrix_ref(math3d.value_ptr(tmp), 2)
+	print(math3d.tostring(tmp), math3d.tostring(output_ref))
+
+	math3d.mul_array( { s = 42 }, mat_array, output_ref)
+
+	print(math3d.tostring(tmp))
+
+
 end

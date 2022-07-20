@@ -309,9 +309,13 @@ math_index(struct math_context *M, math_t id, int index) {
 		return u.id;
 	} else if (!u.s.transient) {
 		u.s.frame = 2 + index;
+	} else {
+		// transient
+		u.s.size = 0;
+		if (u.s.type == MATH_TYPE_MAT)
+			index *= 4;
+		u.s.index += index;
 	}
-	u.s.size = 0;
-	u.s.index += index;
 	return u.id;
 }
 
@@ -350,7 +354,12 @@ math_value(struct math_context *M, math_t id) {
 		return get_transient(M, u.s.index);
 	} else {
 		if (u.s.frame) {
-			return get_marked(M, u.s.index);
+			int index = u.s.index;
+			int offset = u.s.frame - 2;
+			if (offset && u.s.type == MATH_TYPE_MAT) {
+				offset *= 4;
+			}
+			return get_marked(M, index);
 		} else {
 			return get_identity(u.s.type);
 		}
@@ -420,7 +429,7 @@ alloc_vecarray(struct math_context *M, int vecsize) {
 		}
 	}
 	struct page *p = M->marked[page_id];
-	int index = (mem - &p->v[0][0]) / 4;
+	int index = (int)((mem - &p->v[0][0]) / 4);
 	return index + page_id * PAGE_SIZE;
 }
 
@@ -666,7 +675,7 @@ math_frame(struct math_context *M) {
 	} u;
 	memset(&u, 0xff, sizeof(u));
 	++M->frame;
-	if (M->frame > u.s.frame) {
+	if ((int)M->frame > u.s.frame) {
 		M->frame = 0;
 	}
 	int i;

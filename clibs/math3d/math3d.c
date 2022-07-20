@@ -861,6 +861,42 @@ lquaternion(lua_State *L) {
 	return new_object(L, MATH_TYPE_QUAT, quat_from_table, 4);
 }
 
+
+static int
+larray_matrix_ref(lua_State *L) {
+	struct math_context *M = GETMC(L);
+	float *ptr = (float *)lua_touserdata(L, 1);
+	if (ptr == NULL) {
+		return luaL_error(L, "Invalid pointer (type = %s)", lua_typename(L, lua_type(L, 1)));
+	}
+	int sz = (int)luaL_checkinteger(L, 2);
+	int off = (int)luaL_optinteger(L, 3, 0);
+	ptr += off * 16;
+	math_t id = math_ref(M, ptr, MATH_TYPE_MAT, sz);
+	lua_pushmath(L, id);
+	return 1;
+}
+
+static int
+lmul_array(lua_State *L) {
+	struct math_context *M = GETMC(L);
+	math_t m = matrix_from_index(L, M, 1);
+	math_t array = array_from_index(L, M, 2, MATH_TYPE_MAT, 0);
+	math_t output = MATH_NULL;
+	if (!lua_isnoneornil(L, 3)) {
+		output = get_id(L, M, 3);
+		if (!math_isref(M, output)) {
+			return luaL_error(L, "Output is not ref");
+		}
+		int t = math_type(M, output);
+		if (t != MATH_TYPE_MAT)
+			return luaL_error(L, "Output is not matrix, it's %s", math_typename(t));
+	}
+	math_t r = math3d_mul_matrix_array(M, m, array, output);
+	lua_pushmath(L, r);
+	return 1;
+}
+
 static int
 larray_vector(lua_State *L) {
 	struct math_context *M = GETMC(L);
@@ -2149,6 +2185,7 @@ init_math3d_api(lua_State *L, struct math3d_api *M) {
 		{ "matrix", lmatrix },
 		{ "vector", lvector },
 		{ "quaternion", lquaternion },
+		{ "array_matrix_ref", larray_matrix_ref },
 		{ "array_vector", larray_vector },
 		{ "array_matrix", larray_matrix },
 		{ "array_quat", larray_quat },
@@ -2159,6 +2196,7 @@ init_math3d_api(lua_State *L, struct math3d_api *M) {
 		{ "set_columns", lset_columns},
 		{ "reset", lreset },
 		{ "mul", lmul },
+		{ "mul_array", lmul_array },
 		{ "add", ladd },
 		{ "sub", lsub },
 		{ "muladd", lmuladd},
