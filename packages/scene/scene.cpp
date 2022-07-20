@@ -106,7 +106,7 @@ scene_changed(lua_State *L) {
 		}
 		auto locmat = math3d::getvalue(math3d, s.mat, LINEAR_TYPE_MAT);
 		if (locmat) {
-			math3d_mul_matrix(math3d, locmat, mat, mat);
+			math3d_mul_matrix(math3d, mat, locmat, mat);
 		}
 		if (s.parent != 0) {
 			auto parentmatid = worldmats.find(s.parent);
