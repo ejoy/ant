@@ -138,8 +138,8 @@ function init_loader_sys:init()
 
     --cp_eid = color_palette_test()
 
-    -- quad_eid = ientity.create_quad_lines_entity("quads", {r=math3d.quaternion{0.0, math.pi*0.5, 0.0}}, 
-    --     "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
+    quad_eid = ientity.create_quad_lines_entity("quads", {r=math3d.quaternion{0.0, math.pi*0.5, 0.0}}, 
+        "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
 
     -- create_texture_plane_entity(
     --     {1, 1.0, 1.0, 1.0}, 
@@ -354,17 +354,17 @@ local enable = 1
 function init_loader_sys:entity_init()
     
     for _, key, press in kb_mb:unpack() do
-        if key == "SPACE" and press == 0 then
+        if key == "T" and press == 0 then
+            local e = world:entity(quad_eid)
+            ies.set_state(e, "main_view", true)
+
+            local quad_2 = 2
+            e.render_object.mesh:set_ib_range(nil, quad_2 * 6)
+        elseif key == "SPACE" and press == 0 then
             -- local icw = ecs.import.interface "ant.render|icurve_world"
             -- icw.enable(not icw.param().enable)
 
             --imaterial.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
-
-            -- local e = world:entity(quad_eid)
-            -- ies.set_state(e, "main_view", true)
-            -- local ib = e.render_object.ib
-            -- local quad_2 = 2
-            -- ib.num = quad_2 * 6
             
             if enable == 1 then
                 ecs.group(1):enable "view_visible"
