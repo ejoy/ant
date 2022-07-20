@@ -4,12 +4,18 @@ struct lua_State;
 
 #include "luaecs.h"
 #include <type_traits>
+#include <tuple>
 
 namespace ecs_api {
     template <typename T>
     struct component {};
 
     namespace impl {
+        template <typename Component>
+        Component* iter(ecs_context* ctx, int i) {
+            return (Component*)entity_iter(ctx, component<Component>::id, i);
+        }
+
         template <typename Component>
         Component* sibling(ecs_context* ctx, int mainkey, int i) {
             return (Component*)entity_sibling(ctx, mainkey, i, component<Component>::id);
@@ -25,96 +31,81 @@ namespace ecs_api {
         }
     }
 
-    template <typename ...Components>
-    struct entity_;
-
-    template <>
-    struct entity_<> {};
-
-    template <typename Component, typename ...Components>
-    struct entity_<Component, Components...> : public entity_<Components...> {
+    template <typename MainKey, typename ...SubKey>
+    struct entity {
     public:
+        int getid() const {
+            return index;
+        }
         template <typename T>
         T& get() {
-            if constexpr (std::is_same<T, Component>::value) {
-                return *c;
-            }
-            else {
-                return entity_<Components...>::template get<T>();
-            }
+            return *std::get<T*>(c);
         }
-
-        bool init_sibling(ecs_context* ctx, int mainkey, int i) {
-            auto v = impl::sibling<Component>(ctx, mainkey, i);
+        bool init(ecs_context* ctx, int& i) {
+            auto r = init_components(ctx, i);
+            if (r) {
+                index = i;
+            }
+            return r;
+        }
+        bool init(ecs_context* ctx, int i, lua_State* L) {
+            auto r = init_components(ctx, i, L);
+            if (r) {
+                index = i;
+            }
+            return r;
+        }
+    private:
+        template <std::size_t Is, typename Component, typename ...Components>
+        bool init_sibling(ecs_context* ctx, int i) {
+            auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i);
             if (!v) {
                 return false;
             }
-            c = v;
+            std::get<Is>(c) = v;
             if constexpr (sizeof...(Components) > 0) {
-                return entity_<Components...>::init_sibling(ctx, mainkey, i);
+                return init_sibling<Is+1, Components...>(ctx, i);
             }
             return true;
         }
-        void init_sibling(ecs_context* ctx, int mainkey, int i, lua_State* L) {
-            auto v = impl::sibling<Component>(ctx, mainkey, i, L);
-            c = v;
-            if constexpr (sizeof...(Components) > 0) {
-                return entity_<Components...>::init_sibling(ctx, mainkey, i, L);
-            }
-        }
-        bool init(ecs_context* ctx, int& i) {
+        bool init_components(ecs_context* ctx, int& i) {
             for (;;++i) {
-                auto v = (Component*)entity_iter(ctx, component<Component>::id, i);
+                auto v = impl::iter<MainKey>(ctx, i);
                 if (!v) {
                     return false;
                 }
-                c = v;
-                if constexpr (sizeof...(Components) == 0) {
+                std::get<0>(c) = v;
+                if constexpr (sizeof...(SubKey) == 0) {
                     return true;
                 }
                 else {
-                    if (entity_<Components...>::init_sibling(ctx, component<Component>::id, i)) {
+                    if (init_sibling<1, SubKey...>(ctx, i)) {
                         return true;
                     }
                 }
             }
         }
-        bool init(ecs_context* ctx, int i, lua_State* L) {
-            auto v = (Component*)entity_iter(ctx, component<Component>::id, i);
+        template <std::size_t Is, typename Component, typename ...Components>
+        void init_sibling(ecs_context* ctx, int i, lua_State* L) {
+            auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i, L);
+            std::get<Is>(c) = v;
+            if constexpr (sizeof...(Components) > 0) {
+                init_sibling<Is+1, Components...>(ctx, i, L);
+            }
+        }
+        bool init_components(ecs_context* ctx, int i, lua_State* L) {
+            auto v = impl::iter<MainKey>(ctx, i);
             if (!v) {
                 return false;
             }
-            c = v;
-            if constexpr (sizeof...(Components) > 0) {
-                entity_<Components...>::init_sibling(ctx, component<Component>::id, i, L);
+            std::get<0>(c) = v;
+            if constexpr (sizeof...(SubKey) > 0) {
+                init_sibling<1, SubKey...>(ctx, i, L);
             }
             return true;
         }
     private:
-        Component* c;
-    };
-
-    template <typename ...Components>
-    struct entity : public entity_<Components...> {
-    public:
-        int getid() const {
-            return index;
-        }
-        bool init(ecs_context* ctx, int& i) {
-            auto r = entity_<Components...>::init(ctx, i);
-            if (r) {
-                index = i;
-            }
-            return r;
-        }
-        bool init(ecs_context* ctx, int i, lua_State* L) {
-            auto r = entity_<Components...>::init(ctx, i, L);
-            if (r) {
-                index = i;
-            }
-            return r;
-        }
-    private:
+        std::tuple<MainKey*, SubKey*...> c;
         int index;
     };
 
@@ -123,20 +114,20 @@ namespace ecs_api {
         struct strict_select_range {
             struct iterator {
                 ecs_context* ctx;
-                lua_State* L;
                 int index;
                 entity<Args...>& e;
+                lua_State* L;
                 iterator(entity<Args...>& e)
                     : ctx(NULL)
+                    , index(0)
+                    , e(e)
                     , L(NULL)
-                    , index(0)
-                    , e(e)
                 { }
-                iterator(ecs_context* ctx, lua_State* L, entity<Args...>& e)
+                iterator(ecs_context* ctx, entity<Args...>& e, lua_State* L)
                     : ctx(ctx)
-                    , L(L)
                     , index(0)
                     , e(e)
+                    , L(L)
                 { }
         
                 bool operator!=(iterator const& o) const {
@@ -150,31 +141,32 @@ namespace ecs_api {
                 }
                 iterator& operator++() {
                     index++;
-                    if (!e.init(ctx, index, L)) {
-                        ctx = NULL;
-                        L = NULL;
-                    }
+                    next();
                     return *this;
                 }
                 entity<Args...>& operator*() {
                     return e;
                 }
+                void next() {
+                    if (!e.init(ctx, index, L)) {
+                        ctx = NULL;
+                    }
+                }
             };
             ecs_context* ctx;
-            lua_State* L;
             entity<Args...> e;
+            lua_State* L;
 
             strict_select_range(ecs_context* ctx, lua_State* L)
                 : ctx(ctx)
-                , L(L)
                 , e()
+                , L(L)
             {}
 
             iterator begin() {
-                if (e.init(ctx, 0, L)) {
-                    return {ctx, L, e};
-                }
-                return {e};
+                iterator iter {ctx, e, L};
+                iter.next();
+                return iter;
             }
             iterator end() {
                 return {e};
@@ -245,7 +237,7 @@ namespace ecs_api {
 
         template <typename Component>
         Component* iter(int index) {
-            return (Component*)entity_iter(ecs, component<Component>::id, index);
+            return impl::iter<Component>(ecs, index);
         }
 
         template <typename Component, typename MainKey, typename ...SubKey>
