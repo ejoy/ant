@@ -22,17 +22,20 @@ scene_changed(lua_State *L) {
 	auto math3d = w->math3d;
 
 	// step.1
-	if (!ecs.has<ecs::scene_needchange, ecs::scene_update, ecs::scene>()) {
+	auto selector = ecs.select<ecs::scene_needchange, ecs::scene_update, ecs::scene>();
+	auto it = selector.begin();
+	if (it == selector.end()) {
 		return 0;
 	}
 	flatset<int64_t> parents;
-	for (auto& e : ecs.select<ecs::scene_needchange, ecs::scene_update, ecs::scene>()) {
+	for (; it != selector.end(); ++it) {
+		auto& e = *it;
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0) {
 			parents.insert(s.parent);
 		}
-		ecs.enable_tag<ecs::scene_changed>(e);
-		ecs.disable_tag<ecs::scene_needchange>(e);
+		e.enable_tag<ecs::scene_changed>(ecs);
+		e.disable_tag<ecs::scene_needchange>(ecs);
 	}
 
 	// step.2
@@ -41,20 +44,20 @@ scene_changed(lua_State *L) {
 	for (auto& e : ecs.select<ecs::scene_update, ecs::id>(L)) {
 		auto& id = e.get<ecs::id>();
 		if (parents.contains(id)) {
-			auto s = ecs.sibling<ecs::scene>(e);
+			auto s = e.sibling<ecs::scene>(ecs);
 			if (s) {
 				worldmats.insert_or_assign(id, to_math_t(s->worldmat));
 			}
 		}
-		if (ecs.sibling<ecs::scene_changed>(e)) {
+		if (e.sibling<ecs::scene_changed>(ecs)) {
 			change.insert(id);
 		}
 		else {
-			auto s = ecs.sibling<ecs::scene>(e);
+			auto s = e.sibling<ecs::scene>(ecs);
 			if (s && s->parent != 0) {
 				if (change.contains(s->parent)) {
 					change.insert(id);
-					ecs.enable_tag<ecs::scene_changed>(e);
+					e.enable_tag<ecs::scene_changed>(ecs);
 				}
 			}
 		}
@@ -65,8 +68,14 @@ scene_changed(lua_State *L) {
 		auto& id = e.get<ecs::id>();
 		auto& s = e.get<ecs::scene>();
 		
-		auto wm = math3d_make_srt(math3d->MC, to_math_t(s.s), to_math_t(s.r), to_math_t(s.t));
-		wm = math3d_mul_matrix(math3d->MC, to_math_t(s.mat), wm);
+		auto mat = math3d::pushsrt(math3d, s.s, s.r, s.t);
+		if (!mat) {
+			return luaL_error(L, "Unexpected Error.");
+		}
+		auto locmat = math3d::getvalue(math3d, s.mat, LINEAR_TYPE_MAT);
+		if (locmat) {
+			math3d_mul_matrix(math3d, mat, locmat, mat);
+		}
 		if (s.parent != 0) {
 			auto parentmat = worldmats.find(s.parent);
 			if (!parentmat) {
@@ -107,9 +116,9 @@ scene_remove(lua_State *L) {
 	for (auto& e : ecs.select<ecs::scene>(L)) {
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0 && removed.contains(s.parent)) {
-			auto id = ecs.sibling<ecs::id>(e);
-			removed.insert(*id);
-			ecs.remove(e);
+			auto& id = e.sibling<ecs::id>(ecs, L);
+			removed.insert(id);
+			e.remove(ecs);
 		}
 	}
 	return 0;

@@ -34,18 +34,18 @@ lcull(lua_State *L){
 	const auto vpid = math3d_mark_id(L, w->math3d, 3);
 	const auto planes = math3d_frustum_planes(w->math3d->MC, vpid, math3d_homogeneous_depth());
 	for (auto e : ecs.select<ecs::view_visible, ecs::render_object, ecs::scene>()){
-		auto s = e.get<ecs::scene>();
+		auto& s = e.get<ecs::scene>();
 		const math_t aabb = {(uint64_t)s.scene_aabb};
 		if (math_isnull(aabb))
 			continue;
 
 		if (math3d_frustum_intersect_aabb(w->math3d->MC, planes, aabb) < 0){
 			for (int ii=0; ii<numtab; ++ii){
-				ecs.enable_tag(e, s_cull_tabs[ii]);
+				e.enable_tag(ecs, s_cull_tabs[ii]);
 			}
 		} else {
 			for (int ii=0; ii<numtab; ++ii){
-				ecs.disable_tag(e, s_cull_tabs[ii]);
+				e.disable_tag(ecs, s_cull_tabs[ii]);
 			}
 		}
 	}
