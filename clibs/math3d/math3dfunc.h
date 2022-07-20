@@ -1,84 +1,71 @@
 #ifndef math3d_func_h
 #define math3d_func_h
 
-#include "linalg.h"
+#include "mathid.h"
 
 int math3d_homogeneous_depth();
 
 // math functions
+math_t math3d_quat_to_matrix(struct math_context *, math_t quat);
+math_t math3d_matrix_to_quat(struct math_context *, math_t mat);
+math_t math3d_make_quat_from_axis(struct math_context *, math_t axis, float r);
+math_t math3d_quat_between_2vectors(struct math_context *, math_t a, math_t b);
+math_t math3d_make_quat_from_euler(struct math_context *, math_t euler);
+math_t math3d_make_srt(struct math_context *, math_t s, math_t r, math_t t);
+void math3d_decompose_matrix(struct math_context *, math_t mat, math_t v[3]);
+math_t math3d_decompose_scale(struct math_context *, math_t mat);
+math_t math3d_decompose_rot(struct math_context *, math_t mat);
+float math3d_dot(struct math_context *, math_t v1, math_t v2);
+math_t math3d_add_vec(struct math_context *, math_t v1, math_t v2);
+math_t math3d_sub_vec(struct math_context *, math_t v1, math_t v2);
+math_t math3d_mul_vec(struct math_context *, math_t v1, math_t v2);
+math_t math3d_mul_quat(struct math_context *, math_t v1, math_t v2);
+math_t math3d_mul_matrix(struct math_context *, math_t v1, math_t v2);
+float math3d_length(struct math_context *, math_t v);
+math_t math3d_floor(struct math_context *, math_t v);
+math_t math3d_ceil(struct math_context *, math_t v);
+float math3d_dot(struct math_context *, math_t v1, math_t v2);
+math_t math3d_cross(struct math_context *, math_t v1, math_t v2);
+math_t math3d_normalize_vector(struct math_context *, math_t v);
+math_t math3d_normalize_quat(struct math_context *, math_t quat);
+math_t math3d_transpose_matrix(struct math_context *, math_t mat);
+math_t math3d_inverse_quat(struct math_context *, math_t quat);
+math_t math3d_inverse_matrix(struct math_context *, math_t mat);
+math_t math3d_inverse_matrix_fast(struct math_context *, math_t mat);
+math_t math3d_quat_transform(struct math_context *, math_t quat, math_t v);
+math_t math3d_rotmat_transform(struct math_context *, math_t mat, math_t v);
+math_t math3d_mulH(struct math_context *, math_t mat, math_t v);
+math_t math3d_reciprocal(struct math_context *, math_t v);
+math_t math3d_lookat_matrix(struct math_context *, int dir, math_t eye, math_t at, math_t up);
+math_t math3d_perspectiveLH(struct math_context *M, float fov, float aspect, float near, float far, int homogeneous_depth);
+math_t math3d_frustumLH(struct math_context *M, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth);
+math_t math3d_orthoLH(struct math_context *M, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth);
+math_t math3d_base_axes(struct math_context *M, math_t forward);	// return { right , up }
+math_t math3d_quat_to_viewdir(struct math_context *, math_t quat);
+math_t math3d_rotmat_to_viewdir(struct math_context *, math_t mat);
+math_t math3d_viewdir_to_quat(struct math_context *, math_t v);
+void math3d_minmax(struct math_context *, math_t transform, math_t v, math_t minmax[2]);
+math_t math3d_lerp(struct math_context *, math_t v0, math_t v1, float ratio);
+math_t math3d_quat_lerp(struct math_context *, math_t v0, math_t v1, float ratio);
+math_t math3d_quat_slerp(struct math_context *, math_t v0, math_t v1, float ratio);
+math_t math3d_quat_to_euler(struct math_context *, math_t quat);
+void math3d_dir2radian(struct math_context *, math_t rad, float radians[2]);
+math_t math3d_frustum_center(struct math_context *, math_t points);
+float math3d_frustum_max_radius(struct math_context *, math_t points, math_t center);
+math_t math3d_frusutm_aabb(struct math_context *, math_t points);
+int math3d_aabb_isvalid(struct math_context *, math_t aabb);
+math_t math3d_aabb_merge(struct math_context *, math_t aabblhs, math_t aabbrhs);
+math_t math3d_aabb_transform(struct math_context *, math_t mat, math_t aabb);
+math_t math3d_aabb_center_extents(struct math_context *, math_t aabb);	// return { center , extents }
+int math3d_aabb_intersect_plane(struct math_context *, math_t aabb, math_t plane);
+math_t math3d_aabb_intersection(struct math_context *, math_t aabb1, math_t aabb2);
+int math3d_aabb_test_point(struct math_context *, math_t aabb, math_t v);
+void math3d_aabb_points(struct math_context *, math_t aabb, math_t points[8]);
+math_t math3d_aabb_expand(struct math_context *, math_t aabb, math_t e);
+math_t math3d_frustum_planes(struct math_context *, math_t m, int homogeneous_depth);	// return vec4[6]
+int math3d_frustum_intersect_aabb(struct math_context *, math_t planes, math_t aabb);
+math_t math3d_frustum_points(struct math_context *, math_t m, int homogeneous_depth);	// return vec4[8]
+void math3d_frustum_calc_near_far(struct math_context *, math_t planes, float result[2]); // return { near, far }
+float math3d_point2plane(struct math_context *, math_t pt, math_t plane);
 
-void math3d_make_srt(struct lastack *LS, const float *s, const float *r, const float *t);
-void math3d_make_quat_from_euler(struct lastack *LS, float x, float y, float z);
-void math3d_make_quat_from_axis(struct lastack *LS, const float *axis, float radian);
-void math3d_mul_matrix(struct lastack *LS, const float lval[16], const float rval[16], float result[16]);
-// result on stack
-const float * math3d_mul_matrix_stack(struct lastack *LS, const float *lval, const float *rval);
-void math3d_mul_vec4(struct lastack *LS, const float lval[4], const float rval[4], float result[4]);
-void math3d_mul_quat(struct lastack *LS, const float lval[4], const float rval[4], float result[4]);
-void math3d_add_vec(struct lastack *LS, const float lhs[4], const float rhs[4], float r[4]);
-void math3d_sub_vec(struct lastack *LS, const float lhs[4], const float rhs[4], float r[4]);
-void math3d_decompose_matrix(struct lastack *LS, const float *mat);
-void math3d_decompose_rot(const float mat[16], float quat[4]);
-int math3d_decompose_scale(const float mat[16], float scale[4]);
-void math3d_quat_to_matrix(struct lastack *LS, const float quat[4]);
-void math3d_matrix_to_quat(struct lastack *LS, const float mat[16]);
-float math3d_length(const float *v3);
-void math3d_floor(struct lastack *LS, const float v[4]);
-void math3d_ceil(struct lastack *LS, const float v[4]);
-float math3d_dot(const float v1[4], const float v2[4]);
-void math3d_cross(struct lastack *LS, const float v1[4], const float v2[4]);
-void math3d_mulH(struct lastack *LS, const float mat[16], const float vec[4]);
-void math3d_normalize_vector(struct lastack *LS, const float v[4]);
-void math3d_normalize_quat(struct lastack *LS, const float v[4]);
-void math3d_inverse_matrix(struct lastack *LS, const float mat[16]);
-void math3d_inverse_matrix_fast(struct lastack *LS, const float mat[16]);
-void math3d_inverse_quat(struct lastack *LS, const float quat[4]);
-void math3d_transpose_matrix(struct lastack *LS, const float mat[16]);
-void math3d_lookat_matrix(struct lastack *LS, int direction, const float eye[3], const float at[3], const float *up);
-void math3d_reciprocal(struct lastack *LS, const float v[4]);
-void math3d_quat_to_viewdir(struct lastack *LS, const float q[4]);
-void math3d_rotmat_to_viewdir(struct lastack *LS, const float m[16]);
-void math3d_viewdir_to_quat(struct lastack *LS, const float v[3]);
-void math3d_quat_between_2vectors(struct lastack *LS, const float v0[3], const float v1[3]);
-void math3d_perspectiveLH(struct lastack *LS, float fov, float aspect, float near, float far, int homogeneous_depth);
-void math3d_frustumLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth);
-void math3d_orthoLH(struct lastack *LS, float left, float right, float bottom, float top, float near, float far, int homogeneous_depth);
-void math3d_base_axes(struct lastack *LS, const float forward[4]);
-void math3d_quat_transform(struct lastack *LS, const float quat[4], const float v[4]);
-void math3d_rotmat_transform(struct lastack *LS, const float mat[16], const float v[4]);
-void math3d_minmax(struct lastack *LS, const float mat[16], const float v[4], float minv[4], float maxv[4]);
-void math3d_lerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]);
-void math3d_quat_lerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]);
-void math3d_quat_slerp(struct lastack *LS, const float v0[4], const float v1[4], float ratio, float r[4]);
-void math3d_quat_to_euler(struct lastack *LS, const float q[4], float euler[4]);
-void math3d_dir2radian(struct lastack *LS, const float v[4], float radians[2]);
-
-//plane
-float math3d_plane_normalize(struct lastack *LS, const float plane[4], float nplane[4]);
-float math3d_plane_point_distance(struct lastack *LS, const float plane[4], const float point[4]);
-
-//aabb
-void math3d_aabb_append(struct lastack *LS, const float v[4], float *raabb);
-void math3d_aabb_merge(struct lastack *LS, const float *aabblhs, const float *aabbrhs, float *raabb);
-int math3d_aabb_isvalid(struct lastack *LS, const float *aabb);
-void math3d_aabb_transform(struct lastack *LS, const float trans[16], const float aabb[16], float raabb[16]);
-void math3d_aabb_center_extents(struct lastack *LS, const float *aabb, float center[4], float extents[4]);
-int math3d_aabb_test_point(struct lastack *LS, const float *aabb, const float *p);
-float math3d_aabb_diagonal_length(struct lastack *LS, const float *aabb);
-int math3d_aabb_intersect_plane(struct lastack *LS, const float *aabb, const float plane[4]);
-void math3d_aabb_intersetion(struct lastack *LS, const float *lhsaabb, const float *rhsaabb);
-void math3d_aabb_points(struct lastack *LS, const float *aabb, float *points[8]);
-void math3d_aabb_expand(struct lastack *LS, const float *aabb, const float e[4]);
-
-//frustum
-void math3d_frustum_planes(struct lastack *LS, const float m[16], float *planes[6], int homogeneous_depth);
-void math3d_frustum_points(struct lastack *LS, const float m[16], float *points[8], int homogeneous_depth);
-int math3d_frustum_intersect_aabb(struct lastack *LS, const float* planes[6], const float *aabb);
-void math3d_frusutm_aabb(struct lastack *LS, const float* points[8], float *aabb);
-void math3d_frustum_center(struct lastack *LS, const float *points[8], float *center);
-float math3d_frustum_max_radius(struct lastack *LS, const float *points[8], const float center[4]);
-void math3d_frustum_calc_near_far(struct lastack *LS, const float *planes[6], float nearfar[2]);
-
-//primitive
-float math3d_point2plane(struct lastack *LS, const float pt[4], const float plane[4]);
 #endif

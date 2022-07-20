@@ -61,7 +61,7 @@ struct attrib_uniform {
 	ATTRIB_HEARDER
 	bgfx_uniform_handle_t handle;
 	union {
-		int64_t m;
+		math_t m;
 		struct {
 			uint32_t handle;
 			uint8_t stage;
@@ -174,7 +174,7 @@ al_init_attrib(struct attrib_arena* arena, attrib_type *a){
 	a->h.next = INVALID_ATTRIB;
 	a->h.patch = INVALID_ATTRIB;
 	a->u.handle.idx = UINT16_MAX;
-	a->u.m 	= 0;
+	a->u.m 	= MATH_NULL;
 }
 
 static inline attrib_type*
@@ -267,7 +267,7 @@ al_attrib_clear(struct attrib_arena *arena, attrib_id id) {
 	attrib_type *a = al_attrib(arena, id);
 	if (a->h.type == ATTRIB_UNIFORM) {
 		math3d_unmark_id(arena->math, a->u.m);
-		a->u.m = 0;
+		a->u.m = MATH_NULL;
 	}
 	id = a->h.next;
 	al_attrib_return(arena, a);
@@ -351,7 +351,7 @@ static void
 uniform_value(lua_State *L, attrib_type *a) {
 	switch (a->h.type){
 		case ATTRIB_UNIFORM:
-			lua_pushlightuserdata(L, (void *)a->u.m);
+			lua_pushlightuserdata(L, (void*)a->u.m.idx);
 			break;
 		case ATTRIB_SAMPLER:
 			lua_pushfstring(L, "s%d:%d", a->u.t.stage, a->u.t.handle);
@@ -1177,7 +1177,7 @@ apply_attrib(lua_State *L, struct attrib_arena * cobject_, attrib_type *a, int t
 					int t;
 					int stride;
 					const float * v = math3d_value(CAPI_MATH3D, na->u.m, &t);
-					if (t == LINEAR_TYPE_MAT) {
+					if (t == MATH_TYPE_MAT) {
 						stride = 16;
 					} else {
 						stride = 4;
@@ -1470,7 +1470,7 @@ lcolor_palette_new(lua_State *L){
 		struct color_palette* cp = arena->color_palettes + arena->cp_idx;
 		for (int i=0; i<n; ++i){
 			lua_geti(L, 2, i+1);
-			const float *v = math3d_from_lua(L, arena->math, -1, LINEAR_TYPE_VEC4);
+			const float *v = math3d_from_lua(L, arena->math, -1, MATH_TYPE_VEC4);
 			struct color* c = cp->colors + i;
 			memcpy(c->rgba, v, sizeof(c->rgba));
 			lua_pop(L, 1);
@@ -1547,7 +1547,7 @@ static int
 lcolor_palette_get(lua_State *L){
 	struct attrib_arena* arena = to_arena(L, 1);
 	const struct color* c = get_color(L, arena, 2, 3);
-	math3d_push(L, arena->math, c->rgba, LINEAR_TYPE_VEC4);
+	math3d_push(L, arena->math, c->rgba, MATH_TYPE_VEC4);
 	return 1;
 }
 
@@ -1556,7 +1556,7 @@ lcolor_palette_set(lua_State *L){
 	struct attrib_arena* arena = to_arena(L, 1);
 	struct color* c = get_color(L, arena, 2, 3);
 
-	const float* v = math3d_from_lua(L, arena->math, 4, LINEAR_TYPE_VEC4);
+	const float* v = math3d_from_lua(L, arena->math, 4, MATH_TYPE_VEC4);
 	memcpy(c->rgba, v, sizeof(c->rgba));
 	return 0;
 }

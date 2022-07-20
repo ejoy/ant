@@ -10,48 +10,16 @@ extern "C" {
 	#include "math3dfunc.h"
 }
 
-namespace math3d {
-	static const float* getvalue(struct lastack *LS, int64_t id, int type) {
-		int t;
-		const float* res = lastack_value(LS, id, &t);
-		if (t != type) {
-			return NULL;
-		}
-		return res;
-	}
-
-	static float* pushsrt(struct lastack *LS, int64_t s, int64_t r, int64_t t) {
-		const float* scale = getvalue(LS, s, LINEAR_TYPE_VEC4);
-		const float* rot = getvalue(LS, r, LINEAR_TYPE_QUAT);
-		const float* translate = getvalue(LS, t, LINEAR_TYPE_VEC4);
-		if (!scale || !rot || !translate) {
-			return NULL;
-		}
-		float* mat = lastack_allocmatrix(LS);
-		glm::mat4x4& srt = *(glm::mat4x4*)mat;
-		srt = glm::mat4x4(1);
-		srt[0][0] = scale[0];
-		srt[1][1] = scale[1];
-		srt[2][2] = scale[2];
-		srt = glm::mat4x4(*(const glm::quat*)rot) * srt;
-		srt[3][0] = translate[0];
-		srt[3][1] = translate[1];
-		srt[3][2] = translate[2];
-		srt[3][3] = 1;
-		return mat;
-	}
-
-	static void pop_then_mark(struct lastack *LS, int64_t& id) {
-		lastack_unmark(LS, id);
-		id = lastack_mark(LS, lastack_pop(LS));
-	}
+static inline math_t
+to_math_t(int64_t id){
+	return math_t{uint64_t(id)};
 }
 
 static int
 scene_changed(lua_State *L) {
 	auto w = getworld(L, 1);
 	ecs_api::context ecs {w->ecs};
-	auto math3d = w->math3d->LS;
+	auto math3d = w->math3d;
 
 	// step.1
 	if (!ecs.has<ecs::scene_needchange, ecs::scene_update, ecs::scene>()) {
@@ -68,14 +36,14 @@ scene_changed(lua_State *L) {
 	}
 
 	// step.2
-	flatmap<int64_t, int64_t> worldmats;
+	flatmap<int64_t, math_t> worldmats;
 	flatset<int64_t> change;
 	for (auto& e : ecs.select<ecs::scene_update, ecs::id>(L)) {
 		auto& id = e.get<ecs::id>();
 		if (parents.contains(id)) {
 			auto s = ecs.sibling<ecs::scene>(e);
 			if (s) {
-				worldmats.insert_or_assign(id, s->worldmat);
+				worldmats.insert_or_assign(id, to_math_t(s->worldmat));
 			}
 		}
 		if (ecs.sibling<ecs::scene_changed>(e)) {
@@ -97,35 +65,23 @@ scene_changed(lua_State *L) {
 		auto& id = e.get<ecs::id>();
 		auto& s = e.get<ecs::scene>();
 		
-		auto mat = math3d::pushsrt(math3d, s.s, s.r, s.t);
-		if (!mat) {
-			return luaL_error(L, "Unexpected Error.");
-		}
-		auto locmat = math3d::getvalue(math3d, s.mat, LINEAR_TYPE_MAT);
-		if (locmat) {
-			math3d_mul_matrix(math3d, locmat, mat, mat);
-		}
+		auto wm = math3d_make_srt(math3d->MC, to_math_t(s.s), to_math_t(s.r), to_math_t(s.t));
+		wm = math3d_mul_matrix(math3d->MC, to_math_t(s.mat), wm);
 		if (s.parent != 0) {
-			auto parentmatid = worldmats.find(s.parent);
-			if (!parentmatid) {
+			auto parentmat = worldmats.find(s.parent);
+			if (!parentmat) {
 				return luaL_error(L, "Unexpected Error.");
 			}
-			auto parentmat = math3d::getvalue(math3d, *parentmatid, LINEAR_TYPE_MAT);
-			assert(parentmat);
-			math3d_mul_matrix(math3d, parentmat, mat, mat);
+			wm = math3d_mul_matrix(math3d->MC, *parentmat, wm);
 		}
-		math3d::pop_then_mark(math3d, s.worldmat);
-		worldmats.insert_or_assign(id, s.worldmat);
 
-		int type;
-		const float* aabb = lastack_value(math3d, s.aabb, &type);
-		if (type != LINEAR_TYPE_NULL) {
-			if (type != LINEAR_TYPE_MAT) {
-				return luaL_error(L, "Unexpected Error.");
-			}
-			math3d_aabb_transform(math3d, mat, aabb, lastack_allocmatrix(math3d));
-			math3d::pop_then_mark(math3d, s.scene_aabb);
-		}
+		wm = math_mark(math3d->MC, wm);
+		s.worldmat = wm.idx;
+		worldmats.insert_or_assign(id, wm);
+
+		auto aabb = math3d_aabb_transform(math3d->MC, wm, to_math_t(s.aabb));
+		aabb = math_mark(math3d->MC, aabb);
+		s.scene_aabb = aabb.idx;
 	}
 
 	return 0;

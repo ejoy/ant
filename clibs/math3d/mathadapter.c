@@ -33,9 +33,9 @@ getopt_pointer(lua_State *L, struct math3d_api *api, int index, int type) {
 static void *
 get_pointer_variant(lua_State *L, struct math3d_api *api, int index, int elemtype) {
 	if (elemtype & SET_Mat) {
-		return get_pointer(L, api, index, LINEAR_TYPE_MAT);
+		return get_pointer(L, api, index, MATH_TYPE_MAT);
 	} else {
-		return get_pointer(L, api, index, LINEAR_TYPE_VEC4);
+		return get_pointer(L, api, index, MATH_TYPE_VEC4);
 	}
 }
 
@@ -47,7 +47,7 @@ lmatrix_adapter_1(lua_State *L) {
 	struct math3d_api *api = math3d_interface(L);
 	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
 	int from = (int)lua_tointeger(L, lua_upvalueindex(3));
-	void * v = get_pointer(L, api, from, LINEAR_TYPE_MAT);
+	void * v = get_pointer(L, api, from, MATH_TYPE_MAT);
 	lua_settop(L, from-1);
 	lua_pushlightuserdata(L, v);
 	return f(L);
@@ -58,8 +58,8 @@ lmatrix_adapter_2(lua_State *L) {
 	struct math3d_api *api = math3d_interface(L);
 	lua_CFunction f = lua_tocfunction(L, lua_upvalueindex(2));
 	int from = (int)lua_tointeger(L, lua_upvalueindex(3));
-	void * v1 = getopt_pointer(L, api, from, LINEAR_TYPE_MAT);
-	void * v2 = getopt_pointer(L, api, from+1, LINEAR_TYPE_MAT);
+	void * v1 = getopt_pointer(L, api, from, MATH_TYPE_MAT);
+	void * v2 = getopt_pointer(L, api, from+1, MATH_TYPE_MAT);
 	lua_settop(L, from-1);
 	if (v1) {
 		lua_pushlightuserdata(L, v1);
@@ -82,7 +82,7 @@ lmatrix_adapter_var(lua_State *L) {
 	int i;
 	int top = lua_gettop(L);
 	for (i=from;i<=top;i++) {
-		void * v = getopt_pointer(L, api, i, LINEAR_TYPE_MAT);
+		void * v = getopt_pointer(L, api, i, MATH_TYPE_MAT);
 		if (v) {
 			lua_pushlightuserdata(L, v);
 			lua_replace(L, i);
@@ -137,7 +137,7 @@ lvector(lua_State *L) {
 
 	for (ii = from; ii <= top; ++ii) {
 		if (!lua_isnil(L, ii)) {
-			void* p = get_pointer(L, api, ii, LINEAR_TYPE_VEC4);
+			void* p = get_pointer(L, api, ii, MATH_TYPE_VEC4);
 			lua_pushlightuserdata(L, p);
 			lua_replace(L, ii);
 		}
@@ -169,7 +169,7 @@ check_elem_type(lua_State *L, struct math3d_api *api, int index) {
 
 	int type;
 	math3d_from_lua_id(L, api, index, &type);
-	return type == LINEAR_TYPE_MAT ? SET_Mat : SET_Vec;
+	return type == MATH_TYPE_MAT ? SET_Mat : SET_Vec;
 }
 
 static void
@@ -238,13 +238,13 @@ lformat(lua_State *L, const char *format) {
 			luaL_error(L, "Invalid format string %s", format);
 		switch(format[i]) {
 		case 'm':
-			v = get_pointer(L, api, index, LINEAR_TYPE_MAT);
+			v = get_pointer(L, api, index, MATH_TYPE_MAT);
 			break;
 		case 'v':
-			v = get_pointer(L, api, index, LINEAR_TYPE_VEC4);
+			v = get_pointer(L, api, index, MATH_TYPE_VEC4);
 			break;
 		case 'q':
-			v = get_pointer(L, api, index, LINEAR_TYPE_QUAT);
+			v = get_pointer(L, api, index, MATH_TYPE_QUAT);
 			break;
 		default:
 			luaL_error(L, "Invalid format string %s", format);
@@ -336,16 +336,16 @@ get_n(lua_State *L, int n, struct stack_buf *prev) {
 		while (prev) {
 			switch(format[i]) {
 			case 'm':
-				type = LINEAR_TYPE_MAT;
+				type = MATH_TYPE_MAT;
 				break;
 			case 'v':
-				type = LINEAR_TYPE_VEC4;
+				type = MATH_TYPE_VEC4;
 				break;
 			case 'q':
-				type = LINEAR_TYPE_QUAT;
+				type = MATH_TYPE_QUAT;
 				break;
 			default:
-				type = LINEAR_TYPE_NONE;
+				type = MATH_TYPE_NULL;
 				luaL_error(L,"Invalid getter format %s", format);
 				break;
 			}
@@ -413,17 +413,17 @@ loutput_object(lua_State *L, int ltype) {
 
 static int
 loutput_matrix(lua_State *L) {
-	return loutput_object(L, LINEAR_TYPE_MAT);
+	return loutput_object(L, MATH_TYPE_MAT);
 }
 
 static int
 loutput_vector(lua_State *L) {
-	return loutput_object(L, LINEAR_TYPE_VEC4);
+	return loutput_object(L, MATH_TYPE_VEC4);
 }
 
 static int
 loutput_quat(lua_State *L) {
-	return loutput_object(L, LINEAR_TYPE_QUAT);
+	return loutput_object(L, MATH_TYPE_QUAT);
 }
 
 // upvalue1 : userdata mathstack
@@ -474,7 +474,7 @@ luaopen_math3d_adapter(lua_State *L) {
 
 	luaL_newlibtable(L, l);
 
-	if (lua_getfield(L, LUA_REGISTRYINDEX, MATH3D_STACK) != LUA_TUSERDATA) {
+	if (lua_getfield(L, LUA_REGISTRYINDEX, MATH3D_CONTEXT) != LUA_TUSERDATA) {
 		return luaL_error(L, "request 'math3d' first");
 	}
 	struct math3d_api * api = lua_touserdata(L, -1);

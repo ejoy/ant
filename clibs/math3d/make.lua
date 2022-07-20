@@ -7,7 +7,7 @@ lm:lua_source "math3d" {
         Ant3rd .. "glm",
     },
     sources = {
-        "linalg.c",
+        "mathid.c",
         "math3d.c",
         "math3dfunc.cpp",
         "mathadapter.c",

@@ -3,6 +3,7 @@ local math3d = require "math3d"
 do
 	print "---- constant -------"
 	local c = math3d.constant "null"
+	print(c, math3d.mark(c))
 	print(math3d.tostring(c))
 	local c = math3d.constant "v4"
 	print(math3d.tostring(c))
@@ -25,26 +26,27 @@ do
 	print(math3d.tostring(vec))
 end
 
-local ref1 = math3d.ref()
+local ref1, ref2, ref3
 
-ref1.m = { s = 10, r = { axis = {1,0,0}, r = math.rad(60) },  t = { 1,2,3 } }
-local ref2 = math3d.ref()
-ref2.v = math3d.vector(1,2,3,4)
-print("ref1", ref1)
-print("ref1 value", math3d.tostring(math3d.matrix(ref1)))
-print(ref2)
-print("ref2 value", math3d.tostring(math3d.vector(ref2)))
-ref2.v = math3d.pack("dddd", 1,2,3,4)
-print(ref2)
-ref2.v = math3d.vector(ref2, 1)
-print("ref2", ref2)
+do
+	print "----- ref ------"
 
-for i = 1,4 do
-	print("ref1 Line", i, math3d.tostring(ref1[i]))
-end
+	ref1 = math3d.ref()
 
-for i = 1,4 do
-	print("ref2 index", i, math3d.index(ref2,i))
+	ref1.m = { s = 10, r = { axis = {1,0,0}, r = math.rad(60) },  t = { 1,2,3 } }
+
+	ref2 = math3d.ref()
+
+	ref2.v = math3d.vector(1,2,3,4)
+
+	print("ref1", ref1)
+	print("ref1 value", math3d.tostring(math3d.matrix(ref1)))
+	print(ref2)
+	print("ref2 value", math3d.tostring(math3d.vector(ref2)))
+	ref2.v = math3d.pack("dddd", 1,2,3,4)
+	print(ref2)
+	ref2.v = math3d.vector(ref2, 1)
+	print("ref2", ref2)
 end
 
 print "-----plane test-----"
@@ -78,53 +80,57 @@ do
 end
 
 print "===SRT==="
-ref1.m = { s = 1, r = { 0, math.rad(60), 0 }, t = { 1,2,3} }
-print(ref1)
-local s,r,t = math3d.srt(ref1)
-print("S = ", math3d.tostring(s))
-print("R = ", math3d.tostring(r))
-print("T = ", math3d.tostring(t))
+do
+	ref1.m = { r = { 0, math.rad(60), 0 }, t = { 1,2,3} }	-- .s = 1
+	print(ref1)
+	local s,r,t = math3d.srt(ref1)
+	print("S = ", math3d.tostring(s))
+	print("R = ", math3d.tostring(r))
+	print("T = ", math3d.tostring(t))
 
-local function print_srt()
-	print("S = ", math3d.tostring(ref1.s))
-	print("R = ", math3d.tostring(ref1.r))
-	print("T = ", math3d.tostring(ref1.t))
+	local function print_srt()
+		print("S = ", math3d.tostring(ref1.s))
+		print("R = ", math3d.tostring(ref1.r))
+		print("T = ", math3d.tostring(ref1.t))
+	end
+
+	print_srt()
 end
 
-print_srt()
-ref1.s = 1
-print_srt()
-ref1.s = { 3,2,1 }
-print_srt()
-
 print "===QUAT==="
+do
+	local q = math3d.quaternion { 0, math.rad(60, 0), 0 }
+	print(math3d.tostring(q))
+	ref3 = math3d.ref()
+	ref3.m = math3d.quaternion { axis = {1,0,0}, r = math.rad(60) } -- init mat with quat
+	print(ref3)
+	ref3.q = ref3	-- convert mat to quat
+	print(ref3)
 
-local q = math3d.quaternion { 0, math.rad(60, 0), 0 }
-print(math3d.tostring(q))
-local ref3 = math3d.ref()
-ref3.m = math3d.quaternion { axis = {1,0,0}, r = math.rad(60) } -- init mat with quat
-print(ref3)
-ref3.q = ref3	-- convert mat to quat
-print(ref3)
+	print(math3d.tostring(math3d.constant "quat", math3d.constant "quat"))	-- Identity quat
+end
 
 print "===FUNC==="
-print(ref2)
-ref2.v = math3d.add(ref2,ref2,ref2)
-print(ref2)
-ref2.v = math3d.mul(ref2, 2.5)
-print("length", ref2, "=", math3d.length(ref2))
-print("floor", ref2, "=", math3d.tostring(math3d.floor(ref2)))
-print("dot", ref2, ref2, "=", math3d.dot(ref2, ref2))
-print("cross", ref2, ref2, "=", math3d.tostring(math3d.cross(ref2, ref2)))
-local point = math3d.vector(1, 2, 3, 1)
-print("transformH", ref1, point, "=", math3d.tostring(math3d.transformH(ref1, point)))
-print("normalize", ref2, "=", math3d.tostring(math3d.normalize(ref2)))
-print("normalize", ref3, "=", math3d.tostring(math3d.normalize(ref3)))
-print("transpose", ref1, "=", math3d.tostring(math3d.transpose(ref1)))
-print("inverse", ref1, "=", math3d.tostring(math3d.inverse(ref1)))
-print("inverse", ref2, "=", math3d.tostring(math3d.inverse(ref2)))
-print("inverse", ref3, "=", math3d.tostring(math3d.inverse(ref3)))
-print("reciprocal", ref2, "=", math3d.tostring(math3d.reciprocal(ref2)))
+do
+	ref2.v = math3d.vector(1,2,3,4)
+	print(ref2)
+	ref2.v = math3d.add(ref2,ref2,ref2)
+	print(ref2)
+	ref2.v = math3d.mul(ref2, 2.5)
+	print("length", ref2, "=", math3d.length(ref2))
+	print("floor", ref2, "=", math3d.tostring(math3d.floor(ref2)))
+	print("dot", ref2, ref2, "=", math3d.dot(ref2, ref2))
+	print("cross", ref2, ref2, "=", math3d.tostring(math3d.cross(ref2, ref2)))
+	print("normalize", ref2, "=", math3d.tostring(math3d.normalize(ref2)))
+	print("normalize", ref3, "=", math3d.tostring(math3d.normalize(ref3)))
+	print("transpose", ref1, "=", math3d.tostring(math3d.transpose(ref1)))
+	local point = math3d.vector(1, 2, 3, 1)
+	print("transformH", ref1, point, "=", math3d.tostring(math3d.transformH(ref1, point)))
+	print("inverse", ref1, "=", math3d.tostring(math3d.inverse(ref1)))
+	print("inverse", ref2, "=", math3d.tostring(math3d.inverse(ref2)))
+	print("inverse", ref3, "=", math3d.tostring(math3d.inverse(ref3)))
+	print("reciprocal", ref2, "=", math3d.tostring(math3d.reciprocal(ref2)))
+end
 
 print "===INVERSE==="
 do
@@ -147,10 +153,10 @@ end
 
 print "===VIEW&PROJECTION MATRIX==="
 do
-	local eyepos = math3d.vector{0, 5, -10}
-	local at = math3d.vector {0, 0, 0}
-	local direction = math3d.normalize(math3d.vector {1, 1, 1})
-	local updir = math3d.vector {0, 1, 0}
+	local eyepos = math3d.vector( 0, 5, -10 )
+	local at = math3d.vector (0, 0, 0)
+	local direction = math3d.normalize(math3d.vector (1, 1, 1))
+	local updir = math3d.vector (0, 1, 0)
 
 	local mat1 = math3d.lookat(eyepos, at, updir)
 	local mat2 = math3d.lookto(eyepos, direction, updir)
@@ -204,8 +210,10 @@ do
 end
 
 print "===PROJ===="
-local projmat = math3d.projmat {fov=90, aspect=1, n=1, f=1000}
-print("PROJ", math3d.tostring(projmat))
+do
+	local projmat = math3d.projmat {fov=90, aspect=1, n=1, f=1000}
+	print("PROJ", math3d.tostring(projmat))
+end
 
 print "===ADAPTER==="
 local adapter = require "math3d.adapter"
@@ -238,8 +246,8 @@ print(math3d.tostring(v1), math3d.tostring(v2))
 print "===AABB&FRUSTUM==="
 do
 	local aabb = math3d.ref(math3d.aabb(math3d.vector(-1, 2, 3), math3d.vector(1, 2, -3), math3d.vector(-2, 3, 6)))
-	local minv, maxv = math3d.index(aabb, 1), math3d.index(aabb, 2)
-	print("aabb.min:", math3d.tostring(minv), "aabb.max:", math3d.tostring(maxv))
+	assert(math3d.array_size(aabb) == 2)
+	print("aabb:min", math3d.tostring(math3d.array_index(aabb,0)), "aabb:max", math3d.tostring(math3d.array_index(aabb,1)))
 
 	local transformmat = math3d.matrix(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 3, 1)
 	aabb = math3d.aabb_transform(transformmat, aabb)
@@ -296,8 +304,8 @@ do
 	local aabb2 = math3d.aabb()
 	aabb2 = math3d.aabb_append(aabb2, table.unpack(points))
 
-	print("minmax-aabb:", math3d.tostring(math3d.index(aabb, 1)), math3d.tostring(math3d.index(aabb, 2)))
-	print("aabb-append:", math3d.tostring(math3d.index(aabb2, 1)), math3d.tostring(math3d.index(aabb2, 2)))
+	print("minmax-aabb:", math3d.tostring(aabb))
+	print("aabb-append:", math3d.tostring(aabb2))
 end
 
 local r2l_mat = math3d.matrix{s={-1.0, 1.0, 1.0}}
