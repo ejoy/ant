@@ -1345,20 +1345,15 @@ static int
 lminmax(lua_State *L) {
 	struct math_context *M = GETMC(L);
 
-	luaL_checktype(L, 1, LUA_TTABLE);
-	const int numpoints = (int)getlen(L, 1);
-	if (numpoints == 0)
-		return luaL_error(L, "Empty minmax points");
+	const math_t points = object_from_index(L, M, 1, MATH_TYPE_VEC4, vector_from_table);
 
-	math_t transform = object_from_index(L, M, 2, MATH_TYPE_MAT, matrix_from_table);	// can be null
+	const math_t transform = object_from_index(L, M, 2, MATH_TYPE_MAT, matrix_from_table);	// can be null
 	math_t minmax[2] = { MATH_NULL, MATH_NULL };
 
+	const int numpoints = math_size(M, points);
 	int ii;
-
 	for (ii = 0; ii < numpoints; ++ii) {
-		lua_geti(L, 1, ii+1);
-		math_t v = vector_from_index(L, M, -1);
-		lua_pop(L, 1);
+		math_t v = math_index(M, points, ii);
 		math3d_minmax(M, transform, v, minmax);
 	}
 
@@ -1811,15 +1806,7 @@ lfrustum_planes(lua_State *L) {
 	struct math_context *M = GETMC(L);
 	math_t m = matrix_from_index(L, M, 1);
 	math_t planes = math3d_frustum_planes(M, m, g_default_homogeneous_depth);
-
-	// todo: use array instead of table
-	int i;
-	lua_createtable(L, 6, 0);
-	for (i=0;i<6;i++) {
-		lua_pushmath(L, math_index(M, planes, i));
-		lua_seti(L, -2, i+1);
-	}
-
+	lua_pushmath(L, planes);
 	return 1;
 }
 
@@ -1868,14 +1855,7 @@ lfrustum_points(lua_State *L) {
 	struct math_context *M = GETMC(L);
 	math_t m = matrix_from_index(L, M, 1);
 	math_t result = math3d_frustum_points(M, m, g_default_homogeneous_depth);
-
-	lua_createtable(L, 8, 0);
-	int i;
-	for (i=0;i<8;i++) {
-		lua_pushmath(L, math_index(M, result, i));
-		lua_seti(L, -2, i+1);
-	}
-
+	lua_pushmath(L, result);
 	return 1;
 }
 

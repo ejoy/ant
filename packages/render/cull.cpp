@@ -36,6 +36,9 @@ lcull(lua_State *L){
 	for (auto e : ecs.select<ecs::view_visible, ecs::render_object, ecs::scene>()){
 		auto s = e.get<ecs::scene>();
 		const math_t aabb = {(uint64_t)s.scene_aabb};
+		if (math_isnull(aabb))
+			continue;
+
 		if (math3d_frustum_intersect_aabb(w->math3d->MC, planes, aabb) < 0){
 			for (int ii=0; ii<numtab; ++ii){
 				ecs.enable_tag(e, s_cull_tabs[ii]);
