@@ -29,6 +29,24 @@ namespace ecs_api {
             }
             return c;
         }
+
+        template <typename...Ts>
+        using components = decltype(std::tuple_cat(
+            std::declval<std::conditional_t<std::is_empty<Ts>::value,
+                std::tuple<>,
+                std::tuple<Ts*>
+            >>()...
+        ));
+
+        template <std::size_t Is, typename T>
+        static constexpr std::size_t next() {
+            if constexpr (std::is_empty<T>::value) {
+                return Is;
+            }
+            else {
+                return Is+1;
+            }
+        }
     }
 
     template <typename MainKey, typename ...SubKey>
@@ -111,7 +129,7 @@ namespace ecs_api {
             }
             assgin<Is>(v);
             if constexpr (sizeof...(Components) > 0) {
-                return init_sibling<Is+1, Components...>(ctx, i);
+                return init_sibling<impl::next<Is, Component>(), Components...>(ctx, i);
             }
             return true;
         }
@@ -126,7 +144,7 @@ namespace ecs_api {
                     return true;
                 }
                 else {
-                    if (init_sibling<1, SubKey...>(ctx, i)) {
+                    if (init_sibling<impl::next<0, MainKey>(), SubKey...>(ctx, i)) {
                         return true;
                     }
                 }
@@ -137,7 +155,7 @@ namespace ecs_api {
             auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i, L);
             assgin<Is>(v);
             if constexpr (sizeof...(Components) > 0) {
-                init_sibling<Is+1, Components...>(ctx, i, L);
+                init_sibling<impl::next<Is, Component>(), Components...>(ctx, i, L);
             }
         }
         bool init_components(ecs_context* ctx, int i, lua_State* L) {
@@ -147,12 +165,12 @@ namespace ecs_api {
             }
             assgin<0>(v);
             if constexpr (sizeof...(SubKey) > 0) {
-                init_sibling<1, SubKey...>(ctx, i, L);
+                init_sibling<impl::next<0, MainKey>(), SubKey...>(ctx, i, L);
             }
             return true;
         }
     private:
-        std::tuple<MainKey*, SubKey*...> c;
+        impl::components<MainKey, SubKey...> c;
         int index;
     };
 
