@@ -35,7 +35,7 @@ lcull(lua_State *L){
 	const auto planes = math3d_frustum_planes(w->math3d->MC, vpid, math3d_homogeneous_depth());
 	for (auto e : ecs.select<ecs::view_visible, ecs::render_object, ecs::scene>()){
 		auto& s = e.get<ecs::scene>();
-		const math_t aabb = {(uint64_t)s.scene_aabb};
+		const math_t aabb = s.scene_aabb;
 		if (math_isnull(aabb))
 			continue;
 

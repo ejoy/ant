@@ -10,22 +10,17 @@ extern "C" {
 	#include "math3dfunc.h"
 }
 
-static inline math_t tom(int64_t id){
-	return math_t{uint64_t(id)};
-}
-
 static inline void
-math_update(struct math_context* MC, int64_t &id, math_t &m){
-	m = math_mark(MC, m);
-	math_unmark(MC, tom(id));
-	id = m.idx;
+math_update(struct math_context* MC, math_t& id, math_t const& m) {
+	math_unmark(MC, id);
+	id = math_mark(MC, m);
 }
 
 static int
 scene_changed(lua_State *L) {
 	auto w = getworld(L, 1);
 	ecs_api::context ecs {w->ecs};
-	auto math3d = w->math3d;
+	auto math3d = w->math3d->MC;
 
 	// step.1
 	auto selector = ecs.select<ecs::scene_needchange, ecs::scene_update, ecs::scene>();
@@ -52,7 +47,7 @@ scene_changed(lua_State *L) {
 		if (parents.contains(id)) {
 			auto s = e.sibling<ecs::scene>(ecs);
 			if (s) {
-				worldmats.insert_or_assign(id, tom(s->worldmat));
+				worldmats.insert_or_assign(id, s->worldmat);
 			}
 		}
 		if (e.sibling<ecs::scene_changed>(ecs)) {
@@ -74,23 +69,24 @@ scene_changed(lua_State *L) {
 		auto& id = e.get<ecs::id>();
 		auto& s = e.get<ecs::scene>();
 		
-		math_t mat = math3d_make_srt(math3d->MC, tom(s.s), tom(s.r), tom(s.t));
-		mat = math3d_mul_matrix(math3d->MC, mat, tom(s.mat));
+		math_t mat = math3d_make_srt(math3d, s.s, s.r, s.t);
+		if (!math_isnull(s.mat)) {
+			mat = math3d_mul_matrix(math3d, mat, s.mat);
+		}
 		if (s.parent != 0) {
 			auto parentmat = worldmats.find(s.parent);
 			if (!parentmat) {
 				return luaL_error(L, "Unexpected Error.");
 			}
-			mat = math3d_mul_matrix(math3d->MC, *parentmat, mat);
+			mat = math3d_mul_matrix(math3d, *parentmat, mat);
 		}
 
-		math_update(math3d->MC, s.worldmat, mat);
-		worldmats.insert_or_assign(id, mat);
+		math_update(math3d, s.worldmat, mat);
+		worldmats.insert_or_assign(id, s.worldmat);
 
-		math_t aabb = tom(s.aabb);
-		if (!math_isnull(aabb)){
-			aabb = math3d_aabb_transform(math3d->MC, mat, aabb);
-			math_update(math3d->MC, s.scene_aabb, aabb);
+		if (!math_isnull(s.aabb)){
+			math_t aabb = math3d_aabb_transform(math3d, mat, s.aabb);
+			math_update(math3d, s.scene_aabb, aabb);
 		}
 	}
 

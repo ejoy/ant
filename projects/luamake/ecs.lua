@@ -129,10 +129,19 @@ local TYPENAMES <const> = {
     userdata = "int64_t",
 }
 
+local function typenames(v)
+    local ud = v:match "^userdata|(.*)$"
+    if ud then
+        return ud
+    end
+    return assert(TYPENAMES[v])
+end
+
 do
     write "#pragma once"
     write ""
     write "#include \"ecs/select.h\""
+    write "#include \"ecs/user.h\""
     write "#include <stdint.h>"
     write ""
     write "namespace ant_ecs {"
@@ -144,8 +153,8 @@ do
         if type == "c" then
             write(("struct %s {"):format(name))
             for _, field in ipairs(fields) do
-                local name, typename = field:match "^([%w_]+):(%w+)$"
-                write(("\t%s %s;"):format(TYPENAMES[typename], name))
+                local name, typename = field:match "^([%w_]+):([%w|_]+)$"
+                write(("\t%s %s;"):format(typenames(typename), name))
             end
             write("};")
             write ""
@@ -156,7 +165,7 @@ do
             write(("struct %s {};"):format(name))
             write ""
         else
-            write(("using %s = %s;"):format(name, TYPENAMES[type]))
+            write(("using %s = %s;"):format(name, typenames(type)))
             write ""
         end
     end
