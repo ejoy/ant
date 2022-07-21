@@ -472,7 +472,7 @@ local function update_decl(self)
                 unmarshal = class.unmarshal,
             }
             for i, v in ipairs(info.field) do
-                t[i] = v
+                t[i] = v:match "^(.*)|.*$" or v
             end
             w:register(t)
         elseif type == nil then
