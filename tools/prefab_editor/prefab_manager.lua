@@ -432,23 +432,26 @@ function m:on_prefab_ready(prefab)
         end
     end
 
-    local function add_to_hierarchy(e)
-        local node = node_map[e]
+    local function add_to_hierarchy(eid)
+        if world:entity(eid).meshskin then
+            return
+        end
+        local node = node_map[eid]
         if node.parent and not hierarchy:get_node(node.parent) then
             add_to_hierarchy(node.parent)
         end
         local children = node.template.children
         local tp = node.template
         if children then
-            set_select_adapter(children, e)
+            set_select_adapter(children, eid)
         else
             tp = {template = node.template}
         end
-        hierarchy:add(e, tp, node.parent or self.root)
+        hierarchy:add(eid, tp, node.parent or self.root)
     end
 
-    for _, e in ipairs(self.entities) do
-        add_to_hierarchy(e)
+    for _, eid in ipairs(self.entities) do
+        add_to_hierarchy(eid)
     end
     
     local srt = self.prefab_template[1].data.scene
@@ -490,12 +493,9 @@ local function on_remove_entity(e)
 end
 
 function m:reset_prefab()
-    --camera_mgr.clear()
     for _, e in ipairs(self.entities) do
-        if not world:entity(e).scene.REMOVED then
-            on_remove_entity(e)
-            world:remove_entity(e)
-        end
+        on_remove_entity(e)
+        world:remove_entity(e)
     end
     imodifier.set_target(imodifier.highlight, nil)
     light_gizmo.clear()
