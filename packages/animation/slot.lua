@@ -10,25 +10,9 @@ local iom   = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local r2l_mat<const> = mc.R2L_MAT
 
-local function find_animation_entities()
-    local cache = {}
-    for e in w:select "scene:in id:in skeleton:in meshskin:in" do
-        cache[e.id] = {
-            scene       = e.scene,
-            skeleton    = e.skeleton,
-            pose_result = e.meshskin.pose_result,
-        }
-    end
-
-    return cache
-end
-
 local sys = ecs.system "slot_system"
 
 function sys:start_frame()
-    for v in w:select "slot:in scene:in" do
-		v.scene.slot_matrix = nil
-	end
 end
 
 function sys:entity_init()
