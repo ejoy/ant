@@ -898,6 +898,34 @@ lmul_array(lua_State *L) {
 }
 
 static int
+lassign(lua_State *L) {
+	struct math_context *M = GETMC(L);
+	math_t ref = get_id(L, M, 1);
+	if (!math_isref(M, ref)) {
+		return luaL_error(L, "Need ref id");
+	}
+	math_t id;
+	int sz = 4;
+	int type = math_type(M, ref);
+	switch (type) {
+	case MATH_TYPE_MAT:
+		id = matrix_from_index(L, M, 2);
+		sz = 16;
+		break;
+	case MATH_TYPE_VEC4:
+		id = vector_from_index(L, M, 2);
+		break;
+	case MATH_TYPE_QUAT:
+		id = quat_from_index(L, M, 2);
+		break;
+	default:
+		return luaL_error(L, "Unsupport math ref type %s", math_typename(type));
+	}
+	memcpy(math_init(M, ref), math_value(M, id), sz * sizeof(float));
+	return 0;
+}
+
+static int
 larray_vector(lua_State *L) {
 	struct math_context *M = GETMC(L);
 	lua_pushmath(L, array_from_index(L, M, 1, MATH_TYPE_VEC4, 0));
@@ -2224,6 +2252,7 @@ init_math3d_api(lua_State *L, struct math3d_api *M) {
 		{ "ref", NULL },
 		{ "mark", lmark },
 		{ "unmark", lunmark },
+		{ "assign", lassign },
 		{ "constant", lconstant },
 		{ "constant_array", lconstant_array },
 		{ "tostring", ltostring },
@@ -2363,10 +2392,9 @@ math3d_push_(lua_State *L, struct math_context *M, const float *v, int type) {
 	lua_pushlightuserdata(L, MATH_TO_HANDLE(id));
 }
 
-static void
-math3d_ref_(lua_State *L, struct math_context *M, const float *v, int type) {
-	math_t id = math_ref(M, v, type, 1);
-	lua_pushlightuserdata(L, MATH_TO_HANDLE(id));
+static math_t
+math3d_ref_(struct math_context *M, const float *v, int type, int size) {
+	return math_ref(M, v, type, size);
 }
 
 static math_t
@@ -2386,6 +2414,12 @@ math3d_getptr_(struct math_context *M, math_t id, int *type) {
 		*type = math_type(M, id);
 	}
 	return math_init(M, id);
+}
+
+static float *
+math3d_create_(struct math_context *M, int type, int size, math_t *id) {
+	*id = math_import(M, NULL, type, size);
+	return math_init(M, *id);
 }
 
 LUAMOD_API int
@@ -2411,6 +2445,7 @@ luaopen_math3d(lua_State *L) {
 	M->unmark_id = math3d_unmark_id_;
 	M->push = math3d_push_;
 	M->ref = math3d_ref_;
+	M->create = math3d_create_;
 	M->getptr = math3d_getptr_;
 
 	finalize(L, boxstack_gc);

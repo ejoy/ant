@@ -50,6 +50,11 @@ is_equal(const T& a, const T& b, const T& e = T(glm::epsilon<float>())) {
 	return is_zero(a - b, e);
 }
 
+static inline void
+check_type(struct math_context *M, math_t id, int type) {
+	assert(math_type(M, id) == type);
+}
+
 static inline glm::mat4x4 &
 allocmat(struct math_context *M, math_t *id) {
 	*id = math_matrix(M, NULL);
@@ -59,6 +64,7 @@ allocmat(struct math_context *M, math_t *id) {
 
 static inline glm::mat4x4 &
 initmat(struct math_context *M, math_t id) {
+	check_type(M, id, MATH_TYPE_MAT);
 	float * buf = math_init(M, id);
 	return *(glm::mat4x4 *)buf;
 }
@@ -79,30 +85,35 @@ allocvec4(struct math_context *M, math_t *id) {
 
 static inline glm::vec4 &
 initvec4(struct math_context *M, math_t id) {
+	check_type(M, id, MATH_TYPE_VEC4);
 	float * buf = math_init(M, id);
 	return *(glm::vec4 *)buf;
 }
 
 static inline const glm::quat &
 QUAT(struct math_context *M, math_t quat) {
+	check_type(M, quat, MATH_TYPE_QUAT);
 	const float * v = math_value(M, quat);
 	return *(const glm::quat *)(v);
 }
 
 static inline const glm::mat4x4 &
 MAT(struct math_context *M, math_t mat) {
+	check_type(M, mat, MATH_TYPE_MAT);
 	const float *v = math_value(M, mat);
 	return *(const glm::mat4x4 *)(v);
 }
 
 static inline const glm::vec4 &
 VEC(struct math_context *M, math_t v4) {
+	check_type(M, v4, MATH_TYPE_VEC4);
 	const float *v = math_value(M, v4);
 	return *(const glm::vec4 *)(v);
 }
 
 static inline const glm::vec3 &
 VEC3(struct math_context *M, math_t v3) {
+	check_type(M, v3, MATH_TYPE_VEC4);
 	const float *v = math_value(M, v3);
 	return *(const glm::vec3 *)(v);
 }
@@ -349,6 +360,7 @@ math_t
 math3d_floor(struct math_context *M, math_t v) {
 	math_t id = math_vec4(M, NULL);
 	float *vv = math_init(M, id);
+	check_type(M, v, MATH_TYPE_VEC4);
 	const float *value = math_value(M, v);
 	vv[0] = floor(value[0]);
 	vv[1] = floor(value[1]);
@@ -361,6 +373,7 @@ math_t
 math3d_ceil(struct math_context *M, math_t v) {
 	math_t id = math_vec4(M, NULL);
 	float *vv = math_init(M, id);
+	check_type(M, v, MATH_TYPE_VEC4);
 	const float *value = math_value(M, v);
 	vv[0] = ceil(value[0]);
 	vv[1] = ceil(value[1]);
@@ -469,6 +482,7 @@ math_t
 math3d_mulH(struct math_context *M, math_t mat, math_t v) {
 	math_t id;
 	glm::vec4 &r = allocvec4(M, &id);
+	check_type(M, v, MATH_TYPE_VEC4);
 	const float *vec = math_value(M, v);
 
 	if (vec[3] != 1.f){
@@ -489,6 +503,8 @@ math_t
 math3d_reciprocal(struct math_context *M, math_t v) {
 	math_t id;
 	glm::vec4 &vv = allocvec4(M, &id);
+
+	check_type(M, v, MATH_TYPE_VEC4);
 	const float *value = math_value(M, v);
 	const glm::vec4 & vec = *(const glm::vec4 *)(value);
 
@@ -509,6 +525,7 @@ math3d_lookat_matrix(struct math_context *M, int direction, math_t eye, math_t a
 		static const float default_up[3] = {0,1,0};
 		up = default_up;
 	} else {
+		check_type(M, up_id, MATH_TYPE_VEC4);
 		up = math_value(M, up_id);
 	}
 	const glm::vec3 &eyev = VEC3(M, eye);
@@ -670,17 +687,22 @@ math3d_minmax(struct math_context *M, math_t transform, math_t v, math_t minmax[
 	if (math_isnull(minmax[0])) {
 		minmax[0] = v;
 	} else {
+		check_type(M, minmax[0], MATH_TYPE_VEC4);
 		minmax[0] = minv(M, minmax[0], v);
 	}
 	if (math_isnull(minmax[1])) {
 		minmax[1] = v;
 	} else {
+		check_type(M, minmax[1], MATH_TYPE_VEC4);
 		minmax[1] = maxv(M, minmax[1], v);
 	}
 }
 
 math_t
 math3d_aabb_merge(struct math_context *M, math_t aabblhs, math_t aabbrhs) {
+	check_type(M, aabblhs, MATH_TYPE_VEC4);
+	check_type(M, aabbrhs, MATH_TYPE_VEC4);
+
 	math_t v[4] = {
 		math_index(M, aabblhs, 0),
 		math_index(M, aabblhs, 1),
@@ -963,6 +985,8 @@ math3d_aabb_intersect_plane(struct math_context *M, math_t aabb, math_t plane) {
 
 math_t
 math3d_aabb_intersection(struct math_context *M, math_t aabb1, math_t aabb2) {
+	check_type(M, aabb1, MATH_TYPE_VEC4);
+	check_type(M, aabb2, MATH_TYPE_VEC4);
 	math_t aabb[2] = {
 		maxv(M, math_index(M, aabb1, 0),  math_index(M, aabb2, 0)),
 		minv(M, math_index(M, aabb1, 1),  math_index(M, aabb2, 1)),
@@ -987,6 +1011,7 @@ math3d_aabb_intersection(struct math_context *M, math_t aabb1, math_t aabb2) {
 
 int
 math3d_aabb_test_point(struct math_context *M, math_t aabb, math_t v) {
+	check_type(M, aabb, MATH_TYPE_VEC4);
 	const float * aabb_value = math_value(M, aabb);
 	const float * p = math_value(M, v);
 	const float * minv = &aabb_value[0];
@@ -1112,6 +1137,8 @@ math3d_frustum_planes(struct math_context *M, math_t m, int homogeneous_depth) {
 int
 math3d_frustum_intersect_aabb(struct math_context *M, math_t planes, math_t aabb) {
 	int ii;
+
+	check_type(M, aabb, MATH_TYPE_VEC4);
 
 	const glm::vec3 &min =  VEC3(M, math_index(M, aabb, 0));
 	const glm::vec3 &max =  VEC3(M, math_index(M, aabb, 1));

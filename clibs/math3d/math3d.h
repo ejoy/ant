@@ -11,7 +11,8 @@ struct math3d_api {
 	math_t (*from_lua_id)(lua_State *L, struct math_context *MC, int index);
 	float * (*getptr)(struct math_context *MC, math_t id, int *type);
 	void (*push)(lua_State *L, struct math_context *MC, const float *v, int type);
-	void (*ref)(lua_State *L, struct math_context *MC, const float *v, int type);
+	float * (*create)(struct math_context *MC, int type, int size, math_t *id);
+	math_t (*ref)(struct math_context *MC, const float *v, int type, int size);
 	math_t (*mark_id)(lua_State *L, struct math_context *MC, int idx);
 	void (*unmark_id)(struct math_context *MC, math_t id);
 };
@@ -35,9 +36,14 @@ math3d_push(lua_State *L, struct math3d_api *M, const float *v, int type) {
 	M->push(L, M->MC, v, type);
 }
 
-static inline void
-math3d_ref(lua_State *L, struct math3d_api *M, const float *v, int type) {
-	M->ref(L, M->MC, v, type);
+static inline float *
+math3d_create(struct math3d_api *M, int type, int size, math_t *id) {
+	return M->create(M->MC, type, size, id);
+}
+
+static inline math_t
+math3d_ref(struct math3d_api *M, const float *v, int type, int size) {
+	return M->ref(M->MC, v, type, size);
 }
 
 static inline math_t
@@ -52,11 +58,6 @@ math3d_unmark_id(struct math3d_api *M, math_t id) {
 
 static inline const float *
 math3d_value(struct math3d_api *M, math_t id, int *type) {
-	return M->getptr(M->MC, id, type);
-}
-
-static inline float *
-math3d_init(struct math3d_api *M, math_t id, int *type) {
 	return M->getptr(M->MC, id, type);
 }
 

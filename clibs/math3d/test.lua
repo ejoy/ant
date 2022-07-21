@@ -404,6 +404,7 @@ do
 		{},
 	}
 	local output_ref = math3d.array_matrix_ref(math3d.value_ptr(tmp), 2)
+	math3d.assign(outout_ref, math3d.constant "matrix")
 	print(math3d.tostring(tmp), math3d.tostring(output_ref))
 
 	math3d.mul_array( { s = 42 }, mat_array, output_ref)
