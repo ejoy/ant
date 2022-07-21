@@ -10,9 +10,15 @@ extern "C" {
 	#include "math3dfunc.h"
 }
 
-static inline math_t
-to_math_t(int64_t id){
+static inline math_t tom(int64_t id){
 	return math_t{uint64_t(id)};
+}
+
+static inline void
+math_update(struct math_context* MC, int64_t &id, math_t &m){
+	m = math_mark(MC, m);
+	math_unmark(MC, tom(id));
+	id = m.idx;
 }
 
 static int
@@ -46,7 +52,7 @@ scene_changed(lua_State *L) {
 		if (parents.contains(id)) {
 			auto s = e.sibling<ecs::scene>(ecs);
 			if (s) {
-				worldmats.insert_or_assign(id, to_math_t(s->worldmat));
+				worldmats.insert_or_assign(id, tom(s->worldmat));
 			}
 		}
 		if (e.sibling<ecs::scene_changed>(ecs)) {
@@ -68,8 +74,8 @@ scene_changed(lua_State *L) {
 		auto& id = e.get<ecs::id>();
 		auto& s = e.get<ecs::scene>();
 		
-		math_t mat = math3d_make_srt(math3d->MC, to_math_t(s.s), to_math_t(s.r), to_math_t(s.t));
-		mat = math3d_mul_matrix(math3d->MC, mat, to_math_t(s.mat));
+		math_t mat = math3d_make_srt(math3d->MC, tom(s.s), tom(s.r), tom(s.t));
+		mat = math3d_mul_matrix(math3d->MC, mat, tom(s.mat));
 		if (s.parent != 0) {
 			auto parentmat = worldmats.find(s.parent);
 			if (!parentmat) {
@@ -78,15 +84,13 @@ scene_changed(lua_State *L) {
 			mat = math3d_mul_matrix(math3d->MC, *parentmat, mat);
 		}
 
-		mat = math_mark(math3d->MC, mat);
-		s.worldmat = mat.idx;
+		math_update(math3d->MC, s.worldmat, mat);
 		worldmats.insert_or_assign(id, mat);
 
-		auto aabb = to_math_t(s.aabb);
+		math_t aabb = tom(s.aabb);
 		if (!math_isnull(aabb)){
 			aabb = math3d_aabb_transform(math3d->MC, mat, aabb);
-			aabb = math_mark(math3d->MC, aabb);
-			s.scene_aabb = aabb.idx;
+			math_update(math3d->MC, s.scene_aabb, aabb);
 		}
 	}
 
