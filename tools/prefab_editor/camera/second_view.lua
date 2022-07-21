@@ -139,20 +139,25 @@ local frustum_ib<const> = {
 local function scale_frustum_points(frustum_points, len)
     local dirs = {}
 
+    local points = {
+        math3d.array_index(frustum_points, 1),
+        math3d.array_index(frustum_points, 2),
+        math3d.array_index(frustum_points, 3),
+        math3d.array_index(frustum_points, 4),
+    }
+
     for i=1, 4 do
-        dirs[#dirs+1] = math3d.normalize(math3d.sub(frustum_points[i+4], frustum_points[i]))
+        local p1 = math3d.array_index(frustum_points, i+4)
+        dirs[#dirs+1] = math3d.normalize(p1, points[i])
     end
 
     return {
-        frustum_points[1],
-        frustum_points[2],
-        frustum_points[3],
-        frustum_points[4],
+        points[1], points[2], points[3], points[4],
 
-        math3d.muladd(dirs[1], len, frustum_points[1]),
-        math3d.muladd(dirs[2], len, frustum_points[2]),
-        math3d.muladd(dirs[3], len, frustum_points[3]),
-        math3d.muladd(dirs[4], len, frustum_points[4]),
+        math3d.muladd(dirs[1], len, points[1]),
+        math3d.muladd(dirs[2], len, points[2]),
+        math3d.muladd(dirs[3], len, points[3]),
+        math3d.muladd(dirs[4], len, points[4]),
     }
 end
 
@@ -170,7 +175,7 @@ local function create_frustum_entity(eid)
     local vb = {}
     local frustum_points = scale_frustum_points(math3d.frustum_points(camera.projmat), 3)
 
-	for i=1, #frustum_points do
+	for i=1, 8 do
         add_v(frustum_points[i], vb)
 	end
 

@@ -327,7 +327,8 @@ local function update_highlight_aabb(e)
     if e then
         local ro = world:entity(e).render_object
         if ro and ro.aabb then
-            local minv, maxv = math3d.index(ro.aabb, 1, 2)
+            local minv = math3d.array_index(ro.aabb, 1)
+            local maxv = math3d.array_index(ro.aabb, 2)
             highlight_aabb.min = math3d.tovalue(minv)
             highlight_aabb.max = math3d.tovalue(maxv)
             highlight_aabb.visible = true

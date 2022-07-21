@@ -144,7 +144,7 @@ local function fetch_heightmap_data()
         }
     end
 
-    local aabb_min, aabb_max = math3d.index(sceneaabb, 1, 2)
+    local aabb_min, aabb_max = math3d.array_index(sceneaabb, 1), math3d.array_index(sceneaabb, 2)
     local aabb_len = math3d.sub(aabb_max, aabb_min)
     aabb_min, aabb_max = math3d.tovalue(aabb_min), math3d.tovalue(aabb_max)
     local xlen, ylen, zlen = math3d.index(aabb_len, 1, 2, 3)
@@ -157,7 +157,7 @@ local function fetch_heightmap_data()
 
     local movestep = rbsize*unit_pre_tex
     local xoffset, zoffset = movestep/2, movestep/2
-    local ypos = math3d.index(math3d.index(sceneaabb, 2), 2)
+    local ypos = math3d.index(math3d.array_index(sceneaabb, 2), 2)
 
     local f = icamera.get_frustum(camera_ref)
     f.n, f.f = znear, zfar

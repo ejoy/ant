@@ -144,7 +144,7 @@ function ic.lookto(ce, ...)
 end
 
 function ic.focus_aabb(ce, aabb)
-    local aabb_min, aabb_max= math3d.index(aabb, 1), math3d.index(aabb, 2)
+    local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
     local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
     local nviewdir = math3d.sub(aabb_max, center)
     local viewdir = math3d.normalize(math3d.inverse(nviewdir))
