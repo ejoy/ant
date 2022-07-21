@@ -126,6 +126,7 @@ local TYPENAMES <const> = {
     word = "uint16_t",
     byte = "uint8_t",
     float = "float",
+    math_t = "math_t",
     userdata = "int64_t",
 }
 
@@ -134,7 +135,7 @@ local function typenames(v)
     if ud then
         return ud
     end
-    return assert(TYPENAMES[v])
+    return assert(TYPENAMES[v], ("Invalid %s"):format(v))
 end
 
 do
