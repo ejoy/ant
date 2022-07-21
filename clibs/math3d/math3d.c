@@ -1604,16 +1604,39 @@ lforward_dir(lua_State *L) {
 }
 
 static inline float *
-alloc_aabb(lua_State *L, struct math_context *M) {
-	math_t id = math_import(M, NULL, MATH_TYPE_VEC4, 2);
-	lua_pushmath(L, id);
-	return math_init(M, id);
+alloc_aabb(lua_State *L, struct math_context *M, math_t *id) {
+	*id = math_import(M, NULL, MATH_TYPE_VEC4, 2);
+	return math_init(M, *id);
+}
+
+static math_t
+append_aabb(lua_State *L, struct math_context *M, math_t aabb, int from_index, int to_index) {
+	int i;
+	math_t minmax[2] = {
+		math_index(M, aabb, 0),
+		math_index(M, aabb, 1),
+	};
+	for (i=from_index;i<=to_index;i++) {
+		math_t v = vector_from_index(L, M, i);
+		math3d_minmax(M, MATH_NULL, v, minmax);
+	}
+	if (math_issame(minmax[0], math_index(M, aabb, 0)) &&
+		math_issame(minmax[1], math_index(M, aabb, 1))) {
+		return aabb;
+	} else {
+		math_t id;
+		float * r = alloc_aabb(L, M, &id);
+		memcpy(r, math_value(M, minmax[0]), 4 * sizeof(float));
+		memcpy(r+4, math_value(M, minmax[1]), 4 * sizeof(float));
+		return id;
+	}
 }
 
 static int
 laabb(lua_State *L) {
 	struct math_context *M = GETMC(L);
-	float *aabb = alloc_aabb(L, M);
+	math_t id;
+	float *aabb = alloc_aabb(L, M, &id);
 	aabb[0] = FLT_MAX;
 	aabb[1] = FLT_MAX;
 	aabb[2] = FLT_MAX;
@@ -1623,6 +1646,13 @@ laabb(lua_State *L) {
 	aabb[4+1] = -FLT_MAX;
 	aabb[4+2] = -FLT_MAX;
 	aabb[4+3] = 0;
+
+	int top = lua_gettop(L);
+	if (top > 1) {
+		id = append_aabb(L, M, id, 1, top);
+	}
+
+	lua_pushmath(L, id);
 
 	return 1;
 }
@@ -1639,24 +1669,8 @@ static int
 laabb_append(lua_State *L){
 	struct math_context *M = GETMC(L);
 	math_t aabb = aabb_from_index(L, M, 1);
-	int i;
-	int top = lua_gettop(L);
-	math_t minmax[2] = {
-		math_index(M, aabb, 0),
-		math_index(M, aabb, 1),
-	};
-	for (i=2;i<=top;i++) {
-		math_t v = vector_from_index(L, M, i);
-		math3d_minmax(M, MATH_NULL, v, minmax);
-	}
-	if (math_issame(minmax[0], math_index(M, aabb, 0)) &&
-		math_issame(minmax[1], math_index(M, aabb, 1))) {
-		lua_pushmath(L, aabb);
-	} else {
-		float * r = alloc_aabb(L, M);
-		memcpy(r, math_value(M, minmax[0]), 4 * sizeof(float));
-		memcpy(r+4, math_value(M, minmax[1]), 4 * sizeof(float));
-	}
+	aabb = append_aabb(L, M, aabb, 2, lua_gettop(L));
+	lua_pushmath(L, aabb);
 	return 1;
 }
 
@@ -1824,7 +1838,8 @@ lfrustum_to_aabb(lua_State *L){
 		lua_pop(L, 1);
 	}
 	
-	float * aabb = alloc_aabb(L, M);
+	math_t id;
+	float * aabb = alloc_aabb(L, M, &id);
 	aabb[0] = frustum[0],
 	aabb[1] = frustum[1],
 	aabb[2] = frustum[2];
@@ -1833,6 +1848,8 @@ lfrustum_to_aabb(lua_State *L){
 	aabb[5] = frustum[4],
 	aabb[6] = frustum[5];
 	aabb[7] = 1.0f;
+
+	lua_pushmath(L, id);
 	return 1;
 }
 
@@ -2181,6 +2198,26 @@ lconstant(lua_State *L) {
 	return 1;
 }
 
+static int
+lconstant_array(lua_State *L) {
+	const char *tname = luaL_checkstring(L, 1);
+	int type;
+	if (strcmp(tname, math_typename(MATH_TYPE_MAT)) == 0) {
+		type = MATH_TYPE_MAT;
+	} else if (strcmp(tname, math_typename(MATH_TYPE_VEC4)) == 0) {
+		type = MATH_TYPE_VEC4;
+	} else if (strcmp(tname, math_typename(MATH_TYPE_QUAT)) == 0) {
+		type = MATH_TYPE_QUAT;
+	} else {
+		return luaL_error(L, "Unknown array type %s", tname);
+	}
+
+	struct math_context * M = GETMC(L);
+	math_t id = array_from_index(L, M, 2, type, 0);
+	lua_pushlightuserdata(L, MATH_TO_HANDLE(math_mark(M, id)));
+	return 1;
+}
+
 static void
 init_math3d_api(lua_State *L, struct math3d_api *M) {
 	luaL_Reg l[] = {
@@ -2188,6 +2225,7 @@ init_math3d_api(lua_State *L, struct math3d_api *M) {
 		{ "mark", lmark },
 		{ "unmark", lunmark },
 		{ "constant", lconstant },
+		{ "constant_array", lconstant_array },
 		{ "tostring", ltostring },
 		{ "matrix", lmatrix },
 		{ "vector", lvector },

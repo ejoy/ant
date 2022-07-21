@@ -27,11 +27,11 @@ function ms:component_init()
 end
 
 function ms:entity_init()
-	for e in w:select "INIT mesh:in render_object:in" do
+	for e in w:select "INIT mesh:in render_object:in id:in" do
 		e.render_object.mesh = meshcore.mesh(e.mesh)
 	end
 
-	for e in w:select "INIT simplemesh:in render_object:in owned_mesh_buffer?out" do
+	for e in w:select "INIT simplemesh:in render_object:in id:in owned_mesh_buffer?out" do
 		local sm = e.simplemesh
 		e.render_object.mesh = meshcore.mesh(sm)
 		e.owned_mesh_buffer = sm.owned_mesh_buffer

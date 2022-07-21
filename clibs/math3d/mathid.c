@@ -44,6 +44,7 @@ struct math_context {
 	int frame;
 	int n;
 	int marked_page;
+	int marked_n;
 };
 
 static inline int
@@ -85,6 +86,7 @@ math_new() {
 	m->marked[0] = NULL;
 	m->count[0] = NULL;
 	m->transient[0] = NULL;
+	m->marked_n = 0;
 	math_unmarked_init(&m->unmarked);
 	return m;
 }
@@ -498,12 +500,14 @@ math_mark(struct math_context *M, math_t id) {
 		const float *v = math_value(M, id);
 		int size = math_size(M, id);
 		int type = math_type(M, id);
+		M->marked_n++;
 		return alloc_marked(M, v, type, size);
 	}
 	if (u.s.frame == 0) {
 		// constant value
 		return id;
 	}
+	M->marked_n++;
 	return get_marked_id(M, id);
 }
 
@@ -554,6 +558,7 @@ math_unmark(struct math_context *M, math_t id) {
 	index %= PAGE_SIZE;
 	assert(page_id < M->marked_page);
 	int vecsize = u.s.size + 1;
+	M->marked_n--;
 	if (u.s.type == MATH_TYPE_MAT) {
 		vecsize *= 4;
 	}
