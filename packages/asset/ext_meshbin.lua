@@ -42,20 +42,18 @@ local function init(mesh)
     return mesh
 end
 
-local function delete(mesh)
-    local vb = mesh.vb
-    for idx, v in ipairs(vb) do
-        if type(v) ~= "userdata" then
+local function destroy_handle(v)
+    if v then
+        if type(v.handle) ~= "userdata" then
             bgfx.destroy(v.handle)
         end
+        v.handle = nil
     end
+end
 
-    local ib = mesh.ib
-    if ib then
-        if type(ib.handle) ~= "userdata" then
-            bgfx.destroy(ib.handle)
-        end
-    end
+local function delete(mesh)
+    destroy_handle(mesh.vb)
+    destroy_handle(mesh.ib)
 end
 
 local function create_bounding(bounding)
