@@ -24,6 +24,9 @@ do
 
 	local vec = math3d.constant ("v4", { 0,0,0,0 })
 	print(math3d.tostring(vec))
+
+	local aabb = math3d.constant { type = "aabb", 1,1,1,2,2,2 }
+	print(math3d.tostring(aabb))
 end
 
 local ref1, ref2, ref3
@@ -268,7 +271,7 @@ do
 	}
 	local frustuminfo={}
 	for i=1, 8 do
-		frustuminfo[#frustuminfo+1] = frustum_point_names[i] .. ":" .. math3d.tostring(frustum_points[i])
+		frustuminfo[#frustuminfo+1] = frustum_point_names[i] .. ":" .. math3d.tostring(math3d.array_index(frustum_points, i))
 	end
 	print("frustum:\n", table.concat(frustuminfo, ",\n\t"))
 

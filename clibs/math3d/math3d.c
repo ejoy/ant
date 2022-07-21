@@ -1381,7 +1381,7 @@ static int
 lminmax(lua_State *L) {
 	struct math_context *M = GETMC(L);
 
-	const math_t points = object_from_index(L, M, 1, MATH_TYPE_VEC4, vector_from_table);
+	const math_t points = array_from_index(L, M, 1, MATH_TYPE_VEC4, 0);
 
 	const math_t transform = object_from_index(L, M, 2, MATH_TYPE_MAT, matrix_from_table);	// can be null
 	math_t minmax[2] = { MATH_NULL, MATH_NULL };
@@ -1849,7 +1849,6 @@ lfrustum_planes(lua_State *L) {
 static int
 lfrustum_intersect_aabb(lua_State *L) {
 	struct math_context *M = GETMC(L);
-	luaL_checktype(L, 1, LUA_TTABLE);
 	const math_t planes = frustum_planes_from_index(L, M, 1);
 	const math_t aabb = aabb_from_index(L, M, 2);
 	lua_pushinteger(L, math3d_frustum_intersect_aabb(M, planes, aabb));
@@ -2126,6 +2125,8 @@ lvalue_ptr(lua_State *L){
 	return 1;
 }
 
+#define MATH_TYPE_AABB MATH_TYPE_COUNT
+
 static int
 lconstant(lua_State *L) {
 	const char *tname = NULL;
@@ -2149,6 +2150,8 @@ lconstant(lua_State *L) {
 		type = MATH_TYPE_VEC4;
 	} else if (strcmp(tname, math_typename(MATH_TYPE_QUAT)) == 0) {
 		type = MATH_TYPE_QUAT;
+	} else if (strcmp(tname, "aabb") == 0) {
+		type = MATH_TYPE_AABB;
 	} else {
 		return luaL_error(L, "Unknown type %s", tname);
 	}
@@ -2169,6 +2172,9 @@ lconstant(lua_State *L) {
 		break;
 	case MATH_TYPE_QUAT:
 		id = quat_from_table(L, M, -1);
+		break;
+	case MATH_TYPE_AABB:
+		id = aabb_from_table(L, M, -1);
 		break;
 	}
 	lua_pushlightuserdata(L, MATH_TO_HANDLE(math_mark(M, id)));
