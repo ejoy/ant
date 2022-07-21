@@ -249,7 +249,7 @@ print "===AABB&FRUSTUM==="
 do
 	local aabb = math3d.ref(math3d.aabb(math3d.vector(-1, 2, 3), math3d.vector(1, 2, -3), math3d.vector(-2, 3, 6)))
 	assert(math3d.array_size(aabb) == 2)
-	print("aabb:min", math3d.tostring(math3d.array_index(aabb,0)), "aabb:max", math3d.tostring(math3d.array_index(aabb,1)))
+	print("aabb:min", math3d.tostring(math3d.array_index(aabb,1)), "aabb:max", math3d.tostring(math3d.array_index(aabb,2)))
 
 	local transformmat = math3d.matrix(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 3, 1)
 	aabb = math3d.aabb_transform(transformmat, aabb)
@@ -385,7 +385,7 @@ do
 	}
 	print(math3d.tostring(array))
 	assert(math3d.array_size(array) == 2)
-	print(math3d.tostring(math3d.array_index(array, 0)))
+	print(math3d.tostring(math3d.array_index(array, 1)))
 
 	local mat_array = math3d.array_matrix {
 		{ t = { 1,2,3,4 } },

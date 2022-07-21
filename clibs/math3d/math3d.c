@@ -922,7 +922,7 @@ static int
 larray_index(lua_State *L) {
 	struct math_context *M = GETMC(L);
 	math_t v = get_id(L, M, 1);
-	int index = (int)luaL_checkinteger(L, 2);
+	int index = (int)luaL_checkinteger(L, 2) - 1;
 	int size = math_size(M, v);
 	if (index < 0 || index >= size) {
 		return luaL_error(L, "Invalid array index (%d/%d)", index, size);
