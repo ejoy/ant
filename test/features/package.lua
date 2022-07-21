@@ -3,7 +3,6 @@ return {
     dependencies = {
         "ant.animation",
         "ant.camera",
-        "ant.character",
         "ant.compile_resource",
         "ant.heightmap",
         "ant.hwi",
