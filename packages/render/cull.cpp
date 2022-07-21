@@ -31,7 +31,7 @@ lcull(lua_State *L){
 	auto w = getworld(L, 1);
 	ecs_api::context ecs {w->ecs};
 
-	const auto vpid = math3d_mark_id(L, w->math3d, 3);
+	const auto vpid = math3d_from_lua(L, w->math3d, 3, MATH_TYPE_MAT);
 	const auto planes = math3d_frustum_planes(w->math3d->MC, vpid, math3d_homogeneous_depth());
 	for (auto e : ecs.select<ecs::view_visible, ecs::render_object, ecs::scene>()){
 		auto& s = e.get<ecs::scene>();
