@@ -6,7 +6,7 @@ lm:lua_source "render_core"{
         "../../3rd/bx/include",
         "../../clibs/bgfx",
         "../../clibs/lua",
-        "../../clibs/math3d",
+        "../../3rd/math3d",
         "../../clibs/foundation",
         "../../clibs/luabind",
         "../../3rd/glm",
@@ -26,7 +26,7 @@ lm:lua_source "render_core"{
 lm:lua_source "render" {
     includes = {
         "../../clibs/lua",
-        "../../clibs/math3d",
+        "../../3rd/math3d",
         "../../clibs/luabind",
         "../../3rd/luaecs",
         "../../3rd/glm",
