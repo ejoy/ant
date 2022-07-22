@@ -8,16 +8,39 @@ local serialize = import_package "ant.serialize"
 
 local m = ecs.component "scene"
 
+local function equal_vec3(a, b)
+	if type(a) ~= "table" then
+		return true
+	end
+	return a[1] == b[1] and a[2] == b[2] and a[3] == b[3]
+end
+
+local function equal_quat(a, b)
+	if type(a) ~= "table" then
+		return true
+	end
+	return a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and a[4] == b[4]
+end
+
 local function init_scene(scene)
 	local s, r, t = scene.s, scene.r, scene.t
 	if type(s) == "number" then
 		s = {s, s, s}
 	end
-	scene.s = math3d.mark(s and math3d.vector(s) or mc.ONE)
-	scene.r = math3d.mark(r and math3d.quaternion(r) or mc.IDENTITY_QUAT)
-	scene.t = math3d.mark(t and math3d.vector(t) or mc.ZERO_PT)
+	scene.s = mc.ONE
+	scene.r = mc.IDENTITY_QUAT
+	scene.t = mc.ZERO_PT
+	if s and not equal_vec3(s, mc.T_ONE) then
+		scene.s = math3d.mark(math3d.vector(s))
+	end
+	if r and not equal_quat(r, mc.T_IDENTITY_QUAT) then
+		scene.r = math3d.mark(math3d.quaternion(r))
+	end
+	if t and not equal_vec3(t, mc.T_ZERO_PT) then
+		scene.t = math3d.mark(math3d.vector(t))
+	end
 	scene.mat = mc.NULL
-	scene.worldmat = math3d.mark(mc.IDENTITY_MAT)
+	scene.worldmat = mc.NULL
 	if scene.updir then
 		scene.updir = math3d.mark(math3d.vector(scene.updir))
     else

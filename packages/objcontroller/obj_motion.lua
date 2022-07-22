@@ -39,6 +39,15 @@ local function set_srt(srt, s, r, t)
     set_t(srt, t)
 end
 
+local function reset_srt(srt)
+    math3d.unmark(srt.s)
+    math3d.unmark(srt.r)
+    math3d.unmark(srt.t)
+    srt.s = mc.ONE
+    srt.r = mc.IDENTITY_QUAT
+    srt.t = mc.ZERO_PT
+end
+
 function iobj_motion.get_position(e)
     return e.scene.t
 end
@@ -72,9 +81,7 @@ function iobj_motion.set_srt(e, s, r, t)
 end
 
 function iobj_motion.set_srt_matrix(e, mat)
-    set_s(e.scene, mc.ONE)
-    set_r(e.scene, mc.IDENTITY_QUAT)
-    set_t(e.scene, mc.ZERO_PT)
+    reset_srt(e.scene)
     set_mat(e.scene, mat)
     set_changed(e)
 end

@@ -40,7 +40,7 @@ constant.T_IDENTITY_MAT = {
 constant.T_IDENTITY_QUAT    = {0, 0, 0, 1}
 
 constant.ZERO       = math3d.constant("v4", constant.T_ZERO)
-constant.ZERO_PT    = math3d.constant("v4", constant.T_ZERO_PT)
+constant.ZERO_PT    = math3d.constant("v4", constant.T_ZERO_PT) -- identity
 
 constant.ONE        = math3d.constant("v4", constant.T_ONE)
 constant.ONE_PT     = math3d.constant("v4", constant.T_ONE_PT)
@@ -54,8 +54,8 @@ constant.NYAXIS     = math3d.constant("v4", constant.T_NYAXIS)
 constant.ZAXIS      = math3d.constant("v4", constant.T_ZAXIS)
 constant.NZAXIS     = math3d.constant("v4", constant.T_NZAXIS)
 
-constant.IDENTITY_MAT   = math3d.constant("mat",     constant.T_IDENTITY_MAT)
-constant.IDENTITY_QUAT  = math3d.constant("quat",   constant.T_IDENTITY_QUAT)
+constant.IDENTITY_MAT   = math3d.constant("mat",  constant.T_IDENTITY_MAT) -- identity
+constant.IDENTITY_QUAT  = math3d.constant("quat", constant.T_IDENTITY_QUAT) -- identity
 
 constant.R2L_MAT    = math3d.constant("mat", {
     1.0, 0.0, 0.0, 0.0,
@@ -64,6 +64,6 @@ constant.R2L_MAT    = math3d.constant("mat", {
     0.0, 0.0, 0.0, 1.0,
 })
 
-constant.NULL = math3d.constant "null"
+constant.NULL = math3d.constant "null"  -- identity
 
 return constant
