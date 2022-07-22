@@ -16,7 +16,7 @@ local r2l_mat<const> = mc.R2L_MAT
 function skinning_sys:skin_mesh()
 	for e in w:select "meshskin:in id:in" do
 		local skin = e.meshskin.skin
-		local skinning_matrices = e.meshskin.pose.matrices
+		local skinning_matrices = e.meshskin.skinning_matrices
 		local pr = e.meshskin.pose.pose_result
 		if pr then
 			local m = math3d.mul(iom.worldmat(world:entity(e.id)), r2l_mat)

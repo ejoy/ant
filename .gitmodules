@@ -43,3 +43,6 @@
 [submodule "3rd/Effekseer"]
 	path = 3rd/Effekseer
 	url = https://github.com/effekseer/Effekseer.git
+[submodule "3rd/math3d"]
+	path = 3rd/math3d
+	url = https://github.com/cloudwu/math3d.git

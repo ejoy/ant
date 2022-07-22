@@ -40,6 +40,8 @@ local function create(w, package, policies)
                     res.component_opt[v] = false
                 elseif component_type == "c" then
                     res.component_opt[v] = false
+                elseif component_type == "raw" then
+                    res.component_opt[v] = ("\0"):rep(assert(math.tointeger(component_class[v].size[1])))
                 else
                     res.component_opt[v] = 0
                 end

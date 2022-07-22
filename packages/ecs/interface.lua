@@ -80,6 +80,7 @@ local attribute = {
 		"implement",
 		"require_system",
 		"type",
+		"size",
 		"field",
 		"method",
 	},

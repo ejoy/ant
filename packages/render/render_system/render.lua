@@ -30,7 +30,7 @@ local world_trans_sys = ecs.system "world_transform_system"
 function world_trans_sys:entity_init()
 	for e in w:select "INIT render_object:in" do
 		local ro = e.render_object
-		if ro.skinning_pose_id == nil then
+		if not ro.skinning then
 			e.render_object.set_transform = set_world_matrix
 		else
 			e.render_object.set_transform = set_skinning_transform

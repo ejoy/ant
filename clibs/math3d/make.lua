@@ -5,13 +5,14 @@ dofile "../common.lua"
 lm:lua_source "math3d" {
     includes = {
         Ant3rd .. "glm",
+        Ant3rd .. "math3d",
     },
     sources = {
-        "mathid.c",
-        "math3d.c",
-        "math3dfunc.cpp",
-        "mathadapter.c",
-        "testadapter.c",
+        Ant3rd .. "math3d/mathid.c",
+        Ant3rd .. "math3d/math3d.c",
+        Ant3rd .. "math3d/math3dfunc.cpp",
+        Ant3rd .. "math3d/mathadapter.c",
+        Ant3rd .. "math3d/testadapter.c",
     },
     defines = {
         "_USE_MATH_DEFINES",

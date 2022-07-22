@@ -117,9 +117,8 @@ local function submit_filter(viewid, selkey, qn, transforms)
 	end
 end
 
---local iani = ecs.import.interface "ant.animation|ianimation"
 local function transform_find(t, id, ro, mats)
-	local sm = ro.skinning_pose and ro.skinning_pose.matrices
+	local sm = ro.skin_eid and world:entity(ro.skin_eid).meshskin.skinning_matrices
 	local c = t[id]
 	if c == nil then
 		local tid, stride, num
