@@ -40,12 +40,26 @@ local shader_options = {
 	},
 }
 
+local function get_shader_option(plat, renderer, stage)
+	if renderer == "noop" then
+		local noop_redirect = {
+			windows = "direct3d11",
+			mac = "metal",
+			ios = "metal",
+			android = "vulkan",
+		}
+		renderer = noop_redirect[plat]
+	end
+
+	return shader_options[renderer][stage]
+end
+
 function toolset.compile(config)
 	local commands = {
 		SHADERC,
 		"--platform", config.platform,
 		"--type", stage_types[config.stage],
-		"-p", shader_options[config.renderer][config.stage],
+		"-p", get_shader_option(config.platform, config.renderer, config.stage)
 		"-f", config.input,
 		"-o", config.output,
 		"--depends",

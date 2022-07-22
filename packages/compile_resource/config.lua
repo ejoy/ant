@@ -24,6 +24,7 @@ local function get(ext)
 end
 
 local texture_extensions = {
+    noop        = platform.OS == "WINDOWS" and "dds" or "ktx",
 	direct3d11 	= "dds",
 	direct3d12 	= "dds",
 	metal 		= "ktx",
