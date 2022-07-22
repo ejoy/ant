@@ -4,6 +4,9 @@
 #include "math3d.h"
 #include "lua.hpp"
 
+#include "material.h"
+//#include "mesh.h"
+
 #include "lua2struct.h"
 #include "luabgfx.h"
 #include <bgfx/c99/bgfx.h>
@@ -26,30 +29,63 @@ entity_visible(struct ecs_world* w, cid_t vs_id, int index, const ecs::render_ar
 	!entity_sibling(w->ecs, vs_id, index, (cid_t)ra.cull_id);
 }
 #define BGFX(_API)	w->bgfx->##_API
-// static inline void
-// update_transform(struct ecs_world* w, const ecs::render_obj *ro){
-// 	if (ro->matnum > 1){
-// 		BGFX(set_transform)(ro->worldmat, ro->matnum);
-// 	} else {
-// 		int type;
-// 		const float* m = math3d_value(w->math3d, ro->worldmat, &type);
-// 		BGFX(set_transform)(m, 1);
-// 	}
-// }
 
+struct material_instance;
+
+struct queue_materials {
+	enum queue_material_type : uint8_t {
+		QMT_mainqueue = 0,
+		QMT_predepth,
+		QMT_scenedepth,
+		QMT_pickup,
+		QMT_csm1,
+		QMT_csm2,
+		QMT_csm3,
+		QMT_csm4,
+		QMT_count,
+	};
+	union {
+		struct {
+			struct material_instance* mq;
+			struct material_instance* predepth;
+			struct material_instance* scenedepth;
+			struct material_instance* pickup;
+			struct material_instance* csm1;
+			struct material_instance* csm2;
+			struct material_instance* csm3;
+			struct material_instance* csm4;
+		};
+
+		struct material_instance* materials[QMT_count];
+	};
+
+};
+
+//TODO: we should cache transform update by entity id
 static inline void
-update_material(struct ecs_world* w){
-
+update_transform(struct ecs_world* w, math_t wm){
+	const float * v = math_value(w->math3d->MC, wm);
+	const int num = math_size(w->math3d->MC, wm);
+	BGFX(set_transform)(v, num);
 }
 
 static inline void
-update_mesh(){
-
+update_material(struct ecs_world* w, queue_materials *qm, queue_materials::queue_material_type qmt){
+	//auto mi = qm.materials[qmt];
+	// struct material_context ctx{};
+	// material_apply(&ctx, mi);
 }
 
 static inline void
-submit_draw(){
+update_mesh(struct ecs_world* w, struct mesh* m){
+	//struct mesh_context ctx = {};
+	//mesh_apply(m);
+}
 
+static inline void
+submit_draw(struct ecs_world* w, bgfx_view_id_t viewid, const ecs::render_obj &ro){
+	
+	w->bgfx->submit(viewid, {ro.prog}, ro.depth, ro.flags);
 }
 
 static int
