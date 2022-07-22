@@ -171,38 +171,31 @@ do
     end
     write "}"
     write ""
-    write "struct ant_ecs_component_id {"
-    write "\tinline static int id = 0x80000000;"
-    write "\tinline static int gen() {"
-    write "\t\treturn id++;"
-    write "\t}"
-    write "};"
-    write ""
     write "namespace ecs = ant_ecs;"
     write ""
 
     write "namespace ecs_api {"
     write ""
-    write "#define ECS_COMPONENT(NAME) \\"
+    write "#define ECS_COMPONENT(NAME, ID) \\"
     write "template <> struct component<ecs::NAME> { \\"
-    write "\tstatic inline const int id = ant_ecs_component_id::gen(); \\"
+    write "\tstatic inline constexpr int id = 0x80000000 + ID; \\"
     write "\tstatic inline constexpr char name[] = #NAME; \\"
     write "\tstatic inline constexpr bool tag = false; \\"
     write "};"
     write ""
-    write "#define ECS_TAG(NAME) \\"
+    write "#define ECS_TAG(NAME, ID) \\"
     write "template <> struct component<ecs::NAME> { \\"
-    write "\tstatic inline const int id = ant_ecs_component_id::gen(); \\"
+    write "\tstatic inline const int id = 0x80000000 + ID; \\"
     write "\tstatic inline constexpr char name[] = #NAME; \\"
     write "\tstatic inline constexpr bool tag = true; \\"
     write "};"
     write ""
-    write("ECS_TAG(REMOVED)")
-    for _, c in ipairs(components) do
+    write("ECS_TAG(REMOVED, 0)")
+    for i, c in ipairs(components) do
         if c[2] == "tag" then
-            write("ECS_TAG("..c[1]..")")
+            write(("ECS_TAG(%s,%d)"):format(c[1], i))
         else
-            write("ECS_COMPONENT("..c[1]..")")
+            write(("ECS_COMPONENT(%s,%d)"):format(c[1], i))
         end
     end
     write ""
