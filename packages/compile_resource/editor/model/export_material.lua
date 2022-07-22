@@ -157,7 +157,7 @@ return function (output, glbdata, exports, tolocalpath)
         end
 
         local name = img.name or tostring(imgidx)
-        if fs.path(name):extension():string() == "" then
+        if fs.path(name):extension():string() ~= ext then
             name = name .. ext
         end
 
