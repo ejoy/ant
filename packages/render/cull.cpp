@@ -32,14 +32,14 @@ lcull(lua_State *L){
 	ecs_api::context ecs {w->ecs};
 
 	const auto vpid = math3d_from_lua(L, w->math3d, 3, MATH_TYPE_MAT);
-	const auto planes = math3d_frustum_planes(w->math3d->MC, vpid, math3d_homogeneous_depth());
+	const auto planes = math3d_frustum_planes(w->math3d->M, vpid, math3d_homogeneous_depth());
 	for (auto e : ecs.select<ecs::view_visible, ecs::render_object, ecs::scene>()){
 		auto& s = e.get<ecs::scene>();
 		const math_t aabb = s.scene_aabb;
 		if (math_isnull(aabb))
 			continue;
 
-		if (math3d_frustum_intersect_aabb(w->math3d->MC, planes, aabb) < 0){
+		if (math3d_frustum_intersect_aabb(w->math3d->M, planes, aabb) < 0){
 			for (int ii=0; ii<numtab; ++ii){
 				e.enable_tag(ecs, s_cull_tabs[ii]);
 			}

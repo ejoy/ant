@@ -64,8 +64,8 @@ struct queue_materials {
 //TODO: we should cache transform update by entity id
 static inline void
 update_transform(struct ecs_world* w, math_t wm){
-	const float * v = math_value(w->math3d->MC, wm);
-	const int num = math_size(w->math3d->MC, wm);
+	const float * v = math_value(w->math3d->M, wm);
+	const int num = math_size(w->math3d->M, wm);
 	BGFX(set_transform)(v, num);
 }
 

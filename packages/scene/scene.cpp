@@ -11,16 +11,16 @@ extern "C" {
 }
 
 static inline void
-math_update(struct math_context* MC, math_t& id, math_t const& m) {
-	math_unmark(MC, id);
-	id = math_mark(MC, m);
+math_update(struct math_context* math3d, math_t& id, math_t const& m) {
+	math_unmark(math3d, id);
+	id = math_mark(math3d, m);
 }
 
 static int
 scene_changed(lua_State *L) {
 	auto w = getworld(L, 1);
 	ecs_api::context ecs {w->ecs};
-	auto math3d = w->math3d->MC;
+	auto math3d = w->math3d->M;
 
 	// step.1
 	auto selector = ecs.select<ecs::scene_needchange, ecs::scene_update, ecs::scene>();
