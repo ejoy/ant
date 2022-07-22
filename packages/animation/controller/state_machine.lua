@@ -365,8 +365,8 @@ function iani.set_pose_to_prefab(instance, pose)
 		if e.skinning then
 			build_transform(world:entity(eid).render_object, pose)
 		elseif e.meshskin then
-			local count = e.meshskin.joint_remap and e.meshskin.joint_remap:count() or #e.skeleton._handle
-			pose.matrices = animodule.new_bind_pose(count)
+			-- local count = e.meshskin.joint_remap and e.meshskin.joint_remap:count() or #e.skeleton._handle
+			-- pose.matrices = animodule.new_bind_pose(count)
 			pose.skeleton = e.skeleton
 			e.meshskin.pose = pose
 		elseif e.slot then

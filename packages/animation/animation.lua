@@ -151,44 +151,46 @@ function ani_sys:component_init()
 		}
 		world:pub {"AnimationEvent", "set_time", e.id, 0}
 	end
+
 	for e in w:select "INIT meshskin:update skeleton:update" do
 		e.skeleton = assetmgr.resource(e.skeleton)
 		local skin = assetmgr.resource(e.meshskin)
 		local count = skin.joint_remap and skin.joint_remap:count() or #e.skeleton._handle
-		local pose = iani.create_pose()
-		pose.matrices = animodule.new_bind_pose(count)
 		e.meshskin = {
 			skin = skin,
-			pose = pose,
+			pose = iani.create_pose(),
+			skinning_matrices = animodule.new_bind_pose(count)
 		}
 	end
 end
+
 local event_animation = world:sub{"AnimationEvent"}
 local bgfx = require "bgfx"
 local function set_skinning_transform(ro)
-	local sm = ro.skinning_pose.matrices
+	local sm = ro.skin_eid and world:entity(ro.skin_eid).meshskin.skinning_matrices
 	if sm then
 		bgfx.set_multi_transforms(sm:pointer(), sm:count())
 	end
 end
 
-local function build_transform(ro, pose)
-	ro.skinning_pose = pose
+local function build_transform(ro, skin_eid)
+	ro.skin_eid = skin_eid
 	ro.set_transform = set_skinning_transform
 end
-
 local function init_prefab_anim(entity)
 	local entitys = entity.prefab.tag["*"]
 	local anim_eid = {}
 	local slot_eid = {}
-	local skin
-	local anim
+	local skin_eid
+	local ctrl_eid
 	for _, eid in ipairs(entitys) do
 		local e = world:entity(eid)
 		if e.meshskin then
-			skin = e
+			if not skin_eid then
+				skin_eid = eid
+			end
 		elseif e.anim_ctrl then
-			anim = e
+			ctrl_eid = eid
 		elseif e.skinning then
 			anim_eid[#anim_eid + 1] = eid
 		elseif e.slot then
@@ -196,22 +198,24 @@ local function init_prefab_anim(entity)
 		end
 	end
 	
-	if skin then
+	if skin_eid then
+		local skin = world:entity(skin_eid)
 		local ske = skin.skeleton
 		for _, eid in pairs(slot_eid) do
 			local slot = world:entity(eid).slot
 			slot.anim_eid = skin.id
 			if slot.joint_name then
-				slot.joint_index = ske._handle:joint_index(slot.joint_name)	
+				slot.joint_index = ske._handle:joint_index(slot.joint_name)
 			end
 		end
-		if anim then
+		if ctrl_eid then
+			local ctrl = world:entity(ctrl_eid).anim_ctrl
 			skin.meshskin.pose.skeleton = skin.skeleton
-			skin.meshskin.pose.pose_result = anim.anim_ctrl.pose_result
-			anim.anim_ctrl.slot_eid = slot_eid
+			skin.meshskin.pose.pose_result = ctrl.pose_result
+			ctrl.slot_eid = slot_eid
 		end
 		for _, eid in ipairs(anim_eid) do
-			build_transform(world:entity(eid).render_object, skin.meshskin.pose)
+			build_transform(world:entity(eid).render_object, skin_eid)
 		end
 	end
 end

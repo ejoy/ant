@@ -179,6 +179,7 @@ local function add_animation(gltfscene, exports, nodeidx, policy, data)
             policy[#policy+1] = "ant.animation|skinning"
             data.skinning = true
             data.material_setting = { skinning = "GPU"}
+            return true
         end
     end
 end
@@ -246,13 +247,13 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
             "ant.render|render",
         }
 
-        add_animation(gltfscene, exports, nodeidx, policy, data)
+        local hasskin = add_animation(gltfscene, exports, nodeidx, policy, data)
 
         --TODO: need a mesh node to reference all mesh.primitives, we assume primitives only have one right now
         entity = create_entity {
             policy = policy,
             data = data,
-            parent = parent,
+            parent = (not hasskin) and parent,
         }
     end
     return entity
@@ -268,7 +269,7 @@ local function create_node_entity(gltfscene, nodeidx, parent, exports)
     }
     local data = {
         name = nname,
-        scene = {s=srt.s,r=srt.r,t=srt.t},
+        scene = {s=srt.s,r=srt.r,t=srt.t}
     }
     --add_animation(gltfscene, exports, nodeidx, policy, data)
     return create_entity {
@@ -282,7 +283,6 @@ local function create_skin_entity(exports, parent, withanim)
     if not exports.skeleton or #exports.skin < 1 then
         return
     end
-    -- skin
     local policy = {
         "ant.general|name",
         "ant.scene|scene_object",
@@ -294,36 +294,36 @@ local function create_skin_entity(exports, parent, withanim)
     }
     data.skeleton = serialize.path(exports.skeleton)
     data.meshskin = serialize.path(exports.skin[1])
-    create_entity {
+    return create_entity {
         policy = policy,
         data = data,
         parent = parent,
     }
-    -- animation
-    if withanim then
-        local policy = {
-            "ant.general|name",
-            "ant.animation|animation",
-        }
-        local data = {
-            name = "animation",
-        }
-        data.skeleton = serialize.path(exports.skeleton)
-        data.animation = {}
-        local anilst = {}
-        for name, file in pairs(exports.animations) do
-            local n = fix_invalid_name(name)
-            anilst[#anilst+1] = n
-            data.animation[n] = serialize.path(file)
-        end
-        table.sort(anilst)
-        data.animation_birth = anilst[1]
-        data.anim_ctrl = {}
-        create_entity {
-            policy = policy,
-            data = data,
-        }
+end
+
+local function create_animation_entity(exports)
+    local policy = {
+        "ant.general|name",
+        "ant.animation|animation",
+    }
+    local data = {
+        name = "animation",
+    }
+    data.skeleton = serialize.path(exports.skeleton)
+    data.animation = {}
+    local anilst = {}
+    for name, file in pairs(exports.animations) do
+        local n = fix_invalid_name(name)
+        anilst[#anilst+1] = n
+        data.animation[n] = serialize.path(file)
     end
+    table.sort(anilst)
+    data.animation_birth = anilst[1]
+    data.anim_ctrl = {}
+    create_entity {
+        policy = policy,
+        data = data,
+    }
 end
 
 local function find_mesh_nodes(gltfscene, scenenodes, meshnodes)
@@ -360,6 +360,8 @@ return function(output, glbdata, exports, localpath)
     local meshnodes = {}
     find_mesh_nodes(gltfscene, scene.nodes, meshnodes)
 
+    create_skin_entity(exports, rootid, true)
+
     local C = {}
     local scenetree = exports.scenetree
     local function check_create_node_entity(nodeidx)
@@ -389,7 +391,7 @@ return function(output, glbdata, exports, localpath)
     for _, nodeidx in ipairs(meshnodes) do
         check_create_node_entity(nodeidx)
     end
-    create_skin_entity(exports, rootid, true)
+    create_animation_entity(exports)
     utility.save_txt_file("./mesh.prefab", prefab)
 
     local anilst = {}
