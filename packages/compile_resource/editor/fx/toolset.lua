@@ -59,7 +59,7 @@ function toolset.compile(config)
 		SHADERC,
 		"--platform", config.platform,
 		"--type", stage_types[config.stage],
-		"-p", get_shader_option(config.platform, config.renderer, config.stage)
+		"-p", get_shader_option(config.platform, config.renderer, config.stage),
 		"-f", config.input,
 		"-o", config.output,
 		"--depends",
