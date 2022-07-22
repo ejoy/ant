@@ -118,7 +118,7 @@ function irender.multi_draw(vid, ri, mat, tid, num, stride)
 	ri.mesh:submit(bgfx.encoder_get())
 	--update_mesh(ri.vb, ri.ib)
 	local dnum = num // stride
-	bgfx.multi_submit(vid, ri.fx.prog, tid, dnum, stride)
+	bgfx.multi_submit(vid, m.fx.prog, tid, dnum, stride)
 end
 
 function irender.get_main_view_rendertexture()
