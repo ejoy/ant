@@ -52,12 +52,14 @@ function BaseView:set_model(eid)
     local property = {}
     property[#property + 1] = self.base.name
     property[#property + 1] = self.base.tag
-    property[#property + 1] = self.base.position
-    if self:has_rotate() then
-        property[#property + 1] = self.base.rotate
-    end
-    if self:has_scale() then
-        property[#property + 1] = self.base.scale
+    if world:entity(eid).scene then
+        property[#property + 1] = self.base.position
+        if self:has_rotate() then
+            property[#property + 1] = self.base.rotate
+        end
+        if self:has_scale() then
+            property[#property + 1] = self.base.scale
+        end
     end
     self.general_property:set_subproperty(property)
     BaseView.update(self)

@@ -1007,7 +1007,7 @@ local function create_bone_entity(joint_name)
             scene = {s = joint_scale},
             filter_state = "main_view|selectable",
             material = "/pkg/tools.prefab_editor/res/materials/joint.material",
-            mesh = "/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
+            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
             name = joint_name,
             on_ready = function(e)
                 w:sync("render_object:in", e)
@@ -1104,7 +1104,7 @@ function m.init(skeleton)
     joints_map, joints_list = joint_utils:init(skeleton)
     for _, joint in ipairs(joints_list) do
         if not joint.mesh then
-            -- joint.mesh = create_bone_entity(joint.name)
+            joint.mesh = create_bone_entity(joint.name)
         end
     end
 end
