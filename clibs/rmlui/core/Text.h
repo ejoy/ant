@@ -22,10 +22,10 @@ public:
 protected:
 	const Property* GetComputedProperty(PropertyId id);
 	template <typename T>
-	T GetProperty(PropertyId id, std::enable_if<!std::is_enum<T>::value>::type* = 0);
+	T GetProperty(PropertyId id, typename std::enable_if<!std::is_enum<T>::value>::type* = 0);
 
 	template <typename ENUM>
-	ENUM GetProperty(PropertyId id, std::enable_if<std::is_enum<ENUM>::value>::type* = 0) {
+	ENUM GetProperty(PropertyId id, typename std::enable_if<std::is_enum<ENUM>::value>::type* = 0) {
 		return (ENUM)GetProperty<int>(id);
 	}
 
