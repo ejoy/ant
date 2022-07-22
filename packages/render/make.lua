@@ -9,8 +9,12 @@ lm:lua_source "render_core"{
         "../../clibs/math3d",
         "../../clibs/foundation",
         "../../clibs/luabind",
+        "../../3rd/glm",
         "../../3rd/luaecs",
         "../../clibs/ecs",
+    },
+    defines = {
+        "GLM_FORCE_QUAT_DATA_XYZW",
     },
     sources = {
         "render/material.c",
@@ -25,7 +29,11 @@ lm:lua_source "render" {
         "../../clibs/math3d",
         "../../clibs/luabind",
         "../../3rd/luaecs",
+        "../../3rd/glm",
         "../../clibs/ecs",
+    },
+    defines = {
+        "GLM_FORCE_QUAT_DATA_XYZW",
     },
     sources = {
         "cull.cpp",

@@ -311,6 +311,11 @@ namespace ecs_api {
         }
 
         template <typename Component>
+        Component& entity_sibling(int mainkey, int i, lua_State* L) {
+            return *impl::sibling<Component>(ecs, mainkey, i, L);
+        }
+
+        template <typename Component>
         void clear_type() {
             entity_clear_type(ecs, component<Component>::id);
         }

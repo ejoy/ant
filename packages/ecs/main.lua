@@ -472,6 +472,16 @@ local function update_decl(self)
                 t[i] = v:match "^(.*)|.*$" or v
             end
             w:register(t)
+        elseif type == "raw" then
+            local t = {
+                name = name,
+                type = "raw",
+                size = assert(math.tointeger(info.size[1])),
+                init = class.init,
+                marshal = class.marshal,
+                unmarshal = class.unmarshal,
+            }
+            w:register(t)
         elseif type == nil then
             w:register {
                 name = name

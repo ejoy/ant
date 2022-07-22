@@ -1,5 +1,6 @@
 {
     "Lua.completion.autoRequire": false,
+    "Lua.workspace.checkThirdParty": false,
     "diagnostics": {
         "disable": [
             "different-requires",

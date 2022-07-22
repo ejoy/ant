@@ -84,6 +84,8 @@ local function loadComponents()
                 components[#components+1] = {name, "lua"}
             elseif t == "c" then
                 components[#components+1] = {name, "c", info.field}
+            elseif t == "raw" then
+                components[#components+1] = {name, "raw", info.field[1], info.size[1]}
             else
                 components[#components+1] = {name, t}
             end
@@ -149,14 +151,22 @@ do
     write "struct REMOVED {};"
     write ""
     for _, info in ipairs(components) do
-        local name, type, fields = info[1], info[2], info[3]
+        local name, type = info[1], info[2]
         if type == "c" then
+            local fields = info[3]
             write(("struct %s {"):format(name))
             for _, field in ipairs(fields) do
                 local name, typename = field:match "^([%w_]+):([%w|_]+)$"
                 write(("\t%s %s;"):format(typenames(typename), name))
             end
             write("};")
+            write ""
+        elseif type == "raw" then
+            local field, size = info[3], info[4]
+            write(("struct %s {"):format(name))
+            write(field:match "^(.-)[ \t\r\n]*$")
+            write("};")
+            write(("static_assert(sizeof(%s) == %s);"):format(name, size))
             write ""
         elseif type == "tag" then
             write(("struct %s {};"):format(name))
