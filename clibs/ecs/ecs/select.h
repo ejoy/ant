@@ -7,32 +7,39 @@ struct lua_State;
 #include <tuple>
 
 namespace ecs_api {
+    namespace flags {
+        struct absent {};
+    }
+
     template <typename T>
     struct component {};
 
     namespace impl {
         template <typename Component>
         Component* iter(ecs_context* ctx, int i) {
+            static_assert(!std::is_function<Component>::value);
             return (Component*)entity_iter(ctx, component<Component>::id, i);
         }
 
         template <typename Component>
         Component* sibling(ecs_context* ctx, int mainkey, int i) {
+            static_assert(!std::is_function<Component>::value);
             return (Component*)entity_sibling(ctx, mainkey, i, component<Component>::id);
         }
 
         template <typename Component>
         Component* sibling(ecs_context* ctx, int mainkey, int i, lua_State* L) {
+            static_assert(!std::is_function<Component>::value);
             auto c = sibling<Component>(ctx, mainkey, i);
             if (c == NULL) {
-                luaL_error(L, "No %s", component<Component>::name);
+                luaL_error(L, "component `%s` not found.", component<Component>::name);
             }
             return c;
         }
 
         template <typename...Ts>
         using components = decltype(std::tuple_cat(
-            std::declval<std::conditional_t<std::is_empty<Ts>::value,
+            std::declval<std::conditional_t<std::is_empty<Ts>::value || std::is_function<Ts>::value,
                 std::tuple<>,
                 std::tuple<Ts*>
             >>()...
@@ -40,7 +47,7 @@ namespace ecs_api {
 
         template <std::size_t Is, typename T>
         static constexpr std::size_t next() {
-            if constexpr (std::is_empty<T>::value) {
+            if constexpr (std::is_empty<T>::value || std::is_function<T>::value) {
                 return Is;
             }
             else {
@@ -123,15 +130,28 @@ namespace ecs_api {
         }
         template <std::size_t Is, typename Component, typename ...Components>
         bool init_sibling(ecs_context* ctx, int i) {
-            auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i);
-            if (!v) {
-                return false;
+            if constexpr (std::is_function<Component>::value) {
+                using C = std::invoke_result<Component, flags::absent>::type;
+                auto v = impl::sibling<C>(ctx, component<MainKey>::id, i);
+                if (v) {
+                    return false;
+                }
+                if constexpr (sizeof...(Components) > 0) {
+                    return init_sibling<Is, Components...>(ctx, i);
+                }
+                return true;
             }
-            assgin<Is>(v);
-            if constexpr (sizeof...(Components) > 0) {
-                return init_sibling<impl::next<Is, Component>(), Components...>(ctx, i);
+            else {
+                auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i);
+                if (!v) {
+                    return false;
+                }
+                assgin<Is>(v);
+                if constexpr (sizeof...(Components) > 0) {
+                    return init_sibling<impl::next<Is, Component>(), Components...>(ctx, i);
+                }
+                return true;
             }
-            return true;
         }
         bool init_components(ecs_context* ctx, int& i) {
             for (;;++i) {
@@ -152,10 +172,22 @@ namespace ecs_api {
         }
         template <std::size_t Is, typename Component, typename ...Components>
         void init_sibling(ecs_context* ctx, int i, lua_State* L) {
-            auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i, L);
-            assgin<Is>(v);
-            if constexpr (sizeof...(Components) > 0) {
-                init_sibling<impl::next<Is, Component>(), Components...>(ctx, i, L);
+            if constexpr (std::is_function<Component>::value) {
+                using C = std::invoke_result<Component, flags::absent>::type;
+                auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i);
+                if (v) {
+                    luaL_error(L, "component `%s` exists.", component<C>::name);
+                }
+                if constexpr (sizeof...(Components) > 0) {
+                    init_sibling<Is, Components...>(ctx, i, L);
+                }
+            }
+            else {
+                auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i, L);
+                assgin<Is>(v);
+                if constexpr (sizeof...(Components) > 0) {
+                    init_sibling<impl::next<Is, Component>(), Components...>(ctx, i, L);
+                }
             }
         }
         bool init_components(ecs_context* ctx, int i, lua_State* L) {
