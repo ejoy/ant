@@ -28,7 +28,7 @@ entity_visible(struct ecs_world* w, cid_t vs_id, int index, const ecs::render_ar
 	return entity_sibling(w->ecs, vs_id, index, (cid_t)ra.visible_id) &&
 	!entity_sibling(w->ecs, vs_id, index, (cid_t)ra.cull_id);
 }
-#define BGFX(_API)	w->bgfx->##_API
+#define BGFX(_API)	w->bgfx->_API
 
 struct material_instance;
 

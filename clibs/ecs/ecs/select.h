@@ -131,7 +131,7 @@ namespace ecs_api {
         template <std::size_t Is, typename Component, typename ...Components>
         bool init_sibling(ecs_context* ctx, int i) {
             if constexpr (std::is_function<Component>::value) {
-                using C = std::invoke_result<Component, flags::absent>::type;
+                using C = typename std::invoke_result<Component, flags::absent>::type;
                 auto v = impl::sibling<C>(ctx, component<MainKey>::id, i);
                 if (v) {
                     return false;
@@ -173,7 +173,7 @@ namespace ecs_api {
         template <std::size_t Is, typename Component, typename ...Components>
         void init_sibling(ecs_context* ctx, int i, lua_State* L) {
             if constexpr (std::is_function<Component>::value) {
-                using C = std::invoke_result<Component, flags::absent>::type;
+                using C = typename std::invoke_result<Component, flags::absent>::type;
                 auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i);
                 if (v) {
                     luaL_error(L, "component `%s` exists.", component<C>::name);
