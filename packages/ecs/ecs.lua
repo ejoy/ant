@@ -100,6 +100,9 @@ return function (w, package)
     function ecs.group_flush()
         return w:_group_flush()
     end
+    function ecs.clibs(name)
+        return w:clibs(name)
+    end
     w._ecs[package] = ecs
     return ecs
 end

@@ -18,7 +18,7 @@ math_update(struct math_context* math3d, math_t& id, math_t const& m) {
 
 static int
 scene_changed(lua_State *L) {
-	auto w = getworld(L, 1);
+	auto w = getworld(L);
 	ecs_api::context ecs {w->ecs};
 	auto math3d = w->math3d->M;
 
@@ -95,7 +95,7 @@ scene_changed(lua_State *L) {
 
 static int
 scene_remove(lua_State *L) {
-	auto w = getworld(L, 1);
+	auto w = getworld(L);
 	ecs_api::context ecs {w->ecs};
 	ecs.clear_type<ecs::scene_changed>();
 	
@@ -126,6 +126,8 @@ luaopen_system_scene(lua_State *L) {
 		{ "scene_remove", scene_remove },
 		{ NULL, NULL },
 	};
-	luaL_newlib(L, l);
+	luaL_newlibtable(L,l);
+	lua_pushnil(L);
+	luaL_setfuncs(L,l,1);
 	return 1;
 }

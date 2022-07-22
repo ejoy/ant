@@ -210,6 +210,24 @@ function world:remove_entity(eid)
 	end
 end
 
+function world:clibs(name)
+	local w = self
+	local funcs = require(name)
+	if w._initializing then
+		local t = w._clibs
+		if not t then
+			t = {}
+			w._clibs = t
+		end
+		t[#t+1] = name
+	else
+		for _, f in pairs(funcs) do
+			debug.setupvalue(f, 1, w._ecs_world)
+		end
+	end
+	return funcs
+end
+
 local function init_entity(w, ecs)
 	local visitor = ecs:make_index "id"
 	local entity = {}
@@ -278,6 +296,12 @@ function m.new_world(config)
 
 	init_entity(w, ecs)
 
+	if w._clibs then
+		for _, name in ipairs(w._clibs) do
+			w:clibs(name)
+		end
+		w._clibs = nil
+	end
 	return w
 end
 

@@ -89,7 +89,7 @@ local function create_importor(w)
 				local impl = v.implement[1]
 				if impl:sub(1,1) == ":" then
 					v.c = true
-					w._class.system[name] = require(impl:sub(2))
+					w._class.system[name] = w:clibs(impl:sub(2))
 				else
 					local pkg = v.packname
 					local file = impl:gsub("^(.*)%.lua$", "%1")

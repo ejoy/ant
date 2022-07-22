@@ -13,7 +13,7 @@ extern "C"{
 static int
 lcull(lua_State *L){
 	static uint16_t s_cull_tabs[16];
-	const int numtab = (int)lua_rawlen(L, 2);
+	const int numtab = (int)lua_rawlen(L, 1);
 	if (numtab == 0){
 		return 0;
 	}
@@ -23,15 +23,15 @@ lcull(lua_State *L){
 	}
 
 	for (int i=0; i<numtab; ++i){
-		lua_geti(L, 2, i+1);
+		lua_geti(L, 1, i+1);
 		s_cull_tabs[i] = (uint16_t)lua_tointeger(L, -1);
 		lua_pop(L, 1);
 	}
 
-	auto w = getworld(L, 1);
+	auto w = getworld(L);
 	ecs_api::context ecs {w->ecs};
 
-	const auto vpid = math3d_from_lua(L, w->math3d, 3, MATH_TYPE_MAT);
+	const auto vpid = math3d_from_lua(L, w->math3d, 2, MATH_TYPE_MAT);
 	const auto planes = math3d_frustum_planes(w->math3d->M, vpid, math3d_homogeneous_depth());
 	for (auto e : ecs.select<ecs::view_visible, ecs::render_object, ecs::scene>()){
 		auto& s = e.get<ecs::scene>();
@@ -61,6 +61,8 @@ luaopen_system_cull(lua_State *L) {
 		{ "cull", lcull },
 		{ NULL, NULL },
 	};
-	luaL_newlib(L, l);
+	luaL_newlibtable(L,l);
+	lua_pushnil(L);
+	luaL_setfuncs(L,l,1);
 	return 1;
 }

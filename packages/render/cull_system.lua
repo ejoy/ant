@@ -7,7 +7,7 @@ local mc = import_package "ant.math".constant
 local setting = import_package "ant.settings".setting
 local disable_cull = setting:data().graphic.disable_cull
 
-local cullcore = require "cull.core"
+local cullcore = ecs.clibs "cull.core"
 
 local icp = ecs.interface "icull_primitive"
 
@@ -130,6 +130,6 @@ function cull_sys:cull()
 	for ceid, tags in pairs(find_queue_tags()) do
 		local camera = world:entity(ceid).camera
 		--cull(tags, camera.viewprojmat)
-		cullcore.cull(world._ecs_world, build_tags(tags), camera.viewprojmat)
+		cullcore.cull(build_tags(tags), camera.viewprojmat)
 	end
 end

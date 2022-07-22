@@ -23,9 +23,9 @@ struct ecs_world {
 	struct bgfx_encoder_holder*   encoder;
 };
 
-static inline struct ecs_world* getworld(lua_State* L, int idx) {
+static inline struct ecs_world* getworld(lua_State* L) {
 	size_t sz = 0;
-	struct ecs_world* ctx = (struct ecs_world*)luaL_checklstring(L, idx, &sz);
+	struct ecs_world* ctx = (struct ecs_world*)luaL_checklstring(L, lua_upvalueindex(1), &sz);
 	if (sizeof(struct ecs_world) > sz) {
 		luaL_error(L, "invalid ecs_world");
 		return NULL;

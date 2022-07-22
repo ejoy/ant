@@ -90,7 +90,7 @@ submit_draw(struct ecs_world* w, bgfx_view_id_t viewid, const ecs::render_obj &r
 
 static int
 lsubmit(lua_State *L){
-	auto w = getworld(L, 1);
+	auto w = getworld(L);
 	ecs_api::context ecs {w->ecs};
 
 	for (auto a : ecs.select<ecs::render_args2>()){
@@ -118,6 +118,8 @@ luaopen_render(lua_State *L) {
 		{ "submit", lsubmit},
 		{ nullptr, nullptr },
 	};
-	luaL_newlib(L, l);
+	luaL_newlibtable(L,l);
+	lua_pushnil(L);
+	luaL_setfuncs(L,l,1);
 	return 1;
 }
