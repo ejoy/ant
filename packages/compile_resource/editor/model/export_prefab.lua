@@ -177,8 +177,10 @@ local function add_animation(gltfscene, exports, nodeidx, policy, data)
     if node.skin and next(exports.animations) and exports.skeleton then
         if node.skin then
             policy[#policy+1] = "ant.animation|skinning"
+            policy[#policy+1] = "ant.render|skinrender"
             data.skinning = true
             data.material_setting = { skinning = "GPU"}
+            data.scene = nil
             return true
         end
     end
@@ -244,10 +246,12 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
 
         local policy = {
             "ant.general|name",
-            "ant.render|render",
         }
 
         local hasskin = add_animation(gltfscene, exports, nodeidx, policy, data)
+        if not hasskin then
+            policy[#policy+1] = "ant.render|render"
+        end
 
         --TODO: need a mesh node to reference all mesh.primitives, we assume primitives only have one right now
         entity = create_entity {
