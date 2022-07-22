@@ -318,7 +318,7 @@ local function create_animation_entity(exports)
         data.animation[n] = serialize.path(file)
     end
     table.sort(anilst)
-    data.animation_birth = anilst[1]
+    data.animation_birth = anilst[1] or ""
     data.anim_ctrl = {}
     create_entity {
         policy = policy,

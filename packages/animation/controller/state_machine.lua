@@ -223,6 +223,9 @@ end
 function iani.step(anim_e, s_delta, absolute)
 	local ctrl = anim_e.anim_ctrl
 	local ani = ctrl.animation
+	if not ani then
+		return
+	end
 	local play_state = ctrl.play_state
 	local playspeed = play_state.manual_update and 1.0 or play_state.speed
 	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
@@ -285,6 +288,7 @@ end
 function iani.get_time(eid)
 	if not eid then return 0 end
 	local e = get_anim_e(eid)
+	if not e.anim_ctrl.animation then return 0 end
 	return e.anim_ctrl.play_state.ratio * e.anim_ctrl.animation._handle:duration()
 end
 
@@ -365,8 +369,6 @@ function iani.set_pose_to_prefab(instance, pose)
 		if e.skinning then
 			build_transform(world:entity(eid).render_object, pose)
 		elseif e.meshskin then
-			-- local count = e.meshskin.joint_remap and e.meshskin.joint_remap:count() or #e.skeleton._handle
-			-- pose.matrices = animodule.new_bind_pose(count)
 			pose.skeleton = e.skeleton
 			e.meshskin.pose = pose
 		elseif e.slot then
