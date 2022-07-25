@@ -165,9 +165,6 @@ function ani_sys:component_init()
 end
 
 local event_animation = world:sub{"AnimationEvent"}
-local function build_transform(ro, skin_eid)
-	ro.skin_eid = skin_eid
-end
 local function init_prefab_anim(entity)
 	local entitys = entity.prefab.tag["*"]
 	local anim_eid = {}
@@ -204,9 +201,6 @@ local function init_prefab_anim(entity)
 			skin.meshskin.pose.skeleton = skin.skeleton
 			skin.meshskin.pose.pose_result = ctrl.pose_result
 			ctrl.slot_eid = slot_eid
-		end
-		for _, eid in ipairs(anim_eid) do
-			build_transform(world:entity(eid).render_object, skin_eid)
 		end
 	end
 end
