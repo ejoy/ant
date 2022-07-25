@@ -3095,51 +3095,17 @@ ENCODER_API(lsetIndexBuffer) {
 
 ENCODER_API(lsetTransform) {
 	int n = lua_gettop(L);
-	if (n == 1) {
-		if (!lua_isuserdata(L, 1)) {
-			return luaL_error(L, "Need matrix userdata");
-		}
-		void *mat = lua_touserdata(L, 1);
-		int id = BGFX_ENCODER(set_transform, encoder, mat, 1);
-		lua_pushinteger(L, id);
-		return 1;
-	} else if (n < 1) {
-		return luaL_error(L, "Need matrix");
+	if (n != 1) {
+		return luaL_error(L, "Need one matrix");
 	}
-	// multiple mats
-	bgfx_transform_t trans;
-	uint32_t id = BGFX_ENCODER(alloc_transform, encoder, &trans, n);
-	if (trans.num > n) {
-		return luaL_error(L, "Too many transform");
+	if (!lua_isuserdata(L, 1)) {
+		return luaL_error(L, "Need matrix userdata");
 	}
-	int i;
-	for (i=0;i<n;i++) {
-		if (!lua_isuserdata(L, i+1)) {
-			return luaL_error(L, "Need matrix at %d", i+1);
-		}
-		void *mat = lua_touserdata(L, i+1);
-		memcpy(trans.data + 16 * i, mat, 16 * sizeof(float));
-	}
-	BGFX_ENCODER(set_transform_cached, encoder, id, n);
+	void *mat = lua_touserdata(L, 1);
+	int id = BGFX_ENCODER(set_transform, encoder, mat, 1);
 	lua_pushinteger(L, id);
 	return 1;
-}
 
-ENCODER_API(lallocTransform) {
-	int n = lua_gettop(L);
-	// multiple mats
-	bgfx_transform_t trans;
-	uint32_t id = BGFX_ENCODER(alloc_transform, encoder, &trans, n);
-	int i;
-	for (i=0;i<n;i++) {
-		if (!lua_isuserdata(L, i+1)) {
-			return luaL_error(L, "Need matrix at %d", i+1);
-		}
-		void *mat = lua_touserdata(L, i+1);
-		memcpy(trans.data + 16 * i, mat, 16 * sizeof(float));
-	}
-	lua_pushinteger(L, id);
-	return 1;
 }
 
 ENCODER_API(lallocTransformBulk) {
@@ -3172,18 +3138,6 @@ ENCODER_API(lsetTransformCached) {
 	int num = luaL_optinteger(L, 2, 1);
 	BGFX_ENCODER(set_transform_cached, encoder, id, num);
 	return 0;
-}
-
-ENCODER_API(lsetMultiTransforms){
-	int t = lua_type(L, 1);
-	int num = luaL_checkinteger(L, 2);
-	if (t == LUA_TUSERDATA || t == LUA_TLIGHTUSERDATA) {
-		void *mat = lua_touserdata(L, 1);
-		int id = BGFX_ENCODER(set_transform, encoder, mat, num);
-		lua_pushinteger(L, id);
-		return 1;
-	}
-	return luaL_error(L, "invalid type, need userdata/lightuserdata:%s", lua_typename(L,t));
 }
 
 static int
@@ -5271,11 +5225,9 @@ linitEncoder(lua_State *L) {
 		{ "set_state", lsetState_encoder },
 		{ "set_vertex_buffer", lsetVertexBuffer_encoder },
 		{ "set_index_buffer", lsetIndexBuffer_encoder },
-		{ "alloc_transform", lallocTransform_encoder },
 		{ "alloc_transform_bulk", lallocTransformBulk_encoder },
 		{ "set_transform", lsetTransform_encoder },
 		{ "set_transform_cached", lsetTransformCached_encoder },
-		{ "set_multi_transforms", lsetMultiTransforms_encoder },
 		{ "set_uniform", lsetUniform_encoder },
 		{ "set_uniform_matrix", lsetUniformMatrix_encoder },
 		{ "set_uniform_vector", lsetUniformVector_encoder },
@@ -5464,11 +5416,9 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_state", lsetState },
 		{ "set_vertex_buffer", lsetVertexBuffer },
 		{ "set_index_buffer", lsetIndexBuffer },
-		{ "alloc_transform", lallocTransform },
 		{ "alloc_transform_bulk", lallocTransformBulk },
 		{ "set_transform", lsetTransform },
 		{ "set_transform_cached", lsetTransformCached },
-		{ "set_multi_transforms", lsetMultiTransforms},
 		{ "set_uniform", lsetUniform },
 		{ "set_uniform_matrix", lsetUniformMatrix },	// for adapter
 		{ "set_uniform_vector", lsetUniformVector },	// for adapter

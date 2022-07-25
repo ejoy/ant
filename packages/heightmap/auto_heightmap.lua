@@ -132,15 +132,10 @@ local function fetch_heightmap_data()
         local aabb = rc.aabb
         sceneaabb = math3d.aabb_merge(sceneaabb, aabb)
         items[#items+1] = {
-            set_transform = function (worldmat)
-                bgfx.set_transform(worldmat)
-            end,
             fx          = depthmaterial.fx,
-            properties  = depthmaterial.properties,
-            state       = depthmaterial.state,
+            material    = depthmaterial.material,
             eid         = eid,
-            vb          = rc.vb,
-            ib          = rc.ib,
+            mesh        = rc.mesh,
         }
     end
 

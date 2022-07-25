@@ -32,6 +32,7 @@ policy "animation"
 policy "meshskin"
     .component "meshskin"
     .component "skeleton"
+    .component "skinning"
 
 component "animation".type "lua"
 component "skeleton".type "lua"

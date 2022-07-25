@@ -17,12 +17,18 @@ function skinning_sys:skin_mesh()
 		local skinning_matrices = e.meshskin.skinning_matrices
 		local pr = e.meshskin.pose.pose_result
 		if pr then
-			local wm = e.scene.worldmat
-			if wm == mc.NULL then
-				error("Invalid meshskin entity")
-			end
-			local m = math3d.mul(wm, r2l_mat)
+			local m = math3d.mul(e.scene.worldmat, r2l_mat)
 			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, m)
+		end
+	end
+
+	local meshskin
+	for e in w:select "skinning meshskin?in render_object?in" do
+		if e.meshskin then
+			meshskin = e.meshskin
+		else
+			local sm = meshskin.skinning_matrices
+			e.render_object.worldmat = math3d.array_matrix_ref(sm:pointer(), sm:count())
 		end
 	end
 end

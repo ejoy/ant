@@ -119,33 +119,18 @@ local function submit_filter(viewid, selkey, qn, transforms)
 end
 
 local function transform_find(t, id, ro, mats)
-	local sm = ro.skin_eid and world:entity(ro.skin_eid).meshskin.skinning_matrices
 	local c = t[id]
 	if c == nil then
-		local tid, stride, num
-		if sm == nil then
-			local wm = ro.worldmat
-			local nm = {}
-			for i=1, #mats do
-				nm[i] = math3d.mul(mats[i], wm)
-			end
-			tid = bgfx.alloc_transform(table.unpack(nm))
-			stride = 1
-			num = #mats
-		else
-			stride = sm:count()
-			num = stride * #mats
-			local handle
-			tid, handle = bgfx.alloc_transform_bulk(num)
-			local sm_ref = math3d.array_matrix_ref(sm:pointer(), stride)
-			for i=1, #mats do
-				local m = mats[i]
-				local offset = (i-1)*stride
-				local result = math3d.array_matrix_ref(handle, stride, offset)
-				math3d.mul_array(m, sm_ref, result)
-			end
+		local wm = ro.worldmat
+		local stride = math3d.array_size(wm)
+		local nummat = #mats
+		local num = stride * nummat
+		local tid, handle = bgfx.alloc_transform_bulk(num)
+		for i=1, nummat do
+			local offset = (i-1)*stride
+			local r = math3d.array_matrix_ref(handle, stride, offset)
+			math3d.mul_array(mats[i], wm, r)
 		end
-
 		c = {tid, num, stride}
 		t[id] = c
 	end
@@ -155,10 +140,10 @@ end
 local function submit_hitch_filter(viewid, selkey, qn, groups, transforms)
 	for g, mats in pairs(groups) do
 		w:group_enable("hitch_tag", g)
-		for ee in w:select(selkey) do
-			local ro = ee.render_object
-			local tid, num, stride = table.unpack(transforms:find(ee.id, ee.render_object, mats))
-			irender.multi_draw(viewid, ro, ee.filter_material[qn], tid, num, stride)
+		for e in w:select(selkey) do
+			local ro = e.render_object
+			local tid, num, stride = table.unpack(transforms:find(e.id, ro, mats))
+			irender.multi_draw(viewid, ro, e.filter_material[qn], tid, num, stride)
 		end
 	end
 end

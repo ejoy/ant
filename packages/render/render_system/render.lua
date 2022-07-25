@@ -15,28 +15,7 @@ local fbmgr			= require "framebuffer_mgr"
 local declmgr		= require "vertexdecl_mgr"
 local sampler		= require "sampler"
 
-local function set_world_matrix(rc)
-	bgfx.set_transform(rc.worldmat)
-end
-
---local iani = ecs.import.interface "ant.animation|ianimation"
-local function set_skinning_transform(rc)
-	--local sm = iani.get_pose(rc.skinning_pose_id)
-	local sm = world:entity(rc.skinning_pose_id).meshskin.pose.matrices
-	bgfx.set_multi_transforms(sm:pointer(), sm:count())
-end
-
-local world_trans_sys = ecs.system "world_transform_system"
-function world_trans_sys:entity_init()
-	for e in w:select "INIT render_object:in" do
-		local ro = e.render_object
-		if not ro.skinning then
-			e.render_object.set_transform = set_world_matrix
-		else
-			e.render_object.set_transform = set_skinning_transform
-		end
-	end
-end
+local math3d		= require "math3d"
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
 
@@ -85,9 +64,19 @@ function irender.check_set_state(dst_m, src_m, state_op)
 	return bgfx.make_state(t_dst_s)
 end
 
-function irender.draw(vid, ri, mat)
-	ri:set_transform()
+local function update_transforms(wm)
+	local n = math3d.array_size(wm)
+	if n == 1 then
+		bgfx.set_transform(wm)
+	else
+		local tid, handle = bgfx.alloc_transform_bulk(n)
+		bgfx.set_transform_bulk(handle, math3d.value_ptr(wm), n)
+		bgfx.set_transform_cached(tid, n)
+	end
+end
 
+function irender.draw(vid, ri, mat)
+	update_transforms(ri.worldmat)
 	local m = mat or ri
 	m.material(assetmgr.textures)
 	--TODO: we will pass encoder as member to c

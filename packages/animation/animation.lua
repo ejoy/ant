@@ -165,17 +165,8 @@ function ani_sys:component_init()
 end
 
 local event_animation = world:sub{"AnimationEvent"}
-local bgfx = require "bgfx"
-local function set_skinning_transform(ro)
-	local sm = ro.skin_eid and world:entity(ro.skin_eid).meshskin.skinning_matrices
-	if sm then
-		bgfx.set_multi_transforms(sm:pointer(), sm:count())
-	end
-end
-
 local function build_transform(ro, skin_eid)
 	ro.skin_eid = skin_eid
-	ro.set_transform = set_skinning_transform
 end
 local function init_prefab_anim(entity)
 	local entitys = entity.prefab.tag["*"]

@@ -32,14 +32,7 @@ function ds:entity_init()
         local attach_ro = attach.render_object
 
         w:sync("render_object:out", e)
-        local ro = e.render_object
-
-        ro.vb = attach_ro.vb
-        ro.ib = attach_ro.ib
-
-        ro.set_transform = function ()
-            bgfx.set_transform(attach_ro.worldmat)
-        end
+        e.render_object.mesh = attach_ro.mesh
     end
 end
 
