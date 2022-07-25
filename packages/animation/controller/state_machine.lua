@@ -349,26 +349,11 @@ function iani.set_value(e, name, key, value)
 	end
 end
 
-local bgfx = require "bgfx"
-local function set_skinning_transform(ro)
-	local sm = ro.skinning_pose.matrices
-	if sm then
-		bgfx.set_multi_transforms(sm:pointer(), sm:count())
-	end
-end
-
-local function build_transform(ro, pose)
-	ro.skinning_pose = pose
-	ro.set_transform = set_skinning_transform
-end
-
 function iani.set_pose_to_prefab(instance, pose)
 	local entitys = instance.tag["*"]
 	for _, eid in ipairs(entitys) do
 		local e = world:entity(eid)
-		if e.skinning then
-			build_transform(world:entity(eid).render_object, pose)
-		elseif e.meshskin then
+		if e.meshskin then
 			pose.skeleton = e.skeleton
 			e.meshskin.pose = pose
 		elseif e.slot then
