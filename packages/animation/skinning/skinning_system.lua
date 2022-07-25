@@ -14,14 +14,14 @@ local iani = ecs.import.interface "ant.animation|ianimation"
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 local r2l_mat<const> = mc.R2L_MAT
 function skinning_sys:skin_mesh()
-	for e in w:select "meshskin:in id:in" do
+	for e in w:select "meshskin:in scene:in" do
 		local skin = e.meshskin.skin
 		local skinning_matrices = e.meshskin.skinning_matrices
 		local pr = e.meshskin.pose.pose_result
 		if pr then
-			local wm = iom.worldmat(world:entity(e.id))
+			local wm = e.scene.worldmat
 			if wm == mc.NULL then
-				wm = mc.IDENTITY_MAT
+				error("Invalid meshskin entity")
 			end
 			local m = math3d.mul(wm, r2l_mat)
 			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, m)
