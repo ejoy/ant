@@ -79,8 +79,7 @@ function irender.draw(vid, ri, mat)
 	update_transforms(ri.worldmat)
 	local m = mat or ri
 	m.material(assetmgr.textures)
-	--TODO: we will pass encoder as member to c
-	ri.mesh:submit(bgfx.encoder_get())
+	ri.mesh:submit()
 	bgfx.submit(vid, m.fx.prog, 0)
 end
 
@@ -89,8 +88,7 @@ function irender.multi_draw(vid, ri, mat, tid, num, stride)
 	bgfx.set_transform_cached(tid, num)
 	local m = mat or ri
 	m.material(assetmgr.textures)
-	--TODO: we will pass encoder as member to c
-	ri.mesh:submit(bgfx.encoder_get())
+	ri.mesh:submit()
 	local dnum = num // stride
 	bgfx.multi_submit(vid, m.fx.prog, tid, dnum, stride)
 end

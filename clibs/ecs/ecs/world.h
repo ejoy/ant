@@ -20,7 +20,7 @@ struct ecs_world {
 	struct ecs_context*           ecs;
 	struct bgfx_interface_vtbl*   bgfx;
 	struct math3d_api*            math3d;
-	struct bgfx_encoder_holder*   encoder;
+	struct bgfx_encoder_holder*   holder;
 };
 
 static inline struct ecs_world* getworld(lua_State* L) {
