@@ -433,9 +433,9 @@ function m:on_prefab_ready(prefab)
     end
 
     local function add_to_hierarchy(eid)
-        if world:entity(eid).meshskin then
-            return
-        end
+        -- if world:entity(eid).meshskin then
+        --     return
+        -- end
         local node = node_map[eid]
         if node.parent and not hierarchy:get_node(node.parent) then
             add_to_hierarchy(node.parent)
