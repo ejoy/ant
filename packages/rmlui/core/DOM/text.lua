@@ -10,9 +10,9 @@ local property_setter = {}
 
 
 function property_init:cloneNode()
-    local document = self._document
-    local handle = self._handle
     return function ()
+        local document = self._document
+        local handle = self._handle
         return constructor.Node(document, true, rmlui.NodeClone(handle))
     end
 end
@@ -68,6 +68,8 @@ function event.OnDocumentDestroy(handle)
         if e._owner then
             rmlui.TextDelete(h)
         end
+        e._document = nil
+        e._handle = nil
     end
     pool[handle] = nil
 end

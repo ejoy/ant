@@ -6,27 +6,27 @@ local constructorElement
 
 local attribute_mt = {}
 function attribute_mt:__index(name)
-    return rmlui.ElementGetAttribute(self._handle, name)
+    return rmlui.ElementGetAttribute(self._object._handle, name)
 end
 function attribute_mt:__newindex(name, v)
     if v == nil then
-        rmlui.ElementRemoveAttribute(self._handle, name)
+        rmlui.ElementRemoveAttribute(self._object._handle, name)
     else
-        rmlui.ElementSetAttribute(self._handle, name, v)
+        rmlui.ElementSetAttribute(self._object._handle, name, v)
     end
 end
 
 local style_mt = {}
 function style_mt:__index(name)
-    return rmlui.ElementGetProperty(self._handle, name)
+    return rmlui.ElementGetProperty(self._object._handle, name)
 end
 function style_mt:__newindex(name, value)
     if value == nil then
-        rmlui.ElementSetProperty(self._handle, name)
+        rmlui.ElementSetProperty(self._object._handle, name)
     elseif type(value) == "string" then
-        rmlui.ElementSetProperty(self._handle, name, value)
+        rmlui.ElementSetProperty(self._object._handle, name, value)
     else
-        rmlui.ElementSetProperty(self._handle, name, tostring(value))
+        rmlui.ElementSetProperty(self._object._handle, name, tostring(value))
     end
 end
 
@@ -35,8 +35,8 @@ local property_getter = {}
 local property_setter = {}
 
 function property_init:addEventListener()
-    local handle = self._handle
     return function (type, listener, useCapture)
+        local handle = self._handle
         rmlui.ElementAddEventListener(handle, type, listener, useCapture)
     end
 end
@@ -47,10 +47,13 @@ end
 
 local childnodes_mt = {}
 function childnodes_mt:__len()
-    return rmlui.ElementGetChildren(self._handle)
+    local handle = self._object._handle
+    return rmlui.ElementGetChildren(handle)
 end
 function childnodes_mt:__index(i)
-    return constructor.Node(self._document, false, rmlui.ElementGetChildren(self._handle, i-1))
+    local document = self._object._document
+    local handle = self._object._handle
+    return constructor.Node(document, false, rmlui.ElementGetChildren(handle, i-1))
 end
 function childnodes_mt:__pairs()
     local i = 0
@@ -62,84 +65,83 @@ end
 
 function property_init:childNodes()
     return setmetatable({
-        _document = self._document,
-        _handle = self._handle,
+        _object = self,
     }, childnodes_mt)
 end
 
 function property_init:dispatchEvent()
-    local handle = self._handle
     return function (eventname, event)
+        local handle = self._handle
         rmlui.ElementDispatchEvent(handle, eventname, event)
     end
 end
 
 function property_init:removeChild()
-    local handle = self._handle
     return function (child)
+        local handle = self._handle
         child._owner = nil
         rmlui.ElementRemoveChild(handle, child._handle)
     end
 end
 
 function property_init:removeAllChild()
-    local handle = self._handle
     return function ()
+        local handle = self._handle
         rmlui.ElementRemoveAllChildren(handle)
     end
 end
 
 function property_init:appendChild()
-    local handle = self._handle
     return function (child, index)
+        local handle = self._handle
         child._owner = nil
         rmlui.ElementAppendChild(handle, child._handle, index)
     end
 end
 
 function property_init:cloneNode()
-    local document = self._document
-    local handle = self._handle
     return function ()
+        local document = self._document
+        local handle = self._handle
         return constructor.Node(document, true, rmlui.NodeClone(handle))
     end
 end
 
 function property_init:getElementById()
-    local document = self._document
-    local handle = self._handle
     return function (id)
+        local document = self._document
+        local handle = self._handle
         return constructorElement(document, false, rmlui.ElementGetElementById(handle, id))
     end
 end
 
 function property_init:scrollInsets()
-    local handle = self._handle
     return function (l, t, r, b)
+        local handle = self._handle
         rmlui.ElementSetScrollInsets(handle, l, t, r, b)
     end
 end
 
 function property_init:getAttribute()
-    local handle = self._handle
     return function (name)
+        local handle = self._handle
         return rmlui.ElementGetAttribute(handle, name)
     end
 end
 
 function property_init:setAttribute()
-    local handle = self._handle
     return function (name, value)
+        local handle = self._handle
         rmlui.ElementGetAttribute(handle, name, value)
     end
 end
 
 function property_init:style()
-    return setmetatable({_handle = self._handle}, style_mt)
+    return setmetatable({_object = self}, style_mt)
 end
 
 function property_init:attributes()
-    return setmetatable({_handle = self._handle}, attribute_mt)
+    return setmetatable({_object = self}, attribute_mt)
 end
 
 for name, init in pairs(property_init) do
@@ -251,6 +253,8 @@ function event.OnDocumentDestroy(handle)
         if e._owner then
             rmlui.ElementDelete(h)
         end
+        e._document = nil
+        e._handle = nil
     end
     pool[handle] = nil
 end
@@ -259,10 +263,15 @@ function event.OnDestroyNode(handle, node)
     if not pool[handle] then
         return
     end
+    local e = pool[handle][node]
+    if e then
+        e._handle = nil
+    end
     pool[handle][node] = nil
 end
 
 function event.InvalidElement(doc, e, res)
+    --TODO: use proxy relace
     if not pool[doc] or not pool[doc][e] then
         return
     end
