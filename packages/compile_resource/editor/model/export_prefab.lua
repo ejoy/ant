@@ -294,6 +294,7 @@ local function create_skin_entity(exports, parent, withanim)
     }
     local data = {
         name = "meshskin",
+        skinning = true,
         scene = {},
     }
     data.skeleton = serialize.path(exports.skeleton)
