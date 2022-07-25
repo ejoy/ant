@@ -10,8 +10,6 @@ local mc		= mathpkg.constant
 
 -- skinning system
 local skinning_sys = ecs.system "skinning_system"
-local iani = ecs.import.interface "ant.animation|ianimation"
-local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 local r2l_mat<const> = mc.R2L_MAT
 function skinning_sys:skin_mesh()
 	for e in w:select "meshskin:in scene:in" do

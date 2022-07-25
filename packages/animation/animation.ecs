@@ -29,18 +29,10 @@ policy "animation"
     .component "animation_birth"
     .component "anim_ctrl"
 
-policy "skinning"
-    .require_system "ant.animation|skinning_system"
-    .component "skinning"
-    .component "material_setting"
-    .component "material"
-    .component "mesh"
-
 policy "meshskin"
     .component "meshskin"
     .component "skeleton"
 
-component "skinning".type "lua"
 component "animation".type "lua"
 component "skeleton".type "lua"
 component "meshskin".type "lua"

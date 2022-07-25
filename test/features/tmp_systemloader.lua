@@ -279,6 +279,7 @@ function init_loader_sys:init()
 
     local off = 0.1
 	ientity.create_screen_axis_entity({s=0.1}, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")
+    ecs.create_instance "/pkg/ant.test.features/assets/glb/logistics_center.glb|mesh.prefab"
 
     -- local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
     -- function p:on_ready()

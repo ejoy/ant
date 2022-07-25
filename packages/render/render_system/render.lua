@@ -85,18 +85,6 @@ function irender.check_set_state(dst_m, src_m, state_op)
 	return bgfx.make_state(t_dst_s)
 end
 
-local function update_mesh(vb, ib)
-	if ib and ib.num ~= 0 then
-		bgfx.set_index_buffer(ib.handle, ib.start, ib.num)
-	end
-
-	local start_v, num_v = vb.start, vb.num
-	if num_v ~= 0 then
-		local handles = vb.handles
-		bgfx.set_vertex_buffer(handles, start_v, num_v)
-	end
-end
-
 function irender.draw(vid, ri, mat)
 	ri:set_transform()
 
@@ -104,8 +92,6 @@ function irender.draw(vid, ri, mat)
 	m.material(assetmgr.textures)
 	--TODO: we will pass encoder as member to c
 	ri.mesh:submit(bgfx.encoder_get())
-	--update_mesh(ri.vb, ri.ib)
-
 	bgfx.submit(vid, m.fx.prog, 0)
 end
 
@@ -116,7 +102,6 @@ function irender.multi_draw(vid, ri, mat, tid, num, stride)
 	m.material(assetmgr.textures)
 	--TODO: we will pass encoder as member to c
 	ri.mesh:submit(bgfx.encoder_get())
-	--update_mesh(ri.vb, ri.ib)
 	local dnum = num // stride
 	bgfx.multi_submit(vid, m.fx.prog, tid, dnum, stride)
 end

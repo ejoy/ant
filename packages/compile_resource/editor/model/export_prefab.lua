@@ -176,7 +176,6 @@ local function add_animation(gltfscene, exports, nodeidx, policy, data)
     local node = gltfscene.nodes[nodeidx+1]
     if node.skin and next(exports.animations) and exports.skeleton then
         if node.skin then
-            policy[#policy+1] = "ant.animation|skinning"
             policy[#policy+1] = "ant.render|skinrender"
             data.skinning = true
             data.material_setting = { skinning = "GPU"}
