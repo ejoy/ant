@@ -9,17 +9,15 @@ local serialize = import_package "ant.serialize"
 local m = ecs.component "scene"
 
 local function equal_vec3(a, b)
-	if type(a) ~= "table" then
-		return true
+	if type(a) == "table" then
+		return a[1] == b[1] and a[2] == b[2] and a[3] == b[3]
 	end
-	return a[1] == b[1] and a[2] == b[2] and a[3] == b[3]
 end
 
 local function equal_quat(a, b)
-	if type(a) ~= "table" then
-		return true
+	if type(a) == "table" then
+		return a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and a[4] == b[4]
 	end
-	return a[1] == b[1] and a[2] == b[2] and a[3] == b[3] and a[4] == b[4]
 end
 
 local function init_scene(scene)
