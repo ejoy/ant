@@ -27,6 +27,7 @@ function skinning_sys:skin_mesh()
 		if e.meshskin then
 			meshskin = e.meshskin
 		else
+			assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
 			local sm = meshskin.skinning_matrices
 			e.render_object.worldmat = math3d.array_matrix_ref(sm:pointer(), sm:count())
 		end
