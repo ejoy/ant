@@ -407,13 +407,9 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::st
 	for (size_t i = 0; i < nodes.size(); i++)
 	{
 		const std::string& name = nodes[i];
-
-		std::string tag;
-		std::string id;
-		std::vector<std::string> classes;
+		
+		StyleSheetRequirements requirements;
 		std::vector<std::string> pseudo_classes;
-		StructuralSelectorList structural_pseudo_classes;
-		bool child_combinator = false;
 
 		size_t index = 0;
 		while (index < name.size())
@@ -434,31 +430,29 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::st
 			{
 				switch (identifier[0])
 				{
-					case '#':	id = identifier.substr(1); break;
-					case '.':	classes.push_back(identifier.substr(1)); break;
+					case '#':	requirements.id = identifier.substr(1); break;
+					case '.':	requirements.class_names.push_back(identifier.substr(1)); break;
 					case ':':
 					{
 						std::string pseudo_class_name = identifier.substr(1);
 						StructuralSelector node_selector = StyleSheetFactory::GetSelector(pseudo_class_name);
 						if (node_selector.selector)
-							structural_pseudo_classes.push_back(node_selector);
+							requirements.structural_selectors.push_back(node_selector);
 						else
 							pseudo_classes.push_back(pseudo_class_name);
 					}
 					break;
-					case '>':	child_combinator = true; break;
+					case '>':	requirements.child_combinator = true; break;
 
-					default:	if(identifier != "*") tag = identifier;
+					default:	if(identifier != "*") requirements.tag = identifier;
 				}
 			}
 
 			index = end_index;
 		}
 
-		// Sort the classes and pseudo-classes so they are consistent across equivalent declarations that shuffle the order around.
-		std::sort(classes.begin(), classes.end());
-		std::sort(pseudo_classes.begin(), pseudo_classes.end());
-		std::sort(structural_pseudo_classes.begin(), structural_pseudo_classes.end());
+		std::sort(requirements.class_names.begin(), requirements.class_names.end());
+		std::sort(requirements.structural_selectors.begin(), requirements.structural_selectors.end());
 
 		PseudoClassSet set = 0;
 		for (auto& name : pseudo_classes) {
@@ -469,8 +463,10 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::st
 				set = set | PseudoClass::Hover;
 			}
 		}
+		requirements.pseudo_classes = set;
+
 		// Get the named child node.
-		leaf_node = leaf_node->GetOrCreateChildNode(std::move(tag), std::move(id), std::move(classes), set, std::move(structural_pseudo_classes), child_combinator);
+		leaf_node = leaf_node->GetOrCreateChildNode(std::move(requirements));
 	}
 
 	// Merge the new properties with those already on the leaf node.
