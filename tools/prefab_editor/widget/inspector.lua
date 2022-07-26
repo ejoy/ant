@@ -56,7 +56,7 @@ function m.update_template_tranform(eid)
     local e = world:entity(eid)
     local template = hierarchy:get_template(eid)
     
-    if not template or not template.template then return end
+    if not template or not template.template or not e.scene then return end
 
     local s, r, t = iom.get_scale(e), iom.get_rotation(e), iom.get_position(e)
     local srt = template.template.data.scene

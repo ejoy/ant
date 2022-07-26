@@ -65,9 +65,13 @@ function gizmo:updata_uniform_scale()
 	iom.set_rotation(world:entity(self.rw.eid[3]), r)
 	iom.set_rotation(world:entity(self.rw.eid[4]), r)
 end
-
+local function can_edit_srt(eid)
+	if eid and not hierarchy:is_locked(eid) and world:entity(eid).scene then
+		return true
+	end
+end
 function gizmo:set_scale(inscale)
-	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
+	if not can_edit_srt(self.target_eid) then
 		return
 	end
 	iom.set_scale(world:entity(self.target_eid), inscale)
@@ -90,30 +94,35 @@ function gizmo:update_position(worldpos)
 		inspector.update_template_tranform(self.target_eid)
 	else
 		local wm = iom.worldmat(world:entity(gizmo.target_eid))
-		local s, r, t = math3d.srt(wm)
-		newpos = math3d.totable(t)
+		if wm ~= mc.NULL then
+			local s, r, t = math3d.srt(wm)
+			newpos = math3d.totable(t)
+		else
+			newpos = {0,0,0}
+		end
 	end
 	iom.set_position(world:entity(self.root_eid), newpos)
 	iom.set_position(world:entity(self.uniform_rot_root_eid), newpos)
 end
 
 function gizmo:set_position(worldpos)
-	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
+	if not can_edit_srt(self.target_eid) then
 		return
 	end
 	world:pub {"Gizmo", "updateposition", worldpos}
 end
 
 function gizmo:set_rotation(inrot)
-	if not self.target_eid or hierarchy:is_locked(self.target_eid) then
+	if not can_edit_srt(self.target_eid) then
 		return
 	end
+	local e = world:entity(self.target_eid)
 	local newrot
 	if inrot then
-		iom.set_rotation(world:entity(self.target_eid), inrot)
+		iom.set_rotation(e, inrot)
 		newrot = inrot
 	else
-		newrot = iom.get_rotation(world:entity(self.target_eid))
+		newrot = iom.get_rotation(e)
 	end
 	if self.mode == gizmo_const.SCALE then
 		iom.set_rotation(world:entity(self.root_eid), newrot)
@@ -897,7 +906,7 @@ local function select_light_gizmo(x, y)
 end
 
 function gizmo:select_gizmo(x, y)
-	if not x or not y then return false end
+	if not x or not y or not can_edit_srt(gizmo.target_eid) then return false end
 	if self.mode == gizmo_const.MOVE or self.mode == gizmo_const.ROTATE then
 		last_mouse_pos = {x, y}
 		local mode = select_light_gizmo(x, y)
