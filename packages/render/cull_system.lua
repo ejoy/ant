@@ -130,6 +130,8 @@ function cull_sys:cull()
 	for ceid, tags in pairs(find_queue_tags()) do
 		local camera = world:entity(ceid).camera
 		--cull(tags, camera.viewprojmat)
-		cullcore.cull(build_tags(tags), camera.viewprojmat)
+		if camera.viewprojmat then
+			cullcore.cull(build_tags(tags), camera.viewprojmat)
+		end
 	end
 end
