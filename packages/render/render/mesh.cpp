@@ -1,5 +1,7 @@
 #include "lua.hpp"
 
+#include "ecs/world.h"
+
 #include "lua2struct.h"
 #include "luabgfx.h"
 #include "bgfx_interface.h"
@@ -125,9 +127,9 @@ to_mesh(lua_State *L, int idx){
 
 static int
 lmesh_submit(lua_State *L){
+    auto w = getworld(L);
     auto m = to_mesh(L, 1);
-    auto holder = (encoder_holder*)lua_touserdata(L, 2);
-    mesh_submit(m, holder->encoder);
+    mesh_submit(m, w->holder->encoder);
     return 0;
 }
 
@@ -196,21 +198,22 @@ lmesh_get_ib(lua_State *L){
 
 static int
 lnew_mesh(lua_State *L){
+    luaL_checktype(L, lua_upvalueindex(1), LUA_TSTRING);
     auto m = (struct mesh*)lua_newuserdatauv(L, sizeof(struct mesh), 0);
     luaL_checktype(L, 1, LUA_TTABLE);
     lua_struct::unpack(L, 1, *m);
 
     if (luaL_newmetatable(L, "ANT_MESH")){
         luaL_Reg l[] = {
-            { "submit", lmesh_submit},
-            { "set_vb_range", lmesh_set_vb_range},
-            { "set_ib_range", lmesh_set_ib_range},
-            { "get_vb",       lmesh_get_vb},
-            { "get_ib",       lmesh_get_ib},
-			{ nullptr, nullptr },
+            { "submit",         lmesh_submit},
+            { "set_vb_range",   lmesh_set_vb_range},
+            { "set_ib_range",   lmesh_set_ib_range},
+            { "get_vb",         lmesh_get_vb},
+            { "get_ib",         lmesh_get_ib},
+			{ nullptr,          nullptr },
 		};
-
-		luaL_setfuncs(L, l, 0);
+        lua_pushvalue(L, lua_upvalueindex(1));
+		luaL_setfuncs(L, l, 1);
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
     }
@@ -226,5 +229,7 @@ luaopen_mesh(lua_State *L) {
 		{ nullptr, nullptr },
 	};
 	luaL_newlib(L, l);
+    lua_pushnil(L);
+	luaL_setfuncs(L,l,1);
 	return 1;
 }

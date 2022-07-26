@@ -17,3 +17,15 @@ system "init_system"
     .method "simpleecs"
     .method "update"
     .method "exit"
+
+component "testtab"
+
+component "simpleecs".type "lua"
+component "name".type "lua"
+
+policy "name"
+    .component "name"
+
+policy "testpolicy"
+    .require_system "ant.test.simpleecs|init_system"
+    .component "simpleecs"

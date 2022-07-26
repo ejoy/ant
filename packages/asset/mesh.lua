@@ -5,7 +5,7 @@ local w		= world.w
 local assetmgr 		= require "asset"
 local ext_meshbin 	= require "ext_meshbin"
 
-local meshcore		= require "render.mesh"
+local meshcore		= ecs.clibs "render.mesh"
 
 local imesh = ecs.interface "imesh"
 function imesh.create_vb(vb)
