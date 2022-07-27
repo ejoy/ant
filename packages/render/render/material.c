@@ -1225,9 +1225,8 @@ linstance_attribs(lua_State *L){
 	return 1;
 }
 
-//TODO: should be material interface
-static void
-instance_apply_attrib(lua_State *L, struct material_instance *mi, struct ecs_world *w, int texture_index){
+void
+apply_material_instance(lua_State *L, struct material_instance *mi, struct ecs_world *w, int texture_index){
 	struct attrib_arena* arena = arena_from_reg(L);
 	BGFX(encoder_set_state)(w->holder->encoder, mi->m->state, mi->m->rgba);
 
@@ -1264,7 +1263,7 @@ linstance_apply_attrib(lua_State *L) {
 	}
 
 	struct ecs_world* w = getworld(L);
-	instance_apply_attrib(L, mi, w, texture_index);
+	apply_material_instance(L, mi, w, texture_index);
 	return 0;
 }
 
