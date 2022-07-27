@@ -153,7 +153,7 @@ end
 
 local function submit_render_objects(viewid, filter, qn, groups, transforms)
 	for _, fn in ipairs(filter) do
-		--submit_filter(viewid, load_select_key(qn, fn, select_cache), qn, transforms)
+		submit_filter(viewid, load_select_key(qn, fn, select_cache), qn, transforms)
 		submit_hitch_filter(viewid, load_select_key(qn, fn, vs_select_cache), qn, groups, transforms)
 	end
 end
@@ -208,7 +208,7 @@ function render_sys:render_submit()
 			visible_id		= w:component_id(qe.queue_name .. "_visible"),
 			cull_id			= w:component_id(qe.queue_name .. "_cull"),
 			viewid			= viewid,
-			material_idx	= queue_material_ids[qe.queue_name],
+			material_idx	= queue_material_ids[qe.queue_name] or 0,
 		}
 
 		qe.render_args = {
@@ -218,7 +218,7 @@ function render_sys:render_submit()
 		}
 	end
 
-	rendercore.submit(texmapper)
+	--rendercore.submit(texmapper)
 	for e in w:select "render_args:in" do
 		local args = e.render_args
 		submit_render_objects(args.viewid, args.primitive_filter, args.queue_name, groups, transforms)
