@@ -182,16 +182,14 @@ local function create_canvas()
         data = {
             name = "canvas",
             scene = {
-                srt = {
-                    t={0.0, 5.0, 0.0}
-                }
+                t={0.0, 5.0, 0.0}
             },
             canvas = {
                 textures = {},
                 texts = {},
             },
             on_ready = function (e)
-                canvas.added_items = 
+                canvas.added_items =
                 icanvas.add_items(e,
                     {
                         texture = {

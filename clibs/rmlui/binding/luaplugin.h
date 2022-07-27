@@ -4,7 +4,7 @@
 #include "luabind.h"
 #include "luaref.h"
 #include <core/Interface.h>
-#include <core/Variant.h>
+#include <databinding/DataVariant.h>
 
 class lua_event_listener;
 

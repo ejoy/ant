@@ -40,15 +40,13 @@ class LiteralIntDefinition final : public VariableDefinition {
 public:
     LiteralIntDefinition() : VariableDefinition() {}
 
-    bool Get(void* ptr, Variant& variant) override
-    {
+    bool Get(void* ptr, Variant& variant) override {
         variant = static_cast<int>(reinterpret_cast<intptr_t>(ptr));
         return true;
     }
 };
 
-DataVariable MakeLiteralIntVariable(int value)
-{
+DataVariable MakeLiteralIntVariable(int value) {
     static LiteralIntDefinition literal_int_definition;
     return DataVariable(&literal_int_definition, reinterpret_cast<void*>(static_cast<intptr_t>(value)));
 }
