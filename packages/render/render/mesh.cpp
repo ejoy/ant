@@ -95,8 +95,9 @@ namespace lua_struct {
     }
 }
 
-static void
-mesh_submit(struct mesh*m, bgfx_encoder_t *encoder){
+void
+mesh_submit(struct mesh*m, struct ecs_world *w){
+    auto encoder = w->holder->encoder;
     if (m->vb.num > 0){
         assert(m->vb.start < m->vb.num);
         if (m->vb.type == mesh::BT_transient){
@@ -127,9 +128,7 @@ to_mesh(lua_State *L, int idx){
 
 static int
 lmesh_submit(lua_State *L){
-    auto w = getworld(L);
-    auto m = to_mesh(L, 1);
-    mesh_submit(m, w->holder->encoder);
+    mesh_submit(to_mesh(L, 1), getworld(L));
     return 0;
 }
 
