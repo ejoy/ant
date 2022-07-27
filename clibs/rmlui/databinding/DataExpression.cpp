@@ -28,7 +28,7 @@
 
 #include <databinding/DataExpression.h>
 #include <databinding/DataModelHandle.h>
-#include <core/Variant.h>
+#include <databinding/DataVariant.h>
 #include <core/Log.h>
 #include <core/StringUtilities.h>
 #include <databinding/DataModel.h>

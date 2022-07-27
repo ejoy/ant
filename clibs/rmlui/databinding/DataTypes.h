@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/Variant.h>
+#include <databinding/DataVariant.h>
 #include <functional>
 #include <string>
 #include <unordered_set>

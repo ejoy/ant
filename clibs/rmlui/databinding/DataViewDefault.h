@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/Variant.h>
+#include <databinding/DataVariant.h>
 #include <core/HtmlParser.h>
 #include <core/ObserverPtr.h>
 #include <databinding/DataView.h>
