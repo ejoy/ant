@@ -189,17 +189,19 @@ local function init_prefab_anim(entity)
 	if skin_eid then
 		local skin = world:entity(skin_eid)
 		local ske = skin.skeleton
+		local pose = skin.meshskin.pose
 		for _, eid in pairs(slot_eid) do
 			local slot = world:entity(eid).slot
 			slot.anim_eid = skin.id
 			if slot.joint_name then
 				slot.joint_index = ske._handle:joint_index(slot.joint_name)
 			end
+			slot.pose = pose
 		end
 		if ctrl_eid then
 			local ctrl = world:entity(ctrl_eid).anim_ctrl
-			skin.meshskin.pose.skeleton = skin.skeleton
-			skin.meshskin.pose.pose_result = ctrl.pose_result
+			pose.skeleton = skin.skeleton
+			pose.pose_result = ctrl.pose_result
 			ctrl.slot_eid = slot_eid
 		end
 	end

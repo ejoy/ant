@@ -223,7 +223,9 @@ function m:create(what, config)
                 if hitch.group == 0 then
                     hitch.group = get_group_id()
                 end
-                new_entity = ecs.group(hitch.group):create_entity(tmp)
+                local group = ecs.group(hitch.group)
+                new_entity = group:create_entity(tmp)
+                group:enable "scene_update"
             else
                 tmp.data.scene.parent = parent_eid
                 new_entity = ecs.create_entity(tmp)
@@ -567,7 +569,9 @@ function m:add_prefab(filename)
             hitch = { group = group_id },
         }
     }
-    prefab = ecs.group(group_id):create_instance(prefab_filename)
+    local group = ecs.group(group_id)
+    prefab = group:create_instance(prefab_filename)
+    group:enable "scene_update"
     self.entities[#self.entities+1] = v_root
     prefab.on_ready = function(inst)
         local prefab_name = gen_prefab_name()
