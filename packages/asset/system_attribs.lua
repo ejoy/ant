@@ -1,10 +1,11 @@
+local ecs			= ...
+
 local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant
 
 local math3d        = require "math3d"
 local bgfx          = require "bgfx"
-local rmat          = require "render.material"
-local CMATOBJ       = require "cmatobj"
+local rmat          = ecs.clibs "render.material"
 
 
 local function texture_value(stage)
@@ -42,7 +43,7 @@ local function check(properties)
 	return properties
 end
 
-local SYS_ATTRIBS = rmat.system_attribs(CMATOBJ, check{
+local SYS_ATTRIBS = rmat.system_attribs(check{
 	--camera
 	u_eyepos				= {type="u", value=mc.ZERO_PT},
 	u_exposure_param		= {type="u", value=math3d.vector(16.0, 0.008, 100.0, 0.0)},

@@ -7,10 +7,7 @@ local sd        = import_package "ant.settings".setting
 local use_cluster_shading = sd:data().graphic.cluster_shading ~= 0
 local url		= import_package "ant.url"
 
-local CMATOBJ   = require "cmatobj"
-local rmat      = require "render.material"
-
-local COLOR_PALETTES = require "color_palette"
+local matobj	= require "matobj"
 
 local function load(filename)
     return type(filename) == "string" and serialize.parse(filename, cr.read_file(filename)) or filename
@@ -31,7 +28,7 @@ local function to_v(t, h)
 	if t.index then
 		v.type = 'p'
 		local n = t.palette
-		local cp_idx = COLOR_PALETTES[n]
+		local cp_idx = matobj.color_palettes[n]
 		if cp_idx == nil then
 			error(("Invalid color palette:%s"):format(n))
 		end
@@ -123,7 +120,7 @@ local function init(material, setting)
     end
 
     material.properties = generate_properties(material.fx, material.properties)
-    material.object = rmat.material(CMATOBJ, material.state, material.properties)
+    material.object = matobj.rmat.material(material.state, material.properties)
     return material
 end
 

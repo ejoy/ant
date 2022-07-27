@@ -5,11 +5,7 @@ local w		= world.w
 local url = import_package "ant.url"
 
 local assetmgr		= require "asset"
-local sa			= require "system_attribs"
-local CMATOBJ		= require "cmatobj"
-local COLOR_PALETTES= require "color_palette"
-local rmat			= require "render.material"
-
+local matobj		= require "matobj"
 local imaterial = ecs.interface "imaterial"
 
 function imaterial.set_property(e, who, what)
@@ -22,8 +18,9 @@ end
 
 function imaterial.load(mp, setting)
 	local res = imaterial.load_res(mp, setting)
+	local mo = res.object
 	return {
-		material= res.object:instance(),
+		material= mo:instance(),
 		fx		= res.fx
 	}
 end
@@ -33,21 +30,21 @@ function imaterial.load_url(u)
 end
 
 function imaterial.system_attribs()
-	return sa
+	return matobj.sa
 end
 
 local function get_palid(palname)
-	return assert(COLOR_PALETTES[palname], ("Invalid color palette name:%s"):format(palname))
+	return assert(matobj.color_palettes[palname], ("Invalid color palette name:%s"):format(palname))
 end
 
 function imaterial.set_color_palette(palname, coloridx, value)
 	local palid = get_palid(palname)
-	rmat.color_palette_set(CMATOBJ, palid, coloridx, value)
+	matobj.rmat.color_palette_set(palid, coloridx, value)
 end
 
 function imaterial.get_color_palette(palname, coloridx)
 	local palid = get_palid(palname)
-	return rmat.color_palette_get(CMATOBJ, palid, coloridx)
+	return matobj.rmat.color_palette_get(palid, coloridx)
 end
 
 local ms = ecs.system "material_system"
@@ -97,7 +94,7 @@ local function stat_material_info(verbose)
 	end
 	print("Instance number: ", numinstance, "instance attribs: ", #instance_attribs)
 
-	local s = rmat.stat(CMATOBJ)
+	local s = matobj.rmat.stat()
 	print("material cobject, attrib number:", s.attrib_num, "attrib cap:", s.attrib_cap)
 end
 

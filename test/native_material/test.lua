@@ -7,15 +7,31 @@ local cr = import_package "ant.compile_resource"
 local math3d = require "math3d"
 local bgfx = require "bgfx"
 
-local COBJ = rmat.cobject{
-	bgfx = assert(bgfx.CINTERFACE) ,
-    math3d = assert(math3d.CINTERFACE),
-    encoder = assert(bgfx.encoder_get()),
-}
+local function build_ecs_worldobj()
+    local ecs_worldobj = {
+        assert(bgfx.CINTERFACE) ,
+        assert(math3d.CINTERFACE),
+        assert(bgfx.encoder_get()),
+    }
+    local function toint(v)
+        local ss = tostring(v)
+        ss = ss:match "^%a+: (%x+)$" or s:match "^%a+: 0x(%x+)$"
+        return tonumber(assert(ss), 16)
+    end
 
-local system_attribs = rmat.system_attribs(COBJ, {
+    local t = {}
+    for i = 1, #ecs_worldobj do
+        t[i] = toint(ecs_worldobj[i])
+    end
+    return ("<"..("T"):rep(#t)):pack(table.unpack(t))
+end
 
-})
+local ecs_ref = build_ecs_worldobj()
+for k, v in pairs(rmat) do
+    debug.setupvalue(v, 1, ecs_ref)
+end
+
+local system_attribs = rmat.system_attribs{}
 
 local function load_fx(fx, setting)
 	setting = setting or {}
@@ -66,7 +82,7 @@ function s.init()
         PT = "TRISTRIP",
         WRITE_MASK = "RGBA",
     }
-    local material = rmat.material(COBJ, state, properties)
+    local material = rmat.material(state, properties)
     local mi = material:instance()
 
     local state2 = bgfx.make_state{
