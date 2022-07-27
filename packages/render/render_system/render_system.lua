@@ -5,11 +5,14 @@ local w = world.w
 local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
 local template	= import_package "ant.general".template
+local texmapper	= import_package "ant.asset".textures
 local irender	= ecs.import.interface "ant.render|irender"
 local ies		= ecs.import.interface "ant.scene|ifilter_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local itimer	= ecs.import.interface "ant.timer|itimer"
 local render_sys = ecs.system "render_system"
+
+local rendercore= ecs.clibs "render.core"
 
 local def_group_id<const> = 0
 local vg_sys = ecs.system "viewgroup_system"
@@ -150,7 +153,7 @@ end
 
 local function submit_render_objects(viewid, filter, qn, groups, transforms)
 	for _, fn in ipairs(filter) do
-		submit_filter(viewid, load_select_key(qn, fn, select_cache), qn, transforms)
+		--submit_filter(viewid, load_select_key(qn, fn, select_cache), qn, transforms)
 		submit_hitch_filter(viewid, load_select_key(qn, fn, vs_select_cache), qn, groups, transforms)
 	end
 end
@@ -165,22 +168,16 @@ w:register{
 	name = "render_args", type = "lua"
 }
 
-local filter_masks<const> = {
-	foreground	= 0x01,
-	opacity		= 0x02,
-	background	= 0x04,
-	tranclucent	= 0x08,
-	decal_stage	= 0x10,
-	ui_stage	= 0x20,
+local queue_material_ids<const> = {
+	main_queue = 0,
+	pre_depth_queue = 1,
+	scene_depth_queue = 2,
+	pickup_queue = 3,
+	csm1_queue = 4,
+	csm2_queue = 5,
+	csm3_queue = 6,
+	csm4_queue = 7,
 }
-
-local function pack_filters(filter)
-	local m = 0
-	for _, fn in ipairs(filter) do
-		m = m | filter_masks[fn]
-	end
-	return m
-end
 
 function render_sys:render_submit()
 	local groups = setmetatable({}, group_mt)
@@ -198,7 +195,8 @@ function render_sys:render_submit()
 	}
 
 	w:clear "render_args"
-	for qe in w:select "visible queue_name:in camera_ref:in render_target:in primitive_filter:in render_args:new" do
+	w:clear "render_args2"
+	for qe in w:select "visible queue_name:in camera_ref:in render_target:in primitive_filter:in render_args:new render_args2:new" do
 		local rt = qe.render_target
 		local viewid = rt.viewid
 
@@ -206,12 +204,12 @@ function render_sys:render_submit()
 		local camera = world:entity(qe.camera_ref).camera
 		bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
 
-		-- qe.render_args = {
-		--  visible_id			= w:component_id(qe.queue_name .. "_visible"),
-		--  cull_id				= w:component_id(qe.queue_name .. "_cull"),
-		-- 	viewid				= viewid,
-		-- 	primitive_filter	= pack_filters(qe.primitive_filter),
-		-- }
+		qe.render_args2 = {
+			visible_id		= w:component_id(qe.queue_name .. "_visible"),
+			cull_id			= w:component_id(qe.queue_name .. "_cull"),
+			viewid			= viewid,
+			material_idx	= queue_material_ids[qe.queue_name],
+		}
 
 		qe.render_args = {
 			queue_name			= qe.queue_name,
@@ -220,9 +218,7 @@ function render_sys:render_submit()
 		}
 	end
 
-	-- local rendercore = require "render.core"
-	-- rendercore.submit(world._ecs_world)
-
+	rendercore.submit(texmapper)
 	for e in w:select "render_args:in" do
 		local args = e.render_args
 		submit_render_objects(args.viewid, args.primitive_filter, args.queue_name, groups, transforms)

@@ -38,7 +38,7 @@ component "render_args2"
     .field "visible_id:dword"
     .field "cull_id:dword"
     .field "viewid:word"
-    .field "fitler_stages:word"
+    .field "material_idx:byte"
     .implement "render_object.lua"
     .method "init"
 

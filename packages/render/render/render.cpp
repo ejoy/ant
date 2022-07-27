@@ -68,29 +68,6 @@ update_transform(struct ecs_world* w, math_t wm){
 	BGFX(set_transform)(v, num);
 }
 
-static queue_materials::filter_material_type
-find_queue_material_type(uint32_t visibleid){
-	switch (visibleid){
-		case ecs_api::component<ecs::main_queue_visible>::id:
-		return queue_materials::FMT_mainqueue;
-		case ecs_api::component<ecs::pre_depth_queue_visible>::id:
-		return queue_materials::FMT_predepth;
-		case ecs_api::component<ecs::scene_depth_queue_visible>::id:
-		return queue_materials::FMT_scenedepth;
-		case ecs_api::component<ecs::pickup_queue_visible>::id:
-		return queue_materials::FMT_pickup;
-		case ecs_api::component<ecs::csm1_queue_visible>::id:
-		return queue_materials::FMT_csm1;
-		case ecs_api::component<ecs::csm2_queue_visible>::id:
-		return queue_materials::FMT_csm1;
-		case ecs_api::component<ecs::csm3_queue_visible>::id:
-		return queue_materials::FMT_csm1;
-		case ecs_api::component<ecs::csm4_queue_visible>::id:
-		return queue_materials::FMT_csm1;
-		default: assert(false && "Invalid visibleid"); return queue_materials::FMT_count;
-	}
-}
-
 static const cid_t surface_stages[] = {
 	(cid_t)ecs_api::component<ecs::foreground>::id,
 	(cid_t)ecs_api::component<ecs::opacity>::id,
@@ -111,7 +88,10 @@ lsubmit(lua_State *L){
 	for (auto a : ecs.select<ecs::render_args2>()){
 		const auto& ra = a.get<ecs::render_args2>();
 		const bgfx_view_id_t viewid = ra.viewid;
-		const auto qmt = find_queue_material_type(ra.visible_id);
+		const auto midx = ra.material_idx;
+		if (midx >= queue_materials::FMT_count){
+			luaL_error(L, "Invalid material_idx in render_args2:%d", midx);
+		}
 		const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
 		for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
 			const bool visible = entity_sibling(w->ecs, vs_id, i, ra.visible_id) &&
@@ -125,7 +105,7 @@ lsubmit(lua_State *L){
 
 						update_transform(w, ro->worldmat);
 						auto qm = (queue_materials*)ro->materials;
-						apply_material_instance(L, qm->materials[qmt], w, texture_index);
+						apply_material_instance(L, qm->materials[midx], w, texture_index);
 						mesh_submit((struct mesh*)ro->mesh, w);
 
 						const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
