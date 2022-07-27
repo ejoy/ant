@@ -205,7 +205,7 @@ end
 
 local function create_csm_entity(index, vr, fbidx)
 	local csmname = "csm" .. index
-	local queuename = "csm_queue" .. index
+	local queuename = csmname .. "_queue"
 	local camera_ref = icamera.create {
 			updir 	= mc.YAXIS,
 			viewdir = mc.ZAXIS,
