@@ -25,13 +25,6 @@ enum filter_stages : uint16_t {
 	FS_count		= 6,
 };
 
-static inline bool
-entity_visible(struct ecs_world* w, cid_t vs_id, cid_t surfacestage_id, int index, const ecs::render_args2 &ra){
-	return
-		entity_sibling(w->ecs, vs_id, index, ra.visible_id) &&
-		!entity_sibling(w->ecs, vs_id, index, ra.cull_id) &&
-		entity_sibling(w->ecs, vs_id, index, surfacestage_id);
-}
 #define BGFX(_API)	w->bgfx->_API
 
 struct material_instance;
@@ -117,24 +110,27 @@ lsubmit(lua_State *L){
 
 	for (auto a : ecs.select<ecs::render_args2>()){
 		const auto& ra = a.get<ecs::render_args2>();
+		const bgfx_view_id_t viewid = ra.viewid;
 		const auto qmt = find_queue_material_type(ra.visible_id);
 		const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
 		for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
-			for (auto ss : surface_stages){
-				if (entity_visible(w, vs_id, ss, i, ra)){
-					ecs::render_obj* ro = (ecs::render_obj*)entity_sibling(w->ecs, vs_id, i, ecs_api::component<ecs::render_obj>::id);
-					if (ro == nullptr)
-						continue;
+			const bool visible = entity_sibling(w->ecs, vs_id, i, ra.visible_id) &&
+				!entity_sibling(w->ecs, vs_id, i, ra.cull_id);
+			if (visible){
+				for (auto ss : surface_stages){
+					if (entity_sibling(w->ecs, vs_id, i, ss)){
+						ecs::render_obj* ro = (ecs::render_obj*)entity_sibling(w->ecs, vs_id, i, ecs_api::component<ecs::render_obj>::id);
+						if (ro == nullptr)
+							continue;
 
-					update_transform(w, ro->worldmat);
-					auto qm = (queue_materials*)ro->materials;
-					apply_material_instance(L, qm->materials[qmt], w, texture_index);
-					mesh_submit((struct mesh*)ro->mesh, w);
+						update_transform(w, ro->worldmat);
+						auto qm = (queue_materials*)ro->materials;
+						apply_material_instance(L, qm->materials[qmt], w, texture_index);
+						mesh_submit((struct mesh*)ro->mesh, w);
 
-					const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
-					const bgfx_view_id_t viewid = 0;
-					assert(false && "need viewid");
-					w->bgfx->submit(viewid, bgfx_program_handle_t{ro->prog}, ro->depth, discardflags);
+						const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
+						w->bgfx->submit(viewid, bgfx_program_handle_t{ro->prog}, ro->depth, discardflags);
+					}
 				}
 			}
 		}
