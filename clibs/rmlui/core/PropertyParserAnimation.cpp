@@ -1,5 +1,4 @@
 #include <core/PropertyParserAnimation.h>
-#include <core/PropertyShorthandDefinition.h>
 #include <core/PropertyIdSet.h>
 #include <core/StringUtilities.h>
 #include <core/StyleSheetSpecification.h>

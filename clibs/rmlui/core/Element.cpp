@@ -11,7 +11,6 @@
 #include <core/Interface.h>
 #include <core/Log.h>
 #include <core/Property.h>
-#include <core/PropertyDefinition.h>
 #include <core/Stream.h>
 #include <core/StringUtilities.h>
 #include <core/StyleSheetFactory.h>
@@ -1519,10 +1518,7 @@ const Property* Element::GetComputedProperty(PropertyId id) const {
 	const Property* property = GetComputedLocalProperty(id);
 	if (property)
 		return property;
-	const PropertyDefinition* propertyDef = StyleSheetSpecification::GetPropertyDefinition(id);
-	if (!propertyDef)
-		return nullptr;
-	if (propertyDef->IsInherited()) {
+	if (StyleSheetSpecification::IsInheritedProperty(id)) {
 		Element* parent = GetParentNode();
 		while (parent) {
 			const Property* parent_property = parent->GetComputedLocalProperty(id);
@@ -1531,11 +1527,7 @@ const Property* Element::GetComputedProperty(PropertyId id) const {
 			parent = parent->GetParentNode();
 		}
 	}
-	auto const& def = propertyDef->GetDefaultValue();
-	if (def) {
-		return &*def;
-	}
-	return nullptr;
+	return StyleSheetSpecification::GetDefaultProperty(id);
 }
 
 const Transitions* Element::GetTransition(const PropertyDictionary* def) const {
@@ -1698,7 +1690,7 @@ void Element::DirtyDefinition() {
 }
 
 void Element::DirtyInheritedProperties() {
-	dirty_properties |= StyleSheetSpecification::GetRegisteredInheritedProperties();
+	dirty_properties |= StyleSheetSpecification::GetInheritedProperties();
 }
 
 void Element::ForeachProperties(std::function<void(PropertyId id, const Property& property)> f) {
@@ -1795,7 +1787,7 @@ void Element::UpdateProperties() {
 		}
 	});
 
-	PropertyIdSet dirty_inherited_properties = (dirty_properties & StyleSheetSpecification::GetRegisteredInheritedProperties());
+	PropertyIdSet dirty_inherited_properties = (dirty_properties & StyleSheetSpecification::GetInheritedProperties());
 	if (!dirty_inherited_properties.empty()) {
 		for (auto& child : children) {
 			child->DirtyProperties(dirty_inherited_properties);

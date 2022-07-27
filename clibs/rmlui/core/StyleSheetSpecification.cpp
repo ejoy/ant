@@ -1,6 +1,5 @@
 #include <core/StyleSheetSpecification.h>
 #include <core/PropertyIdSet.h>
-#include <core/PropertyDefinition.h>
 #include <core/Log.h>
 #include <core/StringUtilities.h>
 #include <core/PropertyParserNumber.h>
@@ -9,15 +8,13 @@
 #include <core/PropertyParserKeyword.h>
 #include <core/PropertyParserString.h>
 #include <core/PropertyParserTransform.h>
-#include <core/PropertyShorthandDefinition.h>
 #include <array>
 #include <memory>
 
 namespace Rml {
 
 class StyleSheetSpecification;
-class PropertyDefinition;
-class ShorthandDefinition;
+struct StyleSheetSpecificationInstance;
 
 template<class> inline constexpr bool always_false_v = false;
 
@@ -35,16 +32,42 @@ enum class ShorthandType : uint8_t {
 	RecursiveCommaSeparated
 };
 
+struct PropertyDefinition {
+	std::vector<PropertyParser*> parsers;
+};
+
+struct ShorthandItem {
+	std::variant<PropertyId, ShorthandId> definition;
+	bool optional;
+};
+
+struct ShorthandDefinition {
+	ShorthandType type;
+	std::vector<ShorthandItem> items;
+};
+
+struct PropertyRegister {
+	StyleSheetSpecificationInstance& instance;
+	PropertyDefinition& definition;
+	PropertyParser*   GetParser(const std::string& parser_name);
+	PropertyParser*   GetKeywordParser(const std::string& parser_parameters);
+	PropertyRegister& AddParser(const std::string& parser_name);
+	PropertyRegister& AddParser(const std::string& parser_name, const std::string& parser_parameters);
+};
+
 struct StyleSheetSpecificationInstance {
 	~StyleSheetSpecificationInstance();
-	PropertyDefinition& RegisterProperty(PropertyId id, const std::string& property_name, bool inherited);
-	PropertyDefinition& RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value, bool inherited);
+	PropertyRegister RegisterProperty(PropertyId id, const std::string& property_name, bool inherited);
+	PropertyRegister RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value, bool inherited);
 	bool RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type);
 	void RegisterProperties();
 
-	const PropertyDefinition* GetPropertyDefinition(PropertyId id) const;
-	const PropertyIdSet& GetRegisteredInheritedProperties() const;
-	const ShorthandDefinition* GetShorthandDefinition(ShorthandId id) const;
+	std::optional<Property> ParseProperty(PropertyId id, const std::string& value) const;
+
+	bool IsInheritedProperty(PropertyId id) const;
+	const Property* GetDefaultProperty(PropertyId id) const;
+	const PropertyIdSet& GetInheritedProperties() const;
+	const ShorthandDefinition& GetShorthandDefinition(ShorthandId id) const;
 	bool ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) const;
 	bool ParsePropertyDeclaration(PropertyDictionary& dictionary, const std::string& property_name, const std::string& property_value) const;
 	bool ParsePropertyDeclaration(PropertyDictionary& dictionary, PropertyId property_id, const std::string& property_value) const;
@@ -65,12 +88,57 @@ struct StyleSheetSpecificationInstance {
 		{"transform", new PropertyParserTransform()},
 	};
 	std::unordered_map<std::string, PropertyParser*> keyword_parsers;
-	std::array<std::unique_ptr<PropertyDefinition>,  (size_t)PropertyId::NumDefinedIds>  properties;
-	std::array<std::unique_ptr<ShorthandDefinition>, (size_t)ShorthandId::NumDefinedIds> shorthands;
+	std::array<PropertyDefinition,  (size_t)PropertyId::NumDefinedIds>  properties;
+	std::array<ShorthandDefinition, (size_t)ShorthandId::NumDefinedIds> shorthands;
 	std::unordered_map<std::string, PropertyId> property_map;
 	std::unordered_map<std::string, ShorthandId> shorthand_map;
-	PropertyIdSet property_ids_inherited;
+	PropertyIdSet property_inherited;
+	std::unordered_map<PropertyId, std::string> unparsed_default;
+	PropertyDictionary default_value;
 };
+
+PropertyParser* PropertyRegister::GetParser(const std::string& parser_name) {
+	auto iterator = instance.parsers.find(parser_name);
+	if (iterator == instance.parsers.end())
+		return nullptr;
+	return (*iterator).second;
+}
+
+PropertyParser* PropertyRegister::GetKeywordParser(const std::string& parser_parameters) {
+	auto it = instance.keyword_parsers.find(parser_parameters);
+	if (it != instance.keyword_parsers.end()) {
+		return it->second;
+	}
+	PropertyParserKeyword* new_parser = new PropertyParserKeyword();
+	std::vector<std::string> parameter_list;
+	StringUtilities::ExpandString(parameter_list, StringUtilities::ToLower(parser_parameters), ',');
+	for (size_t i = 0; i < parameter_list.size(); i++) {
+		new_parser->parameters[parameter_list[i]] = (int) i;
+	}
+	instance.keyword_parsers.emplace(parser_parameters, new_parser);
+	return new_parser;
+}
+
+PropertyRegister& PropertyRegister::AddParser(const std::string& parser_name) {
+	PropertyParser* new_parser = GetParser(parser_name);
+	if (new_parser == nullptr) {
+		Log::Message(Log::Level::Error, "Property was registered with invalid parser '%s'.", parser_name.c_str());
+		return *this;
+	}
+	definition.parsers.push_back(new_parser);
+	return *this;
+}
+
+PropertyRegister& PropertyRegister::AddParser(const std::string& parser_name, const std::string& parser_parameters) {
+	assert(parser_name == "keyword");
+	PropertyParser* new_parser = GetKeywordParser(parser_parameters);
+	if (new_parser == nullptr) {
+		Log::Message(Log::Level::Error, "Property was registered with invalid parser '%s'.", parser_name.c_str());
+		return *this;
+	}
+	definition.parsers.push_back(new_parser);
+	return *this;
+}
 
 static std::string convert(const std::string& s) {
 	std::string r;
@@ -104,6 +172,16 @@ std::optional<T> MapGet(std::unordered_map<std::string, T> const& map, const std
 	return std::nullopt;
 }
 
+template <typename T>
+std::optional<std::string> MapGetName(std::unordered_map<std::string, T> const& map, T const& v)  {
+	for (auto& [name, value]: map) {
+		if (value == v) {
+			return name;
+		}
+	}
+	return std::nullopt;
+}
+
 StyleSheetSpecificationInstance::~StyleSheetSpecificationInstance() {
 	for (auto [_, parser] : parsers) {
 		delete parser;
@@ -113,42 +191,55 @@ StyleSheetSpecificationInstance::~StyleSheetSpecificationInstance() {
 	}
 }
 
-PropertyDefinition& StyleSheetSpecificationInstance::RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value, bool inherited) {
+PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value, bool inherited) {
 	assert (id < PropertyId::NumDefinedIds);
 	MapAdd(property_map, property_name, id);
 	size_t index = (size_t)id;
-	if (properties[index]) {
-		Log::Message(Log::Level::Error, "While registering property '%s': The property is already registered.", property_name.c_str());
-		return *properties[index];
-	}
-	properties[index] = std::make_unique<PropertyDefinition>(id, default_value, inherited);
+	unparsed_default[id] = default_value;
 	if (inherited)
-		property_ids_inherited.insert(id);
-	return *properties[index];
+		property_inherited.insert(id);
+	return { *this, properties[index] };
 }
 
-PropertyDefinition& StyleSheetSpecificationInstance::RegisterProperty(PropertyId id, const std::string& property_name, bool inherited) {
+PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id, const std::string& property_name, bool inherited) {
 	assert (id < PropertyId::NumDefinedIds);
 	MapAdd(property_map, property_name, id);
 	size_t index = (size_t)id;
-	if (properties[index]) {
-		Log::Message(Log::Level::Error, "While registering property '%s': The property is already registered.", property_name.c_str());
-		return *properties[index];
-	}
-	properties[index] = std::make_unique<PropertyDefinition>(id, inherited);
 	if (inherited)
-		property_ids_inherited.insert(id);
-	return *properties[index];
+		property_inherited.insert(id);
+	return { *this, properties[index] };
 }
 
-const PropertyDefinition* StyleSheetSpecificationInstance::GetPropertyDefinition(PropertyId id) const {
-	if (id >= PropertyId::NumDefinedIds)
+std::optional<Property> StyleSheetSpecificationInstance::ParseProperty(PropertyId id, const std::string& value) const {
+	assert (id < PropertyId::NumDefinedIds);
+	auto& definition = properties[(size_t)id];
+	for (auto parser : definition.parsers) {
+		auto property = parser->ParseValue(value);
+		if (property) {
+			return property;
+		}
+	}
+	return std::nullopt;
+}
+
+bool StyleSheetSpecificationInstance::IsInheritedProperty(PropertyId id) const {
+	return property_inherited.contains(id);
+}
+
+static const Property* PropertyDictionaryGet(const PropertyDictionary& dict, PropertyId id) {
+	auto iterator = dict.find(id);
+	if (iterator == dict.end()) {
 		return nullptr;
-	return properties[(size_t)id].get();
+	}
+	return &(*iterator).second;
 }
 
-const PropertyIdSet& StyleSheetSpecificationInstance::GetRegisteredInheritedProperties(void) const {
-	return property_ids_inherited;
+const Property* StyleSheetSpecificationInstance::GetDefaultProperty(PropertyId id) const {
+	return PropertyDictionaryGet(default_value, id);
+}
+
+const PropertyIdSet& StyleSheetSpecificationInstance::GetInheritedProperties() const {
+	return property_inherited;
 }
 
 bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type) {
@@ -158,7 +249,7 @@ bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const st
 	std::vector<std::string> property_list;
 	StringUtilities::ExpandString(property_list, StringUtilities::ToLower(property_names), ',');
 
-	std::unique_ptr<ShorthandDefinition> property_shorthand(new ShorthandDefinition());
+	auto& property_shorthand = shorthands[(size_t)id];
 
 	for (const std::string& raw_name : property_list) {
 		bool optional = false;
@@ -173,9 +264,7 @@ bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const st
 		auto property_id = MapGet(property_map, name);
 		if (property_id) {
 			// We have a valid property
-			if (const PropertyDefinition* property = GetPropertyDefinition(*property_id)) {
-				item = { property, optional };
-			}
+			item = { *property_id, optional };
 		}
 		else {
 			// Otherwise, we must be a shorthand
@@ -183,9 +272,7 @@ bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const st
 
 			// Test for valid shorthand id. The recursive types (and only those) can hold other shorthands.
 			if (shorthand_id && (type == ShorthandType::RecursiveRepeat || type == ShorthandType::RecursiveCommaSeparated)) {
-				if (const ShorthandDefinition * shorthand = GetShorthandDefinition(*shorthand_id)) {
-					item = { shorthand, optional };
-				}
+				item = { *shorthand_id, optional };
 			}
 		}
 
@@ -193,38 +280,28 @@ bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const st
 			Log::Message(Log::Level::Error, "Shorthand property '%s' was registered with invalid property '%s'.", shorthand_name.c_str(), name.c_str());
 			return false;
 		}
-		property_shorthand->items.emplace_back(std::move(*item));
+		property_shorthand.items.emplace_back(std::move(*item));
 	}
 
-	property_shorthand->id = id;
-	property_shorthand->type = type;
-
-	const size_t index = (size_t)id;
-	// We don't want to owerwrite an existing entry.
-	if (shorthands[index]) {
-		Log::Message(Log::Level::Error, "The shorthand '%s' already exists, ignoring.", shorthand_name.c_str());
-		return false;
-	}
-	shorthands[index] = std::move(property_shorthand);
+	property_shorthand.type = type;
 	return true;
 }
 
-const ShorthandDefinition* StyleSheetSpecificationInstance::GetShorthandDefinition(ShorthandId id) const {
-	if (id >= ShorthandId::NumDefinedIds)
-		return nullptr;
-	return shorthands[(size_t)id].get();
+const ShorthandDefinition& StyleSheetSpecificationInstance::GetShorthandDefinition(ShorthandId id) const {
+	assert (id < ShorthandId::NumDefinedIds);
+	return shorthands[(size_t)id];
 }
 
 void StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyIdSet& set, ShorthandId shorthand_id) const {
-	const ShorthandDefinition* shorthand_definition = GetShorthandDefinition(shorthand_id);
-	for (auto& item : shorthand_definition->items) {
+	const ShorthandDefinition& shorthand_definition = GetShorthandDefinition(shorthand_id);
+	for (auto& item : shorthand_definition.items) {
 		std::visit([&](auto&& arg) {
 			using T = std::decay_t<decltype(arg)>;
-			if constexpr (std::is_same_v<T, const PropertyDefinition*>) {
-				set.insert(arg->GetId());
+			if constexpr (std::is_same_v<T, PropertyId>) {
+				set.insert(arg);
 			}
-			else if constexpr (std::is_same_v<T, const ShorthandDefinition*>) {
-				ParseShorthandDeclaration(set, arg->GetId());
+			else if constexpr (std::is_same_v<T, ShorthandId>) {
+				ParseShorthandDeclaration(set, arg);
 			}
 			else {
 				static_assert(always_false_v<T>, "non-exhaustive visitor!");
@@ -265,13 +342,10 @@ bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyDictionar
 
 bool StyleSheetSpecificationInstance::ParsePropertyDeclaration(PropertyDictionary& dictionary, PropertyId property_id, const std::string& property_value) const {
 	// Parse as a single property.
-	const PropertyDefinition* property_definition = GetPropertyDefinition(property_id);
-	if (!property_definition)
-		return false;
 	std::vector<std::string> property_values;
 	if (!ParsePropertyValues(property_values, property_value, false) || property_values.size() == 0)
 		return false;
-	auto new_property = property_definition->ParseValue(property_values[0]);
+	auto new_property = ParseProperty(property_id, property_values[0]);
 	if (!new_property)
 		return false;
 	dictionary.insert_or_assign(property_id, std::move(*new_property));
@@ -285,13 +359,11 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyDictiona
 		return false;
 
 	// Parse as a shorthand.
-	const ShorthandDefinition* shorthand_definition = GetShorthandDefinition(shorthand_id);
-	if (!shorthand_definition)
-		return false;
+	const ShorthandDefinition& shorthand_definition = GetShorthandDefinition(shorthand_id);
 
 	// If this definition is a 'box'-style shorthand (x-top, x-right, x-bottom, x-left, etc) and there are fewer
 	// than four values
-	if (shorthand_definition->type == ShorthandType::Box && property_values.size() < 4) {
+	if (shorthand_definition.type == ShorthandType::Box && property_values.size() < 4) {
 		// This array tells which property index each side is parsed from
 		std::array<int, 4> box_side_to_value_index = { 0,0,0,0 };
 		switch (property_values.size()) {
@@ -315,30 +387,30 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyDictiona
 		}
 
 		for (int i = 0; i < 4; i++) {
-			const ShorthandItem& item = shorthand_definition->items[i];
-			auto definition = std::get_if<const PropertyDefinition*>(&item.definition);
-			if (!definition) {
+			const ShorthandItem& item = shorthand_definition.items[i];
+			auto id = std::get_if<PropertyId>(&item.definition);
+			if (!id) {
 				return false;
 			}
 			int value_index = box_side_to_value_index[i];
-			auto new_property = (*definition)->ParseValue(property_values[value_index]);
+			auto new_property = ParseProperty(*id, property_values[value_index]);
 			if (!new_property) {
 				return false;
 			}
-			dictionary.insert_or_assign((*definition)->GetId(), std::move(*new_property));
+			dictionary.insert_or_assign(*id, std::move(*new_property));
 		}
 	}
-	else if (shorthand_definition->type == ShorthandType::RecursiveRepeat) {
+	else if (shorthand_definition.type == ShorthandType::RecursiveRepeat) {
 		bool result = true;
 
-		for (auto& item : shorthand_definition->items) {
+		for (auto& item : shorthand_definition.items) {
 			std::visit([&](auto&& arg) {
 				using T = std::decay_t<decltype(arg)>;
-				if constexpr (std::is_same_v<T, const PropertyDefinition*>) {
-					result &= ParsePropertyDeclaration(dictionary, arg->GetId(), property_value);
+				if constexpr (std::is_same_v<T, PropertyId>) {
+					result &= ParsePropertyDeclaration(dictionary, arg, property_value);
 				}
-				else if constexpr (std::is_same_v<T, const ShorthandDefinition*>) {
-					result &= ParseShorthandDeclaration(dictionary, arg->GetId(), property_value);
+				else if constexpr (std::is_same_v<T, ShorthandId>) {
+					result &= ParseShorthandDeclaration(dictionary, arg, property_value);
 				}
 				else {
 					static_assert(always_false_v<T>, "non-exhaustive visitor!");
@@ -349,32 +421,32 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyDictiona
 		if (!result)
 			return false;
 	}
-	else if (shorthand_definition->type == ShorthandType::RecursiveCommaSeparated) {
+	else if (shorthand_definition.type == ShorthandType::RecursiveCommaSeparated) {
 		std::vector<std::string> subvalues;
 		StringUtilities::ExpandString(subvalues, property_value, ',');
 
 		size_t num_optional = 0;
-		for (auto& item : shorthand_definition->items)
+		for (auto& item : shorthand_definition.items)
 			if (item.optional)
 				num_optional += 1;
 
-		if (subvalues.size() + num_optional < shorthand_definition->items.size()) {
+		if (subvalues.size() + num_optional < shorthand_definition.items.size()) {
 			// Not enough subvalues declared.
 			return false;
 		}
 
 		size_t subvalue_i = 0;
-		for (size_t i = 0; i < shorthand_definition->items.size() && subvalue_i < subvalues.size(); i++) {
+		for (size_t i = 0; i < shorthand_definition.items.size() && subvalue_i < subvalues.size(); i++) {
 			bool result = false;
-			const ShorthandItem& item = shorthand_definition->items[i];
+			const ShorthandItem& item = shorthand_definition.items[i];
 
 			std::visit([&](auto&& arg) {
 				using T = std::decay_t<decltype(arg)>;
-				if constexpr (std::is_same_v<T, const PropertyDefinition*>) {
-					result = ParsePropertyDeclaration(dictionary, arg->GetId(), subvalues[subvalue_i]);
+				if constexpr (std::is_same_v<T, PropertyId>) {
+					result = ParsePropertyDeclaration(dictionary, arg, subvalues[subvalue_i]);
 				}
-				else if constexpr (std::is_same_v<T, const ShorthandDefinition*>) {
-					result = ParseShorthandDeclaration(dictionary, arg->GetId(), subvalues[subvalue_i]);
+				else if constexpr (std::is_same_v<T, ShorthandId>) {
+					result = ParseShorthandDeclaration(dictionary, arg, subvalues[subvalue_i]);
 				}
 				else {
 					static_assert(always_false_v<T>, "non-exhaustive visitor!");
@@ -391,27 +463,27 @@ bool StyleSheetSpecificationInstance::ParseShorthandDeclaration(PropertyDictiona
 		size_t value_index = 0;
 		size_t property_index = 0;
 
-		for (; value_index < property_values.size() && property_index < shorthand_definition->items.size(); property_index++) {
-			const ShorthandItem& item = shorthand_definition->items[property_index];
-			auto definition = std::get_if<const PropertyDefinition*>(&item.definition);
-			if (!definition) {
+		for (; value_index < property_values.size() && property_index < shorthand_definition.items.size(); property_index++) {
+			const ShorthandItem& item = shorthand_definition.items[property_index];
+			auto id = std::get_if<PropertyId>(&item.definition);
+			if (!id) {
 				return false;
 			}
-			auto new_property = (*definition)->ParseValue(property_values[value_index]);
+			auto new_property = ParseProperty(*id, property_values[value_index]);
 			if (!new_property) {
 				// This definition failed to parse; if we're falling through, try the next property. If there is no
 				// next property, then abort!
-				if (shorthand_definition->type == ShorthandType::FallThrough) {
-					if (property_index + 1 < shorthand_definition->items.size())
+				if (shorthand_definition.type == ShorthandType::FallThrough) {
+					if (property_index + 1 < shorthand_definition.items.size())
 						continue;
 				}
 				return false;
 			}
 
-			dictionary.insert_or_assign((*definition)->GetId(), std::move(*new_property));
+			dictionary.insert_or_assign(*id, std::move(*new_property));
 
 			// Increment the value index, unless we're replicating the last value and we're up to the last value.
-			if (shorthand_definition->type != ShorthandType::Replicate ||
+			if (shorthand_definition.type != ShorthandType::Replicate ||
 				value_index < property_values.size() - 1)
 				value_index++;
 		}
@@ -539,8 +611,9 @@ bool StyleSheetSpecificationInstance::ParsePropertyValues(std::vector<std::strin
 
 	if (state == VALUE) {
 		value = StringUtilities::StripWhitespace(value);
-		if (value.size() > 0)
+		if (value.size() > 0 || values_list.size() == 0) {
 			values_list.push_back(value);
+		}
 	}
 
 	return true;
@@ -786,6 +859,14 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("length");
 	RegisterProperty(PropertyId::ScrollTop, "scroll-top", "0px", false)
 		.AddParser("length");
+
+	for (auto const& [id, value] : unparsed_default) {
+		if (!ParsePropertyDeclaration(default_value, id, value)) {
+			auto name = MapGetName(property_map, id);
+			Log::Message(Log::Level::Error, "property '%s' default value (%s) parse failed..", name? name->c_str(): "unk", value.c_str());
+		}
+	}
+	unparsed_default.clear();
 }
 
 static StyleSheetSpecificationInstance* instance = nullptr;
@@ -804,34 +885,16 @@ void StyleSheetSpecification::Shutdown() {
 	}
 }
 
-PropertyParser* StyleSheetSpecification::GetParser(const std::string& parser_name) {
-	auto iterator = instance->parsers.find(parser_name);
-	if (iterator == instance->parsers.end())
-		return nullptr;
-	return (*iterator).second;
+bool StyleSheetSpecification::IsInheritedProperty(PropertyId id) {
+	return instance->IsInheritedProperty(id);
 }
 
-PropertyParser* StyleSheetSpecification::GetKeywordParser(const std::string& parser_parameters) {
-	auto it = instance->keyword_parsers.find(parser_parameters);
-	if (it != instance->keyword_parsers.end()) {
-		return it->second;
-	}
-	PropertyParserKeyword* new_parser = new PropertyParserKeyword();
-	std::vector<std::string> parameter_list;
-	StringUtilities::ExpandString(parameter_list, StringUtilities::ToLower(parser_parameters), ',');
-	for (size_t i = 0; i < parameter_list.size(); i++) {
-		new_parser->parameters[parameter_list[i]] = (int) i;
-	}
-	instance->keyword_parsers.emplace(parser_parameters, new_parser);
-	return new_parser;
+const Property* StyleSheetSpecification::GetDefaultProperty(PropertyId id) {
+	return instance->GetDefaultProperty(id);
 }
 
-const PropertyDefinition* StyleSheetSpecification::GetPropertyDefinition(PropertyId id) {
-	return instance->GetPropertyDefinition(id);
-}
-
-const PropertyIdSet & StyleSheetSpecification::GetRegisteredInheritedProperties() {
-	return instance->GetRegisteredInheritedProperties();
+const PropertyIdSet & StyleSheetSpecification::GetInheritedProperties() {
+	return instance->GetInheritedProperties();
 }
 
 bool StyleSheetSpecification::ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) {
