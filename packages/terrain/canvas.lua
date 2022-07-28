@@ -153,11 +153,14 @@ local function update_items()
 
                     bufferoffset = bufferoffset + vbnum
                     buffers[#buffers+1] = objbuffer
-                end
 
-                --TODO: if no items to draw, should remove this entity
-                ifs.set_state(re, "main_view", canvas.show)
-                ifs.set_state(re, "selectable", canvas.show)
+                    ifs.set_state(re, "main_view", canvas.show)
+                    ifs.set_state(re, "selectable", canvas.show)
+                else
+                    -- if no items to draw, should remove this entity
+                    world:remove_entity(tex.renderer_eid)
+                    textures[texpath] = nil
+                end
             end
         end
     end
