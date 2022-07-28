@@ -156,8 +156,8 @@ local function update_items()
                 end
 
                 --TODO: if no items to draw, should remove this entity
-                ifs.set_state(re, "main_view", hasitem)
-                ifs.set_state(re, "selectable", hasitem)
+                ifs.set_state(re, "main_view", canvas.show)
+                ifs.set_state(re, "selectable", canvas.show)
             end
         end
     end
@@ -330,5 +330,25 @@ function icanvas.add_text(e, ...)
     for i=1, select('#', ...) do
         local t = select(1, ...)
         ---
+    end
+end
+
+function icanvas.show(b)
+    for e in w:select "canvas:in" do
+        local canvas = e.canvas
+        canvas.show = b
+
+        local textures = canvas.textures
+        for _, tex in pairs(textures) do
+            local re
+            if tex.renderer_eid then
+                re = world:entity(tex.renderer_eid)
+            end
+
+            if re then
+                ifs.set_state(re, "main_view", b)
+                ifs.set_state(re, "selectable", b)
+            end
+        end
     end
 end
