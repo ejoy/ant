@@ -99,7 +99,7 @@ void
 mesh_submit(struct mesh*m, struct ecs_world *w){
     auto encoder = w->holder->encoder;
     if (m->vb.num > 0){
-        assert(m->vb.start <= m->vb.num);
+        // assert(m->vb.start <= m->vb.num);
         if (m->vb.type == mesh::BT_transient){
             BGFX(encoder_set_transient_vertex_buffer)(encoder, 0, m->vb.t, m->vb.start, m->vb.num);
         } else if (m->vb.type == mesh::BT_static){
@@ -110,7 +110,7 @@ mesh_submit(struct mesh*m, struct ecs_world *w){
     }
 
     if (m->ib.type != mesh::BT_none && m->ib.num > 0){
-        assert(m->vb.start <= m->vb.num);
+        // assert(m->vb.start <= m->vb.num);
         if (m->ib.type == mesh::BT_transient){
             BGFX(encoder_set_transient_index_buffer)(encoder, m->ib.t, m->ib.start, m->ib.num);
         } else if (m->ib.type == mesh::BT_static){
