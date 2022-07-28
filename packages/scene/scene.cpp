@@ -71,7 +71,7 @@ scene_changed(lua_State *L) {
 		
 		math_t mat = math3d_make_srt(math3d, s.s, s.r, s.t);
 		if (!math_isnull(s.mat)) {
-			mat = math3d_mul_matrix(math3d, s.mat, mat);
+			mat = math3d_mul_matrix(math3d, mat, s.mat);
 		}
 		if (s.parent != 0) {
 			auto parentmat = worldmats.find(s.parent);
