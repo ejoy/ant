@@ -915,7 +915,7 @@ void Element::HandleTransitionProperty() {
 		}
 		else if constexpr (std::is_same_v<T, TransitionList>) {
 			// Only remove the transitions that are not in our keep list.
-			const auto& keep_transitions_list = arg.transitions;
+			const auto& keep_transitions_list = arg;
 			it_remove = std::partition(animations.begin(), animations.end(),
 				[&keep_transitions_list](const ElementAnimation& animation) -> bool {
 					if (!animation.IsTransition())
@@ -1571,7 +1571,7 @@ void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const P
 			}
 		}
 		else if constexpr (std::is_same_v<T, TransitionList>) {
-			for (auto const& [id, transition] : arg.transitions) {
+			for (auto const& [id, transition] : arg) {
 				if (properties.contains(id)) {
 					add_transition(id, transition);
 				}
@@ -1597,8 +1597,8 @@ void Element::TransitionPropertyChanges(const Transitions* transitions, Property
 			StartTransition(id, arg, old_property, *new_property);
 		}
 		else if constexpr (std::is_same_v<T, TransitionList>) {
-			auto iter = arg.transitions.find(id);
-			if (iter != arg.transitions.end()) {
+			auto iter = arg.find(id);
+			if (iter != arg.end()) {
 				StartTransition(id, iter->second, old_property, *new_property);
 			}
 		}
