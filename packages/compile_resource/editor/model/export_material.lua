@@ -146,7 +146,7 @@ return function (output, glbdata, exports, tolocalpath)
     local buffers = glbscene.buffers
     local textures = glbscene.textures
     local samplers = glbscene.samplers
-    local function export_image(imgidx, typename)
+    local function export_image(imgidx)
         local img = images[imgidx+1]
         local ext = image_extension[img.mimeType]
         if ext == nil then
@@ -156,39 +156,20 @@ return function (output, glbdata, exports, tolocalpath)
             error(("not support image type:%d"):format(img.mimeType))
         end
 
-        local function check_gen_image_filename(name)
-            local imagepath = output / "images"
-            
-            if fs.path(name):extension():string() ~= ext then
-                name = name .. ext
-            end
-    
-            local img_filename = imagepath / name
-            if fs.exists(img_filename) then
-                log.warn(img_filename:string() .. ", already exist")
-                local fn = img_filename:filename()
-                local s = fn:stem()
-                img_filename = imagepath / ("%s_%s%s"):format(s:string(), typename, fn:extension():string())
-            end
-
-            if fs.exists(img_filename) then
-                error("Invalid filename:" .. img_filename:filename())
-            end
-            return img_filename:filename():string()
+        local name = img.name or tostring(imgidx)
+        if fs.path(name):extension():string() ~= ext then
+            name = name .. ext
         end
 
-
-        local name = img.name or tostring(imgidx)
-        name = check_gen_image_filename(name)
-
-        local bv = bufferviews[img.bufferView+1]
-        local buf = buffers[bv.buffer+1]
-        local begidx = (bv.byteOffset or 0)+1
-        local endidx = begidx + bv.byteLength
-        assert((endidx - 1) <= buf.byteLength)
-        local c = glbbin:sub(begidx, endidx)
-        utility.save_file("./images/"..name, c)
-
+        if not fs.exists(output / "images" / name) then
+            local bv = bufferviews[img.bufferView+1]
+            local buf = buffers[bv.buffer+1]
+            local begidx = (bv.byteOffset or 0)+1
+            local endidx = begidx + bv.byteLength
+            assert((endidx - 1) <= buf.byteLength)
+            local c = glbbin:sub(begidx, endidx)
+            utility.save_file("./images/"..name, c)
+        end
         return name
     end
 
@@ -223,9 +204,9 @@ return function (output, glbdata, exports, tolocalpath)
         end
     end
 
-    local function fetch_texture_info(texidx, typename, normalmap, colorspace)
+    local function fetch_texture_info(texidx, normalmap, colorspace)
         local tex = textures[texidx+1]
-        local imgname = export_image(tex.source, typename)
+        local imgname = export_image(tex.source)
         local texture_desc = {
             path = serialize.path("./"..imgname),
             sampler = to_sampler(tex.sampler),
@@ -246,12 +227,12 @@ return function (output, glbdata, exports, tolocalpath)
         return serialize.path("./../images/" .. imgname_noext .. ".texture")
     end
 
-    local function handle_texture(tex_desc, typename, normalmap, colorspace)
+    local function handle_texture(tex_desc, name, normalmap, colorspace)
         if tex_desc then
-            local filename = fetch_texture_info(tex_desc.index, typename, normalmap, colorspace)
+            local filename = fetch_texture_info(tex_desc.index, normalmap, colorspace)
             return {
                 texture = filename,
-                stage = default_pbr_param[typename].stage,
+                stage = default_pbr_param[name].stage,
             }
         end
     end
