@@ -28,11 +28,16 @@ function ds:entity_init()
     for msg in decl_mount_mb:each() do
         local e, attach = msg[2], msg[3]
         
-        w:sync("render_object:out", attach)
+        w:sync("render_object:in", attach)
         local attach_ro = attach.render_object
 
-        w:sync("render_object:out", e)
-        e.render_object.mesh = attach_ro.mesh
+        w:sync("render_object:update", e)
+        local ro = e.render_object
+        ro.vb_start, ro.vb_num = attach_ro.vb_start, attach_ro.vb_num
+        ro.vb_handle = attach_ro.vb_handle
+
+        ro.ib_start, ro.ib_num = attach_ro.ib_start, attach_ro.ib_num
+        ro.ib_handle = attach_ro.ib_handle
     end
 end
 

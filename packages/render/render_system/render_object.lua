@@ -4,31 +4,29 @@ local serialize = import_package "ant.serialize"
 local rendercore = ecs.clibs "render.core"
 local math3d = require "math3d"
 
+local iro = ecs.interface "irender_object"
+function iro.mesh(p)
+end
+
 local ro = ecs.component "render_object"
-local function init_ro(r)
-    r.worldmat = math3d.NULL
-    r.prog        = 0xffffffff
-    r.mesh        = 0
-    r.depth       = 0
-    r.discardflags= 0xff
-    r.materials   = rendercore.queue_materials()
-    return r
+local function init_ro()
+    return {
+        worldmat = math3d.NULL,
+        prog        = 0xffffffff,
+        mesh        = 0,
+        depth       = 0,
+        discardflags= 0xff,
+        materials   = rendercore.queue_materials(),
+    }
 end
 
 function ro.init(r)
-    return init_ro(r)
+    assert(not r)
+    return init_ro()
 end
 
 function ro.remove(r)
     r.materials = nil
-end
-
-function ro.marshal(r)
-    return serialize.pack(r)
-end
-
-function ro.unmarshal(r)
-    return init_ro(serialize.unpack(r))
 end
 
 local ra = ecs.component "render_args2"

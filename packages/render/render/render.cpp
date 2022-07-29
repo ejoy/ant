@@ -7,7 +7,6 @@
 extern "C"{
 	#include "material.h"
 }
-#include "mesh.h"
 
 #include "lua2struct.h"
 #include "luabgfx.h"
@@ -77,6 +76,25 @@ static const cid_t surface_stages[] = {
 	(cid_t)ecs_api::component<ecs::ui_stage>::id,
 };
 
+static void
+mesh_submit(struct ecs_world* w, ecs::render_object* ro){
+	const uint16_t vbtype = (ro->vb_handle>>16) & 0xffff;
+	switch (vbtype){
+		case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->set_vertex_buffer(0, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
+		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:	//walk through
+		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: w->bgfx->set_dynamic_vertex_buffer(0, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
+		default: assert(false && "Invalid vertex buffer type");
+	}
+
+	const uint16_t ibtype = (ro->ib_handle>>16) & 0xffff;
+	switch (ibtype){
+		case BGFX_HANDLE_INDEX_BUFFER: w->bgfx->set_index_buffer(bgfx_index_buffer_handle_t{(uint16_t)ro->ib_handle}, ro->ib_start, ro->ib_num); break;
+		case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER:	//walk through
+		case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32: w->bgfx->set_dynamic_index_buffer(bgfx_dynamic_index_buffer_handle_t{(uint16_t)ro->ib_handle}, ro->ib_start, ro->ib_num); break;
+		default: assert(false && "Invalid index buffer type");
+	}
+}
+
 static int
 lsubmit(lua_State *L){
 	auto w = getworld(L);
@@ -107,10 +125,11 @@ lsubmit(lua_State *L){
 						auto qm = (queue_materials*)ro->materials;
 						auto mi = qm->materials[midx];
 						apply_material_instance(L, mi, w, texture_index);
-						const auto prog = material_prog(L, mi);
-						mesh_submit((struct mesh*)ro->mesh, w);
+
+						mesh_submit(w, ro);
 
 						const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
+						const auto prog = material_prog(L, mi);
 						w->bgfx->submit(viewid, prog, ro->depth, discardflags);
 					}
 				}
@@ -180,15 +199,22 @@ lqm_num(lua_State *L){
 }
 
 static int
+lqm_ptr(lua_State *L){
+	lua_pushlightuserdata(L, to_qm(L, 1));
+	return 1;
+}
+
+static int
 lqueue_materials(lua_State *L){
 	auto m = (queue_materials*)lua_newuserdatauv(L, sizeof(queue_materials), 0);
 	memset(m, sizeof(*m), 0);
 	if (luaL_newmetatable(L, "ANT_QUEUE_MATERIALS")){
 		luaL_Reg l[] = {
-			{"set", lqm_set},
-			{"get", lqm_get},
-			{"num", lqm_num},
-			{NULL, NULL},
+			{"set",		lqm_set},
+			{"get",		lqm_get},
+			{"num",		lqm_num},
+			{"ptr",		lqm_ptr},
+			{nullptr,	nullptr},
 		};
 		luaL_setfuncs(L, l, 0);
 		lua_pushvalue(L, -1);

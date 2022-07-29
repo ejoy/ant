@@ -41,7 +41,6 @@ int luaopen_ecs_core(lua_State* L);
 int luaopen_fastio(lua_State* L);
 int luaopen_fileinterface(lua_State *L);
 int luaopen_material(lua_State *L);
-int luaopen_mesh(lua_State *L);
 int luaopen_render(lua_State *L);
 int luaopen_image(lua_State* L);
 #if BX_PLATFORM_IOS
@@ -99,7 +98,6 @@ void ant_loadmodules(lua_State* L) {
         { "ecs.core", luaopen_ecs_core},
         { "fastio", luaopen_fastio},
         { "render.material",    luaopen_material},
-        { "render.mesh",        luaopen_mesh},
         { "render.core",        luaopen_render},
         { "image", luaopen_image },
 #if BX_PLATFORM_IOS

@@ -18,7 +18,6 @@ lm:lua_source "render_core"{
     },
     sources = {
         "render/material.c",
-        "render/mesh.cpp",
         "render/render.cpp",
     }
 }

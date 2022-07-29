@@ -147,9 +147,8 @@ local function update_items()
 
                     local buffersize = #objbuffer
                     local vbnum = buffersize//layout.stride
-                    local m = ro.mesh
-                    m:set_vb_range(bufferoffset, vbnum)
-                    m:set_ib_range(0, (vbnum//4)*6)
+                    ro.vb_start, ro.vb_num = bufferoffset, vbnum
+                    ro.ib_start, ro.ib_num = 0, (vbnum//4)*6
 
                     bufferoffset = bufferoffset + vbnum
                     buffers[#buffers+1] = objbuffer

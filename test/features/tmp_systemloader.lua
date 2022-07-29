@@ -360,7 +360,7 @@ function init_loader_sys:entity_init()
             ies.set_state(e, "main_view", true)
 
             local quad_2 = 2
-            e.render_object.mesh:set_ib_range(nil, quad_2 * 6)
+            e.render_object.ib_num = quad_2 * 6
         elseif key == "SPACE" and press == 0 then
             -- local icw = ecs.import.interface "ant.render|icurve_world"
             -- icw.enable(not icw.param().enable)

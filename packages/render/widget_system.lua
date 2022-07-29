@@ -59,9 +59,9 @@ end
 function widget_drawer_sys:end_frame()
 	local e = w:singleton("widget_drawer", "render_object:update")
 	if e then
-		local m = e.render_object.mesh
-		m:set_vb_range(0, 0)
-		m:set_ib_range(0, 0)
+		local ro = e.render_object
+		ro.vb_start, ro.vb_num = 0, 0
+		ro.ib_start, ro.ob_num = 0, 0
 	end
 end
 
@@ -83,24 +83,20 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 		return
 	end
 	local e = w:singleton("widget_drawer", "render_object:update")
-	local m = e.render_object.mesh
-	local vbstart, vbnum, vbhandle = m:get_vb()
+	local ro = e.render_object
+	local vbnum, vbhandle = ro.vb_num, ro.vb_handle
 
 	local vertex_offset = vbnum
 	bgfx.update(vbhandle, vertex_offset, bgfx.memory_buffer(vbfmt, vb));
-	vbnum = vertex_offset + numvertices
-	m:set_vb_range(vbstart, vbnum)
-
+	ro.vb_num = vertex_offset + numvertices
 	local numindices = #ib
 	if numindices ~= 0 then
-		local ibstart, ibnum, ibhandle = m:get_ib()
-		local index_offset = ibnum
+		local index_offset = ro.ib_num
 		if index_offset == 0 then
 			offset_ib(index_offset, ib)
 		end
-		bgfx.update(ibhandle, index_offset, bgfx.memory_buffer(ibfmt, ib))
-		ibnum = index_offset + numindices
-		m:set_ib_range(ibstart, ibnum)
+		bgfx.update(ro.ib_handle, index_offset, bgfx.memory_buffer(ibfmt, ib))
+		ro.ib_num = index_offset + numindices
 	end
 end
 

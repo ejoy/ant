@@ -35,6 +35,16 @@ function render_sys:component_init()
 	end
 end
 
+local function update_ro(ro, m)
+	ro.vb_start = m.vb.start
+	ro.vb_num = m.vb.num
+	ro.vb_handle = m.vb.handle
+
+	ro.ib_start = m.ib.start
+	ro.ib_num = m.ib.num
+	ro.ib_handle = m.ib.handle
+end
+
 function render_sys:entity_init()
 	for qe in w:select "INIT primitive_filter:in queue_name:in" do
 		local pf = qe.primitive_filter
@@ -49,6 +59,16 @@ function render_sys:entity_init()
 		local ro = e.render_object
 		local mr = e.material_result
 		ro.materials:set("main_queue", mr.object:instance())
+	end
+
+	for e in w:select "INIT mesh:in render_object:update" do
+		update_ro(e.render_object, e.mesh)
+	end
+
+	for e in w:select "INIT simplemesh:in render_object:update owned_mesh_buffer?out" do
+		local sm = e.simplemesh
+		update_ro(e.render_object, e.simplemesh)
+		e.owned_mesh_buffer = sm.owned_mesh_buffer
 	end
 end
 
