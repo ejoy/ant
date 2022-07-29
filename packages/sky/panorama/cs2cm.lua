@@ -59,7 +59,7 @@ local function load_res_tex(e)
 end
 
 function cs2cm_sys:entity_ready()
-    for e in w:select "skybox_changed:update render_object render_obj skybox:in filter_ibl?out" do
+    for e in w:select "skybox_changed:update render_object skybox:in filter_ibl?out" do
         local tex = load_res_tex(e)
         if not tex.uncomplete then
             e.skybox_changed = false
@@ -105,7 +105,7 @@ function cs2cm_sys:entity_ready()
 end
 
 function cs2cm_sys:filter_ibl()
-    for e in w:select "filter_ibl render_object render_obj ibl:in skybox:in" do
+    for e in w:select "filter_ibl render_object ibl:in skybox:in" do
         local se_ibl = e.ibl
         local sb = e.skybox
         local cm_rbhandle = sb.cm_rbidx and fbmgr.get_rb(sb.cm_rbidx).handle or load_res_tex(e).handle

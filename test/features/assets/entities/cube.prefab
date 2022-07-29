@@ -1,7 +1,6 @@
 ---
 policy:
     ant.render|render
-    ant.render|render_object
     ant.scene|scene_object
     ant.general|name
 data:

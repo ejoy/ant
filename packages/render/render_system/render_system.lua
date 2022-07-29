@@ -103,17 +103,10 @@ function render_sys:update_filter()
 end
 
 local keys = template.keys
-local select_cache = template.new (function(a,b) return string.format("view_visible %s_visible %s_cull:absent %s render_object:in filter_material:in", a, a, b) end)
-local vs_select_cache = template.new (function(a,b) return string.format("hitch_tag %s_visible %s_cull:absent %s render_object:in filter_material:in id:in", a, a, b) end)
+local vs_select_cache = template.new (function(a,b) return string.format("hitch_tag %s_visible %s_cull:absent %s render_object:in id:in", a, a, b) end)
 local function load_select_key(qn, fn, c)
 	local k = keys[qn][fn]
 	return c[k]
-end
-
-local function submit_filter(viewid, selkey, qn, transforms)
-	for e in w:select(selkey) do
-		irender.draw(viewid, e.render_object, e.filter_material[qn])
-	end
 end
 
 local function transform_find(t, id, ro, mats)
@@ -141,7 +134,8 @@ local function submit_hitch_filter(viewid, selkey, qn, groups, transforms)
 		for e in w:select(selkey) do
 			local ro = e.render_object
 			local tid, num, stride = table.unpack(transforms:find(e.id, ro, mats))
-			irender.multi_draw(viewid, ro, e.filter_material[qn], tid, num, stride)
+			local qm = ro.materials
+			irender.multi_draw(viewid, ro, qm:get(qn), tid, num, stride)
 		end
 	end
 end

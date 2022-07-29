@@ -1,10 +1,10 @@
 local ecs = ...
 local serialize = import_package "ant.serialize"
-local ro = ecs.component "render_obj"
+
 local rendercore = ecs.clibs "render.core"
-local bgfx = require "bgfx"
 local math3d = require "math3d"
 
+local ro = ecs.component "render_object"
 local function init_ro(r)
     r.worldmat = math3d.NULL
     r.prog        = 0xffffffff
@@ -29,4 +29,12 @@ end
 
 function ro.unmarshal(r)
     return init_ro(serialize.unpack(r))
+end
+
+local ra = ecs.component "render_args2"
+function ra.init(v)
+    v.visible_id = 0
+    v.cull_id = 0
+    v.viewid = 0
+    v.material_idx = 0
 end

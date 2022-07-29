@@ -58,7 +58,7 @@ local function log_pickup_queue_entities()
 		log.info "pickup queue entities:"
 		for idx, fn in ipairs(q.primitive_filter) do
 			local s =
-				("pickup_queue %s render_object render_obj"):format(fn)
+				("pickup_queue %s render_object"):format(fn)
 			log.info(("filter type:%s, select: %s"):format(fn, s))
 			local entities = {}
 			for e in w:select(s .. " id:in name?in") do

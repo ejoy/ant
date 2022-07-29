@@ -47,18 +47,13 @@ local function init_scene_aabb(scene, bounding)
 end
 
 function s:entity_init()
-	for v in w:select "INIT scene:in render_object?in render_obj?in scene_needchange?out" do
-		local scene = v.scene
+	for v in w:select "INIT scene mesh?in simplemesh?in scene_needchange?out" do
+		local m = v.mesh or v.simplemesh
+		if m then
+			init_scene_aabb(v.scene, m.bounding)
+		end
 		v.scene_needchange = true
-		update_render_object(v.render_object, scene)
-		update_render_obj(v.render_obj, scene)
 	end
-    for v in w:select "INIT mesh:in scene:update" do
-        init_scene_aabb(v.scene, v.mesh.bounding)
-    end
-    for v in w:select "INIT simplemesh:in scene:update" do
-        init_scene_aabb(v.scene, v.simplemesh.bounding)
-    end
 end
 
 function s:scene_update()

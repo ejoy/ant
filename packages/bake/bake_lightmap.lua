@@ -111,13 +111,9 @@ function bake_lm_sys:end_filter()
     for e in w:select "filter_result bake_lightmap_queue_visible render_object:update" do
         local le = w:singleton("bake_lightmap_queue", "primitive_filter:in")
         local ro = e.render_object
-        local ro1 = e.render_obj
         if has_filter_stage(le.primitive_filter, ro.setting.surfacetype) then
             local m = load_bake_material(ro)
-            e.filter_material["bake_lightmap_queue"] = m
-
-            ro1.materials:set("bake_lightmap_queue", m.material)
-            ro1.prog = m.fx.prog
+            ro.materials:set("bake_lightmap_queue", m.material)
         end
     end
 end

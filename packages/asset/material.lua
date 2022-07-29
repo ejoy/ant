@@ -9,8 +9,7 @@ local matobj		= require "matobj"
 local imaterial = ecs.interface "imaterial"
 
 function imaterial.set_property(e, who, what)
-	local m = e.render_obj.materials:get(1)	--1 is default material
-	assert(e.render_object.material == m)
+	local m = e.render_object.materials:get(1)	--1 is default material
 	m[who] = what
 	--e.render_object.material[who] = what
 end

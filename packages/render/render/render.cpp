@@ -99,7 +99,7 @@ lsubmit(lua_State *L){
 			if (visible){
 				for (auto ss : surface_stages){
 					if (entity_sibling(w->ecs, vs_id, i, ss)){
-						ecs::render_obj* ro = (ecs::render_obj*)entity_sibling(w->ecs, vs_id, i, ecs_api::component<ecs::render_obj>::id);
+						ecs::render_object* ro = (ecs::render_object*)entity_sibling(w->ecs, vs_id, i, ecs_api::component<ecs::render_object>::id);
 						if (ro == nullptr)
 							continue;
 
@@ -148,7 +148,7 @@ check_material_idx(lua_State *L, int idx){
 	} else if (LUA_TNUMBER == argtype){
 		midx = (int)lua_tointeger(L, idx)-1;
 	} else {
-		luaL_error(L, "Invalid argument type:%d", lua_typename(argtype));
+		luaL_error(L, "Invalid argument type:%d", lua_typename(L, argtype));
 	}
 
 	if (midx < 0 || midx >= queue_materials::QMT_count){
@@ -190,7 +190,7 @@ lqueue_materials(lua_State *L){
 			{"num", lqm_num},
 			{NULL, NULL},
 		};
-		luaL_setfuncs(L, 0);
+		luaL_setfuncs(L, l, 0);
 		lua_pushvalue(L, -1);
 		lua_setfield(L, -2, "__index");
 	}
