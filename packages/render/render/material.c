@@ -137,6 +137,7 @@ struct material {
 	uint64_t state;
 	uint32_t rgba;
 	attrib_id attrib;
+	bgfx_program_handle_t prog;
 };
 
 #define INSTANCE_UV_INVALID_LIST	1
@@ -1251,6 +1252,12 @@ apply_material_instance(lua_State *L, struct material_instance *mi, struct ecs_w
 	}
 }
 
+bgfx_program_handle_t
+material_prog(lua_State *L, struct material_instance *mi){
+	(void)L;
+	return mi->m->prog;
+}
+
 // 1: material_instance
 // 2: texture lookup table
 static int
@@ -1414,8 +1421,9 @@ lmaterial_new(lua_State *L) {
 	uint64_t state;
 	uint32_t rgba;
 	get_state(L, 1, &state, &rgba);
-	lua_settop(L, 2);
+	lua_settop(L, 3);
 	struct material *mat = (struct material *)lua_newuserdatauv(L, sizeof(*mat), MATERIAL_UV_NUM);
+	mat->prog.idx = luaL_checkinteger(L, 3) & 0xffff;
 	set_material_matatable(L, "ANT_MATERIAL", 0);
 	const int matidx = lua_absindex(L, -1);
 
@@ -1440,7 +1448,8 @@ lmaterial_new(lua_State *L) {
 
 	lua_newtable(L);
 	const int lookup_idx = lua_absindex(L, -1);
-	for (lua_pushnil(L); lua_next(L, 2) != 0; lua_pop(L, 1)) {
+	const int properties_idx = 2;
+	for (lua_pushnil(L); lua_next(L, properties_idx) != 0; lua_pop(L, 1)) {
 		const char* key = lua_tostring(L, -2);
 		mat->attrib = fetch_material_attrib_value(L, arena, sa_lookup_idx, lookup_idx, key, mat->attrib);
 	}

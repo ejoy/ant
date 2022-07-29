@@ -65,7 +65,7 @@ function qs_sys:entity_init()
                 },
                 name = "polyline",
                 on_ready = function (le)
-                    w:sync("render_object:in", le)
+                    w:sync("render_object:update", le)
                     imaterial.set_property(le, "u_line_info",   math3d.vector(qs.width, 0.0, 0.0, 0.0))
                     imaterial.set_property(le, "u_color",       math3d.vector(qs.color))
                     imaterial.set_property(le, "u_uvmotion",    math3d.vector(speed[1], speed[2], tile[1], tile[2]))

@@ -7,12 +7,12 @@ local math3d = require "math3d"
 
 local s = ecs.system "scenespace_system"
 
-local function inherit_state(r, pr)
+local function inherit_state(r, pro)
 	if r.fx == nil then
-		r.fx = pr.fx
+		r.fx = pro.fx
 	end
 	if r.material == nil then
-		r.material = pr.material
+		r.material = pro.material
 	end
 end
 
@@ -22,14 +22,20 @@ local function update_render_object(ro, scene)
 		if scene.parent ~= 0 then
 			local parent = world:entity(scene.parent)
 			if parent then
-				local pr = parent.render_object
-				if pr then
-					inherit_state(ro, pr)
+				local pro = parent.render_object
+				if pro then
+					inherit_state(ro, pro)
 				end
 			else
 				error "Unexpected Error."
 			end
 		end
+	end
+end
+
+local function update_render_obj(ro, scene)
+	if ro then
+		ro.worldmat = scene.worldmat
 	end
 end
 
@@ -41,10 +47,11 @@ local function init_scene_aabb(scene, bounding)
 end
 
 function s:entity_init()
-	for v in w:select "INIT scene:in render_object?in scene_needchange?out" do
+	for v in w:select "INIT scene:in render_object?in render_obj?in scene_needchange?out" do
 		local scene = v.scene
 		v.scene_needchange = true
 		update_render_object(v.render_object, scene)
+		update_render_obj(v.render_obj, scene)
 	end
     for v in w:select "INIT mesh:in scene:update" do
         init_scene_aabb(v.scene, v.mesh.bounding)
@@ -52,16 +59,11 @@ function s:entity_init()
     for v in w:select "INIT simplemesh:in scene:update" do
         init_scene_aabb(v.scene, v.simplemesh.bounding)
     end
-    --TODO: should move to render package
-    for v in w:select "INIT scene:in render_object:in" do
-        v.render_object.aabb = v.scene.scene_aabb
-    end
 end
 
 function s:scene_update()
-	for e in w:select "scene_changed scene:in render_object:in" do
+	for e in w:select "scene_changed scene:in render_object:update" do
 		e.render_object.worldmat = e.scene.worldmat
-        e.render_object.aabb = e.scene.scene_aabb
 	end
 end
 

@@ -77,7 +77,7 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
             filter_state= "main_view",
             scene   = { srt = {t={0, 5, 5}}},
             on_ready = function (e)
-                w:sync("render_object:in", e)
+                w:sync("render_object:update", e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(color))
                 local texobj = assetmgr.resource(tex)
                 imaterial.set_property(e, "s_basecolor", texobj.handle)
@@ -284,7 +284,7 @@ function init_loader_sys:init()
     -- local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
     -- function p:on_ready()
     --     local e = self.tag.cube[1]
-    --     w:sync("render_object:in", e)
+    --     w:sync("render_object:update", e)
     --     e.render_object.material.u_color = math3d.vector(0.8, 0, 0.8, 1.0)
     -- end
 

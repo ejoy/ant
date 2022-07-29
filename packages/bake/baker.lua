@@ -246,12 +246,12 @@ function downsampler:downsample(hemisize)
     local hsize = hemisize//2
     local viewid = lightmap_viewid + 1
     
-    local we = w:singleton("weight_ds", "render_object:in")
-    local se = w:singleton("simple_ds", "render_object:in")
+    local we = w:singleton("weight_ds", "render_object:update")
+    local se = w:singleton("simple_ds", "render_object:update")
     local we_obj, se_obj = we.render_object, se.render_object
 
     local read, write = 1, 2
-    local we_m, se_m = we_obj.material, se_obj.material
+    local we_m, se_m = we_obj.materials:get(1), se_obj.materials:get(1)
     we_m.hemispheres    = self.render_textures[read]
     we_m.weights        = self.weight_tex
     irender.draw(viewid, we_obj)

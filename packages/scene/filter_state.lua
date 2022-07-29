@@ -26,17 +26,14 @@ local ifs = ecs.interface "ifilter_state"
 ifs.filter_mask = filter_mask
 
 function ifs.has_state(e, name)
-	return ((e.render_object.filter_state) & STATE_TYPE[name]) ~= 0
+	return ((e.filter_state) & STATE_TYPE[name]) ~= 0
 end
 
 function ifs.set_state(e, name, v)
-	local ro = e.render_object
-	if not ro or not ro.filter_state then
-		return
-	end
-	ro.filter_state = v and
-		(ro.filter_state | STATE_TYPE[name]) or
-		(ro.filter_state & (~STATE_TYPE[name]))
+	local fs = e.filter_state
+	fs = v and
+		(fs | STATE_TYPE[name]) or
+		(fs & (~STATE_TYPE[name]))
 	e.render_object_update = true
 end
 
@@ -52,7 +49,7 @@ function ifs.state_names(statemask)
 end
 local m = ecs.system "filter_state_system"
 function m:entity_init()
-    for e in w:select "INIT filter_state:in render_object:in" do
-        e.render_object.filter_state = filter_mask(e.filter_state) or 0
+    for e in w:select "INIT filter_state:update" do
+        e.filter_state = filter_mask(e.filter_state) or 0
     end
 end

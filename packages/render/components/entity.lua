@@ -78,7 +78,7 @@ local function simple_render_entity_data(name, material, mesh, srt, color, hide)
 			filter_state= hide and "auxgeom" or "main_view|auxgeom",
 			name		= name or gen_test_name(),
 			on_ready 	= function(e)
-				w:sync("render_object:in", e)
+				w:sync("render_object:update", e)
 				imaterial.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
 			end
 		}
@@ -255,7 +255,7 @@ function ientity.create_prim_plane_entity(srt, materialpath, color, name, hide)
 			name 		= name or "Plane",
 			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))), true),
 			on_ready = function (e)
-				w:sync("render_object:in", e)
+				w:sync("render_object:update", e)
 				ifs.set_state(e, "main_view", not hide)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 				w:sync("render_object_update:out", e)
@@ -688,7 +688,7 @@ function ientity.create_arrow_entity(srt, headratio, color, material)
 			scene = {s=srt.s,r=srt.r,t=srt.t},
 			name = "arrow",
 			on_ready = function (e)
-				w:sync("render_object:in", e)
+				w:sync("render_object:update", e)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
 		}
@@ -755,7 +755,6 @@ function ientity.create_quad_lines_entity(name, srt, material, quadnum, width, h
 			material = material,
 			name = name,
 			on_ready = function (e)
-				w:sync("render_object:in", e)
 				ifs.set_state(e, "main_view", not hide)
 			end
         }

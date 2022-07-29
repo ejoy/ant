@@ -18,6 +18,8 @@ end
 
 imesh.init_mesh = ext_meshbin.init
 
+
+--TODO: we should move this system to render package, it need sync data to render_object, but asset package should not depend on render package
 local ms = ecs.system "mesh_system"
 
 function ms:component_init()
@@ -27,11 +29,11 @@ function ms:component_init()
 end
 
 function ms:entity_init()
-	for e in w:select "INIT mesh:in render_object:in id:in" do
+	for e in w:select "INIT mesh:in render_object:update" do
 		e.render_object.mesh = meshcore.mesh(e.mesh)
 	end
 
-	for e in w:select "INIT simplemesh:in render_object:in id:in owned_mesh_buffer?out" do
+	for e in w:select "INIT simplemesh:in render_object:update owned_mesh_buffer?out" do
 		local sm = e.simplemesh
 		e.render_object.mesh = meshcore.mesh(sm)
 		e.owned_mesh_buffer = sm.owned_mesh_buffer
@@ -39,7 +41,7 @@ function ms:entity_init()
 end
 
 function ms:end_frame()
-	for e in w:select "REMOVED owned_mesh_buffer render_object:in simplemesh:in" do
+	for e in w:select "REMOVED owned_mesh_buffer simplemesh:in" do
 		if e.owned_mesh_buffer then
 			ext_meshbin.delete(e.simplemesh)
 		end

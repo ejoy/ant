@@ -120,7 +120,7 @@ local function init(material, setting)
     end
 
     material.properties = generate_properties(material.fx, material.properties)
-    material.object = matobj.rmat.material(material.state, material.properties)
+    material.object = matobj.rmat.material(material.state, material.properties, material.fx.prog)
     return material
 end
 

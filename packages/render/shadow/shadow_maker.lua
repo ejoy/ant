@@ -258,8 +258,8 @@ function sm:init()
 	local s = ishadow.shadowmap_size()
 	create_clear_shadowmap_queue(fbidx)
 	local originmatrial = "/pkg/ant.resources/materials/depth.material"
-	shadow_material = imaterial.load(originmatrial)
-	gpu_skinning_material = imaterial.load(originmatrial, {skinning="GPU"})
+	shadow_material = imaterial.load_res(originmatrial)
+	gpu_skinning_material = imaterial.load_res(originmatrial, {skinning="GPU"})
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx)
@@ -448,18 +448,17 @@ local s = ecs.system "shadow_primitive_system"
 local material_cache = {__mode="k"}
 
 function s:end_filter()
-    for e in w:select "filter_result opacity render_object:in skinning?in filter_material:in" do
+    for e in w:select "filter_result opacity render_object:update skinning?in" do
         local ro = e.render_object
 		local m = which_material(e.skinning)
-		local dst_mi, fx = m.material, m.fx
-		local newstate = irender.check_set_state(dst_mi, ro.material)
-		local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
-		local fm = e.filter_material
-		for qe in w:select "csm queue_name:in primitive_filter:in" do
-			fm[qe.queue_name] = {
-				material = new_matobj:instance(),
-				fx = fx,
-			}
+		local mo = m.object
+		local qm = ro.materials
+
+		local newstate = irender.check_set_state(mo, qm:get(1))
+		local new_matobj = irender.create_material_from_template(mo, newstate, material_cache)
+		
+		for qe in w:select "csm queue_name:in" do
+			qm:set(qe.queue_name, new_matobj:instance())
 		end
 	end
 end

@@ -29,9 +29,8 @@ for n, b in pairs(viewidmgr.all_bindings()) do
 end
 
 function render_sys:component_init()
-	for e in w:select "INIT render_object:update filter_material:out render_object_update?out" do
+	for e in w:select "INIT render_object:update render_object_update?out" do
 		e.render_object = e.render_object or {}
-		e.filter_material = {}
 		e.render_object_update = true
 	end
 end
@@ -46,14 +45,10 @@ function render_sys:entity_init()
 		pf.exclude_type = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
 	end
 
-	for e in w:select "INIT material_result:in render_object:in scene?in" do
+	for e in w:select "INIT material_result:in render_object:update" do
 		local ro = e.render_object
 		local mr = e.material_result
-		ro.material = mr.object:instance()
-        ro.fx     	= mr.fx
-		if e.scene then
-			ro.worldmat = e.scene.worldmat
-		end
+		ro.materials:set("main_queue", mr.object:instance())
 	end
 end
 
@@ -81,10 +76,10 @@ end
 
 function render_sys:update_filter()
 	w:clear "filter_result"
-    for e in w:select "render_object_update render_object:in filter_result:new" do
-        local ro = e.render_object
-        local filterstate = ro.filter_state
-		local st = ro.fx.setting.surfacetype
+    for e in w:select "render_object_update render_object filter_result:new" do
+		local matres = imaterial.resource(e, true)
+        local fs = e.filter_state
+		local st = matres.fx.setting.surfacetype
 
 		e[st] = true
 		w:sync(st .. "?out", e)
@@ -99,7 +94,7 @@ function render_sys:update_filter()
 
 			local pf = qe.primitive_filter
 			if has_filter_tag(st, pf) then
-				local add = ((filterstate & pf.filter_type) ~= 0) and ((filterstate & pf.exclude_type) == 0)
+				local add = ((fs & pf.filter_type) ~= 0) and ((fs & pf.exclude_type) == 0)
 				mark_tags(add)
 			end
 		end
@@ -153,7 +148,7 @@ end
 
 local function submit_render_objects(viewid, filter, qn, groups, transforms)
 	for _, fn in ipairs(filter) do
-		submit_filter(viewid, load_select_key(qn, fn, select_cache), qn, transforms)
+		--submit_filter(viewid, load_select_key(qn, fn, select_cache), qn, transforms)
 		submit_hitch_filter(viewid, load_select_key(qn, fn, vs_select_cache), qn, groups, transforms)
 	end
 end
@@ -218,7 +213,7 @@ function render_sys:render_submit()
 		}
 	end
 
-	--rendercore.submit(texmapper)
+	rendercore.submit(texmapper)
 	for e in w:select "render_args:in" do
 		local args = e.render_args
 		submit_render_objects(args.viewid, args.primitive_filter, args.queue_name, groups, transforms)
@@ -226,16 +221,14 @@ function render_sys:render_submit()
 end
 
 function render_sys:entity_remove()
-	for e in w:select "REMOVED render_object:in filter_material:in" do
-		local function release(m)
-			if m.material then
-				m.material:release()
-				m.material = nil
+	for e in w:select "REMOVED render_object:update" do
+		local qm = e.render_object.materials
+		for i=1, qm:num() do
+			local m = qm:get(i)
+			if m then
+				m:release()
+				qm:set(i, nil)
 			end
-		end
-		release(e.render_object)
-		for _, m in pairs(e.filter_material) do
-			release(m)
 		end
 	end
 end
@@ -252,10 +245,11 @@ end
 
 function s:end_filter()
 	if irender.use_pre_depth() then
-		for e in w:select "filter_result main_queue_visible opacity render_object:in" do
+		for e in w:select "filter_result main_queue_visible opacity render_object:update" do
 			local ro = e.render_object
-			local rom = ro.material
-			rom:get_material():set_state(check_set_depth_state_as_equal(rom:get_state()))
+			local qm = ro.materials
+			local m = qm:get(1)
+			m:set_state(check_set_depth_state_as_equal(m:get_state()))
 		end
 	end
 	w:clear "render_object_update"

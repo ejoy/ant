@@ -32,7 +32,7 @@ function screen_3dobj_sys:camera_usage()
         local ce = world:entity(mq.camera_ref)
         if ce.scene_changed then
             local camera = ce.camera
-            for e in w:select "screen_3dobj:in render_object:in id:in scene:update" do
+            for e in w:select "screen_3dobj:in render_object:update id:in scene:update" do
                 local vp = camera.viewprojmat
                 local vr = irq.view_rect "main_queue"
     

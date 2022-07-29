@@ -74,7 +74,7 @@ local renderinfo = {
 local camera_ref
 
 function auto_hm_sys:init()
-    depthmaterial = imaterial.load "/pkg/ant.heightmap/assets/depth.material"
+    depthmaterial = imaterial.load_res "/pkg/ant.heightmap/assets/depth.material"
 
     camera_ref = icamera.create{
         frustum = {

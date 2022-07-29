@@ -1010,7 +1010,7 @@ local function create_bone_entity(joint_name)
             mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
             name = joint_name,
             on_ready = function(e)
-                w:sync("render_object:in", e)
+                w:sync("render_object:update", e)
 				imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
 				ifs.set_state(e, "auxgeom", true)
                 w:sync("render_object_update:out", e)

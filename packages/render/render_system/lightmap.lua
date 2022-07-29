@@ -65,14 +65,17 @@ end
 function lm_sys:entity_init()
     for lmr_e in w:select "INIT lightmap_result:in" do
         local c = lmr_e.lightmap_result.cache
-        for e in w:select "lightmap:in render_object:in filter_material:in" do
+        for e in w:select "lightmap:in render_object:update" do
             local lm = e.lightmap
             local lmid = lm.id
             local bi = c[lmid]
             if bi then
                 bi.texture = assetmgr.resource(bi.texture_path)
-                for _, fm in pairs(e.filter_material) do
-                    fm.material.s_lightmap = bi.texture.handle
+                local ro = e.render_object
+                local qm = ro.materials
+                for i=1, qm:num() do
+                    local m = qm:get(i)
+                    m.s_lightmap = bi.texture.handle
                 end
             end
         end
@@ -91,24 +94,24 @@ local function load_lightmap_material(mf, setting)
     s['skinning'] = 'UNKNOWN'
     s['bloom'] = 'off'
     s['ENABLE_IBL'] = 'off'
-    return imaterial.load(mf, s)
+    return imaterial.load_res(mf, s)
 end
 
 function lm_sys:end_filter()
-    for e in w:select "filter_result lightmap:in render_object:in filter_material:in material:in" do
+    for e in w:select "filter_result lightmap:in render_object:update material:in" do
         local lr_e = w:singleton("lightmapper", "lightmap_result:in")
 
         local r = lr_e and lr_e.lightmap_cache or {}
         local mq = w:singleton("main_queue", "primitive_filter:in")
         local fr = e.filter_result
-        local material = e.material
+        local matpath = e.material
+        local matres = imaterial.resource(e, true)
         for _, fn in ipairs(mq.primitive_filter) do
             if fr[fn] then
                 local lm = e.lightmap
                 local lmid = lm.id
 
-                local mf = type(material) == "string" and material or tostring(material)
-                local bm = load_lightmap_material(mf, material.fx.setting)
+                local bm = load_lightmap_material(matpath, matres.fx.setting)
 
                 local bi = r[lmid]
 
@@ -120,14 +123,10 @@ function lm_sys:end_filter()
                     lmhandle = default_lm.handle
                 end
 
-                update_lm_texture(bm.properties, lmhandle)
-
-                e.filter_material["main_queue"] = {
-                    fx          = bm.fx,
-                    properties  = bm.properties,
-                    state       = bm.state,
-                    stencil     = bm.stencil,
-                }
+                local new_mi = bm:material()
+                new_mi.s_lightmap = lmhandle
+                local qm = e.render_object.materials
+                qm:set("main_queue", new_mi)
             end
         end
     end

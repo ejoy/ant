@@ -232,10 +232,10 @@ end
 
 function pickup_sys:init()
 	create_pick_entity()
-	pickup_materials.opacity		= imaterial.load '/pkg/ant.resources/materials/pickup_opacity.material'
-	pickup_materials.opacity_skin	= imaterial.load('/pkg/ant.resources/materials/pickup_opacity.material', {skinning="GPU"})
-	pickup_materials.translucent	= imaterial.load '/pkg/ant.resources/materials/pickup_transparent.material'
-	pickup_materials.translucent_skin= imaterial.load('/pkg/ant.resources/materials/pickup_transparent.material', {skinning="GPU"})
+	pickup_materials.opacity		= imaterial.load_res '/pkg/ant.resources/materials/pickup_opacity.material'
+	pickup_materials.opacity_skin	= imaterial.load_res('/pkg/ant.resources/materials/pickup_opacity.material', {skinning="GPU"})
+	pickup_materials.translucent	= imaterial.load_res '/pkg/ant.resources/materials/pickup_transparent.material'
+	pickup_materials.translucent_skin= imaterial.load_res('/pkg/ant.resources/materials/pickup_transparent.material', {skinning="GPU"})
 	pickup_materials.ui_stage 		= pickup_materials.translucent
 end
 
@@ -353,13 +353,12 @@ local function has_filter_stage(pf, stage)
 end
 
 function pickup_sys:end_filter()
-	for e in w:select "filter_result pickup_queue_visible render_object:in filter_material:out id:in skinning?in" do
+	for e in w:select "filter_result pickup_queue_visible render_object:update id:in skinning?in" do
 		local ro = e.render_object
 		local st = ro.fx.setting.surfacetype
-		local fm = e.filter_material
 		local qe = w:singleton("pickup_queue", "primitive_filter:in")
 
-		local src_mi = ro.material
+		local src_mi = ro.materials:get()
 		if has_filter_stage(qe.primitive_filter, st) then
 			local mat = which_material(st, e.skinning)
 			local dst_mi = mat.material
@@ -367,10 +366,9 @@ function pickup_sys:end_filter()
 			local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
 			local new_mi = new_matobj:instance()
 			new_mi.u_id = math3d.vector(packeid_as_rgba(e.id))
-			fm["pickup_queue"] = {
-				material	= new_mi,
-				fx			= mat.fx,
-			}
+
+			ro.materials:set("pickup_queue", new_mi)
+			ro.prog = mat.fx.prog
 		end
 	end
 end

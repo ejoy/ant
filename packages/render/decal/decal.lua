@@ -52,7 +52,7 @@ local rotateYZ_MAT = math3d.ref(
     )
 
 function ds:follow_transform_updated()
-    for e in w:select "decal:in render_object:in" do
+    for e in w:select "decal:in render_object:update" do
         local ro = e.render_object
         local d = e.decal
         local mm = math3d.mul(rotateYZ_MAT, ro.worldmat)
@@ -60,7 +60,6 @@ function ds:follow_transform_updated()
         local viewmat = math3d.inverse(mm)
         local projmat = math3d.projmat(d.frustum)
         local viewprojmat = math3d.mul(projmat, viewmat)
-        local material = ro.material
-        material.u_decal_mat = math3d.mul(viewprojmat, ro.worldmat)
+        imaterial.set_property(e, "u_decal_mat", math3d.mul(viewprojmat, ro.worldmat))
     end
 end

@@ -69,7 +69,8 @@ local pre_depth_material
 local pre_depth_skinning_material
 
 local function which_material(skinning)
-	return skinning and pre_depth_skinning_material or pre_depth_material
+	local res = skinning and pre_depth_skinning_material or pre_depth_material
+    return res.object
 end
 
 
@@ -81,8 +82,8 @@ function s:init()
     end
 
     local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/predepth.material"
-    pre_depth_material 			= imaterial.load(pre_depth_material_file, {depth_type="inv_z"})
-    pre_depth_skinning_material = imaterial.load(pre_depth_material_file, {depth_type="inv_z", skinning="GPU"})
+    pre_depth_material 			= imaterial.load_res(pre_depth_material_file, {depth_type="inv_z"})
+    pre_depth_skinning_material = imaterial.load_res(pre_depth_material_file, {depth_type="inv_z", skinning="GPU"})
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
@@ -112,21 +113,16 @@ local material_cache = {__mode="k"}
 
 function s:end_filter()
     if irender.use_pre_depth() then
-        for e in w:select "filter_result pre_depth_queue_visible opacity render_object:in filter_material:in skinning?in" do
-            local m = assert(which_material(e.skinning))
-            local dst_mi = m.material
-            local newstate = irender.check_set_state(dst_mi, e.render_object.material)
-            local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
-            local fx = m.fx
+        for e in w:select "filter_result pre_depth_queue_visible opacity render_object:update skinning?in" do
+            local mo = assert(which_material(e.skinning))
+            local ro = e.render_object
+            local qm = ro.materials
+            local newstate = irender.check_set_state(mo, qm:get(1))
+            local new_mo = irender.create_material_from_template(mo, newstate, material_cache)
 
-            local fm = e.filter_material
-            local nm = {
-                material = new_matobj:instance(),
-                fx = fx,
-            }
-
-            fm["pre_depth_queue"] = nm
-            fm["scene_depth_queue"] = nm
+            local mi = new_mo:instance()
+            qm:set("pre_depth_queue", mi)
+            qm:set("scene_depth_queue", mi)
 
             e["scene_depth_queue_visible"] = true
             w:sync("scene_depth_queue_visible?out", e)

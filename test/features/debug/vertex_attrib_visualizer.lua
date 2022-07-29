@@ -68,7 +68,7 @@ local function create_line_arrow_entity(parent, srt, color)
             scene = {s=srt.s, r=srt.r, t=srt.t},
             name = "line_arrow",
             on_ready = function (e)
-                w:sync("render_object:in id:in", e)
+                w:sync("render_object:update id:in", e)
                 imaterial.set_property(e, "u_color", color)
                 ecs.method.set_parent(e.id, parent)
             end

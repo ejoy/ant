@@ -57,7 +57,7 @@ function widget_drawer_sys:init()
 end
 
 function widget_drawer_sys:end_frame()
-	local e = w:singleton("widget_drawer", "render_object:in")
+	local e = w:singleton("widget_drawer", "render_object:update")
 	if e then
 		local m = e.render_object.mesh
 		m:set_vb_range(0, 0)
@@ -82,7 +82,7 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 	if numvertices == 0 then
 		return
 	end
-	local e = w:singleton("widget_drawer", "render_object:in")
+	local e = w:singleton("widget_drawer", "render_object:update")
 	local m = e.render_object.mesh
 	local vbstart, vbnum, vbhandle = m:get_vb()
 
@@ -196,9 +196,9 @@ function rmb_sys:follow_transform_updated()
 	local sd  = setting:data()
 	if sd.debug and sd.debug.show_bounding then
 		local desc={vb={}, ib={}}
-		for e in w:select "render_object:in scene:in" do
+		for e in w:select "render_object scene:in" do
 			local aabb = e.scene.scene_aabb
-			if ies.has_state(e, "main_view") and aabb then
+			if aabb ~= math3d.NULL and ies.has_state(e, "main_view") then
 				local minv, maxv = math3d.array_index(aabb, 1) math3d.array_index(aabb, 2)
 				local aabb_shape = {min=math3d.tovalue(minv), max=math3d.tovalue(maxv)}
 				local voffset = #desc.vb//4

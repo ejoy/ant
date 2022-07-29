@@ -104,9 +104,8 @@ local cubemap_flags<const> = sampler {
 }
 
 function render2cm_sys:entity_ready()
-    for e in w:select "skybox_changed skybox:in render_object:in filter_ibl?out" do
-        local res = imaterial.load_res(e.material, e.material_setting)
-        local tex = assetmgr.resource(res.properties.s_skybox.texture)
+    for e in w:select "skybox_changed skybox:in render_object:update filter_ibl?out" do
+        local tex = assetmgr.resource(imaterial.resource(e, true).properties.s_skybox.texture)
 
         local ti = tex.texinfo
         if panorama_util.is_panorama_tex(ti) then
@@ -117,10 +116,12 @@ function render2cm_sys:entity_ready()
             local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cm_rbidx, cubemap_flags)
             e.skybox.cm_rbidx = cm_rbidx
 
-            local drawer = w:singleton("cvt_p2cm_drawer", "render_object:in")
+            local drawer = w:singleton("cvt_p2cm_drawer", "render_object:update")
             local ro = drawer.render_object
             ro.worldmat = mc.IDENTITY_MAT
-            ro.material.s_tex = tex.handle
+            local qm = ro.materials
+            local m = qm:get(1)
+            m.s_tex = tex.handle
 
             for idx, fn in ipairs(face_queues) do
                 local faceidx = idx-1
@@ -189,7 +190,7 @@ local build_ibl_viewid = viewidmgr.get "build_ibl"
 local function build_irradiance_map(source_tex, irradiance, facesize)
     local irradiance_rbidx = fbmgr.create_rb{format="RGBA32F", size=facesize, layers=1, flags=cubemap_flags, cubemap=true}
 
-    local drawer = w:singleton("filter_drawer", "render_object:in")
+    local drawer = w:singleton("filter_drawer", "render_object:update")
     local ro = drawer.render_object
     ro.worldmat = mc.IDENTITY_MAT
     -- do for irradiance
@@ -245,7 +246,7 @@ local function build_LUT_map(source_tex, LUT, size)
 end
 
 function render2cm_sys:filter_ibl()
-    for e in w:select "filter_ibl ibl:in skybox:in render_object:in" do
+    for e in w:select "filter_ibl ibl:in skybox:in render_object:update" do
         local source_tex = fbmgr.get_rb(e.skybox.cm_rbidx).handle
         local ibl = iibl.get_ibl()
         ibl.intensity = 12000

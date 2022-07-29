@@ -1,20 +1,32 @@
 local ecs = ...
-
+local serialize = import_package "ant.serialize"
 local ro = ecs.component "render_obj"
-function ro.init()
-    return {
+local rendercore = ecs.clibs "render.core"
+local bgfx = require "bgfx"
+local math3d = require "math3d"
 
-    }
+local function init_ro(r)
+    r.worldmat = math3d.NULL
+    r.prog        = 0xffffffff
+    r.mesh        = 0
+    r.depth       = 0
+    r.discardflags= 0xff
+    r.materials   = rendercore.queue_materials()
+    return r
 end
 
-function ro.remove()
+function ro.init(r)
+    return init_ro(r)
 end
 
-local function material_type(qn)
-    
+function ro.remove(r)
+    r.materials = nil
 end
 
-local function submit(r)
+function ro.marshal(r)
+    return serialize.pack(r)
+end
 
-    r:submit(assetmgr.textures, mattype)
+function ro.unmarshal(r)
+    return init_ro(serialize.unpack(r))
 end

@@ -89,23 +89,8 @@ local function save_lightmap(e, lme)
 end
 
 local function load_bake_material(ro)
-    local s = {BAKING_LIGHTMAP = 1}
-    for k, v in pairs(ro.fx.setting) do
-        s[k] = v
-    end
-    s["ENABLE_SHADOW"] = nil
-    s["identity"] = nil
-    s['shadow_cast'] = nil
-    s['shadow_receive'] = nil
-    s['skinning'] = nil
-    s['bloom'] = nil
-    local fx = assetmgr.load_fx(bake_fx, s)
-    return {
-        fx          = fx,
-        properties  = ro.properties,
-        state       = ro.state,
-        stencil     = ro.stencil,
-    }
+    assert(false, "need rewrite, we only need some lightmap material, one have skinning or simple world matrix in vertex shader")
+    return {}
 end
 
 local function to_none_cull_state(state)
@@ -123,14 +108,16 @@ local function has_filter_stage(pf, stage)
 end
 
 function bake_lm_sys:end_filter()
-    for e in w:select "filter_result bake_lightmap_queue_visible render_object:in filter_material:out" do
+    for e in w:select "filter_result bake_lightmap_queue_visible render_object:update" do
         local le = w:singleton("bake_lightmap_queue", "primitive_filter:in")
         local ro = e.render_object
+        local ro1 = e.render_obj
         if has_filter_stage(le.primitive_filter, ro.setting.surfacetype) then
-            e.filter_material["bake_lightmap_queue"] = {
-                material    = load_bake_material(ro),
-                fx          = ro.fx,
-            }
+            local m = load_bake_material(ro)
+            e.filter_material["bake_lightmap_queue"] = m
+
+            ro1.materials:set("bake_lightmap_queue", m.material)
+            ro1.prog = m.fx.prog
         end
     end
 end
@@ -177,7 +164,7 @@ local function bake_all()
     local lmq = w:singleton("bake_lightmap_queue", "primitive_filter:in")
     local lme = get_lme()
     for _, fn in ipairs(lmq.primitive_filter) do
-        for e in w:select (fn .. " mesh:in lightmap:in render_object:in widget_entity:absent name?in") do
+        for e in w:select (fn .. " mesh:in lightmap:in render_object widget_entity:absent name?in") do
             bake_entity(e, scene_renderobjects, lme)
         end
     end

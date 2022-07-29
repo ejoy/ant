@@ -51,11 +51,6 @@ system "downsample_system"
     .implement "postprocess/downsample.lua"
     .method "init"
 
-interface "idownsampler"
-    .implement "downsample.lua"
-    .method "set_targets"
-    .method "downsample"
-
 component "tonemapping"
 component "tonemapping_queue"
 system "tonemapping_system"

@@ -42,22 +42,18 @@ component "render_args2"
     .implement "render_object.lua"
     .method "init"
 
-component "render_obj"
+component "render_object"
     .type "c"
     .field "worldmat:userdata|math_t"
     .field "materials:userdata"
     .field "mesh:userdata"
     .field "depth:dword"
     .field "discard_flags:byte"
-    .field "prog:word"
     .implement "render_object.lua"
     .method "init"
     .method "remove"
 
 component "render_object_update"
-component "render_object".type "lua"
-component "filter_material".type "lua"
-
 component "visible"
 
 policy "render"

@@ -92,16 +92,16 @@ local function load_text(e)
 
     local textw, texth, num = lfont.prepare_text(fonttex_handle, sc.description, font.size, font.id)
     local x, y = text_start_pos(textw, texth, screenpos)
-    local rc = e.render_object
+    local ro = e.render_object
     assert(false, "need rewrite, not ib vb in render_object")
-    local vb, ib = rc.vb, rc.ib
-    vb.start, vb.num = 0, num*4
-    local vbhandle = vb.handles[1]
-    local vbdata = vbhandle:alloc(vb.num, fontquad_layout.handle)
+    local m = ro.mesh
+    local vbnum = num*4
+    m:set_vb_range(0, vbnum)
 
-    ib.num = num * 2 * 3
-
-    rc.depth = screenpos[3]
+    local _, _, vbhandle = m:get_vb()
+    local vbdata = vbhandle:alloc(vbnum, fontquad_layout.handle)
+    m:set_ib_range(0, num * 2 * 3)
+    ro.depth = screenpos[3]
 
     lfont.load_text_quad(vbdata, sc.description, x, y, font.size, sc.color, font.id)
 end
@@ -144,7 +144,7 @@ function fontsys:camera_usage()
         ro.attach_eid = attach
         imaterial.set_property(e, "s_tex", fonttex)
     end
-    for e in w:select "font:in show_config:in render_object:in" do
+    for e in w:select "font:in show_config:in render_object:update" do
         load_text(e)
     end
     lfont.submit()

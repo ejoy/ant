@@ -9,24 +9,14 @@ local matobj		= require "matobj"
 local imaterial = ecs.interface "imaterial"
 
 function imaterial.set_property(e, who, what)
-	e.render_object.material[who] = what
+	local m = e.render_obj.materials:get(1)	--1 is default material
+	assert(e.render_object.material == m)
+	m[who] = what
+	--e.render_object.material[who] = what
 end
 
 function imaterial.load_res(mp, setting)
 	return assetmgr.resource(url.create(mp, setting))
-end
-
-function imaterial.load(mp, setting)
-	local res = imaterial.load_res(mp, setting)
-	local mo = res.object
-	return {
-		material= mo:instance(),
-		fx		= res.fx
-	}
-end
-
-function imaterial.load_url(u)
-	return assetmgr.resource(u)
 end
 
 function imaterial.system_attribs()
@@ -47,12 +37,19 @@ function imaterial.get_color_palette(palname, coloridx)
 	return matobj.rmat.color_palette_get(palid, coloridx)
 end
 
+function imaterial.resource(e, is_iter)
+	if is_iter then
+		w:sync("material:in material_setting?in", e)
+	end
+	return imaterial.load_res(e.material, e.material_setting)
+end
+
 local ms = ecs.system "material_system"
 
 local function stat_material_info(verbose)
 	local materials = {}
 	local instances = {}
-	for e in w:select "material:in render_object:in filter_material:in" do
+	for e in w:select "material:in render_object:in" do
 		local function mark(mi, matpath)
 			if instances[mi] == nil then
 				instances[mi] = true
@@ -63,9 +60,11 @@ local function stat_material_info(verbose)
 			end
 		end
 
-		mark(e.render_object.material, e.material)
-		for _, m in pairs(e.filter_material) do
-			mark(m.material, e.material)
+		local mpath = e.material
+		local m = e.render_object.materials
+		for i=1, m:num() do
+			local mm = m:get(i)
+			mark(mm, mpath)
 		end
 	end
 

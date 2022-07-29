@@ -42,8 +42,8 @@ local function create_view_buffer_entity()
 			on_ready = function (e)
 				local pq = w:singleton("pickup_queue", "render_target:in")
 				local rt = pq.render_target
-				w:sync("render_object:in", e)
-				imaterial.set_property(e, "s_tex", {stage=0, texture={handle=fbmgr.get_rb(rt.fb_idx, 1).handle}})
+				w:sync("render_object:update", e)
+				imaterial.set_property(e, "s_tex", fbmgr.get_rb(rt.fb_idx, 1).handle)
 			end,
 		}
 	}
@@ -58,7 +58,7 @@ local function log_pickup_queue_entities()
 		log.info "pickup queue entities:"
 		for idx, fn in ipairs(q.primitive_filter) do
 			local s =
-				("pickup_queue %s render_object:in filter_material?in"):format(fn)
+				("pickup_queue %s render_object render_obj"):format(fn)
 			log.info(("filter type:%s, select: %s"):format(fn, s))
 			local entities = {}
 			for e in w:select(s .. " id:in name?in") do
