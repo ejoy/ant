@@ -60,6 +60,8 @@ component "render_object"
     .implement "render_system/render_object.lua"
     .method "init"
     .method "remove"
+    .method "marshal"
+    .method "unmarshal"
 
 component "render_object_update"
 component "visible"

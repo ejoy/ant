@@ -2,7 +2,7 @@ local ecs = ...
 local serialize = import_package "ant.serialize"
 
 local rendercore = ecs.clibs "render.core"
-local math3d = require "math3d"
+local mc = import_package "ant.math".constant
 
 local queuematerials = {}
 
@@ -13,7 +13,7 @@ local function init_ro()
     assert(queuematerials[h] == nil)
     queuematerials[h] = qm
     return {
-        worldmat = math3d.NULL,
+        worldmat    = mc.NULL,
         prog        = 0xffffffff,
         mesh        = 0,
         depth       = 0,
@@ -30,6 +30,14 @@ end
 function ro.remove(r)
     assert(queuematerials[r.materials])
     queuematerials[r.materials] = nil
+end
+
+function ro.marshal(v)
+    return serialize.pack(v)
+end
+
+function ro.unmarshal(s)
+    return serialize.unpack(s)
 end
 
 local ra = ecs.component "render_args2"
