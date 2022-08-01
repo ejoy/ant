@@ -103,11 +103,18 @@ lsubmit(lua_State *L){
 	return 0;
 }
 
+static int
+lnull(lua_State *L){
+	lua_pushlightuserdata(L, nullptr);
+	return 1;
+}
+
 extern "C" int
 luaopen_render(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "submit", lsubmit},
+		{ "null", lnull},
 		{ nullptr, nullptr },
 	};
 	luaL_newlibtable(L,l);

@@ -356,7 +356,7 @@ function pickup_sys:end_filter()
 	for e in w:select "filter_result pickup_queue_visible render_object:update filter_material:in id:in skinning?in" do
 		local ro = e.render_object
 		local fm = e.filter_material
-		local matres = imaterial.resource(e.material, true)
+		local matres = imaterial.resource(e, true)
 		local st = matres.fx.setting.surfacetype
 		local qe = w:singleton("pickup_queue", "primitive_filter:in")
 
@@ -370,7 +370,6 @@ function pickup_sys:end_filter()
 			new_mi.u_id = math3d.vector(packeid_as_rgba(e.id))
 
 			fm["pickup_queue"] = new_mi
-			assert(ro.mat_pickup == 0)
 			ro.mat_pickup = new_mi:ptr()
 		end
 	end

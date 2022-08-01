@@ -54,12 +54,12 @@ local cm_flags = sampler{
 }
 
 local function load_res_tex(e)
-    local res = imaterial.fx(e, true)
+    local res = imaterial.resource(e, true)
     return assetmgr.resource(res.properties.s_skybox.texture)
 end
 
 function cs2cm_sys:entity_ready()
-    for e in w:select "skybox_changed:update render_object skybox:in filter_ibl?out" do
+    for e in w:select "skybox_changed:update render_object filter_material:in skybox:in filter_ibl?out" do
         local tex = load_res_tex(e)
         if not tex.uncomplete then
             e.skybox_changed = false
@@ -96,7 +96,7 @@ function cs2cm_sys:entity_ready()
                 bgfx.touch(build_ibl_viewid)
     
                 fbmgr.destroy(fbidx, true)
-    
+                
                 imaterial.set_property(e, "s_skybox", cm_rbhandle)
             end
             e.filter_ibl = true

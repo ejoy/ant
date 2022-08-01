@@ -13,6 +13,7 @@ local itimer	= ecs.import.interface "ant.timer|itimer"
 local render_sys = ecs.system "render_system"
 
 local rendercore= ecs.clibs "render.core"
+local null = rendercore.null()
 
 local def_group_id<const> = 0
 local vg_sys = ecs.system "viewgroup_system"
@@ -103,7 +104,7 @@ end
 
 function render_sys:update_filter()
 	w:clear "filter_result"
-    for e in w:select "render_object_update render_object filter_result:new" do
+    for e in w:select "render_object_update render_object filter_state:in filter_result:new" do
 		local matres = imaterial.resource(e, true)
         local fs = e.filter_state
 		local st = matres.fx.setting.surfacetype
@@ -252,10 +253,9 @@ function render_sys:entity_remove()
 				fm[k] = nil
 			end
 		end
-		
 		for k in pairs(ro) do
 			if k:match "mat_" then
-				ro[k] = 0
+				ro[k] = null
 			end
 		end
 	end
@@ -278,7 +278,7 @@ function s:end_filter()
 			local fm = e.filter_material
 			local m = fm.main_queue
 			ro.mat_mq = m:ptr()
-			m:set_state(check_set_depth_state_as_equal(m:get_state()))
+			m:get_material():set_state(check_set_depth_state_as_equal(m:get_state()))
 		end
 	end
 	w:clear "render_object_update"

@@ -688,8 +688,7 @@ function ientity.create_arrow_entity(srt, headratio, color, material)
 			scene = {s=srt.s,r=srt.r,t=srt.t},
 			name = "arrow",
 			on_ready = function (e)
-				w:sync("render_object:update", e)
-				imaterial.set_property(e, "u_color", math3d.vector(color))
+				imaterial.set_property(e, "u_color", math3d.vector(color), true)
 			end
 		}
 	}
@@ -755,6 +754,7 @@ function ientity.create_quad_lines_entity(name, srt, material, quadnum, width, h
 			material = material,
 			name = name,
 			on_ready = function (e)
+				w:sync("filter_state:in", e)
 				ifs.set_state(e, "main_view", not hide)
 			end
         }

@@ -23,7 +23,7 @@ function skinning_sys:skin_mesh()
 	end
 
 	local meshskin
-	for e in w:select "skinning meshskin?in render_object?in" do
+	for e in w:select "skinning meshskin?in render_object?update" do
 		if e.meshskin then
 			meshskin = e.meshskin
 		else

@@ -50,6 +50,6 @@ end
 local m = ecs.system "filter_state_system"
 function m:entity_init()
     for e in w:select "INIT filter_state:update" do
-        e.filter_state = filter_mask(e.filter_state) or 0
+        e.filter_state = filter_mask(e.filter_state)
     end
 end

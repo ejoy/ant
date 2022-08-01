@@ -1,30 +1,24 @@
 local ecs = ...
-local serialize = import_package "ant.serialize"
 
-local rendercore = ecs.clibs "render.core"
 local mc = import_package "ant.math".constant
-
-local queuematerials = {}
+local rendercore = ecs.clibs "render.core"
+local null = rendercore.null()
 
 local ro = ecs.component "render_object"
 local function init_ro()
-    local qm = rendercore.queue_materials()
-    local h = qm:ptr()
-    assert(queuematerials[h] == nil)
-    queuematerials[h] = qm
     return {
         worldmat    = mc.NULL,
         prog        = 0xffffffff,
         --materials
-        mat_mq      = 0,
-        mat_predepth= 0,
-        mat_scenedepth=0,
-        mat_pickup  = 0,
-        mat_csm1    = 0,
-        mat_csm2    = 0,
-        mat_csm3    = 0,
-        mat_csm4    = 0,
-        mat_lightmap= 0,
+        mat_mq      = null,
+        mat_predepth= null,
+        mat_scenedepth=null,
+        mat_pickup  = null,
+        mat_csm1    = null,
+        mat_csm2    = null,
+        mat_csm3    = null,
+        mat_csm4    = null,
+        mat_lightmap= null,
         --mesh
         vb_start    = 0,
         vb_num      = 0,
@@ -35,7 +29,6 @@ local function init_ro()
 
         depth       = 0,
         discard_flags=0xff,
-        materials   = h,
     }
 end
 
@@ -45,8 +38,7 @@ function ro.init(r)
 end
 
 function ro.remove(r)
-    assert(queuematerials[r.materials])
-    queuematerials[r.materials] = nil
+    
 end
 
 function ro.marshal(v)
