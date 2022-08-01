@@ -22,7 +22,7 @@ static inline void
 update_transform(struct ecs_world* w, math_t wm){
 	const float * v = math_value(w->math3d->M, wm);
 	const int num = math_size(w->math3d->M, wm);
-	w->bgfx->set_transform(v, num);
+	w->bgfx->encoder_set_transform(w->holder->encoder, v, num);
 }
 
 static const cid_t surface_stages[] = {
@@ -38,26 +38,26 @@ static void
 mesh_submit(struct ecs_world* w, ecs::render_object* ro){
 	const uint16_t vbtype = (ro->vb_handle>>16) & 0xffff;
 	switch (vbtype){
-		case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->set_vertex_buffer(0, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
+		case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 0, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
 		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:	//walk through
-		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: w->bgfx->set_dynamic_vertex_buffer(0, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
+		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: w->bgfx->encoder_set_dynamic_vertex_buffer(w->holder->encoder, 0, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
 		default: assert(false && "Invalid vertex buffer type");
 	}
 
 	if (ro->ib_num > 0){
 		const uint16_t ibtype = (ro->ib_handle>>16) & 0xffff;
 		switch (ibtype){
-			case BGFX_HANDLE_INDEX_BUFFER: w->bgfx->set_index_buffer(bgfx_index_buffer_handle_t{(uint16_t)ro->ib_handle}, ro->ib_start, ro->ib_num); break;
+			case BGFX_HANDLE_INDEX_BUFFER: w->bgfx->encoder_set_index_buffer(w->holder->encoder, bgfx_index_buffer_handle_t{(uint16_t)ro->ib_handle}, ro->ib_start, ro->ib_num); break;
 			case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER:	//walk through
-			case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32: w->bgfx->set_dynamic_index_buffer(bgfx_dynamic_index_buffer_handle_t{(uint16_t)ro->ib_handle}, ro->ib_start, ro->ib_num); break;
+			case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32: w->bgfx->encoder_set_dynamic_index_buffer(w->holder->encoder, bgfx_dynamic_index_buffer_handle_t{(uint16_t)ro->ib_handle}, ro->ib_start, ro->ib_num); break;
 			default: assert(false && "ib_num == 0 and handle is not valid"); break;
 		}
 	}
 }
 
 static inline struct material_instance*
-get_material(const ecs::render_object* ro, int midx){
-	return (struct material_instance*)(*(&ro->mat_mq + midx));
+get_material(const ecs::render_object* ro, int qidx){
+	return (struct material_instance*)(*(&ro->mat_mq + qidx));
 }
 
 static int
@@ -71,9 +71,9 @@ lsubmit(lua_State *L){
 	for (auto a : ecs.select<ecs::render_args2>()){
 		const auto& ra = a.get<ecs::render_args2>();
 		const bgfx_view_id_t viewid = ra.viewid;
-		const auto midx = ra.material_idx;
-		if (midx >= MAX_MATERIAL_INSTANCE_SIZE){
-			luaL_error(L, "Invalid material_idx in render_args2:%d", midx);
+		const auto qidx = ra.queue_index;
+		if (qidx >= MAX_MATERIAL_INSTANCE_SIZE){
+			luaL_error(L, "Invalid queue_index in render_args2:%d", qidx);
 		}
 		const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
 		for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
@@ -87,14 +87,14 @@ lsubmit(lua_State *L){
 							continue;
 
 						update_transform(w, ro->worldmat);
-						auto mi = get_material(ro, midx);
+						auto mi = get_material(ro, qidx);
 						apply_material_instance(L, mi, w, texture_index);
 
 						mesh_submit(w, ro);
 
 						const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
 						const auto prog = material_prog(L, mi);
-						w->bgfx->submit(viewid, prog, ro->depth, discardflags);
+						w->bgfx->encoder_submit(w->holder->encoder, viewid, prog, ro->depth, discardflags);
 					}
 				}
 			}

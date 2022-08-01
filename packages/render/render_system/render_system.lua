@@ -224,7 +224,7 @@ function render_sys:render_submit()
 			visible_id		= w:component_id(qe.queue_name .. "_visible"),
 			cull_id			= w:component_id(qe.queue_name .. "_cull"),
 			viewid			= viewid,
-			material_idx	= queue_material_ids[qe.queue_name] or 0,
+			queue_index		= queue_material_ids[qe.queue_name] or 0,
 		}
 
 		qe.render_args = {
