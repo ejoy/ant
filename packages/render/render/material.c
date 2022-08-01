@@ -1396,6 +1396,7 @@ lmaterial_copy(lua_State *L){
 	struct material* temp_mat = (struct material*)lua_touserdata(L, 1);
 	struct material* new_mat = (struct material*)lua_newuserdatauv(L, sizeof(*new_mat), MATERIAL_UV_NUM);
 	new_mat->attrib = temp_mat->attrib;
+	new_mat->prog = temp_mat->prog;
 	if (!lua_isnoneornil(L, 2)){
 		get_state(L, 2, &new_mat->state, &new_mat->rgba);
 	} else {
