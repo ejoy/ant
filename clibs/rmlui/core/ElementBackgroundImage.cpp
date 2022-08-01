@@ -39,7 +39,7 @@ namespace Rml {
 void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge) {
 	geometry.Release();
 
-	const Property* image = element->GetComputedProperty(PropertyId::BackgroundImage);
+	auto image = element->GetComputedProperty(PropertyId::BackgroundImage);
 	if (!image->Has<std::string>()) {
 		// "none"
 		return;

@@ -112,7 +112,7 @@ public:
 	void SetAnimationProperty(PropertyId id, const Property* property = nullptr);
 
 	const Property* GetProperty(PropertyId id) const;
-	const Property* GetComputedProperty(PropertyId id) const;
+	std::optional<Property> GetComputedProperty(PropertyId id) const;
 	const Property* GetComputedLocalProperty(PropertyId id) const;
 	const Property* GetAnimationProperty(PropertyId id) const;
 	const Transitions* GetTransition(const PropertyDictionary* def = nullptr) const;

@@ -59,17 +59,14 @@ const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const {
 }
 
 SharedPtr<StyleSheetPropertyDictionary> StyleSheet::GetElementDefinition(const Element* element) const {
-	static std::vector< const StyleSheetNode* > applicable_nodes;
+	static std::vector<const StyleSheetNode*> applicable_nodes;
 	applicable_nodes.clear();
-
 	for (StyleSheetNode* node : styled_node_index) {
 		if (node->IsApplicable(element)) {
 			applicable_nodes.push_back(node);
 		}
 	}
-
 	std::sort(applicable_nodes.begin(), applicable_nodes.end(), StyleSheetNodeSort);
-
 	if (applicable_nodes.empty())
 		return nullptr;
 	auto new_definition = MakeShared<StyleSheetPropertyDictionary>();

@@ -127,11 +127,10 @@ static void SetProperty(StyleSheetPropertyDictionary& properties, PropertyId id,
 	properties.spec.insert_or_assign(id, specificity);
 }
 
-void StyleSheetNode::ImportProperties(const StyleSheetPropertyDictionary& _properties, int rule_specificity) {
+void StyleSheetNode::ImportProperties(const PropertyVector& _properties, int rule_specificity) {
 	int property_specificity = specificity + rule_specificity;
-	for (const auto& [id, property] : _properties.prop) {
-		int specificity = getSpecificity(_properties, id);
-		SetProperty(properties, id, property, property_specificity > 0 ? property_specificity : specificity);
+	for (const auto& [id, property] : _properties) {
+		SetProperty(properties, id, property, property_specificity > 0 ? property_specificity : 0);
 	}
 }
 

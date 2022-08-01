@@ -51,7 +51,7 @@ public:
 	void MergeHierarchy(StyleSheetNode* node, int specificity_offset = 0);
 	void BuildIndex(StyleSheet::NodeIndex& styled_node_index);
 
-	void ImportProperties(const StyleSheetPropertyDictionary& properties, int rule_specificity);
+	void ImportProperties(const PropertyVector& properties, int rule_specificity);
 	void MergeProperties(StyleSheetPropertyDictionary& properties, int specificity_offset = 0) const;
 	bool IsApplicable(const Element* element) const;
 	int GetSpecificity() const;

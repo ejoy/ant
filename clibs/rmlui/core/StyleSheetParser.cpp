@@ -101,7 +101,7 @@ static void PostprocessKeyframes(KeyframesMap& keyframes_map)
 }
 
 
-bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std::string& identifier, const std::string& rules, const PropertyDictionary& properties)
+bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std::string& identifier, const std::string& rules, const PropertyVector& properties)
 {
 	if (!IsValidIdentifier(identifier))
 	{
@@ -139,9 +139,8 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 
 	Keyframes& keyframes = keyframes_map[identifier];
 
-	for(float selector : rule_values)
-	{
-		keyframes.blocks.emplace_back(KeyframeBlock { selector, properties });
+	for (float selector : rule_values) {
+		keyframes.blocks.emplace_back(KeyframeBlock { selector, ToDict(properties) });
 	}
 
 	return true;
@@ -172,17 +171,15 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 			{
 				if (token == '{')
 				{
-					// Read the attributes
-					StyleSheetPropertyDictionary properties;
-					if (!ReadProperties(properties.prop))
+					PropertyVector properties;
+					if (!ReadProperties(properties))
 						continue;
 
 					std::vector<std::string> rule_name_list;
 					StringUtilities::ExpandString(rule_name_list, pre_token_str, ',');
 
 					// Add style nodes to the root of the tree
-					for (size_t i = 0; i < rule_name_list.size(); i++)
-					{
+					for (size_t i = 0; i < rule_name_list.size(); i++) {
 						ImportProperties(node, rule_name_list[i], properties, rule_count);
 					}
 
@@ -230,7 +227,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				if (token == '{')
 				{
 					// Each keyframe in keyframes has its own block which is processed here
-					PropertyDictionary properties;
+					PropertyVector properties;
 					if(!ReadProperties(properties))
 						continue;
 
@@ -269,17 +266,17 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 	return rule_count;
 }
 
-bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, const std::string& properties)
+bool StyleSheetParser::ParseProperties(PropertyVector& vec, const std::string& properties)
 {
 	assert(!stream);
 	Stream stream_owner("<unknown>", (const uint8_t*)properties.c_str(), properties.size());
 	stream = &stream_owner;
-	bool success = ReadProperties(parsed_properties);
+	bool success = ReadProperties(vec);
 	stream = nullptr;
 	return success;
 }
 
-bool StyleSheetParser::ReadProperties(PropertyDictionary& properties)
+bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 {
 	std::string name;
 	std::string value;
@@ -329,7 +326,7 @@ bool StyleSheetParser::ReadProperties(PropertyDictionary& properties)
 				{
 					value = StringUtilities::StripWhitespace(value);
 
-					if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value))
+					if (!StyleSheetSpecification::ParsePropertyDeclaration(vec, name, value))
 						Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream->GetSourceURL().c_str(), line_number);
 
 					name.clear();
@@ -367,7 +364,7 @@ bool StyleSheetParser::ReadProperties(PropertyDictionary& properties)
 	{
 		value = StringUtilities::StripWhitespace(value);
 
-		if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value))
+		if (!StyleSheetSpecification::ParsePropertyDeclaration(vec, name, value))
 			Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream->GetSourceURL().c_str(), line_number);
 	}
 	else if (!name.empty() || !value.empty())
@@ -378,7 +375,7 @@ bool StyleSheetParser::ReadProperties(PropertyDictionary& properties)
 	return true;
 }
 
-StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::string rule_name, const StyleSheetPropertyDictionary& properties, int rule_specificity)
+StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::string rule_name, const PropertyVector& properties, int rule_specificity)
 {
 	StyleSheetNode* leaf_node = node;
 

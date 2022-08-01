@@ -36,60 +36,23 @@ namespace Rml {
 
 class Stream;
 class StyleSheetNode;
-class StyleSheetPropertyDictionary;
-
-/**
-	Helper class for parsing a style sheet into its memory representation.
-
-	@author Lloyd Weehuizen
- */
 
 class StyleSheetParser {
 public:
 	StyleSheetParser();
 	~StyleSheetParser();
 
-	/// Parses the given stream into the style sheet
-	/// @param node The root node the stream will be parsed into
-	/// @param stream The stream to read
-	/// @return The number of parsed rules, or -1 if an error occured.
 	int Parse(StyleSheetNode* node, Stream* stream, const StyleSheet& style_sheet, KeyframesMap& keyframes, int begin_line_number);
-
-	/// Parses the given string into the property dictionary
-	/// @param parsed_properties The properties dictionary the properties will be read into
-	/// @param properties The properties to parse
-	/// @return True if the parse was successful, or false if an error occured.
-	bool ParseProperties(PropertyDictionary& parsed_properties, const std::string& properties);
+	bool ParseProperties(PropertyVector& vec, const std::string& properties);
 
 private:
 	Stream* stream;
 	size_t line_number;
 
-	// Parses properties from the parse buffer.
-	// @param property_parser An abstract parser which specifies how the properties are parsed and stored.
-	bool ReadProperties(PropertyDictionary& properties);
-
-	// Import properties into the stylesheet node
-	// @param node Node to import into
-	// @param names The names of the nodes
-	// @param properties The dictionary of properties
-	// @param rule_specificity The specifity of the rule
-	// @return The leaf node of the rule
-	static StyleSheetNode* ImportProperties(StyleSheetNode* node, std::string rule_name, const StyleSheetPropertyDictionary& properties, int rule_specificity);
-
-	// Attempts to parse a @keyframes block
-	bool ParseKeyframeBlock(KeyframesMap & keyframes_map, const std::string & identifier, const std::string & rules, const PropertyDictionary & properties);
-
-	// Attempts to find one of the given character tokens in the active stream
-	// If it's found, buffer is filled with all content up until the token
-	// @param buffer The buffer that receives the content
-	// @param characters The character tokens to find
-	// @param remove_token If the token that caused the find to stop should be removed from the stream
+	bool ReadProperties(PropertyVector& vec);
+	static StyleSheetNode* ImportProperties(StyleSheetNode* node, std::string rule_name, const PropertyVector& properties, int rule_specificity);
+	bool ParseKeyframeBlock(KeyframesMap & keyframes_map, const std::string & identifier, const std::string & rules, const PropertyVector& properties);
 	char FindToken(std::string& buffer, const char* tokens, bool remove_token);
-
-	// Attempts to find the next character in the active stream.
-	// If it's found, buffer is filled with the character
-	// @param buffer The buffer that receives the character, if read.
 	bool ReadCharacter(char& buffer);
 };
 
