@@ -11,7 +11,6 @@ local bgfx      = require "bgfx"
 local bake      = require "bake"
 local ltask     = require "ltask"
 
-local iqm		= ecs.import.interface "ant.render|iqueue_materials"
 local ibaker    = ecs.import.interface "ant.bake|ibaker"
 
 local bake_lm_sys = ecs.system "bake_lightmap_system"
@@ -105,13 +104,14 @@ local function has_filter_stage(pf, stage)
 end
 
 function bake_lm_sys:end_filter()
-    for e in w:select "filter_result bake_lightmap_queue_visible render_object:update" do
+    for e in w:select "filter_result bake_lightmap_queue_visible filter_material:in render_object:update" do
         local le = w:singleton("bake_lightmap_queue", "primitive_filter:in")
         local ro = e.render_object
         if has_filter_stage(le.primitive_filter, ro.setting.surfacetype) then
             local m = load_bake_material(ro)
-            local qm = iqm.get_materials(ro)
-            qm:set("bake_lightmap_queue", m.material)
+            ro.mat_lightmap = m:ptr()
+            local fm = e.filter_material
+            fm["bake_lightmap_queue"] = m
         end
     end
 end

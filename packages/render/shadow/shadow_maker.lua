@@ -12,7 +12,6 @@ local bgfx		= require "bgfx"
 local icamera	= ecs.import.interface "ant.camera|icamera"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
 local irender	= ecs.import.interface "ant.render|irender"
-local iqm		= ecs.import.interface "ant.render|iqueue_materials"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local fbmgr		= require "framebuffer_mgr"
@@ -449,17 +448,24 @@ local s = ecs.system "shadow_primitive_system"
 local material_cache = {__mode="k"}
 
 function s:end_filter()
-    for e in w:select "filter_result opacity render_object:update skinning?in" do
+    for e in w:select "filter_result opacity render_object:update filter_material:in skinning?in" do
         local ro = e.render_object
 		local m = which_material(e.skinning)
 		local mo = m.object
-		local qm = iqm.get_materials(ro)
-
-		local newstate = irender.check_set_state(mo, qm:get(1))
+		local fm = e.filter_material
+		local newstate = irender.check_set_state(mo, fm.main_queue)
 		local new_matobj = irender.create_material_from_template(mo, newstate, material_cache)
 		
-		for qe in w:select "csm queue_name:in" do
-			qm:set(qe.queue_name, new_matobj:instance())
-		end
+		local mi = new_matobj:instance()
+
+		local h = mi:ptr()
+		fm["csm1_queue"] = mi
+		ro.mat_csm1 = h
+		fm["csm2_queue"] = mi
+		ro.mat_csm2 = h
+		fm["csm3_queue"] = mi
+		ro.mat_csm3 = h
+		fm["csm4_queue"] = mi
+		ro.mat_csm4 = h
 	end
 end

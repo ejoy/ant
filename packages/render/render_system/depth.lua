@@ -113,16 +113,22 @@ local material_cache = {__mode="k"}
 
 function s:end_filter()
     if irender.use_pre_depth() then
-        for e in w:select "filter_result pre_depth_queue_visible opacity render_object:update skinning?in" do
+        for e in w:select "filter_result pre_depth_queue_visible opacity render_object:update filter_material:in skinning?in" do
             local mo = assert(which_material(e.skinning))
             local ro = e.render_object
-            local qm = iqm.get_materials(ro)
-            local newstate = irender.check_set_state(mo, qm:get(1))
+            local fm = e.filter_material
+            
+            local newstate = irender.check_set_state(mo, fm.main_queue:get_material())
             local new_mo = irender.create_material_from_template(mo, newstate, material_cache)
 
             local mi = new_mo:instance()
-            qm:set("pre_depth_queue", mi)
-            qm:set("scene_depth_queue", mi)
+            
+            fm["pre_depth_queue"] = mi
+            fm["scene_depth_queue"] = mi
+
+            local h = mi:ptr()
+            ro.mat_predepth = h
+            ro.mat_scenedepth = h
 
             e["scene_depth_queue_visible"] = true
             w:sync("scene_depth_queue_visible?out", e)

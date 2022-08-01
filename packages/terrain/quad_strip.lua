@@ -11,7 +11,7 @@ local layout    = declmgr.get(layoutfmt)
 local stride<const> = layout.stride
 
 local iql       = ecs.import.interface "ant.render|ipolyline"
-local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local function add_quad(p0, p1, normal, ww, offset, clr, vertices)
     local d = math3d.sub(p1, p0)
@@ -60,9 +60,9 @@ function qs_sys:entity_init()
                 name = "polyline",
                 on_ready = function (le)
                     w:sync("render_object:update", le)
-                    iqm.set_property(le, "u_line_info",   math3d.vector(qs.width, 0.0, 0.0, 0.0))
-                    iqm.set_property(le, "u_color",       math3d.vector(qs.color))
-                    iqm.set_property(le, "u_uvmotion",    math3d.vector(speed[1], speed[2], tile[1], tile[2]))
+                    imaterial.set_property(le, "u_line_info",   math3d.vector(qs.width, 0.0, 0.0, 0.0))
+                    imaterial.set_property(le, "u_color",       math3d.vector(qs.color))
+                    imaterial.set_property(le, "u_uvmotion",    math3d.vector(speed[1], speed[2], tile[1], tile[2]))
                 end,
             }
         }

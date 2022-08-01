@@ -8,7 +8,7 @@ local iani      = ecs.import.interface "ant.animation|ianimation"
 local timer     = ecs.import.interface "ant.timer|itimer"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local ika       = ecs.import.interface "ant.animation|ikeyframe"
-local iqm       = ecs.import.interface "ant.render|iqueue_materials"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
 local math3d    = require "math3d"
@@ -127,7 +127,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
                 foreupdate = foreupdate,
                 kfeid = kfeid,
                 reset = function (self)
-                    iqm.set_property(world:entity(self.target), self.property, self.init_value)
+                    imaterial.set_property(world:entity(self.target), self.property, self.init_value)
                 end,
                 update = function(self, time)
                     if not self.target then
@@ -141,7 +141,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
                     if not running and not self.keep and not self.foreupdate then
                         apply_value = self.init_value
                     end
-                    iqm.set_property(world:entity(self.target), self.property, apply_value)
+                    imaterial.set_property(world:entity(self.target), self.property, apply_value)
                     self.continue = running
                 end
             }

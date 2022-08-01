@@ -7,7 +7,7 @@ local declmgr   = renderpkg.declmgr
 local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
 
-local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender   = ecs.import.interface "ant.render|irender"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
@@ -83,7 +83,7 @@ end
 function water_sys:render_submit()
     local sdh = queue_rb_handle "scene_depth_queue"
     for we in w:select "water:in render_object:update" do
-        iqm.set_property(we, "s_scene_depth", sdh)
+        imaterial.set_property(we, "s_scene_depth", sdh)
         irender.draw(ppo_viewid, we.render_object)
     end
 end

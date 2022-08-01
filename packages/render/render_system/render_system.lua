@@ -9,7 +9,6 @@ local texmapper	= import_package "ant.asset".textures
 local irender	= ecs.import.interface "ant.render|irender"
 local ies		= ecs.import.interface "ant.scene|ifilter_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local iqm		= ecs.import.interface "ant.render|iqueue_materials"
 local itimer	= ecs.import.interface "ant.timer|itimer"
 local render_sys = ecs.system "render_system"
 
@@ -30,8 +29,8 @@ for n, b in pairs(viewidmgr.all_bindings()) do
 end
 
 function render_sys:component_init()
-	for e in w:select "INIT render_object:update render_object_update?out" do
-		e.render_object = e.render_object or {}
+	for e in w:select "INIT render_object filter_material:update render_object_update?out" do
+		e.filter_material = e.filter_material or {}
 		e.render_object_update = true
 	end
 end
@@ -41,9 +40,12 @@ local function update_ro(ro, m)
 	ro.vb_num = m.vb.num
 	ro.vb_handle = m.vb.handle
 
-	ro.ib_start = m.ib.start
-	ro.ib_num = m.ib.num
-	ro.ib_handle = m.ib.handle
+	local ib = m.ib
+	if ib then
+		ro.ib_start = m.ib.start
+		ro.ib_num = m.ib.num
+		ro.ib_handle = m.ib.handle
+	end
 end
 
 function render_sys:entity_init()
@@ -57,10 +59,13 @@ function render_sys:entity_init()
 	end
 
 	
-	for e in w:select "INIT material_result:in render_object:update" do
+	for e in w:select "INIT material_result:in render_object:update filter_material:in" do
 		local mr = e.material_result
-		local qm = iqm.get_materials(e.render_object)
-		qm:set("main_queue", mr.object:instance())
+		local fm = e.filter_material
+		local mi = mr.object:instance()
+		fm["main_queue"] = mi
+		local ro = e.render_object
+		ro.mat_mq = mi:ptr()
 	end
 
 	for e in w:select "INIT mesh:in render_object:update" do
@@ -156,8 +161,7 @@ local function submit_hitch_filter(viewid, selkey, qn, groups, transforms)
 		for e in w:select(selkey) do
 			local ro = e.render_object
 			local tid, num, stride = table.unpack(transforms:find(e.id, ro, mats))
-			local qm = iqm.get_materials(ro)
-			irender.multi_draw(viewid, ro, qm:get(qn), tid, num, stride)
+			irender.multi_draw(viewid, ro, e.filter_material[qn], tid, num, stride)
 		end
 	end
 end
@@ -237,13 +241,21 @@ function render_sys:render_submit()
 end
 
 function render_sys:entity_remove()
-	for e in w:select "REMOVED render_object:update" do
-		local qm = iqm.get_materials(e.render_object)
-		for i=1, qm:num() do
-			local m = qm:get(i)
-			if m then
+	for e in w:select "REMOVED render_object:update filter_material:in" do
+		local fm = e.filter_material
+		local ro = e.render_object
+		local mm = {}
+		for k, m in pairs(fm) do
+			if mm[m] == nil then
+				mm[m] = true
 				m:release()
-				qm:set(i, nil)
+				fm[k] = nil
+			end
+		end
+		
+		for k in pairs(ro) do
+			if k:match "mat_" then
+				ro[k] = 0
 			end
 		end
 	end
@@ -261,10 +273,11 @@ end
 
 function s:end_filter()
 	if irender.use_pre_depth() then
-		for e in w:select "filter_result main_queue_visible opacity render_object:update" do
+		for e in w:select "filter_result main_queue_visible opacity render_object:update filter_material:in" do
 			local ro = e.render_object
-			local qm = iqm.get_materials(ro)
-			local m = qm:get(1)
+			local fm = e.filter_material
+			local m = fm.main_queue
+			ro.mat_mq = m:ptr()
 			m:set_state(check_set_depth_state_as_equal(m:get_state()))
 		end
 	end

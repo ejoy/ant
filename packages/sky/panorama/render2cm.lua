@@ -16,7 +16,6 @@ local irq       = ecs.import.interface "ant.render|irenderqueue"
 local irender   = ecs.import.interface "ant.render|irender"
 local iibl      = ecs.import.interface "ant.render|iibl"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local icamera   = ecs.import.interface "ant.camera|icamera"
 
 local panorama_util=require "panorama.util"
@@ -116,10 +115,9 @@ function render2cm_sys:entity_ready()
             local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cm_rbidx, cubemap_flags)
             e.skybox.cm_rbidx = cm_rbidx
 
-            local drawer = w:singleton("cvt_p2cm_drawer", "render_object:update")
+            local drawer = w:singleton("cvt_p2cm_drawer", "render_object:update filter_material:in")
             local ro = drawer.render_object
-            local qm = iqm.get_materials(ro)
-            local m = qm:get(1)
+            local m = drawer.filter_material.main_queue
             m.s_tex = tex.handle
 
             for idx, fn in ipairs(face_queues) do
@@ -146,7 +144,7 @@ function render2cm_sys:entity_ready()
                 local keep_rbs<const> = true
                 fbmgr.destroy(fbidx, keep_rbs)
             end
-            iqm.set_property(e, "s_skybox", fbmgr.get_rb(cm_rbidx).handle)
+            imaterial.set_property(e, "s_skybox", fbmgr.get_rb(cm_rbidx).handle)
             e.filter_ibl = true
         end
     end
@@ -195,7 +193,7 @@ local function build_irradiance_map(source_tex, irradiance, facesize)
     -- do for irradiance
     local irradiance_properties = ibl_properties.irradiance
 
-    iqm.set_property(drawer, "s_source", source_tex)
+    imaterial.set_property(drawer, "s_source", source_tex)
 
     for idx, fn in ipairs(face_queues) do
         local faceidx = idx-1
@@ -215,8 +213,8 @@ local function build_irradiance_map(source_tex, irradiance, facesize)
         irq.update_rendertarget(fn, rt)
         local p, p1 = irradiance_properties.u_ibl_params, irradiance_properties.u_ibl_params1
         p1[2] = faceidx
-        iqm.set_property(drawer, "u_ibl_params", p)
-        iqm.set_property(drawer, "u_ibl_params1", p1)
+        imaterial.set_property(drawer, "u_ibl_params", p)
+        imaterial.set_property(drawer, "u_ibl_params1", p1)
         irender.draw(rt.viewid, ro)
 
         fbmgr.destroy(fbidx, true)

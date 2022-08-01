@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 --[[
 	this code from bgfx example-36, references:
@@ -233,15 +233,15 @@ local shader_parameters = math3d.ref(math3d.vector(0.02, 3.0, 8, 0))
 local function update_sky_parameters(e)
 	local skycomp = e.procedural_sky
 	local hour = skycomp.which_hour
-	iqm.set_property(e, "u_sunDirection", skycomp.sundir)
+	imaterial.set_property(e, "u_sunDirection", skycomp.sundir)
 	
-	--iqm.set_property(e, "u_sunLuminance", xyz2rgb(sun_luminance_fetch(hour)))
-	iqm.set_property(e, "u_skyLuminanceXYZ", sky_luminance_fetch(hour))
+	--imaterial.set_property(e, "u_sunLuminance", xyz2rgb(sun_luminance_fetch(hour)))
+	imaterial.set_property(e, "u_skyLuminanceXYZ", sky_luminance_fetch(hour))
 	shader_parameters.v = math3d.set_index(shader_parameters, 1, skycomp.sun_size, skycomp.sun_bloom, skycomp.intensity, hour)
-	iqm.set_property(e, "u_parameters", shader_parameters)
+	imaterial.set_property(e, "u_parameters", shader_parameters)
 
 	local values = compute_PerezCoeff(skycomp.turbidity)
-	iqm.set_property(e, "u_perezCoeff", values)
+	imaterial.set_property(e, "u_perezCoeff", values)
 end
 
 local function sync_directional_light(e)

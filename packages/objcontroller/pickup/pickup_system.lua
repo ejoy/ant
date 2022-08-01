@@ -13,7 +13,6 @@ local sampler= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
 local irender   = ecs.import.interface "ant.render|irender"
-local iqm		= ecs.import.interface "ant.render|iqueue_materials"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local INV_Z<const> = true
@@ -354,22 +353,25 @@ local function has_filter_stage(pf, stage)
 end
 
 function pickup_sys:end_filter()
-	for e in w:select "filter_result pickup_queue_visible render_object:update id:in skinning?in" do
+	for e in w:select "filter_result pickup_queue_visible render_object:update filter_material:in id:in skinning?in" do
 		local ro = e.render_object
-		local st = ro.fx.setting.surfacetype
+		local fm = e.filter_material
+		local matres = imaterial.resource(e.material, true)
+		local st = matres.fx.setting.surfacetype
 		local qe = w:singleton("pickup_queue", "primitive_filter:in")
 
-		local src_mi = iqm.get_materials(ro)
 		if has_filter_stage(qe.primitive_filter, st) then
+			local src_mo = matres.object
 			local mat = which_material(st, e.skinning)
-			local dst_mi = mat.material
-			local newstate = irender.check_set_state(dst_mi, src_mi)
-			local new_matobj = irender.create_material_from_template(dst_mi:get_material(), newstate, material_cache)
+			local dst_mo = mat.object
+			local newstate = irender.check_set_state(dst_mo, src_mo)
+			local new_matobj = irender.create_material_from_template(dst_mo, newstate, material_cache)
 			local new_mi = new_matobj:instance()
 			new_mi.u_id = math3d.vector(packeid_as_rgba(e.id))
 
-			src_mi:set("pickup_queue", new_mi)
-			ro.prog = mat.fx.prog
+			fm["pickup_queue"] = new_mi
+			assert(ro.mat_pickup == 0)
+			ro.mat_pickup = new_mi:ptr()
 		end
 	end
 end

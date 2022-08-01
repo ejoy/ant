@@ -15,9 +15,26 @@ local function init_ro()
     return {
         worldmat    = mc.NULL,
         prog        = 0xffffffff,
-        mesh        = 0,
+        --materials
+        mat_mq      = 0,
+        mat_predepth= 0,
+        mat_scenedepth=0,
+        mat_pickup  = 0,
+        mat_csm1    = 0,
+        mat_csm2    = 0,
+        mat_csm3    = 0,
+        mat_csm4    = 0,
+        mat_lightmap= 0,
+        --mesh
+        vb_start    = 0,
+        vb_num      = 0,
+        vb_handle   = 0xffffffff,
+        ib_start    = 0,
+        ib_num      = 0,
+        ib_handle   = 0xffffffff,
+
         depth       = 0,
-        discardflags= 0xff,
+        discard_flags=0xff,
         materials   = h,
     }
 end
@@ -33,11 +50,11 @@ function ro.remove(r)
 end
 
 function ro.marshal(v)
-    return serialize.pack(v)
+    return ""
 end
 
 function ro.unmarshal(s)
-    return serialize.unpack(s)
+    return init_ro()
 end
 
 local ra = ecs.component "render_args2"
@@ -48,19 +65,3 @@ function ra.init(v)
     v.material_idx = 0
 end
 
-
-local iqm = ecs.interface "iqueue_materials"
-
-local function get_qm(ro)
-    local h = ro.materials
-    return queuematerials[h]
-end
-
-function iqm.set_property(e, who, what, qn)
-    qn = qn or "main_queue"
-    local qm = get_qm(e.render_object)
-    local m = qm[qn]
-    m[who] = what
-end
-
-iqm.get_materials = get_qm

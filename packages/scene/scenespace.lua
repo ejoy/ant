@@ -47,7 +47,7 @@ local function init_scene_aabb(scene, bounding)
 end
 
 function s:entity_init()
-	for v in w:select "INIT scene mesh?in simplemesh?in scene_needchange?out" do
+	for v in w:select "INIT scene:update mesh?in simplemesh?in scene_needchange?out" do
 		local m = v.mesh or v.simplemesh
 		if m then
 			init_scene_aabb(v.scene, m.bounding)

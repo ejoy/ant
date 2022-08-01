@@ -17,8 +17,6 @@ local icamera   = ecs.import.interface "ant.camera|icamera"
 local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 
-local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
-
 local is = ecs.system "init_system"
 
 local cube_face_entities
@@ -38,7 +36,7 @@ end
 function is:data_changed()
     -- for _, eid in iblmb:unpack() do
     --     local ibl = world[eid]._ibl
-    --     iqm.set_property(eid, "s_skybox", {stage=0, texture={handle=ibl.irradiance.handle}})
+    --     imaterial.set_property(eid, "s_skybox", {stage=0, texture={handle=ibl.irradiance.handle}})
     -- end
 end
 

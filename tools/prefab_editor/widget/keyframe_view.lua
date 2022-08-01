@@ -994,7 +994,7 @@ function m.load(path)
     file_path = path:string()
 end
 local ifs		= ecs.import.interface "ant.scene|ifilter_state"
-local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local bone_color = math3d.ref(math3d.vector(0.4, 0.4, 1, 0.8))
 local bone_highlight_color = math3d.ref(math3d.vector(1.0, 0.4, 0.4, 0.8))
 local function create_bone_entity(joint_name)
@@ -1011,7 +1011,7 @@ local function create_bone_entity(joint_name)
             name = joint_name,
             on_ready = function(e)
                 w:sync("render_object:update", e)
-				iqm.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
+				imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
 				ifs.set_state(e, "auxgeom", true)
                 w:sync("render_object_update:out", e)
                 ies.set_state(e, "main_view", false)
@@ -1056,10 +1056,10 @@ function m.init(skeleton)
     current_skeleton = skeleton
     joint_utils.on_select_joint = function(old, new)
         if old and old.mesh then
-            iqm.set_property(world:entity(old.mesh), "u_basecolor_factor", bone_color) 
+            imaterial.set_property(world:entity(old.mesh), "u_basecolor_factor", bone_color) 
         end
         if new then
-            iqm.set_property(world:entity(new.mesh), "u_basecolor_factor", bone_highlight_color)
+            imaterial.set_property(world:entity(new.mesh), "u_basecolor_factor", bone_highlight_color)
             if current_anim then
                 local layer_index = find_anim_by_name(new.name) or 0
                 if layer_index ~= 0 then

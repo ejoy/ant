@@ -8,6 +8,11 @@ local assetmgr		= require "asset"
 local matobj		= require "matobj"
 local imaterial = ecs.interface "imaterial"
 
+function imaterial.set_property(e, who, what)
+	local fm = e.filter_material
+	fm.main_queue[who] = what
+end
+
 function imaterial.load_res(mp, setting)
 	return assetmgr.resource(url.create(mp, setting))
 end
@@ -42,7 +47,6 @@ local ms = ecs.system "material_system"
 local function stat_material_info(verbose)
 	local materials = {}
 	local instances = {}
-	local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 	for e in w:select "material:in render_object:in" do
 		local function mark(mi, matpath)
 			if instances[mi] == nil then
@@ -54,11 +58,8 @@ local function stat_material_info(verbose)
 			end
 		end
 
-		local mpath = e.material
-		local m = iqm.get_materials(e.render_object)
-		for i=1, m:num() do
-			local mm = m:get(i)
-			mark(mm, mpath)
+		for _, m in pairs(e.filter_material) do
+			mark(m, e.material)
 		end
 	end
 

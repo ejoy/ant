@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local computil  = ecs.import.interface "ant.render|ientity"
 local ilight    = ecs.import.interface "ant.render|ilight"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
@@ -72,11 +72,11 @@ function m.highlight(b)
 
     if b then
         for _, eid in ipairs(m.current_gizmo.eid) do
-            iqm.set_property(world:entity(eid), "u_color", gizmo_const.COLOR.HIGHLIGHT)
+            imaterial.set_property(world:entity(eid), "u_color", gizmo_const.COLOR.HIGHLIGHT)
         end
     else
         for _, eid in ipairs(m.current_gizmo.eid) do
-            iqm.set_property(world:entity(eid), "u_color", math3d.vector(gizmo_const.COLOR.GRAY))
+            imaterial.set_property(world:entity(eid), "u_color", math3d.vector(gizmo_const.COLOR.GRAY))
         end
     end
 end

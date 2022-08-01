@@ -4,7 +4,7 @@ local w = world.w
 local bgfx = require "bgfx"
 local example_sys = ecs.system "lightmap_example"
 local ilm = ecs.import.interface "ant.bake|ilightmap"
-local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender = ecs.import.interface "ant.render|irender"
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 local ientity = ecs.import.interface "ant.render|ientity"
@@ -341,12 +341,7 @@ local function update_lightmap(eid)
     local lm_handle = bgfx.create_texture2d(lm1.size, lm1.size, false, 1, "RGBA32F", flags, mem)
     -- local assetmgr = import_package "ant.asset"
     -- local lm_handle = assetmgr.resource "/pkg/ant.lightmap_baker/textures/lm.texture".handle
-    iqm.set_property(example_eid, "s_lightmap", {
-        stage = 0,
-        texture = {
-            handle = lm_handle
-        }
-    })
+    imaterial.set_property(example_eid, "s_lightmap", lm_handle)
 end
 
 local function create_test_entities()

@@ -14,7 +14,6 @@ local sampler   = renderpkg.sampler
 local assetmgr  = import_package "ant.asset"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local icompute  = ecs.import.interface "ant.render|icompute"
 local iibl      = ecs.import.interface "ant.render|iibl"
 
@@ -98,7 +97,7 @@ function cs2cm_sys:entity_ready()
     
                 fbmgr.destroy(fbidx, true)
     
-                iqm.set_property(e, "s_skybox", cm_rbhandle)
+                imaterial.set_property(e, "s_skybox", cm_rbhandle)
             end
             e.filter_ibl = true
         end

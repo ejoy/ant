@@ -1286,6 +1286,12 @@ linstance_get_state(lua_State *L){
 	return push_material_state(L, mi->m);
 }
 
+static int
+linstance_ptr(lua_State *L){
+	lua_pushlightuserdata(L, to_instance(L, 1));
+	return 1;
+}
+
 static inline void
 clear_material_attribs(lua_State *L, int mat_idx){
 	struct attrib_arena * arena = to_arena(L, get_arena_index(L, mat_idx));
@@ -1314,6 +1320,7 @@ lmaterial_instance(lua_State *L) {
 			{ "attribs",		linstance_attribs},
 			{ "get_material",	linstance_get_material},
 			{ "get_state",		linstance_get_state},
+			{ "ptr",			linstance_ptr},
 			{ NULL, 		NULL },
 		};
 		check_ecs_world_in_upvalue1(L);

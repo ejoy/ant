@@ -7,7 +7,7 @@ local world = ecs.world
 
 -- local ipp       = ecs.import.interface "ant.render|postprocess"
 -- local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
--- local iqm = ecs.import.interface "ant.asset|iqm"
+-- local imaterial = ecs.import.interface "ant.asset|imaterial"
 -- local icamera   = ecs.import.interface "ant.camera|icamera"
 
 -- local mathpkg   = import_package "ant.math"
@@ -64,7 +64,7 @@ local world = ecs.world
 --             "/pkg/ant.resources/materials/postprocess/dof/simple_merge.material",
 --             mergert, nil, e.camera_ref)
 --         local outfocus_handle = fbmgr.get_rb(fbmgr.get(blurrt.fb_idx)[1]).handle
---         iqm.set_property(mergepass.eid, "s_outfocus", outfocus_handle)
+--         imaterial.set_property(mergepass.eid, "s_outfocus", outfocus_handle)
 --         ipp.add_technique("simpledof", {blurpass, mergepass})
 --     end
 -- end
@@ -76,11 +76,11 @@ local world = ecs.world
 --     local blurpass, mergepass = tech[1], tech[2]
 
 --     local focuseid = dof.focuseid
---     iqm.set_property(mergepass.eid, "u_focuspoint", 
+--     imaterial.set_property(mergepass.eid, "u_focuspoint", 
 --         focuseid and world[focuseid] and iom.get_position(focuseid) or mc.ZERO_PT)
 
 --     local f = icamera.get_frustum(eid)
---     iqm.set_property(mergepass.eid, "u_param", {f.n, f.f, 8.0, 12.0})
+--     imaterial.set_property(mergepass.eid, "u_param", {f.n, f.f, 8.0, 12.0})
 -- end
 
 -- local dof_register_mb = world:sub{"component_register", "camera"}

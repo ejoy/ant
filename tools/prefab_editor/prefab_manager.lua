@@ -60,7 +60,7 @@ local function create_light_billboard(light_eid)
     --     directional = "ICON_DIRECTIONALLIGHT",
     -- }
     -- local tex = icons[light_icons[type]].handle
-    -- iqm.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
+    -- imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
     -- iom.set_scale(bb_eid, 0.2)
     -- ies.set_state(bb_eid, "auxgeom", true)
     -- iom.set_position(bb_eid, iom.get_position(light_eid))

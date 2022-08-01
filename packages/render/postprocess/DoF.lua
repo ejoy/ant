@@ -6,7 +6,7 @@ local world = ecs.world
 -- local sampler       = require "sampler"
 -- local ipp           = ecs.import.interface "ant.render|postprocess"
 -- local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
--- local iqm     = ecs.import.interface "ant.asset|iqm"
+-- local imaterial = ecs.import.interface "ant.asset|imaterial"
 -- local irender       = ecs.import.interface "ant.render|irender"
 -- local math3d        = require "math3d"
 
@@ -64,9 +64,9 @@ local world = ecs.world
 --     }
 --     local scatter_pass = ipp.create_pass("scatter", "/pkg/ant.resources/materials/postprocess/dof/scatter.material", scatter_rt)
 --     local ds_fb = fbmgr.get(ds_rt.fb_idx)
---     iqm.set_property(scatter_pass.eid, "s_nearBuffer", {stage=0, texture={handle = fbmgr.get_rb(ds_fb[1]).handle}})
---     iqm.set_property(scatter_pass.eid, "s_farBuffer",  {stage=1, texture={handle = fbmgr.get_rb(ds_fb[2]).handle}})
---     iqm.set_property(scatter_pass.eid, "s_cocBuffer",  {stage=2, texture={handle = fbmgr.get_rb(ds_fb[3]).handle}})
+--     imaterial.set_property(scatter_pass.eid, "s_nearBuffer", {stage=0, texture={handle = fbmgr.get_rb(ds_fb[1]).handle}})
+--     imaterial.set_property(scatter_pass.eid, "s_farBuffer",  {stage=1, texture={handle = fbmgr.get_rb(ds_fb[2]).handle}})
+--     imaterial.set_property(scatter_pass.eid, "s_cocBuffer",  {stage=2, texture={handle = fbmgr.get_rb(ds_fb[3]).handle}})
 
 --     do
 --         local ri = scatter_pass.renderitem
@@ -86,7 +86,7 @@ local world = ecs.world
 --     }
 --     local us_pass = ipp.create_pass("resolve", "/pkg/ant.resources/materials/postprocess/dof/resolve.material", us_rt)
 --     local sp_fb = fbmgr.get(scatter_rt.fb_idx)
---     iqm.set_property(us_pass.eid, "s_scatterBuffer", {stage=0, texture={handle = fbmgr.get_rb(sp_fb[1]).handle}})
+--     imaterial.set_property(us_pass.eid, "s_scatterBuffer", {stage=0, texture={handle = fbmgr.get_rb(sp_fb[1]).handle}})
 
 --     ipp.add_technique("dof", {ds_pass, scatter_pass, us_pass})
 -- end
@@ -132,11 +132,11 @@ local world = ecs.world
 --         cr[1], cr[2]
 --     }
 
---     iqm.set_property(ds_pass.eid, "u_dof_param", dof_param)
+--     imaterial.set_property(ds_pass.eid, "u_dof_param", dof_param)
 
 --     --- scatter
 --     local bokeh = {dof.aperture_rotation, 1/dof.aperture_ratio, 100, 0}
---     iqm.set_property(scatter_pass.eid, "u_bokeh_param", bokeh)
+--     imaterial.set_property(scatter_pass.eid, "u_bokeh_param", bokeh)
     
 --     local blades = dof.aperture_blades
 --     local twopi = math.pi * 2
@@ -146,10 +146,10 @@ local world = ecs.world
 --         blades / twopi,
 --         blades > 0 and math.cos(math.pi / blades) or 0,
 --     }
---     iqm.set_property(scatter_pass.eid, "u_bokeh_sides", bokeh_sides)
+--     imaterial.set_property(scatter_pass.eid, "u_bokeh_sides", bokeh_sides)
 
 --     --- resolve
---     iqm.set_property(resolve_pass.eid, "u_dof_param", dof_param)
+--     imaterial.set_property(resolve_pass.eid, "u_dof_param", dof_param)
 -- end
 
 -- local dof_register_mb = world:sub{"component_register", "camera"}

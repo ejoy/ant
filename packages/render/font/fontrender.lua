@@ -16,7 +16,7 @@ local layout_desc       = declmgr.correct_layout "p20nii|t20nii|c40niu"
 local fontquad_layout   = declmgr.get(layout_desc)
 local declformat        = declmgr.vertex_desc_str(layout_desc)
 
-local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender = ecs.import.interface "ant.render|irender"
 
 local irq = ecs.import.interface "ant.render|irenderqueue"
@@ -139,7 +139,7 @@ function fontsys:camera_usage()
         local e = world:entity(eid)
         local ro = e.render_object
         ro.attach_eid = attach
-        iqm.set_property(e, "s_tex", fonttex)
+        imaterial.set_property(e, "s_tex", fonttex)
     end
     for e in w:select "font:in show_config:in render_object:update" do
         load_text(e)

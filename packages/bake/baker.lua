@@ -19,7 +19,7 @@ local mu, mc    = mathpkg.uitl, mathpkg.constant
 
 local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
-local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local icamera   = ecs.import.interface "ant.camera|icamera"
 local ics       = ecs.import.interface "ant.render|icluster_render"
 
@@ -246,12 +246,12 @@ function downsampler:downsample(hemisize)
     local hsize = hemisize//2
     local viewid = lightmap_viewid + 1
     
-    local we = w:singleton("weight_ds", "render_object:update")
-    local se = w:singleton("simple_ds", "render_object:update")
+    local we = w:singleton("weight_ds", "fitler_material:in render_object:in")
+    local se = w:singleton("simple_ds", "fitler_material:in render_object:in")
     local we_obj, se_obj = we.render_object, se.render_object
 
     local read, write = 1, 2
-    local we_m, se_m = iqm.get(we_obj, 1), iqm.get(se_obj, 1)
+    local we_m, se_m = we.filter_material.main_queue, se.filter_material.main_queue
     we_m.hemispheres    = self.render_textures[read]
     we_m.weights        = self.weight_tex
     irender.draw(viewid, we_obj)

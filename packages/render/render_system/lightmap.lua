@@ -3,7 +3,6 @@ local world = ecs.world
 local w = world.w
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local iqm		= ecs.import.interface "ant.render|iqueue_materials"
 local assetmgr = import_package "ant.asset"
 
 local lm_mount = ecs.action "lightmap_mount"
@@ -66,18 +65,14 @@ end
 function lm_sys:entity_init()
     for lmr_e in w:select "INIT lightmap_result:in" do
         local c = lmr_e.lightmap_result.cache
-        for e in w:select "lightmap:in render_object:update" do
+        for e in w:select "lightmap:in filter_material:in" do
             local lm = e.lightmap
             local lmid = lm.id
             local bi = c[lmid]
             if bi then
                 bi.texture = assetmgr.resource(bi.texture_path)
-                local ro = e.render_object
-                local qm = iqm.get_materials(ro)
-                for i=1, qm:num() do
-                    local m = qm:get(i)
-                    m.s_lightmap = bi.texture.handle
-                end
+                local m = e.fitler_material.main_queue
+                m.s_lightmap = bi.texture.handle
             end
         end
     end
@@ -126,7 +121,7 @@ function lm_sys:end_filter()
 
                 local new_mi = bm:material()
                 new_mi.s_lightmap = lmhandle
-                local qm = iqm.get_materials(e.render_object)
+                local qm = imaterial.get_materials(e.render_object)
                 qm:set("main_queue", new_mi)
             end
         end
