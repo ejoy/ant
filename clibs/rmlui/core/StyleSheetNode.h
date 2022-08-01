@@ -3,6 +3,7 @@
 #include <core/StyleSheet.h>
 #include <core/Types.h>
 #include <core/PropertyDictionary.h>
+#include <core/StyleCache.h>
 
 namespace Rml {
 
@@ -18,13 +19,6 @@ inline bool operator==(const StructuralSelector& a, const StructuralSelector& b)
 inline bool operator<(const StructuralSelector& a, const StructuralSelector& b) { return std::tie(a.selector, a.a, a.b) < std::tie(b.selector, b.a, b.b); }
 
 using StructuralSelectorList = std::vector< StructuralSelector >;
-using StyleSheetNodeList = std::vector< std::unique_ptr<StyleSheetNode> >;
-
-class StyleSheetPropertyDictionary {
-public:
-	PropertyDictionary                  prop;
-	std::unordered_map<PropertyId, int> spec;
-};
 
 struct StyleSheetRequirements {
 	std::string tag;
@@ -36,35 +30,23 @@ struct StyleSheetRequirements {
 
 	bool operator==(const StyleSheetRequirements& rhs) const;
 	bool Match(const Element* element) const;
-	int GetSpecificity();
+	bool MatchStructuralSelector(const Element* element) const;
+	int GetSpecificity() const;
 };
 
 class StyleSheetNode {
 public:
 	StyleSheetNode();
-	StyleSheetNode(StyleSheetNode* parent, StyleSheetRequirements const& req);
-	StyleSheetNode(StyleSheetNode* parent, StyleSheetRequirements && req);
-
-	StyleSheetNode* GetOrCreateChildNode(StyleSheetRequirements && other);
-	StyleSheetNode* GetOrCreateChildNode(StyleSheetNode const& other);
-
-	void MergeHierarchy(StyleSheetNode* node, int specificity_offset = 0);
-	void BuildIndex(StyleSheet::NodeIndex& styled_node_index);
-
-	void ImportProperties(const PropertyVector& properties, int rule_specificity);
-	void MergeProperties(StyleSheetPropertyDictionary& properties, int specificity_offset = 0) const;
+	void SetProperties(const PropertyVector& properties, int rule_specificity);
 	bool IsApplicable(const Element* element) const;
 	int GetSpecificity() const;
+	void AddRequirements(StyleSheetRequirements&& req);
+	Style::PropertyMap GetProperties() const;
 
 private:
-	void CalculateAndSetSpecificity();
-	bool Match(const Element* element) const;
-	bool MatchStructuralSelector(const Element* element) const;
-	StyleSheetNode* parent = nullptr;
-	StyleSheetRequirements requirements;
+	Style::PropertyMap properties;
+	std::vector<StyleSheetRequirements> requirements;
 	int specificity = 0;
-	StyleSheetPropertyDictionary properties;
-	StyleSheetNodeList children;
 };
 
 }

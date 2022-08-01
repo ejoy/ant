@@ -225,7 +225,9 @@ namespace Rml {
         size_t n = data.pop<uint8_t>();
         TransitionList t;
         for (size_t i = 0; i < n; ++i) {
-            t.emplace(data.pop<PropertyId>(), data.pop<Transition>());
+            auto id = data.pop<PropertyId>();
+            auto value = data.pop<Transition>();
+            t.emplace(std::move(id), std::move(value));
         }
         return t;
     }

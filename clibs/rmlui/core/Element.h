@@ -21,7 +21,6 @@ class ElementAnimation;
 class EventListener;
 class Geometry;
 class StyleSheet;
-class StyleSheetPropertyDictionary;
 struct HtmlElement;
 
 using ElementList = std::vector<Element*>;
@@ -115,7 +114,8 @@ public:
 	std::optional<Property> GetComputedProperty(PropertyId id) const;
 	const Property* GetComputedLocalProperty(PropertyId id) const;
 	const Property* GetAnimationProperty(PropertyId id) const;
-	const Transitions* GetTransition(const PropertyDictionary* def = nullptr) const;
+	const Transitions* GetTransition() const;
+	const Transitions* GetTransition(const PropertyDictionary& def) const;
 
 	void SetProperty(const std::string& name, std::optional<std::string> value = {});
 	std::optional<std::string> GetProperty(const std::string& name) const;
@@ -186,7 +186,7 @@ protected:
 	float font_size = 16.f;
 	PropertyDictionary animation_properties;
 	PropertyDictionary inline_properties;
-	SharedPtr<StyleSheetPropertyDictionary> definition_properties;
+	PropertyDictionary definition_properties;
 	PropertyIdSet dirty_properties;
 	glm::mat4x4 transform;
 	Rect content_rect;

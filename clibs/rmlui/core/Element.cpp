@@ -14,7 +14,6 @@
 #include <core/Stream.h>
 #include <core/StringUtilities.h>
 #include <core/StyleSheetFactory.h>
-#include <core/StyleSheetNode.h>
 #include <core/StyleSheetParser.h>
 #include <core/StyleSheetSpecification.h>
 #include <core/Text.h>
@@ -1470,9 +1469,7 @@ const Property* Element::GetComputedLocalProperty(PropertyId id) const {
 	property = PropertyDictionaryGet(inline_properties, id);
 	if (property)
 		return property;
-	if (definition_properties)
-		return PropertyDictionaryGet(definition_properties->prop, id);
-	return nullptr;
+	return PropertyDictionaryGet(definition_properties, id);
 }
 
 
@@ -1539,15 +1536,21 @@ std::optional<Property> Element::GetComputedProperty(PropertyId id) const {
 	return StyleSheetSpecification::GetDefaultProperty(id);
 }
 
-const Transitions* Element::GetTransition(const PropertyDictionary* def) const {
+const Transitions* Element::GetTransition() const {
 	const Property* property = PropertyDictionaryGet(inline_properties, PropertyId::Transition);
 	if (!property) {
-		if (def) {
-			property = PropertyDictionaryGet(*def, PropertyId::Transition);
-		}
-		else if (definition_properties) {
-			property = PropertyDictionaryGet(definition_properties->prop, PropertyId::Transition);
-		}
+		property = PropertyDictionaryGet(definition_properties, PropertyId::Transition);
+	}
+	if (!property) {
+		return nullptr;
+	}
+	return &property->Get<Transitions>();
+}
+
+const Transitions* Element::GetTransition(const PropertyDictionary& def) const {
+	const Property* property = PropertyDictionaryGet(inline_properties, PropertyId::Transition);
+	if (!property) {
+		property = PropertyDictionaryGet(def, PropertyId::Transition);
 	}
 	if (!property) {
 		return nullptr;
@@ -1556,7 +1559,7 @@ const Transitions* Element::GetTransition(const PropertyDictionary* def) const {
 }
 
 void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const PropertyDictionary& new_definition) {
-	const Transitions* transitions = GetTransition(&new_definition);
+	const Transitions* transitions = GetTransition(new_definition);
 	if (!transitions) {
 		return;
 	}
@@ -1622,37 +1625,22 @@ void Element::UpdateDefinition() {
 		return;
 	}
 	dirty_definition = false;
-	SharedPtr<StyleSheetPropertyDictionary> new_definition = GetStyleSheet().GetElementDefinition(this);
-	if (new_definition != definition_properties) {
-		if (definition_properties && new_definition) {
-			PropertyIdSet changed_properties = PropertyDictionaryDiff(definition_properties->prop, new_definition->prop);
-			for (PropertyId id : changed_properties) {
-				if (PropertyDictionaryGet(inline_properties, id)) {
-					changed_properties.erase(id);
-				}
-			}
-			if (!changed_properties.empty()) {
-				TransitionPropertyChanges(changed_properties, new_definition->prop);
-			}
-			definition_properties = new_definition;
-			DirtyProperties(changed_properties);
-		}
-		else if (definition_properties) {
-			PropertyIdSet changed_properties = PropertyDictionaryGetIds(definition_properties->prop);
-			definition_properties = new_definition;
-			DirtyProperties(changed_properties);
-		}
-		else if (new_definition) {
-			PropertyIdSet changed_properties = PropertyDictionaryGetIds(new_definition->prop);
-			definition_properties = new_definition;
-			DirtyProperties(changed_properties);
-		}
-		else {
-			PropertyIdSet changed_properties;
-			definition_properties = new_definition;
-			DirtyProperties(changed_properties);
+	auto map = GetStyleSheet().GetElementDefinition(this);
+	PropertyDictionary new_definition = ToDict(map);
+	Style::Instance().ReleaseMap(map);
+	
+	PropertyIdSet changed_properties = PropertyDictionaryDiff(definition_properties, new_definition);
+	for (PropertyId id : changed_properties) {
+		if (PropertyDictionaryGet(inline_properties, id)) {
+			changed_properties.erase(id);
 		}
 	}
+	if (!changed_properties.empty()) {
+		TransitionPropertyChanges(changed_properties, new_definition);
+	}
+	definition_properties = new_definition;
+
+	DirtyProperties(changed_properties);
 	for (auto& child : children) {
 		child->DirtyDefinition();
 	}
@@ -1714,11 +1702,9 @@ void Element::ForeachProperties(std::function<void(PropertyId id, const Property
 			f(id, property);
 		}
 	}
-	if (definition_properties) {
-		for (auto& [id, property] : definition_properties->prop) {
-			if (!mark.contains(id)) {
-				f(id, property);
-			}
+	for (auto& [id, property] : definition_properties) {
+		if (!mark.contains(id)) {
+			f(id, property);
 		}
 	}
 }

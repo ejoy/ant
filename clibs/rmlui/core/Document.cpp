@@ -58,8 +58,6 @@ void Document::Instance(const HtmlElement& html) {
 	auto const& headHtml = std::get<HtmlElement>(rootHtml.children[0]);
 	auto const& bodyHtml = std::get<HtmlElement>(rootHtml.children[1]);
 	
-	style_sheet.Reset();
-
 	for (auto const& node : headHtml.children) {
 		auto element = std::get_if<HtmlElement>(&node);
 		if (element) {
@@ -87,8 +85,6 @@ void Document::Instance(const HtmlElement& html) {
 			}
 		}
 	}
-	style_sheet.BuildNodeIndex();
-
 	body.InstanceOuter(bodyHtml);
 	body.DirtyDefinition();
 }

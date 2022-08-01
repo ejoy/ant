@@ -1,31 +1,3 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
 #include <core/StyleSheetParser.h>
 #include <core/StyleSheetFactory.h>
 #include <core/StyleSheetNode.h>
@@ -146,7 +118,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 	return true;
 }
 
-int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSheet& style_sheet, KeyframesMap& keyframes, int begin_line_number)
+int StyleSheetParser::Parse(Stream* _stream, StyleSheet& style_sheet, KeyframesMap& keyframes, int begin_line_number)
 {
 	int rule_count = 0;
 	line_number = begin_line_number;
@@ -180,7 +152,7 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 
 					// Add style nodes to the root of the tree
 					for (size_t i = 0; i < rule_name_list.size(); i++) {
-						ImportProperties(node, rule_name_list[i], properties, rule_count);
+						ImportProperties(style_sheet, rule_name_list[i], properties, rule_count);
 					}
 
 					rule_count++;
@@ -375,10 +347,9 @@ bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 	return true;
 }
 
-StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::string rule_name, const PropertyVector& properties, int rule_specificity)
+void StyleSheetParser::ImportProperties(StyleSheet& style_sheet, std::string rule_name, const PropertyVector& properties, int rule_specificity)
 {
-	StyleSheetNode* leaf_node = node;
-
+	StyleSheetNode node;
 	std::vector<std::string> nodes;
 
 	// Find child combinators, the RCSS '>' rule.
@@ -463,13 +434,12 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::st
 		requirements.pseudo_classes = set;
 
 		// Get the named child node.
-		leaf_node = leaf_node->GetOrCreateChildNode(std::move(requirements));
+		node.AddRequirements(std::move(requirements));
 	}
 
 	// Merge the new properties with those already on the leaf node.
-	leaf_node->ImportProperties(properties, rule_specificity);
-
-	return leaf_node;
+	node.SetProperties(properties, rule_specificity);
+	style_sheet.AddNode(std::move(node));
 }
 
 char StyleSheetParser::FindToken(std::string& buffer, const char* tokens, bool remove_token) {

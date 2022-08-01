@@ -2,6 +2,7 @@
 
 #include <core/PropertyIdSet.h>
 #include <core/PropertyDictionary.h>
+#include <optional>
 
 namespace Rml {
 

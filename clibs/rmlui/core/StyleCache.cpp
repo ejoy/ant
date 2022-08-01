@@ -41,11 +41,11 @@ namespace Rml::Style {
         return {s.idx};
     }
 
-    PropertyMap Cache::CreateMap(const std::span<PropertyKV>& slice) {
+    PropertyMap Cache::CreateMap(const PropertyVector& vec) {
         strbuilder<uint8_t> b;
-        std::vector<Attrib> attrib(slice.size());
+        std::vector<Attrib> attrib(vec.size());
         size_t i = 0;
-        for (auto const& [id, value] : slice) {
+        for (auto const& [id, value] : vec) {
             PropertyEncode(b, (PropertyVariant const&)value);
             auto s = b.string();
             attrib[i++] = {
@@ -67,8 +67,11 @@ namespace Rml::Style {
                 s.idx = v.idx;
             }
             else {
-                s = style_inherit(c, s, {s.idx}, 0);
+                s = style_inherit(c, s, {v.idx}, 0);
             }
+        }
+        if (is_null(s)) {
+            return CreateMap();
         }
         s = style_clone(c, s);
         assert(!is_null(s));
@@ -143,12 +146,22 @@ namespace Rml::Style {
         return PropertyDecode(tag_v<Property>, p);
     }
 
-    //AttribData Cache::Index(AttribHandle attrib, size_t index, AttribKey* id) {
-    //    return (AttribData)style_index(c, attrib, (int)index, (uint8_t*)id);
-    //}
+    std::optional<PropertyKV> Cache::Index(EvalHandle attrib, size_t index) {
+        PropertyId id;
+        void* data = style_index(c, attrib.handle, (int)index, (uint8_t*)&id);
+        if (!data) {
+            return std::nullopt;
+        }
+        strparser<uint8_t> p {(const uint8_t*)data};
+        return PropertyKV { id, PropertyDecode(tag_v<Property>, p)};
+    }
 
     void Cache::Flush() {
         style_flush(c);
+    }
+
+    void Cache::Dump() {
+        style_dump(c);
     }
 
     static Cache* cahce = nullptr;

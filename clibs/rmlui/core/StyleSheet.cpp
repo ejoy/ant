@@ -12,43 +12,34 @@
 
 namespace Rml {
 
-inline static bool StyleSheetNodeSort(const StyleSheetNode* lhs, const StyleSheetNode* rhs) {
-	return lhs->GetSpecificity() < rhs->GetSpecificity();
+inline static bool StyleSheetNodeSort(const StyleSheetNode& lhs, const StyleSheetNode& rhs) {
+	return lhs.GetSpecificity() > rhs.GetSpecificity();
 }
 
-StyleSheet::StyleSheet() {
-	root = std::make_unique<StyleSheetNode>();
-	specificity_offset = 0;
-}
+StyleSheet::StyleSheet()
+{}
 
 StyleSheet::~StyleSheet()
 {}
 
 bool StyleSheet::LoadStyleSheet(Stream* stream, int begin_line_number) {
 	StyleSheetParser parser;
-	specificity_offset = parser.Parse(root.get(), stream, *this, keyframes, begin_line_number);
-	bool ok = specificity_offset >= 0;
+	int n = parser.Parse(stream, *this, keyframes, begin_line_number);
+	bool ok = n >= 0;
 	if (!ok) {
 		Log::Message(Log::Level::Error, "Failed to load style sheet in %s.", stream->GetSourceURL().c_str());
 	}
+	std::sort(stylenode.begin(), stylenode.end(), StyleSheetNodeSort);
 	return ok;
 }
 
 void StyleSheet::CombineStyleSheet(const StyleSheet& other_sheet) {
-	root->MergeHierarchy(other_sheet.root.get(), specificity_offset);
-
+	stylenode.assign(other_sheet.stylenode.begin(), other_sheet.stylenode.end());
 	keyframes.reserve(keyframes.size() + other_sheet.keyframes.size());
-	for (auto& other_keyframes : other_sheet.keyframes)
-	{
+	for (auto& other_keyframes : other_sheet.keyframes) {
 		keyframes[other_keyframes.first] = other_keyframes.second;
 	}
-
-	specificity_offset += other_sheet.specificity_offset;
-}
-
-void StyleSheet::BuildNodeIndex() {
-	styled_node_index.clear();
-	root->BuildIndex(styled_node_index);
+	std::sort(stylenode.begin(), stylenode.end(), StyleSheetNodeSort);
 }
 
 const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const {
@@ -58,22 +49,18 @@ const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const {
 	return nullptr;
 }
 
-SharedPtr<StyleSheetPropertyDictionary> StyleSheet::GetElementDefinition(const Element* element) const {
-	static std::vector<const StyleSheetNode*> applicable_nodes;
-	applicable_nodes.clear();
-	for (StyleSheetNode* node : styled_node_index) {
-		if (node->IsApplicable(element)) {
-			applicable_nodes.push_back(node);
+Style::PropertyMap StyleSheet::GetElementDefinition(const Element* element) const {
+	std::vector<Style::PropertyMap> applicable;
+	for (auto& node : stylenode) {
+		if (node.IsApplicable(element)) {
+			applicable.push_back(node.GetProperties());
 		}
 	}
-	std::sort(applicable_nodes.begin(), applicable_nodes.end(), StyleSheetNodeSort);
-	if (applicable_nodes.empty())
-		return nullptr;
-	auto new_definition = MakeShared<StyleSheetPropertyDictionary>();
-	for (auto const& node : applicable_nodes) {
-		node->MergeProperties(*new_definition);
-	}
-	return new_definition;
+	return Style::Instance().CreateMap(applicable);
+}
+
+void StyleSheet::AddNode(StyleSheetNode&& node) {
+	stylenode.emplace_back(std::move(node));
 }
 
 }
