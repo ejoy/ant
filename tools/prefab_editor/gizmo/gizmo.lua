@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local ies = ecs.import.interface "ant.scene|ifilter_state"
 local math3d = require "math3d"
 local gizmo_const = require "gizmo.const"
@@ -27,17 +27,17 @@ local gizmo = {
 }
 
 local function highlight_axis(axis)
-	imaterial.set_property(world:entity(axis.eid[1]), "u_color", gizmo_const.COLOR.HIGHLIGHT)
-	imaterial.set_property(world:entity(axis.eid[2]), "u_color", gizmo_const.COLOR.HIGHLIGHT)
+	iqm.set_property(world:entity(axis.eid[1]), "u_color", gizmo_const.COLOR.HIGHLIGHT)
+	iqm.set_property(world:entity(axis.eid[2]), "u_color", gizmo_const.COLOR.HIGHLIGHT)
 end
 
 local function gray_axis(axis)
-	imaterial.set_property(world:entity(axis.eid[1]), "u_color", gizmo_const.COLOR.GRAY_ALPHA)
-	imaterial.set_property(world:entity(axis.eid[2]), "u_color", gizmo_const.COLOR.GRAY_ALPHA)
+	iqm.set_property(world:entity(axis.eid[1]), "u_color", gizmo_const.COLOR.GRAY_ALPHA)
+	iqm.set_property(world:entity(axis.eid[2]), "u_color", gizmo_const.COLOR.GRAY_ALPHA)
 end
 
 function gizmo:highlight_axis_plane(axis_plane)
-	imaterial.set_property(world:entity(axis_plane.eid[1]), "u_color", gizmo_const.COLOR.HIGHLIGHT_ALPHA)
+	iqm.set_property(world:entity(axis_plane.eid[1]), "u_color", gizmo_const.COLOR.HIGHLIGHT_ALPHA)
 	if axis_plane == self.tyz then
 		highlight_axis(self.ty)
 		highlight_axis(self.tz)
@@ -206,41 +206,41 @@ end
 function gizmo:reset_move_axis_color()
 	if self.mode ~= gizmo_const.MOVE then return end
 	local uname = "u_color"
-	imaterial.set_property(world:entity(self.tx.eid[1]), uname, self.tx.color)
-	imaterial.set_property(world:entity(self.tx.eid[2]), uname, self.tx.color)
-	imaterial.set_property(world:entity(self.ty.eid[1]), uname, self.ty.color)
-	imaterial.set_property(world:entity(self.ty.eid[2]), uname, self.ty.color)
-	imaterial.set_property(world:entity(self.tz.eid[1]), uname, self.tz.color)
-	imaterial.set_property(world:entity(self.tz.eid[2]), uname, self.tz.color)
+	iqm.set_property(world:entity(self.tx.eid[1]), uname, self.tx.color)
+	iqm.set_property(world:entity(self.tx.eid[2]), uname, self.tx.color)
+	iqm.set_property(world:entity(self.ty.eid[1]), uname, self.ty.color)
+	iqm.set_property(world:entity(self.ty.eid[2]), uname, self.ty.color)
+	iqm.set_property(world:entity(self.tz.eid[1]), uname, self.tz.color)
+	iqm.set_property(world:entity(self.tz.eid[2]), uname, self.tz.color)
 	--plane
 	set_visible(self.txy.eid[1], self.target_eid ~= nil)
 	set_visible(self.tyz.eid[1], self.target_eid ~= nil)
 	set_visible(self.tzx.eid[1], self.target_eid ~= nil)
-	imaterial.set_property(world:entity(self.txy.eid[1]), uname, self.txy.color)
-	imaterial.set_property(world:entity(self.tyz.eid[1]), uname, self.tyz.color)
-	imaterial.set_property(world:entity(self.tzx.eid[1]), uname, self.tzx.color)
+	iqm.set_property(world:entity(self.txy.eid[1]), uname, self.txy.color)
+	iqm.set_property(world:entity(self.tyz.eid[1]), uname, self.tyz.color)
+	iqm.set_property(world:entity(self.tzx.eid[1]), uname, self.tzx.color)
 end
 
 function gizmo:reset_rotate_axis_color()
 	local uname = "u_color"
-	imaterial.set_property(world:entity(self.rx.eid[1]), uname, self.rx.color)
-	imaterial.set_property(world:entity(self.rx.eid[2]), uname, self.rx.color)
-	imaterial.set_property(world:entity(self.ry.eid[1]), uname, self.ry.color)
-	imaterial.set_property(world:entity(self.ry.eid[2]), uname, self.ry.color)
-	imaterial.set_property(world:entity(self.rz.eid[1]), uname, self.rz.color)
-	imaterial.set_property(world:entity(self.rz.eid[2]), uname, self.rz.color)
-	imaterial.set_property(world:entity(self.rw.eid[1]), uname, self.rw.color)
+	iqm.set_property(world:entity(self.rx.eid[1]), uname, self.rx.color)
+	iqm.set_property(world:entity(self.rx.eid[2]), uname, self.rx.color)
+	iqm.set_property(world:entity(self.ry.eid[1]), uname, self.ry.color)
+	iqm.set_property(world:entity(self.ry.eid[2]), uname, self.ry.color)
+	iqm.set_property(world:entity(self.rz.eid[1]), uname, self.rz.color)
+	iqm.set_property(world:entity(self.rz.eid[2]), uname, self.rz.color)
+	iqm.set_property(world:entity(self.rw.eid[1]), uname, self.rw.color)
 end
 
 function gizmo:reset_scale_axis_color()
 	local uname = "u_color"
-	imaterial.set_property(world:entity(self.sx.eid[1]), uname, self.sx.color)
-	imaterial.set_property(world:entity(self.sx.eid[2]), uname, self.sx.color)
-	imaterial.set_property(world:entity(self.sy.eid[1]), uname, self.sy.color)
-	imaterial.set_property(world:entity(self.sy.eid[2]), uname, self.sy.color)
-	imaterial.set_property(world:entity(self.sz.eid[1]), uname, self.sz.color)
-	imaterial.set_property(world:entity(self.sz.eid[2]), uname, self.sz.color)
-	imaterial.set_property(world:entity(self.uniform_scale_eid), uname, math3d.vector(gizmo_const.COLOR.GRAY))
+	iqm.set_property(world:entity(self.sx.eid[1]), uname, self.sx.color)
+	iqm.set_property(world:entity(self.sx.eid[2]), uname, self.sx.color)
+	iqm.set_property(world:entity(self.sy.eid[1]), uname, self.sy.color)
+	iqm.set_property(world:entity(self.sy.eid[2]), uname, self.sy.color)
+	iqm.set_property(world:entity(self.sz.eid[1]), uname, self.sz.color)
+	iqm.set_property(world:entity(self.sz.eid[2]), uname, self.sz.color)
+	iqm.set_property(world:entity(self.uniform_scale_eid), uname, math3d.vector(gizmo_const.COLOR.GRAY))
 end
 
 return gizmo

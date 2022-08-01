@@ -19,6 +19,7 @@ local icamera   = ecs.import.interface "ant.camera|icamera"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local ientity   = ecs.import.interface "ant.render|ientity"
+local iqm       = ecs.import.interface "ant.render|iqueue_materials"
 local auto_hm_sys = ecs.system "auto_heightmap_system"
 local depthmaterial
 
@@ -94,7 +95,7 @@ function auto_hm_sys:init()
     renderinfo:init()
 
     local eid = ientity.create_quad_entity({x=0, y=0, w=2, h=2}, "/pkg/ant.resources/materials/texquad.material", "quadtest")
-    imaterial.set_property(eid, "s_tex", {stage=0, texture={handle=renderinfo:color_handle()}})
+    iqm.set_property(world:entity(eid), "s_tex", renderinfo:color_handle())
 end
 
 local function default_tex_info(w, h, fmt)

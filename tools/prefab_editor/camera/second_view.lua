@@ -15,10 +15,9 @@ local INV_Z<const> = true
 local math3d    = require "math3d"
 
 local irq       = ecs.import.interface "ant.render|irenderqueue"
-local ilight    = ecs.import.interface "ant.render|ilight"
 local icamera   = ecs.import.interface "ant.camera|icamera"
 local imesh     = ecs.import.interface "ant.asset|imesh"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 
 local second_camera_sys = ecs.system "second_view_camera_system"
 
@@ -199,7 +198,7 @@ local function create_frustum_entity(eid)
         w:sync("id:in", e)
         ecs.method.set_parent(e.id, frustum_root)
         w:sync("render_object:update", e)
-        imaterial.set_property(e, "u_color", mc.YELLOW_HALF)
+        iqm.set_property(e, "u_color", mc.YELLOW_HALF)
     end
 
     ecs.create_entity{

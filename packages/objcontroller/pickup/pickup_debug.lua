@@ -11,10 +11,7 @@ local mathpkg	= import_package "ant.math"
 local mu		= mathpkg.util
 
 local ientity   = ecs.import.interface "ant.render|ientity"
-local imesh     = ecs.import.interface "ant.asset|imesh"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
-
-
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 
 local frustum_entity
 local function create_frustum_entity()
@@ -43,7 +40,7 @@ local function create_view_buffer_entity()
 				local pq = w:singleton("pickup_queue", "render_target:in")
 				local rt = pq.render_target
 				w:sync("render_object:update", e)
-				imaterial.set_property(e, "s_tex", fbmgr.get_rb(rt.fb_idx, 1).handle)
+				iqm.set_property(e, "s_tex", fbmgr.get_rb(rt.fb_idx, 1).handle)
 			end,
 		}
 	}

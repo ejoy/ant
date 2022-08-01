@@ -5,8 +5,7 @@ local math3d = require "math3d"
 
 local ientity 	= ecs.import.interface "ant.render|ientity"
 local imesh		= ecs.import.interface "ant.asset|imesh"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
-local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 
 local st_sys	= ecs.system "shadow_test_system"
 function st_sys:init()
@@ -49,7 +48,7 @@ function st_sys:init()
             debug_mesh_bounding = true,
 			on_ready = function (e)
 				w:sync("render_object:update", e)
-				imaterial.set_property(e, "u_basecolor_factor", math3d.vector(0.8, 0.8, 0.8, 1))
+				iqm.set_property(e, "u_basecolor_factor", math3d.vector(0.8, 0.8, 0.8, 1))
 			end,
 		}
     }

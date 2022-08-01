@@ -10,11 +10,8 @@ require "bake_mathadapter"
 local bgfx      = require "bgfx"
 local bake      = require "bake"
 local ltask     = require "ltask"
-local crypt     = require "crypt"
 
-local assetmgr  = import_package "ant.asset"
-
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm		= ecs.import.interface "ant.render|iqueue_materials"
 local ibaker    = ecs.import.interface "ant.bake|ibaker"
 
 local bake_lm_sys = ecs.system "bake_lightmap_system"
@@ -113,7 +110,8 @@ function bake_lm_sys:end_filter()
         local ro = e.render_object
         if has_filter_stage(le.primitive_filter, ro.setting.surfacetype) then
             local m = load_bake_material(ro)
-            ro.materials:set("bake_lightmap_queue", m.material)
+            local qm = iqm.get_materials(ro)
+            qm:set("bake_lightmap_queue", m.material)
         end
     end
 end

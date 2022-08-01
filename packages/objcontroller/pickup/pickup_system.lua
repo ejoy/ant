@@ -13,6 +13,7 @@ local sampler= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
 local irender   = ecs.import.interface "ant.render|irender"
+local iqm		= ecs.import.interface "ant.render|iqueue_materials"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local INV_Z<const> = true
@@ -358,7 +359,7 @@ function pickup_sys:end_filter()
 		local st = ro.fx.setting.surfacetype
 		local qe = w:singleton("pickup_queue", "primitive_filter:in")
 
-		local src_mi = ro.materials:get()
+		local src_mi = iqm.get_materials(ro)
 		if has_filter_stage(qe.primitive_filter, st) then
 			local mat = which_material(st, e.skinning)
 			local dst_mi = mat.material
@@ -367,7 +368,7 @@ function pickup_sys:end_filter()
 			local new_mi = new_matobj:instance()
 			new_mi.u_id = math3d.vector(packeid_as_rgba(e.id))
 
-			ro.materials:set("pickup_queue", new_mi)
+			src_mi:set("pickup_queue", new_mi)
 			ro.prog = mat.fx.prog
 		end
 	end

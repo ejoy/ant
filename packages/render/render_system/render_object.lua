@@ -4,19 +4,21 @@ local serialize = import_package "ant.serialize"
 local rendercore = ecs.clibs "render.core"
 local math3d = require "math3d"
 
-local iro = ecs.interface "irender_object"
-function iro.mesh(p)
-end
+local queuematerials = {}
 
 local ro = ecs.component "render_object"
 local function init_ro()
+    local qm = rendercore.queue_materials()
+    local h = qm:ptr()
+    assert(queuematerials[h] == nil)
+    queuematerials[h] = qm
     return {
         worldmat = math3d.NULL,
         prog        = 0xffffffff,
         mesh        = 0,
         depth       = 0,
         discardflags= 0xff,
-        materials   = rendercore.queue_materials(),
+        materials   = h,
     }
 end
 
@@ -26,7 +28,8 @@ function ro.init(r)
 end
 
 function ro.remove(r)
-    r.materials = nil
+    assert(queuematerials[r.materials])
+    queuematerials[r.materials] = nil
 end
 
 local ra = ecs.component "render_args2"
@@ -36,3 +39,20 @@ function ra.init(v)
     v.viewid = 0
     v.material_idx = 0
 end
+
+
+local iqm = ecs.interface "iqueue_materials"
+
+local function get_qm(ro)
+    local h = ro.materials
+    return queuematerials[h]
+end
+
+function iqm.set_property(e, who, what, qn)
+    qn = qn or "main_queue"
+    local qm = get_qm(e.render_object)
+    local m = qm[qn]
+    m[who] = what
+end
+
+iqm.get_materials = get_qm

@@ -11,7 +11,7 @@ local ifs 		= ecs.import.interface "ant.scene|ifilter_state"
 local ientity 	= ecs.import.interface "ant.render|ientity"
 local ilight 	= ecs.import.interface "ant.render|ilight"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local imodifier = ecs.import.interface "ant.modifier|imodifier"
 local igui		= ecs.import.interface "tools.prefab_editor|igui"
 
@@ -183,7 +183,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			on_ready = function (e)
 				w:sync("render_object:update", e)
 				ifs.set_state(e, "main_view", false)
-				imaterial.set_property(e, "u_color", math3d.vector(color))
+				iqm.set_property(e, "u_color", math3d.vector(color))
 				w:sync("render_object_update:out", e)
 			end
 		}
@@ -202,7 +202,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			on_ready = function (e)
 				w:sync("render_object:update", e)
 				ifs.set_state(e, "main_view", false)
-				imaterial.set_property(e, "u_color", math3d.vector(color))
+				iqm.set_property(e, "u_color", math3d.vector(color))
 				w:sync("render_object_update:out", e)
 			end
 		}
@@ -357,7 +357,7 @@ function gizmo_sys:post_init()
 					w:sync("render_object:update", e)
 					ifs.set_state(e, "main_view", false)
 					ifs.set_state(e, "selectable", false)
-					imaterial.set_property(e, "u_color", math3d.vector(color))
+					iqm.set_property(e, "u_color", math3d.vector(color))
 					w:sync("render_object_update:out", e)
 				end
 			}
@@ -530,13 +530,13 @@ local function select_axis(x, y)
 		if radius < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
 			uniform_scale = true
 			local hlcolor = gizmo_const.COLOR.HIGHLIGHT
-			imaterial.set_property(world:entity(gizmo.uniform_scale_eid), "u_color", hlcolor)
-			imaterial.set_property(world:entity(gizmo.sx.eid[1]), "u_color", hlcolor)
-			imaterial.set_property(world:entity(gizmo.sx.eid[2]), "u_color", hlcolor)
-			imaterial.set_property(world:entity(gizmo.sy.eid[1]), "u_color", hlcolor)
-			imaterial.set_property(world:entity(gizmo.sy.eid[2]), "u_color", hlcolor)
-			imaterial.set_property(world:entity(gizmo.sz.eid[1]), "u_color", hlcolor)
-			imaterial.set_property(world:entity(gizmo.sz.eid[2]), "u_color", hlcolor)
+			iqm.set_property(world:entity(gizmo.uniform_scale_eid), "u_color", hlcolor)
+			iqm.set_property(world:entity(gizmo.sx.eid[1]), "u_color", hlcolor)
+			iqm.set_property(world:entity(gizmo.sx.eid[2]), "u_color", hlcolor)
+			iqm.set_property(world:entity(gizmo.sy.eid[1]), "u_color", hlcolor)
+			iqm.set_property(world:entity(gizmo.sy.eid[2]), "u_color", hlcolor)
+			iqm.set_property(world:entity(gizmo.sz.eid[1]), "u_color", hlcolor)
+			iqm.set_property(world:entity(gizmo.sz.eid[2]), "u_color", hlcolor)
 			return
 		end
 	end
@@ -584,13 +584,13 @@ local function select_rotate_axis(x, y)
 		local adjust_axis_len = (axis == gizmo.rw) and gizmo_const.UNIFORM_ROT_AXIS_LEN or gizmo_const.AXIS_LEN
 		if math.abs(dist - gizmo_scale * adjust_axis_len) < gizmo_const.ROTATE_HIT_RADIUS * gizmo_scale then
 			local hlcolor = gizmo_const.COLOR.HIGHLIGHT
-			imaterial.set_property(world:entity(axis.eid[1]), "u_color", hlcolor)
-			imaterial.set_property(world:entity(axis.eid[2]), "u_color", hlcolor)
+			iqm.set_property(world:entity(axis.eid[1]), "u_color", hlcolor)
+			iqm.set_property(world:entity(axis.eid[2]), "u_color", hlcolor)
 			return hitPosVec
 		else
 			local cc = math3d.vector(axis.color)
-			imaterial.set_property(world:entity(axis.eid[1]), "u_color", cc)
-			imaterial.set_property(world:entity(axis.eid[2]), "u_color", cc)
+			iqm.set_property(world:entity(axis.eid[1]), "u_color", cc)
+			iqm.set_property(world:entity(axis.eid[2]), "u_color", cc)
 			return nil
 		end
 	end

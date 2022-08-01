@@ -13,7 +13,7 @@ local mathpkg   = import_package "ant.math"
 local mc		= mathpkg.constant
 
 local ifs		= ecs.import.interface "ant.scene|ifilter_state"
-local imaterial	= ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local irender	= ecs.import.interface "ant.render|irender"
 local imesh 	= ecs.import.interface "ant.asset|imesh"
 local bgfx 		= require "bgfx"
@@ -79,7 +79,7 @@ local function simple_render_entity_data(name, material, mesh, srt, color, hide)
 			name		= name or gen_test_name(),
 			on_ready 	= function(e)
 				w:sync("render_object:update", e)
-				imaterial.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
+				iqm.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
 			end
 		}
 	}
@@ -257,7 +257,7 @@ function ientity.create_prim_plane_entity(srt, materialpath, color, name, hide)
 			on_ready = function (e)
 				w:sync("render_object:update", e)
 				ifs.set_state(e, "main_view", not hide)
-				imaterial.set_property(e, "u_color", math3d.vector(color))
+				iqm.set_property(e, "u_color", math3d.vector(color))
 				w:sync("render_object_update:out", e)
 			end
 		},
@@ -689,7 +689,7 @@ function ientity.create_arrow_entity(srt, headratio, color, material)
 			name = "arrow",
 			on_ready = function (e)
 				w:sync("render_object:update", e)
-				imaterial.set_property(e, "u_color", math3d.vector(color))
+				iqm.set_property(e, "u_color", math3d.vector(color))
 			end
 		}
 	}

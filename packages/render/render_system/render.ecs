@@ -64,6 +64,11 @@ component "render_object"
 component "render_object_update"
 component "visible"
 
+interface "iqueue_materials"
+    .implement "render_system/render_object.lua"
+    .method "set_property"
+    .method "get_materials"
+
 policy "render"
     .require_policy "ant.render|render_object"
     .require_policy "ant.scene|scene_object"

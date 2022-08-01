@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 ecs.require "widget.base_view"
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
-local imaterial     = ecs.import.interface "ant.asset|imaterial"
+local iqm 		    = ecs.import.interface "ant.render|iqueue_materials"
 local prefab_mgr    = ecs.require "prefab_manager"
 local anim_view     = ecs.require "widget.animation_view"
 local imgui     = require "imgui"
@@ -68,7 +68,7 @@ function ColliderView:has_scale()
 end
 
 function ColliderView:on_set_color(...)
-    imaterial.set_property(world:entity(self.eid), "u_color", ...)
+    iqm.set_property(world:entity(self.eid), "u_color", ...)
 end
 
 function ColliderView:on_get_color()

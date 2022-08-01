@@ -9,6 +9,7 @@ local texmapper	= import_package "ant.asset".textures
 local irender	= ecs.import.interface "ant.render|irender"
 local ies		= ecs.import.interface "ant.scene|ifilter_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm		= ecs.import.interface "ant.render|iqueue_materials"
 local itimer	= ecs.import.interface "ant.timer|itimer"
 local render_sys = ecs.system "render_system"
 
@@ -55,10 +56,11 @@ function render_sys:entity_init()
 		pf.exclude_type = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
 	end
 
+	
 	for e in w:select "INIT material_result:in render_object:update" do
-		local ro = e.render_object
 		local mr = e.material_result
-		ro.materials:set("main_queue", mr.object:instance())
+		local qm = iqm.get_materials(e.render_object)
+		qm:set("main_queue", mr.object:instance())
 	end
 
 	for e in w:select "INIT mesh:in render_object:update" do
@@ -154,7 +156,7 @@ local function submit_hitch_filter(viewid, selkey, qn, groups, transforms)
 		for e in w:select(selkey) do
 			local ro = e.render_object
 			local tid, num, stride = table.unpack(transforms:find(e.id, ro, mats))
-			local qm = ro.materials
+			local qm = iqm.get_materials(ro)
 			irender.multi_draw(viewid, ro, qm:get(qn), tid, num, stride)
 		end
 	end
@@ -236,7 +238,7 @@ end
 
 function render_sys:entity_remove()
 	for e in w:select "REMOVED render_object:update" do
-		local qm = e.render_object.materials
+		local qm = iqm.get_materials(e.render_object)
 		for i=1, qm:num() do
 			local m = qm:get(i)
 			if m then
@@ -261,7 +263,7 @@ function s:end_filter()
 	if irender.use_pre_depth() then
 		for e in w:select "filter_result main_queue_visible opacity render_object:update" do
 			local ro = e.render_object
-			local qm = ro.materials
+			local qm = iqm.get_materials(ro)
 			local m = qm:get(1)
 			m:set_state(check_set_depth_state_as_equal(m:get_state()))
 		end

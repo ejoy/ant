@@ -4,8 +4,7 @@ local w = world.w
 
 local math3d = require "math3d"
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
-local bgfx = require "bgfx"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 
 local function update_decal(decal)
     local hw, hh = decal.w * 0.5, decal.h * 0.5
@@ -65,6 +64,6 @@ function ds:follow_transform_updated()
         local viewmat = math3d.inverse(mm)
         local projmat = math3d.projmat(d.frustum)
         local viewprojmat = math3d.mul(projmat, viewmat)
-        imaterial.set_property(e, "u_decal_mat", math3d.mul(viewprojmat, ro.worldmat))
+        iqm.set_property(e, "u_decal_mat", math3d.mul(viewprojmat, ro.worldmat))
     end
 end

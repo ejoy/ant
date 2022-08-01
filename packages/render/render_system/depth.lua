@@ -116,7 +116,7 @@ function s:end_filter()
         for e in w:select "filter_result pre_depth_queue_visible opacity render_object:update skinning?in" do
             local mo = assert(which_material(e.skinning))
             local ro = e.render_object
-            local qm = ro.materials
+            local qm = iqm.get_materials(ro)
             local newstate = irender.check_set_state(mo, qm:get(1))
             local new_mo = irender.create_material_from_template(mo, newstate, material_cache)
 

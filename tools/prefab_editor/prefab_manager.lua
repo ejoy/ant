@@ -8,7 +8,6 @@ local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local ilight        = ecs.import.interface "ant.render|ilight"
-local imaterial     = ecs.import.interface "ant.asset|imaterial"
 local iefk          = ecs.import.interface "ant.efk|iefk"
 local imodifier     = ecs.import.interface "ant.modifier|imodifier"
 local camera_mgr    = ecs.require "camera.camera_manager"
@@ -61,7 +60,7 @@ local function create_light_billboard(light_eid)
     --     directional = "ICON_DIRECTIONALLIGHT",
     -- }
     -- local tex = icons[light_icons[type]].handle
-    -- imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
+    -- iqm.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
     -- iom.set_scale(bb_eid, 0.2)
     -- ies.set_state(bb_eid, "auxgeom", true)
     -- iom.set_position(bb_eid, iom.get_position(light_eid))

@@ -4,7 +4,7 @@ local w = world.w
 
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local irender   = ecs.import.interface "ant.render|irender"
 local declmgr   = require "vertexdecl_mgr"
 
@@ -169,8 +169,8 @@ local function add_polylines(polymesh, line_width, color, material)
             on_ready = function (e)
                 w:sync("polyline:in render_object:update", e)
                 local pl = e.polyline
-                imaterial.set_property(e, "u_line_info", math3d.vector(pl.width, 0.0, 0.0, 0.0))
-                imaterial.set_property(e, "u_color", pl.color)
+                iqm.set_property(e, "u_line_info", math3d.vector(pl.width, 0.0, 0.0, 0.0))
+                iqm.set_property(e, "u_color", pl.color)
             end
         },
     }

@@ -6,8 +6,8 @@ local fs = require "filesystem"
 local pbr_test_sys = ecs.system "pbr_test_system"
 
 local feature_path = fs.path "/pkg/ant.test.features"
-local ies = ecs.import.interface "ant.scene|ifilter_state"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
+local math3d    = require "math3d"
 
 local function create_pbr_entity(name, srt, material,
     color, metallic, roughness)
@@ -27,8 +27,8 @@ local function create_pbr_entity(name, srt, material,
         },
     }
 
-    imaterial.set_property(eid, "u_basecolor_factor",           color)
-    imaterial.set_property(eid, "u_metallic_roughness_factor",  {metallic, roughness, 0.0, 0.0})
+    iqm.set_property(eid, "u_basecolor_factor",           color)
+    iqm.set_property(eid, "u_metallic_roughness_factor",  math3d.vector(metallic, roughness, 0.0, 0.0))
     return eid
 end
 

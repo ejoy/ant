@@ -6,7 +6,7 @@ local m = ecs.system 'init_system'
 local irq = ecs.import.interface "ant.render|irenderqueue"
 local ientity = ecs.import.interface "ant.render|ientity"
 local imesh = ecs.import.interface "ant.asset|imesh"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local math3d = require "math3d"
 local function create_plane()
     ecs.create_entity{
@@ -25,7 +25,7 @@ local function create_plane()
             debug_mesh_bounding = true,
 			on_ready = function (e)
 				w:sync("render_object:update", e)
-				imaterial.set_property(e, "u_basecolor_factor", math3d.vector(0.8, 0.8, 0.8, 1))
+				iqm.set_property(e, "u_basecolor_factor", math3d.vector(0.8, 0.8, 0.8, 1))
 			end,
 		}
     }

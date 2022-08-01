@@ -12,6 +12,8 @@ local bgfx		= require "bgfx"
 local icamera	= ecs.import.interface "ant.camera|icamera"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
 local irender	= ecs.import.interface "ant.render|irender"
+local iqm		= ecs.import.interface "ant.render|iqueue_materials"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local fbmgr		= require "framebuffer_mgr"
 
@@ -252,7 +254,6 @@ end
 
 local shadow_material
 local gpu_skinning_material
-local imaterial = ecs.import.interface "ant.asset|imaterial"
 function sm:init()
 	local fbidx = ishadow.fb_index()
 	local s = ishadow.shadowmap_size()
@@ -452,7 +453,7 @@ function s:end_filter()
         local ro = e.render_object
 		local m = which_material(e.skinning)
 		local mo = m.object
-		local qm = ro.materials
+		local qm = iqm.get_materials(ro)
 
 		local newstate = irender.check_set_state(mo, qm:get(1))
 		local new_matobj = irender.create_material_from_template(mo, newstate, material_cache)

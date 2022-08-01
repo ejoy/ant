@@ -6,7 +6,7 @@ local math3d = require "math3d"
 local ientity = ecs.import.interface "ant.render|ientity"
 local ies = ecs.import.interface "ant.scene|ifilter_state"
 local init_loader_sys = ecs.system 'init_loader_system'
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local imesh = ecs.import.interface "ant.asset|imesh"
 local assetmgr = import_package "ant.asset"
 
@@ -78,9 +78,9 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
             scene   = { srt = {t={0, 5, 5}}},
             on_ready = function (e)
                 w:sync("render_object:update", e)
-                imaterial.set_property(e, "u_basecolor_factor", math3d.vector(color))
+                iqm.set_property(e, "u_basecolor_factor", math3d.vector(color))
                 local texobj = assetmgr.resource(tex)
-                imaterial.set_property(e, "s_basecolor", texobj.handle)
+                iqm.set_property(e, "s_basecolor", texobj.handle)
             end
         }
     }
@@ -204,7 +204,7 @@ function init_loader_sys:init()
 	-- 		name 		= "test_shadow_plane",
 	-- 		simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
 	-- 		on_ready = function (e)
-	-- 			imaterial.set_property(e, "u_basecolor_factor", {0.5, 0.5, 0.5, 1})
+	-- 			iqm.set_property(e, "u_basecolor_factor", {0.5, 0.5, 0.5, 1})
 	-- 		end,
 	-- 	}
     -- }
@@ -365,7 +365,7 @@ function init_loader_sys:entity_init()
             -- local icw = ecs.import.interface "ant.render|icurve_world"
             -- icw.enable(not icw.param().enable)
 
-            --imaterial.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
+            --iqm.set_color_palette("default", 0, math3d.vector(1.0, 0.0, 1.0, 0.0))
             
             if enable == 1 then
                 ecs.group(1):enable "view_visible"

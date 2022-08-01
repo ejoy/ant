@@ -12,11 +12,11 @@ local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 local math3d    = require "math3d"
 
-local ientity   = ecs.import.interface "ant.render|ientity"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local irender   = ecs.import.interface "ant.render|irender"
 local iibl      = ecs.import.interface "ant.render|iibl"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local icamera   = ecs.import.interface "ant.camera|icamera"
 
 local panorama_util=require "panorama.util"
@@ -118,8 +118,7 @@ function render2cm_sys:entity_ready()
 
             local drawer = w:singleton("cvt_p2cm_drawer", "render_object:update")
             local ro = drawer.render_object
-            ro.worldmat = mc.IDENTITY_MAT
-            local qm = ro.materials
+            local qm = iqm.get_materials(ro)
             local m = qm:get(1)
             m.s_tex = tex.handle
 
@@ -140,14 +139,14 @@ function render2cm_sys:entity_ready()
                 rt.fb_idx = fbidx
                 irq.update_rendertarget(fn, rt)
 
-                ro.material.u_param = math3d.vector(faceidx, 0.0, 0.0, 0.0)
+                m.u_param = math3d.vector(faceidx, 0.0, 0.0, 0.0)
 
                 irender.draw(rt.viewid, ro)
 
                 local keep_rbs<const> = true
                 fbmgr.destroy(fbidx, keep_rbs)
             end
-            imaterial.set_property(e, "s_skybox", fbmgr.get_rb(cm_rbidx).handle)
+            iqm.set_property(e, "s_skybox", fbmgr.get_rb(cm_rbidx).handle)
             e.filter_ibl = true
         end
     end
@@ -196,7 +195,7 @@ local function build_irradiance_map(source_tex, irradiance, facesize)
     -- do for irradiance
     local irradiance_properties = ibl_properties.irradiance
 
-    imaterial.set_property(drawer, "s_source", source_tex)
+    iqm.set_property(drawer, "s_source", source_tex)
 
     for idx, fn in ipairs(face_queues) do
         local faceidx = idx-1
@@ -216,8 +215,8 @@ local function build_irradiance_map(source_tex, irradiance, facesize)
         irq.update_rendertarget(fn, rt)
         local p, p1 = irradiance_properties.u_ibl_params, irradiance_properties.u_ibl_params1
         p1[2] = faceidx
-        imaterial.set_property(drawer, "u_ibl_params", p)
-        imaterial.set_property(drawer, "u_ibl_params1", p1)
+        iqm.set_property(drawer, "u_ibl_params", p)
+        iqm.set_property(drawer, "u_ibl_params1", p1)
         irender.draw(rt.viewid, ro)
 
         fbmgr.destroy(fbidx, true)

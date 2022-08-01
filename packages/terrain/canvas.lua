@@ -8,7 +8,7 @@ local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
 local assetmgr  = import_package "ant.asset"
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local irender   = ecs.import.interface "ant.render|irender"
 local ifs       = ecs.import.interface "ant.scene|ifilter_state"
 
@@ -221,7 +221,7 @@ local function create_texture_item_entity(texpath, canvasentity)
             on_ready = function (e)
                 local texobj = assetmgr.resource(texpath)
                 w:sync("render_object:update", e)
-                imaterial.set_property(e, "s_basecolor", texobj.id)
+                iqm.set_property(e, "s_basecolor", texobj.id)
 
                 --update parent
                 w:sync("id:in", e)

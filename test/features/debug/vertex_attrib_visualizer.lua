@@ -7,7 +7,7 @@ local math3d = require "math3d"
 local declmgr = import_package "ant.render".declmgr
 
 local ivav = ecs.interface "ivertex_attrib_visualizer"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 
 local function find_stream(vb, what)
     for i=1, #vb do
@@ -69,7 +69,7 @@ local function create_line_arrow_entity(parent, srt, color)
             name = "line_arrow",
             on_ready = function (e)
                 w:sync("render_object:update id:in", e)
-                imaterial.set_property(e, "u_color", color)
+                iqm.set_property(e, "u_color", color)
                 ecs.method.set_parent(e.id, parent)
             end
         }

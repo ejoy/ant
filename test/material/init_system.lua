@@ -3,8 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local imesh     = ecs.import.interface "ant.asset|imesh"
-local imateral  = ecs.import.interface "ant.asset|imaterial"
-
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local is = ecs.system "init_system"
 
 function is:init()
@@ -36,7 +35,7 @@ function is:init()
                 w:sync("render_object:update", e)
                 local math3d = require "math3d"
                 --local aa = e.render_object.material.material:attribs()
-                imateral.set_property(e, "u_color", math3d.vector(1, 0, 0, 1))
+                iqm.set_property(e, "u_color", math3d.vector(1, 0, 0, 1))
             end
         }
     }

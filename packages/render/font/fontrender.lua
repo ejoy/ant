@@ -8,8 +8,6 @@ local declmgr   = require "vertexdecl_mgr"
 local font      = import_package "ant.font"
 local lfont     = require "font"
 
-local imesh     = ecs.import.interface "ant.asset|imesh"
-
 font.init()
 
 local fonttex_handle    = font.texture()
@@ -18,9 +16,8 @@ local layout_desc       = declmgr.correct_layout "p20nii|t20nii|c40niu"
 local fontquad_layout   = declmgr.get(layout_desc)
 local declformat        = declmgr.vertex_desc_str(layout_desc)
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local irender = ecs.import.interface "ant.render|irender"
-local icamera	= ecs.import.interface "ant.camera|icamera"
 
 local irq = ecs.import.interface "ant.render|irenderqueue"
 local mask<const>, offset<const> = math3d.ref(math3d.vector(0.5, 0.5, 1, 1)), math3d.ref(math3d.vector(0.5, 0.5, 0, 0))
@@ -142,7 +139,7 @@ function fontsys:camera_usage()
         local e = world:entity(eid)
         local ro = e.render_object
         ro.attach_eid = attach
-        imaterial.set_property(e, "s_tex", fonttex)
+        iqm.set_property(e, "s_tex", fonttex)
     end
     for e in w:select "font:in show_config:in render_object:update" do
         load_text(e)

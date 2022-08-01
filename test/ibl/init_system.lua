@@ -17,7 +17,7 @@ local icamera   = ecs.import.interface "ant.camera|icamera"
 local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 
 local is = ecs.system "init_system"
 
@@ -38,7 +38,7 @@ end
 function is:data_changed()
     -- for _, eid in iblmb:unpack() do
     --     local ibl = world[eid]._ibl
-    --     imaterial.set_property(eid, "s_skybox", {stage=0, texture={handle=ibl.irradiance.handle}})
+    --     iqm.set_property(eid, "s_skybox", {stage=0, texture={handle=ibl.irradiance.handle}})
     -- end
 end
 

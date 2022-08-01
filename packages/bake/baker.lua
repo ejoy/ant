@@ -19,7 +19,7 @@ local mu, mc    = mathpkg.uitl, mathpkg.constant
 
 local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
+local iqm 		= ecs.import.interface "ant.render|iqueue_materials"
 local icamera   = ecs.import.interface "ant.camera|icamera"
 local ics       = ecs.import.interface "ant.render|icluster_render"
 
@@ -251,7 +251,7 @@ function downsampler:downsample(hemisize)
     local we_obj, se_obj = we.render_object, se.render_object
 
     local read, write = 1, 2
-    local we_m, se_m = we_obj.materials:get(1), se_obj.materials:get(1)
+    local we_m, se_m = iqm.get(we_obj, 1), iqm.get(se_obj, 1)
     we_m.hemispheres    = self.render_textures[read]
     we_m.weights        = self.weight_tex
     irender.draw(viewid, we_obj)
