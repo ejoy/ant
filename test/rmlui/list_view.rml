@@ -5,7 +5,7 @@
                 background-color: rgba(120, 120, 120, 255);
                 width: 100%;
                 height: 100%;
-                flex-direction: row;
+                flex-direction: col;
             }
             .item-container {
                 border: 2px green;
@@ -288,8 +288,8 @@
     </head>
     <body>
         <div class="panel" data-model="start">
-            <page width='85.33vmin' height='66.00vmin' footerheight='4.00vmin' row='3' col='3'/>
-            <list direction='1' width='667px' height='720px'/>
+            <div style="height:360px;">empty</div>
+            <list direction='1' width='667px' height='360px'/>
         </div>
     </body>
 </rml>
