@@ -13,6 +13,7 @@ extern "C"{
 #include <bgfx/c99/bgfx.h>
 #include <cstdint>
 #include <cassert>
+#include <vector>
 
 enum queue_index_type : uint8_t{
 	QIT_mainqueue = 0,
@@ -37,15 +38,6 @@ update_transform(struct ecs_world* w, math_t wm){
 	const int num = math_size(w->math3d->M, wm);
 	w->bgfx->encoder_set_transform(w->holder->encoder, v, num);
 }
-
-static const cid_t surface_stages[] = {
-	(cid_t)ecs_api::component<ecs::foreground>::id,
-	(cid_t)ecs_api::component<ecs::opacity>::id,
-	(cid_t)ecs_api::component<ecs::background>::id,
-	(cid_t)ecs_api::component<ecs::translucent>::id,
-	(cid_t)ecs_api::component<ecs::decal_stage>::id,
-	(cid_t)ecs_api::component<ecs::ui_stage>::id,
-};
 
 #define INVALID_BUFFER_TYPE UINT16_MAX
 #define BUFFER_TYPE(_HANDLE)	(_HANDLE >> 16) & 0xffff
@@ -97,6 +89,30 @@ draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_
 	}
 }
 
+using render_obj_array = std::vector<const ecs::render_object*>;
+struct queue_stages {
+	struct stage {
+		cid_t id;
+		render_obj_array objs;
+	};
+	stage	stages[6] = {
+		{(cid_t)ecs_api::component<ecs::foreground>::id},
+		{(cid_t)ecs_api::component<ecs::opacity>::id},
+		{(cid_t)ecs_api::component<ecs::background>::id},
+		{(cid_t)ecs_api::component<ecs::translucent>::id},
+		{(cid_t)ecs_api::component<ecs::decal_stage>::id},
+		{(cid_t)ecs_api::component<ecs::ui_stage>::id},
+	};
+
+	void clear(){
+		for (auto &s : stages){
+			s.objs.clear();
+		}
+	}
+};
+
+static queue_stages s_queue_stages;
+
 static int
 lsubmit(lua_State *L){
 	auto w = getworld(L);
@@ -104,7 +120,6 @@ lsubmit(lua_State *L){
 
 	const int texture_index = 1;
 	luaL_checktype(L, texture_index, LUA_TTABLE);
-
 	for (auto a : ecs.select<ecs::render_args2>()){
 		const auto& ra = a.get<ecs::render_args2>();
 		const bgfx_view_id_t viewid = ra.viewid;
@@ -112,20 +127,25 @@ lsubmit(lua_State *L){
 		if (qidx >= MAX_MATERIAL_INSTANCE_SIZE){
 			luaL_error(L, "Invalid queue_index in render_args2:%d", qidx);
 		}
+		s_queue_stages.clear();
 		const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
 		for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
 			const bool visible = entity_sibling(w->ecs, vs_id, i, ra.visible_id) &&
 				!entity_sibling(w->ecs, vs_id, i, ra.cull_id);
 			if (visible){
-				for (auto ss : surface_stages){
-					if (entity_sibling(w->ecs, vs_id, i, ss)){
+				for (auto &s : s_queue_stages.stages){
+					if (entity_sibling(w->ecs, vs_id, i, s.id)){
 						const ecs::render_object* ro = (ecs::render_object*)entity_sibling(w->ecs, vs_id, i, ecs_api::component<ecs::render_object>::id);
-						if (ro == nullptr)
-							continue;
-
-						draw(L, w, ro, viewid, qidx, texture_index);
+						if (ro){
+							s.objs.push_back(ro);
+						}
 					}
 				}
+			}
+		}
+		for (auto &qs : s_queue_stages.stages){
+			for (auto &ro: qs.objs){
+				draw(L, w, ro, viewid, qidx, texture_index);
 			}
 		}
 	}

@@ -122,12 +122,12 @@ function s:end_filter()
             local new_mo = irender.create_material_from_template(mo, newstate, material_cache)
 
             local mi = new_mo:instance()
-            
-            fm["pre_depth_queue"] = mi
-            fm["scene_depth_queue"] = mi
 
             local h = mi:ptr()
+            fm["pre_depth_queue"] = mi
             ro.mat_predepth = h
+
+            fm["scene_depth_queue"] = mi
             ro.mat_scenedepth = h
 
             e["scene_depth_queue_visible"] = true
