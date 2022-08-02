@@ -5,7 +5,6 @@
 #include <core/Stream.h>
 #include <core/StyleSheet.h>
 #include <core/Text.h>
-#include <core/StringUtilities.h>
 #include <core/StyleSheetFactory.h>
 #include <databinding/DataModel.h>
 #include <databinding/DataModelHandle.h>
@@ -85,6 +84,7 @@ void Document::Instance(const HtmlElement& html) {
 			}
 		}
 	}
+	style_sheet.Sort();
 	body.InstanceOuter(bodyHtml);
 	body.DirtyDefinition();
 }

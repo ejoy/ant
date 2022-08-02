@@ -5,21 +5,15 @@
 #include <core/Log.h>
 #include <core/StyleSheetNode.h>
 #include <core/StyleSheetNodeSelector.h>
+#include <core/StyleSheetParser.h>
 
 namespace Rml {
-
-template <typename T>
-static void Combine(StyleSheet& sheet, const T& subsheet) {
-	if (subsheet) {
-		sheet.CombineStyleSheet(*subsheet);
-	}
-}
 
 class StyleSheetFactoryInstance {
 public:
 	~StyleSheetFactoryInstance();
-	StyleSheet* LoadStyleSheet(const std::string& source_path);
-	std::unique_ptr<StyleSheet> LoadStyleSheet(const std::string& content, const std::string& source_path, int line);
+	void LoadStyleSheet(StyleSheet& sheet, const std::string& source_path);
+	void LoadStyleSheet(StyleSheet& sheet, const std::string& content, const std::string& source_path, int line);
 	StructuralSelector GetSelector(const std::string& name);
 
 	std::unordered_map<std::string, StyleSheetNodeSelector*> selectors = {
@@ -35,7 +29,7 @@ public:
 		{ "only-of-type", new StyleSheetNodeSelectorOnlyOfType() },
 		{ "empty", new StyleSheetNodeSelectorEmpty() },
 	};
-	std::unordered_map<std::string, std::unique_ptr<StyleSheet>> stylesheets;
+	std::unordered_map<std::string, StyleSheet> stylesheets;
 };
 
 StyleSheetFactoryInstance::~StyleSheetFactoryInstance() {
@@ -44,27 +38,28 @@ StyleSheetFactoryInstance::~StyleSheetFactoryInstance() {
 	}
 }
 
-StyleSheet* StyleSheetFactoryInstance::LoadStyleSheet(const std::string& source_path) {
+void StyleSheetFactoryInstance::LoadStyleSheet(StyleSheet& sheet, const std::string& source_path) {
 	auto itr = stylesheets.find(source_path);
 	if (itr != stylesheets.end()) {
-		return (*itr).second.get();
+		sheet.Merge(itr->second);
+		return;
 	}
+	auto& newsheet = stylesheets[source_path];
+	StyleSheetParser parser;
 	Stream stream(source_path);
-	auto sheet = std::make_unique<StyleSheet>();
-	if (!sheet->LoadStyleSheet(&stream)) {
-		return nullptr;
+	if (!parser.Parse(stream, newsheet, 1)) {
+		Log::Message(Log::Level::Error, "Failed to load style sheet in %s.", source_path.c_str());
+		return;
 	}
-	auto res = stylesheets.emplace(source_path, std::move(sheet));
-	return res.first->second.get();
+	sheet.Merge(newsheet);
 }
 
-std::unique_ptr<StyleSheet> StyleSheetFactoryInstance::LoadStyleSheet(const std::string& content, const std::string& source_path, int line) {
+void StyleSheetFactoryInstance::LoadStyleSheet(StyleSheet& sheet, const std::string& content, const std::string& source_path, int line) {
+	StyleSheetParser parser;
 	Stream stream(source_path, (const uint8_t*)content.data(), content.size());
-	auto sheet = std::make_unique<StyleSheet>();
-	if (!sheet->LoadStyleSheet(&stream, line)) {
-		return nullptr;
+	if (!parser.Parse(stream, sheet, line)) {
+		Log::Message(Log::Level::Error, "Failed to load style sheet in %s:%d.", source_path.c_str(), line);
 	}
-	return sheet;
 }
 
 StructuralSelector StyleSheetFactoryInstance::GetSelector(const std::string& name) {
@@ -156,11 +151,11 @@ void StyleSheetFactory::Shutdown() {
 }
 
 void StyleSheetFactory::CombineStyleSheet(StyleSheet& sheet, const std::string& source_path) {
-	Combine(sheet, instance->LoadStyleSheet(source_path));
+	instance->LoadStyleSheet(sheet, source_path);
 }
 
 void StyleSheetFactory::CombineStyleSheet(StyleSheet& sheet, const std::string& content, const std::string& source_path, int line) {
-	Combine(sheet, instance->LoadStyleSheet(content, source_path, line));
+	instance->LoadStyleSheet(sheet, content, source_path, line);
 }
 
 StructuralSelector StyleSheetFactory::GetSelector(const std::string& name) {

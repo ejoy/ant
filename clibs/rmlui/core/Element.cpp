@@ -13,7 +13,6 @@
 #include <core/Property.h>
 #include <core/Stream.h>
 #include <core/StringUtilities.h>
-#include <core/StyleSheetFactory.h>
 #include <core/StyleSheetParser.h>
 #include <core/StyleSheetSpecification.h>
 #include <core/Text.h>
@@ -27,6 +26,15 @@
 #include <glm/gtx/transform.hpp>
 
 namespace Rml {
+
+static const Property* PropertyDictionaryGet(const PropertyVector& vec, PropertyId id) {
+	for (auto const& v : vec) {
+		if (v.id == id) {
+			return &v.value;
+		}
+	}
+	return nullptr;
+}
 
 static const Property* PropertyDictionaryGet(const PropertyDictionary& dict, PropertyId id) {
 	auto iterator = dict.find(id);
@@ -1006,8 +1014,8 @@ void Element::HandleAnimationProperty() {
 			for (int i = (has_from_key ? 1 : 0); i < (int)blocks.size() + (has_to_key ? -1 : 0); i++) {
 				// Add properties of current key to animation
 				float time = blocks[i].normalized_time * animation.transition.duration;
-				for (auto& property : blocks[i].properties)
-					AddAnimationKeyTime(property.first, &property.second, time, animation.transition.tween);
+				for (auto& v : blocks[i].properties)
+					AddAnimationKeyTime(v.id, &v.value, time, animation.transition.tween);
 			}
 			// If the last key defines end conditions for a given property, use those values, else, use this element's current values.
 			float time = animation.transition.duration;

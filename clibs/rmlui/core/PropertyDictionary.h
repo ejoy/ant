@@ -20,12 +20,4 @@ namespace Style {
 using PropertyDictionary = std::unordered_map<PropertyId, Property>;
 using PropertyVector = std::vector<Style::PropertyKV>;
 
-inline PropertyDictionary ToDict(const PropertyVector& vec) {
-    PropertyDictionary dict;
-    for (auto const& v : vec) {
-        dict.emplace(v.id, v.value);
-    }
-    return dict;
-}
-
 }

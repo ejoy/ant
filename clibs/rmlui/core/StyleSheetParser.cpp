@@ -45,43 +45,14 @@ static bool IsValidIdentifier(const std::string& str)
 	return true;
 }
 
-
-static void PostprocessKeyframes(KeyframesMap& keyframes_map)
-{
-	for (auto& keyframes_pair : keyframes_map)
-	{
-		Keyframes& keyframes = keyframes_pair.second;
-		auto& blocks = keyframes.blocks;
-		auto& property_ids = keyframes.property_ids;
-
-		// Sort keyframes on selector value.
-		std::sort(blocks.begin(), blocks.end(), [](const KeyframeBlock& a, const KeyframeBlock& b) { return a.normalized_time < b.normalized_time; });
-
-		// Add all property names specified by any block
-		if(blocks.size() > 0) property_ids.reserve(blocks.size() * blocks[0].properties.size());
-		for(auto& block : blocks)
-		{
-			for (auto& property : block.properties)
-				property_ids.push_back(property.first);
-		}
-		// Remove duplicate property names
-		std::sort(property_ids.begin(), property_ids.end());
-		property_ids.erase(std::unique(property_ids.begin(), property_ids.end()), property_ids.end());
-		property_ids.shrink_to_fit();
-	}
-
-}
-
-
-bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std::string& identifier, const std::string& rules, const PropertyVector& properties)
-{
-	if (!IsValidIdentifier(identifier))
-	{
+bool StyleSheetParser::ParseKeyframeBlock(StyleSheet& style_sheet, const std::string& identifier, const std::string& rules, const PropertyVector& properties) {
+	if (!IsValidIdentifier(identifier)) {
 		Log::Message(Log::Level::Warning, "Invalid keyframes identifier '%s' at %s:%d", identifier.c_str(), stream->GetSourceURL().c_str(), line_number);
 		return false;
 	}
-	if (properties.empty())
+	if (properties.empty()) {
 		return true;
+	}
 
 	std::vector<std::string> rule_list;
 	StringUtilities::ExpandString(rule_list, rules, ',');
@@ -89,8 +60,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 	std::vector<float> rule_values;
 	rule_values.reserve(rule_list.size());
 
-	for (auto rule : rule_list)
-	{
+	for (auto rule : rule_list) {
 		float value = 0.0f;
 		int count = 0;
 		rule = StringUtilities::ToLower(rule);
@@ -103,26 +73,19 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 				rule_values.push_back(0.01f * value);
 	}
 
-	if (rule_values.empty())
-	{
+	if (rule_values.empty()) {
 		Log::Message(Log::Level::Warning, "Invalid keyframes rule(s) '%s' at %s:%d", rules.c_str(), stream->GetSourceURL().c_str(), line_number);
 		return false;
 	}
 
-	Keyframes& keyframes = keyframes_map[identifier];
-
-	for (float selector : rule_values) {
-		keyframes.blocks.emplace_back(KeyframeBlock { selector, ToDict(properties) });
-	}
-
+	style_sheet.AddKeyframe(identifier, rule_values, properties);
 	return true;
 }
 
-int StyleSheetParser::Parse(Stream* _stream, StyleSheet& style_sheet, KeyframesMap& keyframes, int begin_line_number)
-{
+bool StyleSheetParser::Parse(Stream& _stream, StyleSheet& style_sheet, int begin_line_number) {
 	int rule_count = 0;
 	line_number = begin_line_number;
-	stream = _stream;
+	stream = &_stream;
 
 	enum class State : uint8_t { Global, AtRuleIdentifier, KeyframeBlock, Invalid };
 	State state = State::Global;
@@ -203,7 +166,7 @@ int StyleSheetParser::Parse(Stream* _stream, StyleSheet& style_sheet, KeyframesM
 					if(!ReadProperties(properties))
 						continue;
 
-					if (!ParseKeyframeBlock(keyframes, at_rule_name, pre_token_str, properties))
+					if (!ParseKeyframeBlock(style_sheet, at_rule_name, pre_token_str, properties))
 						continue;
 				}
 				else if (token == '}')
@@ -233,9 +196,7 @@ int StyleSheetParser::Parse(Stream* _stream, StyleSheet& style_sheet, KeyframesM
 	}
 	while(false);
 
-	PostprocessKeyframes(keyframes);
-
-	return rule_count;
+	return rule_count >= 0;
 }
 
 bool StyleSheetParser::ParseProperties(PropertyVector& vec, const std::string& properties)

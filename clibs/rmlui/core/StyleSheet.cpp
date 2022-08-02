@@ -1,14 +1,6 @@
 #include <core/StyleSheet.h>
-#include <core/StyleSheetFactory.h>
 #include <core/StyleSheetNode.h>
-#include <core/StyleSheetParser.h>
-#include <core/Element.h>
-#include <core/StyleSheetSpecification.h>
-#include <core/Property.h>
-#include <core/Log.h>
-#include <core/Stream.h>
 #include <algorithm>
-#include <array>
 
 namespace Rml {
 
@@ -22,24 +14,14 @@ StyleSheet::StyleSheet()
 StyleSheet::~StyleSheet()
 {}
 
-bool StyleSheet::LoadStyleSheet(Stream* stream, int begin_line_number) {
-	StyleSheetParser parser;
-	int n = parser.Parse(stream, *this, keyframes, begin_line_number);
-	bool ok = n >= 0;
-	if (!ok) {
-		Log::Message(Log::Level::Error, "Failed to load style sheet in %s.", stream->GetSourceURL().c_str());
-	}
-	std::sort(stylenode.begin(), stylenode.end(), StyleSheetNodeSort);
-	return ok;
-}
-
-void StyleSheet::CombineStyleSheet(const StyleSheet& other_sheet) {
+void StyleSheet::Merge(const StyleSheet& other_sheet) {
 	stylenode.assign(other_sheet.stylenode.begin(), other_sheet.stylenode.end());
-	keyframes.reserve(keyframes.size() + other_sheet.keyframes.size());
-	for (auto& other_keyframes : other_sheet.keyframes) {
-		keyframes[other_keyframes.first] = other_keyframes.second;
+	for (auto const& [identifier, values] : other_sheet.keyframes) {
+		auto& kf = keyframes[identifier];
+		for (auto const& value : values.blocks) {
+			kf.blocks.emplace_back(value);
+		}
 	}
-	std::sort(stylenode.begin(), stylenode.end(), StyleSheetNodeSort);
 }
 
 const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const {
@@ -61,6 +43,36 @@ Style::PropertyMap StyleSheet::GetElementDefinition(const Element* element) cons
 
 void StyleSheet::AddNode(StyleSheetNode&& node) {
 	stylenode.emplace_back(std::move(node));
+}
+
+void StyleSheet::AddKeyframe(const std::string& identifier, const std::vector<float>& rule_values, const PropertyVector& properties) {
+	auto& kf = keyframes[identifier];
+	for (float selector : rule_values) {
+		kf.blocks.emplace_back(KeyframeBlock { selector, properties });
+	}
+}
+
+void StyleSheet::Sort() {
+	std::sort(stylenode.begin(), stylenode.end(), StyleSheetNodeSort);
+
+	for (auto& [_, kf] : keyframes) {
+		auto& blocks = kf.blocks;
+		auto& property_ids = kf.property_ids;
+
+		// Sort keyframes on selector value.
+		std::sort(blocks.begin(), blocks.end(), [](const KeyframeBlock& a, const KeyframeBlock& b) { return a.normalized_time < b.normalized_time; });
+
+		// Add all property names specified by any block
+		if (blocks.size() > 0) property_ids.reserve(blocks.size() * blocks[0].properties.size());
+		for (auto& block : blocks) {
+			for (auto& v : block.properties)
+				property_ids.push_back(v.id);
+		}
+		// Remove duplicate property names
+		std::sort(property_ids.begin(), property_ids.end());
+		property_ids.erase(std::unique(property_ids.begin(), property_ids.end()), property_ids.end());
+		property_ids.shrink_to_fit();
+	}
 }
 
 }

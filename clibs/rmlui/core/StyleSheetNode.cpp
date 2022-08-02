@@ -1,6 +1,5 @@
 #include <core/StyleSheetNode.h>
 #include <core/Element.h>
-#include <core/StyleSheetFactory.h>
 #include <core/StyleSheetNodeSelector.h>
 #include <core/StyleCache.h>
 #include <algorithm>
