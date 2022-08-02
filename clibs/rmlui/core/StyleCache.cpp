@@ -8,17 +8,6 @@ extern "C" {
 
 namespace Rml::Style {
 
-    using AttribKey  = PropertyId;
-    using AttribData = const uint8_t*;
-    struct AttribDataView {
-        AttribData data;
-        size_t     size;
-    };
-    struct Attrib {
-        AttribKey      key;
-        AttribDataView data;
-    };
-
     static bool is_null(style_handle_t s) {
         return s.idx == 0;
     }
@@ -43,19 +32,19 @@ namespace Rml::Style {
 
     PropertyMap Cache::CreateMap(const PropertyVector& vec) {
         strbuilder<uint8_t> b;
-        std::vector<Attrib> attrib(vec.size());
+        std::vector<style_attrib> attrib(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
             PropertyEncode(b, (PropertyVariant const&)value);
-            auto s = b.string();
-            attrib[i++] = {
-                id,
-                {s.data(), s.size()},
-            };
+            auto str = b.string();
+            attrib[i].key = (uint8_t)id;
+            attrib[i].data = str.data();
+            attrib[i].sz = str.size();
+            i++;
         }
-        style_handle_t s = style_create(c, (int)attrib.size(), (struct style_attrib*)attrib.data());
+        style_handle_t s = style_create(c, (int)attrib.size(), attrib.data());
         for (auto& v : attrib) {
-            delete[] v.data.data;
+            delete[] v.data;
         }
         return {s.idx};
     }
@@ -82,37 +71,26 @@ namespace Rml::Style {
         style_release(c, {s.idx});
     }
 
-    void Cache::SetProperty(PropertyMap s, const std::span<PropertyKV>& slice) {
+    bool Cache::UpdateProperty(PropertyMap s, PropertyId id, const Property* value) {
+        if (!value) {
+            style_attrib attrib = { (uint8_t)id, NULL, 0 };
+            return !!style_modify(c, {s.idx}, 1, &attrib);
+        }
         strbuilder<uint8_t> b;
-        std::vector<Attrib> attrib(slice.size());
-        size_t i = 0;
-        for (auto const& [id, value] : slice) {
-            PropertyEncode(b, (PropertyVariant const&)value);
-            auto s = b.string();
-            attrib[i++] = {
-                id,
-                {s.data(), s.size()},
-            };
-        }
-        style_modify(c, {s.idx}, (int)attrib.size(), (struct style_attrib*)attrib.data());
-        for (auto& v : attrib) {
-            delete[] v.data.data;
-        }
-    }
-
-    void Cache::DelProperty(PropertyMap s, const std::span<PropertyId>& slice) {
-        std::vector<Attrib> attrib(slice.size());
-        size_t i = 0;
-        for (auto const& id : slice) {
-            attrib[i++] = {
-                id,
-                {NULL, 0},
-            };
-        }
-        style_modify(c, {s.idx}, (int)attrib.size(), (struct style_attrib*)attrib.data());
+        PropertyEncode(b, (PropertyVariant const&)*value);
+        auto str = b.string();
+        style_attrib attrib = { (uint8_t)id, str.data(), str.size() };
+        bool change = !!style_modify(c, {s.idx}, 1, &attrib);
+        delete[] attrib.data;
+        return change;
     }
 
     PropertyTempMap Cache::MergeMap(PropertyMap child, PropertyMap parent) {
+        style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 0);
+        return {s.idx};
+    }
+
+    PropertyTempMap Cache::MergeMap(PropertyMap child, PropertyTempMap parent) {
         style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 0);
         return {s.idx};
     }
@@ -127,14 +105,25 @@ namespace Rml::Style {
         return {s.idx};
     }
 
-    EvalHandle Cache::Eval(PropertyMap s) {
-        int h = style_eval(c, {s.idx});
-        return {h};
+    PropertyTempMap Cache::InheritMap(PropertyTempMap child, PropertyMap parent) {
+        style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 1);
+        return {s.idx};
     }
 
     EvalHandle Cache::Eval(PropertyTempMap s) {
         int h = style_eval(c, {s.idx});
         return {h};
+    }
+
+    std::optional<Property> Cache::Find(PropertyMap s, PropertyId id) {
+        int h = style_eval(c, {s.idx});
+        assert(h >= 0);
+        void* data = style_find(c, h, (uint8_t)id);
+        if (!data) {
+            return std::nullopt;
+        }
+        strparser<uint8_t> p {(const uint8_t*)data};
+        return PropertyDecode(tag_v<Property>, p);
     }
 
     std::optional<Property> Cache::Find(EvalHandle attrib, PropertyId id) {
@@ -154,6 +143,43 @@ namespace Rml::Style {
         }
         strparser<uint8_t> p {(const uint8_t*)data};
         return PropertyKV { id, PropertyDecode(tag_v<Property>, p)};
+    }
+
+    PropertyIdSet Cache::Diff(PropertyMap a, PropertyMap b) {
+        PropertyIdSet mark;
+        PropertyIdSet ids;
+        int ha = style_eval(c, {a.idx});
+        int hb = style_eval(c, {b.idx});
+        assert (ha >= 0 && hb >= 0);
+        
+        for (int i = 0;; ++i) {
+            PropertyId id;
+            void* data_a = style_index(c, ha, i, (uint8_t*)&id);
+            if (!data_a) {
+                break;
+            }
+            mark.insert(id);
+            void* data_b = style_find(c, hb, (uint8_t)id);
+            if (!data_b || data_a != data_b) {
+                ids.insert(id);
+            }
+        }
+
+        for (int i = 0;; ++i) {
+            PropertyId id;
+            void* data_b = style_index(c, hb, i, (uint8_t*)&id);
+            if (!data_b) {
+                break;
+            }
+            if (!mark.contains(id)) {
+                void* data_a = style_find(c, ha, (uint8_t)id);
+                if (!data_a || data_a != data_b) {
+                    ids.insert(id);
+                }
+            }
+        }
+
+        return ids;
     }
 
     void Cache::Flush() {

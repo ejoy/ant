@@ -27,50 +27,13 @@
 
 namespace Rml {
 
-static const Property* PropertyDictionaryGet(const PropertyVector& vec, PropertyId id) {
+static const Property* PropertyVectorGet(const PropertyVector& vec, PropertyId id) {
 	for (auto const& v : vec) {
 		if (v.id == id) {
 			return &v.value;
 		}
 	}
 	return nullptr;
-}
-
-static const Property* PropertyDictionaryGet(const PropertyDictionary& dict, PropertyId id) {
-	auto iterator = dict.find(id);
-	if (iterator == dict.end()) {
-		return nullptr;
-	}
-	return &(*iterator).second;
-}
-
-static PropertyIdSet PropertyDictionaryGetIds(const PropertyDictionary& dict) {
-	PropertyIdSet ids;
-	for (auto& [id, _] : dict) {
-		ids.insert(id);
-	}
-	return ids;
-}
-
-static PropertyIdSet PropertyDictionaryDiff(const PropertyDictionary& dict0, const PropertyDictionary& dict1) {
-	PropertyIdSet mark;
-	PropertyIdSet ids;
-	for (auto& [id, p0] : dict0) {
-		mark.insert(id);
-		const Property* p1 = PropertyDictionaryGet(dict1, id);
-		if (!p1 || p0 != *p1) {
-			ids.insert(id);
-		}
-	}
-	for (auto& [id, p1] : dict1) {
-		if (!mark.contains(id)) {
-			const Property* p0 = PropertyDictionaryGet(dict0, id);
-			if (!p0 || p1 != *p0) {
-				ids.insert(id);
-			}
-		}
-	}
-	return ids;
 }
 
 static PropertyFloat ComputeOrigin(const std::optional<Property>& p) {
@@ -112,6 +75,11 @@ Element::~Element() {
 	for (const auto& listener : listeners) {
 		listener->OnDetach(this);
 	}
+
+	auto& c = Style::Instance();
+	c.ReleaseMap(animation_properties);
+	c.ReleaseMap(inline_properties);
+	c.ReleaseMap(definition_properties);
 }
 
 void Element::Update() {
@@ -212,8 +180,8 @@ float Element::GetFontSize() const {
 	return font_size;
 }
 
-static float ComputeFontsize(const Property* property, Element* element) {
-	PropertyFloat fv = property->Get<PropertyFloat>();
+static float ComputeFontsize(const Property& property, Element* element) {
+	PropertyFloat fv = property.Get<PropertyFloat>();
 	if (fv.unit == PropertyUnit::PERCENT || fv.unit == PropertyUnit::EM) {
 		float fontSize = 16.f;
 		Element* parent = element->GetParentNode();
@@ -236,7 +204,7 @@ static float ComputeFontsize(const Property* property, Element* element) {
 bool Element::UpdataFontSize() {
 	float new_size = font_size;
 	if (auto p = GetComputedLocalProperty(PropertyId::FontSize))
-		new_size = ComputeFontsize(p, this);
+		new_size = ComputeFontsize(*p, this);
 	else if (parent) {
 		new_size = parent->GetFontSize();
 	}
@@ -909,12 +877,12 @@ void Element::HandleTransitionProperty() {
 	dirty_transition = false;
 
 	// Remove all transitions that are no longer in our local list
-	const Transitions* keep_transitions = GetTransition();
+	auto keep_transitions = GetTransition();
 	auto it_remove = animations.end();
 
 	if (!keep_transitions) {
 		static Transitions dummy = TransitionNone {};
-		keep_transitions = &dummy;
+		keep_transitions = dummy;
 	}
 
 	std::visit([&](auto&& arg) {
@@ -998,7 +966,7 @@ void Element::HandleAnimationProperty() {
 			for (PropertyId id : property_ids) {
 				const Property* start = nullptr;
 				if (has_from_key) {
-					start = PropertyDictionaryGet(blocks[0].properties, id);
+					start = PropertyVectorGet(blocks[0].properties, id);
 				}
 				if (start) {
 					StartAnimation(id, start, animation.num_iterations, animation.alternate, animation.transition.delay);
@@ -1020,7 +988,7 @@ void Element::HandleAnimationProperty() {
 			// If the last key defines end conditions for a given property, use those values, else, use this element's current values.
 			float time = animation.transition.duration;
 			for (PropertyId id : property_ids)
-				AddAnimationKeyTime(id, (has_to_key ? PropertyDictionaryGet(blocks.back().properties, id) : nullptr), time, animation.transition.tween);
+				AddAnimationKeyTime(id, (has_to_key ? PropertyVectorGet(blocks.back().properties, id) : nullptr), time, animation.transition.tween);
 		}
 	}
 }
@@ -1466,18 +1434,15 @@ void Element::DirtyPropertiesWithUnitRecursive(PropertyUnit unit) {
 	}
 }
 
-const Property* Element::GetProperty(PropertyId id) const {
-	return PropertyDictionaryGet(inline_properties, id);
+std::optional<Property> Element::GetProperty(PropertyId id) const {
+	auto& c = Style::Instance();
+	return c.Find(inline_properties, id);
 }
 
-const Property* Element::GetComputedLocalProperty(PropertyId id) const {
-	const Property* property = GetAnimationProperty(id);
-	if (property)
-		return property;
-	property = PropertyDictionaryGet(inline_properties, id);
-	if (property)
-		return property;
-	return PropertyDictionaryGet(definition_properties, id);
+std::optional<Property> Element::GetComputedLocalProperty(PropertyId id) const {
+	auto& c = Style::Instance();
+	auto h = GetLocalProperties();
+    return c.Find(h, id);
 }
 
 
@@ -1513,7 +1478,7 @@ std::optional<std::string> Element::GetProperty(const std::string& name) const {
 	std::string res;
 	
   for (const auto& property_id : properties) {
-		const Property* property = GetProperty(property_id);
+		auto property = GetProperty(property_id);
 		if (property) {
 			if (!res.empty()) {
 				res += " ";
@@ -1524,57 +1489,47 @@ std::optional<std::string> Element::GetProperty(const std::string& name) const {
 	return res;
 }
 
-const Property* Element::GetAnimationProperty(PropertyId id) const {
-	return PropertyDictionaryGet(animation_properties, id);
-}
-
 std::optional<Property> Element::GetComputedProperty(PropertyId id) const {
-	const Property* property = GetComputedLocalProperty(id);
-	if (property)
-		return *property;
-	if (StyleSheetSpecification::IsInheritedProperty(id)) {
-		Element* parent = GetParentNode();
-		while (parent) {
-			const Property* parent_property = parent->GetComputedLocalProperty(id);
-			if (parent_property)
-				return *parent_property;
-			parent = parent->GetParentNode();
-		}
+	auto& c = Style::Instance();
+	auto h = GetGlobalProperties();
+	auto r = c.Find(h, id);
+	if (r) {
+		return r;
 	}
-	return StyleSheetSpecification::GetDefaultProperty(id);
+	return c.Find(StyleSheetSpecification::GetDefaultProperties(), id);
 }
 
-const Transitions* Element::GetTransition() const {
-	const Property* property = PropertyDictionaryGet(inline_properties, PropertyId::Transition);
-	if (!property) {
-		property = PropertyDictionaryGet(definition_properties, PropertyId::Transition);
+std::optional<Transitions> Element::GetTransition() const {
+	auto& c = Style::Instance();
+	if (auto property = c.Find(inline_properties, PropertyId::Transition)) {
+		return property->Get<Transitions>();
 	}
-	if (!property) {
-		return nullptr;
+	if (auto property = c.Find(definition_properties, PropertyId::Transition)) {
+		return property->Get<Transitions>();
 	}
-	return &property->Get<Transitions>();
+	return std::nullopt;
 }
 
-const Transitions* Element::GetTransition(const PropertyDictionary& def) const {
-	const Property* property = PropertyDictionaryGet(inline_properties, PropertyId::Transition);
-	if (!property) {
-		property = PropertyDictionaryGet(def, PropertyId::Transition);
+std::optional<Transitions> Element::GetTransition(const Style::PropertyMap& def) const {
+	auto& c = Style::Instance();
+	if (auto property = c.Find(inline_properties, PropertyId::Transition)) {
+		return property->Get<Transitions>();
 	}
-	if (!property) {
-		return nullptr;
+	if (auto property = c.Find(def, PropertyId::Transition)) {
+		return property->Get<Transitions>();
 	}
-	return &property->Get<Transitions>();
+	return std::nullopt;
 }
 
-void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const PropertyDictionary& new_definition) {
-	const Transitions* transitions = GetTransition(new_definition);
+void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const Style::PropertyMap& new_definition) {
+	auto transitions = GetTransition(new_definition);
 	if (!transitions) {
 		return;
 	}
 	
 	auto add_transition = [&](PropertyId id, const Transition& transition) {
 		auto from = GetComputedProperty(id);
-		const Property* to = PropertyDictionaryGet(new_definition, id);
+		auto to = Style::Instance().Find(new_definition, id);
 		if (from && to && (*from != *to)) {
 			return StartTransition(id, transition, *from, *to);
 		}
@@ -1603,7 +1558,7 @@ void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const P
 	}, *transitions);
 }
 
-void Element::TransitionPropertyChanges(const Transitions* transitions, PropertyId id, const Property& old_property) {
+void Element::TransitionPropertyChanges(const Transitions& transitions, PropertyId id, const Property& old_property) {
 	auto new_property = GetComputedProperty(id);
 	if (!new_property || (*new_property == old_property)) {
 		return;
@@ -1625,7 +1580,7 @@ void Element::TransitionPropertyChanges(const Transitions* transitions, Property
 		else {
 			static_assert(always_false_v<T>, "non-exhaustive visitor!");
 		}
-	}, *transitions);
+	}, transitions);
 }
 
 void Element::UpdateDefinition() {
@@ -1633,20 +1588,24 @@ void Element::UpdateDefinition() {
 		return;
 	}
 	dirty_definition = false;
-	auto map = GetStyleSheet().GetElementDefinition(this);
-	PropertyDictionary new_definition = ToDict(map);
-	Style::Instance().ReleaseMap(map);
 	
-	PropertyIdSet changed_properties = PropertyDictionaryDiff(definition_properties, new_definition);
+	auto& c = Style::Instance();
+	auto new_definition = GetStyleSheet().GetElementDefinition(this);
+
+	PropertyIdSet changed_properties = c.Diff(definition_properties, new_definition);
 	for (PropertyId id : changed_properties) {
-		if (PropertyDictionaryGet(inline_properties, id)) {
+		if (c.Find(inline_properties, id)) {
 			changed_properties.erase(id);
 		}
 	}
 	if (!changed_properties.empty()) {
 		TransitionPropertyChanges(changed_properties, new_definition);
 	}
+
+	c.ReleaseMap(definition_properties);
 	definition_properties = new_definition;
+	local_properties = Style::Null;
+	global_properties = Style::Null;
 
 	DirtyProperties(changed_properties);
 	for (auto& child : children) {
@@ -1655,17 +1614,13 @@ void Element::UpdateDefinition() {
 }
 
 void Element::UpdateProperty(PropertyId id, const Property* property) {
-	if (property) {
-		inline_properties.insert_or_assign(id, *property);
+	if (Style::Instance().UpdateProperty(inline_properties, id, property)) {
+		DirtyProperty(id);
 	}
-	else if (!inline_properties.erase(id)) {
-		return;
-	}
-	DirtyProperty(id);
 }
 
 void Element::SetProperty(PropertyId id, const Property* newProperty) {
-	const Transitions* transitions = GetTransition();
+	auto transitions = GetTransition();
 	if (!transitions || std::holds_alternative<TransitionNone>(*transitions)) {
 		UpdateProperty(id, newProperty);
 		return;
@@ -1677,17 +1632,13 @@ void Element::SetProperty(PropertyId id, const Property* newProperty) {
 	}
 	Property oldProperty = *ptrProperty;
 	UpdateProperty(id, newProperty);
-	TransitionPropertyChanges(transitions, id, oldProperty);
+	TransitionPropertyChanges(*transitions, id, oldProperty);
 }
 
 void Element::SetAnimationProperty(PropertyId id, const Property* property) {
-	if (property) {
-		animation_properties.insert_or_assign(id, *property);
+	if (Style::Instance().UpdateProperty(animation_properties, id, property)) {
+		DirtyProperty(id);
 	}
-	else if (!animation_properties.erase(id)) {
-		return;
-	}
-	DirtyProperty(id);
 }
 
 void Element::DirtyDefinition() {
@@ -1699,22 +1650,15 @@ void Element::DirtyInheritedProperties() {
 }
 
 void Element::ForeachProperties(std::function<void(PropertyId id, const Property& property)> f) {
-	PropertyIdSet mark;
-	for (auto& [id, property] : animation_properties) {
-		mark.insert(id);
-		f(id, property);
-	}
-	for (auto& [id, property] : inline_properties) {
-		if (!mark.contains(id)) {
-			mark.insert(id);
-			f(id, property);
-		}
-	}
-	for (auto& [id, property] : definition_properties) {
-		if (!mark.contains(id)) {
-			f(id, property);
-		}
-	}
+	auto& c = Style::Instance();
+	auto h = GetLocalProperties();
+    for (size_t i = 0;; ++i) {
+        auto r = c.Index(h, i);
+        if (!r) {
+            break;
+        }
+        f(r->id, r->value);
+    }
 }
 
 void Element::DirtyProperty(PropertyId id) {
@@ -1813,6 +1757,54 @@ const EdgeInsets<float>& Element::GetPadding() const {
 
 const EdgeInsets<float>& Element::GetBorder() const {
 	return border;
+}
+
+void Element::CalcLocalProperties() {
+	auto& c = Style::Instance();
+	local_properties = c.MergeMap(animation_properties, c.MergeMap(inline_properties, definition_properties));
+}
+
+Style::EvalHandle Element::GetLocalProperties() const {
+	auto& c = Style::Instance();
+	Style::EvalHandle h;
+	if (local_properties.idx != 0) {
+		h = c.Eval(local_properties);
+		if (h) {
+			return h;
+		}
+	}
+	const_cast<Element*>(this)->CalcLocalProperties();
+	h = c.Eval(local_properties);
+	assert(h);
+	return h;
+}
+
+void Element::CalcGlobalProperties() {
+	auto& c = Style::Instance();
+	CalcLocalProperties();
+	if (parent) {
+		parent->CalcGlobalProperties();
+		global_properties = c.InheritMap(local_properties, parent->global_properties);
+	}
+	else {
+		global_properties = local_properties;
+	}
+}
+
+Style::EvalHandle Element::GetGlobalProperties() const {
+	auto& c = Style::Instance();
+	Style::EvalHandle h;
+	if (global_properties.idx != 0) {
+		h = c.Eval(global_properties);
+		if (h) {
+			return h;
+		}
+	}
+	const_cast<Element*>(this)->CalcGlobalProperties();
+	h = c.Eval(global_properties);
+	assert(h);
+	return h;
+
 }
 
 }

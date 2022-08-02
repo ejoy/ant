@@ -17,7 +17,6 @@ namespace Style {
     };
 }
 
-using PropertyDictionary = std::unordered_map<PropertyId, Property>;
 using PropertyVector = std::vector<Style::PropertyKV>;
 
 }

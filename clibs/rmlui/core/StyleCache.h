@@ -2,7 +2,7 @@
 
 #include <core/ID.h>
 #include <core/PropertyIdSet.h>
-#include <core/PropertyDictionary.h>
+#include <core/PropertyVector.h>
 #include <core/Property.h>
 #include <span>
 #include <optional>
@@ -12,6 +12,7 @@ struct style_cache;
 namespace Rml::Style {
     using PropertyMap = struct { uint64_t idx; };
     using PropertyTempMap = struct { uint64_t idx; };
+    constexpr inline PropertyTempMap Null = {0};
 
     struct EvalHandle {
         int handle;
@@ -28,17 +29,20 @@ namespace Rml::Style {
         PropertyMap               CreateMap(const PropertyVector& vec);
         PropertyMap               CreateMap(const std::span<PropertyMap>& maps);
         void                      ReleaseMap(PropertyMap s);
-        void                      SetProperty(PropertyMap s, const std::span<PropertyKV>& slice);
-        void                      DelProperty(PropertyMap s, const std::span<PropertyId>& slice);
+        bool                      UpdateProperty(PropertyMap s, PropertyId id, const Property* value);
         PropertyTempMap           MergeMap(PropertyMap child, PropertyMap parent);
+        PropertyTempMap           MergeMap(PropertyMap child, PropertyTempMap parent);
         PropertyTempMap           MergeMap(PropertyTempMap child, PropertyMap parent);
         PropertyTempMap           InheritMap(PropertyTempMap child, PropertyTempMap parent);
-        void                      Flush();
+        PropertyTempMap           InheritMap(PropertyTempMap child, PropertyMap parent);
         void                      Dump();
-        EvalHandle                Eval(PropertyMap s);
         EvalHandle                Eval(PropertyTempMap s);
+        std::optional<Property>   Find(PropertyMap s, PropertyId id);
         std::optional<Property>   Find(EvalHandle attrib, PropertyId id);
         std::optional<PropertyKV> Index(EvalHandle attrib, size_t index);
+        PropertyIdSet             Diff(PropertyMap a, PropertyMap b);
+        void                      Flush();
+
     private:
         style_cache* c;
     };
@@ -46,24 +50,4 @@ namespace Rml::Style {
     void Initialise(const PropertyIdSet& inherit);
     void Shutdown();
     Cache& Instance();
-}
-
-
-namespace Rml {
-    
-inline PropertyDictionary ToDict(Style::PropertyMap map) {
-	auto& c = Style::Instance();
-	auto h = c.Eval(map);
-	assert(h);
-    PropertyDictionary dict;
-    for (size_t i = 0;; ++i) {
-        auto r = c.Index(h, i);
-        if (!r) {
-            break;
-        }
-        dict.emplace(r->id, r->value);
-    }
-    return dict;
-}
-
 }

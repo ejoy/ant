@@ -171,6 +171,7 @@ void Document::Update(double delta) {
 	UpdateDataModel(true);
 	body.Update();
 	body.UpdateAnimations();
+	Style::Instance().Flush();//TODO
 	UpdateLayout();
 	body.Render();
 }

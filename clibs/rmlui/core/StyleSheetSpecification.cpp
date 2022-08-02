@@ -65,8 +65,7 @@ struct StyleSheetSpecificationInstance {
 
 	std::optional<Property> ParseProperty(PropertyId id, const std::string& value) const;
 
-	bool IsInheritedProperty(PropertyId id) const;
-	std::optional<Property> GetDefaultProperty(PropertyId id) const;
+	Style::PropertyMap GetDefaultProperties() const;
 	const PropertyIdSet& GetInheritedProperties() const;
 	const ShorthandDefinition& GetShorthandDefinition(ShorthandId id) const;
 	bool ParsePropertyDeclaration(PropertyIdSet& set, const std::string& property_name) const;
@@ -224,15 +223,8 @@ std::optional<Property> StyleSheetSpecificationInstance::ParseProperty(PropertyI
 	return std::nullopt;
 }
 
-bool StyleSheetSpecificationInstance::IsInheritedProperty(PropertyId id) const {
-	return property_inherited.contains(id);
-}
-
-std::optional<Property> StyleSheetSpecificationInstance::GetDefaultProperty(PropertyId id) const {
-	auto& c = Style::Instance();
-	auto h = c.Eval(default_value);
-	assert(h);
-	return c.Find(h, id);
+Style::PropertyMap StyleSheetSpecificationInstance::GetDefaultProperties() const {
+	return default_value;
 }
 
 const PropertyIdSet& StyleSheetSpecificationInstance::GetInheritedProperties() const {
@@ -885,12 +877,8 @@ void StyleSheetSpecification::Shutdown() {
 	}
 }
 
-bool StyleSheetSpecification::IsInheritedProperty(PropertyId id) {
-	return instance->IsInheritedProperty(id);
-}
-
-std::optional<Property> StyleSheetSpecification::GetDefaultProperty(PropertyId id) {
-	return instance->GetDefaultProperty(id);
+Style::PropertyMap StyleSheetSpecification::GetDefaultProperties() {
+	return instance->GetDefaultProperties();
 }
 
 const PropertyIdSet & StyleSheetSpecification::GetInheritedProperties() {

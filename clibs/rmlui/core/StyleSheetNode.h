@@ -2,7 +2,7 @@
 
 #include <core/StyleSheet.h>
 #include <core/Types.h>
-#include <core/PropertyDictionary.h>
+#include <core/PropertyVector.h>
 #include <core/StyleCache.h>
 
 namespace Rml {

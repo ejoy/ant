@@ -1,7 +1,7 @@
 #pragma once
 
 #include <core/ID.h>
-#include <core/PropertyDictionary.h>
+#include <core/PropertyVector.h>
 #include <core/StyleCache.h>
 #include <unordered_map>
 #include <vector>
