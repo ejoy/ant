@@ -47,9 +47,19 @@ static const cid_t surface_stages[] = {
 	(cid_t)ecs_api::component<ecs::ui_stage>::id,
 };
 
-static void
+#define INVALID_BUFFER_TYPE UINT16_MAX
+#define BUFFER_TYPE(_HANDLE)	(_HANDLE >> 16) & 0xffff
+
+static bool
 mesh_submit(struct ecs_world* w, const ecs::render_object* ro){
-	const uint16_t vbtype = (ro->vb_handle>>16) & 0xffff;
+	if (ro->vb_num == 0)
+		return false;
+
+	const uint16_t ibtype = BUFFER_TYPE(ro->ib_handle);
+	if (ibtype != INVALID_BUFFER_TYPE && ro->ib_num == 0)
+		return false;
+
+	const uint16_t vbtype = BUFFER_TYPE(ro->vb_handle);
 	switch (vbtype){
 		case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 0, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
 		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:	//walk through
@@ -58,7 +68,6 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro){
 	}
 
 	if (ro->ib_num > 0){
-		const uint16_t ibtype = (ro->ib_handle>>16) & 0xffff;
 		switch (ibtype){
 			case BGFX_HANDLE_INDEX_BUFFER: w->bgfx->encoder_set_index_buffer(w->holder->encoder, bgfx_index_buffer_handle_t{(uint16_t)ro->ib_handle}, ro->ib_start, ro->ib_num); break;
 			case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER:	//walk through
@@ -66,6 +75,8 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro){
 			default: assert(false && "ib_num == 0 and handle is not valid"); break;
 		}
 	}
+
+	return true;
 }
 
 static inline struct material_instance*
@@ -75,15 +86,15 @@ get_material(const ecs::render_object* ro, int qidx){
 
 static void
 draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_id_t viewid, int queueidx, int texture_index){
-	update_transform(w, ro->worldmat);
-	auto mi = get_material(ro, queueidx);
-	apply_material_instance(L, mi, w, texture_index);
+	if (mesh_submit(w, ro)){
+		update_transform(w, ro->worldmat);
+		auto mi = get_material(ro, queueidx);
+		apply_material_instance(L, mi, w, texture_index);
 
-	mesh_submit(w, ro);
-
-	const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
-	const auto prog = material_prog(L, mi);
-	w->bgfx->encoder_submit(w->holder->encoder, viewid, prog, ro->depth, discardflags);
+		const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
+		const auto prog = material_prog(L, mi);
+		w->bgfx->encoder_submit(w->holder->encoder, viewid, prog, ro->depth, discardflags);
+	}
 }
 
 static int
