@@ -27,8 +27,6 @@ end
 
 local bloom_sys = ecs.system "bloom_system"
 
-local ds_drawer_eid, us_drawer_eid
-
 function bloom_sys:init()
     local function create_sample_drawer(name, material)
         return ecs.create_entity{
@@ -42,11 +40,12 @@ function bloom_sys:init()
                 material = material,
                 filter_state = "",
                 scene = {},
+                [name] = true,
             }
         }
     end
-    ds_drawer_eid = create_sample_drawer("ds_drawer_eid", "/pkg/ant.resources/materials/postprocess/downsample.material")
-    us_drawer_eid = create_sample_drawer("us_drawer_eid", "/pkg/ant.resources/materials/postprocess/upsample.material")
+    create_sample_drawer("downsample_drawer", "/pkg/ant.resources/materials/postprocess/downsample.material")
+    create_sample_drawer("upsample_drawer", "/pkg/ant.resources/materials/postprocess/upsample.material")
 end
 
 local function downscale_bloom_vr(vr)
@@ -215,11 +214,10 @@ local scenecolor_property = {
     value  = nil,
 }
 
-local function do_bloom_sample(viewid, drawer, ppi_handle, next_mip)
-    local ro = drawer.render_object
-    local scene = drawer.scene
-    ro.worldmat = scene.worldmat
-    local material = ro.material
+local function do_bloom_sample(viewid, drawertag, ppi_handle, next_mip)
+    local drawer = w:singleton(drawertag, "filter_material:in")
+    local fm = drawer.filter_material
+    local material = fm.main_queue
     local rbhandle = fbmgr.get_rb(fbmgr.get_byviewid(viewid)[1].rbidx).handle
     for i=1, bloom_chain_count do
         local mip = next_mip()
@@ -228,7 +226,7 @@ local function do_bloom_sample(viewid, drawer, ppi_handle, next_mip)
 
         material.s_scene_color = scenecolor_property
         material.u_bloom_param = math3d.vector(mip, 1.2, 15, 0)
-        irender.draw(viewid, ro)
+        irender.draw(viewid, drawertag)
         ppi_handle = rbhandle
         viewid = viewid + 1
     end
@@ -246,15 +244,13 @@ function bloom_sys:bloom()
 
     local pp = w:singleton("postprocess", "postprocess_input:in")
     local ppi_handle = pp.postprocess_input.scene_color_handle
-    local ds_drawer = world:entity(ds_drawer_eid)
-    ppi_handle = do_bloom_sample(bloom_ds_viewid, ds_drawer, ppi_handle, function () 
+    ppi_handle = do_bloom_sample(bloom_ds_viewid, "downsample_drawer", ppi_handle, function () 
         local m = mip
         mip = m+1
         return m
     end)
 
-    local us_drawer = world:entity(us_drawer_eid)
-    do_bloom_sample(bloom_us_viewid, us_drawer, ppi_handle, function ()
+    do_bloom_sample(bloom_us_viewid, "upsample_drawer", ppi_handle, function ()
         local m = mip
         mip = m-1
         return m

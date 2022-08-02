@@ -14,8 +14,21 @@ extern "C"{
 #include <cstdint>
 #include <cassert>
 
+enum queue_index_type : uint8_t{
+	QIT_mainqueue = 0,
+	QIT_predepth,
+	QIT_scenedepth,
+	QIT_pickup,
+	QIT_csm1,
+	QIT_csm2,
+	QIT_csm3,
+	QIT_csm4,
+	QIT_lightmap,
+	QIT_count,
+};
+
 #define MAX_MATERIAL_INSTANCE_SIZE 8
-static_assert(offsetof(ecs::render_object, mat_csm4) - offsetof(ecs::render_object, mat_mq) == sizeof(int64_t) * (MAX_MATERIAL_INSTANCE_SIZE-1), "Invalid material data size");
+static_assert(offsetof(ecs::render_object, mat_lightmap) - offsetof(ecs::render_object, mat_mq) == sizeof(int64_t) * (QIT_count-1), "Invalid material data size");
 
 //TODO: we should cache transform update by entity id
 static inline void
@@ -35,7 +48,7 @@ static const cid_t surface_stages[] = {
 };
 
 static void
-mesh_submit(struct ecs_world* w, ecs::render_object* ro){
+mesh_submit(struct ecs_world* w, const ecs::render_object* ro){
 	const uint16_t vbtype = (ro->vb_handle>>16) & 0xffff;
 	switch (vbtype){
 		case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 0, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
@@ -60,6 +73,19 @@ get_material(const ecs::render_object* ro, int qidx){
 	return (struct material_instance*)(*(&ro->mat_mq + qidx));
 }
 
+static void
+draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_id_t viewid, int queueidx, int texture_index){
+	update_transform(w, ro->worldmat);
+	auto mi = get_material(ro, queueidx);
+	apply_material_instance(L, mi, w, texture_index);
+
+	mesh_submit(w, ro);
+
+	const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
+	const auto prog = material_prog(L, mi);
+	w->bgfx->encoder_submit(w->holder->encoder, viewid, prog, ro->depth, discardflags);
+}
+
 static int
 lsubmit(lua_State *L){
 	auto w = getworld(L);
@@ -82,23 +108,62 @@ lsubmit(lua_State *L){
 			if (visible){
 				for (auto ss : surface_stages){
 					if (entity_sibling(w->ecs, vs_id, i, ss)){
-						ecs::render_object* ro = (ecs::render_object*)entity_sibling(w->ecs, vs_id, i, ecs_api::component<ecs::render_object>::id);
+						const ecs::render_object* ro = (ecs::render_object*)entity_sibling(w->ecs, vs_id, i, ecs_api::component<ecs::render_object>::id);
 						if (ro == nullptr)
 							continue;
 
-						update_transform(w, ro->worldmat);
-						auto mi = get_material(ro, qidx);
-						apply_material_instance(L, mi, w, texture_index);
-
-						mesh_submit(w, ro);
-
-						const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
-						const auto prog = material_prog(L, mi);
-						w->bgfx->encoder_submit(w->holder->encoder, viewid, prog, ro->depth, discardflags);
+						draw(L, w, ro, viewid, qidx, texture_index);
 					}
 				}
 			}
 		}
+	}
+	return 0;
+}
+
+static const char* s_queuenames[QIT_count] = {
+	"main_queue", "pre_depth_queue", "scene_depth_queue", "pickup_queue",
+	"csm1_queue", "csm2_queue", "csm3_queue", "csm4_queue",
+	"lightmap_queue",
+};
+
+static inline queue_index_type
+to_queue_idx(lua_State *L, int index){
+	const int t = lua_type(L, index);
+	if (t == LUA_TSTRING){
+		auto s = lua_tostring(L, index);
+		for (int ii=0; ii<QIT_count; ++ii){
+			if (strcmp(s_queuenames[ii], s) == 0){
+				return (queue_index_type)ii;
+			}
+		}
+
+		return QIT_count;
+	} else if (t == LUA_TNUMBER){
+		return (queue_index_type)lua_tointeger(L, index);
+	} else if (t == LUA_TNIL){
+		return QIT_mainqueue;
+	}
+
+	luaL_error(L, "Invalid type index: %d", index);
+	return QIT_count;
+}
+
+static int
+ldraw(lua_State *L){
+	auto w = getworld(L);
+	ecs_api::context ecs {w->ecs};
+	const cid_t draw_tagid = (cid_t)luaL_checkinteger(L, 1);
+	const bgfx_view_id_t viewid = (bgfx_view_id_t)luaL_checkinteger(L, 2);
+	const int texture_index = 3;
+	luaL_checktype(L, texture_index, LUA_TTABLE);
+	const int queue_index = to_queue_idx(L, 4);
+	for (int i=0; entity_iter(w->ecs, draw_tagid, i); ++i){
+		const auto ro = (ecs::render_object*)entity_sibling(w->ecs, draw_tagid, i, ecs_api::component<ecs::render_object>::id);
+		if (ro == nullptr)
+			return luaL_error(L, "id:%d is not a render_object entity");
+		
+		draw(L, w, ro, viewid, queue_index, texture_index);
 	}
 	return 0;
 }
@@ -114,7 +179,8 @@ luaopen_render(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "submit", lsubmit},
-		{ "null", lnull},
+		{ "draw",	ldraw},
+		{ "null",	lnull},
 		{ nullptr, nullptr },
 	};
 	luaL_newlibtable(L,l);

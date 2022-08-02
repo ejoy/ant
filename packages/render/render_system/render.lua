@@ -16,6 +16,7 @@ local declmgr		= require "vertexdecl_mgr"
 local sampler		= require "sampler"
 
 local math3d		= require "math3d"
+local rendercore	= ecs.clibs "render.core"
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
 
@@ -64,23 +65,10 @@ function irender.check_set_state(dst_m, src_m, state_op)
 	return bgfx.make_state(t_dst_s)
 end
 
-local function update_transforms(wm)
-	local n = math3d.array_size(wm)
-	if n == 1 then
-		bgfx.set_transform(wm)
-	else
-		local tid, handle = bgfx.alloc_transform_bulk(n)
-		bgfx.set_transform_bulk(handle, math3d.value_ptr(wm), n)
-		bgfx.set_transform_cached(tid, n)
-	end
-end
+function irender.draw(viewid, drawer_tag, queuename)
+	local tagid = w:component_id(drawer_tag)
 
-function irender.draw(vid, ri, mat)
-	update_transforms(ri.worldmat)
-	local m = mat or ri
-	m.material(assetmgr.textures)
-	ri.mesh:submit()
-	bgfx.submit(vid, m.fx.prog, 0)
+	rendercore.draw(tagid, viewid, assetmgr.textures, queuename)
 end
 
 --'num' and 'stride' unit is matrix

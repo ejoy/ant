@@ -170,6 +170,7 @@ local function fetch_heightmap_data()
             bgfx.encoder_begin()
             bgfx.touch(renderinfo.auto_hm_viewid)
             bgfx.set_view_transform(renderinfo.auto_hm_viewid, viewmat, projmat)
+            assert(false, "not support render single render_render entity")
             for _, ri in ipairs(items) do
                 irender.draw(renderinfo.auto_hm_viewid, ri)
             end

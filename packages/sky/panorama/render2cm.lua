@@ -139,7 +139,7 @@ function render2cm_sys:entity_ready()
 
                 m.u_param = math3d.vector(faceidx, 0.0, 0.0, 0.0)
 
-                irender.draw(rt.viewid, ro)
+                irender.draw(rt.viewid, "cvt_p2cm_drawer")
 
                 local keep_rbs<const> = true
                 fbmgr.destroy(fbidx, keep_rbs)
@@ -215,7 +215,7 @@ local function build_irradiance_map(source_tex, irradiance, facesize)
         p1[2] = faceidx
         imaterial.set_property(drawer, "u_ibl_params", p)
         imaterial.set_property(drawer, "u_ibl_params1", p1)
-        irender.draw(rt.viewid, ro)
+        irender.draw(rt.viewid, "filter_drawer")
 
         fbmgr.destroy(fbidx, true)
     end

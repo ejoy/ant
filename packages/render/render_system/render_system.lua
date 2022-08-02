@@ -170,7 +170,7 @@ end
 local function submit_render_objects(viewid, filter, qn, groups, transforms)
 	for _, fn in ipairs(filter) do
 		--submit_filter(viewid, load_select_key(qn, fn, select_cache), qn, transforms)
-		submit_hitch_filter(viewid, load_select_key(qn, fn, vs_select_cache), qn, groups, transforms)
+		--submit_hitch_filter(viewid, load_select_key(qn, fn, vs_select_cache), qn, groups, transforms)
 	end
 end
 
@@ -278,6 +278,7 @@ function s:end_filter()
 			local fm = e.filter_material
 			local m = fm.main_queue
 			ro.mat_mq = m:ptr()
+			--Here, we no need to create new material object for this new state, because only main_queue render need this material object
 			m:get_material():set_state(check_set_depth_state_as_equal(m:get_state()))
 		end
 	end

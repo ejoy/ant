@@ -17,9 +17,9 @@ local enable_bloom = setting:get "graphic/postprocess/bloom/enable"
 
 local tm_viewid<const> = viewidmgr.get "tonemapping"
 local tm_materialfile<const> = "/pkg/ant.resources/materials/postprocess/tonemapping.material"
-local tm_eid
+
 function tm_sys:init()
-    tm_eid = ecs.create_entity {
+    ecs.create_entity {
         policy = {
             "ant.general|name",
             "ant.render|simplerender",
@@ -33,6 +33,7 @@ function tm_sys:init()
             },
             scene = {},
             filter_state = "",
+            tonemapping_drawer = true,
         }
     }
 end
@@ -83,8 +84,7 @@ local function update_properties(material)
 end
 
 function tm_sys:tonemapping()
-    local e = world:entity(tm_eid)
-    local ro = e.render_object
-    update_properties(ro.material)
-    irender.draw(tm_viewid, ro)
+    local m = w:singleton("tonemapping_drawer", "filter_material:in")
+    update_properties(m.filter_material.main_queue)
+    irender.draw(tm_viewid, "tonemapping_drawer")
 end

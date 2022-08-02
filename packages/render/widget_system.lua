@@ -56,11 +56,12 @@ function widget_drawer_sys:init()
 end
 
 function widget_drawer_sys:end_frame()
-	local e = w:singleton("widget_drawer", "render_object:update")
+	local e = w:singleton("widget_drawer", "render_object:in")
 	if e then
 		local ro = e.render_object
 		ro.vb_start, ro.vb_num = 0, 0
 		ro.ib_start, ro.ob_num = 0, 0
+		w:sync("render_object:out", e)
 	end
 end
 

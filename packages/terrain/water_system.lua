@@ -82,8 +82,13 @@ end
 
 function water_sys:render_submit()
     local sdh = queue_rb_handle "scene_depth_queue"
-    for we in w:select "water:in render_object:update" do
+    local haswater
+    for we in w:select "water:in filter_material:in" do
         imaterial.set_property(we, "s_scene_depth", sdh)
-        irender.draw(ppo_viewid, we.render_object)
+        haswater = true
+    end
+
+    if haswater then
+        irender.draw(ppo_viewid, "water")
     end
 end

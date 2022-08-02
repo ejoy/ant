@@ -47,11 +47,12 @@ system "resolve_msaa_system"
     .method "resolve"
 
 component "downsample_drawer"
+component "upsample_drawer"
 system "downsample_system"
     .implement "postprocess/downsample.lua"
     .method "init"
 
-component "tonemapping"
+component "tonemapping_drawer"
 component "tonemapping_queue"
 system "tonemapping_system"
     .implement "postprocess/tonemapping.lua"

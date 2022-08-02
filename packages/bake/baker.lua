@@ -6,7 +6,7 @@ local ibaker    = ecs.interface "ibaker"
 
 local bake      = require "bake"
 local bgfx      = require "bgfx"
-local math3d    =   require "math3d"
+local math3d    = require "math3d"
 
 local renderpkg = import_package "ant.render"
 local sampler   = renderpkg.sampler
@@ -242,19 +242,23 @@ function downsampler:update(fbs)
     end
 end
 
+local mainqueue_index<const> = 0
+
 function downsampler:downsample(hemisize)
     local hsize = hemisize//2
     local viewid = lightmap_viewid + 1
     
     local we = w:singleton("weight_ds", "fitler_material:in render_object:in")
     local se = w:singleton("simple_ds", "fitler_material:in render_object:in")
+
     local we_obj, se_obj = we.render_object, se.render_object
 
     local read, write = 1, 2
     local we_m, se_m = we.filter_material.main_queue, se.filter_material.main_queue
     we_m.hemispheres    = self.render_textures[read]
     we_m.weights        = self.weight_tex
-    irender.draw(viewid, we_obj)
+
+    irender.draw(viewid, "weight_ds")
 
     while hsize > 1 do
         viewid = viewid + 1
@@ -264,7 +268,7 @@ function downsampler:downsample(hemisize)
         read, write = write, read
         se_m.hemispheres = self.render_textures[read]
 
-        irender.draw(viewid, se_obj)
+        irender.draw(viewid, "simple_ds")
         hsize = hsize/2
     end
 
@@ -430,6 +434,7 @@ local function render_scene(vp, view, proj, sceneobjs)
     isp.update_lighting_properties(vr, camerapos, setting.z_near, setting.z_far)
     ics.build_cluster_aabbs(lightmap_viewid)
     ics.cull_lights(lightmap_viewid)
+    assert(false, "not support render single render_render entity")
     for _, ro in ipairs(sceneobjs) do
         irender.draw(lightmap_viewid, ro)
     end

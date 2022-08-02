@@ -117,7 +117,8 @@ local cp_eid, quad_eid
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
-    ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+    local eid1, eid2, eid3 = ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+    print(eid1, eid2, eid3)
 
     -- local pp = ecs.create_instance "/pkg/ant.resources.binary/meshes/up_box.glb|mesh.prefab"
     -- function pp.on_ready(e)
