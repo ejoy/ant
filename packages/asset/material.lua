@@ -9,11 +9,13 @@ local matobj		= require "matobj"
 local imaterial = ecs.interface "imaterial"
 
 function imaterial.set_property(e, who, what, isiter)
-	if isiter then
-		w:sync("filter_material:in", e)
-	end
 	local fm = e.filter_material
 	fm.main_queue[who] = what
+end
+
+function imaterial.iset_property(e, who, what)
+	w:sync("filter_material:in", e)
+	imaterial.set_property(e, who, what)
 end
 
 function imaterial.load_res(mp, setting)

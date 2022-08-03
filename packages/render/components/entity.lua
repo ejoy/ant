@@ -78,7 +78,7 @@ local function simple_render_entity_data(name, material, mesh, srt, color, hide)
 			filter_state= hide and "auxgeom" or "main_view|auxgeom",
 			name		= name or gen_test_name(),
 			on_ready 	= function(e)
-				imaterial.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE, true)
+				imaterial.iset_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
 			end
 		}
 	}
@@ -686,7 +686,7 @@ function ientity.create_arrow_entity(srt, headratio, color, material)
 			scene = {s=srt.s,r=srt.r,t=srt.t},
 			name = "arrow",
 			on_ready = function (e)
-				imaterial.set_property(e, "u_color", math3d.vector(color), true)
+				imaterial.iset_property(e, "u_color", math3d.vector(color))
 			end
 		}
 	}

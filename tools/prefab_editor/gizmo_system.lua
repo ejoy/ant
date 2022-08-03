@@ -182,7 +182,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			name = "arrow.cylinder" .. axis_str,
 			on_ready = function (e)
 				ifs.iset_state(e, "main_view", false)
-				imaterial.set_property(e, "u_color", math3d.vector(color), true)
+				imaterial.iset_property(e, "u_color", math3d.vector(color))
 				w:sync("render_object_update:out", e)
 			end
 		}
