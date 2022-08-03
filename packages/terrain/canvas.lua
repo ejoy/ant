@@ -243,16 +243,13 @@ end
 
 local gen_item_id = id_generator()
 local item_cache = {}
-function icanvas.add_items(e, ...)
+function icanvas.add_items(e, items)
     w:sync("canvas:in", e)
     local canvas = e.canvas
     local textures = canvas.textures
 
-    local n = select("#", ...)
-    
     local added_items = {}
-    for i=1, n do
-        local item = select(i, ...)
+    for _, item in ipairs(items) do
         local texture = item.texture
         local texpath = texture.path
         local t = textures[texpath]
@@ -268,7 +265,7 @@ function icanvas.add_items(e, ...)
         item_cache[id] = texpath
         added_items[#added_items+1] = id
     end
-    if n > 0 then
+    if #items > 0 then
         world:pub{"canvas_update", "texture"}
     end
 
