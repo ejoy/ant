@@ -49,7 +49,7 @@ function ro.unmarshal(s)
     return init_ro()
 end
 
-local ra = ecs.component "render_args2"
+local ra = ecs.component "render_args"
 function ra.init(v)
     v.visible_id = 0
     v.cull_id = 0

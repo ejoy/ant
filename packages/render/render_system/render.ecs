@@ -34,7 +34,7 @@ policy "render_object"
     .component_opt "render_object"
     .component_opt "filter_material"
 
-component "render_args2"
+component "render_args"
     .type "c"
     .field "visible_id:dword"
     .field "cull_id:dword"

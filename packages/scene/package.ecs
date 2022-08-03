@@ -75,7 +75,10 @@ component "scene_needchange"
 component "scene_changed"
 
 component "hitch_tag"
-component "hitch".type "lua"
+component "hitch"
+    .type "c"
+    .field "group:int64"
+
 policy "hitch_object"
     .require_policy "ant.scene|scene_object"
     .require_system "ant.scene|standalone_scene_object_system"

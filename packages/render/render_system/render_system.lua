@@ -180,10 +180,6 @@ local group_mt = {__index=function(t, k)
 	return tt
 end}
 
-w:register{
-	name = "render_args", type = "lua"
-}
-
 local queue_material_ids<const> = {
 	main_queue = 0,
 	pre_depth_queue = 1,
@@ -196,23 +192,22 @@ local queue_material_ids<const> = {
 }
 
 function render_sys:render_submit()
-	local groups = setmetatable({}, group_mt)
-	for e in w:select "view_visible hitch:in scene:in" do
-		local s = e.scene
-		local gid = e.hitch.group
-		if gid ~= 0 then
-			local g = groups[gid]
-			g[#g+1] = s.worldmat
-		end
-	end
+	-- local groups = setmetatable({}, group_mt)
+	-- for e in w:select "view_visible hitch:in scene:in" do
+	-- 	local s = e.scene
+	-- 	local gid = e.hitch.group
+	-- 	if gid ~= 0 then
+	-- 		local g = groups[gid]
+	-- 		g[#g+1] = s.worldmat
+	-- 	end
+	-- end
 
-	local transforms = {
-		find = transform_find
-	}
+	-- local transforms = {
+	-- 	find = transform_find
+	-- }
 
 	w:clear "render_args"
-	w:clear "render_args2"
-	for qe in w:select "visible queue_name:in camera_ref:in render_target:in primitive_filter:in render_args:new render_args2:new" do
+	for qe in w:select "visible queue_name:in camera_ref:in render_target:in primitive_filter:in render_args:new" do
 		local rt = qe.render_target
 		local viewid = rt.viewid
 
@@ -220,25 +215,17 @@ function render_sys:render_submit()
 		local camera = world:entity(qe.camera_ref).camera
 		bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
 
-		qe.render_args2 = {
+		qe.render_args = {
 			visible_id		= w:component_id(qe.queue_name .. "_visible"),
 			cull_id			= w:component_id(qe.queue_name .. "_cull"),
 			viewid			= viewid,
 			queue_index		= queue_material_ids[qe.queue_name] or 0,
 		}
-
-		qe.render_args = {
-			queue_name			= qe.queue_name,
-			viewid				= viewid,
-			primitive_filter	= qe.primitive_filter,
-		}
 	end
 
-	rendercore.submit(texmapper)
-	for e in w:select "render_args:in" do
-		local args = e.render_args
-		submit_render_objects(args.viewid, args.primitive_filter, args.queue_name, groups, transforms)
-    end
+	rendercore.submit(texmapper, function (gid)
+		w:group_enable("hitch_tag", gid)
+	end)
 end
 
 function render_sys:entity_remove()

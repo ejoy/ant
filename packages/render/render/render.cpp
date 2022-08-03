@@ -1,19 +1,20 @@
 #include "ecs/world.h"
 #include "ecs/select.h"
 #include "ecs/component.hpp"
-#include "math3d.h"
-#include "lua.hpp"
 
 extern "C"{
+	#include "math3d.h"
+	#include "math3dfunc.h"
 	#include "material.h"
 }
 
-#include "lua2struct.h"
+#include "lua.hpp"
 #include "luabgfx.h"
 #include <bgfx/c99/bgfx.h>
 #include <cstdint>
 #include <cassert>
 #include <vector>
+#include <unordered_map>
 
 enum queue_index_type : uint8_t{
 	QIT_mainqueue = 0,
@@ -92,7 +93,7 @@ draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_
 using render_obj_array = std::vector<const ecs::render_object*>;
 struct queue_stages {
 	struct stage {
-		cid_t id;
+		const cid_t id;
 		render_obj_array objs;
 	};
 	stage	stages[6] = {
@@ -113,6 +114,107 @@ struct queue_stages {
 
 static queue_stages s_queue_stages;
 
+static inline void
+collect_render_objs(struct ecs_world *w, cid_t main_id, int index){
+	for (auto &s : s_queue_stages.stages){
+		if (entity_sibling(w->ecs, main_id, index, s.id)){
+			const ecs::render_object* ro = (ecs::render_object*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::render_object>::id);
+			if (ro){
+				s.objs.push_back(ro);
+			}
+		}
+	}
+}
+
+static inline void
+draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index){
+	for (auto &qs : s_queue_stages.stages){
+		for (auto &ro: qs.objs){
+			draw(L, w, ro, ra.viewid, ra.queue_index, texture_index);
+		}
+	}
+}
+
+static void
+submit_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index){
+	s_queue_stages.clear();
+	const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
+	for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
+		const bool visible = entity_sibling(w->ecs, vs_id, i, ra.visible_id) &&
+			!entity_sibling(w->ecs, vs_id, i, ra.cull_id);
+		if (visible){
+			collect_render_objs(w, vs_id, i);
+		}
+	}
+	draw_objs(L, w, ra, texture_index);
+}
+
+using matrix_array = std::vector<math_t>;
+using group_matrices = std::unordered_map<int64_t, matrix_array>;
+
+static inline uint32_t
+update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const matrix_array& worldmats, uint32_t &stride){
+	stride = math_size(w->math3d->M, ro->worldmat);
+	const auto nummat = worldmats.size();
+	const auto num = nummat * stride;
+	bgfx_transform_t trans;
+	const auto tid = w->bgfx->encoder_alloc_transform(w->holder->encoder, &trans, (uint16_t)num);
+	for (int i=0; i<nummat; ++i){
+		math_t r = math_ref(w->math3d->M, trans.data+i*stride*16, MATH_TYPE_MAT, stride);
+		math3d_mul_matrix_array(w->math3d->M, worldmats[i], ro->worldmat, r);
+	}
+	return tid;
+}
+
+static void
+submit_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, int func_cb_index, const group_matrices &groups){
+	auto enable_hitch_group = [&](auto groupid){
+		lua_pushvalue(L, func_cb_index);
+		lua_pushinteger(L, groupid);
+		lua_call(L, 1, 0);
+	};
+
+	ecs_api::context ecs {w->ecs};
+
+	s_queue_stages.clear();
+
+	for (const auto &g : groups){
+		enable_hitch_group(g.first);
+
+		const cid_t ht_id = (cid_t)ecs_api::component<ecs::hitch_tag>::id;
+		for (int i=0; entity_iter(w->ecs, ht_id, i); ++i){
+			const bool visible = nullptr != entity_sibling(w->ecs, ht_id, i, ra.visible_id);
+			if (visible){
+				collect_render_objs(w, ht_id, i);
+			}
+		}
+
+		for (const auto& s : s_queue_stages.stages){
+			for (const auto &ro : s.objs){
+				if (mesh_submit(w, ro)){
+					uint32_t stride = 0;
+					auto tid = update_hitch_transform(w, ro, g.second, stride);
+					auto mi = get_material(ro, ra.queue_index);
+					apply_material_instance(L, mi, w, texture_index);
+
+					const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
+					const auto prog = material_prog(L, mi);
+
+					for (int i=0; i<g.second.size()-1; ++i) {
+						w->bgfx->encoder_set_transform_cached(w->holder->encoder, tid, stride);
+						w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, ro->depth, BGFX_DISCARD_TRANSFORM);
+						tid += stride;
+					}
+
+					w->bgfx->encoder_set_transform_cached(w->holder->encoder, tid, stride);
+					w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, ro->depth, BGFX_DISCARD_ALL);
+				}
+				
+			}
+		}
+	}
+}
+
 static int
 lsubmit(lua_State *L){
 	auto w = getworld(L);
@@ -120,34 +222,26 @@ lsubmit(lua_State *L){
 
 	const int texture_index = 1;
 	luaL_checktype(L, texture_index, LUA_TTABLE);
-	for (auto a : ecs.select<ecs::render_args2>()){
-		const auto& ra = a.get<ecs::render_args2>();
-		const bgfx_view_id_t viewid = ra.viewid;
-		const auto qidx = ra.queue_index;
-		if (qidx >= MAX_MATERIAL_INSTANCE_SIZE){
-			luaL_error(L, "Invalid queue_index in render_args2:%d", qidx);
+
+	const int func_cb_index = 2;
+	luaL_checktype(L, func_cb_index, LUA_TFUNCTION);
+
+	group_matrices groups;
+	
+	for (auto e : ecs.select<ecs::view_visible, ecs::hitch, ecs::scene>()){
+		const auto &h = e.get<ecs::hitch>();
+		const auto &s = e.get<ecs::scene>();
+		groups[h.group].push_back(s.worldmat);
+	}
+
+	for (auto a : ecs.select<ecs::render_args>()){
+		const auto& ra = a.get<ecs::render_args>();
+		if (ra.queue_index >= MAX_MATERIAL_INSTANCE_SIZE){
+			luaL_error(L, "Invalid queue_index in render_args:%d", ra.queue_index);
 		}
-		s_queue_stages.clear();
-		const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
-		for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
-			const bool visible = entity_sibling(w->ecs, vs_id, i, ra.visible_id) &&
-				!entity_sibling(w->ecs, vs_id, i, ra.cull_id);
-			if (visible){
-				for (auto &s : s_queue_stages.stages){
-					if (entity_sibling(w->ecs, vs_id, i, s.id)){
-						const ecs::render_object* ro = (ecs::render_object*)entity_sibling(w->ecs, vs_id, i, ecs_api::component<ecs::render_object>::id);
-						if (ro){
-							s.objs.push_back(ro);
-						}
-					}
-				}
-			}
-		}
-		for (auto &qs : s_queue_stages.stages){
-			for (auto &ro: qs.objs){
-				draw(L, w, ro, viewid, qidx, texture_index);
-			}
-		}
+
+		submit_objects(L, w, ra, texture_index);
+		submit_hitch_objects(L, w, ra, texture_index, func_cb_index, groups);
 	}
 	return 0;
 }
