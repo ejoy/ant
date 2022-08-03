@@ -5,7 +5,6 @@
 #include <core/Stream.h>
 #include <core/StyleSheet.h>
 #include <core/Text.h>
-#include <core/StringUtilities.h>
 #include <core/StyleSheetFactory.h>
 #include <databinding/DataModel.h>
 #include <databinding/DataModelHandle.h>
@@ -58,8 +57,6 @@ void Document::Instance(const HtmlElement& html) {
 	auto const& headHtml = std::get<HtmlElement>(rootHtml.children[0]);
 	auto const& bodyHtml = std::get<HtmlElement>(rootHtml.children[1]);
 	
-	style_sheet.Reset();
-
 	for (auto const& node : headHtml.children) {
 		auto element = std::get_if<HtmlElement>(&node);
 		if (element) {
@@ -87,8 +84,7 @@ void Document::Instance(const HtmlElement& html) {
 			}
 		}
 	}
-	style_sheet.BuildNodeIndex();
-
+	style_sheet.Sort();
 	body.InstanceOuter(bodyHtml);
 	body.DirtyDefinition();
 }
@@ -175,6 +171,7 @@ void Document::Update(double delta) {
 	UpdateDataModel(true);
 	body.Update();
 	body.UpdateAnimations();
+	Style::Instance().Flush();//TODO
 	UpdateLayout();
 	body.Render();
 }

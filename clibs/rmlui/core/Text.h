@@ -20,7 +20,7 @@ public:
 	void ChangedProperties(const PropertyIdSet& properties);
 
 protected:
-	const Property* GetComputedProperty(PropertyId id);
+	std::optional<Property> GetComputedProperty(PropertyId id);
 	template <typename T>
 	T GetProperty(PropertyId id, typename std::enable_if<!std::is_enum<T>::value>::type* = 0);
 

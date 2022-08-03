@@ -46,3 +46,6 @@
 [submodule "3rd/math3d"]
 	path = 3rd/math3d
 	url = https://github.com/cloudwu/math3d.git
+[submodule "3rd/stylecache"]
+	path = 3rd/stylecache
+	url = https://github.com/cloudwu/stylecache

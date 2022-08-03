@@ -195,12 +195,12 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 			auto it = keywords.find(argument);
 			if (it != keywords.end() && it->second.ValidTransition()) {
 				if (it->second.type == Keyword::NONE) {
-					if (transition_list.transitions.size() > 0) // The none keyword can not be part of multiple definitions
+					if (transition_list.size() > 0) // The none keyword can not be part of multiple definitions
 						return std::nullopt;
 					return TransitionNone {};
 				}
 				else if (it->second.type == Keyword::ALL) {
-					if (transition_list.transitions.size() > 0) // The all keyword can not be part of multiple definitions
+					if (transition_list.size() > 0) // The all keyword can not be part of multiple definitions
 						return false;
 					all = true;
 				}
@@ -258,7 +258,7 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 				return std::nullopt;
 			}
 			for (const auto& id : target_property_ids) {
-				transition_list.transitions.emplace(id, transition);
+				transition_list.emplace(id, transition);
 			}
 		}
 	}

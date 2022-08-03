@@ -1,31 +1,3 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2008-2010 CodePoint Ltd, Shift Technology Ltd
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
 #include <core/StyleSheetParser.h>
 #include <core/StyleSheetFactory.h>
 #include <core/StyleSheetNode.h>
@@ -73,43 +45,14 @@ static bool IsValidIdentifier(const std::string& str)
 	return true;
 }
 
-
-static void PostprocessKeyframes(KeyframesMap& keyframes_map)
-{
-	for (auto& keyframes_pair : keyframes_map)
-	{
-		Keyframes& keyframes = keyframes_pair.second;
-		auto& blocks = keyframes.blocks;
-		auto& property_ids = keyframes.property_ids;
-
-		// Sort keyframes on selector value.
-		std::sort(blocks.begin(), blocks.end(), [](const KeyframeBlock& a, const KeyframeBlock& b) { return a.normalized_time < b.normalized_time; });
-
-		// Add all property names specified by any block
-		if(blocks.size() > 0) property_ids.reserve(blocks.size() * blocks[0].properties.size());
-		for(auto& block : blocks)
-		{
-			for (auto& property : block.properties)
-				property_ids.push_back(property.first);
-		}
-		// Remove duplicate property names
-		std::sort(property_ids.begin(), property_ids.end());
-		property_ids.erase(std::unique(property_ids.begin(), property_ids.end()), property_ids.end());
-		property_ids.shrink_to_fit();
-	}
-
-}
-
-
-bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std::string& identifier, const std::string& rules, const PropertyDictionary& properties)
-{
-	if (!IsValidIdentifier(identifier))
-	{
+bool StyleSheetParser::ParseKeyframeBlock(StyleSheet& style_sheet, const std::string& identifier, const std::string& rules, const PropertyVector& properties) {
+	if (!IsValidIdentifier(identifier)) {
 		Log::Message(Log::Level::Warning, "Invalid keyframes identifier '%s' at %s:%d", identifier.c_str(), stream->GetSourceURL().c_str(), line_number);
 		return false;
 	}
-	if (properties.empty())
+	if (properties.empty()) {
 		return true;
+	}
 
 	std::vector<std::string> rule_list;
 	StringUtilities::ExpandString(rule_list, rules, ',');
@@ -117,8 +60,7 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 	std::vector<float> rule_values;
 	rule_values.reserve(rule_list.size());
 
-	for (auto rule : rule_list)
-	{
+	for (auto rule : rule_list) {
 		float value = 0.0f;
 		int count = 0;
 		rule = StringUtilities::ToLower(rule);
@@ -131,27 +73,19 @@ bool StyleSheetParser::ParseKeyframeBlock(KeyframesMap& keyframes_map, const std
 				rule_values.push_back(0.01f * value);
 	}
 
-	if (rule_values.empty())
-	{
+	if (rule_values.empty()) {
 		Log::Message(Log::Level::Warning, "Invalid keyframes rule(s) '%s' at %s:%d", rules.c_str(), stream->GetSourceURL().c_str(), line_number);
 		return false;
 	}
 
-	Keyframes& keyframes = keyframes_map[identifier];
-
-	for(float selector : rule_values)
-	{
-		keyframes.blocks.emplace_back(KeyframeBlock { selector, properties });
-	}
-
+	style_sheet.AddKeyframe(identifier, rule_values, properties);
 	return true;
 }
 
-int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSheet& style_sheet, KeyframesMap& keyframes, int begin_line_number)
-{
+bool StyleSheetParser::Parse(Stream& _stream, StyleSheet& style_sheet, int begin_line_number) {
 	int rule_count = 0;
 	line_number = begin_line_number;
-	stream = _stream;
+	stream = &_stream;
 
 	enum class State : uint8_t { Global, AtRuleIdentifier, KeyframeBlock, Invalid };
 	State state = State::Global;
@@ -172,18 +106,16 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 			{
 				if (token == '{')
 				{
-					// Read the attributes
-					StyleSheetPropertyDictionary properties;
-					if (!ReadProperties(properties.prop))
+					PropertyVector properties;
+					if (!ReadProperties(properties))
 						continue;
 
 					std::vector<std::string> rule_name_list;
 					StringUtilities::ExpandString(rule_name_list, pre_token_str, ',');
 
 					// Add style nodes to the root of the tree
-					for (size_t i = 0; i < rule_name_list.size(); i++)
-					{
-						ImportProperties(node, rule_name_list[i], properties, rule_count);
+					for (size_t i = 0; i < rule_name_list.size(); i++) {
+						ImportProperties(style_sheet, rule_name_list[i], properties);
 					}
 
 					rule_count++;
@@ -230,11 +162,11 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 				if (token == '{')
 				{
 					// Each keyframe in keyframes has its own block which is processed here
-					PropertyDictionary properties;
+					PropertyVector properties;
 					if(!ReadProperties(properties))
 						continue;
 
-					if (!ParseKeyframeBlock(keyframes, at_rule_name, pre_token_str, properties))
+					if (!ParseKeyframeBlock(style_sheet, at_rule_name, pre_token_str, properties))
 						continue;
 				}
 				else if (token == '}')
@@ -264,22 +196,20 @@ int StyleSheetParser::Parse(StyleSheetNode* node, Stream* _stream, const StyleSh
 	}
 	while(false);
 
-	PostprocessKeyframes(keyframes);
-
-	return rule_count;
+	return rule_count >= 0;
 }
 
-bool StyleSheetParser::ParseProperties(PropertyDictionary& parsed_properties, const std::string& properties)
+bool StyleSheetParser::ParseProperties(PropertyVector& vec, const std::string& properties)
 {
 	assert(!stream);
 	Stream stream_owner("<unknown>", (const uint8_t*)properties.c_str(), properties.size());
 	stream = &stream_owner;
-	bool success = ReadProperties(parsed_properties);
+	bool success = ReadProperties(vec);
 	stream = nullptr;
 	return success;
 }
 
-bool StyleSheetParser::ReadProperties(PropertyDictionary& properties)
+bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 {
 	std::string name;
 	std::string value;
@@ -329,7 +259,7 @@ bool StyleSheetParser::ReadProperties(PropertyDictionary& properties)
 				{
 					value = StringUtilities::StripWhitespace(value);
 
-					if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value))
+					if (!StyleSheetSpecification::ParsePropertyDeclaration(vec, name, value))
 						Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream->GetSourceURL().c_str(), line_number);
 
 					name.clear();
@@ -367,7 +297,7 @@ bool StyleSheetParser::ReadProperties(PropertyDictionary& properties)
 	{
 		value = StringUtilities::StripWhitespace(value);
 
-		if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, value))
+		if (!StyleSheetSpecification::ParsePropertyDeclaration(vec, name, value))
 			Log::Message(Log::Level::Warning, "Syntax error parsing property declaration '%s: %s;' in %s: %d.", name.c_str(), value.c_str(), stream->GetSourceURL().c_str(), line_number);
 	}
 	else if (!name.empty() || !value.empty())
@@ -378,10 +308,9 @@ bool StyleSheetParser::ReadProperties(PropertyDictionary& properties)
 	return true;
 }
 
-StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::string rule_name, const StyleSheetPropertyDictionary& properties, int rule_specificity)
+void StyleSheetParser::ImportProperties(StyleSheet& style_sheet, std::string rule_name, const PropertyVector& properties)
 {
-	StyleSheetNode* leaf_node = node;
-
+	StyleSheetNode node;
 	std::vector<std::string> nodes;
 
 	// Find child combinators, the RCSS '>' rule.
@@ -466,13 +395,12 @@ StyleSheetNode* StyleSheetParser::ImportProperties(StyleSheetNode* node, std::st
 		requirements.pseudo_classes = set;
 
 		// Get the named child node.
-		leaf_node = leaf_node->GetOrCreateChildNode(std::move(requirements));
+		node.AddRequirements(std::move(requirements));
 	}
 
 	// Merge the new properties with those already on the leaf node.
-	leaf_node->ImportProperties(properties, rule_specificity);
-
-	return leaf_node;
+	node.SetProperties(properties);
+	style_sheet.AddNode(std::move(node));
 }
 
 char StyleSheetParser::FindToken(std::string& buffer, const char* tokens, bool remove_token) {

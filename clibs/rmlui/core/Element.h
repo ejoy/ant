@@ -9,7 +9,8 @@
 #include <core/Geometry.h>
 #include <core/Node.h>
 #include <core/PropertyIdSet.h>
-#include <core/PropertyDictionary.h>
+#include <core/PropertyVector.h>
+#include <core/StyleCache.h>
 #include <optional>
 
 namespace Rml {
@@ -21,7 +22,6 @@ class ElementAnimation;
 class EventListener;
 class Geometry;
 class StyleSheet;
-class StyleSheetPropertyDictionary;
 struct HtmlElement;
 
 using ElementList = std::vector<Element*>;
@@ -108,20 +108,21 @@ public:
 	void DirtyProperty(PropertyId id);
 	void DirtyProperties(const PropertyIdSet& properties);
 
-	void SetProperty(PropertyId id, const Property* property = nullptr);
-	void SetAnimationProperty(PropertyId id, const Property* property = nullptr);
+	void SetProperty(const PropertyVector& vec);
+	void DelProperty(const PropertyIdSet& set);
+	void SetAnimationProperty(PropertyId id, const Property& property);
+	void DelAnimationProperty(PropertyId id);
 
-	const Property* GetProperty(PropertyId id) const;
-	const Property* GetComputedProperty(PropertyId id) const;
-	const Property* GetComputedLocalProperty(PropertyId id) const;
-	const Property* GetAnimationProperty(PropertyId id) const;
-	const Transitions* GetTransition(const PropertyDictionary* def = nullptr) const;
+	std::optional<Property> GetProperty(PropertyId id) const;
+	std::optional<Property> GetComputedProperty(PropertyId id) const;
+	std::optional<Property> GetComputedLocalProperty(PropertyId id) const;
+	Transitions GetTransition() const;
+	Transitions GetTransition(const Style::PropertyMap& def) const;
 
-	void SetProperty(const std::string& name, std::optional<std::string> value = {});
+	void SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
 	std::optional<std::string> GetProperty(const std::string& name) const;
 
-	void TransitionPropertyChanges(const PropertyIdSet & properties, const PropertyDictionary& new_definition);
-	void TransitionPropertyChanges(const Transitions* transitions, PropertyId id, const Property& old_property);
+	void TransitionPropertyChanges(const PropertyIdSet & properties, const Style::PropertyMap& new_definition);
 
 	void UpdateProperties();
 	void UpdateAnimations();
@@ -157,11 +158,16 @@ protected:
 	void DirtyTransform();
 	void DirtyClip();
 	void UpdateClip();
-	void UpdateProperty(PropertyId id, const Property* property = nullptr);
+	void SetInlineProperty(const PropertyVector& vec);
+	void DelInlineProperty(const PropertyIdSet& set);
+	void              CalcLocalProperties();
+	Style::EvalHandle GetLocalProperties() const;
+	void              CalcGlobalProperties();
+	Style::EvalHandle GetGlobalProperties() const;
 
 	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay);
 	bool AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween);
-	bool StartTransition(PropertyId id, const Transition& transition, const Property& start_value, const Property& target_value);
+	bool StartTransition(PropertyId id, const Transition& transition, std::optional<Property> start_value, std::optional<Property> target_value);
 	void HandleTransitionProperty();
 	void HandleAnimationProperty();
 	void AdvanceAnimations();
@@ -184,9 +190,11 @@ protected:
 	std::unique_ptr<Geometry> geometry_background;
 	std::unique_ptr<Geometry> geometry_image;
 	float font_size = 16.f;
-	PropertyDictionary animation_properties;
-	PropertyDictionary inline_properties;
-	SharedPtr<StyleSheetPropertyDictionary> definition_properties;
+	Style::PropertyMap animation_properties = Style::Instance().CreateMap();
+	Style::PropertyMap inline_properties = Style::Instance().CreateMap();
+	Style::PropertyMap definition_properties = Style::Instance().CreateMap();
+	Style::PropertyTempMap local_properties = Style::Null;
+	Style::PropertyTempMap global_properties = Style::Null;
 	PropertyIdSet dirty_properties;
 	glm::mat4x4 transform;
 	Rect content_rect;

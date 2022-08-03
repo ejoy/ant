@@ -2,7 +2,6 @@
 
 #include <core/Types.h>
 #include <core/Color.h>
-#include <core/SharedPtr.h>
 #include <memory>
 #include <vector>
 #include <stdint.h>
