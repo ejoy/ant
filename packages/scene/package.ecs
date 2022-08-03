@@ -41,6 +41,7 @@ interface "ifilter_state"
     .implement "filter_state.lua"
     .method "has_state"
     .method "set_state"
+    .method "iset_state"
     .method "filter_mask"
     .method "state_names"
 

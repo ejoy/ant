@@ -181,8 +181,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str,
 			on_ready = function (e)
-				w:sync("filter_state:update", e)
-				ifs.set_state(e, "main_view", false)
+				ifs.iset_state(e, "main_view", false)
 				imaterial.set_property(e, "u_color", math3d.vector(color), true)
 				w:sync("render_object_update:out", e)
 			end
@@ -200,8 +199,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str,
 			on_ready = function (e)
-				w:sync("render_object:update", e)
-				ifs.set_state(e, "main_view", false)
+				ifs.iset_state(e, "main_view", false)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 				w:sync("render_object_update:out", e)
 			end
@@ -354,9 +352,8 @@ function gizmo_sys:post_init()
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name,
 				on_ready = function (e)
-					w:sync("render_object:update", e)
-					ifs.set_state(e, "main_view", false)
-					ifs.set_state(e, "selectable", false)
+					ifs.iset_state(e, "main_view", false)
+					ifs.iset_state(e, "selectable", false)
 					imaterial.set_property(e, "u_color", math3d.vector(color))
 					w:sync("render_object_update:out", e)
 				end

@@ -37,6 +37,12 @@ function ifs.set_state(e, name, v)
 	e.render_object_update = true
 end
 
+function ifs.iset_state(e, name, v)
+	w:sync("filter_state:in", e)
+	ifs.set_state(e, name, v)
+	w:sync("filter_state:out", e)
+end
+
 function ifs.state_names(statemask)
 	local n = {}
 	for k, v in pairs(STATE_TYPE) do
