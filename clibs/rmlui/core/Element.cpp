@@ -1445,7 +1445,6 @@ std::optional<Property> Element::GetComputedLocalProperty(PropertyId id) const {
     return c.Find(h, id);
 }
 
-
 void Element::SetProperty(const std::string& name, std::optional<std::string> value) {
 	if (value) {
 		PropertyVector properties;
@@ -1475,9 +1474,9 @@ std::optional<std::string> Element::GetProperty(const std::string& name) const {
 		Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
 		return std::nullopt;
 	}
+
 	std::string res;
-	
-  for (const auto& property_id : properties) {
+	for (const auto& property_id : properties) {
 		auto property = GetProperty(property_id);
 		if (property) {
 			if (!res.empty()) {

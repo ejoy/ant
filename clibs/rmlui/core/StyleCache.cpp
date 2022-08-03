@@ -37,9 +37,9 @@ namespace Rml::Style {
         for (auto const& [id, value] : vec) {
             PropertyEncode(b, (PropertyVariant const&)value);
             auto str = b.string();
-            attrib[i].key = (uint8_t)id;
             attrib[i].data = str.data();
             attrib[i].sz = str.size();
+            attrib[i].key = (uint8_t)id;
             i++;
         }
         style_handle_t s = style_create(c, (int)attrib.size(), attrib.data());
@@ -73,13 +73,13 @@ namespace Rml::Style {
 
     bool Cache::UpdateProperty(PropertyMap s, PropertyId id, const Property* value) {
         if (!value) {
-            style_attrib attrib = { (uint8_t)id, NULL, 0 };
+            style_attrib attrib = { NULL, 0, (uint8_t)id, 0 };
             return !!style_modify(c, {s.idx}, 1, &attrib);
         }
         strbuilder<uint8_t> b;
         PropertyEncode(b, (PropertyVariant const&)*value);
         auto str = b.string();
-        style_attrib attrib = { (uint8_t)id, str.data(), str.size() };
+        style_attrib attrib = { str.data(), str.size(), (uint8_t)id, 0 };
         bool change = !!style_modify(c, {s.idx}, 1, &attrib);
         delete[] attrib.data;
         return change;
