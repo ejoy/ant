@@ -32,12 +32,26 @@ enum queue_index_type : uint8_t{
 #define MAX_MATERIAL_INSTANCE_SIZE 8
 static_assert(offsetof(ecs::render_object, mat_lightmap) - offsetof(ecs::render_object, mat_mq) == sizeof(int64_t) * (QIT_count-1), "Invalid material data size");
 
-//TODO: we should cache transform update by entity id
+struct transform{
+	uint32_t tid;
+	uint32_t stride;
+};
+
+using obj_transforms = std::unordered_map<const ecs::render_object*, transform>;
 static inline void
-update_transform(struct ecs_world* w, math_t wm){
-	const float * v = math_value(w->math3d->M, wm);
-	const int num = math_size(w->math3d->M, wm);
-	w->bgfx->encoder_set_transform(w->holder->encoder, v, num);
+update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transforms &trans){
+	auto it = trans.find(ro);
+	if (it == trans.end()){
+		const math_t wm = ro->worldmat;
+		const float * v = math_value(w->math3d->M, wm);
+		const int num = math_size(w->math3d->M, wm);
+		transform t;
+		t.tid = w->bgfx->encoder_set_transform(w->holder->encoder, v, num);
+		t.stride = num;
+	} else {
+		const auto& t = it->second;
+		w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
+	}
 }
 
 #define INVALID_BUFFER_TYPE UINT16_MAX
@@ -78,9 +92,9 @@ get_material(const ecs::render_object* ro, int qidx){
 }
 
 static void
-draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_id_t viewid, int queueidx, int texture_index){
+draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_id_t viewid, int queueidx, int texture_index, obj_transforms &trans){
 	if (mesh_submit(w, ro)){
-		update_transform(w, ro->worldmat);
+		update_transform(w, ro, trans);
 		auto mi = get_material(ro, queueidx);
 		apply_material_instance(L, mi, w, texture_index);
 
@@ -127,16 +141,16 @@ collect_render_objs(struct ecs_world *w, cid_t main_id, int index){
 }
 
 static inline void
-draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index){
+draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans){
 	for (auto &qs : s_queue_stages.stages){
 		for (auto &ro: qs.objs){
-			draw(L, w, ro, ra.viewid, ra.queue_index, texture_index);
+			draw(L, w, ro, ra.viewid, ra.queue_index, texture_index, trans);
 		}
 	}
 }
 
 static void
-submit_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index){
+submit_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans){
 	s_queue_stages.clear();
 	const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
 	for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
@@ -146,28 +160,36 @@ submit_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, in
 			collect_render_objs(w, vs_id, i);
 		}
 	}
-	draw_objs(L, w, ra, texture_index);
+	draw_objs(L, w, ra, texture_index, trans);
 }
 
 using matrix_array = std::vector<math_t>;
 using group_matrices = std::unordered_map<int64_t, matrix_array>;
 
-static inline uint32_t
-update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const matrix_array& worldmats, uint32_t &stride){
-	stride = math_size(w->math3d->M, ro->worldmat);
-	const auto nummat = worldmats.size();
-	const auto num = nummat * stride;
-	bgfx_transform_t trans;
-	const auto tid = w->bgfx->encoder_alloc_transform(w->holder->encoder, &trans, (uint16_t)num);
-	for (int i=0; i<nummat; ++i){
-		math_t r = math_ref(w->math3d->M, trans.data+i*stride*16, MATH_TYPE_MAT, stride);
-		math3d_mul_matrix_array(w->math3d->M, worldmats[i], ro->worldmat, r);
+static inline transform
+update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const matrix_array& worldmats, obj_transforms &trans_cache){
+	auto it = trans_cache.find(ro);
+	if (trans_cache.end() == it){
+		transform t;
+		t.stride = math_size(w->math3d->M, ro->worldmat);
+		const auto nummat = worldmats.size();
+		const auto num = nummat * t.stride;
+		bgfx_transform_t trans;
+		t.tid = w->bgfx->encoder_alloc_transform(w->holder->encoder, &trans, (uint16_t)num);
+		for (int i=0; i<nummat; ++i){
+			math_t r = math_ref(w->math3d->M, trans.data+i*t.stride*16, MATH_TYPE_MAT, t.stride);
+			math3d_mul_matrix_array(w->math3d->M, worldmats[i], ro->worldmat, r);
+		}
+
+		it = trans_cache.insert(std::make_pair(ro, t)).first;
 	}
-	return tid;
+
+	return it->second;
 }
 
 static void
-submit_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, int func_cb_index, const group_matrices &groups){
+submit_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, 
+	int texture_index, int func_cb_index, const group_matrices &groups, obj_transforms &trans){
 	auto enable_hitch_group = [&](auto groupid){
 		lua_pushvalue(L, func_cb_index);
 		lua_pushinteger(L, groupid);
@@ -192,8 +214,7 @@ submit_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& 
 		for (const auto& s : s_queue_stages.stages){
 			for (const auto &ro : s.objs){
 				if (mesh_submit(w, ro)){
-					uint32_t stride = 0;
-					auto tid = update_hitch_transform(w, ro, g.second, stride);
+					auto t = update_hitch_transform(w, ro, g.second, trans);
 					auto mi = get_material(ro, ra.queue_index);
 					apply_material_instance(L, mi, w, texture_index);
 
@@ -201,12 +222,12 @@ submit_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& 
 					const auto prog = material_prog(L, mi);
 
 					for (int i=0; i<g.second.size()-1; ++i) {
-						w->bgfx->encoder_set_transform_cached(w->holder->encoder, tid, stride);
+						w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
 						w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, ro->depth, BGFX_DISCARD_TRANSFORM);
-						tid += stride;
+						t.tid += t.stride;
 					}
 
-					w->bgfx->encoder_set_transform_cached(w->holder->encoder, tid, stride);
+					w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
 					w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, ro->depth, BGFX_DISCARD_ALL);
 				}
 				
@@ -234,14 +255,16 @@ lsubmit(lua_State *L){
 		groups[h.group].push_back(s.worldmat);
 	}
 
+	obj_transforms trans;
+
 	for (auto a : ecs.select<ecs::render_args>()){
 		const auto& ra = a.get<ecs::render_args>();
 		if (ra.queue_index >= MAX_MATERIAL_INSTANCE_SIZE){
 			luaL_error(L, "Invalid queue_index in render_args:%d", ra.queue_index);
 		}
 
-		submit_objects(L, w, ra, texture_index);
-		submit_hitch_objects(L, w, ra, texture_index, func_cb_index, groups);
+		submit_objects(L, w, ra, texture_index, trans);
+		submit_hitch_objects(L, w, ra, texture_index, func_cb_index, groups, trans);
 	}
 	return 0;
 }
@@ -282,13 +305,14 @@ ldraw(lua_State *L){
 	const bgfx_view_id_t viewid = (bgfx_view_id_t)luaL_checkinteger(L, 2);
 	const int texture_index = 3;
 	luaL_checktype(L, texture_index, LUA_TTABLE);
+	obj_transforms trans;
 	const int queue_index = to_queue_idx(L, 4);
 	for (int i=0; entity_iter(w->ecs, draw_tagid, i); ++i){
 		const auto ro = (ecs::render_object*)entity_sibling(w->ecs, draw_tagid, i, ecs_api::component<ecs::render_object>::id);
 		if (ro == nullptr)
 			return luaL_error(L, "id:%d is not a render_object entity");
 		
-		draw(L, w, ro, viewid, queue_index, texture_index);
+		draw(L, w, ro, viewid, queue_index, texture_index, trans);
 	}
 	return 0;
 }
