@@ -62,12 +62,15 @@ int StyleSheetNode::GetSpecificity() const {
 	return specificity;
 }
 
-void StyleSheetNode::SetProperties(const PropertyVector& prop, int rule_specificity) {
+void StyleSheetNode::SetProperties(const PropertyVector& prop) {
+	properties = Style::Instance().CreateMap(prop);
+}
+
+void StyleSheetNode::SetSpecificity(int rule_specificity) {
 	specificity = rule_specificity;
 	for (auto const& req : requirements) {
 		specificity += req.GetSpecificity();
 	}
-	properties = Style::Instance().CreateMap(prop);
 }
 
 bool StyleSheetNode::IsApplicable(const Element* const in_element) const {

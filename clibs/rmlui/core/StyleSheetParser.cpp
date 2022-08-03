@@ -115,7 +115,7 @@ bool StyleSheetParser::Parse(Stream& _stream, StyleSheet& style_sheet, int begin
 
 					// Add style nodes to the root of the tree
 					for (size_t i = 0; i < rule_name_list.size(); i++) {
-						ImportProperties(style_sheet, rule_name_list[i], properties, rule_count);
+						ImportProperties(style_sheet, rule_name_list[i], properties);
 					}
 
 					rule_count++;
@@ -308,7 +308,7 @@ bool StyleSheetParser::ReadProperties(PropertyVector& vec)
 	return true;
 }
 
-void StyleSheetParser::ImportProperties(StyleSheet& style_sheet, std::string rule_name, const PropertyVector& properties, int rule_specificity)
+void StyleSheetParser::ImportProperties(StyleSheet& style_sheet, std::string rule_name, const PropertyVector& properties)
 {
 	StyleSheetNode node;
 	std::vector<std::string> nodes;
@@ -399,7 +399,7 @@ void StyleSheetParser::ImportProperties(StyleSheet& style_sheet, std::string rul
 	}
 
 	// Merge the new properties with those already on the leaf node.
-	node.SetProperties(properties, rule_specificity);
+	node.SetProperties(properties);
 	style_sheet.AddNode(std::move(node));
 }
 

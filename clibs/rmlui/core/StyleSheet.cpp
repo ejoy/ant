@@ -4,10 +4,6 @@
 
 namespace Rml {
 
-inline static bool StyleSheetNodeSort(const StyleSheetNode& lhs, const StyleSheetNode& rhs) {
-	return lhs.GetSpecificity() > rhs.GetSpecificity();
-}
-
 StyleSheet::StyleSheet()
 {}
 
@@ -15,7 +11,7 @@ StyleSheet::~StyleSheet()
 {}
 
 void StyleSheet::Merge(const StyleSheet& other_sheet) {
-	stylenode.assign(other_sheet.stylenode.begin(), other_sheet.stylenode.end());
+	stylenode.insert(stylenode.end(), other_sheet.stylenode.begin(), other_sheet.stylenode.end());
 	for (auto const& [identifier, values] : other_sheet.keyframes) {
 		auto& kf = keyframes[identifier];
 		for (auto const& value : values.blocks) {
@@ -53,7 +49,13 @@ void StyleSheet::AddKeyframe(const std::string& identifier, const std::vector<fl
 }
 
 void StyleSheet::Sort() {
-	std::sort(stylenode.begin(), stylenode.end(), StyleSheetNodeSort);
+	int n = 0;
+	for (auto& style : stylenode) {
+		style.SetSpecificity(n++);
+	}
+	std::sort(stylenode.begin(), stylenode.end(), [](const StyleSheetNode& lhs, const StyleSheetNode& rhs) {
+		return lhs.GetSpecificity() > rhs.GetSpecificity();
+	});
 
 	for (auto& [_, kf] : keyframes) {
 		auto& blocks = kf.blocks;

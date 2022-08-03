@@ -37,10 +37,11 @@ struct StyleSheetRequirements {
 class StyleSheetNode {
 public:
 	StyleSheetNode();
-	void SetProperties(const PropertyVector& properties, int rule_specificity);
+	void AddRequirements(StyleSheetRequirements&& req);
+	void SetProperties(const PropertyVector& properties);
+	void SetSpecificity(int rule_specificity);
 	bool IsApplicable(const Element* element) const;
 	int GetSpecificity() const;
-	void AddRequirements(StyleSheetRequirements&& req);
 	Style::PropertyMap GetProperties() const;
 
 private:
