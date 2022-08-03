@@ -1431,6 +1431,9 @@ lmaterial_new(lua_State *L) {
 	get_state(L, 1, &state, &rgba);
 	lua_settop(L, 3);
 	struct material *mat = (struct material *)lua_newuserdatauv(L, sizeof(*mat), MATERIAL_UV_NUM);
+	mat->state = state;
+	mat->rgba = rgba;
+	mat->attrib = INVALID_ATTRIB;
 	mat->prog.idx = luaL_checkinteger(L, 3) & 0xffff;
 	set_material_matatable(L, "ANT_MATERIAL", 0);
 	const int matidx = lua_absindex(L, -1);
@@ -1449,10 +1452,6 @@ lmaterial_new(lua_State *L) {
 
 	//-1 index is system attrib index
 	const int sa_lookup_idx = lua_absindex(L, -1);
-
-	mat->state = state;
-	mat->rgba = rgba;
-	mat->attrib = INVALID_ATTRIB;
 
 	lua_newtable(L);
 	const int lookup_idx = lua_absindex(L, -1);

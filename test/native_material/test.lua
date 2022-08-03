@@ -10,6 +10,7 @@ local bgfx = require "bgfx"
 local function build_ecs_worldobj()
     local ecs_worldobj = {
         assert(bgfx.CINTERFACE) ,
+        assert(bgfx.CINTERFACE) ,
         assert(math3d.CINTERFACE),
         assert(bgfx.encoder_get()),
     }
@@ -82,7 +83,7 @@ function s.init()
         PT = "TRISTRIP",
         WRITE_MASK = "RGBA",
     }
-    local material = rmat.material(state, properties)
+    local material = rmat.material(state, properties, fx.prog)
     local mi = material:instance()
 
     local state2 = bgfx.make_state{
