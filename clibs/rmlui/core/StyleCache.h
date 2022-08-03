@@ -29,7 +29,10 @@ namespace Rml::Style {
         PropertyMap               CreateMap(const PropertyVector& vec);
         PropertyMap               CreateMap(const std::span<PropertyMap>& maps);
         void                      ReleaseMap(PropertyMap s);
-        bool                      UpdateProperty(PropertyMap s, PropertyId id, const Property* value);
+        bool                      SetProperty(PropertyMap s, PropertyId id, const Property& value);
+        bool                      DelProperty(PropertyMap s, PropertyId id);
+        PropertyIdSet             SetProperty(PropertyMap s, const PropertyVector& vec);
+        PropertyIdSet             DelProperty(PropertyMap s, const PropertyIdSet& set);
         PropertyTempMap           MergeMap(PropertyMap child, PropertyMap parent);
         PropertyTempMap           MergeMap(PropertyMap child, PropertyTempMap parent);
         PropertyTempMap           MergeMap(PropertyTempMap child, PropertyMap parent);

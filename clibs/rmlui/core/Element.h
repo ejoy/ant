@@ -108,20 +108,21 @@ public:
 	void DirtyProperty(PropertyId id);
 	void DirtyProperties(const PropertyIdSet& properties);
 
-	void SetProperty(PropertyId id, const Property* property = nullptr);
-	void SetAnimationProperty(PropertyId id, const Property* property = nullptr);
+	void SetProperty(const PropertyVector& vec);
+	void DelProperty(const PropertyIdSet& set);
+	void SetAnimationProperty(PropertyId id, const Property& property);
+	void DelAnimationProperty(PropertyId id);
 
 	std::optional<Property> GetProperty(PropertyId id) const;
 	std::optional<Property> GetComputedProperty(PropertyId id) const;
 	std::optional<Property> GetComputedLocalProperty(PropertyId id) const;
-	std::optional<Transitions> GetTransition() const;
-	std::optional<Transitions> GetTransition(const Style::PropertyMap& def) const;
+	Transitions GetTransition() const;
+	Transitions GetTransition(const Style::PropertyMap& def) const;
 
 	void SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
 	std::optional<std::string> GetProperty(const std::string& name) const;
 
 	void TransitionPropertyChanges(const PropertyIdSet & properties, const Style::PropertyMap& new_definition);
-	void TransitionPropertyChanges(const Transitions& transitions, PropertyId id, const Property& old_property);
 
 	void UpdateProperties();
 	void UpdateAnimations();
@@ -157,7 +158,8 @@ protected:
 	void DirtyTransform();
 	void DirtyClip();
 	void UpdateClip();
-	void UpdateProperty(PropertyId id, const Property* property = nullptr);
+	void SetInlineProperty(const PropertyVector& vec);
+	void DelInlineProperty(const PropertyIdSet& set);
 	void              CalcLocalProperties();
 	Style::EvalHandle GetLocalProperties() const;
 	void              CalcGlobalProperties();
@@ -165,7 +167,7 @@ protected:
 
 	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay);
 	bool AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween);
-	bool StartTransition(PropertyId id, const Transition& transition, const Property& start_value, const Property& target_value);
+	bool StartTransition(PropertyId id, const Transition& transition, std::optional<Property> start_value, std::optional<Property> target_value);
 	void HandleTransitionProperty();
 	void HandleAnimationProperty();
 	void AdvanceAnimations();

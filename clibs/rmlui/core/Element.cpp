@@ -27,6 +27,13 @@
 
 namespace Rml {
 
+struct PropertyTransition {
+	PropertyId              id;
+	const Transition&       transition;
+	std::optional<Property> oldProperty;
+	const Property*         newProperty;
+};
+
 static const Property* PropertyVectorGet(const PropertyVector& vec, PropertyId id) {
 	for (auto const& v : vec) {
 		if (v.id == id) {
@@ -539,10 +546,7 @@ void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
 		PropertyVector properties;
 		StyleSheetParser parser;
 		parser.ParseProperties(properties, it->second);
-
-		for (const auto& name_value : properties) {
-			SetProperty(name_value.id, &name_value.value);
-		}
+		SetProperty(properties);
 	}
 	
 	for (const auto& pair: changed_attributes) {
@@ -828,7 +832,6 @@ bool Element::AddAnimationKeyTime(PropertyId property_id, const Property* target
 	}
 	if (!property)
 		return false;
-	SetProperty(property_id, &*property);
 	ElementAnimation* animation = nullptr;
 	for (auto& existing_animation : animations) {
 		if (existing_animation.GetPropertyId() == property_id) {
@@ -841,7 +844,10 @@ bool Element::AddAnimationKeyTime(PropertyId property_id, const Property* target
 	return animation->AddKey(time, *property, *this, tween);
 }
 
-bool Element::StartTransition(PropertyId id, const Transition& transition, const Property& start_value, const Property& target_value) {
+bool Element::StartTransition(PropertyId id, const Transition& transition, std::optional<Property> start_value, std::optional<Property> target_value) {
+	if (!start_value || !target_value || *start_value == *target_value) {
+		return false;
+	}
 	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == id; });
 
 	if (it != animations.end() && !it->IsTransition())
@@ -853,20 +859,20 @@ bool Element::StartTransition(PropertyId id, const Transition& transition, const
 	if (it == animations.end()) {
 		// Add transition as new animation
 		animations.emplace_back(
-			id, ElementAnimationOrigin::Transition, start_value, *this, start_time, 0.0f, 1, false 
+			id, ElementAnimationOrigin::Transition, *start_value, *this, start_time, 0.0f, 1, false 
 		);
 		it = (animations.end() - 1);
 	}
 	else {
 		// Replace old transition
-		*it = ElementAnimation{ id, ElementAnimationOrigin::Transition, start_value, *this, start_time, 0.0f, 1, false };
+		*it = ElementAnimation{ id, ElementAnimationOrigin::Transition, *start_value, *this, start_time, 0.0f, 1, false };
 	}
 
-	if (!it->AddKey(duration, target_value, *this, transition.tween)) {
+	if (!it->AddKey(duration, *target_value, *this, transition.tween)) {
 		animations.erase(it);
 		return false;
 	}
-	SetAnimationProperty(id, &start_value);
+	SetAnimationProperty(id, *start_value);
 	return true;
 }
 
@@ -879,11 +885,6 @@ void Element::HandleTransitionProperty() {
 	// Remove all transitions that are no longer in our local list
 	auto keep_transitions = GetTransition();
 	auto it_remove = animations.end();
-
-	if (!keep_transitions) {
-		static Transitions dummy = TransitionNone {};
-		keep_transitions = dummy;
-	}
 
 	std::visit([&](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
@@ -910,7 +911,7 @@ void Element::HandleTransitionProperty() {
 		else {
 			static_assert(always_false_v<T>, "non-exhaustive visitor!");
 		}
-	}, *keep_transitions);
+	}, keep_transitions);
 
 	if (it_remove == animations.end()) {
 		return;
@@ -1329,7 +1330,7 @@ void Element::SetScrollLeft(float v) {
 	Size offset { v, 0 };
 	UpdateScrollOffset(offset);
 	Property value(offset.w, PropertyUnit::PX);
-	SetProperty(PropertyId::ScrollLeft, &value);
+	SetProperty({{PropertyId::ScrollLeft, value}});
 }
 
 void Element::SetScrollTop(float v) {
@@ -1339,7 +1340,7 @@ void Element::SetScrollTop(float v) {
 	Size offset { 0, v };
 	UpdateScrollOffset(offset);
 	Property value(offset.h, PropertyUnit::PX);
-	SetProperty(PropertyId::ScrollTop, &value);
+	SetProperty({{PropertyId::ScrollTop, value}});
 }
 
 void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
@@ -1351,10 +1352,10 @@ void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
 	UpdateScrollOffset(offset);
 
 	Property left(offset.w, PropertyUnit::PX);
-	SetProperty(PropertyId::ScrollLeft, &left);
+	SetProperty({{PropertyId::ScrollLeft, left}});
 
 	Property top(offset.h, PropertyUnit::PX);
-	SetProperty(PropertyId::ScrollTop, &top);
+	SetProperty({{PropertyId::ScrollTop, top}});
 }
 
 template <typename T>
@@ -1452,9 +1453,7 @@ void Element::SetProperty(const std::string& name, std::optional<std::string> va
 			Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value->c_str());
 			return;
 		}
-		for (auto& property : properties) {
-			SetProperty(property.id, &property.value);
-		}
+		SetProperty(properties);
 	}
 	else {
 		PropertyIdSet properties;
@@ -1462,9 +1461,7 @@ void Element::SetProperty(const std::string& name, std::optional<std::string> va
 			Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
 			return;
 		}
-		for (auto property_id : properties) {
-			SetProperty(property_id);
-		}
+		DelProperty(properties);
 	}
 }
 
@@ -1498,7 +1495,7 @@ std::optional<Property> Element::GetComputedProperty(PropertyId id) const {
 	return c.Find(StyleSheetSpecification::GetDefaultProperties(), id);
 }
 
-std::optional<Transitions> Element::GetTransition() const {
+Transitions Element::GetTransition() const {
 	auto& c = Style::Instance();
 	if (auto property = c.Find(inline_properties, PropertyId::Transition)) {
 		return property->Get<Transitions>();
@@ -1506,10 +1503,11 @@ std::optional<Transitions> Element::GetTransition() const {
 	if (auto property = c.Find(definition_properties, PropertyId::Transition)) {
 		return property->Get<Transitions>();
 	}
-	return std::nullopt;
+	static TransitionNone none{};
+	return none;
 }
 
-std::optional<Transitions> Element::GetTransition(const Style::PropertyMap& def) const {
+Transitions Element::GetTransition(const Style::PropertyMap& def) const {
 	auto& c = Style::Instance();
 	if (auto property = c.Find(inline_properties, PropertyId::Transition)) {
 		return property->Get<Transitions>();
@@ -1517,69 +1515,35 @@ std::optional<Transitions> Element::GetTransition(const Style::PropertyMap& def)
 	if (auto property = c.Find(def, PropertyId::Transition)) {
 		return property->Get<Transitions>();
 	}
-	return std::nullopt;
+	static TransitionNone none{};
+	return none;
 }
 
 void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const Style::PropertyMap& new_definition) {
-	auto transitions = GetTransition(new_definition);
-	if (!transitions) {
-		return;
-	}
-	
-	auto add_transition = [&](PropertyId id, const Transition& transition) {
-		auto from = GetComputedProperty(id);
-		auto to = Style::Instance().Find(new_definition, id);
-		if (from && to && (*from != *to)) {
-			return StartTransition(id, transition, *from, *to);
-		}
-		return false;
-	};
-
 	std::visit([&](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
 		if constexpr (std::is_same_v<T, TransitionNone>) {
 		}
 		else if constexpr (std::is_same_v<T, TransitionAll>) {
 			for (auto const& id : properties) {
-				add_transition(id, arg);
+				auto from = GetComputedProperty(id);
+				auto to = Style::Instance().Find(new_definition, id);
+				StartTransition(id, arg, from, to);
 			}
 		}
 		else if constexpr (std::is_same_v<T, TransitionList>) {
 			for (auto const& [id, transition] : arg) {
 				if (properties.contains(id)) {
-					add_transition(id, transition);
+					auto from = GetComputedProperty(id);
+					auto to = Style::Instance().Find(new_definition, id);
+					StartTransition(id, transition, from, to);
 				}
 			}
 		}
 		else {
 			static_assert(always_false_v<T>, "non-exhaustive visitor!");
 		}
-	}, *transitions);
-}
-
-void Element::TransitionPropertyChanges(const Transitions& transitions, PropertyId id, const Property& old_property) {
-	auto new_property = GetComputedProperty(id);
-	if (!new_property || (*new_property == old_property)) {
-		return;
-	}
-	
-	std::visit([&](auto&& arg) {
-		using T = std::decay_t<decltype(arg)>;
-		if constexpr (std::is_same_v<T, TransitionNone>) {
-		}
-		else if constexpr (std::is_same_v<T, TransitionAll>) {
-			StartTransition(id, arg, old_property, *new_property);
-		}
-		else if constexpr (std::is_same_v<T, TransitionList>) {
-			auto iter = arg.find(id);
-			if (iter != arg.end()) {
-				StartTransition(id, iter->second, old_property, *new_property);
-			}
-		}
-		else {
-			static_assert(always_false_v<T>, "non-exhaustive visitor!");
-		}
-	}, transitions);
+	}, GetTransition(new_definition));
 }
 
 void Element::UpdateDefinition() {
@@ -1587,10 +1551,8 @@ void Element::UpdateDefinition() {
 		return;
 	}
 	dirty_definition = false;
-	
-	auto& c = Style::Instance();
 	auto new_definition = GetStyleSheet().GetElementDefinition(this);
-
+	auto& c = Style::Instance();
 	PropertyIdSet changed_properties = c.Diff(definition_properties, new_definition);
 	for (PropertyId id : changed_properties) {
 		if (c.Find(inline_properties, id)) {
@@ -1600,42 +1562,109 @@ void Element::UpdateDefinition() {
 	if (!changed_properties.empty()) {
 		TransitionPropertyChanges(changed_properties, new_definition);
 	}
-
 	c.ReleaseMap(definition_properties);
 	definition_properties = new_definition;
 	local_properties = Style::Null;
 	global_properties = Style::Null;
-
 	DirtyProperties(changed_properties);
 	for (auto& child : children) {
 		child->DirtyDefinition();
 	}
 }
 
-void Element::UpdateProperty(PropertyId id, const Property* property) {
-	if (Style::Instance().UpdateProperty(inline_properties, id, property)) {
+void Element::SetInlineProperty(const PropertyVector& vec) {
+	auto change = Style::Instance().SetProperty(inline_properties, vec);
+	DirtyProperties(change);
+}
+
+void Element::DelInlineProperty(const PropertyIdSet& set) {
+	auto change = Style::Instance().DelProperty(inline_properties, set);
+	DirtyProperties(change);
+}
+
+void Element::SetProperty(const PropertyVector& vec) {
+	std::visit([&](auto&& arg) {
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, TransitionNone>) {
+			SetInlineProperty(vec);
+		}
+		else if constexpr (std::is_same_v<T, TransitionAll>) {
+			std::vector<PropertyTransition> pt;
+			for (auto const& v : vec) {
+				if (auto oldProperty = GetComputedProperty(v.id)) {
+					pt.emplace_back(v.id, arg, oldProperty, &v.value);
+				}
+			}
+			SetInlineProperty(vec);
+			for (auto& [id, transition, oldProperty, newProperty] : pt) {
+				StartTransition(id, transition, oldProperty, *newProperty);
+			}
+		}
+		else if constexpr (std::is_same_v<T, TransitionList>) {
+			std::vector<PropertyTransition> pt;
+			for (auto const& [id, transition] : arg) {
+				if (auto oldProperty = GetComputedProperty(id)) {
+					if (auto newProperty = PropertyVectorGet(vec, id)) {
+						pt.emplace_back(id, transition, oldProperty, newProperty);
+					}
+				}
+			}
+			SetInlineProperty(vec);
+			for (auto& [id, transition, oldProperty, newProperty] : pt) {
+				StartTransition(id, transition, oldProperty, *newProperty);
+			}
+		}
+		else {
+			static_assert(always_false_v<T>, "non-exhaustive visitor!");
+		}
+	}, GetTransition());
+}
+
+void Element::DelProperty(const PropertyIdSet& set) {
+	std::visit([&](auto&& arg) {
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, TransitionNone>) {
+			DelInlineProperty(set);
+		}
+		else if constexpr (std::is_same_v<T, TransitionAll>) {
+			std::vector<PropertyTransition> pt;
+			for (auto id : set) {
+				if (auto oldProperty = GetComputedProperty(id)) {
+					pt.emplace_back(id, arg, oldProperty, nullptr);
+				}
+			}
+			DelInlineProperty(set);
+			Style::Instance().Flush();
+			for (auto& [id, transition, oldProperty, _] : pt) {
+				StartTransition(id, transition, oldProperty, GetComputedProperty(id));
+			}
+		}
+		else if constexpr (std::is_same_v<T, TransitionList>) {
+			std::vector<PropertyTransition> pt;
+			for (auto const& [id, transition] : arg) {
+				if (auto oldProperty = GetComputedProperty(id)) {
+					pt.emplace_back(id, transition, oldProperty, nullptr);
+				}
+			}
+			DelInlineProperty(set);
+			for (auto& [id, transition, oldProperty, _] : pt) {
+				StartTransition(id, transition, oldProperty, GetComputedProperty(id));
+			}
+		}
+		else {
+			static_assert(always_false_v<T>, "non-exhaustive visitor!");
+		}
+	}, GetTransition());
+}
+
+void Element::SetAnimationProperty(PropertyId id, const Property& property) {
+	if (Style::Instance().SetProperty(animation_properties, id, property)) {
 		DirtyProperty(id);
 	}
 }
 
-void Element::SetProperty(PropertyId id, const Property* newProperty) {
-	auto transitions = GetTransition();
-	if (!transitions || std::holds_alternative<TransitionNone>(*transitions)) {
-		UpdateProperty(id, newProperty);
-		return;
-	}
-	auto ptrProperty = GetComputedProperty(id);
-	if (!ptrProperty) {
-		UpdateProperty(id, newProperty);
-		return;
-	}
-	Property oldProperty = *ptrProperty;
-	UpdateProperty(id, newProperty);
-	TransitionPropertyChanges(*transitions, id, oldProperty);
-}
-
-void Element::SetAnimationProperty(PropertyId id, const Property* property) {
-	if (Style::Instance().UpdateProperty(animation_properties, id, property)) {
+void Element::DelAnimationProperty(PropertyId id) {
+	if (Style::Instance().DelProperty(animation_properties, id)) {
 		DirtyProperty(id);
 	}
 }

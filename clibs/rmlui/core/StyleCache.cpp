@@ -7,6 +7,11 @@ extern "C" {
 }
 
 namespace Rml::Style {
+    struct Attrib: public style_attrib {
+        ~Attrib() {
+            delete[] data;
+        }
+    };
 
     static bool is_null(style_handle_t s) {
         return s.idx == 0;
@@ -32,7 +37,7 @@ namespace Rml::Style {
 
     PropertyMap Cache::CreateMap(const PropertyVector& vec) {
         strbuilder<uint8_t> b;
-        std::vector<style_attrib> attrib(vec.size());
+        std::vector<Attrib> attrib(vec.size());
         size_t i = 0;
         for (auto const& [id, value] : vec) {
             PropertyEncode(b, (PropertyVariant const&)value);
@@ -43,9 +48,6 @@ namespace Rml::Style {
             i++;
         }
         style_handle_t s = style_create(c, (int)attrib.size(), attrib.data());
-        for (auto& v : attrib) {
-            delete[] v.data;
-        }
         return {s.idx};
     }
 
@@ -71,17 +73,61 @@ namespace Rml::Style {
         style_release(c, {s.idx});
     }
 
-    bool Cache::UpdateProperty(PropertyMap s, PropertyId id, const Property* value) {
-        if (!value) {
-            style_attrib attrib = { NULL, 0, (uint8_t)id, 0 };
-            return !!style_modify(c, {s.idx}, 1, &attrib);
-        }
+    bool Cache::SetProperty(PropertyMap s, PropertyId id, const Property& value) {
         strbuilder<uint8_t> b;
-        PropertyEncode(b, (PropertyVariant const&)*value);
+        PropertyEncode(b, (PropertyVariant const&)value);
         auto str = b.string();
-        style_attrib attrib = { str.data(), str.size(), (uint8_t)id, 0 };
-        bool change = !!style_modify(c, {s.idx}, 1, &attrib);
-        delete[] attrib.data;
+        Attrib attrib = { str.data(), str.size(), (uint8_t)id, 0 };
+        return !!style_modify(c, {s.idx}, 1, &attrib);
+    }
+
+    bool Cache::DelProperty(PropertyMap s, PropertyId id) {
+        style_attrib attrib = { NULL, 0, (uint8_t)id, 0 };
+        return !!style_modify(c, {s.idx}, 1, &attrib);
+    }
+
+    PropertyIdSet Cache::SetProperty(PropertyMap s, const PropertyVector& vec) {
+        strbuilder<uint8_t> b;
+        std::vector<Attrib> attrib(vec.size());
+        size_t i = 0;
+        for (auto const& [id, value] : vec) {
+            PropertyEncode(b, (PropertyVariant const&)value);
+            auto str = b.string();
+            attrib[i].data = str.data();
+            attrib[i].sz = str.size();
+            attrib[i].key = (uint8_t)id;
+            i++;
+        }
+        if (!style_modify(c, {s.idx}, (int)attrib.size(), attrib.data())) {
+            return {};
+        }
+        PropertyIdSet change;
+        for (auto const& a: attrib) {
+            if (a.change) {
+                change.insert((PropertyId)a.key);
+            }
+        }
+        return change;
+    }
+
+    PropertyIdSet Cache::DelProperty(PropertyMap s, const PropertyIdSet& set) {
+        std::vector<Attrib> attrib(set.size());
+        size_t i = 0;
+        for (auto id : set) {
+            attrib[i].data = NULL;
+            attrib[i].sz = 0;
+            attrib[i].key = (uint8_t)id;
+            i++;
+        }
+        if (!style_modify(c, {s.idx}, (int)attrib.size(), attrib.data())) {
+            return {};
+        }
+        PropertyIdSet change;
+        for (auto const& a: attrib) {
+            if (a.change) {
+                change.insert((PropertyId)a.key);
+            }
+        }
         return change;
     }
 
