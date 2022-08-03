@@ -78,8 +78,7 @@ local function simple_render_entity_data(name, material, mesh, srt, color, hide)
 			filter_state= hide and "auxgeom" or "main_view|auxgeom",
 			name		= name or gen_test_name(),
 			on_ready 	= function(e)
-				w:sync("render_object:update", e)
-				imaterial.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
+				imaterial.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE, true)
 			end
 		}
 	}

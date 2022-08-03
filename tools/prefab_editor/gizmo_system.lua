@@ -181,9 +181,9 @@ local function create_arrow_widget(axis_root, axis_str)
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str,
 			on_ready = function (e)
-				w:sync("render_object:update", e)
+				w:sync("filter_state:update", e)
 				ifs.set_state(e, "main_view", false)
-				imaterial.set_property(e, "u_color", math3d.vector(color))
+				imaterial.set_property(e, "u_color", math3d.vector(color), true)
 				w:sync("render_object_update:out", e)
 			end
 		}
