@@ -122,6 +122,7 @@ function list_meta:show_detail(it, show)
     end
 end
 function list_meta:on_mousedown(event)
+    console.log("----on_mousedown----")
     if #self.index_map < 1 then
         for index, it in ipairs(self.panel.childNodes[1].childNodes) do
             if not self.item_width then

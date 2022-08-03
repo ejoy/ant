@@ -360,6 +360,7 @@ function iani.set_pose_to_prefab(instance, pose)
 			e.slot.pose = pose
 		elseif e.animation then
 			pose.pose_result = e.anim_ctrl.pose_result
+			pose.skeleton = e.skeleton
 		end
 	end
 end

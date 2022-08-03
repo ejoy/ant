@@ -150,9 +150,9 @@ void main()
 
 #   ifdef ALPHAMODE_MASK
     // Late discard to avoid samplig artifacts. See https://github.com/KhronosGroup/glTF-Sample-Viewer/issues/267
-    if(color.a < u_alpha_mask_cutoff)
+    if(basecolor.a < u_alpha_mask_cutoff)
         discard;
-    color.a = 1.0;
+    basecolor.a = 1.0;
 #   endif //ALPHAMODE_MASK
 
     gl_FragColor = vec4(color, basecolor.a) + emissivecolor;

@@ -152,11 +152,14 @@ local function update_items()
 
                     bufferoffset = bufferoffset + vbnum
                     buffers[#buffers+1] = objbuffer
-                end
 
-                --TODO: if no items to draw, should remove this entity
-                ifs.set_state(re, "main_view", hasitem)
-                ifs.set_state(re, "selectable", hasitem)
+                    ifs.set_state(re, "main_view", canvas.show)
+                    ifs.set_state(re, "selectable", canvas.show)
+                else
+                    -- if no items to draw, should remove this entity
+                    world:remove_entity(tex.renderer_eid)
+                    textures[texpath] = nil
+                end
             end
         end
     end
@@ -239,16 +242,13 @@ end
 
 local gen_item_id = id_generator()
 local item_cache = {}
-function icanvas.add_items(e, ...)
+function icanvas.add_items(e, items)
     w:sync("canvas:in", e)
     local canvas = e.canvas
     local textures = canvas.textures
 
-    local n = select("#", ...)
-    
     local added_items = {}
-    for i=1, n do
-        local item = select(i, ...)
+    for _, item in ipairs(items) do
         local texture = item.texture
         local texpath = texture.path
         local t = textures[texpath]
@@ -264,7 +264,7 @@ function icanvas.add_items(e, ...)
         item_cache[id] = texpath
         added_items[#added_items+1] = id
     end
-    if n > 0 then
+    if #items > 0 then
         world:pub{"canvas_update", "texture"}
     end
 
@@ -329,5 +329,25 @@ function icanvas.add_text(e, ...)
     for i=1, select('#', ...) do
         local t = select(1, ...)
         ---
+    end
+end
+
+function icanvas.show(b)
+    for e in w:select "canvas:in" do
+        local canvas = e.canvas
+        canvas.show = b
+
+        local textures = canvas.textures
+        for _, tex in pairs(textures) do
+            local re
+            if tex.renderer_eid then
+                re = world:entity(tex.renderer_eid)
+            end
+
+            if re then
+                ifs.set_state(re, "main_view", b)
+                ifs.set_state(re, "selectable", b)
+            end
+        end
     end
 end

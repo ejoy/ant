@@ -28,7 +28,7 @@ local function calc_pose_mat(pose_result, slot)
     local adjust_mat = math3d.mul(r2l_mat, pose_result:joint(slot.joint_index)) --pose_result:joint(slot.joint_index) --
     if slot.offset_srt then
         local offset_mat = math3d.matrix(slot.offset_srt)
-        adjust_mat = math3d.mul(offset_mat, adjust_mat)
+        adjust_mat = math3d.mul(adjust_mat, offset_mat)
     end
     return adjust_mat
 end
