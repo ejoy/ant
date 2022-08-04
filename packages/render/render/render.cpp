@@ -48,6 +48,7 @@ update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transfor
 		transform t;
 		t.tid = w->bgfx->encoder_set_transform(w->holder->encoder, v, num);
 		t.stride = num;
+		trans[ro] = t;
 	} else {
 		const auto& t = it->second;
 		w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
@@ -197,12 +198,9 @@ submit_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& 
 	};
 
 	ecs_api::context ecs {w->ecs};
-
-	s_queue_stages.clear();
-
 	for (const auto &g : groups){
 		enable_hitch_group(g.first);
-
+		s_queue_stages.clear();
 		const cid_t ht_id = (cid_t)ecs_api::component<ecs::hitch_tag>::id;
 		for (int i=0; entity_iter(w->ecs, ht_id, i); ++i){
 			const bool visible = nullptr != entity_sibling(w->ecs, ht_id, i, ra.visible_id);
@@ -217,8 +215,6 @@ submit_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& 
 					auto t = update_hitch_transform(w, ro, g.second, trans);
 					auto mi = get_material(ro, ra.queue_index);
 					apply_material_instance(L, mi, w, texture_index);
-
-					const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
 					const auto prog = material_prog(L, mi);
 
 					for (int i=0; i<g.second.size()-1; ++i) {
@@ -248,11 +244,12 @@ lsubmit(lua_State *L){
 	luaL_checktype(L, func_cb_index, LUA_TFUNCTION);
 
 	group_matrices groups;
-	
 	for (auto e : ecs.select<ecs::view_visible, ecs::hitch, ecs::scene>()){
 		const auto &h = e.get<ecs::hitch>();
 		const auto &s = e.get<ecs::scene>();
-		groups[h.group].push_back(s.worldmat);
+		if (h.group != 0){
+			groups[h.group].push_back(s.worldmat);
+		}
 	}
 
 	obj_transforms trans;
