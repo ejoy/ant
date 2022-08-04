@@ -145,7 +145,7 @@ static inline void
 draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans){
 	for (auto &qs : s_queue_stages.stages){
 		for (auto &ro: qs.objs){
-			draw(L, w, ro, ra.viewid, ra.queue_index, texture_index, trans);
+			draw(L, w, ro, ra.viewid, ra.queue_material_index, texture_index, trans);
 		}
 	}
 }
@@ -213,7 +213,7 @@ submit_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& 
 			for (const auto &ro : s.objs){
 				if (mesh_submit(w, ro)){
 					auto t = update_hitch_transform(w, ro, g.second, trans);
-					auto mi = get_material(ro, ra.queue_index);
+					auto mi = get_material(ro, ra.queue_material_index);
 					apply_material_instance(L, mi, w, texture_index);
 					const auto prog = material_prog(L, mi);
 
@@ -256,8 +256,8 @@ lsubmit(lua_State *L){
 
 	for (auto a : ecs.select<ecs::render_args>()){
 		const auto& ra = a.get<ecs::render_args>();
-		if (ra.queue_index >= MAX_MATERIAL_INSTANCE_SIZE){
-			luaL_error(L, "Invalid queue_index in render_args:%d", ra.queue_index);
+		if (ra.queue_material_index >= MAX_MATERIAL_INSTANCE_SIZE){
+			luaL_error(L, "Invalid queue_material_index in render_args:%d", ra.queue_material_index);
 		}
 
 		submit_objects(L, w, ra, texture_index, trans);
@@ -273,7 +273,7 @@ static const char* s_queuenames[QIT_count] = {
 };
 
 static inline queue_index_type
-which_queue_index(const char* qn){
+which_queue_material_index(const char* qn){
 	for (int ii=0; ii<QIT_count; ++ii){
 		if (strcmp(s_queuenames[ii], qn) == 0){
 			return (queue_index_type)ii;
@@ -285,11 +285,11 @@ which_queue_index(const char* qn){
 
 
 static inline queue_index_type
-to_queue_idx(lua_State *L, int index){
+to_queue_material_idx(lua_State *L, int index){
 	const int t = lua_type(L, index);
 	if (t == LUA_TSTRING){
 		auto s = lua_tostring(L, index);
-		return which_queue_index(s);
+		return which_queue_material_index(s);
 	} else if (t == LUA_TNUMBER){
 		return (queue_index_type)lua_tointeger(L, index);
 	} else if (t == LUA_TNIL){
@@ -309,13 +309,13 @@ ldraw(lua_State *L){
 	const int texture_index = 3;
 	luaL_checktype(L, texture_index, LUA_TTABLE);
 	obj_transforms trans;
-	const int queue_index = to_queue_idx(L, 4);
+	const int qm_idx = to_queue_material_idx(L, 4);
 	for (int i=0; entity_iter(w->ecs, draw_tagid, i); ++i){
 		const auto ro = (ecs::render_object*)entity_sibling(w->ecs, draw_tagid, i, ecs_api::component<ecs::render_object>::id);
 		if (ro == nullptr)
 			return luaL_error(L, "id:%d is not a render_object entity");
 		
-		draw(L, w, ro, viewid, queue_index, texture_index, trans);
+		draw(L, w, ro, viewid, qm_idx, texture_index, trans);
 	}
 	return 0;
 }
@@ -327,9 +327,9 @@ lnull(lua_State *L){
 }
 
 static int
-lqueue_index(lua_State *L){
+lqueue_material_index(lua_State *L){
 	auto s = luaL_checkstring(L, 1);
-	auto idx = which_queue_index(s);
+	auto idx = which_queue_material_index(s);
 
 	if (idx == QIT_count){
 		return 0;
@@ -344,7 +344,7 @@ luaopen_render(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "submit", lsubmit},
 		{ "draw",	ldraw},
-		{ "queue_index", lqueue_index},
+		{ "queue_material_index", lqueue_material_index},
 		{ "null",	lnull},
 		{ nullptr, nullptr },
 	};
