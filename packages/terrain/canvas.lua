@@ -223,8 +223,7 @@ local function create_texture_item_entity(texpath, canvasentity)
             canvas_item = "texture",
             on_ready = function (e)
                 local texobj = assetmgr.resource(texpath)
-                w:sync("render_object:update", e)
-                imaterial.set_property(e, "s_basecolor", texobj.id)
+                imaterial.iset_property(e, "s_basecolor", texobj.id)
 
                 --update parent
                 w:sync("id:in", e)
