@@ -64,9 +64,9 @@ namespace Rml::Style {
         if (is_null(s)) {
             return CreateMap();
         }
-        s = style_clone(c, s);
-        assert(!is_null(s));
-        return {s.idx};
+        style_handle_t r = style_clone(c, s);
+        assert(!is_null(r));
+        return {r.idx};
     }
 
     void Cache::ReleaseMap(PropertyMap s) {
