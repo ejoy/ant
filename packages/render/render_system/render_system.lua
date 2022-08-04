@@ -130,7 +130,7 @@ end
 
 function render_sys:render_submit()
 	w:clear "render_args"
-	for qe in w:select "visible queue_name:in camera_ref:in render_target:in primitive_filter:in render_args:new" do
+	for qe in w:select "visible queue_name:in camera_ref:in render_target:in render_args:new" do
 		local rt = qe.render_target
 		local viewid = rt.viewid
 
@@ -142,7 +142,7 @@ function render_sys:render_submit()
 			visible_id		= w:component_id(qe.queue_name .. "_visible"),
 			cull_id			= w:component_id(qe.queue_name .. "_cull"),
 			viewid			= viewid,
-			queue_index		= rendercore.queue_index(qe.queue_name),
+			queue_index		= rendercore.queue_index(qe.queue_name) or 0,
 		}
 	end
 

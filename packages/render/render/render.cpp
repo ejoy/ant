@@ -332,7 +332,7 @@ lqueue_index(lua_State *L){
 	auto idx = which_queue_index(s);
 
 	if (idx == QIT_count){
-		return luaL_error(L, "Invalid queue:%s", s);
+		return 0;
 	}
 	lua_pushinteger(L, idx);
 	return 1;
