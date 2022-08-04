@@ -31,7 +31,7 @@ end
 
 function ifs.set_state(e, name, v)
 	local fs = e.filter_state
-	fs = v and
+	e.filter_state = v and
 		(fs | STATE_TYPE[name]) or
 		(fs & (~STATE_TYPE[name]))
 	e.render_object_update = true
