@@ -6,7 +6,6 @@
 namespace Rml {
 
 class StyleSheet;
-struct StructuralSelector;
 
 class StyleSheetFactory {
 public:

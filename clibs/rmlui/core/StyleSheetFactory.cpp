@@ -1,6 +1,5 @@
 #include <core/StyleSheetFactory.h>
 #include <core/StyleSheet.h>
-#include <core/StringUtilities.h>
 #include <core/Stream.h>
 #include <core/Log.h>
 #include <core/StyleSheetNode.h>
