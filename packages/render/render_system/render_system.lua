@@ -4,7 +4,6 @@ local w = world.w
 
 local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
-local template	= import_package "ant.general".template
 local texmapper	= import_package "ant.asset".textures
 local irender	= ecs.import.interface "ant.render|irender"
 local ies		= ecs.import.interface "ant.scene|ifilter_state"
@@ -81,7 +80,6 @@ function render_sys:entity_init()
 end
 
 local time_param = math3d.ref(math3d.vector(0.0, 0.0, 0.0, 0.0))
-local starttime = itimer.current()
 local timepassed = 0.0
 local function update_timer_param()
 	local sa = imaterial.system_attribs()
@@ -130,56 +128,6 @@ function render_sys:update_filter()
     end
 end
 
-local keys = template.keys
-local vs_select_cache = template.new (function(a,b) return string.format("hitch_tag %s_visible %s_cull:absent %s render_object:in id:in", a, a, b) end)
-local function load_select_key(qn, fn, c)
-	local k = keys[qn][fn]
-	return c[k]
-end
-
-local function transform_find(t, id, ro, mats)
-	local c = t[id]
-	if c == nil then
-		local wm = ro.worldmat
-		local stride = math3d.array_size(wm)
-		local nummat = #mats
-		local num = stride * nummat
-		local tid, handle = bgfx.alloc_transform_bulk(num)
-		for i=1, nummat do
-			local offset = (i-1)*stride
-			local r = math3d.array_matrix_ref(handle, stride, offset)
-			math3d.mul_array(mats[i], wm, r)
-		end
-		c = {tid, num, stride}
-		t[id] = c
-	end
-	return c
-end
-
-local function submit_hitch_filter(viewid, selkey, qn, groups, transforms)
-	for g, mats in pairs(groups) do
-		w:group_enable("hitch_tag", g)
-		for e in w:select(selkey) do
-			local ro = e.render_object
-			local tid, num, stride = table.unpack(transforms:find(e.id, ro, mats))
-			irender.multi_draw(viewid, ro, e.filter_material[qn], tid, num, stride)
-		end
-	end
-end
-
-local function submit_render_objects(viewid, filter, qn, groups, transforms)
-	for _, fn in ipairs(filter) do
-		--submit_filter(viewid, load_select_key(qn, fn, select_cache), qn, transforms)
-		--submit_hitch_filter(viewid, load_select_key(qn, fn, vs_select_cache), qn, groups, transforms)
-	end
-end
-
-local group_mt = {__index=function(t, k)
-	local tt = {}
-	t[k] = tt
-	return tt
-end}
-
 local queue_material_ids<const> = {
 	main_queue = 0,
 	pre_depth_queue = 1,
@@ -189,23 +137,10 @@ local queue_material_ids<const> = {
 	csm2_queue = 5,
 	csm3_queue = 6,
 	csm4_queue = 7,
+	lightmap_queue = 8,
 }
 
 function render_sys:render_submit()
-	-- local groups = setmetatable({}, group_mt)
-	-- for e in w:select "view_visible hitch:in scene:in" do
-	-- 	local s = e.scene
-	-- 	local gid = e.hitch.group
-	-- 	if gid ~= 0 then
-	-- 		local g = groups[gid]
-	-- 		g[#g+1] = s.worldmat
-	-- 	end
-	-- end
-
-	-- local transforms = {
-	-- 	find = transform_find
-	-- }
-
 	w:clear "render_args"
 	for qe in w:select "visible queue_name:in camera_ref:in render_target:in primitive_filter:in render_args:new" do
 		local rt = qe.render_target
