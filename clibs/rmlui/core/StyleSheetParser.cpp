@@ -13,6 +13,71 @@
 
 namespace Rml {
 
+static StructuralSelector GetSelector(const std::string& name) {
+	const size_t parameter_start = name.find('(');
+	auto func = (parameter_start == std::string::npos)
+			? StyleSheetFactory::GetSelector(name)
+			: StyleSheetFactory::GetSelector(name.substr(0, parameter_start))
+			;
+	if (!func)
+		return StructuralSelector(nullptr, 0, 0);
+
+	// Parse the 'a' and 'b' values.
+	int a = 1;
+	int b = 0;
+
+	const size_t parameter_end = name.find(')', parameter_start + 1);
+	if (parameter_start != std::string::npos && parameter_end != std::string::npos) {
+		std::string parameters = StringUtilities::StripWhitespace(name.substr(parameter_start + 1, parameter_end - (parameter_start + 1)));
+
+		// Check for 'even' or 'odd' first.
+		if (parameters == "even") {
+			a = 2;
+			b = 0;
+		}
+		else if (parameters == "odd") {
+			a = 2;
+			b = 1;
+		}
+		else {
+			// Alrighty; we've got an equation in the form of [[+/-]an][(+/-)b]. So, foist up, we split on 'n'.
+			const size_t n_index = parameters.find('n');
+			if (n_index == std::string::npos) {
+				// The equation is 0n + b. So a = 0, and we only have to parse b.
+				a = 0;
+				b = atoi(parameters.c_str());
+			}
+			else {
+				if (n_index == 0)
+					a = 1;
+				else {
+					const std::string a_parameter = parameters.substr(0, n_index);
+					if (StringUtilities::StripWhitespace(a_parameter) == "-")
+						a = -1;
+					else
+						a = atoi(a_parameter.c_str());
+				}
+
+				size_t pm_index = parameters.find('+', n_index + 1);
+				if (pm_index != std::string::npos)
+					b = 1;
+				else {
+					pm_index = parameters.find('-', n_index + 1);
+					if (pm_index != std::string::npos)
+						b = -1;
+				}
+
+				if (n_index == parameters.size() - 1 || pm_index == std::string::npos)
+					b = 0;
+				else
+					b = b * atoi(parameters.data() + pm_index + 1);
+			}
+		}
+	}
+
+	return StructuralSelector(func, a, b);
+}
+
 StyleSheetParser::StyleSheetParser()
 {
 	line_number = 0;
@@ -364,7 +429,7 @@ void StyleSheetParser::ImportProperties(StyleSheet& style_sheet, std::string rul
 					case ':':
 					{
 						std::string pseudo_class_name = identifier.substr(1);
-						StructuralSelector node_selector = StyleSheetFactory::GetSelector(pseudo_class_name);
+						StructuralSelector node_selector = GetSelector(pseudo_class_name);
 						if (node_selector.selector)
 							requirements.structural_selectors.push_back(node_selector);
 						else
