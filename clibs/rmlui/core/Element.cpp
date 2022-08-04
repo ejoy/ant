@@ -1794,17 +1794,14 @@ void Element::CalcLocalProperties() {
 
 Style::EvalHandle Element::GetLocalProperties() const {
 	auto& c = Style::Instance();
-	Style::EvalHandle h;
 	if (local_properties.idx != 0) {
-		h = c.Eval(local_properties);
+		auto h = c.TryEval(local_properties);
 		if (h) {
 			return h;
 		}
 	}
 	const_cast<Element*>(this)->CalcLocalProperties();
-	h = c.Eval(local_properties);
-	assert(h);
-	return h;
+	return c.Eval(local_properties);
 }
 
 void Element::CalcGlobalProperties() {
@@ -1821,17 +1818,14 @@ void Element::CalcGlobalProperties() {
 
 Style::EvalHandle Element::GetGlobalProperties() const {
 	auto& c = Style::Instance();
-	Style::EvalHandle h;
 	if (global_properties.idx != 0) {
-		h = c.Eval(global_properties);
+		auto h = c.TryEval(global_properties);
 		if (h) {
 			return h;
 		}
 	}
 	const_cast<Element*>(this)->CalcGlobalProperties();
-	h = c.Eval(global_properties);
-	assert(h);
-	return h;
+	return c.Eval(global_properties);
 
 }
 

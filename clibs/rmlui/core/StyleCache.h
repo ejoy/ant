@@ -40,6 +40,7 @@ namespace Rml::Style {
         PropertyTempMap           InheritMap(PropertyTempMap child, PropertyMap parent);
         void                      Dump();
         EvalHandle                Eval(PropertyTempMap s);
+        EvalHandle                TryEval(PropertyTempMap s);
         std::optional<Property>   Find(PropertyMap s, PropertyId id);
         std::optional<Property>   Find(EvalHandle attrib, PropertyId id);
         std::optional<PropertyKV> Index(EvalHandle attrib, size_t index);
