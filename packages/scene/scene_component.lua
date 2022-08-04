@@ -61,8 +61,6 @@ function m.remove(v)
     math3d.unmark(v.mat)
     math3d.unmark(v.worldmat)
     math3d.unmark(v.updir)
-    math3d.unmark(v.aabb)
-    math3d.unmark(v.scene_aabb)
 end
 
 function m.marshal(v)
@@ -71,4 +69,32 @@ end
 
 function m.unmarshal(s)
     return init_scene(serialize.unpack(s))
+end
+
+local b = ecs.component "bounding"
+local function init_b(v)
+	if v.aabb then
+		v.aabb = math3d.mark(math3d.aabb(v.aabb[1], v.aabb[2]))
+		v.scene_aabb = math3d.mark(math3d.aabb(v.aabb))
+	else
+		v.aabb = mc.NULL
+		v.scene_aabb = mc.NULL
+	end
+end
+function b.init(v)
+	scene.aabb = mc.NULL
+	scene.scene_aabb = mc.NULL
+end
+
+function b.remove(v)
+    math3d.unmark(v.aabb)
+    math3d.unmark(v.scene_aabb)
+end
+
+function b.marshal(v)
+	return serialize.pack(v)
+end
+
+function b.unmarshal(v)
+	return init_b(serialize.unpack(v))
 end

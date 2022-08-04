@@ -88,7 +88,7 @@ local function update_timer_param()
 	sa:update("u_time", time_param)
 end
 
-function render_sys:commit_system_propertivs()
+function render_sys:commit_system_properties()
 	update_timer_param()
 end
 
