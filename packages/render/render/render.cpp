@@ -273,17 +273,23 @@ static const char* s_queuenames[QIT_count] = {
 };
 
 static inline queue_index_type
+which_queue_index(const char* qn){
+	for (int ii=0; ii<QIT_count; ++ii){
+		if (strcmp(s_queuenames[ii], qn) == 0){
+			return (queue_index_type)ii;
+		}
+	}
+
+	return QIT_count;
+}
+
+
+static inline queue_index_type
 to_queue_idx(lua_State *L, int index){
 	const int t = lua_type(L, index);
 	if (t == LUA_TSTRING){
 		auto s = lua_tostring(L, index);
-		for (int ii=0; ii<QIT_count; ++ii){
-			if (strcmp(s_queuenames[ii], s) == 0){
-				return (queue_index_type)ii;
-			}
-		}
-
-		return QIT_count;
+		return which_queue_index(s);
 	} else if (t == LUA_TNUMBER){
 		return (queue_index_type)lua_tointeger(L, index);
 	} else if (t == LUA_TNIL){
@@ -320,12 +326,25 @@ lnull(lua_State *L){
 	return 1;
 }
 
+static int
+lqueue_index(lua_State *L){
+	auto s = luaL_checkstring(L, 1);
+	auto idx = which_queue_index(s);
+
+	if (idx == QIT_count){
+		return luaL_error(L, "Invalid queue:%s", s);
+	}
+	lua_pushinteger(L, idx);
+	return 1;
+}
+
 extern "C" int
 luaopen_render(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "submit", lsubmit},
 		{ "draw",	ldraw},
+		{ "queue_index", lqueue_index},
 		{ "null",	lnull},
 		{ nullptr, nullptr },
 	};

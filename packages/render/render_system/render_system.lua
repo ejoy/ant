@@ -128,18 +128,6 @@ function render_sys:update_filter()
     end
 end
 
-local queue_material_ids<const> = {
-	main_queue = 0,
-	pre_depth_queue = 1,
-	scene_depth_queue = 2,
-	pickup_queue = 3,
-	csm1_queue = 4,
-	csm2_queue = 5,
-	csm3_queue = 6,
-	csm4_queue = 7,
-	lightmap_queue = 8,
-}
-
 function render_sys:render_submit()
 	w:clear "render_args"
 	for qe in w:select "visible queue_name:in camera_ref:in render_target:in primitive_filter:in render_args:new" do
@@ -154,7 +142,7 @@ function render_sys:render_submit()
 			visible_id		= w:component_id(qe.queue_name .. "_visible"),
 			cull_id			= w:component_id(qe.queue_name .. "_cull"),
 			viewid			= viewid,
-			queue_index		= queue_material_ids[qe.queue_name] or 0,
+			queue_index		= rendercore.queue_index(qe.queue_name),
 		}
 	end
 
