@@ -903,10 +903,10 @@ function m.show()
     end
 end
 
-function m.on_prefab_load(entitivs)
+function m.on_prefab_load(entities)
     local editanims = {dirty = true, name_list = {} }
     local skeleton
-    for _, eid in ipairs(entitivs) do
+    for _, eid in ipairs(entities) do
         local e = world:entity(eid)
         if e.anim_ctrl then
             anim_eid = eid
