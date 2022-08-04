@@ -28,7 +28,6 @@
 
 #include <core/ElementAnimation.h>
 #include <core/Element.h>
-#include <core/StyleSheetSpecification.h>
 #include <core/Transform.h>
 #include <core/Log.h>
 #include <algorithm>
@@ -220,14 +219,14 @@ void ElementAnimation::UpdateAndGetProperty(double world_time, Element& element)
 	const Property& p0 = keys[key].in;
 	const Property& p1 = keys[key].out;
 	Property p2 = p0.Interpolate(p1, alpha);
-	element.SetAnimationProperty(GetPropertyId(), &p2);
+	element.SetAnimationProperty(GetPropertyId(), p2);
 }
 
 void ElementAnimation::Release(Element& element) {
 	if (!IsInitalized()) {
 		return;
 	}
-	element.SetAnimationProperty(GetPropertyId());
+	element.DelAnimationProperty(GetPropertyId());
 }
 
 }

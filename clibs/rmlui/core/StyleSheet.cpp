@@ -1,54 +1,23 @@
 #include <core/StyleSheet.h>
-#include <core/StyleSheetFactory.h>
 #include <core/StyleSheetNode.h>
-#include <core/StyleSheetParser.h>
-#include <core/Element.h>
-#include <core/StyleSheetSpecification.h>
-#include <core/Property.h>
-#include <core/Log.h>
-#include <core/Stream.h>
 #include <algorithm>
-#include <array>
 
 namespace Rml {
 
-inline static bool StyleSheetNodeSort(const StyleSheetNode* lhs, const StyleSheetNode* rhs) {
-	return lhs->GetSpecificity() < rhs->GetSpecificity();
-}
-
-StyleSheet::StyleSheet() {
-	root = std::make_unique<StyleSheetNode>();
-	specificity_offset = 0;
-}
+StyleSheet::StyleSheet()
+{}
 
 StyleSheet::~StyleSheet()
 {}
 
-bool StyleSheet::LoadStyleSheet(Stream* stream, int begin_line_number) {
-	StyleSheetParser parser;
-	specificity_offset = parser.Parse(root.get(), stream, *this, keyframes, begin_line_number);
-	bool ok = specificity_offset >= 0;
-	if (!ok) {
-		Log::Message(Log::Level::Error, "Failed to load style sheet in %s.", stream->GetSourceURL().c_str());
+void StyleSheet::Merge(const StyleSheet& other_sheet) {
+	stylenode.insert(stylenode.end(), other_sheet.stylenode.begin(), other_sheet.stylenode.end());
+	for (auto const& [identifier, values] : other_sheet.keyframes) {
+		auto& kf = keyframes[identifier];
+		for (auto const& value : values.blocks) {
+			kf.blocks.emplace_back(value);
+		}
 	}
-	return ok;
-}
-
-void StyleSheet::CombineStyleSheet(const StyleSheet& other_sheet) {
-	root->MergeHierarchy(other_sheet.root.get(), specificity_offset);
-
-	keyframes.reserve(keyframes.size() + other_sheet.keyframes.size());
-	for (auto& other_keyframes : other_sheet.keyframes)
-	{
-		keyframes[other_keyframes.first] = other_keyframes.second;
-	}
-
-	specificity_offset += other_sheet.specificity_offset;
-}
-
-void StyleSheet::BuildNodeIndex() {
-	styled_node_index.clear();
-	root->BuildIndex(styled_node_index);
 }
 
 const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const {
@@ -58,25 +27,54 @@ const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const {
 	return nullptr;
 }
 
-SharedPtr<StyleSheetPropertyDictionary> StyleSheet::GetElementDefinition(const Element* element) const {
-	static std::vector< const StyleSheetNode* > applicable_nodes;
-	applicable_nodes.clear();
-
-	for (StyleSheetNode* node : styled_node_index) {
-		if (node->IsApplicable(element)) {
-			applicable_nodes.push_back(node);
+Style::PropertyMap StyleSheet::GetElementDefinition(const Element* element) const {
+	std::vector<Style::PropertyMap> applicable;
+	for (auto& node : stylenode) {
+		if (node.IsApplicable(element)) {
+			applicable.push_back(node.GetProperties());
 		}
 	}
+	return Style::Instance().CreateMap(applicable);
+}
 
-	std::sort(applicable_nodes.begin(), applicable_nodes.end(), StyleSheetNodeSort);
+void StyleSheet::AddNode(StyleSheetNode&& node) {
+	stylenode.emplace_back(std::move(node));
+}
 
-	if (applicable_nodes.empty())
-		return nullptr;
-	auto new_definition = MakeShared<StyleSheetPropertyDictionary>();
-	for (auto const& node : applicable_nodes) {
-		node->MergeProperties(*new_definition);
+void StyleSheet::AddKeyframe(const std::string& identifier, const std::vector<float>& rule_values, const PropertyVector& properties) {
+	auto& kf = keyframes[identifier];
+	for (float selector : rule_values) {
+		kf.blocks.emplace_back(KeyframeBlock { selector, properties });
 	}
-	return new_definition;
+}
+
+void StyleSheet::Sort() {
+	int n = 0;
+	for (auto& style : stylenode) {
+		style.SetSpecificity(n++);
+	}
+	std::sort(stylenode.begin(), stylenode.end(), [](const StyleSheetNode& lhs, const StyleSheetNode& rhs) {
+		return lhs.GetSpecificity() > rhs.GetSpecificity();
+	});
+
+	for (auto& [_, kf] : keyframes) {
+		auto& blocks = kf.blocks;
+		auto& property_ids = kf.property_ids;
+
+		// Sort keyframes on selector value.
+		std::sort(blocks.begin(), blocks.end(), [](const KeyframeBlock& a, const KeyframeBlock& b) { return a.normalized_time < b.normalized_time; });
+
+		// Add all property names specified by any block
+		if (blocks.size() > 0) property_ids.reserve(blocks.size() * blocks[0].properties.size());
+		for (auto& block : blocks) {
+			for (auto& v : block.properties)
+				property_ids.push_back(v.id);
+		}
+		// Remove duplicate property names
+		std::sort(property_ids.begin(), property_ids.end());
+		property_ids.erase(std::unique(property_ids.begin(), property_ids.end()), property_ids.end());
+		property_ids.shrink_to_fit();
+	}
 }
 
 }

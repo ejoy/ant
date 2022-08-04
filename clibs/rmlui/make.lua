@@ -5,7 +5,7 @@ dofile "../common.lua"
 lm:import "../font/make.lua"
 lm:import "../luabind/build.lua"
 
-lm.warnings = "error"
+--lm.warnings = "error"
 
 lm:source_set "yoga" {
     rootdir = Ant3rd .. "yoga",
@@ -18,11 +18,22 @@ lm:source_set "yoga" {
     }
 }
 
+lm:source_set "stylecache" {
+    rootdir = Ant3rd .. "stylecache",
+    includes = {
+        ".",
+    },
+    sources = {
+        "*.c",
+    }
+}
+
 lm:source_set "rmlui_core" {
     includes = {
         ".",
         Ant3rd .. "glm",
         Ant3rd .. "yoga",
+        Ant3rd .. "stylecache",
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
@@ -64,6 +75,7 @@ lm:lua_source "rmlui_binding" {
 lm:source_set "rmlui" {
     deps = {
         "yoga",
+        "stylecache",
         "luabind",
         "rmlui_core",
         "rmlui_databinding",

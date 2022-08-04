@@ -131,7 +131,7 @@ const std::string& Text::GetText() const {
 	return text;
 }
 
-const Property* Text::GetComputedProperty(PropertyId id) {
+std::optional<Property> Text::GetComputedProperty(PropertyId id) {
 	assert(parent);
 	return parent->GetComputedProperty(id);
 }
@@ -514,7 +514,7 @@ Style::TextDecorationLine Text::GetTextDecorationLine() {
 }
 
 Color Text::GetTextDecorationColor() {
-	const Property* property = GetComputedProperty(PropertyId::TextDecorationColor);
+	auto property = GetComputedProperty(PropertyId::TextDecorationColor);
 	if (property->Has<PropertyKeyword>()) {
 		// CurrentColor
 		auto stroke = GetTextStroke();

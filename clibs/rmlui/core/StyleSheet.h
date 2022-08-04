@@ -1,9 +1,8 @@
 #pragma once
 
 #include <core/ID.h>
-#include <core/PropertyDictionary.h>
-#include <core/SharedPtr.h>
-#include <memory>
+#include <core/PropertyVector.h>
+#include <core/StyleCache.h>
 #include <unordered_map>
 #include <vector>
 
@@ -11,39 +10,33 @@ namespace Rml {
 
 class Element;
 class StyleSheetNode;
-class StyleSheetPropertyDictionary;
 class Stream;
 
 struct KeyframeBlock {
 	float normalized_time;  // [0, 1]
-	PropertyDictionary properties;
+	PropertyVector properties;
 };
 struct Keyframes {
 	std::vector<PropertyId> property_ids;
 	std::vector<KeyframeBlock> blocks;
 };
-using KeyframesMap = std::unordered_map<std::string, Keyframes>;
 
 class StyleSheet {
 public:
-	typedef std::vector<StyleSheetNode*> NodeIndex;
 	StyleSheet();
-	virtual ~StyleSheet();
+	~StyleSheet();
 	StyleSheet(const StyleSheet&) = delete;
 	StyleSheet& operator=(const StyleSheet&) = delete;
-	bool LoadStyleSheet(Stream* stream, int begin_line_number = 1);
-	void CombineStyleSheet(const StyleSheet& sheet);
-	void BuildNodeIndex();
+	void Merge(const StyleSheet& sheet);
+	void AddNode(StyleSheetNode && node);
+	void AddKeyframe(const std::string& identifier, const std::vector<float>& rule_values, const PropertyVector& properties);
+	void Sort();
 	const Keyframes* GetKeyframes(const std::string& name) const;
-	SharedPtr<StyleSheetPropertyDictionary> GetElementDefinition(const Element* element) const;
-
-	void Reset() {}
+	Style::PropertyMap GetElementDefinition(const Element* element) const;
 
 private:
-	std::unique_ptr<StyleSheetNode> root;
-	int specificity_offset;
-	KeyframesMap keyframes;
-	NodeIndex styled_node_index;
+	std::vector<StyleSheetNode> stylenode;
+	std::unordered_map<std::string, Keyframes> keyframes;
 };
 
 }
