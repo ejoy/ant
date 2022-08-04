@@ -6,7 +6,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local computil  = ecs.import.interface "ant.render|ientity"
 local ilight    = ecs.import.interface "ant.render|ilight"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
-local ies       = ecs.import.interface "ant.scene|ifilter_state"
+local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local geo_utils = ecs.require "editor.geometry_utils"
 
 local math3d = require "math3d"
@@ -62,7 +62,7 @@ end
 function m.show(b)
     if m.current_gizmo then
         for i, eid in ipairs(m.current_gizmo.eid) do
-            ies.set_state(world:entity(eid), "main_view", b)
+            ivs.set_state(world:entity(eid), "main_view", b)
         end
     end
 end
@@ -91,7 +91,7 @@ local function create_gizmo_root(initpos, introt)
 			name = "gizmo root",
             scene = {t = initpos or {0,0,0}, r = introt or {0,0,0,1}},
             -- on_ready = function (e)
-            --     ies.set_state(e, "visible", false)  
+            --     ivs.set_state(e, "visible", false)  
             -- end
 		},
     }

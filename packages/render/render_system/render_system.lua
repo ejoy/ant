@@ -6,7 +6,7 @@ local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
 local texmapper	= import_package "ant.asset".textures
 local irender	= ecs.import.interface "ant.render|irender"
-local ies		= ecs.import.interface "ant.scene|ifilter_state"
+local ivs		= ecs.import.interface "ant.scene|ivisible_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local itimer	= ecs.import.interface "ant.timer|itimer"
 local render_sys = ecs.system "render_system"
@@ -53,9 +53,9 @@ function render_sys:entity_init()
 		local pf = qe.primitive_filter
 
 		pf._DEBUG_filter_type = pf.filter_type
-		pf.filter_type = ies.filter_mask(pf.filter_type)
+		pf.filter_type = ivs.filter_mask(pf.filter_type)
 		pf._DEBUG_excule_type = pf.exclude_type
-		pf.exclude_type = pf.exclude_type and ies.filter_mask(pf.exclude_type) or 0
+		pf.exclude_type = pf.exclude_type and ivs.filter_mask(pf.exclude_type) or 0
 	end
 
 	
@@ -88,7 +88,7 @@ local function update_timer_param()
 	sa:update("u_time", time_param)
 end
 
-function render_sys:commit_system_properties()
+function render_sys:commit_system_propertivs()
 	update_timer_param()
 end
 

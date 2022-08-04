@@ -6,7 +6,7 @@ local geometry_drawer = import_package "ant.geometry".drawer
 local setting		= import_package "ant.settings".setting
 local mc = import_package "ant.math".constant
 
-local ies = ecs.import.interface "ant.scene|ifilter_state"
+local ivs = ecs.import.interface "ant.scene|ivisible_state"
 local bgfx = require "bgfx"
 local math3d = require "math3d"
 
@@ -194,7 +194,7 @@ function rmb_sys:follow_transform_updated()
 		local desc={vb={}, ib={}}
 		for e in w:select "render_object scene:in" do
 			local aabb = e.scene.scene_aabb
-			if aabb ~= mc.NULL and ies.has_state(e, "main_view") then
+			if aabb ~= mc.NULL and ivs.has_state(e, "main_view") then
 				local minv, maxv = math3d.array_index(aabb, 1) math3d.array_index(aabb, 2)
 				local aabb_shape = {min=math3d.tovalue(minv), max=math3d.tovalue(maxv)}
 				local voffset = #desc.vb//4

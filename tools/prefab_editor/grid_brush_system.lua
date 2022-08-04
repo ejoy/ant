@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
-local ies		    = ecs.import.interface "ant.scene|ifilter_state"
+local ivs		    = ecs.import.interface "ant.scene|ivisible_state"
 local computil      = ecs.import.interface "ant.render|ientity"
 local irq           = ecs.import.interface "ant.render|irenderqueue"
 local icamera       = ecs.import.interface "ant.camera|icamera"
@@ -121,7 +121,7 @@ end
 function grid:show(show)
     if not grid_eid then return end
     self.visible = show
-    ies.set_state(world:entity(grid_eid), "main_view", show)
+    ivs.set_state(world:entity(grid_eid), "main_view", show)
 end
 
 function grid:load(path)

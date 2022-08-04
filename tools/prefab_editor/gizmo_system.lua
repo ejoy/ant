@@ -7,7 +7,7 @@ local mc, mu	= mathpkg.constant, mathpkg.util
 
 local icamera	= ecs.import.interface "ant.camera|icamera"
 local iom 		= ecs.import.interface "ant.objcontroller|iobj_motion"
-local ifs 		= ecs.import.interface "ant.scene|ifilter_state"
+local ivs 		= ecs.import.interface "ant.scene|ivisible_state"
 local ientity 	= ecs.import.interface "ant.render|ientity"
 local ilight 	= ecs.import.interface "ant.render|ilight"
 local irq		= ecs.import.interface "ant.render|irenderqueue"
@@ -181,7 +181,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str,
 			on_ready = function (e)
-				ifs.iset_state(e, "main_view", false)
+				ivs.iset_state(e, "main_view", false)
 				imaterial.iset_property(e, "u_color", math3d.vector(color))
 				w:sync("render_object_update:out", e)
 			end
@@ -199,7 +199,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str,
 			on_ready = function (e)
-				ifs.iset_state(e, "main_view", false)
+				ivs.iset_state(e, "main_view", false)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
 				w:sync("render_object_update:out", e)
 			end
@@ -352,8 +352,8 @@ function gizmo_sys:post_init()
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name,
 				on_ready = function (e)
-					ifs.iset_state(e, "main_view", false)
-					ifs.iset_state(e, "selectable", false)
+					ivs.iset_state(e, "main_view", false)
+					ivs.iset_state(e, "selectable", false)
 					imaterial.set_property(e, "u_color", math3d.vector(color))
 					w:sync("render_object_update:out", e)
 				end
@@ -715,8 +715,8 @@ local function show_rotate_fan(rotAxis, startAngle, deltaAngle)
 			local e4num = math.floor(extraAngle * stepAngle) * 3
 			local ro = e4.render_object
 			ro.ib_num = e4num
-			ifs.set_state(e4, "main_view", e4num > 0)
-			ifs.set_state(e4, "selectable", e4num > 0)
+			ivs.set_state(e4, "main_view", e4num > 0)
+			ivs.set_state(e4, "selectable", e4num > 0)
 		end
 		e3_num = math.floor(deltaAngle * stepAngle + 1) * 3
 	else
@@ -729,8 +729,8 @@ local function show_rotate_fan(rotAxis, startAngle, deltaAngle)
 			local e4start, e4num = math.floor((360 + extraAngle) * stepAngle) * 3, math.floor(-extraAngle * stepAngle + 1) * 3
 			local ro = e4.render_object
 			ro.ib_start, ro.ib_num = e4start, e4num
-			ifs.set_state(e4, "main_view", e4num > 0)
-			ifs.set_state(e4, "selectable", e4num > 0)
+			ivs.set_state(e4, "main_view", e4num > 0)
+			ivs.set_state(e4, "selectable", e4num > 0)
 		else
 			e3_num = math.floor(-deltaAngle * stepAngle + 1) * 3
 			e3_start = math.floor(startAngle * stepAngle) * 3 - e3_num
@@ -744,8 +744,8 @@ local function show_rotate_fan(rotAxis, startAngle, deltaAngle)
 	ro.ib_start, ro.ib_num = e3_start, e3_num
 
 	local e3_visible = e3_num > 0
-	ifs.set_state(e3, "main_view", e3_visible)
-	ifs.set_state(e3, "selectable", e3_visible)
+	ivs.set_state(e3, "main_view", e3_visible)
+	ivs.set_state(e3, "selectable", e3_visible)
 end
 
 local function rotate_gizmo(x, y)

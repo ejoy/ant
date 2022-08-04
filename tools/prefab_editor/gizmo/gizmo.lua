@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local ies = ecs.import.interface "ant.scene|ifilter_state"
+local ivs = ecs.import.interface "ant.scene|ivisible_state"
 local math3d = require "math3d"
 local gizmo_const = require "gizmo.const"
 local gizmo = {
@@ -61,8 +61,8 @@ function gizmo:highlight_axis_or_plane(axis)
 end
 
 local function set_visible(e, b)
-	ies.set_state(world:entity(e), "main_view", b)
-	ies.set_state(world:entity(e), "selectable", b)
+	ivs.set_state(world:entity(e), "main_view", b)
+	ivs.set_state(world:entity(e), "selectable", b)
 end
 
 function gizmo:click_axis(axis)

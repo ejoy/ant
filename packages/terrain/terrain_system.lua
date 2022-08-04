@@ -9,7 +9,7 @@
 -- local math3d	= require "math3d"
 -- local terrain_module = require "terrain"
 
--- local ies = ecs.import.interface "ant.scene|ifilter_state"
+-- local ivs = ecs.import.interface "ant.scene|ivisible_state"
 
 -- local t = ecs.component "terrain"
 -- function t:init()

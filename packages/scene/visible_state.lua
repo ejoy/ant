@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local STATE_TYPE = {
-	---
+---
 	main_view 	= 0x00000001,
 	cast_shadow	= 0x00000002,
 	selectable	= 0x00000004,
@@ -21,15 +21,15 @@ local function filter_mask(names)
 	return s
 end
 
-local ifs = ecs.interface "ifilter_state"
+local ivs = ecs.interface "ivisible_state"
 
-ifs.filter_mask = filter_mask
+ivs.filter_mask = filter_mask
 
-function ifs.has_state(e, name)
+function ivs.has_state(e, name)
 	return ((e.visible_state) & STATE_TYPE[name]) ~= 0
 end
 
-function ifs.set_state(e, name, v)
+function ivs.set_state(e, name, v)
 	local fs = e.visible_state
 	e.visible_state = v and
 		(fs | STATE_TYPE[name]) or
@@ -37,13 +37,13 @@ function ifs.set_state(e, name, v)
 	e.render_object_update = true
 end
 
-function ifs.iset_state(e, name, v)
+function ivs.iset_state(e, name, v)
 	w:sync("visible_state:in", e)
-	ifs.set_state(e, name, v)
+	ivs.set_state(e, name, v)
 	w:sync("visible_state:out", e)
 end
 
-function ifs.state_names(statemask)
+function ivs.state_names(statemask)
 	local n = {}
 	for k, v in pairs(STATE_TYPE) do
 		if (v & statemask) ~= 0 then

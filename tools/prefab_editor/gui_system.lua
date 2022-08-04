@@ -11,7 +11,7 @@ local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 --local effekseer_filename_mgr = ecs.import.interface "ant.effekseer|filename_mgr"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
-local ies       = ecs.import.interface "ant.scene|ifilter_state"
+local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local iwd       = ecs.import.interface "ant.render|iwidget_drawer"
 local iefk      = ecs.import.interface "ant.efk|iefk"
@@ -382,13 +382,13 @@ function hierarchy:set_adaptee_visible(nd, b, recursion)
 end
 
 local function update_visible(node, visible)
-    ies.set_state(world:entity(node.eid), "main_view", visible)
+    ivs.set_state(world:entity(node.eid), "main_view", visible)
     for _, nd in ipairs(node.children) do
         update_visible(nd, visible)
     end
     local adaptee = hierarchy:get_select_adaptee(node.eid)
     for _, eid in ipairs(adaptee) do
-        ies.set_state(world:entity(eid), "main_view", visible)
+        ivs.set_state(world:entity(eid), "main_view", visible)
     end
 end
 local reset_editor = world:sub {"ResetEditor"}
@@ -587,7 +587,7 @@ function m:widget()
     --     else
     --         w:sync("simplemesh?in", skeleton_eid)
     --         if skeleton_eid.simplemesh then
-    --             --ies.set_state(skeleton_eid, "visible", true)
+    --             --ivs.set_state(skeleton_eid, "visible", true)
     --             local desc={vb={}, ib={}}
     --             local pose_result
     --             for e in w:select "skeleton:in pose_result:in" do

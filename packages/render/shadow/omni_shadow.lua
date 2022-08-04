@@ -28,7 +28,7 @@ local math3d        = require "math3d"
 
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local icamera   = ecs.import.interface "ant.camera|icamera"
-local ies       = ecs.import.interface "ant.scene|ifilter_state"
+local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local ilight    = ecs.import.interface "ant.render|ilight"
 local ientity   = ecs.import.interface "ant.render|ientity"
 
@@ -268,7 +268,7 @@ function omni_shadow_sys:data_changed()
     for msg in pl_reg_mb:each() do
         local eid = msg[3]
         local e = world[eid]
-        if ies.has_state "visible" and e.make_shadow then
+        if ivs.has_state "visible" and e.make_shadow then
             ios.create(eid)
             pl_rm_mbs[#pl_rm_mbs+1] = world:sub{"entity_remove", eid}
         end

@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
-local ies       = ecs.import.interface "ant.scene|ifilter_state"
+local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local hierarchy = require "hierarchy_edit"
 local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
@@ -971,7 +971,7 @@ function m.load(path)
                 assert(false)
             end
         else
-            if not mtl.properties[value.target_name] then
+            if not mtl.propertivs[value.target_name] then
                 is_valid = false
                 assert(false)
             end
@@ -993,7 +993,7 @@ function m.load(path)
     update_animation()
     file_path = path:string()
 end
-local ifs		= ecs.import.interface "ant.scene|ifilter_state"
+local ivs		= ecs.import.interface "ant.scene|ivisible_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local bone_color = math3d.ref(math3d.vector(0.4, 0.4, 1, 0.8))
 local bone_highlight_color = math3d.ref(math3d.vector(1.0, 0.4, 0.4, 0.8))
@@ -1012,8 +1012,8 @@ local function create_bone_entity(joint_name)
             on_ready = function(e)
 				--imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
                 imaterial.iset_property(e, "u_basecolor_factor", math3d.vector(bone_color))
-				ifs.iset_state(e, "auxgeom", true)
-                ies.iset_state(e, "main_view", false)
+				ivs.iset_state(e, "auxgeom", true)
+                ivs.iset_state(e, "main_view", false)
                 w:sync("render_object_update:out", e)
 			end
         }
@@ -1034,14 +1034,14 @@ function m.set_current_target(target_eid)
         local desc = {}
         local mtl = serialize.parse(mtlpath, cr.read_file(mtlpath))
         local keys = {}
-        for k, v in pairs(mtl.properties) do
+        for k, v in pairs(mtl.propertivs) do
             if not v.stage then
                 keys[#keys + 1] = k
             end
         end
         table.sort(keys)
         for _, k in ipairs(keys) do
-            desc[#desc + 1] = {name = k, init_value = mtl.properties[k] }
+            desc[#desc + 1] = {name = k, init_value = mtl.propertivs[k] }
         end
         mtl_desc[mtlpath] = desc
     end

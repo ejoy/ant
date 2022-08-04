@@ -10,7 +10,7 @@ local assetmgr  = import_package "ant.asset"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender   = ecs.import.interface "ant.render|irender"
-local ifs       = ecs.import.interface "ant.scene|ifilter_state"
+local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 
 local decl<const> = "p3|t2"
 local layout<const> = declmgr.get(decl)
@@ -153,8 +153,8 @@ local function update_items()
                     bufferoffset = bufferoffset + vbnum
                     buffers[#buffers+1] = objbuffer
 
-                    ifs.set_state(re, "main_view", canvas.show)
-                    ifs.set_state(re, "selectable", canvas.show)
+                    ivs.set_state(re, "main_view", canvas.show)
+                    ivs.set_state(re, "selectable", canvas.show)
                 else
                     -- if no items to draw, should remove this entity
                     world:remove_entity(tex.renderer_eid)
@@ -344,8 +344,8 @@ function icanvas.show(b)
             end
 
             if re then
-                ifs.set_state(re, "main_view", b)
-                ifs.set_state(re, "selectable", b)
+                ivs.set_state(re, "main_view", b)
+                ivs.set_state(re, "selectable", b)
             end
         end
     end

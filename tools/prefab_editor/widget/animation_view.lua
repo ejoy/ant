@@ -3,7 +3,7 @@ local world = ecs.world
 
 local iaudio    = ecs.import.interface "ant.audio|audio_interface"
 local iani      = ecs.import.interface "ant.animation|ianimation"
-local ies       = ecs.import.interface "ant.scene|ifilter_state"
+local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local keyframe_view = ecs.require "widget.keyframe_view"
 local prefab_mgr = ecs.require "prefab_manager"
@@ -220,7 +220,7 @@ local function set_current_anim(anim_name)
     if current_anim and current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
-                ies.set_state(world:entity(col.eid), "visible", false)
+                ivs.set_state(world:entity(col.eid), "visible", false)
             end
         end
     end
@@ -228,7 +228,7 @@ local function set_current_anim(anim_name)
     if current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
-                ies.set_state(world:entity(col.eid), "visible", true)
+                ivs.set_state(world:entity(col.eid), "visible", true)
             end
         end
     end
@@ -694,7 +694,7 @@ local function show_skeleton(b)
     end
     for _, joint in ipairs(joints_list) do
         if joint.mesh then
-            ies.set_state(world:entity(joint.mesh), "main_view", b)
+            ivs.set_state(world:entity(joint.mesh), "main_view", b)
         end
     end
 end
@@ -903,10 +903,10 @@ function m.show()
     end
 end
 
-function m.on_prefab_load(entities)
+function m.on_prefab_load(entitivs)
     local editanims = {dirty = true, name_list = {} }
     local skeleton
-    for _, eid in ipairs(entities) do
+    for _, eid in ipairs(entitivs) do
         local e = world:entity(eid)
         if e.anim_ctrl then
             anim_eid = eid

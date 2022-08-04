@@ -4,7 +4,7 @@ local w = world.w
 local math3d = require "math3d"
 
 local ientity = ecs.import.interface "ant.render|ientity"
-local ies = ecs.import.interface "ant.scene|ifilter_state"
+local ivs = ecs.import.interface "ant.scene|ivisible_state"
 local init_loader_sys = ecs.system 'init_loader_system'
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local imesh = ecs.import.interface "ant.asset|imesh"
@@ -46,21 +46,21 @@ local function point_light_test()
     }
 
     for _, p in ipairs(pl_pos) do
-        local  pl = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_point.prefab"[1]
+        local  pl = ecs.create_instance  "/pkg/ant.test.features/assets/entitivs/light_point.prefab"[1]
         pl.on_ready = function()
             iom.set_position(pl.root, p)
         end
         world:create_object(pl)
     end
 
-    local ce = ecs.create_instance  "/pkg/ant.test.features/assets/entities/pbr_cube.prefab"[1]
+    local ce = ecs.create_instance  "/pkg/ant.test.features/assets/entitivs/pbr_cube.prefab"[1]
     ce.on_ready = function ()
         iom.set_position(ce.root, {0, 0, 0, 1})
     end
     world:create_object(ce)
     
 
-    ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
+    ecs.create_instance  "/pkg/ant.test.features/assets/entitivs/light_directional.prefab"
 end
 
 local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
@@ -248,8 +248,8 @@ function init_loader_sys:init()
         },
     }
 
-    ecs.create_instance"/pkg/ant.test.features/assets/entities/skybox_test.prefab"
-    local p = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
+    ecs.create_instance"/pkg/ant.test.features/assets/entitivs/skybox_test.prefab"
+    local p = ecs.create_instance  "/pkg/ant.test.features/assets/entitivs/light_directional.prefab"
     p.on_ready = function (e)
         local a_eid = ientity.create_arrow_entity({}, 0.3, math3d.vector(1.0, 0.0, 0.0, 1.0), "/pkg/ant.resources/materials/meshcolor.material")
         ecs.method.set_parent(a_eid, e.tag["*"][1])
@@ -261,8 +261,8 @@ function init_loader_sys:init()
     -- end
     -- -- p.on_ready = function (e)
     -- --     for _, ee in ipairs(e.tag['*']) do
-    -- --         ies.set_state(ee, "main_view", false)
-    -- --         ies.set_state(ee, "cast_shadow", false)
+    -- --         ivs.set_state(ee, "main_view", false)
+    -- --         ivs.set_state(ee, "cast_shadow", false)
     -- --     end
     -- -- end
     -- -- p.on_update = function(e)
@@ -282,7 +282,7 @@ function init_loader_sys:init()
 	ientity.create_screen_axis_entity({s=0.1}, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")
     --ecs.create_instance "/pkg/ant.test.features/assets/glb/logistics_center.glb|mesh.prefab"
 
-    -- local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
+    -- local p = ecs.create_instance "/pkg/ant.test.features/assets/entitivs/cube.prefab"
     -- function p:on_ready()
     --     local e = self.tag.cube[1]
     --     w:sync("render_object:update", e)
@@ -291,8 +291,8 @@ function init_loader_sys:init()
 
     --world:create_object(p)
     --print(p)
-    --ecs.create_instance  "/pkg/ant.test.features/assets/entities/test_scene.prefab"
-    --ecs.create_instance  "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
+    --ecs.create_instance  "/pkg/ant.test.features/assets/entitivs/test_scene.prefab"
+    --ecs.create_instance  "/pkg/ant.test.features/assets/entitivs/skybox_test.prefab"
     --ecs.create_instance  "/pkg/ant.test.features/assets/glb/cloud.glb|mesh.prefab"
     --ecs.create_instance  "/pkg/ant.test.features/assets/glb/shadow.glb|mesh.prefab"
     -- local p = ecs.create_instance  "/pkg/ant.test.features/assets/glb/Fox.glb|mesh.prefab"
@@ -300,10 +300,10 @@ function init_loader_sys:init()
     
     --ecs.create_instance  "/pkg/ant.test.features/assets/glb/shuijing.glb|mesh.prefab"
     --ecs.create_instance  "/pkg/ant.resources/meshes/SimpleSkin/SimpleSkin.glb|mesh.prefab"
-    -- ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_point.prefab"
+    -- ecs.create_instance  "/pkg/ant.test.features/assets/entitivs/light_point.prefab"
     -- local eid = ecs.create_instance  "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab"[1]
     -- world:pub{"after_init", eid}
-    --ecs.create_instance  "/pkg/ant.test.features/assets/entities/font_tt.prefab"
+    --ecs.create_instance  "/pkg/ant.test.features/assets/entitivs/font_tt.prefab"
     --ecs.create_instance  "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
 
     --ientity.create_procedural_sky()
@@ -358,7 +358,7 @@ function init_loader_sys:entity_init()
     for _, key, press in kb_mb:unpack() do
         if key == "T" and press == 0 then
             local e = world:entity(quad_eid)
-            ies.set_state(e, "main_view", true)
+            ivs.set_state(e, "main_view", true)
 
             local quad_2 = 2
             e.render_object.ib_num = quad_2 * 6

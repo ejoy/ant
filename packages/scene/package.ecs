@@ -37,7 +37,7 @@ system "filter_state_system"
     .implement "visible_state.lua"
     .method "entity_init"
 
-interface "ifilter_state"
+interface "ivisible_state"
     .implement "visible_state.lua"
     .method "has_state"
     .method "set_state"

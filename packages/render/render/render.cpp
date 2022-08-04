@@ -133,7 +133,11 @@ static inline void
 collect_render_objs(struct ecs_world *w, cid_t main_id, int index){
 	for (auto &s : s_queue_stages.stages){
 		if (entity_sibling(w->ecs, main_id, index, s.id)){
-			const ecs::render_object* ro = (ecs::render_object*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::render_object>::id);
+			auto scene = (const ecs::scene*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::scene>::id);
+			// if (scene == nullptr)
+			// 	continue;
+			//if (math_isnull(w->math3d->M, s->scene_aabb) || math3d_frustum_intersect_aabb())
+			auto ro = (const ecs::render_object*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::render_object>::id);
 			if (ro){
 				s.objs.push_back(ro);
 			}

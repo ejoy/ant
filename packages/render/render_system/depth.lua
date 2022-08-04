@@ -10,14 +10,14 @@ local sampler   = require "sampler"
 local irender   = ecs.import.interface "ant.render|irender"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local ifs       = ecs.import.interface "ant.scene|ifilter_state"
+local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local bgfx      = require "bgfx"
 
 
 local sd_sys = ecs.system "scene_depth_system"
 local function copy_pf(pf)
     local npf = {
-        filter_type = ifs.state_names(pf.filter_type)
+        filter_type = ivs.state_names(pf.filter_type)
     }
 
     for idx, v in ipairs(pf) do

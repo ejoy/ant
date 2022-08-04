@@ -24,7 +24,7 @@ local utils         = require "common.utils"
 local subprocess    = import_package "ant.subprocess"
 local anim_view
 local m = {
-    entities = {}
+    entitivs = {}
 }
 
 local lightidx = 0
@@ -62,7 +62,7 @@ local function create_light_billboard(light_eid)
     -- local tex = icons[light_icons[type]].handle
     -- imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
     -- iom.set_scale(bb_eid, 0.2)
-    -- ies.set_state(bb_eid, "auxgeom", true)
+    -- ivs.set_state(bb_eid, "auxgeom", true)
     -- iom.set_position(bb_eid, iom.get_position(light_eid))
     -- world[bb_eid].parent = world[light_eid].parent
     -- light_gizmo.billboard[light_eid] = bb_eid
@@ -131,7 +131,7 @@ local function create_simple_entity(name, parent)
 end
 
 function m:add_entity(new_entity, parent, temp, no_hierarchy)
-    self.entities[#self.entities+1] = new_entity
+    self.entitivs[#self.entitivs+1] = new_entity
     if not no_hierarchy then
         hierarchy:add(new_entity, {template = temp}, parent)
     end
@@ -189,7 +189,7 @@ function m:create(what, config)
     elseif what == "camera" then
         local new_camera, template = camera_mgr.create_camera()
         hierarchy:add(new_camera, {template = template}, self.root)
-        self.entities[#self.entities+1] = new_camera
+        self.entitivs[#self.entitivs+1] = new_camera
     elseif what == "empty" then
         local parent = gizmo.target_eid or self.root
         local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id(), parent)
@@ -409,7 +409,7 @@ function m:on_prefab_ready(prefab)
             local prefab_name = pt.name or gen_prefab_name()
             local sub_root = create_simple_entity(prefab_name, parent)
             -- ecs.method.set_parent(sub_root, parent)
-            self.entities[#self.entities + 1] = sub_root
+            self.entitivs[#self.entitivs + 1] = sub_root
 
             local children = sub_tree(parent, j)
             for _, child in ipairs(children) do
@@ -421,7 +421,7 @@ function m:on_prefab_ready(prefab)
             j = j + #children
             node_map[sub_root] = {template = {filename = pt.prefab, children = children, name = prefab_name, editor = pt.editor or false}, parent = parent}
         else
-            self.entities[#self.entities + 1] = e
+            self.entitivs[#self.entitivs + 1] = e
             node_map[e] = {template = self.prefab_template[i], parent = parent}
             j = j + 1
         end
@@ -451,7 +451,7 @@ function m:on_prefab_ready(prefab)
         hierarchy:add(eid, tp, node.parent or self.root)
     end
 
-    for _, eid in ipairs(self.entities) do
+    for _, eid in ipairs(self.entitivs) do
         add_to_hierarchy(eid)
     end
     
@@ -471,7 +471,7 @@ function m:open(filename)
     prefab.on_ready = function(instance)
         self:on_prefab_ready(instance)
         hierarchy:update_slot_list(world)
-        anim_view.on_prefab_load(self.entities)
+        anim_view.on_prefab_load(self.entitivs)
     end
     
     function prefab:on_message(msg) end
@@ -494,7 +494,7 @@ local function on_remove_entity(e)
 end
 
 function m:reset_prefab()
-    for _, e in ipairs(self.entities) do
+    for _, e in ipairs(self.entitivs) do
         on_remove_entity(e)
         world:remove_entity(e)
     end
@@ -503,7 +503,7 @@ function m:reset_prefab()
     hierarchy:clear()
     anim_view.clear()
     self.root = create_simple_entity("scene root")
-    self.entities = {}
+    self.entitivs = {}
     world:pub {"WindowTitle", ""}
     world:pub {"ResetEditor", ""}
     hierarchy:set_root(self.root)
@@ -571,7 +571,7 @@ function m:add_prefab(filename)
     local group = ecs.group(group_id)
     prefab = group:create_instance(prefab_filename)
     group:enable "scene_update"
-    self.entities[#self.entities+1] = v_root
+    self.entitivs[#self.entitivs+1] = v_root
     prefab.on_ready = function(inst)
         local prefab_name = gen_prefab_name()
         iom.set_scale(world:entity(v_root), iom.get_scale(world:entity(inst.root)))
@@ -645,14 +645,14 @@ function m:remove_entity(e)
     on_remove_entity(e)
     world:remove_entity(e)
     local index
-    for idx, entity in ipairs(self.entities) do
+    for idx, entity in ipairs(self.entitivs) do
         if entity == e then
             index = idx
             break
         end
     end
     if index then
-        table.remove(self.entities, index)
+        table.remove(self.entitivs, index)
     end
     hierarchy:update_slot_list(world)
     hierarchy:update_collider_list(world)
