@@ -61,6 +61,8 @@ function m.remove(v)
     math3d.unmark(v.mat)
     math3d.unmark(v.worldmat)
     math3d.unmark(v.updir)
+	math3d.unmark(v.aabb)
+    math3d.unmark(v.scene_aabb)
 end
 
 function m.marshal(v)
@@ -80,10 +82,10 @@ local function init_b(v)
 		v.aabb = mc.NULL
 		v.scene_aabb = mc.NULL
 	end
+	return v
 end
 function b.init(v)
-	scene.aabb = mc.NULL
-	scene.scene_aabb = mc.NULL
+	return init_b(v)
 end
 
 function b.remove(v)
