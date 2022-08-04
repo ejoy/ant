@@ -5,7 +5,6 @@
 namespace Rml {
 
 class StyleSheet;
-struct StyleSheetNodeSelector;
 struct StructuralSelector;
 
 class StyleSheetFactory {

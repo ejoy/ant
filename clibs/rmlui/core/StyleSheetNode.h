@@ -4,21 +4,20 @@
 #include <core/Types.h>
 #include <core/PropertyVector.h>
 #include <core/StyleCache.h>
+#include <core/StyleSheetNodeSelector.h>
 
 namespace Rml {
 
-struct StyleSheetNodeSelector;
-
 struct StructuralSelector {
-	StructuralSelector(StyleSheetNodeSelector* selector, int a, int b) : selector(selector), a(a), b(b) {}
-	StyleSheetNodeSelector* selector;
+	StructuralSelector(Selector::IsApplicable selector, int a, int b) : selector(selector), a(a), b(b) {}
+	Selector::IsApplicable selector;
 	int a;
 	int b;
 };
 inline bool operator==(const StructuralSelector& a, const StructuralSelector& b) { return a.selector == b.selector && a.a == b.a && a.b == b.b; }
 inline bool operator<(const StructuralSelector& a, const StructuralSelector& b) { return std::tie(a.selector, a.a, a.b) < std::tie(b.selector, b.a, b.b); }
 
-using StructuralSelectorList = std::vector< StructuralSelector >;
+using StructuralSelectorList = std::vector<StructuralSelector>;
 
 struct StyleSheetRequirements {
 	std::string tag;

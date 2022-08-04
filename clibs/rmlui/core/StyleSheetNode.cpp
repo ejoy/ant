@@ -37,7 +37,7 @@ bool StyleSheetRequirements::Match(const Element* element) const {
 
 bool StyleSheetRequirements::MatchStructuralSelector(const Element* element) const {
 	for (auto& node_selector : structural_selectors) {
-		if (!node_selector.selector->IsApplicable(element, node_selector.a, node_selector.b))
+		if (!node_selector.selector(element, node_selector.a, node_selector.b))
 			return false;
 	}
 	return true;

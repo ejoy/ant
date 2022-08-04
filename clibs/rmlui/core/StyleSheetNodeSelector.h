@@ -1,56 +1,21 @@
 #pragma once
 
 namespace Rml {
+	class Element;
+}
 
-class Element;
+namespace Rml::Selector {
+	using IsApplicable = bool (*)(const Element* element, int a, int b);
 
-struct StyleSheetNodeSelector {
-	virtual ~StyleSheetNodeSelector() {}
-	virtual bool IsApplicable(const Element* element, int a, int b) = 0;
-};
-
-struct StyleSheetNodeSelectorEmpty : public StyleSheetNodeSelector {
-	bool IsApplicable(const Element* element, int a, int b) override;
-};
-
-struct StyleSheetNodeSelectorFirstChild : public StyleSheetNodeSelector {
-	bool IsApplicable(const Element* element, int a, int b) override;
-};
-
-struct StyleSheetNodeSelectorFirstOfType : public StyleSheetNodeSelector {
-	bool IsApplicable(const Element* element, int a, int b) override;
-};
-
-struct StyleSheetNodeSelectorLastChild : public StyleSheetNodeSelector {
-	bool IsApplicable(const Element* element, int a, int b) override;
-};
-
-struct StyleSheetNodeSelectorLastOfType : public StyleSheetNodeSelector {
-	bool IsApplicable(const Element* element, int a, int b) override;
-};
-
-struct StyleSheetNodeSelectorNthChild : public StyleSheetNodeSelector {
-	bool IsApplicable(const Element* element, int a, int b) override;
-};
-
-struct StyleSheetNodeSelectorNthLastChild : public StyleSheetNodeSelector {
-	bool IsApplicable(const Element* element, int a, int b) override;
-};
-
-struct StyleSheetNodeSelectorNthLastOfType : public StyleSheetNodeSelector {
-	bool IsApplicable(const Element* element, int a, int b) override;
-};
-
-struct StyleSheetNodeSelectorNthOfType : public StyleSheetNodeSelector {
-	bool IsApplicable(const Element* element, int a, int b) override;
-};
-
-struct StyleSheetNodeSelectorOnlyChild : public StyleSheetNodeSelector {
-	bool IsApplicable(const Element* element, int a, int b) override;
-};
-
-struct StyleSheetNodeSelectorOnlyOfType : public StyleSheetNodeSelector {
-	bool IsApplicable(const Element* element, int a, int b) override;
-};
-
+	bool Empty(const Element* element, int a, int b);
+	bool FirstChild(const Element* element, int a, int b);
+	bool FirstOfType(const Element* element, int a, int b);
+	bool LastChild(const Element* element, int a, int b);
+	bool LastOfType(const Element* element, int a, int b);
+	bool NthChild(const Element* element, int a, int b);
+	bool NthLastChild(const Element* element, int a, int b);
+	bool NthLastOfType(const Element* element, int a, int b);
+	bool NthOfType(const Element* element, int a, int b);
+	bool OnlyChild(const Element* element, int a, int b);
+	bool OnlyOfType(const Element* element, int a, int b);
 }

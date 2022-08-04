@@ -2,7 +2,7 @@
 #include <core/Element.h>
 #include <core/Text.h>
 
-namespace Rml {
+namespace Rml::Selector {
 
 template <typename T>
 struct reversion_wrapper {
@@ -21,7 +21,7 @@ static bool IsNth(int a, int b, int count) {
 	return (x >= 0 && x * a + b == count);
 }
 
-bool StyleSheetNodeSelectorEmpty::IsApplicable(const Element* element, int, int) {
+bool Empty(const Element* element, int, int) {
 	for (const Element* child : element->Children()) {
 		if (child->IsVisible())
 			return false;
@@ -29,7 +29,7 @@ bool StyleSheetNodeSelectorEmpty::IsApplicable(const Element* element, int, int)
 	return true;
 }
 
-bool StyleSheetNodeSelectorFirstChild::IsApplicable(const Element* element, int, int) {
+bool FirstChild(const Element* element, int, int) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -41,7 +41,7 @@ bool StyleSheetNodeSelectorFirstChild::IsApplicable(const Element* element, int,
 	return false;
 }
 
-bool StyleSheetNodeSelectorFirstOfType::IsApplicable(const Element* element, int, int) {
+bool FirstOfType(const Element* element, int, int) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -54,7 +54,7 @@ bool StyleSheetNodeSelectorFirstOfType::IsApplicable(const Element* element, int
 	return false;
 }
 
-bool StyleSheetNodeSelectorLastChild::IsApplicable(const Element* element, int, int) {
+bool LastChild(const Element* element, int, int) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -66,7 +66,7 @@ bool StyleSheetNodeSelectorLastChild::IsApplicable(const Element* element, int, 
 	return false;
 }
 
-bool StyleSheetNodeSelectorLastOfType::IsApplicable(const Element* element, int, int) {
+bool LastOfType(const Element* element, int, int) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -79,7 +79,7 @@ bool StyleSheetNodeSelectorLastOfType::IsApplicable(const Element* element, int,
 	return false;
 }
 
-bool StyleSheetNodeSelectorNthChild::IsApplicable(const Element* element, int a, int b) {
+bool NthChild(const Element* element, int a, int b) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -94,7 +94,7 @@ bool StyleSheetNodeSelectorNthChild::IsApplicable(const Element* element, int a,
 	return IsNth(a, b, element_index);
 }
 
-bool StyleSheetNodeSelectorNthLastChild::IsApplicable(const Element* element, int a, int b) {
+bool NthLastChild(const Element* element, int a, int b) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -109,7 +109,7 @@ bool StyleSheetNodeSelectorNthLastChild::IsApplicable(const Element* element, in
 	return IsNth(a, b, element_index);
 }
 
-bool StyleSheetNodeSelectorNthLastOfType::IsApplicable(const Element* element, int a, int b) {
+bool NthLastOfType(const Element* element, int a, int b) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -124,7 +124,7 @@ bool StyleSheetNodeSelectorNthLastOfType::IsApplicable(const Element* element, i
 	return IsNth(a, b, element_index);
 }
 
-bool StyleSheetNodeSelectorNthOfType::IsApplicable(const Element* element, int a, int b) {
+bool NthOfType(const Element* element, int a, int b) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -139,7 +139,7 @@ bool StyleSheetNodeSelectorNthOfType::IsApplicable(const Element* element, int a
 	return IsNth(a, b, element_index);
 }
 
-bool StyleSheetNodeSelectorOnlyChild::IsApplicable(const Element* element, int, int) {
+bool OnlyChild(const Element* element, int, int) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;
@@ -153,7 +153,7 @@ bool StyleSheetNodeSelectorOnlyChild::IsApplicable(const Element* element, int, 
 	return true;
 }
 
-bool StyleSheetNodeSelectorOnlyOfType::IsApplicable(const Element* element, int, int) {
+bool OnlyOfType(const Element* element, int, int) {
 	Element* parent = element->GetParentNode();
 	if (parent == nullptr)
 		return false;

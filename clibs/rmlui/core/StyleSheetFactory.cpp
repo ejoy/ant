@@ -11,32 +11,25 @@ namespace Rml {
 
 class StyleSheetFactoryInstance {
 public:
-	~StyleSheetFactoryInstance();
 	void LoadStyleSheet(StyleSheet& sheet, const std::string& source_path);
 	void LoadStyleSheet(StyleSheet& sheet, const std::string& content, const std::string& source_path, int line);
 	StructuralSelector GetSelector(const std::string& name);
 
-	std::unordered_map<std::string, StyleSheetNodeSelector*> selectors = {
-		{ "nth-child", new StyleSheetNodeSelectorNthChild() },
-		{ "nth-last-child", new StyleSheetNodeSelectorNthLastChild() },
-		{ "nth-of-type", new StyleSheetNodeSelectorNthOfType() },
-		{ "nth-last-of-type", new StyleSheetNodeSelectorNthLastOfType() },
-		{ "first-child", new StyleSheetNodeSelectorFirstChild() },
-		{ "last-child", new StyleSheetNodeSelectorLastChild() },
-		{ "first-of-type", new StyleSheetNodeSelectorFirstOfType() },
-		{ "last-of-type", new StyleSheetNodeSelectorLastOfType() },
-		{ "only-child", new StyleSheetNodeSelectorOnlyChild() },
-		{ "only-of-type", new StyleSheetNodeSelectorOnlyOfType() },
-		{ "empty", new StyleSheetNodeSelectorEmpty() },
+	std::unordered_map<std::string, Selector::IsApplicable> selectors = {
+		{ "nth-child", Selector::NthChild },
+		{ "nth-last-child", Selector::NthLastChild },
+		{ "nth-of-type", Selector::NthOfType },
+		{ "nth-last-of-type", Selector::NthLastOfType },
+		{ "first-child", Selector::FirstChild },
+		{ "last-child", Selector::LastChild },
+		{ "first-of-type", Selector::FirstOfType },
+		{ "last-of-type", Selector::LastOfType },
+		{ "only-child", Selector::OnlyChild },
+		{ "only-of-type", Selector::OnlyOfType },
+		{ "empty", Selector::Empty },
 	};
 	std::unordered_map<std::string, StyleSheet> stylesheets;
 };
-
-StyleSheetFactoryInstance::~StyleSheetFactoryInstance() {
-	for (auto [_, selector] : selectors) {
-		delete selector;
-	}
-}
 
 void StyleSheetFactoryInstance::LoadStyleSheet(StyleSheet& sheet, const std::string& source_path) {
 	auto itr = stylesheets.find(source_path);
