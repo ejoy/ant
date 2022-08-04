@@ -223,7 +223,7 @@ local function create_frustum_entity(eid)
             owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/line_color.material",
             scene = {},
-            filter_state = "main_view|auxgeom",
+            visible_state = "main_view|auxgeom",
             name = "second_view_frustum",
             second_view_frustum = true,
         }
@@ -254,7 +254,7 @@ local function create_frustum_entity(eid)
             },
             owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/singlecolor.material",
-            filter_state = "main_view|auxgeom",
+            visible_state = "main_view|auxgeom",
             scene = {
                 t = tri_bottomcenter,
             },

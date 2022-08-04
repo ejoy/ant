@@ -7,7 +7,7 @@ policy:
   ant.scene|scene_object
 ---
 data:
-  filter_state: main_view|selectable|cast_shadow
+  visible_state: main_view|selectable|cast_shadow
   material: /res/1.material
   mesh: /pkg/ant.resources.binary/meshes/arrow.glb|meshes/Plane.001_P1.meshbin
   name: Plane.001
@@ -19,7 +19,7 @@ policy:
   ant.render|render
 ---
 data:
-  filter_state: main_view|selectable|cast_shadow
+  visible_state: main_view|selectable|cast_shadow
   material: /res/2.material
   mesh: /pkg/ant.resources.binary/meshes/arrow.glb|meshes/Plane.002_P1.meshbin
   name: Plane.002

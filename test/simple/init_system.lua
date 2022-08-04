@@ -19,7 +19,7 @@ local function create_plane()
                 t = {0, 0, 0, 1}, s = {50, 1, 50, 0}
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
-			filter_state= "main_view",
+			visible_state= "main_view",
 			name 		= "test_shadow_plane",
 			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
             debug_mesh_bounding = true,

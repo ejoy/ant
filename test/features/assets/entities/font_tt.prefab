@@ -1,6 +1,6 @@
 ---
 data:
-  filter_state: main_view|cast_shadow
+  visible_state: main_view|cast_shadow
   material: /pkg/ant.resources/materials/singlecolor.material
   mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin
   name: slot_cube
@@ -14,7 +14,7 @@ policy:
 action:
   show_name: 1
 data:
-  filter_state: main_view
+  visible_state: main_view
   font:
     family: "华文行楷"
     file: /pkg/ant.resources.binary/fonts/stxingka.ttf

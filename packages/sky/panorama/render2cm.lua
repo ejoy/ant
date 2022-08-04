@@ -70,7 +70,7 @@ function render2cm_sys:init()
             simplemesh = {vb={num=3}},
             scene = {},
             material = "/pkg/ant.sky/panorama/render2cm.material",
-            filter_state = "",
+            visible_state = "",
             cvt_p2cm_drawer = true,
             name = "cvt_p2cm_drawer",
         }
@@ -85,7 +85,7 @@ function render2cm_sys:init()
             simplemesh = {vb={num=3}},
             material = "/pkg/ant.sky/panorama/filter_ibl.material",
             scene = {},
-            filter_state = "",
+            visible_state = "",
             name = "filter_drawer",
             filter_drawer = true,
         }

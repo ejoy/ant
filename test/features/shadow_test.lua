@@ -42,7 +42,7 @@ function st_sys:init()
                 },
             },
 			material 	= "/pkg/ant.resources/materials/mesh_shadow.material",
-			filter_state= "main_view",
+			visible_state= "main_view",
 			name 		= "test_shadow_plane",
 			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
             debug_mesh_bounding = true,

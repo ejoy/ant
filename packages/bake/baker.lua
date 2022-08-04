@@ -129,7 +129,7 @@ local function create_downsample()
                 mesh = ientity.create_mesh{"p1", {0, 0, 0, 0}},
                 material = material,
                 scene = {},
-                filter_state = "",  --force not include to any render queue
+                visible_state = "",  --force not include to any render queue
                 [tag] = true,
             }
         }

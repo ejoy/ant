@@ -44,7 +44,7 @@ local function create_light_billboard(light_eid)
     --         name = "billboard_light",
     --         transform = {},
     --         billboard = {lock = "camera"},
-    --         filter_state = "main_view",
+    --         visible_state = "main_view",
     --         scene_entity = true,
     --         material = gd.editor_package_path .. "res/materials/billboard.material"
     --     },
@@ -208,7 +208,7 @@ function m:create(what, config)
                 },
                 data = {
                     scene = {},
-                    filter_state = "main_view|selectable",
+                    visible_state = "main_view|selectable",
                     --material = "/pkg/ant.resources/materials/outline/scale.material",
                     material = "/pkg/ant.resources/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],

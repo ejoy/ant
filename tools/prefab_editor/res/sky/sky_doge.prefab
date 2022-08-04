@@ -6,7 +6,7 @@ policy:
 data:
     name: skybox_test
     scene_entity: true
-    filter_state: main_view
+    visible_state: main_view
     transform: {}
     ibl:
         intensity: 6500

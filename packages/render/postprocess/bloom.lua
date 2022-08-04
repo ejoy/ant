@@ -38,7 +38,7 @@ function bloom_sys:init()
                 name = name,
                 simplemesh = irender.full_quad(),
                 material = material,
-                filter_state = "",
+                visible_state = "",
                 scene = {},
                 [name] = true,
             }

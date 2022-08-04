@@ -203,7 +203,7 @@
 -- 				data = {
 -- 					name = "section" .. isx .. isy,
 -- 					transform = {},
--- 					filter_state = "main_view|cast_shadow",
+-- 					visible_state = "main_view|cast_shadow",
 -- 					scene_entity=true,
 -- 					section_draw = {
 -- 						vb_start = start,

@@ -240,7 +240,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
 ---@diagnostic disable-next-line: need-check-nil
             material    = serialize.path(materialfile:string()),
             name        = node.name or "",
-            filter_state= DEFAULT_STATE,
+            visible_state= DEFAULT_STATE,
         }
 
         local policy = {

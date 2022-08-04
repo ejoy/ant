@@ -102,9 +102,9 @@ end
 
 function render_sys:update_filter()
 	w:clear "filter_result"
-    for e in w:select "render_object_update render_object filter_state:in filter_result:new" do
+    for e in w:select "render_object_update render_object visible_state:in filter_result:new" do
 		local matres = imaterial.resource(e, true)
-        local fs = e.filter_state
+        local fs = e.visible_state
 		local st = matres.fx.setting.surfacetype
 
 		e[st] = true

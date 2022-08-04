@@ -1005,7 +1005,7 @@ local function create_bone_entity(joint_name)
         },
         data = {
             scene = {},
-            filter_state = "main_view|selectable",
+            visible_state = "main_view|selectable",
             material = "/pkg/tools.prefab_editor/res/materials/joint.material",
             mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
             name = joint_name,

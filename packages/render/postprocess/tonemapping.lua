@@ -32,7 +32,7 @@ function tm_sys:init()
                 EXPOSURE_TYPE=1,
             },
             scene = {},
-            filter_state = "",
+            visible_state = "",
             tonemapping_drawer = true,
         }
     }

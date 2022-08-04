@@ -57,7 +57,7 @@ local function create_simple_test_group()
         data = {
             mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.001.material",
-            filter_state = "main_view",
+            visible_state = "main_view",
             scene = {},
             on_ready = function (e)
                 w:sync("scene:in id:in", e)
@@ -78,7 +78,7 @@ local function create_simple_test_group()
         data = {
             mesh = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
             material = "/pkg/ant.resources.binary/meshes/base/cone.glb|materials/lambert1.material",
-            filter_state = "main_view",
+            visible_state = "main_view",
             scene = {
                 parent = p1,
             },

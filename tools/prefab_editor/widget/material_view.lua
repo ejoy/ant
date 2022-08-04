@@ -115,15 +115,15 @@ local function build_fx_ui(mv)
                 getter = function()
                     local prefab = hierarchy:get_template(mv.eid)
                     local data = prefab.template.data
-                    return data.filter_state:match "cast_shadow" ~= nil
+                    return data.visible_state:match "cast_shadow" ~= nil
                 end,
                 setter = function(value)
                     local prefab = hierarchy:get_template(mv.eid)
                     local data = prefab.template.data
-                local fstate = data.filter_state
+                local fstate = data.visible_state
                     if value then
                         if not fstate:match "cast_shadow" then
-                            data.filter_state = fstate .. "|cast_shadow"
+                            data.visible_state = fstate .. "|cast_shadow"
                         end
                     else
                         local ss = {}
@@ -132,7 +132,7 @@ local function build_fx_ui(mv)
                                 ss[#ss+1] = n
                             end
                         end
-                        data.filter_state = table.concat(ss, '|')
+                        data.visible_state = table.concat(ss, '|')
                     end
 
                     mv.need_reload = true

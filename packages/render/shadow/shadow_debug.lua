@@ -53,7 +53,7 @@ local function create_debug_entity()
 				scene 		= {},
 				material	= quadmaterial,
 				simplemesh	= imesh.init_mesh(ientity.quad_mesh{x=0, y=0, w=quadsize*splitnum, h=quadsize}, true),
-				filter_state= "main_view",
+				visible_state= "main_view",
 			}
 		}
 	end

@@ -5,6 +5,6 @@ policy:
 data:
     mesh:"/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
     material: "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.001.material"
-    filter_state: "main_view"
+    visible_state: "main_view"
     scene: {}
     name: "testmesh"

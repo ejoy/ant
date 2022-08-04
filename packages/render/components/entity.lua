@@ -75,7 +75,7 @@ local function simple_render_entity_data(name, material, mesh, srt, color, hide)
 			},
 			material	= material,
 			simplemesh	= imesh.init_mesh(mesh, true),
-			filter_state= hide and "auxgeom" or "main_view|auxgeom",
+			visible_state= hide and "auxgeom" or "main_view|auxgeom",
 			name		= name or gen_test_name(),
 			on_ready 	= function(e)
 				imaterial.iset_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
@@ -100,7 +100,7 @@ local function grid_mesh_entity_data(name, materialpath, vb, ib)
 		data = {
 			scene 		= {},
 			material 	= materialpath,
-			filter_state= "main_view|auxgeom",
+			visible_state= "main_view|auxgeom",
 			name 		= name or "GridMesh",
 			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
 			on_ready = function(e)
@@ -250,7 +250,7 @@ function ientity.create_prim_plane_entity(srt, materialpath, color, name, hide)
 				t = srt and srt.t or nil,
 			},
 			material 	= materialpath,
-			filter_state= "main_view",
+			visible_state= "main_view",
 			name 		= name or "Plane",
 			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))), true),
 			on_ready = function (e)
@@ -380,7 +380,7 @@ function ientity.create_screen_axis_entity(srt, screen_3dobj, name, color, mater
 			},
 			material	= "/pkg/ant.resources/materials/line_background.material",
 			simplemesh	= imesh.init_mesh(mesh, true),
-			filter_state= "main_view|auxgeom",
+			visible_state= "main_view|auxgeom",
 			name		= name,
 		}
 	}
@@ -458,7 +458,7 @@ function ientity.create_skybox(material)
 		data = {
             scene = {},
 			material = material or "/pkg/ant.resources/materials/sky/skybox.material",
-			filter_state = "main_view",
+			visible_state = "main_view",
 			ibl = {
 				irradiance = {size=64},
 				prefilter = {size=256},
@@ -532,7 +532,7 @@ function ientity.create_procedural_sky(settings)
 					size = 256,
 				}
 			},
-			filter_state = "main_view",
+			visible_state = "main_view",
 			owned_mesh_buffer = true,
 			simplemesh = create_sky_mesh(32, 32),
 			name = "procedural sky",
@@ -567,7 +567,7 @@ function ientity.create_gamma_test_entity()
             },
 			owned_mesh_buffer = true,
             scene = {},
-            filter_state = "main_view",
+            visible_state = "main_view",
         }
     }
 end
@@ -682,7 +682,7 @@ function ientity.create_arrow_entity(srt, headratio, color, material)
 		data = {
 			simplemesh = arrow_mesh(headratio),
 			material = material,
-			filter_state = "main_view",
+			visible_state = "main_view",
 			scene = {s=srt.s,r=srt.r,t=srt.t},
 			name = "arrow",
 			on_ready = function (e)
@@ -736,7 +736,7 @@ function ientity.create_quad_lines_entity(name, srt, material, quadnum, width, h
         },
         data = {
 			scene = {s=srt.s,r=srt.r,t=srt.t},
-			filter_state = "",
+			visible_state = "",
             simplemesh = {
                 vb = {
                     start = 0,

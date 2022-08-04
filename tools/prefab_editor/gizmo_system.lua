@@ -170,7 +170,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			"ant.render|render",
 		},
 		data = {
-			filter_state = "main_view",
+			visible_state = "main_view",
 			scene = {
 				s = {0.004, 0.1, 0.004},
 				r = local_rotator,
@@ -193,7 +193,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			"ant.render|render",
 		},
 		data = {
-			filter_state = "main_view",
+			visible_state = "main_view",
 			scene = {s = {0.02, 0.03, 0.02, 0}, r = local_rotator, t = cone_t, parent = axis_root},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
@@ -346,7 +346,7 @@ function gizmo_sys:post_init()
 				"ant.scene|scene_object",
 			},
 			data = {
-				filter_state = "main_view|selectable",
+				visible_state = "main_view|selectable",
 				scene = {s=srt.s, r=srt.r, t=srt.t, parent = parent},
 				material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",

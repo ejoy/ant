@@ -64,7 +64,7 @@ local function create_line_arrow_entity(parent, srt, color)
         data = {
             simplemesh = line_arrow_mesh,
             material = "/pkg/ant.resources/materials/line_color.material",
-            filter_state = "main_view",
+            visible_state = "main_view",
             scene = {s=srt.s, r=srt.r, t=srt.t},
             name = "line_arrow",
             on_ready = function (e)

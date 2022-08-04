@@ -53,7 +53,7 @@ function qs_sys:entity_init()
             data = {
                 simplemesh = quadstrip_mesh,
                 material = e.material,
-                filter_state = "main_view",
+                visible_state = "main_view",
                 scene = {
                     parent = e.id,
                 },

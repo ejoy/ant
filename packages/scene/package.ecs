@@ -34,11 +34,11 @@ system "c_scene_system"
     .method "scene_remove"
 
 system "filter_state_system"
-    .implement "filter_state.lua"
+    .implement "visible_state.lua"
     .method "entity_init"
 
 interface "ifilter_state"
-    .implement "filter_state.lua"
+    .implement "visible_state.lua"
     .method "has_state"
     .method "set_state"
     .method "iset_state"
@@ -66,7 +66,7 @@ component "scene"
     .method "marshal"
     .method "unmarshal"
 
-component "filter_state"
+component "visible_state"
     .type "lua"
     .require_system "ant.scene|filter_state_system"
 

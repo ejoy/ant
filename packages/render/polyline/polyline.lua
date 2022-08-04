@@ -164,7 +164,7 @@ local function add_polylines(polymesh, line_width, color, material)
             scene = {},
             simplemesh  = polymesh,
             material    = material,
-            filter_state= "main_view",
+            visible_state= "main_view",
             name        = "polyline",
             on_ready = function (e)
                 w:sync("polyline:in filter_material:in", e)

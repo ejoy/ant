@@ -74,7 +74,7 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
             simplemesh = imesh.init_mesh(ientity.plane_mesh(mu.texture_uv(tex_rect, tex_size))),
             owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/texture_plane.material",
-            filter_state= "main_view",
+            visible_state= "main_view",
             scene   = { srt = {t={0, 5, 5}}},
             on_ready = function (e)
                 w:sync("render_object:update", e)
@@ -105,7 +105,7 @@ local function color_palette_test()
                 }
             },
             material = "/pkg/ant.resources/materials/color_palette_test.material",
-            filter_state = "main_view",
+            visible_state = "main_view",
             scene = {srt={}},
             name = "color_pal_test",
         }
@@ -201,7 +201,7 @@ function init_loader_sys:init()
     --             }
     --         },
 	-- 		material 	= "/pkg/ant.resources/materials/singlecolor1.material",
-	-- 		filter_state= "main_view",
+	-- 		visible_state= "main_view",
 	-- 		name 		= "test_shadow_plane",
 	-- 		simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
 	-- 		on_ready = function (e)
@@ -235,7 +235,7 @@ function init_loader_sys:init()
         data = {
             mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.001.material",
-            filter_state = "main_view",
+            visible_state = "main_view",
             scene = {
                 parent = group_root,
             },

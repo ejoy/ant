@@ -29,7 +29,7 @@ function is:init()
                 }
             },
             owned_mesh_buffer = true,
-            filter_state = "main_view",
+            visible_state = "main_view",
             name = "test_material",
             on_ready = function (e)
                 w:sync("render_object:update", e)
