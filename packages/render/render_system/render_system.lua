@@ -135,8 +135,11 @@ function render_sys:render_submit()
 		local viewid = rt.viewid
 
 		bgfx.touch(viewid)
-		local camera = world:entity(qe.camera_ref).camera
-		bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
+		local ce = world:entity(qe.camera_ref)
+		if ce.scene_changed then
+			local camera = ce.camera
+			bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
+		end
 
 		qe.render_args = {
 			visible_id			= w:component_id(qe.queue_name .. "_visible"),
