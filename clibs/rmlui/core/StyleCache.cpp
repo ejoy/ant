@@ -161,6 +161,12 @@ namespace Rml::Style {
         return {h};
     }
 
+    EvalHandle Cache::TryEval(PropertyTempMap s) {
+        int h = style_eval(c, {s.idx});
+        assert(h >= 0);
+        return {h};
+    }
+
     std::optional<Property> Cache::Find(PropertyMap s, PropertyId id) {
         int h = style_eval(c, {s.idx});
         assert(h >= 0);
