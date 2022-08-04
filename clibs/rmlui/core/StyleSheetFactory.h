@@ -1,11 +1,11 @@
 #pragma once
 
 #include <string>
+#include <core/StyleSheetNodeSelector.h>
 
 namespace Rml {
 
 class StyleSheet;
-struct StructuralSelector;
 
 class StyleSheetFactory {
 public:
@@ -13,7 +13,7 @@ public:
 	static void Shutdown();
 	static void CombineStyleSheet(StyleSheet& sheet, const std::string& source_path);
 	static void CombineStyleSheet(StyleSheet& sheet, const std::string& content, const std::string& source_path, int line);
-	static StructuralSelector GetSelector(const std::string& name);
+	static Selector::IsApplicable GetSelector(const std::string& name);
 };
 
 }
