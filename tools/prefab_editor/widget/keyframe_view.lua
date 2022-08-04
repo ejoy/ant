@@ -1004,13 +1004,14 @@ local function create_bone_entity(joint_name)
             "ant.general|name",
         },
         data = {
-            scene = {s = joint_scale},
+            scene = {},
             filter_state = "main_view|selectable",
             material = "/pkg/tools.prefab_editor/res/materials/joint.material",
             mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
             name = joint_name,
             on_ready = function(e)
-				imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
+				--imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
+                imaterial.iset_property(e, "u_basecolor_factor", math3d.vector(bone_color))
 				ifs.iset_state(e, "auxgeom", true)
                 ies.iset_state(e, "main_view", false)
                 w:sync("render_object_update:out", e)
@@ -1087,8 +1088,7 @@ function m.init(skeleton)
                 if joint.mesh then
                     local mesh_e = world:entity(joint.mesh)
                     if mesh_e then
-                        iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, pose_result:joint(joint.index))))
-                        iom.set_scale(mesh_e, joint_scale)
+                        iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(pose_result:joint(joint.index), math3d.matrix{s=joint_scale}))))
                     end
                 end
             end
