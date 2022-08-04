@@ -1818,7 +1818,6 @@ void Element::CalcGlobalProperties() {
 
 Style::EvalHandle Element::GetGlobalProperties() const {
 	auto& c = Style::Instance();
-	Style::EvalHandle h;
 	if (global_properties.idx != 0) {
 		auto h = c.TryEval(global_properties);
 		if (h) {
