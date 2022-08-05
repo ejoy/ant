@@ -83,11 +83,6 @@ scene_changed(lua_State *L) {
 
 		math_update(math3d, s.worldmat, mat);
 		worldmats.insert_or_assign(id, s.worldmat);
-
-		if (!math_isnull(s.aabb)){
-			math_t aabb = math3d_aabb_transform(math3d, mat, s.aabb);
-			math_update(math3d, s.scene_aabb, aabb);
-		}
 	}
 
 	return 0;
@@ -118,12 +113,30 @@ scene_remove(lua_State *L) {
 	return 0;
 }
 
+static int
+bounding_update(lua_State *L){
+	auto w = getworld(L);
+	ecs_api::context ecs {w->ecs};
+	auto math3d = w->math3d->M;
+
+	for ( auto e : ecs.select<ecs::scene_changed, ecs::bounding, ecs::scene>()){
+		auto &b = e.get<ecs::bounding>();
+		if (math_isnull(b.aabb))
+			continue;
+		const auto &s = e.get<ecs::scene>();
+		const math_t aabb = math3d_aabb_transform(math3d, s.worldmat, b.aabb);
+		math_update(math3d, b.scene_aabb, aabb);
+	}
+	return 0;
+}
+
 extern "C" int
 luaopen_system_scene(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "scene_changed", scene_changed },
 		{ "scene_remove", scene_remove },
+		{ "bounding_update", bounding_update},
 		{ NULL, NULL },
 	};
 	luaL_newlibtable(L,l);

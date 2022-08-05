@@ -128,6 +128,12 @@ function render_sys:update_filter()
     end
 end
 
+function render_sys:scene_update()
+	for e in w:select "scene_changed scene:in render_object:update" do
+		e.render_object.worldmat = e.scene.worldmat
+	end
+end
+
 function render_sys:render_submit()
 	w:clear "render_args"
 	for qe in w:select "visible queue_name:in camera_ref:in render_target:in render_args:new" do

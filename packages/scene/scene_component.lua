@@ -44,8 +44,6 @@ local function init_scene(scene)
     else
 		scene.updir = mc.NULL
 	end
-	scene.aabb = mc.NULL
-	scene.scene_aabb = mc.NULL
     scene.parent = scene.parent or 0
     return scene
 end
@@ -61,8 +59,6 @@ function m.remove(v)
     math3d.unmark(v.mat)
     math3d.unmark(v.worldmat)
     math3d.unmark(v.updir)
-	math3d.unmark(v.aabb)
-    math3d.unmark(v.scene_aabb)
 end
 
 function m.marshal(v)
@@ -75,9 +71,12 @@ end
 
 local b = ecs.component "bounding"
 local function init_b(v)
+	if not v then
+		v = {}
+	end
 	if v.aabb then
 		v.aabb = math3d.mark(math3d.aabb(v.aabb[1], v.aabb[2]))
-		v.scene_aabb = math3d.mark(math3d.aabb(v.aabb))
+		v.scene_aabb = math3d.mark(math3d.aabb())
 	else
 		v.aabb = mc.NULL
 		v.scene_aabb = mc.NULL
