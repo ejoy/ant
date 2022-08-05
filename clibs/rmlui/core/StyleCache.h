@@ -33,11 +33,8 @@ namespace Rml::Style {
         bool                      DelProperty(PropertyMap s, PropertyId id);
         PropertyIdSet             SetProperty(PropertyMap s, const PropertyVector& vec);
         PropertyIdSet             DelProperty(PropertyMap s, const PropertyIdSet& set);
-        PropertyTempMap           MergeMap(PropertyMap child, PropertyMap parent);
-        PropertyTempMap           MergeMap(PropertyMap child, PropertyTempMap parent);
-        PropertyTempMap           MergeMap(PropertyTempMap child, PropertyMap parent);
+        PropertyTempMap           MergeMap(PropertyMap A, PropertyMap B, PropertyMap C);
         PropertyTempMap           InheritMap(PropertyTempMap child, PropertyTempMap parent);
-        PropertyTempMap           InheritMap(PropertyTempMap child, PropertyMap parent);
         void                      Dump();
         EvalHandle                Eval(PropertyTempMap s);
         EvalHandle                TryEval(PropertyTempMap s);

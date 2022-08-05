@@ -131,27 +131,12 @@ namespace Rml::Style {
         return change;
     }
 
-    PropertyTempMap Cache::MergeMap(PropertyMap child, PropertyMap parent) {
-        style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 0);
-        return {s.idx};
-    }
-
-    PropertyTempMap Cache::MergeMap(PropertyMap child, PropertyTempMap parent) {
-        style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 0);
-        return {s.idx};
-    }
-
-    PropertyTempMap Cache::MergeMap(PropertyTempMap child, PropertyMap parent) {
-        style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 0);
+    PropertyTempMap Cache::MergeMap(PropertyMap A, PropertyMap B, PropertyMap C) {
+        style_handle_t s = style_inherit(c, {A.idx}, style_inherit(c, {B.idx}, {C.idx}, 0), 0);
         return {s.idx};
     }
 
     PropertyTempMap Cache::InheritMap(PropertyTempMap child, PropertyTempMap parent) {
-        style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 1);
-        return {s.idx};
-    }
-
-    PropertyTempMap Cache::InheritMap(PropertyTempMap child, PropertyMap parent) {
         style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 1);
         return {s.idx};
     }
