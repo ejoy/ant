@@ -38,7 +38,7 @@ struct transform{
 };
 
 using obj_transforms = std::unordered_map<const ecs::render_object*, transform>;
-static inline void
+static inline transform
 update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transforms &trans){
 	auto it = trans.find(ro);
 	if (it == trans.end()){
@@ -46,13 +46,17 @@ update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transfor
 		const float * v = math_value(w->math3d->M, wm);
 		const int num = math_size(w->math3d->M, wm);
 		transform t;
-		t.tid = w->bgfx->encoder_set_transform(w->holder->encoder, v, num);
+		bgfx_transform_t bt;
+		t.tid = w->bgfx->encoder_alloc_transform(w->holder->encoder, &bt, (uint16_t)num);
 		t.stride = num;
-		trans[ro] = t;
+		memcpy(bt.data, v, sizeof(float)*16*num);
+		it = trans.insert(std::make_pair(ro, t)).first;
 	} else {
 		const auto& t = it->second;
 		w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
 	}
+
+	return it->second;
 }
 
 #define INVALID_BUFFER_TYPE UINT16_MAX
@@ -105,7 +109,13 @@ draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_
 	}
 }
 
-using render_obj_array = std::vector<const ecs::render_object*>;
+using matrix_array = std::vector<math_t>;
+using group_matrices = std::unordered_map<int64_t, matrix_array>;
+struct obj_data {
+	const ecs::render_object* obj;
+	const matrix_array* mats;
+};
+using render_obj_array = std::vector<obj_data>;
 struct queue_stages {
 	struct stage {
 		const cid_t id;
@@ -130,7 +140,7 @@ struct queue_stages {
 static queue_stages s_queue_stages;
 
 static inline void
-collect_render_objs(struct ecs_world *w, cid_t main_id, int index){
+collect_render_objs(struct ecs_world *w, cid_t main_id, int index, const matrix_array *mats){
 	for (auto &s : s_queue_stages.stages){
 		if (entity_sibling(w->ecs, main_id, index, s.id)){
 			auto scene = (const ecs::scene*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::scene>::id);
@@ -139,37 +149,24 @@ collect_render_objs(struct ecs_world *w, cid_t main_id, int index){
 			//if (math_isnull(w->math3d->M, s->scene_aabb) || math3d_frustum_intersect_aabb())
 			auto ro = (const ecs::render_object*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::render_object>::id);
 			if (ro){
-				s.objs.push_back(ro);
+				s.objs.emplace_back(obj_data{ro, mats});
 			}
 		}
 	}
 }
 
-static inline void
-draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans){
-	for (auto &qs : s_queue_stages.stages){
-		for (auto &ro: qs.objs){
-			draw(L, w, ro, ra.viewid, ra.queue_material_index, texture_index, trans);
-		}
-	}
-}
-
 static void
-submit_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans){
-	s_queue_stages.clear();
+collect_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans){
 	const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
 	for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
 		const bool visible = entity_sibling(w->ecs, vs_id, i, ra.visible_id) &&
 			!entity_sibling(w->ecs, vs_id, i, ra.cull_id);
 		if (visible){
-			collect_render_objs(w, vs_id, i);
+			collect_render_objs(w, vs_id, i, nullptr);
 		}
 	}
-	draw_objs(L, w, ra, texture_index, trans);
 }
 
-using matrix_array = std::vector<math_t>;
-using group_matrices = std::unordered_map<int64_t, matrix_array>;
 
 static inline transform
 update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const matrix_array& worldmats, obj_transforms &trans_cache){
@@ -193,7 +190,7 @@ update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const 
 }
 
 static void
-submit_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, 
+collect_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, 
 	int texture_index, int func_cb_index, const group_matrices &groups, obj_transforms &trans){
 	auto enable_hitch_group = [&](auto groupid){
 		lua_pushvalue(L, func_cb_index);
@@ -204,33 +201,40 @@ submit_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& 
 	ecs_api::context ecs {w->ecs};
 	for (const auto &g : groups){
 		enable_hitch_group(g.first);
-		s_queue_stages.clear();
+		
 		const cid_t ht_id = (cid_t)ecs_api::component<ecs::hitch_tag>::id;
 		for (int i=0; entity_iter(w->ecs, ht_id, i); ++i){
 			const bool visible = nullptr != entity_sibling(w->ecs, ht_id, i, ra.visible_id);
 			if (visible){
-				collect_render_objs(w, ht_id, i);
+				collect_render_objs(w, ht_id, i, &g.second);
 			}
 		}
+	}
+}
 
-		for (const auto& s : s_queue_stages.stages){
-			for (const auto &ro : s.objs){
-				if (mesh_submit(w, ro)){
-					auto t = update_hitch_transform(w, ro, g.second, trans);
-					auto mi = get_material(ro, ra.queue_material_index);
-					apply_material_instance(L, mi, w, texture_index);
-					const auto prog = material_prog(L, mi);
+static void
+draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans){
+	for (const auto& s : s_queue_stages.stages){
+		for (const auto &od : s.objs){
+			if (mesh_submit(w, od.obj)){
+				auto mi = get_material(od.obj, ra.queue_material_index);
+				apply_material_instance(L, mi, w, texture_index);
+				const auto prog = material_prog(L, mi);
 
-					for (int i=0; i<g.second.size()-1; ++i) {
+				transform t;
+				if (od.mats){
+					t = update_hitch_transform(w, od.obj, *od.mats, trans);
+					for (int i=0; i<od.mats->size()-1; ++i) {
 						w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-						w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, ro->depth, BGFX_DISCARD_TRANSFORM);
+						w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->depth, BGFX_DISCARD_TRANSFORM);
 						t.tid += t.stride;
 					}
-
-					w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-					w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, ro->depth, BGFX_DISCARD_ALL);
+				} else {
+					t = update_transform(w, od.obj, trans);
 				}
-				
+
+				w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
+				w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->depth, BGFX_DISCARD_ALL);
 			}
 		}
 	}
@@ -264,8 +268,11 @@ lsubmit(lua_State *L){
 			luaL_error(L, "Invalid queue_material_index in render_args:%d", ra.queue_material_index);
 		}
 
-		submit_objects(L, w, ra, texture_index, trans);
-		submit_hitch_objects(L, w, ra, texture_index, func_cb_index, groups, trans);
+		s_queue_stages.clear();
+		collect_objects(L, w, ra, texture_index, trans);
+		collect_hitch_objects(L, w, ra, texture_index, func_cb_index, groups, trans);
+
+		draw_objs(L, w, ra, texture_index, trans);
 	}
 	return 0;
 }
