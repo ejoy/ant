@@ -15,6 +15,7 @@ local m = {}
 local width, height = 1, 1
 local screen_ratio = 1.0
 local documents = {}
+local hidden = {}
 
 local focusDocument
 local focusElement
@@ -69,6 +70,14 @@ function m.onload(doc)
     dispatchEvent(getBody(doc), "load", {})
 end
 
+function m.show(doc)
+    hidden[doc] = nil
+end
+
+function m.hide(doc)
+    hidden[doc] = true
+end
+
 function m.close(doc)
     dispatchEvent(getBody(doc), "unload", {})
     notifyDocumentDestroy(doc)
@@ -88,6 +97,7 @@ function m.close(doc)
     if hoverDocument == doc then
         hoverElement = {}
     end
+    hidden[doc] = nil
 end
 
 local function walkElement(e)
@@ -168,9 +178,11 @@ end
 local function fromPoint(x, y)
     for i = #documents, 1, -1 do
         local doc = documents[i]
-        local e = elementFromPoint(doc, x, y)
-        if e then
-            return doc, e
+        if not hidden[doc] then
+            local e = elementFromPoint(doc, x, y)
+            if e then
+                return doc, e
+            end
         end
     end
 end
@@ -360,7 +372,9 @@ end
 function m.update(delta)
     rmlui.RenderBegin()
     for _, doc in ipairs(documents) do
-        rmlui.DocumentUpdate(doc, delta)
+        if not hidden[doc] then
+            rmlui.DocumentUpdate(doc, delta)
+        end
     end
     rmlui.RenderFrame()
 end

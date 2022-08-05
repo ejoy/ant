@@ -50,6 +50,12 @@ local function createWindow(document, source)
             end
         end)
     end
+    function window.show()
+        contextManager.show(document)
+    end
+    function window.hide()
+        contextManager.hide(document)
+    end
     function window.setTimeout(f, delay)
         local t = timer.wait(delay, f)
         timer_object[t] = true
