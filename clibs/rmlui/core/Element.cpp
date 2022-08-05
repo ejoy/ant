@@ -90,6 +90,9 @@ Element::~Element() {
 }
 
 void Element::Update() {
+	if (!IsVisible()) {
+		return;
+	}
 	UpdateStructure();
 	UpdateDefinition();
 	UpdateProperties();
@@ -102,6 +105,9 @@ void Element::Update() {
 }
 
 void Element::UpdateAnimations() {
+	if (!IsVisible()) {
+		return;
+	}
 	AdvanceAnimations();
 	for (auto& child : children) {
 		child->UpdateAnimations();
