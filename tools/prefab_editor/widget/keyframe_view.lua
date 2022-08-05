@@ -971,7 +971,7 @@ function m.load(path)
                 assert(false)
             end
         else
-            if not mtl.propertivs[value.target_name] then
+            if not mtl.properties[value.target_name] then
                 is_valid = false
                 assert(false)
             end
@@ -1034,14 +1034,14 @@ function m.set_current_target(target_eid)
         local desc = {}
         local mtl = serialize.parse(mtlpath, cr.read_file(mtlpath))
         local keys = {}
-        for k, v in pairs(mtl.propertivs) do
+        for k, v in pairs(mtl.properties) do
             if not v.stage then
                 keys[#keys + 1] = k
             end
         end
         table.sort(keys)
         for _, k in ipairs(keys) do
-            desc[#desc + 1] = {name = k, init_value = mtl.propertivs[k] }
+            desc[#desc + 1] = {name = k, init_value = mtl.properties[k] }
         end
         mtl_desc[mtlpath] = desc
     end
