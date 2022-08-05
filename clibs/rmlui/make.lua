@@ -25,6 +25,7 @@ lm:source_set "stylecache" {
     },
     sources = {
         "*.c",
+        "!test*.c",
     }
 }
 
