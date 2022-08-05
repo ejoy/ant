@@ -1807,7 +1807,7 @@ const EdgeInsets<float>& Element::GetBorder() const {
 
 void Element::CalcLocalProperties() {
 	auto& c = Style::Instance();
-	local_properties = c.MergeMap(animation_properties, c.MergeMap(inline_properties, definition_properties));
+	local_properties = c.MergeMap(animation_properties, inline_properties, definition_properties);
 }
 
 Style::EvalHandle Element::GetLocalProperties() const {
