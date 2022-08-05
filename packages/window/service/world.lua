@@ -120,7 +120,7 @@ function S.init(nwh, context, width, height)
 	}
 	cr.init()
 	bgfx.set_debug "T"
-	bgfx.encoder_create()
+	bgfx.encoder_create "world"
 	bgfx.encoder_init()
 	import_package "ant.render".init_bgfx()
 	import_package "ant.asset".init()

@@ -206,7 +206,7 @@ ltask.fork(function ()
 		}
     }
 	import_package "ant.compile_resource".init()
-    bgfx.encoder_create()
+    bgfx.encoder_create "imgui"
     bgfx.encoder_init()
 	renderpkg.init_bgfx()
 	assetmgr.init()

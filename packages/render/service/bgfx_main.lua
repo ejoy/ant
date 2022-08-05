@@ -46,6 +46,45 @@ function S.shutdown()
     end
 end
 
+local profile = {}
+local profile_label = {}
+local profile_time = 0
+local profile_n = 0
+
+local function profile_print()
+    if profile_n <= 0 or profile_n % 60 ~= 0 then
+        return
+    end
+    local s = {
+        "",
+        "service stat"
+    }
+    for who, time in pairs(profile) do
+        local m = time / profile_n
+        if m >= 0.01 then
+            s[#s+1] = ("\t%s(%d) - %.02fms"):format(profile_label[who], who, m)
+        end
+        profile[who] = 0
+    end
+    profile_n = 0
+    print(table.concat(s, "\n"))
+end
+
+local function profile_init(who, label)
+    profile[who] = 0
+    profile_label[who] = label or "unk"
+end
+local function profile_begin()
+    profile_print()
+    local _, now = ltask.now()
+    profile_time = now
+    profile_n = profile_n + 1
+end
+local function profile_end(who)
+    local _, now = ltask.now()
+    profile[who] = profile[who] + (now - profile_time)
+end
+
 local encoder = {}
 local encoder_num = 0
 local encoder_cur = 0
@@ -64,10 +103,11 @@ local function wakeup_frame(...)
     end
 end
 
-function S.encoder_create()
+function S.encoder_create(label)
     local who = ltask.current_session().from
     encoder[who] = nil
     encoder_num = encoder_num + 1
+    --profile_init(who, label)
 end
 
 function S.encoder_destroy()
@@ -84,6 +124,7 @@ function S.encoder_frame()
     if encoder[who] ~= encoder_frame then
         encoder[who] = encoder_frame
         encoder_cur = encoder_cur + 1
+        --profile_end(who)
     end
     return wait_frame()
 end
@@ -193,6 +234,7 @@ ltask.fork(function()
         if encoder_num > 0 and encoder_cur == encoder_num then
             encoder_frame = encoder_frame + 1
             encoder_cur = 0
+            --profile_begin()
             local f = bgfx.frame()
             if pause_token then
                 ltask.wakeup(pause_token)

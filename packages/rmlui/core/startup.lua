@@ -31,7 +31,7 @@ local function getDelta()
 end
 
 local function Render()
-    bgfx.encoder_create()
+    bgfx.encoder_create "rmlui"
     while not quit do
         local delta = getDelta()
         if delta > 0 then
