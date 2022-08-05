@@ -357,11 +357,11 @@ function init_loader_sys:entity_init()
     
     for _, key, press in kb_mb:unpack() do
         if key == "T" and press == 0 then
-            local e = world:entity(quad_eid)
-            ivs.set_state(e, "main_view", true)
+            -- local e = world:entity(quad_eid)
+            -- ivs.set_state(e, "main_view", true)
 
-            local quad_2 = 2
-            e.render_object.ib_num = quad_2 * 6
+            -- local quad_2 = 2
+            -- e.render_object.ib_num = quad_2 * 6
         elseif key == "SPACE" and press == 0 then
             -- local icw = ecs.import.interface "ant.render|icurve_world"
             -- icw.enable(not icw.param().enable)
