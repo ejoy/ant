@@ -25,6 +25,7 @@ private:
 	ObserverPtr<Element> element;
 	std::string modifier;
 	DataExpressionPtr expression;
+	Variant lastvalue = std::monostate {};
 };
 
 class DataViewAttr final : public DataView {

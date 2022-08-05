@@ -1452,22 +1452,22 @@ std::optional<Property> Element::GetComputedLocalProperty(PropertyId id) const {
     return c.Find(h, id);
 }
 
-void Element::SetProperty(const std::string& name, std::optional<std::string> value) {
+bool Element::SetProperty(const std::string& name, std::optional<std::string> value) {
 	if (value) {
 		PropertyVector properties;
 		if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, *value)) {
 			Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value->c_str());
-			return;
+			return false;
 		}
-		SetProperty(properties);
+		return SetProperty(properties);
 	}
 	else {
 		PropertyIdSet properties;
 		if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name)) {
 			Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
-			return;
+			return false;
 		}
-		DelProperty(properties);
+		return DelProperty(properties);
 	}
 }
 
@@ -1578,21 +1578,30 @@ void Element::UpdateDefinition() {
 	}
 }
 
-void Element::SetInlineProperty(const PropertyVector& vec) {
+bool Element::SetInlineProperty(const PropertyVector& vec) {
 	auto change = Style::Instance().SetProperty(inline_properties, vec);
-	DirtyProperties(change);
+	if (!change.empty()) {
+		DirtyProperties(change);
+		return true;
+	}
+	return false;
 }
 
-void Element::DelInlineProperty(const PropertyIdSet& set) {
+bool Element::DelInlineProperty(const PropertyIdSet& set) {
 	auto change = Style::Instance().DelProperty(inline_properties, set);
-	DirtyProperties(change);
+	if (!change.empty()) {
+		DirtyProperties(change);
+		return true;
+	}
+	return false;
 }
 
-void Element::SetProperty(const PropertyVector& vec) {
+bool Element::SetProperty(const PropertyVector& vec) {
+	bool change;
 	std::visit([&](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
 		if constexpr (std::is_same_v<T, TransitionNone>) {
-			SetInlineProperty(vec);
+			change = SetInlineProperty(vec);
 		}
 		else if constexpr (std::is_same_v<T, TransitionAll>) {
 			std::vector<PropertyTransition> pt;
@@ -1601,7 +1610,7 @@ void Element::SetProperty(const PropertyVector& vec) {
 					pt.emplace_back(v.id, arg, oldProperty, &v.value);
 				}
 			}
-			SetInlineProperty(vec);
+			change = SetInlineProperty(vec);
 			for (auto& [id, transition, oldProperty, newProperty] : pt) {
 				StartTransition(id, transition, oldProperty, *newProperty);
 			}
@@ -1615,7 +1624,7 @@ void Element::SetProperty(const PropertyVector& vec) {
 					}
 				}
 			}
-			SetInlineProperty(vec);
+			change = SetInlineProperty(vec);
 			for (auto& [id, transition, oldProperty, newProperty] : pt) {
 				StartTransition(id, transition, oldProperty, *newProperty);
 			}
@@ -1624,13 +1633,15 @@ void Element::SetProperty(const PropertyVector& vec) {
 			static_assert(always_false_v<T>, "non-exhaustive visitor!");
 		}
 	}, GetTransition());
+	return change;
 }
 
-void Element::DelProperty(const PropertyIdSet& set) {
+bool Element::DelProperty(const PropertyIdSet& set) {
+	bool change;
 	std::visit([&](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
 		if constexpr (std::is_same_v<T, TransitionNone>) {
-			DelInlineProperty(set);
+			change = DelInlineProperty(set);
 		}
 		else if constexpr (std::is_same_v<T, TransitionAll>) {
 			std::vector<PropertyTransition> pt;
@@ -1639,7 +1650,7 @@ void Element::DelProperty(const PropertyIdSet& set) {
 					pt.emplace_back(id, arg, oldProperty, nullptr);
 				}
 			}
-			DelInlineProperty(set);
+			change = DelInlineProperty(set);
 			Style::Instance().Flush();
 			for (auto& [id, transition, oldProperty, _] : pt) {
 				StartTransition(id, transition, oldProperty, GetComputedProperty(id));
@@ -1652,7 +1663,7 @@ void Element::DelProperty(const PropertyIdSet& set) {
 					pt.emplace_back(id, transition, oldProperty, nullptr);
 				}
 			}
-			DelInlineProperty(set);
+			change = DelInlineProperty(set);
 			for (auto& [id, transition, oldProperty, _] : pt) {
 				StartTransition(id, transition, oldProperty, GetComputedProperty(id));
 			}
@@ -1661,6 +1672,7 @@ void Element::DelProperty(const PropertyIdSet& set) {
 			static_assert(always_false_v<T>, "non-exhaustive visitor!");
 		}
 	}, GetTransition());
+	return change;
 }
 
 void Element::SetAnimationProperty(PropertyId id, const Property& property) {

@@ -36,14 +36,12 @@ bool DataViewStyle::IsValid() const {
 bool DataViewStyle::Update(DataModel& model) {
 	const std::string& property_name = modifier;
 	bool result = false;
-	Variant variant;
+	Variant value;
 	DataExpressionInterface expr_interface(&model, element.get());
-	
-	if (element && expression->Run(expr_interface, variant)) {
-		std::optional<std::string> newValue = VariantHelper::ToStringOpt(variant);
-		std::optional<std::string> oldValue = element->GetProperty(property_name);
-		if (newValue != oldValue) {
-			element->SetProperty(property_name, newValue);
+	if (element && expression->Run(expr_interface, value)) {
+		if (lastvalue != value) {
+			lastvalue = value;
+			element->SetProperty(property_name, VariantHelper::ToStringOpt(value));
 			result = true;
 		}
 	}

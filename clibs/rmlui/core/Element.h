@@ -108,8 +108,8 @@ public:
 	void DirtyProperty(PropertyId id);
 	void DirtyProperties(const PropertyIdSet& properties);
 
-	void SetProperty(const PropertyVector& vec);
-	void DelProperty(const PropertyIdSet& set);
+	bool SetProperty(const PropertyVector& vec);
+	bool DelProperty(const PropertyIdSet& set);
 	void SetAnimationProperty(PropertyId id, const Property& property);
 	void DelAnimationProperty(PropertyId id);
 
@@ -119,7 +119,7 @@ public:
 	Transitions GetTransition() const;
 	Transitions GetTransition(const Style::PropertyMap& def) const;
 
-	void SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
+	bool SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
 	std::optional<std::string> GetProperty(const std::string& name) const;
 
 	void TransitionPropertyChanges(const PropertyIdSet & properties, const Style::PropertyMap& new_definition);
@@ -158,8 +158,8 @@ protected:
 	void DirtyTransform();
 	void DirtyClip();
 	void UpdateClip();
-	void SetInlineProperty(const PropertyVector& vec);
-	void DelInlineProperty(const PropertyIdSet& set);
+	bool SetInlineProperty(const PropertyVector& vec);
+	bool DelInlineProperty(const PropertyIdSet& set);
 	void              CalcLocalProperties();
 	Style::EvalHandle GetLocalProperties() const;
 	void              CalcGlobalProperties();
