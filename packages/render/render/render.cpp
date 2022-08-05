@@ -140,8 +140,8 @@ struct queue_stages {
 static queue_stages s_queue_stages;
 
 static inline void
-collect_render_objs(struct ecs_world *w, cid_t main_id, int index, const matrix_array *mats){
-	for (auto &s : s_queue_stages.stages){
+collect_render_objs(struct ecs_world *w, cid_t main_id, int index, const matrix_array *mats, queue_stages &queue_stages){
+	for (auto &s : queue_stages.stages){
 		if (entity_sibling(w->ecs, main_id, index, s.id)){
 			auto scene = (const ecs::scene*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::scene>::id);
 			// if (scene == nullptr)
@@ -156,13 +156,13 @@ collect_render_objs(struct ecs_world *w, cid_t main_id, int index, const matrix_
 }
 
 static void
-collect_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans){
+collect_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans, queue_stages &queue_stages){
 	const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
 	for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
 		const bool visible = entity_sibling(w->ecs, vs_id, i, ra.visible_id) &&
 			!entity_sibling(w->ecs, vs_id, i, ra.cull_id);
 		if (visible){
-			collect_render_objs(w, vs_id, i, nullptr);
+			collect_render_objs(w, vs_id, i, nullptr, queue_stages);
 		}
 	}
 }
@@ -191,7 +191,7 @@ update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const 
 
 static void
 collect_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, 
-	int texture_index, int func_cb_index, const group_matrices &groups, obj_transforms &trans){
+	int texture_index, int func_cb_index, const group_matrices &groups, obj_transforms &trans, queue_stages &queue_stages){
 	auto enable_hitch_group = [&](auto groupid){
 		lua_pushvalue(L, func_cb_index);
 		lua_pushinteger(L, groupid);
@@ -206,15 +206,15 @@ collect_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args&
 		for (int i=0; entity_iter(w->ecs, ht_id, i); ++i){
 			const bool visible = nullptr != entity_sibling(w->ecs, ht_id, i, ra.visible_id);
 			if (visible){
-				collect_render_objs(w, ht_id, i, &g.second);
+				collect_render_objs(w, ht_id, i, &g.second, queue_stages);
 			}
 		}
 	}
 }
 
 static void
-draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans){
-	for (const auto& s : s_queue_stages.stages){
+draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans, queue_stages &queue_stages){
+	for (const auto& s : queue_stages.stages){
 		for (const auto &od : s.objs){
 			if (mesh_submit(w, od.obj)){
 				auto mi = get_material(od.obj, ra.queue_material_index);
@@ -269,10 +269,10 @@ lsubmit(lua_State *L){
 		}
 
 		s_queue_stages.clear();
-		collect_objects(L, w, ra, texture_index, trans);
-		collect_hitch_objects(L, w, ra, texture_index, func_cb_index, groups, trans);
+		collect_objects(L, w, ra, texture_index, trans, s_queue_stages);
+		collect_hitch_objects(L, w, ra, texture_index, func_cb_index, groups, trans, s_queue_stages);
 
-		draw_objs(L, w, ra, texture_index, trans);
+		draw_objs(L, w, ra, texture_index, trans, s_queue_stages);
 	}
 	return 0;
 }
