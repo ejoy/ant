@@ -266,9 +266,7 @@ function shape_terrain_test_sys:init()
         data = {
             name = "shape_terrain_test",
             scene = {
-                srt = {
-                    t = {-ww//2, 0.0, -hh//2},
-                }
+                t = {-ww//2, 0.0, -hh//2},
             },
             shape_terrain = {
                 width = ww,

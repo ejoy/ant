@@ -24,7 +24,7 @@ end
 
 local s = ecs.system "scenespace_system"
 function s:entity_init()
-	for v in w:select "INIT scene_needchange?out" do
+	for v in w:select "INIT scene scene_needchange?out" do
 		v.scene_needchange = true
 	end
 end

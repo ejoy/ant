@@ -153,6 +153,12 @@ policy "render_queue"
 
 component "need_touch"
 
+component "cull_args"
+    .type "c"
+    .field "viewprojmat:userdata|math_t"
+    .field "frustum_planes:userdata|math_t"
+    .field "cull_id:int64"
+
 policy "cull"
     .require_system "ant.render|cull_system"
 
@@ -182,9 +188,6 @@ system "render_system"
 system "cull_system"
     .implement "cull_system.lua"
     .require_system "ant.render|viewgroup_system"
-    .method "component_init"
-    .method "data_changed"
-    .method "entity_ready"
     .method "cull"
 
 interface "icull_primitive"

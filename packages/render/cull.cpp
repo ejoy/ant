@@ -2,49 +2,45 @@
 #include "ecs/select.h"
 #include "ecs/component.hpp"
 
-#include <memory>
-
 extern "C"{
 	#include "math3d.h"
 	#include "math3dfunc.h"
 }
 
-#define MATH3D(_FUNC, ...) world->math3d->_FUNC(world->math3d->LS, ...)
+#include <memory>
+#include <unordered_map>
+#include <vector>
+
+using cull_infos = std::unordered_map<uint64_t, std::vector<cid_t>>;
+
 static int
 lcull(lua_State *L){
-	static uint16_t s_cull_tabs[16];
-	const int numtab = (int)lua_rawlen(L, 1);
-	if (numtab == 0){
-		return 0;
-	}
-
-	if (numtab > sizeof(s_cull_tabs)/sizeof(s_cull_tabs[0])){
-		return luaL_error(L, "Too many cull tabs");
-	}
-
-	for (int i=0; i<numtab; ++i){
-		lua_geti(L, 1, i+1);
-		s_cull_tabs[i] = (uint16_t)lua_tointeger(L, -1);
-		lua_pop(L, 1);
-	}
-
 	auto w = getworld(L);
 	ecs_api::context ecs {w->ecs};
 
-	const auto vpid = math3d_from_lua(L, w->math3d, 2, MATH_TYPE_MAT);
-	const auto planes = math3d_frustum_planes(w->math3d->M, vpid, math3d_homogeneous_depth());
+	cull_infos ci;
+	for (auto e : ecs.select<ecs::cull_args>()){
+		const auto& i = e.get<ecs::cull_args>();
+		ci[i.frustum_planes.idx].push_back((cid_t)i.cull_id);
+	}
+
+	if (ci.empty())
+		return 0;
+
 	for (auto e : ecs.select<ecs::view_visible, ecs::render_object, ecs::bounding>()){
 		const auto &b = e.get<ecs::bounding>();
 		if (math_isnull(b.scene_aabb))
 			continue;
 
-		if (math3d_frustum_intersect_aabb(w->math3d->M, planes, b.scene_aabb) < 0){
-			for (int ii=0; ii<numtab; ++ii){
-				e.enable_tag(ecs, s_cull_tabs[ii]);
-			}
-		} else {
-			for (int ii=0; ii<numtab; ++ii){
-				e.disable_tag(ecs, s_cull_tabs[ii]);
+		for (const auto& kv : ci){
+			if (math3d_frustum_intersect_aabb(w->math3d->M, math_t{kv.first}, b.scene_aabb) < 0){
+				for (auto id : kv.second){
+					e.enable_tag(ecs, id);
+				}
+			} else {
+				for (auto id : kv.second){
+					e.disable_tag(ecs, id);
+				}
 			}
 		}
 	}
