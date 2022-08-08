@@ -87,6 +87,8 @@ Element::~Element() {
 	c.ReleaseMap(animation_properties);
 	c.ReleaseMap(inline_properties);
 	c.ReleaseMap(definition_properties);
+	c.ReleaseMap(local_properties);
+	c.ReleaseMap(global_properties);
 }
 
 void Element::Update() {
@@ -740,9 +742,15 @@ void Element::SetDataModel(DataModel* new_data_model) {
 void Element::SetParentNode(Element* _parent) {
 	parent = _parent;
 
+	auto& c = Style::Instance();
+	c.ReleaseMap(global_properties);
 	if (parent) {
 		DirtyDefinition();
 		DirtyInheritedProperties();
+		global_properties = c.Inherit(local_properties, parent->global_properties);
+	}
+	else {
+		global_properties = c.Inherit(local_properties);
 	}
 
 	DirtyTransform();
@@ -1448,8 +1456,7 @@ std::optional<Property> Element::GetProperty(PropertyId id) const {
 
 std::optional<Property> Element::GetComputedLocalProperty(PropertyId id) const {
 	auto& c = Style::Instance();
-	auto h = GetLocalProperties();
-    return c.Find(h, id);
+    return c.Find(local_properties, id);
 }
 
 bool Element::SetProperty(const std::string& name, std::optional<std::string> value) {
@@ -1493,8 +1500,7 @@ std::optional<std::string> Element::GetProperty(const std::string& name) const {
 
 std::optional<Property> Element::GetComputedProperty(PropertyId id) const {
 	auto& c = Style::Instance();
-	auto h = GetGlobalProperties();
-	auto r = c.Find(h, id);
+	auto r = c.Find(global_properties, id);
 	if (r) {
 		return r;
 	}
@@ -1513,7 +1519,7 @@ Transitions Element::GetTransition() const {
 	return none;
 }
 
-Transitions Element::GetTransition(const Style::PropertyMap& def) const {
+Transitions Element::GetTransition(const Style::PropertyCombination& def) const {
 	auto& c = Style::Instance();
 	if (auto property = c.Find(inline_properties, PropertyId::Transition)) {
 		return property->Get<Transitions>();
@@ -1525,7 +1531,7 @@ Transitions Element::GetTransition(const Style::PropertyMap& def) const {
 	return none;
 }
 
-void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const Style::PropertyMap& new_definition) {
+void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const Style::PropertyCombination& new_definition) {
 	std::visit([&](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
 		if constexpr (std::is_same_v<T, TransitionNone>) {
@@ -1568,10 +1574,7 @@ void Element::UpdateDefinition() {
 	if (!changed_properties.empty()) {
 		TransitionPropertyChanges(changed_properties, new_definition);
 	}
-	c.ReleaseMap(definition_properties);
-	definition_properties = new_definition;
-	local_properties = Style::Null;
-	global_properties = Style::Null;
+	c.AssginMap(definition_properties, new_definition);
 	DirtyProperties(changed_properties);
 	for (auto& child : children) {
 		child->DirtyDefinition();
@@ -1651,7 +1654,6 @@ bool Element::DelProperty(const PropertyIdSet& set) {
 				}
 			}
 			change = DelInlineProperty(set);
-			Style::Instance().Flush();
 			for (auto& [id, transition, oldProperty, _] : pt) {
 				StartTransition(id, transition, oldProperty, GetComputedProperty(id));
 			}
@@ -1697,9 +1699,8 @@ void Element::DirtyInheritedProperties() {
 
 void Element::ForeachProperties(std::function<void(PropertyId id, const Property& property)> f) {
 	auto& c = Style::Instance();
-	auto h = GetLocalProperties();
     for (size_t i = 0;; ++i) {
-        auto r = c.Index(h, i);
+        auto r = c.Index(local_properties, i);
         if (!r) {
             break;
         }
@@ -1803,48 +1804,6 @@ const EdgeInsets<float>& Element::GetPadding() const {
 
 const EdgeInsets<float>& Element::GetBorder() const {
 	return border;
-}
-
-void Element::CalcLocalProperties() {
-	auto& c = Style::Instance();
-	local_properties = c.MergeMap(animation_properties, inline_properties, definition_properties);
-}
-
-Style::EvalHandle Element::GetLocalProperties() const {
-	auto& c = Style::Instance();
-	if (local_properties.idx != 0) {
-		auto h = c.TryEval(local_properties);
-		if (h) {
-			return h;
-		}
-	}
-	const_cast<Element*>(this)->CalcLocalProperties();
-	return c.Eval(local_properties);
-}
-
-void Element::CalcGlobalProperties() {
-	auto& c = Style::Instance();
-	CalcLocalProperties();
-	if (parent) {
-		parent->CalcGlobalProperties();
-		global_properties = c.InheritMap(local_properties, parent->global_properties);
-	}
-	else {
-		global_properties = local_properties;
-	}
-}
-
-Style::EvalHandle Element::GetGlobalProperties() const {
-	auto& c = Style::Instance();
-	if (global_properties.idx != 0) {
-		auto h = c.TryEval(global_properties);
-		if (h) {
-			return h;
-		}
-	}
-	const_cast<Element*>(this)->CalcGlobalProperties();
-	return c.Eval(global_properties);
-
 }
 
 }

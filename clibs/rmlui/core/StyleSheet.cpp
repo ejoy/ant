@@ -27,14 +27,14 @@ const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const {
 	return nullptr;
 }
 
-Style::PropertyMap StyleSheet::GetElementDefinition(const Element* element) const {
+Style::PropertyCombination StyleSheet::GetElementDefinition(const Element* element) const {
 	std::vector<Style::PropertyMap> applicable;
 	for (auto& node : stylenode) {
 		if (node.IsApplicable(element)) {
 			applicable.push_back(node.GetProperties());
 		}
 	}
-	return Style::Instance().CreateMap(applicable);
+	return Style::Instance().Merge(applicable);
 }
 
 void StyleSheet::AddNode(StyleSheetNode&& node) {

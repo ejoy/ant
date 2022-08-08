@@ -6,16 +6,14 @@ extern "C" {
 #include <style.h>
 }
 
+constexpr inline style_handle_t STYLE_NULL = {0};
+
 namespace Rml::Style {
     struct Attrib: public style_attrib {
         ~Attrib() {
             delete[] data;
         }
     };
-
-    static bool is_null(style_handle_t s) {
-        return s.idx == 0;
-    }
 
     Cache::Cache(const PropertyIdSet& inherit) {
         uint8_t inherit_mask[128] = {0};
@@ -51,25 +49,40 @@ namespace Rml::Style {
         return {s.idx};
     }
 
-    PropertyMap Cache::CreateMap(const std::span<PropertyMap>& maps) {
-        style_handle_t s = STYLE_NULL;
-        for (auto v : maps) {
-            if (is_null(s)) {
-                s.idx = v.idx;
-            }
-            else {
-                s = style_inherit(c, s, {v.idx}, 0);
-            }
+    PropertyCombination Cache::Merge(const std::span<PropertyMap>& maps) {
+        if (maps.empty()) {
+            style_handle_t s = style_null(c);
+            return {s.idx};
         }
-        if (is_null(s)) {
-            return CreateMap();
+        style_handle_t s = {maps[0].idx};
+        for (size_t i = 1; i < maps.size(); ++i) {
+            s = style_inherit(c, s, {maps[i].idx}, 0);
         }
-        style_handle_t r = style_clone(c, s);
-        assert(!is_null(r));
-        return {r.idx};
+        return {s.idx};
     }
 
-    void Cache::ReleaseMap(PropertyMap s) {
+    PropertyCombination Cache::Merge(PropertyMap A, PropertyMap B, PropertyMap C) {
+        style_handle_t s = style_inherit(c, {A.idx}, style_inherit(c, {B.idx}, {C.idx}, 0), 0);
+        style_addref(c, s);
+        return {s.idx};
+    }
+
+    PropertyCombination Cache::Inherit(PropertyCombination child, PropertyCombination parent) {
+        style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 1);
+        style_addref(c, s);
+        return {s.idx};
+    }
+
+    PropertyCombination Cache::Inherit(PropertyCombination child) {
+        style_addref(c, {child.idx});
+        return {child.idx};
+    }
+
+    void Cache::AssginMap(PropertyMap s, PropertyCombination v) {
+        style_assign(c, {s.idx}, {v.idx});
+    }
+
+    void Cache::ReleaseMap(PropertyAny s) {
         style_release(c, {s.idx});
     }
 
@@ -131,31 +144,8 @@ namespace Rml::Style {
         return change;
     }
 
-    PropertyTempMap Cache::MergeMap(PropertyMap A, PropertyMap B, PropertyMap C) {
-        style_handle_t s = style_inherit(c, {A.idx}, style_inherit(c, {B.idx}, {C.idx}, 0), 0);
-        return {s.idx};
-    }
-
-    PropertyTempMap Cache::InheritMap(PropertyTempMap child, PropertyTempMap parent) {
-        style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 1);
-        return {s.idx};
-    }
-
-    EvalHandle Cache::Eval(PropertyTempMap s) {
-        int h = style_eval(c, {s.idx});
-        assert(h >= 0);
-        return {h};
-    }
-
-    EvalHandle Cache::TryEval(PropertyTempMap s) {
-        int h = style_eval(c, {s.idx});
-        return {h};
-    }
-
-    std::optional<Property> Cache::Find(PropertyMap s, PropertyId id) {
-        int h = style_eval(c, {s.idx});
-        assert(h >= 0);
-        void* data = style_find(c, h, (uint8_t)id);
+    std::optional<Property> Cache::Find(PropertyAny s, PropertyId id) {
+        void* data = style_find(c, {s.idx}, (uint8_t)id);
         if (!data) {
             return std::nullopt;
         }
@@ -163,18 +153,9 @@ namespace Rml::Style {
         return PropertyDecode(tag_v<Property>, p);
     }
 
-    std::optional<Property> Cache::Find(EvalHandle attrib, PropertyId id) {
-        void* data = style_find(c, attrib.handle, (uint8_t)id);
-        if (!data) {
-            return std::nullopt;
-        }
-        strparser<uint8_t> p {(const uint8_t*)data};
-        return PropertyDecode(tag_v<Property>, p);
-    }
-
-    std::optional<PropertyKV> Cache::Index(EvalHandle attrib, size_t index) {
+    std::optional<PropertyKV> Cache::Index(PropertyAny s, size_t index) {
         PropertyId id;
-        void* data = style_index(c, attrib.handle, (int)index, (uint8_t*)&id);
+        void* data = style_index(c, {s.idx}, (int)index, (uint8_t*)&id);
         if (!data) {
             return std::nullopt;
         }
@@ -182,21 +163,18 @@ namespace Rml::Style {
         return PropertyKV { id, PropertyDecode(tag_v<Property>, p)};
     }
 
-    PropertyIdSet Cache::Diff(PropertyMap a, PropertyMap b) {
+    PropertyIdSet Cache::Diff(PropertyAny a, PropertyAny b) {
         PropertyIdSet mark;
         PropertyIdSet ids;
-        int ha = style_eval(c, {a.idx});
-        int hb = style_eval(c, {b.idx});
-        assert (ha >= 0 && hb >= 0);
         
         for (int i = 0;; ++i) {
             PropertyId id;
-            void* data_a = style_index(c, ha, i, (uint8_t*)&id);
+            void* data_a = style_index(c, {a.idx}, i, (uint8_t*)&id);
             if (!data_a) {
                 break;
             }
             mark.insert(id);
-            void* data_b = style_find(c, hb, (uint8_t)id);
+            void* data_b = style_find(c, {b.idx}, (uint8_t)id);
             if (!data_b || data_a != data_b) {
                 ids.insert(id);
             }
@@ -204,12 +182,12 @@ namespace Rml::Style {
 
         for (int i = 0;; ++i) {
             PropertyId id;
-            void* data_b = style_index(c, hb, i, (uint8_t*)&id);
+            void* data_b = style_index(c, {b.idx}, i, (uint8_t*)&id);
             if (!data_b) {
                 break;
             }
             if (!mark.contains(id)) {
-                void* data_a = style_find(c, ha, (uint8_t)id);
+                void* data_a = style_find(c, {a.idx}, (uint8_t)id);
                 if (!data_a || data_a != data_b) {
                     ids.insert(id);
                 }
@@ -221,10 +199,6 @@ namespace Rml::Style {
 
     void Cache::Flush() {
         style_flush(c);
-    }
-
-    void Cache::Dump() {
-        style_dump(c);
     }
 
     static Cache* cahce = nullptr;
