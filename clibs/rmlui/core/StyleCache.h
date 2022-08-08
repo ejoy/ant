@@ -10,9 +10,13 @@
 struct style_cache;
 
 namespace Rml::Style {
-    using PropertyMap = struct { uint64_t idx; };
-    using PropertyTempMap = struct { uint64_t idx; };
-    constexpr inline PropertyTempMap Null = {0};
+    struct PropertyMap { int idx; };
+    struct PropertyCombination { int idx; };
+    struct PropertyAny {
+        PropertyAny(PropertyMap o): idx(o.idx) {}
+        PropertyAny(PropertyCombination o): idx(o.idx) {}
+        int idx;
+    };
 
     struct EvalHandle {
         int handle;
@@ -27,21 +31,19 @@ namespace Rml::Style {
         ~Cache();
         PropertyMap               CreateMap();
         PropertyMap               CreateMap(const PropertyVector& vec);
-        PropertyMap               CreateMap(const std::span<PropertyMap>& maps);
-        void                      ReleaseMap(PropertyMap s);
+        PropertyCombination       Merge(const std::span<PropertyMap>& maps);
+        PropertyCombination       Merge(PropertyMap A, PropertyMap B, PropertyMap C);
+        PropertyCombination       Inherit(PropertyCombination child, PropertyCombination parent);
+        PropertyCombination       Inherit(PropertyCombination child);
+        void                      ReleaseMap(PropertyAny s);
+        void                      AssginMap(PropertyMap s, PropertyCombination v);
         bool                      SetProperty(PropertyMap s, PropertyId id, const Property& value);
         bool                      DelProperty(PropertyMap s, PropertyId id);
         PropertyIdSet             SetProperty(PropertyMap s, const PropertyVector& vec);
         PropertyIdSet             DelProperty(PropertyMap s, const PropertyIdSet& set);
-        PropertyTempMap           MergeMap(PropertyMap A, PropertyMap B, PropertyMap C);
-        PropertyTempMap           InheritMap(PropertyTempMap child, PropertyTempMap parent);
-        void                      Dump();
-        EvalHandle                Eval(PropertyTempMap s);
-        EvalHandle                TryEval(PropertyTempMap s);
-        std::optional<Property>   Find(PropertyMap s, PropertyId id);
-        std::optional<Property>   Find(EvalHandle attrib, PropertyId id);
-        std::optional<PropertyKV> Index(EvalHandle attrib, size_t index);
-        PropertyIdSet             Diff(PropertyMap a, PropertyMap b);
+        std::optional<Property>   Find(PropertyAny s, PropertyId id);
+        std::optional<PropertyKV> Index(PropertyAny s, size_t index);
+        PropertyIdSet             Diff(PropertyAny a, PropertyAny b);
         void                      Flush();
 
     private:

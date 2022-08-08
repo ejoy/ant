@@ -117,12 +117,12 @@ public:
 	std::optional<Property> GetComputedProperty(PropertyId id) const;
 	std::optional<Property> GetComputedLocalProperty(PropertyId id) const;
 	Transitions GetTransition() const;
-	Transitions GetTransition(const Style::PropertyMap& def) const;
+	Transitions GetTransition(const Style::PropertyCombination& def) const;
 
 	bool SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
 	std::optional<std::string> GetProperty(const std::string& name) const;
 
-	void TransitionPropertyChanges(const PropertyIdSet & properties, const Style::PropertyMap& new_definition);
+	void TransitionPropertyChanges(const PropertyIdSet & properties, const Style::PropertyCombination& new_definition);
 
 	void UpdateProperties();
 	void UpdateAnimations();
@@ -160,10 +160,6 @@ protected:
 	void UpdateClip();
 	bool SetInlineProperty(const PropertyVector& vec);
 	bool DelInlineProperty(const PropertyIdSet& set);
-	void              CalcLocalProperties();
-	Style::EvalHandle GetLocalProperties() const;
-	void              CalcGlobalProperties();
-	Style::EvalHandle GetGlobalProperties() const;
 
 	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay);
 	bool AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween);
@@ -193,8 +189,8 @@ protected:
 	Style::PropertyMap animation_properties = Style::Instance().CreateMap();
 	Style::PropertyMap inline_properties = Style::Instance().CreateMap();
 	Style::PropertyMap definition_properties = Style::Instance().CreateMap();
-	Style::PropertyTempMap local_properties = Style::Null;
-	Style::PropertyTempMap global_properties = Style::Null;
+	Style::PropertyCombination local_properties = Style::Instance().Merge(animation_properties, inline_properties, definition_properties);
+	Style::PropertyCombination global_properties = Style::Instance().Inherit(local_properties);
 	PropertyIdSet dirty_properties;
 	glm::mat4x4 transform;
 	Rect content_rect;
