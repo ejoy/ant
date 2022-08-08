@@ -63,7 +63,7 @@ int StyleSheetNode::GetSpecificity() const {
 }
 
 void StyleSheetNode::SetProperties(const PropertyVector& prop) {
-	properties = Style::Instance().CreateMap(prop);
+	properties = Style::Instance().Create(prop);
 }
 
 void StyleSheetNode::SetSpecificity(int rule_specificity) {
@@ -99,7 +99,7 @@ void StyleSheetNode::AddRequirements(StyleSheetRequirements&& req) {
 	requirements.emplace_back(req);
 }
 
-Style::PropertyMap StyleSheetNode::GetProperties() const {
+Style::Value StyleSheetNode::GetProperties() const {
 	return properties;
 }
 

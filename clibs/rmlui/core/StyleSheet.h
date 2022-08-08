@@ -32,7 +32,7 @@ public:
 	void AddKeyframe(const std::string& identifier, const std::vector<float>& rule_values, const PropertyVector& properties);
 	void Sort();
 	const Keyframes* GetKeyframes(const std::string& name) const;
-	Style::PropertyCombination GetElementDefinition(const Element* element) const;
+	Style::Combination GetElementDefinition(const Element* element) const;
 
 private:
 	std::vector<StyleSheetNode> stylenode;

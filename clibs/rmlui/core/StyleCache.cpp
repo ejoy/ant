@@ -28,12 +28,12 @@ namespace Rml::Style {
         style_deletecache(c);
     }
 
-    PropertyMap Cache::CreateMap() {
+    Value Cache::Create() {
         style_handle_t s = style_create(c, 0, NULL);
         return {s.idx};
     }
 
-    PropertyMap Cache::CreateMap(const PropertyVector& vec) {
+    Value Cache::Create(const PropertyVector& vec) {
         strbuilder<uint8_t> b;
         std::vector<Attrib> attrib(vec.size());
         size_t i = 0;
@@ -49,7 +49,7 @@ namespace Rml::Style {
         return {s.idx};
     }
 
-    PropertyCombination Cache::Merge(const std::span<PropertyMap>& maps) {
+    Combination Cache::Merge(const std::span<Value>& maps) {
         if (maps.empty()) {
             style_handle_t s = style_null(c);
             return {s.idx};
@@ -61,32 +61,32 @@ namespace Rml::Style {
         return {s.idx};
     }
 
-    PropertyCombination Cache::Merge(PropertyMap A, PropertyMap B, PropertyMap C) {
+    Combination Cache::Merge(Value A, Value B, Value C) {
         style_handle_t s = style_inherit(c, {A.idx}, style_inherit(c, {B.idx}, {C.idx}, 0), 0);
         style_addref(c, s);
         return {s.idx};
     }
 
-    PropertyCombination Cache::Inherit(PropertyCombination child, PropertyCombination parent) {
+    Combination Cache::Inherit(Combination child, Combination parent) {
         style_handle_t s = style_inherit(c, {child.idx}, {parent.idx}, 1);
         style_addref(c, s);
         return {s.idx};
     }
 
-    PropertyCombination Cache::Inherit(PropertyCombination child) {
+    Combination Cache::Inherit(Combination child) {
         style_addref(c, {child.idx});
         return {child.idx};
     }
 
-    void Cache::AssginMap(PropertyMap s, PropertyCombination v) {
+    void Cache::Assgin(Value s, Combination v) {
         style_assign(c, {s.idx}, {v.idx});
     }
 
-    void Cache::ReleaseMap(PropertyAny s) {
+    void Cache::Release(ValueOrCombination s) {
         style_release(c, {s.idx});
     }
 
-    bool Cache::SetProperty(PropertyMap s, PropertyId id, const Property& value) {
+    bool Cache::SetProperty(Value s, PropertyId id, const Property& value) {
         strbuilder<uint8_t> b;
         PropertyEncode(b, (PropertyVariant const&)value);
         auto str = b.string();
@@ -94,12 +94,12 @@ namespace Rml::Style {
         return !!style_modify(c, {s.idx}, 1, &attrib);
     }
 
-    bool Cache::DelProperty(PropertyMap s, PropertyId id) {
+    bool Cache::DelProperty(Value s, PropertyId id) {
         style_attrib attrib = { NULL, 0, (uint8_t)id, 0 };
         return !!style_modify(c, {s.idx}, 1, &attrib);
     }
 
-    PropertyIdSet Cache::SetProperty(PropertyMap s, const PropertyVector& vec) {
+    PropertyIdSet Cache::SetProperty(Value s, const PropertyVector& vec) {
         strbuilder<uint8_t> b;
         std::vector<Attrib> attrib(vec.size());
         size_t i = 0;
@@ -123,7 +123,7 @@ namespace Rml::Style {
         return change;
     }
 
-    PropertyIdSet Cache::DelProperty(PropertyMap s, const PropertyIdSet& set) {
+    PropertyIdSet Cache::DelProperty(Value s, const PropertyIdSet& set) {
         std::vector<Attrib> attrib(set.size());
         size_t i = 0;
         for (auto id : set) {
@@ -144,7 +144,7 @@ namespace Rml::Style {
         return change;
     }
 
-    std::optional<Property> Cache::Find(PropertyAny s, PropertyId id) {
+    std::optional<Property> Cache::Find(ValueOrCombination s, PropertyId id) {
         void* data = style_find(c, {s.idx}, (uint8_t)id);
         if (!data) {
             return std::nullopt;
@@ -153,7 +153,7 @@ namespace Rml::Style {
         return PropertyDecode(tag_v<Property>, p);
     }
 
-    std::optional<PropertyKV> Cache::Index(PropertyAny s, size_t index) {
+    std::optional<PropertyKV> Cache::Index(ValueOrCombination s, size_t index) {
         PropertyId id;
         void* data = style_index(c, {s.idx}, (int)index, (uint8_t*)&id);
         if (!data) {
@@ -163,7 +163,7 @@ namespace Rml::Style {
         return PropertyKV { id, PropertyDecode(tag_v<Property>, p)};
     }
 
-    PropertyIdSet Cache::Diff(PropertyAny a, PropertyAny b) {
+    PropertyIdSet Cache::Diff(ValueOrCombination a, ValueOrCombination b) {
         PropertyIdSet mark;
         PropertyIdSet ids;
         

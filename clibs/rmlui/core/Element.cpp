@@ -84,11 +84,11 @@ Element::~Element() {
 	}
 
 	auto& c = Style::Instance();
-	c.ReleaseMap(animation_properties);
-	c.ReleaseMap(inline_properties);
-	c.ReleaseMap(definition_properties);
-	c.ReleaseMap(local_properties);
-	c.ReleaseMap(global_properties);
+	c.Release(animation_properties);
+	c.Release(inline_properties);
+	c.Release(definition_properties);
+	c.Release(local_properties);
+	c.Release(global_properties);
 }
 
 void Element::Update() {
@@ -743,7 +743,7 @@ void Element::SetParentNode(Element* _parent) {
 	parent = _parent;
 
 	auto& c = Style::Instance();
-	c.ReleaseMap(global_properties);
+	c.Release(global_properties);
 	if (parent) {
 		DirtyDefinition();
 		DirtyInheritedProperties();
@@ -1519,7 +1519,7 @@ Transitions Element::GetTransition() const {
 	return none;
 }
 
-Transitions Element::GetTransition(const Style::PropertyCombination& def) const {
+Transitions Element::GetTransition(const Style::Combination& def) const {
 	auto& c = Style::Instance();
 	if (auto property = c.Find(inline_properties, PropertyId::Transition)) {
 		return property->Get<Transitions>();
@@ -1531,7 +1531,7 @@ Transitions Element::GetTransition(const Style::PropertyCombination& def) const 
 	return none;
 }
 
-void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const Style::PropertyCombination& new_definition) {
+void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const Style::Combination& new_definition) {
 	std::visit([&](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
 		if constexpr (std::is_same_v<T, TransitionNone>) {
@@ -1574,7 +1574,7 @@ void Element::UpdateDefinition() {
 	if (!changed_properties.empty()) {
 		TransitionPropertyChanges(changed_properties, new_definition);
 	}
-	c.AssginMap(definition_properties, new_definition);
+	c.Assgin(definition_properties, new_definition);
 	DirtyProperties(changed_properties);
 	for (auto& child : children) {
 		child->DirtyDefinition();
