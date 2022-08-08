@@ -167,13 +167,14 @@ local function update_shadow_camera(dl, maincamera)
 	local lightdir = iom.get_direction(dl)
 	local setting = ishadow.setting()
 	local viewmat = maincamera.viewmat
+	local csmfrustums = ishadow.calc_split_frustums(maincamera.frustum)
 	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
-		local vf = csm.view_frustum
+		local vf = csmfrustums[csm.index]--csm.view_frustum
 		local shadow_ce = world:entity(qe.camera_ref)
 		calc_shadow_camera(viewmat, vf, lightdir, setting.shadowmap_size, setting.stabilize, shadow_ce)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
-		--split_distances_VS[csm.index] = vf.f
+		split_distances_VS[csm.index] = vf.f
 	end
 end
 
@@ -266,9 +267,7 @@ function sm:init()
 	end
 end
 
-local shadow_camera_rebuild = false
-local mq_camera_mb = world:sub{"main_queue", "camera_changed"}
-local camera_changed_mb
+
 local function main_camera_changed(ceid)
 	local camera = world:entity(ceid).camera
 	local csmfrustums = ishadow.calc_split_frustums(camera.frustum)
@@ -279,7 +278,6 @@ local function main_camera_changed(ceid)
 		csm.view_frustum = cf
 		split_distances_VS[idx] = cf.f
 	end
-	camera_changed_mb = world:sub{"camera_changed", ceid}
 end
 
 local function set_csm_visible(enable)
@@ -289,24 +287,12 @@ local function set_csm_visible(enable)
 end
 
 function sm:entity_init()
-	for e in w:select "INIT main_queue camera_ref:in" do
-		main_camera_changed(e.camera_ref)
-		shadow_camera_rebuild = true
-	end
-
-	for msg in mq_camera_mb:each() do
-		main_camera_changed(msg[3])
-		shadow_camera_rebuild = true
-	end
-
 	for e in w:select "INIT make_shadow directional_light light:in" do
 		local csm_dl = w:singleton("csm_directional_light", "light:in")
 		if csm_dl == nil then
 			e.csm_directional_light = true
 			w:sync("csm_directional_light?out", e)
 			set_csm_visible(true)
-
-			shadow_camera_rebuild = true
 		else
 			error("already have 'make_shadow' directional light")
 		end
@@ -316,15 +302,6 @@ end
 function sm:entity_remove()
 	for _ in w:select "REMOVED csm_directional_light" do
 		set_csm_visible(false)
-	end
-end
-
-function sm:data_changed()
-	local dl = w:singleton("csm_directional_light", "light:in")
-	if dl then
-		for _ in camera_changed_mb:each() do
-			shadow_camera_rebuild = true
-		end
 	end
 end
 
@@ -347,24 +324,7 @@ function sm:update_camera()
 	if dl then
 		local mq = w:singleton("main_queue", "camera_ref:in")
 		local mce = world:entity(mq.camera_ref)
-		if mce.scene_changed then
-			shadow_camera_rebuild = true
-		end
-
-		if shadow_camera_rebuild then
-			update_shadow_camera(dl, mce.camera)
-			shadow_camera_rebuild = false
-		else
-			for qe in w:select "csm:in camera_ref:in" do
-				local cref = qe.camera_ref
-				local ce = world:entity(cref)
-				local camera = ce.camera
-				update_camera_matrices(camera, ce.scene.worldmat)
-				local idx = qe.csm.index
-				csm_matrices[idx] = calc_csm_matrix_attrib(idx, camera.viewprojmat)
-			end
-		end
-
+		update_shadow_camera(dl, mce.camera)
 		commit_csm_matrices_attribs()
 	end
 end
