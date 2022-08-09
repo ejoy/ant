@@ -4,8 +4,7 @@ local w = world.w
 
 local m = ecs.system "entity_system"
 
-local function update_group_tag(data)
-    local groupid = data.group
+local function update_group_tag(groupid, data)
     for tag, t in pairs(world._group.tags) do
         if t[groupid] then
             data[tag] = true
@@ -20,10 +19,11 @@ function m:entity_create()
     for i = 1, #queue do
         local initargs = queue[i]
         local eid = initargs.eid
+        local groupid = initargs.group
         local data = initargs.data
         local template = initargs.template
         data.INIT = true
-        update_group_tag(data)
+        update_group_tag(groupid, data)
         if template then
             if initargs.parent then
                 data.LAST_CREATE = true
@@ -38,7 +38,7 @@ function m:entity_create()
         else
             w:import(eid, data)
         end
-        w:group_add(initargs.group, eid)
+        w:group_add(groupid, eid)
     end
 end
 
