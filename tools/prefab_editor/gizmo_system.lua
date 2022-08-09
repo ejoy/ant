@@ -223,9 +223,9 @@ local function mouse_hit_plane(screen_pos, plane_info)
 	return utils.ray_hit_plane(iom.ray(c.viewprojmat, screen_pos), plane_info)
 end
 
-local function create_global_axes(srt)
+local function create_global_axes(scene)
 	local off = 0.1
-	ientity.create_screen_axis_entity(srt, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")
+	ientity.create_screen_axis_entity("global_axes", {type = "percent", screen_pos = {off, 1-off}}, scene)
 end
 
 function gizmo:update_scale()
@@ -284,61 +284,67 @@ function gizmo_sys:post_init()
 	create_arrow_widget(axis_root, "z")
 	
 	local plane_xy_eid = ientity.create_prim_plane_entity(
-		{t = {gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 0, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})},
+		"plane_xy",
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
+		{
+			t = {gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 0, 1},
+			s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0},
+			r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0}),
+			parent = axis_root
+		},
 		gizmo_const.COLOR.Z_ALPHA,
-		"plane_xy", true)
-	ecs.method.set_parent(plane_xy_eid, axis_root)
+		true)
 	gizmo.txy.eid = {plane_xy_eid, plane_xy_eid}
 
-	local plane_yz_eid = ientity.create_prim_plane_entity(
-		{t = {0, gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}, r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)})},
+	local plane_yz_eid = ientity.create_prim_plane_entity("plane_yz",
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
+		{
+			t = {0, gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 1},
+			s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0},
+			r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)}),
+			parent = axis_root
+		},
 		gizmo_const.COLOR.X_ALPHA,
-		"plane_yz", true)
-	ecs.method.set_parent(plane_yz_eid, axis_root)
+		true)
 	gizmo.tyz.eid = {plane_yz_eid, plane_yz_eid}
 
-	local plane_zx_eid = ientity.create_prim_plane_entity(
-		{t = {gizmo_const.MOVE_PLANE_OFFSET, 0, gizmo_const.MOVE_PLANE_OFFSET, 1}, s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0}},
+	local plane_zx_eid = ientity.create_prim_plane_entity("plane_zx",
 		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
+		{
+			t = {gizmo_const.MOVE_PLANE_OFFSET, 0, gizmo_const.MOVE_PLANE_OFFSET, 1},
+			s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0},
+			parent = axis_root
+		},
 		gizmo_const.COLOR.Y_ALPHA,
-		"plane_zx", true)
-	ecs.method.set_parent(plane_zx_eid, axis_root)
+		true)
 	gizmo.tzx.eid = {plane_zx_eid, plane_zx_eid}
 	gizmo:reset_move_axis_color()
 
 	-- roate axis
-	local uniform_rot_eid = ientity.create_circle_entity(gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {}, "rotate_gizmo_uniform", gizmo_const.COLOR.GRAY, true)
-	ecs.method.set_parent(uniform_rot_eid, uniform_rot_root)
-	local function create_rotate_fan(radius, circle_trans)
-		local mesh_eid = ientity.create_circle_mesh_entity(radius, gizmo_const.ROTATE_SLICES, circle_trans, "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", "rotate_mesh_gizmo_uniform", gizmo_const.COLOR.Z_ALPHA, true)
-		ecs.method.set_parent(mesh_eid, axis_root)
+	local uniform_rot_eid = ientity.create_circle_entity("rotate_gizmo_uniform", gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {parent = uniform_rot_root}, gizmo_const.COLOR.GRAY, true)
+	local function create_rotate_fan(radius, scene)
+		local mesh_eid = ientity.create_circle_mesh_entity("rotate_mesh_gizmo_uniform", radius, gizmo_const.ROTATE_SLICES, "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", scene, gizmo_const.COLOR.Z_ALPHA, true)
 		return mesh_eid
 	end
 	-- counterclockwise mesh
-	local rot_ccw_mesh_eid = create_rotate_fan(gizmo_const.UNIFORM_ROT_AXIS_LEN, {})
-	ecs.method.set_parent(rot_ccw_mesh_eid, uniform_rot_root)
+	local rot_ccw_mesh_eid = create_rotate_fan(gizmo_const.UNIFORM_ROT_AXIS_LEN, {parent = uniform_rot_root})
 	-- clockwise mesh
-	local rot_cw_mesh_eid = create_rotate_fan(gizmo_const.UNIFORM_ROT_AXIS_LEN, {})
-	ecs.method.set_parent(rot_cw_mesh_eid, uniform_rot_root)
+	local rot_cw_mesh_eid = create_rotate_fan(gizmo_const.UNIFORM_ROT_AXIS_LEN, {parent = uniform_rot_root})
 	gizmo.rw.eid = {uniform_rot_eid, uniform_rot_eid, rot_ccw_mesh_eid, rot_cw_mesh_eid}
 
-	local function create_rotate_axis(axis, line_end, circle_trans)
-		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, line_end, "", axis.color, true)
-		ecs.method.set_parent(line_eid, rot_circle_root)
-		local rot_eid = ientity.create_circle_entity(gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, circle_trans, "rotate gizmo circle", axis.color, true)
-		ecs.method.set_parent(rot_eid, rot_circle_root)
-		local rot_ccw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, circle_trans)
-		local rot_cw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, circle_trans)
+	local function create_rotate_axis(axis, line_end, scene)
+		local line_eid = ientity.create_line_entity("", {0, 0, 0}, line_end, {parent = rot_circle_root}, axis.color, true)
+		local rot_eid = ientity.create_circle_entity("rotate gizmo circle", gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, scene, axis.color, true)
+		local rot_ccw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, {parent = scene.parent, s = scene.s, r = scene.r, t = scene.t})
+		local rot_cw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, {parent = scene.parent, s = scene.s, r = scene.r, t = scene.t})
 		axis.eid = {rot_eid, line_eid, rot_ccw_mesh_eid, rot_cw_mesh_eid}
 	end
-	create_rotate_axis(gizmo.rx, {gizmo_const.AXIS_LEN * 0.5, 0, 0}, {r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})})
-	create_rotate_axis(gizmo.ry, {0, gizmo_const.AXIS_LEN * 0.5, 0}, {r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})})
-	create_rotate_axis(gizmo.rz, {0, 0, gizmo_const.AXIS_LEN * 0.5}, {})
+	create_rotate_axis(gizmo.rx, {gizmo_const.AXIS_LEN * 0.5, 0, 0}, {parent = rot_circle_root, r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})})
+	create_rotate_axis(gizmo.ry, {0, gizmo_const.AXIS_LEN * 0.5, 0}, {parent = rot_circle_root, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})})
+	create_rotate_axis(gizmo.rz, {0, 0, gizmo_const.AXIS_LEN * 0.5}, {parent = rot_circle_root})
 	
 	-- scale axis
-	local function create_scale_cube(srt, color, axis_name, parent)
+	local function create_scale_cube(axis_name, scene, color)
 		local eid = ecs.create_entity {
 			policy = {
 				"ant.render|render",
@@ -347,7 +353,7 @@ function gizmo_sys:post_init()
 			},
 			data = {
 				visible_state = "main_view|selectable",
-				scene = {s=srt.s, r=srt.r, t=srt.t, parent = parent},
+				scene = scene or {},
 				material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name,
@@ -363,12 +369,11 @@ function gizmo_sys:post_init()
 	end
 
 	-- scale axis cube
-	local cube_eid = create_scale_cube({s = gizmo_const.AXIS_CUBE_SCALE}, gizmo_const.COLOR.GRAY, "uniform scale", axis_root)
+	local cube_eid = create_scale_cube("uniform scale", {s = gizmo_const.AXIS_CUBE_SCALE, parent = axis_root}, gizmo_const.COLOR.GRAY)
 	gizmo.uniform_scale_eid = cube_eid
 	local function create_scale_axis(axis, axis_end)
-		local cube_eid = create_scale_cube({t = axis_end, s = gizmo_const.AXIS_CUBE_SCALE}, axis.color, "scale axis", axis_root)
-		local line_eid = ientity.create_line_entity({}, {0, 0, 0}, axis_end, "", axis.color, true)
-		ecs.method.set_parent(line_eid, axis_root)
+		local cube_eid = create_scale_cube("scale axis", {t = axis_end, s = gizmo_const.AXIS_CUBE_SCALE, parent = axis_root}, axis.color)
+		local line_eid = ientity.create_line_entity("", {0, 0, 0}, axis_end, {}, axis.color, true)
 		axis.eid = {cube_eid, line_eid}
 	end
 	create_scale_axis(gizmo.sx, {gizmo_const.AXIS_LEN, 0, 0})

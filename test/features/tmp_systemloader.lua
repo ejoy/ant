@@ -251,7 +251,7 @@ function init_loader_sys:init()
     ecs.create_instance"/pkg/ant.test.features/assets/entities/skybox_test.prefab"
     local p = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
     p.on_ready = function (e)
-        local a_eid = ientity.create_arrow_entity({}, 0.3, math3d.vector(1.0, 0.0, 0.0, 1.0), "/pkg/ant.resources/materials/meshcolor.material")
+        local a_eid = ientity.create_arrow_entity(0.3, math3d.vector(1.0, 0.0, 0.0, 1.0), "/pkg/ant.resources/materials/meshcolor.material")
         ecs.method.set_parent(a_eid, e.tag["*"][1])
     end
     world:create_object(p)
@@ -279,7 +279,7 @@ function init_loader_sys:init()
     -- world:create_object(p)
 
     local off = 0.1
-	ientity.create_screen_axis_entity({s=0.1}, {type = "percent", screen_pos = {off, 1-off}}, "global_axes")
+	ientity.create_screen_axis_entity("global_axes", {type = "percent", screen_pos = {off, 1-off}}, {s=0.1})
     --ecs.create_instance "/pkg/ant.test.features/assets/glb/logistics_center.glb|mesh.prefab"
 
     -- local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"

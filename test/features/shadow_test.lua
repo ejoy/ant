@@ -57,7 +57,7 @@ end
 
 function st_sys:entity_init()
 	for e in w:select "INIT make_shadow light:in scene:in id:in" do
-		local ee = ientity.create_arrow_entity({}, 0.3, {1, 1, 1, 1}, "/pkg/ant.resources/materials/meshcolor.material")
+		local ee = ientity.create_arrow_entity(0.3, {1, 1, 1, 1}, "/pkg/ant.resources/materials/meshcolor.material")
 		ecs.method.set_parent(ee, e.id)
 	end
 end

@@ -184,19 +184,17 @@ local function create_frustum_entity(eid)
             "ant.general|name"
         },
         data = {
-            scene = {},
+            scene = { parent = eid },
             name = "second_view_frustum_root",
             second_view_frustum = true,
             on_ready = function (e)
                 w:sync("id:in", e)
-                ecs.method.set_parent(e.id, eid)
             end,
         }
     }
 
     local function onready(e)
         w:sync("id:in", e)
-        ecs.method.set_parent(e.id, frustum_root)
         imaterial.iset_property(e, "u_color", mc.YELLOW_HALF)
     end
 
@@ -222,7 +220,7 @@ local function create_frustum_entity(eid)
             },
             owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/line_color.material",
-            scene = {},
+            scene = { parent = frustum_root },
             visible_state = "main_view|auxgeom",
             name = "second_view_frustum",
             second_view_frustum = true,
@@ -257,6 +255,7 @@ local function create_frustum_entity(eid)
             visible_state = "main_view|auxgeom",
             scene = {
                 t = tri_bottomcenter,
+                parent = frustum_root
             },
             name = "second_view_triangle",
             on_ready = onready,
