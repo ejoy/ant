@@ -14,32 +14,32 @@ local function update_group_tag(data)
 end
 
 function m:entity_create()
-    for v in w:select "create_entity:in" do
-        local initargs = v.create_entity
-        initargs.INIT = true
-        update_group_tag(initargs)
-        w:new(initargs)
-    end
-    w:clear "create_entity"
+    local queue = world._create_queue
+    world._create_queue = {}
 
-    for v in w:select "create_entity_template:in" do
-        local initargs = v.create_entity_template
-        initargs.data.INIT = true
-        if initargs.parent then
-            initargs.data.LAST_CREATE = true
-        end
-        update_group_tag(initargs.data)
-        w:template_instance(initargs.template, initargs.data)
-        if initargs.parent then
-            for e in w:select "LAST_CREATE scene:update" do
-                e.scene.parent = initargs.parent
+    for i = 1, #queue do
+        local initargs = queue[i]
+        local eid = initargs.eid
+        local data = initargs.data
+        local template = initargs.template
+        data.INIT = true
+        update_group_tag(data)
+        if template then
+            if initargs.parent then
+                data.LAST_CREATE = true
             end
-            w:clear "LAST_CREATE"
+            w:template_instance(eid, template, data)
+            if initargs.parent then
+                for e in w:select "LAST_CREATE scene:update" do
+                    e.scene.parent = initargs.parent
+                end
+                w:clear "LAST_CREATE"
+            end
+        else
+            w:import(eid, data)
         end
+        w:group_add(initargs.group, eid)
     end
-    w:clear "create_entity_template"
-
-    w:group_update()
 end
 
 function m:entity_ready()

@@ -23,33 +23,33 @@ local function sortpairs(t)
     end
 end
 
-local function getentityid(w)
-    w._maxid = w._maxid + 1
-    return w._maxid
-end
-
 local function create_entity_by_data(w, group, data)
-    data.id = getentityid(w)
-    data.group = group or 0
-    w.w:new {
-        create_entity = data
+    local queue = w._create_queue
+    local eid = w.w:new()
+    data.id = eid
+    local initargs = {
+        eid = eid,
+        group = group or 0,
+        data = data,
     }
-    return data.id
+    queue[#queue+1] = initargs
+    return eid
 end
 
 local function create_entity_by_template(w, group, template)
+    local queue = w._create_queue
+    local eid = w.w:new()
     local data = {
-        id = getentityid(w),
-        group = group or 0,
+        id = eid,
     }
     local initargs = {
+        eid = eid,
+        group = group or 0,
         data = data,
         template = template,
     }
-    w.w:new {
-        create_entity_template = initargs
-    }
-    return data.id, initargs
+    queue[#queue+1] = initargs
+    return eid, initargs
 end
 
 function world:_create_entity(package, group, v)
