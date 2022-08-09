@@ -1,18 +1,22 @@
 local ecs   = ...
 local world = ecs.world
 local w     = world.w
-local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local mt_sys = ecs.system "mesh_terrain_system"
 
 local function instance(pid, mp, centerpos)
-    local p = ecs.create_instance(mp)
-    p.on_ready = function (ee)
-        ecs.method.set_parent(ee.root, pid)
-        if centerpos then
-            iom.set_position(world:entity(ee.root), centerpos)
-        end
-    end
+    local root = ecs.create_entity {
+        policy = {
+            "ant.scene|scene_object",
+        },
+        data = {
+            scene = {
+                parent = pid,
+                t = centerpos,
+            }
+        }
+    }
+    local p = ecs.create_instance(mp, root)
     world:create_object(p)
     return p
 end

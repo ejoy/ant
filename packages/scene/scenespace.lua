@@ -29,10 +29,6 @@ function s:entity_init()
 	end
 end
 
-function ecs.method.set_parent(e, parent)
-	world:pub {"parent_changed", e, parent}
-end
-
 local sceneupdate_sys = ecs.system "scene_update_system"
 function sceneupdate_sys:init()
 	ecs.group(0):enable "scene_update"

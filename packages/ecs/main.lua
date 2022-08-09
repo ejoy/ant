@@ -322,17 +322,15 @@ function world:create_object(inner_proxy)
     return outer_proxy
 end
 
-function world:_create_instance(group, filename)
+function world:_create_instance(group, parent, filename)
     local w = self
     local template = create_template(w, filename)
-    local root = create_scene_entity(w, group)
     local prefab, noparent = create_instance(w, group, template)
     for _, m in ipairs(noparent) do
-        m.parent = root
+        m.parent = parent
     end
     run_action(w, prefab, template)
     return {
-        root = root,
         group = group,
         tag = create_tags(prefab, template)
     }
@@ -351,8 +349,8 @@ function world:_create_group(id)
     function api:create_entity(v)
         return w:_create_entity(package, id, v)
     end
-    function api:create_instance(v)
-        return w:_create_instance(id, v)
+    function api:create_instance(v, parent)
+        return w:_create_instance(id, parent, v)
     end
     local function tags(tag)
         local t = group.tags[tag]
