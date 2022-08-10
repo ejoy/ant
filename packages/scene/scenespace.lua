@@ -26,13 +26,6 @@ function b:entity_init()
 	end
 end
 
-local s = ecs.system "scenespace_system"
-function s:entity_init()
-	for v in w:select "INIT scene scene_needchange?out" do
-		v.scene_needchange = true
-	end
-end
-
 local sceneupdate_sys = ecs.system "scene_update_system"
 function sceneupdate_sys:init()
 	ecs.group(0):enable "scene_update"
