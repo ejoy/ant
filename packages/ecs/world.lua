@@ -197,8 +197,7 @@ function world:entity(eid)
 end
 
 function world:debug_entity(eid)
-	local e = self.w:fetch(eid)
-	return self.w:readall(e)
+	return self.w:readall(eid)
 end
 
 function world:remove_entity(eid)
