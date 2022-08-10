@@ -47,27 +47,34 @@ function m:entity_ready()
 end
 
 function m:update_world()
+    w:visitor_update()
     w:update()
     world._frame = world._frame+ 1
+end
+
+local function emptyfunc(f)
+    local info = debug.getinfo(f, "SL")
+    if info.what ~= "C" then
+        local lines = info.activelines
+        return next(lines, next(lines)) == nil
+    end
 end
 
 local MethodRemove = {}
 
 function m:init()
     for name, func in pairs(world._class.component) do
-        MethodRemove[name] = func.remove
+        local f = func.remove
+        if f and not emptyfunc(f) then
+            MethodRemove[name] = f
+        end
     end
 end
 
 function m:entity_remove()
-    for v in w:select "REMOVED id:in" do
-        local e = world._entity[v.id]
-        for name, func in pairs(MethodRemove) do
-            local c = e[name]
-            if c then
-                func(c)
-            end
+    for name, func in pairs(MethodRemove) do
+        for v in w:select("REMOVED "..name..":in") do
+            func(v[name])
         end
-        world._entity[v.id] = nil
     end
 end

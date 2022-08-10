@@ -223,43 +223,6 @@ function world:clibs(name)
 	return funcs
 end
 
-local function init_entity(w, ecs)
-	local entity = {}
-	w._entity = entity
-
-	local proxy_mt = {}
-	function proxy_mt:__index(name)
-		local id = self.id
-		local t = ecs:access(id, name)
-		if type(t) ~= "table" or ecs:type(name) ~= "c" then
-			return t
-		end
-		local mt = {}
-		mt.__index = t
-		function mt:__newindex(k, v)
-			if t[k] ~= v then
-				t[k] = v
-				ecs:access(id, name, t)
-			end
-		end
-		return setmetatable({}, mt)
-	end
-	function proxy_mt:__newindex(name, value)
-		ecs:access(self.id, name, value)
-	end
-
-	local entity_mt = {}
-	function entity_mt:__index(id)
-		if not ecs:exist(id) then
-			return
-		end
-		local proxy = setmetatable({id=id}, proxy_mt)
-		entity[id] = proxy
-		return proxy
-	end
-	setmetatable(entity, entity_mt)
-end
-
 local m = {}
 
 function m.new_world(config)
@@ -277,15 +240,13 @@ function m.new_world(config)
 		},
 		_create_queue = {},
 		w = ecs,
+		_entity = ecs:visitor_create(),
 	}, world)
-
 
 	event.init(world)
 
 	-- load systems and components from modules
 	typeclass.init(w, config)
-
-	init_entity(w, ecs)
 
 	if w._clibs then
 		for _, name in ipairs(w._clibs) do
