@@ -3,11 +3,12 @@ local world = ecs.world
 local w = world.w
 
 local math3d = require "math3d"
+local mc = import_package "ant.math".constant
 
 local b = ecs.system "bounding_system"
 
 local function init_bounding(bounding, bb)
-    if bb then
+    if bb and bb.aabb ~= mc.NULL then
 		local aabb = bb.aabb
 		local aabbmin, aabbmax = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
 		-- copy 2 aabb
