@@ -93,7 +93,7 @@ system "skinning_system"
     .require_system "ant.animation|animation_system"
     .method "skin_mesh"
 
-component "skinning".type "lua"
+component "skinning"
 
 policy "skinrender"
     .require_policy "ant.render|render_object"
