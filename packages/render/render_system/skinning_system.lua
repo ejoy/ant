@@ -23,13 +23,16 @@ function skinning_sys:skin_mesh()
 	end
 
 	local meshskin
-	for e in w:select "skinning meshskin?in render_object?update" do
+	local worldmat
+	for e in w:select "scene_changed skinning scene?in meshskin?in render_object?update bounding?update" do
 		if e.meshskin then
 			meshskin = e.meshskin
+			worldmat = e.scene.worldmat
 		else
 			assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
 			local sm = meshskin.skinning_matrices
 			e.render_object.worldmat = math3d.array_matrix_ref(sm:pointer(), sm:count())
+			e.bounding.scene_aabb = math3d.aabb_transform(worldmat, e.bounding.aabb)
 		end
 	end
 end
