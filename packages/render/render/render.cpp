@@ -51,9 +51,6 @@ update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transfor
 		t.stride = num;
 		memcpy(bt.data, v, sizeof(float)*16*num);
 		it = trans.insert(std::make_pair(ro, t)).first;
-	} else {
-		const auto& t = it->second;
-		w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
 	}
 
 	return it->second;
@@ -99,7 +96,8 @@ get_material(const ecs::render_object* ro, int qidx){
 static void
 draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_id_t viewid, int queueidx, int texture_index, obj_transforms &trans){
 	if (mesh_submit(w, ro)){
-		update_transform(w, ro, trans);
+		auto t = update_transform(w, ro, trans);
+		w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
 		auto mi = get_material(ro, queueidx);
 		apply_material_instance(L, mi, w, texture_index);
 
