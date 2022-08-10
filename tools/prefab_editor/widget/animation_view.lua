@@ -21,7 +21,6 @@ local utils     = require "common.utils"
 local access    = require "vfs.repoaccess"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
-local datalist  = require "datalist"
 local global_data = require "common.global_data"
 
 local m = {}
