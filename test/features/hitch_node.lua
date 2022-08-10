@@ -130,7 +130,6 @@ local function create_skeleton_test_group()
     local function create_obj(g, file)
         local p = g:create_instance(file)
         p.on_init = function ()
-            world:entity(p.root).standalone_scene_object = true
             for _, eid in ipairs(p.tag["*"]) do
                 world:entity(eid).standalone_scene_object = true
             end

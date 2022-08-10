@@ -112,6 +112,9 @@ using group_matrices = std::unordered_map<int64_t, matrix_array>;
 struct obj_data {
 	const ecs::render_object* obj;
 	const matrix_array* mats;
+#if defined(_MSC_VER) && defined(_DEBUG)
+	int64_t id;
+#endif
 };
 using render_obj_array = std::vector<obj_data>;
 struct queue_stages {
@@ -146,8 +149,13 @@ collect_render_objs(struct ecs_world *w, cid_t main_id, int index, const matrix_
 			// 	continue;
 			//if (math_isnull(w->math3d->M, s->scene_aabb) || math3d_frustum_intersect_aabb())
 			auto ro = (const ecs::render_object*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::render_object>::id);
-			if (ro){
-				s.objs.emplace_back(obj_data{ro, mats});
+			if (ro) {
+#if defined(_MSC_VER) && defined(_DEBUG)
+				auto id = *(int64_t*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::id>::id);
+				s.objs.emplace_back(obj_data{ ro, mats, id });
+#else
+				s.objs.emplace_back(obj_data{ ro, mats });
+#endif
 			}
 		}
 	}
