@@ -13,14 +13,15 @@ local m = {}
 
 local function create_dynamic_mesh(layout, vb, ib)
 	local declmgr = import_package "ant.render".declmgr
-	local decl = declmgr.get(layout)
+	local correct_layout = declmgr.correct_layout(layout)
+	local flag = declmgr.vertex_desc_str(correct_layout)
 	return {
 		vb = {
-			start = 0, num = 0,
+			start = 0, num = #vb // #flag,
 			handle=bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fffd", vb), declmgr.get(layout).handle, "a"),
 		},
 		ib = {
-			start = 0, num = 0,
+			start = 0, num = #ib,
 			handle = bgfx.create_dynamic_index_buffer(bgfx.memory_buffer("w", ib), "a")
 		}
 	}
