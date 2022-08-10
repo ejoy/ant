@@ -8,8 +8,11 @@ local b = ecs.system "bounding_system"
 
 local function init_bounding(bounding, bb)
     if bb then
-        bounding.aabb = math3d.mark(bb.aabb)
-        bounding.scene_aabb = math3d.mark(math3d.aabb())
+		local aabb = bb.aabb
+		local aabbmin, aabbmax = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+		-- copy 2 aabb
+        bounding.aabb = math3d.mark(math3d.aabb(aabbmin, aabbmax))
+        bounding.scene_aabb = math3d.mark(math3d.aabb(aabbmin, aabbmax))
     end
 end
 
