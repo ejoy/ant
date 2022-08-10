@@ -4,8 +4,7 @@ local w = world.w
 
 local m = ecs.system "entity_system"
 
-local function update_group_tag(data)
-    local groupid = data.group
+local function update_group_tag(groupid, data)
     for tag, t in pairs(world._group.tags) do
         if t[groupid] then
             data[tag] = true
@@ -14,32 +13,33 @@ local function update_group_tag(data)
 end
 
 function m:entity_create()
-    for v in w:select "create_entity:in" do
-        local initargs = v.create_entity
-        initargs.INIT = true
-        update_group_tag(initargs)
-        w:new(initargs)
-    end
-    w:clear "create_entity"
+    local queue = world._create_queue
+    world._create_queue = {}
 
-    for v in w:select "create_entity_template:in" do
-        local initargs = v.create_entity_template
-        initargs.data.INIT = true
-        if initargs.parent then
-            initargs.data.LAST_CREATE = true
-        end
-        update_group_tag(initargs.data)
-        w:template_instance(initargs.template, initargs.data)
-        if initargs.parent then
-            for e in w:select "LAST_CREATE scene:update" do
-                e.scene.parent = initargs.parent
+    for i = 1, #queue do
+        local initargs = queue[i]
+        local eid = initargs.eid
+        local groupid = initargs.group
+        local data = initargs.data
+        local template = initargs.template
+        data.INIT = true
+        update_group_tag(groupid, data)
+        if template then
+            if initargs.parent then
+                data.LAST_CREATE = true
             end
-            w:clear "LAST_CREATE"
+            w:template_instance(eid, template, data)
+            if initargs.parent then
+                for e in w:select "LAST_CREATE scene:update" do
+                    e.scene.parent = initargs.parent
+                end
+                w:clear "LAST_CREATE"
+            end
+        else
+            w:import(eid, data)
         end
+        w:group_add(groupid, eid)
     end
-    w:clear "create_entity_template"
-
-    w:group_update()
 end
 
 function m:entity_ready()
@@ -47,27 +47,34 @@ function m:entity_ready()
 end
 
 function m:update_world()
+    w:visitor_update()
     w:update()
     world._frame = world._frame+ 1
+end
+
+local function emptyfunc(f)
+    local info = debug.getinfo(f, "SL")
+    if info.what ~= "C" then
+        local lines = info.activelines
+        return next(lines, next(lines)) == nil
+    end
 end
 
 local MethodRemove = {}
 
 function m:init()
     for name, func in pairs(world._class.component) do
-        MethodRemove[name] = func.remove
+        local f = func.remove
+        if f and not emptyfunc(f) then
+            MethodRemove[name] = f
+        end
     end
 end
 
 function m:entity_remove()
-    for v in w:select "REMOVED id:in" do
-        local e = world._entity[v.id]
-        for name, func in pairs(MethodRemove) do
-            local c = e[name]
-            if c then
-                func(c)
-            end
+    for name, func in pairs(MethodRemove) do
+        for v in w:select("REMOVED "..name..":in") do
+            func(v[name])
         end
-        world._entity[v.id] = nil
     end
 end
