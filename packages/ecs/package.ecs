@@ -4,7 +4,6 @@ pipeline "_frame_start"
     .stage "entity_init"
     .stage "animation_ready"
     .stage "entity_ready"
-    .stage "entity_test"
 
 pipeline "_frame_finish"
     .stage "prefab_remove"
