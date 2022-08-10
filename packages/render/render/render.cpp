@@ -43,6 +43,7 @@ update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transfor
 	auto it = trans.find(ro);
 	if (it == trans.end()){
 		const math_t wm = ro->worldmat;
+		assert(math_valid(w->math3d->M, wm) && math_isnull(wm) && "Invalid world mat");
 		const float * v = math_value(w->math3d->M, wm);
 		const int num = math_size(w->math3d->M, wm);
 		transform t;
