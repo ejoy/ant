@@ -19,6 +19,9 @@ function m:entity_create()
     for i = 1, #queue do
         local initargs = queue[i]
         local eid = initargs.eid
+        if not w:exist(eid) then
+            goto continue
+        end
         local groupid = initargs.group
         local data = initargs.data
         local template = initargs.template
@@ -39,6 +42,7 @@ function m:entity_create()
             w:import(eid, data)
         end
         w:group_add(groupid, eid)
+        ::continue::
     end
 end
 

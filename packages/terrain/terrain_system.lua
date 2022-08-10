@@ -231,7 +231,7 @@
 -- 	for _, _, eid in terrain_delete_mb:unpack() do
 -- 		for _, seid in world:each "section_draw" do
 -- 			if world[seid].parent == eid then
--- 				world:remove_entity(seid)
+-- 				w:remove(seid)
 -- 			end
 -- 		end
 -- 	end

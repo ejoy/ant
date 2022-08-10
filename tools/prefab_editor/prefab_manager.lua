@@ -164,14 +164,14 @@ function m:set_default_light(enable)
         end
     else
         if self.default_light then
-            world:remove_entity(self.default_light)
+            w:remove(self.default_light)
             self.default_light = nil
         end
         if self.skybox then
-            world:remove_entity(self.skybox.root)
+            w:remove(self.skybox.root)
             local all_entitys = self.skybox.tag["*"]
             for _, e in ipairs(all_entitys) do
-                world:remove_entity(e)
+                w:remove(e)
             end
             self.skybox = nil
         end
@@ -498,7 +498,7 @@ end
 function m:reset_prefab()
     for _, e in ipairs(self.entities) do
         on_remove_entity(e)
-        world:remove_entity(e)
+        w:remove(e)
     end
     imodifier.set_target(imodifier.highlight, nil)
     light_gizmo.clear()
@@ -642,7 +642,7 @@ function m:remove_entity(e)
         return
     end
     on_remove_entity(e)
-    world:remove_entity(e)
+    w:remove(e)
     local index
     for idx, entity in ipairs(self.entities) do
         if entity == e then

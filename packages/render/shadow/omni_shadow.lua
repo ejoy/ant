@@ -278,7 +278,7 @@ function omni_shadow_sys:data_changed()
         local eid = msg[2]
         for _, os_eid in world:each "omni" do
             if eid == world[os_eid].omni.light_eid then
-                world:remove_entity(os_eid)
+                w:remove(os_eid)
                 break
             end
         end

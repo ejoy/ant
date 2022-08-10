@@ -325,10 +325,10 @@ local highlight_aabb = {
 }
 local function update_highlight_aabb(e)
     if e then
-        local scene = world:entity(e).scene
-        if scene and scene.scene_aabb and scene.scene_aabb ~= mc.NULL then
-            highlight_aabb.min = math3d.tovalue(math3d.array_index(scene.scene_aabb, 1))
-            highlight_aabb.max = math3d.tovalue(math3d.array_index(scene.scene_aabb, 2))
+        local bounding = world:entity(e).bounding
+        if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+            highlight_aabb.min = math3d.tovalue(math3d.array_index(bounding.scene_aabb, 1))
+            highlight_aabb.max = math3d.tovalue(math3d.array_index(bounding.scene_aabb, 2))
             highlight_aabb.visible = true
             return
         end
@@ -436,23 +436,16 @@ function m:handle_event()
             --     end
             end
         elseif what == "parent" then
+            local te = world:entity(target)
             v1 = v1 or prefab_mgr.root
-            hierarchy:set_parent(target, v1)
-            local sourceWorldMat = iom.worldmat(world:entity(target))
-            local targetWorldMat = v1 and iom.worldmat(world:entity(v1)) or mc.IDENTITY_MAT
-            iom.set_srt_matrix(world:entity(target), math3d.mul(math3d.inverse(targetWorldMat), sourceWorldMat))
-            ecs.method.set_parent(target, v1)
-            local isslot
-            if v1 then
-                isslot = world:entity(v1).slot
+            local se = world:entity(v1)
+            if te.scene and se.scene then
+                hierarchy:set_parent(target, v1)
+                local targetWorldMat = v1 and iom.worldmat(se) or mc.IDENTITY_MAT
+                iom.set_srt_matrix(te, math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
+                te.scene.parent = v1
+                te.scene_needchange = true
             end
-            -- if isslot then
-            --     for e in w:select "scene:in slot_name:out" do
-            --         if e.scene == target.scene then
-            --             e.slot_name = "None"
-            --         end
-            --     end
-            -- end
         end
         if transform_dirty then
             on_update(target)

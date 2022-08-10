@@ -663,7 +663,7 @@ function m.clear()
     if joints_list then
         for _, joint in ipairs(joints_list) do
             if joint.mesh then
-                world:remove_entity(joint.mesh)
+                w:remove(joint.mesh)
             end
             joint.mesh = nil
         end
@@ -1097,7 +1097,7 @@ function m.init(skeleton)
     local _, list = joint_utils:get_joints()
     for _, joint in ipairs(list) do
         if joint.mesh then
-            world:remove_entity(joint.mesh)
+            w:remove(joint.mesh)
         end
     end
     joints_map, joints_list = joint_utils:init(skeleton)
