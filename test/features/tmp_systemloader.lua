@@ -251,8 +251,26 @@ function init_loader_sys:init()
     ecs.create_instance"/pkg/ant.test.features/assets/entities/skybox_test.prefab"
     local p = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
     p.on_ready = function (e)
-        local a_eid = ientity.create_arrow_entity(0.3, math3d.vector(1.0, 0.0, 0.0, 1.0), "/pkg/ant.resources/materials/meshcolor.material")
-        ecs.method.set_parent(a_eid, e.tag["*"][1])
+        local pid = e.tag["*"][1]
+
+        ecs.create_entity{
+            policy = {
+                "ant.render|simplerender",
+                "ant.general|name",
+            },
+            data = {
+                simplemesh = ientity.arrow_mesh(0.3),
+                material = "/pkg/ant.resources/materials/meshcolor.material",
+                visible_state = "main_view",
+                scene = {
+                    parent = pid
+                },
+                name = "arrow",
+                on_ready = function (ee)
+                    imaterial.iset_property(ee, "u_color", math3d.vector(1.0, 0.0, 0.0, 1.0))
+                end
+            }
+        }
     end
     world:create_object(p)
     -- local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/offshore-pump.glb|mesh.prefab"
