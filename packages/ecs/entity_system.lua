@@ -20,6 +20,7 @@ function m:entity_create()
         local initargs = queue[i]
         local eid = initargs.eid
         if not w:exist(eid) then
+            log.warn(("entity `%d` has been removed."):format(eid))
             goto continue
         end
         local groupid = initargs.group

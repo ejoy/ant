@@ -10,10 +10,54 @@ extern "C" {
 	#include "math3dfunc.h"
 }
 
-static inline void
+static void
 math_update(struct math_context* math3d, math_t& id, math_t const& m) {
 	math_unmark(math3d, id);
 	id = math_mark(math3d, m);
+}
+
+static bool
+worldmat_update(flatmap<int64_t, math_t>& worldmats, struct math_context* math3d, ecs::scene& s, ecs::id& id) {
+	math_t mat = math3d_make_srt(math3d, s.s, s.r, s.t);
+	if (!math_isnull(s.mat)) {
+		mat = math3d_mul_matrix(math3d, mat, s.mat);
+	}
+	if (s.parent != 0) {
+		auto parentmat = worldmats.find(s.parent);
+		if (!parentmat) {
+			return false;
+		}
+		mat = math3d_mul_matrix(math3d, *parentmat, mat);
+	}
+	math_update(math3d, s.worldmat, mat);
+	worldmats.insert_or_assign(id, s.worldmat);
+	return true;
+}
+
+static int
+entity_init(lua_State *L) {
+	auto w = getworld(L);
+	ecs_api::context ecs {w->ecs};
+	auto math3d = w->math3d->M;
+
+	auto selector = ecs.select<ecs::standalone_scene_object, ecs::scene, ecs::id>();
+	auto it = selector.begin();
+	if (it == selector.end()) {
+		return 0;
+	}
+	flatmap<int64_t, math_t> worldmats;
+	for (; it != selector.end(); ++it) {
+		auto& e = *it;
+		auto& s = e.get<ecs::scene>();
+		auto& id = e.get<ecs::id>();
+		e.disable_tag<ecs::scene_needchange>(ecs);
+		if (!worldmat_update(worldmats, math3d, s, id)) {
+			return luaL_error(L, "Unexpected Error.");
+		}
+	}
+	ecs.clear_type<ecs::standalone_scene_object>();
+
+	return 0;
 }
 
 static int
@@ -66,23 +110,11 @@ scene_changed(lua_State *L) {
 
 	// step.3
 	for (auto& e : ecs.select<ecs::scene_changed, ecs::scene_update, ecs::scene, ecs::id>(L)) {
-		auto& id = e.get<ecs::id>();
 		auto& s = e.get<ecs::scene>();
-		
-		math_t mat = math3d_make_srt(math3d, s.s, s.r, s.t);
-		if (!math_isnull(s.mat)) {
-			mat = math3d_mul_matrix(math3d, mat, s.mat);
+		auto& id = e.get<ecs::id>();
+		if (!worldmat_update(worldmats, math3d, s, id)) {
+			return luaL_error(L, "Unexpected Error.");
 		}
-		if (s.parent != 0) {
-			auto parentmat = worldmats.find(s.parent);
-			if (!parentmat) {
-				return luaL_error(L, "Unexpected Error.");
-			}
-			mat = math3d_mul_matrix(math3d, *parentmat, mat);
-		}
-
-		math_update(math3d, s.worldmat, mat);
-		worldmats.insert_or_assign(id, s.worldmat);
 	}
 
 	return 0;
@@ -134,6 +166,7 @@ extern "C" int
 luaopen_system_scene(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
+		{ "entity_init", entity_init },
 		{ "scene_changed", scene_changed },
 		{ "scene_remove", scene_remove },
 		{ "bounding_update", bounding_update},
