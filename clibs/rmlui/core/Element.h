@@ -117,12 +117,12 @@ public:
 	std::optional<Property> GetComputedProperty(PropertyId id) const;
 	std::optional<Property> GetComputedLocalProperty(PropertyId id) const;
 	Transitions GetTransition() const;
-	Transitions GetTransition(const Style::PropertyCombination& def) const;
+	Transitions GetTransition(const Style::Combination& def) const;
 
 	bool SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
 	std::optional<std::string> GetProperty(const std::string& name) const;
 
-	void TransitionPropertyChanges(const PropertyIdSet & properties, const Style::PropertyCombination& new_definition);
+	void TransitionPropertyChanges(const PropertyIdSet & properties, const Style::Combination& new_definition);
 
 	void UpdateProperties();
 	void UpdateAnimations();
@@ -186,11 +186,11 @@ protected:
 	std::unique_ptr<Geometry> geometry_background;
 	std::unique_ptr<Geometry> geometry_image;
 	float font_size = 16.f;
-	Style::PropertyMap animation_properties = Style::Instance().CreateMap();
-	Style::PropertyMap inline_properties = Style::Instance().CreateMap();
-	Style::PropertyMap definition_properties = Style::Instance().CreateMap();
-	Style::PropertyCombination local_properties = Style::Instance().Merge(animation_properties, inline_properties, definition_properties);
-	Style::PropertyCombination global_properties = Style::Instance().Inherit(local_properties);
+	Style::Value animation_properties = Style::Instance().Create();
+	Style::Value inline_properties = Style::Instance().Create();
+	Style::Value definition_properties = Style::Instance().Create();
+	Style::Combination local_properties = Style::Instance().Merge(animation_properties, inline_properties, definition_properties);
+	Style::Combination global_properties = Style::Instance().Inherit(local_properties);
 	PropertyIdSet dirty_properties;
 	glm::mat4x4 transform;
 	Rect content_rect;

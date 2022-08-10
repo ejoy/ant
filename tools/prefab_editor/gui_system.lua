@@ -298,7 +298,7 @@ function m:ui_update()
     end
 
     local bgfxstat = bgfx.get_stats "sdcpnmtv"
-    stat_window.postMessage(string.format("DrawCall: %d\nTriangle: %d\nTexture: %d\ncpu(ms): %f\ngpu(ms): %f\nfps: %d", 
+    stat_window.postMessage(string.format("DC: %d\nTri: %d\nTex: %d\ncpu(ms): %.2f\ngpu(ms): %.2f\nfps: %d", 
                             bgfxstat.numDraw, bgfxstat.numTriList, bgfxstat.numTextures, bgfxstat.cpu, bgfxstat.gpu, bgfxstat.fps))
 end
 
@@ -325,12 +325,10 @@ local highlight_aabb = {
 }
 local function update_highlight_aabb(e)
     if e then
-        local ro = world:entity(e).render_object
-        if ro and ro.aabb then
-            local minv = math3d.array_index(ro.aabb, 1)
-            local maxv = math3d.array_index(ro.aabb, 2)
-            highlight_aabb.min = math3d.tovalue(minv)
-            highlight_aabb.max = math3d.tovalue(maxv)
+        local scene = world:entity(e).scene
+        if scene and scene.scene_aabb and scene.scene_aabb ~= mc.NULL then
+            highlight_aabb.min = math3d.tovalue(math3d.array_index(scene.scene_aabb, 1))
+            highlight_aabb.max = math3d.tovalue(math3d.array_index(scene.scene_aabb, 2))
             highlight_aabb.visible = true
             return
         end

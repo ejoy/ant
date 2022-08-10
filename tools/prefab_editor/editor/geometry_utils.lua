@@ -36,12 +36,12 @@ function m.get_frustum_vb(points, color)
     return vb
 end
 
-local function do_create_entity(vb, ib, srt, name, color, hide)
+local function do_create_entity(vb, ib, scene, name, color, hide)
 	local mesh = create_dynamic_mesh("p3|c40niu", vb, ib)
-	return ientity.create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, srt, color, hide)
+	return ientity.create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, scene, color, hide)
 end
 
-function m.create_dynamic_frustum(frustum_points, name, color, hide)
+function m.create_dynamic_frustum(name, frustum_points, color, hide)
     local vb = m.get_frustum_vb(frustum_points, color)
     local ib = {
         -- front
@@ -58,17 +58,17 @@ function m.create_dynamic_frustum(frustum_points, name, color, hide)
     return do_create_entity(vb, ib, {}, name, color, hide)
 end
 
-function m.create_dynamic_line(srt, p0, p1, name, color, hide)
+function m.create_dynamic_line(name, p0, p1, scene, color, hide)
 	local vb = {
 		p0[1], p0[2], p0[3], 0xffffffff,
 		p1[1], p1[2], p1[3], 0xffffffff,
 	}
 	local ib = {0, 1}
-    return do_create_entity(vb, ib, srt, name, color, hide)
+    return do_create_entity(vb, ib, scene, name, color, hide)
 end
 
-function m.create_dynamic_lines(srt, vb, ib, name, color)
-    return do_create_entity(vb, ib, srt, name, color)
+function m.create_dynamic_lines(name, vb, ib, scene, color)
+    return do_create_entity(vb, ib, scene, name, color)
 end
 
 function m.get_circle_vb_ib(radius, slices, color)
@@ -83,17 +83,17 @@ function m.get_circle_vb_ib(radius, slices, color)
 	return gvb, circle_ib
 end
 
-function m.create_dynamic_circle(radius, slices, srt, name, color, hide)
+function m.create_dynamic_circle(name, radius, slices, scene, color, hide)
 	local vb, ib = m.get_circle_vb_ib(radius, slices)
-	return do_create_entity(vb, ib, srt, name, color, hide)
+	return do_create_entity(vb, ib, scene, name, color, hide)
 end
 
-function m.create_dynamic_aabb(srt, name, color, hide)
+function m.create_dynamic_aabb(name, scene, color, hide)
 	local desc={vb={}, ib={}}
 	local aabb_shape = {min={0,0,0}, max={1,1,1}}
 	geometry_drawer.draw_aabb_box(aabb_shape, 0xffffffff, nil, desc)
 	local mesh = create_dynamic_mesh("p3|c40niu", desc.vb, desc.ib)
-	return do_create_entity(desc.vb, desc.ib, srt, name, color, hide)
+	return do_create_entity(desc.vb, desc.ib, scene, name, color, hide)
 end
 
 function m.get_aabb_vb_ib(aabb_shape, color)

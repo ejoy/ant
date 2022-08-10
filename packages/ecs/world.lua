@@ -197,17 +197,12 @@ function world:entity(eid)
 end
 
 function world:debug_entity(eid)
-	local e = self._entity_visitor[eid]
-	if e then
-		return self.w:readall(e)
-	end
+	local e = self.w:fetch(eid)
+	return self.w:readall(e)
 end
 
 function world:remove_entity(eid)
-	local e = self._entity_visitor[eid]
-	if e then
-		self.w:remove(e)
-	end
+	self.w:remove(eid)
 end
 
 function world:clibs(name)
@@ -228,51 +223,10 @@ function world:clibs(name)
 	return funcs
 end
 
-local function init_entity(w, ecs)
-	local visitor = ecs:make_index "id"
-	local entity = {}
-	w._entity = entity
-	w._entity_visitor = visitor
-
-	local proxy_mt = {}
-	function proxy_mt:__index(name)
-		local id = self.id
-		local t = visitor(id, name)
-		if type(t) ~= "table" or ecs:type(name) ~= "c" then
-			return t
-		end
-		local mt = {}
-		mt.__index = t
-		function mt:__newindex(k, v)
-			if t[k] ~= v then
-				t[k] = v
-				visitor(id, name, t)
-			end
-		end
-		return setmetatable({}, mt)
-	end
-	function proxy_mt:__newindex(name, value)
-		visitor(self.id, name, value)
-	end
-
-	local entity_mt = {}
-	function entity_mt:__index(id)
-		local v = visitor[id]
-		if not v then
-			return
-		end
-		local proxy = setmetatable({id=id}, proxy_mt)
-		entity[id] = proxy
-		return proxy
-	end
-	setmetatable(entity, entity_mt)
-end
-
 local m = {}
 
 function m.new_world(config)
 	local ecs = config.w
-	ecs:group_init "group"
 	local w = setmetatable({
 		args = config,
 		_memory = {},
@@ -281,20 +235,18 @@ function m.new_world(config)
 		_ecs = {},
 		_methods = {},
 		_frame = 0,
-		_maxid = 0,
 		_group = {
 			tags = {}
 		},
+		_create_queue = {},
 		w = ecs,
+		_entity = ecs:visitor_create(),
 	}, world)
-
 
 	event.init(world)
 
 	-- load systems and components from modules
 	typeclass.init(w, config)
-
-	init_entity(w, ecs)
 
 	if w._clibs then
 		for _, name in ipairs(w._clibs) do

@@ -137,9 +137,9 @@ function m:add_entity(new_entity, parent, temp, no_hierarchy)
     end
 end
 
-local function create_default_light(lt)
+local function create_default_light(lt, parent)
     return ilight.create{
-        srt = {t = {0, 3, 0}, r = {math.rad(130), 0, 0}},
+        srt = {t = {0, 3, 0}, r = {math.rad(130), 0, 0}, parent = parent},
         name            = lt .. gen_light_id(),
         type            = lt,
         color           = {1, 1, 1, 1},
@@ -177,7 +177,10 @@ function m:set_default_light(enable)
         end
     end
 end
-
+local function set_parent(eid, pid)
+    world.entity(eid).scene.parent = pid
+    world.entity(eid).scene_needchange = true
+end
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()
@@ -301,8 +304,7 @@ function m:create(what, config)
         end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then
-            local newlight, tpl = create_default_light(config.type)
-            ecs.method.set_parent(newlight, self.root)
+            local newlight, tpl = create_default_light(config.type, self.root)
             self:add_entity(newlight, self.root, tpl)
             light_gizmo.init()
             --create_light_billboard(newlight)
@@ -574,14 +576,11 @@ function m:add_prefab(filename)
     self.entities[#self.entities+1] = v_root
     prefab.on_ready = function(inst)
         local prefab_name = gen_prefab_name()
-        iom.set_scale(world:entity(v_root), iom.get_scale(world:entity(inst.root)))
-        iom.set_rotation(world:entity(v_root), iom.get_rotation(world:entity(inst.root)))
-        iom.set_position(world:entity(v_root), iom.get_position(world:entity(inst.root)))
         local children = inst.tag["*"]
         if #children == 1 then
             local child = children[1]
             if world:entity(child).camera then
-                ecs.method.set_parent(child, parent)
+                set_parent(child, parent)
                 local temp = serialize.parse(prefab_filename, cr.read_file(prefab_filename))
                 hierarchy:add(child, {template = temp[1], editor = true, temporary = true}, parent)
                 return

@@ -78,7 +78,7 @@ local function create_debug_entity()
 
 		debug_entities[#debug_entities+1] = ecs.create_entity(ientity.frustum_entity_data(frustum_points, "frusutm:" .. se.name, color))
 
-		local d = ientity.axis_entity_data(ce.scene, "csm_axis:" .. idx, color)
+		local d = ientity.axis_entity_data("csm_axis:" .. idx, ce.scene, color)
 		d.data.on_ready = nil
 		debug_entities[#debug_entities+1] = ecs.create_entity(d)
 	end

@@ -27,8 +27,8 @@ const Keyframes* StyleSheet::GetKeyframes(const std::string & name) const {
 	return nullptr;
 }
 
-Style::PropertyCombination StyleSheet::GetElementDefinition(const Element* element) const {
-	std::vector<Style::PropertyMap> applicable;
+Style::Combination StyleSheet::GetElementDefinition(const Element* element) const {
+	std::vector<Style::Value> applicable;
 	for (auto& node : stylenode) {
 		if (node.IsApplicable(element)) {
 			applicable.push_back(node.GetProperties());

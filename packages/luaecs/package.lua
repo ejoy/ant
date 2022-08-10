@@ -1,4 +1,4 @@
 return {
     name = "ant.luaecs",
-    entry = "ecs",
+    entry = "main",
 }

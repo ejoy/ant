@@ -23,59 +23,33 @@ local function sortpairs(t)
     end
 end
 
-local function getentityid(w)
-    w._maxid = w._maxid + 1
-    return w._maxid
-end
-
 local function create_entity_by_data(w, group, data)
-    data.id = getentityid(w)
-    data.group = group or 0
-    w.w:new {
-        create_entity = data
+    local queue = w._create_queue
+    local eid = w.w:new()
+    data.id = eid
+    local initargs = {
+        eid = eid,
+        group = group or 0,
+        data = data,
     }
-    return data.id
+    queue[#queue+1] = initargs
+    return eid
 end
 
 local function create_entity_by_template(w, group, template)
+    local queue = w._create_queue
+    local eid = w.w:new()
     local data = {
-        id = getentityid(w),
-        group = group or 0,
+        id = eid,
     }
     local initargs = {
+        eid = eid,
+        group = group or 0,
         data = data,
         template = template,
     }
-    w.w:new {
-        create_entity_template = initargs
-    }
-    return data.id, initargs
-end
-
-local function update_group_tag(w, data)
-    local groupid = data.group
-    for tag, t in pairs(w._group.tags) do
-        if t[groupid] then
-            data[tag] = true
-        end
-    end
-end
-
-local function create_scene_entity(w, group)
-    local eid = getentityid(w)
-    local parent
-    local data = {
-        id = eid,
-        group = group or 0,
-        scene = {
-            parent = parent,
-        },
-        scene_needchange = true
-    }
-    update_group_tag(w, data)
-    w.w:new(data)
-    w.w:group_update()
-    return eid
+    queue[#queue+1] = initargs
+    return eid, initargs
 end
 
 function world:_create_entity(package, group, v)
@@ -322,17 +296,15 @@ function world:create_object(inner_proxy)
     return outer_proxy
 end
 
-function world:_create_instance(group, filename)
+function world:_create_instance(group, parent, filename)
     local w = self
     local template = create_template(w, filename)
-    local root = create_scene_entity(w, group)
     local prefab, noparent = create_instance(w, group, template)
     for _, m in ipairs(noparent) do
-        m.parent = root
+        m.parent = parent
     end
     run_action(w, prefab, template)
     return {
-        root = root,
         group = group,
         tag = create_tags(prefab, template)
     }
@@ -351,8 +323,8 @@ function world:_create_group(id)
     function api:create_entity(v)
         return w:_create_entity(package, id, v)
     end
-    function api:create_instance(v)
-        return w:_create_instance(id, v)
+    function api:create_instance(v, parent)
+        return w:_create_instance(id, parent, v)
     end
     local function tags(tag)
         local t = group.tags[tag]

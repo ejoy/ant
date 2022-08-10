@@ -10,40 +10,33 @@
 struct style_cache;
 
 namespace Rml::Style {
-    struct PropertyMap { int idx; };
-    struct PropertyCombination { int idx; };
-    struct PropertyAny {
-        PropertyAny(PropertyMap o): idx(o.idx) {}
-        PropertyAny(PropertyCombination o): idx(o.idx) {}
+    struct Value { int idx; };
+    struct Combination { int idx; };
+    struct ValueOrCombination {
+        ValueOrCombination(Value o): idx(o.idx) {}
+        ValueOrCombination(Combination o): idx(o.idx) {}
         int idx;
-    };
-
-    struct EvalHandle {
-        int handle;
-        explicit operator bool() const {
-            return handle >= 0;
-        }
     };
 
     class Cache {
     public:
         Cache(const PropertyIdSet& inherit);
         ~Cache();
-        PropertyMap               CreateMap();
-        PropertyMap               CreateMap(const PropertyVector& vec);
-        PropertyCombination       Merge(const std::span<PropertyMap>& maps);
-        PropertyCombination       Merge(PropertyMap A, PropertyMap B, PropertyMap C);
-        PropertyCombination       Inherit(PropertyCombination child, PropertyCombination parent);
-        PropertyCombination       Inherit(PropertyCombination child);
-        void                      ReleaseMap(PropertyAny s);
-        void                      AssginMap(PropertyMap s, PropertyCombination v);
-        bool                      SetProperty(PropertyMap s, PropertyId id, const Property& value);
-        bool                      DelProperty(PropertyMap s, PropertyId id);
-        PropertyIdSet             SetProperty(PropertyMap s, const PropertyVector& vec);
-        PropertyIdSet             DelProperty(PropertyMap s, const PropertyIdSet& set);
-        std::optional<Property>   Find(PropertyAny s, PropertyId id);
-        std::optional<PropertyKV> Index(PropertyAny s, size_t index);
-        PropertyIdSet             Diff(PropertyAny a, PropertyAny b);
+        Value                     Create();
+        Value                     Create(const PropertyVector& vec);
+        Combination               Merge(const std::span<Value>& maps);
+        Combination               Merge(Value A, Value B, Value C);
+        Combination               Inherit(Combination child, Combination parent);
+        Combination               Inherit(Combination child);
+        void                      Release(ValueOrCombination s);
+        void                      Assgin(Value s, Combination v);
+        bool                      SetProperty(Value s, PropertyId id, const Property& value);
+        bool                      DelProperty(Value s, PropertyId id);
+        PropertyIdSet             SetProperty(Value s, const PropertyVector& vec);
+        PropertyIdSet             DelProperty(Value s, const PropertyIdSet& set);
+        std::optional<Property>   Find(ValueOrCombination s, PropertyId id);
+        std::optional<PropertyKV> Index(ValueOrCombination s, size_t index);
+        PropertyIdSet             Diff(ValueOrCombination a, ValueOrCombination b);
         void                      Flush();
 
     private:
