@@ -82,7 +82,7 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 	if numvertices == 0 then
 		return
 	end
-	local e = w:singleton("widget_drawer", "render_object:update")
+	local e = w:singleton("widget_drawer", "render_object:in")
 	local ro = e.render_object
 	local vbnum, vbhandle = ro.vb_num, ro.vb_handle
 
@@ -98,6 +98,7 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 		bgfx.update(ro.ib_handle, index_offset, bgfx.memory_buffer(ibfmt, ib))
 		ro.ib_num = index_offset + numindices
 	end
+	w:sync("render_object:out", e)
 end
 
 local function apply_srt(shape, srt)
