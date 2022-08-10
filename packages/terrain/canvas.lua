@@ -157,7 +157,7 @@ local function update_items()
                     ivs.set_state(re, "selectable", canvas.show)
                 else
                     -- if no items to draw, should remove this entity
-                    world:remove_entity(tex.renderer_eid)
+                    w:remove(tex.renderer_eid)
                     textures[texpath] = nil
                 end
             end

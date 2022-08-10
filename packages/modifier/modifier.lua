@@ -60,7 +60,7 @@ function imodifier.delete(m)
     if mf.target then
         mf:reset()
     end
-    world:remove_entity(m.eid)
+    w:remove(m.eid)
 end
 
 function imodifier.set_target(m, target)

@@ -200,10 +200,6 @@ function world:debug_entity(eid)
 	return self.w:readall(eid)
 end
 
-function world:remove_entity(eid)
-	self.w:remove(eid)
-end
-
 function world:clibs(name)
 	local w = self
 	local funcs = require(name)
