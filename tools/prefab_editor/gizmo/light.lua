@@ -179,7 +179,7 @@ end
 
 function m.clear()
     for _,v in pairs(m.billboard) do
-        world:remove_entity(v)
+        w:remove(v)
     end
     m.billboard = {}
     m.current_light = nil
@@ -188,7 +188,7 @@ end
 
 function m.on_remove_light(eid)
     --if not m.billboard[eid] then return end
-    --world:remove_entity(m.billboard[eid])
+    --w:remove(m.billboard[eid])
     m.billboard[eid] = nil
     -- m.current_light = nil
     -- m.show(false)

@@ -201,7 +201,7 @@ function iani.play(eid, anim_state)
 					if ev.effect then
 						iefk.stop(world:entity(ev.effect))
 						--TODO: clear keyevent effct
-						--world:remove_entity(ev.effect)
+						--w:remove(ev.effect)
 					end
 				end
 			end

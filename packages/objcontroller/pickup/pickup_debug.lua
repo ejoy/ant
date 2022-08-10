@@ -74,7 +74,7 @@ function pickup_debug_sys:data_changed()
     for _, btn, state in mousemb:unpack() do
         if btn == "LEFT" and state == "DOWN" then
             if frustum_entity then
-                world:remove_entity(frustum_entity)
+                w:remove(frustum_entity)
                 frustum_entity = nil
             end
         end

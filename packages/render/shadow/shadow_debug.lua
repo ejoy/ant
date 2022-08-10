@@ -232,7 +232,7 @@ function shadowdbg_sys:camera_usage()
 	for _, key, press, state in keypress_mb:unpack() do
 		if key == "SPACE" and press == 0 then
 			for _, eid in ipairs(debug_entities) do
-				world:remove_entity(eid)
+				w:remove(eid)
 			end
 			debug_entities = {}
 			log_split_distance()
