@@ -38,25 +38,36 @@ static int
 entity_init(lua_State *L) {
 	auto w = getworld(L);
 	ecs_api::context ecs {w->ecs};
+
+	using namespace ecs_api::flags;
+	for (auto& e : ecs.select<ecs::INIT, ecs::scene, ecs::standalone_scene_object(absent)>()) {
+		e.enable_tag<ecs::scene_needchange>(ecs);
+	}
+	return 0;
+}
+
+static int
+entity_ready(lua_State *L) {
+	auto w = getworld(L);
+	ecs_api::context ecs {w->ecs};
 	auto math3d = w->math3d->M;
 
 	auto selector = ecs.select<ecs::standalone_scene_object, ecs::scene, ecs::id>();
 	auto it = selector.begin();
-	if (it == selector.end()) {
-		return 0;
-	}
-	flatmap<int64_t, math_t> worldmats;
-	for (; it != selector.end(); ++it) {
-		auto& e = *it;
-		auto& s = e.get<ecs::scene>();
-		auto& id = e.get<ecs::id>();
-		e.disable_tag<ecs::scene_needchange>(ecs);
-		if (!worldmat_update(worldmats, math3d, s, id)) {
-			return luaL_error(L, "Unexpected Error.");
+	if (it != selector.end()) {
+		flatmap<int64_t, math_t> worldmats;
+		for (; it != selector.end(); ++it) {
+			auto& e = *it;
+			auto& s = e.get<ecs::scene>();
+			auto& id = e.get<ecs::id>();
+			e.disable_tag<ecs::scene_update>(ecs);
+			e.enable_tag<ecs::scene_changed>(ecs);
+			if (!worldmat_update(worldmats, math3d, s, id)) {
+				return luaL_error(L, "Unexpected Error.");
+			}
 		}
+		ecs.clear_type<ecs::standalone_scene_object>();
 	}
-	ecs.clear_type<ecs::standalone_scene_object>();
-
 	return 0;
 }
 
@@ -151,7 +162,7 @@ bounding_update(lua_State *L){
 	ecs_api::context ecs {w->ecs};
 	auto math3d = w->math3d->M;
 
-	for ( auto e : ecs.select<ecs::scene_changed, ecs::bounding, ecs::scene>()){
+	for (auto& e : ecs.select<ecs::scene_changed, ecs::bounding, ecs::scene>()){
 		auto &b = e.get<ecs::bounding>();
 		if (math_isnull(b.aabb))
 			continue;
@@ -167,6 +178,7 @@ luaopen_system_scene(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "entity_init", entity_init },
+		{ "entity_ready", entity_ready },
 		{ "scene_changed", scene_changed },
 		{ "scene_remove", scene_remove },
 		{ "bounding_update", bounding_update},
