@@ -114,10 +114,9 @@ local function create_directional_gizmo(initpos, introt)
 end
 
 local function update_circle_vb(eid, radian)
-    local rc = world:entity(eid).render_object
-    local vbdesc, ibdesc = rc.vb, rc.ib
+    local mesh = world:entity(eid).simplemesh
     local vb, _ = geo_utils.get_circle_vb_ib(radian, gizmo_const.ROTATE_SLICES)
-    bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", vb));
+    bgfx.update(mesh.vb.handle, 0, bgfx.memory_buffer("fffd", vb));
 end
 
 local function update_point_gizmo()
@@ -158,8 +157,8 @@ local function update_spot_gizmo()
         iom.set_position(world:entity(m.spot.eid[6]), {0, 0, range})
 
         local function update_vb(eid, tp2)
-            local vbdesc = world:entity(eid).render_object.vb
-            bgfx.update(vbdesc.handles[1], 0, bgfx.memory_buffer("fffd", {0, 0, 0, 0xffffffff, tp2[1], tp2[2], tp2[3], 0xffffffff}));
+            local vb = world:entity(eid).simplemesh.vb
+            bgfx.update(vb.handle, 0, bgfx.memory_buffer("fffd", {0, 0, 0, 0xffffffff, tp2[1], tp2[2], tp2[3], 0xffffffff}));
         end
         update_vb(m.spot.eid[1], {0, radius, range})
         update_vb(m.spot.eid[2], {radius, 0, range})
