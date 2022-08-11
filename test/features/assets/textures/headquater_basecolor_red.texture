@@ -1,0 +1,14 @@
+colorspace: sRGB
+compress:
+  android: ASTC4x4
+  ios: ASTC4x4
+  windows: BC3
+normalmap: false
+path: $path ./headquater_basecolor_red.png
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: WRAP
+  V: WRAP
+type: texture

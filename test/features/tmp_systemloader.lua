@@ -113,6 +113,7 @@ local function color_palette_test()
 end
 
 local cp_eid, quad_eid
+local testprefab
 
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
@@ -273,28 +274,20 @@ function init_loader_sys:init()
         }
     end
     world:create_object(p)
-    -- local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/offshore-pump.glb|mesh.prefab"
-    -- function p.on_ready()
-    --     iom.set_position(p.root, {3, 0.0, 0.0})
-    -- end
-    -- -- p.on_ready = function (e)
-    -- --     for _, ee in ipairs(e.tag['*']) do
-    -- --         ivs.set_state(ee, "main_view", false)
-    -- --         ivs.set_state(ee, "cast_shadow", false)
-    -- --     end
-    -- -- end
-    -- -- p.on_update = function(e)
-    -- --     for _, ee in ipairs(e.tag['*']) do
-    -- --         w:sync("skeleton?in", ee)
-    -- --         if ee.skeleton then
-    -- --             --w:sync("pose_result:in", ee)
-    -- --             local iwd = ecs.import.interface "ant.render|iwidget_drawer"
-    -- --             iwd.draw_skeleton(ee.skeleton._handle, ee.pose_result, math3d.matrix{s={1.0, 1.0, -1.0}}, 0xff00ffff)
-    -- --             break
-    -- --         end
-    -- --     end
-    -- -- end
-    -- world:create_object(p)
+
+    do
+        testprefab = ecs.create_instance "/pkg/ant.test.features/assets/glb/headquater-1.glb|mesh.prefab"
+        function testprefab.on_ready(e)
+            local t = assetmgr.resource "/pkg/ant.test.features/assets/textures/headquater_basecolor_red.texture"
+            local mesh_eid = e.tag["*"][2]
+            local te = world:entity(mesh_eid)
+            imaterial.set_property(te, "s_basecolor", t.id)
+
+            iom.set_scale(te, 0.1)
+        end
+        world:create_object(testprefab)
+    end
+
 
     local off = 0.1
 	ientity.create_screen_axis_entity("global_axes", {type = "percent", screen_pos = {off, 1-off}}, {s=0.1})
@@ -380,7 +373,12 @@ function init_loader_sys:entity_init()
 
             -- local quad_2 = 2
             -- e.render_object.ib_num = quad_2 * 6
-        elseif key == "SPACE" and press == 0 then
+        elseif key == "Y" and press == 0 then
+            local mesh_eid = testprefab.tag["*"][2]
+            local te = world:entity(mesh_eid)
+            local t = assetmgr.resource "/pkg/ant.test.features/assets/glb/headquater-1.glb|images/headquater_color.texture"
+            imaterial.set_property(te, "s_basecolor", t.id)
+        elseif key == "N" and press == 0 then
             -- local icw = ecs.import.interface "ant.render|icurve_world"
             -- icw.enable(not icw.param().enable)
 
