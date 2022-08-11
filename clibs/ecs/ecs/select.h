@@ -10,6 +10,7 @@ namespace ecs_api {
     namespace flags {
         struct absent {};
     }
+    constexpr int EID = 0xFFFFFFFF;
 
     template <typename T>
     struct component {};
@@ -80,43 +81,47 @@ namespace ecs_api {
             return index;
         }
         template <typename T>
+            requires (component<T>::id == EID)
+        T get() {
+            return (T)std::get<T*>(c);
+        }
+        template <typename T>
+            requires (component<T>::id != EID && !std::is_empty<T>::value)
         T& get() {
-            static_assert(!std::is_empty<T>::value);
             return *std::get<T*>(c);
         }
         template <typename T>
-        T const& get() const {
-            static_assert(!std::is_empty<T>::value);
-            return *std::get<T*>(c);
+            requires (component<T>::tag)
+        bool sibling(ecs_context* ctx) const {
+            return !!impl::sibling<T>(ctx, component<MainKey>::id, index);
         }
         template <typename T>
-        std::conditional_t<component<T>::tag, bool, T*>
-        sibling(ecs_context* ctx) const {
-            if constexpr (component<T>::tag) {
-                return !!impl::sibling<T>(ctx, component<MainKey>::id, index);
-            }
-            else {
-                static_assert(!std::is_empty<T>::value);
-                return impl::sibling<T>(ctx, component<MainKey>::id, index);
-            }
+            requires (!component<T>::tag && !std::is_empty<T>::value)
+        T* sibling(ecs_context* ctx) const {
+            return impl::sibling<T>(ctx, component<MainKey>::id, index);
         }
         template <typename T>
+            requires (component<T>::id == EID)
+        T sibling(ecs_context* ctx, lua_State* L) const {
+            return (T)impl::sibling<T>(ctx, component<MainKey>::id, index, L);
+        }
+        template <typename T>
+            requires (component<T>::id != EID && !std::is_empty<T>::value)
         T& sibling(ecs_context* ctx, lua_State* L) const {
-            static_assert(!std::is_empty<T>::value);
             return *impl::sibling<T>(ctx, component<MainKey>::id, index, L);
         }
-        template <typename Component>
+        template <typename T>
+            requires (component<T>::tag)
         void enable_tag(ecs_context* ctx) {
-            static_assert(component<Component>::tag);
-            entity_enable_tag(ctx, component<MainKey>::id, index, component<Component>::id);
+            entity_enable_tag(ctx, component<MainKey>::id, index, component<T>::id);
         }
         void enable_tag(ecs_context* ctx, int id) {
             entity_enable_tag(ctx, component<MainKey>::id, index, id);
         }
-        template <typename Component>
+        template <typename T>
+            requires (component<T>::tag)
         void disable_tag(ecs_context* ctx) {
-            static_assert(component<Component>::tag);
-            entity_disable_tag(ctx, component<MainKey>::id, index, component<Component>::id);
+            entity_disable_tag(ctx, component<MainKey>::id, index, component<T>::id);
         }
         void disable_tag(ecs_context* ctx, int id) {
             entity_disable_tag(ctx, component<MainKey>::id, index, id);
@@ -343,6 +348,7 @@ namespace ecs_api {
         }
 
         template <typename Component>
+            requires (component<T>::id != EID && !std::is_empty<T>::value)
         Component& entity_sibling(int mainkey, int i, lua_State* L) {
             return *impl::sibling<Component>(ecs, mainkey, i, L);
         }
