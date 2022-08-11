@@ -197,8 +197,8 @@ update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const 
 }
 
 static void
-collect_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, 
-	int texture_index, int func_cb_index, const group_matrices &groups, obj_transforms &trans, queue_stages &queue_stages){
+collect_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, 
+	const group_matrices &groups, obj_transforms &trans, queue_stages &queue_stages){
 
 	for (const auto &g : groups){
 		const cid_t ht_id = (cid_t)ecs_api::component<ecs::hitch_tag>::id;
@@ -249,9 +249,6 @@ lsubmit(lua_State *L){
 	const int texture_index = 1;
 	luaL_checktype(L, texture_index, LUA_TTABLE);
 
-	const int func_cb_index = 2;
-	luaL_checktype(L, func_cb_index, LUA_TFUNCTION);
-
 	group_matrices groups;
 	for (auto e : ecs.select<ecs::view_visible, ecs::hitch, ecs::scene>()){
 		const auto &h = e.get<ecs::hitch>();
@@ -271,7 +268,7 @@ lsubmit(lua_State *L){
 
 		s_queue_stages.clear();
 		collect_objects(L, w, ra, texture_index, trans, s_queue_stages);
-		collect_hitch_objects(L, w, ra, texture_index, func_cb_index, groups, trans, s_queue_stages);
+		collect_hitch_objects(L, w, ra, texture_index, groups, trans, s_queue_stages);
 
 		draw_objs(L, w, ra, texture_index, trans, s_queue_stages);
 	}
