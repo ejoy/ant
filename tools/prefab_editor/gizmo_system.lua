@@ -1027,7 +1027,7 @@ local function check_calc_aabb(eid)
 	end
 
 	local sceneaabb = math3d.ref(math3d.aabb())
-	build_aabb(scenetree[entity.id], sceneaabb)
+	build_aabb(scenetree[entity.eid], sceneaabb)
 	return sceneaabb
 end
 

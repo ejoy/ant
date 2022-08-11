@@ -377,7 +377,7 @@ function m:on_prefab_ready(prefab)
     local entitys = prefab.tag["*"]
     local function find_e(entitys, id)
         for _, e in ipairs(entitys) do
-            if world:entity(e).id == id then
+            if world:entity(e).eid == id then
                 return e
             end
         end
@@ -386,14 +386,14 @@ function m:on_prefab_ready(prefab)
     local function sub_tree(e, idx)
         local st = {}
         local st_set = {}
-        st_set[world:entity(e).id] = true
+        st_set[world:entity(e).eid] = true
         for i = idx, #entitys do
             local entity = world:entity(entitys[i])
             local scene = entity.scene
             if st_set[scene.parent] == nil then
                 break
             end
-            st_set[entity.id] = true
+            st_set[entity.eid] = true
             st[#st + 1] = entitys[i]
         end
         return st
@@ -416,7 +416,7 @@ function m:on_prefab_ready(prefab)
             local children = sub_tree(parent, j)
             for _, child in ipairs(children) do
                 local ce = world:entity(child)
-                if ce.scene.parent == world:entity(parent).id then
+                if ce.scene.parent == world:entity(parent).eid then
                     ecs.method.set_parent(child, sub_root)
                 end
             end

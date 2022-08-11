@@ -5,7 +5,8 @@ local w = world.w
 local prefab_mgr    = ecs.require "prefab_manager"
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local gizmo         = ecs.require "gizmo.gizmo"
-
+local mathpkg       = import_package "ant.math"
+local mc            = mathpkg.constant
 local utils         = require "common.utils"
 local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
@@ -22,7 +23,8 @@ function BaseView:_init()
     base["position"] = uiproperty.Float({label = "Position", dim = 3, speed = 0.1})
     base["rotate"]   = uiproperty.Float({label = "Rotate", dim = 3})
     base["scale"]    = uiproperty.Float({label = "Scale", dim = 3, speed = 0.05})
-    
+    base["aabbmin"]  = uiproperty.Float({label = "AABB Min", dim = 3, speed = 0.05})
+    base["aabbmax"]  = uiproperty.Float({label = "AABB Max", dim = 3, speed = 0.05})
     self.base        = base
     self.general_property = uiproperty.Group({label = "General"}, base)
     --
@@ -39,6 +41,10 @@ function BaseView:_init()
     self.base.rotate:set_getter(function() return self:on_get_rotate() end)
     self.base.scale:set_setter(function(value) self:on_set_scale(value) end)
     self.base.scale:set_getter(function() return self:on_get_scale() end)
+    self.base.aabbmin:set_setter(function(value) self:on_set_aabbmin(value) end)
+    self.base.aabbmin:set_getter(function() return self:on_get_aabbmin() end)
+    self.base.aabbmax:set_setter(function(value) self:on_set_aabbmax(value) end)
+    self.base.aabbmax:set_getter(function() return self:on_get_aabbmax() end)
 end
 
 function BaseView:set_model(eid)
@@ -59,6 +65,11 @@ function BaseView:set_model(eid)
         end
         if self:has_scale() then
             property[#property + 1] = self.base.scale
+        end
+        local bounding = world:entity(self.eid).bounding
+        if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
+            property[#property + 1] = self.base.aabbmin
+            property[#property + 1] = self.base.aabbmax
         end
     end
     self.general_property:set_subproperty(property)
@@ -182,6 +193,70 @@ function BaseView:on_get_scale()
     else
         return math3d.tovalue(iom.get_scale(world:entity(self.eid)))
     end
+end
+
+function BaseView:on_set_aabbmin(value)
+    local template = hierarchy:get_template(self.eid)
+    if template.template then
+        if template.template.data.bounding then
+            template.template.data.bounding.aabb.min = value
+        else
+            local bounding = world:entity(self.eid).bounding
+            if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
+                local aabbmax = math3d.tovalue(math3d.array_index(bounding.aabb, 2))
+                math3d.unmark(bounding.aabb)
+                bounding.aabb = math3d.mark(math3d.aabb({value[1], value[2], value[3]}, aabbmax))
+            end
+        end
+    end
+end
+
+function BaseView:on_get_aabbmin()
+    local template = hierarchy:get_template(self.eid)
+    if template.template then
+        local bounding = template.template.data.bounding
+        if bounding then
+            return bounding.aabb.min or {0,0,0}
+        else
+            local bounding = world:entity(self.eid).bounding
+            if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
+                return math3d.tovalue(math3d.array_index(bounding.aabb, 1))
+            end
+        end
+    end
+    return {0,0,0}
+end
+
+function BaseView:on_set_aabbmax(value)
+    local template = hierarchy:get_template(self.eid)
+    if template.template then
+        if template.template.data.bounding then
+            template.template.data.bounding.aabb.max = value
+        else
+            local bounding = world:entity(self.eid).bounding
+            if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
+                local aabbmin = math3d.tovalue(math3d.array_index(bounding.aabb, 1))
+                math3d.unmark(bounding.aabb)
+                bounding.aabb = math3d.mark(math3d.aabb(aabbmin, {value[1], value[2], value[3]}))
+            end
+        end
+    end
+end
+
+function BaseView:on_get_aabbmax()
+    local template = hierarchy:get_template(self.eid)
+    if template.template then
+        local bounding = template.template.data.bounding
+        if bounding then
+            return bounding.aabb.max
+        else
+            local bounding = world:entity(self.eid).bounding
+            if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
+                return math3d.tovalue(math3d.array_index(bounding.aabb, 2))
+            end
+        end
+    end
+    return {0,0,0}
 end
 
 function BaseView:has_rotate()
