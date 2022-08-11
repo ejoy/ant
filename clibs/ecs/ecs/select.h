@@ -348,7 +348,7 @@ namespace ecs_api {
         }
 
         template <typename Component>
-            requires (component<T>::id != EID && !std::is_empty<T>::value)
+            requires (component<Component>::id != EID && !std::is_empty<Component>::value)
         Component& entity_sibling(int mainkey, int i, lua_State* L) {
             return *impl::sibling<Component>(ecs, mainkey, i, L);
         }

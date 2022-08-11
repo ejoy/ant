@@ -11,7 +11,7 @@ constexpr inline style_handle_t STYLE_NULL = {0};
 namespace Rml::Style {
     struct Attrib: public style_attrib {
         ~Attrib() {
-            delete[] data;
+            delete[] (uint8_t*)data;
         }
     };
 

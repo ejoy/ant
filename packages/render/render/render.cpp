@@ -15,6 +15,8 @@ extern "C"{
 #include <cassert>
 #include <vector>
 #include <unordered_map>
+#include <memory.h>
+#include <string.h>
 
 enum queue_index_type : uint8_t{
 	QIT_mainqueue = 0,
@@ -145,7 +147,7 @@ static inline void
 collect_render_objs(struct ecs_world *w, cid_t main_id, int index, const matrix_array *mats, queue_stages &queue_stages){
 	for (auto &s : queue_stages.stages){
 		if (entity_sibling(w->ecs, main_id, index, s.id)){
-			auto scene = (const ecs::scene*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::scene>::id);
+			//auto scene = (const ecs::scene*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::scene>::id);
 			// if (scene == nullptr)
 			// 	continue;
 			//if (math_isnull(w->math3d->M, s->scene_aabb) || math3d_frustum_intersect_aabb())
@@ -312,7 +314,6 @@ to_queue_material_idx(lua_State *L, int index){
 static int
 ldraw(lua_State *L){
 	auto w = getworld(L);
-	ecs_api::context ecs {w->ecs};
 	const cid_t draw_tagid = (cid_t)luaL_checkinteger(L, 1);
 	const bgfx_view_id_t viewid = (bgfx_view_id_t)luaL_checkinteger(L, 2);
 	const int texture_index = 3;

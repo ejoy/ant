@@ -190,7 +190,7 @@ namespace Rml {
     template <class ...Args>
     inline std::variant<Args...> PropertyDecode(tag<std::variant<Args...>>, strparser<uint8_t>& data) {
         using VariantType = std::variant<Args...>;
-        constinit auto jump = CreateDecodeVariantJumpTable<VariantType>();
+        constinit static auto jump = CreateDecodeVariantJumpTable<VariantType>();
         uint8_t type = data.pop<uint8_t>();
         if (type >= jump.size()) {
             throw std::runtime_error("decode variant failed.");
