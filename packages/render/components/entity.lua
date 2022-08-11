@@ -318,8 +318,8 @@ local frustum_ib = {
 function ientity.frustum_entity_data(frustum_points, name, color)
 	local vb = {}
 	color = color or {1.0, 1.0, 1.0, 1.0}
-	for i=1, #frustum_points do
-		local p = math3d.totable(frustum_points[i])
+	for i=1, 8 do
+		local p = math3d.tovalue(math3d.array_index(frustum_points, i))
 		table.move(p, 1, 3, #vb+1, vb)
 	end
 	local mesh = create_mesh({"p3", vb}, frustum_ib)

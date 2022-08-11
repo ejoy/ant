@@ -263,14 +263,13 @@ local function add_rotation(srt, rotateX, rotateY, threshold)
     return math3d.mul(math3d.matrix{r=nq}, srt)
 end
 
-local function rotate_forword_vector(srt, rx, ry)
-    local xaxis, yaxis, zaxis = math3d.index(srt, 1, 2, 3)
-
-    local nq = math3d.mul(
+local function get_rotator(r, rx, ry)
+    local m = math3d.matrix(r)
+    local xaxis, yaxis = math3d.index(m, 1, 2)
+    return math3d.mul(math3d.mul(
         math3d.quaternion{axis=xaxis, r=rx},
-        math3d.quaternion{axis=yaxis, r=ry})
-    
-    return math3d.transform(nq, zaxis, 0)
+        math3d.quaternion{axis=yaxis, r=ry}
+    ), r)
 end
 
 function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
@@ -279,29 +278,13 @@ function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
     end
     if rotateX or rotateY then
         local scene = e.scene
-        local srt = scene
-        local srtmat = math3d.matrix(srt)
-        local viewdir = math3d.normalize(rotate_forword_vector(srtmat, rotateX, rotateY))
-        
+        local r = get_rotator(scene.r, rotateX, rotateY)
         if scene.updir ~= mc.NULL then
-            srtmat = math3d.inverse(math3d.lookto(srt.t, viewdir, scene.updir))
-        else
-            local xaxis, yaxis
-            if math3d.isequal(mc.YAXIS, viewdir) then
-                xaxis = mc.XAXIS
-                yaxis = mc.NZAXIS
-            elseif math3d.isequal(mc.NYAXIS, viewdir) then
-                xaxis = mc.XAXIS
-                yaxis = mc.ZAXIS
-            else
-                xaxis = math3d.normalize(math3d.cross(mc.YAXIS, viewdir))
-                yaxis = math3d.cross(viewdir, xaxis)
-            end
-            srtmat = math3d.set_columns(mc.IDENTITY_MAT, xaxis, yaxis, viewdir, srt.t)
+            local viewdir = math3d.todirection(r)
+            local m = math3d.inverse(math3d.lookto(scene.t, viewdir, scene.updir))
+            r = math3d.quaternion(m)
         end
-
-        local s, r, t = math3d.srt(srtmat)
-        set_srt(srt, s, r, t)
+        set_r(scene, r)
         set_changed(e)
     end
 end
