@@ -32,6 +32,12 @@ struct PropertyTransition {
 	const Transition&       transition;
 	std::optional<Property> oldProperty;
 	const Property*         newProperty;
+	PropertyTransition(PropertyId id, const Transition& transition, std::optional<Property> oldProperty, const Property* newProperty)
+		: id(id)
+		, transition(transition)
+		, oldProperty(oldProperty)
+		, newProperty(newProperty)
+	{}
 };
 
 static const Property* PropertyVectorGet(const PropertyVector& vec, PropertyId id) {
@@ -1344,7 +1350,7 @@ void Element::SetScrollLeft(float v) {
 	Size offset { v, 0 };
 	UpdateScrollOffset(offset);
 	Property value(offset.w, PropertyUnit::PX);
-	SetProperty({{PropertyId::ScrollLeft, value}});
+	SetProperty({{PropertyId::ScrollLeft, std::move(value)}});
 }
 
 void Element::SetScrollTop(float v) {
@@ -1354,7 +1360,7 @@ void Element::SetScrollTop(float v) {
 	Size offset { 0, v };
 	UpdateScrollOffset(offset);
 	Property value(offset.h, PropertyUnit::PX);
-	SetProperty({{PropertyId::ScrollTop, value}});
+	SetProperty({{PropertyId::ScrollTop, std::move(value)}});
 }
 
 void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
@@ -1366,10 +1372,10 @@ void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
 	UpdateScrollOffset(offset);
 
 	Property left(offset.w, PropertyUnit::PX);
-	SetProperty({{PropertyId::ScrollLeft, left}});
+	SetProperty({{PropertyId::ScrollLeft, std::move(left)}});
 
 	Property top(offset.h, PropertyUnit::PX);
-	SetProperty({{PropertyId::ScrollTop, top}});
+	SetProperty({{PropertyId::ScrollTop, std::move(top)}});
 }
 
 template <typename T>
