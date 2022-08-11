@@ -9,12 +9,8 @@ local iobj_motion = ecs.interface "iobj_motion"
 
 local function set_changed(e)
     --TODO: opt performance
-    if e.eid == nil then
-        local v = world:entity(e.eid)
-        v.scene_needchange = true
-    else
-        e.scene_needchange = true
-    end
+    local v = world:entity(e.eid)
+    v.scene_needchange = true
 end
 
 local function set_s(srt, v)
