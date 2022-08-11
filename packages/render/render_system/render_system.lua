@@ -155,9 +155,7 @@ function render_sys:render_submit()
 		}
 	end
 
-	rendercore.submit(texmapper, function (gid)
-		w:group_enable("hitch_tag", gid)
-	end)
+	rendercore.submit(texmapper)
 end
 
 function render_sys:entity_remove()

@@ -43,7 +43,7 @@ update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transfor
 	auto it = trans.find(ro);
 	if (it == trans.end()){
 		const math_t wm = ro->worldmat;
-		assert(math_valid(w->math3d->M, wm) && math_isnull(wm) && "Invalid world mat");
+		assert(math_valid(w->math3d->M, wm) && !math_isnull(wm) && "Invalid world mat");
 		const float * v = math_value(w->math3d->M, wm);
 		const int num = math_size(w->math3d->M, wm);
 		transform t;
@@ -199,17 +199,11 @@ update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const 
 static void
 collect_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, 
 	int texture_index, int func_cb_index, const group_matrices &groups, obj_transforms &trans, queue_stages &queue_stages){
-	auto enable_hitch_group = [&](auto groupid){
-		lua_pushvalue(L, func_cb_index);
-		lua_pushinteger(L, groupid);
-		lua_call(L, 1, 0);
-	};
 
-	ecs_api::context ecs {w->ecs};
 	for (const auto &g : groups){
-		enable_hitch_group(g.first);
-		
 		const cid_t ht_id = (cid_t)ecs_api::component<ecs::hitch_tag>::id;
+		int gids[] = {(int)g.first};
+		entity_group_enable(w->ecs, ht_id, 1, gids);
 		for (int i=0; entity_iter(w->ecs, ht_id, i); ++i){
 			const bool visible = nullptr != entity_sibling(w->ecs, ht_id, i, ra.visible_id);
 			if (visible){
