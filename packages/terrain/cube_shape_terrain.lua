@@ -404,7 +404,7 @@ local function calc_edge_aabb(aabb, thickness)
 end
 
 function shape_ts:entity_init()
-    for e in w:select "INIT shape_terrain:in id:in" do
+    for e in w:select "INIT shape_terrain:in eid:in" do
         local st = e.shape_terrain
 
         if st.terrain_fields == nil then
@@ -446,7 +446,7 @@ function shape_ts:entity_init()
                 
                 local terrain_mesh = build_section_mesh(ss, sectionidx, unit, ctf)
                 if terrain_mesh then
-                    ecs.create_entity{
+                    local eid; eid = ecs.create_entity{
                         policy = {
                             "ant.scene|scene_object",
                             "ant.render|simplerender",
@@ -454,16 +454,15 @@ function shape_ts:entity_init()
                         },
                         data = {
                             scene = {
-                                parent = e.id,
+                                parent = e.eid,
                             },
                             simplemesh  = terrain_mesh,
                             material    = shapematerial,
                             visible_state= "main_view|selectable",
                             name        = "section" .. sectionidx,
                             shape_terrain_drawer = true,
-                            on_ready = function(entity)
-                                w:sync("id:in", entity)
-                                world:pub {"shape_terrain", "on_ready", entity.id, e.id}
+                            on_ready = function()
+                                world:pub {"shape_terrain", "on_ready", eid, e.eid}
                             end,
                         },
                     }
@@ -472,7 +471,7 @@ function shape_ts:entity_init()
                 local edge_meshes = build_section_edge_mesh(ss, sectionidx, unit, ctf)
                 if edge_meshes then
                     edge_meshes.bounding = {aabb = math3d.ref(calc_edge_aabb(terrain_mesh.bounding.aabb, ctf.edge.thickness * unit))}
-                    ecs.create_entity {
+                    local eid; eid = ecs.create_entity {
                         policy = {
                             "ant.scene|scene_object",
                             "ant.render|simplerender",
@@ -480,16 +479,15 @@ function shape_ts:entity_init()
                         },
                         data = {
                             scene = {
-                                parent = e.id,
+                                parent = e.eid,
                             },
                             material    = edgematerial,
                             simplemesh  = edge_meshes,
                             visible_state= "main_view|selectable",
                             name        = "section_edge" .. sectionidx,
                             shape_terrain_edge_drawer = true,
-                            on_ready = function(entity)
-                                w:sync("id:in", entity)
-                                world:pub {"shape_terrain", "on_ready", entity.id, e.id}
+                            on_ready = function()
+                                world:pub {"shape_terrain", "on_ready", eid, e.eid}
                             end,
                         },
                     }

@@ -997,8 +997,8 @@ local function check_calc_aabb(eid)
 	
 	local function build_scene()
 		local rt = {}
-		for ee in w:select "scene:in id:in" do
-			local id = ee.id
+		for ee in w:select "scene:in eid:in" do
+			local id = ee.eid
 			local pid = ee.scene.parent
 			if pid then
 				local c = rt[pid]

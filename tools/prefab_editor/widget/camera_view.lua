@@ -323,13 +323,13 @@ local function create_exposure_property(cv)
 
                 local t = deep_copy(template)
                 t.on_ready = function (ee)
-                    w:sync("id:in", ee)
+                    w:sync("eid:in", ee)
                     for q in w:select "queue_name:in camera_ref:in" do
                         if cv.eid == q.camera_ref then
-                            irq.set_camera(q.queue_name, ee.id)
+                            irq.set_camera(q.queue_name, ee.eid)
                         end
                     end
-                    cv.eid = ee.id
+                    cv.eid = ee.eid
                 end
             end
         }),

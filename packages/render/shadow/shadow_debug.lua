@@ -95,7 +95,7 @@ local blit_shadowmap_viewid = viewidmgr.generate "blit_shadowmap"
 local function check_shadow_matrix()
 	local se = world[find_csm_entity(1)]
 	local function directional_light()
-		for e in w:select "directional_light id:in" do
+		for e in w:select "directional_light scene:in" do
 			return e
 		end
 	end

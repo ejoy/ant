@@ -60,7 +60,7 @@ local function create_simple_test_group()
             visible_state = "main_view",
             scene = {},
             on_ready = function (e)
-                w:sync("scene:in id:in", e)
+                w:sync("scene:in eid:in", e)
                 iom.set_position(e, math3d.vector(0, 2, 0))
                 iom.set_scale(e, 3)
                 w:sync("scene:out", e)

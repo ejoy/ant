@@ -34,7 +34,7 @@ local function calc_pose_mat(pose_result, slot)
 end
 
 function sys:update_slot()
-	for v in w:select "slot:in scene:update id:in" do
+	for v in w:select "slot:in scene:update eid:in" do
         local slot = v.slot
         local pose_result = slot.pose and slot.pose.pose_result
         if pose_result then

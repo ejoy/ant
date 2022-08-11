@@ -123,7 +123,7 @@ local function load_events(filename)
 end
 
 function ani_sys:component_init()
-	for e in w:select "INIT animation:in skeleton:update anim_ctrl:in animation_birth:in id:in" do
+	for e in w:select "INIT animation:in skeleton:update anim_ctrl:in animation_birth:in eid:in" do
 		local ani = e.animation
 		for k, v in pairs(ani) do
 			ani[k] = assetmgr.resource(v, world)
@@ -149,7 +149,7 @@ function ani_sys:component_init()
 			loop = false,
 			manual_update = false
 		}
-		world:pub {"AnimationEvent", "set_time", e.id, 0}
+		world:pub {"AnimationEvent", "set_time", e.eid, 0}
 	end
 
 	for e in w:select "INIT meshskin:update skeleton:update" do
