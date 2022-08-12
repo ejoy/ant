@@ -372,9 +372,9 @@ function iefk.destroy(e)
     e.efk.play_handle = nil
 end
 
-function iefk.stop(e)
+function iefk.stop(e, delay)
     if e.efk.play_handle then
-        efk_ctx:stop(e.efk.play_handle)
+        efk_ctx:stop(e.efk.play_handle, delay)
         e.efk.play_handle = nil
     end
 end

@@ -65,7 +65,7 @@ local function create_simple_test_group()
                 iom.set_scale(e, 3)
                 w:sync("scene:out", e)
             end,
-            standalone_scene_object=true,
+            scene_update_once =true,
             name = "virtual_node_p1",
         },
     }
@@ -87,7 +87,7 @@ local function create_simple_test_group()
                 iom.set_position(e, math3d.vector(1, 2, 3))
                 w:sync("scene:out", e)
             end,
-            standalone_scene_object = true,
+            scene_update_once = true,
             name = "virtual_node",
         },
     }
@@ -131,7 +131,7 @@ local function create_skeleton_test_group()
         local p = g:create_instance(file)
         p.on_init = function ()
             for _, eid in ipairs(p.tag["*"]) do
-                world:entity(eid).standalone_scene_object = true
+                world:entity(eid).scene_update_once = true
             end
         end
         world:create_object(p)
