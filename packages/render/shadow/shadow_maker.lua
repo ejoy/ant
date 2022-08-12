@@ -83,7 +83,7 @@ local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_siz
 end
 
 local csm_matrices			= {mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT}
-local split_distances_VS	= math3d.ref(math3d.vector(0, 0, 0, 0))
+local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
 
 local function update_camera_matrices(camera, lightmat)
 	camera.viewmat	= math3d.inverse(lightmat)	--just transpose?

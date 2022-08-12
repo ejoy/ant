@@ -39,26 +39,7 @@ local csm_setting = {
     color			= math3d.ref(math3d.vector(shadow_color())),
     --stabilize		= shadowcfg.stabilize,
 	split_num		= shadowcfg.split_num,
-	cross_delta		= shadowcfg.cross_delta or 0.005,
-	split_weight	= shadowcfg.split_weight or 0.5,
 	split_frustums	= {nil, nil, nil, nil},
-	fb_index		= fbmgr.create{
-		rbidx=fbmgr.create_rb{
-			format = "D32F",
-			w=shadowcfg.size * shadowcfg.split_num,
-			h=shadowcfg.size,
-			layers=1,
-			flags=sampler{
-				RT="RT_ON",
-				MIN="LINEAR",
-				MAG="LINEAR",
-				U="BORDER",
-				V="BORDER",
-				COMPARE="COMPARE_GEQUAL",
-				BOARD_COLOR="0",
-			},
-		}
-	},
 }
 
 local function gen_ratios(distances)
@@ -74,24 +55,42 @@ local function gen_ratios(distances)
 end
 
 if shadowcfg.split_weight then
-	csm_setting.split_weight = shadowcfg.split_weight and math.max(0, math.min(1, shadowcfg.split_weight)) or nil
+	csm_setting.split_num	= shadowcfg.split_num
+	csm_setting.cross_delta	= shadowcfg.cross_delta or 0.8
+	csm_setting.split_weight= math.max(0, math.min(1, shadowcfg.split_weight))
 else
-	local ratio_list
-	
 	if shadowcfg.split_ratios then
-		local n =csm_setting.split_num
-		if #shadowcfg.split_ratios ~= (n - 1)  then
-			error(("#split_ratios == split_num - 1: %d, %d"):format(#shadowcfg.split_ratios, n))
+		if csm_setting.split_num then
+			if #shadowcfg.split_ratios ~= (csm_setting.split_num - 1)  then
+				error(("#split_ratios == split_num - 1: %d, %d"):format(#shadowcfg.split_ratios, csm_setting.split_num))
+			end
+		else
+			csm_setting.split_num = #shadowcfg.split_ratios
 		end
-
-		ratio_list = shadowcfg.split_ratios
+		csm_setting.split_ratios = shadowcfg.split_ratios
 	else
-		ratio_list = {0.08, 0.18, 0.45}
 		csm_setting.split_num = 4
+		csm_setting.split_ratios = gen_ratios{0.3, 0.48, 0.85}
 	end
-
-	csm_setting.split_ratios = gen_ratios(ratio_list)
 end
+
+csm_setting.fb_index = fbmgr.create{
+	rbidx=fbmgr.create_rb{
+		format = "D32F",
+		w=csm_setting.shadowmap_size * csm_setting.split_num,
+		h=csm_setting.shadowmap_size,
+		layers=1,
+		flags=sampler{
+			RT="RT_ON",
+			MIN="LINEAR",
+			MAG="LINEAR",
+			U="BORDER",
+			V="BORDER",
+			COMPARE="COMPARE_GEQUAL",
+			BOARD_COLOR="0",
+		},
+	}
+}
 
 local ishadow = ecs.interface "ishadow"
 
