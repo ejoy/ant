@@ -34,7 +34,7 @@ public:
 
 	const StyleSheet& GetStyleSheet() const;
 	std::string GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
-	bool IsPointWithinElement(Point point);
+	bool IgnorePointerEvents() const;
 
 	float GetFontSize() const;
 	float GetOpacity();
@@ -137,6 +137,7 @@ public:
 	void Render() override;
 	float GetZIndex() const override;
 	Element* ElementFromPoint(Point point) override;
+	Element* ChildFromPoint(Point point);
 	std::string GetInnerHTML() const override;
 	std::string GetOuterHTML() const override;
 	void SetInnerHTML(const std::string& html) override;

@@ -185,12 +185,8 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 		return address;
 }
 
-bool Element::IsPointWithinElement(Point point) {
-	bool ignorePointerEvents = Style::PointerEvents(GetComputedProperty(PropertyId::PointerEvents)->Get<PropertyKeyword>()) == Style::PointerEvents::None;
-	if (ignorePointerEvents) {
-		return false;
-	}
-	return Project(point) && Rect { {}, GetBounds().size }.Contains(point);
+bool Element::IgnorePointerEvents() const {
+	return Style::PointerEvents(GetComputedProperty(PropertyId::PointerEvents)->Get<PropertyKeyword>()) == Style::PointerEvents::None;
 }
 
 float Element::GetZIndex() const {
@@ -1165,15 +1161,44 @@ Element* Element::ElementFromPoint(Point point) {
 	if (!IsVisible()) {
 		return nullptr;
 	}
+	if (clip.type == Clip::Type::Scissor) {
+		auto project_point = point;
+		if (Project(project_point)) {
+			if (Rect { (float)clip.scissor.x, (float)clip.scissor.y, (float)clip.scissor.z, (float)clip.scissor.w }.Contains(project_point)) {
+				if (auto res = ChildFromPoint(point)) {
+					return res;
+				}
+			}
+			if (!IgnorePointerEvents() && Rect { {}, GetBounds().size }.Contains(project_point)) {
+				return this;
+			}
+			return nullptr;
+		}
+		else {
+			if (auto res = ChildFromPoint(point)) {
+				return res;
+			}
+			return nullptr;
+		}
+	}
+	else {
+		if (auto res = ChildFromPoint(point)) {
+			return res;
+		}
+		if (!IgnorePointerEvents() && Project(point) && Rect { {}, GetBounds().size }.Contains(point)) {
+			return this;
+		}
+		return nullptr;
+	}
+}
+
+Element* Element::ChildFromPoint(Point point) {
 	UpdateStackingContext();
 	for (auto iter = stacking_context.rbegin(); iter != stacking_context.rend() && (*iter)->GetZIndex() >= 0; ++iter) {
 		Element* res = (*iter)->ElementFromPoint(point);
 		if (res) {
 			return res;
 		}
-	}
-	if (IsPointWithinElement(point)) {
-		return this;
 	}
 	return nullptr;
 }
