@@ -190,7 +190,7 @@ bool Element::IgnorePointerEvents() const {
 }
 
 float Element::GetZIndex() const {
-	return z_index;
+	return GetComputedProperty(PropertyId::ZIndex)->Get<PropertyFloat>().value;
 }
 
 float Element::GetFontSize() const {
@@ -576,26 +576,12 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::BorderBottomRightRadius) ||
 		changed_properties.contains(PropertyId::BorderBottomLeftRadius)
 		);
-
-	if (changed_properties.contains(PropertyId::Display)) {
-		// Due to structural pseudo-classes, this may change the element definition in siblings and parent.
-		// However, the definitions will only be changed on the next update loop which may result in jarring behavior for one @frame.
-		// A possible workaround is to add the parent to a list of elements that need to be updated again.
-		if (parent != nullptr)
+	if (parent) {
+		if (changed_properties.contains(PropertyId::Display)) {
 			parent->DirtyStructure();
-	}
-
-	if (changed_properties.contains(PropertyId::ZIndex)) {
-		float new_z_index = 0;
-		auto property = GetComputedProperty(PropertyId::ZIndex);
-		if (property->Has<PropertyFloat>()) {
-			new_z_index = property->Get<PropertyFloat>().value;
 		}
-		if (z_index != new_z_index) {
-			z_index = new_z_index;
-			if (parent != nullptr) {
-				parent->DirtyStackingContext();
-			}
+		if (changed_properties.contains(PropertyId::ZIndex)) {
+			parent->DirtyStackingContext();
 		}
 	}
 
@@ -1527,31 +1513,14 @@ std::optional<std::string> Element::GetProperty(const std::string& name) const {
 
 std::optional<Property> Element::GetComputedProperty(PropertyId id) const {
 	auto& c = Style::Instance();
-	auto r = c.Find(global_properties, id);
-	if (r) {
-		return r;
+	if (auto property = c.Find(global_properties, id)) {
+		return property;
 	}
 	return c.Find(StyleSheetSpecification::GetDefaultProperties(), id);
 }
 
 Transitions Element::GetTransition() const {
-	auto& c = Style::Instance();
-	if (auto property = c.Find(inline_properties, PropertyId::Transition)) {
-		return property->Get<Transitions>();
-	}
-	if (auto property = c.Find(definition_properties, PropertyId::Transition)) {
-		return property->Get<Transitions>();
-	}
-	static TransitionNone none{};
-	return none;
-}
-
-Transitions Element::GetTransition(const Style::Combination& def) const {
-	auto& c = Style::Instance();
-	if (auto property = c.Find(inline_properties, PropertyId::Transition)) {
-		return property->Get<Transitions>();
-	}
-	if (auto property = c.Find(def, PropertyId::Transition)) {
+	if (auto property = GetComputedProperty(PropertyId::Transition)) {
 		return property->Get<Transitions>();
 	}
 	static TransitionNone none{};
@@ -1582,7 +1551,7 @@ void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const S
 		else {
 			static_assert(always_false_v<T>, "non-exhaustive visitor!");
 		}
-	}, GetTransition(new_definition));
+	}, GetTransition());
 }
 
 void Element::UpdateDefinition() {
@@ -1752,8 +1721,7 @@ void Element::UpdateProperties() {
 	auto& c = Style::Instance();
 	PropertyIdSet dirty_layout_properties = dirty_properties & LayoutProperties;
 	for (PropertyId id : dirty_layout_properties) {
-		auto property = c.Find(local_properties, id);
-		if (property) {
+		if (auto property = c.Find(local_properties, id)) {
 			GetLayout().SetProperty(id, *property, this);
 		}
 	}

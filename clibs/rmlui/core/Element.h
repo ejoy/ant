@@ -117,7 +117,6 @@ public:
 	std::optional<Property> GetComputedProperty(PropertyId id) const;
 	std::optional<Property> GetComputedLocalProperty(PropertyId id) const;
 	Transitions GetTransition() const;
-	Transitions GetTransition(const Style::Combination& def) const;
 
 	bool SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
 	std::optional<std::string> GetProperty(const std::string& name) const;
@@ -175,7 +174,6 @@ protected:
 	ElementAttributes attributes;
 	std::vector<Element*> children;
 	std::vector<std::unique_ptr<Node>> childnodes;
-	float z_index = 0;
 	std::vector<Node*> stacking_context;
 	std::unique_ptr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;

@@ -645,8 +645,7 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("length_percent");
 	RegisterShorthand(ShorthandId::BorderRadius, "border-radius", "border-top-left-radius, border-top-right-radius, border-bottom-right-radius, border-bottom-left-radius", ShorthandType::Box);
 
-	RegisterProperty(PropertyId::ZIndex, "z-index", "auto", false)
-		.AddParser("keyword", "auto")
+	RegisterProperty(PropertyId::ZIndex, "z-index", "0", false)
 		.AddParser("number");
 
 	RegisterProperty(PropertyId::LineHeight, "line-height", "1.2", true)
