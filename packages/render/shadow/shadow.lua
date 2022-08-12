@@ -54,25 +54,28 @@ local function gen_ratios(distances)
 	return ratios
 end
 
-if shadowcfg.split_weight then
-	csm_setting.split_num	= shadowcfg.split_num
-	csm_setting.cross_delta	= shadowcfg.cross_delta or 0.8
-	csm_setting.split_weight= math.max(0, math.min(1, shadowcfg.split_weight))
-else
-	if shadowcfg.split_ratios then
-		if csm_setting.split_num then
-			if #shadowcfg.split_ratios ~= (csm_setting.split_num - 1)  then
-				error(("#split_ratios == split_num - 1: %d, %d"):format(#shadowcfg.split_ratios, csm_setting.split_num))
-			end
-		else
-			csm_setting.split_num = #shadowcfg.split_ratios
+
+if shadowcfg.split_ratios then
+	if csm_setting.split_num then
+		if #shadowcfg.split_ratios ~= (csm_setting.split_num - 1)  then
+			error(("#split_ratios == split_num - 1: %d, %d"):format(#shadowcfg.split_ratios, csm_setting.split_num))
 		end
-		csm_setting.split_ratios = shadowcfg.split_ratios
+	else
+		csm_setting.split_num = #shadowcfg.split_ratios
+	end
+	csm_setting.split_ratios = shadowcfg.split_ratios
+else
+	csm_setting.cross_delta	= shadowcfg.cross_delta or 0.8
+	if shadowcfg.split_weight then
+		csm_setting.split_num	= shadowcfg.split_num
+		csm_setting.split_weight= math.max(0, math.min(1, shadowcfg.split_weight))
 	else
 		csm_setting.split_num = 4
 		csm_setting.split_ratios = gen_ratios{0.3, 0.48, 0.85}
 	end
 end
+
+assert(csm_setting.split_num ~= nil)
 
 csm_setting.fb_index = fbmgr.create{
 	rbidx=fbmgr.create_rb{

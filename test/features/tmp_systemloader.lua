@@ -221,7 +221,7 @@ function init_loader_sys:init()
         data = {
             scene = {},
             on_ready = function (e)
-                w:sync("scene:in id:in", e)
+                w:sync("scene:in eid:in", e)
                 iom.set_position(e, math3d.vector(-20, 0, 0))
                 w:sync("scene:out", e)
             end,
@@ -241,7 +241,7 @@ function init_loader_sys:init()
                 parent = group_root,
             },
             on_ready = function (e)
-                w:sync("scene:in id:in", e)
+                w:sync("scene:in eid:in", e)
                 iom.set_scale(e, 10)
                 w:sync("scene:out", e)
             end,
@@ -286,6 +286,10 @@ function init_loader_sys:init()
             iom.set_scale(te, 0.1)
         end
         world:create_object(testprefab)
+    end
+
+    do
+        ecs.create_instance "/pkg/ant.test.features/assets/glb/electric-pole-1.glb|mesh.prefab"
     end
 
 
@@ -400,7 +404,7 @@ function init_loader_sys:entity_init()
             enable = enable == 1 and 0 or 1
 
         elseif key == "LEFT" and press == 0 then
-            local d = w:singleton("directional_light", "scene:in id:in")
+            local d = w:singleton("directional_light", "scene:in eid:in")
             iom.set_position(d, {0, 1, 0})
         end
     end
