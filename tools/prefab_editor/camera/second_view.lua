@@ -109,9 +109,9 @@ function second_camera_sys:update_camera()
 end
 
 function second_camera_sys:entity_remove()
-    for e in w:select "REMOVED camera:in id:in" do
+    for e in w:select "REMOVED camera:in eid:in" do
         local sc = w:singleton("second_view", "camera_ref:in")
-        if e.id == sc.camera_ref then
+        if e.eid == sc.camera_ref then
             irq.set_camera("second_view", DEFAULT_camera)
         end
     end
@@ -187,14 +187,10 @@ local function create_frustum_entity(eid)
             scene = { parent = eid },
             name = "second_view_frustum_root",
             second_view_frustum = true,
-            on_ready = function (e)
-                w:sync("id:in", e)
-            end,
         }
     }
 
     local function onready(e)
-        w:sync("id:in", e)
         imaterial.iset_property(e, "u_color", mc.YELLOW_HALF)
     end
 

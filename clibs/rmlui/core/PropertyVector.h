@@ -14,6 +14,10 @@ namespace Style {
     struct PropertyKV {
         PropertyId id;
         Property   value;
+        PropertyKV(PropertyId id, Property&&  value)
+            : id(id)
+            , value(std::move(value))
+        {}
     };
 }
 

@@ -26,7 +26,6 @@ end
 local function create_entity_by_data(w, group, data)
     local queue = w._create_queue
     local eid = w.w:new()
-    data.id = eid
     local initargs = {
         eid = eid,
         group = group or 0,
@@ -39,13 +38,9 @@ end
 local function create_entity_by_template(w, group, template)
     local queue = w._create_queue
     local eid = w.w:new()
-    local data = {
-        id = eid,
-    }
     local initargs = {
         eid = eid,
         group = group or 0,
-        data = data,
         template = template,
     }
     queue[#queue+1] = initargs

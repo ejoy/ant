@@ -24,7 +24,7 @@ function m:entity_create()
             goto continue
         end
         local groupid = initargs.group
-        local data = initargs.data
+        local data = initargs.data or {}
         local template = initargs.template
         data.INIT = true
         update_group_tag(groupid, data)

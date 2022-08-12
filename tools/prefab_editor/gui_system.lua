@@ -264,7 +264,7 @@ function m:ui_update()
     toolbar.show()
     mainview.show()
     scene_view.show()
-    gridmesh_view.show()
+    -- gridmesh_view.show()
     prefab_view.show()
     inspector.show()
     resource_browser.show()
@@ -326,9 +326,9 @@ local highlight_aabb = {
 local function update_highlight_aabb(e)
     if e then
         local bounding = world:entity(e).bounding
-        if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
-            highlight_aabb.min = math3d.tovalue(math3d.array_index(bounding.scene_aabb, 1))
-            highlight_aabb.max = math3d.tovalue(math3d.array_index(bounding.scene_aabb, 2))
+        if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
+            highlight_aabb.min = math3d.tovalue(math3d.array_index(bounding.aabb, 1))
+            highlight_aabb.max = math3d.tovalue(math3d.array_index(bounding.aabb, 2))
             highlight_aabb.visible = true
             return
         end

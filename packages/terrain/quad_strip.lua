@@ -39,7 +39,7 @@ end
 local qs_sys        = ecs.system "quad_strip_system"
 
 function qs_sys:entity_init()
-    for e in w:select "INIT quad_strip:in uv_motion:in material:in id:in" do
+    for e in w:select "INIT quad_strip:in uv_motion:in material:in eid:in" do
         local qs = e.quad_strip
         local uvm = e.uv_motion
         local speed = uvm.speed
@@ -55,7 +55,7 @@ function qs_sys:entity_init()
                 material = e.material,
                 visible_state = "main_view",
                 scene = {
-                    parent = e.id,
+                    parent = e.eid,
                 },
                 name = "polyline",
                 on_ready = function (le)

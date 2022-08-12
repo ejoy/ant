@@ -9,7 +9,7 @@ local iobj_motion = ecs.interface "iobj_motion"
 
 local function set_changed(e)
     --TODO: opt performance
-    local v = world:entity(e.id)
+    local v = world:entity(e.eid)
     v.scene_needchange = true
 end
 

@@ -148,6 +148,7 @@ do
     write ""
     write "namespace ant_ecs {"
     write ""
+    write "using eid = uint64_t;"
     write "struct REMOVED {};"
     write ""
     for _, info in ipairs(components) do
@@ -200,6 +201,11 @@ do
     write "\tstatic inline constexpr bool tag = true; \\"
     write "};"
     write ""
+    write "template <> struct component<ecs::eid> {"
+    write "\tstatic inline constexpr int id = 0xFFFFFFFF;"
+    write "\tstatic inline constexpr char name[] = \"eid\";"
+    write "\tstatic inline constexpr bool tag = false;"
+    write "};"
     write("ECS_TAG(REMOVED, 0)")
     for i, c in ipairs(components) do
         if c[2] == "tag" then

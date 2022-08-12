@@ -3,6 +3,7 @@
 #include "render.h"
 #include "utf8.h"
 #include <core/Core.h>
+#include <memory.h>
 
 namespace Rml {
 

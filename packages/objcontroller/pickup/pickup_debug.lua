@@ -58,8 +58,8 @@ local function log_pickup_queue_entities()
 				("pickup_queue %s render_object"):format(fn)
 			log.info(("filter type:%s, select: %s"):format(fn, s))
 			local entities = {}
-			for e in w:select(s .. " id:in name?in") do
-				entities[#entities+1] = ("%d-%s"):format(e.id, e.name or "")
+			for e in w:select(s .. " eid:in name?in") do
+				entities[#entities+1] = ("%d-%s"):format(e.eid, e.name or "")
 			end
 
 			log.info(table.concat(entities, "\t"))

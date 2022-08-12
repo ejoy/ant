@@ -155,7 +155,7 @@ function efk_sys:init()
         error           = error_handle,
     }
 
-    efk_ctx = efk.create{
+    efk_ctx = efk.startup{
         max_count       = 2000,
         viewid          = effect_viewid,
         shader_load     = efk_cb.shader_load,
@@ -171,14 +171,14 @@ function efk_sys:init()
 end
 
 function efk_sys:exit()
-    efk.destroy(efk_ctx)
+    efk.shutdown(efk_ctx)
 end
 
 local efk_cache = {}
 
 local function load_efk(filename)
     if not efk_cache[filename] then
-        efk_cache[filename] = efk_ctx:create_effect(filename)
+        efk_cache[filename] = efk_ctx:create(filename)
     end
     return {
         handle = efk_cache[filename],
@@ -194,6 +194,14 @@ function efk_sys:entity_init()
     for e in w:select "INIT efk:update" do
         assert(type(e.efk) == "string")
         e.efk = load_efk(e.efk)
+    end
+end
+
+function efk_sys:entity_remove()
+    for e in w:select "REMOVED efk:in" do
+        efk_ctx:stop(e.efk.play_handle)
+        -- efk_ctx:destroy(e.efk.play_handle)
+        e.efk.play_handle = nil
     end
 end
 
@@ -369,7 +377,8 @@ function iefk.set_dynamic(e, b)
 end
 
 function iefk.destroy(e)
-    --efk_ctx:destroy(e.efk.play_handle)
+    efk_ctx:destroy(e.efk.play_handle)
+    e.efk.play_handle = nil
 end
 
 function iefk.stop(e)

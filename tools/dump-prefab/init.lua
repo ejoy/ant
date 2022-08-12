@@ -70,8 +70,8 @@ lm_prefilter.save(lmr_path / "lightmap_result.prefab", {
 
 prefab.instance(w, respath:string())
 
-for v in w:select "parent:update id:in" do
-    v.parent = v.parent.id
+for v in w:select "parent:update eid:in" do
+    v.parent = v.parent.eid
 end
 
 for v in w:select "mesh:update material:update lightmap:in" do
@@ -98,9 +98,9 @@ local function update_worldmat(v, parent_worldmat)
 end
 
 local cache = {}
-for v in w:select "sorted id:in parent?in srt?in worldmat:new" do
+for v in w:select "sorted eid:in parent?in srt?in worldmat:new" do
     if v.parent == nil then
-        cache[v.id] = update_worldmat(v)
+        cache[v.eid] = update_worldmat(v)
     else
         local parent = cache[v.parent]
         if parent ~= nil then

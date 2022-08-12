@@ -353,7 +353,7 @@ local function has_filter_stage(pf, stage)
 end
 
 function pickup_sys:end_filter()
-	for e in w:select "filter_result pickup_queue_visible render_object:update filter_material:in id:in skinning?in" do
+	for e in w:select "filter_result pickup_queue_visible render_object:update filter_material:in eid:in skinning?in" do
 		local ro = e.render_object
 		local fm = e.filter_material
 		local matres = imaterial.resource(e, true)
@@ -367,7 +367,7 @@ function pickup_sys:end_filter()
 			local newstate = irender.check_set_state(dst_mo, src_mo)
 			local new_matobj = irender.create_material_from_template(dst_mo, newstate, material_cache)
 			local new_mi = new_matobj:instance()
-			new_mi.u_id = math3d.vector(packeid_as_rgba(e.id))
+			new_mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
 
 			fm["pickup_queue"] = new_mi
 			ro.mat_pickup = new_mi:ptr()

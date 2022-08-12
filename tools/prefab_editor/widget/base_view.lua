@@ -5,7 +5,8 @@ local w = world.w
 local prefab_mgr    = ecs.require "prefab_manager"
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local gizmo         = ecs.require "gizmo.gizmo"
-
+local mathpkg       = import_package "ant.math"
+local mc            = mathpkg.constant
 local utils         = require "common.utils"
 local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
@@ -22,7 +23,10 @@ function BaseView:_init()
     base["position"] = uiproperty.Float({label = "Position", dim = 3, speed = 0.1})
     base["rotate"]   = uiproperty.Float({label = "Rotate", dim = 3})
     base["scale"]    = uiproperty.Float({label = "Scale", dim = 3, speed = 0.05})
-    
+    base["aabbmin"]  = uiproperty.Float({label = "AABB Min", dim = 3, speed = 0.05})
+    base["aabbmax"]  = uiproperty.Float({label = "AABB Max", dim = 3, speed = 0.05})
+    base["create_aabb"]  = uiproperty.Button({label="Create AABB"})
+    base["delete_aabb"]  = uiproperty.Button({label="Delete AABB"})
     self.base        = base
     self.general_property = uiproperty.Group({label = "General"}, base)
     --
@@ -39,6 +43,12 @@ function BaseView:_init()
     self.base.rotate:set_getter(function() return self:on_get_rotate() end)
     self.base.scale:set_setter(function(value) self:on_set_scale(value) end)
     self.base.scale:set_getter(function() return self:on_get_scale() end)
+    self.base.aabbmin:set_setter(function(value) self:on_set_aabbmin(value) end)
+    self.base.aabbmin:set_getter(function() return self:on_get_aabbmin() end)
+    self.base.aabbmax:set_setter(function(value) self:on_set_aabbmax(value) end)
+    self.base.aabbmax:set_getter(function() return self:on_get_aabbmax() end)
+    self.base.create_aabb:set_click(function() self:create_aabb() end)
+    self.base.delete_aabb:set_click(function() self:delete_aabb() end)
 end
 
 function BaseView:set_model(eid)
@@ -59,6 +69,21 @@ function BaseView:set_model(eid)
         end
         if self:has_scale() then
             property[#property + 1] = self.base.scale
+        end
+
+        property[#property + 1] = self.base.aabbmin
+        property[#property + 1] = self.base.aabbmax
+        property[#property + 1] = self.base.create_aabb
+        property[#property + 1] = self.base.delete_aabb
+        self.base.aabbmin:set_visible(false)
+        self.base.aabbmax:set_visible(false)
+        self.base.create_aabb:set_visible(false)
+        self.base.delete_aabb:set_visible(false)
+        if template.template.data.bounding then
+            self.base.aabbmin:set_visible(true)
+            self.base.aabbmax:set_visible(true)
+        else
+            self.base.create_aabb:set_visible(true)
         end
     end
     self.general_property:set_subproperty(property)
@@ -181,6 +206,99 @@ function BaseView:on_get_scale()
         end
     else
         return math3d.tovalue(iom.get_scale(world:entity(self.eid)))
+    end
+end
+
+function BaseView:on_set_aabbmin(value)
+    local template = hierarchy:get_template(self.eid)
+    if template.template then
+        if template.template.data.bounding then
+            local tv = {value[1], value[2], value[3]}
+            template.template.data.bounding.aabb.min = tv
+            local bounding = world:entity(self.eid).bounding
+            if bounding then
+                local aabbmax = {0,0,0}
+                if bounding.aabb and bounding.aabb ~= mc.NULL then
+                    aabbmax = math3d.tovalue(math3d.array_index(bounding.aabb, 2)) or {}
+                    math3d.unmark(bounding.aabb)
+                end
+                bounding.aabb = math3d.mark(math3d.aabb(tv, aabbmax))
+                world:pub {"UpdateAABB", self.eid}
+            end
+        end
+    end
+end
+
+function BaseView:on_get_aabbmin()
+    local template = hierarchy:get_template(self.eid)
+    if template.template then
+        local bounding = template.template.data.bounding
+        if bounding then
+            return bounding.aabb.min
+        end
+    end
+    return {0,0,0}
+end
+
+function BaseView:on_set_aabbmax(value)
+    local template = hierarchy:get_template(self.eid)
+    if template.template then
+        if template.template.data.bounding then
+            local tv = {value[1], value[2], value[3]}
+            template.template.data.bounding.aabb.max = tv
+            local bounding = world:entity(self.eid).bounding
+            if bounding then
+                local aabbmin = {0,0,0}
+                if bounding.aabb and bounding.aabb ~= mc.NULL then
+                    aabbmin = math3d.tovalue(math3d.array_index(bounding.aabb, 1))
+                    math3d.unmark(bounding.aabb)
+                end
+                bounding.aabb = math3d.mark(math3d.aabb(aabbmin, tv))
+                world:pub {"UpdateAABB", self.eid}
+            end
+        end
+    end
+end
+
+function BaseView:on_get_aabbmax()
+    local template = hierarchy:get_template(self.eid)
+    if template.template then
+        local bounding = template.template.data.bounding
+        if bounding then
+            return bounding.aabb.max
+        end
+    end
+    return {0,0,0}
+end
+
+function BaseView:create_aabb()
+    local tpl = hierarchy:get_template(self.eid)
+    if tpl.template then
+        tpl.template.data.bounding = {aabb ={ min = {0,0,0}, max = {0,0,0} }}
+        self.base.create_aabb:set_visible(false)
+        self.base.delete_aabb:set_visible(true)
+        self.base.aabbmin:set_visible(true)
+        self.base.aabbmax:set_visible(true)
+        self.base.aabbmin:update()
+        self.base.aabbmax:update()
+    end
+end
+
+function BaseView:delete_aabb()
+    local tpl = hierarchy:get_template(self.eid)
+    if tpl.template then
+        tpl.template.data.bounding = nil
+        self.base.create_aabb:set_visible(true)
+        self.base.delete_aabb:set_visible(false)
+        self.base.aabbmin:set_visible(false)
+        self.base.aabbmax:set_visible(false)
+        local bounding = world:entity(self.eid).bounding
+        if bounding.aabb and bounding.aabb ~= mc.NULL then
+            bounding.aabb = mc.NULL
+        else
+            math3d.unmark(bounding.aabb)
+        end
+        world:pub {"UpdateAABB", self.eid}
     end
 end
 

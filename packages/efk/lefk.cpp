@@ -105,7 +105,7 @@ lefkctx_render(lua_State *L){
 }
 
 static int
-lefkctx_create_effect(lua_State *L){
+lefkctx_create(lua_State *L){
     auto ctx = EC(L);
     auto filename = luaL_checkstring(L, 2);
     const float mag = (float)luaL_optnumber(L, 3, 1.f);
@@ -132,7 +132,7 @@ check_effect_valid(efk_ctx *ctx, int handle){
 }
 
 static int
-lefkctx_destroy_effect(lua_State *L){
+lefkctx_destroy(lua_State *L){
     auto ctx = EC(L);
     auto handle = (int)luaL_checkinteger(L, 2);
     if (!check_effect_valid(ctx, handle)){
@@ -256,7 +256,7 @@ lefkctx_set_speed(lua_State* L) {
 }
 
 static int
-lefk_create(lua_State *L){
+lefk_startup(lua_State *L){
     luaL_checktype(L, 1, LUA_TTABLE);
 
     EffekseerRendererBGFX::InitArgs efkArgs;
@@ -294,8 +294,8 @@ lefk_create(lua_State *L){
         lua_setfield(L, -2, "__index");
         luaL_Reg l[] = {
             {"render",          lefkctx_render},
-            {"create_effect",   lefkctx_create_effect},
-            {"destroy_effect",  lefkctx_destroy_effect},
+            {"create",          lefkctx_create},
+            {"destroy",         lefkctx_destroy},
             {"play",            lefkctx_play},
             {"stop",            lefkctx_stop},
             {"set_visible",     lefkctx_set_visible},
@@ -338,7 +338,7 @@ lefk_create(lua_State *L){
 }
 
 static int
-lefk_destroy(lua_State *L){
+lefk_shutdown(lua_State *L){
     auto ctx = EC(L);
     ctx->manager.Reset();
     ctx->renderer.Reset();
@@ -349,8 +349,8 @@ lefk_destroy(lua_State *L){
 extern "C" int
 luaopen_efk(lua_State* L) {
     luaL_Reg lib[] = {
-        { "create", lefk_create},
-        { "destroy",lefk_destroy},
+        { "startup", lefk_startup},
+        { "shutdown",lefk_shutdown},
         { nullptr, nullptr },
     };
     luaL_newlib(L, lib);

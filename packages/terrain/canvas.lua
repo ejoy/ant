@@ -193,10 +193,10 @@ end
 local gen_texture_id = id_generator()
 
 local function create_texture_item_entity(texpath, canvasentity)
-    w:sync("id:in canvas:in", canvasentity)
-    local canvas_id = canvasentity.id
+    w:sync("eid:in canvas:in", canvasentity)
+    local canvas_id = canvasentity.eid
     local canvas = canvasentity.canvas
-    return ecs.create_entity{
+    local eid; eid = ecs.create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -225,18 +225,16 @@ local function create_texture_item_entity(texpath, canvasentity)
                 local texobj = assetmgr.resource(texpath)
                 imaterial.iset_property(e, "s_basecolor", texobj.id)
 
-                --update parent
-                w:sync("id:in", e)
-
                 --update renderer_eid
                 local textures = canvas.textures
                 local t = textures[texpath]
-                t.renderer_eid = e.id
+                t.renderer_eid = eid
                 world:pub{"canvas_update", "texture"}
-                world:pub{"canvas_update", "new_entity", e.id}
+                world:pub{"canvas_update", "new_entity", eid}
             end
         }
     }
+    return eid
 end
 
 local gen_item_id = id_generator()

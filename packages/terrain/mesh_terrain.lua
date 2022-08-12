@@ -22,7 +22,7 @@ local function instance(pid, mp, centerpos)
 end
 
 function mt_sys:entity_init()
-    for e in w:select "INIT shape_terrain:in id:in" do
+    for e in w:select "INIT shape_terrain:in eid:in" do
         local st = e.shape_terrain
         local ms = st.mesh_shape
         local tw, th = st.width, st.height
@@ -31,7 +31,7 @@ function mt_sys:entity_init()
         local unit = st.unit
         assert(ww * hh == #ms, "Invalid mesh indices")
 
-        local terrainid = e.id
+        local terrainid = e.eid
         local meshprefabs = ms.meshes
         local instances = {}
         for ih=1, hh do

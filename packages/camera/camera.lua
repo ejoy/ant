@@ -95,7 +95,7 @@ function ic.get_frustum(ce)
 end
 
 local function set_camera_changed(subcomp, ce)
-    world:pub {"camera_changed", assert(ce.id), subcomp}
+    world:pub {"camera_changed", assert(ce.eid), subcomp}
 end
 
 function ic.set_frustum(ce, frustum)

@@ -1048,9 +1048,9 @@ function m.set_current_target(target_eid)
 end
 
 function m.init(skeleton)
-    for e in w:select "id:in skeleton:in animation:in" do
+    for e in w:select "eid:in skeleton:in animation:in" do
         if e.skeleton == skeleton then
-            anim_eid = e.id
+            anim_eid = e.eid
         end
     end
     current_skeleton = skeleton
