@@ -40,7 +40,7 @@ entity_init(lua_State *L) {
 	ecs_api::context ecs {w->ecs};
 
 	using namespace ecs_api::flags;
-	for (auto& e : ecs.select<ecs::INIT, ecs::scene, ecs::standalone_scene_object(absent)>()) {
+	for (auto& e : ecs.select<ecs::INIT, ecs::scene, ecs::scene_update_once(absent)>()) {
 		e.enable_tag<ecs::scene_needchange>(ecs);
 	}
 	return 0;
@@ -53,7 +53,7 @@ scene_changed(lua_State *L) {
 	auto math3d = w->math3d->M;
 
 	{
-		auto selector = ecs.select<ecs::standalone_scene_object, ecs::scene, ecs::eid>();
+		auto selector = ecs.select<ecs::scene_update_once, ecs::scene, ecs::eid>();
 		auto it = selector.begin();
 		if (it != selector.end()) {
 			flatmap<ecs::eid, math_t> worldmats;
@@ -67,7 +67,7 @@ scene_changed(lua_State *L) {
 					return luaL_error(L, "Unexpected Error.");
 				}
 			}
-			ecs.clear_type<ecs::standalone_scene_object>();
+			ecs.clear_type<ecs::scene_update_once>();
 		}
 	}
 
