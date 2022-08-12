@@ -106,7 +106,6 @@ void Element::Update() {
 	UpdateProperties();
 	HandleTransitionProperty();
 	HandleAnimationProperty();
-	UpdateStackingContext();
 	for (auto& child : children) {
 		child->Update();
 	}
@@ -130,6 +129,7 @@ void Element::Render() {
 	UpdatePerspective();
 	UpdateClip();
 	UpdateGeometry();
+	UpdateStackingContext();
 
 	size_t i = 0;
 	for (; i < stacking_context.size() && stacking_context[i]->GetZIndex() < 0; ++i) {
