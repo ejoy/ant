@@ -6,6 +6,7 @@
 #include <core/Property.h>
 #include <span>
 #include <optional>
+#include <functional>
 
 struct style_cache;
 
@@ -35,7 +36,8 @@ namespace Rml::Style {
         PropertyIdSet             SetProperty(Value s, const PropertyVector& vec);
         PropertyIdSet             DelProperty(Value s, const PropertyIdSet& set);
         std::optional<Property>   Find(ValueOrCombination s, PropertyId id);
-        std::optional<PropertyKV> Index(ValueOrCombination s, size_t index);
+        bool                      Has(ValueOrCombination s, PropertyId id);
+        void                      Foreach(ValueOrCombination s, PropertyUnit unit, PropertyIdSet& set);
         PropertyIdSet             Diff(ValueOrCombination a, ValueOrCombination b);
         void                      Flush();
 
