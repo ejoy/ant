@@ -20,13 +20,8 @@ end
 
 function EffectView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
-    for e in w:select "scene:in efk:in" do
-        if e.scene == world:entity(eid).scene then
-            -- self.speed:set_getter(function() return e.efk.speed end)
-            self.speed:set_getter(function() return 1 end)
-            self.speed:set_setter(function(v) self:on_set_speed(v) end)
-        end
-    end
+    self.speed:set_getter(function() return self:on_get_speed() end)
+    self.speed:set_setter(function(v) self:on_set_speed(v) end)
     self:update()
     return true
 end
@@ -59,11 +54,15 @@ function EffectView:show()
     end
 end
 
+function EffectView:on_get_speed()
+    return world:entity(self.eid).efk.speed
+end
+
 function EffectView:on_set_speed(value)
-    local template = hierarchy:get_template(self.eid)
-    template.template.data.speed = value
-    local instance = world:entity(self.eid).efk
-    instance.speed = value
+    -- local template = hierarchy:get_template(self.eid)
+    -- template.template.data.speed = value
+    -- local instance = world:entity(self.eid).efk
+    -- instance.speed = value
     iefk.set_speed(world:entity(self.eid), value)
 end
 
