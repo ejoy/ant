@@ -197,7 +197,16 @@ static int
 lefkctx_stop(lua_State *L){
     auto ctx = EC(L);
     auto play_handle = (Effekseer::Handle)luaL_checkinteger(L, 2);
-    ctx->manager->StopEffect(play_handle);
+    bool delay = false;
+	if (lua_type(L, 3) == LUA_TBOOLEAN) {
+        delay = lua_toboolean(L, 3);
+	}
+    if (delay) {
+        ctx->manager->SetSpawnDisabled(play_handle, true);
+    }
+    else {
+        ctx->manager->StopEffect(play_handle);
+    }
     return 0;
 }
 
