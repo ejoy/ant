@@ -153,14 +153,22 @@ namespace Rml::Style {
         return PropertyDecode(tag_v<Property>, p);
     }
 
-    std::optional<PropertyKV> Cache::Index(ValueOrCombination s, size_t index) {
-        PropertyId id;
-        void* data = style_index(c, {s.idx}, (int)index, (uint8_t*)&id);
-        if (!data) {
-            return std::nullopt;
+    bool Cache::Has(ValueOrCombination s, PropertyId id) {
+        void* data = style_find(c, {s.idx}, (uint8_t)id);
+        return !!data;
+    }
+
+    void Cache::Foreach(ValueOrCombination s, PropertyUnit unit, PropertyIdSet& set) {
+        for (int i = 0;; ++i) {
+            PropertyId id;
+            void* data = style_index(c, {s.idx}, i, (uint8_t*)&id);
+            if (!data) {
+                break;
+            }
+            if (PropertyIsUnit(unit, data)) {
+                set.insert(id);
+            }
         }
-        strparser<uint8_t> p {(const uint8_t*)data};
-        return PropertyKV { id, PropertyDecode(tag_v<Property>, p)};
     }
 
     PropertyIdSet Cache::Diff(ValueOrCombination a, ValueOrCombination b) {

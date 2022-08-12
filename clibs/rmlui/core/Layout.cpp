@@ -147,12 +147,12 @@ static void SetIntProperty(YGNodeRef node, PropertyId id, int v) {
 	}
 }
 
-void Layout::SetProperty(PropertyId id, const Property* property, const Element* element) {
-	if (property->Has<PropertyKeyword>()) {
-		SetIntProperty(node, id, property->Get<PropertyKeyword>());
+void Layout::SetProperty(PropertyId id, const Property& property, const Element* element) {
+	if (property.Has<PropertyKeyword>()) {
+		SetIntProperty(node, id, property.Get<PropertyKeyword>());
 		return;
 	}
-	auto const& fv = property->Get<PropertyFloat>();
+	auto const& fv = property.Get<PropertyFloat>();
 	if (fv.unit == PropertyUnit::PERCENT) {
 		SetPercentProperty(node, id, fv.value);
 	}

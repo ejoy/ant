@@ -184,9 +184,7 @@ local function load_efk(filename)
         handle = efk_cache[filename],
         speed = 1.0,
         loop = false,
-        dynamic = false, --update efk world matrix every frame
         visible = true,
-        worldmat = math3d.ref(math3d.matrix(mc.IDENTITY_MAT))
     }
 end
 
@@ -252,7 +250,7 @@ function efk_sys:camera_usage()
 end
 
 function efk_sys:follow_transform_updated()
-    for v in w:select "efk:in scene:in" do
+    for v in w:select "efk:in scene:in scene_changed?in" do
         local efk = v.efk
         if efk.play_handle then
             if not efk_ctx:is_alive(efk.play_handle) then
@@ -261,10 +259,7 @@ function efk_sys:follow_transform_updated()
                 else
                     efk.play_handle = nil
                 end
-            end
-            --TODO: layz update, handle scene_changed event?
-            if efk.dynamic then
-                efk.worldmat.m = v.scene.worldmat
+            elseif v.scene_changed then
                 efk_ctx:update_transform(efk.play_handle, math3d.value_ptr(v.scene.worldmat))
             end
         else
@@ -370,10 +365,6 @@ end
 
 function iefk.set_loop(e, b)
     e.efk.loop = b
-end
-
-function iefk.set_dynamic(e, b)
-    e.efk.dynamic = b
 end
 
 function iefk.destroy(e)

@@ -104,9 +104,9 @@ public:
 	void UpdateDefinition();
 	void DirtyDefinition();
 	void DirtyInheritedProperties();
-	void ForeachProperties(std::function<void(PropertyId id, const Property& property)> f);
 	void DirtyProperty(PropertyId id);
 	void DirtyProperties(const PropertyIdSet& properties);
+	void DirtyProperties(PropertyUnit unit);
 
 	bool SetProperty(const PropertyVector& vec);
 	bool DelProperty(const PropertyIdSet& set);

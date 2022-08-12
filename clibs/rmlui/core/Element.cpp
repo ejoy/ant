@@ -1470,11 +1470,7 @@ void Element::SetClassName(const std::string& class_names) {
 }
 
 void Element::DirtyPropertiesWithUnitRecursive(PropertyUnit unit) {
-	ForeachProperties([&](PropertyId id, const Property& property) {
-		if (property.Has<PropertyFloat>() && unit == property.Get<PropertyFloat>().unit) {
-			DirtyProperty(id);
-		}
-	});
+	DirtyProperties(unit);
 	for (auto& child : children) {
 		child->DirtyPropertiesWithUnitRecursive(unit);
 	}
@@ -1598,7 +1594,7 @@ void Element::UpdateDefinition() {
 	auto& c = Style::Instance();
 	PropertyIdSet changed_properties = c.Diff(definition_properties, new_definition);
 	for (PropertyId id : changed_properties) {
-		if (c.Find(inline_properties, id)) {
+		if (c.Has(inline_properties, id)) {
 			changed_properties.erase(id);
 		}
 	}
@@ -1728,15 +1724,9 @@ void Element::DirtyInheritedProperties() {
 	dirty_properties |= StyleSheetSpecification::GetInheritedProperties();
 }
 
-void Element::ForeachProperties(std::function<void(PropertyId id, const Property& property)> f) {
+void Element::DirtyProperties(PropertyUnit unit) {
 	auto& c = Style::Instance();
-    for (size_t i = 0;; ++i) {
-        auto r = c.Index(local_properties, i);
-        if (!r) {
-            break;
-        }
-        f(r->id, r->value);
-    }
+	c.Foreach(local_properties, unit, dirty_properties);
 }
 
 void Element::DirtyProperty(PropertyId id) {
@@ -1752,65 +1742,21 @@ void Element::UpdateProperties() {
 		return;
 	}
 
-	bool dirty_em_properties = false;
 	if (dirty_properties.contains(PropertyId::FontSize)) {
 		if (UpdataFontSize()) {
-			dirty_em_properties = true;
 			dirty_properties.insert(PropertyId::LineHeight);
+			DirtyProperties(PropertyUnit::EM);
 		}
 	}
 
-	ForeachProperties([&](PropertyId id, const Property& property){
-		if (dirty_em_properties && property.Has<PropertyFloat>() && property.Get<PropertyFloat>().unit == PropertyUnit::EM)
-			dirty_properties.insert(id);
-		if (!dirty_properties.contains(id)) {
-			return;
+	auto& c = Style::Instance();
+	PropertyIdSet dirty_layout_properties = dirty_properties & LayoutProperties;
+	for (PropertyId id : dirty_layout_properties) {
+		auto property = c.Find(local_properties, id);
+		if (property) {
+			GetLayout().SetProperty(id, *property, this);
 		}
-
-		switch (id) {
-		case PropertyId::Left:
-		case PropertyId::Top:
-		case PropertyId::Right:
-		case PropertyId::Bottom:
-		case PropertyId::MarginLeft:
-		case PropertyId::MarginTop:
-		case PropertyId::MarginRight:
-		case PropertyId::MarginBottom:
-		case PropertyId::PaddingLeft:
-		case PropertyId::PaddingTop:
-		case PropertyId::PaddingRight:
-		case PropertyId::PaddingBottom:
-		case PropertyId::BorderLeftWidth:
-		case PropertyId::BorderTopWidth:
-		case PropertyId::BorderRightWidth:
-		case PropertyId::BorderBottomWidth:
-		case PropertyId::Height:
-		case PropertyId::Width:
-		case PropertyId::MaxHeight:
-		case PropertyId::MinHeight:
-		case PropertyId::MaxWidth:
-		case PropertyId::MinWidth:
-		case PropertyId::Position:
-		case PropertyId::Display:
-		case PropertyId::Overflow:
-		case PropertyId::AlignContent:
-		case PropertyId::AlignItems:
-		case PropertyId::AlignSelf:
-		case PropertyId::Direction:
-		case PropertyId::FlexDirection:
-		case PropertyId::FlexWrap:
-		case PropertyId::JustifyContent:
-		case PropertyId::AspectRatio:
-		case PropertyId::Flex:
-		case PropertyId::FlexBasis:
-		case PropertyId::FlexGrow:
-		case PropertyId::FlexShrink:
-			GetLayout().SetProperty(id, &property, this);
-			break;
-		default:
-			break;
-		}
-	});
+	}
 
 	PropertyIdSet dirty_inherited_properties = (dirty_properties & StyleSheetSpecification::GetInheritedProperties());
 	if (!dirty_inherited_properties.empty()) {
