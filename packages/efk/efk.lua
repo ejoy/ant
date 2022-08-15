@@ -197,7 +197,9 @@ end
 
 function efk_sys:entity_remove()
     for e in w:select "REMOVED efk:in" do
-        efk_ctx:stop(e.efk.play_handle)
+        if e.efk.play_handle then
+            efk_ctx:stop(e.efk.play_handle)
+        end
         -- efk_ctx:destroy(e.efk.play_handle)
         e.efk.play_handle = nil
     end
