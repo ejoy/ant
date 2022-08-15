@@ -84,7 +84,7 @@ local function instance_(w, prefab, root)
 end
 
 local function instance(w, filename)
-    local lmr_e = w:singleton("lightmapper", "lightmap_result:in")
+    local lmr_e = w:first("lightmapper lightmap_result:in")
     instance_(w, create_prefab(filename, lmr_e.lightmap_result))
 end
 

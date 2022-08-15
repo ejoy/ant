@@ -14,7 +14,7 @@ function imaterial.set_property(e, who, what, isiter)
 end
 
 function imaterial.iset_property(e, who, what)
-	w:sync("filter_material:in", e)
+	w:extend(e, "filter_material:in")
 	imaterial.set_property(e, who, what)
 end
 

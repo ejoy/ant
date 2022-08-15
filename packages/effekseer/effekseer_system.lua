@@ -188,7 +188,7 @@ local event_play_effect = world:sub{"play_effect"}
 local event_do_play = world:sub{"do_play"}
 function effekseer_sys:render_submit()
     for tm_q in w:select "tonemapping_queue render_target:in" do
-        --local tm_q = assert(w:singleton("tonemapping_queue", "render_target:in"))
+        --local tm_q = assert(w:first("tonemapping_queue render_target:in"))
         local effect_view = viewidmgr.get "effect_view"
         local tm_rt = tm_q.render_target
         fbmgr.bind(effect_view, tm_rt.fb_idx)

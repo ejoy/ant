@@ -357,7 +357,7 @@ function iobj_motion.rotate_around_point(e, targetpt, distance, rotateX, rotateY
 end
 
 local function main_queue_viewport_size()
-    local e = w:singleton("main_queue", "render_target:in")
+    local e = w:first("main_queue render_target:in")
     return e.render_target.view_rect
 end
 

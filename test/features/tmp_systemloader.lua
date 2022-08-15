@@ -162,7 +162,7 @@ function init_loader_sys:init()
     --         iom.set_scale(world:entity(e.root), 0.1)
     --         local ivav = ecs.import.interface "ant.test.features|ivertex_attrib_visualizer"
 
-    --         local dl = w:singleton("directional_light", "scene:in")
+    --         local dl = w:first("directional_light scene:in")
     --         local d = math3d.inverse(math3d.todirection(dl.scene.r))
     --         for _, ee in ipairs(e.tag["*"]) do
     --             ivav.display_normal(world:entity(ee), d)
@@ -178,7 +178,7 @@ function init_loader_sys:init()
     --         iom.set_scale(world:entity(e.root), 0.1)
     --         -- local ivav = ecs.import.interface "ant.test.features|ivertex_attrib_visualizer"
 
-    --         -- local dl = w:singleton("directional_light", "scene:in")
+    --         -- local dl = w:first("directional_light scene:in")
     --         -- local d = math3d.inverse(math3d.todirection(dl.scene.r))
     --         -- for _, ee in ipairs(e.tag["*"]) do
     --         --     ivav.display_normal(world:entity(ee), d)
@@ -354,7 +354,7 @@ function init_loader_sys:init_world()
         iom.set_scale(e, math3d.mul(s, {5, 5, 5, 0}))
     end
 
-    local mq = w:singleton("main_queue", "camera_ref:in")
+    local mq = w:first("main_queue camera_ref:in")
     local eyepos = math3d.vector(8, 8, 0)
     local camera_ref = world:entity(mq.camera_ref)
     iom.set_position(camera_ref, eyepos)
@@ -404,7 +404,7 @@ function init_loader_sys:entity_init()
             enable = enable == 1 and 0 or 1
 
         elseif key == "LEFT" and press == 0 then
-            local d = w:singleton("directional_light", "scene:in eid:in")
+            local d = w:first("directional_light scene:in eid:in")
             iom.set_position(d, {0, 1, 0})
         end
     end
@@ -414,7 +414,7 @@ end
 
 function init_loader_sys:camera_usage()
     for _, _, state, x, y in mouse_mb:unpack() do
-        local mq = w:singleton("main_queue", "render_target:in camera_ref:in")
+        local mq = w:first("main_queue render_target:in camera_ref:in")
         local ce = world:entity(mq.camera_ref)
         local camera = ce.camera
         local vpmat = camera.viewprojmat

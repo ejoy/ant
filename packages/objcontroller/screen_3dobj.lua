@@ -27,8 +27,8 @@ local function calc_screen_pos(screen_3dobj, vr)
 end
 
 function screen_3dobj_sys:camera_usage()
-    if w:singleton "scene_changed" then
-        local mq = w:singleton("main_queue", "camera_ref:in")
+    if w:first "scene_changed" then
+        local mq = w:first("main_queue camera_ref:in")
         local ce = world:entity(mq.camera_ref)
         if ce.scene_changed then
             local camera = ce.camera

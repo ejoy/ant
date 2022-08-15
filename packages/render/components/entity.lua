@@ -101,7 +101,6 @@ local function grid_mesh_entity_data(name, materialpath, vb, ib)
 			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
 			on_ready = function(e)
 				ivs.iset_state(e, "auxgeom", true)
-				w:sync("render_object_update:out", e)
 			end
 		},
 	}
@@ -248,7 +247,6 @@ function ientity.create_prim_plane_entity(name, materialpath, scene, color, hide
 			on_ready = function (e)
 				ivs.iset_state(e, "main_view", not hide)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
-				w:sync("render_object_update:out", e)
 			end
 		},
 	}

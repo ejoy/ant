@@ -28,7 +28,7 @@ local function copy_pf(pf)
 end
 
 function sd_sys.init_world()
-    local pd = w:singleton("pre_depth_queue", "render_target:in camera_ref:in primitive_filter:in")
+    local pd = w:first("pre_depth_queue render_target:in camera_ref:in primitive_filter:in")
     local pd_rt = pd.render_target
     local pd_vr = pd_rt.view_rect
 
@@ -92,7 +92,7 @@ function s:data_changed()
     if irender.use_pre_depth() then
         for msg in vr_mb:each() do
             local vr = msg[3]
-            local dq = w:singleton("pre_depth_queue", "render_target:in")
+            local dq = w:first("pre_depth_queue render_target:in")
             local dqvr = dq.render_target.view_rect
             --have been changed in viewport detect
             assert(vr.w == dqvr.w and vr.h == dqvr.h)
@@ -103,8 +103,13 @@ function s:data_changed()
         end
 
         for _, _, ceid in mc_mb:unpack() do
-            w:singleton("pre_depth_queue", "camera_ref:out", {camera_ref = ceid})
-            w:singleton("scene_depth_queue", "camera_ref:out", {camera_ref = ceid})
+            local e = w:first("pre_depth_queue", "camera_ref:out")
+            e.camera_ref = ceid
+            w:submit(e)
+
+            e = w:first("scene_depth_queue", "camera_ref:out")
+            e.camera_ref = ceid
+            w:submit(e)
         end
     end
 end

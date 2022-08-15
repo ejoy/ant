@@ -208,7 +208,7 @@ local camera_changed = world:sub{"main_queue", "camera_changed"}
 local camera_frustum_mb
 
 local function update_framebuffer_texutre()
-    local mq = w:singleton("main_queue", "render_target:in camera_ref:in")
+    local mq = w:first("main_queue render_target:in camera_ref:in")
     local rt = mq.render_target
     local fb = fbmgr.get(rt.fb_idx)
     efk_cb_handle.background = fb[1].handle
@@ -228,7 +228,7 @@ local function update_framebuffer_texutre()
 end
 
 function efk_sys:init_world()
-    local mq = w:singleton("main_queue", "camera_ref:in")
+    local mq = w:first("main_queue camera_ref:in")
     camera_frustum_mb = world:sub{"camera_changed", mq.cameraref, "frustum"}
     --let it init
     world:pub{"camera_changed", mq.cameraref, "frustum"}
@@ -280,7 +280,7 @@ end
 
 --TODO: need remove, should put it on the ltask
 function efk_sys:render_submit()
-    local mq = w:singleton("main_queue", "camera_ref:in")
+    local mq = w:first("main_queue camera_ref:in")
     local ce = world:entity(mq.camera_ref)
     local camera = ce.camera
     for tm_q in w:select "tonemapping_queue render_target:in" do

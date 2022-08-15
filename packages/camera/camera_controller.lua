@@ -89,7 +89,7 @@ function cc_sys:data_changed()
     check_update_control()
 
     for _, delta in mouse_wheel_mb:unpack() do
-        local mq = w:singleton("main_queue", "camera_ref:in")
+        local mq = w:first("main_queue camera_ref:in")
         local speed = calc_wheel_speed()
         local d = delta > 0 and speed or -speed
         iom.move_forward(world:entity(mq.camera_ref), d)
@@ -143,22 +143,22 @@ function cc_sys:data_changed()
     end
 
     if move_x then
-        local mq = w:singleton("main_queue", "camera_ref:in")
+        local mq = w:first("main_queue camera_ref:in")
         iom.move_right(world:entity(mq.camera_ref), move_x)
     end
 
     if move_y then
-        local mq = w:singleton("main_queue", "camera_ref:in")
+        local mq = w:first("main_queue camera_ref:in")
         iom.move_up(world:entity(mq.camera_ref), move_y)
     end
 
     if move_z then
-        local mq = w:singleton("main_queue", "camera_ref:in")
+        local mq = w:first("main_queue camera_ref:in")
         iom.move_forward(world:entity(mq.camera_ref), move_z)
     end
 
     if motiontype and newx and newy then
-        local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
+        local mq = w:first("main_queue camera_ref:in render_target:in")
         local dx, dy = dxdy(newx, newy, mq.render_target.view_rect)
         if dx ~= 0.0 or dy ~= 0.0 then
             local ce = world:entity(mq.camera_ref)

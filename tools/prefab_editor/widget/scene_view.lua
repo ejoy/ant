@@ -25,8 +25,8 @@ local function is_editable(eid)
 end
 
 local function is_delete_disable()
-    local mq = w:singleton("main_queue", "camera_ref:in")
-    local sv = w:singleton("second_view", "camera_ref:in")
+    local mq = w:first("main_queue camera_ref:in")
+    local sv = w:first("second_view camera_ref:in")
     return mq.camera_ref == sv.camera_ref
 end
 

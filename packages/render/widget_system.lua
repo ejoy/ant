@@ -56,7 +56,7 @@ function widget_drawer_sys:init()
 end
 
 function widget_drawer_sys:end_frame()
-	local e = w:singleton("widget_drawer", "render_object:in")
+	local e = w:first("widget_drawer render_object:in")
 	if e then
 		local ro = e.render_object
 		ro.vb_start, ro.vb_num = 0, 0
@@ -82,7 +82,7 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 	if numvertices == 0 then
 		return
 	end
-	local e = w:singleton("widget_drawer", "render_object:in")
+	local e = w:first("widget_drawer render_object:in")
 	local ro = e.render_object
 	local vbnum, vbhandle = ro.vb_num, ro.vb_handle
 

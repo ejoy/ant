@@ -288,7 +288,7 @@ end
 
 function sm:entity_init()
 	for e in w:select "INIT make_shadow directional_light light:in" do
-		local csm_dl = w:singleton("csm_directional_light", "light:in")
+		local csm_dl = w:first("csm_directional_light light:in")
 		if csm_dl == nil then
 			e.csm_directional_light = true
 			w:sync("csm_directional_light?out", e)
@@ -320,9 +320,9 @@ function sm:init_world()
 end
 
 function sm:update_camera()
-	local dl = w:singleton("csm_directional_light", "light:in scene:in")
+	local dl = w:first("csm_directional_light light:in scene:in")
 	if dl then
-		local mq = w:singleton("main_queue", "camera_ref:in")
+		local mq = w:first("main_queue camera_ref:in")
 		local mce = world:entity(mq.camera_ref)
 		update_shadow_camera(dl, mce.camera)
 		commit_csm_matrices_attribs()

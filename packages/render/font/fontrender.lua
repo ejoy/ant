@@ -25,7 +25,7 @@ local mask<const>, offset<const> = math3d.ref(math3d.vector(0.5, 0.5, 1, 1)), ma
 local function calc_screen_pos(pos3d, queuename)
     queuename = queuename or "main_queue"
 
-    local q = w:singleton(queuename, "camera_ref:in")
+    local q = w:first(queuename .. " camera_ref:in")
 	local camera = world:entity(q.camera_ref).camera
     local vp = camera.viewprojmat
     local posNDC = math3d.transformH(vp, pos3d)

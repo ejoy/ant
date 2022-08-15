@@ -61,7 +61,7 @@ local mb_camera_changed = world:sub{"main_queue", "camera_changed"}
 
 function pp_obj_sys:data_changed()
     for _ in mb_camera_changed:each() do
-        local mq = w:singleton("main_queue", "camera_ref:in")
+        local mq = w:first("main_queue camera_ref:in")
         irq.set_camera("postprocess_obj_queue", mq.camera_ref)
     end
 end

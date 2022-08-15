@@ -1014,7 +1014,6 @@ local function create_bone_entity(joint_name)
                 imaterial.iset_property(e, "u_basecolor_factor", math3d.vector(bone_color))
 				ivs.iset_state(e, "auxgeom", true)
                 ivs.iset_state(e, "main_view", false)
-                w:sync("render_object_update:out", e)
 			end
         }
     }

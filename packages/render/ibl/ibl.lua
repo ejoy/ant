@@ -123,7 +123,7 @@ local exp_mb = world:sub{"exposure_changed"}
 
 local function update_ibl_param(intensity)
     local sa = imaterial.system_attribs()
-    local mq = w:singleton("main_queue", "camera_ref:in")
+    local mq = w:first("main_queue camera_ref:in")
     local ce = world:entity(mq.camera_ref)
     local ev = iexposure.exposure(ce)
 

@@ -55,7 +55,7 @@ local lmr_path = outputdir / "lightmaps"
 if not lfs.exists(lmr_path) then
     lfs.create_directories(lmr_path)
 end
-local lmr_e = w:singleton("lightmapper", "lightmap_result:in")
+local lmr_e = w:first("lightmapper lightmap_result:in")
 lm_prefilter.save(lmr_path / "lightmap_result.prefab", {
     policy = {
         "ant.render|lightmap_result",

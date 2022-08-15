@@ -51,7 +51,7 @@ function m:init()
 end
 
 local function init_camera()
-    local mq = w:singleton("main_queue", "camera_ref:in")
+    local mq = w:first("main_queue camera_ref:in")
     local eye, at = math3d.vector(10, 10, -10, 1), mc.ZERO_PT
     local e = world:entity(mq.camera_ref)
     iom.set_position(e, {10, 10, -10, 1})
@@ -75,6 +75,6 @@ end
 function m:data_changed()
     for _, e, camera_ref in bind_billboard_camera_mb:unpack() do
         w:sync("render_object?in", e)
-        e.render_object.camera_ref = camera_ref or w:singleton("main_queue", "camera_ref:in").camera_ref
+        e.render_object.camera_ref = camera_ref or w:first("main_queue camera_ref:in").camera_ref
     end
 end

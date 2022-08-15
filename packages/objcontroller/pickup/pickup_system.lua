@@ -43,7 +43,7 @@ local function cvt_clickpt(pt, ratio)
 end
 
 local function update_camera(pu_camera_ref, clickpt)
-	local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
+	local mq = w:first("main_queue camera_ref:in render_target:in")
 	local main_vr = mq.render_target.view_rect
 	
 	local ndc2D = mu.pt2D_to_NDC(cvt_clickpt(clickpt, main_vr.ratio), main_vr)
@@ -248,7 +248,7 @@ function pickup_sys:entity_init()
 end
 
 local function open_pickup(x, y, cb)
-	local e = w:singleton("pickup_queue", "pickup:in")
+	local e = w:first("pickup_queue pickup:in")
 	e.pickup.nextstep = "blit"
 	e.pickup.clickpt[1] = x
 	e.pickup.clickpt[2] = y
@@ -258,7 +258,7 @@ local function open_pickup(x, y, cb)
 end
 
 local function close_pickup()
-	local e = w:singleton("pickup_queue", "pickup:in")
+	local e = w:first("pickup_queue pickup:in")
 	e.pickup.nextstep = nil
 	e.visible = false
 	w:sync("visible?out", e)
@@ -358,7 +358,7 @@ function pickup_sys:end_filter()
 		local fm = e.filter_material
 		local matres = imaterial.resource(e, true)
 		local st = matres.fx.setting.surfacetype
-		local qe = w:singleton("pickup_queue", "primitive_filter:in")
+		local qe = w:first("pickup_queue primitive_filter:in")
 
 		if has_filter_stage(qe.primitive_filter, st) then
 			local src_mo = matres.object

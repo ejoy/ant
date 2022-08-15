@@ -305,7 +305,7 @@ function shape_terrain_test_sys:data_changed()
 
             indicator = create_indicator()
         elseif key == "T" and press == 0 then
-            local ce = w:singleton("canvas", "scene:in")
+            local ce = w:first("canvas scene:in")
             local unit = 1.0
             local itemid = icanvas.add_items(ce, {
                 {
@@ -327,12 +327,12 @@ function shape_terrain_test_sys:data_changed()
             icanvas.show(itemid, true)
         elseif key == "M" and press == 0 then
             if canvas.added_items then
-                local ce = w:singleton("canvas", "scene:in")
+                local ce = w:first("canvas scene:in")
                 icanvas.remove_item(ce, canvas.added_items[1])
             end
         elseif key == "N" and press == 0 then
             if canvas.added_items then
-                local ce = w:singleton("canvas", "scene:in")
+                local ce = w:first("canvas scene:in")
                 local unit = 1.0
                 icanvas.update_item_rect(ce, canvas.added_items[#canvas.added_items], {
                     x=2*unit, y=3*unit,

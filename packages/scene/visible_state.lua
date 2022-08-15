@@ -38,9 +38,8 @@ function ivs.set_state(e, name, v)
 end
 
 function ivs.iset_state(e, name, v)
-	w:sync("visible_state:in", e)
+	w:extend(e, "visible_state:update render_object_update:out")
 	ivs.set_state(e, name, v)
-	w:sync("visible_state:out", e)
 end
 
 function ivs.state_names(statemask)

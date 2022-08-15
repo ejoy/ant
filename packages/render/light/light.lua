@@ -243,7 +243,7 @@ ilight.count_visible_light = count_visible_light
 
 local function create_light_buffers()
 	local lights = {}
-	local mq = w:singleton("main_queue", "camera_ref:in")
+	local mq = w:first("main_queue camera_ref:in")
 	local ev = iexposure.exposure(world:entity(mq.camera_ref))
 	for e in w:select "light:in visible scene:in" do
 		local p	= math3d.tovalue(iom.get_position(e))

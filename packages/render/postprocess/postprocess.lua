@@ -21,9 +21,9 @@ end
 
 function pp_sys:pre_postprocess()
     --TODO: check screen buffer changed
-    local pp = w:singleton("postprocess", "postprocess_input:in")
+    local pp = w:first("postprocess postprocess_input:in")
     local ppi = pp.postprocess_input
-    local mq = w:singleton("main_queue", "render_target:in")
+    local mq = w:first("main_queue render_target:in")
     local fb = fbmgr.get(mq.render_target.fb_idx)
 
     ppi.scene_color_handle = fbmgr.get_rb(fb[1].rbidx).handle

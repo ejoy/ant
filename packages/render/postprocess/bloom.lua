@@ -153,7 +153,7 @@ local function create_chain_sample_queue(mqvr)
         us_viewid = us_viewid+1
     end
 
-    local pp = w:singleton("postprocess", "postprocess_input:in")
+    local pp = w:first("postprocess postprocess_input:in")
     local bloom_color_handle = fbmgr.get_rb(rbidx).handle
     pp.postprocess_input.bloom_color_handle = bloom_color_handle
 end
@@ -162,7 +162,7 @@ function bloom_sys:init_world()
     if not enable_bloom then
         return 
     end
-    local mq = w:singleton("main_queue", "render_target:in")
+    local mq = w:first("main_queue render_target:in")
     local mqvr = mq.render_target.view_rect
     create_chain_sample_queue(mqvr)
 end
@@ -175,7 +175,7 @@ function bloom_sys:data_changed()
 
     for msg in mqvr_mb:each() do
         local mqvr = msg[3]
-        local q = w:singleton("bloom_upsample"..bloom_chain_count, "render_target:in")
+        local q = w:first("bloom_upsample"..bloom_chain_count .. " render_target:in")
         if q then
             local vr = q.render_target.view_rect
             if mqvr.w ~= vr.w or mqvr.h ~= vr.h then
@@ -202,7 +202,7 @@ function bloom_sys:entity_remove()
 
     if fbidx then
         fbidx = nil
-        local mq = w:singleton("main_queue", "render_target:in")
+        local mq = w:first("main_queue render_target:in")
         create_chain_sample_queue(mq.render_target.view_rect)
     end
 end
@@ -215,7 +215,7 @@ local scenecolor_property = {
 }
 
 local function do_bloom_sample(viewid, drawertag, ppi_handle, next_mip)
-    local drawer = w:singleton(drawertag, "filter_material:in")
+    local drawer = w:first(drawertag .. " filter_material:in")
     local fm = drawer.filter_material
     local material = fm.main_queue
     local rbhandle = fbmgr.get_rb(fbmgr.get_byviewid(viewid)[1].rbidx).handle
@@ -235,14 +235,14 @@ local function do_bloom_sample(viewid, drawertag, ppi_handle, next_mip)
 end
 
 function bloom_sys:bloom()
-    if not enable_bloom or w:singleton("bloom_queue", "render_target:in") == nil then
+    if not enable_bloom or w:first("bloom_queue render_target:in") == nil then
         return
     end
 
     --we just sample result to bloom buffer, and map bloom buffer from tonemapping stage
     local mip = 0
 
-    local pp = w:singleton("postprocess", "postprocess_input:in")
+    local pp = w:first("postprocess postprocess_input:in")
     local ppi_handle = pp.postprocess_input.scene_color_handle
     ppi_handle = do_bloom_sample(bloom_ds_viewid, "downsample_drawer", ppi_handle, function () 
         local m = mip
