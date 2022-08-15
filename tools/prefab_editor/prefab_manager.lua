@@ -88,13 +88,11 @@ function m:create_hitch(slot)
     local parent_eid = gizmo.target_eid or self.root
     local template = {
         policy = {
-            "ant.general|name",
-            "ant.scene|hitch_object",
+            "ant.general|name"
         },
         data = {
             name = auto_name,
-            scene = { parent = parent_eid },
-            hitch = { group = 0 },
+            scene = { parent = parent_eid }
         }
     }
     if slot then
@@ -105,6 +103,9 @@ function m:create_hitch(slot)
             joint_name = "None",
             follow_flag = 1,
         }
+    else
+        template.policy[#template.policy + 1] = "ant.scene|hitch_object"
+        template.data.hitch = { group = 0 }
     end
     local tpl = utils.deep_copy(template)
     if slot then

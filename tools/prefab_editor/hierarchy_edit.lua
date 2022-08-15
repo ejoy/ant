@@ -111,6 +111,9 @@ function hierarchy:update_prefab_template(world)
                     table.remove(templ.policy, find)
                 end
             end
+            if templ.data.scene and templ.data.scene.parent then
+                templ.data.scene.parent = nil
+            end
         end
         table.insert(pt, templ)
 

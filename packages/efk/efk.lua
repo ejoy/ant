@@ -314,8 +314,8 @@ function iefk.create(filename, config)
             scene = config.scene,
             efk = filename,
             on_ready = function (e)
+                w:sync("efk:in", e)
                 if config.play_on_create then
-                    w:sync("efk:in", e)
                     iefk.play(e)
                 end
                 iefk.set_loop(e, config.loop or false)
@@ -376,4 +376,8 @@ function iefk.stop(e, delay)
         efk_ctx:stop(e.efk.play_handle, delay)
         e.efk.play_handle = nil
     end
+end
+
+function iefk.is_playing(e)
+    return e.efk.play_handle ~= nil
 end
