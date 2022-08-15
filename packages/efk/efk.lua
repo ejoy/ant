@@ -299,6 +299,7 @@ function iefk.create(filename, config)
         play_on_create = false,
         loop = false,
         speed = 1.0,
+        scene = {}
     }
     local template = {
 		policy = {
@@ -310,9 +311,7 @@ function iefk.create(filename, config)
 		data = {
             name = "root",
             tag = {"effect"},
-            scene = {
-                parent = config.parent
-            },
+            scene = config.scene,
             efk = filename,
             on_ready = function (e)
                 if config.play_on_create then
