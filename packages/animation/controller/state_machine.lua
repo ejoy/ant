@@ -214,7 +214,7 @@ function iani.play(eid, anim_state)
 end
 
 function iani.get_duration(eid, anim_name)
-	local e = get_anim_e(eid)
+	local e <close> = get_anim_e(eid)
 	if not anim_name then
 		return e.anim_ctrl.animation._handle:duration()
 	else
@@ -252,7 +252,7 @@ end
 
 function iani.set_time(eid, second)
 	if not eid then return end
-	local e = get_anim_e(eid)
+	local e <close> = get_anim_e(eid)
 	iani.step(e, second, true)
 	-- effect
 	local current_time = iani.get_time(eid);
@@ -273,7 +273,7 @@ end
 
 function iani.stop_effect(eid)
 	if not eid then return end
-	local e = get_anim_e(eid)
+	local e <close> = get_anim_e(eid)
 	local all_events = e.anim_ctrl.event_state.keyframe_events
 	if all_events then
 		for _, events in ipairs(all_events) do
@@ -290,32 +290,32 @@ end
 
 function iani.get_time(eid)
 	if not eid then return 0 end
-	local e = get_anim_e(eid)
+	local e <close> = get_anim_e(eid)
 	if not e.anim_ctrl.animation then return 0 end
 	return e.anim_ctrl.play_state.ratio * e.anim_ctrl.animation._handle:duration()
 end
 
 function iani.set_speed(eid, speed)
 	if not eid then return end
-	local e = get_anim_e(eid)
+	local e <close> = get_anim_e(eid)
 	e.anim_ctrl.play_state.speed = speed
 end
 
 function iani.set_loop(eid, loop)
 	if not eid then return end
-	local e = get_anim_e(eid)
+	local e <close> = get_anim_e(eid)
 	e.anim_ctrl.play_state.loop = loop
 end
 
 function iani.pause(eid, pause)
 	if not eid then return end
-	local e = get_anim_e(eid)
+	local e <close> = get_anim_e(eid)
 	e.anim_ctrl.play_state.play = not pause
 end
 
 function iani.is_playing(eid)
 	if not eid then return end
-	local e = get_anim_e(eid)
+	local e <close> = get_anim_e(eid)
 	return e.anim_ctrl.play_state.play
 end
 
