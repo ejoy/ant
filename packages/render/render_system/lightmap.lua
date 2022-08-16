@@ -101,7 +101,7 @@ function lm_sys:end_filter()
         local mq = w:first("main_queue primitive_filter:in")
         local fr = e.filter_result
         local matpath = e.material
-        local matres = imaterial.resource(e, true)
+        local matres = imaterial.resource(e)
         for _, fn in ipairs(mq.primitive_filter) do
             if fr[fn] then
                 local lm = e.lightmap

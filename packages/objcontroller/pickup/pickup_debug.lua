@@ -16,8 +16,8 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local frustum_entity
 local function create_frustum_entity()
 	local pq = w:first("pickup_queue camera_ref:in")
-	local cref = world:entity(pq.camera_ref)
-	local points = math3d.frustum_points(cref.camera.viewprojmat)
+	local camera <close> = w:entity(pq.camera_ref, "camera:in")
+	local points = math3d.frustum_points(camera.camera.viewprojmat)
 	return ientity.create_frustum_entity(points, "pickup_frustum")
 end
 
@@ -39,7 +39,6 @@ local function create_view_buffer_entity()
 			on_ready = function (e)
 				local pq = w:first("pickup_queue render_target:in")
 				local rt = pq.render_target
-				w:sync("render_object:update", e)
 				imaterial.set_property(e, "s_tex", fbmgr.get_rb(rt.fb_idx, 1).handle)
 			end,
 		}

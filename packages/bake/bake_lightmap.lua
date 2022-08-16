@@ -142,7 +142,7 @@ local function bake_entity(e, scene_renderobjects, lme)
     ibaker.bake_entity(e.scene.worldmat, e.mesh, e.lightmap, scene_renderobjects)
     save_lightmap(e, lme)
     e.render_object_update = true
-    w:sync("render_object_update?out", e)
+    w:extend(e, "render_object_update?out")
     log.info(("end bake entity: %s"):format(e.name))
 end
 

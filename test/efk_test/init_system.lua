@@ -29,7 +29,6 @@ function is:init()
             efk     = "/pkg/ant.efk/efkbgfx/examples/resources/Laser01.efk",
             name    = "test_efk",
             on_ready = function (e)
-                w:sync("efk:in", e)
                 e.efk.eff_handle = iefk.play(e)
             end
         },
@@ -38,7 +37,7 @@ end
 
 function is:init_world()
     local mq = w:first("main_queue camera_ref:in")
-    local ce = world:entity(mq.camera_ref)
+    local ce <close> = w:entity(mq.camera_ref)
     iom.set_position(ce, math3d.vector(0.0, 0.0, 10.0))
     iom.set_direction(ce, math3d.vector(0.0, 0.0, -1.0))
 end

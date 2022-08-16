@@ -118,7 +118,7 @@ local material_cache = {__mode="k"}
 
 function s:end_filter()
     if irender.use_pre_depth() then
-        for e in w:select "filter_result pre_depth_queue_visible opacity render_object:update filter_material:in skinning?in" do
+        for e in w:select "filter_result pre_depth_queue_visible opacity render_object:update filter_material:in skinning?in scene_depth_queue_visible?out" do
             local mo = assert(which_material(e.skinning))
             local ro = e.render_object
             local fm = e.filter_material
@@ -136,7 +136,6 @@ function s:end_filter()
             ro.mat_scenedepth = h
 
             e["scene_depth_queue_visible"] = true
-            w:sync("scene_depth_queue_visible?out", e)
         end
     end
 end

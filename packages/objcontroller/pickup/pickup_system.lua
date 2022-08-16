@@ -27,7 +27,7 @@ local function packeid_as_rgba(eid)
 end
 
 local function find_camera(id)
-	local e = world:entity(id)
+	local e <close> = w:entity(id, "camera:in")
 	return e.camera
 end
 
@@ -248,27 +248,27 @@ function pickup_sys:entity_init()
 end
 
 local function open_pickup(x, y, cb)
-	local e = w:first("pickup_queue pickup:in")
+	local e = w:first("pickup_queue pickup:in visible?out")
 	e.pickup.nextstep = "blit"
 	e.pickup.clickpt[1] = x
 	e.pickup.clickpt[2] = y
 	e.pickup.picked_callback = cb
 	e.visible = true
-	w:sync("visible?out", e)
+	w:submit(e)
 end
 
 local function close_pickup()
-	local e = w:first("pickup_queue pickup:in")
+	local e = w:first("pickup_queue pickup:in visible?out")
 	e.pickup.nextstep = nil
 	e.visible = false
-	w:sync("visible?out", e)
+	w:submit(e)
 end
 
 function pickup_sys:update_camera()
 	for e in w:select "pickup_queue visible pickup:in camera_ref:in" do
 		update_camera(e.camera_ref, e.pickup.clickpt)
 		-- if cw_enable then
-		-- 	local main_camera = world:entity(irq.main_camera())
+		-- 	local main_camera <close> = w:entity(irq.main_camera())
 		-- 	local mc_viewmat = main_camera.camera.viewmat
 		-- 	local mc_inv_viewmat = math3d.inverse(mc_viewmat)
 		-- 	for _, pm in pairs(pickup_materials) do
@@ -291,7 +291,7 @@ local function select_obj(pc, render_target)
 	local viewrect = render_target.view_rect
 	local eid = which_entity_hitted(blit_buffer.handle, viewrect, blit_buffer.elemsize)
 	if eid then
-		local e = world:entity(eid)
+		local e <close> = w:entity(eid, "name?in")
 		local n = ""
 		if e then
 			local cb = pc.picked_callback
@@ -356,7 +356,7 @@ function pickup_sys:end_filter()
 	for e in w:select "filter_result pickup_queue_visible render_object:update filter_material:in eid:in skinning?in" do
 		local ro = e.render_object
 		local fm = e.filter_material
-		local matres = imaterial.resource(e, true)
+		local matres = imaterial.resource(e)
 		local st = matres.fx.setting.surfacetype
 		local qe = w:first("pickup_queue primitive_filter:in")
 

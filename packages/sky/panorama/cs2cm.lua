@@ -54,7 +54,7 @@ local cm_flags = sampler{
 }
 
 local function load_res_tex(e)
-    local res = imaterial.resource(e, true)
+    local res = imaterial.resource(e)
     return assetmgr.resource(res.properties.s_skybox.texture)
 end
 
@@ -72,7 +72,7 @@ function cs2cm_sys:entity_ready()
                 local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cm_rbidx, cm_flags)
                 e.skybox.cm_rbidx = cm_rbidx
     
-                local dispatcher = world:entity(cs2cm_convertor_eid)
+                local dispatcher <close> = w:entity(cs2cm_convertor_eid, "dispatch:in")
                 local dis = dispatcher.dispatch
                 local material = dis.material
     

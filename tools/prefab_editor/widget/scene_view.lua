@@ -159,7 +159,6 @@ local function show_scene_node(node)
     end
     local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((gizmo.target_eid == node.eid) and imgui.flags.TreeNode{"Selected"} or 0)
     if not node.display_name then
-        --w:sync("name?in", node.eid)
         local name = node.template.template and node.template.template.data.name or node.template.name
         hierarchy:update_display_name(node.eid, name or "")
     end

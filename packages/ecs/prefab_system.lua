@@ -43,14 +43,14 @@ end
 
 function m:prefab_remove()
     for _, _, id in evPrefabDetach:unpack() do
-        local prefab = world:entity(id)
+        local prefab = w:entity(id, "prefab:in")
         if prefab then
             world:detach_instance(prefab.prefab)
             w:remove(id)
         end
     end
     for _, _, id in evPrefabRemove:unpack() do
-        local prefab = world:entity(id)
+        local prefab = w:entity(id, "prefab:in")
         if prefab then
             local instance = prefab.prefab
             w:remove(instance.root)

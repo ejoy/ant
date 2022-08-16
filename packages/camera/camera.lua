@@ -72,17 +72,20 @@ function ic.create(info)
 end
 
 function ic.calc_viewmat(ce)
+    w:extend(ce, "scene:in")
     local scene = ce.scene
     local srt = scene
     return math3d.lookto(srt.t, math3d.todirection(srt.r), scene.updir)
 end
 
 function ic.calc_projmat(ce)
+    w:extend(ce, "camera:in")
     local camera = ce.camera
     return math3d.projmat(camera.frustum)
 end
 
 function ic.calc_viewproj(ce)
+    w:extend(ce, "camera:in scene:in")
     local scene = ce.scene
     local srt = scene
     local viewmat = math3d.lookto(srt.t, math3d.todirection(srt.r), scene.updir)
@@ -91,14 +94,17 @@ function ic.calc_viewproj(ce)
 end
 
 function ic.get_frustum(ce)
+    w:extend(ce, "camera:in")
     return ce.camera.frustum
 end
 
 local function set_camera_changed(subcomp, ce)
-    world:pub {"camera_changed", assert(ce.eid), subcomp}
+    w:extend(ce, "eid:in")
+    world:pub {"camera_changed", ce.eid, subcomp}
 end
 
 function ic.set_frustum(ce, frustum)
+    w:extend(ce, "camera:in")
     local camera = ce.camera
     camera.frustum = {}
     for k, v in pairs(frustum) do
@@ -108,6 +114,7 @@ function ic.set_frustum(ce, frustum)
 end
 
 local function frustum_changed(ce, name, value)
+    w:extend(ce, "camera:in")
     local camera = assert(ce.camera)
     local f = camera.frustum
     if f.ortho then
@@ -154,6 +161,7 @@ function ic.focus_aabb(ce, aabb)
 end
 
 function ic.focus_obj(ce, e)
+    w:extend(e, "scene:in")
     local aabb = e.scene.scene_aabb
     if aabb then
         ic.focus_aabb(ce, aabb)
@@ -169,18 +177,18 @@ local function update_camera(e)
     camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
 
-local function update_camera_info(ce)
+local function update_camera_info(e)
     local sa = imaterial.system_attribs()
-    local camerapos = iom.get_position(ce)
-	local f = ic.get_frustum(ce)
+    local camerapos = iom.get_position(e)
+	local f = ic.get_frustum(e)
 	sa:update("u_eyepos", camerapos)
 	sa:update("u_camera_param", math3d.vector(f.n, f.f, 0.0, 0.0))
 end
 
 function cameraview_sys:update_mainview_camera()
     for v in w:select "main_queue camera_ref:in" do
-        local ce = world:entity(v.camera_ref)
-        update_camera(ce)
-        update_camera_info(ce)
+        local e <close> = w:entity(v.camera_ref, "camera:in scene:in")
+        update_camera(e)
+        update_camera_info(e)
     end
 end

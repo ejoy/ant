@@ -145,16 +145,16 @@ local function get_anim_e(eid)
 	if type(eid) == "table" then
 		local entitys = eid.tag["*"]
 		for _, eid in ipairs(entitys) do
-			local e = world:entity(eid)
+			local e = w:entity(eid, "anim_ctrl?in animation?in")
 			if e.anim_ctrl then
 				return e
 			end
 		end
 		if eid.tag["*"] then
-			return world:entity(eid.tag["*"][2])
+			return w:entity(eid.tag["*"][2], "anim_ctrl:in animation:in")
 		end
 	else
-		return world:entity(eid)
+		return w:entity(eid, "anim_ctrl:in animation:in")
 	end
 end
 
@@ -163,7 +163,7 @@ function iani.create(filename)
 end
 
 function iani.play(eid, anim_state)
-	local e = get_anim_e(eid)
+	local e <close> = get_anim_e(eid)
 	local anim_name = anim_state.name
 	local anim = e.animation[anim_name]
 	if not anim then
@@ -199,7 +199,8 @@ function iani.play(eid, anim_state)
 			for _, ev in ipairs(events.event_list) do
 				if ev.event_type == "Effect" then
 					if ev.effect then
-						iefk.stop(world:entity(ev.effect))
+						local e <close> = w:entity(ev.effect)
+						iefk.stop(e)
 						--TODO: clear keyevent effct
 						--w:remove(ev.effect)
 					end
@@ -260,7 +261,8 @@ function iani.set_time(eid, second)
 			for _, ev in ipairs(events.event_list) do
 				if ev.event_type == "Effect" then
 					if ev.effect then
-						iefk.set_time(world:entity(ev.effect), (current_time - events.time) * 60)
+						local e <close> = w:entity(ev.effect)
+						iefk.set_time(e, (current_time - events.time) * 60)
 					end
 				end
 			end
@@ -352,7 +354,7 @@ end
 function iani.set_pose_to_prefab(instance, pose)
 	local entitys = instance.tag["*"]
 	for _, eid in ipairs(entitys) do
-		local e = world:entity(eid)
+		local e <close> = w:entity(eid, "meshskin?in slot?in animation?in")
 		if e.meshskin then
 			pose.skeleton = e.skeleton
 			e.meshskin.pose = pose

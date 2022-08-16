@@ -235,7 +235,7 @@ local function do_bloom_sample(viewid, drawertag, ppi_handle, next_mip)
 end
 
 function bloom_sys:bloom()
-    if not enable_bloom or w:first("bloom_queue render_target:in") == nil then
+    if not enable_bloom or w:check("bloom_queue render_target:in") == nil then
         return
     end
 

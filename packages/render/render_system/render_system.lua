@@ -103,19 +103,19 @@ end
 function render_sys:update_filter()
 	w:clear "filter_result"
     for e in w:select "render_object_update render_object visible_state:in filter_result:new" do
-		local matres = imaterial.resource(e, true)
+		local matres = imaterial.resource(e)
         local fs = e.visible_state
 		local st = matres.fx.setting.surfacetype
 
 		e[st] = true
-		w:sync(st .. "?out", e)
+		w:extend(e, st .. "?out")
 
 		for qe in w:select "queue_name:in primitive_filter:in" do
 			local qn = qe.queue_name
 			local function mark_tags(add)
 				local qn_visible = qn .. "_visible"
 				e[qn_visible] = add
-				w:sync(qn_visible .. "?out", e)
+				w:extend(e, qn_visible .. "?out")
 			end
 
 			local pf = qe.primitive_filter
@@ -141,10 +141,10 @@ function render_sys:render_submit()
 		local viewid = rt.viewid
 
 		bgfx.touch(viewid)
-		local ce = world:entity(qe.camera_ref)
-		if ce.scene_changed then
-			local camera = ce.camera
-			bgfx.set_view_transform(viewid, camera.viewmat, camera.projmat)
+		local camera <close> = w:entity(qe.camera_ref, "scene_changed?in")
+		if camera.scene_changed then
+			w:extend(camera, "camera:in")
+			bgfx.set_view_transform(viewid, camera.camera.viewmat, camera.camera.projmat)
 		end
 
 		qe.render_args = {

@@ -119,7 +119,7 @@ end
 local iplay = ecs.interface "effekseer_playback"
 
 local function get_effect_instance(eid)
-    w:sync("effect_instance?in", eid)
+    w:extend(eid, "effect_instance?in")
     return eid.effect_instance
 end
 function iplay.play(eid, loop)
@@ -169,17 +169,11 @@ end
 
 local itimer = ecs.import.interface "ant.timer|itimer"
 
-local function main_camera_ref()
-    for v in world.w:select "main_queue camera_ref:in" do
-        return v.camera_ref
-    end
-end
 
 function effekseer_sys:camera_usage()
-    local camera = world:entity(main_camera_ref()).camera
-    if camera then
-        effekseer.update_view_proj(math3d.value_ptr(camera.viewmat), math3d.value_ptr(camera.projmat))
-    end
+    local mq = w:first("main_queue camera_ref:in")
+    local camera <close> = w:entity(mq.camera_ref)
+    effekseer.update_view_proj(math3d.value_ptr(camera.camera.viewmat), math3d.value_ptr(camera.camera.projmat))
 end
 
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"

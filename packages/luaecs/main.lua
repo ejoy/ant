@@ -57,4 +57,20 @@ function M.visitor_clear(w)
     end
 end
 
+local submit = setmetatable({}, {__mode="k", __index = function (t, w)
+    local mt = {}
+    function mt:__close()
+        w:submit(self)
+    end
+    t[w] = mt
+    return mt
+end})
+
+function M.entity(w, eid, pattern)
+    local v = w:fetch(eid, pattern)
+    if v then
+        return setmetatable(v, submit[w])
+    end
+end
+
 return ecs

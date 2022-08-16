@@ -74,7 +74,7 @@ end
 
 function m:data_changed()
     for _, e, camera_ref in bind_billboard_camera_mb:unpack() do
-        w:sync("render_object?in", e)
+        w:extend(e, "render_object?in")
         e.render_object.camera_ref = camera_ref or w:first("main_queue camera_ref:in").camera_ref
     end
 end

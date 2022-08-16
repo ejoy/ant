@@ -42,7 +42,6 @@ interface "ivisible_state"
     .implement "visible_state.lua"
     .method "has_state"
     .method "set_state"
-    .method "iset_state"
     .method "filter_mask"
     .method "state_names"
 

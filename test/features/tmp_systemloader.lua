@@ -77,7 +77,6 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
             visible_state= "main_view",
             scene   = { srt = {t={0, 5, 5}}},
             on_ready = function (e)
-                w:sync("render_object:update", e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(color))
                 local texobj = assetmgr.resource(tex)
                 imaterial.set_property(e, "s_basecolor", texobj.handle)
@@ -221,9 +220,7 @@ function init_loader_sys:init()
         data = {
             scene = {},
             on_ready = function (e)
-                w:sync("scene:in eid:in", e)
                 iom.set_position(e, math3d.vector(-20, 0, 0))
-                w:sync("scene:out", e)
             end,
             name = "test_group",
         },
@@ -241,9 +238,7 @@ function init_loader_sys:init()
                 parent = group_root,
             },
             on_ready = function (e)
-                w:sync("scene:in eid:in", e)
                 iom.set_scale(e, 10)
-                w:sync("scene:out", e)
             end,
             name = "test_group",
         },
@@ -268,7 +263,7 @@ function init_loader_sys:init()
                 },
                 name = "arrow",
                 on_ready = function (ee)
-                    imaterial.iset_property(ee, "u_color", math3d.vector(1.0, 0.0, 0.0, 1.0))
+                    imaterial.set_property(ee, "u_color", math3d.vector(1.0, 0.0, 0.0, 1.0))
                 end
             }
         }
@@ -300,7 +295,6 @@ function init_loader_sys:init()
     -- local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
     -- function p:on_ready()
     --     local e = self.tag.cube[1]
-    --     w:sync("render_object:update", e)
     --     e.render_object.material.u_color = math3d.vector(0.8, 0, 0.8, 1.0)
     -- end
 

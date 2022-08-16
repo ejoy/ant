@@ -213,7 +213,7 @@ local function update_framebuffer_texutre()
     local fb = fbmgr.get(rt.fb_idx)
     efk_cb_handle.background = fb[1].handle
 
-    local ce = world:entity(mq.camera_ref)
+    local ce <close> = w:entity(mq.camera_ref, "camera:in")
     local projmat = ce.camera.projmat
     local col3, col4 = math3d.index(projmat, 3, 4)
     local m33, m34 = math3d.index(col3, 3, 4)
@@ -281,7 +281,7 @@ end
 --TODO: need remove, should put it on the ltask
 function efk_sys:render_submit()
     local mq = w:first("main_queue camera_ref:in")
-    local ce = world:entity(mq.camera_ref)
+    local ce <close> = w:entity(mq.camera_ref, "camera:in")
     local camera = ce.camera
     for tm_q in w:select "tonemapping_queue render_target:in" do
         local tm_rt = tm_q.render_target
@@ -316,7 +316,6 @@ function iefk.create(filename, config)
             efk = filename,
             on_ready = function (e)
                 if config.play_on_create then
-                    w:sync("efk:in", e)
                     iefk.play(e)
                 end
                 iefk.set_loop(e, config.loop or false)

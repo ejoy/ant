@@ -191,7 +191,7 @@ local function create_frustum_entity(eid)
     }
 
     local function onready(e)
-        imaterial.iset_property(e, "u_color", mc.YELLOW_HALF)
+        imaterial.set_property(e, "u_color", mc.YELLOW_HALF)
     end
 
     ecs.create_entity{

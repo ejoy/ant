@@ -20,18 +20,18 @@ local ds = ecs.system "decal_system"
 
 local decl_mount_mb = world:sub{"decal_mount"}
 function ecs.method.decal_mount(e, attach)
+    --TODO: 不应该用迭代器？
+    error "TODO"
     world:pub{"decal_mount", e, attach}
 end
 
 function ds:entity_init()
     for msg in decl_mount_mb:each() do
         local e, attach = msg[2], msg[3]
-        
-        w:sync("render_object:in", attach)
+        --TODO: 见上一个TODO
         local attach_ro = attach.render_object
-
-        w:sync("render_object:update", e)
         local ro = e.render_object
+
         ro.vb_start, ro.vb_num = attach_ro.vb_start, attach_ro.vb_num
         ro.vb_handle = attach_ro.vb_handle
 
