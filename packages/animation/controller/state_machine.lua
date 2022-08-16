@@ -357,6 +357,7 @@ function iani.set_pose_to_prefab(instance, pose)
 	for _, eid in ipairs(entitys) do
 		local e <close> = w:entity(eid, "meshskin?in slot?in animation?in")
 		if e.meshskin then
+			w:extend(e, "skeleton:in")
 			pose.skeleton = e.skeleton
 			e.meshskin.pose = pose
 		elseif e.slot then
