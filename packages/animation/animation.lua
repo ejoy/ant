@@ -173,7 +173,7 @@ local function init_prefab_anim(entity)
 	local skin_eid
 	local ctrl_eid
 	for _, eid in ipairs(entitys) do
-		local e <close> = w:entity(eid, "meshskin?in anim_ctrl?in skinning?in slot?in")
+		local e <close> = w:entity(eid, "meshskin?in anim_ctrl?in skinning?in slot?in name?in")
 		if e.meshskin then
 			if not skin_eid then
 				skin_eid = eid
