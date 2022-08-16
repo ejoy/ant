@@ -329,17 +329,20 @@ function iefk.create(filename, config)
 end
 
 function iefk.play(e)
+    w:extend(e, "efk:in")
     iefk.stop(e)
     e.efk.do_play = true
 end
 
 function iefk.pause(e, b)
+    w:extend(e, "efk:in")
     if e.efk.play_handle then
         efk_ctx:pause(e.efk.play_handle, b)
     end
 end
 
 function iefk.set_time(e, t)
+    w:extend(e, "efk:in")
     if e.efk.do_settime then
         return
     end
@@ -351,6 +354,7 @@ function iefk.set_time(e, t)
 end
 
 function iefk.set_speed(e, s)
+    w:extend(e, "efk:in")
     e.efk.speed = s
     if e.efk.play_handle then
         efk_ctx:set_speed(e.efk.play_handle, s)
@@ -358,6 +362,7 @@ function iefk.set_speed(e, s)
 end
 
 function iefk.set_visible(e, b)
+    w:extend(e, "efk:in")
     e.efk.visible = b
     if e.efk.play_handle then
         efk_ctx:set_visible(e.efk.play_handle, b)
@@ -365,15 +370,18 @@ function iefk.set_visible(e, b)
 end
 
 function iefk.set_loop(e, b)
+    w:extend(e, "efk:in")
     e.efk.loop = b
 end
 
 function iefk.destroy(e)
+    w:extend(e, "efk:in")
     efk_ctx:destroy(e.efk.play_handle)
     e.efk.play_handle = nil
 end
 
 function iefk.stop(e, delay)
+    w:extend(e, "efk:in")
     if e.efk.play_handle then
         efk_ctx:stop(e.efk.play_handle, delay)
         e.efk.play_handle = nil
@@ -381,5 +389,6 @@ function iefk.stop(e, delay)
 end
 
 function iefk.is_playing(e)
+    w:extend(e, "efk:in")
     return e.efk.play_handle ~= nil
 end
