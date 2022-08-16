@@ -81,7 +81,8 @@ function imodifier.set_target(m, target)
         if not target then
             return
         end
-        local filename = w:entity(target, "material:in").material
+        local e <close> = w:entity(target, "material:in")
+        local filename = e.material
         if not filename then
             return
         end
@@ -100,13 +101,15 @@ end
 
 function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreupdate)
     local function get_value(ae, time)
-        local kfanim = w:entity(ae, "keyframe:in").keyframe
+        local e <close> = w:entity(target, "keyframe:in")
+        local kfanim = e.keyframe
         return kfanim.play_state.current_value, kfanim.play_state.playing
     end
 
     local init_value
     if target then
-        local filename = w:entity(target, "material:in").material
+        local e <close> = w:entity(target, "material:in")
+        local filename = e.material
         local mtl = serialize.parse(filename, cr.read_file(filename))
         assert(mtl.properties[property])
         init_value = math3d.ref(math3d.vector(mtl.properties[property]))
@@ -210,7 +213,8 @@ function imodifier.stop(m)
     if not m then
         return
     end
-    w:entity(m.eid, "modifier:in").modifier.continue = false
+    local e <close> = w:entity(m.eid, "modifier:in")
+    e.modifier.continue = false
 end
 
 function imodifier.create_bone_modifier(target, group_id, filename, bone_name)

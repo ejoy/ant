@@ -178,7 +178,8 @@ local function update_shading_param(ce)
 end
 
 local function build_cluster_aabb_struct(viewid, ceid)
-    update_shading_param(w:entity(ceid, "camera:in"))
+    local e <close> = w:entity(ceid, "camera:in")
+    update_shading_param(e)
 
     local e = w:first("cluster_build_aabb dispatch:in")
     icompute.dispatch(viewid, e.dispatch)
