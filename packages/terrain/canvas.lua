@@ -137,7 +137,7 @@ local function update_items()
             if tex.renderer_eid then
                 local hasitem = #values > 0
                 if hasitem then
-                    local re <close> = w:entity(tex.renderer_eid, "render_object:in")
+                    local re <close> = w:entity(tex.renderer_eid, "render_object:update")
                     local objbuffer = table.concat(values, "")
                     local ro = re.render_object
 
