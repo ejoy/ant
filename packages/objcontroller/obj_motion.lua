@@ -8,9 +8,8 @@ local mc     = import_package "ant.math".constant
 local iobj_motion = ecs.interface "iobj_motion"
 
 local function set_changed(e)
-    --TODO: opt performance
-    local v = world:entity(e.eid)
-    v.scene_needchange = true
+    w:extend(e, "scene:out scene_needchange?out")
+    e.scene_needchange = true
 end
 
 local function set_s(srt, v)
@@ -49,10 +48,12 @@ local function reset_srt(srt)
 end
 
 function iobj_motion.get_position(e)
+    w:extend(e, "scene?in")
     return e.scene and e.scene.t
 end
 
 function iobj_motion.set_position(e, pos)
+    w:extend(e, "scene?in")
     local srt = e.scene
     if not srt then
         return
@@ -62,11 +63,13 @@ function iobj_motion.set_position(e, pos)
 end
 
 function iobj_motion.get_direction(e)
+    w:extend(e, "scene?in")
     return e.scene and math3d.todirection(e.scene.r)
 end
 
 
 function iobj_motion.set_direction(e, dir)
+    w:extend(e, "scene?in")
     local scene = e.scene
     if not scene then
         return
@@ -82,6 +85,7 @@ function iobj_motion.set_direction(e, dir)
 end
 
 function iobj_motion.set_srt(e, s, r, t)
+    w:extend(e, "scene?in")
     if not e.scene then
         return
     end
@@ -90,6 +94,7 @@ function iobj_motion.set_srt(e, s, r, t)
 end
 
 function iobj_motion.set_srt_matrix(e, mat)
+    w:extend(e, "scene?in")
     if not e.scene then
         return
     end
@@ -99,6 +104,7 @@ function iobj_motion.set_srt_matrix(e, mat)
 end
 
 function iobj_motion.set_srt_offset_matrix(e, mat)
+    w:extend(e, "scene?in")
     if not e.scene then
         return
     end
@@ -107,6 +113,7 @@ function iobj_motion.set_srt_offset_matrix(e, mat)
 end
 
 function iobj_motion.set_view(e, pos, dir, updir)
+    w:extend(e, "scene?in")
     local scene = e.scene
     if not scene then
         return
@@ -124,6 +131,7 @@ function iobj_motion.set_view(e, pos, dir, updir)
 end
 
 function iobj_motion.set_scale(e, scale)
+    w:extend(e, "scene?in")
     local srt = e.scene
     if not srt then
         return
@@ -137,10 +145,12 @@ function iobj_motion.set_scale(e, scale)
 end
 
 function iobj_motion.get_scale(e)
+    w:extend(e, "scene?in")
     return e.scene and e.scene.s
 end
 
 function iobj_motion.set_rotation(e, rot)
+    w:extend(e, "scene?in")
     local scene = e.scene
     if not scene then
         return
@@ -164,15 +174,18 @@ function iobj_motion.set_rotation(e, rot)
 end
 
 function iobj_motion.get_rotation(e)
+    w:extend(e, "scene?in")
     return e.scene and e.scene.r
 end
 
 function iobj_motion.worldmat(e)
+    w:extend(e, "scene?in")
     local scene = e.scene
     return scene and scene.worldmat
 end
 
 function iobj_motion.lookto(e, eyepos, viewdir, updir)
+    w:extend(e, "scene?in")
     local scene = e.scene
     if not scene then
         return
@@ -188,6 +201,7 @@ function iobj_motion.lookto(e, eyepos, viewdir, updir)
 end
 
 function iobj_motion.move_delta(e, delta_vec)
+    w:extend(e, "scene?in")
     local srt = e.scene
     if not srt then
         return
@@ -197,6 +211,7 @@ function iobj_motion.move_delta(e, delta_vec)
 end
 
 function iobj_motion.move_along_axis(e, axis, delta)
+    w:extend(e, "scene?in")
     if not e.scene then
         return
     end
@@ -205,6 +220,7 @@ function iobj_motion.move_along_axis(e, axis, delta)
 end
 
 function iobj_motion.move(e, v)
+    w:extend(e, "scene?in")
     local srt = e.scene
     if not srt then
         return
@@ -218,6 +234,7 @@ function iobj_motion.move(e, v)
 end
 
 function iobj_motion.move_right(e, v)
+    w:extend(e, "scene?in")
     local srt = e.scene
     if not srt then
         return
@@ -227,6 +244,7 @@ function iobj_motion.move_right(e, v)
 end
 
 function iobj_motion.move_up(e, v)
+    w:extend(e, "scene?in")
     local srt = e.scene
     if not srt then
         return
@@ -236,6 +254,7 @@ function iobj_motion.move_up(e, v)
 end
 
 function iobj_motion.move_forward(e, v)
+    w:extend(e, "scene?in")
     local srt = e.scene
     if not srt then
         return
@@ -273,6 +292,7 @@ local function get_rotator(r, rx, ry)
 end
 
 function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
+    w:extend(e, "scene?in")
     if not e.scene then
         return
     end
@@ -290,6 +310,7 @@ function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
 end
 
 function iobj_motion.rotate_around_point2(e, viewpt, dx, dy, distance)
+    w:extend(e, "scene?in")
     if not e.scene then
         return
     end
@@ -314,6 +335,7 @@ function iobj_motion.rotate_around_point2(e, viewpt, dx, dy, distance)
 end
 
 function iobj_motion.rotate(e, rotateX, rotateY)
+    w:extend(e, "scene?in")
     if not e.scene then
         return
     end
@@ -333,6 +355,7 @@ function iobj_motion.rotate(e, rotateX, rotateY)
 end
 
 function iobj_motion.rotate_around_point(e, targetpt, distance, rotateX, rotateY, threshold)
+    w:extend(e, "scene?in")
     if not e.scene then
         return
     end
@@ -357,7 +380,7 @@ function iobj_motion.rotate_around_point(e, targetpt, distance, rotateX, rotateY
 end
 
 local function main_queue_viewport_size()
-    local e = w:singleton("main_queue", "render_target:in")
+    local e = w:first("main_queue render_target:in")
     return e.render_target.view_rect
 end
 

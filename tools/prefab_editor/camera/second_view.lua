@@ -35,7 +35,7 @@ end
 local DEFAULT_camera
 
 function second_camera_sys:init_world()
-    local mq = w:singleton("main_queue", "render_target:in")
+    local mq = w:first("main_queue render_target:in")
     local mqrt = mq.render_target
     local vr = calc_second_view_viewport(mqrt.view_rect)
     DEFAULT_camera = icamera.create{
@@ -110,7 +110,7 @@ end
 
 function second_camera_sys:entity_remove()
     for e in w:select "REMOVED camera:in eid:in" do
-        local sc = w:singleton("second_view", "camera_ref:in")
+        local sc = w:first("second_view camera_ref:in")
         if e.eid == sc.camera_ref then
             irq.set_camera("second_view", DEFAULT_camera)
         end
@@ -191,7 +191,7 @@ local function create_frustum_entity(eid)
     }
 
     local function onready(e)
-        imaterial.iset_property(e, "u_color", mc.YELLOW_HALF)
+        imaterial.set_property(e, "u_color", mc.YELLOW_HALF)
     end
 
     ecs.create_entity{

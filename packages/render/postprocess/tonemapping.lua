@@ -75,7 +75,7 @@ local function update_properties(material)
     --TODO: we need something call frame graph, frame graph need two stage: compile and run, with virtual resource
     -- in compile stage, determine which postprocess stage is needed, and connect those virtual resources
     -- render target here, is one of the virtual resource
-    local pp = w:singleton("postprocess", "postprocess_input:in")
+    local pp = w:first("postprocess postprocess_input:in")
     local ppi = pp.postprocess_input
     material.s_scene_color = assert(ppi.scene_color_handle)
     if enable_bloom then
@@ -84,7 +84,7 @@ local function update_properties(material)
 end
 
 function tm_sys:tonemapping()
-    local m = w:singleton("tonemapping_drawer", "filter_material:in")
+    local m = w:first("tonemapping_drawer filter_material:in")
     update_properties(m.filter_material.main_queue)
     irender.draw(tm_viewid, "tonemapping_drawer")
 end

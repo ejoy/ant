@@ -77,7 +77,6 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
             visible_state= "main_view",
             scene   = { srt = {t={0, 5, 5}}},
             on_ready = function (e)
-                w:sync("render_object:update", e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(color))
                 local texobj = assetmgr.resource(tex)
                 imaterial.set_property(e, "s_basecolor", texobj.handle)
@@ -162,7 +161,7 @@ function init_loader_sys:init()
     --         iom.set_scale(world:entity(e.root), 0.1)
     --         local ivav = ecs.import.interface "ant.test.features|ivertex_attrib_visualizer"
 
-    --         local dl = w:singleton("directional_light", "scene:in")
+    --         local dl = w:first("directional_light scene:in")
     --         local d = math3d.inverse(math3d.todirection(dl.scene.r))
     --         for _, ee in ipairs(e.tag["*"]) do
     --             ivav.display_normal(world:entity(ee), d)
@@ -178,7 +177,7 @@ function init_loader_sys:init()
     --         iom.set_scale(world:entity(e.root), 0.1)
     --         -- local ivav = ecs.import.interface "ant.test.features|ivertex_attrib_visualizer"
 
-    --         -- local dl = w:singleton("directional_light", "scene:in")
+    --         -- local dl = w:first("directional_light scene:in")
     --         -- local d = math3d.inverse(math3d.todirection(dl.scene.r))
     --         -- for _, ee in ipairs(e.tag["*"]) do
     --         --     ivav.display_normal(world:entity(ee), d)
@@ -221,9 +220,7 @@ function init_loader_sys:init()
         data = {
             scene = {},
             on_ready = function (e)
-                w:sync("scene:in eid:in", e)
                 iom.set_position(e, math3d.vector(-20, 0, 0))
-                w:sync("scene:out", e)
             end,
             name = "test_group",
         },
@@ -241,9 +238,7 @@ function init_loader_sys:init()
                 parent = group_root,
             },
             on_ready = function (e)
-                w:sync("scene:in eid:in", e)
                 iom.set_scale(e, 10)
-                w:sync("scene:out", e)
             end,
             name = "test_group",
         },
@@ -268,7 +263,7 @@ function init_loader_sys:init()
                 },
                 name = "arrow",
                 on_ready = function (ee)
-                    imaterial.iset_property(ee, "u_color", math3d.vector(1.0, 0.0, 0.0, 1.0))
+                    imaterial.set_property(ee, "u_color", math3d.vector(1.0, 0.0, 0.0, 1.0))
                 end
             }
         }
@@ -300,7 +295,6 @@ function init_loader_sys:init()
     -- local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
     -- function p:on_ready()
     --     local e = self.tag.cube[1]
-    --     w:sync("render_object:update", e)
     --     e.render_object.material.u_color = math3d.vector(0.8, 0, 0.8, 1.0)
     -- end
 
@@ -354,7 +348,7 @@ function init_loader_sys:init_world()
         iom.set_scale(e, math3d.mul(s, {5, 5, 5, 0}))
     end
 
-    local mq = w:singleton("main_queue", "camera_ref:in")
+    local mq = w:first("main_queue camera_ref:in")
     local eyepos = math3d.vector(8, 8, 0)
     local camera_ref = world:entity(mq.camera_ref)
     iom.set_position(camera_ref, eyepos)
@@ -404,7 +398,7 @@ function init_loader_sys:entity_init()
             enable = enable == 1 and 0 or 1
 
         elseif key == "LEFT" and press == 0 then
-            local d = w:singleton("directional_light", "scene:in eid:in")
+            local d = w:first("directional_light scene:in eid:in")
             iom.set_position(d, {0, 1, 0})
         end
     end
@@ -414,7 +408,7 @@ end
 
 function init_loader_sys:camera_usage()
     for _, _, state, x, y in mouse_mb:unpack() do
-        local mq = w:singleton("main_queue", "render_target:in camera_ref:in")
+        local mq = w:first("main_queue render_target:in camera_ref:in")
         local ce = world:entity(mq.camera_ref)
         local camera = ce.camera
         local vpmat = camera.viewprojmat

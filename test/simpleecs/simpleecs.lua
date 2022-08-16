@@ -34,7 +34,7 @@ function initsys:data_changed()
 
     for e in w:select "testtab" do
         print(e.simpleecs)
-        w:sync("simpleecs:in", e)
+        w:extend(e, "simpleecs:in")
         print(e.simpleecs)
     end
 end

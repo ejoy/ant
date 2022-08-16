@@ -171,7 +171,7 @@ local function update_shadow_camera(dl, maincamera)
 	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
 		local vf = csmfrustums[csm.index]--csm.view_frustum
-		local shadow_ce = world:entity(qe.camera_ref)
+		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in")
 		calc_shadow_camera(viewmat, vf, lightdir, setting.shadowmap_size, setting.stabilize, shadow_ce)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = vf.f
@@ -269,7 +269,7 @@ end
 
 
 local function main_camera_changed(ceid)
-	local camera = world:entity(ceid).camera
+	local camera <close> = w:entity(ceid, "camera:in").camera
 	local csmfrustums = ishadow.calc_split_frustums(camera.frustum)
 	for cqe in w:select "csm:in" do
 		local csm = cqe.csm
@@ -288,10 +288,10 @@ end
 
 function sm:entity_init()
 	for e in w:select "INIT make_shadow directional_light light:in" do
-		local csm_dl = w:singleton("csm_directional_light", "light:in")
+		local csm_dl = w:first("csm_directional_light light:in")
 		if csm_dl == nil then
 			e.csm_directional_light = true
-			w:sync("csm_directional_light?out", e)
+			w:extend(e, "csm_directional_light?out")
 			set_csm_visible(true)
 		else
 			error("already have 'make_shadow' directional light")
@@ -320,11 +320,11 @@ function sm:init_world()
 end
 
 function sm:update_camera()
-	local dl = w:singleton("csm_directional_light", "light:in scene:in")
+	local dl = w:first("csm_directional_light light:in scene:in")
 	if dl then
-		local mq = w:singleton("main_queue", "camera_ref:in")
-		local mce = world:entity(mq.camera_ref)
-		update_shadow_camera(dl, mce.camera)
+		local mq = w:first("main_queue camera_ref:in")
+		local camera <close> = w:entity(mq.camera_ref, "camera:in")
+		update_shadow_camera(dl, camera.camera)
 		commit_csm_matrices_attribs()
 	end
 end

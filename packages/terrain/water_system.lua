@@ -75,7 +75,7 @@ function water_sys:component_init()
 end
 
 local function queue_rb_handle(qn, idx)
-    local q = w:singleton(qn, "render_target:in")
+    local q = w:first(qn .." render_target:in")
     local fb = fbmgr.get(q.render_target.fb_idx)
     return fb[idx or #fb].handle
 end

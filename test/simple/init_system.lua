@@ -24,7 +24,7 @@ local function create_plane()
 			simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
             debug_mesh_bounding = true,
 			on_ready = function (e)
-				imaterial.iset_property(e, "u_basecolor_factor", math3d.vector(0.8, 0.8, 0.8, 1))
+				imaterial.set_property(e, "u_basecolor_factor", math3d.vector(0.8, 0.8, 0.8, 1))
 			end,
 		}
     }

@@ -54,14 +54,15 @@ local function process_keyframe_event(task)
 						parent = parent,
 					})
 				elseif event.effect then
-					iefk.play(world:entity(event.effect))
+					local e <close> = w:entity(event.effect)
+					iefk.play(e)
 				end
 			elseif event.event_type == "Move" then
 				for _, eid in ipairs(task.eid) do
-					w:sync("scene:in", eid)
-					local pn = eid.scene.parent
-					w:sync("scene:in", pn)
-					iom.set_position(pn.scene.parent, event.move)
+					local e0 <close> = w:entity(eid, "scene:in")
+					local e1 <close> = w:entity(e0.scene.parent, "scene:in")
+					local e2 <close> = w:entity(e1.scene.parent, "scene:in")
+					iom.set_position(e2, event.move)
 				end
 			end
 		end
@@ -172,7 +173,7 @@ local function init_prefab_anim(entity)
 	local skin_eid
 	local ctrl_eid
 	for _, eid in ipairs(entitys) do
-		local e = world:entity(eid)
+		local e <close> = w:entity(eid, "meshskin?in anim_ctrl?in skinning?in slot?in name?in")
 		if e.meshskin then
 			if not skin_eid then
 				skin_eid = eid
@@ -188,24 +189,27 @@ local function init_prefab_anim(entity)
 	local skeleton
 	local pose
 	if skin_eid then
-		local skin = world:entity(skin_eid)
+		local skin <close> = w:entity(skin_eid, "meshskin:in skeleton:in")
 		skeleton = skin.skeleton
 		pose = skin.meshskin.pose
 		pose.skeleton = skeleton
 	elseif ctrl_eid then
-		skeleton = world:entity(ctrl_eid).skeleton
+		local ctrl <close> = w:entity(ctrl_eid, "skeleton:in")
+		skeleton = ctrl.skeleton
 		pose = iani.create_pose()
 		pose.skeleton = skeleton
 	end
 	for _, eid in pairs(slot_eid) do
-		local slot = world:entity(eid).slot
+		local slot_e <close> = w:entity(eid, "slot:in")
+		local slot = slot_e.slot
 		if slot.joint_name then
 			slot.joint_index = skeleton._handle:joint_index(slot.joint_name)
 		end
 		slot.pose = pose
 	end
 	if ctrl_eid then
-		local ctrl = world:entity(ctrl_eid).anim_ctrl
+		local ctrl_e <close> = w:entity(ctrl_eid, "anim_ctrl:in")
+		local ctrl = ctrl_e.anim_ctrl
 		pose.pose_result = ctrl.pose_result
 		ctrl.slot_eid = slot_eid
 	end
@@ -221,7 +225,6 @@ end
 function ani_sys:entity_ready()
 	for _, what, e, p0, p1 in event_animation:unpack() do
 		if what == "step" then
-			w:sync("anim_ctrl:in", e)
 			iani.step(e, p0, p1)
 		elseif what == "set_time" then
 			iani.set_time(e, p0)

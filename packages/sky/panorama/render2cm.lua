@@ -104,7 +104,7 @@ local cubemap_flags<const> = sampler {
 
 function render2cm_sys:entity_ready()
     for e in w:select "skybox_changed skybox:in render_object:update filter_ibl?out" do
-        local tex = assetmgr.resource(imaterial.resource(e, true).properties.s_skybox.texture)
+        local tex = assetmgr.resource(imaterial.resource(e).properties.s_skybox.texture)
 
         local ti = tex.texinfo
         if panorama_util.is_panorama_tex(ti) then
@@ -115,7 +115,7 @@ function render2cm_sys:entity_ready()
             local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cm_rbidx, cubemap_flags)
             e.skybox.cm_rbidx = cm_rbidx
 
-            local drawer = w:singleton("cvt_p2cm_drawer", "render_object:update filter_material:in")
+            local drawer = w:first("cvt_p2cm_drawer render_object:update filter_material:in")
             local ro = drawer.render_object
             local m = drawer.filter_material.main_queue
             m.s_tex = tex.handle
@@ -129,7 +129,7 @@ function render2cm_sys:entity_ready()
                     mip = 0,
                     numlayer = 1,
                 }
-                local q = w:singleton(fn, "render_target:in")
+                local q = w:first(fn .." render_target:in")
                 local rt = q.render_target
                 local vr = rt.view_rect
                 vr.x, vr.y, vr.w, vr.h = 0, 0, facesize, facesize
@@ -187,7 +187,7 @@ local build_ibl_viewid = viewidmgr.get "build_ibl"
 local function build_irradiance_map(source_tex, irradiance, facesize)
     local irradiance_rbidx = fbmgr.create_rb{format="RGBA32F", size=facesize, layers=1, flags=cubemap_flags, cubemap=true}
 
-    local drawer = w:singleton("filter_drawer", "render_object:update")
+    local drawer = w:first("filter_drawer render_object:update")
     local ro = drawer.render_object
     ro.worldmat = mc.IDENTITY_MAT
     -- do for irradiance
@@ -197,7 +197,7 @@ local function build_irradiance_map(source_tex, irradiance, facesize)
 
     for idx, fn in ipairs(face_queues) do
         local faceidx = idx-1
-        local q = w:singleton(fn, "render_target:in")
+        local q = w:first(fn .. " render_target:in")
         local rt = q.render_target
         rt.viewid = build_ibl_viewid+faceidx
         local vr = rt.view_rect
@@ -223,6 +223,7 @@ local function build_irradiance_map(source_tex, irradiance, facesize)
     irradiance.rbidx = irradiance_rbidx
     irradiance.handle = fbmgr.get_rb(irradiance_rbidx).handle
     irradiance.size = facesize
+    w:submit(drawer)
 end
 
 local function build_prefilter_map(source_tex, prefilter, facesize)

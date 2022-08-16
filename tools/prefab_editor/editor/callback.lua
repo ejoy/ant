@@ -18,7 +18,7 @@ function cb.init(width, height, cfg)
     }
     local oldmouse = m.mouse
     m.mouse = function (x, y, ...)
-        -- local q = world.w:singleton("tonemapping_queue", "render_target:in")
+        -- local q = world.w:first("tonemapping_queue render_target:in")
         -- local rt = q.render_target.view_rect
         -- oldmouse(x-rt.x, y-rt.y, ...)
         oldmouse(x, y, ...)

@@ -63,7 +63,7 @@ function rmlui_sys:entity_init()
     end
 
     for _, vr in vp_changed_mb:unpack() do
-        local rml = w:singleton("rmlui_obj", "render_target:in")
+        local rml = w:first("rmlui_obj render_target:in")
         if rml then
             irq.set_view_rect("rmlui_obj", vr)
             ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, world.args.framebuffer.ratio)
@@ -100,10 +100,6 @@ end
 
 function iRmlUi.preload_dir(dir)
     ltask.call(ServiceRmlUi, "preload_dir", dir)
-end
-
-function iRmlUi.debugger(open)
-    ltask.send(ServiceRmlUi, "debugger", open)
 end
 
 function iRmlUi.open(url)

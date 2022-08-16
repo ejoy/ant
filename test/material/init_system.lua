@@ -32,7 +32,6 @@ function is:init()
             visible_state = "main_view",
             name = "test_material",
             on_ready = function (e)
-                w:sync("render_object:update", e)
                 local math3d = require "math3d"
                 --local aa = e.render_object.material.material:attribs()
                 imaterial.set_property(e, "u_color", math3d.vector(1, 0, 0, 1))

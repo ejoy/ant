@@ -1,5 +1,6 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local timer     = ecs.import.interface "ant.timer|itimer"
 local mathpkg	= import_package "ant.math"
@@ -53,16 +54,17 @@ function im_sys:data_changed()
     local delta_time = timer.delta() * 0.001
     local finished = {}
     for eid, m in pairs(all_motions) do
+        local e <close> = w:entity(eid)
         local current = m.motions[m.current_midx]
         local ratio = current.time / current.duration
         if current.from.scale then
-            iom.set_scale(world:entity(eid), interp(mu.tween[current.tween_type](ratio), current.from.scale, current.to.scale))
+            iom.set_scale(e, interp(mu.tween[current.tween_type](ratio), current.from.scale, current.to.scale))
         end
         if current.from.rotation then
-            iom.set_rotation(world:entity(eid), interp(mu.tween[current.tween_type](ratio), current.from.rotation, current.to.rotation))
+            iom.set_rotation(e, interp(mu.tween[current.tween_type](ratio), current.from.rotation, current.to.rotation))
         end
         if current.from.postion then
-            iom.set_position(world:entity(eid), interp(mu.tween[current.tween_type](ratio), current.from.postion, current.to.postion))
+            iom.set_position(e, interp(mu.tween[current.tween_type](ratio), current.from.postion, current.to.postion))
         end
         current.time = current.time + delta_time
         if current.time > current.duration then
@@ -73,13 +75,13 @@ function im_sys:data_changed()
                     if not m.forwards then
                         local start = m.motions[1]
                         if start.from.scale then
-                            iom.set_scale(world:entity(eid), start.from.scale)
+                            iom.set_scale(e, start.from.scale)
                         end
                         if start.from.rotation then
-                            iom.set_rotation(world:entity(eid), start.from.rotation)
+                            iom.set_rotation(e, start.from.rotation)
                         end
                         if start.from.postion then
-                            iom.set_position(world:entity(eid), start.from.postion)
+                            iom.set_position(e, start.from.postion)
                         end
                     end
                     finished[#finished + 1] = eid

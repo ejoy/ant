@@ -103,6 +103,7 @@ end
 function ie.exposure(ce)
     -- This is equivalent to calling exposure(ev100(N, t, S))
     -- By merging the two calls we can remove extra pow()/log2() calls
+    w:extend(ce, "exposure:in")
     return 1.0 / (1.2 * _EV(ce.exposure));
 end
     

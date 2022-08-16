@@ -125,7 +125,7 @@ local function check_light_index_list()
     end
     if lil.handle ~= oldhandle then
         assert(lil.handle)
-        local ce = w:singleton("cluster_cull_light", "dispatch:in")
+        local ce = w:first("cluster_cull_light dispatch:in")
         local mo = ce.dispatch.material:get_material()
         mo:set_attrib("b_light_index_lists", lil.handle)
 
@@ -168,7 +168,7 @@ local function update_shading_param(ce)
 	local log_farnear = math.log(far/near, 2)
 	local log_near = math.log(near, 2)
 
-    local mq = w:singleton("main_queue", "render_target:in")
+    local mq = w:first("main_queue render_target:in")
     local vr = mq.render_target.view_rect
 
     local sa = imaterial.system_attribs()
@@ -178,14 +178,14 @@ local function update_shading_param(ce)
 end
 
 local function build_cluster_aabb_struct(viewid, ceid)
-    update_shading_param(world:entity(ceid))
+    update_shading_param(w:entity(ceid, "camera:in"))
 
-    local e = w:singleton("cluster_build_aabb", "dispatch:in")
+    local e = w:first("cluster_build_aabb dispatch:in")
     icompute.dispatch(viewid, e.dispatch)
 end
 
 function cfs:init_world()
-    local mq = w:singleton("main_queue", "camera_ref:in")
+    local mq = w:first("main_queue camera_ref:in")
     local ceid = mq.camera_ref
     camera_frustum_mb = world:sub{"camera_changed", ceid}
 
@@ -194,7 +194,7 @@ function cfs:init_world()
     update_render_info()
 
     --build
-    local be = w:singleton("cluster_build_aabb", "dispatch:in")
+    local be = w:first("cluster_build_aabb dispatch:in")
     local bmo= be.dispatch.material:get_material()
     bmo:set_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "build"))
     bmo:set_attrib("b_light_info",          icompute.create_buffer_property(cluster_buffers.light_info, "build"))
@@ -202,7 +202,7 @@ function cfs:init_world()
     build_cluster_aabb_struct(main_viewid, ceid)
 
     --cull
-    local ce = w:singleton("cluster_cull_light", "dispatch:in")
+    local ce = w:first("cluster_cull_light dispatch:in")
     local cmo = ce.dispatch.material:get_material()
     cmo:set_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "cull"))
     cmo:set_attrib("b_global_index_count",  icompute.create_buffer_property(cluster_buffers.global_index_count, "cull"))
@@ -212,7 +212,7 @@ function cfs:init_world()
 end
 
 local function cull_lights(viewid)
-    local e = w:singleton("cluster_cull_light", "dispatch:in")
+    local e = w:first("cluster_cull_light dispatch:in")
     icompute.dispatch(viewid, e.dispatch)
 end
 

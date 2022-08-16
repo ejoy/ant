@@ -89,10 +89,11 @@ function cc_sys:data_changed()
     check_update_control()
 
     for _, delta in mouse_wheel_mb:unpack() do
-        local mq = w:singleton("main_queue", "camera_ref:in")
+        local mq = w:first("main_queue camera_ref:in")
         local speed = calc_wheel_speed()
         local d = delta > 0 and speed or -speed
-        iom.move_forward(world:entity(mq.camera_ref), d)
+        local camera <close> w:entity(mq.camera_ref)
+        iom.move_forward(camera, d)
     end
 
     for _, key, press, status in kb_mb:unpack() do
@@ -143,38 +144,41 @@ function cc_sys:data_changed()
     end
 
     if move_x then
-        local mq = w:singleton("main_queue", "camera_ref:in")
-        iom.move_right(world:entity(mq.camera_ref), move_x)
+        local mq = w:first("main_queue camera_ref:in")
+        local camera <close> = w:entity(mq.camera_ref)
+        iom.move_right(camera, move_x)
     end
 
     if move_y then
-        local mq = w:singleton("main_queue", "camera_ref:in")
-        iom.move_up(world:entity(mq.camera_ref), move_y)
+        local mq = w:first("main_queue camera_ref:in")
+        local camera <close> = w:entity(mq.camera_ref)
+        iom.move_up(camera, move_y)
     end
 
     if move_z then
-        local mq = w:singleton("main_queue", "camera_ref:in")
-        iom.move_forward(world:entity(mq.camera_ref), move_z)
+        local mq = w:first("main_queue camera_ref:in")
+        local camera <close> = w:entity(mq.camera_ref)
+        iom.move_forward(camera, move_z)
     end
 
     if motiontype and newx and newy then
-        local mq = w:singleton("main_queue", "camera_ref:in render_target:in")
+        local mq = w:first("main_queue camera_ref:in render_target:in")
         local dx, dy = dxdy(newx, newy, mq.render_target.view_rect)
         if dx ~= 0.0 or dy ~= 0.0 then
-            local ce = world:entity(mq.camera_ref)
+            local camera <close> = w:entity(mq.camera_ref)
             if motiontype == "rotate_point" then
                 mouse_lastx, mouse_lasty = newx, newy
-                iom.rotate_around_point2(ce, viewat, dy, dx)
+                iom.rotate_around_point2(camera, viewat, dy, dx)
             elseif motiontype == "rotate_forwardaxis" then
                 mouse_lastx, mouse_lasty = newx, newy
-                iom.rotate_forward_vector(ce, dy, dx)
+                iom.rotate_forward_vector(camera, dy, dx)
             elseif motiontype == "move_pan" then
                 if dx ~= 0 then
-                    iom.move_right(ce, -dx * 2.0)
+                    iom.move_right(camera, -dx * 2.0)
                 end
 
                 if dy ~= 0 then
-                    iom.move_up(ce, dy * 2.0)
+                    iom.move_up(camera, dy * 2.0)
                 end
                 mouse_lastx, mouse_lasty = newx, newy
             end

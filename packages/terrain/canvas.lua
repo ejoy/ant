@@ -134,14 +134,10 @@ local function update_items()
                 values[#values+1] = add_item(texsize, v.texture, v)
             end
 
-            local re
             if tex.renderer_eid then
-                re = world:entity(tex.renderer_eid)
-            end
-
-            if re then
                 local hasitem = #values > 0
                 if hasitem then
+                    local re <close> = w:entity(tex.renderer_eid, "render_object:in")
                     local objbuffer = table.concat(values, "")
                     local ro = re.render_object
 
@@ -193,7 +189,7 @@ end
 local gen_texture_id = id_generator()
 
 local function create_texture_item_entity(texpath, canvasentity)
-    w:sync("eid:in canvas:in", canvasentity)
+    w:extend(canvasentity, "eid:in canvas:in")
     local canvas_id = canvasentity.eid
     local canvas = canvasentity.canvas
     local eid; eid = ecs.create_entity{
@@ -223,7 +219,7 @@ local function create_texture_item_entity(texpath, canvasentity)
             canvas_item = "texture",
             on_ready = function (e)
                 local texobj = assetmgr.resource(texpath)
-                imaterial.iset_property(e, "s_basecolor", texobj.id)
+                imaterial.set_property(e, "s_basecolor", texobj.id)
 
                 --update renderer_eid
                 local textures = canvas.textures
@@ -240,7 +236,7 @@ end
 local gen_item_id = id_generator()
 local item_cache = {}
 function icanvas.add_items(e, items)
-    w:sync("canvas:in", e)
+    w:extend(e, "canvas:in")
     local canvas = e.canvas
     local textures = canvas.textures
 
@@ -269,7 +265,7 @@ function icanvas.add_items(e, items)
 end
 
 local function get_texture(e, itemid)
-    w:sync("canvas:in", e)
+    w:extend(e, "canvas:in")
     local canvas = e.canvas
     local textures = canvas.textures
 
@@ -336,12 +332,8 @@ function icanvas.show(b)
 
         local textures = canvas.textures
         for _, tex in pairs(textures) do
-            local re
             if tex.renderer_eid then
-                re = world:entity(tex.renderer_eid)
-            end
-
-            if re then
+                local re <close> = w:entity(tex.renderer_eid)
                 ivs.set_state(re, "main_view", b)
                 ivs.set_state(re, "selectable", b)
             end

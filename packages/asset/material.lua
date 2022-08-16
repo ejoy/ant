@@ -9,13 +9,9 @@ local matobj		= require "matobj"
 local imaterial = ecs.interface "imaterial"
 
 function imaterial.set_property(e, who, what, isiter)
+	w:extend(e, "filter_material:in")
 	local fm = e.filter_material
 	fm.main_queue[who] = what
-end
-
-function imaterial.iset_property(e, who, what)
-	w:sync("filter_material:in", e)
-	imaterial.set_property(e, who, what)
 end
 
 function imaterial.load_res(mp, setting)
@@ -40,10 +36,8 @@ function imaterial.get_color_palette(palname, coloridx)
 	return matobj.rmat.color_palette_get(palid, coloridx)
 end
 
-function imaterial.resource(e, is_iter)
-	if is_iter then
-		w:sync("material:in material_setting?in", e)
-	end
+function imaterial.resource(e)
+	w:extend(e, "material:in material_setting?in")
 	return imaterial.load_res(e.material, e.material_setting)
 end
 

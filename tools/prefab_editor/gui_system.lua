@@ -576,7 +576,7 @@ function m:widget()
     --     if firsttime then
     --         firsttime = false
     --     else
-    --         w:sync("simplemesh?in", skeleton_eid)
+    --         w:extend(skeleton_eid, "simplemesh?in")
     --         if skeleton_eid.simplemesh then
     --             --ivs.set_state(skeleton_eid, "visible", true)
     --             local desc={vb={}, ib={}}

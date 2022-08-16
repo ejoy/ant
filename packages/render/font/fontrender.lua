@@ -25,9 +25,9 @@ local mask<const>, offset<const> = math3d.ref(math3d.vector(0.5, 0.5, 1, 1)), ma
 local function calc_screen_pos(pos3d, queuename)
     queuename = queuename or "main_queue"
 
-    local q = w:singleton(queuename, "camera_ref:in")
-	local camera = world:entity(q.camera_ref).camera
-    local vp = camera.viewprojmat
+    local q = w:first(queuename .. " camera_ref:in")
+    local camera <close> = w:entity(q.camera_ref, "camera:in")
+    local vp = camera.camera.viewprojmat
     local posNDC = math3d.transformH(vp, pos3d)
 
     local posClamp = math3d.muladd(posNDC, mask, offset)
@@ -52,7 +52,7 @@ local vertical_mask<const> = math3d.ref(math3d.vector(0, 1, 0, 0))
 local function calc_aabb_pos(e, offset, offsetop)
     local a_eid = e.scene.parent
     if a_eid then
-        local ae = world:entity(a_eid)
+        local ae <close> = w:entity(a_eid, "scene:in")
         local aabb = ae.scene.scene_aabb
         if aabb then
             local center, extent = math3d.aabb_center_extents(aabb)
@@ -136,7 +136,7 @@ end
 
 function fontsys:camera_usage()
     for _, eid, attach in ev:unpack() do
-        local e = world:entity(eid)
+        local e <close> = w:entity(eid, "render_object:in")
         local ro = e.render_object
         ro.attach_eid = attach
         imaterial.set_property(e, "s_tex", fonttex)

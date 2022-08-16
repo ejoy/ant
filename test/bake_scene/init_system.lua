@@ -18,7 +18,7 @@ function is:init()
 end
 
 function is:init_world()
-    local mq = w:singleton("main_queue", "camera_ref:in")
+    local mq = w:first("main_queue camera_ref:in")
     local eyepos<const> = math3d.vector(0.0, 2.5, -15.0)
     local dir<const> = math3d.sub(math3d.vector(0.0, 0.0, 0.0), eyepos)
     iom.set_position(mq.camera_ref, eyepos)

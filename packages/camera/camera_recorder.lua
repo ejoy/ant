@@ -27,7 +27,7 @@ function cr.start(name)
 end
 
 function cr.add(e, camera_ref, idx)
-    w:sync("camera_recorder:in", e)
+    w:extend(e, "camera_recorder:in")
     local frames = e.camera_recorder.frames
     idx = idx or #frames+1
 
@@ -45,13 +45,13 @@ function cr.add(e, camera_ref, idx)
 end
 
 function cr.remove(e, idx)
-    w:sync("camera_recorder:in", e)
+    w:extend(e, "camera_recorder:in")
     idx = idx or #e.camera_recorder.frames
     table.remove(e.camera_recorder.frames, idx)
 end
 
 function cr.clear(e)
-    w:sync("camera_recorder:in", e)
+    w:extend(e, "camera_recorder:in")
     e.camera_recorder.frames = {}
 end
 
@@ -60,7 +60,7 @@ function cr.stop(e)
 end
 
 function cr.play(e, camera_ref)
-    w:sync("camera_recorder:out", e)
+    w:extend(e, "camera_recorder:in")
     local r = e.camera_recorder
     local p = r.playing
     p.camera_ref = camera_ref
@@ -94,7 +94,7 @@ local function play_camera_recorder()
     end
 
     local delta_time = timer.delta()
-    w:sync("camera_recorder:out", playing_cr)
+    w:extend(playing_cr, "camera_recorder:in")
     local r = playing_cr.camera_recorder
     local frames = r.frames
     if #frames >= 2 then

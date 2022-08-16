@@ -248,8 +248,8 @@ function downsampler:downsample(hemisize)
     local hsize = hemisize//2
     local viewid = lightmap_viewid + 1
     
-    local we = w:singleton("weight_ds", "fitler_material:in render_object:in")
-    local se = w:singleton("simple_ds", "fitler_material:in render_object:in")
+    local we = w:first("weight_ds fitler_material:in render_object:in")
+    local se = w:first("simple_ds fitler_material:in render_object:in")
 
     local we_obj, se_obj = we.render_object, se.render_object
 
@@ -557,7 +557,7 @@ function ibaker.init()
 end
 
 function ibaker.init_framebuffer()
-    local le = w:singleton("bake_lightmap_queue", "render_target:in")
+    local le = w:first("bake_lightmap_queue render_target:in")
     downsampler:update{le.render_target.fb_idx, storage.blit_fbidx}
 end
 

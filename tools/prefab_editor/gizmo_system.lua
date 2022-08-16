@@ -181,9 +181,8 @@ local function create_arrow_widget(axis_root, axis_str)
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str,
 			on_ready = function (e)
-				ivs.iset_state(e, "main_view", false)
-				imaterial.iset_property(e, "u_color", math3d.vector(color))
-				w:sync("render_object_update:out", e)
+				ivs.set_state(e, "main_view", false)
+				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
 		}
 	}
@@ -199,9 +198,8 @@ local function create_arrow_widget(axis_root, axis_str)
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
 			name = "arrow.cone" .. axis_str,
 			on_ready = function (e)
-				ivs.iset_state(e, "main_view", false)
+				ivs.set_state(e, "main_view", false)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
-				w:sync("render_object_update:out", e)
 			end
 		}
 	}
@@ -358,10 +356,9 @@ function gizmo_sys:post_init()
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
 				name = "scale_cube" .. axis_name,
 				on_ready = function (e)
-					ivs.iset_state(e, "main_view", false)
-					ivs.iset_state(e, "selectable", false)
+					ivs.set_state(e, "main_view", false)
+					ivs.set_state(e, "selectable", false)
 					imaterial.set_property(e, "u_color", math3d.vector(color))
-					w:sync("render_object_update:out", e)
 				end
 			}
 		}
@@ -1006,7 +1003,7 @@ local function check_calc_aabb(eid)
 					c = {}
 					rt[pid] = c
 				end
-				w:sync("name?in", ee)
+				w:extend(ee, "name?in")
 				c[#c+1] = {id=id, aabb=ee.scene.scene_aabb, name=ee.name}
 			end
 		end

@@ -545,7 +545,6 @@ function m:add_effect(filename)
     }
     local tpl = utils.deep_copy(template)
     tpl.data.on_ready = function (e)
-        w:sync("efk:in", e)
         iefk.play(e)
     end
     tpl.data.scene.parent = gizmo.target_eid

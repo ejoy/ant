@@ -82,7 +82,7 @@ function irender.multi_draw(vid, ri, mat, tid, num, stride)
 end
 
 function irender.get_main_view_rendertexture()
-	local mq = w:singleton("main_queue", "render_target:in")
+	local mq = w:first("main_queue render_target:in")
 	return fbmgr.get_rb(mq.render_target.fb_idx, 1).handle
 end
 

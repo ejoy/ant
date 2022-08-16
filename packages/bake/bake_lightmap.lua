@@ -105,7 +105,7 @@ end
 
 function bake_lm_sys:end_filter()
     for e in w:select "filter_result bake_lightmap_queue_visible filter_material:in render_object:update" do
-        local le = w:singleton("bake_lightmap_queue", "primitive_filter:in")
+        local le = w:first("bake_lightmap_queue primitive_filter:in")
         local ro = e.render_object
         if has_filter_stage(le.primitive_filter, ro.setting.surfacetype) then
             local m = load_bake_material(ro)
@@ -117,7 +117,7 @@ function bake_lm_sys:end_filter()
 end
 
 local function find_scene_render_objects(queuename)
-    local q = w:singleton(queuename, "primitive_filter:in")
+    local q = w:first(queuename .. " primitive_filter:in")
     local renderobjects = {}
     for _, fn in ipairs(q.primitive_filter) do
         for e in w:select(fn .. " render_object:in widget_entity:absent") do
@@ -142,20 +142,18 @@ local function bake_entity(e, scene_renderobjects, lme)
     ibaker.bake_entity(e.scene.worldmat, e.mesh, e.lightmap, scene_renderobjects)
     save_lightmap(e, lme)
     e.render_object_update = true
-    w:sync("render_object_update?out", e)
+    w:extend(e, "render_object_update?out")
     log.info(("end bake entity: %s"):format(e.name))
 end
 
 local function get_lme()
-    local lme = w:singleton("lightmapper", "lightmap_result:in")
-    w:sync("lightmap_path:in", lme)
-    return lme
+    return w:first("lightmapper lightmap_result:in lightmap_path:in")
 end
 
 local function bake_all()
     local scene_renderobjects = find_scene_render_objects "main_queue"
 
-    local lmq = w:singleton("bake_lightmap_queue", "primitive_filter:in")
+    local lmq = w:first("bake_lightmap_queue primitive_filter:in")
     local lme = get_lme()
     for _, fn in ipairs(lmq.primitive_filter) do
         for e in w:select (fn .. " mesh:in lightmap:in render_object widget_entity:absent name?in") do

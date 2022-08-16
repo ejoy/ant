@@ -95,13 +95,13 @@ end
 
 function lm_sys:end_filter()
     for e in w:select "filter_result lightmap:in render_object:update material:in" do
-        local lr_e = w:singleton("lightmapper", "lightmap_result:in")
+        local lr_e = w:first("lightmapper lightmap_result:in")
 
         local r = lr_e and lr_e.lightmap_cache or {}
-        local mq = w:singleton("main_queue", "primitive_filter:in")
+        local mq = w:first("main_queue primitive_filter:in")
         local fr = e.filter_result
         local matpath = e.material
-        local matres = imaterial.resource(e, true)
+        local matres = imaterial.resource(e)
         for _, fn in ipairs(mq.primitive_filter) do
             if fr[fn] then
                 local lm = e.lightmap

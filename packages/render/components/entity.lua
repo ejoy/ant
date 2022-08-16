@@ -74,7 +74,7 @@ local function simple_render_entity_data(name, material, mesh, scene, color, hid
 			visible_state= hide and "auxgeom" or "main_view|auxgeom",
 			name		= name or gen_test_name(),
 			on_ready 	= function(e)
-				imaterial.iset_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
+				imaterial.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
 			end
 		}
 	}
@@ -100,8 +100,7 @@ local function grid_mesh_entity_data(name, materialpath, vb, ib)
 			name 		= name or "GridMesh",
 			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
 			on_ready = function(e)
-				ivs.iset_state(e, "auxgeom", true)
-				w:sync("render_object_update:out", e)
+				ivs.set_state(e, "auxgeom", true)
 			end
 		},
 	}
@@ -246,9 +245,8 @@ function ientity.create_prim_plane_entity(name, materialpath, scene, color, hide
 			name 		= name or "Plane",
 			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))), true),
 			on_ready = function (e)
-				ivs.iset_state(e, "main_view", not hide)
+				ivs.set_state(e, "main_view", not hide)
 				imaterial.set_property(e, "u_color", math3d.vector(color))
-				w:sync("render_object_update:out", e)
 			end
 		},
 	}
@@ -674,7 +672,7 @@ function ientity.create_arrow_entity(headratio, color, material, scene)
 			scene = scene or {},
 			name = "arrow",
 			on_ready = function (e)
-				imaterial.iset_property(e, "u_color", math3d.vector(color))
+				imaterial.set_property(e, "u_color", math3d.vector(color))
 			end
 		}
 	}
@@ -740,7 +738,7 @@ function ientity.create_quad_lines_entity(name, scene, material, quadnum, width,
 			material = material,
 			name = name,
 			on_ready = function (e)
-				ivs.iset_state(e, "main_view", not hide)
+				ivs.set_state(e, "main_view", not hide)
 			end
         }
     }

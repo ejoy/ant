@@ -56,12 +56,12 @@ function widget_drawer_sys:init()
 end
 
 function widget_drawer_sys:end_frame()
-	local e = w:singleton("widget_drawer", "render_object:in")
+	local e = w:first("widget_drawer render_object:update")
 	if e then
 		local ro = e.render_object
 		ro.vb_start, ro.vb_num = 0, 0
 		ro.ib_start, ro.ob_num = 0, 0
-		w:sync("render_object:out", e)
+		w:submit(e)
 	end
 end
 
@@ -82,7 +82,7 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 	if numvertices == 0 then
 		return
 	end
-	local e = w:singleton("widget_drawer", "render_object:in")
+	local e = w:first("widget_drawer render_object:update")
 	local ro = e.render_object
 	local vbnum, vbhandle = ro.vb_num, ro.vb_handle
 
@@ -98,7 +98,7 @@ local function append_buffers(vbfmt, vb, ibfmt, ib)
 		bgfx.update(ro.ib_handle, index_offset, bgfx.memory_buffer(ibfmt, ib))
 		ro.ib_num = index_offset + numindices
 	end
-	w:sync("render_object:out", e)
+	w:submit(e)
 end
 
 local function apply_srt(shape, srt)

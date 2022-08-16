@@ -27,7 +27,7 @@ function lm_baker:init_world()
 		lfs.create_directories(local_lmpath)
 	end
 
-	local mq = w:singleton("main_queue", "camera_ref:in")
+	local mq = w:first("main_queue camera_ref:in")
     local eyepos = math3d.vector(0, 10, -10)
     local camera_ref = mq.camera_ref
     iom.set_position(camera_ref, eyepos)

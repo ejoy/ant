@@ -8,7 +8,7 @@ local icamera = ecs.import.interface "ant.camera|icamera"
 local irq = ecs.interface "irenderqueue"
 
 local function get_rt(queuename)
-	local qe = w:singleton(queuename, "render_target:in")
+	local qe = w:first(queuename .." render_target:in")
 	return qe.render_target
 end
 
@@ -29,12 +29,12 @@ function irq.frame_buffer(queuename)
 end
 
 function irq.camera(queuename)
-	local qe = w:singleton(queuename, "camera_ref:in")
+	local qe = w:first(queuename .. " camera_ref:in")
 	return qe.camera_ref
 end
 
 function irq.visible(queuename)
-	local qe = w:singleton(queuename, "visible:in")
+	local qe = w:first(queuename .." visible:in")
 	return qe.visible
 end
 
@@ -75,10 +75,8 @@ function irq.set_view_clear_stencil(queuename, stencil)
 	view_clear(rt.viewid, cs)
 end
 
-function irq.update_render_object(e, isentity)
-	if not isentity then
-		w:sync("render_object_update:out", e)
-	end
+function irq.update_render_object(e)
+	w:extend(e, "render_object_update?out")
 	e.render_object_update = true
 end
 
@@ -113,13 +111,14 @@ local function set_view_rect(viewid, vr, queuename)
 end
 
 function irq.set_view_rect(queuename, rect)
-	local qe = w:singleton(queuename, "render_target:in camera_ref?in")
+	local qe = w:first(queuename .." render_target:in camera_ref?in")
 	local rt = qe.render_target
 	local vr = rt.view_rect
 	vr.x, vr.y = rect.x, rect.y
 	vr.w, vr.h = rect.w, rect.h
 	if qe.camera_ref then
-		icamera.set_frustum_aspect(world:entity(qe.camera_ref), vr.w/vr.h)
+		local camera <close> = w:entity(qe.camera_ref)
+		icamera.set_frustum_aspect(camera, vr.w/vr.h)
 	end
 	set_view_rect(rt.viewid, vr, queuename)
 end
@@ -136,7 +135,8 @@ function irq.set_camera(queuename, camera_ref)
 		q.camera_ref = camera_ref
 		local rt = q.render_target
 		local vr = rt.view_rect
-		icamera.set_frustum_aspect(world:entity(camera_ref), vr.w / vr.h)
+		local camera <close> = w:entity(camera_ref)
+		icamera.set_frustum_aspect(camera, vr.w / vr.h)
 		changed = true
 		world:pub{queuename, "camera_changed", camera_ref}
 	end
@@ -152,8 +152,9 @@ function ecs.method.bind_camera(camera_ref, queuename)
 end
 
 function irq.set_visible(queuename, b)
-	local qe = {visible = b}
-	w:singleton(queuename, "visible?out", qe)
+	local e = w:first(queuename .." visible?out")
+	e.visible = b
+	w:submit(e)
 	world:pub{"queue_visible_changed", queuename, b}
 end
 
