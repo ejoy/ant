@@ -92,7 +92,7 @@ function cc_sys:data_changed()
         local mq = w:first("main_queue camera_ref:in")
         local speed = calc_wheel_speed()
         local d = delta > 0 and speed or -speed
-        local camera <close> w:entity(mq.camera_ref)
+        local camera <close> = w:entity(mq.camera_ref)
         iom.move_forward(camera, d)
     end
 
