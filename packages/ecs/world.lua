@@ -57,9 +57,9 @@ function world:pipeline_func(what)
 					total[i] = 0
 				end
 			end
-			dbg_print(8, 2, 0x02, "--- system")
+			dbg_print(0, 2, 0x02, "--- system")
 			for i = 1, MaxText do
-				dbg_print(10, 2+i, 0x02, printtext[i])
+				dbg_print(2, 2+i, 0x02, printtext[i])
 			end
 		end
 	end

@@ -77,9 +77,9 @@ local function profile_print()
         end
     end
 
-    bgfx.dbg_text_print(8, 8, 0x02, "--- encoder")
+    S.dbg_text_print(0, 8, 0x02, "--- encoder")
     for i = 1, #profile_printtext do
-        bgfx.dbg_text_print(10, 8+i, 0x02, profile_printtext[i])
+        S.dbg_text_print(2, 8+i, 0x02, profile_printtext[i])
     end
 end
 
@@ -205,7 +205,7 @@ local frame_control; do
                 printtext = ("FPS: %.03f"):format(fps)
             end
         end
-        bgfx.dbg_text_print(8, 0, 0x02, printtext)
+        S.dbg_text_print(0, 0, 0x02, printtext)
     end
     local function print_time()
         local avg = 0
@@ -222,7 +222,7 @@ local frame_control; do
             end
         end
         avg = avg / (frame_last - frame_first)
-        bgfx.dbg_text_print(8, 1, 0x02, ("avg: %.02fms max:%.02fms min:%.02fms          "):format(avg*1000, max*1000, min*1000))
+        S.dbg_text_print(0, 1, 0x02, ("avg: %.02fms max:%.02fms min:%.02fms          "):format(avg*1000, max*1000, min*1000))
     end
     function frame_control()
         local time = ltask.counter()
@@ -249,6 +249,10 @@ function S.maxfps(v)
         maxfps = v
     end
     return maxfps
+end
+
+function S.dbg_text_print(x, y, ...)
+    return bgfx.dbg_text_print(x + 16, y + 1, ...)
 end
 
 ltask.fork(function()
