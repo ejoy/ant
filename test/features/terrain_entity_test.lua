@@ -94,7 +94,7 @@ function tet_sys:camera_usage()
     end
     if w:check "scene_changed" then
         local mq = w:first("main_queue camera_ref:in")
-        local mc = world:entity(mq.camera_ref)
+        local mc<close> = w:entity(mq.camera_ref)
         if mc.scene_changed then
             update_group(mc)
         end

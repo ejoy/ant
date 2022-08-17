@@ -122,18 +122,21 @@ function init_loader_sys:init()
 
     -- local pp = ecs.create_instance "/pkg/ant.resources.binary/meshes/up_box.glb|mesh.prefab"
     -- function pp.on_ready(e)
-    --     iom.set_scale(world:entity(e.root), 2.5)
+    --     local ee<close> = w:entity(e.root)
+    --     iom.set_scale(ee, 2.5)
     -- end
     -- world:create_object(pp)
     -- local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
     -- p.on_ready = function (e)
-    --     iom.set_position(world:entity(e.root), {0, 5, 0})
+    --     local ee<close> = w:entity(e.root)
+    --     iom.set_position(ee, math3d.vector(0, 5, 0, 1))
     -- end
     -- world:create_object(p)
 
     -- local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/headquater.glb|mesh.prefab"
     -- p.on_ready = function (e)
-    --     iom.set_scale(world:entity(e.root), 0.1)
+    --     local ee<close> = w:entity(e.root)
+    --     iom.set_scale(ee, 0.1)
     -- end
     -- world:create_object(p)
 
@@ -150,7 +153,8 @@ function init_loader_sys:init()
     -- do
     --     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/world_simple.glb|mesh.prefab"
     --     p.on_ready = function (e)
-    --         iom.set_scale(world:entity(e.root), 0.1)
+    --         local ee<close> = w:entity(e.root)
+    --         iom.set_scale(ee, 0.1)
     --     end
     --     world:create_object(p)
     -- end
@@ -158,13 +162,15 @@ function init_loader_sys:init()
     -- do
     --     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/plane.glb|mesh.prefab"
     --     p.on_ready = function (e)
-    --         iom.set_scale(world:entity(e.root), 0.1)
+    --         local ee<close> = w:entity(e.root)
+    --         iom.set_scale(ee, 0.1)
     --         local ivav = ecs.import.interface "ant.test.features|ivertex_attrib_visualizer"
 
     --         local dl = w:first("directional_light scene:in")
     --         local d = math3d.inverse(math3d.todirection(dl.scene.r))
-    --         for _, ee in ipairs(e.tag["*"]) do
-    --             ivav.display_normal(world:entity(ee), d)
+    --         for _, eid in ipairs(e.tag["*"]) do
+    --             local ee<close> = w:entity(eid)
+    --             ivav.display_normal(ee, d)
     --         end
             
     --     end
@@ -174,13 +180,15 @@ function init_loader_sys:init()
     -- do
     --     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/world_simple.glb|mesh.prefab"
     --     p.on_ready = function (e)
-    --         iom.set_scale(world:entity(e.root), 0.1)
+    --         local ee<close> = w:entity(e.root)
+    --         iom.set_scale(ee, 0.1)
     --         -- local ivav = ecs.import.interface "ant.test.features|ivertex_attrib_visualizer"
 
     --         -- local dl = w:first("directional_light scene:in")
     --         -- local d = math3d.inverse(math3d.todirection(dl.scene.r))
-    --         -- for _, ee in ipairs(e.tag["*"]) do
-    --         --     ivav.display_normal(world:entity(ee), d)
+    --         -- for _, eid in ipairs(e.tag["*"]) do
+    --         --     local ee<close> = w:entity(eid)
+    --         --     ivav.display_normal(ee, d)
     --         -- end
             
     --     end
@@ -275,17 +283,16 @@ function init_loader_sys:init()
         function testprefab.on_ready(e)
             local t = assetmgr.resource "/pkg/ant.test.features/assets/textures/headquater_basecolor_red.texture"
             local mesh_eid = e.tag["*"][2]
-            local te = world:entity(mesh_eid)
+            local te<close> = w:entity(mesh_eid)
             imaterial.set_property(te, "s_basecolor", t.id)
-
             iom.set_scale(te, 0.1)
         end
         world:create_object(testprefab)
     end
 
-    do
-        ecs.create_instance "/pkg/ant.test.features/assets/glb/electric-pole-1.glb|mesh.prefab"
-    end
+    -- do
+    --     ecs.create_instance "/pkg/ant.test.features/assets/glb/electric-pole-1.glb|mesh.prefab"
+    -- end
 
 
     local off = 0.1
@@ -350,7 +357,7 @@ function init_loader_sys:init_world()
 
     local mq = w:first("main_queue camera_ref:in")
     local eyepos = math3d.vector(8, 8, 0)
-    local camera_ref = world:entity(mq.camera_ref)
+    local camera_ref<close> = w:entity(mq.camera_ref)
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
     iom.set_direction(camera_ref, dir)
@@ -366,14 +373,14 @@ function init_loader_sys:entity_init()
     
     for _, key, press in kb_mb:unpack() do
         if key == "T" and press == 0 then
-            -- local e = world:entity(quad_eid)
-            -- ivs.set_state(e, "main_view", true)
+            -- local e<close> = w:entity(quad_eid)
+            -- ivs.set_visible(e, "main_view", true)
 
             -- local quad_2 = 2
             -- e.render_object.ib_num = quad_2 * 6
         elseif key == "Y" and press == 0 then
             local mesh_eid = testprefab.tag["*"][2]
-            local te = world:entity(mesh_eid)
+            local te<close> = w:entity(mesh_eid)
             local t = assetmgr.resource "/pkg/ant.test.features/assets/glb/headquater-1.glb|images/headquater_color.texture"
             imaterial.set_property(te, "s_basecolor", t.id)
         elseif key == "N" and press == 0 then
@@ -409,7 +416,7 @@ end
 function init_loader_sys:camera_usage()
     for _, _, state, x, y in mouse_mb:unpack() do
         local mq = w:first("main_queue render_target:in camera_ref:in")
-        local ce = world:entity(mq.camera_ref)
+        local ce = w:entity(mq.camera_ref)
         local camera = ce.camera
         local vpmat = camera.viewprojmat
     

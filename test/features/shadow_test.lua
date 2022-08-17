@@ -11,7 +11,8 @@ local st_sys	= ecs.system "shadow_test_system"
 function st_sys:init()
 	local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab"
 	p.on_ready = function (e)
-		--iom.set_position(world:entity(e.root), math3d.vector(3, 1, 0))
+		--local ee<close> = w:entity(e.root)
+		--iom.set_position(ee, math3d.vector(3, 1, 0))
 	end
 	world:create_object(p)
 
