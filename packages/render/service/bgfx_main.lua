@@ -234,7 +234,7 @@ local frame_control; do
         print_fps()
         print_time()
         if maxfps and fps > maxfps then
-            local waittime = math.ceil((1/maxfps - delta)/1000) *10
+            local waittime = math.ceil((1/maxfps - delta)*1000)
             if waittime > 0 then
                 --ltask.sleep(waittime)
                 exclusive.sleep(waittime)
