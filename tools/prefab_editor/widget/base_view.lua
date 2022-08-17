@@ -118,7 +118,7 @@ function BaseView:on_set_name(value)
 end
 
 function BaseView:on_get_name()
-    local e <close> = w:entity(self.eid, "name:in")
+    local e <close> = w:entity(self.eid, "name?in")
     if type(e.name) == "number" then
         return tostring(e.name)
     end

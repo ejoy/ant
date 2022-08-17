@@ -28,9 +28,14 @@ function SlotView:_init()
                 end,
                 setter = function(name)
                     local tp = hierarchy:get_template(self.eid)
-                    tp.template.data.slot.joint_name = name
-                    local e <close> = w:entity(self.eid, "slot:in")
-                    e.slot.joint_name = name
+                    if tp.template.data.slot.joint_name ~= name then
+                        tp.template.data.slot.joint_name = name
+                        local e <close> = w:entity(self.eid, "slot:in")
+                        e.slot.joint_name = name
+                        e.slot.joint_index = nil
+                        -- if name == "None" then
+                        -- end
+                    end
                 end,
             }),
             uiproperty.Combo({label="FollowFlag", options={}}, {
@@ -57,10 +62,10 @@ function SlotView:_init()
     )
 end
 
-local joint_name_list = {}
+local joint_name_list = {"None"}
 
 function SlotView:set_model(eid)
-    if #joint_name_list < 1 then
+    if #joint_name_list < 2 then
         local _, joint_list = joint_utils:get_joints()
         if joint_list then
             for _, joint in ipairs(joint_list) do

@@ -30,12 +30,14 @@ function ivs.has_state(e, name)
 end
 
 function ivs.set_state(e, name, v)
-	w:extend(e, "visible_state:update render_object_update:out")
+	w:extend(e, "visible_state?update render_object_update?out")
 	local fs = e.visible_state
-	e.visible_state = v and
+	if fs then
+		e.visible_state = v and
 		(fs | STATE_TYPE[name]) or
 		(fs & (~STATE_TYPE[name]))
-	e.render_object_update = true
+		e.render_object_update = true
+	end
 end
 
 function ivs.state_names(statemask)

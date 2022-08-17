@@ -342,7 +342,7 @@ end
 local function on_target(old, new)
     if old then
         local oe <close> = w:entity(old, "light?in")
-        if oe.light then
+        if oe and oe.light then
             light_gizmo.bind(nil)
         end
     end
