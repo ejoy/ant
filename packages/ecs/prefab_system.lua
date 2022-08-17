@@ -43,15 +43,15 @@ end
 
 function m:prefab_remove()
     for _, _, id in evPrefabDetach:unpack() do
-        local prefab = w:entity(id, "prefab:in")
-        if prefab then
+        local prefab = w:entity(id, "prefab?in")
+        if prefab and prefab.prefab then
             world:detach_instance(prefab.prefab)
             w:remove(id)
         end
     end
     for _, _, id in evPrefabRemove:unpack() do
-        local prefab = w:entity(id, "prefab:in")
-        if prefab then
+        local prefab = w:entity(id, "prefab?in")
+        if prefab and prefab.prefab then
             local instance = prefab.prefab
             w:remove(instance.root)
             for _, entity in ipairs(instance.tag["*"]) do
