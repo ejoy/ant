@@ -2,28 +2,64 @@ local typeclass = require "typeclass"
 local system = require "system"
 local event = require "event"
 local ltask = require "ltask"
+local bgfx = require "bgfx"
 
 local world = {}
 world.__index = world
 
 function world:pipeline_func(what)
-	local funcs, symbols = system.lists(self, what)
+	local w = self
+	local funcs, symbols = system.lists(w, what)
 	if not funcs or #funcs == 0 then
 		return function() end
 	end
-	local ecs_world = self._ecs_world
+	local ecs_world = w._ecs_world
 
-	local STAT <const> = false
+	local STAT <const> = true
 	if STAT and what == "_update" then
+		local get_time = ltask.counter
+		local dbg_print = bgfx.dbg_text_print
+		local total = w._cpu_stat
+		local printtext = {}
+		local MaxFrame <const> = 10
+		local MaxText <const> = 5
+		local CurFrame = 0
+		for i = 1, #funcs do
+			total[i] = 0
+		end
+		for i = 1, MaxText do
+			printtext[i] = ""
+		end
 		return function()
 			for i = 1, #funcs do
 				local f = funcs[i]
-				local symbol = symbols[i]
-				--local _ <close> = self:memory_stat(symbol)
-				local _ <close> = self:cpu_stat(symbol)
+				local now = get_time()
 				f(ecs_world)
+				local delta = get_time() - now
+				total[i] = total[i] + delta
 			end
-			self:print_cpu_stat(0, 10)
+			if CurFrame ~= MaxFrame then
+				CurFrame = CurFrame + 1
+			else
+				CurFrame = 1
+				local t = {}
+				for i = 1, #funcs do
+					t[total[i]] = i
+				end
+				table.sort(total)
+				for i = 1, MaxText do
+					local v = total[#total + 1 - i]
+					local m = v / MaxFrame * 1000
+					printtext[i] = ("%s - %.02fms                                      "):format(symbols[t[v]], m)
+				end
+				for i = 1, #funcs do
+					total[i] = 0
+				end
+			end
+			dbg_print(8, 2, 0x02, "--- system")
+			for i = 1, MaxText do
+				dbg_print(10, 2+i, 0x02, printtext[i])
+			end
 		end
 	end
 
@@ -58,70 +94,6 @@ function world:memory_stat(what)
 	ms.res = res
 	ltask.mem_count(ms.start)
 	return ms
-end
-
-local function finish_cpu_stat(cs)
-	local _, now = ltask.now()
-	local delta = now - cs.now
-	local t = cs.total[cs.what]
-	if t then
-		cs.total[cs.what] = t + delta
-	else
-		cs.total[cs.what] = delta
-	end
-end
-
-function world:cpu_stat(what)
-	local cs = self._cpu_stat
-	local _, now = ltask.now()
-	cs.now = now
-	cs.what = what
-	return cs
-end
-
-function world:reset_cpu_stat()
-	self._cpu_stat.total = {}
-	self._cpu_stat.frame = 0
-end
-
-local function print_cpu_stat(w, per)
-	local t = {}
-	for k, v in pairs(w._cpu_stat.total) do
-		t[#t+1] = {k, v}
-	end
-	table.sort(t, function (a, b)
-		return a[2] > b[2]
-	end)
-	local s = {
-		"",
-		"cpu stat"
-	}
-	per = per or 1
-	for _, v in ipairs(t) do
-		local m = v[2] / per
-		if m >= 0.01 then
-			s[#s+1] = ("\t%s - %.02fms"):format(v[1], m)
-		end
-	end
-	print(table.concat(s, "\n"))
-end
-
-function world:print_cpu_stat(skip, delta)
-	skip = skip or 0
-	delta = delta or 1
-
-	local w = self
-	local frame = w._cpu_stat.frame + 1
-	w._cpu_stat.frame = frame
-
-	if frame <= skip then
-		w._cpu_stat.total = {}
-		return
-	elseif frame % delta ~= 0 then
-		return
-	end
-
-	print_cpu_stat(w, frame-skip)
 end
 
 function world:pipeline_init()
@@ -226,7 +198,7 @@ function m.new_world(config)
 		args = config,
 		_memory = {},
 		_memory_stat = setmetatable({start={}, finish={}}, {__close = finish_memory_stat}),
-		_cpu_stat = setmetatable({total={},frame=0}, {__close = finish_cpu_stat}),
+		_cpu_stat = {},
 		_ecs = {},
 		_methods = {},
 		_frame = 0,

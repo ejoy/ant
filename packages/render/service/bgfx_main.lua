@@ -2,11 +2,8 @@ local ltask = require "ltask"
 local exclusive = require "ltask.exclusive"
 local bgfx = require "bgfx"
 
-local APIS = {
+local CALL = {
     "init",
-    "dbg_text_clear",
-    "dbg_text_print",
-    "dbg_text_image",
     "frame",
     "shutdown",
     "request_screenshot",
@@ -18,10 +15,21 @@ local APIS = {
     "encoder_frame",
     "maxfps"
 }
+
+local SEND = {
+    "dbg_text_clear",
+    "dbg_text_print",
+    "dbg_text_image",
+}
+
 local S = {}
 
-function S.APIS()
-    return APIS
+function S.CALL()
+    return CALL
+end
+
+function S.SEND()
+    return SEND
 end
 
 local init_token = {}
@@ -157,39 +165,38 @@ end
 
 local maxfps = 30
 local frame_control; do
-    local MaxTimeCachedFrame <const> = 1000 --*10ms
+    local function gettime()
+        return ltask.counter() --1s
+    end
+    local MaxTimeCachedFrame <const> = 1 --*1s
     local frame_first = 1
     local frame_last  = 0
-    local frames = {}
+    local frame_time = {}
+    local frame_delta = {}
     local fps = 0
-    local lasttime = 0
+    local lasttime = gettime()
     local printtime = 0
     local printtext = ""
-    local function gettime()
-        local _, t = ltask.now() --10ms
-        return t
-    end
     local function clean(time)
         for i = frame_first, frame_last do
-            if frames[i] < time then
-                frames[i] = nil
+            if frame_time[i] < time then
+                frame_time[i] = nil
+                frame_delta[i] = nil
                 frame_first = frame_first + 1
             end
         end
     end
-    local function calc_fps()
+    local function print_fps()
         if frame_first == 1 then
             if frame_last == 1 then
                 fps = 0
             else
-                fps = frame_last / (frames[frame_last] - frames[1]) * 100
+                fps = frame_last / (frame_time[frame_last] - frame_time[1])
             end
         else
-            fps = (frame_last - frame_first + 1) / (MaxTimeCachedFrame / 100)
+            fps = (frame_last - frame_first + 1) / (MaxTimeCachedFrame)
         end
-    end
-    local function print_fps()
-        if lasttime - printtime >= 100 then
+        if lasttime - printtime >= 1 then
             printtime = lasttime
             if maxfps then
                 printtext = ("FPS: %.03f / %d"):format(fps, maxfps)
@@ -199,25 +206,40 @@ local frame_control; do
         end
         bgfx.dbg_text_print(8, 0, 0x02, printtext)
     end
+    local function print_time()
+        local avg = 0
+        local max = -math.huge
+        local min = math.huge
+        for i = frame_first, frame_last do
+            local t = frame_delta[i]
+            avg = avg + t
+            if t > max then
+                max = t
+            end
+            if t < min then
+                min = t
+            end
+        end
+        avg = avg / (frame_last - frame_first)
+        bgfx.dbg_text_print(8, 1, 0x02, ("avg: %.02fms max:%.02fms min:%.02fms          "):format(avg*1000, max*1000, min*1000))
+    end
     function frame_control()
         local time = gettime()
+        local delta = time - lasttime
         clean(time - MaxTimeCachedFrame)
         frame_last = frame_last + 1
-        frames[frame_last] = time
-        calc_fps()
+        frame_time[frame_last] = time
+        frame_delta[frame_last] = delta
         print_fps()
+        print_time()
         if maxfps and fps > maxfps then
-            local waittime = math.ceil(100/maxfps - (time - lasttime))
+            local waittime = math.ceil((1/maxfps - delta)/1000) *10
             if waittime > 0 then
                 --ltask.sleep(waittime)
-                exclusive.sleep(waittime*10)
-                lasttime = gettime()
-            else
-                lasttime = time
+                exclusive.sleep(waittime)
             end
-        else
-            lasttime = time
         end
+        lasttime = gettime()
     end
 end
 
@@ -250,7 +272,13 @@ ltask.fork(function()
     end
 end)
 
-for _, name in ipairs(APIS) do
+for _, name in ipairs(CALL) do
+    if not S[name] then
+        S[name] = bgfx[name]
+    end
+end
+
+for _, name in ipairs(SEND) do
     if not S[name] then
         S[name] = bgfx[name]
     end
