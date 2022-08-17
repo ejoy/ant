@@ -1,6 +1,6 @@
 local ecs = ...
 local world = ecs.world
-
+local w     = world.w
 local iaudio    = ecs.import.interface "ant.audio|audio_interface"
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
@@ -109,7 +109,8 @@ local function to_runtime_event(ke)
 end
 
 local function get_runtime_animations(eid)
-    return world:entity(eid).animation
+    local e <close> = w:entity(eid, "animation:in")
+    return e.animation
 end
 
 local function get_anim_group_eid(eid, name)
@@ -219,7 +220,8 @@ local function set_current_anim(anim_name)
     if current_anim and current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
-                ivs.set_state(world:entity(col.eid), "visible", false)
+                local e <close> = w:entity(col.eid)
+                ivs.set_state(e, "visible", false)
             end
         end
     end
@@ -227,7 +229,8 @@ local function set_current_anim(anim_name)
     if current_anim.collider then
         for _, col in ipairs(current_anim.collider) do
             if col.collider then
-                ivs.set_state(world:entity(col.eid), "visible", true)
+                local e <close> = w:entity(col.eid)
+                ivs.set_state(e, "visible", true)
             end
         end
     end
@@ -381,13 +384,14 @@ local function show_events()
 end
 
 local function do_record(collision, eid)
-    if not world:entity(eid).collider then
+    local e <close> = w:entity(eid, "collider?in")
+    if not e.collider then
         return
     end
-    local tp = math3d.totable(iom.get_position(world:entity(eid)))
+    local tp = math3d.totable(iom.get_position(e))
     collision.position = {tp[1], tp[2], tp[3]}
-    local scale = math3d.totable(iom.get_scale(world:entity(eid)))
-    local factor = world:entity(eid).collider.sphere and 100 or 200
+    local scale = math3d.totable(iom.get_scale(e))
+    local factor = e.collider.sphere and 100 or 200
     collision.size = {scale[1] / factor, scale[2] / factor, scale[3] / factor}
 end
 
@@ -421,7 +425,8 @@ local function show_current_event()
                         if eid == -1 then
                             collision.shape_type = "None"
                         else
-                            collision.shape_type = world:entity(eid).collider.sphere and "sphere" or "box"
+                            local e <close> = w:entity(eid, "collider:in")
+                            collision.shape_type = e.collider.sphere and "sphere" or "box"
                             do_record(collision, eid)
                         end
                         dirty = true
@@ -565,7 +570,7 @@ local function update_collision()
     for idx, ke in ipairs(anim_state.current_event_list) do
         if ke.collision and ke.collision.col_eid and ke.collision.col_eid ~= -1 then
             local eid = ke.collision.col_eid
-            local e = world:entity(eid)
+            local e <close> = w:entity(eid)
             iom.set_position(e, ke.collision.position)
             local factor = e.collider.sphere and 100 or 200
             iom.set_scale(e, {ke.collision.size[1] * factor, ke.collision.size[2] * factor, ke.collision.size[3] * factor})
@@ -693,7 +698,8 @@ local function show_skeleton(b)
     end
     for _, joint in ipairs(joints_list) do
         if joint.mesh then
-            ivs.set_state(world:entity(joint.mesh), "main_view", b)
+            local e <close> = w:entity(joint.mesh)
+            ivs.set_state(e, "main_view", b)
         end
     end
 end
@@ -779,7 +785,8 @@ function m.show()
                         for _, eid in ipairs(group_eid) do
                             local template = hierarchy:get_template(eid)
                             template.template.data.animation[anim_name] = anim_path
-                            world:entity(eid).animation[anim_name] = anim_path
+                            local e <close> = w:entity(eid, "animation:in")
+                            e.animation[anim_name] = anim_path
                         end
                         --TODO:reload
                         reload = true
@@ -906,7 +913,7 @@ function m.on_prefab_load(entities)
     local editanims = {dirty = true, name_list = {} }
     local skeleton
     for _, eid in ipairs(entities) do
-        local e = world:entity(eid)
+        local e <close> = w:entity(eid, "anim_ctrl?in animation?in skeleton?in animation_birth?in")
         if e.anim_ctrl then
             anim_eid = eid
             local animations = e.animation

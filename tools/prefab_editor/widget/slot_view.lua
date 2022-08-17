@@ -29,7 +29,8 @@ function SlotView:_init()
                 setter = function(name)
                     local tp = hierarchy:get_template(self.eid)
                     tp.template.data.slot.joint_name = name
-                    world:entity(self.eid).slot.joint_name = name
+                    local e <close> = w:entity(self.eid, "slot:in")
+                    e.slot.joint_name = name
                 end,
             }),
             uiproperty.Combo({label="FollowFlag", options={}}, {
@@ -48,7 +49,8 @@ function SlotView:_init()
                     end
                     local tp = hierarchy:get_template(self.eid)
                     tp.template.data.slot.follow_flag = flag
-                    world:entity(self.eid).slot.follow_flag = flag
+                    local e <close> = w:entity(self.eid, "slot:in")
+                    e.slot.follow_flag = flag
                 end,
             }),
         }

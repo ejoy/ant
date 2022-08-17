@@ -28,10 +28,12 @@ local function create_transform_property(cv)
     return uiproperty.Group({label="Transform", flags = imgui.flags.TreeNode{"DefaultOpen"} }, {
         uiproperty.Float({label="Scale", speed=0.01, dim=3, disable=true}, {
             getter = function ()
-                return math3d.tovalue(iom.get_scale(world:entity(cv.eid)))
+                local cve <close> = w:entity(cv.eid)
+                return math3d.tovalue(iom.get_scale(cve))
             end,
             setter = function (value)
-                iom.set_scale(world:entity(cv.eid), value)
+                local cve <close> = w:entity(cv.eid)
+                iom.set_scale(cve, value)
                 local ct = camera_template(cv.eid)
                 local s = ct.scene.s
                 if s == nil then
@@ -43,13 +45,15 @@ local function create_transform_property(cv)
         }),
         uiproperty.Float({label="Rotation", speed=0.01, dim=3},{
             getter = function ()
-                local v = math3d.tovalue(math3d.quat2euler(iom.get_rotation(world:entity(cv.eid))))
+                local cve <close> = w:entity(cv.eid)
+                local v = math3d.tovalue(math3d.quat2euler(iom.get_rotation(cve)))
                 v[1], v[2], v[3] = math.deg(v[1]), math.deg(v[2]), math.deg(v[3])
                 return v
             end,
             setter = function (value)
                 local q = math3d.quaternion{math.rad(value[1]), math.rad(value[2]), math.rad(value[3])}
-                iom.set_rotation(world:entity(cv.eid), q)
+                local cve <close> = w:entity(cv.eid)
+                iom.set_rotation(cve, q)
                 local ct = camera_template(cv.eid)
                 local r = ct.scene.r
                 if r == nil then
@@ -62,10 +66,12 @@ local function create_transform_property(cv)
         }),
         uiproperty.Float({label="Translation", speed=0.01, dim=3},{
             getter = function ()
-                return math3d.tovalue(iom.get_position(world:entity(cv.eid)))
+                local cve <close> = w:entity(cv.eid)
+                return math3d.tovalue(iom.get_position(cve))
             end,
             setter = function (value)
-                iom.set_position(world:entity(cv.eid), value)
+                local cve <close> = w:entity(cv.eid)
+                iom.set_position(cve, value)
                 local ct = camera_template(cv.eid)
                 local t = ct.scene.t
                 if t == nil then
@@ -82,49 +88,58 @@ end
 local function create_frustum_property(cv)
     local fov = uiproperty.Float({label="Fov", speed=0.01, min=0.1, max=180},{
         getter = function ()
-            local f = icamera.get_frustum(world:entity(cv.eid))
+            local cve <close> = w:entity(cv.eid)
+            local f = icamera.get_frustum(cve)
             return f.fov
         end,
         setter = function (value)
-            icamera.set_frustum_fov(world:entity(cv.eid), value)
+            local cve <close> = w:entity(cv.eid)
+            icamera.set_frustum_fov(cve, value)
             local ct = camera_template(cv.eid)
             ct.camera.frustum.fov = value
         end,
     })
 
     function fov:is_visible()
-        local f = icamera.get_frustum(world:entity(cv.eid))
+        local cve <close> = w:entity(cv.eid)
+        local f = icamera.get_frustum(cve)
         return ((not f.ortho) and f.fov) and self.visible or false
     end
 
     local aspect = uiproperty.Float({label="Aspect", speed=0.01, min=0.00001}, {
         getter = function ()
-            local f = icamera.get_frustum(world:entity(cv.eid))
+            local cve <close> = w:entity(cv.eid)
+            local f = icamera.get_frustum(cve)
             return f.aspect
         end,
         setter = function (value)
-            icamera.set_frustum_aspect(world:entity(cv.eid), value)
+            local cve <close> = w:entity(cv.eid)
+            icamera.set_frustum_aspect(cve, value)
             local ct = camera_template(cv.eid)
             ct.camera.frustum.aspect = value
         end,
     })
     function aspect:is_visible()
-        local f = icamera.get_frustum(world:entity(cv.eid))
+        local cve <close> = w:entity(cv.eid)
+        local f = icamera.get_frustum(cve)
         return ((not f.ortho) and f.aspect) and self.visible or false
     end
 
     local function set_frustum_item(eid, n, value)
-        local f = icamera.get_frustum(world:entity(cv.eid))
+        local cve <close> = w:entity(cv.eid)
+        local f = icamera.get_frustum(cve)
         local ff = {}
         for k, v in pairs(f) do ff[k] = v end
         ff[n] = value
-        icamera.set_frustum(world:entity(eid), ff)
+        local e <close> = w:entity(eid)
+        icamera.set_frustum(e, ff)
         camera_template(eid).camera.frustum[n] = value
     end
 
     local left = uiproperty.Float({label="Left", speed=0.1}, {
         getter = function ()
-            local f = icamera.get_frustum(world:entity(cv.eid))
+            local cve <close> = w:entity(cv.eid)
+            local f = icamera.get_frustum(cve)
             return f.l
         end,
         setter = function (value)
@@ -132,13 +147,15 @@ local function create_frustum_property(cv)
         end
     })
     function left:is_visible()
-        local f = icamera.get_frustum(world:entity(cv.eid))
+        local cve <close> = w:entity(cv.eid)
+        local f = icamera.get_frustum(cve)
         return f.l and self.visible or false
     end
 
     local right = uiproperty.Float({label="Right", speed=0.1}, {
         getter = function ()
-            local f = icamera.get_frustum(world:entity(cv.eid))
+            local cve <close> = w:entity(cv.eid)
+            local f = icamera.get_frustum(cve)
             return f.r
         end,
         setter = function (value)
@@ -147,13 +164,15 @@ local function create_frustum_property(cv)
     })
 
     function right:is_visible()
-        local f = icamera.get_frustum(world:entity(cv.eid))
+        local cve <close> = w:entity(cv.eid)
+        local f = icamera.get_frustum(cve)
         return f.r and self.visible or false
     end
 
     local top = uiproperty.Float({label="Top", speed=0.1}, {
         getter = function ()
-            return icamera.get_frustum(world:entity(cv.eid)).t
+            local cve <close> = w:entity(cv.eid)
+            return icamera.get_frustum(cve).t
         end,
         setter = function (value)
             set_frustum_item(cv.eid, 't', value)
@@ -161,25 +180,29 @@ local function create_frustum_property(cv)
     })
 
     function top:is_visible()
-        return icamera.get_frustum(world:entity(cv.eid)).t and self.visible or false
+        local cve <close> = w:entity(cv.eid)
+        return icamera.get_frustum(cve).t and self.visible or false
     end
 
     local bottom = uiproperty.Float({label="Bottom", speed=0.1}, {
         getter = function ()
-            return icamera.get_frustum(world:entity(cv.eid)).b
+            local cve <close> = w:entity(cv.eid)
+            return icamera.get_frustum(cve).b
         end,
         setter = function (value)
             set_frustum_item(cv.eid, 'b', value)
         end
     })
     function bottom:is_visible()
-        return icamera.get_frustum(world:entity(cv.eid)).b and self.visible or false
+        local cve <close> = w:entity(cv.eid)
+        return icamera.get_frustum(cve).b and self.visible or false
     end
 
     return uiproperty.Group({label="Frustum", flags=0},{
         uiproperty.Bool({label="Ortho"}, {
             getter = function ()
-                return icamera.get_frustum(world:entity(cv.eid)).ortho
+                local cve <close> = w:entity(cv.eid)
+                return icamera.get_frustum(cve).ortho
             end,
             setter = function (value)
                 set_frustum_item(cv.eid, 'ortho', value)
@@ -191,22 +214,26 @@ local function create_frustum_property(cv)
         left, right, top, bottom,
         uiproperty.Float({label="Near", speed=0.1, min=0.01}, {
             getter = function ()
-                local f = icamera.get_frustum(world:entity(cv.eid))
+                local cve <close> = w:entity(cv.eid)
+                local f = icamera.get_frustum(cve)
                 return f.n
             end,
             setter = function (value)
-                icamera.set_frustum_near(world:entity(cv.eid), value)
+                local cve <close> = w:entity(cv.eid)
+                icamera.set_frustum_near(cve, value)
                 local ct = camera_template(cv.eid)
                 ct.camera.frustum.n = value
             end
         }),
         uiproperty.Float({label="Far", speed=0.1, min=0.01}, {
             getter = function ()
-                local f = icamera.get_frustum(world:entity(cv.eid))
+                local cve <close> = w:entity(cv.eid)
+                local f = icamera.get_frustum(cve)
                 return f.f
             end,
             setter = function (value)
-                icamera.set_frustum_far(world:entity(cv.eid), value)
+                local cve <close> = w:entity(cv.eid)
+                icamera.set_frustum_far(cve, value)
                 camera_template(cv.eid).camera.frustum.f = value
             end
         })
@@ -214,7 +241,8 @@ local function create_frustum_property(cv)
 end
 
 local function camera_exposure(eid)
-    return world:entity(eid).exposure
+    local e <close> = w:entity(eid, "exposure:in") 
+    return e.exposure
 end
 
 local EXPOSURE_TYPE_options<const> = {"Manual", "Auto"}
@@ -304,7 +332,7 @@ local function create_exposure_property(cv)
                 return camera_exposure(cv.eid) ~= nil
             end,
             setter = function (value)
-                local e = world:entity(cv.eid)
+                local e <close> = w:entity(cv.eid, "exposure:in")
                 local template = hierarchy:get_template(cv.eid).template
 
                 local p_idx = find_exposure_policy(template.policy)

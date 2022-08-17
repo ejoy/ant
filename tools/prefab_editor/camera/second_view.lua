@@ -98,7 +98,7 @@ end
 
 function second_camera_sys:update_camera()
     for svq in w:select "second_view visible camera_ref:in" do
-        local ce = world:entity(svq.camera_ref)
+        local ce <close> = w:entity(svq.camera_ref, "camera:in scene:in")
 		local camera, scene = ce.camera, ce.scene
 
 		local pos, dir = math3d.index(scene.worldmat, 4, 3)
@@ -161,7 +161,7 @@ local function scale_frustum_points(frustum_points, len)
 end
 
 local function create_frustum_entity(eid)
-    local e = world:entity(eid)
+    local e <close> = w:entity(eid, "camera:in")
     local camera = e.camera
 
     local function add_v(p, vb)

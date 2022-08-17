@@ -220,7 +220,11 @@ function m:create(what, config)
                 }
             }
             local tmp = utils.deep_copy(template)
-            local hitch = parent_eid and world:entity(parent_eid).hitch
+            local hitch
+            if parent_eid then
+                local pe <close> = w:entity(parent_eid, "hitch?in")
+                hitch = pe.hitch
+            end
             local new_entity
             if hitch then
                 if hitch.group == 0 then
@@ -377,21 +381,22 @@ local function gen_prefab_name() nameidx = nameidx + 1 return "prefab" .. nameid
 function m:on_prefab_ready(prefab)
     local entitys = prefab.tag["*"]
     local function find_e(entitys, id)
-        for _, e in ipairs(entitys) do
-            if world:entity(e).eid == id then
-                return e
+        for _, eid in ipairs(entitys) do
+            local e <close> = w:entity(eid, "eid:in")
+            if e.eid == id then
+                return eid
             end
         end
     end
 
-    local function sub_tree(e, idx)
+    local function sub_tree(eid, idx)
         local st = {}
         local st_set = {}
-        st_set[world:entity(e).eid] = true
+        local e <close> = w:entity(eid, "eid:in")
+        st_set[e.eid] = true
         for i = idx, #entitys do
-            local entity = world:entity(entitys[i])
-            local scene = entity.scene
-            if st_set[scene.parent] == nil then
+            local entity <close> = w:entity(entitys[i], "scene:in eid:in")
+            if st_set[entity.scene.parent] == nil then
                 break
             end
             st_set[entity.eid] = true
@@ -405,8 +410,9 @@ function m:on_prefab_ready(prefab)
     local j = 1
     for i = 1, #self.prefab_template do
         local pt = self.prefab_template[i]
-        local e = entitys[j]
-        local scene = world:entity(e).scene
+        local eid = entitys[j]
+        local e <close> = w:entity(eid, "scene?in light?in")
+        local scene = e.scene
         local parent = scene and find_e(entitys, scene.parent)
         if pt.prefab then
             local prefab_name = pt.name or gen_prefab_name()
@@ -416,30 +422,28 @@ function m:on_prefab_ready(prefab)
 
             local children = sub_tree(parent, j)
             for _, child in ipairs(children) do
-                local ce = world:entity(child)
-                if ce.scene.parent == world:entity(parent).eid then
+                local ce <close> = w:entity(child, "scene:in")
+                local pe <close> = w:entity(parent, "eid")
+                if ce.scene.parent == pe.eid then
                     ecs.method.set_parent(child, sub_root)
                 end
             end
             j = j + #children
             node_map[sub_root] = {template = {filename = pt.prefab, children = children, name = prefab_name, editor = pt.editor or false}, parent = parent}
         else
-            self.entities[#self.entities + 1] = e
-            node_map[e] = {template = self.prefab_template[i], parent = parent}
+            self.entities[#self.entities + 1] = eid
+            node_map[eid] = {template = self.prefab_template[i], parent = parent}
             j = j + 1
         end
 
-        if world:entity(e).light then
-            create_light_billboard(e)
-            light_gizmo.bind(e)
+        if e.light then
+            create_light_billboard(eid)
+            light_gizmo.bind(eid)
             light_gizmo.show(false)
         end
     end
 
     local function add_to_hierarchy(eid)
-        -- if world:entity(eid).meshskin then
-        --     return
-        -- end
         local node = node_map[eid]
         if node.parent and not hierarchy:get_node(node.parent) then
             add_to_hierarchy(node.parent)
@@ -485,15 +489,16 @@ function m:open(filename)
     world:pub {"WindowTitle", filename}
 end
 
-local function on_remove_entity(e)
-    if world:entity(e).light then
-        light_gizmo.on_remove_light(e)
+local function on_remove_entity(eid)
+    local e <close> = w:entity(eid, "light?in")
+    if e.light then
+        light_gizmo.on_remove_light(eid)
     end
-    local teml = hierarchy:get_template(e)
+    local teml = hierarchy:get_template(eid)
     if teml and teml.children then
-        hierarchy:clear_adapter(e)
+        hierarchy:clear_adapter(eid)
     end
-    hierarchy:del(e)
+    hierarchy:del(eid)
 end
 
 function m:reset_prefab()
@@ -579,7 +584,8 @@ function m:add_prefab(filename)
         local children = inst.tag["*"]
         if #children == 1 then
             local child = children[1]
-            if world:entity(child).camera then
+            local e <close> = w:entity(child, "camera:in")
+            if e.camera then
                 set_parent(child, parent)
                 local temp = serialize.parse(prefab_filename, cr.read_file(prefab_filename))
                 hierarchy:add(child, {template = temp[1], editor = true, temporary = true}, parent)

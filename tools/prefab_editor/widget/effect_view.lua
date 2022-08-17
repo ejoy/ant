@@ -50,12 +50,14 @@ function EffectView:show()
         -- local instance = world:entity(self.eid).effect_instance
         -- instance.playid = effekseer.play(instance.handle, instance.playid)
         -- effekseer.set_speed(instance.handle, instance.playid, instance.speed)
-        iefk.play(world:entity(self.eid))
+        local e <close> = w:entity(self.eid)
+        iefk.play(e)
     end
 end
 
 function EffectView:on_get_speed()
-    return world:entity(self.eid).efk.speed
+    local e <close> = w:entity(self.eid, "efk:in")
+    return e.efk.speed
 end
 
 function EffectView:on_set_speed(value)
@@ -63,7 +65,8 @@ function EffectView:on_set_speed(value)
     -- template.template.data.speed = value
     -- local instance = world:entity(self.eid).efk
     -- instance.speed = value
-    iefk.set_speed(world:entity(self.eid), value)
+    local e <close> = w:entity(self.eid)
+    iefk.set_speed(e, value)
 end
 
 function EffectView:on_set_auto_play(value)
@@ -72,9 +75,9 @@ function EffectView:on_set_auto_play(value)
 end
 
 function EffectView:on_set_loop(value)
-    local instance = world:entity(self.eid).efk
-    instance.loop = value
-    iefk.set_loop(world:entity(self.eid), value)
+    local e <close> = w:entity(self.eid, "efk:in")
+    e.efk.loop = value
+    iefk.set_loop(e, value)
 end
 
 return EffectView

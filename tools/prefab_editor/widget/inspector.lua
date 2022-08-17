@@ -53,7 +53,7 @@ end
 
 function m.update_template_tranform(eid)
     if not eid then return end
-    local e = world:entity(eid)
+    local e <close> = w:entity(eid, "scene?in collider?in")
     local template = hierarchy:get_template(eid)
     
     if not template or not template.template or not e.scene then return end
@@ -138,7 +138,7 @@ local function update_current()
     if current_eid == gizmo.target_eid then return end
     current_eid = gizmo.target_eid
     if current_eid then
-        local e = world:entity(current_eid)
+        local e <close> = w:entity(current_eid, "collider?in camera?in efk?in light?in slot?in skybox?in material?in")
         current_panel = nil
         if e.collider then
             current_panel = get_collider_panel()

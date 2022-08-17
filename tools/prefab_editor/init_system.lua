@@ -53,7 +53,7 @@ end
 local function init_camera()
     local mq = w:first("main_queue camera_ref:in")
     local eye, at = math3d.vector(10, 10, -10, 1), mc.ZERO_PT
-    local e = world:entity(mq.camera_ref)
+    local e <close> = w:entity(mq.camera_ref)
     iom.set_position(e, {10, 10, -10, 1})
     iom.set_direction(e, math3d.normalize(math3d.sub(at, eye)))
     local f = icamera.get_frustum(e)

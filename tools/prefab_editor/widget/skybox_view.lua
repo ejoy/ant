@@ -29,7 +29,8 @@ local function set_ibl_value(eid, key, value)
     local sz = tonumber(value)
     local ibl = iblT(eid)
     ibl[key].size = sz
-    world:entity(eid).ibl[key].size = sz
+    local e <close> = w:entity(eid, "ibl:in")
+    e.ibl[key].size = sz
     -- prefab_mgr:save_prefab()
     -- prefab_mgr:reload()
 end
@@ -39,11 +40,13 @@ function SkyboxView:_init()
     self.skybox = uiproperty.Group({label="Skybox"},{
         uiproperty.Float({label="Intensity", min=0, speed=1, max=120000}, {
             getter = function ()
-                return world:entity(self.eid).skybox.intensity
+                local e <close> = w:entity(self.eid, "skybox:in")
+                return e.skybox.intensity
             end,
             setter = function (value)
                 template_data(self.eid, "skybox").intensity = value
-                world:entity(self.eid).skybox.intensity = value
+                local e <close> = w:entity(self.eid)
+                e.skybox.intensity = value
                 -- prefab_mgr:save_prefab()
                 -- prefab_mgr:reload()
             end
@@ -52,13 +55,14 @@ function SkyboxView:_init()
     self.IBL = uiproperty.Group({label="IBL"},{
         uiproperty.Float({label = "Intensity", min=0, speed=1, max=120000}, {
             getter = function ()
-                local e = world:entity(self.eid)
+                local e <close> = w:entity(self.eid, "ibl:in")
                 return e.ibl.intensity
             end,
             setter = function (value)
                 local ibl_t = iblT(self.eid)
                 ibl_t.intensity = value
-                world:entity(self.eid).ibl.intensity = value
+                local e <close> = w:entity(self.eid, "ibl:in")
+                e.ibl.intensity = value
                 iibl.set_ibl_intensity(value)
                 -- prefab_mgr:save_prefab()
                 -- prefab_mgr:reload()
@@ -66,7 +70,8 @@ function SkyboxView:_init()
         }),
         uiproperty.Combo({label = "Irradiance", options = size_str},{
             getter = function ()
-                return tostring(world:entity(self.eid).ibl.irradiance.size)
+                local e <close> = w:entity(self.eid, "ibl:in")
+                return tostring(e.ibl.irradiance.size)
             end,
             setter = function (value)
                 set_ibl_value(self.eid, "irradiance", value)
@@ -74,15 +79,18 @@ function SkyboxView:_init()
         }),
         uiproperty.Combo({label = "Prefilter", options = prefilter_size_str},{
             getter = function()
-                return tostring(world:entity(self.eid).ibl.prefilter.size)
+                local e <close> = w:entity(self.eid, "ibl:in")
+                return tostring(e.ibl.prefilter.size)
             end,
             setter = function()
-                return tostring(world:entity(self.eid).ibl.LUT.size)
+                local e <close> = w:entity(self.eid, "ibl:in")
+                return tostring(e.ibl.LUT.size)
             end
         }),
         uiproperty.Combo({label = "LUT", options = size_str},{
             getter = function ()
-                return tostring(world:entity(self.eid).ibl.LUT.size)
+                local e <close> = w:entity(self.eid, "ibl:in")
+                return tostring(e.ibl.LUT.size)
             end,
             setter = function (value)
                 set_ibl_value(self.eid, "LUT", value)
@@ -104,7 +112,6 @@ function SkyboxView:update()
 end
 
 function SkyboxView:show()
-    if not world:entity(self.eid) then return end
     MaterialView.show(self)
     self.IBL:show()
     self.skybox:show()

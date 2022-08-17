@@ -31,11 +31,13 @@ function ika.add(e, time_ms, value, idx)
 end
 
 function ika.remove(e, idx)
+	w:extend(e, "keyframe:in")
     idx = idx or #e.keyframe.frames
     table.remove(e.keyframe.frames, idx)
 end
 
 function ika.clear(e)
+	w:extend(e, "keyframe:in")
     e.keyframe.frames = {}
 end
 
@@ -43,6 +45,7 @@ function ika.stop(e)
 	if not e then
 		return
 	end
+	w:extend(e, "keyframe:in")
 	local ps = e.keyframe.play_state
 	ps.playing = false
 end
@@ -51,12 +54,14 @@ function ika.set_loop(e, loop)
 	if not e then
 		return
 	end
+	w:extend(e, "keyframe:in")
 	local ps = e.keyframe.play_state
 	ps.loop = loop
 end
 
 function ika.play(e, desc)
 	ika.stop(e)
+	w:extend(e, "keyframe:in")
 	local ps = e.keyframe.play_state
 	ps.loop = desc.loop
 	ps.forwards = desc.forwards
@@ -79,6 +84,7 @@ end
 local timer = ecs.import.interface "ant.timer|itimer"
 
 local function step_keyframe(e, delta_time, absolute)
+	w:extend(e, "keyframe:in")
 	local kf_anim = e.keyframe
 	if not kf_anim.play_state.playing and not absolute then
 		return
@@ -140,6 +146,7 @@ function ika.get_time(e)
 	if not e then
 		return 0
 	end
+	w:extend(e, "keyframe:in")
 	return e.keyframe.play_state.current_time or 0
 end
 

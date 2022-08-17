@@ -27,14 +27,16 @@ function ColliderView:set_model(eid)
     if not BaseView.set_model(self, eid) then return false end
 
     local tp = hierarchy:get_template(eid)
-    local collider = world:entity(eid).collider
+    local e <close> = w:entity(eid, "collider:in")
+    local collider = e.collider
     if collider.sphere then
         self.radius:set_getter(function()
             local scale = math3d.totable(iom.get_scale(eid))
             return scale[1] / 100
         end)
         self.radius:set_setter(function(r)
-            iom.set_scale(world:entity(self.eid), r * 100)
+            local e <close> = w:entity(eid)
+            iom.set_scale(e, r * 100)
             --prefab_mgr:update_current_aabb(self.e)
             world:pub {"UpdateAABB", self.eid}
             anim_view.record_collision(self.eid)
@@ -51,7 +53,8 @@ function ColliderView:set_model(eid)
             return {scale[1] / 200, scale[2] / 200, scale[3] / 200}
         end)
         self.half_size:set_setter(function(sz)
-            iom.set_scale(world:entity(self.eid), {sz[1] * 200, sz[2] * 200, sz[3] * 200})
+            local e <close> = w:entity(self.eid)
+            iom.set_scale(e, {sz[1] * 200, sz[2] * 200, sz[3] * 200})
             --prefab_mgr:update_current_aabb(self.e)
             world:pub {"UpdateAABB", self.eid}
             anim_view.record_collision(self.eid)
@@ -68,7 +71,8 @@ function ColliderView:has_scale()
 end
 
 function ColliderView:on_set_color(...)
-    imaterial.set_property(world:entity(self.eid), "u_color", ...)
+    local e <close> = w:entity(self.eid)
+    imaterial.set_property(e, "u_color", ...)
 end
 
 function ColliderView:on_get_color()
@@ -79,7 +83,7 @@ end
 
 function ColliderView:update()
     BaseView.update(self)
-    local e = world:entity(self.eid)
+    local e <close> = w:entity(self.eid, "collider:in")
     if e.collider.sphere then
         self.radius:update()
     elseif e.collider.capsule then
@@ -92,10 +96,8 @@ function ColliderView:update()
 end
 
 function ColliderView:show()
-    if not world:entity(self.eid) then return end
-    
     BaseView.show(self)
-    local e = world:entity(self.eid)
+    local e <close> = w:entity(self.eid, "collider:in")
     if e.collider.sphere then
         self.radius:show()
     elseif e.collider.capsule then

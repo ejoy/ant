@@ -74,7 +74,7 @@ local function get_icon_by_object_type(node)
     if template and template.filename then
         return icons.ICON_WORLD3D
     else
-        local e = world:entity(node.eid)
+        local e <close> = w:entity(node.eid, "camera?in light?in mesh?in slot?in")
         if e.camera then
             return icons.ICON_CAMERA3D
         end
@@ -106,8 +106,8 @@ local function get_icon_by_object_type(node)
 end
 local imodifier 		= ecs.import.interface "ant.modifier|imodifier"
 local function show_scene_node(node)
-    local e = world:entity(node.eid)
-    if not e or e.animation then
+    local e <close> = w:entity(node.eid, "animation?in")
+    if e.animation then
         return
     end
     imgui.table.NextRow();

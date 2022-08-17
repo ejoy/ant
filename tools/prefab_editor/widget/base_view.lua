@@ -62,7 +62,8 @@ function BaseView:set_model(eid)
     local property = {}
     property[#property + 1] = self.base.name
     property[#property + 1] = self.base.tag
-    if world:entity(eid).scene then
+    local e <close> = w:entity(eid, "scene?in")
+    if e.scene then
         property[#property + 1] = self.base.position
         if self:has_rotate() then
             property[#property + 1] = self.base.rotate
@@ -79,7 +80,7 @@ function BaseView:set_model(eid)
         self.base.aabbmax:set_visible(false)
         self.base.create_aabb:set_visible(false)
         self.base.delete_aabb:set_visible(false)
-        if template.template.data.bounding then
+        if template.template and template.template.data.bounding then
             self.base.aabbmin:set_visible(true)
             self.base.aabbmax:set_visible(true)
         else
@@ -111,13 +112,13 @@ end
 function BaseView:on_set_name(value)
     local template = hierarchy:get_template(self.eid)
     template.template.data.name = value
-    local e = world:entity(self.eid)
+    local e <close> = w:entity(self.eid, "name:out")
     e.name = value
     world:pub {"EntityEvent", "name", self.eid, value}
 end
 
 function BaseView:on_get_name()
-    local e = world:entity(self.eid)
+    local e <close> = w:entity(self.eid, "name:in")
     if type(e.name) == "number" then
         return tostring(e.name)
     end
@@ -148,7 +149,8 @@ function BaseView:on_set_position(value)
         world:pub {"EntityEvent", "move", self.eid, template.template.data.scene.t or {0,0,0}, value}
         template.template.data.scene.t = value
     else
-        world:pub {"EntityEvent", "move", self.eid, math3d.tovalue(iom.get_position(world:entity(self.eid))), value}
+        local e <close> = w:entity(self.eid)
+        world:pub {"EntityEvent", "move", self.eid, math3d.tovalue(iom.get_position(e)), value}
     end
 end
 
@@ -157,13 +159,13 @@ function BaseView:on_get_position()
     if template.template then
         return template.template.data.scene.t or {0,0,0}
     else
-        return math3d.totable(iom.get_position(world:entity(self.eid)))
+        local e <close> = w:entity(self.eid)
+        return math3d.totable(iom.get_position(e))
     end
 end
 
 function BaseView:on_set_rotate(value)
     local template = hierarchy:get_template(self.eid)
-    --local euler = world:entity(self.eid).oldeuler
     world:pub {"EntityEvent", "rotate", self.eid, { math.rad(value[1]), math.rad(value[2]), math.rad(value[3]) }, value}
     if template.template then
         template.template.data.scene.r = math3d.tovalue(math3d.quaternion{math.rad(value[1]), math.rad(value[2]), math.rad(value[3])})
@@ -176,13 +178,12 @@ function BaseView:on_get_rotate()
     if template.template then
         r = template.template.data.scene.r or {0,0,0,1}
     else
-        r = iom.get_rotation(world:entity(self.eid))
+        local e <close> = w:entity(self.eid)
+        r = iom.get_rotation(e)
     end
     local rad = math3d.tovalue(math3d.quat2euler(r))
     local raweuler = { math.deg(rad[1]), math.deg(rad[2]), math.deg(rad[3]) }
-    -- local e = world:entity(self.eid)
-    -- e.oldeuler = raweuler
-    return raweuler--e.oldeuler
+    return raweuler
 end
 
 function BaseView:on_set_scale(value)
@@ -191,7 +192,8 @@ function BaseView:on_set_scale(value)
         world:pub {"EntityEvent", "scale", self.eid, template.template.data.scene.s or {1,1,1}, value}
         template.template.data.scene.s = value
     else
-        world:pub {"EntityEvent", "scale", self.eid, math3d.tovalue(iom.get_scale(world:entity(self.eid))), value}
+        local e <close> = w:entity(self.eid)
+        world:pub {"EntityEvent", "scale", self.eid, math3d.tovalue(iom.get_scale(e)), value}
     end
 end
 
@@ -205,7 +207,8 @@ function BaseView:on_get_scale()
             return {1,1,1}
         end
     else
-        return math3d.tovalue(iom.get_scale(world:entity(self.eid)))
+        local e <close> = w:entity(self.eid)
+        return math3d.tovalue(iom.get_scale(e))
     end
 end
 
@@ -215,7 +218,8 @@ function BaseView:on_set_aabbmin(value)
         if template.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
             template.template.data.bounding.aabb.min = tv
-            local bounding = world:entity(self.eid).bounding
+            local e <close> = w:entity(self.eid, "bounding?in")
+            local bounding = e.bounding
             if bounding then
                 local aabbmax = {0,0,0}
                 if bounding.aabb and bounding.aabb ~= mc.NULL then
@@ -246,7 +250,8 @@ function BaseView:on_set_aabbmax(value)
         if template.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
             template.template.data.bounding.aabb.max = tv
-            local bounding = world:entity(self.eid).bounding
+            local e <close> = w:entity(self.eid, "bounding?in")
+            local bounding = e.bounding
             if bounding then
                 local aabbmin = {0,0,0}
                 if bounding.aabb and bounding.aabb ~= mc.NULL then
@@ -292,7 +297,8 @@ function BaseView:delete_aabb()
         self.base.delete_aabb:set_visible(false)
         self.base.aabbmin:set_visible(false)
         self.base.aabbmax:set_visible(false)
-        local bounding = world:entity(self.eid).bounding
+        local e <close> = w:entity(self.eid, "bounding?in")
+        local bounding = e.bounding
         if bounding.aabb and bounding.aabb ~= mc.NULL then
             bounding.aabb = mc.NULL
         else

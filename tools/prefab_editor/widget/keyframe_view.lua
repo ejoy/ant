@@ -535,7 +535,7 @@ end
 
 local function anim_pause(p)
     if edit_mode == MODE_MTL then
-        local kfa = world:entity(current_anim.runtime_anim.modifier.anim_eid)
+        local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
         ika.stop(kfa)
     else
         iani.pause(anim_eid, p)
@@ -544,7 +544,7 @@ end
 
 local function anim_set_loop(loop)
     if edit_mode == MODE_MTL then
-        local kfa = world:entity(current_anim.runtime_anim.modifier.anim_eid)
+        local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
         ika.set_loop(kfa, loop)
     else
         iani.set_loop(anim_eid, loop)
@@ -553,7 +553,7 @@ end
 
 local function anim_set_time(t)
     if edit_mode == MODE_MTL then
-        local kfa = world:entity(current_anim.runtime_anim.modifier.anim_eid)
+        local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
         ika.set_time(kfa, t)
     else
         iani.set_time(anim_eid, t)
@@ -581,7 +581,8 @@ local function create_animation(name, duration, target_anims)
                 _sampling_context = animation.new_sampling_context(1)
             }
             new_anim.raw_animation:setup(current_skeleton._handle, td)
-            world:entity(anim_eid).animation[name] = new_anim
+            local e <close> = w:entity(anim_eid, "animation:in")
+            e.animation[name] = new_anim
         end
         local edit_anim = {
             edit_mode = edit_mode,
@@ -783,7 +784,7 @@ function m.show()
             imgui.cursor.SameLine()
             if edit_mode == MODE_MTL then
                 if current_anim.runtime_anim.modifier then
-                    local kfa = world:entity(current_anim.runtime_anim.modifier.anim_eid)
+                    local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
                     current_anim.is_playing = ika.is_playing(kfa)
                     if current_anim.is_playing then
                         current_anim.current_frame = math.floor(ika.get_time(kfa) * sample_ratio)
@@ -819,7 +820,7 @@ function m.show()
             local current_time = 0
             if edit_mode == MODE_MTL then
                 if current_anim.runtime_anim.modifier then
-                    local kfa = world:entity(current_anim.runtime_anim.modifier.anim_eid)
+                    local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
                     current_time = ika.get_time(kfa)
                 end
             else
@@ -952,8 +953,8 @@ function m.load(path)
 
     local mtl
     if edit_mode == MODE_MTL then
-        local filename = world:entity(current_mtl_target).material
-        mtl = serialize.parse(filename, cr.read_file(filename))
+        local e <close> = w:entity(current_mtl_target, "material:in")
+        mtl = serialize.parse(e.material, cr.read_file(e.material))
     end
     local is_valid = true
     for _, value in ipairs(anim.target_anims) do
@@ -1027,7 +1028,8 @@ function m.set_current_target(target_eid)
         end
     end
     current_mtl_target = target_eid
-    local mtlpath = world:entity(target_eid).material
+    local e <close> = w:entity(target_eid, "material:in")
+    local mtlpath = e.material
     current_mtl = mtlpath
     if not mtl_desc[mtlpath] then
         local desc = {}
@@ -1055,10 +1057,12 @@ function m.init(skeleton)
     current_skeleton = skeleton
     joint_utils.on_select_joint = function(old, new)
         if old and old.mesh then
-            imaterial.set_property(world:entity(old.mesh), "u_basecolor_factor", bone_color) 
+            local e <close> = w:entity(old.mesh)
+            imaterial.set_property(e, "u_basecolor_factor", bone_color) 
         end
         if new then
-            imaterial.set_property(world:entity(new.mesh), "u_basecolor_factor", bone_highlight_color)
+            local e <close> = w:entity(new.mesh)
+            imaterial.set_property(e, "u_basecolor_factor", bone_highlight_color)
             if current_anim then
                 local layer_index = find_anim_by_name(new.name) or 0
                 if layer_index ~= 0 then
@@ -1085,10 +1089,8 @@ function m.init(skeleton)
         if pose_result then
             for _, joint in ipairs(jlist) do
                 if joint.mesh then
-                    local mesh_e = world:entity(joint.mesh)
-                    if mesh_e then
-                        iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(pose_result:joint(joint.index), math3d.matrix{s=joint_scale}))))
-                    end
+                    local mesh_e <close> = w:entity(joint.mesh)
+                    iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(pose_result:joint(joint.index), math3d.matrix{s=joint_scale}))))
                 end
             end
         end

@@ -323,12 +323,15 @@ local highlight_aabb = {
     min = nil,
     max = nil,
 }
-local function update_highlight_aabb(e)
-    if e then
-        local bounding = world:entity(e).bounding
+
+local function update_highlight_aabb(eid)
+    if eid then
+        local e <close> = w:entity(eid, "bounding?in")
+        local bounding = e.bounding
         if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
-            highlight_aabb.min = math3d.tovalue(math3d.array_index(bounding.aabb, 1))
-            highlight_aabb.max = math3d.tovalue(math3d.array_index(bounding.aabb, 2))
+            local wm = iom.worldmat(e) or mc.IDENTITY_MAT
+            highlight_aabb.min = math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1))
+            highlight_aabb.max = math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1))
             highlight_aabb.visible = true
             return
         end
@@ -337,36 +340,38 @@ local function update_highlight_aabb(e)
 end
 
 local function on_target(old, new)
-    if old and world:entity(old) then
-        if world:entity(old).light then
+    if old then
+        local oe <close> = w:entity(old, "light?in")
+        if oe.light then
             light_gizmo.bind(nil)
         end
     end
     if new then
-        local e = world:entity(new)
-        if e.camera then
+        local ne <close> = w:entity(new, "camera?in light?in render_object?in")
+        if ne.camera then
             camera_mgr.set_second_camera(new, true)
         end
 
-        if e.light then
+        if ne.light then
             light_gizmo.bind(new)
         end
-        if e.render_object then
+        if ne.render_object then
             keyframe_view.set_current_target(new)
         end
     end
     world:pub {"UpdateAABB", new}
 end
 
-local function on_update(e)
-    update_highlight_aabb(e)
-    if not e then return end
-    if world:entity(e).camera then
-        camera_mgr.update_frustrum(e)
-    elseif world:entity(e).light then
+local function on_update(eid)
+    update_highlight_aabb(eid)
+    if not eid then return end
+    local e <close> = w:entity(eid, "camera?in light?in")
+    if e.camera then
+        camera_mgr.update_frustrum(eid)
+    elseif e.light then
         light_gizmo.update()
     end
-    inspector.update_template_tranform(e)
+    inspector.update_template_tranform(eid)
 end
 
 local cmd_queue = ecs.require "gizmo.command_queue"
@@ -380,13 +385,15 @@ function hierarchy:set_adaptee_visible(nd, b, recursion)
 end
 
 local function update_visible(node, visible)
-    ivs.set_state(world:entity(node.eid), "main_view", visible)
+    local ne <close> = w:entity(node.eid)
+    ivs.set_state(ne, "main_view", visible)
     for _, nd in ipairs(node.children) do
         update_visible(nd, visible)
     end
     local adaptee = hierarchy:get_select_adaptee(node.eid)
     for _, eid in ipairs(adaptee) do
-        ivs.set_state(world:entity(eid), "main_view", visible)
+        local e <close> = w:entity(eid)
+        ivs.set_state(e, "main_view", visible)
     end
 end
 local reset_editor = world:sub {"ResetEditor"}
@@ -424,26 +431,24 @@ function m:handle_event()
         elseif what == "name" or what == "tag" then
             transform_dirty = false
             if what == "name" then
+                local e <close> = w:entity(target, "collider?in slot?in")
                 hierarchy:update_display_name(target, v1)
-                if world:entity(target).collider then
+                if e.collider then
                     hierarchy:update_collider_list(world)
-                elseif world:entity(target).slot then
+                elseif e.slot then
                     hierarchy:update_slot_list(world)
                 end
-            -- else
-            --     if world:entity(target).slot then
-            --         hierarchy:update_slot_list(world)
-            --     end
             end
         elseif what == "parent" then
-            local te = world:entity(target)
+            local te <close> = w:entity(target, "scene?in")
             v1 = v1 or prefab_mgr.root
-            local se = world:entity(v1)
+            local se <close> = w:entity(v1, "scene?in")
             if te.scene and se.scene then
                 hierarchy:set_parent(target, v1)
                 local targetWorldMat = v1 and iom.worldmat(se) or mc.IDENTITY_MAT
                 iom.set_srt_matrix(te, math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
                 te.scene.parent = v1
+                w:extend(te, "scene_needchange:out")
                 te.scene_needchange = true
             end
         end
@@ -453,12 +458,12 @@ function m:handle_event()
     end
     for _, what, target, value in hierarchy_event:unpack() do
         if what == "visible" then
-            local e = world:entity(target.eid)
+            local e <close> = w:entity(target.eid, "efk?in light?in")
             hierarchy:set_visible(target, value, true)
             if e.efk then
                 iefk.set_visible(e, value)
             elseif e.light then
-                world:pub{"component_changed", "light", e, "visible", value}
+                world:pub{"component_changed", "light", target.eid, "visible", value}
             else
                 update_visible(target, value)
             end
@@ -471,7 +476,8 @@ function m:handle_event()
         elseif what == "lock" then
             hierarchy:set_lock(target, value)
         elseif what == "delete" then
-            if world:entity(gizmo.target_eid).collider then
+            local e <close> = w:entity(gizmo.target_eid, "collider?in")
+            if e.collider then
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(target)

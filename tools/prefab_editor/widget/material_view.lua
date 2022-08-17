@@ -240,7 +240,8 @@ local function create_property_ui(n, p, mv)
                 for i=1, #value do
                     pp[i] = value[i]
                 end
-                imaterial.set_property(world:entity(mv.eid), n, pp)
+                local e <close> = w:entity(mv.eid)
+                imaterial.set_property(e, n, pp)
                 mv.need_reload = true
             end
         })
@@ -258,7 +259,8 @@ local function create_property_ui(n, p, mv)
                     for ii=1, #value do
                         ppp[ii] = value[ii]
                     end
-                    imaterial.set_property(world:entity(mv.eid), n, pp)
+                    local e <close> = w:entity(mv.eid)
+                    imaterial.set_property(e, n, pp)
                     mv.need_reload = true
                 end
             })
@@ -416,7 +418,7 @@ local function build_properties_ui(mv)
 
         local function create_uvmotion_ui()
             local function update_uvmotion_in_material(u)
-                local e = world:entity(mv.eid)
+                local e <close> = w:entity(mv.eid, "render_object:in")
                 local m = e.render_object.material
                 m.u_uvmotion = math3d.vector(u)
             end
@@ -487,7 +489,8 @@ local function build_properties_ui(mv)
                     setter = function (value)
                         value = math3d.vector({value[1], value[2], value[3], value[4]})
                         set_factor("basecolor", value)
-                        imaterial.set_property(world:entity(mv.eid), "u_basecolor_factor", value)
+                        local e <close> = w:entity(mv.eid)
+                        imaterial.set_property(e, "u_basecolor_factor", value)
                     end
                 })
             )
@@ -504,7 +507,8 @@ local function build_properties_ui(mv)
                         setter = function (value)
                             local pbrfactor = get_pbr_factor(t)
                             pbrfactor[1] = value
-                            imaterial.set_property(world:entity(mv.eid), "u_pbr_factor", pbrfactor)
+                            local e <close> = w:entity(mv.eid)
+                            imaterial.set_property(e, "u_pbr_factor", pbrfactor)
                         end
                     }),
                     uiproperty.Float({label="roughness", min=0.0, max=1.0, speed=0.02}, {
@@ -515,7 +519,8 @@ local function build_properties_ui(mv)
                         setter = function (value)
                             local pbrfactor = get_pbr_factor(t)
                             pbrfactor[2] = value
-                            imaterial.set_property(world:entity(mv.eid), "u_pbr_factor", pbrfactor)
+                            local e <close> = w:entity(mv.eid)
+                            imaterial.set_property(e, "u_pbr_factor", pbrfactor)
                         end,
                     })
                 })
@@ -536,7 +541,8 @@ local function build_properties_ui(mv)
                 end,
                 setter = function (value)
                     set_factor("emissive", value)
-                    imaterial.set_property(world:entity(mv.eid), "u_emissive_factor", value)
+                    local e <close> = w:entity(mv.eid)
+                    imaterial.set_property(e, "u_emissive_factor", value)
                 end
             })
         ))
@@ -558,7 +564,8 @@ local function build_properties_ui(mv)
                 setter = function (value)
                     local pbrfactor = get_pbr_factor(t)
                     pbrfactor[3] = value
-                    imaterial.set_property(world:entity(mv.eid), "u_pbr_factor", pbrfactor)
+                    local e <close> = w:entity(mv.eid)
+                    imaterial.set_property(e, "u_pbr_factor", pbrfactor)
                 end
             })
         })
@@ -572,7 +579,8 @@ local function build_properties_ui(mv)
             setter = function (value)
                 local pbrfactor = get_pbr_factor(t)
                 pbrfactor[4] = value
-                imaterial.set_property(world:entity(mv.eid), "u_pbr_factor", pbrfactor)
+                local e <close> = w:entity(mv.eid)
+                imaterial.set_property(e, "u_pbr_factor", pbrfactor)
             end
         })
     else

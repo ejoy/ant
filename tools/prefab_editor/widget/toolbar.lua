@@ -20,9 +20,10 @@ local status = {
 }
 
 local function is_select_camera()
-    local e = gizmo.target_eid
-    if e then
-        return world:entity(e).camera ~= nil
+    local eid = gizmo.target_eid
+    if eid then
+        local e <close> = w:entity(eid, "camera?in")
+        return e.camera ~= nil
     end
 end
 
