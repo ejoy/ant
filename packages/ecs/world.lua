@@ -23,6 +23,7 @@ function world:pipeline_func(what)
 		local printtext = {}
 		local MaxFrame <const> = 10
 		local MaxText <const> = 5
+		local MaxName <const> = 48
 		local CurFrame = 0
 		for i = 1, #funcs do
 			total[i] = 0
@@ -35,8 +36,7 @@ function world:pipeline_func(what)
 				local f = funcs[i]
 				local now = get_time()
 				f(ecs_world)
-				local delta = get_time() - now
-				total[i] = total[i] + delta
+				total[i] = total[i] + (get_time() - now)
 			end
 			if CurFrame ~= MaxFrame then
 				CurFrame = CurFrame + 1
@@ -50,7 +50,8 @@ function world:pipeline_func(what)
 				for i = 1, MaxText do
 					local v = total[#total + 1 - i]
 					local m = v / MaxFrame * 1000
-					printtext[i] = ("%s - %.02fms                                      "):format(symbols[t[v]], m)
+					local name = symbols[t[v]]
+					printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(m)
 				end
 				for i = 1, #funcs do
 					total[i] = 0

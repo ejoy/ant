@@ -58,24 +58,29 @@ local profile = {}
 local profile_label = {}
 local profile_time = 0
 local profile_n = 0
+local MaxFrame <const> = 30
+local MaxName <const> = 48
+local profile_printtext = {}
 
 local function profile_print()
-    if profile_n <= 0 or profile_n % 60 ~= 0 then
-        return
-    end
-    local s = {
-        "",
-        "service stat"
-    }
-    for who, time in pairs(profile) do
-        local m = time / profile_n
-        if m >= 0.01 then
-            s[#s+1] = ("\t%s(%d) - %.02fms"):format(profile_label[who], who, m)
+    if profile_n ~= MaxFrame then
+        profile_n = profile_n + 1
+    else
+        profile_n = 1
+        local i = 1
+        for who, time in pairs(profile) do
+            local m = time / MaxFrame * 1000
+            local name = ("%s(%d)"):format(profile_label[who], who)
+            profile_printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(m)
+            profile[who] = 0
+            i = i + 1
         end
-        profile[who] = 0
     end
-    profile_n = 0
-    print(table.concat(s, "\n"))
+
+    bgfx.dbg_text_print(8, 8, 0x02, "--- encoder")
+    for i = 1, #profile_printtext do
+        bgfx.dbg_text_print(10, 8+i, 0x02, profile_printtext[i])
+    end
 end
 
 local function profile_init(who, label)
@@ -84,12 +89,11 @@ local function profile_init(who, label)
 end
 local function profile_begin()
     profile_print()
-    local _, now = ltask.now()
+    local now = ltask.counter()
     profile_time = now
-    profile_n = profile_n + 1
 end
 local function profile_end(who)
-    local _, now = ltask.now()
+    local now = ltask.counter()
     profile[who] = profile[who] + (now - profile_time)
 end
 
@@ -115,7 +119,7 @@ function S.encoder_create(label)
     local who = ltask.current_session().from
     encoder[who] = nil
     encoder_num = encoder_num + 1
-    --profile_init(who, label)
+    profile_init(who, label)
 end
 
 function S.encoder_destroy()
@@ -132,7 +136,7 @@ function S.encoder_frame()
     if encoder[who] ~= encoder_frame then
         encoder[who] = encoder_frame
         encoder_cur = encoder_cur + 1
-        --profile_end(who)
+        profile_end(who)
     end
     return wait_frame()
 end
@@ -165,16 +169,13 @@ end
 
 local maxfps = 30
 local frame_control; do
-    local function gettime()
-        return ltask.counter() --1s
-    end
     local MaxTimeCachedFrame <const> = 1 --*1s
     local frame_first = 1
     local frame_last  = 0
     local frame_time = {}
     local frame_delta = {}
     local fps = 0
-    local lasttime = gettime()
+    local lasttime = ltask.counter()
     local printtime = 0
     local printtext = ""
     local function clean(time)
@@ -224,7 +225,7 @@ local frame_control; do
         bgfx.dbg_text_print(8, 1, 0x02, ("avg: %.02fms max:%.02fms min:%.02fms          "):format(avg*1000, max*1000, min*1000))
     end
     function frame_control()
-        local time = gettime()
+        local time = ltask.counter()
         local delta = time - lasttime
         clean(time - MaxTimeCachedFrame)
         frame_last = frame_last + 1
@@ -239,7 +240,7 @@ local frame_control; do
                 exclusive.sleep(waittime)
             end
         end
-        lasttime = gettime()
+        lasttime = ltask.counter()
     end
 end
 
@@ -256,8 +257,8 @@ ltask.fork(function()
         if encoder_num > 0 and encoder_cur == encoder_num then
             encoder_frame = encoder_frame + 1
             encoder_cur = 0
-            --profile_begin()
             local f = bgfx.frame()
+            bgfx.dbg_text_clear()
             if pause_token then
                 ltask.wakeup(pause_token)
                 continue_token = {}
@@ -266,6 +267,7 @@ ltask.fork(function()
             end
             frame_control()
             wakeup_frame(f)
+            profile_begin()
         else
             exclusive.sleep(1)
         end
