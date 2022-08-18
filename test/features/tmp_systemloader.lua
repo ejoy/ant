@@ -416,7 +416,7 @@ end
 function init_loader_sys:camera_usage()
     for _, _, state, x, y in mouse_mb:unpack() do
         local mq = w:first("main_queue render_target:in camera_ref:in")
-        local ce = w:entity(mq.camera_ref)
+        local ce = w:entity(mq.camera_ref, "camera:in")
         local camera = ce.camera
         local vpmat = camera.viewprojmat
     
