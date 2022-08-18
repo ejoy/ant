@@ -85,6 +85,11 @@ function s.init()
     local tex = create_texture()
     update_texture(tex)
 
+    --[[
+        local imaterial = import_package "ant.asset|imaterial"
+        imaterial.set_property(e, "s_tex", tex)
+    ]]
+
     local properties = {
         u_color = {type="u", handle = find_uniform "u_color".handle, value = math3d.vector(1, 0, 0, 0)},
         s_tex = {stage=0, handle = assert(find_uniform "s_tex").handle, value = tex, type = 't'}
