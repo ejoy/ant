@@ -58,6 +58,16 @@ local function create_texture()
     }))
 end
 
+local function update_texture(handle)
+    local x, y, w, h = 1, 1, 1, 1
+    --base 0
+    local layer, mip = 0, 0
+    local mem = bgfx.memory("ffff", {
+        0.8, 0.8, 0.8, 1.0
+    })
+    bgfx.update_texture2d(handle, layer, mip, x, y, w, h, mem)
+end
+
 function s.init()
     local fx = load_fx {
         vs = "/pkg/ant.resources/shaders/simple/quad/vs_simplequad.sc",
@@ -72,9 +82,12 @@ function s.init()
         end
     end
 
+    local tex = create_texture()
+    update_texture(tex)
+
     local properties = {
         u_color = {type="u", handle = find_uniform "u_color".handle, value = math3d.vector(1, 0, 0, 0)},
-        s_tex = {stage=0, handle = assert(find_uniform "s_tex").handle, value = create_texture(), type = 't'}
+        s_tex = {stage=0, handle = assert(find_uniform "s_tex").handle, value = tex, type = 't'}
     }
     local state = bgfx.make_state {
         ALPHA_REF = 0,
