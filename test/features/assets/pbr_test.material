@@ -1,4 +1,8 @@
-fx: /pkg/ant.resources/materials/fx/pbr_default.fx
+fx:
+  vs: /pkg/ant.resouces/shaders/pbr/vs_pbr.sc
+  fs: /pkg/ant.resouces/shaders/pbr/fs_pbr.sc
+  setting:
+    HAS_BASECOLOR_TEXTURE: 1
 state: /pkg/ant.resources/materials/states/default.state
 properties:
   s_basecolor:
