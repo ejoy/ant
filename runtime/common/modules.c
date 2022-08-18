@@ -89,7 +89,7 @@ void ant_loadmodules(lua_State* L) {
         { "effekseer.callback", luaopen_effekseer_callback},
         { "fileinterface", luaopen_fileinterface },
 #if defined(_WIN32) && !defined(__MINGW32__)
-        { "audio", luaopen_audio},
+        //{ "audio", luaopen_audio},
 #endif
         { "ltask", luaopen_ltask},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},

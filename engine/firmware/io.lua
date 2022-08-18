@@ -143,7 +143,7 @@ local function listen_server(address, port)
 		print("listen:", err)
 		return
 	end
-	local rd,wt = socket.select({fd}, 2)
+	local rd,wt = socket.select({fd}, nil, 2)
 	if rd == false then
 		print("select:", 'timeout')
 		fd:close()
