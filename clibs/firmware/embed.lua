@@ -21,7 +21,7 @@ writeline(f)
 local data = readfile(input)
 if #data >= 16380 then
     writeline(f, ([[const char g%sData[] = {]]):format(name))
-    local n = #data - (#data + 1) % 16
+    local n = #data - #data % 16
     for i = 1, n, 16 do
         local b00, b01, b02, b03, b04, b05, b06, b07, b08, b09, b0a, b0b, b0c, b0d, b0e, b0f = string.byte(data, i, i + 15)
         writeline(f, ("0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,"):format(b00, b01, b02, b03, b04, b05, b06, b07, b08, b09, b0a, b0b, b0c, b0d, b0e, b0f))
