@@ -67,10 +67,20 @@ function CMD.LIST(path)
 	return item
 end
 
+local function is_resource(path)
+	local ext = path:extension():string():sub(2):lower()
+	if ext ~= "sc" and ext ~= "glb"  and ext ~= "texture" and ext ~= "png" then
+		return false
+	end
+	return true
+end
+
 function CMD.TYPE(path)
 	local rp = access.realpath(repo, path)
 	if lfs.is_directory(rp) then
 		return "dir"
+	elseif is_resource(rp) then
+		return "resource"
 	elseif lfs.is_regular_file(rp) then
 		return "file"
 	end

@@ -232,7 +232,7 @@ function offline.TYPE(id, fullpath, roothash)
 			response_id(id, nil)
 		elseif v.dir then
 			response_id(id, "dir")
-		elseif v.hash == "invaild" then
+		elseif v.hash == "invalid" then
 			response_id(id, "resource")
 		else
 			response_id(id, "file")
@@ -479,7 +479,7 @@ function response.RESOURCE(fullpath, hash)
 end
 
 function response.FETCH(path, hashs)
-	print("[response] FETCH", path, table.unpack(hashs))
+	print("[response] FETCH", path, hashs)
 	local waiting = {}
 	local missing = {}
 	local function finish()
@@ -594,7 +594,7 @@ function online.TYPE(id, fullpath, roothash)
 			response_id(id, nil)
 		elseif v.dir then
 			response_id(id, "dir")
-		elseif v.hash == "invaild" then
+		elseif v.hash == "invalid" then
 			response_id(id, "resource")
 		else
 			response_id(id, "file")
