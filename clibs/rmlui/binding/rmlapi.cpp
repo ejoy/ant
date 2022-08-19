@@ -356,6 +356,13 @@ lElementGetBounds(lua_State* L) {
 }
 
 static int
+lElementGetTagName(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	lua_pushstdstring(L, e->GetTagName());
+	return 1;
+}
+
+static int
 lElementAppendChild(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::Element* child = lua_checkobject<Rml::Element>(L, 2);
@@ -591,6 +598,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetAttribute", lElementGetAttribute },
 		{ "ElementGetBounds", lElementGetBounds },
+		{ "ElementGetTagName", lElementGetTagName },
 		{ "ElementGetChildren", lElementGetChildren },
 		{ "ElementGetOwnerDocument", lElementGetOwnerDocument },
 		{ "ElementGetProperty", lElementGetProperty },
