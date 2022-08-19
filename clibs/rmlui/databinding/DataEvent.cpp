@@ -7,8 +7,8 @@
 namespace Rml {
 
 struct DataEventListener : public EventListener {
-	DataEventListener(const std::string& type, bool use_capture, const std::string& expression_str)
-		: EventListener(type, use_capture)
+	DataEventListener(const std::string& type, const std::string& expression_str)
+		: EventListener(type, false)
 		, expression_str(expression_str)
 	{ }
 	bool Parse(const DataExpressionInterface& expression_interface, bool is_assignment_expression) {
@@ -39,7 +39,7 @@ DataEvent::~DataEvent() {
 
 bool DataEvent::Initialize(DataModel& model, Element* element, const std::string& expression_str, const std::string& modifier) {
 	assert(element);
-	listener = std::make_unique<DataEventListener>(modifier, false, expression_str);
+	listener = std::make_unique<DataEventListener>(modifier, expression_str);
 	DataExpressionInterface expr_interface(&model, element);
 	if (!listener->Parse(expr_interface, true)) {
 		listener.reset();

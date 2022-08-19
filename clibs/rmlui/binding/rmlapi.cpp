@@ -203,13 +203,6 @@ ElementAddEventListener(Rml::Element* e, const std::string& name, bool userCaptu
 	e->AddEventListener(new EventListener(L, name, get_lua_plugin()->ref(L), lua_toboolean(L, 4)));
 }
 
-static bool
-ElementDispatchEvent(Rml::Element* e, const std::string& type, bool interruptible, bool bubbles, lua_State* L, int parameters) {
-	luaL_checktype(L, parameters, LUA_TTABLE);
-	lua_pushvalue(L, parameters);
-	return e->DispatchEvent(type, get_lua_plugin()->ref(L), interruptible, bubbles);
-}
-
 static int
 lDocumentAddEventListener(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
@@ -240,17 +233,11 @@ lElementAddEventListener(lua_State* L) {
 }
 
 static int
-lDocumentDispatchEvent(lua_State* L) {
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	bool propagating = ElementDispatchEvent(doc->GetBody(), lua_checkstdstring(L, 2), false, false, L, 3);
-	lua_pushboolean(L, propagating);
-	return 1;
-}
-
-static int
 lElementDispatchEvent(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	bool propagating = ElementDispatchEvent(e, lua_checkstdstring(L, 2), true, true, L, 3);
+	luaL_checktype(L, 3, LUA_TTABLE);
+	lua_pushvalue(L, 3);
+	bool propagating = e->DispatchEvent(lua_checkstdstring(L, 2), get_lua_plugin()->ref(L), true, true);
 	lua_pushboolean(L, propagating);
 	return 1;
 }
@@ -587,7 +574,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentSetDimensions", lDocumentSetDimensions},
 		{ "DocumentElementFromPoint", lDocumentElementFromPoint },
 		{ "DocumentAddEventListener", lDocumentAddEventListener },
-		{ "DocumentDispatchEvent", lDocumentDispatchEvent },
 		{ "DocumentGetElementById", lDocumentGetElementById },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentGetBody", lDocumentGetBody },
