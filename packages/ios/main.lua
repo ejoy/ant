@@ -19,7 +19,7 @@ end
 -- see the https://en.wikipedia.org/wiki/List_of_iOS_devices
 major = tonumber(major)
 minor = tonumber(minor)
-local res = assert(fs.loadfile(path))(major, minor)
+local res = assert(loadfile(path:string()))(major, minor)
 if not res then
     return {
         error = ("unknown matchine `%s`"):format(machine)

@@ -96,20 +96,20 @@ local function connect_server(address, port)
 	print("Connecting", address, port)
 	local fd, err = socket "tcp"
 	if not fd then
-		print("socket:", err)
+		print("[ERROR] socket:", err)
 		return
 	end
 	local ok
 	ok, err = fd:connect(address, port)
 	if ok == nil then
 		fd:close()
-		print("connect:", err)
+		print("[ERROR] connect:", err)
 		return
 	end
 	if ok == false then
 		local rd,wt = socket.select(nil, {fd})
 		if not rd then
-			print("select:", wt)	-- select error
+			print("[ERROR] select:", wt)	-- select error
 			fd:close()
 			return
 		end
@@ -117,7 +117,7 @@ local function connect_server(address, port)
 	local ok, err = fd:status()
 	if not ok then
 		fd:close()
-		print("status:", err)
+		print("[ERROR] status:", err)
 		return
 	end
 	print("Connected")
@@ -128,35 +128,35 @@ local function listen_server(address, port)
 	print("Listening", address, port)
 	local fd, err = socket "tcp"
 	if not fd then
-		print("socket:", err)
+		print("[ERROR] socket:", err)
 		return
 	end
 	fd:option("reuseaddr", 1)
 	local ok
 	ok, err = fd:bind(address, port)
 	if not ok then
-		print("bind:", err)
+		print("[ERROR] bind:", err)
 		return
 	end
 	ok, err = fd:listen()
 	if not ok then
-		print("listen:", err)
+		print("[ERROR] listen:", err)
 		return
 	end
 	local rd,wt = socket.select({fd}, nil, 2)
 	if rd == false then
-		print("select:", 'timeout')
+		print("[ERROR] select:", 'timeout')
 		fd:close()
 		return
 	elseif rd == nil then
-		print("select:", wt)	-- select error
+		print("[ERROR] select:", wt)	-- select error
 		fd:close()
 		return
 	end
 	local newfd, err = fd:accept()
 	if not newfd then
 		fd:close()
-		print("accept:", err)
+		print("[ERROR] accept:", err)
 		return
 	end
 	print("Accepted")
@@ -191,7 +191,7 @@ local function response_id(id, ...)
 end
 
 local function response_err(id, msg)
-	print(msg)
+	print("[ERROR]", msg)
 	response_id(id, nil, msg)
 end
 
@@ -205,6 +205,7 @@ end
 local offline = {}
 
 function offline.LIST(id, path, roothash)
+	print("[offline] LIST", path, roothash)
 	local dir = repo:list(path, roothash)
 	if dir then
 		response_id(id, dir)
@@ -214,6 +215,7 @@ function offline.LIST(id, path, roothash)
 end
 
 function offline.TYPE(id, fullpath, roothash)
+	print("[offline] TYPE", fullpath, roothash)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		if fullpath == "" then
@@ -241,6 +243,7 @@ function offline.TYPE(id, fullpath, roothash)
 end
 
 function offline.GET(id, fullpath, roothash)
+	print("[offline] GET", fullpath, roothash)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		path = ""
@@ -265,6 +268,7 @@ function offline.GET(id, fullpath, roothash)
 end
 
 function offline.RESOURCE(id, paths)
+	print("[offline] RESOURCE", table.unpack(paths))
 	if #paths < 2 then
 		offline.GET(id, paths[1])
 		return
@@ -286,6 +290,7 @@ function offline.RESOURCE(id, paths)
 end
 
 function offline.EXIT(id)
+	print("[offline] EXIT")
 	response_id(id, nil)
 	error "EXIT"
 end
@@ -305,7 +310,7 @@ end
 local function offline_dispatch(id, cmd, ...)
 	local f = offline[cmd]
 	if not f then
-		print("Unsupported offline command : ", cmd)
+		print("[ERROR] Unsupported offline command : ", cmd)
 	else
 		f(id, ...)
 	end
@@ -431,11 +436,11 @@ local response = {}
 
 function response.ROOT(hash)
 	if hash == '' then
-		_print("INVALID ROOT", config.rootname)
+		_print("[ERROR] INVALID ROOT", config.rootname)
 		os.exit(-1, true)
 		return
 	end
-	print("CHANGEROOT", hash)
+	print("[response] ROOT", hash)
 	repo:updatehistory(hash)
 	repo:changeroot(hash)
 end
@@ -444,33 +449,37 @@ end
 -- It's rare because the file name is sha1 of file content. We don't need update the file.
 -- Client may not request the file already exist.
 function response.BLOB(hash, data)
+	print("[response] BLOB", hash, #data)
 	if repo:write_blob(hash, data) then
 		request_complete(hash, true)
 	end
 end
 
 function response.FILE(hash, size)
+	print("[response] FILE", hash, size)
 	repo:write_file(hash, size)
 end
 
 function response.MISSING(hash)
-	print("MISSING", hash)
+	print("[response] MISSING", hash)
 	request_complete(hash, false)
 end
 
 function response.SLICE(hash, offset, data)
+	print("[response] SLICE", hash, offset, #data)
 	if repo:write_slice(hash, offset, data) then
 		request_complete(hash, true)
 	end
 end
 
 function response.RESOURCE(fullpath, hash)
+	print("[response] RESOURCE", fullpath, hash)
 	repo:set_resource(fullpath, hash)
-	print("RESOURCE", fullpath, hash)
 	request_complete(fullpath, true)
 end
 
 function response.FETCH(path, hashs)
+	print("[response] FETCH", path, table.unpack(hashs))
 	local waiting = {}
 	local missing = {}
 	local function finish()
@@ -517,7 +526,7 @@ local function waiting_for_root()
 		local ok, err = connection_dispose(INTERVAL)
 		if not ok then
 			if ok == nil then
-				print("dispose", err)
+				print("[ERROR] dispose", err)
 				return
 			end
 			-- timeout
@@ -543,18 +552,20 @@ end
 ---------- online dispatch
 
 function online.LIST(id, path, roothash)
+	print("[online] LIST", path, roothash)
 	local dir, hash = repo:list(path, roothash)
 	if dir then
 		response_id(id, dir)
 	elseif hash then
 		request_file(id, "GET", hash, "LIST", path, roothash)
 	else
-		print("Need Change Root", roothash, path)
+		print("[ERROR] Need Change Root", roothash, path)
 		response_id(id, nil)
 	end
 end
 
 function online.FETCH(id, path)
+	print("[online] FETCH", path)
 	request_start("FETCH", path, {
 		resolve = function ()
 			response_id(id)
@@ -566,6 +577,7 @@ function online.FETCH(id, path)
 end
 
 function online.TYPE(id, fullpath, roothash)
+	print("[online] TYPE", fullpath, roothash)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		if fullpath == "" then
@@ -596,6 +608,7 @@ function online.TYPE(id, fullpath, roothash)
 end
 
 function online.GET(id, fullpath, roothash)
+	print("[online] GET", fullpath, roothash)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		path = ""
@@ -631,6 +644,7 @@ function online.GET(id, fullpath, roothash)
 end
 
 function online.RESOURCE(id, paths)
+	print("[online] RESOURCE", table.unpack(paths))
 	if #paths < 2 then
 		online.GET(id, paths[1])
 		return
@@ -653,7 +667,7 @@ end
 
 function online.SUBSCIBE(channel_name, message)
 	if connection.subscibe[message] then
-		print("Duplicate subscibe", message, channel_name)
+		print("[WARNING] Duplicate subscibe", message, channel_name)
 	end
 	connection.subscibe[message] = channel_name
 end
@@ -663,6 +677,7 @@ function online.SEND(_, ...)
 end
 
 function online.EXIT(id)
+	print("[online] EXIT")
 	response_id(id, nil)
 	error "EXIT"
 end
@@ -675,7 +690,7 @@ local function dispatch_net(cmd, ...)
 		if channel_name then
 			channel_user[channel_name]:push(cmd, ...)
 		else
-			print("Unsupport net command", cmd)
+			print("[ERROR] Unsupport net command", cmd)
 		end
 		return
 	end
@@ -689,7 +704,7 @@ local function online_dispatch(ok, id, cmd, ...)
 	end
 	local f = online[cmd]
 	if not f then
-		print("Unsupported online command : ", cmd)
+		print("[ERROR] Unsupported online command : ", cmd)
 	else
 		f(id, ...)
 		--local ok, err = xpcall(f, debug.traceback, ...)
@@ -725,7 +740,7 @@ local function work_online()
 			timeout = 0
 		else
 			if ok == nil then
-				print("Connection Error", err)
+				print("[ERROR] Connection Error", err)
 				break
 			end
 			timeout = timeout + 0.001
