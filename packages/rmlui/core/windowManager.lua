@@ -47,7 +47,7 @@ function m.postExternMessage(document, data)
     local name = names[document]
     if name then
         task.new(function ()
-            ltask.send(ServiceWorld, "message", "rmlui", name, data)
+            ltask.send(ServiceWorld, "rmlui_message", name, data)
         end)
     end
 end
