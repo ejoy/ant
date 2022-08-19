@@ -64,11 +64,28 @@ end
 local LOG
 
 if __ANT_RUNTIME__ then
+    local platform = require "bee.platform"
     local thread = require "bee.thread"
     local IO = thread.channel "IOreq"
-    function LOG(data)
-        IO:push(false, "SEND", "LOG", data)
-    end
+	if platform.os == "ios" then
+		local ios = require "ios"
+		local fs = require "bee.filesystem"
+		local document = ios.directory(ios.NSDocumentDirectory)
+		fs.create_directories(document .. "/log")
+		local logfile = document .. "/log/" .. (os.date '%Y_%m_%d_%H_%M_%S') .. ".log"
+		function LOG(data)
+			IO:push(false, "SEND", "LOG", data)
+			local f <close> = io.open(logfile, "a+")
+			if f then
+				f:write(data)
+				f:write("\n")
+			end
+		end
+	else
+		function LOG(data)
+			IO:push(false, "SEND", "LOG", data)
+		end
+	end
 else
     function LOG(data)
         io.write(data)

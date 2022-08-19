@@ -45,6 +45,7 @@ int luaopen_render(lua_State *L);
 int luaopen_image(lua_State* L);
 #if BX_PLATFORM_IOS
 int luaopen_gesture(lua_State* L);
+int luaopen_ios(lua_State* L);
 #endif
 #if defined(ANT_RUNTIME)
 int luaopen_firmware(lua_State* L);
@@ -102,6 +103,7 @@ void ant_loadmodules(lua_State* L) {
         { "image", luaopen_image },
 #if BX_PLATFORM_IOS
         { "gesture", luaopen_gesture },
+        { "ios", luaopen_ios },
 #endif
 #if defined(ANT_RUNTIME)
         { "firmware", luaopen_firmware },
