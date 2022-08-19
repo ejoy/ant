@@ -31,7 +31,7 @@ function dtt_sys:init()
                 local x, y, ww, hh = 0, 0, 2, 2
                 local gen_mipmap = false
                 local layernum = 1
-                local texture_fmt = "RGBA32F"
+                local texture_fmt = "RGBA8"
                 local texture_flag = sampler{
                     MIN="LINEAR",
                     MAG="LINEAR",
@@ -41,8 +41,8 @@ function dtt_sys:init()
                 tex_handle = bgfx.create_texture2d(ww, hh, gen_mipmap, layernum, texture_fmt, texture_flag)
                 local layer, mip = 0, 0
                 bgfx.update_texture2d(tex_handle, layer, mip, x, y, ww, hh, bgfx.memory_buffer("ffff", {
-                    1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0,
-                    0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0
+                    255, 255, 255, 255,
+                    128, 128, 128, 128,
                 }))
 
                 imaterial.set_property(e, "s_basecolor", tex_handle)
