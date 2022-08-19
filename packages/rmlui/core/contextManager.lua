@@ -280,6 +280,7 @@ local function processTouchStart(touch)
         touch.target = e
         touch.changed = true
         touchData[touch.id] = touch
+        return true
     end
 end
 
@@ -289,6 +290,7 @@ local function processTouchMove(touch)
         t.changed = true
         t.x = touch.x
         t.y = touch.y
+        return true
     end
 end
 
@@ -299,6 +301,7 @@ local function processTouchEnd(touch)
         t.removed = true
         t.x = touch.x
         t.y = touch.y
+        return true
     end
 end
 
@@ -324,8 +327,11 @@ function m.process_touch(state, touches)
     else
         return
     end
+    local capture = false
     for _, touch in ipairs(touches) do
-        process(touch)
+        if process(touch) then
+            capture = true
+        end
     end
     for _, touch in pairs(touchData) do
         if touch.changed then
@@ -339,6 +345,9 @@ function m.process_touch(state, touches)
         for _, touch in ipairs(touches) do
             touchData[touch.id] = nil
         end
+    end
+    if capture then
+        return true
     end
 end
 
