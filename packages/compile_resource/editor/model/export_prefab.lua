@@ -306,6 +306,9 @@ local function create_skin_entity(exports, parent, withanim)
 end
 
 local function create_animation_entity(exports)
+    if not next(exports.animations) then
+        return
+    end
     local policy = {
         "ant.general|name",
         "ant.animation|animation",
@@ -398,28 +401,30 @@ return function(output, glbdata, exports, localpath)
     create_animation_entity(exports)
     utility.save_txt_file("./mesh.prefab", prefab)
 
-    local anilst = {}
-    local animation = {}
-    for name, file in pairs(exports.animations) do
-        local n = fix_invalid_name(name)
-        anilst[#anilst+1] = n
-        animation[n] = serialize.path(file)
-    end
-    table.sort(anilst)
-    local anim_prefab = {
-        {
-            policy = {
-                "ant.general|name",
-                "ant.animation|animation",
-            },
-            data = {
-                name = "animation",
-                skeleton = serialize.path(exports.skeleton),
-                animation = animation,
-                animation_birth = anilst[1],
-                anim_ctrl = {},
-            },
+    if next(exports.animations) then
+        local anilst = {}
+        local animation = {}
+        for name, file in pairs(exports.animations) do
+            local n = fix_invalid_name(name)
+            anilst[#anilst+1] = n
+            animation[n] = serialize.path(file)
+        end
+        table.sort(anilst)
+        local anim_prefab = {
+            {
+                policy = {
+                    "ant.general|name",
+                    "ant.animation|animation",
+                },
+                data = {
+                    name = "animation",
+                    skeleton = serialize.path(exports.skeleton),
+                    animation = animation,
+                    animation_birth = anilst[1],
+                    anim_ctrl = {},
+                },
+            }
         }
-    }
-    utility.save_txt_file("./animation.prefab", anim_prefab)
+        utility.save_txt_file("./animation.prefab", anim_prefab)
+    end
 end
