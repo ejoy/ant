@@ -325,18 +325,17 @@ function icanvas.add_text(e, ...)
     end
 end
 
-function icanvas.show(b)
-    for e in w:select "canvas:in" do
-        local canvas = e.canvas
-        canvas.show = b
+function icanvas.show(e, b)
+    w:extend(e, "canvas:in")
+    local canvas = e.canvas
+    canvas.show = b
 
-        local textures = canvas.textures
-        for _, tex in pairs(textures) do
-            if tex.renderer_eid then
-                local re <close> = w:entity(tex.renderer_eid)
-                ivs.set_state(re, "main_view", b)
-                ivs.set_state(re, "selectable", b)
-            end
+    local textures = canvas.textures
+    for _, tex in pairs(textures) do
+        if tex.renderer_eid then
+            local re <close> = w:entity(tex.renderer_eid)
+            ivs.set_state(re, "main_view", b)
+            ivs.set_state(re, "selectable", b)
         end
     end
 end
