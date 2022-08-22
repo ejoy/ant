@@ -94,10 +94,11 @@ end
 function hierarchy:update_prefab_template(world)
     local prefab_template = {}
     local function construct_entity(eid, pt)
-        if self.all[eid].template.temporary then
+        local node = self.all[eid]
+        if node.template.temporary then
             return
         end
-        local templ = self.all[eid].template.template
+        local templ = node.template.template
         if templ and templ.data then
             if templ.data.tag then
                 local policy_name = "ant.general|tag"
@@ -118,13 +119,14 @@ function hierarchy:update_prefab_template(world)
         table.insert(pt, templ)
 
         local pidx = #pt > 0 and #pt or nil
-        local prefab_filename = self.all[eid].template.filename
+        local prefab_filename = node.template.filename
         if prefab_filename then
-            table.insert(pt, {mount = pidx, name = self.all[eid].template.name, editor = self.all[eid].template.editor, prefab = prefab_filename})
+            table.insert(pt, {mount = pidx, name = node.template.name, editor = node.template.editor, prefab = prefab_filename})
         end
-        for _, child in ipairs(self.all[eid].children) do
-            if self.all[child.eid].template.template then
-                self.all[child.eid].template.template.mount = pidx
+        for _, child in ipairs(node.children) do
+            local nd = self.all[child.eid]
+            if nd.parent ~= self.root.eid and nd.template.template then
+                nd.template.template.mount = pidx
             end
             construct_entity(child.eid, pt)
         end

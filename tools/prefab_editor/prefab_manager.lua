@@ -179,8 +179,10 @@ function m:set_default_light(enable)
     end
 end
 local function set_parent(eid, pid)
-    world.entity(eid).scene.parent = pid
-    world.entity(eid).scene_needchange = true
+    local e <close> = w:entity(eid)
+    w:extend(e, "scene:out scene_needchange?out")
+    e.scene.parent = pid
+    e.scene_needchange = true
 end
 function m:create(what, config)
     if not self.root then
@@ -395,8 +397,8 @@ function m:on_prefab_ready(prefab)
         local e <close> = w:entity(eid, "eid:in")
         st_set[e.eid] = true
         for i = idx, #entitys do
-            local entity <close> = w:entity(entitys[i], "scene:in eid:in")
-            if st_set[entity.scene.parent] == nil then
+            local entity <close> = w:entity(entitys[i], "scene?in eid:in")
+            if not entity.scene or st_set[entity.scene.parent] == nil then
                 break
             end
             st_set[entity.eid] = true
@@ -415,21 +417,12 @@ function m:on_prefab_ready(prefab)
         local scene = e.scene
         local parent = scene and find_e(entitys, scene.parent)
         if pt.prefab then
-            local prefab_name = pt.name or gen_prefab_name()
-            local sub_root = create_simple_entity(prefab_name, parent)
-            -- ecs.method.set_parent(sub_root, parent)
-            self.entities[#self.entities + 1] = sub_root
-
             local children = sub_tree(parent, j)
-            for _, child in ipairs(children) do
-                local ce <close> = w:entity(child, "scene:in")
-                local pe <close> = w:entity(parent, "eid")
-                if ce.scene.parent == pe.eid then
-                    ecs.method.set_parent(child, sub_root)
-                end
-            end
             j = j + #children
-            node_map[sub_root] = {template = {filename = pt.prefab, children = children, name = prefab_name, editor = pt.editor or false}, parent = parent}
+            local target_node = node_map[parent]
+            target_node.children = children
+            target_node.filename = pt.prefab
+            target_node.editor = pt.editor or false
         else
             self.entities[#self.entities + 1] = eid
             node_map[eid] = {template = self.prefab_template[i], parent = parent}
@@ -448,10 +441,11 @@ function m:on_prefab_ready(prefab)
         if node.parent and not hierarchy:get_node(node.parent) then
             add_to_hierarchy(node.parent)
         end
-        local children = node.template.children
+        local children = node.children
         local tp = node.template
         if children then
             set_select_adapter(children, eid)
+            tp = {template = node.template, filename = node.filename, editor = node.editor}
         else
             tp = {template = node.template}
         end
@@ -567,20 +561,22 @@ function m:add_prefab(filename)
     end
     local prefab
     local parent = gizmo.target_eid or self.root
-    local group_id = get_group_id()
-    local v_root = ecs.create_entity {
-        policy = "ant.scene|hitch_object",
-        data = {
-            scene = { parent = parent },
-            hitch = { group = group_id },
-        }
-    }
-    local group = ecs.group(group_id)
-    prefab = group:create_instance(prefab_filename)
-    group:enable "scene_update"
+    -- local group_id = get_group_id()
+    -- local v_root = ecs.create_entity {
+    --     policy = "ant.scene|hitch_object",
+    --     data = {
+    --         scene = { parent = parent },
+    --         hitch = { group = group_id },
+    --     }
+    -- }
+    -- local group = ecs.group(group_id)
+    -- prefab = group:create_instance(prefab_filename)
+    -- group:enable "scene_update"
+    local v_root, temp = create_simple_entity(gen_prefab_name(), parent)
     self.entities[#self.entities+1] = v_root
+    hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false}, parent)
+    prefab = ecs.create_instance(prefab_filename, v_root)
     prefab.on_ready = function(inst)
-        local prefab_name = gen_prefab_name()
         local children = inst.tag["*"]
         if #children == 1 then
             local child = children[1]
@@ -593,7 +589,6 @@ function m:add_prefab(filename)
             end
         end
         set_select_adapter(children, v_root)
-        hierarchy:add(v_root, {filename = prefab_filename, name = prefab_name, children = children, editor = false}, parent)
     end
     function prefab:on_message(msg) end
     function prefab:on_update() end
@@ -634,6 +629,9 @@ function m:save_prefab(path)
         else
             utils.write_file(filename, stringify(new_template))
             anim_view.save_keyevent()
+        end
+        if prefab_filename then
+            ecs.release_cache(prefab_filename)
         end
         return
     end
