@@ -69,10 +69,8 @@ if __ANT_RUNTIME__ then
     local IO = thread.channel "IOreq"
 	if platform.os == "ios" then
 		local ios = require "ios"
-		local fs = require "bee.filesystem"
 		local document = ios.directory(ios.NSDocumentDirectory)
-		fs.create_directories(document .. "/log")
-		local logfile = document .. "/log/" .. (os.date '%Y_%m_%d_%H_%M_%S') .. ".log"
+		local logfile = document .. "/log_" .. (os.date '%Y%m%d_%H%M%S') .. ".log"
 		function LOG(data)
 			IO:push(false, "SEND", "LOG", data)
 			local f <close> = io.open(logfile, "a+")
