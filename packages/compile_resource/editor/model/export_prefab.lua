@@ -306,9 +306,6 @@ local function create_skin_entity(exports, parent, withanim)
 end
 
 local function create_animation_entity(exports)
-    if not next(exports.animations) then
-        return
-    end
     local policy = {
         "ant.general|name",
         "ant.animation|animation",
@@ -398,10 +395,9 @@ return function(output, glbdata, exports, localpath)
     for _, nodeidx in ipairs(meshnodes) do
         check_create_node_entity(nodeidx)
     end
-    create_animation_entity(exports)
-    utility.save_txt_file("./mesh.prefab", prefab)
-
     if next(exports.animations) then
+        create_animation_entity(exports)
+        -- export animations
         local anilst = {}
         local animation = {}
         for name, file in pairs(exports.animations) do
@@ -427,4 +423,5 @@ return function(output, glbdata, exports, localpath)
         }
         utility.save_txt_file("./animation.prefab", anim_prefab)
     end
+    utility.save_txt_file("./mesh.prefab", prefab)
 end
