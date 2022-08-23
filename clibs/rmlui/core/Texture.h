@@ -8,8 +8,6 @@
 
 namespace Rml {
 
-using TextureHandle = uintptr_t;
-
 struct Texture: public TextureData {
 public:
 	Texture(const std::string& path);
