@@ -14,8 +14,7 @@ return {
         local path = fs.path(filename)
         local c = read_file(path)
         return {
-            rawdata = c,
-            filename = path:string()
+            handle = effekseer.create(c, filename),
         }
     end,
     unloader = function (res)

@@ -8,7 +8,7 @@ system "efk_system"
     .method "follow_transform_updated"
     .method "render_submit"
     .method "exit"
-
+component "efk_queue"
 component "efk".type "lua"
 policy "efk"
     .require_system     "ant.efk|efk_system"

@@ -6,6 +6,8 @@ local subprocess = import_package "ant.subprocess"
 local bgfx = require "bgfx"
 local image = require "image"
 
+local pngparam = require "editor.texture.png_param"
+
 local TEXTUREC = subprocess.tool_exe_path "texturec"
 
 local function add_option(commands, name, value)
@@ -56,32 +58,6 @@ local function writefile(filename, data)
 	f:close()
 end
 
-local function default_sampler()
-	return {
-		U="WRAP",
-		V="WRAP",
-		W="WRAP",
-		MIN="LINEAR",
-		MAG="LINEAR",
-		MIP="POINT",
-	}
-end
-
-local function fill_default_sampler(sampler)
-	local d = default_sampler()
-	if sampler == nil then
-		return d
-	end
-
-	for k, v in pairs(d) do
-		if sampler[k] == nil then
-			sampler[k] = v
-		end
-	end
-
-	return sampler
-end
-
 local function readall(filename)
 	local f = assert(lfs.open(filename, "rb"))
 	local data = f:read "a"
@@ -91,7 +67,7 @@ end
 
 return function (output, param)
 	local config = {
-        sampler = fill_default_sampler(param.sampler),
+        sampler = pngparam.sampler(param.sampler),
         flag	= sampler(param.sampler),
     }
     if param.colorspace == "sRGB" then

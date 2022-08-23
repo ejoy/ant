@@ -18,6 +18,8 @@ local cr        = import_package "ant.compile_resource"
 local itimer    = ecs.import.interface "ant.timer|itimer"
 local mc 		= import_package "ant.math".constant
 
+local irq       = ecs.import.interface "ant.render|irenderqueue"
+
 local efk_sys = ecs.system "efk_system"
 
 local FxFiles = {}
@@ -114,20 +116,14 @@ local function texture_load(texname, srgb)
     --TODO: need use srgb texture
     local _ <close> = fs.switch_sync()
     assert(texname:match "^/pkg" ~= nil)
-    local filecontent = cr.read_file(texname)
-    local cfg = datalist.parse(cr.read_file(texname .. "|main.cfg"))
-    local ti = cfg.info
-    if texname:lower():match "%.png$" then
-        if ti.format == "RG8" then
-            filecontent = image.png.gray2rgb(filecontent)
-        else
-            filecontent = image.convert(filecontent, "RGBA8")
-        end
-    end
+    local p = fs.path(texname)
+    p:replace_extension "efkpng"
 
+    local filecontent = cr.read_file(p:string() .. "|main.bin")
+    local cfg = cr.read_file(p:string() .. "|main.cfg")
     local mem = bgfx.memory_buffer(filecontent)
     local handle = bgfx.create_texture(mem, cfg.flag)
-    TEXTURE_LOADED[handle] = texname
+    TEXTURE_LOADED[handle] = p:string()
     return (handle & 0xffff)
 end
 
@@ -137,7 +133,7 @@ local function texture_unload(texhandle)
 end
 
 local function error_handle(msg)
-    error(msg)
+    print("[ERROR]", debug.traceback(msg))
 end
 
 local function texture_find(_, id)
@@ -166,6 +162,27 @@ function efk_sys:init()
         userdata        = {
             callback = efk_cb_handle,
             filefactory = filefactory,
+        }
+    }
+    local vp = world.args.viewport
+    ecs.create_entity{
+        policy = {
+            "ant.general|name",
+            "ant.render|render_target",
+            "ant.render|watch_screen_buffer",
+        },
+        data = {
+            efk_queue = true,
+            render_target = {
+                view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
+                viewid = effect_viewid,
+                view_mode = "s",
+                clear_state = {
+                    clear = "",
+                },
+            },
+            watch_screen_buffer = true,
+            name = "efk_queue",
         }
     }
 end
@@ -236,7 +253,12 @@ function efk_sys:init_world()
     world:pub{"camera_changed", mq.cameraref, "frustum"}
 end
 
+local vp_changed_mb = world:sub{"world_viewport_changed"}
 function efk_sys:camera_usage()
+    for _, vp in vp_changed_mb:unpack() do
+        irq.set_view_rect("efk_queue", vp)
+    end
+
     for _, _, cameraref in camera_changed:unpack() do
         camera_frustum_mb = world:sub{"camera_changed", cameraref, "frustum"}
         update_framebuffer_texutre()
@@ -285,19 +307,13 @@ function efk_sys:render_submit()
     local mq = w:first("main_queue camera_ref:in")
     local ce <close> = w:entity(mq.camera_ref, "camera:in")
     local camera = ce.camera
-    for tm_q in w:select "tonemapping_queue render_target:in" do
-        local tm_rt = tm_q.render_target
-        fbmgr.bind(effect_viewid, tm_rt.fb_idx)
-        local vr = tm_rt.view_rect
-        bgfx.set_view_rect(effect_viewid, vr.x, vr.y, vr.w, vr.h)
-    end
     efk_ctx:render(math3d.value_ptr(camera.viewmat), math3d.value_ptr(camera.projmat), itimer.delta())
 end
 
 local iefk = ecs.interface "iefk"
 
 function iefk.create(filename, config)
-    local config = config or {
+    config = config or {
         play_on_create = false,
         loop = false,
         speed = 1.0,

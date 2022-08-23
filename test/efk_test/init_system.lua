@@ -18,7 +18,7 @@ local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local is = ecs.system "init_system"
 
 function is:init()
-    world:create_entity {
+    ecs.create_entity {
         policy = {
             "ant.general|name",
             "ant.scene|scene_object",
@@ -29,7 +29,8 @@ function is:init()
             efk     = "/pkg/ant.efk/efkbgfx/examples/resources/Laser01.efk",
             name    = "test_efk",
             on_ready = function (e)
-                e.efk.eff_handle = iefk.play(e)
+                local handle = iefk.play(e)
+                e.efk.eff_handle = handle
             end
         },
     }
