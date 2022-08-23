@@ -780,14 +780,14 @@ function m.show()
                         end
                     end
                     if update then
-                        local group_eid = get_anim_group_eid(anim_eid, current_anim.name)
-                        --TODO: set for group eid
-                        for _, eid in ipairs(group_eid) do
-                            local template = hierarchy:get_template(eid)
+                        -- local group_eid = get_anim_group_eid(anim_eid, current_anim.name)
+                        -- --TODO: set for group eid
+                        -- for _, eid in ipairs(group_eid) do
+                            local template = hierarchy:get_template(anim_eid)
                             template.template.data.animation[anim_name] = anim_path
-                            local e <close> = w:entity(eid, "animation:in")
+                            local e <close> = w:entity(anim_eid, "animation:in")
                             e.animation[anim_name] = anim_path
-                        end
+                        -- end
                         --TODO:reload
                         reload = true
                     end

@@ -21,7 +21,7 @@ return {
         return {
             _duration = data.duration,
             _sampling_context = animodule.new_sampling_context(1),
-            _handle = iani.build_animation(ske._handle, raw_animation, data.joint_anims, data.sample_ratio),
+            _handle = iani.build_animation(ske._handle, raw_animation, data.target_anims, data.sample_ratio),
         }
     end,
     unloader = function (res)

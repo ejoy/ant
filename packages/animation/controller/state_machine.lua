@@ -62,7 +62,7 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
         local poseMat = ske:joint(ske:joint_index(joint_name))
 		local localMat = math3d.matrix{s = 1, r = mc.IDENTITY_QUAT, t = mc.ZERO}
         local from_s, from_r, from_t = math3d.srt(math3d.mul(poseMat, localMat))
-		if not clips then
+		if not clips or #clips < 1 then
 			raw_anim:push_prekey(joint_name, 0, from_s, from_r, from_t)
 		else
 			for _, clip in ipairs(clips) do
