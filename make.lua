@@ -29,7 +29,10 @@ end
 lm.c = "c11"
 lm.cxx = "c++20"
 lm.msvc = {
-    defines = "_CRT_SECURE_NO_WARNINGS",
+    defines = {
+        "_CRT_SECURE_NO_WARNINGS",
+        lm.mode == "debug" and "_DISABLE_STRING_ANNOTATION",
+    },
     flags = {
         "-wd5105"
     }
