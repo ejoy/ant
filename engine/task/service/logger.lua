@@ -23,7 +23,7 @@ local function service(id)
 end
 
 function command.startup(id, label)
-	lables[id] = label
+	lables[id] = label:sub(9)
 	return service(id) .. " startup."
 end
 
@@ -64,11 +64,26 @@ end
 local LOG
 
 if __ANT_RUNTIME__ then
+    local platform = require "bee.platform"
     local thread = require "bee.thread"
     local IO = thread.channel "IOreq"
-    function LOG(data)
-        IO:push(false, "SEND", "LOG", data)
-    end
+	if platform.os == "ios" then
+		local ios = require "ios"
+		local document = ios.directory(ios.NSDocumentDirectory)
+		local logfile = document .. "/log_" .. (os.date '%Y%m%d_%H%M%S') .. ".log"
+		function LOG(data)
+			IO:push(false, "SEND", "LOG", data)
+			local f <close> = io.open(logfile, "a+")
+			if f then
+				f:write(data)
+				f:write("\n")
+			end
+		end
+	else
+		function LOG(data)
+			IO:push(false, "SEND", "LOG", data)
+		end
+	end
 else
     function LOG(data)
         io.write(data)

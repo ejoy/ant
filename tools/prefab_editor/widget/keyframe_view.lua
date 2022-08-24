@@ -39,7 +39,7 @@ local allanims = { {}, {} }
 local anim_name_list = { {}, {} }
 local MODE_MTL<const> = 1
 local MODE_SKE<const> = 2
-local edit_mode = MODE_MTL
+local edit_mode = MODE_SKE
 local edit_mode_name = {
     "Materail",
     "Skeleton",
@@ -382,7 +382,7 @@ local function show_current_detail()
             name = current_joint.name
         end
     end
-    if not current_clip or current_anim.target_anims[1].target_name ~= name then
+    if not current_clip or current_anim.target_anims[current_anim.selected_layer_index].target_name ~= name then
         return
     end
 
@@ -708,7 +708,8 @@ local function show_joints()
     if joints_map and current_skeleton then
         joint_utils:show_joints(joints_map.root)
         current_joint = joint_utils.current_joint
-        if current_joint then
+        if current_joint ~= joint_utils.current_joint then
+            current_joint = joint_utils.current_joint
             on_select_target(current_joint.name)
         end
     end

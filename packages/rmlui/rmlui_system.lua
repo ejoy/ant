@@ -71,12 +71,26 @@ function rmlui_sys:entity_init()
     end
 end
 
+local S = ltask.dispatch()
+
+local msgqueue = {}
+
+function S.rmlui_message(...)
+	msgqueue[#msgqueue+1] = {...}
+end
+
 local windows = {}
 local events = {}
 
-local eventTaskMessage = world:sub {"task-message","rmlui"}
 function rmlui_sys:ui_update()
-    for _, _, name, data in eventTaskMessage:unpack() do
+    if #msgqueue == 0 then
+        return
+    end
+    local mq = msgqueue
+    msgqueue = {}
+    for i = 1, #mq do
+        local msg = mq[i]
+        local name, data = msg[1], msg[2]
         local window = windows[name]
         local event = events[name]
         if window and event and event.message then

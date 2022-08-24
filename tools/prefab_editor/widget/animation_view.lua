@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w     = world.w
-local iaudio    = ecs.import.interface "ant.audio|audio_interface"
+-- local iaudio    = ecs.import.interface "ant.audio|audio_interface"
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
@@ -447,28 +447,28 @@ local function show_current_event()
         end
     elseif current_event.event_type == "Sound" then
         if imgui.widget.Button("SelectBank") then
-            local path = uiutils.get_open_file_path("Bank", "bank")
-            if path then
-                local rp = lfs.relative(lfs.path(path), global_data.project_root)
-                local fullpath = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
-                local bank = iaudio.load_bank(fullpath)
-                if not bank then
-                    print("LoadBank Faied. :", fullpath)
-                end
-                local bankname = fullpath:sub(1, -5) .. "strings.bank"
-                local bank_string = iaudio.load_bank(bankname)
-                if not bank_string then
-                    print("LoadBank Faied. :", bankname)
-                end
-                local event_list = iaudio.get_event_list(bank)
-                sound_event_list = {}
-                for _, v in ipairs(event_list) do
-                    sound_event_list[#sound_event_list + 1] = iaudio.get_event_name(v)
-                end
-                current_event.asset_path_ui.text = fullpath
-                current_event.asset_path = fullpath
-                dirty = true
-            end
+            -- local path = uiutils.get_open_file_path("Bank", "bank")
+            -- if path then
+            --     local rp = lfs.relative(lfs.path(path), global_data.project_root)
+            --     local fullpath = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
+            --     local bank = iaudio.load_bank(fullpath)
+            --     if not bank then
+            --         print("LoadBank Faied. :", fullpath)
+            --     end
+            --     local bankname = fullpath:sub(1, -5) .. "strings.bank"
+            --     local bank_string = iaudio.load_bank(bankname)
+            --     if not bank_string then
+            --         print("LoadBank Faied. :", bankname)
+            --     end
+            --     local event_list = iaudio.get_event_list(bank)
+            --     sound_event_list = {}
+            --     for _, v in ipairs(event_list) do
+            --         sound_event_list[#sound_event_list + 1] = iaudio.get_event_name(v)
+            --     end
+            --     current_event.asset_path_ui.text = fullpath
+            --     current_event.asset_path = fullpath
+            --     dirty = true
+            -- end
         end
         imgui.widget.Text("BankPath : " .. current_event.asset_path)
         imgui.widget.Text("SoundEvent : " .. current_event.sound_event)
@@ -476,9 +476,9 @@ local function show_current_event()
         for _, se in ipairs(sound_event_list) do
             if imgui.widget.Selectable(se, current_event.sound_event == se, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                 current_event.sound_event = se
-                if (imgui.util.IsMouseDoubleClicked(0)) then
-                    iaudio.play(se)
-                end
+                -- if (imgui.util.IsMouseDoubleClicked(0)) then
+                --     iaudio.play(se)
+                -- end
             end
         end
     elseif current_event.event_type == "Effect" then
@@ -780,14 +780,14 @@ function m.show()
                         end
                     end
                     if update then
-                        local group_eid = get_anim_group_eid(anim_eid, current_anim.name)
-                        --TODO: set for group eid
-                        for _, eid in ipairs(group_eid) do
-                            local template = hierarchy:get_template(eid)
+                        -- local group_eid = get_anim_group_eid(anim_eid, current_anim.name)
+                        -- --TODO: set for group eid
+                        -- for _, eid in ipairs(group_eid) do
+                            local template = hierarchy:get_template(anim_eid)
                             template.template.data.animation[anim_name] = anim_path
-                            local e <close> = w:entity(eid, "animation:in")
+                            local e <close> = w:entity(anim_eid, "animation:in")
                             e.animation[anim_name] = anim_path
-                        end
+                        -- end
                         --TODO:reload
                         reload = true
                     end

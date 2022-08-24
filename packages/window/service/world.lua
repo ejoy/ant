@@ -181,8 +181,4 @@ function S.exit()
     print "exit"
 end
 
-S.message = function(...)
-	world:pub {"task-message", ...}
-end
-
 return S

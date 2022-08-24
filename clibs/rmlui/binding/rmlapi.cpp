@@ -80,9 +80,8 @@ lua_pushRmlNode(lua_State* L, const Rml::Node* node) {
 namespace {
 
 struct EventListener final : public Rml::EventListener {
-	EventListener(lua_State* L_, const std::string& type, int funcref, bool use_capture)
+	EventListener(const std::string& type, int funcref, bool use_capture)
 		: Rml::EventListener(type, use_capture)
-		, L(L_)
 		, ref(funcref)
 	{}
 	~EventListener() {
@@ -95,7 +94,6 @@ struct EventListener final : public Rml::EventListener {
 			get_lua_plugin()->callref(L, ref, 1, 0);
 		});
 	}
-	lua_State* L;
 	int ref;
 };
 
@@ -196,27 +194,6 @@ lDocumentDefineCustomElement(lua_State* L) {
 	return 0;
 }
 
-static void
-ElementAddEventListener(Rml::Element* e, const std::string& name, bool userCapture, lua_State* L, int idx) {
-	luaL_checktype(L, 3, LUA_TFUNCTION);
-	lua_pushvalue(L, 3);
-	e->AddEventListener(new EventListener(L, name, get_lua_plugin()->ref(L), lua_toboolean(L, 4)));
-}
-
-static bool
-ElementDispatchEvent(Rml::Element* e, const std::string& type, bool interruptible, bool bubbles, lua_State* L, int parameters) {
-	luaL_checktype(L, parameters, LUA_TTABLE);
-	lua_pushvalue(L, parameters);
-	return e->DispatchEvent(type, get_lua_plugin()->ref(L), interruptible, bubbles);
-}
-
-static int
-lDocumentAddEventListener(lua_State* L) {
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	ElementAddEventListener(doc->GetBody(), lua_checkstdstring(L, 2), lua_toboolean(L, 4), L, 3);
-	return 0;
-}
-
 static int
 lDocumentGetElementById(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
@@ -235,22 +212,18 @@ lDocumentGetSourceURL(lua_State *L) {
 static int
 lElementAddEventListener(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	ElementAddEventListener(e, lua_checkstdstring(L, 2), lua_toboolean(L, 4), L, 3);
+	luaL_checktype(L, 3, LUA_TFUNCTION);
+	lua_pushvalue(L, 3);
+	e->AddEventListener(new EventListener(lua_checkstdstring(L, 2), get_lua_plugin()->ref(L), lua_toboolean(L, 4)));
 	return 0;
-}
-
-static int
-lDocumentDispatchEvent(lua_State* L) {
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	bool propagating = ElementDispatchEvent(doc->GetBody(), lua_checkstdstring(L, 2), false, false, L, 3);
-	lua_pushboolean(L, propagating);
-	return 1;
 }
 
 static int
 lElementDispatchEvent(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	bool propagating = ElementDispatchEvent(e, lua_checkstdstring(L, 2), true, true, L, 3);
+	luaL_checktype(L, 3, LUA_TTABLE);
+	lua_pushvalue(L, 3);
+	bool propagating = e->DispatchEvent(lua_checkstdstring(L, 2), get_lua_plugin()->ref(L), true, true);
 	lua_pushboolean(L, propagating);
 	return 1;
 }
@@ -353,6 +326,13 @@ lElementGetBounds(lua_State* L) {
 	lua_pushnumber(L, bounds.size.w);
 	lua_pushnumber(L, bounds.size.h);
 	return 4;
+}
+
+static int
+lElementGetTagName(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	lua_pushstdstring(L, e->GetTagName());
+	return 1;
 }
 
 static int
@@ -579,8 +559,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentUpdate", lDocumentUpdate },
 		{ "DocumentSetDimensions", lDocumentSetDimensions},
 		{ "DocumentElementFromPoint", lDocumentElementFromPoint },
-		{ "DocumentAddEventListener", lDocumentAddEventListener },
-		{ "DocumentDispatchEvent", lDocumentDispatchEvent },
 		{ "DocumentGetElementById", lDocumentGetElementById },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentGetBody", lDocumentGetBody },
@@ -591,6 +569,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetAttribute", lElementGetAttribute },
 		{ "ElementGetBounds", lElementGetBounds },
+		{ "ElementGetTagName", lElementGetTagName },
 		{ "ElementGetChildren", lElementGetChildren },
 		{ "ElementGetOwnerDocument", lElementGetOwnerDocument },
 		{ "ElementGetProperty", lElementGetProperty },

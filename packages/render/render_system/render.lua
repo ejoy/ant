@@ -140,7 +140,7 @@ local rb_flag = sampler {
 }
 
 local depth_flag = sampler {
-	RT="RT_MSAA4",
+	RT="RT_MSAA4|RT_WRITE",
 	MIN="POINT",
 	MAG="POINT",
 	U="CLAMP",

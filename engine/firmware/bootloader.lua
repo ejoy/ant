@@ -6,6 +6,8 @@ local errlog = thread.channel "errlog"
 local errthread = thread.thread([[
 	-- Error Thread
 	local thread = require "bee.thread"
+    thread.setname "ant - Error thread"
+
 	local err = thread.channel "errlog"
 	while true do
 		local msg = err:bpop()

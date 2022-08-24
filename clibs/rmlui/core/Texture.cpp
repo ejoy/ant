@@ -18,9 +18,9 @@ Texture::Texture(const std::string& _source)
 }
 
 Texture::~Texture() {
-	if (handle && GetRenderInterface()) {
+	if (GetRenderInterface()) {
 		GetRenderInterface()->ReleaseTexture(handle);
-		handle = 0;
+		handle = UINT16_MAX;
 	}
 }
 

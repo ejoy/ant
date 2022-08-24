@@ -20,7 +20,7 @@ namespace Rml::Style {
         for (auto id : inherit) {
             inherit_mask[(size_t)id] = 1;
         }
-        c = style_newcache(inherit_mask);
+        c = style_newcache(inherit_mask, NULL, NULL);
         assert(c);
     }
 

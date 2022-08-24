@@ -15,7 +15,7 @@ class EventListener;
 class Document;
 
 using FontFaceHandle = uint64_t;
-using TextureHandle = uintptr_t;
+using TextureHandle = uint16_t;
 
 struct Line {
 	std::string text;
@@ -25,7 +25,7 @@ struct Line {
 typedef std::vector<Line> LineList;
 
 struct TextureData {
-	TextureHandle handle = 0;
+	TextureHandle handle = UINT16_MAX;
 	Size          dimensions = {0, 0};
 };
 

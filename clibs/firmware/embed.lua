@@ -18,6 +18,22 @@ local name = fs.path(output):stem():string()
 local f <close> = assert(io.open(output, "wb"))
 writeline(f, [[#pragma once]])
 writeline(f)
-writeline(f, ([[const char g%sData[] = R"firmware(]]):format(name))
-writeline(f, readfile(input))
-writeline(f, [[)firmware";]])
+local data = readfile(input)
+if #data >= 16380 then
+    writeline(f, ([[const char g%sData[] = {]]):format(name))
+    local n = #data - #data % 16
+    for i = 1, n, 16 do
+        local b00, b01, b02, b03, b04, b05, b06, b07, b08, b09, b0a, b0b, b0c, b0d, b0e, b0f = string.byte(data, i, i + 15)
+        writeline(f, ("0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,"):format(b00, b01, b02, b03, b04, b05, b06, b07, b08, b09, b0a, b0b, b0c, b0d, b0e, b0f))
+    end
+    for i = n+1, #data do
+        local b = string.byte(data, i)
+        f:write(("0x%02x,"):format(b))
+    end
+    writeline(f)
+    writeline(f, [[};]])
+else
+    writeline(f, ([[const char g%sData[] = R"firmware(]]):format(name))
+    writeline(f, data)
+    writeline(f, [[)firmware";]])
+end

@@ -73,10 +73,10 @@ local function createWindow(document, source)
         t:remove()
     end
     function window.addEventListener(type, listener, useCapture)
-        rmlui.DocumentAddEventListener(document, type, function(e) listener(constructor.Event(e)) end, useCapture)
+        rmlui.ElementAddEventListener(rmlui.DocumentGetBody(document), type, function(e) listener(constructor.Event(e)) end, useCapture)
     end
     function window.postMessage(data)
-        rmlui.DocumentDispatchEvent(document, "message", {
+        rmlui.ElementDispatchEvent(rmlui.DocumentGetBody(document), "message", {
             source = source,
             data = data,
         })

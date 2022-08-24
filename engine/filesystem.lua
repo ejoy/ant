@@ -196,7 +196,7 @@ function fs.is_directory(path)
 end
 
 function fs.is_regular_file(path)
-    return vfs.type(path._value) == 'file'
+    return vfs.type(path._value) ~= 'dir'
 end
 
 function fs.rename()

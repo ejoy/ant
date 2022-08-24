@@ -91,6 +91,9 @@ return function (w, package)
     function ecs.create_entity(v)
         return w:_create_entity(package, nil, v)
     end
+    function ecs.release_cache(v)
+        return w:_release_cache(v)
+    end
     function ecs.create_instance(v, parent)
         return w:_create_instance(nil, parent, v)
     end

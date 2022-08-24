@@ -185,6 +185,10 @@ function property_setter:id(v)
     rmlui.ElementSetAttribute(self._handle, "id", v)
 end
 
+function property_getter:tagName()
+    return rmlui.ElementGetTagName(self._handle)
+end
+
 function property_getter:className()
     return rmlui.ElementGetAttribute(self._handle, "class") or ""
 end

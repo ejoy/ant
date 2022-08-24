@@ -291,6 +291,10 @@ function world:create_object(inner_proxy)
     return outer_proxy
 end
 
+function world:_release_cache(filename)
+    templates[filename] = nil
+end
+
 function world:_create_instance(group, parent, filename)
     local w = self
     local template = create_template(w, filename)
