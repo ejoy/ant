@@ -66,7 +66,7 @@ require "vfs"
 			dbg:event("setThreadName", "Bootstrap")
 			initstr = initstr .. [[
 local ltask = require "ltask"
-local name = ("Service:%d <%s>"):format(ltask.self(), debug.getregistry().SERVICE_LABEL or "unk")
+local name = ("Service:%d <%s>"):format(ltask.self(), ltask.label():sub(9) or "unk")
 dofile "/engine/debugger.lua"
 	:event("setThreadName", name)
 	:event "wait"
