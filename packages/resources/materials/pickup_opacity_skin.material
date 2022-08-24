@@ -3,7 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/picking/vs_picking.sc
   setting:
     lighting: off
-    skinning: GPU
+    GPU_SKINNING: 1
 properties:
   u_id: {0, 0, 0, 0}
   u_viewcamera_viewmat: {1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0}

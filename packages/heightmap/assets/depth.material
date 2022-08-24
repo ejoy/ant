@@ -7,8 +7,7 @@ fx:
     shadow_cast: off
     shadow_receive: off
     subsurface: off
-    skinning: UNKNOWN
-    depth_type: linear
+    GPU_SKINNING: 1
 state:
   ALPHA_REF: 0
   CULL: CW

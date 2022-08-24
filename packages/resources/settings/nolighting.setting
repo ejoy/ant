@@ -3,5 +3,3 @@ surfacetype: opacity
 shadow_cast: off
 shadow_receive: off
 subsurface: off
-skinning: UNKNOWN
-depth_type: inv_z

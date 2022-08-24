@@ -3,7 +3,7 @@ fx:
     fs: /pkg/ant.resources/shaders/polyline/fs_polyline.sc
     setting:
         surfacetype: translucent
-        fix_line_width: true
+        FIX_WIDTH: 1
 properties:
     s_tex:
         stage: 0

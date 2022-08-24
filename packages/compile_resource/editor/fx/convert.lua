@@ -18,23 +18,9 @@ local SETTING_MAPPING = {
             return "ENABLE_SHADOW=1"
         end
     end,
-    skinning = function (v)
-        if v == "GPU" then
-            return "GPU_SKINNING=1"
-        end
-    end,
-    depth_type = function (v)
-        if v == "linear" then
-            return "DEPTH_LINEAR=1"
-        elseif v == "pack_depth" then
-            return "PACK_RGBA8=1"
-        end
-    end,
-    os = function ()
-    end,
-    renderer = function()
-    end,
-    fix_line_width = "FIX_WIDTH",
+    os = DEF_FUNC,
+    renderer = DEF_FUNC,
+    stage = DEF_FUNC,
     subsurface = DEF_FUNC,
     surfacetype = DEF_FUNC,
     shadow_cast = DEF_FUNC,

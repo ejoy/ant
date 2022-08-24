@@ -3,15 +3,11 @@ local setting = import_package "ant.settings".setting
 local datalist = require "datalist"
 
 local function read_default_setting_from_file()
-    local f = fs.open (fs.path "/pkg/ant.resources/settings/default.setting")
-    local c = f:read "a"
-    f:close()
-    return c
+    local f<close> = fs.open (fs.path "/pkg/ant.resources/settings/default.setting")
+    return f:read "a"
 end
 
 local defaultSetting = datalist.parse(read_default_setting_from_file())
-defaultSetting.depth_type = setting:get 'graphic/shadow/type'
-defaultSetting.bloom      = setting:get 'graphic/postprocess/bloom/enable' and "on" or "off"
 
 local function add_default(input)
     local output = {}
