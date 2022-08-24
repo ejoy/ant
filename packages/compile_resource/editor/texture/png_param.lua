@@ -8,7 +8,7 @@ local function default_param(path)
             windows= "BC3",
         },
         normalmap= false,
-        path= path,
+        local_texpath = path,
         sampler={
           MAG= "LINEAR",
           MIN= "LINEAR",
@@ -26,7 +26,7 @@ local function raw_param(path, format)
         colorspace = "sRGB",
         format = format,
         normalmap= false,
-        path= path,
+        local_texpath= path,
         sampler={
           MAG= "LINEAR",
           MIN= "LINEAR",

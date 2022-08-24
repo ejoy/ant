@@ -1,13 +1,16 @@
-local bgfx = require "bgfx"
-local platform = require "platform"
+local bgfx      = require "bgfx"
+local platform  = require "platform"
 local stringify = require "stringify"
 
+local function def_cfg() return {setting={},arguments=""} end
+
 local config = {
-    glb = {setting={},arguments=""},
-    model = {setting={},arguments=""},
-    texture = {setting={},arguments=""},
-    png = {setting={},arguments=""},
-    sc = {setting={},arguments=""},
+    glb     = def_cfg(),
+    model   = def_cfg(),
+    texture = def_cfg(),
+    png     = def_cfg(),
+    sc      = def_cfg(),
+    efk     = def_cfg(),
 }
 
 local function set_setting(ext, setting)
@@ -47,6 +50,7 @@ local function init()
     })
     set_setting("texture", {os=os, ext=texture})
     set_setting("png", {os=os, ext=texture})
+    set_setting("efk", {os=os, ext=texture})
 end
 
 

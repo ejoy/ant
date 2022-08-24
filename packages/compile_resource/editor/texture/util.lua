@@ -53,16 +53,23 @@ local function gen_commands(commands, param, input, output)
 end
 
 local function writefile(filename, data)
-	local f = assert(lfs.open(filename, "wb"))
+	local f<close> = assert(lfs.open(filename, "wb"))
 	f:write(data)
-	f:close()
 end
 
 local function readall(filename)
-	local f = assert(lfs.open(filename, "rb"))
-	local data = f:read "a"
-	f:close()
-	return data
+	local f<close> = lfs.open(filename, "rb")
+	return f:read "a"
+end
+
+local function is_png(path)
+	return path:match "%.png$"
+end
+
+local function gray2rgb(path, outfile)
+	local c = readall(path)
+	local fc = image.png.convert(c)
+	writefile(outfile, fc)
 end
 
 return function (output, param)
@@ -76,6 +83,11 @@ return function (output, param)
 	local imgpath = param.local_texpath
 	if imgpath then
 		local binfile = output / ("main."..param.setting.ext)
+		if is_png(imgpath) and param.gray2rgb then
+			local tmpfile = output / ("tmp." .. param.setting.ext)
+			gray2rgb(imgpath, tmpfile)
+			imgpath = tmpfile:string()
+		end
 		local commands = {
 			TEXTUREC
 		}

@@ -21,6 +21,7 @@ lm:lua_source "efk" {
     },
     sources = {
         "lefk.cpp",
+        "lefk_res.cpp",
     },
     deps = {
         "source_efkbgfx_lib",

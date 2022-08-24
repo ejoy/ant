@@ -9,11 +9,12 @@ local vfs = require "vfs"
 local compile = require "compile".compile
 
 local ResourceCompiler = {
-    model = "editor.model.convert",
-    glb = "editor.model.glb",
+    model   = "editor.model.convert",
+    glb     = "editor.model.glb",
     texture = "editor.texture.convert",
-    png = "editor.texture.png",
-    sc = "editor.fx.convert",
+    png     = "editor.texture.png",
+    sc      = "editor.fx.convert",
+    efk     = "editor.efk.convert",
 }
 
 for ext, compiler in pairs(ResourceCompiler) do

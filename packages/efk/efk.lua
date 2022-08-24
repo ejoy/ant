@@ -6,8 +6,6 @@ local efk_cb    = require "effekseer.callback"
 local efk       = require "efk"
 local fs        = require "filesystem"
 local bgfx      = require "bgfx"
-local image     = require "image"
-local datalist  = require "datalist"
 local math3d    = require "math3d"
 local fileinterface = require "fileinterface"
 local renderpkg = import_package "ant.render"
@@ -16,7 +14,6 @@ local viewidmgr = renderpkg.viewidmgr
 local assetmgr  = import_package "ant.asset"
 local cr        = import_package "ant.compile_resource"
 local itimer    = ecs.import.interface "ant.timer|itimer"
-local mc 		= import_package "ant.math".constant
 
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
@@ -164,6 +161,8 @@ function efk_sys:init()
             filefactory = filefactory,
         }
     }
+
+    assetmgr.set_efkobj(efk_ctx)
     local vp = world.args.viewport
     ecs.create_entity{
         policy = {
@@ -191,24 +190,14 @@ function efk_sys:exit()
     efk.shutdown(efk_ctx)
 end
 
-local efk_cache = {}
-
-local function load_efk(filename)
-    if not efk_cache[filename] then
-        efk_cache[filename] = efk_ctx:create(filename)
-    end
-    return {
-        handle = efk_cache[filename],
-        speed = 1.0,
-        loop = false,
-        visible = true,
-    }
-end
-
 function efk_sys:entity_init()
     for e in w:select "INIT efk:update" do
-        assert(type(e.efk) == "string")
-        e.efk = load_efk(e.efk)
+        e.efk = {
+            handle = assetmgr.resource(e.efk).handle,
+            speed = 1.0,
+            loop = false,
+            visible = true,
+        }
     end
 end
 

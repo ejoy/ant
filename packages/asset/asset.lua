@@ -3,6 +3,7 @@ local setting = import_package "ant.settings".setting
 local resource = require "resource"
 local url = import_package "ant.url"
 local texture_mgr = require "texture_mgr"
+local efkobj		= require "efkobj"
 
 local assetmgr = {}
 
@@ -102,6 +103,10 @@ end
 function assetmgr.init()
 	texture_mgr.init()
 	initialize()
+end
+
+function assetmgr.set_efkobj(efkctx)
+	efkobj.ctx = efkctx
 end
 
 assetmgr.edit = resource.edit
