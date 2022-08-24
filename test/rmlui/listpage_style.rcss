@@ -7,3 +7,7 @@
     justify-content: flex-start;
     transition: top 0.5s linear-out;
 }
+
+.notransition {
+    transition: none;
+}

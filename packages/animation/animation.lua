@@ -51,7 +51,7 @@ local function process_keyframe_event(task)
 					end
 					event.effect = iefk.create(event.asset_path, {
 						play_on_create = true,
-						parent = parent,
+						scene = {parent = parent}
 					})
 				elseif event.effect then
 					local e <close> = w:entity(event.effect)

@@ -223,6 +223,7 @@ function hierarchy:update_slot_list(world)
         end
     end
     self.slot_list = slot_list
+    world:pub {"UpdateSlotList"}
 end
 
 function hierarchy:update_collider_list(world)

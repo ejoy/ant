@@ -105,7 +105,6 @@ local function to_runtime_event(ke)
         }
     end
     return event
-    --runtime_event.collider = current_clip.collider
 end
 
 local function get_runtime_animations(eid)
@@ -201,6 +200,9 @@ local function get_runtime_events()
 end
 
 local function set_event_dirty(num)
+    local e <close> = w:entity(anim_eid, "anim_ctrl:in")
+    iani.stop_effect(anim_eid)
+    e.anim_ctrl.keyframe_events[current_anim.name] = to_runtime_event(anim_key_event)
     anim_state.event_dirty = num
 end
 
@@ -246,7 +248,6 @@ local function set_current_anim(anim_name)
     set_event_dirty(-1)
     return true
 end
-
 
 local event_id = 1
 
@@ -553,6 +554,11 @@ function m.on_remove_entity(eid)
     --         end
     --     end
     -- end
+    local e <close> = w:entity(eid, "slot?in name:in")
+    if e.slot and anim_eid then
+        local ae <close> = w:entity(anim_eid, "anim_ctrl?in")
+        ae.anim_ctrl.slot_eid[e.name] = nil
+    end
     if dirty then
         set_event_dirty(-1)
     end
@@ -657,12 +663,17 @@ local function get_clips_filename()
 end
 
 function m.save_keyevent(filename)
-    local revent = to_runtime_event(anim_key_event)
-    if #revent < 1 then
-        return
+    local revent = {}
+    for _, name in ipairs(edit_anims.name_list) do
+        local eventlist = to_runtime_event(edit_anims[name].key_event)
+        if #eventlist > 0 then
+            revent[name] = eventlist
+        end
     end
-    local prefab_filename = filename or prefab_mgr:get_current_filename():sub(1, -8) .. ".event"
-    utils.write_file(prefab_filename, stringify(revent))
+    if next(revent) then
+        local prefab_filename = filename or prefab_mgr:get_current_filename():sub(1, -8) .. ".event"
+        utils.write_file(prefab_filename, stringify(revent))
+    end
 end
 
 function m.clear()
@@ -703,8 +714,17 @@ local function show_skeleton(b)
         end
     end
 end
-
+local update_slot_list = world:sub {"UpdateSlotList"}
 function m.show()
+    for _ in update_slot_list:unpack() do
+        local slotlist = {}
+        for name, eid in pairs(hierarchy.slot_list) do
+            slotlist[name] = eid
+        end
+        local e <close> = w:entity(anim_eid, "anim_ctrl:in")
+        e.anim_ctrl.slot_eid = slotlist
+        break
+    end
     if not current_anim or not anim_eid then return end
     local reload = false
     local viewport = imgui.GetMainViewport()
@@ -851,7 +871,7 @@ function m.show()
         imgui.widget.Sequencer(edit_anims, anim_state, imgui_message)
         -- clear dirty flag
         edit_anims.dirty = false
-        set_event_dirty(0)
+        -- set_event_dirty(0)
         --
         local move_type
         local new_frame_idx
@@ -916,6 +936,8 @@ function m.on_prefab_load(entities)
         local e <close> = w:entity(eid, "anim_ctrl?in animation?in skeleton?in animation_birth?in")
         if e.anim_ctrl then
             anim_eid = eid
+            local prefab_filename = prefab_mgr:get_current_filename()
+            iani.load_events(e, string.sub(prefab_filename, 1, -8) .. ".event")
             local animations = e.animation
             if animations then
                 editanims.birth = e.animation_birth

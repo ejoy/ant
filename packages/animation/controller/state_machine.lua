@@ -139,7 +139,6 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
     end
     return raw_animation:build()
 end
-local assetmgr 		= import_package "ant.asset"
 
 local function get_anim_e(eid)
 	if type(eid) == "table" then
@@ -159,8 +158,39 @@ local function get_anim_e(eid)
 	end
 end
 
+local function stop_all_effect(all_events, delay)
+	for _, events in ipairs(all_events) do
+		for _, ev in ipairs(events.event_list) do
+			if ev.event_type == "Effect" and ev.effect then
+				local e <close> = w:entity(ev.effect)
+				iefk.stop(e, delay)
+			end
+		end
+	end
+end
+
 function iani.create(filename)
 	return ecs.create_instance(filename)
+end
+
+function iani.load_events(anim_e, filename)
+	if not fs.exists(fs.path(filename)) then
+		return
+	end
+    local f = fs.open(fs.path(filename))
+    if not f then
+        return
+    end
+    local data = f:read "a"
+    f:close()
+	local events = datalist.parse(data)
+	if type(anim_e) == "number" then
+		local e <close> = get_anim_e(anim_e)
+		e.anim_ctrl.keyframe_events = events
+	else
+		anim_e.anim_ctrl.keyframe_events = events
+	end
+	
 end
 
 function iani.play(eid, anim_state)
@@ -194,22 +224,9 @@ function iani.play(eid, anim_state)
 	e.anim_ctrl.owner = anim_state.owner
 	e.anim_ctrl.animation = anim
 	e.anim_ctrl.play_state = { ratio = 0.0, previous_ratio = 0.0, play = true, speed = anim_state.speed or 1.0, loop = anim_state.loop, manual_update = anim_state.manual, forwards = anim_state.forwards}
-	local all_events = e.anim_ctrl.event_state.keyframe_events
-	if all_events then
-		for _, events in ipairs(all_events) do
-			for _, ev in ipairs(events.event_list) do
-				if ev.event_type == "Effect" then
-					if ev.effect then
-						local e <close> = w:entity(ev.effect)
-						iefk.stop(e)
-						--TODO: clear keyevent effct
-						--w:remove(ev.effect)
-					end
-				end
-			end
-		end	
-	end
+	stop_all_effect(e.anim_ctrl.event_state.keyframe_events)
 	e.anim_ctrl.event_state = { next_index = 1, keyframe_events = e.anim_ctrl.keyframe_events[anim_name] }
+	
 	world:pub{"animation", anim_name, "play", anim_state.owner}
 end
 
@@ -241,6 +258,7 @@ function iani.step(anim_e, s_delta, absolute)
 		else
 			play_state.ratio = (next_time - duration) / duration
 		end
+		stop_all_effect(ctrl.event_state.keyframe_events, true)
 	else
 		play_state.ratio = next_time / duration
 	end
@@ -260,11 +278,9 @@ function iani.set_time(eid, second)
 	if all_events then
 		for _, events in ipairs(all_events) do
 			for _, ev in ipairs(events.event_list) do
-				if ev.event_type == "Effect" then
-					if ev.effect then
-						local e <close> = w:entity(ev.effect)
-						iefk.set_time(e, (current_time - events.time) * 60)
-					end
+				if ev.event_type == "Effect" and ev.effect then
+					local e <close> = w:entity(ev.effect)
+					iefk.set_time(e, (current_time - events.time) * 60)
 				end
 			end
 		end
@@ -274,18 +290,7 @@ end
 function iani.stop_effect(eid)
 	if not eid then return end
 	local e <close> = get_anim_e(eid)
-	local all_events = e.anim_ctrl.event_state.keyframe_events
-	if all_events then
-		for _, events in ipairs(all_events) do
-			for _, ev in ipairs(events.event_list) do
-				if ev.event_type == "Effect" then
-					if ev.effect then
-						world:prefab_event(ev.effect, "stop", "effect")
-					end
-				end
-			end
-		end
-	end
+	stop_all_effect(e.anim_ctrl.event_state.keyframe_events)
 end
 
 function iani.get_time(eid)
