@@ -63,13 +63,17 @@ local function readall(filename)
 end
 
 local function is_png(path)
-	return path:match "%.png$"
+	return path:equal_extension "png" ~= nil
 end
 
 local function gray2rgb(path, outfile)
 	local c = readall(path)
-	local fc = image.png.convert(c)
-	writefile(outfile, fc)
+	local fc = image.png.gray2rgba(c)
+	if fc then
+		writefile(outfile, fc)
+		return outfile
+	end
+	return path
 end
 
 return function (output, param)
@@ -85,8 +89,7 @@ return function (output, param)
 		local binfile = output / ("main."..param.setting.ext)
 		if is_png(imgpath) and param.gray2rgb then
 			local tmpfile = output / ("tmp." .. param.setting.ext)
-			gray2rgb(imgpath, tmpfile)
-			imgpath = tmpfile:string()
+			imgpath = gray2rgb(imgpath, tmpfile)
 		end
 		local commands = {
 			TEXTUREC

@@ -268,7 +268,7 @@ check_mem(lua_State *L, int memidx, int fmtidx, struct memory *& m, bimg::Textur
 }
 
 static bimg::ImageContainer*
-gray2rgb(const bimg::ImageContainer &ic, bx::DefaultAllocator &allocator){
+gray2rgba(const bimg::ImageContainer &ic, bx::DefaultAllocator &allocator){
     auto unpack = [](float* dst, const void* src){
         const uint8_t* _src = (const uint8_t*)src;
         dst[0] = dst[1] = dst[2] = bx::fromUnorm(_src[0], 255.0f);
@@ -309,7 +309,7 @@ lpng_convert(lua_State *L){
 
     bimg::ImageContainer *dstimage = &ic;
     if (ic.m_format == bimg::TextureFormat::RG8){
-        dstimage = gray2rgb(ic, allocator);
+        dstimage = gray2rgba(ic, allocator);
     }
 
     //we need image file format from png to dds
@@ -319,11 +319,31 @@ lpng_convert(lua_State *L){
     return 2;
 }
 
+static int
+lpng_gray2rgba(lua_State *L){
+    size_t srcsize = 0;
+    auto src = luaL_checklstring(L, 1, &srcsize);
+    bx::DefaultAllocator allocator;
+    bimg::ImageContainer ic;
+    bx::Error err;
+    bimg::imageParse(ic, src, (uint32_t)srcsize, &err);
+
+    bimg::ImageContainer *dstimage = &ic;
+    if (ic.m_format != bimg::TextureFormat::RG8)
+        return 0;
+
+    dstimage = gray2rgba(ic, allocator);
+    push_dds_file(L, &allocator, dstimage);
+    bimg::imageFree(dstimage);
+    return 1;
+}
+
 static void
-create_png_lib(lua_State *L)    {
+create_png_lib(lua_State *L){
     lua_newtable(L);
     luaL_Reg pnglib[] = {
         {"convert", lpng_convert},
+        {"gray2rgba",lpng_gray2rgba},
         {nullptr, nullptr},
     };
     luaL_setfuncs(L, pnglib, 0);

@@ -116,7 +116,7 @@ local function texture_load(texname, srgb)
     local p = fs.path(texname)
     p:replace_extension "texture"
 
-    if not fs.exist(p) then
+    if not fs.exists(p) then
         print("[EFK ERROR]", debug.traceback(("%s: need corresponding .texture file to describe how this png file to use")) )
     end
 
