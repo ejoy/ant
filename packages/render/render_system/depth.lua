@@ -81,9 +81,8 @@ function s:init()
         return
     end
 
-    local pre_depth_material_file<const> 	= "/pkg/ant.resources/materials/predepth.material"
-    pre_depth_material 			= imaterial.load_res(pre_depth_material_file, {depth_type="inv_z"})
-    pre_depth_skinning_material = imaterial.load_res(pre_depth_material_file, {depth_type="inv_z", skinning="GPU"})
+    pre_depth_material 			= imaterial.load_res "/pkg/ant.resources/materials/predepth.material"
+    pre_depth_skinning_material = imaterial.load_res "/pkg/ant.resources/materials/predepth_skin.material"
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}

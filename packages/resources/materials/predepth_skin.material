@@ -1,0 +1,15 @@
+fx:
+  fs: /pkg/ant.resources/shaders/depth/fs_depth.sc
+  vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  setting:
+    lighting: off
+    surfacetype: opacity
+    shadow_cast: off
+    shadow_receive: off
+    subsurface: off
+    skinning: GPU
+    depth_type: inv_z
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  WRITE_MASK: Z

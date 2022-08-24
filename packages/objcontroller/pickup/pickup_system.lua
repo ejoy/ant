@@ -233,9 +233,9 @@ end
 function pickup_sys:init()
 	create_pick_entity()
 	pickup_materials.opacity		= imaterial.load_res '/pkg/ant.resources/materials/pickup_opacity.material'
-	pickup_materials.opacity_skin	= imaterial.load_res('/pkg/ant.resources/materials/pickup_opacity.material', {skinning="GPU"})
+	pickup_materials.opacity_skin	= imaterial.load_res '/pkg/ant.resources/materials/pickup_opacity_skin.material'
 	pickup_materials.translucent	= imaterial.load_res '/pkg/ant.resources/materials/pickup_transparent.material'
-	pickup_materials.translucent_skin= imaterial.load_res('/pkg/ant.resources/materials/pickup_transparent.material', {skinning="GPU"})
+	pickup_materials.translucent_skin= imaterial.load_res '/pkg/ant.resources/materials/pickup_transparent_skin.material'
 	pickup_materials.ui_stage 		= pickup_materials.translucent
 end
 
