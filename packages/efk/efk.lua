@@ -114,7 +114,11 @@ local function texture_load(texname, srgb)
     local _ <close> = fs.switch_sync()
     assert(texname:match "^/pkg" ~= nil)
     local p = fs.path(texname)
-    p:replace_extension "efkpng"
+    p:replace_extension "texture"
+
+    if not fs.exist(p) then
+        print("[EFK ERROR]", debug.traceback(("%s: need corresponding .texture file to describe how this png file to use")) )
+    end
 
     local filecontent = cr.read_file(p:string() .. "|main.bin")
     local cfg = cr.read_file(p:string() .. "|main.cfg")

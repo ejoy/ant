@@ -14,7 +14,6 @@ local ResourceCompiler = {
     texture = "editor.texture.convert",
     png     = "editor.texture.png",
     sc      = "editor.fx.convert",
-    efk     = "editor.efk.convert",
 }
 
 for ext, compiler in pairs(ResourceCompiler) do
