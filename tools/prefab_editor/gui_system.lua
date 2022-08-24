@@ -476,8 +476,8 @@ function m:handle_event()
         elseif what == "lock" then
             hierarchy:set_lock(target, value)
         elseif what == "delete" then
-            local e <close> = w:entity(gizmo.target_eid, "collider?in")
-            if e.collider then
+            local e <close> = w:entity(gizmo.target_eid, "collider?in slot?in")
+            if e.collider or e.slot then
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(target)

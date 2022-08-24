@@ -26,6 +26,7 @@ interface "ianimation"
     .method "set_pose_to_prefab"
     .method "create_pose"
     .method "release_pose"
+    .method "load_events"
 
 policy "animation_controller.state_machine"
     .require_system "state_machine_system"
