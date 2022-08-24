@@ -14,7 +14,7 @@ thread.thread (([[
 print(xpcall(function()
     --local dbg = dofile "engine/debugger.lua"
     --if dbg then
-    --    dbg:event("setThreadName", "IO")
+    --    dbg:event("setThreadName", "IO thread")
     --    print "wait"
     --    dbg:event "wait"
     --end

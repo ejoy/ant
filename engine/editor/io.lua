@@ -22,6 +22,8 @@ local access = dofile "engine/vfs/repoaccess.lua"
 local thread = require "bee.thread"
 dofile "engine/common/log.lua"
 
+thread.setname "ant - IO thread"
+
 local channel = thread.channel "IOreq"
 local repo
 

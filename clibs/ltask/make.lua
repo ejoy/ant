@@ -23,7 +23,10 @@ lm:lua_source "ltask" {
         Ant3rd .. "ltask/src/*.c",
         "!" .. Ant3rd .. "ltask/src/main.c",
     },
-    --defines = "DEBUGLOG",
+    defines = {
+        --"DEBUGLOG",
+        lm.mode=="debug" and "DEBUGTHREADNAME",
+    },
     windows = {
         links = {
             "user32",

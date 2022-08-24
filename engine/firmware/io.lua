@@ -8,6 +8,8 @@ local socket = require "bee.socket"
 local protocol = require "protocol"
 local _print
 
+thread.setname "ant - IO thread"
+
 local status = {}
 local config = {}
 local repo
