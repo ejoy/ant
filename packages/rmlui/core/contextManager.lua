@@ -131,7 +131,9 @@ local function cancelActive()
         return
     end
     for _, element in ipairs(activeElement) do
-        setPseudoClass(element, "active", false)
+        if validElement(activeDocument, element) then
+            setPseudoClass(element, "active", false)
+        end
     end
     activeDocument = nil
     activeElement = nil
