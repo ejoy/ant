@@ -137,7 +137,7 @@ local function texture_unload(texhandle)
 end
 
 local function error_handle(msg)
-    error(msg)
+    print("[ERROR]", debug.traceback(msg))
 end
 
 local function texture_find(_, id)
