@@ -80,9 +80,8 @@ lua_pushRmlNode(lua_State* L, const Rml::Node* node) {
 namespace {
 
 struct EventListener final : public Rml::EventListener {
-	EventListener(lua_State* L_, const std::string& type, int funcref, bool use_capture)
+	EventListener(const std::string& type, int funcref, bool use_capture)
 		: Rml::EventListener(type, use_capture)
-		, L(L_)
 		, ref(funcref)
 	{}
 	~EventListener() {
@@ -95,7 +94,6 @@ struct EventListener final : public Rml::EventListener {
 			get_lua_plugin()->callref(L, ref, 1, 0);
 		});
 	}
-	lua_State* L;
 	int ref;
 };
 
@@ -196,20 +194,6 @@ lDocumentDefineCustomElement(lua_State* L) {
 	return 0;
 }
 
-static void
-ElementAddEventListener(Rml::Element* e, const std::string& name, bool userCapture, lua_State* L, int idx) {
-	luaL_checktype(L, 3, LUA_TFUNCTION);
-	lua_pushvalue(L, 3);
-	e->AddEventListener(new EventListener(L, name, get_lua_plugin()->ref(L), lua_toboolean(L, 4)));
-}
-
-static int
-lDocumentAddEventListener(lua_State* L) {
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	ElementAddEventListener(doc->GetBody(), lua_checkstdstring(L, 2), lua_toboolean(L, 4), L, 3);
-	return 0;
-}
-
 static int
 lDocumentGetElementById(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
@@ -228,7 +212,9 @@ lDocumentGetSourceURL(lua_State *L) {
 static int
 lElementAddEventListener(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	ElementAddEventListener(e, lua_checkstdstring(L, 2), lua_toboolean(L, 4), L, 3);
+	luaL_checktype(L, 3, LUA_TFUNCTION);
+	lua_pushvalue(L, 3);
+	e->AddEventListener(new EventListener(lua_checkstdstring(L, 2), get_lua_plugin()->ref(L), lua_toboolean(L, 4)));
 	return 0;
 }
 
@@ -573,7 +559,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentUpdate", lDocumentUpdate },
 		{ "DocumentSetDimensions", lDocumentSetDimensions},
 		{ "DocumentElementFromPoint", lDocumentElementFromPoint },
-		{ "DocumentAddEventListener", lDocumentAddEventListener },
 		{ "DocumentGetElementById", lDocumentGetElementById },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentGetBody", lDocumentGetBody },
