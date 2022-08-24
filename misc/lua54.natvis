@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="lua_State">
+    <DisplayString>[thread top=]{top-(ci->func+1)}</DisplayString>
+    <Expand>
+      <Item Name="[stack top]">top-(ci->func+1)</Item>
+      <Item Name="[call]" Condition="ci->func->val.tt_!=0">ci->func</Item>
+      <Item Name="[callinfo]">"------------------------------------"</Item>
+      <LinkedListItems>
+        <HeadPointer>ci</HeadPointer>
+        <NextPointer>previous</NextPointer>
+        <ValueNode>this</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+  <Type Name="CallInfo">
+    <DisplayString Condition="(func->val.tt_) == 0x46">{((char *)((GCUnion *)(func->val.value_.gc))->cl.l.p->source)+8+sizeof(double)*2}</DisplayString>
+    <DisplayString Condition="(func->val.tt_) == 0x16">{func->val.value_.f}</DisplayString>
+    <DisplayString Condition="(func->val.tt_) == 0x66">{((GCUnion *)(func->val.value_.gc))->cl.c.f}</DisplayString>
+    <Expand>
+      <ExpandedItem>func</ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="StackValue">
+    <DisplayString>{val}</DisplayString>
+    <Expand>
+      <ExpandedItem>val</ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="TValue">
+    <DisplayString Condition="tt_ == 0x46">{((GCUnion *)(value_.gc))->cl.l.p}</DisplayString>
+    <DisplayString Condition="tt_ == 0x16">{value_.f}</DisplayString>
+    <DisplayString Condition="tt_ == 0x66">{((GCUnion *)(value_.gc))->cl.c.f}</DisplayString>
+    <Expand>
+      <ExpandedItem Condition="tt_ == 0x46">((GCUnion *)(value_.gc))->cl.l</ExpandedItem>
+      <ExpandedItem Condition="tt_ == 0x16">value_.f</ExpandedItem>
+      <ExpandedItem Condition="tt_ == 0x66">((GCUnion *)(value_.gc))->cl.c</ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="CClosure">
+    <DisplayString>{f}</DisplayString>
+  </Type>
+  <Type Name="LClosure">
+    <DisplayString>{p}</DisplayString>
+    <Expand>
+      <ExpandedItem>p</ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="Proto">
+    <DisplayString Condition="source">{source}:{linedefined}</DisplayString>
+    <DisplayString>=?</DisplayString>
+    <Expand>
+      <Item Name="source" Condition="source">(source)</Item>
+      <Item Name="linedefined">linedefined</Item>
+      <Item Name="lastlinedefined">lastlinedefined</Item>
+      <Item Name="what" Condition="linedefined == 0">"main"</Item>
+      <Item Name="what" Condition="linedefined != 0">"Lua"</Item>
+    </Expand>
+  </Type>
+  <Type Name="TString">
+    <DisplayString>{(char *)(this)+8+sizeof(double)*2}</DisplayString>
+  </Type>
+</AutoVisualizer>
