@@ -2,20 +2,20 @@ local config = ...
 
 local vfs = require "vfs"
 local thread = require "bee.thread"
-local errlog = thread.channel "errlog"
-local errthread = thread.thread([[
-	-- Error Thread
-	local thread = require "bee.thread"
+
+thread.thread([[
+    -- Error Thread
+    local thread = require "bee.thread"
     thread.setname "ant - Error thread"
 
-	local err = thread.channel "errlog"
-	while true do
-		local msg = err:bpop()
-		if msg == "EXIT" then
-			break
-		end
-		print("ERROR:" .. msg)
-	end
+    local err = thread.channel "errlog"
+    while true do
+        local msg = err:bpop()
+        if msg == "EXIT" then
+            break
+        end
+        print("ERROR:" .. msg)
+    end
 ]])
 
 thread.newchannel "IOreq"
@@ -46,14 +46,31 @@ end
 initIOThread()
 vfs.initfunc "/engine/firmware/init_thread.lua"
 
+local _dofile = dofile
+function dofile(path)
+    local f = assert(io.open(path))
+    local str = f:read "a"
+    f:close()
+    return assert(load(str, "@" .. path))()
+end
+local i = 1
+while true do
+    if arg[i] == '-e' then
+        i = i + 1
+        assert(arg[i], "'-e' needs argument")
+        load(arg[i], "=(expr)")()
+    elseif arg[i] == nil then
+        break
+    end
+    i = i + 1
+end
+dofile = _dofile
+
 local function dofile(path)
     local f, err = vfs.loadfile(path)
     if not f then
         error(err)
     end
-    errlog:push("EXIT")
-    thread.wait(errthread)
     return f()
 end
-
 dofile "/main.lua"

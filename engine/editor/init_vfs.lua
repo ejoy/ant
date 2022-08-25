@@ -8,6 +8,21 @@ local repopath = _VFS_ROOT_
     and lfs.absolute(lfs.path(_VFS_ROOT_)):string()
     or lfs.absolute(lfs.path(arg[0])):remove_filename():string()
 
+thread.thread([[
+    -- Error Thread
+    local thread = require "bee.thread"
+    thread.setname "ant - Error thread"
+
+    local err = thread.channel "errlog"
+    while true do
+        local msg = err:bpop()
+        if msg == "EXIT" then
+            break
+        end
+        print("ERROR:" .. msg)
+    end
+]])
+
 thread.newchannel "IOreq"
 thread.thread (([[
 -- IO thread

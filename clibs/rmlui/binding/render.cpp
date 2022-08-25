@@ -347,8 +347,9 @@ bool Renderer::UpdateTexture(Rml::TextureHandle texture, uint16_t x, uint16_t y,
 void Renderer::ReleaseTexture(Rml::TextureHandle texture) {
     bgfx_texture_handle_t th = { uint16_t(texture) };
     if (!BGFX_HANDLE_IS_VALID(th)) {
-        BGFX(destroy_texture)(th);
+        return;
     }
+    BGFX(destroy_texture)(th);
 }
 
 Rml::MaterialHandle Renderer::CreateTextureMaterial(Rml::TextureHandle texture, Rml::SamplerFlag flags) {

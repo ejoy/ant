@@ -608,6 +608,7 @@ local function on_move_keyframe(frame_idx, move_type)
         update_collision()
         current_event = nil
     end
+    set_event_dirty(-1)
 end
 local function min_max_range_value(clip_index)
     return 0, math.ceil(current_anim.duration * sample_ratio) - 1

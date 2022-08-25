@@ -61,17 +61,17 @@ local function init(c)
 package.cpath = %q
 require "vfs"
 ]]):format(package.cpath)
-		local dbg = debug.getregistry()["lua-debug"]
-		if dbg then
-			dbg:event("setThreadName", "Bootstrap")
-			initstr = initstr .. [[
+	end
+	local dbg = debug.getregistry()["lua-debug"]
+	if dbg then
+		dbg:event("setThreadName", "Bootstrap")
+		initstr = initstr .. [[
 local ltask = require "ltask"
 local name = ("Service:%d <%s>"):format(ltask.self(), ltask.label():sub(9) or "unk")
 dofile "/engine/debugger.lua"
 	:event("setThreadName", name)
 	:event "wait"
 ]]
-		end
 	end
 
 	if config.support_package then

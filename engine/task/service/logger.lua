@@ -87,6 +87,7 @@ if __ANT_RUNTIME__ then
 else
     function LOG(data)
         io.write(data)
+        io.write("\n")
         io.flush()
     end
 end
@@ -109,7 +110,7 @@ local function writelog()
 		message = string.gsub(message, "%$%{([^}]*)%}", function (s)
 			return parse(id, s)
 		end)
-		LOG(string.format("[%s.%02d : %-10s]%s\n", os.date("%Y-%m-%d %H:%M:%S", tsec), msec, querylabel(id), message))
+		LOG(string.format("[%s.%02d : %-10s]%s", os.date("%Y-%m-%d %H:%M:%S", tsec), msec, querylabel(id), message))
 	end
 end
 
