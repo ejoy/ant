@@ -2,20 +2,20 @@ local config = ...
 
 local vfs = require "vfs"
 local thread = require "bee.thread"
-local errlog = thread.channel "errlog"
-local errthread = thread.thread([[
-	-- Error Thread
-	local thread = require "bee.thread"
+
+thread.thread([[
+    -- Error Thread
+    local thread = require "bee.thread"
     thread.setname "ant - Error thread"
 
-	local err = thread.channel "errlog"
-	while true do
-		local msg = err:bpop()
-		if msg == "EXIT" then
-			break
-		end
-		print("ERROR:" .. msg)
-	end
+    local err = thread.channel "errlog"
+    while true do
+        local msg = err:bpop()
+        if msg == "EXIT" then
+            break
+        end
+        print("ERROR:" .. msg)
+    end
 ]])
 
 thread.newchannel "IOreq"
@@ -51,8 +51,6 @@ local function dofile(path)
     if not f then
         error(err)
     end
-    errlog:push("EXIT")
-    thread.wait(errthread)
     return f()
 end
 
