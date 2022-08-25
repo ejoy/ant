@@ -117,12 +117,22 @@ local function texture_load(texname, srgb)
     p:replace_extension "texture"
 
     if not fs.exists(p) then
-        print("[EFK ERROR]", debug.traceback(("%s: need corresponding .texture file to describe how this png file to use")) )
+        print("[EFK ERROR]", debug.traceback(("%s: need corresponding .texture file to describe how this png file to use"):format(texname)) )
     end
 
     local filecontent = cr.read_file(p:string() .. "|main.bin")
     local cfg = cr.read_file(p:string() .. "|main.cfg")
     local mem = bgfx.memory_buffer(filecontent)
+
+    local isRGB = cfg.sampler.colorspace == "sRGB"
+    if isRGB then
+        print("[EFK WARNING]", "color texture in effekseer should be sRGB")
+    end
+
+    if isRGB ~= srgb then
+        print("[EFK WARNING]", ("texture file define colorspace:%s, is difference from texture_load require: %s"):format(cfg.sampler.colorspace, srgb and "sRGB" or "linear"))
+    end
+
     local handle = bgfx.create_texture(mem, cfg.flag)
     TEXTURE_LOADED[handle] = p:string()
     return (handle & 0xffff)
@@ -134,7 +144,7 @@ local function texture_unload(texhandle)
 end
 
 local function error_handle(msg)
-    print("[ERROR]", debug.traceback(msg))
+    print("[EFK ERROR]", debug.traceback(msg))
 end
 
 local function texture_find(_, id)
