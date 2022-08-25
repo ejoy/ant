@@ -159,6 +159,9 @@ local function get_anim_e(eid)
 end
 
 local function stop_all_effect(all_events, delay)
+	if not all_events then
+		return
+	end
 	for _, events in ipairs(all_events) do
 		for _, ev in ipairs(events.event_list) do
 			if ev.event_type == "Effect" and ev.effect then

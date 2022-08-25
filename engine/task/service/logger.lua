@@ -87,7 +87,7 @@ if __ANT_RUNTIME__ then
 else
     function LOG(data)
         io.write(data)
-        io:write("\n")
+        io.write("\n")
         io.flush()
     end
 end
