@@ -82,8 +82,8 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	};
 
 	std::string path = image->Get<std::string>();
-	auto texture = Texture::Fetch(path);
-	auto material = GetRenderInterface()->CreateTextureMaterial(texture->GetHandle(), repeat);
+	auto const& texture = Texture::Fetch(path);
+	auto material = GetRenderInterface()->CreateTextureMaterial(texture.handle, repeat);
 	geometry.SetMaterial(material);
 
 	Color color = Color::FromSRGB(255, 255, 255, 255);
@@ -93,7 +93,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		return;
 
 	if (texSize.IsEmpty()) {
-		texSize = texture->GetDimensions();
+		texSize = texture.dimensions;
 	}
 	Size scale{
 		surface.size.w / texSize.w,

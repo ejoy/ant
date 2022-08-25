@@ -26,8 +26,6 @@ struct Vertex {
 
 using Index = uint32_t;
 
-struct Texture;
-
 class Geometry {
 public:
 	Geometry() = default;
