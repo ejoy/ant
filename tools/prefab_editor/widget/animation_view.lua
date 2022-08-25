@@ -717,13 +717,15 @@ end
 local update_slot_list = world:sub {"UpdateSlotList"}
 function m.show()
     for _ in update_slot_list:unpack() do
-        local slotlist = {}
-        for name, eid in pairs(hierarchy.slot_list) do
-            slotlist[name] = eid
+        if anim_eid then
+            local slotlist = {}
+            for name, eid in pairs(hierarchy.slot_list) do
+                slotlist[name] = eid
+            end
+            local e <close> = w:entity(anim_eid, "anim_ctrl:in")
+            e.anim_ctrl.slot_eid = slotlist
+            break
         end
-        local e <close> = w:entity(anim_eid, "anim_ctrl:in")
-        e.anim_ctrl.slot_eid = slotlist
-        break
     end
     if not current_anim or not anim_eid then return end
     local reload = false
