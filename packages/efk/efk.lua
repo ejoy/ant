@@ -7,6 +7,7 @@ local efk       = require "efk"
 local fs        = require "filesystem"
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
+local datalist  = require "datalist"
 local fileinterface = require "fileinterface"
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
@@ -121,15 +122,19 @@ local function texture_load(texname, srgb)
     end
 
     local filecontent = cr.read_file(p:string() .. "|main.bin")
-    local cfg = cr.read_file(p:string() .. "|main.cfg")
+    local cfg = datalist.parse(cr.read_file(p:string() .. "|main.cfg"))
     local mem = bgfx.memory_buffer(filecontent)
 
-    local isRGB = cfg.sampler.colorspace == "sRGB"
-    if isRGB then
+    local function has_sRGB(flag)
+        return flag:match "Sg" ~= nil
+    end
+
+    local issRGB = has_sRGB(cfg.flag)
+    if not issRGB then
         print("[EFK WARNING]", "color texture in effekseer should be sRGB")
     end
 
-    if isRGB ~= srgb then
+    if issRGB ~= srgb then
         print("[EFK WARNING]", ("texture file define colorspace:%s, is difference from texture_load require: %s"):format(cfg.sampler.colorspace, srgb and "sRGB" or "linear"))
     end
 
