@@ -18,6 +18,11 @@ local SETTING_MAPPING = {
             return "ENABLE_SHADOW=1"
         end
     end,
+    skinning = function (v)
+        if v == "GPU" then
+            return "GPU_SKINNING=1"
+        end
+    end,
     os = DEF_FUNC,
     renderer = DEF_FUNC,
     stage = DEF_FUNC,
