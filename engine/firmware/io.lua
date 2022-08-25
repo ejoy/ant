@@ -423,11 +423,16 @@ local function request_file(id, req, hash, res, path, roothash)
 			online[res](id, path, roothash)
 		end,
 		reject = function ()
-			if roothash then
-				response_err(id, "MISSING "..path.." "..roothash)
+			local errmsg = "MISSING "
+			if type(path) == "table" then
+				errmsg = errmsg .. table.concat(path, " ")
 			else
-				response_err(id, "MISSING "..path)
+				errmsg = errmsg .. path
 			end
+			if roothash then
+				errmsg = errmsg .. " " .. roothash
+			end
+			response_err(id, errmsg)
 		end
 	}
 	request_start(req, hash, promise)
