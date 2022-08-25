@@ -46,6 +46,26 @@ end
 initIOThread()
 vfs.initfunc "/engine/firmware/init_thread.lua"
 
+local _dofile = dofile
+function dofile(path)
+    local f = assert(io.open(path))
+    local str = f:read "a"
+    f:close()
+    return assert(load(str, "@" .. path))()
+end
+local i = 1
+while true do
+    if arg[i] == '-e' then
+        i = i + 1
+        assert(arg[i], "'-e' needs argument")
+        load(arg[i], "=(expr)")()
+    elseif arg[i] == nil then
+        break
+    end
+    i = i + 1
+end
+dofile = _dofile
+
 local function dofile(path)
     local f, err = vfs.loadfile(path)
     if not f then
@@ -53,5 +73,4 @@ local function dofile(path)
     end
     return f()
 end
-
 dofile "/main.lua"
