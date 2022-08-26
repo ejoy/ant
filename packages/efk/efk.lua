@@ -92,6 +92,9 @@ do
             vs = pkgpath .. fx.vs,
             fs = pkgpath .. fx.fs,
             varying_path = pkgpath .. fx.varying_path,
+            setting = {
+                LINEAR_INPUT_COLOR=1,
+            }
         }
     end
 end
