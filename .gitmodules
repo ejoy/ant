@@ -39,7 +39,7 @@
 	url = https://github.com/actboy168/bee.lua.git
 [submodule "packages/efk/efkbgfx"]
 	path = packages/efk/efkbgfx
-	url = https://github.com/junjie020/efkbgfx.git
+	url = https://github.com/cloudwu/efkbgfx.git
 [submodule "3rd/math3d"]
 	path = 3rd/math3d
 	url = https://github.com/cloudwu/math3d.git
