@@ -86,15 +86,17 @@ local function generate_material(mi, mode, hasskin)
     end
 
     local filename = mi.filename
-    local function gen_key(fn, sn)
-        fn = fn:sub(1, 4) == "/pkg" and fn or utility.full_path(fn)
-        return fn .. sn
+    local function gen_key(fn, sn, skn)
+        fn = fn:sub(1, 4) == "/pkg" and fn or utility.full_path(fn):string()
+        return fn .. sn .. skn
     end
-    local key = gen_key(filename:string(), sname)
+
+    local skn = hasskin and "_skin" or ""
+    local key = gen_key(filename:string(), sname, skn)
 
     local m = material_cache[key]
     if m == nil then
-        if sname == "" then
+        if sname == "" and skn == "" then
             m = mi
         else
             local basename = filename:stem():string()
