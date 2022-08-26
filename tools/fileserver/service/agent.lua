@@ -15,7 +15,9 @@ local VfsSessionId
 
 local ServiceLogManager = ltask.uniqueservice "log.manager"
 local ServiceEditor = ltask.uniqueservice "editor"
-local LoggerIndex, LoggerFile
+local LoggerIndex
+local LoggerFile
+local LoggerQueue = {}
 
 local function compile_resource(path)
 	if not ServiceCompile then
@@ -30,19 +32,32 @@ end
 
 local function logger_init()
 	LoggerIndex, LoggerFile = ltask.call(ServiceLogManager, "CREATE", REPOPATH)
+	ltask.fork(function ()
+		while LoggerIndex do
+			if #LoggerQueue > 0 then
+				local fp <close> = assert(io.open(LoggerFile, 'a'))
+				for i = 1, #LoggerQueue do
+					local data = LoggerQueue[i]
+					LoggerQueue[i] = nil
+					fp:write(data)
+					fp:write('\n')
+				end
+			end
+			ltask.sleep(1)
+		end
+	end)
 end
 
 local function logger_write(data)
 	ltask.send(ServiceEditor, "MESSAGE", "LOG", "RUNTIME", data)
-    local fp = assert(io.open(LoggerFile, 'a'))
-    fp:write(data)
-    fp:write('\n')
-    fp:close()
+    LoggerQueue[#LoggerQueue+1] = data
 end
 
 local function logger_quit()
 	if LoggerIndex then
 		ltask.call(ServiceLogManager, "CLOSE", REPOPATH, LoggerIndex)
+		LoggerIndex = nil
+		LoggerFile = nil
 	end
 end
 
