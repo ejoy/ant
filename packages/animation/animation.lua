@@ -202,7 +202,7 @@ local function init_prefab_anim(entity)
 	for _, eid in pairs(slot_eid) do
 		local slot_e <close> = w:entity(eid, "slot:in")
 		local slot = slot_e.slot
-		if slot.joint_name then
+		if slot.joint_name and skeleton then
 			slot.joint_index = skeleton._handle:joint_index(slot.joint_name)
 		end
 		slot.pose = pose

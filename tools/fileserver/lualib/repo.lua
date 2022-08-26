@@ -375,11 +375,12 @@ function repo:dir(hash)
 	local dir = {}
 	local file = {}
 	for line in f:lines() do
-		local t, hash, name = line:match "^([df]) (%S*) (.*)"
+		local t, hash, name = line:match "^([dfr]) (%S*) (.*)"
 		if t == 'd' then
 			dir[name] = hash
 		elseif t == 'f' then
 			file[name] = hash
+		elseif t == 'r' then
 		else
 			if _DEBUG then print ("INVALID", filename) end
 			f:close()

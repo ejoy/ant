@@ -169,7 +169,7 @@ function m:set_default_light(enable)
             self.default_light = nil
         end
         if self.skybox then
-            w:remove(self.skybox.root)
+            -- w:remove(self.skybox.root)
             local all_entitys = self.skybox.tag["*"]
             for _, e in ipairs(all_entitys) do
                 w:remove(e)
@@ -582,7 +582,7 @@ function m:add_prefab(filename)
             local child = children[1]
             local e <close> = w:entity(child, "camera:in")
             if e.camera then
-                set_parent(child, parent)
+                -- set_parent(child, parent)
                 local temp = serialize.parse(prefab_filename, cr.read_file(prefab_filename))
                 hierarchy:add(child, {template = temp[1], editor = true, temporary = true}, parent)
                 return

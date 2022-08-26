@@ -30,7 +30,7 @@ end
 ltask.fork(function ()
 	while true do
 		if not dispatch_response() then
-			exclusive.sleep(1)
+			exclusive.sleep(10)
 			ltask.sleep(0)
 		end
 	end

@@ -9,10 +9,15 @@ local REPOPATH = arg[1]
 
 local message = {}
 local ServiceCompile
-local ServiceLogRuntime
 local ServiceDebugProxy
 local ServiceVfsMgr = ltask.uniqueservice "vfsmgr"
 local VfsSessionId
+
+local ServiceLogManager = ltask.uniqueservice "log.manager"
+local ServiceEditor = ltask.uniqueservice "editor"
+local LoggerIndex
+local LoggerFile
+local LoggerQueue = {}
 
 local function compile_resource(path)
 	if not ServiceCompile then
@@ -25,6 +30,37 @@ local function response(...)
 	socket.send(FD, protocol.packmessage({...}))
 end
 
+local function logger_init()
+	LoggerIndex, LoggerFile = ltask.call(ServiceLogManager, "CREATE", REPOPATH)
+	ltask.fork(function ()
+		while LoggerIndex do
+			if #LoggerQueue > 0 then
+				local fp <close> = assert(io.open(LoggerFile, 'a'))
+				for i = 1, #LoggerQueue do
+					local data = LoggerQueue[i]
+					LoggerQueue[i] = nil
+					fp:write(data)
+					fp:write('\n')
+				end
+			end
+			ltask.sleep(1)
+		end
+	end)
+end
+
+local function logger_write(data)
+	ltask.send(ServiceEditor, "MESSAGE", "LOG", "RUNTIME", data)
+    LoggerQueue[#LoggerQueue+1] = data
+end
+
+local function logger_quit()
+	if LoggerIndex then
+		ltask.call(ServiceLogManager, "CLOSE", REPOPATH, LoggerIndex)
+		LoggerIndex = nil
+		LoggerFile = nil
+	end
+end
+
 function message.ROOT(path)
 	REPOPATH = assert(REPOPATH or path, "Need repo name")
 	print("ROOT", REPOPATH)
@@ -32,7 +68,7 @@ function message.ROOT(path)
 		ltask.send(ServiceVfsMgr, "CLOSE", VfsSessionId)
 		VfsSessionId = nil
 	else
-		ServiceLogRuntime = ltask.spawn("log.runtime", REPOPATH)
+		logger_init()
 	end
 	local sid, roothash = ltask.call(ServiceVfsMgr, "ROOT", REPOPATH)
 	VfsSessionId = sid
@@ -98,7 +134,7 @@ function message.DBG(data)
 end
 
 function message.LOG(data)
-	ltask.send(ServiceLogRuntime, "LOG", data)
+	logger_write(data)
 end
 
 function message.MSG(CMD,...)
@@ -135,9 +171,7 @@ local function quit()
 	if ServiceCompile then
 		ltask.send(ServiceCompile, "QUIT")
 	end
-	if ServiceLogRuntime then
-		ltask.send(ServiceLogRuntime, "QUIT")
-	end
+	logger_quit()
 	if ServiceDebugProxy then
 		ltask.send(ServiceDebugProxy, "QUIT")
 	end
