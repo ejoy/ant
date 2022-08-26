@@ -185,27 +185,6 @@ function efk_sys:init()
     }
 
     assetmgr.set_efkobj(efk_ctx)
-    local vp = world.args.viewport
-    ecs.create_entity{
-        policy = {
-            "ant.general|name",
-            "ant.render|render_target",
-            "ant.render|watch_screen_buffer",
-        },
-        data = {
-            efk_queue = true,
-            render_target = {
-                view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
-                viewid = effect_viewid,
-                view_mode = "s",
-                clear_state = {
-                    clear = "",
-                },
-            },
-            watch_screen_buffer = true,
-            name = "efk_queue",
-        }
-    }
 end
 
 function efk_sys:exit()
@@ -238,18 +217,19 @@ local camera_changed = world:sub{"main_queue", "camera_changed"}
 local camera_frustum_mb
 
 local function update_framebuffer_texutre()
-    local mq = w:first("main_queue render_target:in camera_ref:in")
-    local rt = mq.render_target
-    local fb = fbmgr.get(rt.fb_idx)
+    local eq = w:first("efk_queue render_target:in")
+    local fbidx = eq.render_target.fb_idx
+    local fb = fbmgr.get(fbidx)
     efk_cb_handle.background = fb[1].handle
 
+    local mq = w:first("main_queue camera_ref:in")
     local ce <close> = w:entity(mq.camera_ref, "camera:in")
     local projmat = ce.camera.projmat
     local col3, col4 = math3d.index(projmat, 3, 4)
     local m33, m34 = math3d.index(col3, 3, 4)
     local m43, m44 = math3d.index(col4, 3, 4)
     efk_cb_handle.depth = {
-        handle = fbmgr.get_depth(rt.fb_idx).handle,
+        handle = fbmgr.get_depth(fbidx).handle,
         1.0, --depth buffer scale
         0.0, --depth buffer offset
         m33, m34,
@@ -258,8 +238,31 @@ local function update_framebuffer_texutre()
 end
 
 function efk_sys:init_world()
-    local mq = w:first("main_queue camera_ref:in")
+    local mq = w:first("main_queue render_target:in camera_ref:in")
     camera_frustum_mb = world:sub{"camera_changed", mq.cameraref, "frustum"}
+    local vp = world.args.viewport
+    ecs.create_entity{
+        policy = {
+            "ant.general|name",
+            "ant.render|render_target",
+            "ant.render|watch_screen_buffer",
+        },
+        data = {
+            efk_queue = true,
+            render_target = {
+                view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
+                viewid = effect_viewid,
+                fb_idx = mq.render_target.fb_idx,
+                view_mode = "s",
+                clear_state = {
+                    clear = "",
+                },
+            },
+            watch_screen_buffer = true,
+            name = "efk_queue",
+        }
+    }
+
     --let it init
     world:pub{"camera_changed", mq.cameraref, "frustum"}
 end
