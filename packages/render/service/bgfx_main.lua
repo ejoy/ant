@@ -236,7 +236,9 @@ local frame_control; do
         if maxfps and fps > maxfps then
             local waittime = math.ceil((1/maxfps - delta)*1000)
             if waittime > 0 then
-                --ltask.sleep(waittime)
+                if waittime < 10 then
+                    waittime = 10
+                end
                 exclusive.sleep(waittime)
             end
         end
