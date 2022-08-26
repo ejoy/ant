@@ -17,6 +17,10 @@ function vfs.type(path, hash)
 	return io_req:call("TYPE", path, hash)
 end
 
+function vfs.fetch(path)
+	return io_req:call("FETCH", path)
+end
+
 if __ANT_RUNTIME__ then
 	function vfs.resource(paths)
 		return io_req:call("RESOURCE", paths)
