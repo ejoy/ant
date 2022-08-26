@@ -224,7 +224,7 @@ lefk_startup(lua_State *L){
     luaL_checktype(L, 1, LUA_TTABLE);
 
     EffekseerRendererBGFX::InitArgs efkArgs;
-
+    efkArgs.invz = true;    //we use inverse z
     auto get_field = [L](const char* name, int idx, int luatype, auto op){
         auto ltype = lua_getfield(L, idx, name);
         if (luatype == ltype){
