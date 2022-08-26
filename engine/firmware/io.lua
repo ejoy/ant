@@ -734,9 +734,8 @@ local function work_online()
 	end
 	local result = {}
 	local reading = connection.recvq
-	local timeout = 0
 	while true do
-		if host.update(status, timeout) then
+		if host.update(status, 0.01) then
 			break
 		end
 		local ok, err = connection_dispose(0)
@@ -744,16 +743,9 @@ local function work_online()
 			while protocol.readmessage(reading, result) do
 				dispatch_net(table.unpack(result))
 			end
-			timeout = 0
-		else
-			if ok == nil then
-				print("[ERROR] Connection Error", err)
-				break
-			end
-			timeout = timeout + 0.001
-			if timeout > INTERVAL then
-				timeout = INTERVAL
-			end
+		elseif ok == nil then
+			print("[ERROR] Connection Error", err)
+			break
 		end
 	end
 end
