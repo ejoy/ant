@@ -3,10 +3,10 @@ local ltask = require "ltask"
 local fs = require "bee.filesystem"
 local fw = require "bee.filewatch"
 local repo_new = require "repo".new
+local REPOPATH = arg[1]
 
-local CACHE = {}
-local SESSION = {}
-local session_id = 0
+local rebuild = false
+local repo
 
 local function split(path)
 	local r = {}
@@ -43,7 +43,6 @@ local function ignore_path(p)
 	end
 end
 
-
 local function watch_add_path(paths, path)
 	for i = 1, #paths do
 		local status = compare_path(paths[i], path)
@@ -59,68 +58,24 @@ local function watch_add_path(paths, path)
 	paths[#paths+1] = path
 end
 
-local function watch_add(repo, repopath)
-	local paths = {}
-	local watchs = {}
-	watch_add_path(paths, repopath:lexically_normal())
-	for _, lpath in pairs(repo._mountpoint) do
-		watch_add_path(paths, lpath:lexically_normal())
-	end
-	for i = 1, #paths do
-		local path = paths[i]
-		watchs[i] = assert(fw.add(path:string()))
-	end
-	repo._watchs = watchs
-end
-
-local function watch_del(repo)
-	local watchs = repo._watchs
-	for i = 1, #watchs do
-		fw.remove(watchs[i])
-	end
-end
-
-local function repo_create(repopath)
-	repopath = fs.path(repopath)
-	local repo = repo_new(repopath)
-	if not repo then
-		return
-	end
-	if fs.is_regular_file(repopath / ".repo" / "root") then
-		repo:index()
-	else
-		repo:rebuild()
-	end
-	watch_add(repo, repopath)
-	return repo
-end
-
 local function update_watch()
 	while true do
 		local type, path = fw.select()
 		if not type then
 			break
 		end
+		--if rebuild then
+		--	goto continue
+		--end
 		path = fs.path(path)
 		if ignore_path(path) then
 			goto continue
 		end
-		local touch = {}
-		for k, repo in pairs(CACHE) do
-			local vpath = repo:virtualpath(path)
-			if vpath then
-				print('Modify repo', k, vpath)
-				touch[#touch+1] = k
-			end
-		end
-		for _, k in ipairs(touch) do
-			local repo = CACHE[k]
-			watch_del(repo)
-			CACHE[k] = nil
-			repo._ref = repo._ref - 1
-			if repo._ref == 0 then
-				repo:close()
-			end
+		local vpath = repo:virtualpath(path)
+		if vpath then
+			print('Modify repo', vpath)
+			rebuild = true
+			goto continue
 		end
 		::continue::
 	end
@@ -135,60 +90,57 @@ end)
 
 local S = {}
 
-function S.ROOT(repopath)
-	local repo = CACHE[repopath]
+function S.ROOT()
 	if not repo then
-		repo = repo_create(repopath)
+		repo = repo_new(fs.path(REPOPATH))
 		if repo == nil then
 			error "Create repo failed."
 		end
-		repo._ref = 1
-		CACHE[repopath] = repo
+		local paths = {}
+		watch_add_path(paths, fs.path(REPOPATH):lexically_normal())
+		for _, lpath in pairs(repo._mountpoint) do
+			watch_add_path(paths, lpath:lexically_normal())
+		end
+		for i = 1, #paths do
+			local path = paths[i]
+			fw.add(path:string())
+		end
+		rebuild = true
 	end
-	session_id = session_id + 1
-	SESSION[session_id] = repo
-	repo._ref = repo._ref + 1
-	return session_id, repo:root()
+	if rebuild then
+		if fs.is_regular_file(fs.path(REPOPATH) / ".repo" / "root") then
+			repo:index()
+		else
+			repo:rebuild()
+		end
+	end
+	return repo:root()
 end
 
-function S.GET(sid, hash)
-	local repo = assert(SESSION[sid], "Need ROOT.")
+function S.GET(hash)
 	local path = repo:hash(hash)
 	if path then
 		return path:string()
 	end
 end
 
-function S.FETCH(sid, path)
-	local repo = assert(SESSION[sid], "Need ROOT.")
+function S.FETCH(path)
 	local hashs = repo:fetch(path)
 	if hashs then
 		return table.concat(hashs, "|")
 	end
 end
 
-function S.BUILD(sid, path, lpath)
-	local repo = assert(SESSION[sid], "Need ROOT.")
-	return repo:build_dir(path, lpath)
+function S.BUILD(lpath)
+	local rpath = fs.relative(fs.path(lpath), fs.path(REPOPATH)):string()
+	return repo:build_dir("/"..rpath, lpath)
 end
 
-function S.CLOSE(sid)
-	local repo = assert(SESSION[sid], "Need ROOT.")
-	repo._ref = repo._ref - 1
-	SESSION[sid] = nil
-	if repo._ref == 0 then
-		repo:close()
-	end
-end
-
-function S.REALPATH(sid, path)
-	local repo = assert(SESSION[sid], "Need ROOT.")
+function S.REALPATH(path)
 	return fs.absolute(repo:realpath(path)):string()
 end
 
-
-function S.VIRTUALPATH(sid, path)
-	local repo = assert(SESSION[sid], "Need ROOT.")
+function S.VIRTUALPATH(path)
 	local vp = repo:virtualpath(fs.relative(fs.path(path)))
 	if vp then
 		return '/' .. vp

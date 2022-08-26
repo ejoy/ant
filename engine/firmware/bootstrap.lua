@@ -34,7 +34,6 @@ do
 end
 
 local config = {
-	rootname = nil,
 	repopath = "./",
 	vfspath = "vfs.lua",
 	socket = nil,

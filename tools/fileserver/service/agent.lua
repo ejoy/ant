@@ -1,94 +1,60 @@
 local ltask = require "ltask"
 local socket = require "socket"
 local protocol = require "protocol"
-local fs = require "bee.filesystem"
 
-local arg = ltask.call(ltask.queryservice "arguments", "QUERY")
 local FD = ...
-local REPOPATH = arg[1]
 
 local message = {}
-local ServiceCompile
-local ServiceDebugProxy
+local ServiceCompile = ltask.uniqueservice "compile"
 local ServiceVfsMgr = ltask.uniqueservice "vfsmgr"
-local VfsSessionId
-
 local ServiceLogManager = ltask.uniqueservice "log.manager"
 local ServiceEditor = ltask.uniqueservice "editor"
-local LoggerIndex
-local LoggerFile
+local ServiceDebugProxy
+
+local LoggerIndex, LoggerFile = ltask.call(ServiceLogManager, "CREATE")
 local LoggerQueue = {}
 
-local function compile_resource(path)
-	if not ServiceCompile then
-		ServiceCompile = ltask.spawn("compile", REPOPATH)
+ltask.fork(function ()
+	while LoggerIndex do
+		if #LoggerQueue > 0 then
+			local fp <close> = assert(io.open(LoggerFile, 'a'))
+			for i = 1, #LoggerQueue do
+				local data = LoggerQueue[i]
+				LoggerQueue[i] = nil
+				fp:write(data)
+				fp:write('\n')
+			end
+		end
+		ltask.sleep(1)
 	end
-	return pcall(ltask.call, ServiceCompile, "COMPILE", path)
-end
+end)
 
 local function response(...)
 	socket.send(FD, protocol.packmessage({...}))
 end
 
-local function logger_init()
-	LoggerIndex, LoggerFile = ltask.call(ServiceLogManager, "CREATE", REPOPATH)
-	ltask.fork(function ()
-		while LoggerIndex do
-			if #LoggerQueue > 0 then
-				local fp <close> = assert(io.open(LoggerFile, 'a'))
-				for i = 1, #LoggerQueue do
-					local data = LoggerQueue[i]
-					LoggerQueue[i] = nil
-					fp:write(data)
-					fp:write('\n')
-				end
-			end
-			ltask.sleep(1)
-		end
-	end)
-end
-
-local function logger_write(data)
-	ltask.send(ServiceEditor, "MESSAGE", "LOG", "RUNTIME", data)
-    LoggerQueue[#LoggerQueue+1] = data
-end
-
-local function logger_quit()
-	if LoggerIndex then
-		ltask.call(ServiceLogManager, "CLOSE", REPOPATH, LoggerIndex)
-		LoggerIndex = nil
-		LoggerFile = nil
-	end
-end
-
-function message.ROOT(path)
-	REPOPATH = assert(REPOPATH or path, "Need repo name")
-	print("ROOT", REPOPATH)
-	if VfsSessionId then
-		ltask.send(ServiceVfsMgr, "CLOSE", VfsSessionId)
-		VfsSessionId = nil
-	else
-		logger_init()
-	end
-	local sid, roothash = ltask.call(ServiceVfsMgr, "ROOT", REPOPATH)
-	VfsSessionId = sid
+function message.ROOT()
+	local roothash = ltask.call(ServiceVfsMgr, "ROOT")
 	response("ROOT", roothash)
 end
 
 function message.RESOURCE(path)
-	local ok, lpath = compile_resource(path)
+	local ok, lpath = pcall(ltask.call, ServiceCompile, "COMPILE", path)
 	if not ok then
-		print(table.concat(lpath, "\n"))
+		if type(lpath) == "table" then
+			print(table.concat(lpath, "\n"))
+		else
+			print(lpath)
+		end
 		response("MISSING", path)
 		return
 	end
-	local rpath = fs.relative(fs.path(lpath), fs.path(REPOPATH)):string()
-	local hash = ltask.call(ServiceVfsMgr, "BUILD", VfsSessionId, "/"..rpath, lpath)
+	local hash = ltask.call(ServiceVfsMgr, "BUILD", lpath)
 	response("RESOURCE", path, hash)
 end
 
 function message.GET(hash)
-	local filename = ltask.call(ServiceVfsMgr, "GET", VfsSessionId, hash)
+	local filename = ltask.call(ServiceVfsMgr, "GET", hash)
 	if filename == nil then
 		response("MISSING", hash)
 		return
@@ -118,7 +84,7 @@ function message.GET(hash)
 end
 
 function message.FETCH(path)
-	local hashs = ltask.call(ServiceVfsMgr, "FETCH", VfsSessionId, path)
+	local hashs = ltask.call(ServiceVfsMgr, "FETCH", path)
 	if not hashs then
 		response("MISSING", path)
 		return
@@ -128,13 +94,14 @@ end
 
 function message.DBG(data)
 	--if not ServiceDebugProxy then
-	--	ServiceDebugProxy = ltask.spawn("debug.proxy", FD, VfsSessionId)
+	--	ServiceDebugProxy = ltask.spawn("debug.proxy", FD)
 	--end
 	--ltask.send(ServiceDebugProxy, "MESSAGE", data)
 end
 
 function message.LOG(data)
-	logger_write(data)
+	ltask.send(ServiceEditor, "MESSAGE", "LOG", "RUNTIME", data)
+    LoggerQueue[#LoggerQueue+1] = data
 end
 
 function message.MSG(CMD,...)
@@ -165,13 +132,7 @@ local function dispatch(fd)
 end
 
 local function quit()
-	if VfsSessionId then
-		ltask.send(ServiceVfsMgr, "CLOSE", VfsSessionId)
-	end
-	if ServiceCompile then
-		ltask.send(ServiceCompile, "QUIT")
-	end
-	logger_quit()
+	ltask.call(ServiceLogManager, "CLOSE", LoggerIndex)
 	if ServiceDebugProxy then
 		ltask.send(ServiceDebugProxy, "QUIT")
 	end
