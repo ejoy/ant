@@ -343,7 +343,7 @@ function m.show()
                 local preview = preview_images[selected_file]
                 if preview then
                     if texture_detail[selected_file] then
-                        imgui.widget.Text("image:" .. texture_detail[selected_file].path)
+                        imgui.widget.Text("image:" .. tostring(texture_detail[selected_file].path))
                     end
                     -- imgui.deprecated.Columns(2, "PreviewColumns", true)
                     imgui.widget.Text(preview.texinfo.width .. "x" .. preview.texinfo.height .. " ".. preview.texinfo.bitsPerPixel)

@@ -664,6 +664,7 @@ local function get_clips_filename()
 end
 
 function m.save_keyevent(filename)
+    if not edit_anims then return end
     local revent = {}
     for _, name in ipairs(edit_anims.name_list) do
         local eventlist = to_runtime_event(edit_anims[name].key_event)
