@@ -79,18 +79,20 @@ function lm_sys:entity_init()
 end
 
 local function load_lightmap_material(mf, setting)
-    local s = {USING_LIGHTMAP=1}
-    for k, v in pairs(setting) do
-        s[k] = v
-    end
-    s["ENABLE_SHADOW"] = nil
-    s["identity"] = nil
-    s['shadow_cast'] = 'off'
-    s['shadow_receive'] = 'off'
-    s['skinning'] = 'UNKNOWN'
-    s['bloom'] = 'off'
-    s['ENABLE_IBL'] = 'off'
-    return imaterial.load_res(mf, s)
+    -- local s = {USING_LIGHTMAP=1}
+    -- for k, v in pairs(setting) do
+    --     s[k] = v
+    -- end
+    -- s["ENABLE_SHADOW"] = nil
+    -- s["identity"] = nil
+    -- s['shadow_cast'] = 'off'
+    -- s['shadow_receive'] = 'off'
+    -- s['skinning'] = 'UNKNOWN'
+    -- s['bloom'] = 'off'
+    -- s['ENABLE_IBL'] = 'off'
+
+    local newmf = nil   --TODO
+    return imaterial.load_res(newmf)
 end
 
 function lm_sys:end_filter()

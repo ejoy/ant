@@ -96,9 +96,9 @@ local function generate_properties(fx, properties)
 	return new_properties
 end
 
-local function init(material, setting)
+local function init(material)
     material.fx.setting = load(material.fx.setting)
-    material.fx = assetmgr.load_fx(material.fx, setting)
+    material.fx = assetmgr.load_fx(material.fx)
 
     if material.state then
         material.state = bgfx.make_state(load(material.state))
@@ -125,8 +125,7 @@ local function init(material, setting)
 end
 
 local function loader(fileurl)
-	local f, s = url.parse(fileurl)
-    return init(load(f), s)
+    return init(load(fileurl))
 end
 
 local function unloader()

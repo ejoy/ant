@@ -28,9 +28,6 @@ function tm_sys:init()
             name = "tonemapping_render_obj",
             simplemesh = irender.full_quad(),
             material = tm_materialfile,
-            material_setting = {
-                EXPOSURE_TYPE=1,
-            },
             scene = {},
             visible_state = "",
             tonemapping_drawer = true,

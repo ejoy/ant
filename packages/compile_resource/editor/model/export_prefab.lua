@@ -1,7 +1,7 @@
 local math3d = require "math3d"
 local utility = require "editor.model.utility"
 local serialize = import_package "ant.serialize"
-
+local datalist = require "datalist"
 local lfs = require "filesystem.local"
 local fs = require "filesystem"
 
@@ -79,7 +79,7 @@ local primitive_names = {
 
 local material_cache = {}
 
-local function generate_material(mi, mode)
+local function generate_material(mi, mode, hasskin)
     local sname = primitive_names[mode+1]
     if not sname then
         error(("not support primitate state, mode:%d"):format(mode))
@@ -107,6 +107,14 @@ local function generate_material(mi, mode)
                 s.PT = sname
                 basename = basename .. "_" .. sname
             end
+
+            if hasskin then
+                if nil == nm.fx.setting then
+                    nm.fx.setting = {}
+                end
+                nm.fx.setting.GPU_SKINNING = 1
+                basename = basename .. "_skin"
+            end
             m = {
                 filename = filename:parent_path() / (basename .. ".material"),
                 material = nm
@@ -119,12 +127,12 @@ local function generate_material(mi, mode)
     return m
 end
 
-local function read_material_file(filename)
-    local function read_file(fn)
-        local f<close> = fs.open(fn)
-        return f:read "a"
-    end
+local function read_file(fn)
+    local f<close> = fs.open(fn)
+    return f:read "a"
+end
 
+local function read_material_file(filename)
     local mi = serialize.parse(filename, read_file(filename))
     if type(mi.state) == "string" then
         mi.state = serialize.parse(filename, read_file(fs.path(mi.state)))
@@ -170,22 +178,16 @@ local function find_node_animation(gltfscene, nodeidx, scenetree, animationfiles
     end
 end
 
-local function add_animation(gltfscene, exports, nodeidx, policy, data)
-    --TODO: we need to check skin.joints is reference to skeleton node, to detect this mesh entity have animation or not
-    --      we just give it animation info where it have skin info right now
+local function has_skin(gltfscene, exports, nodeidx)
     local node = gltfscene.nodes[nodeidx+1]
     if node.skin and next(exports.animations) and exports.skeleton then
         if node.skin then
-            policy[#policy+1] = "ant.render|skinrender"
-            data.skinning = true
-            data.material_setting = { skinning = "GPU"}
-            data.scene = nil
             return true
         end
     end
 end
 
-local function seri_material(exports, mode, materialidx)
+local function seri_material(exports, mode, materialidx, hasskin)
     local em = exports.material
     if em == nil or #em <= 0 then
         return
@@ -193,7 +195,7 @@ local function seri_material(exports, mode, materialidx)
 
     if materialidx then
         local mi = assert(exports.material[materialidx+1])
-        local materialinfo = generate_material(mi, mode)
+        local materialinfo = generate_material(mi, mode, hasskin)
         if materialinfo then
             save_material(materialinfo)
             return materialinfo.filename
@@ -216,6 +218,30 @@ local function seri_material(exports, mode, materialidx)
     return default_material_path
 end
 
+local function read_local_file(materialfile)
+    local f <close> = lfs.open(materialfile)
+    return f:read "a"
+end
+
+local function check_create_skin_material(materialfile)
+    local n = materialfile:stem():string() .. "_skin"
+    local newpath = materialfile:parent_path() / (n .. materialfile:extension())
+    local fullnewpath = utility.full_path(newpath:string())
+    if lfs.exists(fullnewpath) then
+        return newpath
+    end
+
+    local lmf = lfs.path(utility.full_path(materialfile:string()))
+    local m = datalist.parse(read_local_file(lmf))
+    if nil == m.fx.setting then
+        m.fx.setting = {}
+    end
+
+    m.fx.setting.GPU_SKINNING = 1
+    utility.save_txt_file(newpath:string(), m)
+    return newpath
+end
+
 local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(node)
@@ -225,7 +251,8 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     local entity
     for primidx, prim in ipairs(mesh.primitives) do
         local meshname = mesh.name and fix_invalid_name(mesh.name) or ("mesh" .. meshidx)
-        local materialfile = seri_material(exports, prim.mode or 4, prim.material)
+        local needskin = has_skin(gltfscene, exports, nodeidx)
+        local materialfile = seri_material(exports, prim.mode or 4, prim.material, needskin)
         if materialfile == nil then
             error(("not found %s material %d"):format(meshname, prim.material or -1))
         end
@@ -235,7 +262,6 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
         end
 
         local data = {
-            scene       = {s=srt.s,r=srt.r,t=srt.t},
             mesh        = serialize.path(meshfile),
 ---@diagnostic disable-next-line: need-check-nil
             material    = serialize.path(materialfile:string()),
@@ -247,16 +273,19 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
             "ant.general|name",
         }
 
-        local hasskin = add_animation(gltfscene, exports, nodeidx, policy, data)
-        if not hasskin then
+        if needskin then
+            policy[#policy+1] = "ant.render|skinrender"
+            data.skinning = true
+        else
             policy[#policy+1] = "ant.render|render"
+            data.scene    = {s=srt.s,r=srt.r,t=srt.t}
         end
 
         --TODO: need a mesh node to reference all mesh.primitives, we assume primitives only have one right now
         entity = create_entity {
             policy = policy,
             data = data,
-            parent = (not hasskin) and parent,
+            parent = (not needskin) and parent,
         }
     end
     return entity

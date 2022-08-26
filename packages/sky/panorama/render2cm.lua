@@ -104,7 +104,7 @@ local cubemap_flags<const> = sampler {
 
 function render2cm_sys:entity_ready()
     for e in w:select "skybox_changed skybox:in render_object:update filter_ibl?out" do
-        local tex = assetmgr.resource(imaterial.resource(e).properties.s_skybox.texture)
+        local tex = assetmgr.resource(imaterial.load_res(e).properties.s_skybox.texture)
 
         local ti = tex.texinfo
         if panorama_util.is_panorama_tex(ti) then

@@ -258,9 +258,8 @@ function sm:init()
 	local fbidx = ishadow.fb_index()
 	local s = ishadow.shadowmap_size()
 	create_clear_shadowmap_queue(fbidx)
-	local originmatrial = "/pkg/ant.resources/materials/depth.material"
-	shadow_material = imaterial.load_res(originmatrial)
-	gpu_skinning_material = imaterial.load_res(originmatrial, {skinning="GPU"})
+	shadow_material = imaterial.load_res "/pkg/ant.resources/materials/depth.material"
+	gpu_skinning_material = imaterial.load_res "/pkg/ant.resources/materials/depth_skin.material"
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx)

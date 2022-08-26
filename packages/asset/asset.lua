@@ -51,40 +51,8 @@ function assetmgr.resource(path, world)
 	return resource.proxy(fullpath)
 end
 
-local curve_world = setting:data().graphic.curve_world
-local enable_bloom = setting:get "graphic/postprocess/bloom/enable"
-local curve_world_type_macros<const> = {
-    view_sphere = 1,
-    cylinder = 2,
-}
-
-local default_setting = {}
-
-if curve_world.enable then
-	default_setting["ENABLE_CURVE_WORLD"] = curve_world_type_macros[curve_world.type]
-end
-
-if enable_bloom then
-	default_setting["BLOOM_ENABLE"] = 1
-end
-
-
-local function merge(a, b)
-	for k, v in pairs(default_setting) do
-		if not a[k] then
-			a[k] = v
-		end
-	end
-    for k, v in pairs(b) do
-        if not a[k] then
-            a[k] = v
-        end
-    end
-end
-
-function assetmgr.load_fx(fx, setting)
-	setting = setting or {}
-	local newfx = { setting = setting }
+function assetmgr.load_fx(fx)
+	local newfx = {setting=fx.setting or {}}
 	local function check_resolve_path(p)
 		if fx[p] then
 			newfx[p] = absolute_path(fx[p])
@@ -94,9 +62,6 @@ function assetmgr.load_fx(fx, setting)
 	check_resolve_path "vs"
 	check_resolve_path "fs"
 	check_resolve_path "cs"
-    if fx.setting then
-        merge(setting, fx.setting)
-    end
 	return cr.load_fx(newfx)
 end
 

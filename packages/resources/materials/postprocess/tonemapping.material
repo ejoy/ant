@@ -5,6 +5,7 @@ fx:
     lighting: off
     shadow_cast: off
     shadow_receive: off
+    EXPOSURE_TYPE: 1
 properties:
   u_exposure_param: {0.0, 0.0, 0.0, 0.0}
   s_scene_color:

@@ -2,8 +2,6 @@ local ecs	= ...
 local world = ecs.world
 local w		= world.w
 
-local url = import_package "ant.url"
-
 local assetmgr		= require "asset"
 local matobj		= require "matobj"
 local imaterial = ecs.interface "imaterial"
@@ -14,9 +12,7 @@ function imaterial.set_property(e, who, what, isiter)
 	fm.main_queue[who] = what
 end
 
-function imaterial.load_res(mp, setting)
-	return assetmgr.resource(url.create(mp, setting))
-end
+imaterial.load_res = assetmgr.resource
 
 function imaterial.system_attribs()
 	return matobj.sa
@@ -37,8 +33,8 @@ function imaterial.get_color_palette(palname, coloridx)
 end
 
 function imaterial.resource(e)
-	w:extend(e, "material:in material_setting?in")
-	return imaterial.load_res(e.material, e.material_setting)
+	w:extend(e, "material:in")
+	return assetmgr.resource(e.material)
 end
 
 local ms = ecs.system "material_system"
@@ -95,8 +91,8 @@ end
 function ms:component_init()
 	w:clear "material_result"
 
-	for e in w:select "INIT material:in material_setting?in material_result:new" do
-		e.material_result = imaterial.load_res(e.material, e.material_setting)
+	for e in w:select "INIT material:in material_result:new" do
+		e.material_result = imaterial.load_res(e.material)
 		--debug_material = true
 	end
 end

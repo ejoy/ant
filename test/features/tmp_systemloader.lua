@@ -346,6 +346,14 @@ function init_loader_sys:init()
     --         mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
     --     }
     -- }
+
+    local pp = ecs.create_instance "/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab"
+    pp.on_ready = function (e)
+        local ee<close> = w:entity(e.tag['*'][1])
+        iom.set_scale(ee, 0.1)
+    end
+
+    world:create_object(pp)
 end
 
 function init_loader_sys:init_world()
