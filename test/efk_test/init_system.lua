@@ -26,7 +26,7 @@ function is:init()
         },
         data = {
             scene   = {srt = {}},
-            efk     = "/pkg/ant.test.efk/assets/test.efk",
+            efk     = "/pkg/ant.test.efk/assets/miner_efk/miner_dust.efk",
             name    = "test_efk",
             on_ready = function (e)
                 local handle = iefk.play(e)
