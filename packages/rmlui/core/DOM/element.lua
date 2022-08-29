@@ -37,7 +37,14 @@ local property_setter = {}
 function property_init:addEventListener()
     return function (type, listener, useCapture)
         local handle = self._handle
-        rmlui.ElementAddEventListener(handle, type, listener, useCapture)
+        return rmlui.ElementAddEventListener(handle, type, listener, useCapture)
+    end
+end
+
+function property_init:removeEventListener()
+    return function (id)
+        local handle = self._handle
+        rmlui.ElementRemoveEventListener(handle, id)
     end
 end
 

@@ -16,7 +16,6 @@ public:
 	{}
 	virtual ~EventListener() {}
 	virtual void ProcessEvent(Event& event) = 0;
-	virtual void OnDetach(Element* element) = 0;
 
 	std::string type;
 	bool use_capture;

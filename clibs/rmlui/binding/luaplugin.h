@@ -6,8 +6,6 @@
 #include <core/Interface.h>
 #include <databinding/DataVariant.h>
 
-class lua_event_listener;
-
 namespace Rml {
 class Node;
 class Element;
