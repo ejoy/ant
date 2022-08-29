@@ -189,7 +189,7 @@ function efk_sys:init_world()
     ecs.create_entity{
         policy = {
             "ant.general|name",
-            "ant.render|render_target",
+            "ant.efk|efk_queue",
             "ant.render|watch_screen_buffer",
         },
         data = {
@@ -203,6 +203,7 @@ function efk_sys:init_world()
                     clear = "",
                 },
             },
+            queue_name = "efk_queue",
             watch_screen_buffer = true,
             name = "efk_queue",
         }
