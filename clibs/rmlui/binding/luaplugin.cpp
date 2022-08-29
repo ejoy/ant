@@ -155,11 +155,12 @@ LuaEventListener::LuaEventListener(lua_plugin* p, Rml::Element* element, const s
 		lua_pushlightuserdata(L, (void*)doc);
 		lua_pushlightuserdata(L, (void*)element);
 		lua_pushlstring(L, code.c_str(), code.length());
-		plugin->call(L, LuaEvent::OnEventAttach, 4, 1);
+		plugin->call(L, LuaEvent::OnEventAttach, 3, 1);
         if (lua_type(L, -1) == LUA_TNUMBER) {
             id = (int)luaL_checkinteger(L, -1);
         }
 	});
+	
 }
 
 LuaEventListener::~LuaEventListener() {
