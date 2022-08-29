@@ -1,17 +1,29 @@
 local rmlui = require "rmlui"
+local datalist = require "datalist"
+local fs = require "filesystem"
+local function readfile(filename)
+    local f <close> = fs.open(fs.path(filename))
+    return f:read "a"
+end
+
+local function load_material(filename)
+    local fxc = datalist.parse(readfile(filename)).fx
+    fxc.setting = fxc.setting or {}
+    local cr = import_package "ant.compile_resource"
+    return cr.load_fx(fxc)
+end
 
 local function create_shaders()
-    local assetmgr = import_package "ant.asset"
     local shaders = {
-        font            = assetmgr.resource "/pkg/ant.rmlui/fx/font.fx",
-        font_cr         = assetmgr.resource "/pkg/ant.rmlui/fx/font_cr.fx",
-        font_outline    = assetmgr.resource "/pkg/ant.rmlui/fx/font_outline.fx",
-        font_outline_cr = assetmgr.resource "/pkg/ant.rmlui/fx/font_outline_cr.fx",
-        font_shadow     = assetmgr.resource "/pkg/ant.rmlui/fx/font_shadow.fx",
-        font_shadow_cr  = assetmgr.resource "/pkg/ant.rmlui/fx/font_shadow_cr.fx",
-        image           = assetmgr.resource "/pkg/ant.rmlui/fx/image.fx",
-        image_cr        = assetmgr.resource "/pkg/ant.rmlui/fx/image_cr.fx",
-        debug_draw      = assetmgr.resource "/pkg/ant.rmlui/fx/debug_draw.fx"
+        font            = load_material "/pkg/ant.rmlui/materials/font.material",
+        font_cr         = load_material "/pkg/ant.rmlui/materials/font_cr.material",
+        font_outline    = load_material "/pkg/ant.rmlui/materials/font_outline.material",
+        font_outline_cr = load_material "/pkg/ant.rmlui/materials/font_outline_cr.material",
+        font_shadow     = load_material "/pkg/ant.rmlui/materials/font_shadow.material",
+        font_shadow_cr  = load_material "/pkg/ant.rmlui/materials/font_shadow_cr.material",
+        image           = load_material "/pkg/ant.rmlui/materials/image.material",
+        image_cr        = load_material "/pkg/ant.rmlui/materials/image_cr.material",
+        debug_draw      = load_material "/pkg/ant.rmlui/materials/debug_draw.material",
     }
 
     local function push_uniforms(a, b)

@@ -6,8 +6,8 @@ local math3d    = require "math3d"
 local sd        = import_package "ant.settings".setting
 local use_cluster_shading = sd:data().graphic.cluster_shading ~= 0
 local url		= import_package "ant.url"
-local ext_fx	= require "ext_fx"
 local matobj	= require "matobj"
+local respath 	= require "respath"
 
 local function load(filename)
     return type(filename) == "string" and serialize.parse(filename, cr.read_file(filename)) or filename
@@ -96,16 +96,23 @@ local function generate_properties(fx, properties)
 	return new_properties
 end
 
-local function check_load_fx(fx)
-	if type(fx) == "string" then
-		return ext_fx.load(fx)
-	end
-	return ext_fx.init(fx)
+local function init_fx(fxc)
+    local newfx = {setting=fxc.setting or {}}
+    local function check_resolve_path(p)
+        if fxc[p] then
+            newfx[p] = respath.absolute_path(fxc[p])
+        end
+    end
+    check_resolve_path "varying_path"
+    check_resolve_path "vs"
+    check_resolve_path "fs"
+    check_resolve_path "cs"
+    return cr.load_fx(newfx)
 end
 
 local function init(material)
     material.fx.setting = load(material.fx.setting)
-	material.fx = ext_fx.init(material.fx)
+	material.fx = init_fx(material.fx)
 
     if material.state then
         material.state = bgfx.make_state(load(material.state))
