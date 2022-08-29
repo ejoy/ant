@@ -1,11 +1,13 @@
-local project = ...
 package.path = "engine/?.lua"
 require "bootstrap"
-require "editor.create_repo" (project)
 
-import_package "ant.compile_resource"
 local ltask = require "ltask"
+local arg = ltask.call(ltask.queryservice "arguments", "QUERY")
+local REPOPATH = arg[1]
 local vfs = require "vfs"
+
+require "editor.create_repo" (REPOPATH)
+import_package "ant.compile_resource"
 
 local S = {}
 
@@ -19,10 +21,6 @@ end
 
 function S.COMPILE(path)
     return compile_url(path):string()
-end
-
-function S.QUIT()
-    ltask.quit()
 end
 
 return S

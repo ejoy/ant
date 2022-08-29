@@ -83,7 +83,6 @@ local function init_config(c)
 	config.nettype = c.nettype
 	config.address = c.address
 	config.port = c.port
-	config.rootname = c.rootname
 	config.socket = c.socket
 	read_config(config.repopath .. "config", config)
 end
@@ -443,7 +442,7 @@ local response = {}
 
 function response.ROOT(hash)
 	if hash == '' then
-		_print("[ERROR] INVALID ROOT", config.rootname)
+		_print("[ERROR] INVALID ROOT")
 		os.exit(-1, true)
 		return
 	end
@@ -528,7 +527,7 @@ end
 local function waiting_for_root()
 	local resp = {}
 	local reading = connection.recvq
-	connection_send("ROOT", config.rootname)
+	connection_send("ROOT")
 	while true do
 		local ok, err = connection_dispose(INTERVAL)
 		if not ok then

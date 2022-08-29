@@ -1,6 +1,11 @@
 local ltask = require "ltask"
 local fs = require "bee.filesystem"
-local REPO = {}
+
+local arg = ltask.call(ltask.queryservice "arguments", "QUERY")
+local REPOPATH = arg[1]
+
+local LOGDIR = fs.path(REPOPATH) / ".log"
+local repo = {}
 
 local _origin = os.time() - os.clock()
 local function os_date(fmt)
@@ -35,13 +40,7 @@ end
 
 local S = {}
 
-function S.CREATE(repopath)
-    local LOGDIR = fs.path(repopath) / ".log"
-    local repo = REPO[repopath]
-    if not repo then
-        repo = {}
-        REPO[repopath] = repo
-    end
+function S.CREATE()
     local i = 1
     while repo[i] do
         i = i + 1
@@ -62,23 +61,16 @@ function S.CREATE(repopath)
     return i, res:string()
 end
 
-function S.CLOSE(repopath, index)
-    local repo = REPO[repopath]
-    if repo then
-        local LOGDIR = fs.path(repopath) / ".log"
-        movelog(LOGDIR, index)
-        repo[index] = nil
-    end
+function S.CLOSE(index)
+    movelog(LOGDIR, index)
+    repo[index] = nil
 end
 
 function S.QUIT()
-    for repopath, repo in pairs(REPO) do
-        local LOGDIR = fs.path(repopath) / ".log"
-        for index in pairs(repo) do
-            movelog(LOGDIR, index)
-        end
+    for index in pairs(repo) do
+        movelog(LOGDIR, index)
     end
-    REPO = {}
+    repo = {}
     ltask.quit()
 end
 
