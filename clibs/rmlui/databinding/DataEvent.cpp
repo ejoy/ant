@@ -11,7 +11,6 @@ struct DataEventListener : public EventListener {
 		: EventListener(type, false)
 		, expression(std::move(expr))
 	{ }
-	void OnDetach(Element *) override {}
 	void ProcessEvent(Event& event) override {
 		Element* element = event.GetTargetElement();
 		DataExpressionInterface expr_interface(element->GetDataModel(), element, &event);
@@ -23,11 +22,12 @@ struct DataEventListener : public EventListener {
 
 DataEvent::DataEvent(Element* element)
 	: element(element->GetObserverPtr())
+	, listener(nullptr)
 {}
 
 DataEvent::~DataEvent() {
 	if (element && listener) {
-		element->RemoveEventListener(listener.get());
+		element->RemoveEventListener(listener);
 	}
 }
 
@@ -38,8 +38,8 @@ bool DataEvent::Initialize(DataModel& model, Element* element, const std::string
 	if (!expression.Parse(expr_interface, expression_str, true)) {
 		return false;
 	}
-	listener = std::make_unique<DataEventListener>(modifier, std::move(expression));
-	element->AddEventListener(listener.get());
+	listener = new DataEventListener(modifier, std::move(expression));
+	element->AddEventListener(listener);
 	return true;
 }
 

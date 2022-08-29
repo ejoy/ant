@@ -62,10 +62,10 @@ bool DispatchEvent(Event& event, bool bubbles) {
 		for (auto const& listener : walk_element->GetEventListeners()) {
 			if (listener->type == type) {
 				if (listener->use_capture) {
-					listeners.emplace_back(walk_element, listener, depth, true);
+					listeners.emplace_back(walk_element, listener.get(), depth, true);
 				}
 				else if (bubbles || (depth == 0)) {
-					listeners.emplace_back(walk_element, listener, depth, false);
+					listeners.emplace_back(walk_element, listener.get(), depth, false);
 				}
 			}
 		}

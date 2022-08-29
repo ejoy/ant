@@ -9,7 +9,6 @@ class Element;
 class DataModel;
 class DataExpression;
 using DataExpressionPtr = std::unique_ptr<DataExpression>;
-struct DataEventListener;
 
 class DataEvent {
 public:
@@ -20,7 +19,7 @@ public:
 
 private:
 	ObserverPtr<Element> element;
-    std::unique_ptr<DataEventListener> listener;
+    EventListener* listener;
 };
 
 }

@@ -60,7 +60,7 @@ public:
 	void RemoveEventListener(EventListener* listener);
 	bool DispatchEvent(const std::string& type, int parameters, bool interruptible, bool bubbles);
 	void RemoveAllEvents();
-	std::vector<EventListener*> const& GetEventListeners() const;
+	const std::vector<std::unique_ptr<EventListener>>& GetEventListeners() const;
 
 	void   AppendChild(Node* node, uint32_t index = 0xffffffff);
 	std::unique_ptr<Node> RemoveChild(Node* node);
@@ -181,7 +181,7 @@ protected:
 	std::vector<ElementAnimation> animations;
 	std::vector<std::string> classes;
 	PseudoClassSet pseudo_classes = 0;
-	std::vector<EventListener*> listeners;
+	std::vector<std::unique_ptr<EventListener>> listeners;
 	std::unique_ptr<Geometry> geometry_background;
 	std::unique_ptr<Geometry> geometry_image;
 	float font_size = 16.f;

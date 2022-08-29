@@ -87,7 +87,6 @@ struct EventListener final : public Rml::EventListener {
 	~EventListener() {
 		get_lua_plugin()->unref(ref);
 	}
-	void OnDetach(Rml::Element* element) override { delete this; }
 	void ProcessEvent(Rml::Event& event) override {
 		luabind::invoke([&](lua_State* L) {
 			get_lua_plugin()->pushevent(L, event);
@@ -214,7 +213,17 @@ lElementAddEventListener(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	luaL_checktype(L, 3, LUA_TFUNCTION);
 	lua_pushvalue(L, 3);
-	e->AddEventListener(new EventListener(lua_checkstdstring(L, 2), get_lua_plugin()->ref(L), lua_toboolean(L, 4)));
+	auto listener = new EventListener(lua_checkstdstring(L, 2), get_lua_plugin()->ref(L), lua_toboolean(L, 4));
+	e->AddEventListener(listener);
+	lua_pushlightuserdata(L, listener);
+	return 1;
+}
+
+static int
+lElementRemoveEventListener(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::EventListener* listener = lua_checkobject<Rml::EventListener>(L, 2);
+	e->RemoveEventListener(listener);
 	return 0;
 }
 
@@ -566,6 +575,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentCreateTextNode", lDocumentCreateTextNode },
 		{ "DocumentDefineCustomElement", lDocumentDefineCustomElement },
 		{ "ElementAddEventListener", lElementAddEventListener },
+		{ "ElementRemoveEventListener", lElementRemoveEventListener },
 		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetAttribute", lElementGetAttribute },
 		{ "ElementGetBounds", lElementGetBounds },

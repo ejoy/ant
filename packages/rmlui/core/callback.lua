@@ -62,18 +62,13 @@ end
 function m.OnDestroyNode(document, node)
 	event("OnDestroyNode", document, node)
 end
-function m.OnEvent(ev, e)
-	local delegate = events[ev]
-	if not delegate then
-		return
-	end
-	local f = delegate[1]
-	if delegate[2] then
-		debug.setupvalue(f, delegate[2], constructor.Event(e))
-	end
-	invoke(f)
+
+local maxEventId = 0
+local function genEventId()
+	maxEventId = maxEventId + 1
+	return maxEventId
 end
-function m.OnEventAttach(ev, document, element, source)
+function m.OnEventAttach(document, element, source)
 	if source == "" then
 		return
 	end
@@ -98,10 +93,22 @@ function m.OnEventAttach(ev, document, element, source)
 		upvalue[name] = i
 		i = i + 1
 	end
-	events[ev] = {f, upvalue.event}
+	local eventid = genEventId()
+	events[eventid] = {f, upvalue.event}
 end
-function m.OnEventDetach(ev)
-	events[ev] = nil
+function m.OnEvent(eventid, e)
+	local delegate = events[eventid]
+	if not delegate then
+		return
+	end
+	local f = delegate[1]
+	if delegate[2] then
+		debug.setupvalue(f, delegate[2], constructor.Event(e))
+	end
+	invoke(f)
+end
+function m.OnEventDetach(eventid)
+	events[eventid] = nil
 end
 
 function m.OnRealPath(path)

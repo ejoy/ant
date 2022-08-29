@@ -85,9 +85,6 @@ Element::~Element() {
 	for (auto& child : childnodes) {
 		child->SetParentNode(nullptr);
 	}
-	for (const auto& listener : listeners) {
-		listener->OnDetach(this);
-	}
 
 	auto& c = Style::Instance();
 	c.Release(animation_properties);
@@ -1278,17 +1275,15 @@ void Element::DirtyClip() {
 }
 
 void Element::AddEventListener(EventListener* listener) {
-	auto it = std::find(listeners.begin(), listeners.end(), listener);
-	if (it == listeners.end()) {
-		listeners.emplace(it, listener);
-	}
+	listeners.emplace_back(listener);
 }
 
 void Element::RemoveEventListener(EventListener* listener) {
-	auto it = std::find(listeners.begin(), listeners.end(), listener);
+	auto it = std::find_if(listeners.begin(), listeners.end(), [&](auto const& a){
+		return a.get() == listener;
+	});
 	if (it != listeners.end()) {
 		listeners.erase(it);
-		listener->OnDetach(this);
 	}
 }
 
@@ -1298,16 +1293,13 @@ bool Element::DispatchEvent(const std::string& type, int parameters, bool interr
 }
 
 void Element::RemoveAllEvents() {
-	for (const auto& listener : listeners) {
-		listener->OnDetach(this);
-	}
 	listeners.clear();
 	for (auto& child : children) {
 		child->RemoveAllEvents();
 	}
 }
 
-std::vector<EventListener*> const& Element::GetEventListeners() const {
+const std::vector<std::unique_ptr<EventListener>>& Element::GetEventListeners() const {
 	return listeners;
 }
 

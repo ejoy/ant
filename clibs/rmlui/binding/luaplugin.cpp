@@ -18,14 +18,14 @@ extern "C" {
 
 class lua_plugin;
 
-class lua_event_listener final : public Rml::EventListener {
+class LuaEventListener final : public Rml::EventListener {
 public:
-	lua_event_listener(lua_plugin* p, Rml::Element* element, const std::string& type, const std::string& code, bool use_capture);
-	~lua_event_listener();
+	LuaEventListener(lua_plugin* p, Rml::Element* element, const std::string& type, const std::string& code, bool use_capture);
+	~LuaEventListener();
 private:
-	void OnDetach(Rml::Element* element) override;
 	void ProcessEvent(Rml::Event& event) override;
 	lua_plugin *plugin;
+	int id;
 };
 
 static int ref_function(luaref reference, lua_State* L, const char* funcname) {
@@ -45,7 +45,7 @@ lua_plugin::~lua_plugin() {
 }
 
 Rml::EventListener* lua_plugin::OnCreateEventListener(Rml::Element* element, const std::string& type, const std::string& code, bool use_capture) {
-	return new lua_event_listener(this, element, type, code, use_capture);
+	return new LuaEventListener(this, element, type, code, use_capture);
 }
 
 void lua_plugin::OnLoadInlineScript(Rml::Document* document, const std::string& content, const std::string& source_path, int source_line) {
@@ -145,36 +145,40 @@ void lua_plugin::pushevent(lua_State* L, const Rml::Event& event) {
 	lua_setfield(L, -2, "current");
 }
 
-lua_event_listener::lua_event_listener(lua_plugin* p, Rml::Element* element, const std::string& type, const std::string& code, bool use_capture)
+LuaEventListener::LuaEventListener(lua_plugin* p, Rml::Element* element, const std::string& type, const std::string& code, bool use_capture)
 	: Rml::EventListener(type, use_capture)
 	, plugin(p)
+	, id(0)
 	{
 	luabind::invoke([&](lua_State* L) {
 		Rml::Document* doc = element->GetOwnerDocument();
-		lua_pushlightuserdata(L, (void*)this);
 		lua_pushlightuserdata(L, (void*)doc);
 		lua_pushlightuserdata(L, (void*)element);
 		lua_pushlstring(L, code.c_str(), code.length());
-		plugin->call(L, LuaEvent::OnEventAttach, 4);
+		plugin->call(L, LuaEvent::OnEventAttach, 4, 1);
+        if (lua_type(L, -1) == LUA_TNUMBER) {
+            id = (int)luaL_checkinteger(L, -1);
+        }
 	});
 }
 
-lua_event_listener::~lua_event_listener() {
-	// element should be the same with Init
+LuaEventListener::~LuaEventListener() {
+	if (!id) {
+		return;
+	}
 	luabind::invoke([&](lua_State* L) {
-		lua_pushlightuserdata(L, (void*)this);
+		lua_pushinteger(L, id);
 		plugin->call(L, LuaEvent::OnEventDetach, 1);
 	});
 }
 
-void lua_event_listener::ProcessEvent(Rml::Event& event) {
+void LuaEventListener::ProcessEvent(Rml::Event& event) {
+	if (!id) {
+		return;
+	}
 	luabind::invoke([&](lua_State* L) {
-		lua_pushlightuserdata(L, (void*)this);
+		lua_pushinteger(L, id);
 		plugin->pushevent(L, event);
 		plugin->call(L, LuaEvent::OnEvent, 2);
 	});
-}
-
-void lua_event_listener::OnDetach(Rml::Element* element) {
-	delete this;
 }
