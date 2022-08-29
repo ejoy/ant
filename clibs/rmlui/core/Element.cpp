@@ -1287,9 +1287,10 @@ void Element::RemoveEventListener(EventListener* listener) {
 	}
 }
 
-bool Element::DispatchEvent(const std::string& type, int parameters, bool interruptible, bool bubbles) {
-	Event event(this, type, parameters, interruptible);
-	return Rml::DispatchEvent(event, bubbles);
+void Element::RemoveEventListener(const std::string& type) {
+	listeners.erase(std::remove_if(listeners.begin(), listeners.end(), [&](auto const& a){
+		return a->type == type;
+	}), listeners.end());
 }
 
 void Element::RemoveAllEvents() {
@@ -1298,6 +1299,12 @@ void Element::RemoveAllEvents() {
 		child->RemoveAllEvents();
 	}
 }
+
+bool Element::DispatchEvent(const std::string& type, int parameters, bool interruptible, bool bubbles) {
+	Event event(this, type, parameters, interruptible);
+	return Rml::DispatchEvent(event, bubbles);
+}
+
 
 const std::vector<std::unique_ptr<EventListener>>& Element::GetEventListeners() const {
 	return listeners;
