@@ -3,15 +3,15 @@ local rmlui = require "rmlui"
 local function create_shaders()
     local assetmgr = import_package "ant.asset"
     local shaders = {
-        font            = assetmgr.load_fx "/pkg/ant.rmlui/fx/font.fx",
-        font_cr         = assetmgr.load_fx "/pkg/ant.rmlui/fx/font_cr.fx",
-        font_outline    = assetmgr.load_fx "/pkg/ant.rmlui/fx/font_outline.fx",
-        font_outline_cr = assetmgr.load_fx "/pkg/ant.rmlui/fx/font_outline_cr.fx",
-        font_shadow     = assetmgr.load_fx "/pkg/ant.rmlui/fx/font_shadow.fx",
-        font_shadow_cr  = assetmgr.load_fx "/pkg/ant.rmlui/fx/font_shadow_cr.fx",
-        image           = assetmgr.load_fx "/pkg/ant.rmlui/fx/image.fx",
-        image_cr        = assetmgr.load_fx "/pkg/ant.rmlui/fx/image_cr.fx",
-        debug_draw      = assetmgr.load_fx "/pkg/ant.rmlui/fx/debug_draw.fx"
+        font            = assetmgr.resource "/pkg/ant.rmlui/fx/font.fx",
+        font_cr         = assetmgr.resource "/pkg/ant.rmlui/fx/font_cr.fx",
+        font_outline    = assetmgr.resource "/pkg/ant.rmlui/fx/font_outline.fx",
+        font_outline_cr = assetmgr.resource "/pkg/ant.rmlui/fx/font_outline_cr.fx",
+        font_shadow     = assetmgr.resource "/pkg/ant.rmlui/fx/font_shadow.fx",
+        font_shadow_cr  = assetmgr.resource "/pkg/ant.rmlui/fx/font_shadow_cr.fx",
+        image           = assetmgr.resource "/pkg/ant.rmlui/fx/image.fx",
+        image_cr        = assetmgr.resource "/pkg/ant.rmlui/fx/image_cr.fx",
+        debug_draw      = assetmgr.resource "/pkg/ant.rmlui/fx/debug_draw.fx"
     }
 
     local function push_uniforms(a, b)

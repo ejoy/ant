@@ -20,7 +20,8 @@ local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 local efk_sys = ecs.system "efk_system"
 
-local FxFiles = {}; do
+local FxFiles = {};
+local function init_fx_files()
     for _, name in ipairs{
         "sprite_unlit",
         "sprite_lit",
@@ -36,10 +37,9 @@ local FxFiles = {}; do
         "model_adv_lit",
         "model_adv_distortion",
     } do
-        local filename = ("/pkg/ant.efk/fx/%s.fx"):format(name)
+        local filename = ("/pkg/ant.efk/materials/%s.material"):format(name)
         local r = assetmgr.resource(filename)
-        local _ = r.vs --tiger lazy load
-        FxFiles[name] = r
+        FxFiles[name] = r.fx
     end
 end
 
@@ -106,6 +106,7 @@ end
 local effect_viewid<const> = viewidmgr.get "effect_view"
 local efk_cb_handle, efk_ctx
 function efk_sys:init()
+    init_fx_files()
     efk_cb_handle =  efk_cb.callback{
         shader_load     = shader_load,
         texture_load    = texture_load,
