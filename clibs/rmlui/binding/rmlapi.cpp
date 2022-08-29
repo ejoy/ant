@@ -222,8 +222,12 @@ lElementAddEventListener(lua_State* L) {
 static int
 lElementRemoveEventListener(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	Rml::EventListener* listener = lua_checkobject<Rml::EventListener>(L, 2);
-	e->RemoveEventListener(listener);
+	if (lua_type(L, 2) == LUA_TSTRING) {
+		e->RemoveEventListener(lua_checkstdstring(L, 2));
+	}
+	else {
+		e->RemoveEventListener(lua_checkobject<Rml::EventListener>(L, 2));
+	}
 	return 0;
 }
 

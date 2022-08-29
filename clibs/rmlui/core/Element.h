@@ -58,6 +58,7 @@ public:
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);
+	void RemoveEventListener(const std::string& type);
 	bool DispatchEvent(const std::string& type, int parameters, bool interruptible, bool bubbles);
 	void RemoveAllEvents();
 	const std::vector<std::unique_ptr<EventListener>>& GetEventListeners() const;
