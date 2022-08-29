@@ -58,11 +58,10 @@ enum class ElementAnimationOrigin : uint8_t { Animation, Transition };
 
 class ElementAnimation {
 public:
-	ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element, double start_world_time, float duration, int num_iterations, bool alternate_direction);
+	ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element, float start_time, float duration, int num_iterations, bool alternate_direction);
 	bool AddKey(float target_time, const Property & property, Element & element, Tween tween);
-	void UpdateAndGetProperty(double time, Element& element);
+	void Update(Element& element, float delta);
 	PropertyId GetPropertyId() const { return property_id; }
-	float GetDuration() const { return duration; }
 	bool IsComplete() const { return animation_complete; }
 	bool IsTransition() const { return origin == ElementAnimationOrigin::Transition; }
 	bool IsInitalized() const { return !keys.empty(); }
@@ -76,8 +75,7 @@ private:
 	int num_iterations;       // -1 for infinity
 	bool alternate_direction; // between iterations
 	std::vector<AnimationKey> keys;
-	double last_update_world_time;
-	float time_since_iteration_start;
+	float time;
 	int current_iteration;
 	bool reverse_direction;
 	bool animation_complete;

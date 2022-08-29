@@ -105,13 +105,12 @@ static bool PrepareTransforms(AnimationKey& key, Element& element) {
 	return PrepareTransformPair(t0, t1, element);
 }
 
-ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element, double start_world_time, float duration, int num_iterations, bool alternate_direction)
+ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element, float start_time, float duration, int num_iterations, bool alternate_direction)
 	: property_id(property_id)
 	, duration(duration)
 	, num_iterations(num_iterations)
 	, alternate_direction(alternate_direction)
-	, last_update_world_time(start_world_time)
-	, time_since_iteration_start(0.0f)
+	, time(start_time)
 	, current_iteration(0)
 	, reverse_direction(false)
 	, animation_complete(false)
@@ -153,7 +152,7 @@ bool ElementAnimation::AddKey(float target_time, const Property & in_property, E
 }
 
 float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const {
-	float t = time_since_iteration_start;
+	float t = time;
 
 	if (reverse_direction)
 		t = duration - t;
@@ -190,25 +189,21 @@ float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const {
 	return alpha;
 }
 
-void ElementAnimation::UpdateAndGetProperty(double world_time, Element& element) {
-	float dt = float(world_time - last_update_world_time);
-	if (keys.size() < 2 || animation_complete || dt <= 0.0f)
+void ElementAnimation::Update(Element& element, float delta) {
+	if (keys.size() < 2 || animation_complete || delta <= 0.0f)
 		return;
+	time += delta;
 
-	dt = std::min(dt, 0.1f);
-	last_update_world_time = world_time;
-	time_since_iteration_start += dt;
-
-	if (time_since_iteration_start >= duration) {
+	if (time >= duration) {
 		current_iteration += 1;
 		if (num_iterations == -1 || (current_iteration >= 0 && current_iteration < num_iterations)) {
-			time_since_iteration_start -= duration;
+			time -= duration;
 			if (alternate_direction)
 				reverse_direction = !reverse_direction;
 		}
 		else {
 			animation_complete = true;
-			time_since_iteration_start = duration;
+			time = duration;
 		}
 	}
 

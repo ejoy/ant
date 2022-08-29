@@ -126,8 +126,8 @@ lDocumentDestroy(lua_State* L) {
 static int
 lDocumentUpdate(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	double delta = luaL_checknumber(L, 2);
-	doc->Update(delta);
+	float delta = (float)luaL_checknumber(L, 2);
+	doc->Update(delta / 1000);
 	return 0;
 }
 

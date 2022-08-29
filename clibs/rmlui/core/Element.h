@@ -125,7 +125,7 @@ public:
 	void TransitionPropertyChanges(const PropertyIdSet & properties, const Style::Combination& new_definition);
 
 	void UpdateProperties();
-	void UpdateAnimations();
+	void UpdateAnimations(float delta);
 
 	const EdgeInsets<float>& GetPadding() const;
 	const EdgeInsets<float>& GetBorder() const;
@@ -167,7 +167,7 @@ protected:
 	bool StartTransition(PropertyId id, const Transition& transition, std::optional<Property> start_value, std::optional<Property> target_value);
 	void HandleTransitionProperty();
 	void HandleAnimationProperty();
-	void AdvanceAnimations();
+	void AdvanceAnimations(float delta);
 
 	std::string tag;
 	std::string id;

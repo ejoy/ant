@@ -166,11 +166,10 @@ const Size& Document::GetDimensions() {
 	return dimensions;
 }
 
-void Document::Update(double delta) {
-    elapsed_time += delta;
+void Document::Update(float delta) {
 	UpdateDataModel(true);
 	body.Update();
-	body.UpdateAnimations();
+	body.UpdateAnimations(delta);
 	Style::Instance().Flush();//TODO
 	UpdateLayout();
 	body.Render();
@@ -215,10 +214,6 @@ void Document::NotifyCustomElement(Element* e){
 
 void Document::DefineCustomElement(const std::string& name) {
 	custom_element.emplace(name);
-}
-
-double Document::GetCurrentTime() {
-	return elapsed_time / 1000;
 }
 
 }

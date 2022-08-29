@@ -108,13 +108,13 @@ void Element::Update() {
 	}
 }
 
-void Element::UpdateAnimations() {
+void Element::UpdateAnimations(float delta) {
 	if (!IsVisible()) {
 		return;
 	}
-	AdvanceAnimations();
+	AdvanceAnimations(delta);
 	for (auto& child : children) {
-		child->UpdateAnimations();
+		child->UpdateAnimations(delta);
 	}
 }
 
@@ -801,9 +801,7 @@ void Element::UpdateStructure() {
 }
 
 void Element::StartAnimation(PropertyId property_id, const Property* start_value, int num_iterations, bool alternate_direction, float delay) {
-	double start_time = GetOwnerDocument()->GetCurrentTime() + (double)delay;
-
-	ElementAnimation animation{ property_id, ElementAnimationOrigin::Animation, *start_value, *this, start_time, 0.0f, num_iterations, alternate_direction };
+	ElementAnimation animation{ property_id, ElementAnimationOrigin::Animation, *start_value, *this, delay, 0.0f, num_iterations, alternate_direction };
 	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == property_id; });
 	if (it == animations.end()) {
 		if (animation.IsInitalized()) {
@@ -853,18 +851,18 @@ bool Element::StartTransition(PropertyId id, const Transition& transition, std::
 		return false;
 
 	float duration = transition.duration;
-	double start_time = GetOwnerDocument()->GetCurrentTime() + (double)transition.delay;
+	float delay = transition.delay;
 
 	if (it == animations.end()) {
 		// Add transition as new animation
 		animations.emplace_back(
-			id, ElementAnimationOrigin::Transition, *start_value, *this, start_time, 0.0f, 1, false 
+			id, ElementAnimationOrigin::Transition, *start_value, *this, delay, 0.0f, 1, false 
 		);
 		it = (animations.end() - 1);
 	}
 	else {
 		// Replace old transition
-		*it = ElementAnimation{ id, ElementAnimationOrigin::Transition, *start_value, *this, start_time, 0.0f, 1, false };
+		*it = ElementAnimation{ id, ElementAnimationOrigin::Transition, *start_value, *this, delay, 0.0f, 1, false };
 	}
 
 	if (!it->AddKey(duration, *target_value, *this, transition.tween)) {
@@ -993,13 +991,12 @@ void Element::HandleAnimationProperty() {
 	}
 }
 
-void Element::AdvanceAnimations() {
+void Element::AdvanceAnimations(float delta) {
 	if (animations.empty()) {
 		return;
 	}
-	double time = GetOwnerDocument()->GetCurrentTime();
 	for (auto& animation : animations) {
-		animation.UpdateAndGetProperty(time, *this);
+		animation.Update(*this, delta);
 	}
 	auto it_completed = std::partition(animations.begin(), animations.end(), [](const ElementAnimation& animation) { return !animation.IsComplete(); });
 	std::vector<bool> is_transition;

@@ -29,7 +29,7 @@ public:
 	void SetDimensions(const Size& dimensions);
 	const Size& GetDimensions();
 	Element* ElementFromPoint(Point pt);
-	void Update(double delta);
+	void Update(float delta);
 	void UpdateLayout();
 	DataModelConstructor CreateDataModel(const std::string& name);
 	bool RemoveDataModel(const std::string& name);
@@ -41,7 +41,6 @@ public:
 	Text* CreateTextNode(const std::string& str);
 	void NotifyCustomElement(Element* e);
 	void DefineCustomElement(const std::string& name);
-	double GetCurrentTime();
 	void Instance(const HtmlElement& html);
 
 private:
@@ -51,7 +50,6 @@ private:
 	std::unordered_map<std::string, std::unique_ptr<DataModel>> data_models;
 	ElementDocument body;
 	Size dimensions;
-	double elapsed_time = 0.;
 	bool dirty_dimensions = false;
 };
 
