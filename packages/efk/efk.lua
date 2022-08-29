@@ -20,82 +20,26 @@ local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 local efk_sys = ecs.system "efk_system"
 
-local FxFiles = {}
-do
-    local FxNames = {
-        sprite_unlit ={
-            vs = "sprite_unlit_vs.fx.sc",
-            fs = "model_unlit_ps.fx.sc",
-            varying_path = "sprite_Unlit_varying.def.sc",
-        },
-        sprite_lit = {
-            vs = "sprite_lit_vs.fx.sc", 
-            fs = "model_lit_ps.fx.sc",
-            varying_path = "sprite_Lit_varying.def.sc",
-        },
-        sprite_distortion = {
-            vs = "sprite_distortion_vs.fx.sc", 
-            fs = "model_distortion_ps.fx.sc",
-            varying_path = "sprite_BackDistortion_varying.def.sc",
-        },
-        sprite_adv_unlit = {
-            vs = "ad_sprite_unlit_vs.fx.sc", 
-            fs = "ad_model_unlit_ps.fx.sc",
-            varying_path = "sprite_AdvancedUnlit_varying.def.sc",
-        },
-        sprite_adv_lit = {
-            vs = "ad_sprite_lit_vs.fx.sc", 
-            fs = "ad_model_lit_ps.fx.sc",
-            varying_path = "sprite_AdvancedLit_varying.def.sc",
-        },
-        sprite_adv_distortion = {
-            vs = "ad_sprite_distortion_vs.fx.sc", 
-            fs = "ad_model_distortion_ps.fx.sc",
-            varying_path = "sprite_AdvancedBackDistortion_varying.def.sc",
-        },
+local FxFiles = {}; do
+    for _, name in ipairs{
+        "sprite_unlit",
+        "sprite_lit",
+        "sprite_distortion",
+        "sprite_adv_unlit",
+        "sprite_adv_lit",
+        "sprite_adv_distortion",
 
-        model_unlit = {
-            vs = "model_unlit_vs.fx.sc", 
-            fs = "model_unlit_ps.fx.sc",
-            varying_path = "model_Unlit_varying.def.sc",
-        },
-        model_lit = {
-            vs = "model_lit_vs.fx.sc", 
-            fs = "model_lit_ps.fx.sc",
-            varying_path = "model_Lit_varying.def.sc",
-        },
-        model_distortion = {
-            vs = "model_distortion_vs.fx.sc", 
-            fs = "model_distortion_ps.fx.sc",
-            varying_path = "model_BackDistortion_varying.def.sc",
-        },
-        model_adv_unlit = {
-            vs = "ad_model_unlit_vs.fx.sc", 
-            fs = "ad_model_unlit_ps.fx.sc",
-            varying_path = "model_AdvancedUnlit_varying.def.sc",
-        },
-        model_adv_lit = {
-            vs = "ad_model_lit_vs.fx.sc", 
-            fs = "ad_model_lit_ps.fx.sc",
-            varying_path = "model_Advancedlit_varying.def.sc",
-        },
-        model_adv_distortion = {
-            vs = "ad_model_distortion_vs.fx.sc",
-            fs = "ad_model_distortion_ps.fx.sc",
-            varying_path = "model_AdvancedBackDistortion_varying.def.sc",
-        },
-    }
-
-    for name, fx in pairs(FxNames) do
-        local pkgpath = "/pkg/ant.efk/efkbgfx/shaders/"
-        FxFiles[name] = assetmgr.load_fx{
-            vs = pkgpath .. fx.vs,
-            fs = pkgpath .. fx.fs,
-            varying_path = pkgpath .. fx.varying_path,
-            setting = {
-                LINEAR_INPUT_COLOR=1,
-            }
-        }
+        "model_unlit",
+        "model_lit",
+        "model_distortion",
+        "model_adv_unlit",
+        "model_adv_lit",
+        "model_adv_distortion",
+    } do
+        local filename = ("/pkg/ant.efk/fx/%s.fx"):format(name)
+        local r = assetmgr.resource(filename)
+        local _ = r.vs --tiger lazy load
+        FxFiles[name] = r
     end
 end
 

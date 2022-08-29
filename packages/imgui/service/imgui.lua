@@ -217,18 +217,12 @@ ltask.fork(function ()
 	assetmgr.init()
     bgfx.encoder_begin()
 
-    local imgui_font = assetmgr.load_fx {
-        fs = "/pkg/ant.imgui/shader/fs_imgui_font.sc",
-        vs = "/pkg/ant.imgui/shader/vs_imgui_font.sc",
-    }
+    local imgui_font = assetmgr.load_fx "/pkg/ant.imgui/fx/font.fx"
     imgui.SetFontProgram(
         imgui_font.prog,
         imgui_font.uniforms[1].handle
     )
-    local imgui_image = assetmgr.load_fx {
-        fs = "/pkg/ant.imgui/shader/fs_imgui_image.sc",
-        vs = "/pkg/ant.imgui/shader/vs_imgui_image.sc",
-    }
+    local imgui_image = assetmgr.load_fx "/pkg/ant.imgui/fx/image.fx"
     imgui.SetImageProgram(
         imgui_image.prog,
         imgui_image.uniforms[1].handle

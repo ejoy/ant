@@ -2,41 +2,18 @@ local rmlui = require "rmlui"
 
 local function create_shaders()
     local assetmgr = import_package "ant.asset"
-    local function load_shaders(def)
-        local shaders = {}
-        for k, v in pairs(def) do
-            shaders[k] = assetmgr.load_fx(v)
-            v.setting["ENABLE_CLIP_RECT"] = 1
-            shaders[k .. "_cr"] = assetmgr.load_fx(v)
-        end
-        return shaders
-    end
-    local shaders = load_shaders {
-        image = {
-            fs = "/pkg/ant.resources/shaders/ui/fs_image.sc",
-            vs = "/pkg/ant.resources/shaders/ui/vs_image.sc",
-            setting = {}
-        },
-        font = {
-            fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-            vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-            setting = {},
-        },
-        font_outline = {
-            fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-            vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-            setting = {OUTLINE_EFFECT=1},
-        },
-        font_shadow ={
-            fs = "/pkg/ant.resources/shaders/font/fs_uifont.sc",
-            vs = "/pkg/ant.resources/shaders/font/vs_uifont.sc",
-            setting = {SHADOW_EFFECT=1},
-        },
+    local shaders = {
+        font            = assetmgr.load_fx "/pkg/ant.rmlui/fx/font.fx",
+        font_cr         = assetmgr.load_fx "/pkg/ant.rmlui/fx/font_cr.fx",
+        font_outline    = assetmgr.load_fx "/pkg/ant.rmlui/fx/font_outline.fx",
+        font_outline_cr = assetmgr.load_fx "/pkg/ant.rmlui/fx/font_outline_cr.fx",
+        font_shadow     = assetmgr.load_fx "/pkg/ant.rmlui/fx/font_shadow.fx",
+        font_shadow_cr  = assetmgr.load_fx "/pkg/ant.rmlui/fx/font_shadow_cr.fx",
+        image           = assetmgr.load_fx "/pkg/ant.rmlui/fx/image.fx",
+        image_cr        = assetmgr.load_fx "/pkg/ant.rmlui/fx/image_cr.fx",
+        debug_draw      = assetmgr.load_fx "/pkg/ant.rmlui/fx/debug_draw.fx"
     }
-    shaders.debug_draw = assetmgr.load_fx {
-        vs = "/pkg/ant.resources/shaders/ui/vs_debug.sc",
-        fs = "/pkg/ant.resources/shaders/ui/fs_debug.sc",
-    }
+
     local function push_uniforms(a, b)
         for _, u in ipairs(b) do
             local name = u.name

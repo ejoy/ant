@@ -6,7 +6,7 @@ local math3d    = require "math3d"
 local sd        = import_package "ant.settings".setting
 local use_cluster_shading = sd:data().graphic.cluster_shading ~= 0
 local url		= import_package "ant.url"
-
+local ext_fx	= require "ext_fx"
 local matobj	= require "matobj"
 
 local function load(filename)
@@ -96,9 +96,16 @@ local function generate_properties(fx, properties)
 	return new_properties
 end
 
+local function check_load_fx(fx)
+	if type(fx) == "string" then
+		return ext_fx.load(fx)
+	end
+	return ext_fx.init(fx)
+end
+
 local function init(material)
     material.fx.setting = load(material.fx.setting)
-    material.fx = assetmgr.load_fx(material.fx)
+	material.fx = ext_fx.init(material.fx)
 
     if material.state then
         material.state = bgfx.make_state(load(material.state))
