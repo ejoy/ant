@@ -196,20 +196,6 @@ local function multi_wakeup(key, ...)
 	end
 end
 
-local datalist = require "datalist"
-local fs = require "filesystem"
-local function readfile(filename)
-    local f <close> = fs.open(fs.path(filename))
-    return f:read "a"
-end
-
-local function load_material(filename)
-    local fxc = datalist.parse(readfile(filename)).fx
-    fxc.setting = fxc.setting or {}
-    local cr = import_package "ant.compile_resource"
-    return cr.load_fx(fxc)
-end
-
 local config = pm.loadcfg(packagename)
 ltask.fork(function ()
     init_width, init_height = w, h
@@ -231,15 +217,15 @@ ltask.fork(function ()
 	assetmgr.init()
     bgfx.encoder_begin()
 
-    local imgui_font = load_material "/pkg/ant.imgui/materials/font.material"
+    local imgui_font = assetmgr.load_fx "/pkg/ant.imgui/materials/font.material"
     imgui.SetFontProgram(
-        imgui_font.prog,
-        imgui_font.uniforms[1].handle
+        imgui_font.fx.prog,
+        imgui_font.fx.uniforms[1].handle
     )
-    local imgui_image = load_material "/pkg/ant.imgui/materials/image.material"
+    local imgui_image = assetmgr.load_fx "/pkg/ant.imgui/materials/image.material"
     imgui.SetImageProgram(
-        imgui_image.prog,
-        imgui_image.uniforms[1].handle
+        imgui_image.fx.prog,
+        imgui_image.fx.uniforms[1].handle
     )
     if platform.OS == "Windows" then
         font.Create {

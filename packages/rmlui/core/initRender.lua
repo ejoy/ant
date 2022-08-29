@@ -1,29 +1,17 @@
 local rmlui = require "rmlui"
-local datalist = require "datalist"
-local fs = require "filesystem"
-local function readfile(filename)
-    local f <close> = fs.open(fs.path(filename))
-    return f:read "a"
-end
-
-local function load_material(filename)
-    local fxc = datalist.parse(readfile(filename)).fx
-    fxc.setting = fxc.setting or {}
-    local cr = import_package "ant.compile_resource"
-    return cr.load_fx(fxc)
-end
+local assetmgr = import_package "ant.asset"
 
 local function create_shaders()
     local shaders = {
-        font            = load_material "/pkg/ant.rmlui/materials/font.material",
-        font_cr         = load_material "/pkg/ant.rmlui/materials/font_cr.material",
-        font_outline    = load_material "/pkg/ant.rmlui/materials/font_outline.material",
-        font_outline_cr = load_material "/pkg/ant.rmlui/materials/font_outline_cr.material",
-        font_shadow     = load_material "/pkg/ant.rmlui/materials/font_shadow.material",
-        font_shadow_cr  = load_material "/pkg/ant.rmlui/materials/font_shadow_cr.material",
-        image           = load_material "/pkg/ant.rmlui/materials/image.material",
-        image_cr        = load_material "/pkg/ant.rmlui/materials/image_cr.material",
-        debug_draw      = load_material "/pkg/ant.rmlui/materials/debug_draw.material",
+        font            = assetmgr.load_fx "/pkg/ant.rmlui/materials/font.material",
+        font_cr         = assetmgr.load_fx "/pkg/ant.rmlui/materials/font_cr.material",
+        font_outline    = assetmgr.load_fx "/pkg/ant.rmlui/materials/font_outline.material",
+        font_outline_cr = assetmgr.load_fx "/pkg/ant.rmlui/materials/font_outline_cr.material",
+        font_shadow     = assetmgr.load_fx "/pkg/ant.rmlui/materials/font_shadow.material",
+        font_shadow_cr  = assetmgr.load_fx "/pkg/ant.rmlui/materials/font_shadow_cr.material",
+        image           = assetmgr.load_fx "/pkg/ant.rmlui/materials/image.material",
+        image_cr        = assetmgr.load_fx "/pkg/ant.rmlui/materials/image_cr.material",
+        debug_draw      = assetmgr.load_fx "/pkg/ant.rmlui/materials/debug_draw.material",
     }
 
     local function push_uniforms(a, b)
@@ -37,8 +25,8 @@ local function create_shaders()
     local progs = {}
     local uniforms = {}
     for k, v in pairs(shaders) do
-        push_uniforms(uniforms, v.uniforms)
-        progs[k] = v.prog & 0xFFFF
+        push_uniforms(uniforms, v.fx.uniforms)
+        progs[k] = v.fx.prog & 0xFFFF
     end
     progs.uniforms = uniforms
     return progs

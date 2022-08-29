@@ -7,6 +7,7 @@ local sd        = import_package "ant.settings".setting
 local use_cluster_shading = sd:data().graphic.cluster_shading ~= 0
 local url		= import_package "ant.url"
 local matobj	= require "matobj"
+local load_fx 	= require "load_fx"
 local respath 	= require "respath"
 
 local function load(filename)
@@ -96,23 +97,8 @@ local function generate_properties(fx, properties)
 	return new_properties
 end
 
-local function init_fx(fxc)
-    local newfx = {setting=fxc.setting or {}}
-    local function check_resolve_path(p)
-        if fxc[p] then
-            newfx[p] = respath.absolute_path(fxc[p])
-        end
-    end
-    check_resolve_path "varying_path"
-    check_resolve_path "vs"
-    check_resolve_path "fs"
-    check_resolve_path "cs"
-    return cr.load_fx(newfx)
-end
-
-local function init(material)
-    material.fx.setting = load(material.fx.setting)
-	material.fx = init_fx(material.fx)
+local function loader(filename)
+    local material = load_fx(filename)
 
     if material.state then
         material.state = bgfx.make_state(load(material.state))
@@ -138,15 +124,10 @@ local function init(material)
     return material
 end
 
-local function loader(fileurl)
-    return init(load(fileurl))
-end
-
 local function unloader()
 end
 
 return {
-    init = init,
     loader = loader,
     unloader = unloader,
 }

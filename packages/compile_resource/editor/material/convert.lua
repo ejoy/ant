@@ -1,9 +1,11 @@
 local lfs = require "filesystem.local"
 local fs = require "filesystem"
-local toolset = require "editor.fx.toolset"
-local fxsetting = require "editor.fx.setting"
+local datalist = require "datalist"
+local toolset = require "editor.material.toolset"
+local fxsetting = require "editor.material.setting"
 local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
 local setting = import_package "ant.settings".setting
+local serialize = import_package "ant.serialize"
 
 local function DEF_FUNC() end
 
@@ -60,10 +62,9 @@ local function default_macros(setting)
     return m
 end
 
-local function get_macros(s)
-    local setting = fxsetting.adddef(s)
+local function get_macros(setting, fxsetting)
     local macros = default_macros(setting)
-    for k, v in pairs(setting) do
+    for k, v in pairs(fxsetting) do
         local f = SETTING_MAPPING[k]
         if f == nil then
             macros[#macros+1] = k .. '=' .. v
@@ -90,24 +91,65 @@ local function compile_debug_shader(platform, renderer)
     end
 end
 
+local function readfile(filename)
+	local f <close> = assert(lfs.open(filename, "r"))
+	return f:read "a"
+end
+
+local function writefile(filename, data)
+	local f<close> = assert(lfs.open(filename, "wb"))
+	f:write(serialize.stringify(data))
+end
+
+local function readdatalist(filepath)
+	return datalist.parse(readfile(filepath), function(args)
+		return args[2]
+	end)
+end
+
+local function table_append(t, a)
+	table.move(a, 1, #a, #t+1, t)
+end
+
+local function mergeCfgSetting(setting, localpath)
+    if setting == nil then
+        setting = {}
+    elseif type(setting) == "string" then
+        setting = serialize.parse(setting, readfile(localpath(setting)))
+    else
+        assert(type(setting) == "table")
+    end
+    return fxsetting.adddef(setting)
+end
+
 return function (input, output, setting, localpath)
-    local vp = setting.varying_path
-    if vp then
-        vp = localpath(vp)
+    local mat = readdatalist(input)
+    local fx = mat.fx
+    fx.setting = mergeCfgSetting(fx.setting, localpath)
+    local depfiles = {input}
+    local varying_path = fx.varying_path
+    if varying_path then
+        varying_path = localpath(varying_path)
     end
-    local ok, err, deps = toolset.compile {
-        platform = setting.os,
-        renderer = setting.renderer,
-        input = input,
-        output = output / "main.bin",
-        includes = {SHARER_INC},
-        stage = assert(setting.stage),
-        varying_path = vp,
-        macros = get_macros(setting),
-        debug = compile_debug_shader(setting.os, setting.renderer),
-    }
-    if not ok then
-        return false, ("compile failed: " .. input:string() .. "\n\n" .. err)
+    for _, stage in ipairs {"vs","fs","cs"} do
+        if fx[stage] then
+            local ok, err, deps = toolset.compile {
+                platform = setting.os,
+                renderer = setting.renderer,
+                input = localpath(fx[stage]),
+                output = output / (stage..".bin"),
+                includes = {SHARER_INC},
+                stage = stage,
+                varying_path = varying_path,
+                macros = get_macros(setting, fx.setting),
+                debug = compile_debug_shader(setting.os, setting.renderer),
+            }
+            if not ok then
+                return false, ("compile failed: " .. input:string() .. "\n\n" .. err)
+            end
+            table_append(depfiles, deps)
+        end
     end
-    return true, deps
+    writefile(output / "main.material", mat)
+    return true, depfiles
 end

@@ -8,8 +8,8 @@ local config = {
     glb     = def_cfg(),
     model   = def_cfg(),
     texture = def_cfg(),
+    material = def_cfg(),
     png     = def_cfg(),
-    sc      = def_cfg(),
     efk     = def_cfg(),
 }
 
@@ -42,7 +42,7 @@ local function init()
     local texture = assert(texture_extensions[renderer])
     set_setting("model", {})
     set_setting("glb", {})
-    set_setting("sc", {
+    set_setting("material", {
         os = os,
         renderer = renderer,
         hd = caps.homogeneousDepth and true or nil,

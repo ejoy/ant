@@ -1,5 +1,4 @@
 local fs = require "filesystem"
-local setting = import_package "ant.settings".setting
 local datalist = require "datalist"
 
 local function read_default_setting_from_file()

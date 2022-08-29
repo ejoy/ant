@@ -12,8 +12,8 @@ local ResourceCompiler = {
     model   = "editor.model.convert",
     glb     = "editor.model.glb",
     texture = "editor.texture.convert",
+    material = "editor.material.convert",
     png     = "editor.texture.png",
-    sc      = "editor.fx.convert",
 }
 
 for ext, compiler in pairs(ResourceCompiler) do

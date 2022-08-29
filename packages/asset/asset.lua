@@ -49,5 +49,6 @@ assetmgr.edit = resource.edit
 assetmgr.unload = resource.unload
 assetmgr.reload = resource.reload
 assetmgr.textures = texture_mgr.textures
+assetmgr.load_fx = require "load_fx"
 
 return assetmgr
