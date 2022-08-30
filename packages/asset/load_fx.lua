@@ -75,7 +75,7 @@ local function createProgram(filename, fx)
 end
 
 return function (filename)
-    local material = serialize.parse(filename, readall(filename.."|main.material"))
+    local material = serialize.parse(filename, readall(filename.."|main.cfg"))
     material.fx = createProgram(filename, material.fx)
     return material
 end

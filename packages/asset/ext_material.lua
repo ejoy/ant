@@ -5,7 +5,6 @@ local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local sd        = import_package "ant.settings".setting
 local use_cluster_shading = sd:data().graphic.cluster_shading ~= 0
-local url		= import_package "ant.url"
 local matobj	= require "matobj"
 local load_fx 	= require "load_fx"
 local respath 	= require "respath"

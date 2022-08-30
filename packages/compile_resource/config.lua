@@ -1,58 +1,58 @@
-local bgfx      = require "bgfx"
-local platform  = require "platform"
-local stringify = require "stringify"
-
-local function def_cfg() return {setting={},arguments=""} end
-
 local config = {
-    glb     = def_cfg(),
-    model   = def_cfg(),
-    texture = def_cfg(),
-    material = def_cfg(),
-    png     = def_cfg(),
+    glb      = {setting={},arguments=""},
+    model    = {setting={},arguments=""},
+    texture  = {setting={},arguments=""},
+    material = {setting={},arguments=""},
+    png      = {setting={},arguments=""},
 }
 
-local function set_setting(ext, setting)
+local ResourceCompiler <const> = {
+    model   = "editor.model.convert",
+    glb     = "editor.model.glb",
+    texture = "editor.texture.convert",
+    material = "editor.material.convert",
+    png     = "editor.texture.png",
+}
+
+local function parse(arguments)
+    local setting = {}
+    arguments:gsub("([^=&]*)=([^=&]*)", function(k ,v)
+        setting[k] = v
+    end)
+    return setting
+end
+
+local function set(ext, arguments)
     local cfg = config[ext]
     if not cfg then
         error("invalid type: " .. ext)
     end
-    cfg.setting = setting
-    cfg.arguments = stringify(cfg.setting)
+    cfg.arguments = arguments
+    cfg.setting = parse(arguments)
+    assert(not __ANT_RUNTIME__)
+    if not __ANT_RUNTIME__ then
+        local lfs   = require "filesystem.local"
+        local sha1  = require "hash".sha1
+        local serialize = import_package "ant.serialize".stringify
+        local vfs = require "vfs"
+        local hash = sha1(cfg.arguments):sub(1,7)
+        local function writefile(filename, data)
+            local f = assert(lfs.open(filename, "wb"))
+            f:write(data)
+            f:close()
+        end
+        cfg.binpath = lfs.path(vfs.repopath()) / ".build" / ext / hash
+        cfg.compiler = assert(ResourceCompiler[ext])
+        lfs.create_directories(cfg.binpath)
+        writefile(cfg.binpath / ".setting", serialize(cfg.setting))
+    end
 end
 
 local function get(ext)
-    return assert(config[ext], "invalid path")
+    return config[ext]
 end
-
-local texture_extensions = {
-    noop        = platform.OS == "WINDOWS" and "dds" or "ktx",
-	direct3d11 	= "dds",
-	direct3d12 	= "dds",
-	metal 		= "ktx",
-	vulkan 		= "ktx",
-	opengl 		= "ktx",
-}
-
-local function init()
-    local os = platform.OS:lower()
-    local caps = bgfx.get_caps()
-    local renderer = caps.rendererType:lower()
-    local texture = assert(texture_extensions[renderer])
-    set_setting("model", {})
-    set_setting("glb", {})
-    set_setting("material", {
-        os = os,
-        renderer = renderer,
-        hd = caps.homogeneousDepth and true or nil,
-        obl = caps.originBottomLeft and true or nil,
-    })
-    set_setting("texture", {os=os, ext=texture})
-    set_setting("png", {os=os, ext=texture})
-end
-
 
 return {
-    init = init,
+    set = set,
     get = get,
 }

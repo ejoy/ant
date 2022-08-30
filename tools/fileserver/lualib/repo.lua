@@ -39,7 +39,7 @@ local repo_build_dir
 
 local function is_resource(path)
 	local ext = path:match "[^/]%.([%w*?_%-]*)$"
-	if ext ~= "sc" and ext ~= "glb"  and ext ~= "texture" and ext ~= "png" then
+	if ext ~= "material" and ext ~= "glb"  and ext ~= "texture" and ext ~= "png" then
 		return false
 	end
 	return true

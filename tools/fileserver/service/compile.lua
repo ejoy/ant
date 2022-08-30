@@ -23,4 +23,8 @@ function S.COMPILE(path)
     return compile_url(path):string()
 end
 
+function S.SETTING(ext, setting)
+    vfs.resource_setting(ext, setting)
+end
+
 return S

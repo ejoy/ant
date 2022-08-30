@@ -1,5 +1,4 @@
 local resource = require "resource"
-local url = import_package "ant.url"
 local texture_mgr = require "texture_mgr"
 local efkobj		= require "efkobj"
 
@@ -12,13 +11,12 @@ local function require_ext(ext)
 end
 
 local function initialize()
-	local function loader(fileurl, data)
-		local filename = url.parse(fileurl)
+	local function loader(filename, data)
 		local ext = filename:match "[^.]*$"
 		local world = data
 		local res
 		respath.push(filename)
-		res = require_ext(ext).loader(fileurl, world)
+		res = require_ext(ext).loader(filename, world)
 		respath.pop()
 		return res
 	end

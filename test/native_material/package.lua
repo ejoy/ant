@@ -7,6 +7,5 @@ return {
         "ant.settings",
         "ant.serialize",
         "ant.subprocess",
-        "ant.url",
     }
 }

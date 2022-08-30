@@ -25,6 +25,9 @@ if __ANT_RUNTIME__ then
 	function vfs.resource(paths)
 		return io_req:call("RESOURCE", paths)
 	end
+	function vfs.resource_setting(ext, setting)
+		return io_req:call("RESOURCE_SETTING", ext, setting)
+	end
 else
 	function vfs.repopath()
 		return io_req:call("REPOPATH")

@@ -54,6 +54,10 @@ function S.RESOURCE(paths)
 	return request("RESOURCE", paths)
 end
 
+function S.RESOURCE_SETTING(ext, setting)
+	return request("RESOURCE_SETTING", ext, setting)
+end
+
 function S.FETCH(path)
 	return request("FETCH", path)
 end

@@ -1,5 +1,4 @@
 local lfs = require "filesystem.local"
-local config = require "config"
 local vfs = require "vfs"
 
 local function normalize(p)
@@ -25,10 +24,7 @@ local function split_path(pathstring)
     local pathlst = split(pathstring)
     local res = {}
     for i = 1, #pathlst - 1 do
-        local path = normalize(pathlst[i])
-        local ext = path:match "[^/]%.([%w*?_%-]*)$"
-        local cfg = config.get(ext)
-        res[#res+1] = path.."?"..cfg.arguments
+        res[#res+1] = normalize(pathlst[i])
     end
     res[#res+1] = pathlst[#pathlst]
     return res

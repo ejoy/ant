@@ -290,6 +290,10 @@ function offline.RESOURCE(id, paths)
 	offline.GET(id, paths[#paths], hash)
 end
 
+function offline.RESOURCE_SETTING(id, ext, setting)
+	print("[offline] RESOURCE_SETTING", ext, setting)
+end
+
 function offline.EXIT(id)
 	print("[offline] EXIT")
 	response_id(id, nil)
@@ -669,6 +673,12 @@ function online.RESOURCE(id, paths)
 		end
 	end
 	online.GET(id, paths[#paths], hash)
+end
+
+function online.RESOURCE_SETTING(id, ext, setting)
+	print("[online] RESOURCE_SETTING", ext, setting)
+	connection_send("RESOURCE_SETTING", ext, setting)
+	response_id(id)
 end
 
 function online.SUBSCIBE(channel_name, message)
