@@ -86,7 +86,7 @@ local function compile_file(input)
     local inputstr = input:string()
     local ext = inputstr:match "[^/]%.([%w*?_%-]*)$"
     local cfg = config.get(ext)
-    local output = cfg.binpath / get_filename(inputstr:lower())
+    local output = cfg.binpath / get_filename(inputstr)
     if not do_build(output) then
         lfs.create_directory(output)
         local ok, deps = cfg.compiler(input, output, cfg.setting, function (path)
