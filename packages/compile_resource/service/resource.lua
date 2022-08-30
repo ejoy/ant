@@ -52,11 +52,10 @@ local function createTexture(c)
 end
 
 local function loadTexture(name)
-    local urls = cr.compile_path(name)
-    local c = datalist.parse(readall_s(cr.compile_dir(urls, "main.cfg")))
+    local c = datalist.parse(readall_s(cr.compile(name.."|main.cfg")))
     c.name = name
     if not c.value then
-        c.path = cr.compile_dir(urls, "main.bin")
+        c.path = cr.compile(name.."|main.bin")
     end
     return c
 end

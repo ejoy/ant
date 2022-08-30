@@ -1,32 +1,8 @@
 local fs    = require "filesystem"
 local lfs   = require "filesystem.local"
-local sha1  = require "hash".sha1
-local serialize = import_package "ant.serialize".stringify
-local urlpkg   = import_package "ant.url"
+local sha1  = require "editor.hash".sha1
 local datalist = require "datalist"
-local config    = require "config"
-local vfs = require "vfs"
-local compile = require "compile".compile
-
-local ResourceCompiler = {
-    model   = "editor.model.convert",
-    glb     = "editor.model.glb",
-    texture = "editor.texture.convert",
-    material = "editor.material.convert",
-    png     = "editor.texture.png",
-}
-
-for ext, compiler in pairs(ResourceCompiler) do
-    local cfg = config.get(ext)
-    cfg.binpath = lfs.path(vfs.repopath()) / ".build" / ext
-    cfg.compiler = compiler
-end
-
-local function get_filename(pathname)
-    pathname = pathname:lower()
-    local filename = pathname:match "[/]?([^/]*)$"
-    return filename.."_"..sha1(pathname)
-end
+local config    = require "editor.config"
 
 local function writefile(filename, data)
 	local f = assert(lfs.open(filename, "wb"))
@@ -39,6 +15,12 @@ local function readfile(filename)
 	local data = f:read "a"
 	f:close()
 	return data
+end
+
+local function get_filename(pathname)
+    pathname = pathname:lower()
+    local filename = pathname:match "[/]?([^/]*)$"
+    return filename.."_"..sha1(pathname)
 end
 
 local function readconfig(filename)
@@ -78,84 +60,62 @@ local function create_depfile(filename, deps)
     writefile(filename, table.concat(w, "\n"))
 end
 
+local compile
+
 local function absolute_path(base, path)
 	if path:sub(1,1) == "/" then
-        if path:find("|", 1, true) then
-            return compile(path)
-        end
-		return fs.path(path):localpath()
+		return compile(path)
 	end
 	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
 end
 
-local function do_compile(cfg, setting, input, output)
-    lfs.create_directories(output)
-    local ok, deps = require(cfg.compiler)(input, output, setting, function (path)
+local function do_compile(input, output)
+    local inputstr = input:string()
+    local ext = inputstr:match "[^/]%.([%w*?_%-]*)$"
+    local cfg = config.get(ext)
+    lfs.create_directory(output)
+    local ok, err = cfg.compiler(input, output, cfg.setting, function (path)
         return absolute_path(input, path)
     end)
     if not ok then
-        local err = deps
         error("compile failed: " .. input:string() .. "\n" .. err)
     end
-    create_depfile(output / ".dep", deps or {})
 end
 
-local function compile_localfile(folder, fileurl)
-    local file, setting, arguments = urlpkg.parse(fileurl)
-    local hash = sha1(arguments):sub(1,7)
-    local ext = file:match "[^/]%.([%w*?_%-]*)$"
+local function compile_file(input)
+    local inputstr = input:string()
+    local ext = inputstr:match "[^/]%.([%w*?_%-]*)$"
     local cfg = config.get(ext)
-    local input = lfs.absolute(folder / file)
-    local keystring = input:string():lower()
-    local output = cfg.binpath / get_filename(keystring) / hash
-    if not lfs.exists(output) or not do_build(output) then
-        do_compile(cfg, setting, input, output)
-        writefile(output / ".setting", serialize(setting))
-        writefile(output / ".arguments", arguments)
+    local output = cfg.binpath / get_filename(inputstr)
+    if not do_build(output) then
+        lfs.create_directory(output)
+        local ok, deps = cfg.compiler(input, output, cfg.setting, function (path)
+            return absolute_path(input, path)
+        end)
+        if not ok then
+            local err = deps
+            error("compile failed: " .. input:string() .. "\n" .. err)
+        end
+        create_depfile(output / ".dep", deps or {})
     end
     return output
 end
 
-local function compile_virtualfile(url)
-    local path, setting, arguments = urlpkg.parse(url)
-    local input = fs.path(path):localpath()
-    local file = input:filename():string()
-    local hash = sha1(arguments):sub(1,7)
-    local ext = file:match "[^/]%.([%w*?_%-]*)$"
-    local cfg = config.get(ext)
-    local keystring = input:string():lower() 
-    local output = cfg.binpath / get_filename(keystring) / hash
-    if not lfs.exists(output) or not do_build(output) then
-        do_compile(cfg, setting, input, output)
-        writefile(output / ".setting", serialize(setting))
-        writefile(output / ".arguments", arguments)
+function compile(pathstring)
+    local pos = pathstring:find("|", 1, true)
+    if pos then
+        local resource = fs.path(pathstring:sub(1,pos-1)):localpath()
+        return compile_file(resource) / pathstring:sub(pos+1):gsub("|", "/")
+    else
+        return fs.path(pathstring):localpath()
     end
-    return output
 end
 
-function vfs.resource(urllst)
-    local url = urllst[1]
-    if #urllst == 1 then
-        if url:match "?" then
-            return compile_virtualfile(url)
-        end
-        return fs.path(url):localpath()
-    end
-    local folder = compile_virtualfile(url)
-    for i = 2, #urllst do
-        if urllst[i]:match "?" then
-            folder = compile_localfile(folder, urllst[i])
-        else
-            folder = folder /urllst[i]
-        end
-    end
-    return folder
-end
+local set_setting = config.set
 
-if vfs.sync then
-    vfs.sync.resource = vfs.resource
-end
-
-if vfs.async then
-    vfs.async.resource = vfs.resource
-end
+return {
+    set_setting = set_setting,
+    do_compile = do_compile,
+    compile = compile,
+    compile_file = compile_file,
+}

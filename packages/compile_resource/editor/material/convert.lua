@@ -150,6 +150,6 @@ return function (input, output, setting, localpath)
             table_append(depfiles, deps)
         end
     end
-    writefile(output / "main.material", mat)
+    writefile(output / "main.cfg", mat)
     return true, depfiles
 end

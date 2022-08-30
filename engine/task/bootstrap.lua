@@ -126,7 +126,7 @@ local function request(...)
 	end
 	return ltask.call(ServiceVfs, ...)
 end
-vfs.sync = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource}
+vfs.sync = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource,resource_setting=vfs.resource_setting}
 function vfs.realpath(path, hash)
 	return request("GET", path, hash)
 end
@@ -139,7 +139,10 @@ end
 function vfs.resource(paths)
 	return request("RESOURCE", paths)
 end
-vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource}
+function vfs.resource_setting(ext, setting)
+	return request("RESOURCE_SETTING", ext, setting)
+end
+vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource,resource_setting=vfs.resource_setting}
 initfunc()]]):format(servicelua)
 end
 

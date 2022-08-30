@@ -53,6 +53,10 @@ function message.RESOURCE(path)
 	response("RESOURCE", path, hash)
 end
 
+function message.RESOURCE_SETTING(ext, setting)
+	ltask.call(ServiceCompile, "SETTING", ext, setting)
+end
+
 function message.GET(hash)
 	local filename = ltask.call(ServiceVfsMgr, "GET", hash)
 	if filename == nil then
