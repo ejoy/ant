@@ -289,12 +289,12 @@ function offline.RESOURCE(id, path)
 		return
     end
 	local resourefile = path:sub(1,pos-1)
-	local subfile = normalize(path:sub(pos+1))
 	local hash = repo:get_resource(resourefile)
 	if not hash then
 		response_id(id, nil)
 		return
 	end
+	local subfile = normalize(path:sub(pos+1))
 	offline.GET(id, subfile, hash)
 end
 
@@ -669,12 +669,12 @@ function online.RESOURCE(id, path)
 		return
     end
 	local resourefile = path:sub(1,pos-1)
-	local subfile = normalize(path:sub(pos+1))
 	local hash = repo:get_resource(resourefile)
 	if not hash then
 		request_file(id, "RESOURCE", resourefile, "RESOURCE", path)
 		return
 	end
+	local subfile = normalize(path:sub(pos+1))
 	online.GET(id, subfile, hash)
 end
 
