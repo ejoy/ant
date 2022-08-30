@@ -26,17 +26,7 @@ uniform vec4 u_pbr_factor;
 #define u_alpha_mask_cutoff  u_pbr_factor.z
 #define u_occlusion_strength u_pbr_factor.w
 
-struct material_info
-{
-    float roughness;      // roughness value, as authored by the model creator (input to shader)
-    vec3 f0;                        // full reflectance color (n incidence angle)
-
-    float alpha_roughness;           // roughness mapped to a more linear change in the roughness (proposed by [2])
-    vec3 albedo;
-
-    vec3 f90;                       // reflectance color at grazing angle
-    float metallic;
-};
+#include "pbr/material_info.sh"
 
 vec4 get_basecolor(vec2 texcoord)
 {
@@ -84,10 +74,10 @@ float clamp_dot(vec3 x, vec3 y)
 material_info get_material_info(vec4 basecolor, vec2 uv)
 {
     material_info mi;
-    get_metallic_roughness(mi.metallic, mi.roughness, uv);
+    get_metallic_roughness(mi.metallic, mi.perceptual_roughness, uv);
     // Roughness is authored as perceptual roughness; as is convention,
     // convert to material roughness by squaring the perceptual roughness.
-    mi.alpha_roughness = mi.roughness * mi.roughness;
+    mi.roughness = mi.perceptual_roughness * mi.perceptual_roughness;
 
     // Achromatic f0 based on IOR.
     vec3 f0_ior = vec3_splat(MIN_ROUGHNESS);

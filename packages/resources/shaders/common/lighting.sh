@@ -5,58 +5,7 @@
 #include "common/cluster_shading.sh"
 
 #include "pbr/pbr.sh"
-
-struct material_info
-{
-    float roughness;      // roughness value, as authored by the model creator (input to shader)
-    vec3 f0;                        // full reflectance color (n incidence angle)
-
-    float alpha_roughness;           // roughness mapped to a more linear change in the roughness (proposed by [2])
-    vec3 albedo;
-
-    vec3 f90;                       // reflectance color at grazing angle
-    float metallic;
-
-    vec3 N;
-    float NdotV;
-    vec3 V;
-};
-
-float clamp_dot(vec3 x, vec3 y)
-{
-    return clamp(dot(x, y), 0.0, 1.0);
-}
-
-void calc_reflectance(vec3 basecolor, float metallic, out vec3 f0, out vec3 f90, out vec3 albedo)
-{
-    vec3 f0_ior = vec3_splat(MIN_ROUGHNESS);
-    f0 = mix(f0_ior, basecolor, metallic);
-
-    albedo = mix(basecolor * (1.0-f0_ior),  vec3_splat(0.0), metallic);
-    // Compute reflectance.
-    float reflectance = max(f0.r, max(f0.g, f0.b));
-
-    // Anything less than 2% is physically impossible and is instead considered to be shadowing. Compare to "Real-Time-Rendering" 4th editon on page 325.
-    f90 = vec3_splat(clamp(reflectance * 50.0, 0.0, 1.0));
-}
-
-material_info init_material_info(float metallic, float roughness, vec3 basecolor, vec3 N, vec3 V)
-{
-    material_info mi;
-
-    mi.metallic = metallic;
-    mi.roughness = roughness;
-    // Roughness is authored as perceptual roughness; as is convention,
-    // convert to material roughness by squaring the perceptual roughness.
-    mi.alpha_roughness = roughness * roughness;
-
-    mi.N = N;
-    mi.V = V;
-    mi.NdotV = clamp_dot(N, V);
-
-    calc_reflectance(basecolor, metallic, mi.f0, mi.f90, mi.albedo);
-    return mi;
-}
+#include "pbr/material_info.sh"
 
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#range-property
 float get_range_attenuation(float range, float distance)
@@ -104,7 +53,7 @@ vec3 get_light_radiance(in light_info l, in vec3 posWS, in material_info mi)
         // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#acknowledgments AppendixB
         color += intensity * NdotL * (
                 BRDF_lambertian(mi.f0, mi.f90, mi.albedo, VdotH) +
-                BRDF_specularGGX(mi.f0, mi.f90, mi.alpha_roughness, VdotH, NdotL, mi.NdotV, NdotH));
+                BRDF_specularGGX(mi.f0, mi.f90, mi.roughness, VdotH, NdotL, mi.NdotV, NdotH));
     }
 
     return color;
