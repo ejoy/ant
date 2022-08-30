@@ -1,8 +1,8 @@
 local fs    = require "filesystem"
 local lfs   = require "filesystem.local"
-local sha1  = require "hash".sha1
+local sha1  = require "editor.hash".sha1
 local datalist = require "datalist"
-local config    = require "config"
+local config    = require "editor.config"
 local vfs = require "vfs"
 local compile = require "compile".compile
 
@@ -72,9 +72,9 @@ local function absolute_path(base, path)
 	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
 end
 
-local function do_compile(cfg, setting, input, output)
-    lfs.create_directories(output)
-    local ok, deps = require(cfg.compiler)(input, output, setting, function (path)
+local function do_compile(cfg, input, output)
+    lfs.create_directory(output)
+    local ok, deps = cfg.compiler(input, output, cfg.setting, function (path)
         return absolute_path(input, path)
     end)
     if not ok then
@@ -84,47 +84,24 @@ local function do_compile(cfg, setting, input, output)
     create_depfile(output / ".dep", deps or {})
 end
 
-local function compile_localfile(folder, file)
-    local ext = file:match "[^/]%.([%w*?_%-]*)$"
+local function compile_file(input)
+    local inputstr = input:string()
+    local ext = inputstr:match "[^/]%.([%w*?_%-]*)$"
     local cfg = config.get(ext)
-    local input = lfs.absolute(folder / file)
-    if not cfg then
-        return input
-    end
-    local keystring = input:string():lower()
-    local output = cfg.binpath / get_filename(keystring)
-    if not lfs.exists(output) or not do_build(output) then
-        do_compile(cfg, cfg.setting, input, output)
-    end
-    return output
-end
-
-local function compile_virtualfile(path)
-    local input = fs.path(path):localpath()
-    local file = input:filename():string()
-    local ext = file:match "[^/]%.([%w*?_%-]*)$"
-    local cfg = config.get(ext)
-    if not cfg then
-        return input
-    end
-    local keystring = input:string():lower()
-    local output = cfg.binpath / get_filename(keystring)
-    if not lfs.exists(output) or not do_build(output) then
-        do_compile(cfg, cfg.setting, input, output)
+    local output = cfg.binpath / get_filename(inputstr:lower())
+    if not do_build(output) then
+        do_compile(cfg, input, output)
     end
     return output
 end
 
 function vfs.resource(urllst)
-    local url = urllst[1]
-    if #urllst == 1 then
-        return compile_virtualfile(url)
+    assert(#urllst >= 2)
+    local folder = compile_file(fs.path(urllst[1]):localpath())
+    for i = 2, #urllst - 1 do
+        folder = compile_file(folder / urllst[i])
     end
-    local folder = compile_virtualfile(url)
-    for i = 2, #urllst do
-        folder = compile_localfile(folder, urllst[i])
-    end
-    return folder
+    return folder / urllst[#urllst]
 end
 
 function vfs.resource_setting(ext, setting)

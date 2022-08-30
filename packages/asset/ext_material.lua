@@ -8,9 +8,15 @@ local use_cluster_shading = sd:data().graphic.cluster_shading ~= 0
 local matobj	= require "matobj"
 local load_fx 	= require "load_fx"
 local respath 	= require "respath"
+local fs 	    = require "filesystem"
+
+local function readall(filename)
+    local f <close> = assert(fs.open(fs.path(filename), "rb"))
+    return f:read "a"
+end
 
 local function load(filename)
-    return type(filename) == "string" and serialize.parse(filename, cr.read_file(filename)) or filename
+    return type(filename) == "string" and serialize.parse(filename, readall(filename)) or filename
 end
 
 local function to_math_v(v)

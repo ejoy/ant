@@ -3,7 +3,6 @@ local cm        = require "compile"
 local bgfx      = require "bgfx"
 local platform  = require "platform"
 local vfs       = require "vfs"
-local stringify = require "stringify"
 
 if not __ANT_RUNTIME__ then
     require "editor.compile"
@@ -14,6 +13,31 @@ local function read_file(filename)
     local c = f:read "a"
     f:close()
     return c
+end
+
+local function sortpairs(t)
+    local sort = {}
+    for k in pairs(t) do
+        sort[#sort+1] = k
+    end
+    table.sort(sort)
+    local n = 1
+    return function ()
+        local k = sort[n]
+        if k == nil then
+            return
+        end
+        n = n + 1
+        return k, t[k]
+    end
+end
+
+local function stringify(t)
+    local s = {}
+    for k, v in sortpairs(t) do
+        s[#s+1] = k.."="..tostring(v)
+    end
+    return table.concat(s, "&")
 end
 
 local texture_extensions = {
@@ -46,6 +70,4 @@ return {
     init        = init,
     read_file   = read_file,
     compile     = cm.compile,
-    compile_path= cm.compile_path,
-    compile_dir = cm.compile_dir,
 }

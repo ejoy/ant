@@ -271,7 +271,7 @@ end
 function offline.RESOURCE(id, paths)
 	print("[offline] RESOURCE", table.unpack(paths))
 	if #paths < 2 then
-		offline.GET(id, paths[1])
+		response_err(id, "Resource invalid")
 		return
 	end
 	local hash = repo:get_resource(paths[1])
@@ -656,7 +656,7 @@ end
 function online.RESOURCE(id, paths)
 	print("[online] RESOURCE", table.unpack(paths))
 	if #paths < 2 then
-		online.GET(id, paths[1])
+		response_err(id, "Resource invalid")
 		return
 	end
 	local hash = repo:get_resource(paths[1])

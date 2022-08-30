@@ -20,40 +20,17 @@ local function split(str)
     return r
 end
 
-local function split_path(pathstring)
-    local pathlst = split(pathstring)
-    local res = {}
-    for i = 1, #pathlst - 1 do
-        res[#res+1] = normalize(pathlst[i])
-    end
-    res[#res+1] = pathlst[#pathlst]
-    return res
-end
-
-local function compile_urls(urls)
-    local path = assert(vfs.resource(urls))
-    return lfs.path(path)
-end
-
 local function compile(pathstring)
-    return compile_urls(split_path(pathstring))
-end
-
-local function compile_path(pathstring)
-    local res = split_path(pathstring.."|")
-    res[#res] = nil
-    return res
-end
-
-local function compile_dir(urls, file)
-    urls[#urls+1] = file
-    local r = compile_urls(urls)
-    urls[#urls] = nil
-    return r
+    local urls = split(pathstring)
+    if #urls == 1 then
+        return lfs.path(vfs.realpath(pathstring))
+    end
+    for i = 1, #urls - 1 do
+        urls[i] = normalize(urls[i])
+    end
+    return lfs.path(vfs.resource(urls))
 end
 
 return {
     compile = compile,
-    compile_path = compile_path,
-    compile_dir = compile_dir,
 }

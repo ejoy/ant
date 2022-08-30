@@ -204,7 +204,7 @@ end
 function vfs:set_resource(name, hash)
 	self.resource[name] = hash
 	local path = self:hashpath(self.root)..".resource"
-	local f <close> = io.open(path, "ab")
+	local f <close> = assert(io.open(path, "ab"))
 	f:write(("%s %s\n"):format(hash, name))
 end
 

@@ -1,3 +1,14 @@
+local lfs = require "filesystem.local"
+local sha1 = require "editor.hash".sha1
+local serialize = import_package "ant.serialize"
+local vfs = require "vfs"
+
+local function writefile(filename, data)
+    local f = assert(lfs.open(filename, "wb"))
+    f:write(data)
+    f:close()
+end
+
 local config = {
     glb      = {setting={},arguments=""},
     model    = {setting={},arguments=""},
@@ -27,29 +38,16 @@ local function set(ext, arguments)
     if not cfg then
         error("invalid type: " .. ext)
     end
-    cfg.arguments = arguments
+    local hash = sha1(arguments):sub(1,7)
     cfg.setting = parse(arguments)
-    assert(not __ANT_RUNTIME__)
-    if not __ANT_RUNTIME__ then
-        local lfs   = require "filesystem.local"
-        local sha1  = require "hash".sha1
-        local serialize = import_package "ant.serialize".stringify
-        local vfs = require "vfs"
-        local hash = sha1(cfg.arguments):sub(1,7)
-        local function writefile(filename, data)
-            local f = assert(lfs.open(filename, "wb"))
-            f:write(data)
-            f:close()
-        end
-        cfg.binpath = lfs.path(vfs.repopath()) / ".build" / ext / hash
-        cfg.compiler = assert(ResourceCompiler[ext])
-        lfs.create_directories(cfg.binpath)
-        writefile(cfg.binpath / ".setting", serialize(cfg.setting))
-    end
+    cfg.binpath = lfs.path(vfs.repopath()) / ".build" / ext / hash
+    cfg.compiler = require(assert(ResourceCompiler[ext]))
+    lfs.create_directories(cfg.binpath)
+    writefile(cfg.binpath / ".setting", serialize.stringify(cfg.setting))
 end
 
 local function get(ext)
-    return config[ext]
+    return assert(config[ext])
 end
 
 return {
