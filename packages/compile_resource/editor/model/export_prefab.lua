@@ -4,6 +4,7 @@ local serialize = import_package "ant.serialize"
 local datalist = require "datalist"
 local lfs = require "filesystem.local"
 local fs = require "filesystem"
+local compile = require "editor.compile"
 
 local invalid_chars<const> = {
     '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
@@ -145,10 +146,13 @@ end
 local default_material_path<const> = lfs.path "/pkg/ant.resources/materials/pbr_default.material"
 local default_material_info
 
-local function save_material(mi)
+local function save_material(output, mi)
     local f = utility.full_path(mi.filename:string())
     if not lfs.exists(f) then
         utility.save_txt_file(mi.filename:string(), mi.material)
+        compile.do_compile(output / mi.filename, output / "materials" / "_tmp")
+        lfs.remove(output / mi.filename)
+        lfs.rename(output / "materials" / "_tmp", output / mi.filename)
     end
 end
 
@@ -189,7 +193,7 @@ local function has_skin(gltfscene, exports, nodeidx)
     end
 end
 
-local function seri_material(exports, mode, materialidx, hasskin)
+local function seri_material(output, exports, mode, materialidx, hasskin)
     local em = exports.material
     if em == nil or #em <= 0 then
         return
@@ -199,7 +203,7 @@ local function seri_material(exports, mode, materialidx, hasskin)
         local mi = assert(exports.material[materialidx+1])
         local materialinfo = generate_material(mi, mode, hasskin)
         if materialinfo then
-            save_material(materialinfo)
+            save_material(output, materialinfo)
             return materialinfo.filename
         end
     end
@@ -213,7 +217,7 @@ local function seri_material(exports, mode, materialidx, hasskin)
 
     local materialinfo = generate_material(default_material_info, mode)
     if materialinfo and materialinfo.filename ~= default_material_path then
-        save_material(materialinfo)
+        save_material(output, materialinfo)
         return materialinfo.filename
     end
 
@@ -244,7 +248,7 @@ local function check_create_skin_material(materialfile)
     return newpath
 end
 
-local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
+local function create_mesh_node_entity(output, gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(node)
     local meshidx = node.mesh
@@ -254,7 +258,7 @@ local function create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
     for primidx, prim in ipairs(mesh.primitives) do
         local meshname = mesh.name and fix_invalid_name(mesh.name) or ("mesh" .. meshidx)
         local needskin = has_skin(gltfscene, exports, nodeidx)
-        local materialfile = seri_material(exports, prim.mode or 4, prim.material, needskin)
+        local materialfile = seri_material(output, exports, prim.mode or 4, prim.material, needskin)
         if materialfile == nil then
             error(("not found %s material %d"):format(meshname, prim.material or -1))
         end
@@ -414,7 +418,7 @@ return function(output, glbdata, exports, localpath)
         local node = gltfscene.nodes[nodeidx+1]
         local e
         if node.mesh then
-            e = create_mesh_node_entity(gltfscene, nodeidx, parent, exports)
+            e = create_mesh_node_entity(output, gltfscene, nodeidx, parent, exports)
         else
             e = create_node_entity(gltfscene, nodeidx, parent, exports)
         end

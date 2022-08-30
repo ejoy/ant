@@ -78,7 +78,7 @@ local quit
 function host.init()
 	return config
 end
-function host.update(apis, timeout)
+function host.update(apis)
 	if first then
 		first = false
 		apis.request("FETCH", "/engine/firmware", {
@@ -93,7 +93,6 @@ function host.update(apis, timeout)
 	if quit then
 		return true
 	end
-	thread.sleep(timeout)
 end
 function host.exit(apis)
 	if apis.fd then

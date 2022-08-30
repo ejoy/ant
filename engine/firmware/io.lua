@@ -268,26 +268,34 @@ function offline.GET(id, fullpath, roothash)
 	response_id(id, realpath)
 end
 
-function offline.RESOURCE(id, paths)
-	print("[offline] RESOURCE", table.unpack(paths))
-	if #paths < 2 then
-		response_err(id, "Resource invalid")
+local function normalize(p)
+    local stack = {}
+    p:gsub('[^/|]*', function (w)
+        if #w == 0 and #stack ~= 0 then
+        elseif w == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
+            stack[#stack] = nil
+        elseif w ~= '.' then
+            stack[#stack + 1] = w
+        end
+    end)
+    return table.concat(stack, "/")
+end
+
+function offline.RESOURCE(id, path)
+	print("[offline] RESOURCE", path)
+    local pos = path:find("|", 1, true)
+    if not pos then
+		offline.GET(id, path)
 		return
-	end
-	local hash = repo:get_resource(paths[1])
+    end
+	local resourefile = path:sub(1,pos-1)
+	local subfile = normalize(path:sub(pos+1))
+	local hash = repo:get_resource(resourefile)
 	if not hash then
 		response_id(id, nil)
 		return
 	end
-	for i = 2, #paths-1 do
-		local path = table.concat(paths, "#", 1, i) --TODO
-		hash = repo:get_resource(path)
-		if not hash then
-			response_id(id, nil)
-			return
-		end
-	end
-	offline.GET(id, paths[#paths], hash)
+	offline.GET(id, subfile, hash)
 end
 
 function offline.RESOURCE_SETTING(id, ext, setting)
@@ -653,26 +661,21 @@ function online.GET(id, fullpath, roothash)
 	end
 end
 
-function online.RESOURCE(id, paths)
-	print("[online] RESOURCE", table.unpack(paths))
-	if #paths < 2 then
-		response_err(id, "Resource invalid")
+function online.RESOURCE(id, path)
+	print("[online] RESOURCE", path)
+    local pos = path:find("|", 1, true)
+    if not pos then
+		online.GET(id, path)
 		return
-	end
-	local hash = repo:get_resource(paths[1])
+    end
+	local resourefile = path:sub(1,pos-1)
+	local subfile = normalize(path:sub(pos+1))
+	local hash = repo:get_resource(resourefile)
 	if not hash then
-		request_file(id, "RESOURCE", paths[1], "RESOURCE", paths)
+		request_file(id, "RESOURCE", resourefile, "RESOURCE", path)
 		return
 	end
-	for i = 2, #paths-1 do
-		local path = table.concat(paths, "#", 1, i) --TODO
-		hash = repo:get_resource(path)
-		if not hash then
-			request_file(id, "RESOURCE", path, "RESOURCE", paths)
-			return
-		end
-	end
-	online.GET(id, paths[#paths], hash)
+	online.GET(id, subfile, hash)
 end
 
 function online.RESOURCE_SETTING(id, ext, setting)
@@ -744,7 +747,7 @@ local function work_online()
 	local result = {}
 	local reading = connection.recvq
 	while true do
-		if host.update(status, 0.01) then
+		if host.update(status) then
 			break
 		end
 		local ok, err = connection_dispose(0)
@@ -755,6 +758,8 @@ local function work_online()
 		elseif ok == nil then
 			print("[ERROR] Connection Error", err)
 			break
+		else
+			thread.sleep(0.01)
 		end
 	end
 end
@@ -766,8 +771,8 @@ if not host then
 		local _, c = channel_req:bpop()
 		return c
 	end
-	function host.update(_, timeout)
-		while online_dispatch(channel_req:pop(timeout)) do end
+	function host.update(_)
+		while online_dispatch(channel_req:pop()) do end
 		logger_dispatch(online)
 	end
 	function host.exit()

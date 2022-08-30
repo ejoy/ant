@@ -1,15 +1,26 @@
 local lfs       = require "filesystem.local"
-local cm        = require "compile"
 local bgfx      = require "bgfx"
 local platform  = require "platform"
 local vfs       = require "vfs"
 
-if not __ANT_RUNTIME__ then
-    require "editor.compile"
+local compile
+local compile_file
+local set_setting
+
+if __ANT_RUNTIME__ then
+    function compile(pathstring)
+        return lfs.path(vfs.resource(pathstring))
+    end
+    set_setting = vfs.resource_setting
+else
+    local editor = require "editor.compile"
+    compile = editor.compile
+    compile_file = editor.compile_file
+    set_setting = editor.set_setting
 end
 
 local function read_file(filename)
-    local f = assert(lfs.open(cm.compile(filename), "rb"))
+    local f = assert(lfs.open(compile(filename), "rb"))
     local c = f:read "a"
     f:close()
     return c
@@ -54,20 +65,22 @@ local function init()
     local caps = bgfx.get_caps()
     local renderer = caps.rendererType:lower()
     local texture = assert(texture_extensions[renderer])
-    vfs.resource_setting("model", stringify {})
-    vfs.resource_setting("glb", stringify {})
-    vfs.resource_setting("material", stringify {
+    set_setting("model", stringify {})
+    set_setting("glb", stringify {})
+    set_setting("material", stringify {
         os = os,
         renderer = renderer,
         hd = caps.homogeneousDepth and true or nil,
         obl = caps.originBottomLeft and true or nil,
     })
-    vfs.resource_setting("texture", stringify {os=os, ext=texture})
-    vfs.resource_setting("png", stringify {os=os, ext=texture})
+    set_setting("texture", stringify {os=os, ext=texture})
+    set_setting("png", stringify {os=os, ext=texture})
 end
 
 return {
-    init        = init,
-    read_file   = read_file,
-    compile     = cm.compile,
+    init         = init,
+    read_file    = read_file,
+    compile      = compile,
+    compile_file = compile_file,
+    set_setting  = set_setting,
 }

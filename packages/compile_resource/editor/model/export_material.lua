@@ -1,9 +1,8 @@
 local serialize = import_package "ant.serialize"
-
 local fs = require "filesystem.local"
 local utility = require "editor.model.utility"
-
 local datalist = require "datalist"
+local compile = require "editor.compile"
 
 local image_extension = {
     ["image/jpeg"] = ".jpg",
@@ -220,10 +219,14 @@ return function (output, glbdata, exports, tolocalpath)
         add_texture_format(texture_desc, need_compress)
         local imgname_noext = fs.path(imgname):stem():string()
         local texfilename = "./images/" .. imgname_noext .. ".texture"
-        if fs.exists(fs.path(texfilename)) then
-            error("filename:" .. texfilename .. " already exist")
+        if fs.exists(fs.path(output / texfilename)) then
+            return serialize.path("./../images/" .. imgname_noext .. ".texture")
         end
         utility.save_txt_file(texfilename, texture_desc)
+        compile.do_compile(output / texfilename, output / "images" / "_tmp")
+        fs.remove(output / "images" / imgname)
+        fs.remove(output / texfilename)
+        fs.rename(output / "images" / "_tmp", output / texfilename)
         return serialize.path("./../images/" .. imgname_noext .. ".texture")
     end
 

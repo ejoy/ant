@@ -42,6 +42,9 @@ local function is_resource(path)
 	if ext ~= "material" and ext ~= "glb"  and ext ~= "texture" and ext ~= "png" then
 		return false
 	end
+	if path:sub(1,8) == "/.build/" then
+		return false
+	end
 	return true
 end
 
