@@ -60,7 +60,20 @@ vec4 get_basecolor(vec2 texcoord, vec4 basecolor)
 #ifdef HAS_BASECOLOR_TEXTURE
     basecolor *= texture2D(s_basecolor, texcoord);
 #endif//HAS_BASECOLOR_TEXTURE
+
+#ifdef ALPHAMODE_OPAQUE
+    basecolor.a = u_alpha_mask_cutoff;
+#endif //ALPHAMODE_OPAQUE
     return basecolor;
+}
+
+vec4 get_emissive_color(vec2 texcoord)
+{
+    vec4 emissivecolor = u_emissive_factor;
+#ifdef HAS_EMISSIVE_TEXTURE
+    emissivecolor *= texture2D(s_emissive, texcoord);
+#endif //HAS_EMISSIVE_TEXTURE
+    return emissivecolor;
 }
 
 vec3 get_normal_by_tbn(mat3 tbn, vec3 normal, vec2 texcoord)
@@ -107,14 +120,7 @@ void main()
     vec4 basecolor = get_basecolor(uv, vec4_splat(1.0));
 #endif //WITH_COLOR_ATTRIB
 
-#ifdef ALPHAMODE_OPAQUE
-    basecolor.a = u_alpha_mask_cutoff;
-#endif //ALPHAMODE_OPAQUE
-
-    vec4 emissivecolor = vec4_splat(0.0);
-#ifdef HAS_EMISSIVE_TEXTURE
-    emissivecolor = texture2D(s_emissive, uv) * u_emissive_factor;
-#endif //HAS_EMISSIVE_TEXTURE
+    vec4 emissivecolor = get_emissive_color(uv);
 
 #ifdef MATERIAL_UNLIT
     gl_FragColor = basecolor + emissivecolor;
