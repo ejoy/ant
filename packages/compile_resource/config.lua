@@ -10,7 +10,6 @@ local config = {
     texture = def_cfg(),
     material = def_cfg(),
     png     = def_cfg(),
-    efk     = def_cfg(),
 }
 
 local function set_setting(ext, setting)
@@ -50,12 +49,10 @@ local function init()
     })
     set_setting("texture", {os=os, ext=texture})
     set_setting("png", {os=os, ext=texture})
-    set_setting("efk", {os=os, ext=texture})
 end
 
 
 return {
     init = init,
-    set_setting = set_setting,
     get = get,
 }
