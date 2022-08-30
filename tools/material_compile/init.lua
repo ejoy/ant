@@ -1,10 +1,11 @@
 local cr = import_package "ant.compile_resource"
-local stringify = import_package "ant.serialize".stringify
+local serialize = import_package "ant.serialize"
 
+local fs = require "filesystem"
 local lfs = require "filesystem.local"
 
 local sc = arg[1]
-local scpath = lfs.path(sc)
+local scpath = fs.path(sc)
 local stage = scpath:filename():string():match "([vf]s)_%w+"
 
 local mc = {
@@ -13,9 +14,26 @@ local mc = {
     }
 }
 
-local tmpfile = lfs.path "tmp.material"
+local tmpfile = lfs.path "./tools/material_compile/tmp.material"
+local output = lfs.path "./tools/material_compile/output"
 
-local f<close> = lfs.open(tmpfile, "wb")
-f:write(stringify(mc))
-cr.init()
-cr.compile_file(tmpfile)
+local f = lfs.open(tmpfile, "wb")
+f:write(serialize.stringify(mc))
+f:close()
+
+local function stringify(t)
+    local s = {}
+    for k, v in pairs(t) do
+        s[#s+1] = k.."="..tostring(v)
+    end
+    return table.concat(s, "&")
+end
+
+cr.set_setting("material", stringify {
+    os = "windows",
+    renderer = "direct3d11",
+    hd = nil,
+    obl = nil,
+})
+cr.do_compile(tmpfile, output)
+lfs.remove(tmpfile)

@@ -5,6 +5,7 @@ local vfs       = require "vfs"
 
 local compile
 local compile_file
+local do_compile
 local set_setting
 
 if __ANT_RUNTIME__ then
@@ -16,6 +17,7 @@ else
     local editor = require "editor.compile"
     compile = editor.compile
     compile_file = editor.compile_file
+    do_compile = editor.do_compile
     set_setting = editor.set_setting
 end
 
@@ -81,6 +83,7 @@ return {
     init         = init,
     read_file    = read_file,
     compile      = compile,
+    do_compile   = do_compile,
     compile_file = compile_file,
     set_setting  = set_setting,
 }
