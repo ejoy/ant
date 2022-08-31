@@ -34,7 +34,7 @@ vec3 get_light_radiance(in light_info l, in vec3 posWS, in material_info mi)
     float LdotH = clamp_dot(L, H);
     float VdotH = clamp_dot(V, H);
 
-    if (NdotL > 0.0 || mi.NdotV > 0.0)
+    if (NdotL > 0.0)
     {
         // Calculation of analytical light
         // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#acknowledgments AppendixB
@@ -42,7 +42,6 @@ vec3 get_light_radiance(in light_info l, in vec3 posWS, in material_info mi)
                 BRDF_lambertian(mi.f0, mi.f90, mi.albedo, VdotH) +
                 BRDF_specularGGX(mi.f0, mi.f90, mi.roughness, VdotH, NdotL, mi.NdotV, NdotH));
     }
-
     return color;
 }
 
