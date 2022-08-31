@@ -1,10 +1,6 @@
-#include "pch.h"
-
 #include <lua.hpp>
-
-#include "luaplugin.h"
-#include "luabind.h"
-
+#include <binding/luaplugin.h>
+#include <binding/luabind.h>
 #include <databinding/DataModelHandle.h>
 #include <databinding/DataVariable.h>
 #include <core/Element.h>

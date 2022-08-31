@@ -26,6 +26,12 @@ std::vector<Index>& Geometry::GetIndices() {
 	return indices;
 }
 
+Geometry::Geometry()
+	: vertices()
+	, indices()
+	, material(GetRenderInterface()->CreateDefaultMaterial())
+{}
+
 Geometry::~Geometry() {
 	Release();
 }
@@ -33,13 +39,11 @@ Geometry::~Geometry() {
 void Geometry::Release() {
 	vertices.clear();
 	indices.clear();
-	SetMaterial(0);
+	SetMaterial(GetRenderInterface()->CreateDefaultMaterial());
 }
 
 void Geometry::SetMaterial(MaterialHandle mat) {
-	if (material) {
-		GetRenderInterface()->DestroyMaterial(material);
-	}
+	GetRenderInterface()->DestroyMaterial(material);
 	material = mat;
 }
 

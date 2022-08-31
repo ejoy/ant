@@ -28,7 +28,7 @@ using Index = uint32_t;
 
 class Geometry {
 public:
-	Geometry() = default;
+	Geometry();
 	~Geometry();
 	Geometry(const Geometry&) = delete;
 	Geometry& operator=(const Geometry&) = delete;
@@ -63,7 +63,7 @@ public:
 protected:
 	std::vector<Vertex> vertices;
 	std::vector<Index> indices;
-	MaterialHandle material = 0;
+	MaterialHandle material;
 };
 
 }

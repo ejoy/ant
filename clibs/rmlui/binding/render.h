@@ -1,6 +1,6 @@
 #pragma once
 
-#include "font.h"
+#include <binding/font.h>
 #include <core/Interface.h>
 #include <bgfx/c99/bgfx.h>
 
@@ -29,6 +29,7 @@ public:
     void SetClipRect(glm::vec4 r[2]) override;
     Rml::MaterialHandle CreateTextureMaterial(Rml::TextureHandle texture, Rml::SamplerFlag flag) override;
     Rml::MaterialHandle CreateFontMaterial(const Rml::TextEffects& effects) override;
+    Rml::MaterialHandle CreateDefaultMaterial() override;
     void DestroyMaterial(Rml::MaterialHandle mat) override;
 
 public:

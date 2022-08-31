@@ -1,7 +1,6 @@
-#include "pch.h"
-#include "font.h"
-#include "render.h"
-#include "utf8.h"
+#include <binding/font.h>
+#include <binding/render.h>
+#include <binding/utf8.h>
 #include <core/Core.h>
 #include <memory.h>
 

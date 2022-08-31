@@ -6,12 +6,11 @@
 #include <core/EventListener.h>
 #include <core/Text.h>
 
-#include "luaplugin.h"
-#include "luabind.h"
-
-#include "render.h"
-#include "font.h"
-#include "context.h"
+#include <binding/luaplugin.h>
+#include <binding/luabind.h>
+#include <binding/render.h>
+#include <binding/font.h>
+#include <binding/context.h>
 
 #include "../bgfx/bgfx_interface.h"
 #include "../bgfx/luabgfx.h"

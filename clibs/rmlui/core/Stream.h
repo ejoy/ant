@@ -19,7 +19,7 @@ public:
 		View& operator=(const View&) = delete;
 		View& operator=(View&&) = delete;
 
-		operator bool() const;
+		explicit operator bool() const;
 		uint8_t operator[] (size_t i) const;
 		size_t size() const;
 	};
@@ -31,7 +31,7 @@ public:
 	bool End() const;
 	void Next();
 	void Undo();
-	operator bool() const;
+	explicit operator bool() const;
 
 private:
 	std::string    url;

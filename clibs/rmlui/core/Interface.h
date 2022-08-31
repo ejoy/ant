@@ -27,6 +27,9 @@ typedef std::vector<Line> LineList;
 struct TextureData {
 	TextureHandle handle = UINT16_MAX;
 	Size          dimensions = {0, 0};
+	explicit operator bool () const {
+		return handle != UINT16_MAX;
+	}
 };
 
 class RenderInterface {
@@ -42,6 +45,7 @@ public:
 	virtual void SetClipRect(glm::vec4 r[2]) = 0;
 	virtual MaterialHandle CreateTextureMaterial(TextureHandle texture, SamplerFlag flag) = 0;
 	virtual MaterialHandle CreateFontMaterial(const TextEffects& effects) = 0;
+	virtual MaterialHandle CreateDefaultMaterial() = 0;
 	virtual void DestroyMaterial(MaterialHandle mat) = 0;
 };
 
