@@ -4,9 +4,9 @@ $input v_texcoord0 v_posWS v_normal v_tangent v_bitangent
 
 #include "water.sh"
 #include "common/camera.sh"
-#include "common/lighting.sh"
 #include "common/common.sh"
 #include "common/transform.sh"
+#include "pbr/lighting.sh"
 
 // Surface settings:
 SAMPLER2D(s_dudv,           0); // UV motion sampler for shifting the normalmap

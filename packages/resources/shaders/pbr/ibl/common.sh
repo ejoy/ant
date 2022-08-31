@@ -10,9 +10,7 @@ uniform vec4 u_build_ibl_param;
 #define WORKGROUP_THREADS 8
 #endif //WORKGROUP_THREADS
 
-#define MIN_ROUGHNESS 0.04
-
-#include "common/common.sh"
+#include "pbr/common.sh"
 
 void calc_TB(vec3 N, out vec3 T, out vec3 B)
 {

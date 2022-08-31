@@ -3,11 +3,12 @@ $input v_texcoord0, v_normal, v_tangent, v_bitangent, v_posWS
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 #include <shaderlib.sh>
-#include "common/lighting.sh"
+
 #include "common/transform.sh"
 #include "common/utils.sh"
 #include "common/cluster_shading.sh"
 #include "pbr/pbr.sh"
+#include "pbr/lighting.sh"
 
 // material properites
 SAMPLER2D(s_basecolor,          0);

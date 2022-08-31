@@ -10,6 +10,8 @@ uniform vec4 u_ibl_param;
 #define u_ibl_prefilter_mipmap_count    u_ibl_param.x
 #define u_ibl_indirect_intensity        u_ibl_param.y
 
+#include "pbr/material_info.sh"
+
 vec3 get_IBL_radiance_Lambertian(in material_info mi)
 {
     return textureCube(s_irradiance, mi.N).rgb * mi.albedo;

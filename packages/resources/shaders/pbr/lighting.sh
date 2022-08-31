@@ -8,11 +8,10 @@
 #include "pbr/material_info.sh"
 
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#range-property
-float get_range_attenuation(float range, float distance)
+float get_range_attenuation(float range, float dis)
 {
-    return max(min(1.0 - pow(distance / range, 4.0), 1.0), 0.0) / pow(distance, 2.0);
+    return max(min(1.0 - pow(dis / range, 4.0), 1.0), 0.0) / pow(dis, 2.0);
 }
-
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#inner-and-outer-cone-angles
 float get_spot_attenuation(vec3 pt2l, vec3 spotdir, float outter_cone, float inner_cone)
 {

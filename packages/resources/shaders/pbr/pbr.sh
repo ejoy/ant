@@ -1,6 +1,5 @@
 #ifndef __PBR_SH__
 #define __PBR_SH__
-#define MIN_ROUGHNESS 0.04
 
 //
 // Fresnel

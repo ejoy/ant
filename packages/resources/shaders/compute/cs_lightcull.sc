@@ -1,7 +1,7 @@
 #include "bgfx_shader.sh"
 #include "bgfx_compute.sh"
 #include "common/cluster_shading.sh"
-#include "common/lighting.sh"
+//#include "common/lighting.sh"
 
 float sphere_closest_pt_to_aabb(vec3 center, AABB aabb){
     vec3 closest = max(aabb.minv.xyz, min(center, aabb.maxv.xyz));

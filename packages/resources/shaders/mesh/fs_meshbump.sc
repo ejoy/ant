@@ -1,11 +1,12 @@
 $input v_texcoord0, v_lightdir, v_viewdir	
 
-#include "common.sh"	
-#include "common/lighting.sh"	
+#include "common.sh"
 #include "common/uniforms.sh"	
+#include "commom/simplelighting.sh"
 
 SAMPLER2D(s_basecolor,  0);	
 SAMPLER2D(s_normal, 1);	
+
 
 void main()	
 {	
