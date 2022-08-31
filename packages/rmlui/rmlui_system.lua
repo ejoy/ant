@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local assetmgr = import_package "ant.asset"
 
 local ltask     = require "ltask"
 local renderpkg = import_package "ant.render"
@@ -26,7 +25,6 @@ function rmlui_sys:init()
             texid = ft_handle,
             width = ft_w, height = ft_h,
         },
-        default_tex = "/pkg/ant.resources/textures/default/1x1_white.texture",
     })
     iRmlUi.font_dir "/pkg/ant.resources.binary/ui/test/assets/font/"
 

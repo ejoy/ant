@@ -173,10 +173,17 @@ protected:
     Rml::Point offset;
 };
 
+static Rml::TextureHandle CreateDefaultTexture() {
+    const bgfx_memory_t* mem = BGFX(alloc)(4);
+    *(uint32_t*)mem->data = 0xFFFFFFFF;
+    bgfx_texture_handle_t h = BGFX(create_texture_2d)(1, 1, false, 1, BGFX_TEXTURE_FORMAT_RGBA8, BGFX_TEXTURE_SRGB, mem);
+    return h.idx;
+}
+
 Renderer::Renderer(const RmlContext* context)
     : mcontext(context)
     , mEncoder(nullptr)
-    , default_tex(CreateTexture(mcontext->default_tex)->handle)
+    , default_tex(CreateDefaultTexture())
     , default_tex_mat(std::make_unique<TextureMaterial>(
         mcontext->shader,
         uint16_t(default_tex),

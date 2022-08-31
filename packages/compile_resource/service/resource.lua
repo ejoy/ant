@@ -74,7 +74,7 @@ local DefaultTexture = createTexture {
         bitsPerPixel = 32,
     },
     value = {0, 0, 0, 255},
-    flags = "umwwvm+l*p-l",
+    flag = "umwwvm+l*p-l",
     sampler = {
         MAG = "LINEAR",
         MIN = "LINEAR",
