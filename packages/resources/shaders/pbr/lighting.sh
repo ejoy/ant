@@ -22,21 +22,9 @@ float get_spot_attenuation(vec3 pt2l, vec3 spotdir, float outter_cone, float inn
 vec3 get_light_radiance(in light_info l, in vec3 posWS, in material_info mi)
 {
     vec3 color = vec3_splat(0.0);
-    vec3 pt2l = l.dir;
-    float attenuation = 1.0;
-    if(!IS_DIRECTIONAL_LIGHT(l.type))
-    {
-        pt2l = l.pos - posWS;
-        attenuation = get_range_attenuation(l.range, length(pt2l));
-        if (IS_SPOT_LIGHT(l.type))
-        {
-            attenuation *= get_spot_attenuation(pt2l, l.dir, l.outter_cutoff, l.inner_cutoff);
-        }
-    }
+    vec3 intensity = l.attenuation * l.intensity * l.color.rgb;
 
-    vec3 intensity = attenuation * l.intensity * l.color.rgb;
-
-    vec3 L = normalize(pt2l);
+    vec3 L = l.pt2l;    // pt2l is normalize
     vec3 N = mi.N;
     vec3 V = mi.V;
 
@@ -58,26 +46,69 @@ vec3 get_light_radiance(in light_info l, in vec3 posWS, in material_info mi)
     return color;
 }
 
-#if BGFX_SHADER_TYPE_FRAGMENT
-vec3 calc_direct_light(in material_info mi, vec4 fragCoord, vec3 posWS)
+light_grid get_light_grid(vec4 fragcoord)
 {
-    vec3 color = vec3_splat(0.0);
+    light_grid g;
 #ifdef CLUSTER_SHADING
-	uint cluster_idx = which_cluster(fragCoord);
+	uint cluster_idx = which_cluster(fragcoord);
 
     uint cluster_count = u_cluster_size.x * u_cluster_size.y * u_cluster_size.z;
     cluster_idx = clamp(cluster_idx, 0, cluster_count-1);
-	light_grid g; load_light_grid(b_light_grids, cluster_idx, g);
-	uint iend = g.offset + g.count;
-
-	for (uint ii=g.offset; ii<iend; ++ii)
-	{
-		uint ilight = b_light_index_lists[ii];
+	load_light_grid(b_light_grids, cluster_idx, g);
 #else //!CLUSTER_SHADING
-	for (uint ilight=0; ilight<u_light_count[0]; ++ilight)
-	{
+    g.offset = 0;
+    g.count = u_light_count[0];
 #endif //CLUSTER_SHADING
-        light_info l; load_light_info(b_lights, ilight, l);
+    return g;
+}
+
+uint get_light_index(uint idx)
+{
+#ifdef CLUSTER_SHADING
+    return b_light_index_lists[idx];
+#else //!CLUSTER_SHADING
+    return idx;
+#endif //CLUSTER_SHADING
+}
+
+void init_light_info(inout light_info l, vec3 posWS)
+{
+    float attenuation = 1.0;
+    if(IS_DIRECTIONAL_LIGHT(l.type))
+    {
+        l.pt2l = l.dir; //we assume l.dir is normalize
+    }
+    else
+    {
+        l.pt2l = l.pos - posWS;
+        float pt2l_len = length(l.pt2l);
+        l.attenuation = get_range_attenuation(l.range, pt2l_len);
+        if (IS_SPOT_LIGHT(l.type))
+        {
+            l.attenuation *= get_spot_attenuation(l.pt2l, l.dir, l.outter_cutoff, l.inner_cutoff);
+        }
+
+        l.pt2l /= pt2l_len;
+    }
+}
+
+light_info get_light(uint ilight, vec3 posWS)
+{
+    light_info l; load_light_info(b_lights, ilight, l);
+    init_light_info(l, posWS);
+    return l;
+}
+
+#if BGFX_SHADER_TYPE_FRAGMENT
+vec3 calc_direct_light(in material_info mi, vec4 fragcoord, vec3 posWS)
+{
+    vec3 color = vec3_splat(0.0);
+
+    light_grid g = get_light_grid(fragcoord);
+	for (uint ii=g.offset; ii<g.offset + g.count; ++ii)
+	{
+        uint ilight = get_light_index(ii);
+        light_info l = get_light(ilight, posWS);
         color += get_light_radiance(l, posWS, mi);
     }
 
