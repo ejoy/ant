@@ -18,17 +18,19 @@ void Shutdown() {
 	textures.clear();
 }
 
-const TextureData& Fetch(const std::string& path) {
+static TextureData InvalidTexture;
+
+const TextureData& Fetch(Element* e, const std::string& path) {
 	auto iterator = textures.find(path);
 	if (iterator != textures.end()) {
 		return iterator->second;
 	}
-	auto data = GetRenderInterface()->CreateTexture(path);
-	if (!data) {
-		Log::Message(Log::Level::Warning, "Failed to load texture from %s.", path.c_str());
-		return textures.emplace(path, TextureData{}).first->second;
-	}
-	return textures.emplace(path, std::move(*data)).first->second;
+	Rml::GetPlugin()->OnLoadTexture(e->GetOwnerDocument(), e, path);
+	return InvalidTexture;
+}
+
+void Set(const std::string& path, TextureData&& data) {
+	textures.emplace(path, std::move(data));
 }
 
 }

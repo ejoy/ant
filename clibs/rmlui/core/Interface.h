@@ -37,7 +37,6 @@ public:
 	virtual void Begin() = 0;
 	virtual void End() = 0;
 	virtual void RenderGeometry(Vertex* vertices, size_t num_vertices, Index* indices, size_t num_indices, MaterialHandle mat) = 0;
-	virtual std::optional<TextureData> CreateTexture(const std::string& path) = 0;
 	virtual void ReleaseTexture(TextureHandle texture) = 0;
 	virtual void SetTransform(const glm::mat4x4& transform) = 0;
 	virtual void SetClipRect() = 0;
@@ -67,6 +66,7 @@ public:
 	virtual void OnCreateElement(Document* document, Element* element, const std::string& tag) = 0;
 	virtual void OnDestroyNode(Document* document, Node* node) = 0;
 	virtual std::string OnRealPath(const std::string& path) = 0;
+	virtual void OnLoadTexture(Document* document, Element* element, const std::string& path) = 0;
 };
 
 }

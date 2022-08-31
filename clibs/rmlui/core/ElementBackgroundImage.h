@@ -7,7 +7,7 @@ namespace Rml {
 class Element;
 
 struct ElementBackgroundImage {
-	static void GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge);
+	static bool GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge);
 };
 
 }
