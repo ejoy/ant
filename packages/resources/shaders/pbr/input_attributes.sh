@@ -35,14 +35,20 @@ uniform vec4 u_pbr_factor;
 
 struct input_attributes
 {
-    vec2 uv;
-    vec3 pos;
     vec4 basecolor;
     vec4 emissive;
+
     vec3 N;
     float metallic;
+
     vec3 V;
     float perceptual_roughness;
+
+    float occlusion;
+    float occlusion_strength;
+    vec2 uv;
+
+    vec3 pos;
 };
 
 vec4 get_basecolor(vec2 texcoord, vec4 basecolor)
@@ -84,21 +90,39 @@ vec3 get_normal(vec3 tangent, vec3 bitangent, vec3 normal, vec2 texcoord)
 }
 
 
-void get_metallic_roughness(out float metallic, out float roughness, vec2 uv)
+void get_metallic_roughness(vec2 uv, inout input_attributes input_attribs)
 {
-    metallic = u_metallic_factor;
-    roughness = u_roughness_factor;
+    input_attribs.metallic = u_metallic_factor;
+    input_attribs.perceptual_roughness = u_roughness_factor;
 
 #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
     // Roughness is stored in the 'g' channel, metallic is stored in the 'b' channel.
     // This layout intentionally reserves the 'r' channel for (optional) occlusion map data
     vec4 mrSample = texture2D(s_metallic_roughness, uv);
-    roughness *= mrSample.g;
-    metallic *= mrSample.b;
+    input_attribs.perceptual_roughness *= mrSample.g;
+    input_attribs.metallic *= mrSample.b;
 #endif //HAS_METALLIC_ROUGHNESS_TEXTURE
 
-    roughness  = clamp(roughness, 0.0, 1.0);
-    metallic   = clamp(metallic, 0.0, 1.0);
+    input_attribs.perceptual_roughness  = clamp(input_attribs.perceptual_roughness, 0.0, 1.0);
+    input_attribs.metallic              = clamp(input_attribs.metallic, 0.0, 1.0);
+}
+
+void get_occlusion(vec2 texcoord, inout input_attributes input_attribs)
+{
+#ifdef HAS_OCCLUSION_TEXTURE
+    input_attribs.occlusion = texture2D(s_occlusion,  uv).r;
+#else
+    input_attribs.occlusion = 1.0;
+#   endif //HAS_OCCLUSION_TEXTURE
+    input_attribs.occlusion_strength = u_occlusion_strength;
+}
+
+vec3 apply_occlusion(input_attributes input_attribs, vec3 color)
+{
+    #ifdef HAS_OCCLUSION_TEXTURE
+    color  += lerp(color, color * input_attribus.occlusion, input_attribus.occlusion_strength);
+    #endif //HAS_OCCLUSION_TEXTURE
+    return color;
 }
 
 #endif //_PBR_INPUT_ATTRIBUTES_SH_

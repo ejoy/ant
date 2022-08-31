@@ -43,10 +43,7 @@ void main()
     color += calc_indirect_light(mi);
 #   endif //ENABLE_IBL
 
-#   ifdef HAS_OCCLUSION_TEXTURE
-    float ao = texture2D(s_occlusion,  uv).r;
-    color  += lerp(color, color * ao, u_occlusion_strength);
-#   endif //HAS_OCCLUSION_TEXTURE
+    color = apply_occlusion(input_attribs, color);
 
 #   ifdef ALPHAMODE_MASK
     // Late discard to avoid samplig artifacts. See https://github.com/KhronosGroup/glTF-Sample-Viewer/issues/267

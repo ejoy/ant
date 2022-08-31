@@ -1,4 +1,4 @@
-input_attributes input_attribs;
+input_attributes input_attribs = (input_attributes)0;
 {
     vec2 uv = uv_motion(v_texcoord0);
     input_attribs.uv = uv;
@@ -18,6 +18,7 @@ input_attributes input_attribs;
     input_attribs.N = get_normal_by_tbn(tbn_from_world_pos(v_normal, v_posWS.xyz, uv), v_normal, uv);
 #   endif //WITH_TANGENT_ATTRIB
 
-    get_metallic_roughness(input_attribs.metallic, input_attribs.perceptual_roughness, uv);
+    get_metallic_roughness(uv, input_attribs);
+    get_occlusion(uv, input_attribs);
 #endif //!MATERIAL_UNLIT
 }
