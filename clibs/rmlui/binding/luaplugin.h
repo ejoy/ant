@@ -1,10 +1,9 @@
-#ifndef ant_rml_lua_plugin_h
-#define ant_rml_lua_plugin_h
+#pragma once
 
-#include "luabind.h"
-#include "luaref.h"
+#include <binding/luabind.h>
 #include <core/Interface.h>
 #include <databinding/DataVariant.h>
+#include "luaref.h"
 
 namespace Rml {
 class Node;
@@ -49,6 +48,3 @@ public:
 lua_plugin* get_lua_plugin();
 void lua_pushvariant(lua_State *L, const Rml::Variant &v);
 void lua_getvariant(lua_State *L, int index, Rml::Variant* variant);
-
-
-#endif

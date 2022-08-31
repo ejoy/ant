@@ -1,11 +1,9 @@
-#include "pch.h"
-#include "render.h"
-#include "../bgfx/bgfx_interface.h"
-
+#include <binding/render.h>
 #include <core/Core.h>
 #include <core/Interface.h>
 #include <core/File.h>
 #include <cassert>
+#include "../bgfx/bgfx_interface.h"
 
 #ifdef RMLUI_MATRIX_ROW_MAJOR
 error "need matrix type as column major"
@@ -197,8 +195,9 @@ Renderer::Renderer(const RmlContext* context)
     Rml::SetRenderInterface(this);
 }
 
-Renderer::~Renderer()
-{}
+Renderer::~Renderer() {
+    ReleaseTexture(default_tex);
+}
 
 void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::MaterialHandle mat) {
     BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
@@ -217,10 +216,7 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::I
 
     submitScissorRect(mEncoder);
 
-    Material* material = mat
-        ? reinterpret_cast<Material*>(mat)
-        : default_tex_mat.get()
-        ;
+    Material* material = reinterpret_cast<Material*>(mat);
     material->Submit(mEncoder);
 
     auto prog = material->Program(state, mcontext->shader);
@@ -354,9 +350,7 @@ void Renderer::ReleaseTexture(Rml::TextureHandle texture) {
 
 Rml::MaterialHandle Renderer::CreateTextureMaterial(Rml::TextureHandle texture, Rml::SamplerFlag flags) {
     bgfx_texture_handle_t th = { uint16_t(texture) };
-    if (!BGFX_HANDLE_IS_VALID(th)) {
-        th = { uint16_t(default_tex) };
-    }
+    assert(BGFX_HANDLE_IS_VALID(th));
     auto material = std::make_unique<TextureMaterial>(mcontext->shader, th.idx, flags);
     return reinterpret_cast<Rml::MaterialHandle>(material.release());
 }
@@ -402,9 +396,13 @@ Rml::MaterialHandle Renderer::CreateFontMaterial(const Rml::TextEffects& effects
     return std::visit(TextEffectVisitor{mcontext}, effects[0]);
 }
 
+Rml::MaterialHandle Renderer::CreateDefaultMaterial() {
+     return reinterpret_cast<Rml::MaterialHandle>(default_tex_mat.get());
+}
+
 void Renderer::DestroyMaterial(Rml::MaterialHandle mat) {
     Material* material = reinterpret_cast<Material*>(mat);
-    if (default_font_mat.get() != material) {
+    if (default_font_mat.get() != material && default_tex_mat.get() != material) {
         delete material;
     }
 }

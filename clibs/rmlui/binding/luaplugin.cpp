@@ -1,11 +1,11 @@
-#include "pch.h"
-
 #include <core/Core.h>
 #include <core/Interface.h>
 #include <core/Document.h>
 #include <core/Stream.h>
 #include <core/Event.h>
 #include <core/EventListener.h>
+#include <binding/luaplugin.h>
+#include <binding/luabind.h>
 
 extern "C" {
 #include <lua.h>
@@ -13,8 +13,6 @@ extern "C" {
 #include "lualib.h"
 }
 
-#include "luaplugin.h"
-#include "luabind.h"
 
 class lua_plugin;
 

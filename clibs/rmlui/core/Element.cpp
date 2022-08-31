@@ -1105,6 +1105,9 @@ void Element::UpdateGeometry() {
 		if (!geometry_image) {
 			geometry_image.reset(new Geometry);
 		}
+		else {
+			geometry_image->Release();
+		}
 		ElementBackgroundImage::GenerateGeometry(this, *geometry_image, padding_edge);
 		dirty_image = false;
 	}

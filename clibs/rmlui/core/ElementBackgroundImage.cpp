@@ -9,11 +9,14 @@
 namespace Rml {
 
 void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge) {
-	geometry.Release();
-
 	auto image = element->GetComputedProperty(PropertyId::BackgroundImage);
 	if (!image->Has<std::string>()) {
 		// "none"
+		return;
+	}
+	std::string path = image->Get<std::string>();
+	auto const& texture = Texture::Fetch(path);
+	if (!texture) {
 		return;
 	}
 
@@ -53,14 +56,8 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		element->GetComputedProperty(PropertyId::BackgroundPositionY)->Get<PropertyFloat>().ComputeH(element)
 	};
 
-	std::string path = image->Get<std::string>();
-	auto const& texture = Texture::Fetch(path);
-	auto material = GetRenderInterface()->CreateTextureMaterial(texture.handle, repeat);
-	geometry.SetMaterial(material);
-
 	Color color = Color::FromSRGB(255, 255, 255, 255);
 	color.ApplyOpacity(element->GetOpacity());
-
 	if (!color.IsVisible())
 		return;
 
@@ -103,6 +100,8 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		break;
 	}
 
+	auto material = GetRenderInterface()->CreateTextureMaterial(texture.handle, repeat);
+	geometry.SetMaterial(material);
 	if (paddingEdge.size() == 0 
 		|| (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{})
 	) {
