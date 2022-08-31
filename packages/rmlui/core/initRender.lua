@@ -1,5 +1,7 @@
 local rmlui = require "rmlui"
 local assetmgr = import_package "ant.asset"
+local cr = import_package "ant.compile_resource"
+cr.init()
 
 local function create_shaders()
     local shaders = {
