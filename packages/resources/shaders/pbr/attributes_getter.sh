@@ -21,4 +21,11 @@ input_attributes input_attribs = (input_attributes)0;
     get_metallic_roughness(uv, input_attribs);
     get_occlusion(uv, input_attribs);
 #endif //!MATERIAL_UNLIT
+
+    //should discard after all texture sample is done. See https://github.com/KhronosGroup/glTF-Sample-Viewer/issues/267
+#ifdef ALPHAMODE_MASK
+    if(input_attribs.basecolor.a < u_alpha_mask_cutoff)
+        discard;
+    input_attribs.basecolor.a = 1.0;
+#endif //ALPHAMODE_MASK
 }

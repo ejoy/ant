@@ -45,13 +45,6 @@ void main()
 
     color = apply_occlusion(input_attribs, color);
 
-#   ifdef ALPHAMODE_MASK
-    // Late discard to avoid samplig artifacts. See https://github.com/KhronosGroup/glTF-Sample-Viewer/issues/267
-    if(basecolor.a < u_alpha_mask_cutoff)
-        discard;
-    basecolor.a = 1.0;
-#   endif //ALPHAMODE_MASK
-
     gl_FragColor = vec4(color, input_attribs.basecolor.a) + input_attribs.emissive;
 #endif //MATERIAL_UNLIT
 }
