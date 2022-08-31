@@ -157,7 +157,7 @@ function S.texture_complete(name)
     while true do
         local c = texturebyname[name]
         if c and not c.output.uncomplete then
-            return c.output.handle
+            return c.output
         end
         ltask.wait(name)
     end
