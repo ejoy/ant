@@ -119,8 +119,14 @@ void main()
 #endif //VIEW_WATER_WITHOUT_LIGHTING
 
     //This is a simple pbr lighting here, only consider directional lighting pass from CPU side
-	vec3 V = u_eyepos.xyz - v_posWS.xyz;
-    material_info mi = init_material_info(0.1, 0.2, color, N, V);
+	input_attributes input_attribs;
+	input_attribs.V = u_eyepos.xyz - v_posWS.xyz;
+	input_attribs.N = N;
+	input_attribs.basecolor = vec4(color, 1.0);
+	input_attribs.emissive = vec4(0.0, 0.0, 0.0, 0.0);
+	input_attribs.metallic = 0.1;
+	input_attribs.perceptual_roughness = 0.2;
+    material_info mi = init_material_info(input_attribs);
 
     light_info l;
 	l.pos = vec3(0.0, 0.0, 0.0);
