@@ -146,6 +146,8 @@ public:
 
 	virtual void ChangedProperties(const PropertyIdSet& changed_properties);
 
+	void DirtyImage();
+
 protected:
 	void OnAttributeChange(const ElementAttributes& changed_attributes);
 	void UpdateStackingContext();

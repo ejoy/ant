@@ -5,7 +5,7 @@
 #include <core/Element.h>
 #include <core/EventListener.h>
 #include <core/Text.h>
-
+#include <core/Texture.h>
 #include <binding/luaplugin.h>
 #include <binding/luabind.h>
 #include <binding/render.h>
@@ -451,6 +451,13 @@ lElementProject(lua_State* L) {
 }
 
 static int
+lElementDirtyImage(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->DirtyImage();
+	return 0;
+}
+
+static int
 lElementDelete(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	delete e;
@@ -532,8 +539,20 @@ lRenderBegin(lua_State* L) {
 }
 
 static int
-lRenderFrame(lua_State* L){
+lRenderFrame(lua_State* L) {
 	Rml::GetRenderInterface()->End();
+    return 0;
+}
+
+static int
+lRenderSetTexture(lua_State* L) {
+	Rml::TextureData data;
+	if (lua_gettop(L) >= 4) {
+		data.handle = (Rml::TextureHandle)luaL_checkinteger(L, 2);
+		data.dimensions.w = (float)luaL_checkinteger(L, 3);
+		data.dimensions.h = (float)luaL_checkinteger(L, 4);
+	}
+	Rml::Texture::Set(lua_checkstdstring(L, 1), std::move(data));
     return 0;
 }
 
@@ -605,12 +624,14 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementGetElementById", lElementGetElementById },
 		{ "ElementDelete", lElementDelete },
 		{ "ElementProject", lElementProject },
+		{ "ElementDirtyImage", lElementDirtyImage },
 		{ "NodeGetParent", lNodeGetParent },
 		{ "NodeClone", lNodeClone },
 		{ "TextGetText", lTextGetText },
 		{ "TextDelete", lTextDelete },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },
+		{ "RenderSetTexture", lRenderSetTexture },
 		{ "RmlInitialise", lRmlInitialise },
 		{ "RmlShutdown", lRmlShutdown },
 		{ NULL, NULL },

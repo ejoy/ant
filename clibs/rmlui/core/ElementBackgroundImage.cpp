@@ -8,16 +8,16 @@
 
 namespace Rml {
 
-void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge) {
+bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge) {
 	auto image = element->GetComputedProperty(PropertyId::BackgroundImage);
 	if (!image->Has<std::string>()) {
 		// "none"
-		return;
+		return false;
 	}
 	std::string path = image->Get<std::string>();
-	auto const& texture = Texture::Fetch(path);
+	auto const& texture = Texture::Fetch(element, path);
 	if (!texture) {
-		return;
+		return false;
 	}
 
 	const auto& bounds = element->GetBounds();
@@ -28,7 +28,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 
 	Rect surface = Rect{ {0, 0}, bounds.size };
 	if (surface.size.IsEmpty()) {
-		return;
+		return false;
 	}
 
 	switch (origin) {
@@ -42,7 +42,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		break;
 	}
 	if (surface.size.IsEmpty()) {
-		return;
+		return false;
 	}
 
 	SamplerFlag repeat = (SamplerFlag)element->GetComputedProperty(PropertyId::BackgroundRepeat)->Get<PropertyKeyword>();
@@ -59,7 +59,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	Color color = Color::FromSRGB(255, 255, 255, 255);
 	color.ApplyOpacity(element->GetOpacity());
 	if (!color.IsVisible())
-		return;
+		return false;
 
 	if (texSize.IsEmpty()) {
 		texSize = texture.dimensions;
@@ -112,6 +112,7 @@ void ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		geometry.AddPolygon(paddingEdge, color);
 		geometry.UpdateUV(paddingEdge.size(), surface, uv);
 	}
+	return true;
 }
 
 }

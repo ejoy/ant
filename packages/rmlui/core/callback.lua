@@ -112,8 +112,11 @@ function m.OnEventDetach(eventid)
 end
 
 function m.OnRealPath(path)
-    local _ <close> = fs.switch_sync()
 	return filemanager.realpath(path)
+end
+
+function m.OnLoadTexture(doc, e, path)
+	filemanager.loadTexture(doc, e, path)
 end
 
 return m

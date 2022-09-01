@@ -1108,7 +1108,9 @@ void Element::UpdateGeometry() {
 		else {
 			geometry_image->Release();
 		}
-		ElementBackgroundImage::GenerateGeometry(this, *geometry_image, padding_edge);
+		if (!ElementBackgroundImage::GenerateGeometry(this, *geometry_image, padding_edge)) {
+			geometry_image.reset();
+		}
 		dirty_image = false;
 	}
 }
@@ -1272,6 +1274,10 @@ void Element::DirtyTransform() {
 
 void Element::DirtyClip() {
 	dirty_clip = true;
+}
+
+void Element::DirtyImage() {
+	dirty_image = true;
 }
 
 void Element::AddEventListener(EventListener* listener) {

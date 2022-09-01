@@ -74,7 +74,7 @@ local DefaultTexture = createTexture {
         bitsPerPixel = 32,
     },
     value = {0, 0, 0, 255},
-    flags = "umwwvm+l*p-l",
+    flag = "umwwvm+l*p-l",
     sampler = {
         MAG = "LINEAR",
         MIN = "LINEAR",
@@ -96,6 +96,10 @@ local function genId()
 end
 
 local function asyncCreateTexture(name)
+    if queue[name] then
+        return
+    end
+    queue[name] = true
     queue[#queue+1] = name
     if #queue == 1 then
         ltask.wakeup(token)
@@ -163,6 +167,38 @@ function S.texture_complete(name)
     end
 end
 
+function S.texture_create_complete(name)
+    local c = texturebyname[name]
+    if c then
+        if not c.output.uncomplete then
+            return c.output
+        end
+    else
+        local id = genId()
+        local res = loadTexture(name)
+        c = {
+            input = res,
+            output = {
+                id = id,
+                handle = DefaultTexture,
+                name = name,
+                uncomplete = true,
+                texinfo = res.info,
+                sampler = res.sampler,
+            },
+        }
+        texturebyname[name] = c
+        texturebyid[id] = c
+    end
+    asyncCreateTexture(c.output.name)
+    while true do
+        ltask.wait(name)
+        if not c.output.uncomplete then
+            return c.output
+        end
+    end
+end
+
 function S.texture_destroy(name)
     local c = texturebyname[name]
     if c then
@@ -189,6 +225,7 @@ ltask.fork(function ()
             if not name then
                 break
             end
+            queue[name] = nil
             local c = texturebyname[name]
             if not c.input then
                 c.input = loadTexture(name)

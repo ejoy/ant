@@ -2,6 +2,7 @@ local rmlui = require "rmlui"
 local event = require "core.event"
 local environment = require "core.environment"
 local createSandbox = require "core.sandbox.create"
+local filemanager = require "core.filemanager"
 
 local elementFromPoint = rmlui.DocumentElementFromPoint
 local getBody = rmlui.DocumentGetBody
@@ -380,7 +381,28 @@ function m.set_dimensions(w, h, ratio)
     end
 end
 
+local function updateTexture()
+    local q = filemanager.texture_queue()
+    if not q then
+        return
+    end
+    for i = 1, #q do
+        local v = q[i]
+        if v.handle then
+            rmlui.RenderSetTexture(v.path, v.handle, v.width, v.height)
+            for _, e in ipairs(v.elements) do
+                if e._handle then
+                    rmlui.ElementDirtyImage(e._handle)
+                end
+            end
+        else
+            rmlui.RenderSetTexture(v.path)
+        end
+    end
+end
+
 function m.update(delta)
+    updateTexture()
     rmlui.RenderBegin()
     for _, doc in ipairs(documents) do
         if not hidden[doc] then

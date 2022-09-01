@@ -173,10 +173,17 @@ protected:
     Rml::Point offset;
 };
 
+static Rml::TextureHandle CreateDefaultTexture() {
+    const bgfx_memory_t* mem = BGFX(alloc)(4);
+    *(uint32_t*)mem->data = 0xFFFFFFFF;
+    bgfx_texture_handle_t h = BGFX(create_texture_2d)(1, 1, false, 1, BGFX_TEXTURE_FORMAT_RGBA8, BGFX_TEXTURE_SRGB, mem);
+    return h.idx;
+}
+
 Renderer::Renderer(const RmlContext* context)
     : mcontext(context)
     , mEncoder(nullptr)
-    , default_tex(CreateTexture(mcontext->default_tex)->handle)
+    , default_tex(CreateDefaultTexture())
     , default_tex_mat(std::make_unique<TextureMaterial>(
         mcontext->shader,
         uint16_t(default_tex),
@@ -308,26 +315,6 @@ void Renderer::SetClipRect(const glm::u16vec4& r) {
 
 void Renderer::SetClipRect(glm::vec4 r[2]) {
     setShaderScissorRect(mEncoder, r);
-}
-
-std::optional<Rml::TextureData> Renderer::CreateTexture(const std::string& path) {
-    auto realpath = Rml::GetPlugin()->OnRealPath(path);
-	Rml::File f(realpath);
-	if (!f) {
-		return std::nullopt;
-    }
-	const size_t bufsize = f.Length();
-    const bgfx_memory_t *mem = BGFX(alloc)((uint32_t)bufsize);
-	f.Read(mem->data, bufsize);
-
-	bgfx_texture_info_t info;
-    const uint64_t flags = BGFX_TEXTURE_SRGB;
-	const bgfx_texture_handle_t th = BGFX(create_texture)(mem, flags, 1, &info);
-	if (th.idx == UINT16_MAX){
-		return std::nullopt;
-	}
-
-    return Rml::TextureData {th.idx, {(float)info.width, (float)info.height}};
 }
 
 bool Renderer::UpdateTexture(Rml::TextureHandle texture, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *buffer){

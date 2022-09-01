@@ -21,7 +21,6 @@ public:
     void Begin() override;
     void End() override;
     void RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::MaterialHandle mat) override;
-    std::optional<Rml::TextureData> CreateTexture(const std::string& path) override;
     void ReleaseTexture(Rml::TextureHandle texture) override;
     void SetTransform(const glm::mat4x4& transform) override;
     void SetClipRect() override;
