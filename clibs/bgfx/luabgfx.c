@@ -3383,6 +3383,24 @@ lupdateTIB(lua_State *L){
 }
 
 static int
+linfoV(lua_State *L){
+	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
+	lua_pushinteger(L, v->tvb.startVertex);
+	lua_pushinteger(L, v->tvb.size/v->tvb.stride);
+	lua_pushinteger(L, BGFX_LUAHANDLE(DYNAMIC_VERTEX_BUFFER, v->tvb.handle));
+	return 3;
+}
+
+static int
+linfoI(lua_State *L){
+	struct transient_buffer *v = luaL_checkudata(L, 1, "BGFX_TB");
+	lua_pushinteger(L, v->tib.startIndex);
+	lua_pushinteger(L, v->tib.size/(v->tib.isIndex16 ? sizeof(uint16_t) : sizeof(uint32_t)));
+	lua_pushinteger(L, BGFX_LUAHANDLE(DYNAMIC_VERTEX_BUFFER, v->tib.handle));
+	return 3;
+}
+
+static int
 lnewTransientBuffer(lua_State *L) {
 	size_t sz;
 	const char * format = luaL_checklstring(L, 1, &sz);
@@ -5317,6 +5335,8 @@ luaopen_bgfx(lua_State *L) {
 		{ "apply", lapplyVB },
 		{ "updateV",lupdateTVB},
 		{ "updateI",lupdateTIB},
+		{ "infoV",	linfoV},
+		{ "infoI",	linfoI},
 		{ "__call", lpackTVB },
 		{ "__index", NULL },
 		{ NULL, NULL },
