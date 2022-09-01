@@ -104,13 +104,6 @@ function access.readmount(repo)
 end
 
 function access.realpath(repo, pathname)
-	if pathname:sub(1,1) ~= "/" then
-		--TODO
-		if pathname:sub(1,7) ~= "engine/" then
-			log.warn(("Use relative path as absolute path: `%s`"):format(pathname))
-		end
-		pathname = "/"..pathname
-	end
 	local mountnames = repo._mountname
 	for i = #mountnames, 1, -1 do
 		local mpath = mountnames[i]

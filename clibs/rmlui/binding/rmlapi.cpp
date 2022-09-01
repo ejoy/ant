@@ -9,7 +9,6 @@
 #include <binding/luaplugin.h>
 #include <binding/luabind.h>
 #include <binding/render.h>
-#include <binding/font.h>
 #include <binding/context.h>
 
 #include "../bgfx/bgfx_interface.h"
@@ -20,11 +19,9 @@
 
 struct RmlInterface {
 	lua_plugin      m_plugin;
-    Rml::FontEngine m_font;
     Renderer        m_renderer;
     RmlInterface(lua_State* L, RmlContext* context)
         : m_plugin(L)
-		, m_font(context)
         , m_renderer(context)
     {}
 };
