@@ -210,8 +210,6 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 							white_space_property == Style::WhiteSpace::Prewrap ||
 							white_space_property == Style::WhiteSpace::Preline;
 
-	FontEngineInterface* font_engine_interface = GetFontEngineInterface();
-
 	// Starting at the line_begin character, we generate sections of the text (we'll call them tokens) depending on the
 	// white-space parsing parameters. Each section is then appended to the line if it can fit. If not, or if an
 	// endline is found (and we're processing them), then the line is ended. kthxbai!
@@ -224,7 +222,7 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 
 		// Generate the next token and determine its pixel-length.
 		bool break_line = BuildToken(token, next_token_begin, string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline);
-		int token_width = font_engine_interface->GetStringWidth(font_face_handle, token);
+		int token_width = GetRenderInterface()->GetStringWidth(font_face_handle, token);
 
 		// If we're breaking to fit a line box, check if the token can fit on the line before we add it.
 		if (break_at_line)
@@ -247,7 +245,7 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 						next_token_begin = token_begin;
 						const char* partial_string_end = StringUtilities::SeekBackwardUTF8(token_begin + i, token_begin);
 						break_line = BuildToken(token, next_token_begin, partial_string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline);
-						token_width = font_engine_interface->GetStringWidth(font_face_handle, token);
+						token_width = GetRenderInterface()->GetStringWidth(font_face_handle, token);
 
 						if (force_loop_break_after_next || token_width <= max_token_width)
 						{
@@ -377,7 +375,7 @@ void Text::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	dirty_decoration = true;
 	Color color = GetTextColor();
 	color.ApplyOpacity(GetOpacity());
-	GetFontEngineInterface()->GenerateString(font_face_handle, lines, color, geometry);
+	GetRenderInterface()->GenerateString(font_face_handle, lines, color, geometry);
 }
 
 void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
@@ -397,7 +395,7 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 		float width = (float)line.width;
 		float underline_thickness = 0;
 		float underline_position = 0;
-		GetFontEngineInterface()->GetUnderline(font_face_handle, underline_position, underline_thickness);
+		GetRenderInterface()->GetUnderline(font_face_handle, underline_position, underline_thickness);
 
 		switch (text_decoration_line) {
 		case Style::TextDecorationLine::Underline: {
@@ -406,15 +404,15 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 			break;
 		}
 		case Style::TextDecorationLine::Overline: {
-			int baseline = GetFontEngineInterface()->GetBaseline(font_face_handle);
-			int line_height = GetFontEngineInterface()->GetLineHeight(font_face_handle);
+			int baseline = GetRenderInterface()->GetBaseline(font_face_handle);
+			int line_height = GetRenderInterface()->GetLineHeight(font_face_handle);
 			position.y += baseline - line_height;
 			decoration_under = true;
 			break;
 		}
 		case Style::TextDecorationLine::LineThrough: {
-			int baseline = GetFontEngineInterface()->GetBaseline(font_face_handle);
-			int line_height = GetFontEngineInterface()->GetLineHeight(font_face_handle);
+			int baseline = GetRenderInterface()->GetBaseline(font_face_handle);
+			int line_height = GetRenderInterface()->GetLineHeight(font_face_handle);
 			position.y += baseline - 0.5f * line_height;
 			decoration_under = false;
 			break;
@@ -475,15 +473,15 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 }
 
 float Text::GetLineHeight() {
-	float line_height = (float)GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle());
+	float line_height = (float)GetRenderInterface()->GetLineHeight(GetFontFaceHandle());
 	float percent = GetProperty<float>(PropertyId::LineHeight);
 	return line_height * percent;
 }
 
 float Text::GetBaseline() {
-	float line_height = (float)GetFontEngineInterface()->GetLineHeight(GetFontFaceHandle());
+	float line_height = (float)GetRenderInterface()->GetLineHeight(GetFontFaceHandle());
 	float percent = GetProperty<float>(PropertyId::LineHeight);
-	return line_height * (1 + percent) / 2.0f - GetFontEngineInterface()->GetBaseline(GetFontFaceHandle());
+	return line_height * (1 + percent) / 2.0f - GetRenderInterface()->GetBaseline(GetFontFaceHandle());
 }
 
 std::optional<TextShadow> Text::GetTextShadow() {
@@ -541,7 +539,7 @@ FontFaceHandle Text::GetFontFaceHandle() {
 	Style::FontStyle style   = GetProperty<Style::FontStyle>(PropertyId::FontStyle);
 	Style::FontWeight weight = GetProperty<Style::FontWeight>(PropertyId::FontWeight);
 	int size = (int)parent->GetFontSize();
-	font_handle = GetFontEngineInterface()->GetFontFaceHandle(family, style, weight, size);
+	font_handle = GetRenderInterface()->GetFontFaceHandle(family, style, weight, size);
 	if (font_handle == 0) {
 		Log::Message(Log::Level::Error, "Load font %s failed.", family.c_str());
 	}

@@ -9,7 +9,6 @@
 namespace Rml {
 
 static RenderInterface* render_interface = nullptr;
-static FontEngineInterface* font_interface = nullptr;
 static Plugin* plugin = nullptr;
 
 static bool initialised = false;
@@ -18,10 +17,6 @@ bool Initialise() {
 	assert(!initialised);
 	if (!render_interface) {
 		Log::Message(Log::Level::Error, "No render interface set!");
-		return false;
-	}
-	if (!font_interface) {
-		Log::Message(Log::Level::Error, "No font interface set!");
 		return false;
 	}
 	if (!plugin) {
@@ -41,7 +36,6 @@ void Shutdown() {
 	StyleSheetSpecification::Shutdown();
 	Texture::Shutdown();
 
-	font_interface = nullptr;
 	render_interface = nullptr;
 	initialised = false;
 }
@@ -52,14 +46,6 @@ void SetRenderInterface(RenderInterface* _render_interface) {
 
 RenderInterface* GetRenderInterface() {
 	return render_interface;
-}
-
-void SetFontEngineInterface(FontEngineInterface* _font_interface) {
-	font_interface = _font_interface;
-}
-
-FontEngineInterface* GetFontEngineInterface() {
-	return font_interface;
 }
 
 void SetPlugin(Plugin* _plugin) {

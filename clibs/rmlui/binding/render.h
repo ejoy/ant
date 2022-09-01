@@ -1,6 +1,6 @@
 #pragma once
 
-#include <binding/font.h>
+#include <binding/context.h>
 #include <core/Interface.h>
 #include <bgfx/c99/bgfx.h>
 
@@ -31,9 +31,12 @@ public:
     Rml::MaterialHandle CreateDefaultMaterial() override;
     void DestroyMaterial(Rml::MaterialHandle mat) override;
 
-public:
-    // will delete buffer
-    bool UpdateTexture(Rml::TextureHandle texhandle, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *buffer);
+	Rml::FontFaceHandle GetFontFaceHandle(const std::string& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, uint32_t size) override;
+	int GetLineHeight(Rml::FontFaceHandle handle) override;
+	int GetBaseline(Rml::FontFaceHandle handle) override;
+	void GetUnderline(Rml::FontFaceHandle handle, float& position, float& thickness) override;
+	int GetStringWidth(Rml::FontFaceHandle handle, const std::string& string) override;
+	void GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry) override;
 
 private:
     void submitScissorRect(bgfx_encoder_t* encoder);
