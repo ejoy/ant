@@ -6,6 +6,7 @@ local fxsetting = require "editor.material.setting"
 local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
 local setting = import_package "ant.settings".setting
 local serialize = import_package "ant.serialize"
+local depends   = require "editor.depends"
 
 local function DEF_FUNC() end
 
@@ -107,10 +108,6 @@ local function readdatalist(filepath)
 	end)
 end
 
-local function table_append(t, a)
-	table.move(a, 1, #a, #t+1, t)
-end
-
 local function mergeCfgSetting(setting, localpath)
     if setting == nil then
         setting = {}
@@ -126,7 +123,8 @@ return function (input, output, setting, localpath)
     local mat = readdatalist(input)
     local fx = mat.fx
     fx.setting = mergeCfgSetting(fx.setting, localpath)
-    local depfiles = {input}
+    local depfiles = {}
+
     local varying_path = fx.varying_path
     if varying_path then
         varying_path = localpath(varying_path)
@@ -147,7 +145,7 @@ return function (input, output, setting, localpath)
             if not ok then
                 return false, ("compile failed: " .. input:string() .. "\n\n" .. err)
             end
-            table_append(depfiles, deps)
+            depends.append(depfiles, deps)
         end
     end
     writefile(output / "main.cfg", mat)
