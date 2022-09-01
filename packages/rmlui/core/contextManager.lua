@@ -3,6 +3,7 @@ local event = require "core.event"
 local environment = require "core.environment"
 local createSandbox = require "core.sandbox.create"
 local filemanager = require "core.filemanager"
+local constructor = require "core.DOM.constructor"
 
 local elementFromPoint = rmlui.DocumentElementFromPoint
 local getBody = rmlui.DocumentGetBody
@@ -20,9 +21,7 @@ local hidden = {}
 
 local focusDocument
 local focusElement
-local activeDocument
 local activeElement
-local hoverDocument
 local hoverElement = {}
 local mouseX, mouseY
 local MOUSE_DOWN <const> = 1
@@ -43,12 +42,6 @@ end
 local function notifyDocumentDestroy(document)
 	event("OnDocumentDestroy", document)
 	environment[document] = nil
-end
-
-local function validElement(doc, e)
-    local res = {}
-    event("InvalidElement", doc, e, res)
-    return res.ok
 end
 
 function m.open(url)
@@ -92,20 +85,15 @@ function m.close(doc)
     if focusDocument == doc then
         focusElement = nil
     end
-    if activeDocument == doc then
-        activeElement = nil
-    end
-    if hoverDocument == doc then
-        hoverElement = {}
-    end
     hidden[doc] = nil
 end
 
-local function walkElement(e)
+local function walkElement(doc, e)
     local r = {}
     while true do
-        r[#r+1] = e
-        r[e] = true
+        local element = constructor.Element(doc, false, e)
+        r[#r+1] = element
+        r[element] = true
         e = getParent(e)
         if not e then
             break
@@ -131,21 +119,19 @@ local function cancelActive()
     if not activeElement then
         return
     end
-    for _, element in ipairs(activeElement) do
-        if validElement(activeDocument, element) then
-            setPseudoClass(element, "active", false)
+    for _, e in ipairs(activeElement) do
+        if e._handle then
+            setPseudoClass(e._handle, "active", false)
         end
     end
-    activeDocument = nil
     activeElement = nil
 end
 
 local function setActive(doc, e)
     cancelActive()
-    activeDocument = doc
-    activeElement = walkElement(e)
-    for _, element in ipairs(activeElement) do
-        setPseudoClass(element, "active", true)
+    activeElement = walkElement(doc, e)
+    for _, e in ipairs(activeElement) do
+        setPseudoClass(e._handle, "active", true)
     end
 end
 
@@ -162,19 +148,18 @@ local function diff(a, b, f)
     end
 end
 
-local function updateHover(doc, newHover, event)
+local function updateHover(newHover, event)
     local oldHover = hoverElement
-    diff(oldHover, newHover, function (element)
-        if validElement(doc, element) and dispatchEvent(element, "mouseout", event) then
-            setPseudoClass(element, "hover", false)
+    diff(oldHover, newHover, function (e)
+        if e._handle and dispatchEvent(e._handle, "mouseout", event) then
+            setPseudoClass(e._handle, "hover", false)
         end
     end)
-    diff(newHover, oldHover, function (element)
-        if validElement(doc, element) and dispatchEvent(element, "mouseover", event) then
-            setPseudoClass(element, "hover", true)
+    diff(newHover, oldHover, function (e)
+        if e._handle and dispatchEvent(e._handle, "mouseover", event) then
+            setPseudoClass(e._handle, "hover", true)
         end
     end)
-    hoverDocument = doc
     hoverElement = newHover
 end
 
@@ -214,7 +199,7 @@ local function processMouseMove(doc, e, button, x, y)
     if cancelled then
         return
     end
-    updateHover(doc, walkElement(e), event)
+    updateHover(walkElement(doc, e), event)
 end
 
 function m.process_mouse(x, y, button, state)
@@ -252,8 +237,8 @@ local function push(t, v)
     t[#t+1] = v
 end
 
-local function dispatchTouchEvent(doc, e, name)
-    if not validElement(doc, e) then
+local function dispatchTouchEvent(e, name)
+    if not e._handle then
         return
     end
     local event = {
@@ -273,14 +258,13 @@ local function dispatchTouchEvent(doc, e, name)
             end
         end
     end
-    dispatchEvent(e, name, event)
+    dispatchEvent(e._handle, name, event)
 end
 
 local function processTouchStart(touch)
     local doc, e = fromPoint(touch.x, touch.y)
     if e then
-        touch.target_doc = doc
-        touch.target = e
+        touch.target = constructor.Element(doc, false, e)
         touch.changed = true
         touchData[touch.id] = touch
         return true
@@ -338,7 +322,7 @@ function m.process_touch(state, touches)
     end
     for _, touch in pairs(touchData) do
         if touch.changed then
-            dispatchTouchEvent(touch.target_doc, touch.target, name)
+            dispatchTouchEvent(touch.target, name)
         end
     end
     for _, touch in pairs(touchData) do
