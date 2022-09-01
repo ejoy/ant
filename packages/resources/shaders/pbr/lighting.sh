@@ -98,7 +98,7 @@ light_info get_light(uint ilight, vec3 posWS)
     return l;
 }
 
-#define NEW_LIGHTING
+//#define NEW_LIGHTING
 #ifdef NEW_LIGHTING
 #include "pbr/surface_shading.sh"
 #endif //NEW_LIGHTING
