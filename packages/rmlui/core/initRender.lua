@@ -34,12 +34,14 @@ local function create_shaders()
     return progs
 end
 
+local shaders = create_shaders()
+
 return function(t)
     local renderpkg = import_package "ant.render"
     local declmgr = renderpkg.declmgr
     local layouhandle = declmgr.get "p2|c40niu|t20".handle
     t.layout  = layouhandle
-    t.shader = create_shaders()
+    t.shader = shaders
     t.callback = require "core.callback"
     rmlui.RmlInitialise(t)
 end
