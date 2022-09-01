@@ -98,6 +98,11 @@ light_info get_light(uint ilight, vec3 posWS)
     return l;
 }
 
+#define NEW_LIGHTING
+#ifdef NEW_LIGHTING
+#include "pbr/surface_shading.sh"
+#endif //NEW_LIGHTING
+
 #if BGFX_SHADER_TYPE_FRAGMENT
 vec3 calc_direct_light(in material_info mi, vec4 fragcoord, vec3 posWS)
 {
@@ -108,7 +113,11 @@ vec3 calc_direct_light(in material_info mi, vec4 fragcoord, vec3 posWS)
 	{
         uint ilight = get_light_index(ii);
         light_info l = get_light(ilight, posWS);
+#   ifdef NEW_LIGHTING
+        color += surfaceShading(mi, l, 1.0);
+#   else //!NEW_LIGHTING
         color += get_light_radiance(l, posWS, mi);
+#   endif //NEW_LIGHTING
     }
 
 #ifdef USING_LIGHTMAP
