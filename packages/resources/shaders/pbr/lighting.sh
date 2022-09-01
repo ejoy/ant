@@ -72,10 +72,10 @@ uint get_light_index(uint idx)
 
 void init_light_info(inout light_info l, vec3 posWS)
 {
-    float attenuation = 1.0;
     if(IS_DIRECTIONAL_LIGHT(l.type))
     {
         l.pt2l = l.dir; //we assume l.dir is normalize
+        l.attenuation = 1.0;
     }
     else
     {
