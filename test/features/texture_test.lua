@@ -8,27 +8,49 @@ local renderpkg = import_package "ant.render"
 local sampler = renderpkg.sampler
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-
+local imesh		= ecs.import.interface "ant.asset|imesh"
+local ientity 	= ecs.import.interface "ant.render|ientity"
 local dtt_sys = ecs.system "dynamic_texture_test_system"
-
+local declmgr= import_package "ant.render".declmgr
 local test_eid
+local test_billboard
+local layout    = declmgr.get "p3|t2"
 local tex_handle 
+
+local m={
+    -1,-1,0,0,1,
+    -1,1,0,0,0 ,
+    1,-1,0,1,1,
+    1,1,0,1,0,
+}
 function dtt_sys:init()
-    test_eid = ecs.create_entity{
+
+    test_billboard=ecs.create_entity{
         policy = {
-            "ant.render|render",
+            "ant.render|simplerender",
             "ant.general|name",
+            "ant.render|billboard"
         },
         data = {
+            billboard=true,
             name = "test_texture_entity",
             scene = {
-                t = {10, 0.0, 0.0},
+                t = {0, 4.0,-4.0},
             },
             visible_state = "main_view",
-            material = "/pkg/ant.test.features/assets/texture_test.material",
-            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+            material = "/pkg/ant.test.features/assets/billboard_test.material",
+            simplemesh={
+                vb={
+                    start=0,
+                    num=4,
+                    handle=bgfx.create_vertex_buffer(
+                        bgfx.memory_buffer("fffff", m),
+                        layout.handle
+                    )
+                },
+            },
             on_ready = function (e)
-                local x, y, ww, hh = 0, 0, 2, 2
+                local x, y, ww, hh = 0, 0, 1, 1
                 local gen_mipmap = false
                 local layernum = 1
                 local texture_fmt = "RGBA8"
@@ -39,29 +61,16 @@ function dtt_sys:init()
                     V="CLAMP",
                 }
                 tex_handle = bgfx.create_texture2d(ww, hh, gen_mipmap, layernum, texture_fmt, texture_flag)
-                local layer, mip = 0, 0
-                bgfx.update_texture2d(tex_handle, layer, mip, x, y, ww, hh, bgfx.memory_buffer("ffff", {
-                    255, 255, 255, 255,
-                    128, 128, 128, 128,
-                }))
-
                 imaterial.set_property(e, "s_basecolor", tex_handle)
             end
         }
-    }
-    
+    }  
 end
 
-local kb_mb = world:sub{"keyboard"}
+
 
 function dtt_sys:data_changed()
-    for _, key, press in kb_mb:unpack() do
-        if key == "G" and press == 0 then
-            local layer, mip = 0, 0
-            local x, y, ww, hh = 1, 1, 1, 1
-            bgfx.update_texture2d(tex_handle, layer, mip, x, y, ww, hh, bgfx.memory_buffer("ffff", {
-                0.8, 0.8, 0.8, 1.0
-            }))
-        end
-    end
+
 end
+
+

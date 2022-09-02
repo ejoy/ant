@@ -364,7 +364,7 @@ function init_loader_sys:init_world()
     end
 
     local mq = w:first("main_queue camera_ref:in")
-    local eyepos = math3d.vector(8, 8, 0)
+    local eyepos = math3d.vector(0, 8, -8)
     local camera_ref<close> = w:entity(mq.camera_ref)
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))

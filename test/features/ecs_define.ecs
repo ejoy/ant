@@ -129,9 +129,14 @@ system "hitch_node_test_system"
     .method "init"
     .method "data_changed"
 
+
+
 system "dynamic_texture_test_system"
+    .require_system "ant.render|billboard_system"
+    .require_policy "ant.render|billboard"
     .implement "texture_test.lua"
     .method "init"
     .method "data_changed"
+
 
 import "debug/vertex_attrib_visualizer.ecs"
