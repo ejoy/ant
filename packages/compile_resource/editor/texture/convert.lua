@@ -53,5 +53,5 @@ return function (input, output, setting, localpath)
 		return ok, err
 	end
 
-	return true, depends
+	return true, depfiles
 end
