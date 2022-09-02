@@ -164,6 +164,7 @@ end
 function list_meta:on_mousedown(event)
     if not self.item_width then
         local childNodes = self.panel.childNodes
+        self.item_count = #childNodes
         for _, it in ipairs(childNodes) do
             if not self.item_width then
                 self.item_width = it.clientWidth
