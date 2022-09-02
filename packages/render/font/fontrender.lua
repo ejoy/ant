@@ -17,7 +17,6 @@ local dyn_vb = require "font.dyn_vb"
 fontpkg.init()
 
 local fonttex_handle    = fontpkg.texture()
-local fonttex           = {stage=0, texture={handle=fonttex_handle}}
 local layout_desc       = declmgr.correct_layout "p20nii|t20nii|c40niu"
 local fontquad_layout   = declmgr.get(layout_desc)
 local dvb               = dyn_vb:create(10240, layout_desc)
@@ -133,7 +132,7 @@ function fontsys:camera_usage()
         local e <close> = w:entity(eid, "font:in")
         local f = e.font
         f.attach_eid = attach
-        imaterial.set_property(e, "s_tex", fonttex)
+        imaterial.set_property(e, "s_tex", fonttex_handle)
     end
     for e in w:select "font:in show_config:in scene:in render_object:update" do
         if e.font.idx == nil then
