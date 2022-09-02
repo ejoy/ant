@@ -188,9 +188,10 @@ local function processMouseUp(doc, e, button, x, y)
     if cancelled then
         return
     end
-    if focusElement == e then
+    -- TODO: fix mousedown/mouseup on different element
+    -- if focusElement == e then
         dispatchEvent(e, "click", event)
-    end
+    -- end
 end
 
 local function processMouseMove(doc, e, button, x, y)
