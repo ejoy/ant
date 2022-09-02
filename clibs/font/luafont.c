@@ -4,6 +4,7 @@
 #include <lauxlib.h>
 #include <lualib.h>
 #include "../bgfx/bgfx_interface.h"
+#include "luabgfx.h"
 
 #include "font_manager.h"
 #include "truetype.h"
@@ -216,7 +217,7 @@ static int
 lload_text_quad(lua_State *L){
     struct font_manager *fm = getF(L);
 
-    struct quad_text *qtdata = (struct quad_text*)lua_touserdata(L, 1);
+	struct memory* m = (struct memory*)lua_touserdata(L, 1);
     size_t sz;
     const char* text = luaL_checklstring(L, 2, &sz);
     const char* textend = text + sz;
@@ -228,7 +229,7 @@ lload_text_quad(lua_State *L){
     const uint32_t color = (uint32_t)luaL_checkinteger(L, 6);
     const int fontid = luaL_optinteger(L, 7, 0);
 
-	struct quad_text *qt = qtdata;
+	struct quad_text *qt = (struct quad_text *)m->data;;
 
     struct font_glyph g = {0};
     while (text != textend){
