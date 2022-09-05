@@ -180,7 +180,7 @@ function cc_sys:camera_usage()
     if move_y then
         move_y=move_y/mq.render_target.view_rect.h*30
         local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
-        lastru.v=math3d.add(lastru,math3d.mul(up,-move_x*math.max(1.0,distance)))
+        lastru.v=math3d.add(lastru,math3d.mul(up,-move_y*math.max(1.0,distance)))
         up=math3d.normalize(up)
         iom.set_position(ce,math3d.add(lastru,lastl))
 
