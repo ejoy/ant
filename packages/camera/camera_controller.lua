@@ -35,10 +35,10 @@ local move_speed = 1.0
 local move_wheel_speed = 6
 local dxdy_speed = 2
 local key_move_speed = 1.0
+local init=false
 
-
-local distance=1.1
-local baseDistance=1.1
+local distance=1
+local baseDistance=1
 local zoomExponent = 2
 local zoomFactor = 0.01
 local rotAroundY=0
@@ -48,7 +48,7 @@ local lookat = math3d.ref(math3d.vector(0, 0, 1))
 --right up偏移
 local lastru=math3d.ref(math3d.vector(0, 0, 0))
 --lookat偏移
-local lastl=math3d.ref(math3d.vector(0, 0, -1.1))
+local lastl=math3d.ref(math3d.vector(0, 0, -1))
 
 local function calc_dxdy_speed()
     return move_speed * dxdy_speed
@@ -105,10 +105,31 @@ function cc_sys:camera_usage()
     if check_stop_camera() then
         return
     end
+    if init==false then
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:in camera:in")
+    
+        local look=math3d.ref(math3d.vector(math3d.index(ce.scene.t,1),math3d.index(ce.scene.t,2),math3d.index(ce.scene.t,3)))
+        lookat=math3d.ref(math3d.normalize(look))
+        lookat=math3d.ref(math3d.inverse(lookat))
+        local factor=(math3d.index(look,1)*math3d.index(look,1)+math3d.index(look,2)*math3d.index(look,2)+math3d.index(look,3)*math3d.index(look,3))^0.5
+        distance=factor
+
+        local zoomDistance=(distance/baseDistance)^(1.0/zoomExponent)
+        zoomDistance=zoomDistance-0.001*zoomFactor
+        zoomDistance=math.max(zoomDistance,0.0001)
+        distance=(zoomDistance*zoomDistance)*baseDistance
+        lastl=math3d.ref(math3d.mul(math3d.ref(lookat),-distance))
+        iom.set_position(ce,math3d.add(math3d.ref(lastru),math3d.ref(lastl)))
+        init=true
+    end
 
     check_update_control()
     local mq = w:first("main_queue camera_ref:in render_target:in")
     local ce<close> = w:entity(mq.camera_ref, "scene:update")
+    local tt1=math3d.index(ce.scene.t,1)
+    local tt2=math3d.index(ce.scene.t,2)
+    local tt3=math3d.index(ce.scene.t,3)
     for _, delta in mouse_wheel_mb:unpack() do     
         local d = delta > 0 and 5 or -5
         local zoomDistance=(distance/baseDistance)^(1.0/zoomExponent)
@@ -116,6 +137,9 @@ function cc_sys:camera_usage()
         zoomDistance=math.max(zoomDistance,0.0001)
         distance=(zoomDistance^zoomExponent)*baseDistance
         lastl=math3d.ref(math3d.mul(math3d.ref(lookat),-distance))
+        local t1=math3d.index(lastl,1)
+        local t2=math3d.index(lastl,2)
+        local t3=math3d.index(lastl,3)
         iom.set_position(ce,math3d.add(math3d.ref(lastru),math3d.ref(lastl)))
     end
 
