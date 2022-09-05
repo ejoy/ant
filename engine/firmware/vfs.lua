@@ -44,7 +44,6 @@ function vfs.new(repopath)
 	local repo = {
 		path = repopath:gsub("[/\\]?$","/") .. ".repo/",
 		cache = {},--setmetatable( {} , { __mode = "kv" } ),
-		compile = {},
 		root = nil,
 	}
 	setmetatable(repo, vfs)
@@ -64,47 +63,27 @@ local function dir_object(self, hash)
 			local type, hash, name = line:match "([dfr]) (%S*) (.*)"
 			if type then
 				dir[name] = {
-					dir = type == 'd',
+					type = type,
 					hash = hash,
 				}
 			end
 		end
 		df:close()
-		local c = self.compile[hash]
-		if c then
-			local sub = {}
-			for h, fullpath in pairs(c) do
-				local path, name = fullpath:match "([^/]*)/?(.*)"
-				if name == "" then
-					dir[path] = {
-						dir = true,
-						hash = h,
-					}
-				else
-					sub[h] = {path=path, name=name}
-				end
-			end
-			self.compile[hash] = nil
-			for h, inf in pairs(sub) do
-				local d = assert(dir[inf.path])
-				local c = self.compile[d.hash]
-				if not c then
-					c = {}
-					self.compile[hash] = c
-				end
-				c[h] = inf.name
-			end
-		end
 		return dir
 	end
 end
+
+local ListSuccess <const> = 1
+local ListFailed <const> = 2
+local ListNeedGet <const> = 3
+local ListNeedResource <const> = 4
 
 local function fetch_file(self, hash, fullpath, parent)
 	local dir = self.cache[hash]
 	if not dir then
 		dir = dir_object(self, hash)
 		if not dir then
-			return false, hash
+			return ListNeedGet, hash
 		end
 		self.cache[hash] = dir
 	end
@@ -113,22 +92,39 @@ local function fetch_file(self, hash, fullpath, parent)
 	local subpath = dir[path]
 	if subpath then
 		if name == "" then
-			return true, subpath.hash
-		elseif subpath.dir then
-			return fetch_file(self, subpath.hash, name, parent.."/"..path)
+			if subpath.type == 'r' then
+				local res = parent.."/"..path
+				local h = self.resource[res]
+				if h then
+					return ListSuccess, h
+				end
+				return ListNeedResource, res
+			else
+				return ListSuccess, subpath.hash
+			end
+		else
+			if subpath.type == 'd' then
+				return fetch_file(self, subpath.hash, name, parent.."/"..path)
+			elseif subpath.type == 'r' then
+				local res = parent.."/"..path
+				local h = self.resource[res]
+				if h then
+					return fetch_file(self, h, name, res)
+				end
+				return ListNeedResource, res
+			end
 		end
-	elseif path:match "%?" then
-		return false, (parent.."/"..path):sub(2)
 	end
 	-- invalid repo, root change
+	return ListFailed
 end
 
 function vfs:list(path, hash)
 	hash = hash or self.root
 	if path ~= "" then
-		local ok, h = fetch_file(self, hash, path, "")
-		if not ok then
-			return false, h
+		local r, h = fetch_file(self, hash, path, "")
+		if r ~= ListSuccess then
+			return nil, r, h
 		end
 		hash = h
 	end
@@ -136,42 +132,11 @@ function vfs:list(path, hash)
 	if not dir then
 		dir = dir_object(self, hash)
 		if not dir then
-			return false, hash
+			return nil, ListNeedGet, hash
 		end
 		self.cache[hash] = dir
 	end
 	return dir
-end
-
-local function fetch_hash(self, hash, fullpath, addhash)
-	local dir = self.cache[hash]
-	if not dir then
-		dir = dir_object(self, hash)
-		if not dir then
-			local c = self.compile[hash]
-			if not c then
-				c = {}
-				self.compile[hash] = c
-			end
-			c[addhash] = fullpath
-			return true
-		end
-		self.cache[hash] = dir
-	end
-	local path, name = fullpath:match "([^/]*)/?(.*)"
-	local subpath = dir[path]
-	if name == "" then
-		if subpath then
-			return
-		end
-		dir[path] = {
-			dir = true,
-			hash = addhash
-		}
-		return true
-	elseif subpath and subpath.dir then
-		return fetch_hash(self, subpath.hash, name, addhash)
-	end
 end
 
 function vfs:updatehistory(hash)

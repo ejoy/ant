@@ -58,12 +58,17 @@ function CMD.GET(path)
 	end
 end
 
+local ListValue <const> = {
+	dir = true,
+	file = false,
+}
+
 function CMD.LIST(path)
 	local item = {}
 	for _, filename in ipairs(access.list_files(repo, path)) do
 		local realpath = access.realpath(repo, path .. filename)
 		if realpath then
-			item[filename] = not not lfs.is_directory(realpath)
+			item[filename] = ListValue[CMD.TYPE(path .. filename)]
 		end
 	end
 	return item
@@ -79,12 +84,14 @@ end
 
 function CMD.TYPE(path)
 	local rp = access.realpath(repo, path)
-	if lfs.is_directory(rp) then
-		return "dir"
-	elseif is_resource(rp) then
-		return "resource"
-	elseif lfs.is_regular_file(rp) then
-		return "file"
+	if rp then
+		if lfs.is_directory(rp) then
+			return "dir"
+		elseif is_resource(rp) then
+			return "dir"
+		elseif lfs.is_regular_file(rp) then
+			return "file"
+		end
 	end
 end
 
