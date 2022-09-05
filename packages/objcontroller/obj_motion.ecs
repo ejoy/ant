@@ -29,8 +29,6 @@ interface "iobj_motion"
     .method "move_forward"
 
     .method "rotate_forward_vector"
-    .method "rotate"
-    .method "rotate_around_point"
     .method "rotate_around_point2"
 
     .method "ray"
