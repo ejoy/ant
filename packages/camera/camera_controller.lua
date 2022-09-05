@@ -10,33 +10,24 @@ local cc_sys = ecs.system "default_camera_controller"
 local kb_mb             = world:sub {"keyboard"}
 local mouse_mb          = world:sub {"mouse"}
 local mouse_wheel_mb    = world:sub {"mouse_wheel"}
-
-
 local viewat_change_mb      = world:sub{"camera_controller", "viewat"}
 local move_speed_change_mb  = world:sub{"camera_controller", "move_speed"}
 local inc_move_speed_mb     = world:sub{"camera_controller", "inc_move_speed"}
 local dec_move_speed_mb     = world:sub{"camera_controller", "dec_move_speed"}
 local move_speed_delta_change_mb = world:sub{"camera_controller", "move_speed_delta"}
-
 local stop_camera_mb        = world:sub{"camera_controller", "stop"}
 
 local mouse_lastx, mouse_lasty
 local move_x, move_y, move_z
-local mouse_btn
-local mouse_state
 local move_speed_delta = 0.01
 local move_speed = 1.0
-local move_wheel_speed = 6
 local dxdy_speed = 2
 local key_move_speed = 1.0
 local init=false
-
 local distance=1
 local baseDistance=1
 local zoomExponent = 2
 local zoomFactor = 0.01
-local rotAroundY=0
-local rotAroundX=0
 
 local lookat = math3d.ref(math3d.vector(0, 0, 1))
 --right up偏移
@@ -46,10 +37,6 @@ local lastl=math3d.ref(math3d.vector(0, 0, -1))
 
 local function calc_dxdy_speed()
     return move_speed * dxdy_speed
-end
-
-local function calc_wheel_speed()
-    return move_speed * move_wheel_speed
 end
 
 local function calc_key_speed()
@@ -94,6 +81,12 @@ local function check_stop_camera()
     return stop_camera
 end
 
+local function calc_zoom_distance(dz)
+    local zoomDistance=(distance/baseDistance)^(1.0/zoomExponent)
+    zoomDistance=zoomDistance-dz*zoomFactor
+    zoomDistance=math.max(zoomDistance,0.0001)
+    return (zoomDistance*zoomDistance)*baseDistance
+end
 
 function cc_sys:camera_usage()
     if check_stop_camera() then
@@ -102,17 +95,12 @@ function cc_sys:camera_usage()
     if init==false then
         local mq = w:first("main_queue camera_ref:in render_target:in")
         local ce<close> = w:entity(mq.camera_ref, "scene:in camera:in")
-    
-        local look=math3d.vector(math3d.index(ce.scene.t,1),math3d.index(ce.scene.t,2),math3d.index(ce.scene.t,3))
-        lookat.v=math3d.normalize(look)
-        lookat.v=math3d.inverse(lookat)
-        local factor=(math3d.index(look,1)*math3d.index(look,1)+math3d.index(look,2)*math3d.index(look,2)+math3d.index(look,3)*math3d.index(look,3))^0.5
-        distance=factor
+        
+        local look=ce.scene.t
+        lookat.v=math3d.inverse(math3d.normalize(look))
+        distance=math3d.length(look)
+        distance=calc_zoom_distance(0.001)
 
-        local zoomDistance=(distance/baseDistance)^(1.0/zoomExponent)
-        zoomDistance=zoomDistance-0.001*zoomFactor
-        zoomDistance=math.max(zoomDistance,0.0001)
-        distance=(zoomDistance*zoomDistance)*baseDistance
         lastl.v=math3d.mul(lookat,-distance)
         iom.set_position(ce,math3d.add(lastru.v,lastl.v))
         init=true
@@ -123,10 +111,7 @@ function cc_sys:camera_usage()
     local ce<close> = w:entity(mq.camera_ref, "scene:update")
     for _, delta in mouse_wheel_mb:unpack() do     
         local d = delta > 0 and 5 or -5
-        local zoomDistance=(distance/baseDistance)^(1.0/zoomExponent)
-        zoomDistance=zoomDistance-d*zoomFactor
-        zoomDistance=math.max(zoomDistance,0.0001)
-        distance=(zoomDistance^zoomExponent)*baseDistance
+        distance=calc_zoom_distance(d)
         lastl.v=math3d.mul(lookat,-distance)
         iom.set_position(ce,math3d.add(lastru,lastl))
     end
@@ -164,8 +149,7 @@ function cc_sys:camera_usage()
     local newx, newy
     local motiontype
     for _, btn, state, x, y in mouse_mb:unpack() do
-        mouse_state = state
-        mouse_btn = btn
+
         if state == "DOWN" then
             newx, newy = x, y
             mouse_lastx, mouse_lasty = x, y
@@ -188,16 +172,7 @@ function cc_sys:camera_usage()
     if move_x then
         move_x=move_x/mq.render_target.view_rect.w*30
         local right = math3d.transform(ce.scene.r, mc.XAXIS, 0)
-        right=math3d.normalize(right)
-        if distance<1 then
-            lastru.v=math3d.add(lastru,math3d.mul(right,-move_x))
-        else
-            lastru.v=
-                math3d.add(
-                    lastru,
-                    math3d.mul(right,-move_x*distance)
-                )
-        end
+        lastru.v=math3d.add(lastru,math3d.mul(right,-move_x*math.max(1.0,distance)))
         iom.set_position(ce,math3d.add(lastru,lastl))
 
     end
@@ -205,21 +180,14 @@ function cc_sys:camera_usage()
     if move_y then
         move_y=move_y/mq.render_target.view_rect.h*30
         local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
+        lastru.v=math3d.add(lastru,math3d.mul(up,-move_x*math.max(1.0,distance)))
         up=math3d.normalize(up)
-        if distance<1 then
-            lastru.v=math3d.add(lastru,math3d.mul(up,move_y))
-        else
-            lastru.v=math3d.add(lastru,math3d.mul(up,move_y*distance))
-        end
         iom.set_position(ce,math3d.add(lastru,lastl))
 
     end
 
     if move_z then
-        local zoomDistance=(distance/baseDistance)^(1.0/zoomExponent)
-        zoomDistance=zoomDistance-move_z*zoomFactor
-        zoomDistance=math.max(zoomDistance,0.0001)
-        distance=(zoomDistance*zoomDistance)*baseDistance
+        distance=calc_zoom_distance(move_z)
         lastl.v=math3d.mul(lookat,-distance)
         iom.set_position(ce,math3d.add(lastru,lastl))
     end
@@ -242,23 +210,7 @@ function cc_sys:camera_usage()
                 right=math3d.normalize(right)
                 local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
                 up=math3d.normalize(up)
-
-                if distance<1 then
-
-                    lastru.v =
-                        math3d.add(
-                            lastru,
-                            math3d.mul(right,-dx),
-                            math3d.mul(up,dy*0.5)
-                        )
-                                 else
-                    lastru.v=
-                        math3d.add(
-                            lastru,
-                            math3d.mul(right,-dx*distance),
-                            math3d.mul(up,dy*0.5*distance)
-                        )        
-                end
+                lastru.v=math3d.add(lastru,math3d.mul(right,-dx*math.max(1.0,distance)),math3d.mul(up,dy*0.5*math.max(1.0,distance)))
                 iom.set_position(ce,math3d.add(lastl,lastru))    
                 mouse_lastx, mouse_lasty = newx, newy
             end
