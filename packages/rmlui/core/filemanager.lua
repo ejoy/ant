@@ -4,7 +4,7 @@ local lfont = require "font"
 local ltask = require "ltask"
 local constructor = require "core.DOM.constructor"
 
-local ServiceResource = ltask.uniqueservice "ant.compile_resource|resource"
+local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
 
 local m = {}
 

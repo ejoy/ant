@@ -1,6 +1,7 @@
 local convert_image = require "editor.texture.util"
 local datalist = require "datalist"
 local lfs = require "filesystem.local"
+local depends = require "editor.depends"
 
 local function which_format(os, param)
 	local compress = param.compress
@@ -26,13 +27,13 @@ end
 
 return function (input, output, setting, localpath)
 	local param = readdatalist(input)
-	local dependfiles = {input}
+	local depfiles = {}
 	if param.path then
 		param.setting = setting
 		param.local_texpath = localpath(assert(param.path))
 		param.format = which_format(setting.os, param)
 
-		dependfiles[#dependfiles+1] = param.local_texpath
+		depends.add(depfiles, param.local_texpath)
 	else
 		assert(param.value, "memory texture should define the texture memory")
 	
@@ -52,5 +53,5 @@ return function (input, output, setting, localpath)
 		return ok, err
 	end
 
-	return true, dependfiles
+	return true, depfiles
 end

@@ -32,9 +32,7 @@ void main()
 #else //!MATERIAL_UNLIT
     material_info mi = init_material_info(input_attribs);
 
-    // LIGHTING
     vec3 color = calc_direct_light(mi, gl_FragCoord, v_posWS.xyz);
-
 #   ifdef ENABLE_SHADOW
 	color = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0), color);
 #   endif //ENABLE_SHADOW

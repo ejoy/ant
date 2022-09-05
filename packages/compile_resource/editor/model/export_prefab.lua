@@ -146,11 +146,11 @@ end
 local default_material_path<const> = lfs.path "/pkg/ant.resources/materials/pbr_default.material"
 local default_material_info
 
-local function save_material(output, mi)
+local function save_material(output, exports, mi)
     local f = utility.full_path(mi.filename:string())
     if not lfs.exists(f) then
         utility.save_txt_file(mi.filename:string(), mi.material)
-        compile.do_compile(output / mi.filename, output / "materials" / "_tmp")
+        compile.do_compile(output / mi.filename, output / "materials" / "_tmp", exports.depfiles)
         lfs.remove(output / mi.filename)
         lfs.rename(output / "materials" / "_tmp", output / mi.filename)
     end
@@ -203,7 +203,7 @@ local function seri_material(output, exports, mode, materialidx, hasskin)
         local mi = assert(exports.material[materialidx+1])
         local materialinfo = generate_material(mi, mode, hasskin)
         if materialinfo then
-            save_material(output, materialinfo)
+            save_material(output, exports, materialinfo)
             return materialinfo.filename
         end
     end
@@ -217,7 +217,7 @@ local function seri_material(output, exports, mode, materialidx, hasskin)
 
     local materialinfo = generate_material(default_material_info, mode)
     if materialinfo and materialinfo.filename ~= default_material_path then
-        save_material(output, materialinfo)
+        save_material(output, exports, materialinfo)
         return materialinfo.filename
     end
 

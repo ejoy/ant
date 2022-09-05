@@ -4,6 +4,8 @@ system "font_system"
     .implement "font/fontrender.lua"
     .method "component_init"
     .method "camera_usage"
+    .method "entity_remove"
+    .method "exit"
 
 policy "font"
     .require_policy "ant.scene|scene_object"

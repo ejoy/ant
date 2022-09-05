@@ -134,6 +134,13 @@ memory_read(lua_State *L) {
 }
 
 static int
+memory_size(lua_State *L){
+	struct memory *mem = (struct memory *)lua_touserdata(L, 1);
+	lua_pushinteger(L, mem->size);
+	return 1;
+}
+
+static int
 memory_write(lua_State *L) {
 	struct memory *mem = (struct memory *)lua_touserdata(L, 1);
 	if (mem->constant) {
@@ -209,6 +216,7 @@ memory_new(lua_State *L) {
 		luaL_Reg l[] = {
 			{ "__tostring", memory_tostring },
 			{ "__index", memory_read },
+			{ "__len", memory_size},
 			{ "__newindex", memory_write },
 			{ "__gc", memory_release },
 			{ NULL, NULL },
