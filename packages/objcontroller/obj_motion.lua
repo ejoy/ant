@@ -96,72 +96,53 @@ local function refine_rotation(scene, r)
 end
 
 function iobj_motion.set_rotation(e, rot)
-    w:extend(e, "scene?in")
+    w:extend(e, "scene:in")
     local scene = e.scene
-    if not scene then
-        return
-    end
     set_r(scene, refine_rotation(scene, rot))
     set_changed(e)
 end
 
 function iobj_motion.get_rotation(e)
-    w:extend(e, "scene?in")
-    return e.scene and e.scene.r
+    w:extend(e, "scene:in")
+    return e.scene.r
 end
 
 function iobj_motion.set_srt(e, s, r, t)
-    w:extend(e, "scene?in")
-    if not e.scene then
-        return
-    end
+    w:extend(e, "scene:in")
     set_srt(e.scene, s, r, t)
     set_changed(e)
 end
 
 function iobj_motion.set_srt_matrix(e, mat)
-    w:extend(e, "scene?in")
-    if not e.scene then
-        return
-    end
-    reset_srt(e.scene)
-    set_mat(e.scene, mat)
+    w:extend(e, "scene:in")
+    local scene = e.scene
+    reset_srt(scene)
+    set_mat(scene, mat)
     set_changed(e)
 end
 
 function iobj_motion.set_srt_offset_matrix(e, mat)
-    w:extend(e, "scene?in")
-    if not e.scene then
-        return
-    end
+    w:extend(e, "scene:in")
     set_mat(e.scene, mat)
     set_changed(e)
 end
 
 function iobj_motion.set_view(e, pos, dir, updir)
-    w:extend(e, "scene?in")
+    w:extend(e, "scene:in")
     local scene = e.scene
-    if not scene then
-        return
-    end
     if updir then
         math3d.unmark(scene.updir)
         scene.updir = math3d.mark(updir)
-        local _srt = math3d.inverse(math3d.lookto(pos, dir, scene.updir))
-        local s, r, t = math3d.srt(_srt)
-        set_srt(scene, s, r, t)
-    else
-        set_srt(scene, scene.s, math3d.torotation(dir), pos)
     end
+
+    local r = refine_rotation_from_viewdir(scene, dir)
+    set_srt(scene, scene.s, r, pos)
     set_changed(e)
 end
 
 function iobj_motion.set_scale(e, scale)
-    w:extend(e, "scene?in")
+    w:extend(e, "scene:in")
     local srt = e.scene
-    if not srt then
-        return
-    end
     if type(scale) == "number" then
         set_s(srt, {scale, scale, scale})
     else
@@ -171,58 +152,34 @@ function iobj_motion.set_scale(e, scale)
 end
 
 function iobj_motion.get_scale(e)
-    w:extend(e, "scene?in")
-    return e.scene and e.scene.s
+    w:extend(e, "scene:in")
+    return e.scene.s
 end
 
 function iobj_motion.worldmat(e)
-    w:extend(e, "scene?in")
-    local scene = e.scene
-    return scene and scene.worldmat
+    w:extend(e, "scene:in")
+    return e.scene.worldmat
 end
 
-function iobj_motion.lookto(e, eyepos, viewdir, updir)
-    w:extend(e, "scene?in")
-    local scene = e.scene
-    if not scene then
-        return
-    end
-    if updir then
-        math3d.unmark(scene.updir)
-        scene.updir = math3d.mark(updir)
-    end
-    local srt = math3d.inverse(math3d.lookto(eyepos, viewdir, updir))
-    local s, r, t = math3d.srt(srt)
-    set_srt(e.scene, s, r, t)
-    set_changed(e)
-end
+iobj_motion.lookto = iobj_motion.set_view
 
 function iobj_motion.move_delta(e, delta_vec)
-    w:extend(e, "scene?in")
-    local srt = e.scene
-    if not srt then
-        return
-    end
-    local pos = math3d.add(srt.t, delta_vec)
+    w:extend(e, "scene:in")
+    local scene = e.scene
+    local pos = math3d.add(scene.t, delta_vec)
     iobj_motion.set_position(e, pos)
 end
 
 function iobj_motion.move_along_axis(e, axis, delta)
-    w:extend(e, "scene?in")
-    if not e.scene then
-        return
-    end
+    w:extend(e, "scene:in")
     local p = iobj_motion.get_position(e)
     iobj_motion.set_position(e, math3d.muladd(axis, delta, p))
 end
 
 function iobj_motion.move(e, v)
-    w:extend(e, "scene?in")
+    w:extend(e, "scene:in")
     local srt = e.scene
-    if not srt then
-        return
-    end
-    local p = math3d.vector(srt.t)
+    local p = srt.t
     local srtmat = math3d.matrix(srt)
     for i=1, 3 do
         p = math3d.muladd(v[i], math3d.index(srtmat, i), p)
@@ -231,32 +188,23 @@ function iobj_motion.move(e, v)
 end
 
 function iobj_motion.move_right(e, v)
-    w:extend(e, "scene?in")
-    local srt = e.scene
-    if not srt then
-        return
-    end
-    local right = math3d.transform(srt.r, mc.XAXIS, 0)
+    w:extend(e, "scene:in")
+    local scene = e.scene
+    local right = math3d.transform(scene.r, mc.XAXIS, 0)
     iobj_motion.move_along_axis(e, right, v)
 end
 
 function iobj_motion.move_up(e, v)
-    w:extend(e, "scene?in")
-    local srt = e.scene
-    if not srt then
-        return
-    end
-    local up = math3d.transform(srt.r, mc.YAXIS, 0)
+    w:extend(e, "scene:in")
+    local scene = e.scene
+    local up = math3d.transform(scene.r, mc.YAXIS, 0)
     iobj_motion.move_along_axis(e, up, v)
 end
 
 function iobj_motion.move_forward(e, v)
-    w:extend(e, "scene?in")
-    local srt = e.scene
-    if not srt then
-        return
-    end
-    local f = math3d.todirection(srt.r)
+    w:extend(e, "scene:in")
+    local scene = e.scene
+    local f = math3d.todirection(scene.r)
     iobj_motion.move_along_axis(e, f, v)
 end
 
@@ -270,10 +218,7 @@ local function get_rotator(r, rx, ry)
 end
 
 function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
-    w:extend(e, "scene?in")
-    if not e.scene then
-        return
-    end
+    w:extend(e, "scene:in")
     if rotateX or rotateY then
         local scene = e.scene
         local r = get_rotator(scene.r, rotateX, rotateY)
