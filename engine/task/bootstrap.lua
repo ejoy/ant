@@ -5,22 +5,23 @@ local SERVICE_ROOT <const> = 1
 local MESSSAGE_SYSTEM <const> = 0
 
 local config
-local init_exclusive_service
+
+local init_root_service
 
 local function new_service(label, id)
-	local sid = boot.new_service(label, init_exclusive_service, id)
+	local sid = boot.new_service(label, config.init_service, id)
 	assert(sid == id)
 	return sid
 end
 
-local function bootstrap()
-	new_service("root", SERVICE_ROOT)
+local function root_thread()
+	boot.new_service("root", init_root_service, SERVICE_ROOT)
 	boot.init_root(SERVICE_ROOT)
 	-- send init message to root service
 	local init_msg, sz = ltask.pack("init", {
 		lua_path = config.lua_path,
 		lua_cpath = config.lua_cpath,
-		service_path = config.service_path,
+		service_path = "/engine/task/service/root.lua",
 		name = "root",
 		args = {config}
 	})
@@ -40,6 +41,12 @@ local function exclusive_thread(label, id)
 	boot.new_thread(sid)
 end
 
+local function io_thread(label, id)
+	local vfs = require "vfs"
+	local sid = boot.new_service_preinit(label, id, vfs.iothread)
+	boot.new_thread(sid)
+end
+
 local function toclose(f)
 	return setmetatable({}, {__close=f})
 end
@@ -52,7 +59,6 @@ local function init(c)
 		config.service_path = "/engine/task/service/?.lua"
 	end
 	config.lua_cpath = config.lua_cpath or package.cpath
-	table.insert(config.exclusive, "vfs")
 
 	local initstr = ""
 	if __ANT_RUNTIME__ then
@@ -62,6 +68,7 @@ package.cpath = %q
 require "vfs"
 ]]):format(package.cpath)
 	end
+
 	local dbg = debug.getregistry()["lua-debug"]
 	if dbg then
 		dbg:event("setThreadName", "Bootstrap")
@@ -74,11 +81,24 @@ dofile "/engine/debugger.lua"
 ]]
 	end
 
-	if config.support_package then
-		initstr = initstr .. [[
+	initstr = initstr .. [[
 package.path = "/engine/?.lua"
-require "bootstrap"
+require "simple_bootstrap"
+local initfunc = assert(loadfile "/engine/task/service/service.lua")
+]]
 
+	init_root_service = initstr .. [[
+local RootLua <const>  = "/engine/task/service/root.lua"
+local f, err = loadfile(RootLua)
+function loadfile(filename)
+	assert(filename == RootLua)
+	return f, err
+end
+initfunc()
+]]
+
+if config.support_package then
+	initstr = initstr .. [[
 local rawsearchpath = package.searchpath
 package.searchpath = function(name, path, sep, dirsep)
 	local package, file = name:match "^([^|]*)|(.*)$"
@@ -93,38 +113,30 @@ package.searchpath = function(name, path, sep, dirsep)
 	return rawsearchpath(name, path, sep, dirsep)
 end
 
-local pm = require "packagemanager"
 local rawloadfile = loadfile
 function loadfile(filename, mode, env)
 	if env == nil then
 		local package, file = filename:match "^/pkg/([^/]+)/(.+)$"
 		if package and file then
-			return loadfile(filename, mode or "bt", pm.loadenv(package))
+			local pm = require "packagemanager"
+			return rawloadfile(filename, mode or "bt", pm.loadenv(package))
 		end
 		return rawloadfile(filename, mode)
 	end
 	return rawloadfile(filename, mode, env)
 end
 ]]
-	end
+end
 
-	local servicelua = "/engine/task/service/service.lua"
-	init_exclusive_service = initstr .. ([[
-local vfs = require "vfs"
-vfs.sync = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource}
-vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource}
-dofile %q
-]]):format(servicelua)
-	config.init_service = initstr .. ([[
-local initfunc = assert(loadfile %q)
+	config.init_service = initstr .. [[
 local ltask = require "ltask"
 local vfs = require "vfs"
-local ServiceVfs
+local ServiceIO
 local function request(...)
-	if not ServiceVfs then
-		ServiceVfs = ltask.queryservice "vfs"
+	if not ServiceIO then
+		ServiceIO = ltask.queryservice "io"
 	end
-	return ltask.call(ServiceVfs, ...)
+	return ltask.call(ServiceIO, ...)
 end
 vfs.sync = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource,resource_setting=vfs.resource_setting}
 function vfs.realpath(path, hash)
@@ -143,19 +155,21 @@ function vfs.resource_setting(ext, setting)
 	return request("RESOURCE_SETTING", ext, setting)
 end
 vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource=vfs.resource,resource_setting=vfs.resource_setting}
-initfunc()]]):format(servicelua)
+initfunc()]]
 end
 
 return function (c)
 	init(c)
-    boot.init(config)
+	boot.init(config)
 	local _ <close> = toclose(boot.deinit)
-    boot.init_timer()
+	boot.init_timer()
 	for i, t in ipairs(config.exclusive) do
 		local label = type(t) == "table" and t[1] or t
 		local id = i + 1
 		exclusive_thread(label, id)
 	end
-    bootstrap()
-    boot.run()
+	config.preinit = { "io" }
+	root_thread()
+	io_thread("io", 2 + #config.exclusive)
+	boot.run()
 end

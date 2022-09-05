@@ -182,12 +182,8 @@ end
 -- response io request with id
 local function response_id(id, ...)
 	if id then
-		if type(id) == "string" then
-			local c = thread.channel(id)
-			c:push(...)
-		else
-			channel_req:ret(id, ...)
-		end
+		assert(type(id) ~= "string")
+		channel_req:ret(id, ...)
 	end
 end
 
@@ -326,14 +322,6 @@ local function offline_dispatch(id, cmd, ...)
 		print("[ERROR] Unsupported offline command : ", cmd)
 	else
 		f(id, ...)
-	end
-end
-
-local function work_offline()
-	local c = channel_req
-	while true do
-		offline_dispatch(c:bpop())
-		logger_dispatch(offline)
 	end
 end
 
@@ -734,6 +722,104 @@ local function online_dispatch(ok, id, cmd, ...)
 	return true
 end
 
+local ltask
+local lt_update
+local lt_switch_offline
+
+local S = {}; do
+	local session = 0
+	local queue = {}
+	local function lt_request(...)
+		session = session + 1
+		queue[#queue+1] = {session,...}
+		return ltask.wait(session)
+	end
+	local function lt_response(id, ...)
+		ltask.wakeup(id, ...)
+	end
+	local function lt_online_update()
+		if #queue > 0 then
+			local q = queue
+			queue = {}
+			for _, m in ipairs(q) do
+				online_dispatch(true, table.unpack(m))
+			end
+		end
+	end
+	local function lt_offline_update()
+		if #queue > 0 then
+			local q = queue
+			queue = {}
+			for _, m in ipairs(q) do
+				offline_dispatch(true, table.unpack(m))
+			end
+		end
+	end
+	function lt_switch_offline()
+		lt_update = lt_offline_update
+	end
+
+	function response_id(id, ...)
+		if id then
+			assert(type(id) ~= "string")
+			if type(id) == "userdata" then
+				channel_req:ret(id, ...)
+			else
+				lt_response(id, ...)
+			end
+		end
+	end
+
+	for v in pairs(online) do
+		S[v] = function (...)
+			return lt_request(v, ...)
+		end
+	end
+	lt_update = lt_online_update
+end
+
+local function ltask_ready()
+	return coroutine.yield() == nil
+end
+
+local function ltask_update()
+	if ltask == nil then
+		assert(loadfile "/engine/task/service/service.lua")(true)
+		ltask = require "ltask"
+		ltask.dispatch(S)
+	end
+	lt_update()
+	local SCHEDULE_IDLE <const> = 1
+	local SCHEDULE_QUIT <const> = 2
+	local SCHEDULE_SUCCESS <const> = 3
+	while true do
+		local s = ltask.schedule_message()
+		if s == SCHEDULE_QUIT then
+			ltask.log "${quit}"
+			return
+		end
+		if s == SCHEDULE_IDLE then
+			ltask.dispatch_wakeup()
+			break
+		end
+		coroutine.yield()
+	end
+end
+
+local function work_offline()
+	lt_switch_offline()
+
+	local c = channel_req
+	while true do
+		offline_dispatch(c:pop())
+		logger_dispatch(offline)
+		if ltask_ready() then
+			ltask_update()
+		end
+		thread.sleep(0.01)
+	end
+end
+
 local function work_online()
 	rdset[1] = connection.fd	-- may need support multi socket
 	wtset[1] = connection.fd
@@ -774,6 +860,9 @@ if not host then
 	function host.update(_)
 		while online_dispatch(channel_req:pop()) do end
 		logger_dispatch(online)
+		if ltask_ready() then
+			ltask_update()
+		end
 	end
 	function host.exit()
 		print("Working offline")

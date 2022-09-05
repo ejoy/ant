@@ -81,7 +81,7 @@ end
 function host.update(apis)
 	if first then
 		first = false
-		apis.request("FETCH", "/engine/firmware", {
+		apis.request("FETCH", "/engine", {
 			resolve = function ()
 				quit = true
 			end,
