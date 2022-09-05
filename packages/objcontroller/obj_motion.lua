@@ -282,31 +282,6 @@ function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
     end
 end
 
---[[ function iobj_motion.rotate_around_point2(e, viewpt, dx, dy, distance)
-    w:extend(e, "scene?in")
-    if not e.scene then
-        return
-    end
-    local srt = e.scene
-    local srtmat = math3d.matrix(srt)
-    local right, up, pos = math3d.index(srtmat, 1, 2, 4)
-
-    local nq = math3d.mul(
-        math3d.quaternion{axis=right, r=dx},
-        math3d.quaternion{axis=up, r=dy})
-
-    pos = math3d.transform(nq, pos, 1)
-
-    local newdir = math3d.normalize(math3d.sub(viewpt, pos))
-    iobj_motion.set_direction(e, newdir)
-
-    if distance then
-        iobj_motion.set_position(e, math3d.muladd(newdir, distance, pos))
-    else
-        iobj_motion.set_position(e, pos)
-    end
-end ]]
-
 function iobj_motion.rotate_around_point2(e, lastru, dx, dy)
     
     local scene = e.scene
@@ -323,7 +298,7 @@ function iobj_motion.rotate_around_point2(e, lastru, dx, dy)
 
     set_t(scene, p)
     local nq = math3d.mul(q, scene.r)
-    set_r(scene, nq)
+    set_r(scene, refine_rotation(scene,nq))
     set_changed(e)
     local distance=(math3d.index(v,1)*math3d.index(v,1)+math3d.index(v,2)*math3d.index(v,2)+math3d.index(v,3)*math3d.index(v,3))^0.5
     local lookat=math3d.normalize(math3d.todirection(nq))
