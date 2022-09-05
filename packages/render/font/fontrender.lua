@@ -5,55 +5,44 @@ local w = world.w
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local declmgr   = require "vertexdecl_mgr"
-local font      = import_package "ant.font"
+
+local mathpkg   = import_package "ant.math"
+local mu        = mathpkg.util
+
+local fontpkg   = import_package "ant.font"
 local lfont     = require "font"
 
-font.init()
+local dyn_vb = require "font.dyn_vb"
 
-local fonttex_handle    = font.texture()
-local fonttex           = {stage=0, texture={handle=fonttex_handle}}
+fontpkg.init()
+
+local fonttex_handle    = fontpkg.texture()
 local layout_desc       = declmgr.correct_layout "p20nii|t20nii|c40niu"
 local fontquad_layout   = declmgr.get(layout_desc)
-local declformat        = declmgr.vertex_desc_str(layout_desc)
+local dvb               = dyn_vb:create(10240, layout_desc)
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender = ecs.import.interface "ant.render|irender"
 
-local irq = ecs.import.interface "ant.render|irenderqueue"
-local mask<const>, offset<const> = math3d.ref(math3d.vector(0.5, 0.5, 1, 1)), math3d.ref(math3d.vector(0.5, 0.5, 0, 0))
 
-local function calc_screen_pos(pos3d, queuename)
-    queuename = queuename or "main_queue"
-
-    local q = w:first(queuename .. " camera_ref:in")
-    local camera <close> = w:entity(q.camera_ref, "camera:in")
-    local vp = camera.camera.viewprojmat
-    local posNDC = math3d.transformH(vp, pos3d)
-
-    local posClamp = math3d.muladd(posNDC, mask, offset)
-    local vr = irq.view_rect(queuename)
-
-    local posScreen = math3d.tovalue(math3d.mul(math3d.vector(vr.w, vr.h, 1, 1), posClamp))
-
-    if not math3d.get_origin_bottom_left() then
-        posScreen[2] = vr.h - posScreen[2]
-    end
-
-    return posScreen
+local function calc_screen_pos(pos3d)
+    local q = w:first("main_queue camera_ref:in render_target:in")
+    local ce = w:entity(q.camera_ref, "camera:in")
+    return mu.world_to_screen(ce.camera.viewprojmat, q.render_target.view_rect, pos3d)
 end
 
-local function text_start_pos(textw, texth, screenpos)
-    return screenpos[1] - textw * 0.5, screenpos[2] - texth * 0.5
+local function text_start_pos(textw, texth, sx, sy)
+    return sx - textw * 0.5, sy - texth * 0.5
 end
 
 local fontsys = ecs.system "font_system"
 
 local vertical_mask<const> = math3d.ref(math3d.vector(0, 1, 0, 0))
 local function calc_aabb_pos(e, offset, offsetop)
-    local a_eid = e.scene.parent
+    local a_eid = e.font.attach_eid
     if a_eid then
-        local ae <close> = w:entity(a_eid, "scene:in")
-        local aabb = ae.scene.scene_aabb
+        local ae <close> = w:entity(a_eid, "bounding:in")
+        local aabb = ae.bounding.scene_aabb
         if aabb then
             local center, extent = math3d.aabb_center_extents(aabb)
             local pos = offsetop(center, extent)
@@ -81,26 +70,31 @@ local function calc_3d_anchor_pos(e, cfg)
     end
 end
 
+local function add_text_mem(m, num, ro)
+    local vbnum = num*4
+    local idx, s, n = dvb:add(m)
+    assert(n == vbnum)
+    ro.vb_num = vbnum
+    ro.vb_start = s
+
+    ro.ib_start, ro.ib_num = 0, num * 2 * 3
+    return idx
+end
+
 local function load_text(e)
     local font = e.font
     local sc = e.show_config
     local pos = calc_3d_anchor_pos(e, sc)
-    local screenpos = pos and calc_screen_pos(pos) or {0.0, 0.0, 0.0}
+    local sx, sy, depth = math3d.index(calc_screen_pos(pos), 1, 2, 3)
 
     local textw, texth, num = lfont.prepare_text(fonttex_handle, sc.description, font.size, font.id)
-    local x, y = text_start_pos(textw, texth, screenpos)
+    local x, y = text_start_pos(textw, texth, sx, sy)
     local ro = e.render_object
-    assert(false, "need rewrite, not ib vb in render_object")
-    local m = ro.mesh
-    local vbnum = num*4
-    m:set_vb_range(0, vbnum)
 
-    local _, _, vbhandle = m:get_vb()
-    local vbdata = vbhandle:alloc(vbnum, fontquad_layout.handle)
-    m:set_ib_range(0, num * 2 * 3)
-    ro.depth = screenpos[3]
+    local m = bgfx.memory_buffer(num*4 * fontquad_layout.stride)
+    lfont.load_text_quad(m, sc.description, x, y, font.size, sc.color, font.id)
 
-    lfont.load_text_quad(vbdata, sc.description, x, y, font.size, sc.color, font.id)
+    font.idx = add_text_mem(m, num, ro)
 end
 
 local ev = world:sub {"show_name"}
@@ -109,12 +103,11 @@ function fontsys:component_init()
     for e in w:select "INIT font:in simplemesh:out owned_mesh_buffer?out" do
         lfont.import(e.font.file)
         e.font.id = lfont.name(e.font.name)
-
         e.simplemesh = {
             vb = {
                 start = 0,
                 num = 0,
-                handle = bgfx.transient_buffer(declformat),
+                handle = dvb.handle,
             },
             ib = {
                 start = 0,
@@ -136,17 +129,32 @@ end
 
 function fontsys:camera_usage()
     for _, eid, attach in ev:unpack() do
-        local e <close> = w:entity(eid, "render_object:in")
-        local ro = e.render_object
-        ro.attach_eid = attach
-        imaterial.set_property(e, "s_tex", fonttex)
+        local e <close> = w:entity(eid, "font:in")
+        local f = e.font
+        f.attach_eid = attach
+        imaterial.set_property(e, "s_tex", fonttex_handle)
     end
-    for e in w:select "font:in show_config:in render_object:update" do
-        load_text(e)
+    for e in w:select "font:in show_config:in scene:in render_object:update" do
+        if e.font.idx == nil then
+            load_text(e)
+        end
     end
     lfont.submit()
 end
 
-function ecs.method.show_name(e, attach)
-    world:pub {"show_name", e, attach}
+function fontsys:entity_remove()
+    for _, e in w:select "REMOVED font:in" do
+        local idx = e.font.idx
+        if idx then
+            dvb:remove(idx)
+        end
+    end
+end
+
+function fontsys:exit()
+    dvb:destroy()
+end
+
+function ecs.method.show_name(eid, attach)
+    world:pub {"show_name", eid, attach}
 end

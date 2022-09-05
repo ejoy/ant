@@ -281,14 +281,6 @@ function event.OnDestroyNode(handle, node)
     pool[handle][node] = nil
 end
 
-function event.InvalidElement(doc, e, res)
-    --TODO: use proxy relace
-    if not pool[doc] or not pool[doc][e] then
-        return
-    end
-    res.ok = true
-end
-
 function constructorElement(document, owner, handle)
     if handle == nil then
         return

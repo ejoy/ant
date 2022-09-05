@@ -76,7 +76,7 @@ dofile "/engine/debugger.lua"
 
 	if config.support_package then
 		initstr = initstr .. [[
-package.path = "engine/?.lua"
+package.path = "/engine/?.lua"
 require "bootstrap"
 
 local rawsearchpath = package.searchpath

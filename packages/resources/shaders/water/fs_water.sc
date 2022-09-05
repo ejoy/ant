@@ -136,6 +136,8 @@ void main()
     l.color     = u_direciontal_light_color;
     l.dir       = u_directional_light_dir.xyz;
     l.intensity = u_direciontal_light_color.a;
+	l.pt2l	= l.dir;
+	l.attenuation = 1.0;
 
     gl_FragColor = vec4(get_light_radiance(l, v_posWS.xyz, mi), 1.0);
 }

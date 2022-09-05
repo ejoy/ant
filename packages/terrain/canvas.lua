@@ -49,9 +49,6 @@ local function posmat(srt)
         if s then
             s = {s[1], 1.0, s[2]}
         end
-        if r then
-            r = math3d.quaternion{0.0, r, 0.0}
-        end
         if t then
             t = {t[1], 0.0, t[2]}
         end

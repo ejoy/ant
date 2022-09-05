@@ -7,7 +7,7 @@ local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 
 local font      = import_package "ant.font"
-local ServiceRmlUi = ltask.spawn "ant.rmlui|rmlui"
+local ServiceRmlUi = ltask.queryservice "ant.rmlui|rmlui"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local rmlui_sys = ecs.system "rmlui_system"
 local iRmlUi = ecs.interface "irmlui"

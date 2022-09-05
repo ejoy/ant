@@ -13,6 +13,8 @@ struct light_info{
 	float	intensity;
 	float	inner_cutoff;
 	float	outter_cutoff;
+	vec3	pt2l;
+	float	attenuation;
 };
 
 #define LightType_Directional 0

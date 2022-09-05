@@ -4,6 +4,7 @@ local export_animation = require "editor.model.export_animation"
 local export_material = require "editor.model.export_material"
 local glbloader = require "editor.model.glTF.glb"
 local utility = require "editor.model.utility"
+local depends = require "editor.depends"
 
 local function build_scene_tree(gltfscene)
     local scenetree = {}
@@ -18,18 +19,18 @@ local function build_scene_tree(gltfscene)
 end
 
 return function (input, output, _, tolocalpath)
+    local depfiles = {}
+    depends.add(depfiles, input .. ".patch")
     utility.init(input, output)
     local glbdata = glbloader.decode(input)
     local exports = {}
     assert(glbdata.version == 2)
     exports.scenetree = build_scene_tree(glbdata.info)
+    exports.depfiles = depfiles
 
     export_meshbin(output, glbdata, exports)
     export_material(output, glbdata, exports, tolocalpath)
     export_animation(input, output, exports)
     export_prefab(output, glbdata, exports, tolocalpath)
-    return true, {
-        input,
-        input .. ".patch"
-    }
+    return true, depfiles
 end

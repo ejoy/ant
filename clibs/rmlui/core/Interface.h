@@ -46,10 +46,7 @@ public:
 	virtual MaterialHandle CreateFontMaterial(const TextEffects& effects) = 0;
 	virtual MaterialHandle CreateDefaultMaterial() = 0;
 	virtual void DestroyMaterial(MaterialHandle mat) = 0;
-};
 
-class FontEngineInterface {
-public:
 	virtual FontFaceHandle GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, uint32_t size) = 0;
 	virtual int GetLineHeight(FontFaceHandle handle) = 0;
 	virtual int GetBaseline(FontFaceHandle handle) = 0;

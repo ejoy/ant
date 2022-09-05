@@ -150,7 +150,9 @@ function util.world_to_screen(vpmat, vr, posWS)
 	local r = math3d.mul(screenNDC, math3d.vector(vr.w, vr.h, 1.0))
 	local ratio = vr.ratio
 	if ratio ~= nil and ratio ~= 1 then
-		return math3d.mul(1.0 / ratio, r)
+		local z = math3d.index(r, 3)
+		local sr = math3d.mul(1.0 / ratio, r)
+		return math3d.set_index(sr, 3, z)
 	end
 	return r
 end
