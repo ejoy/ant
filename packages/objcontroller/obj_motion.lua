@@ -64,7 +64,7 @@ end
 
 local function refine_rotation_from_viewdir(scene, viewdir)
     if scene.updir ~= mc.NULL then
-        local m = math3d.inverse(math3d.lookto(scene.t, viewdir, scene.updir))
+        local m = math3d.transpose(math3d.lookto(scene.t, viewdir, scene.updir))
         return math3d.quaternion(m)
     end
     return math3d.torotation(viewdir)
@@ -89,7 +89,7 @@ end
 local function refine_rotation(scene, r)
     if scene.updir ~= mc.NULL then
         local viewdir = math3d.todirection(r)
-        local m = math3d.inverse(math3d.lookto(scene.t, viewdir, scene.updir))
+        local m = math3d.transpose(math3d.lookto(scene.t, viewdir, scene.updir))
         return math3d.quaternion(m)
     end
     return r
