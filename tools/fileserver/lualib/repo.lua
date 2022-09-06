@@ -118,7 +118,7 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 	for _, name in ipairs(filelist) do
 		local fullname = filepath .. name	-- full name in repo
 		if is_resource(fullname) then
-			table.insert(hashs, string.format("r invalid %s", name))
+			table.insert(hashs, string.format("r resource %s", name))
 		else
 			if filelist[name] == "v" or lfs.is_directory(self:realpath(fullname)) then
 				local hash = repo_build_dir(self, fullname .. '/', cache, namehashcache)

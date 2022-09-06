@@ -58,12 +58,17 @@ function CMD.GET(path)
 	end
 end
 
+local ListValue <const> = {
+	dir = true,
+	file = false,
+}
+
 function CMD.LIST(path)
 	local item = {}
 	for _, filename in ipairs(access.list_files(repo, path)) do
 		local realpath = access.realpath(repo, path .. filename)
 		if realpath then
-			item[filename] = not not lfs.is_directory(realpath)
+			item[filename] = ListValue[CMD.TYPE(path .. filename)]
 		end
 	end
 	return item
@@ -79,12 +84,14 @@ end
 
 function CMD.TYPE(path)
 	local rp = access.realpath(repo, path)
-	if lfs.is_directory(rp) then
-		return "dir"
-	elseif is_resource(rp) then
-		return "resource"
-	elseif lfs.is_regular_file(rp) then
-		return "file"
+	if rp then
+		if lfs.is_directory(rp) then
+			return "dir"
+		elseif is_resource(rp) then
+			return "dir"
+		elseif lfs.is_regular_file(rp) then
+			return "file"
+		end
 	end
 end
 
@@ -99,7 +106,10 @@ function CMD.MOUNT(name, path)
 	access.addmount(repo, name, lfs.path(path))
 end
 
-local function dispatch(id, cmd, ...)
+local function dispatch(ok, id, cmd, ...)
+	if not ok then
+		return
+	end
     local f = CMD[cmd]
     if not f then
         print("Unsupported command : ", cmd)
@@ -107,13 +117,47 @@ local function dispatch(id, cmd, ...)
     else
         response_id(id, f(...))
     end
-    return true
+	return true
+end
+
+local ltask
+
+local exclusive = require "ltask.exclusive"
+
+local function ltask_ready()
+	return coroutine.yield() == nil
+end
+
+local function ltask_update()
+	if ltask == nil then
+		assert(loadfile "engine/task/service/service.lua")(true)
+		ltask = require "ltask"
+		ltask.dispatch(CMD)
+	end
+	local SCHEDULE_IDLE <const> = 1
+	local SCHEDULE_QUIT <const> = 2
+	local SCHEDULE_SUCCESS <const> = 3
+	while true do
+		local s = ltask.schedule_message()
+		if s == SCHEDULE_QUIT then
+			ltask.log "${quit}"
+			return
+		end
+		if s == SCHEDULE_IDLE then
+			break
+		end
+		coroutine.yield()
+	end
 end
 
 local function work()
-	local c = channel
 	while true do
-		while dispatch(c:bpop()) do end
+		while dispatch(channel:pop()) do
+		end
+		if ltask_ready() then
+			ltask_update()
+		end
+		exclusive.sleep(1)
 	end
 end
 

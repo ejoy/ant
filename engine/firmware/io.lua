@@ -182,12 +182,8 @@ end
 -- response io request with id
 local function response_id(id, ...)
 	if id then
-		if type(id) == "string" then
-			local c = thread.channel(id)
-			c:push(...)
-		else
-			channel_req:ret(id, ...)
-		end
+		assert(type(id) ~= "string")
+		channel_req:ret(id, ...)
 	end
 end
 
@@ -231,12 +227,10 @@ function offline.TYPE(id, fullpath, roothash)
 		local v = dir[name]
 		if not v then
 			response_id(id, nil)
-		elseif v.dir then
-			response_id(id, "dir")
-		elseif v.hash == "invalid" then
-			response_id(id, "resource")
-		else
+		elseif v.type == 'f' then
 			response_id(id, "file")
+		else
+			response_id(id, "dir")
 		end
 		return
 	end
@@ -260,42 +254,12 @@ function offline.GET(id, fullpath, roothash)
 		response_id(id, nil)
 		return
 	end
-	if v.dir then
+	if v.type ~= 'f' then
 		response_id(id, false, v.hash)
 		return
 	end
 	local realpath = repo:hashpath(v.hash)
 	response_id(id, realpath)
-end
-
-local function normalize(p)
-    local stack = {}
-    p:gsub('[^/|]*', function (w)
-        if #w == 0 and #stack ~= 0 then
-        elseif w == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
-            stack[#stack] = nil
-        elseif w ~= '.' then
-            stack[#stack + 1] = w
-        end
-    end)
-    return table.concat(stack, "/")
-end
-
-function offline.RESOURCE(id, path)
-	print("[offline] RESOURCE", path)
-    local pos = path:find("|", 1, true)
-    if not pos then
-		offline.GET(id, path)
-		return
-    end
-	local resourefile = path:sub(1,pos-1)
-	local hash = repo:get_resource(resourefile)
-	if not hash then
-		response_id(id, nil)
-		return
-	end
-	local subfile = normalize(path:sub(pos+1))
-	offline.GET(id, subfile, hash)
 end
 
 function offline.RESOURCE_SETTING(id, ext, setting)
@@ -326,14 +290,6 @@ local function offline_dispatch(id, cmd, ...)
 		print("[ERROR] Unsupported offline command : ", cmd)
 	else
 		f(id, ...)
-	end
-end
-
-local function work_offline()
-	local c = channel_req
-	while true do
-		offline_dispatch(c:bpop())
-		logger_dispatch(offline)
 	end
 end
 
@@ -569,17 +525,27 @@ end
 
 ---------- online dispatch
 
+local ListNeedGet <const> = 3
+local ListNeedResource <const> = 4
+
 function online.LIST(id, path, roothash)
 	print("[online] LIST", path, roothash)
-	local dir, hash = repo:list(path, roothash)
+	local dir, r, hash = repo:list(path, roothash)
 	if dir then
 		response_id(id, dir)
-	elseif hash then
-		request_file(id, "GET", hash, "LIST", path, roothash)
-	else
-		print("[ERROR] Need Change Root", roothash, path)
-		response_id(id, nil)
+		return
 	end
+	if r == ListNeedGet then
+		request_file(id, "GET", hash, "LIST", path, roothash)
+		return
+	end
+	if r == ListNeedResource then
+		request_file(id, "RESOURCE", hash, "LIST", path, roothash)
+		--TODO
+		return
+	end
+	print("[ERROR] Need Change Root", roothash, path)
+	response_id(id, nil)
 end
 
 function online.FETCH(id, path)
@@ -605,24 +571,28 @@ function online.TYPE(id, fullpath, roothash)
 		path = ""
 		name = fullpath
 	end
-	local dir, hash = repo:list(path, roothash)
+	local dir, r, hash = repo:list(path, roothash)
 	if dir then
 		local v = dir[name]
 		if not v then
 			response_id(id, nil)
-		elseif v.dir then
-			response_id(id, "dir")
-		elseif v.hash == "invalid" then
-			response_id(id, "resource")
-		else
+		elseif v.type == 'f' then
 			response_id(id, "file")
+		else
+			response_id(id, "dir")
 		end
 		return
-	elseif hash then
-		request_file(id, "GET", hash, "TYPE", fullpath, roothash)
-	else
-		response_id(id, nil)
 	end
+
+	if r == ListNeedGet then
+		request_file(id, "GET", hash, "TYPE", fullpath, roothash)
+		return
+	end
+	if r == ListNeedResource then
+		request_file(id, "RESOURCE", hash, "TYPE", fullpath, roothash)
+		return
+	end
+	response_id(id, nil)
 end
 
 function online.GET(id, fullpath, roothash)
@@ -632,10 +602,14 @@ function online.GET(id, fullpath, roothash)
 		path = ""
 		name = fullpath
 	end
-	local dir, hash = repo:list(path, roothash)
+	local dir, r, hash = repo:list(path, roothash)
 	if not dir then
-		if hash then
+		if r == ListNeedGet then
 			request_file(id, "GET", hash, "GET", fullpath, roothash)
+			return
+		end
+		if r == ListNeedResource then
+			request_file(id, "RESOURCE", hash, "GET", fullpath, roothash)
 			return
 		end
 		response_err(id, "Not exist<1> " .. path .. (roothash and (" "..roothash) or ""))
@@ -647,7 +621,7 @@ function online.GET(id, fullpath, roothash)
 		response_err(id, "Not exist<2> " .. fullpath .. (roothash and (" "..roothash) or ""))
 		return
 	end
-	if v.dir then
+	if v.type ~= 'f' then
 		response_id(id, false, v.hash)
 		return
 	end
@@ -659,23 +633,6 @@ function online.GET(id, fullpath, roothash)
 		f:close()
 		response_id(id, realpath)
 	end
-end
-
-function online.RESOURCE(id, path)
-	print("[online] RESOURCE", path)
-    local pos = path:find("|", 1, true)
-    if not pos then
-		online.GET(id, path)
-		return
-    end
-	local resourefile = path:sub(1,pos-1)
-	local hash = repo:get_resource(resourefile)
-	if not hash then
-		request_file(id, "RESOURCE", resourefile, "RESOURCE", path)
-		return
-	end
-	local subfile = normalize(path:sub(pos+1))
-	online.GET(id, subfile, hash)
 end
 
 function online.RESOURCE_SETTING(id, ext, setting)
@@ -734,6 +691,104 @@ local function online_dispatch(ok, id, cmd, ...)
 	return true
 end
 
+local ltask
+local lt_update
+local lt_switch_offline
+
+local S = {}; do
+	local session = 0
+	local queue = {}
+	local function lt_request(...)
+		session = session + 1
+		queue[#queue+1] = {session,...}
+		return ltask.wait(session)
+	end
+	local function lt_response(id, ...)
+		ltask.wakeup(id, ...)
+	end
+	local function lt_online_update()
+		if #queue > 0 then
+			local q = queue
+			queue = {}
+			for _, m in ipairs(q) do
+				online_dispatch(true, table.unpack(m))
+			end
+		end
+	end
+	local function lt_offline_update()
+		if #queue > 0 then
+			local q = queue
+			queue = {}
+			for _, m in ipairs(q) do
+				offline_dispatch(true, table.unpack(m))
+			end
+		end
+	end
+	function lt_switch_offline()
+		lt_update = lt_offline_update
+	end
+
+	function response_id(id, ...)
+		if id then
+			assert(type(id) ~= "string")
+			if type(id) == "userdata" then
+				channel_req:ret(id, ...)
+			else
+				lt_response(id, ...)
+			end
+		end
+	end
+
+	for v in pairs(online) do
+		S[v] = function (...)
+			return lt_request(v, ...)
+		end
+	end
+	lt_update = lt_online_update
+end
+
+local function ltask_ready()
+	return coroutine.yield() == nil
+end
+
+local function ltask_update()
+	if ltask == nil then
+		assert(loadfile "/engine/task/service/service.lua")(true)
+		ltask = require "ltask"
+		ltask.dispatch(S)
+	end
+	lt_update()
+	local SCHEDULE_IDLE <const> = 1
+	local SCHEDULE_QUIT <const> = 2
+	local SCHEDULE_SUCCESS <const> = 3
+	while true do
+		local s = ltask.schedule_message()
+		if s == SCHEDULE_QUIT then
+			ltask.log "${quit}"
+			return
+		end
+		if s == SCHEDULE_IDLE then
+			ltask.dispatch_wakeup()
+			break
+		end
+		coroutine.yield()
+	end
+end
+
+local function work_offline()
+	lt_switch_offline()
+
+	local c = channel_req
+	while true do
+		offline_dispatch(c:pop())
+		logger_dispatch(offline)
+		if ltask_ready() then
+			ltask_update()
+		end
+		thread.sleep(0.01)
+	end
+end
+
 local function work_online()
 	rdset[1] = connection.fd	-- may need support multi socket
 	wtset[1] = connection.fd
@@ -774,6 +829,9 @@ if not host then
 	function host.update(_)
 		while online_dispatch(channel_req:pop()) do end
 		logger_dispatch(online)
+		if ltask_ready() then
+			ltask_update()
+		end
 	end
 	function host.exit()
 		print("Working offline")

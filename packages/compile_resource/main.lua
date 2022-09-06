@@ -9,8 +9,22 @@ local do_compile
 local set_setting
 
 if __ANT_RUNTIME__ then
+    local function normalize(p)
+        local stack = {}
+        p:gsub('[^/|]*', function (w)
+            if #w == 0 and #stack ~= 0 then
+            elseif w == '..' and #stack ~= 0 and stack[#stack] ~= '..' then
+                stack[#stack] = nil
+            elseif w ~= '.' then
+                stack[#stack + 1] = w
+            end
+        end)
+        return table.concat(stack, "/")
+    end
+
     function compile(pathstring)
-        return lfs.path(vfs.resource(pathstring))
+        pathstring = normalize(pathstring)
+        return lfs.path(vfs.realpath(pathstring))
     end
     set_setting = vfs.resource_setting
 else

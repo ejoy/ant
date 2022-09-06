@@ -1,6 +1,5 @@
 local sandbox = require "sandbox"
 local fs  = require "filesystem"
-local dofile = dofile
 
 local pathtoname = {}
 local registered = {}

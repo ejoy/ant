@@ -134,10 +134,11 @@ function fontsys:camera_usage()
         f.attach_eid = attach
         imaterial.set_property(e, "s_tex", fonttex_handle)
     end
+
     for e in w:select "font:in show_config:in scene:in render_object:update" do
-        if e.font.idx == nil then
+        --if e.font.idx == nil then
             load_text(e)
-        end
+        --end
     end
     lfont.submit()
 end

@@ -1,6 +1,6 @@
 local ltask = require "ltask"
 local gesture
-local exclusive
+local scheduling
 
 local S = {}
 
@@ -51,7 +51,7 @@ local function dispatch(CMD,...)
             end
         end
         repeat
-            exclusive.scheduling()
+            scheduling()
         until ltask.schedule_message() ~= SCHEDULE_SUCCESS
     else
         if CMD == "init" then
@@ -86,7 +86,8 @@ local function multi_wakeup(key, ...)
 end
 
 function S.create_window()
-    exclusive = require "ltask.exclusive"
+    local exclusive = require "ltask.exclusive"
+    scheduling = exclusive.scheduling()
     local window = require "window"
     window.create(dispatch, 1334, 750)
     ltask.fork(function()
