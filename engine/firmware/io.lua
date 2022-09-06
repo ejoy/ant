@@ -1,4 +1,4 @@
-local loadfile, host = ...
+local loadfile, config, host = ...
 
 local INTERVAL = 0.01 -- socket select timeout
 
@@ -11,11 +11,9 @@ local _print
 thread.setname "ant - IO thread"
 
 local status = {}
-local config = {}
 local repo
 
-local channel_req
-local channel_user
+local io_req
 local logqueue = {}
 
 local connection = {
@@ -23,19 +21,10 @@ local connection = {
 	sendq = {},
 	recvq = {},
 	fd = nil,
-	subscibe = {},
 }
 
 local function init_channels()
-	channel_req = thread.channel "IOreq"
-
-	local mt = {}
-	function mt:__index(name)
-		local c = assert(thread.channel(name))
-		self[name] = c
-		return c
-	end
-	channel_user = setmetatable({} , mt)
+	io_req = thread.channel "IOreq"
 
 	local origin = os.time() - os.clock()
 	local function os_date(fmt)
@@ -63,28 +52,6 @@ local function init_channels()
 		local info = debug.getinfo(2, 'Sl')
 		logqueue[#logqueue+1] = ('[%s][IO   ](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), info.short_src, info.currentline, packstring(...))
 	end
-end
-
-local function read_config(path, env)
-	env = env or {}
-	local r = loadfile(path, "t", env)
-	if not r then
-		return
-	end
-	if not pcall(r) then
-		return
-	end
-	return env
-end
-
-local function init_config(c)
-	config.repopath = assert(c.repopath)
-	config.vfspath = assert(c.vfspath)
-	config.nettype = c.nettype
-	config.address = c.address
-	config.port = c.port
-	config.socket = c.socket
-	read_config(config.repopath .. "config", config)
 end
 
 local function init_repo()
@@ -172,10 +139,10 @@ local function wait_server()
 		return
 	end
 	if config.nettype == "listen" then
-		return listen_server(config.address, config.port)
+		return listen_server(config.address, tonumber(config.port))
 	end
 	if config.nettype == "connect" then
-		return connect_server(config.address, config.port)
+		return connect_server(config.address, tonumber(config.port))
 	end
 end
 
@@ -183,7 +150,7 @@ end
 local function response_id(id, ...)
 	if id then
 		assert(type(id) ~= "string")
-		channel_req:ret(id, ...)
+		io_req:ret(id, ...)
 	end
 end
 
@@ -201,9 +168,9 @@ end
 
 local offline = {}
 
-function offline.LIST(id, path, roothash)
-	print("[offline] LIST", path, roothash)
-	local dir = repo:list(path, roothash)
+function offline.LIST(id, path)
+	print("[offline] LIST", path)
+	local dir = repo:list(path)
 	if dir then
 		response_id(id, dir)
 	else
@@ -211,8 +178,8 @@ function offline.LIST(id, path, roothash)
 	end
 end
 
-function offline.TYPE(id, fullpath, roothash)
-	print("[offline] TYPE", fullpath, roothash)
+function offline.TYPE(id, fullpath)
+	print("[offline] TYPE", fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		if fullpath == "" then
@@ -222,7 +189,7 @@ function offline.TYPE(id, fullpath, roothash)
 		path = ""
 		name = fullpath
 	end
-	local dir = repo:list(path, roothash)
+	local dir = repo:list(path)
 	if dir then
 		local v = dir[name]
 		if not v then
@@ -237,14 +204,14 @@ function offline.TYPE(id, fullpath, roothash)
 	response_id(id, nil)
 end
 
-function offline.GET(id, fullpath, roothash)
-	print("[offline] GET", fullpath, roothash)
+function offline.GET(id, fullpath)
+	print("[offline] GET", fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		path = ""
 		name = fullpath
 	end
-	local dir = repo:list(path, roothash)
+	local dir = repo:list(path)
 	if not dir then
 		response_id(id, nil)
 		return
@@ -262,7 +229,7 @@ function offline.GET(id, fullpath, roothash)
 	response_id(id, realpath)
 end
 
-function offline.RESOURCE_SETTING(id, ext, setting)
+function offline.RESOURCE_SETTING(_, ext, setting)
 	print("[offline] RESOURCE_SETTING", ext, setting)
 end
 
@@ -281,7 +248,6 @@ end
 do
 	local function noresponse_function() end
 	offline.FETCH    = noresponse_function
-	offline.SUBSCIBE = noresponse_function
 end
 
 local function offline_dispatch(id, cmd, ...)
@@ -528,23 +494,23 @@ end
 local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
-function online.LIST(id, path, roothash)
-	print("[online] LIST", path, roothash)
-	local dir, r, hash = repo:list(path, roothash)
+function online.LIST(id, path)
+	print("[online] LIST", path)
+	local dir, r, hash = repo:list(path)
 	if dir then
 		response_id(id, dir)
 		return
 	end
 	if r == ListNeedGet then
-		request_file(id, "GET", hash, "LIST", path, roothash)
+		request_file(id, "GET", hash, "LIST", path)
 		return
 	end
 	if r == ListNeedResource then
-		request_file(id, "RESOURCE", hash, "LIST", path, roothash)
+		request_file(id, "RESOURCE", hash, "LIST", path)
 		--TODO
 		return
 	end
-	print("[ERROR] Need Change Root", roothash, path)
+	print("[ERROR] Need Change Root", path)
 	response_id(id, nil)
 end
 
@@ -560,8 +526,8 @@ function online.FETCH(id, path)
 	})
 end
 
-function online.TYPE(id, fullpath, roothash)
-	print("[online] TYPE", fullpath, roothash)
+function online.TYPE(id, fullpath)
+	print("[online] TYPE", fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		if fullpath == "" then
@@ -571,7 +537,7 @@ function online.TYPE(id, fullpath, roothash)
 		path = ""
 		name = fullpath
 	end
-	local dir, r, hash = repo:list(path, roothash)
+	local dir, r, hash = repo:list(path)
 	if dir then
 		local v = dir[name]
 		if not v then
@@ -585,40 +551,40 @@ function online.TYPE(id, fullpath, roothash)
 	end
 
 	if r == ListNeedGet then
-		request_file(id, "GET", hash, "TYPE", fullpath, roothash)
+		request_file(id, "GET", hash, "TYPE", fullpath)
 		return
 	end
 	if r == ListNeedResource then
-		request_file(id, "RESOURCE", hash, "TYPE", fullpath, roothash)
+		request_file(id, "RESOURCE", hash, "TYPE", fullpath)
 		return
 	end
 	response_id(id, nil)
 end
 
-function online.GET(id, fullpath, roothash)
-	print("[online] GET", fullpath, roothash)
+function online.GET(id, fullpath)
+	print("[online] GET", fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		path = ""
 		name = fullpath
 	end
-	local dir, r, hash = repo:list(path, roothash)
+	local dir, r, hash = repo:list(path)
 	if not dir then
 		if r == ListNeedGet then
-			request_file(id, "GET", hash, "GET", fullpath, roothash)
+			request_file(id, "GET", hash, "GET", fullpath)
 			return
 		end
 		if r == ListNeedResource then
-			request_file(id, "RESOURCE", hash, "GET", fullpath, roothash)
+			request_file(id, "RESOURCE", hash, "GET", fullpath)
 			return
 		end
-		response_err(id, "Not exist<1> " .. path .. (roothash and (" "..roothash) or ""))
+		response_err(id, "Not exist<1> " .. path)
 		return
 	end
 
 	local v = dir[name]
 	if not v then
-		response_err(id, "Not exist<2> " .. fullpath .. (roothash and (" "..roothash) or ""))
+		response_err(id, "Not exist<2> " .. fullpath)
 		return
 	end
 	if v.type ~= 'f' then
@@ -641,13 +607,6 @@ function online.RESOURCE_SETTING(id, ext, setting)
 	response_id(id)
 end
 
-function online.SUBSCIBE(channel_name, message)
-	if connection.subscibe[message] then
-		print("[WARNING] Duplicate subscibe", message, channel_name)
-	end
-	connection.subscibe[message] = channel_name
-end
-
 function online.SEND(_, ...)
 	connection_send(...)
 end
@@ -662,12 +621,7 @@ end
 local function dispatch_net(cmd, ...)
 	local f = response[cmd]
 	if not f then
-		local channel_name = connection.subscibe[cmd]
-		if channel_name then
-			channel_user[channel_name]:push(cmd, ...)
-		else
-			print("[ERROR] Unsupport net command", cmd)
-		end
+		print("[ERROR] Unsupport net command", cmd)
 		return
 	end
 	f(...)
@@ -732,7 +686,7 @@ local S = {}; do
 		if id then
 			assert(type(id) ~= "string")
 			if type(id) == "userdata" then
-				channel_req:ret(id, ...)
+				io_req:ret(id, ...)
 			else
 				lt_response(id, ...)
 			end
@@ -778,7 +732,7 @@ end
 local function work_offline()
 	lt_switch_offline()
 
-	local c = channel_req
+	local c = io_req
 	while true do
 		offline_dispatch(c:pop())
 		logger_dispatch(offline)
@@ -820,14 +774,10 @@ local function work_online()
 end
 
 if not host then
+	init_channels()
 	host = {}
-	function host.init()
-		init_channels()
-		local _, c = channel_req:bpop()
-		return c
-	end
 	function host.update(_)
-		while online_dispatch(channel_req:pop()) do end
+		while online_dispatch(io_req:pop()) do end
 		logger_dispatch(online)
 		if ltask_ready() then
 			ltask_update()
@@ -840,7 +790,6 @@ if not host then
 end
 
 local function main()
-	init_config(host.init())
 	init_repo()
 	if config.address then
 		connection.fd = wait_server()

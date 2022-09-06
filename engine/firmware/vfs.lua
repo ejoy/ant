@@ -119,8 +119,8 @@ local function fetch_file(self, hash, fullpath, parent)
 	return ListFailed
 end
 
-function vfs:list(path, hash)
-	hash = hash or self.root
+function vfs:list(path)
+	local hash = self.root
 	if path ~= "" then
 		local r, h = fetch_file(self, hash, path, "")
 		if r ~= ListSuccess then

@@ -24,7 +24,7 @@ dofile "engine/common/log.lua"
 
 thread.setname "ant - IO thread"
 
-local channel = thread.channel "IOreq"
+local io_req = thread.channel "IOreq"
 local repo
 
 local function init_repo()
@@ -40,12 +40,8 @@ end
 
 local function response_id(id, ...)
 	if id then
-		if type(id) == "string" then
-			local c = thread.channel(id)
-			c:push(...)
-		else
-			channel:ret(id, ...)
-		end
+		assert(type(id) == "userdata")
+		io_req:ret(id, ...)
 	end
 end
 
@@ -152,7 +148,7 @@ end
 
 local function work()
 	while true do
-		while dispatch(channel:pop()) do
+		while dispatch(io_req:pop()) do
 		end
 		if ltask_ready() then
 			ltask_update()

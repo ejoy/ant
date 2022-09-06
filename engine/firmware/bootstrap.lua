@@ -60,24 +60,20 @@ elseif type == "remote" then
 	local ip, port = address:match "^([^:]+):(%d+)"
 	if ip and port then
 		config.address = ip
-		config.port = tonumber(port)
+		config.port = port
 	else
 		config.address = "127.0.0.1"
-		config.port = 2018
+		config.port = '2018'
 	end
 elseif type == "offline" then
 end
 
-local thread = require "bee.thread"
 local fw = require "firmware"
 local socket = require "bee.socket"
 local host = {}
 local bootloader
 local first = true
 local quit
-function host.init()
-	return config
-end
 function host.update(apis)
 	if first then
 		first = false
@@ -104,7 +100,7 @@ function host.exit(apis)
 	end
 	bootloader = assert(apis.repo:realpath '/engine/firmware/bootloader.lua')
 end
-assert(fw.loadfile "io.lua")(fw.loadfile, host)
+assert(fw.loadfile "io.lua")(fw.loadfile, config, host)
 
 local function loadfile(path, name)
 	local f = io.open(path)
