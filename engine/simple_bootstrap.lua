@@ -8,7 +8,6 @@ if not __ANT_RUNTIME__ then
         end
         return s
     end)
-    require "vfs.repoaccess" --TODO
 end
 
 require "common.log"
