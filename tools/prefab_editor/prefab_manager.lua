@@ -160,7 +160,7 @@ function m:set_default_light(enable)
             local newlight, _ = create_default_light("directional")
             self.default_light = newlight
             if not self.skybox then
-                self.skybox = ecs.create_instance("res/skybox_test.prefab")
+                self.skybox = ecs.create_instance("/res/skybox_test.prefab")
             end
         end
     else
