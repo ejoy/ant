@@ -209,7 +209,7 @@ local function choose_project()
         imgui.cursor.SameLine()
         if imgui.widget.Button "Quit" then
             local res_root_str = tostring(fs.path "":localpath())
-            global_data.project_root = lfs.path(string.sub(res_root_str, 1, #res_root_str - 1))
+            global_data.project_root = lfs.path(res_root_str)
             global_data.packages = get_package(global_data.project_root, true)
             imgui.windows.CloseCurrentPopup();
         end

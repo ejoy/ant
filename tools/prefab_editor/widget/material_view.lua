@@ -51,7 +51,7 @@ local default_setting = read_datalist_file "/pkg/ant.resources/settings/default.
 
 local function material_template(eid)
     local prefab = hierarchy:get_template(eid)
-    local mf = prefab.template.data.material
+    local mf = prefab.template.data.material .. "/main.cfg"
     return read_datalist_file(mf)
 end
 
