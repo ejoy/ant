@@ -955,7 +955,10 @@ function m.load(path)
     local mtl
     if edit_mode == MODE_MTL then
         local e <close> = w:entity(current_mtl_target, "material:in")
-        local mtl_path = e.material .. "/main.cfg"
+        local mtl_path = e.material
+        if string.find(e.material, ".glb|") then
+            mtl_path = mtl_path .. "/main.cfg"
+        end
         mtl = serialize.parse(mtl_path, cr.read_file(mtl_path))
     end
     local is_valid = true
@@ -1031,7 +1034,11 @@ function m.set_current_target(target_eid)
     end
     current_mtl_target = target_eid
     local e <close> = w:entity(target_eid, "material:in")
-    local mtlpath = e.material .. "/main.cfg"
+    
+    local mtlpath = e.material
+    if string.find(e.material, ".glb|") then
+        mtlpath = mtlpath .. "/main.cfg"
+    end
     current_mtl = mtlpath
     if not mtl_desc[mtlpath] then
         local desc = {}

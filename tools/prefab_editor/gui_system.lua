@@ -326,10 +326,10 @@ local highlight_aabb = {
 
 local function update_highlight_aabb(eid)
     if eid then
-        local e <close> = w:entity(eid, "bounding?in")
+        local e <close> = w:entity(eid, "bounding?in scene?in")
         local bounding = e.bounding
         if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
-            local wm = iom.worldmat(e) or mc.IDENTITY_MAT
+            local wm = e.scene and iom.worldmat(e) or mc.IDENTITY_MAT
             highlight_aabb.min = math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1))
             highlight_aabb.max = math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1))
             highlight_aabb.visible = true
