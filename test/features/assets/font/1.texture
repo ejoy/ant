@@ -1,0 +1,11 @@
+colorspace: sRGB
+format: RGBA8
+normalmap: false
+path: $path 1.png
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+type: texture

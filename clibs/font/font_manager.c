@@ -1,5 +1,6 @@
 #include "font_manager.h"
 #include "truetype.h"
+#include "imagefont.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -59,6 +60,19 @@ get_ttf(struct font_manager *F, int fontid) {
 	const stbtt_fontinfo * r = get_ttf_unsafe(F, fontid);
 	unlock(F);
 	return r;
+}
+
+static inline const struct image_font*
+get_imgfont_unsafe(struct font_manager *F, int fontid){
+	return image_font_info(F->L, F->imgfonts, fontid);
+}
+
+static inline const struct image_font*
+get_imgfont(struct font_manager *F, int fontid){
+	lock(F);
+	const struct image_font* imgf = get_imgfont_unsafe(F, fontid);
+	unlock(F);
+	return imgf;
 }
 
 static inline int
@@ -214,25 +228,30 @@ font_manager_touch_unsafe(struct font_manager *F, int font, int codepoint, struc
 		return -1;
 	}
 
-	const struct stbtt_fontinfo *fi = get_ttf_unsafe(F, font);
+	if (is_truetypefont(font)){
+		const struct stbtt_fontinfo *fi = get_ttf_unsafe(F, font);
 
-	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
-	int ascent, descent, lineGap;
-	int advance, lsb;
-	int ix0, iy0, ix1, iy1;
+		float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
+		int ascent, descent, lineGap;
+		int advance, lsb;
+		int ix0, iy0, ix1, iy1;
 
-	stbtt_GetFontVMetrics(fi, &ascent, &descent, &lineGap);
-	stbtt_GetCodepointHMetrics(fi, codepoint, &advance, &lsb);
-	stbtt_GetCodepointBitmapBox(fi, codepoint, scale, scale, &ix0, &iy0, &ix1, &iy1);
+		stbtt_GetFontVMetrics(fi, &ascent, &descent, &lineGap);
+		stbtt_GetCodepointHMetrics(fi, codepoint, &advance, &lsb);
+		stbtt_GetCodepointBitmapBox(fi, codepoint, scale, scale, &ix0, &iy0, &ix1, &iy1);
 
-	glyph->w = ix1-ix0 + DISTANCE_OFFSET * 2;
-	glyph->h = iy1-iy0 + DISTANCE_OFFSET * 2;
-	glyph->offset_x = (short)(lsb * scale) - DISTANCE_OFFSET;
-	glyph->offset_y = iy0 - DISTANCE_OFFSET;
-	glyph->advance_x = (short)(((float)advance) * scale + 0.5f);
-	glyph->advance_y = (short)((ascent + descent + lineGap) * scale + 0.5f);
-	glyph->u = 0;
-	glyph->v = 0;
+		glyph->w = ix1-ix0 + DISTANCE_OFFSET * 2;
+		glyph->h = iy1-iy0 + DISTANCE_OFFSET * 2;
+		glyph->offset_x = (short)(lsb * scale) - DISTANCE_OFFSET;
+		glyph->offset_y = iy0 - DISTANCE_OFFSET;
+		glyph->advance_x = (short)(((float)advance) * scale + 0.5f);
+		glyph->advance_y = (short)((ascent + descent + lineGap) * scale + 0.5f);
+		glyph->u = 0;
+		glyph->v = 0;
+	} else {
+		assert(is_imgfont(font));
+		imgfont_codepoint_glyph(F->L, font, codepoint, glyph);
+	}
 
 	if (last_node->version == F->version)	// full ?
 		return -1;
@@ -266,46 +285,57 @@ font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascen
 		*lineGap = 0;
 	}
 
-	const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
-	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
-	stbtt_GetFontVMetrics(fi, ascent, descent, lineGap);
-	*ascent = scale_font(*ascent, scale, size);
-	*descent = scale_font(*descent, scale, size);
-	*lineGap = scale_font(*lineGap, scale, size);
+	if (is_truetypefont(fontid)){
+		const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
+		float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
+		stbtt_GetFontVMetrics(fi, ascent, descent, lineGap);
+		*ascent = scale_font(*ascent, scale, size);
+		*descent = scale_font(*descent, scale, size);
+		*lineGap = scale_font(*lineGap, scale, size);
+	} else {
+		assert(is_imgfont(fontid));
+		const struct image_font* imgf = get_imgfont(F, fontid);
+		const float scale = imgfont_scale(imgf->scale, imgf->itemsize, size);
+		*ascent 	= scale_font(imgf->itemsize, scale, size);
+		*descent	= fscale_font(imgf->descent, imgf->scale, size);
+		*lineGap	= fscale_font(imgf->linegap, imgf->scale, size);
+	}
 }
 
 void 
 font_manager_underline(struct font_manager *F, int fontid, int size, float *position, float *thickness){
-	const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
-	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
-	stbtt_uint32 post = stbtt__find_table(fi->data, fi->fontstart, "post");
-	if (!post) {
-		return;
+	if (is_truetypefont(fontid)){
+		const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
+		float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
+		stbtt_uint32 post = stbtt__find_table(fi->data, fi->fontstart, "post");
+		if (!post) {
+			return;
+		}
+		int16_t underline_position = ttSHORT(fi->data + post + 8);
+		int16_t underline_thickness = ttSHORT(fi->data + post + 10);
+		*position = fscale_font(underline_position, scale, size);
+		*thickness = fscale_font(underline_thickness, scale, size);
+	} else {
+		assert(is_imgfont(fontid));
+		const struct image_font* imgf = get_imgfont(F, fontid);
+		const float scale = imgfont_scale(imgf->scale, imgf->itemsize, size);
+		*position = fscale_font(imgf->descent, scale, size);
+		*thickness = fscale_font(imgf->underline_thickness, scale, size);
 	}
-	int16_t underline_position = ttSHORT(fi->data + post + 8);
-	int16_t underline_thickness = ttSHORT(fi->data + post + 10);
-	*position = fscale_font(underline_position, scale, size);
-	*thickness = fscale_font(underline_thickness, scale, size);
-}
-
-void
-font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1,int *y1){
-	const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
-	stbtt_GetFontBoundingBox(fi, x0, y0, x1, y1);
-	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
-	*x0 = scale_font(*x0, scale, size);
-	*y0 = scale_font(*y0, scale, size);
-	*x1 = scale_font(*x1, scale, size);
-	*y1 = scale_font(*y1, scale, size);
 }
 
 // F->dpi_perinch is a constant, so do not need to lock
 int
 font_manager_pixelsize(struct font_manager *F, int fontid, int pointsize) {
-	//TODO: need set dpi when init font_manager
-	const int defaultdpi = 96;
-	const int dpi = F->dpi_perinch == 0 ? defaultdpi : F->dpi_perinch;
-	return (int)((pointsize / 72.f) * dpi + 0.5f);
+	if (is_truetypefont(fontid)){
+		//TODO: need set dpi when init font_manager
+		const int defaultdpi = 96;
+		const int dpi = F->dpi_perinch == 0 ? defaultdpi : F->dpi_perinch;
+		return (int)((pointsize / 72.f) * dpi + 0.5f);
+	}
+
+	assert(is_imgfont(fontid));
+	return 0;
 }
 
 static inline void
@@ -333,15 +363,18 @@ int
 font_manager_glyph(struct font_manager *F, int fontid, int codepoint, int size, struct font_glyph *g, struct font_glyph *og){
     int updated = font_manager_touch(F, fontid, codepoint, g);
 
-    if (og){
-        if (is_space_codepoint(codepoint)){
-			updated = 1;	// not need update
-			*og = *g;
-            og->w = og->h = 0;
-        } else {
-            *og = *g;
-        }
-    }
+	if (og){
+		*og = *g;
+		if (is_truetypefont(fontid)){
+			if (is_space_codepoint(codepoint)){
+				updated = 1;	// not need update
+				og->w = og->h = 0;
+			}
+		} else {
+			assert(is_imgfont(fontid));
+			updated = 1;
+		}
+	}
 
     font_manager_scale(F, g, size);
     return updated;
@@ -366,36 +399,37 @@ font_manager_update_unsafe(struct font_manager *F, int fontid, int codepoint, st
 		hash_insert(F, cp, slot);
 	}
 
-	const struct stbtt_fontinfo *fi = get_ttf_unsafe(F, fontid);
-	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
+	if (is_truetypefont(fontid)){
+		const struct stbtt_fontinfo *fi = get_ttf_unsafe(F, fontid);
+		float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
 
-	int width, height, xoff, yoff;
+		int width, height, xoff, yoff;
 
-	unsigned char *tmp = stbtt_GetCodepointSDF(fi, scale, codepoint, DISTANCE_OFFSET, ONEDGE_VALUE, PIXEL_DIST_SCALE, &width, &height, &xoff, &yoff);
-	if (tmp == NULL){
-		return NULL;
+		unsigned char *tmp = stbtt_GetCodepointSDF(fi, scale, codepoint, DISTANCE_OFFSET, ONEDGE_VALUE, PIXEL_DIST_SCALE, &width, &height, &xoff, &yoff);
+		if (tmp == NULL){
+			return NULL;
+		}
+		int size = width * height;
+		int gsize = glyph->w * glyph->h; 
+		if (size > gsize) {
+			size = gsize;
+		}
+		memcpy(buffer, tmp, size);
+
+		stbtt_FreeSDF(tmp, fi->userdata);
+
+		struct font_slot *s = &F->slots[slot];
+		s->codepoint_ttf = cp;
+		s->offset_x = glyph->offset_x;
+		s->offset_y = glyph->offset_y;
+		s->advance_x = glyph->advance_x;
+		s->advance_y = glyph->advance_y;
+		s->w = glyph->w;
+		s->h = glyph->h;
+
+		glyph->u = (slot % FONT_MANAGER_SLOTLINE) * FONT_MANAGER_GLYPHSIZE;
+		glyph->v = (slot / FONT_MANAGER_SLOTLINE) * FONT_MANAGER_GLYPHSIZE;
 	}
-	int size = width * height;
-	int gsize = glyph->w * glyph->h; 
-	if (size > gsize) {
-		size = gsize;
-	}
-	memcpy(buffer, tmp, size);
-
-	stbtt_FreeSDF(tmp, fi->userdata);
-
-	struct font_slot *s = &F->slots[slot];
-	s->codepoint_ttf = cp;
-	s->offset_x = glyph->offset_x;
-	s->offset_y = glyph->offset_y;
-	s->advance_x = glyph->advance_x;
-	s->advance_y = glyph->advance_y;
-	s->w = glyph->w;
-	s->h = glyph->h;
-
-	glyph->u = (slot % FONT_MANAGER_SLOTLINE) * FONT_MANAGER_GLYPHSIZE;
-	glyph->v = (slot / FONT_MANAGER_SLOTLINE) * FONT_MANAGER_GLYPHSIZE;
-
 	return NULL;
 }
 
@@ -440,6 +474,31 @@ font_manager_addfont_with_family(struct font_manager *F, const char* family) {
 	return r;
 }
 
+void
+font_manager_import_image_font_unsafe(struct font_manager *F, const char* name, const char* imgdata){
+	image_font_import(F->L, name, imgdata);
+}
+
+void
+font_manager_import_image_font(struct font_manager *F, const char* name, const char* imgdata){
+	lock(F);
+	font_manager_import_image_font_unsafe(F, name, imgdata);
+	unlock(F);
+}
+
+int
+font_manager_add_image_font_unsafe(struct font_manager *F, const char* name){
+	return image_font_name(F->L, name);
+}
+
+int
+font_manager_add_image_font(struct font_manager *F, const char* name){
+	lock(F);
+	const int fontid = font_manager_add_image_font_unsafe(F, name);
+	unlock(F);
+	return fontid;
+}
+
 float
 font_manager_sdf_mask(struct font_manager *F){
 	return (ONEDGE_VALUE) / 255.f;
@@ -457,9 +516,9 @@ font_manager_init(struct font_manager *F, void *L) {
 	font_manager_init_unsafe(F, truetype_cstruct(L), L);
 	#define SETAPI(n) F->n = n
 	SETAPI(font_manager_import);
+	SETAPI(font_manager_import_image_font);
 	SETAPI(font_manager_addfont_with_family);
 	SETAPI(font_manager_fontheight);
-	SETAPI(font_manager_boundingbox);
 	SETAPI(font_manager_pixelsize);
 	SETAPI(font_manager_glyph);
 	SETAPI(font_manager_touch);

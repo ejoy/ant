@@ -29,6 +29,7 @@ int luaopen_terrain(lua_State *L);
 int luaopen_font(lua_State *L);
 int luaopen_font_init(lua_State *L);
 int luaopen_font_truetype(lua_State *L);
+int luaopen_font_image(lua_State *L);
 int luaopen_efk(lua_State* L);
 int luaopen_effekseer_callback(lua_State* L);
 int luaopen_audio(lua_State* L);
@@ -70,6 +71,7 @@ void ant_loadmodules(lua_State* L) {
         { "font", luaopen_font },
         { "font.init", luaopen_font_init },
         { "font.truetype", luaopen_font_truetype },
+        { "font.image", luaopen_font_image},
         { "crypt", luaopen_crypt },
         { "datalist", luaopen_datalist },
         { "hierarchy", luaopen_hierarchy },

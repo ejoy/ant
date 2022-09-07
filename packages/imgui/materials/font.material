@@ -1,4 +1,8 @@
 fx:
-  fs: /pkg/ant.imgui/shader/fs_imgui_font.sc
-  vs: /pkg/ant.imgui/shader/vs_imgui_font.sc
+  fs: /pkg/ant.imgui/shader/fs_uifont.sc
+  vs: /pkg/ant.imgui/shader/vs_uifont.sc
+  setting:
+    OUTLINE_EFFECT: 1
+properties:
+  u_effect_color: {0.0, 0.0, 0.0, 0.0}
 state: /pkg/ant.resources/materials/states/default.state

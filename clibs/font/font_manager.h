@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "fontmutex.h"
 #include "font_define.h"
+#include "font_glyph.h"
+#include "imagefont.h"
 
 #define FONT_MANAGER_SLOTLINE (FONT_MANAGER_TEXSIZE/FONT_MANAGER_GLYPHSIZE)
 #define FONT_MANAGER_SLOTS (FONT_MANAGER_SLOTLINE*FONT_MANAGER_SLOTLINE)
@@ -59,17 +61,6 @@ struct priority_list {
 
 struct truetype_font;
 
-struct font_glyph {
-	int16_t offset_x;
-	int16_t offset_y;
-	int16_t advance_x;
-	int16_t advance_y;
-	uint16_t w;
-	uint16_t h;
-	uint16_t u;
-	uint16_t v;
-};
-
 struct font_manager {
 	int version;
 	int count;
@@ -78,14 +69,18 @@ struct font_manager {
 	struct priority_list priority[FONT_MANAGER_SLOTS];
 	int16_t hash[FONT_MANAGER_HASHSLOTS];
 	struct truetype_font* ttf;
+	struct image_font imgfonts[MAX_IMAGE_FONT];
 	void *L;
 	int dpi_perinch;
 	struct mutex_t* mutex;
 
 	void (*font_manager_import)(struct font_manager *F, const char* fontpath);
 	int  (*font_manager_addfont_with_family)(struct font_manager *F, const char* family);
+
+	void (*font_manager_import_image_font)(struct font_manager *F, const char* name, const char* imgdata);
+	int  (*font_manager_add_image_font)(struct font_manager *F, const char* name);
+
 	void (*font_manager_fontheight)(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
-	void (*font_manager_boundingbox)(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1, int *y1);
 	int  (*font_manager_pixelsize)(struct font_manager *F, int fontid, int pointsize);
 	// return 0 for need updated
 	int  (*font_manager_glyph)(struct font_manager *F, int fontid, int codepoint, int size, struct font_glyph *g, struct font_glyph *og);
@@ -104,9 +99,11 @@ struct font_manager {
 
 void font_manager_init(struct font_manager *, void *L);
 void font_manager_import(struct font_manager *F, const char* fontpath);
+void font_manager_import_image_font(struct font_manager *F, const char* name, const char* imgdata);
+int font_manager_add_image_font(struct font_manager *F, const char* name);
+
 int font_manager_addfont_with_family(struct font_manager *F, const char* family);
 void font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
-void font_manager_boundingbox(struct font_manager *F, int fontid, int size, int *x0, int *y0, int *x1, int *y1);
 int font_manager_pixelsize(struct font_manager *F, int fontid, int pointsize);
 int font_manager_glyph(struct font_manager *F, int fontid, int codepoint, int size, struct font_glyph *g, struct font_glyph *og);
 int font_manager_touch(struct font_manager *, int font, int codepoint, struct font_glyph *glyph);

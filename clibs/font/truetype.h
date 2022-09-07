@@ -18,6 +18,11 @@ struct truetype_font {
 	stbtt_fontinfo fontinfo[TRUETYPE_CAP];
 };
 
+static inline int
+is_truetypefont(int fontid){
+	return 0 == (((uint8_t)fontid) & 0xC0);
+}
+
 // get global struct truetype_font
 static inline struct truetype_font *
 truetype_cstruct(lua_State *L) {
