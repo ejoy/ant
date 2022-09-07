@@ -30,7 +30,7 @@ dofile "engine/editor/create_repo.lua" (repopath, access)
 local function response_id(id, ...)
 	if id then
 		assert(type(id) == "userdata")
-		io_req:ret(id, ...)
+		thread.rpc_return(id, ...)
 	end
 end
 

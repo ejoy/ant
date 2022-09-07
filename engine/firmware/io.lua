@@ -150,7 +150,7 @@ end
 local function response_id(id, ...)
 	if id then
 		assert(type(id) ~= "string")
-		io_req:ret(id, ...)
+		thread.rpc_return(id, ...)
 	end
 end
 
@@ -686,7 +686,7 @@ local S = {}; do
 		if id then
 			assert(type(id) ~= "string")
 			if type(id) == "userdata" then
-				io_req:ret(id, ...)
+				thread.rpc_return(id, ...)
 			else
 				lt_response(id, ...)
 			end
