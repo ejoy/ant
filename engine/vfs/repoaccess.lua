@@ -26,9 +26,10 @@ local function load_package(path)
 end
 
 function access.addmount(repo, name, path)
+	path = lfs.path(path)
 	local p = repo._mountpoint[name]
 	if p == nil then
-		repo._mountpoint[name] = lfs.path(path)
+		repo._mountpoint[name] = path
 		repo._mountname[#repo._mountname+1] = name
 	elseif p:string() == path:string() then
 	else

@@ -32,7 +32,7 @@ local BaseView, MaterialView = view_class.BaseView, view_class.MaterialView
 
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
-local access    = require "vfs.repoaccess"
+local access    = dofile "/engine/vfs/repoaccess.lua"
 
 local rb        = ecs.require "widget.resource_browser"
 
