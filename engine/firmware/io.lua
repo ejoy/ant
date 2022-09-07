@@ -507,7 +507,6 @@ function online.LIST(id, path)
 	end
 	if r == ListNeedResource then
 		request_file(id, "RESOURCE", hash, "LIST", path)
-		--TODO
 		return
 	end
 	print("[ERROR] Need Change Root", path)
