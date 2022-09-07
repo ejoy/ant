@@ -960,6 +960,7 @@ function MaterialView:_init()
             local path = uiutils.get_saveas_path("Material", "material")
             if path then
                 local vpath = access.virtualpath(global_data.repo, fs.path(path))
+                assert(vpath)
                 if vpath == nil then
                     error(("save path:%s, is not valid package"):format(path))
                 end

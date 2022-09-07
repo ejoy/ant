@@ -353,7 +353,9 @@ function TextureResource:show()
         if imgui.widget.Button("Select...") then
             local glb_filename = uiutils.get_open_file_path("Textures", "glb")
             if glb_filename then
-                glb_path = "/" .. access.virtualpath(global_data.repo, fs.path(glb_filename))
+                local vp = access.virtualpath(global_data.repo, fs.path(glb_filename))
+                assert(vp)
+                glb_path = "/" .. vp
                 rc.compile(glb_path)
                 image_path = rc.compile(glb_path .. "|images")
                 imgui.windows.OpenPopup("select_image")

@@ -5,7 +5,7 @@ return function (repopath, access)
     local repo
     function vfs.realpath(path)
         local rp = access.realpath(repo, path)
-        if lfs.exists(rp) then
+        if rp and lfs.exists(rp) then
             return rp:string()
         end
     end
