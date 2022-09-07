@@ -11,12 +11,13 @@ uniform vec4 u_mask;
 #define u_dist_multiplier	u_mask.y
 #define u_outline_width		u_mask.z
 
-#if defined(OUTLINE_EFFECT) || defined(GLOW_EFFECT) || defined(SHADOW_EFFECT)
+#if defined(OUTLINE_EFFECT) || defined(GLOW_EFFECT) 
 uniform vec4 u_effect_color;
-#endif //OUTLINE_EFFECT || GLOW_EFFECT || SHADOW_EFFECT
+#endif //OUTLINE_EFFECT || GLOW_EFFECT 
 
 #if defined(SHADOW_EFFECT)
 uniform vec4 u_shadow_offset;
+uniform vec4 u_shadow_color;
 #endif //SHADOW_EFFECT
 
 float smoothing_result(float dis, float mask, float range){
@@ -36,15 +37,29 @@ void main()
 	float coloralpha = smoothing_result(dis, u_edge_mask, smoothing);
 
 #if defined(OUTLINE_EFFECT)
-	float outline_width	= smoothing * u_outline_width;
+/*   	float outline_width	= smoothing * u_outline_width;
 	float outline_mask	= u_edge_mask - outline_width;
 	float alpha = smoothing_result(dis, outline_mask, smoothing);
-	color		= vec4(lerp(u_effect_color.rgb, v_color0.rgb, coloralpha), alpha * v_color0.a);
+	color		= vec4(lerp(u_effect_color.rgb, v_color0.rgb, coloralpha), alpha * v_color0.a);  */
+ 
+  	vec4 outlineColor;
+	outlineColor.a=smoothing_result(dis, u_outline_width, 0.18);
+	outlineColor.rgb=u_effect_color.rgb;
+	color=lerp(outlineColor,color,coloralpha);  
+	
+
 #elif defined(SHADOW_EFFECT)
+/*
 	float offsetdis = texture2D(s_tex, v_texcoord0+u_shadow_offset.xy).a;
 	float shadow_mask = u_edge_mask - (offsetdis - dis)*smoothing;
 	float alpha = smoothing_result(offsetdis, shadow_mask, smoothing);
-	color		= vec4(lerp(u_effect_color.rgb, v_color0.rgb, coloralpha), alpha * v_color0.a);
+	color		= vec4(lerp(u_effect_color.rgb, v_color0.rgb, coloralpha), alpha * v_color0.a);*/
+
+	float shadowDistance=texture2D(s_tex, v_texcoord0+u_shadow_offset.xy).a;
+	float shadowAlpha = smoothing_result(shadowDistance, u_edge_mask, 0.1);
+	vec4 shadowColor = vec4(u_shadow_color.rgb, u_shadow_color.a * shadowAlpha);
+	color=lerp(shadowColor,color,coloralpha);
+
 #elif defined(GLOW_EFFECT)
 	// vec4 effectcolor = u_effect_color;
 	// effectcolor.a = sdf(dis, u_effect_mask, u_effect_range);

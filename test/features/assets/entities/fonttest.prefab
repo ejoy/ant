@@ -58,7 +58,7 @@ data:
     font:
         file: /pkg/ant.resources.binary/ui/test/assets/font/simsun.ttc
         name: 宋体
-        size: 42
+        size: 200
     show_config:
         location_type: aabb_top
         location_offset: {0, 0.15, 0, 0}
