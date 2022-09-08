@@ -3,6 +3,11 @@ local cpath, repopath = ...
 package.path = "engine/?.lua"
 package.cpath = cpath
 
+local vfs = require "vfs"
+local thread = require "bee.thread"
+local io_req = thread.channel "IOreq"
+thread.setname "ant - IO thread"
+
 local function loadfile(path)
 	local f = io.open(path)
 	if not f then
@@ -17,93 +22,35 @@ local function dofile(path)
 	return assert(loadfile(path))()
 end
 
-local lfs = require "bee.filesystem"
-local access = dofile "engine/vfs/repoaccess.lua"
-local thread = require "bee.thread"
 dofile "engine/common/log.lua"
 
-thread.setname "ant - IO thread"
-
-local channel = thread.channel "IOreq"
-local repo
-
-local function init_repo()
-    local path = lfs.path(repopath)
-    if not lfs.is_directory(path) then
-       error "Not a dir"
-    end
-    repo = {
-        _root = path,
-    }
-    access.readmount(repo)
-end
+local access = dofile "engine/vfs/repoaccess.lua"
+dofile "engine/editor/create_repo.lua" (repopath, access)
 
 local function response_id(id, ...)
 	if id then
-		if type(id) == "string" then
-			local c = thread.channel(id)
-			c:push(...)
-		else
-			channel:ret(id, ...)
-		end
+		assert(type(id) == "userdata")
+		thread.rpc_return(id, ...)
 	end
 end
 
-local CMD = {}
-
-function CMD.GET(path)
-	local rp = access.realpath(repo, path)
-	if rp and lfs.exists(rp) then
-		return rp:string()
-	end
-end
-
-local ListValue <const> = {
-	dir = true,
-	file = false,
+local CMD = {
+	GET = vfs.realpath,
+	LIST = vfs.list,
+	TYPE = vfs.type,
+	REPOPATH = vfs.repopath,
+	MOUNT = vfs.mount,
+	FETCH = function() end,
 }
 
-function CMD.LIST(path)
-	local item = {}
-	for _, filename in ipairs(access.list_files(repo, path)) do
-		local realpath = access.realpath(repo, path .. filename)
-		if realpath then
-			item[filename] = ListValue[CMD.TYPE(path .. filename)]
-		end
-	end
-	return item
-end
-
-local function is_resource(path)
-	local ext = path:extension():string():sub(2):lower()
-	if ext ~= "material" and ext ~= "glb"  and ext ~= "texture" and ext ~= "png" then
-		return false
-	end
-	return true
-end
-
-function CMD.TYPE(path)
-	local rp = access.realpath(repo, path)
-	if rp then
-		if lfs.is_directory(rp) then
-			return "dir"
-		elseif is_resource(rp) then
-			return "dir"
-		elseif lfs.is_regular_file(rp) then
-			return "file"
-		end
+local S_CMD = {}
+for k, f in pairs(CMD) do
+	S_CMD[k] = function (id, ...)
+		response_id(id, f(...))
 	end
 end
-
-function CMD.FETCH(path)
-end
-
-function CMD.REPOPATH()
-	return repopath
-end
-
-function CMD.MOUNT(name, path)
-	access.addmount(repo, name, lfs.path(path))
+for k, f in pairs(S_CMD) do
+	CMD["S_"..k] = f
 end
 
 local function dispatch(ok, id, cmd, ...)
@@ -152,7 +99,7 @@ end
 
 local function work()
 	while true do
-		while dispatch(channel:pop()) do
+		while dispatch(io_req:pop()) do
 		end
 		if ltask_ready() then
 			ltask_update()
@@ -161,5 +108,4 @@ local function work()
 	end
 end
 
-init_repo()
 work()

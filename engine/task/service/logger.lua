@@ -65,14 +65,13 @@ local LOG
 
 if __ANT_RUNTIME__ then
     local platform = require "bee.platform"
-    local thread = require "bee.thread"
-    local IO = thread.channel "IOreq"
+    local ServiceIO = ltask.queryservice "io"
 	if platform.os == "ios" then
 		local ios = require "ios"
 		local document = ios.directory(ios.NSDocumentDirectory)
 		local logfile = document .. "/log_" .. (os.date '%Y%m%d_%H%M%S') .. ".log"
 		function LOG(data)
-			IO:push(false, "SEND", "LOG", data)
+			ltask.send(ServiceIO, "SEND", "LOG", data)
 			local f <close> = io.open(logfile, "a+")
 			if f then
 				f:write(data)
@@ -81,7 +80,7 @@ if __ANT_RUNTIME__ then
 		end
 	else
 		function LOG(data)
-			IO:push(false, "SEND", "LOG", data)
+			ltask.send(ServiceIO, "SEND", "LOG", data)
 		end
 	end
 else

@@ -955,7 +955,11 @@ function m.load(path)
     local mtl
     if edit_mode == MODE_MTL then
         local e <close> = w:entity(current_mtl_target, "material:in")
-        mtl = serialize.parse(e.material, cr.read_file(e.material))
+        local mtl_path = e.material
+        if string.find(e.material, ".glb|") then
+            mtl_path = mtl_path .. "/main.cfg"
+        end
+        mtl = serialize.parse(mtl_path, cr.read_file(mtl_path))
     end
     local is_valid = true
     for _, value in ipairs(anim.target_anims) do
@@ -1030,7 +1034,11 @@ function m.set_current_target(target_eid)
     end
     current_mtl_target = target_eid
     local e <close> = w:entity(target_eid, "material:in")
+    
     local mtlpath = e.material
+    if string.find(e.material, ".glb|") then
+        mtlpath = mtlpath .. "/main.cfg"
+    end
     current_mtl = mtlpath
     if not mtl_desc[mtlpath] then
         local desc = {}
@@ -1090,8 +1098,10 @@ function m.init(skeleton)
         if pose_result then
             for _, joint in ipairs(jlist) do
                 if joint.mesh then
-                    local mesh_e <close> = w:entity(joint.mesh)
-                    iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(pose_result:joint(joint.index), math3d.matrix{s=joint_scale}))))
+                    local mesh_e <close> = w:entity(joint.mesh, "scene?in")
+                    if mesh_e.scene then
+                        iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(pose_result:joint(joint.index), math3d.matrix{s=joint_scale}))))    
+                    end
                 end
             end
         end

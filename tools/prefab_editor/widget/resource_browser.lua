@@ -62,7 +62,7 @@ local function construct_resource_tree(fspath)
         end
         table.sort(sorted_path, function(a, b) return string.lower(tostring(a)) < string.lower(tostring(b)) end)
         for _, item in ipairs(sorted_path) do
-            if fs.is_directory(item) then
+            if fs.is_directory(item) and item:extension():string() ~= ".glb" then
                 table.insert(tree.dirs, {item, construct_resource_tree(item), parent = {tree}})
                 if selected_folder[1] == item then
                     selected_folder = tree.dirs[#tree.dirs]

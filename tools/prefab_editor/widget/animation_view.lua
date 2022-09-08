@@ -18,7 +18,7 @@ local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local joint_utils = require "widget.joint_utils"
 local utils     = require "common.utils"
-local access    = require "vfs.repoaccess"
+local access    = dofile "/engine/vfs/repoaccess.lua"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local global_data = require "common.global_data"
@@ -487,6 +487,7 @@ local function show_current_event()
             local rpath = uiutils.get_open_file_path("Effect", "efk")
             if rpath then
                 local pkgpath = access.virtualpath(global_data.repo, fs.path(rpath))
+                assert(pkgpath)
                 current_event.asset_path_ui.text = pkgpath
                 current_event.asset_path = pkgpath
                 dirty = true
@@ -761,6 +762,7 @@ function m.show()
                 local localpath = uiutils.get_open_file_path("Animation", "anim")
                 if localpath then
                     anim_path = access.virtualpath(global_data.repo, fs.path(localpath))
+                    assert(anim_path)
                 end
                 -- local glb_filename = uiutils.get_open_file_path("Animation", "glb")
                 -- if glb_filename then

@@ -27,10 +27,15 @@ local fs = require "filesystem"
 local lfs = require "filesystem.local"
 
 function utils.write_file(filename, data)
-    local filepath = fs.path(filename)
-    local name = filepath:filename()
-    local path = filepath:remove_filename()
-    local f = assert(lfs.open(path:localpath() / name:string(), "wb"))
+    local f
+    if string.sub(filename, 1, 1) == "/" then
+        local filepath = fs.path(filename)
+        local name = filepath:filename()
+        local path = filepath:remove_filename()
+        f = assert(lfs.open(path:localpath() / name:string(), "wb"))
+    else
+        f = assert(lfs.open(fs.path(filename), "wb"))
+    end
     f:write(data)
     f:close()
 end

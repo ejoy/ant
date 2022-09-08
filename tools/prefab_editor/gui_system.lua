@@ -43,7 +43,7 @@ prefab_mgr.set_anim_view(anim_view)
 
 
 local vfs               = require "vfs"
-local access            = require "vfs.repoaccess"
+local access            = dofile "/engine/vfs/repoaccess.lua"
 local fs                = require "filesystem"
 local lfs               = require "filesystem.local"
 local bgfx              = require "bgfx"
@@ -209,7 +209,7 @@ local function choose_project()
         imgui.cursor.SameLine()
         if imgui.widget.Button "Quit" then
             local res_root_str = tostring(fs.path "":localpath())
-            global_data.project_root = lfs.path(string.sub(res_root_str, 1, #res_root_str - 1))
+            global_data.project_root = lfs.path(res_root_str)
             global_data.packages = get_package(global_data.project_root, true)
             imgui.windows.CloseCurrentPopup();
         end
@@ -326,10 +326,10 @@ local highlight_aabb = {
 
 local function update_highlight_aabb(eid)
     if eid then
-        local e <close> = w:entity(eid, "bounding?in")
+        local e <close> = w:entity(eid, "bounding?in scene?in")
         local bounding = e.bounding
         if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
-            local wm = iom.worldmat(e) or mc.IDENTITY_MAT
+            local wm = e.scene and iom.worldmat(e) or mc.IDENTITY_MAT
             highlight_aabb.min = math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1))
             highlight_aabb.max = math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1))
             highlight_aabb.visible = true
@@ -557,6 +557,7 @@ end
 function m:data_changed()
     if highlight_aabb.visible and highlight_aabb.min and highlight_aabb.max then
         iwd.draw_aabb_box(highlight_aabb, nil, aabb_color_i)
+        -- iwd.draw_lines({0.0,0.0,0.0,0.0,10.0,0.0}, nil, aabb_color_i)
     end
 end
 

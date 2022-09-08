@@ -42,9 +42,6 @@ local function is_resource(path)
 	if ext ~= "material" and ext ~= "glb"  and ext ~= "texture" and ext ~= "png" then
 		return false
 	end
-	if path:sub(1,8) == "/.build/" then
-		return false
-	end
 	return true
 end
 
@@ -117,7 +114,7 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 	local filelist = access.list_files(self, filepath)
 	for _, name in ipairs(filelist) do
 		local fullname = filepath .. name	-- full name in repo
-		if is_resource(fullname) then
+		if not self._resource and is_resource(fullname) then
 			table.insert(hashs, string.format("r resource %s", name))
 		else
 			if filelist[name] == "v" or lfs.is_directory(self:realpath(fullname)) then
@@ -402,6 +399,7 @@ function repo:build_dir(rpath, lpath)
 		_namecache = {},
 		_mountname = {},
 		_mountpoint = {},
+		_resource = true,
 	}
 	access.addmount(r, rpath, lpath)
 	setmetatable(r, repo)

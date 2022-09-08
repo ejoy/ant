@@ -1,12 +1,11 @@
 local lfs = require "bee.filesystem"
-local access = dofile "/engine/vfs/repoaccess.lua"
 local vfs = require "vfs"
 
-return function (repopath)
+return function (repopath, access)
     local repo
     function vfs.realpath(path)
         local rp = access.realpath(repo, path)
-        if lfs.exists(rp) then
+        if rp and lfs.exists(rp) then
             return rp:string()
         end
     end
@@ -15,8 +14,12 @@ return function (repopath)
         file = false,
     }
     local function is_resource(path)
-        local ext = path:extension():string():sub(2):lower()
+        path = path:string()
+        local ext = path:match "[^/]%.([%w*?_%-]*)$"
         if ext ~= "material" and ext ~= "glb"  and ext ~= "texture" and ext ~= "png" then
+            return false
+        end
+        if path:sub(1,8) == "/.build/" then
             return false
         end
         return true

@@ -1,3 +1,4 @@
+require "common.log"
 local sandbox = require "sandbox"
 local fs  = require "filesystem"
 

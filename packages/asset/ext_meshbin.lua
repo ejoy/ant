@@ -63,11 +63,7 @@ local function create_bounding(bounding)
 end
 
 local function loader(filename)
-    local c
-    do
-        local _ <close> = fs.switch_sync()
-        c = cr.read_file(filename)
-    end
+    local c = cr.read_file(filename)
     local mesh = serialize.unpack(c)
     create_bounding(mesh.bounding)
     return init(mesh)

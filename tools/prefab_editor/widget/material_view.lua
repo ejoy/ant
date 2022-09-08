@@ -32,7 +32,7 @@ local BaseView, MaterialView = view_class.BaseView, view_class.MaterialView
 
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
-local access    = require "vfs.repoaccess"
+local access    = dofile "/engine/vfs/repoaccess.lua"
 
 local rb        = ecs.require "widget.resource_browser"
 
@@ -52,6 +52,9 @@ local default_setting = read_datalist_file "/pkg/ant.resources/settings/default.
 local function material_template(eid)
     local prefab = hierarchy:get_template(eid)
     local mf = prefab.template.data.material
+    if string.find(mf, ".glb|") then
+        mf = mf .. "/main.cfg"
+    end
     return read_datalist_file(mf)
 end
 
@@ -957,6 +960,7 @@ function MaterialView:_init()
             local path = uiutils.get_saveas_path("Material", "material")
             if path then
                 local vpath = access.virtualpath(global_data.repo, fs.path(path))
+                assert(vpath)
                 if vpath == nil then
                     error(("save path:%s, is not valid package"):format(path))
                 end

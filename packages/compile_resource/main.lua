@@ -36,7 +36,12 @@ else
 end
 
 local function read_file(filename)
-    local f = assert(lfs.open(compile(filename), "rb"))
+    local f
+    if string.sub(filename, 1, 1) == "/" then
+        f = assert(lfs.open(compile(filename), "rb"))
+    else
+        f = assert(lfs.open(lfs.path(filename), "rb"))
+    end
     local c = f:read "a"
     f:close()
     return c
