@@ -26,12 +26,13 @@ local thread = require "bee.thread"
 
 thread.newchannel "IOreq"
 
-config.vfspath = vfs.realpath "/engine/firmware/vfs.lua"
+config.vfspath = "/engine/firmware/vfs.lua"
 
 local SCRIPT = {"-- IO thread"}
 SCRIPT[#SCRIPT+1] = "local PRELOAD = {"
 for _, v in ipairs {
     "/engine/firmware/io.lua",
+    "/engine/firmware/vfs.lua",
     "/engine/task/service/service.lua",
     "/engine/debugger.lua",
 } do

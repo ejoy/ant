@@ -55,7 +55,7 @@ local function init_channels()
 end
 
 local function init_repo()
-	local vfs = assert(loadfile(config.vfspath, 'engine/firmware/vfs.lua'))()
+	local vfs = assert(loadfile(config.vfspath))()
 	repo = vfs.new(config.repopath)
 	status.repo = repo
 end
@@ -350,10 +350,10 @@ local function request_complete(args, ok, err)
 	end
 end
 
-local function request_file(id, req, hash, res, path, roothash)
+local function request_file(id, req, hash, res, path)
 	local promise = {
 		resolve = function ()
-			online[res](id, path, roothash)
+			online[res](id, path)
 		end,
 		reject = function ()
 			local errmsg = "MISSING "
@@ -361,9 +361,6 @@ local function request_file(id, req, hash, res, path, roothash)
 				errmsg = errmsg .. table.concat(path, " ")
 			else
 				errmsg = errmsg .. path
-			end
-			if roothash then
-				errmsg = errmsg .. " " .. roothash
 			end
 			response_err(id, errmsg)
 		end
@@ -593,7 +590,7 @@ function online.GET(id, fullpath)
 	local realpath = repo:hashpath(v.hash)
 	local f = io.open(realpath,"rb")
 	if not f then
-		request_file(id, "GET", v.hash, "GET", fullpath, roothash)
+		request_file(id, "GET", v.hash, "GET", fullpath)
 	else
 		f:close()
 		response_id(id, realpath)
@@ -659,26 +656,19 @@ local S = {}; do
 	local function lt_response(id, ...)
 		ltask.wakeup(id, ...)
 	end
-	local function lt_online_update()
+
+	local lt_dispatch = online_dispatch
+	function lt_update()
 		if #queue > 0 then
 			local q = queue
 			queue = {}
 			for _, m in ipairs(q) do
-				online_dispatch(true, table.unpack(m))
-			end
-		end
-	end
-	local function lt_offline_update()
-		if #queue > 0 then
-			local q = queue
-			queue = {}
-			for _, m in ipairs(q) do
-				offline_dispatch(true, table.unpack(m))
+				lt_dispatch(true, table.unpack(m))
 			end
 		end
 	end
 	function lt_switch_offline()
-		lt_update = lt_offline_update
+		lt_dispatch = offline_dispatch
 	end
 
 	function response_id(id, ...)
@@ -697,7 +687,11 @@ local S = {}; do
 			return lt_request(v, ...)
 		end
 	end
-	lt_update = lt_online_update
+	for v in pairs(online) do
+		S["S_"..v] = function (id, ...)
+			lt_dispatch(true, id, v, ...)
+		end
+	end
 end
 
 local function ltask_ready()

@@ -1,5 +1,6 @@
 local boot = require "ltask.bootstrap"
 local ltask = require "ltask"
+local fs = require "filesystem"
 
 local SERVICE_ROOT <const> = 1
 local MESSSAGE_SYSTEM <const> = 0
@@ -51,6 +52,11 @@ local function toclose(f)
 	return setmetatable({}, {__close=f})
 end
 
+local function readall(filename)
+	local f <close> = assert(fs.open(fs.path(filename), "rb"))
+	return f:read "a"
+end
+
 local function init(c)
 	config = c
 	if config.service_path then
@@ -59,6 +65,8 @@ local function init(c)
 		config.service_path = "/engine/task/service/?.lua"
 	end
 	config.lua_cpath = config.lua_cpath or package.cpath
+
+	local servicelua = readall "/engine/task/service/service.lua"
 
 	local initstr = ""
 	if __ANT_RUNTIME__ then
@@ -75,16 +83,22 @@ require "vfs"
 		initstr = initstr .. [[
 local ltask = require "ltask"
 local name = ("Service:%d <%s>"):format(ltask.self(), ltask.label():sub(9) or "unk")
-dofile "/engine/debugger.lua"
-	:event("setThreadName", name)
-	:event "wait"
+local function dbg_dofile(filename, ...)
+    local f = assert(io.open(filename))
+    local str = f:read "a"
+    f:close()
+    return assert(load(str, "=(debugger.lua)"))(...)
+end
+local path = os.getenv "LUA_DEBUG_PATH"
+dbg_dofile(path .. "/script/debugger.lua", path)
+	: attach {}
+	: event("setThreadName", name)
+	: event "wait"
 ]]
 	end
 
 	initstr = initstr .. [[
 package.path = "/engine/?.lua"
-require "simple_bootstrap"
-local initfunc = assert(loadfile "/engine/task/service/service.lua")
 ]]
 
 	init_root_service = initstr .. [[
@@ -94,7 +108,6 @@ function loadfile(filename)
 	assert(filename == RootLua)
 	return f, err
 end
-initfunc()
 ]]
 
 if config.support_package then
@@ -128,17 +141,30 @@ end
 ]]
 end
 
-	config.init_service = initstr .. [[
+	init_root_service = init_root_service .. servicelua
+	config.init_service = initstr .. servicelua
+
+	config.preload = [[
 local ltask = require "ltask"
 local vfs = require "vfs"
-local ServiceIO
-local function request(...)
-	if not ServiceIO then
-		ServiceIO = ltask.queryservice "io"
-	end
+local thread = require "bee.thread"
+local ServiceIO = ltask.uniqueservice "io"
+
+local function sync_request(cmd, ...)
+	local r, _ = thread.rpc_create()
+	ltask.send_direct(ServiceIO, "S_"..cmd, r, ...)
+	return thread.rpc_wait(r)
+end
+local function async_request(...)
 	return ltask.call(ServiceIO, ...)
 end
-vfs.sync = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource_setting=vfs.resource_setting}
+local request = async_request
+function vfs.switch_sync()
+	request = sync_request
+end
+function vfs.switch_async()
+	request = async_request
+end
 function vfs.realpath(path)
 	return request("GET", path)
 end
@@ -151,8 +177,8 @@ end
 function vfs.resource_setting(ext, setting)
 	return request("RESOURCE_SETTING", ext, setting)
 end
-vfs.async = {realpath=vfs.realpath,list=vfs.list,type=vfs.type,resource_setting=vfs.resource_setting}
-initfunc()]]
+]]
+
 end
 
 return function (c)

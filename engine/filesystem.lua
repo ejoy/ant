@@ -304,18 +304,12 @@ function fs.dofile(filepath)
 end
 
 local close_sync = setmetatable({}, {__close=function ()
-    for k, v in pairs(vfs.async) do
-        vfs[k] = v
-    end
+    vfs.switch_async()
 end})
 
 function fs.switch_sync()
-    if vfs.sync and vfs.type ~= vfs.sync.type then
-        for k, v in pairs(vfs.sync) do
-            vfs[k] = v
-        end
-        return close_sync
-    end
+    vfs.switch_sync()
+    return close_sync
 end
 
 return fs
