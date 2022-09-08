@@ -59,11 +59,10 @@ local CODEPOINTS = setmetatable({}, {__index=function (t, key)
     local fontid = (0xff000000&key)>>24
     local name = image_fontid_names[fontid]
     local img = assert(import_names[name])
-    local w, h = img.w, img.h
-
     local itemsize = img.itemsize
-    local s = codepoint * itemsize
-    local uidx, vidx = s // w, s % h
+    local ww = img.w // itemsize
+
+    local uidx, vidx = codepoint % ww, codepoint // ww
     local u, v = uidx * itemsize, vidx * itemsize
     
     -- struct font_glyph {
@@ -89,8 +88,7 @@ end})
 function imagefont.codepoint(fontid, codepoint)
     assert(is_imgfont(fontid))
     local key = fontid << 24|codepoint
-    local v = CODEPOINTS[key]
-    return v
+    return CODEPOINTS[key]
 end
 
 limgfont.IMPORT     = imagefont.import

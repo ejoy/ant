@@ -162,7 +162,9 @@ lprepare_text(lua_State *L) {
 #define FIXPOINT FONT_POSTION_FIX_POINT
 
 static inline void
-fill_text_quad(struct font_manager *F, struct quad_text * qt, int16_t x0, int16_t y0, uint32_t color, int size, struct font_glyph *g) {
+fill_text_quad(struct font_manager *F, struct quad_text * qt,
+	int16_t x0, int16_t y0, uint16_t texw, uint16_t texh,
+	uint32_t color, int size, struct font_glyph *g) {
 	unsigned short w = g->w;
 	unsigned short h = g->h;
 //	printf("fill %d %d %d %d %d\n", x0, g->u, g->v, w, h);
@@ -174,11 +176,11 @@ fill_text_quad(struct font_manager *F, struct quad_text * qt, int16_t x0, int16_
 	int16_t x1 = x0 + g->w * FIXPOINT;
 	int16_t y1 = y0 + g->h * FIXPOINT;
 
-	int16_t u0 = g->u * (0x8000 / FONT_MANAGER_TEXSIZE);
-	int16_t v0 = g->v * (0x8000 / FONT_MANAGER_TEXSIZE);
+	int16_t u0 = g->u * (0x8000 / texw);
+	int16_t v0 = g->v * (0x8000 / texh);
 
-	int16_t u1 = (g->u + w) * (0x8000 / FONT_MANAGER_TEXSIZE);
-	int16_t v1 = (g->v + h) * (0x8000 / FONT_MANAGER_TEXSIZE);
+	int16_t u1 = (g->u + w) * (0x8000 / texw);
+	int16_t v1 = (g->v + h) * (0x8000 / texh);
 
 	qt[0].p[0] = x0;
 	qt[0].p[1] = y0;
@@ -219,15 +221,19 @@ lload_text_quad(lua_State *L){
 
 	struct memory* m = (struct memory*)lua_touserdata(L, 1);
     size_t sz;
-    const char* text = luaL_checklstring(L, 2, &sz);
+
+	const int fontid = (int)luaL_checkinteger(L, 2);
+    const char* text = luaL_checklstring(L, 3, &sz);
     const char* textend = text + sz;
 
-    int16_t x = read_fixpoint(L, 3);
-    int16_t y = read_fixpoint(L, 4);
+    int16_t x = read_fixpoint(L, 4);
+    int16_t y = read_fixpoint(L, 5);
 
-    const int fontsize = (int)luaL_checkinteger(L, 5);
-    const uint32_t color = (uint32_t)luaL_checkinteger(L, 6);
-    const int fontid = luaL_optinteger(L, 7, 0);
+	const uint16_t texw = (uint16_t)luaL_checkinteger(L, 6);
+	const uint16_t texh = (uint16_t)luaL_checkinteger(L, 7);
+
+    const int fontsize = (int)luaL_checkinteger(L, 8);
+    const uint32_t color = (uint32_t)luaL_checkinteger(L, 9);
 
 	struct quad_text *qt = (struct quad_text *)m->data;;
 
@@ -240,7 +246,7 @@ lload_text_quad(lua_State *L){
                 luaL_error(L, "codepoint:%d, %s, is not cache, need call 'prepare_text' first", codepoint, text);
             }
 
-            fill_text_quad(fm, qt, x, y, color, fontsize, &g);
+            fill_text_quad(fm, qt, x, y, texw, texh, color, fontsize, &g);
             x += g.advance_x * FIXPOINT;
             qt += 4;
         }

@@ -16,7 +16,7 @@ local dyn_vb = require "font.dyn_vb"
 
 fontpkg.init()
 
-local fonttex_handle    = fontpkg.texture()
+local fonttex_handle, fonttex_width, fonttex_height = fontpkg.texture()
 local layout_desc       = declmgr.correct_layout "p20nii|t20nii|c40niu"
 local fontquad_layout   = declmgr.get(layout_desc)
 local dvb               = dyn_vb:create(10240, layout_desc)
@@ -92,7 +92,7 @@ local function load_text(e)
     local ro = e.render_object
 
     local m = bgfx.memory_buffer(num*4 * fontquad_layout.stride)
-    lfont.load_text_quad(m, sc.description, x, y, font.size, sc.color, font.id)
+    lfont.load_text_quad(m, sc.description, font.id, x, y, fonttex_width, fonttex_height, font.size, sc.color)
 
     font.idx = add_text_mem(m, num, ro)
 end

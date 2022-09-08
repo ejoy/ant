@@ -53,11 +53,11 @@ local function load_text_mesh(name, img, description)
 
     local fontsize = 36
     local textw, texth, num = lfont.prepare_text(img.handle, description, fontsize, imgfontid)
-    local sx, sy = 0, 0
+    local sx, sy = 250, 60
     local x, y = text_start_pos(textw, texth, sx, sy)
 
     local m = bgfx.memory_buffer(num*4 * fontquad_layout.stride)
-    lfont.load_text_quad(m, description, x, y, fontsize, 0xff00ff00, imgfontid)
+    lfont.load_text_quad(m, imgfontid, description, x, y, img.w, img.h, fontsize, 0xffffffff)
 
     return {
             vb = {
@@ -103,8 +103,8 @@ local images = {}
 function fonttest_sys.init()
     --ecs.create_instance "/pkg/ant.test.features/assets/entities/fonttest.prefab"
     --TODO: sync load texture here
-    local codepoint, codepoint2 = 3, 8
-    local description = ("<I"):pack(codepoint, codepoint2)
+    local codepoint, codepoint2 = 3, 4
+    local description = ("<BB"):pack(codepoint, codepoint2)
     local img = import_image_font(fonttex)
     images["default"] = img
     ecs.create_entity{
