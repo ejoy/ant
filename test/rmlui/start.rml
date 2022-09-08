@@ -23,6 +23,7 @@
                 background-color: #f22222;
                 color: #ffffff;
                 transform: scale(1.0);
+                
             }
             button:hover {
                 transform: scale(1.2);
