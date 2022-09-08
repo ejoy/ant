@@ -13,11 +13,11 @@ function m.init()
         lfont(fontinit (([[
             package.cpath = %q
             package.path = "/pkg/ant.font/?.lua"
-            local dbg = assert(loadfile '/engine/debugger.lua')()
-            if dbg then
-                dbg:event("setThreadName", "IO thread")
-                dbg:event "wait"
-            end
+            -- local dbg = assert(loadfile '/engine/debugger.lua')()
+            -- if dbg then
+            --     dbg:event("setThreadName", "IO thread")
+            --     dbg:event "wait"
+            -- end
             require "vfs"
             dofile "/pkg/ant.font/manager.lua"
             dofile "/pkg/ant.font/imagefont.lua"

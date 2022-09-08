@@ -1,10 +1,13 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 local fonttest_sys = ecs.system "font_test_system"
 local fs = require "filesystem"
 local assetmgr = import_package "ant.asset"
 
 local fonttex = "/pkg/ant.test.features/assets/font/1.texture"
+
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local lfont = require "font"
 local bgfx = require "bgfx"
@@ -98,7 +101,7 @@ end
 local images = {}
 
 function fonttest_sys.init()
-    ecs.create_instance "/pkg/ant.test.features/assets/entities/fonttest.prefab"
+    --ecs.create_instance "/pkg/ant.test.features/assets/entities/fonttest.prefab"
     --TODO: sync load texture here
     local codepoint, codepoint2 = 3, 8
     local description = ("<I"):pack(codepoint, codepoint2)
@@ -111,10 +114,13 @@ function fonttest_sys.init()
         },
         data = {
             simplemesh = load_text_mesh("default", img, description),
-            material = "/pkg/ant.resources/materials/font/font.material",
+            material = "/pkg/ant.resources/materials/font/imagefont.material",
             visible_state = "main_view",
             scene = {},
             name = "test_imagefont",
+            on_ready = function (e)
+                imaterial.set_property(e, "s_tex", img.handle)
+            end
         }
     }
 end

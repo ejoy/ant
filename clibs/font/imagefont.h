@@ -6,7 +6,7 @@
 #include <lauxlib.h>
 #include <assert.h>
 
-#include "font_glyph.h"
+#include "font_define.h"
 
 struct image_font {
 	uint16_t handle;
@@ -20,25 +20,13 @@ struct image_font {
     float underline_thickness;
 };
 
-#define MAX_IMAGE_FONT 32
-
 #define IMAGE_FONT              "IMAGE_FONT"
 #define IMAGE_FONT_IMPORT       "IMPORT"
 #define IMAGE_FONT_IMG_INFO     "IMG_INFO"
 #define IMAGE_FONT_CODEPOINT    "CODEPOINT"
 #define IMAGE_FONT_NAME         "NAME"
-//TODO: change font_manager hash uint32_t to uint64_t, for fix more fontid range
-#define IMAGE_FONT_MASK 0x40    //7 bit
-#define FONT_ID_MASK    0x3F    //low 6 bits
-static inline int
-imgfont_index(int fontid){
-    return FONT_ID_MASK&((uint8_t)fontid);
-}
 
-static inline int
-is_imgfont(int fontid){
-    return 0 != (IMAGE_FONT_MASK&((uint8_t)fontid));
-}
+
 
 static inline float
 imgfont_scale(float scale, uint16_t itemsize, int size){
@@ -58,8 +46,8 @@ push_func(lua_State *L, const char* filed){
 
 static inline struct image_font*
 image_font_info(lua_State *L, struct image_font *imgfonts, int fontid){
-    const int id = imgfont_index(fontid);
-    struct image_font* imgf = imgfonts+id;
+    const int idx = font_index(fontid);
+    struct image_font* imgf = imgfonts+idx;
     if (imgf->handle != UINT16_MAX){
         return imgf;
     }

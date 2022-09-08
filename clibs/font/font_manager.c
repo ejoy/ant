@@ -104,16 +104,11 @@ font_manager_init_unsafe(struct font_manager *F, struct truetype_font *ttf, void
 	F->list_head = lastslot;
 // init hash
 	for (i=0;i<FONT_MANAGER_SLOTS;i++) {
-		F->slots[i].codepoint_ttf = -1;
+		F->slots[i].codepoint_key = -1;
 	}
 	for (i=0;i<FONT_MANAGER_HASHSLOTS;i++) {
 		F->hash[i] = -1;	// empty slot
 	}
-}
-
-static inline int
-codepoint_ttf(int font, int codepoint) {
-	return (font << 24 | codepoint);
 }
 
 static inline int
@@ -127,7 +122,7 @@ hash_lookup(struct font_manager *F, int cp) {
 	int position = hash(cp);
 	while ((slot = F->hash[position]) >= 0) {
 		struct font_slot * s = &F->slots[slot];
-		if (s->codepoint_ttf == cp)
+		if (s->codepoint_key == cp)
 			return slot;
 		position = (position + COLLISION_STEP) % FONT_MANAGER_HASHSLOTS;
 	}
@@ -146,14 +141,14 @@ hash_insert(struct font_manager *F, int cp, int slotid) {
 	int slot;
 	while ((slot = F->hash[position]) >= 0) {
 		struct font_slot * s = &F->slots[slot];
-		if (s->codepoint_ttf < 0)
+		if (s->codepoint_key < 0)
 			break;
-		assert(s->codepoint_ttf != cp);
+		assert(s->codepoint_key != cp);
 
 		position = (position + COLLISION_STEP) % FONT_MANAGER_HASHSLOTS;
 	}
 	F->hash[position] = slotid;
-	F->slots[slotid].codepoint_ttf = cp;
+	F->slots[slotid].codepoint_key = cp;
 }
 
 static void
@@ -166,7 +161,7 @@ rehash(struct font_manager *F) {
 	int count = 0;
 	(void)count;
 	for (i=0;i<FONT_MANAGER_SLOTS;i++) {
-		int cp = F->slots[i].codepoint_ttf;
+		int cp = F->slots[i].codepoint_key;
 		if (cp >= 0) {
 			assert(++count <= FONT_MANAGER_SLOTS);
 			hash_insert(F, cp, i);
@@ -204,7 +199,7 @@ touch_slot(struct font_manager *F, int slotid) {
 // 1 exist in cache. 0 not exist in cache , call font_manager_update. -1 failed.
 int
 font_manager_touch_unsafe(struct font_manager *F, int font, int codepoint, struct font_glyph *glyph) {
-	int cp = codepoint_ttf(font, codepoint);
+	int cp = codepoint_key(font, codepoint);
 	int slot = hash_lookup(F, cp);
 	if (slot >= 0) {
 		touch_slot(F, slot);
@@ -222,7 +217,7 @@ font_manager_touch_unsafe(struct font_manager *F, int font, int codepoint, struc
 	}
 	int last_slot = F->priority[F->list_head].prev;
 	struct priority_list *last_node = &F->priority[last_slot];
-	if (font <= 0) {
+	if (font_index(font) <= 0) {
 		// invalid font
 		memset(glyph, 0, sizeof(*glyph));
 		return -1;
@@ -384,7 +379,7 @@ static const char *
 font_manager_update_unsafe(struct font_manager *F, int fontid, int codepoint, struct font_glyph *glyph, uint8_t *buffer) {
 	if (fontid <= 0)
 		return "Invalid font";
-	int cp = codepoint_ttf(fontid, codepoint);
+	int cp = codepoint_key(fontid, codepoint);
 	int slot = hash_lookup(F, cp);
 	if (slot < 0) {
 		// move last node to head
@@ -395,7 +390,7 @@ font_manager_update_unsafe(struct font_manager *F, int fontid, int codepoint, st
 		}
 		last_node->version = F->version;
 		F->list_head = slot;
-		F->slots[slot].codepoint_ttf = -1;
+		F->slots[slot].codepoint_key = -1;
 		hash_insert(F, cp, slot);
 	}
 
@@ -419,7 +414,7 @@ font_manager_update_unsafe(struct font_manager *F, int fontid, int codepoint, st
 		stbtt_FreeSDF(tmp, fi->userdata);
 
 		struct font_slot *s = &F->slots[slot];
-		s->codepoint_ttf = cp;
+		s->codepoint_key = cp;
 		s->offset_x = glyph->offset_x;
 		s->offset_y = glyph->offset_y;
 		s->advance_x = glyph->advance_x;

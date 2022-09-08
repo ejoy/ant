@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include "fontmutex.h"
 #include "font_define.h"
-#include "font_glyph.h"
 #include "imagefont.h"
 
 #define FONT_MANAGER_SLOTLINE (FONT_MANAGER_TEXSIZE/FONT_MANAGER_GLYPHSIZE)
@@ -44,7 +43,7 @@
 //              |------------- advance_x ---------->|
 
 struct font_slot {
-	int codepoint_ttf;	// high 8 bits (ttf index)
+	uint32_t codepoint_key;	// high 8 bits (ttf index)
 	int16_t offset_x;
 	int16_t offset_y;
 	int16_t advance_x;
@@ -69,7 +68,7 @@ struct font_manager {
 	struct priority_list priority[FONT_MANAGER_SLOTS];
 	int16_t hash[FONT_MANAGER_HASHSLOTS];
 	struct truetype_font* ttf;
-	struct image_font imgfonts[MAX_IMAGE_FONT];
+	struct image_font imgfonts[MAX_FONT_NUM];
 	void *L;
 	int dpi_perinch;
 	struct mutex_t* mutex;

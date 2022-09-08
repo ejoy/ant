@@ -11,17 +11,11 @@
 #define TRUETYPE_NAME "TRUETYPE_NAME"
 #define TRUETYPE_CSTRUCT "TRUETYPE_CSTRUCT"
 #define TRUETYPE_IMPORT "TRUETYPE_IMPORT"
-#define TRUETYPE_CAP 64
 
 struct truetype_font {
 	uint64_t enable;
-	stbtt_fontinfo fontinfo[TRUETYPE_CAP];
+	stbtt_fontinfo fontinfo[MAX_FONT_NUM];
 };
-
-static inline int
-is_truetypefont(int fontid){
-	return 0 == (((uint8_t)fontid) & 0xC0);
-}
 
 // get global struct truetype_font
 static inline struct truetype_font *
@@ -55,7 +49,7 @@ default_info(struct truetype_font *ttf) {
 // font id -> font info
 static inline const stbtt_fontinfo *
 truetype_font(struct truetype_font *ttf, int fontid, lua_State *L) {
-	if (fontid < 1 || fontid > TRUETYPE_CAP) {
+	if (fontid < 1 || fontid > MAX_FONT_NUM) {
 		fontid = 0;
 	} else {
 		--fontid;

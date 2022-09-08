@@ -4,6 +4,7 @@
 #include <lauxlib.h>
 #include <string.h>
 
+#include "font_define.h"
 #include "truetype.h"
 
 static const unsigned char *
@@ -25,8 +26,8 @@ static int
 lupdate_cstruct(lua_State *L) {
 	struct truetype_font * f = truetype_cstruct(L);
 	int fontid = luaL_checkinteger(L, 1);
-	if (fontid < 1 || fontid > TRUETYPE_CAP)
-		return luaL_error(L, "The font id %d is out of %d", fontid, TRUETYPE_CAP);
+	if (fontid < 1 || fontid > MAX_FONT_NUM)
+		return luaL_error(L, "The font id %d is out of %d", fontid, MAX_FONT_NUM);
 	const unsigned char * data = get_ttfbuffer(L, 2);
 	if (data == NULL)
 		return luaL_error(L, "Invalid font data for %d", fontid);
@@ -57,8 +58,8 @@ static int
 lunload_cstruct(lua_State *L) {
 	struct truetype_font * f = truetype_cstruct(L);
 	int fontid = luaL_checkinteger(L, 1);
-	if (fontid < 1 || fontid > TRUETYPE_CAP)
-		return luaL_error(L, "The font id %d is out of %d", fontid, TRUETYPE_CAP);
+	if (fontid < 1 || fontid > MAX_FONT_NUM)
+		return luaL_error(L, "The font id %d is out of %d", fontid, MAX_FONT_NUM);
 	--fontid;
 	f->enable &= ~(1 << fontid);
 	return 0;

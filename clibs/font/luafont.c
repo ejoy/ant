@@ -236,7 +236,7 @@ lload_text_quad(lua_State *L){
         utfint codepoint;
         text = utf8_decode(text, &codepoint, 0);
         if (codepoint){
-            if (font_manager_touch(fm, fontid, codepoint, &g) <= 0){
+            if (font_manager_touch(fm, fontid, codepoint, &g) < 0){
                 luaL_error(L, "codepoint:%d, %s, is not cache, need call 'prepare_text' first", codepoint, text);
             }
 
