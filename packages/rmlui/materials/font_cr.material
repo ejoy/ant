@@ -3,4 +3,9 @@ fx:
     vs: /pkg/ant.resources/shaders/font/vs_uifont.sc
     setting:
         ENABLE_CLIP_RECT: 1
+properties:
+  s_tex:
+    stage: 0
+    texture: /pkg/ant.resources/textures/default.texture
+  u_mask: {0.68, 0.18, 0.77, 0.0}
 state: /pkg/ant.resources/materials/states/default.state
