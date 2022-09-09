@@ -9,6 +9,7 @@ local socket = require "bee.socket"
 local io_req = thread.channel "IOreq"
 thread.setname "ant - IO thread"
 
+local quit = false
 local channelfd = socket.undump(fddata)
 
 local function loadfile(path)
@@ -135,8 +136,12 @@ function CMD.SWITCH()
 	ltask_init()
 end
 
+function CMD.quit()
+	quit = true
+end
+
 local function work()
-	while true do
+	while not quit do
 		local rds = socket.select(event)
 		if rds then
 			for _, rd in ipairs(rds) do

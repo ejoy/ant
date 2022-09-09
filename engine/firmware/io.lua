@@ -5,6 +5,7 @@ local thread = require "bee.thread"
 local socket = require "bee.socket"
 local protocol = require "protocol"
 local _print
+local QUIT = false
 local OFFLINE = false
 
 local channelfd = fddata and socket.undump(fddata) or nil
@@ -498,10 +499,8 @@ function CMD.SEND(_, ...)
 	request_send(...)
 end
 
-function CMD.EXIT(id)
-	print("[request] EXIT")
-	response_id(id, nil)
-	error "EXIT"
+function CMD.quit(id)
+	QUIT = true
 end
 
 -- dispatch package from connection
@@ -609,7 +608,7 @@ end
 
 local function work_online()
 	request_send("ROOT")
-	while true do
+	while not QUIT do
 		if host.update(status) then
 			break
 		end
@@ -714,6 +713,9 @@ local function main()
 	end
 	for _, hash in ipairs(uncomplete_req) do
 		request_complete(hash, false)
+	end
+	if QUIT then
+		return
 	end
 	host.exit(status)
 end
