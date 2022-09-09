@@ -576,14 +576,8 @@ local function ltask_init()
 	event_addr(ltaskfd, function ()
 		waitfunc()
 		local SCHEDULE_IDLE <const> = 1
-		local SCHEDULE_QUIT <const> = 2
-		local SCHEDULE_SUCCESS <const> = 3
 		while true do
 			local s = ltask.schedule_message()
-			if s == SCHEDULE_QUIT then
-				ltask.log "${quit}"
-				return
-			end
 			if s == SCHEDULE_IDLE then
 				break
 			end
@@ -661,6 +655,10 @@ local function init_event()
 			else
 				dispatch_net(table.unpack(result))
 			end
+		end
+		if ltask then
+			ltask.dispatch_wakeup()
+			coroutine.yield()
 		end
 	end)
 	event_addw(connection.fd, function (fd)
