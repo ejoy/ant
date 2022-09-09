@@ -1,41 +1,54 @@
 local thread = require "bee.thread"
+local socket = require "bee.socket"
 local io_req = thread.channel "IOreq"
 
 __ANT_RUNTIME__ = package.preload.firmware ~= nil
 
-local vfs = ...
+local vfs, fddata = ...
+local fd = socket.undump(fddata)
 
-local function rpc(...)
+local function call(...)
 	local r, _ = thread.rpc_create()
 	io_req:push(r, ...)
+	fd:send "T"
 	return thread.rpc_wait(r)
 end
 
+local function send(...)
+	local r, _ = thread.rpc_create()
+	io_req:push(r, ...)
+	fd:send "T"
+end
+
 function vfs.realpath(path)
-	return rpc("GET", path)
+	return call("GET", path)
 end
 
 function vfs.list(path)
-	return rpc("LIST", path)
+	return call("LIST", path)
 end
 
 function vfs.type(path)
-	return rpc("TYPE", path)
+	return call("TYPE", path)
 end
 
 function vfs.fetch(path)
-	return rpc("FETCH", path)
+	return call("FETCH", path)
+end
+
+function vfs.switch()
+	send("SWITCH")
 end
 
 if __ANT_RUNTIME__ then
 	function vfs.resource_setting(ext, setting)
-		return rpc("RESOURCE_SETTING", ext, setting)
+		return call("RESOURCE_SETTING", ext, setting)
 	end
 else
 	function vfs.repopath()
-		return rpc("REPOPATH")
+		return call("REPOPATH")
 	end
 	function vfs.mount(name, path)
-		return rpc("MOUNT", name, path)
+		return call("MOUNT", name, path)
 	end
 end

@@ -3,6 +3,7 @@ if thread.id ~= 0 then
     return
 end
 
+local socket = require "bee.socket"
 local boot = require "ltask.bootstrap"
 local lfs = require "filesystem.local"
 local vfs = require "vfs"
@@ -12,6 +13,11 @@ local repopath = _VFS_ROOT_
     or lfs.absolute(lfs.path(arg[0])):remove_filename():string()
 
 thread.newchannel "IOreq"
+
+local s, c = socket.pair()
+local io_req = thread.channel "IOreq"
+io_req:push(package.cpath, repopath, socket.dump(s))
+
 vfs.iothread = boot.preinit (([[
     -- IO thread
     local dbg = dofile "engine/debugger.lua"
@@ -28,7 +34,9 @@ vfs.iothread = boot.preinit (([[
         f:close()
         return load(str, "@" .. path)
     end
-    assert(loadfile "engine/editor/io.lua")(%q, %q)
+    local thread = require "bee.thread"
+    local io_req = thread.channel "IOreq"
+    assert(loadfile "engine/editor/io.lua")(io_req:bpop())
 ]]):format(package.cpath, repopath))
 
-vfs.initfunc "engine/firmware/init_thread.lua"
+vfs.initfunc("engine/firmware/init_thread.lua", socket.dump(c))

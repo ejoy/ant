@@ -1,12 +1,13 @@
-local loadfile, config, host = ...
-
-local INTERVAL = 0.01 -- socket select timeout
+local loadfile, config, host, fddata = ...
 
 -- C libs only
 local thread = require "bee.thread"
 local socket = require "bee.socket"
 local protocol = require "protocol"
 local _print
+local OFFLINE = false
+
+local channelfd = fddata and socket.undump(fddata) or nil
 
 thread.setname "ant - IO thread"
 
@@ -14,7 +15,6 @@ local status = {}
 local repo
 
 local io_req
-local logqueue = {}
 
 local connection = {
 	request = {},
@@ -22,6 +22,11 @@ local connection = {
 	recvq = {},
 	fd = nil,
 }
+
+local function connection_send(...)
+	local pack = protocol.packmessage({...})
+	table.insert(connection.sendq, 1, pack)
+end
 
 local function init_channels()
 	io_req = thread.channel "IOreq"
@@ -50,7 +55,12 @@ local function init_channels()
 	_print = _G.print
 	function _G.print(...)
 		local info = debug.getinfo(2, 'Sl')
-		logqueue[#logqueue+1] = ('[%s][IO   ](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), info.short_src, info.currentline, packstring(...))
+		local text = ('[%s][IO   ](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), info.short_src, info.currentline, packstring(...))
+		if OFFLINE then
+			_print(text)
+		else
+			connection_send("LOG", text)
+		end
 	end
 end
 
@@ -156,122 +166,52 @@ end
 
 local function response_err(id, msg)
 	print("[ERROR]", msg)
-	response_id(id, nil, msg)
-end
-
-local function logger_dispatch(t)
-	for i = 1, #logqueue do
-		t.SEND(false, "LOG", logqueue[i])
-		logqueue[i] = nil
-	end
-end
-
-local offline = {}
-
-function offline.LIST(id, path)
-	print("[offline] LIST", path)
-	local dir = repo:list(path)
-	if dir then
-		response_id(id, dir)
-	else
-		response_id(id, nil)
-	end
-end
-
-function offline.TYPE(id, fullpath)
-	print("[offline] TYPE", fullpath)
-	local path, name = fullpath:match "(.*)/(.-)$"
-	if path == nil then
-		if fullpath == "" then
-			response_id(id, "dir")
-			return
-		end
-		path = ""
-		name = fullpath
-	end
-	local dir = repo:list(path)
-	if dir then
-		local v = dir[name]
-		if not v then
-			response_id(id, nil)
-		elseif v.type == 'f' then
-			response_id(id, "file")
-		else
-			response_id(id, "dir")
-		end
-		return
-	end
 	response_id(id, nil)
 end
 
-function offline.GET(id, fullpath)
-	print("[offline] GET", fullpath)
-	local path, name = fullpath:match "(.*)/(.-)$"
-	if path == nil then
-		path = ""
-		name = fullpath
-	end
-	local dir = repo:list(path)
-	if not dir then
-		response_id(id, nil)
-		return
-	end
-	local v = dir[name]
-	if not v then
-		response_id(id, nil)
-		return
-	end
-	if v.type ~= 'f' then
-		response_id(id, false, v.hash)
-		return
-	end
-	local realpath = repo:hashpath(v.hash)
-	response_id(id, realpath)
-end
+local CMD = {}
 
-function offline.RESOURCE_SETTING(_, ext, setting)
-	print("[offline] RESOURCE_SETTING", ext, setting)
-end
-
-function offline.EXIT(id)
-	print("[offline] EXIT")
-	response_id(id, nil)
-	error "EXIT"
-end
-
-function offline.SEND(_,msg, ...)
-	if msg == "LOG" then
-		_print(...)
-	end
-end
-
-do
-	local function noresponse_function() end
-	offline.FETCH    = noresponse_function
-end
-
-local function offline_dispatch(id, cmd, ...)
-	local f = offline[cmd]
-	if not f then
-		print("[ERROR] Unsupported offline command : ", cmd)
-	else
-		f(id, ...)
-	end
-end
-
-local online = {}
-
-local function connection_send(...)
-	local pack = protocol.packmessage({...})
-	table.insert(connection.sendq, 1, pack)
-end
-
--- fd set for select
 local rdset = {}
 local wtset = {}
-local function connection_dispose(timeout)
+local rdfunc = {}
+local wtfunc = {}
+local function event_addr(fd, func)
+	if fd then
+		rdset[#rdset+1] = fd
+		rdfunc[fd] = func
+	end
+end
+local function event_addw(fd, func)
+	if fd then
+		wtset[#wtset+1] = fd
+		wtfunc[fd] = func
+	end
+end
+local function event_delr(fd)
+	if fd then
+		rdfunc[fd] = nil
+		for i, h in ipairs(rdset) do
+			if h == fd then
+				table.remove(rdset, i)
+				break
+			end
+		end
+	end
+end
+local function event_delw(fd)
+	if fd then
+		wtfunc[fd] = nil
+		for i, h in ipairs(wtset) do
+			if h == fd then
+				table.remove(wtset, i)
+				break
+			end
+		end
+	end
+end
+
+local function event_select(timeout)
 	local sending = connection.sendq
-	local fd = connection.fd
 	local rd, wt
 	if #sending > 0  then
 		rd, wt = socket.select(rdset, wtset, timeout)
@@ -286,43 +226,21 @@ local function connection_dispose(timeout)
 		-- select error
 		return nil, wt
 	end
-	if wt and wt[1] then
-		while true do
-			local data = table.remove(sending)
-			if data == nil then
-				break
-			end
-			local nbytes, err = fd:send(data)
-			if nbytes then
-				if nbytes < #data then
-					table.insert(sending, data:sub(nbytes+1))
-					break
-				end
-			else
-				if err then
-					return nil, err
-				else
-					table.insert(sending, data)	-- push back
-				end
-				break
-			end
-		end
+	for _, fd in ipairs(wt) do
+		wtfunc[fd](fd)
 	end
-	if rd[1] then
-		local data, err = fd:recv()
-		if not data then
-			if err then
-				-- socket error
-				return nil, err
-			end
-			return nil, "Closed by remote"
-		end
-		table.insert(connection.recvq, data)
+	for _, fd in ipairs(rd) do
+		rdfunc[fd](fd)
 	end
 	return true
 end
 
 local function request_start(req, args, promise)
+	if OFFLINE then
+		print("[ERROR] " .. req .. " failed in offline mode.")
+		promise.reject()
+		return
+	end
 	local list = connection.request[args]
 	if list then
 		list[#list+1] = promise
@@ -331,6 +249,13 @@ local function request_start(req, args, promise)
 		connection_send(req, args)
 	end
 end
+local function request_send(...)
+	if OFFLINE then
+		return
+	end
+	connection_send(...)
+end
+
 status.request = request_start
 
 local function request_complete(args, ok, err)
@@ -353,7 +278,7 @@ end
 local function request_file(id, req, hash, res, path)
 	local promise = {
 		resolve = function ()
-			online[res](id, path)
+			CMD[res](id, path)
 		end,
 		reject = function ()
 			local errmsg = "MISSING "
@@ -455,44 +380,11 @@ function response.FETCH(path, hashs)
 	finish()
 end
 
-local function waiting_for_root()
-	local resp = {}
-	local reading = connection.recvq
-	connection_send("ROOT")
-	while true do
-		local ok, err = connection_dispose(INTERVAL)
-		if not ok then
-			if ok == nil then
-				print("[ERROR] dispose", err)
-				return
-			end
-			-- timeout
-		else
-			local changeroot
-			local result = {}
-			while protocol.readmessage(reading, result) do
-				if result[1] == "ROOT" then
-					changeroot = result[2]
-				else
-					table.insert(resp, result)
-					result = {}
-				end
-			end
-			if changeroot then
-				response.ROOT(changeroot)
-				return resp
-			end
-		end
-	end
-end
-
----------- online dispatch
-
 local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
-function online.LIST(id, path)
-	print("[online] LIST", path)
+function CMD.LIST(id, path)
+	print("[request] LIST", path)
 	local dir, r, hash = repo:list(path)
 	if dir then
 		response_id(id, dir)
@@ -506,12 +398,11 @@ function online.LIST(id, path)
 		request_file(id, "RESOURCE", hash, "LIST", path)
 		return
 	end
-	print("[ERROR] Need Change Root", path)
 	response_id(id, nil)
 end
 
-function online.FETCH(id, path)
-	print("[online] FETCH", path)
+function CMD.FETCH(id, path)
+	print("[request] FETCH", path)
 	request_start("FETCH", path, {
 		resolve = function ()
 			response_id(id)
@@ -522,8 +413,8 @@ function online.FETCH(id, path)
 	})
 end
 
-function online.TYPE(id, fullpath)
-	print("[online] TYPE", fullpath)
+function CMD.TYPE(id, fullpath)
+	print("[request] TYPE", fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		if fullpath == "" then
@@ -557,8 +448,8 @@ function online.TYPE(id, fullpath)
 	response_id(id, nil)
 end
 
-function online.GET(id, fullpath)
-	print("[online] GET", fullpath)
+function CMD.GET(id, fullpath)
+	print("[request] GET", fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"
 	if path == nil then
 		path = ""
@@ -597,18 +488,18 @@ function online.GET(id, fullpath)
 	end
 end
 
-function online.RESOURCE_SETTING(id, ext, setting)
-	print("[online] RESOURCE_SETTING", ext, setting)
-	connection_send("RESOURCE_SETTING", ext, setting)
+function CMD.RESOURCE_SETTING(id, ext, setting)
+	print("[request] RESOURCE_SETTING", ext, setting)
+	request_send("RESOURCE_SETTING", ext, setting)
 	response_id(id)
 end
 
-function online.SEND(_, ...)
-	connection_send(...)
+function CMD.SEND(_, ...)
+	request_send(...)
 end
 
-function online.EXIT(id)
-	print("[online] EXIT")
+function CMD.EXIT(id)
+	print("[request] EXIT")
 	response_id(id, nil)
 	error "EXIT"
 end
@@ -623,14 +514,14 @@ local function dispatch_net(cmd, ...)
 	f(...)
 end
 
-local function online_dispatch(ok, id, cmd, ...)
+local function dispatch(ok, id, cmd, ...)
 	if not ok then
 		-- no req
 		return false
 	end
-	local f = online[cmd]
+	local f = CMD[cmd]
 	if not f then
-		print("[ERROR] Unsupported online command : ", cmd)
+		print("[ERROR] Unsupported command : ", cmd)
 	else
 		f(id, ...)
 		--local ok, err = xpcall(f, debug.traceback, ...)
@@ -641,55 +532,33 @@ local function online_dispatch(ok, id, cmd, ...)
 	return true
 end
 
+local exclusive = require "ltask.exclusive"
 local ltask
-local lt_update
-local lt_switch_offline
 
 local S = {}; do
 	local session = 0
-	local queue = {}
-	local function lt_request(...)
-		session = session + 1
-		queue[#queue+1] = {session,...}
-		return ltask.wait(session)
-	end
-	local function lt_response(id, ...)
-		ltask.wakeup(id, ...)
-	end
-
-	local lt_dispatch = online_dispatch
-	function lt_update()
-		if #queue > 0 then
-			local q = queue
-			queue = {}
-			for _, m in ipairs(q) do
-				lt_dispatch(true, table.unpack(m))
-			end
+	for v in pairs(CMD) do
+		S[v] = function (...)
+			session = session + 1
+			ltask.fork(function (...)
+				dispatch(true, ...)
+			end, session, v, ...)
+			return ltask.wait(session)
 		end
 	end
-	function lt_switch_offline()
-		lt_dispatch = offline_dispatch
+	for v in pairs(CMD) do
+		S["S_"..v] = function (id, ...)
+			dispatch(true, id, v, ...)
+		end
 	end
-
 	function response_id(id, ...)
 		if id then
 			assert(type(id) ~= "string")
 			if type(id) == "userdata" then
 				thread.rpc_return(id, ...)
 			else
-				lt_response(id, ...)
+				ltask.wakeup(id, ...)
 			end
-		end
-	end
-
-	for v in pairs(online) do
-		S[v] = function (...)
-			return lt_request(v, ...)
-		end
-	end
-	for v in pairs(online) do
-		S["S_"..v] = function (id, ...)
-			lt_dispatch(true, id, v, ...)
 		end
 	end
 end
@@ -698,70 +567,56 @@ local function ltask_ready()
 	return coroutine.yield() == nil
 end
 
-local function ltask_update()
-	if ltask == nil then
-		assert(loadfile "/engine/task/service/service.lua")(true)
-		ltask = require "ltask"
-		ltask.dispatch(S)
-	end
-	lt_update()
-	local SCHEDULE_IDLE <const> = 1
-	local SCHEDULE_QUIT <const> = 2
-	local SCHEDULE_SUCCESS <const> = 3
-	while true do
-		local s = ltask.schedule_message()
-		if s == SCHEDULE_QUIT then
-			ltask.log "${quit}"
-			return
+local function ltask_init()
+	assert(loadfile "/engine/task/service/service.lua")(true)
+	ltask = require "ltask"
+	ltask.dispatch(S)
+	local waitfunc, fd = exclusive.eventinit()
+	local ltaskfd = socket.fd(fd, "tcp6", "connect")
+	event_addr(ltaskfd, function ()
+		waitfunc()
+		local SCHEDULE_IDLE <const> = 1
+		local SCHEDULE_QUIT <const> = 2
+		local SCHEDULE_SUCCESS <const> = 3
+		while true do
+			local s = ltask.schedule_message()
+			if s == SCHEDULE_QUIT then
+				ltask.log "${quit}"
+				return
+			end
+			if s == SCHEDULE_IDLE then
+				break
+			end
+			coroutine.yield()
 		end
-		if s == SCHEDULE_IDLE then
-			ltask.dispatch_wakeup()
-			break
-		end
-		coroutine.yield()
+	end)
+end
+
+function CMD.SWITCH()
+	while not ltask_ready() do
+		exclusive.sleep(1)
 	end
+	ltask_init()
 end
 
 local function work_offline()
-	lt_switch_offline()
+	OFFLINE = true
 
-	local c = io_req
 	while true do
-		offline_dispatch(c:pop())
-		logger_dispatch(offline)
-		if ltask_ready() then
-			ltask_update()
-		end
-		thread.sleep(0.01)
+		event_select()
 	end
 end
 
 local function work_online()
-	rdset[1] = connection.fd	-- may need support multi socket
-	wtset[1] = connection.fd
-	local reqs = waiting_for_root()
-	if not reqs then
-		return
-	end
-	for _, req in ipairs(reqs) do
-		dispatch_net(table.unpack(req))
-	end
-	local result = {}
-	local reading = connection.recvq
+	request_send("ROOT")
 	while true do
 		if host.update(status) then
 			break
 		end
-		local ok, err = connection_dispose(0)
-		if ok then
-			while protocol.readmessage(reading, result) do
-				dispatch_net(table.unpack(result))
-			end
-		elseif ok == nil then
+		local ok, err = event_select()
+		if ok == nil then
 			print("[ERROR] Connection Error", err)
 			break
-		else
-			thread.sleep(0.01)
 		end
 	end
 end
@@ -770,25 +625,86 @@ if not host then
 	init_channels()
 	host = {}
 	function host.update(_)
-		while online_dispatch(io_req:pop()) do end
-		logger_dispatch(online)
-		if ltask_ready() then
-			ltask_update()
-		end
 	end
-	function host.exit()
+	function host.exit(_)
 		print("Working offline")
 		work_offline()
 	end
 end
 
+local function init_event()
+	local result = {}
+	local reqs = {}
+	local reading = connection.recvq
+	local sending = connection.sendq
+	event_addr(connection.fd, function (fd)
+		local data, err = fd:recv()
+		if not data then
+			if err then
+				-- socket error
+				return nil, err
+			end
+			return nil, "Closed by remote"
+		end
+		table.insert(reading, data)
+		while protocol.readmessage(reading, result) do
+			if reqs then
+				if result[1] ~= "ROOT" then
+					table.insert(reqs, result)
+				else
+					dispatch_net(table.unpack(result))
+					for _, req in ipairs(reqs) do
+						dispatch_net(table.unpack(req))
+					end
+					reqs = nil
+				end
+			else
+				dispatch_net(table.unpack(result))
+			end
+		end
+	end)
+	event_addw(connection.fd, function (fd)
+		while true do
+			local data = table.remove(sending)
+			if data == nil then
+				break
+			end
+			local nbytes, err = fd:send(data)
+			if nbytes then
+				if nbytes < #data then
+					table.insert(sending, data:sub(nbytes+1))
+					break
+				end
+			else
+				if err then
+					return nil, err
+				else
+					table.insert(sending, data)	-- push back
+				end
+				break
+			end
+		end
+	end)
+end
+
 local function main()
 	init_repo()
+	event_addr(channelfd, function (fd)
+		if nil == fd:recv() then
+			event_delr(fd)
+			return
+		end
+		while dispatch(io_req:pop()) do
+		end
+	end)
 	if config.address then
 		connection.fd = wait_server()
 		if connection.fd then
 			status.fd = connection.fd
+			init_event()
 			work_online()
+			event_delr(connection.fd)
+			event_delw(connection.fd)
 			-- socket error or closed
 		end
 	end
