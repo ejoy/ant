@@ -1,6 +1,6 @@
 fx:
-  fs: /pkg/ant.imgui/shader/fs_uifont.sc
-  vs: /pkg/ant.imgui/shader/vs_uifont.sc
+  fs: /pkg/ant.resources/shaders/font/fs_uifont.sc
+  vs: /pkg/ant.resources/shaders/font/vs_uifont.sc
   setting:
     OUTLINE_EFFECT: 1
 properties:
