@@ -149,14 +149,12 @@ function vfs:changeroot(hash)
 	self.root = hash
 	self.resource = {}
 	local path = self:hashpath(hash)..".resource"
-	do
-		local f <close> = io.open(path, "rb")
-		if f then
-			for line in f:lines() do
-				local hash, name = line:match "([%da-f]+) (.*)"
-				if hash then
-					self.resource[name] = hash
-				end
+	local f <close> = io.open(path, "rb")
+	if f then
+		for line in f:lines() do
+			local hash, name = line:match "([%da-f]+) (.*)"
+			if hash then
+				self.resource[name] = hash
 			end
 		end
 	end
