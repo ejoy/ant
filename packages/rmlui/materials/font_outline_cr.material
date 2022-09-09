@@ -4,10 +4,10 @@ fx:
     setting:
         OUTLINE_EFFECT: 1
         ENABLE_CLIP_RECT: 1
-properties:
+properties:        
   s_tex:
     stage: 0
     texture: /pkg/ant.resources/textures/default.texture
-  u_mask: {0.68, 0.18, 0.77, 0.0}
+  u_mask: {0.68, 0.18, 0.75, 0.0}
   u_effect_color:{1.0,0.0,0.0,1.0}
 state: /pkg/ant.resources/materials/states/default.state

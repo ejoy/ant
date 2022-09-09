@@ -1,6 +1,7 @@
 local boot = require "ltask.bootstrap"
 local ltask = require "ltask"
 local fs = require "filesystem"
+local vfs = require "vfs"
 
 local SERVICE_ROOT <const> = 1
 local MESSSAGE_SYSTEM <const> = 0
@@ -193,6 +194,7 @@ return function (c)
 	end
 	config.preinit = { "io" }
 	root_thread()
+	vfs.switch()
 	io_thread("io", 2 + #config.exclusive)
 	boot.run()
 end

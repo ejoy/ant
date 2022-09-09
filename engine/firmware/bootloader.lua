@@ -20,13 +20,18 @@ while true do
 end
 dofile = _dofile
 
+config.vfspath = "/engine/firmware/vfs.lua"
+
 local boot = require "ltask.bootstrap"
 local vfs = require "vfs"
 local thread = require "bee.thread"
+local socket = require "bee.socket"
 
 thread.newchannel "IOreq"
 
-config.vfspath = "/engine/firmware/vfs.lua"
+local s, c = socket.pair()
+local io_req = thread.channel "IOreq"
+io_req:push(config, nil, socket.dump(s))
 
 local SCRIPT = {"-- IO thread"}
 SCRIPT[#SCRIPT+1] = "local PRELOAD = {"
@@ -58,25 +63,15 @@ if dbg then
     dbg:event "wait"
 end
 ]]
-SCRIPT[#SCRIPT+1] = "local config = {"
-for _, v in ipairs {
-	"repopath",
-	"vfspath",
-	"nettype",
-	"address",
-	"port",
-	"socket",
-} do
-    if config[v] then
-        SCRIPT[#SCRIPT+1] = ("[%q] = %q,"):format(v, config[v])
-    end
-end
-SCRIPT[#SCRIPT+1] = "}"
-SCRIPT[#SCRIPT+1] = "assert(loadfile '/engine/firmware/io.lua')(loadfile, config)"
+SCRIPT[#SCRIPT+1] = [[
+local thread = require "bee.thread"
+local io_req = thread.channel "IOreq"
+]]
+SCRIPT[#SCRIPT+1] = "assert(loadfile '/engine/firmware/io.lua')(loadfile, io_req:bpop())"
 
 vfs.iothread = boot.preinit (table.concat(SCRIPT, "\n"))
 
-vfs.initfunc "/engine/firmware/init_thread.lua"
+vfs.initfunc("/engine/firmware/init_thread.lua", socket.dump(c))
 
 local function dofile(path)
     local f, err = vfs.loadfile(path)

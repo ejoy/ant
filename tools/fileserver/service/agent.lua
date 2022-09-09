@@ -29,12 +29,14 @@ ltask.fork(function ()
 	end
 end)
 
+
 local function response(...)
 	socket.send(FD, protocol.packmessage({...}))
 end
 
+local roothash = ltask.call(ServiceVfsMgr, "ROOT")
+
 function message.ROOT()
-	local roothash = ltask.call(ServiceVfsMgr, "ROOT")
 	response("ROOT", roothash)
 end
 

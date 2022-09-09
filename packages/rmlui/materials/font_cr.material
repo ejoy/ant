@@ -7,5 +7,5 @@ properties:
   s_tex:
     stage: 0
     texture: /pkg/ant.resources/textures/default.texture
-  u_mask: {0.68, 0.18, 0.77, 0.0}
+  u_mask: {0.68, 0.18, 0.75, 0.0}
 state: /pkg/ant.resources/materials/states/default.state

@@ -391,7 +391,7 @@ function repo:dir(hash)
 	return { dir = dir, file = file }
 end
 
-function repo:build_dir(rpath, lpath)
+function repo:build_dir(lpath)
 	lpath = lfs.path(lpath)
 	local r = {
 		_root = self._root,
@@ -401,10 +401,10 @@ function repo:build_dir(rpath, lpath)
 		_mountpoint = {},
 		_resource = true,
 	}
-	access.addmount(r, rpath, lpath)
+	access.addmount(r, "", lpath)
 	setmetatable(r, repo)
 	local cache = {}
-	local roothash = repo_build_dir(r, rpath.."/", cache, r._namecache)
+	local roothash = repo_build_dir(r, "/", cache, r._namecache)
 	repo_write_cache(r, cache)
 	return roothash
 end
