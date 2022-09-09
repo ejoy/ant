@@ -501,6 +501,7 @@ end
 
 function CMD.quit(id)
 	QUIT = true
+	response_id(id)
 end
 
 -- dispatch package from connection
