@@ -115,11 +115,11 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 	for _, name in ipairs(filelist) do
 		local fullname = filepath .. name	-- full name in repo
 		if not self._resource and is_resource(fullname) then
-			table.insert(hashs, string.format("r resource %s", name))
+			table.insert(hashs, string.format("r %s %s", name, fullname))
 		else
 			if filelist[name] == "v" or lfs.is_directory(self:realpath(fullname)) then
 				local hash = repo_build_dir(self, fullname .. '/', cache, namehashcache)
-				table.insert(hashs, string.format("d %s %s", hash, name))
+				table.insert(hashs, string.format("d %s %s", name, hash))
 			else
 				local realfullname = self:realpath(fullname)
 				local mtime = lfs.last_write_time(realfullname)	-- timestamp
@@ -138,7 +138,7 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 					filename = realfullname,
 					timestamp = mtime,
 				})
-				table.insert(hashs, string.format("f %s %s", hash, name))
+				table.insert(hashs, string.format("f %s %s", name, hash))
 			end
 		end
 	end
@@ -371,7 +371,7 @@ function repo:dir(hash)
 	local dir = {}
 	local file = {}
 	for line in f:lines() do
-		local t, hash, name = line:match "^([dfr]) (%S*) (.*)"
+		local t, name, hash = line:match "^([dfr]) (%S*) (%S*)$"
 		if t == 'd' then
 			dir[name] = hash
 		elseif t == 'f' then

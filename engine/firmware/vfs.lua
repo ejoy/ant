@@ -60,7 +60,7 @@ local function dir_object(self, hash)
 	if df then
 		local dir = {}
 		for line in df:lines() do
-			local type, hash, name = line:match "([dfr]) (%S*) (.*)"
+			local type, name, hash = line:match "^([dfr]) (%S*) (%S*)$"
 			if type then
 				dir[name] = {
 					type = type,
@@ -78,7 +78,7 @@ local ListFailed <const> = 2
 local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
-local function fetch_file(self, hash, fullpath, parent)
+local function fetch_file(self, hash, fullpath)
 	local dir = self.cache[hash]
 	if not dir then
 		dir = dir_object(self, hash)
@@ -93,25 +93,23 @@ local function fetch_file(self, hash, fullpath, parent)
 	if subpath then
 		if name == "" then
 			if subpath.type == 'r' then
-				local res = parent.."/"..path
-				local h = self.resource[res]
+				local h = self.resource[subpath.hash]
 				if h then
 					return ListSuccess, h
 				end
-				return ListNeedResource, res
+				return ListNeedResource, subpath.hash
 			else
 				return ListSuccess, subpath.hash
 			end
 		else
 			if subpath.type == 'd' then
-				return fetch_file(self, subpath.hash, name, parent.."/"..path)
+				return fetch_file(self, subpath.hash, name)
 			elseif subpath.type == 'r' then
-				local res = parent.."/"..path
-				local h = self.resource[res]
+				local h = self.resource[subpath.hash]
 				if h then
-					return fetch_file(self, h, name, res)
+					return fetch_file(self, h, name)
 				end
-				return ListNeedResource, res
+				return ListNeedResource, subpath.hash
 			end
 		end
 	end
@@ -122,7 +120,7 @@ end
 function vfs:list(path)
 	local hash = self.root
 	if path ~= "" then
-		local r, h = fetch_file(self, hash, path, "")
+		local r, h = fetch_file(self, hash, path)
 		if r ~= ListSuccess then
 			return nil, r, h
 		end
@@ -175,13 +173,11 @@ function vfs:realpath(path)
 	if not self.root then
 		return
 	end
-	local ok, hash = fetch_file(self, self.root, path, "")
-	if not ok then
-		return nil, hash
+	local r, hash = fetch_file(self, self.root, path)
+	if r ~= ListSuccess then
+		return
 	end
-
-	local f_n = self.path .. hash:sub(1,2) .. "/" .. hash
-	return f_n, hash
+	return self:hashpath(hash)
 end
 
 function vfs:hashpath(hash)
