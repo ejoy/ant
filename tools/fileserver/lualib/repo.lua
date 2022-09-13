@@ -135,7 +135,7 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 					if _DEBUG then print("FILE", hash, fullname, mtime) end
 				end
 				add_item(hash, {
-					filename = fullname,
+					filename = realfullname,
 					timestamp = mtime,
 				})
 				table.insert(hashs, string.format("f %s %s", hash, name))
@@ -295,11 +295,7 @@ local function read_ref(self, hash)
 			if timestamp then
 				-- It's a file
 				-- TODO
-				local realname = access.realpath(self, name)
-				if not realname then
-					realname = self._root / name
-				end
-				if not realname:string():match "%?" and lfs.is_regular_file(realname) and lfs.last_write_time(realname) == timestamp then
+				if lfs.is_regular_file(name) and lfs.last_write_time(name) == timestamp then
 					cache[name] = { hash = hash , timestamp = timestamp }
 					table.insert(items, line)
 				else
@@ -348,7 +344,7 @@ function repo:hash(hash)
 	if f then
 		f:close()
 		-- it's a dir object
-		return filename
+		return filename:string()
 	end
 	local rfilename = filename:replace_extension(".ref")
 
@@ -360,7 +356,7 @@ function repo:hash(hash)
 		local name = line:match "f (.-) ?(%d*)$"
 		if name then
 			f:close()
-			return self:realpath(name)
+			return name
 		end
 	end
 	f:close()

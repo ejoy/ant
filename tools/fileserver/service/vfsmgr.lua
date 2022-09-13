@@ -120,7 +120,7 @@ end
 function S.GET(hash)
 	local path = repo:hash(hash)
 	if path then
-		return path:string()
+		return path
 	end
 end
 
