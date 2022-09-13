@@ -115,6 +115,7 @@ policy "simplerender"
     .require_interface "ant.scene|ivisible_state"
     .require_interface "ant.render|irender"
 	.component "simplemesh"
+    .component_opt "owned_mesh_buffer"
 	.component "material"
     .component "visible_state"
 
