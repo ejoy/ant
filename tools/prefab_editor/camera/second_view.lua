@@ -207,11 +207,13 @@ local function create_frustum_entity(eid)
                     num = 8,
                     declname = "p3",
                     memory = {"fff", vb},
+                    owned = true,
                 },
                 ib = {
                     start = 0,
                     num = #frustum_ib,
                     memory = {"w", frustum_ib},
+                    owned = true,
                 }
             },
             owned_mesh_buffer = true,
@@ -243,7 +245,8 @@ local function create_frustum_entity(eid)
                         -tri_edge_len_half, 0.0, 0.0,
                         0.0, tri_edge_height, 0.0,
                         tri_edge_len_half, 0.0, 0.0,
-                    }}
+                    }},
+                    owned = true,
                 }
             },
             owned_mesh_buffer = true,

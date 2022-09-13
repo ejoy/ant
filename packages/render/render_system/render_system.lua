@@ -68,14 +68,11 @@ function render_sys:entity_init()
 		ro.mat_mq = mi:ptr()
 	end
 
-	for e in w:select "INIT mesh:in render_object:update" do
-		update_ro(e.render_object, e.mesh)
-	end
-
-	for e in w:select "INIT simplemesh:in render_object:update owned_mesh_buffer?out" do
-		local sm = e.simplemesh
-		update_ro(e.render_object, e.simplemesh)
-		e.owned_mesh_buffer = sm.owned_mesh_buffer
+	for e in w:select "INIT mesh?in simplemesh?in render_object:update" do
+		local m = e.mesh or e.simplemesh
+		if m then
+			update_ro(e.render_object, m)
+		end
 	end
 end
 

@@ -29,23 +29,20 @@ end
 
 local function init(mesh)
     local vb = mesh.vb
-    if type(vb) ~= "userdata" then
-        setmetatable(vb, proxy_vb)
-    end
+    setmetatable(vb, proxy_vb)
 
     local ib = mesh.ib
     if ib then
-        if type(ib.handle) ~= "userdata" then
-            setmetatable(ib, proxy_ib)
-        end
+        setmetatable(ib, proxy_ib)
     end
     return mesh
 end
 
 local function destroy_handle(v)
     if v then
-        if type(v.handle) ~= "userdata" then
+        if v.owned then
             bgfx.destroy(v.handle)
+            v.owned = nil
         end
         v.handle = nil
     end
