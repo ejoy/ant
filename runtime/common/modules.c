@@ -10,6 +10,7 @@ int luaopen_bee_thread(lua_State* L);
 int luaopen_bee_platform(lua_State* L);
 int luaopen_bgfx(lua_State* L);
 int luaopen_bgfx_util(lua_State* L);
+int luaopen_bundle(lua_State* L);
 int luaopen_crypt(lua_State* L);
 int luaopen_datalist(lua_State* L);
 int luaopen_hierarchy(lua_State* L);
@@ -68,6 +69,7 @@ void ant_loadmodules(lua_State* L) {
         { "bee.platform", luaopen_bee_platform },
         { "bgfx", luaopen_bgfx },
         { "bgfx.util", luaopen_bgfx_util },
+        { "bundle", luaopen_bundle },
         { "font", luaopen_font },
         { "font.init", luaopen_font_init },
         { "font.truetype", luaopen_font_truetype },

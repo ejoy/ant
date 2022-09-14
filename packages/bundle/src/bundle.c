@@ -155,7 +155,7 @@ lcreate_view(lua_State *L) {
 }
 
 LUAMOD_API int
-luaopen_bundle_core(lua_State *L) {
+luaopen_bundle(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "create_bundle", lcreate_bundle },
