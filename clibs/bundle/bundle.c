@@ -3,100 +3,77 @@
 #include <lua.h>
 #include <lauxlib.h>
 
-#include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include <string.h>
 
-struct view_record {
+struct bundle_record {
 	const char *key;
 	void *value;
 };
 
-struct bundle_view {
+struct bundle {
 	int n;
-	struct view_record r[1];
-};
-
-struct bundle_box {
-	struct bundle_view *view;
+	struct bundle_record r[1];
 };
 
 static int
 comp_str(const void *aa, const void *bb) {
-	const struct view_record * a = (const struct view_record *)aa;
-	const struct view_record * b = (const struct view_record *)bb;
+	const struct bundle_record * a = (const struct bundle_record *)aa;
+	const struct bundle_record * b = (const struct bundle_record *)bb;
 	return strcmp(a->key, b->key);
 }
 
-static int
-count_table(lua_State *L, int index) {
-	lua_pushnil(L);
-	int n = 0;
-	while (lua_next(L, index) != 0) {
-		++n;
-		lua_pop(L, 1);
-	}
-	return n;
-}
-
-static int
-lcreate_bundle_view(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TTABLE);
-	int n = luaL_optinteger(L, 2, 0);
-	if (n <= 0) {
-		n = count_table(L, 1);
-	}
-	struct bundle_view * b = (struct bundle_view *)lua_newuserdatauv(L, sizeof(*b) + sizeof(b->r[0]) * (n-1), 0);	
-	b->n = n;
-	lua_pushnil(L);
-	while (lua_next(L, 1) != 0) {
-		--n;
-		if (n < 0) {
-			luaL_error(L, "Invalid table size");
-		}
-		void * v = NULL;
-		if (lua_isuserdata(L, -1)) {
-			v = lua_touserdata(L, -1);
-		}
-		b->r[n].key = lua_tostring(L, -2);
-		b->r[n].value = v;
-		lua_pop(L, 1);
-	}
-	if (n != 0) {
-		luaL_error(L, "Invalid table size");
-	}
-	qsort(b->r, n, sizeof(b->r[0]), comp_str);
-	lua_pushlightuserdata(L, b);
-	return 2;
-}
-
-static struct view_record *
-index_view(lua_State *L, struct bundle_view *view, const char *key) {
-	if (view == NULL)
-		luaL_error(L, "Invalid bundle view");
+static struct bundle_record *
+find_key(struct bundle *b, const char *key) {
 	int begin = 0;
-	int end = view->n;
+	int end = b->n;
 	while (begin < end) {
 		int mid = (begin + end) / 2;
-		int c = strcmp(key, view->r[mid].key);
+		int c = strcmp(b->r[mid].key, key);
 		if (c == 0)
-			return &view->r[mid];
+			return &b->r[mid];
 		else if (c < 0) {
-			end = mid;
-		} else {
 			begin = mid + 1;
+		} else {
+			end = mid;
 		}
 	}
 	return NULL;
 }
 
 static int
-lget_view(lua_State *L) {
-	struct bundle_box * box = (struct bundle_box *)lua_touserdata(L, 1);
+setvalue(lua_State *L) {
+	struct bundle * b = luaL_checkudata(L, 1, "BUNDLE_META");
 	const char * key = luaL_checkstring(L, 2);
-	struct view_record * r = index_view(L, box->view, key);
+	struct bundle_record *r = find_key(b, key);
 	if (r == NULL)
-		return luaL_error(L, "%s not found", key);
+		return luaL_error(L, "Invalid key = %s", key);
+	if (r->value != NULL) {
+		return luaL_error(L, "key %s exist", key);
+	}
+	switch (lua_type(L, 3)) {
+	case LUA_TUSERDATA:
+	case LUA_TLIGHTUSERDATA:
+		r->value = lua_touserdata(L, 3);
+		break;
+	case LUA_TSTRING:
+		r->value = (void *)lua_tostring(L, 3);
+		break;
+	default:
+		return luaL_error(L, "Invalid value type = %s", lua_typename(L, lua_type(L, 3)));
+	}
+	return 0;
+}
+
+static int
+getvalue(lua_State *L) {
+	struct bundle * b = lua_touserdata(L, 1);
+	if (b == NULL)
+		return luaL_error(L, "Need bundle userdata");
+	const char *key = luaL_checkstring(L, 2);
+	struct bundle_record *r = find_key(b, key);
+	if (r == NULL)
+		return luaL_error(L, "Invalid key = %s", key);
 	if (r->value == NULL)
 		return 0;
 	lua_pushlightuserdata(L, r->value);
@@ -104,50 +81,41 @@ lget_view(lua_State *L) {
 }
 
 static int
-lset_view(lua_State *L) {
-	struct bundle_box * box = (struct bundle_box *)lua_touserdata(L, 1);
-	const char * key = luaL_checkstring(L, 2);
-	luaL_checktype(L, 3, LUA_TLIGHTUSERDATA);
-	void * value = lua_touserdata(L, 3);
-	struct view_record * r = index_view(L, box->view, key);
-	if (r == NULL)
-		return luaL_error(L, "%s not found", key);
-	r->value = value;
-	return 0;
-}
-
-static int
-lrelease_view(lua_State *L) {
-	struct bundle_box * box = (struct bundle_box *)lua_touserdata(L, 1);
-	lua_pushlightuserdata(L, box->view);
-	box->view = NULL;
-	return 1;
-}
-
-static int
-lbox_bundle_view(lua_State *L) {
-	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
-	struct bundle_box * box = (struct bundle_box *)lua_newuserdatauv(L, sizeof(*box), 0);
-	box->view = lua_touserdata(L, 1);
-	if (luaL_newmetatable(L, "BUNDLE_VIEW")) {
+lcreate_bundle(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	int n = lua_rawlen(L, 1);
+	size_t sz = sizeof(struct bundle) + sizeof(struct bundle_record) * (n-1);
+	struct bundle *b = (struct bundle *)lua_newuserdatauv(L, sz, n);
+	int i;
+	for (i=0;i<n;i++) {
+		if (lua_geti(L, 1, i+1) != LUA_TSTRING) {
+			return luaL_error(L, "[%d] is not a string", i+1);
+		}
+		b->r[i].key = lua_tostring(L, -1);
+		b->r[i].value = NULL;
+		lua_setiuservalue(L, -2, i+1);
+	}
+	qsort(b->r, n, sizeof(struct bundle_record), comp_str);
+	if (luaL_newmetatable(L, "BUNDLE_META")) {
 		luaL_Reg l[] = {
-			{ "__index", lget_view },
-			{ "__newindex", lset_view },
-			{ "__call", lrelease_view },
+			{ "__newindex", setvalue },
+			{ "__index", getvalue },
 			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
 	}
 	lua_setmetatable(L, -2);
-	return 1;
+	lua_pushlightuserdata(L, b);
+	b->n = n;
+	return 2;
 }
 
 LUAMOD_API int
 luaopen_bundle_core(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "create_view", lcreate_bundle_view },
-		{ "box_view", lbox_bundle_view },
+		{ "create_bundle", lcreate_bundle },
+		{ "get", getvalue },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
