@@ -110,12 +110,56 @@ lcreate_bundle(lua_State *L) {
 	return 2;
 }
 
+static int
+getvalue_from_view(lua_State *L) {
+	struct bundle ** view = (struct bundle **)lua_touserdata(L, 1);
+	int i;
+	const char * key = luaL_checkstring(L, 2);
+	for (i=0;view[i];i++) {
+		struct bundle_record * b = find_key(view[i], key);
+		if (b) {
+			if (b->value == NULL)
+				return 0;
+			lua_pushlightuserdata(L, b->value);
+			return 1;
+		}
+	}
+	return luaL_error(L, "Can't find %s in bundle view", key);
+}
+
+static int
+lcreate_view(lua_State *L) {
+	luaL_checktype(L, 1, LUA_TTABLE);
+	int n = lua_rawlen(L, 1);
+	struct bundle ** view = (struct bundle **)lua_newuserdatauv(L, (n+1) * sizeof(struct bundle *), 0);
+	int i;
+	for (i=0;i<n;i++) {
+		if (lua_geti(L, 1, i+1) != LUA_TLIGHTUSERDATA)
+			return luaL_error(L, "[%d] is not a lightuserdata", i+1);
+		view[i] = (struct bundle *)lua_touserdata(L, -1);
+		if (view[i] == NULL) {
+			return luaL_error(L, "[%d] is NULL", i+1);
+		}
+		lua_pop(L, 1);
+	}
+	view[n] = NULL;
+	if (luaL_newmetatable(L, "BUNDLE_VIEW_META")) {
+		luaL_Reg l[] = {
+			{ "__index", getvalue_from_view },
+			{ NULL, NULL },
+		};
+		luaL_setfuncs(L, l, 0);
+	}
+	lua_setmetatable(L, -2);
+	return 1;
+}
+
 LUAMOD_API int
 luaopen_bundle_core(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "create_bundle", lcreate_bundle },
-		{ "get", getvalue },
+		{ "create_view", lcreate_view },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
