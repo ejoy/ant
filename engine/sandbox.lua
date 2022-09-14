@@ -111,8 +111,19 @@ local function sandbox_env(loadenv, config, root, pkgname)
         return loadenv(name)
     end
 
+    env._ENTRY_FILE = config.entry
     function env.import_package(name)
-        return env.package_env(name)._ENTRY
+        local e = env.package_env(name)
+        local f = e._ENTRY
+        if f then
+            return f
+        end
+        if e._ENTRY_FILE then
+            f = e.require(e._ENTRY_FILE)
+            e._ENTRY = f
+            e._ENTRY_FILE = nil
+            return f
+        end
     end
 
     env.package = {
