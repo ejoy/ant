@@ -16,6 +16,7 @@ lm:lua_source "render_core"{
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
     },
+    deps = "compile_ecs",
     sources = {
         "render/material.c",
         "render/render.cpp",
