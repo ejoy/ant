@@ -60,8 +60,8 @@ data:
         name: 宋体
         size: 42
     show_config:
-        location_type: aabb_top
-        location_offset: {0, 0.15, 0, 0}
+        location_type: abs_pos
+        location: {0.0, 0.0, 0.0}
         description: 中国中国
         color: 0xffffff00
 action:
