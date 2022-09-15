@@ -1,18 +1,15 @@
 local ttf = require "font.truetype"
-local vfs = require "vfs"
-
-local font = {}
 
 local MAXFONT <const> = 64
 
-function font.loader(filename)
-	local f = assert(io.open(vfs.realpath(filename), "rb"))
+local function loader(filename)
+	local f = assert(io.open(filename, "rb"))
 	local data = f:read "a"
 	f:close()
 	return data
 end
 
-font.namelist = {}
+local namelist = {}
 
 local function utf16toutf8(s)
 	local surrogate
@@ -67,8 +64,8 @@ local ids = {
 	},
 }
 
-function font.import(filename)
-	local data = font.loader(filename)
+local function import(filename)
+	local data = loader(filename)
 	local index = 0
 	local cache = {}
 	while true do
@@ -82,7 +79,7 @@ function font.import(filename)
 						local full = fname .. " " .. sname
 						if not cache[full] then
 							cache[full] = true
-							table.insert(font.namelist, {
+							table.insert(namelist, {
 								filename = filename,
 								index = index,
 								key = filename .. ":" .. index,
@@ -106,7 +103,7 @@ end
 --	filename:index -> { filename: index: id: }
 local CACHE = {}
 
-function font.unload(filename)
+local function unload(filename)
 	local c = CACHE[filename]
 	if c then
 		CACHE[filename] = nil
@@ -135,7 +132,7 @@ end
 
 local function fetch_name(nametable, name_)
 	local name = string.lower(name_)
-	for _, obj in ipairs(font.namelist) do
+	for _, obj in ipairs(namelist) do
 		local key = matching(obj, name)
 		if key then
 			local fontobj = CACHE[key]
@@ -160,16 +157,12 @@ end
 
 setmetatable(ttf.nametable, { __index = fetch_name })
 
-function font.name(name)
-	return ttf.nametable[name]
-end
-
 local function fetch_id(_, id)
 	local key = assert(CACHE[id])
 	local obj = CACHE[key]
 	local c = CACHE[obj.filename]
 	if c == nil then
-		c = font.loader(obj.filename)
+		c = loader(obj.filename)
 		CACHE[obj.filename] = c
 	end
 	return ttf.update(id, c, obj.index)
@@ -177,10 +170,4 @@ end
 
 setmetatable(ttf.idtable, { __index = fetch_id })
 
-function font.info(id)
-	return ttf.idtable[id]
-end
-
-debug.getregistry().TRUETYPE_IMPORT = font.import
-
-return font
+debug.getregistry().TRUETYPE_IMPORT = import

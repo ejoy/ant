@@ -1,6 +1,4 @@
 local fs = require "filesystem"
-
-local lfont = require "font"
 local ltask = require "ltask"
 local constructor = require "core.DOM.constructor"
 
@@ -9,22 +7,6 @@ local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
 local m = {}
 
 local directorys  = { fs.path "/" }
-
-local function import_font(path)
-    for p in fs.pairs(path) do
-        if fs.is_directory(p) then
-            import_font(p)
-        elseif fs.is_regular_file(p) then
-            if p:equal_extension "otf" or p:equal_extension "ttf" or p:equal_extension "ttc" then
-                lfont.import(p:string())
-            end
-        end
-    end
-end
-
-function m.font_dir(dir)
-    import_font(fs.path(dir))
-end
 
 function m.preload_dir(dir)
     directorys[#directorys+1] = fs.path(dir)
@@ -42,7 +24,6 @@ function m.vfspath(path)
     end
 end
 
-
 function m.realpath(path)
     local _ <close> = fs.switch_sync()
     for i = #directorys, 1, -1 do
@@ -52,7 +33,6 @@ function m.realpath(path)
         end
     end
 end
-
 
 local function find_texture(path)
     path = fs.path(path)

@@ -5,6 +5,7 @@ local w = world.w
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local declmgr   = require "vertexdecl_mgr"
+local fs        = require "filesystem"
 
 local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
@@ -85,6 +86,8 @@ local function add_text_mem(m, num, ro)
     return idx
 end
 
+
+
 local function load_text(e)
     local font = e.font
     local sc = e.show_config
@@ -95,7 +98,7 @@ local function load_text(e)
 
     local layoutdata,codepoints,textw,texth = layout.prepare_text(
         fonttex_handle,
-        "你好[#ffffff]Hello[#]world[#ff00ff]世界[#]",
+        sc.description,
         font.size,
         font.id,
         0xffff0000
@@ -127,7 +130,7 @@ local ev = world:sub {"show_name"}
 
 function fontsys:component_init()
     for e in w:select "INIT font:in simplemesh:out owned_mesh_buffer?out" do
-        lfont.import(e.font.file)
+        fontpkg.import(fs.path(e.font.file))
         e.font.id = lfont.name(e.font.name)
         e.simplemesh = {
             vb = {
@@ -162,9 +165,9 @@ function fontsys:camera_usage()
     end
 
     for e in w:select "font:in show_config:in scene:in render_object:update" do
-        if e.font.idx == nil then
+        --if e.font.idx == nil then
             load_text(e)
-        end
+        --end
     end
     lfont.submit()
 end

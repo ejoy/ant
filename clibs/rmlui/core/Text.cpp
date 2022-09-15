@@ -210,7 +210,7 @@ Text::~Text()
 void Text::SetText(const std::string& _text) {
 	if (text != _text) {
 		text = _text;
-		DirtyLayout();
+		DirtyLayout();		
 	}
 }
 
@@ -375,7 +375,7 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 		token_begin = next_token_begin;
 	}
 
-	//´¦ÀíÍêµÄline
+	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½line
 	//GetRenderInterface()->PrepareText(font_face_handle,line,codepoints,layoutMap,text_layouts,line_layouts,line_begin,line_length);
 	return true;
 }
@@ -543,6 +543,10 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 		isRichText=data_model->RichText();
 	
 	Style::TextAlign text_align = GetProperty<Style::TextAlign>(PropertyId::TextAlign);
+	text_layouts.clear();
+	layoutMap.clear();
+	codepoints.clear();
+	ctext.clear();
 	if(isRichText){
 		ParseText();
 	}
