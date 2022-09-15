@@ -153,9 +153,10 @@ local function save_material(output, exports, mi)
     if not material_files[f:string()] then
         lfs.remove_all(f)
         utility.save_txt_file(mi.filename:string(), mi.material)
-        compile.do_compile(output / mi.filename, output / "materials" / "_tmp", exports.depfiles)
-        lfs.remove(output / mi.filename)
-        lfs.rename(output / "materials" / "_tmp", output / mi.filename)
+        local outfolder = output / "materials" / "_tmp"
+        compile.do_compile(output / mi.filename, outfolder, exports.depfiles)
+        lfs.rename(output / mi.filename, outfolder / "m.material")   --move to outfolder
+        lfs.rename(outfolder, output / mi.filename)
 
         material_files[f:string()] = true
     end
