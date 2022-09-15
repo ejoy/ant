@@ -154,12 +154,29 @@ lcreate_view(lua_State *L) {
 	return 1;
 }
 
+static int
+lexist(lua_State *L) {
+	struct bundle ** view = luaL_checkudata(L, 1, "BUNDLE_VIEW_META");
+	int i;
+	const char * key = luaL_checkstring(L, 2);
+	for (i=0;view[i];i++) {
+		struct bundle_record * b = find_key(view[i], key);
+		if (b) {
+			lua_pushboolean(L, 1);
+			return 1;
+		}
+	}
+	return 0;
+}
+
+
 LUAMOD_API int
 luaopen_bundle(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "create_bundle", lcreate_bundle },
 		{ "create_view", lcreate_view },
+		{ "exist", lexist },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
