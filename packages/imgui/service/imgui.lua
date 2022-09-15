@@ -173,29 +173,6 @@ for _, name in ipairs {"init","update","exit","size","mouse_wheel","mouse","keyb
 	end
 end
 
-
-local tokenmap = {}
-local function multi_wait(key)
-	local mtoken = tokenmap[key]
-	if not mtoken then
-		mtoken = {}
-		tokenmap[key] = mtoken
-	end
-	local t = {}
-	mtoken[#mtoken+1] = t
-	return ltask.wait(t)
-end
-
-local function multi_wakeup(key, ...)
-	local mtoken = tokenmap[key]
-	if mtoken then
-		tokenmap[key] = nil
-		for _, token in ipairs(mtoken) do
-			ltask.wakeup(token, ...)
-		end
-	end
-end
-
 local config = pm.loadcfg(packagename)
 ltask.fork(function ()
     init_width, init_height = w, h
@@ -255,14 +232,14 @@ ltask.fork(function ()
     bgfx.encoder_end()
 	bgfx.encoder_destroy()
     rhwi.shutdown()
-    multi_wakeup "quit"
+    ltask.multi_wakeup "quit"
     print "exit"
 end)
 
 local S = {}
 
 function S.wait()
-    multi_wait "quit"
+    ltask.multi_wait "quit"
 end
 
 --TODO

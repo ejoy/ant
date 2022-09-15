@@ -150,7 +150,7 @@ function S.texture_reload(id)
     end
     asyncCreateTexture(c.output.name)
     while true do
-        ltask.wait(c.output.name)
+        ltask.multi_wait(c.output.name)
         if not c.output.uncomplete then
             return c.output
         end
@@ -163,7 +163,7 @@ function S.texture_complete(name)
         if c and not c.output.uncomplete then
             return c.output.handle
         end
-        ltask.wait(name)
+        ltask.multi_wait(name)
     end
 end
 
@@ -192,7 +192,7 @@ function S.texture_create_complete(name)
     end
     asyncCreateTexture(c.output.name)
     while true do
-        ltask.wait(name)
+        ltask.multi_wait(name)
         if not c.output.uncomplete then
             return c.output
         end
@@ -233,7 +233,7 @@ ltask.fork(function ()
             c.output.handle = createTexture(c.input)
             c.output.uncomplete = nil
             c.input = nil
-            ltask.wakeup(name)
+            ltask.multi_wakeup(name)
             ltask.sleep(0)
         end
     end

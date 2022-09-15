@@ -102,19 +102,6 @@ local encoder_num = 0
 local encoder_cur = 0
 local encoder_frame = 0
 
-local tokens = {}
-local function wait_frame()
-    local t = {}
-    tokens[#tokens+1] = t
-    ltask.wait(t)
-end
-local function wakeup_frame(...)
-    for i, token in ipairs(tokens) do
-        ltask.wakeup(token, ...)
-        tokens[i] = nil
-    end
-end
-
 function S.encoder_create(label)
     local who = ltask.current_session().from
     encoder[who] = nil
@@ -138,7 +125,7 @@ function S.encoder_frame()
         encoder_cur = encoder_cur + 1
         profile_end(who)
     end
-    return wait_frame()
+    return ltask.multi_wait "bgfx.frame"
 end
 
 local pause_token
@@ -272,7 +259,7 @@ ltask.fork(function()
                 continue_token = nil
             end
             frame_control()
-            wakeup_frame(f)
+            ltask.multi_wakeup("bgfx.frame", f)
             profile_begin()
         else
             exclusive.sleep(1)

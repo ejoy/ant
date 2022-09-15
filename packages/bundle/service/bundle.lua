@@ -54,9 +54,9 @@ function S.open_bundle(path)
         v.status = STATUS_WAIT
         v.obj, v.view = create_bundle(path)
         v.status = STATUS_OK
-        ltask.wakeup("[bundle]"..path)
+        ltask.multi_wakeup("[bundle]"..path)
     elseif v.status == STATUS_WAIT then
-        ltask.wait("[bundle]"..path)
+        ltask.multi_wait("[bundle]"..path)
     end
     return v.view
 end
@@ -74,9 +74,9 @@ function S.open_file(path)
             Bundle[b].obj[path] = v.value
         end
         v.status = STATUS_OK
-        ltask.wakeup("[file]"..path)
+        ltask.multi_wakeup("[file]"..path)
     else -- v.status == STATUS_WAIT
-        ltask.wait("[file]"..path)
+        ltask.multi_wait("[file]"..path)
     end
     return v.value
 end
