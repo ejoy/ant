@@ -18,23 +18,12 @@ struct font_glyph {
 	uint16_t v;
 };
 
-//TODO: change font_manager hash uint32_t to uint64_t, for fix more fontid range
 #define IMAGE_FONT_MASK 0x40    //7 bit
 #define FONT_ID_MASK    0x3F    //low 6 bits
 
 static inline uint32_t
 codepoint_key(int font, int codepoint) {
 	return (uint32_t)((font << 24) | codepoint);
-}
-
-static inline int
-is_truetypefont(int fontid){
-	return 0 == (((uint8_t)fontid) & 0xC0);
-}
-
-static inline int
-is_imgfont(int fontid){
-    return 0 != (IMAGE_FONT_MASK&((uint8_t)fontid));
 }
 
 static inline int

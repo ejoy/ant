@@ -92,7 +92,7 @@ local function load_text(e)
     local ro = e.render_object
 
     local m = bgfx.memory_buffer(num*4 * fontquad_layout.stride)
-    lfont.load_text_quad(m, sc.description, font.id, x, y, fonttex_width, fonttex_height, font.size, sc.color)
+    lfont.load_text_quad(m, font.id, sc.description, x, y, fonttex_width, fonttex_height, font.size, sc.color)
 
     font.idx = add_text_mem(m, num, ro)
 end
@@ -135,9 +135,9 @@ function fontsys:camera_usage()
     end
 
     for e in w:select "font:in show_config:in scene:in render_object:update" do
-        --if e.font.idx == nil then
+        if e.font.idx == nil then
             load_text(e)
-        --end
+        end
     end
     lfont.submit()
 end

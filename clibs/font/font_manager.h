@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include "fontmutex.h"
 #include "font_define.h"
-#include "imagefont.h"
 
 #define FONT_MANAGER_SLOTLINE (FONT_MANAGER_TEXSIZE/FONT_MANAGER_GLYPHSIZE)
 #define FONT_MANAGER_SLOTS (FONT_MANAGER_SLOTLINE*FONT_MANAGER_SLOTLINE)
@@ -68,16 +67,12 @@ struct font_manager {
 	struct priority_list priority[FONT_MANAGER_SLOTS];
 	int16_t hash[FONT_MANAGER_HASHSLOTS];
 	struct truetype_font* ttf;
-	struct image_font imgfonts[MAX_FONT_NUM];
 	void *L;
 	int dpi_perinch;
 	struct mutex_t* mutex;
 
 	void (*font_manager_import)(struct font_manager *F, const char* fontpath);
 	int  (*font_manager_addfont_with_family)(struct font_manager *F, const char* family);
-
-	void (*font_manager_import_image_font)(struct font_manager *F, const char* name, const char* imgdata);
-	int  (*font_manager_add_image_font)(struct font_manager *F, const char* name);
 
 	void (*font_manager_fontheight)(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
 	int  (*font_manager_pixelsize)(struct font_manager *F, int fontid, int pointsize);
@@ -98,8 +93,6 @@ struct font_manager {
 
 void font_manager_init(struct font_manager *, void *L);
 void font_manager_import(struct font_manager *F, const char* fontpath);
-void font_manager_import_image_font(struct font_manager *F, const char* name, const char* imgdata);
-int font_manager_add_image_font(struct font_manager *F, const char* name);
 
 int font_manager_addfont_with_family(struct font_manager *F, const char* family);
 void font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascent, int *descent, int *lineGap);
