@@ -11,6 +11,7 @@ local ServiceRmlUi = ltask.queryservice "ant.rmlui|rmlui"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local rmlui_sys = ecs.system "rmlui_system"
 local iRmlUi = ecs.interface "irmlui"
+local fs = require "filesystem"
 
 local ui_viewid<const> = viewidmgr.get "uiruntime"
 
@@ -106,8 +107,20 @@ end
 
 local maxID = 0
 
+local function import_font(path)
+    for p in fs.pairs(path) do
+        if fs.is_directory(p) then
+            import_font(p)
+        elseif fs.is_regular_file(p) then
+            if p:equal_extension "otf" or p:equal_extension "ttf" or p:equal_extension "ttc" then
+                font.import(p)
+            end
+        end
+    end
+end
+
 function iRmlUi.font_dir(dir)
-    ltask.call(ServiceRmlUi, "font_dir", dir)
+    import_font(fs.path(dir))
 end
 
 function iRmlUi.preload_dir(dir)

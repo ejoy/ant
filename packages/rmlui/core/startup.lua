@@ -72,7 +72,6 @@ end
 S.open = windowManager.open
 S.close = windowManager.close
 S.postMessage = windowManager.postMessage
-S.font_dir = filemanager.font_dir
 S.preload_dir = filemanager.preload_dir
 S.mouse = contextManager.process_mouse
 S.touch = contextManager.process_touch
