@@ -85,6 +85,8 @@ local function add_text_mem(m, num, ro)
     return idx
 end
 
+
+
 local function load_text(e)
     local font = e.font
     local sc = e.show_config
@@ -95,7 +97,7 @@ local function load_text(e)
 
     local layoutdata,codepoints,textw,texth = layout.prepare_text(
         fonttex_handle,
-        "你好[#ffffff]Hello[#]world[#ff00ff]世界[#]",
+        sc.description,
         font.size,
         font.id,
         0xffff0000
@@ -153,6 +155,7 @@ function fontsys:component_init()
     end
 end
 
+local init_load_text=false
 function fontsys:camera_usage()
     for _, eid, attach in ev:unpack() do
         local e <close> = w:entity(eid, "font:in")
@@ -160,13 +163,14 @@ function fontsys:camera_usage()
         f.attach_eid = attach
         imaterial.set_property(e, "s_tex", fonttex_handle)
     end
-
-    for e in w:select "font:in show_config:in scene:in render_object:update" do
-        --if e.font.idx == nil then
+    if init_load_text==false then
+        for e in w:select "font:in show_config:in scene:in render_object:update" do
             load_text(e)
-        --end
+        end
+        lfont.submit()
+        init_load_text=true
+    else
     end
-    lfont.submit()
 end
 
 function fontsys:entity_remove()
