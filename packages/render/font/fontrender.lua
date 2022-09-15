@@ -155,7 +155,6 @@ function fontsys:component_init()
     end
 end
 
-local init_load_text=false
 function fontsys:camera_usage()
     for _, eid, attach in ev:unpack() do
         local e <close> = w:entity(eid, "font:in")
@@ -163,14 +162,13 @@ function fontsys:camera_usage()
         f.attach_eid = attach
         imaterial.set_property(e, "s_tex", fonttex_handle)
     end
-    if init_load_text==false then
-        for e in w:select "font:in show_config:in scene:in render_object:update" do
+
+    for e in w:select "font:in show_config:in scene:in render_object:update" do
+        --if e.font.idx == nil then
             load_text(e)
-        end
-        lfont.submit()
-        init_load_text=true
-    else
+        --end
     end
+    lfont.submit()
 end
 
 function fontsys:entity_remove()

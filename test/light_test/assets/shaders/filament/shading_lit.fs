@@ -63,6 +63,102 @@ float normalFiltering(float perceptualRoughness, const vec3 worldNormal) {
 }
 #endif
 
+void reflectanceFromSpecular(const MaterialInputs material, inout PixelParams pixel){
+    // This is from KHR_materials_pbrSpecularGlossiness.
+    vec3 specularColor = material.specularColor;
+    float metallic = computeMetallicFromSpecularColor(specularColor);
+
+    pixel.diffuseColor = computeDiffuseColor(baseColor, metallic);
+    pixel.f0 = specularColor;
+}
+
+void reflectanceFromMetallic(const MaterialInputs material, inout PixelParams pixel){
+    pixel.diffuseColor = computeDiffuseColor(baseColor, material.metallic);
+#   if !defined(SHADING_MODEL_SUBSURFACE) && (!defined(MATERIAL_HAS_REFLECTANCE) && defined(MATERIAL_HAS_IOR))
+    float reflectance = iorToF0(max(1.0, material.ior), 1.0);
+#   else    //
+    // Assumes an interface from air to an IOR of 1.5 for dielectrics
+    float reflectance = computeDielectricF0(material.reflectance);
+#   endif   //
+
+    pixel.f0 = computeF0(baseColor, material.metallic, reflectance);
+}
+
+void reflectanceFromCloth(const MaterialInputs material, inout PixelParams pixel){
+    pixel.diffuseColor = baseColor.rgb;
+    pixel.f0 = material.sheenColor;
+#   if defined(MATERIAL_HAS_SUBSURFACE_COLOR)
+    pixel.subsurfaceColor = material.subsurfaceColor;
+#   endif   //
+}
+
+void getCommonPixelParams_Reflectance(const MaterialInputs material, inout PixelParams pixel){
+#if defined(SHADING_MODEL_SPECULAR_GLOSSINESS)
+    reflectanceFromSpecular(material, pixel);
+#elif !defined(SHADING_MODEL_CLOTH)
+    reflectanceFromMetallic(material, pixel);
+#else   //
+    reflectanceFromCloth(material, pixel);
+#endif  //
+}
+
+void refractionTransmission(const MaterialInputs material, inout PixelParams pixel){
+#if defined(MATERIAL_HAS_TRANSMISSION)
+    pixel.transmission = saturate(material.transmission);
+#else    //
+    pixel.transmission = 1.0;
+#endif   //
+}
+
+void refractionAbsorption(const MaterialInputs material, inout PixelParams pixel){
+#if defined(MATERIAL_HAS_ABSORPTION)
+    #if defined(MATERIAL_HAS_THICKNESS) || defined(MATERIAL_HAS_MICRO_THICKNESS)
+        pixel.absorption = max(vec3(0.0), material.absorption);
+    #else    //
+        pixel.absorption = saturate(material.absorption);
+    #endif   //
+#else    //
+    pixel.absorption = vec3(0.0);
+#endif   //
+}
+
+void refractionThickness(const MaterialInputs material, inout PixelParams pixel){
+    #if defined(MATERIAL_HAS_THICKNESS)
+    pixel.thickness = max(0.0, material.thickness);
+    #endif   //
+    #if defined(MATERIAL_HAS_MICRO_THICKNESS) && (REFRACTION_TYPE == REFRACTION_TYPE_THIN)
+    pixel.uThickness = max(0.0, material.microThickness);
+    #else    //
+    pixel.uThickness = 0.0;
+    #endif   //
+}
+
+void calcIor(const MaterialInputs material, inout PixelParams pixel){
+    // Air's Index of refraction is 1.000277 at STP but everybody uses 1.0
+    const float airIor = 1.0;
+#if !defined(MATERIAL_HAS_IOR)
+    // [common case] ior is not set in the material, deduce it from F0
+    float materialor = f0ToIor(pixel.f0.g);
+#else    //
+    // if ior is set in the material, use it (can lead to unrealistic materials)
+    float materialor = max(1.0, material.ior);
+#endif   //
+
+    pixel.etaIR = airIor / materialor;  // air -> material
+    pixel.etaRI = materialor / airIor;  // material -> air
+}
+
+void getCommonPixelParams_Refraction(const MaterialInputs material, inout PixelParams pixel) {
+#if !defined(SHADING_MODEL_CLOTH) && !defined(SHADING_MODEL_SUBSURFACE) && defined(MATERIAL_HAS_REFRACTION)
+    calcIor(material, pixel);
+
+    refractionTransmission(material, pixel);
+    refractionAbsorption(material, pixel);
+    refractionThickness(material, pixel);
+
+#endif  //
+}
+
 void getCommonPixelParams(const MaterialInputs material, inout PixelParams pixel) {
     vec4 baseColor = material.baseColor;
     applyAlphaMask(baseColor);
@@ -74,67 +170,9 @@ void getCommonPixelParams(const MaterialInputs material, inout PixelParams pixel
     unpremultiply(baseColor);
 #endif
 
-#if defined(SHADING_MODEL_SPECULAR_GLOSSINESS)
-    // This is from KHR_materials_pbrSpecularGlossiness.
-    vec3 specularColor = material.specularColor;
-    float metallic = computeMetallicFromSpecularColor(specularColor);
+    getCommonPixelParams_Reflectance(material, pixel);
+    getCommonPixelParams_Refraction(material, pixel);
 
-    pixel.diffuseColor = computeDiffuseColor(baseColor, metallic);
-    pixel.f0 = specularColor;
-#elif !defined(SHADING_MODEL_CLOTH)
-    pixel.diffuseColor = computeDiffuseColor(baseColor, material.metallic);
-#if !defined(SHADING_MODEL_SUBSURFACE) && (!defined(MATERIAL_HAS_REFLECTANCE) && defined(MATERIAL_HAS_IOR))
-    float reflectance = iorToF0(max(1.0, material.ior), 1.0);
-#else
-    // Assumes an interface from air to an IOR of 1.5 for dielectrics
-    float reflectance = computeDielectricF0(material.reflectance);
-#endif
-    pixel.f0 = computeF0(baseColor, material.metallic, reflectance);
-#else
-    pixel.diffuseColor = baseColor.rgb;
-    pixel.f0 = material.sheenColor;
-#if defined(MATERIAL_HAS_SUBSURFACE_COLOR)
-    pixel.subsurfaceColor = material.subsurfaceColor;
-#endif
-#endif
-
-#if !defined(SHADING_MODEL_CLOTH) && !defined(SHADING_MODEL_SUBSURFACE)
-#if defined(MATERIAL_HAS_REFRACTION)
-    // Air's Index of refraction is 1.000277 at STP but everybody uses 1.0
-    const float airIor = 1.0;
-#if !defined(MATERIAL_HAS_IOR)
-    // [common case] ior is not set in the material, deduce it from F0
-    float materialor = f0ToIor(pixel.f0.g);
-#else
-    // if ior is set in the material, use it (can lead to unrealistic materials)
-    float materialor = max(1.0, material.ior);
-#endif
-    pixel.etaIR = airIor / materialor;  // air -> material
-    pixel.etaRI = materialor / airIor;  // material -> air
-#if defined(MATERIAL_HAS_TRANSMISSION)
-    pixel.transmission = saturate(material.transmission);
-#else
-    pixel.transmission = 1.0;
-#endif
-#if defined(MATERIAL_HAS_ABSORPTION)
-#if defined(MATERIAL_HAS_THICKNESS) || defined(MATERIAL_HAS_MICRO_THICKNESS)
-    pixel.absorption = max(vec3(0.0), material.absorption);
-#else
-    pixel.absorption = saturate(material.absorption);
-#endif
-#else
-    pixel.absorption = vec3(0.0);
-#endif
-#if defined(MATERIAL_HAS_THICKNESS)
-    pixel.thickness = max(0.0, material.thickness);
-#endif
-#if defined(MATERIAL_HAS_MICRO_THICKNESS) && (REFRACTION_TYPE == REFRACTION_TYPE_THIN)
-    pixel.uThickness = max(0.0, material.microThickness);
-#else
-    pixel.uThickness = 0.0;
-#endif
-#endif
-#endif
 }
 
 void getSheenPixelParams(const MaterialInputs material, inout PixelParams pixel) {

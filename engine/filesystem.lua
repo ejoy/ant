@@ -243,6 +243,13 @@ function fs.relative(path, base)
     return constructor(table.concat(s, "/"))
 end
 
+local filestatus = {}
+filestatus.__index = filestatus
+
+function filestatus:is_directory()
+    return self[1] == true
+end
+
 function fs.pairs(path)
     local value = path._value:gsub("(.-)/?$", "%1")
     local list = vfs.list(value .. "/")
@@ -250,13 +257,15 @@ function fs.pairs(path)
         return function ()
         end
     end
-    local name
+    local name, status
+    local status_obj = setmetatable({}, filestatus)
     return function()
-        name = next(list, name)
+        name, status = next(list, name)
         if not name then
             return
         end
-        return path / name
+        status_obj[1] = status
+        return path / name, status_obj
     end
 end
 

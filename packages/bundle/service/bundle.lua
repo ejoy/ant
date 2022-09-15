@@ -1,6 +1,7 @@
 local ltask = require "ltask"
 local bundle = require "bundle"
 local vfs = require "vfs"
+local glob = require "glob"
 
 local S = {}
 local File = {}
@@ -10,20 +11,25 @@ local STATUS_NULL <const> = 1
 local STATUS_WAIT <const> = 2
 local STATUS_OK <const> = 3
 
+local function read_bundle(path)
+    local f <close> = io.open(path, "rb")
+    if not f then
+        return
+    end
+    local patterns = {}
+    for line in f:lines() do
+        patterns[#patterns+1] = line
+    end
+    return patterns
+end
+
 local function open_bundle(path)
     local realpath = vfs.realpath(path)
     if not realpath then
         return
     end
-    local f <const> = io.open(realpath, "rb")
-    if not f then
-        return
-    end
-    local data = {}
-    for line in f:lines() do
-        data[#data+1] = line
-    end
-    return data
+    local patterns = read_bundle(realpath)
+    return glob("/", patterns)
 end
 
 local function create_bundle(path)
@@ -59,6 +65,14 @@ function S.open_bundle(path)
         ltask.multi_wait("[bundle]"..path)
     end
     return v.view
+end
+
+function S.close_bundle(path)
+    local v = Bundle[path]
+    if v == nil then
+        error("bundle not opened")
+    end
+    --TODO
 end
 
 function S.open_file(path)

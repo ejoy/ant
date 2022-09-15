@@ -298,6 +298,7 @@ void material(inout MaterialInputs material) {
 #include "brdf.fs"
 
 #include "ambient_occlusion.fs"
+#include "light_directional.fs"
 #include "light_indirect.fs"
 #include "shading_lit.fs"
 

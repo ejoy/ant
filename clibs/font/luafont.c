@@ -85,7 +85,7 @@ prepare_char(struct font_manager* F, uint16_t texid, int fontid, int codepoint, 
 		return;
 	}
 
-	if (ret == 0 && is_truetypefont(fontid)) {
+	if (ret == 0){
 		uint8_t *mem = malloc(g.w * g.h);
 		const char * err = font_manager_update(F, fontid, codepoint, &g, mem);
 		if (err){
@@ -299,37 +299,11 @@ lname(lua_State *L) {
 }
 
 static int
-limport_image_font(lua_State *L){
-	struct font_manager *F = getF(L);
-	//image name
-	const char* name = luaL_checkstring(L, 1);
-	size_t sz;
-	//打包后的image font
-	const char* imgdata = luaL_checklstring(L, 2, &sz);
-	if (sz != sizeof(struct image_font)){
-		luaL_error(L, "Invalid image data");
-	}
-	font_manager_import_image_font(F, name, imgdata);
-	return 0;
-}
-
-static int
-limage_font(lua_State *L){
-	struct font_manager *F = getF(L);
-	const char* name = luaL_checkstring(L, 1);
-	const int fontid = font_manager_add_image_font(F, name);
-	lua_pushinteger(L, fontid);
-	return 1;
-}
-
-static int
 initfont(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	luaL_Reg l[] = {
 		{ "import",				limport },
 		{ "name",				lname },
-		{ "import_image_font",	limport_image_font},
-		{ "image_font",			limage_font},
 		{ "fontheight",			lfontheight },
 		{ "prepare_text",		lprepare_text },
 		{ "load_text_quad",		lload_text_quad },

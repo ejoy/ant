@@ -22,7 +22,6 @@ function m.init()
             end
             require "vfs"
             dofile "/pkg/ant.font/manager.lua"
-            dofile "/pkg/ant.font/imagefont.lua"
         ]]):format(package.cpath)))
     end
     TextureW = lfont.fonttexture_size
