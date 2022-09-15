@@ -51,31 +51,9 @@ local function update_ui_data(eid)
     --end
 end
 
-function m.update_template_tranform(eid)
-    if not eid then return end
-    local e <close> = w:entity(eid, "scene?in collider?in")
-    local template = hierarchy:get_template(eid)
-    
-    if not template or not template.template or not e.scene then return end
-
-    local s, r, t = iom.get_scale(e), iom.get_rotation(e), iom.get_position(e)
-    local srt = template.template.data.scene
-    srt.r = {math3d.index(r, 1, 2, 3, 4)}
-    srt.s = {math3d.index(s, 1, 2, 3)}
-    srt.t = {math3d.index(t, 1, 2, 3)}
-
-    if e.collider then
-        anim_view.record_collision(eid)
-    end
-end
-
 function m.update_ui(ut)
     if not gizmo.target_eid then return end
-    local e = gizmo.target_eid
-    if ut then
-        m.update_template_tranform(e)
-    end
-    update_ui_data(e)
+    update_ui_data(gizmo.target_eid)
 end
 
 local function get_camera_panel()

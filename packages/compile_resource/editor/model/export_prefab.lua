@@ -146,13 +146,18 @@ end
 local default_material_path<const> = lfs.path "/pkg/ant.resources/materials/pbr_default.material"
 local default_material_info
 
+local material_files = {}
+
 local function save_material(output, exports, mi)
     local f = utility.full_path(mi.filename:string())
-    if not lfs.exists(f) then
+    if not material_files[f:string()] then
+        lfs.remove_all(f)
         utility.save_txt_file(mi.filename:string(), mi.material)
         compile.do_compile(output / mi.filename, output / "materials" / "_tmp", exports.depfiles)
         lfs.remove(output / mi.filename)
         lfs.rename(output / "materials" / "_tmp", output / mi.filename)
+
+        material_files[f:string()] = true
     end
 end
 
@@ -380,7 +385,7 @@ end
 
 return function(output, glbdata, exports, localpath)
     prefab = {}
-
+    material_files = {}
     local gltfscene = glbdata.info
     local sceneidx = gltfscene.scene or 0
     local scene = gltfscene.scenes[sceneidx+1]

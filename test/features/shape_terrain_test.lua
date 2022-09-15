@@ -307,7 +307,7 @@ function shape_terrain_test_sys:data_changed()
         elseif key == "T" and press == 0 then
             local ce = w:first("canvas scene:in")
             local unit = 1.0
-            local itemid = icanvas.add_items(ce, {
+            local items = icanvas.add_items(ce, {
                 {
                     texture = {
                         path = "/pkg/ant.resources/textures/white.texture",
@@ -324,7 +324,10 @@ function shape_terrain_test_sys:data_changed()
                 }
             })
 
-            icanvas.show(itemid, true)
+            for _, itemid in ipairs(items) do
+                icanvas.show(itemid, true)
+            end
+            
         elseif key == "M" and press == 0 then
             if canvas.added_items then
                 local ce = w:first("canvas scene:in")

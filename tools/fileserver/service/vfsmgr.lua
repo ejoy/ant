@@ -120,7 +120,7 @@ end
 function S.GET(hash)
 	local path = repo:hash(hash)
 	if path then
-		return path:string()
+		return path
 	end
 end
 
@@ -132,8 +132,7 @@ function S.FETCH(path)
 end
 
 function S.BUILD(lpath)
-	local rpath = fs.relative(fs.path(lpath), fs.path(REPOPATH)):string()
-	return repo:build_dir("/"..rpath, lpath)
+	return repo:build_dir(lpath)
 end
 
 function S.REALPATH(path)

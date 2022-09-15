@@ -115,11 +115,11 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 	for _, name in ipairs(filelist) do
 		local fullname = filepath .. name	-- full name in repo
 		if not self._resource and is_resource(fullname) then
-			table.insert(hashs, string.format("r resource %s", name))
+			table.insert(hashs, string.format("r %s %s", name, fullname))
 		else
 			if filelist[name] == "v" or lfs.is_directory(self:realpath(fullname)) then
 				local hash = repo_build_dir(self, fullname .. '/', cache, namehashcache)
-				table.insert(hashs, string.format("d %s %s", hash, name))
+				table.insert(hashs, string.format("d %s %s", name, hash))
 			else
 				local realfullname = self:realpath(fullname)
 				local mtime = lfs.last_write_time(realfullname)	-- timestamp
@@ -135,10 +135,10 @@ function repo_build_dir(self, filepath, cache, namehashcache)
 					if _DEBUG then print("FILE", hash, fullname, mtime) end
 				end
 				add_item(hash, {
-					filename = fullname,
+					filename = realfullname,
 					timestamp = mtime,
 				})
-				table.insert(hashs, string.format("f %s %s", hash, name))
+				table.insert(hashs, string.format("f %s %s", name, hash))
 			end
 		end
 	end
@@ -295,11 +295,7 @@ local function read_ref(self, hash)
 			if timestamp then
 				-- It's a file
 				-- TODO
-				local realname = access.realpath(self, name)
-				if not realname then
-					realname = self._root / name
-				end
-				if not realname:string():match "%?" and lfs.is_regular_file(realname) and lfs.last_write_time(realname) == timestamp then
+				if lfs.is_regular_file(name) and lfs.last_write_time(name) == timestamp then
 					cache[name] = { hash = hash , timestamp = timestamp }
 					table.insert(items, line)
 				else
@@ -348,7 +344,7 @@ function repo:hash(hash)
 	if f then
 		f:close()
 		-- it's a dir object
-		return filename
+		return filename:string()
 	end
 	local rfilename = filename:replace_extension(".ref")
 
@@ -360,7 +356,7 @@ function repo:hash(hash)
 		local name = line:match "f (.-) ?(%d*)$"
 		if name then
 			f:close()
-			return self:realpath(name)
+			return name
 		end
 	end
 	f:close()
@@ -375,7 +371,7 @@ function repo:dir(hash)
 	local dir = {}
 	local file = {}
 	for line in f:lines() do
-		local t, hash, name = line:match "^([dfr]) (%S*) (.*)"
+		local t, name, hash = line:match "^([dfr]) (%S*) (%S*)$"
 		if t == 'd' then
 			dir[name] = hash
 		elseif t == 'f' then
@@ -391,7 +387,7 @@ function repo:dir(hash)
 	return { dir = dir, file = file }
 end
 
-function repo:build_dir(rpath, lpath)
+function repo:build_dir(lpath)
 	lpath = lfs.path(lpath)
 	local r = {
 		_root = self._root,
@@ -401,10 +397,10 @@ function repo:build_dir(rpath, lpath)
 		_mountpoint = {},
 		_resource = true,
 	}
-	access.addmount(r, rpath, lpath)
+	access.addmount(r, "", lpath)
 	setmetatable(r, repo)
 	local cache = {}
-	local roothash = repo_build_dir(r, rpath.."/", cache, r._namecache)
+	local roothash = repo_build_dir(r, "/", cache, r._namecache)
 	repo_write_cache(r, cache)
 	return roothash
 end

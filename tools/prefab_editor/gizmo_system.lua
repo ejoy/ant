@@ -41,7 +41,7 @@ function gizmo:update()
 	self:update_scale()
 	self:updata_uniform_scale()
 	self:update_axis_plane()
-	inspector.update_ui(false)
+	inspector.update_ui()
 end
 
 function gizmo:set_target(eid)
@@ -81,9 +81,14 @@ function gizmo:set_scale(inscale)
 	end
 	local e <close> = w:entity(self.target_eid)
 	iom.set_scale(e, inscale)
+	local template = hierarchy:get_template(self.target_eid)
+	template.template.data.scene.s = inscale
 end
 
-function gizmo:update_position(worldpos)
+function gizmo:set_position(worldpos)
+	if not can_edit_srt(self.target_eid) then
+		return
+	end
 	local newpos
 	if worldpos then
 		local pid = hierarchy:get_parent(gizmo.target_eid)
@@ -100,8 +105,9 @@ function gizmo:update_position(worldpos)
 		end
 		local e <close> = w:entity(self.target_eid)
 		iom.set_position(e, localPos)
+		local template = hierarchy:get_template(self.target_eid)
+		template.template.data.scene.t = localPos
 		newpos = worldpos
-		inspector.update_template_tranform(self.target_eid)
 	else
 		local e <close> = w:entity(gizmo.target_eid)
 		local wm = iom.worldmat(e)
@@ -118,13 +124,6 @@ function gizmo:update_position(worldpos)
 	iom.set_position(uniform_rot_root, newpos)
 end
 
-function gizmo:set_position(worldpos)
-	if not can_edit_srt(self.target_eid) then
-		return
-	end
-	world:pub {"Gizmo", "updateposition", worldpos}
-end
-
 function gizmo:set_rotation(inrot)
 	if not can_edit_srt(self.target_eid) then
 		return
@@ -133,6 +132,8 @@ function gizmo:set_rotation(inrot)
 	local newrot
 	if inrot then
 		iom.set_rotation(e, inrot)
+		local template = hierarchy:get_template(self.target_eid)
+		template.template.data.scene.r = inrot
 		newrot = inrot
 	else
 		newrot = iom.get_rotation(e)
@@ -653,7 +654,6 @@ local mouse_drag = world:sub {"mousedrag"}
 local mouse_down = world:sub {"mousedown"}
 local mouse_move = world:sub {"mousemove"}
 local mouse_up = world:sub {"mouseup"}
-local gizmo_target_event = world:sub {"Gizmo"}
 local gizmo_mode_event = world:sub {"GizmoMode"}
 
 local last_mouse_pos
@@ -670,24 +670,23 @@ local function move_gizmo(x, y)
 	if not gizmo.target_eid or not x or not y then
 		return
 	end
-	local deltaPos
+	local worldPos
 	if move_axis == gizmo.txy or move_axis == gizmo.tyz or move_axis == gizmo.tzx then
 		local re <close> = w:entity(gizmo.root_eid)
 		local gizmoTPos = math3d.totable(iom.get_position(re))
 		local downpos = mouse_hit_plane(last_mouse_pos, {dir = gizmo_dir_to_world(move_axis.dir), pos = gizmoTPos})
 		local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(move_axis.dir), pos = gizmoTPos})
 		if downpos and curpos then
-			local deltapos = math3d.totable(math3d.sub(curpos, downpos))
-			deltaPos = {last_gizmo_pos[1] + deltapos[1], last_gizmo_pos[2] + deltapos[2], last_gizmo_pos[3] + deltapos[3]}
+			local delta = math3d.totable(math3d.sub(curpos, downpos))
+			worldPos = {last_gizmo_pos[1] + delta[1], last_gizmo_pos[2] + delta[2], last_gizmo_pos[3] + delta[3]}
 		end
 	else
 		local ce <close> = w:entity(irq.main_camera(), "camera:in")
 		local newOffset = utils.view_to_axis_constraint(iom.ray(ce.camera.viewprojmat, {x, y}), iom.get_position(ce), gizmo_dir_to_world(move_axis.dir), last_gizmo_pos)
-		local deltaOffset = math3d.totable(math3d.sub(newOffset, init_offset))
-		deltaPos = {last_gizmo_pos[1] + deltaOffset[1], last_gizmo_pos[2] + deltaOffset[2], last_gizmo_pos[3] + deltaOffset[3]}
+		local delta = math3d.totable(math3d.sub(newOffset, init_offset))
+		worldPos = {last_gizmo_pos[1] + delta[1], last_gizmo_pos[2] + delta[2], last_gizmo_pos[3] + delta[3]}
 	end
-
-	gizmo:set_position(deltaPos)
+	gizmo:set_position(worldPos)
 	gizmo:update_scale()
 	is_tran_dirty = true
 	world:pub {"Gizmo", "update"}
@@ -1065,13 +1064,13 @@ local function check_calc_aabb(eid)
 end
 
 function gizmo_sys:handle_event()
-	for _, what, wp in gizmo_event:unpack() do
-		if what == "updateposition" then
-			gizmo:update_position(wp)
-		elseif what == "ontarget" then
-			gizmo:update()
-		end
-	end
+	-- for _, what, wp in gizmo_event:unpack() do
+	-- 	if what == "updateposition" then
+	-- 		gizmo:update_position(wp)
+	-- 	elseif what == "ontarget" then
+	-- 		gizmo:update()
+	-- 	end
+	-- end
 
 	for _ in camera_zoom:unpack() do
 		gizmo:update_scale()

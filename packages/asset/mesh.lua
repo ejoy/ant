@@ -28,8 +28,6 @@ end
 
 function ms:end_frame()
 	for e in w:select "REMOVED owned_mesh_buffer simplemesh:in" do
-		if e.owned_mesh_buffer then
-			ext_meshbin.delete(e.simplemesh)
-		end
+		ext_meshbin.delete(e.simplemesh)
 	end
 end

@@ -91,42 +91,20 @@ local function load_text(e)
     local pos = calc_3d_anchor_pos(e, sc)
     local sx, sy, depth = math3d.index(calc_screen_pos(pos), 1, 2, 3)
 
-    --local textw, texth, num = lfont.prepare_text(fonttex_handle, "你好", font.size, font.id)
-
-    local layoutdata,codepoints,textw,texth = layout.prepare_text(
-        fonttex_handle,
-        "你好[#ffffff]Hello[#]world[#ff00ff]世界[#]",
-        font.size,
-        font.id,
-        0xffff0000
-    )
-
+    local textw, texth, num = lfont.prepare_text(fonttex_handle, sc.description, font.size, font.id)
     local x, y = text_start_pos(textw, texth, sx, sy)
     local ro = e.render_object
 
-    --local m = bgfx.memory_buffer(num*4 * fontquad_layout.stride)
-    local m = bgfx.memory_buffer(#codepoints * 4 * fontquad_layout.stride)
+    local m = bgfx.memory_buffer(num*4 * fontquad_layout.stride)
+    lfont.load_text_quad(m, sc.description, font.id, x, y, fonttex_width, fonttex_height, font.size, sc.color)
 
-    --local xx,yy=lfont.load_text_quad(m,  font.id,"ABCDE", x, y, fonttex_width, fonttex_height, font.size, sc.color)
-    local offset=0
-
-    for _, ld in ipairs(layoutdata) do
-        --assert(ld.start > 0 and ld.start+ld.num <= #codepoints)
-        local xx, yy = layout.load_text_quad(
-            m, font.id, offset, x, y, fonttex_width, fonttex_height, font.size, ld.color,ld.num,ld.start
-        )
-        x = xx
-        y = yy
-        offset = offset+ld.num * 4
-    end 
-    --font.idx = add_text_mem(m, num, ro)
-    font.idx = add_text_mem(m, #codepoints, ro)
+    font.idx = add_text_mem(m, num, ro)
 end
 
 local ev = world:sub {"show_name"}
 
 function fontsys:component_init()
-    for e in w:select "INIT font:in simplemesh:out owned_mesh_buffer?out" do
+    for e in w:select "INIT font:in simplemesh:out" do
         lfont.import(e.font.file)
         e.font.id = lfont.name(e.font.name)
         e.simplemesh = {
@@ -141,7 +119,6 @@ function fontsys:component_init()
                 handle = irender.quad_ib()
             }
         }
-        e.owned_mesh_buffer = true
     end
     for e in w:select "INIT show_config:in" do
         if e.show_config.location_offset then

@@ -429,6 +429,7 @@ local function get_skybox_mesh()
 		local desc = {vb={}, ib={}}
 		geodrawer.draw_box({1, 1, 1}, nil, nil, desc)
 		skybox_mesh = create_mesh({"p3", desc.vb}, desc.ib)
+		skybox_mesh.ib.owned, skybox_mesh.vb.owned = true, true
 	end
 
 	return skybox_mesh
@@ -548,7 +549,8 @@ function ientity.create_gamma_test_entity()
 						100, 132, 0.0, 1.0,
 						420, 200, 1.0, 0.0,
 						420, 132, 1.0, 1.0,
-					}), declmgr.get "p2|t2".handle)
+					}), declmgr.get "p2|t2".handle),
+					owned = true,
                 }
             },
 			owned_mesh_buffer = true,

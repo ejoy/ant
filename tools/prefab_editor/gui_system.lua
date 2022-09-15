@@ -11,6 +11,7 @@ local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 --local effekseer_filename_mgr = ecs.import.interface "ant.effekseer|filename_mgr"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
+local ipl       = ecs.import.interface "ant.render|ipolyline"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local iwd       = ecs.import.interface "ant.render|iwidget_drawer"
@@ -371,7 +372,6 @@ local function on_update(eid)
     elseif e.light then
         light_gizmo.update()
     end
-    inspector.update_template_tranform(eid)
 end
 
 local cmd_queue = ecs.require "gizmo.command_queue"
@@ -409,7 +409,7 @@ function m:handle_event()
     end
     for _, action, value1, value2 in event_gizmo:unpack() do
         if action == "update" or action == "ontarget" then
-            inspector.update_ui(action == "update")
+            inspector.update_ui()
             if action == "ontarget" then
                 on_target(value1, value2)
             elseif action == "update" then
@@ -552,7 +552,6 @@ function m:handle_event()
         imodifier.stop(imodifier.highlight)
     end
 end
-
 
 function m:data_changed()
     if highlight_aabb.visible and highlight_aabb.min and highlight_aabb.max then

@@ -12,15 +12,12 @@ local function loadenv(name)
     end
     if not info.env then
         info.env = sandbox.env(loadenv, info.config, "/pkg/"..name, name)
-        if info.config.entry then
-            info.env._ENTRY = info.env.require(info.config.entry)
-        end
     end
     return info.env
 end
 
 local function import(name)
-    return loadenv(name)._ENTRY
+    return loadenv(name).import_package(name)
 end
 
 local function register_package(path)

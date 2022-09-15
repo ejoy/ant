@@ -1,12 +1,16 @@
-local cpath, repopath = ...
+local cpath, repopath, fddata = ...
 
 package.path = "engine/?.lua"
 package.cpath = cpath
 
 local vfs = require "vfs"
 local thread = require "bee.thread"
+local socket = require "bee.socket"
 local io_req = thread.channel "IOreq"
 thread.setname "ant - IO thread"
+
+local quit = false
+local channelfd = socket.undump(fddata)
 
 local function loadfile(path)
 	local f = io.open(path)
@@ -67,44 +71,77 @@ local function dispatch(ok, id, cmd, ...)
 	return true
 end
 
-local ltask
+local event = {channelfd}
+local eventfunc = {}
+
+local function event_del(fd)
+	if fd then
+		eventfunc[fd] = nil
+		for i, h in ipairs(event) do
+			if h == fd then
+				table.remove(event, i)
+				break
+			end
+		end
+	end
+end
+
+eventfunc[channelfd] = function ()
+	channelfd:recv()
+	if nil == channelfd:recv() then
+		event_del(channelfd)
+		return
+	end
+	while dispatch(io_req:pop()) do
+	end
+end
 
 local exclusive = require "ltask.exclusive"
+local ltask
 
 local function ltask_ready()
 	return coroutine.yield() == nil
 end
 
-local function ltask_update()
-	if ltask == nil then
-		assert(loadfile "engine/task/service/service.lua")(true)
-		ltask = require "ltask"
-		ltask.dispatch(CMD)
-	end
-	local SCHEDULE_IDLE <const> = 1
-	local SCHEDULE_QUIT <const> = 2
-	local SCHEDULE_SUCCESS <const> = 3
-	while true do
-		local s = ltask.schedule_message()
-		if s == SCHEDULE_QUIT then
-			ltask.log "${quit}"
-			return
+local function ltask_init()
+	assert(loadfile "engine/task/service/service.lua")(true)
+	ltask = require "ltask"
+	ltask.dispatch(CMD)
+	local waitfunc, fd = exclusive.eventinit()
+	local ltaskfd = socket.fd(fd, "tcp6", "connect")
+	event[#event+1] = ltaskfd
+	eventfunc[ltaskfd] = function ()
+		waitfunc()
+		local SCHEDULE_IDLE <const> = 1
+		while true do
+			local s = ltask.schedule_message()
+			if s == SCHEDULE_IDLE then
+				break
+			end
+			coroutine.yield()
 		end
-		if s == SCHEDULE_IDLE then
-			break
-		end
-		coroutine.yield()
 	end
 end
 
-local function work()
-	while true do
-		while dispatch(io_req:pop()) do
-		end
-		if ltask_ready() then
-			ltask_update()
-		end
+function CMD.SWITCH()
+	while not ltask_ready() do
 		exclusive.sleep(1)
+	end
+	ltask_init()
+end
+
+function CMD.quit()
+	quit = true
+end
+
+local function work()
+	while not quit do
+		local rds = socket.select(event)
+		if rds then
+			for _, rd in ipairs(rds) do
+				eventfunc[rd]()
+			end
+		end
 	end
 end
 

@@ -1,18 +1,24 @@
-local ecs = ...
-local world = ecs.world
-local w = world.w
-
---[[
-    1. use new lighting shader. 
-    2. use new ibl. we try to use filament ibl texture to create ibl light, maybe ibl is the key reason
-    3. use new tonemapping&bloom. a bake version of tonemapping is use in filament, it's another key reason for light.
-]]
-
-local S = ecs.system "init_system"
-
-local MF = "/pkg/ant.test.light/assets/test.material"
-
-function S.init()
-    
-end
-
+package.path = "engine/?.lua"
+require "bootstrap"
+import_package "ant.window".start {
+    import = {
+        "@ant.test.light",
+    },
+    pipeline = {
+        "init",
+        "update",
+        "exit",
+    },
+    system = {
+        "ant.test.light|init_system",
+    },
+    interface = {
+        "ant.objcontroller|iobj_motion",
+    },
+    policy = {
+        "ant.general|name",
+        "ant.scene|scene_object",
+        "ant.render|render",
+        "ant.render|render_queue",
+    }
+}

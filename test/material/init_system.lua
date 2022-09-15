@@ -26,6 +26,7 @@ function is:init()
                         -0.1, -0.1, 1.0, 0.0,
                             0.1, -0.1, 1.0, 1.0,
                     }},
+                    owned = true,
                 }
             },
             owned_mesh_buffer = true,

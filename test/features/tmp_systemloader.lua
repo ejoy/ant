@@ -64,6 +64,8 @@ local function point_light_test()
 end
 
 local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
+    local m = imesh.init_mesh(ientity.plane_mesh(mu.texture_uv(tex_rect, tex_size)))
+    m.vb.owned = true
     return ecs.create_entity{
         policy = {
             "ant.render|simplerender",
@@ -71,7 +73,7 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
         },
         data = {
             name = "test_texture_plane",
-            simplemesh = imesh.init_mesh(ientity.plane_mesh(mu.texture_uv(tex_rect, tex_size))),
+            simplemesh = m,
             owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/texture_plane.material",
             visible_state= "main_view",
