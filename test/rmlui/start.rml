@@ -40,7 +40,7 @@
         <script type="text/x-lua" >
             local start = window.createModel "start" {
                 show = false,
-                richtext = false,
+                richtext = true,
                 label = "游戏测试 [#ff00ff]CD EF[#] 换行"
                 --"游戏测试 [#abcdef]此处 应该[#] 换行"
                 --"游戏测试 [#abcdef]CD EF[#] 换行"

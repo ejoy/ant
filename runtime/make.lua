@@ -41,11 +41,13 @@ for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
     end
 end
 
-checkAddModule("efk", "../packages/efk/make.lua")
-
-checkAddModule("render", "../packages/render/make.lua")
-checkAddModule("scene", "../packages/scene/make.lua")
-checkAddModule("layout", "../packages/font/make.lua")
+for path in fs.pairs(fs.path(lm.workdir) / "../packages") do
+    if fs.exists(path / "make.lua") then
+        local name = path:stem():string()
+        local makefile = ("../packages/%s/make.lua"):format(name)
+        checkAddModule(name, makefile)
+    end
+end
 
 lm:copy "copy_mainlua" {
     input = "common/main.lua",
@@ -78,7 +80,7 @@ lm:source_set "ant_common" {
         }
     }
 }
-
+checkAddModule("layout", "../packages/font/make.lua")
 lm:source_set "ant_openlibs" {
     includes = "../clibs/lua",
     sources = "common/ant_openlibs.c",
