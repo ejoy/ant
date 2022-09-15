@@ -92,7 +92,7 @@ local function load_text(e)
     local ro = e.render_object
 
     local m = bgfx.memory_buffer(num*4 * fontquad_layout.stride)
-    lfont.load_text_quad(m, sc.description, font.id, x, y, fonttex_width, fonttex_height, font.size, sc.color)
+    lfont.load_text_quad(m, font.id, sc.description, x, y, fonttex_width, fonttex_height, font.size, sc.color)
 
     font.idx = add_text_mem(m, num, ro)
 end
