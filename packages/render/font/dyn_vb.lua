@@ -21,12 +21,17 @@ function dyn_vb:destroy()
     end
 end
 
+local function numv(m, s)
+    local sizebytes = #m
+    return sizebytes // s
+end
+
 function dyn_vb:add(mem)
     local idx = #self.data+1
     self.data[idx] = mem
     local offsetV = self:update(idx, idx)
-    local numV = #mem // self.stride
-    return idx, offsetV-numV, numV
+    local n = numv(mem, self.stride)
+    return idx, offsetV-n, n
 end
 
 function dyn_vb:remove(idx)
@@ -36,15 +41,20 @@ end
 
 function dyn_vb:update(from, to)
     from = from or 1
+    assert(from > 0, ("Invalid 'from': %d"):format(from))
     to = to or #self.data
     local offsetV = 0
-    while from <= to do
-        local m = self.data[from]
+
+    local s = self.stride
+    for i=1, from-1 do
+        local n = numv(self.data[i], s)
+        offsetV = offsetV + n
+    end
+    for i=from, to do
+        local m = self.data[i]
         bgfx.update(self.handle, offsetV, m)
-        local sizebytes = #m
-        local numv = sizebytes // self.stride
-        offsetV = offsetV + numv
-        from = from + 1
+        
+        offsetV = offsetV + numv(m, s)
     end
 
     return offsetV
