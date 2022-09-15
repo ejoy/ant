@@ -124,7 +124,7 @@ prepare_char(struct font_manager* F, uint16_t texid, int fontid, int codepoint, 
 		return;
 	}
 
-	if (ret == 0 && is_truetypefont(fontid)) {
+	if (ret == 0) {
 		uint8_t *mem = (uint8_t *)malloc(g.w * g.h);
 		const char * err = F->font_manager_update(F, fontid, codepoint, &g, mem);
 		if (err){
