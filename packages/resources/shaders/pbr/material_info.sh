@@ -18,6 +18,8 @@ struct material_info
     vec3 N;
     float NdotV;
     vec3 V;
+    // float padding;
+    // vec3 DFG;
 };
 
 float clamp_dot(vec3 x, vec3 y)
