@@ -11,10 +11,14 @@ local mu        = mathpkg.util
 
 local fontpkg   = import_package "ant.font"
 local lfont     = require "font"
+fontpkg.init()
+
+
+local layout    = require "layout"(fontpkg.handle())
 
 local dyn_vb = require "font.dyn_vb"
 
-fontpkg.init()
+
 
 local fonttex_handle, fonttex_width, fonttex_height = fontpkg.texture()
 local layout_desc       = declmgr.correct_layout "p20nii|t20nii|c40niu"
@@ -32,7 +36,7 @@ local function calc_screen_pos(pos3d)
 end
 
 local function text_start_pos(textw, texth, sx, sy)
-    return sx - textw * 0.5, sy - texth * 0.5
+    return (sx - textw * 0.5)*8, (sy - texth * 0.5)*8
 end
 
 local fontsys = ecs.system "font_system"
@@ -87,14 +91,36 @@ local function load_text(e)
     local pos = calc_3d_anchor_pos(e, sc)
     local sx, sy, depth = math3d.index(calc_screen_pos(pos), 1, 2, 3)
 
-    local textw, texth, num = lfont.prepare_text(fonttex_handle, sc.description, font.size, font.id)
+    --local textw, texth, num = lfont.prepare_text(fonttex_handle, "你好", font.size, font.id)
+
+    local layoutdata,codepoints,textw,texth = layout.prepare_text(
+        fonttex_handle,
+        "你好[#ffffff]Hello[#]world[#ff00ff]世界[#]",
+        font.size,
+        font.id,
+        0xffff0000
+    )
+
     local x, y = text_start_pos(textw, texth, sx, sy)
     local ro = e.render_object
 
-    local m = bgfx.memory_buffer(num*4 * fontquad_layout.stride)
-    lfont.load_text_quad(m, sc.description, font.id, x, y, fonttex_width, fonttex_height, font.size, sc.color)
+    --local m = bgfx.memory_buffer(num*4 * fontquad_layout.stride)
+    local m = bgfx.memory_buffer(#codepoints * 4 * fontquad_layout.stride)
 
-    font.idx = add_text_mem(m, num, ro)
+    --local xx,yy=lfont.load_text_quad(m,  font.id,"ABCDE", x, y, fonttex_width, fonttex_height, font.size, sc.color)
+    local offset=0
+
+    for _, ld in ipairs(layoutdata) do
+        --assert(ld.start > 0 and ld.start+ld.num <= #codepoints)
+        local xx, yy = layout.load_text_quad(
+            m, font.id, offset, x, y, fonttex_width, fonttex_height, font.size, ld.color,ld.num,ld.start
+        )
+        x = xx
+        y = yy
+        offset = offset+ld.num * 4
+    end 
+    --font.idx = add_text_mem(m, num, ro)
+    font.idx = add_text_mem(m, #codepoints, ro)
 end
 
 local ev = world:sub {"show_name"}

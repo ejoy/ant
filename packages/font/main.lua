@@ -1,14 +1,16 @@
 local lfont = require "font"
 local bgfx = require "bgfx"
-
+--local layout = require "layout"
 local m = {}
 
 local TextureHandle, TextureW, TextureH
 
 function m.init()
     local fontinit = require "font.init"
+    --local layoutinit = require "layout.init"
     if __ANT_RUNTIME__ then
         lfont(fontinit [[dofile "/pkg/ant.font/manager.lua"]])
+        --layout(layoutinit [[dofile "/pkg/ant.font/manager.lua"]])
     else
         lfont(fontinit (([[
             package.cpath = %q

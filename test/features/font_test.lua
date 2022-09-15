@@ -101,7 +101,7 @@ end
 local images = {}
 
 function fonttest_sys.init()
-    --ecs.create_instance "/pkg/ant.test.features/assets/entities/fonttest.prefab"
+    ecs.create_instance "/pkg/ant.test.features/assets/entities/fonttest.prefab"
     --TODO: sync load texture here
     local codepoint, codepoint2 = 3, 4
     local description = ("<BB"):pack(codepoint, codepoint2)

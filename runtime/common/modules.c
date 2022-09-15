@@ -44,6 +44,8 @@ int luaopen_fileinterface(lua_State *L);
 int luaopen_material(lua_State *L);
 int luaopen_render(lua_State *L);
 int luaopen_image(lua_State* L);
+int luaopen_layout(lua_State* L);
+//int luaopen_layout_init(lua_State* L);
 #if BX_PLATFORM_IOS
 int luaopen_gesture(lua_State* L);
 int luaopen_ios(lua_State* L);
@@ -91,6 +93,8 @@ void ant_loadmodules(lua_State* L) {
         { "efk", luaopen_efk},
         { "effekseer.callback", luaopen_effekseer_callback},
         { "fileinterface", luaopen_fileinterface },
+        { "layout", luaopen_layout},
+        //{ "layout.init", luaopen_layout_init },
 #if defined(_WIN32) && !defined(__MINGW32__)
         //{ "audio", luaopen_audio},
 #endif

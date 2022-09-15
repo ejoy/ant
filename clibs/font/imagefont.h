@@ -97,12 +97,14 @@ imgfont_codepoint_glyph(lua_State *L, int fontid, int codepoint, struct font_gly
     return 1;
 }
 
+//import image name对应的image font？
 static inline void
 image_font_import(lua_State *L, const char* name, const char* imgdata){
     push_func(L, IMAGE_FONT_IMPORT);
 
     lua_pushstring(L, name); 
     lua_pushlstring(L, imgdata, sizeof(struct image_font));   //use light userdata to void copy string??
+    //调用luafont.c的import
     if (lua_pcall(L, 2, 0, 0) != LUA_OK){
         printf("Import image data failed!\n");
     }

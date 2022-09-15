@@ -7,6 +7,7 @@
 #include "luabgfx.h"
 
 #include "font_manager.h"
+
 #include "truetype.h"
 
 #include <string.h>
@@ -251,7 +252,9 @@ lload_text_quad(lua_State *L){
             qt += 4;
         }
     }
-    return 0;
+	lua_pushinteger(L,x);
+    lua_pushinteger(L,y);
+    return 2;
 }
 
 static int
@@ -298,8 +301,10 @@ lname(lua_State *L) {
 static int
 limport_image_font(lua_State *L){
 	struct font_manager *F = getF(L);
+	//image name
 	const char* name = luaL_checkstring(L, 1);
 	size_t sz;
+	//打包后的image font
 	const char* imgdata = luaL_checklstring(L, 2, &sz);
 	if (sz != sizeof(struct image_font)){
 		luaL_error(L, "Invalid image data");

@@ -363,4 +363,14 @@ void DataModel::Update(bool clear_dirty_variables) {
 		dirty_variables.clear();
 }
 
+bool DataModel::RichText(){
+	Variant value;
+	if(variables.find("richtext")!=variables.end()){
+		variables["richtext"].Get(value);
+		bool isRichText=std::get<bool>(value);
+		return isRichText;
+	}
+	else return false;
+}
+
 }

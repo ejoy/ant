@@ -9,7 +9,7 @@
 #include <cassert>
 #include <stdint.h>
 #include "../bgfx/bgfx_interface.h"
-
+#include "../core/Color.h"
 extern "C" {
     #include "../font/font_manager.h"
 }
@@ -19,6 +19,42 @@ error "need matrix type as column major"
 #endif //RMLUI_MATRIX_ROW_MAJOR
 
 #define RENDER_STATE (BGFX_STATE_WRITE_RGB|BGFX_STATE_DEPTH_TEST_ALWAYS|BGFX_STATE_BLEND_ALPHA|BGFX_STATE_MSAA)
+
+typedef unsigned int utfint;
+#define MAXUNICODE	0x10FFFFu
+#define MAXUTF		0x7FFFFFFFu
+#define FIXPOINT FONT_POSTION_FIX_POINT
+
+const char* utf8_decode1(const char* s, utfint* val, int strict,int& cnt) {
+    static const utfint limits[] =
+    { ~(utfint)0, 0x80, 0x800, 0x10000u, 0x200000u, 0x4000000u };
+    unsigned int c = (unsigned char)s[0];
+    utfint res = 0;  /* final result */
+    if (c < 0x80)  /* ascii? */
+        res = c,cnt=0;
+    else {
+        int count = 0;  /* to count number of continuation bytes */
+        for (; c & 0x40; c <<= 1) {  /* while it needs continuation bytes... */
+            unsigned int cc = (unsigned char)s[++count];  /* read next byte */
+            if ((cc & 0xC0) != 0x80)  /* not a continuation byte? */
+                return NULL;  /* invalid byte sequence */
+            res = (res << 6) | (cc & 0x3F);  /* add lower 6 bits from cont. byte */
+        }
+        res |= ((utfint)(c & 0x7F) << (count * 5));  /* add first byte */
+        if (count > 5 || res > MAXUTF || res < limits[count])
+            return NULL;  /* invalid byte sequence */
+        s += count;  /* skip continuation bytes read */
+        cnt=count;
+    }
+    if (strict) {
+        /* check for invalid code points; too large or surrogates */
+        if (res > MAXUNICODE || (0xD800u <= res && res <= 0xDFFFu))
+            return NULL;
+    }
+    if (val) *val = res;
+    cnt+=1;
+    return s + 1;  /* +1 to include first byte */
+}
 
 static uint32_t getTextureFlags(Rml::SamplerFlag flags) {
     switch (flags) {
@@ -528,4 +564,142 @@ void Renderer::GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, 
 
         line.width = x - int(line.position.x + 0.5f);
     }
+}
+
+void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<uint32_t>& codepoints, Rml::Geometry& geometry){
+    auto& vertices = geometry.GetVertices();
+    auto& indices = geometry.GetIndices();
+    vertices.clear();
+    indices.clear();
+    for (size_t i = 0; i < lines.size(); ++i) {
+        Rml::Line& line = lines[i];
+        vertices.reserve(vertices.size() + line.text.size() * 4);
+        indices.reserve(indices.size() + line.text.size() * 6);
+
+        FontFace face;
+        face.handle = handle;
+        const Rml::Point fonttexel(1.f / mcontext->font_tex.width, 1.f / mcontext->font_tex.height);
+
+        int x = int(line.position.x + 0.5f), y = int(line.position.y + 0.5f);
+
+        Rml::Color color;
+        for (auto& layout:line.layouts){
+            color=layout.color;
+            for(int ii=0;ii<layout.num;++ii){
+                uint32_t codepoint=codepoints[layout.start+ii];
+                struct font_glyph og;
+                auto g = GetGlyph(mcontext, face, codepoint, &og);
+
+                const int x0 = x + g.offset_x;
+                const int y0 = y + g.offset_y;
+                const int16_t u0 = g.u;
+                const int16_t v0 = g.v;
+
+                const float scale = FONT_POSTION_FIX_POINT / MAGIC_FACTOR;
+                geometry.AddRectFilled(
+                    { x0 * scale, y0 * scale, g.w * scale, g.h * scale },
+                    { u0 * fonttexel.x, v0 * fonttexel.y ,og.w * fonttexel.x , og.h * fonttexel.y },
+                    color
+                );
+                x += g.advance_x;                
+            }
+        }
+/* 
+        for (auto codepoint : utf8::view(line.text)) {
+
+            struct font_glyph og;
+            auto g = GetGlyph(mcontext, face, codepoint, &og);
+
+            // Generate the geometry for the character.
+            const int x0 = x + g.offset_x;
+            const int y0 = y + g.offset_y;
+            const int16_t u0 = g.u;
+            const int16_t v0 = g.v;
+
+            const float scale = FONT_POSTION_FIX_POINT / MAGIC_FACTOR;
+            geometry.AddRectFilled(
+                { x0 * scale, y0 * scale, g.w * scale, g.h * scale },
+                { u0 * fonttexel.x, v0 * fonttexel.y ,og.w * fonttexel.x , og.h * fonttexel.y },
+                color
+            );
+
+            //x += g.advance_x + (dim.x - olddim.x);
+            x += g.advance_x;
+        } */
+
+        line.width = x - int(line.position.x + 0.5f);
+    }
+}
+
+float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& layoutMap,std::vector<Rml::layout>& text_layouts,std::vector<Rml::layout>& line_layouts,int start,int num){
+    float line_width=0.f;
+
+    FontFace face;
+    face.handle = handle;
+
+    Rml::layout l;
+    int lstart=codepoints.size();
+    int lnum=0;
+    Rml::Color pre_color,cur_color;
+
+    int pre_lm=start+0,cur_lm;
+    int i=0;//i代表是当前string的位移 //start+i代表在ctext中的位移
+
+    if(num){
+        pre_color=text_layouts[layoutMap[pre_lm]].color;
+        l.color=pre_color;
+        l.start=lstart;
+
+        uint32_t codepoint = 0;
+        const char* str = (const char*)&string[i];
+        int cnt=0;
+        str=utf8_decode1(str, &codepoint, 1,cnt);
+        codepoints.emplace_back(codepoint);
+        assert(str);
+        auto glyph=GetGlyph(mcontext,face,codepoint);
+        line_width+=glyph.advance_x;
+        if(cnt>1){
+            i+=3;
+        }
+        else{
+            i+=1;
+        }
+        lstart++;
+        lnum++;            
+    }
+    else return 0.f;
+
+    while(i<num){
+        cur_lm=layoutMap[start+i];
+        cur_color=text_layouts[cur_lm].color;
+        if(!(cur_color==pre_color)){
+            l.num=lnum;
+            line_layouts.emplace_back(l);
+            l.color=cur_color;
+            l.start=lstart;
+            lnum=0;
+            pre_color=cur_color;
+        }
+
+        uint32_t codepoint = 0;
+        const char* str = (const char*)&string[i];
+        int cnt=0;
+        str=utf8_decode1(str, &codepoint, 1,cnt);
+        codepoints.emplace_back(codepoint);
+        assert(str);
+        auto glyph=GetGlyph(mcontext,face,codepoint);
+        line_width+=glyph.advance_x;
+        if(cnt>1){
+            i+=3;
+        }
+        else{
+            i+=1;
+        }
+        lstart++;
+        lnum++;                
+    }
+
+    l.num=lnum;
+    line_layouts.emplace_back(l);
+    return line_width;
 }

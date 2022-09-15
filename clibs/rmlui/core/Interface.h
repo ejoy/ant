@@ -17,11 +17,20 @@ class Document;
 using FontFaceHandle = uint64_t;
 using TextureHandle = uint16_t;
 
+struct layout {
+    Color color;
+    //uint32_t fontid;
+    uint16_t num;
+    uint16_t start;
+};
+
 struct Line {
+	std::vector<layout> layouts;
 	std::string text;
 	Point position;
 	int width;
 };
+
 typedef std::vector<Line> LineList;
 
 struct TextureData {
@@ -52,7 +61,9 @@ public:
 	virtual int GetBaseline(FontFaceHandle handle) = 0;
 	virtual void GetUnderline(FontFaceHandle handle, float& position, float &thickness) = 0;
 	virtual int GetStringWidth(FontFaceHandle handle, const std::string& string) = 0;
-	virtual void GenerateString(FontFaceHandle handle, LineList& lines, const Color& color, Geometry& geometry) = 0;
+	virtual void GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry) =0;
+	virtual void GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<uint32_t>& codepoints, Rml::Geometry& geometry)=0;
+	virtual float PrepareText(FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& layoutMap,std::vector<layout>& text_layouts,std::vector<layout>& line_layouts,int start,int num)=0;
 };
 
 class Plugin {
