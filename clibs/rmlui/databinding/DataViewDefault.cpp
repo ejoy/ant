@@ -267,9 +267,11 @@ bool DataViewText::Update(DataModel& model) {
 	}
 
 	if (entries_modified) {
+		bool isRichText=model.RichText();
 		if (Text* text_element = static_cast<Text*>(element.get())) {
 			std::string new_text = BuildText();
 			text_element->SetText(new_text);
+			text_element->SetRichText(isRichText);
 		}
 	}
 

@@ -40,7 +40,12 @@
         <script type="text/x-lua" >
             local start = window.createModel "start" {
                 show = false,
-                label = "新游戏"
+                richtext = true,
+                label = "游戏测试 [#ff00ff]CD EF[#] 换行"
+                --"游戏测试 [#abcdef]此处 应该[#] 换行"
+                --"游戏测试 [#abcdef]CD EF[#] 换行"
+                --"AB [#abcdef]CD EF[#] G"
+                --"游戏测试 [#abcdef]此处 应该[#] 换行"
             }
             function start.new(event)
                 console.log(event.target.id)
@@ -74,12 +79,12 @@
         </script>
     </head>
     <body>
-        <div id="test" data-model="start">
+        <div data-model="start">
             <button id = "new" data-event-click="new()">{{label}}</button>
-            <button data-event-click="load()">载入游戏</button>
-            <button data-event-click="setting()">设置</button>
-            <button data-if="show">隐藏菜单</button>
-            <button data-event-click="exit()">退出</button>
+            <button data-event-click="load()">[#0000ff]D[#]</button>
+            <button data-event-click="setting()">[#0000ff]E[#]</button>
+            <button data-if="show">[#0000ff]F[#]</button>
+            <button data-event-click="exit()">[#0000ff]G[#]</button>
         </div>
     </body>
 </rml>

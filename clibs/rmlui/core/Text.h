@@ -18,7 +18,7 @@ public:
 	Size Measure(float minWidth, float maxWidth, float minHeight, float maxHeight);
 	float GetBaseline();
 	void ChangedProperties(const PropertyIdSet& properties);
-
+	void SetRichText(bool isRichText);
 protected:
 	std::optional<Property> GetComputedProperty(PropertyId id);
 	template <typename T>
@@ -43,12 +43,12 @@ protected:
 	void SetInnerHTML(const std::string& html) override;
 	void SetOuterHTML(const std::string& html) override;
 	const Rect& GetContentRect() const override;
-
 private:
+	void ParseText();
 	void UpdateTextEffects();
 	void UpdateGeometry(const FontFaceHandle font_face_handle);
 	void UpdateDecoration(const FontFaceHandle font_face_handle);
-	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix);
+	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts);
 	float GetLineHeight();
 	std::optional<TextShadow> GetTextShadow();
 	std::optional<TextStroke> GetTextStroke();
@@ -56,8 +56,11 @@ private:
 	Color GetTextDecorationColor();
 	Color GetTextColor();
 	FontFaceHandle GetFontFaceHandle();
-
 	std::string text;
+	std::string ctext;
+	std::vector<uint32_t> codepoints;
+	std::vector<Rml::layout> text_layouts;
+	std::vector<int> layoutMap;
 	LineList lines;
 	Geometry geometry;
 	Geometry decoration;
@@ -67,6 +70,7 @@ private:
 	bool dirty_decoration = true;
 	bool dirty_effects = true;
 	bool dirty_font = true;
+	bool isRichText = false;
 };
 
 }

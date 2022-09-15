@@ -8,9 +8,96 @@
 #include <databinding/DataModelHandle.h>
 #include <databinding/DataUtilities.h>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include "../databinding/DataModel.h"
 namespace Rml {
 
+std::unordered_map<uint8_t, uint8_t> ctod{
+    {'0',0x00},
+    {'1',0x01},
+    {'2',0x02},
+    {'3',0x03},
+    {'4',0x04},
+    {'5',0x05},
+    {'6',0x06},
+    {'7',0x07},
+    {'8',0x08},
+    {'9',0x09},
+    {'a',0x0a},
+    {'b',0x0b},
+    {'c',0x0c},
+    {'d',0x0d},
+    {'e',0x0e},
+    {'f',0x0f},
+};
+
+
+
+void Text::ParseText(){
+	ctext.clear();
+	int i=0;
+	int n=text.size();
+	Color default_color = GetTextColor();
+	default_color.ApplyOpacity(GetOpacity());
+	std::vector<uint32_t> codepoints;
+	uint16_t start = 0;
+
+	while (text[i]) {
+        Rml::layout l;
+		l.color=default_color;
+		Color color;
+        l.start = start;
+
+        assert(i < n && text[i] != ']');
+        if (text[i] == '[') {
+            assert((i + 1) < n && text[i + 1] == '#');
+            i++; 
+
+			assert((i + 6) < n );
+			color.r=ctod[text[i+1]]*16+ctod[text[i+2]];
+			color.g=ctod[text[i+3]]*16+ctod[text[i+4]];
+			color.b=ctod[text[i+5]]*16+ctod[text[i+6]];
+			color.a=default_color.a;
+			i+=6;
+
+            assert((i + 1) < n && text[i + 1] == ']');
+            i++;
+
+            l.color = color;
+
+            while (i + 1 < n && text[i + 1] != '[') {
+					ctext.push_back(text[i+1]);
+					layoutMap.emplace_back(text_layouts.size());
+					start++;
+				
+                i++;                         
+            }
+
+            assert(i + 3 < n && text[i + 1] == '[' && text[i + 2] == '#' && text[i + 3] == ']');
+			if(text_layouts.size()==0||!(l.color==text_layouts[text_layouts.size()-1].color))
+				text_layouts.emplace_back(l);	
+            i += 3;
+            ++i;
+        }
+        else {
+
+			if(text_layouts.size()==0||!(l.color==text_layouts[text_layouts.size()-1].color))
+				text_layouts.emplace_back(l);		
+				ctext.push_back(text[i]);
+				layoutMap.emplace_back(text_layouts.size()-1);
+				start++;
+						
+            i++;		
+        }
+    }
+	
+	for(int ii=0;ii+1<text_layouts.size();++ii){
+		text_layouts[ii].num=text_layouts[ii+1].start-text_layouts[ii].start;
+	}
+	if(text_layouts.size()>1)
+		text_layouts[text_layouts.size()-1].num=start-text_layouts[text_layouts.size()-1].start;
+	else if(text_layouts.size()==1)
+		text_layouts[text_layouts.size()-1].num=start;
+}
 
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline) {
 	bool last_token = (token_begin == string_end);
@@ -183,11 +270,12 @@ void Text::Render() {
 	}
 }
 
-bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix) {
+bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts) {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 
 	// Initialise the output variables.
 	line.clear();
+	line_layouts.clear();
 	line_length = 0;
 	line_width = 0;
 
@@ -213,8 +301,9 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 	// Starting at the line_begin character, we generate sections of the text (we'll call them tokens) depending on the
 	// white-space parsing parameters. Each section is then appended to the line if it can fit. If not, or if an
 	// endline is found (and we're processing them), then the line is ended. kthxbai!
-	const char* token_begin = text.c_str() + line_begin;
-	const char* string_end = text.c_str() + text.size();
+	std::string ttext=isRichText?ctext:text;
+	const char* token_begin = ttext.c_str() + line_begin;
+	const char* string_end = ttext.c_str() + ttext.size();
 	while (token_begin != string_end)
 	{
 		std::string token;
@@ -286,6 +375,8 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 		token_begin = next_token_begin;
 	}
 
+	//处理完的line
+	//GetRenderInterface()->PrepareText(font_face_handle,line,codepoints,layoutMap,text_layouts,line_layouts,line_begin,line_length);
 	return true;
 }
 
@@ -373,9 +464,14 @@ void Text::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	}
 	dirty_geometry = false;
 	dirty_decoration = true;
-	Color color = GetTextColor();
-	color.ApplyOpacity(GetOpacity());
-	GetRenderInterface()->GenerateString(font_face_handle, lines, color, geometry);
+	if(!isRichText){
+		Color color = GetTextColor();
+		color.ApplyOpacity(GetOpacity());
+		GetRenderInterface()->GenerateString(font_face_handle, lines, color, geometry);		
+	}
+	else{
+			GetRenderInterface()->GenerateRichString(font_face_handle, lines, codepoints, geometry);
+	}
 }
 
 void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
@@ -442,14 +538,24 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 	float height = 0.0f;
 	float first_line = true;
 	float baseline = GetBaseline();
-
+	
+	if(data_model)
+		isRichText=data_model->RichText();
+	
 	Style::TextAlign text_align = GetProperty<Style::TextAlign>(PropertyId::TextAlign);
+	if(isRichText){
+		ParseText();
+	}
 	std::string line;
+	std::vector<Rml::layout> line_layouts;
+	codepoints.clear();
 	while (!finish && height < maxHeight) {
 		float line_width;
 		int line_length;
-		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line);
-		lines.push_back(Line { line, Point(line_width, height + baseline), 0 });
+		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line,line_layouts);
+		if(isRichText)
+			line_width=GetRenderInterface()->PrepareText(GetFontFaceHandle(),line,codepoints,layoutMap,text_layouts,line_layouts,line_begin,line_length);
+		lines.push_back(Line { line_layouts,line, Point(line_width, height + baseline), 0 });
 		width = std::max(width, line_width);
 		height += line_height;
 		first_line = false;
@@ -614,6 +720,10 @@ void Text::SetOuterHTML(const std::string& html) {
 
 const Rect& Text::GetContentRect() const {
 	return GetBounds();
+}
+
+void Text::SetRichText(bool rt){
+	isRichText=rt;
 }
 
 }

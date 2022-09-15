@@ -10,6 +10,7 @@ int luaopen_bee_thread(lua_State* L);
 int luaopen_bee_platform(lua_State* L);
 int luaopen_bgfx(lua_State* L);
 int luaopen_bgfx_util(lua_State* L);
+int luaopen_bundle(lua_State* L);
 int luaopen_crypt(lua_State* L);
 int luaopen_datalist(lua_State* L);
 int luaopen_hierarchy(lua_State* L);
@@ -43,6 +44,8 @@ int luaopen_fileinterface(lua_State *L);
 int luaopen_material(lua_State *L);
 int luaopen_render(lua_State *L);
 int luaopen_image(lua_State* L);
+int luaopen_layout(lua_State* L);
+//int luaopen_layout_init(lua_State* L);
 #if BX_PLATFORM_IOS
 int luaopen_gesture(lua_State* L);
 int luaopen_ios(lua_State* L);
@@ -67,6 +70,7 @@ void ant_loadmodules(lua_State* L) {
         { "bee.platform", luaopen_bee_platform },
         { "bgfx", luaopen_bgfx },
         { "bgfx.util", luaopen_bgfx_util },
+        { "bundle", luaopen_bundle },
         { "font", luaopen_font },
         { "font.init", luaopen_font_init },
         { "font.truetype", luaopen_font_truetype },
@@ -89,6 +93,8 @@ void ant_loadmodules(lua_State* L) {
         { "efk", luaopen_efk},
         { "effekseer.callback", luaopen_effekseer_callback},
         { "fileinterface", luaopen_fileinterface },
+        { "layout", luaopen_layout},
+        //{ "layout.init", luaopen_layout_init },
 #if defined(_WIN32) && !defined(__MINGW32__)
         //{ "audio", luaopen_audio},
 #endif

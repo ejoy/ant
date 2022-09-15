@@ -7,6 +7,7 @@
 #include "luabgfx.h"
 
 #include "font_manager.h"
+
 #include "truetype.h"
 
 #include <string.h>
@@ -251,7 +252,9 @@ lload_text_quad(lua_State *L){
             qt += 4;
         }
     }
-    return 0;
+	lua_pushinteger(L,x);
+    lua_pushinteger(L,y);
+    return 2;
 }
 
 static int
