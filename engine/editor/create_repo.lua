@@ -13,17 +13,6 @@ return function (repopath, access)
         dir = true,
         file = false,
     }
-    local function is_resource(path)
-        path = path:string()
-        local ext = path:match "[^/]%.([%w*?_%-]*)$"
-        if ext ~= "material" and ext ~= "glb"  and ext ~= "texture" and ext ~= "png" then
-            return false
-        end
-        if path:sub(1,8) == "/.build/" then
-            return false
-        end
-        return true
-    end
     function vfs.list(path)
         local item = {}
         for _, filename in ipairs(access.list_files(repo, path)) do
@@ -32,16 +21,7 @@ return function (repopath, access)
         return item
     end
     function vfs.type(path)
-        local rp = access.realpath(repo, path)
-        if rp then
-            if lfs.is_directory(rp) then
-                return "dir"
-            elseif is_resource(rp) then
-                return "dir"
-            elseif lfs.is_regular_file(rp) then
-                return "file"
-            end
-        end
+        return access.type(repo, path)
     end
     function vfs.repopath()
         return repopath

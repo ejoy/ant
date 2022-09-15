@@ -118,6 +118,44 @@ function access.realpath(repo, pathname)
 	end
 end
 
+local function is_resource(path)
+	path = path:string()
+	local ext = path:match "[^/]%.([%w*?_%-]*)$"
+	if ext ~= "material" and ext ~= "glb"  and ext ~= "texture" and ext ~= "png" then
+		return false
+	end
+	if path:sub(1,8) == "/.build/" then
+		return false
+	end
+	return true
+end
+
+local function get_type(path)
+	if lfs.is_directory(path) then
+		return "dir"
+	elseif is_resource(path) then
+		return "dir"
+	elseif lfs.is_regular_file(path) then
+		return "file"
+	end
+end
+
+function access.type(repo, pathname)
+	local mountnames = repo._mountname
+	local p = pathname.."/"
+	local pn = #p
+	for i = #mountnames, 1, -1 do
+		local mpath = mountnames[i]
+		if pathname == mpath or pathname.."/" == mpath:sub(1, pn) then
+			return "dir"
+		end
+		local n = #mpath + 1
+		if pathname:sub(1,n) == mpath .. '/' then
+			return get_type(repo._mountpoint[mpath] / pathname:sub(n+1))
+		end
+	end
+end
+
 function access.virtualpath(repo, pathname)
 	pathname = pathname:string()
 	-- TODO: ipairs
