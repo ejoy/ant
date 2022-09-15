@@ -33,6 +33,10 @@ function m.handle()
     return lfont.font_manager
 end
 
+function m.import(filename)
+    return lfont.import(filename:localpath():string())
+end
+
 function m.texture()
     return TextureHandle, TextureW, TextureH
 end

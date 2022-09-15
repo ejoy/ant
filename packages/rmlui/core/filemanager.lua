@@ -1,8 +1,7 @@
 local fs = require "filesystem"
-
-local lfont = require "font"
 local ltask = require "ltask"
 local constructor = require "core.DOM.constructor"
+local font = import_package "ant.font"
 
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
 
@@ -16,7 +15,7 @@ local function import_font(path)
             import_font(p)
         elseif fs.is_regular_file(p) then
             if p:equal_extension "otf" or p:equal_extension "ttf" or p:equal_extension "ttc" then
-                lfont.import(p:string())
+                font.import(p)
             end
         end
     end

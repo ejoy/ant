@@ -5,6 +5,7 @@ local w = world.w
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local declmgr   = require "vertexdecl_mgr"
+local fs        = require "filesystem"
 
 local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
@@ -129,7 +130,7 @@ local ev = world:sub {"show_name"}
 
 function fontsys:component_init()
     for e in w:select "INIT font:in simplemesh:out owned_mesh_buffer?out" do
-        lfont.import(e.font.file)
+        fontpkg.import(fs.path(e.font.file))
         e.font.id = lfont.name(e.font.name)
         e.simplemesh = {
             vb = {
