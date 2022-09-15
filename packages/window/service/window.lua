@@ -63,28 +63,6 @@ local function dispatch(CMD,...)
     end
 end
 
-local tokenmap = {}
-local function multi_wait(key)
-	local mtoken = tokenmap[key]
-	if not mtoken then
-		mtoken = {}
-		tokenmap[key] = mtoken
-	end
-	local t = {}
-	mtoken[#mtoken+1] = t
-	return ltask.wait(t)
-end
-
-local function multi_wakeup(key, ...)
-	local mtoken = tokenmap[key]
-	if mtoken then
-		tokenmap[key] = nil
-		for _, token in ipairs(mtoken) do
-			ltask.wakeup(token, ...)
-		end
-	end
-end
-
 function S.create_window()
     local exclusive = require "ltask.exclusive"
     scheduling = exclusive.scheduling()
@@ -92,12 +70,12 @@ function S.create_window()
     window.create(dispatch, 1334, 750)
     ltask.fork(function()
         window.mainloop(true)
-        multi_wakeup "quit"
+        ltask.multi_wakeup "quit"
     end)
 end
 
 function S.wait()
-    multi_wait "quit"
+    ltask.multi_wait "quit"
 end
 
 function S.priority(v)
