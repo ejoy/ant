@@ -9,6 +9,10 @@ local m = {}
 
 local prefixPath = fs.path "/"
 
+local function fullpath(path)
+    return (prefixPath / path):string()
+end
+
 function m.add_bundle(path)
     bundle.open(path)
 end
@@ -22,27 +26,14 @@ function m.set_prefix(v)
 end
 
 function m.realpath(source_path)
-    local path = (prefixPath / source_path):string()
-    return bundle.get(path)
-end
-
-local function find_texture(path)
-    path = fs.path(path)
-    if not path:equal_extension "texture" and not path:equal_extension "png" then
-        return
-    end
-    local _ <close> = fs.switch_sync()
-    local file = prefixPath / path
-    if fs.exists(file) then
-        return file:string()
-    end
+    return bundle.get(fullpath(source_path))
 end
 
 local pendQueue = {}
 local readyQueue = {}
 
 function m.loadTexture(doc, e, path)
-    local realpath = find_texture(path)
+    local realpath = fullpath(path)
     if not realpath then
         readyQueue[#readyQueue+1] = {
             path = path,
@@ -85,18 +76,17 @@ function m.texture_queue()
 end
 
 function m.exists(path)
-    local file = (prefixPath / path):string()
-    return bundle.exist(file)
+    return bundle.exist(fullpath(path))
 end
 
 function m.loadString(content, source_path, source_line, env)
-    local path = (prefixPath / source_path):string()
+    local path = fullpath(source_path)
 	local source = "--@"..path..":"..source_line.."\n "..content
     return load(source, source, "t", env)
 end
 
 function m.loadFile(source_path, env)
-    local path = (prefixPath / source_path):string()
+    local path = fullpath(source_path)
     local realpath = bundle.get(path)
     local f = io.open(realpath)
     if not f then
