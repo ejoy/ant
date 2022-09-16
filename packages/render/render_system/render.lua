@@ -347,7 +347,7 @@ function irender.quad_ib_num()
 	return quad_ib_num
 end
 
-local fullquad_vbhandle = bgfx.create_vertex_buffer(bgfx.memory_buffer("f", {1.0, 1.0, 1.0}), declmgr.get "p1".handle)
+local fullquad_vbhandle = bgfx.create_vertex_buffer(bgfx.memory_buffer("b", {1, 1, 1}), declmgr.get "p10NIu".handle)
 local fullquad<const> = {
 	vb = {
 		start = 0, num = 3,
