@@ -40,10 +40,6 @@ local function create(filename)
 	return res
 end
 
-local function create_sync(filename)
-	
-end
-
 local function destroy(res)
 	res.handle = ltask.call(ServiceResource, "texture_destroy", res.name)
 	res.uncomplete = true

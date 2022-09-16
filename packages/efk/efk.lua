@@ -5,9 +5,7 @@ local w     = world.w
 local efk_cb    = require "effekseer.callback"
 local efk       = require "efk"
 local fs        = require "filesystem"
-local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local datalist  = require "datalist"
 local fileinterface = require "fileinterface"
 local renderpkg = import_package "ant.render"
 local fbmgr     = renderpkg.fbmgr
@@ -56,51 +54,24 @@ local function shader_load(materialfile, shadername, stagetype)
     return fx[stagetype]
 end
 
-local TEXTURE_LOADED = {}
+local TEXTURES = {}
+
 local function texture_load(texname, srgb)
     --TODO: need use srgb texture
-    local _ <close> = fs.switch_sync()
     assert(texname:match "^/pkg" ~= nil)
-    local p = fs.path(texname)
-    p:replace_extension "texture"
-
-    if not fs.exists(p) then
+    local tex = TEXTURES[fs.path(texname):replace_extension "texture":string()]
+    if not tex then
         print("[EFK ERROR]", debug.traceback(("%s: need corresponding .texture file to describe how this png file to use"):format(texname)) )
     end
-
-    local filecontent = cr.read_file(p:string() .. "|main.bin")
-    local cfg = datalist.parse(cr.read_file(p:string() .. "|main.cfg"))
-    local mem = bgfx.memory_buffer(filecontent)
-
-    local function has_sRGB(flag)
-        return flag:match "Sg" ~= nil
-    end
-
-    local issRGB = has_sRGB(cfg.flag)
-    if not issRGB then
-        print("[EFK WARNING]", "color texture in effekseer should be sRGB")
-    end
-
-    if issRGB ~= srgb then
-        print("[EFK WARNING]", ("texture file define colorspace:%s, is difference from texture_load require: %s"):format(cfg.sampler.colorspace, srgb and "sRGB" or "linear"))
-    end
-
-    local handle = bgfx.create_texture(mem, cfg.flag)
-    TEXTURE_LOADED[handle] = p:string()
-    return (handle & 0xffff)
+    return tex
 end
 
 local function texture_unload(texhandle)
-    local tex = TEXTURE_LOADED[texhandle]
-    assetmgr.unload(tex)
+    --TODO
 end
 
 local function error_handle(msg)
     print("[EFK ERROR]", debug.traceback(msg))
-end
-
-local function texture_find(_, id)
-    return id
 end
 
 local effect_viewid<const> = viewidmgr.get "effect_view"
@@ -111,7 +82,7 @@ function efk_sys:init()
         shader_load     = shader_load,
         texture_load    = texture_load,
         texture_unload  = texture_unload,
-        texture_map     = setmetatable({}, {__index = texture_find}),
+        texture_map     = assetmgr.textures,
         error           = error_handle,
     }
 
@@ -280,13 +251,13 @@ function iefk.create(filename, config)
         scene = {}
     }
     local template = {
-		policy = {
+        policy = {
             "ant.general|name",
             "ant.scene|scene_object",
             "ant.efk|efk",
             "ant.general|tag"
-		},
-		data = {
+        },
+        data = {
             name = "root",
             tag = {"effect"},
             scene = config.scene,
@@ -299,9 +270,15 @@ function iefk.create(filename, config)
                 iefk.set_loop(e, config.loop or false)
                 iefk.set_speed(e, config.speed or 1.0)
             end
-		},
+        },
     }
     return ecs.create_entity(template)
+end
+
+function iefk.preload(textures)
+    for _, texture in ipairs(textures) do
+        TEXTURES[texture] = assetmgr.resource(texture).id
+    end
 end
 
 function iefk.play(e)
