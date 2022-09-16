@@ -123,8 +123,16 @@ function iRmlUi.font_dir(dir)
     import_font(fs.path(dir))
 end
 
-function iRmlUi.preload_dir(dir)
-    ltask.call(ServiceRmlUi, "preload_dir", dir)
+function iRmlUi.add_bundle(dir)
+    ltask.call(ServiceRmlUi, "add_bundle", dir)
+end
+
+function iRmlUi.del_bundle(dir)
+    ltask.call(ServiceRmlUi, "del_bundle", dir)
+end
+
+function iRmlUi.set_prefix(dir)
+    ltask.call(ServiceRmlUi, "set_prefix", dir)
 end
 
 function iRmlUi.open(url)
