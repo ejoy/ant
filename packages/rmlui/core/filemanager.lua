@@ -1,37 +1,29 @@
 local fs = require "filesystem"
 local ltask = require "ltask"
 local constructor = require "core.DOM.constructor"
+local bundle = import_package "ant.bundle"
 
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
 
 local m = {}
 
-local directorys  = { fs.path "/" }
+local prefixPath = fs.path "/"
 
-function m.preload_dir(dir)
-    directorys[#directorys+1] = fs.path(dir)
+function m.add_bundle(path)
+    bundle.open(path)
 end
 
-function m.vfspath(path)
-    for i = #directorys, 1, -1 do
-        local file = directorys[i] / path
-        if fs.exists(file) then
-            if file:equal_extension "texture" or file:equal_extension "png" then
-                return
-            end
-            return file:string()
-        end
-    end
+function m.del_bundle(path)
+    bundle.close(path)
 end
 
-function m.realpath(path)
-    local _ <close> = fs.switch_sync()
-    for i = #directorys, 1, -1 do
-        local file = directorys[i] / path
-        if fs.exists(file) then
-            return file:localpath():string()
-        end
-    end
+function m.set_prefix(v)
+    prefixPath = fs.path(v)
+end
+
+function m.realpath(source_path)
+    local path = (prefixPath / source_path):string()
+    return bundle.get(path)
 end
 
 local function find_texture(path)
@@ -39,12 +31,9 @@ local function find_texture(path)
     if not path:equal_extension "texture" and not path:equal_extension "png" then
         return
     end
-    local _ <close> = fs.switch_sync()
-    for i = #directorys, 1, -1 do
-        local file = directorys[i] / path
-        if fs.exists(file) then
-            return file:string()
-        end
+    local file = (prefixPath / path):string()
+    if bundle.exist(file) then
+        return file
     end
 end
 
@@ -95,12 +84,26 @@ function m.texture_queue()
 end
 
 function m.exists(path)
-    for i = #directorys, 1, -1 do
-        local file = directorys[i] / path
-        if fs.exists(file) then
-            return true
-        end
+    local file = (prefixPath / path):string()
+    return bundle.exist(file)
+end
+
+function m.loadString(content, source_path, source_line, env)
+    local path = (prefixPath / source_path):string()
+	local source = "--@"..path..":"..source_line.."\n "..content
+    return load(source, source, "t", env)
+end
+
+function m.loadFile(source_path, env)
+    local path = (prefixPath / source_path):string()
+    local realpath = bundle.get(path)
+    local f = io.open(realpath)
+    if not f then
+        return nil, ('%s:No such file or directory.'):format(path)
     end
+    local str = f:read 'a'
+    f:close()
+    return load(str, "@" .. path, "bt", env)
 end
 
 return m

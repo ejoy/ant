@@ -22,7 +22,7 @@ return function (env)
         if not path then
             return err1
         end
-        local func, err2 = loadfile(fm.vfspath(path), "bt", env)
+        local func, err2 = fm.loadFile(path, env)
         if not func then
             error(("error loading module '%s' from file '%s':\n\t%s"):format(name, path, err2))
         end

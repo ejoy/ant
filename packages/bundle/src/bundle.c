@@ -170,6 +170,16 @@ lexist(lua_State *L) {
 }
 
 
+static int
+ltostr(lua_State *L) {
+	switch (lua_type(L, 1)) {
+	case LUA_TLIGHTUSERDATA:
+		lua_pushstring(L, (const char*)lua_touserdata(L, 1));
+		return 1;
+	}
+	return 0;
+}
+
 LUAMOD_API int
 luaopen_bundle(lua_State *L) {
 	luaL_checkversion(L);
@@ -177,6 +187,7 @@ luaopen_bundle(lua_State *L) {
 		{ "create_bundle", lcreate_bundle },
 		{ "create_view", lcreate_view },
 		{ "exist", lexist },
+		{ "tostr", ltostr },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);

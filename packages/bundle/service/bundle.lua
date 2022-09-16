@@ -17,10 +17,15 @@ local function read_bundle(path)
         return
     end
     local patterns = {}
+    local attributes = {}
     for line in f:lines() do
-        patterns[#patterns+1] = line
+        local type, pattern = line:match "([as])[%s]+(%S+)"
+        if type then
+            patterns[#patterns+1] = pattern
+            attributes[#attributes+1] = type
+        end
     end
-    return patterns
+    return patterns, attributes
 end
 
 local function open_bundle(path)
@@ -28,28 +33,38 @@ local function open_bundle(path)
     if not realpath then
         return
     end
-    local patterns = read_bundle(realpath)
-    return glob("/", patterns)
+    local patterns, attributes = read_bundle(realpath)
+    return glob("/", patterns, attributes)
 end
 
 local function create_bundle(path)
-    local data = open_bundle(path)
-    if not data then
+    local res = open_bundle(path)
+    if not res then
         return
     end
-    local obj, view = bundle.create_bundle(data)
-    for _, file in ipairs(data) do
+    local request = ltask.request()
+    local SELF = ltask.self()
+    local obj, view = bundle.create_bundle(res.files)
+    for i, file in ipairs(res.files) do
+        local attr = res.attributes[i]
         local v = File[file]
         if v then
             table.insert(v.bundle, path)
+            if v.attribute == "a" and attr == "s" then
+                request:add { SELF, "open_file", file }
+            end
         else
             File[file] = {
                 status = STATUS_NULL,
+                attribute = attr,
                 bundle = {path}
             }
+            if attr == "s" then
+                request:add { SELF, "open_file", file }
+            end
         end
     end
-    return obj, view
+    return obj, view, request
 end
 
 function S.open_bundle(path)
@@ -58,7 +73,13 @@ function S.open_bundle(path)
         v = {}
         Bundle[path] = v
         v.status = STATUS_WAIT
-        v.obj, v.view = create_bundle(path)
+        local request
+        v.obj, v.view, request = create_bundle(path)
+        for req, resp in request:select() do
+            if not resp then
+                error(req.error)
+            end
+        end
         v.status = STATUS_OK
         ltask.multi_wakeup("[bundle]"..path)
     elseif v.status == STATUS_WAIT then

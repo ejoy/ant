@@ -32,7 +32,7 @@ local function normalize(...)
 end
 
 local function pattern_copy(t, s)
-    local r = {ignore=t.ignore}
+    local r = {ignore=t.ignore, idx=t.idx}
     for i = s, #t do
         r[i-s+1] = t[i]
     end
@@ -57,8 +57,8 @@ local function pattern_preprocess(root, pattern)
     return path, ignore
 end
 
-local function pattern_compile(res, path, ignore)
-    local pattern = {ignore=ignore}
+local function pattern_compile(path, ignore, idx)
+    local pattern = {ignore=ignore, idx=idx}
     path:gsub('[^'..PathSeq..']+', function (w)
         if w == '..' and #pattern ~= 0 and pattern[#pattern] ~= '..' then
             if pattern[#pattern] == GlobStar then
@@ -73,7 +73,7 @@ local function pattern_compile(res, path, ignore)
             end
         end
     end)
-    res[#res+1] = pattern
+    return pattern
 end
 
 local function pattern_sub(res, pattern)
@@ -127,22 +127,22 @@ local function match_prefix(t, s)
     return true
 end
 
-local function glob_compile(root, patterns)
-    local res = {}
-    local files = {}
-    for _, pattern in ipairs(patterns) do
+local function glob_compile(results, root, patterns, attributes)
+    local compiled = {}
+    for i, pattern in ipairs(patterns) do
         local path, ignore = pattern_preprocess(root, pattern)
         if ignore or path:match "%*" then
-            pattern_compile(res, path, ignore)
+            compiled[#compiled+1] = pattern_compile(path, ignore, i)
         else
-            files[#files+1] = path
+            table.insert(results.files, path)
+            table.insert(results.attributes, attributes[i])
         end
     end
-    if #res == 0 then
-        return root, res, files
+    if #compiled == 0 then
+        return root, compiled
     end
     local gcd = {}
-    local first = res[1]
+    local first = compiled[1]
     while true do
         local r = first[1]
         if r == nil then
@@ -154,31 +154,31 @@ local function glob_compile(root, patterns)
         if r:match "%*" then
             break
         end
-        if not match_prefix(res, r) then
+        if not match_prefix(compiled, r) then
             break
         end
-        for _, v in ipairs(res) do
+        for _, v in ipairs(compiled) do
             table.remove(v, 1)
         end
         gcd[#gcd+1] = r
     end
-    for _, v in ipairs(res) do
+    for _, v in ipairs(compiled) do
         for i, w in ipairs(v) do
             if w ~= GlobStar then
                 v[i] = compile(w)
             end
         end
     end
-    for i = 1, #res do
-        local v = res[i]
+    for i = 1, #compiled do
+        local v = compiled[i]
         if v[1] == GlobStar and #v > 1 then
-            res[#res+1] = pattern_copy(v, 2)
+            compiled[#compiled+1] = pattern_copy(v, 2)
         end
     end
     if root:sub(1,1) == '/' then
         gcd[1] = '/'.. (gcd[1] or '')
     end
-    return normalize(table.unpack(gcd)), res, files
+    return normalize(table.unpack(gcd)), compiled
 end
 
 local function glob_match_dir(patterns, path)
@@ -199,17 +199,19 @@ local function glob_match_dir(patterns, path)
 end
 
 local function glob_match_file(patterns, path)
-    local suc = false
+    local idx
     for _, pattern in ipairs(patterns) do
         local res = pattern_match(pattern, path)
         if res == MATCH_SUCCESS then
-            suc = true
+            if not idx then
+                idx = pattern.idx
+            end
         elseif res == MATCH_FAILED then
             return MATCH_FAILED
         end
     end
-    if suc then
-        return MATCH_SUCCESS
+    if idx then
+        return MATCH_SUCCESS, idx
     end
     return MATCH_FAILED
 end
@@ -223,22 +225,27 @@ local function glob_match(patterns, path, status)
     end
 end
 
-local function glob_scan(patterns, dir, result)
+local function glob_scan(results, dir, patterns, attributes)
     if #patterns == 0 then
         return
     end
     for path, status in fs.pairs(fs.path(dir)) do
         local res, sub = glob_match(patterns, path, status)
         if res == MATCH_PENDING then
-            glob_scan(sub, path, result)
+            glob_scan(results, path, sub, attributes)
         elseif res == MATCH_SUCCESS then
-            result[#result+1] = path:string()
+            table.insert(results.files, path:string())
+            table.insert(results.attributes, attributes[sub])
         end
     end
 end
 
-return function (dir, patterns)
-    local root, compiled, files = glob_compile(dir, patterns)
-    glob_scan(compiled, root, files)
-    return files
+return function (dir, patterns, attributes)
+    local results = {
+        files = {},
+        attributes = {},
+    }
+    local root, compiled = glob_compile(results, dir, patterns, attributes)
+    glob_scan(results, root, compiled, attributes)
+    return results
 end
