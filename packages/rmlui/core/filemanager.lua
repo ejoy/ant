@@ -31,9 +31,10 @@ local function find_texture(path)
     if not path:equal_extension "texture" and not path:equal_extension "png" then
         return
     end
-    local file = (prefixPath / path):string()
-    if bundle.exist(file) then
-        return file
+    local _ <close> = fs.switch_sync()
+    local file = prefixPath / path
+    if fs.exists(file) then
+        return file:string()
     end
 end
 
