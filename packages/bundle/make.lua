@@ -5,3 +5,9 @@ lm:lua_source "bundle" {
         "src/bundle.c",
     }
 }
+
+lm:lua_source "textureman" {
+    sources = {
+        "src/textureman.c",
+    }
+}
