@@ -8,9 +8,7 @@ local tm_sys    = ecs.system "tonemapping_system"
 local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
-local imesh     = ecs.import.interface "ant.asset|imesh"
-local iexposure = ecs.import.interface "ant.camera|iexposure"
+local util      = ecs.require "postprocess.util"
 
 local setting   = import_package "ant.settings".setting
 local enable_bloom = setting:get "graphic/postprocess/bloom/enable"
@@ -19,44 +17,13 @@ local tm_viewid<const> = viewidmgr.get "tonemapping"
 local tm_materialfile<const> = "/pkg/ant.resources/materials/postprocess/tonemapping.material"
 
 function tm_sys:init()
-    ecs.create_entity {
-        policy = {
-            "ant.general|name",
-            "ant.render|simplerender",
-        },
-        data = {
-            name = "tonemapping_render_obj",
-            simplemesh = irender.full_quad(),
-            material = tm_materialfile,
-            scene = {},
-            visible_state = "",
-            tonemapping_drawer = true,
-        }
-    }
+    util.create_quad_drawer("tonemapping_drawer", tm_materialfile)
 end
 
 function tm_sys:init_world()
     local vp = world.args.viewport
-    ecs.create_entity {
-        policy = {
-            "ant.render|postprocess_queue",
-            "ant.general|name",
-        },
-        data = {
-            render_target = {
-                viewid     = tm_viewid,
-                view_rect   = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
-                view_mode = "",
-                clear_state = {
-                    clear = "D", --clear z buffer for effect
-                    depth = 0
-                },
-            },
-            queue_name = "tonemapping_queue",
-            name = "tonemapping_rt_obj",
-            tonemapping_queue = true,
-        }
-    }
+    local vr = {x=vp.x, y=vp.y, w=vp.w, h=vp.h}
+    util.create_queue(tm_viewid, vr, nil, "tonemapping_queue", "tonemapping_queue")
 end
 
 local vp_changed_mb = world:sub{"world_viewport_changed"}

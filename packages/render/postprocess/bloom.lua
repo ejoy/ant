@@ -13,6 +13,8 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 
+local util      = ecs.require "postprocess.util"
+
 local setting   = import_package "ant.settings".setting
 local enable_bloom = setting:get "graphic/postprocess/bloom/enable"
 
@@ -28,24 +30,8 @@ end
 local bloom_sys = ecs.system "bloom_system"
 
 function bloom_sys:init()
-    local function create_sample_drawer(name, material)
-        return ecs.create_entity{
-            policy = {
-                "ant.render|simplerender",
-                "ant.general|name",
-            },
-            data = {
-                name = name,
-                simplemesh = irender.full_quad(),
-                material = material,
-                visible_state = "",
-                scene = {},
-                [name] = true,
-            }
-        }
-    end
-    create_sample_drawer("downsample_drawer", "/pkg/ant.resources/materials/postprocess/downsample.material")
-    create_sample_drawer("upsample_drawer", "/pkg/ant.resources/materials/postprocess/upsample.material")
+    util.create_quad_drawer("downsample_drawer", "/pkg/ant.resources/materials/postprocess/downsample.material")
+    util.create_quad_drawer("upsample_drawer", "/pkg/ant.resources/materials/postprocess/upsample.material")
 end
 
 local function downscale_bloom_vr(vr)
@@ -68,27 +54,7 @@ local function remove_all_bloom_queue()
     end
 end
 
-local function create_queue(viewid, vr, fbidx, queuename)
-    ecs.create_entity{
-        policy = {
-            "ant.render|postprocess_queue",
-            "ant.general|name",
-        },
-        data = {
-            render_target = {
-                view_rect = vr,
-                view_mode = "",
-                clear_state = {clear=""},
-                viewid = viewid,
-                fb_idx = fbidx,
-            },
-            [queuename] = true,
-            queue_name = queuename,
-            name = queuename,
-            bloom_queue = true,
-        }
-    }
-end
+
 
 local bloom_rb_flags = sampler {
     RT="RT_ON",
@@ -141,7 +107,7 @@ local function create_chain_sample_queue(mqvr)
     local ds_viewid = bloom_ds_viewid
     for i=1, bloom_chain_count do
         chain_vr = downscale_bloom_vr(chain_vr)
-        create_queue(ds_viewid, chain_vr, fbpyramids[i+1], "bloom_downsample"..i)
+        util.create_queue(ds_viewid, chain_vr, fbpyramids[i+1], "bloom_downsample"..i, "bloom_queue")
         ds_viewid = ds_viewid+1
     end
 
@@ -149,7 +115,7 @@ local function create_chain_sample_queue(mqvr)
     local us_viewid = bloom_us_viewid
     for i=1, bloom_chain_count do
         chain_vr = upscale_bloom_vr(chain_vr)
-        create_queue(us_viewid, chain_vr, fbpyramids[bloom_chain_count-i+1], "bloom_upsample"..i)
+        util.create_queue(us_viewid, chain_vr, fbpyramids[bloom_chain_count-i+1], "bloom_upsample"..i, "bloom_queue")
         us_viewid = us_viewid+1
     end
 
