@@ -6,6 +6,8 @@ uniform vec4    u_eyepos;
 uniform vec4    u_camera_param;
 #define u_near 	u_camera_param.x
 #define u_far 	u_camera_param.y
+#define u_inv_near u_camera_param.z
+#define u_inv_far u_camera_param.w
 
 uniform vec4    u_exposure_param;
 

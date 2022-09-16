@@ -182,13 +182,18 @@ local function update_camera_info(e)
     local camerapos = iom.get_position(e)
 	local f = ic.get_frustum(e)
 	sa:update("u_eyepos", camerapos)
-	sa:update("u_camera_param", math3d.vector(f.n, f.f, 0.0, 0.0))
+    local nn, ff = f.n, f.f
+    local inv_nn, inv_ff = 1.0/nn, 1.0/ff
+	sa:update("u_camera_param", math3d.vector(nn, ff, inv_nn, inv_ff))
 end
 
 function cameraview_sys:update_mainview_camera()
     for v in w:select "main_queue camera_ref:in" do
-        local e <close> = w:entity(v.camera_ref, "camera:in scene:in")
+        local e <close> = w:entity(v.camera_ref, "scene_changed?in camera:in scene:in")
+        --TODO: viewmat/projmat/viewprojmat should cache them
         update_camera(e)
-        update_camera_info(e)
+        if e.scene_changed then
+            update_camera_info(e)
+        end
     end
 end
