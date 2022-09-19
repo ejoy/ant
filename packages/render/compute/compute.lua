@@ -4,9 +4,10 @@ local w = world.w
 local bgfx = require "bgfx"
 
 local ic = ecs.interface "icompute"
+local assetmgr = import_package "ant.asset"
 
 function ic.dispatch(viewid, ds)
-	ds.material{}
+	ds.material(assetmgr.textures)
 
 	local s = ds.size
 	bgfx.dispatch(viewid, ds.fx.prog, s[1], s[2], s[3])
