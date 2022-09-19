@@ -145,12 +145,13 @@ end
 
 function BaseView:on_set_position(value)
     local template = hierarchy:get_template(self.eid)
+    local t = {value[1], value[2], value[3]}
     if template.template then
-        world:pub {"EntityEvent", "move", self.eid, template.template.data.scene.t or {0,0,0}, value}
-        template.template.data.scene.t = value
+        world:pub {"EntityEvent", "move", self.eid, template.template.data.scene.t or {0,0,0}, t}
+        template.template.data.scene.t = t
     else
         local e <close> = w:entity(self.eid)
-        world:pub {"EntityEvent", "move", self.eid, math3d.tovalue(iom.get_position(e)), value}
+        world:pub {"EntityEvent", "move", self.eid, math3d.tovalue(iom.get_position(e)), t}
     end
 end
 
@@ -166,7 +167,7 @@ end
 
 function BaseView:on_set_rotate(value)
     local template = hierarchy:get_template(self.eid)
-    world:pub {"EntityEvent", "rotate", self.eid, { math.rad(value[1]), math.rad(value[2]), math.rad(value[3]) }, value}
+    world:pub {"EntityEvent", "rotate", self.eid, { math.rad(value[1]), math.rad(value[2]), math.rad(value[3]) }, {value[1], value[2], value[3]}}
     if template.template then
         template.template.data.scene.r = math3d.tovalue(math3d.quaternion{math.rad(value[1]), math.rad(value[2]), math.rad(value[3])})
     end
@@ -188,12 +189,13 @@ end
 
 function BaseView:on_set_scale(value)
     local template = hierarchy:get_template(self.eid)
+    local s = {value[1], value[2], value[3]}
     if template.template then
-        world:pub {"EntityEvent", "scale", self.eid, template.template.data.scene.s or {1,1,1}, value}
-        template.template.data.scene.s = value
+        world:pub {"EntityEvent", "scale", self.eid, template.template.data.scene.s or {1,1,1}, s}
+        template.template.data.scene.s = s
     else
         local e <close> = w:entity(self.eid)
-        world:pub {"EntityEvent", "scale", self.eid, math3d.tovalue(iom.get_scale(e)), value}
+        world:pub {"EntityEvent", "scale", self.eid, math3d.tovalue(iom.get_scale(e)), s}
     end
 end
 
