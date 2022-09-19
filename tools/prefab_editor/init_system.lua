@@ -69,7 +69,8 @@ function m:init_world()
 end
 
 function m:post_init()
-    iRmlUi.preload_dir "/pkg/tools.prefab_editor/res/ui"
+    iRmlUi.add_bundle "/rml.bundle"
+    iRmlUi.set_prefix "/pkg/tools.prefab_editor/res/ui"
 end
 
 function m:data_changed()
