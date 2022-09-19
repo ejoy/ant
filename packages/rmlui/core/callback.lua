@@ -18,29 +18,18 @@ local function invoke(f, ...)
 	end
 	return ok, err
 end
+
 function m.OnLoadInlineScript(document, content, source_path, source_line)
-    local _ <close> = fs.switch_sync()
-	local path = filemanager.vfspath(source_path)
-	if not path then
-		console.warn(("file '%s' does not exist."):format(source_path))
-		return
-	end
-	local source = "--@"..path..":"..source_line.."\n "..content
-	local f, err = load(source, source, "t", environment[document])
+	local f, err = filemanager.loadString(content, source_path, source_line, environment[document])
 	if not f then
 		console.warn(err)
 		return
 	end
 	invoke(f)
 end
+
 function m.OnLoadExternalScript(document, source_path)
-    local _ <close> = fs.switch_sync()
-	local path = filemanager.vfspath(source_path)
-	if not path then
-		console.warn(("file '%s' does not exist."):format(source_path))
-		return
-	end
-	local f, err = loadfile(path, "bt", environment[document])
+	local f, err = filemanager.loadFile(source_path, environment[document])
 	if not f then
 		console.warn(("file '%s' load failed: %s."):format(source_path, err))
 		return

@@ -38,7 +38,7 @@ public:
 	int GetStringWidth(Rml::FontFaceHandle handle, const std::string& string) override;
 	void GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry) override;
     void GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<uint32_t>& codepoints, Rml::Geometry& geometry) override;
-    float PrepareText(Rml::FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& layoutMap,std::vector<Rml::layout>& text_layouts,std::vector<Rml::layout>& line_layouts,int start,int num) override;
+    float PrepareText(Rml::FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<Rml::group>& groups,std::vector<Rml::layout>& line_layouts,int start,int num) override;
 private:
     void submitScissorRect(bgfx_encoder_t* encoder);
     void setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r);

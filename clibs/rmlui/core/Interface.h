@@ -24,6 +24,11 @@ struct layout {
     uint16_t start;
 };
 
+struct group{
+	Color color;
+	//todo
+};
+
 struct Line {
 	std::vector<layout> layouts;
 	std::string text;
@@ -63,7 +68,7 @@ public:
 	virtual int GetStringWidth(FontFaceHandle handle, const std::string& string) = 0;
 	virtual void GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry) =0;
 	virtual void GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<uint32_t>& codepoints, Rml::Geometry& geometry)=0;
-	virtual float PrepareText(FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& layoutMap,std::vector<layout>& text_layouts,std::vector<layout>& line_layouts,int start,int num)=0;
+	virtual float PrepareText(FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<group>& groups,std::vector<layout>& line_layouts,int start,int num)=0;
 };
 
 class Plugin {
@@ -75,6 +80,7 @@ public:
 	virtual void OnDestroyNode(Document* document, Node* node) = 0;
 	virtual std::string OnRealPath(const std::string& path) = 0;
 	virtual void OnLoadTexture(Document* document, Element* element, const std::string& path) = 0;
+	virtual void OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& groupmap,std::string& ctext,Rml::group& default_group)=0;
 };
 
 }
