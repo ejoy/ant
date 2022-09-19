@@ -393,12 +393,8 @@ local function update_visible(node, visible)
     for _, eid in ipairs(adaptee) do
         local e <close> = w:entity(eid, "visible_state?in")
         ivs.set_state(e, "main_view", visible)
-        if e.visible_state then
-            local template = hierarchy:get_template(eid)
-            template.template.data.visible_state = ivs.state_names(e.visible_state)
-            if not rv then
-                rv = ivs.has_state(e, "main_view")
-            end
+        if e.visible_state and not rv then
+            rv = ivs.has_state(e, "main_view")
         end
     end
     local ne <close> = w:entity(node.eid, "visible_state?in")
