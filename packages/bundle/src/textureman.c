@@ -4,6 +4,7 @@
 #include <lauxlib.h>
 #include <stdint.h>
 #include "luabgfx.h"
+#include "textureman.h"
 
 #define EVENT_QUEUE_SIZE 0x8000
 #define TEXTURE_MAX_ID 0x7fff
@@ -63,6 +64,17 @@ ltexture_get(lua_State *L) {
 	int luahandle = (BGFX_HANDLE_TEXTURE << 16) | h;
 	lua_pushinteger(L, luahandle);
 	return 1;
+}
+
+bgfx_texture_handle_t
+texture_get(int id) {
+	bgfx_texture_handle_t handle = BGFX_INVALID_HANDLE;
+	if (id <= 0 || id > g_texture_id)
+		return handle;
+	uint16_t h = g_texture[id - 1];
+	g_texture_timestamp[id - 1] = g_frame;
+	handle.idx = h;
+	return handle;
 }
 
 static int
