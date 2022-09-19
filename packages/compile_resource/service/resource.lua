@@ -1,8 +1,10 @@
-local ltask    = require "ltask"
-local bgfx     = require "bgfx"
-local datalist = require "datalist"
-local fastio   = require "fastio"
-local cr       = import_package "ant.compile_resource"
+local ltask      = require "ltask"
+local bgfx       = require "bgfx"
+local datalist   = require "datalist"
+local fastio     = require "fastio"
+local textureman = require "textureman.server"
+local cr         = import_package "ant.compile_resource"
+import_package "ant.render".init_bgfx()
 
 cr.init()
 
@@ -85,15 +87,8 @@ local DefaultTexture = createTexture {
 }
 
 local texturebyname = {}
-local texturebyid = {}
 local queue = {}
 local token = {}
-
-local maxid = 0
-local function genId()
-    maxid = maxid + 1
-    return maxid
-end
 
 local function asyncCreateTexture(name)
     if queue[name] then
@@ -114,107 +109,21 @@ end
 
 function S.texture_create(name)
     local c = texturebyname[name]
-    if c then
-        if c.output.uncomplete then
-            asyncCreateTexture(c.output.name)
-        end
-        return c.output
-    else
-        local id = genId()
-        local res = loadTexture(name)
-        c = {
-            input = res,
-            output = {
-                id = id,
-                handle = DefaultTexture,
-                name = name,
-                uncomplete = true,
-                texinfo = res.info,
-                sampler = res.sampler,
-            },
-        }
-        texturebyname[name] = c
-        texturebyid[id] = c
-        asyncCreateTexture(c.output.name)
-        return c.output
-    end
-end
-
-function S.texture_reload(id)
-    local c = texturebyid[id]
     if not c then
-        return
-    end
-    if not c.output.uncomplete then
-        return c.output
-    end
-    asyncCreateTexture(c.output.name)
-    while true do
-        ltask.multi_wait(c.output.name)
-        if not c.output.uncomplete then
-            return c.output
-        end
-    end
-end
-
-function S.texture_complete(name)
-    while true do
-        local c = texturebyname[name]
-        if c and not c.output.uncomplete then
-            return c.output.handle
-        end
-        ltask.multi_wait(name)
-    end
-end
-
-function S.texture_create_complete(name)
-    local c = texturebyname[name]
-    if c then
-        if not c.output.uncomplete then
-            return c.output
-        end
-    else
-        local id = genId()
+        local id = textureman.texture_create(DefaultTexture)
         local res = loadTexture(name)
         c = {
             input = res,
             output = {
                 id = id,
-                handle = DefaultTexture,
-                name = name,
-                uncomplete = true,
                 texinfo = res.info,
                 sampler = res.sampler,
             },
         }
         texturebyname[name] = c
-        texturebyid[id] = c
+        asyncCreateTexture(name)
     end
-    asyncCreateTexture(c.output.name)
-    while true do
-        ltask.multi_wait(name)
-        if not c.output.uncomplete then
-            return c.output
-        end
-    end
-end
-
-function S.texture_destroy(name)
-    local c = texturebyname[name]
-    if c then
-        assert(c.output.uncomplete == nil)
-        bgfx.destroy(c.output.handle)
-        c.output.handle = DefaultTexture
-        c.output.uncomplete = true
-        return
-    end
-    for i, n in ipairs(queue) do
-        if n == name then
-            table.remove(queue, i)
-            ltask.interrupt(name, "destroy")
-            break
-        end
-    end
+    return c.output
 end
 
 ltask.fork(function ()
@@ -230,13 +139,30 @@ ltask.fork(function ()
             if not c.input then
                 c.input = loadTexture(name)
             end
-            c.output.handle = createTexture(c.input)
-            c.output.uncomplete = nil
+            local handle = createTexture(c.input)
             c.input = nil
-            ltask.multi_wakeup(name)
+            textureman.texture_set(c.output.id, handle)
+            textureman.event_push(c.output.id)
             ltask.sleep(0)
         end
     end
 end)
+
+local quit
+
+ltask.fork(function ()
+    bgfx.encoder_create "texture"
+    while not quit do
+        bgfx.encoder_frame()
+    end
+    bgfx.encoder_destroy()
+    ltask.wakeup(quit)
+end)
+
+function S.quit()
+    quit = {}
+    ltask.wait(quit)
+    ltask.quit()
+end
 
 return S

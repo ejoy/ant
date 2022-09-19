@@ -1,6 +1,8 @@
 local rmlui = require "rmlui"
 local assetmgr = import_package "ant.asset"
 local cr = import_package "ant.compile_resource"
+local renderpkg = import_package "ant.render"
+renderpkg.init_bgfx()
 cr.init()
 
 local function create_shaders()
@@ -37,7 +39,6 @@ end
 local shaders = create_shaders()
 
 return function(t)
-    local renderpkg = import_package "ant.render"
     local declmgr = renderpkg.declmgr
     local layouhandle = declmgr.get "p2|c40niu|t20".handle
     t.layout  = layouhandle

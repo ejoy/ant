@@ -367,7 +367,7 @@ function m.set_dimensions(w, h, ratio)
 end
 
 local function updateTexture()
-    local q = filemanager.texture_queue()
+    local q = filemanager.updateTexture()
     if not q then
         return
     end

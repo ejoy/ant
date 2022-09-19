@@ -1,9 +1,11 @@
 local fs = require "filesystem"
 local ltask = require "ltask"
+local textureman = require "textureman.client"
 local constructor = require "core.DOM.constructor"
 local bundle = import_package "ant.bundle"
 
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
+local DefaultTexture = ltask.call(ServiceResource, "texture_default")
 
 local m = {}
 
@@ -30,16 +32,11 @@ function m.realpath(source_path)
 end
 
 local pendQueue = {}
+local eventQueue = {}
 local readyQueue = {}
 
 function m.loadTexture(doc, e, path)
     local realpath = fullpath(path)
-    if not realpath then
-        readyQueue[#readyQueue+1] = {
-            path = path,
-        }
-        return
-    end
     local element = constructor.Element(doc, false, e)
     local q = pendQueue[path]
     if q then
@@ -48,25 +45,43 @@ function m.loadTexture(doc, e, path)
     end
     pendQueue[path] = {element}
     ltask.fork(function ()
-        local ok, info = pcall(ltask.call, ServiceResource, "texture_create_complete", realpath)
-        if ok then
-            readyQueue[#readyQueue+1] = {
-                path = path,
-                elements = pendQueue[path],
-                handle = info.handle,
-                width = info.texinfo.width,
-                height = info.texinfo.height,
-            }
+        local info = ltask.call(ServiceResource, "texture_create", realpath)
+        local handle = textureman.texture_get(info.id)
+        if handle == DefaultTexture then
+            eventQueue[info.id] = {path, info}
         else
             readyQueue[#readyQueue+1] = {
                 path = path,
+                elements = pendQueue[path],
+                handle = handle,
+                width = info.texinfo.width,
+                height = info.texinfo.height,
             }
+            pendQueue[path] = nil
         end
-        pendQueue[path] = nil
     end)
 end
 
-function m.texture_queue()
+function m.updateTexture()
+    while true do
+        local id = textureman.event_pop()
+        if not id then
+            break
+        end
+        local e = eventQueue[id]
+        if e then
+            local path, info = e[1], e[2]
+            readyQueue[#readyQueue+1] = {
+                path = path,
+                elements = pendQueue[path],
+                handle = textureman.texture_get(info.id),
+                width = info.texinfo.width,
+                height = info.texinfo.height,
+            }
+            pendQueue[path] = nil
+            eventQueue[id] = nil
+        end
+    end
     if #readyQueue == 0 then
         return
     end

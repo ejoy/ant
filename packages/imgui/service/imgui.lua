@@ -2,17 +2,6 @@ local packagename, w, h = ...
 
 local ltask     = require "ltask"
 local bgfx      = require "bgfx"
-local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
-for _, name in ipairs(ltask.call(ServiceBgfxMain, "CALL")) do
-	bgfx[name] = function (...)
-		return ltask.call(ServiceBgfxMain, name, ...)
-	end
-end
-for _, name in ipairs(ltask.call(ServiceBgfxMain, "SEND")) do
-	bgfx[name] = function (...)
-		ltask.send(ServiceBgfxMain, name, ...)
-	end
-end
 
 local imgui       = require "imgui"
 local renderpkg   = import_package "ant.render"
@@ -175,6 +164,7 @@ end
 
 local config = pm.loadcfg(packagename)
 ltask.fork(function ()
+	renderpkg.init_bgfx()
     init_width, init_height = w, h
 
     local nwh = imgui.Create(dispatch, w, h)
@@ -190,7 +180,6 @@ ltask.fork(function ()
 	import_package "ant.compile_resource".init()
     bgfx.encoder_create "imgui"
     bgfx.encoder_init()
-	renderpkg.init_bgfx()
 	assetmgr.init()
     bgfx.encoder_begin()
 

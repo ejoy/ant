@@ -8,19 +8,7 @@ local cr        = import_package "ant.compile_resource"
 local setting	= import_package "ant.settings".setting
 local mu		= import_package "ant.math".util
 local platform  = require "bee.platform"
-
 local bgfx      = require "bgfx"
-local ServiceBgfxMain = ltask.queryservice "ant.render|bgfx_main"
-for _, name in ipairs(ltask.call(ServiceBgfxMain, "CALL")) do
-	bgfx[name] = function (...)
-		return ltask.call(ServiceBgfxMain, name, ...)
-	end
-end
-for _, name in ipairs(ltask.call(ServiceBgfxMain, "SEND")) do
-	bgfx[name] = function (...)
-		ltask.send(ServiceBgfxMain, name, ...)
-	end
-end
 
 local ServiceWindow = ltask.queryservice "ant.window|window"
 ltask.send(ServiceWindow, "subscribe", {
@@ -104,6 +92,8 @@ local function calc_fb_size(w, h, ratio)
 end
 
 function S.init(nwh, context, width, height)
+	import_package "ant.render".init_bgfx()
+
 	local scene_ratio = setting:get "graphic/framebuffer/scene_ratio" or 1.0
 	local ratio = setting:get "graphic/framebuffer/ratio" or 1.0
 	log.info(("framebuffer ratio:%2f, scene:%2f"):format(ratio, scene_ratio))
@@ -127,7 +117,6 @@ function S.init(nwh, context, width, height)
 	bgfx.set_debug "T"
 	bgfx.encoder_create "world"
 	bgfx.encoder_init()
-	import_package "ant.render".init_bgfx()
 	import_package "ant.asset".init()
 	bgfx.encoder_begin()
 	encoderBegin = true

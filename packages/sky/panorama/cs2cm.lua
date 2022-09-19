@@ -61,7 +61,7 @@ end
 function cs2cm_sys:entity_ready()
     for e in w:select "skybox_changed:update render_object filter_material:in skybox:in filter_ibl?out" do
         local tex = load_res_tex(e)
-        if not tex.uncomplete then
+        if not assetmgr.invalid_texture(tex.id) then
             e.skybox_changed = false
             local ti = tex.texinfo
             if panorama_util.is_panorama_tex(ti) then
@@ -77,7 +77,7 @@ function cs2cm_sys:entity_ready()
                 local material = dis.material
     
                 local cm_rbhandle = fbmgr.get_rb(cm_rbidx).handle
-                material.s_source = tex.handle
+                material.s_source = tex.id
                 material.s_cubemap_source = icompute.create_image_property(cm_rbhandle, 1, 0, "w")
     
                 local s = dis.size

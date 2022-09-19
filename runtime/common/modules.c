@@ -27,6 +27,8 @@ int luaopen_rmlui(lua_State* L);
 int luaopen_rp3d_core(lua_State* L);
 int luaopen_window(lua_State* L);
 int luaopen_terrain(lua_State *L);
+int luaopen_textureman_client(lua_State *L);
+int luaopen_textureman_server(lua_State *L);
 int luaopen_font(lua_State *L);
 int luaopen_font_init(lua_State *L);
 int luaopen_font_truetype(lua_State *L);
@@ -89,7 +91,9 @@ void ant_loadmodules(lua_State* L) {
         { "rmlui", luaopen_rmlui },
         { "rp3d.core", luaopen_rp3d_core },
         { "window", luaopen_window },
-        { "terrain", luaopen_terrain},
+        { "terrain", luaopen_terrain },
+        { "textureman.client", luaopen_textureman_client },
+        { "textureman.server", luaopen_textureman_server },
         { "efk", luaopen_efk},
         { "effekseer.callback", luaopen_effekseer_callback},
         { "fileinterface", luaopen_fileinterface },
