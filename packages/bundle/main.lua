@@ -32,12 +32,20 @@ function m.close(path)
     rebuild()
 end
 
-function m.get(path)
+function m.fetch(path)
     local v = view[path]
-    if v then
-        return v
+    if not v then
+        v = ltask.call(ServiceBundle, "open_file", path)
     end
-    return ltask.call(ServiceBundle, "open_file", path)
+    return bundle.tostr(v)
+end
+
+function m.get(path)
+    return bundle.tostr(view[path])
+end
+
+function m.exist(path)
+    return bundle.exist(view, path)
 end
 
 return m

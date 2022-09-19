@@ -113,7 +113,10 @@ vec3 calc_direct_light(in material_info mi, vec4 fragcoord, vec3 posWS)
         uint ilight = get_light_index(ii);
         light_info l = get_light(ilight, posWS);
 #   ifdef NEW_LIGHTING
-        color += surfaceShading(mi, l, 1.0);
+        float NdotL = clamp_dot(mi.N, l.pt2l);
+        if (NdotL > 0){
+            color += surfaceShading(mi, l, 1.0);
+        }
 #   else //!NEW_LIGHTING
         color += get_light_radiance(l, posWS, mi);
 #   endif //NEW_LIGHTING

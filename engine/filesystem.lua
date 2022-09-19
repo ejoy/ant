@@ -246,8 +246,14 @@ end
 local filestatus = {}
 filestatus.__index = filestatus
 
-function filestatus:is_directory()
-    return self[1] == true
+if __ANT_RUNTIME__ then
+    function filestatus:is_directory()
+        return self[1].type == "d"
+    end
+else
+    function filestatus:is_directory()
+        return self[1] == true
+    end
 end
 
 function fs.pairs(path)

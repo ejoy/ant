@@ -133,7 +133,7 @@ function gizmo:set_rotation(inrot)
 	if inrot then
 		iom.set_rotation(e, inrot)
 		local template = hierarchy:get_template(self.target_eid)
-		template.template.data.scene.r = inrot
+		template.template.data.scene.r = math3d.tovalue(inrot)
 		newrot = inrot
 	else
 		newrot = iom.get_rotation(e)

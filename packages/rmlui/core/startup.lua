@@ -72,7 +72,9 @@ end
 S.open = windowManager.open
 S.close = windowManager.close
 S.postMessage = windowManager.postMessage
-S.preload_dir = filemanager.preload_dir
+S.add_bundle = filemanager.add_bundle
+S.del_bundle = filemanager.del_bundle
+S.set_prefix = filemanager.set_prefix
 S.mouse = contextManager.process_mouse
 S.touch = contextManager.process_touch
 S.gesture = contextManager.process_gesture

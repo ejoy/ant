@@ -9,7 +9,8 @@ end
 
 function init_sys:post_init()
     local args = getArguments()
-    iRmlUi.preload_dir(args[1])
+    iRmlUi.add_bundle "/rml.bundle"
+    iRmlUi.set_prefix "/resource"
     local window = iRmlUi.open(args[2])
     window.addEventListener("message", function (event)
         print("Message: " .. event.data)

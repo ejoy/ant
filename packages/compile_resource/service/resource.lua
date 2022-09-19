@@ -1,8 +1,8 @@
 local ltask    = require "ltask"
-local cr       = import_package "ant.compile_resource"
 local bgfx     = require "bgfx"
 local datalist = require "datalist"
 local fastio   = require "fastio"
+local cr       = import_package "ant.compile_resource"
 
 cr.init()
 
