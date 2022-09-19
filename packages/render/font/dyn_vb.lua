@@ -1,7 +1,8 @@
 local dyn_vb = {}; dyn_vb.__index = dyn_vb
-
 local declmgr = require "vertexdecl_mgr"
 local bgfx = require "bgfx"
+
+local dvbidx_table={}
 
 function dyn_vb:create(maxsize, fmt)
     local d = declmgr.get(fmt)
@@ -26,17 +27,33 @@ local function numv(m, s)
     return sizebytes // s
 end
 
-function dyn_vb:add(mem)
+function dyn_vb:add(mem,fontidx_table,fontidx)
     local idx = #self.data+1
     self.data[idx] = mem
+    fontidx_table[fontidx]=idx
+    dvbidx_table[idx]=fontidx
     local offsetV = self:update(idx, idx)
     local n = numv(mem, self.stride)
-    return idx, offsetV-n, n
+    return offsetV-n, n
 end
 
-function dyn_vb:remove(idx)
-    table.remove(self.data, idx)
-    self:update(idx)
+function dyn_vb:remove(fontidx,fontidx_table)
+    local offsetV=0
+    local dvbidx=fontidx_table[fontidx]
+    local s=self.stride
+    for i=1,dvbidx-1 do
+        local m=self.data[i]
+        offsetV=offsetV+numv(m,s)
+    end
+
+    for i=dvbidx,#self.data-1 do
+        local fidx=dvbidx_table[i+1]
+        local m=self.data[i+1]
+        fontidx_table[fidx]=i
+        dvbidx_table[i]=fidx
+        bgfx.update(self.handle, offsetV, m)
+        offsetV=numv(m,s)
+    end
 end
 
 function dyn_vb:update(from, to)
@@ -59,5 +76,27 @@ function dyn_vb:update(from, to)
 
     return offsetV
 end
+
+function dyn_vb:replace(fontidx,m,fontidx_table)
+    local offsetV=0
+    local s=self.stride
+    local idxn=numv(m,s)
+    local dvbidx=fontidx_table[fontidx]
+    for i=1,dvbidx-1 do
+        local n=numv(self.data[i],s)
+        offsetV=offsetV+n
+    end
+
+    bgfx.update(self.handle,offsetV,m)
+    offsetV = offsetV + idxn
+ 
+    for i=dvbidx+1,#self.data do
+        local mem = self.data[i]
+        bgfx.update(self.handle, offsetV, m)
+        offsetV = offsetV + numv(mem, s)  
+    end
+    return idxn
+end
+
 
 return dyn_vb
