@@ -18,7 +18,8 @@ fontpkg.init()
 local layout    = require "layout"(fontpkg.handle())
 
 local dyn_vb = require "font.dyn_vb"
-
+local fontidx_table={}
+local fontidx=1
 
 
 local fonttex_handle, fonttex_width, fonttex_height = fontpkg.texture()
@@ -75,15 +76,25 @@ local function calc_3d_anchor_pos(e, cfg)
     end
 end
 
-local function add_text_mem(m, num, ro)
+local function add_text_mem(m, num, ro,font)
     local vbnum = num*4
-    local idx, s, n = dvb:add(m)
-    assert(n == vbnum)
-    ro.vb_num = vbnum
-    ro.vb_start = s
-
-    ro.ib_start, ro.ib_num = 0, num * 2 * 3
-    return idx
+    if font.idx then
+        local n
+        n=dvb:replace(font.idx,m,fontidx_table)
+        assert(n == vbnum)
+        ro.vb_num = vbnum
+        ro.ib_start, ro.ib_num = 0, num * 2 * 3
+        return font.idx
+    else
+        local s, n
+        s, n = dvb:add(m,fontidx_table,fontidx)
+        fontidx=fontidx+1
+        assert(n == vbnum)
+        ro.vb_num = vbnum
+        ro.vb_start = s
+        ro.ib_start, ro.ib_num = 0, num * 2 * 3
+        return fontidx-1
+    end
 end
 
 
@@ -123,7 +134,7 @@ local function load_text(e)
         offset = offset+ld.num * 4
     end 
     --font.idx = add_text_mem(m, num, ro)
-    font.idx = add_text_mem(m, #codepoints, ro)
+    font.idx = add_text_mem(m, #codepoints, ro,font)
 end
 
 local ev = world:sub {"show_name"}
@@ -176,7 +187,7 @@ function fontsys:entity_remove()
     for _, e in w:select "REMOVED font:in" do
         local idx = e.font.idx
         if idx then
-            dvb:remove(idx)
+            dvb:remove(idx,fontidx_table)
         end
     end
 end
