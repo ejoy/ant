@@ -14,6 +14,25 @@ extern "C" {
 }
 
 
+std::unordered_map<uint8_t, uint8_t> ctoh{
+    {'0',0x00},
+    {'1',0x01},
+    {'2',0x02},
+    {'3',0x03},
+    {'4',0x04},
+    {'5',0x05},
+    {'6',0x06},
+    {'7',0x07},
+    {'8',0x08},
+    {'9',0x09},
+    {'a',0x0a},
+    {'b',0x0b},
+    {'c',0x0c},
+    {'d',0x0d},
+    {'e',0x0e},
+    {'f',0x0f},
+};
+
 class lua_plugin;
 
 class LuaEventListener final : public Rml::EventListener {
@@ -104,6 +123,56 @@ void lua_plugin::OnLoadTexture(Rml::Document* document, Rml::Element* element, c
     });
 }
 
+void lua_plugin::OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& groupMap,std::string& ctext,Rml::group& default_group) {
+    luabind::invoke([&](lua_State* L) {
+        lua_pushstring(L, str.data());
+		call(L, LuaEvent::OnParseText, 1, 3);
+
+		//-1 -2 -3 - groupmap groups ctext
+		lua_pushnil(L);//-1 -2 - nil groupmap
+		while(lua_next(L,-2)){//-1 -2 idx groupmap
+			groupMap.emplace_back((int)lua_tointeger(L,-1)-1);
+			lua_pop(L,1);
+		}
+
+		lua_pop(L,1);
+
+		lua_pushnil(L);
+		while(lua_next(L,-2)){
+			Rml::group group;
+			lua_getfield(L,-1,"color");
+			size_t sz=0;
+			const char* s = lua_tolstring(L, -1, &sz);
+			std::string str(s,sz);
+			if(str=="default"){
+				group.color=default_group.color;
+			}
+			else{
+				Rml::Color c;
+				std::string ctmp(str);
+				c.r=ctoh[ctmp[0]]*16+ctoh[ctmp[1]];
+				c.g=ctoh[ctmp[2]]*16+ctoh[ctmp[3]];
+				c.b=ctoh[ctmp[4]]*16+ctoh[ctmp[5]];
+				group.color=c;
+			}
+			lua_pop(L,1);
+			lua_pop(L,1);
+			groups.emplace_back(group);
+		}
+
+		lua_pop(L,1);
+
+		if (lua_type(L, -1) == LUA_TSTRING) {
+            size_t sz = 0;
+            const char* str = lua_tolstring(L, -1, &sz);
+			std::string ctmp(str);
+            ctext=str;
+		}	
+    });
+
+	//TODO
+}
+
 void lua_plugin::register_event(lua_State* L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	lua_settop(L, 1);
@@ -120,6 +189,7 @@ void lua_plugin::register_event(lua_State* L) {
 	ref_function(reference, L, "OnEventDetach");
 	ref_function(reference, L, "OnRealPath");
 	ref_function(reference, L, "OnLoadTexture");
+	ref_function(reference, L, "OnParseText");
 }
 
 int  lua_plugin::ref(lua_State* L) {

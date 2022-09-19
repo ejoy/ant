@@ -631,7 +631,7 @@ void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lin
     }
 }
 
-float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& layoutMap,std::vector<Rml::layout>& text_layouts,std::vector<Rml::layout>& line_layouts,int start,int num){
+float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<Rml::group>& groups,std::vector<Rml::layout>& line_layouts,int start,int num){
     float line_width=0.f;
 
     FontFace face;
@@ -646,7 +646,7 @@ float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string
     int i=0;//i代表是当前string的位移 //start+i代表在ctext中的位移
 
     if(num){
-        pre_color=text_layouts[layoutMap[pre_lm]].color;
+        pre_color=groups[groupmap[pre_lm]].color;
         l.color=pre_color;
         l.start=lstart;
 
@@ -670,8 +670,8 @@ float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string
     else return 0.f;
 
     while(i<num){
-        cur_lm=layoutMap[start+i];
-        cur_color=text_layouts[cur_lm].color;
+        cur_lm=groupmap[start+i];
+        cur_color=groups[cur_lm].color;
         if(!(cur_color==pre_color)){
             l.num=lnum;
             line_layouts.emplace_back(l);

@@ -9,6 +9,9 @@
 #include <databinding/DataUtilities.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include "../databinding/DataModel.h"
+#include<iostream>
+
+
 namespace Rml {
 
 std::unordered_map<uint8_t, uint8_t> ctod{
@@ -42,10 +45,10 @@ void Text::ParseText(){
 	uint16_t start = 0;
 
 	while (text[i]) {
-        Rml::layout l;
-		l.color=default_color;
+        group group;
+		group.color=default_color;
+
 		Color color;
-        l.start = start;
 
         assert(i < n && text[i] != ']');
         if (text[i] == '[') {
@@ -62,41 +65,34 @@ void Text::ParseText(){
             assert((i + 1) < n && text[i + 1] == ']');
             i++;
 
-            l.color = color;
+            group.color = color;
 
             while (i + 1 < n && text[i + 1] != '[') {
 					ctext.push_back(text[i+1]);
-					layoutMap.emplace_back(text_layouts.size());
+					groupmap.emplace_back(groups.size());
 					start++;
 				
                 i++;                         
             }
 
             assert(i + 3 < n && text[i + 1] == '[' && text[i + 2] == '#' && text[i + 3] == ']');
-			if(text_layouts.size()==0||!(l.color==text_layouts[text_layouts.size()-1].color))
-				text_layouts.emplace_back(l);	
+			if(groups.size()==0||!(group.color==groups[groups.size()-1].color))
+				groups.emplace_back(group);	
             i += 3;
             ++i;
         }
         else {
 
-			if(text_layouts.size()==0||!(l.color==text_layouts[text_layouts.size()-1].color))
-				text_layouts.emplace_back(l);		
+			if(groups.size()==0||!(group.color==groups[groups.size()-1].color))
+				groups.emplace_back(group);		
 				ctext.push_back(text[i]);
-				layoutMap.emplace_back(text_layouts.size()-1);
+				groupmap.emplace_back(groups.size()-1);
 				start++;
 						
             i++;		
         }
     }
 	
-	for(int ii=0;ii+1<text_layouts.size();++ii){
-		text_layouts[ii].num=text_layouts[ii+1].start-text_layouts[ii].start;
-	}
-	if(text_layouts.size()>1)
-		text_layouts[text_layouts.size()-1].num=start-text_layouts[text_layouts.size()-1].start;
-	else if(text_layouts.size()==1)
-		text_layouts[text_layouts.size()-1].num=start;
 }
 
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline) {
@@ -375,8 +371,7 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 		token_begin = next_token_begin;
 	}
 
-	//�������line
-	//GetRenderInterface()->PrepareText(font_face_handle,line,codepoints,layoutMap,text_layouts,line_layouts,line_begin,line_length);
+	//GetRenderInterface()->PrepareText(font_face_handle,line,codepoints,groupmap,groups,line_layouts,line_begin,line_length);
 	return true;
 }
 
@@ -543,12 +538,16 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 		isRichText=data_model->RichText();
 	
 	Style::TextAlign text_align = GetProperty<Style::TextAlign>(PropertyId::TextAlign);
-	text_layouts.clear();
-	layoutMap.clear();
+	groups.clear();
+	groupmap.clear();
 	codepoints.clear();
 	ctext.clear();
 	if(isRichText){
-		ParseText();
+		//ParseText();
+		Color default_color = GetTextColor();
+		group default_group;
+		default_group.color=default_color;
+		GetPlugin()->OnParseText(text,groups,groupmap,ctext,default_group);
 	}
 	std::string line;
 	std::vector<Rml::layout> line_layouts;
@@ -558,7 +557,7 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 		int line_length;
 		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line,line_layouts);
 		if(isRichText)
-			line_width=GetRenderInterface()->PrepareText(GetFontFaceHandle(),line,codepoints,layoutMap,text_layouts,line_layouts,line_begin,line_length);
+			line_width=GetRenderInterface()->PrepareText(GetFontFaceHandle(),line,codepoints,groupmap,groups,line_layouts,line_begin,line_length);
 		lines.push_back(Line { line_layouts,line, Point(line_width, height + baseline), 0 });
 		width = std::max(width, line_width);
 		height += line_height;

@@ -6,7 +6,6 @@ local serialize     = import_package "ant.serialize"
 local worldedit     = import_package "ant.editor".worldedit(world)
 local assetmgr      = import_package "ant.asset"
 local stringify     = import_package "ant.serialize".stringify
-local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local ilight        = ecs.import.interface "ant.render|ilight"
 local iefk          = ecs.import.interface "ant.efk|iefk"
 local imodifier     = ecs.import.interface "ant.modifier|imodifier"

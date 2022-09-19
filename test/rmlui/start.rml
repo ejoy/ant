@@ -41,11 +41,7 @@
             local start = window.createModel "start" {
                 show = false,
                 richtext = true,
-                label = "游戏测试 [#ff00ff]CD EF[#] 换行"
-                --"游戏测试 [#abcdef]此处 应该[#] 换行"
-                --"游戏测试 [#abcdef]CD EF[#] 换行"
-                --"AB [#abcdef]CD EF[#] G"
-                --"游戏测试 [#abcdef]此处 应该[#] 换行"
+                label = "测试1{/r test2 }测试3{/g test4} 测试5{/b test6 }测试7{/color:ff00ff 测试8} 测试9"
             }
             function start.new(event)
                 console.log(event.target.id)
@@ -81,10 +77,10 @@
     <body>
         <div data-model="start">
             <button id = "new" data-event-click="new()">{{label}}</button>
-            <button data-event-click="load()">[#0000ff]D[#]</button>
-            <button data-event-click="setting()">[#0000ff]E[#]</button>
-            <button data-if="show">[#0000ff]F[#]</button>
-            <button data-event-click="exit()">[#0000ff]G[#]</button>
+            <button data-event-click="load()">测试01</button>
+            <button data-event-click="setting()">{/g 测试02}</button>
+            <button data-if="show">{/g 测试5{/b 测试6}}</button>
+            <button data-event-click="exit()">测试03{/g 测试04}</button>
         </div>
     </body>
 </rml>

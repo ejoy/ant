@@ -4,7 +4,7 @@ local constructor = require "core.DOM.constructor"
 local environment = require "core.environment"
 local event = require "core.event"
 local fs = require "filesystem"
-
+local parsetext=require "core.ParseText"
 local m = {}
 
 local events = {}
@@ -106,6 +106,11 @@ end
 
 function m.OnLoadTexture(doc, e, path)
 	filemanager.loadTexture(doc, e, path)
+end
+
+
+function m.OnParseText(str)
+	return parsetext.ParseText(str)
 end
 
 return m

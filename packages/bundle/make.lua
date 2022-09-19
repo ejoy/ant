@@ -5,3 +5,12 @@ lm:lua_source "bundle" {
         "src/bundle.c",
     }
 }
+
+lm:lua_source "textureman" {
+	includes = {
+		"../../clibs/bgfx",
+	},
+    sources = {
+        "src/textureman.c",
+    }
+}

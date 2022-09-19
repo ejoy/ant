@@ -385,16 +385,27 @@ function hierarchy:set_adaptee_visible(nd, b, recursion)
 end
 
 local function update_visible(node, visible)
-    local ne <close> = w:entity(node.eid)
-    ivs.set_state(ne, "main_view", visible)
     for _, nd in ipairs(node.children) do
         update_visible(nd, visible)
     end
+    local rv
     local adaptee = hierarchy:get_select_adaptee(node.eid)
     for _, eid in ipairs(adaptee) do
-        local e <close> = w:entity(eid)
+        local e <close> = w:entity(eid, "visible_state?in")
         ivs.set_state(e, "main_view", visible)
+        if e.visible_state and not rv then
+            rv = ivs.has_state(e, "main_view")
+        end
     end
+    local ne <close> = w:entity(node.eid, "visible_state?in")
+    ivs.set_state(ne, "main_view", visible)
+    if ne.visible_state then
+        local template = hierarchy:get_template(node.eid)
+        template.template.data.visible_state = ivs.state_names(ne.visible_state)
+    elseif rv and rv ~= visible then
+        hierarchy:set_visible(node, rv)
+    end
+    return rv
 end
 local reset_editor = world:sub {"ResetEditor"}
 local test_m

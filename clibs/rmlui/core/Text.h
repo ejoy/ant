@@ -59,8 +59,8 @@ private:
 	std::string text;
 	std::string ctext;
 	std::vector<uint32_t> codepoints;
-	std::vector<Rml::layout> text_layouts;
-	std::vector<int> layoutMap;
+	//std::vector<Rml::layout> text_layouts;
+	std::vector<int> groupmap;
 	LineList lines;
 	Geometry geometry;
 	Geometry decoration;
@@ -71,6 +71,7 @@ private:
 	bool dirty_effects = true;
 	bool dirty_font = true;
 	bool isRichText = false;
+	std::vector<Rml::group> groups;
 };
 
 }
