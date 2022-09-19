@@ -13,10 +13,6 @@ end
 local mt = {}
 
 function mt:__index(id)
-	--TODO
-	if id == 65535 then
-		return DefaultTexture
-	end
     return textureman.texture_get(id)
 end
 

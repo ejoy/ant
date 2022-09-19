@@ -15,7 +15,7 @@ class EventListener;
 class Document;
 
 using FontFaceHandle = uint64_t;
-using TextureHandle = uint16_t;
+using TextureId = uint16_t;
 
 struct layout {
     Color color;
@@ -39,8 +39,8 @@ struct Line {
 typedef std::vector<Line> LineList;
 
 struct TextureData {
-	TextureHandle handle = UINT16_MAX;
-	Size          dimensions = {0, 0};
+	TextureId handle = UINT16_MAX;
+	Size      dimensions = {0, 0};
 	explicit operator bool () const {
 		return handle != UINT16_MAX;
 	}
@@ -51,12 +51,11 @@ public:
 	virtual void Begin() = 0;
 	virtual void End() = 0;
 	virtual void RenderGeometry(Vertex* vertices, size_t num_vertices, Index* indices, size_t num_indices, MaterialHandle mat) = 0;
-	virtual void ReleaseTexture(TextureHandle texture) = 0;
 	virtual void SetTransform(const glm::mat4x4& transform) = 0;
 	virtual void SetClipRect() = 0;
 	virtual void SetClipRect(const glm::u16vec4& r) = 0;
 	virtual void SetClipRect(glm::vec4 r[2]) = 0;
-	virtual MaterialHandle CreateTextureMaterial(TextureHandle texture, SamplerFlag flag) = 0;
+	virtual MaterialHandle CreateTextureMaterial(TextureId texture, SamplerFlag flag) = 0;
 	virtual MaterialHandle CreateFontMaterial(const TextEffects& effects) = 0;
 	virtual MaterialHandle CreateDefaultMaterial() = 0;
 	virtual void DestroyMaterial(MaterialHandle mat) = 0;

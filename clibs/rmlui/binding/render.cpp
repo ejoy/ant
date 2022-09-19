@@ -10,7 +10,9 @@
 #include <stdint.h>
 #include "../bgfx/bgfx_interface.h"
 #include "../core/Color.h"
+
 extern "C" {
+    #include <textureman.h>
     #include "../font/font_manager.h"
 }
 
@@ -86,6 +88,21 @@ private:
     uint16_t tex;
 };
 
+class AsyncTextureUniform {
+public:
+    AsyncTextureUniform(uint16_t id, Rml::TextureId tex)
+        : id(id)
+        , tex(tex)
+    {}
+    void Submit(bgfx_encoder_t* encoder, uint32_t flags = UINT32_MAX) {
+        bgfx_texture_handle_t handle = texture_get(tex);
+        BGFX(encoder_set_texture)(encoder, 0, {id}, handle, flags);
+    }
+private:
+    uint16_t id;
+    Rml::TextureId tex;
+};
+
 class Uniform {
 public:
     Uniform(uint16_t id)
@@ -129,8 +146,8 @@ public:
 
 class TextureMaterial: public Material {
 public:
-    TextureMaterial(shader const& s, uint16_t texid, Rml::SamplerFlag flags)
-        : tex_uniform(s.find_uniform("s_tex"), texid)
+    TextureMaterial(shader const& s, bgfx_texture_handle_t tex, Rml::SamplerFlag flags)
+        : tex_uniform(s.find_uniform("s_tex"), tex.idx)
         , flags(getTextureFlags(flags))
     { }
     void Submit(bgfx_encoder_t* encoder) override {
@@ -144,6 +161,26 @@ public:
     }
 private:
     TextureUniform tex_uniform;
+    uint32_t flags;
+};
+
+class AsyncTextureMaterial: public Material {
+public:
+    AsyncTextureMaterial(shader const& s, Rml::TextureId texid, Rml::SamplerFlag flags)
+        : tex_uniform(s.find_uniform("s_tex"), texid)
+        , flags(getTextureFlags(flags))
+    { }
+    void Submit(bgfx_encoder_t* encoder) override {
+        tex_uniform.Submit(encoder, flags);
+    }
+    uint16_t Program(const RenderState& state, const shader& s) override {
+        return state.needShaderClipRect
+            ? s.image_cr
+            : s.image
+            ;
+    }
+private:
+    AsyncTextureUniform tex_uniform;
     uint32_t flags;
 };
 
@@ -218,11 +255,11 @@ protected:
     Rml::Point offset;
 };
 
-static Rml::TextureHandle CreateDefaultTexture() {
+static bgfx_texture_handle_t CreateDefaultTexture() {
     const bgfx_memory_t* mem = BGFX(alloc)(4);
     *(uint32_t*)mem->data = 0xFFFFFFFF;
     bgfx_texture_handle_t h = BGFX(create_texture_2d)(1, 1, false, 1, BGFX_TEXTURE_FORMAT_RGBA8, BGFX_TEXTURE_SRGB, mem);
-    return h.idx;
+    return h;
 }
 
 Renderer::Renderer(const RmlContext* context)
@@ -231,7 +268,7 @@ Renderer::Renderer(const RmlContext* context)
     , default_tex(CreateDefaultTexture())
     , default_tex_mat(std::make_unique<TextureMaterial>(
         context->shader,
-        uint16_t(default_tex),
+        default_tex,
         Rml::SamplerFlag::Unset
     ))
     , default_font_mat(std::make_unique<TextMaterial>(
@@ -248,7 +285,7 @@ Renderer::Renderer(const RmlContext* context)
 }
 
 Renderer::~Renderer() {
-    ReleaseTexture(default_tex);
+    BGFX(destroy_texture)({default_tex});
 }
 
 void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::MaterialHandle mat) {
@@ -362,18 +399,8 @@ void Renderer::SetClipRect(glm::vec4 r[2]) {
     setShaderScissorRect(mEncoder, r);
 }
 
-void Renderer::ReleaseTexture(Rml::TextureHandle texture) {
-    bgfx_texture_handle_t th = { uint16_t(texture) };
-    if (!BGFX_HANDLE_IS_VALID(th)) {
-        return;
-    }
-    BGFX(destroy_texture)(th);
-}
-
-Rml::MaterialHandle Renderer::CreateTextureMaterial(Rml::TextureHandle texture, Rml::SamplerFlag flags) {
-    bgfx_texture_handle_t th = { uint16_t(texture) };
-    assert(BGFX_HANDLE_IS_VALID(th));
-    auto material = std::make_unique<TextureMaterial>(mcontext->shader, th.idx, flags);
+Rml::MaterialHandle Renderer::CreateTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flags) {
+    auto material = std::make_unique<AsyncTextureMaterial>(mcontext->shader, texture, flags);
     return reinterpret_cast<Rml::MaterialHandle>(material.release());
 }
 
@@ -453,8 +480,7 @@ Rml::FontFaceHandle Renderer::GetFontFaceHandle(const std::string& family, Rml::
     return face.handle;
 }
 
-static bool UpdateTexture(Rml::TextureHandle texture, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *buffer) {
-    bgfx_texture_handle_t th = { uint16_t(texture) };
+static bool UpdateTexture(bgfx_texture_handle_t th, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *buffer) {
     if (!BGFX_HANDLE_IS_VALID(th))
         return false;
     const uint32_t bytes = (uint32_t)w * h;
@@ -471,7 +497,7 @@ static struct font_glyph GetGlyph(const RmlContext* mcontext, const FontFace& fa
         uint8_t *buffer = new uint8_t[bufsize];
         memset(buffer, 0, bufsize);
         if (NULL == F->font_manager_update(F, face.fontid, codepoint, &og, buffer)) {
-            UpdateTexture(mcontext->font_tex.texid, og.u, og.v, og.w, og.h, buffer);
+            UpdateTexture({(uint16_t)mcontext->font_tex.texid}, og.u, og.v, og.w, og.h, buffer);
         }
         else {
             delete[] buffer;

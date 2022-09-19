@@ -21,12 +21,11 @@ public:
     void Begin() override;
     void End() override;
     void RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::MaterialHandle mat) override;
-    void ReleaseTexture(Rml::TextureHandle texture) override;
     void SetTransform(const glm::mat4x4& transform) override;
     void SetClipRect() override;
     void SetClipRect(const glm::u16vec4& r) override;
     void SetClipRect(glm::vec4 r[2]) override;
-    Rml::MaterialHandle CreateTextureMaterial(Rml::TextureHandle texture, Rml::SamplerFlag flag) override;
+    Rml::MaterialHandle CreateTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flag) override;
     Rml::MaterialHandle CreateFontMaterial(const Rml::TextEffects& effects) override;
     Rml::MaterialHandle CreateDefaultMaterial() override;
     void DestroyMaterial(Rml::MaterialHandle mat) override;
@@ -48,10 +47,10 @@ private:
 #endif
 
 private:
-    const RmlContext*   mcontext;
-    bgfx_encoder_t*     mEncoder;
-    RenderState         state;
-    Rml::TextureHandle  default_tex;
+    const RmlContext*     mcontext;
+    bgfx_encoder_t*       mEncoder;
+    RenderState           state;
+    bgfx_texture_handle_t default_tex;
     std::unique_ptr<TextureMaterial> default_tex_mat;
     std::unique_ptr<TextMaterial> default_font_mat;
     std::unique_ptr<Uniform>      clip_uniform;

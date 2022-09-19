@@ -35,6 +35,10 @@ local pendQueue = {}
 local eventQueue = {}
 local readyQueue = {}
 
+local function invalid_texture(id)
+	return textureman.texture_get(id) == DefaultTexture
+end
+
 function m.loadTexture(doc, e, path)
     local realpath = fullpath(path)
     local element = constructor.Element(doc, false, e)
@@ -46,14 +50,13 @@ function m.loadTexture(doc, e, path)
     pendQueue[path] = {element}
     ltask.fork(function ()
         local info = ltask.call(ServiceResource, "texture_create", realpath)
-        local handle = textureman.texture_get(info.id)
-        if handle == DefaultTexture then
+        if invalid_texture(info.id) then
             eventQueue[info.id] = {path, info}
         else
             readyQueue[#readyQueue+1] = {
                 path = path,
                 elements = pendQueue[path],
-                handle = handle,
+                id = info.id,
                 width = info.texinfo.width,
                 height = info.texinfo.height,
             }
@@ -74,7 +77,7 @@ function m.updateTexture()
             readyQueue[#readyQueue+1] = {
                 path = path,
                 elements = pendQueue[path],
-                handle = textureman.texture_get(info.id),
+                id = info.id,
                 width = info.texinfo.width,
                 height = info.texinfo.height,
             }

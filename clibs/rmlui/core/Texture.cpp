@@ -10,11 +10,6 @@ using TextureMap = std::unordered_map<std::string, TextureData>;
 static TextureMap textures;
 
 void Shutdown() {
-	if (GetRenderInterface()) {
-		for (auto const& [_, data] : textures) {
-			GetRenderInterface()->ReleaseTexture(data.handle);
-		}
-	}
 	textures.clear();
 }
 

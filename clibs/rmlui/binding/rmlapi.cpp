@@ -545,7 +545,7 @@ static int
 lRenderSetTexture(lua_State* L) {
 	Rml::TextureData data;
 	if (lua_gettop(L) >= 4) {
-		data.handle = (Rml::TextureHandle)luaL_checkinteger(L, 2);
+		data.handle = (Rml::TextureId)luaL_checkinteger(L, 2);
 		data.dimensions.w = (float)luaL_checkinteger(L, 3);
 		data.dimensions.h = (float)luaL_checkinteger(L, 4);
 	}

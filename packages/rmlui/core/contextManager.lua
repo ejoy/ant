@@ -373,8 +373,8 @@ local function updateTexture()
     end
     for i = 1, #q do
         local v = q[i]
-        if v.handle then
-            rmlui.RenderSetTexture(v.path, v.handle, v.width, v.height)
+        if v.id then
+            rmlui.RenderSetTexture(v.path, v.id, v.width, v.height)
             for _, e in ipairs(v.elements) do
                 if e._handle then
                     rmlui.ElementDirtyImage(e._handle)
