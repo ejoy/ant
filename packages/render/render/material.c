@@ -11,6 +11,7 @@
 #include <luabgfx.h>
 
 #include "ecs/world.h"
+#include "textureman.h"
 
 #include "vla.h"
 
@@ -1089,33 +1090,30 @@ linstance_release(lua_State *L) {
 #define MAX_UNIFORM_NUM 1024
 
 static inline bgfx_texture_handle_t
-check_get_texture_handle(lua_State *L, int texture_index, uint32_t handle){
-	bgfx_texture_handle_t tex;
-	if (texture_index != 0 && (0xffff0000 & handle) == 0){
-		lua_geti(L, texture_index, handle);
-		tex.idx = (uint16_t)lua_tointeger(L, -1);
-		lua_pop(L, 1);
-	} else {
-		tex.idx = handle;
+check_get_texture_handle(lua_State *L, uint32_t handle){
+	if ((0xffff0000 & handle) == 0){
+		return texture_get((int)handle);
 	}
-	return tex;
+	
+	bgfx_texture_handle_t t = {(uint16_t)handle};
+	return t;
 }
 
 static void
-apply_attrib(lua_State *L, struct attrib_arena * arena, struct ecs_world* w, attrib_type *a, int texture_index) {
+apply_attrib(lua_State *L, struct attrib_arena * arena, struct ecs_world* w, attrib_type *a) {
 	switch(a->h.type){
 		case ATTRIB_REF:
-			apply_attrib(L, arena, w, al_attrib(arena, a->ref.id), texture_index);
+			apply_attrib(L, arena, w, al_attrib(arena, a->ref.id));
 			break;
 		case ATTRIB_SAMPLER: {
-			const bgfx_texture_handle_t tex = check_get_texture_handle(L, texture_index, a->u.t.handle);
+			const bgfx_texture_handle_t tex = check_get_texture_handle(L, a->u.t.handle);
 			#ifdef _DEBUG
 			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
 			#endif //_DEBUG
 			BGFX(encoder_set_texture)(w->holder->encoder, a->u.t.stage, a->u.handle, tex, UINT32_MAX);
 		}	break;
 		case ATTRIB_IMAGE: {
-			const bgfx_texture_handle_t tex = check_get_texture_handle(L, texture_index, a->r.handle);
+			const bgfx_texture_handle_t tex = check_get_texture_handle(L, a->r.handle);
 			BGFX(encoder_set_image)(w->holder->encoder, a->r.stage, tex, a->r.mip, a->r.access, BGFX_TEXTURE_FORMAT_COUNT);
 		}	break;
 
@@ -1227,14 +1225,14 @@ linstance_attribs(lua_State *L){
 }
 
 void
-apply_material_instance(lua_State *L, struct material_instance *mi, struct ecs_world *w, int texture_index){
+apply_material_instance(lua_State *L, struct material_instance *mi, struct ecs_world *w){
 	struct attrib_arena* arena = arena_from_reg(L);
 	BGFX(encoder_set_state)(w->holder->encoder, mi->m->state, mi->m->rgba);
 
 	if (mi->patch_attrib == INVALID_ATTRIB) {
 		for (attrib_id id = mi->m->attrib; id != INVALID_ATTRIB; id = al_attrib_next_uniform_id(arena, id, NULL)){
 			attrib_type* a = al_attrib(arena, id);
-			apply_attrib(L, arena, w, a, texture_index);
+			apply_attrib(L, arena, w, a);
 		}
 	} else {
 		for (attrib_id id = mi->m->attrib; id != INVALID_ATTRIB; id = al_attrib_next_uniform_id(arena, id, NULL)){
@@ -1247,7 +1245,7 @@ apply_material_instance(lua_State *L, struct material_instance *mi, struct ecs_w
 				}
 			}
 			attrib_type *a = al_attrib(arena, apply_id);
-			apply_attrib(L, arena, w, a, texture_index);
+			apply_attrib(L, arena, w, a);
 		}
 	}
 }
@@ -1263,14 +1261,8 @@ material_prog(lua_State *L, struct material_instance *mi){
 static int
 linstance_apply_attrib(lua_State *L) {
 	struct material_instance *mi = to_instance(L, 1);
-	int texture_index = 0;
-	if (!lua_isnoneornil(L, 2)){
-		texture_index = 2;
-		luaL_checktype(L, 2, LUA_TTABLE);
-	}
-
 	struct ecs_world* w = getworld(L);
-	apply_material_instance(L, mi, w, texture_index);
+	apply_material_instance(L, mi, w);
 	return 0;
 }
 
