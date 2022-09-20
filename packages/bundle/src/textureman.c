@@ -100,14 +100,19 @@ read_timestamp(int index) {
 	return (uint32_t)(g_frame - t);
 }
 
+static inline int
+is_invalid(int id, int filter) {
+	return (g_texture[id] == filter);
+}
+
 static void
-frame_get(lua_State *L,int index, int range) {
+frame_get(lua_State *L,int index, int range, int filter) {
 	int i;
 	int n = 0;
 	if (range >= 0) {
 		// filter new
 		for (i=0;i<g_texture_id;i++) {
-			if (read_timestamp(i) <= range) {
+			if (is_invalid(i, filter) && read_timestamp(i) <= range) {
 				lua_pushinteger(L, i+1);
 				lua_rawseti(L, index, ++n);
 			}
@@ -116,7 +121,7 @@ frame_get(lua_State *L,int index, int range) {
 		// filter old
 		int old = - range;
 		for (i=0;i<g_texture_id;i++) {
-			if (read_timestamp(i) >= old) {
+			if (!is_invalid(i, filter) && read_timestamp(i) >= old) {
 				lua_pushinteger(L, i+1);
 				lua_rawseti(L, index, ++n);
 			}
@@ -130,13 +135,13 @@ frame_get(lua_State *L,int index, int range) {
 }
 
 static void
-check_result(lua_State *L) {
-	if (lua_isnoneornil(L, 2)) {
-		lua_settop(L, 1);
+check_result(lua_State *L, int index) {
+	if (lua_isnoneornil(L, index)) {
+		lua_settop(L, index-1);
 		lua_newtable(L);
 	} else {
-		luaL_checktype(L, 2, LUA_TTABLE);
-		lua_settop(L, 2);
+		luaL_checktype(L, index, LUA_TTABLE);
+		lua_settop(L, index);
 	}
 }
 
@@ -145,8 +150,10 @@ lframe_new(lua_State *L) {
 	int range = luaL_optinteger(L, 1, 0);
 	if (range < 0)
 		return luaL_error(L, "Invalid range %d", range);
-	check_result(L);
-	frame_get(L, 2, range);
+	int filter = luaL_optinteger(L, 2, 0xffff);
+	filter &= 0xffff;
+	check_result(L, 3);
+	frame_get(L, 3, range, filter);
 	return 1;
 }
 
@@ -155,8 +162,10 @@ lframe_old(lua_State *L) {
 	int range = luaL_checkinteger(L, 1);
 	if (range <= 0)
 		return luaL_error(L, "Invalid range %d", range);
-	check_result(L);
-	frame_get(L, 2, -range);
+	int filter = luaL_optinteger(L, 2, 0xffff);
+	filter &= 0xffff;
+	check_result(L, 3);
+	frame_get(L, 3, -range, filter);
 	return 1;
 }
 
