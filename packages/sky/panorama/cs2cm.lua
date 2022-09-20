@@ -108,7 +108,7 @@ function cs2cm_sys:filter_ibl()
     for e in w:select "filter_ibl render_object ibl:in skybox:in" do
         local se_ibl = e.ibl
         local sb = e.skybox
-        local cm_rbhandle = sb.cm_rbidx and fbmgr.get_rb(sb.cm_rbidx).handle or load_res_tex(e).handle
+        local cm_rbhandle = sb.cm_rbidx and fbmgr.get_rb(sb.cm_rbidx).handle or load_res_tex(e).id
 
         iibl.filter_all{
 			source 		= {value=cm_rbhandle, facesize=sb.facesize},

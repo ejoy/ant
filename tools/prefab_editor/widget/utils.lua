@@ -1,3 +1,4 @@
+local assetmgr 	= import_package "ant.asset"
 local imgui     = require "imgui"
 local m = {}
 
@@ -40,7 +41,7 @@ function m.imguiToolbar(icon, tooltip, active)
     else
         bg_col = {0.2, 0.2, 0.2, 1}
     end
-    local r = imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height,
+    local r = imgui.widget.ImageButton(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height,
                 {frame_padding = 2, bg_col = bg_col, tint_col = {1.0, 1.0, 1.0, 1.0}})
     if tooltip then
         imgui_tooltip(tooltip)
