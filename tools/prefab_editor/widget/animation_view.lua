@@ -5,6 +5,7 @@ local w     = world.w
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
+local assetmgr 	= import_package "ant.asset"
 local keyframe_view = ecs.require "widget.keyframe_view"
 local prefab_mgr = ecs.require "prefab_manager"
 local gizmo     = ecs.require "gizmo.gizmo"
@@ -851,7 +852,7 @@ function m.show()
         imgui.cursor.PopItemWidth()
         imgui.cursor.SameLine()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
-        if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
+        if imgui.widget.ImageButton(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
             if anim_state.is_playing then
                 anim_group_pause(anim_eid, true)
             else

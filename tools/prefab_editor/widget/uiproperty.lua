@@ -309,7 +309,7 @@ function TextureResource:show()
         imgui.table.SetupColumn("ImagePath", imgui.flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0)
         imgui.table.NextColumn()
         if self.runtimedata._data.handle then
-            imgui.widget.Image(self.runtimedata._data.handle, uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
+            imgui.widget.Image(assetmgr.textures[self.runtimedata._data.id], uiconfig.PropertyImageSize, uiconfig.PropertyImageSize)
         end
         imgui.table.NextColumn()
         imgui.cursor.PushItemWidth(-1)

@@ -3,8 +3,7 @@ local world = ecs.world
 local w = world.w
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
-local ivs       = ecs.import.interface "ant.scene|ivisible_state"
-local hierarchy = require "hierarchy_edit"
+local assetmgr 	= import_package "ant.asset"
 local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
@@ -801,7 +800,7 @@ function m.show()
             end
             
             local icon = current_anim.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
-            if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
+            if imgui.widget.ImageButton(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
                 if current_anim.is_playing then
                     anim_pause(true)
                 else
