@@ -71,6 +71,8 @@ system "bloom_system"
     .method "entity_remove"
     .method "bloom"
 
+component "ssao_drawer"
+component "ssao_queue"
 system "ssao_system"
     .implement "postprocess/ssao.lua"
     .method "init"

@@ -41,6 +41,8 @@ alloc_id("build_ibl", 6)		--[16, 21]
 alloc_id "ibl"					--21
 alloc_id "pre_depth"
 alloc_id "scene_depth"
+alloc_id "ssao"
+alloc_id("ssao_blur", 2)
 alloc_id "main_view"
 
 --start postprocess

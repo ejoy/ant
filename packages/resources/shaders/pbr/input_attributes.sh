@@ -25,6 +25,13 @@ SAMPLER2D(s_occlusion,          4);
 SAMPLER2D(s_lightmap,           8);
 #endif //USING_LIGHTMAP
 
+#ifdef USING_SSAO
+SAMPLER2D(s_ssao,               9);
+#   ifdef USING_SSAO_BENT_NORMAL
+SAMPLER2D(s_ssao_bent_normal    10);
+#   endif //USING_SSAO_BENT_NORMAL
+#endif //USING_SSAO
+
 uniform vec4 u_basecolor_factor;
 uniform vec4 u_emissive_factor;
 uniform vec4 u_pbr_factor;
