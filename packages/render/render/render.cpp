@@ -97,12 +97,12 @@ get_material(const ecs::render_object* ro, int qidx){
 }
 
 static void
-draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_id_t viewid, int queueidx, int texture_index, obj_transforms &trans){
+draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_id_t viewid, int queueidx, obj_transforms &trans){
 	if (mesh_submit(w, ro)){
 		auto t = update_transform(w, ro, trans);
 		w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
 		auto mi = get_material(ro, queueidx);
-		apply_material_instance(L, mi, w, texture_index);
+		apply_material_instance(L, mi, w);
 
 		const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
 		const auto prog = material_prog(L, mi);
@@ -165,7 +165,7 @@ collect_render_objs(struct ecs_world *w, cid_t main_id, int index, const matrix_
 }
 
 static void
-collect_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans, queue_stages &queue_stages){
+collect_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, obj_transforms &trans, queue_stages &queue_stages){
 	const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
 	for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
 		const bool visible = entity_sibling(w->ecs, vs_id, i, ra.visible_id) &&
@@ -199,7 +199,7 @@ update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const 
 }
 
 static void
-collect_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, 
+collect_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, 
 	const group_matrices &groups, obj_transforms &trans, queue_stages &queue_stages){
 
 	for (const auto &g : groups){
@@ -216,12 +216,12 @@ collect_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args&
 }
 
 static void
-draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, int texture_index, obj_transforms &trans, queue_stages &queue_stages){
+draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, obj_transforms &trans, queue_stages &queue_stages){
 	for (const auto& s : queue_stages.stages){
 		for (const auto &od : s.objs){
 			if (mesh_submit(w, od.obj)){
 				auto mi = get_material(od.obj, ra.queue_material_index);
-				apply_material_instance(L, mi, w, texture_index);
+				apply_material_instance(L, mi, w);
 				const auto prog = material_prog(L, mi);
 
 				transform t;
@@ -248,9 +248,6 @@ lsubmit(lua_State *L){
 	auto w = getworld(L);
 	ecs_api::context ecs {w->ecs};
 
-	const int texture_index = 1;
-	luaL_checktype(L, texture_index, LUA_TTABLE);
-
 	group_matrices groups;
 	for (auto e : ecs.select<ecs::view_visible, ecs::hitch, ecs::scene>()){
 		const auto &h = e.get<ecs::hitch>();
@@ -269,10 +266,10 @@ lsubmit(lua_State *L){
 		}
 
 		s_queue_stages.clear();
-		collect_objects(L, w, ra, texture_index, trans, s_queue_stages);
-		collect_hitch_objects(L, w, ra, texture_index, groups, trans, s_queue_stages);
+		collect_objects(L, w, ra, trans, s_queue_stages);
+		collect_hitch_objects(L, w, ra, groups, trans, s_queue_stages);
 
-		draw_objs(L, w, ra, texture_index, trans, s_queue_stages);
+		draw_objs(L, w, ra, trans, s_queue_stages);
 	}
 	return 0;
 }
@@ -316,16 +313,14 @@ ldraw(lua_State *L){
 	auto w = getworld(L);
 	const cid_t draw_tagid = (cid_t)luaL_checkinteger(L, 1);
 	const bgfx_view_id_t viewid = (bgfx_view_id_t)luaL_checkinteger(L, 2);
-	const int texture_index = 3;
-	luaL_checktype(L, texture_index, LUA_TTABLE);
 	obj_transforms trans;
-	const int qm_idx = to_queue_material_idx(L, 4);
+	const int qm_idx = to_queue_material_idx(L, 3);
 	for (int i=0; entity_iter(w->ecs, draw_tagid, i); ++i){
 		const auto ro = (ecs::render_object*)entity_sibling(w->ecs, draw_tagid, i, ecs_api::component<ecs::render_object>::id);
 		if (ro == nullptr)
 			return luaL_error(L, "id:%d is not a render_object entity");
 		
-		draw(L, w, ro, viewid, qm_idx, texture_index, trans);
+		draw(L, w, ro, viewid, qm_idx, trans);
 	}
 	return 0;
 }

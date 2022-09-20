@@ -11,6 +11,10 @@
 #include "../../clibs/fileinterface/fileinterface.h"
 #include <Effekseer/Effekseer.DefaultEffectLoader.h>
 
+extern "C" {
+    #include <textureman.h>
+}
+
 class efk_ctx {
 public:
     efk_ctx() = default;
@@ -219,6 +223,11 @@ lefkctx_set_speed(lua_State* L) {
 	return 0;
 }
 
+static bgfx_texture_handle_t
+texture_handle(int id, void *) {
+    return texture_get(id);
+}
+
 static int
 lefk_startup(lua_State *L){
     luaL_checktype(L, 1, LUA_TTABLE);
@@ -240,12 +249,12 @@ lefk_startup(lua_State *L){
     get_field("viewid",     1, LUA_TNUMBER, [&](){efkArgs.viewid = (bgfx_view_id_t)lua_tointeger(L, -1);});
 
     efkArgs.bgfx = bgfx_inf_;
+    efkArgs.texture_handle = texture_handle;
 
     get_field("shader_load",    1, LUA_TLIGHTUSERDATA, [&](){efkArgs.shader_load = (decltype(efkArgs.shader_load))lua_touserdata(L, -1);});
     get_field("texture_load",   1, LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_load = (decltype(efkArgs.texture_load))lua_touserdata(L, -1);});
     get_field("texture_get",    1, LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_get = (decltype(efkArgs.texture_get))lua_touserdata(L, -1);});
     get_field("texture_unload", 1, LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_unload = (decltype(efkArgs.texture_unload))lua_touserdata(L, -1);});
-    get_field("texture_handle", 1, LUA_TLIGHTUSERDATA, [&](){efkArgs.texture_handle = (decltype(efkArgs.texture_handle))lua_touserdata(L, -1);});
     struct file_interface *fi = nullptr;
     get_field("userdata", 1, LUA_TTABLE, [&](){
         get_field("callback", -1, LUA_TUSERDATA, [&](){efkArgs.ud = lua_touserdata(L, -1);});

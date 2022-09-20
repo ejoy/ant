@@ -12,6 +12,7 @@ lm:lua_source "render_core"{
         "../../3rd/glm",
         "../../3rd/luaecs",
         "../../clibs/ecs",
+        "../../packages/bundle/src",
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
