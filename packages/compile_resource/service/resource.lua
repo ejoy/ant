@@ -75,7 +75,7 @@ local DefaultTexture = createTexture {
         numMips = 1,
         bitsPerPixel = 32,
     },
-    value = {0, 0, 0, 255},
+    value = {0, 0, 0, 0},
     flag = "umwwvm+l*p-l",
     sampler = {
         MAG = "LINEAR",
@@ -86,17 +86,33 @@ local DefaultTexture = createTexture {
     name = "<default>"
 }
 
-local texturebyname = {}
-local queue = {}
+local textureByName = {}
+local textureById = {}
+local createQueue = {}
+local destroyQueue = {}
 local token = {}
 
 local function asyncCreateTexture(name)
-    if queue[name] then
+    if createQueue[name] then
         return
     end
-    queue[name] = true
-    queue[#queue+1] = name
-    if #queue == 1 then
+    if destroyQueue[name] then
+        destroyQueue[name] = nil
+    end
+    createQueue[name] = true
+    createQueue[#createQueue+1] = name
+    if #createQueue == 1 then
+        ltask.wakeup(token)
+    end
+end
+
+local function asyncDestroyTexture(name)
+    if createQueue[name] then
+        return
+    end
+    destroyQueue[name] = true
+    destroyQueue[#destroyQueue+1] = name
+    if #destroyQueue == 1 then
         ltask.wakeup(token)
     end
 end
@@ -108,11 +124,12 @@ function S.texture_default()
 end
 
 function S.texture_create(name)
-    local c = texturebyname[name]
+    local c = textureByName[name]
     if not c then
         local id = textureman.texture_create(DefaultTexture)
         local res = loadTexture(name)
         c = {
+            name = name,
             input = res,
             output = {
                 id = id,
@@ -120,29 +137,41 @@ function S.texture_create(name)
                 sampler = res.sampler,
             },
         }
-        texturebyname[name] = c
+        textureByName[name] = c
+        textureById[id] = c
         asyncCreateTexture(name)
     end
     return c.output
 end
 
+
 ltask.fork(function ()
     while true do
         ltask.wait(token)
+        for i = 1, #destroyQueue do
+            local name = destroyQueue[i]
+            if destroyQueue[name] then
+                destroyQueue[name] = nil
+                local c = textureByName[name]
+                bgfx.destroy(c.handle)
+                c.handle = nil
+                textureman.texture_set(c.output.id, DefaultTexture)
+            end
+        end
         while true do
-            local name = table.remove(queue, 1)
+            local name = table.remove(createQueue, 1)
             if not name then
                 break
             end
-            queue[name] = nil
-            local c = texturebyname[name]
+            createQueue[name] = nil
+            local c = textureByName[name]
             if not c.input then
                 c.input = loadTexture(name)
             end
             local handle = createTexture(c.input)
+            c.handle = handle
             c.input = nil
             textureman.texture_set(c.output.id, handle)
-            textureman.event_push(c.output.id)
             ltask.sleep(0)
         end
     end
@@ -152,7 +181,36 @@ local quit
 
 ltask.fork(function ()
     bgfx.encoder_create "texture"
+    local FrameNew = 0
+    local FrameCur = 1
+    local results = {}
+    local OneMinute <const> = 30 * 60
     while not quit do
+        if #createQueue == 0 then
+            textureman.frame_new(FrameCur - FrameNew + 1, DefaultTexture, results)
+            for i = 1, #results do
+                local id = results[i]
+                results[i] = nil
+                local c = textureById[id]
+                if c then
+                    asyncCreateTexture(c.name)
+                end
+            end
+            FrameNew = FrameCur - 1
+        end
+        if FrameCur % OneMinute == 0 then
+            textureman.frame_old(OneMinute, DefaultTexture, results)
+            for i = 1, #results do
+                local id = results[i]
+                results[i] = nil
+                local c = textureById[id]
+                if c then
+                    asyncDestroyTexture(c.name)
+                end
+            end
+        end
+        FrameCur = FrameCur + 1
+        textureman.frame_tick()
         bgfx.encoder_frame()
     end
     bgfx.encoder_destroy()

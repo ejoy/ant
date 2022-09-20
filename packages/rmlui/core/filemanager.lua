@@ -1,11 +1,9 @@
 local fs = require "filesystem"
 local ltask = require "ltask"
-local textureman = require "textureman.client"
 local constructor = require "core.DOM.constructor"
 local bundle = import_package "ant.bundle"
 
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
-local DefaultTexture = ltask.call(ServiceResource, "texture_default")
 
 local m = {}
 
@@ -32,12 +30,7 @@ function m.realpath(source_path)
 end
 
 local pendQueue = {}
-local eventQueue = {}
 local readyQueue = {}
-
-local function invalid_texture(id)
-	return textureman.texture_get(id) == DefaultTexture
-end
 
 function m.loadTexture(doc, e, path)
     local realpath = fullpath(path)
@@ -50,41 +43,18 @@ function m.loadTexture(doc, e, path)
     pendQueue[path] = {element}
     ltask.fork(function ()
         local info = ltask.call(ServiceResource, "texture_create", realpath)
-        if invalid_texture(info.id) then
-            eventQueue[info.id] = {path, info}
-        else
-            readyQueue[#readyQueue+1] = {
-                path = path,
-                elements = pendQueue[path],
-                id = info.id,
-                width = info.texinfo.width,
-                height = info.texinfo.height,
-            }
-            pendQueue[path] = nil
-        end
+        readyQueue[#readyQueue+1] = {
+            path = path,
+            elements = pendQueue[path],
+            id = info.id,
+            width = info.texinfo.width,
+            height = info.texinfo.height,
+        }
+        pendQueue[path] = nil
     end)
 end
 
 function m.updateTexture()
-    while true do
-        local id = textureman.event_pop()
-        if not id then
-            break
-        end
-        local e = eventQueue[id]
-        if e then
-            local path, info = e[1], e[2]
-            readyQueue[#readyQueue+1] = {
-                path = path,
-                elements = pendQueue[path],
-                id = info.id,
-                width = info.texinfo.width,
-                height = info.texinfo.height,
-            }
-            pendQueue[path] = nil
-            eventQueue[id] = nil
-        end
-    end
     if #readyQueue == 0 then
         return
     end
