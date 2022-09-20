@@ -20,8 +20,13 @@ local groupmapidx=1
 local function prereplace(str)
     if str then
         if string.find(str,"%b{}")==1 then
-            str=string.gsub(str,"/(%w+)",rtable)
-            return str
+            if string.byte(str,string.len(str))=="}" then
+                str=string.gsub(str,"/(%w+)",rtable)
+                return str
+            else
+                str=string.gsub(str,"/(%w+)",rtable)
+                return "{"..default_color.." "..str.."}"
+            end
         else
             local start=string.find(str,"/(%w+)")
             if start==nil then
@@ -60,7 +65,7 @@ local function preorder(str)
         error("group need state like /key1:value1 /key2:value2 ...")
    end
    local idx=1
-   local mstart,mend,chs,subtext=string.find(textinfo,"([^{}]+)(%b{})",idx)
+   local mstart,mend,chs,subtext=string.find(textinfo,"([^{}]*)(%b{})",idx)
    while mstart do
         for ch in string.gmatch(chs,".")do
             ctext=ctext..ch
