@@ -3,23 +3,16 @@ local world = ecs.world
 local w = world.w
 
 local setting	= import_package "ant.settings".setting
-local hwi 		= import_package "ant.hwi"
+local mathpkg	= import_package "ant.math"
+local mu		= mathpkg.util
 local math3d	= require "math3d"
-
-local viewidmgr = require "viewid_mgr"
 
 local bgfx		= require "bgfx"
 
 local fbmgr		= require "framebuffer_mgr"
 local sampler	= require "sampler"
-local shadowcommon=require "shadow.common"
 
-local sm_bias_matrix = shadowcommon.sm_bias_matrix
-
-local homogeneous_depth_scale_offset = math3d.ref(math3d.vector(0.5, 0.5, 0.0, 0.0))
-local normal_depth_scale_offset = math3d.ref(math3d.vector(1.0, 0.0, 0.0, 0.0))
-
-local scale_offset = hwi.get_caps().homogeneousDepth and homogeneous_depth_scale_offset or normal_depth_scale_offset
+local sm_bias_matrix = mu.calc_texture_matrix()
 
 local shadowcfg = setting:data().graphic.shadow
 
@@ -99,10 +92,6 @@ local ishadow = ecs.interface "ishadow"
 
 function ishadow.setting()
 	return csm_setting
-end
-
-function ishadow.shadow_depth_scale_offset()
-	return scale_offset
 end
 
 local crop_matrices = {}

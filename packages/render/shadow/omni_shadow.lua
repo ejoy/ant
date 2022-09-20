@@ -21,8 +21,11 @@ local INV_Z<const> = true
 
 local fbmgr         = require "framebuffer_mgr"
 local viewidmgr     = require "viewid_mgr"
-local sampler   = require "sampler"
-local shadowcommon  = require "shadow.common"
+local sampler       = require "sampler"
+
+local mathpkg       = import_package "ant.math"
+local mu            = mathpkg.util
+
 
 local math3d        = require "math3d"
 
@@ -86,7 +89,7 @@ local function crop_matrix(s, offset)
         0.0, s[2], 0.0, 0.0,
         0.0, 0.0, 1.0, 0.0,
         offset[1], offset[2], 0.0, 0.0
-    ), shadowcommon.sm_bias_matrix)
+    ), mu.calc_texture_matrix())
 end
 
 local def_sm_size<const> = 512

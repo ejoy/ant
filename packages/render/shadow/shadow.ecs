@@ -23,7 +23,6 @@ system "shadow_primitive_system"
 
 interface "ishadow"
     .implement "shadow/shadow.lua"
-    .method "shadow_depth_scale_offset"
     .method "crop_matrix"
 
     .method "setting"
