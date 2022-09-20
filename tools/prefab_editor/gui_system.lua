@@ -493,6 +493,8 @@ function m:handle_event()
             end
             prefab_mgr:remove_entity(target)
             update_highlight_aabb()
+        elseif what == "clone" then
+            prefab_mgr:clone(target)
         elseif what == "movetop" then
             hierarchy:move_top(target)
         elseif what == "moveup" then

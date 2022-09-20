@@ -17,8 +17,8 @@ local source_e = nil
 local target_e = nil
 local function is_editable(eid)
     --if not world[eid].scene_entity or
-    if not hierarchy:is_visible(eid) or
-        hierarchy:is_locked(eid) then
+    -- if not hierarchy:is_visible(eid) or
+    if hierarchy:is_locked(eid) then
         return false
     end
     return true
@@ -34,6 +34,9 @@ local function node_context_menu(eid)
     if gizmo.target_eid ~= eid then return end
     if imgui.windows.BeginPopupContextItem(tostring(eid)) then
         local current_lock = hierarchy:is_locked(eid)
+        if imgui.widget.Selectable("Clone", false) then
+            world:pub { "HierarchyEvent", "clone", eid }
+        end
         if imgui.widget.Selectable("MoveTop", false) then
             world:pub { "HierarchyEvent", "movetop", eid }
         end
