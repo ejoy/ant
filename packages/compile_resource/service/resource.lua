@@ -206,6 +206,7 @@ ltask.fork(function ()
                 local c = textureById[id]
                 if c then
                     asyncDestroyTexture(c.name)
+                    print("Destroy Texture: " .. c.name)
                 end
             end
         end
