@@ -190,7 +190,6 @@ ltask.fork(function ()
             textureman.frame_new(FrameCur - FrameNew + 1, DefaultTexture, results)
             for i = 1, #results do
                 local id = results[i]
-                results[i] = nil
                 local c = textureById[id]
                 if c then
                     asyncCreateTexture(c.name)
@@ -202,7 +201,6 @@ ltask.fork(function ()
             textureman.frame_old(OneMinute, DefaultTexture, results)
             for i = 1, #results do
                 local id = results[i]
-                results[i] = nil
                 local c = textureById[id]
                 if c then
                     asyncDestroyTexture(c.name)
