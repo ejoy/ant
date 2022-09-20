@@ -142,60 +142,10 @@ end
 
 
 local function update_properties()
---[[
-uniform vec4 u_ssao_param;
-#define u_ssao_visiblity_power          u_ssao_param.x
-#define u_ssao_angle_inc_sin            u_ssao_param.y
-#define u_ssao_angle_inc_cos            u_ssao_param.z
-#define u_ssao_projection_scale_radius  u_ssao_param.w
-
-uniform vec4 u_ssao_param2;
-#define u_ssao_sample_count             u_ssao_param2.x
-#define u_ssao_inv_sample_count         u_ssao_param2.y
-#define u_ssao_intensity                u_ssao_param2.z
-#define u_ssao_bias                     u_ssao_param2.w
-
-uniform vec4 u_ssao_param3;
-#define u_ssao_inv_radius_squared               u_ssao_param3.x
-#define u_ssao_min_horizon_angle_sine_squared   u_ssao_param3.y
-#define u_ssao_peak2                            u_ssao_param3.z
-#define u_ssao_spiral_turns                     u_ssao_param4.w
-
-uniform vec4 u_ssao_param4;
-#define u_ssao_max_level                        u_ssao_param4.x
-
-
-// ssct
-uniform vec4 u_ssct_param;
-#define u_ssct_lightdirVS                       u_ssct_param.xyz
-#define u_ssct_intensity                        u_ssct_param.w
-
-uniform vec4 u_ssct_param2;
-#define u_ssct_cone_angle_tangeant              u_ssct_param2.x
-#define u_ssct_projection_scale                 u_ssct_param2.y
-#define u_ssct_contact_distance_max_inv         u_ssct_param2.z
-#define u_ssct_shadow_distance                  u_ssct_param2.w
-
-uniform vec4 u_ssct_param3;
-#define u_ssct_sample_count                     u_ssct_param3.x
-#define u_ssct_ray_count                        u_ssct_param3.y
-#define u_ssct_depth_bias                       u_ssct_param3.z
-#define u_ssct_slope_scaled_depth_bias          u_ssct_param3.w
-
-uniform mat4 u_ssct_screen_from_view_mat;
-]]
-
--- const mat4 screenFromClipMatrix{ mat4::row_major_init{
---     0.5 * desc.width, 0.0, 0.0, 0.5 * desc.width,
---     0.0, 0.5 * desc.height, 0.0, 0.5 * desc.height,
---     0.0, 0.0, 0.5, 0.5,
---     0.0, 0.0, 0.0, 1.0
--- }};
     local d<close> = w:first("ssao_drawer filter_material:in")
-    local dm = d.filter_material.main_queue
 
-    local pp = w:first("postprocess postprocess_input:in")
-    dm.s_scene_depth = pp.postprocess_input.scene_depth_handle
+    local sdq = w:first("scene_depth_queue render_target:in")
+    imaterial.set_property(d, "s_scene_depth", fbmgr.get_depth(sdq.render_target.fb_idx).handle)
 
     local mq = w:first("main_queue render_target:in camera_ref:in")
     local vr = mq.render_target.view_rect
