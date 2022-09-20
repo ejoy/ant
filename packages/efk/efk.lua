@@ -82,7 +82,7 @@ function efk_sys:init()
         shader_load     = shader_load,
         texture_load    = texture_load,
         texture_unload  = texture_unload,
-        texture_map     = assetmgr.textures,
+        texture_map     = {},
         error           = error_handle,
     }
 
@@ -93,7 +93,6 @@ function efk_sys:init()
         texture_load    = efk_cb.texture_load,
         texture_get     = efk_cb.texture_get,
         texture_unload  = efk_cb.texture_unload,
-        texture_handle  = efk_cb.texture_handle,
         userdata        = {
             callback = efk_cb_handle,
             filefactory = filefactory,

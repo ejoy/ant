@@ -4,7 +4,6 @@ local w = world.w
 
 local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
-local texmapper	= import_package "ant.asset".textures
 local irender	= ecs.import.interface "ant.render|irender"
 local ivs		= ecs.import.interface "ant.scene|ivisible_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
@@ -152,7 +151,7 @@ function render_sys:render_submit()
 		}
 	end
 
-	rendercore.submit(texmapper)
+	rendercore.submit()
 end
 
 function render_sys:entity_remove()

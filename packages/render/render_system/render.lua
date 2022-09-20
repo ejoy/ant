@@ -7,15 +7,12 @@ local setting		= import_package "ant.settings".setting
 local settingdata 	= setting:data()
 local graphic_setting=settingdata.graphic
 
-local assetmgr		= import_package "ant.asset"
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local declmgr		= require "vertexdecl_mgr"
 local sampler		= require "sampler"
-
-local math3d		= require "math3d"
 local rendercore	= ecs.clibs "render.core"
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
@@ -68,14 +65,14 @@ end
 function irender.draw(viewid, drawer_tag, queuename)
 	local tagid = w:component_id(drawer_tag)
 
-	rendercore.draw(tagid, viewid, assetmgr.textures, queuename)
+	rendercore.draw(tagid, viewid, queuename)
 end
 
 --'num' and 'stride' unit is matrix
 function irender.multi_draw(vid, ri, mat, tid, num, stride)
 	bgfx.set_transform_cached(tid, num)
 	local m = mat or ri
-	m.material(assetmgr.textures)
+	m.material()
 	ri.mesh:submit()
 	local dnum = num // stride
 	bgfx.multi_submit(vid, m.fx.prog, tid, dnum, stride)

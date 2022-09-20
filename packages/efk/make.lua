@@ -18,6 +18,7 @@ lm:lua_source "efk" {
         "../../3rd/bgfx/include",
         "../../3rd/bx/include",
         "../../clibs/lua",
+        "../../packages/bundle/src",
     },
     sources = {
         "lefk.cpp",
