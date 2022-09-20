@@ -25,21 +25,19 @@ uniform vec4 u_ssao_param4;
 // ssct
 uniform vec4 u_ssct_param;
 #define u_ssct_lightdirVS                       u_ssct_param.xyz
-#define u_ssct_shadow_distance                  u_ssct_param.w
+#define u_ssct_intensity                        u_ssct_param.w
 
 uniform vec4 u_ssct_param2;
 #define u_ssct_cone_angle_tangeant              u_ssct_param2.x
-#define u_ssct_contact_distance_max_inv         u_ssct_param2.y
-#define u_ssct_projection_scale                 u_ssct_param2.zw
+#define u_ssct_projection_scale                 u_ssct_param2.y
+#define u_ssct_contact_distance_max_inv         u_ssct_param2.z
+#define u_ssct_shadow_distance                  u_ssct_param2.w
 
 uniform vec4 u_ssct_param3;
-#define u_ssct_intensity                        u_ssct_param3.x
-#define u_ssct_sample_count                     u_ssct_param3.y
+#define u_ssct_sample_count                     u_ssct_param3.x
+#define u_ssct_ray_count                        u_ssct_param3.y
 #define u_ssct_depth_bias                       u_ssct_param3.z
 #define u_ssct_slope_scaled_depth_bias          u_ssct_param3.w
-
-uniform vec4 u_ssct_param4;
-#define u_ssct_ray_count                        u_ssct_param4.x
 
 uniform mat4 u_ssct_screen_from_view_mat;
 
