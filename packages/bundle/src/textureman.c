@@ -128,7 +128,7 @@ frame_get(lua_State *L,int index, int range, int filter) {
 		}
 	}
 	int on = lua_rawlen(L, index);
-	for (i=n;i<=on;i++) {
+	for (i=n+1;i<=on;i++) {
 		lua_pushnil(L);
 		lua_rawseti(L, index, i);
 	}
