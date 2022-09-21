@@ -31,7 +31,6 @@ enum queue_index_type : uint8_t{
 	QIT_count,
 };
 
-#define MAX_MATERIAL_INSTANCE_SIZE 8
 static_assert(offsetof(ecs::render_object, mat_lightmap) - offsetof(ecs::render_object, mat_mq) == sizeof(int64_t) * (QIT_count-1), "Invalid material data size");
 
 struct transform{
@@ -164,12 +163,36 @@ collect_render_objs(struct ecs_world *w, cid_t main_id, int index, const matrix_
 	}
 }
 
+static cid_t s_cullids[queue_index_type::QIT_count] = {
+	(cid_t)ecs_api::component<ant_ecs::main_queue_cull>::id,
+	(cid_t)ecs_api::component<ant_ecs::pre_depth_queue_cull>::id,
+	(cid_t)ecs_api::component<ant_ecs::scene_depth_queue_cull>::id,
+	(cid_t)ecs_api::component<ant_ecs::pickup_queue_cull>::id,
+	(cid_t)ecs_api::component<ant_ecs::csm1_queue_cull>::id,
+	(cid_t)ecs_api::component<ant_ecs::csm1_queue_cull>::id,
+	(cid_t)ecs_api::component<ant_ecs::csm1_queue_cull>::id,
+	(cid_t)ecs_api::component<ant_ecs::csm1_queue_cull>::id,
+	(cid_t)ecs_api::component<ant_ecs::bake_lightmap_queue_cull>::id,
+};
+
+static cid_t s_queuevisibleids[queue_index_type::QIT_count] = {
+	(cid_t)ecs_api::component<ant_ecs::main_queue_visible>::id,
+	(cid_t)ecs_api::component<ant_ecs::pre_depth_queue_visible>::id,
+	(cid_t)ecs_api::component<ant_ecs::scene_depth_queue_visible>::id,
+	(cid_t)ecs_api::component<ant_ecs::pickup_queue_visible>::id,
+	(cid_t)ecs_api::component<ant_ecs::csm1_queue_visible>::id,
+	(cid_t)ecs_api::component<ant_ecs::csm2_queue_visible>::id,
+	(cid_t)ecs_api::component<ant_ecs::csm3_queue_visible>::id,
+	(cid_t)ecs_api::component<ant_ecs::csm4_queue_visible>::id,
+	(cid_t)ecs_api::component<ant_ecs::bake_lightmap_queue_visible>::id,
+};
+
 static void
 collect_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, obj_transforms &trans, queue_stages &queue_stages){
 	const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
 	for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
-		const bool visible = entity_sibling(w->ecs, vs_id, i, ra.visible_id) &&
-			!entity_sibling(w->ecs, vs_id, i, ra.cull_id);
+		const bool visible = entity_sibling(w->ecs, vs_id, i, s_queuevisibleids[ra.queue_index]) &&
+			!entity_sibling(w->ecs, vs_id, i, s_cullids[ra.queue_index]);
 		if (visible){
 			collect_render_objs(w, vs_id, i, nullptr, queue_stages);
 		}
@@ -207,7 +230,7 @@ collect_hitch_objects(lua_State *L, struct ecs_world *w, const ecs::render_args&
 		int gids[] = {(int)g.first};
 		entity_group_enable(w->ecs, ht_id, 1, gids);
 		for (int i=0; entity_iter(w->ecs, ht_id, i); ++i){
-			const bool visible = nullptr != entity_sibling(w->ecs, ht_id, i, ra.visible_id);
+			const bool visible = nullptr != entity_sibling(w->ecs, ht_id, i, s_queuevisibleids[ra.queue_index]);
 			if (visible){
 				collect_render_objs(w, ht_id, i, &g.second, queue_stages);
 			}
@@ -220,7 +243,7 @@ draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, obj_tra
 	for (const auto& s : queue_stages.stages){
 		for (const auto &od : s.objs){
 			if (mesh_submit(w, od.obj)){
-				auto mi = get_material(od.obj, ra.queue_material_index);
+				auto mi = get_material(od.obj, ra.queue_index);
 				apply_material_instance(L, mi, w);
 				const auto prog = material_prog(L, mi);
 
@@ -261,8 +284,8 @@ lsubmit(lua_State *L){
 
 	for (auto a : ecs.select<ecs::render_args>()){
 		const auto& ra = a.get<ecs::render_args>();
-		if (ra.queue_material_index >= MAX_MATERIAL_INSTANCE_SIZE){
-			luaL_error(L, "Invalid queue_material_index in render_args:%d", ra.queue_material_index);
+		if (ra.queue_index > queue_index_type::QIT_count){
+			luaL_error(L, "Invalid queue_index in render_args:%d", ra.queue_index);
 		}
 
 		s_queue_stages.clear();
@@ -332,7 +355,7 @@ lnull(lua_State *L){
 }
 
 static int
-lqueue_material_index(lua_State *L){
+lqueue_index(lua_State *L){
 	auto s = luaL_checkstring(L, 1);
 	auto idx = which_queue_material_index(s);
 
@@ -349,7 +372,7 @@ luaopen_render(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "submit", lsubmit},
 		{ "draw",	ldraw},
-		{ "queue_material_index", lqueue_material_index},
+		{ "queue_index", lqueue_index},
 		{ "null",	lnull},
 		{ nullptr, nullptr },
 	};

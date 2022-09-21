@@ -36,10 +36,8 @@ policy "render_object"
 
 component "render_args"
     .type "c"
-    .field "visible_id:dword"
-    .field "cull_id:dword"
     .field "viewid:word"
-    .field "queue_material_index:byte"
+    .field "queue_index:byte"
     .implement "render_system/render_object.lua"
     .method "init"
 

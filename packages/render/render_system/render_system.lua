@@ -144,10 +144,8 @@ function render_sys:render_submit()
 		end
 
 		qe.render_args = {
-			visible_id			= w:component_id(qe.queue_name .. "_visible"),
-			cull_id				= w:component_id(qe.queue_name .. "_cull"),
-			viewid				= viewid,
-			queue_material_index= rendercore.queue_material_index(qe.queue_name) or 0,
+			viewid		= viewid,
+			queue_index	= rendercore.queue_index(qe.queue_name) or 0,
 		}
 	end
 
