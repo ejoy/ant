@@ -30,8 +30,11 @@ local function node_context_menu(eid)
     if gizmo.target_eid ~= eid then return end
     if imgui.windows.BeginPopupContextItem(tostring(eid)) then
         local current_lock = hierarchy:is_locked(eid)
-        if imgui.widget.Selectable("Clone", false) then
-            world:pub { "HierarchyEvent", "clone", eid }
+        local tpl = hierarchy:get_template(eid)
+        if not tpl.filename then
+            if imgui.widget.Selectable("Clone", false) then
+                world:pub { "HierarchyEvent", "clone", eid }
+            end
         end
         if imgui.widget.Selectable("MoveTop", false) then
             world:pub { "HierarchyEvent", "movetop", eid }

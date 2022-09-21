@@ -9,7 +9,6 @@ local uiconfig  = require "widget.config"
 
 local imgui = require "imgui"
 local irq   = ecs.import.interface "ant.render|irenderqueue"
-
 local function show_main_view()
     local imgui_vp = imgui.GetMainViewport()
     local wp, ws = imgui_vp.WorkPos, imgui_vp.WorkSize
@@ -47,6 +46,11 @@ local function show_main_view()
             vp.x, vp.y, vp.w, vp.h = x, y, ww, hh
             world:pub{"world_viewport_changed", vp}
             world:pub{"resize", ww, hh}
+            -- TODO: remove this
+            local mq = w:first("main_queue camera_ref:in render_target:in")
+            local camera <close> = w:entity(mq.camera_ref)
+            w:extend(camera, "scene_needchange:out")
+            camera.scene_needchange = true
         end
     end
     imgui.windows.PopStyleVar(3)
