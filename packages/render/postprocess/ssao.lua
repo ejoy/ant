@@ -11,7 +11,7 @@ local sampler   = require "sampler"
 
 local math3d    = require "math3d"
 
-local util      = ecs.require "util"
+local util      = ecs.require "postprocess.util"
 
 local irender   = ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
@@ -39,11 +39,7 @@ local function create_framebuffer(ww, hh)
         RT="RT_ON",
     }
 
-    local function create_rb()
-        fbmgr.create_rb{
-            w=ww, h=hh, layers=1, format="RGBA8", flags=rb_flags
-        }
-    end
+    local function create_rb() return fbmgr.create_rb{w=ww, h=hh, layers=1, format="RGBA8", flags=rb_flags} end
 
     local rb1 = create_rb()
 
@@ -137,12 +133,12 @@ local function update_config(camera, lightdir, depthwidth, depthheight, depthdep
     local ssct = ssao_configs.ssct
     ssct.tan_cone_angle            = math.tan(ssao_configs.ssct.light_cone*0.5)
     ssct.inv_contact_distance_max  = 1.0 / ssct.contact_distance_max
-    ssct.lightdir.v                = math3d.mul(camera.viewmat, lightdir)
+    ssct.lightdir.v                = math3d.transform(camera.viewmat, lightdir, 0)
 end
 
 
 local function update_properties()
-    local d<close> = w:first("ssao_drawer filter_material:in")
+    local d = w:first("ssao_drawer filter_material:in")
 
     local sdq = w:first("scene_depth_queue render_target:in")
     imaterial.set_property(d, "s_scene_depth", fbmgr.get_depth(sdq.render_target.fb_idx).handle)
@@ -155,7 +151,7 @@ local function update_properties()
     local projmat = camera.projmat
 
     local directional_light = w:first("directional_light scene:in")
-    local lightdir = iom.get_direciont(directional_light)
+    local lightdir = iom.get_direction(directional_light)
     update_config(camera, lightdir, depthwidth, depthheight, depthdepth)
 
     imaterial.set_property(d, "u_ssao_param", math3d.vector(
@@ -172,7 +168,7 @@ local function update_properties()
     imaterial.set_property(d, "u_ssao_param3", math3d.vector(
         ssao_configs.inv_radius_squared,
         ssao_configs.min_horizon_angle_sine_squared,
-        ssao_configs.peek2,
+        ssao_configs.peak2,
         ssao_configs.spiral_turns
     ))
 
@@ -182,7 +178,7 @@ local function update_properties()
 
     --screen space cone trace
     local ssct = ssao_configs.ssct
-    local lx, ly, lz = math3d.index(ssao_configs.lightdir, 1, 2, 3)
+    local lx, ly, lz = math3d.index(ssct.lightdir, 1, 2, 3)
     imaterial.set_property(d, "u_ssct_param", math3d.vector(
         lx, ly, lz,
         ssct.intensity
@@ -199,7 +195,7 @@ local function update_properties()
         ssct.sample_count,
         ssct.ray_count,
         ssct.depth_bias,
-        ssct.depth_slopeBias
+        ssct.depth_slope_bias
     ))
     --screen matrix
     do
