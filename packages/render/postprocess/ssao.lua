@@ -60,6 +60,9 @@ function ssao_sys:init_world()
     local fbidx = create_framebuffer(vr.w, vr.h)
     util.create_queue(ssao_viewid, vr, fbidx, "ssao_queue", "ssao_queue")
 
+    local sqd = w:first("scene_depth_queue visible?out")
+    sqd.visible = true
+    w:submit(sqd)
     --TODO: blur
 end
 
