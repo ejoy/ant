@@ -280,7 +280,7 @@ local function showHeaderWidget(logbytag)
     end
     imgui.cursor.Separator()
 end
-
+local assetmgr  = import_package "ant.asset"
 function m.showLog(name, current_log)
     local total_virtual_count = #current_log
     if total_virtual_count <= 0 then return end
@@ -318,12 +318,12 @@ function m.showLog(name, current_log)
         local color
         local item = current_log[i]
         if item.level == LEVEL_INFO then
-            imgui.widget.Image(icons.ICON_INFO.handle, icons.ICON_INFO.texinfo.width, icons.ICON_INFO.texinfo.height)
+            imgui.widget.Image(assetmgr.textures[icons.ICON_INFO.id], icons.ICON_INFO.texinfo.width, icons.ICON_INFO.texinfo.height)
         elseif item.level == LEVEL_WARN then
-            imgui.widget.Image(icons.ICON_WARN.handle, icons.ICON_WARN.texinfo.width, icons.ICON_WARN.texinfo.height)
+            imgui.widget.Image(assetmgr.textures[icons.ICON_WARN.id], icons.ICON_WARN.texinfo.width, icons.ICON_WARN.texinfo.height)
             color = level_color.warn
         elseif item.level == LEVEL_ERROR then
-            imgui.widget.Image(icons.ICON_ERROR.handle, icons.ICON_ERROR.texinfo.width, icons.ICON_ERROR.texinfo.height)
+            imgui.widget.Image(assetmgr.textures[icons.ICON_ERROR.id], icons.ICON_ERROR.texinfo.width, icons.ICON_ERROR.texinfo.height)
             color = level_color.error
         end
         imgui.cursor.SameLine()

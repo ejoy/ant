@@ -183,6 +183,28 @@ local function set_parent(eid, pid)
     e.scene.parent = pid
     e.scene_needchange = true
 end
+
+function m:clone(eid)
+    local srctpl = hierarchy:get_template(eid)
+    if srctpl.filename then
+        return
+    end
+    local dsttpl = utils.deep_copy(srctpl.template)
+    local tmp = utils.deep_copy(dsttpl)
+    local e <close> = w:entity(eid, "name:in scene:in")
+    local pid = e.scene.parent > 0 and e.scene.parent or self.root
+    local name = e.name .. "copy"
+    tmp.data.name = name
+    tmp.data.scene.parent = pid
+    if e.scene.slot then
+        tmp.data.on_ready = function (obj) hierarchy:update_slot_list(world) end
+    end
+
+    local new_entity = ecs.create_entity(tmp)
+    dsttpl.data.name = name
+    self:add_entity(new_entity, pid, dsttpl)
+end
+
 function m:create(what, config)
     if not self.root then
         self:reset_prefab()

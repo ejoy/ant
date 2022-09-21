@@ -177,7 +177,7 @@ function m.show()
             local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((selected_folder == v) and imgui.flags.TreeNode{"Selected"} or 0)
             local skip = false
             if not v.parent then
-                imgui.widget.Image(icons.ICON_ROOM_INSTANCE.handle, icons.ICON_ROOM_INSTANCE.texinfo.width, icons.ICON_ROOM_INSTANCE.texinfo.height)
+                imgui.widget.Image(assetmgr.textures[icons.ICON_ROOM_INSTANCE.id], icons.ICON_ROOM_INSTANCE.texinfo.width, icons.ICON_ROOM_INSTANCE.texinfo.height)
                 imgui.cursor.SameLine()
             end
             if (#v[2].dirs == 0) then
@@ -244,7 +244,7 @@ function m.show()
             if folder then
                 rename_file(selected_file)
                 for _, path in pairs(folder.dirs) do
-                    imgui.widget.Image(icons.ICON_FOLD.handle, icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
+                    imgui.widget.Image(assetmgr.textures[icons.ICON_FOLD.id], icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
                     imgui.cursor.SameLine()
                     if imgui.widget.Selectable(tostring(path[1]:filename()), selected_file == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path[1]
@@ -268,7 +268,7 @@ function m.show()
                 end
                 for _, path in pairs(folder.files) do
                     local icon = icons.get_file_icon(path)
-                    imgui.widget.Image(icon.handle, icon.texinfo.width, icon.texinfo.height)
+                    imgui.widget.Image(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height)
                     imgui.cursor.SameLine()
                     if imgui.widget.Selectable(tostring(path:filename()), selected_file == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path
@@ -354,7 +354,7 @@ function m.show()
                     if height > 180 then
                         height = 180
                     end
-                    imgui.widget.Image(preview.handle, width, height)
+                    imgui.widget.Image(assetmgr.textures[preview.id], width, height)
                     imgui.cursor.SameLine()
                     local texture_info = texture_detail[selected_file] 
                     if texture_info then

@@ -15,13 +15,9 @@ local m = {}
 
 local source_e = nil
 local target_e = nil
+
 local function is_editable(eid)
-    --if not world[eid].scene_entity or
-    if not hierarchy:is_visible(eid) or
-        hierarchy:is_locked(eid) then
-        return false
-    end
-    return true
+    return not hierarchy:is_locked(eid)
 end
 
 local function is_delete_disable()
@@ -34,6 +30,9 @@ local function node_context_menu(eid)
     if gizmo.target_eid ~= eid then return end
     if imgui.windows.BeginPopupContextItem(tostring(eid)) then
         local current_lock = hierarchy:is_locked(eid)
+        if imgui.widget.Selectable("Clone", false) then
+            world:pub { "HierarchyEvent", "clone", eid }
+        end
         if imgui.widget.Selectable("MoveTop", false) then
             world:pub { "HierarchyEvent", "movetop", eid }
         end
@@ -144,7 +143,7 @@ local function show_scene_node(node)
         imgui.util.PushID(tostring(eid))
         local current_lock = hierarchy:is_locked(eid)
         local icon = current_lock and icons.ICON_LOCK or icons.ICON_UNLOCK
-        if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
+        if imgui.widget.ImageButton(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
             world:pub { "HierarchyEvent", "lock", eid, not current_lock }
         end
         imgui.util.PopID()
@@ -160,7 +159,7 @@ local function show_scene_node(node)
             end
         end
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
-        if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
+        if imgui.widget.ImageButton(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
             world:pub { "HierarchyEvent", "visible", nd, not current_visible }
         end
         imgui.util.PopID()
@@ -179,7 +178,7 @@ local function show_scene_node(node)
     end
     
     local current_icon = get_icon_by_object_type(node)
-    imgui.widget.Image(current_icon.handle, current_icon.texinfo.width, current_icon.texinfo.height)
+    imgui.widget.Image(assetmgr.textures[current_icon.id], current_icon.texinfo.width, current_icon.texinfo.height)
     imgui.cursor.SameLine()
     if not has_child then
         imgui.cursor.Indent(-2)

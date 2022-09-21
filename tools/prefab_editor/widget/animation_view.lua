@@ -8,9 +8,9 @@ local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local keyframe_view = ecs.require "widget.keyframe_view"
 local prefab_mgr = ecs.require "prefab_manager"
 local gizmo     = ecs.require "gizmo.gizmo"
-local asset_mgr = import_package "ant.asset"
-local icons     = require "common.icons"(asset_mgr)
-local logger    = require "widget.log"(asset_mgr)
+local assetmgr = import_package "ant.asset"
+local icons     = require "common.icons"(assetmgr)
+local logger    = require "widget.log"(assetmgr)
 local imgui     = require "imgui"
 local math3d    = require "math3d"
 local hierarchy = require "hierarchy_edit"
@@ -20,7 +20,6 @@ local joint_utils = require "widget.joint_utils"
 local utils     = require "common.utils"
 local access    = dofile "/engine/vfs/repoaccess.lua"
 local fs        = require "filesystem"
-local lfs       = require "filesystem.local"
 local global_data = require "common.global_data"
 
 local m = {}
@@ -851,7 +850,7 @@ function m.show()
         imgui.cursor.PopItemWidth()
         imgui.cursor.SameLine()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
-        if imgui.widget.ImageButton(icon.handle, icon.texinfo.width, icon.texinfo.height) then
+        if imgui.widget.ImageButton(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
             if anim_state.is_playing then
                 anim_group_pause(anim_eid, true)
             else
