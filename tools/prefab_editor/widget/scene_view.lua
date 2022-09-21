@@ -15,13 +15,9 @@ local m = {}
 
 local source_e = nil
 local target_e = nil
+
 local function is_editable(eid)
-    --if not world[eid].scene_entity or
-    -- if not hierarchy:is_visible(eid) or
-    if hierarchy:is_locked(eid) then
-        return false
-    end
-    return true
+    return not hierarchy:is_locked(eid)
 end
 
 local function is_delete_disable()
