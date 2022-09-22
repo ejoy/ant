@@ -4,7 +4,7 @@ local constructor = require "core.DOM.constructor"
 local environment = require "core.environment"
 local event = require "core.event"
 local fs = require "filesystem"
-local parsetext=require "core.ParseText"
+local parsetext=require "core.parsetext"
 local m = {}
 
 local events = {}
