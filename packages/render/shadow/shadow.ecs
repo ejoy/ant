@@ -14,6 +14,7 @@ system "shadow_system"
     --.method "refine_filter"
     .method "refine_camera"
     .method "render_submit"
+    .method "camera_usage"
 
 system "shadow_primitive_system"
     .implement "shadow/shadow_maker.lua"
@@ -37,13 +38,14 @@ interface "ishadow"
 
     .method "calc_split_frustums"
     .method "split_frustums"
+    .method "sm_bias_matrix"
 
 component "csm_directional_light"
 component "csm".type "lua"
 policy "csm_queue"
     .require_system "ant.render|shadow_system"
     .require_system "ant.render|shadow_primitive_system"
-    --.require_system "ant.render|shadow_debug_system"
+    .require_system "ant.render|shadow_debug_system"
     .require_interface "ant.render|ishadow"
     .component "csm"
 

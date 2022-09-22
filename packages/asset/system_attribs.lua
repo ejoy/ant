@@ -89,7 +89,17 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	u_shadow_param1		 = {type="u", value=mc.ZERO},
 	u_shadow_param2		 = {type="u", value=mc.ZERO},
 	s_shadowmap			 = texture_value(8),
-
+	u_main_camera_matrix = { type="u",
+		value = mc.IDENTITY_MAT
+	},
+	u_csm_light_shadow_bias= { type="u",
+		value = {
+			math3d.vector(0,0,0,0),
+			math3d.vector(0,0,0,0),
+			math3d.vector(0,0,0,0),
+			math3d.vector(0,0,0,0),
+		}
+	},
 	--   omni
 	u_omni_matrix = { type = "u",
 		value = {
