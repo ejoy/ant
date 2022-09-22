@@ -3,7 +3,8 @@
 #include <binding/context.h>
 #include <core/Interface.h>
 #include <bgfx/c99/bgfx.h>
-#include"../core/interface.h"
+#include <core/Interface.h>
+
 struct RenderState {
     glm::vec4 rectVerteices[2] {glm::vec4(0), glm::vec4(0)};
     uint16_t lastScissorId = UINT16_MAX;
