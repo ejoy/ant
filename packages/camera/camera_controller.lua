@@ -2,7 +2,8 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 local math3d = require "math3d"
-local mc = import_package "ant.math".constant
+local mathpkg = import_package "ant.math"
+local mc, mu = mathpkg.constant, mathpkg.util
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local cc_sys = ecs.system "default_camera_controller"
@@ -98,8 +99,9 @@ function cc_sys:camera_usage()
         local mq = w:first("main_queue camera_ref:in render_target:in")
         local ce<close> = w:entity(mq.camera_ref, "scene:in camera:in")
         local t = ce.scene.t
-        if t == mc.ZERO_PT then
-            t = math3d.add(t, math3d.vector(0, 0, 0.01))
+        if mu.equal3d(t, mc.ZERO, 10e-6) then
+            local d = math3d.todirection(ce.scene.r)
+            t = math3d.muladd(d, 0.01, t)
         end
         lookat.v = math3d.inverse(math3d.normalize(t))
         distance = math3d.length(t)
