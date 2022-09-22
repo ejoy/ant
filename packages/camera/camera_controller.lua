@@ -174,6 +174,8 @@ function cc_sys:camera_usage()
            
 
     if move_x then
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
         move_x  =move_x / mq.render_target.view_rect.w * 30
         local right = math3d.transform(ce.scene.r, mc.XAXIS, 0)
         last_ru.v = math3d.add(last_ru, math3d.mul(right, -move_x*math.max(1.0, distance)))
@@ -183,6 +185,8 @@ function cc_sys:camera_usage()
     end
 
     if move_y then
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
         move_y = move_y / mq.render_target.view_rect.h * 30
         local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
         last_ru.v = math3d.add(last_ru, math3d.mul(up, -move_y*math.max(1.0,distance)))
@@ -193,6 +197,8 @@ function cc_sys:camera_usage()
     end
 
     if move_z then
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
         calc_zoom_distance(move_z)
         local cur_lookat = calc_cur_lookat()
         iom.set_position(ce, math3d.add(last_ru, cur_lookat))
@@ -205,7 +211,7 @@ function cc_sys:camera_usage()
         if dx ~= 0.0 or dy ~= 0.0 then
             if motiontype == "rotate_point" then
                 mouse_lastx, mouse_lasty = newx, newy
-                local ratio, newdir, pos=iom.rotate_around_point2(ce, last_ru, 6*dy, 6*dx, ce.scene)
+                local ratio, newdir, pos=iom.rotate_around_point(ce, last_ru, 6*dy, 6*dx, ce.scene)
                 distance = ratio
                 lookat.v = newdir
                 local cur_lookat = calc_cur_lookat()
