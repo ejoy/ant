@@ -17,11 +17,6 @@ local rendercore	= ecs.clibs "render.core"
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
 
-local QUEUE_TYPES <const> = {
-    main_queue = LAYER_NAMES,
-    pre_depth_queue = {"opacity"},
-}
-
 local irender		= ecs.interface "irender"
 
 function irender.use_pre_depth()
@@ -95,7 +90,7 @@ if not graphic_setting.disable_pre_z then
 end
 
 function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, surfacetypes, visible)
-	surfacetypes = surfacetypes or QUEUE_TYPES["main_queue"]
+	surfacetypes = surfacetypes or LAYER_NAMES
 	filtertype = filtertype or "main_view"
 
 	local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
@@ -159,7 +154,6 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 
 	ecs.create_entity {
 		policy = {
-			"ant.render|render_queue",
 			"ant.render|pre_depth_queue",
 			"ant.render|watch_screen_buffer",
 			"ant.render|cull",
@@ -179,7 +173,7 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 			},
 			primitive_filter = {
 				filter_type = "main_view",
-				table.unpack(QUEUE_TYPES["pre_depth_queue"]),
+				"opacity",
 			},
 			queue_name 		= "pre_depth_queue",
 			name 			= "pre_depth_queue",
@@ -213,7 +207,6 @@ function irender.create_main_queue(vr, camera_ref)
 	local fbidx = create_main_fb(vr)
 	ecs.create_entity {
 		policy = {
-			"ant.render|render_queue",
 			"ant.render|watch_screen_buffer",
 			"ant.render|main_queue",
 			"ant.render|cull",
@@ -231,10 +224,9 @@ function irender.create_main_queue(vr, camera_ref)
 			},
 			primitive_filter = {
 				filter_type = "main_view",
-				table.unpack(QUEUE_TYPES["main_queue"]),
+				table.unpack(LAYER_NAMES)
 			},
 			visible = true,
-			INIT = true,
 			main_queue = true,
 			watch_screen_buffer = true,
 			queue_name = "main_queue",

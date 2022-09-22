@@ -116,6 +116,9 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	u_tetra_normal_Red		= {type="u", value=mc.ZERO},
 
 	s_omni_shadowmap	= texture_value(9),
+
+	--postprocess
+	u_pp_param				= {type="u", value=mc.ZERO},
 })
 
 return SYS_ATTRIBS

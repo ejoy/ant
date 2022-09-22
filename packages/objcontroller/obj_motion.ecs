@@ -29,7 +29,7 @@ interface "iobj_motion"
     .method "move_forward"
 
     .method "rotate_forward_vector"
-    .method "rotate_around_point2"
+    .method "rotate_around_point"
 
     .method "ray"
     .method "screen_to_ndc"

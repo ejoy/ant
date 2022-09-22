@@ -72,6 +72,12 @@ function util.equal(n0, n1, threshold)
     return util.iszero(n1 - n0, threshold)
 end
 
+function util.equal3d(v0, v1, threshold)
+	local v = math3d.sub(v0, v1)
+	local sq_len = math3d.dot(v, v)
+	return util.iszero(sq_len, threshold)
+end
+
 function util.print_srt(e, numtab)
 	local tab = ""
 	if numtab then

@@ -48,17 +48,13 @@ local function reset_srt(srt)
 end
 
 function iobj_motion.get_position(e)
-    w:extend(e, "scene?in")
+    w:extend(e, "scene:in")
     return e.scene and e.scene.t
 end
 
 function iobj_motion.set_position(e, pos)
-    w:extend(e, "scene?update")
-    local srt = e.scene
-    if not srt then
-        return
-    end
-    set_t(srt, pos)
+    w:extend(e, "scene:update")
+    set_t(e.scene, pos)
     set_changed(e)
 end
 
@@ -71,17 +67,13 @@ local function refine_rotation_from_viewdir(scene, viewdir)
 end
 
 function iobj_motion.get_direction(e)
-    w:extend(e, "scene?in")
-    return e.scene and math3d.todirection(e.scene.r)
+    w:extend(e, "scene:in")
+    return math3d.todirection(e.scene.r)
 end
 
 function iobj_motion.set_direction(e, viewdir)
-    w:extend(e, "scene?in")
+    w:extend(e, "scene:in")
     local scene = e.scene
-    if not scene then
-        return
-    end
-
     set_r(scene, refine_rotation_from_viewdir(scene, viewdir))
     set_changed(e)
 end
@@ -218,8 +210,8 @@ local function get_rotator(r, rx, ry)
 end
 
 function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
-    w:extend(e, "scene:in")
     if rotateX or rotateY then
+        w:extend(e, "scene:in")
         local scene = e.scene
         local r = get_rotator(scene.r, rotateX, rotateY)
         set_r(scene, refine_rotation(scene, r))
@@ -227,7 +219,7 @@ function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
     end
 end
 
-function iobj_motion.rotate_around_point2(e, lastru, dx, dy)
+function iobj_motion.rotate_around_point(e, lastru, dx, dy)
     
     local scene = e.scene
     local m = math3d.matrix(scene.r)

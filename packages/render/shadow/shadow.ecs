@@ -49,11 +49,9 @@ policy "csm_queue"
     .require_interface "ant.render|ishadow"
     .component "csm"
 
-component "csm1_queue_cull"
-component "csm1_queue_visible"
-component "csm2_queue_cull"
-component "csm2_queue_visible"
-component "csm3_queue_cull"
-component "csm3_queue_visible"
-component "csm4_queue_cull"
-component "csm4_queue_visible"
+for i=1, 4 do
+    local cn = "csm" .. i .. "_queue"
+    component(cn)
+    component(cn .. "_cull")
+    component(cn .. "_visible")
+end

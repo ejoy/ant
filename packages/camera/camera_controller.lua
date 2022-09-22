@@ -110,9 +110,10 @@ function cc_sys:camera_usage()
     end
 
     check_update_control()
-    local mq = w:first("main_queue camera_ref:in render_target:in")
-    local ce<close> = w:entity(mq.camera_ref, "scene:update")
-    for _, delta in mouse_wheel_mb:unpack() do     
+
+    for _, delta in mouse_wheel_mb:unpack() do
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
         local d = delta > 0 and 5 or -5
         calc_zoom_distance(d)
         local cur_lookat = calc_cur_lookat()
@@ -198,6 +199,8 @@ function cc_sys:camera_usage()
     end
 
     if motiontype and newx and newy then
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
         local dx, dy = dxdy(newx, newy, mq.render_target.view_rect)
         if dx ~= 0.0 or dy ~= 0.0 then
             if motiontype == "rotate_point" then

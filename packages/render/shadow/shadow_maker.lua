@@ -255,8 +255,6 @@ local function create_csm_entity(index, vr, fbidx)
 			},
 			name = csmname
 		}
-
-	w:register {name = queuename}
 	ecs.create_entity {
 		policy = {
 			"ant.render|render_queue",

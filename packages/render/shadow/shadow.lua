@@ -65,12 +65,20 @@ else
 	else
 		csm_setting.split_num = 4
 		csm_setting.split_ratios = {
+<<<<<<< HEAD
 			{0.0,0.05},
 			{0.04,0.25},
 			{0.2,0.45},
 			{0.40,0.85}
 		}
 		-- csm_setting.split_ratios = gen_ratios{0.3, 0.48, 0.85}
+=======
+			{0.05, 0.25},
+			{0.23, 0.48},
+			{0.45, 0.65},
+			{0.60, 0.85},
+		}
+>>>>>>> 9ebbe7d18a9a6ddca474b98718ec9480b4de0623
 	end
 end
 

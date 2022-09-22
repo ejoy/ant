@@ -15,37 +15,23 @@ local bgfx      = require "bgfx"
 
 
 local sd_sys = ecs.system "scene_depth_system"
-local function copy_pf(pf)
-    local npf = {
-        filter_type = ivs.state_names(pf.filter_type)
-    }
 
-    for idx, v in ipairs(pf) do
-        npf[idx] = v
-    end
-
-    return npf
-end
-
-function sd_sys.init_world()
-    local pd = w:first("pre_depth_queue render_target:in camera_ref:in primitive_filter:in")
-    local pd_rt = pd.render_target
-    local pd_vr = pd_rt.view_rect
-
+function sd_sys.post_init()
+    local vr = world.args.viewport
     ecs.create_entity {
         policy = {
-            "ant.render|render_queue",
+            "ant.render|scene_depth_queue",
             "ant.general|name",
         },
         data = {
-            camera_ref = pd.camera_ref,
+            camera_ref = 0,
             render_target = {
-                view_rect = mu.copy_viewrect(pd_vr),
+                view_rect = mu.copy_viewrect(vr),
                 viewid = viewidmgr.get "scene_depth",
                 fb_idx = fbmgr.create{
                     rbidx = fbmgr.create_rb{
                         format = "D16F", layers = 1,
-                        w = pd_vr.w, h = pd_vr.h,
+                        w = vr.w, h = vr.h,
                         flags = sampler{RT="RT_ON",},
                     }
                 },
@@ -53,13 +39,20 @@ function sd_sys.init_world()
                     clear = "D",
                     depth = 0.0,
                 },
-                view_mode = pd_rt.view_mode,
+                view_mode = "s",
             },
-            primitive_filter = copy_pf(pd.primitive_filter),
+            primitive_filter = {
+                filter_type = "main_view",
+                "opacity",
+            },
             queue_name = "scene_depth_queue",
             name = "scene_depth_queue",
             visible = false,
             scene_depth_queue = true,
+            on_ready = function (e)
+                local pd = w:first("pre_depth_queue camera_ref:in")
+                irq.set_camera("scene_depth_queue", pd.camera_ref)
+            end
         }
     }
 end
@@ -74,7 +67,7 @@ local function which_material(skinning)
 end
 
 
-local s = ecs.system "pre_depth_primitive_system"
+local s = ecs.system "pre_depth_system"
 
 function s:init()
     if not irender.use_pre_depth() then
