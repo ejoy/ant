@@ -236,16 +236,16 @@ function iobj_motion.rotate_around_point2(e, lastru, dx, dy)
         math3d.quaternion{axis=xaxis, r=dx},
         math3d.quaternion{axis=yaxis, r=dy}
     )
-    local p=math3d.sub(scene.t,lastru)
-    local v = math3d.transform(q, math3d.sub(p, math3d.vector(0,0,0)), 0)
-    p = math3d.add(math3d.vector(0,0,0), v,lastru)
+    local p=math3d.sub(scene.t, lastru)
+    local v = math3d.transform(q, p, 0)
+    p = math3d.add(v, lastru)
 
     set_t(scene, p)
     local nq = math3d.mul(q, scene.r)
     set_r(scene, refine_rotation(scene,nq))
     set_changed(e)
     local distance=math3d.length(v)
-    local lookat=math3d.normalize(math3d.todirection(nq))
+    local lookat=math3d.normalize(math3d.todirection(scene.r))
     return distance,lookat,p
 end
 
