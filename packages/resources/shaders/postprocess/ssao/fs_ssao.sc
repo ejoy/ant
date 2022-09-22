@@ -103,7 +103,7 @@ void scalableAmbientObscurance(out float obscurance, out vec3 bentNormal,
 
     // Choose the screen-space sample radius
     // proportional to the projected area of the sphere
-    float ssDiskRadius = -(u_ssao_projection_scale_radius / origin.z);
+    float ssDiskRadius = (u_ssao_projection_scale_radius / origin.z);
 
     obscurance = 0.0;
     bentNormal = normal;
@@ -166,7 +166,9 @@ void main()
     }
 
     if (u_ssct_intensity > 0.0) {
-        occlusion = max(occlusion, dominantLightShadowing(v_texcoord0, origin, normal, gl_FragCoord.xy));
+        float occlusion1 = max(occlusion, dominantLightShadowing(v_texcoord0, origin, normal, gl_FragCoord.xy));
+        occlusion += occlusion1;
+        occlusion -= occlusion1;
     }
 
     // occlusion to visibility

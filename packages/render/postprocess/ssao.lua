@@ -85,14 +85,14 @@ local ssao_configs = {
 
     --
     sample_count                = 7,
-    spiral_turns                = 6,
+    spiral_turns                = 3,
     --
 
     --screen space cone trace
     ssct                        = {
         enable                  = true,
-        shadow_distance         = 1.0,          -- full cone angle in radian, between 0 and pi/2
-        light_cone              = 0.3,          -- how far shadows can be cast
+        light_cone              = 1.0,          -- full cone angle in radian, between 0 and pi/2
+        shadow_distance         = 0.3,          -- how far shadows can be cast
         contact_distance_max    = 1.0,          -- max distance for contact
         intensity               = 0.8,          -- intensity
         lightdir                = math3d.ref(math3d.vector(0, 1, 0)),  --light direction
@@ -108,27 +108,23 @@ local function update_config(camera, lightdir, depthwidth, depthheight, depthdep
     ssao_configs.min_horizon_angle_sine_squared = math.sin(ssao_configs.min_horizon_angle) ^ 2.0
 
     --calc projection scale
-    do
-        -- estimate of the size in pixel of a 1m tall/wide object viewed from 1m away (i.e. at z=1)
-        local projmat_c1, projmat_c2 = math3d.index(camera.projmat, 1, 2)
-        local c1x, c2y = math3d.index(projmat_c1, 1), math3d.index(projmat_c2, 2)
-        ssao_configs.projection_scale = math.min(c1x*0.5*depthwidth, c2y*0.5*depthheight)
-    end
-
+    ssao_configs.projection_scale = util.projection_scale(depthwidth, depthheight, camera.projmat)
     ssao_configs.projection_scale_radius = ssao_configs.projection_scale * ssao_configs.radius
 
     local peak = 0.1 * ssao_configs.radius
     ssao_configs.peak2 = peak * peak
 
-    ssao_configs.visible_power = ssao_configs.power * ssao_configs.power
+    ssao_configs.visible_power = ssao_configs.power * 2.0
 
-    ssao_configs.intensity_pre_sample = ssao_configs.intensity / ssao_configs.sample_count
+    local TAU<const> = math.pi * 2.0
+    ssao_configs.ssao_intentsity = ssao_configs.intensity * (TAU * peak)
+    ssao_configs.intensity_pre_sample = ssao_configs.ssao_intentsity / ssao_configs.sample_count
 
     ssao_configs.max_level = depthdepth - 1
 
     ssao_configs.inv_sample_count = 1.0 / (ssao_configs.sample_count - 0.5)
 
-    local TAU<const> = math.pi * 2.0
+    
     local inc = ssao_configs.inv_sample_count * ssao_configs.spiral_turns * TAU
     ssao_configs.sin_inc, ssao_configs.cos_inc = math.sin(inc), math.cos(inc)
 
@@ -136,7 +132,7 @@ local function update_config(camera, lightdir, depthwidth, depthheight, depthdep
     local ssct = ssao_configs.ssct
     ssct.tan_cone_angle            = math.tan(ssao_configs.ssct.light_cone*0.5)
     ssct.inv_contact_distance_max  = 1.0 / ssct.contact_distance_max
-    ssct.lightdir.v                = math3d.transform(camera.viewmat, lightdir, 0)
+    ssct.lightdir.v                = math3d.normalize(math3d.inverse(math3d.transform(camera.viewmat, lightdir, 0)))
 end
 
 

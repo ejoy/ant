@@ -2,8 +2,14 @@ local ecs       = ...
 local world     = ecs.world
 local w         = world.w
 local fbmgr     = require "framebuffer_mgr"
+local math3d    = require "math3d"
 
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local util      = ecs.require "postprocess.util"
 local pp_sys    = ecs.system "postprocess_system"
+
+local mq_camera_mb = world:sub{"main_queue", "camera_changed"}
+local camear_frustum_mb
 
 function pp_sys:init()
     ecs.create_entity {
@@ -19,11 +25,40 @@ function pp_sys:init()
     }
 end
 
+local function update_postprocess_param(ceid)
+    local ce = w:entity(ceid, "camera:in")
+    local projmat = ce.camera.projmat
+    local A, B = util.reverse_depth_param(projmat)
+    local sa = imaterial.system_attribs()
+    sa:update("u_pp_param", math3d.vector(A, B, 0.0, 0.0))    --
+end
+
+local need_update_pp_param
+
+function pp_sys:init_world()
+    local mq = w:first("main_queue camera_ref:in")
+    camear_frustum_mb = world:sub{"camera_changed", mq.camera_ref, "frustum"}
+    need_update_pp_param = mq.camera_ref
+end
+
 function pp_sys:pre_postprocess()
+    for _, ceid in mq_camera_mb:unpack() do
+        camear_frustum_mb = world:sub{"camera_changed", ceid, "frustum"}
+        need_update_pp_param = ceid
+    end
+
+    for _, ceid in camear_frustum_mb:unpack() do
+        need_update_pp_param = ceid
+    end
+
+    if need_update_pp_param then
+        update_postprocess_param(need_update_pp_param)
+        need_update_pp_param = nil
+    end
     --TODO: check screen buffer changed
     local pp = w:first("postprocess postprocess_input:in")
     local ppi = pp.postprocess_input
-    local mq = w:first("main_queue render_target:in")
+    local mq = w:first("main_queue render_target:in camera_ref:in")
     local fb = fbmgr.get(mq.render_target.fb_idx)
 
     ppi.scene_color_handle = fbmgr.get_rb(fb[1].rbidx).handle

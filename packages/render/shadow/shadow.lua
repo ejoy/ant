@@ -39,7 +39,7 @@ local function gen_ratios(distances)
 	local pre_dis = 0
 	local ratios = {}
 	for i=1, #distances do
-		local dis = distances[i] * (1.0+csm_setting.cross_delta)
+		local dis = math.min(1.0, distances[i] * (1.0+csm_setting.cross_delta))
 		ratios[#ratios+1] = {pre_dis, dis}
 		pre_dis = dis
 	end
@@ -58,13 +58,18 @@ if shadowcfg.split_ratios then
 	end
 	csm_setting.split_ratios = shadowcfg.split_ratios
 else
-	csm_setting.cross_delta	= shadowcfg.cross_delta or 0.8
+	csm_setting.cross_delta	= shadowcfg.cross_delta or 0.25
 	if shadowcfg.split_weight then
 		csm_setting.split_num	= shadowcfg.split_num
 		csm_setting.split_weight= math.max(0, math.min(1, shadowcfg.split_weight))
 	else
 		csm_setting.split_num = 4
-		csm_setting.split_ratios = gen_ratios{0.3, 0.48, 0.85}
+		csm_setting.split_ratios = {
+			{0.05, 0.25},
+			{0.23, 0.48},
+			{0.45, 0.65},
+			{0.60, 0.85},
+		}
 	end
 end
 
