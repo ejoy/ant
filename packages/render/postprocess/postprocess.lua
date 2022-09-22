@@ -42,7 +42,7 @@ function pp_sys:init_world()
 end
 
 function pp_sys:pre_postprocess()
-    for _, ceid in mq_camera_mb:unpack() do
+    for _, _, ceid in mq_camera_mb:unpack() do
         camear_frustum_mb = world:sub{"camera_changed", ceid, "frustum"}
         need_update_pp_param = ceid
     end
