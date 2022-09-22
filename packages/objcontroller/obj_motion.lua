@@ -219,7 +219,7 @@ function iobj_motion.rotate_forward_vector(e, rotateX, rotateY)
     end
 end
 
-function iobj_motion.rotate_around_point2(e, lastru, dx, dy)
+function iobj_motion.rotate_around_point(e, lastru, dx, dy)
     
     local scene = e.scene
     local m = math3d.matrix(scene.r)

@@ -29,11 +29,9 @@ local baseDistance=1
 local zoomExponent = 2
 local zoomFactor = 0.01
 
-local lookat = math3d.ref(math3d.vector(0, 0, 1))
---right up偏移
-local lastru=math3d.ref(math3d.vector(0, 0, 0))
---lookat偏移
-local lastl=math3d.ref(math3d.vector(0, 0, -1))
+local lookat        = math3d.ref(math3d.vector(0, 0, 1))
+local last_rightup  = math3d.ref(math3d.vector(0, 0, 0))
+local last_lookat   = math3d.ref(math3d.vector(0, 0, -1))
 
 local function calc_dxdy_speed()
     return move_speed * dxdy_speed
@@ -82,9 +80,9 @@ local function check_stop_camera()
 end
 
 local function calc_zoom_distance(dz)
-    local zoomDistance=(distance/baseDistance)^(1.0/zoomExponent)
-    zoomDistance=zoomDistance-dz*zoomFactor
-    zoomDistance=math.max(zoomDistance,0.0001)
+    local zoomDistance = (distance/baseDistance)^(1.0/zoomExponent)
+    zoomDistance = zoomDistance - dz*zoomFactor
+    zoomDistance = math.max(zoomDistance, 0.0001)
     return (zoomDistance*zoomDistance)*baseDistance
 end
 
@@ -96,24 +94,25 @@ function cc_sys:camera_usage()
         local mq = w:first("main_queue camera_ref:in render_target:in")
         local ce<close> = w:entity(mq.camera_ref, "scene:in camera:in")
         
-        local look=ce.scene.t
-        lookat.v=math3d.inverse(math3d.normalize(look))
-        distance=math3d.length(look)
-        distance=calc_zoom_distance(0.001)
+        local look = ce.scene.t
+        lookat.v = math3d.inverse(math3d.normalize(look))
+        distance = math3d.length(look)
+        distance = calc_zoom_distance(0.001)
 
-        lastl.v=math3d.mul(lookat,-distance)
-        iom.set_position(ce,math3d.add(lastru.v,lastl.v))
+        last_lookat.v = math3d.mul(lookat, -distance)
+        iom.set_position(ce,math3d.add(last_rightup.v, last_lookat.v))
         init=true
     end
 
     check_update_control()
-    local mq = w:first("main_queue camera_ref:in render_target:in")
-    local ce<close> = w:entity(mq.camera_ref, "scene:update")
-    for _, delta in mouse_wheel_mb:unpack() do     
+
+    for _, delta in mouse_wheel_mb:unpack() do
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
         local d = delta > 0 and 5 or -5
-        distance=calc_zoom_distance(d)
-        lastl.v=math3d.mul(lookat,-distance)
-        iom.set_position(ce,math3d.add(lastru,lastl))
+        distance = calc_zoom_distance(d)
+        last_lookat.v = math3d.mul(lookat, -distance)
+        iom.set_position(ce,math3d.add(last_rightup, last_lookat))
     end
 
     local rotatetype="rotate_point"
@@ -170,48 +169,55 @@ function cc_sys:camera_usage()
            
 
     if move_x then
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
         move_x=move_x/mq.render_target.view_rect.w*30
         local right = math3d.transform(ce.scene.r, mc.XAXIS, 0)
-        lastru.v=math3d.add(lastru,math3d.mul(right,-move_x*math.max(1.0,distance)))
-        iom.set_position(ce,math3d.add(lastru,lastl))
+        last_rightup.v = math3d.add(last_rightup, math3d.mul(right,-move_x*math.max(1.0,distance)))
+        iom.set_position(ce,math3d.add(last_rightup, last_lookat))
 
     end
 
     if move_y then
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
         move_y=move_y/mq.render_target.view_rect.h*30
         local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
-        lastru.v=math3d.add(lastru,math3d.mul(up,-move_y*math.max(1.0,distance)))
-        up=math3d.normalize(up)
-        iom.set_position(ce,math3d.add(lastru,lastl))
-
+        last_rightup.v = math3d.add(last_rightup , math3d.mul(up, -move_y*math.max(1.0, distance)))
+        up = math3d.normalize(up)
+        iom.set_position(ce, math3d.add(last_rightup, last_lookat))
     end
 
     if move_z then
-        distance=calc_zoom_distance(move_z)
-        lastl.v=math3d.mul(lookat,-distance)
-        iom.set_position(ce,math3d.add(lastru,lastl))
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
+        distance = calc_zoom_distance(move_z)
+        last_lookat.v=math3d.mul(lookat,-distance)
+        iom.set_position(ce,math3d.add(last_rightup , last_lookat))
     end
 
     if motiontype and newx and newy then
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
         local dx, dy = dxdy(newx, newy, mq.render_target.view_rect)
         if dx ~= 0.0 or dy ~= 0.0 then
             if motiontype == "rotate_point" then
-                 mouse_lastx, mouse_lasty = newx, newy
-                local ratio,newdir,pos=iom.rotate_around_point2(ce, lastru,6*dy, 6*dx,ce.scene)
-                distance=ratio
-                lookat.v=newdir
-                lastl.v=math3d.mul(newdir,-distance)
-                lastru.v=math3d.sub(pos,lastl)
+                mouse_lastx, mouse_lasty = newx, newy
+                local ratio, newdir, pos = iom.rotate_around_point(ce, last_rightup , 6*dy, 6*dx, ce.scene)
+                distance = ratio
+                lookat.v = newdir
+                last_lookat.v = math3d.mul(newdir,-distance)
+                last_rightup.v = math3d.sub(pos,last_lookat)
             elseif motiontype == "rotate_forwardaxis" then
                 mouse_lastx, mouse_lasty = newx, newy
                 iom.rotate_forward_vector(ce, dy, dx)
             elseif motiontype == "move_pan" then
                 local right = math3d.transform(ce.scene.r, mc.XAXIS, 0)
-                right=math3d.normalize(right)
+                right = math3d.normalize(right)
                 local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
                 up=math3d.normalize(up)
-                lastru.v=math3d.add(lastru,math3d.mul(right,-dx*math.max(1.0,distance)),math3d.mul(up,dy*0.5*math.max(1.0,distance)))
-                iom.set_position(ce,math3d.add(lastl,lastru))    
+                last_rightup.v = math3d.add(last_rightup, math3d.mul(right,-dx*math.max(1.0,distance)),math3d.mul(up,dy*0.5*math.max(1.0,distance)))
+                iom.set_position(ce, math3d.add(last_lookat, last_rightup))
                 mouse_lastx, mouse_lasty = newx, newy
             end
         end
