@@ -84,7 +84,7 @@ end
 ltask.fork(function ()
 	while true do
 		update_watch()
-		ltask.sleep(100)
+		ltask.sleep(10)
 	end
 end)
 

@@ -77,12 +77,12 @@ function access.readmount(repo)
 		if name:sub(1, 1) == "@" then
 			if name == '@pkg-one' then
 				assert_syntax(#tokens == 2)
-				local path = lfs.absolute(lfs.path(tokens[2]))
+				local path = lfs.absolute(lfs.path(tokens[2])):lexically_normal()
 				local pkgname = load_package(path)
 				addmount('/pkg/'..pkgname, path)
 			elseif name == '@pkg' then
 				assert_syntax(#tokens == 2)
-				local path = lfs.absolute(lfs.path(tokens[2]))
+				local path = lfs.absolute(lfs.path(tokens[2])):lexically_normal()
 				for pkgpath in lfs.pairs(path) do
 					if not pkgpath:string():match ".DS_Store" then
 						local pkgname = load_package(pkgpath)
@@ -94,7 +94,7 @@ function access.readmount(repo)
 			end
 		else
 			assert_syntax(#tokens == 2)
-			local path = lfs.absolute(lfs.path(tokens[2]))
+			local path = lfs.absolute(lfs.path(tokens[2])):lexically_normal()
 			addmount(name, path)
 		end
 		::continue::
