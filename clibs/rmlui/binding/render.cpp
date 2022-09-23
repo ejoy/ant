@@ -1,4 +1,4 @@
-#include <binding/render.h>
+﻿#include <binding/render.h>
 #include <binding/render.h>
 #include <binding/utf8.h>
 #include <binding/context.h>
