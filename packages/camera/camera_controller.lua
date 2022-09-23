@@ -207,7 +207,7 @@ function cc_sys:camera_usage()
         if dx ~= 0.0 or dy ~= 0.0 then
             if motiontype == "rotate_point" then
                 mouse_lastx, mouse_lasty = newx, newy
-                local ratio, newdir, pos=iom.rotate_around_point2(ce, last_ru, 6*dy, 6*dx, ce.scene)
+                local ratio, newdir, pos=iom.rotate_around_point(ce, last_ru, 6*dy, 6*dx, ce.scene)
                 distance = ratio
                 lookat.v = newdir
                 local cur_lookat = calc_cur_lookat()
