@@ -63,7 +63,7 @@ end
 
 function util.iszero(n, threshold)
     threshold = threshold or 0.00001
-    return -threshold <= n and n <= threshold
+    return math.abs(n) <= threshold
 end
 
 function util.equal(n0, n1, threshold)
