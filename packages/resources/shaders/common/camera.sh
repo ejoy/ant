@@ -40,7 +40,7 @@ float linear_depth(float nolinear_depth)
 	// float B = -(u_far * u_near) / (u_far - u_near);
 	//#endif
 	float A = u_proj[2][2];
-	float B = u_proj[2][3];
+	float B = u_proj[3][2];
 	return linear_depth(nolinear_depth, A, B);
 }
 #endif //_CAMERA_SH_

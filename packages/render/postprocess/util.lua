@@ -57,8 +57,8 @@ function util.projection_scale(w, h, projmat)
 end
 
 function util.reverse_depth_param(projmat)
-    local pm_c3 = math3d.index(projmat, 3)
-    return math3d.index(pm_c3, 3, 4)
+    local pm_c3, pm_c4 = math3d.index(projmat, 3, 4)
+    return math3d.index(pm_c3, 3), math3d.index(pm_c4, 3)
 end
 
 return util
