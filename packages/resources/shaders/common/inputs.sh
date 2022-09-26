@@ -11,6 +11,7 @@
 #else //!GPU_SKINNING
 #   define INPUT_INDICES
 #   define INPUT_WEIGHT
+#   define BGFX_CONFIG_MAX_BONES 1
 #endif //GPU_SKINNING
 
 #ifdef WITH_COLOR_ATTRIB
