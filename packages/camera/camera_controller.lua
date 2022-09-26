@@ -91,6 +91,11 @@ local function calc_cur_lookat()
     return math3d.mul(lookat,-distance)
 end
 
+local function camera_entity()
+    local mq = w:first("main_queue camera_ref:in render_target:in")
+    return w:entity(mq.camera_ref, "scene:update")
+end
+
 function cc_sys:camera_usage()
     if check_stop_camera() then
         return
@@ -100,14 +105,15 @@ function cc_sys:camera_usage()
         local ce<close> = w:entity(mq.camera_ref, "scene:in camera:in")
         local t = ce.scene.t
         if mu.equal3d(t, mc.ZERO, 10e-6) then
-            local d = math3d.todirection(ce.scene.r)
-            t = math3d.muladd(d, 0.01, t)
+            distance = 0.0
+            lookat.v = math3d.inverse(math3d.todirection(ce.scene.r))
+        else
+            lookat.v = math3d.inverse(math3d.normalize(t))
+            distance = math3d.length(t)
+            calc_zoom_distance(0)
+            local cur_lookat = calc_cur_lookat()
+            iom.set_position(ce, math3d.add(last_ru.v, cur_lookat))
         end
-        lookat.v = math3d.inverse(math3d.normalize(t))
-        distance = math3d.length(t)
-        calc_zoom_distance(0)
-        local cur_lookat = calc_cur_lookat()
-        iom.set_position(ce, math3d.add(last_ru.v, cur_lookat))
         init = true
     end
 
@@ -139,7 +145,7 @@ function cc_sys:camera_usage()
             move_z = pressed and  calc_key_speed() or nil
         end
         if status.SHIFT then
-            rotatetype="rotate_forwardaxis"
+            rotatetype = "rotate_forwardaxis"
             if press == 0 then
                 if key == "EQUALS" then --'+'
                     move_speed = move_speed + move_speed_delta
@@ -148,14 +154,19 @@ function cc_sys:camera_usage()
                 end
             end
         else
-            rotatetype="rotate_point"
+            rotatetype = "rotate_point"
+            local ce = camera_entity()
+            if mu.equal3d(ce.scene.t, mc.ZERO, 10e-6) then
+                print("camera position is equal to:%s, current target position is:%s, distance value is:%2f, can not rotate target point", 
+                    math3d.tostring(ce.scene.t), math3d.tostring(mc.ZERO), distance)
+                return
+            end
         end
     end
 
     local newx, newy
     local motiontype
     for _, btn, state, x, y in mouse_mb:unpack() do
-
         if state == "DOWN" then
             newx, newy = x, y
             mouse_lastx, mouse_lasty = x, y
@@ -164,27 +175,26 @@ function cc_sys:camera_usage()
         end
 
          if btn == "RIGHT"  then
-            if rotatetype == "rotate_point" then
-                motiontype = "rotate_point"
-            else 
-                motiontype = "rotate_forwardaxis"
-            end
+            motiontype = assert(rotatetype)
          elseif btn == "MIDDLE" then
             motiontype = "move_pan"
         end
     end
-           
+
 
     if move_x then
-        move_x  =move_x / mq.render_target.view_rect.w * 30
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
+        move_x  = move_x / mq.render_target.view_rect.w * 30
         local right = math3d.transform(ce.scene.r, mc.XAXIS, 0)
         last_ru.v = math3d.add(last_ru, math3d.mul(right, -move_x*math.max(1.0, distance)))
         local cur_lookat = calc_cur_lookat()
         iom.set_position(ce, math3d.add(last_ru, cur_lookat))
-
     end
 
     if move_y then
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
         move_y = move_y / mq.render_target.view_rect.h * 30
         local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
         last_ru.v = math3d.add(last_ru, math3d.mul(up, -move_y*math.max(1.0,distance)))
@@ -195,6 +205,8 @@ function cc_sys:camera_usage()
     end
 
     if move_z then
+        local mq = w:first("main_queue camera_ref:in render_target:in")
+        local ce<close> = w:entity(mq.camera_ref, "scene:update")
         calc_zoom_distance(move_z)
         local cur_lookat = calc_cur_lookat()
         iom.set_position(ce, math3d.add(last_ru, cur_lookat))
@@ -222,7 +234,7 @@ function cc_sys:camera_usage()
                 up = math3d.normalize(up)
                 last_ru.v = math3d.add(last_ru, math3d.mul(right, -dx*math.max(1.0,distance)), math3d.mul(up, dy*0.5*math.max(1.0, distance)))
                 local cur_lookat = calc_cur_lookat()
-                iom.set_position(ce, math3d.add(cur_lookat, last_ru))    
+                iom.set_position(ce, math3d.add(cur_lookat, last_ru))
                 mouse_lastx, mouse_lasty = newx, newy
             end
         end
