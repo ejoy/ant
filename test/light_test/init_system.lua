@@ -64,8 +64,8 @@ function S.init_world()
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
     iom.set_direction(camera_ref, dir)
-    --iom.set_position(camera_ref, math3d.vector(0, 0, 0))
-    --iom.set_direction(camera_ref, math3d.vector(0.0, 0.0, 1.0))
+    -- iom.set_position(camera_ref, math3d.vector(0, 0, 0))
+    -- iom.set_direction(camera_ref, math3d.vector(0.0, 0.0, 1.0))
 end
 
 function S:camera_usage()

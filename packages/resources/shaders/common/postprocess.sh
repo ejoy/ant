@@ -2,12 +2,13 @@
 #define __SHADER_POSTPROCESS_SH__
 
 #include <shaderlib.sh>
+#include "common/common.sh"
+#include "common/camera.sh"
+
 SAMPLER2D(s_scene_color, 0);
 SAMPLER2D(s_scene_depth, 1);
 
 uniform vec4 u_pp_param;
-
-#include "common/camera.sh"
 
 float linear_depth_pp(float nolinear_depth)
 {
@@ -17,11 +18,11 @@ float linear_depth_pp(float nolinear_depth)
 vec3 posVS_from_depth(vec2 uv, float depthVS)
 {
 	vec2 origin2d = vec2(uv.x-0.5,
-#if BGFX_SHADER_LANGUAGE_GLSL
+#if ORIGIN_BOTTOM_LEFT
 	uv.y - 0.5
-#else //!BGFX_SHADER_LANGUAGE_GLSL
-	0.5-uv.y
-#endif //BGFX_SHADER_LANGUAGE_GLSL
+#else //!ORIGIN_BOTTOM_LEFT
+	0.5 - uv.y
+#endif //ORIGIN_BOTTOM_LEFT
 	);
 	return vec3(origin2d*depthVS*u_inv_near, depthVS);
 }
@@ -39,12 +40,24 @@ highp float depthVS_from_texture(const highp sampler2D depthTexture, const highp
     return linear_depth_pp(depth);
 }
 
+vec2 get_texel_coord(vec2 xy)
+{
+#if ORIGIN_BOTTOM_LEFT
+	return xy;
+#else //!ORIGIN_BOTTOM_LEFT
+	return vec2(xy.x, 1.0-xy.y);
+#endif //ORIGIN_BOTTOM_LEFT
+}
 
 highp vec3 normalVS_from_depth(
         const highp sampler2D depthTexture, const highp vec2 uv,
         const highp vec3 position){
     highp vec2 uvdx = uv + vec2(u_viewTexel.x, 0.0);
+#if ORIGIN_BOTTOM_LEFT
     highp vec2 uvdy = uv + vec2(0.0, u_viewTexel.y);
+#else //ORIGIN_BOTTOM_LEFT
+	highp vec2 uvdy = uv + vec2(0.0, -u_viewTexel.y);
+#endif //ORIGIN_BOTTOM_LEFT
 
 	highp vec3 px = posVS_from_depth(uvdx, depthVS_from_texture(depthTexture, uvdx, 0.0));
     highp vec3 py = posVS_from_depth(uvdy, depthVS_from_texture(depthTexture, uvdy, 0.0));

@@ -1,16 +1,9 @@
 #ifndef _CLUSTER_SHADING_SH_
 #define _CLUSTER_SHADING_SH_
 #include "bgfx_compute.sh"
+#include "common/common.sh"
 #include "common/lightdata.sh"
 #include "common/camera.sh"
-
-#ifndef ORIGIN_BOTTOM_LEFT
-#define ORIGIN_BOTTOM_LEFT 0
-#endif //ORIGIN_BOTTOM_LEFT
-
-#ifndef HOMOGENEOUS_DEPTH
-#define HOMOGENEOUS_DEPTH 0
-#endif //HOMOGENEOUS_DEPTH
 
 struct light_grid{
     uint offset;
