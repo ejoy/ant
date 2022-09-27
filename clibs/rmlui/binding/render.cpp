@@ -465,12 +465,9 @@ union FontFace {
 	uint64_t handle;
 };
 
-Rml::FontFaceHandle Renderer::GetFontFaceHandle(const std::string& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, uint32_t size){
+Rml::FontFaceHandle Renderer::GetFontFaceHandle(const std::string& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, uint32_t size) {
     font_manager* F = mcontext->font_mgr;
-    const char* name = "宋体";
-    if (!family.empty())
-        name = family.c_str();
-    int fontid = F->font_manager_addfont_with_family(F, name);
+    int fontid = F->font_manager_addfont_with_family(F, family.c_str());
     if (fontid <= 0) {
         return static_cast<Rml::FontFaceHandle>(0);
     }
