@@ -28,9 +28,9 @@ end
 local function update_postprocess_param(ceid)
     local ce = w:entity(ceid, "camera:in")
     local projmat = ce.camera.projmat
-    local A, B = util.reverse_depth_param(projmat)
+    local X, Y, A, B = util.reverse_position_param(projmat)
     local sa = imaterial.system_attribs()
-    sa:update("u_pp_param", math3d.vector(A, B, 0.0, 0.0))    --
+    sa:update("u_reverse_pos_param", math3d.vector(X, Y, A, B))
 end
 
 local need_update_pp_param

@@ -118,7 +118,7 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	s_omni_shadowmap	= texture_value(9),
 
 	--postprocess
-	u_pp_param				= {type="u", value=mc.ZERO},
+	u_reverse_pos_param				= {type="u", value=mc.ZERO},
 })
 
 return SYS_ATTRIBS

@@ -3,8 +3,8 @@
 
 uniform vec4 u_ssao_param;
 #define u_ssao_visiblity_power          u_ssao_param.x
-#define u_ssao_angle_inc_sin            u_ssao_param.y
-#define u_ssao_angle_inc_cos            u_ssao_param.z
+#define u_ssao_angle_inc_cos            u_ssao_param.y
+#define u_ssao_angle_inc_sin            u_ssao_param.z
 #define u_ssao_projection_scale_radius  u_ssao_param.w
 
 uniform vec4 u_ssao_param2;
