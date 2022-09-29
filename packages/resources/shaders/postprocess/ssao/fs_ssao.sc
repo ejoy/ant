@@ -160,13 +160,20 @@ void main()
     highp vec3 normal = normalVS_from_depth(s_scene_depth, v_texcoord0, origin);
     highp float occlusion = 0.0;
     highp vec3 bentNormal;
+
+#if ORIGIN_BOTTOM_LEFT
+    vec2 coord = gl_FragCoord.xy;
+#else //!ORIGIN_BOTTOM_LEFT
+    vec2 coord = vec2(gl_FragCoord.x, u_viewRect.w-gl_FragCoord.y);
+#endif //ORIGIN_BOTTOM_LEFT
     if (u_ssao_intensity > 0.0) {
-        highp float noise = interleavedGradientNoise(gl_FragCoord.xy);
+
+        highp float noise = interleavedGradientNoise(coord);
         scalableAmbientObscurance(occlusion, bentNormal, v_texcoord0, origin, noise, normal);
     }
 
     if (u_ssct_intensity > 0.0) {
-        float occlusion1 = max(occlusion, dominantLightShadowing(v_texcoord0, origin, normal, gl_FragCoord.xy));
+        float occlusion1 = max(occlusion, dominantLightShadowing(v_texcoord0, origin, normal, coord));
         occlusion += occlusion1;
         occlusion -= occlusion1;
     }

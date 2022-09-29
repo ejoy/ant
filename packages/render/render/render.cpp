@@ -218,7 +218,7 @@ update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const 
 		const auto num = nummat * t.stride;
 		bgfx_transform_t trans;
 		t.tid = w->bgfx->encoder_alloc_transform(w->holder->encoder, &trans, (uint16_t)num);
-		for (int i=0; i<nummat; ++i){
+		for (size_t i=0; i<nummat; ++i){
 			math_t r = math_ref(w->math3d->M, trans.data+i*t.stride*16, MATH_TYPE_MAT, t.stride);
 			math3d_mul_matrix_array(w->math3d->M, worldmats[i], ro->worldmat, r);
 		}

@@ -154,7 +154,8 @@ function ika.is_playing(e)
 	if not e then
 		return false
 	end
-	return e.keyframe.play_state.playing
+	w:extend(e, "keyframe:in")
+	return e.keyframe and e.keyframe.play_state.playing
 end
 
 function ma_sys.data_changed()
