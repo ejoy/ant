@@ -13,6 +13,7 @@ uniform mat4 u_csm_matrix[4];
 uniform vec4 u_csm_split_distances;
 uniform vec4 u_shadow_param1;
 uniform vec4 u_shadow_param2;
+uniform vec4 u_shadow_param3;
 #define u_shadowmap_bias		u_shadow_param1.x
 #define u_normaloffset 			u_shadow_param1.y
 #define u_shadowmap_texelsize	u_shadow_param1.z
@@ -34,16 +35,25 @@ uniform vec4 u_omni_param;
 //#define PACK_RGBA8
 //#define LINEAR_SHADOW
 #ifdef LINEAR_SHADOW
+//#define SHADOW_SAMPLER2D	SAMPLER2D
+//#define shadow_sampler_type sampler2D 
+#else
+//#define SHADOW_SAMPLER2D	SAMPLER2DSHADOW
+//#define shadow_sampler_type sampler2DShadow
+//#define SHADOW_SAMPLER2D	SAMPLER2D
+//#define shadow_sampler_type sampler2D 
+#endif
+
+#define SM_HARD 
+//#define SM_VSM 
 #define SHADOW_SAMPLER2D	SAMPLER2D
 #define shadow_sampler_type sampler2D 
-#else
-#define SHADOW_SAMPLER2D	SAMPLER2DSHADOW
-#define shadow_sampler_type sampler2DShadow
-#endif
+
 
 #ifdef ENABLE_SHADOW
 SHADOW_SAMPLER2D(s_shadowmap, 8);
 SHADOW_SAMPLER2D(s_omni_shadowmap, 9);
+SHADOW_SAMPLER2D(s_shadowsqmap, 13);
 #endif //ENABLE_SHADOW
 
 bool is_texcoord_in_range(vec2 _texcoord, float minv, float maxv)
@@ -80,17 +90,51 @@ float hardShadow(
 
 	// NOTE: below code is same as this
 
-#ifdef LINEAR_SHADOW
+//#ifdef LINEAR_SHADOW
+//	vec2 texCoord = _shadowCoord.xy/_shadowCoord.w;
+//	float receiver = (_shadowCoord.z+_bias)/_shadowCoord.w;
+//	float occluder = texture2D(_sampler, texCoord).x;
+//	float visibility = step(occluder, receiver);
+//	return visibility;
+//#else 
+//	vec4 coord = _shadowCoord;
+//	coord.z += _bias;
+//	return shadow2DProj(_sampler, coord);
+//#endif //LINEAR_SHADOW
+
 	vec2 texCoord = _shadowCoord.xy/_shadowCoord.w;
 	float receiver = (_shadowCoord.z+_bias)/_shadowCoord.w;
 	float occluder = texture2D(_sampler, texCoord).x;
 	float visibility = step(occluder, receiver);
 	return visibility;
-#else //
-	vec4 coord = _shadowCoord;
-	coord.z += _bias;
-	return shadow2DProj(_sampler, coord);
-#endif //LINEAR_SHADOW
+}
+
+float VSM(
+	shadow_sampler_type _sampler,
+	shadow_sampler_type _sqsampler,
+	vec4 _shadowCoord, float _bias,
+	float _depthMultiplier, float _minVariance) 
+{
+	vec2 texCoord = _shadowCoord.xy / _shadowCoord.w;
+	bool outside = any(greaterThan(texCoord, vec2_splat(1.0)))
+				|| any(lessThan   (texCoord, vec2_splat(0.0)))
+				 ;
+
+	if (outside)
+	{
+		return 1.0;
+	}	
+	float receiver = (_shadowCoord.z + _bias) / _shadowCoord.w * _depthMultiplier;
+	float depth = texture2D(_sampler, texCoord).x * _depthMultiplier;
+	float depthSq = texture2D(_sqsampler, texCoord).x * _depthMultiplier;
+	if (receiver > depth)
+	{
+		return 1.0;
+	}	
+	float variance = max(depthSq- depth * depth, _minVariance);
+	float d = receiver - depth;
+	float visibility = variance / (variance + d*d);
+	return visibility;
 }
 
 int select_cascade(float distanceVS)
@@ -155,7 +199,7 @@ static const vec4 g_colors[4] = {
 };
 #endif //SHADOW_COVERAGE_DEBUG
 
-vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor)
+vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor, float depthMultiplier, float minVariance)
 {
 	vec4 shadowcoord = vec4_splat(0.0);
 #ifdef USE_VIEW_SPACE_DISTANCE
@@ -169,9 +213,13 @@ vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor)
 		return scenecolor;	// not in shadow
 #endif //USE_VIEW_SPACE_DISTANCE
 
+#ifdef SM_HARD
 	float visibility = hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias);
+#else SM_VSM
+	float visibility = VSM(s_shadowmap, s_shadowsqmap, shadowcoord, u_shadowmap_bias, depthMultiplier, minVariance);
+#endif
 	vec3 finalcolor = mix(u_shadow_color, scenecolor, visibility);
-
+	
 #ifdef SHADOW_COVERAGE_DEBUG
 	finalcolor *= g_colors[cascadeidx];
 #endif //SHADOW_COVERAGE_DEBUG

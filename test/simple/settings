@@ -34,8 +34,11 @@ graphic:
     enable: true
     size: 1024
     bias: 0.003
-    normal_offset: 0
+    normal_offset: 0.012
     color: {0.0, 0.0, 0.0, 1}
-    stabilize: true
+    stabilize: false
     split_lamada: 1
     split_num: 4
+    min_variance: 0.012
+    depth_multiplier: 500
+    --split_weight: 0.75

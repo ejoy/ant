@@ -100,8 +100,8 @@ function imodifier.set_target(m, target)
 end
 
 function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreupdate)
-    local function get_value(ae, time)
-        local e <close> = w:entity(target, "keyframe:in")
+    local function get_value(kfe, time)
+        local e <close> = w:entity(kfe, "keyframe:in")
         local kfanim = e.keyframe
         return kfanim.play_state.current_value, kfanim.play_state.playing
     end
@@ -110,6 +110,9 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
     if target then
         local e <close> = w:entity(target, "material:in")
         local filename = e.material
+        if string.find(filename, ".glb|") then
+            filename = filename .. "/main.cfg"
+        end
         local mtl = serialize.parse(filename, cr.read_file(filename))
         assert(mtl.properties[property])
         init_value = math3d.ref(math3d.vector(mtl.properties[property]))

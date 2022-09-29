@@ -28,11 +28,12 @@ end
 bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
 local csm_setting = {
 	shadowmap_size	= shadowcfg.size,
-	shadow_param	= {shadowcfg.bias, shadowcfg.normal_offset, 1/shadowcfg.size, 0.00012},
+	shadow_param	= {shadowcfg.bias, shadowcfg.min_variance, 1/shadowcfg.size, shadowcfg.depth_multiplier},
     color			= math3d.ref(math3d.vector(shadow_color())),
-    --stabilize		= shadowcfg.stabilize,
+    stabilize		= shadowcfg.stabilize,
 	split_num		= shadowcfg.split_num,
 	split_frustums	= {nil, nil, nil, nil},
+	shadow_param3	= {shadowcfg.normal_offset, 0, 0, 0},
 }
 
 local function gen_ratios(distances)
@@ -58,40 +59,77 @@ if shadowcfg.split_ratios then
 	end
 	csm_setting.split_ratios = shadowcfg.split_ratios
 else
-	csm_setting.cross_delta	= shadowcfg.cross_delta or 0.25
+	csm_setting.cross_delta	= shadowcfg.cross_delta or 0.00
 	if shadowcfg.split_weight then
 		csm_setting.split_num	= shadowcfg.split_num
 		csm_setting.split_weight= math.max(0, math.min(1, shadowcfg.split_weight))
 	else
 		csm_setting.split_num = 4
-		csm_setting.split_ratios = {
-			{0.05, 0.25},
-			{0.23, 0.48},
-			{0.45, 0.65},
-			{0.60, 0.85},
+ 		csm_setting.split_ratios = {
+ 			{0.01,0.2},
+			{0.2,0.30},
+			{0.3,0.40},
+			{0.4,0.68} 
 		}
 	end
 end
 
+
 assert(csm_setting.split_num ~= nil)
 
-csm_setting.fb_index = fbmgr.create{
-	rbidx=fbmgr.create_rb{
-		format = "D32F",
+csm_setting.fb_index = fbmgr.create(
+	{
+		rbidx = fbmgr.create_rb{
+			format = "R16F",
+			w=csm_setting.shadowmap_size * csm_setting.split_num,
+			h=csm_setting.shadowmap_size,
+			layers=1,
+			flags=sampler{
+				MIN="POINT",
+				MAG="POINT",
+				U="CLAMP",
+				V="CLAMP",
+				RT="RT_ON",
+			}
+		}
+	},
+	{
+		rbidx=fbmgr.create_rb{
+			format = "D32F",
+			w=csm_setting.shadowmap_size * csm_setting.split_num,
+			h=csm_setting.shadowmap_size,
+			layers=1,
+			flags=sampler{
+				RT="RT_ON",
+				MIN="LINEAR",
+				MAG="LINEAR",
+				U="BORDER",
+				V="BORDER",
+				COMPARE="COMPARE_GEQUAL",
+				BOARD_COLOR="0",
+			},
+		}
+	}
+)
+
+--[[ csm_setting.sqfb_index = fbmgr.create{
+	sqrbidx = fbmgr.create_rb{
+		format = "R16F",
 		w=csm_setting.shadowmap_size * csm_setting.split_num,
 		h=csm_setting.shadowmap_size,
 		layers=1,
 		flags=sampler{
+			MIN="POINT",
+			MAG="POINT",
+			U="CLAMP",
+			V="CLAMP",
 			RT="RT_ON",
-			MIN="LINEAR",
-			MAG="LINEAR",
-			U="BORDER",
-			V="BORDER",
-			COMPARE="COMPARE_GEQUAL",
-			BOARD_COLOR="0",
-		},
+		}
 	}
 }
+ ]]
+
+
 
 local ishadow = ecs.interface "ishadow"
 
@@ -113,6 +151,7 @@ end
 
 for csm_idx=1, csm_setting.split_num do
 	local vp_crop = calc_crop_matrix(csm_idx)
+	local t = math3d.tovalue(vp_crop)
 	crop_matrices[#crop_matrices+1] = math3d.ref(math3d.mul(vp_crop, sm_bias_matrix))
 end
 
@@ -129,6 +168,10 @@ function ishadow.fb_index()
 	return csm_setting.fb_index
 end
 
+--[[ function ishadow.sqfb_index()
+	return csm_setting.sqfb_index
+end ]]
+
 function ishadow.bias()
 	return csm_setting.shadow_param[1]
 end
@@ -139,6 +182,10 @@ end
 
 function ishadow.shadow_param()
 	return csm_setting.shadow_param
+end
+
+function ishadow.shadow_param3()
+	return csm_setting.shadow_param3
 end
 
 function ishadow.color()
@@ -165,7 +212,6 @@ end
 
 function ishadow.calc_split_frustums(view_frustum)
 	local split_weight = csm_setting.split_weight
-	--local split_weight = 0.75
 	local frustums = csm_setting.split_frustums
 	local view_nearclip, view_farclip = view_frustum.n, view_frustum.f
 	local clip_range = view_farclip - view_nearclip
@@ -190,7 +236,7 @@ function ishadow.calc_split_frustums(view_frustum)
 			local si = ff / num_sclies
 			farclip = split_weight*(view_nearclip*(ratio^si)) + (1-split_weight)*(view_nearclip + clip_range*si)
 			frustums[nn/2] = split_new_frustum(view_frustum, nearclip, farclip)
-			nearclip = farclip * cross_multipler
+			nearclip = farclip / cross_multipler
 			nn = nn + 2
 			ff = ff + 2
 		end
