@@ -24,6 +24,10 @@ $input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT
 
 #include "input_attributes.sh"
 
+#define u_shadowMapOffset u_shadow_param3.x
+#define u_minVariance u_shadow_param1.y
+#define u_depthMultiplier u_shadow_param1.w
+
 void main()
 {
 #include "attributes_getter.sh"
@@ -32,10 +36,12 @@ void main()
     gl_FragColor = input_attribs.basecolor + input_attribs.emissive;
 #else //!MATERIAL_UNLIT
     material_info mi = init_material_info(input_attribs);
-
     vec3 color = calc_direct_light(mi, gl_FragCoord, v_posWS.xyz);
 #   ifdef ENABLE_SHADOW
-	color = shadow_visibility(v_distanceVS, vec4(v_posWS.xyz, 1.0), color);
+    vec3 normal = normalize(v_normal);
+    vec4 wPos = v_posWS;
+    wPos = vec4(v_posWS.xyz + normal.xyz * u_shadowMapOffset, 1.0);
+	color = shadow_visibility(v_distanceVS, vec4(wPos.xyz, 1.0), color, u_depthMultiplier, u_minVariance);
 #   endif //ENABLE_SHADOW
 
 #   ifdef ENABLE_IBL

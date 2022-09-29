@@ -14,24 +14,16 @@ extern "C" {
 }
 
 
-std::unordered_map<uint8_t, uint8_t> ctoh{
-    {'0',0x00},
-    {'1',0x01},
-    {'2',0x02},
-    {'3',0x03},
-    {'4',0x04},
-    {'5',0x05},
-    {'6',0x06},
-    {'7',0x07},
-    {'8',0x08},
-    {'9',0x09},
-    {'a',0x0a},
-    {'b',0x0b},
-    {'c',0x0c},
-    {'d',0x0d},
-    {'e',0x0e},
-    {'f',0x0f},
-};
+static uint32_t
+border_color_or_compare(char c){
+	int n = 0;
+	if(c >= '0' && c <= '9'){
+		n = c - '0';
+	}else if(c >= 'a' && c <= 'f'){
+		n = c - 'a' + 10 ;
+	}
+	return n;
+}
 
 class lua_plugin;
 
@@ -150,10 +142,10 @@ void lua_plugin::OnParseText(const std::string& str,std::vector<Rml::group>& gro
 			else{
 				Rml::Color c;
 				std::string ctmp(str);
-				c.r=ctoh[ctmp[0]]*16+ctoh[ctmp[1]];
-				c.g=ctoh[ctmp[2]]*16+ctoh[ctmp[3]];
-				c.b=ctoh[ctmp[4]]*16+ctoh[ctmp[5]];
-				group.color=c;
+				c.r = border_color_or_compare(ctmp[0]) * 16 + border_color_or_compare(ctmp[1]);
+				c.g = border_color_or_compare(ctmp[2]) * 16 + border_color_or_compare(ctmp[3]);
+				c.b = border_color_or_compare(ctmp[4]) * 16 + border_color_or_compare(ctmp[5]);
+				group.color = c;
 			}
 			lua_pop(L,1);
 			lua_pop(L,1);

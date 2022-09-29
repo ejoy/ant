@@ -5,4 +5,4 @@ fx:
 state:
   ALPHA_REF: 0
   CULL: CCW
-  WRITE_MASK: Z
+  WRITE_MASK: RZ

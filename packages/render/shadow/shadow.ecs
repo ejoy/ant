@@ -2,7 +2,6 @@ import "@ant.general"
 import "@ant.scene"
 
 import "shadow/shadow_debug.ecs"
-
 system "shadow_system"
     .implement "shadow/shadow_maker.lua"
     .require_system "ant.render|render_system"
@@ -33,6 +32,7 @@ interface "ishadow"
     .method "bias"
     .method "normal_offset"
     .method "shadow_param"
+    .method "shadow_param3"
     .method "color"
     .method "split_num"
 

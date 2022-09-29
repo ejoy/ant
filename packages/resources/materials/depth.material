@@ -1,7 +1,8 @@
 fx:
   vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  fs: /pkg/ant.resources/shaders/depth/fs_depth.sc
   setting: /pkg/ant.resources/settings/nolighting.setting
 state:
   CULL: CCW
   DEPTH_TEST: GREATER
-  WRITE_MASK: Z
+  WRITE_MASK: RZ

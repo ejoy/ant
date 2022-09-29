@@ -169,9 +169,9 @@ static cid_t s_cullids[queue_index_type::QIT_count] = {
 	(cid_t)ecs_api::component<ant_ecs::scene_depth_queue_cull>::id,
 	(cid_t)ecs_api::component<ant_ecs::pickup_queue_cull>::id,
 	(cid_t)ecs_api::component<ant_ecs::csm1_queue_cull>::id,
-	(cid_t)ecs_api::component<ant_ecs::csm1_queue_cull>::id,
-	(cid_t)ecs_api::component<ant_ecs::csm1_queue_cull>::id,
-	(cid_t)ecs_api::component<ant_ecs::csm1_queue_cull>::id,
+	(cid_t)ecs_api::component<ant_ecs::csm2_queue_cull>::id,
+	(cid_t)ecs_api::component<ant_ecs::csm3_queue_cull>::id,
+	(cid_t)ecs_api::component<ant_ecs::csm4_queue_cull>::id,
 	(cid_t)ecs_api::component<ant_ecs::bake_lightmap_queue_cull>::id,
 };
 
@@ -191,8 +191,16 @@ static void
 collect_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, obj_transforms &trans, queue_stages &queue_stages){
 	const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
 	for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
-		const bool visible = entity_sibling(w->ecs, vs_id, i, s_queuevisibleids[ra.queue_index]) &&
+		bool visible = true;
+		if(i == 30){
+			bool v1 = entity_sibling(w->ecs, vs_id, i, s_queuevisibleids[ra.queue_index]);
+			bool v2 = !entity_sibling(w->ecs, vs_id, i, s_cullids[ra.queue_index]);
+			visible = v1&&v2;
+		}
+		else{
+			visible = entity_sibling(w->ecs, vs_id, i, s_queuevisibleids[ra.queue_index]) &&
 			!entity_sibling(w->ecs, vs_id, i, s_cullids[ra.queue_index]);
+		}
 		if (visible){
 			collect_render_objs(w, vs_id, i, nullptr, queue_stages);
 		}
