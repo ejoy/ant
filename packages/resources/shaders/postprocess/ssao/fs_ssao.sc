@@ -34,8 +34,12 @@ highp vec2 startPosition(const float noise) {
 }
 
 highp mat2 tapAngleStep() {
-    highp vec2 t = vec2(u_ssao_angle_inc_cos, u_ssao_angle_inc_sin);
-    return mat2(t.x, t.y, -t.y, t.x);
+    const float c = u_ssao_angle_inc_cos;
+    const float s = u_ssao_angle_inc_sin;
+    // the rotation matrix in column mode
+    return mat2(
+         c, s,   //col0
+        -s, c);  //col1
 }
 
 vec3 tapLocationFast(float i, vec2 p, const float noise) {
@@ -78,7 +82,7 @@ void computeAmbientOcclusionSAO(inout float occlusion, inout vec3 bentNormal,
     // sin(beta) * |v|. So the test simplifies to vn^2 < vv * sin(epsilon)^2.
     w *= step(vv * u_ssao_min_horizon_angle_sine_squared, vn * vn);
 
-    float sampleOcclusion = max(0.0, vn + (origin.z * u_ssao_bias)) / (vv + u_ssao_peak2);
+    float sampleOcclusion = max(0.0, vn - (origin.z * u_ssao_bias)) / (vv + u_ssao_peak2);
     occlusion += w * sampleOcclusion;
 
 #if COMPUTE_BENT_NORMAL
@@ -167,7 +171,6 @@ void main()
     vec2 coord = vec2(gl_FragCoord.x, u_viewRect.w-gl_FragCoord.y);
 #endif //ORIGIN_BOTTOM_LEFT
     if (u_ssao_intensity > 0.0) {
-
         highp float noise = interleavedGradientNoise(coord);
         scalableAmbientObscurance(occlusion, bentNormal, v_texcoord0, origin, noise, normal);
     }
