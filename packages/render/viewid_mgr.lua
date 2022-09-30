@@ -42,7 +42,7 @@ alloc_id "ibl"					--21
 alloc_id "pre_depth"
 alloc_id "scene_depth"
 alloc_id "ssao"
-alloc_id("ssao_blur", 2)
+alloc_id("bilateral_filter", 2)
 alloc_id "main_view"
 
 --start postprocess

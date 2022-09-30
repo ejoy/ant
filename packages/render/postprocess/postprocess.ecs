@@ -75,6 +75,9 @@ system "bloom_system"
 
 component "ssao_drawer"
 component "ssao_queue"
+component "bilateral_filter_horizontal_queue"
+component "bilateral_filter_vertical_queue"
+
 system "ssao_system"
     .implement "postprocess/ssao.lua"
     .require_system "ant.render|scene_depth_system"
