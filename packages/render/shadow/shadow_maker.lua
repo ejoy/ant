@@ -15,7 +15,6 @@ local irender	= ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local fbmgr		= require "framebuffer_mgr"
-
 local INV_Z<const> = true
 --local sm_bias_matrix = mu.calc_texture_matrix()
 local biasX,biasY,biasZ
@@ -86,8 +85,8 @@ end
 local csm_matrices			= {mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
 
-local function update_camera_matrices(camera, lightmat,csm_index)
-	camera.viewmat = math3d.inverse(lightmat)	--just transpose?
+local function update_camera_matrices(camera, light_view)
+	camera.viewmat = math3d.matrix(light_view)
 	camera.projmat = math3d.projmat(camera.frustum, INV_Z)
 	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
 end
@@ -211,7 +210,7 @@ local function update_shadow_camera(dl, maincamera)
 end
 
 local function calc_ortho_minmax(corners_view, main_view, light_view, corners_world, shadowmap_size)
-	local light_ortho_min, light_ortho_max = math3d.minmax(corners_view, math3d.mul(main_view, light_view))
+	local light_ortho_min, light_ortho_max = math3d.minmax(corners_view, math3d.mul(main_view, math3d.matrix(light_view)))
 
 	local diagonal = math3d.sub(math3d.array_index(corners_world, 1), math3d.array_index(corners_world, 8))
 	local bound = math3d.length(diagonal)
@@ -238,21 +237,23 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
 	set_worldmat(shadow_ce.scene, shadow_ce.scene)
 
+	local inv_main_proj = math3d.projmat(csm_frustum, INV_Z)
 	local light_world = shadow_ce.scene.worldmat
 	local light_view = math3d.inverse(light_world)
 	local slice_view_proj = math3d.mul(math3d.projmat(csm_frustum, INV_Z), main_view)
 
 	local corners_world = math3d.frustum_points(slice_view_proj)
-	local corners_view = math3d.frustum_points(math3d.projmat(csm_frustum, INV_Z))
+	local corners_view = math3d.frustum_points(inv_main_proj)
 
 	local light_ortho_min, light_ortho_max = calc_ortho_minmax(corners_view, main_view, light_view, corners_world, shadowmap_size)
-
 	local min_extent, max_extent = math3d.tovalue(light_ortho_min), math3d.tovalue(light_ortho_max)
 	local camera = shadow_ce.camera
 	local f = camera.frustum
-	f.l, f.b, f.n = min_extent[1], min_extent[2], min_extent[1]
-	f.r, f.t, f.f = max_extent[1], max_extent[2], max_extent[1]
-	update_camera_matrices(camera, light_world)
+	local near_plane = -csm_frustum.f
+	local far_plane  =  csm_frustum.f
+	f.l, f.b, f.n = min_extent[1], min_extent[2], near_plane
+	f.r, f.t, f.f = max_extent[1], max_extent[2], far_plane
+	update_camera_matrices(camera, light_view)
 end
 
 local function update_shadow_frustum(dl, main_camera)
@@ -266,7 +267,7 @@ local function update_shadow_frustum(dl, main_camera)
 		local csm = qe.csm
 		local csm_frustum = csm_frustums[csm.index]
 		csm_frustum.n = 1
-		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in")
+		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in scene:in")
 		update_csm_frustum(lightdir, setting.shadowmap_size, csm_frustum, shadow_ce, main_view)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
@@ -414,7 +415,7 @@ function sm:init_world()
 end
 
 function sm:update_camera()
-	local dl = w:first("csm_directional_light light:in scene:in")
+	local dl = w:first("csm_directional_light light:in scene:in scene_changed?in")
 	if dl then
 		local mq = w:first("main_queue camera_ref:in")
 		local camera <close> = w:entity(mq.camera_ref, "camera:in")
