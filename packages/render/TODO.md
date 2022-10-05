@@ -22,6 +22,7 @@
 7. 使用Hi-Z的方式进行剔除；
 8. 使用compute shader将MSAA的深度resolve到普通的深度；
 9. 增强阴影的效果，使用VSM实现软阴影，或对比使用PCF的效果；
+10. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；
 
 #### 新功能/探索
 1. SDF Shadow；
