@@ -280,7 +280,7 @@ function m:ui_update()
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
         --local x, y = imgui.util.GetMousePos()
-        if mainview.in_view(mouse_pos_x, mouse_pos_y) then
+        if mouse_pos_x and mainview.in_view(mouse_pos_x, mouse_pos_y) then
             if not drag_file then
                 local dropdata = imgui.widget.GetDragDropPayload()
                 if dropdata and (string.sub(dropdata, -7) == ".prefab"
