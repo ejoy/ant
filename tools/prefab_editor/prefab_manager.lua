@@ -544,8 +544,22 @@ function m:reload()
         self:open(filename)
     end
 end
-
+local global_data       = require "common.global_data"
+local access            = dofile "/engine/vfs/repoaccess.lua"
 function m:add_effect(filename)
+    -- preload all textures for effect
+    local path = filename:match("^(.+/)[%w*?_.%-]*$")
+    local files = access.list_files(global_data.repo, path)
+    local texture_files = {}
+    for _, value in ipairs(files) do
+        if string.sub(value, -8) == ".texture" then
+            texture_files[#texture_files + 1] = path..value
+        end
+    end
+    if #texture_files > 0 then
+        iefk.preload(texture_files)
+    end
+
     if not self.root then
         self:reset_prefab()
     end
