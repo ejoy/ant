@@ -276,6 +276,8 @@ end
 
 local sm = ecs.system "shadow_system"
 
+
+
 local function create_clear_shadowmap_queue(fbidx)
 	local rb = fbmgr.get_rb(fbidx, 1)
 	local ww, hh = rb.w, rb.h

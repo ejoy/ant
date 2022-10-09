@@ -56,6 +56,7 @@ function pp_sys:pre_postprocess()
         need_update_pp_param = nil
     end
     --TODO: check screen buffer changed
+    first"vsm_queue postprocess_input:in"
     local pp = w:first("postprocess postprocess_input:in")
     local ppi = pp.postprocess_input
     local mq = w:first("main_queue render_target:in camera_ref:in")
