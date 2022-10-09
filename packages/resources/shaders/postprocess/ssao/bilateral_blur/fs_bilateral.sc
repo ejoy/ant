@@ -5,7 +5,10 @@ $input v_texcoord0
 #include "postprocess/ssao/util.sh"
 
 SAMPLER2D(s_sao, 0);
+
+#if COMPUTE_BENT_NORMAL
 SAMPLER2D(s_bentnormal, 1);
+#endif //COMPUTE_BENT_NORMAL
 
 uniform vec4 u_bilateral_weight[2];
 uniform vec4 u_bilateral_param;
@@ -54,14 +57,17 @@ void main()
         return;
     }
 
-    ao_info center_ai = vec2(data.r, unpackHalfFloat(data.gb));
-    vec3 bn = sampleBN(s_bentnormal, v_texcoord0);
-
     // we handle the center pixel separately because it doesn't participate in
     // bilateral filtering
     float total_weight = get_kernel_weight(0);
+
+    ao_info center_ai = vec2(data.r, unpackHalfFloat(data.gb));    
     float sumAO = ao * total_weight;
+
+#if COMPUTE_BENT_NORMAL
+    vec3 bn = sampleBN(s_bentnormal, v_texcoord0);
     vec3 sumBN  = bn * total_weight;
+#endif //COMPUTE_BENT_NORMAL
 
     vec2 offset = u_step_offset;
     for (int i = 1; i < (int)u_sample_count; i++) {
@@ -71,11 +77,13 @@ void main()
         for (int iuv=0; iuv<2; ++iuv){
             vec2 uv = v_texcoord0 + offsets[iuv];
             const ao_info s = sampleAO(s_sao, uv);
-            bn = sampleBN(s_bentnormal, uv);
-
             const float bilateral = weight * bilateralWeight(center_ai.depth, s.depth);
             sumAO += s.ao * bilateral;
+
+#if COMPUTE_BENT_NORMAL
+            bn = sampleBN(s_bentnormal, uv);
             sumBN += bn * bilateral;
+#endif //COMPUTE_BENT_NORMAL
 
             total_weight += bilateral;
         }
@@ -83,12 +91,18 @@ void main()
     }
 
     ao = sumAO * (1.0 / total_weight);
+
+#if COMPUTE_BENT_NORMAL
     bn = sumBN * (1.0 / total_weight);
+#endif //COMPUTE_BENT_NORMAL
 
     // simple dithering helps a lot (assumes 8 bits target)
     // this is most useful with high quality/large blurs
     ao += ((interleavedGradientNoise(gl_FragCoord.xy) - 0.5) / 255.0);
 
-    postProcess.aoData = vec3(ao, data.gb);
-    postProcess.bnData = packBentNormal(bn);
+    gl_FragData[0] = vec4(ao, data.gb, 1.0);
+
+#if COMPUTE_BENT_NORMAL
+    gl_FragData[1] = packBentNormal(bn);
+#endif //COMPUTE_BENT_NORMAL
 }
