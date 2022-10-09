@@ -79,10 +79,14 @@ local MousePosX, MousePosY = 0, 0
 local DOWN <const> = {true}
 
 local KeyModifiers = {
-	[imgui.enum.Key.ModCtrl]  = 0,
-	[imgui.enum.Key.ModShift] = 1,
-	[imgui.enum.Key.ModAlt]   = 2,
-	[imgui.enum.Key.ModSuper] = 4,
+	[imgui.enum.Key.LeftCtrl]   = 0x00,
+	[imgui.enum.Key.LeftShift]  = 0x01,
+	[imgui.enum.Key.LeftAlt]    = 0x02,
+	[imgui.enum.Key.LeftSuper]  = 0x04,
+	[imgui.enum.Key.RightCtrl]  = 0x00,
+	[imgui.enum.Key.RightShift] = 0x10,
+	[imgui.enum.Key.RightAlt]   = 0x20,
+	[imgui.enum.Key.RightSuper] = 0x40,
 }
 
 local function updateIO()
@@ -119,9 +123,9 @@ local function updateIO()
 				end
 				Keyboard[code] = down
 				if down then
-					cb.keyboard(code, 1, KeyMods)
+					cb.keyboard(code, 1, ((KeyMods & 0x0F) | (KeyMods >> 8)))
 				else
-					cb.keyboard(code, 0, KeyMods)
+					cb.keyboard(code, 0, ((KeyMods & 0x0F) | (KeyMods >> 8)))
 				end
 				KeyboardChanged[code] = true
 			end

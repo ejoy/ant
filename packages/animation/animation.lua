@@ -234,7 +234,7 @@ end
 
 local mathadapter = import_package "ant.math.adapter"
 local math3d_adapter = require "math3d.adapter"
-
+require "skeleton" -- for mathadapter bind
 mathadapter.bind(
 	"animation",
 	function ()

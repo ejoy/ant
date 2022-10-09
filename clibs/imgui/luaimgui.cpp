@@ -163,11 +163,10 @@ static int lPairsInputEvents(lua_State* L) {
 			lua_pushinteger(L, ++event_n);
 			lua_pushstring(L, "Key");
 			auto key = e->Key.Key;
-			if (key >= ImGuiKey_ModCtrl) {
-				lua_pushinteger(L, key);
-			} else {
-				lua_pushinteger(L, key - ImGuiKey_KeysData_OFFSET + 1);
+			if (key < ImGuiKey_KeysData_OFFSET || key >= ImGuiKey_KeysData_OFFSET + ImGuiKey_KeysData_SIZE) {
+				break;
 			}
+			lua_pushinteger(L, key - ImGuiKey_KeysData_OFFSET + 1);
 			lua_pushinteger(L, e->Key.Down);
 			return 4;
 		}
@@ -1609,40 +1608,28 @@ static int wImage(lua_State *L) {
 	return 0;
 }
 
-/**ImageButton( handle,size_x,size_y,
-						opt [
-							{ uv0={0,0},
-							uv1={1,1},
-							frame_padding=-1,
-							bg_col={0f,0f,0f,0f},
-							tint_col={1f,1f,1f,1f},
-							flags=0x01,
-							mip = 0 }
-						] );
-**/
 static int
 wImageButton(lua_State *L) {
-	int lua_handle = (int)luaL_checkinteger(L, 1);
+	const char * id = luaL_checkstring(L, INDEX_ID);
+	int lua_handle = (int)luaL_checkinteger(L, 2);
 	ImTextureID tex_id = rendererGetTextureID(L, lua_handle);
-	float size_x = (float)luaL_checknumber(L, 2);
-	float size_y = (float)luaL_checknumber(L, 3);
+	float size_x = (float)luaL_checknumber(L, 3);
+	float size_y = (float)luaL_checknumber(L, 4);
 	ImVec2 size = { size_x, size_y };
 
 	ImVec2 uv0 = { 0.0f,0.0f };
 	ImVec2 uv1 = { 1.0f,1.0f };
-	int frame_padding = -1;
 	ImVec4 bg_col = { 0.0f,0.0f,0.0f,0.0f };
 	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f };
 
 	if (lua_type(L, 4) == LUA_TTABLE)
 	{
-		uv0 = read_field_vec2(L, "uv0", uv0, 4);
-		uv1 = read_field_vec2(L, "uv1", uv1, 4);
-		frame_padding = read_field_int(L, "frame_padding", frame_padding, 4);
-		bg_col = read_field_vec4(L, "bg_col", bg_col, 4);
-		tint_col = read_field_vec4(L, "tint_col", tint_col, 4);
+		uv0 = read_field_vec2(L, "uv0", uv0, 5);
+		uv1 = read_field_vec2(L, "uv1", uv1, 5);
+		bg_col = read_field_vec4(L, "bg_col", bg_col, 5);
+		tint_col = read_field_vec4(L, "tint_col", tint_col, 5);
 	}
-	bool clicked = ImGui::ImageButton(tex_id, size, uv0, uv1, frame_padding, bg_col, tint_col);
+	bool clicked = ImGui::ImageButton(id, tex_id, size, uv0, uv1, bg_col, tint_col);
 	lua_pushboolean(L, clicked);
 	return 1;
 }
@@ -3295,6 +3282,7 @@ static struct enum_pair eInputTextFlags[] = {
 	ENUM(ImGuiInputTextFlags, CharsScientific),
 	ENUM(ImGuiInputTextFlags, CallbackResize),
 	ENUM(ImGuiInputTextFlags, CallbackEdit),
+	ENUM(ImGuiInputTextFlags, EscapeClearsAll),
 	{ NULL, 0 },
 };
 
@@ -3396,6 +3384,9 @@ static struct enum_pair eHoveredFlags[] = {
 	ENUM(ImGuiHoveredFlags, NoNavOverride),
 	ENUM(ImGuiHoveredFlags, RectOnly),
 	ENUM(ImGuiHoveredFlags, RootAndChildWindows),
+	ENUM(ImGuiHoveredFlags, DelayNormal),
+	ENUM(ImGuiHoveredFlags, DelayShort),
+	ENUM(ImGuiHoveredFlags, NoSharedDelay),
 	{ NULL, 0 },
 };
 
@@ -3619,10 +3610,37 @@ static struct enum_pair eKey[] = {
 	ENUM(ImGuiKey, KeypadAdd),
 	ENUM(ImGuiKey, KeypadEnter),
 	ENUM(ImGuiKey, KeypadEqual),
-	ENUM(ImGuiKey, ModCtrl),
-	ENUM(ImGuiKey, ModShift),
-	ENUM(ImGuiKey, ModAlt),
-	ENUM(ImGuiKey, ModSuper),
+    ENUM(ImGuiKey, GamepadStart),
+    ENUM(ImGuiKey, GamepadBack),
+    ENUM(ImGuiKey, GamepadFaceLeft),
+    ENUM(ImGuiKey, GamepadFaceRight),
+    ENUM(ImGuiKey, GamepadFaceUp),
+    ENUM(ImGuiKey, GamepadFaceDown),
+    ENUM(ImGuiKey, GamepadDpadLeft),
+    ENUM(ImGuiKey, GamepadDpadRight),
+    ENUM(ImGuiKey, GamepadDpadUp),
+    ENUM(ImGuiKey, GamepadDpadDown),
+    ENUM(ImGuiKey, GamepadL1),
+    ENUM(ImGuiKey, GamepadR1),
+    ENUM(ImGuiKey, GamepadL2),
+    ENUM(ImGuiKey, GamepadR2),
+    ENUM(ImGuiKey, GamepadL3),
+    ENUM(ImGuiKey, GamepadR3),
+    ENUM(ImGuiKey, GamepadLStickLeft),
+    ENUM(ImGuiKey, GamepadLStickRight),
+    ENUM(ImGuiKey, GamepadLStickUp),
+    ENUM(ImGuiKey, GamepadLStickDown),
+    ENUM(ImGuiKey, GamepadRStickLeft),
+    ENUM(ImGuiKey, GamepadRStickRight),
+    ENUM(ImGuiKey, GamepadRStickUp),
+    ENUM(ImGuiKey, GamepadRStickDown),
+    ENUM(ImGuiKey, MouseLeft),
+    ENUM(ImGuiKey, MouseRight),
+    ENUM(ImGuiKey, MouseMiddle),
+    ENUM(ImGuiKey, MouseX1),
+    ENUM(ImGuiKey, MouseX2),
+    ENUM(ImGuiKey, MouseWheelX),
+    ENUM(ImGuiKey, MouseWheelY),
 	ENUM(ImGuiKey, COUNT),
 	{ NULL, 0 },
 };

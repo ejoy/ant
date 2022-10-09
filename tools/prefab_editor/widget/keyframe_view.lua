@@ -800,7 +800,7 @@ function m.show()
             end
             
             local icon = current_anim.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
-            if imgui.widget.ImageButton(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
+            if imgui.widget.ImageButton("todo", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
                 if current_anim.is_playing then
                     anim_pause(true)
                 else

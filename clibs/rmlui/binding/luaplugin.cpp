@@ -184,12 +184,10 @@ void lua_plugin::register_event(lua_State* L) {
 	ref_function(reference, L, "OnParseText");
 }
 
-int  lua_plugin::ref(lua_State* L) {
-	return luaref_ref(reference, L);
-}
-
-void lua_plugin::unref(int ref) {
-	luaref_unref(reference, ref);
+luaref_box lua_plugin::ref(lua_State* L) {
+	luaref_box box {reference, L};
+	assert(box.isvalid());
+	return box;
 }
 
 void lua_plugin::callref(lua_State* L, int ref, size_t argn, size_t retn) {

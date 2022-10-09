@@ -11,6 +11,9 @@ public:
         char utf8_path[1024];
 		Effekseer::ConvertUtf16ToUtf8(utf8_path, 1024, path);
         file_handle handle = file_open(fi, utf8_path, "rb");
+        if (!handle) {
+            return nullptr;
+        }
         return Effekseer::MakeRefPtr<FileReader>(fi, handle);
     }
 

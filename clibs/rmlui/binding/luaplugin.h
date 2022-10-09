@@ -40,8 +40,7 @@ public:
 	void OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& layoutMap,std::string& ctext,Rml::group& default_group) override;
 
 	void register_event(lua_State* L);
-	int  ref(lua_State* L);
-	void unref(int ref);
+	luaref_box ref(lua_State* L);
 	void callref(lua_State* L, int ref, size_t argn = 0, size_t retn = 0);
 	void call(lua_State* L, LuaEvent eid, size_t argn = 0, size_t retn = 0);
 	void pushevent(lua_State* L, const Rml::Event& event);

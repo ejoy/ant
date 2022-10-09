@@ -31,12 +31,16 @@ graphic:
       inv_highlight: 0.00001
       threshold: 12000
   shadow:
-    enable: true
-    size: 1024
-    type: inv_z
     bias: 0.003
-    normal_offset: 0
-    color: {0.0, 0.0, 0.0, 1}
-    stabilize: true
+    color: {0, 0, 0, 1}
+    enable: true
+    normal_offset: 0.012
+    size: 512
     split_lamada: 1
-    split_num: 4
+    stabilize: false
+    split_ratios:
+      {0.0, 0.1},
+      {0.1, 1},
+    type: inv_z
+    min_variance: 0.012
+    depth_multiplier: 1000
