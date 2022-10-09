@@ -1,6 +1,8 @@
 #pragma once
 
 #include <lua.hpp>
+#include <utility>
+
 typedef lua_State* luaref;
 
 luaref luaref_init   (lua_State* L);
@@ -18,6 +20,18 @@ public:
     {}
     ~luaref_box() {
         luaref_unref(refL, ref);
+    }
+    luaref_box(const luaref_box&) = delete;
+    luaref_box& operator=(const luaref_box&) = delete;
+    luaref_box(luaref_box&& rhs)
+        : refL(rhs.refL)
+        , ref(rhs.ref)
+    {
+        rhs.ref = LUA_NOREF;
+    }
+    luaref_box& operator=(luaref_box&& rhs) {
+        std::swap(*this, rhs);
+        return *this;
     }
     bool isvalid() const {
         return luaref_isvalid(refL, ref);
