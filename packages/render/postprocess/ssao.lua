@@ -19,21 +19,24 @@ local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local ssao_sys  = ecs.system "ssao_system"
 
+local ENABLE_BENT_NORMAL<const> = false
+local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao.material" or "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material"
+local BILATERAL_FILTER_MATERIAL<const>  = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/bilateral_filter.material" or "/pkg/ant.resources/materials/postprocess/bilateral_filter_bentnormal.material"
+
 function ssao_sys:init()
-    util.create_quad_drawer("ssao_drawer", "/pkg/ant.resources/materials/postprocess/ssao.material")
+    util.create_quad_drawer("ssao_drawer", SSAO_MATERIAL)
+    util.create_quad_drawer("bilateral_filter_drawer", BILATERAL_FILTER_MATERIAL)
 end
 
 local ssao_viewid<const> = viewidmgr.get "ssao"
 local bilateral_filter_viewid<const>, bilateral_filter_count<const> = viewidmgr.get_range "bilateral_filter"
 assert(bilateral_filter_count == 2, "need 2 pass blur: horizontal and vertical")
-local bilateral_filter_horizontal_viewid<const>, bilateral_filter_vertical_viewid<const> = bilateral_filter_viewid, bilateral_filter_viewid+1
-
-local ENABLE_BENT_NORMAL<const> = false
+local Hbilateral_filter_viewid<const>, Vbilateral_filter_viewid<const> = bilateral_filter_viewid, bilateral_filter_viewid+1
 
 local function create_framebuffer(ww, hh)
     local rb_flags = sampler{
-        MIN="POINT",
-        MAG="POINT",
+        MIN="LINEAR",
+        MAG="LINEAR",
         U="CLAMP",
         V="CLAMP",
         RT="RT_ON",
@@ -60,21 +63,18 @@ function ssao_sys:init_world()
     util.create_queue(ssao_viewid, vr, fbidx, "ssao_queue", "ssao_queue")
 
     --TODO: use compute shader to resolve msaa depth to normal depth
-    local sqd = w:first("scene_depth_queue visible?out")
+    local sqd = w:first "scene_depth_queue visible?out"
     sqd.visible = true
     w:submit(sqd)
 
     local fbidx_blur = create_framebuffer(vr.w, vr.h)
-    util.create_queue(bilateral_filter_horizontal_viewid, mu.copy_viewrect(vr), fbidx_blur, "bilateral_filter_horizontal_queue", "bilateral_filter_horizontal_queue")
-    util.create_queue(bilateral_filter_vertical_viewid, mu.copy_viewrect(vr), fbidx, "bilateral_filter_vertical_queue", "bilateral_filter_vertical_queue")
+    util.create_queue(Hbilateral_filter_viewid, mu.copy_viewrect(vr), fbidx_blur, "Hbilateral_filter_queue", "Hbilateral_filter_queue")
+    util.create_queue(Vbilateral_filter_viewid, mu.copy_viewrect(vr), fbidx, "Vbilateral_filter_queue", "Vbilateral_filter_queue")
 end
 
 local texmatrix<const> = mu.calc_texture_matrix()
 
 local ssao_configs = {
-    enabled                     = false,    -- enables or disables screen-space ambient occlusion
-    enableBentNormals           = false,    -- enables bent normals computation from AO, and specular AO
-
     radius                      = 0.3,      -- Ambient Occlusion radius in meters, between 0 and ~10.
     power                       = 1.0,      -- Controls ambient occlusion's contrast. Must be positive.
     bias                        = 0.0005,   -- Self-occlusion bias in meters. Use to avoid self-occlusion. Between 0 and a few mm.
@@ -141,7 +141,7 @@ end
 
 local function update_properties(drawer, ce)
     --TODO: use nomral scene depth buffer
-    local sdq = w:first("scene_depth_queue render_target:in")
+    local sdq = w:first "scene_depth_queue render_target:in"
     imaterial.set_property(drawer, "s_scene_depth", fbmgr.get_depth(sdq.render_target.fb_idx).handle)
 
     local vr = sdq.render_target.view_rect
@@ -149,7 +149,7 @@ local function update_properties(drawer, ce)
     local camera = ce.camera
     local projmat = camera.projmat
 
-    local directional_light = w:first("directional_light scene:in")
+    local directional_light = w:first "directional_light scene:in"
     local lightdir = iom.get_direction(directional_light)
     calc_ssao_config(camera, lightdir, depthwidth, depthheight, depthdepth)
 
@@ -218,8 +218,11 @@ local bilateral_config = {
 
 local function update_bilateral_filter_properties(drawer, sao_handle, bn_handle, kernels, offset, camera_far)
     local sample_radius_count<const> = #kernels
-    imaterial.set_property(drawer, "s_sao", sao_handle, bn_handle)
-    imaterial.set_property(drawer, "u_bilateral_weight", kernels)
+    imaterial.set_property(drawer, "s_sao", sao_handle)
+    if bn_handle then
+        imaterial.set_property(drawer, "s_bentnormal", sao_handle)
+    end
+    imaterial.set_property(drawer, "u_bilateral_kernels", kernels)
     imaterial.set_property(drawer, "u_bilateral_param", 
         math3d.vector(offset[1], offset[2], sample_radius_count, camera_far/bilateral_config.bilateral_threshold))
 end
@@ -227,7 +230,7 @@ end
 local kernel_max_size<const> = 16
 
 local function gaussian_sample_radius_count(kernelsize)
-    return math.min(kernel_max_size, (kernelsize+1)/2);
+    return math.min(kernel_max_size, (kernelsize+1)//2);
 end
 
 local function generate_gaussian_kernels(kernelsize, std_dev)
@@ -242,16 +245,20 @@ end
 
 local function submit_bilateral_filter(drawer, viewid, rt, kernels, offset, camerafar)
     local fb = fbmgr.get(rt.fb_idx)
-    local ao_handle, bn_handle = fbmgr.get_rb(fb[1]).handle, fbmgr.get_rb(fb[2]).handle
+    local ao_handle = fb[1].handle
+    local bn_handle
+    if ENABLE_BENT_NORMAL then
+        bn_handle = assert(fb[2]).handle
+    end
 
     local vr = rt.view_rect
     update_bilateral_filter_properties(drawer, ao_handle, bn_handle, kernels, {offset[1]/vr.w, offset[2]/vr.h}, camerafar)
-    irender.draw(viewid, "ssao_drawer")
+    irender.draw(viewid, "bilateral_filter_drawer")
 end
 
 function ssao_sys:ssao()
-    local drawer = w:first("ssao_drawer filter_material:in")
-    local mq = w:first("main_queue camera_ref:in")
+    local drawer = w:first "ssao_drawer filter_material:in"
+    local mq = w:first "main_queue camera_ref:in"
     local ce = w:entity(mq.camera_ref, "camera:in")
     update_properties(drawer, ce)
 
@@ -259,17 +266,19 @@ function ssao_sys:ssao()
 
     -- take bilateral filter
     local kernels = generate_gaussian_kernels(bilateral_config.kernel_size, bilateral_config.std_deviation)
-    local camera_far<const> = ce.frustum.f
-    local aoqueue = w:first("ssao_queue render_target:in")
-    submit_bilateral_filter(kernels, bilateral_filter_horizontal_viewid, aoqueue.render_target, kernels, {1.0, 0.0}, camera_far)
+    local camera_far<const> = ce.camera.frustum.f
+    local aoqueue = w:first "ssao_queue render_target:in"
+    local bf_drawer = w:first "bilateral_filter_drawer filter_material:in"
+    submit_bilateral_filter(bf_drawer, Hbilateral_filter_viewid, aoqueue.render_target, kernels, {1.0, 0.0}, camera_far)
 
-    local bf_queue = w:first("bilateral_filter_horizontal_queue render_target:in")
-    submit_bilateral_filter(drawer, bilateral_filter_vertical_viewid, bf_queue.render_target, kernels, {0.0, 1.0}, camera_far)
+    local bf_queue = w:first "Hbilateral_filter_queue render_target:in"
+    submit_bilateral_filter(bf_drawer, Vbilateral_filter_viewid, bf_queue.render_target, kernels, {0.0, 1.0}, camera_far)
+
+    assert(w:first "Vbilateral_filter_queue render_target".render_target.fb_idx == aoqueue.render_target.fb_idx)
 
     -- output result
-    local pp = w:first("postprocess postprocess_input:in")
+    local pp = w:first "postprocess postprocess_input:in"
     local ppi = pp.postprocess_input
     local fb = fbmgr.get(aoqueue.render_target.fb_idx)
-    ppi.ssao_handle = fbmgr.get_rb(fb[1]).handle
-    ppi.bent_normal_handle = fbmgr.get_rb(fb[2]).handle
+    ppi.ssao_handle, ppi.bent_normal_handle = fb[1].handle, fb[2].handle
 end

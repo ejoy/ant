@@ -10,7 +10,7 @@ SAMPLER2D(s_sao, 0);
 SAMPLER2D(s_bentnormal, 1);
 #endif //COMPUTE_BENT_NORMAL
 
-uniform vec4 u_bilateral_weight[2];
+uniform vec4 u_bilateral_kernels[2];
 uniform vec4 u_bilateral_param;
 #define u_step_offset   u_bilateral_param.xy
 #define u_sample_count  u_bilateral_param.z

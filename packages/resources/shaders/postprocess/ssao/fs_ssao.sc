@@ -12,10 +12,9 @@ $input v_texcoord0
 #include "postprocess/ssao/uniforms.sh"
 #include "postprocess/ssao/ssct.sh"
 
-// #include "ssaoUtils.fs"
-// #include "geometry.fs"
-
 const float kLog2LodRate = 3.0;
+
+//code from filament ssao
 
 // Ambient Occlusion, largely inspired from:
 // "The Alchemy Screen-Space Ambient Obscurance Algorithm" by Morgan McGuire
