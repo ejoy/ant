@@ -106,13 +106,9 @@ local ssao_configs = {
     },
 }
 
-local function update_config(camera, lightdir, depthwidth, depthheight, depthdepth)
+do
     ssao_configs.inv_radius_squared             = 1.0/(ssao_configs.radius * ssao_configs.radius)
     ssao_configs.min_horizon_angle_sine_squared = math.sin(ssao_configs.min_horizon_angle) ^ 2.0
-
-    --calc projection scale
-    ssao_configs.projection_scale = util.projection_scale(depthwidth, depthheight, camera.projmat)
-    ssao_configs.projection_scale_radius = ssao_configs.projection_scale * ssao_configs.radius
 
     local peak = 0.1 * ssao_configs.radius
     ssao_configs.peak2 = peak * peak
@@ -123,11 +119,8 @@ local function update_config(camera, lightdir, depthwidth, depthheight, depthdep
     ssao_configs.ssao_intentsity = ssao_configs.intensity * (TAU * peak)
     ssao_configs.intensity_pre_sample = ssao_configs.ssao_intentsity / ssao_configs.sample_count
 
-    ssao_configs.max_level = depthdepth - 1
-
     ssao_configs.inv_sample_count = 1.0 / (ssao_configs.sample_count - 0.5)
 
-    
     local inc = ssao_configs.inv_sample_count * ssao_configs.spiral_turns * TAU
     ssao_configs.sin_inc, ssao_configs.cos_inc = math.sin(inc), math.cos(inc)
 
@@ -135,7 +128,15 @@ local function update_config(camera, lightdir, depthwidth, depthheight, depthdep
     local ssct = ssao_configs.ssct
     ssct.tan_cone_angle            = math.tan(ssao_configs.ssct.light_cone*0.5)
     ssct.inv_contact_distance_max  = 1.0 / ssct.contact_distance_max
-    ssct.lightdir.v                = math3d.normalize(math3d.inverse(math3d.transform(camera.viewmat, lightdir, 0)))
+end
+
+local function calc_ssao_config(camera, lightdir, depthwidth, depthheight, depthdepth)
+    --calc projection scale
+    ssao_configs.projection_scale = util.projection_scale(depthwidth, depthheight, camera.projmat)
+    ssao_configs.projection_scale_radius = ssao_configs.projection_scale * ssao_configs.radius
+    ssao_configs.max_level = depthdepth - 1
+
+    ssao_configs.ssct.lightdir.v                = math3d.normalize(math3d.inverse(math3d.transform(camera.viewmat, lightdir, 0)))
 end
 
 local function update_properties(drawer, ce)
@@ -150,7 +151,7 @@ local function update_properties(drawer, ce)
 
     local directional_light = w:first("directional_light scene:in")
     local lightdir = iom.get_direction(directional_light)
-    update_config(camera, lightdir, depthwidth, depthheight, depthdepth)
+    calc_ssao_config(camera, lightdir, depthwidth, depthheight, depthdepth)
 
     imaterial.set_property(drawer, "u_ssao_param", math3d.vector(
         ssao_configs.visible_power,
