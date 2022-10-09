@@ -6,9 +6,9 @@ $input v_texcoord0
 
 SAMPLER2D(s_sao, 0);
 
-#if COMPUTE_BENT_NORMAL
+#if ENABLE_BENT_NORMAL
 SAMPLER2D(s_bentnormal, 1);
-#endif //COMPUTE_BENT_NORMAL
+#endif //ENABLE_BENT_NORMAL
 
 uniform vec4 u_bilateral_kernels[2];
 uniform vec4 u_bilateral_param;
@@ -43,17 +43,20 @@ float get_kernel_weight(uint idx)
 {
     uint uidx = idx / 4;
     uint vidx = idx % 4;
-    return u_bilateral_weight[uidx][vidx];
+    return u_bilateral_kernels[uidx][vidx];
 }
 
 void main()
 {
     vec3 data = texture2D(s_sao, v_texcoord0).rgb;
 
+    //TODO: need check this is correct for our skybox code
     if (data.g * data.b == 1.0) {
         // This is the skybox, skip
-        postProcess.aoData = data;
-        postProcess.bnData = vec3(0.0);
+        gl_FragData[0] = vec4(data, 1.0);
+#if ENABLE_BENT_NORMAL
+        gl_FragData[1] = vec4(0.0, 0.0, 0.0, 1.0);
+#endif //ENABLE_BENT_NORMAL
         return;
     }
 
@@ -61,13 +64,13 @@ void main()
     // bilateral filtering
     float total_weight = get_kernel_weight(0);
 
-    ao_info center_ai = vec2(data.r, unpackHalfFloat(data.gb));    
-    float sumAO = ao * total_weight;
+    const ao_info center_ai = {data.r, unpackHalfFloat(data.gb)};
+    float sumAO = center_ai.ao * total_weight;
 
-#if COMPUTE_BENT_NORMAL
+#if ENABLE_BENT_NORMAL
     vec3 bn = sampleBN(s_bentnormal, v_texcoord0);
     vec3 sumBN  = bn * total_weight;
-#endif //COMPUTE_BENT_NORMAL
+#endif //ENABLE_BENT_NORMAL
 
     vec2 offset = u_step_offset;
     for (int i = 1; i < (int)u_sample_count; i++) {
@@ -80,29 +83,25 @@ void main()
             const float bilateral = weight * bilateralWeight(center_ai.depth, s.depth);
             sumAO += s.ao * bilateral;
 
-#if COMPUTE_BENT_NORMAL
+#if ENABLE_BENT_NORMAL
             bn = sampleBN(s_bentnormal, uv);
             sumBN += bn * bilateral;
-#endif //COMPUTE_BENT_NORMAL
+#endif //ENABLE_BENT_NORMAL
 
             total_weight += bilateral;
         }
         offset += u_step_offset;
     }
 
-    ao = sumAO * (1.0 / total_weight);
-
-#if COMPUTE_BENT_NORMAL
-    bn = sumBN * (1.0 / total_weight);
-#endif //COMPUTE_BENT_NORMAL
-
+    float ao = sumAO * (1.0 / total_weight);
     // simple dithering helps a lot (assumes 8 bits target)
     // this is most useful with high quality/large blurs
     ao += ((interleavedGradientNoise(gl_FragCoord.xy) - 0.5) / 255.0);
 
     gl_FragData[0] = vec4(ao, data.gb, 1.0);
 
-#if COMPUTE_BENT_NORMAL
+#if ENABLE_BENT_NORMAL
+    bn = sumBN * (1.0 / total_weight);
     gl_FragData[1] = packBentNormal(bn);
-#endif //COMPUTE_BENT_NORMAL
+#endif //ENABLE_BENT_NORMAL
 }

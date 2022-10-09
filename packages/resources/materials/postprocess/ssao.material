@@ -1,8 +1,6 @@
 fx:
   fs: /pkg/ant.resources/shaders/postprocess/ssao/fs_ssao.sc
   vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
-  # setting:
-  #   COMPUTE_BENT_NORMAL: 1
 properties:
   s_scene_depth:
     stage: 1

@@ -84,7 +84,7 @@ void computeAmbientOcclusionSAO(inout float occlusion, inout vec3 bentNormal,
     float sampleOcclusion = max(0.0, vn - (origin.z * u_ssao_bias)) / (vv + u_ssao_peak2);
     occlusion += w * sampleOcclusion;
 
-#if COMPUTE_BENT_NORMAL
+#if ENABLE_BENT_NORMAL
 
     // TODO: revisit how we choose to keep the normal or not
     // reject samples beyond the far plane
@@ -96,7 +96,7 @@ void computeAmbientOcclusionSAO(inout float occlusion, inout vec3 bentNormal,
         bentNormal += n * (sampleOcclusion <= 0.0 ? 1.0 : 0.0);
     }
 
-#endif //COMPUTE_BENT_NORMAL
+#endif //ENABLE_BENT_NORMAL
 }
 
 void scalableAmbientObscurance(out float obscurance, out vec3 bentNormal,
@@ -116,9 +116,9 @@ void scalableAmbientObscurance(out float obscurance, out vec3 bentNormal,
         tapPosition = mul(angleStep, tapPosition);
     }
     obscurance = sqrt(obscurance * u_ssao_intensity);
-#if COMPUTE_BENT_NORMAL
+#if ENABLE_BENT_NORMAL
     bentNormal = normalize(bentNormal);
-#endif //COMPUTE_BENT_NORMAL
+#endif //ENABLE_BENT_NORMAL
 }
 
 ConeTraceSetup init_cone_trace(highp vec2 uv, highp vec3 origin, vec3 normal)
@@ -189,7 +189,7 @@ void main()
 // #endif
 
     gl_FragData[0] = vec4(vec3(aoVisibility, packHalfFloat(origin.z * u_inv_far)), 1.0);
-#if COMPUTE_BENT_NORMAL
+#if ENABLE_BENT_NORMAL
     gl_FragData[1] = vec4(encodeNormalUint(bentNormal), 1.0);
-#endif //COMPUTE_BENT_NORMAL
+#endif //ENABLE_BENT_NORMAL
 }

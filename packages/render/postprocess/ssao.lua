@@ -3,7 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local mathpkg   = import_package "ant.math"
-local mu        = mathpkg.util
+local mu, mc    = mathpkg.util, mathpkg.constant
 
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
@@ -20,8 +20,8 @@ local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local ssao_sys  = ecs.system "ssao_system"
 
 local ENABLE_BENT_NORMAL<const> = false
-local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao.material" or "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material"
-local BILATERAL_FILTER_MATERIAL<const>  = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/bilateral_filter.material" or "/pkg/ant.resources/materials/postprocess/bilateral_filter_bentnormal.material"
+local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/ssao.material"
+local BILATERAL_FILTER_MATERIAL<const>  = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/bilateral_filter_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/bilateral_filter.material"
 
 function ssao_sys:init()
     util.create_quad_drawer("ssao_drawer", SSAO_MATERIAL)
@@ -211,39 +211,39 @@ local function update_properties(drawer, ce)
 end
 
 local bilateral_config = {
-    kernel_size = 16,
+    kernel_radius = 8,
     std_deviation = 1.0,
     bilateral_threshold = 0.0065,
 }
 
-local function update_bilateral_filter_properties(drawer, sao_handle, bn_handle, kernels, offset, camera_far)
-    local sample_radius_count<const> = #kernels
+local KERNEL_MAX_RADIUS_SIZE<const> = 16
+
+local function generate_gaussian_kernels(radius, std_dev, kernels)
+    radius = math.min(KERNEL_MAX_RADIUS_SIZE, radius)
+    for i=1, radius do
+        local x = i-1
+        local kidx = (x // 4)+1
+        local vidx = (x %  4)+1
+        local k = kernels[kidx]
+        k[vidx] = math.exp(-(x * x) / (2.0 * std_dev * std_dev))
+    end
+    return radius
+end
+
+local KERNELS       = {math3d.ref(mc.ZERO),math3d.ref(mc.ZERO),}
+local KERNELS_COUNT = generate_gaussian_kernels(bilateral_config.kernel_radius, bilateral_config.std_deviation, KERNELS)
+
+local function update_bilateral_filter_properties(drawer, sao_handle, bn_handle, offset, inv_camera_far_with_bilateral_threshold)
     imaterial.set_property(drawer, "s_sao", sao_handle)
     if bn_handle then
         imaterial.set_property(drawer, "s_bentnormal", sao_handle)
     end
-    imaterial.set_property(drawer, "u_bilateral_kernels", kernels)
+    imaterial.set_property(drawer, "u_bilateral_kernels", KERNELS)
     imaterial.set_property(drawer, "u_bilateral_param", 
-        math3d.vector(offset[1], offset[2], sample_radius_count, camera_far/bilateral_config.bilateral_threshold))
+        math3d.vector(offset[1], offset[2], KERNELS_COUNT, inv_camera_far_with_bilateral_threshold))
 end
 
-local kernel_max_size<const> = 16
-
-local function gaussian_sample_radius_count(kernelsize)
-    return math.min(kernel_max_size, (kernelsize+1)//2);
-end
-
-local function generate_gaussian_kernels(kernelsize, std_dev)
-    local count = gaussian_sample_radius_count(kernelsize)
-    local kernels = {}
-    for i=1, count do
-        local x = i-1
-        kernels[i] = math.exp(-(x * x) / (2.0 * std_dev * std_dev))
-    end
-    return kernels
-end
-
-local function submit_bilateral_filter(drawer, viewid, rt, kernels, offset, camerafar)
+local function submit_bilateral_filter(drawer, viewid, rt, offset, inv_camera_far_with_bilateral_threshold)
     local fb = fbmgr.get(rt.fb_idx)
     local ao_handle = fb[1].handle
     local bn_handle
@@ -252,7 +252,7 @@ local function submit_bilateral_filter(drawer, viewid, rt, kernels, offset, came
     end
 
     local vr = rt.view_rect
-    update_bilateral_filter_properties(drawer, ao_handle, bn_handle, kernels, {offset[1]/vr.w, offset[2]/vr.h}, camerafar)
+    update_bilateral_filter_properties(drawer, ao_handle, bn_handle, {offset[1]/vr.w, offset[2]/vr.h}, inv_camera_far_with_bilateral_threshold)
     irender.draw(viewid, "bilateral_filter_drawer")
 end
 
@@ -265,20 +265,23 @@ function ssao_sys:ssao()
     irender.draw(ssao_viewid, "ssao_drawer")
 
     -- take bilateral filter
-    local kernels = generate_gaussian_kernels(bilateral_config.kernel_size, bilateral_config.std_deviation)
-    local camera_far<const> = ce.camera.frustum.f
+    local inv_camera_far_with_bilateral_threshold<const> = ce.camera.frustum.f / bilateral_config.bilateral_threshold
     local aoqueue = w:first "ssao_queue render_target:in"
     local bf_drawer = w:first "bilateral_filter_drawer filter_material:in"
-    submit_bilateral_filter(bf_drawer, Hbilateral_filter_viewid, aoqueue.render_target, kernels, {1.0, 0.0}, camera_far)
+    submit_bilateral_filter(bf_drawer, Hbilateral_filter_viewid, aoqueue.render_target, {1.0, 0.0}, inv_camera_far_with_bilateral_threshold)
 
     local bf_queue = w:first "Hbilateral_filter_queue render_target:in"
-    submit_bilateral_filter(bf_drawer, Vbilateral_filter_viewid, bf_queue.render_target, kernels, {0.0, 1.0}, camera_far)
+    submit_bilateral_filter(bf_drawer, Vbilateral_filter_viewid, bf_queue.render_target, {0.0, 1.0}, inv_camera_far_with_bilateral_threshold)
 
-    assert(w:first "Vbilateral_filter_queue render_target".render_target.fb_idx == aoqueue.render_target.fb_idx)
+    assert(w:first "Vbilateral_filter_queue render_target:in".render_target.fb_idx == aoqueue.render_target.fb_idx)
 
     -- output result
     local pp = w:first "postprocess postprocess_input:in"
     local ppi = pp.postprocess_input
     local fb = fbmgr.get(aoqueue.render_target.fb_idx)
-    ppi.ssao_handle, ppi.bent_normal_handle = fb[1].handle, fb[2].handle
+    ppi.ssao_handle = fb[1].handle
+
+    if ENABLE_BENT_NORMAL then
+        ppi.bent_normal_handle = fb[2].handle
+    end
 end
