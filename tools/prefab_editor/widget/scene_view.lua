@@ -146,7 +146,7 @@ local function show_scene_node(node)
         imgui.util.PushID(tostring(eid))
         local current_lock = hierarchy:is_locked(eid)
         local icon = current_lock and icons.ICON_LOCK or icons.ICON_UNLOCK
-        if imgui.widget.ImageButton(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
+        if imgui.widget.ImageButton("todo", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
             world:pub { "HierarchyEvent", "lock", eid, not current_lock }
         end
         imgui.util.PopID()
@@ -162,7 +162,7 @@ local function show_scene_node(node)
             end
         end
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
-        if imgui.widget.ImageButton(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
+        if imgui.widget.ImageButton("todo", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
             world:pub { "HierarchyEvent", "visible", nd, not current_visible }
         end
         imgui.util.PopID()
