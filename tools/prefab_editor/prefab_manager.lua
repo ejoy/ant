@@ -21,6 +21,8 @@ local widget_utils  = require "widget.utils"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local subprocess    = import_package "ant.subprocess"
+local bgfx      = require "bgfx"
+
 local anim_view
 local m = {
     entities = {}
@@ -114,7 +116,6 @@ function m:create_hitch(slot)
     hitch_id = hitch_id + 1
     self:add_entity(new_entity, parent_eid, template)
 end
-
 
 local function create_simple_entity(name, parent)
     local template = {
@@ -515,7 +516,9 @@ local function on_remove_entity(eid)
     end
     hierarchy:del(eid)
 end
-
+local ientity   = ecs.import.interface "ant.render|ientity"
+local imesh 	= ecs.import.interface "ant.asset|imesh"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 function m:reset_prefab()
     for _, e in ipairs(self.entities) do
         on_remove_entity(e)
@@ -534,6 +537,23 @@ function m:reset_prefab()
     self.prefab_template = nil
     self.prefab_instance = nil
     gizmo.target_eid = nil
+
+    -- self.plane = ecs.create_entity {
+    --     policy = {
+    --         "ant.render|render",
+    --         "ant.general|name",
+    --     },
+    --     data = {
+    --         scene = {s = {100, 1, 100}},
+    --         mesh  = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",--"/pkg/tools.prefab_editor/res/plane.meshbin", --imesh.init_mesh(ientity.plane_mesh()),
+    --         material    = "/pkg/ant.resources/materials/pbr_default.material",
+    --         visible_state= "main_view",
+    --         name        = "ground",
+    --         on_ready = function (e)
+    --             -- imaterial.set_property(e, "s_basecolor", fbmgr.get_rb(rt.fb_idx, 1).handle)
+    --         end
+    --     },
+    -- }
 end
 
 function m:reload()
