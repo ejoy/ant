@@ -41,6 +41,7 @@ return {
             "tools.prefab_editor|input_system",
             "tools.prefab_editor|grid_brush_system",
             "tools.prefab_editor|gui_system",
+            "tools.prefab_editor|camera_system",
             "ant.objcontroller|pickup_system",
             "ant.camera|default_camera_controller",
         }

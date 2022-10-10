@@ -1622,7 +1622,7 @@ wImageButton(lua_State *L) {
 	ImVec4 bg_col = { 0.0f,0.0f,0.0f,0.0f };
 	ImVec4 tint_col = { 1.0f,1.0f,1.0f,1.0f };
 
-	if (lua_type(L, 4) == LUA_TTABLE)
+	if (lua_type(L, 5) == LUA_TTABLE)
 	{
 		uv0 = read_field_vec2(L, "uv0", uv0, 5);
 		uv1 = read_field_vec2(L, "uv1", uv1, 5);
@@ -3814,6 +3814,7 @@ lCreate(lua_State* L) {
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
 	io.ConfigViewportsNoTaskBarIcon = true;
 
 	ImGuiStyle& style = ImGui::GetStyle();

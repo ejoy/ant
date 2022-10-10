@@ -155,6 +155,7 @@ function gizmo:on_mode(mode)
 	self.mode = mode
 	self:show_by_state(true)
 	self:set_rotation()
+	self:update_scale()
 end
 
 local function create_arrow_widget(axis_root, axis_str)
@@ -1017,21 +1018,22 @@ end
 local gizmo_event = world:sub{"Gizmo"}
 
 local function check_calc_aabb(eid)
-	local entity <close> = w:entity(eid, "scene:in eid:in")
-	local scene = entity.scene
-	if scene == nil then
-		return
+	local entity <close> = w:entity(eid, "bounding?in scene?in")
+	local sceneaabb = math3d.ref(math3d.aabb(math3d.vector(-5.0, -5.0, -5.0), math3d.vector(5.0, 5.0, 5.0)))
+	local bounding = entity.bounding
+	if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
+		local wm = entity.scene and iom.worldmat(entity) or mc.IDENTITY_MAT
+		return math3d.ref(math3d.aabb(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1), math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1)))
 	end
-	local aabb = scene.scene_aabb
-	if aabb then
-		return aabb
+	do
+		return sceneaabb
 	end
-	
+	-- TODO : merge aabb
 	local function build_scene()
 		local rt = {}
-		for ee in w:select "scene:in eid:in" do
+		for ee in w:select "bounding?in scene?in eid:in" do
 			local id = ee.eid
-			local pid = ee.scene.parent
+			local pid = ee.scene and ee.scene.parent or 0
 			if pid then
 				local c = rt[pid]
 				if c == nil then
@@ -1039,7 +1041,7 @@ local function check_calc_aabb(eid)
 					rt[pid] = c
 				end
 				w:extend(ee, "name?in")
-				c[#c+1] = {id=id, aabb=ee.scene.scene_aabb, name=ee.name}
+				c[#c+1] = {id=id, aabb = sceneaabb, name=ee.name}
 			end
 		end
 		return rt
@@ -1099,7 +1101,7 @@ function gizmo_sys:handle_event()
 			gizmo:click_axis_or_plane(move_axis)
 			gizmo:click_axis(rotate_axis)
 
-			world:pub{"camera_controller", "stop", gizmo_seleted}
+			-- world:pub{"camera_controller", "stop", gizmo_seleted}
 		elseif what == "MIDDLE" then
 		end
 	end
@@ -1119,7 +1121,7 @@ function gizmo_sys:handle_event()
 				end
 			end
 			gizmo_seleted = false
-			world:pub{"camera_controller", "stop", false}
+			-- world:pub{"camera_controller", "stop", false}
 			light_gizmo_mode = 0
 			if is_tran_dirty then
 				is_tran_dirty = false
