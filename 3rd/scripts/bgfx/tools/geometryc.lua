@@ -17,6 +17,9 @@ lm:exe "geometryc" {
         "src/vertexlayout.cpp",
         "3rdparty/meshoptimizer/src/*.cpp",
     },
+    msvc = {
+        flags = "/wd4819",
+    },
     windows = {
         deps = "bgfx-support-utf8",
     }

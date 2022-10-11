@@ -75,6 +75,7 @@ table.insert(bgfxDll.defines, "BGFX_SHARED_LIB_BUILD=1")
 lm:lib "bgfx-lib" (bgfxLib)
 lm:src "bgfx-dll" (bgfxDll)
 lm:dll "bgfx-dll" {
+    basename = "bgfx",
     windows = {
         links = {
             "gdi32",

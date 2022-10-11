@@ -3,6 +3,7 @@ local lm = require "luamake"
 lm.cxx = "c++17"
 
 lm.warnings = {
+    "error",
     "on"
 }
 
@@ -18,6 +19,10 @@ lm.msvc = {
 
 lm.mingw = {
     includes = lm.BxDir / "include/compat/mingw",
+}
+
+lm.linux  = {
+    flags = "-fPIC"
 }
 
 lm.macos = {
