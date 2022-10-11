@@ -4,9 +4,7 @@ system "camera_system"
     .require_interface "ant.objcontroller|iobj_motion"
     .method "init_world"
     .method "entity_ready"
-    .method "data_changed"
-    
-
+    .method "handle_input"
 
 system "second_view_camera_system"
     .implement "camera/second_view.lua"

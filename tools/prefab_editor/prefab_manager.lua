@@ -21,6 +21,8 @@ local widget_utils  = require "widget.utils"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local subprocess    = import_package "ant.subprocess"
+local bgfx      = require "bgfx"
+
 local anim_view
 local m = {
     entities = {}
@@ -115,7 +117,6 @@ function m:create_hitch(slot)
     self:add_entity(new_entity, parent_eid, template)
 end
 
-
 local function create_simple_entity(name, parent)
     local template = {
 		policy = {
@@ -139,12 +140,12 @@ end
 
 local function create_default_light(lt, parent)
     return ilight.create{
-        srt = {t = {0, 3, 0}, r = {math.rad(130), 0, 0}, parent = parent},
+        srt = {t = {0, 5, 0}, r = {math.rad(130), 0, 0}, parent = parent},
         name            = lt .. gen_light_id(),
         type            = lt,
         color           = {1, 1, 1, 1},
-        make_shadow     = false,
-        intensity       = ilight.default_intensity(lt),
+        make_shadow     = true,
+        intensity       = 250000,--ilight.default_intensity(lt),
         intensity_unit  = ilight.default_intensity_unit(lt),
         range           = 1,
         motion_type     = "dynamic",
@@ -237,7 +238,8 @@ function m:create(what, config)
                     scene = {},
                     visible_state = "main_view|selectable",
                     --material = "/pkg/ant.resources/materials/outline/scale.material",
-                    material = "/pkg/ant.resources/materials/pbr_default.material",
+                    -- material = "/pkg/ant.resources/materials/pbr_default.material",
+                    material = "/pkg/tools.prefab_editor/res/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
                     name = config.type .. gen_geometry_id(),
                 }
@@ -515,7 +517,10 @@ local function on_remove_entity(eid)
     end
     hierarchy:del(eid)
 end
-
+local ientity   = ecs.import.interface "ant.render|ientity"
+local imesh 	= ecs.import.interface "ant.asset|imesh"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+local tile_tex
 function m:reset_prefab()
     for _, e in ipairs(self.entities) do
         on_remove_entity(e)
@@ -534,6 +539,39 @@ function m:reset_prefab()
     self.prefab_template = nil
     self.prefab_instance = nil
     gizmo.target_eid = nil
+
+    if not tile_tex then
+        tile_tex = bgfx.create_texture2d(4, 4, true, 1, "RGBA8", "uwvwww-l+p*l", bgfx.memory_buffer("bbbb", {
+            100, 100, 100, 255,100, 100, 100, 255,200, 200, 200, 255,200, 200, 200, 255,
+            100, 100, 100, 255,100, 100, 100, 255,200, 200, 200, 255,200, 200, 200, 255,
+            200, 200, 200, 255,200, 200, 200, 255,100, 100, 100, 255,100, 100, 100, 255,
+            200, 200, 200, 255,200, 200, 200, 255,100, 100, 100, 255,100, 100, 100, 255,
+            100, 100, 100, 255,
+            200, 200, 200, 255,
+            200, 200, 200, 255,
+            100, 100, 100, 255,
+            150, 150, 150, 255
+        }))
+    end
+    if not self.plane then
+        self.plane = ecs.create_entity {
+            policy = {
+                "ant.render|render",
+                "ant.general|name",
+            },
+            data = {
+                scene = {s = {200, 1, 200}},
+                mesh  = "/pkg/tools.prefab_editor/res/plane.glb|meshes/Plane_P1.meshbin",
+                material    = "/pkg/tools.prefab_editor/res/materials/texture_plane.material",
+                visible_state= "main_view",
+                name        = "ground",
+                on_ready = function (e)
+                    -- imaterial.set_property(e, "s_basecolor", tile_tex)
+                    imaterial.set_property(e, "u_uvmotion", math3d.vector{0, 0, 100, 100})
+                end
+            },
+        }
+    end
 end
 
 function m:reload()

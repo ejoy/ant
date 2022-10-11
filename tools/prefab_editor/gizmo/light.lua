@@ -46,7 +46,7 @@ function m.bind(eid)
         local er <close> = w:entity(m.current_gizmo.root, "name:in")
         iom.set_position(er, iom.get_position(ec))
         iom.set_rotation(er, iom.get_rotation(ec))
-        er.name = ec.name
+        -- er.name = ec.name
         m.show(true)
     end
 end
@@ -84,7 +84,7 @@ function m.highlight(b)
     end
 end
 
-local function create_gizmo_root(initpos, introt)
+local function create_gizmo_root(initpos, initrot)
     return ecs.create_entity{
 		policy = {
 			"ant.general|name",
@@ -92,7 +92,7 @@ local function create_gizmo_root(initpos, introt)
 		},
 		data = {
 			name = "gizmo root",
-            scene = {t = initpos or {0,0,0}, r = introt or {0,0,0,1}},
+            scene = {t = initpos or {0, 5, 0}, r = initrot or {math.rad(130), 0, 0, 1}},
             -- on_ready = function (e)
             --     ivs.set_state(e, "visible", false)  
             -- end
@@ -100,8 +100,8 @@ local function create_gizmo_root(initpos, introt)
     }
 end
 
-local function create_directional_gizmo(initpos, introt)
-    local root = create_gizmo_root(initpos, introt)
+local function create_directional_gizmo(initpos, initrot)
+    local root = create_gizmo_root(initpos, initrot)
     local circle_eid = computil.create_circle_entity("directional gizmo circle", RADIUS, SLICES, {parent = root}, gizmo_const.COLOR.GRAY, true)
     local alleid = {}
     alleid[#alleid + 1] = circle_eid
@@ -125,8 +125,13 @@ end
 
 local function update_point_gizmo()
     local root = m.point.root
-    local e <close> = w:entity(m.current_light)
-    local radius = m.current_light and ilight.range(e) or 1.0
+    local range = 1.0
+    if m.current_light then
+        local e <close> = w:entity(m.current_light, "light:in")
+        range = ilight.range(e)
+    end
+    
+    local radius = range
     
     if #m.point.eid == 0 then
         local c0 = geo_utils.create_dynamic_circle("light gizmo circle", radius, gizmo_const.ROTATE_SLICES, {parent = root}, gizmo_const.COLOR.GRAY, true)
@@ -144,7 +149,7 @@ local function update_spot_gizmo()
     local range = 1.0
     local radian = 10
     if m.current_light then
-        local e <close> = w:entity(m.current_light)
+        local e <close> = w:entity(m.current_light, "light:in")
         range = ilight.range(e)
         radian = ilight.outter_radian(e) or 10
     end
@@ -204,9 +209,16 @@ end
 
 local inited = false
 function m.init()
-    if inited or not m.current_light then return end
-    local e <close> = w:entity(m.current_light)
-    create_directional_gizmo(m.current_light and iom.get_position(e) or nil, m.current_light and iom.get_rotation(e) or nil)
+    if inited then return end
+    local initpos
+    local initrot
+    if m.current_light then
+        local e <close> = w:entity(m.current_light)
+        initpos = iom.get_position(e)
+        initrot = iom.get_rotation(e)
+    end
+    
+    create_directional_gizmo(initpos, initrot)
     m.point.root = create_gizmo_root()
     update_point_gizmo()
     m.spot.root = create_gizmo_root()

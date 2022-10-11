@@ -40,7 +40,9 @@ local bgfxLib = {
         defines = "__STDC_FORMAT_MACROS",
     },
     windows = {
-        includes = "3rdparty/dxsdk/include",
+        includes = {
+            "3rdparty/directx-headers/include/directx",
+        }
     },
     linux = {
         defines = {
@@ -73,6 +75,7 @@ table.insert(bgfxDll.defines, "BGFX_SHARED_LIB_BUILD=1")
 lm:lib "bgfx-lib" (bgfxLib)
 lm:src "bgfx-dll" (bgfxDll)
 lm:dll "bgfx-dll" {
+    basename = "bgfx",
     windows = {
         links = {
             "gdi32",
