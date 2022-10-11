@@ -1,0 +1,23 @@
+fx:
+  fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
+  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
+  setting:
+    ALPHAMODE_OPAQUE: 1
+    HAS_BASECOLOR_TEXTURE: 1
+    UV_MOTION: 1
+    shadow_receive: on
+    shadow_cast: off
+properties:
+  s_basecolor:
+    stage: 0
+    texture: /pkg/tools.prefab_editor/res/textures/plane.texture
+  u_pbr_factor:       {1, 1, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
+  u_emissive_factor:  {0, 0, 0, 0}
+  u_basecolor_factor: {1, 1, 1, 1}
+  u_uvmotion: {0, 0, 1.0, 1.0}
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  DEPTH_TEST: GREATER
+  MSAA: true
+  WRITE_MASK: RGBAZ
