@@ -2,11 +2,6 @@ local lm = require "luamake"
 
 lm.cxx = "c++17"
 
-lm.warnings = {
-    "error",
-    "on"
-}
-
 lm.defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0)
 
 lm.msvc = {
