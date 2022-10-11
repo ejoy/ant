@@ -1,0 +1,12 @@
+fx:
+    cs: /pkg/ant.resources/shaders/depth/cs_blur.sc
+    setting:
+        lighting: off
+        vblur: 1
+properties:
+    s_image_input:
+        stage: 0
+        texture: /pkg/ant.resources/textures/default.texture
+    s_image_output:
+        stage: 1
+        texture: /pkg/ant.resources/textures/default.texture

@@ -49,8 +49,15 @@ function gizmo:set_target(eid)
 	if self.target_eid == target then
 		return
 	end
+	
 	local old_target = self.target_eid
 	self.target_eid = target
+	if target then
+		local e <close> = w:entity(target)
+		local _, r, t = math3d.srt(iom.worldmat(e))
+		self:set_rotation(r, true)
+		self:set_position(t, true)
+	end
 	gizmo:show_by_state(target ~= nil)
 	world:pub {"Gizmo","ontarget", old_target, target}
 end
@@ -85,32 +92,33 @@ function gizmo:set_scale(inscale)
 	template.template.data.scene.s = inscale
 end
 
-function gizmo:set_position(worldpos)
+function gizmo:set_position(worldpos, gizmoonly)
 	if not can_edit_srt(self.target_eid) then
 		return
 	end
 	local newpos
+	local target <close> = w:entity(self.target_eid)
 	if worldpos then
-		local pid = hierarchy:get_parent(gizmo.target_eid)
-		local parent_worldmat
-		if pid then
-			local pe <close> = w:entity(pid)
-			parent_worldmat = iom.worldmat(pe)
+		if not gizmoonly then
+			local pid = hierarchy:get_parent(gizmo.target_eid)
+			local parent_worldmat
+			if pid then
+				local pe <close> = w:entity(pid)
+				parent_worldmat = iom.worldmat(pe)
+			end
+			local localPos
+			if not parent_worldmat then
+				localPos = worldpos
+			else
+				localPos = math3d.totable(math3d.transform(math3d.inverse(parent_worldmat), math3d.vector(worldpos), 1))
+			end
+			iom.set_position(target, localPos)
+			local template = hierarchy:get_template(self.target_eid)
+			template.template.data.scene.t = localPos
 		end
-		local localPos
-		if not parent_worldmat then
-			localPos = worldpos
-		else
-			localPos = math3d.totable(math3d.transform(math3d.inverse(parent_worldmat), math3d.vector(worldpos), 1))
-		end
-		local e <close> = w:entity(self.target_eid)
-		iom.set_position(e, localPos)
-		local template = hierarchy:get_template(self.target_eid)
-		template.template.data.scene.t = localPos
 		newpos = worldpos
 	else
-		local e <close> = w:entity(gizmo.target_eid)
-		local wm = iom.worldmat(e)
+		local wm = iom.worldmat(target)
 		if wm ~= mc.NULL then
 			local s, r, t = math3d.srt(wm)
 			newpos = math3d.totable(t)
@@ -124,19 +132,21 @@ function gizmo:set_position(worldpos)
 	iom.set_position(uniform_rot_root, newpos)
 end
 
-function gizmo:set_rotation(inrot)
+function gizmo:set_rotation(inrot, gizmoonly)
 	if not can_edit_srt(self.target_eid) then
 		return
 	end
-	local e <close> = w:entity(self.target_eid)
+	local target <close> = w:entity(self.target_eid)
 	local newrot
 	if inrot then
-		iom.set_rotation(e, inrot)
-		local template = hierarchy:get_template(self.target_eid)
-		template.template.data.scene.r = math3d.tovalue(inrot)
+		if not gizmoonly then
+			iom.set_rotation(target, inrot)
+			local template = hierarchy:get_template(self.target_eid)
+			template.template.data.scene.r = math3d.tovalue(inrot)
+		end
 		newrot = inrot
 	else
-		newrot = iom.get_rotation(e)
+		newrot = iom.get_rotation(target)
 	end
 	local re <close> = w:entity(self.root_eid)
 	if self.mode == gizmo_const.SCALE then

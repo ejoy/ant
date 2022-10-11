@@ -33,7 +33,7 @@ local csm_setting = {
     stabilize		= shadowcfg.stabilize,
 	split_num		= shadowcfg.split_num,
 	split_frustums	= {nil, nil, nil, nil},
-	shadow_param3	= {shadowcfg.normal_offset, 0, 0, 0},
+	shadow_param3	= {shadowcfg.normal_offset, shadowcfg.size, 0, 0},
 }
 
 local function gen_ratios(distances)
@@ -79,21 +79,6 @@ assert(csm_setting.split_num ~= nil)
 
 csm_setting.fb_index = fbmgr.create(
 	{
-		rbidx = fbmgr.create_rb{
-			format = "R16F",
-			w=csm_setting.shadowmap_size * csm_setting.split_num,
-			h=csm_setting.shadowmap_size,
-			layers=1,
-			flags=sampler{
-				MIN="POINT",
-				MAG="POINT",
-				U="CLAMP",
-				V="CLAMP",
-				RT="RT_ON",
-			}
-		}
-	},
-	{
 		rbidx=fbmgr.create_rb{
 			format = "D32F",
 			w=csm_setting.shadowmap_size * csm_setting.split_num,
@@ -101,8 +86,8 @@ csm_setting.fb_index = fbmgr.create(
 			layers=1,
 			flags=sampler{
 				RT="RT_ON",
-				MIN="LINEAR",
-				MAG="LINEAR",
+				MIN="POINT",
+				MAG="POINT",
 				U="BORDER",
 				V="BORDER",
 				COMPARE="COMPARE_GEQUAL",
