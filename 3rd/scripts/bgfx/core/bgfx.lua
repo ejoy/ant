@@ -40,7 +40,9 @@ local bgfxLib = {
         defines = "__STDC_FORMAT_MACROS",
     },
     windows = {
-        includes = "3rdparty/dxsdk/include",
+        includes = {
+            "3rdparty/directx-headers/include/directx",
+        }
     },
     linux = {
         defines = {
