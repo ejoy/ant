@@ -14,7 +14,6 @@ system "shadow_system"
     .method "refine_camera"
     .method "render_submit"
     .method "camera_usage"
-
 system "shadow_primitive_system"
     .implement "shadow/shadow_maker.lua"
     .require_system "end_filter_system"

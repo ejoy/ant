@@ -44,16 +44,23 @@ uniform vec4 u_omni_param;
 //#define shadow_sampler_type sampler2D 
 #endif
 
-#define SM_HARD 
+//#define SM_HARD 
 //#define SM_VSM 
+//#define SM_PCF
+#define SM_ESM
 #define SHADOW_SAMPLER2D	SAMPLER2D
 #define shadow_sampler_type sampler2D 
 
 
 #ifdef ENABLE_SHADOW
+
+#ifdef SM_ESM
+SHADOW_SAMPLER2D(s_shadowmap_blur, 8);
+#else
 SHADOW_SAMPLER2D(s_shadowmap, 8);
+#endif
+
 SHADOW_SAMPLER2D(s_omni_shadowmap, 9);
-SHADOW_SAMPLER2D(s_shadowsqmap, 13);
 #endif //ENABLE_SHADOW
 
 bool is_texcoord_in_range(vec2 _texcoord, float minv, float maxv)
@@ -109,9 +116,35 @@ float hardShadow(
 	return visibility;
 }
 
+float PCF(
+	shadow_sampler_type _sampler,
+	vec4 _shadowCoord,
+	float _bias,
+	float _fTexelSize,
+	float _fNativeTexelSizeInX)
+{
+	int m_iPCFBlurForLoopStart = -3;
+	int m_iPCFBlurForLoopEnd = 4;
+	float visibility = 0.0;
+    for( int x = m_iPCFBlurForLoopStart; x < m_iPCFBlurForLoopEnd; ++x ) 
+    {
+        for( int y = m_iPCFBlurForLoopStart; y < m_iPCFBlurForLoopEnd; ++y ) 
+        {
+			vec2 texCoord = _shadowCoord.xy / _shadowCoord.w;
+            float receiver = (_shadowCoord.z + _bias) / _shadowCoord.w;
+			texCoord.x += x*_fNativeTexelSizeInX;
+			texCoord.y += y*_fTexelSize;
+			float occluder = texture2D(_sampler, texCoord).x;
+            visibility += step(occluder, receiver);
+        }
+    }
+	return visibility / 49.0;	
+}
+
+
+
 float VSM(
 	shadow_sampler_type _sampler,
-	shadow_sampler_type _sqsampler,
 	vec4 _shadowCoord, float _bias,
 	float _depthMultiplier, float _minVariance) 
 {
@@ -126,16 +159,37 @@ float VSM(
 	}	
 	float receiver = (_shadowCoord.z + _bias) / _shadowCoord.w * _depthMultiplier;
 	float depth = texture2D(_sampler, texCoord).x * _depthMultiplier;
-	float depthSq = texture2D(_sqsampler, texCoord).x * _depthMultiplier;
+	float depthSq = texture2D(_sampler, texCoord).y * _depthMultiplier;
 	if (receiver > depth)
 	{
 		return 1.0;
 	}	
-	float variance = max(depthSq- depth * depth, _minVariance);
+	float variance = max(depthSq - depth * depth, _minVariance);
 	float d = receiver - depth;
-	float visibility = variance / (variance + d*d);
-	return visibility;
+	float visibility = variance / (variance + d * d);
+	return pow(visibility, 6);
 }
+
+float ESM(
+	shadow_sampler_type _sampler,
+	vec4 _shadowCoord, float _bias,
+	float _depthMultiplier) 
+{
+	vec2 texCoord = _shadowCoord.xy / _shadowCoord.w;
+	bool outside = any(greaterThan(texCoord, vec2_splat(1.0)))
+				|| any(lessThan   (texCoord, vec2_splat(0.0)))
+				 ;
+
+	if (outside)
+	{
+		return 1.0;
+	}	
+	float receiver = (_shadowCoord.z + _bias) / _shadowCoord.w;
+	float occluder = texture2D(_sampler, texCoord).x;
+	float visibility = clamp(exp(_depthMultiplier * (receiver - occluder) ), 0.0, 1.0);
+	return pow(visibility, 10);
+}
+
 
 int select_cascade(float distanceVS)
 {
@@ -215,9 +269,22 @@ vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor, float dept
 
 #ifdef SM_HARD
 	float visibility = hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias);
-#else SM_VSM
-	float visibility = VSM(s_shadowmap, s_shadowsqmap, shadowcoord, u_shadowmap_bias, depthMultiplier, minVariance);
 #endif
+
+#ifdef SM_PCF
+	float fNativeTexelSizeInX = u_shadowmap_texelsize / 8;
+	float fNativeTexelSizeInY = u_shadowmap_texelsize / 4;
+	float visibility = PCF(s_shadowmap, shadowcoord, u_shadowmap_bias, fNativeTexelSizeInY, fNativeTexelSizeInX);
+#endif
+
+#ifdef SM_VSM
+	float visibility = VSM(s_shadowmap_blur, shadowcoord, u_shadowmap_bias, depthMultiplier, minVariance);
+#endif
+
+#ifdef SM_ESM
+	float visibility = ESM(s_shadowmap_blur, shadowcoord, u_shadowmap_bias, depthMultiplier);
+#endif
+
 	vec3 finalcolor = mix(u_shadow_color, scenecolor, visibility);
 	
 #ifdef SHADOW_COVERAGE_DEBUG

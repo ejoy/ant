@@ -252,7 +252,7 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	local near_plane = -csm_frustum.f
 	local far_plane  =  csm_frustum.f
 	f.l, f.b, f.n = min_extent[1], min_extent[2], near_plane
-	f.r, f.t, f.f = max_extent[1], max_extent[2], far_plane
+	f.r, f.t, f.f = max_extent[1], max_extent[2], far_plane + 500	-- avoid scene AABB intersection
 	update_camera_matrices(camera, light_view)
 end
 
@@ -407,8 +407,7 @@ end
 
 function sm:init_world()
 	local sa = imaterial.system_attribs()
-	sa:update("s_shadowsqmap", fbmgr.get_rb(ishadow.fb_index(), 1).handle)
-	sa:update("s_shadowmap", fbmgr.get_rb(ishadow.fb_index(), 2).handle)
+	sa:update("s_shadowmap", fbmgr.get_rb(ishadow.fb_index(), 1).handle)
 	sa:update("u_shadow_param1", math3d.vector(ishadow.shadow_param()))
 	sa:update("u_shadow_param2", ishadow.color())
 	sa:update("u_shadow_param3", math3d.vector(ishadow.shadow_param3()))
