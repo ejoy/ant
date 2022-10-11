@@ -48,6 +48,7 @@ function m:init()
     end
     world:pub { "camera_controller", "move_speed", editor_setting.setting.camera.speed }
     world:pub { "DefaultLight", true }
+    world:pub { "camera_controller", "stop", true}
 end
 
 local function init_camera()

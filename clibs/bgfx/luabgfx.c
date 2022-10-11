@@ -17,7 +17,7 @@
 #include "bgfx_alloc.h"
 #include "transient_buffer.h"
 
-#if BGFX_API_VERSION != 115
+#if BGFX_API_VERSION != 117
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -776,95 +776,94 @@ find_texture_format(const uint16_t *formats, int index) {
 #define TFNAME(v) #v,
 
 static const char * c_texture_formats[] = {
-	TFNAME(BC1)
-	TFNAME(BC2)
-	TFNAME(BC3)
-	TFNAME(BC4)
-	TFNAME(BC5)
-	TFNAME(BC6H)
-	TFNAME(BC7)
-	TFNAME(ETC1)
-	TFNAME(ETC2)
-	TFNAME(ETC2A)
-	TFNAME(ETC2A1)
-	TFNAME(PTC12)
-	TFNAME(PTC14)
-	TFNAME(PTC12A)
-	TFNAME(PTC14A)
-	TFNAME(PTC22)
-	TFNAME(PTC24)
-
-	TFNAME(ATC)
-	TFNAME(ATCE)
-	TFNAME(ATCI)
-	TFNAME(ASTC4X4)
-	TFNAME(ASTC5X5)
-	TFNAME(ASTC6X6)
-	TFNAME(ASTC8X5)
-	TFNAME(ASTC8X6)
-	TFNAME(ASTC10X5)
-
-	TFNAME(UNKNOWN)
-	TFNAME(R1)
-	TFNAME(A8)
-	TFNAME(R8)
-	TFNAME(R8I)
-	TFNAME(R8U)
-	TFNAME(R8S)
-	TFNAME(R16)
-	TFNAME(R16I)
-	TFNAME(R16U)
-	TFNAME(R16F)
-	TFNAME(R16S)
-	TFNAME(R32I)
-	TFNAME(R32U)
-	TFNAME(R32F)
-	TFNAME(RG8)
-	TFNAME(RG8I)
-	TFNAME(RG8U)
-	TFNAME(RG8S)
-	TFNAME(RG16)
-	TFNAME(RG16I)
-	TFNAME(RG16U)
-	TFNAME(RG16F)
-	TFNAME(RG16S)
-	TFNAME(RG32I)
-	TFNAME(RG32U)
-	TFNAME(RG32F)
-	TFNAME(RGB8)
-	TFNAME(RGB8I)
-	TFNAME(RGB8U)
-	TFNAME(RGB8S)
-	TFNAME(RGB9E5F)
-	TFNAME(BGRA8)
-	TFNAME(RGBA8)
-	TFNAME(RGBA8I)
-	TFNAME(RGBA8U)
-	TFNAME(RGBA8S)
-	TFNAME(RGBA16)
-	TFNAME(RGBA16I)
-	TFNAME(RGBA16U)
-	TFNAME(RGBA16F)
-	TFNAME(RGBA16S)
-	TFNAME(RGBA32I)
-	TFNAME(RGBA32U)
-	TFNAME(RGBA32F)
-	TFNAME(R5G6B5)
-	TFNAME(RGBA4)
-	TFNAME(RGB5A1)
-	TFNAME(RGB10A2)
-	TFNAME(RG11B10F)
-	TFNAME(UNKNOWNDEPTH)
-	TFNAME(D16)
-	TFNAME(D24)
-	TFNAME(D24S8)
-	TFNAME(D32)
-	TFNAME(D16F)
-	TFNAME(D24F)
-	TFNAME(D32F)
-	TFNAME(D0S8)
-
-
+	TFNAME(BC1)                  /** ( 0) DXT1 R5G6B5A1                  */
+	TFNAME(BC2)					 /** ( 1) DXT3 R5G6B5A4                  */
+	TFNAME(BC3)					 /** ( 2) DXT5 R5G6B5A8                  */
+	TFNAME(BC4)					 /** ( 3) LATC1/ATI1 R8                  */
+	TFNAME(BC5)					 /** ( 4) LATC2/ATI2 RG8                 */
+	TFNAME(BC6H)				 /** ( 5) BC6H RGB16F                    */
+	TFNAME(BC7)					 /** ( 6) BC7 RGB 4-7 bits per color channel, 0-8 bits alpha */
+	TFNAME(ETC1)				 /** ( 7) ETC1 RGB8                      */
+	TFNAME(ETC2)				 /** ( 8) ETC2 RGB8                      */
+	TFNAME(ETC2A)				 /** ( 9) ETC2 RGBA8                     */
+	TFNAME(ETC2A1)				 /** (10) ETC2 RGB8A1                    */
+	TFNAME(PTC12)				 /** (11) PVRTC1 RGB 2BPP                */
+	TFNAME(PTC14)				 /** (12) PVRTC1 RGB 4BPP                */
+	TFNAME(PTC12A)				 /** (13) PVRTC1 RGBA 2BPP               */
+	TFNAME(PTC14A)				 /** (14) PVRTC1 RGBA 4BPP               */
+	TFNAME(PTC22)				 /** (15) PVRTC2 RGBA 2BPP               */
+	TFNAME(PTC24)				 /** (16) PVRTC2 RGBA 4BPP               */
+	TFNAME(ATC)					 /** (17) ATC RGB 4BPP                   */
+	TFNAME(ATCE)				 /** (18) ATCE RGBA 8 BPP explicit alpha */
+	TFNAME(ATCI)				 /** (19) ATCI RGBA 8 BPP interpolated alpha */
+	TFNAME(ASTC4X4)				 /** (20) ASTC 4x4 8.0 BPP               */
+	TFNAME(ASTC5X5)				 /** (21) ASTC 5x5 5.12 BPP              */
+	TFNAME(ASTC6X6)				 /** (22) ASTC 6x6 3.56 BPP              */
+	TFNAME(ASTC8X5)				 /** (23) ASTC 8x5 3.20 BPP              */
+	TFNAME(ASTC8X6)				 /** (24) ASTC 8x6 2.67 BPP              */
+	TFNAME(ASTC10X5)			 /** (25) ASTC 10x5 2.56 BPP             */
+	TFNAME(UNKNOWN)				 /** (26) Compressed formats above.      */
+	TFNAME(R1)					 /** (27)                                */
+	TFNAME(A8)					 /** (28)                                */
+	TFNAME(R8)					 /** (29)                                */
+	TFNAME(R8I)					 /** (30)                                */
+	TFNAME(R8U)					 /** (31)                                */
+	TFNAME(R8S)					 /** (32)                                */
+	TFNAME(R16)					 /** (33)                                */
+	TFNAME(R16I)				 /** (34)                                */
+	TFNAME(R16U)				 /** (35)                                */
+	TFNAME(R16F)				 /** (36)                                */
+	TFNAME(R16S)				 /** (37)                                */
+	TFNAME(R32I)				 /** (38)                                */
+	TFNAME(R32U)				 /** (39)                                */
+	TFNAME(R32F)				 /** (40)                                */
+	TFNAME(RG8)					 /** (41)                                */
+	TFNAME(RG8I)				 /** (42)                                */
+	TFNAME(RG8U)				 /** (43)                                */
+	TFNAME(RG8S)				 /** (44)                                */
+	TFNAME(RG16)				 /** (45)                                */
+	TFNAME(RG16I)				 /** (46)                                */
+	TFNAME(RG16U)				 /** (47)                                */
+	TFNAME(RG16F)				 /** (48)                                */
+	TFNAME(RG16S)				 /** (49)                                */
+	TFNAME(RG32I)				 /** (50)                                */
+	TFNAME(RG32U)				 /** (51)                                */
+	TFNAME(RG32F)				 /** (52)                                */
+	TFNAME(RGB8)				 /** (53)                                */
+	TFNAME(RGB8I)				 /** (54)                                */
+	TFNAME(RGB8U)				 /** (55)                                */
+	TFNAME(RGB8S)				 /** (56)                                */
+	TFNAME(RGB9E5F)				 /** (57)                                */
+	TFNAME(BGRA8)				 /** (58)                                */
+	TFNAME(RGBA8)				 /** (59)                                */
+	TFNAME(RGBA8I)				 /** (60)                                */
+	TFNAME(RGBA8U)				 /** (61)                                */
+	TFNAME(RGBA8S)				 /** (62)                                */
+    TFNAME(RGBA16)               /** (63)                                */
+    TFNAME(RGBA16I)              /** (64)                                */
+    TFNAME(RGBA16U)              /** (65)                                */
+    TFNAME(RGBA16F)              /** (66)                                */
+    TFNAME(RGBA16S)              /** (67)                                */
+    TFNAME(RGBA32I)              /** (68)                                */
+    TFNAME(RGBA32U)              /** (69)                                */
+    TFNAME(RGBA32F)              /** (70)                                */
+    TFNAME(B5G6R5)               /** (71)                                */
+    TFNAME(R5G6B5)               /** (72)                                */
+    TFNAME(BGRA4)                /** (73)                                */
+    TFNAME(RGBA4)                /** (74)                                */
+    TFNAME(BGR5A1)               /** (75)                                */
+    TFNAME(RGB5A1)               /** (76)                                */
+    TFNAME(RGB10A2)              /** (77)                                */
+    TFNAME(RG11B10F)             /** (78)                                */
+    TFNAME(UNKNOWNDEPTH)         /** (79) Depth formats below.           */
+    TFNAME(D16)                  /** (80)                                */
+    TFNAME(D24)                  /** (81)                                */
+    TFNAME(D24S8)                /** (82)                                */
+    TFNAME(D32)                  /** (83)                                */
+    TFNAME(D16F)                 /** (84)                                */
+    TFNAME(D24F)                 /** (85)                                */
+    TFNAME(D32F)                 /** (86)                                */
+    TFNAME(D0S8)                 /** (87)                                */
 };
 
 static void
@@ -1206,6 +1205,14 @@ lframe(lua_State *L) {
 	int capture = lua_toboolean(L, 1);
 	int frame = BGFX(frame)(capture);
 	lua_pushinteger(L, frame);
+	return 1;
+}
+
+static int
+lrenderFrame(lua_State *L) {
+	int msecs = luaL_optinteger(L, 1, -1);
+	bgfx_render_frame_t status = bgfx_render_frame(msecs);
+	lua_pushinteger(L, status);
 	return 1;
 }
 
@@ -3113,7 +3120,6 @@ ENCODER_API(lsetTransform) {
 	int id = BGFX_ENCODER(set_transform, encoder, mat, 1);
 	lua_pushinteger(L, id);
 	return 1;
-
 }
 
 ENCODER_API(lallocTransformBulk) {
@@ -4652,10 +4658,10 @@ ENCODER_API(lsubmitOcclusionQuery) {
 	uint16_t progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
 	uint16_t oqid = BGFX_LUAHANDLE_ID(OCCLUSION_QUERY, luaL_checkinteger(L, 3));
 	uint32_t depth = luaL_optinteger(L, 4, 0);
-	int preserveState = lua_toboolean(L, 5);
+	uint8_t flags = discard_flags(L, 5);
 	bgfx_program_handle_t ph = { progid };
 	bgfx_occlusion_query_handle_t oqh = { oqid };
-	BGFX_ENCODER(submit_occlusion_query, encoder, id, ph, oqh, depth, preserveState);
+	BGFX_ENCODER(submit_occlusion_query, encoder, id, ph, oqh, depth, flags);
 	return 0;
 }
 
@@ -4666,11 +4672,29 @@ ENCODER_API(lsubmitIndirect) {
 	uint16_t start = luaL_optinteger(L, 4, 0);
 	uint16_t num = luaL_optinteger(L, 5, 1);
 	uint32_t depth = luaL_optinteger(L, 6, 0);
-	bool preserveState = lua_toboolean(L, 7);
+	uint8_t flags = discard_flags(L, 7);
 	bgfx_program_handle_t ph = { progid };
 	bgfx_indirect_buffer_handle_t ih = { iid };
 
-	BGFX_ENCODER(submit_indirect, encoder, id, ph, ih, start, num, depth, preserveState);
+	BGFX_ENCODER(submit_indirect, encoder, id, ph, ih, start, num, depth, flags);
+	return 0;
+}
+
+ENCODER_API(lsubmitIndirectCount) {
+	int id = luaL_checkinteger(L, 1);
+	uint16_t progid = BGFX_LUAHANDLE_ID(PROGRAM, luaL_checkinteger(L, 2));
+	uint16_t iid = BGFX_LUAHANDLE_ID(INDIRECT_BUFFER, luaL_checkinteger(L, 3));
+	uint16_t start = luaL_optinteger(L, 4, 0);
+	uint16_t index_id = BGFX_LUAHANDLE_ID(INDEX_BUFFER, luaL_checkinteger(L, 5));
+	uint32_t numIndex = luaL_optinteger(L, 6, 0);
+	uint16_t maxNum = luaL_optinteger(L, 7, UINT16_MAX );
+	uint32_t depth = luaL_optinteger(L, 8, 0);
+	uint8_t flags = discard_flags(L, 9);
+	bgfx_program_handle_t ph = { progid };
+	bgfx_indirect_buffer_handle_t ih = { iid };
+	bgfx_index_buffer_handle_t indexh = { index_id };
+
+	BGFX_ENCODER(submit_indirect_count, encoder, id, ph, ih, start, indexh, numIndex, maxNum, depth, flags);
 	return 0;
 }
 
@@ -5251,6 +5275,7 @@ linitEncoder(lua_State *L) {
 		{ "set_instance_data_buffer", lsetInstanceDataBuffer_encoder },
 		{ "set_instance_count", lsetInstanceCount_encoder },
 		{ "submit_indirect", lsubmitIndirect_encoder },
+		{ "submit_indirect_count", lsubmitIndirectCount_encoder },
 		{ "set_image", lsetImage_encoder },
 		{ "execute_setter", lexecuteSetter_encoder },
 
@@ -5349,6 +5374,7 @@ luaopen_bgfx(lua_State *L) {
 
 		{ "reset", lreset },
 		{ "frame", lframe },
+		{ "render_frame", lrenderFrame },
 		{ "set_debug", lsetDebug },
 		{ "set_name", lsetName },
 
@@ -5442,6 +5468,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "set_instance_data_buffer", lsetInstanceDataBuffer },
 		{ "set_instance_count", lsetInstanceCount },
 		{ "submit_indirect", lsubmitIndirect },
+		{ "submit_indirect_count", lsubmitIndirectCount },
 		{ "set_image", lsetImage },
 		{ "execute_setter", lexecuteSetter },
 

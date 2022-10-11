@@ -246,8 +246,8 @@ local function generate_linelist_vertices(points)
         fill_vertex(p0, d0, 0, 0,  1, 1, c0)
         fill_vertex(p0, d0, 0, 1, -1, 1, c0)
 
-        fill_vertex(p1, d1, 1, 0,  1, 1, c1)
-        fill_vertex(p1, d1, 1, 1, -1, 1, c1)
+        fill_vertex(p1, d0, 1, 0,  1, 1, c1)
+        fill_vertex(p1, d0, 1, 1, -1, 1, c1)
     end
 
     return vertices

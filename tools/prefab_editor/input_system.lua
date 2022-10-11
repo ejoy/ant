@@ -33,21 +33,4 @@ function m:input_filter()
             end
         end
     end
-    for _, delta, x, y in event_mouse_wheel:unpack() do
-        local vx, vy = x,y
-        if vx and vy then
-            world:pub { "camera", "zoom", -delta }
-        end
-    end
-    for _, key, press, state in event_keyboard:unpack() do
-        if key == "W" and press == 2 then
-
-        elseif key == "S" and press == 2 then
-
-		elseif key == "A" and press == 2 then
-			
-		elseif key == "D" and press == 2 then
-			
-        end
-    end
 end

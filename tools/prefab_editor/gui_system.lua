@@ -410,6 +410,7 @@ end
 local reset_editor = world:sub {"ResetEditor"}
 local test_m
 local test_m1
+local ipl = ecs.import.interface "ant.render|ipolyline"
 function m:handle_event()
     for _, _, _, x, y in event_mouse:unpack() do
         mouse_pos_x = x
@@ -543,15 +544,18 @@ function m:handle_event()
         elseif state.CTRL and key == "O" and press == 1 then
             OnOpen()
         elseif state.CTRL and key == "S" and press == 1 then
-            -- test_m = imodifier.create_bone_modifier(test1.root, "/pkg/tools.prefab_editor/res/ueAnimat.glb|animation.prefab", "Bone")
-            -- iom.set_position(world:entity(test2.root), math3d.vector{0, 0, -5})
-            -- test_m1 = imodifier.create_bone_modifier(test2.root, "/pkg/tools.prefab_editor/res/ueAnimat.glb|animation.prefab", "Bone")
             prefab_mgr:save_prefab()
         elseif state.CTRL and key == "R" and press == 1 then
             anim_view:clear()
             prefab_mgr:reload()
             -- imodifier.start(test_m, {name="confirm"})
             -- imodifier.start(test_m1, {name="confirm"})
+        elseif state.CTRL and key == "T" and press == 1 then
+            -- test_m = imodifier.create_bone_modifier(test1.root, "/pkg/tools.prefab_editor/res/ueAnimat.glb|animation.prefab", "Bone")
+            -- iom.set_position(world:entity(test2.root), math3d.vector{0, 0, -5})
+            -- test_m1 = imodifier.create_bone_modifier(test2.root, "/pkg/tools.prefab_editor/res/ueAnimat.glb|animation.prefab", "Bone")
+
+            -- test_m = ipl.add_linelist({{0.0, 0.0, 0.0}, {5.0, 5.0, 100.0}, {5.0, 5.0, 100.0}, {5.0, 0.0, 0.0}}, 80, {1.0, 0.0, 0.0, 0.7})
         end
     end
 

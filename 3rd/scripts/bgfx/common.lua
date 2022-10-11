@@ -2,10 +2,6 @@ local lm = require "luamake"
 
 lm.cxx = "c++17"
 
-lm.warnings = {
-    "on"
-}
-
 lm.defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0)
 
 lm.msvc = {
@@ -18,6 +14,10 @@ lm.msvc = {
 
 lm.mingw = {
     includes = lm.BxDir / "include/compat/mingw",
+}
+
+lm.linux  = {
+    flags = "-fPIC"
 }
 
 lm.macos = {

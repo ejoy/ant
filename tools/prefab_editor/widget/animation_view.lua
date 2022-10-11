@@ -850,7 +850,7 @@ function m.show()
         imgui.cursor.PopItemWidth()
         imgui.cursor.SameLine()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
-        if imgui.widget.ImageButton(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
+        if imgui.widget.ImageButton("todo", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
             if anim_state.is_playing then
                 anim_group_pause(anim_eid, true)
             else
