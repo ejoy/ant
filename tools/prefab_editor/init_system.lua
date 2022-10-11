@@ -63,10 +63,12 @@ local function init_camera()
 end
 
 local light_gizmo = ecs.require "gizmo.light"
+local prefab_mgr = ecs.require "prefab_manager"
 function m:init_world()
     irq.set_view_clear_color("main_queue", 0x353535ff)--0xa0a0a0ff
     init_camera()
     light_gizmo.init()
+    prefab_mgr:reset_prefab()
 end
 
 function m:post_init()

@@ -395,7 +395,7 @@ function gizmo_sys:post_init()
 	create_scale_axis(gizmo.sy, {0, gizmo_const.AXIS_LEN, 0})
 	create_scale_axis(gizmo.sz, {0, 0, gizmo_const.AXIS_LEN})
 	
-    ientity.create_grid_entity("", 64, 64, 1, 1)
+    -- ientity.create_grid_entity("", 64, 64, 1, 1)
 end
 local mb_main_camera_changed = world:sub{"main_queue", "camera_changed"}
 
