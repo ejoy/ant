@@ -53,10 +53,12 @@ function gizmo:set_target(eid)
 	local old_target = self.target_eid
 	self.target_eid = target
 	if target then
-		local e <close> = w:entity(target)
-		local _, r, t = math3d.srt(iom.worldmat(e))
-		self:set_rotation(r, true)
-		self:set_position(t, true)
+		local e <close> = w:entity(target, "scene?in")
+		if e.scene then
+			local _, r, t = math3d.srt(iom.worldmat(e))
+			self:set_rotation(r, true)
+			self:set_position(t, true)
+		end
 	end
 	gizmo:show_by_state(target ~= nil)
 	world:pub {"Gizmo","ontarget", old_target, target}
@@ -1027,18 +1029,17 @@ end
 
 local gizmo_event = world:sub{"Gizmo"}
 
-local function check_calc_aabb(eid)
-	local entity <close> = w:entity(eid, "bounding?in scene?in")
-	local sceneaabb = math3d.ref(math3d.aabb(math3d.vector(-5.0, -5.0, -5.0), math3d.vector(5.0, 5.0, 5.0)))
+local function world_aabb(entity)
 	local bounding = entity.bounding
 	if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
 		local wm = entity.scene and iom.worldmat(entity) or mc.IDENTITY_MAT
-		return math3d.ref(math3d.aabb(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1), math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1)))
+		return math3d.aabb(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1), math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1))
+	else
+		return math3d.aabb(mc.ZERO, mc.ONE)
 	end
-	do
-		return sceneaabb
-	end
-	-- TODO : merge aabb
+end
+
+local function check_calc_aabb(eid)
 	local function build_scene()
 		local rt = {}
 		for ee in w:select "bounding?in scene?in eid:in" do
@@ -1050,29 +1051,33 @@ local function check_calc_aabb(eid)
 					c = {}
 					rt[pid] = c
 				end
-				w:extend(ee, "name?in")
-				c[#c+1] = {id=id, aabb = sceneaabb, name=ee.name}
+				c[#c+1] = {id=id, aabb = world_aabb(ee)}
+				-- w:extend(ee, "name?in")
+				-- c[#c+1] = {id=id, aabb = world_aabb(ee), name=ee.name}
 			end
 		end
 		return rt
 	end
+
 	local scenetree = build_scene()
 
-	local function build_aabb(tr, sceneaabb)
-		for idx, it in ipairs(tr) do
+	local function build_aabb(tr)
+		local maabb = math3d.aabb(mc.ZERO, mc.ONE)
+		for _, it in ipairs(tr) do
 			local ctr = scenetree[it.id]
 			if ctr then
-				build_aabb(ctr, sceneaabb)
+				maabb = math3d.aabb_merge(build_aabb(ctr), maabb)
 			end
 			if it.aabb then
-				sceneaabb.m = math3d.aabb_merge(it.aabb, sceneaabb)
+				maabb = math3d.aabb_merge(it.aabb, maabb)
 			end
 		end
+		return maabb
 	end
 
-	local sceneaabb = math3d.ref(math3d.aabb())
-	build_aabb(scenetree[entity.eid], sceneaabb)
-	return sceneaabb
+	local entity <close> = w:entity(eid, "bounding?in scene?in")
+	local e = scenetree[eid]
+	return e and build_aabb(e) or world_aabb(entity)
 end
 
 function gizmo_sys:handle_event()
