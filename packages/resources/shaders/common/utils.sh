@@ -2,23 +2,52 @@
 #define __SHADER_UTILS_SH__
 #include <shaderlib.sh>
 
-vec4 texture2D_sRGB(sampler2D tex, vec2 coord)
+vec2 get_fragcoord(vec2 fragcoord)
 {
-    vec4 color = texture2D(tex, coord);
-#ifdef ENABLE_SRGB_TEXTURE
-    return color;
-#else   //!ENABLE_SRGB_TEXTURE
-    return vec4(toLinear(color.rgb), color.a);
-#endif  //ENABLE_SRGB_TEXTURE
+#if ORIGIN_BOTTOM_LEFT
+    return fragcoord;
+#else //!ORIGIN_BOTTOM_LEFT
+    return vec2(fragcoord.x, u_viewRect.w-fragcoord.y);
+#endif //ORIGIN_BOTTOM_LEFT
 }
 
-vec4 output_color_sRGB(vec4 outcolor)
+vec2 get_normalize_fragcoord(vec2 fragcoord)
 {
-#ifdef  ENABLE_SRGB_FB
-    return outcolor;
-#else   //!ENABLE_SRGB_FB
-    return vec4(toGamma(outcolor.rgb), outcolor.a);
-#endif  //ENABLE_SRGB_FB
+    vec2 fg = get_fragcoord(fragcoord);
+    return fg / u_viewRect.zw;
+}
+
+vec4 fetch_texture2d_size(sampler2D tex, int lod)
+{
+    ivec2 s = textureSize(tex, lod);
+    return vec4(s.x, s.y, 1.0/s.x, 1.0/s.y);
+}
+
+struct gather_result3{
+    vec4 r, g, b;
+};
+
+#define ENABLE_TEXTURE_GATHER
+
+gather_result3 texture_gather3(sampler2D tex, vec2 uv)
+{
+    gather_result3 r;
+    #ifdef ENABLE_TEXTURE_GATHER
+        r.r = textureGather(tex, uv, 0);
+        r.g = textureGather(tex, uv, 1);
+        r.b = textureGather(tex, uv, 2);
+    #else //!ENABLE_TEXTURE_GATHER
+        vec3 s01 = texture2DLodOffset(tex, uv, 0.0, ivec2(0, 1)).rgb;
+        vec3 s11 = texture2DLodOffset(tex, uv, 0.0, ivec2(1, 1)).rgb;
+        vec3 s10 = texture2DLodOffset(tex, uv, 0.0, ivec2(1, 0)).rgb;
+        vec3 s00 = texture2DLodOffset(tex, uv, 0.0, ivec2(0, 0)).rgb;
+
+        r.r = vec4(s01.r, s11.r, s10.r, s00.r);
+        r.g = vec4(s01.g, s11.g, s10.g, s00.g);
+        r.b = vec4(s01.b, s11.b, s10.b, s00.b);
+    #endif //ENABLE_TEXTURE_GATHER
+
+    return r;
 }
 
 #endif //__SHADER_UTILS_SH__

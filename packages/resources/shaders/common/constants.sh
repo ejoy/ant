@@ -10,4 +10,15 @@
 
 #define FP16Scale 0.0009765625
 
+#define HALF_PI            1.570796327
+
+#define MEDIUMP_FLT_MAX    65504.0
+#define MEDIUMP_FLT_MIN    0.00006103515625
+
+#ifdef TARGET_MOBILE
+#define FLT_EPS            MEDIUMP_FLT_MIN
+#else   //TARGET_MOBILE
+#define FLT_EPS            1e-5
+#endif //TARGET_MOBILE
+
 #endif //_CONSTANTS_SH_

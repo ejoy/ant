@@ -13,14 +13,23 @@ input_attributes input_attribs = (input_attributes)0;
 #ifndef MATERIAL_UNLIT
     input_attribs.V = normalize(u_eyepos.xyz - v_posWS.xyz);
 #   ifdef WITH_TANGENT_ATTRIB
-    input_attribs.N = get_normal(v_tangent, v_bitangent, v_normal, uv);
+    const mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);
 #   else //!WITH_TANGENT_ATTRIB
-    input_attribs.N = get_normal_by_tbn(tbn_from_world_pos(v_normal, v_posWS.xyz, uv), v_normal, uv);
+    const mat3 tbn = tbn_from_world_pos(v_normal, v_posWS.xyz, uv);
 #   endif //WITH_TANGENT_ATTRIB
+
+    input_attribs.N = get_normal_by_tbn(tbn, v_normal, uv);
+
+#ifdef ENABLE_BENT_NORMAL
+    const vec3 bent_normalTS = vec3(0.0, 0.0, 1.0);
+    input_attribs.bent_normal = instMul(bent_normalTS, tbn);
+#endif //ENABLE_BENT_NORMAL
 
     get_metallic_roughness(uv, input_attribs);
     get_occlusion(uv, input_attribs);
 #endif //!MATERIAL_UNLIT
+
+    input_attribs.screen_uv = get_normalize_fragcoord(gl_FragCoord.xy);
 
     //should discard after all texture sample is done. See https://github.com/KhronosGroup/glTF-Sample-Viewer/issues/267
 #ifdef ALPHAMODE_MASK

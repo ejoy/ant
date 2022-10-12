@@ -29,15 +29,4 @@ vec3 get_IBL_radiance_GGX(in material_info mi)
     return specular_light * (mi.f0 * lut.x + lut.y);
 }
 
-vec3 calc_indirect_light(in material_info mi)
-{
-// #ifdef  NEW_LIGHTING
-    
-// #else   //!NEW_LIGHTING
-    vec3 indirect_color =   get_IBL_radiance_GGX(mi) +
-                            get_IBL_radiance_Lambertian(mi);
-    return indirect_color * u_ibl_indirect_intensity;
-//#endif //NEW_LIGHTING
-}
-
 #endif //_IBL_SH_

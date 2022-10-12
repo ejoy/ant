@@ -1,5 +1,6 @@
 #ifndef _PBR_INPUT_ATTRIBUTES_SH_
 #define _PBR_INPUT_ATTRIBUTES_SH_
+
 // material properites
 #ifdef HAS_BASECOLOR_TEXTURE
 SAMPLER2D(s_basecolor,          0);
@@ -25,13 +26,6 @@ SAMPLER2D(s_occlusion,          4);
 SAMPLER2D(s_lightmap,           8);
 #endif //USING_LIGHTMAP
 
-#ifdef USING_SSAO
-SAMPLER2D(s_ssao,               9);
-#   ifdef USING_SSAO_BENT_NORMAL
-SAMPLER2D(s_ssao_bent_normal    10);
-#   endif //USING_SSAO_BENT_NORMAL
-#endif //USING_SSAO
-
 uniform vec4 u_basecolor_factor;
 uniform vec4 u_emissive_factor;
 uniform vec4 u_pbr_factor;
@@ -51,11 +45,15 @@ struct input_attributes
     vec3 V;
     float perceptual_roughness;
 
-    float occlusion;
-    float occlusion_strength;
-    vec2 uv;
-
     vec3 pos;
+    float occlusion;
+
+    vec2 uv;
+    vec2 screen_uv;
+#ifdef ENABLE_BENT_NORMAL
+    // this bent normal is pixel bent normal in world space
+    vec3 bent_normal;
+#endif //ENABLE_BENT_NORMAL
 };
 
 vec4 get_basecolor(vec2 texcoord, vec4 basecolor)
@@ -118,18 +116,10 @@ void get_occlusion(vec2 texcoord, inout input_attributes input_attribs)
 {
 #ifdef HAS_OCCLUSION_TEXTURE
     input_attribs.occlusion = texture2D(s_occlusion,  uv).r;
-#else
+#else //!HAS_OCCLUSION_TEXTURE
     input_attribs.occlusion = 1.0;
-#   endif //HAS_OCCLUSION_TEXTURE
-    input_attribs.occlusion_strength = u_occlusion_strength;
-}
-
-vec3 apply_occlusion(input_attributes input_attribs, vec3 color)
-{
-    #ifdef HAS_OCCLUSION_TEXTURE
-    color  += lerp(color, color * input_attribus.occlusion, input_attribus.occlusion_strength);
-    #endif //HAS_OCCLUSION_TEXTURE
-    return color;
+#endif //HAS_OCCLUSION_TEXTURE
+    input_attribs.occlusion *= u_occlusion_strength;
 }
 
 #endif //_PBR_INPUT_ATTRIBUTES_SH_

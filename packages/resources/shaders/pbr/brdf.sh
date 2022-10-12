@@ -1,4 +1,4 @@
-#include "pbr/math.sh"
+#include "common/math.sh"
 
 //------------------------------------------------------------------------------
 // BRDF configuration

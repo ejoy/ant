@@ -13,8 +13,8 @@ $input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT
 #include "common/cluster_shading.sh"
 #include "common/constants.sh"
 #include "common/uvmotion.sh"
-#include "pbr/ibl.sh"
 #include "pbr/lighting.sh"
+#include "pbr/indirect_lighting.sh"
 #include "pbr/pbr.sh"
 
 #ifdef ENABLE_SHADOW
@@ -38,18 +38,14 @@ void main()
     material_info mi = init_material_info(input_attribs);
     vec3 color = calc_direct_light(mi, gl_FragCoord, v_posWS.xyz);
 #   ifdef ENABLE_SHADOW
-    vec3 normal = normalize(v_normal);
-    vec4 wPos = v_posWS;
-    wPos = vec4(v_posWS.xyz + normal.xyz * u_shadowMapOffset, 1.0);
-	color = shadow_visibility(v_distanceVS, vec4(wPos.xyz, 1.0), color, u_depthMultiplier, u_minVariance);
+    vec3 normalWS = normalize(v_normal);
+    vec4 posWS = vec4(v_posWS.xyz + normalWS.xyz * u_shadowMapOffset, 1.0);
+	color = shadow_visibility(v_distanceVS, posWS, color, u_depthMultiplier, u_minVariance);
 #   endif //ENABLE_SHADOW
 
 #   ifdef ENABLE_IBL
-    color += calc_indirect_light(mi);
+    color += calc_indirect_light(input_attribs, mi, v_distanceVS);
 #   endif //ENABLE_IBL
-
-    color = apply_occlusion(input_attribs, color);
-
     gl_FragColor = vec4(color, input_attribs.basecolor.a) + input_attribs.emissive;
 #endif //MATERIAL_UNLIT
 }

@@ -78,11 +78,5 @@ highp vec3 normalVS_from_depth(
 }
 #endif //BGFX_SHADER_TYPE_FRAGMENT
 
-vec2 screen_uv(vec2 fragcoord)
-{
-	vec2 xy = fragcoord.xy - u_viewRect.xy;
-	return xy / u_viewRect.zw;
-}
-
 
 #endif //__SHADER_POSTPROCESS_SH__

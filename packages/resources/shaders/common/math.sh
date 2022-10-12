@@ -2,19 +2,11 @@
 // Common math
 //------------------------------------------------------------------------------
 
-/** @public-api */
-//#define PI                 3.14159265359
-/** @public-api */
-#define HALF_PI            1.570796327
-
-#define MEDIUMP_FLT_MAX    65504.0
-#define MEDIUMP_FLT_MIN    0.00006103515625
+#include "constants.sh"
 
 #ifdef TARGET_MOBILE
-#define FLT_EPS            MEDIUMP_FLT_MIN
 #define saturateMediump(x) min(x, MEDIUMP_FLT_MAX)
 #else
-#define FLT_EPS            1e-5
 #define saturateMediump(x) x
 #endif
 

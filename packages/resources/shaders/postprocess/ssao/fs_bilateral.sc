@@ -2,7 +2,7 @@ $input v_texcoord0
 #include <bgfx_shader.sh>
 #include <shaderlib.sh>
 
-#include "postprocess/ssao/util.sh"
+#include "common/math.sh"
 
 SAMPLER2D(s_sao, 0);
 
