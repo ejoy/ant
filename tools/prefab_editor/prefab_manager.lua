@@ -496,6 +496,7 @@ function m:open(filename)
         self:on_prefab_ready(instance)
         hierarchy:update_slot_list(world)
         anim_view.on_prefab_load(self.entities)
+        world:pub {"LookAtTarget", self.entities[1]}
     end
     
     function prefab:on_message(msg) end
@@ -517,8 +518,7 @@ local function on_remove_entity(eid)
     end
     hierarchy:del(eid)
 end
-local ientity   = ecs.import.interface "ant.render|ientity"
-local imesh 	= ecs.import.interface "ant.asset|imesh"
+
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local tile_tex
 function m:reset_prefab()

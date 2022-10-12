@@ -1003,6 +1003,7 @@ function gizmo:select_gizmo(x, y)
 end
 
 local keypress_mb = world:sub{"keyboard"}
+local look_at_target_mb = world:sub{"LookAtTarget"}
 local last_mouse_pos_x = 0
 local last_mouse_pos_y = 0
 local function on_mouse_move()
@@ -1221,14 +1222,14 @@ function gizmo_sys:handle_event()
 				end
 			end
 		end
-
-		if key == 'F' then
-			if gizmo.target_eid then
-				local aabb = check_calc_aabb(gizmo.target_eid)
-				if aabb then
-					local mc <close> = w:entity(irq.main_camera())
-					icamera.focus_aabb(mc, aabb)
-				end
+	end
+	for _, tid in look_at_target_mb:unpack() do
+		local target = tid or gizmo.target_eid
+		if target then
+			local aabb = check_calc_aabb(target)
+			if aabb then
+				local mc <close> = w:entity(irq.main_camera())
+				icamera.focus_aabb(mc, aabb)
 			end
 		end
 	end
