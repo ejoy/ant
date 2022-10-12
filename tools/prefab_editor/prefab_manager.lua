@@ -534,11 +534,12 @@ function m:reset_prefab()
     self.entities = {}
     world:pub {"WindowTitle", ""}
     world:pub {"ResetEditor", ""}
+    world:pub {"UpdateAABB"}
     hierarchy:set_root(self.root)
     self.prefab_filename = nil
     self.prefab_template = nil
     self.prefab_instance = nil
-    gizmo.target_eid = nil
+    gizmo:set_target()
 
     if not tile_tex then
         tile_tex = bgfx.create_texture2d(4, 4, true, 1, "RGBA8", "uwvwww-l+p*l", bgfx.memory_buffer("bbbb", {
@@ -733,6 +734,7 @@ function m:remove_entity(e)
     hierarchy:update_slot_list(world)
     hierarchy:update_collider_list(world)
     gizmo:set_target(nil)
+    world:pub {"UpdateAABB"}
 end
 
 function m:get_current_filename()

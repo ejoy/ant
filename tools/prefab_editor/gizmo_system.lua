@@ -1043,19 +1043,27 @@ end
 local function check_calc_aabb(eid)
 	local function build_scene()
 		local rt = {}
-		for ee in w:select "bounding?in scene?in eid:in" do
+		local skin_eid
+		local skin_mesh = {}
+		for ee in w:select "bounding:in scene?in mesh?in meshskin?in eid:in" do
 			local id = ee.eid
-			local pid = ee.scene and ee.scene.parent or 0
-			if pid then
+			if ee.meshskin then
+				skin_eid = id
+			elseif not ee.scene and ee.mesh then
+				skin_mesh[#skin_mesh + 1] = {id=id, aabb = world_aabb(ee)}
+			end
+			local pid = ee.scene and ee.scene.parent
+			if pid and pid > 0 then
 				local c = rt[pid]
 				if c == nil then
 					c = {}
 					rt[pid] = c
 				end
 				c[#c+1] = {id=id, aabb = world_aabb(ee)}
-				-- w:extend(ee, "name?in")
-				-- c[#c+1] = {id=id, aabb = world_aabb(ee), name=ee.name}
 			end
+		end
+		if skin_eid then
+			rt[skin_eid] = skin_mesh
 		end
 		return rt
 	end

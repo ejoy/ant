@@ -934,19 +934,17 @@ function m.save(path)
     end
 end
 local fs        = require "filesystem"
+local lfs = require "filesystem.local"
 local datalist  = require "datalist"
 local cr        = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
 function m.load(path)
-    if not fs.exists(fs.path(path)) then
-        return
-    end
     if (edit_mode == MODE_SKE and not current_skeleton) and (edit_mode == MODE_MTL and not current_mtl_target) then
         return
     end
     --m.clear()
-    local path = fs.path(path):localpath()
-    local f = assert(fs.open(path))
+    local path = lfs.path(path)
+    local f = assert(lfs.open(path))
     local data = f:read "a"
     f:close()
     local anim = datalist.parse(data)
