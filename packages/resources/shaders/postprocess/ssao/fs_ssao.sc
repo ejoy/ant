@@ -162,14 +162,13 @@ void main()
     highp float occlusion = 0.0;
     highp vec3 bentNormal;
 
-    vec2 coord = get_fragcoord(gl_FragCoord.xy);
     if (u_ssao_intensity > 0.0) {
-        highp float noise = interleavedGradientNoise(coord);
+        highp float noise = interleavedGradientNoise(gl_FragCoord.xy);
         scalableAmbientObscurance(occlusion, bentNormal, v_texcoord0, origin, noise, normal);
     }
 
     if (u_ssct_intensity > 0.0) {
-        occlusion += max(occlusion, dominantLightShadowing(v_texcoord0, origin, normal, coord));
+        occlusion += max(occlusion, dominantLightShadowing(v_texcoord0, origin, normal, gl_FragCoord));
     }
 
     // occlusion to visibility
