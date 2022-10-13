@@ -234,7 +234,8 @@ local function get_or_create_target_anim(target)
     end
     current_anim.target_anims[#current_anim.target_anims + 1] = {
         target_name = target,
-        clips = {}
+        clips = {},
+        inherit = {false, false, false} -- s, r, t
     }
     return current_anim.target_anims[#current_anim.target_anims]
 end
@@ -324,7 +325,9 @@ local function max_range_value()
     end
     return max_value
 end
-
+local inherit_s = {false}
+local inherit_r = {false}
+local inherit_t = {false}
 local function show_current_detail()
     if not current_anim or current_anim.edit_mode ~= edit_mode then return end
     imgui.widget.PropertyLabel("FrameCount:")
@@ -356,12 +359,26 @@ local function show_current_detail()
     end
     local anim_layer = current_anim.target_anims[current_anim.selected_layer_index]
     local clips = anim_layer.clips
+    
+    -- imgui.cursor.SameLine()
+    -- if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[1]) then
+    --     anim_layer.inherit[1] = anim_layer.inherit_ui[1][1]
+    --     update_animation()
+    -- end
+    -- imgui.cursor.SameLine()
+    -- if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[2]) then
+    --     anim_layer.inherit[2] = anim_layer.inherit_ui[2][1]
+    --     update_animation()
+    -- end
+    imgui.cursor.SameLine()
+    if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[3]) then
+        anim_layer.inherit[3] = anim_layer.inherit_ui[3][1]
+        update_animation()
+    end
 
     if current_anim.selected_clip_index < 1 then
         return
     else
-        imgui.cursor.SameLine()
-        imgui.widget.Text("        ")
         imgui.cursor.SameLine()
         if imgui.widget.Button("DelClip") then
             table.remove(clips, current_anim.selected_clip_index)
@@ -381,7 +398,7 @@ local function show_current_detail()
             name = current_joint.name
         end
     end
-    if not current_clip or current_anim.target_anims[current_anim.selected_layer_index].target_name ~= name then
+    if not current_clip or anim_layer.target_name ~= name then
         return
     end
 
@@ -718,7 +735,7 @@ function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    for _ in uiutils.imgui_windows("Skeleton", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
+    if imgui.windows.Begin("Skeleton", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         if (edit_mode == MODE_MTL and current_uniform) or (edit_mode == MODE_SKE and current_skeleton) then
             if imgui.widget.Button("New") then
                 new_anim_widget = true
@@ -800,7 +817,7 @@ function m.show()
             end
             
             local icon = current_anim.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
-            if imgui.widget.ImageButton("todo", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
+            if imgui.widget.ImageButton("##play ", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
                 if current_anim.is_playing then
                     anim_pause(true)
                 else
@@ -812,7 +829,7 @@ function m.show()
                 end
             end
             imgui.cursor.SameLine()
-            if imgui.widget.Checkbox("loop", ui_loop) then
+            if imgui.widget.Checkbox("loop ", ui_loop) then
                 anim_set_loop(ui_loop[1])
             end
 
@@ -900,6 +917,7 @@ function m.show()
 
             imgui.table.End()
         end
+        imgui.windows.End()
     end
 end
 function m.save(path)
@@ -923,6 +941,7 @@ function m.save(path)
             clip.scale_ui = nil
             clip.value_ui = nil
         end
+        value.inherit_ui = nil
     end
     local savedata = {name = current_anim.name, duration = current_anim.duration, target_anims = target_anims, sample_ratio = sample_ratio}
     if edit_mode == MODE_SKE then
@@ -987,6 +1006,10 @@ function m.load(path)
                 current_uniform = value.target_name
             end
         end
+        if not value.inherit then
+            value.inherit = {false, false, false}
+        end
+        value.inherit_ui = {{value.inherit[1]}, {value.inherit[2]}, {value.inherit[3]}}
     end
     if not is_valid then
         return
@@ -1013,7 +1036,6 @@ local function create_bone_entity(joint_name)
             mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
             name = joint_name,
             on_ready = function(e)
-				--imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
 				ivs.set_state(e, "auxgeom", true)
                 ivs.set_state(e, "main_view", false)

@@ -146,7 +146,7 @@ local function show_scene_node(node)
         imgui.util.PushID(tostring(eid))
         local current_lock = hierarchy:is_locked(eid)
         local icon = current_lock and icons.ICON_LOCK or icons.ICON_UNLOCK
-        if imgui.widget.ImageButton("todo", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
+        if imgui.widget.ImageButton("lock", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
             world:pub { "HierarchyEvent", "lock", eid, not current_lock }
         end
         imgui.util.PopID()
@@ -162,7 +162,7 @@ local function show_scene_node(node)
             end
         end
         icon = current_visible and icons.ICON_VISIBLE or icons.ICON_UNVISIBLE
-        if imgui.widget.ImageButton("todo", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
+        if imgui.widget.ImageButton("visible", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
             world:pub { "HierarchyEvent", "visible", nd, not current_visible }
         end
         imgui.util.PopID()
@@ -239,7 +239,7 @@ function m.show()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
     imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
 
-    for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
+    if imgui.windows.Begin("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) then
         if imgui.widget.Button("Create") then
             imgui.windows.OpenPopup("CreateEntity")
         end
@@ -297,6 +297,7 @@ function m.show()
             end
             imgui.table.End() 
         end
+        imgui.windows.End()
     end
 end
 

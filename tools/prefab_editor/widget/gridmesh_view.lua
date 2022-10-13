@@ -39,7 +39,7 @@ function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1] + viewport.WorkSize[1] - uiconfig.PropertyWidgetWidth, viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
     imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
-    for _ in uiutils.imgui_windows("GridMesh", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
+    if imgui.windows.Begin("GridMesh", imgui.flags.Window { "NoCollapse", "NoClosed" }) then
         local title = "CreateGridMesh"
         if imgui.widget.Button("Create") then
             imgui.windows.OpenPopup(title)
@@ -128,6 +128,7 @@ function m.show()
                 end
             end
         end
+        imgui.windows.End()
     end
 end
 

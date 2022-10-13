@@ -734,7 +734,8 @@ function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    for _ in uiutils.imgui_windows("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
+    -- for _ in uiutils.imgui_windows("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
+    if imgui.windows.Begin("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         if current_anim then
             anim_state.is_playing = iani.is_playing(anim_eid)
             if anim_state.is_playing then
@@ -850,7 +851,7 @@ function m.show()
         imgui.cursor.PopItemWidth()
         imgui.cursor.SameLine()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
-        if imgui.widget.ImageButton("todo", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
+        if imgui.widget.ImageButton("##play", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
             if anim_state.is_playing then
                 anim_group_pause(anim_eid, true)
             else
@@ -927,6 +928,8 @@ function m.show()
 
             imgui.table.End()
         end
+        
+        imgui.windows.End()
     end
     if reload then
         prefab_mgr:save_prefab()

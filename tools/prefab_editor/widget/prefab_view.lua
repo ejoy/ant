@@ -54,7 +54,7 @@ function prefab_view:show()
         return
     end
 
-    for _ in uiutils.imgui_windows("Prefab", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
+    if imgui.windows.Begin("Prefab", imgui.flags.Window { "NoCollapse", "NoClosed" }) then
         if imgui.widget.CollapsingHeader("Prefab Data", imgui.flags.TreeNode{"DefaultOpen"}) then
             for _, n in ipairs(compdefines.names) do
                 local v = t[n]
@@ -74,7 +74,7 @@ function prefab_view:show()
             end
         end
 
-        
+        imgui.windows.End()
     end
 end
 
