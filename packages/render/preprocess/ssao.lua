@@ -218,12 +218,12 @@ local function update_properties(drawer, ce)
 end
 
 local bilateral_config = {
-    kernel_radius = 8,
-    std_deviation = 1.0,
+    kernel_radius = 6,
+    std_deviation = 4.0,
     bilateral_threshold = 0.0065,
 }
 
-local KERNEL_MAX_RADIUS_SIZE<const> = 16
+local KERNEL_MAX_RADIUS_SIZE<const> = 8
 
 local function generate_gaussian_kernels(radius, std_dev, kernels)
     radius = math.min(KERNEL_MAX_RADIUS_SIZE, radius)

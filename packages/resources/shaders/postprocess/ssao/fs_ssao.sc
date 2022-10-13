@@ -20,15 +20,15 @@ const float kLog2LodRate = 3.0;
 // "The Alchemy Screen-Space Ambient Obscurance Algorithm" by Morgan McGuire
 // "Scalable Ambient Obscurance" by Morgan McGuire, Michael Mara and David Luebke
 
-vec3 tapLocation(float i, const float noise) {
-    float offset = ((2.0 * M_PI) * 2.4) * noise;
-    float angle = ((i * u_ssao_inv_sample_count) * u_ssao_spiral_turns) * (2.0 * M_PI) + offset;
-    float radius = (i + noise + 0.5) * u_ssao_inv_sample_count;
-    return vec3(cos(angle), sin(angle), radius * radius);
-}
+// vec3 tapLocation(float i, const float noise) {
+//     float offset = (PI2 * 2.4) * noise;
+//     float angle = ((i * u_ssao_inv_sample_count) * u_ssao_spiral_turns) * (PI2) + offset;
+//     float radius = (i + noise + 0.5) * u_ssao_inv_sample_count;
+//     return vec3(cos(angle), sin(angle), radius * radius);
+// }
 
 highp vec2 startPosition(const float noise) {
-    float angle = ((2.0 * M_PI) * 2.4) * noise;
+    float angle = (PI2 * 2.4) * noise;
     return vec2(cos(angle), sin(angle));
 }
 
@@ -41,17 +41,21 @@ highp mat2 tapAngleStep() {
         -s, c);  //col1
 }
 
+float tapRadius2(float i, float noise){
+    return sq((i + noise + 0.5) * u_ssao_inv_sample_count);
+}
+
 vec3 tapLocationFast(float i, vec2 p, const float noise) {
-    float radius = (i + noise + 0.5) * u_ssao_inv_sample_count;
-    return vec3(p, radius * radius);
+    return vec3(p, tapRadius2(i, noise));
 }
 
 vec3 fetchSamplePos(float i, float ssDiskRadius, const highp vec2 uv, const vec2 tapPosition, const float noise)
 {
-    vec3 tap = tapLocationFast(i, tapPosition, noise);
+    //vec3 tap = tapLocationFast(i, tapPosition, noise);
+    const float r2 = tapRadius2(i, noise);
 
-    float ssRadius = max(1.0, tap.z * ssDiskRadius); // at least 1 pixel screen-space radius
-    vec2 uvSamplePos = uv + vec2(ssRadius * tap.xy) * u_viewTexel.xy;
+    float ssRadius = max(1.0, r2 * ssDiskRadius); // at least 1 pixel screen-space radius
+    vec2 uvSamplePos = uv + vec2(ssRadius * tapPosition) * u_viewTexel.xy;
 
     float level = clamp(floor(log2(ssRadius)) - kLog2LodRate, 0.0, u_ssao_max_level);
 
