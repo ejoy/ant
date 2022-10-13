@@ -70,6 +70,13 @@ function ssao_sys:init_world()
     local fbidx_blur = create_framebuffer(vr.w, vr.h)
     util.create_queue(Hbilateral_filter_viewid, mu.copy_viewrect(vr), fbidx_blur, "Hbilateral_filter_queue", "Hbilateral_filter_queue")
     util.create_queue(Vbilateral_filter_viewid, mu.copy_viewrect(vr), fbidx, "Vbilateral_filter_queue", "Vbilateral_filter_queue")
+
+    local sa = imaterial.system_attribs()
+    local ssao_fb = fbmgr.get(fbidx)
+    sa:update("s_ssao", ssao_fb[1].handle)
+    if ENABLE_BENT_NORMAL then
+        sa:update("s_ssao_bent_normal", ssao_fb[2].handle)
+    end
 end
 
 local texmatrix<const> = mu.calc_texture_matrix()
@@ -256,15 +263,18 @@ local function submit_bilateral_filter(drawer, viewid, rt, offset, inv_camera_fa
     irender.draw(viewid, "bilateral_filter_drawer")
 end
 
-function ssao_sys:ssao()
+function ssao_sys:build_ssao()
     local drawer = w:first "ssao_drawer filter_material:in"
     local mq = w:first "main_queue camera_ref:in"
     local ce = w:entity(mq.camera_ref, "camera:in")
     update_properties(drawer, ce)
 
     irender.draw(ssao_viewid, "ssao_drawer")
+end
 
-    -- take bilateral filter
+function ssao_sys:bilateral_filter()
+    local mq = w:first "main_queue camera_ref:in"
+    local ce = w:entity(mq.camera_ref, "camera:in")
     local inv_camera_far_with_bilateral_threshold<const> = ce.camera.frustum.f / bilateral_config.bilateral_threshold
     local aoqueue = w:first "ssao_queue render_target:in"
     local bf_drawer = w:first "bilateral_filter_drawer filter_material:in"
@@ -275,13 +285,13 @@ function ssao_sys:ssao()
 
     assert(w:first "Vbilateral_filter_queue render_target:in".render_target.fb_idx == aoqueue.render_target.fb_idx)
 
-    -- output result
-    local pp = w:first "postprocess postprocess_input:in"
-    local ppi = pp.postprocess_input
-    local fb = fbmgr.get(aoqueue.render_target.fb_idx)
-    ppi.ssao_handle = fb[1].handle
+    -- -- output result
+    -- local pp = w:first "postprocess postprocess_input:in"
+    -- local ppi = pp.postprocess_input
+    -- local fb = fbmgr.get(aoqueue.render_target.fb_idx)
+    -- ppi.ssao_handle = fb[1].handle
 
-    if ENABLE_BENT_NORMAL then
-        ppi.bent_normal_handle = fb[2].handle
-    end
+    -- if ENABLE_BENT_NORMAL then
+    --     ppi.bent_normal_handle = fb[2].handle
+    -- end
 end
