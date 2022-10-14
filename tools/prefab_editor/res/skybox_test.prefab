@@ -8,7 +8,7 @@ data:
     visible_state: main_view
     scene: {}
     ibl:
-        intensity: 6500
+        intensity: 65000
         irradiance:
             size: 128
         prefilter:
@@ -18,4 +18,4 @@ data:
     material: /pkg/ant.resources/materials/sky/skybox2.material
     simplemesh: false
     skybox:
-        facesize: 256
+        facesize: 512

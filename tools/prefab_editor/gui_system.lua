@@ -493,7 +493,6 @@ function m:handle_event()
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(target)
-            update_highlight_aabb()
         elseif what == "clone" then
             prefab_mgr:clone(target)
         elseif what == "movetop" then
@@ -509,11 +508,9 @@ function m:handle_event()
     
     for _, filename in event_open_prefab:unpack() do
         prefab_mgr:open(filename)
-        update_highlight_aabb()
     end
     for _, filename in event_open_fbx:unpack() do
         prefab_mgr:open_fbx(filename)
-        update_highlight_aabb()
     end
     for _, filename in event_add_prefab:unpack() do
         if string.sub(filename, -4) == ".efk" then

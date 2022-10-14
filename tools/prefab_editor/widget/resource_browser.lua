@@ -199,7 +199,7 @@ function m.show()
         end 
     end
 
-    for _ in uiutils.imgui_windows("ResourceBrowser", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
+    if imgui.windows.Begin("ResourceBrowser", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         imgui.windows.PushStyleVar(imgui.enum.StyleVar.ItemSpacing, 0, 6)
         local _, split_dirs = path_split(selected_folder[1]:string())
         for i = 1, #split_dirs do
@@ -374,6 +374,7 @@ function m.show()
             imgui.windows.EndChild()
         imgui.table.End()
         end
+        imgui.windows.End()
     end
 end
 

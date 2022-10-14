@@ -53,10 +53,12 @@ function gizmo:set_target(eid)
 	local old_target = self.target_eid
 	self.target_eid = target
 	if target then
-		local e <close> = w:entity(target)
-		local _, r, t = math3d.srt(iom.worldmat(e))
-		self:set_rotation(r, true)
-		self:set_position(t, true)
+		local e <close> = w:entity(target, "scene?in")
+		if e.scene then
+			local _, r, t = math3d.srt(iom.worldmat(e))
+			self:set_rotation(r, true)
+			self:set_position(t, true)
+		end
 	end
 	gizmo:show_by_state(target ~= nil)
 	world:pub {"Gizmo","ontarget", old_target, target}
@@ -1001,6 +1003,7 @@ function gizmo:select_gizmo(x, y)
 end
 
 local keypress_mb = world:sub{"keyboard"}
+local look_at_target_mb = world:sub{"LookAtTarget"}
 local last_mouse_pos_x = 0
 local last_mouse_pos_y = 0
 local function on_mouse_move()
@@ -1027,52 +1030,71 @@ end
 
 local gizmo_event = world:sub{"Gizmo"}
 
-local function check_calc_aabb(eid)
-	local entity <close> = w:entity(eid, "bounding?in scene?in")
-	local sceneaabb = math3d.ref(math3d.aabb(math3d.vector(-5.0, -5.0, -5.0), math3d.vector(5.0, 5.0, 5.0)))
+local function world_aabb(entity)
 	local bounding = entity.bounding
 	if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
 		local wm = entity.scene and iom.worldmat(entity) or mc.IDENTITY_MAT
-		return math3d.ref(math3d.aabb(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1), math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1)))
+		return math3d.aabb(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1), math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1))
+	else
+		return math3d.aabb(mc.ZERO, mc.ONE)
 	end
-	do
-		return sceneaabb
-	end
-	-- TODO : merge aabb
+end
+
+local function check_calc_aabb(eid)
 	local function build_scene()
 		local rt = {}
-		for ee in w:select "bounding?in scene?in eid:in" do
+		local skin_eid
+		local skin_mesh = {}
+		for ee in w:select "bounding:in scene?in mesh?in meshskin?in eid:in" do
 			local id = ee.eid
-			local pid = ee.scene and ee.scene.parent or 0
-			if pid then
+			if ee.meshskin then
+				skin_eid = id
+			elseif not ee.scene and ee.mesh then
+				skin_mesh[#skin_mesh + 1] = {id=id, aabb = world_aabb(ee)}
+			end
+			local pid = ee.scene and ee.scene.parent
+			if pid and pid > 0 then
 				local c = rt[pid]
 				if c == nil then
 					c = {}
 					rt[pid] = c
 				end
-				w:extend(ee, "name?in")
-				c[#c+1] = {id=id, aabb = sceneaabb, name=ee.name}
+				c[#c+1] = {id=id, aabb = world_aabb(ee)}
 			end
+		end
+		if skin_eid then
+			rt[skin_eid] = skin_mesh
 		end
 		return rt
 	end
+
 	local scenetree = build_scene()
 
-	local function build_aabb(tr, sceneaabb)
-		for idx, it in ipairs(tr) do
+	local function build_aabb(tr)
+		local maabb = math3d.aabb(mc.ZERO, mc.ONE)
+		for _, it in ipairs(tr) do
 			local ctr = scenetree[it.id]
 			if ctr then
-				build_aabb(ctr, sceneaabb)
+				maabb = math3d.aabb_merge(build_aabb(ctr), maabb)
 			end
 			if it.aabb then
-				sceneaabb.m = math3d.aabb_merge(it.aabb, sceneaabb)
+				maabb = math3d.aabb_merge(it.aabb, maabb)
 			end
 		end
+		return maabb
 	end
 
-	local sceneaabb = math3d.ref(math3d.aabb())
-	build_aabb(scenetree[entity.eid], sceneaabb)
-	return sceneaabb
+	local entity <close> = w:entity(eid, "bounding?in scene?in")
+	local e = scenetree[eid]
+	return e and build_aabb(e) or world_aabb(entity)
+end
+
+local function focus_aabb(ce, aabb)
+    local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+    local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
+    local dist = -2.0 * math3d.length(math3d.sub(aabb_max, center))
+	local viewdir = iom.get_direction(ce)
+    iom.lookto(ce, math3d.muladd(dist, viewdir, center), viewdir)
 end
 
 function gizmo_sys:handle_event()
@@ -1216,14 +1238,14 @@ function gizmo_sys:handle_event()
 				end
 			end
 		end
-
-		if key == 'F' then
-			if gizmo.target_eid then
-				local aabb = check_calc_aabb(gizmo.target_eid)
-				if aabb then
-					local mc <close> = w:entity(irq.main_camera())
-					icamera.focus_aabb(mc, aabb)
-				end
+	end
+	for _, tid in look_at_target_mb:unpack() do
+		local target = tid or gizmo.target_eid
+		if target then
+			local aabb = check_calc_aabb(target)
+			if aabb then
+				local mc <close> = w:entity(irq.main_camera())
+				focus_aabb(mc, aabb)
 			end
 		end
 	end

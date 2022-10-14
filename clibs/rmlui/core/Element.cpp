@@ -724,9 +724,7 @@ void Element::SetDataModel(DataModel* new_data_model) {
 	}
 }
 
-void Element::SetParentNode(Element* _parent) {
-	parent = _parent;
-
+void Element::RefreshProperties() {
 	auto& c = Style::Instance();
 	c.Release(global_properties);
 	if (parent) {
@@ -737,7 +735,15 @@ void Element::SetParentNode(Element* _parent) {
 	else {
 		global_properties = c.Inherit(local_properties);
 	}
+	for (auto& child : children) {
+		child->RefreshProperties();
+	}
+}
 
+void Element::SetParentNode(Element* _parent) {
+	parent = _parent;
+
+	RefreshProperties();
 	DirtyTransform();
 	DirtyClip();
 	DirtyPerspective();
