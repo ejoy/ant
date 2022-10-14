@@ -159,10 +159,11 @@ float dominantLightShadowing(highp vec2 uv, highp vec3 origin, vec3 normal, vec2
 
 void main()
 {
-    highp float depthVS = depthVS_from_texture(s_scene_depth, v_texcoord0, 0.0);
+    highp float depth_non_linear = texture2DLod(s_scene_depth, v_texcoord0, 0.0).r;
+    highp float depthVS = linear_depth_pp(depth_non_linear);//depthVS_from_texture(s_scene_depth, v_texcoord0, 0.0);
 
     highp vec3 origin = posVS_from_depth(v_texcoord0, depthVS);
-    highp vec3 normal = normalVS_from_depth(s_scene_depth, v_texcoord0, origin);
+    highp vec3 normal = normalVS_from_depth_HighQ(s_scene_depth, v_texcoord0, depth_non_linear, origin);
     highp float occlusion = 0.0;
     highp vec3 bentNormal;
 

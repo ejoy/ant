@@ -60,15 +60,24 @@ vec2 get_texel_coord(vec2 xy)
 #endif //ORIGIN_BOTTOM_LEFT
 }
 
+vec4 uv_dxdy()
+{
+	highp vec4 dxdy;
+	dxdy.xy = vec2(u_viewTexel.x, 0.0);
+#if ORIGIN_BOTTOM_LEFT
+    dxdy.zw = vec2(0.0, u_viewTexel.y);
+#else //ORIGIN_BOTTOM_LEFT
+	dxdy.zw = vec2(0.0, -u_viewTexel.y);
+#endif //ORIGIN_BOTTOM_LEFT
+	return dxdy;
+}
+
 highp vec3 normalVS_from_depth(
         const highp sampler2D depthTexture, const highp vec2 uv,
         const highp vec3 position){
-    highp vec2 uvdx = uv + vec2(u_viewTexel.x, 0.0);
-#if ORIGIN_BOTTOM_LEFT
-    highp vec2 uvdy = uv + vec2(0.0, u_viewTexel.y);
-#else //ORIGIN_BOTTOM_LEFT
-	highp vec2 uvdy = uv + vec2(0.0, -u_viewTexel.y);
-#endif //ORIGIN_BOTTOM_LEFT
+	highp vec4 dxdy = uv_dxdy();
+    highp vec2 uvdx = uv + dxdy.xy;
+	highp vec2 uvdy = uv + dxdy.zw;
 
 	highp vec3 px = posVS_from_depth(uvdx, depthVS_from_texture(depthTexture, uvdx, 0.0));
     highp vec3 py = posVS_from_depth(uvdy, depthVS_from_texture(depthTexture, uvdy, 0.0));
@@ -76,6 +85,42 @@ highp vec3 normalVS_from_depth(
     highp vec3 dpdy = py - position;
     return normalVS_from_dxdy(dpdy, dpdx);
 }
+
+highp vec3 normalVS_from_depth_HighQ(
+        const highp sampler2D depthTexture, const highp vec2 uv, float depth_non_linear,
+        const highp vec3 position) {
+
+    //precision highp float;
+
+    vec3 pos_c = position;
+	const highp vec4 dxdy = uv_dxdy();
+	const highp vec2 dx = dxdy.xy;
+	const highp vec2 dy = dxdy.zw;
+
+	vec4 H = vec4(
+		texture2DLod(depthTexture, uv - dx, 0.0).r,
+		texture2DLod(depthTexture, uv + dx, 0.0).r,
+		texture2DLod(depthTexture, uv - dx * 2.0, 0.0).r,
+		texture2DLod(depthTexture, uv + dx * 2.0, 0.0).r);
+    vec2 he = abs((2.0 * H.xy - H.zw) - depth_non_linear);
+
+    vec3 pos_l = posVS_from_depth(uv - dx, linear_depth_pp(H.x));
+    vec3 pos_r = posVS_from_depth(uv + dx, linear_depth_pp(H.y));
+
+    vec3 dpdx = (he.x < he.y) ? (pos_c - pos_l) : (pos_r - pos_c);
+
+    vec4 V = vec4(
+		texture2DLod(depthTexture, uv - dy, 0.0).r,
+		texture2DLod(depthTexture, uv + dy, 0.0).r,
+		texture2DLod(depthTexture, uv - dy * 2.0, 0.0).r,
+		texture2DLod(depthTexture, uv + dy * 2.0, 0.0).r);
+    const vec2 ve = abs((2.0 * V.xy - V.zw) - depth_non_linear);
+    const vec3 pos_d = posVS_from_depth(uv - dy, linear_depth_pp(V.x));
+    const vec3 pos_u = posVS_from_depth(uv + dy, linear_depth_pp(V.y));
+    const vec3 dpdy = (ve.x < ve.y) ? (pos_c - pos_d) : (pos_u - pos_c);
+    return normalVS_from_dxdy(dpdy, dpdx);
+}
+
 #endif //BGFX_SHADER_TYPE_FRAGMENT
 
 
