@@ -28,7 +28,7 @@ end
 bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
 local csm_setting = {
 	shadowmap_size	= shadowcfg.size,
-	shadow_param	= {shadowcfg.bias, shadowcfg.min_variance, 1/shadowcfg.size, shadowcfg.depth_multiplier},
+	shadow_param	= {shadowcfg.bias, shadowcfg.min_variance or 0.0, 1/shadowcfg.size, shadowcfg.depth_multiplier or 1.0},
     color			= math3d.ref(math3d.vector(shadow_color())),
     stabilize		= shadowcfg.stabilize,
 	split_num		= shadowcfg.split_num,
