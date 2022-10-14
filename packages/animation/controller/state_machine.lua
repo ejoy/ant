@@ -140,7 +140,7 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
     for _, anim in ipairs(joint_anims) do
 		flags[ske:joint_index(anim.target_name)] = true
         raw_animation:clear_prekey(anim.target_name)
-        push_anim_key(raw_animation, anim.target_name, anim.clips, anim.inherit[3])
+        push_anim_key(raw_animation, anim.target_name, anim.clips, anim.inherit and anim.inherit[3])
     end
 	local ske_count = #ske
 	for i=1, ske_count do
