@@ -38,22 +38,22 @@ end
 function SkyboxView:_init()
     MaterialView._init(self)
     self.skybox = uiproperty.Group({label="Skybox"},{
-        uiproperty.Float({label="Intensity", min=0, speed=1, max=120000}, {
+        uiproperty.Float({label="FaceSize", min=0, speed=1, max=250000}, {
             getter = function ()
                 local e <close> = w:entity(self.eid, "skybox:in")
-                return e.skybox.intensity
+                return e.skybox.facesize
             end,
             setter = function (value)
-                template_data(self.eid, "skybox").intensity = value
+                template_data(self.eid, "skybox").facesize = value
                 local e <close> = w:entity(self.eid)
-                e.skybox.intensity = value
+                e.skybox.facesize = value
                 -- prefab_mgr:save_prefab()
                 -- prefab_mgr:reload()
             end
         })
     })
     self.IBL = uiproperty.Group({label="IBL"},{
-        uiproperty.Float({label = "Intensity", min=0, speed=1, max=120000}, {
+        uiproperty.Float({label = "Intensity", min=0, speed=1, max=250000}, {
             getter = function ()
                 local e <close> = w:entity(self.eid, "ibl:in")
                 return e.ibl.intensity

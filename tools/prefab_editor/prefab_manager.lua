@@ -654,7 +654,7 @@ function m:add_prefab(filename)
         local children = inst.tag["*"]
         if #children == 1 then
             local child = children[1]
-            local e <close> = w:entity(child, "camera:in")
+            local e <close> = w:entity(child, "camera?in")
             if e.camera then
                 -- set_parent(child, parent)
                 local temp = serialize.parse(prefab_filename, cr.read_file(prefab_filename))
