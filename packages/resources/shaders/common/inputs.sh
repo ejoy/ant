@@ -70,7 +70,7 @@
 
 
 ///define check
-#ifdef ENABLE_SHADOW
+#if defined(ENABLE_SHADOW) && !defined(MATERIAL_UNLIT)
 #   ifndef WITH_NORMAL_ATTRIB
 #   error "Shadow need normal attribute"
 #   endif //!WITH_NORMAL_ATTRIB
