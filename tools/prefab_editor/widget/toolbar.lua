@@ -67,7 +67,7 @@ function m.show()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("DefaultLight", defaultLight) then
-            world:pub { "DefaultLight", defaultLight[1] }
+            world:pub { "UpdateDefaultLight", defaultLight[1] }
         end
 
         imgui.cursor.SameLine()

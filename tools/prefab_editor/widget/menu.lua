@@ -11,10 +11,26 @@ local editor_setting    = require "editor_setting"
 
 local imgui             = require "imgui"
 local lfs               = require "filesystem.local"
+local access            = dofile "/engine/vfs/repoaccess.lua"
 local fs                = require "filesystem"
+local global_data       = require "common.global_data"
+local uiutils           = require "widget.utils"
 
 local m = {}
-
+local function show_select_light_dialog()
+    local lightprefab = editor_setting.setting.light or ""
+    if imgui.widget.MenuItem("Light:".. lightprefab) then
+        local prefab_filename = uiutils.get_open_file_path("Select Prefab", "prefab")
+        if prefab_filename then
+            local filename = access.virtualpath(global_data.repo, fs.path(prefab_filename))
+            if filename and fs.exists(fs.path(filename)) then
+                editor_setting.setting.light = filename
+                editor_setting.save()
+                world:pub { "UpdateDefaultLight", true}
+            end
+        end
+    end
+end
 local function show_select_blender_dialog()
     local blenderpath = editor_setting.setting.blender_path or ""
     if imgui.widget.MenuItem("BlenderPath:".. blenderpath) then
@@ -84,6 +100,7 @@ function m.show()
                 wf:write(setting)
                 wf:close()
             end
+            show_select_light_dialog()
             show_select_blender_dialog()
             imgui.cursor.Separator()
             if imgui.widget.MenuItem "ProjectSetting" then
