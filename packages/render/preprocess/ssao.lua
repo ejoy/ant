@@ -159,7 +159,7 @@ local function update_properties(drawer, ce)
     local projmat = camera.projmat
 
     local directional_light = w:first "directional_light scene:in"
-    local lightdir = iom.get_direction(directional_light)
+    local lightdir = directional_light and iom.get_direction(directional_light) or mc.ZAXIS
     calc_ssao_config(camera, lightdir, depthwidth, depthheight, depthdepth)
 
     imaterial.set_property(drawer, "u_ssao_param", math3d.vector(
