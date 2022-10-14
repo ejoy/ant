@@ -154,35 +154,28 @@ local function create_default_light(lt, parent)
     }
 end
 
-function m:set_default_light(enable)
+function m:clear_light()
+    if not self.default_light then
+        return
+    end
+    local all_entitys = self.default_light.tag["*"]
+    for _, e in ipairs(all_entitys) do
+        w:remove(e)
+    end
+    self.default_light = nil
+end
+function m:update_default_light(enable)
+    self:clear_light()
     if enable then
+        local filename = editor_setting.setting.light
+        if not filename or not fs.exists(fs.path(filename)) then
+            filename = "/pkg/tools.prefab_editor/res/light.prefab"
+        end
+        self.light_prefab = filename
         if not self.default_light then
-            local newlight, _ = create_default_light("directional")
-            self.default_light = newlight
-            if not self.skybox then
-                self.skybox = ecs.create_instance("/res/skybox_test.prefab")
-            end
-        end
-    else
-        if self.default_light then
-            w:remove(self.default_light)
-            self.default_light = nil
-        end
-        if self.skybox then
-            -- w:remove(self.skybox.root)
-            local all_entitys = self.skybox.tag["*"]
-            for _, e in ipairs(all_entitys) do
-                w:remove(e)
-            end
-            self.skybox = nil
+            self.default_light = ecs.create_instance(self.light_prefab)
         end
     end
-end
-local function set_parent(eid, pid)
-    local e <close> = w:entity(eid)
-    w:extend(e, "scene:out scene_needchange?out")
-    e.scene.parent = pid
-    e.scene_needchange = true
 end
 
 function m:clone(eid)
@@ -656,7 +649,6 @@ function m:add_prefab(filename)
             local child = children[1]
             local e <close> = w:entity(child, "camera?in")
             if e.camera then
-                -- set_parent(child, parent)
                 local temp = serialize.parse(prefab_filename, cr.read_file(prefab_filename))
                 hierarchy:add(child, {template = temp[1], editor = true, temporary = true}, parent)
                 return

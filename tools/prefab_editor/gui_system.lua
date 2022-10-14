@@ -144,7 +144,7 @@ local function open_proj(path)
         log_widget.init_log_receiver()
         console_widget.init_console_sender()
         local topname = find_package_name(lpath)
-
+        world:pub { "UpdateDefaultLight", true }
         if topname then
             global_data.package_path = topname .. "/"
             log.warn("need handle effect file")
@@ -313,7 +313,7 @@ local event_add_prefab      = world:sub {"AddPrefabOrEffect"}
 local event_resource_browser= world:sub {"ResourceBrowser"}
 local event_window_title    = world:sub {"WindowTitle"}
 local event_create          = world:sub {"Create"}
-local event_light           = world:sub {"DefaultLight"}
+local event_light           = world:sub {"UpdateDefaultLight"}
 local event_gizmo           = world:sub {"Gizmo"}
 local event_mouse           = world:sub {"mouse"}
 local light_gizmo = ecs.require "gizmo.light"
@@ -560,7 +560,7 @@ function m:handle_event()
         prefab_mgr:create(what, type)
     end
     for _, enable in event_light:unpack() do
-        prefab_mgr:set_default_light(enable)
+        prefab_mgr:update_default_light(enable)
     end
     for _, what in reset_editor:unpack() do
         imodifier.stop(imodifier.highlight)
