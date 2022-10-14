@@ -104,7 +104,9 @@ local ssao_configs = {
         light_cone              = 1.0,          -- full cone angle in radian, between 0 and pi/2
         shadow_distance         = 0.3,          -- how far shadows can be cast
         contact_distance_max    = 1.0,          -- max distance for contact
-        intensity               = 0.8,          -- intensity
+        --TODO: need fix cone tracing bug
+        intensity               = 0,
+        --intensity               = 0.8,          -- intensity
         lightdir                = math3d.ref(math3d.vector(0, 1, 0)),  --light direction
         depth_bias              = 0.01,         -- depth bias in world units (mitigate self shadowing)
         depth_slope_bias        = 0.01,         -- depth slope bias (mitigate self shadowing)
