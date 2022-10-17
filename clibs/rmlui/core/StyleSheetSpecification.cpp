@@ -815,11 +815,11 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("length_percent");
 
 	RegisterProperty(PropertyId::ColumnGap, "column-gap", false)
-		.AddParser("length_percent");
+		.AddParser("length");
 	RegisterProperty(PropertyId::RowGap, "row-gap", false)
-		.AddParser("length_percent");
+		.AddParser("length");
 	RegisterProperty(PropertyId::Gap, "gap", false)
-		.AddParser("length_percent");
+		.AddParser("length");
 	
 	RegisterProperty(PropertyId::AlignContent, "align-content", false)
 		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");
