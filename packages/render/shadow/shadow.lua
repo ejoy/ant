@@ -28,12 +28,11 @@ end
 bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
 local csm_setting = {
 	shadowmap_size	= shadowcfg.size,
-	shadow_param	= {shadowcfg.bias, shadowcfg.min_variance or 0.0, 1/shadowcfg.size, shadowcfg.depth_multiplier or 1.0},
-    color			= math3d.ref(math3d.vector(shadow_color())),
+	shadow_param	= math3d.ref(math3d.vector(shadowcfg.bias, shadowcfg.min_variance or 0.0, 1/shadowcfg.size, shadowcfg.depth_multiplier or 1.0)),
+    shadow_param2	= math3d.ref(math3d.vector(shadowcfg.color[1], shadowcfg.color[2], shadowcfg.color[3], shadowcfg.normal_offset)),
     stabilize		= shadowcfg.stabilize,
 	split_num		= shadowcfg.split_num,
 	split_frustums	= {nil, nil, nil, nil},
-	shadow_param3	= {shadowcfg.normal_offset, shadowcfg.size, 0, 0},
 }
 
 local function gen_ratios(distances)
@@ -169,11 +168,7 @@ function ishadow.shadow_param()
 	return csm_setting.shadow_param
 end
 
-function ishadow.shadow_param3()
-	return csm_setting.shadow_param3
-end
-
-function ishadow.color()
+function ishadow.shadow_param2()
 	return csm_setting.color
 end
 

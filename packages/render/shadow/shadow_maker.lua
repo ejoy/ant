@@ -409,9 +409,8 @@ end
 function sm:init_world()
 	local sa = imaterial.system_attribs()
 	sa:update("s_shadowmap", fbmgr.get_rb(ishadow.fb_index(), 1).handle)
-	sa:update("u_shadow_param1", math3d.vector(ishadow.shadow_param()))
-	sa:update("u_shadow_param2", ishadow.color())
-	sa:update("u_shadow_param3", math3d.vector(ishadow.shadow_param3()))
+	sa:update("u_shadow_param1", ishadow.shadow_param())
+	sa:update("u_shadow_param2", ishadow.shadow_param2())
 end
 
 function sm:update_camera()

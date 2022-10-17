@@ -89,7 +89,6 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	u_depth_scale_offset = {type="u", value=mc.ZERO},
 	u_shadow_param1		 = {type="u", value=mc.ZERO},
 	u_shadow_param2		 = {type="u", value=mc.ZERO},
-	u_shadow_param3		 = {type="u", value=mc.ZERO},
 
 	s_shadowmap			 = texture_value(8),
 	u_main_camera_matrix = { type="u",
