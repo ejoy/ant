@@ -37,6 +37,9 @@ static inline PropertyIdSet GetLayoutProperties() {
 	set.insert(PropertyId::MinHeight);
 	set.insert(PropertyId::MaxWidth);
 	set.insert(PropertyId::MinWidth);
+	set.insert(PropertyId::ColumnGap);
+	set.insert(PropertyId::RowGap);
+	set.insert(PropertyId::Gap);
 	set.insert(PropertyId::Position);
 	set.insert(PropertyId::Display);
 	set.insert(PropertyId::Overflow);
