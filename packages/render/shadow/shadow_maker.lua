@@ -289,9 +289,8 @@ local function create_clear_shadowmap_queue(fbidx)
 		data = {
 			render_target = {
 				clear_state = {
-					color = 0xffffffff,
 					depth = 0,
-					clear = "CD",
+					clear = "D",
 				},
 				fb_idx = fbidx,
 				viewid = viewidmgr.get "csm_fb",
