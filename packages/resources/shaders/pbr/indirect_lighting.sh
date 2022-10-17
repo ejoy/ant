@@ -1,9 +1,6 @@
 #ifndef _INDIRECT_LIGHTING_SH_
 #define _INDIRECT_LIGHTING_SH_
 
-#define ENABLE_SSAO
-//#define HIGH_QULITY_SPECULAR_AO
-
 #ifdef HIGH_QULITY_SPECULAR_AO
 #   ifndef ENABLE_BENT_NORMAL
 #   error "High qulity specular ao need bent normal info"

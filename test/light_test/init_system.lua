@@ -28,11 +28,11 @@ local function create_simple_triangles()
             simplemesh = {
                 vb = {
                     start = 0,
-                    num = 3,
+                    num = 6,
                     handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {
-                        -- 0.0, 0.0, 1.0,
-                        -- 0.0, 1.0, 1.0,
-                        -- 1.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        0.0, 1.0, 1.0,
+                        1.0, 0.0, 1.0,
                         0.0, 0.0, 1.0,
                         1.0, 0.0, 1.0,
                         0.0, 0.0,-1.0,

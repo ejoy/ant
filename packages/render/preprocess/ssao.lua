@@ -5,6 +5,8 @@ local w     = world.w
 local mathpkg   = import_package "ant.math"
 local mu, mc    = mathpkg.util, mathpkg.constant
 
+local setting = import_package "ant.settings".setting
+
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
@@ -17,9 +19,13 @@ local irender   = ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 
+local ao_setting<const> = setting:data().graphic.ao or {
+    bent_normal = true,
+}
+
 local ssao_sys  = ecs.system "ssao_system"
 
-local ENABLE_BENT_NORMAL<const> = false
+local ENABLE_BENT_NORMAL<const>         = ao_setting.bent_normal or true
 local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/ssao.material"
 local BILATERAL_FILTER_MATERIAL<const>  = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/bilateral_filter_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/bilateral_filter.material"
 
@@ -88,9 +94,6 @@ local ssao_configs = {
     resolution                  = 0.5,      -- How each dimension of the AO buffer is scaled. Must be either 0.5 or 1.0.
     intensity                   = 1.0,      -- Strength of the Ambient Occlusion effect.
     bilateral_threshold         = 0.05,     -- depth distance that constitute an edge for filtering
-    quality                     = "LOW",    -- affects # of samples used for AO.
-    low_pass_filter             = "MEDIUM", -- affects AO smoothness
-    upsampling                  = "LOW",    -- affects AO buffer upsampling quality
     min_horizon_angle           = 0.0,      -- min angle in radian to consider
 
     --

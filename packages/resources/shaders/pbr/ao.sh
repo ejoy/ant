@@ -6,9 +6,9 @@
 
 //TODO: use sampler array
 SAMPLER2D(s_ssao,               9);
-#   ifdef USING_SSAO_BENT_NORMAL
-SAMPLER2D(s_ssao_bent_normal    10);
-#   endif //USING_SSAO_BENT_NORMAL
+#ifdef ENABLE_BENT_NORMAL
+SAMPLER2D(s_ssao_bent_normal,   13);
+#endif //ENABLE_BENT_NORMAL
 
 float SpecularAO_Lagarde(float NoV, float visibility, float roughness) {
     // Lagarde and de Rousiers 2014, "Moving Frostbite to PBR"

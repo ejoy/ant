@@ -163,7 +163,11 @@ void main()
     highp float depthVS = linear_depth_pp(depth_non_linear);//depthVS_from_texture(s_scene_depth, v_texcoord0, 0.0);
 
     highp vec3 origin = posVS_from_depth(v_texcoord0, depthVS);
+#ifdef HIGH_QULITY_NORMAL_RECONSTRUCT
     highp vec3 normal = normalVS_from_depth_HighQ(s_scene_depth, v_texcoord0, depth_non_linear, origin);
+#else //!HIGH_QULITY_NORMAL_RECONSTRUCT
+    highp vec3 normal = normalVS_from_depth(s_scene_depth, v_texcoord0, origin);
+#endif //HIGH_QULITY_NORMAL_RECONSTRUCT
     highp float occlusion = 0.0;
     highp vec3 bentNormal;
 

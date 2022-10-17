@@ -21,17 +21,24 @@ local SETTING_MAPPING = {
             return "ENABLE_SHADOW=1"
         end
     end,
-    os = DEF_FUNC,
-    renderer = DEF_FUNC,
-    stage = DEF_FUNC,
+    os          = DEF_FUNC,
+    renderer    = DEF_FUNC,
+    stage       = DEF_FUNC,
     varying_path= DEF_FUNC,
-    subsurface = DEF_FUNC,
+    subsurface  = DEF_FUNC,
     surfacetype = DEF_FUNC,
     shadow_cast = DEF_FUNC,
 }
 
-local enable_cs = setting:get 'graphic/lighting/cluster_shading' ~= 0
-local enable_bloom = setting:get "graphic/postprocess/bloom/enable"
+local enable_cs<const>     = setting:get 'graphic/lighting/cluster_shading' ~= 0
+local enable_bloom<const>  = setting:get "graphic/postprocess/bloom/enable"
+
+local ao_setting<const> = setting:data().graphic.ao or {
+    enable      = true,
+    bent_normal = true,
+    qulity      = "high",
+    sample_count= 7,
+}
 
 local curve_world = setting:data().graphic.curve_world
 local curve_world_type_macros<const> = {
@@ -58,6 +65,18 @@ local function default_macros(setting)
 
     if enable_bloom then
         m[#m+1] = "BLOOM_ENABLE=1"
+    end
+
+    if ao_setting.enable then
+        m[#m+1] = "ENABLE_SSAO=1"
+        if ao_setting.bent_normal then
+            m[#m+1] = "ENABLE_BENT_NORMAL=1"
+        end
+
+        if ao_setting.qulity == "high" then
+            m[#m+1] = "HIGH_QULITY_SPECULAR_AO=1"
+            m[#m+1] = "HIGH_QULITY_NORMAL_RECONSTRUCT=1"
+        end
     end
 
     return m
