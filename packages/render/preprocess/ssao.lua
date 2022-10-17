@@ -222,7 +222,7 @@ end
 local bilateral_config = {
     kernel_radius = 6,
     std_deviation = 4.0,
-    bilateral_threshold = 0.0065,
+    bilateral_threshold = ssao_configs.bilateral_threshold,
 }
 
 local KERNEL_MAX_RADIUS_SIZE<const> = 8
