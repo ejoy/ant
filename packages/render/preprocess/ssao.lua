@@ -24,9 +24,19 @@ local ao_setting<const> = setting:data().graphic.ao or def_setting.graphic.ao
 
 local ssao_sys  = ecs.system "ssao_system"
 
+local ENABLE_SSAO                       = ao_setting.enable
 local ENABLE_BENT_NORMAL<const>         = ao_setting.bent_normal
 local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/ssao.material"
 local BILATERAL_FILTER_MATERIAL<const>  = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/bilateral_filter_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/bilateral_filter.material"
+
+if not ENABLE_SSAO then
+    local function DEF_FUNC() end
+    ssao_sys.init = DEF_FUNC
+    ssao_sys.init_world = DEF_FUNC
+    ssao_sys.build_ssao = DEF_FUNC
+    ssao_sys.bilateral_filter = DEF_FUNC
+    return
+end
 
 function ssao_sys:init()
     util.create_quad_drawer("ssao_drawer", SSAO_MATERIAL)

@@ -138,7 +138,9 @@ return function (input, output, setting, localpath)
     local mat = readdatalist(input)
     local fx = mat.fx
     fx.setting = mergeCfgSetting(fx.setting, localpath)
-    local depfiles = {}
+    local depfiles = {
+        localpath "./settings"
+    }
 
     local varying_path = fx.varying_path
     if varying_path then
