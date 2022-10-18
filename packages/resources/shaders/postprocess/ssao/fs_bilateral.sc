@@ -6,7 +6,7 @@ $input v_texcoord0
 
 SAMPLER2D(s_sao, 0);
 
-#if ENABLE_BENT_NORMAL
+#ifdef ENABLE_BENT_NORMAL
 SAMPLER2D(s_bentnormal, 1);
 #endif //ENABLE_BENT_NORMAL
 
@@ -91,9 +91,9 @@ void main()
     // this is most useful with high quality/large blurs
     ao += ((interleavedGradientNoise(gl_FragCoord.xy) - 0.5) / 255.0);
 
-    gl_FragData[0] = vec4(ao, packHalfFloat(center_ai.depth), 1.0);
+    gl_FragData[0] = vec4(ao, packHalfFloat(center_ai.depth), 0.0);
 
 #if ENABLE_BENT_NORMAL
-    gl_FragData[1] = packBentNormal(r.bn / r.weight);
+    gl_FragData[1] = vec4(encodeNormalUint(r.bn / r.weight), 0.0);
 #endif //ENABLE_BENT_NORMAL
 }

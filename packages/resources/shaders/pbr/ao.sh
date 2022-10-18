@@ -143,8 +143,7 @@ void apply_occlusion(input_attributes input_attribs, material_info mi, float dep
     ao_value av = fetch_ao(input_attribs.screen_uv, depthVS);
     av.ao = min(av.ao, input_attribs.occlusion);
 
-    const float diffuseAO = av.ao;
-    indirect_diffuse *= diffuseAO;
+    indirect_diffuse *= av.ao;
     indirect_specular *= calc_specularAO(input_attribs, mi, av);
 }
 
