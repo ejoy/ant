@@ -3,13 +3,25 @@ local fs = require "filesystem"
 local datalist = require "datalist"
 local toolset = require "editor.material.toolset"
 local fxsetting = require "editor.material.setting"
-local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
+--local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
+
 local settingpkg = import_package "ant.settings"
 local setting, def_setting = settingpkg.setting, settingpkg.default
 local serialize = import_package "ant.serialize"
 local depends   = require "editor.depends"
 
 local function DEF_FUNC() end
+
+local BGFX_SHADER_INC<const>        = lfs.absolute "./3rd/bgfx/src"
+local BGFX_SHADER_LIB_INC<const>    = lfs.absolute "./3rd/bgfx/examples/common"
+local SHADER_BASE<const>            = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
+local function shader_includes()
+    return {
+        SHADER_BASE,
+        BGFX_SHADER_INC,
+        BGFX_SHADER_LIB_INC,
+    }
+end
 
 local SETTING_MAPPING = {
     lighting = function (v)
@@ -153,7 +165,7 @@ return function (input, output, setting, localpath)
                 renderer = setting.renderer,
                 input = localpath(fx[stage]),
                 output = output / (stage..".bin"),
-                includes = {SHARER_INC},
+                includes = shader_includes(),
                 stage = stage,
                 varying_path = varying_path,
                 macros = get_macros(setting, fx.setting),
