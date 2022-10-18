@@ -8,7 +8,6 @@
 
 namespace Rml {
 
-class VariableDefinition;
 class DataVariable;
 class Event;
 
