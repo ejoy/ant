@@ -1,6 +1,6 @@
-local platform = require "platform"
+local platform = require "bee.platform"
 
-if platform.OS ~= "iOS" then
+if platform.os ~= "ios" then
     return {
         error = "Not running in iOS"
     }

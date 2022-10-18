@@ -82,7 +82,6 @@ void ant_loadmodules(lua_State* L) {
         { "math3d", luaopen_math3d },
         { "math3d.adapter", luaopen_math3d_adapter },
         { "platform", luaopen_platform },
-        { "platform.timer", luaopen_platform_timer },
         { "protocol", luaopen_protocol },
         { "remotedebug", luaopen_remotedebug },
         { "remotedebug.hookmgr", luaopen_remotedebug_hookmgr },

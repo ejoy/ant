@@ -33,14 +33,5 @@ int luaopen_platform(lua_State* L) {
         { NULL, NULL },
     };
     luaL_newlib(L, lib);
-#if BX_PLATFORM_IOS
-    lua_pushstring(L, isiOSAppOnMac()? "OSX": "iOS");
-#else
-    lua_pushstring(L, BX_PLATFORM_NAME);
-#endif
-    lua_setfield(L, -2, "OS");
-
-    lua_pushstring(L, BX_CRT_NAME);
-    lua_setfield(L, -2, "CRT");
     return 1;
 }
