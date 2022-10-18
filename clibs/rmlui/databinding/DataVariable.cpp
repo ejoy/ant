@@ -3,11 +3,11 @@
 
 namespace Rml {
 
-bool DataVariable::Get(Variant& variant) {
+bool DataVariable::Get(DataVariant& variant) {
     return definition->Get(ptr, variant);
 }
 
-bool DataVariable::Set(const Variant& variant) {
+bool DataVariable::Set(const DataVariant& variant) {
     return definition->Set(ptr, variant);
 }
 
@@ -19,11 +19,11 @@ DataVariable DataVariable::Child(const DataAddressEntry& address) {
     return definition->Child(ptr, address);
 }
 
-bool VariableDefinition::Get(void* /*ptr*/, Variant& /*variant*/) {
+bool VariableDefinition::Get(void* /*ptr*/, DataVariant& /*variant*/) {
     Log::Message(Log::Level::Warning, "Values can only be retrieved from scalar data types.");
     return false;
 }
-bool VariableDefinition::Set(void* /*ptr*/, const Variant& /*variant*/) {
+bool VariableDefinition::Set(void* /*ptr*/, const DataVariant& /*variant*/) {
     Log::Message(Log::Level::Warning, "Values can only be assigned to scalar data types.");
     return false;
 }
@@ -40,7 +40,7 @@ class LiteralIntDefinition final : public VariableDefinition {
 public:
     LiteralIntDefinition() : VariableDefinition() {}
 
-    bool Get(void* ptr, Variant& variant) override {
+    bool Get(void* ptr, DataVariant& variant) override {
         variant = static_cast<int>(reinterpret_cast<intptr_t>(ptr));
         return true;
     }

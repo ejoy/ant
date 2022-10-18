@@ -14,7 +14,7 @@ struct DataEventListener : public EventListener {
 	void ProcessEvent(Event& event) override {
 		Element* element = event.GetTargetElement();
 		DataExpressionInterface expr_interface(element->GetDataModel(), element, &event);
-		Variant unused_value_out;
+		DataVariant unused_value_out;
 		expression.Run(expr_interface, unused_value_out);
 	}
 	DataExpression expression;

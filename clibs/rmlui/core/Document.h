@@ -11,7 +11,6 @@ namespace Rml {
 class Text;
 class StyleSheet;
 class DataModel;
-class DataModelConstructor;
 class Factory;
 struct HtmlElement;
 
@@ -31,7 +30,7 @@ public:
 	Element* ElementFromPoint(Point pt);
 	void Update(float delta);
 	void UpdateLayout();
-	DataModelConstructor CreateDataModel(const std::string& name);
+	DataModel* CreateDataModel(const std::string& name);
 	bool RemoveDataModel(const std::string& name);
 	void UpdateDataModel(bool clear_dirty_variables);
 	DataModel* GetDataModelPtr(const std::string& name) const;

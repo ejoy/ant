@@ -6,7 +6,7 @@
 
 namespace Rml {
 
-using Variant = std::variant<
+using DataVariant = std::variant<
 	std::monostate,
 	bool,
 	float,
@@ -16,12 +16,12 @@ using Variant = std::variant<
 
 namespace VariantHelper {
 	template <typename T>
-	bool Has(const Variant& variant) {
+	bool Has(const DataVariant& variant) {
 		return std::holds_alternative<float>(variant);
 	}
 
 	template <typename T>
-	T Get(const Variant& variant, T def = T{}) {
+	T Get(const DataVariant& variant, T def = T{}) {
 		if (const T* r = std::get_if<T>(&variant)) {
 			return *r;
 		}
@@ -29,7 +29,7 @@ namespace VariantHelper {
 	}
 
 	template <typename T>
-	T ConvertGet(const Variant& variant) {
+	T ConvertGet(const DataVariant& variant) {
 		return std::visit(
 			[] (auto const& val) {
 				if constexpr (std::is_convertible_v<decltype(val), T>)
@@ -58,7 +58,7 @@ namespace VariantHelper {
 			return v;
 		}
 	};
-	inline std::string ToString(const Variant& variant) {
+	inline std::string ToString(const DataVariant& variant) {
 		return std::visit(ToStringVisitor {}, variant);
 	}
 	struct ToStringOptVisitor {
@@ -78,7 +78,7 @@ namespace VariantHelper {
 			return v;
 		}
 	};
-	inline std::optional<std::string> ToStringOpt(const Variant& variant) {
+	inline std::optional<std::string> ToStringOpt(const DataVariant& variant) {
 		return std::visit(ToStringOptVisitor {}, variant);
 	}
 }
