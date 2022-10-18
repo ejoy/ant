@@ -4,7 +4,8 @@ local datalist = require "datalist"
 local toolset = require "editor.material.toolset"
 local fxsetting = require "editor.material.setting"
 local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
-local setting = import_package "ant.settings".setting
+local settingpkg = import_package "ant.settings"
+local setting, def_setting = settingpkg.setting, settingpkg.default
 local serialize = import_package "ant.serialize"
 local depends   = require "editor.depends"
 
@@ -33,12 +34,7 @@ local SETTING_MAPPING = {
 local enable_cs<const>     = setting:get 'graphic/lighting/cluster_shading' ~= 0
 local enable_bloom<const>  = setting:get "graphic/postprocess/bloom/enable"
 
-local ao_setting<const> = setting:data().graphic.ao or {
-    enable      = true,
-    bent_normal = false,
-    qulity      = "high",
-    sample_count= 7,
-}
+local ao_setting<const> = setting:data().graphic.ao or def_setting.graphic.ao
 
 local curve_world = setting:data().graphic.curve_world
 local curve_world_type_macros<const> = {

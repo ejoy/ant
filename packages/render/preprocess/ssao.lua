@@ -5,7 +5,8 @@ local w     = world.w
 local mathpkg   = import_package "ant.math"
 local mu, mc    = mathpkg.util, mathpkg.constant
 
-local setting = import_package "ant.settings".setting
+local settingpkg = import_package "ant.settings"
+local setting, def_setting = settingpkg.setting, settingpkg.default
 
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
@@ -19,12 +20,7 @@ local irender   = ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 
-local ao_setting<const> = setting:data().graphic.ao or {
-    enable = true,
-    bent_normal = false,
-    qulity = "low",
-    sample_count = 7,
-}
+local ao_setting<const> = setting:data().graphic.ao or def_setting.graphic.ao
 
 local ssao_sys  = ecs.system "ssao_system"
 
