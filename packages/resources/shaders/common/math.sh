@@ -1,3 +1,5 @@
+#ifndef _MATH_SH_
+#define _MATH_SH_
 //------------------------------------------------------------------------------
 // Common math
 //------------------------------------------------------------------------------
@@ -188,3 +190,5 @@ float interleavedGradientNoise(highp vec2 w) {
     const vec3 m = vec3(0.06711056, 0.00583715, 52.9829189);
     return fract(m.z * fract(dot(w, m.xy)));
 }
+
+#endif //_MATH_SH_

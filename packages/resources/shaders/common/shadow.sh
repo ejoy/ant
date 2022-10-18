@@ -34,17 +34,6 @@ uniform vec4 u_omni_param;
 
 #define USE_VIEW_SPACE_DISTANCE
 //#define SHADOW_COVERAGE_DEBUG
-//#define PACK_RGBA8
-//#define LINEAR_SHADOW
-#ifdef LINEAR_SHADOW
-//#define SHADOW_SAMPLER2D	SAMPLER2D
-//#define shadow_sampler_type sampler2D 
-#else
-//#define SHADOW_SAMPLER2D	SAMPLER2DSHADOW
-//#define shadow_sampler_type sampler2DShadow
-//#define SHADOW_SAMPLER2D	SAMPLER2D
-//#define shadow_sampler_type sampler2D 
-#endif
 
 //#define SM_HARD 
 //#define SM_VSM 
@@ -61,8 +50,6 @@ SHADOW_SAMPLER2D(s_shadowmap_blur, 8);
 #else
 SHADOW_SAMPLER2D(s_shadowmap, 8);
 #endif
-
-SHADOW_SAMPLER2D(s_omni_shadowmap, 9);
 #endif //ENABLE_SHADOW
 
 bool is_texcoord_in_range(vec2 _texcoord, float minv, float maxv)
@@ -142,8 +129,6 @@ float PCF(
     }
 	return visibility / 49.0;	
 }
-
-
 
 float VSM(
 	shadow_sampler_type _sampler,
@@ -294,29 +279,6 @@ vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor)
 #endif //SHADOW_COVERAGE_DEBUG
 
 	return finalcolor;
-}
-
-vec4 calc_omni_shadow_coord(vec4 posWS)
-{
-	vec4 selection = vec4(
-		dot(u_tetra_normal_Green.xyz,  posWS.xyz),
-		dot(u_tetra_normal_Yellow.xyz, posWS.xyz),
-		dot(u_tetra_normal_Blue.xyz,   posWS.xyz),
-		dot(u_tetra_normal_Red.xyz,    posWS.xyz));
-
-	float face = max(max(selection.x, selection.y), max(selection.z, selection.w));
-	for (int ii=0; ii<4; ++ii)
-		if (face == selection[ii])
-			return mul(u_omni_matrix[ii], posWS);
-
-	return vec4_splat(0.0);
-}
-
-vec3 omni_shadow_visibility(vec4 posWS, vec3 scenecolor)
-{
-	vec4 shadowcoord = calc_omni_shadow_coord(posWS);
-	float visibility = hardShadow(s_omni_shadowmap, shadowcoord, u_shadowmap_bias);
-	return mix(u_shadow_color, scenecolor, visibility);
 }
 
 #endif //__SHADER_SHADOW_SH__

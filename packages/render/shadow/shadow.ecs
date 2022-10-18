@@ -28,15 +28,12 @@ interface "ishadow"
     .method "fb_index"
     .method "shadowmap_size"
 
-    .method "bias"
-    .method "normal_offset"
     .method "shadow_param"
     .method "shadow_param2"
     .method "split_num"
 
     .method "calc_split_frustums"
     .method "split_frustums"
-    .method "sm_bias_matrix"
 
 component "csm_directional_light"
 component "csm".type "lua"

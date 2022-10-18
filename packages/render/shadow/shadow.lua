@@ -1,6 +1,6 @@
-local ecs = ...
+local ecs 	= ...
 local world = ecs.world
-local w = world.w
+local w 	= world.w
 
 local setting	= import_package "ant.settings".setting
 local mathpkg	= import_package "ant.math"
@@ -12,18 +12,7 @@ local bgfx		= require "bgfx"
 local fbmgr		= require "framebuffer_mgr"
 local sampler	= require "sampler"
 
-local sm_bias_matrix = mu.calc_texture_matrix()
-
 local shadowcfg = setting:data().graphic.shadow
-
-local function shadow_color()
-	local c = {0, 0, 0, 1}
-	for idx, v in ipairs(shadowcfg.color) do
-		c[idx] = v
-	end
-
-	return c
-end
 
 bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
 local csm_setting = {
@@ -34,19 +23,6 @@ local csm_setting = {
 	split_num		= shadowcfg.split_num,
 	split_frustums	= {nil, nil, nil, nil},
 }
-
-local function gen_ratios(distances)
-	local pre_dis = 0
-	local ratios = {}
-	for i=1, #distances do
-		local dis = math.min(1.0, distances[i] * (1.0+csm_setting.cross_delta))
-		ratios[#ratios+1] = {pre_dis, dis}
-		pre_dis = dis
-	end
-	ratios[#ratios+1] = {pre_dis, 1.0}
-	return ratios
-end
-
 
 if shadowcfg.split_ratios then
 	if csm_setting.split_num then
@@ -123,29 +99,26 @@ end
 
 local crop_matrices = {}
 
-local spiltunit = 1 / csm_setting.split_num
-local function calc_crop_matrix(csm_idx)
-	local offset = spiltunit * (csm_idx - 1)
-	return math3d.matrix(
-		spiltunit, 0.0, 0.0, 0.0,
-		0.0, 1.0, 0.0, 0.0, 
-		0.0, 0.0, 1.0, 0.0,
-		offset, 0.0, 0.0, 1.0)
-end
+do
+	local spiltunit = 1 / csm_setting.split_num
+	local function calc_crop_matrix(csm_idx)
+		local offset = spiltunit * (csm_idx - 1)
+		return math3d.matrix(
+			spiltunit, 0.0, 0.0, 0.0,
+			0.0, 1.0, 0.0, 0.0, 
+			0.0, 0.0, 1.0, 0.0,
+			offset, 0.0, 0.0, 1.0)
+	end
 
-for csm_idx=1, csm_setting.split_num do
-	local vp_crop = calc_crop_matrix(csm_idx)
-	local t = math3d.tovalue(vp_crop)
-	crop_matrices[#crop_matrices+1] = math3d.ref(math3d.mul(vp_crop, sm_bias_matrix))
+	local sm_bias_matrix = mu.calc_texture_matrix()
+	for csm_idx=1, csm_setting.split_num do
+		local vp_crop = calc_crop_matrix(csm_idx)
+		crop_matrices[#crop_matrices+1] = math3d.ref(math3d.mul(vp_crop, sm_bias_matrix))
+	end
 end
-
 
 function ishadow.crop_matrix(csm_index)
 	return crop_matrices[csm_index]
-end
-
-function ishadow.sm_bias_matrix()
-	return sm_bias_matrix
 end
 
 function ishadow.fb_index()
@@ -155,14 +128,6 @@ end
 --[[ function ishadow.sqfb_index()
 	return csm_setting.sqfb_index
 end ]]
-
-function ishadow.bias()
-	return csm_setting.shadow_param[1]
-end
-
-function ishadow.normal_offset()
-	return csm_setting.shadow_param[2]
-end
 
 function ishadow.shadow_param()
 	return csm_setting.shadow_param

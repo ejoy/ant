@@ -1,7 +1,7 @@
 #ifndef _AO_SH_
 #define _AO_SH_
 
-#include "commom/math.sh"
+#include "common/math.sh"
 #include "pbr/input_attributes.sh"
 
 //TODO: use sampler array
