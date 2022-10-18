@@ -8,6 +8,11 @@ _windows:
   graphic:
     api: d3d11
 graphic:
+  ao:
+    enable: true
+    bent_normal: false
+    qulity: "low"
+    sample_count: 7
   curve_world:
     enable: false
     type: "cylinder"

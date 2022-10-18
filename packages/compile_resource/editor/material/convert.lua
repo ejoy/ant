@@ -35,7 +35,7 @@ local enable_bloom<const>  = setting:get "graphic/postprocess/bloom/enable"
 
 local ao_setting<const> = setting:data().graphic.ao or {
     enable      = true,
-    bent_normal = true,
+    bent_normal = false,
     qulity      = "high",
     sample_count= 7,
 }

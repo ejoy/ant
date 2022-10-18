@@ -20,12 +20,15 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local ao_setting<const> = setting:data().graphic.ao or {
-    bent_normal = true,
+    enable = true,
+    bent_normal = false,
+    qulity = "low",
+    sample_count = 7,
 }
 
 local ssao_sys  = ecs.system "ssao_system"
 
-local ENABLE_BENT_NORMAL<const>         = ao_setting.bent_normal or true
+local ENABLE_BENT_NORMAL<const>         = ao_setting.bent_normal
 local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/ssao.material"
 local BILATERAL_FILTER_MATERIAL<const>  = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/bilateral_filter_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/bilateral_filter.material"
 
