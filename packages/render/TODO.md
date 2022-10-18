@@ -28,11 +28,12 @@
 13. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
 
 #### 新功能/探索
-1. SDF Shadow；
-2. Visibility Buffer；
-3. GI相关。SSGI，SSR和SDFGI等；
-4. LOD；
-5. 阴影的VSM；  //2022.09.29已经完成。但效果有待验证
+1. 天气系统。让目前游戏能够昼夜变化。一个简单的方式是使用后处理的color grading改变色调，另外一个更正确的方法应该是使用动态的天空盒；
+2. SDF Shadow；
+3. Visibility Buffer；
+4. GI相关。SSGI，SSR和SDFGI等；
+5. LOD；
+6. 阴影的VSM；  //2022.09.29已经完成。但效果有待验证
 
 #### 增强调试功能
 1. 影子。只管的在屏幕上看到对应的shadowmap、csm frustum等；
