@@ -20,7 +20,7 @@ if not path_mt.localpath then
 end
 
 function fs.app_path(name)
-    local platform = require 'platform'
+    local platform = require "bee.platform"
     if platform.os == "ios" then
         local ios = require "ios"
         return fs.path(ios.directory(ios.NSDocumentDirectory))
