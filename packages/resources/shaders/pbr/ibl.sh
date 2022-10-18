@@ -15,9 +15,9 @@ uniform vec4 u_ibl_param;
 vec3 get_IBL_radiance_Lambertian(in material_info mi)
 {
 #ifdef ENABLE_BENT_NORMAL
-    vec3 N = mi.N;
-#else //!ENABLE_BENT_NORMAL
     vec3 N = mi.bent_normal;
+#else //!ENABLE_BENT_NORMAL
+    vec3 N = mi.N;
 #endif //ENABLE_BENT_NORMAL
     return textureCube(s_irradiance, N).rgb * mi.albedo;
 }
