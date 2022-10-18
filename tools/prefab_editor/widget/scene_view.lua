@@ -238,7 +238,7 @@ function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + uiconfig.ToolBarHeight, 'F')
     imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
-
+    -- for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
     if imgui.windows.Begin("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) then
         if imgui.widget.Button("Create") then
             imgui.windows.OpenPopup("CreateEntity")
@@ -297,8 +297,8 @@ function m.show()
             end
             imgui.table.End() 
         end
-        imgui.windows.End()
     end
+    imgui.windows.End()
 end
 
 return m

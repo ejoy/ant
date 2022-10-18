@@ -212,7 +212,6 @@ local function choose_project()
             local res_root_str = tostring(fs.path "":localpath())
             global_data.project_root = lfs.path(res_root_str)
             global_data.packages = get_package(global_data.project_root, true)
-            imgui.windows.CloseCurrentPopup();
         end
 
         imgui.cursor.Separator();
@@ -237,6 +236,8 @@ local function choose_project()
             global_data.editor_root = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
             log.warn("need handle effect file")
             --effekseer_filename_mgr.add_path("/pkg/tools.prefab_editor/res")
+            
+            imgui.windows.CloseCurrentPopup()
         end
         imgui.windows.EndPopup()
     end
