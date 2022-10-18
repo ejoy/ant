@@ -1,10 +1,9 @@
 local ecs = ...
 
-local timer = require "platform.timer"
-local time_counter = timer.counter
-local time_freq    = timer.frequency() / 1000
+local ltask = require "ltask"
+
 local function gettime()
-	return time_counter() / time_freq
+	return ltask.counter()
 end
 
 local previous

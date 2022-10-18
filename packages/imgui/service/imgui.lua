@@ -8,10 +8,10 @@ local renderpkg   = import_package "ant.render"
 local viewidmgr   = renderpkg.viewidmgr
 local assetmgr    = import_package "ant.asset"
 local rhwi        = import_package "ant.hwi"
-local platform    = require "platform"
+local platform    = require "bee.platform"
 local exclusive   = require "ltask.exclusive"
 local font        = imgui.font
-local Font        = platform.font
+local Font        = require "platform".font
 local cb          = {}
 local message     = {}
 local initialized = false
@@ -20,12 +20,9 @@ local init_height
 local debug_traceback = debug.traceback
 local viewids = {}
 
-local _timer = require "platform.timer"
-local _time_counter = _timer.counter
-local _time_freq    = _timer.frequency() / 1000
-local _timer_previous = _time_counter() / _time_freq
+local _timer_previous = ltask.counter()
 local function timer_delta()
-	local current = _time_counter() / _time_freq
+	local current = ltask.counter()
 	local delta = current - _timer_previous
 	_timer_previous = current
 	return delta
@@ -197,12 +194,12 @@ ltask.fork(function ()
         imgui_image.fx.prog,
         imgui_image.fx.uniforms[1].handle
     )
-    if platform.OS == "Windows" then
+    if platform.os == "windows" then
         font.Create {
             { Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
             { Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},
         }
-    elseif platform.OS == "macOS" then
+    elseif platform.os == "macos" then
         font.Create { { Font "华文细黑" , 18, glyphRanges { 0x0020, 0xFFFF }} }
     else -- iOS
         font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }

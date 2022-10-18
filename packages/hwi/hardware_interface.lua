@@ -1,6 +1,6 @@
 local hw = {}
 
-local platform = require "platform"
+local platform = require "bee.platform"
 local bgfx     = require "bgfx"
 
 local math3d   = require "math3d"
@@ -18,7 +18,7 @@ local function check_renderer(renderer)
 		return hw.default_renderer()
 	end
 
-	if platform.OS == "iOS" and renderer ~= "METAL" then
+	if platform.os == "ios" and renderer ~= "METAL" then
 		assert(false, 'iOS platform context layer is select before bgfx renderer created \
 			the default layter is metal, if we need to test OpenGLES on iOS platform \
 			we need to change the context layter to OpenGLES')
@@ -71,7 +71,7 @@ function hw.init(args)
 end
 
 function hw.dpi()
-	return platform.dpi(init_args.nwh)
+	return require "platform".dpi(init_args.nwh)
 end
 
 function hw.native_window()
@@ -98,26 +98,25 @@ function hw.reset(t, w, h)
 end
 
 local platform_relates = {
-	WINDOWS = {
+	windows = {
 		renderer="DIRECT3D11",
 	},
-	OSX = {
+	macos = {
 		renderer="METAL",
 	},
-	IOS = {
+	ios = {
 		renderer="METAL",
 	},
-	ANDROID = {
+	android = {
 		renderer="VULKAN",
 	},
 }
 
 function hw.default_renderer(plat)
-	plat = plat or platform.OS
-	local PLAT=plat:upper()
-	local pi = platform_relates[PLAT]
+	plat = plat or platform.os
+	local pi = platform_relates[plat]
 	if pi then
-		if PLAT == "IOS" then
+		if plat == "ios" then
 			assert(pi.renderer == "METAL")
 		end
 		return pi.renderer

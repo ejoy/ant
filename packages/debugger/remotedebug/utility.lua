@@ -4,8 +4,8 @@ local function fs_absolute(...)
 end
 
 local function platform_os()
-    local platform = require "platform"
-    return platform.OS
+    local platform = require "bee.platform"
+    return platform.os
 end
 
 local function closeprocess()

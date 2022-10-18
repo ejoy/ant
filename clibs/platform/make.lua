@@ -8,7 +8,6 @@ lm:lua_source "platform" {
     },
     sources = {
         "lplatform.cpp",
-        "platform_timer.cpp",
     },
     windows = {
         sources = {

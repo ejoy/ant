@@ -1,7 +1,7 @@
 local util = {}
 local subprocess = require "bee.subprocess"
 local fs = require "bee.filesystem"
-local platform = require "platform"
+local platform = require "bee.platform"
 
 local function quote_arg(s)
     if type(s) ~= 'string' then
@@ -97,7 +97,7 @@ local function find_bindir()
     return fs.exe_path():parent_path()
 end
 local BINDIR<const> = find_bindir()--fs.exe_path():parent_path()
-local TOOLSUFFIX<const> = platform.OS == "OSX" and "" or ".exe"
+local TOOLSUFFIX<const> = platform.os == "macos" and "" or ".exe"
 
 function util.bin_dir()
     return BINDIR

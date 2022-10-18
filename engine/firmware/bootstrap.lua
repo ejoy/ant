@@ -20,8 +20,14 @@ end
 
 do
 	local fs = require "bee.filesystem"
-	local appdata = fs.appdata_path()
-	local root = is_ios() and appdata or appdata / "ant" / "runtime"
+	local function app_path(name)
+		if is_ios() then
+			local ios = require "ios"
+			return fs.path(ios.directory(ios.NSDocumentDirectory))
+		end
+		return fs.appdata_path() / name
+	end
+	local root = app_path "ant"
 	local repo = root / ".repo"
 	if needcleanup then
 		fs.remove_all(repo)
