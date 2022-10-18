@@ -86,20 +86,19 @@ local BgfxOS <const> = {
 }
 
 local function init()
-    local os = BgfxOS[platform.os] or platform.os
     local caps = bgfx.get_caps()
     local renderer = caps.rendererType:lower()
     local texture = assert(texture_extensions[renderer])
     set_setting("model", stringify {})
     set_setting("glb", stringify {})
     set_setting("material", stringify {
-        os = os,
+        os = BgfxOS[platform.os] or platform.os,
         renderer = renderer,
         hd = caps.homogeneousDepth and true or nil,
         obl = caps.originBottomLeft and true or nil,
     })
-    set_setting("texture", stringify {os=os, ext=texture})
-    set_setting("png", stringify {os=os, ext=texture})
+    set_setting("texture", stringify {os=platform.os, ext=texture})
+    set_setting("png", stringify {os=platform.os, ext=texture})
 end
 
 return {
