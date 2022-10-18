@@ -67,9 +67,11 @@ if __ANT_RUNTIME__ then
     local platform = require "bee.platform"
     local ServiceIO = ltask.queryservice "io"
 	if platform.os == "ios" then
+		local fs = require "bee.filesystem"
 		local ios = require "ios"
 		local document = ios.directory(ios.NSDocumentDirectory)
-		local logfile = document .. "/log_" .. (os.date '%Y%m%d_%H%M%S') .. ".log"
+		local logfile = document .. "/log/" .. (os.date '%Y%m%d_%H%M%S') .. ".log"
+		fs.create_directories(document .. "/log")
 		function LOG(data)
 			ltask.send(ServiceIO, "SEND", "LOG", data)
 			local f <close> = io.open(logfile, "a+")
