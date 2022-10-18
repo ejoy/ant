@@ -169,7 +169,7 @@ function ishadow.shadow_param()
 end
 
 function ishadow.shadow_param2()
-	return csm_setting.color
+	return csm_setting.shadow_param2
 end
 
 local function split_new_frustum(view_frustum, n, f)
