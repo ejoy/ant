@@ -400,7 +400,7 @@ function gizmo_sys:post_init()
 	gizmo.uniform_scale_eid = cube_eid
 	local function create_scale_axis(axis, axis_end)
 		local cube_eid = create_scale_cube("scale axis", {t = axis_end, s = gizmo_const.AXIS_CUBE_SCALE, parent = axis_root}, axis.color)
-		local line_eid = ientity.create_line_entity("", {0, 0, 0}, axis_end, {}, axis.color, true)
+		local line_eid = ientity.create_line_entity("", {0, 0, 0}, axis_end, {parent = axis_root}, axis.color, true)
 		axis.eid = {cube_eid, line_eid}
 	end
 	create_scale_axis(gizmo.sx, {gizmo_const.AXIS_LEN, 0, 0})
@@ -747,10 +747,10 @@ local function move_light_gizmo(x, y)
 end
 
 local function show_rotate_fan(rotAxis, startAngle, deltaAngle)
-	local e3 <close> = w:entity(rotAxis.eid[3], "render_object:in")
+	local e3 <close> = w:entity(rotAxis.eid[3], "render_object:update")
 	local e3_start, e3_num
 	local stepAngle = gizmo_const.ROTATE_SLICES / 360
-	local e4 <close> = w:entity(rotAxis.eid[4], "render_object:in")
+	local e4 <close> = w:entity(rotAxis.eid[4], "render_object:update")
 	if deltaAngle > 0 then
 		e3_start = math.floor(startAngle * stepAngle) * 3
 		local totalAngle = startAngle + deltaAngle

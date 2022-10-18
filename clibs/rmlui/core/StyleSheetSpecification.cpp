@@ -79,7 +79,6 @@ struct StyleSheetSpecificationInstance {
 		{"number", new PropertyParserNumber(PropertyParserNumber::UnitMark::Number)},
 		{"length", new PropertyParserNumber(PropertyParserNumber::UnitMark::Length)},
 		{"length_percent", new PropertyParserNumber(PropertyParserNumber::UnitMark::LengthPercent)},
-		{"number_length_percent", new PropertyParserNumber(PropertyParserNumber::UnitMark::NumberLengthPercent)},
 		{"angle", new PropertyParserNumber(PropertyParserNumber::UnitMark::Angle)},
 		{"string", new PropertyParserString()},
 		{"animation", new PropertyParserAnimation()},
@@ -813,6 +812,13 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("length_percent");
 	RegisterProperty(PropertyId::MaxHeight, "max-height", false)
 		.AddParser("length_percent");
+
+	RegisterProperty(PropertyId::ColumnGap, "column-gap", false)
+		.AddParser("length");
+	RegisterProperty(PropertyId::RowGap, "row-gap", false)
+		.AddParser("length");
+	RegisterProperty(PropertyId::Gap, "gap", false)
+		.AddParser("length");
 	
 	RegisterProperty(PropertyId::AlignContent, "align-content", false)
 		.AddParser("keyword", "auto, flex-start, center, flex-end, stretch, baseline, space-between, space-around");

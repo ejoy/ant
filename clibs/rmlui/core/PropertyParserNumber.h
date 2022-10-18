@@ -11,7 +11,6 @@ public:
 		Number,
 		Length,
 		LengthPercent,
-		NumberLengthPercent,
 		Angle,
 	};
 

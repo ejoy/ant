@@ -235,7 +235,8 @@ local function get_or_create_target_anim(target)
     current_anim.target_anims[#current_anim.target_anims + 1] = {
         target_name = target,
         clips = {},
-        inherit = {false, false, false} -- s, r, t
+        inherit = {false, false, false}, -- s, r, t
+        inherit_ui = {{false}, {false}, {false}}
     }
     return current_anim.target_anims[#current_anim.target_anims]
 end

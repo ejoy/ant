@@ -85,11 +85,6 @@ std::optional<Property> PropertyParserNumber::ParseValue(const std::string& valu
 			return Property { float_value, unit };
 		}
 		break;
-	case UnitMark::NumberLengthPercent:
-		if (!PropertyIsAngle(unit)) {
-			return Property { float_value, unit };
-		}
-		break;
 	case UnitMark::Angle:
 		if (PropertyIsAngle(unit)) {
 			return Property { float_value, unit };
