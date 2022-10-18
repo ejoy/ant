@@ -1,21 +1,22 @@
 __ANT_RUNTIME__ = "0.0.1"
 
-local platform = require "platform"
+local platform = require "bee.platform"
 
 local function is_ios()
-	return "ios" == platform.OS:lower()
+	return "ios" == platform.os
 end
 
 local needcleanup, type, address
 
 if is_ios() then
-	local clean_up_next_time = platform.setting("clean_up_next_time")
+	local setting = require "platform".setting
+	local clean_up_next_time = setting("clean_up_next_time")
 	if clean_up_next_time == true then
-		platform.setting("clean_up_next_time", false)
+		setting("clean_up_next_time", false)
 		needcleanup = true
 	end
-	type = platform.setting "server_type"
-	address = platform.setting "server_address"
+	type = setting "server_type"
+	address = setting "server_address"
 end
 
 do
