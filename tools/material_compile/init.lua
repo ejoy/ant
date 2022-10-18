@@ -6,7 +6,7 @@ local lfs = require "filesystem.local"
 
 local sc = arg[1]
 local scpath = fs.path(sc)
-local stage = scpath:filename():string():match "([vf]s)_%w+"
+local stage = scpath:filename():string():match "([vfc]s)_%w+"
 
 local mc = {
     fx = {
