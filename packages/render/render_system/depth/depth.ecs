@@ -22,7 +22,7 @@ policy "scene_depth_queue"
 
 component "depth_resolve"
 system "depth_resolve_system"
-    .implement "render_system/depth.lua"
+    .implement "render_system/depth/depth.lua"
     .method "init"
     .method "init_world"
     .method "data_changed"
@@ -33,7 +33,7 @@ policy "depth_resolve"
 
 component "depth_mipmap"
 system "depth_mipmap_system"
-    .implement "render_system/depth.lua"
+    .implement "render_system/depth/depth.lua"
     .method "init"
     .method "depth_mipmap"
 

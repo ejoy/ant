@@ -4,7 +4,7 @@ import "@ant.camera"
 import "@ant.asset"
 import "@ant.objcontroller"
 
-import "render_system/depth.ecs"
+import "render_system/depth/depth.ecs"
 
 component "main_queue"
 component "main_queue_cull"
@@ -14,7 +14,7 @@ policy "main_queue"
     .component "main_queue"
 
 system "pre_depth_system"
-    .implement "render_system/depth.lua"
+    .implement "render_system/depth/depth.lua"
     .require_system "end_filter_system"
     .require_interface "ant.render|irender"
     .method "init"
@@ -22,7 +22,7 @@ system "pre_depth_system"
     .method "end_filter"
 
 system "scene_depth_system"
-    .implement "render_system/depth.lua"
+    .implement "render_system/depth/depth.lua"
     .method "post_init"
 
 component "orthoview".type "lua"
