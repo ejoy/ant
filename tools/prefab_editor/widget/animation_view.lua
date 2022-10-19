@@ -174,6 +174,7 @@ local function from_runtime_event(runtime_event)
                     e.life_time = e.life_time or 2
                     e.breakable_ui = {e.breakable}
                     e.life_time_ui = {e.life_time, speed = 0.02, min = 0, max = 100}
+                    prefab_mgr.check_effect_preload(e.asset_path)
                 end
             elseif e.event_type == "Move" then
                 e.move = e.move or {0.0, 0.0, 0.0}
