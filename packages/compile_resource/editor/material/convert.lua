@@ -3,8 +3,6 @@ local fs = require "filesystem"
 local datalist = require "datalist"
 local toolset = require "editor.material.toolset"
 local fxsetting = require "editor.material.setting"
---local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
-
 local settingpkg = import_package "ant.settings"
 local setting, def_setting = settingpkg.setting, settingpkg.default
 local serialize = import_package "ant.serialize"
@@ -12,14 +10,12 @@ local depends   = require "editor.depends"
 
 local function DEF_FUNC() end
 
-local BGFX_SHADER_INC<const>        = lfs.absolute "./3rd/bgfx/src"
-local BGFX_SHADER_LIB_INC<const>    = lfs.absolute "./3rd/bgfx/examples/common"
+-- local BGFX_SHADER_INC<const>        = lfs.absolute "./3rd/bgfx/src"
+-- local BGFX_SHADER_LIB_INC<const>    = lfs.absolute "./3rd/bgfx/examples/common"
 local SHADER_BASE<const>            = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
 local function shader_includes()
     return {
         SHADER_BASE,
-        BGFX_SHADER_INC,
-        BGFX_SHADER_LIB_INC,
     }
 end
 
