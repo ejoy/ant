@@ -411,6 +411,8 @@ end
 local reset_editor = world:sub {"ResetEditor"}
 local test_m
 local test_m1
+local test1
+local test2
 local ipl = ecs.import.interface "ant.render|ipolyline"
 function m:handle_event()
     for _, _, _, x, y in event_mouse:unpack() do
@@ -541,6 +543,25 @@ function m:handle_event()
             world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
         elseif state.CTRL and key == "O" and press == 1 then
             OnOpen()
+            -- local g1 = ecs.group(1)
+            -- g1:enable "scene_update"
+            -- g1:enable "view_visible"
+            -- local prefab = g1:create_instance("/pkg/tools.prefab_editor/res/cube.prefab")
+            -- function prefab:on_init() end
+            -- prefab.on_ready = function(instance)
+            --     test1 = instance.tag["*"][1]
+            -- end
+            -- function prefab:on_message(msg) end
+            -- function prefab:on_update() end
+            -- world:create_object(prefab)
+            -- prefab = ecs.create_instance("/pkg/tools.prefab_editor/res/cube.prefab")
+            -- function prefab:on_init() end
+            -- prefab.on_ready = function(instance)
+            --     test2 = instance.tag["*"][1]
+            -- end
+            -- function prefab:on_message(msg) end
+            -- function prefab:on_update() end
+            -- world:create_object(prefab)
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save_prefab()
         elseif state.CTRL and key == "R" and press == 1 then
@@ -549,9 +570,10 @@ function m:handle_event()
             -- imodifier.start(test_m, {name="confirm"})
             -- imodifier.start(test_m1, {name="confirm"})
         elseif state.CTRL and key == "T" and press == 1 then
-            -- test_m = imodifier.create_bone_modifier(test1.root, "/pkg/tools.prefab_editor/res/ueAnimat.glb|animation.prefab", "Bone")
-            -- iom.set_position(world:entity(test2.root), math3d.vector{0, 0, -5})
-            -- test_m1 = imodifier.create_bone_modifier(test2.root, "/pkg/tools.prefab_editor/res/ueAnimat.glb|animation.prefab", "Bone")
+            -- test_m = imodifier.create_bone_modifier(test1, 1, "/pkg/tools.prefab_editor/res/Interact_build.glb|animation.prefab", "Bone")
+            -- local te <close> = w:entity(test2, "scene?in")
+            -- iom.set_position(te, math3d.vector{0, 0, -5})
+            -- test_m1 = imodifier.create_bone_modifier(test2, 1, "/pkg/tools.prefab_editor/res/Interact_build.glb|animation.prefab", "Bone")
 
             -- test_m = ipl.add_linelist({{0.0, 0.0, 0.0}, {5.0, 5.0, 100.0}, {5.0, 5.0, 100.0}, {5.0, 0.0, 0.0}}, 80, {1.0, 0.0, 0.0, 0.7})
         end

@@ -476,10 +476,33 @@ function m:on_prefab_ready(prefab)
     self.root_mat = math3d.ref(math3d.matrix(srt))
 end
 
+local function check_animation(template)
+    local has_animation = false
+    local anim_template
+    for _, tpl in ipairs(template) do
+        if not anim_template and tpl.data.mesh then
+            local mesh_file = tpl.data.mesh
+            local pos = string.find(mesh_file, ".glb|")
+            local anim_path = string.sub(mesh_file, 1, pos + 4) .. "animation.prefab"
+            if fs.exists(anim_path) then
+                anim_template = serialize.parse(anim_path, cr.read_file(anim_path))
+            end
+        end
+        if tpl.data.animation then
+            has_animation = true
+            break
+        end
+    end
+    if not has_animation and anim_template then
+        template[#template + 1] = anim_template
+    end
+end
 function m:open(filename)
     self:reset_prefab()
     self.prefab_filename = filename
     self.prefab_template = serialize.parse(filename, cr.read_file(filename))
+    
+    -- check_animation(self.prefab_template)
 
     local prefab = ecs.create_instance(filename)
     function prefab:on_init()
@@ -578,8 +601,9 @@ function m:reload()
 end
 local global_data       = require "common.global_data"
 local access            = dofile "/engine/vfs/repoaccess.lua"
-function m:add_effect(filename)
-    -- preload all textures for effect
+
+-- preload all textures for effect
+function m.check_effect_preload(filename)
     local path = filename:match("^(.+/)[%w*?_.%-]*$")
     local files = access.list_files(global_data.repo, path)
     local texture_files = {}
@@ -591,10 +615,15 @@ function m:add_effect(filename)
     if #texture_files > 0 then
         iefk.preload(texture_files)
     end
+end
+
+function m:add_effect(filename)
+    self.check_effect_preload(filename)
 
     if not self.root then
         self:reset_prefab()
     end
+
     local template = {
 		policy = {
             "ant.general|name",

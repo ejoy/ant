@@ -185,9 +185,10 @@ end
 
 local vp_changed_mb = world:sub{"world_viewport_changed"}
 function efk_sys:camera_usage()
-    for _, vp in vp_changed_mb:unpack() do
-        irq.set_view_rect("efk_queue", vp)
-    end
+    -- fix effect viewport bug
+    -- for _, vp in vp_changed_mb:unpack() do
+    --     irq.set_view_rect("efk_queue", vp)
+    -- end
 
     for _, _, cameraref in camera_changed:unpack() do
         camera_frustum_mb = world:sub{"camera_changed", cameraref, "frustum"}
