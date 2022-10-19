@@ -2,9 +2,9 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local viewidmgr = require "render.viewid_mgr"
-local sampler   = require "render.sampler"
-local fbmgr     = require "render.framebuffer_mgr"
+local viewidmgr = require "viewid_mgr"
+local sampler   = require "sampler"
+local fbmgr     = require "framebuffer_mgr"
 
 local bgfx      = require "bgfx"
 
