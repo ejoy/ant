@@ -41,7 +41,7 @@ local Dir = {
 
 function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 	local function tween_push_anim_key(raw_anim, joint_name, clip, time, duration, to_pos, to_rot, poseMat, reverse, sum_pos)
-		if clip.tween == mu.TWEEN_LINEAR then
+		if clip.tween == mu.TWEEN_LINEAR and to_rot[1] < 180 and to_rot[2] < 180 and to_rot[3] < 180 then
 			return
 		end
         local tween_step = 1.0 / TWEEN_SAMPLE
