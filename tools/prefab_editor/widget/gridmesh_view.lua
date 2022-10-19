@@ -128,8 +128,8 @@ function m.show()
                 end
             end
         end
-        imgui.windows.End()
     end
+    imgui.windows.End()
 end
 
 return m

@@ -20,12 +20,12 @@ local init_height
 local debug_traceback = debug.traceback
 local viewids = {}
 
-local _timer_previous = ltask.counter()
+local _, _timer_previous = ltask.now()
 local function timer_delta()
-	local current = ltask.counter()
+	local _, current = ltask.now()
 	local delta = current - _timer_previous
 	_timer_previous = current
-	return delta
+	return delta * 10
 end
 
 local function glyphRanges(t)

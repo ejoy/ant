@@ -605,7 +605,7 @@ function m:add_effect(filename)
 		data = {
             name = "root",
             tag = {"effect"},
-            scene = {},
+            scene = {parent = gizmo.target_eid},
             efk = filename,
 		},
     }
@@ -613,7 +613,7 @@ function m:add_effect(filename)
     tpl.data.on_ready = function (e)
         iefk.play(e)
     end
-    tpl.data.scene.parent = gizmo.target_eid
+    -- tpl.data.scene.parent = gizmo.target_eid
     self:add_entity(ecs.create_entity(tpl), gizmo.target_eid, template)
 end
 

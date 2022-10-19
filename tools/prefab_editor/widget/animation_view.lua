@@ -928,9 +928,8 @@ function m.show()
 
             imgui.table.End()
         end
-        
-        imgui.windows.End()
     end
+    imgui.windows.End()
     if reload then
         prefab_mgr:save_prefab()
         prefab_mgr:reload()

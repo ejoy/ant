@@ -264,7 +264,7 @@ const DataEventFunc* DataModel::GetEventCallback(const std::string& name) {
 	return &it->second;
 }
 
-bool DataModel::GetVariableInto(const DataAddress& address, Variant& out_value) const {
+bool DataModel::GetVariableInto(const DataAddress& address, DataVariant& out_value) const {
 	DataVariable variable = GetVariable(address);
 	bool result = (variable && variable.Get(out_value));
 	if (!result)
@@ -364,7 +364,7 @@ void DataModel::Update(bool clear_dirty_variables) {
 }
 
 bool DataModel::RichText(){
-	Variant value;
+	DataVariant value;
 	if(variables.find("richtext")!=variables.end()){
 		variables["richtext"].Get(value);
 		bool isRichText=std::get<bool>(value);

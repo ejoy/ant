@@ -52,7 +52,7 @@ enum class Instruction : uint8_t {
 
 struct InstructionData {
 	Instruction instruction;
-	Variant data;
+	DataVariant data;
 };
 
 class Element;
@@ -66,9 +66,9 @@ public:
     DataExpressionInterface() = default;
     DataExpressionInterface(DataModel* data_model, Node* element, Event* event = nullptr);
     DataAddress ParseAddress(const std::string& address_str) const;
-    Variant GetValue(const DataAddress& address) const;
-    bool SetValue(const DataAddress& address, const Variant& value) const;
-    bool EventCallback(const std::string& name, const std::vector<Variant>& arguments);
+    DataVariant GetValue(const DataAddress& address) const;
+    bool SetValue(const DataAddress& address, const DataVariant& value) const;
+    bool EventCallback(const std::string& name, const std::vector<DataVariant>& arguments);
 
 private:
     DataModel* data_model = nullptr;
@@ -81,7 +81,7 @@ public:
     DataExpression();
     ~DataExpression();
     bool Parse(const DataExpressionInterface& expression_interface, const std::string& expression, bool is_assignment_expression);
-    bool Run(const DataExpressionInterface& expression_interface, Variant& out_value);
+    bool Run(const DataExpressionInterface& expression_interface, DataVariant& out_value);
     std::vector<std::string> GetVariableNameList() const;
 
 private:

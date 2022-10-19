@@ -3,7 +3,8 @@ local ecs = ...
 local ltask = require "ltask"
 
 local function gettime()
-	return ltask.counter()
+    local _, now = ltask.now()
+	return now * 10
 end
 
 local previous
@@ -18,10 +19,6 @@ end
 
 function it.delta()
 	return delta
-end
-
-function it.fetch_time()
-	return gettime()
 end
 
 local time_sys = ecs.system "time_system"

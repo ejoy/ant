@@ -6,7 +6,6 @@
 #include <databinding/DataModel.h>
 #include <databinding/DataView.h>
 #include <databinding/DataEvent.h>
-#include <databinding/DataViewDefault.h>
 
 namespace Rml {
 

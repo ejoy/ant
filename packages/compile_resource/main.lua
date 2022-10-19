@@ -97,8 +97,8 @@ local function init()
         hd = caps.homogeneousDepth and true or nil,
         obl = caps.originBottomLeft and true or nil,
     })
-    set_setting("texture", stringify {os=os, ext=texture})
-    set_setting("png", stringify {os=os, ext=texture})
+    set_setting("texture", stringify {os=platform.os, ext=texture})
+    set_setting("png", stringify {os=platform.os, ext=texture})
 end
 
 return {

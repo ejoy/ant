@@ -8,12 +8,10 @@
 
 namespace Rml {
 
-class VariableDefinition;
-class DataModelHandle;
 class DataVariable;
 class Event;
 
-using DataEventFunc = std::function<void(DataModelHandle, Event&, const std::vector<Variant>&)>;
+using DataEventFunc = std::function<void(Event&, const std::vector<DataVariant>&)>;
 using DirtyVariables = std::unordered_set<std::string>;
 
 struct DataAddressEntry {

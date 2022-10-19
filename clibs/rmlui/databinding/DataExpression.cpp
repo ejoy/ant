@@ -1,5 +1,4 @@
 #include <databinding/DataExpression.h>
-#include <databinding/DataModelHandle.h>
 #include <databinding/DataVariant.h>
 #include <core/Log.h>
 #include <core/StringUtilities.h>
@@ -121,7 +120,7 @@ public:
 		return std::move(variable_addresses);
 	}
 
-	void Emit(Instruction instruction, Variant data = Variant())
+	void Emit(Instruction instruction, DataVariant data = DataVariant())
 	{
 		assert(instruction != Instruction::Push && instruction != Instruction::Pop &&
 			instruction != Instruction::Arguments && instruction != Instruction::Variable && instruction != Instruction::Assign);
@@ -129,7 +128,7 @@ public:
 	}
 	void Push() {
 		program_stack_size += 1;
-		program.push_back(InstructionData{ Instruction::Push, Variant() });
+		program.push_back(InstructionData{ Instruction::Push, DataVariant() });
 	}
 	void Pop(Register destination) {
 		if (program_stack_size <= 0) {
@@ -137,7 +136,7 @@ public:
 			return;
 		}
 		program_stack_size -= 1;
-		program.push_back(InstructionData{ Instruction::Pop, Variant(int(destination)) });
+		program.push_back(InstructionData{ Instruction::Pop, DataVariant(int(destination)) });
 	}
 	void Arguments(int num_arguments) {
 		if (program_stack_size < num_arguments) {
@@ -145,7 +144,7 @@ public:
 			return;
 		}
 		program_stack_size -= num_arguments;
-		program.push_back(InstructionData{ Instruction::Arguments, Variant(int(num_arguments)) });
+		program.push_back(InstructionData{ Instruction::Arguments, DataVariant(int(num_arguments)) });
 	}
 	void Variable(const std::string& name) {
 		VariableGetSet(name, false);
@@ -164,7 +163,7 @@ private:
 		}
 		int index = int(variable_addresses.size());
 		variable_addresses.push_back(std::move(address));
-		program.push_back(InstructionData{ is_assignment ? Instruction::Assign : Instruction::Variable, Variant(int(index)) });
+		program.push_back(InstructionData{ is_assignment ? Instruction::Assign : Instruction::Variable, DataVariant(int(index)) });
 	}
 
 	const std::string expression;
@@ -441,7 +440,7 @@ namespace Parse {
 
 		const float number = FromString(str, 0.0f);
 
-		parser.Emit(Instruction::Literal, Variant(number));
+		parser.Emit(Instruction::Literal, DataVariant(number));
 	}
 	static void StringLiteral(DataParser& parser)
 	{
@@ -464,7 +463,7 @@ namespace Parse {
 			c = parser.Next();
 		}
 
-		parser.Emit(Instruction::Literal, Variant(str));
+		parser.Emit(Instruction::Literal, DataVariant(str));
 	}
 	static void Variable(DataParser& parser)
 	{
@@ -477,9 +476,9 @@ namespace Parse {
 		// Keywords are parsed like variables, but are really literals.
 		// Check for them here.
 		if (name == "true")
-			parser.Emit(Instruction::Literal, Variant(true));
+			parser.Emit(Instruction::Literal, DataVariant(true));
 		else if (name == "false")
-			parser.Emit(Instruction::Literal, Variant(false));
+			parser.Emit(Instruction::Literal, DataVariant(false));
 		else
 			parser.Variable(name);
 	}
@@ -646,7 +645,7 @@ namespace Parse {
 			parser.SkipWhitespace();
 		}
 
-		parser.Emit(function_type, Variant(func_name));
+		parser.Emit(function_type, DataVariant(func_name));
 	}
 
 
@@ -701,27 +700,27 @@ public:
 		return str;
 	}
 
-	Variant Result() const {
+	DataVariant Result() const {
 		return R;
 	}
 
 
 private:
-	Variant R, L, C;
-	std::stack<Variant> stack;
-	std::vector<Variant> arguments;
+	DataVariant R, L, C;
+	std::stack<DataVariant> stack;
+	std::vector<DataVariant> arguments;
 
 	const Program& program;
 	const AddressList& addresses;
 	DataExpressionInterface expression_interface;
 
-	bool Execute(const Instruction instruction, const Variant& data)
+	bool Execute(const Instruction instruction, const DataVariant& data)
 	{
-		auto AnyString = [](const Variant& v1, const Variant& v2) {
+		auto AnyString = [](const DataVariant& v1, const DataVariant& v2) {
 			return std::holds_alternative<std::string>(v1) || std::holds_alternative<std::string>(v2);
 		};
 
-		auto Compute = [](const Instruction op, const Variant& l, const Variant& r) {
+		auto Compute = [](const Instruction op, const DataVariant& l, const DataVariant& r) {
 			auto lv = (VariantHelper::Has<float>(l) ? VariantHelper::Get<float>(l) : VariantHelper::Get<int>(l));
 			auto rv = (VariantHelper::Has<float>(r) ? VariantHelper::Get<float>(r) : VariantHelper::Get<int>(r));
 			float value = 0.0f;
@@ -732,9 +731,9 @@ private:
 			default: break;
 			}
 			if (VariantHelper::Has<int>(l) && VariantHelper::Has<int>(r)) {
-				return Variant((int)value);
+				return DataVariant((int)value);
 			} else {
-				return Variant(value);
+				return DataVariant(value);
 			}
 		};
 
@@ -743,7 +742,7 @@ private:
 		case Instruction::Push:
 		{
 			stack.push(std::move(R));
-			R = Variant {};
+			R = DataVariant {};
 		}
 		break;
 		case Instruction::Pop:
@@ -778,37 +777,37 @@ private:
 		case Instruction::Add:
 		{
 			if (AnyString(L, R))
-				R = Variant(VariantHelper::ToString(L) + VariantHelper::ToString(R));
+				R = DataVariant(VariantHelper::ToString(L) + VariantHelper::ToString(R));
 			else {
-				//R = Variant(VariantHelper::Get<float>(L) + VariantHelper::Get<float>(R));
+				//R = DataVariant(VariantHelper::Get<float>(L) + VariantHelper::Get<float>(R));
 				R = Compute(instruction, L, R);
 			}
 		}
 		break;
 		case Instruction::Subtract:  R = Compute(instruction, L, R); break;
 		case Instruction::Multiply:  R = Compute(instruction, L, R); break;
-		case Instruction::Divide:    R = Variant(VariantHelper::Get<float>(L) / VariantHelper::Get<float>(R));  break;
-		case Instruction::Not:       R = Variant(!VariantHelper::Get<bool>(R));                     break;
-		case Instruction::And:       R = Variant(VariantHelper::Get<bool>(L) && VariantHelper::Get<bool>(R));     break;
-		case Instruction::Or:        R = Variant(VariantHelper::Get<bool>(L) || VariantHelper::Get<bool>(R));     break;
-		case Instruction::Less:      R = Variant(VariantHelper::ConvertGet<float>(L) < VariantHelper::ConvertGet<float>(R));  break;
-		case Instruction::LessEq:    R = Variant(VariantHelper::ConvertGet<float>(L) <= VariantHelper::ConvertGet<float>(R)); break;
-		case Instruction::Greater:   R = Variant(VariantHelper::ConvertGet<float>(L) > VariantHelper::ConvertGet<float>(R));  break;
-		case Instruction::GreaterEq: R = Variant(VariantHelper::ConvertGet<float>(L) >= VariantHelper::ConvertGet<float>(R)); break;
+		case Instruction::Divide:    R = DataVariant(VariantHelper::Get<float>(L) / VariantHelper::Get<float>(R));  break;
+		case Instruction::Not:       R = DataVariant(!VariantHelper::Get<bool>(R));                     break;
+		case Instruction::And:       R = DataVariant(VariantHelper::Get<bool>(L) && VariantHelper::Get<bool>(R));     break;
+		case Instruction::Or:        R = DataVariant(VariantHelper::Get<bool>(L) || VariantHelper::Get<bool>(R));     break;
+		case Instruction::Less:      R = DataVariant(VariantHelper::ConvertGet<float>(L) < VariantHelper::ConvertGet<float>(R));  break;
+		case Instruction::LessEq:    R = DataVariant(VariantHelper::ConvertGet<float>(L) <= VariantHelper::ConvertGet<float>(R)); break;
+		case Instruction::Greater:   R = DataVariant(VariantHelper::ConvertGet<float>(L) > VariantHelper::ConvertGet<float>(R));  break;
+		case Instruction::GreaterEq: R = DataVariant(VariantHelper::ConvertGet<float>(L) >= VariantHelper::ConvertGet<float>(R)); break;
 		case Instruction::Equal:
 		{
 			if (AnyString(L, R))
-				R = Variant(VariantHelper::Get<std::string>(L) == VariantHelper::Get<std::string>(R));
+				R = DataVariant(VariantHelper::Get<std::string>(L) == VariantHelper::Get<std::string>(R));
 			else
-				R = Variant(VariantHelper::ConvertGet<float>(L) == VariantHelper::ConvertGet<float>(R));
+				R = DataVariant(VariantHelper::ConvertGet<float>(L) == VariantHelper::ConvertGet<float>(R));
 		}
 		break;
 		case Instruction::NotEqual:
 		{
 			if (AnyString(L, R))
-				R = Variant(VariantHelper::Get<std::string>(L) != VariantHelper::Get<std::string>(R));
+				R = DataVariant(VariantHelper::Get<std::string>(L) != VariantHelper::Get<std::string>(R));
 			else
-				R = Variant(VariantHelper::Get<float>(L) != VariantHelper::Get<float>(R));
+				R = DataVariant(VariantHelper::Get<float>(L) != VariantHelper::Get<float>(R));
 		}
 		break;
 		case Instruction::Ternary:
@@ -890,7 +889,7 @@ bool DataExpression::Parse(const DataExpressionInterface& expression_interface, 
 	return true;
 }
 
-bool DataExpression::Run(const DataExpressionInterface& expression_interface, Variant& out_value) {
+bool DataExpression::Run(const DataExpressionInterface& expression_interface, DataVariant& out_value) {
 	DataInterpreter interpreter(program, addresses, expression_interface);
 	if (!interpreter.Run())
 		return false;
@@ -918,15 +917,15 @@ DataAddress DataExpressionInterface::ParseAddress(const std::string& address_str
 	return data_model ? data_model->ResolveAddress(address_str, element) : DataAddress();
 }
 
-Variant DataExpressionInterface::GetValue(const DataAddress& address) const {
-	Variant result;
+DataVariant DataExpressionInterface::GetValue(const DataAddress& address) const {
+	DataVariant result;
 	if (data_model) {
 		data_model->GetVariableInto(address, result);
 	}
 	return result;
 }
 
-bool DataExpressionInterface::SetValue(const DataAddress& address, const Variant& value) const {
+bool DataExpressionInterface::SetValue(const DataAddress& address, const DataVariant& value) const {
 	bool result = false;
 	if (data_model && !address.empty()) {
 		if (DataVariable variable = data_model->GetVariable(address))
@@ -938,7 +937,7 @@ bool DataExpressionInterface::SetValue(const DataAddress& address, const Variant
 	return result;
 }
 
-bool DataExpressionInterface::EventCallback(const std::string& name, const std::vector<Variant>& arguments) {
+bool DataExpressionInterface::EventCallback(const std::string& name, const std::vector<DataVariant>& arguments) {
 	if (!data_model || !event)
 		return false;
 
@@ -946,8 +945,7 @@ bool DataExpressionInterface::EventCallback(const std::string& name, const std::
 	if (!func || !*func)
 		return false;
 
-	DataModelHandle handle(data_model);
-	func->operator()(handle, *event, arguments);
+	func->operator()(*event, arguments);
 	return true;
 }
 
