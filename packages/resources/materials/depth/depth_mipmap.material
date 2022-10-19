@@ -1,0 +1,15 @@
+fx:
+  cs: /pkg/ant.resources/shaders/depth/cs_depth_mipmap.sc
+  setting:
+    lighting: off
+properties:
+  s_depth:
+    stage: 0
+    access: r
+    mip: 0
+    image: /pkg/ant.resources/textures/black.texture
+  s_depth_next:
+    stage: 1
+    access: w
+    mip: 1
+    image: /pkg/ant.resources/textures/black.texture
