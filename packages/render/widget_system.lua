@@ -60,7 +60,7 @@ function widget_drawer_sys:end_frame()
 	if e then
 		local ro = e.render_object
 		ro.vb_start, ro.vb_num = 0, 0
-		ro.ib_start, ro.ob_num = 0, 0
+		ro.ib_start, ro.ib_num = 0, 0
 		w:submit(e)
 	end
 end
