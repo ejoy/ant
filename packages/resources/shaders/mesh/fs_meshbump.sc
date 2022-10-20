@@ -1,6 +1,6 @@
 $input v_texcoord0, v_lightdir, v_viewdir	
 
-#include "common.sh"
+#include <bgfx_shader.sh>
 #include "common/uniforms.sh"	
 #include "common/simplelighting.sh"
 

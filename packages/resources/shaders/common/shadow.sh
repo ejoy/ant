@@ -6,7 +6,7 @@
  #ifndef __SHADER_SHADOW_SH__
  #define __SHADER_SHADOW_SH__
 
-#include "common.sh"
+#include "common/common.sh"
 
 //csm
 uniform mat4 u_csm_matrix[4];

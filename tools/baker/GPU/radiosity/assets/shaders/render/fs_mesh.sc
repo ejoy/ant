@@ -1,6 +1,6 @@
 $input v_texcoord0, v_normal, v_viewdir
 
-#include "common.sh"
+#include <bgfx_shader.sh>
 #include "common/simplelighting.sh"
 SAMPLER2D(s_basecolor, 0);
 
