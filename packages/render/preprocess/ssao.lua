@@ -77,7 +77,6 @@ function ssao_sys:init_world()
     local fbidx = create_framebuffer(vr.w, vr.h)
     util.create_queue(ssao_viewid, vr, fbidx, "ssao_queue", "ssao_queue")
 
-    --TODO: use compute shader to resolve msaa depth to normal depth
     local sqd = w:first "scene_depth_queue visible?out"
     sqd.visible = true
     w:submit(sqd)
@@ -161,7 +160,6 @@ local function calc_ssao_config(camera, lightdir, depthwidth, depthheight, depth
 end
 
 local function update_properties(drawer, ce)
-    --TODO: use nomral scene depth buffer
     local sdq = w:first "scene_depth_queue render_target:in"
     imaterial.set_property(drawer, "s_scene_depth", fbmgr.get_depth(sdq.render_target.fb_idx).handle)
 
