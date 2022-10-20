@@ -6,7 +6,6 @@ lm.BgfxDir      = lm.EfkDir .. "bgfx"
 lm.BxDir        = lm.EfkDir .. "bx"
 lm.BimgDir      = lm.EfkDir .. "bimg"
 lm.BgfxBinDir   = lm.bindir
-lm.LuaInclude   = rootdir .. "3rd/bee.lua/3rd/lua/"
 lm:import "efkbgfx/luabinding/make.lua"
 lm:import "efkbgfx/renderer/make.lua"
 lm:import "efkbgfx/shaders/make.lua"
