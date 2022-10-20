@@ -3,7 +3,8 @@
 2. 使用DeferredShading。目前的one pass deferred能够很好解决deferrd shading占用过多带宽的问题；
 
 #### Bug
-
+1. 修复引擎在D3D12/Vulkan中的问题；
+2. 修复bloom后处理，在emissive color值很高的时候，依然没有bloom的效果。具体使用furnace-1.glb这个文件用于测试；
 
 #### 优化：
 1. 顶点压缩。
