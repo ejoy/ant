@@ -1,7 +1,6 @@
 #define linit_c
 #define LUA_LIB
 
-#include "lprefix.h"
 #include <stddef.h>
 #include "lua.h"
 #include "lualib.h"

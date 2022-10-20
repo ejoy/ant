@@ -2,7 +2,9 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
-lm:source_set "remotedebug" {
+local LuaInclude <const> = Ant3rd .. "bee.lua/3rd/lua/"
+
+lm:lua_source "remotedebug" {
     cxx = "c++17", --TODO: clang does not support c++20
     includes = LuaInclude,
     defines = {

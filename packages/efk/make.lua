@@ -17,7 +17,6 @@ lm:lua_source "efk" {
         "../../3rd/Effekseer/Dev/Cpp/Effekseer",
         "../../3rd/bgfx/include",
         "../../3rd/bx/include",
-        "../../3rd/bee.lua/3rd/lua",
         "../../packages/bundle/src",
     },
     sources = {

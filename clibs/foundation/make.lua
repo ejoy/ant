@@ -2,8 +2,7 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 
-lm:source_set "foundation" {
-    includes = LuaInclude,
+lm:lua_source "foundation" {
     sources = {
         "vla.c",
         "set.c"

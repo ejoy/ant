@@ -6,8 +6,6 @@ BgfxInclude = {
     Ant3rd .. "bx/include",
 }
 
-LuaInclude = Ant3rd .. "bee.lua/3rd/lua/"
-
 if lm.os == "windows" then
     if lm.compiler == "msvc" then
         BgfxInclude[#BgfxInclude+1] = Ant3rd .. "bx/include/compat/msvc"
