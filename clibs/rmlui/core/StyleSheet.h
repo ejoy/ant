@@ -17,7 +17,7 @@ struct KeyframeBlock {
 	PropertyVector properties;
 };
 struct Keyframes {
-	std::vector<PropertyId> property_ids;
+	PropertyIdSet property_ids;
 	std::vector<KeyframeBlock> blocks;
 };
 
