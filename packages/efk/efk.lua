@@ -277,7 +277,9 @@ end
 
 function iefk.preload(textures)
     for _, texture in ipairs(textures) do
-        TEXTURES[texture] = assetmgr.resource(texture).id
+        if not TEXTURES[texture] then
+            TEXTURES[texture] = assetmgr.resource(texture).id
+        end
     end
 end
 

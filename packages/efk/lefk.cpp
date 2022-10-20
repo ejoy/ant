@@ -79,8 +79,8 @@ lefkctx_create(lua_State *L){
             return (e.eff == nullptr);
         }
     );
-    it = ctx->effects.emplace(it, efk_ctx::effect{eff, 0});
-    auto handle = std::distance(it, ctx->effects.begin());
+    ctx->effects.emplace_back(efk_ctx::effect{ eff, 0 });
+    auto handle = ctx->effects.size() - 1;
     lua_pushinteger(L, handle);
     return 1;
 }
