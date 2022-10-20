@@ -1,6 +1,8 @@
 local lm = require "luamake"
 local fs = require "bee.filesystem"
 
+local LuaInclude <const> = "../3rd/bee.lua/3rd/lua"
+
 local runtime = false
 
 local RuntimeBacklist = {
@@ -57,7 +59,7 @@ lm:copy "copy_mainlua" {
 lm:source_set "ant_common" {
     deps = "lua_source",
     includes = {
-        "../clibs/lua",
+        LuaInclude,
         "../3rd/bgfx/include",
         "../3rd/bx/include",
         "common"
@@ -82,7 +84,7 @@ lm:source_set "ant_common" {
 }
 checkAddModule("layout", "../packages/font/make.lua")
 lm:source_set "ant_openlibs" {
-    includes = "../clibs/lua",
+    includes = LuaInclude,
     sources = "common/ant_openlibs.c",
 }
 
@@ -136,7 +138,7 @@ lm:source_set "ant_runtime" {
         RuntimeModules,
     },
     includes = {
-        "../clibs/lua",
+        LuaInclude,
         "../3rd/bgfx/include",
         "../3rd/bx/include",
     },
@@ -150,7 +152,7 @@ lm:source_set "ant_editor" {
         EditorModules,
     },
     includes = {
-        "../clibs/lua",
+        LuaInclude,
         "../3rd/bgfx/include",
         "../3rd/bx/include",
     },
