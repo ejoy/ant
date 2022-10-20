@@ -41,13 +41,13 @@ local Dir = {
 
 function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 	local function tween_push_anim_key(raw_anim, joint_name, clip, time, duration, to_pos, to_rot, poseMat, reverse, sum)
-		if clip.tween == mu.TWEEN_LINEAR and to_rot[1] < 180 and to_rot[2] < 180 and to_rot[3] < 180 then
+		if clip.tween == mu.TWEEN_LINEAR and math.abs(to_rot[1]) < 180 and math.abs(to_rot[2]) < 180 and math.abs(to_rot[3]) < 180 then
 			return
 		end
 		local start_rot = sum and sum.rot or {0, 0, 0}
 		local start_pos = sum and sum.pos or mc.ZERO
         local tween_step = 1.0 / TWEEN_SAMPLE
-        for j = 1, TWEEN_SAMPLE - 1 do
+        for j = 1, TWEEN_SAMPLE - 2 do
 			local rj = reverse and (TWEEN_SAMPLE - j) or j
             local tween_ratio = mu.tween[clip.tween](rj * tween_step)
 			local target_pos = math3d.mul(Dir[clip.direction], to_pos * tween_ratio)
@@ -73,14 +73,14 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 		else
 			for _, clip in ipairs(clips) do
 				if clip.range[1] >= 0 and clip.range[2] >= 0 then
-					local duration = clip.range[2] - clip.range[1]
+					local duration = clip.range[2] - clip.range[1] + 1
 					local subdiv = clip.repeat_count
 					if clip.type == TYPE_REBOUND then
 						subdiv = 2 * subdiv
 					elseif clip.type == TYPE_SHAKE then
 						subdiv = 4 * subdiv
 					end
-					local step = (duration // subdiv) * frame_to_time
+					local step = (duration / subdiv - 1) * frame_to_time
 					local start_time = clip.range[1] * frame_to_time
 					local to_rot = {0,clip.amplitude_rot,0}
 					if clip.rot_axis == DIR_X then
@@ -108,7 +108,7 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 							raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
 							tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, false, inherit and sum)
 							time = time + step
-							raw_anim:push_prekey(joint_name,time, to_s, to_r, to_t)
+							raw_anim:push_prekey(joint_name, time, to_s, to_r, to_t)
 							time = time + frame_to_time
 						end
 					else
