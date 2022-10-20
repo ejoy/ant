@@ -43,7 +43,7 @@ local anim_state = {
 }
 
 local ui_loop = {false}
-
+local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
 local event_type = {
     "Effect", "Sound", "Collision", "Message", "Move"
 }
@@ -126,6 +126,10 @@ end
 
 local function anim_group_set_loop(eid, ...)
     iani.set_loop(eid, ...)
+end
+
+local function anim_group_set_speed(eid, ...)
+    iani.set_speed(eid, ...)
 end
 
 local function anim_group_delete(anim_name)
@@ -242,7 +246,7 @@ local function set_current_anim(anim_name)
     anim_state.duration = current_anim.duration
     current_event = nil
     
-    anim_play({name = anim_name, loop = ui_loop[1], manual = false}, iani.play)
+    anim_play({name = anim_name, loop = ui_loop[1], speed = ui_speed[1], manual = false}, iani.play)
     anim_group_set_time(anim_eid, 0)
     anim_group_pause(anim_eid, not anim_state.is_playing)
     set_event_dirty(-1)
@@ -490,6 +494,7 @@ local function show_current_event()
                 assert(pkgpath)
                 current_event.asset_path_ui.text = pkgpath
                 current_event.asset_path = pkgpath
+                prefab_mgr.check_effect_preload(pkgpath)
                 dirty = true
             end
         end
@@ -856,13 +861,19 @@ function m.show()
             if anim_state.is_playing then
                 anim_group_pause(anim_eid, true)
             else
-                anim_play({name = current_anim.name, loop = ui_loop[1], manual = false}, iani.play)
+                anim_play({name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1], manual = false}, iani.play)
             end
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("loop", ui_loop) then
             anim_group_set_loop(anim_eid, ui_loop[1])
         end
+        imgui.cursor.SameLine()
+        imgui.cursor.PushItemWidth(50)
+        if imgui.widget.DragFloat("speed", ui_speed) then
+            anim_group_set_speed(anim_eid, ui_speed[1])
+        end
+        imgui.cursor.PopItemWidth()
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("showskeleton", ui_showskeleton) then
             show_skeleton(ui_showskeleton[1])

@@ -568,6 +568,12 @@ local function anim_set_loop(loop)
     end
 end
 
+local function anim_set_speed(speed)
+    if edit_mode == MODE_MTL then
+    else
+        iani.set_speed(anim_eid, speed)
+    end
+end
 local function anim_set_time(t)
     if edit_mode == MODE_MTL then
         local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
@@ -665,6 +671,7 @@ function m.new()
 end
 
 local ui_loop = {true}
+local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
 function m.clear()
     if current_skeleton and current_joint then
         joint_utils:set_current_joint(current_skeleton, nil)
@@ -826,7 +833,7 @@ function m.show()
                     if edit_mode == MODE_MTL then
                         anim_play({loop = ui_loop[1]}, imodifier.start)
                     else
-                        anim_play({name = current_anim.name, loop = ui_loop[1], manual = false}, iani.play)
+                        anim_play({name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1], manual = false}, iani.play)
                     end
                 end
             end
@@ -834,7 +841,12 @@ function m.show()
             if imgui.widget.Checkbox("loop ", ui_loop) then
                 anim_set_loop(ui_loop[1])
             end
-
+            imgui.cursor.SameLine()
+            imgui.cursor.PushItemWidth(50)
+            if imgui.widget.DragFloat("speed ", ui_speed) then
+                anim_set_speed(ui_speed[1])
+            end
+            imgui.cursor.PopItemWidth()
             imgui.cursor.SameLine()
             local current_time = 0
             if edit_mode == MODE_MTL then

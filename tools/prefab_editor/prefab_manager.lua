@@ -501,7 +501,11 @@ function m:open(filename)
     self:reset_prefab()
     self.prefab_filename = filename
     self.prefab_template = serialize.parse(filename, cr.read_file(filename))
-    
+    for _, value in ipairs(self.prefab_template) do
+        if value.data and value.data.efk then
+            self.check_effect_preload(value.data.efk)
+        end
+    end
     -- check_animation(self.prefab_template)
 
     local prefab = ecs.create_instance(filename)
