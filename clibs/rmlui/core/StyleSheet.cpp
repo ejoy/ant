@@ -65,15 +65,10 @@ void StyleSheet::Sort() {
 		std::sort(blocks.begin(), blocks.end(), [](const KeyframeBlock& a, const KeyframeBlock& b) { return a.normalized_time < b.normalized_time; });
 
 		// Add all property names specified by any block
-		if (blocks.size() > 0) property_ids.reserve(blocks.size() * blocks[0].properties.size());
 		for (auto& block : blocks) {
 			for (auto& v : block.properties)
-				property_ids.push_back(v.id);
+				property_ids.insert(v.id);
 		}
-		// Remove duplicate property names
-		std::sort(property_ids.begin(), property_ids.end());
-		property_ids.erase(std::unique(property_ids.begin(), property_ids.end()), property_ids.end());
-		property_ids.shrink_to_fit();
 	}
 }
 
