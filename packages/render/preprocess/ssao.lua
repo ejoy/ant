@@ -25,10 +25,6 @@ local ao_setting<const> = setting:data().graphic.ao or def_setting.graphic.ao
 local ssao_sys  = ecs.system "ssao_system"
 
 local ENABLE_SSAO<const>                = ao_setting.enable
-local ENABLE_BENT_NORMAL<const>         = ao_setting.bent_normal
-local FB_RATIO<const>                   = ao_setting.ratio or 0.5
-local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/ssao.material"
-local BILATERAL_FILTER_MATERIAL<const>  = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/bilateral_filter_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/bilateral_filter.material"
 
 if not ENABLE_SSAO then
     local function DEF_FUNC() end
@@ -37,6 +33,76 @@ if not ENABLE_SSAO then
     ssao_sys.build_ssao = DEF_FUNC
     ssao_sys.bilateral_filter = DEF_FUNC
     return
+end
+
+local ENABLE_BENT_NORMAL<const>         = ao_setting.bent_normal
+local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/ssao.material"
+local BILATERAL_FILTER_MATERIAL<const>  = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/bilateral_filter_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/bilateral_filter.material"
+
+local SAMPLE_CONFIG<const> = {
+    low = {
+        sample_count = 3,
+        spiral_turns = 1,
+        bilateral_filter_raidus = 3,
+    },
+    medium = {
+        sample_count = 5,
+        spiral_turns = 2,
+        bilateral_filter_raidus = 4,
+    },
+    high = {
+        sample_count = 7,
+        spiral_turns = 3,
+        bilateral_filter_raidus = 6,
+    }
+}
+
+local HOWTO_SAMPLE<const> = SAMPLE_CONFIG[ao_setting.quality]
+
+local ssao_configs = setmetatable({
+    sample_count = HOWTO_SAMPLE.sample_count,
+    spiral_turns = HOWTO_SAMPLE.spiral_turns,
+
+    --TODO: need push to ao_setting
+    --screen space cone trace
+    ssct                        = {
+        enable                  = true,
+        light_cone              = 1.0,          -- full cone angle in radian, between 0 and pi/2
+        shadow_distance         = 0.3,          -- how far shadows can be cast
+        contact_distance_max    = 1.0,          -- max distance for contact
+        --TODO: need fix cone tracing bug
+        intensity               = 0,
+        --intensity               = 0.8,          -- intensity
+        lightdir                = math3d.ref(math3d.vector(0, 1, 0)),  --light direction
+        depth_bias              = 0.01,         -- depth bias in world units (mitigate self shadowing)
+        depth_slope_bias        = 0.01,         -- depth slope bias (mitigate self shadowing)
+        sample_count            = 4,            -- tracing sample count, between 1 and 255
+        ray_count               = 1,            -- # of rays to trace, between 1 and 255
+    }
+}, {__index=ao_setting})
+
+do
+    ssao_configs.inv_radius_squared             = 1.0/(ssao_configs.radius * ssao_configs.radius)
+    ssao_configs.min_horizon_angle_sine_squared = math.sin(ssao_configs.min_horizon_angle) ^ 2.0
+
+    local peak = 0.1 * ssao_configs.radius
+    ssao_configs.peak2 = peak * peak
+
+    ssao_configs.visible_power = ssao_configs.power * 2.0
+
+    local TAU<const> = math.pi * 2.0
+    ssao_configs.ssao_intentsity = ssao_configs.intensity * (TAU * peak)
+    ssao_configs.intensity_pre_sample = ssao_configs.ssao_intentsity / ssao_configs.sample_count
+
+    ssao_configs.inv_sample_count = 1.0 / (ssao_configs.sample_count - 0.5)
+
+    local inc = ssao_configs.inv_sample_count * ssao_configs.spiral_turns * TAU
+    ssao_configs.sin_inc, ssao_configs.cos_inc = math.sin(inc), math.cos(inc)
+
+    --ssct
+    local ssct = ssao_configs.ssct
+    ssct.tan_cone_angle            = math.tan(ssao_configs.ssct.light_cone*0.5)
+    ssct.inv_contact_distance_max  = 1.0 / ssct.contact_distance_max
 end
 
 function ssao_sys:init()
@@ -73,7 +139,7 @@ local function create_framebuffer(ww, hh)
 end
 
 function ssao_sys:init_world()
-    local vr = mu.calc_viewport(mu.copy_viewrect(world.args.viewport), FB_RATIO)
+    local vr = mu.calc_viewport(mu.copy_viewrect(world.args.viewport), ssao_configs.resolution)
     local fbidx = create_framebuffer(vr.w, vr.h)
     util.create_queue(ssao_viewid, vr, fbidx, "ssao_queue", "ssao_queue")
 
@@ -95,68 +161,13 @@ end
 
 local texmatrix<const> = mu.calc_texture_matrix()
 
-local ssao_configs = {
-    radius                      = 0.3,      -- Ambient Occlusion radius in meters, between 0 and ~10.
-    power                       = 1.0,      -- Controls ambient occlusion's contrast. Must be positive.
-    bias                        = 0.0005,   -- Self-occlusion bias in meters. Use to avoid self-occlusion. Between 0 and a few mm.
-    resolution                  = 0.5,      -- How each dimension of the AO buffer is scaled. Must be either 0.5 or 1.0.
-    intensity                   = 1.0,      -- Strength of the Ambient Occlusion effect.
-    bilateral_threshold         = 0.05,     -- depth distance that constitute an edge for filtering
-    min_horizon_angle           = 0.0,      -- min angle in radian to consider
-
-    --
-    sample_count                = 7,
-    spiral_turns                = 3,
-    --
-
-    --screen space cone trace
-    ssct                        = {
-        enable                  = true,
-        light_cone              = 1.0,          -- full cone angle in radian, between 0 and pi/2
-        shadow_distance         = 0.3,          -- how far shadows can be cast
-        contact_distance_max    = 1.0,          -- max distance for contact
-        --TODO: need fix cone tracing bug
-        intensity               = 0,
-        --intensity               = 0.8,          -- intensity
-        lightdir                = math3d.ref(math3d.vector(0, 1, 0)),  --light direction
-        depth_bias              = 0.01,         -- depth bias in world units (mitigate self shadowing)
-        depth_slope_bias        = 0.01,         -- depth slope bias (mitigate self shadowing)
-        sample_count            = 4,            -- tracing sample count, between 1 and 255
-        ray_count               = 1,            -- # of rays to trace, between 1 and 255
-    },
-}
-
-do
-    ssao_configs.inv_radius_squared             = 1.0/(ssao_configs.radius * ssao_configs.radius)
-    ssao_configs.min_horizon_angle_sine_squared = math.sin(ssao_configs.min_horizon_angle) ^ 2.0
-
-    local peak = 0.1 * ssao_configs.radius
-    ssao_configs.peak2 = peak * peak
-
-    ssao_configs.visible_power = ssao_configs.power * 2.0
-
-    local TAU<const> = math.pi * 2.0
-    ssao_configs.ssao_intentsity = ssao_configs.intensity * (TAU * peak)
-    ssao_configs.intensity_pre_sample = ssao_configs.ssao_intentsity / ssao_configs.sample_count
-
-    ssao_configs.inv_sample_count = 1.0 / (ssao_configs.sample_count - 0.5)
-
-    local inc = ssao_configs.inv_sample_count * ssao_configs.spiral_turns * TAU
-    ssao_configs.sin_inc, ssao_configs.cos_inc = math.sin(inc), math.cos(inc)
-
-    --ssct
-    local ssct = ssao_configs.ssct
-    ssct.tan_cone_angle            = math.tan(ssao_configs.ssct.light_cone*0.5)
-    ssct.inv_contact_distance_max  = 1.0 / ssct.contact_distance_max
-end
-
 local function calc_ssao_config(camera, lightdir, depthwidth, depthheight, depthdepth)
     --calc projection scale
     ssao_configs.projection_scale = util.projection_scale(depthwidth, depthheight, camera.projmat)
     ssao_configs.projection_scale_radius = ssao_configs.projection_scale * ssao_configs.radius
     ssao_configs.max_level = depthdepth - 1
 
-    ssao_configs.ssct.lightdir.v                = math3d.normalize(math3d.inverse(math3d.transform(camera.viewmat, lightdir, 0)))
+    ssao_configs.ssct.lightdir.v = math3d.normalize(math3d.inverse(math3d.transform(camera.viewmat, lightdir, 0)))
 end
 
 local function update_properties(drawer, ce)
@@ -231,7 +242,7 @@ local function update_properties(drawer, ce)
 end
 
 local bilateral_config = {
-    kernel_radius = 6,
+    kernel_radius = HOWTO_SAMPLE.bilateral_filter_raidus,
     std_deviation = 4.0,
     bilateral_threshold = ssao_configs.bilateral_threshold,
 }

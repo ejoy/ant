@@ -10,8 +10,15 @@ _windows:
 graphic:
   ao:
     enable: true
-    bent_normal: false
-    qulity: "low"
+    bent_normal : false
+    quality     : "low"
+    radius      : 0.3
+    power       : 1.0
+    bias        : 0.0005
+    resolution  : 0.5
+    intensity   : 1.0
+    bilateral_threshold: 0.05
+    min_horizon_angle: 0.0
   curve_world:
     enable: false
     type: "cylinder"
