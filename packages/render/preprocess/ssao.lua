@@ -24,8 +24,9 @@ local ao_setting<const> = setting:data().graphic.ao or def_setting.graphic.ao
 
 local ssao_sys  = ecs.system "ssao_system"
 
-local ENABLE_SSAO                       = ao_setting.enable
+local ENABLE_SSAO<const>                = ao_setting.enable
 local ENABLE_BENT_NORMAL<const>         = ao_setting.bent_normal
+local FB_RATIO<const>                   = ao_setting.ratio or 0.5
 local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/ssao.material"
 local BILATERAL_FILTER_MATERIAL<const>  = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/bilateral_filter_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/bilateral_filter.material"
 
@@ -72,8 +73,7 @@ local function create_framebuffer(ww, hh)
 end
 
 function ssao_sys:init_world()
-    local vr = mu.copy_viewrect(world.args.viewport)
-
+    local vr = mu.calc_viewport(mu.copy_viewrect(world.args.viewport), FB_RATIO)
     local fbidx = create_framebuffer(vr.w, vr.h)
     util.create_queue(ssao_viewid, vr, fbidx, "ssao_queue", "ssao_queue")
 
@@ -163,7 +163,8 @@ local function update_properties(drawer, ce)
     local sdq = w:first "scene_depth_queue render_target:in"
     imaterial.set_property(drawer, "s_scene_depth", fbmgr.get_depth(sdq.render_target.fb_idx).handle)
 
-    local vr = sdq.render_target.view_rect
+    local aoq = w:first "ssao_queue render_target:in"
+    local vr = aoq.render_target.view_rect
     local depthwidth, depthheight, depthdepth = vr.w, vr.h, 1
     local camera = ce.camera
     local projmat = camera.projmat
