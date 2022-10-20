@@ -1,8 +1,0 @@
-colorspace: sRGB
-normalmap: false
-path: /pkg/ant.resources.binary/textures/BH-ChiBi-Chuan-04-D.tga
-sampler:
-  MAG: LINEAR
-  MIN: LINEAR
-  U: CLAMP
-  V: CLAMP

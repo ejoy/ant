@@ -1,8 +1,0 @@
-normalmap: false
-path: /pkg/ant.resources.binary/textures/pbr/bolonga_lod.dds
-sRGB: false
-sampler:
-  MAG: LINEAR
-  MIN: LINEAR
-  U: MIRROR
-  V: MIRROR

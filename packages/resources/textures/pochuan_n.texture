@@ -1,8 +1,0 @@
-normalmap: true
-path: /pkg/ant.resources.binary/textures/BH-ChiBi-Chuan-04-N.tga
-sRGB: false
-sampler:
-  MAG: LINEAR
-  MIN: LINEAR
-  U: CLAMP
-  V: CLAMP

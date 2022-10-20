@@ -1,8 +1,0 @@
-normalmap: false
-path: /pkg/ant.resources.binary/textures/pbr/bolonga_irr.dds
-sRGB: false
-sampler:
-  MAG: ANISOTROPIC
-  MIN: ANISOTROPIC
-  U: MIRROR
-  V: MIRROR
