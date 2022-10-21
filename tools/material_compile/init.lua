@@ -31,7 +31,7 @@ else
 
     local mc = {
         fx = {
-            [stage] = srcpath,
+            [stage] = srcfile,
         }
     }
     
