@@ -31,8 +31,8 @@ graphic:
   postprocess:
     bloom:
       enable: true
-      inv_highlight: 0.00001
-      threshold: 12000
+      inv_highlight: 0.2
+      threshold: 2
   shadow:
     enable: true
     size: 1024

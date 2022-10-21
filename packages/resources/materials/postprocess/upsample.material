@@ -1,11 +1,16 @@
 fx:
-  fs: /pkg/ant.resources/shaders/postprocess/bloom/fs_upsample.sc
-  vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
+  cs: /pkg/ant.resources/shaders/postprocess/bloom/cs_upsample.sc
+  
 properties:
-  s_scene_color:
+  s_color_input:
     stage: 0
-    access: "r"
+    access: r
     mip: 0
     image: /pkg/ant.resources/textures/black.texture
+  s_color_output:
+    stage: 1
+    access: "w"
+    mip: 1
+    image: /pkg/ant.resources/textures/black.texture
   u_bloom_param: {0, 0, 0, 0} #which chain level
-state: /pkg/ant.resources/materials/postprocess/postprocess.state
+  u_bloom_param2: {0.0, 0.0, 0.0, 0.0} #output size, inverse ouput size
