@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/ElementDocument.h>
+#include <core/Element.h>
 #include <core/StyleSheet.h>
 #include <unordered_map>
 #include <unordered_set>
@@ -47,7 +47,7 @@ private:
 	StyleSheet style_sheet;
 	std::unordered_set<std::string> custom_element;
 	std::unordered_map<std::string, std::unique_ptr<DataModel>> data_models;
-	ElementDocument body;
+	Element body;
 	Size dimensions;
 	bool dirty_dimensions = false;
 };

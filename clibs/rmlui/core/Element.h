@@ -143,9 +143,7 @@ public:
 	void SetInnerHTML(const std::string& html) override;
 	void SetOuterHTML(const std::string& html) override;
 	const Rect& GetContentRect() const override;
-
-	virtual void ChangedProperties(const PropertyIdSet& changed_properties);
-
+	void ChangedProperties(const PropertyIdSet& changed_properties);
 	void DirtyImage();
 
 protected:

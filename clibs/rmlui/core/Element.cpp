@@ -1707,6 +1707,9 @@ void Element::UpdateProperties() {
 		if (UpdataFontSize()) {
 			dirty_properties.insert(PropertyId::LineHeight);
 			DirtyProperties(PropertyUnit::EM);
+			if (GetOwnerDocument()->GetBody() == this) {
+				DirtyPropertiesWithUnitRecursive(PropertyUnit::REM);
+			}
 		}
 	}
 

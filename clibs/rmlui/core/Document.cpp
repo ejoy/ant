@@ -14,7 +14,7 @@
 namespace Rml {
 
 Document::Document(const Size& _dimensions)
-	: body(this)
+	: body(this, "body")
 	, dimensions(_dimensions)
 { }
 
