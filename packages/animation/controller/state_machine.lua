@@ -19,7 +19,7 @@ local TYPE_LINEAR <const>	= 1
 local TYPE_REBOUND <const>	= 2
 local TYPE_SHAKE <const>	= 3
 
-local TWEEN_SAMPLE <const> 			= 15
+local TWEEN_SAMPLE <const>	= 16
 
 local DIR_X <const> 	= 1
 local DIR_Y <const> 	= 2
@@ -44,10 +44,15 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 		if clip.tween == mu.TWEEN_LINEAR and math.abs(to_rot[1]) < 180 and math.abs(to_rot[2]) < 180 and math.abs(to_rot[3]) < 180 then
 			return
 		end
+		local frametime = 1.0 / sample_ratio
+		duration = duration - frametime --skip the first frame
+		if duration < frametime then
+			return
+		end
 		local start_rot = sum and sum.rot or {0, 0, 0}
 		local start_pos = sum and sum.pos or mc.ZERO
         local tween_step = 1.0 / TWEEN_SAMPLE
-        for j = 1, TWEEN_SAMPLE - 2 do
+        for j = 1, TWEEN_SAMPLE - 1 do
 			local rj = reverse and (TWEEN_SAMPLE - j) or j
             local tween_ratio = mu.tween[clip.tween](rj * tween_step)
 			local target_pos = math3d.mul(Dir[clip.direction], to_pos * tween_ratio)
@@ -80,8 +85,12 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 					elseif clip.type == TYPE_SHAKE then
 						subdiv = 4 * subdiv
 					end
-					local step = (duration / subdiv - 1) * frame_to_time
+					local step = (duration / subdiv) * frame_to_time
 					local start_time = clip.range[1] * frame_to_time
+					if duration < subdiv or step <= frame_to_time then
+						raw_anim:push_prekey(joint_name, start_time, from_s, from_r, from_t)
+						goto continue
+					end
 					local to_rot = {0,clip.amplitude_rot,0}
 					if clip.rot_axis == DIR_X then
 						to_rot = {clip.amplitude_rot,0,0}
@@ -103,13 +112,17 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 					local to_s, to_r, to_t = math3d.srt(math3d.mul(poseMat, localMat))
 					
 					local time = start_time
+					local endtime = clip.range[2] * frame_to_time
 					if clip.type == TYPE_LINEAR then
 						for i = 1, clip.repeat_count, 1 do
 							raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
 							tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, false, inherit and sum)
-							time = time + step
+							time = start_time + i * step
 							raw_anim:push_prekey(joint_name, time, to_s, to_r, to_t)
 							time = time + frame_to_time
+							if time >= endtime then
+								break;
+							end
 						end
 					else
 						localMat = math3d.matrix{s = 1, r = math3d.quaternion{math.rad(-target_rot[1]), math.rad(-target_rot[2]), math.rad(-target_rot[3])}, t = math3d.mul(target_pos, math3d.vector(-1,-1,-1))}
@@ -117,7 +130,7 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 						raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
 						for i = 1, clip.repeat_count, 1 do
 							tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, false, inherit and sum)
-							time = time + step
+							time = start_time + i * step
 							raw_anim:push_prekey(joint_name, time, to_s, to_r, to_t)
 							tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, true, inherit and sum)
 							if clip.type == TYPE_REBOUND then
@@ -131,6 +144,9 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 								tween_push_anim_key(raw_anim, joint_name, clip, time, step, -clip.amplitude_pos, {-to_rot[1], -to_rot[2], -to_rot[3]}, poseMat, true, inherit and sum)
 								time = time + step
 							end
+							if time >= endtime then
+								break;
+							end
 						end
 						if clip.type == TYPE_SHAKE then
 							raw_anim:push_prekey(joint_name, clip.range[2] * frame_to_time, from_s, from_r, from_t)
@@ -140,6 +156,7 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 						sum = {pos = target_pos, rot = target_rot}
 					end
 				end
+				::continue::
 			end
 		end
     end
