@@ -8,10 +8,10 @@ local setting, def_setting = settingpkg.setting, settingpkg.default
 local serialize = import_package "ant.serialize"
 local depends   = require "editor.depends"
 
+local ENABLE_SHADOW<const> = setting:data().graphic.shadow.enable
+
 local function DEF_FUNC() end
 
--- local BGFX_SHADER_INC<const>        = lfs.absolute "./3rd/bgfx/src"
--- local BGFX_SHADER_LIB_INC<const>    = lfs.absolute "./3rd/bgfx/examples/common"
 local SHADER_BASE<const>            = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
 local function shader_includes()
     return {
@@ -26,7 +26,7 @@ local SETTING_MAPPING = {
         end
     end,
     shadow_receive = function (v)
-        if v == "on" then
+        if ENABLE_SHADOW and v == "on" then
             return "ENABLE_SHADOW=1"
         end
     end,

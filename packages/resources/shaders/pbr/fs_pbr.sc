@@ -17,9 +17,9 @@ $input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT
 #include "pbr/indirect_lighting.sh"
 #include "pbr/pbr.sh"
 
+#define v_distanceVS v_posWS.w
 #ifdef ENABLE_SHADOW
 #include "common/shadow.sh"
-#define v_distanceVS v_posWS.w
 #endif //ENABLE_SHADOW
 
 #include "input_attributes.sh"

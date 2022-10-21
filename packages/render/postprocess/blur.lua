@@ -2,6 +2,18 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
+local setting = import_package "ant.settings".setting
+local ENABLE_SHADOW<const> = setting:data().graphic.shadow.enable
+
+local blur_sys = ecs.system "blur_system"
+if not ENABLE_SHADOW then
+    local function DEF_FUNC() end
+    blur_sys.init = DEF_FUNC
+    blur_sys.init_world = DEF_FUNC
+    blur_sys.blur = DEF_FUNC
+    return 
+end
+
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 local fbmgr		= require "framebuffer_mgr"
@@ -15,8 +27,6 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local vblur_viewid<const> = viewidmgr.get "vblur"
 local hblur_viewid<const> = viewidmgr.get "hblur"
-
-local blur_sys = ecs.system "blur_system"
 
 local blur_textures = {}
 local blur_w
