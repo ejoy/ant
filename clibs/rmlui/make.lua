@@ -35,6 +35,7 @@ lm:source_set "rmlui_core" {
         Ant3rd .. "glm",
         Ant3rd .. "yoga",
         Ant3rd .. "stylecache",
+        Ant3rd .. "bee.lua",
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",

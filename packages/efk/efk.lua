@@ -263,7 +263,7 @@ function iefk.create(filename, config)
             scene = config.scene,
             efk = filename,
             on_ready = function (e)
-                w:sync("efk:in", e)
+                w:extend(e, "efk:in")
                 if config.play_on_create then
                     iefk.play(e)
                 end

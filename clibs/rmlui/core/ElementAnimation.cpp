@@ -184,7 +184,7 @@ float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const {
 		alpha = std::clamp(alpha, 0.0f, 1.0f);
 	}
 
-	alpha = keys[key1].tween(alpha);
+	alpha = keys[key1].tween.get(alpha);
 	if (out_key) *out_key = key1;
 	return alpha;
 }

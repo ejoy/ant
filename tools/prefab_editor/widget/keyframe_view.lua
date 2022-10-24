@@ -223,6 +223,8 @@ local new_clip_pop = false
 local start_frame_ui = {0, speed = 1, min = 0}
 local new_range_start = 0
 local new_range_end = 1
+local max_repeat<const> = 10
+
 local function get_or_create_target_anim(target)
     if not current_anim then
         return
@@ -281,7 +283,7 @@ local function create_clip()
                         rot_axis = 2,
                         amplitude_pos = 0,
                         amplitude_rot = 0,
-                        repeat_ui = {1, speed = 1, min = 1, max = 20},
+                        repeat_ui = {1, speed = 1, min = 1, max = max_repeat},
                         random_amplitude_ui = { false },
                         amplitude_pos_ui = {0, speed = 0.1},
                         amplitude_rot_ui = {0, speed = 1},
@@ -498,7 +500,14 @@ local function show_current_detail()
         end
         imgui.widget.PropertyLabel("Repeat")
         if imgui.widget.DragInt("##Repeat", current_clip.repeat_ui) then
-            current_clip.repeat_count = current_clip.repeat_ui[1]
+            local count = current_clip.repeat_ui[1]
+            if count > max_repeat then
+                count = max_repeat
+            elseif count < 1 then
+                count = 1
+            end
+            current_clip.repeat_count = count
+            current_clip.repeat_ui[1] = count
             dirty = true
         end
         -- imgui.widget.PropertyLabel("Random")
@@ -951,7 +960,6 @@ function m.save(path)
             clip.random_amplitude_ui = nil
             clip.amplitude_pos_ui = nil
             clip.amplitude_rot_ui = nil
-            clip.repeat_ui = nil
             clip.scale_ui = nil
             clip.value_ui = nil
         end
@@ -971,6 +979,7 @@ local lfs = require "filesystem.local"
 local datalist  = require "datalist"
 local cr        = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
+
 function m.load(path)
     if (edit_mode == MODE_SKE and not current_skeleton) and (edit_mode == MODE_MTL and not current_mtl_target) then
         return
@@ -996,7 +1005,7 @@ function m.load(path)
         if edit_mode == MODE_SKE then
             for _, clip in ipairs(value.clips) do
                 clip.range_ui = {clip.range[1], clip.range[2], speed = 1}
-                clip.repeat_ui = {clip.repeat_count, speed = 1, min = 1, max = 20}
+                clip.repeat_ui = {clip.repeat_count, speed = 1, min = 1, max = max_repeat}
                 clip.random_amplitude_ui = {clip.random_amplitude}
                 clip.amplitude_pos_ui = {clip.amplitude_pos, speed = 0.1}
                 clip.amplitude_rot_ui = {clip.amplitude_rot, speed = 1}

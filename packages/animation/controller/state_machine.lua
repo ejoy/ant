@@ -45,7 +45,7 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 			return
 		end
 		local frametime = 1.0 / sample_ratio
-		duration = duration - frametime --skip the first frame
+		duration = duration - 2 * frametime --skip the first/last frame
 		if duration < frametime then
 			return
 		end
@@ -117,7 +117,7 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 						for i = 1, clip.repeat_count, 1 do
 							raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
 							tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, false, inherit and sum)
-							time = start_time + i * step
+							time = start_time + i * step - frame_to_time
 							raw_anim:push_prekey(joint_name, time, to_s, to_r, to_t)
 							time = time + frame_to_time
 							if time >= endtime then
@@ -130,7 +130,7 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 						raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
 						for i = 1, clip.repeat_count, 1 do
 							tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, false, inherit and sum)
-							time = start_time + i * step
+							time = start_time + i * step - frame_to_time
 							raw_anim:push_prekey(joint_name, time, to_s, to_r, to_t)
 							tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, true, inherit and sum)
 							if clip.type == TYPE_REBOUND then

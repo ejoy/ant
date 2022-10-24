@@ -1,8 +1,8 @@
 #include <core/Tween.h>
 #include <utility>
 #include <numbers>
-#include <array>
 #include <math.h>
+#include <bee/utility/unreachable.h>
 
 namespace Rml {
 
@@ -71,7 +71,7 @@ static float sine(float t) {
 
 }
 
-static float tween(Tween::Type type, float t) {
+static float TweenIn(Tween::Type type, float t) {
 	using namespace TweenFunctions;
 	switch (type) {
 	case Tween::Type::Back:
@@ -97,70 +97,103 @@ static float tween(Tween::Type type, float t) {
 	case Tween::Type::Sine:
 		return sine(t);
 	default:
-		break;
+		bee::unreachable();
 	}
-	return t;
+}
+
+static float TweenOut(Tween::Type type, float t) {
+	return 1.0f - TweenIn(type, 1.0f - t);
+}
+
+static float TweenInOut(Tween::Type type, float t) {
+	if (t < 0.5f)
+		return TweenIn(type, 2.0f * t) * 0.5f;
+	else
+		return 0.5f + TweenOut(type, 2.0f * t - 1.0f) * 0.5f;
+}
+
+static std::string TweenToString(Tween::Type type) {
+	switch (type) {
+	case Tween::Type::Back:
+		return "back";
+	case Tween::Type::Bounce:
+		return "bounce";
+	case Tween::Type::Circular:
+		return "circular";
+	case Tween::Type::Cubic:
+		return "cubic";
+	case Tween::Type::Elastic:
+		return "elastic";
+	case Tween::Type::Exponential:
+		return "exponential";
+	case Tween::Type::Linear:
+		return "linear";
+	case Tween::Type::Quadratic:
+		return "quadratic";
+	case Tween::Type::Quartic:
+		return "quartic";
+	case Tween::Type::Quintic:
+		return "quintic";
+	case Tween::Type::Sine:
+		return "sine";
+	default:
+		bee::unreachable();
+	}
+}
+
+static std::string TweenToString(Tween::Direction direction) {
+	switch (direction) {
+	case Tween::Direction::In:
+		return "-in";
+	case Tween::Direction::Out:
+		return "-out";
+	case Tween::Direction::InOut:
+		return "-in-out";
+	default:
+		bee::unreachable();
+	}
+}
+
+static Tween::Type TweenGetType(uint8_t v) {
+	return (Tween::Type)((v >> 4) & 0xF);
+}
+
+static Tween::Direction TweenGetDirection(uint8_t v) {
+	return (Tween::Direction)(v & 0xF);
+}
+
+static uint8_t TweenMake(Tween::Type type, Tween::Direction direction) {
+	return (uint8_t(type) << 4) | uint8_t(direction);
 }
 
 Tween::Tween()
+	: v(0)
 { }
 
 Tween::Tween(Type type, Direction direction)
-: type(type)
-, direction(direction)
+	: v(TweenMake(type, direction))
 { }
 
-float Tween::operator()(float t) const {
-	switch (direction) {
+float Tween::get(float t) const {
+	switch (TweenGetDirection(v)) {
 	case Direction::In:
-		return in(t);
+		return TweenIn(TweenGetType(v), t);
 	case Direction::Out:
-		return out(t);
+		return TweenOut(TweenGetType(v), t);
 	case Direction::InOut:
-		return in_out(t);
+		return TweenInOut(TweenGetType(v), t);
+	default:
+		bee::unreachable();
 	}
 	return t;
 }
 
-bool Tween::operator==(const Tween& other) const {
-	return type == other.type && direction == other.direction;
+bool Tween::operator==(const Tween& rhs) const {
+	return v == rhs.v;
 } 
 
-
 std::string Tween::ToString() const {
-	static const std::array<std::string, size_t(Type::Count)> type_str = {
-		{ "none", "back", "bounce", "circular", "cubic", "elastic", "exponential", "linear", "quadratic", "quartic", "quintic", "sine" }
-	};
-
-	if (size_t(type) < type_str.size()) {
-		if (type == Type::None) {
-			return "none";
-		}
-		switch (direction) {
-		case Direction::In:
-			return type_str[size_t(type)] + "-in";
-		case Direction::Out:
-			return type_str[size_t(type)] + "-out";
-		case Direction::InOut:
-			return type_str[size_t(type)] + "-in-out";
-		}
-	}
-	return "unknown";
-}
-
-float Tween::in(float t) const {
-	return tween(type, t);
-}
-
-float Tween::out(float t) const {
-	return 1.0f - tween(type, 1.0f - t);
-}
-
-float Tween::in_out(float t) const {
-	if (t < 0.5f)
-		return tween(type, 2.0f * t) * 0.5f;
-	else
-		return 0.5f + out(2.0f * t - 1.0f) * 0.5f;
+	return TweenToString(TweenGetType(v)) + TweenToString(TweenGetDirection(v));
 }
 
 }
