@@ -63,16 +63,6 @@ function irender.draw(viewid, drawer_tag, queuename)
 	rendercore.draw(tagid, viewid, queuename)
 end
 
---'num' and 'stride' unit is matrix
-function irender.multi_draw(vid, ri, mat, tid, num, stride)
-	bgfx.set_transform_cached(tid, num)
-	local m = mat or ri
-	m.material()
-	ri.mesh:submit()
-	local dnum = num // stride
-	bgfx.multi_submit(vid, m.fx.prog, tid, dnum, stride)
-end
-
 function irender.get_main_view_rendertexture()
 	local mq = w:first("main_queue render_target:in")
 	return fbmgr.get_rb(mq.render_target.fb_idx, 1).handle
