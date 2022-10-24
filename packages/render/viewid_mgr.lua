@@ -53,8 +53,6 @@ alloc_id "main_view"
 alloc_id "copy_scene"
 alloc_id "postprocess_obj"		--26
 alloc_id "bloom"
-alloc_id("bloom_ds", bloom_chain_count)
-alloc_id("bloom_us", bloom_chain_count)
 alloc_id "effect_view"
 alloc_id "tonemapping"
 --end postprocess
