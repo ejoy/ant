@@ -1,9 +1,8 @@
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 
-#include "common/sphere_coord.sh"
 #include "pbr/ibl/common.sh"
-#include "common/sphere_coord.sh"
+#include "common/utils.sh"
 
 SAMPLERCUBE(s_source, 0);
 

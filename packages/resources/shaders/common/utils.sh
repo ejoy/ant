@@ -14,6 +14,54 @@ vec4 fetch_texture2d_size(sampler2D tex, int lod)
     return vec4(s.x, s.y, 1.0/s.x, 1.0/s.y);
 }
 
+vec2 id2uv(ivec2 uvidx, ivec2 size)
+{
+    const vec2 texeloffset = vec2(0.5, 0.5);
+    vec2 uv = ((vec2)uvidx + texeloffset)/(size-1);
+#if ORIGIN_BOTTOM_LEFT
+    return uv;
+#else //!ORIGIN_BOTTOM_LEFT
+    return vec2(uv.x, 1.0-uv.y);
+#endif //ORIGIN_BOTTOM_LEFT
+}
+
+vec3 uvface2dir(vec2 uv, int face)
+{
+    switch (face){
+    case 0:
+        return vec3( 1.0, uv.y,-uv.x);
+    case 1:
+        return vec3(-1.0, uv.y, uv.x);
+    case 2:
+        return vec3( uv.x, 1.0,-uv.y);
+    case 3:
+        return vec3( uv.x,-1.0, uv.y);
+    case 4:
+        return vec3( uv.x, uv.y, 1.0);
+    default:
+        return vec3(-uv.x, uv.y,-1.0);
+    }
+}
+
+vec2 dir2spherecoord(vec3 v)
+{
+	return vec2(
+		0.5f + 0.5f * atan2(v.z, v.x) / M_PI,
+		acos(v.y) / M_PI);
+}
+
+// from [0, 1] ==> [-1, 1], normalize uv to symmetry uv
+vec2 n2s(vec2 uv){
+	return uv * 2.0 - 1.0;
+}
+
+vec3 id2dir(ivec3 id, vec2 size)
+{
+    vec2 uv = n2s(id2uv(id.xy, size));
+    int faceidx = id.z;
+    return normalize(uvface2dir(uv, faceidx));
+}
+
 struct gather_result3{
     vec4 r, g, b;
 };

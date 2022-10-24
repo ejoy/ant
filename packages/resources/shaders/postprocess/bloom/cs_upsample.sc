@@ -4,6 +4,7 @@
 SAMPLER2D(s_color_input, 0);
 IMAGE2D_WR(s_color_output, rgba16f, 1);
 
+#include "common/utils.sh"
 #include "postprocess/bloom/bloom.sh"
 
 NUM_THREADS(16, 16, 1)
@@ -15,7 +16,7 @@ void main()
     if (any(uv_out >= u_bloom_output_size))
         return;
 
-    const vec2 uv = uv_out * u_bloom_output_texelsize;
+    const vec2 uv = id2uv(gl_GlobalInvocationID.xy, u_bloom_output_size);
 
 #ifdef BLOOM_UPSAMPLE_QUALITY_HIGH
     vec3 c0, c1;

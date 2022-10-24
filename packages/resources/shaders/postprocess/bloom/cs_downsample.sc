@@ -1,5 +1,6 @@
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
+#include "common/utils.sh"
 
 SAMPLER2D(s_color_input, 0);
 IMAGE2D_WR(s_color_output, rgba16f, 1);
@@ -38,18 +39,18 @@ void main()
     if (any(uv_out >= u_bloom_output_size))
         return;
 
-    const vec2 uv = uv_out * u_bloom_output_texelsize;
+    const vec2 uv = id2uv(gl_GlobalInvocationID.xy, u_bloom_output_size);
     
     vec4 d = vec4(u_bloom_output_texelsize, -u_bloom_output_texelsize) * 0.5;
 
     vec3 c = texture2DLod(s_color_input, uv, lod).rgb;
 
+    //TODO: use textureGather
     vec3 lt = texture2DLod(s_color_input, uv + d.zw, lod).rgb;
     vec3 rt = texture2DLod(s_color_input, uv + d.xw, lod).rgb;
     vec3 rb = texture2DLod(s_color_input, uv + d.xy, lod).rgb;
     vec3 lb = texture2DLod(s_color_input, uv + d.zy, lod).rgb;
 
-    //TODO: use textureGather
     vec3 lt2 = texture2DLodOffset(s_color_input, uv, lod, ivec2(-1, -1)).rgb;
     vec3 rt2 = texture2DLodOffset(s_color_input, uv, lod, ivec2( 1, -1)).rgb;
     vec3 rb2 = texture2DLodOffset(s_color_input, uv, lod, ivec2( 1,  1)).rgb;
