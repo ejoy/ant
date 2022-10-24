@@ -127,7 +127,7 @@ function efk_sys:entity_remove()
     end
 end
 
-local mq_vr_mb = world:sub{"viewrect_changed", "main_queue"}
+local mq_vr_mb = world:sub{"view_rect_changed", "main_queue"}
 local camera_changed = world:sub{"main_queue", "camera_changed"}
 local camera_frustum_mb
 
