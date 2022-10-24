@@ -131,21 +131,26 @@ local function readdatalist(filepath)
 	end)
 end
 
-local function mergeCfgSetting(setting, localpath)
-    if setting == nil then
-        setting = {}
-    elseif type(setting) == "string" then
-        setting = serialize.parse(setting, readfile(localpath(setting)))
+local function mergeCfgSetting(fx, localpath)
+    if fx.setting == nil then
+        fx.setting = {}
+    elseif type(fx.setting) == "string" then
+        fx.setting = serialize.parse(fx.setting, readfile(localpath(fx.setting)))
     else
-        assert(type(setting) == "table")
+        assert(type(fx.setting) == "table")
     end
-    return fxsetting.adddef(setting)
+
+    fx.setting = fxsetting.adddef(fx.setting)
+    if fx.cs then
+        fx.setting["lighting"]          = 'off'
+        fx.setting["shadow_receive"]    = 'off'
+    end
 end
 
 return function (input, output, setting, localpath)
     local mat = readdatalist(input)
     local fx = mat.fx
-    fx.setting = mergeCfgSetting(fx.setting, localpath)
+    mergeCfgSetting(fx, localpath)
     local depfiles = {
         localpath "./settings"
     }
