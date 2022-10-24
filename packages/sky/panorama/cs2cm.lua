@@ -41,7 +41,7 @@ function cs2cm_sys:init()
     }
 end
 
-local build_ibl_viewid = viewidmgr.get "build_ibl"
+local p2c_viewid = viewidmgr.get "panorama2cubmap"
 local cm_flags = sampler{
     MIN="LINEAR",
     MAG="LINEAR",
@@ -82,7 +82,7 @@ function cs2cm_sys:entity_ready()
     
                 local s = dis.size
                 s[1], s[2], s[3] = facesize // thread_group_size, facesize // thread_group_size, 6
-                icompute.dispatch(build_ibl_viewid, dis)
+                icompute.dispatch(p2c_viewid, dis)
     
                 --just generate mipmaps for cm_rbidx
                 local fbidx = fbmgr.create{
@@ -92,8 +92,8 @@ function cs2cm_sys:entity_ready()
                     mip = 0,
                     numlayer = 1,
                 }
-                bgfx.set_view_frame_buffer(build_ibl_viewid, fbmgr.get(fbidx).handle)
-                bgfx.touch(build_ibl_viewid)
+                bgfx.set_view_frame_buffer(p2c_viewid, fbmgr.get(fbidx).handle)
+                bgfx.touch(p2c_viewid)
     
                 fbmgr.destroy(fbidx, true)
                 

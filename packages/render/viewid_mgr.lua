@@ -32,25 +32,25 @@ alloc_id "csm1"
 alloc_id "csm2"
 alloc_id "csm3"
 alloc_id "csm4"
+--TODO: vblur and hblur can use only 1 viewid
 alloc_id "vblur"
 alloc_id "hblur"
-alloc_id "omni_Green"
-alloc_id "omni_Yellow"
-alloc_id "omni_Blue"
-alloc_id "omni_Red"				--9
-alloc_id("panorama2cubmap", 6)	--[10, 15]
-alloc_id("build_ibl", 6)		--[16, 21]
-alloc_id "ibl"					--21
+-- NOTE: omni shadowmap is not use right now
+-- alloc_id "omni_Green"
+-- alloc_id "omni_Yellow"
+-- alloc_id "omni_Blue"
+-- alloc_id "omni_Red"
+alloc_id "panorama2cubmap"
+alloc_id "ibl"
 alloc_id "pre_depth"
 alloc_id "scene_depth"
 alloc_id "depth_resolve"
 alloc_id "depth_mipmap"
 alloc_id "ssao"
-alloc_id("bilateral_filter", 2)
+alloc_id("bilateral_filter", 2)	--TODO: move to compute shader and just use only 1 viewid 
 alloc_id "main_view"
 
 --start postprocess
-alloc_id "copy_scene"
 alloc_id "postprocess_obj"		--26
 alloc_id "bloom"
 alloc_id "effect_view"
