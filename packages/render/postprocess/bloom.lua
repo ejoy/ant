@@ -32,7 +32,7 @@ function bloom_sys:init()
     icompute.create_compute_entity("bloom_upsampler", "/pkg/ant.resources/materials/postprocess/upsample.material", {0, 0, 0})
 end
 
-local bloom_rb_flags = sampler {
+local bloom_rb_flags<const> = sampler {
     RT="RT_ON",
     MIN="LINEAR",
     MAG="LINEAR",
@@ -40,6 +40,17 @@ local bloom_rb_flags = sampler {
     V="CLAMP",
     BLIT="BLIT_COMPUTEWRITE"
 }
+
+local BLOOM_MIPCOUNT<const> = 4
+local BLOOM_PARAM = math3d.ref(math3d.vector(0, bloom_setting.inv_highlight, bloom_setting.threshold, 0))
+
+local bloom_viewid<const> = viewidmgr.get "bloom"
+
+local MIN_FB_SIZE<const> = 2 ^ BLOOM_MIPCOUNT
+
+local function is_viewrect_valid(vr)
+    return (vr.w >= MIN_FB_SIZE or vr.h >= MIN_FB_SIZE)
+end
 
 local function create_bloom_rb(vr)
     return fbmgr.create_rb{
@@ -53,18 +64,24 @@ local function create_bloom_rb(vr)
 end
 
 function bloom_sys:init_world()
-    local mq = w:first "main_queue render_target:in"
-    local mqvr = mq.render_target.view_rect
-
-    local be = w:first "bloom_downsampler dispatch:in"
-    be.dispatch.bloom_texture_idx = create_bloom_rb(mqvr)
+    local vr = world.args.viewport
+    if is_viewrect_valid(vr) then
+        local be = w:first "bloom_downsampler dispatch:in"
+        be.dispatch.bloom_texture_idx = create_bloom_rb(vr)
+    end
 end
 
-local mqvr_mb = world:sub{"viewrect_changed", "main_queue"}
+local mqvr_mb = world:sub{"view_rect_changed", "main_queue"}
 function bloom_sys:data_changed()
     for _, _, vr in mqvr_mb:unpack() do
         local be = w:first "bloom_downsampler dispatch:in"
-        fbmgr.resize_rb(be.bloom_texture_idx, vr.w, vr.h)
+        if is_viewrect_valid(vr) then
+            if be.dispatch.bloom_texture_idx then
+                fbmgr.resize_rb(be.dispatch.bloom_texture_idx, vr.w, vr.h)
+            else 
+                be.dispatch.bloom_texture_idx = create_bloom_rb(vr)
+            end
+        end
     end
 end
 
@@ -84,18 +101,18 @@ local output_color_property = {
     access = "w"
 }
 
-local BLOOM_MIPCOUNT<const> = 4
-local BLOOM_PARAM = math3d.ref(math3d.vector(0, bloom_setting.inv_highlight, bloom_setting.threshold, 0))
-
-local bloom_viewid<const> = viewidmgr.get "bloom"
-
 local DISPATCH_GROUP_SIZE_X<const>, DISPATCH_GROUP_SIZE_Y<const> = 16, 16
 function bloom_sys:bloom()
     local dse = w:first "bloom_downsampler dispatch:in"
-    local mq = w:first "main_queue render_target:in"
+    if dse.dispatch.bloom_texture_idx == nil then
+        return
+    end
+
+    local vr = world.args.viewport
+    assert(is_viewrect_valid(vr))
+
     local ppi = w:first "postprocess postprocess_input:in".postprocess_input
 
-    local vr = mq.render_target.view_rect
     local ds_dis = dse.dispatch
     local ds_m = ds_dis.material
 
