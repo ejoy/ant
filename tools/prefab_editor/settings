@@ -30,7 +30,7 @@ graphic:
     format: RGBA16F
   postprocess:
     bloom:
-      enable: true
+      enable: false
       inv_highlight: 0.2
       threshold: 2
   shadow:
