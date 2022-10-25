@@ -244,7 +244,7 @@ local function create_property_ui(n, p, mv)
                     pp[i] = value[i]
                 end
                 local e <close> = w:entity(mv.eid)
-                imaterial.set_property(e, n, pp)
+                imaterial.set_property(e, n, math3d.vector(pp))
                 mv.need_reload = true
             end
         })
@@ -263,7 +263,7 @@ local function create_property_ui(n, p, mv)
                         ppp[ii] = value[ii]
                     end
                     local e <close> = w:entity(mv.eid)
-                    imaterial.set_property(e, n, pp)
+                    imaterial.set_property(e, n, math3d.vector(pp))
                     mv.need_reload = true
                 end
             })
@@ -484,7 +484,7 @@ local function build_properties_ui(mv)
                         value = math3d.vector({value[1], value[2], value[3], value[4]})
                         set_factor("basecolor", value)
                         local e <close> = w:entity(mv.eid)
-                        imaterial.set_property(e, "u_basecolor_factor", value)
+                        imaterial.set_property(e, "u_basecolor_factor", math3d.vector(value))
                     end
                 })
             )
@@ -502,7 +502,7 @@ local function build_properties_ui(mv)
                             local pbrfactor = get_pbr_factor(t)
                             pbrfactor[1] = value
                             local e <close> = w:entity(mv.eid)
-                            imaterial.set_property(e, "u_pbr_factor", pbrfactor)
+                            imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
                         end
                     }),
                     uiproperty.Float({label="roughness", min=0.0, max=1.0, speed=0.02}, {
@@ -514,7 +514,7 @@ local function build_properties_ui(mv)
                             local pbrfactor = get_pbr_factor(t)
                             pbrfactor[2] = value
                             local e <close> = w:entity(mv.eid)
-                            imaterial.set_property(e, "u_pbr_factor", pbrfactor)
+                            imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
                         end,
                     })
                 })
@@ -536,7 +536,7 @@ local function build_properties_ui(mv)
                 setter = function (value)
                     set_factor("emissive", value)
                     local e <close> = w:entity(mv.eid)
-                    imaterial.set_property(e, "u_emissive_factor", value)
+                    imaterial.set_property(e, "u_emissive_factor", math3d.vector(value))
                 end
             })
         ))
@@ -559,7 +559,7 @@ local function build_properties_ui(mv)
                     local pbrfactor = get_pbr_factor(t)
                     pbrfactor[3] = value
                     local e <close> = w:entity(mv.eid)
-                    imaterial.set_property(e, "u_pbr_factor", pbrfactor)
+                    imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
                 end
             })
         })
@@ -574,7 +574,7 @@ local function build_properties_ui(mv)
                 local pbrfactor = get_pbr_factor(t)
                 pbrfactor[4] = value
                 local e <close> = w:entity(mv.eid)
-                imaterial.set_property(e, "u_pbr_factor", pbrfactor)
+                imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
             end
         })
     else
