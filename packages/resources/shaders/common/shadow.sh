@@ -6,6 +6,8 @@
  #ifndef __SHADER_SHADOW_SH__
  #define __SHADER_SHADOW_SH__
 
+#ifdef ENABLE_SHADOW
+
 #include "common/common.sh"
 
 //csm
@@ -43,14 +45,11 @@ uniform vec4 u_omni_param;
 #define shadow_sampler_type sampler2D 
 
 
-#ifdef ENABLE_SHADOW
-
 #ifdef SM_ESM
 SHADOW_SAMPLER2D(s_shadowmap_blur, 8);
 #else
 SHADOW_SAMPLER2D(s_shadowmap, 8);
 #endif
-#endif //ENABLE_SHADOW
 
 bool is_texcoord_in_range(vec2 _texcoord, float minv, float maxv)
 {
@@ -280,5 +279,5 @@ vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor)
 
 	return finalcolor;
 }
-
+#endif //ENABLE_SHADOW
 #endif //__SHADER_SHADOW_SH__
