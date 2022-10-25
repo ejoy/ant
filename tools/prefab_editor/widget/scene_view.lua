@@ -222,11 +222,13 @@ local geom_type = {
     "cylinder",
     "sphere",
     "torus",
+    "plane",
     "cube(prefab)",
     "cone(prefab)",
     "cylinder(prefab)",
     "sphere(prefab)",
-    "torus(prefab)"
+    "torus(prefab)",
+    "plane(prefab)",
 }
 local collider_type = {
     "sphere",

@@ -103,6 +103,7 @@ local function on_right_mouse(dx, dy)
 		pitch = -1.48
 	end
 	iom.set_rotation(ce, math3d.quaternion{pitch, yaw, 0})
+	-- iom.rotate_forward_vector(ce, -dy * rotate_speed, -dx * rotate_speed)
 end
 
 local function on_wheel(delta)

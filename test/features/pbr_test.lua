@@ -22,7 +22,7 @@ local function create_pbr_entity(name, srt, material,
             transform   = srt,
             material    = material,
             visible_state= "main_view|selectable",
-            mesh        = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
+            mesh        = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",
             scene_entity = true,
         },
     }

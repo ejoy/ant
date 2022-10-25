@@ -314,7 +314,7 @@ local function on_target(old, new)
 end
 
 local function on_update(eid)
-    update_highlight_aabb(eid)
+    world:pub {"UpdateAABB", eid}
     if not eid then return end
     local e <close> = w:entity(eid, "camera?in light?in")
     if e.camera then

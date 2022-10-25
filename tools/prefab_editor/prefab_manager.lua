@@ -70,11 +70,12 @@ local function create_light_billboard(light_eid)
 end
 
 local geom_mesh_file = {
-    ["cube"] = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-    ["cone"] = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
-    ["cylinder"] = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin",
-    ["sphere"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
-    ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin"
+    ["cube"] = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
+    ["cone"] = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/Cone_P1.meshbin",
+    ["cylinder"] = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/Cylinder_P1.meshbin",
+    ["sphere"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",
+    ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/Torus_P1.meshbin",
+    ["plane"] = "/pkg/ant.resources.binary/meshes/base/plane.glb|meshes/Plane_P1.meshbin"
 }
 
 local group_id = 0
@@ -216,11 +217,14 @@ function m:create(what, config)
         local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id(), parent)
         self:add_entity(new_entity, parent, temp)
     elseif what == "geometry" then
-        if config.type == "cube"
-            or config.type == "cone"
-            or config.type == "cylinder"
-            or config.type == "sphere"
-            or config.type == "torus" then
+        if config.type == "cube" or config.type == "cone" or config.type == "cylinder"
+            or config.type == "sphere" or config.type == "torus" or config.type == "plane" then
+            local offsety = 1.0
+            if config.type == "torus" then
+                offsety = 0.25
+            elseif config.type == "plane" then
+                offsety = 0.001
+            end
             local parent_eid = config.parent or gizmo.target_eid
             local template = {
                 policy = {
@@ -228,10 +232,8 @@ function m:create(what, config)
                     "ant.general|name",
                 },
                 data = {
-                    scene = {},
+                    scene = {t = {0, offsety , 0}},
                     visible_state = "main_view|selectable",
-                    --material = "/pkg/ant.resources/materials/outline/scale.material",
-                    -- material = "/pkg/ant.resources/materials/pbr_default.material",
                     material = "/pkg/tools.prefab_editor/res/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
                     name = config.type .. gen_geometry_id(),
@@ -268,6 +270,8 @@ function m:create(what, config)
             m:add_prefab(gd.editor_package_path .. "res/sphere.prefab")
         elseif config.type == "torus(prefab)" then
             m:add_prefab(gd.editor_package_path .. "res/torus.prefab")
+        elseif config.type == "plane(prefab)" then
+            m:add_prefab(gd.editor_package_path .. "res/plane.prefab")
         end
     elseif what == "terrain" then
         if config.type == "shape" then
