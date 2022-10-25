@@ -2,7 +2,7 @@ fx:
   fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
   vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
   setting:
-    MATERIAL_UNLIT: 1
+    lighting: off
     HAS_BASECOLOR_TEXTURE: 1
 properties:
   s_basecolor:

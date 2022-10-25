@@ -152,7 +152,7 @@ end
 
 local Text = class("Text", PropertyBase)
 function Text:widget()
-    return imgui.widget.Text(self:get_label(), self.uidata)
+    return imgui.widget.Text(self.uidata.text)
 end
 
 local EditText = class("EditText", PropertyBase)

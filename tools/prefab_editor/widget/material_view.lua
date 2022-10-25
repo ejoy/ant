@@ -68,7 +68,7 @@ end
 
 local function build_fx_ui(mv)
     local function shader_file_ui(st)
-        return uiproperty.Text({label=st,}, {
+        return uiproperty.EditText({label=st,}, {
             getter = function()
                 return material_template(mv.eid).fx[st]
             end,
@@ -379,15 +379,6 @@ local function build_properties_ui(mv)
                 end
             end
         end
-
-        properties[#properties+1] = uiproperty.Combo({label="lit mode", options=LIT_options}, {
-            getter = function ()
-                return fx_setting "MATERIAL_UNLIT" and "unlit" or "lit"
-            end,
-            setter = function (value)
-                fx_setting("MATERIAL_UNLIT", value == "unlit" and 1 or nil)
-            end
-        })
 
         --TODO: need a texture&enable ui control
         local function add_textre_ui(field, parentui, ...)
@@ -1045,7 +1036,12 @@ function MaterialView:enable_properties_ui(eid)
     local t = material_template(eid)
     if is_pbr_material(t) then
         local p_ui = assert(self.material:find_property_by_label "Properties")
-        local unlit_mode<const> = t.fx.setting and t.fx.setting.MATERIAL_UNLIT ~= nil or false
+        local function is_unlit()
+            if t.fx.setting  then
+                return t.fx.setting.lighting == "off"
+            end
+        end
+        local unlit_mode<const> = is_unlit()
         
         local function disable_property(n, disable)
             local p = p_ui:find_property_by_label(n)
@@ -1056,18 +1052,18 @@ function MaterialView:enable_properties_ui(eid)
         disable_property("metallic_roughness", unlit_mode)
         disable_property("occlusion",         unlit_mode)
 
-        local function disable_texture(n)
+        local function check_enable_texture_ui(n)
             local p = p_ui:find_property_by_label(n)
             local enable_ui = p.subproperty[1]
             local text_ui = p.subproperty[2]
             text_ui.disable = not enable_ui.modifier.getter()
         end
         
-        disable_texture "basecolor"
-        disable_texture "normal"
-        disable_texture "metallic_roughness"
-        disable_texture "emissive"
-        disable_texture "occlusion"
+        check_enable_texture_ui "basecolor"
+        check_enable_texture_ui "normal"
+        check_enable_texture_ui "metallic_roughness"
+        check_enable_texture_ui "emissive"
+        check_enable_texture_ui "occlusion"
 
     end
 end

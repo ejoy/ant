@@ -55,7 +55,7 @@ local function create_simple_test_group()
             "ant.general|name",
         },
         data = {
-            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
+            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.001.material",
             visible_state = "main_view",
             scene = {},
@@ -74,7 +74,7 @@ local function create_simple_test_group()
             "ant.general|name",
         },
         data = {
-            mesh = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/Cone_P1.meshbin",
+            mesh = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
             material = "/pkg/ant.resources.binary/meshes/base/cone.glb|materials/lambert1.material",
             visible_state = "main_view",
             scene = {

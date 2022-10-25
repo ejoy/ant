@@ -241,7 +241,7 @@ function init_loader_sys:init()
             "ant.general|name",
         },
         data = {
-            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
+            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
             material = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.001.material",
             visible_state = "main_view",
             scene = {
@@ -345,7 +345,7 @@ function init_loader_sys:init()
     --         sceme = {srt={s=100}},
     --         filterstate = "main_view|selectable",
     --         material = "/pkg/ant.resources/materials/singlecolor.material",
-    --         mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
+    --         mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
     --     }
     -- }
 

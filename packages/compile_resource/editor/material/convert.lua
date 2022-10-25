@@ -21,8 +21,8 @@ end
 
 local SETTING_MAPPING = {
     lighting = function (v)
-        if v == "on" then
-            return "ENABLE_LIGHTING=1"
+        if v == "off" then
+            return "MATERIAL_UNLIT=1"
         end
     end,
     shadow_receive = function (v)

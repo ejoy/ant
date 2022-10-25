@@ -1056,7 +1056,7 @@ local function create_bone_entity(joint_name)
             scene = {},
             visible_state = "main_view|selectable",
             material = "/pkg/tools.prefab_editor/res/materials/joint.material",
-            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
+            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
             name = joint_name,
             on_ready = function(e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
