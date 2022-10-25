@@ -6,8 +6,9 @@ local uiconfig  = require "widget.config"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local vfs       = require "vfs"
-local access    = dofile "/engine/vfs/repoaccess.lua"
 local global_data = require "common.global_data"
+local access    = global_data.repo_access
+
 local utils     = require "common.utils"
 local rc        = import_package "ant.compile_resource"
 local class     = utils.class 

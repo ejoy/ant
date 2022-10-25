@@ -42,9 +42,6 @@ local gizmo_const       = require "gizmo.const"
 local prefab_mgr        = ecs.require "prefab_manager"
 prefab_mgr.set_anim_view(anim_view)
 
-
-local vfs               = require "vfs"
-local access            = dofile "/engine/vfs/repoaccess.lua"
 local fs                = require "filesystem"
 local lfs               = require "filesystem.local"
 local bgfx              = require "bgfx"
@@ -77,39 +74,6 @@ local function choose_project_dir()
     end
 end
 
-local NOT_skip_packages = {
-    "ant.resources",
-    "ant.resources.binary",
-    "ant.test.feature",
-}
-
-local function skip_package(pkgpath)
-    for _, n in ipairs(NOT_skip_packages) do
-        if pkgpath:match(n) then
-            return false
-        end
-    end
-    return true
-end
-
-local function get_package(entry_path, readmount)
-    local repo = {_root = entry_path}
-    if readmount then
-        access.readmount(repo)
-    end
-    local packages = {}
-    for _, name in ipairs(repo._mountname) do
-        if #name > 1 then
-            vfs.mount(name, repo._mountpoint[name]:string())
-            if not (name:match "/pkg/ant%." and skip_package(name)) then
-                packages[#packages + 1] = {name = name, path = repo._mountpoint[name]}
-            end
-        end
-    end
-    global_data.repo = repo
-    return packages
-end
-
 local function start_fileserver(path)
     local cthread = require "bee.thread"
     cthread.newchannel "log_channel"
@@ -126,29 +90,18 @@ local function start_fileserver(path)
     ]]
 end
 
-local function find_package_name(proj_path)
-    for _, package in ipairs(global_data.packages) do
-        if package.path == proj_path then
-            return package.name
-        end
-    end
-end
-
 local function open_proj(path)
     local lpath = lfs.path(path)
     if lfs.exists(lpath / ".mount") then
-        global_data.project_root = lpath
-        global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
+        local topname = global_data:update_root(lpath)
+
         --file server
         start_fileserver(path)
         log_widget.init_log_receiver()
         console_widget.init_console_sender()
-        local topname = find_package_name(lpath)
         world:pub { "UpdateDefaultLight", true }
         if topname then
-            global_data.package_path = topname .. "/"
             log.warn("need handle effect file")
-            --effekseer_filename_mgr.add_path(global_data.package_path .. "res")
             return topname
         else
             print("Can not add effekseer resource seacher path.")
@@ -195,10 +148,8 @@ local function choose_project()
                 if not n() then
                     log_widget.error({tag = "Editor", message = "folder not empty!"})
                 else
-                    global_data.project_root = lpath
                     on_new_project(path)
-                    global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
-
+                    global_data:update_root(lpath)
                     editor_setting.update_lastproj("", path, false)
                 end
             end
@@ -209,9 +160,7 @@ local function choose_project()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button "Quit" then
-            local res_root_str = tostring(fs.path "":localpath())
-            global_data.project_root = lfs.path(res_root_str)
-            global_data.packages = get_package(global_data.project_root, true)
+            global_data:update_root(fs.path "":localpath():string())
         end
 
         imgui.cursor.Separator();
@@ -231,7 +180,7 @@ local function choose_project()
         imgui.windows.EndDisabled()
         if global_data.project_root then
             local fw = require "bee.filewatch"
-            fw.add(global_data.project_root:string())
+            fw.add(global_data.project_root)
             local res_root_str = tostring(fs.path "":localpath())
             global_data.editor_root = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
             log.warn("need handle effect file")

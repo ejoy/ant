@@ -18,7 +18,9 @@ local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local joint_utils = require "widget.joint_utils"
 local utils     = require "common.utils"
-local access    = dofile "/engine/vfs/repoaccess.lua"
+local global_data = require "common.global_data"
+local access    = global_data.repo_access
+
 local fs        = require "filesystem"
 local global_data = require "common.global_data"
 

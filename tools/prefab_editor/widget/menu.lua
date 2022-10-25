@@ -11,9 +11,9 @@ local editor_setting    = require "editor_setting"
 
 local imgui             = require "imgui"
 local lfs               = require "filesystem.local"
-local access            = dofile "/engine/vfs/repoaccess.lua"
-local fs                = require "filesystem"
 local global_data       = require "common.global_data"
+local access            = global_data.repo_access
+local fs                = require "filesystem"
 local uiutils           = require "widget.utils"
 
 local m = {}

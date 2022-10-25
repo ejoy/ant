@@ -604,7 +604,7 @@ function m:reload()
     end
 end
 local global_data       = require "common.global_data"
-local access            = dofile "/engine/vfs/repoaccess.lua"
+local access            = global_data.repo_access
 
 -- preload all textures for effect
 function m.check_effect_preload(filename)
