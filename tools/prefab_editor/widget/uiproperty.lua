@@ -166,6 +166,7 @@ function EditText:widget()
     if self.readonly then
         return imgui.widget.Text(self.uidata.text)
     else
+        -- it will change self.uidata.text as userdata
         return imgui.widget.InputText(self:get_label(), self.uidata)
     end
 end
@@ -175,7 +176,7 @@ function EditText:update()
 end
 
 function EditText:value()
-    return self.uidata.text
+    return tostring(self.uidata.text)   -- self.uidata.text maybe userdata from c
 end
 
 function EditText:show()
