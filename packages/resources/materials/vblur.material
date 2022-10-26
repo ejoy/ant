@@ -10,3 +10,4 @@ properties:
     s_image_output:
         stage: 1
         texture: /pkg/ant.resources/textures/default.texture
+    u_blur_offset : {1.0, 0.0, 0.0, 0.0}
