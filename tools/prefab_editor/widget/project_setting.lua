@@ -1,9 +1,10 @@
+local fs  = require "filesystem"
 local lfs           = require "filesystem.local"
 local imgui         = require "imgui"
 local global_data   = require "common.global_data"
 local setting       = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
-
+local access        = dofile "/engine/vfs/repoaccess.lua"
 local ps = {
     id      = "ProjectSetting"
 }
@@ -256,7 +257,7 @@ local function setting_ui(sc)
     end
 
     if Button "Save" then
-        local p = lfs.path(global_data.project_root) / "settings"
+        local p = global_data.project_root / "settings"
         local f<close> = lfs.open(p, "w")
         f:write(serialize.stringify(sc._data))
     end
@@ -280,11 +281,12 @@ function ps.show(open_popup)
     if BeginPopupModal(ps.id, default_win_flags) then
         if BeginTabBar("PS_Bar", default_tab_flags) then
             if BeginTabItem "ProjectSetting" then
-                local p = lfs.path(global_data.project_root) / "settings"
-                local s = project_settings[p:string()]
+                local p = global_data.project_root / "settings"
+                local vp = fs.path(access.virtualpath(global_data.repo, p))
+                local s = project_settings[vp:string()]
                 if s == nil then
-                    s = setting.create(p)
-                    project_settings[p:string()] = s
+                    s = setting.create(vp)
+                    project_settings[vp:string()] = s
                 end
                 setting_ui(s)
                 EndTabItem()

@@ -41,22 +41,31 @@ local function update_lastproj(name, projpath, auto_import)
 end
 
 local function add_recent_file(f)
+    local function find_recent_file(f, rf)
+        for idx, ff in ipairs(rf) do
+            if ff == f then
+                return idx
+            end
+        end
+    end
+
     local rf = editor_setting.recent_files
     if rf == nil then
         rf = {}
         editor_setting.recent_files = rf
     end
 
-    for _, ff in ipairs(rf) do
-        if ff == f then
-            return
-        end
+    local idx = find_recent_file(f, rf)
+
+    if idx == nil and #rf == 10 then
+        idx = 10
     end
 
-    if #rf == 10 then
-        table.remove(rf, 10)
+    if idx then
+        table.remove(rf, idx)
     end
     table.insert(rf, 1, f)
+    assert(#rf <= 10)
 end
 
 local function update_camera_setting(speed)

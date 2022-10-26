@@ -333,7 +333,7 @@ function shape_terrain_test_sys:data_changed()
 
             indicator = create_indicator()
         elseif key == "T" and press == 0 then
-            local ce = w:first("canvas scene:in")
+            local ce = w:first "canvas scene:in"
             local unit = 1.0
             local items = icanvas.add_items(ce, {
                 {

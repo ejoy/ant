@@ -3,7 +3,6 @@ fx:
   vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
   setting:
     #CYLINDER_TRANSFORM: 1
-    #MATERIAL_UNLIT: 1
     WITH_COLOR_ATTRIB: 1
     HAS_BASECOLOR_TEXTURE: 1
     HAS_NORMAL_TEXTURE: 1

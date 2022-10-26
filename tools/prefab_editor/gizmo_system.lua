@@ -49,8 +49,17 @@ function gizmo:set_target(eid)
 	if self.target_eid == target then
 		return
 	end
+	
 	local old_target = self.target_eid
 	self.target_eid = target
+	if target then
+		local e <close> = w:entity(target, "scene?in")
+		if e.scene then
+			local _, r, t = math3d.srt(iom.worldmat(e))
+			self:set_rotation(r, true)
+			self:set_position(t, true)
+		end
+	end
 	gizmo:show_by_state(target ~= nil)
 	world:pub {"Gizmo","ontarget", old_target, target}
 end
@@ -85,32 +94,33 @@ function gizmo:set_scale(inscale)
 	template.template.data.scene.s = inscale
 end
 
-function gizmo:set_position(worldpos)
+function gizmo:set_position(worldpos, gizmoonly)
 	if not can_edit_srt(self.target_eid) then
 		return
 	end
 	local newpos
+	local target <close> = w:entity(self.target_eid)
 	if worldpos then
-		local pid = hierarchy:get_parent(gizmo.target_eid)
-		local parent_worldmat
-		if pid then
-			local pe <close> = w:entity(pid)
-			parent_worldmat = iom.worldmat(pe)
+		if not gizmoonly then
+			local pid = hierarchy:get_parent(gizmo.target_eid)
+			local parent_worldmat
+			if pid then
+				local pe <close> = w:entity(pid)
+				parent_worldmat = iom.worldmat(pe)
+			end
+			local localPos
+			if not parent_worldmat then
+				localPos = worldpos
+			else
+				localPos = math3d.totable(math3d.transform(math3d.inverse(parent_worldmat), math3d.vector(worldpos), 1))
+			end
+			iom.set_position(target, localPos)
+			local template = hierarchy:get_template(self.target_eid)
+			template.template.data.scene.t = localPos
 		end
-		local localPos
-		if not parent_worldmat then
-			localPos = worldpos
-		else
-			localPos = math3d.totable(math3d.transform(math3d.inverse(parent_worldmat), math3d.vector(worldpos), 1))
-		end
-		local e <close> = w:entity(self.target_eid)
-		iom.set_position(e, localPos)
-		local template = hierarchy:get_template(self.target_eid)
-		template.template.data.scene.t = localPos
 		newpos = worldpos
 	else
-		local e <close> = w:entity(gizmo.target_eid)
-		local wm = iom.worldmat(e)
+		local wm = iom.worldmat(target)
 		if wm ~= mc.NULL then
 			local s, r, t = math3d.srt(wm)
 			newpos = math3d.totable(t)
@@ -124,19 +134,21 @@ function gizmo:set_position(worldpos)
 	iom.set_position(uniform_rot_root, newpos)
 end
 
-function gizmo:set_rotation(inrot)
+function gizmo:set_rotation(inrot, gizmoonly)
 	if not can_edit_srt(self.target_eid) then
 		return
 	end
-	local e <close> = w:entity(self.target_eid)
+	local target <close> = w:entity(self.target_eid)
 	local newrot
 	if inrot then
-		iom.set_rotation(e, inrot)
-		local template = hierarchy:get_template(self.target_eid)
-		template.template.data.scene.r = math3d.tovalue(inrot)
+		if not gizmoonly then
+			iom.set_rotation(target, inrot)
+			local template = hierarchy:get_template(self.target_eid)
+			template.template.data.scene.r = math3d.tovalue(inrot)
+		end
 		newrot = inrot
 	else
-		newrot = iom.get_rotation(e)
+		newrot = iom.get_rotation(target)
 	end
 	local re <close> = w:entity(self.root_eid)
 	if self.mode == gizmo_const.SCALE then
@@ -194,7 +206,7 @@ local function create_arrow_widget(axis_root, axis_str)
 				parent = axis_root
 			},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
-			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
+			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/Cylinder_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str,
 			on_ready = function (e)
 				ivs.set_state(e, "main_view", false)
@@ -211,7 +223,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			visible_state = "main_view",
 			scene = {s = {0.02, 0.03, 0.02, 0}, r = local_rotator, t = cone_t, parent = axis_root},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
-			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
+			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/Cone_P1.meshbin',
 			name = "arrow.cone" .. axis_str,
 			on_ready = function (e)
 				ivs.set_state(e, "main_view", false)
@@ -371,7 +383,7 @@ function gizmo_sys:post_init()
 				visible_state = "main_view|selectable",
 				scene = scene or {},
 				material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
-				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
 				name = "scale_cube" .. axis_name,
 				on_ready = function (e)
 					ivs.set_state(e, "main_view", false)
@@ -388,7 +400,7 @@ function gizmo_sys:post_init()
 	gizmo.uniform_scale_eid = cube_eid
 	local function create_scale_axis(axis, axis_end)
 		local cube_eid = create_scale_cube("scale axis", {t = axis_end, s = gizmo_const.AXIS_CUBE_SCALE, parent = axis_root}, axis.color)
-		local line_eid = ientity.create_line_entity("", {0, 0, 0}, axis_end, {}, axis.color, true)
+		local line_eid = ientity.create_line_entity("", {0, 0, 0}, axis_end, {parent = axis_root}, axis.color, true)
 		axis.eid = {cube_eid, line_eid}
 	end
 	create_scale_axis(gizmo.sx, {gizmo_const.AXIS_LEN, 0, 0})
@@ -735,10 +747,10 @@ local function move_light_gizmo(x, y)
 end
 
 local function show_rotate_fan(rotAxis, startAngle, deltaAngle)
-	local e3 <close> = w:entity(rotAxis.eid[3], "render_object:in")
+	local e3 <close> = w:entity(rotAxis.eid[3], "render_object:update")
 	local e3_start, e3_num
 	local stepAngle = gizmo_const.ROTATE_SLICES / 360
-	local e4 <close> = w:entity(rotAxis.eid[4], "render_object:in")
+	local e4 <close> = w:entity(rotAxis.eid[4], "render_object:update")
 	if deltaAngle > 0 then
 		e3_start = math.floor(startAngle * stepAngle) * 3
 		local totalAngle = startAngle + deltaAngle
@@ -991,6 +1003,7 @@ function gizmo:select_gizmo(x, y)
 end
 
 local keypress_mb = world:sub{"keyboard"}
+local look_at_target_mb = world:sub{"LookAtTarget"}
 local last_mouse_pos_x = 0
 local last_mouse_pos_y = 0
 local function on_mouse_move()
@@ -1017,52 +1030,71 @@ end
 
 local gizmo_event = world:sub{"Gizmo"}
 
-local function check_calc_aabb(eid)
-	local entity <close> = w:entity(eid, "bounding?in scene?in")
-	local sceneaabb = math3d.ref(math3d.aabb(math3d.vector(-5.0, -5.0, -5.0), math3d.vector(5.0, 5.0, 5.0)))
+local function world_aabb(entity)
 	local bounding = entity.bounding
 	if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
 		local wm = entity.scene and iom.worldmat(entity) or mc.IDENTITY_MAT
-		return math3d.ref(math3d.aabb(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1), math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1)))
+		return math3d.aabb(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1), math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1))
+	else
+		return math3d.aabb(mc.ZERO, mc.ONE)
 	end
-	do
-		return sceneaabb
-	end
-	-- TODO : merge aabb
+end
+
+local function check_calc_aabb(eid)
 	local function build_scene()
 		local rt = {}
-		for ee in w:select "bounding?in scene?in eid:in" do
+		local skin_eid
+		local skin_mesh = {}
+		for ee in w:select "bounding:in scene?in mesh?in meshskin?in eid:in" do
 			local id = ee.eid
-			local pid = ee.scene and ee.scene.parent or 0
-			if pid then
+			if ee.meshskin then
+				skin_eid = id
+			elseif not ee.scene and ee.mesh then
+				skin_mesh[#skin_mesh + 1] = {id=id, aabb = world_aabb(ee)}
+			end
+			local pid = ee.scene and ee.scene.parent
+			if pid and pid > 0 then
 				local c = rt[pid]
 				if c == nil then
 					c = {}
 					rt[pid] = c
 				end
-				w:extend(ee, "name?in")
-				c[#c+1] = {id=id, aabb = sceneaabb, name=ee.name}
+				c[#c+1] = {id=id, aabb = world_aabb(ee)}
 			end
+		end
+		if skin_eid then
+			rt[skin_eid] = skin_mesh
 		end
 		return rt
 	end
+
 	local scenetree = build_scene()
 
-	local function build_aabb(tr, sceneaabb)
-		for idx, it in ipairs(tr) do
+	local function build_aabb(tr)
+		local maabb = math3d.aabb(mc.ZERO, mc.ONE)
+		for _, it in ipairs(tr) do
 			local ctr = scenetree[it.id]
 			if ctr then
-				build_aabb(ctr, sceneaabb)
+				maabb = math3d.aabb_merge(build_aabb(ctr), maabb)
 			end
 			if it.aabb then
-				sceneaabb.m = math3d.aabb_merge(it.aabb, sceneaabb)
+				maabb = math3d.aabb_merge(it.aabb, maabb)
 			end
 		end
+		return maabb
 	end
 
-	local sceneaabb = math3d.ref(math3d.aabb())
-	build_aabb(scenetree[entity.eid], sceneaabb)
-	return sceneaabb
+	local entity <close> = w:entity(eid, "bounding?in scene?in")
+	local e = scenetree[eid]
+	return e and build_aabb(e) or world_aabb(entity)
+end
+
+local function focus_aabb(ce, aabb)
+    local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+    local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
+    local dist = -2.0 * math3d.length(math3d.sub(aabb_max, center))
+	local viewdir = iom.get_direction(ce)
+    iom.lookto(ce, math3d.muladd(dist, viewdir, center), viewdir)
 end
 
 function gizmo_sys:handle_event()
@@ -1206,14 +1238,14 @@ function gizmo_sys:handle_event()
 				end
 			end
 		end
-
-		if key == 'F' then
-			if gizmo.target_eid then
-				local aabb = check_calc_aabb(gizmo.target_eid)
-				if aabb then
-					local mc <close> = w:entity(irq.main_camera())
-					icamera.focus_aabb(mc, aabb)
-				end
+	end
+	for _, tid in look_at_target_mb:unpack() do
+		local target = tid or gizmo.target_eid
+		if target then
+			local aabb = check_calc_aabb(target)
+			if aabb then
+				local mc <close> = w:entity(irq.main_camera())
+				focus_aabb(mc, aabb)
 			end
 		end
 	end

@@ -132,7 +132,7 @@ function world:memory(async)
 		rp3d = getmemory("rp3d.core", "memory"),
 		animation = getmemory("hierarchy", "memory"),
 	}
-	if require "platform".OS:lower() == "windows" then
+	if require "bee.platform".os == "windows" then
 		m.imgui = require "imgui".memory()
 	end
 

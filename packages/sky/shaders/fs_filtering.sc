@@ -1,7 +1,7 @@
 $input v_texcoord0
 
 #include <bgfx_shader.sh>
-#include "common/sphere_coord.sh"
+#include "common/utils.sh"
 
 // enum
 #define cLambertian 0

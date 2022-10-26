@@ -144,20 +144,21 @@ static queue_stages s_queue_stages;
 
 static inline void
 collect_render_objs(struct ecs_world *w, cid_t main_id, int index, const matrix_array *mats, queue_stages &queue_stages){
-	for (auto &s : queue_stages.stages){
-		if (entity_sibling(w->ecs, main_id, index, s.id)){
-			//auto scene = (const ecs::scene*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::scene>::id);
-			// if (scene == nullptr)
-			// 	continue;
-			//if (math_isnull(w->math3d->M, s->scene_aabb) || math3d_frustum_intersect_aabb())
-			auto ro = (const ecs::render_object*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::render_object>::id);
-			if (ro) {
-#if defined(_MSC_VER) && defined(_DEBUG)
-				auto id = (uint64_t)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::eid>::id);
-				s.objs.emplace_back(obj_data{ ro, mats, id });
-#else
-				s.objs.emplace_back(obj_data{ ro, mats });
-#endif
+	auto ro = (const ecs::render_object*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::render_object>::id);
+	if (ro){
+		for (auto &s : queue_stages.stages){
+			if (entity_sibling(w->ecs, main_id, index, s.id)){
+				//auto scene = (const ecs::scene*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::scene>::id);
+				// if (scene == nullptr)
+				// 	continue;
+				//if (math_isnull(w->math3d->M, s->scene_aabb) || math3d_frustum_intersect_aabb())
+				
+	#if defined(_MSC_VER) && defined(_DEBUG)
+					auto id = (uint64_t)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::eid>::id);
+					s.objs.emplace_back(obj_data{ ro, mats, id });
+	#else
+					s.objs.emplace_back(obj_data{ ro, mats });
+	#endif
 			}
 		}
 	}
@@ -191,16 +192,8 @@ static void
 collect_objects(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, obj_transforms &trans, queue_stages &queue_stages){
 	const cid_t vs_id = ecs_api::component<ecs::view_visible>::id;
 	for (int i=0; entity_iter(w->ecs, vs_id, i); ++i){
-		bool visible = true;
-		if(i == 30){
-			bool v1 = entity_sibling(w->ecs, vs_id, i, s_queuevisibleids[ra.queue_index]);
-			bool v2 = !entity_sibling(w->ecs, vs_id, i, s_cullids[ra.queue_index]);
-			visible = v1&&v2;
-		}
-		else{
-			visible = entity_sibling(w->ecs, vs_id, i, s_queuevisibleids[ra.queue_index]) &&
-			!entity_sibling(w->ecs, vs_id, i, s_cullids[ra.queue_index]);
-		}
+		const bool visible = entity_sibling(w->ecs, vs_id, i, s_queuevisibleids[ra.queue_index]) &&
+							!entity_sibling(w->ecs, vs_id, i, s_cullids[ra.queue_index]);
 		if (visible){
 			collect_render_objs(w, vs_id, i, nullptr, queue_stages);
 		}

@@ -3,35 +3,46 @@ local fs = require "filesystem"
 local datalist = require "datalist"
 local toolset = require "editor.material.toolset"
 local fxsetting = require "editor.material.setting"
-local SHARER_INC = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
-local setting = import_package "ant.settings".setting
+local settingpkg = import_package "ant.settings"
+local setting, def_setting = settingpkg.setting, settingpkg.default
 local serialize = import_package "ant.serialize"
 local depends   = require "editor.depends"
 
+local ENABLE_SHADOW<const> = setting:data().graphic.shadow.enable
+
 local function DEF_FUNC() end
+
+local SHADER_BASE<const>            = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
+local function shader_includes()
+    return {
+        SHADER_BASE,
+    }
+end
 
 local SETTING_MAPPING = {
     lighting = function (v)
-        if v == "on" then
-            return "ENABLE_LIGHTING=1"
+        if v == "off" then
+            return "MATERIAL_UNLIT=1"
         end
     end,
     shadow_receive = function (v)
-        if v == "on" then
+        if ENABLE_SHADOW and v == "on" then
             return "ENABLE_SHADOW=1"
         end
     end,
-    os = DEF_FUNC,
-    renderer = DEF_FUNC,
-    stage = DEF_FUNC,
+    os          = DEF_FUNC,
+    renderer    = DEF_FUNC,
+    stage       = DEF_FUNC,
     varying_path= DEF_FUNC,
-    subsurface = DEF_FUNC,
+    subsurface  = DEF_FUNC,
     surfacetype = DEF_FUNC,
     shadow_cast = DEF_FUNC,
 }
 
-local enable_cs = setting:get 'graphic/lighting/cluster_shading' ~= 0
-local enable_bloom = setting:get "graphic/postprocess/bloom/enable"
+local enable_cs<const>     = setting:get 'graphic/lighting/cluster_shading' ~= 0
+local enable_bloom<const>  = setting:get "graphic/postprocess/bloom/enable"
+
+local ao_setting<const> = setting:data().graphic.ao or def_setting.graphic.ao
 
 local curve_world = setting:data().graphic.curve_world
 local curve_world_type_macros<const> = {
@@ -58,6 +69,18 @@ local function default_macros(setting)
 
     if enable_bloom then
         m[#m+1] = "BLOOM_ENABLE=1"
+    end
+
+    if ao_setting.enable then
+        m[#m+1] = "ENABLE_SSAO=1"
+        if ao_setting.bent_normal then
+            m[#m+1] = "ENABLE_BENT_NORMAL=1"
+        end
+
+        if ao_setting.qulity == "high" then
+            m[#m+1] = "HIGH_QULITY_SPECULAR_AO=1"
+            m[#m+1] = "HIGH_QULITY_NORMAL_RECONSTRUCT=1"
+        end
     end
 
     return m
@@ -108,22 +131,29 @@ local function readdatalist(filepath)
 	end)
 end
 
-local function mergeCfgSetting(setting, localpath)
-    if setting == nil then
-        setting = {}
-    elseif type(setting) == "string" then
-        setting = serialize.parse(setting, readfile(localpath(setting)))
+local function mergeCfgSetting(fx, localpath)
+    if fx.setting == nil then
+        fx.setting = {}
+    elseif type(fx.setting) == "string" then
+        fx.setting = serialize.parse(fx.setting, readfile(localpath(fx.setting)))
     else
-        assert(type(setting) == "table")
+        assert(type(fx.setting) == "table")
     end
-    return fxsetting.adddef(setting)
+
+    fx.setting = fxsetting.adddef(fx.setting)
+    if fx.cs then
+        fx.setting["lighting"]          = 'off'
+        fx.setting["shadow_receive"]    = 'off'
+    end
 end
 
 return function (input, output, setting, localpath)
     local mat = readdatalist(input)
     local fx = mat.fx
-    fx.setting = mergeCfgSetting(fx.setting, localpath)
-    local depfiles = {}
+    mergeCfgSetting(fx, localpath)
+    local depfiles = {
+        localpath "/settings"
+    }
 
     local varying_path = fx.varying_path
     if varying_path then
@@ -136,7 +166,7 @@ return function (input, output, setting, localpath)
                 renderer = setting.renderer,
                 input = localpath(fx[stage]),
                 output = output / (stage..".bin"),
-                includes = {SHARER_INC},
+                includes = shader_includes(),
                 stage = stage,
                 varying_path = varying_path,
                 macros = get_macros(setting, fx.setting),

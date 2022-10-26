@@ -49,5 +49,5 @@ public:
 };
 
 lua_plugin* get_lua_plugin();
-void lua_pushvariant(lua_State *L, const Rml::Variant &v);
-void lua_getvariant(lua_State *L, int index, Rml::Variant* variant);
+void lua_pushvariant(lua_State *L, const Rml::DataVariant &v);
+void lua_getvariant(lua_State *L, int index, Rml::DataVariant* variant);

@@ -18,7 +18,7 @@ local function create_instance(prefab, on_ready)
     world:create_object(p)
 end
 
-local function create_simple_triangle()
+local function create_simple_triangles()
     ecs.create_entity{
         policy = {
             "ant.render|simplerender",
@@ -28,11 +28,14 @@ local function create_simple_triangle()
             simplemesh = {
                 vb = {
                     start = 0,
-                    num = 3,
+                    num = 6,
                     handle = bgfx.create_vertex_buffer(bgfx.memory_buffer("fff", {
                         0.0, 0.0, 1.0,
-                        0.0, 1.0, 2.0,
-                        1.0, 0.0, 2.0
+                        0.0, 1.0, 1.0,
+                        1.0, 0.0, 1.0,
+                        0.0, 0.0, 1.0,
+                        1.0, 0.0, 1.0,
+                        0.0, 0.0,-1.0,
                     }), declmgr.get "p3".handle)
                 },
             },
@@ -43,12 +46,12 @@ local function create_simple_triangle()
         }
     }
 
-    local p1 = math3d.vector(0.0, 0.0, 1.0)
-    local p2 = math3d.vector(0.0, 1.0, 2.0)
-    local p3 = math3d.vector(1.0, 0.0, 2.0)
+    -- local p1 = math3d.vector(0.0, 0.0, 1.0)
+    -- local p2 = math3d.vector(0.0, 1.0, 2.0)
+    -- local p3 = math3d.vector(1.0, 0.0, 2.0)
 
-    local n = math3d.normalize(math3d.cross(math3d.sub(p2, p1), math3d.sub(p3, p1)))
-    print(math3d.tostring(n))
+    -- local n = math3d.normalize(math3d.cross(math3d.sub(p2, p1), math3d.sub(p3, p1)))
+    -- print(math3d.tostring(n))
 end
 
 function S.init()
@@ -58,13 +61,7 @@ function S.init()
         iom.set_direction(le, math3d.vector(0.6, -1.0, -0.8))
     end)
 
-    create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
-        local leid = e.tag['*'][1]
-        local le<close> = w:entity(leid, "scene:update")
-        iom.set_scale(le, 0.1)
-    end)
 
-    --create_simple_triangle()
     ecs.create_instance "/pkg/ant.test.light/assets/skybox.prefab"
 end
 
@@ -75,7 +72,14 @@ function S.init_world()
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
     iom.set_direction(camera_ref, dir)
-    -- iom.set_position(camera_ref, math3d.vector(0, 0, 0))
+    create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
+        local leid = e.tag['*'][1]
+        local le<close> = w:entity(leid, "scene:update")
+        iom.set_scale(le, 0.1)
+    end)
+
+    --create_simple_triangles()
+    -- iom.set_position(camera_ref, math3d.vector(0, 2, -5))
     -- iom.set_direction(camera_ref, math3d.vector(0.0, 0.0, 1.0))
 end
 

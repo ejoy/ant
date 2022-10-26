@@ -84,6 +84,9 @@ static void SetFloatProperty(YGNodeRef node, PropertyId id, float v) {
 	case PropertyId::BorderTopWidth:    YGNodeStyleSetBorder(node, YGEdgeTop, v); break;
 	case PropertyId::BorderRightWidth:  YGNodeStyleSetBorder(node, YGEdgeRight, v); break;
 	case PropertyId::BorderBottomWidth: YGNodeStyleSetBorder(node, YGEdgeBottom, v); break;
+	case PropertyId::ColumnGap:         YGNodeStyleSetGap(node, YGGutterColumn, v); break;
+	case PropertyId::RowGap:            YGNodeStyleSetGap(node, YGGutterRow, v); break;
+	case PropertyId::Gap:               YGNodeStyleSetGap(node, YGGutterAll, v); break;
 	case PropertyId::Height:            YGNodeStyleSetHeight(node, v); break;
 	case PropertyId::Width:             YGNodeStyleSetWidth(node, v); break;
 	case PropertyId::MaxHeight:         YGNodeStyleSetMaxHeight(node, v); break;

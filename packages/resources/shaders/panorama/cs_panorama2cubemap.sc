@@ -3,7 +3,7 @@
 SAMPLER2D(s_source, 0);
 IMAGE2D_ARRAY_WR(s_cubemap_source, rgba16f, 1);
 
-#include "common/sphere_coord.sh"
+#include "common/utils.sh"
 
 uniform vec4 u_param;
 #define u_sample_lod u_param.x

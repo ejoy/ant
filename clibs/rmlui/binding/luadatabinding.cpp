@@ -1,7 +1,7 @@
 #include <lua.hpp>
 #include <binding/luaplugin.h>
 #include <binding/luabind.h>
-#include <databinding/DataModelHandle.h>
+#include <databinding/DataModel.h>
 #include <databinding/DataVariable.h>
 #include <core/Element.h>
 #include <core/Document.h>
@@ -26,12 +26,12 @@ struct LuaPushVariantVisitor {
 };
 
 void
-lua_pushvariant(lua_State *L, const Rml::Variant &v) {
+lua_pushvariant(lua_State *L, const Rml::DataVariant &v) {
 	std::visit(LuaPushVariantVisitor{L}, v);
 }
 
 void
-lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
+lua_getvariant(lua_State *L, int index, Rml::DataVariant* variant) {
 	if (!variant)
 		return;
 	switch(lua_type(L, index)) {
@@ -50,7 +50,7 @@ lua_getvariant(lua_State *L, int index, Rml::Variant* variant) {
 		break;
 	case LUA_TNIL:
 	default:	// todo
-		*variant = Rml::Variant {};
+		*variant = Rml::DataVariant {};
 		break;
 	}
 }
@@ -59,8 +59,7 @@ class LuaScalarDef;
 class LuaTableDef;
 
 struct LuaDataModel {
-	Rml::DataModelConstructor constructor;
-	Rml::DataModelHandle handle;
+	Rml::DataModel* datamodel;
 	LuaScalarDef *scalarDef;
 	LuaTableDef* tableDef;
 	lua_State* dataL;
@@ -68,14 +67,14 @@ struct LuaDataModel {
 	LuaDataModel(Rml::Document* document, const std::string& name);
 	~LuaDataModel() { release(); }
 	void release();
-	bool valid() { return !!constructor; }
+	bool valid() { return !!datamodel; }
 };
 
 class LuaTableDef : public Rml::VariableDefinition {
 public:
 	LuaTableDef(const struct LuaDataModel* model);
-	virtual bool Get(void* ptr, Rml::Variant& variant);
-	virtual bool Set(void* ptr, const Rml::Variant& variant);
+	virtual bool Get(void* ptr, Rml::DataVariant& variant);
+	virtual bool Set(void* ptr, const Rml::DataVariant& variant);
 	virtual int Size(void* ptr);
 	virtual Rml::DataVariable Child(void* ptr, const Rml::DataAddressEntry& address);
 protected:
@@ -93,7 +92,7 @@ LuaTableDef::LuaTableDef(const struct LuaDataModel *model)
 	, model(model)
 {}
 
-bool LuaTableDef::Get(void* ptr, Rml::Variant& variant) {
+bool LuaTableDef::Get(void* ptr, Rml::DataVariant& variant) {
 	lua_State *L = model->dataL;
 	if (!L)
 		return false;
@@ -102,7 +101,7 @@ bool LuaTableDef::Get(void* ptr, Rml::Variant& variant) {
 	return true;
 }
 
-bool LuaTableDef::Set(void* ptr, const Rml::Variant& variant) {
+bool LuaTableDef::Set(void* ptr, const Rml::DataVariant& variant) {
 	int id = (int)(intptr_t)ptr;
 	lua_State *L = model->dataL;
 	if (!L)
@@ -200,7 +199,7 @@ BindVariable(struct LuaDataModel* D, lua_State* L) {
 	lua_rawset(dataL, 1);
 	const char* key = lua_tostring(L, -1);
 	if (lua_type(dataL, D->top) == LUA_TFUNCTION) {
-		D->constructor.BindEventCallback(key, [=](Rml::DataModelHandle, Rml::Event& event, const std::vector<Rml::Variant>& list) {
+		D->datamodel->BindEventCallback(key, [=](Rml::Event& event, const std::vector<Rml::DataVariant>& list) {
 			luabind::invoke([&](lua_State* L){
 				lua_pushvalue(dataL, id);
 				lua_xmove(dataL, L, 1);
@@ -213,7 +212,7 @@ BindVariable(struct LuaDataModel* D, lua_State* L) {
 		});
 	}
 	else {
-		D->constructor.BindVariable(key,
+		D->datamodel->BindVariable(key,
 			Rml::DataVariable(D->scalarDef, (void*)(intptr_t)id)
 		);
 	}
@@ -260,7 +259,7 @@ lDataModelSet(lua_State *L) {
 		lua_pop(dataL, 1);
 		lua_xmove(L, dataL, 1);
 		lua_replace(dataL, id);
-		D->handle.DirtyVariable(lua_tostring(L, 2));
+		D->datamodel->DirtyVariable(lua_tostring(L, 2));
 		return 0;
 	}
 	lua_pop(dataL, 1);
@@ -273,7 +272,7 @@ lDataModelDirty(lua_State* L) {
 	struct LuaDataModel* D = (struct LuaDataModel*)lua_touserdata(L, 1);
 	int n = lua_gettop(L);
 	for (int i = 2; i <= n; ++i) {
-		D->handle.DirtyVariable(luaL_checkstring(L, i));
+		D->datamodel->DirtyVariable(luaL_checkstring(L, i));
 	}
 	return 0;
 }
@@ -296,8 +295,7 @@ lDataModelDelete(lua_State* L) {
 }
 
 LuaDataModel::LuaDataModel(Rml::Document* document, const std::string& name)
-	: constructor(document->CreateDataModel(name))
-	, handle(constructor.GetModelHandle())
+	: datamodel(document->CreateDataModel(name))
 	, scalarDef(new LuaScalarDef(this))
 	, tableDef(new LuaTableDef(this))
 	, dataL(nullptr)

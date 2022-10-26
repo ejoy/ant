@@ -4,7 +4,8 @@ $input a_position
 $output v_skyColor, v_screenPos, v_viewDir
 
 #include "procedural_sky.sh"
-#include "common.sh"
+#include <bgfx_shader.sh>
+#include <shaderlib.sh>
 
 vec3 Perez(vec3 A,vec3 B,vec3 C,vec3 D, vec3 E,float costeta, float cosgamma)
 {

@@ -7,7 +7,6 @@
 #include <core/Text.h>
 #include <core/StyleSheetFactory.h>
 #include <databinding/DataModel.h>
-#include <databinding/DataModelHandle.h>
 #include <databinding/DataUtilities.h>
 #include <core/HtmlParser.h>
 #include <fstream>
@@ -15,7 +14,7 @@
 namespace Rml {
 
 Document::Document(const Size& _dimensions)
-	: body(this)
+	: body(this, "body")
 	, dimensions(_dimensions)
 { }
 
@@ -119,13 +118,13 @@ void Document::UpdateDataModel(bool clear_dirty_variables) {
 	}
 }
 
-DataModelConstructor Document::CreateDataModel(const std::string& name) {
+DataModel* Document::CreateDataModel(const std::string& name) {
 	auto result = data_models.emplace(name, std::make_unique<DataModel>());
 	bool inserted = result.second;
 	if (inserted)
-		return DataModelConstructor(result.first->second.get());
+		return result.first->second.get();
 	Log::Message(Log::Level::Error, "Data model name '%s' already exists.", name.c_str());
-	return DataModelConstructor();
+	return nullptr;
 }
 
 bool Document::RemoveDataModel(const std::string& name) {

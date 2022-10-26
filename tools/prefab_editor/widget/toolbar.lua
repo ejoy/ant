@@ -33,6 +33,7 @@ local localSpace = {}
 local defaultLight = { true }
 local camera_speed = {0.1, speed=0.05, min=0.01, max=10}
 local icons = require "common.icons"(assetmgr)
+
 function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2])
@@ -40,7 +41,8 @@ function m.show()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowBorderSize, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.25, 0.25, 0.25, 1)
-    for _ in uiutils.imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar", "NoMove", "NoDocking" }) do
+    -- for _ in uiutils.imgui_windows("Controll", imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar", "NoMove", "NoDocking" }) do
+    if imgui.windows.Begin("Controll", imgui.flags.Window { "NoTitleBar", "NoResize", "NoScrollbar", "NoMove", "NoDocking" }) then
         uiutils.imguiBeginToolbar()
         if uiutils.imguiToolbar(icons.ICON_SELECT, "Select", status.GizmoMode == "select") then
             status.GizmoMode = "select"
@@ -67,7 +69,7 @@ function m.show()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("DefaultLight", defaultLight) then
-            world:pub { "DefaultLight", defaultLight[1] }
+            world:pub { "UpdateDefaultLight", defaultLight[1] }
         end
 
         imgui.cursor.SameLine()
@@ -103,6 +105,7 @@ function m.show()
     end
     imgui.windows.PopStyleColor()
     imgui.windows.PopStyleVar(2)
+    imgui.windows.End()
 end
 
 return m

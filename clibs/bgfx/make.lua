@@ -3,7 +3,10 @@ local lm = require "luamake"
 dofile "../common.lua"
 
 lm:lua_source "bgfx" {
-    deps = "bx",
+    deps = {
+        "bx",
+        "copy_bgfx_shader",
+    },
     includes = {
         BgfxInclude,
     },

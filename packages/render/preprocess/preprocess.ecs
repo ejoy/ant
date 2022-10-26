@@ -1,0 +1,26 @@
+policy "preprocess"
+    .require_system "ant.render|ssao_system"
+
+pipeline "ssao"
+    .stage "build_ssao"
+    .stage "bilateral_filter"
+
+pipeline "preprocess"
+    .pipeline "depth"
+    .pipeline "ssao"
+
+component "ssao_drawer"
+component "ssao_queue"
+component "Hbilateral_filter_queue"
+component "Vbilateral_filter_queue"
+component "bilateral_filter_drawer"
+
+system "ssao_system"
+    .implement "preprocess/ssao.lua"
+    .require_system "ant.render|scene_depth_system"
+    --.require_system "ant.render|depth_resolve_system"
+    --.require_system "ant.render|depth_mipmap_system"
+    .method "init"
+    .method "init_world"
+    .method "build_ssao"
+    .method "bilateral_filter"

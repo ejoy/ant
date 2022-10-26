@@ -6,18 +6,22 @@
  #ifndef __SHADER_SHADOW_SH__
  #define __SHADER_SHADOW_SH__
 
-#include "common.sh"
+#ifdef ENABLE_SHADOW
+
+#include "common/common.sh"
 
 //csm
 uniform mat4 u_csm_matrix[4];
 uniform vec4 u_csm_split_distances;
 uniform vec4 u_shadow_param1;
 uniform vec4 u_shadow_param2;
-uniform vec4 u_shadow_param3;
 #define u_shadowmap_bias		u_shadow_param1.x
-#define u_normaloffset 			u_shadow_param1.y
+#define u_minVariance 			u_shadow_param1.y
 #define u_shadowmap_texelsize	u_shadow_param1.z
+#define u_depthMultiplier 		u_shadow_param1.w
+
 #define u_shadow_color			u_shadow_param2.rgb
+#define u_normal_offset 		u_shadow_param2.w
 
 // omni
 uniform mat4 u_omni_matrix[4];
@@ -32,17 +36,6 @@ uniform vec4 u_omni_param;
 
 #define USE_VIEW_SPACE_DISTANCE
 //#define SHADOW_COVERAGE_DEBUG
-//#define PACK_RGBA8
-//#define LINEAR_SHADOW
-#ifdef LINEAR_SHADOW
-//#define SHADOW_SAMPLER2D	SAMPLER2D
-//#define shadow_sampler_type sampler2D 
-#else
-//#define SHADOW_SAMPLER2D	SAMPLER2DSHADOW
-//#define shadow_sampler_type sampler2DShadow
-//#define SHADOW_SAMPLER2D	SAMPLER2D
-//#define shadow_sampler_type sampler2D 
-#endif
 
 //#define SM_HARD 
 //#define SM_PCF
@@ -58,16 +51,11 @@ uniform vec4 u_omni_param;
 #endif
 
 
-#ifdef ENABLE_SHADOW
-
 #ifdef SM_ESM
 SHADOW_SAMPLER2D(s_shadowmap_blur, 8);
 #else
 SHADOW_SAMPLER2D(s_shadowmap, 8);
 #endif
-
-SHADOW_SAMPLER2D(s_omni_shadowmap, 9);
-#endif //ENABLE_SHADOW
 
 bool is_texcoord_in_range(vec2 _texcoord, float minv, float maxv)
 {
@@ -243,7 +231,7 @@ static const vec4 g_colors[4] = {
 };
 #endif //SHADOW_COVERAGE_DEBUG
 
-vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor, float depthMultiplier, float minVariance)
+vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor)
 {
 	vec4 shadowcoord = vec4_splat(0.0);
 #ifdef USE_VIEW_SPACE_DISTANCE
@@ -268,7 +256,7 @@ vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor, float dept
 #endif
 
 #ifdef SM_ESM
-	float visibility = ESM(s_shadowmap_blur, shadowcoord, u_shadowmap_bias, depthMultiplier);
+	float visibility = ESM(s_shadowmap_blur, shadowcoord, u_shadowmap_bias, u_depthMultiplier);
 #endif
 
 	vec3 finalcolor = mix(u_shadow_color, scenecolor, visibility);
@@ -279,28 +267,5 @@ vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor, float dept
 
 	return finalcolor;
 }
-
-vec4 calc_omni_shadow_coord(vec4 posWS)
-{
-	vec4 selection = vec4(
-		dot(u_tetra_normal_Green.xyz,  posWS.xyz),
-		dot(u_tetra_normal_Yellow.xyz, posWS.xyz),
-		dot(u_tetra_normal_Blue.xyz,   posWS.xyz),
-		dot(u_tetra_normal_Red.xyz,    posWS.xyz));
-
-	float face = max(max(selection.x, selection.y), max(selection.z, selection.w));
-	for (int ii=0; ii<4; ++ii)
-		if (face == selection[ii])
-			return mul(u_omni_matrix[ii], posWS);
-
-	return vec4_splat(0.0);
-}
-
-vec3 omni_shadow_visibility(vec4 posWS, vec3 scenecolor)
-{
-	vec4 shadowcoord = calc_omni_shadow_coord(posWS);
-	float visibility = hardShadow(s_omni_shadowmap, shadowcoord, u_shadowmap_bias);
-	return mix(u_shadow_color, scenecolor, visibility);
-}
-
+#endif //ENABLE_SHADOW
 #endif //__SHADER_SHADOW_SH__

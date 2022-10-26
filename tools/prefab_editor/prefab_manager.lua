@@ -3,8 +3,9 @@ local world = ecs.world
 local w = world.w
 local cr            = import_package "ant.compile_resource"
 local serialize     = import_package "ant.serialize"
-local worldedit     = import_package "ant.editor".worldedit(world)
-local assetmgr      = import_package "ant.asset"
+local mathpkg       = import_package "ant.math"
+local mc            = mathpkg.constant
+local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local stringify     = import_package "ant.serialize".stringify
 local ilight        = ecs.import.interface "ant.render|ilight"
 local iefk          = ecs.import.interface "ant.efk|iefk"
@@ -70,11 +71,12 @@ local function create_light_billboard(light_eid)
 end
 
 local geom_mesh_file = {
-    ["cube"] = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-    ["cone"] = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
-    ["cylinder"] = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin",
-    ["sphere"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/pSphere1_P1.meshbin",
-    ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/pTorus1_P1.meshbin"
+    ["cube"] = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
+    ["cone"] = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/Cone_P1.meshbin",
+    ["cylinder"] = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/Cylinder_P1.meshbin",
+    ["sphere"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",
+    ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/Torus_P1.meshbin",
+    ["plane"] = "/pkg/ant.resources.binary/meshes/base/plane.glb|meshes/Plane_P1.meshbin"
 }
 
 local group_id = 0
@@ -154,35 +156,28 @@ local function create_default_light(lt, parent)
     }
 end
 
-function m:set_default_light(enable)
+function m:clear_light()
+    if not self.default_light then
+        return
+    end
+    local all_entitys = self.default_light.tag["*"]
+    for _, e in ipairs(all_entitys) do
+        w:remove(e)
+    end
+    self.default_light = nil
+end
+function m:update_default_light(enable)
+    self:clear_light()
     if enable then
+        local filename = editor_setting.setting.light
+        if not filename or not fs.exists(fs.path(filename)) then
+            filename = "/pkg/tools.prefab_editor/res/light.prefab"
+        end
+        self.light_prefab = filename
         if not self.default_light then
-            local newlight, _ = create_default_light("directional")
-            self.default_light = newlight
-            if not self.skybox then
-                self.skybox = ecs.create_instance("/res/skybox_test.prefab")
-            end
-        end
-    else
-        if self.default_light then
-            w:remove(self.default_light)
-            self.default_light = nil
-        end
-        if self.skybox then
-            -- w:remove(self.skybox.root)
-            local all_entitys = self.skybox.tag["*"]
-            for _, e in ipairs(all_entitys) do
-                w:remove(e)
-            end
-            self.skybox = nil
+            self.default_light = ecs.create_instance(self.light_prefab)
         end
     end
-end
-local function set_parent(eid, pid)
-    local e <close> = w:entity(eid)
-    w:extend(e, "scene:out scene_needchange?out")
-    e.scene.parent = pid
-    e.scene_needchange = true
 end
 
 function m:clone(eid)
@@ -223,11 +218,14 @@ function m:create(what, config)
         local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id(), parent)
         self:add_entity(new_entity, parent, temp)
     elseif what == "geometry" then
-        if config.type == "cube"
-            or config.type == "cone"
-            or config.type == "cylinder"
-            or config.type == "sphere"
-            or config.type == "torus" then
+        if config.type == "cube" or config.type == "cone" or config.type == "cylinder"
+            or config.type == "sphere" or config.type == "torus" or config.type == "plane" then
+            local offsety = 1.0
+            if config.type == "torus" then
+                offsety = 0.25
+            elseif config.type == "plane" then
+                offsety = 0.001
+            end
             local parent_eid = config.parent or gizmo.target_eid
             local template = {
                 policy = {
@@ -235,10 +233,8 @@ function m:create(what, config)
                     "ant.general|name",
                 },
                 data = {
-                    scene = {},
+                    scene = {t = {0, offsety , 0}},
                     visible_state = "main_view|selectable",
-                    --material = "/pkg/ant.resources/materials/outline/scale.material",
-                    -- material = "/pkg/ant.resources/materials/pbr_default.material",
                     material = "/pkg/tools.prefab_editor/res/materials/pbr_default.material",
                     mesh = geom_mesh_file[config.type],
                     name = config.type .. gen_geometry_id(),
@@ -275,6 +271,8 @@ function m:create(what, config)
             m:add_prefab(gd.editor_package_path .. "res/sphere.prefab")
         elseif config.type == "torus(prefab)" then
             m:add_prefab(gd.editor_package_path .. "res/torus.prefab")
+        elseif config.type == "plane(prefab)" then
+            m:add_prefab(gd.editor_package_path .. "res/plane.prefab")
         end
     elseif what == "terrain" then
         if config.type == "shape" then
@@ -483,10 +481,37 @@ function m:on_prefab_ready(prefab)
     self.root_mat = math3d.ref(math3d.matrix(srt))
 end
 
+local function check_animation(template)
+    local has_animation = false
+    local anim_template
+    for _, tpl in ipairs(template) do
+        if not anim_template and tpl.data.mesh then
+            local mesh_file = tpl.data.mesh
+            local pos = string.find(mesh_file, ".glb|")
+            local anim_path = string.sub(mesh_file, 1, pos + 4) .. "animation.prefab"
+            if fs.exists(anim_path) then
+                anim_template = serialize.parse(anim_path, cr.read_file(anim_path))
+            end
+        end
+        if tpl.data.animation then
+            has_animation = true
+            break
+        end
+    end
+    if not has_animation and anim_template then
+        template[#template + 1] = anim_template
+    end
+end
 function m:open(filename)
     self:reset_prefab()
     self.prefab_filename = filename
     self.prefab_template = serialize.parse(filename, cr.read_file(filename))
+    for _, value in ipairs(self.prefab_template) do
+        if value.data and value.data.efk then
+            self.check_effect_preload(value.data.efk)
+        end
+    end
+    -- check_animation(self.prefab_template)
 
     local prefab = ecs.create_instance(filename)
     function prefab:on_init()
@@ -496,6 +521,7 @@ function m:open(filename)
         self:on_prefab_ready(instance)
         hierarchy:update_slot_list(world)
         anim_view.on_prefab_load(self.entities)
+        world:pub {"LookAtTarget", self.entities[1]}
     end
     
     function prefab:on_message(msg) end
@@ -517,8 +543,7 @@ local function on_remove_entity(eid)
     end
     hierarchy:del(eid)
 end
-local ientity   = ecs.import.interface "ant.render|ientity"
-local imesh 	= ecs.import.interface "ant.asset|imesh"
+
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local tile_tex
 function m:reset_prefab()
@@ -534,11 +559,12 @@ function m:reset_prefab()
     self.entities = {}
     world:pub {"WindowTitle", ""}
     world:pub {"ResetEditor", ""}
+    world:pub {"UpdateAABB"}
     hierarchy:set_root(self.root)
     self.prefab_filename = nil
     self.prefab_template = nil
     self.prefab_instance = nil
-    gizmo.target_eid = nil
+    gizmo:set_target()
 
     if not tile_tex then
         tile_tex = bgfx.create_texture2d(4, 4, true, 1, "RGBA8", "uwvwww-l+p*l", bgfx.memory_buffer("bbbb", {
@@ -577,15 +603,16 @@ end
 function m:reload()
     local filename = self.prefab_filename
     if filename == 'nil' then
-        self:save_prefab(tostring(gd.project_root) .. "/res/__temp__.prefab")
+        self:save_prefab((gd.project_root / "res/__temp__.prefab"):string())
     else
         self:open(filename)
     end
 end
 local global_data       = require "common.global_data"
-local access            = dofile "/engine/vfs/repoaccess.lua"
-function m:add_effect(filename)
-    -- preload all textures for effect
+local access            = global_data.repo_access
+
+-- preload all textures for effect
+function m.check_effect_preload(filename)
     local path = filename:match("^(.+/)[%w*?_.%-]*$")
     local files = access.list_files(global_data.repo, path)
     local texture_files = {}
@@ -597,10 +624,15 @@ function m:add_effect(filename)
     if #texture_files > 0 then
         iefk.preload(texture_files)
     end
+end
+
+function m:add_effect(filename)
+    self.check_effect_preload(filename)
 
     if not self.root then
         self:reset_prefab()
     end
+
     local template = {
 		policy = {
             "ant.general|name",
@@ -611,7 +643,7 @@ function m:add_effect(filename)
 		data = {
             name = "root",
             tag = {"effect"},
-            scene = {},
+            scene = {parent = gizmo.target_eid},
             efk = filename,
 		},
     }
@@ -619,7 +651,7 @@ function m:add_effect(filename)
     tpl.data.on_ready = function (e)
         iefk.play(e)
     end
-    tpl.data.scene.parent = gizmo.target_eid
+    -- tpl.data.scene.parent = gizmo.target_eid
     self:add_entity(ecs.create_entity(tpl), gizmo.target_eid, template)
 end
 
@@ -653,9 +685,8 @@ function m:add_prefab(filename)
         local children = inst.tag["*"]
         if #children == 1 then
             local child = children[1]
-            local e <close> = w:entity(child, "camera:in")
+            local e <close> = w:entity(child, "camera?in")
             if e.camera then
-                -- set_parent(child, parent)
                 local temp = serialize.parse(prefab_filename, cr.read_file(prefab_filename))
                 hierarchy:add(child, {template = temp[1], editor = true, temporary = true}, parent)
                 return
@@ -710,8 +741,73 @@ function m:save_prefab(path)
     end
     utils.write_file(filename, stringify(new_template))
     anim_view.save_keyevent(string.sub(filename, 1, -8) .. ".event")
-    self:open(filename)
+    local lfilename = lfs.path(filename)
+    assert(lfilename:is_absolute(), ("filename should be local path:%s"):format(filename))
+    self:open(access.virtualpath(global_data.repo, lfilename))
     world:pub {"ResourceBrowser", "dirty"}
+end
+
+function m:set_parent(target, parent)
+    local te <close> = w:entity(target, "scene?in")
+    if te.scene then
+        -- local template = hierarchy:get_template(target).template
+        -- local tpl = utils.deep_copy(template)
+
+        -- local targetWorldMat = mc.IDENTITY_MAT
+        -- if parent then
+        --     local se <close> = w:entity(parent, "scene?in")
+        --     targetWorldMat = iom.worldmat(se)
+        -- end
+        -- local s, r, t = math3d.srt(math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
+        -- tpl.data.scene = {parent = parent, s = s, r = r, t = t}
+
+        -- local e = ecs.create_entity(tpl)
+        -- self:add_entity(e, parent, template)
+
+        local function new_entity(te, pe, scene)
+            local template = hierarchy:get_template(te).template
+            local tpl = utils.deep_copy(template)
+            if scene then
+                tpl.data.scene = scene
+                template.data.scene.s = scene.s
+                template.data.scene.r = scene.r
+                template.data.scene.t = scene.t
+            end
+            local e = ecs.create_entity(tpl)
+            self:add_entity(e, pe, template)
+            return e
+        end
+        local function create_tree(te, pe, scene)
+            local npe = new_entity(te, pe, scene)
+            local tn = hierarchy:get_node(te)
+            for _, ce in ipairs(tn.children) do
+                local tpl = hierarchy:get_template(ce.eid).template
+                create_tree(ce.eid, npe, {parent = npe, s = tpl.data.scene.s, r = tpl.data.scene.r, t = tpl.data.scene.t })
+            end
+            return npe
+        end
+
+        local targetWorldMat = mc.IDENTITY_MAT
+        if parent then
+            local se <close> = w:entity(parent, "scene?in")
+            targetWorldMat = iom.worldmat(se)
+        end
+        local ts, tr, tt = math3d.srt(math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
+        ts = math3d.tovalue(ts)
+        tr = math3d.tovalue(tr)
+        tt = math3d.tovalue(tt)
+        local s, r, t = {ts[1], ts[2], ts[3]}, tr, {tt[1], tt[2], tt[3]}
+        local e = create_tree(target, parent, {parent = parent, s = s, r = r, t = t})
+        local function remove_tree(te)
+            local tn = hierarchy:get_node(te)
+            for _, ce in ipairs(tn.children) do
+                remove_tree(ce.eid)
+            end
+            self:remove_entity(te)
+        end
+        remove_tree(target)
+        return e
+    end
 end
 
 function m:remove_entity(e)
@@ -733,6 +829,7 @@ function m:remove_entity(e)
     hierarchy:update_slot_list(world)
     hierarchy:update_collider_list(world)
     gizmo:set_target(nil)
+    world:pub {"UpdateAABB"}
 end
 
 function m:get_current_filename()

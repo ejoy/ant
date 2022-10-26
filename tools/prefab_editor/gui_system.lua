@@ -42,9 +42,6 @@ local gizmo_const       = require "gizmo.const"
 local prefab_mgr        = ecs.require "prefab_manager"
 prefab_mgr.set_anim_view(anim_view)
 
-
-local vfs               = require "vfs"
-local access            = dofile "/engine/vfs/repoaccess.lua"
 local fs                = require "filesystem"
 local lfs               = require "filesystem.local"
 local bgfx              = require "bgfx"
@@ -77,39 +74,6 @@ local function choose_project_dir()
     end
 end
 
-local NOT_skip_packages = {
-    "ant.resources",
-    "ant.resources.binary",
-    "ant.test.feature",
-}
-
-local function skip_package(pkgpath)
-    for _, n in ipairs(NOT_skip_packages) do
-        if pkgpath:match(n) then
-            return false
-        end
-    end
-    return true
-end
-
-local function get_package(entry_path, readmount)
-    local repo = {_root = entry_path}
-    if readmount then
-        access.readmount(repo)
-    end
-    local packages = {}
-    for _, name in ipairs(repo._mountname) do
-        if #name > 1 then
-            vfs.mount(name, repo._mountpoint[name]:string())
-            if not (name:match "/pkg/ant%." and skip_package(name)) then
-                packages[#packages + 1] = {name = name, path = repo._mountpoint[name]}
-            end
-        end
-    end
-    global_data.repo = repo
-    return packages
-end
-
 local function start_fileserver(path)
     local cthread = require "bee.thread"
     cthread.newchannel "log_channel"
@@ -126,29 +90,18 @@ local function start_fileserver(path)
     ]]
 end
 
-local function find_package_name(proj_path)
-    for _, package in ipairs(global_data.packages) do
-        if package.path == proj_path then
-            return package.name
-        end
-    end
-end
-
 local function open_proj(path)
     local lpath = lfs.path(path)
     if lfs.exists(lpath / ".mount") then
-        global_data.project_root = lpath
-        global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
+        local topname = global_data:update_root(lpath)
+
         --file server
         start_fileserver(path)
         log_widget.init_log_receiver()
         console_widget.init_console_sender()
-        local topname = find_package_name(lpath)
-
+        world:pub { "UpdateDefaultLight", true }
         if topname then
-            global_data.package_path = topname .. "/"
             log.warn("need handle effect file")
-            --effekseer_filename_mgr.add_path(global_data.package_path .. "res")
             return topname
         else
             print("Can not add effekseer resource seacher path.")
@@ -165,7 +118,7 @@ local function OnOpen()
         if projname == nil then
             projname = lfs.path(path):filename():string() .. "(folder)"
         end
-        editor_setting.update_lastproj(projname:gsub("/pkg/", ""), path, false)
+        editor_setting.update_lastproj(projname:string():gsub("/pkg/", ""), path, false)
         editor_setting.save()
     end
 end
@@ -195,10 +148,8 @@ local function choose_project()
                 if not n() then
                     log_widget.error({tag = "Editor", message = "folder not empty!"})
                 else
-                    global_data.project_root = lpath
                     on_new_project(path)
-                    global_data.packages = get_package(lfs.absolute(global_data.project_root), true)
-
+                    global_data:update_root(lpath)
                     editor_setting.update_lastproj("", path, false)
                 end
             end
@@ -209,10 +160,7 @@ local function choose_project()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button "Quit" then
-            local res_root_str = tostring(fs.path "":localpath())
-            global_data.project_root = lfs.path(res_root_str)
-            global_data.packages = get_package(global_data.project_root, true)
-            imgui.windows.CloseCurrentPopup();
+            global_data:update_root(fs.path "":localpath())
         end
 
         imgui.cursor.Separator();
@@ -233,10 +181,10 @@ local function choose_project()
         if global_data.project_root then
             local fw = require "bee.filewatch"
             fw.add(global_data.project_root:string())
-            local res_root_str = tostring(fs.path "":localpath())
-            global_data.editor_root = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
-            log.warn("need handle effect file")
+            log.warn "need handle effect file"
             --effekseer_filename_mgr.add_path("/pkg/tools.prefab_editor/res")
+            
+            imgui.windows.CloseCurrentPopup()
         end
         imgui.windows.EndPopup()
     end
@@ -313,7 +261,7 @@ local event_add_prefab      = world:sub {"AddPrefabOrEffect"}
 local event_resource_browser= world:sub {"ResourceBrowser"}
 local event_window_title    = world:sub {"WindowTitle"}
 local event_create          = world:sub {"Create"}
-local event_light           = world:sub {"DefaultLight"}
+local event_light           = world:sub {"UpdateDefaultLight"}
 local event_gizmo           = world:sub {"Gizmo"}
 local event_mouse           = world:sub {"mouse"}
 local light_gizmo = ecs.require "gizmo.light"
@@ -364,7 +312,7 @@ local function on_target(old, new)
 end
 
 local function on_update(eid)
-    update_highlight_aabb(eid)
+    world:pub {"UpdateAABB", eid}
     if not eid then return end
     local e <close> = w:entity(eid, "camera?in light?in")
     if e.camera then
@@ -410,6 +358,8 @@ end
 local reset_editor = world:sub {"ResetEditor"}
 local test_m
 local test_m1
+local test1
+local test2
 local ipl = ecs.import.interface "ant.render|ipolyline"
 function m:handle_event()
     for _, _, _, x, y in event_mouse:unpack() do
@@ -452,17 +402,8 @@ function m:handle_event()
                 end
             end
         elseif what == "parent" then
-            local te <close> = w:entity(target, "scene?in")
-            v1 = v1 or prefab_mgr.root
-            local se <close> = w:entity(v1, "scene?in")
-            if te.scene and se.scene then
-                hierarchy:set_parent(target, v1)
-                local targetWorldMat = v1 and iom.worldmat(se) or mc.IDENTITY_MAT
-                iom.set_srt_matrix(te, math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
-                te.scene.parent = v1
-                w:extend(te, "scene_needchange:out")
-                te.scene_needchange = true
-            end
+            target = prefab_mgr:set_parent(target, v1)
+            gizmo:set_target(target)
         end
         if transform_dirty then
             on_update(target)
@@ -493,7 +434,6 @@ function m:handle_event()
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
             prefab_mgr:remove_entity(target)
-            update_highlight_aabb()
         elseif what == "clone" then
             prefab_mgr:clone(target)
         elseif what == "movetop" then
@@ -509,11 +449,9 @@ function m:handle_event()
     
     for _, filename in event_open_prefab:unpack() do
         prefab_mgr:open(filename)
-        update_highlight_aabb()
     end
     for _, filename in event_open_fbx:unpack() do
         prefab_mgr:open_fbx(filename)
-        update_highlight_aabb()
     end
     for _, filename in event_add_prefab:unpack() do
         if string.sub(filename, -4) == ".efk" then
@@ -543,6 +481,25 @@ function m:handle_event()
             world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
         elseif state.CTRL and key == "O" and press == 1 then
             OnOpen()
+            -- local g1 = ecs.group(1)
+            -- g1:enable "scene_update"
+            -- g1:enable "view_visible"
+            -- local prefab = g1:create_instance("/pkg/tools.prefab_editor/res/cube.prefab")
+            -- function prefab:on_init() end
+            -- prefab.on_ready = function(instance)
+            --     test1 = instance.tag["*"][1]
+            -- end
+            -- function prefab:on_message(msg) end
+            -- function prefab:on_update() end
+            -- world:create_object(prefab)
+            -- prefab = ecs.create_instance("/pkg/tools.prefab_editor/res/cube.prefab")
+            -- function prefab:on_init() end
+            -- prefab.on_ready = function(instance)
+            --     test2 = instance.tag["*"][1]
+            -- end
+            -- function prefab:on_message(msg) end
+            -- function prefab:on_update() end
+            -- world:create_object(prefab)
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save_prefab()
         elseif state.CTRL and key == "R" and press == 1 then
@@ -551,9 +508,10 @@ function m:handle_event()
             -- imodifier.start(test_m, {name="confirm"})
             -- imodifier.start(test_m1, {name="confirm"})
         elseif state.CTRL and key == "T" and press == 1 then
-            -- test_m = imodifier.create_bone_modifier(test1.root, "/pkg/tools.prefab_editor/res/ueAnimat.glb|animation.prefab", "Bone")
-            -- iom.set_position(world:entity(test2.root), math3d.vector{0, 0, -5})
-            -- test_m1 = imodifier.create_bone_modifier(test2.root, "/pkg/tools.prefab_editor/res/ueAnimat.glb|animation.prefab", "Bone")
+            -- test_m = imodifier.create_bone_modifier(test1, 1, "/pkg/tools.prefab_editor/res/Interact_build.glb|animation.prefab", "Bone")
+            -- local te <close> = w:entity(test2, "scene?in")
+            -- iom.set_position(te, math3d.vector{0, 0, -5})
+            -- test_m1 = imodifier.create_bone_modifier(test2, 1, "/pkg/tools.prefab_editor/res/Interact_build.glb|animation.prefab", "Bone")
 
             -- test_m = ipl.add_linelist({{0.0, 0.0, 0.0}, {5.0, 5.0, 100.0}, {5.0, 5.0, 100.0}, {5.0, 0.0, 0.0}}, 80, {1.0, 0.0, 0.0, 0.7})
         end
@@ -563,7 +521,7 @@ function m:handle_event()
         prefab_mgr:create(what, type)
     end
     for _, enable in event_light:unpack() do
-        prefab_mgr:set_default_light(enable)
+        prefab_mgr:update_default_light(enable)
     end
     for _, what in reset_editor:unpack() do
         imodifier.stop(imodifier.highlight)

@@ -1,6 +1,5 @@
 $input v_posWS, v_normalWS, v_pos, v_texcoord0
-
-#include "common.sh"
+#include <bgfx_shader.sh>
 #include "common/transform.sh"
 #include "common/camera.sh"
 

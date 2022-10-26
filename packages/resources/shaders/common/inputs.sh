@@ -67,3 +67,11 @@
 #else //!WITH_OUTPUT_WORLDPOS
 #   define OUTPUT_WORLDPOS
 #endif //WITH_OUTPUT_WORLDPOS
+
+
+///define check
+#if defined(ENABLE_SHADOW) && !defined(MATERIAL_UNLIT)
+#   ifndef WITH_NORMAL_ATTRIB
+#   error "Shadow need normal attribute"
+#   endif //!WITH_NORMAL_ATTRIB
+#endif //ENABLE_SHADOW

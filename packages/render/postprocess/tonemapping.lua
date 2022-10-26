@@ -11,13 +11,12 @@ local irq       = ecs.import.interface "ant.render|irenderqueue"
 local util      = ecs.require "postprocess.util"
 
 local setting   = import_package "ant.settings".setting
-local enable_bloom = setting:get "graphic/postprocess/bloom/enable"
 
-local tm_viewid<const> = viewidmgr.get "tonemapping"
-local tm_materialfile<const> = "/pkg/ant.resources/materials/postprocess/tonemapping.material"
+local ENABLE_BLOOM<const>       = setting:get "graphic/postprocess/bloom/enable"
+local tm_viewid<const>          = viewidmgr.get "tonemapping"
 
 function tm_sys:init()
-    util.create_quad_drawer("tonemapping_drawer", tm_materialfile)
+    util.create_quad_drawer("tonemapping_drawer", "/pkg/ant.resources/materials/postprocess/tonemapping.material")
 end
 
 function tm_sys:init_world()
@@ -42,8 +41,10 @@ local function update_properties(material)
     local pp = w:first("postprocess postprocess_input:in")
     local ppi = pp.postprocess_input
     material.s_scene_color = assert(ppi.scene_color_handle)
-    if enable_bloom then
-        material.s_bloom_color = assert(ppi.bloom_color_handle)
+    local bloomhandle = ppi.bloom_color_handle
+    if bloomhandle then
+        assert(ENABLE_BLOOM)
+        material.s_bloom_color = ppi.bloom_color_handle
     end
 end
 

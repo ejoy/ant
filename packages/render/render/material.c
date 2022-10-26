@@ -956,7 +956,7 @@ lookup_material_attrib_id(lua_State *L, int mat_idx, int key_idx){
 	}
 	lua_pushvalue(L, key_idx);	// push lookup key
 	if (lua_rawget(L, -2) != LUA_TNUMBER) {
-		return luaL_error(L, "set invalid attrib %s", luaL_tolstring(L, 2, NULL));
+		return luaL_error(L, "set invalid attrib %s", luaL_tolstring(L, key_idx, NULL));
 	}
 	const attrib_id id = (int)lua_tointeger(L, -1);
 	lua_pop(L, 1);	//lut

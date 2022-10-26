@@ -1,12 +1,19 @@
 ---
 data:
-  material: /pkg/ant.resources/materials/mesh_shadow.material
-  mesh: /pkg/tools.prefab_editor/res/plane.meshbin
-  name: "testplane"
-  visible_state: main_view|selectable|cast_shadow
+  name: Scene
+  scene: {}
+policy:
+  ant.general|name
+  ant.scene|scene_object
+---
+data:
+  material: /pkg/ant.resources.binary/meshes/base/Plane.glb|materials/Material.001.material
+  mesh: /pkg/ant.resources.binary/meshes/base/Plane.glb|meshes/Plane_P1.meshbin
+  name: Plane
   scene:
-    s: {5, 1, 5, 0}
+    t: {0, 0.0010000000474974513, 0, 1}
+  visible_state: main_view|selectable|cast_shadow
+mount: 1
 policy:
   ant.general|name
   ant.render|render
-  ant.scene|scene_object

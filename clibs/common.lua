@@ -5,6 +5,7 @@ BgfxInclude = {
     Ant3rd .. "bgfx/include",
     Ant3rd .. "bx/include",
 }
+
 if lm.os == "windows" then
     if lm.compiler == "msvc" then
         BgfxInclude[#BgfxInclude+1] = Ant3rd .. "bx/include/compat/msvc"

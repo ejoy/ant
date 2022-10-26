@@ -7,5 +7,6 @@ end
 return {
     create = registry.create,
     apply = apply,
-    setting = require "setting"
+    setting = require "setting",
+    default = require "default"
 }

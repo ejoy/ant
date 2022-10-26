@@ -1,6 +1,6 @@
 local lfs       = require "filesystem.local"
 local bgfx      = require "bgfx"
-local platform  = require "platform"
+local platform  = require "bee.platform"
 local vfs       = require "vfs"
 
 local compile
@@ -72,8 +72,8 @@ local function stringify(t)
     return table.concat(s, "&")
 end
 
-local texture_extensions = {
-    noop        = platform.OS == "WINDOWS" and "dds" or "ktx",
+local texture_extensions <const> = {
+    noop        = platform.os == "windows" and "dds" or "ktx",
 	direct3d11 	= "dds",
 	direct3d12 	= "dds",
 	metal 		= "ktx",
@@ -81,21 +81,24 @@ local texture_extensions = {
 	opengl 		= "ktx",
 }
 
+local BgfxOS <const> = {
+    macos = "osx",
+}
+
 local function init()
-    local os = platform.OS:lower()
     local caps = bgfx.get_caps()
     local renderer = caps.rendererType:lower()
     local texture = assert(texture_extensions[renderer])
     set_setting("model", stringify {})
     set_setting("glb", stringify {})
     set_setting("material", stringify {
-        os = os,
+        os = BgfxOS[platform.os] or platform.os,
         renderer = renderer,
         hd = caps.homogeneousDepth and true or nil,
         obl = caps.originBottomLeft and true or nil,
     })
-    set_setting("texture", stringify {os=os, ext=texture})
-    set_setting("png", stringify {os=os, ext=texture})
+    set_setting("texture", stringify {os=platform.os, ext=texture})
+    set_setting("png", stringify {os=platform.os, ext=texture})
 end
 
 return {

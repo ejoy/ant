@@ -9,9 +9,9 @@
                 margin-right: 10%;
                 margin-top: 10%;
                 margin-bottom: 20%;
+                gap: 20px;
             }
             button {
-                margin: 10px;
                 padding: 0 20px;
                 text-align: center;
                 text-decoration: none;
@@ -23,7 +23,6 @@
                 background-color: #f22222;
                 color: #ffffff;
                 transform: scale(1.0);
-                
             }
             button:hover {
                 transform: scale(1.2);
@@ -40,8 +39,7 @@
         <script type="text/x-lua" >
             local start = window.createModel "start" {
                 show = false,
-                richtext = true,
-                label = "测试1{/r test2 }测试3{/g test4} 测试5{/b test6 }测试7{/color:ff00ff 测试8} 测试9"
+                label = "新游戏"
             }
             function start.new(event)
                 console.log(event.target.id)
@@ -75,12 +73,12 @@
         </script>
     </head>
     <body>
-        <div data-model="start">
+        <div id="test" data-model="start">
             <button id = "new" data-event-click="new()">{{label}}</button>
-            <button data-event-click="load()">测试01</button>
-            <button data-event-click="setting()">{/g 测试02}</button>
-            <button data-if="show">{/g 测试5{/b 测试6}}</button>
-            <button data-event-click="exit()">测试03{/g 测试04}</button>
+            <button data-event-click="load()">载入游戏</button>
+            <button data-event-click="setting()">设置</button>
+            <button data-if="show">隐藏菜单</button>
+            <button data-event-click="exit()">退出</button>
         </div>
     </body>
 </rml>

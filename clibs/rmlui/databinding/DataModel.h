@@ -38,7 +38,7 @@ public:
 	const DataEventFunc* GetEventCallback(const std::string& name);
 
 	DataVariable GetVariable(const DataAddress& address) const;
-	bool GetVariableInto(const DataAddress& address, Variant& out_value) const;
+	bool GetVariableInto(const DataAddress& address, DataVariant& out_value) const;
 
 	void DirtyVariable(const std::string& variable_name);
 	bool IsVariableDirty(const std::string& variable_name) const;

@@ -223,6 +223,8 @@ local new_clip_pop = false
 local start_frame_ui = {0, speed = 1, min = 0}
 local new_range_start = 0
 local new_range_end = 1
+local max_repeat<const> = 10
+
 local function get_or_create_target_anim(target)
     if not current_anim then
         return
@@ -234,7 +236,9 @@ local function get_or_create_target_anim(target)
     end
     current_anim.target_anims[#current_anim.target_anims + 1] = {
         target_name = target,
-        clips = {}
+        clips = {},
+        inherit = {false, false, false}, -- s, r, t
+        inherit_ui = {{false}, {false}, {false}}
     }
     return current_anim.target_anims[#current_anim.target_anims]
 end
@@ -279,7 +283,7 @@ local function create_clip()
                         rot_axis = 2,
                         amplitude_pos = 0,
                         amplitude_rot = 0,
-                        repeat_ui = {1, speed = 1, min = 1, max = 20},
+                        repeat_ui = {1, speed = 1, min = 1, max = max_repeat},
                         random_amplitude_ui = { false },
                         amplitude_pos_ui = {0, speed = 0.1},
                         amplitude_rot_ui = {0, speed = 1},
@@ -324,7 +328,9 @@ local function max_range_value()
     end
     return max_value
 end
-
+local inherit_s = {false}
+local inherit_r = {false}
+local inherit_t = {false}
 local function show_current_detail()
     if not current_anim or current_anim.edit_mode ~= edit_mode then return end
     imgui.widget.PropertyLabel("FrameCount:")
@@ -356,12 +362,26 @@ local function show_current_detail()
     end
     local anim_layer = current_anim.target_anims[current_anim.selected_layer_index]
     local clips = anim_layer.clips
+    
+    -- imgui.cursor.SameLine()
+    -- if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[1]) then
+    --     anim_layer.inherit[1] = anim_layer.inherit_ui[1][1]
+    --     update_animation()
+    -- end
+    -- imgui.cursor.SameLine()
+    -- if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[2]) then
+    --     anim_layer.inherit[2] = anim_layer.inherit_ui[2][1]
+    --     update_animation()
+    -- end
+    imgui.cursor.SameLine()
+    if imgui.widget.Checkbox("inherit", anim_layer.inherit_ui[3]) then
+        anim_layer.inherit[3] = anim_layer.inherit_ui[3][1]
+        update_animation()
+    end
 
     if current_anim.selected_clip_index < 1 then
         return
     else
-        imgui.cursor.SameLine()
-        imgui.widget.Text("        ")
         imgui.cursor.SameLine()
         if imgui.widget.Button("DelClip") then
             table.remove(clips, current_anim.selected_clip_index)
@@ -381,7 +401,7 @@ local function show_current_detail()
             name = current_joint.name
         end
     end
-    if not current_clip or current_anim.target_anims[current_anim.selected_layer_index].target_name ~= name then
+    if not current_clip or anim_layer.target_name ~= name then
         return
     end
 
@@ -480,7 +500,14 @@ local function show_current_detail()
         end
         imgui.widget.PropertyLabel("Repeat")
         if imgui.widget.DragInt("##Repeat", current_clip.repeat_ui) then
-            current_clip.repeat_count = current_clip.repeat_ui[1]
+            local count = current_clip.repeat_ui[1]
+            if count > max_repeat then
+                count = max_repeat
+            elseif count < 1 then
+                count = 1
+            end
+            current_clip.repeat_count = count
+            current_clip.repeat_ui[1] = count
             dirty = true
         end
         -- imgui.widget.PropertyLabel("Random")
@@ -550,6 +577,12 @@ local function anim_set_loop(loop)
     end
 end
 
+local function anim_set_speed(speed)
+    if edit_mode == MODE_MTL then
+    else
+        iani.set_speed(anim_eid, speed)
+    end
+end
 local function anim_set_time(t)
     if edit_mode == MODE_MTL then
         local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
@@ -647,6 +680,7 @@ function m.new()
 end
 
 local ui_loop = {true}
+local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
 function m.clear()
     if current_skeleton and current_joint then
         joint_utils:set_current_joint(current_skeleton, nil)
@@ -718,7 +752,8 @@ function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    for _ in uiutils.imgui_windows("Skeleton", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
+    -- for _ in uiutils.imgui_windows("Skeleton", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
+    if imgui.windows.Begin("Skeleton", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         if (edit_mode == MODE_MTL and current_uniform) or (edit_mode == MODE_SKE and current_skeleton) then
             if imgui.widget.Button("New") then
                 new_anim_widget = true
@@ -800,22 +835,27 @@ function m.show()
             end
             
             local icon = current_anim.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
-            if imgui.widget.ImageButton("todo", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
+            if imgui.widget.ImageButton("##play ", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
                 if current_anim.is_playing then
                     anim_pause(true)
                 else
                     if edit_mode == MODE_MTL then
                         anim_play({loop = ui_loop[1]}, imodifier.start)
                     else
-                        anim_play({name = current_anim.name, loop = ui_loop[1], manual = false}, iani.play)
+                        anim_play({name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1], manual = false}, iani.play)
                     end
                 end
             end
             imgui.cursor.SameLine()
-            if imgui.widget.Checkbox("loop", ui_loop) then
+            if imgui.widget.Checkbox("loop ", ui_loop) then
                 anim_set_loop(ui_loop[1])
             end
-
+            imgui.cursor.SameLine()
+            imgui.cursor.PushItemWidth(50)
+            if imgui.widget.DragFloat("speed ", ui_speed) then
+                anim_set_speed(ui_speed[1])
+            end
+            imgui.cursor.PopItemWidth()
             imgui.cursor.SameLine()
             local current_time = 0
             if edit_mode == MODE_MTL then
@@ -901,6 +941,7 @@ function m.show()
             imgui.table.End()
         end
     end
+    imgui.windows.End()
 end
 function m.save(path)
     if not current_anim then return end
@@ -919,10 +960,10 @@ function m.save(path)
             clip.random_amplitude_ui = nil
             clip.amplitude_pos_ui = nil
             clip.amplitude_rot_ui = nil
-            clip.repeat_ui = nil
             clip.scale_ui = nil
             clip.value_ui = nil
         end
+        value.inherit_ui = nil
     end
     local savedata = {name = current_anim.name, duration = current_anim.duration, target_anims = target_anims, sample_ratio = sample_ratio}
     if edit_mode == MODE_SKE then
@@ -934,19 +975,18 @@ function m.save(path)
     end
 end
 local fs        = require "filesystem"
+local lfs = require "filesystem.local"
 local datalist  = require "datalist"
 local cr        = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
+
 function m.load(path)
-    if not fs.exists(fs.path(path)) then
-        return
-    end
     if (edit_mode == MODE_SKE and not current_skeleton) and (edit_mode == MODE_MTL and not current_mtl_target) then
         return
     end
     --m.clear()
-    local path = fs.path(path):localpath()
-    local f = assert(fs.open(path))
+    local path = lfs.path(path)
+    local f = assert(lfs.open(path))
     local data = f:read "a"
     f:close()
     local anim = datalist.parse(data)
@@ -965,7 +1005,7 @@ function m.load(path)
         if edit_mode == MODE_SKE then
             for _, clip in ipairs(value.clips) do
                 clip.range_ui = {clip.range[1], clip.range[2], speed = 1}
-                clip.repeat_ui = {clip.repeat_count, speed = 1, min = 1, max = 20}
+                clip.repeat_ui = {clip.repeat_count, speed = 1, min = 1, max = max_repeat}
                 clip.random_amplitude_ui = {clip.random_amplitude}
                 clip.amplitude_pos_ui = {clip.amplitude_pos, speed = 0.1}
                 clip.amplitude_rot_ui = {clip.amplitude_rot, speed = 1}
@@ -989,6 +1029,10 @@ function m.load(path)
                 current_uniform = value.target_name
             end
         end
+        if not value.inherit then
+            value.inherit = {false, false, false}
+        end
+        value.inherit_ui = {{value.inherit[1]}, {value.inherit[2]}, {value.inherit[3]}}
     end
     if not is_valid then
         return
@@ -1012,10 +1056,9 @@ local function create_bone_entity(joint_name)
             scene = {},
             visible_state = "main_view|selectable",
             material = "/pkg/tools.prefab_editor/res/materials/joint.material",
-            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
+            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
             name = joint_name,
             on_ready = function(e)
-				--imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
 				ivs.set_state(e, "auxgeom", true)
                 ivs.set_state(e, "main_view", false)

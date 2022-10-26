@@ -95,14 +95,17 @@ local function show_input()
     end
     imgui.cursor.Separator()
 end
+
 function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    for _ in uiutils.imgui_windows("Console", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
+    -- for _ in uiutils.imgui_windows("Console", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
+    if imgui.windows.Begin("Console", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         show_input()
         log_widget.showConsole()
     end
+    imgui.windows.End()
 end
 
 return function(asset_mgr)

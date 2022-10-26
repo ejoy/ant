@@ -55,7 +55,7 @@ local function dispatch(CMD,...)
         until ltask.schedule_message() ~= SCHEDULE_SUCCESS
     else
         if CMD == "init" then
-            if require "platform".OS == "iOS" then
+            if require "bee.platform".os == "ios" then
                 gesture_init()
             end
         end

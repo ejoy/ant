@@ -1,6 +1,6 @@
 $input v_normal, v_viewdir, v_shadowcoord
-#include "common.sh"
-#include "commom/simplelighting.sh"
+#include <bgfx_shader.sh>
+#include "common/simplelighting.sh"
 #include "common/shadow.sh"
 
 void main()

@@ -1,5 +1,4 @@
 local fs = require "bee.filesystem"
-local platform = require 'platform'
 
 function fs.open(filepath, ...)
     return io.open(filepath:string(), ...)
@@ -18,6 +17,15 @@ if not path_mt.localpath then
     function path_mt:localpath()
         return self
     end
+end
+
+function fs.app_path(name)
+    local platform = require "bee.platform"
+    if platform.os == "ios" then
+        local ios = require "ios"
+        return fs.path(ios.directory(ios.NSDocumentDirectory))
+    end
+    return fs.appdata_path() / name
 end
 
 return fs

@@ -126,7 +126,6 @@ function grid:show(show)
 end
 
 function grid:load(path)
-    local filename = string.sub(path, #global_data.project_root:string() + 2, -5)
     local source = dofile(path)
     --local source = require(string.gsub(filename, "/", "."))
     if not source or not source.size or not source.row or not source.col then return end

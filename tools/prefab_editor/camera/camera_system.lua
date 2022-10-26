@@ -49,7 +49,7 @@ local function on_key(key, press)
 		return
 	end
 	local pan = false
-	if key == "A" or key == "D" or key == "W" or key == "S" then
+	if key == "A" or key == "D" or key == "W" or key == "S" or key == "F" then
 		pan = true
 	end
 	if not pan then
@@ -71,7 +71,8 @@ local function on_key(key, press)
 		newpos = math3d.add(pos, math3d.mul(math3d.normalize(zdir), dt))
 	elseif key == "S" then
 		newpos = math3d.add(pos, math3d.mul(math3d.normalize(zdir), -dt))
-	--elseif key == "F" then
+	elseif key == "F" then
+		world:pub {"LookAtTarget"}
 	end
 	if newpos then
 		iom.set_position(ce, newpos)
@@ -102,6 +103,7 @@ local function on_right_mouse(dx, dy)
 		pitch = -1.48
 	end
 	iom.set_rotation(ce, math3d.quaternion{pitch, yaw, 0})
+	-- iom.rotate_forward_vector(ce, -dy * rotate_speed, -dx * rotate_speed)
 end
 
 local function on_wheel(delta)

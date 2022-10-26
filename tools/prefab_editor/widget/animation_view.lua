@@ -18,7 +18,9 @@ local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local joint_utils = require "widget.joint_utils"
 local utils     = require "common.utils"
-local access    = dofile "/engine/vfs/repoaccess.lua"
+local global_data = require "common.global_data"
+local access    = global_data.repo_access
+
 local fs        = require "filesystem"
 local global_data = require "common.global_data"
 
@@ -43,7 +45,7 @@ local anim_state = {
 }
 
 local ui_loop = {false}
-
+local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
 local event_type = {
     "Effect", "Sound", "Collision", "Message", "Move"
 }
@@ -128,6 +130,10 @@ local function anim_group_set_loop(eid, ...)
     iani.set_loop(eid, ...)
 end
 
+local function anim_group_set_speed(eid, ...)
+    iani.set_speed(eid, ...)
+end
+
 local function anim_group_delete(anim_name)
     local template = hierarchy:get_template(anim_eid)
     local animation_map = template.template.data.animation
@@ -174,6 +180,7 @@ local function from_runtime_event(runtime_event)
                     e.life_time = e.life_time or 2
                     e.breakable_ui = {e.breakable}
                     e.life_time_ui = {e.life_time, speed = 0.02, min = 0, max = 100}
+                    prefab_mgr.check_effect_preload(e.asset_path)
                 end
             elseif e.event_type == "Move" then
                 e.move = e.move or {0.0, 0.0, 0.0}
@@ -241,7 +248,7 @@ local function set_current_anim(anim_name)
     anim_state.duration = current_anim.duration
     current_event = nil
     
-    anim_play({name = anim_name, loop = ui_loop[1], manual = false}, iani.play)
+    anim_play({name = anim_name, loop = ui_loop[1], speed = ui_speed[1], manual = false}, iani.play)
     anim_group_set_time(anim_eid, 0)
     anim_group_pause(anim_eid, not anim_state.is_playing)
     set_event_dirty(-1)
@@ -489,6 +496,7 @@ local function show_current_event()
                 assert(pkgpath)
                 current_event.asset_path_ui.text = pkgpath
                 current_event.asset_path = pkgpath
+                prefab_mgr.check_effect_preload(pkgpath)
                 dirty = true
             end
         end
@@ -734,7 +742,8 @@ function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    for _ in uiutils.imgui_windows("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
+    -- for _ in uiutils.imgui_windows("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
+    if imgui.windows.Begin("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         if current_anim then
             anim_state.is_playing = iani.is_playing(anim_eid)
             if anim_state.is_playing then
@@ -850,17 +859,23 @@ function m.show()
         imgui.cursor.PopItemWidth()
         imgui.cursor.SameLine()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
-        if imgui.widget.ImageButton("todo", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
+        if imgui.widget.ImageButton("##play", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
             if anim_state.is_playing then
                 anim_group_pause(anim_eid, true)
             else
-                anim_play({name = current_anim.name, loop = ui_loop[1], manual = false}, iani.play)
+                anim_play({name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1], manual = false}, iani.play)
             end
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("loop", ui_loop) then
             anim_group_set_loop(anim_eid, ui_loop[1])
         end
+        imgui.cursor.SameLine()
+        imgui.cursor.PushItemWidth(50)
+        if imgui.widget.DragFloat("speed", ui_speed) then
+            anim_group_set_speed(anim_eid, ui_speed[1])
+        end
+        imgui.cursor.PopItemWidth()
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("showskeleton", ui_showskeleton) then
             show_skeleton(ui_showskeleton[1])
@@ -928,6 +943,7 @@ function m.show()
             imgui.table.End()
         end
     end
+    imgui.windows.End()
     if reload then
         prefab_mgr:save_prefab()
         prefab_mgr:reload()

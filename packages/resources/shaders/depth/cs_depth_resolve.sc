@@ -6,18 +6,21 @@
 #endif //MSAA_COUNT
 
 SAMPLER2DMS(s_depthMSAA, 0);
-IMAGE2D_WR(s_depth, d16f, 1);
+IMAGE2D_WR(s_depth, r16f, 1);
 
-NUM_THREADS(32, 32, 1)
+NUM_THREADS(16, 16, 1)
 void main()
 {
-    ivec2 uv = gl_GlobalInvocationID.xy;
-    float depth = 1.0;
-    for (int ii=0; ii<MSAA_COUNT; ++ii)
-    {
-        float d = texelFetch(s_depthMSAA, uv, ii).r;
-        depth = min(depth, d);
+    const ivec2 uv = gl_GlobalInvocationID.xy;
+    const ivec2 s = imageSize(s_depth);
+    if (all(uv < s)){
+        float depth = 1.0;
+        for (int ii=0; ii<MSAA_COUNT; ++ii)
+        {
+            float d = texelFetch(s_depthMSAA, uv, ii).r;
+            depth = min(depth, d);
+        }
+        
+        imageStore(s_depth, uv, depth);
     }
-    
-    imageWrite(s_depth, uv, depth);
 }

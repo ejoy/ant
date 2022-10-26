@@ -5,7 +5,6 @@ lm:lua_source "render_core"{
         "../../3rd/bgfx/include",
         "../../3rd/bx/include",
         "../../clibs/bgfx",
-        "../../clibs/lua",
         "../../3rd/math3d",
         "../../clibs/foundation",
         "../../clibs/luabind",
@@ -17,7 +16,7 @@ lm:lua_source "render_core"{
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
     },
-    deps = "compile_ecs",
+    objdeps = "compile_ecs",
     sources = {
         "render/material.c",
         "render/render.cpp",
@@ -26,7 +25,6 @@ lm:lua_source "render_core"{
 
 lm:lua_source "render" {
     includes = {
-        "../../clibs/lua",
         "../../3rd/math3d",
         "../../clibs/luabind",
         "../../3rd/luaecs",

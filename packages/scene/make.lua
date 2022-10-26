@@ -2,7 +2,6 @@ local lm = require "luamake"
 
 lm:lua_source "scene" {
     includes = {
-        "../../clibs/lua",
 		"../../clibs/ecs",
         "../../3rd/math3d",
 		"../../3rd/luaecs",

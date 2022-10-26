@@ -1,7 +1,7 @@
 $input a_position, a_normal, a_texcoord0
 $output v_posWS, v_normalWS, v_pos, v_texcoord0
 
-#include "common.sh"
+#include <bgfx_shader.sh>
 
 void main()
 {

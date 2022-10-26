@@ -131,17 +131,17 @@ function cc_sys:camera_usage()
     local rotatetype="rotate_point"
     for _, key, press, status in kb_mb:unpack() do
         local pressed = press == 1 or press == 2
-        if key == "A" then
+        if key == "D" then
             move_x = pressed and -calc_key_speed() or nil
-        elseif key == "D" then
+        elseif key == "A" then
             move_x = pressed and  calc_key_speed() or nil
-        elseif key == "W" then
-            move_y = pressed and -calc_key_speed() or nil
-        elseif key == "S" then
-            move_y = pressed and  calc_key_speed() or nil
         elseif key == "E" then
-            move_z = pressed and -calc_key_speed() or nil
+            move_y = pressed and -calc_key_speed() or nil
         elseif key == "Q" then
+            move_y = pressed and  calc_key_speed() or nil
+        elseif key == "S" then
+            move_z = pressed and -calc_key_speed() or nil
+        elseif key == "W" then
             move_z = pressed and  calc_key_speed() or nil
         end
         if status.SHIFT then

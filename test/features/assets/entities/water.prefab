@@ -14,5 +14,5 @@ data:
   postprocess_obj: true
   scene:
     s: 10
-    t: {-5, 0.0, -5}
+    t: {0.0, 0.0, 10.0}
   name: water_test

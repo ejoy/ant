@@ -1,27 +1,34 @@
 __ANT_RUNTIME__ = "0.0.1"
 
-local platform = require "platform"
+local platform = require "bee.platform"
 
 local function is_ios()
-	return "ios" == platform.OS:lower()
+	return "ios" == platform.os
 end
 
 local needcleanup, type, address
 
 if is_ios() then
-	local clean_up_next_time = platform.setting("clean_up_next_time")
+	local setting = require "platform".setting
+	local clean_up_next_time = setting("clean_up_next_time")
 	if clean_up_next_time == true then
-		platform.setting("clean_up_next_time", false)
+		setting("clean_up_next_time", false)
 		needcleanup = true
 	end
-	type = platform.setting "server_type"
-	address = platform.setting "server_address"
+	type = setting "server_type"
+	address = setting "server_address"
 end
 
 do
 	local fs = require "bee.filesystem"
-	local appdata = fs.appdata_path()
-	local root = is_ios() and appdata or appdata / "ant" / "runtime"
+	local function app_path(name)
+		if is_ios() then
+			local ios = require "ios"
+			return fs.path(ios.directory(ios.NSDocumentDirectory))
+		end
+		return fs.appdata_path() / name
+	end
+	local root = app_path "ant"
 	local repo = root / ".repo"
 	if needcleanup then
 		fs.remove_all(repo)

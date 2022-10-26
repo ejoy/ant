@@ -143,9 +143,7 @@ public:
 	void SetInnerHTML(const std::string& html) override;
 	void SetOuterHTML(const std::string& html) override;
 	const Rect& GetContentRect() const override;
-
-	virtual void ChangedProperties(const PropertyIdSet& changed_properties);
-
+	void ChangedProperties(const PropertyIdSet& changed_properties);
 	void DirtyImage();
 
 protected:
@@ -163,6 +161,7 @@ protected:
 	void UpdateClip();
 	bool SetInlineProperty(const PropertyVector& vec);
 	bool DelInlineProperty(const PropertyIdSet& set);
+	void RefreshProperties();
 
 	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay);
 	bool AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween);

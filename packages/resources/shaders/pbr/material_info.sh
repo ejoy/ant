@@ -9,16 +9,20 @@ struct material_info
     float perceptual_roughness;// roughness value, as authored by the model creator (input to shader)
     vec3 f0;                   // full reflectance color (n incidence angle)
 
-    float roughness;     // roughness mapped to a more linear change in the roughness (proposed by [2])
+    float roughness;            // roughness mapped to a more linear change in the roughness (proposed by [2])
     vec3 albedo;
 
-    vec3 f90;             // reflectance color at grazing angle
+    vec3 f90;                   // reflectance color at grazing angle
     float metallic;
 
     vec3 N;
     float NdotV;
     vec3 V;
-    // float padding;
+    vec3 reflect_vector;
+
+#ifdef ENABLE_BENT_NORMAL
+    vec3 bent_normal;
+#endif //ENABLE_BENT_NORMAL
     // vec3 DFG;
 };
 
@@ -54,6 +58,11 @@ material_info init_material_info(in input_attributes input_attribs)
     mi.V = input_attribs.V;
     mi.NdotV = clamp_dot(mi.N, mi.V);
 
+#ifdef ENABLE_BENT_NORMAL
+    mi.bent_normal = input_attribs.bent_normal;
+#endif //ENABLE_BENT_NORMAL
+
+    mi.reflect_vector = normalize(reflect(-mi.V, mi.N));
     calc_reflectance(input_attribs, mi);
     return mi;
 }

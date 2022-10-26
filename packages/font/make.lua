@@ -5,7 +5,6 @@ lm:lua_source "layout"{
         "font",
     },
     includes = {
-        "../../clibs/lua",
         "../../clibs/font",
         "../../clibs/bgfx",
         "../../3rd/bgfx/include",

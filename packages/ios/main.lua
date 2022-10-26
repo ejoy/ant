@@ -1,13 +1,13 @@
-local platform = require "platform"
+local platform = require "bee.platform"
 
-if platform.OS ~= "iOS" then
+if platform.os ~= "ios" then
     return {
         error = "Not running in iOS"
     }
 end
 
 local fs = require "filesystem"
-local machine = platform.machine()
+local machine = require "platform".machine()
 local name, major, minor = machine:match "(%a+)(%d+),(%d+)"
 local path = fs.path(("/pkg/ant.ios/%s.lua"):format(name))
 if not fs.exists(path) then

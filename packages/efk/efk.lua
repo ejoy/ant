@@ -127,7 +127,7 @@ function efk_sys:entity_remove()
     end
 end
 
-local mq_vr_mb = world:sub{"viewrect_changed", "main_queue"}
+local mq_vr_mb = world:sub{"view_rect_changed", "main_queue"}
 local camera_changed = world:sub{"main_queue", "camera_changed"}
 local camera_frustum_mb
 
@@ -185,9 +185,10 @@ end
 
 local vp_changed_mb = world:sub{"world_viewport_changed"}
 function efk_sys:camera_usage()
-    for _, vp in vp_changed_mb:unpack() do
-        irq.set_view_rect("efk_queue", vp)
-    end
+    -- fix effect viewport bug
+    -- for _, vp in vp_changed_mb:unpack() do
+    --     irq.set_view_rect("efk_queue", vp)
+    -- end
 
     for _, _, cameraref in camera_changed:unpack() do
         camera_frustum_mb = world:sub{"camera_changed", cameraref, "frustum"}
@@ -262,7 +263,7 @@ function iefk.create(filename, config)
             scene = config.scene,
             efk = filename,
             on_ready = function (e)
-                w:sync("efk:in", e)
+                w:extend(e, "efk:in")
                 if config.play_on_create then
                     iefk.play(e)
                 end
@@ -276,7 +277,9 @@ end
 
 function iefk.preload(textures)
     for _, texture in ipairs(textures) do
-        TEXTURES[texture] = assetmgr.resource(texture).id
+        if not TEXTURES[texture] then
+            TEXTURES[texture] = assetmgr.resource(texture).id
+        end
     end
 end
 

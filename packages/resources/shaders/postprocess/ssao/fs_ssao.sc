@@ -6,30 +6,29 @@ $input v_texcoord0
 #include "common/common.sh"
 #include "common/postprocess.sh"
 #include "common/camera.sh"
-
-#include "postprocess/ssao/util.sh"
+#include "common/utils.sh"
+#include "common/math.sh"
 
 #include "postprocess/ssao/uniforms.sh"
 #include "postprocess/ssao/ssct.sh"
 
-// #include "ssaoUtils.fs"
-// #include "geometry.fs"
-
 const float kLog2LodRate = 3.0;
+
+//code from filament ssao
 
 // Ambient Occlusion, largely inspired from:
 // "The Alchemy Screen-Space Ambient Obscurance Algorithm" by Morgan McGuire
 // "Scalable Ambient Obscurance" by Morgan McGuire, Michael Mara and David Luebke
 
-vec3 tapLocation(float i, const float noise) {
-    float offset = ((2.0 * M_PI) * 2.4) * noise;
-    float angle = ((i * u_ssao_inv_sample_count) * u_ssao_spiral_turns) * (2.0 * M_PI) + offset;
-    float radius = (i + noise + 0.5) * u_ssao_inv_sample_count;
-    return vec3(cos(angle), sin(angle), radius * radius);
-}
+// vec3 tapLocation(float i, const float noise) {
+//     float offset = (PI2 * 2.4) * noise;
+//     float angle = ((i * u_ssao_inv_sample_count) * u_ssao_spiral_turns) * (PI2) + offset;
+//     float radius = (i + noise + 0.5) * u_ssao_inv_sample_count;
+//     return vec3(cos(angle), sin(angle), radius * radius);
+// }
 
 highp vec2 startPosition(const float noise) {
-    float angle = ((2.0 * M_PI) * 2.4) * noise;
+    float angle = (PI2 * 2.4) * noise;
     return vec2(cos(angle), sin(angle));
 }
 
@@ -42,24 +41,26 @@ highp mat2 tapAngleStep() {
         -s, c);  //col1
 }
 
+float tapRadius2(float i, float noise){
+    return sq((i + noise + 0.5) * u_ssao_inv_sample_count);
+}
+
 vec3 tapLocationFast(float i, vec2 p, const float noise) {
-    float radius = (i + noise + 0.5) * u_ssao_inv_sample_count;
-    return vec3(p, radius * radius);
+    return vec3(p, tapRadius2(i, noise));
 }
 
 vec3 fetchSamplePos(float i, float ssDiskRadius, const highp vec2 uv, const vec2 tapPosition, const float noise)
 {
-    vec3 tap = tapLocationFast(i, tapPosition, noise);
+    //vec3 tap = tapLocationFast(i, tapPosition, noise);
+    const float r2 = tapRadius2(i, noise);
 
-    float ssRadius = max(1.0, tap.z * ssDiskRadius); // at least 1 pixel screen-space radius
-    vec2 uvSamplePos = uv + vec2(ssRadius * tap.xy) * u_viewTexel.xy;
+    float ssRadius = max(1.0, r2 * ssDiskRadius); // at least 1 pixel screen-space radius
+    vec2 uvSamplePos = uv + vec2(ssRadius * tapPosition) * u_viewTexel.xy;
 
     float level = clamp(floor(log2(ssRadius)) - kLog2LodRate, 0.0, u_ssao_max_level);
 
     return vec3(uvSamplePos, level);
 }
-
-float sq(float x) { return x * x; }
 
 void computeAmbientOcclusionSAO(inout float occlusion, inout vec3 bentNormal,
         const highp vec3 origin, const vec3 normal, const vec3 samplePos) {
@@ -85,7 +86,7 @@ void computeAmbientOcclusionSAO(inout float occlusion, inout vec3 bentNormal,
     float sampleOcclusion = max(0.0, vn - (origin.z * u_ssao_bias)) / (vv + u_ssao_peak2);
     occlusion += w * sampleOcclusion;
 
-#if COMPUTE_BENT_NORMAL
+#if ENABLE_BENT_NORMAL
 
     // TODO: revisit how we choose to keep the normal or not
     // reject samples beyond the far plane
@@ -97,7 +98,7 @@ void computeAmbientOcclusionSAO(inout float occlusion, inout vec3 bentNormal,
         bentNormal += n * (sampleOcclusion <= 0.0 ? 1.0 : 0.0);
     }
 
-#endif //COMPUTE_BENT_NORMAL
+#endif //ENABLE_BENT_NORMAL
 }
 
 void scalableAmbientObscurance(out float obscurance, out vec3 bentNormal,
@@ -117,9 +118,9 @@ void scalableAmbientObscurance(out float obscurance, out vec3 bentNormal,
         tapPosition = mul(angleStep, tapPosition);
     }
     obscurance = sqrt(obscurance * u_ssao_intensity);
-#if COMPUTE_BENT_NORMAL
+#if ENABLE_BENT_NORMAL
     bentNormal = normalize(bentNormal);
-#endif //COMPUTE_BENT_NORMAL
+#endif //ENABLE_BENT_NORMAL
 }
 
 ConeTraceSetup init_cone_trace(highp vec2 uv, highp vec3 origin, vec3 normal)
@@ -158,27 +159,25 @@ float dominantLightShadowing(highp vec2 uv, highp vec3 origin, vec3 normal, vec2
 
 void main()
 {
-    highp float depthVS = depthVS_from_texture(s_scene_depth, v_texcoord0, 0.0);
+    highp float depth_non_linear = texture2DLod(s_scene_depth, v_texcoord0, 0.0).r;
+    highp float depthVS = linear_depth_pp(depth_non_linear);//depthVS_from_texture(s_scene_depth, v_texcoord0, 0.0);
 
     highp vec3 origin = posVS_from_depth(v_texcoord0, depthVS);
+#ifdef HIGH_QULITY_NORMAL_RECONSTRUCT
+    highp vec3 normal = normalVS_from_depth_HighQ(s_scene_depth, v_texcoord0, depth_non_linear, origin);
+#else //!HIGH_QULITY_NORMAL_RECONSTRUCT
     highp vec3 normal = normalVS_from_depth(s_scene_depth, v_texcoord0, origin);
+#endif //HIGH_QULITY_NORMAL_RECONSTRUCT
     highp float occlusion = 0.0;
     highp vec3 bentNormal;
 
-#if ORIGIN_BOTTOM_LEFT
-    vec2 coord = gl_FragCoord.xy;
-#else //!ORIGIN_BOTTOM_LEFT
-    vec2 coord = vec2(gl_FragCoord.x, u_viewRect.w-gl_FragCoord.y);
-#endif //ORIGIN_BOTTOM_LEFT
     if (u_ssao_intensity > 0.0) {
-        highp float noise = interleavedGradientNoise(coord);
+        highp float noise = interleavedGradientNoise(gl_FragCoord.xy);
         scalableAmbientObscurance(occlusion, bentNormal, v_texcoord0, origin, noise, normal);
     }
 
     if (u_ssct_intensity > 0.0) {
-        float occlusion1 = max(occlusion, dominantLightShadowing(v_texcoord0, origin, normal, coord));
-        occlusion += occlusion1;
-        occlusion -= occlusion1;
+        occlusion += max(occlusion, dominantLightShadowing(v_texcoord0, origin, normal, gl_FragCoord));
     }
 
     // occlusion to visibility
@@ -190,7 +189,7 @@ void main()
 // #endif
 
     gl_FragData[0] = vec4(vec3(aoVisibility, packHalfFloat(origin.z * u_inv_far)), 1.0);
-#if COMPUTE_BENT_NORMAL
+#if ENABLE_BENT_NORMAL
     gl_FragData[1] = vec4(encodeNormalUint(bentNormal), 1.0);
-#endif //COMPUTE_BENT_NORMAL
+#endif //ENABLE_BENT_NORMAL
 }

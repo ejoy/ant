@@ -3,7 +3,7 @@ fx:
   setting:
     HAS_BASECOLOR_TEXTURE: 1
     HAS_EMISSIVE_TEXTURE: 1
-    MATERIAL_UNLIT: 1
+    lighting: off
     surfacetype: translucent
   vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
 properties:

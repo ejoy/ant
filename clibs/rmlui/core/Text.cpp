@@ -5,7 +5,6 @@
 #include <core/Log.h>
 #include <core/Property.h>
 #include <core/StringUtilities.h>
-#include <databinding/DataModelHandle.h>
 #include <databinding/DataUtilities.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include "../databinding/DataModel.h"

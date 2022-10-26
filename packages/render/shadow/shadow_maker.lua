@@ -4,9 +4,33 @@ local ecs = ...
 local world = ecs.world
 local w     = world.w
 
+local setting	= import_package "ant.settings".setting
+local ENABLE_SHADOW<const> = setting:data().graphic.shadow.enable
+
+local sm = ecs.system "shadow_system"
+
+if not ENABLE_SHADOW then
+	local function DEF_FUNC() end
+	for _, m in ipairs{"init",
+    "init_world",
+    "entity_init",
+    "entity_remove",
+    "update_camera",
+    --"refine_filter",
+    "refine_camera",
+    "render_submit",
+    "camera_usage",
+    "end_filter"} do
+		sm[m] = DEF_FUNC
+	end
+
+	return
+end
+
 local viewidmgr = require "viewid_mgr"
 --local mu		= mathpkg.util
 local mc 		= import_package "ant.math".constant
+
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local icamera	= ecs.import.interface "ant.camera|icamera"
@@ -16,71 +40,6 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local iom		= ecs.import.interface "ant.objcontroller|iobj_motion"
 local fbmgr		= require "framebuffer_mgr"
 local INV_Z<const> = true
---local sm_bias_matrix = mu.calc_texture_matrix()
-local biasX,biasY,biasZ
--- local function create_crop_matrix(shadow)
--- 	local view_camera = world.main_queue_camera(world)
-
--- 	local csm = shadow.csm
--- 	local csmindex = csm.index
--- 	local shadowcamera = world[shadow.camera_ref].camera
--- 	local shadow_viewmatrix = mu.view_proj(shadowcamera)
-
--- 	local bb_LS = get_frustum_points(view_camera, view_camera.frustum, shadow_viewmatrix, shadow.csm.split_ratios)
--- 	local aabb = bb_LS:get "aabb"
--- 	local min, max = aabb.min, aabb.max
-
--- 	local proj = math3d.projmat(shadowcamera.frustum)
--- 	local minproj, maxproj = math3d.transformH(proj, min) math3d.transformH(proj, max)
-
--- 	local scalex, scaley = math3d.mul(2, math3d.reciprocal(math3d.sub(maxproj, minproj)))
--- 	if csm.stabilize then
--- 		local quantizer = shadow.shadowmap_size
--- 		scalex = quantizer / math.ceil(quantizer / scalex);
--- 		scaley = quantizer / math.ceil(quantizer / scaley);
--- 	end
-
-function calc_offset(a, b, scale)
- 	return (a + b) * -0.5 * scale
-end
-
--- 	local offsetx, offsety = 
--- 		calc_offset(maxproj[1], minproj[1], scalex), 
--- 		calc_offset(maxproj[2], minproj[2], scaley)
-
--- 	if csm.stabilize then
--- 		local half_size = shadow.shadowmap_size * 0.5;
--- 		offsetx = math.ceil(offsetx * half_size) / half_size;
--- 		offsety = math.ceil(offsety * half_size) / half_size;
--- 	end
-	
--- 	return {
--- 		scalex, 0, 0, 0,
--- 		0, scaley, 0, 0,
--- 		0, 0, 1, 0,
--- 		offsetx, offsety, 0, 1,
--- 	}
--- end
-
-local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_size)
-	local texsize = 1 / shadowmap_size
-
-	local unit_pretexel = math3d.mul(math3d.sub(maxextent, minextent), texsize)
-	local invunit_pretexel = math3d.reciprocal(unit_pretexel)
-	local function limit_move_in_one_texel(value)
-		-- value /= unit_pretexel;
-		-- value = floor( value );
-		-- value *= unit_pretexel;
-		return math3d.tovalue(
-			math3d.mul(math3d.floor(math3d.mul(math3d.vector(value), invunit_pretexel)), unit_pretexel))
-	end
-
-	local newmin = limit_move_in_one_texel(minextent)
-	local newmax = limit_move_in_one_texel(maxextent)
-	
-	minextent[1], minextent[2] = newmin[1], newmin[2]
-	maxextent[1], maxextent[2] = newmax[1], newmax[2]
-end
 
 local csm_matrices			= {mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
@@ -96,118 +55,181 @@ local function set_worldmat(srt, mat)
 	srt.worldmat = math3d.mark(math3d.matrix(mat))
 end
 
-
-
-
-local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, shadow_ce,csm_index,ortho)
-	local center_WS = math3d.points_center(corners_WS)
-	local min_extent, max_extent
-
-	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
-	iom.set_position(shadow_ce, center_WS)
-	set_worldmat(shadow_ce.scene, shadow_ce.scene)
-
-	local camera = shadow_ce.camera
-	if stabilize then
-		local radius = math3d.points_radius(corners_WS, center_WS)
-		--radius = math.ceil(radius * 16.0) / 16.0	-- round to 16
-		min_extent, max_extent = {-radius, -radius, -radius}, {radius, radius, radius}
-		keep_shadowmap_move_one_texel(min_extent, max_extent, shadowmap_size)
-	else
- 		local minv, maxv = math3d.minmax(corners_WS, math3d.inverse(shadow_ce.scene.worldmat))
-		min_extent, max_extent = math3d.tovalue(minv), math3d.tovalue(maxv)
---[[  		local minproj, maxproj = math3d.transformH(ortho, minv),math3d.transformH(ortho, maxv)
-		local scalesub = math3d.sub(maxproj,minproj)
-		local scaleadd = math3d.add(maxproj, minproj)
-		local scalex = 2.0 / math3d.index(scalesub, 1)
-		local scaley = 2.0 / math3d.index(scalesub, 2)
-		local quantizer = 64.0
-		scalex = quantizer / math.ceil(quantizer / scalex)
-		scaley = quantizer / math.ceil(quantizer / scaley)
-		local offsetx = 0.5 * math3d.index(scaleadd, 1) * scalex
-		local offsety = 0.5 * math3d.index(scaleadd, 2) * scaley
-		local half_size = shadowmap_size * 0.5
-		offsetx = math.ceil(offsetx * half_size) / half_size
-		offsety = math.ceil(offsety * half_size) / half_size
-		local crop = math3d.matrix{
-	 		scalex, 0, 0, 0,
-	 		0, scaley, 0, 0,
-	 		0, 0, 1, 0,
-	 		offsetx, offsety, 0, 1,		
-		}
-		camera.viewmat = math3d.inverse(shadow_ce.scene.worldmat)
-		camera.projmat = math3d.mul(crop,ortho)
-		camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)   ]]
-	end
-  	local f = camera.frustum
-	f.l, f.b, f.n = min_extent[1], min_extent[2], min_extent[3]
-	f.r, f.t, f.f = max_extent[1], max_extent[2], max_extent[3]
-	update_camera_matrices(camera, shadow_ce.scene.worldmat,csm_index) 
- 
-	do
-		-- local ident_projmat = math3d.projmat{
-		-- 	ortho=true,
-		-- 	l=-1, r=1, b=-1, t=1, n=-100, f=100,
-		-- }
-
-		-- local minv, maxv = math3d.minmax(corners_WS, camera_rc.viewmat)
-		-- local minv_proj, maxv_proj = math3d.transformH(ident_projmat, minv, 1), math3d.transformH(ident_projmat, maxv, 1)
-		-- -- scale = 2 / (maxv_proj-minv_proj)
-		-- local scale = math3d.mul(2, math3d.reciprocal(math3d.sub(maxv_proj, minv_proj)))
-		-- -- offset = 0.5 * (minv_proj+maxv_proj) * scale
-		-- local offset = math3d.mul(scale, math3d.mul(0.5, math3d.add(minv_proj, maxv_proj)))
-		-- local scalex, scaley = math3d.index(scale, 1, 2)
-		-- local offsetx, offsety = math3d.index(offset, 1, 2)
-		-- local lightproj = math3d.mul(math3d.matrix(
-		-- scalex, 0.0, 	0.0, 0.0,
-		-- 0.0,	scaley,	0.0, 0.0,
-		-- 0.0,	0.0,	1.0, 0.0,
-		-- offsetx,offsety,0.0, 1.0
-		-- ), ident_projmat)
-
-		-- camera_rc.projmat = lightproj
-		-- camera_rc.viewprojmat = math3d.mul(camera_rc.projmat, camera_rc.viewmat)
-	end
-end
-
-
-local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, stabilize, shadow_ce,csm_index,ortho)
-	local vp = math3d.mul(math3d.projmat(frustum, INV_Z), viewmat)
-
-	local corners_WS = math3d.frustum_points(vp)
-	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, shadow_ce,csm_index,ortho)
-end
-
--- local function calc_split_distance(frustum)
--- 	local corners_VS = math3d.frustum_points(math3d.projmat(frustum))
--- 	local minv, maxv = math3d.minmax(corners_VS)
--- 	return math3d.index(maxv, 3)
--- end
-
 local function calc_csm_matrix_attrib(csmidx, vp)
 	return math3d.mul(ishadow.crop_matrix(csmidx), vp)
 end
 
-local function update_shadow_camera(dl, maincamera)
-	local lightdir = iom.get_direction(dl)
-	local setting = ishadow.setting()
-	local viewmat = maincamera.viewmat
-	local csmfrustums = ishadow.calc_split_frustums(maincamera.frustum)
-	local frustum = {
-		l = -1, r = 1, t = -1, b = 1,
-		n = 1, f = 100, ortho = true,
-	}
-	local ortho = math3d.projmat(frustum,INV_Z)
-	for qe in w:select "csm:in camera_ref:in" do
-		local csm = qe.csm
-		local vf = csmfrustums[csm.index]--csm.view_frustum
-		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in")
-		calc_shadow_camera(viewmat, vf, lightdir, setting.shadowmap_size, false, shadow_ce,csm.index,ortho)
-		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
-		--csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.projmat,shadow_ce.camera.viewmat)
-		split_distances_VS[csm.index] = vf.f
-	end
-end
+-- --local sm_bias_matrix = mu.calc_texture_matrix()
+-- local biasX,biasY,biasZ
+-- -- local function create_crop_matrix(shadow)
+-- -- 	local view_camera = world.main_queue_camera(world)
+
+-- -- 	local csm = shadow.csm
+-- -- 	local csmindex = csm.index
+-- -- 	local shadowcamera = world[shadow.camera_ref].camera
+-- -- 	local shadow_viewmatrix = mu.view_proj(shadowcamera)
+
+-- -- 	local bb_LS = get_frustum_points(view_camera, view_camera.frustum, shadow_viewmatrix, shadow.csm.split_ratios)
+-- -- 	local aabb = bb_LS:get "aabb"
+-- -- 	local min, max = aabb.min, aabb.max
+
+-- -- 	local proj = math3d.projmat(shadowcamera.frustum)
+-- -- 	local minproj, maxproj = math3d.transformH(proj, min) math3d.transformH(proj, max)
+
+-- -- 	local scalex, scaley = math3d.mul(2, math3d.reciprocal(math3d.sub(maxproj, minproj)))
+-- -- 	if csm.stabilize then
+-- -- 		local quantizer = shadow.shadowmap_size
+-- -- 		scalex = quantizer / math.ceil(quantizer / scalex);
+-- -- 		scaley = quantizer / math.ceil(quantizer / scaley);
+-- -- 	end
+
+-- local function calc_offset(a, b, scale)
+--  	return (a + b) * -0.5 * scale
+-- end
+
+-- -- 	local offsetx, offsety = 
+-- -- 		calc_offset(maxproj[1], minproj[1], scalex), 
+-- -- 		calc_offset(maxproj[2], minproj[2], scaley)
+
+-- -- 	if csm.stabilize then
+-- -- 		local half_size = shadow.shadowmap_size * 0.5;
+-- -- 		offsetx = math.ceil(offsetx * half_size) / half_size;
+-- -- 		offsety = math.ceil(offsety * half_size) / half_size;
+-- -- 	end
+	
+-- -- 	return {
+-- -- 		scalex, 0, 0, 0,
+-- -- 		0, scaley, 0, 0,
+-- -- 		0, 0, 1, 0,
+-- -- 		offsetx, offsety, 0, 1,
+-- -- 	}
+-- -- end
+
+-- local function keep_shadowmap_move_one_texel(minextent, maxextent, shadowmap_size)
+-- 	local texsize = 1 / shadowmap_size
+
+-- 	local unit_pretexel = math3d.mul(math3d.sub(maxextent, minextent), texsize)
+-- 	local invunit_pretexel = math3d.reciprocal(unit_pretexel)
+-- 	local function limit_move_in_one_texel(value)
+-- 		-- value /= unit_pretexel;
+-- 		-- value = floor( value );
+-- 		-- value *= unit_pretexel;
+-- 		return math3d.tovalue(
+-- 			math3d.mul(math3d.floor(math3d.mul(math3d.vector(value), invunit_pretexel)), unit_pretexel))
+-- 	end
+
+-- 	local newmin = limit_move_in_one_texel(minextent)
+-- 	local newmax = limit_move_in_one_texel(maxextent)
+	
+-- 	minextent[1], minextent[2] = newmin[1], newmin[2]
+-- 	maxextent[1], maxextent[2] = newmax[1], newmax[2]
+-- end
+
+-- local function calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, shadow_ce,csm_index,ortho)
+-- 	local center_WS = math3d.points_center(corners_WS)
+-- 	local min_extent, max_extent
+
+-- 	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
+-- 	iom.set_position(shadow_ce, center_WS)
+-- 	set_worldmat(shadow_ce.scene, shadow_ce.scene)
+
+-- 	local camera = shadow_ce.camera
+-- 	if stabilize then
+-- 		local radius = math3d.points_radius(corners_WS, center_WS)
+-- 		--radius = math.ceil(radius * 16.0) / 16.0	-- round to 16
+-- 		min_extent, max_extent = {-radius, -radius, -radius}, {radius, radius, radius}
+-- 		keep_shadowmap_move_one_texel(min_extent, max_extent, shadowmap_size)
+-- 	else
+--  		local minv, maxv = math3d.minmax(corners_WS, math3d.inverse(shadow_ce.scene.worldmat))
+-- 		min_extent, max_extent = math3d.tovalue(minv), math3d.tovalue(maxv)
+-- --[[  		local minproj, maxproj = math3d.transformH(ortho, minv),math3d.transformH(ortho, maxv)
+-- 		local scalesub = math3d.sub(maxproj,minproj)
+-- 		local scaleadd = math3d.add(maxproj, minproj)
+-- 		local scalex = 2.0 / math3d.index(scalesub, 1)
+-- 		local scaley = 2.0 / math3d.index(scalesub, 2)
+-- 		local quantizer = 64.0
+-- 		scalex = quantizer / math.ceil(quantizer / scalex)
+-- 		scaley = quantizer / math.ceil(quantizer / scaley)
+-- 		local offsetx = 0.5 * math3d.index(scaleadd, 1) * scalex
+-- 		local offsety = 0.5 * math3d.index(scaleadd, 2) * scaley
+-- 		local half_size = shadowmap_size * 0.5
+-- 		offsetx = math.ceil(offsetx * half_size) / half_size
+-- 		offsety = math.ceil(offsety * half_size) / half_size
+-- 		local crop = math3d.matrix{
+-- 	 		scalex, 0, 0, 0,
+-- 	 		0, scaley, 0, 0,
+-- 	 		0, 0, 1, 0,
+-- 	 		offsetx, offsety, 0, 1,		
+-- 		}
+-- 		camera.viewmat = math3d.inverse(shadow_ce.scene.worldmat)
+-- 		camera.projmat = math3d.mul(crop,ortho)
+-- 		camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)   ]]
+-- 	end
+--   	local f = camera.frustum
+-- 	f.l, f.b, f.n = min_extent[1], min_extent[2], min_extent[3]
+-- 	f.r, f.t, f.f = max_extent[1], max_extent[2], max_extent[3]
+-- 	update_camera_matrices(camera, shadow_ce.scene.worldmat,csm_index) 
+ 
+-- 	do
+-- 		-- local ident_projmat = math3d.projmat{
+-- 		-- 	ortho=true,
+-- 		-- 	l=-1, r=1, b=-1, t=1, n=-100, f=100,
+-- 		-- }
+
+-- 		-- local minv, maxv = math3d.minmax(corners_WS, camera_rc.viewmat)
+-- 		-- local minv_proj, maxv_proj = math3d.transformH(ident_projmat, minv, 1), math3d.transformH(ident_projmat, maxv, 1)
+-- 		-- -- scale = 2 / (maxv_proj-minv_proj)
+-- 		-- local scale = math3d.mul(2, math3d.reciprocal(math3d.sub(maxv_proj, minv_proj)))
+-- 		-- -- offset = 0.5 * (minv_proj+maxv_proj) * scale
+-- 		-- local offset = math3d.mul(scale, math3d.mul(0.5, math3d.add(minv_proj, maxv_proj)))
+-- 		-- local scalex, scaley = math3d.index(scale, 1, 2)
+-- 		-- local offsetx, offsety = math3d.index(offset, 1, 2)
+-- 		-- local lightproj = math3d.mul(math3d.matrix(
+-- 		-- scalex, 0.0, 	0.0, 0.0,
+-- 		-- 0.0,	scaley,	0.0, 0.0,
+-- 		-- 0.0,	0.0,	1.0, 0.0,
+-- 		-- offsetx,offsety,0.0, 1.0
+-- 		-- ), ident_projmat)
+
+-- 		-- camera_rc.projmat = lightproj
+-- 		-- camera_rc.viewprojmat = math3d.mul(camera_rc.projmat, camera_rc.viewmat)
+-- 	end
+-- end
+
+
+-- local function calc_shadow_camera(viewmat, frustum, lightdir, shadowmap_size, stabilize, shadow_ce,csm_index,ortho)
+-- 	local vp = math3d.mul(math3d.projmat(frustum, INV_Z), viewmat)
+
+-- 	local corners_WS = math3d.frustum_points(vp)
+-- 	calc_shadow_camera_from_corners(corners_WS, lightdir, shadowmap_size, stabilize, shadow_ce,csm_index,ortho)
+-- end
+
+-- -- local function calc_split_distance(frustum)
+-- -- 	local corners_VS = math3d.frustum_points(math3d.projmat(frustum))
+-- -- 	local minv, maxv = math3d.minmax(corners_VS)
+-- -- 	return math3d.index(maxv, 3)
+-- -- end
+
+-- local function update_shadow_camera(dl, maincamera)
+-- 	local lightdir = iom.get_direction(dl)
+-- 	local setting = ishadow.setting()
+-- 	local viewmat = maincamera.viewmat
+-- 	local csmfrustums = ishadow.calc_split_frustums(maincamera.frustum)
+-- 	local frustum = {
+-- 		l = -1, r = 1, t = -1, b = 1,
+-- 		n = 1, f = 100, ortho = true,
+-- 	}
+-- 	local ortho = math3d.projmat(frustum,INV_Z)
+-- 	for qe in w:select "csm:in camera_ref:in" do
+-- 		local csm = qe.csm
+-- 		local vf = csmfrustums[csm.index]--csm.view_frustum
+-- 		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in")
+-- 		calc_shadow_camera(viewmat, vf, lightdir, setting.shadowmap_size, false, shadow_ce,csm.index,ortho)
+-- 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
+-- 		--csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.projmat,shadow_ce.camera.viewmat)
+-- 		split_distances_VS[csm.index] = vf.f
+-- 	end
+-- end
 
 local function calc_ortho_minmax(corners_view, main_view, light_view, corners_world, shadowmap_size)
 	local light_ortho_min, light_ortho_max = math3d.minmax(corners_view, math3d.mul(main_view, math3d.matrix(light_view)))
@@ -257,7 +279,6 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 end
 
 local function update_shadow_frustum(dl, main_camera)
-
 	local lightdir = iom.get_direction(dl)
 	local setting = ishadow.setting()
 	local csm_frustums = ishadow.calc_split_frustums(main_camera.frustum)
@@ -274,8 +295,6 @@ local function update_shadow_frustum(dl, main_camera)
 	end
 end
 
-local sm = ecs.system "shadow_system"
-
 local function create_clear_shadowmap_queue(fbidx)
 	local rb = fbmgr.get_rb(fbidx, 1)
 	local ww, hh = rb.w, rb.h
@@ -287,9 +306,8 @@ local function create_clear_shadowmap_queue(fbidx)
 		data = {
 			render_target = {
 				clear_state = {
-					color = 0xffffffff,
 					depth = 0,
-					clear = "CD",
+					clear = "D",
 				},
 				fb_idx = fbidx,
 				viewid = viewidmgr.get "csm_fb",
@@ -361,18 +379,17 @@ function sm:init()
 	end
 end
 
-
-local function main_camera_changed(ceid)
-	local camera <close> = w:entity(ceid, "camera:in").camera
-	local csmfrustums = ishadow.calc_split_frustums(camera.frustum)
-	for cqe in w:select "csm:in" do
-		local csm = cqe.csm
-		local idx = csm.index
-		local cf = assert(csmfrustums[csm.index])
-		csm.view_frustum = cf
-		split_distances_VS[idx] = cf.f
-	end
-end
+-- local function main_camera_changed(ceid)
+-- 	local camera <close> = w:entity(ceid, "camera:in").camera
+-- 	local csmfrustums = ishadow.calc_split_frustums(camera.frustum)
+-- 	for cqe in w:select "csm:in" do
+-- 		local csm = cqe.csm
+-- 		local idx = csm.index
+-- 		local cf = assert(csmfrustums[csm.index])
+-- 		csm.view_frustum = cf
+-- 		split_distances_VS[idx] = cf.f
+-- 	end
+-- end
 
 local function set_csm_visible(enable)
 	for v in w:select "csm visible?out" do
@@ -408,9 +425,8 @@ end
 function sm:init_world()
 	local sa = imaterial.system_attribs()
 	sa:update("s_shadowmap", fbmgr.get_rb(ishadow.fb_index(), 1).handle)
-	sa:update("u_shadow_param1", math3d.vector(ishadow.shadow_param()))
-	sa:update("u_shadow_param2", ishadow.color())
-	sa:update("u_shadow_param3", math3d.vector(ishadow.shadow_param3()))
+	sa:update("u_shadow_param1", ishadow.shadow_param())
+	sa:update("u_shadow_param2", ishadow.shadow_param2())
 end
 
 function sm:update_camera()
@@ -507,11 +523,9 @@ local omni_stencils = {
 	},
 }
 
-local s = ecs.system "shadow_primitive_system"
-
 local material_cache = {__mode="k"}
 
-function s:end_filter()
+function sm:end_filter()
     for e in w:select "filter_result opacity render_object:update filter_material:in skinning?in" do
         local ro = e.render_object
 		local m = which_material(e.skinning)

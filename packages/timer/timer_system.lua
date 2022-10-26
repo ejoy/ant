@@ -1,10 +1,10 @@
 local ecs = ...
 
-local timer = require "platform.timer"
-local time_counter = timer.counter
-local time_freq    = timer.frequency() / 1000
+local ltask = require "ltask"
+
 local function gettime()
-	return time_counter() / time_freq
+    local _, now = ltask.now()
+	return now * 10
 end
 
 local previous
@@ -19,10 +19,6 @@ end
 
 function it.delta()
 	return delta
-end
-
-function it.fetch_time()
-	return gettime()
 end
 
 local time_sys = ecs.system "time_system"

@@ -1,11 +1,8 @@
 $input v_skyColor, v_screenPos, v_viewDir
 
-/*
-* Copyright 2017 Stanislav Pidhorskyi. All rights reserved.
-* License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
-*/
 #include "procedural_sky.sh"
-#include "common.sh"
+#include <bgfx_shader.sh>
+#include <shaderlib.sh>
 
 // https://www.shadertoy.com/view/4ssXRX
 // http://www.loopit.dk/banding_in_games.pdf

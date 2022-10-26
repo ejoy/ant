@@ -35,14 +35,19 @@ function fr_sys:init()
 end
 
 local function update_pre_depth_queue()
-	for de in w:select "pre_depth_queue render_target:in camera_ref:out" do
-		for me in w:select "main_queue render_target:in camera_ref:in" do
-			de.camera_ref = me.camera_ref
-			local vr = me.render_target.view_rect
-			local dvr = de.render_target.view_rect
-			dvr.x, dvr.y, dvr.w, dvr.h = vr.x, vr.y, vr.w, vr.h
-		end
+	local function sync_queue(sq, dq)
+		dq.camera_ref = sq.camera_ref
+		local srcvr = sq.render_target.view_rect
+		local dstvr = dq.render_target.view_rect
+
+		dstvr.x, dstvr.y, dstvr.w, dstvr.h = srcvr.x, srcvr.y, srcvr.w, srcvr.h
+		w:submit(dq)
 	end
+	local pdq = w:first "pre_depth_queue render_target:in camera_ref:out"
+	local sdq = w:first "scene_depth_queue render_target:in camera_ref:out"
+	local mq = w:first "main_queue render_target:in camera_ref:in"
+	sync_queue(mq, pdq)
+	sync_queue(mq, sdq)
 end
 
 function fr_sys:data_changed()

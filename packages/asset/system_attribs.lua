@@ -89,7 +89,6 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	u_depth_scale_offset = {type="u", value=mc.ZERO},
 	u_shadow_param1		 = {type="u", value=mc.ZERO},
 	u_shadow_param2		 = {type="u", value=mc.ZERO},
-	u_shadow_param3		 = {type="u", value=mc.ZERO},
 
 	s_shadowmap			 = texture_value(8),
 	u_main_camera_matrix = { type="u",
@@ -110,10 +109,14 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	u_tetra_normal_Blue		= {type="u", value=mc.ZERO},
 	u_tetra_normal_Red		= {type="u", value=mc.ZERO},
 
-	s_omni_shadowmap	= texture_value(9),
+	--s_omni_shadowmap	= texture_value(9),
 	s_shadowmap_blur	= texture_value(8),
+
+	--TODO: move as sampler to texture array
+	s_ssao				= texture_value(9),
+	s_ssao_bent_normal	= texture_value(10),
 	--postprocess
-	u_reverse_pos_param				= {type="u", value=mc.ZERO},
+	u_reverse_pos_param	= {type="u", value=mc.ZERO},
 })
 
 return SYS_ATTRIBS
