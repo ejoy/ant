@@ -118,7 +118,7 @@ local function OnOpen()
         if projname == nil then
             projname = lfs.path(path):filename():string() .. "(folder)"
         end
-        editor_setting.update_lastproj(projname:gsub("/pkg/", ""), path, false)
+        editor_setting.update_lastproj(projname:string():gsub("/pkg/", ""), path, false)
         editor_setting.save()
     end
 end
