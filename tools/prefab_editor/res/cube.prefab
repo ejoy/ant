@@ -8,7 +8,7 @@ policy:
 ---
 data:
   material: /pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material
-  mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin
+  mesh: /pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin
   name: Cube
   scene:
     t: {0, 1, 0, 1}
