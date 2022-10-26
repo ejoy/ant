@@ -160,7 +160,7 @@ local function choose_project()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button "Quit" then
-            global_data:update_root(fs.path "":localpath():string())
+            global_data:update_root(fs.path "":localpath())
         end
 
         imgui.cursor.Separator();
