@@ -180,7 +180,7 @@ local function choose_project()
         imgui.windows.EndDisabled()
         if global_data.project_root then
             local fw = require "bee.filewatch"
-            fw.add(global_data.project_root)
+            fw.add(global_data.project_root:string())
             log.warn "need handle effect file"
             --effekseer_filename_mgr.add_path("/pkg/tools.prefab_editor/res")
             

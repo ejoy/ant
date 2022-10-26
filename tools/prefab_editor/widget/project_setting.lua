@@ -257,7 +257,7 @@ local function setting_ui(sc)
     end
 
     if Button "Save" then
-        local p = lfs.path(global_data.project_root) / "settings"
+        local p = global_data.project_root / "settings"
         local f<close> = lfs.open(p, "w")
         f:write(serialize.stringify(sc._data))
     end
@@ -281,7 +281,7 @@ function ps.show(open_popup)
     if BeginPopupModal(ps.id, default_win_flags) then
         if BeginTabBar("PS_Bar", default_tab_flags) then
             if BeginTabItem "ProjectSetting" then
-                local p = lfs.path(global_data.project_root) / "settings"
+                local p = global_data.project_root / "settings"
                 local vp = fs.path(access.virtualpath(global_data.repo, p))
                 local s = project_settings[vp:string()]
                 if s == nil then

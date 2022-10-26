@@ -602,7 +602,7 @@ end
 function m:reload()
     local filename = self.prefab_filename
     if filename == 'nil' then
-        self:save_prefab(tostring(gd.project_root) .. "/res/__temp__.prefab")
+        self:save_prefab((gd.project_root / "res/__temp__.prefab"):string())
     else
         self:open(filename)
     end
