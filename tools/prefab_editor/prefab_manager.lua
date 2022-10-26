@@ -3,8 +3,9 @@ local world = ecs.world
 local w = world.w
 local cr            = import_package "ant.compile_resource"
 local serialize     = import_package "ant.serialize"
-local worldedit     = import_package "ant.editor".worldedit(world)
-local assetmgr      = import_package "ant.asset"
+local mathpkg       = import_package "ant.math"
+local mc            = mathpkg.constant
+local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local stringify     = import_package "ant.serialize".stringify
 local ilight        = ecs.import.interface "ant.render|ilight"
 local iefk          = ecs.import.interface "ant.efk|iefk"
@@ -744,6 +745,69 @@ function m:save_prefab(path)
     assert(lfilename:is_absolute(), ("filename should be local path:%s"):format(filename))
     self:open(access.virtualpath(global_data.repo, lfilename))
     world:pub {"ResourceBrowser", "dirty"}
+end
+
+function m:set_parent(target, parent)
+    local te <close> = w:entity(target, "scene?in")
+    if te.scene then
+        -- local template = hierarchy:get_template(target).template
+        -- local tpl = utils.deep_copy(template)
+
+        -- local targetWorldMat = mc.IDENTITY_MAT
+        -- if parent then
+        --     local se <close> = w:entity(parent, "scene?in")
+        --     targetWorldMat = iom.worldmat(se)
+        -- end
+        -- local s, r, t = math3d.srt(math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
+        -- tpl.data.scene = {parent = parent, s = s, r = r, t = t}
+
+        -- local e = ecs.create_entity(tpl)
+        -- self:add_entity(e, parent, template)
+
+        local function new_entity(te, pe, scene)
+            local template = hierarchy:get_template(te).template
+            local tpl = utils.deep_copy(template)
+            if scene then
+                tpl.data.scene = scene
+                template.data.scene.s = scene.s
+                template.data.scene.r = scene.r
+                template.data.scene.t = scene.t
+            end
+            local e = ecs.create_entity(tpl)
+            self:add_entity(e, pe, template)
+            return e
+        end
+        local function create_tree(te, pe, scene)
+            local npe = new_entity(te, pe, scene)
+            local tn = hierarchy:get_node(te)
+            for _, ce in ipairs(tn.children) do
+                local tpl = hierarchy:get_template(ce.eid).template
+                create_tree(ce.eid, npe, {parent = npe, s = tpl.data.scene.s, r = tpl.data.scene.r, t = tpl.data.scene.t })
+            end
+            return npe
+        end
+
+        local targetWorldMat = mc.IDENTITY_MAT
+        if parent then
+            local se <close> = w:entity(parent, "scene?in")
+            targetWorldMat = iom.worldmat(se)
+        end
+        local ts, tr, tt = math3d.srt(math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
+        ts = math3d.tovalue(ts)
+        tr = math3d.tovalue(tr)
+        tt = math3d.tovalue(tt)
+        local s, r, t = {ts[1], ts[2], ts[3]}, tr, {tt[1], tt[2], tt[3]}
+        local e = create_tree(target, parent, {parent = parent, s = s, r = r, t = t})
+        local function remove_tree(te)
+            local tn = hierarchy:get_node(te)
+            for _, ce in ipairs(tn.children) do
+                remove_tree(ce.eid)
+            end
+            self:remove_entity(te)
+        end
+        remove_tree(target)
+        return e
+    end
 end
 
 function m:remove_entity(e)
