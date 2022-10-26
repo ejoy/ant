@@ -3,8 +3,9 @@ local world = ecs.world
 local w = world.w
 local cr            = import_package "ant.compile_resource"
 local serialize     = import_package "ant.serialize"
-local worldedit     = import_package "ant.editor".worldedit(world)
-local assetmgr      = import_package "ant.asset"
+local mathpkg       = import_package "ant.math"
+local mc            = mathpkg.constant
+local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local stringify     = import_package "ant.serialize".stringify
 local ilight        = ecs.import.interface "ant.render|ilight"
 local iefk          = ecs.import.interface "ant.efk|iefk"
@@ -742,6 +743,23 @@ function m:save_prefab(path)
     anim_view.save_keyevent(string.sub(filename, 1, -8) .. ".event")
     self:open(filename)
     world:pub {"ResourceBrowser", "dirty"}
+end
+
+function m:set_parent(target, parent)
+    local te <close> = w:entity(target, "scene?in")
+    parent = parent or self.root
+    local se <close> = w:entity(parent, "scene?in")
+    if te.scene and se.scene then
+        local template = hierarchy:get_template(target).template
+        local tpl = utils.deep_copy(template)
+        local targetWorldMat = parent and iom.worldmat(se) or mc.IDENTITY_MAT
+        local s, r, t = math3d.srt(math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
+        tpl.data.scene = {parent = parent, s = s, r = r, t = t}
+        local e = ecs.create_entity(tpl)
+        self:add_entity(e, parent, template)
+        self:remove_entity(target)
+        return e
+    end
 end
 
 function m:remove_entity(e)

@@ -402,17 +402,7 @@ function m:handle_event()
                 end
             end
         elseif what == "parent" then
-            local te <close> = w:entity(target, "scene?in")
-            v1 = v1 or prefab_mgr.root
-            local se <close> = w:entity(v1, "scene?in")
-            if te.scene and se.scene then
-                hierarchy:set_parent(target, v1)
-                local targetWorldMat = v1 and iom.worldmat(se) or mc.IDENTITY_MAT
-                iom.set_srt_matrix(te, math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
-                te.scene.parent = v1
-                w:extend(te, "scene_needchange:out")
-                te.scene_needchange = true
-            end
+            target = prefab_mgr:set_parent(target, v1)
         end
         if transform_dirty then
             on_update(target)
