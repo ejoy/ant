@@ -403,6 +403,7 @@ function m:handle_event()
             end
         elseif what == "parent" then
             target = prefab_mgr:set_parent(target, v1)
+            gizmo:set_target(target)
         end
         if transform_dirty then
             on_update(target)
