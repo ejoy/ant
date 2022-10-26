@@ -70,8 +70,8 @@ local function create_light_billboard(light_eid)
 end
 
 local geom_mesh_file = {
-    ["cube"] = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
-    ["cone"] = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin",
+    ["cube"] = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
+    ["cone"] = "/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/Cone_P1.meshbin",
     ["cylinder"] = "/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/Cylinder_P1.meshbin",
     ["sphere"] = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",
     ["torus"] = "/pkg/ant.resources.binary/meshes/base/torus.glb|meshes/Torus_P1.meshbin",

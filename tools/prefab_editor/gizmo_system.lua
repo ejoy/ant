@@ -206,7 +206,7 @@ local function create_arrow_widget(axis_root, axis_str)
 				parent = axis_root
 			},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
-			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/pCylinder1_P1.meshbin',
+			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/Cylinder_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str,
 			on_ready = function (e)
 				ivs.set_state(e, "main_view", false)
@@ -223,7 +223,7 @@ local function create_arrow_widget(axis_root, axis_str)
 			visible_state = "main_view",
 			scene = {s = {0.02, 0.03, 0.02, 0}, r = local_rotator, t = cone_t, parent = axis_root},
 			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
-			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/pCone1_P1.meshbin',
+			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/Cone_P1.meshbin',
 			name = "arrow.cone" .. axis_str,
 			on_ready = function (e)
 				ivs.set_state(e, "main_view", false)
@@ -383,7 +383,7 @@ function gizmo_sys:post_init()
 				visible_state = "main_view|selectable",
 				scene = scene or {},
 				material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
-				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin",
+				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
 				name = "scale_cube" .. axis_name,
 				on_ready = function (e)
 					ivs.set_state(e, "main_view", false)

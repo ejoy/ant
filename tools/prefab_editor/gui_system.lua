@@ -180,7 +180,7 @@ local function choose_project()
         imgui.windows.EndDisabled()
         if global_data.project_root then
             local fw = require "bee.filewatch"
-            fw.add(global_data.project_root)
+            fw.add(global_data.project_root:string())
             local res_root_str = tostring(fs.path "":localpath())
             global_data.editor_root = fs.path(string.sub(res_root_str, 1, #res_root_str - 1))
             log.warn("need handle effect file")
