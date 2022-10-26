@@ -49,13 +49,17 @@ end
 
 local default_setting = read_datalist_file "/pkg/ant.resources/settings/default.setting"
 
-local function material_template(eid)
-    local prefab = hierarchy:get_template(eid)
-    local mf = prefab.template.data.material
+local function load_material_file(mf)
     if string.find(mf, ".glb|") then
         mf = mf .. "/main.cfg"
     end
+
     return read_datalist_file(mf)
+end
+
+local function material_template(eid)
+    local prefab = hierarchy:get_template(eid)
+    return load_material_file(prefab.template.data.material)
 end
 
 local function state_template(eid)
@@ -863,38 +867,56 @@ local function build_state_ui(mv)
     })
 end
 
-local function save_material(e, path)
-    local t = material_template(e)
-    local p = t.properties
-    if p then
-        local pp = {}
-        local function is_tex(v)
-            return v.texture
+local function check_relative_path(path, basepath)
+    if path:is_relative() then
+        if not fs.exists(basepath / path) then
+            error(("base path: %s, relative resource path: %s, is not valid"):format(basepath:string(), path:string()))
         end
-        for k, v in pairs(p) do
-            pp[k] = v
-            if is_tex(v) then
-                if fs.path(v.texture):is_relative() then
-                    pp[k].texture = serialize.path(v.texture)
-                else
-                    pp[k].texture = v.texture
+    else
+        if not fs.exists(path) then
+            error(("Invalid resource path:%s"):format(path:string()))
+        end
+    end
+end
+
+local function save_material(eid, path)
+    path = fs.path(path)
+    local t = material_template(eid)
+
+    local function refine_properties(p)
+        if p then
+            local pp = {}
+            local function is_tex(v)
+                return v.texture
+            end
+            for k, v in pairs(p) do
+                pp[k] = v
+                if is_tex(v) then
+                    local texpath = fs.path(v.texture)
+                    check_relative_path(texpath, path)
+                    pp[k].texture =  texpath:is_relative() and serialize.path(v.texture) or v.texture
                 end
             end
+            return pp
         end
-        t.properties = pp
     end
+
+    local nt = {
+        fx = t.fx,
+        state = t.state,
+        properties = refine_properties(t.properties),
+    }
 
     local lpp = path:parent_path():localpath()
     if not lfs.exists(lpp) then
         lfs.create_directories(lpp)
     end
     local f<close> = lfs.open(lpp / path:filename():string(), "w")
-    f:write(serialize.stringify(t))
+    f:write(serialize.stringify(nt))
 end
 
 local function reload(e, mtl)
     local prefab = hierarchy:get_template(e)
-    save_material(e, fs.path(mtl))
     prefab.template.data.material = mtl
     prefab_mgr:save_prefab()
     prefab_mgr:reload()
@@ -929,6 +951,23 @@ local function build_file_ui(mv)
     })
 end
 
+local function refine_material_data(eid, newmaterial_path)
+    local prefab = hierarchy:get_template(eid)
+    local oldmaterial_path = prefab.template.data.material
+    if oldmaterial_path ~= newmaterial_path then
+        local basepath = fs.path(oldmaterial_path):parent_path()
+        local t = load_material_file(oldmaterial_path)
+        for k, p in pairs(t.properties) do
+            if p.texture then
+                local texpath = fs.path(p.texture)
+                if texpath:is_relative() then
+                    p.texture = (basepath / texpath):string()
+                end
+            end
+        end
+    end
+end
+
 function MaterialView:_init()
     BaseView._init(self)
     
@@ -939,10 +978,9 @@ function MaterialView:_init()
     self.save       = uiproperty.Button({label="Save"}, {
         click = function ()
             local p = self.mat_file:find_property "path"
-            local filepath = p.value()
-            if filepath:match "^/pkg/" == nil then
-                log.warn("Invalid material path:", filepath)
-            end
+            local filepath = fs.path(p:value())
+            check_relative_path(filepath, prefab_mgr:get_current_filename())
+            save_material(self.eid, filepath)
             reload(self.eid, filepath)
         end,
     })
@@ -955,6 +993,9 @@ function MaterialView:_init()
                 if vpath == nil then
                     error(("save path:%s, is not valid package"):format(path))
                 end
+
+                refine_material_data(self.eid, vpath)
+                save_material(self.eid, vpath)
                 reload(self.eid, vpath)
             end
         end
