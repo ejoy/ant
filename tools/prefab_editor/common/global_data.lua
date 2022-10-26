@@ -1,9 +1,11 @@
 local m = {}
-
+local fs                = require "filesystem"
 local lfs               = require "filesystem.local"
 local vfs               = require "vfs"
 local access            = dofile "/engine/vfs/repoaccess.lua"
 m.repo_access = access
+
+m.editor_root           = lfs.path(fs.path "":localpath())
 
 local function find_package_name(proj_path, packages)
     for _, package in ipairs(packages) do
@@ -47,9 +49,9 @@ local function get_package(entry_path, readmount)
 end
 
 function m:update_root(rootpath)
-    self.project_root = rootpath
-    self.packages = get_package(lfs.absolute(self.project_root), true)
-    self.package_path = find_package_name(rootpath, self.packages)
+    self.project_root   = rootpath
+    self.packages       = get_package(lfs.absolute(self.project_root), true)
+    self.package_path   = find_package_name(rootpath, self.packages)
     return self.package_path
 end
 
