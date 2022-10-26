@@ -740,7 +740,9 @@ function m:save_prefab(path)
     end
     utils.write_file(filename, stringify(new_template))
     anim_view.save_keyevent(string.sub(filename, 1, -8) .. ".event")
-    self:open(filename)
+    local lfilename = lfs.path(filename)
+    assert(lfilename:is_absolute(), ("filename should be local path:%s"):format(filename))
+    self:open(access.virtualpath(global_data.repo, lfilename))
     world:pub {"ResourceBrowser", "dirty"}
 end
 
