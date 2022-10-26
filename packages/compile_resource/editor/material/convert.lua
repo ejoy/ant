@@ -152,7 +152,7 @@ return function (input, output, setting, localpath)
     local fx = mat.fx
     mergeCfgSetting(fx, localpath)
     local depfiles = {
-        localpath "./settings"
+        localpath "/settings"
     }
 
     local varying_path = fx.varying_path
