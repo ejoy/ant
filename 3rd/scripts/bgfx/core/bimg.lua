@@ -1,35 +1,23 @@
 local lm = require "luamake"
 
-lm:source_set "astc-codec" {
-    rootdir = lm.BimgDir / "3rdparty/astc-codec",
+lm:source_set "astc-encoder" {
+    rootdir = lm.BimgDir / "3rdparty/astc-encoder",
     includes = {
         ".",
         "include"
     },
     sources = {
-        "src/decoder/*.cc",
-    },
-    gcc = {
-        flags = {
-            "-Wno-class-memaccess",
-        }
-    },
-    clang = {
-        flags = {
-            "-Wno-deprecated-array-compare",
-            "-Wno-unused-function",
-            "-Wno-unused-const-variable"
-        }
+        "source/*.cpp",
     }
 }
 
 lm:source_set "bimg" {
     rootdir = lm.BimgDir,
-    deps = "astc-codec",
+    deps = "astc-encoder",
     includes = {
         lm.BxDir / "include",
         "include",
-        "3rdparty/astc-codec/include"
+        "3rdparty/astc-encoder/include"
     },
     sources = {
         "src/image.cpp",
@@ -65,7 +53,7 @@ lm:source_set "bimg-iqa" {
 lm:source_set "bimg-encode" {
     rootdir = lm.BimgDir,
     deps = {
-        "astc-codec",
+        "astc-encoder",
         "bimg-iqa",
     },
     includes = {
@@ -74,6 +62,7 @@ lm:source_set "bimg-encode" {
         "3rdparty",
         "3rdparty/nvtt",
         "3rdparty/iqa/include",
+        "3rdparty/astc-encoder/include"
     },
     sources = {
         "src/image_encode.cpp",

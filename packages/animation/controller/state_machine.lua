@@ -130,7 +130,7 @@ function iani.build_animation(ske, raw_animation, joint_anims, sample_ratio)
 						raw_anim:push_prekey(joint_name, time, from_s, from_r, from_t)
 						for i = 1, clip.repeat_count, 1 do
 							tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, false, inherit and sum)
-							time = start_time + i * step - frame_to_time
+							time = time + step
 							raw_anim:push_prekey(joint_name, time, to_s, to_r, to_t)
 							tween_push_anim_key(raw_anim, joint_name, clip, time, step, clip.amplitude_pos, to_rot, poseMat, true, inherit and sum)
 							if clip.type == TYPE_REBOUND then
