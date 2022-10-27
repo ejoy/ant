@@ -12,7 +12,7 @@ local bgfx		= require "bgfx"
 local fbmgr		= require "framebuffer_mgr"
 local sampler	= require "sampler"
 
-local shadowcfg = setting:data().graphic.shadow
+local shadowcfg = setmetatable({}, {__index= setting:data().graphic.shadow})
 
 bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
 local csm_setting = {
