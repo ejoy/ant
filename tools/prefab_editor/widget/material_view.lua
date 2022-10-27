@@ -981,7 +981,7 @@ local function refine_material_data(eid, newmaterial_path)
     local oldmaterial_path = fs.path(prefab.template.data.material)
     if oldmaterial_path ~= newmaterial_path then
         local basepath = oldmaterial_path:parent_path()
-        local t = load_material_file(oldmaterial_path)
+        local t = load_material_file(oldmaterial_path:string())
         for k, p in pairs(t.properties) do
             if p.texture then
                 local texpath = fs.path(p.texture)
