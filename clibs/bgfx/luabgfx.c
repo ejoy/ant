@@ -17,7 +17,7 @@
 #include "bgfx_alloc.h"
 #include "transient_buffer.h"
 
-#if BGFX_API_VERSION != 117
+#if BGFX_API_VERSION != 118
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -797,73 +797,81 @@ static const char * c_texture_formats[] = {
 	TFNAME(ATCE)				 /** (18) ATCE RGBA 8 BPP explicit alpha */
 	TFNAME(ATCI)				 /** (19) ATCI RGBA 8 BPP interpolated alpha */
 	TFNAME(ASTC4X4)				 /** (20) ASTC 4x4 8.0 BPP               */
-	TFNAME(ASTC5X5)				 /** (21) ASTC 5x5 5.12 BPP              */
-	TFNAME(ASTC6X6)				 /** (22) ASTC 6x6 3.56 BPP              */
-	TFNAME(ASTC8X5)				 /** (23) ASTC 8x5 3.20 BPP              */
-	TFNAME(ASTC8X6)				 /** (24) ASTC 8x6 2.67 BPP              */
-	TFNAME(ASTC10X5)			 /** (25) ASTC 10x5 2.56 BPP             */
-	TFNAME(UNKNOWN)				 /** (26) Compressed formats above.      */
-	TFNAME(R1)					 /** (27)                                */
-	TFNAME(A8)					 /** (28)                                */
-	TFNAME(R8)					 /** (29)                                */
-	TFNAME(R8I)					 /** (30)                                */
-	TFNAME(R8U)					 /** (31)                                */
-	TFNAME(R8S)					 /** (32)                                */
-	TFNAME(R16)					 /** (33)                                */
-	TFNAME(R16I)				 /** (34)                                */
-	TFNAME(R16U)				 /** (35)                                */
-	TFNAME(R16F)				 /** (36)                                */
-	TFNAME(R16S)				 /** (37)                                */
-	TFNAME(R32I)				 /** (38)                                */
-	TFNAME(R32U)				 /** (39)                                */
-	TFNAME(R32F)				 /** (40)                                */
-	TFNAME(RG8)					 /** (41)                                */
-	TFNAME(RG8I)				 /** (42)                                */
-	TFNAME(RG8U)				 /** (43)                                */
-	TFNAME(RG8S)				 /** (44)                                */
-	TFNAME(RG16)				 /** (45)                                */
-	TFNAME(RG16I)				 /** (46)                                */
-	TFNAME(RG16U)				 /** (47)                                */
-	TFNAME(RG16F)				 /** (48)                                */
-	TFNAME(RG16S)				 /** (49)                                */
-	TFNAME(RG32I)				 /** (50)                                */
-	TFNAME(RG32U)				 /** (51)                                */
-	TFNAME(RG32F)				 /** (52)                                */
-	TFNAME(RGB8)				 /** (53)                                */
-	TFNAME(RGB8I)				 /** (54)                                */
-	TFNAME(RGB8U)				 /** (55)                                */
-	TFNAME(RGB8S)				 /** (56)                                */
-	TFNAME(RGB9E5F)				 /** (57)                                */
-	TFNAME(BGRA8)				 /** (58)                                */
-	TFNAME(RGBA8)				 /** (59)                                */
-	TFNAME(RGBA8I)				 /** (60)                                */
-	TFNAME(RGBA8U)				 /** (61)                                */
-	TFNAME(RGBA8S)				 /** (62)                                */
-    TFNAME(RGBA16)               /** (63)                                */
-    TFNAME(RGBA16I)              /** (64)                                */
-    TFNAME(RGBA16U)              /** (65)                                */
-    TFNAME(RGBA16F)              /** (66)                                */
-    TFNAME(RGBA16S)              /** (67)                                */
-    TFNAME(RGBA32I)              /** (68)                                */
-    TFNAME(RGBA32U)              /** (69)                                */
-    TFNAME(RGBA32F)              /** (70)                                */
-    TFNAME(B5G6R5)               /** (71)                                */
-    TFNAME(R5G6B5)               /** (72)                                */
-    TFNAME(BGRA4)                /** (73)                                */
-    TFNAME(RGBA4)                /** (74)                                */
-    TFNAME(BGR5A1)               /** (75)                                */
-    TFNAME(RGB5A1)               /** (76)                                */
-    TFNAME(RGB10A2)              /** (77)                                */
-    TFNAME(RG11B10F)             /** (78)                                */
-    TFNAME(UNKNOWNDEPTH)         /** (79) Depth formats below.           */
-    TFNAME(D16)                  /** (80)                                */
-    TFNAME(D24)                  /** (81)                                */
-    TFNAME(D24S8)                /** (82)                                */
-    TFNAME(D32)                  /** (83)                                */
-    TFNAME(D16F)                 /** (84)                                */
-    TFNAME(D24F)                 /** (85)                                */
-    TFNAME(D32F)                 /** (86)                                */
-    TFNAME(D0S8)                 /** (87)                                */
+	TFNAME(ASTC5x4) 			 /** (21) ASTC 5x4 6.40 BPP	             */
+	TFNAME(ASTC5x5) 			 /** (22) ASTC 5x5 5.12 BPP	             */
+	TFNAME(ASTC6x5) 			 /** (23) ASTC 6x5 4.27 BPP	             */
+	TFNAME(ASTC6x6) 			 /** (24) ASTC 6x6 3.56 BPP	             */
+	TFNAME(ASTC8x5) 			 /** (25) ASTC 8x5 3.20 BPP	             */
+	TFNAME(ASTC8x6) 			 /** (26) ASTC 8x6 2.67 BPP	             */
+	TFNAME(ASTC8x8) 			 /** (27) ASTC 8x8 2.00 BPP	             */
+	TFNAME(ASTC10x5) 			 /** (28) ASTC 10x5 2.56 BPP	         */
+	TFNAME(ASTC10x6) 			 /** (29) ASTC 10x6 2.13 BPP	         */
+	TFNAME(ASTC10x8) 			 /** (30) ASTC 10x8 1.60 BPP	         */
+	TFNAME(ASTC10x10) 			 /** (31) ASTC 10x10 1.28 BPP            */
+	TFNAME(ASTC12x10) 			 /** (32) ASTC 12x10 1.07 BPP            */
+	TFNAME(ASTC12x12)			 /** (33) ASTC 12x12 0.89 BPP            */
+	TFNAME(UNKNOWN)				 /** (34) Compressed formats above.      */
+	TFNAME(R1)					 /** (35)                                */
+	TFNAME(A8)					 /** (36)                                */
+	TFNAME(R8)					 /** (37)                                */
+	TFNAME(R8I)					 /** (38)                                */
+	TFNAME(R8U)					 /** (39)                                */
+	TFNAME(R8S)					 /** (40)                                */
+	TFNAME(R16)					 /** (41)                                */
+	TFNAME(R16I)				 /** (42)                                */
+	TFNAME(R16U)				 /** (43)                                */
+	TFNAME(R16F)				 /** (44)                                */
+	TFNAME(R16S)				 /** (45)                                */
+	TFNAME(R32I)				 /** (46)                                */
+	TFNAME(R32U)				 /** (47)                                */
+	TFNAME(R32F)				 /** (48)                                */
+	TFNAME(RG8)					 /** (49)                                */
+	TFNAME(RG8I)				 /** (50)                                */
+	TFNAME(RG8U)				 /** (51)                                */
+	TFNAME(RG8S)				 /** (52)                                */
+	TFNAME(RG16)				 /** (53)                                */
+	TFNAME(RG16I)				 /** (54)                                */
+	TFNAME(RG16U)				 /** (55)                                */
+	TFNAME(RG16F)				 /** (56)                                */
+	TFNAME(RG16S)				 /** (57)                                */
+	TFNAME(RG32I)				 /** (58)                                */
+	TFNAME(RG32U)				 /** (59)                                */
+	TFNAME(RG32F)				 /** (60)                                */
+	TFNAME(RGB8)				 /** (61)                                */
+	TFNAME(RGB8I)				 /** (62)                                */
+	TFNAME(RGB8U)				 /** (63)                                */
+	TFNAME(RGB8S)				 /** (64)                                */
+	TFNAME(RGB9E5F)				 /** (65)                                */
+	TFNAME(BGRA8)				 /** (66)                                */
+	TFNAME(RGBA8)				 /** (67)                                */
+	TFNAME(RGBA8I)				 /** (68)                                */
+	TFNAME(RGBA8U)				 /** (69)                                */
+	TFNAME(RGBA8S)				 /** (70)                                */
+    TFNAME(RGBA16)               /** (71)                                */
+    TFNAME(RGBA16I)              /** (72)                                */
+    TFNAME(RGBA16U)              /** (73)                                */
+    TFNAME(RGBA16F)              /** (74)                                */
+    TFNAME(RGBA16S)              /** (75)                                */
+    TFNAME(RGBA32I)              /** (76)                                */
+    TFNAME(RGBA32U)              /** (77)                                */
+    TFNAME(RGBA32F)              /** (78)                                */
+    TFNAME(B5G6R5)               /** (79)                                */
+    TFNAME(R5G6B5)               /** (80)                                */
+    TFNAME(BGRA4)                /** (81)                                */
+    TFNAME(RGBA4)                /** (82)                                */
+    TFNAME(BGR5A1)               /** (83)                                */
+    TFNAME(RGB5A1)               /** (84)                                */
+    TFNAME(RGB10A2)              /** (85)                                */
+    TFNAME(RG11B10F)             /** (86)                                */
+    TFNAME(UNKNOWNDEPTH)         /** (87) Depth formats below.           */
+    TFNAME(D16)                  /** (88)                                */
+    TFNAME(D24)                  /** (89)                                */
+    TFNAME(D24S8)                /** (90)                                */
+    TFNAME(D32)                  /** (91)                                */
+    TFNAME(D16F)                 /** (92)                                */
+    TFNAME(D24F)                 /** (93)                                */
+    TFNAME(D32F)                 /** (94)                                */
+    TFNAME(D0S8)                 /** (95)                                */
 };
 
 static void
