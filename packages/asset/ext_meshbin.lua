@@ -1,9 +1,11 @@
-local cr = import_package "ant.compile_resource"
-local serialize = import_package "ant.serialize"
-local math3d = require "math3d"
-local bgfx = require "bgfx"
-local declmgr = import_package "ant.render".declmgr
-local fs = require "filesystem"
+local cr        = import_package "ant.compile_resource"
+
+local math3d    = require "math3d"
+local bgfx      = require "bgfx"
+local fastio    = require "fastio"
+local datalist  = require "datalist"
+local fs        = require "filesystem"
+local declmgr   = import_package "ant.render".declmgr
 
 local proxy_vb = {}
 function proxy_vb:__index(k)
@@ -59,9 +61,29 @@ local function create_bounding(bounding)
     end
 end
 
+local function load_mem(m, pp)
+    local binname = m[1]
+    assert(type(binname) == "string" and binname:match "%.[iv]bbin")
+
+    local data, err = fastio.readall((pp / binname):string())
+    if not data then
+        error(("read file failed:%s, error:%s"):format(binname, err))
+    end
+    m[1] = data
+end
+
 local function loader(filename)
-    local c = cr.read_file(filename)
-    local mesh = serialize.unpack(c)
+    local local_filename = cr.compile(filename)
+    local mesh = datalist.parse(fastio.readall_s(local_filename:string()))
+
+    local pp = local_filename:parent_path()
+
+    local vb = assert(mesh.vb)
+    load_mem(vb.memory, pp)
+    local ib = mesh.ib
+    if ib then
+        load_mem(ib.memory, pp)
+    end
     create_bounding(mesh.bounding)
     return init(mesh)
 end

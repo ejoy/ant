@@ -6,14 +6,6 @@ local assetmgr 		= require "asset"
 local ext_meshbin 	= require "ext_meshbin"
 
 local imesh = ecs.interface "imesh"
-function imesh.create_vb(vb)
-	return ext_meshbin.proxy_vb(vb)
-end
-
-function imesh.create_ib(ib)
-	return ext_meshbin.proxy_ib(ib)
-end
-
 imesh.init_mesh = ext_meshbin.init
 
 

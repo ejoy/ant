@@ -392,6 +392,25 @@ end
 
 -- end
 
+local function save_meshbin_files(resname, meshgroup)
+	local cfgname = ("./meshes/%s.meshbin"):format(resname)
+
+	local function write_bin_file(fn, bin)
+		utility.save_file("./meshes/" .. fn, bin)
+		return fn
+	end
+
+	local vb = assert(meshgroup.vb)
+	vb.memory[1] = write_bin_file(resname .. ".vbbin", vb.memory[1])
+	local ib = meshgroup.ib
+	if ib then
+		ib.memory[1] = write_bin_file(resname .. ".ibbin", ib.memory[1])
+	end
+
+	utility.save_txt_file(cfgname, meshgroup)
+	return cfgname
+end
+
 
 local function export_meshbin(gltfscene, bindata, exports)
 	exports.mesh = {}
@@ -419,12 +438,9 @@ local function export_meshbin(gltfscene, bindata, exports)
 					meshaabb = math3d.aabb_merge(meshaabb, aabb)
 				end
 			end
-			local primname = "P" .. primidx
-			local resname = "./meshes/"..meshname .. "_" .. primname .. ".meshbin"
-			utility.save_bin_file(resname, group)
-			local m = exports.mesh[meshidx]
-			m[primidx] = resname
-			--m.FrontFace = check_front_face(group.vb, group.ib)
+
+			local stemname = ("%s_P%d"):format(meshname, primidx)
+			exports.mesh[meshidx][primidx] = save_meshbin_files(stemname, group)
 		end
 	end
 end

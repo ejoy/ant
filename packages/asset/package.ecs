@@ -10,8 +10,6 @@ interface "imaterial"
 
 interface "imesh"
     .implement "mesh.lua"
-    .method "create_vb"
-    .method "create_ib"
     .method "init_mesh"
 
 system "matobj_system"
