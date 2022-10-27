@@ -2,12 +2,20 @@ local fs  = require "filesystem"
 local lfs           = require "filesystem.local"
 local imgui         = require "imgui"
 local global_data   = require "common.global_data"
+local access        = global_data.repo_access
+local datalist      = require "datalist"
+
 local setting       = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
-local access        = dofile "/engine/vfs/repoaccess.lua"
+
 local ps = {
     id      = "ProjectSetting"
 }
+
+local function read_file(p)
+    local f <close> = lfs.open(p)
+    return f:read "a"
+end
 
 local default_tr_flags = imgui.flags.TreeNode{}
 local default_win_flags= imgui.flags.Window{}
@@ -86,30 +94,20 @@ local default_curve_world<const> = {
 
 local project_settings = {}
 
-local apply_curve_world_in_editor = false
-local old_setting
-local function backup_curve_world_setting()
-    local s = setting.setting
-    local cw = s:data().graphic.curve_world
-    old_setting = {
-        enable          = cw.enable,
-        type            = cw.type,
-        flat_distance   = cw.flat_distance,
-        distance        = cw.distance,
-        curve_rate      = cw.curve_rate,
-    }
-end
-local function apply_curve_world_setting(cw_setting)
-    local s = setting.setting
-    s:set("graphic/curve_world/enable",       cw_setting.enable)
-    s:set("graphic/curve_world/type",         cw_setting.type)
-    s:set("graphic/curve_world/flat_distance",cw_setting.flat_distance)
-    s:set("graphic/curve_world/distance",     cw_setting.distance)
-    s:set("graphic/curve_world/curve_rate",   cw_setting.curve_rate)
+local function deep_copy(dst)
+    local src = {}
+    for k, v in pairs(default_curve_world) do
+        if type(v) == "table" then
+            src[k] = deep_copy(v)
+        else
+            src[k] = v
+        end
+    end
+    return src
 end
 
 local function setting_ui(sc)
-    local graphic = sc:data().graphic
+    local graphic = sc.graphic
 
     if TreeNode("Graphic", default_tr_flags) then
         --Render
@@ -120,14 +118,16 @@ local function setting_ui(sc)
                 local rs = {}
                 local rbgcolor = toRGBColor(r.clear_color)
                 if CheckProperty("Color", rbgcolor, r.clear:match "C"~=nil, PropertyColor, function (rgbcolor)
-                    sc:set("graphic/render/clear_color", toDWColor(rgbcolor))
+                    --sc:set("graphic/render/clear_color", toDWColor(rgbcolor))
+                    r.clear_color = toDWColor(rgbcolor)
                 end) then
                     rs[#rs+1] = "C"
                 end
 
                 local v = {r.clear_depth}
                 if CheckProperty("Depth", v, r.clear:match "D"~=nil, PropertyFloat, function (v)
-                    sc:set("graphic/render/clear_depth", v[1])
+                    --sc:set("graphic/render/clear_depth", v[1])
+                    r.clear_depth = v[1]
                 end) then
                     rs[#rs+1] = "D"
                 end
@@ -135,13 +135,15 @@ local function setting_ui(sc)
 
                 v[1] = r.clear_stencil
                 if CheckProperty("Stencil", v, r.clear:match "S"~=nil, PropertyFloat, function (v)
-                    sc:set("graphic/render/clear_stencil", v[1])
+                    --sc:set("graphic/render/clear_stencil", v[1])
+                    r.clear_stencil = v[1]
                 end) then
                     rs[#rs+1] = "S"
                 end
 
                 if #rs >= 0 then
-                    sc:set("graphic/render/clear" ,table.concat(rs, ""))
+                    --sc:set("graphic/render/clear" ,table.concat(rs, ""))
+                    r.clear = table.concat(rs, "")
                 end
                 TreePop()
             end
@@ -161,17 +163,23 @@ local function setting_ui(sc)
                 local b = pp.bloom
                 local change, enable = Checkbox("Enable", b.enable)
                 if change then
-                    sc:set("graphic/postprocess/bloom/enable", enable)
+                    --sc:set("graphic/postprocess/bloom/enable", enable)
+                    b.enable = enable
                 end
                 BeginDisabled(not enable)
                 local v = {b.inv_highlight or 0.0}
+                v.min, v.max = -64, 64
+                v.speed = 0.2
                 if PropertyFloat("Inverse HighLight", v) then
-                    sc:set("graphic/postprocess/bloom/inv_highlight", v[1])
+                    --sc:set("graphic/postprocess/bloom/inv_highlight", v[1])
+                    b.inv_highlight = v[1]
                 end
 
                 v[1] = b.threshold or 0.0
+                v.min, v.max = 0.0, 512
                 if PropertyFloat("Lumnimance Thresthod", v) then
-                    sc:set("graphic/postprocess/bloom/threshold", v[1])
+                    --sc:set("graphic/postprocess/bloom/threshold", v[1])
+                    b.threshold = v[1]
                 end
                 EndDisabled()
                 TreePop()
@@ -184,35 +192,26 @@ local function setting_ui(sc)
             local cw = graphic.curve_world
 
             SameLine()
-            local aa = {apply_curve_world_in_editor}
-            if Checkbox("Apply in Editor", aa) then
-                local result = aa[1]
-                if result then
-                    backup_curve_world_setting()
-                else
-                    apply_curve_world_setting(old_setting)
-                end
-        
-                apply_curve_world_in_editor = result
-            end
 
             local modified
             local change, enable = Checkbox("Enable", cw and cw.enable or false)
             if change then
                 if cw == nil then
-                    sc:set("graphic/curve_world", default_curve_world)
-                    cw = default_curve_world
+                    --sc:set("graphic/curve_world", default_curve_world)
+                    cw = deep_copy(default_curve_world)
+                    graphic.curve_world = cw
                 end
                 sc:set("graphic/curve_world/enable", enable)
                 modified = true
             end
-            cw = cw or default_curve_world
+            cw = cw or deep_copy(default_curve_world)
 
             BeginDisabled(not enable)
             if BeginCombo("Type", {cw.type, flags = imgui.flags.Combo{} }) then
                 for _, n in ipairs(default_curve_world.type_options) do
                     if imgui.widget.Selectable(n, cw.type == n) then
-                        sc:set("graphic/curve_world/type", n)
+                        --sc:set("graphic/curve_world/type", n)
+                        cw.type = n
                         modified = true
                     end
                 end
@@ -223,14 +222,16 @@ local function setting_ui(sc)
             if t == "cylinder" then
                 local v = {cw.flat_distance, speed=1.0, min=0.0}
                 if PropertyFloat("Flat Distance", v) then
-                    sc:set("graphic/curve_world/flat_distance", v[1])
+                    --sc:set("graphic/curve_world/flat_distance", v[1])
+                    cw.flat_distance = v[1]
                     modified = true
                 end
                 v[1] = cw.curve_rate
                 v.speed = 0.01
                 v.max = 1.0
                 if PropertyFloat("Curve Rate", v) then
-                    sc:set("graphic/curve_world/curve_rate", v[1])
+                    --sc:set("graphic/curve_world/curve_rate", v[1])
+                    cw.curve_rate = v[1]
                     modified = true
                 end
 
@@ -238,7 +239,8 @@ local function setting_ui(sc)
                 v.speed = 0.5
                 v.max = nil
                 if PropertyFloat("Curve Distance", v) then
-                    sc:set("graphic/curve_world/distance", v[1])
+                    --sc:set("graphic/curve_world/distance", v[1])
+                    cw.distance = v[1]
                     modified = true
                 end
             else
@@ -247,9 +249,6 @@ local function setting_ui(sc)
             end
             EndDisabled()
 
-            if modified and apply_curve_world_in_editor then
-                apply_curve_world_setting(cw)
-            end
             TreePop()
         end
 
@@ -259,34 +258,25 @@ local function setting_ui(sc)
     if Button "Save" then
         local p = global_data.project_root / "settings"
         local f<close> = lfs.open(p, "w")
-        f:write(serialize.stringify(sc._data))
+        f:write(serialize.stringify(sc))
     end
 end
 
 function ps.show(open_popup)
     if open_popup then
-        if not IsPopupOpen(ps.id) then
-            apply_curve_world_in_editor = false
-        end
-
         imgui.windows.OpenPopup(ps.id)
         imgui.windows.SetNextWindowSize(800, 600)
-    else
-        if not IsPopupOpen(ps.id) and apply_curve_world_in_editor then
-            apply_curve_world_setting(old_setting)
-            apply_curve_world_in_editor = false
-        end
     end
 
     if BeginPopupModal(ps.id, default_win_flags) then
         if BeginTabBar("PS_Bar", default_tab_flags) then
             if BeginTabItem "ProjectSetting" then
                 local p = global_data.project_root / "settings"
-                local vp = fs.path(access.virtualpath(global_data.repo, p))
-                local s = project_settings[vp:string()]
+                
+                local s = project_settings[p:string()]
                 if s == nil then
-                    s = setting.create(vp)
-                    project_settings[vp:string()] = s
+                    s = datalist.parse(read_file(p))
+                    project_settings[p:string()] = s
                 end
                 setting_ui(s)
                 EndTabItem()
