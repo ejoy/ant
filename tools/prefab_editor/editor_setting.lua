@@ -28,16 +28,19 @@ local function save()
     f:write(c)
 end
 
-local function update_lastproj(name, projpath, auto_import)
-    local l = editor_setting.lastproj
-    if l == nil then
-        l = {}
-        editor_setting.lastproj = l
+local function update_lastproj(name, projpath)
+    if not editor_setting.lastprojs then
+        editor_setting.lastprojs = {}
     end
-
-    l.name = name
-    l.proj_path = projpath:gsub("\\", "/")
-    l.auto_import = auto_import
+    local proj_list = {
+        {name = name, proj_path = projpath:gsub("\\", "/")}
+    }
+    for _, proj in ipairs(editor_setting.lastprojs) do
+        if projpath ~= proj.proj_path then
+            proj_list[#proj_list + 1] = proj
+        end
+    end
+    editor_setting.lastprojs = proj_list
 end
 
 local function add_recent_file(f)
