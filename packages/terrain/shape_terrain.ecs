@@ -1,3 +1,8 @@
+system "plane_terrain_system"
+    .implement "plane_terrain.lua"
+    .method "entity_init"
+
+
 system "cube_shape_terrain_system"
     .implement "cube_shape_terrain.lua"
     .method "entity_init"
@@ -21,7 +26,8 @@ interface "imeshshape"
     .method "set_resource"
 
 policy "shape_terrain"
-    .require_system "ant.terrain|mesh_terrain_system"
+    --.require_system "ant.terrain|mesh_terrain_system"
+    .require_system "ant.terrain|plane_terrain_system"
     .require_interface "ant.terrain|imeshshape"
     .component "shape_terrain"
 

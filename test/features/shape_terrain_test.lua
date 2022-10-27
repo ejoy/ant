@@ -255,6 +255,30 @@ local function generate_mesh_shape(ww, hh)
     return ms
 end
 
+local shape_type_field = {
+    "g",  "g",  "g",  "d",  "g",  "d",  "g",  "d",
+    "g",  "g",  "g",  "d",  "g",  "g",  "g",  "g",
+    "d",  "d",  "d",  "g",  "g",  "d",  "g",  "d",
+    "g",  "d",  "g",  "g",  "d",  "d",  "d",  "d",
+    "d",  "d",  "g",  "d",  "g",  "g",  "g",  "g",
+    "g",  "d",  "g",  "d",  "g",  "g",  "g",  "g",
+    "g",  "g",  "g",  "d",  "g",  "g",  "g",  "g",
+    "g",  "d",  "d",  "d",  "g",  "g",  "g",  "g",
+}
+
+local function gen_terrain_field(width, height)
+    local terrain_field = {}
+    for ih=1, height do
+        for iw=1, width do
+            local idx = (ih - 1) * width + iw
+            terrain_field[idx] = {}
+            terrain_field[idx].type = shape_type_field[idx]
+        end
+    end
+    return terrain_field
+     
+end
+
 function shape_terrain_test_sys:init()
     local ww, hh = 8, 8 --256, 256--2, 2
     shape_terrain_test = ecs.create_entity{
@@ -272,6 +296,9 @@ function shape_terrain_test_sys:init()
                 width = ww,
                 height = hh,
                 unit = 2.0,
+                terrain_fields = gen_terrain_field(ww, hh),
+                section_size = math.max(1, ww > 4 and ww//4 or ww//2),
+                material = "/pkg/ant.resources/materials/plane_terrain.material",
                 -- cube_shape = {
                 --     fields = generate_terrain_fields(ww, hh),
                 --     section_size = math.max(1, ww > 4 and ww//4 or ww//2),
@@ -281,7 +308,8 @@ function shape_terrain_test_sys:init()
                 --         thickness = 0.08,
                 --     },
                 -- }
-                mesh_shape = generate_mesh_shape(ww, hh)
+
+                --mesh_shape = generate_mesh_shape(ww, hh)
             },
         }
     }

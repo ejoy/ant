@@ -24,6 +24,33 @@ local csm_setting = {
 	split_frustums	= {nil, nil, nil, nil},
 }
 
+local function gen_ratios(distances)
+	local pre_dis = 0
+	local ratios = {}
+	for i=1, #distances do
+		local dis = math.min(1.0, distances[i] * (1.0+csm_setting.cross_delta))
+		ratios[#ratios+1] = {pre_dis, dis}
+		pre_dis = dis
+	end
+	ratios[#ratios+1] = {pre_dis, 1.0}
+	return ratios
+end
+
+if shadowcfg.bias == nil then 
+	shadowcfg.bias = 0.003
+end
+
+if shadowcfg.min_variance == nil then
+	shadowcfg.min_variance = 0.012
+end
+
+if shadowcfg.depth_multiplier == nil then
+	shadowcfg.depth_multiplier = 1000
+end
+
+if shadowcfg.normal_offset == nil then
+	shadowcfg.normal_offset = 0.012
+end
 if shadowcfg.split_ratios then
 	if csm_setting.split_num then
 		if #shadowcfg.split_ratios ~= (csm_setting.split_num - 1)  then
@@ -41,8 +68,8 @@ else
 	else
 		csm_setting.split_num = 4
  		csm_setting.split_ratios = {
- 			{0.01,0.2},
-			{0.2,0.30},
+ 			{0.06,0.1},
+			{0.1,0.30},
 			{0.3,0.40},
 			{0.4,0.68} 
 		}

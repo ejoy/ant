@@ -1,0 +1,43 @@
+fx:
+  fs: /pkg/ant.resources/shaders/terrain/fs_plane_terrain.sc
+  vs: /pkg/ant.resources/shaders/terrain/vs_plane_terrain.sc
+properties:
+  u_pbr_factor: {1, 1, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
+  u_emissive_factor: {0, 0, 0, 0}
+  u_basecolor_factor: {1, 1, 1, 1}
+  s_stone1_color:
+    stage: 0
+    texture: /pkg/ant.resources/textures/shape_terrain/shape_stone1_basecolor.texture
+  s_stone2_color:
+    stage: 1
+    texture: /pkg/ant.resources/textures/shape_terrain/shape_stone2_basecolor.texture 
+  s_sand1_color:
+    stage: 2
+    texture: /pkg/ant.resources/textures/shape_terrain/shape_sand1_basecolor.texture
+  s_sand2_color:
+    stage: 3
+    texture: /pkg/ant.resources/textures/shape_terrain/shape_sand2_basecolor.texture
+  s_sand3_color:
+    stage: 4
+    texture: /pkg/ant.resources/textures/shape_terrain/shape_sand3_basecolor.texture
+  s_stone_height:
+    stage: 5
+    texture: /pkg/ant.resources/textures/shape_terrain/shape_stone_height.texture
+  s_sand_height:
+    stage: 6
+    texture: /pkg/ant.resources/textures/shape_terrain/shape_sand_height.texture
+  s_stone1_normal:
+    stage: 7
+    texture: /pkg/ant.resources/textures/shape_terrain/shape_stone1_normal.texture
+  s_stone2_normal:
+    stage: 8
+    texture: /pkg/ant.resources/textures/shape_terrain/shape_stone2_normal.texture
+  s_sand_normal:
+    stage: 9
+    texture: /pkg/ant.resources/textures/shape_terrain/shape_sand_normal.texture
+state: 
+    ALPHA_REF: 0
+    CULL: CCW
+    DEPTH_TEST: GREATER
+    MSAA: true
+    WRITE_MASK: RGBAZ

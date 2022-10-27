@@ -92,7 +92,7 @@ component "scene_changed"
 component "hitch_tag"
 component "hitch"
     .type "c"
-    .field "group:int64"
+    .field "group:int"
 
 policy "hitch_object"
     .require_policy "ant.scene|scene_object"

@@ -23,7 +23,7 @@ end
 
 function mt_sys:entity_init()
     for e in w:select "INIT shape_terrain:in eid:in" do
-        local st = e.shape_terrain
+--[[         local st = e.shape_terrain
         local ms = st.mesh_shape
         local tw, th = st.width, st.height
         local mw, mh = ms.w, ms.h
@@ -43,7 +43,7 @@ function mt_sys:entity_init()
                 instances[idx] = instance(terrainid, assert(meshprefabs[midx]), centerpos)
             end
         end
-        ms.instances = instances
+        ms.instances = instances ]]
     end
 end
 
