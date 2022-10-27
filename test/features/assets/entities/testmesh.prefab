@@ -3,8 +3,8 @@ policy:
     ant.render|render
     ant.general|name
 data:
-    mesh:"/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
-    material: "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.001.material"
+    mesh:"/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
+    material: "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material"
     visible_state: "main_view"
     scene: {}
     name: "testmesh"
