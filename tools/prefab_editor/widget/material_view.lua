@@ -928,13 +928,39 @@ local function check_disable_file_fetch_ui(matfile_ui)
     fetch.disable = f == nil or (not f:equal_extension ".material")
 end
 
+local default_files<const> = {
+    ['/pkg/ant.resources/materials/pbr_default.material']       = true,
+    ['/pkg/ant.resources/materials/pbr_default_cw.material']    = true,
+    ['/pkg/ant.resources/materials/states/default.state']       = true,
+    ['/pkg/ant.resources/materials/states/default_cw.state']    = true,
+    ['/pkg/ant.resources/materials/states/translucent.state']   = true,
+    ['/pkg/ant.resources/materials/states/translucent_cw.state']= true,
+}
+
+local function is_glb_resource()
+    local cp = prefab_mgr:get_current_filename()
+    if cp then
+        return cp:match "%.glb%|mesh%.prefab$" ~= nil
+    end
+end
+
+
+local function is_readonly_resource(p)
+    if is_glb_resource() then
+        return true
+    end
+    return p:match ".glb|" or default_files[p]
+end
+
 local function build_file_ui(mv)
     return uiproperty.SameLineContainer({},{
         uiproperty.Button({label="!", id="fetch_material"}, {
             click = function ()
                 local f = rb.selected_file()
                 local prefab = hierarchy:get_template(mv.eid)
-                prefab.template.data.material = f
+                prefab.template.data.material = f:string()
+
+                mv.save.disable = is_readonly_resource(f:string())
             end
         }),
         uiproperty.EditText({label="File", id="path"},{
@@ -1009,29 +1035,6 @@ function MaterialView:_init()
             self.save, self.saveas,
         })
     })
-end
-
-local default_files<const> = {
-    ['/pkg/ant.resources/materials/pbr_default.material']       = true,
-    ['/pkg/ant.resources/materials/pbr_default_cw.material']    = true,
-    ['/pkg/ant.resources/materials/states/default.state']       = true,
-    ['/pkg/ant.resources/materials/states/default_cw.state']    = true,
-    ['/pkg/ant.resources/materials/states/translucent.state']   = true,
-    ['/pkg/ant.resources/materials/states/translucent_cw.state']= true,
-}
-
-local function is_glb_resource()
-    local cp = prefab_mgr:get_current_filename()
-    if cp then
-        return cp:match "%.glb%|mesh%.prefab$" ~= nil
-    end
-end
-
-local function is_readonly_resource(p)
-    if is_glb_resource() then
-        return true
-    end
-    return p:match ".glb|" or default_files[p]
 end
 
 function MaterialView:set_model(eid)
@@ -1109,16 +1112,11 @@ function MaterialView:enable_properties_ui(eid)
     end
 end
 
-function MaterialView:update()
+function MaterialView:show()
     if self.eid then
         BaseView.update(self)
         self.material:update()
-        
-    end
-end
 
-function MaterialView:show()
-    if self.eid then
         BaseView.show(self)
         check_disable_file_fetch_ui(self.mat_file)
         self.material:show()
