@@ -951,6 +951,17 @@ local function is_readonly_resource(p)
     return p:match ".glb|" or default_files[p]
 end
 
+local function to_virtualpath(localpath)
+    local vpath = access.virtualpath(global_data.repo, fs.path(localpath))
+    if vpath == nil then
+        error(("save path:%s, is not valid package"):format(localpath))
+    end
+
+    if not vpath:match "/pkg" then
+        return fs.path(global_data.package_path:string() .. vpath)
+    end
+end
+
 local function build_file_ui(mv)
     return uiproperty.SameLineContainer({},{
         uiproperty.Button({label="!", id="fetch_material"}, {
@@ -1013,16 +1024,10 @@ function MaterialView:_init()
         click = function ()
             local path = uiutils.get_saveas_path("Material", "material")
             if path then
-                local vpath = access.virtualpath(global_data.repo, fs.path(path))
-                assert(vpath)
-                if vpath == nil then
-                    error(("save path:%s, is not valid package"):format(path))
-                end
-
-                local p = fs.path(vpath)
-                refine_material_data(self.eid, p)
-                save_material(self.eid, p)
-                reload(self.eid, p)
+                local vpath = to_virtualpath(path)
+                refine_material_data(self.eid, vpath)
+                save_material(self.eid, vpath)
+                reload(self.eid, vpath)
             end
         end
     })
