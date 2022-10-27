@@ -880,7 +880,6 @@ local function check_relative_path(path, basepath)
 end
 
 local function save_material(eid, path)
-    path = fs.path(path)
     local t = material_template(eid)
 
     local function refine_properties(p)
@@ -915,9 +914,9 @@ local function save_material(eid, path)
     f:write(serialize.stringify(nt))
 end
 
-local function reload(e, mtl)
+local function reload(e, mpath)
     local prefab = hierarchy:get_template(e)
-    prefab.template.data.material = mtl
+    prefab.template.data.material = mpath:string()
     prefab_mgr:save_prefab()
     prefab_mgr:reload()
 end
@@ -979,9 +978,9 @@ end
 
 local function refine_material_data(eid, newmaterial_path)
     local prefab = hierarchy:get_template(eid)
-    local oldmaterial_path = prefab.template.data.material
+    local oldmaterial_path = fs.path(prefab.template.data.material)
     if oldmaterial_path ~= newmaterial_path then
-        local basepath = fs.path(oldmaterial_path):parent_path()
+        local basepath = oldmaterial_path:parent_path()
         local t = load_material_file(oldmaterial_path)
         for k, p in pairs(t.properties) do
             if p.texture then
@@ -1020,9 +1019,10 @@ function MaterialView:_init()
                     error(("save path:%s, is not valid package"):format(path))
                 end
 
-                refine_material_data(self.eid, vpath)
-                save_material(self.eid, vpath)
-                reload(self.eid, vpath)
+                local p = fs.path(vpath)
+                refine_material_data(self.eid, p)
+                save_material(self.eid, p)
+                reload(self.eid, p)
             end
         end
     })
