@@ -86,9 +86,24 @@ local function default_macros(setting)
     return m
 end
 
-local function get_macros(setting, fxsetting)
+local function is_pbr_material(fx)
+    if fx.vs and fx.fs then
+        return fx.vs:match "/pkg/ant.resources/shaders/pbr/vs_pbr.sc" and
+            fx.fs:match "/pkg/ant.resources/shaders/pbr/fs_pbr.sc"
+    end
+end
+
+local PBR_TEXTURE_MACROS<const> = {
+    s_basecolor = "HAS_BASECOLOR_TEXTURE=1",
+    s_normal    = "HAS_NORMAL_TEXTURE=1",
+    s_metallic_roughness="HAS_METALLIC_ROUGHNESS_TEXTURE=1",
+    s_emissive="HAS_EMISSIVE_TEXTURE=1",
+    s_occlusion="HAS_OCCLUSION_TEXTURE=1",
+}
+
+local function get_macros(setting, mat)
     local macros = default_macros(setting)
-    for k, v in pairs(fxsetting) do
+    for k, v in pairs(mat.fx.setting) do
         local f = SETTING_MAPPING[k]
         if f == nil then
             macros[#macros+1] = k .. '=' .. v
@@ -103,6 +118,15 @@ local function get_macros(setting, fxsetting)
                 macros[#macros+1] = f
             else
                 error("invalid type")
+            end
+        end
+    end
+
+    if is_pbr_material(mat.fx) then
+        local properties = mat.properties
+        for texname, m in pairs(PBR_TEXTURE_MACROS) do
+            if properties[texname] then
+                macros[#macros+1] = m
             end
         end
     end
@@ -169,7 +193,7 @@ return function (input, output, setting, localpath)
                 includes = shader_includes(),
                 stage = stage,
                 varying_path = varying_path,
-                macros = get_macros(setting, fx.setting),
+                macros = get_macros(setting, mat),
                 debug = compile_debug_shader(setting.os, setting.renderer),
             }
             if not ok then

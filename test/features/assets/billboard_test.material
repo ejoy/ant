@@ -3,7 +3,6 @@ fx:
   vs: /pkg/ant.test.features/assets/vs_billboard.sc
   setting:
     ALPHAMODE_OPAQUE: 1
-    HAS_BASECOLOR_TEXTURE: 1
 properties:
   s_basecolor:
     stage: 0

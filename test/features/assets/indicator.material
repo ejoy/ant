@@ -8,7 +8,6 @@ fx:
     FIX_WIDTH: 1
     surfacetype: background
     lighting: off
-    #HAS_EMISSIVE_TEXTURE: 1
 properties:
   s_tex:
     stage: 0

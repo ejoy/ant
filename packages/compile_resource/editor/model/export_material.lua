@@ -273,20 +273,7 @@ return function (output, glbdata, exports, tolocalpath)
             },
         }
 
-        local p = material.properties
         local setting = {}
-        local tex_names = {
-            s_basecolor = "HAS_BASECOLOR_TEXTURE",
-            s_metallic_roughness = "HAS_METALLIC_ROUGHNESS_TEXTURE",
-            s_normal = "HAS_NORMAL_TEXTURE",
-            s_emissive = "HAS_EMISSIVE_TEXTURE",
-            s_occlusion = "HAS_OCCLUSION_TEXTURE",
-        }
-        for k, n in pairs(tex_names) do
-            if p[k] then
-                setting[n] = 1
-            end
-        end
         if isopaque then
             setting["ALPHAMODE_OPAQUE"] = 1
         else

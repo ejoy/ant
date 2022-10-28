@@ -4,8 +4,6 @@ fx:
   setting:
     #CYLINDER_TRANSFORM: 1
     WITH_COLOR_ATTRIB: 1
-    HAS_BASECOLOR_TEXTURE: 1
-    HAS_NORMAL_TEXTURE: 1
     surfacetype: background
 properties:
   s_basecolor:
