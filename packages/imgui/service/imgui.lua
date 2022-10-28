@@ -96,7 +96,7 @@ local function updateIO()
 		elseif what == "MouseWheel" then
 			cb.mouse_wheel(MousePosX, MousePosY, y)
 		elseif what == "MouseButton" then
-			local button, down = x, DOWN[y]
+			local button, down = x + 1, DOWN[y]
 			local cur = Mouse[button]
 			if cur ~= down then
 				Mouse[button] = down

@@ -41,6 +41,16 @@ struct lua_args {
 	bool err;
 };
 
+template <typename Flags>
+static Flags lua_getflags(lua_State* L, int idx) {
+	return (Flags)luaL_checkinteger(L, idx);
+}
+
+template <typename Flags>
+static Flags lua_getflags(lua_State* L, int idx, Flags def) {
+	return (Flags)luaL_optinteger(L, idx, lua_Integer(def));
+}
+
 static int
 lDestroy(lua_State *L) {
 	if (ImGui::GetCurrentContext()) {
@@ -54,7 +64,7 @@ lDestroy(lua_State *L) {
 
 static int dSpace(lua_State* L) {
 	const char* str_id = luaL_checkstring(L, 1);
-	ImGuiDockNodeFlags flags = (ImGuiDockNodeFlags)luaL_checkinteger(L, 2);
+	auto flags = lua_getflags<ImGuiDockNodeFlags>(L, 2);
 	float w = (float)luaL_optnumber(L, 3, 0);
 	float h = (float)luaL_optnumber(L, 4, 0);
 	ImGui::DockSpace(ImGui::GetID(str_id), ImVec2(w, h), flags);
@@ -123,7 +133,7 @@ static int lPairsInputEvents(lua_State* L) {
 		switch (e->Type) {
 		case ImGuiInputEventType_MousePos: {
 			if (io.WantCaptureMouse) {
-				continue;
+				break;
 			}
 			ImVec2 event_pos(e->MousePos.PosX, e->MousePos.PosY);
 			if (ImGui::IsMousePosValid(&event_pos))
@@ -136,10 +146,10 @@ static int lPairsInputEvents(lua_State* L) {
 		}
 		case ImGuiInputEventType_MouseWheel:
 			if (io.WantCaptureMouse) {
-				continue;
+				break;
 			}
 			if (e->MouseWheel.WheelX == 0.0f && e->MouseWheel.WheelY == 0.0f) {
-				continue;
+				break;
 			}
 			lua_pushinteger(L, ++event_n);
 			lua_pushstring(L, "MouseWheel");
@@ -148,21 +158,21 @@ static int lPairsInputEvents(lua_State* L) {
 			return 4;
 		case ImGuiInputEventType_MouseButton:
 			if (io.WantCaptureMouse) {
-				continue;
+				break;
 			}
 			lua_pushinteger(L, ++event_n);
 			lua_pushstring(L, "MouseButton");
-			lua_pushinteger(L, e->MouseButton.Button + 1);
+			lua_pushinteger(L, e->MouseButton.Button);
 			lua_pushinteger(L, e->MouseButton.Down);
 			return 4;
 		case ImGuiInputEventType_Key:
 		{
 			if (io.WantCaptureKeyboard) {
-				continue;
+				break;
 			}
 			auto key = e->Key.Key;
 			if (key < ImGuiKey_KeysData_OFFSET || key >= ImGuiKey_KeysData_OFFSET + ImGuiKey_KeysData_SIZE) {
-				continue;
+				break;
 			}
 			lua_pushinteger(L, ++event_n);
 			lua_pushstring(L, "Key");
@@ -291,7 +301,7 @@ wColorButton(lua_State *L) {
 	float c2 = (float)luaL_checknumber(L, 3);
 	float c3 = (float)luaL_checknumber(L, 4);
 	float c4 = (float)luaL_optnumber(L, 5, 1.0f);
-	ImGuiColorEditFlags flags = (ImGuiColorEditFlags)luaL_optinteger(L, 6, 0);
+	auto flags = lua_getflags<ImGuiColorEditFlags>(L, 6, ImGuiColorEditFlags_None);
 	float w = (float)luaL_optnumber(L, 7, 0);
 	float h = (float)luaL_optnumber(L, 8, 0);
 	bool click = ImGui::ColorButton(desc, ImVec4(c1, c2, c3, c4), flags, ImVec2(w, h));
@@ -1292,7 +1302,7 @@ wSelectable(lua_State *L) {
 		selected = lua_toboolean(L, INDEX_ARGS);
 		size.x = (float)luaL_optnumber(L, 3, 0.0f);
 		size.y = (float)luaL_optnumber(L, 4, 0.0f);
-		flags = (ImGuiSelectableFlags)luaL_optinteger(L, 5, 0);
+		flags = lua_getflags<ImGuiSelectableFlags>(L, 5, ImGuiSelectableFlags_None);
 		if (lua_toboolean(L, 6)) {
 			flags |= ImGuiSelectableFlags_Disabled;
 		}
@@ -1329,7 +1339,7 @@ wSelectable(lua_State *L) {
 static int
 wTreeNode(lua_State *L) {
 	const char * label = luaL_checkstring(L, INDEX_ID);
-	ImGuiTreeNodeFlags flags = (ImGuiTreeNodeFlags)luaL_optinteger(L, 2, 0);
+	auto flags = lua_getflags<ImGuiTreeNodeFlags>(L, 2, ImGuiTreeNodeFlags_None);
 	bool change = ImGui::TreeNodeEx(label, flags);
 	lua_pushboolean(L, change);
 	return 1;
@@ -1359,7 +1369,7 @@ wSetNextItemOpen(lua_State *L) {
 static int
 wCollapsingHeader(lua_State *L) {
 	const char *label = luaL_checkstring(L, INDEX_ID);
-	ImGuiTreeNodeFlags flags = (ImGuiTreeNodeFlags)luaL_optinteger(L, 2, 0);
+	auto flags = lua_getflags<ImGuiTreeNodeFlags>(L, 2, ImGuiTreeNodeFlags_None);
 	bool change = ImGui::CollapsingHeader(label, flags);
 	lua_pushboolean(L, change);
 	return 1;
@@ -1636,8 +1646,8 @@ wImageButton(lua_State *L) {
 
 static int
 wBeginDragDropSource(lua_State * L) {
-	ImGuiDragDropFlags flag = (ImGuiDragDropFlags)luaL_optinteger(L, 1, 0);
-	bool change = ImGui::BeginDragDropSource(flag);
+	auto flags = lua_getflags<ImGuiDragDropFlags>(L, 1, ImGuiDragDropFlags_None);
+	bool change = ImGui::BeginDragDropSource(flags);
 	lua_pushboolean(L, change);
 	return 1;
 }
@@ -1677,16 +1687,16 @@ static int
 wAcceptDragDropPayload(lua_State * L) {
 	bool is_table_arg = lua_istable(L, 1);
 	const char * type;
-	ImGuiDragDropFlags flag;
-	if ( is_table_arg ){
+	ImGuiDragDropFlags flags;
+	if (is_table_arg) {
 		type = read_field_checkstring(L, "type", 1);
-		flag = read_field_int(L, "flags", 0, 1);
+		flags = read_field_int(L, "flags", 0, 1);
 	}
 	else {
 		type = luaL_checkstring(L, 1);
-		flag = (ImGuiDragDropFlags)luaL_optinteger(L, 2, 0);
+		flags = lua_getflags<ImGuiDragDropFlags>(L, 2, ImGuiDragDropFlags_None);
 	}
-	const ImGuiPayload * payload = ImGui::AcceptDragDropPayload(type, flag);
+	const ImGuiPayload * payload = ImGui::AcceptDragDropPayload(type, flags);
 	if (payload != NULL){
 		if (is_table_arg){
 			lua_pushlstring(L, (const char *)payload->Data,payload->DataSize);
@@ -2045,7 +2055,7 @@ wSelectableInput(lua_State* L) {
 		selected = lua_toboolean(L, INDEX_ARGS);
 		size.x = (float)luaL_optnumber(L, 3, 0.0f);
 		size.y = (float)luaL_optnumber(L, 4, 0.0f);
-		flags = (ImGuiSelectableFlags)luaL_optinteger(L, 5, 0);
+		flags = lua_getflags<ImGuiSelectableFlags>(L, 5, ImGuiSelectableFlags_None);
 		if (lua_toboolean(L, 6)) {
 			flags |= ImGuiSelectableFlags_Disabled;
 		}
@@ -2172,7 +2182,7 @@ winBeginChild(lua_State *L) {
 	float width = (float)luaL_optnumber(L, 2, 0);
 	float height = (float)luaL_optnumber(L, 3, 0);
 	bool border = lua_toboolean(L, 4);
-	ImGuiWindowFlags flags = (ImGuiWindowFlags)luaL_optinteger(L, 5, 0);
+	auto flags = lua_getflags<ImGuiWindowFlags>(L, 5, ImGuiWindowFlags_None);
 	bool change = ImGui::BeginChild(id, ImVec2(width, height), border, flags);
 	lua_pushboolean(L, change);
 	return 1;
@@ -2187,7 +2197,7 @@ winEndChild(lua_State *L) {
 static int
 winBeginTabBar(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
-	ImGuiTabBarFlags flags = (ImGuiWindowFlags)luaL_optinteger(L, 2, 0);
+	auto flags = lua_getflags<ImGuiTabBarFlags>(L, 2, ImGuiTabBarFlags_None);
 	bool change = ImGui::BeginTabBar(id, flags);
 	lua_pushboolean(L, change);
 	return 1;
@@ -2224,14 +2234,15 @@ winSetTabItemClosed(lua_State *L) {
 
 static int
 winOpenPopup(lua_State *L) {
-	//TODO: ImGuiPopupFlags
 	if (lua_isinteger(L, INDEX_ID)) {
 		ImGuiID id = (ImGuiID)lua_tointeger(L, INDEX_ID);
-		ImGui::OpenPopup(id);
+		auto flags = lua_getflags<ImGuiPopupFlags>(L, INDEX_ARGS, ImGuiPopupFlags_None);
+		ImGui::OpenPopup(id, flags);
 	}
 	else {
 		const char * id = luaL_checkstring(L, INDEX_ID);
-		ImGui::OpenPopup(id);
+		auto flags = lua_getflags<ImGuiPopupFlags>(L, INDEX_ARGS, ImGuiPopupFlags_None);
+		ImGui::OpenPopup(id, flags);
 	}
 	return 0;
 }
@@ -2239,7 +2250,7 @@ winOpenPopup(lua_State *L) {
 static int
 winBeginPopup(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
-	ImGuiWindowFlags flags = (ImGuiWindowFlags)(luaL_optinteger(L, INDEX_ARGS, 0) & 0xffffffff);
+	auto flags = lua_getflags<ImGuiWindowFlags>(L, INDEX_ARGS, ImGuiWindowFlags_None);
 	bool change = ImGui::BeginPopup(id, flags);
 	lua_pushboolean(L, change);
 	return 1;
@@ -2248,7 +2259,7 @@ winBeginPopup(lua_State *L) {
 static int
 winBeginPopupContextItem(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
-	ImGuiPopupFlags flags = (ImGuiPopupFlags)(luaL_optinteger(L, INDEX_ARGS, 1));	// 1 : MouseButtonRight
+	auto flags = lua_getflags<ImGuiPopupFlags>(L, INDEX_ARGS, ImGuiPopupFlags_MouseButtonRight);
 	int change = ImGui::BeginPopupContextItem(id, flags);
 	lua_pushboolean(L, change);
 	return 1;
@@ -2257,7 +2268,7 @@ winBeginPopupContextItem(lua_State *L) {
 static int
 winBeginPopupContextWindow(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
-	ImGuiPopupFlags flags = (ImGuiPopupFlags)(luaL_optinteger(L, INDEX_ARGS, 1));
+	auto flags = lua_getflags<ImGuiPopupFlags>(L, INDEX_ARGS, ImGuiPopupFlags_MouseButtonRight);
 	int change = ImGui::BeginPopupContextWindow(id, flags);
 	lua_pushboolean(L, change);
 	return 1;
@@ -2266,7 +2277,7 @@ winBeginPopupContextWindow(lua_State *L) {
 static int
 winBeginPopupContextVoid(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
-	ImGuiPopupFlags flags = (ImGuiPopupFlags)(luaL_optinteger(L, INDEX_ARGS, 1));
+	auto flags = lua_getflags<ImGuiPopupFlags>(L, INDEX_ARGS, ImGuiPopupFlags_MouseButtonRight);
 	int change = ImGui::BeginPopupContextVoid(id, flags);
 	lua_pushboolean(L, change);
 	return 1;
@@ -2291,7 +2302,7 @@ winEndPopup(lua_State *L) {
 static int
 winOpenPopupOnItemClick(lua_State *L) {
 	const char * id = luaL_checkstring(L, INDEX_ID);
-	ImGuiPopupFlags flags = (ImGuiPopupFlags)(luaL_optinteger(L, INDEX_ARGS, 1));
+	auto flags = lua_getflags<ImGuiPopupFlags>(L, INDEX_ARGS, ImGuiPopupFlags_MouseButtonRight);
 	ImGui::OpenPopupOnItemClick(id, flags);
 	return 0;
 }
@@ -2326,7 +2337,7 @@ winIsWindowCollapsed(lua_State *L) {
 
 static int
 winIsWindowFocused(lua_State *L) {
-	ImGuiFocusedFlags flags = (ImGuiWindowFlags)luaL_optinteger(L, 1, 0);
+	auto flags = lua_getflags<ImGuiFocusedFlags>(L, 1, ImGuiFocusedFlags_None);
 	bool v = ImGui::IsWindowFocused(flags);
 	lua_pushboolean(L, v);
 	return 1;
@@ -2334,7 +2345,7 @@ winIsWindowFocused(lua_State *L) {
 
 static int
 winIsWindowHovered(lua_State *L) {
-	ImGuiHoveredFlags flags = (ImGuiWindowFlags)luaL_optinteger(L, 1, 0);
+	auto flags = lua_getflags<ImGuiHoveredFlags>(L, 1, ImGuiHoveredFlags_None);
 	bool v = ImGui::IsWindowHovered(flags);
 	lua_pushboolean(L, v);
 	return 1;
@@ -2817,7 +2828,7 @@ cSetMouseCursor(lua_State* L) {
 
 static int
 uSetColorEditOptions(lua_State *L) {
-	ImGuiColorEditFlags flags = (ImGuiColorEditFlags)luaL_checkinteger(L, 1);
+	auto flags = lua_getflags<ImGuiColorEditFlags>(L, 1);
 	ImGui::SetColorEditOptions(flags);
 	return 0;
 }
@@ -2854,7 +2865,7 @@ uSetKeyboardFocusHere(lua_State *L) {
 
 static int
 uIsItemHovered(lua_State *L) {
-	ImGuiHoveredFlags flags = (ImGuiHoveredFlags)luaL_optinteger(L, 1, 0);
+	auto flags = lua_getflags<ImGuiHoveredFlags>(L, 1, ImGuiHoveredFlags_None);
 	bool change = ImGui::IsItemHovered(flags);
 	lua_pushboolean(L, change);
 	return 1;
@@ -2876,7 +2887,7 @@ uIsItemFocused(lua_State *L) {
 
 static int
 uIsItemClicked(lua_State *L) {
-	int mouse_button = (int)luaL_optinteger(L, 1, 0);
+	auto mouse_button = lua_getflags<ImGuiMouseButton>(L, 1, ImGuiMouseButton_Left);
 	bool change = ImGui::IsItemClicked(mouse_button);
 	lua_pushboolean(L, change);
 	return 1;
@@ -3112,7 +3123,7 @@ uSetNextFrameWantCaptureMouse(lua_State * L) {
 
 static int
 uIsMouseDoubleClicked(lua_State * L) {
-	ImGuiMouseButton btn = (ImGuiMouseButton)luaL_checkinteger(L, 1);
+	auto btn = lua_getflags<ImGuiMouseButton>(L, 1);
 	bool clicked = ImGui::IsMouseDoubleClicked(btn);
 	lua_pushboolean(L, clicked);
 	return 1;
@@ -3120,7 +3131,7 @@ uIsMouseDoubleClicked(lua_State * L) {
 
 static int
 uIsKeyPressed(lua_State * L) {
-	ImGuiKey key = (ImGuiKey)luaL_checkinteger(L, 1);
+	auto key = lua_getflags<ImGuiKey>(L, 1);
 	bool pressed = ImGui::IsKeyPressed(key);
 	lua_pushboolean(L, pressed);
 	return 1;
@@ -3164,8 +3175,8 @@ uCalcItemWidth(lua_State* L) {
 
 static int
 cIsMouseDragging(lua_State* L) {
-	int mouseType = (int)luaL_optinteger(L, 1, 0);
-	lua_pushboolean(L, ImGui::IsMouseDragging(mouseType));
+	auto mouse_button = lua_getflags<ImGuiMouseButton>(L, 1, ImGuiMouseButton_Left);
+	lua_pushboolean(L, ImGui::IsMouseDragging(mouse_button));
 	return 1;
 }
 
@@ -3234,7 +3245,19 @@ flag_gen(lua_State *L, const char *name, struct enum_pair *enums) {
 	lua_setfield(L, -2, name);
 }
 
+static void
+enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
+	int i;
+	lua_newtable(L);
+	for (i = 0; enums[i].name; i++) {
+		lua_pushinteger(L, enums[i].value);
+		lua_setfield(L, -2, enums[i].name);
+	}
+	lua_setfield(L, -2, name);
+}
+
 static struct enum_pair eColorEditFlags[] = {
+	ENUM(ImGuiColorEditFlags, None),
 	ENUM(ImGuiColorEditFlags, NoAlpha),
 	ENUM(ImGuiColorEditFlags, NoPicker),
 	ENUM(ImGuiColorEditFlags, NoOptions),
@@ -3261,6 +3284,7 @@ static struct enum_pair eColorEditFlags[] = {
 };
 
 static struct enum_pair eInputTextFlags[] = {
+	ENUM(ImGuiInputTextFlags, None),
 	ENUM(ImGuiInputTextFlags, CharsDecimal),
 	ENUM(ImGuiInputTextFlags, CharsHexadecimal),
 	ENUM(ImGuiInputTextFlags, CharsUppercase),
@@ -3287,6 +3311,7 @@ static struct enum_pair eInputTextFlags[] = {
 };
 
 static struct enum_pair eComboFlags[] = {
+	ENUM(ImGuiComboFlags, None),
 	ENUM(ImGuiComboFlags, PopupAlignLeft),
 	ENUM(ImGuiComboFlags, HeightSmall),
 	ENUM(ImGuiComboFlags, HeightRegular),
@@ -3298,6 +3323,7 @@ static struct enum_pair eComboFlags[] = {
 };
 
 static struct enum_pair eSelectableFlags[] = {
+	ENUM(ImGuiSelectableFlags, None),
 	ENUM(ImGuiSelectableFlags, DontClosePopups),
 	ENUM(ImGuiSelectableFlags, SpanAllColumns),
 	ENUM(ImGuiSelectableFlags, AllowDoubleClick),
@@ -3306,10 +3332,11 @@ static struct enum_pair eSelectableFlags[] = {
 #endif
 	// Use boolean(disabled) in Selectable(_,_, disabled)
 	//	ENUM(ImGuiSelectableFlags, Disabled),
-		{ NULL, 0 },
+	{ NULL, 0 },
 };
 
 static struct enum_pair eTreeNodeFlags[] = {
+	ENUM(ImGuiTreeNodeFlags, None),
 	ENUM(ImGuiTreeNodeFlags, Selected),
 	ENUM(ImGuiTreeNodeFlags, Framed),
 	ENUM(ImGuiTreeNodeFlags, AllowItemOverlap),
@@ -3331,6 +3358,7 @@ static struct enum_pair eTreeNodeFlags[] = {
 };
 
 static struct enum_pair eWindowFlags[] = {
+	ENUM(ImGuiWindowFlags, None),
 	ENUM(ImGuiWindowFlags, NoTitleBar),
 	ENUM(ImGuiWindowFlags, NoResize),
 	ENUM(ImGuiWindowFlags, NoMove),
@@ -3391,6 +3419,7 @@ static struct enum_pair eHoveredFlags[] = {
 };
 
 static struct enum_pair eTabBarFlags[] = {
+	ENUM(ImGuiTabBarFlags, None),
 	ENUM(ImGuiTabBarFlags, Reorderable),
 	ENUM(ImGuiTabBarFlags, AutoSelectNewTabs),
 	ENUM(ImGuiTabBarFlags, TabListPopupButton),
@@ -3404,6 +3433,7 @@ static struct enum_pair eTabBarFlags[] = {
 };
 
 static struct enum_pair eDragDropFlags[] = {
+	ENUM(ImGuiDragDropFlags, None),
 	ENUM(ImGuiDragDropFlags, SourceNoPreviewTooltip),
 	ENUM(ImGuiDragDropFlags, SourceNoDisableHover),
 	ENUM(ImGuiDragDropFlags, SourceNoHoldToOpenOthers),
@@ -3502,6 +3532,11 @@ static struct enum_pair eTableColumnFlags[] = {
 	{ NULL, 0 },
 };
 
+static struct enum_pair eMouseButton[] = {
+	ENUM(ImGuiMouseButton, Left),
+	ENUM(ImGuiMouseButton, Right),
+	ENUM(ImGuiMouseButton, Middle),
+};
 
 static struct enum_pair eKey[] = {
 	ENUM(ImGuiKey, None),
@@ -3641,7 +3676,6 @@ static struct enum_pair eKey[] = {
     ENUM(ImGuiKey, MouseX2),
     ENUM(ImGuiKey, MouseWheelX),
     ENUM(ImGuiKey, MouseWheelY),
-	ENUM(ImGuiKey, COUNT),
 	{ NULL, 0 },
 };
 
@@ -3652,17 +3686,6 @@ static struct enum_pair eKey[] = {
 #ifdef _MSC_VER
 #pragma region IMP_ENUM
 #endif
-
-static void
-enum_gen(lua_State *L, const char *name, struct enum_pair *enums) {
-	int i;
-	lua_newtable(L);
-	for (i = 0; enums[i].name; i++) {
-		lua_pushinteger(L, enums[i].value);
-		lua_setfield(L, -2, enums[i].name);
-	}
-	lua_setfield(L, -2, name);
-}
 
 static struct enum_pair eStyleCol[] = {
 	ENUM(ImGuiCol, Text),
@@ -3785,7 +3808,6 @@ static struct enum_pair eSliderFlags[] = {
 	ENUM(ImGuiSliderFlags,Logarithmic),
 	ENUM(ImGuiSliderFlags,NoRoundToFormat),
 	ENUM(ImGuiSliderFlags,NoInput),
-	ENUM(ImGuiSliderFlags,InvalidMask_),
 	{ NULL, 0 },
 };
 
@@ -4192,6 +4214,7 @@ luaopen_imgui(lua_State *L) {
 	enum_gen(L, "TableBgTarget", eTableBgTarget);
 	enum_gen(L, "SortDirection", eSortDirection);
 	enum_gen(L, "Key", eKey);
+	enum_gen(L, "MouseButton", eMouseButton);
 	lua_setfield(L, -2, "enum");
 
 	return 1;
