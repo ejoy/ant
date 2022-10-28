@@ -25,23 +25,10 @@ function pp_sys:init()
     }
 end
 
-local function update_postprocess_param(ceid)
-    local ce = w:entity(ceid, "camera:in")
-    local projmat = ce.camera.projmat
-    local X, Y, A, B = util.reverse_position_param(projmat)
-    local sa = imaterial.system_attribs()
-    sa:update("u_reverse_pos_param", math3d.vector(X, Y, A, B))
-end
+local need_update_scene_buffers
 
 local need_update_pp_param
-
-function pp_sys:init_world()
-    local mq = w:first("main_queue camera_ref:in")
-    camear_frustum_mb = world:sub{"camera_changed", mq.camera_ref, "frustum"}
-    need_update_pp_param = mq.camera_ref
-end
-
-function pp_sys:pre_postprocess()
+local function update_postprocess_param()
     for _, _, ceid in mq_camera_mb:unpack() do
         camear_frustum_mb = world:sub{"camera_changed", ceid, "frustum"}
         need_update_pp_param = ceid
@@ -52,15 +39,44 @@ function pp_sys:pre_postprocess()
     end
 
     if need_update_pp_param then
-        update_postprocess_param(need_update_pp_param)
-        need_update_pp_param = nil
+        local ce = w:entity(need_update_pp_param, "camera:in")
+        local projmat = ce.camera.projmat
+        local X, Y, A, B = util.reverse_position_param(projmat)
+        local sa = imaterial.system_attribs()
+        sa:update("u_reverse_pos_param", math3d.vector(X, Y, A, B))
     end
-    --TODO: check screen buffer changed
-    local pp = w:first("postprocess postprocess_input:in")
-    local ppi = pp.postprocess_input
-    local mq = w:first("main_queue render_target:in camera_ref:in")
-    local fb = fbmgr.get(mq.render_target.fb_idx)
+end
 
-    ppi.scene_color_handle = fbmgr.get_rb(fb[1].rbidx).handle
-    ppi.scene_depth_handle = fbmgr.get_rb(fb[#fb].rbidx).handle
+
+
+function pp_sys:init_world()
+    local mq = w:first("main_queue camera_ref:in")
+    camear_frustum_mb = world:sub{"camera_changed", mq.camera_ref, "frustum"}
+    need_update_pp_param = mq.camera_ref
+    need_update_scene_buffers = true
+end
+
+local viewrect_changed = world:sub{"view_rect_changed", "main_queue"}
+
+local function update_postprocess_input()
+    for _ in viewrect_changed:each() do
+        need_update_scene_buffers = true
+    end
+
+    if need_update_scene_buffers then
+        local pp = w:first "postprocess postprocess_input:in"
+        local ppi = pp.postprocess_input
+    
+        local mq = w:first "main_queue render_target:in camera_ref:in"
+        local fb = fbmgr.get(mq.render_target.fb_idx)
+    
+        ppi.scene_color_handle = fbmgr.get_rb(fb[1].rbidx).handle
+        ppi.scene_depth_handle = fbmgr.get_rb(fb[#fb].rbidx).handle
+        need_update_scene_buffers = nil
+    end
+end
+
+function pp_sys:pre_postprocess()
+    update_postprocess_param()
+    update_postprocess_input()
 end

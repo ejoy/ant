@@ -123,12 +123,6 @@ function irq.set_view_rect(queuename, rect)
 	set_view_rect(rt.viewid, vr, queuename)
 end
 
-function irq.set_frame_buffer(queuename, fbidx)
-	local rt = get_rt(queuename)
-	rt.fb_idx = fbidx
-	world:pub{"framebuffer_changed", queuename, fbidx}
-end
-
 function irq.set_camera(queuename, camera_ref)
 	local changed
 	for q in w:select(queuename .. " camera_ref:out render_target:in") do
