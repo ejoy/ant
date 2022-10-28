@@ -41,8 +41,11 @@ uniform vec4 u_omni_param;
 //#define SM_PCF
 #define SM_ESM
 
+#if defined(SM_HARD) || defined(SM_PCF)
+#define USE_SHADOW_COMPARE
+#endif //
 
-#ifdef SM_HARD
+#ifdef USE_SHADOW_COMPARE
 #define SHADOW_SAMPLER2D	SAMPLER2DSHADOW
 #define shadow_sampler_type sampler2DShadow
 #else
@@ -68,54 +71,26 @@ bool is_proj_texcoord_in_range(vec4 texcoord, float minv, float maxv)
 	return is_texcoord_in_range(texcoord.xy/texcoord.w, minv, maxv);
 }
 
+
 float hardShadow(
 	shadow_sampler_type _sampler,
 	vec4 _shadowCoord, float _bias)
 {
-	#ifdef SM_HARD
-	// vec2 texCoord = _shadowCoord.xy/_shadowCoord.w;
-
-	// bool outside = any(greaterThan(texCoord, vec2_splat(1.0)))
-	// 			|| any(lessThan   (texCoord, vec2_splat(0.0)))
-	// 			 ;
-
-	// if (outside)
-	// {
-	// 	return 1.0;
-	// }
-
-	// float receiver = (_shadowCoord.z-_bias)/_shadowCoord.w;
-	// float occluder = unpackRgbaToFloat(texture2D(_sampler, texCoord) );
-
-	// float visibility = step(receiver, occluder);
-	// return visibility;
-
-	// NOTE: below code is same as this
-
-//#ifdef LINEAR_SHADOW
-//	vec2 texCoord = _shadowCoord.xy/_shadowCoord.w;
-//	float receiver = (_shadowCoord.z+_bias)/_shadowCoord.w;
-//	float occluder = texture2D(_sampler, texCoord).x;
-//	float visibility = step(occluder, receiver);
-//	return visibility;
-//#else 
-//	vec4 coord = _shadowCoord;
-//	coord.z += _bias;
-//	return shadow2DProj(_sampler, coord);
-//#endif //LINEAR_SHADOW
-
-	//vec2 texCoord = _shadowCoord.xy/_shadowCoord.w;
-	//float receiver = (_shadowCoord.z+_bias)/_shadowCoord.w;
-	//float occluder = texture2D(_sampler, texCoord).x;
-	//float visibility = step(occluder, receiver);
-	//return visibility;
+#ifdef USE_SHADOW_COMPARE
 	vec4 coord = _shadowCoord;
 	coord.z += _bias;
 
 	return shadow2DProj(_sampler, coord);
-	#endif
+#else //!USE_SHADOW_COMPARE
+	vec2 texCoord = _shadowCoord.xy/_shadowCoord.w;
+	float receiver = (_shadowCoord.z+_bias)/_shadowCoord.w;
+	float occluder = texture2D(_sampler, texCoord).x;
+	float visibility = step(occluder, receiver);
+	return visibility;
+#endif //USE_SHADOW_COMPARE
 }
 
+#ifdef SM_PCF
 float PCF(
 	shadow_sampler_type _sampler,
 	vec4 _shadowCoord,
@@ -123,7 +98,6 @@ float PCF(
 	float _fTexelSize,
 	float _fNativeTexelSizeInX)
 {
-	#ifdef SM_PCF
 	int m_iPCFBlurForLoopStart = -3;
 	int m_iPCFBlurForLoopEnd = 4;
 	float visibility = 0.0;
@@ -140,15 +114,15 @@ float PCF(
         }
     }
 	return visibility / 49.0;	
-	#endif
 }
+#endif //SM_PCF
 
+#ifdef SM_ESM
 float ESM(
 	shadow_sampler_type _sampler,
 	vec4 _shadowCoord, float _bias,
 	float _depthMultiplier) 
 {
-	#ifdef SM_ESM
 	vec2 texCoord = _shadowCoord.xy / _shadowCoord.w;
 	bool outside = any(greaterThan(texCoord, vec2_splat(1.0)))
 				|| any(lessThan   (texCoord, vec2_splat(0.0)))
@@ -164,9 +138,8 @@ float ESM(
 
 	float visibility = clamp(exp(_depthMultiplier * (receiver - occluder) ), 0.0, 1.0);
 	return pow(visibility, 10);
-	#endif
 }
-
+#endif //SM_ESM
 
 
 int select_cascade(float distanceVS)
@@ -231,6 +204,25 @@ static const vec4 g_colors[4] = {
 };
 #endif //SHADOW_COVERAGE_DEBUG
 
+float sample_visibility(vec4 shadowcoord)
+{
+#ifdef SM_HARD
+	return hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias);
+#endif //SM_HARD
+
+#ifdef SM_PCF
+	float fNativeTexelSizeInX = u_shadowmap_texelsize / 8;
+	float fNativeTexelSizeInY = u_shadowmap_texelsize / 4;
+	return PCF(s_shadowmap, shadowcoord, u_shadowmap_bias, fNativeTexelSizeInY, fNativeTexelSizeInX);
+#endif //SM_PCF
+
+#ifdef SM_ESM
+	return ESM(s_shadowmap_blur, shadowcoord, u_shadowmap_bias, u_depthMultiplier);
+#endif //SM_ESM
+
+	return 0.0;
+}
+
 vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor)
 {
 	vec4 shadowcoord = vec4_splat(0.0);
@@ -245,19 +237,7 @@ vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor)
 		return scenecolor;	// not in shadow
 #endif //USE_VIEW_SPACE_DISTANCE
 
-#ifdef SM_HARD
-	float visibility = hardShadow(s_shadowmap, shadowcoord, u_shadowmap_bias);
-#endif
-
-#ifdef SM_PCF
-	float fNativeTexelSizeInX = u_shadowmap_texelsize / 8;
-	float fNativeTexelSizeInY = u_shadowmap_texelsize / 4;
-	float visibility = PCF(s_shadowmap, shadowcoord, u_shadowmap_bias, fNativeTexelSizeInY, fNativeTexelSizeInX);
-#endif
-
-#ifdef SM_ESM
-	float visibility = ESM(s_shadowmap_blur, shadowcoord, u_shadowmap_bias, u_depthMultiplier);
-#endif
+	const float visibility = sample_visibility(shadowcoord);
 
 	vec3 finalcolor = mix(u_shadow_color, scenecolor, visibility);
 	
