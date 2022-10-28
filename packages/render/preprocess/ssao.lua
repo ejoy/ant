@@ -124,18 +124,31 @@ local function create_framebuffer(ww, hh)
         RT="RT_ON",
     }
 
-    local function create_rb() return fbmgr.create_rb{w=ww, h=hh, layers=1, format="RGBA8", flags=rb_flags} end
-
-    local rb1 = create_rb()
-
     if ENABLE_BENT_NORMAL then
+        local rbidx = fbmgr.create_rb{w=ww, h=hh, layers=2, format="RGBA8", flags=rb_flags}
         return fbmgr.create(
-            {rbidx=rb1},
-            {rbidx=create_rb()}
+            {
+                rbidx   = rbidx,
+                access  = "w",
+                mip     = 0,
+                layer   = 0,
+                numLayers=2,
+                resolve = "",
+            },
+            {
+                rbidx   = rbidx,
+                access  = "w",
+                mip     = 0,
+                layer   = 1,
+                numLayers=2,
+                resolve = "",
+            }
         )
-
     end
-    return fbmgr.create{rbidx=rb1}
+
+    return fbmgr.create{
+        rbidx = fbmgr.create_rb{w=ww, h=hh, layers=2, format="RGBA8", flags=rb_flags}
+    }
 end
 
 function ssao_sys:init_world()
@@ -154,9 +167,6 @@ function ssao_sys:init_world()
     local sa = imaterial.system_attribs()
     local ssao_fb = fbmgr.get(fbidx)
     sa:update("s_ssao", ssao_fb[1].handle)
-    if ENABLE_BENT_NORMAL then
-        sa:update("s_ssao_bent_normal", ssao_fb[2].handle)
-    end
 end
 
 local texmatrix<const> = mu.calc_texture_matrix()
@@ -166,7 +176,7 @@ local function calc_ssao_config(camera, lightdir, depthwidth, depthheight, depth
     ssao_configs.projection_scale = util.projection_scale(depthwidth, depthheight, camera.projmat)
     ssao_configs.projection_scale_radius = ssao_configs.projection_scale * ssao_configs.radius
     ssao_configs.max_level = depthdepth - 1
-
+    ssao_configs.edge_distance = 1.0 / ssao_configs.bilateral_threshold
     ssao_configs.ssct.lightdir.v = math3d.normalize(math3d.inverse(math3d.transform(camera.viewmat, lightdir, 0)))
 end
 
@@ -203,7 +213,8 @@ local function update_properties(drawer, ce)
     ))
 
     imaterial.set_property(drawer, "u_ssao_param4", math3d.vector(
-        ssao_configs.max_level, 0.0, 0.0, 0.0
+        depthwidth, depthheight, ssao_configs.max_level,
+        ssao_configs.edge_distance
     ))
 
     --screen space cone trace

@@ -44,6 +44,7 @@ local function update_postprocess_param()
         local X, Y, A, B = util.reverse_position_param(projmat)
         local sa = imaterial.system_attribs()
         sa:update("u_reverse_pos_param", math3d.vector(X, Y, A, B))
+        need_update_pp_param = nil
     end
 end
 

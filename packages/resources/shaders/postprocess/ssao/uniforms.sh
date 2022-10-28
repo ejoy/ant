@@ -20,7 +20,11 @@ uniform vec4 u_ssao_param3;
 #define u_ssao_spiral_turns                     u_ssao_param4.w
 
 uniform vec4 u_ssao_param4;
-#define u_ssao_max_level                        u_ssao_param4.x
+#define u_ssao_width                            u_ssao_param4.x
+#define u_ssao_height                           u_ssao_param4.y
+#define u_ssao_size                             u_ssao_param4.xy
+#define u_ssao_max_level                        u_ssao_param4.z
+#define u_ssao_edge_distance                    u_ssao_param4.w
 
 // ssct
 uniform vec4 u_ssct_param;

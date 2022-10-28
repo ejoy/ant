@@ -4,11 +4,7 @@
 #include "common/math.sh"
 #include "pbr/input_attributes.sh"
 
-//TODO: use sampler array
-SAMPLER2D(s_ssao,               9);
-#ifdef ENABLE_BENT_NORMAL
-SAMPLER2D(s_ssao_bent_normal,   13);
-#endif //ENABLE_BENT_NORMAL
+SAMPLER2DARRAY(s_ssao, 9);
 
 float SpecularAO_Lagarde(float NoV, float visibility, float roughness) {
     // Lagarde and de Rousiers 2014, "Moving Frostbite to PBR"
@@ -62,7 +58,7 @@ float SpecularAO_Cones(vec3 bentNormal, vec3 reflect_vector, float visibility, f
 #ifdef ENABLE_BENT_NORMAL
 vec3 fetch_bent_normal(vec2 uv, vec4 weights)
 {
-    const gather_result3 r = texture_gather3(s_ssao_bent_normal, uv);
+    const gather_result3 r = texture_gather3(s_ssao, vec3(uv, 1.0));
 
     const vec3 bn = vec3(
         dot(r.r, weights),
@@ -87,10 +83,7 @@ ao_value fetch_ao(vec2 uv, float depthVS)
 {
     ao_value av;
 #ifdef HIGH_QULITY_SPECULAR_AO
-    //TODO: need add to system uniform value
-    const float edge_distance = 1.0 / 0.0625;
-    highp vec2 size = vec2(textureSize(s_ssao, 0));
-    gather_result3 r = texture_gather3(s_ssao, uv);
+    gather_result3 r = texture_gather3(s_ssao, vec3(uv, 0.0));
     // bilateral weights
     vec4 depthsVS = vec4(
         unpack(vec2(r.g.x, r.b.x)),
@@ -100,14 +93,14 @@ ao_value fetch_ao(vec2 uv, float depthVS)
     depthsVS *= u_far;
 
     // bilinear weights
-    const vec2 f = fract(uv * size - 0.5);
+    const vec2 f = fract(uv * u_ssao_size - 0.5);
     const vec4 b = vec4(
         (1.0 - f.x) * f.y,
         f.x * f.y,
         f.x * (1.0 - f.y),
         (1.0 - f.x) * (1.0 - f.y));
 
-    vec4 w = (vec4_splat(depthVS) - depthsVS) * edge_distance;
+    vec4 w = (vec4_splat(depthVS) - depthsVS) * u_ssao_edge_distance;
     w = max(vec4_splat(MEDIUMP_FLT_MIN), 1.0 - w * w) * b;
 
     
@@ -115,7 +108,7 @@ ao_value fetch_ao(vec2 uv, float depthVS)
     //r.r is ao value
     av.ao = dot(r.r, av.weights);
 #else   //!HIGH_QULITY_SPECULAR_AO
-    av.ao = texture2D(s_ssao, uv).r;
+    av.ao = texture2DArray(s_ssao, vec3(uv, 0.0)).r;
     av.weights = vec4_splat(0.0);
 #endif  //HIGH_QULITY_SPECULAR_AO
     return av;
