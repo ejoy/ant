@@ -123,7 +123,7 @@ static int lPairsInputEvents(lua_State* L) {
 		switch (e->Type) {
 		case ImGuiInputEventType_MousePos: {
 			if (io.WantCaptureMouse) {
-				break;
+				continue;
 			}
 			ImVec2 event_pos(e->MousePos.PosX, e->MousePos.PosY);
 			if (ImGui::IsMousePosValid(&event_pos))
@@ -136,10 +136,10 @@ static int lPairsInputEvents(lua_State* L) {
 		}
 		case ImGuiInputEventType_MouseWheel:
 			if (io.WantCaptureMouse) {
-				break;
+				continue;
 			}
 			if (e->MouseWheel.WheelX == 0.0f && e->MouseWheel.WheelY == 0.0f) {
-				break;
+				continue;
 			}
 			lua_pushinteger(L, ++event_n);
 			lua_pushstring(L, "MouseWheel");
@@ -148,7 +148,7 @@ static int lPairsInputEvents(lua_State* L) {
 			return 4;
 		case ImGuiInputEventType_MouseButton:
 			if (io.WantCaptureMouse) {
-				break;
+				continue;
 			}
 			lua_pushinteger(L, ++event_n);
 			lua_pushstring(L, "MouseButton");
@@ -158,14 +158,14 @@ static int lPairsInputEvents(lua_State* L) {
 		case ImGuiInputEventType_Key:
 		{
 			if (io.WantCaptureKeyboard) {
-				break;
+				continue;
+			}
+			auto key = e->Key.Key;
+			if (key < ImGuiKey_KeysData_OFFSET || key >= ImGuiKey_KeysData_OFFSET + ImGuiKey_KeysData_SIZE) {
+				continue;
 			}
 			lua_pushinteger(L, ++event_n);
 			lua_pushstring(L, "Key");
-			auto key = e->Key.Key;
-			if (key < ImGuiKey_KeysData_OFFSET || key >= ImGuiKey_KeysData_OFFSET + ImGuiKey_KeysData_SIZE) {
-				break;
-			}
 			lua_pushinteger(L, key - ImGuiKey_KeysData_OFFSET + 1);
 			lua_pushinteger(L, e->Key.Down);
 			return 4;
