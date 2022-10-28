@@ -880,7 +880,6 @@ local function check_relative_path(path, basepath)
 end
 
 local function save_material(eid, path)
-    path = fs.path(path)
     local t = material_template(eid)
 
     local function refine_properties(p)
@@ -915,9 +914,9 @@ local function save_material(eid, path)
     f:write(serialize.stringify(nt))
 end
 
-local function reload(e, mtl)
+local function reload(e, mpath)
     local prefab = hierarchy:get_template(e)
-    prefab.template.data.material = mtl
+    prefab.template.data.material = mpath:string()
     prefab_mgr:save_prefab()
     prefab_mgr:reload()
 end
@@ -928,13 +927,50 @@ local function check_disable_file_fetch_ui(matfile_ui)
     fetch.disable = f == nil or (not f:equal_extension ".material")
 end
 
+local default_files<const> = {
+    ['/pkg/ant.resources/materials/pbr_default.material']       = true,
+    ['/pkg/ant.resources/materials/pbr_default_cw.material']    = true,
+    ['/pkg/ant.resources/materials/states/default.state']       = true,
+    ['/pkg/ant.resources/materials/states/default_cw.state']    = true,
+    ['/pkg/ant.resources/materials/states/translucent.state']   = true,
+    ['/pkg/ant.resources/materials/states/translucent_cw.state']= true,
+}
+
+local function is_glb_resource()
+    local cp = prefab_mgr:get_current_filename()
+    if cp then
+        return cp:match "%.glb%|mesh%.prefab$" ~= nil
+    end
+end
+
+
+local function is_readonly_resource(p)
+    if is_glb_resource() then
+        return true
+    end
+    return p:match ".glb|" or default_files[p]
+end
+
+local function to_virtualpath(localpath)
+    local vpath = access.virtualpath(global_data.repo, fs.path(localpath))
+    if vpath == nil then
+        error(("save path:%s, is not valid package"):format(localpath))
+    end
+
+    if not vpath:match "/pkg" then
+        return fs.path(global_data.package_path:string() .. vpath)
+    end
+end
+
 local function build_file_ui(mv)
     return uiproperty.SameLineContainer({},{
         uiproperty.Button({label="!", id="fetch_material"}, {
             click = function ()
                 local f = rb.selected_file()
                 local prefab = hierarchy:get_template(mv.eid)
-                prefab.template.data.material = f
+                prefab.template.data.material = f:string()
+
+                mv.save.disable = is_readonly_resource(f:string())
             end
         }),
         uiproperty.EditText({label="File", id="path"},{
@@ -953,10 +989,10 @@ end
 
 local function refine_material_data(eid, newmaterial_path)
     local prefab = hierarchy:get_template(eid)
-    local oldmaterial_path = prefab.template.data.material
+    local oldmaterial_path = fs.path(prefab.template.data.material)
     if oldmaterial_path ~= newmaterial_path then
-        local basepath = fs.path(oldmaterial_path):parent_path()
-        local t = load_material_file(oldmaterial_path)
+        local basepath = oldmaterial_path:parent_path()
+        local t = load_material_file(oldmaterial_path:string())
         for k, p in pairs(t.properties) do
             if p.texture then
                 local texpath = fs.path(p.texture)
@@ -988,12 +1024,7 @@ function MaterialView:_init()
         click = function ()
             local path = uiutils.get_saveas_path("Material", "material")
             if path then
-                local vpath = access.virtualpath(global_data.repo, fs.path(path))
-                assert(vpath)
-                if vpath == nil then
-                    error(("save path:%s, is not valid package"):format(path))
-                end
-
+                local vpath = to_virtualpath(path)
                 refine_material_data(self.eid, vpath)
                 save_material(self.eid, vpath)
                 reload(self.eid, vpath)
@@ -1009,29 +1040,6 @@ function MaterialView:_init()
             self.save, self.saveas,
         })
     })
-end
-
-local default_files<const> = {
-    ['/pkg/ant.resources/materials/pbr_default.material']       = true,
-    ['/pkg/ant.resources/materials/pbr_default_cw.material']    = true,
-    ['/pkg/ant.resources/materials/states/default.state']       = true,
-    ['/pkg/ant.resources/materials/states/default_cw.state']    = true,
-    ['/pkg/ant.resources/materials/states/translucent.state']   = true,
-    ['/pkg/ant.resources/materials/states/translucent_cw.state']= true,
-}
-
-local function is_glb_resource()
-    local cp = prefab_mgr:get_current_filename()
-    if cp then
-        return cp:match "%.glb%|mesh%.prefab$" ~= nil
-    end
-end
-
-local function is_readonly_resource(p)
-    if is_glb_resource() then
-        return true
-    end
-    return p:match ".glb|" or default_files[p]
 end
 
 function MaterialView:set_model(eid)
@@ -1109,16 +1117,11 @@ function MaterialView:enable_properties_ui(eid)
     end
 end
 
-function MaterialView:update()
+function MaterialView:show()
     if self.eid then
         BaseView.update(self)
         self.material:update()
-        
-    end
-end
 
-function MaterialView:show()
-    if self.eid then
         BaseView.show(self)
         check_disable_file_fetch_ui(self.mat_file)
         self.material:show()

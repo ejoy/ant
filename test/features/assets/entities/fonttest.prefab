@@ -8,7 +8,7 @@ data:
         s: 100
         t: {0, 3, 0, 1}
     material: /pkg/ant.resources/materials/singlecolor.material
-    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
+    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
     visible_state: main_view|selectable
     name: slot_cube
 ---
@@ -41,7 +41,7 @@ data:
         s: 1
         t: {0, 3, 5, 1}
     material: /pkg/ant.resources/materials/singlecolor.material
-    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/pCube1_P1.meshbin"
+    mesh: "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin"
     visible_state: main_view|selectable
     name: slot_cube
 ---

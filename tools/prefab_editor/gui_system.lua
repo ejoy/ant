@@ -118,20 +118,16 @@ local function OnOpen()
         if projname == nil then
             projname = lfs.path(path):filename():string() .. "(folder)"
         end
-        editor_setting.update_lastproj(projname:string():gsub("/pkg/", ""), path, false)
+        editor_setting.update_lastproj(projname:string():gsub("/pkg/", ""), path)
         editor_setting.save()
     end
 end
 
 local function choose_project()
+    local selected_proj
     if global_data.project_root then return end
     local setting = editor_setting.setting
-    local lastproj = setting.lastproj
-    if lastproj and lastproj.auto_import then
-        open_proj(assert(lastproj.proj_path))
-        return
-    end
-
+    local lastprojs = setting.lastprojs
     local title = "Choose project"
     if not imgui.windows.IsPopupOpen(title) then
         imgui.windows.OpenPopup(title)
@@ -150,7 +146,7 @@ local function choose_project()
                 else
                     on_new_project(path)
                     global_data:update_root(lpath)
-                    editor_setting.update_lastproj("", path, false)
+                    editor_setting.update_lastproj("", path)
                 end
             end
         end
@@ -164,20 +160,16 @@ local function choose_project()
         end
 
         imgui.cursor.Separator();
-
-        imgui.windows.BeginDisabled(not lastproj)
-        local last_name = "Last:" .. (lastproj and lastproj.name or "...")
-        if imgui.widget.Button(last_name) then
-            open_proj(lastproj.proj_path)
+        if lastprojs then
+            for i, proj in ipairs(lastprojs) do
+                if imgui.widget.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
+                    selected_proj = lastprojs[i]
+                    -- if imgui.util.IsMouseDoubleClicked(0) then
+                        open_proj(proj.proj_path)
+                    -- end
+                end
+            end
         end
-        imgui.cursor.SameLine()
-        local c, r = imgui.widget.Checkbox("Auto open last project", lastproj and lastproj.auto_import or false)
-        if c then
-            assert(lastproj)
-            lastproj.auto_import = r
-            editor_setting.save()
-        end
-        imgui.windows.EndDisabled()
         if global_data.project_root then
             local fw = require "bee.filewatch"
             fw.add(global_data.project_root:string())

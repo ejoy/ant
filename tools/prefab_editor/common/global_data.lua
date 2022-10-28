@@ -8,9 +8,9 @@ m.repo_access = access
 m.editor_root           = lfs.path(fs.path "":localpath())
 
 local function find_package_name(proj_path, packages)
-    for _, package in ipairs(packages) do
-        if package.path == proj_path then
-            return package.name
+    for _, pkg in ipairs(packages) do
+        if pkg.path == proj_path then
+            return pkg.name
         end
     end
 end

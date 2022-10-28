@@ -97,10 +97,10 @@ local function on_right_mouse(dx, dy)
 	local yaw = rad[2] - dx * rotate_speed-- * camera_speed
 	local pitch = rad[1] - dy * rotate_speed-- * camera_speed
 	-- min/max pitch : -85/85
-	if pitch > 1.48 then
-		pitch = 1.48
-	elseif pitch < -1.48 then
-		pitch = -1.48
+	if pitch > 1.47 then
+		pitch = 1.47
+	elseif pitch < -1.47 then
+		pitch = -1.47
 	end
 	iom.set_rotation(ce, math3d.quaternion{pitch, yaw, 0})
 	-- iom.rotate_forward_vector(ce, -dy * rotate_speed, -dx * rotate_speed)

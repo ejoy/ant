@@ -242,7 +242,7 @@ function init_loader_sys:init()
         },
         data = {
             mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
-            material = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/lambert1.001.material",
+            material = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material",
             visible_state = "main_view",
             scene = {
                 parent = group_root,

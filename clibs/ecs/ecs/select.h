@@ -352,6 +352,12 @@ namespace ecs_api {
             entity_clear_type(ecs, component<Component>::id);
         }
 
+        template <typename Component, size_t N>
+            requires (component<Component>::tag)
+        void group_enable(int (&ids)[N]) {
+            entity_group_enable(ecs, component<Component>::id, N, ids);
+        }
+
         template <typename ...Args>
         auto select(lua_State* L) {
             return impl::strict_select_range<Args...>(ecs, L);
