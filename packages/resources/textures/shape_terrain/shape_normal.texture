@@ -1,9 +1,9 @@
-colorspace: linear
 compress:
-  android: ASTC6x6
-  ios: ASTC6x6
+  android: ASTC4x4
+  ios: ASTC4x4
   windows: BC5
-normalmap: true
+maxsize: 1024x1024
+mipmap: 0
 path: /pkg/ant.resources.binary/terrain/shapes/normal.png
 sampler:
   MAG: LINEAR
