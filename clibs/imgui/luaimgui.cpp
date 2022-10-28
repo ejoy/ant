@@ -166,7 +166,7 @@ static int lPairsInputEvents(lua_State* L) {
 			}
 			lua_pushinteger(L, ++event_n);
 			lua_pushstring(L, "Key");
-			lua_pushinteger(L, key - ImGuiKey_KeysData_OFFSET + 1);
+			lua_pushinteger(L, key);
 			lua_pushinteger(L, e->Key.Down);
 			return 4;
 		}
