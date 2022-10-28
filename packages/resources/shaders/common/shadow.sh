@@ -53,12 +53,7 @@ uniform vec4 u_omni_param;
 #define shadow_sampler_type sampler2D 
 #endif
 
-
-#ifdef SM_ESM
-SHADOW_SAMPLER2D(s_shadowmap_blur, 8);
-#else
 SHADOW_SAMPLER2D(s_shadowmap, 8);
-#endif
 
 bool is_texcoord_in_range(vec2 _texcoord, float minv, float maxv)
 {
@@ -217,7 +212,7 @@ float sample_visibility(vec4 shadowcoord)
 #endif //SM_PCF
 
 #ifdef SM_ESM
-	return ESM(s_shadowmap_blur, shadowcoord, u_shadowmap_bias, u_depthMultiplier);
+	return ESM(s_shadowmap, shadowcoord, u_shadowmap_bias, u_depthMultiplier);
 #endif //SM_ESM
 
 	return 0.0;

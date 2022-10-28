@@ -103,7 +103,7 @@ end
 
 local function update_blur_texture_info()
     local sa = imaterial.system_attribs()
-    sa:update("s_shadowmap_blur", blur_textures.hblur_texture_handle)
+    sa:update("s_shadowmap", blur_textures.hblur_texture_handle)
 end
 
 function blur_sys:init()
