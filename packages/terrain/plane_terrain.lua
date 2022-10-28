@@ -9,7 +9,7 @@ local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-
+local terrain_module = require "terrain"
 local layout_name<const>    = declmgr.correct_layout "p4|t20|t21"
 local layout                = declmgr.get(layout_name)
 
@@ -32,9 +32,9 @@ local function noise(x, y, freq, exp, lb ,ub)
     for iy = 1, y do
         for ix = 1, x do
             --t[#t + 1] = math3d.noise(ix - 1, iy - 1, freq, depth, seed) * 1
-            local e1 = (math3d.noise(ix - 1, iy - 1, 1 * freq, 4, 0, 0, 0) * a + b) * 1
-            local e2 = (math3d.noise(ix - 1, iy - 1, 2 * freq, 4, 0, 5.3, 9.1) * a + b) * 0.5
-            local e3 = (math3d.noise(ix - 1, iy - 1, 4 * freq, 4, 0, 17.8, 23.5) * a + b) * 0.25
+            local e1 = (terrain_module.noise(ix - 1, iy - 1, 1 * freq, 4, 0, 0, 0) * a + b) * 1
+            local e2 = (terrain_module.noise(ix - 1, iy - 1, 2 * freq, 4, 0, 5.3, 9.1) * a + b) * 0.5
+            local e3 = (terrain_module.noise(ix - 1, iy - 1, 4 * freq, 4, 0, 17.8, 23.5) * a + b) * 0.25
             local e = (e1 + e2 + e3) / 1.75
             t[#t + 1] = e ^ exp
         end
