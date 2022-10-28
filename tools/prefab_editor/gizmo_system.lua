@@ -1092,7 +1092,7 @@ end
 local function focus_aabb(ce, aabb)
     local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
     local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
-    local dist = -2.0 * math3d.length(math3d.sub(aabb_max, center))
+    local dist = -3.0 * math3d.length(math3d.sub(aabb_max, center))
 	local viewdir = iom.get_direction(ce)
     iom.lookto(ce, math3d.muladd(dist, viewdir, center), viewdir)
 end
@@ -1244,8 +1244,11 @@ function gizmo_sys:handle_event()
 		if target then
 			local aabb = check_calc_aabb(target)
 			if aabb then
-				local mc <close> = w:entity(irq.main_camera())
-				focus_aabb(mc, aabb)
+				-- local mc <close> = w:entity(irq.main_camera())
+				-- focus_aabb(mc, aabb)
+				local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+    			local center = math3d.tovalue(math3d.mul(0.5, math3d.add(aabb_min, aabb_max)))
+				world:pub {"SmoothLookAt", { center[1], center[2], center[3] }, 3.0 * math3d.length(math3d.sub(aabb_max, center))}
 			end
 		end
 	end
