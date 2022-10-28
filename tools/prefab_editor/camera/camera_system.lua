@@ -64,7 +64,7 @@ local function on_key(key, press)
 	elseif key == "S" then
 		newpos = math3d.add(pos, math3d.mul(math3d.normalize(zdir), -dt))
 	elseif key == "F" and press == 1 then
-		world:pub {"LookAtTarget"}
+		world:pub {"LookAtTarget", nil, true}
 	end
 	if newpos then
 		iom.set_position(ce, newpos)
@@ -102,9 +102,8 @@ local function on_right_mouse(dx, dy)
 	if shift_down then
 		local cam_pos = iom.get_position(ce)
 		local target_pos = mc.ZERO
-		if gizmo.target_eid then
-			local ct<close> = w:entity(gizmo.target_eid, "scene:in")
-			target_pos = iom.get_position(ct)
+		if animation.target then
+			target_pos = math3d.vector(animation.target)
 		end
 		local dist = -1.0 * math3d.length(math3d.sub(cam_pos, target_pos))
 		iom.set_position(ce, math3d.muladd(dist, math3d.todirection(rot), target_pos))
