@@ -16,6 +16,8 @@ local ui_loop  = {false}
 function EffectView:_init()
     BaseView._init(self)
     self.speed = uiproperty.Float({label = "Speed", min = 0.01, max = 10.0, speed = 0.01}, {})
+    self.path = uiproperty.EditText({label = "path", readonly = true})
+    self.path:set_getter(function() return self:on_get_path() end)
 end
 
 function EffectView:set_model(eid)
@@ -28,6 +30,7 @@ end
 
 function EffectView:update()
     BaseView.update(self)
+    self.path:update()
     self.speed:update()
     local template = hierarchy:get_template(self.eid)
     --ui_auto_play[1] = template.template.data.auto_play
@@ -36,6 +39,7 @@ end
 
 function EffectView:show()
     BaseView.show(self)
+    self.path:show()
     self.speed:show()
     -- imgui.widget.PropertyLabel("auto_play")
     -- if imgui.widget.Checkbox("##auto_play", ui_auto_play) then
@@ -58,6 +62,11 @@ end
 function EffectView:on_get_speed()
     local e <close> = w:entity(self.eid, "efk:in")
     return e.efk.speed
+end
+
+function BaseView:on_get_path()
+    local tpl = hierarchy:get_template(self.eid)
+    return tpl.template.data.efk
 end
 
 function EffectView:on_set_speed(value)
