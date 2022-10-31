@@ -112,7 +112,7 @@ void get_metallic_roughness(vec2 uv, inout input_attributes input_attribs)
     input_attribs.metallic              = clamp(input_attribs.metallic, 0.0, 1.0);
 }
 
-void get_occlusion(vec2 texcoord, inout input_attributes input_attribs)
+void get_occlusion(vec2 uv, inout input_attributes input_attribs)
 {
 #ifdef HAS_OCCLUSION_TEXTURE
     input_attribs.occlusion = texture2D(s_occlusion,  uv).r;
