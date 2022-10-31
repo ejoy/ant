@@ -1239,13 +1239,19 @@ function gizmo_sys:handle_event()
 			end
 		end
 	end
-	for _, tid in look_at_target_mb:unpack() do
+	for _, tid, anim in look_at_target_mb:unpack() do
 		local target = tid or gizmo.target_eid
 		if target then
 			local aabb = check_calc_aabb(target)
 			if aabb then
-				local mc <close> = w:entity(irq.main_camera())
-				focus_aabb(mc, aabb)
+				if anim then
+					local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+					local center = math3d.tovalue(math3d.mul(0.5, math3d.add(aabb_min, aabb_max)))
+					world:pub {"SmoothLookAt", { center[1], center[2], center[3] }, 2.0 * math3d.length(math3d.sub(aabb_max, center))}
+				else
+					local mc <close> = w:entity(irq.main_camera())
+					focus_aabb(mc, aabb)
+				end
 			end
 		end
 	end
