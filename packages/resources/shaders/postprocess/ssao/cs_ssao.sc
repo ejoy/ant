@@ -2,6 +2,7 @@ $input v_texcoord0
 
 #include <bgfx_shader.sh>
 #include <shaderlib.sh>
+#include <bgfx_compute.sh>
 
 #include "common/common.sh"
 #include "common/postprocess.sh"
@@ -12,20 +13,12 @@ $input v_texcoord0
 #include "postprocess/ssao/uniforms.sh"
 #include "postprocess/ssao/ssct.sh"
 
-const float kLog2LodRate = 3.0;
+SAMPLER2D(s_depth, 0);
+IMAGE2D_ARRAY_WR(s_ssao_result, rgba8, 1);
 
 //code from filament ssao
 
-// Ambient Occlusion, largely inspired from:
-// "The Alchemy Screen-Space Ambient Obscurance Algorithm" by Morgan McGuire
-// "Scalable Ambient Obscurance" by Morgan McGuire, Michael Mara and David Luebke
-
-// vec3 tapLocation(float i, const float noise) {
-//     float offset = (PI2 * 2.4) * noise;
-//     float angle = ((i * u_ssao_inv_sample_count) * u_ssao_spiral_turns) * (PI2) + offset;
-//     float radius = (i + noise + 0.5) * u_ssao_inv_sample_count;
-//     return vec3(cos(angle), sin(angle), radius * radius);
-// }
+const float kLog2LodRate = 3.0;
 
 highp vec2 startPosition(const float noise) {
     float angle = (PI2 * 2.4) * noise;
@@ -64,7 +57,7 @@ vec3 fetchSamplePos(float i, float ssDiskRadius, const highp vec2 uv, const vec2
 
 void computeAmbientOcclusionSAO(inout float occlusion, inout vec3 bentNormal,
         const highp vec3 origin, const vec3 normal, const vec3 samplePos) {
-    highp float occlusionDepth = depthVS_from_texture(s_scene_depth, samplePos.xy, samplePos.z);
+    highp float occlusionDepth = depthVS_from_texture(s_depth, samplePos.xy, samplePos.z);
     highp vec3 p = posVS_from_depth(samplePos.xy, occlusionDepth);//computeViewSpacePositionFromDepth(uvSamplePos, occlusionDepth, materialParams.positionParams);
 
     // now we have the sample, compute AO
@@ -127,7 +120,7 @@ ConeTraceSetup init_cone_trace(highp vec2 uv, highp vec3 origin, vec3 normal)
 {
     ConeTraceSetup cone;
 
-    vec4 resolution = fetch_texture2d_size(s_scene_depth, 0);
+    vec4 resolution = fetch_texture2d_size(s_depth, 0);
     cone.ssStartPos = uv * resolution.zw;                           //materialParams.resolution.xy;
     cone.vsStartPos = origin;
     cone.vsNormal   = normal;
@@ -153,31 +146,40 @@ ConeTraceSetup init_cone_trace(highp vec2 uv, highp vec3 origin, vec3 normal)
 float dominantLightShadowing(highp vec2 uv, highp vec3 origin, vec3 normal, vec2 fragcoord) {
     ConeTraceSetup cone = init_cone_trace(uv, origin, normal);
     return ssctDominantLightShadowing(uv, origin, normal,
-            s_scene_depth, fragcoord, //getFragCoord(cone.xy),
+            s_depth, fragcoord, //getFragCoord(cone.xy),
             u_ssct_ray_count, cone);
 }
 
+NUM_THREADS(16, 16, 1)
 void main()
 {
-    highp float depth_non_linear = texture2DLod(s_scene_depth, v_texcoord0, 0.0).r;
-    highp float depthVS = linear_depth_pp(depth_non_linear);//depthVS_from_texture(s_scene_depth, v_texcoord0, 0.0);
+    const ivec2 uv_out = gl_GlobalInvocationID.xy;
+    
+    //we assume s_depth size is the same as s_ssao_result
+    const ivec3 size = imageSize(s_ssao_result);
+    if (any(uv_out >= size.xy))
+        return;
 
-    highp vec3 origin = posVS_from_depth(v_texcoord0, depthVS);
+    const vec2 uv = id2uv(uv_out, size.xy);
+    highp float depth_non_linear = texture2DLod(s_depth, uv, 0.0).r;
+    highp float depthVS = linear_depth_pp(depth_non_linear);//depthVS_from_texture(s_depth, uv, 0.0);
+
+    highp vec3 origin = posVS_from_depth(uv, depthVS);
 #ifdef HIGH_QULITY_NORMAL_RECONSTRUCT
-    highp vec3 normal = normalVS_from_depth_HighQ(s_scene_depth, v_texcoord0, depth_non_linear, origin);
+    highp vec3 normal = normalVS_from_depth_HighQ(s_depth, uv, depth_non_linear, origin);
 #else //!HIGH_QULITY_NORMAL_RECONSTRUCT
-    highp vec3 normal = normalVS_from_depth(s_scene_depth, v_texcoord0, origin);
+    highp vec3 normal = normalVS_from_depth(s_depth, uv, origin);
 #endif //HIGH_QULITY_NORMAL_RECONSTRUCT
     highp float occlusion = 0.0;
     highp vec3 bentNormal;
 
     if (u_ssao_intensity > 0.0) {
-        highp float noise = interleavedGradientNoise(gl_FragCoord.xy);
-        scalableAmbientObscurance(occlusion, bentNormal, v_texcoord0, origin, noise, normal);
+        highp float noise = interleavedGradientNoise(uv_out.xy);
+        scalableAmbientObscurance(occlusion, bentNormal, uv, origin, noise, normal);
     }
 
     if (u_ssct_intensity > 0.0) {
-        occlusion += max(occlusion, dominantLightShadowing(v_texcoord0, origin, normal, gl_FragCoord));
+        occlusion += max(occlusion, dominantLightShadowing(uv, origin, normal, uv_out));
     }
 
     // occlusion to visibility
@@ -188,8 +190,8 @@ void main()
 //     aoVisibility += gl_FragCoord.x * MEDIUMP_FLT_MIN;
 // #endif
 
-    gl_FragData[0] = vec4(vec3(aoVisibility, packHalfFloat(origin.z * u_inv_far)), 1.0);
+    imageStore(s_ssao_result, ivec3(uv_out, 0), vec4(vec3(aoVisibility, packHalfFloat(origin.z * u_inv_far)), 1.0));
 #if ENABLE_BENT_NORMAL
-    gl_FragData[1] = vec4(encodeNormalUint(bentNormal), 1.0);
+    imageStore(s_ssao_result, ivec3(uv_out, 1), vec4(encodeNormalUint(bentNormal), 1.0));
 #endif //ENABLE_BENT_NORMAL
 }

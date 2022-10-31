@@ -43,11 +43,11 @@ vec3 normalVS_from_dxdy(vec3 dpdx, vec3 dpdy)
 	return normalize(cross(dpdx, dpdy));
 }
 
-#if BGFX_SHADER_TYPE_FRAGMENT
+#if BGFX_SHADER_TYPE_FRAGMENT || BGFX_SHADER_TYPE_COMPUTE
 
 highp float depthVS_from_texture(const highp sampler2D depthTexture, const highp vec2 uv, const float lod)
 {
-	highp float depth = texture2DLod(s_scene_depth, uv, lod).r;
+	highp float depth = texture2DLod(depthTexture, uv, lod).r;
     return linear_depth_pp(depth);
 }
 
@@ -60,22 +60,24 @@ vec2 get_texel_coord(vec2 xy)
 #endif //ORIGIN_BOTTOM_LEFT
 }
 
-vec4 uv_dxdy()
+vec4 uv_dxdy(const highp sampler2D depthTexture)
 {
-	highp vec4 dxdy;
-	dxdy.xy = vec2(u_viewTexel.x, 0.0);
+	const vec2 size = textureSize(depthTexture, 0);
+	vec2 texelsize = 1.0 / size;
+	return vec4(
+		vec2(u_viewTexel.x, 0.0),
 #if ORIGIN_BOTTOM_LEFT
-    dxdy.zw = vec2(0.0, u_viewTexel.y);
+    vec2(0.0, u_viewTexel.y)
 #else //ORIGIN_BOTTOM_LEFT
-	dxdy.zw = vec2(0.0, -u_viewTexel.y);
+	vec2(0.0, -u_viewTexel.y)
 #endif //ORIGIN_BOTTOM_LEFT
-	return dxdy;
+	);
 }
 
 highp vec3 normalVS_from_depth(
         const highp sampler2D depthTexture, const highp vec2 uv,
         const highp vec3 position){
-	highp vec4 dxdy = uv_dxdy();
+	highp vec4 dxdy = uv_dxdy(depthTexture);
     highp vec2 uvdx = uv + dxdy.xy;
 	highp vec2 uvdy = uv + dxdy.zw;
 
@@ -90,10 +92,9 @@ highp vec3 normalVS_from_depth_HighQ(
         const highp sampler2D depthTexture, const highp vec2 uv, float depth_non_linear,
         const highp vec3 position) {
 
-    //precision highp float;
-
     vec3 pos_c = position;
-	const highp vec4 dxdy = uv_dxdy();
+
+	const highp vec4 dxdy = uv_dxdy(depthTexture);
 	const highp vec2 dx = dxdy.xy;
 	const highp vec2 dy = dxdy.zw;
 

@@ -1,17 +1,17 @@
 fx:
-  fs: /pkg/ant.resources/shaders/postprocess/ssao/fs_bilateral.sc
-  vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
+  cs: /pkg/ant.resources/shaders/postprocess/ssao/cs_bilateral.sc
   setting:
     COMPUTE_BENT_NORMAL: 1
 properties:
-  s_sao:
+  s_ssao_result:
     stage: 0
     texture: /pkg/ant.resources/textures/black.texture
-  s_bentnormal:
+  s_filter_result:
     stage: 1
-    texture: /pkg/ant.resources/textures/black.texture
+    mip: 0
+    access: w
+    image: /pkg/ant.resources/textures/black.texture
   u_bilateral_param:   {0, 0, 0, 0}  #xy: offset in uv, z: sample radius count(max is 8), w: camera far/bilateral_threshold(default is 0.0065)
   u_bilateral_kernels:  #max smaple radius is: 8, so only 2 vec4 uniforms
     {0.0, 0.0, 0.0, 0.0}
     {0.0, 0.0, 0.0, 0.0}
-state: /pkg/ant.resources/materials/postprocess/postprocess.state

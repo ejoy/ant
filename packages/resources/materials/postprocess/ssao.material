@@ -1,10 +1,6 @@
 fx:
-  fs: /pkg/ant.resources/shaders/postprocess/ssao/fs_ssao.sc
-  vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
+  cs: /pkg/ant.resources/shaders/postprocess/ssao/cs_ssao.sc
 properties:
-  s_scene_depth:
-    stage: 1
-    texture: /pkg/ant.resources/textures/black.texture
   u_ssao_param:   {0, 0, 0, 0}  #which chain level, inverse highlight value, threshold
   u_ssao_param2:  {0, 0, 0, 0}
   u_ssao_param3:  {0, 0, 0, 0}
@@ -15,4 +11,12 @@ properties:
   u_ssct_param3:  {0, 0, 0, 0}
   u_ssct_param4:  {0, 0, 0, 0}
   u_ssct_screen_from_view_mat: {1.0, 0.0, 0.0, 0.0,   0.0, 1.0, 0.0, 0.0,   0.0, 0.0, 1.0, 0.0,   0.0, 0.0, 0.0, 1.0}
-state: /pkg/ant.resources/materials/postprocess/postprocess.state
+
+  s_depth:
+    stage: 0
+    texture: /pkg/ant.resources/textures/black.texture
+  s_ssao_result:
+    stage: 1
+    mip: 0
+    access: "w"
+    image: /pkg/ant.resources/textures/black.texture

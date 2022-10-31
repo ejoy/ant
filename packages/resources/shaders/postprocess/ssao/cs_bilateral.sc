@@ -1,14 +1,14 @@
 $input v_texcoord0
 #include <bgfx_shader.sh>
+#include <bgfx_compute.sh>
 #include <shaderlib.sh>
 
+#include "common/utils.sh"
 #include "common/math.sh"
 
-SAMPLER2D(s_sao, 0);
+SAMPLER2DARRAY(s_ssao_result, 0);
 
-#ifdef ENABLE_BENT_NORMAL
-SAMPLER2D(s_bentnormal, 1);
-#endif //ENABLE_BENT_NORMAL
+IMAGE2D_ARRAY_WR(s_filter_result, rgba8, 1);
 
 uniform vec4 u_bilateral_kernels[2];
 uniform vec4 u_bilateral_param;
@@ -26,16 +26,18 @@ struct ao_info{
     float depth;
 };
 
-ao_info sampleAO(sampler2D texAO, vec2 uv) {
-    vec3 data   = texture2D(texAO, uv).rgb;
+ao_info sampleAO(vec2 uv) {
+    // we can't use texture2DArray in compute shader, it will cause an error, use texture2DArrayLod instead
+    vec3 data = texture2DArrayLod(s_ssao_result, vec3(uv, 0.0), 0.0).rgb;
     ao_info ai;
     ai.ao = data.r;
     ai.depth = unpackHalfFloat(data.gb);
     return ai;
 }
 
-vec3 sampleBN(sampler2D texBN, vec2 uv) {
-    vec3 data = texture2D(texBN, uv).xyz;
+vec3 sampleBN(vec2 uv) {
+    // we can't use texture2DArray in compute shader, it will cause an error, use texture2DArrayLod instead
+    vec3 data = texture2DArrayLod(s_ssao_result, vec3(uv, 1.0), 0.0).xyz;
     return decodeNormalUint(data);
 }
 
@@ -56,44 +58,52 @@ struct sum_result{
 
 void sum_all(vec2 uv, float center_depth, float weight, inout sum_result r)
 {
-    const ao_info s = sampleAO(s_sao, uv);
+    const ao_info s = sampleAO(uv);
     const float bilateral = weight * bilateralWeight(center_depth, s.depth);
     r.ao += s.ao * bilateral;
 
 #ifdef ENABLE_BENT_NORMAL
-    vec3 bn = sampleBN(s_bentnormal, uv);
+    vec3 bn = sampleBN(uv);
     r.bn += bn * bilateral;
 #endif //ENABLE_BENT_NORMAL
 
     r.weight += bilateral;
 }
 
+NUM_THREADS(16, 16, 1)
 void main()
 {
+    const ivec2 uv_out = gl_GlobalInvocationID.xy;
+    const ivec3 size = imageSize(s_filter_result);
+    if (any(uv_out >= size.xy))
+        return;
+
+    const vec2 uv = id2uv(uv_out, size.xy);
+
     sum_result r;
-    const ao_info center_ai = sampleAO(s_sao, v_texcoord0);
+    const ao_info center_ai = sampleAO(uv);
     r.weight = get_kernel_weight(0);
     r.ao = center_ai.ao * r.weight;
 
-#if ENABLE_BENT_NORMAL
-    r.bn = sampleBN(s_bentnormal, v_texcoord0) * r.weight;
+#ifdef ENABLE_BENT_NORMAL
+    r.bn = sampleBN(uv) * r.weight;
 #endif //ENABLE_BENT_NORMAL
 
     for (int i = 1; i < (int)u_sample_count; i++) {
         float weight = get_kernel_weight(i);
         vec2 offset = u_step_offset * i;
-        sum_all(v_texcoord0 + offset, center_ai.depth, weight, r);
-        sum_all(v_texcoord0 - offset, center_ai.depth, weight, r);
+        sum_all(uv + offset, center_ai.depth, weight, r);
+        sum_all(uv - offset, center_ai.depth, weight, r);
     }
 
     float ao = r.ao/r.weight;
     // simple dithering helps a lot (assumes 8 bits target)
     // this is most useful with high quality/large blurs
-    ao += ((interleavedGradientNoise(gl_FragCoord.xy) - 0.5) / 255.0);
+    ao += ((interleavedGradientNoise(uv_out.xy) - 0.5) / 255.0);
 
-    gl_FragData[0] = vec4(ao, packHalfFloat(center_ai.depth), 0.0);
+    imageStore(s_filter_result, ivec3(uv_out, 0), vec4(ao, packHalfFloat(center_ai.depth), 0.0));
 
-#if ENABLE_BENT_NORMAL
-    gl_FragData[1] = vec4(encodeNormalUint(r.bn / r.weight), 0.0);
+#ifdef ENABLE_BENT_NORMAL
+    imageStore(s_filter_result, ivec3(uv_out, 1), vec4(encodeNormalUint(r.bn/r.weight), 0.0));
 #endif //ENABLE_BENT_NORMAL
 }

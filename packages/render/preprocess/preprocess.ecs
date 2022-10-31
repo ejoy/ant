@@ -9,11 +9,8 @@ pipeline "preprocess"
     .pipeline "depth"
     .pipeline "ssao"
 
-component "ssao_drawer"
-component "ssao_queue"
-component "Hbilateral_filter_queue"
-component "Vbilateral_filter_queue"
-component "bilateral_filter_drawer"
+component "ssao_dispatcher"
+component "bilateral_filter_dispatcher"
 
 system "ssao_system"
     .implement "preprocess/ssao.lua"
