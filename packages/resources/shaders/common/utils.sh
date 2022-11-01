@@ -17,8 +17,13 @@ vec4 fetch_texture2d_size(sampler2D tex, int lod)
 vec2 id2uv(ivec2 uvidx, ivec2 size)
 {
     const vec2 texeloffset = vec2(0.5, 0.5);
-    vec2 uv = ((vec2)uvidx + texeloffset)/(size-1);
-#if ORIGIN_BOTTOM_LEFT
+    return ((vec2)uvidx + texeloffset)/(size-1);
+}
+
+vec2 id2uv_flipy(ivec2 uvidx, ivec2 size)
+{
+    vec2 uv = id2uv(uvidx, size);
+    #if ORIGIN_BOTTOM_LEFT
     return uv;
 #else //!ORIGIN_BOTTOM_LEFT
     return vec2(uv.x, 1.0-uv.y);
@@ -57,7 +62,7 @@ vec2 n2s(vec2 uv){
 
 vec3 id2dir(ivec3 id, vec2 size)
 {
-    vec2 uv = n2s(id2uv(id.xy, size));
+    vec2 uv = n2s(id2uv_flipy(id.xy, size));
     int faceidx = id.z;
     return normalize(uvface2dir(uv, faceidx));
 }

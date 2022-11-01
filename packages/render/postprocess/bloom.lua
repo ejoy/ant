@@ -28,8 +28,8 @@ local sampler   = require "sampler"
 
 local icompute  = ecs.import.interface "ant.render|icompute"
 function bloom_sys:init()
-    icompute.create_compute_entity("bloom_downsampler", "/pkg/ant.resources/materials/postprocess/downsample.material", {0, 0, 0})
-    icompute.create_compute_entity("bloom_upsampler", "/pkg/ant.resources/materials/postprocess/upsample.material", {0, 0, 0})
+    icompute.create_compute_entity("bloom_downsampler", "/pkg/ant.resources/materials/postprocess/downsample.material", {0, 0, 1})
+    icompute.create_compute_entity("bloom_upsampler", "/pkg/ant.resources/materials/postprocess/upsample.material", {0, 0, 1})
 end
 
 local bloom_rb_flags<const> = sampler {
@@ -101,7 +101,6 @@ local output_color_property = {
     access = "w"
 }
 
-local DISPATCH_GROUP_SIZE_X<const>, DISPATCH_GROUP_SIZE_Y<const> = 16, 16
 function bloom_sys:bloom()
     local dse = w:first "bloom_downsampler dispatch:in"
     if dse.dispatch.bloom_texture_idx == nil then
@@ -134,7 +133,7 @@ function bloom_sys:bloom()
         ds_m.u_bloom_param2 = math3d.vector(ww, hh, 1.0/ww, 1.0/hh)
         fbsizes[#fbsizes+1] = ww
         fbsizes[#fbsizes+1] = hh
-        ds_dis.size[1], ds_dis.size[2], ds_dis.size[3] = ww // DISPATCH_GROUP_SIZE_X, hh // DISPATCH_GROUP_SIZE_Y, 1
+        icompute.calc_dispatch_size_2d(ww, hh, ds_dis.size)
 
         input_color_property.value = mip == 1 and scene_color_handle or bloom_handle
         input_color_property.mip = mip-1
@@ -159,7 +158,7 @@ function bloom_sys:bloom()
         us_m.u_bloom_param = BLOOM_PARAM
         ww, hh = fbsizes[mip*2-1], fbsizes[mip*2]
         us_m.u_bloom_param2 = math3d.vector(ww, hh, 1.0/ww, 1.0/hh)
-        us_dis.size[1], us_dis.size[2], us_dis.size[3] = ww // DISPATCH_GROUP_SIZE_X, hh // DISPATCH_GROUP_SIZE_Y, 1
+        icompute.calc_dispatch_size_2d(ww, hh, us_dis.size)
 
         input_color_property.mip = mip
         us_m.s_color_input = input_color_property

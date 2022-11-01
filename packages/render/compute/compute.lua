@@ -51,6 +51,16 @@ function ic.create_image_property(handle, stage, mip, access)
     }
 end
 
+local DEFAULT_DISPATCH_GROUP_SIZE_X<const>, DEFAULT_DISPATCH_GROUP_SIZE_Y<const> = 16, 16
+
+function ic.calc_dispatch_size_2d_with_group_size(ww, hh, gx, gy, s)
+    s[1], s[2] = (ww // gx)+1, (hh // gy)+1
+end
+
+function ic.calc_dispatch_size_2d(ww, hh, s)
+    ic.calc_dispatch_size_2d_with_group_size(ww, hh, DEFAULT_DISPATCH_GROUP_SIZE_X, DEFAULT_DISPATCH_GROUP_SIZE_Y, s)
+end
+
 local cs = ecs.system "compute_system"
 function cs:entity_init()
 	for e in w:select "INIT material_result:in dispatch:in" do

@@ -11,7 +11,7 @@ float max3(vec3 v){
 }
 
 void threshold(inout vec3 c) {
-    // threshold everything below 1.0
+    // threshold everything below u_bloom_threshold
     c = max(vec3_splat(0.0), c - u_bloom_threshold);
     // crush everything above 1
     float f = max3(c);
