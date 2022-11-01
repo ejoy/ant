@@ -115,7 +115,7 @@ local bilateral_filter_viewid<const>, bilateral_filter_count<const> = viewidmgr.
 assert(bilateral_filter_count == 2, "need 2 pass blur: horizontal and vertical")
 local Hbilateral_filter_viewid<const>, Vbilateral_filter_viewid<const> = bilateral_filter_viewid, bilateral_filter_viewid+1
 
-local function create_framebuffer(ww, hh)
+local function create_rbidx(ww, hh)
     local rb_flags = sampler{
         MIN="LINEAR",
         MAG="LINEAR",
@@ -125,39 +125,16 @@ local function create_framebuffer(ww, hh)
         BLIT="BLIT_COMPUTEWRITE",
     }
 
-    if ENABLE_BENT_NORMAL then
-        local rbidx = fbmgr.create_rb{w=ww, h=hh, layers=2, format="RGBA8", flags=rb_flags}
-        return fbmgr.create(
-            {
-                rbidx   = rbidx,
-                access  = "w",
-                mip     = 0,
-                layer   = 0,
-                numLayers=2,
-                resolve = "",
-            },
-            {
-                rbidx   = rbidx,
-                access  = "w",
-                mip     = 0,
-                layer   = 1,
-                numLayers=2,
-                resolve = "",
-            }
-        )
-    end
-
-    return fbmgr.create{
-        rbidx = fbmgr.create_rb{w=ww, h=hh, layers=1, format="RGBA8", flags=rb_flags}
-    }
+    local numlayers = ENABLE_BENT_NORMAL and 2 or 1
+    return fbmgr.create_rb{w=ww, h=hh, layers=numlayers, format="RGBA8", flags=rb_flags}
 end
 
 function ssao_sys:init_world()
     local vr = mu.calc_viewport(mu.copy_viewrect(world.args.viewport), ssao_configs.resolution)
-    local fbidx = create_framebuffer(vr.w, vr.h)
+    local rbidx = create_rbidx(vr.w, vr.h)
 
     local aod = w:first "ssao_dispatcher dispatch:in"
-    aod.dispatch.fb_idx = fbidx
+    aod.dispatch.rb_idx = rbidx
 
     local sqd = w:first "scene_depth_queue visible?out"
     sqd.visible = true
@@ -165,12 +142,11 @@ function ssao_sys:init_world()
 
     local bfd = w:first "bilateral_filter_dispatcher dispatch:in"
 
-    local fbidx_blur = create_framebuffer(vr.w, vr.h)
-    bfd.dispatch.fb_idx = fbidx_blur
+    bfd.dispatch.rb_idx = create_rbidx(vr.w, vr.h)
 
     local sa = imaterial.system_attribs()
-    local ssao_fb = fbmgr.get(fbidx)
-    sa:update("s_ssao", ssao_fb[1].handle)
+    local ssao_rb = fbmgr.get_rb(rbidx)
+    sa:update("s_ssao", ssao_rb.handle)
 end
 
 local texmatrix<const> = mu.calc_texture_matrix()
@@ -184,24 +160,12 @@ local function calc_ssao_config(camera, lightdir, aobuf_w, aobuf_h, depthlevel)
     ssao_configs.ssct.lightdir.v = math3d.normalize(math3d.inverse(math3d.transform(camera.viewmat, lightdir, 0)))
 end
 
-local ssao_property = {
-    type = "i",
-    access = "w",
-    mip = 0,
-    stage = 0,
-    value = nil,
-}
-
-local function calc_dispatch_size(ww, hh)
-    return (ww // 16)+1, (hh//16)+1
-end
-
 local function update_properties(dispatcher, ce)
     local sdq = w:first "scene_depth_queue render_target:in"
     local m = dispatcher.material
     m.s_depth = fbmgr.get_depth(sdq.render_target.fb_idx).handle
 
-    local rb = fbmgr.get_rb(dispatcher.fb_idx, 1)
+    local rb = fbmgr.get_rb(dispatcher.rb_idx)
     m.s_ssao_result = rb.handle
 
     local aobuf_w, aobuf_h = rb.w, rb.h
@@ -313,9 +277,9 @@ function ssao_sys:bilateral_filter()
     local bfd = w:first "bilateral_filter_dispatcher dispatch:in"
 
     local sd = w:first "ssao_dispatcher dispatch:in"
-    local inputrb = fbmgr.get_rb(sd.dispatch.fb_idx, 1)
+    local inputrb = fbmgr.get_rb(sd.dispatch.rb_idx)
     local inputhandle = inputrb.handle
-    local outputrb = fbmgr.get_rb(bfd.dispatch.fb_idx, 1)
+    local outputrb = fbmgr.get_rb(bfd.dispatch.rb_idx)
     local outputhandle = outputrb.handle
 
     assert(outputrb.w == inputrb.w and outputrb.h == inputrb.h)
