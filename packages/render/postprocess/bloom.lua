@@ -108,7 +108,7 @@ function bloom_sys:bloom()
     end
 
     local vr = world.args.viewport
-    assert(is_viewrect_valid(vr))
+    assert(is_viewrect_valid(vr), ("Invalid viewport size:%d, %d, at least:%d, %d"):format(vr.w, vr.h, MIN_FB_SIZE, MIN_FB_SIZE))
 
     local ppi = w:first "postprocess postprocess_input:in".postprocess_input
 
@@ -116,7 +116,7 @@ function bloom_sys:bloom()
     local ds_m = ds_dis.material
 
     local scene_color_handle = ppi.scene_color_handle
-    local bloom_handle = fbmgr.get_rb(dse.dispatch.bloom_texture_idx).handle
+    local bloom_handle = fbmgr.get_rb(ds_dis.bloom_texture_idx).handle
 
     local function output_image_size(ww, hh)
         return math.floor(ww * 0.5 + 0.5), math.floor(hh * 0.5 + 0.5)
