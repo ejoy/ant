@@ -210,8 +210,7 @@ local function update_properties(dispatcher, ce)
         value = rb.handle
     }
 
-    local s = dispatcher.size
-    s[1], s[2] = calc_dispatch_size(rb.w, rb.h)
+    icompute.calc_dispatch_size_2d(rb.w, rb.h, dispatcher.size)
 
     local vr = sdq.render_target.view_rect
     local depthwidth, depthheight, depthdepth = vr.w, vr.h, 1
@@ -331,8 +330,7 @@ function ssao_sys:bilateral_filter()
 
     assert(outputrb.w == inputrb.w and outputrb.h == inputrb.h)
     local bf_dis = bfd.dispatch
-    local s = bf_dis.size
-    s[1], s[2] = calc_dispatch_size(inputrb.w, inputrb.h)
+    icompute.calc_dispatch_size_2d(inputrb.w, inputrb.h, bf_dis.size)
 
     local bfdmaterial = bf_dis.material
     update_bilateral_filter_properties(bfdmaterial, inputhandle, outputhandle, {1.0/inputrb.w, 0.0}, inv_camera_far_with_bilateral_threshold)
