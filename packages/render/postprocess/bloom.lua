@@ -102,13 +102,13 @@ local output_color_property = {
 }
 
 function bloom_sys:bloom()
-    local dse = w:first "bloom_downsampler dispatch:in"
-    if dse.dispatch.bloom_texture_idx == nil then
+    local vr = world.args.viewport
+    if not is_viewrect_valid(vr) then
         return
     end
 
-    local vr = world.args.viewport
-    assert(is_viewrect_valid(vr), ("Invalid viewport size:%d, %d, at least:%d, %d"):format(vr.w, vr.h, MIN_FB_SIZE, MIN_FB_SIZE))
+    local dse = w:first "bloom_downsampler dispatch:in"
+    assert(dse.dispatch.bloom_texture_idx, ("Invalid viewport size:%d, %d, at least:%d, %d"):format(vr.w, vr.h, MIN_FB_SIZE, MIN_FB_SIZE))
 
     local ppi = w:first "postprocess postprocess_input:in".postprocess_input
 
