@@ -48,7 +48,7 @@ vec3 fetchSamplePos(float i, float ssDiskRadius, const highp vec2 uv, const vec2
     const float r2 = tapRadius2(i, noise);
 
     float ssRadius = max(1.0, r2 * ssDiskRadius); // at least 1 pixel screen-space radius
-    vec2 uvSamplePos = uv + vec2(ssRadius * tapPosition) * u_viewTexel.xy;
+    vec2 uvSamplePos = uv + vec2(ssRadius * tapPosition) * u_ssao_texelsize.xy;
 
     float level = clamp(floor(log2(ssRadius)) - kLog2LodRate, 0.0, u_ssao_max_level);
 
@@ -166,15 +166,15 @@ void main()
 
     highp vec3 origin = posVS_from_depth(uv, depthVS);
 #ifdef HIGH_QULITY_NORMAL_RECONSTRUCT
-    highp vec3 normal = normalVS_from_depth_HighQ(s_depth, uv, depth_non_linear, origin);
+    highp vec3 normal = normalVS_from_depth_HighQ(s_depth, uv, depth_non_linear, origin, u_ssao_texelsize);
 #else //!HIGH_QULITY_NORMAL_RECONSTRUCT
-    highp vec3 normal = normalVS_from_depth(s_depth, uv, origin);
+    highp vec3 normal = normalVS_from_depth(s_depth, uv, origin, u_ssao_texelsize);
 #endif //HIGH_QULITY_NORMAL_RECONSTRUCT
     highp float occlusion = 0.0;
     highp vec3 bentNormal;
 
     if (u_ssao_intensity > 0.0) {
-        highp float noise = interleavedGradientNoise(uv_out.xy);
+        highp float noise = interleavedGradientNoise(uv_out.xy+0.5);
         scalableAmbientObscurance(occlusion, bentNormal, uv, origin, noise, normal);
     }
 

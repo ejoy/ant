@@ -60,24 +60,22 @@ vec2 get_texel_coord(vec2 xy)
 #endif //ORIGIN_BOTTOM_LEFT
 }
 
-vec4 uv_dxdy(const highp sampler2D depthTexture)
+vec4 uv_dxdy(vec2 texelsize)
 {
-	const vec2 size = textureSize(depthTexture, 0);
-	vec2 texelsize = 1.0 / size;
 	return vec4(
-		vec2(u_viewTexel.x, 0.0),
+		vec2(texelsize.x, 0.0),
 #if ORIGIN_BOTTOM_LEFT
-    vec2(0.0, u_viewTexel.y)
+    vec2(0.0, texelsize.y)
 #else //ORIGIN_BOTTOM_LEFT
-	vec2(0.0, -u_viewTexel.y)
+	vec2(0.0, -texelsize.y)
 #endif //ORIGIN_BOTTOM_LEFT
 	);
 }
 
 highp vec3 normalVS_from_depth(
         const highp sampler2D depthTexture, const highp vec2 uv,
-        const highp vec3 position){
-	highp vec4 dxdy = uv_dxdy(depthTexture);
+        const highp vec3 position, const highp vec2 texelsize){
+	highp vec4 dxdy = uv_dxdy(texelsize);
     highp vec2 uvdx = uv + dxdy.xy;
 	highp vec2 uvdy = uv + dxdy.zw;
 
@@ -90,11 +88,11 @@ highp vec3 normalVS_from_depth(
 
 highp vec3 normalVS_from_depth_HighQ(
         const highp sampler2D depthTexture, const highp vec2 uv, float depth_non_linear,
-        const highp vec3 position) {
+        const highp vec3 position, const highp vec2 texelsize) {
 
     vec3 pos_c = position;
 
-	const highp vec4 dxdy = uv_dxdy(depthTexture);
+	const highp vec4 dxdy = uv_dxdy(texelsize);
 	const highp vec2 dx = dxdy.xy;
 	const highp vec2 dy = dxdy.zw;
 

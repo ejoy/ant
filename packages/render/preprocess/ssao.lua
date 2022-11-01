@@ -175,11 +175,11 @@ end
 
 local texmatrix<const> = mu.calc_texture_matrix()
 
-local function calc_ssao_config(camera, lightdir, depthwidth, depthheight, depthdepth)
+local function calc_ssao_config(camera, lightdir, aobuf_w, aobuf_h, depthlevel)
     --calc projection scale
-    ssao_configs.projection_scale = util.projection_scale(depthwidth, depthheight, camera.projmat)
+    ssao_configs.projection_scale = util.projection_scale(aobuf_w, aobuf_h, camera.projmat)
     ssao_configs.projection_scale_radius = ssao_configs.projection_scale * ssao_configs.radius
-    ssao_configs.max_level = depthdepth - 1
+    ssao_configs.max_level = depthlevel - 1
     ssao_configs.edge_distance = 1.0 / ssao_configs.bilateral_threshold
     ssao_configs.ssct.lightdir.v = math3d.normalize(math3d.inverse(math3d.transform(camera.viewmat, lightdir, 0)))
 end
@@ -202,24 +202,20 @@ local function update_properties(dispatcher, ce)
     m.s_depth = fbmgr.get_depth(sdq.render_target.fb_idx).handle
 
     local rb = fbmgr.get_rb(dispatcher.fb_idx, 1)
-    m.s_ssao_result = {
-        type = "i",
-        stage = 1,
-        access = "w",
-        mip = 0,
-        value = rb.handle
-    }
+    m.s_ssao_result = rb.handle
 
-    icompute.calc_dispatch_size_2d(rb.w, rb.h, dispatcher.size)
+    local aobuf_w, aobuf_h = rb.w, rb.h
+    icompute.calc_dispatch_size_2d(aobuf_w, aobuf_h, dispatcher.size)
 
-    local vr = sdq.render_target.view_rect
-    local depthwidth, depthheight, depthdepth = vr.w, vr.h, 1
+    local depthlevel = 1
+
     local camera = ce.camera
     local projmat = camera.projmat
 
     local directional_light = w:first "directional_light scene:in"
     local lightdir = directional_light and iom.get_direction(directional_light) or mc.ZAXIS
-    calc_ssao_config(camera, lightdir, depthwidth, depthheight, depthdepth)
+
+    calc_ssao_config(camera, lightdir, aobuf_w, aobuf_h, depthlevel)
 
     m.u_ssao_param = math3d.vector(
         ssao_configs.visible_power,
@@ -237,7 +233,7 @@ local function update_properties(dispatcher, ce)
         ssao_configs.spiral_turns)
 
     m.u_ssao_param4 = math3d.vector(
-        depthwidth, depthheight, ssao_configs.max_level,
+        1.0/rb.w, 1.0/rb.h, ssao_configs.max_level,
         ssao_configs.edge_distance)
 
     --screen space cone trace
@@ -259,10 +255,10 @@ local function update_properties(dispatcher, ce)
     --screen matrix
     do
         local baismatrix = math3d.mul(math3d.matrix(
-            depthwidth, 0.0, 0.0, 0.0,
-            0.0, depthheight, 0.0, 0.0,
+            aobuf_w, 0.0, 0.0, 0.0,
+            0.0, aobuf_h, 0.0, 0.0,
             0.0, 0.0, 1.0, 0.0,
-            depthwidth, depthheight, 0.0, 1.0
+            aobuf_w, aobuf_h, 0.0, 1.0
         ), texmatrix)
         m.u_ssct_screen_from_view_mat = math3d.mul(baismatrix, projmat)
     end
@@ -293,13 +289,7 @@ local KERNELS_COUNT = generate_gaussian_kernels(bilateral_config.kernel_radius, 
 
 local function update_bilateral_filter_properties(material, inputhandle, outputhandle, offset, inv_camera_far_with_bilateral_threshold)
     material.s_ssao_result = inputhandle
-    material.s_filter_result = {
-        type = "i",
-        access = "w",
-        mip = 0,
-        stage = 1,
-        value = outputhandle
-    }
+    material.s_filter_result = outputhandle
 
     material.u_bilateral_kernels = KERNELS
     material.u_bilateral_param = math3d.vector(offset[1], offset[2], KERNELS_COUNT, inv_camera_far_with_bilateral_threshold)

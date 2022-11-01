@@ -17,7 +17,7 @@ vec4 fetch_texture2d_size(sampler2D tex, int lod)
 vec2 id2uv(ivec2 uvidx, ivec2 size)
 {
     const vec2 texeloffset = vec2(0.5, 0.5);
-    return ((vec2)uvidx + texeloffset)/(size-1);
+    return ((vec2)uvidx + texeloffset)/size;
 }
 
 vec2 id2uv_flipy(ivec2 uvidx, ivec2 size)
