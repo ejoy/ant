@@ -15,26 +15,11 @@ local sampler	= require "sampler"
 local shadowcfg = setmetatable({}, {__index= setting:data().graphic.shadow})
 
 bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
-local csm_setting = {
-	shadowmap_size	= shadowcfg.size,
-	shadow_param	= math3d.ref(math3d.vector(shadowcfg.bias, shadowcfg.min_variance or 0.0, 1/shadowcfg.size, shadowcfg.depth_multiplier or 1.0)),
-    shadow_param2	= math3d.ref(math3d.vector(shadowcfg.color[1], shadowcfg.color[2], shadowcfg.color[3], shadowcfg.normal_offset)),
-    stabilize		= shadowcfg.stabilize,
-	split_num		= shadowcfg.split_num,
-	split_frustums	= {nil, nil, nil, nil},
-}
 
-local function gen_ratios(distances)
-	local pre_dis = 0
-	local ratios = {}
-	for i=1, #distances do
-		local dis = math.min(1.0, distances[i] * (1.0+csm_setting.cross_delta))
-		ratios[#ratios+1] = {pre_dis, dis}
-		pre_dis = dis
-	end
-	ratios[#ratios+1] = {pre_dis, 1.0}
-	return ratios
-end
+shadowcfg.shadowmap_size	= shadowcfg.size
+shadowcfg.shadow_param		= math3d.ref(math3d.vector(shadowcfg.bias, shadowcfg.min_variance or 0.0, 1/shadowcfg.size, shadowcfg.depth_multiplier or 1.0))
+shadowcfg.shadow_param2		= math3d.ref(math3d.vector(shadowcfg.color[1], shadowcfg.color[2], shadowcfg.color[3], shadowcfg.normal_offset))
+shadowcfg.split_frustums	= {nil, nil, nil, nil}
 
 if shadowcfg.bias == nil then 
 	shadowcfg.bias = 0.003
@@ -51,24 +36,28 @@ end
 if shadowcfg.normal_offset == nil then
 	shadowcfg.normal_offset = 0.012
 end
+
+if shadowcfg.far_offset == nil then
+	shadowcfg.far_offset = 0
+end
 if shadowcfg.split_ratios then
-	if csm_setting.split_num then
-		if #shadowcfg.split_ratios ~= (csm_setting.split_num - 1)  then
-			error(("#split_ratios == split_num - 1: %d, %d"):format(#shadowcfg.split_ratios, csm_setting.split_num))
+	if shadowcfg.split_num then
+		if #shadowcfg.split_ratios ~= (shadowcfg.split_num)  then
+			error(("#split_ratios == split_num - 1: %d, %d"):format(#shadowcfg.split_ratios, shadowcfg.split_num))
 		end
 	else
-		csm_setting.split_num = #shadowcfg.split_ratios
+		shadowcfg.split_num = #shadowcfg.split_ratios
 	end
-	csm_setting.split_ratios = shadowcfg.split_ratios
+	shadowcfg.split_ratios = shadowcfg.split_ratios
 else
-	csm_setting.cross_delta	= shadowcfg.cross_delta or 0.00
+	shadowcfg.cross_delta	= shadowcfg.cross_delta or 0.00
 	if shadowcfg.split_weight then
-		csm_setting.split_num	= shadowcfg.split_num
-		csm_setting.split_weight= math.max(0, math.min(1, shadowcfg.split_weight))
+		shadowcfg.split_num	= shadowcfg.split_num
+		shadowcfg.split_weight= math.max(0, math.min(1, shadowcfg.split_weight))
 	else
-		csm_setting.split_num = 4
- 		csm_setting.split_ratios = {
- 			{0.06,0.1},
+		shadowcfg.split_num = 4
+ 		shadowcfg.split_ratios = {
+ 			{0.00,0.1},
 			{0.1,0.30},
 			{0.3,0.40},
 			{0.4,0.68} 
@@ -77,14 +66,14 @@ else
 end
 
 
-assert(csm_setting.split_num ~= nil)
+assert(shadowcfg.split_num ~= nil)
 
-csm_setting.fb_index = fbmgr.create(
+shadowcfg.fb_index = fbmgr.create(
 	{
 		rbidx=fbmgr.create_rb{
 			format = "D32F",
-			w=csm_setting.shadowmap_size * csm_setting.split_num,
-			h=csm_setting.shadowmap_size,
+			w=shadowcfg.shadowmap_size * shadowcfg.split_num,
+			h=shadowcfg.shadowmap_size,
 			layers=1,
 			flags=sampler{
 				RT="RT_ON",
@@ -99,11 +88,11 @@ csm_setting.fb_index = fbmgr.create(
 	}
 )
 
---[[ csm_setting.sqfb_index = fbmgr.create{
+--[[ shadowcfg.sqfb_index = fbmgr.create{
 	sqrbidx = fbmgr.create_rb{
 		format = "R16F",
-		w=csm_setting.shadowmap_size * csm_setting.split_num,
-		h=csm_setting.shadowmap_size,
+		w=shadowcfg.shadowmap_size * shadowcfg.split_num,
+		h=shadowcfg.shadowmap_size,
 		layers=1,
 		flags=sampler{
 			MIN="POINT",
@@ -121,13 +110,13 @@ csm_setting.fb_index = fbmgr.create(
 local ishadow = ecs.interface "ishadow"
 
 function ishadow.setting()
-	return csm_setting
+	return shadowcfg
 end
 
 local crop_matrices = {}
 
 do
-	local spiltunit = 1 / csm_setting.split_num
+	local spiltunit = 1 / shadowcfg.split_num
 	local function calc_crop_matrix(csm_idx)
 		local offset = spiltunit * (csm_idx - 1)
 		return math3d.matrix(
@@ -138,7 +127,7 @@ do
 	end
 
 	local sm_bias_matrix = mu.calc_texture_matrix()
-	for csm_idx=1, csm_setting.split_num do
+	for csm_idx=1, shadowcfg.split_num do
 		local vp_crop = calc_crop_matrix(csm_idx)
 		crop_matrices[#crop_matrices+1] = math3d.ref(math3d.mul(vp_crop, sm_bias_matrix))
 	end
@@ -149,19 +138,19 @@ function ishadow.crop_matrix(csm_index)
 end
 
 function ishadow.fb_index()
-	return csm_setting.fb_index
+	return shadowcfg.fb_index
 end
 
 --[[ function ishadow.sqfb_index()
-	return csm_setting.sqfb_index
+	return shadowcfg.sqfb_index
 end ]]
 
 function ishadow.shadow_param()
-	return csm_setting.shadow_param
+	return shadowcfg.shadow_param
 end
 
 function ishadow.shadow_param2()
-	return csm_setting.shadow_param2
+	return shadowcfg.shadow_param2
 end
 
 local function split_new_frustum(view_frustum, n, f)
@@ -175,26 +164,26 @@ local function split_new_frustum(view_frustum, n, f)
 end
 
 function ishadow.split_frustums()
-	return csm_setting.split_frustums
+	return shadowcfg.split_frustums
 end
 
 function ishadow.shadowmap_size()
-	return csm_setting.shadowmap_size
+	return shadowcfg.shadowmap_size
 end
 
 function ishadow.calc_split_frustums(view_frustum)
-	local split_weight = csm_setting.split_weight
-	local frustums = csm_setting.split_frustums
+	local split_weight = shadowcfg.split_weight
+	local frustums = shadowcfg.split_frustums
 	local view_nearclip, view_farclip = view_frustum.n, view_frustum.f
 	local clip_range = view_farclip - view_nearclip
-	local split_num = csm_setting.split_num
+	local split_num = shadowcfg.split_num
 
 	if split_weight then
  		local ratio = view_farclip/view_nearclip
 		local num_sclies = split_num*2
 		local nearclip = view_nearclip
 		local farclip
-		local cross_multipler = (1.0+csm_setting.cross_delta)
+		local cross_multipler = (1.0+shadowcfg.cross_delta)
 		local nn=2
 		local ff=1
 --[[ 		for i=1, split_num do
@@ -221,7 +210,7 @@ function ishadow.calc_split_frustums(view_frustum)
 		end
 
 		for i=1, split_num do
-			local ratio = csm_setting.split_ratios[i]
+			local ratio = shadowcfg.split_ratios[i]
 			local near_clip, far_clip = calc_clip(ratio[1]), calc_clip(ratio[2])
 			frustums[i] = split_new_frustum(view_frustum, near_clip, far_clip)
 		end
@@ -230,7 +219,7 @@ function ishadow.calc_split_frustums(view_frustum)
 end
 
 function ishadow.split_num()
-	return csm_setting.split_num
+	return shadowcfg.split_num
 end
 
 return ishadow

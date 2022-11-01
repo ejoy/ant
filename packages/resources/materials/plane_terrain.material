@@ -2,36 +2,27 @@ fx:
   fs: /pkg/ant.resources/shaders/terrain/fs_plane_terrain.sc
   vs: /pkg/ant.resources/shaders/terrain/vs_plane_terrain.sc
   setting:
-    HAS_BASECOLOR_TEXTURE: 1
-    HAS_CEMENT_BASECOLOR_TEXTURE: 1
-    HAS_NORMAL_TEXTURE: 1
+    HAS_TERRAIN_BASECOLOR_TEXTURE: 1
+    HAS_TERRAIN_NORMAL_TEXTURE: 1
+    HAS_PROCESSING: 1
     lighting: on
 properties:
-  u_sand_pbr_factor: {0.1, 1, 0.5, 1}  #metallic, roughness, alpha_cutoff, occlusion strength
+  u_sand_pbr_factor: {0.2, 1, 0.5, 1}  #metallic, roughness, alpha_cutoff, occlusion strength
   u_stone_pbr_factor: {0.1, 0.6, 0.5, 1}  #metallic, roughness, alpha_cutoff, occlusion strength
-  u_cement_pbr_factor: {0.1, 0.6, 0.5, 1}  #metallic, roughness, alpha_cutoff, occlusion strength
+  u_cement_pbr_factor: {0.1, 0.8, 0.5, 1}  #metallic, roughness, alpha_cutoff, occlusion strength
   u_emissive_factor: {0, 0, 0, 0}
   u_basecolor_factor: {1, 1, 1, 1}
   s_basecolor:
     stage: 0
     texture: /pkg/ant.resources/textures/shape_terrain/shape_basecolor.texture
+  s_height:
+    stage: 1
+    texture: /pkg/ant.resources/textures/shape_terrain/shape_height.texture
   s_normal:
     stage: 2
     texture: /pkg/ant.resources/textures/shape_terrain/shape_normal.texture
-  s_sand_height:
-    stage: 3
-    texture: /pkg/ant.resources/textures/shape_terrain/shape_sand_height.texture
-  s_stone_height:
-    stage: 4
-    texture: /pkg/ant.resources/textures/shape_terrain/shape_stone_height.texture
-  s_cement_basecolor:
-    stage: 13
-    texture: /pkg/ant.resources/textures/shape_terrain/shape_cement_basecolor.texture
-  s_cement_height:
-    stage: 14
-    texture: /pkg/ant.resources/textures/shape_terrain/shape_cement_height.texture
   s_cement_alpha:
-    stage: 15
+    stage: 3
     texture: /pkg/ant.resources/textures/shape_terrain/shape_cement_alpha.texture
 state: 
     ALPHA_REF: 0

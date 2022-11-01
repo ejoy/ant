@@ -254,16 +254,17 @@ local function generate_mesh_shape(ww, hh)
 
     return ms
 end
-
+-- d1 u4 s2 b4 t4 o1 
+-- 1 0degree 2 90degree 3 180degree 4 270degree
 local shape_type_field = {
-    "g",  "g",  "g",  "d",  "g",  "d",  "g",  "d",
-    "g",  "g",  "g",  "d",  "g",  "g",  "g",  "g",
-    "d",  "d",  "d",  "g",  "g",  "d",  "g",  "d",
-    "g",  "d",  "g",  "g",  "d",  "d",  "d",  "d",
-    "d",  "d",  "g",  "d",  "g",  "g",  "g",  "g",
-    "g",  "d",  "g",  "d",  "g",  "g",  "g",  "g",
-    "g",  "g",  "g",  "d",  "g",  "g",  "g",  "g",
-    "g",  "d",  "d",  "d",  "g",  "g",  "g",  "g",
+    "b4",  "s1",  "b1",  "d1",  "d1",  "d1",  "d1",  "d1",
+    "s2",  "d1",  "s2",  "d1",  "d1",  "d1",  "d1",  "d1",
+    "b3",  "s1",  "b2",  "d1",  "b4",  "t1",  "b1",  "d1",
+    "d1",  "d1",  "d1",  "d1",  "t4",  "o1",  "t2",  "d1",
+    "d1",  "u2",  "s1",  "b1",  "b3",  "t3",  "b2",  "d1",
+    "b4",  "s1",  "u4",  "s2",  "d1",  "u3",  "d1",  "d1",
+    "s2",  "u2",  "s1",  "b2",  "d1",  "s2",  "d1",  "d1",
+    "b3",  "s1",  "u4",  "u2",  "s1",  "t3",  "s1",  "u4",
 }
 
 local function gen_terrain_field(width, height)
@@ -295,7 +296,7 @@ function shape_terrain_test_sys:init()
             shape_terrain = {
                 width = ww,
                 height = hh,
-                unit = 2.0,
+                unit = 6.0,
                 terrain_fields = gen_terrain_field(ww, hh),
                 section_size = math.max(1, ww > 4 and ww//4 or ww//2),
                 material = "/pkg/ant.resources/materials/plane_terrain.material",

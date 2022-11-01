@@ -5,10 +5,11 @@ compress:
 maxsize: 1024x1024
 mipmap: 0
 colorspace: sRGB
-path:/pkg/ant.resources.binary/terrain/shapes/basecolor.png
+path:/pkg/ant.resources.binary/terrain/shapes/basecolor.dds
 sampler:
   MAG: LINEAR
   MIN: LINEAR
+  MIP: LINEAR
   U: WRAP
   V: WRAP
 type: texture

@@ -42,8 +42,7 @@ graphic:
     color: {0.0, 0.0, 0.0, 1}
     stabilize: true
     #split_ratios: {0.05, 0.25, 0.6}
-    split_lamada: 0.8
-    split_num: 4
+    split_lamada: 4
     min_variance: 0.012
     depth_multiplier: 1000
 debug:

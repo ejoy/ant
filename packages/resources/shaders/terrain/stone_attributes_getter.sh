@@ -2,27 +2,19 @@ input_attributes stone_attribs = (input_attributes)0;
 {
     vec2 uv = uv_motion(v_texcoord0);
     stone_attribs.uv = uv;
-    stone_attribs.basecolor *= u_basecolor_factor;
-    float stone_idx = v_stone_type;
-    vec3 normalTS;
+    float color_idx;
 
-    if(stone_idx >= 0.9 && stone_idx <= 1.1){
-        stone_attribs.basecolor = texture2D(s_stone1_color  ,  v_texcoord0);
-        normalTS = fetch_bc5_normal(s_stone1_normal, v_texcoord0);
-    }
-    else if(stone_idx >= 1.9 && stone_idx <= 2.1){
-        stone_attribs.basecolor = texture2D(s_stone2_color  ,  v_texcoord0);
-        normalTS = fetch_bc5_normal(s_stone2_normal, v_texcoord0);
-    }
+    stone_attribs.basecolor = get_terrain_basecolor(uv, vec4(1.0, 1.0, 1.0, 1.0), stone_color_idx);
+    stone_attribs.V = normalize(u_eyepos.xyz - v_posWS.xyz);
 
-    stone_attribs.emissive = get_emissive_color(uv);
+    const mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);    
+    stone_attribs.N = get_terrain_normal_by_tbn(tbn, v_normal, uv, stone_normal_idx);
 
-    stone_attribs.V = get_V(u_eyepos.xyz, v_posWS.xyz);
-
-    mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);
-    stone_attribs.N = normalize(instMul(normalTS, tbn));
-
-    get_metallic_roughness(uv, stone_attribs);
+    stone_attribs.metallic = u_stone_metallic_factor;
+    stone_attribs.perceptual_roughness = u_stone_roughness_factor;
+    stone_attribs.perceptual_roughness  = clamp(stone_attribs.perceptual_roughness, 0.0, 1.0);
+    stone_attribs.metallic              = clamp(stone_attribs.metallic, 0.0, 1.0);
     get_occlusion(uv, stone_attribs);
 
+    stone_attribs.screen_uv = get_normalize_fragcoord(gl_FragCoord.xy);
 }

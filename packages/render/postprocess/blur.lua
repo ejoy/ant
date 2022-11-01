@@ -86,9 +86,9 @@ end
 
 
 local function build_blur_textures()
-    local setting = ishadow.setting()
-    blur_w = setting.shadowmap_size * setting.split_num
-    blur_h = setting.shadowmap_size
+    local s_setting = ishadow.setting()
+    blur_w = s_setting.shadowmap_size * s_setting.split_num
+    blur_h = s_setting.shadowmap_size
     local function check_destroy(handle)
         if handle then
             bgfx.destroy(handle)

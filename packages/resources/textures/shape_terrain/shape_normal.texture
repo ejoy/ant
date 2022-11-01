@@ -4,10 +4,11 @@ compress:
   windows: BC5
 maxsize: 1024x1024
 mipmap: 0
-path: /pkg/ant.resources.binary/terrain/shapes/normal.png
+path: /pkg/ant.resources.binary/terrain/shapes/normal.dds
 sampler:
   MAG: LINEAR
   MIN: LINEAR
+  MIP: LINEAR
   U: WRAP
   V: WRAP
 type: texture

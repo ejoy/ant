@@ -255,7 +255,7 @@ local function calc_ortho_minmax(corners_view, main_view, light_view, corners_wo
 	return light_ortho_min, light_ortho_max
 end
 
-local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_view)
+local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_view, far_offset)
 	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
 	set_worldmat(shadow_ce.scene, shadow_ce.scene)
 
@@ -274,7 +274,7 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	local near_plane = -csm_frustum.f
 	local far_plane  =  csm_frustum.f
 	f.l, f.b, f.n = min_extent[1], min_extent[2], near_plane
-	f.r, f.t, f.f = max_extent[1], max_extent[2], far_plane + 500	-- avoid scene AABB intersection
+	f.r, f.t, f.f = max_extent[1], max_extent[2], far_plane + far_offset 	-- avoid scene AABB intersection
 	update_camera_matrices(camera, light_view)
 end
 
@@ -289,7 +289,7 @@ local function update_shadow_frustum(dl, main_camera)
 		local csm_frustum = csm_frustums[csm.index]
 		csm_frustum.n = 1
 		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in scene:in")
-		update_csm_frustum(lightdir, setting.shadowmap_size, csm_frustum, shadow_ce, main_view)
+		update_csm_frustum(lightdir, setting.shadowmap_size, csm_frustum, shadow_ce, main_view, setting.far_offset)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end

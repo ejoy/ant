@@ -6,6 +6,10 @@
 SAMPLER2D(s_basecolor,          0);
 #endif //HAS_BASECOLOR_TEXTURE
 
+#ifdef HAS_TERRAIN_BASECOLOR_TEXTURE
+SAMPLER2DARRAY(s_basecolor,          0);
+#endif //HAS_TERRAIN_BASECOLOR_TEXTURE
+
 #ifdef HAS_METALLIC_ROUGHNESS_TEXTURE
 SAMPLER2D(s_metallic_roughness, 1);
 #endif //HAS_METALLIC_ROUGHNESS_TEXTURE
@@ -13,6 +17,10 @@ SAMPLER2D(s_metallic_roughness, 1);
 #ifdef HAS_NORMAL_TEXTURE
 SAMPLER2D(s_normal,             2);
 #endif //HAS_NORMAL_TEXTURE
+
+#ifdef HAS_TERRAIN_NORMAL_TEXTURE
+SAMPLER2DARRAY(s_normal,             2);
+#endif HAS_TERRAIN_NORMAL_TEXTURE
 
 #ifdef HAS_EMISSIVE_TEXTURE
 SAMPLER2D(s_emissive,           3);
@@ -59,6 +67,7 @@ struct input_attributes
 vec4 get_basecolor(vec2 texcoord, vec4 basecolor)
 {
     basecolor *= u_basecolor_factor;
+
 #ifdef HAS_BASECOLOR_TEXTURE
     basecolor *= texture2D(s_basecolor, texcoord);
 #endif//HAS_BASECOLOR_TEXTURE
@@ -68,6 +77,21 @@ vec4 get_basecolor(vec2 texcoord, vec4 basecolor)
 #endif //ALPHAMODE_OPAQUE
     return basecolor;
 }
+
+vec4 get_terrain_basecolor(vec2 texcoord, vec4 basecolor, float color_idx)
+{
+    basecolor *= u_basecolor_factor;
+
+#ifdef HAS_TERRAIN_BASECOLOR_TEXTURE
+    basecolor *= texture2DArray(s_basecolor, vec3(texcoord, color_idx) );
+#endif//HAS_TERRAIN_BASECOLOR_TEXTURE
+
+#ifdef ALPHAMODE_OPAQUE
+    basecolor.a = u_alpha_mask_cutoff;
+#endif //ALPHAMODE_OPAQUE
+    return basecolor;
+}
+
 
 vec4 get_emissive_color(vec2 texcoord)
 {
@@ -83,9 +107,10 @@ vec3 get_normal_by_tbn(mat3 tbn, vec3 normal, vec2 texcoord)
 #ifdef HAS_NORMAL_TEXTURE
 	vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
 	return normalize(instMul(normalTS, tbn));
-#else //!HAS_NORMAL_TEXTURE
-    return normal;
 #endif //HAS_NORMAL_TEXTURE
+
+    return normal;
+
 }
 
 vec3 get_normal(vec3 tangent, vec3 bitangent, vec3 normal, vec2 texcoord)
@@ -94,6 +119,14 @@ vec3 get_normal(vec3 tangent, vec3 bitangent, vec3 normal, vec2 texcoord)
     return get_normal_by_tbn(tbn, normal, texcoord);
 }
 
+vec3 get_terrain_normal_by_tbn(mat3 tbn, vec3 normal, vec2 texcoord, float normal_idx)
+{
+#ifdef HAS_TERRAIN_NORMAL_TEXTURE
+	vec3 normalTS = texture2DArray(s_normal, vec3(texcoord, normal_idx) );
+	return normalize(instMul(normalTS, tbn));
+#endif //HAS_TERRAIN_NORMAL_TEXTURE
+    return normal;
+}
 
 void get_metallic_roughness(vec2 uv, inout input_attributes input_attribs)
 {

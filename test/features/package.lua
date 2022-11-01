@@ -13,5 +13,6 @@ return {
         "ant.render",
         "ant.objcontroller",
         "ant.efk",
+        "ant.timer"
     }
 }
