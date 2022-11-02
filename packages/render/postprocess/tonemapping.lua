@@ -5,15 +5,18 @@ local w     = world.w
 local viewidmgr = require "viewid_mgr"
 
 local tm_sys    = ecs.system "tonemapping_system"
-local ientity   = ecs.import.interface "ant.render|ientity"
 local irender   = ecs.import.interface "ant.render|irender"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local util      = ecs.require "postprocess.util"
 
+local fbmgr     = require "framebuffer_mgr"
+local sampler   = require "sampler"
+
 local setting   = import_package "ant.settings".setting
 
-local ENABLE_BLOOM<const>       = setting:get "graphic/postprocess/bloom/enable"
-local tm_viewid<const>          = viewidmgr.get "tonemapping"
+local ENABLE_BLOOM<const>   = setting:data().graphic.postprocess.bloom.enable
+local ENABLE_FXAA<const>    = setting:data().graphic.postprocess.fxaa
+local tm_viewid<const>      = viewidmgr.get "tonemapping"
 
 function tm_sys:init()
     util.create_quad_drawer("tonemapping_drawer", "/pkg/ant.resources/materials/postprocess/tonemapping.material")
@@ -22,7 +25,23 @@ end
 function tm_sys:init_world()
     local vp = world.args.viewport
     local vr = {x=vp.x, y=vp.y, w=vp.w, h=vp.h}
-    util.create_queue(tm_viewid, vr, nil, "tonemapping_queue", "tonemapping_queue")
+    local tm_fbidx
+    if ENABLE_FXAA then
+        tm_fbidx = fbmgr.create{
+            rbidx = fbmgr.create_rb{
+                w = vr.w, h = vr.h, layers = 1,
+                format = "RGBA8",
+                flags = sampler{
+                    U = "CLAMP",
+                    V = "CLAMP",
+                    MIN="LINEAR",
+                    MAG="LINEAR",
+                    COLOR_SPACE="sRGB",
+                },
+            }
+        }
+    end
+    util.create_queue(tm_viewid, vr, tm_fbidx, "tonemapping_queue", "tonemapping_queue")
 end
 
 local vp_changed_mb = world:sub{"world_viewport_changed"}

@@ -1,0 +1,12 @@
+fx:
+  vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
+  fs: /pkg/ant.resources/shaders/postprocess/fs_fxaa.sc
+  setting:
+    lighting: off
+    shadow_cast: off
+    shadow_receive: off
+properties:
+  s_scene_ldr_color:
+    stage: 0
+    texture: /pkg/ant.resources/textures/black.texture
+state: /pkg/ant.resources/materials/postprocess/postprocess.state
