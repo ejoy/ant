@@ -55,6 +55,7 @@ alloc_id "postprocess_obj"		--26
 alloc_id "bloom"
 alloc_id "effect_view"
 alloc_id "tonemapping"
+alloc_id "fxaa"
 --end postprocess
 
 alloc_id("lightmap_ds", lightmap_ds_count)

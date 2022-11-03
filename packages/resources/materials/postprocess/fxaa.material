@@ -1,6 +1,6 @@
 fx:
   vs: /pkg/ant.resources/shaders/fullscreen/vs_fullscreen.sc
-  fs: /pkg/ant.resources/shaders/postprocess/fs_fxaa.sc
+  fs: /pkg/ant.resources/shaders/postprocess/fxaa/fs_fxaa.sc
   setting:
     lighting: off
     shadow_cast: off

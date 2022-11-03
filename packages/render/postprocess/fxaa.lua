@@ -3,7 +3,7 @@ local world = ecs.world
 local w     = world.w
 
 local setting = import_package "ant.settings".setting
-local ENABLE_FXAA<const> = setting:data().graphic.postprocess.fxaa
+local ENABLE_FXAA<const> = setting:data().graphic.postprocess.fxaa.enable
 
 local fxaasys = ecs.system "fxaa_system"
 
@@ -12,11 +12,12 @@ if not ENABLE_FXAA then
     fxaasys.init = DEF_FUNC
     fxaasys.init_world = DEF_FUNC
     fxaasys.fxaa = DEF_FUNC
+    return
 end
 
 local mu        = import_package "ant.math".util
 local fbmgr     = require "framebuffer_mgr"
-local viewidmgr = require "viewidmgr"
+local viewidmgr = require "viewid_mgr"
 local util      = ecs.require "postprocess.util"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
@@ -34,12 +35,11 @@ end
 
 function fxaasys:fxaa()
     local tme = w:first "tonemapping_queue render_target:in"
-    local sceneldr_handle = fbmgr.get_rb(tme.render_target.fb_idx, 1)
+    local sceneldr_handle = fbmgr.get_rb(tme.render_target.fb_idx, 1).handle
 
     local fd = w:first "fxaa_drawer filter_material:in"
     imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)
-    
 
-    irender.drawer(fxaa_viewid, "fxaa_drawer")
+    irender.draw(fxaa_viewid, "fxaa_drawer")
 end
 

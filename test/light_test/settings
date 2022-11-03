@@ -37,7 +37,8 @@ graphic:
       enable: true
       inv_highlight: 0.1
       threshold: 2.3
-    fxaa: true
+    fxaa:
+      enable: true
   shadow:
     enable: true
     size: 1024

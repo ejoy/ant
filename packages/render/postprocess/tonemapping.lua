@@ -15,7 +15,7 @@ local sampler   = require "sampler"
 local setting   = import_package "ant.settings".setting
 
 local ENABLE_BLOOM<const>   = setting:data().graphic.postprocess.bloom.enable
-local ENABLE_FXAA<const>    = setting:data().graphic.postprocess.fxaa
+local ENABLE_FXAA<const>    = setting:data().graphic.postprocess.fxaa.enable
 local tm_viewid<const>      = viewidmgr.get "tonemapping"
 
 function tm_sys:init()
@@ -36,6 +36,7 @@ function tm_sys:init_world()
                     V = "CLAMP",
                     MIN="LINEAR",
                     MAG="LINEAR",
+                    RT="RT_ON",
                     COLOR_SPACE="sRGB",
                 },
             }
