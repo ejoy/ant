@@ -189,9 +189,6 @@ end
 local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 	assert(prim.mode == nil or prim.mode == 4)
 	local attributes = prim.attributes
-	if attributes.NORMAL == nil or attributes.TANGENT == nil then
-		error "'NORMAL' and 'TANGENT' attribute is need in gltf vertex buffer attributes"
-	end
 
 	local accessors, bufferViews, buffers = gltfscene.accessors, gltfscene.bufferViews, gltfscene.buffers
 	local layoutdesc = {}
