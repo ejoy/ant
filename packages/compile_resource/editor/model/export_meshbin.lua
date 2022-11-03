@@ -169,11 +169,11 @@ local jointidx_fmt<const> = "HHHH"
 -- left hand define as: 
 -- 		x: -left, +right
 -- 		y: +up, -down
---		z: +point2user, -point2screen
+--		z: -point2user, +point2screen
 -- right hand define as:
 -- 		x: -left, +right
 -- 		y: +up, -down
---		z: -point2user, +point2screen
+--		z: +point2user, -point2screen
 local function r2l_vec(v, l)
 	local t = l:sub(6, 6)
 	local n = tonumber(l:sub(2, 2))
