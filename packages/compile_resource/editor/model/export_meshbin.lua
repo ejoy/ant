@@ -177,15 +177,13 @@ local jointidx_fmt<const> = "HHHH"
 local function r2l_vec(v, l)
 	local t = l:sub(6, 6)
 	local n = tonumber(l:sub(2, 2))
-	if t == 'f' then
+	if t == 'f' and n > 2 then
 		local fmt = ('f'):rep(n)
-		local p = {fmt:unpack(v)}
-		p[3] = -p[3]
-		p[n+1] = nil
-		return fmt:pack(table.unpack(p))
+		local x,y,z = fmt:unpack(v)
+		return fmt:pack(x, y, -z)
 	end
 
-	assert(("not support layout:%s, %s"):format(l, t))
+	assert(("not support layout:%s, type:%s must be 'float', attribute number:%d should be large than 2"):format(l, t, n))
 end
 
 local function fetch_vb_buffers(gltfscene, gltfbin, prim)
