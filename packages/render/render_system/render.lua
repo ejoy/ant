@@ -228,9 +228,8 @@ end
 function irender.screen_capture(force_read)
 	for e in w:select "main_queue render_target:in" do
 		local fbidx = e.render_target.fb_idx
-		
-		local s = setting:data()
-		local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA8"
+		--Force to enable HDR as RGBA16F
+		local format<const> = "RGBA16F"
 		local handle, width, height, pitch = irender.read_render_buffer_content(format, fbmgr.get(fbidx)[1].rbidx, force_read)
 		return width, height, pitch, tostring(handle)
 	end
