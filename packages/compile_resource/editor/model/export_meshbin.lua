@@ -179,8 +179,8 @@ local function r2l_vec(v, l)
 	local n = tonumber(l:sub(2, 2))
 	if t == 'f' and n > 2 then
 		local fmt = ('f'):rep(n)
-		local x,y,z = fmt:unpack(v)
-		return fmt:pack(x, y, -z)
+		local x,y,z,w = fmt:unpack(v)
+		return fmt:pack(x, y, -z, w)
 	end
 
 	assert(("not support layout:%s, type:%s must be 'float', attribute number:%d should be large than 2"):format(l, t, n))
