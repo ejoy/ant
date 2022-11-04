@@ -71,8 +71,6 @@ struct gather_result3{
     vec4 r, g, b;
 };
 
-#define ENABLE_TEXTURE_GATHER
-
 gather_result3 texture_gather3(sampler2DArray tex, vec3 uv)
 {
     gather_result3 r;

@@ -209,23 +209,21 @@ local jointidx_fmt<const> = "HHHH"
 -- left hand define as: 
 -- 		x: -left, +right
 -- 		y: +up, -down
---		z: +point2user, -point2screen
+--		z: -point2user, +point2screen
 -- right hand define as:
 -- 		x: -left, +right
 -- 		y: +up, -down
---		z: -point2user, +point2screen
+--		z: +point2user, -point2screen
 local function r2l_vec(v, l)
 	local t = l:sub(6, 6)
 	local n = tonumber(l:sub(2, 2))
-	if t == 'f' then
+	if t == 'f' and n > 2 then
 		local fmt = ('f'):rep(n)
-		local p = {fmt:unpack(v)}
-		p[3] = -p[3]
-		p[n+1] = nil
-		return fmt:pack(table.unpack(p))
+		local x,y,z,w = fmt:unpack(v)
+		return fmt:pack(x, y, -z, w)
 	end
 
-	assert(("not support layout:%s, %s"):format(l, t))
+	assert(("not support layout:%s, type:%s must be 'float', attribute number:%d should be large than 2"):format(l, t, n))
 end
 
 local function r2_vec(v, l)
@@ -341,6 +339,7 @@ end
 --[[ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 	assert(prim.mode == nil or prim.mode == 4)
 	local attributes = prim.attributes
+
 	local accessors, bufferViews, buffers = gltfscene.accessors, gltfscene.bufferViews, gltfscene.buffers
 	local layoutdesc = {}
 	local layouts = {}

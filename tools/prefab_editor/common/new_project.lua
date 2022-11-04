@@ -163,14 +163,11 @@ graphic:
     clear_depth: 1
     clear_stencil: 0
     clear: CDS
-  hdr:
-    enable: false
-    format: RGBA16F
   postprocess:
     bloom:
       enable: false
-      format: RGBA16F
-      sample_times: 4
+      inv_highlight: 0.1
+      threshold: 2.3
   shadow:
     enable: true
     size: 1024

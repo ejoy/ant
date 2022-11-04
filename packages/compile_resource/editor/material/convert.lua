@@ -39,10 +39,10 @@ local SETTING_MAPPING = {
     shadow_cast = DEF_FUNC,
 }
 
-local enable_cs<const>     = setting:get 'graphic/lighting/cluster_shading' ~= 0
-local enable_bloom<const>  = setting:get "graphic/postprocess/bloom/enable"
-
-local ao_setting<const> = setting:data().graphic.ao or def_setting.graphic.ao
+local enable_cs<const>      = setting:get 'graphic/lighting/cluster_shading' ~= 0
+local enable_bloom<const>   = setting:get "graphic/postprocess/bloom/enable"
+local enable_fxaa<const>    = setting:get "graphic/postprocess/fxaa/enable"
+local ao_setting<const>     = setting:data().graphic.ao or def_setting.graphic.ao
 
 local curve_world = setting:data().graphic.curve_world
 local curve_world_type_macros<const> = {
@@ -55,6 +55,7 @@ local function default_macros(setting)
         "ENABLE_SRGB_TEXTURE=1",
         "ENABLE_SRGB_FB=1",
         "ENABLE_IBL=1",
+        "ENABLE_TEXTURE_GATHER=1",
     }
 
     if enable_cs then

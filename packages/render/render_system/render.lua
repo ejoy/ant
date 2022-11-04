@@ -4,9 +4,8 @@ local w = world.w
 
 local default_comp 	= import_package "ant.general".default
 local setting		= import_package "ant.settings".setting
-local settingdata 	= setting:data()
-local graphic_setting=settingdata.graphic
-
+local ENABLE_PRE_DEPTH<const> = not setting:data().graphic.disable_pre_z
+local ENABLE_FXAA<const> = setting:data().graphic.postprocess.fxaa.enable
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
@@ -20,7 +19,7 @@ local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent"
 local irender		= ecs.interface "irender"
 
 function irender.use_pre_depth()
-	return not graphic_setting.disable_pre_z
+	return ENABLE_PRE_DEPTH
 end
 
 function irender.layer_names()
@@ -69,12 +68,12 @@ function irender.get_main_view_rendertexture()
 end
 
 local default_clear_state = {
-	color = graphic_setting.render.clear_color or 0x000000ff,
+	color = setting:data().graphic.render.clear_color or 0x000000ff,
 	depth = 0.0,
 	clear = "CD",
 }
 
-if not graphic_setting.disable_pre_z then
+if ENABLE_PRE_DEPTH then
 	default_clear_state.depth = nil
 	default_clear_state.clear = "C"
 end
@@ -113,32 +112,24 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 	}
 end
 
-local rb_flag = sampler {
-	RT="RT_MSAA4",
-	MIN="LINEAR",
-	MAG="LINEAR",
-	U="CLAMP",
-	V="CLAMP",
-}
-
-local depth_flag = sampler {
-	RT="RT_MSAA4|RT_WRITE",
-	MIN="POINT",
-	MAG="POINT",
-	U="CLAMP",
-	V="CLAMP",
-}
+local function create_depth_rb(ww, hh)
+	return fbmgr.create_rb{
+		format = "D16F",
+		w = ww, h = hh,
+		layers = 1,
+		flags = sampler {
+			RT = ENABLE_FXAA and "RT_ON" or "RT_MSAA4|RT_WRITE",
+			MIN="POINT",
+			MAG="POINT",
+			U="CLAMP",
+			V="CLAMP",
+		},
+	}
+end
 
 function irender.create_pre_depth_queue(vr, camera_ref)
 	local depth_viewid = viewidmgr.get "pre_depth"
-	local fbidx = fbmgr.create{
-		rbidx=fbmgr.create_rb{
-			format = "D16F",
-			w = vr.w, h=vr.h,
-			layers = 1,
-			flags = depth_flag,
-		}
-	}
+	local fbidx = fbmgr.create{rbidx = create_depth_rb(vr.w, vr.h)}
 
 	fbmgr.bind(depth_viewid, fbidx)
 
@@ -176,20 +167,23 @@ end
 
 local function create_main_fb(fbsize)
 	local function get_depth_buffer()
-		if not graphic_setting.disable_pre_z then
+		if ENABLE_PRE_DEPTH then
 			local depth_viewid = viewidmgr.get "pre_depth"
 			local depthfb = fbmgr.get_byviewid(depth_viewid)
 			return depthfb[#depthfb]
 		end
-		return {rbidx=fbmgr.create_rb(
-			default_comp.render_buffer(
-				fbsize.w, fbsize.h, "D32F", depth_flag)
-		)}
+		return {rbidx=create_depth_rb(fbsize.w, fbsize.h)}
 	end
 	return fbmgr.create({
 		rbidx=fbmgr.create_rb(
 		default_comp.render_buffer(
-			fbsize.w, fbsize.h, "RGBA16F", rb_flag)
+			fbsize.w, fbsize.h, "RGBA16F", sampler {
+				RT= ENABLE_FXAA and "RT_ON" or "RT_MSAA4",
+				MIN="LINEAR",
+				MAG="LINEAR",
+				U="CLAMP",
+				V="CLAMP",
+			})
 	)}, get_depth_buffer())
 end
 
@@ -234,9 +228,8 @@ end
 function irender.screen_capture(force_read)
 	for e in w:select "main_queue render_target:in" do
 		local fbidx = e.render_target.fb_idx
-		
-		local s = setting:data()
-		local format = s.graphic.hdr.enable and s.graphic.hdr.format or "RGBA8"
+		--Force to enable HDR as RGBA16F
+		local format<const> = "RGBA16F"
 		local handle, width, height, pitch = irender.read_render_buffer_content(format, fbmgr.get(fbidx)[1].rbidx, force_read)
 		return width, height, pitch, tostring(handle)
 	end
