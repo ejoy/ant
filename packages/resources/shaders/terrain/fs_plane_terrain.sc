@@ -85,8 +85,8 @@ void main()
 
     float a_sand   = sand_alpha;
     float a_cement = texture2DArray(s_cement_alpha, vec3(v_texcoord1, cement_alpha_type) );
-    float d_sand   = texture2DArray(s_height, vec3(v_texcoord0, 0.0) );
-    float d_stone  = texture2DArray(s_height, vec3(v_texcoord0, 1.0) );
+    float d_sand   = texture2DArray(s_height, vec3(v_texcoord2, 0.0) );
+    float d_stone  = texture2DArray(s_height, vec3(v_texcoord2, 1.0) );
     float d_cement = texture2DArray(s_height, vec3(v_texcoord0, 2.0) );
 
     float sub1 = 4 * abs(d_sand - (a_sand));
@@ -97,7 +97,7 @@ void main()
     float f2 = 1 - sub2;
     texture_stone.w = sub2;   
 
-     vec4 texture_ground =  vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1), 1.0);
+       vec4 texture_ground =  vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1), 1.0);
 
     if(terrain_alpha_type >= 0.9 && terrain_alpha_type <= 1.1){
         vec4 texture_ground =  vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1), 1.0);
@@ -106,7 +106,7 @@ void main()
     }
     else{
         gl_FragColor = texture_ground;
-    }   
+    }     
 
 /*     vec4 texture_ground =  vec4(mul(stone_attribs.basecolor.xyz, texture_sand.w) + mul(sand_attribs.basecolor.xyz, 1), 1.0);
     if(terrain_alpha_type >= 0.9 && terrain_alpha_type <= 1.1){

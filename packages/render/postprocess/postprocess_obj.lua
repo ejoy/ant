@@ -43,7 +43,7 @@ function pp_obj_sys:init_world()
                 camera_ref      = mq.camera_ref,
                 render_target   = rt,
                 primitive_filter = {
-                    filter_type = "",
+                    filter_type = "postprocess_obj",
                     "opacity",
                     "translucent",
                 },

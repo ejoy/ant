@@ -19,6 +19,7 @@ local function init_ro()
         mat_csm3    = null,
         mat_csm4    = null,
         mat_lightmap= null,
+        mat_ppoq    = null,
         --mesh
         vb_start    = 0,
         vb_num      = 0,

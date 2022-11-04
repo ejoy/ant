@@ -30,6 +30,46 @@ local function to_ib(indexbin, flag, count)
 	}
 end
 
+--[[ local function fetch_ib_buffer(gltfscene, gltfbin, index_accessor, ib_table)
+	local bufferViews = gltfscene.bufferViews
+
+	local bvidx = index_accessor.bufferView+1
+	local bv = bufferViews[bvidx]
+	local elemsize = gltfutil.accessor_elemsize(index_accessor)
+	local class = {
+		acc_offset = index_accessor.byteOffset or 0,
+		bv_offset = bv.byteOffset or 0,
+		elemsize = elemsize,
+		stride = bv.byteStride or elemsize,
+	}
+
+	assert(elemsize == 2 or elemsize == 4)
+	local offset = class.acc_offset + class.bv_offset
+	local n = index_accessor.count
+	local size = n * elemsize
+
+	local indexbin = gltfbin:sub(offset+1, offset+size)
+	local num_triangles = n // 3
+
+	local buffer = {}
+	local fmt = elemsize == 4 and "III" or "HHH"
+	for tri=0, num_triangles-1 do
+		local buffer_offset = tri * elemsize * 3
+		local v0, v1, v2 = fmt:unpack(indexbin, buffer_offset+1)
+		ib_table[#ib_table + 1] = {
+			i0 = v0,
+			i1 = v1,
+			i2 = v2
+		}
+		local s = fmt:pack(v0, v2, v1)
+		buffer[#buffer+1] = s
+	end
+
+	indexbin = table.concat(buffer, "")
+
+	return to_ib(indexbin, elemsize == 4 and 'd' or '', index_accessor.count)
+end ]]
+
 local function fetch_ib_buffer(gltfscene, gltfbin, index_accessor)
 	local bufferViews = gltfscene.bufferViews
 
@@ -188,9 +228,232 @@ local function r2l_vec(v, l)
 	assert(("not support layout:%s, %s"):format(l, t))
 end
 
-local function fetch_vb_buffers(gltfscene, gltfbin, prim)
+local function r2_vec(v, l)
+	local t = l:sub(6, 6)
+	local n = tonumber(l:sub(2, 2))
+	if t == 'f' then
+		local fmt = ('f'):rep(n)
+		local p = {fmt:unpack(v)}
+		p[3] = -p[3]
+		p[n+1] = nil
+		return p
+	end
+
+	assert(("not support layout:%s, %s"):format(l, t))
+end
+
+
+local function positive(q)
+    if math3d.index(q, 4) < 0 then
+		local qx, qy, qz, qw = math3d.index(q, 1, 2, 3, 4)
+        return math3d.quaternion(-qx, -qy, -qz, qw)
+    else
+        return q
+    end
+end
+
+local function pack_tangent_frame(normal, tangent, storage_size)
+    local bitangent = math3d.cross(tangent, normal)
+    local nx, ny, nz = math3d.index(normal, 1, 2, 3)
+    local bx, by, bz = math3d.index(bitangent, 1, 2, 3)
+    local tx, ty, tz = math3d.index(tangent, 1, 2, 3)
+    local mat = math3d.matrix{
+        nx, ny, nz, 0,
+        bx, by, bz, 0,
+        tx, ty, tz, 0,
+         0,  0,  0, 1
+   }
+   local q = math3d.quaternion(mat)
+   q = positive(math3d.normalize(q))
+   local bias = 1.0 / (storage_size ^ (8 - 1) - 1)
+   local qx, qy, qz, qw = math3d.index(q, 1, 2, 3, 4)
+   if qw < bias then
+        local factor = math.sqrt(1.0 - bias * bias)
+        --q = math3d.quaternion(qx * factor, qy * factor, qz * factor, bias)
+		qx = qx * factor
+		qy = qy * factor
+		qz = qz * factor
+		qw = qw * factor
+   end
+   if math3d.dot(math3d.cross(normal, tangent), bitangent) < 0 then
+		qx = qx * -1
+		qy = qy * -1
+		qz = qz * -1
+		qw = qw * -1
+   end
+   return {qx, qy, qz, qw}
+end
+
+local function create_add_tanuv(tan_t, idx, inc1, inc2, inc3)
+	local t
+	if tan_t[idx] == nil then
+		t = {0, 0, 0}
+	else
+		t = tan_t[idx]
+	end
+	t[1] = t[1] + inc1
+	t[2] = t[2] + inc2
+	t[3] = t[3] + inc3
+	tan_t[idx] = t
+end
+
+local function calc_tangents(vb, num_v, ib, num_i)
+	local tanu = {}
+	local tanv = {}
+	local tangents = {}
+	for ii = 1, num_i do
+		local indices = ib[ii]
+		local i0, i1, i2 = indices.i0 + 1, indices.i1 + 1, indices.i2 + 1
+		local v0, v1, v2 = vb[i0], vb[i1], vb[i2]
+		local bax, bay, baz, bau, bav = v1.x - v0.x, v1.y - v0.y, v1.z - v0.z, v1.u - v0.u, v1.v - v0.v
+		local cax, cay, caz, cau, cav = v2.x - v0.x, v2.y - v0.y, v2.z - v0.z, v2.u - v0.u, v2.v - v0.v
+		local det = bau * cav - bav * cau
+		local invDet = 1.0 / det
+		local tx, ty, tz = (bax * cav - cax * bav) * invDet, (bay * cav - cay * bav) * invDet, (baz * cav - caz * bav) * invDet
+		local bx, by, bz = (cax * bau - bax * cau) * invDet, (cay * bau - bay * cau) * invDet, (caz * bau - baz * cau) * invDet
+
+		create_add_tanuv(tanu, i0, tx, ty, tz)
+		create_add_tanuv(tanu, i1, tx, ty, tz)
+		create_add_tanuv(tanu, i2, tx, ty, tz)
+		create_add_tanuv(tanv, i0, bx, by, bz)
+		create_add_tanuv(tanv, i1, bx, by, bz)
+		create_add_tanuv(tanv, i2, bx, by, bz)
+	end
+	for ii = 1, num_v do
+		local normal = vb[ii].n
+		local tan_u = math3d.vector(tanu[ii][1], tanu[ii][2], tanu[ii][3])
+		local tan_v = math3d.vector(tanv[ii][1], tanv[ii][2], tanv[ii][3])
+		local n = math3d.vector(normal[1], normal[2], normal[3])
+		local ndt = math3d.dot(n, tan_u)
+		local nxt = math3d.cross(n, tan_u)
+		local tmp = math3d.sub(tan_u, math3d.mul(n, ndt))
+		local tangent = math3d.tovalue(math3d.normalize(tmp))
+		if math3d.dot(nxt, tan_v) < 0 then
+			tangent[4] = -1
+		else
+			tangent[4] = 1
+		end
+		tangents[ii] = tangent
+	end
+	return tangents
+end
+
+--[[ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 	assert(prim.mode == nil or prim.mode == 4)
 	local attributes = prim.attributes
+	local accessors, bufferViews, buffers = gltfscene.accessors, gltfscene.bufferViews, gltfscene.buffers
+	local layoutdesc = {}
+	local layouts = {}
+	local final_layouts = {}
+
+	for _, attribname in ipairs(LAYOUT_NAMES) do
+		local accidx = attributes[attribname]
+		if accidx then
+			local acc = accessors[accidx+1]
+			local bvidx = acc.bufferView+1
+			local bv = bufferViews[bvidx]
+			local layout = get_layout(attribname, accessors[accidx+1])
+			layouts[#layouts+1] = layout
+			if string.sub(layout, 1 ,1) == "n" or string.sub(layout, 1 ,1) == "T" then
+			else
+				final_layouts[#final_layouts+1] = layout
+			end
+			local elemsize = gltfutil.accessor_elemsize(acc)
+			layoutdesc[#layoutdesc+1] = {
+				acc_offset = acc.byteOffset or 0,
+			 	bv_offset = bv.byteOffset or 0,
+				elemsize = elemsize,
+			 	stride = bv.byteStride or elemsize,
+			}
+		end
+	end
+
+	local buffer = {}
+	local numv = gltfutil.num_vertices(prim, gltfscene)
+
+	local change_index_attrib = -1
+
+	local vb_table = {}
+	for iv=0, numv-1 do
+		local vertex = {}
+		for idx, d in ipairs(layoutdesc) do
+		   local l = layouts[idx]
+		   local v = attrib_data(d, iv, gltfbin)
+
+		   local t = l:sub(1, 1)
+
+		   if t == 'p' then
+			   v = r2_vec(v, l)
+			   vertex.x = v[1]
+			   vertex.y = v[2]
+			   vertex.z = v[3]
+		   elseif t == 't' then
+			   local fmt = ('f'):rep(2)
+			   v = {fmt:unpack(v)}
+			   vertex.u = v[1]
+			   vertex.v = v[2]
+		   elseif t == 'n' then
+			   v = r2_vec(v, l)
+			   vertex.n = v
+		   end
+	   end 
+	   vb_table[#vb_table + 1] = vertex
+   end
+
+   local tangents = calc_tangents(vb_table, #vb_table, ib_table, #ib_table)
+	for iv=0, numv-1 do
+		local normal, tangent
+ 		for idx, d in ipairs(layoutdesc) do
+			local l = layouts[idx]
+			local v = attrib_data(d, iv, gltfbin)
+
+			local t = l:sub(1, 1)
+
+			if t == 'p' or t == 'b' then
+				v = r2l_vec(v, l)
+				buffer[#buffer+1] = v
+			elseif t == 'n' then
+				v  = r2_vec(v, l)
+				normal = math3d.vector(v[1], v[2], v[3])				
+			elseif t == 'i' then
+				if l:sub(6, 6) == 'u' then
+					v = jointidx_fmt:pack(v:byte(1), v:byte(2), v:byte(3), v:byte(4))
+					change_index_attrib = idx
+				end
+				buffer[#buffer+1] = v
+			else
+				buffer[#buffer+1] = v
+			end
+		end
+		tangent = tangents[iv + 1]
+		local tangent_pack = math3d.vector(tangent[1], tangent[2], tangent[3])
+		local quat = pack_tangent_frame(normal, tangent_pack, 2)
+		local fmt = ('f'):rep(4)
+		buffer[#buffer + 1] = fmt:pack(table.unpack(quat))
+	end
+
+	if change_index_attrib ~= -1 then
+		layouts[change_index_attrib] = layouts[change_index_attrib]:sub(1, 5) .. 'i'
+	end
+
+	local bindata = table.concat(buffer, "")
+
+	final_layouts[#final_layouts+1] = "T40NIf"
+
+	return {
+		declname = table.concat(final_layouts, '|'),
+		--declname = table.concat(layouts, '|'),
+		memory = {bindata, 1, #bindata},
+		start = 0,
+		num = numv,
+	}
+end
+ ]]
+
+ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
+	assert(prim.mode == nil or prim.mode == 4)
+	local attributes = prim.attributes
+
 	local accessors, bufferViews, buffers = gltfscene.accessors, gltfscene.bufferViews, gltfscene.buffers
 	local layoutdesc = {}
 	local layouts = {}
@@ -247,6 +510,28 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
 	}
 end
 
+local function find_skin_root_idx(skin, nodetree)
+	local joints = skin.joints
+	if joints == nil or #joints == 0 then
+		return
+	end
+
+	if skin.skeleton then
+		return skin.skeleton
+	end
+
+	local root = joints[1]
+	while true do
+		local p = nodetree[root]
+		if p == nil then
+			break
+		end
+
+		root = p
+	end
+	return root
+end
+ 
 local function find_skin_root_idx(skin, nodetree)
 	local joints = skin.joints
 	if joints == nil or #joints == 0 then
@@ -412,6 +697,39 @@ local function save_meshbin_files(resname, meshgroup)
 end
 
 
+--[[ local function export_meshbin(gltfscene, bindata, exports)
+	exports.mesh = {}
+	local meshes = gltfscene.meshes
+	if meshes == nil then
+		return
+	end
+	for meshidx, mesh in ipairs(meshes) do
+		local meshname = get_obj_name(mesh, meshidx, "mesh")
+		local meshaabb = math3d.aabb()
+		exports.mesh[meshidx] = {}
+		for primidx, prim in ipairs(mesh.primitives) do
+			local ib_table = {}
+			local group = {}
+			local indices_accidx = prim.indices
+			group.ib = indices_accidx and
+				fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1], ib_table) or
+				gen_ib(group.vb.num)
+			group.vb = fetch_vb_buffers(gltfscene, bindata, prim, ib_table)
+			local bb = create_prim_bounding(gltfscene, prim)
+			if bb then
+				local aabb = math3d.aabb(bb.aabb[1], bb.aabb[2])
+				if math3d.aabb_isvalid(aabb) then
+					group.bounding = bb
+					meshaabb = math3d.aabb_merge(meshaabb, aabb)
+				end
+			end
+
+			local stemname = ("%s_P%d"):format(meshname, primidx)
+			exports.mesh[meshidx][primidx] = save_meshbin_files(stemname, group)
+		end
+	end
+end ]]
+
 local function export_meshbin(gltfscene, bindata, exports)
 	exports.mesh = {}
 	local meshes = gltfscene.meshes
@@ -444,7 +762,6 @@ local function export_meshbin(gltfscene, bindata, exports)
 		end
 	end
 end
-
 return function (_, glbdata, exports)
 	joint_trees = {}
 	export_meshbin(glbdata.info, glbdata.bin, exports)

@@ -38,10 +38,10 @@ uniform vec4 u_omni_param;
 //#define SHADOW_COVERAGE_DEBUG
 
 //#define SM_HARD 
-//#define SM_PCF
-#define SM_ESM
+#define SM_PCF
+//#define SM_ESM
 
-#if defined(SM_HARD) || defined(SM_PCF)
+#if defined(SM_HARD)
 #define USE_SHADOW_COMPARE
 #endif //
 

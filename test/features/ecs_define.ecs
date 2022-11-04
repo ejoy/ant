@@ -13,7 +13,7 @@ import "@ant.audio"
 import "@ant.efk"
 import "@ant.timer"
 
-component "printer".type "lua"
+
 
 system "init_loader_system"
     .implement "tmp_systemloader.lua"
@@ -29,8 +29,9 @@ system "init_loader_system"
     --.require_system "ant.test.features|decal_test_system"
     --.require_system "ant.test.features|water_test_system"
     --.require_system "ant.test.features|hitch_node_test_system"
-    .require_system "ant.test.features|shape_terrain_test_system"
+    .require_system "ant.test.features|terrain_test_system"
     --.require_system "ant.test.features|dynamic_texture_test_system"
+    .require_system "ant.test.features|printer_system"
     .require_system "ant.camera|camera_recorder_system"
     .require_system "ant.sky|procedural_sky_system"
     .require_system "ant.splitviews|splitviews_system"
@@ -65,6 +66,13 @@ system "init_loader_system"
     .method "init_world"
     .method "entity_init"
     .method "camera_usage"
+
+component "printer".type "lua"
+
+system "printer_system"
+    .implement "printer.lua"
+    .method "init"
+    .method "end_filter"
     .method "render_submit"
 
 system "animation_test_system"
@@ -104,12 +112,11 @@ system "font_test_system"
     .require_policy "ant.render|show_name"
     .method "init"
 
-system "shape_terrain_test_system"
-    .implement "shape_terrain_test.lua"
-    .require_policy "ant.terrain|shape_terrain"
-    .require_policy "ant.terrain|quad_strip"
+system "terrain_test_system"
+    .implement "terrain_test.lua"
+    .require_interface "ant.test.features|iterrain"
     .method "init"
-    .method "data_changed"
+
 
 system "water_test_system"
     .implement "water_test.lua"
@@ -137,5 +144,11 @@ system "dynamic_texture_test_system"
     .method "init"
     .method "data_changed"
 
+
+interface "iterrain"
+    .implement "terrain.lua"
+    .method "gen_terrain_field"
+    .method "create_roadnet_entity"
+    .method "create_terrain_entity"
 
 import "debug/vertex_attrib_visualizer.ecs"

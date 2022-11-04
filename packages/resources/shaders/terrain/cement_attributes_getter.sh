@@ -1,6 +1,6 @@
 input_attributes cement_attribs = (input_attributes)0;
 {
-    vec2 uv = uv_motion(v_texcoord0);
+    vec2 uv = uv_motion(v_texcoord2);
     cement_attribs.uv = uv;
     cement_attribs.basecolor = get_terrain_basecolor(uv, vec4(1.0, 1.0, 1.0, 1.0), 5);
     cement_attribs.V = normalize(u_eyepos.xyz - v_posWS.xyz);

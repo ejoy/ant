@@ -1,6 +1,6 @@
 input_attributes stone_attribs = (input_attributes)0;
 {
-    vec2 uv = uv_motion(v_texcoord0);
+    vec2 uv = uv_motion(v_texcoord2);
     stone_attribs.uv = uv;
     float color_idx;
 

@@ -24,6 +24,8 @@ local declmgr = renderpkg.declmgr
 local icamera = ecs.import.interface "ant.camera|icamera"
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 
+local printer
+local printer_material
 local function point_light_test()
     local pl_pos = {
         {  1, 0, 1},
@@ -119,7 +121,7 @@ local testprefab
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
-    -- local eid1, eid2, eid3 = ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+    local eid1, eid2, eid3 = ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
     -- print(eid1, eid2, eid3)
 
     -- local pp = ecs.create_instance "/pkg/ant.resources.binary/meshes/up_box.glb|mesh.prefab"
@@ -221,7 +223,7 @@ function init_loader_sys:init()
     -- }
     --ientity.create_procedural_sky()
     --local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/headquater.glb|mesh.prefab"
-    local g1 = ecs.group(1)
+--[[     local g1 = ecs.group(1)
     local group_root = g1:create_entity{
         policy = {
             "ant.scene|scene_object",
@@ -252,7 +254,7 @@ function init_loader_sys:init()
             end,
             name = "test_group",
         },
-    }
+    } ]]
 
     ecs.create_instance"/pkg/ant.test.features/assets/entities/skybox_test.prefab"
     local p = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
@@ -280,7 +282,7 @@ function init_loader_sys:init()
     end
     world:create_object(p)
 
-    do
+--[[     do
         testprefab = ecs.create_instance "/pkg/ant.test.features/assets/glb/headquater-1.glb|mesh.prefab"
         function testprefab.on_ready(e)
             local t = assetmgr.resource "/pkg/ant.test.features/assets/textures/headquater_basecolor_red.texture"
@@ -290,7 +292,7 @@ function init_loader_sys:init()
             iom.set_scale(te, 0.1)
         end
         world:create_object(testprefab)
-    end
+    end ]]
 
     -- do
     --     ecs.create_instance "/pkg/ant.test.features/assets/glb/electric-pole-1.glb|mesh.prefab"
@@ -301,13 +303,13 @@ function init_loader_sys:init()
 	ientity.create_screen_axis_entity("global_axes", {type = "percent", screen_pos = {off, 1-off}}, {s=0.1})
     --ecs.create_instance "/pkg/ant.test.features/assets/glb/logistics_center.glb|mesh.prefab"
 
-    -- local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
-    -- function p:on_ready()
-    --     local e = self.tag.cube[1]
-    --     e.render_object.material.u_color = math3d.vector(0.8, 0, 0.8, 1.0)
-    -- end
+--[[      local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
+     function p:on_ready()
+         local e = self.tag.cube[1]
+         e.render_object.material.u_color = math3d.vector(0.8, 0, 0.8, 1.0)
+     end
 
-    --world:create_object(p)
+    world:create_object(p) ]]
     --print(p)
     --ecs.create_instance  "/pkg/ant.test.features/assets/entities/test_scene.prefab"
     --ecs.create_instance  "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
@@ -349,13 +351,90 @@ function init_loader_sys:init()
     --     }
     -- }
 
-    local pp = ecs.create_instance "/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab"
+--[[      local pp = ecs.create_instance "/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab"
     pp.on_ready = function (e)
         local ee<close> = w:entity(e.tag['*'][1])
         iom.set_scale(ee, 0.1)
+        iom.set_position(ee, math3d.vector(0, 0, 0))
     end
 
-    world:create_object(pp)
+    world:create_object(pp)  ]]
+
+    local t = ecs.create_instance  "/pkg/ant.test.features/assets/glb/test2.glb|mesh.prefab"
+    t.on_ready = function (e)
+        local pid<close> = w:entity(e.tag['*'][1])
+        iom.set_scale(pid, 1)
+        iom.set_position(pid, math3d.vector(5, 0, 5))
+    end
+    world:create_object(t)
+
+--[[     local units = 1
+    local tt1 = ecs.create_instance "/pkg/ant.test.features/assets/glb/truck2.glb|mesh.prefab"
+    tt1.on_ready = function (e)
+        local pid<close> = w:entity(e.tag['*'][1])
+        iom.set_scale(pid, 0.1)
+        iom.set_position(pid, math3d.vector(2.25*units, 0, 1.25*units))
+    end
+
+    local tt2 = ecs.create_instance "/pkg/ant.test.features/assets/glb/truck2.glb|mesh.prefab"
+    tt2.on_ready = function (e)
+        local pid<close> = w:entity(e.tag['*'][1])
+        iom.set_scale(pid, 0.1)
+        iom.set_position(pid, math3d.vector(2.75*units, 0, 1.25*units))
+    end
+
+    local tt3 = ecs.create_instance "/pkg/ant.test.features/assets/glb/truck2.glb|mesh.prefab"
+    tt3.on_ready = function (e)
+        local pid<close> = w:entity(e.tag['*'][1])
+        iom.set_scale(pid, 0.1)
+        iom.set_position(pid, math3d.vector(2.25*units, 0, 1.75*units))
+    end
+
+    local tt4 = ecs.create_instance "/pkg/ant.test.features/assets/glb/truck2.glb|mesh.prefab"
+    tt4.on_ready = function (e)
+        local pid<close> = w:entity(e.tag['*'][1])
+        iom.set_scale(pid, 0.1)
+        iom.set_position(pid, math3d.vector(2.75*units, 0, 1.75*units))
+    end
+    world:create_object(tt1)
+    world:create_object(tt2)
+    world:create_object(tt3)
+    world:create_object(tt4)
+
+    local ep = ecs.create_instance "/pkg/ant.test.features/assets/glb/electric-pole-1.glb|mesh.prefab"
+    ep.on_ready = function (e)
+        local pid<close> = w:entity(e.tag['*'][1])
+        iom.set_scale(pid, 0.1)
+        iom.set_position(pid, math3d.vector(8*units, 0, 8*units))
+    end
+    world:create_object(ep) ]]
+
+--[[ 
+    printer_material = imaterial.load_res "/pkg/ant.resources/materials/printer.material"
+     ecs.create_entity {
+        policy = {
+            "ant.render|render",
+            "ant.general|name",
+        },
+        data = {
+            primitive_filter = {
+                filter_type = "postprocess_obj",
+                "opacity",
+                "translucent",
+            },
+            name        = "printer_test",
+            scene  = {s = 1, t = {4, 1, 4}},
+            material    = "/pkg/ant.resources/materials/printer.material",
+            visible_state = "postprocess_obj",
+            mesh        = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",
+            printer = true
+        },
+    } 
+
+    local sa = imaterial.system_attribs()
+	sa:update("u_printer_factor", math3d.vector(0, 0, 0, 0))  ]]
+
+    
 end
 
 function init_loader_sys:init_world()
@@ -446,3 +525,4 @@ function init_loader_sys:camera_usage()
         print("click:", x, y, math3d.tostring(r), "view_rect:", vr.x, vr.y, vr.w, vr.h)
     end
 end
+

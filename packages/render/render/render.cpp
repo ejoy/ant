@@ -161,9 +161,10 @@ using tag_queue = tag_array<
 	RengerQueue(csm2_queue),
 	RengerQueue(csm3_queue),
 	RengerQueue(csm4_queue),
-	RengerQueue(bake_lightmap_queue)
+	RengerQueue(bake_lightmap_queue),
+	RengerQueue(postprocess_obj_queue)
 >;
-static_assert(offsetof(ecs::render_object, mat_lightmap) - offsetof(ecs::render_object, mat_mq) == sizeof(int64_t) * (tag_queue::N-1), "Invalid material data size");
+static_assert(offsetof(ecs::render_object, mat_ppoq) - offsetof(ecs::render_object, mat_mq) == sizeof(int64_t) * (tag_queue::N-1), "Invalid material data size");
 
 template <typename Entity>
 void collect_render_objs(Entity& e, ecs_api::context& ecs, const matrix_array *mats) {

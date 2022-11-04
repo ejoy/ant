@@ -9,6 +9,19 @@
 #include "common/curve_world.sh"
 #endif //ENABLE_CURVE_WORLD
 
+void to_tangent_frame(const highp vec4 q, out highp vec3 t){
+    t = vec3( 0.0,  0.0,  1.0 ) + 
+        vec3( 2.0, -2.0, -2.0 ) * q.x * q.zwx +
+        vec3( 2.0,  2.0, -2.0 ) * q.y * q.wzy;
+}
+
+void to_tangent_frame(const highp vec4 q, out highp vec3 n, out highp vec3 t){
+    to_tangent_frame(q, t);
+    n = vec3( 1.0,  0.0,  0.0 ) + 
+        vec3(-2.0,  2.0, -2.0 ) * q.y * q.yxw +
+        vec3(-2.0,  2.0,  2.0 ) * q.z * q.zwx;
+}
+
 mat3 to_tbn(vec3 t, vec3 b, vec3 n)
 {
 	mat3 TBN = mat3(t, b, n);

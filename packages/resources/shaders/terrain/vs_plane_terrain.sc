@@ -1,6 +1,6 @@
 #include "common/inputs.sh"
 
-$input 	a_position a_texcoord0 a_texcoord1 a_texcoord2 a_texcoord3 a_texcoord4
+$input 	a_position a_texcoord0 a_texcoord1 a_texcoord2 a_texcoord3 a_texcoord4 a_texcoord5
 $output v_texcoord0 v_texcoord1 v_texcoord2 v_texcoord3 v_texcoord4 v_normal v_tangent v_bitangent v_posWS v_idx1 v_idx2
 
 #include <bgfx_shader.sh>
@@ -30,5 +30,6 @@ void main()
 	v_idx1 = vec2(a_texcoord2.x, a_texcoord2.y);
 	v_idx2 = vec4(a_texcoord3.x, a_texcoord3.y, a_texcoord4.x, a_texcoord4.y);
 	
+	v_texcoord2 = a_texcoord5;
 	#endif
 }

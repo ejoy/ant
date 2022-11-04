@@ -4,13 +4,14 @@ local w = world.w
 
 local STATE_TYPE = {
 ---
-	main_view 	= 0x00000001,
-	cast_shadow	= 0x00000002,
-	selectable	= 0x00000004,
+	main_view 		= 0x00000001,
+	cast_shadow		= 0x00000002,
+	selectable		= 0x00000004,
+	postprocess_obj = 0x00000008,
 	--
-	lightmap	= 0x00000010,
+	lightmap		= 0x00000010,
 	--
-	auxgeom		= 0x00008000,
+	auxgeom			= 0x00008000,
 }
 
 local function filter_mask(names)

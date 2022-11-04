@@ -22,7 +22,7 @@ system "postprocess_system"
 
 policy "postprocess"
     .require_system "ant.render|render_system"
-    .require_system "ant.render|blur_system"
+    --.require_system "ant.render|blur_system"
     .require_system "ant.render|postprocess_system"
     --.require_system "ant.render|resolve_msaa_system"
     .require_system "ant.render|postprocess_obj_system"

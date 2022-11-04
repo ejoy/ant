@@ -1,6 +1,6 @@
 input_attributes sand_attribs = (input_attributes)0;
 {
-    vec2 uv = uv_motion(v_texcoord0);
+    vec2 uv = uv_motion(v_texcoord2);
     sand_attribs.uv = uv;
     sand_attribs.basecolor = get_terrain_basecolor(uv, vec4(1.0, 1.0, 1.0, 1.0), sand_color_idx);
     sand_attribs.V = normalize(u_eyepos.xyz - v_posWS.xyz);
