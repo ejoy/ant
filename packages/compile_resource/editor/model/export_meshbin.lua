@@ -587,28 +587,6 @@ local function find_skin_root_idx(skin, nodetree)
 	end
 	return root
 end
- 
-local function find_skin_root_idx(skin, nodetree)
-	local joints = skin.joints
-	if joints == nil or #joints == 0 then
-		return
-	end
-
-	if skin.skeleton then
-		return skin.skeleton
-	end
-
-	local root = joints[1]
-	while true do
-		local p = nodetree[root]
-		if p == nil then
-			break
-		end
-
-		root = p
-	end
-	return root
-end
 
 local joint_trees = {}
 
