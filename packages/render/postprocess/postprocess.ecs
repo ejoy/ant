@@ -90,6 +90,7 @@ system "fxaa_system"
     .implement "postprocess/fxaa.lua"
     .method "init"
     .method "init_world"
+    .method "data_changed"
     .method "fxaa"
 
 -- system "dof_system"

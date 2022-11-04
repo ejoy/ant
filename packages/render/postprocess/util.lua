@@ -22,7 +22,7 @@ function util.create_quad_drawer(tab, material)
     }
 end
 
-function util.create_queue(viewid, vr, fbidx, queuename, tabname)
+function util.create_queue(viewid, vr, fbidx, queuename, tabname, autoresize)
     local template = {
         policy = {
             "ant.render|postprocess_queue",
@@ -38,6 +38,7 @@ function util.create_queue(viewid, vr, fbidx, queuename, tabname)
             },
             [queuename] = true,
             queue_name = queuename,
+            watch_screen_buffer = autoresize,
             name = queuename,
         }
     }

@@ -12,6 +12,7 @@ if not ENABLE_FXAA then
     fxaasys.init = DEF_FUNC
     fxaasys.init_world = DEF_FUNC
     fxaasys.fxaa = DEF_FUNC
+    fxaasys.data_changed = DEF_FUNC
     return
 end
 
@@ -22,6 +23,7 @@ local util      = ecs.require "postprocess.util"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender   = ecs.import.interface "ant.render|irender"
+local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 function fxaasys:init()
     util.create_quad_drawer("fxaa_drawer", "/pkg/ant.resources/materials/postprocess/fxaa.material")
@@ -31,6 +33,15 @@ local fxaa_viewid<const> = viewidmgr.get "fxaa"
 
 function fxaasys:init_world()
     util.create_queue(fxaa_viewid, mu.copy_viewrect(world.args.viewport), nil, "fxaa_queue", "fxaa_queue")
+end
+
+local vp_changed_mb = world:sub{"world_viewport_changed"}
+
+function fxaasys:data_changed()
+    for _, vp in vp_changed_mb:unpack() do
+        irq.set_view_rect("fxaa_queue", vp)
+        break
+    end
 end
 
 function fxaasys:fxaa()

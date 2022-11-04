@@ -42,15 +42,17 @@ function tm_sys:init_world()
             }
         }
     end
-    util.create_queue(tm_viewid, vr, tm_fbidx, "tonemapping_queue", "tonemapping_queue")
+    util.create_queue(tm_viewid, vr, tm_fbidx, "tonemapping_queue", "tonemapping_queue", ENABLE_FXAA)
 end
 
 local vp_changed_mb = world:sub{"world_viewport_changed"}
 
 function tm_sys:data_changed()
-    for _, vp in vp_changed_mb:unpack() do
-        irq.set_view_rect("tonemapping_queue", vp)
-        break
+    if not ENABLE_FXAA then
+        for _, vp in vp_changed_mb:unpack() do
+            irq.set_view_rect("tonemapping_queue", vp)
+            break
+        end
     end
 end
 
