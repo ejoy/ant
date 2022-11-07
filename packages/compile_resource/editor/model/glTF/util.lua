@@ -1,5 +1,5 @@
 local util = {}; util.__index = util
-
+local math3d    = require "math3d"
 local comptype_name_mapper = {
 	[5120] = "BYTE",
 	[5121] = "UNSIGNED_BYTE",
@@ -61,6 +61,48 @@ util.type_count_remapper 	= type_count_remapper
 util.decl_comptype_mapper	= decl_comptype_mapper
 util.decl_comptype_remapper = decl_comptype_remapper
 
+local function positive(q)
+    if math3d.index(q, 4) < 0 then
+		local qx, qy, qz, qw = math3d.index(q, 1, 2, 3, 4)
+        return math3d.quaternion(-qx, -qy, -qz, qw)
+    else
+        return q
+    end
+end
+
+
+
+function util.pack_tangent_frame(normal, tangent, storage_size)
+    local bitangent = math3d.cross(tangent, normal)
+    local nx, ny, nz = math3d.index(normal, 1, 2, 3)
+    local bx, by, bz = math3d.index(bitangent, 1, 2, 3)
+    local tx, ty, tz = math3d.index(tangent, 1, 2, 3)
+    local mat = math3d.matrix{
+        nx, ny, nz, 0,
+        bx, by, bz, 0,
+        tx, ty, tz, 0,
+         0,  0,  0, 1
+   }
+   local q = math3d.quaternion(mat)
+   q = positive(math3d.normalize(q))
+   local bias = 1.0 / (storage_size ^ (8 - 1) - 1)
+   local qx, qy, qz, qw = math3d.index(q, 1, 2, 3, 4)
+   if qw < bias then
+        local factor = math.sqrt(1.0 - bias * bias)
+        --q = math3d.quaternion(qx * factor, qy * factor, qz * factor, bias)
+		qx = qx * factor
+		qy = qy * factor
+		qz = qz * factor
+		qw = qw * factor
+   end
+   if math3d.dot(math3d.cross(normal, tangent), bitangent) < 0 then
+		qx = qx * -1
+		qy = qy * -1
+		qz = qz * -1
+		qw = qw * -1
+   end
+   return {qx, qy, qz, qw}
+end
 function util.accessor(name, prim, meshscene)
 	local accessors = meshscene.accessors
 	local pos_accidx = assert(prim.attributes[name]) + 1

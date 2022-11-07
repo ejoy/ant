@@ -1,7 +1,7 @@
 #include "common/inputs.sh"
 
-$input 	a_position a_texcoord0 INPUT_NORMAL  INPUT_TANGENT INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT
 //$input 	a_position a_texcoord0 INPUT_TANGENT INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT
+$input 	a_position a_texcoord0 NPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT INPUT_TANGENT
 $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
@@ -30,19 +30,19 @@ void main()
 #ifdef WITH_NORMAL_ATTRIB
 	//TODO: normal and tangent should use inverse transpose matrix
 
-/* 	vec4 quat = a_tangent;
+	vec4 quat = a_tangent;
 	vec3 normal;
 	vec3 tangent;
 	to_tangent_frame(quat, normal, tangent);
 	v_normal	= normalize(mul(wm, vec4(normal, 0.0)).xyz);
 	v_tangent	= normalize(mul(wm, vec4(tangent, 0.0)).xyz);
-	v_bitangent	= cross(v_normal, v_tangent); */
+	v_bitangent	= cross(v_normal, v_tangent);
 
- 	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
+/* 	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
 #	ifdef WITH_TANGENT_ATTRIB
 	v_tangent	= normalize(mul(wm, vec4(a_tangent, 0.0)).xyz);
 	v_bitangent	= cross(v_normal, v_tangent);	//left hand
-#	endif //WITH_TANGENT_ATTRIB 
+#	endif //WITH_TANGENT_ATTRIB */
 
 #endif //WITH_NORMAL_ATTRIB
 
