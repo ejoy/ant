@@ -16,7 +16,7 @@ system "pre_depth_system"
     .require_interface "ant.render|irender"
     .method "init"
     .method "data_changed"
-    .method "end_filter"
+    .method "update_filter"
 
 -- component "scene_depth_queue"
 -- component "scene_depth_queue_cull"

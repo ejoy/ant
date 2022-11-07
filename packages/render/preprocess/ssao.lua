@@ -2,12 +2,24 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local mathpkg   = import_package "ant.math"
-local mu, mc    = mathpkg.util, mathpkg.constant
-
 local settingpkg = import_package "ant.settings"
 local setting, def_setting = settingpkg.setting, settingpkg.default
 
+local ao_setting<const> = setting:data().graphic.ao or def_setting.graphic.ao
+
+local ssao_sys  = ecs.system "ssao_system"
+
+local renderutil= require "util"
+
+local ENABLE_SSAO<const>                = ao_setting.enable
+
+if not ENABLE_SSAO then
+    renderutil.default_system(ssao_sys, "init", "init_world", "build_ssao", "bilateral_filter")
+    return
+end
+
+local mathpkg   = import_package "ant.math"
+local mu, mc    = mathpkg.util, mathpkg.constant
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
@@ -19,21 +31,6 @@ local util      = ecs.require "postprocess.util"
 local icompute  = ecs.import.interface "ant.render|icompute"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
-
-local ao_setting<const> = setting:data().graphic.ao or def_setting.graphic.ao
-
-local ssao_sys  = ecs.system "ssao_system"
-
-local ENABLE_SSAO<const>                = ao_setting.enable
-
-if not ENABLE_SSAO then
-    local function DEF_FUNC() end
-    ssao_sys.init = DEF_FUNC
-    ssao_sys.init_world = DEF_FUNC
-    ssao_sys.build_ssao = DEF_FUNC
-    ssao_sys.bilateral_filter = DEF_FUNC
-    return
-end
 
 local ENABLE_BENT_NORMAL<const>         = ao_setting.bent_normal
 local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/ssao.material"

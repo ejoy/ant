@@ -5,25 +5,21 @@ local world = ecs.world
 local w     = world.w
 
 local setting	= import_package "ant.settings".setting
-local ENABLE_SHADOW<const> = setting:data().graphic.shadow.enable
-
+local ENABLE_SHADOW<const> = setting:get "graphic/shadow/enable"
+local renderutil= require "util"
 local sm = ecs.system "shadow_system"
 
 if not ENABLE_SHADOW then
-	local function DEF_FUNC() end
-	for _, m in ipairs{"init",
-    "init_world",
-    "entity_init",
-    "entity_remove",
-    "update_camera",
-    --"refine_filter",
-    "refine_camera",
-    "render_submit",
-    "camera_usage",
-    "end_filter"} do
-		sm[m] = DEF_FUNC
-	end
-
+	renderutil.default_system(sm, 	"init",
+									"init_world",
+									"entity_init",
+									"entity_remove",
+									"update_camera",
+									--"refine_filter",
+									"refine_camera",
+									"render_submit",
+									"camera_usage",
+									"update_filter")
 	return
 end
 
@@ -525,7 +521,7 @@ local omni_stencils = {
 
 local material_cache = {__mode="k"}
 
-function sm:end_filter()
+function sm:update_filter()
     for e in w:select "filter_result opacity render_object:update filter_material:in skinning?in" do
         local ro = e.render_object
 		local m = which_material(e.skinning)

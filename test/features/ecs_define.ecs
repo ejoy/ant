@@ -72,7 +72,7 @@ component "printer".type "lua"
 system "printer_system"
     .implement "printer.lua"
     .method "init"
-    .method "end_filter"
+    .method "update_filter"
     .method "render_submit"
 
 system "animation_test_system"

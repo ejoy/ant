@@ -4,15 +4,11 @@ local w     = world.w
 
 local setting = import_package "ant.settings".setting
 local ENABLE_FXAA<const> = setting:data().graphic.postprocess.fxaa.enable
-
+local renderutil = require "util"
 local fxaasys = ecs.system "fxaa_system"
 
 if not ENABLE_FXAA then
-    local function DEF_FUNC() end
-    fxaasys.init = DEF_FUNC
-    fxaasys.init_world = DEF_FUNC
-    fxaasys.fxaa = DEF_FUNC
-    fxaasys.data_changed = DEF_FUNC
+    renderutil.default_system(fxaasys, "init", "init_world", "fxaa", "data_changed")
     return
 end
 

@@ -4,8 +4,8 @@ local w = world.w
 
 local default_comp 	= import_package "ant.general".default
 local setting		= import_package "ant.settings".setting
-local ENABLE_PRE_DEPTH<const> = not setting:data().graphic.disable_pre_z
-local ENABLE_FXAA<const> = setting:data().graphic.postprocess.fxaa.enable
+local ENABLE_PRE_DEPTH<const> = not setting:get "graphic/disable_pre_z"
+local ENABLE_FXAA<const> = setting:get "graphic/postprocess/fxaa/enable"
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"

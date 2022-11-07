@@ -61,7 +61,7 @@ local function which_material(skinning)
 end
 
 
-function printer_sys:end_filter()
+function printer_sys:update_filter()
   	for e in w:select "filter_result postprocess_obj_queue_visible opacity render_object:update filter_material:in skinning?in" do
         local m = which_material(e.skinning)
         local mo = m.object

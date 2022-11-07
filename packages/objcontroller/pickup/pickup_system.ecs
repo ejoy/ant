@@ -8,7 +8,7 @@ system "pickup_system"
     .method "init"
     .method "entity_init"
     .method "update_camera"
-    .method "end_filter"
+    .method "update_filter"
     .method "pickup"
 
 pipeline "select"
