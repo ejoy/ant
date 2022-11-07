@@ -136,10 +136,6 @@ function ssao_sys:init_world()
     local aod = w:first "ssao_dispatcher dispatch:in"
     aod.dispatch.rb_idx = rbidx
 
-    local sqd = w:first "scene_depth_queue visible?out"
-    sqd.visible = true
-    w:submit(sqd)
-
     local bfd = w:first "bilateral_filter_dispatcher dispatch:in"
 
     bfd.dispatch.rb_idx = create_rbidx(vr.w, vr.h)
@@ -161,9 +157,9 @@ local function calc_ssao_config(camera, lightdir, aobuf_w, aobuf_h, depthlevel)
 end
 
 local function update_properties(dispatcher, ce)
-    local sdq = w:first "scene_depth_queue render_target:in"
+    local dq = w:first "pre_depth_queue render_target:in"
     local m = dispatcher.material
-    m.s_depth = fbmgr.get_depth(sdq.render_target.fb_idx).handle
+    m.s_depth = fbmgr.get_depth(dq.render_target.fb_idx).handle
 
     local rb = fbmgr.get_rb(dispatcher.rb_idx)
     m.s_ssao_result = rb.handle
@@ -257,6 +253,12 @@ local function update_bilateral_filter_properties(material, inputhandle, outputh
 
     material.u_bilateral_kernels = KERNELS
     material.u_bilateral_param = math3d.vector(offset[1], offset[2], KERNELS_COUNT, inv_camera_far_with_bilateral_threshold)
+end
+
+local mqvr_mb = world:sub{"view_rect_changed", "main_queue"}
+
+function ssao_sys:data_changed()
+
 end
 
 function ssao_sys:build_ssao()

@@ -119,8 +119,8 @@ local function create_depth_rb(ww, hh)
 		layers = 1,
 		flags = sampler {
 			RT = ENABLE_FXAA and "RT_ON" or "RT_MSAA4|RT_WRITE",
-			MIN="POINT",
-			MAG="POINT",
+			MIN="LINEAR",
+			MAG="LINEAR",
 			U="CLAMP",
 			V="CLAMP",
 		},

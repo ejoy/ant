@@ -3,59 +3,56 @@ local world = ecs.world
 local w     = world.w
 local mu = import_package "ant.math".util
 
-local fbmgr     = require "framebuffer_mgr"
-local viewidmgr = require "viewid_mgr"
-local sampler   = require "sampler"
+-- local fbmgr     = require "framebuffer_mgr"
+-- local viewidmgr = require "viewid_mgr"
+-- local sampler   = require "sampler"
 
 local irender   = ecs.import.interface "ant.render|irender"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local ivs       = ecs.import.interface "ant.scene|ivisible_state"
-local bgfx      = require "bgfx"
 
+-- local sd_sys = ecs.system "scene_depth_system"
 
-local sd_sys = ecs.system "scene_depth_system"
-
-function sd_sys.post_init()
-    local vr = world.args.viewport
-    ecs.create_entity {
-        policy = {
-            "ant.render|scene_depth_queue",
-            "ant.general|name",
-        },
-        data = {
-            camera_ref = 0,
-            render_target = {
-                view_rect = mu.copy_viewrect(vr),
-                viewid = viewidmgr.get "scene_depth",
-                fb_idx = fbmgr.create{
-                    rbidx = fbmgr.create_rb{
-                        format = "D16F", layers = 1,
-                        w = vr.w, h = vr.h,
-                        flags = sampler{RT="RT_ON",},
-                    }
-                },
-                clear_state = {
-                    clear = "D",
-                    depth = 0.0,
-                },
-                view_mode = "s",
-            },
-            primitive_filter = {
-                filter_type = "main_view",
-                "opacity",
-            },
-            queue_name = "scene_depth_queue",
-            name = "scene_depth_queue",
-            visible = false,
-            scene_depth_queue = true,
-            on_ready = function (e)
-                local pd = w:first("pre_depth_queue camera_ref:in")
-                irq.set_camera("scene_depth_queue", pd.camera_ref)
-            end
-        }
-    }
-end
+-- function sd_sys.post_init()
+--     local vr = world.args.viewport
+--     ecs.create_entity {
+--         policy = {
+--             "ant.render|scene_depth_queue",
+--             "ant.general|name",
+--         },
+--         data = {
+--             camera_ref = 0,
+--             render_target = {
+--                 view_rect = mu.copy_viewrect(vr),
+--                 viewid = viewidmgr.get "scene_depth",
+--                 fb_idx = fbmgr.create{
+--                     rbidx = fbmgr.create_rb{
+--                         format = "D16F", layers = 1,
+--                         w = vr.w, h = vr.h,
+--                         flags = sampler{RT="RT_ON",},
+--                     }
+--                 },
+--                 clear_state = {
+--                     clear = "D",
+--                     depth = 0.0,
+--                 },
+--                 view_mode = "s",
+--             },
+--             primitive_filter = {
+--                 filter_type = "main_view",
+--                 "opacity",
+--             },
+--             queue_name = "scene_depth_queue",
+--             name = "scene_depth_queue",
+--             visible = false,
+--             scene_depth_queue = true,
+--             on_ready = function (e)
+--                 local pd = w:first("pre_depth_queue camera_ref:in")
+--                 irq.set_camera("scene_depth_queue", pd.camera_ref)
+--             end
+--         }
+--     }
+-- end
 
 
 local pre_depth_material
@@ -90,7 +87,7 @@ function s:data_changed()
             assert(vr.w == dqvr.w and vr.h == dqvr.h)
             if vr.x ~= dqvr.x or vr.y ~= dqvr.y then
                 irq.set_view_rect("pre_depth_queue", vr)
-                irq.set_view_rect("scene_depth_queue", vr)
+                --irq.set_view_rect("scene_depth_queue", vr)
             end
         end
 
@@ -99,9 +96,9 @@ function s:data_changed()
             e.camera_ref = ceid
             w:submit(e)
 
-            e = w:first("scene_depth_queue", "camera_ref:out")
-            e.camera_ref = ceid
-            w:submit(e)
+            -- e = w:first("scene_depth_queue", "camera_ref:out")
+            -- e.camera_ref = ceid
+            -- w:submit(e)
         end
     end
 end
@@ -110,7 +107,7 @@ local material_cache = {__mode="k"}
 
 function s:end_filter()
     if irender.use_pre_depth() then
-        for e in w:select "filter_result pre_depth_queue_visible opacity render_object:update filter_material:in skinning?in scene_depth_queue_visible?out" do
+        for e in w:select "filter_result pre_depth_queue_visible opacity render_object:update filter_material:in skinning?in" do
             local mo = assert(which_material(e.skinning))
             local ro = e.render_object
             local fm = e.filter_material
@@ -124,10 +121,9 @@ function s:end_filter()
             fm["pre_depth_queue"] = mi
             ro.mat_predepth = h
 
-            fm["scene_depth_queue"] = mi
-            ro.mat_scenedepth = h
-
-            e["scene_depth_queue_visible"] = true
+            -- fm["scene_depth_queue"] = mi
+            -- ro.mat_scenedepth = h
+            --e["scene_depth_queue_visible"] = true
         end
     end
 end
