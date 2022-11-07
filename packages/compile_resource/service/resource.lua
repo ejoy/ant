@@ -6,6 +6,7 @@ local textureman = require "textureman.server"
 local cr         = import_package "ant.compile_resource"
 import_package "ant.render".init_bgfx()
 
+bgfx.init()
 cr.init()
 
 local mem_formats <const> = {
@@ -219,6 +220,7 @@ end)
 function S.quit()
     quit = {}
     ltask.wait(quit)
+    bgfx.shutdown()
     ltask.quit()
 end
 
