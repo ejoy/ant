@@ -9,8 +9,6 @@ local asset_mgr = import_package "ant.asset"
 local mathpkg   = import_package "ant.math"
 
 local mc        = mathpkg.constant
---local effekseer_filename_mgr = ecs.import.interface "ant.effekseer|filename_mgr"
-local irq       = ecs.import.interface "ant.render|irenderqueue"
 local ipl       = ecs.import.interface "ant.render|ipolyline"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
@@ -48,7 +46,6 @@ local bgfx              = require "bgfx"
 
 local m = ecs.system 'gui_system'
 local drag_file = nil
-
 local imodifier = ecs.import.interface "ant.modifier|imodifier"
 local function on_new_project(path)
     new_project.set_path(path)
@@ -126,8 +123,7 @@ end
 local function choose_project()
     local selected_proj
     if global_data.project_root then return end
-    local setting = editor_setting.setting
-    local lastprojs = setting.lastprojs
+    local lastprojs = editor_setting.setting.lastprojs
     local title = "Choose project"
     if not imgui.windows.IsPopupOpen(title) then
         imgui.windows.OpenPopup(title)
@@ -174,8 +170,6 @@ local function choose_project()
             local fw = require "bee.filewatch"
             fw.add(global_data.project_root:string())
             log.warn "need handle effect file"
-            --effekseer_filename_mgr.add_path("/pkg/tools.prefab_editor/res")
-            
             imgui.windows.CloseCurrentPopup()
         end
         imgui.windows.EndPopup()
@@ -353,6 +347,8 @@ local test_m1
 local test1
 local test2
 local ipl = ecs.import.interface "ant.render|ipolyline"
+local vp_changed_mb = world:sub{"world_viewport_changed"}
+local viewport
 function m:handle_event()
     for _, _, _, x, y in event_mouse:unpack() do
         mouse_pos_x = x
@@ -518,6 +514,10 @@ function m:handle_event()
     for _, what in reset_editor:unpack() do
         imodifier.stop(imodifier.highlight)
     end
+    for _, vp in vp_changed_mb:unpack() do
+        viewport = vp
+        break
+    end
 end
 
 function m:data_changed()
@@ -529,49 +529,17 @@ end
 
 local igui = ecs.interface "igui"
 function igui.cvt2scenept(x, y)
-    local vr = irq.view_rect "tonemapping_queue"
-    return x-vr.x, y-vr.y
+    if viewport then
+        return x - viewport.x, y - viewport.y
+    end
+    return x, y
 end
 
 local joint_utils = require "widget.joint_utils"
 
 function m:widget()
-    -- local ske = joint_utils:get_current_skeleton()
-    -- if not ske then
-    --     return
-    -- end
-    -- if not skeleton_eid then
-    --     local desc={vb={}, ib={}}
-    --     geometry_drawer.draw_skeleton(ske._handle, nil, DEFAULT_COLOR, {s = 15}, desc)
-    --     skeleton_eid = geo_utils.create_dynamic_lines(nil, desc.vb, desc.ib, "skeleton", DEFAULT_COLOR_F)
-    -- end
-    -- if skeleton_eid then
-    --     if firsttime then
-    --         firsttime = false
-    --     else
-    --         w:extend(skeleton_eid, "simplemesh?in")
-    --         if skeleton_eid.simplemesh then
-    --             --ivs.set_state(skeleton_eid, "visible", true)
-    --             local desc={vb={}, ib={}}
-    --             local pose_result
-    --             for e in w:select "skeleton:in pose_result:in" do
-    --                 if ske == e.skeleton then
-    --                     pose_result = e.pose_result
-    --                     break
-    --                 end
-    --             end
-    --             geometry_drawer.draw_skeleton(ske._handle, pose_result, DEFAULT_COLOR, nil, desc, joint_utils.current_joint and joint_utils.current_joint.index or 1)
-    --             local rc = skeleton_eid.simplemesh
-    --             local vbdesc, ibdesc = rc.vb, rc.ib
-    --             bgfx.update(vbdesc[1].handle, 0, bgfx.memory_buffer("fffd", desc.vb))
-    --             bgfx.update(ibdesc.handle, 0, bgfx.memory_buffer("w", desc.ib))
-    --         end
-    --     end
-    -- end
 end
 
 function m.end_animation()
-    -- if gizmo.target_eid and world:entity(gizmo.target_eid).skeleton then
-    -- end
     joint_utils:update_pose(prefab_mgr:get_root_mat() or math3d.matrix{})
 end
