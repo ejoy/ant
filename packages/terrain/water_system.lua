@@ -59,36 +59,11 @@ local function gen_water_grid_mesh(gw, gh, unit, height)
     }
 end
 
-local ppo_viewid<const> = viewidmgr.get "postprocess_obj"
-
-function water_sys:init_world()
-    irq.set_visible("scene_depth_queue", true)
-end
-
 function water_sys:component_init()
     for e in w:select "INIT water:in simplemesh:out" do
         local water = e.water
         local gw, gh = water.grid_width, water.grid_height
         local unit = water.unit
         e.simplemesh = gen_water_grid_mesh(gw, gh, unit)
-    end
-end
-
-local function queue_rb_handle(qn, idx)
-    local q = w:first(qn .." render_target:in")
-    local fb = fbmgr.get(q.render_target.fb_idx)
-    return fb[idx or #fb].handle
-end
-
-function water_sys:render_submit()
-    local sdh = queue_rb_handle "scene_depth_queue"
-    local haswater
-    for we in w:select "water:in filter_material:in" do
-        imaterial.set_property(we, "s_scene_depth", sdh)
-        haswater = true
-    end
-
-    if haswater then
-        irender.draw(ppo_viewid, "water")
     end
 end
