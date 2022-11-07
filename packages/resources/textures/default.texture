@@ -1,5 +1,6 @@
 normalmap: false
-path: /pkg/ant.resources.binary/textures/default.dds
+size: {1, 1}
+value: {0, 0, 0, 255}
 sRGB: false
 format: RGBA8
 sampler:
