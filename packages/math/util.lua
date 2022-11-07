@@ -269,6 +269,11 @@ function util.copy_viewrect(vp)
 	return {x=vp.x, y=vp.y, w=vp.w, h=vp.h, ratio=vp.ratio}
 end
 
+function util.copy2viewrect(srcvr, dstvr)
+	dstvr.x, dstvr.y, dstvr.w, dstvr.h = srcvr.x, srcvr.y, srcvr.w, srcvr.h
+	dstvr.ratio = srcvr.ratio
+end
+
 function util.isnan(v)
 	for _, vvv in ipairs(math3d.tovalue(v)) do
 		if vvv ~= vvv then

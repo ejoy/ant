@@ -1,12 +1,9 @@
 system "water_system"
     .implement "water_system.lua"
     .method "component_init"
-    .method "init_world"
-    .method "render_submit"
 
 component "water".type "lua"
 
 policy "water"
     .require_system "ant.terrain|water_system"
-    .require_system "ant.render|scene_depth_system"
     .component "water"

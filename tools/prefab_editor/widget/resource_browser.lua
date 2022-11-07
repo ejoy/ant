@@ -152,6 +152,23 @@ local function rename_file(file)
     end
 end
 
+local function ShowContextMenu()
+    if imgui.windows.BeginPopupContextItem(tostring(selected_file:filename())) then
+        if imgui.widget.MenuItem("Reveal in Explorer", "Alt+Shift+R") then
+            os.execute("c:\\windows\\explorer.exe /select,"..selected_file:localpath():string():gsub("/","\\"))
+        end
+        if imgui.widget.MenuItem("Delete", "Delete") then
+            lfs.remove(selected_file:localpath())
+            selected_file = nil
+        end
+        if imgui.widget.MenuItem("Rename", "F2") then
+            renaming = true
+            new_filename.text = tostring(selected_file:filename())
+        end
+        imgui.windows.EndPopup()
+    end
+end
+
 function m.show()
     if not gd.project_root then
         return
@@ -253,17 +270,7 @@ function m.show()
                         end
                     end
                     if selected_file == path[1] then
-                        if imgui.windows.BeginPopupContextItem(tostring(path[1]:filename())) then
-                            if imgui.widget.Selectable("Delete", false) then
-                                lfs.remove(selected_file:localpath())
-                                selected_file = nil
-                            end
-                            if imgui.widget.Selectable("Rename", false) then
-                                renaming = true
-                                new_filename.text = tostring(selected_file:filename())
-                            end
-                            imgui.windows.EndPopup()
-                        end
+                        ShowContextMenu()
                     end
                 end
                 for _, path in pairs(folder.files) do
@@ -306,17 +313,7 @@ function m.show()
                         end
                     end
                     if selected_file == path then
-                        if imgui.windows.BeginPopupContextItem(tostring(path:filename())) then
-                            if imgui.widget.Selectable("Delete", false) then
-                                lfs.remove(selected_file:localpath())
-                                selected_file = nil
-                            end
-                            if imgui.widget.Selectable("Rename", false) then
-                                renaming = true
-                                new_filename.text = tostring(selected_file:filename())
-                            end
-                            imgui.windows.EndPopup()
-                        end
+                        ShowContextMenu()
                     end
                     if path:equal_extension(".material")
                         or path:equal_extension(".texture")

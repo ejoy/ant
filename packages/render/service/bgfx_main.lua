@@ -2,6 +2,8 @@ local ltask = require "ltask"
 local exclusive = require "ltask.exclusive"
 local bgfx = require "bgfx"
 
+local initialized = false
+
 local CALL = {
     "init",
     "frame",
@@ -30,28 +32,6 @@ end
 
 function S.SEND()
     return SEND
-end
-
-local init_token = {}
-local thread_num = 0
-
-function S.init(args)
-    if init_token == nil then
-    elseif args == nil then
-        ltask.wait(init_token)
-    else
-        bgfx.init(args)
-        ltask.wakeup(init_token)
-        init_token = nil
-    end
-    thread_num = thread_num + 1
-end
-
-function S.shutdown()
-    thread_num = thread_num - 1
-    if thread_num == 0 then
-        bgfx.shutdown()
-    end
 end
 
 local profile = {}
@@ -244,8 +224,8 @@ function S.dbg_text_print(x, y, ...)
     return bgfx.dbg_text_print(x + 16, y + 1, ...)
 end
 
-ltask.fork(function()
-    while true do
+local function mainloop()
+    while initialized do
         ltask.sleep(0)
         if encoder_num > 0 and encoder_cur == encoder_num then
             encoder_frame = encoder_frame + 1
@@ -265,7 +245,32 @@ ltask.fork(function()
             exclusive.sleep(1)
         end
     end
-end)
+end
+
+local init_token = {}
+local thread_num = 0
+
+function S.init(args)
+    if init_token == nil then
+    elseif args == nil then
+        ltask.wait(init_token)
+    else
+        bgfx.init(args)
+        initialized = true
+        ltask.fork(mainloop)
+        ltask.wakeup(init_token)
+        init_token = nil
+    end
+    thread_num = thread_num + 1
+end
+
+function S.shutdown()
+    thread_num = thread_num - 1
+    if thread_num == 0 then
+        initialized = false
+        bgfx.shutdown()
+    end
+end
 
 for _, name in ipairs(CALL) do
     if not S[name] then

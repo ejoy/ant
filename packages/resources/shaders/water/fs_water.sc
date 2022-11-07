@@ -8,15 +8,15 @@ $input v_texcoord0 v_posWS v_normal v_tangent v_bitangent
 #include "common/transform.sh"
 #include "pbr/lighting.sh"
 
-// Surface settings:
-SAMPLER2D(s_dudv,           0); // UV motion sampler for shifting the normalmap
-SAMPLER2D(s_normalmapA,     1); // Normalmap sampler A
-SAMPLER2D(s_normalmapB,     2); // Normalmap sampler B
-SAMPLER2D(s_foam,           3); // Foam sampler
-SAMPLER2DARRAY(s_caustic,   4); // Caustic sampler, (Texture array with 16 Textures for the animation)
+#include "common/postprocess.sh"
 
-SAMPLER2D(s_scene,          5);
-SAMPLER2D(s_scene_depth,    6);
+// Surface settings:
+//s_scene_color/s_scene_depth define in postprocess.sh as stage 0/1
+SAMPLER2D(s_dudv,           2); // UV motion sampler for shifting the normalmap
+SAMPLER2D(s_normalmapA,     3); // Normalmap sampler A
+SAMPLER2D(s_normalmapB,     4); // Normalmap sampler B
+SAMPLER2D(s_foam,           5); // Foam sampler
+SAMPLER2DARRAY(s_caustic,   6); // Caustic sampler, (Texture array with 16 Textures for the animation)
 
 
 uniform vec4 u_water_surface = vec4(0.5, 0.075, 2.0, -0.75);
@@ -86,7 +86,7 @@ void main()
 
 	// TODO:s_scene texture should have mipmap, it something like ibl 's_prefilter' map
     //      need to calculate pre frame?? or just directly use s_prefilter map??
-	vec3 screen_color = texture2D(s_scene, ref_uv).rgb;//texture2DLod(s_scene, ref_uv, depth_blend_pow * 2.5).rgb;
+	vec3 screen_color = texture2D(s_scene_color, ref_uv).rgb;//texture2DLod(s_scene, ref_uv, depth_blend_pow * 2.5).rgb;
 	vec3 color = mix(screen_color*dye_color, dye_color*0.25, depth_blend_pow*0.5);
 
 	// Caustic screen projection

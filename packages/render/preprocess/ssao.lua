@@ -2,12 +2,24 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local mathpkg   = import_package "ant.math"
-local mu, mc    = mathpkg.util, mathpkg.constant
-
 local settingpkg = import_package "ant.settings"
 local setting, def_setting = settingpkg.setting, settingpkg.default
 
+local ao_setting<const> = setting:data().graphic.ao or def_setting.graphic.ao
+
+local ssao_sys  = ecs.system "ssao_system"
+
+local renderutil= require "util"
+
+local ENABLE_SSAO<const>                = ao_setting.enable
+
+if not ENABLE_SSAO then
+    renderutil.default_system(ssao_sys, "init", "init_world", "build_ssao", "bilateral_filter")
+    return
+end
+
+local mathpkg   = import_package "ant.math"
+local mu, mc    = mathpkg.util, mathpkg.constant
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
@@ -19,21 +31,6 @@ local util      = ecs.require "postprocess.util"
 local icompute  = ecs.import.interface "ant.render|icompute"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
-
-local ao_setting<const> = setting:data().graphic.ao or def_setting.graphic.ao
-
-local ssao_sys  = ecs.system "ssao_system"
-
-local ENABLE_SSAO<const>                = ao_setting.enable
-
-if not ENABLE_SSAO then
-    local function DEF_FUNC() end
-    ssao_sys.init = DEF_FUNC
-    ssao_sys.init_world = DEF_FUNC
-    ssao_sys.build_ssao = DEF_FUNC
-    ssao_sys.bilateral_filter = DEF_FUNC
-    return
-end
 
 local ENABLE_BENT_NORMAL<const>         = ao_setting.bent_normal
 local SSAO_MATERIAL<const>              = ENABLE_BENT_NORMAL and "/pkg/ant.resources/materials/postprocess/ssao_bentnormal.material" or "/pkg/ant.resources/materials/postprocess/ssao.material"
@@ -136,10 +133,6 @@ function ssao_sys:init_world()
     local aod = w:first "ssao_dispatcher dispatch:in"
     aod.dispatch.rb_idx = rbidx
 
-    local sqd = w:first "scene_depth_queue visible?out"
-    sqd.visible = true
-    w:submit(sqd)
-
     local bfd = w:first "bilateral_filter_dispatcher dispatch:in"
 
     bfd.dispatch.rb_idx = create_rbidx(vr.w, vr.h)
@@ -161,9 +154,9 @@ local function calc_ssao_config(camera, lightdir, aobuf_w, aobuf_h, depthlevel)
 end
 
 local function update_properties(dispatcher, ce)
-    local sdq = w:first "scene_depth_queue render_target:in"
+    local dq = w:first "pre_depth_queue render_target:in"
     local m = dispatcher.material
-    m.s_depth = fbmgr.get_depth(sdq.render_target.fb_idx).handle
+    m.s_depth = fbmgr.get_depth(dq.render_target.fb_idx).handle
 
     local rb = fbmgr.get_rb(dispatcher.rb_idx)
     m.s_ssao_result = rb.handle
@@ -257,6 +250,12 @@ local function update_bilateral_filter_properties(material, inputhandle, outputh
 
     material.u_bilateral_kernels = KERNELS
     material.u_bilateral_param = math3d.vector(offset[1], offset[2], KERNELS_COUNT, inv_camera_far_with_bilateral_threshold)
+end
+
+local mqvr_mb = world:sub{"view_rect_changed", "main_queue"}
+
+function ssao_sys:data_changed()
+
 end
 
 function ssao_sys:build_ssao()

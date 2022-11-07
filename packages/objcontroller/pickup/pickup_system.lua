@@ -352,7 +352,7 @@ local function has_filter_stage(pf, stage)
 	end
 end
 
-function pickup_sys:end_filter()
+function pickup_sys:update_filter()
 	for e in w:select "filter_result pickup_queue_visible render_object:update filter_material:in eid:in skinning?in" do
 		local ro = e.render_object
 		local fm = e.filter_material

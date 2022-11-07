@@ -3,20 +3,13 @@ local world = ecs.world
 local w     = world.w
 
 local bloom_sys = ecs.system "bloom_system"
-
 local setting   = import_package "ant.settings".setting
-
-local mc        = import_package "ant.math".constant
-
+local renderutil= require "util"
 local bloom_setting = setting:data().graphic.postprocess.bloom
 local ENABLE_BLOOM<const> = bloom_setting.enable
 
 if not ENABLE_BLOOM then
-    local function DEF_FUNC() end
-    bloom_sys.init = DEF_FUNC
-    bloom_sys.init_world = DEF_FUNC
-    bloom_sys.data_changed = DEF_FUNC
-    bloom_sys.bloom = DEF_FUNC
+    renderutil.default_system(bloom_sys, "init", "init_world", "data_changed", "bloom")
     return
 end
 

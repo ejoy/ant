@@ -17,7 +17,10 @@ $input v_texcoord0
 #define FXAA_GLSL_130      1
 
 #define G3D_FXAA_PATCHES   1
+
+#ifndef COMPUTE_LUMINANCE_TO_ALPHA
 #define FXAA_GREEN_AS_LUMA 1
+#endif //!COMPUTE_LUMINANCE_TO_ALPHA
 
 #include "postprocess/fxaa/fxaa.sh"
 

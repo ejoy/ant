@@ -155,7 +155,6 @@ struct tag_array {
 using tag_queue = tag_array<
 	RengerQueue(main_queue),
 	RengerQueue(pre_depth_queue),
-	RengerQueue(scene_depth_queue),
 	RengerQueue(pickup_queue),
 	RengerQueue(csm1_queue),
 	RengerQueue(csm2_queue),

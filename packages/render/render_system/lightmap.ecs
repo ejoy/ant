@@ -2,7 +2,7 @@ system "lightmap_system"
     .implement "render_system/lightmap.lua"
     .method "init"
     .method "entity_init"
-    .method "end_filter"
+    .method "update_filter"
 
 component "lightmapper"
 component "lightmap_result".type "lua"

@@ -14,7 +14,7 @@ system "shadow_system"
     .method "refine_camera"
     .method "render_submit"
     .method "camera_usage"
-    .method "end_filter"
+    .method "update_filter"
 
 interface "ishadow"
     .implement "shadow/shadow.lua"

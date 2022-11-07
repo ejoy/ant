@@ -96,7 +96,7 @@ local function has_filter_tag(t, filter)
 	end
 end
 
-function render_sys:update_filter()
+function render_sys:begin_filter()
 	w:clear "filter_result"
     for e in w:select "render_object_update render_object visible_state:in filter_result:new" do
 		local matres = imaterial.resource(e)
@@ -182,7 +182,7 @@ local function check_set_depth_state_as_equal(state)
 	return bgfx.make_state(ss)
 end
 
-function s:end_filter()
+function s:update_filter()
 	if irender.use_pre_depth() then
 		for e in w:select "filter_result main_queue_visible opacity render_object:update filter_material:in" do
 			local ro = e.render_object

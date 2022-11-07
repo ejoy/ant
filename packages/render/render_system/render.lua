@@ -4,8 +4,8 @@ local w = world.w
 
 local default_comp 	= import_package "ant.general".default
 local setting		= import_package "ant.settings".setting
-local ENABLE_PRE_DEPTH<const> = not setting:data().graphic.disable_pre_z
-local ENABLE_FXAA<const> = setting:data().graphic.postprocess.fxaa.enable
+local ENABLE_PRE_DEPTH<const> = not setting:get "graphic/disable_pre_z"
+local ENABLE_FXAA<const> = setting:get "graphic/postprocess/fxaa/enable"
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
@@ -119,8 +119,8 @@ local function create_depth_rb(ww, hh)
 		layers = 1,
 		flags = sampler {
 			RT = ENABLE_FXAA and "RT_ON" or "RT_MSAA4|RT_WRITE",
-			MIN="POINT",
-			MAG="POINT",
+			MIN="LINEAR",
+			MAG="LINEAR",
 			U="CLAMP",
 			V="CLAMP",
 		},

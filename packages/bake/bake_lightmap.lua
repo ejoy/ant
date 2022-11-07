@@ -103,7 +103,7 @@ local function has_filter_stage(pf, stage)
     end
 end
 
-function bake_lm_sys:end_filter()
+function bake_lm_sys:update_filter()
     for e in w:select "filter_result bake_lightmap_queue_visible filter_material:in render_object:update" do
         local le = w:first("bake_lightmap_queue primitive_filter:in")
         local ro = e.render_object

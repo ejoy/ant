@@ -36,38 +36,6 @@ local geometricidx = 0
 local function gen_geometry_id() geometricidx = geometricidx + 1 return geometricidx end
 
 local function create_light_billboard(light_eid)
-    -- local bb_eid = world:deprecated_create_entity{
-    --     policy = {
-    --         "ant.render|render",
-    --         "ant.effect|billboard",
-    --         "ant.general|name"
-    --     },
-    --     data = {
-    --         name = "billboard_light",
-    --         transform = {},
-    --         billboard = {lock = "camera"},
-    --         visible_state = "main_view",
-    --         scene_entity = true,
-    --         material = gd.editor_package_path .. "res/materials/billboard.material"
-    --     },
-    --     action = {
-    --         bind_billboard_camera = "camera"
-    --     }
-    -- }
-    -- local icons = require "common.icons"(assetmgr)
-    -- local type = world[light_eid].type
-    -- local light_icons = {
-    --     spot = "ICON_SPOTLIGHT",
-    --     point = "ICON_POINTLIGHT",
-    --     directional = "ICON_DIRECTIONALLIGHT",
-    -- }
-    -- local tex = icons[light_icons[type]].handle
-    -- imaterial.set_property(bb_eid, "s_basecolor", {stage = 0, texture = {handle = tex}})
-    -- iom.set_scale(bb_eid, 0.2)
-    -- ivs.set_state(bb_eid, "auxgeom", true)
-    -- iom.set_position(bb_eid, iom.get_position(light_eid))
-    -- world[bb_eid].parent = world[light_eid].parent
-    -- light_gizmo.billboard[light_eid] = bb_eid
 end
 
 local geom_mesh_file = {
@@ -87,7 +55,8 @@ end
 
 local hitch_id = 1
 function m:create_hitch(slot)
-    local auto_name = "hitch" .. hitch_id
+    local auto_name = (slot and "slot" or "hitch") .. hitch_id
+    hitch_id = hitch_id + 1
     local parent_eid = gizmo.target_eid or self.root
     local template = {
         policy = {
@@ -114,9 +83,7 @@ function m:create_hitch(slot)
     if slot then
         tpl.data.on_ready = function (e) hierarchy:update_slot_list(world) end
     end
-    local new_entity = ecs.create_entity(tpl)
-    hitch_id = hitch_id + 1
-    self:add_entity(new_entity, parent_eid, template)
+    self:add_entity(ecs.create_entity(tpl), parent_eid, template)
 end
 
 local function create_simple_entity(name, parent)

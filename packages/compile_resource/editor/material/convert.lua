@@ -41,7 +41,7 @@ local SETTING_MAPPING = {
 
 local enable_cs<const>      = setting:get 'graphic/lighting/cluster_shading' ~= 0
 local enable_bloom<const>   = setting:get "graphic/postprocess/bloom/enable"
-local enable_fxaa<const>    = setting:get "graphic/postprocess/fxaa/enable"
+local fxaa_setting<const>    = setting:data().graphic.postprocess.fxaa
 local ao_setting<const>     = setting:data().graphic.ao or def_setting.graphic.ao
 
 local curve_world = setting:data().graphic.curve_world
@@ -82,6 +82,10 @@ local function default_macros(setting)
             m[#m+1] = "HIGH_QULITY_SPECULAR_AO=1"
             m[#m+1] = "HIGH_QULITY_NORMAL_RECONSTRUCT=1"
         end
+    end
+
+    if fxaa_setting.enable and not fxaa_setting.use_green_as_luma then
+        m[#m+1] = "COMPUTE_LUMINANCE_TO_ALPHA=1"
     end
 
     return m
