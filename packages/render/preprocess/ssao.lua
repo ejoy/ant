@@ -253,9 +253,15 @@ local function update_bilateral_filter_properties(material, inputhandle, outputh
 end
 
 local mqvr_mb = world:sub{"view_rect_changed", "main_queue"}
+local mq_cc_mb = world:sub{"camera_changed", "main_queue"}
 
 function ssao_sys:data_changed()
-
+    for _, _, vr in mqvr_mb:unpack() do
+        local aod = w:first "ssao_dispatcher dispatch:in"
+        local bfd = w:first "bilateral_filter_dispatcher dispatch:in"
+        fbmgr.resize_rb(aod.dispatch.rbidx, vr.w, vr.h)
+        fbmgr.resize_rb(bfd.dispatch.rbidx, vr.w, vr.h)
+    end
 end
 
 function ssao_sys:build_ssao()
