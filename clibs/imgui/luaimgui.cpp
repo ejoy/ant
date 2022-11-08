@@ -3056,8 +3056,7 @@ fCreateFont(lua_State *L, ImFontAtlas* atlas, ImFontConfig* config) {
 		break;
 	case LUA_TUSERDATA:
 		ttf_buf = (const char*)lua_touserdata(L, -1);
-		ttf_len = (size_t)*(uint32_t*)ttf_buf;
-		ttf_buf += 4;
+		ttf_len = (size_t)lua_rawlen(L, -1);
 		break;
 	default:
 		luaL_checktype(L, -1, LUA_TSTRING);
