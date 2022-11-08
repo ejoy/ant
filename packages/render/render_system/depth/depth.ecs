@@ -18,18 +18,7 @@ system "pre_depth_system"
     .method "data_changed"
     .method "update_filter"
 
--- component "scene_depth_queue"
--- component "scene_depth_queue_cull"
--- component "scene_depth_queue_visible"
--- policy "scene_depth_queue"
---     .require_policy "ant.render|render_queue"
---     .require_system "ant.render|scene_depth_system"
---     .require_system  "ant.render|pre_depth_system"
---     .component "scene_depth_queue"
-
--- system "scene_depth_system"
---     .implement "render_system/depth/depth.lua"
---     .method "post_init"
+--import "render_system/depth/scene_depth.ecs"
 
 --NOTE: some machine not support sample depth format(D32F, D16, D24xS. etc), so resolve normal depth value from MSAA buffer is not valid.
 -- right now, if we want MSAA and normal depth, redraw the scene to normal depth buffer is the only option
