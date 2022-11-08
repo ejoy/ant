@@ -93,6 +93,8 @@ do
 
     ssao_configs.inv_sample_count = 1.0 / (ssao_configs.sample_count - 0.5)
 
+    ssao_configs.edge_distance = 1.0 / ssao_configs.bilateral_threshold
+
     local inc = ssao_configs.inv_sample_count * ssao_configs.spiral_turns * TAU
     ssao_configs.sin_inc, ssao_configs.cos_inc = math.sin(inc), math.cos(inc)
 
@@ -100,6 +102,33 @@ do
     local ssct = ssao_configs.ssct
     ssct.tan_cone_angle            = math.tan(ssao_configs.ssct.light_cone*0.5)
     ssct.inv_contact_distance_max  = 1.0 / ssct.contact_distance_max
+end
+
+local bilateral_config = {
+    kernel_radius = HOWTO_SAMPLE.bilateral_filter_raidus,
+    std_deviation = 4.0,
+    bilateral_threshold = ssao_configs.bilateral_threshold,
+}
+
+local KERNEL_MAX_RADIUS_SIZE<const> = 8
+
+local function generate_gaussian_kernels(radius, std_dev, kernels)
+    radius = math.min(KERNEL_MAX_RADIUS_SIZE, radius)
+    for i=1, radius do
+        local x = i-1
+        local kidx = (x // 4)+1
+        local vidx = (x %  4)+1
+        local k = kernels[kidx]
+        k[vidx] = math.exp(-(x * x) / (2.0 * std_dev * std_dev))
+    end
+    return radius
+end
+
+local KERNELS       = {math3d.ref(mc.ZERO),math3d.ref(mc.ZERO),}
+local KERNELS_COUNT = generate_gaussian_kernels(bilateral_config.kernel_radius, bilateral_config.std_deviation, KERNELS)
+
+local function update_bilateral_filter_kernels(material)
+    material.u_bilateral_kernels = KERNELS
 end
 
 function ssao_sys:init()
@@ -126,20 +155,55 @@ local function create_rbidx(ww, hh)
     return fbmgr.create_rb{w=ww, h=hh, layers=numlayers, format="RGBA8", flags=rb_flags}
 end
 
+local function update_ao_properties(material)
+    material.u_ssao_param = math3d.vector(
+        ssao_configs.visible_power,
+        ssao_configs.cos_inc, ssao_configs.sin_inc,
+        ssao_configs.edge_distance)
+
+    material.u_ssao_param2 = math3d.vector(
+        ssao_configs.sample_count, ssao_configs.inv_sample_count,
+        ssao_configs.intensity_pre_sample, ssao_configs.bias)
+
+    material.u_ssao_param3 = math3d.vector(
+        ssao_configs.inv_radius_squared,
+        ssao_configs.min_horizon_angle_sine_squared,
+        ssao_configs.peak2,
+        ssao_configs.spiral_turns)
+end
+
+local function update_ssct_properties(material)
+    --screen space cone trace
+    local ssct = ssao_configs.ssct
+    material.u_ssct_param2 = math3d.vector(
+        ssct.tan_cone_angle,
+        ssct.intensity,
+        ssct.inv_contact_distance_max,
+        ssct.shadow_distance)
+
+    material.u_ssct_param3 = math3d.vector(
+        ssct.sample_count,
+        ssct.ray_count,
+        ssct.depth_bias,
+        ssct.depth_slope_bias)
+end
+
 function ssao_sys:init_world()
     local vr = mu.calc_viewport(mu.copy_viewrect(world.args.viewport), ssao_configs.resolution)
     local rbidx = create_rbidx(vr.w, vr.h)
 
     local aod = w:first "ssao_dispatcher dispatch:in"
-    aod.dispatch.rb_idx = rbidx
+    local aod_dis = aod.dispatch
+    aod_dis.rb_idx = rbidx
+    local sa = imaterial.system_attribs()
+    sa:update("s_ssao", fbmgr.get_rb(rbidx).handle)
+
+    update_ao_properties(aod_dis.material)
+    update_ssct_properties(aod_dis.material)
 
     local bfd = w:first "bilateral_filter_dispatcher dispatch:in"
-
     bfd.dispatch.rb_idx = create_rbidx(vr.w, vr.h)
-
-    local sa = imaterial.system_attribs()
-    local ssao_rb = fbmgr.get_rb(rbidx)
-    sa:update("s_ssao", ssao_rb.handle)
+    update_bilateral_filter_kernels(bfd.dispatch.material)
 end
 
 local texmatrix<const> = mu.calc_texture_matrix()
@@ -149,11 +213,9 @@ local function calc_ssao_config(camera, lightdir, aobuf_w, aobuf_h, depthlevel)
     ssao_configs.projection_scale = util.projection_scale(aobuf_w, aobuf_h, camera.projmat)
     ssao_configs.projection_scale_radius = ssao_configs.projection_scale * ssao_configs.radius
     ssao_configs.max_level = depthlevel - 1
-    ssao_configs.edge_distance = 1.0 / ssao_configs.bilateral_threshold
-    ssao_configs.ssct.lightdir.v = math3d.normalize(math3d.inverse(math3d.transform(camera.viewmat, lightdir, 0)))
 end
 
-local function update_properties(dispatcher, ce)
+local function update_ao_frame_properties(dispatcher, ce)
     local dq = w:first "pre_depth_queue render_target:in"
     local m = dispatcher.material
     m.s_depth = fbmgr.get_depth(dq.render_target.fb_idx).handle
@@ -162,8 +224,6 @@ local function update_properties(dispatcher, ce)
     m.s_ssao_result = rb.handle
 
     local aobuf_w, aobuf_h = rb.w, rb.h
-    icompute.calc_dispatch_size_2d(aobuf_w, aobuf_h, dispatcher.size)
-
     local depthlevel = 1
 
     local camera = ce.camera
@@ -174,41 +234,14 @@ local function update_properties(dispatcher, ce)
 
     calc_ssao_config(camera, lightdir, aobuf_w, aobuf_h, depthlevel)
 
-    m.u_ssao_param = math3d.vector(
-        ssao_configs.visible_power,
-        ssao_configs.cos_inc, ssao_configs.sin_inc,
-        ssao_configs.projection_scale_radius)
-
-    m.u_ssao_param2 = math3d.vector(
-        ssao_configs.sample_count, ssao_configs.inv_sample_count,
-        ssao_configs.intensity_pre_sample, ssao_configs.bias)
-
-    m.u_ssao_param3 = math3d.vector(
-        ssao_configs.inv_radius_squared,
-        ssao_configs.min_horizon_angle_sine_squared,
-        ssao_configs.peak2,
-        ssao_configs.spiral_turns)
-
     m.u_ssao_param4 = math3d.vector(
         1.0/rb.w, 1.0/rb.h, ssao_configs.max_level,
-        ssao_configs.edge_distance)
+        ssao_configs.projection_scale_radius)
 
-    --screen space cone trace
-    local ssct = ssao_configs.ssct
-    local lx, ly, lz = math3d.index(ssct.lightdir, 1, 2, 3)
-    m.u_ssct_param = math3d.vector(lx, ly, lz, ssct.intensity)
+    lightdir = math3d.normalize(math3d.inverse(math3d.transform(camera.viewmat, lightdir, 0)))
+    local lx, ly, lz = math3d.index(lightdir, 1, 2, 3)
+    m.u_ssct_param = math3d.vector(lx, ly, lz, ssao_configs.projection_scale)
 
-    m.u_ssct_param2 = math3d.vector(
-        ssct.tan_cone_angle,
-        ssao_configs.projection_scale,
-        ssct.inv_contact_distance_max,
-        ssct.shadow_distance)
-
-    m.u_ssct_param3 = math3d.vector(
-        ssct.sample_count,
-        ssct.ray_count,
-        ssct.depth_bias,
-        ssct.depth_slope_bias)
     --screen matrix
     do
         local baismatrix = math3d.mul(math3d.matrix(
@@ -221,34 +254,9 @@ local function update_properties(dispatcher, ce)
     end
 end
 
-local bilateral_config = {
-    kernel_radius = HOWTO_SAMPLE.bilateral_filter_raidus,
-    std_deviation = 4.0,
-    bilateral_threshold = ssao_configs.bilateral_threshold,
-}
-
-local KERNEL_MAX_RADIUS_SIZE<const> = 8
-
-local function generate_gaussian_kernels(radius, std_dev, kernels)
-    radius = math.min(KERNEL_MAX_RADIUS_SIZE, radius)
-    for i=1, radius do
-        local x = i-1
-        local kidx = (x // 4)+1
-        local vidx = (x %  4)+1
-        local k = kernels[kidx]
-        k[vidx] = math.exp(-(x * x) / (2.0 * std_dev * std_dev))
-    end
-    return radius
-end
-
-local KERNELS       = {math3d.ref(mc.ZERO),math3d.ref(mc.ZERO),}
-local KERNELS_COUNT = generate_gaussian_kernels(bilateral_config.kernel_radius, bilateral_config.std_deviation, KERNELS)
-
-local function update_bilateral_filter_properties(material, inputhandle, outputhandle, offset, inv_camera_far_with_bilateral_threshold)
+local function update_bilateral_filter_frame_properties(material, inputhandle, outputhandle, offset, inv_camera_far_with_bilateral_threshold)
     material.s_ssao_result = inputhandle
     material.s_filter_result = outputhandle
-
-    material.u_bilateral_kernels = KERNELS
     material.u_bilateral_param = math3d.vector(offset[1], offset[2], KERNELS_COUNT, inv_camera_far_with_bilateral_threshold)
 end
 
@@ -259,8 +267,14 @@ function ssao_sys:data_changed()
     for _, _, vr in mqvr_mb:unpack() do
         local aod = w:first "ssao_dispatcher dispatch:in"
         local bfd = w:first "bilateral_filter_dispatcher dispatch:in"
-        fbmgr.resize_rb(aod.dispatch.rbidx, vr.w, vr.h)
-        fbmgr.resize_rb(bfd.dispatch.rbidx, vr.w, vr.h)
+        fbmgr.resize_rb(aod.dispatch.rb_idx, vr.w, vr.h)
+        local sa = imaterial.system_attribs()
+        sa:update("s_ssao", fbmgr.get_rb(aod.dispatch.rb_idx).handle)
+
+        fbmgr.resize_rb(bfd.dispatch.rb_idx, vr.w, vr.h)
+
+        icompute.calc_dispatch_size_2d(vr.w, vr.h, aod.dispatch.size)
+        icompute.calc_dispatch_size_2d(vr.w, vr.h, bfd.dispatch.size)
     end
 end
 
@@ -269,7 +283,7 @@ function ssao_sys:build_ssao()
     local mq = w:first "main_queue camera_ref:in"
     local ce = w:entity(mq.camera_ref, "camera:in")
     local d = aod.dispatch
-    update_properties(d, ce)
+    update_ao_frame_properties(d, ce)
 
     icompute.dispatch(ssao_viewid, d)
 end
@@ -289,13 +303,11 @@ function ssao_sys:bilateral_filter()
 
     assert(outputrb.w == inputrb.w and outputrb.h == inputrb.h)
     local bf_dis = bfd.dispatch
-    icompute.calc_dispatch_size_2d(inputrb.w, inputrb.h, bf_dis.size)
-
     local bfdmaterial = bf_dis.material
-    update_bilateral_filter_properties(bfdmaterial, inputhandle, outputhandle, {1.0/inputrb.w, 0.0}, inv_camera_far_with_bilateral_threshold)
+    update_bilateral_filter_frame_properties(bfdmaterial, inputhandle, outputhandle, {1.0/inputrb.w, 0.0}, inv_camera_far_with_bilateral_threshold)
     icompute.dispatch(Hbilateral_filter_viewid, bf_dis)
 
-    update_bilateral_filter_properties(bfdmaterial, outputhandle, inputhandle, {0.0, 1.0/inputrb.h}, inv_camera_far_with_bilateral_threshold)
+    update_bilateral_filter_frame_properties(bfdmaterial, outputhandle, inputhandle, {0.0, 1.0/inputrb.h}, inv_camera_far_with_bilateral_threshold)
     icompute.dispatch(Vbilateral_filter_viewid, bf_dis)
 
 end
