@@ -6,7 +6,9 @@ local iterrain  = ecs.interface "iterrain"
 local terrain_test_sys = ecs.system "terrain_test_system"
 
 function terrain_test_sys:init()
+    -- 32 32 means terrain's width and height
     iterrain.gen_terrain_field(32, 32)
+    -- x y road's type road's dirction
     iterrain.create_roadnet_entity(1, 1, "L", "W")
     iterrain.create_roadnet_entity(2, 1, "I", "E")
     iterrain.create_roadnet_entity(3, 1, "L", "N")
@@ -16,5 +18,6 @@ function terrain_test_sys:init()
     iterrain.create_roadnet_entity(2, 3, "I", "E")
     iterrain.create_roadnet_entity(3, 3, "L", "E") 
     iterrain.create_roadnet_entity(6, 6, "L", "N") 
+    -- create terrain and road
     iterrain.create_terrain_entity()
 end

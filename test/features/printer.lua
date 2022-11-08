@@ -12,7 +12,7 @@ local printer_material
 
 function printer_sys:init()
     printer_material = imaterial.load_res "/pkg/ant.resources/materials/printer.material"
-    --[[ ecs.create_entity {
+     ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -24,36 +24,20 @@ function printer_sys:init()
                 "translucent",
             },
             name        = "printer_test",
-            scene  = {s = 0.1, t = {4, 0, 4}},
+            scene  = {s = 0.2, t = {1, 0, 1}},
             material    = "/pkg/ant.resources/materials/printer.material",
             visible_state = "postprocess_obj",
             mesh        = "/pkg/ant.test.features/assets/glb/electric-pole-1.glb|meshes/Cylinder.006_P1.meshbin",
+            -- add printer tag
+            -- previous still be zero
+            -- duration means generation duration time
             printer = {
                 previous = 0,
                 duration = 5
             }
         },
-    }  ]]
+    }  
 
---[[     ecs.create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.general|name",
-        },
-        data = {
-            primitive_filter = {
-                filter_type = "postprocess_obj",
-                "opacity",
-                "translucent",
-            },
-            name        = "printer_test",
-            scene  = {s = 0.1, t = {4, 0, 4}},
-            material    = "/pkg/ant.resources/materials/pbr_default.material",
-            visible_state = "postprocess_obj",
-            mesh        = "/pkg/ant.test.features/assets/glb/electric-pole-1.glb|meshes/Cylinder.006_P1.meshbin",
-
-        },
-    } ]]
 end
 
 local function which_material(skinning)
