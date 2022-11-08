@@ -7,6 +7,8 @@ $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGEN
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
 
+#define PACK_TANGENT_TO_QUAT 1
+
 void main()
 {
 	mat4 wm = get_world_matrix();
@@ -28,21 +30,24 @@ void main()
 #endif //WITH_COLOR_ATTRIB
 
 #ifdef WITH_NORMAL_ATTRIB
-	//TODO: normal and tangent should use inverse transpose matrix
-
-	vec4 quat = a_tangent;
+#	ifdef PACK_TANGENT_TO_QUAT
+	const vec4 quat = a_tangent;
 	vec3 normal;
 	vec3 tangent;
 	to_tangent_frame(quat, normal, tangent);
 	v_normal	= normalize(mul(wm, vec4(normal, 0.0)).xyz);
 	v_tangent	= normalize(mul(wm, vec4(tangent, 0.0)).xyz);
 	v_bitangent	= cross(v_normal, v_tangent);
+#	else //!PACK_TANGENT_TO_QUAT
 
-/* 	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
-#	ifdef WITH_TANGENT_ATTRIB
+//TODO: normal and tangent should use inverse transpose matrix
+	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
+#		ifdef WITH_TANGENT_ATTRIB
 	v_tangent	= normalize(mul(wm, vec4(a_tangent, 0.0)).xyz);
 	v_bitangent	= cross(v_normal, v_tangent);	//left hand
-#	endif //WITH_TANGENT_ATTRIB */
+#		endif //WITH_TANGENT_ATTRIB
+
+#	endif //PACK_TANGENT_TO_QUAT
 
 #endif //WITH_NORMAL_ATTRIB
 
