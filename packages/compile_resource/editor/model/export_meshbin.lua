@@ -3,7 +3,8 @@ local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
 local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
-
+local mathpkg	= import_package "ant.math"
+local mc, mu	= mathpkg.constant, mathpkg.util
 local function get_layout(name, accessor)
 	local shortname, channel = declmgr.parse_attri_name(name)
 	local comptype_name = gltfutil.comptype_name_mapper[accessor.componentType]
@@ -214,34 +215,23 @@ local jointidx_fmt<const> = "HHHH"
 -- 		x: -left, +right
 -- 		y: +up, -down
 --		z: +point2user, -point2screen
-local function r2l_vec(v, l)
+local function r2l_vec(v, l, pack)
 	local t = l:sub(6, 6)
 	local n = tonumber(l:sub(2, 2))
 	if t == 'f' and n > 2 then
 		local fmt = ('f'):rep(n)
-		local x,y,z,w = fmt:unpack(v)
-		return fmt:pack(x, y, -z, w)
+		if pack == false then
+			local x,y,z,w = fmt:unpack(v)
+			return fmt:pack(x, y, -z, w)
+		else 
+			local p = {fmt:unpack(v)}
+			p[3] = -p[3]
+			return math3d.vector(p[1], p[2], p[3])			
+		end
 	end
 
 	assert(("not support layout:%s, type:%s must be 'float', attribute number:%d should be large than 2"):format(l, t, n))
 end
-
-local function r2_vec(v, l)
-	local t = l:sub(6, 6)
-	local n = tonumber(l:sub(2, 2))
-	if t == 'f' then
-		local fmt = ('f'):rep(n)
-		local p = {fmt:unpack(v)}
-		p[3] = -p[3]
-		p[n+1] = nil
-		return p
-	end
-
-	assert(("not support layout:%s, %s"):format(l, t))
-end
-
-
-
 
 local function create_add_tanuv(tan_t, idx, inc1, inc2, inc3)
 	local t
@@ -255,57 +245,48 @@ local function create_add_tanuv(tan_t, idx, inc1, inc2, inc3)
 	t[3] = inc3
 	tan_t[idx] = t
 end
-local function calc_local_tangent(vertex, t, b)
-	local normal = math3d.vector(vertex.n)
-	local tangent = math3d.vector(t)
-	local bitangent = math3d.vector(b)
-	local local_tangent = math3d.sub(tangent, math3d.mul(normal, math3d.dot(tangent, normal)))
-	local_tangent = math3d.normalize(local_tangent)
-	local lt_x, lt_y, lt_z = math3d.index(local_tangent, 1, 2, 3)
+local function calc_local_tangent(n, t, b)
+	local local_t = math3d.sub(t, math3d.mul(n, math3d.dot(t, n)))
+	local_t = math3d.normalize(local_t)
+	local lt_x, lt_y, lt_z = math3d.index(local_t, 1, 2, 3)
 	if lt_x ~= lt_x or lt_y ~= lt_y or lt_z ~= lt_z then
-		local_tangent = math3d.cross(normal, bitangent)
+		local_t = math3d.cross(n, b)
 	end
-	return {math3d.index(local_tangent, 1, 2, 3)}
+	return local_t
 end
 
 --Urho3D calc_tangents
 local function calc_tangents(vb, ib)
 	local tangents = {}
 	for ii = 1, #ib do
-		local indices = ib[ii]
-		local i0, i1, i2 = indices.i0 + 1, indices.i1 + 1, indices.i2 + 1
-		local v0, v1, v2 = vb[i0], vb[i1], vb[i2]
-		local bax, bay, baz, bau, bav = v1.x - v0.x, v1.y - v0.y, v1.z - v0.z, v1.u - v0.u, v1.v - v0.v
-		local cax, cay, caz, cau, cav = v2.x - v0.x, v2.y - v0.y, v2.z - v0.z, v2.u - v0.u, v2.v - v0.v
-		local dirCorrection = cau * bav - cav * bau
-		if dirCorrection < 0.0 then
-			dirCorrection = -1.0
-		else
-			dirCorrection = 1.0
-		end
+	  local indices = ib[ii]
+	  local i0, i1, i2 = indices.i0 + 1, indices.i1 + 1, indices.i2 + 1
+	  local a, b, c = vb[i0], vb[i1], vb[i2]
+	  local ba, ca = math3d.sub(b.p, b.p), math3d.sub(b.p, a.p)
+	  local bau, bav = b.u - a.u, b.v - a.v
+	  local cau, cav = c.u - a.u, b.v - a.v
+  
+	  local dirCorrection = (cau * bav - cav * bau) < 0 and -1.0 or 1.0
+  
+	  if bau == 0 and bav == 0 and cau == 0 and cav == 0 then
+		bau, bav = 0.0, 1.0
+		cau, cav = 1.0, 0.0
+	  end
+	  
 
-		if bau == 0 and bav == 0 and cau == 0 and cav == 0 then
-			bau = 0.0
-			bav = 1.0
-			cau = 1.0
-			cav = 0.0
-		end
-		
-		local tangent = {}
-		local bitangent = {}
-		tangent[1] = (cax * bav - bax * cav) * dirCorrection
-		tangent[2] = (cay * bav - bay * cav) * dirCorrection
-		tangent[3] = (caz * bav - baz * cav) * dirCorrection
-		bitangent[1] = (cax * bau - bax * cau) * dirCorrection
-		bitangent[2] = (cay * bau - cay * cau) * dirCorrection
-		bitangent[3] = (caz * bau - caz * cau) * dirCorrection
-		tangents[i0] = calc_local_tangent(v0, tangent, bitangent)
-		tangents[i1] = calc_local_tangent(v1, tangent, bitangent)
-		tangents[i2] = calc_local_tangent(v2, tangent, bitangent)
+	  local tangent  = math3d.mul(math3d.sub(math3d.mul(ba, bav), math3d.mul(ca, cav)), dirCorrection)
+	  local bitangent  = math3d.mul(math3d.sub(math3d.mul(ca, bau), math3d.mul(ba, cau)), dirCorrection)
+  
+	  assert(not (mu.isnan(tangent) and mu.isnan(bitangent)), "tangent or bitangnt is nan")
+  
+	  -- TODO: need merge vertex tangent
+	  tangents[i0] = calc_local_tangent(a.n, tangent, bitangent)
+	  tangents[i1] = calc_local_tangent(b.n, tangent, bitangent)
+	  tangents[i2] = calc_local_tangent(c.n, tangent, bitangent)
 	end
-
+  
 	return tangents
-end
+  end
 --bgfx calc_tangent
 --[[ local function calc_tangents(vb, num_v, ib, num_i)
 	local tanu = {}
@@ -416,17 +397,15 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 			   local t = l:sub(1, 1)
 	
 			   if t == 'p' then
-				   v = r2_vec(v, l)
-				   vertex.x = v[1]
-				   vertex.y = v[2]
-				   vertex.z = v[3]
+				   v = r2l_vec(v, l, true)
+				   vertex.p = v
 			   elseif t == 't' then
 				   local fmt = ('f'):rep(2)
 				   v = {fmt:unpack(v)}
 				   vertex.u = v[1]
 				   vertex.v = v[2]
 			   elseif t == 'n' then
-				   v = r2_vec(v, l)
+				   v = r2l_vec(v, l, true)
 				   vertex.n = v
 			   end
 		   end 
@@ -445,14 +424,14 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 			local t = l:sub(1, 1)
 
 			if t == 'p' or t == 'b' then
-				v = r2l_vec(v, l)
+				v = r2l_vec(v, l, false)
 				buffer[#buffer+1] = v
 			elseif t == 'n' then
 				if layout_n == true and layout_t == true then
-					v  = r2_vec(v, l)
-					normal = math3d.vector(v[1], v[2], v[3])
+					v  = r2l_vec(v, l, true)
+					normal = v
 				else		
-					v = r2l_vec(v, l)
+					v = r2l_vec(v, l, false)
 					buffer[#buffer+1] = v
 				end	
 			elseif t == 'i' then
@@ -462,7 +441,7 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 				end
 				buffer[#buffer+1] = v
 			elseif t == 'T' then
-					v  = r2_vec(v, l)
+					v  = r2l_vec(v, l, true)
 					tangent = v
 			else
 				buffer[#buffer+1] = v
@@ -473,8 +452,7 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 			if layout_T == false then
 				tangent = tangents[iv + 1]
 			end
-			local tangent_pack = math3d.vector(tangent[1], tangent[2], tangent[3])
-			local quat = gltfutil.pack_tangent_frame(normal, tangent_pack, 2)
+			local quat = gltfutil.pack_tangent_frame(normal, tangent, 2)
 			local fmt = ('f'):rep(4)
 			buffer[#buffer + 1] = fmt:pack(table.unpack(quat))
 		end
