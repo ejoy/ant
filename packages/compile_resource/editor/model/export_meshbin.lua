@@ -777,6 +777,9 @@ end
 			exports.mesh[meshidx][primidx] = save_meshbin_files(stemname, group)
 		end
 	end
+
+	--calculate tangent info will use too many math3d resource, we need to reset here
+	math3d.reset()
 end 
 
 --[[ local function export_meshbin(gltfscene, bindata, exports)
