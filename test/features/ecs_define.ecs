@@ -156,6 +156,5 @@ interface "iterrain"
     .method "create_roadnet_entity"
     .method "update_roadnet_entity"
     .method "delete_roadnet_entity"
-    .method "is_terrain_change"
 
 import "debug/vertex_attrib_visualizer.ecs"
