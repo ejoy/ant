@@ -14,7 +14,7 @@ local renderutil= require "util"
 local ENABLE_SSAO<const>                = ao_setting.enable
 
 if not ENABLE_SSAO then
-    renderutil.default_system(ssao_sys, "init", "init_world", "build_ssao", "bilateral_filter")
+    renderutil.default_system(ssao_sys, "init", "init_world", "data_changed", "build_ssao", "bilateral_filter")
     return
 end
 
