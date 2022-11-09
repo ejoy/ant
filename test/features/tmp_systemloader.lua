@@ -360,13 +360,13 @@ function init_loader_sys:init()
 
     world:create_object(pp)  ]]
 
-    local t = ecs.create_instance  "/pkg/ant.test.features/assets/glb/test5.glb|mesh.prefab"
+--[[     local t = ecs.create_instance  "/pkg/ant.test.features/assets/glb/test5.glb|mesh.prefab"
     t.on_ready = function (e)
         local pid<close> = w:entity(e.tag['*'][1])
         iom.set_scale(pid, 0.1)
         iom.set_position(pid, math3d.vector(5, 0, 5))
     end
-    world:create_object(t)
+    world:create_object(t) ]]
 
 --[[     local units = 1
     local tt1 = ecs.create_instance "/pkg/ant.test.features/assets/glb/truck2.glb|mesh.prefab"
