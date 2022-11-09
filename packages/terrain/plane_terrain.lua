@@ -1,6 +1,7 @@
 local ecs   = ...
 local world = ecs.world
 local ww     = world.w
+local iplane_terrain  = ecs.interface "iplane_terrain"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local fs        = require "filesystem"
 local datalist  = require "datalist"
@@ -12,7 +13,8 @@ local math3d    = require "math3d"
 local terrain_module = require "terrain"
 local layout_name<const>    = declmgr.correct_layout "p3|t20|t21|t22|t23|t24|t25"
 local layout                = declmgr.get(layout_name)
-
+local noise1 = {}
+local terrain_width, terrain_height
 local default_quad_ib<const> = {
     0, 1, 2,
     2, 3, 0,
@@ -28,7 +30,6 @@ end
 local function noise(x, y, freq, exp, lb ,ub)
     local a = ub - lb
     local b = lb
-    local t = {}
     for iy = 1, y do
         for ix = 1, x do
             --t[#t + 1] = math3d.noise(ix - 1, iy - 1, freq, depth, seed) * 1
@@ -36,10 +37,9 @@ local function noise(x, y, freq, exp, lb ,ub)
             local e2 = (terrain_module.noise(ix - 1, iy - 1, 2 * freq, 4, 0, 5.3, 9.1) * a + b) * 0.5
             local e3 = (terrain_module.noise(ix - 1, iy - 1, 4 * freq, 4, 0, 17.8, 23.5) * a + b) * 0.25
             local e = (e1 + e2 + e3) / 1.75
-            t[#t + 1] = e ^ exp
+            noise1[#noise1 + 1] = e ^ exp
         end
     end
-    return t
 end
 
 
@@ -108,7 +108,7 @@ function cterrain_fields.new(st)
 end
 
 function cterrain_fields:init()
-    local tf = self.terrain_fields
+    local tf = self.prev_terrain_fields
     local width, height = self.width, self.height
 
     for ih = 1, height do
@@ -174,7 +174,7 @@ end
 
 local packfmt<const> = "fffffffffffffff"
 
-local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, noise1, direction, terrain_type, cement_type, sand_color_idx, stone_color_idx, stone_normal_idx, width)
+local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, direction, terrain_type, cement_type, sand_color_idx, stone_color_idx, stone_normal_idx, width)
     local grid_type
     if terrain_type == nil then
         grid_type = 0.0
@@ -279,7 +279,7 @@ function cterrain_fields:get_field(sidx, iw, ih)
                     isw * self.section_size + iw
     local y = isw * self.section_size + iw
     local x = (ish * self.section_size+ih)
-    return x, y, offset, self.terrain_fields[offset]
+    return x, y, offset, self.prev_terrain_fields[offset]
 end
 
 function cterrain_fields:get_offset(sidx)
@@ -288,7 +288,7 @@ function cterrain_fields:get_offset(sidx)
     return isw * self.section_size, ish * self.section_size
 end
 
-local function build_mesh(sectionsize, sectionidx, unit, cterrainfileds, noise1, width)
+local function build_mesh(sectionsize, sectionidx, unit, cterrainfileds, width)
     local vb = {}
     for ih = 1, sectionsize do
         for iw = 1, sectionsize do
@@ -308,7 +308,7 @@ local function build_mesh(sectionsize, sectionidx, unit, cterrainfileds, noise1,
                     stone_normal_idx = 2
                 end
                 local uv1 = uv0
-                add_quad(vb, origin, extent, uv0, uv1, xx, yy, noise1, field.alpha_direction, field.type, field.alpha_type - 1, sand_color_idx, stone_color_idx, stone_normal_idx, width)
+                add_quad(vb, origin, extent, uv0, uv1, xx, yy, field.alpha_direction, field.type, field.alpha_type - 1, sand_color_idx, stone_color_idx, stone_normal_idx, width)
             end
         end
     end
@@ -327,21 +327,19 @@ local function is_power_of_2(n)
 	end
 end
 
-function p_ts:entity_init()
+function iplane_terrain.set_wh(w, h)
+    terrain_width = w
+    terrain_height = h
+    build_ib(terrain_width, terrain_height)
+    noise(terrain_width + 1, terrain_height + 1, 4, 2, 0.2, 1)
+end
 
-    for e in ww:select "INIT shape_terrain:in eid:in" do
-        local st = e.shape_terrain
-
-        if st.terrain_fields == nil then
+function iplane_terrain.update_plane_terrain(st)
+        if st.prev_terrain_fields == nil then
             error "need define terrain_field, it should be file or table"
         end
-        --st.terrain_fields = read_terrain_field(st.terrain_fields)
 
         local width, height = st.width, st.height
---[[         if width * height ~= #st.terrain_fields then
-            error(("height_fields data is not equal 'width' and 'height':%d, %d"):format(width, height))
-        end ]]
-
         if not (is_power_of_2(width) and is_power_of_2(height)) then
             error(("one of the 'width' or 'heigth' is not power of 2"):format(width, height))
         end
@@ -361,16 +359,15 @@ function p_ts:entity_init()
         local unit = st.unit
         local shapematerial = st.material
         
-        build_ib(width,height)
+        --build_ib(width,height)
         local ctf = cterrain_fields.new(st)
         ctf:init()
         
-        local noise1 = noise(width + 1, height + 1, 4, 2, 0.2, 1)
         for ih = 1, st.section_height do
             for iw = 1, st.section_width do
                 local sectionidx = (ih - 1) * st.section_width + iw
                 
-                local terrain_mesh = build_mesh(ss, sectionidx, unit, ctf, noise1, width)
+                local terrain_mesh = build_mesh(ss, sectionidx, unit, ctf, width)
                 if terrain_mesh then
                     local eid; eid = ecs.create_entity{
                         policy = {
@@ -380,19 +377,24 @@ function p_ts:entity_init()
                         },
                         data = {
                             scene = {
-                                parent = e.eid,
+                                --parent = e.eid,
                             },
                             simplemesh  = terrain_mesh,
                             material    = shapematerial,
                             visible_state= "main_view|selectable",
                             name        = "section" .. sectionidx,
+                            plane_terrain = true,
                             on_ready = function()
-                                world:pub {"shape_terrain", "on_ready", eid, e.eid}
+                                --world:pub {"shape_terrain", "on_ready", eid, e.eid}
                             end,
                         },
                     }
                 end
             end
-        end
-    end
+        end   
+end
+
+function p_ts:init()
+
+
 end

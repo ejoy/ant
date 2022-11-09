@@ -6,7 +6,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local printer_sys = ecs.system 'printer_system'
 local irender   = ecs.import.interface "ant.render|irender"
 local timer 		= ecs.import.interface "ant.timer|itimer"
-
+local iterrain  = ecs.interface "iterrain"
 local material_cache = {__mode="k"}
 local printer_material
 
@@ -24,7 +24,7 @@ function printer_sys:init()
                 "translucent",
             },
             name        = "printer_test",
-            scene  = {s = 0.2, t = {1, 0, 1}},
+            scene  = {s = 0.2, t = {5, 0, 5}},
             material    = "/pkg/ant.resources/materials/printer.material",
             visible_state = "postprocess_obj",
             mesh        = "/pkg/ant.test.features/assets/glb/electric-pole-1.glb|meshes/Cylinder.006_P1.meshbin",
@@ -60,12 +60,36 @@ function printer_sys:update_filter()
 	end  
 end
 
+local mark = false
+-- x y
+local delete_list = {
+    {1, 1},
+    {2, 1},
+    {3, 1},
+    {1, 2},
+    {3, 2},
+    {1, 3},
+    {2, 3},
+    {3, 3},
+}
+
+local update_list = {
+    {7, 1, "I", "E"},
+    {8, 1, "I", "E"},
+    {9, 1, "I", "E"},
+}
+
 function printer_sys:render_submit()
 
     for e in w:select "printer:in bounding?in" do
         local current = e.printer.previous + timer.delta() / 1000
         if current > e.printer.duration then
             e.printer = nil
+            if mark == false then
+                iterrain.delete_roadnet_entity(delete_list)
+                iterrain.update_roadnet_entity(update_list)
+                mark = true
+            end
         else
             e.printer.previous = current
             local center, extent = math3d.aabb_center_extents(e.bounding.scene_aabb)

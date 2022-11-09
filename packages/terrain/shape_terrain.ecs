@@ -1,7 +1,14 @@
 system "plane_terrain_system"
     .implement "plane_terrain.lua"
-    .method "entity_init"
+    .require_interface "ant.test.features|iterrain"
+    .method "init"
 
+component "plane_terrain".type "lua"
+
+interface "iplane_terrain"
+    .implement "plane_terrain.lua"
+    .method "update_plane_terrain"
+    .method "set_wh"
 
 system "cube_shape_terrain_system"
     .implement "cube_shape_terrain.lua"
