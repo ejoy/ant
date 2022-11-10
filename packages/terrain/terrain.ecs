@@ -4,6 +4,17 @@ import "@ant.asset"
 import "shape_terrain.ecs"
 import "water.ecs"
 
+system "terrain_system"
+    .implement "terrain_system.lua"
+    .method "data_changed"
+
+interface "iterrain"
+    .implement "terrain_system.lua"
+    .method "gen_terrain_field"
+    .method "create_roadnet_entity"
+    .method "update_roadnet_entity"
+    .method "delete_roadnet_entity"
+
 -- interface "terrain"
 --     .implement "terrain_system.lua"
 --     .method "min_max_height"

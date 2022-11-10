@@ -6,7 +6,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local printer_sys = ecs.system 'printer_system'
 local irender   = ecs.import.interface "ant.render|irender"
 local timer 		= ecs.import.interface "ant.timer|itimer"
-local iterrain  = ecs.interface "iterrain"
+local iterrain  = ecs.import.interface "ant.terrain|iterrain"
 local material_cache = {__mode="k"}
 local printer_material
 

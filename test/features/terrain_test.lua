@@ -2,7 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local iterrain  = ecs.interface "iterrain"
+local iterrain  = ecs.import.interface "ant.terrain|iterrain"
 local terrain_test_sys = ecs.system "terrain_test_system"
 
 function terrain_test_sys:init()

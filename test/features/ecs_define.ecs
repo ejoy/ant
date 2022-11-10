@@ -71,7 +71,7 @@ component "printer".type "lua"
 
 system "printer_system"
     .implement "printer.lua"
-    .require_interface "ant.test.features|iterrain"
+    .require_interface "ant.terrain|iterrain"
     .method "init"
     .method "update_filter"
     .method "render_submit"
@@ -115,7 +115,7 @@ system "font_test_system"
 
 system "terrain_test_system"
     .implement "terrain_test.lua"
-    .require_interface "ant.test.features|iterrain"
+    .require_interface "ant.terrain|iterrain"
     .method "init"
     .method "data_changed"
 
@@ -146,15 +146,6 @@ system "dynamic_texture_test_system"
     .method "init"
     .method "data_changed"
 
-system "terrain_system"
-    .implement "terrain.lua"
-    .method "data_changed"
 
-interface "iterrain"
-    .implement "terrain.lua"
-    .method "gen_terrain_field"
-    .method "create_roadnet_entity"
-    .method "update_roadnet_entity"
-    .method "delete_roadnet_entity"
 
 import "debug/vertex_attrib_visualizer.ecs"

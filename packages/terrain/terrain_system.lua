@@ -1,238 +1,115 @@
--- local ecs = ...
--- local world = ecs.world
+local ecs	= ...
+local world = ecs.world
+local w		= world.w
+local iterrain = ecs.import.interface "ant.terrain|iterrain"
+local terrain_sys = ecs.system "terrain_system"
+local iplane_terrain  = ecs.import.interface "ant.terrain|iplane_terrain"
+local terrain_change = false
+local terrain_fields = {}
+local terrain_width, terrain_height
+local shape_terrain = {}
 
--- local assetmgr = import_package "ant.asset"
+local function calc_tf_idx(ix, iy, x)
+    return (iy - 1) * x + ix
+end
 
--- local renderpkg = import_package 'ant.render'
--- local declmgr	= renderpkg.declmgr
+local function parse_terrain_type_dir(type, dir)
+    local t, d
+    if type == "U" then
+        t = "U"
+    elseif type == "I" then
+        t = "I"
+    elseif type == "L" then
+        t = "L"
+    elseif type == "T" then
+        t = "T"
+    elseif type == "X" then
+        t = "X"
+    else
+        t = "D"
+    end
 
--- local math3d	= require "math3d"
--- local terrain_module = require "terrain"
+    if dir == "N" then
+        d = "1"
+    elseif dir == "E" then
+        d = "2"
+    elseif dir == "S" then
+        d = "3"
+    elseif dir == "W" then
+        d = "4"
+    end
+    return t..d
+end
 
--- local ivs = ecs.import.interface "ant.scene|ivisible_state"
+local function calc_shape_terrain()
+    shape_terrain.width = terrain_width
+    shape_terrain.height = terrain_height
+    shape_terrain.unit = 1.0
+    shape_terrain.prev_terrain_fields = terrain_fields
+    shape_terrain.section_size = math.max(1, terrain_width > 4 and terrain_width//4 or terrain_width//2)
+    shape_terrain.material = "/pkg/ant.resources/materials/plane_terrain.material"
+end
 
--- local t = ecs.component "terrain"
--- function t:init()
--- 	self.tile_width		= self.tile_width	or 1
--- 	self.tile_height	= self.tile_height	or 1
--- 	self.section_size	= self.section_size or 2
--- 	self.elem_size		= self.elem_size	or 7
--- 	self.grid_unit		= self.grid_unit	or 1
--- 	self.heightmap_scale= self.heightmap_scale or 1
--- 	return self
--- end
+function iterrain.gen_terrain_field(width, height)
+    local terrain_field = {}
+    terrain_width  = width
+    terrain_height = height
+    for ih=1, terrain_height do
+        for iw=1, terrain_width do
+            local idx = (ih - 1) * terrain_width + iw
+            terrain_field[idx] = {}
+        end
+    end
+    terrain_fields = terrain_field
+    calc_shape_terrain()
+    iplane_terrain.set_wh(width, height)
+    iplane_terrain.update_plane_terrain(shape_terrain)
+end
 
--- local iterrain = ecs.interface "terrain"
+function iterrain.create_roadnet_entity(create_list)
+    for ii = 1, #create_list do
+        local cl = create_list[ii]
+        local x, y, type, dir = cl[1], cl[2], cl[3], cl[4]
+        local idx = calc_tf_idx(x, y, terrain_width)
+        local road = parse_terrain_type_dir(type, dir)
+        terrain_fields[idx].type = road
+    end
+    terrain_change = true
+end
 
--- local function tile_length(t) return t.section_size * t.elem_size end
--- function iterrain.tile_length(eid)
--- 	return tile_length(world[eid]._terrain)
--- end
+function iterrain.update_roadnet_entity(update_list)
+    for ii = 1, #update_list do
+        local ul = update_list[ii]
+        local x, y, type, dir = ul[1], ul[2], ul[3], ul[4]
+        local idx = calc_tf_idx(x, y, terrain_width)
+        local road = parse_terrain_type_dir(type, dir)
+        terrain_fields[idx].type = road
+    end
+    terrain_change = true
+end
 
--- local function grid_width(t) return t.tile_width * tile_length(t) end
--- function iterrain.grid_width(eid)
--- 	return grid_width(world[eid]._terrain)
--- end
+function iterrain.delete_roadnet_entity(delete_list)
+    for ii = 1, #delete_list do
+        local dl = delete_list[ii]
+        local x, y = dl[1], dl[2]
+        local idx = calc_tf_idx(x, y, terrain_width)
+        terrain_fields[idx] = {}
+    end
+    terrain_change = true
+end
 
--- local function grid_height(t) return t.tile_height * tile_length(t)end
--- function iterrain.grid_height(eid)
--- 	return  grid_height(world[eid]._terrain)
--- end
+function terrain_sys:data_changed()
+    if terrain_change then
 
--- local function vertices_num(t)
--- 	local tl = tile_length(t)
--- 	return (t.tile_width*tl+1) * (t.tile_height*tl+1)
--- end
+        shape_terrain.prev_terrain_fields = terrain_fields
+        for e in w:select "plane_terrain eid:in" do      
+            w:remove(e)
+        end
 
--- function iterrain.vertices_num(eid)
--- 	return vertices_num(world[eid]._terrain)
--- end
+        iplane_terrain.update_plane_terrain(shape_terrain) 
 
--- local function indices_num(t)
--- 	return t.elem_size * t.elem_size * 2 * 3
--- end
+        terrain_change = false
+    end 
 
--- function iterrain.min_max_height(eid)
--- 	local t = world[eid]._terrain
--- 	return t.min_max_height
--- end
+end
 
--- function iterrain.heightfield(eid)
--- 	local t = world[eid]._terrain
--- 	return t.heightfield
--- end
-
-
--- local function get_hieght_field_data(hf, scale)
--- 	if hf then
--- 		local img = hf.handle
--- 		local w, h = img:size()
--- 		local d = img:data()
--- 		return {
--- 			w, h, d, scale
--- 		}
--- 	end
--- end
-
--- local tm = ecs.transform "terrain_mesh"
--- function tm.process_prefab(e)
--- 	local terrain = e._terrain
-	
--- 	local gw, gh = grid_width(terrain), grid_height(terrain)
--- 	local pos_decl, normal_decl = declmgr.get "p3", declmgr.get "n3"
-
--- 	local renderdata = terrain_module.create_render_data()
--- 	local indices = renderdata:init_index_buffer(terrain.elem_size, terrain.elem_size, gw+1)
--- 	local positions, normals = renderdata:init_vertex_buffer(gw, gh, get_hieght_field_data(terrain.heightfield, terrain.heightmap_scale))
--- 	terrain.renderdata = renderdata
-
--- 	local numvertices, numindices = vertices_num(terrain), indices_num(terrain)
--- 	e.mesh = world.component "mesh" {
--- 		vb = {
--- 			start = 0,
--- 			num = numvertices,
--- 			{
--- 				declname = "p3",
--- 				memory = {positions, pos_decl.stride * numvertices},
--- 			},
--- 			{
--- 				declname = "n3",
--- 				memory = {normals, normal_decl.stride * numvertices},
--- 			},
--- 		},
--- 		ib = {
--- 			start = 0,
--- 			num = numindices,
--- 			flag = "d",
--- 			memory = {indices, numindices * 4}
--- 		}
--- 	}
--- end
-
--- local bt = ecs.transform "build_terrain"
-
--- local function is_power_of_2(n)
--- 	if n ~= 0 then
--- 		local l = math.log(n, 2)
--- 		return math.ceil(l) == math.floor(l)
--- 	end
--- end
-
--- function bt.process_prefab(e)
--- 	local terrain = e.terrain
-
--- 	if not is_power_of_2(terrain.elem_size+1) then
--- 		error(("element size must be power of two - 1:%d"):format(terrain.elem_size))
--- 	end
-
--- 	local num_title	= terrain.tile_width * terrain.tile_height
--- 	local t = {
--- 		tile_width	= terrain.tile_width,
--- 		tile_height	= terrain.tile_height,
--- 		section_size= terrain.section_size,
--- 		elem_size	= terrain.elem_size,
--- 		grid_unit	= terrain.grid_unit,
--- 		heightmap_scale = terrain.heightmap_scale,
--- 		num_title	= num_title,
--- 		num_section = num_title * terrain.section_size * terrain.section_size,
--- 	}
-
--- 	local tilelen = terrain.section_size * terrain.elem_size
-
--- 	local gridwidth, gridheight = terrain.tile_width * tilelen, terrain.tile_height * tilelen
-
--- 	local hf_width, hf_height = gridwidth+1, gridheight+1
--- 	t.bounding = {aabb = math3d.ref(math3d.aabb({-hf_width, 0, -hf_height}, {hf_width, 0, hf_height}))}
-
--- 	if terrain.heightmap then
--- 		t.heightfield = assetmgr.resource(terrain.heightmap, {format="r32f"})
--- 	end
--- 	e._terrain = t
--- end
-
--- local sma = ecs.action "section_mount"
--- function sma.init(prefab, idx, terraineid)
--- 	local e = world[prefab[idx]]
--- 	e.parent = terraineid
--- 	local te = world[terraineid]
--- 	local cp = te._cache_prefab
-
--- 	local rc = e._rendercache
--- 	local sd = e.section_draw
--- 	local vbstart = sd.vb_start
--- 	rc.vb = {
--- 		start	= vbstart,
--- 		num		= sd.vb_num,
--- 		handle = cp.vb.handle,
--- 	}
--- 	rc.ib = cp.ib
-
--- 	local terrain = te._terrain
--- 	local pitchw = iterrain.grid_width(terraineid) + 1
--- 	local minv, maxv = terrain_module.create_section_aabb(
--- 		terrain.renderdata:vertex_buffer "position", vbstart, terrain.elem_size, pitchw)
-
--- 	e._bounding.aabb = math3d.ref(math3d.aabb(minv, maxv))
--- end
-
--- local function create_render_terrain_entity(eid)
--- 	local e = world[eid]
--- 	if e.material == nil then
--- 		error("terrain entity need material")
--- 	end
--- 	local terrain = e._terrain
-
--- 	local sw = terrain.tile_width * terrain.section_size
--- 	local sh = terrain.tile_height * terrain.section_size
-
--- 	local elemsize = terrain.elem_size
--- 	local vertexwidth, vertexheight = (sw * elemsize)+1, (sh*elemsize)+1
--- 	local numvertices = vertexwidth * vertexheight
--- 	for isy=1, sh do
--- 		local offset = (isy-1) * vertexwidth * elemsize
--- 		for isx=1, sw do
--- 			local start = offset + elemsize * (isx-1)
--- 			world:deprecated_create_entity{
--- 				policy = {
--- 					"ant.terrain|terrain_section_render",
--- 					"ant.render|render",
--- 					"ant.scene|hierarchy_policy",
--- 					"ant.general|name",
--- 					"ant.render|debug_mesh_bounding",
--- 				},
--- 				data = {
--- 					name = "section" .. isx .. isy,
--- 					transform = {},
--- 					visible_state = "main_view|cast_shadow",
--- 					scene_entity=true,
--- 					section_draw = {
--- 						vb_start = start,
--- 						vb_num = numvertices,
--- 						sectionidx=isx + (isy-1) * sw,
--- 					},
--- 					debug_mesh_bounding = true,
--- 				},
--- 				action = {
--- 					section_mount = eid,
--- 				},
--- 			}
--- 		end
--- 	end
--- end
-
--- local ts = ecs.system "terrain_system"
--- local terrain_create_mb = world:sub{"component_register", "terrain"}
--- local terrain_delete_mb = world:sub{"remove_entity", "terrain"}
--- function ts.data_changed()
--- 	for _, _, eid in terrain_create_mb:unpack() do
--- 		create_render_terrain_entity(eid)
--- 	end
-
--- 	for _, _, eid in terrain_delete_mb:unpack() do
--- 		for _, seid in world:each "section_draw" do
--- 			if world[seid].parent == eid then
--- 				w:remove(seid)
--- 			end
--- 		end
--- 	end
--- end
