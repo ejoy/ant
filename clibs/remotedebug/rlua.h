@@ -94,6 +94,7 @@ rlua_Integer  (rlua_tointegerx) (rlua_State *L, int idx, int *isnum);
 int           (rlua_isinteger) (rlua_State *L, int idx);
 int           (rlua_iscfunction) (rlua_State *L, int idx);
 int           (rlua_isstring) (rlua_State *L, int idx);
+const char *  (rluaL_optlstring) (rlua_State *L, int arg, const char *def, size_t *l);
 
 void (rlua_createtable) (rlua_State *L, int narr, int nrec);
 void (rlua_rawsetp) (rlua_State *L, int idx, const void *p);
@@ -112,10 +113,16 @@ void (rlua_rotate) (rlua_State *L, int idx, int n);
 void (rlua_copy) (rlua_State *L, int fromidx, int toidx);
 int  (rlua_checkstack) (rlua_State *L, int n);
 void (rluaL_checkstack) (rlua_State *L, int sz, const char *msg);
+int  (rlua_next) (rlua_State *L, int idx);
 
 void  (rluaL_buffinit) (rlua_State *L, rluaL_Buffer *B);
 char *(rluaL_prepbuffsize) (rluaL_Buffer *B, size_t sz);
 void  (rluaL_pushresultsize) (rluaL_Buffer *B, size_t sz);
+void  (rluaL_requiref) (rlua_State *L, const char *modname, rlua_CFunction openf, int glb);
+int   (rluaL_getsubtable) (rlua_State *L, int idx, const char *fname);
+
+void  (rluaL_pushresult) (rluaL_Buffer *B);
+int   (rluaL_fileresult) (rlua_State *L, int stat, const char *fname);
 
 #define rlua_pop(L,n) rlua_settop(L, -(n)-1)
 #define rlua_pushcfunction(L,f) rlua_pushcclosure(L, (f), 0)
@@ -188,6 +195,7 @@ void  (rluaL_pushresultsize) (rluaL_Buffer *B, size_t sz);
 #define luaL_pushresultsize rluaL_pushresultsize
 #define luaL_ref rluaL_ref
 #define luaL_requiref rluaL_requiref
+#define luaL_getsubtable rluaL_getsubtable
 #define luaL_setfuncs rluaL_setfuncs
 #define luaL_setmetatable rluaL_setmetatable
 #define luaL_testudata rluaL_testudata
@@ -397,6 +405,7 @@ void  (rluaL_pushresultsize) (rluaL_Buffer *B, size_t sz);
 #define rluaL_pushresultsize luaL_pushresultsize
 #define rluaL_ref luaL_ref
 #define rluaL_requiref luaL_requiref
+#define rluaL_getsubtable luaL_getsubtable
 #define rluaL_setfuncs luaL_setfuncs
 #define rluaL_setmetatable luaL_setmetatable
 #define rluaL_testudata luaL_testudata

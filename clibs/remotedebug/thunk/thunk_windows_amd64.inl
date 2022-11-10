@@ -1,4 +1,4 @@
-#include "thunk.h"
+#include "thunk_jit.h"
 #include <memory>
 
 thunk* thunk_create_hook(intptr_t dbg, intptr_t hook)
@@ -11,13 +11,13 @@ thunk* thunk_create_hook(intptr_t dbg, intptr_t hook)
 	static unsigned char sc[] = {
 		0x57,                                                       // push rdi
 		0x50,                                                       // push rax
-		0x48, 0x83, 0xec, 0x28,                                     // sub rsp, 40
+		0x48, 0x83, 0xec, 0x28,                                     // sub rsp, 0x28
 		0x4c, 0x8b, 0xc2,                                           // mov r8, rdx
 		0x48, 0x8b, 0xd1,                                           // mov rdx, rcx
 		0x48, 0xb9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rcx, dbg
 		0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rax, hook
 		0xff, 0xd0,                                                 // call rax
-		0x48, 0x83, 0xc4, 0x28,                                     // add rsp, 40
+		0x48, 0x83, 0xc4, 0x28,                                     // add rsp, 0x28
 		0x58,                                                       // pop rax
 		0x5f,                                                       // pop rdi
 		0xc3,                                                       // ret
@@ -34,23 +34,19 @@ thunk* thunk_create_hook(intptr_t dbg, intptr_t hook)
 	return t.release();
 }
 
-thunk* thunk_create_panic(intptr_t dbg, intptr_t panic)
+thunk* thunk_create_allocf(intptr_t dbg, intptr_t allocf)
 {
-	// int __cedel thunk_panic(lua_State* L)
+	// void* __cedel thunk_allocf(void *ud, void *ptr, size_t osize, size_t nsize)
 	// {
-	//    `panic`(`dbg`, L);
-	//     return `undefinition`;
+	//     return `allocf`(`dbg`, ptr, osize, nsize);
 	// }
 	static unsigned char sc[] = {
 		0x57,                                                       // push rdi
-		0x50,                                                       // push rax
-		0x48, 0x83, 0xec, 0x28,                                     // sub rsp, 40
-		0x48, 0x8b, 0xd1,                                           // mov rdx, rcx
+		0x48, 0x83, 0xec, 0x28,                                     // sub rsp, 0x28
 		0x48, 0xb9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rcx, dbg
-		0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rax, panic
+		0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rax, hook
 		0xff, 0xd0,                                                 // call rax
-		0x48, 0x83, 0xc4, 0x28,                                     // add rsp, 40
-		0x58,                                                       // pop rax
+		0x48, 0x83, 0xc4, 0x28,                                     // add rsp, 0x28
 		0x5f,                                                       // pop rdi
 		0xc3,                                                       // ret
 	};
@@ -58,8 +54,8 @@ thunk* thunk_create_panic(intptr_t dbg, intptr_t panic)
 	if (!t->create(sizeof(sc))) {
 		return 0;
 	}
-	memcpy(sc + 11, &dbg, sizeof(dbg));
-	memcpy(sc + 21, &panic, sizeof(panic));
+	memcpy(sc + 7, &dbg, sizeof(dbg));
+	memcpy(sc + 17, &allocf, sizeof(allocf));
 	if (!t->write(&sc)) {
 		return 0;
 	}

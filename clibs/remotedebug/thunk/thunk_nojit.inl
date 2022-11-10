@@ -1,4 +1,4 @@
-#include "thunk.h"
+#include "thunk_nojit.h"
 #include <lua.hpp>
 #include "../lua_compat.h"
 
@@ -20,11 +20,5 @@ void thunk_set(lua_State* L, void* key, intptr_t v) {
 thunk* thunk_create_hook(intptr_t dbg, intptr_t hook) {
     thunk* t = new thunk;
     t->data = (void*)hook;
-    return t;
-}
-
-thunk* thunk_create_panic(intptr_t dbg, intptr_t panic) {
-    thunk* t = new thunk;
-    t->data = (void*)panic;
     return t;
 }

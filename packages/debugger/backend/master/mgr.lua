@@ -1,7 +1,6 @@
-local json = require 'common.json'
 local proto = require 'common.protocol'
 local ev = require 'backend.event'
-local thread = require 'remotedebug.thread'
+local thread = require 'bee.thread'
 local stdio = require 'remotedebug.stdio'
 
 local redirect = {}
@@ -12,16 +11,18 @@ local initialized = false
 local stat = {}
 local queue = {}
 local masterThread
-local workers = {}
+local client = {}
+local maxThreadId = 0
+local threadChannel = {}
+local threadCatalog = {}
+local threadStatus = {}
+local threadName = {}
+local terminateDebuggeeCallback
 
-ev.on('thread', function(reason, threadId)
-    if reason == "started" then
-        workers[threadId] = assert(thread.channel("DbgWorker" .. threadId))
-        ev.emit('worker-ready', threadId)
-    elseif reason == "exited" then
-        workers[threadId] = nil
-    end
-end)
+local function genThreadId()
+    maxThreadId = maxThreadId + 1
+    return maxThreadId
+end
 
 local function event_in(data)
     local msg = proto.recv(data, stat)
@@ -40,12 +41,12 @@ local function event_close()
     if not initialized then
         return
     end
-    mgr.broadcastToWorker {
+    mgr.workerBroadcast {
         cmd = 'terminated',
     }
     ev.emit('close')
-    seq = 0
     initialized = false
+    seq = 0
     stat = {}
     queue = {}
 end
@@ -96,60 +97,145 @@ function mgr.initConfig(config)
     end
 end
 
-function mgr.sendToClient(pkg)
+function mgr.clientSend(pkg)
+    if not initialized then
+        return
+    end
     network.send(proto.send(pkg, stat))
 end
 
-function mgr.sendToWorker(w, pkg)
-    return workers[w]:push(assert(json.encode(pkg)))
+function mgr.workerSend(w, msg)
+    return threadChannel[w]:push(msg)
 end
 
-function mgr.broadcastToWorker(pkg)
-    local msg = assert(json.encode(pkg))
-    for _, channel in pairs(workers) do
+function mgr.workerBroadcast(msg)
+    for _, channel in pairs(threadChannel) do
         channel:push(msg)
     end
 end
 
+function mgr.workerBroadcastExclude(exclude, msg)
+    for w, channel in pairs(threadChannel) do
+        if w ~= exclude then
+            channel:push(msg)
+        end
+    end
+end
+
+function mgr.setThreadName(w, name)
+    threadName[w] = name
+end
+
+function mgr.workers()
+    return threadChannel
+end
+
 function mgr.threads()
     local t = {}
-    for w in pairs(workers) do
-        t[#t + 1] = w
+    for threadId, status in pairs(threadStatus) do
+        if status == "connect" then
+            t[#t + 1] = {
+                name = (threadName[threadId] or "Thread (${id})"):gsub("%$%{([^}]*)%}", {
+                    id = threadId
+                }),
+                id = threadId,
+            }
+        end
     end
+    table.sort(t, function (a, b)
+        return a.name < b.name
+    end)
     return t
 end
 
 function mgr.hasThread(w)
-    return workers[w] ~= nil
+    return threadChannel[w] ~= nil
 end
 
-local function updateOnce()
-    local threads = require 'backend.master.threads'
-    while true do
-        local ok, w, msg = masterThread:pop()
-        if not ok then
-            break
+function mgr.initWorker(WorkerIdent)
+    local workerChannel = ('DbgWorker(%s)'):format(WorkerIdent)
+    local threadId = genThreadId()
+    threadChannel[threadId] = assert(thread.channel(workerChannel))
+    threadCatalog[WorkerIdent] = threadId
+    threadStatus[threadId] = "disconnect"
+    threadName[threadId] = nil
+    ev.emit('worker-ready', threadId)
+end
+
+function mgr.setThreadStatus(threadId, status)
+    threadStatus[threadId] = status
+    if terminateDebuggeeCallback and status == "disconnect" then
+        for _, s in pairs(threadStatus) do
+            if s == "connect" then
+                return
+            end
         end
-        local _ = workers[w]
-        local pkg = assert(json.decode(msg))
-        if threads[pkg.cmd] then
-            threads[pkg.cmd](w, pkg)
+        terminateDebuggeeCallback()
+    end
+end
+
+function mgr.setTerminateDebuggeeCallback(callback)
+    for _, s in pairs(threadStatus) do
+        if s == "connect" then
+            terminateDebuggeeCallback = callback
+            return
         end
     end
+    callback()
+end
+
+function mgr.exitWorker(w)
+    threadChannel[w] = nil
+    for WorkerIdent, threadId in pairs(threadCatalog) do
+        if threadId == w then
+            threadCatalog[WorkerIdent] = nil
+        end
+    end
+    threadStatus[w] = nil
+    threadName[w] = nil
+end
+
+local function update_redirect()
     if redirect.stderr then
         local res = redirect.stderr:read(redirect.stderr:peek())
         if res then
             local event = require 'backend.master.event'
-            event.output('stderr', res)
+            event.output {
+                category = 'stderr',
+                output = res,
+            }
         end
     end
     if redirect.stdout then
         local res = redirect.stdout:read(redirect.stdout:peek())
         if res then
             local event = require 'backend.master.event'
-            event.output('stdout', res)
+            event.output {
+                category = 'stdout',
+                output = res,
+            }
         end
     end
+end
+
+local quit = false
+
+local function update_once()
+    local threadCMD = require 'backend.master.threads'
+    while true do
+        local ok, w, cmd, msg = masterThread:pop()
+        if not ok then
+            break
+        end
+        if cmd == "EXIT" then
+            quit = true
+            return
+        end
+        if threadCMD[cmd] then
+            threadCMD[cmd](threadCatalog[w] or w, msg)
+        end
+    end
+    update_redirect()
     if not network.update() then
         return true
     end
@@ -184,11 +270,19 @@ local function updateOnce()
 end
 
 function mgr.update()
-    while true do
-        if updateOnce() then
-            return
+    while not quit do
+        if update_once() then
+            thread.sleep(0.01)
         end
     end
+end
+
+function mgr.setClient(c)
+    client = c
+end
+
+function mgr.getClient()
+    return client
 end
 
 return mgr

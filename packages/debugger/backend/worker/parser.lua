@@ -13,21 +13,32 @@ local function getproto(content)
     return cl.f
 end
 
+local function nextline(proto, abs, currentline, pc)
+    local line = proto.lineinfo[pc]
+    if line == -128 then
+        return assert(abs[pc-1])
+    else
+        return currentline + line
+    end
+end
+
 local function getactivelines(proto)
     local l = {}
-    if version >= 504 then
-        local n = proto.linedefined
+    if version >= 0x54 then
+        local currentline = proto.linedefined
         local abs = {}
         for _, line in ipairs(proto.abslineinfo) do
             abs[line.pc] = line.line
         end
-        for i, line in ipairs(proto.lineinfo) do
-            if line == -128 then
-                n = assert(abs[i-1])
-            else
-                n = n + line
-            end
-            l[n] = true
+        local start = 1
+        if proto.is_vararg > 0 then
+            assert(proto.code[1] & 0x7F == 81) -- OP_VARARGPREP
+            currentline = nextline(proto, abs, currentline, 1)
+            start = 2
+        end
+        for pc = start, #proto.lineinfo do
+            currentline = nextline(proto, abs, currentline, pc)
+            l[currentline] = true
         end
     else
         for _, line in ipairs(proto.lineinfo) do

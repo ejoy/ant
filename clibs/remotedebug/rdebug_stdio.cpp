@@ -5,7 +5,7 @@
 
 lua_State* get_host(rlua_State *L);
 rlua_State* get_client(lua_State *L);
-int  event(rlua_State* cL, lua_State* hL, const char* name);
+int  event(rlua_State* cL, lua_State* hL, const char* name, int start);
 
 static int getIoOutput(lua_State* L) {
 #if LUA_VERSION_NUM >= 502
@@ -59,7 +59,7 @@ static int redirect_gc(rlua_State* L) {
 }
 
 static int redirect(rlua_State* L) {
-    const char* lst[] = {"stdin", "stdout", "stderr"};
+    const char* lst[] = {"stdin", "stdout", "stderr", NULL};
     remotedebug::std_fd type = (remotedebug::std_fd)(rluaL_checkoption(L, 1, "stdout", lst));
     switch (type) {
     case remotedebug::std_fd::STDIN:
@@ -98,15 +98,12 @@ static int callfunc(lua_State* L) {
 }
 
 static int redirect_print(lua_State* L) {
-	rlua_State *cL = get_client(L);
+    rlua_State *cL = get_client(L);
     if (cL) {
-        lua_pushnil(L);
-        lua_insert(L, 1);
-	    int ok = event(cL, L, "print");
+        int ok = event(cL, L, "print", 1);
         if (ok > 0) {
             return 0;
         }
-        lua_remove(L, 1);
     }
     return callfunc(L);
 }
@@ -117,7 +114,7 @@ static int redirect_f_write(lua_State* L) {
     if (ok) {
         rlua_State *cL = get_client(L);
         if (cL) {
-            int ok = event(cL, L, "iowrite");
+            int ok = event(cL, L, "iowrite", 2);
             if (ok > 0) {
                 lua_settop(L, 1);
                 return 1;
@@ -128,29 +125,39 @@ static int redirect_f_write(lua_State* L) {
 }
 
 static int redirect_io_write(lua_State* L) {
-	rlua_State *cL = get_client(L);
+    rlua_State *cL = get_client(L);
     if (cL) {
-        lua_pushnil(L);
-        lua_insert(L, 1);
-	    int ok = event(cL, L, "iowrite");
+        int ok = event(cL, L, "iowrite", 1);
         if (ok > 0) {
             getIoOutput(L);
             return 1;
         }
-        lua_remove(L, 1);
     }
     return callfunc(L);
+}
+
+static bool openhook(lua_State* L, bool enable, lua_CFunction f) {
+    if (enable) {
+        lua_pushcclosure(L, f, 1);
+        return true;
+    }
+    if (lua_tocfunction(L, -1) == f) {
+        if (lua_getupvalue(L, -1, 1)) {
+            lua_remove(L, -2);
+            return true;
+        }
+    }
+    lua_pop(L, 1);
+    return false;
 }
 
 static int open_print(rlua_State* L) {
     bool enable = rlua_toboolean(L, 1);
     lua_State* hL = get_host(L);
     lua_getglobal(hL, "print");
-    enable
-        ? lua_pushcclosure(hL, redirect_print, 1)
-        : (lua_getupvalue(hL, -1, 1)? lua_remove(hL, -2):(void)0)
-        ;
-    lua_setglobal(hL, "print");
+    if (openhook(hL, enable, redirect_print)) {
+        lua_setglobal(hL, "print");
+    }
     return 0;
 }
 
@@ -167,11 +174,9 @@ static int open_iowrite(rlua_State* L) {
                 lua_pushstring(hL, "write");
                 lua_pushvalue(hL, -1);
                 lua_rawget(hL, -3);
-                enable
-                    ? lua_pushcclosure(hL, redirect_f_write, 1)
-                    : (lua_getupvalue(hL, -1, 1)? lua_remove(hL, -2):(void)0)
-                    ;
-                lua_rawset(hL, -3);
+                if (openhook(hL, enable, redirect_f_write)) {
+                    lua_rawset(hL, -3);
+                }
                 lua_pop(hL, 1);
 #if LUA_VERSION_NUM >= 504
             }
@@ -186,11 +191,9 @@ static int open_iowrite(rlua_State* L) {
         lua_pushstring(hL, "write");
         lua_pushvalue(hL, -1);
         lua_rawget(hL, -3);
-        enable
-            ? lua_pushcclosure(hL, redirect_io_write, 1)
-            : (lua_getupvalue(hL, -1, 1)? lua_remove(hL, -2):(void)0)
-            ;
-        lua_rawset(hL, -3);
+        if (openhook(hL, enable, redirect_io_write)) {
+            lua_rawset(hL, -3);
+        }
     }
     lua_pop(hL, 1);
     return 0;

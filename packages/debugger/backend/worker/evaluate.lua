@@ -13,16 +13,16 @@ if not readfile then
     end
 end
 
-local eval_repl   = assert(rdebug.reffunc(readfile 'backend.worker.eval.repl'))
-local eval_watch  = assert(rdebug.reffunc(readfile 'backend.worker.eval.watch'))
-local eval_verify = assert(rdebug.reffunc(readfile 'backend.worker.eval.verify'))
-local eval_dump   = assert(rdebug.reffunc(readfile 'backend.worker.eval.dump'))
-local compat_dump = assert(load(readfile 'backend.worker.eval.dump'))
+local eval_readwrite = assert(rdebug.load(readfile 'backend.worker.eval.readwrite'))
+local eval_readonly  = assert(rdebug.load(readfile 'backend.worker.eval.readonly'))
+local eval_verify    = assert(rdebug.load(readfile 'backend.worker.eval.verify'))
+local eval_dump      = assert(rdebug.load(readfile 'backend.worker.eval.dump'))
+local compat_dump    = assert(load(readfile 'backend.worker.eval.dump'))
 
 local function run_repl(frameId, expression)
-    local res = table.pack(rdebug.watch(eval_repl, 'return ' .. expression, frameId))
+    local res = table.pack(rdebug.watch(eval_readwrite, 'return ' .. expression, frameId))
     if not res[1] then
-        res = table.pack(rdebug.watch(eval_repl, expression, frameId))
+        res = table.pack(rdebug.watch(eval_readwrite, expression, frameId))
         if not res[1] then
             return false, res[2]
         end
@@ -38,7 +38,7 @@ local function run_repl(frameId, expression)
 end
 
 local function run_watch(frameId, expression)
-    local res = table.pack(rdebug.watch(eval_watch, expression, frameId))
+    local res = table.pack(rdebug.watch(eval_readonly, expression, frameId))
     if not res[1] then
         return false, res[2]
     end
@@ -53,7 +53,7 @@ local function run_watch(frameId, expression)
 end
 
 local function run_hover(frameId, expression)
-    local ok, res = rdebug.watch(eval_watch, expression, frameId)
+    local ok, res = rdebug.watch(eval_readonly, expression, frameId)
     if not ok then
         return false, res
     end
@@ -64,7 +64,7 @@ local function run_hover(frameId, expression)
 end
 
 local function run_clipboard(frameId, expression)
-    local res = table.pack(rdebug.watch(eval_watch, expression, frameId))
+    local res = table.pack(rdebug.watch(eval_readonly, expression, frameId))
     if not res[1] then
         return false, res[2]
     end
@@ -100,8 +100,16 @@ function m.run(frameId, expression, context)
     return nil, ("unknown context `%s`"):format(context)
 end
 
-function m.eval(expression, level)
-    return rdebug.eval(eval_watch, expression, level or 0)
+function m.set(frameId, expression, value)
+    local ok, res = rdebug.watch(eval_readwrite, expression.."="..value, frameId)
+    if not ok then
+        return false, res
+    end
+    return run_watch(frameId, expression)
+end
+
+function m.eval(expression, level, symbol)
+    return rdebug.eval(eval_readonly, expression, level, symbol)
 end
 
 function m.verify(expression)

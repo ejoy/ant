@@ -1,9 +1,12 @@
 ﻿#include "rlua.h"
+#include "rdebug_cmodule.h"
+#include "rdebug_putenv.h"
+#include <stdlib.h>
 
 static int DEBUG_HOST = 0;	// host L in client VM
 static int DEBUG_CLIENT = 0;	// client L in host VM for hook
 
-int  event(rlua_State* cL, lua_State* hL, const char* name);
+int  event(rlua_State* cL, lua_State* hL, const char* name, int start);
 
 rlua_State *
 get_client(lua_State *L) {
@@ -48,7 +51,7 @@ static int
 lhost_clear(lua_State *L) {
 	rlua_State *cL = get_client(L);
 	if (cL) {
-		event(cL, L, "exit");
+		event(cL, L, "exit", 1);
 	}
 	clear_client(L);
 	return 0;
@@ -63,6 +66,8 @@ client_main(rlua_State *L) {
 	rlua_pushboolean(L, 1);
 	rlua_setfield(L, RLUA_REGISTRYINDEX, "LUA_NOENV");
 	rluaL_openlibs(L);
+	remotedebug::require_all(L);
+
 #if !defined(RLUA_DISABLE) || LUA_VERSION_NUM >= 504
 #	if !defined(LUA_GCGEN)
 #		define LUA_GCGEN 10
@@ -138,7 +143,7 @@ lhost_event(lua_State *L) {
 	if (!cL) {
 		return 0;
 	}
-	int ok = event(cL, L, luaL_checkstring(L, 1));
+	int ok = event(cL, L, luaL_checkstring(L, 1), 2);
 	if (ok < 0) {
 		return 0;
 	}
@@ -148,15 +153,33 @@ lhost_event(lua_State *L) {
 
 #if defined(_WIN32) && !defined(RLUA_DISABLE)
 #include <bee/utility/unicode_win.h>
-#include <bee/lua/binding.h>
+
+static std::string_view
+to_strview(lua_State* L, int idx) {
+    size_t len = 0;
+    const char* buf = luaL_checklstring(L, idx, &len);
+    return std::string_view(buf, len);
+}
 
 static int
 la2u(lua_State *L) {
-    std::string r = bee::a2u(bee::lua::to_strview(L, 1));
+    std::string r = bee::a2u(to_strview(L, 1));
     lua_pushlstring(L, r.data(), r.size());
     return 1;
 }
 #endif
+
+static int lsetenv(lua_State* L) {
+    const char* name = luaL_checkstring(L, 1);
+    const char* value = luaL_checkstring(L, 2);
+#if defined(_WIN32)
+    lua_pushfstring(L, "%s=%s", name, value);
+    remotedebug::putenv(lua_tostring(L, -1));
+#else
+    ::setenv(name, value, 1);
+#endif
+    return 0;
+}
 
 RLUA_FUNC
 int luaopen_remotedebug(lua_State *L) {
@@ -164,6 +187,7 @@ int luaopen_remotedebug(lua_State *L) {
 		{ "start", lhost_start },
 		{ "clear", lhost_clear },
 		{ "event", lhost_event },
+		{ "setenv", lsetenv },
 #if defined(_WIN32) && !defined(RLUA_DISABLE)
 		{ "a2u",   la2u },
 #endif

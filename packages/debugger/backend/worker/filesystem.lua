@@ -1,9 +1,8 @@
-local utility = require 'remotedebug.utility'
+local fs = require 'bee.filesystem'
+local has_unicode, unicode = pcall(require, 'bee.unicode')
 local ev = require 'backend.event'
-local rdebug = require 'remotedebug.visitor'
-local absolute = utility.fs_absolute
-local u2a = utility.u2a or function (...) return ... end
-local a2u = utility.a2u or function (...) return ... end
+local u2a = has_unicode and unicode.u2a or function (...) return ... end
+local a2u = has_unicode and unicode.a2u or function (...) return ... end
 
 local isWindows = package.config:sub(1,1) == "\\"
 local sourceFormat = isWindows and "path" or "linuxpath"
@@ -27,35 +26,11 @@ local function nativepath(s)
     return towsl(s)
 end
 
-local function init_searchpath(config, name)
-    if not config[name] then
-        return
-    end
-    local value = config[name]
-    if type(value) == 'table' then
-        local path = {}
-        for _, v in ipairs(value) do
-            if type(v) == "string" then
-                path[#path+1] = nativepath(v)
-            end
-        end
-        value = table.concat(path, ";")
-    else
-        value = nativepath(value)
-    end
-    local visitor = rdebug.field(rdebug.field(rdebug._G, "package"), name)
-    if not rdebug.assign(visitor, value) then
-        return
-    end
-end
-
 ev.on('initializing', function(config)
     sourceFormat = config.sourceFormat or (isWindows and "path" or "linuxpath")
     pathFormat = config.pathFormat or "path"
     useWSL = config.useWSL
     useUtf8 = config.sourceCoding == "utf8"
-    init_searchpath(config, 'path')
-    init_searchpath(config, 'cpath')
 end)
 
 local function normalize_posix(p)
@@ -104,16 +79,27 @@ function m.path_native(s)
     return pathFormat == "path" and s:lower() or s
 end
 
+local function is_absolute(path)
+    if sourceFormat == "path" then
+        return path:match "^%a:" ~= nil
+    else
+        return path:sub(1,1) == "/"
+    end
+end
+
+local function fs_absolute(path)
+    if is_absolute(path) then
+        return path
+    end
+    return fs.current_path():string() .. "/" .. path
+end
+
 function m.source_normalize(path)
     if sourceFormat == "string" then
         return path
     end
-    if sourceFormat == "path" then
-        local absolute_path = isWindows and absolute(path) or path
-        return table.concat(normalize_win32(absolute_path), '/')
-    end
-    local absolute_path = isWindows and path or absolute(path)
-    return table.concat(normalize_posix(absolute_path), '/')
+    local normalize = sourceFormat == "path" and normalize_win32 or normalize_posix
+    return table.concat(normalize(fs_absolute(path)), '/')
 end
 
 function m.path_normalize(path)
@@ -128,6 +114,9 @@ function m.path_relative(path, base)
         or (function(a, b) return a == b end)
     local rpath = normalize(path)
     local rbase = normalize(base)
+    if pathFormat == "path" and not equal(rpath[1], rbase[1]) then
+        return table.concat(rpath, '/')
+    end
     while #rpath > 0 and #rbase > 0 and equal(rpath[1], rbase[1]) do
         table.remove(rpath, 1)
         table.remove(rbase, 1)
@@ -138,6 +127,9 @@ function m.path_relative(path, base)
     local s = {}
     for _ in ipairs(rbase) do
         s[#s+1] = '..'
+    end
+    if #s == 0 then
+        s[#s+1] = '.'
     end
     for _, e in ipairs(rpath) do
         s[#s+1] = e
@@ -151,6 +143,11 @@ function m.path_filename(path)
     return paths[#paths]
 end
 
+function m.program_path()
+    return fs.exe_path():string()
+end
+
+m.nativepath = nativepath
 m.a2u = a2u
 
 return m

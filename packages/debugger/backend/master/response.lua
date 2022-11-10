@@ -3,7 +3,7 @@ local mgr = require 'backend.master.mgr'
 local response = {}
 
 function response.error(req, msg)
-    mgr.sendToClient {
+    mgr.clientSend {
         type = 'response',
         seq = mgr.newSeq(),
         command = req.command,
@@ -14,7 +14,7 @@ function response.error(req, msg)
 end
 
 function response.success(req, body)
-    mgr.sendToClient {
+    mgr.clientSend {
         type = 'response',
         seq = mgr.newSeq(),
         command = req.command,
@@ -29,7 +29,7 @@ function response.initialize(req)
         mgr.newSeq()
         return
     end
-    mgr.sendToClient {
+    mgr.clientSend {
         type = 'response',
         seq = mgr.newSeq(),
         command = req.command,
@@ -40,21 +40,14 @@ function response.initialize(req)
 end
 
 function response.threads(req, threads)
-    local thds = {}
-    for _, id in ipairs(threads) do
-        thds[#thds + 1] = {
-            name = ('Thread %d'):format(id),
-            id = id,
-        }
-    end
-    mgr.sendToClient {
+    mgr.clientSend {
         type = 'response',
         seq = mgr.newSeq(),
         command = req.command,
         request_seq = req.seq,
         success = true,
         body = {
-            threads = thds
+            threads = threads
         },
     }
 end

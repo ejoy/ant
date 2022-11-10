@@ -61,11 +61,15 @@ local function create_bounding(bounding)
     end
 end
 
-local function load_mem(m, pp)
+local function parent_path(v)
+    return v:match("^(.+)/[^/]*$")
+end
+
+local function load_mem(m, filename)
     local binname = m[1]
     assert(type(binname) == "string" and binname:match "%.[iv]bbin")
 
-    local data, err = fastio.readall((pp / binname):string())
+    local data, err = fastio.readall(cr.compile(parent_path(filename) .. "/" .. binname):string())
     if not data then
         error(("read file failed:%s, error:%s"):format(binname, err))
     end
@@ -76,13 +80,11 @@ local function loader(filename)
     local local_filename = cr.compile(filename)
     local mesh = datalist.parse(fastio.readall_s(local_filename:string()))
 
-    local pp = local_filename:parent_path()
-
     local vb = assert(mesh.vb)
-    load_mem(vb.memory, pp)
+    load_mem(vb.memory, filename)
     local ib = mesh.ib
     if ib then
-        load_mem(ib.memory, pp)
+        load_mem(ib.memory, filename)
     end
     create_bounding(mesh.bounding)
     return init(mesh)

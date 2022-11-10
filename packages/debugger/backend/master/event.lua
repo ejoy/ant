@@ -2,7 +2,7 @@ local mgr = require 'backend.master.mgr'
 local event = {}
 
 function event.initialized()
-    mgr.sendToClient {
+    mgr.clientSend {
         type = 'event',
         seq = mgr.newSeq(),
         event = 'initialized',
@@ -10,7 +10,7 @@ function event.initialized()
 end
 
 function event.capabilities()
-    mgr.sendToClient {
+    mgr.clientSend {
         type = 'event',
         seq = mgr.newSeq(),
         event = 'capabilities',
@@ -20,46 +20,35 @@ function event.capabilities()
     }
 end
 
-function event.stopped(threadId, msg)
-    mgr.sendToClient {
+function event.stopped(body)
+    mgr.clientSend {
         type = 'event',
         seq = mgr.newSeq(),
         event = 'stopped',
-        body = {
-            reason = msg,
-            threadId = threadId,
-        }
+        body = body
     }
 end
 
-function event.breakpoint(reason, breakpoint)
-    mgr.sendToClient {
+function event.breakpoint(body)
+    mgr.clientSend {
         type = 'event',
         seq = mgr.newSeq(),
         event = 'breakpoint',
-        body = {
-            reason = reason,
-            breakpoint = breakpoint,
-        }
+        body = body
     }
 end
 
-function event.output(category, output, source, line)
-    mgr.sendToClient {
+function event.output(body)
+    mgr.clientSend {
         type = 'event',
         seq = mgr.newSeq(),
         event = 'output',
-        body = {
-            category = category,
-            output = output,
-            source = source,
-            line = line,
-        }
+        body = body
     }
 end
 
 function event.terminated()
-    mgr.sendToClient {
+    mgr.clientSend {
         type = 'event',
         seq = mgr.newSeq(),
         event = 'terminated',
@@ -69,27 +58,51 @@ function event.terminated()
     }
 end
 
-function event.loadedSource(reason, source)
-    mgr.sendToClient {
+function event.loadedSource(body)
+    mgr.clientSend {
         type = 'event',
         seq = mgr.newSeq(),
         event = 'loadedSource',
-        body = {
-            reason = reason,
-            source = source,
-        }
+        body = body
     }
 end
 
-function event.thread(reason, threadId)
-    mgr.sendToClient {
+function event.thread(body)
+    mgr.clientSend {
         type = 'event',
         seq = mgr.newSeq(),
         event = 'thread',
-        body = {
-            reason = reason,
-            threadId = threadId,
-        }
+        body = body
+    }
+end
+
+function event.invalidated(body)
+    if not mgr.getClient().supportsInvalidatedEvent then
+        return
+    end
+    mgr.clientSend {
+        type = 'event',
+        seq = mgr.newSeq(),
+        event = 'invalidated',
+        body = body
+    }
+end
+
+function event.continued(body)
+    mgr.clientSend {
+        type = 'event',
+        seq = mgr.newSeq(),
+        event = 'continued',
+        body = body
+    }
+end
+
+function event.memory(body)
+    mgr.clientSend {
+        type = 'event',
+        seq = mgr.newSeq(),
+        event = 'memory',
+        body = body
     }
 end
 
