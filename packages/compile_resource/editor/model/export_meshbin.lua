@@ -206,6 +206,19 @@ local LAYOUT_NAMES<const> = {
 
 local jointidx_fmt<const> = "HHHH"
 
+local function unpack_vec(v, l)
+	local t = l:sub(6, 6)
+	local n = tonumber(l:sub(2, 2))
+	if t == 'f' then
+		local fmt = ('f'):rep(n)
+		local vv = {fmt:unpack(v)}
+		vv[n+1] = nil -- remove unpack offset
+		return vv, fmt
+	end
+
+	assert(("not support layout:%s, type:%s must be 'float'"):format(l, t))
+end
+
 -- change from right hand to left hand
 -- left hand define as: 
 -- 		x: -left, +right
@@ -215,22 +228,22 @@ local jointidx_fmt<const> = "HHHH"
 -- 		x: -left, +right
 -- 		y: +up, -down
 --		z: +point2user, -point2screen
-local function r2l_vec(v, l, pack)
-	local t = l:sub(6, 6)
-	local n = tonumber(l:sub(2, 2))
-	if t == 'f' and n > 2 then
-		local fmt = ('f'):rep(n)
-		if pack == false then
-			local x,y,z,w = fmt:unpack(v)
-			return fmt:pack(x, y, -z, w)
-		else 
-			local p = {fmt:unpack(v)}
-			p[3] = -p[3]
-			return math3d.vector(p[1], p[2], p[3])			
-		end
+local function r2l_vec_v(v, l)
+	local vv, fmt = unpack_vec(v, l)
+	if vv[3] then
+		vv[3] = -vv[3]
 	end
+	return vv, fmt
+end
 
-	assert(("not support layout:%s, type:%s must be 'float', attribute number:%d should be large than 2"):format(l, t, n))
+local function r2l_vec(v, l)
+	local vv, fmt = r2l_vec_v(v, l)
+	return fmt:pack(table.unpack(vv))
+end
+
+local function r2l_math3dvec(v, l)
+	local vv = r2l_vec_v(v, l)
+	return math3d.vector(vv)
 end
 
 local function create_add_tanuv(tan_t, idx, inc1, inc2, inc3)
@@ -403,16 +416,13 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 			   local t = l:sub(1, 1)
 	
 			   if t == 'p' then
-				   v = r2l_vec(v, l, true)
-				   vertex.p = v
+				   vertex.p = r2l_math3dvec(v, l)
 			   elseif t == 't' then
-				   local fmt = ('f'):rep(2)
-				   v = {fmt:unpack(v)}
-				   vertex.u = v[1]
-				   vertex.v = v[2]
+					local uv = unpack_vec(v, l)
+				   vertex.u = uv[1]
+				   vertex.v = uv[2]
 			   elseif t == 'n' then
-				   v = r2l_vec(v, l, true)
-				   vertex.n = v
+				   vertex.n = r2l_math3dvec(v, l)
 			   end
 		   end 
 		   vb_table[#vb_table + 1] = vertex
@@ -430,15 +440,12 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 			local t = l:sub(1, 1)
 
 			if t == 'p' or t == 'b' then
-				v = r2l_vec(v, l, false)
-				buffer[#buffer+1] = v
+				buffer[#buffer+1] = r2l_vec(v, l)
 			elseif t == 'n' then
-				if layout_n == true and layout_t == true then
-					v  = r2l_vec(v, l, true)
-					normal = v
-				else		
-					v = r2l_vec(v, l, false)
-					buffer[#buffer+1] = v
+				if layout_n and layout_t then
+					normal = r2l_math3dvec(v, l)
+				else
+					buffer[#buffer+1] = r2l_vec(v, l)
 				end	
 			elseif t == 'i' then
 				if l:sub(6, 6) == 'u' then
@@ -447,8 +454,7 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 				end
 				buffer[#buffer+1] = v
 			elseif t == 'T' then
-					v  = r2l_vec(v, l, true)
-					tangent = v
+				tangent = r2l_math3dvec(v, l)
 			else
 				buffer[#buffer+1] = v
 			end
