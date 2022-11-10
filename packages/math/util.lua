@@ -75,7 +75,7 @@ local ZERO_THRESHOLD<const> = 10e-6
 
 function util.iszero_math3dvec(v, threshold)
 	threshold = threshold or ZERO_THRESHOLD
-	return iszero_(threshold, math3d.index(1, 2, 3, 4))
+	return iszero_(threshold, math3d.index(v, 1, 2, 3, 4))
 end
 
 function util.iszero(n, threshold)
