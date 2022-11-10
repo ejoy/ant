@@ -1,27 +1,6 @@
-#include "thunk.h"
+#include "thunk_jit.h"
 #include <memory>
-#include <sys/mman.h>
 #include <memory.h>
-
-bool thunk::create(size_t s) {
-	data = mmap(NULL, s, PROT_READ | PROT_WRITE | PROT_EXEC, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-	if (!data) {
-		size = 0;
-		return false;
-	}
-	size = s;
-	return true;
-}
-
-bool thunk::write(void* buf) {
-	memcpy(data, buf, size);
-	return true;
-}
-
-thunk::~thunk() {
-	if (!data) return;
-	munmap(data, size);
-}
 
 thunk* thunk_create_hook(intptr_t dbg, intptr_t hook)
 {
@@ -52,28 +31,24 @@ thunk* thunk_create_hook(intptr_t dbg, intptr_t hook)
 	return t.release();
 }
 
-thunk* thunk_create_panic(intptr_t dbg, intptr_t panic)
+thunk* thunk_create_allocf(intptr_t dbg, intptr_t allocf)
 {
-	// int __cedel thunk_panic(lua_State* L)
+	// void* __cedel thunk_allocf(void *ud, void *ptr, size_t osize, size_t nsize)
 	// {
-	//    `panic`(`dbg`, L);
-	//     return `undefinition`;
+	//     return `allocf`(`dbg`, ptr, osize, nsize);
 	// }
 	static unsigned char sc[] = {
-		0x50,                                                       // push rax
-		0x48, 0x89, 0xfe,                                           // mov rsi, rdi
 		0x48, 0xbf, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rdi, dbg
-		0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rax, panic
+		0x48, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rax, hook
 		0xff, 0xd0,                                                 // call rax
-		0x58,                                                       // pop rax
 		0xc3,                                                       // ret
 	};
 	std::unique_ptr<thunk> t(new thunk);
 	if (!t->create(sizeof(sc))) {
 		return 0;
 	}
-	memcpy(sc + 6, &dbg, sizeof(dbg));
-	memcpy(sc + 16, &panic, sizeof(panic));
+	memcpy(sc + 2, &dbg, sizeof(dbg));
+	memcpy(sc + 12, &allocf, sizeof(allocf));
 	if (!t->write(&sc)) {
 		return 0;
 	}

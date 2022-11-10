@@ -1,3 +1,4 @@
+local source = require 'backend.worker.source'
 local ev = require 'backend.event'
 
 local foreground
@@ -90,6 +91,23 @@ local function vtmode(text)
     return text
 end
 
-return function (msg, src, line)
-    ev.emit('output', 'stdout', vtmode(msg), src, line)
+return function (message, info)
+    local src = source.create(info.source)
+    if source.valid(src) then
+        ev.emit('output',  {
+            category = 'stdout',
+            output = vtmode(message),
+            source = {
+                name = src.name,
+                path = src.path,
+                sourceReference = src.sourceReference,
+            },
+            line = source.line(src, info.currentline),
+        })
+    else
+        ev.emit('output',  {
+            category = 'stdout',
+            output = vtmode(message),
+        })
+    end
 end

@@ -1,5 +1,4 @@
 local rdebug = require 'remotedebug.visitor'
-local json = require 'common.json'
 local variables = require 'backend.worker.variables'
 local source = require 'backend.worker.source'
 local breakpoint = require 'backend.worker.breakpoint'
@@ -10,20 +9,22 @@ local luaver = require 'backend.worker.luaver'
 local ev = require 'backend.event'
 local hookmgr = require 'remotedebug.hookmgr'
 local stdio = require 'remotedebug.stdio'
-local thread = require 'remotedebug.thread'
-local err = thread.channel 'errlog'
+local thread = require 'bee.thread'
+local fs = require 'backend.worker.filesystem'
+local log = require 'common.log'
 
 local initialized = false
+local suspend = false
 local info = {}
 local state = 'running'
 local stopReason = 'step'
-local exceptionFilters = {}
-local exceptionMsg = ''
-local exceptionTrace = ''
-local exceptionLevel = 0
+local currentException = {
+    message = '',
+    trace = '',
+}
 local outputCapture = {}
 local noDebug = false
-local openUpdate = false
+local autoUpdate = true
 local coroutineTree = {}
 local stackFrame = {}
 local skipFrame = 0
@@ -31,9 +32,12 @@ local baseL
 
 local CMD = {}
 
-thread.newchannel ('DbgWorker' .. thread.id)
+local WorkerIdent = tostring(thread.id)
+local WorkerChannel = ('DbgWorker(%s)'):format(WorkerIdent)
+
+thread.newchannel(WorkerChannel)
 local masterThread = thread.channel 'DbgMaster'
-local workerThread = thread.channel ('DbgWorker' .. thread.id)
+local workerThread = thread.channel (WorkerChannel)
 
 local function workerThreadUpdate(timeout)
     while true do
@@ -41,50 +45,47 @@ local function workerThreadUpdate(timeout)
         if not ok then
             break
         end
-        local ok, e = xpcall(function()
-            local pkg = json.decode(msg)
-            local f = CMD[pkg.cmd]
+        local ok, err = xpcall(function()
+            local f = CMD[msg.cmd]
             if f then
-                f(pkg)
+                f(msg)
             end
         end, debug.traceback)
         if not ok then
-            err:push(e)
+            log.error("ERROR:" .. err)
         end
     end
 end
 
-local function sendToMaster(msg)
-	masterThread:push(thread.id, assert(json.encode(msg)))
+local function sendToMaster(cmd)
+    return function (msg)
+        masterThread:push(WorkerIdent, cmd, msg)
+    end
 end
 
 ev.on('breakpoint', function(reason, bp)
-    sendToMaster {
-        cmd = 'eventBreakpoint',
+    sendToMaster 'eventBreakpoint' {
         reason = reason,
         breakpoint = bp,
     }
 end)
 
-ev.on('output', function(category, output, source, line)
-    sendToMaster {
-        cmd = 'eventOutput',
-        category = category,
-        output = output,
-        source = source and {
-            name = source.name,
-            path = source.path,
-            sourceReference = source.sourceReference,
-        } or nil,
-        line = line,
-    }
+ev.on('output', function(body)
+    sendToMaster 'eventOutput' (body)
 end)
 
 ev.on('loadedSource', function(reason, s)
-    sendToMaster {
-        cmd = 'loadedSource',
+    sendToMaster 'eventLoadedSource' {
         reason = reason,
         source = source.output(s)
+    }
+end)
+
+ev.on('memory', function(memoryReference, offset, count)
+    sendToMaster 'eventMemory' {
+        memoryReference = memoryReference,
+        offset = offset,
+        count = count,
     }
 end)
 
@@ -94,10 +95,12 @@ end)
 --    for i = 1, n do
 --        t[i] = tostring(select(i, ...))
 --    end
---    ev.emit('output', 'stderr', table.concat(t, '\t')..'\n')
+--    ev.emit('output', {
+--        category = 'stderr',
+--        output = table.concat(t, '\t')..'\n',
+--    })
 --end
 
---local log = require 'common.log'
 --print = log.info
 
 local function cleanFrame()
@@ -112,21 +115,32 @@ end
 
 function CMD.initialized()
     initialized = true
+    suspend = false
+    sendToMaster 'eventThread' {
+        reason = 'started',
+    }
 end
 
-function CMD.terminated()
+function CMD.disconnect()
     if initialized then
         initialized = false
         state = 'running'
         ev.emit('terminated')
-        sendToMaster {
-            cmd = 'eventThread',
-            reason = 'exited',
+        sendToMaster 'eventThread' {
+            reason = 'exited'
         }
     end
 end
 
+function CMD.suspend()
+    suspend = true
+end
+
 local function getFuncName(depth)
+    local funcname = traceback.pushglobalfuncname(info.func)
+    if funcname then
+        return funcname
+    end
     if info.what == 'main' then
         return '(main)'
     end
@@ -169,8 +183,8 @@ end
 
 local function stackTrace(res, coid, start, levels)
     for depth = start, start + levels - 1 do
-        if not rdebug.getinfo(depth, "Sln", info) then
-            return depth - start
+        if not rdebug.getinfo(depth, "Slnf", info) then
+            return true, depth - start
         end
         local r = {
             id = (coid << 16) | depth,
@@ -179,13 +193,14 @@ local function stackTrace(res, coid, start, levels)
             column = 0,
         }
         if info.what ~= 'C' then
-            r.line = info.currentline
             r.column = 1
             local src = source.create(info.source)
             if source.valid(src) then
+                r.line = source.line(src, info.currentline)
                 r.source = source.output(src)
                 r.presentationHint = 'normal'
             else
+                r.line = info.currentline
                 r.presentationHint = 'label'
             end
         else
@@ -193,38 +208,23 @@ local function stackTrace(res, coid, start, levels)
         end
         res[#res + 1] = r
     end
-    return levels
+    return false, levels
 end
 
-local function calcStackLevel()
-    if stackFrame.total then
-        return
-    end
-    local n = 0
-    local L = baseL
-    repeat
-        hookmgr.sethost(L)
-        local sl = hookmgr.stacklevel()
-        local curL = L
-        stackFrame[#stackFrame+1] = curL
-        L = coroutineTree[curL]
-        if not L then
-            for depth = sl-1, 0, -1 do
-                if not rdebug.getinfo(depth, "S", info) or info.what ~= "C" then
-                    break
-                end
-                sl = sl - 1
-            end
-            if skipFrame > 0 then
-                skipFrame = math.min(sl, skipFrame)
-                sl = sl - skipFrame
-            end
+local function skipCFunction(res)
+    for i = #res, 1, -1 do
+        if res[i].presentationHint ~= "label" or res[i].name ~= "(C ?)" then
+            break
         end
-        n = n + sl
-        stackFrame[curL] = sl
-    until not L
-    hookmgr.sethost(baseL)
-    stackFrame.total = n
+        res[i] = nil
+    end
+end
+
+local function coroutineFrom(L)
+    if hookmgr.coroutine_from then
+        return coroutineTree[L] or hookmgr.coroutine_from(L)
+    end
+    return coroutineTree[L]
 end
 
 function CMD.stackTrace(pkg)
@@ -240,71 +240,79 @@ function CMD.stackTrace(pkg)
         cleanFrame()
     end
 
-    calcStackLevel()
-
-    if start + levels > stackFrame.total then
-        levels = stackFrame.total - start
-    end
-
+    start = start + skipFrame
     local L = baseL
     local coroutineId = 0
     repeat
         hookmgr.sethost(L)
         local curL = L
-        L = coroutineTree[curL]
-        if start > stackFrame[curL] then
-            start = start - stackFrame[curL]
-        else
-            if not L then
-                start = start + skipFrame
-            end
-            local n = stackTrace(res, coroutineId, start, levels)
-            if levels == n then
+        L = coroutineFrom(curL)
+        if stackFrame[curL] == nil then
+            local finsh, n = stackTrace(res, coroutineId, start, levels)
+            if not finsh then
                 break
             end
+            if not L then
+                skipCFunction(res)
+                break
+            end
+            stackFrame[curL] = start + n
             start = 0
             levels = levels - n
+        elseif start > stackFrame[curL] then
+            start = start - stackFrame[curL]
         end
         coroutineId = coroutineId + 1
     until (not L or levels <= 0)
     hookmgr.sethost(baseL)
 
-    sendToMaster {
-        cmd = 'stackTrace',
+    sendToMaster 'stackTrace' {
         command = pkg.command,
         seq = pkg.seq,
         success = true,
-        stackFrames = res,
-        totalFrames = stackFrame.total,
+        body = {
+            stackFrames = res,
+            totalFrames = 0x10000,
+        }
     }
 end
 
 function CMD.source(pkg)
-    sendToMaster {
-        cmd = 'source',
+    sendToMaster 'source' {
         command = pkg.command,
         seq = pkg.seq,
         content = source.getCode(pkg.sourceReference),
     }
 end
 
+local function findFrame(id)
+    local L = baseL
+    for _ = 1, id - 1 do
+        if not L then
+            return
+        end
+        L = coroutineFrom(L)
+    end
+    return L
+end
+
 function CMD.scopes(pkg)
     local coid = (pkg.frameId >> 16) + 1
     local depth = pkg.frameId & 0xFFFF
-    hookmgr.sethost(assert(stackFrame[coid]))
-    sendToMaster {
-        cmd = 'scopes',
+    hookmgr.sethost(assert(findFrame(coid)))
+    sendToMaster 'scopes' {
         command = pkg.command,
         seq = pkg.seq,
-        scopes = variables.scopes(depth),
+        body = {
+            scopes = variables.scopes(depth)
+        }
     }
 end
 
 function CMD.variables(pkg)
     local vars, err = variables.extand(pkg.valueId, pkg.filter, pkg.start, pkg.count)
     if not vars then
-        sendToMaster {
-            cmd = 'variables',
+        sendToMaster 'variables' {
             command = pkg.command,
             seq = pkg.seq,
             success = false,
@@ -312,20 +320,20 @@ function CMD.variables(pkg)
         }
         return
     end
-    sendToMaster {
-        cmd = 'variables',
+    sendToMaster 'variables' {
         command = pkg.command,
         seq = pkg.seq,
         success = true,
-        variables = vars,
+        body = {
+            variables = vars
+        }
     }
 end
 
 function CMD.setVariable(pkg)
     local var, err = variables.set(pkg.valueId, pkg.name, pkg.value)
     if not var then
-        sendToMaster {
-            cmd = 'setVariable',
+        sendToMaster 'setVariable' {
             command = pkg.command,
             seq = pkg.seq,
             success = false,
@@ -333,22 +341,60 @@ function CMD.setVariable(pkg)
         }
         return
     end
-    sendToMaster {
-        cmd = 'setVariable',
+    sendToMaster 'setVariable' {
         command = pkg.command,
         seq = pkg.seq,
         success = true,
-        value = var.value,
-        type = var.type,
+        body = {
+            value = var.value,
+            type = var.type,
+        }
     }
 end
 
-function CMD.evaluate(pkg)
+function CMD.readMemory(pkg)
+    local res, err = variables.readMemory(pkg.memoryReference, pkg.offset, pkg.count)
+    if not res then
+        sendToMaster 'readMemory' {
+            command = pkg.command,
+            seq = pkg.seq,
+            success = false,
+            message = err,
+        }
+        return
+    end
+    sendToMaster 'readMemory' {
+        command = pkg.command,
+        seq = pkg.seq,
+        success = true,
+        body = res
+    }
+end
+
+function CMD.writeMemory(pkg)
+    local res, err = variables.writeMemory(pkg.memoryReference, pkg.offset, pkg.data, pkg.allowPartial)
+    if not res then
+        sendToMaster 'writeMemory' {
+            command = pkg.command,
+            seq = pkg.seq,
+            success = false,
+            message = err,
+        }
+        return
+    end
+    sendToMaster 'writeMemory' {
+        command = pkg.command,
+        seq = pkg.seq,
+        success = true,
+        body = res
+    }
+end
+
+function CMD.setExpression(pkg)
     local depth = pkg.frameId & 0xFFFF
-    local ok, result = evaluate.run(depth, pkg.expression, pkg.context)
+    local ok, result = evaluate.set(depth, pkg.expression, pkg.value)
     if not ok then
-        sendToMaster {
-            cmd = 'evaluate',
+        sendToMaster 'setExpression' {
             command = pkg.command,
             seq = pkg.seq,
             success = false,
@@ -356,8 +402,27 @@ function CMD.evaluate(pkg)
         }
         return
     end
-    sendToMaster {
-        cmd = 'evaluate',
+    sendToMaster 'setExpression' {
+        command = pkg.command,
+        seq = pkg.seq,
+        success = true,
+        body = result
+    }
+end
+
+function CMD.evaluate(pkg)
+    local depth = pkg.frameId & 0xFFFF
+    local ok, result = evaluate.run(depth, pkg.expression, pkg.context)
+    if not ok then
+        sendToMaster 'evaluate' {
+            command = pkg.command,
+            seq = pkg.seq,
+            success = false,
+            message = result,
+        }
+        return
+    end
+    sendToMaster 'evaluate' {
         command = pkg.command,
         seq = pkg.seq,
         success = true,
@@ -377,24 +442,19 @@ function CMD.setFunctionBreakpoints(pkg)
 end
 
 function CMD.setExceptionBreakpoints(pkg)
-    exceptionFilters = {}
-    for _, filter in ipairs(pkg.filters) do
-        exceptionFilters[filter] = true
-    end
-    if hookmgr.exception_open then
-        hookmgr.exception_open(next(exceptionFilters) ~= nil)
-    end
+    breakpoint.setExceptionBreakpoints(pkg.arguments)
 end
 
 function CMD.exceptionInfo(pkg)
-    sendToMaster {
-        cmd = 'exceptionInfo',
+    sendToMaster 'exceptionInfo' {
         command = pkg.command,
         seq = pkg.seq,
-        breakMode = 'always',
-        exceptionId = exceptionMsg,
-        details = {
-            stackTrace = exceptionTrace,
+        body = {
+            breakMode = 'always',
+            exceptionId = currentException.message,
+            details = {
+                stackTrace = currentException.trace,
+            }
         }
     }
 end
@@ -443,20 +503,55 @@ end
 
 function CMD.restartFrame()
     cleanFrame()
-    sendToMaster {
-        cmd = 'eventStop',
+    sendToMaster 'eventStop' {
         reason = 'restart',
     }
 end
 
-local function runLoop(reason, text, level)
+function CMD.setSearchPath(pkg)
+    local function set_search_path(name)
+        if not pkg[name] then
+            return
+        end
+        local value = pkg[name]
+        if type(value) == 'table' then
+            local path = {}
+            for _, v in ipairs(value) do
+                if type(v) == "string" then
+                    path[#path+1] = fs.nativepath(v)
+                end
+            end
+            value = table.concat(path, ";")
+        else
+            value = fs.nativepath(value)
+        end
+        local visitor = rdebug.field(rdebug.field(rdebug._G, "package"), name)
+        if not rdebug.assign(visitor, value) then
+            return
+        end
+    end
+    set_search_path "path"
+    set_search_path "cpath"
+end
+
+function CMD.customRequestShowIntegerAsDec()
+    variables.showIntegerAsDec()
+    sendToMaster 'eventInvalidated' {
+        areas = "variables",
+    }
+end
+
+function CMD.customRequestShowIntegerAsHex()
+    variables.showIntegerAsHex()
+    sendToMaster 'eventInvalidated' {
+        areas = "variables",
+    }
+end
+
+local function runLoop(reason, level)
     baseL = hookmgr.gethost()
     --TODO: 只在lua栈帧时需要text？
-    sendToMaster {
-        cmd = 'eventStop',
-        reason = reason,
-        text = text,
-    }
+    sendToMaster 'eventStop' (reason)
     skipFrame = level or 0
 
     while true do
@@ -474,33 +569,47 @@ local function event_breakpoint(src, line)
         hookmgr.break_closeline()
         return
     end
-    local bp = breakpoint.find(src, line)
+    local bp = breakpoint.hit_bp(src, source.line(src, line))
     if bp then
-        if breakpoint.exec(bp) then
-            state = 'stopped'
-            runLoop 'breakpoint'
-            return true
-        end
+        state = 'stopped'
+        runLoop {
+            reason = 'breakpoint',
+            hitBreakpointIds = {bp.id}
+        }
+        return true
+    end
+end
+
+local function debuggeeReady()
+    while suspend do
+        workerThreadUpdate(0.01)
+    end
+    if initialized then
+        return true
     end
 end
 
 function event.bp(line)
-    if not initialized then return end
+    if not debuggeeReady() then return end
     rdebug.getinfo(0, "S", info)
     local src = source.create(info.source)
     event_breakpoint(src, line)
 end
 
 function event.funcbp(func)
-    if not initialized then return end
-    if breakpoint.hit_funcbp(func) then
+    if not debuggeeReady() then return end
+    local bp = breakpoint.hit_funcbp(func)
+    if bp then
         state = 'stopped'
-        runLoop 'function breakpoint'
+        runLoop {
+            reason = 'function breakpoint',
+            hitBreakpointIds = {bp.id}
+        }
     end
 end
 
 function event.step(line)
-    if not initialized then return end
+    if not debuggeeReady() then return end
     rdebug.getinfo(0, "S", info)
     local src = source.create(info.source)
     if event_breakpoint(src, line) then
@@ -518,12 +627,14 @@ function event.step(line)
         hookmgr.step_cancel()
     end
     if state == 'stopped' then
-        runLoop(stopReason)
+        runLoop {
+            reason = stopReason
+        }
     end
 end
 
 function event.newproto(proto, level)
-    if not initialized then return end
+    if not debuggeeReady() then return end
     rdebug.getinfo(level, "S", info)
     local src = source.create(info.source)
     if not source.valid(src) then
@@ -532,119 +643,145 @@ function event.newproto(proto, level)
     return breakpoint.newproto(proto, src, info.linedefined.."-"..info.lastlinedefined)
 end
 
-local function getEventArgs(i)
-    local name, value = rdebug.getlocal(1, -i)
-    if name == nil then
-        return
-    end
-    return rdebug.value(value)
-end
-
-local function pairsEventArgs()
-    local max = rdebug.getstack()
-    local n = 1
-    return function()
-        n = n + 1
-        if n > max then
-            return
-        end
-        return n, rdebug.getstack(n)
-    end
-end
-
-local function getExceptionType()
-    local pcall = rdebug.value(rdebug.fieldv(rdebug._G, 'pcall'))
-    local xpcall = rdebug.value(rdebug.fieldv(rdebug._G, 'xpcall'))
-    local level = 1
-    while true do
-        local f = rdebug.getfunc(level)
-        if f == nil then
-            break
-        end
-        f = rdebug.value(f)
-        if f == pcall then
-            return 'pcall'
-        end
-        if f == xpcall then
-            return 'xpcall'
-        end
-        level = level + 1
-    end
-    return 'lua_pcall'
-end
-
 function event.update()
+    debuggeeReady()
     workerThreadUpdate()
 end
 
-function event.print()
-    if not initialized then return end
+function event.autoUpdate(flag)
+    autoUpdate = flag
+    hookmgr.update_open(not noDebug and autoUpdate)
+end
+
+function event.print(...)
+    if not debuggeeReady() then return end
     local res = {}
-    for _, arg in pairsEventArgs() do
-        res[#res + 1] = variables.tostring(arg)
+    local args = table.pack(...)
+    for i = 1, args.n do
+        res[#res + 1] = variables.tostring(args[i])
     end
     res = table.concat(res, '\t') .. '\n'
     rdebug.getinfo(1, "Sl", info)
-    local src = source.create(info.source)
-    if source.valid(src) then
-        stdout(res, src, info.currentline)
-    else
-        stdout(res)
-    end
+    stdout(res, info)
     return true
 end
 
-function event.iowrite()
-    if not initialized then return end
+function event.iowrite(...)
+    if not debuggeeReady() then return end
     local res = {}
-    for _, arg in pairsEventArgs() do
-        res[#res + 1] = variables.tostring(arg)
+    local args = table.pack(...)
+    for i = 1, args.n do
+        res[#res + 1] = variables.tostring(args[i])
     end
     res = table.concat(res, '\t')
     rdebug.getinfo(1, "Sl", info)
-    local src = source.create(info.source)
-    if source.valid(src) then
-        stdout(res, src, info.currentline)
-    else
-        stdout(res)
-    end
+    stdout(res, info)
     return true
 end
 
-function event.panic(msg)
-    if not initialized then return end
-    if not exceptionFilters['lua_panic'] then
-        return
-    end
-    exceptionMsg, exceptionTrace, exceptionLevel = traceback(tostring(msg))
-    state = 'stopped'
-    runLoop('exception', exceptionMsg, exceptionLevel)
+local ERREVENT_ERRRUN    <const> = 0x02
+local ERREVENT_ERRSYNTAX <const> = 0x03
+local ERREVENT_ERRMEM    <const> = 0x04
+local ERREVENT_ERRERR    <const> = 0x05
+local ERREVENT_PANIC     <const> = 0x10
+
+local function GlobalFunction(name)
+    return rdebug.value(rdebug.fieldv(rdebug._G, name))
 end
 
-function event.r_exception(msg)
-    if not initialized then return end
-    local type = getExceptionType()
-    if not type or not exceptionFilters[type] then
-        return
+local function getExceptionType(errcode)
+    errcode = errcode & 0xF
+    if errcode == ERREVENT_ERRRUN then
+        if rdebug.getinfo(0, "Slf", info) then
+            if info.what ~= 'C' then
+                return "runtime"
+            end
+            local raisefunc = rdebug.value(info.func)
+            if raisefunc == GlobalFunction "assert" then
+                return "assert"
+            end
+            if raisefunc == GlobalFunction "error" then
+                return "error"
+            end
+        end
+        return "other"
+    elseif errcode == ERREVENT_ERRSYNTAX then
+        return "syntax"
+    elseif errcode == ERREVENT_ERRMEM then
+        return "unknown"
+    elseif errcode == ERREVENT_ERRERR then
+        return "unknown"
+    else
+        return "unknown"
     end
-    exceptionMsg, exceptionTrace, exceptionLevel = traceback(tostring(msg))
-    state = 'stopped'
-    runLoop('exception', exceptionMsg, exceptionLevel)
 end
 
-function event.exception()
-    if not initialized then return end
-    local type = getExceptionType()
-    if not type or not exceptionFilters[type] then
-        return
+local function getExceptionCaught(errcode)
+    if errcode & ERREVENT_PANIC ~= 0 then
+        return "panic"
     end
-    local msg = getEventArgs(2)
-    exceptionMsg, exceptionTrace, exceptionLevel = traceback(msg)
-    state = 'stopped'
-    runLoop('exception', exceptionMsg, exceptionLevel)
+    local pcall = GlobalFunction 'pcall'
+    local xpcall = GlobalFunction 'xpcall'
+    local level = 0
+    while true do
+        if not rdebug.getinfo(level, "f", info) then
+            break
+        end
+        if level >= 100 then
+            return 'native'
+        end
+        local f = rdebug.value(info.func)
+        if f == pcall then
+            return 'lua'
+        end
+        if f == xpcall then
+            return 'lua'
+        end
+        level = level + 1
+    end
+    return 'native'
 end
 
-function event.r_thread(co, type)
+local function getExceptionFlags(errcode)
+    return {
+        getExceptionType(errcode),
+        getExceptionCaught(errcode),
+    }
+end
+
+local function runException(flags, errobj)
+    local errmsg = variables.tostring(errobj)
+    local level, message, trace = traceback.traceback(flags, errmsg)
+    if level < 0 then
+        return
+    end
+    local bp = breakpoint.hitExceptionBreakpoint(flags, level, errobj)
+    if not bp then
+        return
+    end
+    currentException = {
+        message = message,
+        trace = trace,
+    }
+    state = 'stopped'
+    runLoop({
+        reason = 'exception',
+        hitBreakpointIds = {bp.id},
+        text = message,
+    }, level)
+end
+
+function event.exception(errobj, errcode)
+    if not debuggeeReady() then return end
+    if errcode == nil or errcode == -1 then
+        --TODO:暂时兼容旧版本
+        errcode = ERREVENT_ERRRUN
+    end
+    runException(getExceptionFlags(errcode), errobj)
+end
+
+function event.thread(co, type)
+    if not debuggeeReady() then return end
     local L = hookmgr.gethost()
     if co then
         if type == 0 then
@@ -656,33 +793,30 @@ function event.r_thread(co, type)
     hookmgr.updatehookmask(L)
 end
 
-function event.thread()
-    local co = getEventArgs(1)
-    local type = getEventArgs(2)
-    event.r_thread(co, type)
+function event.wait()
+    suspend = true
+    debuggeeReady()
 end
 
-function event.wait()
-    while not initialized do
-        workerThreadUpdate(0.01)
-    end
+function event.setThreadName(name)
+    sendToMaster 'setThreadName' (name)
 end
 
 function event.exit()
-    CMD.terminated()
+    sendToMaster 'exitWorker' {}
 end
 
 hookmgr.init(function(name, ...)
-    local ok, e = xpcall(function(...)
+    local ok, err = xpcall(function(...)
         if event[name] then
             return event[name](...)
         end
     end, debug.traceback, ...)
     if not ok then
-        err:push(e)
+        log.error("ERROR:" .. tostring(err))
         return
     end
-    return e
+    return err
 end)
 
 local function lst2map(t)
@@ -695,7 +829,7 @@ end
 
 ev.on('initializing', function(config)
     noDebug = config.noDebug
-    hookmgr.update_open(not noDebug and openUpdate)
+    hookmgr.update_open(not noDebug and autoUpdate)
     if hookmgr.thread_open then
         hookmgr.thread_open(true)
     end
@@ -718,16 +852,6 @@ ev.on('terminated', function()
     end
 end)
 
-sendToMaster {
-    cmd = 'eventThread',
-    reason = 'started',
-}
+sendToMaster 'initWorker' {}
 
-local w = {}
-
-function w.openupdate()
-    openUpdate = true
-    hookmgr.update_open(true)
-end
-
-return w
+hookmgr.update_open(true)

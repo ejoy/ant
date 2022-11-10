@@ -7,10 +7,6 @@ end
 local function unpack(fmt)
     return unpack_setpos(fmt:unpack(unpack_buf, unpack_pos))
 end
-local function undo()
-    unpack_pos = unpack_pos - 1
-end
-
 
 local function LoadByte()
     return unpack 'B'
@@ -54,9 +50,9 @@ local function LoadRawInt()
     return unpack 'i'
 end
 
-local Version = 503
-local LoadInt = LoadRawInt
-local LoadLineInfo = LoadRawInt
+local Version
+local LoadInt
+local LoadLineInfo
 local LoadLength
 local LoadConstants
 
@@ -101,7 +97,7 @@ local function LoadConstants53(f)
         elseif t == LUA_TLNGSTR then
             f.k[i] = LoadString()
         else
-            assert(false)
+            error("unknown type: " .. t)
         end
     end
 end
@@ -123,14 +119,19 @@ local function LoadConstants54(f)
     f.k = {}
     for i = 1, f.sizek do
         local t = LoadByte()
-        if t == LUA_VNUMFLT then
+        if t == LUA_VNIL then
+        elseif t == LUA_VTRUE then
+            f.k[i] = true
+        elseif t == LUA_VFALSE then
+            f.k[i] = false
+        elseif t == LUA_VNUMFLT then
             f.k[i] = LoadNumber()
         elseif t == LUA_VNUMINT then
             f.k[i] = LoadInteger()
         elseif t == LUA_VSHRSTR or t == LUA_VLNGSTR then
             f.k[i] = LoadString()
         else
-            assert(t == LUA_VNIL or t == LUA_VTRUE or t == LUA_VFALSE)
+            error("unknown type: " .. t)
         end
     end
 end
@@ -142,7 +143,7 @@ local function LoadUpvalues(f)
         f.upvalues[i] = {}
         f.upvalues[i].instack = LoadByte()
         f.upvalues[i].idx = LoadByte()
-        if Version >= 504 then
+        if Version >= 0x54 then
             f.upvalues[i].kind = LoadByte()
         end
     end
@@ -163,7 +164,7 @@ local function LoadDebug(f)
     for i = 1, f.sizelineinfo do
         f.lineinfo[i] = LoadLineInfo()
     end
-    if Version >= 504 then
+    if Version >= 0x54 then
         f.sizeabslineinfo = LoadInt()
         f.abslineinfo = {}
         for i = 1, f.sizeabslineinfo do
@@ -205,37 +206,22 @@ function LoadFunction(f, psource)
 end
 
 local function InitCompat()
-    local version = LoadByte()
-    if version == 0x53 then
-        Version = 503
+    Version = LoadByte()
+    if Version == 0x53 then
         LoadLength = LoadLength53
         LoadInt = LoadRawInt
         LoadLineInfo = LoadRawInt
         LoadConstants = LoadConstants53
         return
     end
-    if version == 0x54 then
-        Version = 504
+    if Version == 0x54 then
         LoadLength = LoadLength54
         LoadInt = LoadLength54
         LoadLineInfo = function () return unpack 'b' end
         LoadConstants = LoadConstants54
         return
     end
-    if version == 0x03 then
-        --TODO: 兼容旧版本
-        undo()
-        version = LoadLength54()
-        if version == 504 then
-            Version = 504
-            LoadLength = LoadLength54
-            LoadInt = LoadLength54
-            LoadLineInfo = function () return unpack 'b' end
-            LoadConstants = LoadConstants54
-            return
-        end
-    end
-    assert(false, "unknown lua version: "..version)
+    error(("unknown lua version: 0x%x"):format(Version))
 end
 
 local function CheckHeader()
@@ -243,7 +229,7 @@ local function CheckHeader()
     InitCompat()
     assert(LoadByte() == 0)
     assert(LoadCharN(6) == '\x19\x93\r\n\x1a\n')
-    if Version < 504 then
+    if Version < 0x54 then
         -- int
         assert(string.packsize 'i' == LoadByte())
         -- size_t

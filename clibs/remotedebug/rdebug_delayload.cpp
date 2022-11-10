@@ -5,22 +5,23 @@
 #define DELAYIMP_INSECURE_WRITABLE_HOOKS
 #include <DelayImp.h>
 
-#if LUA_VERSION_NUM == 504
-#define LUA_DLL_NAME "lua54.dll"
-#elif LUA_VERSION_NUM == 503
-#define LUA_DLL_NAME "lua53.dll"
-#elif LUA_VERSION_NUM == 502
-#define LUA_DLL_NAME "lua52.dll"
-#elif LUA_VERSION_NUM == 501
-#define LUA_DLL_NAME "lua51.dll"
-#else
-#error "Unknown Lua Version: " #LUA_VERSION_NUM
+#if !defined(LUA_DLL_VERSION)
+#error "Need LUA_DLL_VERSION"
 #endif
+
+#define LUA_STRINGIZE(_x) LUA_STRINGIZE_(_x)
+#define LUA_STRINGIZE_(_x) #_x
+
+#define LUA_DLL_NAME LUA_STRINGIZE(LUA_DLL_VERSION) ".dll"
 
 namespace remotedebug::delayload {
 	typedef FARPROC (*FindLuaApi)(const char* name);
 	static HMODULE    luadll = 0;
 	static FindLuaApi luaapi = 0;
+
+	HMODULE get_luadll() {
+		return luadll;
+	}
 
 	void set_luadll(HMODULE handle) {
 		if (luadll) return;

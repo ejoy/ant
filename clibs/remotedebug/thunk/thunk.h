@@ -5,22 +5,18 @@
 
 struct thunk;
 thunk* thunk_create_hook(intptr_t dbg, intptr_t hook);
-thunk* thunk_create_panic(intptr_t dbg, intptr_t panic);
+thunk* thunk_create_allocf(intptr_t dbg, intptr_t allocf);
 
-#if defined(_WIN32) || defined(__linux__) || defined(__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__)
-struct thunk {
-	void*  data = 0;
-	size_t size = 0;
-	bool create(size_t s);
-	bool write(void* buf);
-	~thunk();
-};
+#if defined(_WIN32)
+#	define THUNK_JIT 1
 #else
-struct thunk {
-	void*  data = 0;
-};
-struct lua_State;
-intptr_t thunk_get(lua_State* L, void* key);
-void     thunk_set(lua_State* L, void* key, intptr_t v);
-#define RDEBUG_DISABLE_THUNK 1
+#	if defined(__ia64__)
+#		define THUNK_JIT 1
+#	endif
+#endif
+
+#if defined(THUNK_JIT)
+#include "thunk_jit.h"
+#else
+#include "thunk_nojit.h"
 #endif

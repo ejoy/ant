@@ -35,11 +35,7 @@ function m.recv(bytes, stat)
     local pkg = recv(stat, bytes)
     if pkg then
         if stat.debug then print('[recv]', pkg) end
-        local res, err = json.decode(pkg)
-        if res then
-            return res
-        end
-        error(('%s\n%s'):format(err, pkg))
+        return json.decode(pkg)
     end
 end
 
@@ -47,7 +43,7 @@ function m.send(cmd, stat)
     --if cmd.type == 'response' and cmd.success == false then
     --    error(debug.traceback(cmd.message))
     --end
-    local pkg = assert(json.encode(cmd))
+    local pkg = json.encode(cmd)
     if stat.debug then print('[send]', pkg) end
     return ('Content-Length: %d\r\n\r\n%s'):format(#pkg, pkg)
 end

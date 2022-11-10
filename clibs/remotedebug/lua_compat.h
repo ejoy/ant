@@ -35,15 +35,6 @@ inline void lua_getglobal(lua_State* L, const char* s) {
     lua_getfield(L, LUA_GLOBALSINDEX, (s));
 }
 
-inline void lua_getuservalue(lua_State* L, int idx) {
-    lua_getfenv(L, idx);
-}
-
-inline void lua_setuservalue(lua_State* L, int idx) {
-    luaL_checktype(L, -1, LUA_TTABLE);
-    lua_setfenv(L, idx);
-}
-
 inline const char* luaL_tolstring(lua_State *L, int idx, size_t *len) {
     if (!luaL_callmeta(L, idx, "__tostring")) {
         int t = lua_type(L, idx), tt = 0;
@@ -78,6 +69,10 @@ inline const char* luaL_tolstring(lua_State *L, int idx, size_t *len) {
     return lua_tolstring(L, -1, len);
 }
 
+inline size_t lua_rawlen(lua_State *L, int idx) {
+    return lua_objlen(L, idx);
+}
+
 #endif
 
 namespace lua {
@@ -94,5 +89,54 @@ namespace lua {
     LUACOMPAT_DEF(rawgetp)
     LUACOMPAT_DEF(getglobal)
     LUACOMPAT_DEF(getfield)
-    LUACOMPAT_DEF(getuservalue)
 }
+
+#if LUA_VERSION_NUM == 501
+inline int lua_getiuservalue(lua_State* L, int idx, int n) {
+    if (n != 1) {
+        lua_pushnil(L);
+        return LUA_TNONE;
+    }
+    lua_getfenv(L, idx);
+    return lua_type(L, -1);
+}
+#elif LUA_VERSION_NUM == 502
+inline int lua_getiuservalue(lua_State* L, int idx, int n) {
+    if (n != 1) {
+        lua_pushnil(L);
+        return LUA_TNONE;
+    }
+    lua_getuservalue(L, idx);
+    return lua_type(L, -1);
+}
+#elif LUA_VERSION_NUM == 503
+inline int lua_getiuservalue(lua_State* L, int idx, int n) {
+    if (n != 1) {
+        lua_pushnil(L);
+        return LUA_TNONE;
+    }
+    return lua_getuservalue(L, idx);
+}
+#endif
+
+
+#if LUA_VERSION_NUM == 501
+inline int lua_setiuservalue(lua_State* L, int idx, int n) {
+    if (n != 1) {
+        lua_pop(L, 1);
+        return 0;
+    }
+    luaL_checktype(L, -1, LUA_TTABLE);
+    lua_setfenv(L, idx);
+    return 1;
+}
+#elif LUA_VERSION_NUM == 502 || LUA_VERSION_NUM == 503
+inline int lua_setiuservalue(lua_State* L, int idx, int n) {
+    if (n != 1) {
+        lua_pop(L, 1);
+        return 0;
+    }
+    lua_setuservalue(L, idx);
+    return 1;
+}
+#endif

@@ -1,3 +1,4 @@
+#include "thunk_jit.h"
 #include <Windows.h>
 
 bool thunk::create(size_t s) {
