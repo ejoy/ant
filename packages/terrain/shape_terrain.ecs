@@ -1,6 +1,5 @@
 system "plane_terrain_system"
     .implement "plane_terrain.lua"
-    .require_interface "ant.test.features|iterrain"
     .method "init"
 
 component "plane_terrain".type "lua"
