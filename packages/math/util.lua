@@ -61,8 +61,25 @@ function util.limit(v, min, max)
     return v
 end
 
+local function iszero_(threshold, v, ...)
+	if v then
+		if math.abs(v) <= threshold then
+			return true
+		end
+
+		return iszero_(threshold, ...)
+	end
+end
+
+local ZERO_THRESHOLD<const> = 10e-6
+
+function util.iszero_math3dvec(v, threshold)
+	threshold = threshold or ZERO_THRESHOLD
+	return iszero_(threshold, math3d.index(1, 2, 3, 4))
+end
+
 function util.iszero(n, threshold)
-    threshold = threshold or 0.00001
+    threshold = threshold or ZERO_THRESHOLD
     return math.abs(n) <= threshold
 end
 
@@ -274,12 +291,20 @@ function util.copy2viewrect(srcvr, dstvr)
 	dstvr.ratio = srcvr.ratio
 end
 
-function util.isnan(v)
-	for _, vvv in ipairs(math3d.tovalue(v)) do
-		if vvv ~= vvv then
+local function isnan(v, ...)
+	if v then
+		if v ~= v then
 			return true
 		end
+
+		return util.isnan(...)
 	end
+end
+
+util.isnan = isnan
+
+function util.isnan_math3dvec(v)
+	return isnan(math3d.index(v, 1, 2, 3, 4))
 end
 
 local hwi = import_package "ant.hwi"

@@ -247,11 +247,13 @@ local function create_add_tanuv(tan_t, idx, inc1, inc2, inc3)
 end
 local function calc_local_tangent(n, t, b)
 	local local_t = math3d.sub(t, math3d.mul(n, math3d.dot(t, n)))
-	local_t = math3d.normalize(local_t)
-	local lt_x, lt_y, lt_z = math3d.index(local_t, 1, 2, 3)
-	if lt_x ~= lt_x or lt_y ~= lt_y or lt_z ~= lt_z then
+	if mu.iszero_math3dvec(local_t) then
 		local_t = math3d.cross(n, b)
+	else
+		local_t = math3d.normalize(local_t)
+		assert(not mu.isnan_math3dvec(local_t))
 	end
+
 	return local_t
 end
 
@@ -259,30 +261,34 @@ end
 local function calc_tangents(vb, ib)
 	local tangents = {}
 	for ii = 1, #ib do
-	  local indices = ib[ii]
-	  local i0, i1, i2 = indices.i0 + 1, indices.i1 + 1, indices.i2 + 1
-	  local a, b, c = vb[i0], vb[i1], vb[i2]
-	  local ba, ca = math3d.sub(b.p, b.p), math3d.sub(b.p, a.p)
-	  local bau, bav = b.u - a.u, b.v - a.v
-	  local cau, cav = c.u - a.u, b.v - a.v
-  
-	  local dirCorrection = (cau * bav - cav * bau) < 0 and -1.0 or 1.0
-  
-	  if bau == 0 and bav == 0 and cau == 0 and cav == 0 then
-		bau, bav = 0.0, 1.0
-		cau, cav = 1.0, 0.0
-	  end
-	  
+		local indices = ib[ii]
+		local i0, i1, i2 = indices.i0 + 1, indices.i1 + 1, indices.i2 + 1
+		local a, b, c = vb[i0], vb[i1], vb[i2]
+		local ba, ca = math3d.sub(b.p, b.p), math3d.sub(b.p, a.p)
+		local bau, bav = b.u - a.u, b.v - a.v
+		local cau, cav = c.u - a.u, b.v - a.v
+	
+		local dirCorrection = (cau * bav - cav * bau) < 0 and -1.0 or 1.0
+	
+		if bau == 0 and bav == 0 and cau == 0 and cav == 0 then
+			bau, bav = 0.0, 1.0
+			cau, cav = 1.0, 0.0
+		end
+		
+		--[[
+			tangent	= (ba * bav - ca * cav) * dirCorrection
+			bitangent=(ca * bau - ba * cau) * dirCorrection
+		]]
 
-	  local tangent  = math3d.mul(math3d.sub(math3d.mul(ba, bav), math3d.mul(ca, cav)), dirCorrection)
-	  local bitangent  = math3d.mul(math3d.sub(math3d.mul(ca, bau), math3d.mul(ba, cau)), dirCorrection)
-  
-	  assert(not (mu.isnan(tangent) and mu.isnan(bitangent)), "tangent or bitangnt is nan")
-  
-	  -- TODO: need merge vertex tangent
-	  tangents[i0] = calc_local_tangent(a.n, tangent, bitangent)
-	  tangents[i1] = calc_local_tangent(b.n, tangent, bitangent)
-	  tangents[i2] = calc_local_tangent(c.n, tangent, bitangent)
+		local tangent  = math3d.mul(math3d.sub(math3d.mul(ba, bav), math3d.mul(ca, cav)), dirCorrection)
+		local bitangent  = math3d.mul(math3d.sub(math3d.mul(ca, bau), math3d.mul(ba, cau)), dirCorrection)
+	
+		assert(not (mu.isnan_math3dvec(tangent) and mu.isnan_math3dvec(bitangent)), "tangent or bitangnt is nan")
+	
+		-- TODO: need merge vertex tangent
+		tangents[i0] = calc_local_tangent(a.n, tangent, bitangent)
+		tangents[i1] = calc_local_tangent(b.n, tangent, bitangent)
+		tangents[i2] = calc_local_tangent(c.n, tangent, bitangent)
 	end
   
 	return tangents
