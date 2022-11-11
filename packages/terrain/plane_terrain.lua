@@ -143,13 +143,13 @@ function cterrain_fields:init()
             elseif a_type == "L" then
                 f.alpha_type = 3
                 if a_dir == "1" then
-                    f.alpha_direction = 90
-                elseif a_dir == "2" then
-                    f.alpha_direction = 0
-                elseif a_dir == "3" then
-                    f.alpha_direction = 270
-                elseif a_dir == "4" then
                     f.alpha_direction = 180
+                elseif a_dir == "2" then
+                    f.alpha_direction = 270
+                elseif a_dir == "3" then
+                    f.alpha_direction = 0
+                elseif a_dir == "4" then
+                    f.alpha_direction = 90
                 end
             elseif a_type == "T" then
                 f.alpha_type = 4
