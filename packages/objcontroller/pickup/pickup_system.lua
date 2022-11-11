@@ -61,9 +61,9 @@ local function update_camera(pu_camera_ref, clickpt)
 
 	local camera = find_camera(pu_camera_ref)
 	local viewdir = math3d.normalize(math3d.sub(at, eye))
-	camera.viewmat = math3d.lookto(eye, viewdir, camera.updir)
-	camera.projmat = math3d.projmat(camera.frustum, INV_Z)
-	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+	camera.viewmat.m		= math3d.lookto(eye, viewdir, camera.updir)
+	camera.projmat.m	= math3d.projmat(camera.frustum, INV_Z)
+	camera.viewprojmat.m= math3d.mul(camera.projmat, camera.viewmat)
 end
 
 

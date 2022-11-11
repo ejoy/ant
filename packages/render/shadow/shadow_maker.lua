@@ -41,9 +41,9 @@ local csm_matrices			= {mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.ID
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
 
 local function update_camera_matrices(camera, light_view)
-	camera.viewmat = math3d.matrix(light_view)
-	camera.projmat = math3d.projmat(camera.frustum, INV_Z)
-	camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+	camera.viewmat.m = math3d.matrix(light_view)
+	camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
+	camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
 end
 
 local function set_worldmat(srt, mat)

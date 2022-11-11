@@ -218,13 +218,15 @@ function svs:update_camera()
         local qn = v.name
         local qe = w:first(qn .. " camera_ref:in")
         local ceid = qe.camera_ref
-        local cref <close> = w:entity(ceid, "camera:update scene:in")
-        local camera = cref.camera
-        local scene = cref.scene
-        local worldmat = scene.worldmat
-        local d, p = math3d.index(worldmat, 3, 4)
-        camera.viewmat = math3d.lookto(p, d, scene.updir)
-        camera.projmat = math3d.projmat(camera.frustum, INV_Z)
-        camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+        local cref <close> = w:entity(ceid, "scene_changed?in camera:update scene:in")
+        if cref.scene_changed then
+            local camera = cref.camera
+            local scene = cref.scene
+            local worldmat = scene.worldmat
+            local d, p = math3d.index(worldmat, 3, 4)
+            camera.viewmat.m = math3d.lookto(p, d, scene.updir)
+            camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
+            camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
+        end
     end
 end

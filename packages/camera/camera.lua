@@ -170,11 +170,20 @@ end
 
 local cameraview_sys = ecs.system "camera_view_system"
 
+function cameraview_sys:entity_init()
+    for e in w:select "INIT camera:in" do
+        local camera = e.camera
+        camera.viewmat       = math3d.ref(math3d.matrix())
+        camera.projmat       = math3d.ref(math3d.matrix())
+        camera.viewprojmat   = math3d.ref(math3d.matrix())
+    end
+end
+
 local function update_camera(e)
     local camera = e.camera
-    camera.viewmat = math3d.inverse(e.scene.worldmat)
-    camera.projmat = math3d.projmat(camera.frustum, INV_Z)
-    camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+    camera.viewmat.m = math3d.inverse(e.scene.worldmat)
+    camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
+    camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
 end
 
 local function update_camera_info(e)
@@ -190,9 +199,8 @@ end
 function cameraview_sys:update_mainview_camera()
     for v in w:select "main_queue camera_ref:in" do
         local e <close> = w:entity(v.camera_ref, "scene_changed?in camera:in scene:in")
-        --TODO: viewmat/projmat/viewprojmat should cache them
-        update_camera(e)
         if e.scene_changed then
+            update_camera(e)
             update_camera_info(e)
         end
     end

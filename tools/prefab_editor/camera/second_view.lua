@@ -97,14 +97,15 @@ function second_camera_sys:data_changed()
 end
 
 function second_camera_sys:update_camera()
-    for svq in w:select "second_view visible camera_ref:in" do
-        local ce <close> = w:entity(svq.camera_ref, "camera:in scene:in")
-		local camera, scene = ce.camera, ce.scene
+    local svq = w:first "second_view visible camera_ref:in"
+    local ce <close> = w:entity(svq.camera_ref, "scene_changed?in camera:in scene:in")
+    if ce.scene_changed then
+        local camera, scene = ce.camera, ce.scene
 
-		local pos, dir = math3d.index(scene.worldmat, 4, 3)
-		camera.viewmat = math3d.lookto(pos, dir, scene.updir)
-		camera.projmat = math3d.projmat(camera.frustum, INV_Z)
-		camera.viewprojmat = math3d.mul(camera.projmat, camera.viewmat)
+        local pos, dir = math3d.index(scene.worldmat, 4, 3)
+        camera.viewmat.m = math3d.lookto(pos, dir, scene.updir)
+        camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
+        camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
     end
 end
 

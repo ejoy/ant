@@ -24,7 +24,7 @@ local function build_cull_args()
 		local ce <close> = w:entity(qe.camera_ref, "camera:in")
 		local vpmat = ce.camera.viewprojmat
 		qe.cull_args = {
-			viewprojmat		= vpmat,
+			viewprojmat		= vpmat.i,
 			frustum_planes 	= math3d.frustum_planes(vpmat),
 			cull_id			= cull_ids[qe.queue_name],
 		}

@@ -1,5 +1,6 @@
 system "camera_view_system"
     .implement "camera.lua"
+    .method "entity_init"
     .method "update_mainview_camera"
 
 interface "icamera"
