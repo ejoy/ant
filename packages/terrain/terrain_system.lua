@@ -50,7 +50,7 @@ local function calc_shape_terrain()
     shape_terrain.material = "/pkg/ant.resources/materials/plane_terrain.material"
 end
 
-function iterrain.gen_terrain_field(width, height)
+function iterrain.gen_terrain_field(width, height, offset)
     local terrain_field = {}
     terrain_width  = width
     terrain_height = height
@@ -62,7 +62,7 @@ function iterrain.gen_terrain_field(width, height)
     end
     terrain_fields = terrain_field
     calc_shape_terrain()
-    iplane_terrain.set_wh(width, height)
+    iplane_terrain.set_wh(width, height, offset)
     iplane_terrain.update_plane_terrain(shape_terrain)
 end
 

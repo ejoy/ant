@@ -7,8 +7,9 @@ local terrain_test_sys = ecs.system "terrain_test_system"
 
 function terrain_test_sys:init()
     -- 32 32 means terrain's width and height
+    -- 10 means origin's x and z offset to left-bottom dirction
     -- terrain should be generated in initial stage
-    iterrain.gen_terrain_field(32, 32)
+    iterrain.gen_terrain_field(32, 32, 10)
 end
 
 -- world coordinate x
