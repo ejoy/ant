@@ -13,7 +13,8 @@ $input v_texcoord0
 #define FXAA_GATHER4_ALPHA 0
 #endif //ENABLE_TEXTURE_GATHER
 
-#define FXAA_PC_CONSOLE    1
+//#define FXAA_PC_CONSOLE    1
+#define FXAA_PC 1
 #define FXAA_GLSL_130      1
 
 #define G3D_FXAA_PATCHES   1
@@ -33,6 +34,16 @@ void main()
     vec2 max_corner = v_texcoord0 + half_texel;
     vec2 min_Corner = v_texcoord0 - half_texel;
 
+#ifdef  FXAA_PC
+    gl_FragColor = FxaaPixelShader(
+        v_texcoord0,
+        s_scene_ldr_color,
+        u_viewTexel.xy,
+        0.75,                                   //FxaaFloat fxaaQualitySubpix
+        0.125,                                  //FxaaFloat fxaaQualityEdgeThreshold
+        0.0833                                  //FxaaFloat fxaaQualityEdgeThresholdMin
+    );
+#else   //!FXAA_PC
     gl_FragColor = FxaaPixelShader(
             v_texcoord0,
             vec4(min_Corner, max_corner),
@@ -47,4 +58,6 @@ void main()
 #endif
             0.04                                // FxaaFloat fxaaConsoleEdgeThresholdMin
     );
+#endif  //
+
 }
