@@ -29,12 +29,7 @@ SAMPLER2D(s_scene_ldr_color,  0);
 
 void main()
 {
-    //we assume v_texcoord0 is in texel center
-    const vec2 half_texel = u_viewTexel.xy * 0.5;
-    vec2 max_corner = v_texcoord0 + half_texel;
-    vec2 min_Corner = v_texcoord0 - half_texel;
-
-#ifdef  FXAA_PC
+#if FXAA_PC
     gl_FragColor = FxaaPixelShader(
         v_texcoord0,
         s_scene_ldr_color,
@@ -44,6 +39,10 @@ void main()
         0.0833                                  //FxaaFloat fxaaQualityEdgeThresholdMin
     );
 #else   //!FXAA_PC
+    //we assume v_texcoord0 is in texel center
+    const vec2 half_texel = u_viewTexel.xy * 0.5;
+    vec2 max_corner = v_texcoord0 + half_texel;
+    vec2 min_Corner = v_texcoord0 - half_texel;
     gl_FragColor = FxaaPixelShader(
             v_texcoord0,
             vec4(min_Corner, max_corner),
@@ -58,6 +57,6 @@ void main()
 #endif
             0.04                                // FxaaFloat fxaaConsoleEdgeThresholdMin
     );
-#endif  //
+#endif  //FXAA_PC
 
 }
