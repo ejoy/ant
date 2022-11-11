@@ -1,7 +1,7 @@
 local ecs	= ...
 local world = ecs.world
 local w		= world.w
-local iterrain = ecs.import.interface "ant.terrain|iterrain"
+local iterrain = ecs.interface "iterrain"
 local terrain_sys = ecs.system "terrain_system"
 local iplane_terrain  = ecs.import.interface "ant.terrain|iplane_terrain"
 local terrain_change = false
