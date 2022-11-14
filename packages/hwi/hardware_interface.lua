@@ -15,6 +15,7 @@ end
 
 local function check_renderer(renderer)
 	if renderer == nil then
+		--return "VULKAN"
 		return hw.default_renderer()
 	end
 

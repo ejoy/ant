@@ -76,17 +76,80 @@ vec4 compute_lighting(input_attributes input_attribs, vec4 FragCoord, vec4 v_pos
 void main()
 { 
     #ifdef HAS_PROCESSING
-    #include "stone_attributes_getter.sh"
-    #include "sand_attributes_getter.sh"
-    #include "cement_attributes_getter.sh"
+/*     vec2 uv = uv_motion(v_texcoord2);
+    vec4 sand_basecolor   = get_terrain_basecolor(uv, vec4(1.0, 1.0, 1.0, 1.0), sand_color_idx);
+    vec4 stone_basecolor  = get_terrain_basecolor(uv, vec4(1.0, 1.0, 1.0, 1.0), stone_color_idx);
+    vec4 cement_basecolor = get_terrain_basecolor(uv, vec4(1.0, 1.0, 1.0, 1.0), 5);
+    const mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);
+    vec4 sand_normal      = vec4(get_terrain_normal_by_tbn(tbn, v_normal, uv, 0), 0);
+    vec4 stone_normal     = vec4(get_terrain_normal_by_tbn(tbn, v_normal, uv, stone_normal_idx), 0);
+    vec4 cement_normal    = vec4(get_terrain_normal_by_tbn(tbn, v_normal, uv, 3), 0);
+    vec4 sand_metallic    = 
+    float a_sand   = sand_alpha;
+    float a_cement = texture2DArray(s_cement_alpha, vec3(v_texcoord0, cement_alpha_type) );
+    float d_sand   = texture2DArray(s_height, vec3(v_texcoord2, 0.0) );
+    float d_stone  = texture2DArray(s_height, vec3(v_texcoord2, 1.0) );
+    float d_cement = texture2DArray(s_height, vec3(v_texcoord0, 2.0) );
+
+    float sub1 = 4 * abs(d_sand - (a_sand));
+    float f1 = 1 - sub1;
+    sand_basecolor.w = sub1;
+    sand_normal.w    = sub1;
+
+    float sub2 = 4 * abs(d_stone - (1 - a_sand));
+    float f2 = 1 - sub2;
+    stone_basecolor.w = sub2;
+    stone_normal.w    = sub2;
+
+    vec4 ground_basecolor =  vec4(mul(stone_basecolor.xyz, sand_basecolor.w) + mul(sand_basecolor.xyz, 1.0), 1.0);
+    vec4 ground_normal    =  vec4(mul(stone_normal.xyz, sand_normal.w) + mul(sand_normal.xyz, 1.0), 1.0);
+
+    vec4 blend_basecolor;
+    vec4 blend_normal;
+
+    if(terrain_alpha_type >= 0.9 && terrain_alpha_type <= 1.1){
+        blend_basecolor = vec4(blend(cement_basecolor, 1 - a_cement, d_cement, ground_basecolor, a_cement, d_stone), 1.0);
+        blend_normal    = vec4(blend(cement_normal, 1 - a_cement, d_cement, ground_normal, a_cement, d_stone), 1.0);
+    }
+    else{
+        blend_basecolor = ground_basecolor;
+        blend_normal    = ground_normal;
+    } 
+
+    input_attributes blend_attribs = (input_attributes)0;
+{
+    blend_attribs.uv = uv;
+    blend_attribs.basecolor = blend_basecolor;
+    blend_attribs.V = normalize(u_eyepos.xyz - v_posWS.xyz);
+
+    blend_attribs.N = blend_normal.xyz;
+
+    blend_attribs.metallic = u_stone_metallic_factor;
+    blend_attribs.perceptual_roughness = u_stone_roughness_factor;
+    blend_attribs.perceptual_roughness  = clamp(blend_attribs.perceptual_roughness, 0.0, 1.0);
+    blend_attribs.metallic              = clamp(blend_attribs.metallic, 0.0, 1.0);
+
+    get_occlusion(uv, blend_attribs);
+
+    blend_attribs.screen_uv = get_normalize_fragcoord(gl_FragCoord.xy);
+} 
+
+    gl_FragColor = compute_lighting(blend_attribs, gl_FragCoord, v_posWS, v_normal);
+ */
+
+    #include "attributes_getter.sh"
+    
     vec4 texture_stone   = compute_lighting(stone_attribs,  gl_FragCoord, v_posWS, v_normal);
     vec4 texture_sand    = compute_lighting(sand_attribs,   gl_FragCoord, v_posWS, v_normal);
     vec4 texture_cement  = compute_lighting(cement_attribs, gl_FragCoord, v_posWS, v_normal);
 
     float a_sand   = sand_alpha;
     float a_cement = texture2DArray(s_cement_alpha, vec3(v_texcoord1, cement_alpha_type) );
+    //terrain's basecolor height should use v_texcoord2, represent 4x4 grid per texture
     float d_sand   = texture2DArray(s_height, vec3(v_texcoord2, 0.0) );
     float d_stone  = texture2DArray(s_height, vec3(v_texcoord2, 1.0) );
+
+    //road's basecolor height should use v_texcoord0, represent 1x1 grid per texture
     float d_cement = texture2DArray(s_height, vec3(v_texcoord0, 2.0) );
 
     float sub1 = 4 * abs(d_sand - (a_sand));
@@ -97,16 +160,16 @@ void main()
     float f2 = 1 - sub2;
     texture_stone.w = sub2;   
 
-       vec4 texture_ground =  vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1), 1.0);
+       vec4 texture_ground =  vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1.0), 1.0);
 
     if(terrain_alpha_type >= 0.9 && terrain_alpha_type <= 1.1){
-        vec4 texture_ground =  vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1), 1.0);
+        vec4 texture_ground =  vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1.0), 1.0);
         gl_FragColor = vec4(blend(texture_cement, 1 - a_cement, d_cement, texture_ground, a_cement, d_stone), 1.0);
         //gl_FragColor = vec4(1 - a_cement > a_cement ? texture_cement.xyz : vec3(0,0,0), 1.0);
     }
     else{
         gl_FragColor = texture_ground;
-    }     
+    }      
 
 /*     vec4 texture_ground =  vec4(mul(stone_attribs.basecolor.xyz, texture_sand.w) + mul(sand_attribs.basecolor.xyz, 1), 1.0);
     if(terrain_alpha_type >= 0.9 && terrain_alpha_type <= 1.1){
@@ -117,7 +180,7 @@ void main()
     } */  
 
     //gl_FragColor = vec4(stone_attribs.basecolor.xyz, 1.0);
-    //gl_FragColor = vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1), 1.0);
+    //gl_FragColor = vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1.0), 1.0);
     //gl_FragColor = vec4(mul(stone_attribs.basecolor.xyz, texture_sand.w) + mul(sand_attribs.basecolor.xyz, 1), 1.0);
 
     #else
