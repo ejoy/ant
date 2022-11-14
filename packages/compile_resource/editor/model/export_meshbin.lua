@@ -1,5 +1,5 @@
-local gltfutil  = require "editor.model.glTF.util"
 local renderpkg = import_package "ant.render"
+local gltfutil  = require "editor.model.glTF.util"
 local declmgr   = renderpkg.declmgr
 local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
@@ -258,6 +258,10 @@ local function create_add_tanuv(tan_t, idx, inc1, inc2, inc3)
 	t[3] = inc3
 	tan_t[idx] = t
 end
+
+--TODO: if we support calculate tangents from vertex data, we should consider move lua code to c and not use math3d
+-- bacause, as the glb have large vertices, it will consume the math3d lib vectors rapily, we need to careful reuse 
+-- the vector alloc in math3d, to avoid vectors are cross the limitation
 local function calc_local_tangent(n, t, b)
 	local local_t = math3d.sub(t, math3d.mul(n, math3d.dot(t, n)))
 	if mu.iszero_math3dvec(local_t) then
@@ -298,9 +302,9 @@ local function calc_tangents(vb, ib)
 		assert(not mu.isnan_math3dvec(tangent) and not mu.isnan_math3dvec(bitangent), "tangent or bitangnt is nan")
 	
 		-- TODO: need merge vertex tangent
-		tangents[i0] = calc_local_tangent(a.n, tangent, bitangent)
-		tangents[i1] = calc_local_tangent(b.n, tangent, bitangent)
-		tangents[i2] = calc_local_tangent(c.n, tangent, bitangent)
+		tangents[i0] = math3d.mark(calc_local_tangent(a.n, tangent, bitangent))
+		tangents[i1] = math3d.mark(calc_local_tangent(b.n, tangent, bitangent))
+		tangents[i2] = math3d.mark(calc_local_tangent(c.n, tangent, bitangent))
 	end
   
 	return tangents
@@ -357,6 +361,16 @@ local function adjust_tangent_location(layouts, final_layouts)
 	final_layouts[#final_layouts+1] = "T40NIf"
 end
 
+local function vertex_mark(v)
+	v.p = math3d.mark(v.p)
+	v.n = math3d.mark(v.n)
+end
+
+local function vertex_unmark(v)
+	math3d.unmark(v.p)
+	math3d.unmark(v.n)
+end
+
 local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 	assert(prim.mode == nil or prim.mode == 4)
 	local attributes = prim.attributes
@@ -400,34 +414,43 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 	local change_index_attrib = false
 	local vb_table = {}
 	local tangents = {}
-	if layout_n == false or layout_t == false then
+	if not (layout_n and layout_t) then
 		final_layouts = layouts
-	elseif layout_T == true then
+	elseif layout_T then
 		adjust_tangent_location(layouts, final_layouts)
 	else
 		adjust_tangent_location(layouts, final_layouts)
+
+		--numv maybe very large
+		math3d.reset()
 		for iv=0, numv-1 do
 			local vertex = {}
 			for idx, d in ipairs(layoutdesc) do
-			   local l = layouts[idx]
-			   local v = attrib_data(d, iv, gltfbin)
-	
-			   local t = l:sub(1, 1)
-	
-			   if t == 'p' then
-				   vertex.p = r2l_math3dvec(v, l)
-			   elseif t == 't' then
-					local uv = unpack_vec(v, l)
-				   vertex.u = uv[1]
-				   vertex.v = uv[2]
-			   elseif t == 'n' then
-				   vertex.n = r2l_math3dvec(v, l)
-			   end
-		   end 
-		   vb_table[#vb_table + 1] = vertex
-	   end
+				local l = layouts[idx]
+				local v = attrib_data(d, iv, gltfbin)
 
-	   tangents = calc_tangents(vb_table, ib_table)
+				local t = l:sub(1, 1)
+	
+				if t == 'p' then
+					vertex.p = r2l_math3dvec(v, l)
+				elseif t == 't' then
+					local uv = unpack_vec(v, l)
+					vertex.u = uv[1]
+					vertex.v = uv[2]
+				elseif t == 'n' then
+					vertex.n = r2l_math3dvec(v, l)
+				end
+			end
+		   end 
+			end
+
+			vertex_mark(vertex)
+			vb_table[#vb_table + 1] = vertex
+		end
+
+		math3d.reset()
+		tangents = calc_tangents(vb_table, ib_table)
+		math3d.reset()
 	end
 
 	for iv=0, numv-1 do
@@ -459,8 +482,8 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 			end
 		end
 
-		if layout_n == true and layout_t == true then
-			if layout_T == false then
+		if layout_n and layout_t then
+			if not layout_T then
 				tangent = tangents[iv + 1]
 			end
 			local quat = gltfutil.pack_tangent_frame(normal, tangent, 2)
@@ -471,11 +494,21 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 	for idx = 1, #final_layouts do
 		local l = final_layouts[idx]
 		local t = l:sub(1, 1)
-		if t == 'i' and change_index_attrib == true then
+		if t == 'i' and change_index_attrib then
 			final_layouts[idx] = final_layouts[idx]:sub(1, 5) .. 'i'
 			break
 		end
 	end
+
+	for _, vertex in ipairs(vb_table) do
+		vertex_unmark(vertex)
+	end
+
+	for _, t in ipairs(tangents) do
+		math3d.unmark(t)
+	end
+
+	math3d.reset()
 
 	local bindata = table.concat(buffer, "")
 
@@ -743,7 +776,7 @@ end
 	end
 	for meshidx, mesh in ipairs(meshes) do
 		local meshname = get_obj_name(mesh, meshidx, "mesh")
-		local meshaabb = math3d.aabb()
+		--local meshaabb = math3d.aabb()
 		exports.mesh[meshidx] = {}
 		for primidx, prim in ipairs(mesh.primitives) do
 			local ib_table = {}
@@ -758,7 +791,7 @@ end
 				local aabb = math3d.aabb(bb.aabb[1], bb.aabb[2])
 				if math3d.aabb_isvalid(aabb) then
 					group.bounding = bb
-					meshaabb = math3d.aabb_merge(meshaabb, aabb)
+					--meshaabb = math3d.aabb_merge(meshaabb, aabb)
 				end
 			end
 
