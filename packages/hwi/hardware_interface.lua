@@ -3,6 +3,13 @@ local hw = {}
 local platform = require "bee.platform"
 local bgfx     = require "bgfx"
 
+if not __ANT_RUNTIME__ then
+    if package.loaded.math3d then
+        error "need init math3d MAXPAGE"
+    end
+    debug.getregistry().MATH3D_MAXPAGE = 10480
+end
+
 local math3d   = require "math3d"
 
 local caps = nil
