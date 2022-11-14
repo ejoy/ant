@@ -20,7 +20,7 @@ SAMPLER2D(s_normal,             2);
 
 #ifdef HAS_TERRAIN_NORMAL_TEXTURE
 SAMPLER2DARRAY(s_normal,             2);
-#endif HAS_TERRAIN_NORMAL_TEXTURE
+#endif //HAS_TERRAIN_NORMAL_TEXTURE
 
 #ifdef HAS_EMISSIVE_TEXTURE
 SAMPLER2D(s_emissive,           3);
