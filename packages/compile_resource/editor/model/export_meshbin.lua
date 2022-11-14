@@ -295,8 +295,7 @@ local function calc_tangents(vb, ib)
 
 		local tangent  = math3d.mul(math3d.sub(math3d.mul(ba, bav), math3d.mul(ca, cav)), dirCorrection)
 		local bitangent  = math3d.mul(math3d.sub(math3d.mul(ca, bau), math3d.mul(ba, cau)), dirCorrection)
-	
-		assert(not (mu.isnan_math3dvec(tangent) and mu.isnan_math3dvec(bitangent)), "tangent or bitangnt is nan")
+		assert(not mu.isnan_math3dvec(tangent) and not mu.isnan_math3dvec(bitangent), "tangent or bitangnt is nan")
 	
 		-- TODO: need merge vertex tangent
 		tangents[i0] = calc_local_tangent(a.n, tangent, bitangent)
