@@ -13,8 +13,13 @@ local cmd_queue = {
 local isTranDirty = false
 function cmd_queue:undo()
 	local cmd = queue.pop_last(self.cmd_undo)
-	if not cmd then return end
+	if not cmd then
+		return
+	end
 	local e <close> = w:entity(cmd.eid)
+	if not e then
+		return
+	end
 	if cmd.action == gizmo_const.SCALE then
 		iom.set_scale(e, cmd.oldvalue)
 	elseif cmd.action == gizmo_const.ROTATE then
@@ -36,8 +41,13 @@ end
 
 function cmd_queue:redo()
 	local cmd = queue.pop_last(self.cmd_redo)
-	if not cmd then return end
+	if not cmd then
+		return
+	end
 	local e <close> = w:entity(cmd.eid)
+	if not e then
+		return
+	end
 	if cmd.action == gizmo_const.SCALE then
 		iom.set_scale(e, cmd.newvalue)
 	elseif cmd.action == gizmo_const.ROTATE then

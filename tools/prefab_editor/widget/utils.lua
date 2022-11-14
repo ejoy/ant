@@ -1,5 +1,6 @@
 local assetmgr 	= import_package "ant.asset"
 local imgui     = require "imgui"
+local faicons   = require "common.fa_icons"
 local m = {}
 
 local function ONCE(t, s)
@@ -86,12 +87,12 @@ function m.confirm_dialog(info)
     local change, opened = imgui.windows.BeginPopupModal(info.title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
         imgui.widget.Text(info.message)
-        if imgui.widget.Button("OK") then
+        if imgui.widget.Button(faicons.ICON_FA_SQUARE_CHECK" OK") then
             info.answer = 1
             imgui.windows.CloseCurrentPopup()
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Button("Cancel") then
+        if imgui.widget.Button(faicons.ICON_FA_SQUARE_XMARK" Cancel") then
             info.answer = 0
             imgui.windows.CloseCurrentPopup()
         end

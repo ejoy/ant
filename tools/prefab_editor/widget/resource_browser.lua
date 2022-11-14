@@ -12,6 +12,7 @@ local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
 local gd        = require "common.global_data"
 local icons     = require "common.icons"(assetmgr)
+local faicons   = require "common.fa_icons"
 local editor_setting=require "editor_setting"
 
 local m = {
@@ -62,7 +63,8 @@ local function construct_resource_tree(fspath)
         end
         table.sort(sorted_path, function(a, b) return string.lower(tostring(a)) < string.lower(tostring(b)) end)
         for _, item in ipairs(sorted_path) do
-            if fs.is_directory(item) and item:extension():string() ~= ".glb" then
+            local ext = item:extension():string()
+            if fs.is_directory(item) and ext ~= ".glb" and ext ~= ".png" and ext ~= ".material" and ext ~= ".texture" then
                 table.insert(tree.dirs, {item, construct_resource_tree(item), parent = {tree}})
                 if selected_folder[1] == item then
                     selected_folder = tree.dirs[#tree.dirs]
@@ -140,12 +142,12 @@ local function rename_file(file)
         if imgui.widget.InputText("##NewName", new_filename) then
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Button("OK") then
+        if imgui.widget.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
             lfs.rename(file:localpath(), fs.path(tostring(file:parent_path() .. "/" .. tostring(new_filename.text))):localpath())
             renaming = false
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Button("Cancel") then
+        if imgui.widget.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
             renaming = false
         end
         imgui.windows.EndPopup()
@@ -154,16 +156,17 @@ end
 
 local function ShowContextMenu()
     if imgui.windows.BeginPopupContextItem(tostring(selected_file:filename())) then
-        if imgui.widget.MenuItem("Reveal in Explorer", "Alt+Shift+R") then
+        if imgui.widget.MenuItem(faicons.ICON_FA_UP_RIGHT_FROM_SQUARE.." Reveal in Explorer", "Alt+Shift+R") then
             os.execute("c:\\windows\\explorer.exe /select,"..selected_file:localpath():string():gsub("/","\\"))
         end
-        if imgui.widget.MenuItem("Delete", "Delete") then
-            lfs.remove(selected_file:localpath())
-            selected_file = nil
-        end
-        if imgui.widget.MenuItem("Rename", "F2") then
+        if imgui.widget.MenuItem(faicons.ICON_FA_PEN.." Rename", "F2") then
             renaming = true
             new_filename.text = tostring(selected_file:filename())
+        end
+        imgui.cursor.Separator()
+        if imgui.widget.MenuItem(faicons.ICON_FA_TRASH.." Delete", "Delete") then
+            lfs.remove(selected_file:localpath())
+            selected_file = nil
         end
         imgui.windows.EndPopup()
     end

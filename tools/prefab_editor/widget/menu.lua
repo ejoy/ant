@@ -15,11 +15,12 @@ local global_data       = require "common.global_data"
 local access            = global_data.repo_access
 local fs                = require "filesystem"
 local uiutils           = require "widget.utils"
+local faicons            = require "common.fa_icons"
 
 local m = {}
 local function show_select_light_dialog()
     local lightprefab = editor_setting.setting.light or ""
-    if imgui.widget.MenuItem("Light:".. lightprefab) then
+    if imgui.widget.MenuItem(faicons.ICON_FA_LIGHTBULB.." Light:".. lightprefab) then
         local prefab_filename = uiutils.get_open_file_path("Select Prefab", "prefab")
         if prefab_filename then
             local filename = access.virtualpath(global_data.repo, fs.path(prefab_filename))
@@ -54,13 +55,13 @@ function m.show()
     local click_project_setting
     if imgui.widget.BeginMainMenuBar() then
         if imgui.widget.BeginMenu "File" then
-            if imgui.widget.MenuItem("New", "Ctrl+N") then
+            if imgui.widget.MenuItem(faicons.ICON_FA_FILE_PEN.." New", "Ctrl+N") then
                 prefab_mgr:reset_prefab()
             end
-            if imgui.widget.MenuItem("Open", "Ctrl+O") then
+            if imgui.widget.MenuItem(faicons.ICON_FA_FOLDER_OPEN.." Open", "Ctrl+O") then
             end
             imgui.cursor.Separator()
-            if imgui.widget.BeginMenu "Recent Files" then
+            if imgui.widget.BeginMenu(faicons.ICON_FA_LIST.." Recent Files") then
                 local rf = editor_setting.setting.recent_files
                 if rf then
                     for _, f in ipairs(editor_setting.setting.recent_files) do
@@ -74,11 +75,11 @@ function m.show()
                 imgui.widget.EndMenu()
             end
             imgui.cursor.Separator()
-            if imgui.widget.MenuItem("Save", "Ctrl+S") then
+            if imgui.widget.MenuItem(faicons.ICON_FA_FLOPPY_DISK.." Save", "Ctrl+S") then
                 prefab_mgr:save_prefab()
             end
             
-            if imgui.widget.MenuItem "Save As.." then
+            if imgui.widget.MenuItem(faicons.ICON_FA_DOWNLOAD.." Save As..") then
                 local path = widget_utils.get_saveas_path("Prefab", "prefab")
                 if path then
                     prefab_mgr:save_prefab(path)
@@ -88,13 +89,13 @@ function m.show()
         end
         if imgui.widget.BeginMenu "Edit" then
             imgui.cursor.Separator()
-            if imgui.widget.MenuItem("Undo", "CTRL+Z") then
+            if imgui.widget.MenuItem(faicons.ICON_FA_ARROW_ROTATE_LEFT.." Undo", "CTRL+Z") then
             end
 
-            if imgui.widget.MenuItem("Redo", "CTRL+Y", false, false) then
+            if imgui.widget.MenuItem(faicons.ICON_FA_ARROW_ROTATE_RIGHT.." Redo", "CTRL+Y", false, false) then
             end
             imgui.cursor.Separator()
-            if imgui.widget.MenuItem "SaveUILayout" then
+            if imgui.widget.MenuItem(faicons.ICON_FA_FLOPPY_DISK.. " SaveUILayout") then
                 local setting = imgui.util.SaveIniSettings()
                 local wf = assert(lfs.open(fs.path "":localpath() .. "/" .. "imgui.layout", "wb"))
                 wf:write(setting)
@@ -103,7 +104,7 @@ function m.show()
             show_select_light_dialog()
             show_select_blender_dialog()
             imgui.cursor.Separator()
-            if imgui.widget.MenuItem "ProjectSetting" then
+            if imgui.widget.MenuItem(faicons.ICON_FA_GEAR.." ProjectSetting") then
                 click_project_setting = true
             end
             imgui.widget.EndMenu()

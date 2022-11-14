@@ -10,6 +10,7 @@ local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy_edit"
+local faicons   = require "common.fa_icons"
 
 local m = {}
 
@@ -32,39 +33,39 @@ local function node_context_menu(eid)
         local current_lock = hierarchy:is_locked(eid)
         local tpl = hierarchy:get_template(eid)
         if not tpl.filename then
-            if imgui.widget.Selectable("Clone", false) then
+            if imgui.widget.MenuItem(faicons.ICON_FA_CLONE.." Clone", "Ctrl+D") then
                 world:pub { "HierarchyEvent", "clone", eid }
             end
         end
-        if imgui.widget.Selectable("MoveTop", false) then
+        if imgui.widget.MenuItem(faicons.ICON_FA_ARROWS_UP_TO_LINE.." MoveTop") then
             world:pub { "HierarchyEvent", "movetop", eid }
         end
-        if imgui.widget.Selectable("MoveUp", false) then
+        if imgui.widget.MenuItem(faicons.ICON_FA_ARROW_UP.." MoveUp") then
             world:pub { "HierarchyEvent", "moveup", eid }
         end
         imgui.cursor.Separator()
-        if imgui.widget.Selectable(current_lock and "Unlock" or "lock", false) then
+        if imgui.widget.MenuItem(current_lock and faicons.ICON_FA_LOCK.." Unlock" or faicons.ICON_FA_LOCK_OPEN.." lock") then
             world:pub { "HierarchyEvent", "lock", eid, not current_lock }
         end
         local current_visible = hierarchy:is_visible(eid)
-        if imgui.widget.Selectable(current_visible and "Hide" or "Show", false) then
+        if imgui.widget.MenuItem(current_visible and faicons.ICON_FA_EYE.." Hide" or faicons.ICON_FA_EYE_SLASH.." Show") then
             world:pub { "HierarchyEvent", "visible", hierarchy:get_node(eid), not current_visible }
         end
         imgui.cursor.Separator()
         imgui.windows.BeginDisabled(is_delete_disable())
-        if imgui.widget.Selectable("Delete", false) then
+        if imgui.widget.MenuItem(faicons.ICON_FA_TRASH.." Delete", "Delete") then
             world:pub { "HierarchyEvent", "delete", eid }
         end
         imgui.windows.EndDisabled()
         imgui.cursor.Separator()
-        if imgui.widget.Selectable("MoveDown", false) then
+        if imgui.widget.MenuItem(faicons.ICON_FA_ARROW_DOWN.." MoveDown") then
             world:pub { "HierarchyEvent", "movedown", eid }
         end
-        if imgui.widget.Selectable("MoveBottom", false) then
+        if imgui.widget.MenuItem(faicons.ICON_FA_ARROWS_DOWN_TO_LINE.." MoveBottom") then
             world:pub { "HierarchyEvent", "movebottom", eid }
         end
         imgui.cursor.Separator()
-        if imgui.widget.Selectable("NoParent", false) then
+        if imgui.widget.MenuItem("NoParent") then
             world:pub { "EntityEvent", "parent", eid }
         end
         imgui.windows.EndPopup()
@@ -242,7 +243,7 @@ function m.show()
     imgui.windows.SetNextWindowSize(uiconfig.SceneWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
     -- for _ in uiutils.imgui_windows("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) do
     if imgui.windows.Begin("Hierarchy", imgui.flags.Window { "NoCollapse", "NoClosed" }) then
-        if imgui.widget.Button("Create") then
+        if imgui.widget.Button(faicons.ICON_FA_SQUARE_PLUS.." Create") then
             imgui.windows.OpenPopup("CreateEntity")
         end
         if imgui.windows.BeginPopup("CreateEntity") then

@@ -8,6 +8,7 @@ local math3d = require "math3d"
 local gizmo_const = require "gizmo.const"
 local gizmo = {
     mode = gizmo_const.SELECT,
+	scale = 1.0,
 	--move
 	tx = {dir = gizmo_const.DIR_X, color = math3d.ref(math3d.vector(gizmo_const.COLOR.X))},
 	ty = {dir = gizmo_const.DIR_Y, color = math3d.ref(math3d.vector(gizmo_const.COLOR.Y))},

@@ -75,8 +75,9 @@ local function exec_command(command)
     end
 end
 
+local faicons   = require "common.fa_icons"
 local function show_input()
-    imgui.widget.Text(">")
+    imgui.widget.Text(faicons.ICON_FA_TERMINAL)
     imgui.cursor.SameLine()
     local reclaim_focus = false
     imgui.cursor.PushItemWidth(-1)

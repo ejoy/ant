@@ -20,7 +20,7 @@ local joint_utils = require "widget.joint_utils"
 local utils     = require "common.utils"
 local global_data = require "common.global_data"
 local access    = global_data.repo_access
-
+local faicons   = require "common.fa_icons"
 local fs        = require "filesystem"
 local global_data = require "common.global_data"
 
@@ -348,7 +348,7 @@ local shape_type = {
 local function show_events()
     if anim_state.selected_frame >= 0 then -- and current_clip then
         imgui.cursor.SameLine()
-        if imgui.widget.Button("AddEvent") then
+        if imgui.widget.Button(faicons.ICON_FA_SQUARE_PLUS.." AddEvent") then
             imgui.windows.OpenPopup("AddKeyEvent")
         end
     end
@@ -752,7 +752,7 @@ function m.show()
         end
         imgui.cursor.SameLine()
         local title = "Add Animation"
-        if imgui.widget.Button("Add") then
+        if imgui.widget.Button(faicons.ICON_FA_SQUARE_PLUS.." Add") then
             anim_path = ""
             imgui.windows.OpenPopup(title)
         end
@@ -802,7 +802,7 @@ function m.show()
             --     end
             -- end
             imgui.cursor.Separator()
-            if imgui.widget.Button("  OK  ") then
+            if imgui.widget.Button(faicons.ICON_FA_CHECK.."  OK  ") then
                 if #anim_name > 0 and #anim_path > 0 then
                     local update = true
                     local anims = get_runtime_animations(anim_eid)
@@ -830,7 +830,7 @@ function m.show()
                 imgui.windows.CloseCurrentPopup()
             end
             imgui.cursor.SameLine()
-            if imgui.widget.Button("Cancel") then
+            if imgui.widget.Button(faicons.ICON_FA_XMARK.." Cancel") then
                 clear_add_animation_cache()
                 imgui.windows.CloseCurrentPopup()
             end
@@ -838,7 +838,7 @@ function m.show()
         end
 
         imgui.cursor.SameLine()
-        if imgui.widget.Button("Remove") then
+        if imgui.widget.Button(faicons.ICON_FA_TRASH.." Remove") then
             anim_group_delete(current_anim.name)
             local nextanim = edit_anims.name_list[1]
             if nextanim then
@@ -881,7 +881,7 @@ function m.show()
             show_skeleton(ui_showskeleton[1])
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Button("SaveEvent") then
+        if imgui.widget.Button(faicons.ICON_FA_FLOPPY_DISK.." SaveEvent") then
             m.save_keyevent()
         end
         imgui.cursor.SameLine()

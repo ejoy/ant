@@ -20,6 +20,7 @@ local cmd_queue = ecs.require "gizmo.command_queue"
 local utils 	= ecs.require "mathutils"
 local camera_mgr= ecs.require "camera.camera_manager"
 local gizmo 	= ecs.require "gizmo.gizmo"
+local light_gizmo = ecs.require "gizmo.light"
 local inspector = ecs.require "widget.inspector"
 
 local hierarchy = require "hierarchy_edit"
@@ -32,7 +33,6 @@ local gizmo_sys = ecs.system "gizmo_system"
 local move_axis
 local rotate_axis
 local uniform_scale = false
-local gizmo_scale = 1.0
 local local_space = false
 
 function gizmo:update()
@@ -68,7 +68,6 @@ function gizmo:updata_uniform_scale()
 	if not self.rw.eid or not self.rw.eid[1] then return end
 	local mc <close> = w:entity(irq.main_camera())
 	self.rw.dir = math3d.totable(iom.get_direction(mc))
-	--update_camera
 	local r = iom.get_rotation(mc)
 	local e1 <close> = w:entity(self.rw.eid[1])
 	local e3 <close> = w:entity(self.rw.eid[3])
@@ -98,7 +97,7 @@ function gizmo:set_position(worldpos, gizmoonly)
 	if not can_edit_srt(self.target_eid) then
 		return
 	end
-	local newpos
+	local newpos = worldpos
 	local target <close> = w:entity(self.target_eid)
 	if worldpos then
 		if not gizmoonly then
@@ -112,20 +111,20 @@ function gizmo:set_position(worldpos, gizmoonly)
 			if not parent_worldmat then
 				localPos = worldpos
 			else
-				localPos = math3d.totable(math3d.transform(math3d.inverse(parent_worldmat), math3d.vector(worldpos), 1))
+				localPos = math3d.transform(math3d.inverse(parent_worldmat), math3d.vector(worldpos), 1)
 			end
 			iom.set_position(target, localPos)
 			local template = hierarchy:get_template(self.target_eid)
-			template.template.data.scene.t = localPos
+			local tp = (type(localPos) == "table") and localPos or math3d.tovalue(localPos)
+			template.template.data.scene.t = {tp[1], tp[2], tp[3]}
 		end
-		newpos = worldpos
 	else
 		local wm = iom.worldmat(target)
 		if wm ~= mc.NULL then
-			local s, r, t = math3d.srt(wm)
-			newpos = math3d.totable(t)
+			local _, _, t = math3d.srt(wm)
+			newpos = t
 		else
-			newpos = {0,0,0}
+			newpos = mc..ZERO
 		end
 	end
 	local root <close> = w:entity(self.root_eid);
@@ -139,14 +138,14 @@ function gizmo:set_rotation(inrot, gizmoonly)
 		return
 	end
 	local target <close> = w:entity(self.target_eid)
-	local newrot
+	local newrot = inrot
 	if inrot then
 		if not gizmoonly then
 			iom.set_rotation(target, inrot)
 			local template = hierarchy:get_template(self.target_eid)
-			template.template.data.scene.r = math3d.tovalue(inrot)
+			local tv = math3d.tovalue(inrot)
+			template.template.data.scene.r = {tv[1], tv[2], tv[3], tv[4]}
 		end
-		newrot = inrot
 	else
 		newrot = iom.get_rotation(target)
 	end
@@ -154,11 +153,7 @@ function gizmo:set_rotation(inrot, gizmoonly)
 	if self.mode == gizmo_const.SCALE then
 		iom.set_rotation(re, newrot)
 	elseif self.mode == gizmo_const.MOVE or self.mode == gizmo_const.ROTATE then
-		if local_space then
-			iom.set_rotation(re, newrot)
-		else
-			iom.set_rotation(re, math3d.quaternion{0,0,0})
-		end
+		iom.set_rotation(re, local_space and newrot or mc.IDENTITY_QUAT)
 	end
 end
 
@@ -260,13 +255,17 @@ function gizmo:update_scale()
 	local eyepos = iom.get_position(mc)
 	local re <close> = w:entity(self.root_eid)
 	local project_dist = math3d.dot(math3d.normalize(viewdir), math3d.sub(iom.get_position(re), eyepos))
-	gizmo_scale = project_dist * 0.6
+	gizmo.scale = project_dist * 0.6
 	if self.root_eid then
-		iom.set_scale(re, gizmo_scale)
+		iom.set_scale(re, gizmo.scale)
 	end
 	if self.uniform_rot_root_eid then
 		local ue <close> = w:entity(self.uniform_rot_root_eid)
-		iom.set_scale(ue, gizmo_scale)
+		iom.set_scale(ue, gizmo.scale)
+	end
+	if light_gizmo.directional.root then
+		local le <close> = w:entity(light_gizmo.directional.root)
+		iom.set_scale(le, gizmo.scale * 0.2)
 	end
 end
 
@@ -482,7 +481,7 @@ local function select_axis_plane(x, y)
 		end
 		return nil
 	end
-	local planeHitRadius = gizmo_scale * gizmo_const.MOVE_PLANE_HIT_RADIUS * 0.5
+	local planeHitRadius = gizmo.scale * gizmo_const.MOVE_PLANE_HIT_RADIUS * 0.5
 	local axis_plane = gizmo.tyz
 	local posToGizmo = hit_test_axis_plane(axis_plane)
 	
@@ -584,7 +583,7 @@ local function select_axis(x, y)
 		end
 	end
 	-- by axis
-	local line_len = gizmo_const.AXIS_LEN * gizmo_scale
+	local line_len = gizmo_const.AXIS_LEN * gizmo.scale
 
 	local axes = {
 		x = {line_len, 0, 0},
@@ -628,7 +627,7 @@ local function select_rotate_axis(x, y)
 		local adjust_axis_len = (axis == gizmo.rw) and gizmo_const.UNIFORM_ROT_AXIS_LEN or gizmo_const.AXIS_LEN
 		local a1 <close> = w:entity(axis.eid[1])
 		local a2 <close> = w:entity(axis.eid[2])
-		if math.abs(dist - gizmo_scale * adjust_axis_len) < gizmo_const.ROTATE_HIT_RADIUS * gizmo_scale then
+		if math.abs(dist - gizmo.scale * adjust_axis_len) < gizmo_const.ROTATE_HIT_RADIUS * gizmo.scale then
 			local hlcolor = gizmo_const.COLOR.HIGHLIGHT
 			imaterial.set_property(a1, "u_color", hlcolor)
 			imaterial.set_property(a2, "u_color", hlcolor)
@@ -662,7 +661,7 @@ local function select_rotate_axis(x, y)
 	end
 end
 
-local camera_zoom = world:sub {"camera", "zoom"}
+local camera_zoom = world:sub {"camera"}
 local mouse_drag = world:sub {"mousedrag"}
 local mouse_down = world:sub {"mousedown"}
 local mouse_move = world:sub {"mousemove"}
@@ -683,21 +682,19 @@ local function move_gizmo(x, y)
 	if not gizmo.target_eid or not x or not y then
 		return
 	end
-	local worldPos
+	local worldPos = last_gizmo_pos
 	if move_axis == gizmo.txy or move_axis == gizmo.tyz or move_axis == gizmo.tzx then
 		local re <close> = w:entity(gizmo.root_eid)
 		local gizmoTPos = math3d.totable(iom.get_position(re))
 		local downpos = mouse_hit_plane(last_mouse_pos, {dir = gizmo_dir_to_world(move_axis.dir), pos = gizmoTPos})
 		local curpos = mouse_hit_plane({x, y}, {dir = gizmo_dir_to_world(move_axis.dir), pos = gizmoTPos})
 		if downpos and curpos then
-			local delta = math3d.totable(math3d.sub(curpos, downpos))
-			worldPos = {last_gizmo_pos[1] + delta[1], last_gizmo_pos[2] + delta[2], last_gizmo_pos[3] + delta[3]}
+			worldPos = math3d.add(last_gizmo_pos, math3d.sub(curpos, downpos))
 		end
 	else
 		local ce <close> = w:entity(irq.main_camera(), "camera:in")
 		local newOffset = utils.view_to_axis_constraint(iom.ray(ce.camera.viewprojmat, {x, y}), iom.get_position(ce), gizmo_dir_to_world(move_axis.dir), last_gizmo_pos)
-		local delta = math3d.totable(math3d.sub(newOffset, init_offset))
-		worldPos = {last_gizmo_pos[1] + delta[1], last_gizmo_pos[2] + delta[2], last_gizmo_pos[3] + delta[3]}
+		worldPos = math3d.add(last_gizmo_pos, math3d.sub(newOffset, init_offset))
 	end
 	gizmo:set_position(worldPos)
 	gizmo:update_scale()
@@ -719,7 +716,7 @@ local last_spot_range
 local function move_light_gizmo(x, y)
 	if light_gizmo_mode == 0 then return end
 	local circle_centre
-	local le <close> = w:entity(light_gizmo.current_light)
+	local le <close> = w:entity(light_gizmo.current_light, "light:in")
 	if light_gizmo_mode == 4 or light_gizmo_mode == 5 then
 		local mat = iom.worldmat(le)
 		circle_centre = math3d.transform(mat, math3d.vector{0, 0, ilight.range(le)}, 1)
@@ -813,7 +810,7 @@ local function rotate_gizmo(x, y)
 		angleBaseDir = math3d.normalize(math3d.cross(mc.YAXIS, axis_dir))
 	end
 	
-	local deltaAngle = proj_len * 200 / gizmo_scale
+	local deltaAngle = proj_len * 200 / gizmo.scale
 	if deltaAngle > 360 then
 		deltaAngle = deltaAngle - 360
 	elseif deltaAngle < -360 then
@@ -960,7 +957,7 @@ function gizmo:select_gizmo(x, y)
 		local mode = select_light_gizmo(x, y)
 		if mode ~= 0 then
 			if mode == 5 then
-				local le <close> = w:entity(light_gizmo.current_light)
+				local le <close> = w:entity(light_gizmo.current_light, "light:in")
 				last_spot_range = ilight.range(le)
 				last_gizmo_pos = math3d.totable(iom.get_position(le))
 				local mat = iom.worldmat(le)
@@ -1098,16 +1095,10 @@ local function focus_aabb(ce, aabb)
 end
 
 function gizmo_sys:handle_event()
-	-- for _, what, wp in gizmo_event:unpack() do
-	-- 	if what == "updateposition" then
-	-- 		gizmo:update_position(wp)
-	-- 	elseif what == "ontarget" then
-	-- 		gizmo:update()
-	-- 	end
-	-- end
-
 	for _ in camera_zoom:unpack() do
 		gizmo:update_scale()
+		gizmo:updata_uniform_scale()
+		break
 	end
 
 	for _, what, value in gizmo_mode_event:unpack() do
@@ -1132,8 +1123,6 @@ function gizmo_sys:handle_event()
 			gizmo_seleted = gizmo:select_gizmo(x, y)
 			gizmo:click_axis_or_plane(move_axis)
 			gizmo:click_axis(rotate_axis)
-
-			-- world:pub{"camera_controller", "stop", gizmo_seleted}
 		elseif what == "MIDDLE" then
 		end
 	end
@@ -1153,7 +1142,6 @@ function gizmo_sys:handle_event()
 				end
 			end
 			gizmo_seleted = false
-			-- world:pub{"camera_controller", "stop", false}
 			light_gizmo_mode = 0
 			if is_tran_dirty then
 				is_tran_dirty = false
@@ -1200,9 +1188,6 @@ function gizmo_sys:handle_event()
 			elseif gizmo.mode == gizmo_const.ROTATE and rotate_axis then
 				rotate_gizmo(x, y)
 			end
-		elseif what == "RIGHT" then
-			gizmo:update_scale()
-			gizmo:updata_uniform_scale()
 		end
 	end
 	

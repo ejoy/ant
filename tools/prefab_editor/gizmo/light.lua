@@ -8,8 +8,7 @@ local ilight    = ecs.import.interface "ant.render|ilight"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local geo_utils = ecs.require "editor.geometry_utils"
-
-local math3d = require "math3d"
+local math3d    = require "math3d"
 local gizmo_const = require "gizmo.const"
 local bgfx = require "bgfx"
 

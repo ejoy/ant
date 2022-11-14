@@ -113,7 +113,7 @@ local function create_default_light(lt, parent)
         name            = lt .. gen_light_id(),
         type            = lt,
         color           = {1, 1, 1, 1},
-        make_shadow     = true,
+        make_shadow     = false,
         intensity       = 250000,--ilight.default_intensity(lt),
         intensity_unit  = ilight.default_intensity_unit(lt),
         range           = 1,

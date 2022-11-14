@@ -68,6 +68,7 @@ local function on_key(key, press)
 	end
 	if newpos then
 		iom.set_position(ce, newpos)
+		world:pub {"camera", "move"}
 	end
 end
 
@@ -80,6 +81,7 @@ local function on_middle_mouse(dx, dy)
 	local ydir = math3d.normalize(math3d.index(mat, 2))
 	local dir = math3d.add(math3d.mul(xdir, dx), math3d.mul(ydir, -dy))
 	iom.set_position(ce, math3d.add(pos, math3d.mul(dir, 0.02 * move_speed * camera_speed)))
+	world:pub {"camera", "move"}
 end
 
 local shift_down = false
@@ -108,6 +110,7 @@ local function on_right_mouse(dx, dy)
 		local dist = -1.0 * math3d.length(math3d.sub(cam_pos, target_pos))
 		iom.set_position(ce, math3d.muladd(dist, math3d.todirection(rot), target_pos))
 	end
+	world:pub {"camera", "rotation"}
 end
 
 local function on_wheel(delta)

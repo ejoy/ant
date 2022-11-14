@@ -19,6 +19,7 @@ local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
 local imodifier = ecs.import.interface "ant.modifier|imodifier"
 local ika       = ecs.import.interface "ant.animation|ikeyframe"
+local faicons   = require "common.fa_icons"
 local m = {}
 local mtl_desc = {}
 local current_mtl
@@ -309,7 +310,7 @@ local function create_clip()
             imgui.widget.Text("Invalid start range!")
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Button "Cancel" then
+        if imgui.widget.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
             new_clip_pop = false
         end
         imgui.windows.EndPopup()
@@ -383,7 +384,7 @@ local function show_current_detail()
         return
     else
         imgui.cursor.SameLine()
-        if imgui.widget.Button("DelClip") then
+        if imgui.widget.Button(faicons.ICON_FA_TRASH.." DelClip") then
             table.remove(clips, current_anim.selected_clip_index)
             current_anim.selected_clip_index = 0
             current_anim.dirty_layer = -1
@@ -664,7 +665,7 @@ function m.new()
             end
             anim_duration = duration_ui[1]
         end
-        if imgui.widget.Button "OK" then
+        if imgui.widget.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
             new_anim_widget = false
             if anim_name ~= "" then
                 create_animation(anim_name, anim_duration)
@@ -672,7 +673,7 @@ function m.new()
             end
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Button "Cancel" then
+        if imgui.widget.Button(faicons.ICON_FA_SQUARE_XMARK.." Cancel") then
             new_anim_widget = false
         end
         imgui.windows.EndPopup()
@@ -755,13 +756,13 @@ function m.show()
     -- for _ in uiutils.imgui_windows("Skeleton", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
     if imgui.windows.Begin("Skeleton", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         if (edit_mode == MODE_MTL and current_uniform) or (edit_mode == MODE_SKE and current_skeleton) then
-            if imgui.widget.Button("New") then
+            if imgui.widget.Button(faicons.ICON_FA_FILE_PEN.." New") then
                 new_anim_widget = true
             end
             imgui.cursor.SameLine()
         end
         m.new()
-        if imgui.widget.Button("Load") then
+        if imgui.widget.Button(faicons.ICON_FA_FOLDER_OPEN.." Load") then
             local anim_filename = uiutils.get_open_file_path("Load Animation", "anim")
             if anim_filename then
                 m.load(anim_filename)
@@ -769,7 +770,7 @@ function m.show()
         end
 
         imgui.cursor.SameLine()
-        if imgui.widget.Button("Save") then
+        if imgui.widget.Button(faicons.ICON_FA_FLOPPY_DISK.." Save") then
             m.save(file_path)
         end
         imgui.cursor.SameLine()

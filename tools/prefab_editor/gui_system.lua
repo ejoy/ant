@@ -7,7 +7,7 @@ local imgui     = require "imgui"
 local rhwi      = import_package "ant.hwi"
 local asset_mgr = import_package "ant.asset"
 local mathpkg   = import_package "ant.math"
-
+local faicons   = require "common.fa_icons"
 local mc        = mathpkg.constant
 local ipl       = ecs.import.interface "ant.render|ipolyline"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
@@ -132,7 +132,7 @@ local function choose_project()
     local change, opened = imgui.windows.BeginPopupModal(title, imgui.flags.Window{"AlwaysAutoResize", "NoClosed"})
     if change then
         imgui.widget.Text("Create new or open existing project.")
-        if imgui.widget.Button "Create" then
+        if imgui.widget.Button(faicons.ICON_FA_FOLDER_PLUS.." Create") then
             local path = choose_project_dir()
             if path then
                 local lpath = lfs.path(path)
@@ -147,11 +147,11 @@ local function choose_project()
             end
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Button "Open" then
+        if imgui.widget.Button(faicons.ICON_FA_FOLDER_OPEN.." Open") then
             OnOpen()
         end
         imgui.cursor.SameLine()
-        if imgui.widget.Button "Quit" then
+        if imgui.widget.Button(faicons.ICON_FA_BAN.." Quit") then
             global_data:update_root(fs.path "":localpath())
         end
 
