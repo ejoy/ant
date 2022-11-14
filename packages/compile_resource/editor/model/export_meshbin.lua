@@ -441,8 +441,6 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 					vertex.n = r2l_math3dvec(v, l)
 				end
 			end
-		   end 
-			end
 
 			vertex_mark(vertex)
 			vb_table[#vb_table + 1] = vertex
