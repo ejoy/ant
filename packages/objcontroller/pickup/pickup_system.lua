@@ -43,7 +43,7 @@ local function cvt_clickpt(pt, ratio)
 end
 
 local function update_camera(pu_camera_ref, clickpt)
-	local mq = w:first("main_queue camera_ref:in render_target:in")
+	local mq = w:first "main_queue camera_ref:in render_target:in"
 	local main_vr = mq.render_target.view_rect
 	
 	local ndc2D = mu.pt2D_to_NDC(cvt_clickpt(clickpt, main_vr.ratio), main_vr)
@@ -53,13 +53,17 @@ local function update_camera(pu_camera_ref, clickpt)
 		eye, at = at, eye
 	end
 
-	local maincamera = find_camera(mq.camera_ref)
+	local mqc = w:entity(mq.camera_ref, "camera:in")
+	local maincamera = mqc.camera
 	local vp = maincamera.viewprojmat
 	local ivp = math3d.inverse(vp)
 	eye = math3d.transformH(ivp, eye, 1)
 	at = math3d.transformH(ivp, at, 1)
 
-	local camera = find_camera(pu_camera_ref)
+	--use scene_changed here, not scene_needchange, see render_system.lua, it check for 'scene_changed' component
+	local pqc<close> = w:entity(pu_camera_ref, "camera:in scene_changed?out")
+	pqc.scene_changed = true
+	local camera = pqc.camera
 	local viewdir = math3d.normalize(math3d.sub(at, eye))
 	camera.viewmat.m		= math3d.lookto(eye, viewdir, camera.updir)
 	camera.projmat.m	= math3d.projmat(camera.frustum, INV_Z)
@@ -248,7 +252,7 @@ function pickup_sys:entity_init()
 end
 
 local function open_pickup(x, y, cb)
-	local e = w:first("pickup_queue pickup:in visible?out")
+	local e = w:first "pickup_queue pickup:in visible?out"
 	e.pickup.nextstep = "blit"
 	e.pickup.clickpt[1] = x
 	e.pickup.clickpt[2] = y
@@ -258,15 +262,16 @@ local function open_pickup(x, y, cb)
 end
 
 local function close_pickup()
-	local e = w:first("pickup_queue pickup:in visible?out")
+	local e = w:first "pickup_queue pickup:in visible?out"
 	e.pickup.nextstep = nil
 	e.visible = false
 	w:submit(e)
 end
 
 function pickup_sys:update_camera()
-	for e in w:select "pickup_queue visible pickup:in camera_ref:in" do
-		update_camera(e.camera_ref, e.pickup.clickpt)
+	local puq = w:first "pickup_queue visible pickup:in camera_ref:in"
+	if puq then
+		update_camera(puq.camera_ref, puq.pickup.clickpt)
 		-- if cw_enable then
 		-- 	local main_camera <close> = w:entity(irq.main_camera())
 		-- 	local mc_viewmat = main_camera.camera.viewmat
@@ -318,13 +323,14 @@ local function check_next_step(pc)
 end
 
 function pickup_sys:pickup()
-	for v in w:select "pickup_queue visible pickup:in render_target:in" do
-		local pc = v.pickup
+	local puq = w:first "pickup_queue visible pickup:in render_target:in"
+	if puq then
+		local pc = puq.pickup
 		local nextstep = pc.nextstep
 		if nextstep == "blit" then
-			blit(pc.blit_buffer, v.render_target)
+			blit(pc.blit_buffer, puq.render_target)
 		elseif nextstep == "select_obj" then
-			select_obj(pc, v.render_target)
+			select_obj(pc, puq.render_target)
 			close_pickup()
 		end
 		check_next_step(pc)
@@ -358,7 +364,7 @@ function pickup_sys:update_filter()
 		local fm = e.filter_material
 		local matres = imaterial.resource(e)
 		local st = matres.fx.setting.surfacetype
-		local qe = w:first("pickup_queue primitive_filter:in")
+		local qe = w:first "pickup_queue primitive_filter:in"
 
 		if has_filter_stage(qe.primitive_filter, st) then
 			local src_mo = matres.object
