@@ -37,6 +37,7 @@ local shader_options = {
 	vulkan = {
 		vs = "spirv",
 		fs = "spirv",
+		cs = "spirv",
 	},
 }
 

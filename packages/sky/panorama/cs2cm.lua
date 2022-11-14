@@ -85,17 +85,18 @@ function cs2cm_sys:entity_ready()
                 icompute.dispatch(p2c_viewid, dis)
     
                 --just generate mipmaps for cm_rbidx
-                local fbidx = fbmgr.create{
+                 local fbidx = fbmgr.create{
                     rbidx = cm_rbidx,
                     resolve = "g",
                     layer = 0,
                     mip = 0,
                     numlayer = 1,
                 }
-                bgfx.set_view_frame_buffer(p2c_viewid, fbmgr.get(fbidx).handle)
-                bgfx.touch(p2c_viewid)
+                local testid = viewidmgr.get "panorama2cubmapMips"
+                bgfx.set_view_frame_buffer(testid, fbmgr.get(fbidx).handle)
+                bgfx.touch(testid)
     
-                fbmgr.destroy(fbidx, true)
+                fbmgr.destroy(fbidx, true) 
                 
                 imaterial.set_property(e, "s_skybox", cm_rbhandle)
             end
