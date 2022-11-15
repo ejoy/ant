@@ -138,14 +138,11 @@ local function material_init()
 end
 
 function s.init()
-
     --material_init()
-
-    bgfx.set_view_clear(0, "CD", 0, 0)
 end
 
 function s.render()
-    
+    bgfx.touch(0)
 end
 
 return s

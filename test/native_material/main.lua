@@ -28,6 +28,8 @@ function S.init(nwh, context, width, height)
 	--bgfx.encoder_create()
 	bgfx.encoder_init()
 
+	bgfx.set_view_rect(0, 0, 0, width, height)
+	bgfx.set_view_clear(0, "CD", 0xffff00ff, 0)
     test = require "test"
     test.init()
 end
