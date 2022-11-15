@@ -8,6 +8,23 @@ _windows:
   graphic:
     api: d3d11
 graphic:
+  ao:
+    enable: true
+    bent_normal : false
+    quality     : "low"
+    radius      : 0.3
+    power       : 1.0
+    bias        : 0.0005
+    resolution  : 0.5
+    intensity   : 1.0
+    bilateral_threshold: 0.05
+    min_horizon_angle: 0.0
+  curve_world:
+    enable: false
+    type: "cylinder"
+    flat_distance: 0
+    curve_rate: 0.1
+    distance: 1200
   lighting:
     cluster_shading: 1
   render:
@@ -30,5 +47,11 @@ graphic:
     normal_offset: 0
     color: {0.0, 0.0, 0.0, 1}
     stabilize: true
-    split_lamada: 1
+    # split_ratios:
+    #   {0.05, 0.25}
+    #   {0.23, 0.48}
+    #   {0.45, 0.85}
+    split_lamada: 0.8
     split_num: 4
+debug:
+  show_bounding: true

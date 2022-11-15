@@ -40,16 +40,19 @@ function S.update()
     --world:pipeline_update()
     bgfx.encoder_begin()
 	render()
+	bgfx.encoder_end()
     do
         bgfx.frame()
     end
-    bgfx.encoder_end()
 end
 
 function S.size()
 end
 
 function S.mouse()
+end
+
+function S.exit()
 end
 
 local function dispatch(CMD,...)

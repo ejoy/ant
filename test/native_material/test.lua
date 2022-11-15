@@ -4,6 +4,8 @@ local rmat = require "render.material"
 
 local cr = import_package "ant.compile_resource"
 
+local fs = require "filesystem"
+local lfs = require "filesystem.local"
 local math3d = require "math3d"
 local bgfx = require "bgfx"
 
@@ -68,12 +70,18 @@ local function update_texture(handle)
     bgfx.update_texture2d(handle, layer, mip, x, y, w, h, mem)
 end
 
-function s.init()
-    local fx = load_fx {
-        vs = "/pkg/ant.resources/shaders/simple/quad/vs_simplequad.sc",
-        fs = "/pkg/ant.resources/shaders/simple/quad/fs_simplequad.sc"
-    }
+local function material_init()
+    --TODO: need copy code from ext_material if we do not want to depend ant.asset
+    local mfn = "/pkg/ant.native_material/simplequad.material"
+    local mf = cr.compile_file(fs.path(mfn .. "|main.cfg"))
+    local c; do
+        local f<close> = lfs.open(mf, "r")
+        c = f:read "a"
+    end
 
+    bgfx.create_program()
+    local fx
+    
     local function find_uniform(name)
         for _, u in ipairs(fx.uniforms) do
             if u.name == name then
@@ -129,8 +137,15 @@ function s.init()
     collectgarbage "collect"
 end
 
-function s.render()
+function s.init()
 
+    --material_init()
+
+    bgfx.set_view_clear(0, "CD", 0, 0)
+end
+
+function s.render()
+    
 end
 
 return s

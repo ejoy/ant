@@ -1,10 +1,12 @@
-local ecs = ...
-local world = ecs.world
-local bgfx = require "bgfx"
-local math3d = require "math3d"
-local declmgr = require "declmgr"
-local fs = require "filesystem"
-local sampler = require "sampler"
+local ecs       = ...
+local world     = ecs.world
+local bgfx      = require "bgfx"
+local math3d    = require "math3d"
+local declmgr   = require "declmgr"
+local fs        = require "filesystem"
+local sampler   = require "sampler"
+
+
 local is = ecs.system "init_system"
 
 local mesh = {
