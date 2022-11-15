@@ -1,20 +1,50 @@
-local renderpkg = import_package "ant.render"
 local gltfutil  = require "editor.model.glTF.util"
-local declmgr   = renderpkg.declmgr
 local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
+
+local LAYOUT_NAMES<const> = {
+	"POSITION",
+	"NORMAL",
+	"TANGENT",
+	"BITANGENT",
+	"COLOR_0",
+	"COLOR_1",
+	"COLOR_2",
+	"COLOR_3",
+	"TEXCOORD_0",
+	"TEXCOORD_1",
+	"TEXCOORD_2",
+	"TEXCOORD_3",
+	"TEXCOORD_4",
+	"TEXCOORD_5",
+	"TEXCOORD_6",
+	"TEXCOORD_7",
+	"JOINTS_0",
+	"WEIGHTS_0",
+}
+
+-- ant.render/vertexdecl_mgr.lua has defined this mapper, but we won't want to dependent ant.render in this package
+local SHORT_NAMES<const> = {
+	POSITION = 'p', NORMAL = 'n', COLOR = 'c',
+	TANGENT = 'T', BITANGENT = 't',	TEXCOORD = 't',
+	JOINTS = 'i', WEIGHTS = 'w'	-- that is special defines
+}
+
 local function get_layout(name, accessor)
-	local shortname, channel = declmgr.parse_attri_name(name)
+	local attribname, channel = name:match"(%w+)_(%d+)"
+	local shortname = SHORT_NAMES[attribname or name]
 	local comptype_name = gltfutil.comptype_name_mapper[accessor.componentType]
 
-	return 	shortname .. 
-			tostring(gltfutil.type_count_mapper[accessor.type]) .. 
-			tostring(channel) .. 
-			(accessor.normalized and "n" or "N") .. 
-			"I" .. 
-			gltfutil.decl_comptype_mapper[comptype_name]
+	return table.concat({
+		shortname,
+		tostring(gltfutil.type_count_mapper[accessor.type]),
+		tostring(channel or 0),
+		(accessor.normalized and "n" or "N"),
+		"I",
+		gltfutil.decl_comptype_mapper[comptype_name],
+	}, "")
 end
 
 local function attrib_data(desc, iv, bin)
@@ -160,49 +190,6 @@ local function get_obj_name(obj, idx, defname)
 
 	return defname .. idx
 end
-
-local default_layouts<const> = {
-	POSITION = 1,
-	NORMAL = 1,
-	TANGENT = 1,
-	BITANGENT = 1,
-
-	COLOR_0 = 3,
-	COLOR_1 = 3,
-	COLOR_2 = 3,
-	COLOR_3 = 3,
-	TEXCOORD_0 = 3,
-	TEXCOORD_1 = 3,
-	TEXCOORD_2 = 3,
-	TEXCOORD_3 = 3,
-	TEXCOORD_4 = 3,
-	TEXCOORD_5 = 3,
-	TEXCOORD_6 = 3,
-	TEXCOORD_7 = 3,
-	JOINTS_0 = 2,
-	WEIGHTS_0 = 2,
-}
-
-local LAYOUT_NAMES<const> = {
-	"POSITION",
-	"NORMAL",
-	"TANGENT",
-	"BITANGENT",
-	"COLOR_0",
-	"COLOR_1",
-	"COLOR_2",
-	"COLOR_3",
-	"TEXCOORD_0",
-	"TEXCOORD_1",
-	"TEXCOORD_2",
-	"TEXCOORD_3",
-	"TEXCOORD_4",
-	"TEXCOORD_5",
-	"TEXCOORD_6",
-	"TEXCOORD_7",
-	"JOINTS_0",
-	"WEIGHTS_0",
-}
 
 local jointidx_fmt<const> = "HHHH"
 

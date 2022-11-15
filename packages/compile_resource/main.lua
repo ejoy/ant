@@ -108,4 +108,5 @@ return {
     do_compile   = do_compile,
     compile_file = compile_file,
     set_setting  = set_setting,
+    sampler      = require "editor.texture.sampler",
 }

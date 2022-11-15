@@ -1,10 +1,11 @@
-local sampler = import_package "ant.render".sampler
-local stringify = import_package "ant.serialize".stringify
+local stringify 	= import_package "ant.serialize".stringify
+local subprocess 	= import_package "ant.subprocess"
 
-local lfs = require "filesystem.local"
-local subprocess = import_package "ant.subprocess"
-local bgfx = require "bgfx"
-local image = require "image"
+local sampler 		= require "editor.texture.sampler"
+local lfs 			= require "filesystem.local"
+
+local bgfx 			= require "bgfx"
+local image 		= require "image"
 
 local pngparam = require "editor.texture.png_param"
 

@@ -1,7 +1,7 @@
 local convert_image = require "editor.texture.util"
-local datalist = require "datalist"
-local lfs = require "filesystem.local"
-local depends = require "editor.depends"
+local datalist 		= require "datalist"
+local lfs 			= require "filesystem.local"
+local depends 		= require "editor.depends"
 
 local function which_format(os, param)
 	local compress = param.compress
