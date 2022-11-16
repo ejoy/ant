@@ -28,6 +28,7 @@
 12. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
 13. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
 14. AO效果和效率的优化。效果：修复bent_normal和cone tracing的bug；效率：使用hi-z提高深度图的采样（主要是采样更低的mipmap，提高缓存效率）；
+15. 在转换到新一代图形API后（Metal/Vulkan/D3D12），需要对render pass进行优化。如postprocess里面，如果一个framebuffer的输出是另一个pass的输入，需要使用到subpass的概念进行优化，这能够省掉不少贷款（因为下一个pass的输入，并不会真的写道framebuffer身上）；
 
 #### 新功能/探索
 1. 天气系统。让目前游戏能够昼夜变化。一个简单的方式是使用后处理的color grading改变色调，另外一个更正确的方法应该是使用动态的天空盒；
