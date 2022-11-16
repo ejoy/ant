@@ -226,7 +226,18 @@ bool rendererCreate() {
 	return true;
 }
 
+static void rendererDestroyFont() {
+	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
+	ImTextureID texid = atlas->TexID;
+	if (NULL != texid) {
+		atlas->SetTexID(0);
+		ImGuiTexture texture = { texid };
+		BGFX(destroy_texture)(texture.s.handle);
+	}
+}
+
 void rendererDestroy() {
+	rendererDestroyFont();
 	ImGuiViewport* viewport = ImGui::GetMainViewport();
 	RendererViewport* ud = (RendererViewport*)viewport->RendererUserData;
 	delete ud;
@@ -254,6 +265,8 @@ int rendererSetImageProgram(lua_State* L) {
 }
 
 void rendererBuildFont(lua_State* L) {
+	rendererDestroyFont();
+
 	ImFontAtlas* atlas = ImGui::GetIO().Fonts;
 	uint8_t* data;
 	int32_t width;
@@ -271,9 +284,9 @@ void rendererBuildFont(lua_State* L) {
 		, BGFX(copy)(data, width * height)
 		);
 	texture.s.flags = IMGUI_FLAGS_FONT;
-	atlas->TexID = texture.ptr;
-	//atlas->ClearInputData();
-	//atlas->ClearTexData();
+	atlas->SetTexID(texture.ptr);
+	atlas->ClearInputData();
+	atlas->ClearTexData();
 }
 
 ImTextureID rendererGetTextureID(lua_State* L, int lua_handle) {
