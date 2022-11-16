@@ -1,6 +1,6 @@
 return function (_, _)
+    local vfs = require "vfs"
     local thread = require "bee.thread"
-    local io_req  = thread.channel "IOreq"
     local dbg_net = thread.channel "DdgNet"
     local m = {}
     local fsend
@@ -19,7 +19,7 @@ return function (_, _)
         return true
     end
     function m.send(data)
-        io_req:push("SEND", "DBG", data)
+        vfs.send("SEND", "DBG", data)
     end
     function m.close()
         fclose()

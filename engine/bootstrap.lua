@@ -12,3 +12,7 @@ end
 
 require "common.log"
 require "packagemanager"
+
+if __ANT_RUNTIME__ then
+    require "runtime.debug"
+end

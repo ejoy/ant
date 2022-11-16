@@ -36,6 +36,14 @@ function vfs.fetch(path)
 	return call("FETCH", path)
 end
 
+function vfs.call(...)
+	return call(...)
+end
+
+function vfs.send(...)
+	return send(...)
+end
+
 function vfs.switch()
 	send("SWITCH")
 end
