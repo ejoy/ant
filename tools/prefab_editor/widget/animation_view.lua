@@ -108,47 +108,20 @@ local function to_runtime_event(ke)
     return event
 end
 
-local function get_runtime_animations(eid)
-    local e <close> = w:entity(eid, "animation:in")
-    return e.animation
-end
-
-local function get_anim_group_eid(eid, name)
-    local anims = get_runtime_animations(eid)
-    return anim_eid_group[anims[name]]
-end
-
-local function anim_group_set_time(eid, t)
-    iani.set_time(eid, t)
-end
-
-local function anim_play(state, play)
-    play(anim_eid, state)
-end
-
-local function anim_group_set_loop(eid, ...)
-    iani.set_loop(eid, ...)
-end
-
-local function anim_group_set_speed(eid, ...)
-    iani.set_speed(eid, ...)
-end
-
 local function anim_group_delete(anim_name)
-    local template = hierarchy:get_template(anim_eid)
-    local animation_map = template.template.data.animation
+    local tpl = hierarchy:get_template(anim_eid)
+    local tdata = tpl.template.data
+    local animation_map = tdata.animation
     animation_map[anim_name] = nil
-    local anims = get_runtime_animations(anim_eid)
-    anims[anim_name] = nil
-    if template.template.data.animation_birth == anim_name then
-        template.template.data.animation_birth = next(animation_map) or ""
+    local e <close> = w:entity(anim_eid, "animation:in")
+    e.animation[anim_name] = nil
+    if tdata.animation_birth == anim_name then
+        tdata.animation_birth = next(animation_map) or ""
     end
     local name_idx = find_index(edit_anims.name_list, anim_name)
-    table.remove(edit_anims.name_list, name_idx)
-end
-
-local function anim_group_pause(eid, p)
-    iani.pause(eid, p)
+    if name_idx then
+        table.remove(edit_anims.name_list, name_idx)
+    end
 end
 
 local default_collider_define = {
@@ -248,9 +221,9 @@ local function set_current_anim(anim_name)
     anim_state.duration = current_anim.duration
     current_event = nil
     
-    anim_play({name = anim_name, loop = ui_loop[1], speed = ui_speed[1], manual = false}, iani.play)
-    anim_group_set_time(anim_eid, 0)
-    anim_group_pause(anim_eid, not anim_state.is_playing)
+    iani.play(anim_eid, {name = anim_name, loop = ui_loop[1], speed = ui_speed[1], manual = false})
+    iani.set_time(anim_eid, 0)
+    iani.pause(anim_eid, not anim_state.is_playing)
     set_event_dirty(-1)
     return true
 end
@@ -742,7 +715,6 @@ function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    -- for _ in uiutils.imgui_windows("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) do
     if imgui.windows.Begin("Animation", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         if current_anim then
             anim_state.is_playing = iani.is_playing(anim_eid)
@@ -805,8 +777,8 @@ function m.show()
             if imgui.widget.Button(faicons.ICON_FA_CHECK.."  OK  ") then
                 if #anim_name > 0 and #anim_path > 0 then
                     local update = true
-                    local anims = get_runtime_animations(anim_eid)
-                    if anims[anim_name] then
+                    local e <close> = w:entity(anim_eid, "animation:in")
+                    if e.animation[anim_name] then
                         local confirm = {title = "Confirm", message = "animation ".. anim_name .. " exist, replace it ?"}
                         uiutils.confirm_dialog(confirm)
                         if confirm.answer and confirm.answer == 0 then
@@ -814,14 +786,9 @@ function m.show()
                         end
                     end
                     if update then
-                        -- local group_eid = get_anim_group_eid(anim_eid, current_anim.name)
-                        -- --TODO: set for group eid
-                        -- for _, eid in ipairs(group_eid) do
-                            local template = hierarchy:get_template(anim_eid)
-                            template.template.data.animation[anim_name] = anim_path
-                            local e <close> = w:entity(anim_eid, "animation:in")
-                            e.animation[anim_name] = anim_path
-                        -- end
+                        local template = hierarchy:get_template(anim_eid)
+                        template.template.data.animation[anim_name] = anim_path
+                        e.animation[anim_name] = anim_path
                         --TODO:reload
                         reload = true
                     end
@@ -861,19 +828,19 @@ function m.show()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
         if imgui.widget.ImageButton("##play", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
             if anim_state.is_playing then
-                anim_group_pause(anim_eid, true)
+                iani.pause(anim_eid, true)
             else
-                anim_play({name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1], manual = false}, iani.play)
+                iani.play(anim_eid, {name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1], manual = false})
             end
         end
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("loop", ui_loop) then
-            anim_group_set_loop(anim_eid, ui_loop[1])
+            iani.set_loop(anim_eid, ui_loop[1])
         end
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(50)
         if imgui.widget.DragFloat("speed", ui_speed) then
-            anim_group_set_speed(anim_eid, ui_speed[1])
+            iani.set_speed(anim_eid, ui_speed[1])
         end
         imgui.cursor.PopItemWidth()
         imgui.cursor.SameLine()
@@ -899,9 +866,9 @@ function m.show()
         for k, v in pairs(imgui_message) do
             if k == "pause" then
                 if anim_state.current_frame ~= v then
-                    anim_group_pause(anim_eid, true)
+                    iani.pause(anim_eid, true)
                     anim_state.current_frame = v
-                    anim_group_set_time(anim_eid, v / sample_ratio)   
+                    iani.set_time(anim_eid, v / sample_ratio)   
                 end
             elseif k == "selected_frame" then
                 new_frame_idx = v

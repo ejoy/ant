@@ -14,6 +14,7 @@ local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local iwd       = ecs.import.interface "ant.render|iwidget_drawer"
 local iefk      = ecs.import.interface "ant.efk|iefk"
+local igui      = ecs.import.interface "tools.prefab_editor|igui"
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
 local keyframe_view     = ecs.require "widget.keyframe_view"
@@ -160,9 +161,7 @@ local function choose_project()
             for i, proj in ipairs(lastprojs) do
                 if imgui.widget.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                     selected_proj = lastprojs[i]
-                    -- if imgui.util.IsMouseDoubleClicked(0) then
-                        open_proj(proj.proj_path)
-                    -- end
+                    open_proj(proj.proj_path)
                 end
             end
         end
@@ -214,7 +213,7 @@ function m:ui_update()
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
         --local x, y = imgui.util.GetMousePos()
-        if mouse_pos_x and mainview.in_view(mouse_pos_x, mouse_pos_y) then
+        if mouse_pos_x and mainview.in_view(igui.cvt2scenept(mouse_pos_x, mouse_pos_y)) then
             if not drag_file then
                 local dropdata = imgui.widget.GetDragDropPayload()
                 if dropdata and (string.sub(dropdata, -7) == ".prefab"
@@ -527,7 +526,6 @@ function m:data_changed()
     end
 end
 
-local igui = ecs.interface "igui"
 function igui.cvt2scenept(x, y)
     if viewport then
         return x - viewport.x, y - viewport.y
@@ -535,11 +533,10 @@ function igui.cvt2scenept(x, y)
     return x, y
 end
 
-local joint_utils = require "widget.joint_utils"
-
 function m:widget()
 end
 
+local joint_utils = require "widget.joint_utils"
 function m.end_animation()
     joint_utils:update_pose(prefab_mgr:get_root_mat() or math3d.matrix{})
 end

@@ -8,7 +8,6 @@ local utils         = require "common.utils"
 local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local hierarchy     = require "hierarchy_edit"
---local effekseer     = require "effekseer"
 local BaseView      = require "widget.view_class".BaseView
 local EffectView    = require "widget.view_class".EffectView
 local ui_auto_play  = {false}
