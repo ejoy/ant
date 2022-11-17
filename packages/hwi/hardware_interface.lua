@@ -15,9 +15,9 @@ end
 
 local function check_renderer(renderer)
 	if renderer == nil then
-		--return "VULKAN"
-		--return hw.default_renderer()
-		return "DIRECT3D12"
+		--eturn "VULKAN"
+		return hw.default_renderer()
+		--return "DIRECT3D12"
 	end
 
 	if platform.os == "ios" and renderer ~= "METAL" then
