@@ -3,13 +3,6 @@ local hw = {}
 local platform = require "bee.platform"
 local bgfx     = require "bgfx"
 
-if not __ANT_RUNTIME__ then
-    if package.loaded.math3d then
-        error "need init math3d MAXPAGE"
-    end
-    debug.getregistry().MATH3D_MAXPAGE = 10480
-end
-
 local math3d   = require "math3d"
 
 local caps = nil
@@ -23,7 +16,8 @@ end
 local function check_renderer(renderer)
 	if renderer == nil then
 		--return "VULKAN"
-		return hw.default_renderer()
+		--return hw.default_renderer()
+		return "DIRECT3D12"
 	end
 
 	if platform.os == "ios" and renderer ~= "METAL" then
@@ -63,10 +57,10 @@ local function bgfx_init(args)
 		renderer= check_renderer(args.renderer),
 		loglevel= args.loglevel or LOG_WARN,
 		reset 	= args.reset or cvt_flags{
-			-- v = true,
-			--m = 4,
 			s = true,
-		}
+		},
+		debug   = true,
+		profile = true
 	}
 	bgfx.init(init_args)
 end

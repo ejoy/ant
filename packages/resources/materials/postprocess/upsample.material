@@ -1,12 +1,9 @@
 fx:
-  cs: /pkg/ant.resources/shaders/postprocess/bloom/cs_upsample.sc
-  
+  cs: /pkg/ant.resources/shaders/postprocess/bloom/cs_upsample.sc 
 properties:
   s_color_input:
     stage: 0
-    access: r
-    mip: 0
-    image: /pkg/ant.resources/textures/black.texture
+    texture: /pkg/ant.resources/textures/black.texture
   s_color_output:
     stage: 1
     access: "w"
