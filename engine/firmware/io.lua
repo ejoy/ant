@@ -24,6 +24,8 @@ local connection = {
 	fd = nil,
 }
 
+local subscibe = {}
+
 local function connection_send(...)
 	local pack = protocol.packmessage({...})
 	table.insert(connection.sendq, 1, pack)
@@ -499,6 +501,13 @@ function CMD.SEND(_, ...)
 	request_send(...)
 end
 
+function CMD.SUBSCIBE(_, channel_name, message)
+	if subscibe[message] then
+		print("[WARNING] Duplicate subscibe", message, channel_name)
+	end
+	subscibe[message] = assert(thread.channel(channel_name))
+end
+
 function CMD.quit(id)
 	QUIT = true
 	response_id(id)
@@ -508,7 +517,12 @@ end
 local function dispatch_net(cmd, ...)
 	local f = response[cmd]
 	if not f then
-		print("[ERROR] Unsupport net command", cmd)
+		local channel = subscibe[cmd]
+		if channel then
+			channel:push(cmd, ...)
+		else
+			print("[ERROR] Unsupport net command", cmd)
+		end
 		return
 	end
 	f(...)

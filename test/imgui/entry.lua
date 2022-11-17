@@ -54,6 +54,32 @@ end
 
 local test_cb = {true}
 
+local function init()
+    local platform    = require "bee.platform"
+    local Font        = require "platform".font
+    local function glyphRanges(t)
+        assert(#t % 2 == 0)
+        local s = {}
+        for i = 1, #t do
+            s[#s+1] = ("<I4"):pack(t[i])
+        end
+        s[#s+1] = "\x00\x00\x00"
+        return table.concat(s)
+    end
+    if platform.os == "windows" then
+        imgui.font.Create {
+            { Font "Segoe UI Emoji" , 18, glyphRanges { 0x23E0, 0x329F, 0x1F000, 0x1FA9F }},
+            { Font "黑体" , 18, glyphRanges { 0x0020, 0xFFFF }},
+        }
+    elseif platform.os == "macos" then
+        imgui.font.Create { { Font "华文细黑" , 18, glyphRanges { 0x0020, 0xFFFF }} }
+    elseif platform.os == "ios" then
+        imgui.font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
+    else
+        error("unknown os:" .. platform.os)
+    end
+end
+
 local function update(viewid)
     bgfx.set_view_clear(viewid, "CD", 0x303030ff, 1, 0)
 
@@ -129,5 +155,6 @@ local function update(viewid)
 end
 
 return {
+    init = init,
     update = update,
 }

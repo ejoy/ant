@@ -151,32 +151,48 @@ local vfs = require "vfs"
 local thread = require "bee.thread"
 local ServiceIO = ltask.uniqueservice "io"
 
-local function sync_request(cmd, ...)
+local function sync_call(cmd, ...)
 	local r, _ = thread.rpc_create()
 	ltask.send_direct(ServiceIO, "S_"..cmd, r, ...)
 	return thread.rpc_wait(r)
 end
-local function async_request(...)
+local function async_call(...)
 	return ltask.call(ServiceIO, ...)
 end
-local request = async_request
+local function sync_send(cmd, ...)
+	local r, _ = thread.rpc_create()
+	ltask.send_direct(ServiceIO, "S_"..cmd, r, ...)
+end
+local function async_send(...)
+	return ltask.send(ServiceIO, ...)
+end
+local call = async_call
+local send = async_send
 function vfs.switch_sync()
-	request = sync_request
+	call = sync_call
+	send = sync_send
 end
 function vfs.switch_async()
-	request = async_request
+	call = async_call
+	send = async_send
 end
 function vfs.realpath(path)
-	return request("GET", path)
+	return call("GET", path)
 end
 function vfs.list(path)
-	return request("LIST", path)
+	return call("LIST", path)
 end
 function vfs.type(path)
-	return request("TYPE", path)
+	return call("TYPE", path)
 end
 function vfs.resource_setting(ext, setting)
-	return request("RESOURCE_SETTING", ext, setting)
+	return call("RESOURCE_SETTING", ext, setting)
+end
+function vfs.call(...)
+	return call(...)
+end
+function vfs.send(...)
+	return send(...)
 end
 ]]
 
