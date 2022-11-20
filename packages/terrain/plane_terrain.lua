@@ -346,18 +346,9 @@ function iplane_terrain.update_plane_terrain(st)
         end
 
         local width, height = st.width, st.height
-        if not (is_power_of_2(width) and is_power_of_2(height)) then
-            error(("one of the 'width' or 'heigth' is not power of 2"):format(width, height))
-        end
 
         local ss = st.section_size
-        if not is_power_of_2(ss) then
-            error(("'section_size':%d, is not power of 2"):format(ss))
-        end
 
-        if ss == 0 or ss > width or ss > height then
-            error(("invalid 'section_size':%d, larger than 'width' or 'height' or it is 0: %d, %d"):format(ss, width, height))
-        end
 
         st.section_width, st.section_height = width // ss, height // ss
         st.num_section = st.section_width * st.section_height

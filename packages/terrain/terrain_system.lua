@@ -8,9 +8,9 @@ local terrain_change = false
 local terrain_fields = {}
 local terrain_width, terrain_height
 local shape_terrain = {}
-
+local terrain_offset = 0
 local function calc_tf_idx(ix, iy, x)
-    return (iy - 1) * x + ix
+    return iy * x + ix + 1
 end
 
 local function parse_terrain_type_dir(type, dir)
@@ -52,8 +52,8 @@ end
 
 function iterrain.gen_terrain_field(width, height, offset)
     local terrain_field = {}
-    terrain_width  = width
-    terrain_height = height
+    terrain_width  = width + 1
+    terrain_height = height + 1
     for ih=1, terrain_height do
         for iw=1, terrain_width do
             local idx = (ih - 1) * terrain_width + iw
@@ -62,14 +62,15 @@ function iterrain.gen_terrain_field(width, height, offset)
     end
     terrain_fields = terrain_field
     calc_shape_terrain()
-    iplane_terrain.set_wh(width, height, offset)
+    iplane_terrain.set_wh(width + 1, height + 1, offset)
     iplane_terrain.update_plane_terrain(shape_terrain)
+    terrain_offset = offset
 end
 
 function iterrain.create_roadnet_entity(create_list)
     for ii = 1, #create_list do
         local cl = create_list[ii]
-        local x, y, type, dir = cl[1], cl[2], cl[3], cl[4]
+        local x, y, type, dir = cl[1] + terrain_offset, cl[2] + terrain_offset, cl[3], cl[4]
         local idx = calc_tf_idx(x, y, terrain_width)
         local road = parse_terrain_type_dir(type, dir)
         terrain_fields[idx].type = road
@@ -80,7 +81,7 @@ end
 function iterrain.update_roadnet_entity(update_list)
     for ii = 1, #update_list do
         local ul = update_list[ii]
-        local x, y, type, dir = ul[1], ul[2], ul[3], ul[4]
+        local x, y, type, dir = ul[1] + terrain_offset, ul[2] + terrain_offset, ul[3], ul[4]
         local idx = calc_tf_idx(x, y, terrain_width)
         local road = parse_terrain_type_dir(type, dir)
         terrain_fields[idx].type = road
@@ -91,7 +92,7 @@ end
 function iterrain.delete_roadnet_entity(delete_list)
     for ii = 1, #delete_list do
         local dl = delete_list[ii]
-        local x, y = dl[1], dl[2]
+        local x, y = dl[1] + terrain_offset, dl[2] + terrain_offset
         local idx = calc_tf_idx(x, y, terrain_width)
         terrain_fields[idx] = {}
     end
