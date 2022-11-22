@@ -340,7 +340,60 @@ function iplane_terrain.set_wh(w, h, offset)
     noise(terrain_width + 1, terrain_height + 1, 4, 2, 0.2, 1)
 end
 
-function iplane_terrain.update_plane_terrain(st)
+function iplane_terrain.init_plane_terrain(st)
+    if st.prev_terrain_fields == nil then
+        error "need define terrain_field, it should be file or table"
+    end
+
+    local width, height = st.width, st.height
+
+    local ss = st.section_size
+
+
+    st.section_width, st.section_height = width // ss, height // ss
+    st.num_section = st.section_width * st.section_height
+
+    local unit = st.unit
+    local shapematerial = st.material
+    
+    --build_ib(width,height)
+    local ctf = cterrain_fields.new(st)
+    ctf:init()
+    
+    for ih = 1, st.section_height do
+        for iw = 1, st.section_width do
+            local sectionidx = (ih - 1) * st.section_width + iw
+            
+            local terrain_mesh = build_mesh(ss, sectionidx, unit, ctf, width)
+            if terrain_mesh then
+                local eid; eid = ecs.create_entity{
+                    policy = {
+                        "ant.scene|scene_object",
+                        "ant.render|simplerender",
+                        "ant.general|name",
+                    },
+                    data = {
+                        scene = {
+                            --parent = e.eid,
+                        },
+                        simplemesh  = terrain_mesh,
+                        material    = shapematerial,
+                        visible_state= "main_view|selectable",
+                        name        = "section" .. sectionidx,
+                        plane_terrain = true,
+                        section_index = sectionidx,
+                        on_ready = function()
+                            --world:pub {"shape_terrain", "on_ready", eid, e.eid}
+                        end,
+                    },
+                }
+            end
+        end
+    end   
+end
+
+
+function iplane_terrain.update_plane_terrain(st, tc)
         if st.prev_terrain_fields == nil then
             error "need define terrain_field, it should be file or table"
         end
@@ -360,35 +413,32 @@ function iplane_terrain.update_plane_terrain(st)
         local ctf = cterrain_fields.new(st)
         ctf:init()
         
-        for ih = 1, st.section_height do
-            for iw = 1, st.section_width do
-                local sectionidx = (ih - 1) * st.section_width + iw
-                
-                local terrain_mesh = build_mesh(ss, sectionidx, unit, ctf, width)
-                if terrain_mesh then
-                    local eid; eid = ecs.create_entity{
-                        policy = {
-                            "ant.scene|scene_object",
-                            "ant.render|simplerender",
-                            "ant.general|name",
+        for section_idx,_ in pairs(tc) do
+            local terrain_mesh = build_mesh(ss, section_idx, unit, ctf, width)
+            if terrain_mesh then
+                local eid; eid = ecs.create_entity{
+                    policy = {
+                        "ant.scene|scene_object",
+                        "ant.render|simplerender",
+                        "ant.general|name",
+                    },
+                    data = {
+                        scene = {
+                            --parent = e.eid,
                         },
-                        data = {
-                            scene = {
-                                --parent = e.eid,
-                            },
-                            simplemesh  = terrain_mesh,
-                            material    = shapematerial,
-                            visible_state= "main_view|selectable",
-                            name        = "section" .. sectionidx,
-                            plane_terrain = true,
-                            on_ready = function()
-                                --world:pub {"shape_terrain", "on_ready", eid, e.eid}
-                            end,
-                        },
-                    }
-                end
-            end
-        end   
+                        simplemesh  = terrain_mesh,
+                        material    = shapematerial,
+                        visible_state= "main_view|selectable",
+                        name        = "section" .. section_idx,
+                        plane_terrain = true,
+                        section_index = section_idx,
+                        on_ready = function()
+                            --world:pub {"shape_terrain", "on_ready", eid, e.eid}
+                        end,
+                    },
+                }
+            end    
+        end  
 end
 
 function p_ts:init()

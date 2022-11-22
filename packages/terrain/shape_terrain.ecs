@@ -4,9 +4,11 @@ system "plane_terrain_system"
     .method "init"
 
 component "plane_terrain".type "lua"
+component "section_index".type "lua"
 
 interface "iplane_terrain"
     .implement "plane_terrain.lua"
+    .method "init_plane_terrain"
     .method "update_plane_terrain"
     .method "set_wh"
 
