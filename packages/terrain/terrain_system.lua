@@ -16,9 +16,11 @@ local function calc_tf_idx(ix, iy, x)
 end
 
 local function calc_section_idx(idx)
-    local x = (idx - 1) %  256
-    local y = (idx - 1) // 256
-    return y // 16 * 16 + x // 16 + 1
+    local width, height = shape_terrain.width, shape_terrain.height
+    local size = shape_terrain.section_size
+    local x = (idx - 1) %  width
+    local y = (idx - 1) // height
+    return y // size * (height / size)  + x // size + 1
 end
 
 local function parse_terrain_type_dir(type, dir)
@@ -54,7 +56,7 @@ local function calc_shape_terrain()
     shape_terrain.height = terrain_height
     shape_terrain.unit = 10.0
     shape_terrain.prev_terrain_fields = terrain_fields
-    shape_terrain.section_size = 16
+    shape_terrain.section_size = math.min(math.max(1, terrain_width > 4 and terrain_width//4 or terrain_width//2), 16)
     shape_terrain.material = "/pkg/ant.resources/materials/plane_terrain.material"
 end
 
