@@ -330,5 +330,29 @@ function util.calc_texture_matrix()
 	return math3d.ref(math3d.matrix(m))
 end
 
-return util
+--polar coordinate
+function util.polar2xyz(theta, phi, r)
+	if r then
+		return r * math.cos(theta) * math.sin(phi), r * math.sin(theta) * math.sin(phi), r * math.cos(theta)
+	else
+		return math.cos(theta) * math.sin(phi), math.sin(theta) * math.sin(phi), math.cos(theta)
+	end
+end
 
+function util.xyz2polar(x, y, z, need_normalize)
+	if need_normalize then
+		local l = math.sqrt(x*x+y*y+z*z)
+		if util.iszero(l) then
+			return 0, 0
+		end
+		x, y, z = x/l, y/l, z/l
+		return math.acos(z), math.asin(x/z)
+	end
+
+	--x = math.cos(theta) * math.sin(phi)
+	--x/math.cos(theta) = math.sin(phi)
+	return math.acos(z), math.asin(x/z), 1
+end
+
+
+return util

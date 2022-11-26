@@ -1,0 +1,10 @@
+component "daytime_controller".type "lua"
+
+system "daytime_system"
+    .require_interface "ant.objcontroller|iobj_motion"
+    .require_interface "ant.light|ilight"
+    .method "init_world"
+    .method "data_changed"
+
+policy "daytime"
+    .require_system "ant.weather|daytime_system"
