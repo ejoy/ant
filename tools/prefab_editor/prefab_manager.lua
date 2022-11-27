@@ -717,20 +717,6 @@ end
 function m:set_parent(target, parent)
     local te <close> = w:entity(target, "scene?in")
     if te.scene then
-        -- local template = hierarchy:get_template(target).template
-        -- local tpl = utils.deep_copy(template)
-
-        -- local targetWorldMat = mc.IDENTITY_MAT
-        -- if parent then
-        --     local se <close> = w:entity(parent, "scene?in")
-        --     targetWorldMat = iom.worldmat(se)
-        -- end
-        -- local s, r, t = math3d.srt(math3d.mul(math3d.inverse(targetWorldMat), iom.worldmat(te)))
-        -- tpl.data.scene = {parent = parent, s = s, r = r, t = t}
-
-        -- local e = ecs.create_entity(tpl)
-        -- self:add_entity(e, parent, template)
-
         local function new_entity(te, pe, scene)
             local template = hierarchy:get_template(te).template
             local tpl = utils.deep_copy(template)

@@ -86,10 +86,6 @@ function SlotView:set_model(eid)
     return true
 end
 
--- function SlotView:has_scale()
---     return false
--- end
-
 function SlotView:update()
     BaseView.update(self)
     self.slot:update()

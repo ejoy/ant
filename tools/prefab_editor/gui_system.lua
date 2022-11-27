@@ -14,7 +14,6 @@ local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local iwd       = ecs.import.interface "ant.render|iwidget_drawer"
 local iefk      = ecs.import.interface "ant.efk|iefk"
-local igui      = ecs.import.interface "tools.prefab_editor|igui"
 local resource_browser  = ecs.require "widget.resource_browser"
 local anim_view         = ecs.require "widget.animation_view"
 local keyframe_view     = ecs.require "widget.keyframe_view"
@@ -46,7 +45,6 @@ local lfs               = require "filesystem.local"
 local bgfx              = require "bgfx"
 
 local m = ecs.system 'gui_system'
-local drag_file = nil
 local imodifier = ecs.import.interface "ant.modifier|imodifier"
 local function on_new_project(path)
     new_project.set_path(path)
@@ -187,8 +185,7 @@ function m:init_world()
     --     -- {time = 600, value = {1, 1, 1, 1}},
     -- })
 end
-local mouse_pos_x
-local mouse_pos_y
+
 function m:ui_update()
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
@@ -209,27 +206,6 @@ function m:ui_update()
     choose_project()
     imgui.windows.PopStyleColor(2)
     imgui.windows.PopStyleVar()
-    
-    --drag file to view
-    if imgui.util.IsMouseDragging(0) then
-        --local x, y = imgui.util.GetMousePos()
-        if mouse_pos_x and mainview.in_view(igui.cvt2scenept(mouse_pos_x, mouse_pos_y)) then
-            if not drag_file then
-                local dropdata = imgui.widget.GetDragDropPayload()
-                if dropdata and (string.sub(dropdata, -7) == ".prefab"
-                    or string.sub(dropdata, -4) == ".efk" or string.sub(dropdata, -4) == ".glb") then
-                    drag_file = dropdata
-                end
-            end
-        else
-            drag_file = nil
-        end
-    else
-        if drag_file then
-            world:pub {"AddPrefabOrEffect", drag_file}
-            drag_file = nil
-        end
-    end
 
     local bgfxstat = bgfx.get_stats "sdcpnmtv"
     stat_window.postMessage(string.format("DC: %d\nTri: %d\nTex: %d\ncpu(ms): %.2f\ngpu(ms): %.2f\nfps: %d", 
@@ -237,19 +213,16 @@ function m:ui_update()
 end
 
 local hierarchy_event       = world:sub {"HierarchyEvent"}
-local drop_files_event      = world:sub {"OnDropFiles"}
 local entity_event          = world:sub {"EntityEvent"}
 local event_keyboard        = world:sub {"keyboard"}
-local event_open_prefab     = world:sub {"OpenPrefab"}
-local event_open_fbx        = world:sub {"OpenFBX"}
+local event_open_file       = world:sub {"OpenFile"}
 local event_add_prefab      = world:sub {"AddPrefabOrEffect"}
 local event_resource_browser= world:sub {"ResourceBrowser"}
 local event_window_title    = world:sub {"WindowTitle"}
 local event_create          = world:sub {"Create"}
 local event_light           = world:sub {"UpdateDefaultLight"}
 local event_gizmo           = world:sub {"Gizmo"}
-local event_mouse           = world:sub {"mouse"}
-local light_gizmo = ecs.require "gizmo.light"
+local light_gizmo           = ecs.require "gizmo.light"
 
 local aabb_color_i <const> = 0x6060ffff
 local highlight_aabb = {
@@ -346,13 +319,8 @@ local test_m1
 local test1
 local test2
 local ipl = ecs.import.interface "ant.render|ipolyline"
-local vp_changed_mb = world:sub{"world_viewport_changed"}
-local viewport
+
 function m:handle_event()
-    for _, _, _, x, y in event_mouse:unpack() do
-        mouse_pos_x = x
-        mouse_pos_y = y
-    end
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
     end
@@ -434,21 +402,20 @@ function m:handle_event()
         end
     end
     
-    for _, filename in event_open_prefab:unpack() do
-        prefab_mgr:open(filename)
+    for _, tn, filename in event_open_file:unpack() do
+        if tn == "FBX" then
+            prefab_mgr:open_fbx(filename)
+        elseif tn == "Prefab" then
+            prefab_mgr:open(filename)
+        end
     end
-    for _, filename in event_open_fbx:unpack() do
-        prefab_mgr:open_fbx(filename)
-    end
+
     for _, filename in event_add_prefab:unpack() do
         if string.sub(filename, -4) == ".efk" then
             prefab_mgr:add_effect(filename)
         else
             prefab_mgr:add_prefab(filename)
         end
-    end
-    for _, files in drop_files_event:unpack() do
-        on_drop_files(files)
     end
 
     for _, what in event_resource_browser:unpack() do
@@ -513,10 +480,6 @@ function m:handle_event()
     for _, what in reset_editor:unpack() do
         imodifier.stop(imodifier.highlight)
     end
-    for _, vp in vp_changed_mb:unpack() do
-        viewport = vp
-        break
-    end
 end
 
 function m:data_changed()
@@ -524,13 +487,6 @@ function m:data_changed()
         iwd.draw_aabb_box(highlight_aabb, nil, aabb_color_i)
         -- iwd.draw_lines({0.0,0.0,0.0,0.0,10.0,0.0}, nil, aabb_color_i)
     end
-end
-
-function igui.cvt2scenept(x, y)
-    if viewport then
-        return x - viewport.x, y - viewport.y
-    end
-    return x, y
 end
 
 function m:widget()

@@ -5,7 +5,6 @@
 #include "ImSimpleSequencer.h"
 #include "imgui.h"
 #include "imgui_internal.h"
-#include "ImCurveEdit.h"
 #include <cstdlib>
 #include <algorithm>
 #include <string>

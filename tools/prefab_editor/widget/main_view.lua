@@ -9,7 +9,49 @@ local uiconfig  = require "widget.config"
 
 local imgui = require "imgui"
 local irq   = ecs.import.interface "ant.render|irenderqueue"
-local function show_main_view()
+local igui  = ecs.import.interface "tools.prefab_editor|igui"
+local event_mouse   = world:sub {"mouse"}
+
+local mouse_pos_x
+local mouse_pos_y
+local drag_file
+
+local m = {}
+
+function igui.cvt2scenept(x, y)
+    return x - world.args.viewport.x, y - world.args.viewport.y
+end
+
+local function in_view(x, y)
+    return mu.pt2d_in_rect(x, y, irq.view_rect "tonemapping_queue")
+end
+
+function m.show()
+    for _, _, _, x, y in event_mouse:unpack() do
+        mouse_pos_x = x
+        mouse_pos_y = y
+    end
+    --drag file to view
+    if imgui.util.IsMouseDragging(0) then
+        --local x, y = imgui.util.GetMousePos()
+        if mouse_pos_x and in_view(igui.cvt2scenept(mouse_pos_x, mouse_pos_y)) then
+            if not drag_file then
+                local dropdata = imgui.widget.GetDragDropPayload()
+                if dropdata and (string.sub(dropdata, -7) == ".prefab"
+                    or string.sub(dropdata, -4) == ".efk" or string.sub(dropdata, -4) == ".glb") then
+                    drag_file = dropdata
+                end
+            end
+        else
+            drag_file = nil
+        end
+    else
+        if drag_file then
+            world:pub {"AddPrefabOrEffect", drag_file}
+            drag_file = nil
+        end
+    end
+
     local imgui_vp = imgui.GetMainViewport()
     local wp, ws = imgui_vp.WorkPos, imgui_vp.WorkSize
 
@@ -55,9 +97,4 @@ local function show_main_view()
     imgui.windows.End()
 end
 
-return {
-    show = show_main_view,
-    in_view = function(x, y)
-        return mu.pt2d_in_rect(x, y, irq.view_rect "tonemapping_queue")
-    end
-}
+return m

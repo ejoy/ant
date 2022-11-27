@@ -288,13 +288,13 @@ function m.show()
                             elseif path:equal_extension(".glb") then
                                 prefab_file = tostring(path) .. "|mesh.prefab"
                             elseif path:equal_extension(".fbx") then
-                                world:pub {"OpenFBX", tostring(path)}
+                                world:pub {"OpenFile", "FBX", tostring(path)}
                             elseif path:equal_extension ".material" then
                                 local me = ecs.require "widget.material_editor"
                                 me.open(path)
                             end
                             if prefab_file then
-                                world:pub {"OpenPrefab", prefab_file}
+                                world:pub {"OpenFile", "Prefab", prefab_file}
                             end
                         end
                         if path:equal_extension(".png") then

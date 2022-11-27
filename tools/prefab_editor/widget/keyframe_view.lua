@@ -329,9 +329,7 @@ local function max_range_value()
     end
     return max_value
 end
-local inherit_s = {false}
-local inherit_r = {false}
-local inherit_t = {false}
+
 local function show_current_detail()
     if not current_anim or current_anim.edit_mode ~= edit_mode then return end
     imgui.widget.PropertyLabel("FrameCount:")
@@ -511,11 +509,6 @@ local function show_current_detail()
             current_clip.repeat_ui[1] = count
             dirty = true
         end
-        -- imgui.widget.PropertyLabel("Random")
-        -- if imgui.widget.Checkbox("##Random", anim.random_amplitude_ui) then
-        --     anim.random_amplitude = anim.random_amplitude_ui[1]
-        --     dirty = true
-        -- end
         imgui.widget.PropertyLabel("Direction")
         if imgui.widget.BeginCombo("##Direction", {dir_name[current_clip.direction], flags = imgui.flags.Combo {}}) then
             for i, type in ipairs(dir_name) do
@@ -556,10 +549,6 @@ local function show_current_detail()
     end
 end
 
-local function anim_play(anim_state, play)
-    play((edit_mode == MODE_MTL) and current_anim.runtime_anim.modifier or anim_eid, anim_state)
-end
-
 local function anim_pause(p)
     if edit_mode == MODE_MTL then
         local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
@@ -579,11 +568,11 @@ local function anim_set_loop(loop)
 end
 
 local function anim_set_speed(speed)
-    if edit_mode == MODE_MTL then
-    else
+    if edit_mode == MODE_SKE then
         iani.set_speed(anim_eid, speed)
     end
 end
+
 local function anim_set_time(t)
     if edit_mode == MODE_MTL then
         local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
@@ -592,6 +581,7 @@ local function anim_set_time(t)
         iani.set_time(anim_eid, t)
     end
 end
+
 local anim_name = ""
 local anim_duration = 30
 local anim_name_ui = {text = ""}
@@ -840,9 +830,9 @@ function m.show()
                     anim_pause(true)
                 else
                     if edit_mode == MODE_MTL then
-                        anim_play({loop = ui_loop[1]}, imodifier.start)
+                        imodifier.start(current_anim.runtime_anim.modifier, {loop = ui_loop[1]})
                     else
-                        anim_play({name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1], manual = false}, iani.play)
+                        iani.play(anim_eid, {name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1], manual = false})
                     end
                 end
             end

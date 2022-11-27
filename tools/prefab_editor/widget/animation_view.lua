@@ -519,22 +519,6 @@ end
 
 function m.on_remove_entity(eid)
     local dirty = false
-    -- for _, clip in ipairs(all_clips) do
-    --     if clip.key_event then
-    --         for _, ke in pairs(clip.key_event) do
-    --             for _, e in ipairs(ke) do
-    --                 if e.collision and e.collision.col_eid and e.collision.col_eid == eid then
-    --                     e.collision.col_eid = -1
-    --                     e.collision.shape_type = "None"
-    --                     e.collision.position = nil
-    --                     e.collision.size = nil
-    --                     e.collision.enable = false
-    --                     dirty = true
-    --                 end
-    --             end
-    --         end
-    --     end
-    -- end
     local e <close> = w:entity(eid, "slot?in name:in")
     if e.slot and anim_eid then
         local ae <close> = w:entity(anim_eid, "anim_ctrl?in")
@@ -634,15 +618,12 @@ local function on_move_clip(move_type, current_clip_index, move_delta)
     set_clips_dirty(true)
 end
 
-local current_event_file
-local current_clip_file
-local stringify     = import_package "ant.serialize".stringify
-
-
 local function get_clips_filename()
     local prefab_filename = prefab_mgr:get_current_filename()
     return string.sub(prefab_filename, 1, -8) .. ".event"
 end
+
+local stringify = import_package "ant.serialize".stringify
 
 function m.save_keyevent(filename)
     if not edit_anims then return end
@@ -744,35 +725,7 @@ function m.show()
                     anim_path = access.virtualpath(global_data.repo, fs.path(localpath))
                     assert(anim_path)
                 end
-                -- local glb_filename = uiutils.get_open_file_path("Animation", "glb")
-                -- if glb_filename then
-                --     external_anim_list = {}
-                --     current_external_anim = nil
-                --     anim_glb_path = "/" .. access.virtualpath(global_data.repo, fs.path(glb_filename))
-                --     rc.compile(anim_glb_path)
-                --     local external_path = rc.compile(anim_glb_path .. "|animations")
-                --     for path in fs.pairs(external_path) do
-                --         if path:equal_extension ".ozz" then
-                --             local filename = path:filename():string()
-                --             if filename ~= "skeleton.ozz" then
-                --                 external_anim_list[#external_anim_list + 1] = filename
-                --             end
-                --         end
-                --     end
-                -- end
             end
-            -- if #external_anim_list > 0 then
-            --     imgui.cursor.Separator()
-            --     for _, external_anim in ipairs(external_anim_list) do
-            --         if imgui.widget.Selectable(external_anim, current_external_anim and (current_external_anim == external_anim), 0, 0, imgui.flags.Selectable {"DontClosePopups"}) then
-            --             current_external_anim = external_anim
-            --             anim_path = anim_glb_path .. "|animations/" .. external_anim
-            --             if #anim_name < 1 then
-            --                 anim_name = fs.path(anim_path):stem():string()
-            --             end
-            --         end
-            --     end
-            -- end
             imgui.cursor.Separator()
             if imgui.widget.Button(faicons.ICON_FA_CHECK.."  OK  ") then
                 if #anim_name > 0 and #anim_path > 0 then

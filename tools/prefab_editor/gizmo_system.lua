@@ -1195,7 +1195,7 @@ function gizmo_sys:handle_event()
 		local eid = pick_id
 		if eid then
 			if gizmo.mode ~= gizmo_const.SELECT and not gizmo_seleted then
-				if hierarchy:get_template(eid) then
+				if hierarchy:get_template(eid) or hierarchy:get_select_adapter(eid) then
 					gizmo:set_target(eid)
 				end
 			end

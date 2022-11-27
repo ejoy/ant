@@ -68,7 +68,7 @@ function m.show()
                         local ff = f:match "([^|]+)|mesh.prefab"
                         ff = ff or f
                         if imgui.widget.MenuItem(ff) then
-                            world:pub{"OpenPrefab", f}
+                            world:pub{"OpenFile", "Prefab", f}
                         end
                     end
                 end
@@ -118,66 +118,7 @@ function m.show()
             end
             imgui.widget.EndMenu()
         end
-
-        if imgui.widget.BeginMenu "Debug" then
-            if imgui.widget.MenuItem "Fix Srt" then
-                local stringify = import_package "ant.serialize".stringify
-
-                local datalist = require "datalist"
-
-                local rootdir = fs.path "d:/work/vaststars2"
-
-                local function readfile(f)
-                    local ff<close> = lfs.open(f)
-                    return ff:read "a"
-                end
-
-                local function writefile(f, c)
-                    local ff<close> = lfs.open(f, "w")
-                    ff:write(c)
-                end
-
-                local function list_all_files(p, op, skips)
-                    if skips[p:string()] then
-                        return
-                    end
-                    for f in fs.pairs(p) do
-                        if fs.is_directory(f) then
-                            list_all_files(f, op, skips)
-                        else
-                            op(f)
-                        end
-                    end
-                end
-
-                list_all_files(rootdir, function (f)
-                    if f:equal_extension "prefab" then
-                        local c = datalist.parse(readfile(f))
-                        local changed
-                        for _, p in ipairs(c) do
-                            if p.data and p.data.scene and p.data.scene.srt then
-                                local srt = p.data.scene.srt
-                                p.data.scene.srt = nil
-                                p.data.scene.s = srt.s
-                                p.data.scene.r = srt.r
-                                p.data.scene.t = srt.t
-                                changed = true
-                            end
-                        end
-                        if changed then
-                            writefile(f, stringify(c))
-                        end
-                    end
-                end, {
-                    [(rootdir / "build"):string()] = true,
-                    [(rootdir / "bin"):string()] = true,
-                    [(rootdir / "3rd/ant/bin"):string()] = true,
-                    [(rootdir / "3rd/ant/3rd"):string()] = true,
-                })
-            end
-            imgui.widget.EndMenu()
-        end
-        
+      
         imgui.widget.EndMainMenuBar()
     end
 
