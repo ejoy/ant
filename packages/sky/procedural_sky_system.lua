@@ -20,19 +20,19 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local mu = import_package "ant.math".util
 local math3d = require "math3d"
 
-local MONTHS = {
-	"January",
-	"February",
-	"March",
-	"April",
-	"May",
-	"June",
-	"July",
-	"August",
-	"September",
-	"October",
-	"November",
-	"December",
+local MONTHS<const> = {
+	January		= 0,
+	February	= 1,
+	March		= 2,
+	April		= 3,
+	May			= 4,
+	June		= 5,
+	July		= 6,
+	August		= 7,
+	September	= 8,
+	October		= 9,
+	November	= 10,
+	December	= 11,
 }
 
 -- HDTV rec. 709 matrix.
@@ -118,9 +118,6 @@ local ABCDE_t = {
 	math3d.constant("v4", {-0.0033, -0.0109, -0.0670, 0}),
 }
 
--- Controls sun position according to time, month, and observer's latitude.
--- this data get from: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
-
 local function compute_PerezCoeff(turbidity)
 	assert(#ABCDE == #ABCDE_t)
 	local r = {}
@@ -132,22 +129,28 @@ local function compute_PerezCoeff(turbidity)
 	return r
 end
 
-local function fetch_month_index_op()
-	local remapper = {}
-	for idx, m in ipairs(MONTHS) do
-		remapper[m] = idx
-	end
+local days_in_month<const> = {
+	31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+}
 
-	return function (whichmonth)
-		return remapper[whichmonth]
+local sum_days_in_month = {days_in_month[1]}; do
+	for i=2, 12 do
+		local d = days_in_month[i]
+		sum_days_in_month[i] = sum_days_in_month[i-1]+d
 	end
 end
 
-local which_month_index = fetch_month_index_op()
+local day_offset<const> = 15
 
-local function calc_sun_orbit_delta(whichmonth, ecliptic_obliquity)
-	local month = which_month_index(whichmonth) - 1
-	local day = 30 * month + 15
+local function select_which_day(whichmonth)
+	local month<const> = MONTHS[whichmonth]
+	return sum_days_in_month[month] + day_offset
+end
+
+-- Controls sun position according to time, month, and observer's latitude.
+-- this data get from: https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html
+
+local function calc_sun_orbit_delta(day, ecliptic_obliquity)
 	local lambda = math.rad(280.46 + 0.9856474 * day);
 	return math.asin(math.sin(ecliptic_obliquity) * math.sin(lambda))
 end
@@ -156,9 +159,9 @@ local function calc_sun_direction(skycomp)
 	-- should move to C
 	local latitude = skycomp.latitude
 	local whichhour = skycomp.which_hour - 12	-- this algorithm take hour from [-12, 12]
-	local delta = calc_sun_orbit_delta(skycomp.month, skycomp.ecliptic_obliquity)
+	local delta = calc_sun_orbit_delta(select_which_day(skycomp.month), skycomp.ecliptic_obliquity)
 
-	local hh = whichhour * math.pi / 12
+	local hh = whichhour * math.pi / 12 --whichhour * math.pi * 2 / 24
 	local azimuth = math.atan(
 			math.sin(hh), 
 			math.cos(hh) * math.cos(latitude) - math.tan(delta) * math.cos(latitude))
