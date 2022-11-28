@@ -16,7 +16,8 @@ local assetmgr  = import_package "ant.asset"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local icompute  = ecs.import.interface "ant.render|icompute"
 local iibl      = ecs.import.interface "ant.render|iibl"
-
+local icubemap_mipmap = ecs.import.interface "ant.sky|icubemap_mipmap"
+local rhwi      = import_package "ant.hwi"
 local panorama_util=require "panorama.util"
 
 local thread_group_size<const> = 32
@@ -58,6 +59,7 @@ local function load_res_tex(e)
     return assetmgr.resource(res.properties.s_skybox.texture)
 end
 
+
 function cs2cm_sys:entity_ready()
     for e in w:select "skybox_changed:update render_object filter_material:in skybox:in filter_ibl?out" do
         local tex = load_res_tex(e)
@@ -85,19 +87,25 @@ function cs2cm_sys:entity_ready()
                 icompute.dispatch(p2c_viewid, dis)
     
                 --just generate mipmaps for cm_rbidx
-                 local fbidx = fbmgr.create{
-                    rbidx = cm_rbidx,
-                    resolve = "g",
-                    layer = 0,
-                    mip = 0,
-                    numlayer = 1,
-                }
-                local testid = viewidmgr.get "panorama2cubmapMips"
-                bgfx.set_view_frame_buffer(testid, fbmgr.get(fbidx).handle)
-                bgfx.touch(testid)
-    
-                fbmgr.destroy(fbidx, true) 
-                
+                local renderer = rhwi.renderer()
+                if renderer == "VULKAN" or renderer == "DIRECT3D12" then
+                    icubemap_mipmap.gen_cubemap_mipmap(facesize, cm_rbhandle)
+                else
+                    icubemap_mipmap.gen_cubemap_mipmap(facesize, cm_rbhandle)
+                    local fbidx = fbmgr.create{
+                       rbidx = cm_rbidx,
+                       resolve = "g",
+                       layer = 0,
+                       mip = 0,
+                       numlayer = 1,
+                   }
+                   local testid = viewidmgr.get "panorama2cubmapMips"
+                   bgfx.set_view_frame_buffer(testid, fbmgr.get(fbidx).handle)
+                   bgfx.touch(testid)
+       
+                   fbmgr.destroy(fbidx, true)
+                end
+
                 imaterial.set_property(e, "s_skybox", cm_rbhandle)
             end
             e.filter_ibl = true

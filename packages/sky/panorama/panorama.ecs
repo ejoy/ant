@@ -23,3 +23,13 @@ system "cs2cm_system"
     .method "entity_ready"
     .method "filter_ibl"
 
+system "cubemap_mipmap_system"
+    .implement "panorama/cubemap_mipmap.lua"
+    .method "render_preprocess"
+
+interface "icubemap_mipmap"
+    .implement "panorama/cubemap_mipmap.lua"
+    .method "gen_cubemap_mipmap"
+
+component "cubemap_mipmap_builder"
+component "cubemap_mipmap".type "lua"

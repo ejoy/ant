@@ -64,7 +64,7 @@ local function bgfx_init(args)
 		reset 	= args.reset or cvt_flags{
 			s = true,
 		},
-		-- debug = true,
+		debug = true,
 	}
 	bgfx.init(init_args)
 end
@@ -138,6 +138,10 @@ hw.frames = nil
 function hw.frame()
 	hw.frames = bgfx.encoder_frame()
 	return hw.frames
+end
+
+function hw.renderer()
+	return init_args.renderer
 end
 
 return hw
