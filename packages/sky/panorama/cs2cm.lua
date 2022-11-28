@@ -91,7 +91,6 @@ function cs2cm_sys:entity_ready()
                 if renderer == "VULKAN" or renderer == "DIRECT3D12" then
                     icubemap_mipmap.gen_cubemap_mipmap(facesize, cm_rbhandle)
                 else
-                    icubemap_mipmap.gen_cubemap_mipmap(facesize, cm_rbhandle)
                     local fbidx = fbmgr.create{
                        rbidx = cm_rbidx,
                        resolve = "g",
