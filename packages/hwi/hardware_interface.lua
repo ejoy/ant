@@ -64,7 +64,7 @@ local function bgfx_init(args)
 		reset 	= args.reset or cvt_flags{
 			s = true,
 		},
-		debug = true,
+		--debug = true,
 	}
 	bgfx.init(init_args)
 end
