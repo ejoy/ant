@@ -79,15 +79,52 @@ local function create_plane()
     }
 end
 
+local function raymarch_entity()
+    return ecs.create_entity{
+        policy = {
+            "ant.render|simplerender",
+            "ant.general|name",
+        },
+        data = {
+            name = "test_raymarch",
+            simplemesh = imesh.init_mesh{
+                vb = {
+                    start = 0,
+                    num = 8,
+                    declname = "p4",
+                    memory = {"ffff", {
+                        -1.0, -1.0, 0.0, 1.0,
+                        -1.0,  1.0, 0.0, 1.0,
+                         1.0,  1.0, 0.0, 1.0,
+                         1.0, -1.0, 0.0, 1.0,
+                    }},
+                    owned = true,
+                },
+                ib = {
+                    start = 0,
+                    num = 6,
+                    memory = {"w", {
+                        0, 1, 2, 2, 3, 0
+                    }},
+                    owned = true,
+                }
+            },
+            material = "/pkg/ant.test.atmosphere/assets/raymarch.material",
+            scene = {},
+            visible_state = "main_view",
+        }
+    }
+end
+
 function S.init()
-    create_instance( "/pkg/ant.test.weather/assets/light.prefab", function (e)
+    create_instance( "/pkg/ant.test.atmosphere/assets/light.prefab", function (e)
         local leid = e.tag['*'][1]
         local le<close> = w:entity(leid, "scene:update")
         iom.set_direction(le, math3d.vector(0.6, -1.0, -0.8))
     end)
 
-    ientity.create_procedural_sky()
-
+    --ientity.create_procedural_sky()
+    raymarch_entity()
 end
 
 function S.init_world()
@@ -97,11 +134,13 @@ function S.init_world()
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
     iom.set_direction(camera_ref, dir)
-    create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
-        local leid = e.tag['*'][1]
-        local le<close> = w:entity(leid, "scene:update")
-        iom.set_scale(le, 0.1)
-    end)
+
+    
+    -- create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
+    --     local leid = e.tag['*'][1]
+    --     local le<close> = w:entity(leid, "scene:update")
+    --     iom.set_scale(le, 0.1)
+    -- end)
 
     --create_simple_triangles()
     -- iom.set_position(camera_ref, math3d.vector(0, 2, -5))

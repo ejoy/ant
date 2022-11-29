@@ -1,5 +1,5 @@
 return {
-    name = "ant.test.daytime",
+    name = "ant.test.atmosphere",
     dependencies = {
         "ant.animation", --TODO: temp fix for scene package need animation package
         "ant.collision",
