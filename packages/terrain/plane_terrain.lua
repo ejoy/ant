@@ -14,7 +14,7 @@ local terrain_module = require "terrain"
 local layout_name<const>    = declmgr.correct_layout "p3|t20|t21|t22|t23|t24|t25"
 local layout                = declmgr.get(layout_name)
 local noise1 = {}
-local terrain_width, terrain_height, origin_offset
+local terrain_width, terrain_height, origin_offset_width, origin_offset_height
 local default_quad_ib<const> = {
     0, 1, 2,
     2, 3, 0,
@@ -295,7 +295,7 @@ local function build_mesh(sectionsize, sectionidx, unit, cterrainfileds, width)
             local xx, yy, offset, field = cterrainfileds:get_field(sectionidx, iw, ih)
             if field ~= nil then
                 local x, z = cterrainfileds:get_offset(sectionidx)
-                local origin = {(iw - 1 + x) * unit - origin_offset * unit, 0.0, (ih - 1 + z) * unit - origin_offset * unit}
+                local origin = {(iw - 1 + x) * unit - origin_offset_width * unit, 0.0, (ih - 1 + z) * unit - origin_offset_height * unit}
                 local extent = {unit, 0, unit}
                 local uv0 = {0.0, 0.0, 1.0, 1.0}
                 -- other_uv sand_color_uv stone_color_uv sand_normal_uv stone_normal_uv sand_height_uv stone_height_uv
@@ -327,13 +327,19 @@ local function is_power_of_2(n)
 	end
 end
 
-function iplane_terrain.set_wh(w, h, offset)
+function iplane_terrain.set_wh(w, h, offset_x, offset_z)
     terrain_width = w
     terrain_height = h
-    if offset == nil then
-        origin_offset = 0
+    if offset_x == nil then
+        origin_offset_width = 0
     else
-        origin_offset = offset
+        origin_offset_width = offset_x
+    end
+
+    if offset_z == nil then
+        origin_offset_height = 0
+    else
+        origin_offset_height = offset_z
     end
 
     build_ib(terrain_width, terrain_height)
