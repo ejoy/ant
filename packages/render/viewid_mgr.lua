@@ -48,7 +48,6 @@ alloc_id "scene_depth"
 alloc_id "depth_resolve"
 alloc_id "depth_mipmap"
 alloc_id "ssao"
-alloc_id("bilateral_filter", 2)	--TODO: move to compute shader and just use only 1 viewid 
 alloc_id "main_view"
 
 --start postprocess

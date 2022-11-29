@@ -137,9 +137,6 @@ function ssao_sys:init()
 end
 
 local ssao_viewid<const> = viewidmgr.get "ssao"
-local bilateral_filter_viewid<const>, bilateral_filter_count<const> = viewidmgr.get_range "bilateral_filter"
-assert(bilateral_filter_count == 2, "need 2 pass blur: horizontal and vertical")
-local Hbilateral_filter_viewid<const>, Vbilateral_filter_viewid<const> = bilateral_filter_viewid, bilateral_filter_viewid+1
 
 local function create_rbidx(ww, hh)
     local rb_flags = sampler{
@@ -305,9 +302,9 @@ function ssao_sys:bilateral_filter()
     local bf_dis = bfd.dispatch
     local bfdmaterial = bf_dis.material
     update_bilateral_filter_frame_properties(bfdmaterial, inputhandle, outputhandle, {1.0/inputrb.w, 0.0}, inv_camera_far_with_bilateral_threshold)
-    icompute.dispatch(Hbilateral_filter_viewid, bf_dis)
+    icompute.dispatch(ssao_viewid, bf_dis)
 
     update_bilateral_filter_frame_properties(bfdmaterial, outputhandle, inputhandle, {0.0, 1.0/inputrb.h}, inv_camera_far_with_bilateral_threshold)
-    icompute.dispatch(Vbilateral_filter_viewid, bf_dis)
+    icompute.dispatch(ssao_viewid, bf_dis)
 
 end
