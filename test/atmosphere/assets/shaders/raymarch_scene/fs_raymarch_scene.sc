@@ -5,19 +5,30 @@ $input v_viewray
 
 static const vec3 kSphereCenter = vec3(0.0, 0.0, 0.0);
 static const float kSphereRadius = 2.0;
+
+struct intersect_info{
+  vec3 pos, normal;
+};
+
+float ray_sphere_intersect(vec3 origin, vec3 dir, vec3 sphere_origin, float sphere_radius, out intersect_info ii)
+{
+  vec3 oo = origin - sphere_origin;
+  float oo_dot_dir = dot(oo, dir);
+  float oo_dot_oo = dot(oo, oo);
+  float ray_sphere_center_squared_distance = oo_dot_oo - oo_dot_dir * oo_dot_dir;
+  const float dis = -oo_dot_dir - sqrt(
+      sphere_radius * sphere_radius - ray_sphere_center_squared_distance);
+
+  ii.pos = origin + dir * dis;
+  ii.normal = normalize(ii.pos - sphere_origin);
+  return dis;
+}
+
 void main() {
   vec3 view_direction = normalize(v_viewray);
 
-  // Compute the distance between the view ray line and the sphere center,
-  // and the distance between the camera and the intersection of the view
-  // ray with the sphere (or NaN if there is no intersection).
-  vec3 p = u_eyepos - kSphereCenter;
-  float p_dot_v = dot(p, view_direction);
-  float p_dot_p = dot(p, p);
-  float ray_sphere_center_squared_distance = p_dot_p - p_dot_v * p_dot_v;
-  float distance_to_intersection = -p_dot_v - sqrt(
-      kSphereRadius * kSphereRadius - ray_sphere_center_squared_distance);
-
+  intersect_info ii;
+  const float distance_to_intersection = ray_sphere_intersect(u_eyepos, view_direction, kSphereCenter, kSphereRadius, ii);
   if (distance_to_intersection > 0.0) {
     gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
   } else {
