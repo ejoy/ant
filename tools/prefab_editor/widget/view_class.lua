@@ -9,7 +9,6 @@ local effect_view   = class("EffectView",   base_view)
 local light_view    = class("LightView",    base_view)
 local skybox_view   = class("SkyboxView",   material_view)
 
-local prefab_view   = class "PrefabView"
 return {
     BaseView    = base_view,
     CameraView  = camera_view,
@@ -19,5 +18,4 @@ return {
     ColliderView= collider_view,
     EffectView  = effect_view,
     SkyboxView  = skybox_view,
-    PrefabView  = prefab_view,
 }

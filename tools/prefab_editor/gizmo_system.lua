@@ -170,20 +170,21 @@ local function create_arrow_widget(axis_root, axis_str)
 	local cylindere_t
 	local local_rotator
 	local color
+	local axis_len = gizmo_const.AXIS_LEN
 	if axis_str == "x" then
-		cone_t = {gizmo_const.AXIS_LEN, 0, 0}
+		cone_t = {axis_len, 0, 0}
 		local_rotator = {0, 0, math.rad(-90)}
-		cylindere_t = {0.5 * gizmo_const.AXIS_LEN, 0, 0}
+		cylindere_t = {0.5 * axis_len, 0, 0}
 		color = gizmo_const.COLOR.X
 	elseif axis_str == "y" then
-		cone_t = {0, gizmo_const.AXIS_LEN, 0}
+		cone_t = {0, axis_len, 0}
 		local_rotator = mc.IDENTITY_QUAT
-		cylindere_t = {0, 0.5 * gizmo_const.AXIS_LEN, 0}
+		cylindere_t = {0, 0.5 * axis_len, 0}
 		color = gizmo_const.COLOR.Y
 	elseif axis_str == "z" then
-		cone_t = {0, 0, gizmo_const.AXIS_LEN}
+		cone_t = {0, 0, axis_len}
 		local_rotator = {math.rad(90), 0, 0}
-		cylindere_t = {0, 0, 0.5 * gizmo_const.AXIS_LEN}
+		cylindere_t = {0, 0, 0.5 * axis_len}
 		color = gizmo_const.COLOR.Z
 	end
 
@@ -226,13 +227,15 @@ local function create_arrow_widget(axis_root, axis_str)
 			end
 		}
 	}
+	local axis
 	if axis_str == "x" then
-		gizmo.tx.eid = {cylindereid, coneeid}
+		axis = gizmo.tx
 	elseif axis_str == "y" then
-		gizmo.ty.eid = {cylindereid, coneeid}
+		axis = gizmo.ty
 	elseif axis_str == "z" then
-		gizmo.tz.eid = {cylindereid, coneeid}
+		axis = gizmo.tz
 	end
+	axis.eid = {cylindereid, coneeid}
 end
 
 function gizmo_sys:init()
@@ -245,8 +248,8 @@ local function mouse_hit_plane(screen_pos, plane_info)
 end
 
 local function create_global_axes(scene)
-	local off = 0.1
-	ientity.create_screen_axis_entity("global_axes", {type = "percent", screen_pos = {off, 1-off}}, scene)
+	local offset = 0.1
+	ientity.create_screen_axis_entity("global_axes", {type = "percent", screen_pos = {offset, 1 - offset}}, scene)
 end
 
 function gizmo:update_scale()

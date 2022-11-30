@@ -22,7 +22,6 @@ local mainview          = ecs.require "widget.main_view"
 local scene_view        = ecs.require "widget.scene_view"
 local inspector         = ecs.require "widget.inspector"
 local gridmesh_view     = ecs.require "widget.gridmesh_view"
-local prefab_view       = ecs.require "widget.prefab_view"
 local menu              = ecs.require "widget.menu"
 local gizmo             = ecs.require "gizmo.gizmo"
 local camera_mgr        = ecs.require "camera.camera_manager"
@@ -196,7 +195,6 @@ function m:ui_update()
     mainview.show()
     scene_view.show()
     -- gridmesh_view.show()
-    prefab_view.show()
     inspector.show()
     resource_browser.show()
     anim_view.show()
@@ -318,7 +316,6 @@ local test_m
 local test_m1
 local test1
 local test2
-local ipl = ecs.import.interface "ant.render|ipolyline"
 
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
