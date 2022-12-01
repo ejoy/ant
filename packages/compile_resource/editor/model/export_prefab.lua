@@ -151,11 +151,11 @@ local material_files = {}
 local function save_material(output, exports, mi)
     local f = utility.full_path(mi.filename:string())
     if not material_files[f:string()] then
-        lfs.remove_all(f)
         utility.save_txt_file(mi.filename:string(), mi.material)
         local outfolder = output / "materials" / "_tmp"
         compile.do_compile(output / mi.filename, outfolder, exports.depfiles)
-        lfs.rename(outfolder, (output / mi.filename):lexically_normal())
+        lfs.remove_all(f)
+        lfs.rename(outfolder, output / mi.filename)
 
         material_files[f:string()] = true
     end
