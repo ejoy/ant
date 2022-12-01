@@ -878,7 +878,7 @@ function m.on_prefab_load(entities)
         if e.anim_ctrl then
             anim_eid = eid
             local prefab_filename = prefab_mgr:get_current_filename()
-            iani.load_events(e, string.sub(prefab_filename, 1, -8) .. ".event")
+            iani.load_events(eid, string.sub(prefab_filename, 1, -8) .. ".event")
             local animations = e.animation
             if animations then
                 editanims.birth = e.animation_birth
