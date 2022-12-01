@@ -270,7 +270,7 @@ local function calc_tangents(vb, ib)
 		local a, b, c = vb[i0], vb[i1], vb[i2]
 		local ba, ca = math3d.sub(b.p, a.p), math3d.sub(c.p, a.p)
 		local bau, bav = b.u - a.u, b.v - a.v
-		local cau, cav = c.u - a.u, b.v - a.v
+		local cau, cav = c.u - a.u, c.v - a.v
 	
 		local dirCorrection = (cau * bav - cav * bau) < 0 and -1.0 or 1.0
 	
