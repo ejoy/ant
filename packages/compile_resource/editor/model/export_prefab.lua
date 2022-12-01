@@ -155,7 +155,7 @@ local function save_material(output, exports, mi)
         utility.save_txt_file(mi.filename:string(), mi.material)
         local outfolder = output / "materials" / "_tmp"
         compile.do_compile(output / mi.filename, outfolder, exports.depfiles)
-        lfs.rename(outfolder, output / mi.filename)
+        lfs.rename(outfolder, (output / mi.filename):lexically_normal())
 
         material_files[f:string()] = true
     end
