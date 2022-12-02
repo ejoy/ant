@@ -74,6 +74,9 @@ function iterrain.gen_terrain_field(width, height, offset_x, offset_z, unit)
         end
     end
     terrain_fields = terrain_field
+    if unit == nil then
+        unit = 10.0
+    end
     calc_shape_terrain(unit)
     iplane_terrain.set_wh(width, height, offset_x, offset_z)
     iplane_terrain.init_plane_terrain(shape_terrain)
