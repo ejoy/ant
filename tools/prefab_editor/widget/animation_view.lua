@@ -52,7 +52,6 @@ local event_type = {
 
 local current_event
 local current_clip
-local anim_eid_group = {}
 local anim_key_event = {}
 local function find_index(t, item)
     for i, c in ipairs(t) do
@@ -643,7 +642,6 @@ end
 function m.clear()
     anim_eid = nil
     current_anim = nil
-    anim_eid_group = {}
     current_event = nil
     current_clip = nil
     edit_anims = nil
@@ -653,16 +651,12 @@ end
 local anim_name = ""
 local ui_anim_name = {text = ""}
 local anim_path = ""
-local external_anim_list = {}
-local current_external_anim
 local anim_glb_path = ""
 
 local function clear_add_animation_cache()
     anim_name = ""
     ui_anim_name.text = ""
     anim_glb_path = ""
-    external_anim_list = {}
-    current_external_anim = nil
 end
 
 local ui_showskeleton = {false}

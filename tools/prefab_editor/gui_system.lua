@@ -21,7 +21,6 @@ local toolbar           = ecs.require "widget.toolbar"
 local mainview          = ecs.require "widget.main_view"
 local scene_view        = ecs.require "widget.scene_view"
 local inspector         = ecs.require "widget.inspector"
-local gridmesh_view     = ecs.require "widget.gridmesh_view"
 local menu              = ecs.require "widget.menu"
 local gizmo             = ecs.require "gizmo.gizmo"
 local camera_mgr        = ecs.require "camera.camera_manager"
@@ -194,7 +193,6 @@ function m:ui_update()
     toolbar.show()
     mainview.show()
     scene_view.show()
-    -- gridmesh_view.show()
     inspector.show()
     resource_browser.show()
     anim_view.show()

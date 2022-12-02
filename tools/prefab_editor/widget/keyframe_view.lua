@@ -672,14 +672,16 @@ end
 
 local ui_loop = {true}
 local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
-function m.clear()
+function m.clear(keep_skel)
     if current_skeleton and current_joint then
         joint_utils:set_current_joint(current_skeleton, nil)
     end
-    anim_eid = nil
     allanims = { {}, {} }
     anim_name_list = { {}, {} }
-    current_skeleton = nil
+    if not keep_skel then
+        anim_eid = nil
+        current_skeleton = nil
+    end
     current_anim = nil
     current_joint = nil
     current_uniform = nil
@@ -703,11 +705,8 @@ local function on_select_target(tn)
     end
     local layer_index = find_anim_by_name(tn)
     if layer_index then
-        if current_anim.selected_layer_index ~= layer_index then
-            current_anim.selected_layer_index = layer_index
-            current_anim.selected_clip_index = 1
-        else
-            current_anim.selected_layer_index = layer_index
+        current_anim.selected_layer_index = layer_index
+        if current_anim.selected_clip_index < 1 and #current_anim.target_anims[layer_index].clips > 0 then
             current_anim.selected_clip_index = 1
         end
     else
@@ -731,7 +730,6 @@ end
 local function show_joints()
     if joints_map and current_skeleton then
         joint_utils:show_joints(joints_map.root)
-        current_joint = joint_utils.current_joint
         if current_joint ~= joint_utils.current_joint then
             current_joint = joint_utils.current_joint
             on_select_target(current_joint.name)
@@ -974,7 +972,7 @@ function m.load(path)
     if (edit_mode == MODE_SKE and not current_skeleton) and (edit_mode == MODE_MTL and not current_mtl_target) then
         return
     end
-    --m.clear()
+    m.clear(true)
     local path = lfs.path(path)
     local f = assert(lfs.open(path))
     local data = f:read "a"
