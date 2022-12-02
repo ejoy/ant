@@ -225,13 +225,8 @@ function iani.load_events(anim_e, filename)
     local data = f:read "a"
     f:close()
 	local events = datalist.parse(data)
-	if type(anim_e) == "number" then
-		local e <close> = get_anim_e(anim_e)
-		e.anim_ctrl.keyframe_events = events
-	else
-		anim_e.anim_ctrl.keyframe_events = events
-	end
-	
+	local e <close> = get_anim_e(anim_e)
+	e.anim_ctrl.keyframe_events = events
 end
 
 function iani.play(eid, anim_state)
@@ -412,6 +407,7 @@ function iani.set_pose_to_prefab(instance, pose)
 			w:extend(e, "anim_ctrl:in skeleton:in")
 			pose.pose_result = e.anim_ctrl.pose_result
 			pose.skeleton = e.skeleton
+			pose.anim_eid = eid
 		end
 	end
 end
