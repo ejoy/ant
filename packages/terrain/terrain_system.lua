@@ -36,6 +36,8 @@ local function parse_terrain_type_dir(type, dir)
         t = "T"
     elseif type == "X" then
         t = "X"
+    elseif type == "O" then
+        t = "O"
     else
         t = "D"
     end
@@ -52,16 +54,16 @@ local function parse_terrain_type_dir(type, dir)
     return t..d
 end
 
-local function calc_shape_terrain()
+local function calc_shape_terrain(unit)
     shape_terrain.width = terrain_width
     shape_terrain.height = terrain_height
-    shape_terrain.unit = 10.0
+    shape_terrain.unit = unit
     shape_terrain.prev_terrain_fields = terrain_fields
     shape_terrain.section_size = math.min(math.max(1, terrain_width > 4 and terrain_width//4 or terrain_width//2), 16)
     shape_terrain.material = "/pkg/ant.resources/materials/plane_terrain.material"
 end
 
-function iterrain.gen_terrain_field(width, height, offset_x, offset_z)
+function iterrain.gen_terrain_field(width, height, offset_x, offset_z, unit)
     local terrain_field = {}
     terrain_width  = width
     terrain_height = height
@@ -72,7 +74,7 @@ function iterrain.gen_terrain_field(width, height, offset_x, offset_z)
         end
     end
     terrain_fields = terrain_field
-    calc_shape_terrain()
+    calc_shape_terrain(unit)
     iplane_terrain.set_wh(width, height, offset_x, offset_z)
     iplane_terrain.init_plane_terrain(shape_terrain)
     terrain_width_offset  = offset_x

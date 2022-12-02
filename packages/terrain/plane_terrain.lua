@@ -164,6 +164,8 @@ function cterrain_fields:init()
                 end
             elseif a_type == "X" then
                 f.alpha_type = 5
+            elseif a_type == 'O' then
+                f.alpha_type = 7
             else
                 f.alpha_type = 6
             end                         
