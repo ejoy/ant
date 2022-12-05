@@ -1,13 +1,12 @@
 #include "common/inputs.sh"
 
-//$input 	a_position a_texcoord0 INPUT_TANGENT INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT
-$input 	a_position a_texcoord0 NPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT INPUT_TANGENT
+$input 	a_position a_texcoord0 INPUT_NORMAL INPUT_TANGENT INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT
 $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
 
-#define PACK_TANGENT_TO_QUAT 1
+//#define CREATE_TAN_FRAME()	\
 
 void main()
 {
@@ -29,27 +28,21 @@ void main()
 	v_color0 = a_color0;
 #endif //WITH_COLOR_ATTRIB
 
-#ifdef WITH_NORMAL_ATTRIB
-#	ifdef PACK_TANGENT_TO_QUAT
+#ifndef MATERIAL_UNLIT
+#ifdef CALC_TBN
+	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
+#else //!CALC_TBN
+#	if PACK_TANGENT_TO_QUAT
 	const vec4 quat = a_tangent;
-	vec3 normal;
-	vec3 tangent;
+	vec3 normal, tangent;
 	to_tangent_frame(quat, normal, tangent);
+#	else //!PACK_TANGENT_TO_QUAT
+	vec3 normal = a_normal;
+	vec3 tangent = a_tangent.xyz;
+#	endif//PACK_TANGENT_TO_QUAT
 	v_normal	= normalize(mul(wm, vec4(normal, 0.0)).xyz);
 	v_tangent	= normalize(mul(wm, vec4(tangent, 0.0)).xyz);
-	v_bitangent	= cross(v_normal, v_tangent);
-#	else //!PACK_TANGENT_TO_QUAT
-
-//TODO: normal and tangent should use inverse transpose matrix
-	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
-#		ifdef WITH_TANGENT_ATTRIB
-	v_tangent	= normalize(mul(wm, vec4(a_tangent, 0.0)).xyz);
 	v_bitangent	= cross(v_normal, v_tangent);	//left hand
-#		endif //WITH_TANGENT_ATTRIB
-
-#	endif //PACK_TANGENT_TO_QUAT
-
-#endif //WITH_NORMAL_ATTRIB
-
-
+#endif//CALC_TBN
+#endif //!MATERIAL_UNLIT
 }
