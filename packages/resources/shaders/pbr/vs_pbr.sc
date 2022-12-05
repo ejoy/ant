@@ -14,11 +14,6 @@ void main()
 	vec4 posWS = transformWS(wm, vec4(a_position, 1.0));
 	gl_Position = mul(u_viewProj, posWS);
 
-#if WITH_OUTPUT_WORLDPOS
-	v_posWS = posWS;
-	v_posWS.w = mul(u_view, v_posWS).z;
-#endif //WITH_OUTPUT_WORLDPOS
-
 	v_texcoord0	= a_texcoord0;
 #ifdef USING_LIGHTMAP
 	v_texcoord1 = a_texcoord1;
@@ -29,6 +24,9 @@ void main()
 #endif //WITH_COLOR_ATTRIB
 
 #ifndef MATERIAL_UNLIT
+	v_posWS = posWS;
+	v_posWS.w = mul(u_view, v_posWS).z;
+
 #ifdef CALC_TBN
 	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
 #else //!CALC_TBN
