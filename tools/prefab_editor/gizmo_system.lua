@@ -45,7 +45,7 @@ function gizmo:update()
 end
 
 function gizmo:set_target(eid)
-	local target = hierarchy:get_select_adapter(eid)
+	local target = eid
 	if self.target_eid == target then
 		return
 	end
@@ -1028,8 +1028,6 @@ local function on_mouse_move()
 	
 end
 
-local gizmo_event = world:sub{"Gizmo"}
-
 local function world_aabb(entity)
 	local bounding = entity.bounding
 	if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
@@ -1197,9 +1195,10 @@ function gizmo_sys:handle_event()
 	for _,pick_id in pickup_mb:unpack() do
 		local eid = pick_id
 		if eid then
-			if gizmo.mode ~= gizmo_const.SELECT and not gizmo_seleted then
-				if hierarchy:get_template(eid) or hierarchy:get_select_adapter(eid) then
-					gizmo:set_target(eid)
+			if not gizmo_seleted then
+				local teid = hierarchy:get_select_adapter(eid)
+				if hierarchy:get_node(teid) then
+					gizmo:set_target(teid)
 				end
 			end
 			if imodifier.highlight then
