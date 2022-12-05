@@ -98,51 +98,6 @@ end
 	return to_ib(indexbin, elemsize == 4 and 'd' or '', index_accessor.count)
 end 
 
---[[ local function fetch_ib_buffer(gltfscene, gltfbin, index_accessor)
-	local bufferViews = gltfscene.bufferViews
-
-	local bvidx = index_accessor.bufferView+1
-	local bv = bufferViews[bvidx]
-	local elemsize = gltfutil.accessor_elemsize(index_accessor)
-	local class = {
-		acc_offset = index_accessor.byteOffset or 0,
-		bv_offset = bv.byteOffset or 0,
-		elemsize = elemsize,
-		stride = bv.byteStride or elemsize,
-	}
-
-	assert(elemsize == 2 or elemsize == 4)
-	local offset = class.acc_offset + class.bv_offset
-	local n = index_accessor.count
-	local size = n * elemsize
-
-	local indexbin = gltfbin:sub(offset+1, offset+size)
-	local num_triangles = n // 3
-
-	local buffer = {}
-	local fmt = elemsize == 4 and "III" or "HHH"
-	for tri=0, num_triangles-1 do
-		local buffer_offset = tri * elemsize * 3
-		local v0, v1, v2 = fmt:unpack(indexbin, buffer_offset+1)
-		local s = fmt:pack(v0, v2, v1)
-		buffer[#buffer+1] = s
-	end
-
-	indexbin = table.concat(buffer, "")
-
-	return to_ib(indexbin, elemsize == 4 and 'd' or '', index_accessor.count)
-end ]]
-
-local function gen_ib(num_vertex)
-	local faceindices = {}
-	local fmt = num_vertex > 65535 and "III" or "HHH"
-	for f=0, num_vertex-1, 3 do
-		faceindices[#faceindices+1] = fmt:pack(f, f+2, f+1)
-	end
-	local ibbin = table.concat(faceindices, '')
-	return to_ib(ibbin, fmt == "III" and 'd' or '', num_vertex)
-end
-
 local function create_prim_bounding(meshscene, prim)	
 	local posacc = meshscene.accessors[assert(prim.attributes.POSITION)+1]
 	local minv = posacc.min
@@ -284,9 +239,7 @@ local function calc_tangents(ib, vb, layouts)
 			we can solve T and B
 	]]
 
-	for i=1, #ib, 3 do
-		local vidx0, vidx1, vidx2 = ib[i]+1, ib[i+1]+1, ib[i+2]+1
-
+	local function calc_tangent(vidx0, vidx1, vidx2)
 		local a, b, c = load_vertex(vidx0), load_vertex(vidx1), load_vertex(vidx2)
 
 		local ba = math3d.sub(b.p, a.p)
@@ -315,6 +268,17 @@ local function calc_tangents(ib, vb, layouts)
 		bitangents[vidx0]	= bitangents[vidx0] and math3d.add(bitangents[vidx0], bi) or bi
 		bitangents[vidx1]	= bitangents[vidx1] and math3d.add(bitangents[vidx1], bi) or bi
 		bitangents[vidx2]	= bitangents[vidx2] and math3d.add(bitangents[vidx2], bi) or bi
+	end
+
+	if ib then
+		for i=1, #ib, 3 do
+			local vidx0, vidx1, vidx2 = ib[i]+1, ib[i+1]+1, ib[i+2]+1
+			calc_tangent(vidx0, vidx1, vidx2)
+		end
+	else
+		for iv=1, #vb, 3 do
+			calc_tangent(iv, iv+1, iv+2)
+		end
 	end
 
 	local normal_attrib_idx = find_layout_idx(layouts, "NORMAL")
@@ -377,7 +341,7 @@ local function generate_layouts(gltfscene, attributes)
 	return layouts
 end
 
-local function fetch_vertices(layouts, gltfbin, numv)
+local function fetch_vertices(layouts, gltfbin, numv, reverse_wing_order)
 	local vertices = {}
 	for iv=0, numv-1 do
 		local v = {}
@@ -385,6 +349,14 @@ local function fetch_vertices(layouts, gltfbin, numv)
 			v[#v+1] = l:fetch_buf(iv, gltfbin)
 		end
 		vertices[#vertices+1] = v
+	end
+
+	if reverse_wing_order then
+		assert((numv // 3)*3 == numv)
+		for iv=1, numv, 3 do
+			-- swap v3 and v2
+			vertices[iv+1], vertices[iv+2] = vertices[iv+2], vertices[iv+1]
+		end
 	end
 	return vertices
 end
@@ -455,16 +427,12 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 	local layouts = generate_layouts(gltfscene, prim.attributes)
 
 	local numv = gltfutil.num_vertices(prim, gltfscene)
-	local vertices = fetch_vertices(layouts, gltfbin, numv)
+	local vertices = fetch_vertices(layouts, gltfbin, numv, ib_table == nil)
 
 	if need_calc_tangent(layouts) then
-		if ib_table then
-			math3d.reset()
-			calc_tangents(ib_table, vertices, layouts)
-			math3d.reset()
-		else
-			assert("need implement")
-		end
+		math3d.reset()
+		calc_tangents(ib_table, vertices, layouts)
+		math3d.reset()
 		layouts[#layouts+1] = {
 			layout		= "T40NIf",
 			fetch_buf	= attrib_data,	-- this tangent already in left hand space
@@ -482,67 +450,6 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 		num = numv,
 	}
 end
-
-
- --[[ local function fetch_vb_buffers(gltfscene, gltfbin, prim)
-	assert(prim.mode == nil or prim.mode == 4)
-	local attributes = prim.attributes
-
-	local accessors, bufferViews, buffers = gltfscene.accessors, gltfscene.bufferViews, gltfscene.buffers
-	local layoutdesc = {}
-	local layouts = {}
-
-	for _, attribname in ipairs(LAYOUT_NAMES) do
-		local accidx = attributes[attribname]
-		if accidx then
-			local acc = accessors[accidx+1]
-			local bvidx = acc.bufferView+1
-			local bv = bufferViews[bvidx]
-			layouts[#layouts+1] = get_layout(attribname, accessors[accidx+1])
-			local elemsize = gltfutil.accessor_elemsize(acc)
-			layoutdesc[#layoutdesc+1] = {
-				acc_offset = acc.byteOffset or 0,
-			 	bv_offset = bv.byteOffset or 0,
-				elemsize = elemsize,
-			 	stride = bv.byteStride or elemsize,
-			}
-		end
-	end
-
-	local buffer = {}
-	local numv = gltfutil.num_vertices(prim, gltfscene)
-
-	local change_index_attrib = -1
-	for iv=0, numv-1 do
-		for idx, d in ipairs(layoutdesc) do
-			local l = layouts[idx]
-			local v = attrib_data(d, iv, gltfbin)
-
-			local t = l:sub(1, 1)
-			if t == 'p' or t == 'n' or t == 'T' or t == 'b' then
-				v = r2l_vec(v, l)
-			elseif t == 'i' then
-				if l:sub(6, 6) == 'u' then
-					v = jointidx_fmt:pack(v:byte(1), v:byte(2), v:byte(3), v:byte(4))
-					change_index_attrib = idx
-				end
-			end
-			buffer[#buffer+1] = v
-		end
-	end
-
-	if change_index_attrib ~= -1 then
-		layouts[change_index_attrib] = layouts[change_index_attrib]:sub(1, 5) .. 'i'
-	end
-
-	local bindata = table.concat(buffer, "")
-	return {
-		declname = table.concat(layouts, '|'),
-		memory = {bindata, 1, #bindata},
-		start = 0,
-		num = numv,
-	}
-end ]]
 
 local function find_skin_root_idx(skin, nodetree)
 	local joints = skin.joints
@@ -725,9 +632,10 @@ end
 			local indices_accidx = prim.indices
 
 			--TODO: if no index buffer, just switch vb order, not create a new index buffer
-			group.ib = indices_accidx and
-				fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1], ib_table) or
-				gen_ib(group.vb.num)
+			if indices_accidx then
+				group.ib = fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1], ib_table)
+			end
+
 			group.vb = fetch_vb_buffers(gltfscene, bindata, prim, ib_table)
 			local bb = create_prim_bounding(gltfscene, prim)
 			if bb then
