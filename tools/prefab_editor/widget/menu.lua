@@ -59,6 +59,7 @@ function m.show()
                 prefab_mgr:reset_prefab()
             end
             if imgui.widget.MenuItem(faicons.ICON_FA_FOLDER_OPEN.." Open", "Ctrl+O") then
+                world:pub{"OpenProject"}
             end
             imgui.cursor.Separator()
             if imgui.widget.BeginMenu(faicons.ICON_FA_LIST.." Recent Files") then
