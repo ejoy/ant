@@ -276,7 +276,7 @@ local function find_layout_idx(layouts, name)
 	end
 end
 
-local function calc_tangents2(ib, vb, layouts)
+local function calc_tangents(ib, vb, layouts)
 	local tangents, bitangents = {}, {}
 
 	local pos_attrib_idx, tex_attrib_idx = find_layout_idx(layouts, "POSITION"), find_layout_idx(layouts, "TEXCOORD_0")
@@ -312,20 +312,25 @@ local function calc_tangents2(ib, vb, layouts)
 		local cau, cav = c.u - a.u, c.v - a.v
 
 		local det<const> = bau * cav - bav * cau
-		local invDet<const> = 1.0 / det
+		local t, bi
+		if mu.iszero(det) then
+			t, bi = mc.ZERO, mc.ZERO
+		else
+			local invDet<const> = 1.0 / det
 
-		--(ba * cav - ca * bav) * invDet
-		--(ca * bau - ba * cau) * invDet
-		local t  = math3d.mul(math3d.sub(math3d.mul(ba, cav), math3d.mul(ca, bav)), invDet)
-		local bi = math3d.mul(math3d.sub(math3d.mul(ca, bau), math3d.mul(ba, cau)), invDet)
+			--(ba * cav - ca * bav) * invDet
+			--(ca * bau - ba * cau) * invDet
+			t, bi = math3d.mul(math3d.sub(math3d.mul(ba, cav), math3d.mul(ca, bav)), invDet),
+					math3d.mul(math3d.sub(math3d.mul(ca, bau), math3d.mul(ba, cau)), invDet)
+		end
 
-		tangents[vidx0] = tangents[vidx0] and math3d.add(tangents[vidx0], t) or t
-		tangents[vidx1] = tangents[vidx1] and math3d.add(tangents[vidx1], t) or t
-		tangents[vidx2] = tangents[vidx2] and math3d.add(tangents[vidx2], t) or t
+		tangents[vidx0]		= tangents[vidx0] and math3d.add(tangents[vidx0], t) or t
+		tangents[vidx1]		= tangents[vidx1] and math3d.add(tangents[vidx1], t) or t
+		tangents[vidx2]		= tangents[vidx2] and math3d.add(tangents[vidx2], t) or t
 
-		bitangents[vidx0] = bitangents[vidx0] and math3d.add(bitangents[vidx0], bi) or bi
-		bitangents[vidx1] = bitangents[vidx1] and math3d.add(bitangents[vidx1], bi) or bi
-		bitangents[vidx2] = bitangents[vidx2] and math3d.add(bitangents[vidx2], bi) or bi
+		bitangents[vidx0]	= bitangents[vidx0] and math3d.add(bitangents[vidx0], bi) or bi
+		bitangents[vidx1]	= bitangents[vidx1] and math3d.add(bitangents[vidx1], bi) or bi
+		bitangents[vidx2]	= bitangents[vidx2] and math3d.add(bitangents[vidx2], bi) or bi
 	end
 
 	local normal_attrib_idx = find_layout_idx(layouts, "NORMAL")
@@ -336,112 +341,14 @@ local function calc_tangents2(ib, vb, layouts)
 
 		local normal 	= load_vec(vb[iv], normal_attrib_idx, normal_layout)
 		local ndt    	= math3d.dot(normal, tanu)
-		if mu.iszero(ndt) then
-			assert("normal dot tanu is zero, will casue NaN value")
-		end
 		local nxt    	= math3d.cross(normal, tanu)
 		local tangent	= math3d.sub(tanu, math3d.mul(normal, ndt))
 		tangent			= math3d.set_index(tangent, 4, math3d.dot(nxt, tanv) < 0 and -1.0 or 1.0)
+		if mu.isnan_math3dvec(tangent) then
+			error "tangent is NaN"
+		end
 		store(iv, math3d.normalize(tangent))
 	end
-end
-
---Urho3D calc_tangents
-local function calc_tangents(ib, vbloader)
-	local tangents = {}
-	for ii = 1, #ib, 3 do
-		local v0, v1, v2 = ib[ii] + 1, ib[ii+1] + 1, ib[ii+2] + 1
-
-		local a, b, c = vbloader(v0), vbloader(v1), vbloader(v2)
-		local ba, ca = math3d.sub(b.p, a.p), math3d.sub(c.p, a.p)
-		local bau, bav = b.u - a.u, b.v - a.v
-		local cau, cav = c.u - a.u, c.v - a.v
-	
-		local dirCorrection = (cau * bav - cav * bau) < 0 and -1.0 or 1.0
-	
-		if bau == 0 and bav == 0 and cau == 0 and cav == 0 then
-			bau, bav = 0.0, 1.0
-			cau, cav = 1.0, 0.0
-		end
-		
-		--[[
-			tangent	= (ba * bav - ca * cav) * dirCorrection
-			bitangent=(ca * bau - ba * cau) * dirCorrection
-		]]
-
-		local tangent  = math3d.mul(math3d.sub(math3d.mul(ba, bav), math3d.mul(ca, cav)), dirCorrection)
-		local bitangent  = math3d.mul(math3d.sub(math3d.mul(ca, bau), math3d.mul(ba, cau)), dirCorrection)
-		assert(not mu.isnan_math3dvec(tangent) and not mu.isnan_math3dvec(bitangent), "tangent or bitangnt is nan")
-	
-		-- TODO: need merge vertex tangent
-
-		tangents[v0] = calc_local_tangent(a.n, tangent, bitangent)
-		tangents[v1] = calc_local_tangent(b.n, tangent, bitangent)
-		tangents[v2] = calc_local_tangent(c.n, tangent, bitangent)
-	end
-  
-	return tangents
-  end
---bgfx calc_tangent
---[[ local function calc_tangents(vb, num_v, ib, num_i)
-	local tanu = {}
-	local tanv = {}
-	local tangents = {}
-	for ii = 1, num_i do
-		local indices = ib[ii]
-		local i0, i1, i2 = indices.i0 + 1, indices.i1 + 1, indices.i2 + 1
-		local v0, v1, v2 = vb[i0], vb[i1], vb[i2]
-		local bax, bay, baz, bau, bav = v1.x - v0.x, v1.y - v0.y, v1.z - v0.z, v1.u - v0.u, v1.v - v0.v
-		local cax, cay, caz, cau, cav = v2.x - v0.x, v2.y - v0.y, v2.z - v0.z, v2.u - v0.u, v2.v - v0.v
-		local det = bau * cav - bav * cau
-		local invDet = 1.0 / det
-		local tx, ty, tz = (bax * cav - cax * bav) * invDet, (bay * cav - cay * bav) * invDet, (baz * cav - caz * bav) * invDet
-		local bx, by, bz = (cax * bau - bax * cau) * invDet, (cay * bau - bay * cau) * invDet, (caz * bau - baz * cau) * invDet
-
-		create_add_tanuv(tanu, i0, tx, ty, tz)
-		create_add_tanuv(tanu, i1, tx, ty, tz)
-		create_add_tanuv(tanu, i2, tx, ty, tz)
-		create_add_tanuv(tanv, i0, bx, by, bz)
-		create_add_tanuv(tanv, i1, bx, by, bz)
-		create_add_tanuv(tanv, i2, bx, by, bz)
-	end
-	for ii = 1, num_v do
-		local normal = vb[ii].n
-		local tan_u = math3d.vector(tanu[ii][1], tanu[ii][2], tanu[ii][3])
-		local tan_v = math3d.vector(tanv[ii][1], tanv[ii][2], tanv[ii][3])
-		local n = math3d.vector(normal[1], normal[2], normal[3])
-		local ndt = math3d.dot(n, tan_u)
-		local nxt = math3d.cross(n, tan_u)
-		local tmp = math3d.sub(tan_u, math3d.mul(n, ndt))
-		local tangent = math3d.tovalue(math3d.normalize(tmp))
-		if math3d.dot(nxt, tan_v) < 0 then
-			tangent[4] = -1
-		else
-			tangent[4] = 1
-		end
-		tangents[ii] = tangent
-	end
-	return tangents
-end ]]
-
-local function adjust_tangent_location(layouts, final_layouts)
-	for idx = 1, #layouts do
-		local layout = layouts[idx]
-		if string.sub(layout, 1 ,1) ~= "n" and string.sub(layout, 1 ,1) ~= "T" then
-			final_layouts[#final_layouts+1] = layout
-		end
-	end
-	final_layouts[#final_layouts+1] = "T40NIf"
-end
-
-local function vertex_mark(v)
-	v.p = math3d.mark(v.p)
-	v.n = math3d.mark(v.n)
-end
-
-local function vertex_unmark(v)
-	math3d.unmark(v.p)
-	math3d.unmark(v.n)
 end
 
 local function r2l_buf(d, iv, gltfbin)
@@ -450,7 +357,7 @@ local function r2l_buf(d, iv, gltfbin)
 end
 
 local function is_vec_attrib(an)
-	return an:match "pnTb"
+	return ("pnTb"):match(an)
 end
 
 local function need_calc_tangent(layouts)
@@ -568,7 +475,7 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
 	if need_calc_tangent(layouts) then
 		if ib_table then
 			math3d.reset()
-			calc_tangents2(ib_table, vertices, layouts)
+			calc_tangents(ib_table, vertices, layouts)
 			math3d.reset()
 		else
 			assert("need implement")
