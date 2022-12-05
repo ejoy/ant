@@ -225,39 +225,6 @@ local function r2l_vec(v, l)
 	return fmt:pack(table.unpack(vv))
 end
 
-local function r2l_math3dvec(v, l)
-	local vv = r2l_vec_v(v, l)
-	return math3d.vector(vv)
-end
-
-local function create_add_tanuv(tan_t, idx, inc1, inc2, inc3)
-	local t
-	if tan_t[idx] == nil then
-		t = {0, 0, 0}
-	else
-		t = tan_t[idx]
-	end
-	t[1] = inc1
-	t[2] = inc2
-	t[3] = inc3
-	tan_t[idx] = t
-end
-
---TODO: if we support calculate tangents from vertex data, we should consider move lua code to c and not use math3d
--- bacause, as the glb have large vertices, it will consume the math3d lib vectors rapily, we need to careful reuse 
--- the vector alloc in math3d, to avoid vectors are cross the limitation
-local function calc_local_tangent(n, t, b)
-	local local_t = math3d.sub(t, math3d.mul(n, math3d.dot(t, n)))
-	if mu.iszero_math3dvec(local_t) then
-		local_t = math3d.cross(n, b)
-	else
-		local_t = math3d.normalize(local_t)
-		assert(not mu.isnan_math3dvec(local_t))
-	end
-
-	return local_t
-end
-
 local function find_layout(layouts, name)
 	for i=1, #layouts do
 		local l = layouts[i]
@@ -301,6 +268,22 @@ local function calc_tangents(ib, vb, layouts)
 		}
 	end
 
+	--[[
+		tangent calculation:
+		we have 3 vertices: a, b, c, which have position and uv defined in triangle abc, we make:
+			tangent T and bitangent B:
+				b.p - a.p = (b.u-a.u)*T + (b.v-a.v)*B
+				c.p - a.p = (c.u-a.u)*T + (c.v-a.v)*B
+			make:
+				ba=b.p-a.p, bau=b.u-a.u, bav=b.v-a.v
+				ca=c.p-a.p, cau=c.u-a.u, cav=c.v-a.v
+
+				ba = bau*T + bav*B	==> ba.x = bau*T.x + bav*B.x | ba.y = bau*T.y + bav*B.y | ba.z = bau*T.z + bav*B.z
+				ca = cau*T + cav*B	==> ca.x = cau*T.x + cav*B.x | ca.y = cau*T.y + cav*B.y | ca.z = cau*T.z + cav*B.z
+
+			we can solve T and B
+	]]
+
 	for i=1, #ib, 3 do
 		local vidx0, vidx1, vidx2 = ib[i]+1, ib[i+1]+1, ib[i+2]+1
 
@@ -314,7 +297,7 @@ local function calc_tangents(ib, vb, layouts)
 		local det<const> = bau * cav - bav * cau
 		local t, bi
 		if mu.iszero(det) then
-			t, bi = mc.ZERO, mc.ZERO
+			t, bi = mc.XAXIS, mc.ZAXIS
 		else
 			local invDet<const> = 1.0 / det
 
@@ -324,6 +307,7 @@ local function calc_tangents(ib, vb, layouts)
 					math3d.mul(math3d.sub(math3d.mul(ca, bau), math3d.mul(ba, cau)), invDet)
 		end
 
+		-- we will merge tangent and bitangent value
 		tangents[vidx0]		= tangents[vidx0] and math3d.add(tangents[vidx0], t) or t
 		tangents[vidx1]		= tangents[vidx1] and math3d.add(tangents[vidx1], t) or t
 		tangents[vidx2]		= tangents[vidx2] and math3d.add(tangents[vidx2], t) or t
@@ -340,13 +324,14 @@ local function calc_tangents(ib, vb, layouts)
 		local tanv 		= bitangents[iv]
 
 		local normal 	= load_vec(vb[iv], normal_attrib_idx, normal_layout)
-		local ndt    	= math3d.dot(normal, tanu)
 		local nxt    	= math3d.cross(normal, tanu)
+		
+		-- see: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-13-normal-mapping/#tangent-and-bitangent
+		-- make tangent vector perpendicular to normal
+		-- tangent = tangent - normal * normal dot tangent
+		local ndt	= math3d.dot(normal, tanu)
 		local tangent	= math3d.sub(tanu, math3d.mul(normal, ndt))
-		tangent			= math3d.set_index(tangent, 4, math3d.dot(nxt, tanv) < 0 and -1.0 or 1.0)
-		if mu.isnan_math3dvec(tangent) then
-			error "tangent is NaN"
-		end
+		tangent	= math3d.set_index(tangent, 4, math3d.dot(nxt, tanv) < 0 and -1.0 or 1.0)
 		store(iv, math3d.normalize(tangent))
 	end
 end
