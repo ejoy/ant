@@ -48,8 +48,8 @@ local function get_layout(name, accessor)
 end
 
 local function attrib_data(desc, iv, bin)
-	local buf_offset = desc.bv_offset + iv * desc.stride + desc.acc_offset
-	return bin:sub(buf_offset+1, buf_offset+desc.elemsize)
+	local buf_offset = desc.bv + iv * desc.stride + desc.acc
+	return bin:sub(buf_offset+1, buf_offset+desc.size)
 end
 
 local function to_ib(indexbin, flag, count)
@@ -87,13 +87,10 @@ end
 	for tri=0, num_triangles-1 do
 		local buffer_offset = tri * elemsize * 3
 		local v0, v1, v2 = fmt:unpack(indexbin, buffer_offset+1)
-		local s = fmt:pack(v0, v2, v1)
-		ib_table[#ib_table + 1] = {
-			i0 = v0,
-			i1 = v2,
-			i2 = v1
-		}
-		buffer[#buffer+1] = s
+		ib_table[#ib_table + 1] = v0
+		ib_table[#ib_table + 1] = v2
+		ib_table[#ib_table + 1] = v1
+		buffer[#buffer+1] = fmt:pack(v0, v2, v1)
 	end
 
 	indexbin = table.concat(buffer, "")
@@ -261,13 +258,101 @@ local function calc_local_tangent(n, t, b)
 	return local_t
 end
 
+local function find_layout(layouts, name)
+	for i=1, #layouts do
+		local l = layouts[i]
+		if l.name == name then
+			return l
+		end
+	end
+end
+
+local function find_layout_idx(layouts, name)
+	for i=1, #layouts do
+		local l = layouts[i]
+		if l.name == name then
+			return i
+		end
+	end
+end
+
+local function calc_tangents2(ib, vb, layouts)
+	local tangents, bitangents = {}, {}
+
+	local pos_attrib_idx, tex_attrib_idx = find_layout_idx(layouts, "POSITION"), find_layout_idx(layouts, "TEXCOORD_0")
+	local pos_layout, tex_layout = layouts[pos_attrib_idx].layout, layouts[tex_attrib_idx].layout
+	local function store(iv, v)
+		local x, y, z, w = math3d.index(v, 1, 2, 3, 4)
+		local vv = vb[iv]
+		vv[#vv+1] = ('ffff'):pack(x, y, z, w)
+	end
+
+	local function load_vec(v, idx, layout)
+		local p = unpack_vec(v[idx], layout)
+		return math3d.vector(p)
+	end
+
+	local function load_vertex(vidx)
+		local v = vb[vidx]
+		local t = unpack_vec(v[tex_attrib_idx], tex_layout)
+		return {
+			p = load_vec(v, pos_attrib_idx, pos_layout),
+			u = t[1], v = t[2]
+		}
+	end
+
+	for i=1, #ib, 3 do
+		local vidx0, vidx1, vidx2 = ib[i]+1, ib[i+1]+1, ib[i+2]+1
+
+		local a, b, c = load_vertex(vidx0), load_vertex(vidx1), load_vertex(vidx2)
+
+		local ba = math3d.sub(b.p, a.p)
+		local ca = math3d.sub(c.p, a.p)
+		local bau, bav = b.u - a.u, b.v - a.v
+		local cau, cav = c.u - a.u, c.v - a.v
+
+		local det<const> = bau * cav - bav * cau
+		local invDet<const> = 1.0 / det
+
+		--(ba * cav - ca * bav) * invDet
+		--(ca * bau - ba * cau) * invDet
+		local t  = math3d.mul(math3d.sub(math3d.mul(ba, cav), math3d.mul(ca, bav)), invDet)
+		local bi = math3d.mul(math3d.sub(math3d.mul(ca, bau), math3d.mul(ba, cau)), invDet)
+
+		tangents[vidx0] = tangents[vidx0] and math3d.add(tangents[vidx0], t) or t
+		tangents[vidx1] = tangents[vidx1] and math3d.add(tangents[vidx1], t) or t
+		tangents[vidx2] = tangents[vidx2] and math3d.add(tangents[vidx2], t) or t
+
+		bitangents[vidx0] = bitangents[vidx0] and math3d.add(bitangents[vidx0], bi) or bi
+		bitangents[vidx1] = bitangents[vidx1] and math3d.add(bitangents[vidx1], bi) or bi
+		bitangents[vidx2] = bitangents[vidx2] and math3d.add(bitangents[vidx2], bi) or bi
+	end
+
+	local normal_attrib_idx = find_layout_idx(layouts, "NORMAL")
+	local normal_layout = layouts[normal_attrib_idx].layout
+	for iv=1, #vb do
+		local tanu 		= tangents[iv]
+		local tanv 		= bitangents[iv]
+
+		local normal 	= load_vec(vb[iv], normal_attrib_idx, normal_layout)
+		local ndt    	= math3d.dot(normal, tanu)
+		if mu.iszero(ndt) then
+			assert("normal dot tanu is zero, will casue NaN value")
+		end
+		local nxt    	= math3d.cross(normal, tanu)
+		local tangent	= math3d.sub(tanu, math3d.mul(normal, ndt))
+		tangent			= math3d.set_index(tangent, 4, math3d.dot(nxt, tanv) < 0 and -1.0 or 1.0)
+		store(iv, math3d.normalize(tangent))
+	end
+end
+
 --Urho3D calc_tangents
-local function calc_tangents(vb, ib)
+local function calc_tangents(ib, vbloader)
 	local tangents = {}
-	for ii = 1, #ib do
-		local indices = ib[ii]
-		local i0, i1, i2 = indices.i0 + 1, indices.i1 + 1, indices.i2 + 1
-		local a, b, c = vb[i0], vb[i1], vb[i2]
+	for ii = 1, #ib, 3 do
+		local v0, v1, v2 = ib[ii] + 1, ib[ii+1] + 1, ib[ii+2] + 1
+
+		local a, b, c = vbloader(v0), vbloader(v1), vbloader(v2)
 		local ba, ca = math3d.sub(b.p, a.p), math3d.sub(c.p, a.p)
 		local bau, bav = b.u - a.u, b.v - a.v
 		local cau, cav = c.u - a.u, c.v - a.v
@@ -289,9 +374,10 @@ local function calc_tangents(vb, ib)
 		assert(not mu.isnan_math3dvec(tangent) and not mu.isnan_math3dvec(bitangent), "tangent or bitangnt is nan")
 	
 		-- TODO: need merge vertex tangent
-		tangents[i0] = math3d.mark(calc_local_tangent(a.n, tangent, bitangent))
-		tangents[i1] = math3d.mark(calc_local_tangent(b.n, tangent, bitangent))
-		tangents[i2] = math3d.mark(calc_local_tangent(c.n, tangent, bitangent))
+
+		tangents[v0] = calc_local_tangent(a.n, tangent, bitangent)
+		tangents[v1] = calc_local_tangent(b.n, tangent, bitangent)
+		tangents[v2] = calc_local_tangent(c.n, tangent, bitangent)
 	end
   
 	return tangents
@@ -358,147 +444,147 @@ local function vertex_unmark(v)
 	math3d.unmark(v.n)
 end
 
-local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
-	assert(prim.mode == nil or prim.mode == 4)
-	local attributes = prim.attributes
+local function r2l_buf(d, iv, gltfbin)
+	local v = attrib_data(d, iv, gltfbin)
+	return r2l_vec(v, d.layout)
+end
 
-	local accessors, bufferViews, buffers = gltfscene.accessors, gltfscene.bufferViews, gltfscene.buffers
-	local layoutdesc = {}
+local function is_vec_attrib(an)
+	return an:match "pnTb"
+end
+
+local function need_calc_tangent(layouts)
+	return find_layout(layouts, "TANGENT") == nil and find_layout(layouts, "NORMAL") and find_layout(layouts, "TEXCOORD_0")
+end
+
+local function generate_layouts(gltfscene, attributes)
+	local accessors, bufferViews = gltfscene.accessors, gltfscene.bufferViews
+
 	local layouts = {}
-	local final_layouts = {}
-	local layout_n = false
-	local layout_t = false
-	local layout_T = false
 	for _, attribname in ipairs(LAYOUT_NAMES) do
 		local accidx = attributes[attribname]
 		if accidx then
 			local acc = accessors[accidx+1]
 			local bvidx = acc.bufferView+1
 			local bv = bufferViews[bvidx]
-			local layout = get_layout(attribname, accessors[accidx+1])
-			layouts[#layouts+1] = layout
-			if string.sub(layout, 1 ,1) == "n" then
-				layout_n = true
-			end
-			if string.sub(layout, 1 ,1) == "t" then
-				layout_t = true
-			end
-			if string.sub(layout, 1 ,1) == "T" then
-				layout_T = true
-			end
 			local elemsize = gltfutil.accessor_elemsize(acc)
-			layoutdesc[#layoutdesc+1] = {
-				acc_offset = acc.byteOffset or 0,
-			 	bv_offset = bv.byteOffset or 0,
-				elemsize = elemsize,
-			 	stride = bv.byteStride or elemsize,
+			local layout = get_layout(attribname, accessors[accidx+1])
+			local layouttype = layout:sub(1, 1)
+			local l = {
+				name	= attribname,
+				layout 	= layout,
+				acc		= acc.byteOffset or 0,
+			 	bv		= bv.byteOffset or 0,
+				size	= elemsize,
+			 	stride	= bv.byteStride or elemsize,
+				fetch_buf = is_vec_attrib(layouttype) and r2l_buf or attrib_data,
 			}
+			layouts[#layouts+1] = l
 		end
 	end
+	return layouts
+end
 
-	local buffer = {}
-	local numv = gltfutil.num_vertices(prim, gltfscene)
-	local change_index_attrib = false
-	local vb_table = {}
-	local tangents = {}
-	if not (layout_n and layout_t) then
-		final_layouts = layouts
-	elseif layout_T then
-		adjust_tangent_location(layouts, final_layouts)
-	else
-		adjust_tangent_location(layouts, final_layouts)
-
-		--numv maybe very large
-		math3d.reset()
-		for iv=0, numv-1 do
-			local vertex = {}
-			for idx, d in ipairs(layoutdesc) do
-				local l = layouts[idx]
-				local v = attrib_data(d, iv, gltfbin)
-
-				local t = l:sub(1, 1)
-	
-				if t == 'p' then
-					vertex.p = r2l_math3dvec(v, l)
-				elseif t == 't' then
-					local uv = unpack_vec(v, l)
-					vertex.u = uv[1]
-					vertex.v = uv[2]
-				elseif t == 'n' then
-					vertex.n = r2l_math3dvec(v, l)
-				end
-			end
-
-			vertex_mark(vertex)
-			vb_table[#vb_table + 1] = vertex
-		end
-
-		math3d.reset()
-		tangents = calc_tangents(vb_table, ib_table)
-		math3d.reset()
-	end
-
+local function fetch_vertices(layouts, gltfbin, numv)
+	local vertices = {}
 	for iv=0, numv-1 do
-		local normal, tangent
- 		for idx, d in ipairs(layoutdesc) do
-			local l = layouts[idx]
-			local v = attrib_data(d, iv, gltfbin)
+		local v = {}
+		for _, l in ipairs(layouts) do
+			v[#v+1] = l:fetch_buf(iv, gltfbin)
+		end
+		vertices[#vertices+1] = v
+	end
+	return vertices
+end
 
-			local t = l:sub(1, 1)
 
-			if t == 'p' or t == 'b' then
-				buffer[#buffer+1] = r2l_vec(v, l)
-			elseif t == 'n' then
-				if layout_n and layout_t then
-					normal = r2l_math3dvec(v, l)
-				else
-					buffer[#buffer+1] = r2l_vec(v, l)
-				end	
-			elseif t == 'i' then
-				if l:sub(6, 6) == 'u' then
-					v = jointidx_fmt:pack(v:byte(1), v:byte(2), v:byte(3), v:byte(4))
-					change_index_attrib = true
-				end
-				buffer[#buffer+1] = v
-			elseif t == 'T' then
-				tangent = r2l_math3dvec(v, l)
-			else
-				buffer[#buffer+1] = v
-			end
+local function pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_index)
+	local ll = {}
+	for _, l in ipairs(layouts) do
+		--remove NORMAL attrib
+		if need_pack_tangent_frame and l.name == "NORMAL" then
+			goto continue
+		end
+		if need_convert_joint_index then
+			ll[#ll+1] = l.layout:sub(1, 5) .. 'i'
+			goto continue
+		end
+		ll[#ll+1] = l.layout
+		::continue::
+	end
+	return table.concat(ll, '|')
+end
+
+local function pack_vertex_data(layouts, vertices)
+	local function load_attrib(attribidx, vertex)
+		local l = layouts[attribidx]
+		return unpack_vec(vertex[attribidx], l.layout)
+	end
+	local function load_attrib_math3dvec(attribidx, vertex)
+		local r = load_attrib(attribidx, vertex)
+		return math3d.vector(r)
+	end
+
+	local joint_attrib_idx 						= find_layout_idx(layouts, "JOINTS_0")
+	local need_convert_joint_index<const> 		= joint_attrib_idx and layouts[joint_attrib_idx].layout:sub(6, 6) == 'u' or false
+	local normal_attrib_idx, tangent_attrib_idx = find_layout_idx(layouts, "NORMAL"), find_layout_idx(layouts, "TANGENT")
+
+	local need_pack_tangent_frame<const> = normal_attrib_idx and tangent_attrib_idx
+
+	local new_vertices = {}
+	for iv=1, #vertices do
+		local v = vertices[iv]
+		if need_convert_joint_index then
+			local j = v[joint_attrib_idx]
+			v[joint_attrib_idx] = jointidx_fmt:pack(j:byte(1), j:byte(2), j:byte(3), j:byte(4))
 		end
 
-		if layout_n and layout_t then
-			if not layout_T then
-				tangent = tangents[iv + 1]
-			end
+		if need_pack_tangent_frame then
+			local normal = load_attrib_math3dvec(normal_attrib_idx, v)
+			local tangent = load_attrib_math3dvec(tangent_attrib_idx, v)
+
 			local quat = gltfutil.pack_tangent_frame(normal, tangent, 2)
 			local fmt = ('f'):rep(4)
-			buffer[#buffer + 1] = fmt:pack(table.unpack(quat))
+			local QUAT_tangent = fmt:pack(table.unpack(quat))
+			v[tangent_attrib_idx] = QUAT_tangent
+
+			-- remove normal
+			table.remove(v, normal_attrib_idx)
 		end
+		new_vertices[#new_vertices+1] = table.concat(v,"")
 	end
-	for idx = 1, #final_layouts do
-		local l = final_layouts[idx]
-		local t = l:sub(1, 1)
-		if t == 'i' and change_index_attrib then
-			final_layouts[idx] = final_layouts[idx]:sub(1, 5) .. 'i'
-			break
+
+	return new_vertices, pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_index)
+end
+
+local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
+	assert(prim.mode == nil or prim.mode == 4)
+
+	local layouts = generate_layouts(gltfscene, prim.attributes)
+
+	local numv = gltfutil.num_vertices(prim, gltfscene)
+	local vertices = fetch_vertices(layouts, gltfbin, numv)
+
+	if need_calc_tangent(layouts) then
+		if ib_table then
+			math3d.reset()
+			calc_tangents2(ib_table, vertices, layouts)
+			math3d.reset()
+		else
+			assert("need implement")
 		end
+		layouts[#layouts+1] = {
+			layout		= "T40NIf",
+			fetch_buf	= attrib_data,	-- this tangent already in left hand space
+			name		= "TANGENT",
+		}
 	end
 
-	for _, vertex in ipairs(vb_table) do
-		vertex_unmark(vertex)
-	end
-
-	for _, t in ipairs(tangents) do
-		math3d.unmark(t)
-	end
-
-	math3d.reset()
-
-	local bindata = table.concat(buffer, "")
+	local new_vertices, full_layout = pack_vertex_data(layouts, vertices)
+	local bindata = table.concat(new_vertices, "")
 
 	return {
-		declname = table.concat(final_layouts, '|'),
+		declname = full_layout,
 		memory = {bindata, 1, #bindata},
 		start = 0,
 		num = numv,
@@ -745,6 +831,8 @@ end
 			local ib_table = {}
 			local group = {}
 			local indices_accidx = prim.indices
+
+			--TODO: if no index buffer, just switch vb order, not create a new index buffer
 			group.ib = indices_accidx and
 				fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1], ib_table) or
 				gen_ib(group.vb.num)
