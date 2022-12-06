@@ -369,7 +369,7 @@ local function pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_
 		if need_pack_tangent_frame and l.name == "NORMAL" then
 			goto continue
 		end
-		if need_convert_joint_index then
+		if need_convert_joint_index and l.name == "JOINTS_0" then
 			ll[#ll+1] = l.layout:sub(1, 5) .. 'i'
 			goto continue
 		end
