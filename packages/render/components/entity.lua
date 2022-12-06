@@ -383,8 +383,8 @@ function ientity.create_line_entity(name, p0, p1, scene, color, hide)
 	
 end
 
-function ientity.create_circle_entity(name, radius, slices, scene, color, hide)
-	local circle_vb, circle_ib = geolib.circle(radius, slices)
+function ientity.create_circle_entity(name, radius, slices, scene, color, hide, arc)
+	local circle_vb, circle_ib = geolib.circle(radius, slices, arc)
 	local gvb = {}
 	--color = color or 0xffffffff
 	for i = 1, #circle_vb, 3 do

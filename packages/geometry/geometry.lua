@@ -135,10 +135,12 @@ local function gen_circle_vertices(vb, slices, height, radius)
 	end
 end
 
-local function gen_circle_vertices_facez(vb, slices, zvalue, radius)
-	local radian_step = 2 * math.pi / slices
-	for s=0, slices-1 do
-		local radian = radian_step * s
+local function gen_circle_vertices_facez(vb, slices, zvalue, radius, arc_desc)
+	local arc = arc_desc or {start_deg = 0, end_deg = 2 * math.pi }
+	local radian_step = (arc.end_deg - arc.start_deg) / slices
+	local step_count = arc_desc and slices or slices-1
+	for s=0, step_count do
+		local radian = arc.start_deg + radian_step * s
 		add_vertex(vb,
 			math.cos(radian) * radius,
 			math.sin(radian) * radius,
@@ -146,10 +148,11 @@ local function gen_circle_vertices_facez(vb, slices, zvalue, radius)
 	end
 end
 
-local function gen_circle_indices(ib, slices, baseidx)
+local function gen_circle_indices(ib, slices, baseidx, arc)
 	local last_idx = baseidx
+	local end_idx = arc and slices or baseidx
 	for i=1, slices do
-		local next_idx = i == slices and baseidx or (last_idx + 1)					
+		local next_idx = i == slices and end_idx or (last_idx + 1)				
 		ib[#ib+1] = last_idx
 		ib[#ib+1] = next_idx
 
@@ -157,11 +160,11 @@ local function gen_circle_indices(ib, slices, baseidx)
 	end
 end
 
-function geometry.circle(radius, slices)
+function geometry.circle(radius, slices, arc)
 	local vb = {}
 	local ib = {}
-	gen_circle_vertices_facez(vb, slices, 0, radius)
-	gen_circle_indices(ib, slices, 0)
+	gen_circle_vertices_facez(vb, slices, 0, radius, arc)
+	gen_circle_indices(ib, slices, 0, arc)
 	return vb, ib
 end
 

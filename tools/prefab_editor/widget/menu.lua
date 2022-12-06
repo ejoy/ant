@@ -68,7 +68,7 @@ function m.show()
                     for _, f in ipairs(editor_setting.setting.recent_files) do
                         local ff = f:match "([^|]+)|mesh.prefab"
                         ff = ff or f
-                        if imgui.widget.MenuItem(ff) then
+                        if fs.exists(fs.path(ff)) and imgui.widget.MenuItem(ff) then
                             world:pub{"OpenFile", "Prefab", f}
                         end
                     end
