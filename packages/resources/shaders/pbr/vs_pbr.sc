@@ -6,8 +6,6 @@ $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGEN
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
 
-//#define CREATE_TAN_FRAME()	\
-
 void main()
 {
 	mat4 wm = get_world_matrix();
@@ -40,7 +38,7 @@ void main()
 #	endif//PACK_TANGENT_TO_QUAT
 	v_normal	= normalize(mul(wm, vec4(normal, 0.0)).xyz);
 	v_tangent	= normalize(mul(wm, vec4(tangent, 0.0)).xyz);
-	v_bitangent	= cross(v_normal, v_tangent);	//left hand
+	v_bitangent	= cross(v_tangent, v_normal);	//left hand
 #endif//CALC_TBN
 #endif //!MATERIAL_UNLIT
 }

@@ -12,11 +12,6 @@ void main()
 	vec4 posWS = transformWS(wm, vec4(a_position, 1.0));
 	gl_Position = mul(u_viewProj, posWS);
 
-#if WITH_OUTPUT_WORLDPOS
-	v_posWS = posWS;
-	v_posWS.w = mul(u_view, v_posWS).z;
-#endif //WITH_OUTPUT_WORLDPOS
-
 	v_texcoord0	= a_texcoord0;
 #ifdef USING_LIGHTMAP
 	v_texcoord1 = a_texcoord1;
@@ -26,15 +21,26 @@ void main()
 	v_color0 = a_color0;
 #endif //WITH_COLOR_ATTRIB
 
-#ifdef WITH_NORMAL_ATTRIB
-	//TODO: normal and tangent should use inverse transpose matrix
-	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
-#	ifdef WITH_TANGENT_ATTRIB
-	v_tangent	= normalize(mul(wm, vec4(a_tangent, 0.0)).xyz);
-	v_bitangent	= cross(v_normal, v_tangent);	//left hand
-#	endif //WITH_TANGENT_ATTRIB
+#ifndef MATERIAL_UNLIT
+	v_posWS = posWS;
+	v_posWS.w = mul(u_view, v_posWS).z;
 
-#endif //WITH_NORMAL_ATTRIB
+#ifdef CALC_TBN
+	v_normal	= normalize(mul(wm, vec4(a_normal, 0.0)).xyz);
+#else //!CALC_TBN
+#	if PACK_TANGENT_TO_QUAT
+	const vec4 quat = a_tangent;
+	vec3 normal, tangent;
+	to_tangent_frame(quat, normal, tangent);
+#	else //!PACK_TANGENT_TO_QUAT
+	vec3 normal = a_normal;
+	vec3 tangent = a_tangent.xyz;
+#	endif//PACK_TANGENT_TO_QUAT
+	v_normal	= normalize(mul(wm, vec4(normal, 0.0)).xyz);
+	v_tangent	= normalize(mul(wm, vec4(tangent, 0.0)).xyz);
+	v_bitangent	= cross(v_tangent, v_normal);	//left hand
+#endif//CALC_TBN
+#endif //!MATERIAL_UNLIT
 
 
 }

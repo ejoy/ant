@@ -22,16 +22,6 @@ void to_tangent_frame(const highp vec4 q, out highp vec3 n, out highp vec3 t){
         vec3(-2.0,  2.0,  2.0 ) * q.z * q.zwx;
 }
 
-mat3 to_tbn(vec3 t, vec3 b, vec3 n)
-{
-	mat3 TBN = mat3(t, b, n);
-#if BGFX_SHADER_LANGUAGE_HLSL
-	return TBN;
-#else
-	return transpose(TBN);
-#endif
-}
-
 mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 {
 	mat4 wolrdMat = mat4(
@@ -72,7 +62,7 @@ mat3 calc_tbn_lh_ex(vec3 n, vec3 t, float b_sign, mat4 worldMat)
 	vec3 tangent = normalize(mul(worldMat, vec4(t.xyz, 0.0)).xyz);
 	vec3 bitangent = cross(normal, tangent) * b_sign;
 
-	return to_tbn(tangent, bitangent, normal);
+	return mat3(tangent, bitangent, normal);
 }
 
 // left handside
@@ -86,7 +76,7 @@ mat3 calc_tbn(vec3 n, vec3 t, vec3 b, mat4 worldMat)
 	vec3 normal = normalize(mul(worldMat, vec4(n, 0.0)).xyz);
 	vec3 tangent = normalize(mul(worldMat, vec4(t, 0.0)).xyz);
 	vec3 bitangent = normalize(mul(worldMat, vec4(b, 0.0)).xyz);
- 	return to_tbn(tangent, bitangent, normal);
+ 	return mat3(tangent, bitangent, normal);
 }
 
 vec3 remap_normal(vec2 normalTSXY)
@@ -147,6 +137,7 @@ void check_clip_rotated_rect(vec2 pixel)
 #endif //ENABLE_CLIP_RECT
 
 #if BGFX_SHADER_TYPE_FRAGMENT
+//TODO: fix me
 mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
 {
     vec3 Q1  = dFdx(posWS);
@@ -156,9 +147,9 @@ mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
 
     vec3 N  = normalize(normal);
     vec3 T  = normalize(Q1*st2.y - Q2*st1.y);
-    vec3 B  = -normalize(cross(N, T));
+    vec3 B  = normalize(cross(T, N));	// left hand
 
-	return to_tbn(T, B, N);
+	return mat3(T, B, N);
 }
 #endif //BGFX_SHADER_TYPE_FRAGMENT
 #endif //__SHADER_TRANSFORMS_SH__

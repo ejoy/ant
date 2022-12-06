@@ -12,12 +12,11 @@ input_attributes input_attribs = (input_attributes)0;
 
 #ifndef MATERIAL_UNLIT
     input_attribs.V = normalize(u_eyepos.xyz - v_posWS.xyz);
-#   ifdef WITH_TANGENT_ATTRIB
-    const mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);
-#   else //!WITH_TANGENT_ATTRIB
+#   ifdef CALC_TBN
     const mat3 tbn = tbn_from_world_pos(v_normal, v_posWS.xyz, uv);
-#   endif //WITH_TANGENT_ATTRIB
-
+#   else //!CALC_TBN
+    const mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);
+#   endif //CALC_TBN
     input_attribs.N = get_normal_by_tbn(tbn, v_normal, uv);
 
 #ifdef ENABLE_BENT_NORMAL
