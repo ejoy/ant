@@ -5,7 +5,6 @@ local m     = ecs.system 'input_system'
 local event_mouse = world:sub {"mouse"}
 local last_mouse
 local last_vx, last_vy
-local last_wx, last_wy
 
 function m:input_filter()
     for _,what,state,x,y in event_mouse:unpack() do

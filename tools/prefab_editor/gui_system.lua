@@ -21,7 +21,6 @@ local toolbar           = ecs.require "widget.toolbar"
 local mainview          = ecs.require "widget.main_view"
 local scene_view        = ecs.require "widget.scene_view"
 local inspector         = ecs.require "widget.inspector"
-local gridmesh_view     = ecs.require "widget.gridmesh_view"
 local menu              = ecs.require "widget.menu"
 local gizmo             = ecs.require "gizmo.gizmo"
 local camera_mgr        = ecs.require "camera.camera_manager"
@@ -85,7 +84,7 @@ local function start_fileserver(path)
     ]]
 end
 
-local function open_proj(path)
+local function do_open_proj(path)
     local lpath = lfs.path(path)
     if lfs.exists(lpath / ".mount") then
         local topname = global_data:update_root(lpath)
@@ -106,15 +105,14 @@ local function open_proj(path)
     end
 end
 
-local function OnOpen()
+local function on_open_proj()
     local path = choose_project_dir()
     if path then
-        local projname = open_proj(path)
-        if projname == nil then
-            projname = lfs.path(path):filename():string() .. "(folder)"
-        end
+        local projname = do_open_proj(path)
         editor_setting.update_lastproj(projname:string():gsub("/pkg/", ""), path)
         editor_setting.save()
+        prefab_mgr:reset_prefab()
+        world:pub {"ResourceBrowser", "dirty"}
     end
 end
 
@@ -146,7 +144,7 @@ local function choose_project()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button(faicons.ICON_FA_FOLDER_OPEN.." Open") then
-            OnOpen()
+            on_open_proj()
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button(faicons.ICON_FA_BAN.." Quit") then
@@ -158,7 +156,7 @@ local function choose_project()
             for i, proj in ipairs(lastprojs) do
                 if imgui.widget.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                     selected_proj = lastprojs[i]
-                    open_proj(proj.proj_path)
+                    do_open_proj(proj.proj_path)
                 end
             end
         end
@@ -194,7 +192,6 @@ function m:ui_update()
     toolbar.show()
     mainview.show()
     scene_view.show()
-    -- gridmesh_view.show()
     inspector.show()
     resource_browser.show()
     anim_view.show()
@@ -214,6 +211,7 @@ local hierarchy_event       = world:sub {"HierarchyEvent"}
 local entity_event          = world:sub {"EntityEvent"}
 local event_keyboard        = world:sub {"keyboard"}
 local event_open_file       = world:sub {"OpenFile"}
+local event_open_proj       = world:sub {"OpenProject"}
 local event_add_prefab      = world:sub {"AddPrefabOrEffect"}
 local event_resource_browser= world:sub {"ResourceBrowser"}
 local event_window_title    = world:sub {"WindowTitle"}
@@ -398,6 +396,10 @@ function m:handle_event()
             hierarchy:move_bottom(target)
         end
     end
+
+    for _ in event_open_proj:unpack() do
+        on_open_proj()
+    end
     
     for _, tn, filename in event_open_file:unpack() do
         if tn == "FBX" then
@@ -428,10 +430,12 @@ function m:handle_event()
     end
 
     for _, key, press, state in event_keyboard:unpack() do
-        if key == "DELETE" and press == 1 then
-            world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
+        if key == "Delete" and press == 1 then
+            if gizmo.target_eid then
+                world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
+            end
         elseif state.CTRL and key == "O" and press == 1 then
-            OnOpen()
+            on_open_proj()
             -- local g1 = ecs.group(1)
             -- g1:enable "scene_update"
             -- g1:enable "view_visible"

@@ -32,8 +32,9 @@ local function update_lastproj(name, projpath)
     if not editor_setting.lastprojs then
         editor_setting.lastprojs = {}
     end
+    projpath = projpath:gsub("\\", "/")
     local proj_list = {
-        {name = name, proj_path = projpath:gsub("\\", "/")}
+        {name = name, proj_path = projpath}
     }
     for _, proj in ipairs(editor_setting.lastprojs) do
         if projpath ~= proj.proj_path then

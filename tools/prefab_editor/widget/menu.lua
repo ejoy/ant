@@ -59,6 +59,7 @@ function m.show()
                 prefab_mgr:reset_prefab()
             end
             if imgui.widget.MenuItem(faicons.ICON_FA_FOLDER_OPEN.." Open", "Ctrl+O") then
+                world:pub{"OpenProject"}
             end
             imgui.cursor.Separator()
             if imgui.widget.BeginMenu(faicons.ICON_FA_LIST.." Recent Files") then
@@ -67,7 +68,7 @@ function m.show()
                     for _, f in ipairs(editor_setting.setting.recent_files) do
                         local ff = f:match "([^|]+)|mesh.prefab"
                         ff = ff or f
-                        if imgui.widget.MenuItem(ff) then
+                        if fs.exists(fs.path(ff)) and imgui.widget.MenuItem(ff) then
                             world:pub{"OpenFile", "Prefab", f}
                         end
                     end

@@ -9,9 +9,10 @@
 #   define INPUT_WEIGHT    a_weight
 
 #else //!GPU_SKINNING
+#   define BGFX_CONFIG_MAX_BONES 1
+
 #   define INPUT_INDICES
 #   define INPUT_WEIGHT
-#   define BGFX_CONFIG_MAX_BONES 1
 #endif //GPU_SKINNING
 
 #ifdef WITH_COLOR_ATTRIB
@@ -22,22 +23,6 @@
 #   define OUTPUT_COLOR0
 #endif //WITH_COLOR_ATTRIB
 
-#ifndef WITH_TANGENT_ATTRIB
-#   if !((defined(CALC_TBN) || defined(WITHOUT_TANGENT_ATTRIB)) && defined(MATERIAL_UNLIT))
-#       define WITH_TANGENT_ATTRIB 1
-#   endif 
-#endif //!WITH_TANGENT_ATTRIB
-
-#ifdef WITH_TANGENT_ATTRIB
-#   define INPUT_TANGENT    a_tangent
-#   define OUTPUT_TANGENT   v_tangent
-#   define OUTPUT_BITANGENT v_bitangent
-#else //!WITH_TANGENT_ATTRIB
-#   define INPUT_TANGENT
-#   define OUTPUT_TANGENT
-#   define OUTPUT_BITANGENT
-#endif//WITH_TANGENT_ATTRIB
-
 #if defined(USING_LIGHTMAP)
 #   define INPUT_LIGHTMAP_TEXCOORD      a_texcoord1
 #   define OUTPUT_LIGHTMAP_TEXCOORD     v_texcoord1
@@ -46,32 +31,41 @@
 #   define OUTPUT_LIGHTMAP_TEXCOORD
 #endif //USING_LIGHTMAP
 
-#ifndef MATERIAL_UNLIT
-#   define WITH_NORMAL_ATTRIB 1
-#endif //MATERIAL_UNLIT
+#ifndef PACK_TANGENT_TO_QUAT
+#define PACK_TANGENT_TO_QUAT 1
+#endif //PACK_TANGENT_TO_QUAT
 
-#ifdef WITH_NORMAL_ATTRIB
-#   define INPUT_NORMAL a_normal
-#   define OUTPUT_NORMAL v_normal
-#else //!WITH_NORMAL_ATTRIB
+#ifdef MATERIAL_UNLIT
 #   define INPUT_NORMAL
+#   define INPUT_TANGENT
+
 #   define OUTPUT_NORMAL
-#endif //WITH_NORMAL_ATTRIB
+#   define OUTPUT_TANGENT
+#   define OUTPUT_BITANGENT
 
-#if (!defined(USING_LIGHTMAP) && defined(ENABLE_SHADOW)) || !defined(MATERIAL_UNLIT)
-#   define WITH_OUTPUT_WORLDPOS 1
-#endif 
-
-#ifdef WITH_OUTPUT_WORLDPOS
-#   define OUTPUT_WORLDPOS v_posWS
-#else //!WITH_OUTPUT_WORLDPOS
 #   define OUTPUT_WORLDPOS
-#endif //WITH_OUTPUT_WORLDPOS
 
+#else //!MATERIAL_UNLIT
+#   ifdef CALC_TBN
+#   define INPUT_NORMAL     a_normal
+#   define INPUT_TANGENT
 
-///define check
-#if defined(ENABLE_SHADOW) && !defined(MATERIAL_UNLIT)
-#   ifndef WITH_NORMAL_ATTRIB
-#   error "Shadow need normal attribute"
-#   endif //!WITH_NORMAL_ATTRIB
-#endif //ENABLE_SHADOW
+#   define OUTPUT_NORMAL    v_normal
+#   define OUTPUT_TANGENT
+#   define OUTPUT_BITANGENT
+#   else    //!CALC_TBN
+#       define INPUT_TANGENT    a_tangent
+
+#       if PACK_TANGENT_TO_QUAT
+#       define INPUT_NORMAL
+#       else //!PACK_TANGENT_TO_QUAT
+#       define INPUT_NORMAL a_normal
+#       endif //PACK_TANGENT_TO_QUAT
+
+#       define OUTPUT_NORMAL    v_normal
+#       define OUTPUT_TANGENT   v_tangent
+#       define OUTPUT_BITANGENT v_bitangent
+#   endif   //CALC_TBN
+
+#   define OUTPUT_WORLDPOS v_posWS
+#endif //MATERIAL_UNLIT

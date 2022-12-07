@@ -45,7 +45,7 @@ function gizmo:update()
 end
 
 function gizmo:set_target(eid)
-	local target = hierarchy:get_select_adapter(eid)
+	local target = eid
 	if self.target_eid == target then
 		return
 	end
@@ -66,15 +66,22 @@ end
 
 function gizmo:updata_uniform_scale()
 	if not self.rw.eid or not self.rw.eid[1] then return end
-	local mc <close> = w:entity(irq.main_camera())
-	self.rw.dir = math3d.totable(iom.get_direction(mc))
-	local r = iom.get_rotation(mc)
+	local ce <close> = w:entity(irq.main_camera())
+	self.rw.dir = math3d.totable(iom.get_direction(ce))
+	local r = iom.get_rotation(ce)
 	local e1 <close> = w:entity(self.rw.eid[1])
 	local e3 <close> = w:entity(self.rw.eid[3])
 	local e4 <close> = w:entity(self.rw.eid[4])
 	iom.set_rotation(e1, r)
 	iom.set_rotation(e3, r)
 	iom.set_rotation(e4, r)
+
+	-- local ex <close> = w:entity(self.rx.eid[1])
+	-- local ey <close> = w:entity(self.ry.eid[1])
+	-- local ez <close> = w:entity(self.rz.eid[1])
+	-- iom.set_rotation(ex, r)
+	-- iom.set_rotation(ey, r)
+	-- iom.set_rotation(ez, r)
 end
 local function can_edit_srt(eid)
 	if not eid then return end
@@ -91,6 +98,8 @@ function gizmo:set_scale(inscale)
 	iom.set_scale(e, inscale)
 	local template = hierarchy:get_template(self.target_eid)
 	template.template.data.scene.s = inscale
+	
+	world:pub {"UpdateAABB", self.target_eid}
 end
 
 function gizmo:set_position(worldpos, gizmoonly)
@@ -155,6 +164,7 @@ function gizmo:set_rotation(inrot, gizmoonly)
 	elseif self.mode == gizmo_const.MOVE or self.mode == gizmo_const.ROTATE then
 		iom.set_rotation(re, local_space and newrot or mc.IDENTITY_QUAT)
 	end
+	world:pub {"UpdateAABB", self.target_eid}
 end
 
 function gizmo:on_mode(mode)
@@ -253,9 +263,9 @@ local function create_global_axes(scene)
 end
 
 function gizmo:update_scale()
-	local mc <close> = w:entity(irq.main_camera())
-	local viewdir = iom.get_direction(mc)
-	local eyepos = iom.get_position(mc)
+	local ce <close> = w:entity(irq.main_camera())
+	local viewdir = iom.get_direction(ce)
+	local eyepos = iom.get_position(ce)
 	local re <close> = w:entity(self.root_eid)
 	local project_dist = math3d.dot(math3d.normalize(viewdir), math3d.sub(iom.get_position(re), eyepos))
 	gizmo.scale = project_dist * 0.6
@@ -364,7 +374,8 @@ function gizmo_sys:post_init()
 
 	local function create_rotate_axis(axis, line_end, scene)
 		local line_eid = ientity.create_line_entity("", {0, 0, 0}, line_end, {parent = rot_circle_root}, axis.color, true)
-		local rot_eid = ientity.create_circle_entity("rotate gizmo circle", gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, scene, axis.color, true)
+		local arc = nil--(axis == gizmo.ry) and {start_deg = math.rad(180), end_deg = math.rad(360) } or {start_deg = math.rad(-90), end_deg = math.rad(90) }
+		local rot_eid = ientity.create_circle_entity("rotate gizmo circle", gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, scene, axis.color, true, arc)
 		local rot_ccw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, {parent = scene.parent, s = scene.s, r = scene.r, t = scene.t})
 		local rot_cw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, {parent = scene.parent, s = scene.s, r = scene.r, t = scene.t})
 		axis.eid = {rot_eid, line_eid, rot_ccw_mesh_eid, rot_cw_mesh_eid}
@@ -446,8 +457,8 @@ function gizmo:update_axis_plane()
 	worldDir = math3d.vector(gizmo_dir_to_world(gizmo_const.DIR_X))
 	local plane_yz = {n = worldDir, d = -math3d.dot(worldDir, gizmoPosVec)}
 
-	local mc <close> = w:entity(irq.main_camera())
-	local eyepos = iom.get_position(mc)
+	local ce <close> = w:entity(irq.main_camera())
+	local eyepos = iom.get_position(ce)
 
 	local project = math3d.sub(eyepos, math3d.mul(plane_xy.n, math3d.dot(plane_xy.n, eyepos) + plane_xy.d))
 	local invmat = math3d.inverse(iom.worldmat(re))
@@ -534,6 +545,13 @@ local function select_axis_plane(x, y)
 	return nil
 end
 
+local function world_to_screen(wpos)
+	local ce <close> = w:entity(irq.main_camera())
+	local vpmat = icamera.calc_viewproj(ce)
+	local mqvr = irq.view_rect "main_queue"
+	return mu.world_to_screen(vpmat, mqvr, wpos)
+end
+
 local function select_axis(x, y)
 	if not gizmo.target_eid then
 		return
@@ -554,12 +572,9 @@ local function select_axis(x, y)
 	if axisPlane then
 		return axisPlane
 	end
-	local mc <close> = w:entity(irq.main_camera(), "camera:in")
-	local vpmat = mc.camera.viewprojmat
-
 	local re <close> = w:entity(gizmo.root_eid)
 	local gizmo_obj_pos = iom.get_position(re)
-	local start = mu.world_to_screen(vpmat, mqvr, gizmo_obj_pos)
+	local start = world_to_screen(gizmo_obj_pos)
 	uniform_scale = false
 	-- uniform scale
 	local hp = math3d.vector(x, y, 0)
@@ -596,7 +611,7 @@ local function select_axis(x, y)
 
 	for k, delta_dir in pairs(axes) do
 		local end_ptWS = math3d.add(gizmo_obj_pos, math3d.vector(gizmo_dir_to_world(delta_dir)))
-		local end_pt = mu.world_to_screen(vpmat, mqvr, end_ptWS)
+		local end_pt = world_to_screen(end_ptWS)
 		local dis, intersectpt = mu.pt2d_line_intersect(start, end_pt, hp)
 		if math.abs(dis) < gizmo_const.MOVE_HIT_RADIUS_PIXEL and mu.pt2d_in_line(start, end_pt, intersectpt) then
 			local tn = gizmo.mode == gizmo_const.SCALE and "s" or "t"
@@ -746,53 +761,56 @@ local function move_light_gizmo(x, y)
 	world:pub {"Gizmo", "update"}
 end
 
-local function show_rotate_fan(rotAxis, startAngle, deltaAngle)
-	local e3 <close> = w:entity(rotAxis.eid[3], "render_object:update")
+local function show_rotate_fan(rot_axis, start_angle, delta_angle)
 	local e3_start, e3_num
-	local stepAngle = gizmo_const.ROTATE_SLICES / 360
-	local e4 <close> = w:entity(rotAxis.eid[4], "render_object:update")
-	if deltaAngle > 0 then
-		e3_start = math.floor(startAngle * stepAngle) * 3
-		local totalAngle = startAngle + deltaAngle
-		if totalAngle > 360 then
-			local extraAngle = (totalAngle - 360)
-			deltaAngle = deltaAngle - extraAngle
+	local step_angle = gizmo_const.ROTATE_SLICES / 360
+	local e4 <close> = w:entity(rot_axis.eid[4], "render_object:update")
+	local ro4 = e4.render_object
+	ro4.ib_start, ro4.ib_num = 0, 0
+	if delta_angle > 0 then
+		e3_start = math.floor(start_angle * step_angle) * 3
+		local total_angle = start_angle + delta_angle
+		if total_angle > 360 then
+			local extra_angle = (total_angle - 360)
+			delta_angle = delta_angle - extra_angle
 			
-			local e4num = math.floor(extraAngle * stepAngle) * 3
-			local ro = e4.render_object
-			ro.ib_num = e4num
+			local e4num = math.floor(extra_angle * step_angle) * 3
+			ro4.ib_num = e4num
 			ivs.set_state(e4, "main_view", e4num > 0)
 			ivs.set_state(e4, "selectable", e4num > 0)
 		end
-		e3_num = math.floor(deltaAngle * stepAngle + 1) * 3
+		e3_num = math.floor(delta_angle * step_angle + 1) * 3
 	else
-		local extraAngle = startAngle + deltaAngle
-		if extraAngle < 0 then
+		local extra_angle = start_angle + delta_angle
+		if extra_angle < 0 then
 			e3_start = 0
-			e3_num = math.floor(startAngle * stepAngle) * 3
+			e3_num = math.floor(start_angle * step_angle) * 3
 
-			local e4start, e4num = math.floor((360 + extraAngle) * stepAngle) * 3, math.floor(-extraAngle * stepAngle + 1) * 3
-			local ro = e4.render_object
-			ro.ib_start, ro.ib_num = e4start, e4num
+			local e4start, e4num = math.floor((360 + extra_angle) * step_angle) * 3, math.floor(-extra_angle * step_angle + 1) * 3
+			ro4.ib_start, ro4.ib_num = e4start, e4num
 			ivs.set_state(e4, "main_view", e4num > 0)
 			ivs.set_state(e4, "selectable", e4num > 0)
 		else
-			e3_num = math.floor(-deltaAngle * stepAngle + 1) * 3
-			e3_start = math.floor(startAngle * stepAngle) * 3 - e3_num
+			e3_num = math.floor(-delta_angle * step_angle + 1) * 3
+			e3_start = math.floor(start_angle * step_angle) * 3 - e3_num
 			if e3_start < 0 then
 				e3_num = e3_num + e3_start
 				e3_start = 0
 			end
 		end
 	end
-	local ro = e3.render_object
-	ro.ib_start, ro.ib_num = e3_start, e3_num
+	local e3 <close> = w:entity(rot_axis.eid[3], "render_object:update")
+	local ro3 = e3.render_object
+	ro3.ib_start, ro3.ib_num = e3_start, e3_num
 
 	local e3_visible = e3_num > 0
 	ivs.set_state(e3, "main_view", e3_visible)
 	ivs.set_state(e3, "selectable", e3_visible)
 end
 
+local init_screen_offest = math3d.ref()
+local local_angle = 0
+local revolutions = 0
 local function rotate_gizmo(x, y)
 	if not x or not y then return end
 	local axis_dir = (rotate_axis ~= gizmo.rw) and gizmo_dir_to_world(rotate_axis.dir) or rotate_axis.dir
@@ -803,8 +821,8 @@ local function rotate_gizmo(x, y)
 		return
 	end
 	local gizmo_to_last_hit = math3d.normalize(math3d.sub(last_hit, gizmoPos))
-	local tangent = math3d.normalize(math3d.cross(axis_dir, gizmo_to_last_hit))
-	local proj_len = math3d.dot(tangent, math3d.sub(hitPosVec, last_hit))
+	-- local tangent = math3d.normalize(math3d.cross(axis_dir, gizmo_to_last_hit))
+	-- local proj_len = math3d.dot(tangent, math3d.sub(hitPosVec, last_hit))
 	
 	local angleBaseDir = gizmo_dir_to_world(mc.XAXIS)
 	if rotate_axis == gizmo.rx then
@@ -813,14 +831,24 @@ local function rotate_gizmo(x, y)
 		angleBaseDir = math3d.normalize(math3d.cross(mc.YAXIS, axis_dir))
 	end
 	
-	local deltaAngle = proj_len * 200 / gizmo.scale
-	if deltaAngle > 360 then
-		deltaAngle = deltaAngle - 360
-	elseif deltaAngle < -360 then
-		deltaAngle = deltaAngle + 360
+	local init_point = world_to_screen(gizmoPos)
+	local screen_vec = math3d.vector{x - math3d.index(init_point, 1), y - math3d.index(init_point, 2), 0}
+	local ax = math3d.dot(screen_vec, init_screen_offest)
+	local ay = math3d.dot(screen_vec, math3d.vector{-1.0 * math3d.index(init_screen_offest, 2), math3d.index(init_screen_offest, 1), 0})
+	local prev_local_angle = local_angle
+	local_angle = math.atan(ay, ax)
+	if local_angle * prev_local_angle < 0.0 and (2.0 * math.abs(local_angle) > math.pi) then
+		if 2.0 * math.abs(local_angle) > math.pi then
+			if local_angle < 0.0 then
+				revolutions = revolutions + 1
+			else
+				revolutions = revolutions - 1
+			end
+		end
 	end
-	if math.abs(deltaAngle) < 0.0001 then
-		return
+	local delta_angle = math.fmod(math.deg(local_angle + revolutions * math.pi * 2.0), 360)
+	if rotate_axis == gizmo.rz or rotate_axis == gizmo.rw then
+		delta_angle = -1.0 * delta_angle
 	end
 	local tableGizmoToLastHit
 	if local_space and rotate_axis ~= gizmo.rw then
@@ -832,14 +860,14 @@ local function rotate_gizmo(x, y)
 	if rotate_axis == gizmo.ry then
 		isTop = tableGizmoToLastHit[3] > 0
 	end
-	local angle = math.deg(math.acos(math3d.dot(gizmo_to_last_hit, angleBaseDir)))
+	local fan_angle = math.deg(math.acos(math3d.dot(gizmo_to_last_hit, angleBaseDir)))
 	if not isTop then
-		angle = 360 - angle
+		fan_angle = 360 - fan_angle
 	end
 
-	show_rotate_fan(rotate_axis, angle, (rotate_axis == gizmo.ry) and -deltaAngle or deltaAngle)
+	show_rotate_fan(rotate_axis, fan_angle, (rotate_axis == gizmo.ry) and -delta_angle or delta_angle)
 	
-	local quat = math3d.quaternion { axis = last_rotate_axis, r = math.rad(deltaAngle) }
+	local quat = math3d.quaternion { axis = last_rotate_axis, r = math.rad(delta_angle) }
 	
 	gizmo:set_rotation(math3d.mul(last_rotate, quat))
 	if local_space then
@@ -936,13 +964,7 @@ local function select_light_gizmo(x, y)
 			click_dir_spot_light = dir
 			light_gizmo_mode = 4
 		else
-			local mc <close> = w:entity(irq.main_camera())
-			local vpmat = icamera.calc_viewproj(mc)
-			local mqvr = irq.view_rect "main_queue"
-			local sp1 = mu.world_to_screen(vpmat, mqvr, iom.get_position(le))
-			local sp2 = mu.world_to_screen(vpmat, mqvr, centre)
-
-			if mu.pt2d_line_distance(sp1, sp2, math3d.vector(x, y, 0.0)) < 5.0 then
+			if mu.pt2d_line_distance(world_to_screen(iom.get_position(le)), world_to_screen(centre), math3d.vector(x, y, 0.0)) < 5.0 then
 				light_gizmo_mode = 5
 				light_gizmo.highlight(true)
 			else
@@ -996,6 +1018,11 @@ function gizmo:select_gizmo(x, y)
 			else
 				last_rotate_axis.v = rotate_axis.dir
 			end
+
+			local sc = world_to_screen(iom.get_position(te))
+			init_screen_offest.v = math3d.normalize(math3d.vector(x - math3d.index(sc, 1), y - math3d.index(sc, 2), 0))
+			local_angle = 0
+			revolutions = 0
 			return true
 		end
 	end
@@ -1025,10 +1052,7 @@ local function on_mouse_move()
 			end
 		end
 	end
-	
 end
-
-local gizmo_event = world:sub{"Gizmo"}
 
 local function world_aabb(entity)
 	local bounding = entity.bounding
@@ -1197,9 +1221,10 @@ function gizmo_sys:handle_event()
 	for _,pick_id in pickup_mb:unpack() do
 		local eid = pick_id
 		if eid then
-			if gizmo.mode ~= gizmo_const.SELECT and not gizmo_seleted then
-				if hierarchy:get_template(eid) or hierarchy:get_select_adapter(eid) then
-					gizmo:set_target(eid)
+			if not gizmo_seleted then
+				local teid = hierarchy:get_select_adapter(eid)
+				if hierarchy:get_node(teid) then
+					gizmo:set_target(teid)
 				end
 			end
 			if imodifier.highlight then
@@ -1216,14 +1241,10 @@ function gizmo_sys:handle_event()
 	end
 	for _, key, press, state in keypress_mb:unpack() do
 		if state.CTRL then
-			if key == "Z" then
-				if press == 1 then
-					cmd_queue:undo()
-				end
-			elseif key == "Y" then
-				if press == 1 then
-					cmd_queue:redo()
-				end
+			if key == "Z" and press == 1 then
+				cmd_queue:undo()
+			elseif key == "Y" and press == 1 then
+				cmd_queue:redo()
 			end
 		end
 	end
@@ -1237,8 +1258,8 @@ function gizmo_sys:handle_event()
 					local center = math3d.tovalue(math3d.mul(0.5, math3d.add(aabb_min, aabb_max)))
 					world:pub {"SmoothLookAt", { center[1], center[2], center[3] }, 2.0 * math3d.length(math3d.sub(aabb_max, center))}
 				else
-					local mc <close> = w:entity(irq.main_camera())
-					focus_aabb(mc, aabb)
+					local ce <close> = w:entity(irq.main_camera())
+					focus_aabb(ce, aabb)
 				end
 			end
 		end

@@ -61,21 +61,10 @@ function util.limit(v, min, max)
     return v
 end
 
-local function iszero_(threshold, v, ...)
-	if v then
-		if math.abs(v) <= threshold then
-			return true
-		end
-
-		return iszero_(threshold, ...)
-	end
-end
-
 local ZERO_THRESHOLD<const> = 10e-6
 
 function util.iszero_math3dvec(v, threshold)
-	threshold = threshold or ZERO_THRESHOLD
-	return iszero_(threshold, math3d.index(v, 1, 2, 3, 4))
+	return math3d.isequal(v, constant.ZERO, threshold)
 end
 
 function util.iszero(n, threshold)

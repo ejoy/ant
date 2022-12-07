@@ -12,17 +12,23 @@ input_attributes input_attribs = (input_attributes)0;
 
 #ifndef MATERIAL_UNLIT
     input_attribs.V = normalize(u_eyepos.xyz - v_posWS.xyz);
-#   ifdef WITH_TANGENT_ATTRIB
-    const mat3 tbn = mtxFromCols(v_tangent, v_bitangent, v_normal);
-#   else //!WITH_TANGENT_ATTRIB
-    const mat3 tbn = tbn_from_world_pos(v_normal, v_posWS.xyz, uv);
-#   endif //WITH_TANGENT_ATTRIB
+    v_normal = normalize(v_normal);
 
-    input_attribs.N = get_normal_by_tbn(tbn, v_normal, uv);
+#   ifdef CALC_TBN
+    vec3 tangent, bitangent;
+    cotangent_frame(v_normal, input_attribs.V, uv, tangent, bitangent);
+    input_attribs.N = normal_from_tangent_frame(tangent, bitangent, v_normal, uv);
+#   else //!CALC_TBN
+    const vec3 tangent = v_tangent, bitangent = v_bitangent;
+    input_attribs.N = normal_from_tangent_frame(tangent, bitangent, v_normal, uv);
+#   endif //CALC_TBN
 
 #ifdef ENABLE_BENT_NORMAL
     const vec3 bent_normalTS = vec3(0.0, 0.0, 1.0);
-    input_attribs.bent_normal = instMul(bent_normalTS, tbn);
+    input_attribs.bent_normal = normalize(vec3(
+        dot(tangent, bent_normalTS),
+        dot(bitangent, bent_normalTS),
+        dot(v_normal, bent_normalTS)));
 #endif //ENABLE_BENT_NORMAL
 
     get_metallic_roughness(uv, input_attribs);

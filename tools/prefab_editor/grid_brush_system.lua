@@ -206,6 +206,9 @@ local event_reset = world:sub {"ResetEditor"}
 local brush_state = false
 
 function brush_sys:handle_event()
+    if true then
+        return
+    end
     if not grid then return end
 
     for _, what in event_reset:unpack() do
