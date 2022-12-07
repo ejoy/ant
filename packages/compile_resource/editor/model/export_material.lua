@@ -226,6 +226,7 @@ return function (output, glbdata, exports, tolocalpath)
         compile.do_compile(output / texfilename, output / "images" / "_tmp", {})
         fs.remove(output / "images" / imgname)
         fs.remove(output / texfilename)
+        fs.remove_all(output / texfilename)
         fs.rename(output / "images" / "_tmp", output / texfilename)
         return serialize.path("./../images/" .. imgname_noext .. ".texture")
     end
