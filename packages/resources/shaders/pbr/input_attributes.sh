@@ -102,21 +102,14 @@ vec4 get_emissive_color(vec2 texcoord)
     return emissivecolor;
 }
 
-vec3 get_normal_by_tbn(mat3 tbn, vec3 normal, vec2 texcoord)
+vec3 normal_from_tangent_frame(vec3 tangent, vec3 bitangent, vec3 normal, vec2 texcoord)
 {
 #ifdef HAS_NORMAL_TEXTURE
 	vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
-	return normalize(mul(tbn, normalTS));
-#endif //HAS_NORMAL_TEXTURE
-
+	return normalize(vec3(dot(tangent, normalTS), dot(bitangent, normalTS), dot(normal, normalTS)));
+#else
     return normal;
-
-}
-
-vec3 get_normal(vec3 tangent, vec3 bitangent, vec3 normal, vec2 texcoord)
-{
-    mat3 tbn = mtxFromCols(tangent, bitangent, normal);
-    return get_normal_by_tbn(tbn, normal, texcoord);
+#endif //HAS_NORMAL_TEXTURE
 }
 
 vec3 get_terrain_normal_by_tbn(mat3 tbn, vec3 normal, vec2 texcoord, float normal_idx)

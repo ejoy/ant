@@ -137,19 +137,28 @@ void check_clip_rotated_rect(vec2 pixel)
 #endif //ENABLE_CLIP_RECT
 
 #if BGFX_SHADER_TYPE_FRAGMENT
-//TODO: fix me
-mat3 tbn_from_world_pos(vec3 normal, vec3 posWS, vec2 texcoord)
+// code from: http://www.thetenthplanet.de/archives/1180
+void cotangent_frame(vec3 N, vec3 p, vec2 uv, out vec3 tangent, out vec3 bitangent)
 {
-    vec3 Q1  = dFdx(posWS);
-    vec3 Q2  = dFdy(posWS);
-    vec2 st1 = dFdx(texcoord);
-    vec2 st2 = dFdy(texcoord);
-
-    vec3 N  = normalize(normal);
-    vec3 T  = normalize(Q1*st2.y - Q2*st1.y);
-    vec3 B  = normalize(cross(T, N));	// left hand
-
-	return mat3(T, B, N);
+    // get edge vectors of the pixel triangle
+    vec3 dp1 = dFdx( p );
+    vec3 dp2 = dFdy( p );
+    vec2 duv1 = dFdx( uv );
+    vec2 duv2 = dFdy( uv );
+ 
+ 	// solve the linear system
+	// this code is right hand, we interchange the cross argument to make it as left hand
+	// vec3 dp2perp = cross( dp2, N);
+    // vec3 dp1perp = cross( N, dp1 );
+    vec3 dp2perp = cross( N, dp2 );
+    vec3 dp1perp = cross( dp1, N );
+    vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
+    vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
+ 
+    // construct a scale-invariant frame 
+    float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
+	tangent = T * invmax;
+	bitangent = B * invmax;
 }
 #endif //BGFX_SHADER_TYPE_FRAGMENT
 #endif //__SHADER_TRANSFORMS_SH__
