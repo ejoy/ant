@@ -236,6 +236,14 @@ local function calc_tangents(ib, vb, layouts)
 				ba = bau*T + bav*B	==> ba.x = bau*T.x + bav*B.x | ba.y = bau*T.y + bav*B.y | ba.z = bau*T.z + bav*B.z
 				ca = cau*T + cav*B	==> ca.x = cau*T.x + cav*B.x | ca.y = cau*T.y + cav*B.y | ca.z = cau*T.z + cav*B.z
 
+				cav*ba = cav*bau*T + cav*bav*B
+				bav*ca = bav*cau*T + bav*cav*B
+
+				bav*ca - cav*ba = (bav*cau-cav*bau)*T	==> T = (bav*ca - cav*ba)/(bav*cau - cav*bau)
+
+				let det = (bav*cau-cav*bau), invdet = 1/(bav*cau-cav*bau)
+				T = (bav*ca - cav*ba) * invdet
+
 			we can solve T and B
 	]]
 
