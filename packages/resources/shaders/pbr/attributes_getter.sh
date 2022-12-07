@@ -19,12 +19,16 @@ input_attributes input_attribs = (input_attributes)0;
     cotangent_frame(v_normal, input_attribs.V, uv, tangent, bitangent);
     input_attribs.N = normal_from_tangent_frame(tangent, bitangent, v_normal, uv);
 #   else //!CALC_TBN
-    input_attribs.N = normal_from_tangent_frame(v_tangent, v_bitangent, v_normal, uv);
+    const vec3 tangent = v_tangent, bitangent = v_bitangent;
+    input_attribs.N = normal_from_tangent_frame(tangent, bitangent, v_normal, uv);
 #   endif //CALC_TBN
 
 #ifdef ENABLE_BENT_NORMAL
     const vec3 bent_normalTS = vec3(0.0, 0.0, 1.0);
-    input_attribs.bent_normal = instMul(bent_normalTS, tbn);
+    input_attribs.bent_normal = normalize(vec3(
+        dot(tangent, bent_normalTS),
+        dot(bitangent, bent_normalTS),
+        dot(v_normal, bent_normalTS)));
 #endif //ENABLE_BENT_NORMAL
 
     get_metallic_roughness(uv, input_attribs);
