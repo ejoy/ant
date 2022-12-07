@@ -401,7 +401,7 @@ local function pack_vertex_data(layouts, vertices)
 	local need_convert_joint_index<const> 		= joint_attrib_idx and layouts[joint_attrib_idx].layout:sub(6, 6) == 'u' or false
 	local normal_attrib_idx, tangent_attrib_idx = find_layout_idx(layouts, "NORMAL"), find_layout_idx(layouts, "TANGENT")
 
-	local need_pack_tangent_frame<const> = normal_attrib_idx and tangent_attrib_idx
+	local need_pack_tangent_frame<const> = false --normal_attrib_idx and tangent_attrib_idx
 
 	local new_vertices = {}
 	for iv=1, #vertices do
