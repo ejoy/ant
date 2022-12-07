@@ -27,7 +27,7 @@ uniform vec4 u_construct_color;
 uniform vec4 u_printer_factor;
 #define _ConstructY u_printer_factor.x
 
-#include "input_attributes.sh"
+#include "pbr/input_attributes.sh"
 
 vec4 compute_lighting(input_attributes input_attribs, vec4 FragCoord, vec4 v_posWS, vec3 v_normal){
 

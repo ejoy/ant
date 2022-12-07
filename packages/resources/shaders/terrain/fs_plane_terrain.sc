@@ -21,7 +21,7 @@ $input v_texcoord0 v_texcoord1 v_texcoord2 v_texcoord3 v_texcoord4 v_normal v_ta
 #include "common/shadow.sh"
 #endif //ENABLE_SHADOW
 
-#include "input_attributes.sh"
+#include "pbr/input_attributes.sh"
 
 
 uniform vec4 u_sand_pbr_factor;
