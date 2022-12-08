@@ -318,7 +318,7 @@ local function build_mesh(sectionsize, sectionidx, unit, cterrainfileds, width)
     if #vb > 0 then
         local min_x, min_z = cterrainfileds:get_offset(sectionidx)
         local max_x, max_z = (min_x + sectionsize) * unit, (min_z + sectionsize) * unit
-        return to_mesh_buffer(vb, math3d.aabb(math3d.vector(min_x, 0, min_z), math3d.vector(max_x, 0, max_z)))
+        return to_mesh_buffer(vb, math3d.aabb(math3d.vector(min_x * unit - origin_offset_width * unit, 0, min_z), math3d.vector(max_x * unit - origin_offset_height, 0, max_z)))
     end
 end
 
