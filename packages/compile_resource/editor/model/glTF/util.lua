@@ -76,7 +76,7 @@ function util.pack_tangent_frame(normal, tangent, storage_size)
     local bitangent = math3d.cross(tangent, normal)
     local nx, ny, nz = math3d.index(normal, 1, 2, 3)
     local bx, by, bz = math3d.index(bitangent, 1, 2, 3)
-    local tx, ty, tz = math3d.index(tangent, 1, 2, 3)
+    local tx, ty, tz, tw = math3d.index(tangent, 1, 2, 3, 4)
     local mat = math3d.matrix{
         nx, ny, nz, 0,
         bx, by, bz, 0,
@@ -88,21 +88,13 @@ function util.pack_tangent_frame(normal, tangent, storage_size)
    local bias = 1.0 / (storage_size ^ (8 - 1) - 1)
    local qx, qy, qz, qw = math3d.index(q, 1, 2, 3, 4)
    if qw < bias then
-        local factor = math.sqrt(1.0 - bias * bias)
-        --q = math3d.quaternion(qx * factor, qy * factor, qz * factor, bias)
-		qx = qx * factor
-		qy = qy * factor
-		qz = qz * factor
-		qw = qw * factor
+        local factor = math.sqrt(1.0 - bias * bias) * tw
+        q = math3d.quaternion(qx * factor , qy * factor, qz * factor, qw * factor)
    end
-   if math3d.dot(math3d.cross(normal, tangent), bitangent) < 0 then
-		qx = qx * -1
-		qy = qy * -1
-		qz = qz * -1
-		qw = qw * -1
-   end
-   return {qx, qy, qz, qw}
+
+   return math3d.tovalue(q)
 end
+
 function util.accessor(name, prim, meshscene)
 	local accessors = meshscene.accessors
 	local pos_accidx = assert(prim.attributes[name]) + 1

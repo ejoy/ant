@@ -34,10 +34,10 @@ void main()
 	to_tangent_frame(quat, normal, tangent);
 #	else //!PACK_TANGENT_TO_QUAT
 	vec3 normal = a_normal;
-	vec3 tangent = a_tangent.xyz;
+	vec3 tangent = a_tangent.xyz * a_tangent.w;
 #	endif//PACK_TANGENT_TO_QUAT
 	v_normal	= normalize(mul(wm, vec4(normal, 0.0)).xyz);
-	v_tangent	= normalize(mul(wm, vec4(tangent, 0.0)).xyz * a_tangent.w);
+	v_tangent	= normalize(mul(wm, vec4(tangent, 0.0)).xyz);
 	v_bitangent	= cross(v_tangent, v_normal);	//left hand
 #endif//CALC_TBN
 #endif //!MATERIAL_UNLIT
