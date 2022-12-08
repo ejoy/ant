@@ -75,13 +75,6 @@ function gizmo:updata_uniform_scale()
 	iom.set_rotation(e1, r)
 	iom.set_rotation(e3, r)
 	iom.set_rotation(e4, r)
-
-	-- local ex <close> = w:entity(self.rx.eid[1])
-	-- local ey <close> = w:entity(self.ry.eid[1])
-	-- local ez <close> = w:entity(self.rz.eid[1])
-	-- iom.set_rotation(ex, r)
-	-- iom.set_rotation(ey, r)
-	-- iom.set_rotation(ez, r)
 end
 local function can_edit_srt(eid)
 	if not eid then return end
@@ -267,7 +260,8 @@ function gizmo:update_scale()
 	local viewdir = iom.get_direction(ce)
 	local eyepos = iom.get_position(ce)
 	local re <close> = w:entity(self.root_eid)
-	local project_dist = math3d.dot(math3d.normalize(viewdir), math3d.sub(iom.get_position(re), eyepos))
+	local cam_to_origin = math3d.sub(iom.get_position(re), eyepos)
+	local project_dist = math3d.dot(math3d.normalize(viewdir), cam_to_origin)
 	gizmo.scale = project_dist * 0.6
 	if self.root_eid then
 		iom.set_scale(re, gizmo.scale)
@@ -280,6 +274,26 @@ function gizmo:update_scale()
 		local le <close> = w:entity(light_gizmo.directional.root)
 		iom.set_scale(le, gizmo.scale * 0.2)
 	end
+
+	local get_mat = function(orign, cam_to_origin, zaxis)
+		local yaxis = math3d.normalize(math3d.cross(cam_to_origin, zaxis))
+		local xaxis = math3d.cross(yaxis, zaxis)
+		return math3d.matrix(
+			math3d.index(xaxis,1), math3d.index(xaxis,2), math3d.index(xaxis,3), 0,
+			math3d.index(yaxis,1), math3d.index(yaxis,2), math3d.index(yaxis,3), 0,
+			math3d.index(zaxis,1), math3d.index(zaxis,2), math3d.index(zaxis,3), 0,
+			math3d.index(orign,1), math3d.index(orign,2), math3d.index(orign,3), 1
+		)
+	end
+
+	local origin = iom.get_position(re)
+	cam_to_origin = math3d.normalize(cam_to_origin)
+	local rxe <close> = w:entity(gizmo.rx.eid[1])
+	iom.set_srt_matrix(rxe, math3d.mul(get_mat(origin, cam_to_origin, mc.XAXIS), math3d.matrix{s = gizmo.scale}))
+	local rye <close> = w:entity(gizmo.ry.eid[1])
+	iom.set_srt_matrix(rye, math3d.mul(get_mat(origin, cam_to_origin, mc.YAXIS), math3d.matrix{s = gizmo.scale, r = math3d.quaternion{0, 0, math.rad(90)}}))
+	local rze <close> = w:entity(gizmo.rz.eid[1])
+	iom.set_srt_matrix(rze, math3d.mul(get_mat(origin, cam_to_origin, mc.ZAXIS), math3d.matrix{s = gizmo.scale}))
 end
 
 function gizmo_sys:post_init()
@@ -329,7 +343,7 @@ function gizmo_sys:post_init()
 		{
 			t = {gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 0, 1},
 			s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0},
-			r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0}),
+			r = math3d.quaternion{math.rad(90), 0, 0},
 			parent = axis_root
 		},
 		gizmo_const.COLOR.Z_ALPHA,
@@ -341,7 +355,7 @@ function gizmo_sys:post_init()
 		{
 			t = {0, gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 1},
 			s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0},
-			r = math3d.tovalue(math3d.quaternion{0, 0, math.rad(90)}),
+			r = math3d.quaternion{0, 0, math.rad(90)},
 			parent = axis_root
 		},
 		gizmo_const.COLOR.X_ALPHA,
@@ -374,15 +388,15 @@ function gizmo_sys:post_init()
 
 	local function create_rotate_axis(axis, line_end, scene)
 		local line_eid = ientity.create_line_entity("", {0, 0, 0}, line_end, {parent = rot_circle_root}, axis.color, true)
-		local arc = nil--(axis == gizmo.ry) and {start_deg = math.rad(180), end_deg = math.rad(360) } or {start_deg = math.rad(-90), end_deg = math.rad(90) }
-		local rot_eid = ientity.create_circle_entity("rotate gizmo circle", gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, scene, axis.color, true, arc)
-		local rot_ccw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, {parent = scene.parent, s = scene.s, r = scene.r, t = scene.t})
-		local rot_cw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, {parent = scene.parent, s = scene.s, r = scene.r, t = scene.t})
+		local arc = (axis == gizmo.ry) and {start_deg = math.rad(180), end_deg = math.rad(360) } or {start_deg = math.rad(-90), end_deg = math.rad(90) }
+		local rot_eid = ientity.create_circle_entity("rotate gizmo circle", gizmo_const.AXIS_LEN, gizmo_const.ROTATE_SLICES, {}, axis.color, true, arc)
+		local rot_ccw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, {parent = rot_circle_root, s = scene.s, r = scene.r, t = scene.t})
+		local rot_cw_mesh_eid = create_rotate_fan(gizmo_const.AXIS_LEN, {parent = rot_circle_root, s = scene.s, r = scene.r, t = scene.t})
 		axis.eid = {rot_eid, line_eid, rot_ccw_mesh_eid, rot_cw_mesh_eid}
 	end
-	create_rotate_axis(gizmo.rx, {gizmo_const.AXIS_LEN * 0.5, 0, 0}, {parent = rot_circle_root, r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})})
-	create_rotate_axis(gizmo.ry, {0, gizmo_const.AXIS_LEN * 0.5, 0}, {parent = rot_circle_root, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})})
-	create_rotate_axis(gizmo.rz, {0, 0, gizmo_const.AXIS_LEN * 0.5}, {parent = rot_circle_root})
+	create_rotate_axis(gizmo.rx, {gizmo_const.AXIS_LEN * 0.5, 0, 0}, {r = math3d.quaternion{0, math.rad(90), 0}})
+	create_rotate_axis(gizmo.ry, {0, gizmo_const.AXIS_LEN * 0.5, 0}, {r = math3d.quaternion{math.rad(90), 0, 0}})
+	create_rotate_axis(gizmo.rz, {0, 0, gizmo_const.AXIS_LEN * 0.5}, {})
 	
 	-- scale axis
 	local function create_scale_cube(axis_name, scene, color)
@@ -846,7 +860,8 @@ local function rotate_gizmo(x, y)
 			end
 		end
 	end
-	local delta_angle = math.fmod(math.deg(local_angle + revolutions * math.pi * 2.0), 360)
+	local delta_angle = math.deg(local_angle + revolutions * math.pi * 2.0)
+	-- delta_angle = math.fmod(delta_angle, 360)
 	if rotate_axis == gizmo.rz or rotate_axis == gizmo.rw then
 		delta_angle = -1.0 * delta_angle
 	end
