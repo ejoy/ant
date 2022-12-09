@@ -10,6 +10,5 @@ vec2 v_texcoord0  : TEXCOORD0;
 vec2 v_texcoord1  : TEXCOORD1;
 vec4 v_posWS      : TEXCOORD2;
 vec3 v_normal     : TEXCOORD3;
-vec3 v_tangent    : TEXCOORD4;
-vec3 v_bitangent  : TEXCOORD5;
+vec4 v_tangent    : TEXCOORD4;
 vec4 v_color0     : TEXCOORD6;

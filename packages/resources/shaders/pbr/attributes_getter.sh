@@ -16,11 +16,12 @@ input_attributes input_attribs = (input_attributes)0;
 
 #   ifdef CALC_TBN
     mat3 tbn = cotangent_frame(v_normal, input_attribs.V, uv);
-    input_attribs.N = normal_from_tangent_frame(tbn, uv);
 #   else //!CALC_TBN
-    mat3 tbn = mat3(v_tangent, v_bitangent, v_normal);
-    input_attribs.N = normal_from_tangent_frame(tbn, uv);
+    v_tangent.xyz = normalize(v_tangent.xyz);
+    vec3 bitangent = cross(v_normal, v_tangent.xyz) * v_tangent.w;
+    mat3 tbn = mat3(v_tangent.xyz, bitangent, v_normal);
 #   endif //CALC_TBN
+    input_attribs.N = normal_from_tangent_frame(tbn, uv);
 
 #ifdef ENABLE_BENT_NORMAL
     const vec3 bent_normalTS = vec3(0.0, 0.0, 1.0);

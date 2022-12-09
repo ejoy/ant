@@ -1,7 +1,7 @@
 #include "common/inputs.sh"
 
 $input 	a_position a_texcoord0 INPUT_NORMAL INPUT_TANGENT INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT
-$output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
+$output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
@@ -36,9 +36,8 @@ void main()
 	vec3 normal = a_normal;
 	vec3 tangent = a_tangent.xyz;
 #	endif//PACK_TANGENT_TO_QUAT
-	v_normal	= normalize(mul(wm, vec4(normal, 0.0)).xyz);
-	v_tangent	= normalize(mul(wm, vec4(tangent, 0.0)).xyz);
-	v_bitangent	= cross(v_normal, v_tangent)*sign(a_tangent.w);
+	v_normal	= mul(wm, vec4(normal, 0.0)).xyz;
+	v_tangent	= vec4(mul(wm, vec4(tangent, 0.0)).xyz, sign(a_tangent.w));
 #endif//CALC_TBN
 #endif //!MATERIAL_UNLIT
 }
