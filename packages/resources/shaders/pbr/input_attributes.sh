@@ -120,7 +120,7 @@ vec3 normal_from_tangent_frame(mat3 tbn, vec2 texcoord)
 	vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
 	return normalize(mul(tbn, normalTS));
 #else
-    return tbn[3];
+    return tbn[2];
 #endif //HAS_NORMAL_TEXTURE
 }
 
