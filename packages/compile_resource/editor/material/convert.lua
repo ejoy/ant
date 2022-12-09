@@ -141,6 +141,8 @@ end
 local function compile_debug_shader(platform, renderer)
     if platform == "windows" and renderer:match "direct3d" then
         return true
+    elseif platform == "windows" and renderer:match "vulkan" then
+        return true
     end
 end
 
