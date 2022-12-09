@@ -172,10 +172,10 @@ static_assert(offsetof(ecs::render_object, mat_ppoq) - offsetof(ecs::render_obje
 
 template <typename Entity>
 void collect_render_objs(Entity& e, ecs_api::context& ecs, const matrix_array *mats) {
-	auto& ro = e.get<ecs::render_object>();
+	auto& ro = e.template get<ecs::render_object>();
 	s_queue_stages.foreach([&](auto stage, auto& s) {
 		using Stage = decltype(stage);
-		if (e.sibling<Stage>(ecs)) {
+		if (e.template sibling<Stage>(ecs)) {
 #if defined(_MSC_VER) && defined(_DEBUG)
 			auto id = (uint64_t)e.sibling<ecs::eid>(ecs);
 			s.emplace_back(obj_data{ &ro, mats, id });
