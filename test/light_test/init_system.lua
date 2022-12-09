@@ -8,6 +8,9 @@ local bgfx = require "bgfx"
 local renderpkg = import_package "ant.render"
 local declmgr = renderpkg.declmgr
 
+local assetmgr = import_package "ant.asset"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+
 local S = ecs.system "init_system"
 
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
@@ -58,9 +61,8 @@ function S.init()
     create_instance( "/pkg/ant.test.light/assets/light.prefab", function (e)
         local leid = e.tag['*'][1]
         local le<close> = w:entity(leid, "scene:update")
-        iom.set_direction(le, math3d.vector(0.6, -1.0, -0.8))
+        iom.set_direction(le, math3d.vector(1.0, 1.0, 1.0))
     end)
-
 
     ecs.create_instance "/pkg/ant.test.light/assets/skybox.prefab"
 end
@@ -72,10 +74,18 @@ function S.init_world()
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
     iom.set_direction(camera_ref, dir)
-    create_instance("/pkg/ant.test.light/assets/world_simple.glb|mesh.prefab", function (e)
+    create_instance("/pkg/ant.test.light/assets/headquater-1.glb|mesh.prefab", function (e)
         local leid = e.tag['*'][1]
         local le<close> = w:entity(leid, "scene:update")
         iom.set_scale(le, 0.1)
+    end)
+
+    create_instance("/pkg/ant.test.light/assets/plane.glb|mesh.prefab", function (e)
+        local normaltex = assetmgr.resource "/pkg/ant.test.light/assets/normal.texture"
+        local leidobj = e.tag['*'][2]
+        local obj<close> = w:entity(leidobj)
+
+        imaterial.set_property(obj, "s_normal", normaltex.id)
     end)
 
     --create_simple_triangles()

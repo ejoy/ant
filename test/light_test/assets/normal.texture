@@ -1,0 +1,11 @@
+colorspace: linear
+format: RGBA8
+noresize: true
+normalmap: false
+path: $path ./normal.png
+sampler:
+    MAG: LINEAR
+    MIN: LINEAR
+    U: WRAP
+    V: WRAP
+type: texture
