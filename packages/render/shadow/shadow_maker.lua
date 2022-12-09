@@ -41,7 +41,7 @@ local csm_matrices			= {mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.ID
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
 
 local function update_camera_matrices(camera, light_view)
-	camera.viewmat.m = math3d.matrix(light_view)
+	camera.viewmat.m = light_view
 	camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
 	camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
 end
@@ -228,7 +228,7 @@ end
 -- end
 
 local function calc_ortho_minmax(corners_view, main_view, light_view, corners_world, shadowmap_size)
-	local light_ortho_min, light_ortho_max = math3d.minmax(corners_view, math3d.mul(main_view, math3d.matrix(light_view)))
+	local light_ortho_min, light_ortho_max = math3d.minmax(corners_view, math3d.mul(main_view, light_view))
 
 	local diagonal = math3d.sub(math3d.array_index(corners_world, 1), math3d.array_index(corners_world, 8))
 	local bound = math3d.length(diagonal)
