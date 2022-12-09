@@ -56,41 +56,6 @@ vec4 transformWS(mat4 wm, vec4 pos)
 	return posWS;
 }
 
-mat3 calc_tbn_lh_ex(vec3 n, vec3 t, float b_sign, mat4 worldMat)
-{
-	vec3 normal = normalize(mul(worldMat, vec4(n, 0.0)).xyz);
-	vec3 tangent = normalize(mul(worldMat, vec4(t.xyz, 0.0)).xyz);
-	vec3 bitangent = cross(normal, tangent) * b_sign;
-
-	return mat3(tangent, bitangent, normal);
-}
-
-// left handside
-mat3 calc_tbn_lh(vec3 n, vec3 t, mat4 worldMat)
-{
-	return calc_tbn_lh_ex(n, t, 1.0, worldMat);
-}
-
-mat3 calc_tbn(vec3 n, vec3 t, vec3 b, mat4 worldMat)
-{
-	vec3 normal = normalize(mul(worldMat, vec4(n, 0.0)).xyz);
-	vec3 tangent = normalize(mul(worldMat, vec4(t, 0.0)).xyz);
-	vec3 bitangent = normalize(mul(worldMat, vec4(b, 0.0)).xyz);
- 	return mat3(tangent, bitangent, normal);
-}
-
-vec3 remap_normal(vec2 normalTSXY)
-{
-    vec2 normalXY = normalTSXY * 2.0 - 1.0;
-	float z = sqrt(1.0 - dot(normalXY, normalXY));
-    return vec3(normalXY, z);
-}
-
-vec3 fetch_bc5_normal(sampler2D normalMap, vec2 texcoord)
-{
-    return remap_normal(texture2DBc5(normalMap, texcoord));
-}
-
 vec4 map_screen_coord_to_ndc(vec2 p)
 {
     vec2 pos    = p.xy * u_viewTexel.xy;
@@ -138,7 +103,7 @@ void check_clip_rotated_rect(vec2 pixel)
 
 #if BGFX_SHADER_TYPE_FRAGMENT
 // code from: http://www.thetenthplanet.de/archives/1180
-void cotangent_frame(vec3 N, vec3 p, vec2 uv, out vec3 tangent, out vec3 bitangent)
+mat3 cotangent_frame(vec3 N, vec3 p, vec2 uv)
 {
     // get edge vectors of the pixel triangle
     vec3 dp1 = dFdx( p );
@@ -147,18 +112,14 @@ void cotangent_frame(vec3 N, vec3 p, vec2 uv, out vec3 tangent, out vec3 bitange
     vec2 duv2 = dFdy( uv );
  
  	// solve the linear system
-	// this code is right hand, we interchange the cross argument to make it as left hand
-	// vec3 dp2perp = cross( dp2, N);
-    // vec3 dp1perp = cross( N, dp1 );
-    vec3 dp2perp = cross( N, dp2 );
-    vec3 dp1perp = cross( dp1, N );
+	vec3 dp2perp = cross( dp2, N);
+    vec3 dp1perp = cross( N, dp1 );
     vec3 T = dp2perp * duv1.x + dp1perp * duv2.x;
     vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;
  
     // construct a scale-invariant frame 
     float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) );
-	tangent = T * invmax;
-	bitangent = B * invmax;
+	return mat3(T * invmax, B * invmax, N);
 }
 #endif //BGFX_SHADER_TYPE_FRAGMENT
 #endif //__SHADER_TRANSFORMS_SH__

@@ -102,13 +102,25 @@ vec4 get_emissive_color(vec2 texcoord)
     return emissivecolor;
 }
 
-vec3 normal_from_tangent_frame(vec3 tangent, vec3 bitangent, vec3 normal, vec2 texcoord)
+vec3 remap_normal(vec2 normalTSXY)
+{
+    vec2 normalXY = normalTSXY * 2.0 - 1.0;
+	float z = sqrt(1.0 - dot(normalXY, normalXY));
+    return vec3(normalXY, z);
+}
+
+vec3 fetch_bc5_normal(sampler2D normalMap, vec2 texcoord)
+{
+    return remap_normal(texture2DBc5(normalMap, texcoord));
+}
+
+vec3 normal_from_tangent_frame(mat3 tbn, vec2 texcoord)
 {
 #ifdef HAS_NORMAL_TEXTURE
 	vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
-	return normalize(vec3(dot(tangent, normalTS), dot(bitangent, normalTS), dot(normal, normalTS)));
+	return normalize(mul(tbn, normalTS));
 #else
-    return normal;
+    return tbn[3];
 #endif //HAS_NORMAL_TEXTURE
 }
 
