@@ -415,9 +415,9 @@ local function pack_vertex_data(layouts, vertices)
 			local normal = load_attrib_math3dvec(normal_attrib_idx, v)
 			local tangent = load_attrib_math3dvec(tangent_attrib_idx, v)
 
-			local quat = gltfutil.pack_tangent_frame(normal, tangent, 2)
+			local q = mu.pack_tangent_frame(normal, tangent)
 			local fmt = ('f'):rep(4)
-			local QUAT_tangent = fmt:pack(table.unpack(quat))
+			local QUAT_tangent = fmt:pack(math3d.index(q, 1, 2, 3, 4))
 			v[tangent_attrib_idx] = QUAT_tangent
 
 			-- remove normal

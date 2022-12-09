@@ -343,5 +343,42 @@ function util.xyz2polar(x, y, z, need_normalize)
 	return math.acos(z), math.asin(x/z), 1
 end
 
+local function quat_inverse_sign(q)
+	local qx, qy, qz, qw = math3d.index(q, 1, 2, 3, 4)
+	return math3d.quaternion(-qx, -qy, -qz, qw)
+end
+
+function util.pack_tangent_frame(normal, tangent, storage_size)
+	storage_size = storage_size or 2
+	local q = math3d.quaternion(math3d.matrix(tangent, math3d.cross(normal, tangent), normal, constant.ZERO_PT))
+	q = math3d.normalize(q)
+
+	local qw = math3d.index(q, 4)
+
+	-- make sure qw is positive, because we need sign of this quaternion to tell shader is the tangent frame is invert or not
+	if qw < 0 then
+		q = quat_inverse_sign(q)
+	end
+
+	-- Ensure w is never 0.0
+    -- Bias is 2^(nb_bits - 1) - 1
+	local CHAR_BIT<const> = 8
+	local bias = 1.0 / ((1 << (storage_size * CHAR_BIT - 1)) - 1)
+	if qw < bias then
+		qw = bias
+
+		local factor = math.sqrt(1.0 - bias * bias)
+		local qx, qy, qz = math3d.index(q, 1, 2, 3)
+		q = math3d.quaternion(qx*factor, qy*factor, qz*factor, qw)
+	end
+
+	local sign = math3d.index(tangent, 4)
+	if sign < 0 then
+		q = quat_inverse_sign(q)
+	end
+
+	return q
+end
+
 
 return util
