@@ -130,15 +130,9 @@ static queue_stages<
 	ecs::ui_stage
 > s_queue_stages;
 
-struct conststr {
-    const char* const str;
-    template <std::size_t N>
-    constexpr conststr(const char(&a)[N]) : str(a) {}
-};
-
-template <conststr Name, typename TagCull, typename TagVisible>
+template <typename Name, typename TagCull, typename TagVisible>
 struct render_queue {
-	static constexpr inline const char* name = Name.str;
+	static constexpr inline const char* name = Name::name;
 	using cull = TagCull;
 	using visible = TagVisible;
 };
@@ -150,7 +144,18 @@ struct tag_array {
 	using at = std::remove_cvref_t<decltype(std::get<Is>(std::tuple<Tags...>()))>;
 };
 
-#define RengerQueue(NAME) render_queue<conststr(#NAME), ecs::NAME##_cull, ecs::NAME##_visible>
+#define ConstString(NAME) struct conststr_##NAME { static constexpr inline const char* name = #NAME; };
+#define RengerQueue(NAME) render_queue<conststr_##NAME, ecs::NAME##_cull, ecs::NAME##_visible>
+
+ConstString(main_queue)
+ConstString(pre_depth_queue)
+ConstString(pickup_queue)
+ConstString(csm1_queue)
+ConstString(csm2_queue)
+ConstString(csm3_queue)
+ConstString(csm4_queue)
+ConstString(bake_lightmap_queue)
+ConstString(postprocess_obj_queue)
 
 using tag_queue = tag_array<
 	RengerQueue(main_queue),
