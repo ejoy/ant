@@ -16,8 +16,8 @@ void to_tangent_frame(const highp vec4 q, out highp vec3 t){
 }
 
 void to_tangent_frame(const highp vec4 q, out highp vec3 n, out highp vec3 t){
-    to_tangent_frame(q, t);
-    n = vec3( 1.0,  0.0,  0.0 ) + 
+    to_tangent_frame(q, n);
+    t = vec3( 1.0,  0.0,  0.0 ) + 
         vec3(-2.0,  2.0, -2.0 ) * q.y * q.yxw +
         vec3(-2.0,  2.0,  2.0 ) * q.z * q.zwx;
 }

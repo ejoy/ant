@@ -102,6 +102,7 @@ vec4 get_emissive_color(vec2 texcoord)
     return emissivecolor;
 }
 
+#ifdef HAS_NORMAL_TEXTURE
 vec3 remap_normal(vec2 normalTSXY)
 {
     vec2 normalXY = normalTSXY * 2.0 - 1.0;
@@ -116,13 +117,10 @@ vec3 fetch_bc5_normal(sampler2D normalMap, vec2 texcoord)
 
 vec3 normal_from_tangent_frame(mat3 tbn, vec2 texcoord)
 {
-#ifdef HAS_NORMAL_TEXTURE
 	vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
 	return normalize(mul(tbn, normalTS));
-#else
-    return tbn[2];
-#endif //HAS_NORMAL_TEXTURE
 }
+#endif //HAS_NORMAL_TEXTURE
 
 vec3 get_terrain_normal_by_tbn(mat3 tbn, vec3 normal, vec2 texcoord, float normal_idx)
 {

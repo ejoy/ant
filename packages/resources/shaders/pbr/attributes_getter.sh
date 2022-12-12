@@ -14,6 +14,7 @@ input_attributes input_attribs = (input_attributes)0;
     input_attribs.V = normalize(u_eyepos.xyz - v_posWS.xyz);
     v_normal = normalize(v_normal);
 
+#ifdef HAS_NORMAL_TEXTURE
 #   ifdef CALC_TBN
     mat3 tbn = cotangent_frame(v_normal, input_attribs.V, uv);
 #   else //!CALC_TBN
@@ -22,6 +23,9 @@ input_attributes input_attribs = (input_attributes)0;
     mat3 tbn = mat3(v_tangent.xyz, bitangent, v_normal);
 #   endif //CALC_TBN
     input_attribs.N = normal_from_tangent_frame(tbn, uv);
+#else  //!HAS_NORMAL_TEXTURE
+    input_attribs.N = v_normal;
+#endif //HAS_NORMAL_TEXTURE
 
 #ifdef ENABLE_BENT_NORMAL
     const vec3 bent_normalTS = vec3(0.0, 0.0, 1.0);
