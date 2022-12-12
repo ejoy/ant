@@ -3,10 +3,11 @@ fx:
   setting:
     lighting: off
 properties:
-  u_build_cubemap_mipmap_param: {0, 0, 0, 0}
   s_source:
     stage: 0
-    texture: /pkg/ant.resources/textures/default.texture
+    access: r
+    mip: 0
+    image: /pkg/ant.resources/textures/black.texture
   s_result:
     stage: 1
     access: w

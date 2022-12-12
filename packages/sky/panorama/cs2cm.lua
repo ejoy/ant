@@ -69,6 +69,8 @@ function cs2cm_sys:entity_ready()
             if panorama_util.is_panorama_tex(ti) then
                 if e.skybox.facesize == nil then
                     e.skybox.facesize = ti.height // 2
+                else
+                    e.skybox.facesize = math.min(ti.width, ti.height // 2)
                 end
                 local facesize = e.skybox.facesize
                 local cm_rbidx = panorama_util.check_create_cubemap_tex(facesize, e.skybox.cm_rbidx, cm_flags)
@@ -87,7 +89,7 @@ function cs2cm_sys:entity_ready()
                 icompute.dispatch(p2c_viewid, dis)
     
                 --just generate mipmaps for cm_rbidx
-                local renderer = rhwi.renderer()
+                local renderer = rhwi.renderer()--[[ 
                 if renderer == "VULKAN" or renderer == "DIRECT3D12" then
                     icubemap_mipmap.gen_cubemap_mipmap(facesize, cm_rbhandle)
                 else
@@ -98,13 +100,13 @@ function cs2cm_sys:entity_ready()
                        mip = 0,
                        numlayer = 1,
                    }
-                   local testid = viewidmgr.get "panorama2cubmapMips"
-                   bgfx.set_view_frame_buffer(testid, fbmgr.get(fbidx).handle)
-                   bgfx.touch(testid)
+                   --local testid = viewidmgr.get "panorama2cubmapMips"
+                   bgfx.set_view_frame_buffer(p2c_viewid, fbmgr.get(fbidx).handle)
+                   bgfx.touch(p2c_viewid)
        
                    fbmgr.destroy(fbidx, true)
-                end
-
+                end ]]
+                icubemap_mipmap.gen_cubemap_mipmap(facesize, cm_rbhandle)
                 imaterial.set_property(e, "s_skybox", cm_rbhandle)
             end
             e.filter_ibl = true
