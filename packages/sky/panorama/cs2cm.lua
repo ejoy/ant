@@ -87,25 +87,6 @@ function cs2cm_sys:entity_ready()
                 local s = dis.size
                 s[1], s[2], s[3] = facesize // thread_group_size, facesize // thread_group_size, 6
                 icompute.dispatch(p2c_viewid, dis)
-    
-                --just generate mipmaps for cm_rbidx
-                local renderer = rhwi.renderer()--[[ 
-                if renderer == "VULKAN" or renderer == "DIRECT3D12" then
-                    icubemap_mipmap.gen_cubemap_mipmap(facesize, cm_rbhandle)
-                else
-                    local fbidx = fbmgr.create{
-                       rbidx = cm_rbidx,
-                       resolve = "g",
-                       layer = 0,
-                       mip = 0,
-                       numlayer = 1,
-                   }
-                   --local testid = viewidmgr.get "panorama2cubmapMips"
-                   bgfx.set_view_frame_buffer(p2c_viewid, fbmgr.get(fbidx).handle)
-                   bgfx.touch(p2c_viewid)
-       
-                   fbmgr.destroy(fbidx, true)
-                end ]]
                 icubemap_mipmap.gen_cubemap_mipmap(facesize, cm_rbhandle)
                 imaterial.set_property(e, "s_skybox", cm_rbhandle)
             end
