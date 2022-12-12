@@ -6,8 +6,8 @@
 1. 修复引擎在D3D12/Vulkan中的问题；
 2. 修复bloom后处理，在emissive color值很高的时候，依然没有bloom的效果。具体使用furnace-1.glb这个文件用于测试；(2022.11.08已经完成)
 
-#### 优化：
-##### 已经完成：
+#### 优化
+##### 已经完成
 1. 顶点压缩。
   1)使用四元数多normal/tangent/bitangent进行压缩；(2022.11.08已经完成)
 2. 后处理
@@ -16,7 +16,7 @@
 4. 使用compute shader将MSAA的深度resolve到普通的深度；(2022.11.08已经完成。但不同的机器resolve msaa的depth硬件不一定支持)
 5. 增强阴影的效果，包括精度和和filter的阴影，或对比使用PCF的效果；(2022.11.08已经完成)
 
-##### 未完成：
+##### 未完成
 1. 顶点相关：
   - 顶点压缩。
     1) 使用更多的16bit的顶点数据，以更大程度上压缩顶点占用的数量；
@@ -38,6 +38,7 @@
 10. 在转换到新一代图形API后（Metal/Vulkan/D3D12），需要对render pass进行优化。如postprocess里面，如果一个framebuffer的输出是另一个pass的输入，需要使用到subpass的概念进行优化，这能够省掉不少贷款（因为下一个pass的输入，并不会真的写道framebuffer身上）；
 11. 优化bgfx的draw viewid和compute shader viewid；
 12. 调整iOS和Android下的ASTC压缩格式。目前强制使用了ASTC4x4，因为之前bgfx不支持ASTC6x6，最近更新了，看看是否ASTC的格式都支持全了；
+13. 在全平台下使用bgfx vulkan的API。目前windows下测试是没有问题的。还需要的工作包括：iOS下，使用KhronosGroup/MoltenVK库，让iOS支持vulkan；其次，windows平台下，需要把相应的runtime dll带到相应的开发目录和发布目录里面（和目前fmod一样）；
 
 #### 新功能/探索
 ##### 已经完成
