@@ -20,12 +20,21 @@ local cubemap_mipmap_sys = ecs.system "cubemap_mipmap_system"
 
 local icubemap_mipmap = ecs.interface "icubemap_mipmap"
 
-local pcm_id = viewidmgr.get "panorama2cubmapMips"
+local p2c_viewid = viewidmgr.get "panorama2cubmap"
 
 local cubemap_textures = {
-    value = nil,
-    size = 0,
-    mipmap_count = 0,
+    source = {
+        facesize = 0,
+        value  = nil,
+        stage  = 0,
+        mip    = 0,
+        access = "r"
+    },
+    result = {
+        value = nil,
+        size = 0,
+        mipmap_count = 0,
+    }
 }
 
 local cubemap_flags<const> = sampler {
@@ -39,15 +48,19 @@ local cubemap_flags<const> = sampler {
 }
 
 local function build_cubemap_textures(facesize, cm_rbhandle)
-    cubemap_textures.value = cm_rbhandle
-    cubemap_textures.size  = facesize
-    cubemap_textures.mipmap_count = math.log(facesize, 2) + 1
+    cubemap_textures.source.value = cm_rbhandle
+    cubemap_textures.source.facesize  = facesize
+
+
+    cubemap_textures.result.value = cm_rbhandle
+    cubemap_textures.result.size  = facesize
+    cubemap_textures.result.mipmap_count = math.log(facesize, 2) + 1
 end
 
 local function create_cubemap_entities()
-    local size = cubemap_textures.size
+    local size = cubemap_textures.result.size
 
-    local mipmap_count = cubemap_textures.mipmap_count
+    local mipmap_count = cubemap_textures.result.mipmap_count
 
     local function create_cubemap_compute_entity(dispatchsize, cubemap_mipmap)
         ecs.create_entity {
@@ -87,11 +100,12 @@ function cubemap_mipmap_sys:render_preprocess()
         local dis = e.dispatch
         local material = dis.material
         local cubemap_mipmap = e.cubemap_mipmap
-        material.u_build_cubemap_mipmap_param = math3d.vector(cubemap_mipmap.mipidx, 0, 0, 0)
-        material.s_source = cubemap_textures.value
-        material.s_result = icompute.create_image_property(cubemap_textures.value, 1, cubemap_mipmap.mipidx + 1, "w")
+        --material.u_build_cubemap_mipmap_param = math3d.vector(cubemap_mipmap.mipidx, 0, 0, 0)
+        material.s_source = icompute.create_image_property(cubemap_textures.result.value, 0, cubemap_mipmap.mipidx, "r")
+        --cubemap_textures.result.value = bgfx.create_texturecube(256, true, 1, "RGBA16F", cubemap_flags)
+        material.s_result = icompute.create_image_property(cubemap_textures.result.value, 1, cubemap_mipmap.mipidx + 1, "w")
 
-        icompute.dispatch(pcm_id, dis)
+        icompute.dispatch(p2c_viewid, dis)
         w:remove(e)
     end
 end
