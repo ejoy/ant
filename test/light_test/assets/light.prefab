@@ -3,7 +3,7 @@ policy:
   ant.render|light
 data:
   scene:
-    r: {0.5, 0.0, 0.0, 0.8660253}
+    r: {1.2, 0.0, 0.0}
     t: {0, 10, 0, 1}
   light:
     color: {1, 1, 1, 1}
