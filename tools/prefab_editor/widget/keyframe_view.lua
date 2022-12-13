@@ -678,25 +678,25 @@ function m.clear(keep_skel)
     end
     allanims = { {}, {} }
     anim_name_list = { {}, {} }
-    if not keep_skel then
-        anim_eid = nil
-        current_skeleton = nil
-    end
     current_anim = nil
     current_joint = nil
     current_uniform = nil
     current_mtl = nil
     mtl_desc = {}
-    if joints_list then
-        for _, joint in ipairs(joints_list) do
-            if joint.mesh then
-                w:remove(joint.mesh)
+    if not keep_skel then
+        anim_eid = nil
+        current_skeleton = nil
+        if joints_list then
+            for _, joint in ipairs(joints_list) do
+                if joint.mesh then
+                    w:remove(joint.mesh)
+                end
+                joint.mesh = nil
             end
-            joint.mesh = nil
         end
+        joint_utils.on_select_joint = nil
+        joint_utils.update_joint_pose = nil
     end
-    joint_utils.on_select_joint = nil
-    joint_utils.update_joint_pose = nil
 end
 
 local function on_select_target(tn)
@@ -1034,7 +1034,11 @@ local ivs		= ecs.import.interface "ant.scene|ivisible_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local bone_color = math3d.ref(math3d.vector(0.4, 0.4, 1, 0.8))
 local bone_highlight_color = math3d.ref(math3d.vector(1.0, 0.4, 0.4, 0.8))
-local function create_bone_entity(joint_name)
+
+local ientity 	= ecs.import.interface "ant.render|ientity"
+local imesh 	= ecs.import.interface "ant.asset|imesh"
+
+local function create_joint_entity(joint_name)
     local template = {
         policy = {
             "ant.render|render",
@@ -1044,7 +1048,7 @@ local function create_bone_entity(joint_name)
             scene = {},
             visible_state = "main_view|selectable",
             material = "/pkg/tools.prefab_editor/res/materials/joint.material",
-            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
+            mesh = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
             name = joint_name,
             on_ready = function(e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
@@ -1053,6 +1057,76 @@ local function create_bone_entity(joint_name)
 			end
         }
     }
+    return ecs.create_entity(template)
+end
+
+local bone_vert
+local function create_bone_entity(joint_name)
+    if not bone_vert then
+		local kInter = 0.2
+		local pos = {
+			{1.0, 0.0, 0.0},
+			{kInter, 0.1, 0.1},
+			{kInter, 0.1, -0.1},
+			{kInter, -0.1, -0.1},
+			{kInter, -0.1, 0.1},
+			{0.0, 0.0, 0.0},
+		}
+        local normals = {
+			math3d.tovalue(math3d.normalize(math3d.cross(math3d.sub(pos[3], pos[2]), math3d.sub(pos[3], pos[1])))),
+			math3d.tovalue(math3d.normalize(math3d.cross(math3d.sub(pos[2], pos[3]), math3d.sub(pos[2], pos[6])))),
+			math3d.tovalue(math3d.normalize(math3d.cross(math3d.sub(pos[4], pos[3]), math3d.sub(pos[4], pos[1])))),
+			math3d.tovalue(math3d.normalize(math3d.cross(math3d.sub(pos[3], pos[4]), math3d.sub(pos[3], pos[6])))),
+			math3d.tovalue(math3d.normalize(math3d.cross(math3d.sub(pos[5], pos[4]), math3d.sub(pos[5], pos[1])))),
+			math3d.tovalue(math3d.normalize(math3d.cross(math3d.sub(pos[4], pos[5]), math3d.sub(pos[4], pos[6])))),
+			math3d.tovalue(math3d.normalize(math3d.cross(math3d.sub(pos[2], pos[5]), math3d.sub(pos[2], pos[1])))),
+			math3d.tovalue(math3d.normalize(math3d.cross(math3d.sub(pos[5], pos[2]), math3d.sub(pos[5], pos[6]))))
+		}
+        bone_vert = {
+			pos[1][1], pos[1][2], pos[1][3], normals[1][1], normals[1][2], normals[1][3], 0, 0,
+        	pos[2][1], pos[2][2], pos[2][3], normals[1][1], normals[1][2], normals[1][3], 0, 0,
+            pos[3][1], pos[3][2], pos[3][3], normals[1][1], normals[1][2], normals[1][3], 0, 0,
+            pos[6][1], pos[6][2], pos[6][3], normals[2][1], normals[2][2], normals[2][3], 0, 0,
+            pos[3][1], pos[3][2], pos[3][3], normals[2][1], normals[2][2], normals[2][3], 0, 0,
+        	pos[2][1], pos[2][2], pos[2][3], normals[2][1], normals[2][2], normals[2][3], 0, 0,
+        	pos[1][1], pos[1][2], pos[1][3], normals[3][1], normals[3][2], normals[3][3], 0, 0,
+        	pos[3][1], pos[3][2], pos[3][3], normals[3][1], normals[3][2], normals[3][3], 0, 0,
+            pos[4][1], pos[4][2], pos[4][3], normals[3][1], normals[3][2], normals[3][3], 0, 0,
+            pos[6][1], pos[6][2], pos[6][3], normals[4][1], normals[4][2], normals[4][3], 0, 0,
+            pos[4][1], pos[4][2], pos[4][3], normals[4][1], normals[4][2], normals[4][3], 0, 0,
+        	pos[3][1], pos[3][2], pos[3][3], normals[4][1], normals[4][2], normals[4][3], 0, 0,
+        	pos[1][1], pos[1][2], pos[1][3], normals[5][1], normals[5][2], normals[5][3], 0, 0,
+        	pos[4][1], pos[4][2], pos[4][3], normals[5][1], normals[5][2], normals[5][3], 0, 0,
+            pos[5][1], pos[5][2], pos[5][3], normals[5][1], normals[5][2], normals[5][3], 0, 0,
+            pos[6][1], pos[6][2], pos[6][3], normals[6][1], normals[6][2], normals[6][3], 0, 0,
+            pos[5][1], pos[5][2], pos[5][3], normals[6][1], normals[6][2], normals[6][3], 0, 0,
+        	pos[4][1], pos[4][2], pos[4][3], normals[6][1], normals[6][2], normals[6][3], 0, 0,
+        	pos[1][1], pos[1][2], pos[1][3], normals[7][1], normals[7][2], normals[7][3], 0, 0,
+        	pos[5][1], pos[5][2], pos[5][3], normals[7][1], normals[7][2], normals[7][3], 0, 0,
+            pos[2][1], pos[2][2], pos[2][3], normals[7][1], normals[7][2], normals[7][3], 0, 0,
+            pos[6][1], pos[6][2], pos[6][3], normals[8][1], normals[8][2], normals[8][3], 0, 0,
+            pos[2][1], pos[2][2], pos[2][3], normals[8][1], normals[8][2], normals[8][3], 0, 0,
+        	pos[5][1], pos[5][2], pos[5][3], normals[8][1], normals[8][2], normals[8][3], 0, 0
+		}
+	end
+    local template = {
+		policy = {
+			"ant.render|simplerender",
+			"ant.general|name",
+		},
+		data = {
+			scene 		= {},
+			material	= "/pkg/tools.prefab_editor/res/materials/joint.material",
+			simplemesh	= imesh.init_mesh(ientity.create_mesh({"p3|n3|t2", bone_vert}), true),
+			visible_state= "main_view|selectable",
+			name		= joint_name,
+			on_ready 	= function(e)
+                imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
+                ivs.set_state(e, "auxgeom", true)
+                ivs.set_state(e, "main_view", false)
+			end
+		}
+	}
     return ecs.create_entity(template)
 end
 
@@ -1130,7 +1204,37 @@ function m.init(skeleton)
                 if joint.mesh then
                     local mesh_e <close> = w:entity(joint.mesh, "scene?in")
                     if mesh_e.scene then
-                        iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(pose_result:joint(joint.index), math3d.matrix{s=joint_scale}))))    
+                        -- joint
+                        iom.set_srt_matrix(mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, math3d.mul(pose_result:joint(joint.index), math3d.matrix{s=joint_scale}))))
+                        -- bone
+                        local bone_mesh_e <close> = w:entity(joint.bone_mesh, "scene?in")
+                        local parent_idx = skeleton._handle:parent(joint.index)
+                        local show = false
+                        if parent_idx > 0 then
+                            local bone_mat
+                            local mat_parent = pose_result:joint(parent_idx)
+                            local mat_current = pose_result:joint(joint.index)
+                            local bone_dir = math3d.sub(math3d.index(mat_current, 4), math3d.index(mat_parent, 4))
+                            
+                            local zdir = math3d.index(mat_parent, 3)
+                            local dot1 = math3d.dot(zdir, bone_dir)
+                            local xdir = math3d.index(mat_parent, 1)
+                            local dot2 = math3d.dot(xdir, bone_dir)
+                            local binormal = math.abs(dot1) < math.abs(dot2) and zdir or xdir
+                            
+                            local bone_len = math3d.length(bone_dir)
+                            local show_bone = bone_len > 0.0001
+                            if show_bone then
+                                local xaxis = bone_dir
+                                local yaxis = math3d.mul(bone_len, math3d.normalize(math3d.cross(binormal, bone_dir)))
+                                local zaxis = math3d.mul(bone_len, math3d.normalize(math3d.cross(bone_dir, yaxis)))
+                                bone_mat = math3d.matrix(xaxis, yaxis, zaxis, math3d.index(mat_parent, 4))
+                                iom.set_srt_matrix(bone_mesh_e, math3d.mul(root_mat, math3d.mul(mc.R2L_MAT, bone_mat)))
+                                show = true
+                            end
+                            show = show_bone
+                        end
+                        ivs.set_state(bone_mesh_e, "main_view", show)
                     end
                 end
             end
@@ -1145,7 +1249,8 @@ function m.init(skeleton)
     joints_map, joints_list = joint_utils:init(skeleton)
     for _, joint in ipairs(joints_list) do
         if not joint.mesh then
-            joint.mesh = create_bone_entity(joint.name)
+            joint.bone_mesh = create_bone_entity(joint.name)
+            joint.mesh = create_joint_entity(joint.name)
         end
     end
 end

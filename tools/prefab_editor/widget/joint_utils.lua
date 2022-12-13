@@ -1,6 +1,7 @@
 local imgui     = require "imgui"
 
 local m = {
+    show_skeleton = false,
     joint_map = {},
     joint_list = {},
 }
@@ -113,7 +114,7 @@ function m:get_current_skeleton()
 end
 
 function m:update_pose(root_mat)
-    if self.update_joint_pose then
+    if self.update_joint_pose and self.show_skeleton then
         self.update_joint_pose(root_mat, self.joint_list)
     end
 end

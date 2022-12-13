@@ -669,8 +669,11 @@ local function show_skeleton(b)
         if joint.mesh then
             local e <close> = w:entity(joint.mesh)
             ivs.set_state(e, "main_view", b)
+            local be <close> = w:entity(joint.bone_mesh)
+            ivs.set_state(be, "main_view", b)
         end
     end
+    joint_utils.show_skeleton = b
 end
 local update_slot_list = world:sub {"UpdateSlotList"}
 function m.show()
