@@ -363,7 +363,7 @@ function util.pack_tangent_frame(normal, tangent, storage_size)
 	-- make sure qw is positive, because we need sign of this quaternion to tell shader is the tangent frame is invert or not
 	if qw < 0 then
 		q = quat_inverse_sign(q)
-		qw = math3d.index(q, 4)	-- qw = -qw
+		qw = -qw	--math3d.index(q, 4)
 	end
 
 	-- Ensure w is never 0.0
