@@ -32,8 +32,10 @@ function skinning_sys:skin_mesh()
 			assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
 			local sm = meshskin.skinning_matrices
 			e.render_object.worldmat = math3d.array_matrix_ref(sm:pointer(), sm:count())
-			math3d.unmark(e.bounding.scene_aabb)
-			e.bounding.scene_aabb = math3d.mark(math3d.aabb_transform(worldmat, e.bounding.aabb))
+			if mc.NULL ~= e.bounding.aabb then
+				math3d.unmark(e.bounding.scene_aabb)
+				e.bounding.scene_aabb = math3d.mark(math3d.aabb_transform(worldmat, e.bounding.aabb))
+			end
 		end
 	end
 end
