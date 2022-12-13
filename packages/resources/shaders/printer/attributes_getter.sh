@@ -14,20 +14,22 @@ input_attributes input_attribs = (input_attributes)0;
     input_attribs.V = normalize(u_eyepos.xyz - v_posWS.xyz);
     v_normal = normalize(v_normal);
 
+#ifdef HAS_NORMAL_TEXTURE
 #   ifdef CALC_TBN
     mat3 tbn = cotangent_frame(v_normal, input_attribs.V, uv);
-    input_attribs.N = normal_from_tangent_frame(tbn, uv);
 #   else //!CALC_TBN
-    mat3 tbn = mat3(v_tangent, v_bitangent, v_normal);
-    input_attribs.N = normal_from_tangent_frame(tbn, uv);
+    v_tangent.xyz = normalize(v_tangent.xyz);
+    vec3 bitangent = cross(v_normal, v_tangent.xyz) * v_tangent.w;
+    mat3 tbn = mat3(v_tangent.xyz, bitangent, v_normal);
 #   endif //CALC_TBN
+    input_attribs.N = normal_from_tangent_frame(tbn, uv);
+#else  //!HAS_NORMAL_TEXTURE
+    input_attribs.N = v_normal;
+#endif //HAS_NORMAL_TEXTURE
 
 #ifdef ENABLE_BENT_NORMAL
     const vec3 bent_normalTS = vec3(0.0, 0.0, 1.0);
-    input_attribs.bent_normal = normalize(vec3(
-        dot(tangent, bent_normalTS),
-        dot(bitangent, bent_normalTS),
-        dot(v_normal, bent_normalTS)));
+    input_attribs.bent_normal = bent_normalTS;
 #endif //ENABLE_BENT_NORMAL
 
     get_metallic_roughness(uv, input_attribs);
