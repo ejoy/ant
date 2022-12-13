@@ -59,12 +59,12 @@ end
 
 function S.init()
     create_instance( "/pkg/ant.test.light/assets/light.prefab", function (e)
-        local leid = e.tag['*'][1]
-        local le<close> = w:entity(leid, "scene:update")
-        iom.set_direction(le, math3d.vector(1.0, 1.0, 1.0))
+        --local leid = e.tag['*'][1]
+        --local le<close> = w:entity(leid, "scene:update")
+        --iom.set_direction(le, math3d.vector(1.0, 1.0, 1.0))
     end)
 
-    ecs.create_instance "/pkg/ant.test.light/assets/skybox.prefab"
+    -- ecs.create_instance "/pkg/ant.test.light/assets/skybox.prefab"
 end
 
 function S.init_world()
@@ -86,6 +86,13 @@ function S.init_world()
         local obj<close> = w:entity(leidobj)
 
         imaterial.set_property(obj, "s_normal", normaltex.id)
+    end)
+
+    create_instance("/pkg/ant.test.light/assets/ground_01.glb|mesh.prefab", function (e)
+        local leid = e.tag['*'][1]
+        local le<close> = w:entity(leid, "scene:update")
+        iom.set_scale(le, 0.1)
+        iom.set_position(le, math3d.vector(5, 0, 0))
     end)
 
     --create_simple_triangles()

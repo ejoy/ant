@@ -1,0 +1,12 @@
+colorspace: linear
+normalmap: false
+path: /pkg/ant.test.light/assets/materials/aerodynamics_workshop_2k.hdr
+mipmap: 0
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+  W: CLAMP
+type: texture
