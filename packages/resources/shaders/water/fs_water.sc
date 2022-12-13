@@ -7,6 +7,7 @@ $input v_texcoord0 v_posWS v_normal v_tangent v_bitangent
 #include "common/common.sh"
 #include "common/transform.sh"
 #include "pbr/lighting.sh"
+#include "pbr/input_attributes.sh"
 
 #include "common/postprocess.sh"
 
