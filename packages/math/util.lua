@@ -348,7 +348,9 @@ local function quat_inverse_sign(q)
 	return math3d.quaternion(-qx, -qy, -qz, -qw)
 end
 
---
+--normal: normalize
+--tangent: [tx, ty, tz, tw], it must have 4 elements, and tw element must be 1.0 or -1.0, where -1.0 indicate reflection is existd
+--storage_size: default is 2
 function util.pack_tangent_frame(normal, tangent, storage_size)
 	storage_size = storage_size or 2
 	local q = math3d.normalize(
