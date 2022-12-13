@@ -30,8 +30,8 @@ void main()
 #else //!CALC_TBN
 #	if PACK_TANGENT_TO_QUAT
 	const vec4 quat = a_tangent;
-	vec3 normal, tangent;
-	to_tangent_frame(quat, normal, tangent);
+	vec3 normal = quat_to_normal(quat);
+	vec3 tangent = quat_to_tangent(quat);
 #	else //!PACK_TANGENT_TO_QUAT
 	vec3 normal = a_normal;
 	vec3 tangent = a_tangent.xyz;

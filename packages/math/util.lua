@@ -345,7 +345,7 @@ end
 
 local function quat_inverse_sign(q)
 	local qx, qy, qz, qw = math3d.index(q, 1, 2, 3, 4)
-	return math3d.quaternion(-qx, -qy, -qz, qw)
+	return math3d.quaternion(-qx, -qy, -qz, -qw)
 end
 
 function util.pack_tangent_frame(normal, tangent, storage_size)
