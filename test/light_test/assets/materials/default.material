@@ -2,14 +2,18 @@ fx:
   fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
   setting:
     ALPHAMODE_OPAQUE: 1
+    PACK_TANGENT_FRAME: 0
   vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
 properties:
   u_basecolor_factor: {1, 1, 1, 1}
   u_emissive_factor: {0, 0, 0, 0}
   u_pbr_factor: {0, 0.8999999761581421, 0.5, 1}
+  s_basecolor:
+    stage: 0
+    texture: /pkg/ant.test.light/assets/ground_01.glb|images/floor_color.texture
 state:
   ALPHA_REF: 0
-  CULL: NONE
+  CULL: CCW
   DEPTH_TEST: GREATER
   MSAA: true
   WRITE_MASK: RGBAZ
