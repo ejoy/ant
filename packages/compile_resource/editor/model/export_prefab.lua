@@ -266,7 +266,8 @@ local function create_mesh_node_entity(output, gltfscene, nodeidx, parent, expor
         local needskin = has_skin(gltfscene, exports, nodeidx)
         local materialfile = seri_material(output, exports, prim.mode or 4, prim.material, needskin)
         if materialfile == nil then
-            error(("not found %s material %d"):format(meshname, prim.material or -1))
+            materialfile = fs.path "/pkg/ant.resources/materials/pbr_default.material"
+            --error(("not found %s material %d"):format(meshname, prim.material or -1))
         end
         local meshfile = exports.mesh[meshidx+1][primidx]
         if meshfile == nil then
