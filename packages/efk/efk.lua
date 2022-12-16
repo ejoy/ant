@@ -271,7 +271,7 @@ function iefk.create(filename, config)
             tag = {"effect"},
             scene = cfg.scene,
             efk = {
-                path = cfg.path,
+                path = filename,
                 auto_play = cfg.auto_play,
                 loop = cfg.loop,
                 speed = cfg.speed,
