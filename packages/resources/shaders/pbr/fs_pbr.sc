@@ -34,8 +34,7 @@ void main()
     material_info mi = init_material_info(input_attribs);
     vec3 color = calc_direct_light(mi, gl_FragCoord, v_posWS.xyz);
 #   ifdef ENABLE_SHADOW
-    vec3 normalWS = normalize(v_normal);
-    vec4 posWS = vec4(v_posWS.xyz + normalWS.xyz * u_normal_offset, 1.0);
+    vec4 posWS = vec4(v_posWS.xyz + v_normal * u_normal_offset, 1.0);
 	color = shadow_visibility(v_distanceVS, posWS, color);
 #   endif //ENABLE_SHADOW
 
