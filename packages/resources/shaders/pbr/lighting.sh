@@ -10,6 +10,8 @@
 #include "pbr/pbr.sh"
 #include "pbr/material_info.sh"
 
+#include "pbr/indirect_lighting.sh"
+
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#range-property
 float get_range_attenuation(float range, float dis)
 {
@@ -144,6 +146,18 @@ vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
     }
     return color;
 }
+
+vec4 compute_lighting(input_attributes input_attribs){
+    material_info mi = init_material_info(input_attribs);
+
+    vec3 color = calc_direct_light(input_attribs, mi);
+
+#   ifdef ENABLE_IBL
+    color += calc_indirect_light(input_attribs, mi);
+#   endif //ENABLE_IBL
+    return vec4(color, input_attribs.basecolor.a) + input_attribs.emissive;
+}
+
 #endif //BGFX_SHADER_TYPE_FRAGMENT
 
 #endif //__SHADER_LIGHTING_SH__

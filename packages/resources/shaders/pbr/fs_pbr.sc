@@ -25,13 +25,6 @@ void main()
 #ifdef MATERIAL_UNLIT
     gl_FragColor = input_attribs.basecolor + input_attribs.emissive;
 #else //!MATERIAL_UNLIT
-    material_info mi = init_material_info(input_attribs);
-
-    vec3 color = calc_direct_light(input_attribs, mi);
-
-#   ifdef ENABLE_IBL
-    color += calc_indirect_light(input_attribs, mi);
-#   endif //ENABLE_IBL
-    gl_FragColor = vec4(color, input_attribs.basecolor.a) + input_attribs.emissive;
+    gl_FragColor = compute_lighting(input_attribs);
 #endif //MATERIAL_UNLIT
 }

@@ -29,23 +29,6 @@ uniform vec4 u_printer_factor;
 
 #include "pbr/input_attributes.sh"
 
-vec4 compute_lighting(input_attributes input_attribs, vec4 FragCoord, vec4 v_posWS, vec3 v_normal){
-
-    material_info mi = init_material_info(input_attribs);
-    vec3 color = calc_direct_light(mi, FragCoord, v_posWS.xyz);
-#   ifdef ENABLE_SHADOW
-    vec3 normalWS = normalize(v_normal);
-    vec4 posWS = vec4(v_posWS.xyz + normalWS.xyz * u_normal_offset, 1.0);
-	color = shadow_visibility(v_distanceVS, posWS, color);
-#   endif //ENABLE_SHADOW
-
-#   ifdef ENABLE_IBL
-    color += calc_indirect_light(input_attribs, mi, v_distanceVS);
-#   endif //ENABLE_IBL
-    return vec4(color, input_attribs.basecolor.a) + input_attribs.emissive;
-
-}
-
 void main()
 { 
     #include "pbr/attributes_getter.sh"
@@ -73,7 +56,7 @@ void main()
             gl_FragColor = _ConstructColor;
         }
         else{
-            gl_FragColor = compute_lighting(input_attribs, gl_FragCoord, v_posWS, v_normal);
+            gl_FragColor = compute_lighting(input_attribs);
         }
     }
 }
