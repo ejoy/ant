@@ -31,7 +31,8 @@ void main(){
     uint visible_light_count = 0;
 
     uint offset = cluster_idx * light_count;
-    for(uint light_idx=0; light_idx<light_count; ++light_idx){
+    const uint direciontal_light_idx = 0;
+    for(uint light_idx=direciontal_light_idx+1; light_idx<light_count; ++light_idx){
         light_info l; load_light_info(b_lights, light_idx, l);
 
         if(interset_aabb(l, aabb)){

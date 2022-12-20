@@ -11,8 +11,12 @@ input_attributes input_attribs = (input_attributes)0;
     input_attribs.emissive = get_emissive_color(uv);
 
 #ifndef MATERIAL_UNLIT
+    input_attribs.fragcoord = gl_FragCoord;
+    input_attribs.posWS = v_posWS.xyz;
+    input_attribs.distanceVS = v_posWS.w;
     input_attribs.V = normalize(u_eyepos.xyz - v_posWS.xyz);
     v_normal = normalize(v_normal);
+    input_attribs.gN = v_normal;
 
 #ifdef HAS_NORMAL_TEXTURE
 #   ifdef CALC_TBN

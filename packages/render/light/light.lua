@@ -246,13 +246,14 @@ local function create_light_buffers()
 	local mq = w:first("main_queue camera_ref:in")
     local camera <close> = w:entity(mq.camera_ref)
 	local ev = iexposure.exposure(camera)
-	for e in w:select "light:in visible scene:in" do
+
+	local function pack_light(e)
 		local p	= math3d.tovalue(iom.get_position(e))
 		local d	= math3d.tovalue(math3d.inverse(iom.get_direction(e)))
 		local c = e.light.color
 		local t	= e.light.type
 		local enable<const> = 1
-		lights[#lights+1] = ('f'):rep(16):pack(
+		return ('f'):rep(16):pack(
 			p[1], p[2], p[3], e.light.range or math.maxinteger,
 			d[1], d[2], d[3], enable,
 			c[1], c[2], c[3], c[4],		--c[4] is no meaning
@@ -261,6 +262,13 @@ local function create_light_buffers()
 			e.light.inner_cutoff or 0,
 			e.light.outter_cutoff or 0
 		)
+	end
+
+	for e in w:select "directional_light light:in visible scene:in" do
+		lights[#lights+1] = pack_light(e)
+	end
+	for e in w:select "light:in directional_light:absent visible scene:in" do
+		lights[#lights+1] = pack_light(e)
 	end
     return lights
 end

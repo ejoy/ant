@@ -58,10 +58,20 @@ struct input_attributes
 
     vec2 uv;
     vec2 screen_uv;
+
+    vec3 posWS;
+    float distanceVS;
+    vec4 fragcoord;
+    vec3 gN;
+
 #ifdef ENABLE_BENT_NORMAL
     // this bent normal is pixel bent normal in world space
     vec3 bent_normal;
 #endif //ENABLE_BENT_NORMAL
+
+#ifdef USING_LIGHTMAP
+    vec2 uv1;
+#endif //USING_LIGHTMAP
 };
 
 vec4 get_basecolor(vec2 texcoord, vec4 basecolor)
@@ -117,7 +127,9 @@ vec3 fetch_bc5_normal(sampler2D normalMap, vec2 texcoord)
 #ifdef HAS_NORMAL_TEXTURE
 vec3 normal_from_tangent_frame(mat3 tbn, vec2 texcoord)
 {
-	vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
+	//vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
+    vec3 normalTS = texture2D(s_normal, texcoord).rgb;
+    normalTS = normalTS*2.0-1.0;
 	return normalize(mul(tbn, normalTS));
 }
 #endif //HAS_NORMAL_TEXTURE

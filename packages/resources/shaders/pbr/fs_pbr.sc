@@ -16,12 +16,6 @@ $input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_LIGHTMAP_
 #include "pbr/lighting.sh"
 #include "pbr/indirect_lighting.sh"
 #include "pbr/pbr.sh"
-
-#define v_distanceVS v_posWS.w
-#ifdef ENABLE_SHADOW
-#include "common/shadow.sh"
-#endif //ENABLE_SHADOW
-
 #include "input_attributes.sh"
 
 void main()
@@ -32,14 +26,11 @@ void main()
     gl_FragColor = input_attribs.basecolor + input_attribs.emissive;
 #else //!MATERIAL_UNLIT
     material_info mi = init_material_info(input_attribs);
-    vec3 color = calc_direct_light(mi, gl_FragCoord, v_posWS.xyz);
-#   ifdef ENABLE_SHADOW
-    vec4 posWS = vec4(v_posWS.xyz + v_normal * u_normal_offset, 1.0);
-	color = shadow_visibility(v_distanceVS, posWS, color);
-#   endif //ENABLE_SHADOW
+
+    vec3 color = calc_direct_light(input_attribs, mi);
 
 #   ifdef ENABLE_IBL
-    color += calc_indirect_light(input_attribs, mi, v_distanceVS);
+    color += calc_indirect_light(input_attribs, mi);
 #   endif //ENABLE_IBL
     gl_FragColor = vec4(color, input_attribs.basecolor.a) + input_attribs.emissive;
 #endif //MATERIAL_UNLIT

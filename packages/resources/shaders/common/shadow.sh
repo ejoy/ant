@@ -218,29 +218,21 @@ float sample_visibility(vec4 shadowcoord)
 	return 0.0;
 }
 
-vec3 shadow_visibility(float distanceVS, vec4 posWS, vec3 scenecolor)
+float shadow_visibility(float distanceVS, vec4 posWS)
 {
 	vec4 shadowcoord = vec4_splat(0.0);
 #ifdef USE_VIEW_SPACE_DISTANCE
 	int cascadeidx = select_cascade(distanceVS);
 	if (cascadeidx < 0)
-		return scenecolor;	// not in shadow
+		return 0.0;	// not in shadow
 	shadowcoord = mul(u_csm_matrix[cascadeidx], posWS);
 #else //!USE_VIEW_SPACE_DISTANCE
 	int cascadeidx = calc_shadow_coord(posWS, shadowcoord);
 	if (cascadeidx < 0)
-		return scenecolor;	// not in shadow
+		return 0.0;	// not in shadow
 #endif //USE_VIEW_SPACE_DISTANCE
 
-	const float visibility = sample_visibility(shadowcoord);
-
-	vec3 finalcolor = mix(u_shadow_color, scenecolor, visibility);
-	
-#ifdef SHADOW_COVERAGE_DEBUG
-	finalcolor *= g_colors[cascadeidx];
-#endif //SHADOW_COVERAGE_DEBUG
-
-	return finalcolor;
+	return sample_visibility(shadowcoord);
 }
 #endif //ENABLE_SHADOW
 #endif //__SHADER_SHADOW_SH__
