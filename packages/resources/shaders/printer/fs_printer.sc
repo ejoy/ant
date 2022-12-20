@@ -48,7 +48,7 @@ vec4 compute_lighting(input_attributes input_attribs, vec4 FragCoord, vec4 v_pos
 
 void main()
 { 
-    #include "attributes_getter.sh"
+    #include "pbr/attributes_getter.sh"
 
     float building = 0;
     float t = _ConstructY;
