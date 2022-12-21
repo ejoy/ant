@@ -37,7 +37,7 @@ void main()
 	vec3 tangent = a_tangent.xyz;
 #	endif//PACK_TANGENT_TO_QUAT
 	v_normal	= mul(wm, vec4(normal, 0.0)).xyz;
-	v_tangent	= vec4(mul(wm, vec4(tangent, 0.0)).xyz, sign(a_tangent.w));
+	v_tangent	= mul(wm, vec4(tangent, 0.0)).xyz * sign(a_tangent.w);
 #endif//CALC_TBN
 #endif //!MATERIAL_UNLIT
 }

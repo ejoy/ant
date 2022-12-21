@@ -22,9 +22,9 @@ input_attributes input_attribs = (input_attributes)0;
 #   ifdef CALC_TBN
     mat3 tbn = cotangent_frame(v_normal, input_attribs.V, uv);
 #   else //!CALC_TBN
-    v_tangent.xyz = normalize(v_tangent.xyz);
-    vec3 bitangent = cross(v_normal, v_tangent.xyz) * v_tangent.w;
-    mat3 tbn = mat3(v_tangent.xyz, bitangent, v_normal);
+    v_tangent = normalize(v_tangent);
+    vec3 bitangent = cross(v_normal, v_tangent);
+    mat3 tbn = mat3(v_tangent, bitangent, v_normal);
 #   endif //CALC_TBN
     input_attribs.N = normal_from_tangent_frame(tbn, uv);
 #else  //!HAS_NORMAL_TEXTURE

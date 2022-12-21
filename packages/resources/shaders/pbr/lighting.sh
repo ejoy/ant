@@ -111,11 +111,21 @@ light_info get_light(uint ilight, vec3 posWS)
 float directional_light_visibility(in input_attributes input_attribs)
 {
 #   ifdef ENABLE_SHADOW
-    const vec4 posWS = vec4(input_attribs.posWS.xyz + input_attribs.gN * u_normal_offset, 1.0);
+    const vec4 posWS = vec4(input_attribs.posWS + input_attribs.gN * u_normal_offset, 1.0);
 	return shadow_visibility(input_attribs.distanceVS, posWS);
 #   else //!ENABLE_SHADOW
     return 1.0;
 #   endif //ENABLE_SHADOW
+}
+
+void shading_color(in input_attributes input_attribs, in material_info mi, in uint ilight, inout vec3 color)
+{
+    const light_info l = get_light(0, input_attribs.posWS);
+    mi.NdotL = dot(mi.N, l.pt2l);
+    if (mi.NdotL > 0)
+    {
+        color += surfaceShading(mi, l);
+    }
 }
 
 vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
@@ -128,12 +138,7 @@ vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
     const float dl_visibility = directional_light_visibility(input_attribs);
     if (dl_visibility > 0.0)
     {
-        const light_info dl = get_light(0, input_attribs.posWS);
-        mi.NdotL = dot(mi.N, dl.pt2l);
-        if (mi.NdotL > 0)
-        {
-            color += surfaceShading(mi, dl);
-        }
+        shading_color(input_attribs, mi, 0, color);
     }
 #endif //USING_LIGHTMAP
 
@@ -144,12 +149,7 @@ vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
         for (uint ii=g.offset; ii<g.offset + g.count; ++ii)
         {
             uint ilight = get_light_index(ii);
-            light_info l = get_light(ilight, input_attribs.posWS);
-            mi.NdotL = dot(mi.N, l.pt2l);
-            if (mi.NdotL > 0)
-            {
-                color += surfaceShading(mi, l);
-            }
+            shading_color(input_attribs, mi, ilight, color);
         }
     }
     return color;
