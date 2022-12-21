@@ -129,7 +129,11 @@ vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
     if (dl_visibility > 0.0)
     {
         const light_info dl = get_light(0, input_attribs.posWS);
-        color += surfaceShading(mi, dl);
+        mi.NdotL = dot(mi.N, dl.pt2l);
+        if (mi.NdotL > 0)
+        {
+            color += surfaceShading(mi, dl);
+        }
     }
 #endif //USING_LIGHTMAP
 
@@ -141,7 +145,11 @@ vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
         {
             uint ilight = get_light_index(ii);
             light_info l = get_light(ilight, input_attribs.posWS);
-            color += surfaceShading(mi, l);
+            mi.NdotL = dot(mi.N, l.pt2l);
+            if (mi.NdotL > 0)
+            {
+                color += surfaceShading(mi, l);
+            }
         }
     }
     return color;

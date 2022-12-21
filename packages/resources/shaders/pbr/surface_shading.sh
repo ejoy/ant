@@ -105,7 +105,7 @@ vec3 surfaceShading(const material_info mi, const light_info light) {
     vec3 h = normalize(mi.V + light.pt2l);
 
     float NoV = mi.NdotV;
-    float NoL = saturate(dot(mi.N, light.pt2l));
+    float NoL = mi.NdotL;
     float NoH = saturate(dot(mi.N, h));
     float LoH = saturate(dot(light.pt2l, h));
 
