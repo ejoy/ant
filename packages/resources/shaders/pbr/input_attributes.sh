@@ -127,9 +127,9 @@ vec3 fetch_bc5_normal(sampler2D normalMap, vec2 texcoord)
 #ifdef HAS_NORMAL_TEXTURE
 vec3 normal_from_tangent_frame(mat3 tbn, vec2 texcoord)
 {
-	//vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
-    vec3 normalTS = texture2D(s_normal, texcoord).rgb;
-    normalTS = normalTS*2.0-1.0;
+	vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
+    // vec3 normalTS = texture2D(s_normal, texcoord).rgb;
+    // normalTS = normalTS*2.0-1.0;
 	return normalize(mul(tbn, normalTS));
 }
 #endif //HAS_NORMAL_TEXTURE
