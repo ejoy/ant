@@ -3,9 +3,14 @@
 
 #include "common/lightdata.sh"
 #include "common/cluster_shading.sh"
+#ifdef ENABLE_SHADOW
+#include "common/shadow.sh"
+#endif //ENABLE_SHADOW
 
 #include "pbr/pbr.sh"
 #include "pbr/material_info.sh"
+
+#include "pbr/indirect_lighting.sh"
 
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#range-property
 float get_range_attenuation(float range, float dis)
@@ -103,35 +108,64 @@ light_info get_light(uint ilight, vec3 posWS)
 #endif //NEW_LIGHTING
 
 #if BGFX_SHADER_TYPE_FRAGMENT
-vec3 calc_direct_light(in material_info mi, vec4 fragcoord, vec3 posWS)
+float directional_light_visibility(in input_attributes input_attribs)
+{
+#   ifdef ENABLE_SHADOW
+    const vec4 posWS = vec4(input_attribs.posWS + input_attribs.gN * u_normal_offset, 1.0);
+	return shadow_visibility(input_attribs.distanceVS, posWS);
+#   else //!ENABLE_SHADOW
+    return 1.0;
+#   endif //ENABLE_SHADOW
+}
+
+void shading_color(in input_attributes input_attribs, in material_info mi, in uint ilight, inout vec3 color)
+{
+    const light_info l = get_light(0, input_attribs.posWS);
+    mi.NdotL = dot(mi.N, l.pt2l);
+    if (mi.NdotL > 0)
+    {
+        color += surfaceShading(mi, l);
+    }
+}
+
+vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
 {
     vec3 color = vec3_splat(0.0);
-
-    light_grid g = get_light_grid(fragcoord);
-	for (uint ii=g.offset; ii<g.offset + g.count; ++ii)
-	{
-        uint ilight = get_light_index(ii);
-        light_info l = get_light(ilight, posWS);
-#   ifdef NEW_LIGHTING
-        float NdotL = clamp_dot(mi.N, l.pt2l);
-        if (NdotL > 0){
-            color += surfaceShading(mi, l, 1.0);
-        }
-#   else //!NEW_LIGHTING
-        color += get_light_radiance(l, posWS, mi);
-#   endif //NEW_LIGHTING
-    }
-
 #ifdef USING_LIGHTMAP
-    if (u_light_count[0] > 0)
+    vec4 irradiance = texture2D(s_lightmap, input_attribs.uv1);
+    color += input_attribs.basecolor.rgb * irradiance.rgb * PI * 0.5;
+#else //!USING_LIGHTMAP
+    const float dl_visibility = directional_light_visibility(input_attribs);
+    if (dl_visibility > 0.0)
     {
-        vec4 irradiance = texture2D(s_lightmap, v_texcoord1);
-        color += basecolor.rgb * irradiance.rgb * PI * 0.5;
+        shading_color(input_attribs, mi, 0, color);
     }
 #endif //USING_LIGHTMAP
 
+    if (u_light_count[0] > 1)
+    {
+        //TODO: other lights not check visibility right now
+        light_grid g = get_light_grid(input_attribs.fragcoord);
+        for (uint ii=g.offset; ii<g.offset + g.count; ++ii)
+        {
+            uint ilight = get_light_index(ii);
+            shading_color(input_attribs, mi, ilight, color);
+        }
+    }
     return color;
 }
+
+vec4 compute_lighting(input_attributes input_attribs){
+    material_info mi = init_material_info(input_attribs);
+
+    vec3 color = calc_direct_light(input_attribs, mi);
+
+#   ifdef ENABLE_IBL
+    color += calc_indirect_light(input_attribs, mi);
+#   endif //ENABLE_IBL
+    return vec4(color, input_attribs.basecolor.a) + input_attribs.emissive;
+}
+
 #endif //BGFX_SHADER_TYPE_FRAGMENT
 
 #endif //__SHADER_LIGHTING_SH__
