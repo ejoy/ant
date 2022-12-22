@@ -348,7 +348,9 @@ local function quat_inverse_sign(q)
 	return math3d.quaternion(-qx, -qy, -qz, -qw)
 end
 
---
+--normal: normalize
+--tangent: [tx, ty, tz, tw], it must have 4 elements, and tw element must be 1.0 or -1.0, where -1.0 indicate reflection is existd
+--storage_size: default is 2
 function util.pack_tangent_frame(normal, tangent, storage_size)
 	storage_size = storage_size or 2
 	local q = math3d.normalize(
@@ -361,7 +363,7 @@ function util.pack_tangent_frame(normal, tangent, storage_size)
 	-- make sure qw is positive, because we need sign of this quaternion to tell shader is the tangent frame is invert or not
 	if qw < 0 then
 		q = quat_inverse_sign(q)
-		qw = math3d.index(q, 4)	-- qw = -qw
+		qw = -qw	--math3d.index(q, 4)
 	end
 
 	-- Ensure w is never 0.0

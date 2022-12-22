@@ -56,23 +56,6 @@ vec3 blend(vec4 texture1, float a1, float d1, vec4 texture2, float a2, float d2)
     return (texture1.rgb * b1 + texture2.rgb * b2) / (b1 + b2);
 }
 
-vec4 compute_lighting(input_attributes input_attribs, vec4 FragCoord, vec4 v_posWS, vec3 v_normal){
-
-    material_info mi = init_material_info(input_attribs);
-    vec3 color = calc_direct_light(mi, FragCoord, v_posWS.xyz);
-#   ifdef ENABLE_SHADOW
-    vec3 normalWS = normalize(v_normal);
-    vec4 posWS = vec4(v_posWS.xyz + normalWS.xyz * u_normal_offset, 1.0);
-	color = shadow_visibility(v_distanceVS, posWS, color);
-#   endif //ENABLE_SHADOW
-
-#   ifdef ENABLE_IBL
-    color += calc_indirect_light(input_attribs, mi, v_distanceVS);
-#   endif //ENABLE_IBL
-    return vec4(color, input_attribs.basecolor.a) + input_attribs.emissive;
-
-}
-
 void main()
 { 
     #ifdef HAS_PROCESSING
@@ -139,9 +122,9 @@ void main()
 
     #include "attributes_getter.sh"
     
-    vec4 texture_stone   = compute_lighting(stone_attribs,  gl_FragCoord, v_posWS, v_normal);
-    vec4 texture_sand    = compute_lighting(sand_attribs,   gl_FragCoord, v_posWS, v_normal);
-    vec4 texture_cement  = compute_lighting(cement_attribs, gl_FragCoord, v_posWS, v_normal);
+    vec4 texture_stone   = compute_lighting(stone_attribs);
+    vec4 texture_sand    = compute_lighting(sand_attribs);
+    vec4 texture_cement  = compute_lighting(cement_attribs);
 
     float a_sand   = sand_alpha;
     float a_cement = texture2DArray(s_cement_alpha, vec3(v_texcoord1, cement_alpha_type) );

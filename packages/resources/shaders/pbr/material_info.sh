@@ -18,6 +18,8 @@ struct material_info
     vec3 N;
     float NdotV;
     vec3 V;
+    float NdotL;
+
     vec3 reflect_vector;
 
 #ifdef ENABLE_BENT_NORMAL
@@ -57,12 +59,14 @@ material_info init_material_info(in input_attributes input_attribs)
     mi.N = input_attribs.N;
     mi.V = input_attribs.V;
     mi.NdotV = clamp_dot(mi.N, mi.V);
+    mi.NdotL = 0.0;
 
 #ifdef ENABLE_BENT_NORMAL
     mi.bent_normal = input_attribs.bent_normal;
 #endif //ENABLE_BENT_NORMAL
 
     mi.reflect_vector = normalize(reflect(-mi.V, mi.N));
+    
     calc_reflectance(input_attribs, mi);
     return mi;
 }

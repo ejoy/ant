@@ -24,12 +24,13 @@ return function (input, output, _, tolocalpath)
     utility.init(input, output)
     local glbdata = glbloader.decode(input)
     local exports = {}
+    local settings = {}
     assert(glbdata.version == 2)
     exports.scenetree = build_scene_tree(glbdata.info)
     exports.depfiles = depfiles
 
-    export_meshbin(output, glbdata, exports)
-    export_material(output, glbdata, exports, tolocalpath)
+    export_meshbin(output, glbdata, exports, settings)
+    export_material(output, glbdata, exports, tolocalpath, settings)
     export_animation(input, output, exports)
     export_prefab(output, glbdata, exports, tolocalpath)
     return true, depfiles

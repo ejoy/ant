@@ -151,7 +151,7 @@ local function choose_project()
             global_data:update_root(fs.path "":localpath())
         end
 
-        imgui.cursor.Separator();
+        imgui.cursor.Separator()
         if lastprojs then
             for i, proj in ipairs(lastprojs) do
                 if imgui.widget.Selectable(proj.name .. " : " .. proj.proj_path, selected_proj and selected_proj.proj_path == proj.proj_path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
@@ -312,9 +312,11 @@ end
 local reset_editor = world:sub {"ResetEditor"}
 local test_m
 local test_m1
+local test_m2
 local test1
 local test2
-
+local test3
+local ika       = ecs.import.interface "ant.animation|ikeyframe"
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
@@ -455,13 +457,41 @@ function m:handle_event()
             -- function prefab:on_message(msg) end
             -- function prefab:on_update() end
             -- world:create_object(prefab)
+
+
+            -- local prefab = ecs.create_instance("/pkg/tools.prefab_editor/res/building_station_new.prefab")
+            -- function prefab:on_init() end
+            -- prefab.on_ready = function(instance)
+            --     test3 = {edge = {}}
+            --     local alleid = instance.tag["*"]
+            --     for _, eid in ipairs(alleid) do
+            --         local e <close> = w:entity(eid, "name:in")
+            --         if e.name == "Cylinder" then
+            --             test3.centre = eid
+            --         else
+            --             local prefix = string.sub(e.name, 1, 8)
+            --             if prefix == "Cube.002" or prefix == "Cube.005" then
+            --                 test3.edge[#test3.edge + 1] = eid
+            --             end
+            --         end
+            --     end
+            -- end
+            -- function prefab:on_message(msg) end
+            -- function prefab:on_update() end
+            -- world:create_object(prefab)
+
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save_prefab()
         elseif state.CTRL and key == "R" and press == 1 then
-            anim_view:clear()
-            prefab_mgr:reload()
+            -- anim_view:clear()
+            -- prefab_mgr:reload()
             -- imodifier.start(test_m, {name="confirm"})
             -- imodifier.start(test_m1, {name="confirm"})
+
+            -- imodifier.start(test_m2.centre, {})
+            -- for _, m in ipairs(test_m2.edge) do
+            --     imodifier.start(m, {})
+            -- end
         elseif state.CTRL and key == "T" and press == 1 then
             -- test_m = imodifier.create_bone_modifier(test1, 1, "/pkg/tools.prefab_editor/res/Interact_build.glb|animation.prefab", "Bone")
             -- local te <close> = w:entity(test2, "scene?in")
@@ -469,6 +499,42 @@ function m:handle_event()
             -- test_m1 = imodifier.create_bone_modifier(test2, 1, "/pkg/tools.prefab_editor/res/Interact_build.glb|animation.prefab", "Bone")
 
             -- test_m = ipl.add_linelist({{0.0, 0.0, 0.0}, {5.0, 5.0, 100.0}, {5.0, 5.0, 100.0}, {5.0, 0.0, 0.0}}, 80, {1.0, 0.0, 0.0, 0.7})
+            
+            -- local function get_value(kfe, time)
+            --     local e <close> = w:entity(kfe, "keyframe:in")
+            --     local kfanim = e.keyframe
+            --     return kfanim.play_state.current_value, kfanim.play_state.playing
+            -- end
+            -- test_m2 = {edge = {}}
+            -- local kfrot = ika.create({
+            --     {time = 0, value = {0, 0, 0}},
+            --     {time = 4, value = {0, 360, 25}},
+            -- })
+            -- test_m2.centre = {
+            --     eid = imodifier.create_srt_modifier(test3.centre, 0, function(time)
+            --                 local srt, running = get_value(kfrot, time)
+            --                 return math3d.matrix({
+            --                     r = math3d.quaternion{0, math.rad(srt[2]), 0},
+            --                     t = {0, srt[3], 0}
+            --                 }), running
+            --             end,
+            --         "test"),
+            --     anim_eid = kfrot
+            -- }
+            -- local kftran = ika.create({
+            --     {time = 0, value = {0, 0, 0}},
+            --     {time = 4, value = {0, 25, 0}},
+            -- })
+            -- for _, e in ipairs(test3.edge) do
+            --     test_m2.edge[#test_m2.edge + 1] = {
+            --         eid = imodifier.create_srt_modifier(e, 0, function(time)
+            --                     local tran, running = get_value(kftran, time)
+            --                     return math3d.matrix({t = tran}), running
+            --                 end,
+            --             "test"),
+            --         anim_eid = kftran
+            --     }
+            -- end
         end
     end
 

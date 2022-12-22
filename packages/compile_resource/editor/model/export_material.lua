@@ -132,7 +132,7 @@ local function read_datalist(statefile)
     return s
 end
 
-return function (output, glbdata, exports, tolocalpath)
+return function (output, glbdata, exports, tolocalpath, settings)
     local glbscene, glbbin = glbdata.info, glbdata.bin
     local materials = glbscene.materials
 
@@ -286,6 +286,10 @@ return function (output, glbdata, exports, tolocalpath)
 
         if not isopaque then
             setting.surfacetype = "translucent"
+        end
+
+        if settings["COLOR_0"] then
+            setting["WITH_COLOR_ATTRIB"] = 1
         end
 
         if mat.doubleSided then

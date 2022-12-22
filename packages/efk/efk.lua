@@ -17,6 +17,7 @@ local itimer    = ecs.import.interface "ant.timer|itimer"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 local efk_sys = ecs.system "efk_system"
+local iefk = ecs.interface "iefk"
 
 local FxFiles = {};
 local function init_fx_files()
@@ -106,14 +107,23 @@ function efk_sys:exit()
     efk.shutdown(efk_ctx)
 end
 
-function efk_sys:entity_init()
-    for e in w:select "INIT efk:update" do
-        e.efk = {
-            handle = assetmgr.resource(e.efk).handle,
-            speed = 1.0,
-            loop = false,
-            visible = true,
-        }
+function efk_sys:component_init()
+    for e in w:select "INIT efk:in eid:in" do
+        e.efk.handle = assetmgr.resource(e.efk.path).handle
+        e.efk.speed = e.efk.speed or 1.0
+        e.efk.loop = e.efk.loop or false
+        e.efk.visible = e.efk.visible or true
+        if e.efk.auto_play then
+            world:pub {"playeffect", e.eid}
+        end
+    end
+end
+
+local playevent = world:sub {"playeffect"}
+function efk_sys:entity_ready()
+    for _, eid in playevent:unpack() do
+        local e <close> = w:entity(eid)
+        iefk.play(e)
     end
 end
 
@@ -241,14 +251,13 @@ function efk_sys:render_submit()
     efk_ctx:render(math3d.value_ptr(camera.viewmat), math3d.value_ptr(camera.projmat), itimer.delta())
 end
 
-local iefk = ecs.interface "iefk"
-
 function iefk.create(filename, config)
-    config = config or {
-        play_on_create = false,
-        loop = false,
-        speed = 1.0,
-        scene = {}
+    local cfg = {
+        scene = config.scene or {},
+        auto_play = config.auto_play or false,
+        loop = config.loop or false,
+        speed = config.speed or 1.0,
+        visible = config.visible or true
     }
     local template = {
         policy = {
@@ -260,15 +269,19 @@ function iefk.create(filename, config)
         data = {
             name = "root",
             tag = {"effect"},
-            scene = config.scene,
-            efk = filename,
+            scene = cfg.scene,
+            efk = {
+                path = filename,
+                auto_play = cfg.auto_play,
+                loop = cfg.loop,
+                speed = cfg.speed,
+                visible = cfg.visible
+            },
             on_ready = function (e)
                 w:extend(e, "efk:in")
-                if config.play_on_create then
+                if cfg.auto_play then
                     iefk.play(e)
                 end
-                iefk.set_loop(e, config.loop or false)
-                iefk.set_speed(e, config.speed or 1.0)
             end
         },
     }

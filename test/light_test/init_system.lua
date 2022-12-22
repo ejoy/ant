@@ -82,7 +82,7 @@ local function create_simple_triangles()
 end
 
 function S.init()
-    create_instance( "/pkg/ant.test.light/assets/light.prefab", function (e)
+    create_instance( "/pkg/ant.test.light/assets/light2.prefab", function (e)
         --local leid = e.tag['*'][1]
         --local le<close> = w:entity(leid, "scene:update")
         --iom.set_direction(le, math3d.vector(1.0, 1.0, 1.0))
@@ -98,11 +98,11 @@ function S.init_world()
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
     iom.set_direction(camera_ref, dir)
-    -- create_instance("/pkg/ant.test.light/assets/headquater-1.glb|mesh.prefab", function (e)
-    --     local leid = e.tag['*'][1]
-    --     local le<close> = w:entity(leid, "scene:update")
-    --     iom.set_scale(le, 0.1)
-    -- end)
+    create_instance("/pkg/ant.test.light/assets/building_station.prefab", function (e)
+        local leid = e.tag['*'][1]
+        local le<close> = w:entity(leid, "scene:update")
+        iom.set_scale(le, 0.1)
+    end)
 
     -- create_instance("/pkg/ant.test.light/assets/plane.glb|mesh.prefab", function (e)
     --     local normaltex = assetmgr.resource "/pkg/ant.test.light/assets/normal.texture"
@@ -119,21 +119,21 @@ function S.init_world()
     --     iom.set_position(le, math3d.vector(5, 0, 0))
     -- end)
 
-    ecs.create_entity{
-        policy = {
-            "ant.render|render",
-            "ant.general|name",
-        },
-        data = {
-            material = "/pkg/ant.test.light/assets/materials/default.material",
-            mesh = "/pkg/ant.test.light/assets/ground_01.glb|meshes/Plane.007_P1.meshbin",
-            name = "ground_01",
-            scene = {
-                s = 0.1
-            },
-            visible_state = "main_view",
-        }
-    }
+    -- ecs.create_entity{
+    --     policy = {
+    --         "ant.render|render",
+    --         "ant.general|name",
+    --     },
+    --     data = {
+    --         material = "/pkg/ant.test.light/assets/materials/default.material",
+    --         mesh = "/pkg/ant.test.light/assets/ground_01.glb|meshes/Plane.007_P1.meshbin",
+    --         name = "ground_01",
+    --         scene = {
+    --             s = 0.1
+    --         },
+    --         visible_state = "main_view",
+    --     }
+    -- }
 
     --create_simple_triangles()
 

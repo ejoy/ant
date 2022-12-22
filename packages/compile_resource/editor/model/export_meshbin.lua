@@ -146,10 +146,16 @@ end
 local jointidx_fmt<const> = "HHHH"
 
 local function unpack_vec(v, l)
+	local type = l:sub(1, 1)
 	local t = l:sub(6, 6)
 	local n = tonumber(l:sub(2, 2))
 	if t == 'f' then
 		local fmt = ('f'):rep(n)
+		local vv = {fmt:unpack(v)}
+		vv[n+1] = nil -- remove unpack offset
+		return vv, fmt
+ 	elseif t == 'i' and type == 'c' then
+		local fmt = ('B'):rep(n)
 		local vv = {fmt:unpack(v)}
 		vv[n+1] = nil -- remove unpack offset
 		return vv, fmt
@@ -169,11 +175,12 @@ end
 --		z: +point2user, -point2screen
 local function r2l_vec_v(v, l)
 	local vv, fmt = unpack_vec(v, l)
-	if vv[3] then
+	if vv[3] and l:sub(6,6) == 'f' then
 		vv[3] = -vv[3]
 	end
 	return vv, fmt
 end
+
 
 local function r2l_vec(v, l)
 	local vv, fmt = r2l_vec_v(v, l)
@@ -314,7 +321,7 @@ local function r2l_buf(d, iv, gltfbin)
 end
 
 local function is_vec_attrib(an)
-	return ("pnTb"):match(an)
+	return ("pnTbc"):match(an)
 end
 
 local function need_calc_tangent(layouts)
@@ -388,22 +395,42 @@ local function pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_
 end
 
 local function pack_vertex_data(layouts, vertices)
+	local function check_nan(v)
+		if v ~= v then
+			return 0
+		else
+			return v
+		end
+	end
+	local function f2i(fv, n, factor)
+		for ii = 1, n do
+			local vv = fv[ii]
+			vv = check_nan(vv)
+			vv = math.floor(vv * factor)
+			fv[ii] = vv
+		end
+	end
 	local function load_attrib(attribidx, vertex)
 		local l = layouts[attribidx]
 		return unpack_vec(vertex[attribidx], l.layout)
 	end
 	local function load_attrib_math3dvec(attribidx, vertex)
 		local r = load_attrib(attribidx, vertex)
+		if #r < 3 then
+			r[3] = 0
+		end
 		return math3d.vector(r)
 	end
 
+	local color_attrib_idx 						= find_layout_idx(layouts, "COLOR_0")
 	local joint_attrib_idx 						= find_layout_idx(layouts, "JOINTS_0")
 	local need_convert_joint_index<const> 		= joint_attrib_idx and layouts[joint_attrib_idx].layout:sub(6, 6) == 'u' or false
 	local normal_attrib_idx, tangent_attrib_idx = find_layout_idx(layouts, "NORMAL"), find_layout_idx(layouts, "TANGENT")
 
 	local need_pack_tangent_frame<const> = normal_attrib_idx and tangent_attrib_idx
-
+	--local need_pack_tangent_frame<const> = false
 	local new_vertices = {}
+
 	for iv=1, #vertices do
 		local v = vertices[iv]
 		if need_convert_joint_index then
@@ -414,25 +441,66 @@ local function pack_vertex_data(layouts, vertices)
 		if need_pack_tangent_frame then
 			local normal = load_attrib_math3dvec(normal_attrib_idx, v)
 			local tangent = load_attrib_math3dvec(tangent_attrib_idx, v)
-
-			local q = mu.pack_tangent_frame(normal, tangent)
-			local fmt = ('f'):rep(4)
-			local QUAT_tangent = fmt:pack(math3d.index(q, 1, 2, 3, 4))
+			
+ 			local quat = mu.pack_tangent_frame(normal, tangent)
+			local fv = table.pack(math3d.index(quat, 1, 2, 3, 4))
+			f2i(fv, #fv, 32767)
+			local fmt = ('h'):rep(4)
+			local QUAT_tangent = fmt:pack(table.unpack(fv)) 
 			v[tangent_attrib_idx] = QUAT_tangent
-
-			-- remove normal
-			table.remove(v, normal_attrib_idx)
 		end
+	end
+
+	local texcoord_attrib_idx 					= find_layout_idx(layouts, "TEXCOORD_0")
+	local weights_attrib_idx 					= find_layout_idx(layouts, "WEIGHTS_0")
+	for iv=1, #vertices do
+		local v = vertices[iv]
+		if texcoord_attrib_idx  then
+			local texture_coord = load_attrib_math3dvec(texcoord_attrib_idx , v)
+			local fv = table.pack(math3d.index(texture_coord, 1, 2))
+			f2i(fv, #fv, 32767)
+			local fmt = ('h'):rep(2)
+			local tc = fmt:pack(table.unpack(fv))
+			v[texcoord_attrib_idx ] = tc
+		end
+		if weights_attrib_idx then
+			local weights = load_attrib_math3dvec(weights_attrib_idx, v)
+			local fv = table.pack(math3d.index(weights, 1, 2, 3, 4))
+			f2i(fv, #fv, 32767)
+			local fmt = ('h'):rep(4)
+			local w = fmt:pack(table.unpack(fv))
+			v[weights_attrib_idx] = w
+		end
+		if need_pack_tangent_frame then
+			-- remove normal
+			table.remove(v, normal_attrib_idx)	
+		end	
 		new_vertices[#new_vertices+1] = table.concat(v,"")
+	end
+	if need_pack_tangent_frame then
+		layouts[tangent_attrib_idx].layout = "T40nii"
+	end
+	if texcoord_attrib_idx  then
+		layouts[texcoord_attrib_idx ].layout = "t20nii"
+	end
+	if weights_attrib_idx then
+		layouts[weights_attrib_idx].layout = "w40nii"
+	end
+	if color_attrib_idx then
+		layouts[color_attrib_idx].layout = "c40niu"
 	end
 
 	return new_vertices, pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_index)
 end
 
-local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table)
+local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table, settings)
 	assert(prim.mode == nil or prim.mode == 4)
 
 	local layouts = generate_layouts(gltfscene, prim.attributes)
+
+	if find_layout(layouts, "COLOR_0") then
+		settings["COLOR_0"] = true
+	end
 
 	local numv = gltfutil.num_vertices(prim, gltfscene)
 	local vertices = fetch_vertices(layouts, gltfbin, numv, ib_table == nil)
@@ -624,7 +692,7 @@ local function save_meshbin_files(resname, meshgroup)
 end
 
 
- local function export_meshbin(gltfscene, bindata, exports)
+ local function export_meshbin(gltfscene, bindata, exports, settings)
 	exports.mesh = {}
 	local meshes = gltfscene.meshes
 	if meshes == nil then
@@ -644,7 +712,7 @@ end
 				group.ib = fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1], ib_table)
 			end
 
-			group.vb = fetch_vb_buffers(gltfscene, bindata, prim, ib_table)
+			group.vb = fetch_vb_buffers(gltfscene, bindata, prim, ib_table, settings)
 			local bb = create_prim_bounding(gltfscene, prim)
 			if bb then
 				local aabb = math3d.aabb(bb.aabb[1], bb.aabb[2])
@@ -696,9 +764,9 @@ end
 	end
 end ]]
 
-return function (_, glbdata, exports)
+return function (_, glbdata, exports, settings)
 	joint_trees = {}
-	export_meshbin(glbdata.info, glbdata.bin, exports)
+	export_meshbin(glbdata.info, glbdata.bin, exports, settings)
 	export_skinbin(glbdata.info, glbdata.bin, exports)
 	return exports
 end

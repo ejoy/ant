@@ -32,59 +32,61 @@ function EffectView:update()
     self.path:update()
     self.speed:update()
     local template = hierarchy:get_template(self.eid)
-    --ui_auto_play[1] = template.template.data.auto_play
-    ui_loop[1] = template.template.data.loop
+    ui_auto_play[1] = template.template.data.efk.auto_play or false
+    ui_loop[1] = template.template.data.efk.loop or false
 end
 
 function EffectView:show()
     BaseView.show(self)
+    imgui.cursor.Separator()
     self.path:show()
     self.speed:show()
-    -- imgui.widget.PropertyLabel("auto_play")
-    -- if imgui.widget.Checkbox("##auto_play", ui_auto_play) then
-    --     self:on_set_auto_play(ui_auto_play[1])
-    -- end
+    imgui.widget.PropertyLabel("auto_play")
+    if imgui.widget.Checkbox("##auto_play", ui_auto_play) then
+        self:on_set_auto_play(ui_auto_play[1])
+    end
     imgui.widget.PropertyLabel("loop")
     if imgui.widget.Checkbox("##loop", ui_loop) then
         self:on_set_loop(ui_loop[1])
     end
-    imgui.widget.PropertyLabel("Play")
+    imgui.cursor.Separator()
     if imgui.widget.Button("Play") then
-        -- local instance = world:entity(self.eid).effect_instance
-        -- instance.playid = effekseer.play(instance.handle, instance.playid)
-        -- effekseer.set_speed(instance.handle, instance.playid, instance.speed)
         local e <close> = w:entity(self.eid)
         iefk.play(e)
+    end
+    imgui.cursor.SameLine()
+    if imgui.widget.Button("Stop") then
+        local e <close> = w:entity(self.eid)
+        iefk.stop(e)
     end
 end
 
 function EffectView:on_get_speed()
-    local e <close> = w:entity(self.eid, "efk:in")
-    return e.efk.speed
+    local tpl = hierarchy:get_template(self.eid)
+    return tpl.template.data.efk.speed or 1.0
 end
 
 function BaseView:on_get_path()
     local tpl = hierarchy:get_template(self.eid)
-    return tpl.template.data.efk
+    return tpl.template.data.efk.path
 end
 
 function EffectView:on_set_speed(value)
-    -- local template = hierarchy:get_template(self.eid)
-    -- template.template.data.speed = value
-    -- local instance = world:entity(self.eid).efk
-    -- instance.speed = value
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.efk.speed = value
     local e <close> = w:entity(self.eid)
     iefk.set_speed(e, value)
 end
 
 function EffectView:on_set_auto_play(value)
     local template = hierarchy:get_template(self.eid)
-    template.template.data.auto_play = value
+    template.template.data.efk.auto_play = value
 end
 
 function EffectView:on_set_loop(value)
-    local e <close> = w:entity(self.eid, "efk:in")
-    e.efk.loop = value
+    local template = hierarchy:get_template(self.eid)
+    template.template.data.efk.loop = value
+    local e <close> = w:entity(self.eid)
     iefk.set_loop(e, value)
 end
 

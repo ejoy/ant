@@ -154,15 +154,18 @@ function m:clone(eid)
     end
     local dsttpl = utils.deep_copy(srctpl.template)
     local tmp = utils.deep_copy(dsttpl)
-    local e <close> = w:entity(eid, "name:in scene:in")
-    local pid = e.scene.parent > 0 and e.scene.parent or self.root
-    local name = e.name .. "copy"
+    local e <close> = w:entity(eid, "name:in scene?in")
+    if not e.scene then
+        print("can not clone noscene node.")
+        return
+    end
+    local name = e.name .. "_copy"
     tmp.data.name = name
+    local pid = e.scene.parent > 0 and e.scene.parent or self.root
     tmp.data.scene.parent = pid
     if e.scene.slot then
         tmp.data.on_ready = function (obj) hierarchy:update_slot_list(world) end
     end
-
     local new_entity = ecs.create_entity(tmp)
     dsttpl.data.name = name
     self:add_entity(new_entity, pid, dsttpl)
@@ -475,7 +478,7 @@ function m:open(filename)
     self.prefab_template = serialize.parse(filename, cr.read_file(filename))
     for _, value in ipairs(self.prefab_template) do
         if value.data and value.data.efk then
-            self.check_effect_preload(value.data.efk)
+            self.check_effect_preload(value.data.efk.path)
         end
     end
     -- check_animation(self.prefab_template)
@@ -611,7 +614,13 @@ function m:add_effect(filename)
             name = "root",
             tag = {"effect"},
             scene = {parent = gizmo.target_eid},
-            efk = filename,
+            efk = {
+                path = filename,
+                auto_play = false,
+                loop = false,
+                speed = 1.0,
+                visible = true
+            }
 		},
     }
     local tpl = utils.deep_copy(template)
