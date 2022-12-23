@@ -1,4 +1,4 @@
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
 
 #include "rdebug_delayload.h"
 #include <lua.hpp>
