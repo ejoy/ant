@@ -455,6 +455,7 @@ local function pack_vertex_data(layouts, vertices)
 	local weights_attrib_idx 					= find_layout_idx(layouts, "WEIGHTS_0")
 	for iv=1, #vertices do
 		local v = vertices[iv]
+		--[[ texcoord will be integer overflow.
 		if texcoord_attrib_idx  then
 			local texture_coord = load_attrib_math3dvec(texcoord_attrib_idx , v)
 			local fv = table.pack(math3d.index(texture_coord, 1, 2))
@@ -462,7 +463,7 @@ local function pack_vertex_data(layouts, vertices)
 			local fmt = ('h'):rep(2)
 			local tc = fmt:pack(table.unpack(fv))
 			v[texcoord_attrib_idx ] = tc
-		end
+		end ]]
 		if weights_attrib_idx then
 			local weights = load_attrib_math3dvec(weights_attrib_idx, v)
 			local fv = table.pack(math3d.index(weights, 1, 2, 3, 4))
@@ -480,9 +481,9 @@ local function pack_vertex_data(layouts, vertices)
 	if need_pack_tangent_frame then
 		layouts[tangent_attrib_idx].layout = "T40nii"
 	end
-	if texcoord_attrib_idx  then
+--[[ 	if texcoord_attrib_idx  then
 		layouts[texcoord_attrib_idx ].layout = "t20nii"
-	end
+	end ]]
 	if weights_attrib_idx then
 		layouts[weights_attrib_idx].layout = "w40nii"
 	end
