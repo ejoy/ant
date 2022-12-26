@@ -11,6 +11,7 @@
 #include "pbr/material_info.sh"
 
 #include "pbr/indirect_lighting.sh"
+#include "pbr/surface_shading.sh"
 
 // https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_lights_punctual/README.md#range-property
 float get_range_attenuation(float range, float dis)

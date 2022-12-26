@@ -112,9 +112,7 @@ void evaluateDirectionalLight(const MaterialInputs material,
     if (light.NoL <= 0.0) {
         return;
     }
-
-    float visibility = 1.0;
-    color.rgb += surfaceShading(pixel, light, visibility);
+    color.rgb += surfaceShading(pixel, light, 1.0);
 }
 
 
