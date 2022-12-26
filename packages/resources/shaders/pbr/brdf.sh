@@ -1,3 +1,6 @@
+#ifndef __PBR_BRDF__
+#define __PBR_BRDF__
+
 #include "common/math.sh"
 
 //------------------------------------------------------------------------------
@@ -254,3 +257,5 @@ float diffuse(float roughness, float NoV, float NoL, float LoH) {
     return Fd_Burley(roughness, NoV, NoL, LoH);
 #endif
 }
+
+#endif //__PBR_BRDF__

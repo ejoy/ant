@@ -1,3 +1,5 @@
+#ifndef __SURFACE_SHADING_SH__
+#define __SURFACE_SHADING_SH__
 
 #include "brdf.sh"
 
@@ -151,3 +153,4 @@ vec3 surfaceShading(const material_info pixel, const Light light, float occlusio
     return (color * light.colorIntensity.rgb) *
             (light.colorIntensity.w * light.attenuation * NoL * occlusion);
 }
+#endif //__SURFACE_SHADING_SH__

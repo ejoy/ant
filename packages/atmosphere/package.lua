@@ -1,5 +1,5 @@
 return {
-	name = "ant.weather",
+	name = "ant.atmosphere",
     dependencies = {
         "ant.timer",
         "ant.math",
