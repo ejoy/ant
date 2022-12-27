@@ -105,7 +105,7 @@ end
 
 local platform_relates = {
 	windows = {
-		renderer="DIRECT3D11",
+		renderer="VULKAN",
 	},
 	macos = {
 		renderer="METAL",
