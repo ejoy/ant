@@ -40,6 +40,7 @@
 12. 优化bgfx的draw viewid和compute shader viewid；
 13. 调整iOS和Android下的ASTC压缩格式。目前强制使用了ASTC4x4，因为之前bgfx不支持ASTC6x6，最近更新了，看看是否ASTC的格式都支持全了；
 14. 在全平台下使用bgfx vulkan的API。目前windows下测试是没有问题的。还需要的工作包括：iOS下，使用KhronosGroup/MoltenVK库，让iOS支持vulkan；其次，windows平台下，需要把相应的runtime dll带到相应的开发目录和发布目录里面（和目前fmod一样）；
+15. 将lightmap重新激活；
 
 #### 新功能/探索
 ##### 已经完成
