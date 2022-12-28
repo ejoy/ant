@@ -3,7 +3,7 @@
 #endif //BGFX_SHADER_H_HEADER_GUARD
 
 #ifdef GPU_SKINNING
-#   define BGFX_CONFIG_MAX_BONES 256
+#   define BGFX_CONFIG_MAX_BONES 255
 
 #   define INPUT_INDICES   a_indices
 #   define INPUT_WEIGHT    a_weight
