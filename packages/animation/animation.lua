@@ -157,7 +157,7 @@ function ani_sys:component_init()
 		e.skeleton = assetmgr.resource(e.skeleton)
 		local skin = assetmgr.resource(e.meshskin)
 		local count = skin.joint_remap and skin.joint_remap:count() or #e.skeleton._handle
-		if count > 128 then
+		if count > 64 then
 			error(("skinning matrices are too large, max is 128, %d needed"):format(count))
 		end
 		e.meshskin = {
