@@ -186,7 +186,7 @@ local function update_ssct_properties(material)
 end
 
 function ssao_sys:init_world()
-    local vr = mu.calc_viewport(mu.copy_viewrect(world.args.viewport), ssao_configs.resolution)
+    local vr = mu.calc_viewport(world.args.viewport, ssao_configs.resolution)
     local rbidx = create_rbidx(vr.w, vr.h)
 
     local aod = w:first "ssao_dispatcher dispatch:in"
@@ -264,14 +264,16 @@ function ssao_sys:data_changed()
     for _, _, vr in mqvr_mb:unpack() do
         local aod = w:first "ssao_dispatcher dispatch:in"
         local bfd = w:first "bilateral_filter_dispatcher dispatch:in"
-        fbmgr.resize_rb(aod.dispatch.rb_idx, vr.w, vr.h)
+        local new_vr = mu.calc_viewport(vr, ssao_configs.resolution)
+
+        fbmgr.resize_rb(aod.dispatch.rb_idx, new_vr.w, new_vr.h)
         local sa = imaterial.system_attribs()
         sa:update("s_ssao", fbmgr.get_rb(aod.dispatch.rb_idx).handle)
 
-        fbmgr.resize_rb(bfd.dispatch.rb_idx, vr.w, vr.h)
+        fbmgr.resize_rb(bfd.dispatch.rb_idx, new_vr.w, new_vr.h)
 
-        icompute.calc_dispatch_size_2d(vr.w, vr.h, aod.dispatch.size)
-        icompute.calc_dispatch_size_2d(vr.w, vr.h, bfd.dispatch.size)
+        icompute.calc_dispatch_size_2d(new_vr.w, new_vr.h, aod.dispatch.size)
+        icompute.calc_dispatch_size_2d(new_vr.w, new_vr.h, bfd.dispatch.size)
     end
 end
 
