@@ -239,13 +239,12 @@ end
 
 function imodifier.create_bone_modifier(target, group_id, filename, bone_name)
     local anim_prefab = ecs.create_instance(filename)
-    return {
-        eid = imodifier.create_srt_modifier(target, group_id, function (time)
+    local modifier = imodifier.create_srt_modifier(target, group_id, function (time)
             local anim <close> = w:entity(anim_prefab.tag["*"][1], "anim_ctrl:in skeleton:in")
             local pr = anim.anim_ctrl.pose_result
             return pr:joint(anim.skeleton._handle:joint_index(bone_name)), anim.anim_ctrl.play_state.play
-        end),
-        anim_eid = anim_prefab
-    }
+        end)
+    modifier.anim_eid = anim_prefab
+    return modifier
 end
 
