@@ -144,10 +144,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
                     imaterial.set_property(e, self.property, self.init_value)
                 end,
                 update = function(self, time)
-                    if not self.target then
-                        return
-                    end
-                    if not self.foreupdate and not self.continue then
+                    if not self.target or (not self.foreupdate and not self.continue) then
                         return
                     end
                     local value, running = get_value(self.kfeid, time)
@@ -162,14 +159,30 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
             }
         }
     }
-    local eid = ecs.create_entity(template)
     return {
-        eid = eid,
+        eid = ecs.create_entity(template),
         anim_eid = kfeid
     }
 end
 
-function imodifier.create_srt_modifier(target, group_id, generator, keep)
+function imodifier.create_srt_modifier(target, group_id, generator, keep, foreupdate)
+    local anim_eid
+    if type(generator) == "table" then
+        anim_eid = ika.create(generator)
+        local function get_value(kfe, time)
+            local e <close> = w:entity(kfe, "keyframe:in")
+            local kfanim = e.keyframe
+            return kfanim.play_state.current_value, kfanim.play_state.playing
+        end
+        generator = function(time)
+            local srt, running = get_value(anim_eid, time)
+            srt = srt or {1, 0, 0, 0, 0, 0, 0}
+            return math3d.matrix({s = srt[1],
+                r = math3d.quaternion{math.rad(srt[2]), math.rad(srt[3]), math.rad(srt[4])},
+                t = {srt[5], srt[6], srt[7]}}), running
+        end
+    end
+    
 	local template = {
 		policy = {
             "ant.general|name",
@@ -185,17 +198,18 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep)
                 target = target,
                 continue = false,
                 keep = keep,
+                foreupdate = foreupdate,
                 reset = function (self)
                     local e <close> = w:entity(self.target)
                     iom.set_srt_offset_matrix(e, mc.IDENTITY_MAT)
                 end,
                 update = function(self, time)
-                    if not self.continue or not self.target then
+                    if not self.target or (not self.foreupdate and not self.continue) then
                         return
                     end
                     local value, running = generator(time)
                     local apply_value = value
-                    if not running and not self.keep then
+                    if not running and not self.keep and not self.foreupdate then
                         apply_value = mc.IDENTITY_MAT
                     end
                     local e <close> = w:entity(self.target)
@@ -205,7 +219,10 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep)
             },
 		},
     }
-    return ecs.group(group_id):create_entity(template)
+    return {
+        eid = ecs.group(group_id):create_entity(template),
+        anim_eid = anim_eid
+    }
 end
 
 function imodifier.start(m, desc)

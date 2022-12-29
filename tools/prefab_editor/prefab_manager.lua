@@ -147,6 +147,15 @@ function m:update_default_light(enable)
     end
 end
 
+function m:show_ground(enable)
+    if not enable then
+        w:remove(self.plane)
+        self.plane = nil
+    else
+        self:create_ground()
+    end
+end
+
 function m:clone(eid)
     local srctpl = hierarchy:get_template(eid)
     if srctpl.filename then
@@ -516,26 +525,8 @@ end
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local tile_tex
-function m:reset_prefab()
-    for _, e in ipairs(self.entities) do
-        on_remove_entity(e)
-        w:remove(e)
-    end
-    imodifier.set_target(imodifier.highlight, nil)
-    light_gizmo.clear()
-    hierarchy:clear()
-    anim_view.clear()
-    self.root = create_simple_entity("scene root")
-    self.entities = {}
-    world:pub {"WindowTitle", ""}
-    world:pub {"ResetEditor", ""}
-    world:pub {"UpdateAABB"}
-    hierarchy:set_root(self.root)
-    self.prefab_filename = nil
-    self.prefab_template = nil
-    self.prefab_instance = nil
-    gizmo:set_target()
 
+function m:create_ground()
     if not tile_tex then
         tile_tex = bgfx.create_texture2d(4, 4, true, 1, "RGBA8", "uwvwww-l+p*l", bgfx.memory_buffer("bbbb", {
             100, 100, 100, 255,100, 100, 100, 255,200, 200, 200, 255,200, 200, 200, 255,
@@ -563,11 +554,34 @@ function m:reset_prefab()
                 name        = "ground",
                 on_ready = function (e)
                     -- imaterial.set_property(e, "s_basecolor", tile_tex)
+                    -- ivs.set_state(e, "main_view", false)
                     imaterial.set_property(e, "u_uvmotion", math3d.vector{0, 0, 100, 100})
                 end
             },
         }
     end
+end
+
+function m:reset_prefab()
+    for _, e in ipairs(self.entities) do
+        on_remove_entity(e)
+        w:remove(e)
+    end
+    imodifier.set_target(imodifier.highlight, nil)
+    light_gizmo.clear()
+    hierarchy:clear()
+    anim_view.clear()
+    self.root = create_simple_entity("scene root")
+    self.entities = {}
+    world:pub {"WindowTitle", ""}
+    world:pub {"ResetEditor", ""}
+    world:pub {"UpdateAABB"}
+    hierarchy:set_root(self.root)
+    self.prefab_filename = nil
+    self.prefab_template = nil
+    self.prefab_instance = nil
+    gizmo:set_target()
+    self:create_ground()
 end
 
 function m:reload()
