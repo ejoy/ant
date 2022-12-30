@@ -274,19 +274,19 @@ local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, direction, road_ty
         vb[#vb+1] = table.concat(v, "")
     elseif direction == 180 then
         local v = {
-            packfmt:pack(ox, oy, oz, u00, v01, u10, v10, ns1, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v20),
-            packfmt:pack(ox, oy, nz, u00, v00, u10, v11, ns2, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v21),
-            packfmt:pack(nx, ny, nz, u01, v00, u11, v11, ns3, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v21),
-            packfmt:pack(nx, ny, oz, u01, v01, u11, v10, ns4, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v20) 
+            packfmt:pack(ox, oy, oz, u00, v01, u11, v10, ns1, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v20),
+            packfmt:pack(ox, oy, nz, u00, v00, u11, v11, ns2, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v21),
+            packfmt:pack(nx, ny, nz, u01, v00, u10, v11, ns3, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v21),
+            packfmt:pack(nx, ny, oz, u01, v01, u10, v10, ns4, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v20) 
           
         }
         vb[#vb+1] = table.concat(v, "")         
     elseif direction == 270 then
         local v = {
-            packfmt:pack(ox, oy, oz, u00, v01, u11, v10, ns1, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v20),
-            packfmt:pack(ox, oy, nz, u00, v00, u10, v10, ns2, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v21),
-            packfmt:pack(nx, ny, nz, u01, v00, u10, v11, ns3, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v21),
-            packfmt:pack(nx, ny, oz, u01, v01, u11, v11, ns4, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v20) 
+            packfmt:pack(ox, oy, oz, u00, v01, u10, v10, ns1, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v20),
+            packfmt:pack(ox, oy, nz, u00, v00, u11, v10, ns2, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v21),
+            packfmt:pack(nx, ny, nz, u01, v00, u11, v11, ns3, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v21),
+            packfmt:pack(nx, ny, oz, u01, v01, u10, v11, ns4, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v20) 
           
         }
         vb[#vb+1] = table.concat(v, "")      
