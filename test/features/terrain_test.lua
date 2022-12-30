@@ -13,21 +13,25 @@ function terrain_test_sys:init()
 end
 
 -- world coordinate x
--- world coordinate y 
--- road's type (I L T U X)
+-- world coordinate y
+-- road's type (Road Red White) 
+-- road's shape 
+    --Road  (I L T U X O)
+    --Red   (U I O)
+    --White (U I O)
 -- road's dirction (N E S W)
 local create_list = {
-    {1, 1, "L", "W"},
-    {2, 1, "I", "E"},
-    {3, 1, "L", "N"},
-    {1, 2, "I", "N"},
-    {3, 2, "I", "N"},
-    {1, 3, "L", "S"},
-    {2, 3, "I", "E"},
-    {3, 3, "L", "E"},
-    {7, 1, "I", "N"},
-    {8, 1, "I", "N"},
-    {9, 1, "I", "N"},
+    {1, 2, "Red", "U", "S"},
+    {2, 2, "Red", "U", "E"},
+    {3, 2, "Red", "U", "W"},
+    {4, 2, "Red", "O", "N"},
+    {1, 1, "Red", "U", "N"},
+    {2, 1, "White", "U", "E"},
+    {3, 1, "White", "I", "W"},
+    {4, 1, "White", "U", "W"},
+    {7, 1, "Road", "I", "N"},
+    {8, 1, "Road", "I", "N"},
+    {9, 1, "Road", "I", "N"},
 }
 
 local mark = false

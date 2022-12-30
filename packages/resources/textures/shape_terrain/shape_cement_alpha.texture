@@ -6,9 +6,9 @@ maxsize: 1024x1024
 mipmap: 0
 path: /pkg/ant.resources.binary/terrain/shapes/cement_alpha.dds
 sampler:
-  MAG: LINEAR
-  MIN: LINEAR
-  MIP: LINEAR
+  MAG: POINT
+  MIN: POINT
+  MIP: POINT
   U: WRAP
   V: WRAP
 type: texture

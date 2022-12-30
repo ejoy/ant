@@ -9,7 +9,15 @@ input_attributes cement_attribs = (input_attributes)0;
 
     sand_attribs.basecolor   = get_terrain_basecolor(uv, vec4(1.0, 1.0, 1.0, 1.0), sand_color_idx);
     stone_attribs.basecolor  = get_terrain_basecolor(uv, vec4(1.0, 1.0, 1.0, 1.0), stone_color_idx);
-    cement_attribs.basecolor = get_terrain_basecolor(uv, vec4(1.0, 1.0, 1.0, 1.0), 5);
+    if(road_type >= 0.9 && road_type <= 1.1){
+        cement_attribs.basecolor = get_terrain_basecolor(uv, vec4(1.0, 1.0, 1.0, 1.0), 5);
+    }
+    else if(road_type >= 1.9 && road_type <= 2.1){
+        cement_attribs.basecolor = get_terrain_basecolor(uv, vec4(1.0, 1.0, 1.0, 1.0), 6);
+    }
+    else if(road_type >= 2.9 && road_type <= 3.1){
+        cement_attribs.basecolor = get_terrain_basecolor(uv, vec4(1.0, 1.0, 1.0, 1.0), 7);
+    }
 
     sand_attribs.emissive   = get_emissive_color(uv);
     stone_attribs.emissive  = get_emissive_color(uv);

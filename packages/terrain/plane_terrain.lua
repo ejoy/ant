@@ -115,15 +115,21 @@ function cterrain_fields:init()
         for iw = 1, width do
             local idx = (ih - 1) * width + iw
             local f = tf[idx]
-            local a_type, a_dir
+            local a_type, a_shape, a_dir
             if f.type == nil then
                 a_dir = 1
             else
-                a_type = string.sub(f.type, 1, 1)
-                a_dir  = string.sub(f.type, -1, -1)
+                a_type  = string.sub(f.type, 1, 1)
+                f.alpha_type = a_type
+                a_shape = string.sub(f.type, 2, 2)
+                a_dir   = string.sub(f.type, 3, 3)
             end
-            if a_type == "U" then
-                f.alpha_type = 1
+            if a_shape == "U" then
+                if f.alpha_type == "1" then
+                    f.alpha_shape = 1
+                else
+                    f.alpha_shape = 8
+                end
                 if a_dir == "1" then
                     f.alpha_direction = 0
                 elseif a_dir == "2" then
@@ -133,15 +139,25 @@ function cterrain_fields:init()
                 elseif a_dir == "4" then
                     f.alpha_direction = 270
                 end
-            elseif a_type == "I" then
-                f.alpha_type = 2
+            elseif a_shape == "I" then
+                if f.alpha_type == "1" then
+                    f.alpha_shape = 2
+                else
+                    f.alpha_shape = 10
+                end
                 if a_dir == "1" then
                     f.alpha_direction = 90
                 elseif a_dir == "2" then
                     f.alpha_direction = 0
+                    
+                elseif a_dir == "3" then
+                    f.alpha_direction = 270
+                    
+                elseif a_dir == "4" then
+                    f.alpha_direction = 180
                 end
-            elseif a_type == "L" then
-                f.alpha_type = 3
+            elseif a_shape == "L" then
+                f.alpha_shape = 3
                 if a_dir == "1" then
                     f.alpha_direction = 180
                 elseif a_dir == "2" then
@@ -151,8 +167,8 @@ function cterrain_fields:init()
                 elseif a_dir == "4" then
                     f.alpha_direction = 90
                 end
-            elseif a_type == "T" then
-                f.alpha_type = 4
+            elseif a_shape == "T" then
+                f.alpha_shape = 4
                 if a_dir == "1" then
                     f.alpha_direction = 0
                 elseif a_dir == "2" then
@@ -162,12 +178,16 @@ function cterrain_fields:init()
                 elseif a_dir == "4" then
                     f.alpha_direction = 90
                 end
-            elseif a_type == "X" then
-                f.alpha_type = 5
-            elseif a_type == 'O' then
-                f.alpha_type = 7
+            elseif a_shape == "X" then
+                f.alpha_shape = 5
+            elseif a_shape == 'O' then    
+                if f.alpha_type == "1" then
+                    f.alpha_shape = 7
+                else
+                    f.alpha_shape = 9
+                end
             else
-                f.alpha_type = 6
+                f.alpha_shape = 6
             end                         
             
         end
@@ -176,12 +196,13 @@ end
 
 local packfmt<const> = "fffffffffffffff"
 
-local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, direction, terrain_type, cement_type, sand_color_idx, stone_color_idx, stone_normal_idx, width)
+local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, direction, road_type, road_shape, sand_color_idx, stone_color_idx, stone_normal_idx, width)
     local grid_type
-    if terrain_type == nil then
+    -- road_type ground/road/red/white
+    if road_type == nil then
         grid_type = 0.0
     else
-        grid_type = 1.0
+        grid_type = road_type
     end
     local ox, oy, oz = table.unpack(origin)
     local nx, ny, nz = ox + extent[1], oy + extent[2], oz + extent[3]
@@ -236,36 +257,36 @@ local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, direction, terrain
 
     if direction == 0 or direction == nil then
         local v = {
-            packfmt:pack(ox, oy, oz, u00, v01, u10, v11, ns1, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u20, v20),
-            packfmt:pack(ox, oy, nz, u00, v00, u10, v10, ns2, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u20, v21),
-            packfmt:pack(nx, ny, nz, u01, v00, u11, v10, ns3, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u21, v21),
-            packfmt:pack(nx, ny, oz, u01, v01, u11, v11, ns4, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u21, v20)            
+            packfmt:pack(ox, oy, oz, u00, v01, u10, v11, ns1, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v20),
+            packfmt:pack(ox, oy, nz, u00, v00, u10, v10, ns2, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v21),
+            packfmt:pack(nx, ny, nz, u01, v00, u11, v10, ns3, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v21),
+            packfmt:pack(nx, ny, oz, u01, v01, u11, v11, ns4, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v20)            
         }
         vb[#vb+1] = table.concat(v, "")
     elseif direction == 90 then
         local v = {
-            packfmt:pack(ox, oy, oz, u00, v01, u11, v11, ns1, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u20, v20),
-            packfmt:pack(ox, oy, nz, u00, v00, u10, v11, ns2, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u20, v21),
-            packfmt:pack(nx, ny, nz, u01, v00, u10, v10, ns3, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u21, v21),
-            packfmt:pack(nx, ny, oz, u01, v01, u11, v10, ns4, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u21, v20) 
+            packfmt:pack(ox, oy, oz, u00, v01, u11, v11, ns1, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v20),
+            packfmt:pack(ox, oy, nz, u00, v00, u10, v11, ns2, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v21),
+            packfmt:pack(nx, ny, nz, u01, v00, u10, v10, ns3, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v21),
+            packfmt:pack(nx, ny, oz, u01, v01, u11, v10, ns4, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v20) 
           
         }
         vb[#vb+1] = table.concat(v, "")
     elseif direction == 180 then
         local v = {
-            packfmt:pack(ox, oy, oz, u00, v01, u11, v10, ns1, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u20, v20),
-            packfmt:pack(ox, oy, nz, u00, v00, u11, v11, ns2, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u20, v21),
-            packfmt:pack(nx, ny, nz, u01, v00, u10, v11, ns3, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u21, v21),
-            packfmt:pack(nx, ny, oz, u01, v01, u10, v10, ns4, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u21, v20) 
+            packfmt:pack(ox, oy, oz, u00, v01, u10, v10, ns1, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v20),
+            packfmt:pack(ox, oy, nz, u00, v00, u10, v11, ns2, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v21),
+            packfmt:pack(nx, ny, nz, u01, v00, u11, v11, ns3, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v21),
+            packfmt:pack(nx, ny, oz, u01, v01, u11, v10, ns4, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v20) 
           
         }
         vb[#vb+1] = table.concat(v, "")         
     elseif direction == 270 then
         local v = {
-            packfmt:pack(ox, oy, oz, u00, v01, u10, v10, ns1, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u20, v20),
-            packfmt:pack(ox, oy, nz, u00, v00, u11, v10, ns2, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u20, v21),
-            packfmt:pack(nx, ny, nz, u01, v00, u11, v11, ns3, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u21, v21),
-            packfmt:pack(nx, ny, oz, u01, v01, u10, v11, ns4, stone_normal_idx, grid_type, cement_type, sand_color_idx, stone_color_idx, u21, v20) 
+            packfmt:pack(ox, oy, oz, u00, v01, u11, v10, ns1, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v20),
+            packfmt:pack(ox, oy, nz, u00, v00, u10, v10, ns2, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u20, v21),
+            packfmt:pack(nx, ny, nz, u01, v00, u10, v11, ns3, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v21),
+            packfmt:pack(nx, ny, oz, u01, v01, u11, v11, ns4, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, u21, v20) 
           
         }
         vb[#vb+1] = table.concat(v, "")      
@@ -310,7 +331,7 @@ local function build_mesh(sectionsize, sectionidx, unit, cterrainfileds, width)
                     stone_normal_idx = 2
                 end
                 local uv1 = uv0
-                add_quad(vb, origin, extent, uv0, uv1, xx, yy, field.alpha_direction, field.type, field.alpha_type - 1, sand_color_idx, stone_color_idx, stone_normal_idx, width)
+                add_quad(vb, origin, extent, uv0, uv1, xx, yy, field.alpha_direction, field.alpha_type, field.alpha_shape - 1, sand_color_idx, stone_color_idx, stone_normal_idx, width)
             end
         end
     end

@@ -38,8 +38,8 @@ uniform vec4 u_cement_pbr_factor;
 
 #define sand_alpha          v_idx1.x
 #define stone_normal_idx    v_idx1.y
-#define terrain_alpha_type  v_idx2.x
-#define cement_alpha_type   v_idx2.y
+#define road_type           v_idx2.x
+#define road_shape          v_idx2.y
 #define sand_color_idx      v_idx2.z
 #define stone_color_idx     v_idx2.w
 
@@ -67,7 +67,7 @@ void main()
     vec4 texture_cement  = compute_lighting(cement_attribs);
 
     float a_sand   = sand_alpha;
-    float a_cement = texture2DArray(s_cement_alpha, vec3(v_texcoord1, cement_alpha_type) );
+    float a_cement = texture2DArray(s_cement_alpha, vec3(v_texcoord1, road_shape) );
     //terrain's basecolor height should use v_texcoord2, represent 4x4 grid per texture
     float d_sand   = texture2DArray(s_height, vec3(v_texcoord2, 0.0) );
     float d_stone  = texture2DArray(s_height, vec3(v_texcoord2, 1.0) );
@@ -83,19 +83,21 @@ void main()
     float f2 = 1 - sub2;
     texture_stone.w = sub2;   
 
-       vec4 texture_ground =  vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1.0), 1.0);
+    vec4 texture_ground =  vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1.0), 1.0);
 
-    if(terrain_alpha_type >= 0.9 && terrain_alpha_type <= 1.1){
-        vec4 texture_ground =  vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1.0), 1.0);
+    if(road_type >= 0.9 && road_type <= 1.1){
         gl_FragColor = vec4(blend(texture_cement, 1 - a_cement, d_cement, texture_ground, a_cement, d_stone), 1.0);
         //gl_FragColor = vec4(1 - a_cement > a_cement ? texture_cement.xyz : vec3(0,0,0), 1.0);
+    }
+    else if((road_type >= 1.9 && road_type <= 2.1) || (road_type >= 2.9 && road_type <= 3.1)){
+        gl_FragColor = a_cement < 1.0 ? texture_cement : texture_ground;
     }
     else{
         gl_FragColor = texture_ground;
     }      
 
 /*     vec4 texture_ground =  vec4(mul(stone_attribs.basecolor.xyz, texture_sand.w) + mul(sand_attribs.basecolor.xyz, 1), 1.0);
-    if(terrain_alpha_type >= 0.9 && terrain_alpha_type <= 1.1){
+    if(road_type >= 0.9 && road_type <= 1.1){
         gl_FragColor = vec4(blend(cement_attribs.basecolor, 1 - a_cement, d_cement, texture_ground, a_cement, d_stone), 1.0);
     }
     else{

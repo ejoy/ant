@@ -24,22 +24,29 @@ local function calc_section_idx(idx)
     return y // size * (height / size)  + x // size + 1
 end
 
-local function parse_terrain_type_dir(type, dir)
-    local t, d
-    if type == "U" then
-        t = "U"
-    elseif type == "I" then
-        t = "I"
-    elseif type == "L" then
-        t = "L"
-    elseif type == "T" then
-        t = "T"
-    elseif type == "X" then
-        t = "X"
-    elseif type == "O" then
-        t = "O"
+local function parse_terrain_type_dir(type, shape, dir)
+    local t, s, d
+    if type == "Road" then
+        t = "1"
+    elseif type == "Red" then
+        t = "2"
+    elseif type == "White" then
+        t = "3"
+    end
+    if shape == "U" then
+        s = "U"
+    elseif shape == "I" then
+        s = "I"
+    elseif shape == "L" then
+        s = "L"
+    elseif shape == "T" then
+        s = "T"
+    elseif shape == "X" then
+        s = "X"
+    elseif shape == "O" then
+        s = "O"
     else
-        t = "D"
+        s = "D"
     end
 
     if dir == "N" then
@@ -51,7 +58,7 @@ local function parse_terrain_type_dir(type, dir)
     elseif dir == "W" then
         d = "4"
     end
-    return t..d
+    return t..s..d
 end
 
 local function calc_shape_terrain(unit)
@@ -87,9 +94,9 @@ end
 function iterrain.create_roadnet_entity(create_list)
     for ii = 1, #create_list do
         local cl = create_list[ii]
-        local x, y, type, dir = cl[1] + terrain_width_offset, cl[2] + terrain_height_offset, cl[3], cl[4]
+        local x, y, type, shape, dir = cl[1] + terrain_width_offset, cl[2] + terrain_height_offset, cl[3], cl[4], cl[5]
         local idx = calc_tf_idx(x, y, terrain_width)
-        local road = parse_terrain_type_dir(type, dir)
+        local road = parse_terrain_type_dir(type, shape, dir)
         terrain_fields[idx].type = road
         local section_idx = calc_section_idx(idx)
         if terrain_change[section_idx] == nil then
@@ -102,9 +109,9 @@ end
 function iterrain.update_roadnet_entity(update_list)
     for ii = 1, #update_list do
         local ul = update_list[ii]
-        local x, y, type, dir = ul[1] + terrain_width_offset, ul[2] + terrain_height_offset, ul[3], ul[4]
+        local x, y, type, shape, dir = ul[1] + terrain_width_offset, ul[2] + terrain_height_offset, ul[3], ul[4], ul[5]
         local idx = calc_tf_idx(x, y, terrain_width)
-        local road = parse_terrain_type_dir(type, dir)
+        local road = parse_terrain_type_dir(type, shape, dir)
         terrain_fields[idx].type = road
         local section_idx = calc_section_idx(idx)
         if terrain_change[section_idx] == nil then
