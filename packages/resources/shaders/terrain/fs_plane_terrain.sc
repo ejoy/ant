@@ -25,16 +25,19 @@ $input v_texcoord0 v_texcoord1 v_texcoord2 v_texcoord3 v_texcoord4 v_normal v_ta
 
 
 uniform vec4 u_sand_pbr_factor;
-#define u_sand_metallic_factor    u_sand_pbr_factor.x
-#define u_sand_roughness_factor   u_sand_pbr_factor.y
+#define u_sand_metallic_factor      u_sand_pbr_factor.x
+#define u_sand_roughness_factor     u_sand_pbr_factor.y
+#define u_sand_occlusion_factor     u_sand_pbr_factor.w
 
 uniform vec4 u_stone_pbr_factor;
-#define u_stone_metallic_factor    u_stone_pbr_factor.x
-#define u_stone_roughness_factor   u_stone_pbr_factor.y
+#define u_stone_metallic_factor     u_stone_pbr_factor.x
+#define u_stone_roughness_factor    u_stone_pbr_factor.y
+#define u_stone_occlusion_factor    u_stone_pbr_factor.w
 
 uniform vec4 u_cement_pbr_factor;
 #define u_cement_metallic_factor    u_cement_pbr_factor.x
 #define u_cement_roughness_factor   u_cement_pbr_factor.y
+#define u_cement_occlusion_factor   u_cement_pbr_factor.w
 
 #define sand_alpha          v_idx1.x
 #define stone_normal_idx    v_idx1.y

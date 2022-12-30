@@ -31,6 +31,7 @@ local LAST_main_camera
 
 local localSpace = {}
 local defaultLight = { true }
+local showground = { true }
 local camera_speed = {0.1, speed=0.05, min=0.01, max=10}
 local icons = require "common.icons"(assetmgr)
 
@@ -70,7 +71,10 @@ function m.show()
         if imgui.widget.Checkbox("DefaultLight", defaultLight) then
             world:pub { "UpdateDefaultLight", defaultLight[1] }
         end
-
+        imgui.cursor.SameLine()
+        if imgui.widget.Checkbox("ShowGround", showground) then
+            world:pub { "ShowGround", showground[1] }
+        end
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(64)
         camera_speed[1] = editor_setting.setting.camera.speed

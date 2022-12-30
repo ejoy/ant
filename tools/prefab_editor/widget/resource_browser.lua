@@ -143,7 +143,7 @@ local function rename_file(file)
         end
         imgui.cursor.SameLine()
         if imgui.widget.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
-            lfs.rename(file:localpath(), fs.path(tostring(file:parent_path() .. "/" .. tostring(new_filename.text))):localpath())
+            lfs.rename(file:localpath(), file:parent_path():localpath() / tostring(new_filename.text))
             renaming = false
         end
         imgui.cursor.SameLine()

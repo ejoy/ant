@@ -186,7 +186,7 @@ local function update_ssct_properties(material)
 end
 
 function ssao_sys:init_world()
-    local vr = mu.calc_viewport(mu.copy_viewrect(world.args.viewport), ssao_configs.resolution)
+    local vr = mu.calc_viewport(world.args.viewport, ssao_configs.resolution)
     local rbidx = create_rbidx(vr.w, vr.h)
 
     local aod = w:first "ssao_dispatcher dispatch:in"
@@ -205,7 +205,7 @@ end
 
 local texmatrix<const> = mu.calc_texture_matrix()
 
-local function calc_ssao_config(camera, lightdir, aobuf_w, aobuf_h, depthlevel)
+local function calc_ssao_config(camera, aobuf_w, aobuf_h, depthlevel)
     --calc projection scale
     ssao_configs.projection_scale = util.projection_scale(aobuf_w, aobuf_h, camera.projmat)
     ssao_configs.projection_scale_radius = ssao_configs.projection_scale * ssao_configs.radius
@@ -226,15 +226,14 @@ local function update_ao_frame_properties(dispatcher, ce)
     local camera = ce.camera
     local projmat = camera.projmat
 
-    local directional_light = w:first "directional_light scene:in"
-    local lightdir = directional_light and iom.get_direction(directional_light) or mc.ZAXIS
-
-    calc_ssao_config(camera, lightdir, aobuf_w, aobuf_h, depthlevel)
+    calc_ssao_config(camera, aobuf_w, aobuf_h, depthlevel)
 
     m.u_ssao_param4 = math3d.vector(
         1.0/rb.w, 1.0/rb.h, ssao_configs.max_level,
         ssao_configs.projection_scale_radius)
 
+    local directional_light = w:first "directional_light scene:in"
+    local lightdir = directional_light and iom.get_direction(directional_light) or mc.ZAXIS
     lightdir = math3d.normalize(math3d.inverse(math3d.transform(camera.viewmat, lightdir, 0)))
     local lx, ly, lz = math3d.index(lightdir, 1, 2, 3)
     m.u_ssct_param = math3d.vector(lx, ly, lz, ssao_configs.projection_scale)
@@ -264,14 +263,16 @@ function ssao_sys:data_changed()
     for _, _, vr in mqvr_mb:unpack() do
         local aod = w:first "ssao_dispatcher dispatch:in"
         local bfd = w:first "bilateral_filter_dispatcher dispatch:in"
-        fbmgr.resize_rb(aod.dispatch.rb_idx, vr.w, vr.h)
+        local new_vr = mu.calc_viewport(vr, ssao_configs.resolution)
+
+        fbmgr.resize_rb(aod.dispatch.rb_idx, new_vr.w, new_vr.h)
         local sa = imaterial.system_attribs()
         sa:update("s_ssao", fbmgr.get_rb(aod.dispatch.rb_idx).handle)
 
-        fbmgr.resize_rb(bfd.dispatch.rb_idx, vr.w, vr.h)
+        fbmgr.resize_rb(bfd.dispatch.rb_idx, new_vr.w, new_vr.h)
 
-        icompute.calc_dispatch_size_2d(vr.w, vr.h, aod.dispatch.size)
-        icompute.calc_dispatch_size_2d(vr.w, vr.h, bfd.dispatch.size)
+        icompute.calc_dispatch_size_2d(new_vr.w, new_vr.h, aod.dispatch.size)
+        icompute.calc_dispatch_size_2d(new_vr.w, new_vr.h, bfd.dispatch.size)
     end
 end
 

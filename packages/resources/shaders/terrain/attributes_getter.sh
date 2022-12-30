@@ -83,9 +83,9 @@ input_attributes cement_attribs = (input_attributes)0;
     cement_attribs.metallic              = clamp(cement_attribs.metallic, 0.0, 1.0);        
 
 
-    get_occlusion(uv, sand_attribs);
-    get_occlusion(uv, stone_attribs);
-    get_occlusion(uv, cement_attribs);
+    sand_attribs.occlusion              = u_sand_occlusion_factor;
+    stone_attribs.occlusion             = u_stone_occlusion_factor;
+    cement_attribs.occlusion            = u_cement_occlusion_factor;
 #endif //!MATERIAL_UNLIT
 
     sand_attribs.screen_uv   = get_normalize_fragcoord(gl_FragCoord.xy);
