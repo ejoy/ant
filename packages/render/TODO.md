@@ -8,8 +8,10 @@
 
 #### 优化
 ##### 已经完成
-1. 顶点压缩。
-  1)使用四元数多normal/tangent/bitangent进行压缩；(2022.11.08已经完成)
+1. 顶点相关：
+  - 顶点压缩。
+    1) 使用四元数多normal/tangent/bitangent进行压缩；(2022.11.08已经完成)
+    2) 使用更多的16bit的顶点数据，以更大程度上压缩顶点占用的数量；
 2. 后处理
   1) Bloom目前的效果并不好；(2022.11.08已经完成)
 3. 使用FXAA/TAA，解决bgfx在MSAA下，不同平台直接很多bug的问题。(2022.11.08已经完成)
@@ -18,29 +20,26 @@
 
 ##### 未完成
 1. 顶点相关：
-  - 顶点压缩。
-    1) 使用更多的16bit的顶点数据，以更大程度上压缩顶点占用的数量；
   - 顶点数据使用不同的流。目前所有顶点都打包到一个流里面，当某个着色器不会访问到对应的顶点数据的时候，相应的带宽就会被浪费掉了。但目前代码很多地方都依赖着只有一个流的逻辑，多个流的情况是否真的能够提交性能还需要验证；
-
 2. 着色器优化。尽可能使用mediump和lowp格式。目前默认全部都是highp格式；
-3. 后处理优化
+3. 转换到Vulkan（全平台支持，Mac和iOS使用MoltenVK）。（目前在window和mac下都能够正常运行vulkan，iOS还有一些编译的问题。2023/1/3）
+  1). 针对Vulkan上的subpass对渲染的render进行相应的优化；
+4. 后处理优化
   1) 后处理的DoF是时候要解决了。bgfx里面有一个one pass的DoF例子，非常值得参考；
   2) Color Grading需要用于调整颜色；
   3) tonemapping能够预先bake到一张贴图里面，而不需要单独在fragment阶段进行计算。具体要看filament里面的tonemapping的操作；
   4）AO效果和效率的优化。效果：修复bent_normal和cone tracing的bug；效率：使用hi-z提高深度图的采样（主要是采样更低的mipmap，提高缓存效率）；
-4. 水渲染；
-5. 点光源，包括point、spot和rectangle/plane的区域光，包括其对应的阴影；
-6. ibl的计算应该直接烘培，不应该做在compute shader上；
-7. 使用Hi-Z的方式进行剔除；
-8. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；
-
-9. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
-10. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
-11. 在转换到新一代图形API后（Metal/Vulkan/D3D12），需要对render pass进行优化。如postprocess里面，如果一个framebuffer的输出是另一个pass的输入，需要使用到subpass的概念进行优化，这能够省掉不少贷款（因为下一个pass的输入，并不会真的写道framebuffer身上）；
+5. 水渲染；
+6. 点光源，包括point、spot和rectangle/plane的区域光，包括其对应的阴影；
+7. ibl的计算应该直接烘培，不应该做在compute shader上；
+8. 使用Hi-Z的方式进行剔除；
+9. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；
+10. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
+11. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
 12. 优化bgfx的draw viewid和compute shader viewid；
 13. 调整iOS和Android下的ASTC压缩格式。目前强制使用了ASTC4x4，因为之前bgfx不支持ASTC6x6，最近更新了，看看是否ASTC的格式都支持全了；
-14. 在全平台下使用bgfx vulkan的API。目前windows下测试是没有问题的。还需要的工作包括：iOS下，使用KhronosGroup/MoltenVK库，让iOS支持vulkan；其次，windows平台下，需要把相应的runtime dll带到相应的开发目录和发布目录里面（和目前fmod一样）；
-15. 将lightmap重新激活；
+14. 将lightmap重新激活；
+15. 解决动态材质的问题；
 
 #### 新功能/探索
 ##### 已经完成
