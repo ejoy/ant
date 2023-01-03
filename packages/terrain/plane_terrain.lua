@@ -340,12 +340,12 @@ local function build_mesh(sectionsize, sectionidx, unit, cterrainfileds, width)
         local min_x, min_z = cterrainfileds:get_offset(sectionidx)
         local max_x, max_z = min_x + sectionsize, min_z + sectionsize
 
-        --
-        local offset = math3d.vector(origin_offset_width, 0, origin_offset_height)
-        local minv, maxv = math3d.vector(min_x, 0, min_z), math3d.vector(max_x, 0, max_z)
-        minv, maxv = math3d.sub(minv, offset), math3d.sub(maxv, offset)
-        minv, maxv = math3d.mul(minv, unit), math3d.mul(maxv, unit)
-        return to_mesh_buffer(vb, math3d.aabb(minv, maxv))
+        --minv = ((min_x, 0, min_z) - (origin_offset_width, 0, origin_offset_height)) * unit
+        --maxv = ((max_x, 0, max_z) - (origin_offset_width, 0, origin_offset_height)) * unit
+        local offset = math3d.vector(-origin_offset_width*unit, 0, -origin_offset_height*unit)
+        return to_mesh_buffer(vb, math3d.aabb(
+            math3d.muladd(math3d.vector(min_x, 0, min_z), unit, offset),
+            math3d.muladd(math3d.vector(max_x, 0, max_z), unit, offset)))
     end
 end
 
