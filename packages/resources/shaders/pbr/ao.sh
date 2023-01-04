@@ -4,7 +4,11 @@
 #include "common/math.sh"
 #include "pbr/input_attributes.sh"
 
+#ifdef ENABLE_BENT_NORMAL
 SAMPLER2DARRAY(s_ssao, 9);
+#else //!ENABLE_BENT_NORMAL
+SAMPLER2D(s_ssao, 9);
+#endif //ENABLE_BENT_NORMAL
 
 float SpecularAO_Lagarde(float NoV, float visibility, float roughness) {
     // Lagarde and de Rousiers 2014, "Moving Frostbite to PBR"
@@ -83,7 +87,12 @@ ao_value fetch_ao(vec2 uv, float depthVS)
 {
     ao_value av;
 #ifdef HIGH_QULITY_SPECULAR_AO
+#ifdef ENABLE_BENT_NORMAL
     gather_result3 r = texture_gather3(s_ssao, vec3(uv, 0.0));
+#else //!ENABLE_BENT_NORMAL
+    gather_result3 r = texture_gather3(s_ssao, uv);
+#endif //ENABLE_BENT_NORMAL
+    
     // bilateral weights
     vec4 depthsVS = vec4(
         unpack(vec2(r.g.x, r.b.x)),
@@ -108,7 +117,12 @@ ao_value fetch_ao(vec2 uv, float depthVS)
     //r.r is ao value
     av.ao = dot(r.r, av.weights);
 #else   //!HIGH_QULITY_SPECULAR_AO
+#ifdef ENABLE_BENT_NORMAL
     av.ao = texture2DArray(s_ssao, vec3(uv, 0.0)).r;
+#else //!ENABLE_BENT_NORMAL
+    av.ao = texture2D(s_ssao, uv).r;
+#endif //ENABLE_BENT_NORMAL
+    
     av.weights = vec4_splat(0.0);
 #endif  //HIGH_QULITY_SPECULAR_AO
     return av;
