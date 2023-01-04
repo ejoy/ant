@@ -76,9 +76,9 @@ local function blur_dispatch()
         local dis = e.dispatch
         local material = dis.material
         local mobj = material:get_material()
-        mobj:set_attrib("s_image_iutput", icompute.create_image_property(blur_textures.vblur_texture_handle, 0, 0, "r"))
+        mobj:set_attrib("s_image_input", icompute.create_image_property(blur_textures.vblur_texture_handle, 0, 0, "r"))
         mobj:set_attrib("s_image_output", icompute.create_image_property(blur_textures.hblur_texture_handle, 1, 0, "w"))
-        icompute.dispatch(hblur_viewid, dis)
+        icompute.dispatch(vblur_viewid, dis)
         w:remove(e)
     end
 

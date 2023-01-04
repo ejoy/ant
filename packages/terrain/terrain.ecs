@@ -4,8 +4,11 @@ import "@ant.asset"
 import "shape_terrain.ecs"
 import "water.ecs"
 
+component "shape_terrain".type "lua"
+component "st".type "lua"
 system "terrain_system"
     .implement "terrain_system.lua"
+    .method "init"
     .method "data_changed"
 
 interface "iterrain"

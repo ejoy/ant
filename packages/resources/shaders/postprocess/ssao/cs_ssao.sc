@@ -14,7 +14,12 @@ $input v_texcoord0
 #include "postprocess/ssao/ssct.sh"
 
 SAMPLER2D(s_depth, 0);
+
+#ifdef ENABLE_BENT_NORMAL
 IMAGE2D_ARRAY_WR(s_ssao_result, rgba8, 1);
+#else
+IMAGE2D_WR(s_ssao_result, rgba8, 1);
+#endif //ENABLE_BENT_NORMAL
 
 //code from filament ssao
 
@@ -154,13 +159,16 @@ NUM_THREADS(16, 16, 1)
 void main()
 {
     const ivec2 uv_out = gl_GlobalInvocationID.xy;
-    
-    //we assume s_depth size is the same as s_ssao_result
-    const ivec3 size = imageSize(s_ssao_result);
-    if (any(uv_out >= size.xy))
+
+#ifdef ENABLE_BENT_NORMAL
+    const ivec2 size = imageSize(s_ssao_result).xy;
+#else //!ENABLE_BENT_NORMAL
+    const ivec2 size = imageSize(s_ssao_result);
+#endif //ENABLE_BENT_NORMAL
+    if (any(uv_out >= size))
         return;
 
-    const vec2 uv = id2uv(uv_out, size.xy);
+    const vec2 uv = id2uv(uv_out, size);
     highp float depth_non_linear = texture2DLod(s_depth, uv, 0.0).r;
     highp float depthVS = linear_depth_pp(depth_non_linear);//depthVS_from_texture(s_depth, uv, 0.0);
 
@@ -190,8 +198,10 @@ void main()
 //     aoVisibility += gl_FragCoord.x * MEDIUMP_FLT_MIN;
 // #endif
 
+#ifdef ENABLE_BENT_NORMAL
     imageStore(s_ssao_result, ivec3(uv_out, 0), vec4(vec3(aoVisibility, packHalfFloat(origin.z * u_inv_far)), 1.0));
-#if ENABLE_BENT_NORMAL
     imageStore(s_ssao_result, ivec3(uv_out, 1), vec4(encodeNormalUint(bentNormal), 1.0));
+#else //!ENABLE_BENT_NORMAL
+    imageStore(s_ssao_result, uv_out, vec4(vec3(aoVisibility, packHalfFloat(origin.z * u_inv_far)), 1.0));
 #endif //ENABLE_BENT_NORMAL
 }

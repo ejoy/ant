@@ -127,7 +127,7 @@ return function (output, param)
 		ti.format = fmt
 		ti.mipmap = false
 		ti.depth = 1
-		ti.numLayers = 1
+		ti.numLayers = param.numLayers or 1
 		ti.cubemap = false
 		ti.storageSize = w*h*4
 		ti.numMips = 1

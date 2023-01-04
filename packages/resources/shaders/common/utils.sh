@@ -71,6 +71,27 @@ struct gather_result3{
     vec4 r, g, b;
 };
 
+gather_result3 texture_gather3(sampler2D tex, vec2 uv)
+{
+    gather_result3 r;
+    #ifdef ENABLE_TEXTURE_GATHER
+        r.r = textureGather(tex, uv, 0);
+        r.g = textureGather(tex, uv, 1);
+        r.b = textureGather(tex, uv, 2);
+    #else //!ENABLE_TEXTURE_GATHER
+        vec3 s01 = texture2DArrayLodOffset(tex, uv, 0.0, ivec2(0, 1)).rgb;
+        vec3 s11 = texture2DArrayLodOffset(tex, uv, 0.0, ivec2(1, 1)).rgb;
+        vec3 s10 = texture2DArrayLodOffset(tex, uv, 0.0, ivec2(1, 0)).rgb;
+        vec3 s00 = texture2DArrayLodOffset(tex, uv, 0.0, ivec2(0, 0)).rgb;
+
+        r.r = vec4(s01.r, s11.r, s10.r, s00.r);
+        r.g = vec4(s01.g, s11.g, s10.g, s00.g);
+        r.b = vec4(s01.b, s11.b, s10.b, s00.b);
+    #endif //ENABLE_TEXTURE_GATHER
+
+    return r;
+}
+
 gather_result3 texture_gather3(sampler2DArray tex, vec3 uv)
 {
     gather_result3 r;

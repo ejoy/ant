@@ -6,9 +6,13 @@ $input v_texcoord0
 #include "common/utils.sh"
 #include "common/math.sh"
 
+#ifdef ENABLE_BENT_NORMAL
 SAMPLER2DARRAY(s_ssao_result, 0);
-
 IMAGE2D_ARRAY_WR(s_filter_result, rgba8, 1);
+#else //!ENABLE_BENT_NORMAL
+SAMPLER2D(s_ssao_result, 0);
+IMAGE2D_WR(s_filter_result, rgba8, 1);
+#endif //ENABLE_BENT_NORMAL
 
 uniform vec4 u_bilateral_kernels[2];
 uniform vec4 u_bilateral_param;
@@ -27,19 +31,26 @@ struct ao_info{
 };
 
 ao_info sampleAO(vec2 uv) {
+#ifdef ENABLE_BENT_NORMAL
     // we can't use texture2DArray in compute shader, it will cause an error, use texture2DArrayLod instead
     vec3 data = texture2DArrayLod(s_ssao_result, vec3(uv, 0.0), 0.0).rgb;
+#else //!ENABLE_BENT_NORMAL
+    vec3 data = texture2DLod(s_ssao_result, uv, 0.0).rgb;
+#endif //ENABLE_BENT_NORMAL
+
     ao_info ai;
     ai.ao = data.r;
     ai.depth = unpackHalfFloat(data.gb);
     return ai;
 }
 
+#ifdef ENABLE_BENT_NORMAL
 vec3 sampleBN(vec2 uv) {
     // we can't use texture2DArray in compute shader, it will cause an error, use texture2DArrayLod instead
     vec3 data = texture2DArrayLod(s_ssao_result, vec3(uv, 1.0), 0.0).xyz;
     return decodeNormalUint(data);
 }
+#endif //ENABLE_BENT_NORMAL
 
 float get_kernel_weight(uint idx)
 {
@@ -74,11 +85,15 @@ NUM_THREADS(16, 16, 1)
 void main()
 {
     const ivec2 uv_out = gl_GlobalInvocationID.xy;
-    const ivec3 size = imageSize(s_filter_result);
-    if (any(uv_out >= size.xy))
+#ifdef ENABLE_BENT_NORMAL
+    const ivec2 size = imageSize(s_filter_result).xy;
+#else //!ENABLE_BENT_NORMAL
+    const ivec2 size = imageSize(s_filter_result);
+#endif //ENABLE_BENT_NORMAL
+    if (any(uv_out >= size))
         return;
 
-    const vec2 uv = id2uv(uv_out, size.xy);
+    const vec2 uv = id2uv(uv_out, size);
 
     sum_result r;
     const ao_info center_ai = sampleAO(uv);
@@ -101,9 +116,10 @@ void main()
     // this is most useful with high quality/large blurs
     ao += ((interleavedGradientNoise(uv_out.xy) - 0.5) / 255.0);
 
-    imageStore(s_filter_result, ivec3(uv_out, 0), vec4(ao, packHalfFloat(center_ai.depth), 0.0));
-
 #ifdef ENABLE_BENT_NORMAL
+    imageStore(s_filter_result, ivec3(uv_out, 0), vec4(vec3(ao, packHalfFloat(center_ai.depth)), 0.0));
     imageStore(s_filter_result, ivec3(uv_out, 1), vec4(encodeNormalUint(r.bn/r.weight), 0.0));
+#else //!ENABLE_BENT_NORMAL
+    imageStore(s_filter_result, uv_out, vec4(vec3(ao, packHalfFloat(center_ai.depth)), 0.0));
 #endif //ENABLE_BENT_NORMAL
 }

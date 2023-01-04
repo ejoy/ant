@@ -16,7 +16,7 @@ system "cube_shape_terrain_system"
     .implement "cube_shape_terrain.lua"
     .method "entity_init"
 
-component "shape_terrain".type "lua"
+--component "shape_terrain".type "lua"
 
 component "shape_terrain_drawer"
 component "shape_terrain_edge_drawer"

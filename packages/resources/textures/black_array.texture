@@ -1,0 +1,11 @@
+normalmap: false
+size: {1, 1}
+numLayers: 2
+value: {0, 0, 0, 255, 0, 0, 0, 255}
+sRGB: false
+format: RGBA8
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  U: MIRROR
+  V: MIRROR

@@ -43,8 +43,9 @@ return function (input, output, setting, localpath)
 		
 		local s = param.size
 		local w,h = s[1], s[2]
-		if w*h*4 ~= #param.value then
-			error(("invalid image size [w, h]=[%d, %d], format:%s, value count:%d"):format(w, h, param.format, #param.value))
+		local numlayers = param.numLayers or 1
+		if numlayers*w*h*4 ~= #param.value then
+			error(("invalid image size [w, h]=[%d, %d], numLayers=%d, format:%s, value count:%d"):format(w, h, param.numLayers, param.format, #param.value))
 		end
 	end
 

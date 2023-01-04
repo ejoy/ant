@@ -116,7 +116,7 @@ system "font_test_system"
 system "terrain_test_system"
     .implement "terrain_test.lua"
     .require_interface "ant.terrain|iterrain"
-    .method "init"
+    .method "init_world"
     .method "data_changed"
 
 
