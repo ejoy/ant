@@ -1,5 +1,9 @@
 package.path = "/engine/?.lua"
 require "bootstrap"
+if package.loaded.math3d then
+    error "need init math3d MAXPAGE"
+end
+debug.getregistry().MATH3D_MAXPAGE = 10240
 
 local ltask = require "ltask"
 local arg = ltask.call(ltask.queryservice "arguments", "QUERY")

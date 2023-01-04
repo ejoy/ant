@@ -39,9 +39,6 @@ local function convertreal(v)
     return ('%.17g'):format(v)
 end
 
-local PATTERN <const> = "%a%d/%-_.|"
-local PATTERN <const> = "^["..PATTERN.."]["..PATTERN.."]*$"
-
 local function stringify_basetype(v)
     local t = type(v)
     if t == 'number' then
@@ -51,11 +48,19 @@ local function stringify_basetype(v)
             return convertreal(v)
         end
     elseif t == 'string' then
-        if v:match(PATTERN) then
-            return v
-        else
+        if v == "true" or v == "false" or v == "nil" then
             return datalist.quote(v)
         end
+        if v:match "[#:=$-,\"\\{}%[%]]" then
+            return datalist.quote(v)
+        end
+        if v:match "^%d+$" then
+            return datalist.quote(v)
+        end
+        if v:match "^%d*.%d*$" then
+            return datalist.quote(v)
+        end
+        return v
     elseif t == 'boolean'then
         if v then
             return 'true'
