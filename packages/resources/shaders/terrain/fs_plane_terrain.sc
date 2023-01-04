@@ -49,7 +49,7 @@ uniform vec4 u_cement_pbr_factor;
 SAMPLER2DARRAY(s_height,             1);
 SAMPLER2DARRAY(s_cement_alpha,       3);
 
-vec3 blend(vec4 texture1, float a1, float d1, vec4 texture2, float a2, float d2){
+vec3 blend(vec3 texture1, float a1, float d1, vec3 texture2, float a2, float d2){
     float depth = 0.03;
     float ma = max(d1 + a1, d2 + a2) - depth;
 
@@ -86,17 +86,17 @@ void main()
     float f2 = 1 - sub2;
     texture_stone.w = sub2;   
 
-    vec4 texture_ground =  vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1.0), 1.0);
+    vec3 texture_ground =  texture_stone.xyz*texture_sand.w + texture_sand.xyz;
 
     if(road_type >= 0.9 && road_type <= 1.1){
-        gl_FragColor = vec4(blend(texture_cement, 1 - a_cement, d_cement, texture_ground, a_cement, d_stone), 1.0);
+        gl_FragColor = vec4(blend(texture_cement.rgb, 1 - a_cement, d_cement, texture_ground, a_cement, d_stone), 1.0);
         //gl_FragColor = vec4(1 - a_cement > a_cement ? texture_cement.xyz : vec3(0,0,0), 1.0);
     }
     else if((road_type >= 1.9 && road_type <= 2.1) || (road_type >= 2.9 && road_type <= 3.1)){
-        gl_FragColor = a_cement < 1.0 ? texture_cement : texture_ground;
+        gl_FragColor = a_cement < 1.0 ? texture_cement : vec4(texture_ground, 1.0);
     }
     else{
-        gl_FragColor = texture_ground;
+        gl_FragColor = vec4(texture_ground, 1.0);
     }      
 
 /*     vec4 texture_ground =  vec4(mul(stone_attribs.basecolor.xyz, texture_sand.w) + mul(sand_attribs.basecolor.xyz, 1), 1.0);

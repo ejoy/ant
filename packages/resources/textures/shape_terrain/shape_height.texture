@@ -3,6 +3,7 @@ compress:
   ios: ASTC4x4
   windows: BC3
 maxsize: 1024x1024
+colorspace: linear
 mipmap: 0
 path: /pkg/ant.resources.binary/terrain/shapes/height.dds
 sampler:
