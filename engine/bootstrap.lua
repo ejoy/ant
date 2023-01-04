@@ -15,9 +15,4 @@ require "packagemanager"
 
 if __ANT_RUNTIME__ then
     require "runtime.debug"
-else
-    if package.loaded.math3d then
-        error "need init math3d MAXPAGE"
-    end
-    debug.getregistry().MATH3D_MAXPAGE = 10240
 end

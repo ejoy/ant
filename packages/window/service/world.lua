@@ -1,5 +1,12 @@
 local initargs = ...
 
+if not __ANT_RUNTIME__ then
+	if package.loaded.math3d then
+		error "need init math3d MAXPAGE"
+	end
+	debug.getregistry().MATH3D_MAXPAGE = 10240
+end
+
 local ltask     = require "ltask"
 local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.ecs"
