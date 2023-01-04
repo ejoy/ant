@@ -3,8 +3,12 @@
 2. 使用DeferredShading。目前的one pass deferred能够很好解决deferrd shading占用过多带宽的问题；
 
 #### Bug
+##### 已经完成
 1. 修复引擎在D3D12/Vulkan中的问题；
 2. 修复bloom后处理，在emissive color值很高的时候，依然没有bloom的效果。具体使用furnace-1.glb这个文件用于测试；(2022.11.08已经完成)
+
+##### 未完成
+1. 修复shader下的cubemap resource，绑定为texture2d array的问题。具体重现的方法是，在iOS开发环境下，打开对应的shader validation等相关的debug选项就会有相应的报错；
 
 #### 优化
 ##### 已经完成
@@ -47,12 +51,12 @@
 1. 阴影的VSM；  //2022.09.29已经完成，使用的是ESM。
 
 ##### 未完成
-1. 天气系统。让目前游戏能够昼夜变化。一个简单的方式是使用后处理的color grading改变色调，另外一个更正确的方法是使用与烘培的大气散射模拟天空，讲indirection lighting和天空和合拼；（2022.12.12正在进行）；
+1. 天气系统。让目前游戏能够昼夜变化。一个简单的方式是使用后处理的color grading改变色调，另外一个更正确的方法是使用与烘培的大气散射模拟天空，将indirect lighting和天空和合拼；（2022.12.12正在进行）；
 2. SDF Shadow；
 3. Visibility Buffer；
 4. GI相关。SSGI，SSR和SDFGI等；
 5. LOD；
-6. 这个功能，很可能就会要求引擎需要延迟渲染的，one pass deferred在很多硬件上面是可行的；
+6. 延迟渲染。延迟渲染能够降低为大量动态光源的计算。但移动设备需要one pass deferred的支持。Vulkan在API层面上支持subpass的操作，能够很好地实现这个功能。唯一需要注意的是，使用了MoltenVK的iOS是否能够支持这个功能；
 
 #### 增强调试功能
 1. 影子。只管的在屏幕上看到对应的shadowmap、csm frustum等；
