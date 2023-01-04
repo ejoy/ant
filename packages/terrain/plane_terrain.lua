@@ -14,7 +14,8 @@ local terrain_module = require "terrain"
 local layout_name<const>    = declmgr.correct_layout "p3|t20|t21|t22|t23|t24|t25"
 local layout                = declmgr.get(layout_name)
 local noise1 = {}
-local terrain_width, terrain_height, origin_offset_width, origin_offset_height
+local terrain_width, terrain_height, unit, origin_offset_width, origin_offset_height
+local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 local default_quad_ib<const> = {
     0, 1, 2,
     2, 3, 0,
@@ -311,14 +312,14 @@ function cterrain_fields:get_offset(sidx)
     return isw * self.section_size, ish * self.section_size
 end
 
-local function build_mesh(sectionsize, sectionidx, unit, cterrainfileds, width)
+local function build_mesh(sectionsize, sectionidx, cterrainfileds, width)
     local vb = {}
     for ih = 1, sectionsize do
         for iw = 1, sectionsize do
             local xx, yy, offset, field = cterrainfileds:get_field(sectionidx, iw, ih)
             if field ~= nil then
                 local x, z = cterrainfileds:get_offset(sectionidx)
-                local origin = {(iw - 1 + x) * unit - origin_offset_width * unit, 0.0, (ih - 1 + z) * unit - origin_offset_height * unit}
+                local origin = {(iw - 1 + x) * unit, 0.0, (ih - 1 + z) * unit}
                 local extent = {unit, 0, unit}
                 local uv0 = {0.0, 0.0, 1.0, 1.0}
                 -- other_uv sand_color_uv stone_color_uv sand_normal_uv stone_normal_uv sand_height_uv stone_height_uv
@@ -340,12 +341,9 @@ local function build_mesh(sectionsize, sectionidx, unit, cterrainfileds, width)
         local min_x, min_z = cterrainfileds:get_offset(sectionidx)
         local max_x, max_z = min_x + sectionsize, min_z + sectionsize
 
-        --minv = ((min_x, 0, min_z) - (origin_offset_width, 0, origin_offset_height)) * unit
-        --maxv = ((max_x, 0, max_z) - (origin_offset_width, 0, origin_offset_height)) * unit
-        local offset = math3d.vector(-origin_offset_width*unit, 0, -origin_offset_height*unit)
         return to_mesh_buffer(vb, math3d.aabb(
-            math3d.muladd(math3d.vector(min_x, 0, min_z), unit, offset),
-            math3d.muladd(math3d.vector(max_x, 0, max_z), unit, offset)))
+            math3d.mul(math3d.vector(min_x, 0, min_z), unit),
+            math3d.mul(math3d.vector(max_x, 0, max_z), unit)))
     end
 end
 
@@ -376,59 +374,8 @@ function iplane_terrain.set_wh(w, h, offset_x, offset_z)
 end
 
 function iplane_terrain.init_plane_terrain(st)
-    if st.prev_terrain_fields == nil then
-        error "need define terrain_field, it should be file or table"
-    end
-
-    local width, height = st.width, st.height
-
-    local ss = st.section_size
-
-
-    st.section_width, st.section_height = width // ss, height // ss
-    st.num_section = st.section_width * st.section_height
-
-    local unit = st.unit
-    local shapematerial = st.material
-    
-    --build_ib(width,height)
-    local ctf = cterrain_fields.new(st)
-    ctf:init()
-    
-    for ih = 1, st.section_height do
-        for iw = 1, st.section_width do
-            local sectionidx = (ih - 1) * st.section_width + iw
-            
-            local terrain_mesh = build_mesh(ss, sectionidx, unit, ctf, width)
-            if terrain_mesh then
-                local eid; eid = ecs.create_entity{
-                    policy = {
-                        "ant.scene|scene_object",
-                        "ant.render|simplerender",
-                        "ant.general|name",
-                    },
-                    data = {
-                        scene = {
-                            --parent = e.eid,
-                        },
-                        simplemesh  = terrain_mesh,
-                        material    = shapematerial,
-                        visible_state= "main_view|selectable",
-                        name        = "section" .. sectionidx,
-                        plane_terrain = true,
-                        section_index = sectionidx,
-                        on_ready = function()
-                            --world:pub {"shape_terrain", "on_ready", eid, e.eid}
-                        end,
-                    },
-                }
-            end
-        end
-    end   
-end
-
-
-function iplane_terrain.update_plane_terrain(st, tc)
+    for e in ww:select "shape_terrain st:update eid:in" do
+        e.st = st
         if st.prev_terrain_fields == nil then
             error "need define terrain_field, it should be file or table"
         end
@@ -441,7 +388,64 @@ function iplane_terrain.update_plane_terrain(st, tc)
         st.section_width, st.section_height = width // ss, height // ss
         st.num_section = st.section_width * st.section_height
 
-        local unit = st.unit
+        unit = st.unit
+        local shapematerial = st.material
+        
+        --build_ib(width,height)
+        local ctf = cterrain_fields.new(st)
+        ctf:init()
+        
+        for ih = 1, st.section_height do
+            for iw = 1, st.section_width do
+                local sectionidx = (ih - 1) * st.section_width + iw
+                
+                local terrain_mesh = build_mesh(ss, sectionidx, ctf, width)
+                if terrain_mesh then
+                    local eid; eid = ecs.create_entity{
+                        policy = {
+                            "ant.scene|scene_object",
+                            "ant.render|simplerender",
+                            "ant.general|name",
+                        },
+                        data = {
+                            scene = {
+                                parent = e.eid,
+                            },
+                            simplemesh  = terrain_mesh,
+                            material    = shapematerial,
+                            visible_state= "main_view|selectable",
+                            name        = "section" .. sectionidx,
+                            plane_terrain = true,
+                            section_index = sectionidx,
+                            on_ready = function()
+                                world:pub {"shape_terrain", "on_ready", eid, e.eid}
+                            end,
+                        },
+                    }
+                end
+            end
+        end
+        iom.set_position(e, math3d.vector(-origin_offset_width * unit, 0, -origin_offset_height * unit))
+    end   
+end
+
+
+function iplane_terrain.update_plane_terrain(tc)
+    
+    for e in ww:select "shape_terrain st:update eid:in" do
+        local st = e.st
+        if st.prev_terrain_fields == nil then
+            error "need define terrain_field, it should be file or table"
+        end
+
+        local width, height = st.width, st.height
+
+        local ss = st.section_size
+
+
+        st.section_width, st.section_height = width // ss, height // ss
+        st.num_section = st.section_width * st.section_height
+
         local shapematerial = st.material
         
         --build_ib(width,height)
@@ -449,7 +453,7 @@ function iplane_terrain.update_plane_terrain(st, tc)
         ctf:init()
         
         for section_idx,_ in pairs(tc) do
-            local terrain_mesh = build_mesh(ss, section_idx, unit, ctf, width)
+            local terrain_mesh = build_mesh(ss, section_idx, ctf, width)
             if terrain_mesh then
                 local eid; eid = ecs.create_entity{
                     policy = {
@@ -459,7 +463,7 @@ function iplane_terrain.update_plane_terrain(st, tc)
                     },
                     data = {
                         scene = {
-                            --parent = e.eid,
+                            parent = e.eid,
                         },
                         simplemesh  = terrain_mesh,
                         material    = shapematerial,
@@ -468,12 +472,14 @@ function iplane_terrain.update_plane_terrain(st, tc)
                         plane_terrain = true,
                         section_index = section_idx,
                         on_ready = function()
-                            --world:pub {"shape_terrain", "on_ready", eid, e.eid}
+                            world:pub {"shape_terrain", "on_ready", eid, e.eid}
                         end,
                     },
                 }
             end    
-        end  
+        end
+        iom.set_position(e, math3d.vector(-origin_offset_width * unit, 0, -origin_offset_height * unit))
+    end
 end
 
 function p_ts:init()

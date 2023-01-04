@@ -135,6 +135,24 @@ function iterrain.delete_roadnet_entity(delete_list)
     end
 end
 
+function terrain_sys:init()
+    ecs.create_entity{
+        policy = {
+            "ant.scene|scene_object",
+            "ant.general|name",
+        },
+        data = {
+            scene = {
+            },
+            name          = "shape_terrain",
+            shape_terrain = true,
+            st = {},
+            on_ready = function()
+            end,
+        },
+    }
+end
+
 function terrain_sys:data_changed()
     if tc_cnt ~= 0 then
 
@@ -148,7 +166,7 @@ function terrain_sys:data_changed()
             end      
         end
 
-        iplane_terrain.update_plane_terrain(shape_terrain, terrain_change) 
+        iplane_terrain.update_plane_terrain(terrain_change) 
 
         terrain_change = {}
         tc_cnt = 0
