@@ -12,7 +12,6 @@ void main()
 	vec4 posWS = transformWS(wm, vec4(a_position.xyz, 1.0));
 	gl_Position = mul(u_viewProj, posWS);
 
-	#ifdef HAS_PROCESSING
 	
 	v_texcoord0	= a_texcoord0;
 
@@ -31,5 +30,4 @@ void main()
 	v_idx2 = vec4(a_texcoord3.x, a_texcoord3.y, a_texcoord4.x, a_texcoord4.y);
 	
 	v_texcoord2 = a_texcoord5;
-	#endif
 }

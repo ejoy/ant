@@ -61,7 +61,7 @@ vec3 blend(vec3 texture1, float a1, float d1, vec3 texture2, float a2, float d2)
 
 void main()
 { 
-    #ifdef HAS_PROCESSING
+    #ifdef HAS_MULTIPLE_LIGHTING
 
     #include "attributes_getter.sh"
     
@@ -90,7 +90,6 @@ void main()
 
     if(road_type >= 0.9 && road_type <= 1.1){
         gl_FragColor = vec4(blend(texture_cement.rgb, 1 - a_cement, d_cement, texture_ground, a_cement, d_stone), 1.0);
-        //gl_FragColor = vec4(1 - a_cement > a_cement ? texture_cement.xyz : vec3(0,0,0), 1.0);
     }
     else if((road_type >= 1.9 && road_type <= 2.1) || (road_type >= 2.9 && road_type <= 3.1)){
         gl_FragColor = a_cement < 1.0 ? texture_cement : vec4(texture_ground, 1.0);
@@ -98,21 +97,45 @@ void main()
     else{
         gl_FragColor = vec4(texture_ground, 1.0);
     }      
+    #else
 
-/*     vec4 texture_ground =  vec4(mul(stone_attribs.basecolor.xyz, texture_sand.w) + mul(sand_attribs.basecolor.xyz, 1), 1.0);
-    if(road_type >= 0.9 && road_type <= 1.1){
-        gl_FragColor = vec4(blend(cement_attribs.basecolor, 1 - a_cement, d_cement, texture_ground, a_cement, d_stone), 1.0);
+    #include "attributes_getter.sh"
+    
+    vec4 texture_stone   = stone_attribs.basecolor;
+    vec4 texture_sand    = sand_attribs.basecolor;
+    vec4 texture_cement  = cement_attribs.basecolor;
+
+    float a_sand   = sand_alpha;
+    float a_cement = texture2DArray(s_cement_alpha, vec3(v_texcoord1, road_shape) );
+    //terrain's basecolor height should use v_texcoord2, represent 4x4 grid per texture
+    float d_sand   = texture2DArray(s_height, vec3(v_texcoord2, 0.0) );
+    float d_stone  = texture2DArray(s_height, vec3(v_texcoord2, 1.0) );
+
+    //road's basecolor height should use v_texcoord0, represent 1x1 grid per texture
+    float d_cement = texture2DArray(s_height, vec3(v_texcoord0, 2.0) );
+
+    float sub1 = 4 * abs(d_sand - (a_sand));
+    float f1 = 1 - sub1;
+    texture_sand.w = sub1;
+
+    float sub2 = 4 * abs(d_stone - (1 - a_sand));
+    float f2 = 1 - sub2;
+    texture_stone.w = sub2;   
+
+    vec3 texture_ground =  texture_stone.xyz*texture_sand.w + texture_sand.xyz;
+     if(road_type >= 0.9 && road_type <= 1.1){
+        stone_attribs.basecolor = vec4(blend(texture_cement, 1 - a_cement, d_cement, texture_ground, a_cement, d_stone), 1.0);
+        gl_FragColor = compute_lighting(stone_attribs);
+    }
+    else if((road_type >= 1.9 && road_type <= 2.1) || (road_type >= 2.9 && road_type <= 3.1)){
+        stone_attribs.basecolor = a_cement < 1.0 ? texture_cement : vec4(texture_ground, 1.0);
+        gl_FragColor = compute_lighting(stone_attribs);
     }
     else{
-        gl_FragColor = texture_ground;
-    } */  
-
-    //gl_FragColor = vec4(stone_attribs.basecolor.xyz, 1.0);
-    //gl_FragColor = vec4(mul(texture_stone.xyz, texture_sand.w) + mul(texture_sand.xyz, 1.0), 1.0);
-    //gl_FragColor = vec4(mul(stone_attribs.basecolor.xyz, texture_sand.w) + mul(sand_attribs.basecolor.xyz, 1), 1.0);
-
-    #else
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        stone_attribs.basecolor = vec4(texture_ground, 1.0);
+        gl_FragColor = compute_lighting(stone_attribs);
+    }          
+        
     #endif
 }
 
