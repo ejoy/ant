@@ -94,6 +94,7 @@ input_attributes init_input_attributes(vec3 gnormal, vec3 normal, vec4 posWS, ve
     //use stone setting
     input_attribs.perceptual_roughness  = clamp(u_stone_roughness_factor, 0.0, 1.0);
     input_attribs.metallic              = clamp(u_stone_metallic_factor, 0.0, 1.0);
+    input_attribs.occlusion         = 1.0;
     return input_attribs;
 }
 
