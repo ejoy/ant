@@ -48,7 +48,7 @@ local function stringify_basetype(v)
             return convertreal(v)
         end
     elseif t == 'string' then
-        if v == "true" or v == "false" or v == "nil" then
+        if v == "" or v == "true" or v == "false" or v == "nil" then
             return datalist.quote(v)
         end
         if v:match "[#:=$-,\"\\{}%[%]]" then
