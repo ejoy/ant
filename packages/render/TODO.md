@@ -61,6 +61,6 @@
 #### 增强调试功能
 1. 影子。只管的在屏幕上看到对应的shadowmap、csm frustum等；
 2. 添加一个overdraw的模式，观察哪些像素是背多次渲染了。详细参考unity和虚幻上的做法；
-
+3. bgfx支持查看每一个view下cpu/gpu时间，但在init的时候加上profile=true，还是无法取出每个view的时间；
 
 
