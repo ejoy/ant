@@ -9,16 +9,8 @@ input_attributes cement_attribs = (input_attributes)0;
     cement_attribs.uv = uv;
 
     //basecolor
-    sand_attribs.basecolor   = texture2DArray(s_basecolor, mediump vec3(uv, sand_color_idx));
-    stone_attribs.basecolor  = texture2DArray(s_basecolor, mediump vec3(uv, stone_color_idx));
-    float cement_color_idx = 5;
-    if(0.9 <= road_type && road_type <= 1.1){
-        cement_color_idx = 5;
-    } else if(1.9 <= road_type && road_type <= 2.1){
-        cement_color_idx = 6;
-    } else if(2.9 <= road_type && road_type <= 3.1){
-        cement_color_idx = 7;
-    }
+    sand_attribs.basecolor   = texture2DArray(s_basecolor, mediump vec3(uv, v_sand_color_idx));
+    stone_attribs.basecolor  = texture2DArray(s_basecolor, mediump vec3(uv, v_stone_color_idx));
     cement_attribs.basecolor = texture2DArray(s_basecolor, mediump vec3(uv, cement_color_idx));
 
 #ifndef MATERIAL_UNLIT
@@ -52,7 +44,7 @@ input_attributes cement_attribs = (input_attributes)0;
     mat3 tbn = mat3(v_tangent, bitangent, v_normal);
 #   endif //CALC_TBN
     sand_attribs.N   = terrain_normal_from_tangent_frame(tbn, v_normal, uv, 0);
-    stone_attribs.N  = terrain_normal_from_tangent_frame(tbn, v_normal, uv, stone_normal_idx);
+    stone_attribs.N  = terrain_normal_from_tangent_frame(tbn, v_normal, uv, v_stone_normal_idx);
     cement_attribs.N = terrain_normal_from_tangent_frame(tbn, v_normal, uv, 3);
 #else  //!HAS_NORMAL_TEXTURE
     sand_attribs.N   = v_normal;
