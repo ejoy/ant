@@ -5,7 +5,7 @@ local w     = world.w
 local iterrain  = ecs.import.interface "ant.terrain|iterrain"
 local terrain_test_sys = ecs.system "terrain_test_system"
 
-function terrain_test_sys:init()
+function terrain_test_sys:init_world()
     -- 32 32 means terrain's width and height
     -- 10 means origin's x and z offset to left-bottom dirction
     -- terrain should be generated in initial stage
