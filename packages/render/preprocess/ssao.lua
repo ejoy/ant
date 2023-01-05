@@ -257,7 +257,6 @@ local function update_bilateral_filter_frame_properties(material, inputhandle, o
 end
 
 local mqvr_mb = world:sub{"view_rect_changed", "main_queue"}
-local mq_cc_mb = world:sub{"camera_changed", "main_queue"}
 
 function ssao_sys:data_changed()
     for _, _, vr in mqvr_mb:unpack() do

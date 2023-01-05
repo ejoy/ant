@@ -98,9 +98,10 @@ function ic.get_frustum(ce)
     return ce.camera.frustum
 end
 
-local function set_camera_changed(subcomp, ce)
-    w:extend(ce, "eid:in")
-    world:pub {"camera_changed", ce.eid, subcomp}
+local function mark_camera_changed(ce, changed)
+    w:extend(ce, "camera_changed?out")
+    ce.camera_changed = changed
+    w:submit(ce)
 end
 
 function ic.set_frustum(ce, frustum)
@@ -110,23 +111,16 @@ function ic.set_frustum(ce, frustum)
     for k, v in pairs(frustum) do
         camera.frustum[k] = v
     end
-    set_camera_changed("frusutm", ce)
+    mark_camera_changed(ce, true)
 end
 
 local function frustum_changed(ce, name, value)
     w:extend(ce, "camera:in")
     local camera = assert(ce.camera)
     local f = camera.frustum
-    if f.ortho then
-        --error("ortho frustum can not set aspect")
-        return
-    end
-    if f.aspect then
-        f[name] = value
-        set_camera_changed("frustum", ce)
-    else
-        error("Not implement")
-    end
+    f[name] = value
+
+    mark_camera_changed(ce, true)
 end
 
 function ic.set_frustum_aspect(ce, aspect)
@@ -170,12 +164,20 @@ end
 
 local cameraview_sys = ecs.system "camera_view_system"
 
+function cameraview_sys:start_frame()
+    for ce in w:select "camera_changed?out" do
+        ce.camerac_hanged = nil
+    end
+end
+
 function cameraview_sys:entity_init()
-    for e in w:select "INIT camera:in" do
+    for e in w:select "INIT camera:in camera_changed?out" do
         local camera = e.camera
         camera.viewmat       = math3d.ref(math3d.matrix())
         camera.projmat       = math3d.ref(math3d.matrix())
         camera.viewprojmat   = math3d.ref(math3d.matrix())
+
+        e.camera_changed    = true
     end
 end
 
@@ -198,8 +200,8 @@ end
 
 function cameraview_sys:update_mainview_camera()
     for v in w:select "main_queue camera_ref:in" do
-        local e <close> = w:entity(v.camera_ref, "scene_changed?in camera:in scene:in")
-        if e.scene_changed then
+        local e <close> = w:entity(v.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in")
+        if e.scene_changed or e.camera_changed then
             update_camera(e)
             update_camera_info(e)
         end
