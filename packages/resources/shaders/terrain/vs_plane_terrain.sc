@@ -8,26 +8,20 @@ $output v_texcoord0 v_texcoord1 v_texcoord2 v_texcoord3 v_texcoord4 v_normal v_t
 
 void main()
 {
-	mat4 wm = get_world_matrix();
-	vec4 posWS = transformWS(wm, vec4(a_position.xyz, 1.0));
+	mediump mat4 wm = get_world_matrix();
+	highp vec4 posWS = transformWS(wm, mediump vec4(a_position, 1.0));
 	gl_Position = mul(u_viewProj, posWS);
 
-	
 	v_texcoord0	= a_texcoord0;
-
 	v_texcoord1 = a_texcoord1;
+	v_idx1		= a_texcoord2.xy;
+	v_idx2		= vec4(a_texcoord3.xy, a_texcoord4.xy);
 
-	v_normal	= normalize(mul(wm, vec4(0.0, 1.0, 0.0, 0.0)).xyz);
+	v_texcoord2 = a_texcoord5;
 
-	v_tangent	= normalize(mul(wm, vec4(1.0, 0.0, 0.0, 0.0)).xyz);
-
-	v_bitangent	= cross(v_normal, v_tangent);	//left hand
+	v_normal	= mul(wm, mediump vec4(0.0, 1.0, 0.0, 0.0)).xyz;
+	v_tangent	= mul(wm, mediump vec4(1.0, 0.0, 0.0, 0.0)).xyz;
 
 	v_posWS = posWS;
 	v_posWS.w = mul(u_view, v_posWS).z;
-	
-	v_idx1 = vec2(a_texcoord2.x, a_texcoord2.y);
-	v_idx2 = vec4(a_texcoord3.x, a_texcoord3.y, a_texcoord4.x, a_texcoord4.y);
-	
-	v_texcoord2 = a_texcoord5;
 }

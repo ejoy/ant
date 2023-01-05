@@ -21,23 +21,23 @@ $input v_texcoord0 v_texcoord1 v_texcoord2 v_texcoord3 v_texcoord4 v_normal v_ta
 #include "common/shadow.sh"
 #endif //ENABLE_SHADOW
 
-#include "pbr/input_attributes.sh"
+#include "pbr/attribute_define.sh"
 
+SAMPLER2DARRAY(s_basecolor,     0);
+SAMPLER2DARRAY(s_height,        1);
+SAMPLER2DARRAY(s_normal,        2);
+SAMPLER2DARRAY(s_cement_alpha,  3);
 
-uniform vec4 u_sand_pbr_factor;
-#define u_sand_metallic_factor      u_sand_pbr_factor.x
-#define u_sand_roughness_factor     u_sand_pbr_factor.y
-#define u_sand_occlusion_factor     u_sand_pbr_factor.w
+uniform vec4 u_metallic_roughness_factor1;
+uniform vec4 u_metallic_roughness_factor2;
+#define u_sand_metallic_factor      u_metallic_roughness_factor1.x
+#define u_sand_roughness_factor     u_metallic_roughness_factor1.y
 
-uniform vec4 u_stone_pbr_factor;
-#define u_stone_metallic_factor     u_stone_pbr_factor.x
-#define u_stone_roughness_factor    u_stone_pbr_factor.y
-#define u_stone_occlusion_factor    u_stone_pbr_factor.w
+#define u_stone_metallic_factor     u_metallic_roughness_factor1.z
+#define u_stone_roughness_factor    u_metallic_roughness_factor1.w
 
-uniform vec4 u_cement_pbr_factor;
-#define u_cement_metallic_factor    u_cement_pbr_factor.x
-#define u_cement_roughness_factor   u_cement_pbr_factor.y
-#define u_cement_occlusion_factor   u_cement_pbr_factor.w
+#define u_cement_metallic_factor    u_metallic_roughness_factor2.x
+#define u_cement_roughness_factor   u_metallic_roughness_factor2.y
 
 #define sand_alpha          v_idx1.x
 #define stone_normal_idx    v_idx1.y
@@ -46,8 +46,12 @@ uniform vec4 u_cement_pbr_factor;
 #define sand_color_idx      v_idx2.z
 #define stone_color_idx     v_idx2.w
 
-SAMPLER2DARRAY(s_height,             1);
-SAMPLER2DARRAY(s_cement_alpha,       3);
+
+mediump vec3 terrain_normal_from_tangent_frame(mat3 tbn, mediump vec3 normal, mediump vec2 texcoord, mediump float normal_idx)
+{
+	mediump vec3 normalTS = texture2DArray(s_normal, mediump vec3(texcoord, normal_idx) );
+	return normalize(instMul(normalTS, tbn));
+}
 
 vec3 blend(vec3 texture1, float a1, float d1, vec3 texture2, float a2, float d2){
     float depth = 0.03;
@@ -61,7 +65,7 @@ vec3 blend(vec3 texture1, float a1, float d1, vec3 texture2, float a2, float d2)
 
 void main()
 { 
-    #ifdef HAS_MULTIPLE_LIGHTING
+#ifdef HAS_MULTIPLE_LIGHTING
 
     #include "attributes_getter.sh"
     
@@ -79,25 +83,23 @@ void main()
     float d_cement = texture2DArray(s_height, vec3(v_texcoord0, 2.0) );
 
     float sub1 = 4 * abs(d_sand - (a_sand));
-    float f1 = 1 - sub1;
     texture_sand.w = sub1;
 
     float sub2 = 4 * abs(d_stone - (1 - a_sand));
-    float f2 = 1 - sub2;
     texture_stone.w = sub2;   
 
     vec3 texture_ground =  texture_stone.xyz*texture_sand.w + texture_sand.xyz;
 
     if(road_type >= 0.9 && road_type <= 1.1){
-        gl_FragColor = vec4(blend(texture_cement.rgb, 1 - a_cement, d_cement, texture_ground, a_cement, d_stone), 1.0);
+        gl_FragColor = vec4(blend(texture_cement.rgb, 1.0 - a_cement, d_cement, texture_ground, a_cement, d_stone), 1.0);
     }
     else if((road_type >= 1.9 && road_type <= 2.1) || (road_type >= 2.9 && road_type <= 3.1)){
         gl_FragColor = a_cement < 1.0 ? texture_cement : vec4(texture_ground, 1.0);
     }
     else{
         gl_FragColor = vec4(texture_ground, 1.0);
-    }      
-    #else
+    }
+#else   //HAS_MULTIPLE_LIGHTING
 
     #include "attributes_getter.sh"
     
@@ -115,16 +117,14 @@ void main()
     float d_cement = texture2DArray(s_height, vec3(v_texcoord0, 2.0) );
 
     float sub1 = 4 * abs(d_sand - (a_sand));
-    float f1 = 1 - sub1;
     texture_sand.w = sub1;
 
     float sub2 = 4 * abs(d_stone - (1 - a_sand));
-    float f2 = 1 - sub2;
     texture_stone.w = sub2;   
 
     vec3 texture_ground =  texture_stone.xyz*texture_sand.w + texture_sand.xyz;
      if(road_type >= 0.9 && road_type <= 1.1){
-        stone_attribs.basecolor = vec4(blend(texture_cement, 1 - a_cement, d_cement, texture_ground, a_cement, d_stone), 1.0);
+        stone_attribs.basecolor = vec4(blend(texture_cement, 1.0 - a_cement, d_cement, texture_ground, a_cement, d_stone), 1.0);
         gl_FragColor = compute_lighting(stone_attribs);
     }
     else if((road_type >= 1.9 && road_type <= 2.1) || (road_type >= 2.9 && road_type <= 3.1)){
@@ -136,7 +136,7 @@ void main()
         gl_FragColor = compute_lighting(stone_attribs);
     }          
         
-    #endif
+#endif  //HAS_MULTIPLE_LIGHTING
 }
 
 
