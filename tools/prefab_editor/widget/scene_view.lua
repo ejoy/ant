@@ -68,6 +68,13 @@ local function node_context_menu(eid)
         if imgui.widget.MenuItem("NoParent") then
             world:pub { "EntityEvent", "parent", eid }
         end
+        imgui.cursor.Separator()
+        if imgui.widget.MenuItem("SRT Animation") then
+            world:pub { "CreateAnimation", "srt", eid }
+        end
+        if imgui.widget.MenuItem("MTL Animation") then
+            world:pub { "CreateAnimation", "mtl", eid }
+        end
         imgui.windows.EndPopup()
     end
 end

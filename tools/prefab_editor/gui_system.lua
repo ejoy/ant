@@ -219,6 +219,7 @@ local event_create          = world:sub {"Create"}
 local event_light           = world:sub {"UpdateDefaultLight"}
 local event_showground      = world:sub {"ShowGround"}
 local event_gizmo           = world:sub {"Gizmo"}
+local create_animation_event = world:sub {"CreateAnimation"}
 local light_gizmo           = ecs.require "gizmo.light"
 
 local aabb_color_i <const> = 0x6060ffff
@@ -386,6 +387,7 @@ function m:handle_event()
             if e.collider or e.slot then
                 anim_view.on_remove_entity(gizmo.target_eid)
             end
+            keyframe_view.on_eid_delete(target)
             prefab_mgr:remove_entity(target)
         elseif what == "clone" then
             prefab_mgr:clone(target)
@@ -433,7 +435,7 @@ function m:handle_event()
     end
 
     for _, key, press, state in event_keyboard:unpack() do
-        if key == "Delete" and press == 1 then
+        if key == "DELETE" and press == 1 then
             if gizmo.target_eid then
                 world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
             end
@@ -483,6 +485,7 @@ function m:handle_event()
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save_prefab()
         elseif state.CTRL and key == "R" and press == 1 then
+            -- ecs.create_instance "/pkg/tools.prefab_editor/res/skybox.prefab"
             -- anim_view:clear()
             -- prefab_mgr:reload()
             -- imodifier.start(test_m, {name="confirm"})
@@ -526,6 +529,9 @@ function m:handle_event()
     end
     for _, what in reset_editor:unpack() do
         imodifier.stop(imodifier.highlight)
+    end
+    for _, at, target in create_animation_event:unpack() do
+        keyframe_view.create_target_animation(at, target)
     end
 end
 

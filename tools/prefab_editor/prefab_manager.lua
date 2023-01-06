@@ -817,5 +817,12 @@ end
 function m.set_anim_view(aview)
     anim_view = aview
 end
-
+function m:get_eid_by_name(name)
+    for _, eid in ipairs(self.entities) do
+        local e <close> = w:entity(eid, "name?in")
+        if e.name == name then
+            return eid
+        end
+    end
+end
 return m

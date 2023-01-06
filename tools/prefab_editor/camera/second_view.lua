@@ -279,10 +279,6 @@ function sc_frustum_sys:camera_usage()
     for _, _, visible in sc_visible_mb:unpack() do
         show_frustum(visible)
     end
-
-    for _ in cc_mb:each() do
-        show_frustum(true)
-    end
 end
 
 function sc_frustum_sys:entity_remove()
