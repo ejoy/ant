@@ -35,7 +35,6 @@ local SETTING_MAPPING = {
     stage       = DEF_FUNC,
     varying_path= DEF_FUNC,
     subsurface  = DEF_FUNC,
-    surfacetype = DEF_FUNC,
     shadow_cast = DEF_FUNC,
 }
 

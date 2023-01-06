@@ -2,7 +2,7 @@ fx:
   fs: /pkg/ant.resources/shaders/simple/quad/fs_shadowquad.sc
   setting:
     shadow_receive: on
-    surfacetype: translucent
+    lighting: off
   vs: /pkg/ant.resources/shaders/simple/quad/vs_texquad.sc
 state:
   ALPHA_REF: 0

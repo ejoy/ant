@@ -8,7 +8,6 @@ fx:
     shadow_receive: on
     shadow_cast: off
     subsurface: off
-    surfacetype: opacity
 properties:
   s_basecolor:
     stage: 0

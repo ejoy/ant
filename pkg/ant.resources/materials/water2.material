@@ -2,7 +2,7 @@ fx:
   vs: /pkg/ant.resources/shaders/water/vs_water_simple.sc
   fs: /pkg/ant.resources/shaders/water/fs_water_simple.sc
   setting:
-    surfacetype: translucent
+    lighting: off
 properties:
   u_noise_scale_bais:     {1.0, 4.0, 0.0, 0.0}
   u_distort_scale_bais:   {1.0, 1.0, 0.0, 0.0}

@@ -7,7 +7,6 @@ fx:
     shadow_cast: on
     shadow_receive: on
     subsurface: off
-    surfacetype: opacity
 properties:
   u_pbr_factor: {0, 0.5, 0.5, 1}
   u_emissive_factor: {0, 0, 0, 0}

@@ -19,6 +19,7 @@ extern "C"{
 #include <unordered_map>
 #include <memory.h>
 #include <string.h>
+#include <algorithm>
 
 struct transform {
 	uint32_t tid;
@@ -106,29 +107,7 @@ struct obj_data {
 #endif
 };
 
-template <typename ...Stages>
-struct queue_stages {
-	using stage = std::vector<obj_data>;
-	std::array<stage, sizeof...(Stages)> stages;
-
-	template <typename Func, size_t ...Is>
-	void foreach_(Func&& func, std::index_sequence<Is...>) {
-		static_cast<void>(std::initializer_list<int>{(func(Stages {}, stages[Is]), 0)...});
-	}
-	template <typename Func>
-	void foreach(Func&& func) {
-		foreach_(std::forward<Func>(func), std::make_index_sequence<sizeof...(Stages)>());
-	}
-};
-
-static queue_stages<
-	ecs::foreground,
-	ecs::opacity,
-	ecs::background,
-	ecs::translucent,
-	ecs::decal_stage,
-	ecs::ui_stage
-> s_queue_stages;
+using objarray = std::vector<obj_data>;
 
 template <typename Name, typename TagCull, typename TagVisible>
 struct render_queue {
@@ -171,79 +150,58 @@ using tag_queue = tag_array<
 static_assert(offsetof(ecs::render_object, mat_ppoq) - offsetof(ecs::render_object, mat_mq) == sizeof(int64_t) * (tag_queue::N-1), "Invalid material data size");
 
 template <typename Entity>
-void collect_render_objs(Entity& e, ecs_api::context& ecs, const matrix_array *mats) {
+void collect_render_objs(Entity& e, ecs_api::context& ecs, const matrix_array *mats, objarray &objs) {
 	auto& ro = e.template get<ecs::render_object>();
-	s_queue_stages.foreach([&](auto stage, auto& s) {
-		using Stage = decltype(stage);
-		if (e.template sibling<Stage>(ecs)) {
 #if defined(_MSC_VER) && defined(_DEBUG)
-			auto id = (uint64_t)e.sibling<ecs::eid>(ecs);
-			s.emplace_back(obj_data{ &ro, mats, id });
+	auto id = (uint64_t)e.sibling<ecs::eid>(ecs);
+	objs.emplace_back(obj_data{ &ro, mats, id });
 #else
-			s.emplace_back(obj_data{ &ro, mats });
+	objs.emplace_back(obj_data{ &ro, mats });
 #endif
-		}
-	});
 }
 
-struct collect_objects {
+template<typename SubClass>
+struct collect_objects_base {
 	static constexpr size_t N = tag_queue::N;
-	using JumpTable = std::array<void(*)(ecs_api::context&, const matrix_array*), N>;
-
-	template <size_t Is>
-	static void run(ecs_api::context& ecs, const matrix_array* mats) {
-		using namespace ecs_api::flags;
-		for (auto& e : ecs.select<ecs::view_visible, typename tag_queue::at<Is>::visible, typename tag_queue::at<Is>::cull(absent), ecs::render_object>()){
-			collect_render_objs(e, ecs, mats);
-		}
-	}
+	using JumpTable = std::array<void(*)(ecs_api::context&, const matrix_array*, objarray &), N>;
 
 	template <size_t ...Is>
 	constexpr static void init_(JumpTable& jump, std::index_sequence<Is...>) {
-		static_cast<void>(std::initializer_list<int>{(jump[Is] = run<Is>, 0)...});
+		static_cast<void>(std::initializer_list<int>{(jump[Is] = SubClass::template run<Is>, 0)...});
 	}
 	constexpr static auto init() {
 		JumpTable jump;
 		init_(jump, std::make_index_sequence<N>());
 		return jump;
 	}
-	void operator() (ecs_api::context& ecs, const matrix_array* mats, size_t i) {
+	void operator() (ecs_api::context& ecs, const matrix_array* mats, size_t i, objarray &objs) {
 		constinit static auto jump = init();
 		if (i >= N) {
 			return;
 		}
-		jump[i](ecs, mats);
+		jump[i](ecs, mats, objs);
 	}
+};
+
+struct collect_objects : public collect_objects_base<collect_objects> {
+	template <size_t Is>
+	static void run(ecs_api::context& ecs, const matrix_array* mats, objarray &objs) {
+		using namespace ecs_api::flags;
+		for (auto& e : ecs.select<ecs::view_visible, typename tag_queue::at<Is>::visible, typename tag_queue::at<Is>::cull(absent), ecs::render_object>()){
+			collect_render_objs(e, ecs, mats, objs);
+		}
+	}
+
 };
 collect_objects s_collect_objects;
 
-struct collect_hitch_objects {
-	static constexpr size_t N = tag_queue::N;
-	using JumpTable = std::array<void(*)(ecs_api::context& ecs, const matrix_array*), N>;
-
+struct collect_hitch_objects : public collect_objects_base<collect_hitch_objects> {
 	template <size_t Is>
-	static void run(ecs_api::context& ecs, const matrix_array* mats) {
+	static void run(ecs_api::context& ecs, const matrix_array* mats, objarray &objs) {
 		using namespace ecs_api::flags;
 		for (auto& e : ecs.select<ecs::hitch_tag, typename tag_queue::at<Is>::visible, ecs::render_object>()){
-			collect_render_objs(e, ecs, mats);
+			collect_render_objs(e, ecs, mats, objs);
 		}
-	}
-
-	template <size_t ...Is>
-	constexpr static void init_(JumpTable& jump, std::index_sequence<Is...>) {
-		static_cast<void>(std::initializer_list<int>{(jump[Is] = run<Is>, 0)...});
-	}
-	constexpr static auto init() {
-		JumpTable jump;
-		init_(jump, std::make_index_sequence<N>());
-		return jump;
-	}
-	void operator() (ecs_api::context& ecs, const matrix_array* mats, size_t i) {
-		constinit static auto jump = init();
-		if (i >= N) {
-			return;
-		}
-		jump[i](ecs, mats);
 	}
 };
 collect_hitch_objects s_collect_hitch_objects;
@@ -270,31 +228,29 @@ update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const 
 }
 
 static void
-draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, obj_transforms &trans){
-	s_queue_stages.foreach([&](auto _, auto& s) {
-		for (const auto & od : s) {
-			if (mesh_submit(w, od.obj)) {
-				auto mi = get_material(od.obj, ra.queue_index);
-				apply_material_instance(L, mi, w);
-				const auto prog = material_prog(L, mi);
+draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const objarray &objs, obj_transforms &trans){
+	for (const auto &od : objs){
+		auto mi = get_material(od.obj, ra.queue_index);
+		if (mi && mesh_submit(w, od.obj)) {
+			apply_material_instance(L, mi, w);
+			const auto prog = material_prog(L, mi);
 
-				transform t;
-				if (od.mats){
-					t = update_hitch_transform(w, od.obj, *od.mats, trans);
-					for (int i=0; i<od.mats->size()-1; ++i) {
-						w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-						w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->depth, BGFX_DISCARD_TRANSFORM);
-						t.tid += t.stride;
-					}
-				} else {
-					t = update_transform(w, od.obj, trans);
+			transform t;
+			if (od.mats){
+				t = update_hitch_transform(w, od.obj, *od.mats, trans);
+				for (int i=0; i<od.mats->size()-1; ++i) {
+					w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
+					w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->depth, BGFX_DISCARD_TRANSFORM);
+					t.tid += t.stride;
 				}
-
-				w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-				w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->depth, BGFX_DISCARD_ALL);
+			} else {
+				t = update_transform(w, od.obj, trans);
 			}
+
+			w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
+			w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->depth, BGFX_DISCARD_ALL);
 		}
-	});
+	}
 }
 
 static int
@@ -319,16 +275,18 @@ lsubmit(lua_State *L) {
 			luaL_error(L, "Invalid queue_index in render_args:%d", ra.queue_index);
 		}
 
-		s_queue_stages.foreach([](auto _, auto& s){
-			s.clear();
-		});
-		s_collect_objects(ecs, nullptr, ra.queue_index);
+		objarray objs;
+		s_collect_objects(ecs, nullptr, ra.queue_index, objs);
 		for (auto const& [groupid, mats] : groups) {
 			int gids[] = {groupid};
 			ecs.group_enable<ecs::hitch_tag>(gids);
-			s_collect_hitch_objects(ecs, &mats, ra.queue_index);
+			s_collect_hitch_objects(ecs, &mats, ra.queue_index, objs);
 		}
-		draw_objs(L, w, ra, trans);
+
+		std::sort(std::begin(objs), std::end(objs), [](const auto &lhs, const auto &rhs){
+			return lhs.obj->render_layer < rhs.obj->render_layer;
+		});
+		draw_objs(L, w, ra, objs, trans);
 	}
 	return 0;
 }
@@ -342,6 +300,15 @@ static size_t find_queue(const char* name, size_t def) {
 		return find_queue<Is+1>(name, def);
 	}
 	return def;
+}
+
+template<size_t Qidx = 0>
+static const char* find_queue_name(size_t idx){
+	if constexpr (Qidx < tag_queue::N) {
+		return (Qidx != idx) ? find_queue_name<Qidx+1>(idx) : tag_queue::at<Qidx>::name;
+	}
+
+	return "";
 }
 
 static size_t to_queue_material_idx(lua_State *L, int idx) {
@@ -386,6 +353,19 @@ lqueue_index(lua_State *L) {
 	return 1;
 }
 
+static int
+lqueue_count(lua_State *L){
+	lua_pushinteger(L, tag_queue::N);
+	return 1;
+}
+
+static int
+lqueue_name(lua_State *L){
+	size_t qidx = (size_t)luaL_checkinteger(L, 1);
+	lua_pushstring(L, find_queue_name<0>(qidx));
+	return 1;
+}
+
 extern "C" int
 luaopen_render(lua_State *L) {
 	luaL_checkversion(L);
@@ -393,6 +373,8 @@ luaopen_render(lua_State *L) {
 		{ "submit", lsubmit},
 		{ "draw",	ldraw},
 		{ "queue_index", lqueue_index},
+		{ "queue_count", lqueue_count},
+		{ "queue_name", lqueue_name},
 		{ "null",	lnull},
 		{ nullptr, nullptr },
 	};

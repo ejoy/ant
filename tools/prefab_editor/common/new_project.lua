@@ -191,8 +191,6 @@ end
 function m.gen_prebuild()
 --     local content = [[
 -- ---
--- path: /pkg/ant.resources/materials/fullscreen.material
--- ---
 -- path: /pkg/ant.resources/materials/depth.material
 -- setting:
 --     depth_type: inv_z

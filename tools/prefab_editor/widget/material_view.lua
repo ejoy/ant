@@ -111,13 +111,6 @@ local function build_fx_ui(mv)
                     mv.need_reload = true
                 end
             }),
-            uiproperty.Combo({label = "Layer", options = irender.layer_names()},{
-                getter = function() return setting_filed "surfacetype" end,
-                setter = function(value)
-                    check_set_setting("surfacetype", value)
-                    mv.need_reload = true
-                end,
-            }),
             uiproperty.Bool({label = "ShadowCast"}, {
                 getter = function()
                     local prefab = hierarchy:get_template(mv.eid)

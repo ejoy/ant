@@ -17,7 +17,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local INV_Z<const> = true
 
-local pickup_materials = {}
+local pickup_material, pickup_skin_material
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
@@ -236,11 +236,8 @@ end
 
 function pickup_sys:init()
 	create_pick_entity()
-	pickup_materials.opacity		= imaterial.load_res '/pkg/ant.resources/materials/pickup_opacity.material'
-	pickup_materials.opacity_skin	= imaterial.load_res '/pkg/ant.resources/materials/pickup_opacity_skin.material'
-	pickup_materials.translucent	= imaterial.load_res '/pkg/ant.resources/materials/pickup_transparent.material'
-	pickup_materials.translucent_skin= imaterial.load_res '/pkg/ant.resources/materials/pickup_transparent_skin.material'
-	pickup_materials.ui_stage 		= pickup_materials.translucent
+	pickup_material			= imaterial.load_res '/pkg/ant.resources/materials/pickup_opacity.material'
+	pickup_skin_material	= imaterial.load_res '/pkg/ant.resources/materials/pickup_opacity_skin.material'
 end
 
 function pickup_sys:entity_init()
@@ -337,47 +334,28 @@ function pickup_sys:pickup()
 	end
 end
 
-local function which_material(st, isskin)
-	if isskin then
-		st = st .. "_skin"
-	end
-	local m = pickup_materials[st]
-	if m == nil then
-		error(("invalid surface type:"):format(st))
-	end
-	return m
+local function which_material(isskin)
+	return isskin and pickup_skin_material or pickup_material
 end
 
 local material_cache = {__mode="k"}
-
-local function has_filter_stage(pf, stage)
-	for _, fn in ipairs(pf) do
-		if fn == stage then
-			return true
-		end
-	end
-end
 
 function pickup_sys:update_filter()
 	for e in w:select "filter_result pickup_queue_visible render_object:update filter_material:in eid:in skinning?in" do
 		local ro = e.render_object
 		local fm = e.filter_material
 		local matres = imaterial.resource(e)
-		local st = matres.fx.setting.surfacetype
-		local qe = w:first "pickup_queue primitive_filter:in"
 
-		if has_filter_stage(qe.primitive_filter, st) then
-			local src_mo = matres.object
-			local mat = which_material(st, e.skinning)
-			local dst_mo = mat.object
-			local newstate = irender.check_set_state(dst_mo, src_mo)
-			local new_matobj = irender.create_material_from_template(dst_mo, newstate, material_cache)
-			local new_mi = new_matobj:instance()
-			new_mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
+		local src_mo = matres.object
+		local mat = which_material(e.skinning)
+		local dst_mo = mat.object
+		local newstate = irender.check_set_state(dst_mo, src_mo)
+		local new_matobj = irender.create_material_from_template(dst_mo, newstate, material_cache)
+		local new_mi = new_matobj:instance()
+		new_mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
 
-			fm["pickup_queue"] = new_mi
-			ro.mat_pickup = new_mi:ptr()
-		end
+		fm["pickup_queue"] = new_mi
+		ro.mat_pickup = new_mi:ptr()
 	end
 end
 

@@ -522,24 +522,30 @@ local omni_stencils = {
 local material_cache = {__mode="k"}
 
 function sm:update_filter()
-    for e in w:select "filter_result opacity render_object:update filter_material:in skinning?in" do
-        local ro = e.render_object
-		local m = which_material(e.skinning)
-		local mo = m.object
-		local fm = e.filter_material
-		local newstate = irender.check_set_state(mo, fm.main_queue)
-		local new_matobj = irender.create_material_from_template(mo, newstate, material_cache)
-		
-		local mi = new_matobj:instance()
+    for e in w:select "filter_result render_layer:in render_object:update filter_material:in skinning?in" do
+		if e.render_layer == "opacity" then
+			local ro = e.render_object
+			local m = which_material(e.skinning)
+			local mo = m.object
+			local fm = e.filter_material
+			local newstate = irender.check_set_state(mo, fm.main_queue)
+			local new_matobj = irender.create_material_from_template(mo, newstate, material_cache)
+			
+			local mi = new_matobj:instance()
 
-		local h = mi:ptr()
-		fm["csm1_queue"] = mi
-		ro.mat_csm1 = h
-		fm["csm2_queue"] = mi
-		ro.mat_csm2 = h
-		fm["csm3_queue"] = mi
-		ro.mat_csm3 = h
-		fm["csm4_queue"] = mi
-		ro.mat_csm4 = h
+			local h = mi:ptr()
+			fm["csm1_queue"] = mi
+			ro.mat_csm1 = h
+			fm["csm2_queue"] = mi
+			ro.mat_csm2 = h
+			fm["csm3_queue"] = mi
+			ro.mat_csm3 = h
+			fm["csm4_queue"] = mi
+			ro.mat_csm4 = h
+		else
+			w:extend(e, "csm1_queue_visible?out csm2_queue_visible?out csm3_queue_visible?out csm4_queue_visible?out")
+			e.csm1_queue_visible = nil
+			w:submit(e)
+		end
 	end
 end

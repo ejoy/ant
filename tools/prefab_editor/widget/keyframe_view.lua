@@ -1201,6 +1201,7 @@ local function create_joint_entity(joint_name)
             visible_state = "main_view|selectable",
             material = "/pkg/tools.prefab_editor/res/materials/joint.material",
             mesh = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
+            render_layer = "translucent",
             name = joint_name,
             on_ready = function(e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
@@ -1269,6 +1270,7 @@ local function create_bone_entity(joint_name)
 		data = {
 			scene 		= {},
 			material	= "/pkg/tools.prefab_editor/res/materials/joint.material",
+            render_layer = "translucent",
 			simplemesh	= imesh.init_mesh(ientity.create_mesh({"p3|n3|t2", bone_vert}), true),
 			visible_state= "main_view|selectable",
 			name		= joint_name,

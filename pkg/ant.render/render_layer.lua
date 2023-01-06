@@ -1,11 +1,7 @@
-local ecs = ...
-local world = ecs.world
-local w = world.w
-
 local MAX_LAYER<const> = 16
 
 local layer_names = {
-    "FOREGROUNG", "DEFAULT", "BACKGROUND", "TRANSLUCENT",
+    "foreground", "opacity", "background", "translucent", "decal", "ui"
 }
 
 local function find_layeridx(name)
@@ -16,20 +12,39 @@ local function find_layeridx(name)
     end
 end
 
-local irl = ecs.interface "irender_layer"
+local irl = {}
 
 function irl.add_layer(name, after_layeridx)
+    local n = #layer_names
     if #layer_names >= MAX_LAYER then
         error(("Too many render layer, max is :%d"):format(MAX_LAYER))
     end
 
+    after_layeridx = after_layeridx or n
+    if after_layeridx == MAX_LAYER then
+        error "Can not push another layer, it will larger than MAX_LAYER"
+    end
 
+    local next = #layer_names+1
+    layer_names[next] = name
+    return next
 end
 
-function irl.layer_name(layeridx)
+function irl.remove_layer(layeridx)
+    if layeridx <= 0 or layeridx > MAX_LAYER then
+        log.warn(("Invalid layeridx:%d"):format(layeridx))
+        return
+    end
+
+    table.remove(layer_names, layeridx)
+end
+
+function irl.layeridx(name)
+    return find_layeridx(name)
+end
+
+function irl.layername(layeridx)
     return layer_names[layeridx]
 end
 
-function irl.defualt_layer()
-    return assert(find_layeridx "DEFAULT")
-end
+return irl

@@ -1,5 +1,4 @@
 lighting: on
-surfacetype: opacity
 shadow_cast: on
 shadow_receive: on
 subsurface: off

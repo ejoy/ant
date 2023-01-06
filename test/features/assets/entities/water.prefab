@@ -10,6 +10,7 @@ data:
     unit: 1
   simplemesh: true
   material: /pkg/ant.resources/materials/water2.material
+  render_layer: translcuent
   visible_state: ""
   postprocess_obj: true
   scene:

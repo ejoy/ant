@@ -2,8 +2,7 @@ fx:
   fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
   vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
   setting:
-    surfacetype: translucent
-    lighting:off
+    lighting: off
 properties:
   u_color: {0, 0, 0, 1}
 state:

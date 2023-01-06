@@ -211,6 +211,7 @@ local function create_texture_item_entity(texpath, canvasentity)
             scene       = {
                 parent = canvas_id,
             },
+            render_layer = "ui",
             visible_state= "main_view",
             name        = "canvas_texture" .. gen_texture_id(),
             canvas_item = "texture",

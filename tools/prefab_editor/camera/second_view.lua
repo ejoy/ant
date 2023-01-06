@@ -210,6 +210,7 @@ local function create_frustum_entity(eid)
             },
             owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/line_color.material",
+            render_layer = "translucent",
             scene = { parent = frustum_root },
             visible_state = "main_view|auxgeom",
             name = "second_view_frustum",

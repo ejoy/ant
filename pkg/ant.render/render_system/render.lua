@@ -78,8 +78,7 @@ if ENABLE_PRE_DEPTH then
 	default_clear_state.clear = "C"
 end
 
-function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, surfacetypes, visible)
-	surfacetypes = surfacetypes or LAYER_NAMES
+function irender.create_view_queue(view_rect, view_queuename, camera_ref, filtertype, exclude, visible)
 	filtertype = filtertype or "main_view"
 
 	local fbidx = fbmgr.get_fb_idx(viewidmgr.get "main_view")
@@ -104,7 +103,6 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 			primitive_filter	= {
 				filter_type = filtertype,
 				exclude_type = exclude,
-				table.unpack(surfacetypes),
 			},
 			visible 			= visible or false,
 			watch_screen_buffer	= true,

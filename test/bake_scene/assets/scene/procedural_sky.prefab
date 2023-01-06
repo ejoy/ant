@@ -9,6 +9,7 @@ data:
     turbidity: 2.15
     which_hour: 12
   visible_state: main_view
+  render_layer: background
   scene:
     r: {0, 0, 0, 1}
     s: {1, 1, 1, 0}

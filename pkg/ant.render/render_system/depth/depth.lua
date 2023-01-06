@@ -52,17 +52,20 @@ local function create_depth_only_material(mo, ro, fm)
 end
 
 function s:update_filter()
-    for e in w:select "filter_result pre_depth_queue_visible opacity render_object:update filter_material:in skinning?in" do
-        local mo = assert(which_material(e.skinning))
-        local ro = e.render_object
-        local fm = e.filter_material
+    for e in w:select "filter_result pre_depth_queue_visible:update render_layer:in render_object:update filter_material:in skinning?in" do
+        if e.render_layer == "opacity" then
+            local mo = assert(which_material(e.skinning))
+            local ro = e.render_object
+            local fm = e.filter_material
 
-        local mi = create_depth_only_material(mo, ro, fm)
+            local mi = create_depth_only_material(mo, ro, fm)
 
-        local h = mi:ptr()
-        fm["pre_depth_queue"] = mi
-        ro.mat_predepth = h
-
+            local h = mi:ptr()
+            fm["pre_depth_queue"] = mi
+            ro.mat_predepth = h
+        else
+            e.pre_depth_queue_visible = nil
+        end
         -- fm["scene_depth_queue"] = mi
         -- ro.mat_scenedepth = h
         --e["scene_depth_queue_visible"] = true

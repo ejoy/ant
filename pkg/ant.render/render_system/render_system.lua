@@ -10,6 +10,8 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local itimer	= ecs.import.interface "ant.timer|itimer"
 local render_sys = ecs.system "render_system"
 
+local irl		= require "render_layer"
+
 local rendercore= ecs.clibs "render.core"
 local null = rendercore.null()
 
@@ -73,6 +75,16 @@ function render_sys:entity_init()
 			update_ro(e.render_object, m)
 		end
 	end
+
+	for e in w:select "INIT render_layer?update render_object:update" do
+		local rl = e.render_layer
+		if not rl  then
+			rl = "opacity"
+			e.render_layer = rl
+		end
+
+		e.render_object.render_layer = assert(irl.layeridx(rl))
+	end
 end
 
 local time_param = math3d.ref(math3d.vector(0.0, 0.0, 0.0, 0.0))
@@ -88,23 +100,11 @@ function render_sys:commit_system_properties()
 	update_timer_param()
 end
 
-local function has_filter_tag(t, filter)
-	for _, fn in ipairs(filter) do
-		if fn == t then
-			return true
-		end
-	end
-end
 
 function render_sys:begin_filter()
 	w:clear "filter_result"
     for e in w:select "render_object_update render_object visible_state:in filter_result:new" do
-		local matres = imaterial.resource(e)
         local fs = e.visible_state
-		local st = matres.fx.setting.surfacetype
-
-		e[st] = true
-		w:extend(e, st .. "?out")
 
 		for qe in w:select "queue_name:in primitive_filter:in" do
 			local qn = qe.queue_name
@@ -115,10 +115,8 @@ function render_sys:begin_filter()
 			end
 
 			local pf = qe.primitive_filter
-			if has_filter_tag(st, pf) then
-				local add = ((fs & pf.filter_type) ~= 0) and ((fs & pf.exclude_type) == 0)
-				mark_tags(add)
-			end
+			local add = ((fs & pf.filter_type) ~= 0) and ((fs & pf.exclude_type) == 0)
+			mark_tags(add)
 		end
 		e.filter_result = true
     end
@@ -184,13 +182,15 @@ end
 
 function s:update_filter()
 	if irender.use_pre_depth() then
-		for e in w:select "filter_result main_queue_visible opacity render_object:update filter_material:in" do
-			local ro = e.render_object
-			local fm = e.filter_material
-			local m = fm.main_queue
-			ro.mat_mq = m:ptr()
-			--Here, we no need to create new material object for this new state, because only main_queue render need this material object
-			m:get_material():set_state(check_set_depth_state_as_equal(m:get_state()))
+		for e in w:select "filter_result main_queue_visible render_layer:in render_object:update filter_material:in" do
+			if e.render_layer == "opacity" then
+				local ro = e.render_object
+				local fm = e.filter_material
+				local m = fm.main_queue
+				ro.mat_mq = m:ptr()
+				--Here, we no need to create new material object for this new state, because only main_queue render need this material object
+				m:get_material():set_state(check_set_depth_state_as_equal(m:get_state()))
+			end
 		end
 	end
 	w:clear "render_object_update"

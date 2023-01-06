@@ -48,6 +48,7 @@ function widget_drawer_sys:init()
 			scene = {},
 			simplemesh = create_dynamic_buffer(wd.declname, wd.vertices_num, wd.indices_num),
 			material = "/pkg/ant.resources/materials/line.material",
+			render_layer = "translucent",
 			visible_state = "main_view",
 			widget_drawer = wd,
 			name = "bounding_draw"

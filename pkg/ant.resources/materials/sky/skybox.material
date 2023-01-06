@@ -2,7 +2,6 @@ fx:
     vs: /pkg/ant.resources/shaders/sky/skybox/vs_skybox.sc
     fs: /pkg/ant.resources/shaders/sky/skybox/fs_skybox.sc
     setting:
-        surfacetype: background
         lighting: off
 properties:
     s_skybox:

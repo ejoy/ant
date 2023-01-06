@@ -166,6 +166,7 @@ local function add_polylines(polymesh, line_width, color, material, srt)
             material    = material,
             visible_state= "main_view",
             name        = "polyline",
+            render_layer= "background",
             on_ready = function (e)
                 w:extend(e, "polyline:in")
                 local pl = e.polyline
@@ -211,7 +212,7 @@ end
 
 function ipl.add_strip_lines(points, line_width, color, material, loop)
     local polymesh = ipl.create_linestrip_mesh(points, line_width, color, loop)
-    return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polyline.material")
+    return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polyline.material", "background")
 end
 
 local function generate_linelist_vertices(points)

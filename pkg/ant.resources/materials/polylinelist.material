@@ -2,7 +2,6 @@ fx:
     vs: /pkg/ant.resources/shaders/polyline/vs_polylinelist.sc
     fs: /pkg/ant.resources/shaders/polyline/fs_polyline.sc
     setting:
-        surfacetype: translucent
         FIX_WIDTH: 1
 properties:
     s_tex:

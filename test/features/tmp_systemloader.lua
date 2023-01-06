@@ -79,6 +79,7 @@ local function create_texture_plane_entity(color, tex, tex_rect, tex_size)
             owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/texture_plane.material",
             visible_state= "main_view",
+            render_layer = "background",
             scene   = { srt = {t={0, 5, 5}}},
             on_ready = function (e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(color))
