@@ -14,14 +14,21 @@ return {
     loader = function (filename, world)
         local iani = world._ecs["ant.animation"].import.interface "ant.animation|ianimation"
         local path = fs.path(filename)
-        local data = datalist.parse(read_file(path))
-        local ske = assetmgr.resource(data.skeleton)
+        local anim_list = datalist.parse(read_file(path))
+        local ske_anim
+        for _, anim in ipairs(anim_list) do
+            if anim.type == "ske" then
+                ske_anim = anim
+                break
+            end
+        end
+        local ske = assetmgr.resource(ske_anim.skeleton)
         local raw_animation = animodule.new_raw_animation()
-        raw_animation:setup(ske._handle, data.duration)
+        raw_animation:setup(ske._handle, ske_anim.duration)
         return {
-            _duration = data.duration,
+            _duration = ske_anim.duration,
             _sampling_context = animodule.new_sampling_context(1),
-            _handle = iani.build_animation(ske._handle, raw_animation, data.target_anims, data.sample_ratio),
+            _handle = iani.build_animation(ske._handle, raw_animation, ske_anim.target_anims, ske_anim.sample_ratio),
         }
     end,
     unloader = function (res)
