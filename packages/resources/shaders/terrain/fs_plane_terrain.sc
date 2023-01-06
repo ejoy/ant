@@ -64,23 +64,6 @@ vec3 blend(vec3 texture1, float a1, float d1, vec3 texture2, float a2, float d2)
     return (texture1.rgb * b1 + texture2.rgb * b2) / (b1 + b2);
 }
 
-float which_cement_color_idx(float rtype)
-{
-    if(rtype == 1.0){
-        return 5.0;
-    }
-    
-    if(rtype == 2.0){
-        return 6.0;
-    }
-    
-    if(rtype == 3.0){
-        return 7.0;
-    }
-
-    return -1.0;
-}
-
 input_attributes init_input_attributes(vec3 gnormal, vec3 normal, vec4 posWS, vec4 basecolor)
 {
     input_attributes input_attribs  = (input_attributes)0;
@@ -123,7 +106,7 @@ void main()
 
 #ifdef HAS_MULTIPLE_LIGHTING
 
-    const float cement_color_idx = which_cement_color_idx(v_road_type);
+    const float cement_color_idx = v_road_type;
     
     #include "attributes_getter.sh"
     
@@ -147,11 +130,10 @@ void main()
     vec4 stone_basecolor   = texture2DArray(s_basecolor, vec3(uv, v_stone_color_idx));
     vec4 sand_basecolor    = texture2DArray(s_basecolor, vec3(uv, v_sand_color_idx));
 
-    const float cement_color_idx = which_cement_color_idx(v_road_type);
+    const float cement_color_idx = v_road_type;
     vec4 cement_basecolor = vec4_splat(0.0);
-    if (cement_color_idx > 0){
-        cement_basecolor = texture2DArray(s_basecolor, vec3(uv, cement_color_idx));
-    }
+    
+    cement_basecolor = texture2DArray(s_basecolor, vec3(uv, cement_color_idx));
 
     float cement_alpha = texture2DArray(s_cement_alpha, vec3(v_texcoord1, v_road_shape) );
     float cement_height = texture2DArray(s_height, vec3(v_texcoord0, 2.0) );

@@ -203,7 +203,7 @@ local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, direction, road_ty
     if road_type == nil then
         grid_type = 0.0
     else
-        grid_type = road_type
+        grid_type = road_type + 4.0
     end
     local ox, oy, oz = table.unpack(origin)
     local nx, ny, nz = ox + extent[1], oy + extent[2], oz + extent[3]
