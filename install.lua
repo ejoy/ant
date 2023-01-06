@@ -13,7 +13,7 @@ end
 
 local fs = require "bee.filesystem"
 local bytecode = dofile "tools/install/bytecode.lua"
-local argument = dofile "packages/argument/main.lua"
+local argument = dofile "pkg/ant.argument/main.lua"
 
 local function copy_directory(from, to, filter)
     fs.create_directories(to)
@@ -47,7 +47,7 @@ print(("remove %s* ..."):format(output:string()))
 if fs.exists(output) then
     fs.remove_all(output / "bin")
     fs.remove_all(output / "engine")
-    fs.remove_all(output / "packages")
+    fs.remove_all(output / "pkg")
     fs.remove_all(output / "tools")
 else
     fs.create_directories(output)
@@ -61,7 +61,7 @@ end)
 copy_directory(input / "engine", output / "engine", function (path)
     return path:filename():string() ~= ".gitignore"
 end)
-copy_directory(input / "packages", output / "packages", function (path)
+copy_directory(input / "pkg", output / "pkg", function (path)
     return path:filename():string() ~= ".gitignore"
 end)
 copy_directory(input / "docs", output / "doc")
