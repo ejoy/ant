@@ -41,11 +41,11 @@ for path in fs.pairs(fs.path(lm.workdir) / "../clibs") do
     end
 end
 
-for path in fs.pairs(fs.path(lm.workdir) / "../packages") do
+for path in fs.pairs(fs.path(lm.workdir) / "../pkg") do
     if fs.exists(path / "make.lua") then
-        local name = path:stem():string()
-        local makefile = ("../packages/%s/make.lua"):format(name)
-        checkAddModule(name, makefile)
+        local name = path:filename():string()
+        local makefile = ("../pkg/%s/make.lua"):format(name)
+        checkAddModule(name:sub(5, -1), makefile)
     end
 end
 
@@ -79,7 +79,7 @@ lm:lua_source "ant_common" {
         }
     }
 }
-checkAddModule("layout", "../packages/font/make.lua")
+checkAddModule("layout", "../pkg/ant.font/make.lua")
 lm:lua_source "ant_openlibs" {
     sources = "common/ant_openlibs.c",
 }

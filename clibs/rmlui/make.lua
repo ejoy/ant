@@ -67,7 +67,7 @@ lm:lua_source "rmlui_binding" {
         Ant3rd .. "glm",
         Ant3rd .. "yoga",
         "../luabind",
-        "../../packages/bundle/src/",
+        "../../pkg/ant.bundle/src/",
     },
     defines = "GLM_FORCE_QUAT_DATA_XYZW",
     sources = {

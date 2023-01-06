@@ -66,10 +66,12 @@ local function loadComponents()
     local function eval(filename)
         assert(loadfile(filename:string(), "t", env))()
     end
-    for _, pkgpath in ipairs(packages) do
-        for file in fs.pairs(pkgpath, "r") do
-            if file:equal_extension "ecs" then
-                eval(file)
+    for _, pkgs in ipairs(packages) do
+        for pkg in fs.pairs(pkgs) do
+            for file in fs.pairs(pkg, "r") do
+                if file:equal_extension "ecs" then
+                    eval(file)
+                end
             end
         end
     end

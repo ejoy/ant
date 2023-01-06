@@ -14,7 +14,7 @@
 	path = 3rd/glm
 	url = https://github.com/g-truc/glm.git
 [submodule "packages/resources.binary"]
-	path = packages/resources.binary
+	path = pkg/ant.resources.binary
 	url = https://gz-tea.ejoy.com/git/Ant/assets.git
 [submodule "3rd/imgui"]
 	path = 3rd/imgui
@@ -38,7 +38,7 @@
 	path = 3rd/bee.lua
 	url = https://github.com/actboy168/bee.lua.git
 [submodule "packages/efk/efkbgfx"]
-	path = packages/efk/efkbgfx
+	path = pkg/ant.efk/efkbgfx
 	url = https://github.com/cloudwu/efkbgfx.git
 [submodule "3rd/math3d"]
 	path = 3rd/math3d

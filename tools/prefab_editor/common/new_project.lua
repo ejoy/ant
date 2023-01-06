@@ -58,7 +58,7 @@ end
 
 function m.gen_mount()
     local mount_content = [[
-@pkg packages
+@pkg pkg
 @pkg-one ${project}
 engine engine
 ]]
