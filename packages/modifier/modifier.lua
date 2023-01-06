@@ -226,6 +226,9 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
 end
 
 function imodifier.start(m, desc)
+    if not m then
+        return
+    end
     world:pub {"modifier", m, desc}
 end
 

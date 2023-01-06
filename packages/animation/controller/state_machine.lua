@@ -240,21 +240,32 @@ function iani.play(eid, anim_state)
 			local f = assert(fs.open(path))
 			local data = f:read "a"
 			f:close()
-			local anim_data = datalist.parse(data)
-			local duration = anim_data.duration
-			anim = {
-				_duration = duration,
-				_sampling_context = animodule.new_sampling_context(1)
-			}
-			local ske = e.skeleton._handle
-			local raw_animation = animodule.new_raw_animation()
-			raw_animation:setup(ske, duration)
-			anim._handle = iani.build_animation(ske, raw_animation, anim_data.joint_anims, anim_data.sample_ratio)
+			local anim_list = datalist.parse(data)
+			for _, anim_data in ipairs(anim_list) do
+				if anim_data.type == "ske" then
+					local duration = anim_data.duration
+					anim = {
+						_duration = duration,
+						_sampling_context = animodule.new_sampling_context(1)
+					}
+					local ske = e.skeleton._handle
+					local raw_animation = animodule.new_raw_animation()
+					raw_animation:setup(ske, duration)
+					anim._handle = iani.build_animation(ske, raw_animation, anim_data.joint_anims, anim_data.sample_ratio)
+					break
+				elseif anim_data.type == "srt" then --TODO: srt and mtl animation
+				elseif anim_data.type == "mtl" then
+				end
+			end
 		else
 			print("animation:", anim_name, "not exist")
 			return
 		end
 		e.animation[anim_name] = anim
+	end
+	if not anim then
+		print("animation:", anim_name, "not exist")
+		return
 	end
 	e.anim_ctrl.name = anim_name
 	e.anim_ctrl.owner = anim_state.owner
