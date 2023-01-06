@@ -1,10 +1,12 @@
 local lm = require "luamake"
 
+local ROOT <const> = "../../"
+
 lm:lua_source "textureman" {
 	includes = {
-		"../../clibs/bgfx",
-		"../../3rd/bgfx/include",
-		"../../3rd/bx/include",
+		ROOT .. "clibs/bgfx",
+		ROOT .. "3rd/bgfx/include",
+		ROOT .. "3rd/bx/include",
 	},
     sources = {
         "src/textureman.c",

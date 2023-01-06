@@ -6,7 +6,7 @@ lm.BimgDir = lm:path "../bimg/"
 
 lm:import "bgfx"
 
-local SHADER_PKG_DIR<const> = "../../packages/resources/shaders/"
+local SHADER_PKG_DIR<const> = "../../pkg/ant.resources/shaders/"
 lm:copy "copy_bgfx_shader" {
     input = {
         lm.BgfxDir .. "/src/bgfx_shader.sh",

@@ -1,11 +1,13 @@
 local lm = require "luamake"
 
+local ROOT <const> = "../../"
+
 lm:lua_source "scene" {
     includes = {
-		"../../clibs/ecs",
-        "../../3rd/math3d",
-		"../../3rd/luaecs",
-        "../../3rd/glm",
+		ROOT .. "clibs/ecs",
+        ROOT .. "3rd/math3d",
+		ROOT .. "3rd/luaecs",
+        ROOT .. "3rd/glm",
     },
     sources = {
         "scene.cpp"

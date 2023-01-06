@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../clibs/fileinterface/fileinterface.h"
+#include "fileinterface.h"
 #include <Effekseer/Effekseer.h>
 
 class EfkFileInterface : public Effekseer::FileInterface {
