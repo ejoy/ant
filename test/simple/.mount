@@ -1,4 +1,4 @@
 / ${project}
 engine engine
 @pkg pkg
-@pkg-one ${project}
+@pkg ${project}/pkg
