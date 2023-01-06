@@ -72,17 +72,12 @@ function second_camera_sys:init_world()
     }
 end
 
-local cc_mb
+
 
 function second_camera_sys:entity_init()
-    for q in w:select "INIT second_view camera_ref:in" do
-        local cref = q.camera_ref
-        cc_mb = world:sub{"camera_changed", cref}
-    end
 end
 
 local mq_vr_mb = world:sub{"view_rect_changed", "main_queue"}
-local sc_cc_mb = world:sub{"second_view", "camera_changed"}
 
 function second_camera_sys:data_changed()
     for msg in mq_vr_mb:each() do
@@ -90,16 +85,12 @@ function second_camera_sys:data_changed()
         local sv_vr = calc_second_view_viewport(vr)
         irq.set_view_rect("second_view", sv_vr)
     end
-
-    for _, _, cref in sc_cc_mb:unpack() do
-        cc_mb = world:sub{"camera_changed", cref}
-    end
 end
 
 function second_camera_sys:update_camera()
     local svq = w:first "second_view visible camera_ref:in"
-    local ce <close> = w:entity(svq.camera_ref, "scene_changed?in camera:in scene:in")
-    if ce.scene_changed then
+    local ce <close> = w:entity(svq.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in")
+    if ce.scene_changed or ce.camera_changed then
         local camera, scene = ce.camera, ce.scene
 
         local pos, dir = math3d.index(scene.worldmat, 4, 3)

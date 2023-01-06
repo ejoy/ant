@@ -137,8 +137,8 @@ function render_sys:render_submit()
 		local viewid = rt.viewid
 
 		bgfx.touch(viewid)
-		local camera <close> = w:entity(qe.camera_ref, "scene_changed?in")
-		if camera.scene_changed then
+		local camera <close> = w:entity(qe.camera_ref, "scene_changed?in camera_changed?in")
+		if camera.scene_changed or camera.camera_changed then
 			w:extend(camera, "camera:in")
 			bgfx.set_view_transform(viewid, camera.camera.viewmat, camera.camera.projmat)
 		end

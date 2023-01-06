@@ -138,7 +138,6 @@ end
 local main_viewid = viewidmgr.get "main_view"
 
 local cr_camera_mb      = world:sub{"main_queue", "camera_changed"}
-local camera_frustum_mb
 
 function cfs:init()
     icompute.create_compute_entity(
@@ -188,7 +187,6 @@ end
 function cfs:init_world()
     local mq = w:first("main_queue camera_ref:in")
     local ceid = mq.camera_ref
-    camera_frustum_mb = world:sub{"camera_changed", ceid}
 
     cluster_buffers.light_info.handle = ilight.light_buffer()
 
@@ -246,12 +244,14 @@ function cfs:data_changed()
 
     for msg in cr_camera_mb:each() do
         local ceid = msg[3]
-        camera_frustum_mb = world:sub{"camera_changed", msg[3]}
         build_cluster_aabb_struct(main_viewid, ceid)
     end
 
-    for _, ceid in camera_frustum_mb:unpack() do
-        build_cluster_aabb_struct(main_viewid, ceid)
+    local mq = w:first "main_queue camera_ref:in"
+    local ce = w:entity(mq.camera_ref, "camera_changed?in")
+
+    if ce.camera_changed then
+        build_cluster_aabb_struct(main_viewid, mq.camera_ref)
     end
 
     if rebuild_light_index_list then

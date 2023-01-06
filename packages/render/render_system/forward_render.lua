@@ -34,14 +34,15 @@ function fr_sys:init()
 	irender.create_main_queue(vr, camera)
 end
 
-local mq_cc = world:sub{"camera_changed", "main_queue"}
 local mq_vr_changed = world:sub{"view_rect_changed", "main_queue"}
 
 function fr_sys:data_changed()
 	if irender.use_pre_depth() then
-		for _, _, ceid in mq_cc:unpack() do
+		local mq = w:first "main_queue camera_ref:in"
+		local ce = w:entity(mq.camera_ref, "camera_changed?in")
+		if ce.camera_changed then
 			local pdq = w:first "pre_depth_queue camera_ref:out"
-			pdq.camera_ref = ceid
+			pdq.camera_ref = mq.camera_ref
 			w:submit(pdq)
 		end
 

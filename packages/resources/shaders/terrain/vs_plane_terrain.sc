@@ -1,7 +1,7 @@
 #include "common/inputs.sh"
 
 $input 	a_position a_texcoord0 a_texcoord1 a_texcoord2 a_texcoord3 a_texcoord4 a_texcoord5
-$output v_texcoord0 v_texcoord1 v_texcoord2 v_texcoord3 v_texcoord4 v_normal v_tangent v_bitangent v_posWS v_idx1 v_idx2
+$output v_texcoord0 v_texcoord1 v_texcoord2 v_normal v_tangent v_bitangent v_posWS v_idx1 v_idx2
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
@@ -14,10 +14,10 @@ void main()
 
 	v_texcoord0	= a_texcoord0;
 	v_texcoord1 = a_texcoord1;
-	v_idx1		= a_texcoord2.xy;
-	v_idx2		= vec4(a_texcoord3.xy, a_texcoord4.xy);
+	v_texcoord2 = a_texcoord2;
 
-	v_texcoord2 = a_texcoord5;
+	v_idx1		= a_texcoord3.xy;
+	v_idx2		= vec4(a_texcoord4.xy, a_texcoord5.xy);
 
 	v_normal	= mul(wm, mediump vec4(0.0, 1.0, 0.0, 0.0)).xyz;
 	v_tangent	= mul(wm, mediump vec4(1.0, 0.0, 0.0, 0.0)).xyz;

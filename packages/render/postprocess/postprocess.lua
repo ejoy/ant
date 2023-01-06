@@ -9,7 +9,6 @@ local util      = ecs.require "postprocess.util"
 local pp_sys    = ecs.system "postprocess_system"
 
 local mq_camera_mb = world:sub{"main_queue", "camera_changed"}
-local camear_frustum_mb
 
 function pp_sys:init()
     ecs.create_entity {
@@ -30,12 +29,15 @@ local need_update_scene_buffers
 local need_update_pp_param
 local function update_postprocess_param()
     for _, _, ceid in mq_camera_mb:unpack() do
-        camear_frustum_mb = world:sub{"camera_changed", ceid, "frustum"}
         need_update_pp_param = ceid
     end
 
-    for _, ceid in camear_frustum_mb:unpack() do
-        need_update_pp_param = ceid
+    if not need_update_pp_param then
+        local mq = w:first "main_queue camera_ref:in"
+        local ce = w:entity(mq.camera_ref, "camera_changed?in")
+        if ce.camera_changed then
+            need_update_pp_param = mq.camera_ref
+        end
     end
 
     if need_update_pp_param then
@@ -52,7 +54,6 @@ end
 
 function pp_sys:init_world()
     local mq = w:first("main_queue camera_ref:in")
-    camear_frustum_mb = world:sub{"camera_changed", mq.camera_ref, "frustum"}
     need_update_pp_param = mq.camera_ref
     need_update_scene_buffers = true
 end

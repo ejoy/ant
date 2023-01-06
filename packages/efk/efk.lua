@@ -138,8 +138,7 @@ function efk_sys:entity_remove()
 end
 
 local mq_vr_mb = world:sub{"view_rect_changed", "main_queue"}
-local camera_changed = world:sub{"main_queue", "camera_changed"}
-local camera_frustum_mb
+local mq_camera_changed = world:sub{"main_queue", "camera_changed"}
 
 local function update_framebuffer_texutre()
     local eq = w:first("efk_queue render_target:in")
@@ -162,9 +161,10 @@ local function update_framebuffer_texutre()
     }
 end
 
+local need_update_framebuffer
+
 function efk_sys:init_world()
     local mq = w:first("main_queue render_target:in camera_ref:in")
-    camera_frustum_mb = world:sub{"camera_changed", mq.cameraref, "frustum"}
     local vp = world.args.viewport
     ecs.create_entity{
         policy = {
@@ -190,27 +190,27 @@ function efk_sys:init_world()
     }
 
     --let it init
-    world:pub{"camera_changed", mq.cameraref, "frustum"}
+    need_update_framebuffer = true
 end
 
-local vp_changed_mb = world:sub{"world_viewport_changed"}
 function efk_sys:camera_usage()
-    -- fix effect viewport bug
-    -- for _, vp in vp_changed_mb:unpack() do
-    --     irq.set_view_rect("efk_queue", vp)
-    -- end
-
-    for _, _, cameraref in camera_changed:unpack() do
-        camera_frustum_mb = world:sub{"camera_changed", cameraref, "frustum"}
-        update_framebuffer_texutre()
-    end
-
-    for _ in camera_frustum_mb:each() do
-        update_framebuffer_texutre()
+    for _ in mq_camera_changed:each() do
+        need_update_framebuffer = true
     end
 
     for _ in mq_vr_mb:each() do
+        need_update_framebuffer = true
+    end
+
+    if not need_update_framebuffer then
+        local mq = w:first "main_queue camera_ref:in"
+        local ce = w:entity(mq.camera_ref, "camera_changed?in")
+        need_update_framebuffer = ce.camera_changed
+    end
+
+    if need_update_framebuffer then
         update_framebuffer_texutre()
+        need_update_framebuffer = nil
     end
 end
 
