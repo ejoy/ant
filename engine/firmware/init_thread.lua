@@ -56,7 +56,7 @@ else
 	function vfs.repopath()
 		return call("REPOPATH")
 	end
-	function vfs.mount(name, path)
-		return call("MOUNT", name, path)
+	function vfs.mount(path)
+		return call("MOUNT", path)
 	end
 end
