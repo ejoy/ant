@@ -14,6 +14,8 @@ static YGConfigRef createDefaultYogaConfig() {
 	YGConfigRef config = YGConfigNew();
 	YGConfigSetLogger(config, YogaLogger);
 	YGConfigSetPointScaleFactor(config, 0);
+	YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
+	YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 	return config;
 }
 
