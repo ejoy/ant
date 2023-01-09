@@ -49,8 +49,12 @@ local function default_sampler()
 	}
 end
 
-local function fill_default_sampler(sampler)
+local function fill_default_sampler(param)
+    local sampler = param.sampler
 	local d = default_sampler()
+    if param.mipmap then
+        d.MIP = "LINEAR"
+    end
 	if sampler == nil then
 		return d
 	end

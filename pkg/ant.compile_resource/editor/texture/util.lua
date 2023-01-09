@@ -81,7 +81,7 @@ end
 
 return function (output, param)
 	local config = {
-        sampler = pngparam.sampler(param.sampler),
+        sampler = pngparam.sampler(param),
         flag	= sampler(param.sampler),
     }
     if param.colorspace == "sRGB" then
