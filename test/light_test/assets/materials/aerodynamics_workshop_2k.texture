@@ -1,5 +1,6 @@
 colorspace: linear
 normalmap: false
+cubemap: true
 path: /pkg/ant.test.light/assets/materials/aerodynamics_workshop_2k.hdr
 mipmap: 0
 sampler:
