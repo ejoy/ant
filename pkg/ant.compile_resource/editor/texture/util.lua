@@ -36,7 +36,9 @@ local function gen_commands(commands, param, input, output)
 	if param.normalmap then
 		add_option(commands, "-n")
 	end
-
+ 	if param.cubemap then
+		add_option(commands, "--equirect")
+	end 
 	param.colorspace = param.colorspace or "sRGB"
 	if param.colorspace == "linear" then
 		add_option(commands, "--linear")
@@ -128,7 +130,7 @@ return function (output, param)
 		ti.mipmap = false
 		ti.depth = 1
 		ti.numLayers = param.numLayers or 1
-		ti.cubemap = false
+		ti.cubeMap = param.cubemap or false
 		ti.storageSize = w*h*4
 		ti.numMips = 1
 		ti.bitsPerPixel = 32
