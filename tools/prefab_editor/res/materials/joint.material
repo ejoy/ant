@@ -4,7 +4,6 @@ fx:
     lighting: on
     shadow_receive: off
     shadow_cast: off
-    surfacetype: translucent
     PACK_TANGENT_TO_QUAT: 0
   vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
 properties:

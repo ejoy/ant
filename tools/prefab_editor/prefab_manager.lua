@@ -253,62 +253,6 @@ function m:create(what, config)
         elseif config.type == "plane(prefab)" then
             m:add_prefab(gd.editor_package_path .. "res/plane.prefab")
         end
-    elseif what == "terrain" then
-        if config.type == "shape" then
-            -- local ist = ecs.import.interface "ant.terrain|ishape_terrain"
-            -- local function generate_terrain_fields(w, h)
-            --     local shapetypes = ist.shape_types()
-
-            --     local fields = {}
-            --     for ih=1, h do
-            --         for iw=1, w do
-            --             local which = 3 --math.random(1, 3)
-            --             local height = 0.05 --math.random() * 0.05
-            --             fields[#fields+1] = {
-            --                 type    = shapetypes[which],
-            --                 height  = height,
-            --             }
-            --         end
-            --     end
-
-            --     return fields
-            --end
-
-            -- local ww, hh = 64, 64
-            -- local terrain_fields = generate_terrain_fields(ww, hh)
-            -- local template = {
-            --     policy = {
-            --         "ant.scene|scene_object",
-            --         "ant.terrain|shape_terrain",
-            --         "ant.general|name",
-            --     },
-            --     data = {
-            --         name = "shape_terrain_test",
-            --         scene = {
-            --             srt = {
-            --                 t = {-ww//2, 0.0, -hh//2},
-            --             }
-            --         },
-            --         shape_terrain = {
-            --             terrain_fields = terrain_fields,
-            --             width = ww,
-            --             height = hh,
-            --             section_size = math.max(1, ww > 4 and ww//4 or ww//2),
-            --             unit = 2,
-            --             edge = {
-            --                 color = 0xffe5e5e5,
-            --                 thickness = 0.08,
-            --             },
-            --         },
-            --         materials = {
-            --             shape = "/pkg/ant.resources/materials/shape_terrain.material",
-            --             edge = "/pkg/ant.resources/materials/shape_terrain_edge.material",
-            --         }
-            --     }
-            -- }
-            -- local shapetarrain = ecs.create_entity(utils.deep_copy(template))
-            -- self:add_entity(shapetarrain, self.root, template)
-        end
     elseif what == "light" then
         if config.type == "directional" or config.type == "point" or config.type == "spot" then
             local newlight, tpl = create_default_light(config.type, self.root)
@@ -550,6 +494,7 @@ function m:create_ground()
                 scene = {s = {200, 1, 200}},
                 mesh  = "/pkg/tools.prefab_editor/res/plane.glb|meshes/Plane_P1.meshbin",
                 material    = "/pkg/tools.prefab_editor/res/materials/texture_plane.material",
+                render_layer = "background",
                 visible_state= "main_view",
                 name        = "ground",
                 on_ready = function (e)
@@ -817,5 +762,12 @@ end
 function m.set_anim_view(aview)
     anim_view = aview
 end
-
+function m:get_eid_by_name(name)
+    for _, eid in ipairs(self.entities) do
+        local e <close> = w:entity(eid, "name?in")
+        if e.name == name then
+            return eid
+        end
+    end
+end
 return m

@@ -210,6 +210,7 @@ local function create_frustum_entity(eid)
             },
             owned_mesh_buffer = true,
             material = "/pkg/ant.resources/materials/line_color.material",
+            render_layer = "translucent",
             scene = { parent = frustum_root },
             visible_state = "main_view|auxgeom",
             name = "second_view_frustum",
@@ -278,10 +279,6 @@ local sc_visible_mb = world:sub{"queue_visible_changed", "second_view"}
 function sc_frustum_sys:camera_usage()
     for _, _, visible in sc_visible_mb:unpack() do
         show_frustum(visible)
-    end
-
-    for _ in cc_mb:each() do
-        show_frustum(true)
     end
 end
 

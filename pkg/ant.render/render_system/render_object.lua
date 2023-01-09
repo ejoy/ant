@@ -30,6 +30,7 @@ local function init_ro()
 
         depth       = 0,
         discard_flags=0xff,
+        render_layer= 0,
     }
 end
 

@@ -20,11 +20,12 @@ local mc, mu	= mathpkg.constant, mathpkg.util
 local imodifier = ecs.import.interface "ant.modifier|imodifier"
 local ika       = ecs.import.interface "ant.animation|ikeyframe"
 local faicons   = require "common.fa_icons"
+local prefab_mgr = ecs.require "prefab_manager"
 local m = {}
-local mtl_desc = {}
 local current_mtl
-local current_mtl_target
+local current_target
 local current_uniform
+local target_map = {}
 local file_path
 local joints_map
 local joints_list
@@ -34,18 +35,12 @@ local sample_ratio = 50.0
 local anim_eid
 local current_joint
 local current_anim
-local current = {}
-local allanims = { {}, {}, {} }
-local anim_name_list = { {}, {}, {} }
+local allanims = {}
+local anim_name_list = {}
+local create_context = {}
 local MODE_MTL<const> = 1
 local MODE_SKE<const> = 2
 local MODE_SRT<const> = 3
-local edit_mode = MODE_SKE
-local edit_mode_name = {
-    "Materail",
-    "Skeleton",
-    "SRT",
-}
 local anim_type_name = {
     "Linear",
     "Rebound",
@@ -70,28 +65,25 @@ local dir_name = {
     "XYZ",
 }
 
-local function get_init_value(uniformname)
-    if edit_mode == MODE_SRT then
+local function get_init_value(anim)
+    if anim.type == "srt" then
         --{s, rx, ry, rz, tx, ty, tz}
-        return {1, 0, 0, 0, 0, 0, 0}
-    elseif edit_mode == MODE_MTL then
-        for _, value in ipairs(mtl_desc[current_mtl]) do
-            if uniformname == value.name then
-                return value.init_value
-            end
-        end
+        return 
+    elseif anim.type == "mtl" then
+        
     end
 end
 
 local function update_animation()
+    local animtype = current_anim.type
     local runtime_anim = current_anim.runtime_anim
-    if edit_mode == MODE_MTL or edit_mode == MODE_SRT then
-        local keyframes = {}
-        local init_value = get_init_value(current_uniform)
-        local get_keyframe_value = function (clip)
-            if edit_mode == MODE_MTL then
+    if animtype == "ske" then
+        runtime_anim._handle = iani.build_animation(current_skeleton._handle, runtime_anim.raw_animation, current_anim.target_anims, sample_ratio)
+    else
+        local get_keyframe_value = function (type, clip)
+            if type == "mtl" then
                 return clip.value
-            elseif edit_mode == MODE_SRT then
+            elseif type == "srt" then
                 local value = {1, 0, 0, 0, 0, 0, 0}
                 value[clip.rot_axis + 1] = clip.amplitude_rot
                 if clip.direction < 4 then
@@ -114,54 +106,61 @@ local function update_animation()
             end
         end
         for _, anim in ipairs(current_anim.target_anims) do
-            if (edit_mode == MODE_MTL and current_uniform == anim.target_name) or (edit_mode == MODE_SRT and "srt" == anim.target_name) then
-                local from = init_value
-                local last_clip = anim.clips[1]
-                for _, clip in ipairs(anim.clips) do
-                    if clip.range[1] == last_clip.range[2] + 1 then
-                        from = get_keyframe_value(last_clip)
-                    else
-                        if clip.range[1] > 0 then
-                            keyframes[#keyframes + 1] = {time = ((clip == last_clip) and 0 or (last_clip.range[2] + 1) / sample_ratio), value = init_value}  
-                        end
-                        from = init_value
-                    end
-                    local fromvalue = {}
-                    for _, value in ipairs(from) do
-                        fromvalue[#fromvalue + 1] = value
-                    end
-                    keyframes[#keyframes + 1] = {time = clip.range[1] / sample_ratio, tween = clip.tween, value = fromvalue}
-                    local tovalue = get_keyframe_value(clip)
-                    if edit_mode == MODE_MTL then
-                        local tv = {}
-                        for _, value in ipairs(tovalue) do
-                            tv[#tv + 1] = value * clip.scale
-                        end
-                        tovalue = tv
-                    end
-                    keyframes[#keyframes + 1] = {time = clip.range[2] / sample_ratio, tween = clip.tween, value = tovalue}
-                    last_clip = clip
-                end
-                local endclip = anim.clips[#anim.clips]
-                if endclip.range[2] < current_anim.frame_count - 1 then
-                    keyframes[#keyframes + 1] = {time = (endclip.range[2] + 1) / sample_ratio, value = init_value}
-                    if current_anim.frame_count > endclip.range[2] + 1 then
-                        keyframes[#keyframes + 1] = {time = current_anim.frame_count / sample_ratio, value = init_value}
-                    end
-                end
-                break
+            if #anim.clips < 1 then
+                goto continue
             end
-        end
-        if #keyframes > 0 then
-            imodifier.delete(runtime_anim.modifier)
-            if edit_mode == MODE_MTL then
-                runtime_anim.modifier = imodifier.create_mtl_modifier(current_mtl_target, current_uniform, keyframes, false, true)
-            elseif edit_mode == MODE_SRT then
-                runtime_anim.modifier = imodifier.create_srt_modifier(current_mtl_target, 0, keyframes, false, true)
+            local keyframes = {}
+            local init_value
+            if animtype == "srt" then
+                init_value = {1, 0, 0, 0, 0, 0, 0}
+            elseif animtype == "mtl" then
+                init_value = anim.init_value
             end
+            local from = init_value
+            local last_clip = anim.clips[1]
+            for _, clip in ipairs(anim.clips) do
+                if clip.range[1] == last_clip.range[2] + 1 then
+                    from = get_keyframe_value(animtype, last_clip)
+                else
+                    if clip.range[1] > 0 then
+                        keyframes[#keyframes + 1] = {time = ((clip == last_clip) and 0 or (last_clip.range[2] + 1) / sample_ratio), value = init_value}
+                    end
+                    from = init_value
+                end
+                local fromvalue = {}
+                for _, value in ipairs(from) do
+                    fromvalue[#fromvalue + 1] = value
+                end
+                keyframes[#keyframes + 1] = {time = clip.range[1] / sample_ratio, tween = clip.tween, value = fromvalue}
+                local tovalue = get_keyframe_value(animtype, clip)
+                if animtype == "mtl" then
+                    local tv = {}
+                    for _, value in ipairs(tovalue) do
+                        tv[#tv + 1] = value * clip.scale
+                    end
+                    tovalue = tv
+                end
+                keyframes[#keyframes + 1] = {time = clip.range[2] / sample_ratio, tween = clip.tween, value = tovalue}
+                last_clip = clip
+            end
+            local endclip = anim.clips[#anim.clips]
+            if endclip and endclip.range[2] < current_anim.frame_count - 1 then
+                keyframes[#keyframes + 1] = {time = (endclip.range[2] + 1) / sample_ratio, value = init_value}
+                if current_anim.frame_count > endclip.range[2] + 1 then
+                    keyframes[#keyframes + 1] = {time = current_anim.frame_count / sample_ratio, value = init_value}
+                end
+            end
+            imodifier.delete(anim.modifier)
+            anim.modifier = nil
+            if #keyframes > 0 then
+                if animtype == "mtl" then
+                    anim.modifier = imodifier.create_mtl_modifier(current_target, anim.target_name, keyframes, false, true)
+                elseif animtype == "srt" then
+                    anim.modifier = imodifier.create_srt_modifier(target_map[anim.target_name], 0, keyframes, false, true)
+                end
+            end
+            ::continue::
         end
-    else
-        runtime_anim._handle = iani.build_animation(current_skeleton._handle, runtime_anim.raw_animation, current_anim.target_anims, sample_ratio)
     end
 end
 
@@ -276,26 +275,27 @@ local new_range_start = 0
 local new_range_end = 1
 local max_repeat<const> = 10
 
-local function get_current_anim_name()
-    if edit_mode == MODE_MTL then
+local function get_current_target_name()
+    if current_anim.type == "mtl" then
         return current_uniform
-    elseif edit_mode == MODE_SRT then
-        return "srt"
+    elseif current_anim.type == "srt" then
+        return #current_anim.target_anims > 0 and current_anim.target_anims[1].target_name or nil
     else
-        return current_joint.name
+        return current_joint and current_joint.name or nil
     end
 end
-local function get_or_create_target_anim(target)
-    if not current_anim then
+local function get_or_create_target_anim(tn, init_value)
+    if not current_anim or not tn then
         return
     end
     for _, value in ipairs(current_anim.target_anims) do
-        if target == value.target_name then
+        if tn == value.target_name then
             return value;
         end
     end
     current_anim.target_anims[#current_anim.target_anims + 1] = {
-        target_name = target,
+        target_name = tn,
+        init_value = init_value,
         clips = {},
         inherit = {false, false, false}, -- s, r, t
         inherit_ui = {{false}, {false}, {false}}
@@ -304,7 +304,7 @@ local function get_or_create_target_anim(target)
 end
 
 local function create_clip()
-    if not new_clip_pop or (not current_joint and not current_uniform and not current_mtl_target) then
+    if not new_clip_pop or (not current_joint and not current_uniform and not current_target) then
         return
     end
     local title = "New Clip"
@@ -325,11 +325,11 @@ local function create_clip()
         end
         if is_index_valid(new_range_start) and is_index_valid(new_range_end) then
             if imgui.widget.Button "Create" then
-                local current_anim_name = get_current_anim_name()
-                local anim = get_or_create_target_anim(current_anim_name)
+                local target_name = get_current_target_name()
+                local anim = get_or_create_target_anim(target_name)
                 local clips = anim.clips
                 local new_clip
-                if edit_mode == MODE_MTL then
+                if current_anim.type == "mtl" then
                     new_clip = {
                         value = {0.0, 0.0, 0.0, 0.0},
                         value_ui = {0.0, 0.0, 0.0, 0.0, speed = 1},
@@ -362,7 +362,7 @@ local function create_clip()
                         break
                     end
                 end
-                local index, _ = find_anim_by_name(current_anim_name)
+                local index, _ = find_anim_by_name(target_name)
                 current_anim.selected_layer_index = index
                 current_anim.dirty_layer = -1
                 new_clip_pop = false
@@ -392,7 +392,8 @@ local function max_range_value()
 end
 
 local function show_current_detail()
-    if not current_anim or current_anim.edit_mode ~= edit_mode then return end
+    if not current_anim then return end
+    local anim_type = current_anim.type
     imgui.widget.PropertyLabel("FrameCount:")
     if imgui.widget.DragInt("##FrameCount", current_anim.frame_count_ui) then
         if current_anim.frame_count_ui[1] < max_range_value() + 1 then
@@ -401,17 +402,18 @@ local function show_current_detail()
         current_anim.frame_count = current_anim.frame_count_ui[1]
         local d = current_anim.frame_count / sample_ratio
         current_anim.duration = d
-        if edit_mode == MODE_SKE then
+        if anim_type == "ske" then
             current_anim.runtime_anim._duration = d
             current_anim.runtime_anim.raw_animation:setup(current_skeleton._handle, d)
             current_anim.runtime_anim._handle = current_anim.runtime_anim.raw_animation:build() 
         end
         current_anim.dirty = true
     end
-    if (edit_mode == MODE_MTL and not current_uniform) or (edit_mode == MODE_SKE and not current_joint) then
+    local target_name = get_current_target_name()
+    if (anim_type == "mtl" and not current_uniform) or (anim_type == "ske" and not current_joint) or not target_name then
         return
     end
-    imgui.widget.Text(get_current_anim_name() .. ":")
+    imgui.widget.Text(target_name .. ":")
     imgui.cursor.SameLine()
     if imgui.widget.Button("NewClip") then
         new_clip_pop = true
@@ -453,7 +455,7 @@ local function show_current_detail()
     end
 
     local current_clip = clips[current_anim.selected_clip_index]
-    local name = get_current_anim_name()
+    local name = get_current_target_name()
     if not current_clip or anim_layer.target_name ~= name then
         return
     end
@@ -527,7 +529,7 @@ local function show_current_detail()
         end
         imgui.widget.EndCombo()
     end
-    if edit_mode == MODE_MTL then
+    if anim_type == "mtl" then
         imgui.widget.PropertyLabel("UniformValue")
         local ui_data = current_clip.value_ui
         if imgui.widget.ColorEdit("##UniformValue", ui_data) then
@@ -541,7 +543,7 @@ local function show_current_detail()
             dirty = true
         end
     else
-        if edit_mode == MODE_SKE then
+        if anim_type == "ske" then
             imgui.widget.PropertyLabel("AnimationType")
             if imgui.widget.BeginCombo("##AnimationType", {anim_type_name[current_clip.type], flags = imgui.flags.Combo {}}) then
                 for i, type in ipairs(anim_type_name) do
@@ -606,35 +608,51 @@ local function show_current_detail()
 end
 
 local function anim_pause(p)
-    if edit_mode == MODE_MTL or edit_mode == MODE_SRT then
-        local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
-        ika.stop(kfa)
-    else
-        iani.pause(anim_eid, p)
+    for _, current in pairs(allanims) do
+        if current.type == "ske" then
+            iani.pause(anim_eid, p)
+        else
+            for _, anim in ipairs(current.target_anims) do
+                if anim.modifier then
+                    local kfa <close> = w:entity(anim.modifier.anim_eid)
+                    ika.stop(kfa)
+                end
+            end
+        end
     end
 end
 
 local function anim_set_loop(loop)
-    if edit_mode == MODE_MTL or edit_mode == MODE_SRT then
-        local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
-        ika.set_loop(kfa, loop)
-    else
-        iani.set_loop(anim_eid, loop)
+    for _, current in pairs(allanims) do
+        if current.type == "ske" then
+            iani.set_loop(anim_eid, loop)
+        else
+            for _, anim in ipairs(current.target_anims) do
+                if anim.modifier then
+                    local kfa <close> = w:entity(anim.modifier.anim_eid)
+                    ika.set_loop(kfa, loop)
+                end
+            end
+        end
     end
 end
 
 local function anim_set_speed(speed)
-    if edit_mode == MODE_SKE then
+    if current_anim.type == "ske" then
         iani.set_speed(anim_eid, speed)
     end
 end
 
 local function anim_set_time(t)
-    if edit_mode == MODE_MTL or edit_mode == MODE_SRT then
-        local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
-        ika.set_time(kfa, t)
-    else
+    if current_anim.type == "ske" then
         iani.set_time(anim_eid, t)
+    else
+        for _, anim in ipairs(current_anim.target_anims) do
+            if anim.modifier then
+                local kfa <close> = w:entity(anim.modifier.anim_eid)
+                ika.set_time(kfa, t)
+            end
+        end
     end
 end
 
@@ -644,14 +662,14 @@ local anim_name_ui = {text = ""}
 local duration_ui = {30, speed = 1, min = 1}
 local new_anim_widget = false
 
-local function create_animation(name, duration, target_anims)
-    if allanims[edit_mode][name] then
+local function create_animation(animtype, name, duration, target_anims)
+    if allanims[name] then
         local msg = name .. " has existed!"
         widget_utils.message_box({title = "Create Animation Error", info = msg})
     else
         local td = duration / sample_ratio
         local new_anim
-        if edit_mode == MODE_MTL or edit_mode == MODE_SRT then
+        if animtype == "mtl" or animtype == "srt" then
             new_anim = {}
         else
             new_anim = {
@@ -664,7 +682,7 @@ local function create_animation(name, duration, target_anims)
             e.animation[name] = new_anim
         end
         local edit_anim = {
-            edit_mode = edit_mode,
+            type = animtype,
             name = name,
             dirty = true,
             dirty_layer = -1,-- [1...n]: dirty index, 0: no dirty, -1: all dirty
@@ -680,12 +698,19 @@ local function create_animation(name, duration, target_anims)
             target_anims = target_anims or {},
             runtime_anim = new_anim
         }
-        allanims[edit_mode][name] = edit_anim
-        current[edit_mode] = edit_anim
+        allanims[name] = edit_anim
         current_anim = edit_anim
-        local name_list = anim_name_list[edit_mode]
-        name_list[#name_list + 1] = name
-        table.sort(name_list)
+        anim_name_list[#anim_name_list + 1] = name
+        table.sort(anim_name_list)
+        if create_context then
+            if animtype == "mtl" then
+                for _, desc in ipairs(create_context.desc) do
+                    get_or_create_target_anim(desc.name, desc.init_value)
+                end
+            elseif animtype == "srt" then
+                get_or_create_target_anim(create_context.desc[1].name)
+            end
+        end
     end
 end
 
@@ -714,8 +739,7 @@ function m.new()
         if imgui.widget.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
             new_anim_widget = false
             if anim_name ~= "" then
-                create_animation(anim_name, anim_duration)
-            else
+                create_animation(create_context.type, anim_name, anim_duration)
             end
         end
         imgui.cursor.SameLine()
@@ -725,26 +749,29 @@ function m.new()
         imgui.windows.EndPopup()
     end
 end
-
+local ui_playall = { false }
 local ui_loop = {true}
 local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
 function m.clear(keep_skel)
     if current_skeleton and current_joint then
         joint_utils:set_current_joint(current_skeleton, nil)
     end
-    allanims = { {}, {}, {} }
-    anim_name_list = { {}, {}, {} }
-    local modifier = current_anim and current_anim.runtime_anim.modifier or nil
-    if modifier then
-        w:remove(modifier.anim_eid)
-        w:remove(modifier.eid)
+    allanims = {}
+    anim_name_list = {}
+    target_map = {}
+    if current_anim then
+        for _, anim in ipairs(current_anim.target_anims) do
+            if anim.type == "srt" or anim.type == "mtl" then
+                imodifier.delete(anim.modifier)
+            end
+        end
     end
+    create_context = nil
     current_anim = nil
     current_joint = nil
     current_uniform = nil
     current_mtl = nil
-    current_mtl_target = nil
-    mtl_desc = {}
+    current_target = nil
     if not keep_skel then
         anim_eid = nil
         current_skeleton = nil
@@ -777,13 +804,11 @@ local function on_select_target(tn)
     end
     current_anim.dirty = true
 end
+
 local function show_uniforms()
-    if not current_mtl or not mtl_desc[current_mtl] then
-        return
-    end
-    for _, desc in ipairs(mtl_desc[current_mtl]) do
-        if imgui.widget.Selectable(desc.name, current_uniform and current_uniform == desc.name) then
-            current_uniform = desc.name
+    for _, anim in ipairs(current_anim.target_anims) do
+        if imgui.widget.Selectable(anim.target_name, current_uniform and current_uniform == anim.target_name) then
+            current_uniform = anim.target_name
             on_select_target(current_uniform)
         end
     end
@@ -798,26 +823,43 @@ local function show_joints()
         end
     end
 end
-local function set_mode(mode)
-    edit_mode = mode
-    if current_anim then
-        current_anim.selected_layer_index = 0
-        current_anim.selected_clip_index = 0
+-- local function set_mode(mode)
+--     edit_mode = mode
+--     if current_anim then
+--         current_anim.selected_layer_index = 0
+--         current_anim.selected_clip_index = 0
+--     end
+--     current_anim = current[edit_mode]
+--     if current_anim then
+--         current_anim.dirty = true
+--         current_anim.dirty_layer = -1
+--     end
+--     current_uniform = nil
+--     current_joint = nil
+-- end
+local function play_animation(current)
+    if current.type == "ske" then
+        iani.play(anim_eid, {name = current.name, loop = ui_loop[1], speed = ui_speed[1], manual = false})
+    else
+        for _, anim in ipairs(current.target_anims) do
+            if anim.modifier then
+                if anim.type == "srt"  then
+                    target_map[anim.target_name] = prefab_mgr:get_eid_by_name(anim.target_name)
+                    imodifier.set_target(anim.modifier, target_map[anim.target_name])
+                elseif anim.type == "mtl" then
+                    imodifier.set_target(anim.modifier, current_target)
+                end
+                imodifier.start(anim.modifier, {loop = ui_loop[1]})
+            end
+        end
     end
-    current_anim = current[edit_mode]
-    if current_anim then
-        current_anim.dirty = true
-        current_anim.dirty_layer = -1
-    end
-    current_uniform = nil
-    current_joint = nil
 end
 function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
     if imgui.windows.Begin("Skeleton", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
-        if (edit_mode == MODE_MTL and current_uniform) or (edit_mode == MODE_SKE and current_skeleton) or (edit_mode == MODE_SRT and current_mtl_target) then
+        if current_skeleton then
             if imgui.widget.Button(faicons.ICON_FA_FILE_PEN.." New") then
                 new_anim_widget = true
             end
@@ -836,31 +878,33 @@ function m.show()
             m.save(file_path)
         end
         imgui.cursor.SameLine()
-        imgui.widget.Text("Mode: ")
-        imgui.cursor.SameLine()
-        imgui.cursor.PushItemWidth(120)
-        if imgui.widget.BeginCombo("##EditMode", {edit_mode_name[edit_mode], flags = imgui.flags.Combo {}}) then
-            for i, type in ipairs(edit_mode_name) do
-                if imgui.widget.Selectable(type, i == edit_mode) then
-                    set_mode(i)
-                end
-            end
-            imgui.widget.EndCombo()
-        end
-        imgui.cursor.PopItemWidth()
+        imgui.widget.Text("Mode: "..(current_anim and current_anim.type or ""))
+        -- imgui.cursor.SameLine()
+        -- imgui.cursor.PushItemWidth(120)
+        -- if imgui.widget.BeginCombo("##EditMode", {edit_mode_name[edit_mode], flags = imgui.flags.Combo {}}) then
+        --     for i, type in ipairs(edit_mode_name) do
+        --         if imgui.widget.Selectable(type, i == edit_mode) then
+        --             set_mode(i)
+        --         end
+        --     end
+        --     imgui.widget.EndCombo()
+        -- end
+
+        -- imgui.cursor.PopItemWidth()
         
-        if #anim_name_list[edit_mode] > 0 then
+        if #anim_name_list > 0 then
             imgui.cursor.SameLine()
             imgui.cursor.PushItemWidth(150)
-            if imgui.widget.BeginCombo("##AnimList", {current[edit_mode].name, flags = imgui.flags.Combo {}}) then
-                for _, name in ipairs(anim_name_list[edit_mode]) do
-                    if imgui.widget.Selectable(name, current[edit_mode].name == name) then
+            if imgui.widget.BeginCombo("##AnimList", {current_anim.name, flags = imgui.flags.Combo {}}) then
+                for _, name in ipairs(anim_name_list) do
+                    if imgui.widget.Selectable(name, current_anim.name == name) then
                         current_anim.selected_layer_index = 0
                         current_anim.selected_clip_index = 0
-                        current[edit_mode] = allanims[edit_mode][name]
-                        current_anim = current[edit_mode]
+                        current_anim = allanims[name]
+                        current_anim.dirty = true
                         current_anim.selected_layer_index = 0
                         current_anim.selected_clip_index = 0
+                        current_anim.dirty_layer = -1
                     end
                 end
                 imgui.widget.EndCombo()
@@ -869,12 +913,19 @@ function m.show()
         end
         if current_anim then
             imgui.cursor.SameLine()
-            if edit_mode == MODE_MTL or edit_mode == MODE_SRT then
-                if current_anim.runtime_anim.modifier then
-                    local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
-                    current_anim.is_playing = ika.is_playing(kfa)
-                    if current_anim.is_playing then
-                        current_anim.current_frame = math.floor(ika.get_time(kfa) * sample_ratio)
+            if imgui.widget.Checkbox("all ", ui_playall) then
+                anim_set_loop(ui_playall[1])
+            end
+            imgui.cursor.SameLine()
+            if current_anim.type == "mtl" or current_anim.type == "srt" then
+                for _, anim in ipairs(current_anim.target_anims) do
+                    if anim.modifier then
+                        local kfa <close> = w:entity(anim.modifier.anim_eid)
+                        current_anim.is_playing = ika.is_playing(kfa)
+                        if current_anim.is_playing then
+                            current_anim.current_frame = math.floor(ika.get_time(kfa) * sample_ratio)
+                        end
+                        break
                     end
                 end
             else
@@ -891,10 +942,12 @@ function m.show()
                 if current_anim.is_playing then
                     anim_pause(true)
                 else
-                    if edit_mode == MODE_MTL or edit_mode == MODE_SRT then
-                        imodifier.start(current_anim.runtime_anim.modifier, {loop = ui_loop[1]})
+                    if ui_playall[1] then
+                        for _, current in pairs(allanims) do
+                            play_animation(current)
+                        end
                     else
-                        iani.play(anim_eid, {name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1], manual = false})
+                        play_animation(current_anim)
                     end
                 end
             end
@@ -910,19 +963,23 @@ function m.show()
             imgui.cursor.PopItemWidth()
             imgui.cursor.SameLine()
             local current_time = 0
-            if edit_mode == MODE_MTL or edit_mode == MODE_SRT then
-                if current_anim.runtime_anim.modifier then
-                    local kfa <close> = w:entity(current_anim.runtime_anim.modifier.anim_eid)
-                    current_time = ika.get_time(kfa)
-                end
-            else
+            if current_anim.type == "ske" then
                 current_time = anim_eid and iani.get_time(anim_eid) or 0
+            else
+                for _, anim in ipairs(current_anim.target_anims) do
+                    if anim.modifier then
+                        local kfa <close> = w:entity(anim.modifier.anim_eid)
+                        current_time = ika.get_time(kfa)
+                        break
+                    end
+                end
             end
             imgui.widget.Text(string.format("Selected Frame: %d Time: %.2f(s) Current Frame: %d/%d Time: %.2f/%.2f(s)", current_anim.selected_frame, current_anim.selected_frame / sample_ratio, math.floor(current_time * sample_ratio), math.floor(current_anim.duration * sample_ratio), current_time, current_anim.duration))
-        end
-        if edit_mode == MODE_MTL and current_mtl then
-            imgui.cursor.SameLine()
-            imgui.widget.Text("material path: " .. tostring(current_mtl))
+        
+            if current_anim.type == "mtl" and current_mtl then
+                imgui.cursor.SameLine()
+                imgui.widget.Text("material path: " .. tostring(current_mtl))
+            end
         end
         if imgui.table.Begin("SkeletonColumns", 3, imgui.flags.Table {'Resizable', 'ScrollY'}) then
             imgui.table.SetupColumn("Targets", imgui.flags.TableColumn {'WidthStretch'}, 1.0)
@@ -933,10 +990,12 @@ function m.show()
             imgui.table.NextColumn()
             local child_width, child_height = imgui.windows.GetContentRegionAvail()
             imgui.windows.BeginChild("##show_target", child_width, child_height, false)
-            if edit_mode == MODE_MTL then
-                show_uniforms()
-            elseif edit_mode == MODE_SKE then
-                show_joints()
+            if current_anim then
+                if current_anim.type == "mtl" then
+                    show_uniforms()
+                elseif current_anim.type == "ske" then
+                    show_joints()
+                end
             end
             imgui.windows.EndChild()
 
@@ -950,7 +1009,7 @@ function m.show()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
             imgui.windows.BeginChild("##show_layers", child_width, child_height, false)
 
-            if current_anim and current_anim.edit_mode == edit_mode then
+            if current_anim then
                 local imgui_message = {}
                 imgui.widget.SimpleSequencer(current_anim, imgui_message)
                 current_anim.dirty = false
@@ -971,9 +1030,9 @@ function m.show()
                         current_anim.selected_layer_index = v
                         if v > 0 and v <= #current_anim.target_anims then
                             local name = current_anim.target_anims[v].target_name
-                            if edit_mode == MODE_MTL then
+                            if current_anim.type == "mtl" then
                                 current_uniform = name
-                            elseif edit_mode == MODE_SKE then
+                            elseif current_anim.type == "ske" then
                                 joint_utils:set_current_joint(current_skeleton, name)
                             end
                         end
@@ -995,8 +1054,11 @@ function m.show()
     end
     imgui.windows.End()
 end
+
 function m.save(path)
-    if not current_anim then return end
+    if not next(allanims) then
+        return
+    end
     local filename
     if not path then
         filename = widget_utils.get_saveas_path("Save Animation", "anim")
@@ -1004,26 +1066,32 @@ function m.save(path)
     else
         filename = path
     end
-    local target_anims = utils.deep_copy(current_anim.target_anims)
-    for _, value in ipairs(target_anims) do
-        for _, clip in ipairs(value.clips) do
-            clip.range_ui = nil
-            clip.repeat_ui = nil
-            clip.random_amplitude_ui = nil
-            clip.amplitude_pos_ui = nil
-            clip.amplitude_rot_ui = nil
-            clip.scale_ui = nil
-            clip.value_ui = nil
+    local animdata = {}
+    for _, anim in pairs(allanims) do
+        local target_anims = utils.deep_copy(anim.target_anims)
+        for _, subanim in ipairs(target_anims) do
+            for _, clip in ipairs(subanim.clips) do
+                clip.range_ui = nil
+                clip.repeat_ui = nil
+                clip.random_amplitude_ui = nil
+                clip.amplitude_pos_ui = nil
+                clip.amplitude_rot_ui = nil
+                clip.scale_ui = nil
+                clip.value_ui = nil
+            end
+            subanim.inherit_ui = nil
+            subanim.modifier = nil
         end
-        value.inherit_ui = nil
+        animdata[#animdata + 1] = {
+            type = anim.type,
+            name = anim.name,
+            duration = anim.duration,
+            target_anims = target_anims,
+            sample_ratio = sample_ratio,
+            skeleton = (anim.type == "ske") and tostring(current_skeleton) or nil
+        }
     end
-    local savedata = {name = current_anim.name, duration = current_anim.duration, target_anims = target_anims, sample_ratio = sample_ratio}
-    if edit_mode == MODE_SKE then
-        savedata.skeleton = tostring(current_skeleton)
-    end
-    savedata.anim_type = edit_mode
-
-    utils.write_file(filename, stringify(savedata))
+    utils.write_file(filename, stringify(animdata))
     if file_path ~= filename then
         file_path = filename
     end
@@ -1033,73 +1101,104 @@ local lfs = require "filesystem.local"
 local datalist  = require "datalist"
 local cr        = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
-
 function m.load(path)
-    -- if (edit_mode == MODE_SKE and not current_skeleton) and not current_mtl_target then
-    --     return
-    -- end
     m.clear(true)
     local path = lfs.path(path)
     local f = assert(lfs.open(path))
     local data = f:read "a"
     f:close()
-    local anim = datalist.parse(data)
-    set_mode(anim.anim_type or MODE_SKE)
-    local mtl
-    if edit_mode == MODE_MTL then
-        local e <close> = w:entity(current_mtl_target, "material:in")
-        local mtl_path = e.material
-        if string.find(e.material, ".glb|") then
-            mtl_path = mtl_path .. "/main.cfg"
-        end
-        mtl = serialize.parse(mtl_path, cr.read_file(mtl_path))
-    end
-    local is_valid = true
-    for _, value in ipairs(anim.target_anims) do
-        if edit_mode == MODE_SKE or edit_mode == MODE_SRT then
-            for _, clip in ipairs(value.clips) do
-                clip.range_ui = {clip.range[1], clip.range[2], speed = 1}
-                if edit_mode == MODE_SKE then
-                    clip.repeat_ui = {clip.repeat_count, speed = 1, min = 1, max = max_repeat}
-                    clip.random_amplitude_ui = {clip.random_amplitude}
+    local animlist = datalist.parse(data)
+    for _, anim in ipairs(animlist) do
+        -- local mtl
+        -- if edit_mode == MODE_MTL then
+        --     local e <close> = w:entity(current_target, "material:in")
+        --     local mtl_path = e.material
+        --     if string.find(e.material, ".glb|") then
+        --         mtl_path = mtl_path .. "/main.cfg"
+        --     end
+        --     mtl = serialize.parse(mtl_path, cr.read_file(mtl_path))
+        -- end
+        local is_valid = true
+        for _, subanim in ipairs(anim.target_anims) do
+            if anim.type == "mtl" then
+                -- if not mtl.properties[subanim.target_name] then
+                --     is_valid = false
+                --     assert(false)
+                -- end
+                for _, clip in ipairs(subanim.clips) do
+                    clip.range_ui = {clip.range[1], clip.range[2], speed = 1}
+                    clip.value_ui = {clip.value[1], clip.value[2], clip.value[3], clip.value[4], speed = 1}
+                    clip.scale_ui = {clip.scale, min = 0, max = 10, speed = 0.1}
                 end
-                clip.amplitude_pos_ui = {clip.amplitude_pos, speed = 0.1}
-                clip.amplitude_rot_ui = {clip.amplitude_rot, speed = 1}
-            end
-            if edit_mode == MODE_SKE then
-                local joint = joint_utils:get_joint_by_name(current_skeleton, value.target_name)
-                if not joint then
-                    is_valid = false
-                    assert(false)
+                if not current_uniform then
+                    current_uniform = subanim.target_name
+                end
+            else
+                for _, clip in ipairs(subanim.clips) do
+                    clip.range_ui = {clip.range[1], clip.range[2], speed = 1}
+                    if anim.type == "ske" then
+                        clip.repeat_ui = {clip.repeat_count, speed = 1, min = 1, max = max_repeat}
+                        clip.random_amplitude_ui = {clip.random_amplitude}
+                    end
+                    clip.amplitude_pos_ui = {clip.amplitude_pos, speed = 0.1}
+                    clip.amplitude_rot_ui = {clip.amplitude_rot, speed = 1}
+                end
+                if anim.type == "ske" then
+                    local joint = joint_utils:get_joint_by_name(current_skeleton, subanim.target_name)
+                    if not joint then
+                        is_valid = false
+                        assert(false)
+                    end
                 end
             end
-        else
-            if not mtl.properties[value.target_name] then
-                is_valid = false
-                assert(false)
+            if not subanim.inherit then
+                subanim.inherit = {false, false, false}
             end
-            for _, clip in ipairs(value.clips) do
-                clip.range_ui = {clip.range[1], clip.range[2], speed = 1}
-                clip.value_ui = {clip.value[1], clip.value[2], clip.value[3], clip.value[4], speed = 1}
-                clip.scale_ui = {clip.scale, min = 0, max = 10, speed = 0.1}
-            end
-            if not current_uniform then
-                current_uniform = value.target_name
-            end
+            subanim.inherit_ui = {{subanim.inherit[1]}, {subanim.inherit[2]}, {subanim.inherit[3]}}
+
+            target_map[subanim.target_name] = prefab_mgr:get_eid_by_name(subanim.target_name)
         end
-        if not value.inherit then
-            value.inherit = {false, false, false}
+        if not is_valid then
+            return
         end
-        value.inherit_ui = {{value.inherit[1]}, {value.inherit[2]}, {value.inherit[3]}}
+        create_animation(anim.type, anim.name, math.floor(anim.duration * sample_ratio), anim.target_anims)
+        sample_ratio = anim.sample_ratio
+        update_animation()
     end
-    if not is_valid then
-        return
-    end
-    create_animation(anim.name, math.floor(anim.duration * sample_ratio), anim.target_anims)
-    sample_ratio = anim.sample_ratio
-    update_animation()
     file_path = path:string()
 end
+
+function m.create_target_animation(at, target)
+    local e <close> = w:entity(target, "material?in name:in")
+    create_context = {}
+    create_context.type = at
+    new_anim_widget = true
+    if at == "srt" then
+        create_context.desc = {{name = e.name}}
+        target_map[e.name] = target
+    elseif at == "mtl" then
+        local mtlpath = e.material
+        if mtlpath then
+            if string.find(e.material, ".glb|") then
+                mtlpath = mtlpath .. "/main.cfg"
+            end
+            local desc = {}
+            local mtl = serialize.parse(mtlpath, cr.read_file(mtlpath))
+            local keys = {}
+            for k, v in pairs(mtl.properties) do
+                if not v.stage then
+                    keys[#keys + 1] = k
+                end
+            end
+            table.sort(keys)
+            for _, k in ipairs(keys) do
+                desc[#desc + 1] = {name = k, init_value = mtl.properties[k] }
+            end
+            create_context.desc = desc
+        end
+    end
+end
+
 local ivs		= ecs.import.interface "ant.scene|ivisible_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local bone_color = math3d.ref(math3d.vector(0.4, 0.4, 1, 0.8))
@@ -1119,6 +1218,7 @@ local function create_joint_entity(joint_name)
             visible_state = "main_view|selectable",
             material = "/pkg/tools.prefab_editor/res/materials/joint.material",
             mesh = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",--"/pkg/tools.prefab_editor/res/meshes/joint.meshbin",
+            render_layer = "translucent",
             name = joint_name,
             on_ready = function(e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
@@ -1187,6 +1287,7 @@ local function create_bone_entity(joint_name)
 		data = {
 			scene 		= {},
 			material	= "/pkg/tools.prefab_editor/res/materials/joint.material",
+            render_layer = "translucent",
 			simplemesh	= imesh.init_mesh(ientity.create_mesh({"p3|n3|t2", bone_vert}), true),
 			visible_state= "main_view|selectable",
 			name		= joint_name,
@@ -1200,36 +1301,26 @@ local function create_bone_entity(joint_name)
     return ecs.create_entity(template)
 end
 
-function m.set_current_target(target_eid)
-    if current_mtl_target ~= target_eid then
-        if current_anim and current_anim.runtime_anim.modifier then
-            imodifier.set_target(current_anim.runtime_anim.modifier, target_eid)
-        end
-    end
-    current_mtl_target = target_eid
-    local e <close> = w:entity(target_eid, "material?in")
-    local mtlpath = e.material
-    if mtlpath then
-        if string.find(e.material, ".glb|") then
-            mtlpath = mtlpath .. "/main.cfg"
-        end
-        current_mtl = mtlpath
-        if not mtl_desc[mtlpath] then
-            local desc = {}
-            local mtl = serialize.parse(mtlpath, cr.read_file(mtlpath))
-            local keys = {}
-            for k, v in pairs(mtl.properties) do
-                if not v.stage then
-                    keys[#keys + 1] = k
+function m.on_eid_delete(eid)
+    local e <close> = w:entity(eid, "material?in name:in")
+    target_map[e.name] = nil
+    for _, anim in pairs(allanims) do
+        for _, subanim in ipairs(anim.target_anims) do
+            if subanim.modifier then
+                local me <close> = w:entity(subanim.modifier.eid, "modifier:in")
+                if eid == me.modifier.target then
+                    imodifier.set_target(subanim.modifier)
                 end
             end
-            table.sort(keys)
-            for _, k in ipairs(keys) do
-                desc[#desc + 1] = {name = k, init_value = mtl.properties[k] }
-            end
-            mtl_desc[mtlpath] = desc
-        end 
+        end
     end
+end
+
+function m.set_current_target(target_eid)
+    if current_target == target_eid then
+        return
+    end
+    current_target = target_eid
 end
 
 function m.init(skeleton)

@@ -15,6 +15,7 @@ function is:init()
         data = {
             scene = {srt={}},
             material = "/pkg/ant.test.material/assets/test.material",
+            render_layer = "translcuent",
             simplemesh = imesh.init_mesh{
                 vb = {
                     start = 0,

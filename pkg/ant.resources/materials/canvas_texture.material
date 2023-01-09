@@ -3,7 +3,6 @@ fx:
   fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
   setting:
     lighting: off
-    surfacetype: ui_stage
 properties:
   s_basecolor:
     stage: 0

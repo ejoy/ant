@@ -107,12 +107,10 @@ function bake_lm_sys:update_filter()
     for e in w:select "filter_result bake_lightmap_queue_visible filter_material:in render_object:update" do
         local le = w:first("bake_lightmap_queue primitive_filter:in")
         local ro = e.render_object
-        if has_filter_stage(le.primitive_filter, ro.setting.surfacetype) then
-            local m = load_bake_material(ro)
-            ro.mat_lightmap = m:ptr()
-            local fm = e.filter_material
-            fm["bake_lightmap_queue"] = m
-        end
+        local m = load_bake_material(ro)
+        ro.mat_lightmap = m:ptr()
+        local fm = e.filter_material
+        fm["bake_lightmap_queue"] = m
     end
 end
 

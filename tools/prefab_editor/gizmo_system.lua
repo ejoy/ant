@@ -204,7 +204,8 @@ local function create_arrow_widget(axis_root, axis_str)
 				t = cylindere_t,
 				parent = axis_root
 			},
-			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
+			material = "/pkg/ant.resources/materials/singlecolor_nocull.material",
+			render_layer = "translucent",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cylinder.glb|meshes/Cylinder_P1.meshbin',
 			name = "arrow.cylinder" .. axis_str,
 			on_ready = function (e)
@@ -221,7 +222,8 @@ local function create_arrow_widget(axis_root, axis_str)
 		data = {
 			visible_state = "main_view",
 			scene = {s = {0.02, 0.03, 0.02, 0}, r = local_rotator, t = cone_t, parent = axis_root},
-			material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
+			material = "/pkg/ant.resources/materials/singlecolor_nocull.material",
+			render_layer = "translucent",
 			mesh = '/pkg/ant.resources.binary/meshes/base/cone.glb|meshes/Cone_P1.meshbin',
 			name = "arrow.cone" .. axis_str,
 			on_ready = function (e)
@@ -339,7 +341,7 @@ function gizmo_sys:post_init()
 	
 	local plane_xy_eid = ientity.create_prim_plane_entity(
 		"plane_xy",
-		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
+		"/pkg/ant.resources/materials/singlecolor_nocull.material",
 		{
 			t = {gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 0, 1},
 			s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0},
@@ -347,11 +349,11 @@ function gizmo_sys:post_init()
 			parent = axis_root
 		},
 		gizmo_const.COLOR.Z_ALPHA,
-		true)
+		true, "translucent")
 	gizmo.txy.eid = {plane_xy_eid, plane_xy_eid}
 
 	local plane_yz_eid = ientity.create_prim_plane_entity("plane_yz",
-		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
+		"/pkg/ant.resources/materials/singlecolor_nocull.material",
 		{
 			t = {0, gizmo_const.MOVE_PLANE_OFFSET, gizmo_const.MOVE_PLANE_OFFSET, 1},
 			s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0},
@@ -359,25 +361,25 @@ function gizmo_sys:post_init()
 			parent = axis_root
 		},
 		gizmo_const.COLOR.X_ALPHA,
-		true)
+		true, "translucent")
 	gizmo.tyz.eid = {plane_yz_eid, plane_yz_eid}
 
 	local plane_zx_eid = ientity.create_prim_plane_entity("plane_zx",
-		"/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
+		"/pkg/ant.resources/materials/singlecolor_nocull.material",
 		{
 			t = {gizmo_const.MOVE_PLANE_OFFSET, 0, gizmo_const.MOVE_PLANE_OFFSET, 1},
 			s = {gizmo_const.MOVE_PLANE_SCALE, 1, gizmo_const.MOVE_PLANE_SCALE, 0},
 			parent = axis_root
 		},
 		gizmo_const.COLOR.Y_ALPHA,
-		true)
+		true, "translucent")
 	gizmo.tzx.eid = {plane_zx_eid, plane_zx_eid}
 	gizmo:reset_move_axis_color()
 
 	-- roate axis
 	local uniform_rot_eid = ientity.create_circle_entity("rotate_gizmo_uniform", gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {parent = uniform_rot_root}, gizmo_const.COLOR.GRAY, true)
 	local function create_rotate_fan(radius, scene)
-		local mesh_eid = ientity.create_circle_mesh_entity("rotate_mesh_gizmo_uniform", radius, gizmo_const.ROTATE_SLICES, "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material", scene, gizmo_const.COLOR.Z_ALPHA, true)
+		local mesh_eid = ientity.create_circle_mesh_entity("rotate_mesh_gizmo_uniform", radius, gizmo_const.ROTATE_SLICES, "/pkg/ant.resources/materials/singlecolor_nocull.material", scene, gizmo_const.COLOR.Z_ALPHA, true)
 		return mesh_eid
 	end
 	-- counterclockwise mesh
@@ -409,9 +411,10 @@ function gizmo_sys:post_init()
 			data = {
 				visible_state = "main_view|selectable",
 				scene = scene or {},
-				material = "/pkg/ant.resources/materials/singlecolor_translucent_nocull.material",
+				material = "/pkg/ant.resources/materials/singlecolor_nocull.material",
 				mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
 				name = "scale_cube" .. axis_name,
+				render_layer = "translucent",
 				on_ready = function (e)
 					ivs.set_state(e, "main_view", false)
 					ivs.set_state(e, "selectable", false)

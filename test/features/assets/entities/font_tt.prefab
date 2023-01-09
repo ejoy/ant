@@ -20,6 +20,7 @@ data:
     file: /pkg/ant.resources.binary/fonts/stxingka.ttf
     size: 42
   material: /pkg/ant.resources/materials/font/font.material
+  render_layer: ui
   scene: {}
   show_config:
     color: 4278255360

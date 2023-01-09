@@ -6,6 +6,7 @@ policy:
     ant.collision|collider_policy
 data:
     material: /pkg/ant.resources/terrain/test.material
+    render_layer: translcuent
     transform: 
         s: {1, 1, 1, 0}
     scene_entity: true

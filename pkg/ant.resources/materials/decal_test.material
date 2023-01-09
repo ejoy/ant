@@ -1,7 +1,5 @@
 fx:
   fs: /pkg/ant.resources/shaders/decals/fs_test.sc
-  setting:
-    surfacetype: decal_stage
   vs: /pkg/ant.resources/shaders/decals/vs_test.sc
 properties:
   s_decal:

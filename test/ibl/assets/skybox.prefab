@@ -17,4 +17,5 @@ data:
         LUT:
             size: 256
     material: /pkg/ant.resources/materials/sky/skybox.material
+    render_layer: "background"
     skybox: {}

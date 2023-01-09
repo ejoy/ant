@@ -2,7 +2,6 @@ fx:
   vs: /pkg/ant.resources/shaders/font/vs_uifont.sc
   fs: /pkg/ant.resources/shaders/font/fs_uifont.sc
   setting:
-    surfacetype: ui_stage
     SHADOW_EFFECT:1
     OUTLINE_EFFECT:1
 properties:
@@ -11,8 +10,8 @@ properties:
     texture: /pkg/ant.resources/textures/default.texture
   u_mask: {0.68, 0.18,1, 0.0}
   u_effect_color:{1.0,0.0,0.0,1.0}
-  --u_shadow_color:{0.0,0.0,0.0,1.0}
-  --u_shadow_offset:{1.0,1.0,0.0,1.0}
+  #u_shadow_color:{0.0,0.0,0.0,1.0}
+  #u_shadow_offset:{1.0,1.0,0.0,1.0}
 state:
   ALPHA_REF: 0
   CULL: CCW

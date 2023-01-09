@@ -324,8 +324,7 @@ namespace ImSimpleSequencer
 			char tmps[512];
 			sprintf(tmps, "%d", current_frame);
 			draw_list->AddText(ImVec2(cursorOffset + 10, canvas_pos.y + 2), 0xFF2A2AFF, tmps);
-			int px = (int)canvas_pos.x + int((current_frame - firstFrameUsed) * framePixelWidth) - int(firstFrameUsed * framePixelWidth);
-			draw_list->AddRectFilled(ImVec2((float)px, canvas_pos.y), ImVec2((float)px + framePixelWidth, canvas_pos.y + ItemHeight), 0x502A2AFF);
+			draw_list->AddRectFilled(ImVec2(cursorOffset - 0.75f * framePixelWidth + 1, canvas_pos.y), ImVec2(cursorOffset + 0.25f * framePixelWidth + 1, canvas_pos.y + ItemHeight), 0x502A2AFF);
 		}
 
 		ImGui::EndChildFrame();

@@ -284,10 +284,6 @@ return function (output, glbdata, exports, tolocalpath, settings)
             setting["ALPHAMODE_MASK"] = 1
         end
 
-        if not isopaque then
-            setting.surfacetype = "translucent"
-        end
-
         if settings["COLOR_0"] then
             setting["WITH_COLOR_ATTRIB"] = 1
         end

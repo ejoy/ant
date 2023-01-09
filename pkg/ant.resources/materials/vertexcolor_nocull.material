@@ -2,11 +2,13 @@ fx:
   fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
   vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
   setting:
-    surfacetype: translucent
     lighting: off
-    WITH_COLOR_ATTRIB: 1
+properties:
+  u_color: {1, 1, 1, 1}
 state:
-  LINEAA: true
+  ALPHA_REF: 0
+  CULL: NONE
+  DEPTH_TEST: ALWAYS
   MSAA: true
-  PT: LINES
-  WRITE_MASK: RGB
+  BLEND: ALPHA
+  WRITE_MASK: RGBA

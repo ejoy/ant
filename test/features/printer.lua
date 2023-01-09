@@ -46,17 +46,19 @@ end
 
 
 function printer_sys:update_filter()
-  	for e in w:select "filter_result postprocess_obj_queue_visible opacity render_object:update filter_material:in skinning?in" do
-        local m = which_material(e.skinning)
-        local mo = m.object
-		local ro = e.render_object
-		local fm = e.filter_material
-        local newstate = irender.check_set_state(mo, fm.main_queue)
-        local new_matobj = irender.create_material_from_template(mo, newstate, material_cache)
-		local mi = new_matobj:instance()
-        local h = mi:ptr()
-		fm["postprocess_obj_queue"] = mi
-		ro.mat_ppoq = h
+  	for e in w:select "filter_result postprocess_obj_queue_visible render_layer:in render_object:update filter_material:in skinning?in" do
+        if e.render_layer == "opacity" then
+            local m = which_material(e.skinning)
+            local mo = m.object
+            local ro = e.render_object
+            local fm = e.filter_material
+            local newstate = irender.check_set_state(mo, fm.main_queue)
+            local new_matobj = irender.create_material_from_template(mo, newstate, material_cache)
+            local mi = new_matobj:instance()
+            local h = mi:ptr()
+            fm["postprocess_obj_queue"] = mi
+            ro.mat_ppoq = h
+        end
 	end  
 end
 
