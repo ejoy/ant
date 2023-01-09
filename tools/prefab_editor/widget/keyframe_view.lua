@@ -608,26 +608,30 @@ local function show_current_detail()
 end
 
 local function anim_pause(p)
-    if current_anim.type == "ske" then
-        iani.pause(anim_eid, p)
-    else
-        for _, anim in ipairs(current_anim.target_anims) do
-            if anim.modifier then
-                local kfa <close> = w:entity(anim.modifier.anim_eid)
-                ika.stop(kfa)
+    for _, current in pairs(allanims) do
+        if current.type == "ske" then
+            iani.pause(anim_eid, p)
+        else
+            for _, anim in ipairs(current.target_anims) do
+                if anim.modifier then
+                    local kfa <close> = w:entity(anim.modifier.anim_eid)
+                    ika.stop(kfa)
+                end
             end
         end
     end
 end
 
 local function anim_set_loop(loop)
-    if current_anim.type == "ske" then
-        iani.set_loop(anim_eid, loop)
-    else
-        for _, anim in ipairs(current_anim.target_anims) do
-            if anim.modifier then
-                local kfa <close> = w:entity(anim.modifier.anim_eid)
-                ika.set_loop(kfa, loop)
+    for _, current in pairs(allanims) do
+        if current.type == "ske" then
+            iani.set_loop(anim_eid, loop)
+        else
+            for _, anim in ipairs(current.target_anims) do
+                if anim.modifier then
+                    local kfa <close> = w:entity(anim.modifier.anim_eid)
+                    ika.set_loop(kfa, loop)
+                end
             end
         end
     end
@@ -745,7 +749,7 @@ function m.new()
         imgui.windows.EndPopup()
     end
 end
-
+local ui_playall = { false }
 local ui_loop = {true}
 local ui_speed = {1, min = 0.1, max = 10, speed = 0.1}
 function m.clear(keep_skel)
@@ -833,6 +837,23 @@ end
 --     current_uniform = nil
 --     current_joint = nil
 -- end
+local function play_animation(current)
+    if current.type == "ske" then
+        iani.play(anim_eid, {name = current.name, loop = ui_loop[1], speed = ui_speed[1], manual = false})
+    else
+        for _, anim in ipairs(current.target_anims) do
+            if anim.modifier then
+                if anim.type == "srt"  then
+                    target_map[anim.target_name] = prefab_mgr:get_eid_by_name(anim.target_name)
+                    imodifier.set_target(anim.modifier, target_map[anim.target_name])
+                elseif anim.type == "mtl" then
+                    imodifier.set_target(anim.modifier, current_target)
+                end
+                imodifier.start(anim.modifier, {loop = ui_loop[1]})
+            end
+        end
+    end
+end
 function m.show()
     local viewport = imgui.GetMainViewport()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
@@ -892,6 +913,10 @@ function m.show()
         end
         if current_anim then
             imgui.cursor.SameLine()
+            if imgui.widget.Checkbox("all ", ui_playall) then
+                anim_set_loop(ui_playall[1])
+            end
+            imgui.cursor.SameLine()
             if current_anim.type == "mtl" or current_anim.type == "srt" then
                 for _, anim in ipairs(current_anim.target_anims) do
                     if anim.modifier then
@@ -917,20 +942,12 @@ function m.show()
                 if current_anim.is_playing then
                     anim_pause(true)
                 else
-                    if current_anim.type == "ske" then
-                        iani.play(anim_eid, {name = current_anim.name, loop = ui_loop[1], speed = ui_speed[1], manual = false})
-                    else
-                        for _, anim in ipairs(current_anim.target_anims) do
-                            if anim.modifier then
-                                if anim.type == "srt"  then
-                                    target_map[anim.target_name] = prefab_mgr:get_eid_by_name(anim.target_name)
-                                    imodifier.set_target(anim.modifier, target_map[anim.target_name])
-                                elseif anim.type == "mtl" then
-                                    imodifier.set_target(anim.modifier, current_target)
-                                end
-                                imodifier.start(anim.modifier, {loop = ui_loop[1]})
-                            end
+                    if ui_playall[1] then
+                        for _, current in pairs(allanims) do
+                            play_animation(current)
                         end
+                    else
+                        play_animation(current_anim)
                     end
                 end
             end
