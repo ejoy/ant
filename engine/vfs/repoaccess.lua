@@ -12,6 +12,8 @@ function access.readmount(repo)
 	for line in f:lines() do
 		local text = line
 			:gsub("#.*$","")	-- strip comment
+			:gsub("^%s*","")
+			:gsub("%s*$","")
 			:gsub("%${([^}]*)}", {
 			engine = "./",
 			project = repo._root:string():gsub("(.-)[/\\]?$", "%1"),
