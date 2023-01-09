@@ -5,7 +5,7 @@ return function (repopath, access)
     local repo
     function vfs.realpath(path)
         local rp = access.realpath(repo, path)
-        if rp and lfs.exists(rp) then
+        if rp then
             return rp:string()
         end
     end
@@ -26,8 +26,8 @@ return function (repopath, access)
     function vfs.repopath()
         return repopath
     end
-    function vfs.mount(name, path)
-        access.addmount(repo, name, path)
+    function vfs.mount(path)
+        access.addmount(repo, path)
     end
     local path = lfs.path(repopath)
     if not lfs.is_directory(path) then

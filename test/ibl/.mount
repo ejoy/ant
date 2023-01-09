@@ -1,4 +1,2 @@
-engine engine
-@pkg pkg
-/ ${project}
-@pkg-one ${project}
+${engine}
+${project}
