@@ -64,7 +64,7 @@ vec3 blend(vec3 texture1, float a1, float d1, vec3 texture2, float a2, float d2)
     return (texture1.rgb * b1 + texture2.rgb * b2) / (b1 + b2);
 }
 
-input_attributes init_input_attributes(vec3 gnormal, vec3 normal, vec4 posWS, vec4 basecolor)
+input_attributes init_input_attributes(vec3 gnormal, vec3 normal, vec4 posWS, vec4 basecolor, vec4 fragcoord)
 {
     input_attributes input_attribs  = (input_attributes)0;
     input_attribs.basecolor         = basecolor;
@@ -78,6 +78,8 @@ input_attributes init_input_attributes(vec3 gnormal, vec3 normal, vec4 posWS, ve
     input_attribs.perceptual_roughness  = clamp(u_stone_roughness_factor, 0.0, 1.0);
     input_attribs.metallic              = clamp(u_stone_metallic_factor, 0.0, 1.0);
     input_attribs.occlusion         = 1.0;
+
+    input_attribs.screen_uv         = get_normalize_fragcoord(fragcoord.xy);
     return input_attribs;
 }
 
@@ -151,7 +153,7 @@ void main()
     mat3 tbn = mat3(v_tangent, bitangent, v_normal);
     vec3 normal = terrain_normal_from_tangent_frame(tbn, uv, v_stone_normal_idx);
 
-    input_attributes input_attribs = init_input_attributes(v_normal, normal, v_posWS, vec4(basecolor, 1.0));
+    input_attributes input_attribs = init_input_attributes(v_normal, normal, v_posWS, vec4(basecolor, 1.0), gl_FragCoord);
 
     gl_FragColor = compute_lighting(input_attribs);
         
