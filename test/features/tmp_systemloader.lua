@@ -3,26 +3,21 @@ local world = ecs.world
 local w = world.w
 local math3d = require "math3d"
 
-local ientity = ecs.import.interface "ant.render|ientity"
-local ivs = ecs.import.interface "ant.scene|ivisible_state"
-local init_loader_sys = ecs.system 'init_loader_system'
-local imaterial = ecs.import.interface "ant.asset|imaterial"
-local imesh = ecs.import.interface "ant.asset|imesh"
-local assetmgr = import_package "ant.asset"
+local ientity       = ecs.import.interface "ant.render|ientity"
+local imaterial     = ecs.import.interface "ant.asset|imaterial"
+local imesh         = ecs.import.interface "ant.asset|imesh"
+local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 
-local bgfx = require "bgfx"
+local assetmgr      = import_package "ant.asset"
 
-local mathpkg = import_package"ant.math"
-local mc, mu = mathpkg.constant, mathpkg.util
+local mathpkg       = import_package"ant.math"
+local mc, mu        = mathpkg.constant, mathpkg.util
 
-local camerapkg = import_package"ant.camera"
-local split_frustum = camerapkg.split_frustum
+local renderpkg     = import_package "ant.render"
+local declmgr       = renderpkg.declmgr
+local rl            = renderpkg.layer
 
-local renderpkg = import_package "ant.render"
-local declmgr = renderpkg.declmgr
-
-local icamera = ecs.import.interface "ant.camera|icamera"
-local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
+local init_loader_sys   = ecs.system 'init_loader_system'
 
 local printer
 local printer_material
@@ -438,6 +433,48 @@ function init_loader_sys:init()
     
 end
 
+local function render_layer_test()
+    rl.add_layer("after_opacity", rl.layeridx "opacity")
+    rl.add_layer("after_opacity2", rl.layeridx "after_opacity")
+
+    local m = imesh.init_mesh(ientity.plane_mesh())
+
+    ecs.create_entity {
+        policy = {
+            "ant.render|simplerender",
+            "ant.general|name",
+        },
+        data = {
+            simplemesh = m,
+            scene = {},
+            material = "/pkg/ant.test.features/assets/render_layer_test.material",
+            render_layer = "after_opacity2",
+            visible_state = "main_view",
+            name = "test",
+        }
+    }
+
+    ecs.create_entity {
+        policy = {
+            "ant.render|simplerender",
+            "ant.general|name",
+        },
+        data = {
+            simplemesh = m,
+            scene = {
+                t = {0.5, 0.0, 0.0}
+            },
+            material = "/pkg/ant.test.features/assets/render_layer_test.material",
+            render_layer = "after_opacity",
+            visible_state = "main_view",
+            on_ready = function (e)
+                imaterial.set_property(e, "u_basecolor_factor", math3d.vector(1.0, 0.0, 0.0, 1.0))
+            end,
+            name = "test",
+        }
+    }
+end
+
 function init_loader_sys:init_world()
     for msg in after_init_mb:each() do
         local e = msg[2]
@@ -451,6 +488,8 @@ function init_loader_sys:init_world()
     iom.set_position(camera_ref, eyepos)
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
     iom.set_direction(camera_ref, dir)
+
+    render_layer_test()
     
 end
 
