@@ -97,9 +97,9 @@ local function vfsignore(path)
 		local type, name = line:match "^([ie][nx]clude)%s+(.*)$"
 		if name then
 			if type == "include" then
-				include = name
+				include[#include+1] = name
 			elseif type == "exclude" then
-				exclude = name
+				exclude[#exclude+1] = name
 			end
 		end
 	end
