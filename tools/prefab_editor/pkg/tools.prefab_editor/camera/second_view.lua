@@ -89,6 +89,9 @@ end
 
 function second_camera_sys:update_camera()
     local svq = w:first "second_view visible camera_ref:in"
+    if not svq then
+        return
+    end
     local ce <close> = w:entity(svq.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in")
     if ce.scene_changed or ce.camera_changed then
         local camera, scene = ce.camera, ce.scene
