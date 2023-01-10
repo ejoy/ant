@@ -4,11 +4,9 @@ local w = world.w
 local assetmgr  = import_package "ant.asset"
 
 local imgui     = require "imgui"
-local fw        = require "bee.filewatch"
 local lfs       = require "filesystem.local"
 local fs        = require "filesystem"
 local uiconfig  = require "widget.config"
-local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
 local gd        = require "common.global_data"
 local icons     = require "common.icons"(assetmgr)
@@ -175,14 +173,14 @@ function m.show()
     if not gd.project_root then
         return
     end
-    local type, path = fw.select()
+    local type, path = gd.filewatch:select()
     while type do
         if (not string.find(path, "\\.build\\"))
             and (not string.find(path, "\\.log\\"))
             and (not string.find(path, "\\.repo\\")) then
             m.dirty = true
         end
-        type, path = fw.select()
+        type, path = gd.filewatch:select()
     end
 
     local viewport = imgui.GetMainViewport()

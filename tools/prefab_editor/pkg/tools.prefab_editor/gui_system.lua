@@ -161,8 +161,10 @@ local function choose_project()
             end
         end
         if global_data.project_root then
-            local fw = require "bee.filewatch"
-            fw.add(global_data.project_root:string())
+            local bfw = require "bee.filewatch"
+            local fw = bfw.create()
+            fw:add(global_data.project_root:string())
+            global_data.filewatch = fw
             log.warn "need handle effect file"
             imgui.windows.CloseCurrentPopup()
         end
