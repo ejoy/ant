@@ -149,7 +149,7 @@ local function generate_stripline_vertices(points, uv_rotation, loop)
     return vertices
 end
 
-local function add_polylines(polymesh, line_width, color, material, srt)
+local function add_polylines(polymesh, line_width, color, material, srt, render_layer)
     return ecs.create_entity {
         policy = {
             "ant.render|simplerender",
@@ -166,7 +166,7 @@ local function add_polylines(polymesh, line_width, color, material, srt)
             material    = material,
             visible_state= "main_view",
             name        = "polyline",
-            render_layer= "background",
+            render_layer= render_layer or "background",
             on_ready = function (e)
                 w:extend(e, "polyline:in")
                 local pl = e.polyline
@@ -281,7 +281,7 @@ function ipl.create_linelist_mesh(pointlist, line_width, color)
     }
 end
 
-function ipl.add_linelist(pointlist, line_width, color, material, srt)
+function ipl.add_linelist(pointlist, line_width, color, material, srt, render_layer)
     local polymesh = ipl.create_linelist_mesh(pointlist, line_width, color)
-    return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polylinelist.material", srt or {})
+    return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polylinelist.material", srt or {}, render_layer)
 end
