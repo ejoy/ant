@@ -70,11 +70,11 @@ function access.virtualpath(repo, pathname)
 	for _, mpath in ipairs(repo._mountpoint) do
 		mpath = mpath:string()
 		if pathname == mpath then
-			return mpath
+			return "/"
 		end
 		local n = #mpath + 1
 		if pathname:sub(1,n) == mpath .. '/' then
-			return mpath .. '/' .. pathname:sub(n+1)
+			return pathname:sub(n+1)
 		end
 	end
 end
