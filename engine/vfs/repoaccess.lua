@@ -3,6 +3,11 @@ local access = {}
 local lfs = require "bee.filesystem"
 
 function access.addmount(repo, path)
+	for _, value in ipairs(repo._mountpoint) do
+		if value:string() == path then
+			return
+		end
+	end
 	repo._mountpoint[#repo._mountpoint+1] = lfs.path(path)
 end
 
@@ -29,7 +34,7 @@ end
 function access.realpath(repo, pathname)
 	local mountpoint = repo._mountpoint
 	for i = #mountpoint, 1, -1 do
-		local path = mountpoint[i] / pathname:sub(2)
+		local path = #pathname > 1 and mountpoint[i] / pathname:sub(2) or mountpoint[i]
 		if lfs.exists(path) then
 			return path
 		end
@@ -74,7 +79,7 @@ function access.virtualpath(repo, pathname)
 		end
 		local n = #mpath + 1
 		if pathname:sub(1,n) == mpath .. '/' then
-			return pathname:sub(n+1)
+			return pathname:sub(n)
 		end
 	end
 end
