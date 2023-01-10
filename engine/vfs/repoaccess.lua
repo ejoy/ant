@@ -3,6 +3,9 @@ local access = {}
 local lfs = require "bee.filesystem"
 
 function access.addmount(repo, path)
+	if not lfs.exists(path) then
+		return
+	end
 	for _, value in ipairs(repo._mountpoint) do
 		if value:string() == path then
 			return
