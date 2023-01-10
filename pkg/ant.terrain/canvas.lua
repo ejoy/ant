@@ -185,7 +185,7 @@ end
 
 local gen_texture_id = id_generator()
 
-local function create_texture_item_entity(texpath, canvasentity)
+local function create_texture_item_entity(texpath, canvasentity, materialfile, render_layer)
     w:extend(canvasentity, "eid:in canvas:in")
     local canvas_id = canvasentity.eid
     local canvas = canvasentity.canvas
@@ -207,11 +207,11 @@ local function create_texture_item_entity(texpath, canvasentity)
                     handle = irender.quad_ib(),
                 }
             },
-            material    = "/pkg/ant.resources/materials/canvas_texture.material",
+            material    = materialfile or "/pkg/ant.resources/materials/canvas_texture.material",
             scene       = {
                 parent = canvas_id,
             },
-            render_layer = "ui",
+            render_layer = render_layer or "ui",
             visible_state= "main_view",
             name        = "canvas_texture" .. gen_texture_id(),
             canvas_item = "texture",
@@ -233,7 +233,7 @@ end
 
 local gen_item_id = id_generator()
 local item_cache = {}
-function icanvas.add_items(e, items)
+function icanvas.add_items(e, items, material, render_layer)
     w:extend(e, "canvas:in")
     local canvas = e.canvas
     local textures = canvas.textures
@@ -244,7 +244,7 @@ function icanvas.add_items(e, items)
         local texpath = texture.path
         local t = textures[texpath]
         if t == nil then
-            create_texture_item_entity(texpath, e)
+            create_texture_item_entity(texpath, e, material, render_layer)
             t = {
                 items = {},
             }
