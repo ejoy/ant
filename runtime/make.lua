@@ -8,12 +8,14 @@ local RuntimeBacklist = {
     imgui = true,
     audio = true,
     effekseer = true,
+    remotedebug = true,
 }
 
 local EditorBacklist = {
     firmware = true,
     audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os ~= "windows"),
     effekseer = true,
+    remotedebug = true,
 }
 
 local RuntimeModules = {}
