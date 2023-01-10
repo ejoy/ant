@@ -2,7 +2,6 @@ local ecs           = ...
 local world         = ecs.world
 local w             = world.w
 local math3d        = require "math3d"
-local lms           = require "motion.sample"
 
 local ientity       = ecs.import.interface "ant.render|ientity"
 local imaterial     = ecs.import.interface "ant.asset|imaterial"
@@ -495,6 +494,28 @@ local function motion_sampler_test()
     }
 end
 
+local canvas_eid
+local function canvas_test()
+    canvas_eid = ecs.create_entity {
+        policy = {
+            "ant.scene|scene_object",
+            "ant.terrain|canvas",
+            "ant.general|name",
+        },
+        data = {
+            name = "canvas",
+            scene = {
+                t = {0.0, 10, 0.0},
+            },
+            canvas = {
+                textures = {},
+                texts = {},
+                show = true,
+            },
+        }
+    }
+end
+
 function init_loader_sys:init_world()
     for msg in after_init_mb:each() do
         local e = msg[2]
@@ -510,7 +531,7 @@ function init_loader_sys:init_world()
     iom.set_direction(camera_ref, dir)
 
     render_layer_test()
-    
+    canvas_test()
 end
 
 local kb_mb = world:sub{"keyboard"}
@@ -556,6 +577,22 @@ function init_loader_sys:entity_init()
         elseif key == "LEFT" and press == 0 then
             local d = w:first("directional_light scene:in eid:in")
             iom.set_position(d, {0, 1, 0})
+        elseif key == "C" and press == 0 then
+            local icanvas = ecs.import.interface "ant.terrain|icanvas"
+            icanvas.add_items(w:entity(canvas_eid), {
+                {
+                    x = 2, y = 2, w = 4, h = 4,
+                    texture = {
+                        path = "/pkg/ant.test.features/assets/canvas_texture.material",
+                        size = {w = 128, h = 128,},
+                        rect = {
+                            x = 0, y = 0,
+                            w = 32, h = 32,
+                        },
+                    }
+                }
+
+            })
         end
     end
 
@@ -563,26 +600,26 @@ function init_loader_sys:entity_init()
 end
 
 function init_loader_sys:camera_usage()
-    for _, _, state, x, y in mouse_mb:unpack() do
-        local mq = w:first("main_queue render_target:in camera_ref:in")
-        local ce = w:entity(mq.camera_ref, "camera:in")
-        local camera = ce.camera
-        local vpmat = camera.viewprojmat
+    -- for _, _, state, x, y in mouse_mb:unpack() do
+    --     local mq = w:first("main_queue render_target:in camera_ref:in")
+    --     local ce = w:entity(mq.camera_ref, "camera:in")
+    --     local camera = ce.camera
+    --     local vpmat = camera.viewprojmat
     
-        local vr = mq.render_target.view_rect
-        local nx, ny = mu.remap_xy(x, y, vr.ratio)
-        local ndcpt = mu.pt2D_to_NDC({nx, ny}, vr)
-        ndcpt[3] = 0
-        local p0 = mu.ndc_to_world(vpmat, ndcpt)
-        ndcpt[3] = 1
-        local p1 = mu.ndc_to_world(vpmat, ndcpt)
+    --     local vr = mq.render_target.view_rect
+    --     local nx, ny = mu.remap_xy(x, y, vr.ratio)
+    --     local ndcpt = mu.pt2D_to_NDC({nx, ny}, vr)
+    --     ndcpt[3] = 0
+    --     local p0 = mu.ndc_to_world(vpmat, ndcpt)
+    --     ndcpt[3] = 1
+    --     local p1 = mu.ndc_to_world(vpmat, ndcpt)
     
-        local ray = {o = p0, d = math3d.sub(p0, p1)}
+    --     local ray = {o = p0, d = math3d.sub(p0, p1)}
     
-        local plane = math3d.vector(0, 1, 0, 0)
-        local r = math3d.muladd(ray.d, math3d.plane_ray(ray.o, ray.d, plane), ray.o)
+    --     local plane = math3d.vector(0, 1, 0, 0)
+    --     local r = math3d.muladd(ray.d, math3d.plane_ray(ray.o, ray.d, plane), ray.o)
         
-        print("click:", x, y, math3d.tostring(r), "view_rect:", vr.x, vr.y, vr.w, vr.h)
-    end
+    --     print("click:", x, y, math3d.tostring(r), "view_rect:", vr.x, vr.y, vr.w, vr.h)
+    -- end
 end
 

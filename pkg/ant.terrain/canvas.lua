@@ -112,12 +112,6 @@ local function add_item(texsize, tex, rect)
         vv4[1], vv4[2], vv4[3], u1v0[1], u1v0[2])
 end
 
-local function get_tex_size(texpath)
-    local texobj = assetmgr.resource(texpath)
-    local ti = texobj.texinfo
-    return {w=ti.width, h=ti.height}
-end
-
 local function update_items()
     local bufferoffset = 0
     local buffers = {}
@@ -125,10 +119,9 @@ local function update_items()
         local canvas = e.canvas
         local textures = canvas.textures
         for texpath, tex in pairs(textures) do
-            local texsize = get_tex_size(texpath)
             local values = {}
             for _, v in pairs(tex.items) do
-                values[#values+1] = add_item(texsize, v.texture, v)
+                values[#values+1] = add_item(v.texture.size, v.texture, v)
             end
 
             if tex.renderer_eid then
@@ -185,7 +178,7 @@ end
 
 local gen_texture_id = id_generator()
 
-local function create_texture_item_entity(texpath, canvasentity, materialfile, render_layer)
+local function create_texture_item_entity(materialpath, canvasentity, render_layer)
     w:extend(canvasentity, "eid:in canvas:in")
     local canvas_id = canvasentity.eid
     local canvas = canvasentity.canvas
@@ -207,7 +200,7 @@ local function create_texture_item_entity(texpath, canvasentity, materialfile, r
                     handle = irender.quad_ib(),
                 }
             },
-            material    = materialfile or "/pkg/ant.resources/materials/canvas_texture.material",
+            material    = materialpath,
             scene       = {
                 parent = canvas_id,
             },
@@ -216,12 +209,9 @@ local function create_texture_item_entity(texpath, canvasentity, materialfile, r
             name        = "canvas_texture" .. gen_texture_id(),
             canvas_item = "texture",
             on_ready = function (e)
-                local texobj = assetmgr.resource(texpath)
-                imaterial.set_property(e, "s_basecolor", texobj.id)
-
                 --update renderer_eid
                 local textures = canvas.textures
-                local t = textures[texpath]
+                local t = textures[materialpath]
                 t.renderer_eid = eid
                 world:pub{"canvas_update", "texture"}
                 world:pub{"canvas_update", "new_entity", eid}
@@ -233,7 +223,7 @@ end
 
 local gen_item_id = id_generator()
 local item_cache = {}
-function icanvas.add_items(e, items, material, render_layer)
+function icanvas.add_items(e, items, render_layer)
     w:extend(e, "canvas:in")
     local canvas = e.canvas
     local textures = canvas.textures
@@ -241,18 +231,18 @@ function icanvas.add_items(e, items, material, render_layer)
     local added_items = {}
     for _, item in ipairs(items) do
         local texture = item.texture
-        local texpath = texture.path
-        local t = textures[texpath]
+        local key = texture.path
+        local t = textures[key]
         if t == nil then
-            create_texture_item_entity(texpath, e, material, render_layer)
+            create_texture_item_entity(key, e, render_layer)
             t = {
                 items = {},
             }
-            textures[texpath] = t
+            textures[key] = t
         end
         local id = gen_item_id()
         t.items[id] = item
-        item_cache[id] = texpath
+        item_cache[id] = key
         added_items[#added_items+1] = id
     end
     if #items > 0 then
