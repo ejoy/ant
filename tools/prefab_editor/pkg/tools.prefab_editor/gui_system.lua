@@ -435,7 +435,7 @@ function m:handle_event()
     end
 
     for _, key, press, state in event_keyboard:unpack() do
-        if key == "DELETE" and press == 1 then
+        if key == "Delete" and press == 1 then
             if gizmo.target_eid then
                 world:pub { "HierarchyEvent", "delete", gizmo.target_eid }
             end

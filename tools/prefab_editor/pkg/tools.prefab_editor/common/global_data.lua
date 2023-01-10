@@ -36,15 +36,24 @@ local function get_package(entry_path, readmount)
         access.readmount(repo)
     end
     local packages = {}
-    for _, name in ipairs(repo._mountname) do
-        if #name > 1 then
-            vfs.mount(name, repo._mountpoint[name]:string())
-            if not (name:match "/pkg/ant%." and skip_package(name)) then
-                packages[#packages + 1] = {name = name, path = repo._mountpoint[name]}
+    for _, value in ipairs(repo._mountpoint) do
+        local pkgpath = value / "pkg"
+        if value:string() == "./" then
+            for item in lfs.pairs(pkgpath) do
+                local _, pkgname = item:string():match'(.*/)(.*)'
+                if pkgname == "ant.resources" or pkgname == "ant.resources.binary" then
+                    packages[#packages + 1] = {name = pkgname, path = item}
+                end
+            end
+        else
+            for item in lfs.pairs(pkgpath) do
+                local _, pkgname = item:string():match'(.*/)(.*)'
+                packages[#packages + 1] = {name = pkgname, path = item}
             end
         end
     end
     m.repo = repo
+    vfs.mount(entry_path:string())
     return packages
 end
 

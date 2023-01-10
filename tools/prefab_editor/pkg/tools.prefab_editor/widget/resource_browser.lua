@@ -78,9 +78,8 @@ local function construct_resource_tree(fspath)
 end
 
 local engine_package_resources = {
-    "/engine",
-    "/pkg/ant.resources",
-    "/pkg/ant.resources.binary",
+    "ant.resources",
+    "ant.resources.binary",
 }
 
 function m.update_resource_tree(hiden_engine_res)
@@ -106,7 +105,7 @@ function m.update_resource_tree(hiden_engine_res)
         packages = gd.packages
     end
     for _, item in ipairs(packages) do
-        local path = fs.path(item.name)
+        local path = fs.path("/pkg") / fs.path(item.name)
         resource_tree.dirs[#resource_tree.dirs + 1] = {path, construct_resource_tree(path)}
     end
 
