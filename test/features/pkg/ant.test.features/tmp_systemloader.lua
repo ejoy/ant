@@ -1,7 +1,8 @@
-local ecs = ...
-local world = ecs.world
-local w = world.w
-local math3d = require "math3d"
+local ecs           = ...
+local world         = ecs.world
+local w             = world.w
+local math3d        = require "math3d"
+local lms           = require "motion.sample"
 
 local ientity       = ecs.import.interface "ant.render|ientity"
 local imaterial     = ecs.import.interface "ant.asset|imaterial"
@@ -471,6 +472,25 @@ local function render_layer_test()
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(1.0, 0.0, 0.0, 1.0))
             end,
             name = "test",
+        }
+    }
+end
+
+local function motion_sampler_test()
+    local ims = ecs.import.interface "ant.render|imotion_sampler"
+    local g = ims.sampler_group()
+    g:create_entity {
+        policy = {
+            "ant.scene|scene_object",
+            "ant.render|motion_sampler",
+            "ant.general|name",
+        },
+        data = {
+            scene = {},
+            name = "motion_sample",
+            on_ready = function (e)
+                ims.set_target(e, nil, math3d.vector(0.0, 1.2, 0.0), math3d.vector(0.0, 0.0, 2.0), 2000)
+            end
         }
     }
 end

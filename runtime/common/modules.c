@@ -45,6 +45,7 @@ int luaopen_fastio(lua_State* L);
 int luaopen_fileinterface(lua_State *L);
 int luaopen_material(lua_State *L);
 int luaopen_render(lua_State *L);
+int luaopen_motion_sampler(lua_State *L);
 int luaopen_image(lua_State* L);
 int luaopen_layout(lua_State* L);
 //int luaopen_layout_init(lua_State* L);
@@ -109,6 +110,7 @@ void ant_loadmodules(lua_State* L) {
         { "fastio", luaopen_fastio},
         { "render.material",    luaopen_material},
         { "render.core",        luaopen_render},
+        { "motion.sampler",     luaopen_motion_sampler},
         { "image", luaopen_image },
 #if BX_PLATFORM_IOS
         { "gesture", luaopen_gesture },
