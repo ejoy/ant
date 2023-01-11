@@ -26,25 +26,26 @@
 1. 顶点相关：
   - 顶点数据使用不同的流。目前所有顶点都打包到一个流里面，当某个着色器不会访问到对应的顶点数据的时候，相应的带宽就会被浪费掉了。但目前代码很多地方都依赖着只有一个流的逻辑，多个流的情况是否真的能够提交性能还需要验证；
 2. 着色器优化。尽可能使用mediump和lowp格式。目前默认全部都是highp格式；
-3. 转换到Vulkan（全平台支持，Mac和iOS使用MoltenVK）。（目前在window和mac下都能够正常运行vulkan，iOS还有一些编译的问题。2023/1/3）
+3. 优化polyline的效果。启用FXAA之后，polyline的线会丢失；
+4. 转换到Vulkan（全平台支持，Mac和iOS使用MoltenVK）。（目前在window和mac下都能够正常运行vulkan，iOS还有一些编译的问题。2023/1/3）
   1). 针对Vulkan上的subpass对渲染的render进行相应的优化；
-4. 后处理优化
+5. 后处理优化
   1) 后处理的DoF是时候要解决了。bgfx里面有一个one pass的DoF例子，非常值得参考；
   2) Color Grading需要用于调整颜色；
   3) tonemapping能够预先bake到一张贴图里面，而不需要单独在fragment阶段进行计算。具体要看filament里面的tonemapping的操作；
   4）AO效果和效率的优化。效果：修复bent_normal和cone tracing的bug；效率：使用hi-z提高深度图的采样（主要是采样更低的mipmap，提高缓存效率）；
-5. 优化动画计算，将skinning的代码从vertex shader放到compute shader中，并消除shadow/pre-depth/main pass中分别重复的计算（https://wickedengine.net/2017/09/09/skinning-in-compute-shader/）；
-6. 水渲染；
-7. 点光源，包括point、spot和rectangle/plane的区域光，包括其对应的阴影；
-8. ibl的计算应该直接烘培，不应该做在compute shader上；
-9. 使用Hi-Z的方式进行剔除；
-10. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；
-11. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
-12. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
-13. 优化bgfx的draw viewid和compute shader viewid；
-14. 调整iOS和Android下的ASTC压缩格式。目前强制使用了ASTC4x4，因为之前bgfx不支持ASTC6x6，最近更新了，看看是否ASTC的格式都支持全了；
-15. 将lightmap重新激活；
-16. 解决动态材质的问题；
+6. 优化动画计算，将skinning的代码从vertex shader放到compute shader中，并消除shadow/pre-depth/main pass中分别重复的计算（https://wickedengine.net/2017/09/09/skinning-in-compute-shader/）；
+7. 水渲染；
+8. 点光源，包括point、spot和rectangle/plane的区域光，包括其对应的阴影；
+9. ibl的计算应该直接烘培，不应该做在compute shader上；
+10. 使用Hi-Z的方式进行剔除；
+11. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；
+12. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
+13. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
+14. 优化bgfx的draw viewid和compute shader viewid；
+15. 调整iOS和Android下的ASTC压缩格式。目前强制使用了ASTC4x4，因为之前bgfx不支持ASTC6x6，最近更新了，看看是否ASTC的格式都支持全了；
+16. 将lightmap重新激活；
+17. 解决动态材质的问题；
 
 #### 新功能/探索
 ##### 已经完成
