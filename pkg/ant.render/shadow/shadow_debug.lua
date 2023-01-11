@@ -52,7 +52,7 @@ local function create_debug_entity()
 			data = {
 				scene 		= {},
 				material	= quadmaterial,
-				render_layer= "translcuent",
+				render_layer= "translucent",
 				simplemesh	= imesh.init_mesh(ientity.quad_mesh{x=0, y=0, w=quadsize*splitnum, h=quadsize}, true),
 				visible_state= "main_view",
 			}
@@ -60,7 +60,8 @@ local function create_debug_entity()
 	end
 
 	do
-		local mc_e <close> = w:entity(irq.main_camera())
+		local mq = w:first "main_queue camera_ref:in"
+		local mc_e <close> = w:entity(mq.camera_ref, "camera:in")
 		local camera = mc_e.camera
 		for idx, f in ipairs(ishadow.split_frustums()) do
 			local vp = math3d.mul(math3d.projmat(f, INV_Z), camera.viewmat)
