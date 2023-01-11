@@ -1,3 +1,10 @@
+if not __ANT_RUNTIME__ then
+    if package.loaded.math3d then
+        error "need init math3d MAXPAGE"
+    end
+    debug.getregistry().MATH3D_MAXPAGE = 10240
+end
+
 local lfs       = require "filesystem.local"
 local bgfx      = require "bgfx"
 local platform  = require "bee.platform"
