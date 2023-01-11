@@ -3,6 +3,14 @@ local access = {}
 local lfs = require "bee.filesystem"
 
 function access.addmount(repo, path)
+	if not lfs.exists(path) then
+		return
+	end
+	for _, value in ipairs(repo._mountpoint) do
+		if value:string() == path then
+			return
+		end
+	end
 	repo._mountpoint[#repo._mountpoint+1] = lfs.path(path)
 end
 
@@ -29,7 +37,7 @@ end
 function access.realpath(repo, pathname)
 	local mountpoint = repo._mountpoint
 	for i = #mountpoint, 1, -1 do
-		local path = mountpoint[i] / pathname:sub(2)
+		local path = #pathname > 1 and mountpoint[i] / pathname:sub(2) or mountpoint[i]
 		if lfs.exists(path) then
 			return path
 		end
@@ -70,11 +78,11 @@ function access.virtualpath(repo, pathname)
 	for _, mpath in ipairs(repo._mountpoint) do
 		mpath = mpath:string()
 		if pathname == mpath then
-			return mpath
+			return "/"
 		end
 		local n = #mpath + 1
 		if pathname:sub(1,n) == mpath .. '/' then
-			return mpath .. '/' .. pathname:sub(n+1)
+			return pathname:sub(n)
 		end
 	end
 end
@@ -92,9 +100,9 @@ local function vfsignore(path)
 		local type, name = line:match "^([ie][nx]clude)%s+(.*)$"
 		if name then
 			if type == "include" then
-				include = name
+				include[#include+1] = name
 			elseif type == "exclude" then
-				exclude = name
+				exclude[#exclude+1] = name
 			end
 		end
 	end

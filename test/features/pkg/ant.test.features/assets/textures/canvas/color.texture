@@ -2,7 +2,7 @@ colorspace: sRGB
 compress:
   android: ASTC6x6
   ios: ASTC6x6
-  windows: BC1
+  windows: BC3
 normalmap: false
 mipmap: 0
 path: /pkg/ant.resources.binary/textures/effect/num4x4.dds

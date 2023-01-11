@@ -2,7 +2,7 @@ colorspace: sRGB
 compress:
   android: ASTC6x6
   ios: ASTC6x6
-  windows: BC1
+  windows: BC3
 normalmap: false
 path: /pkg/ant.resources.binary/test/tt/0.jpg
 sampler:

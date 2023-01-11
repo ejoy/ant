@@ -45,6 +45,7 @@ int luaopen_fastio(lua_State* L);
 int luaopen_fileinterface(lua_State *L);
 int luaopen_material(lua_State *L);
 int luaopen_render(lua_State *L);
+int luaopen_motion_sampler(lua_State *L);
 int luaopen_image(lua_State* L);
 int luaopen_layout(lua_State* L);
 //int luaopen_layout_init(lua_State* L);
@@ -83,10 +84,10 @@ void ant_loadmodules(lua_State* L) {
         { "math3d.adapter", luaopen_math3d_adapter },
         { "platform", luaopen_platform },
         { "protocol", luaopen_protocol },
-        { "remotedebug", luaopen_remotedebug },
-        { "remotedebug.hookmgr", luaopen_remotedebug_hookmgr },
-        { "remotedebug.stdio", luaopen_remotedebug_stdio },
-        { "remotedebug.visitor", luaopen_remotedebug_visitor },
+        //{ "remotedebug", luaopen_remotedebug },
+        //{ "remotedebug.hookmgr", luaopen_remotedebug_hookmgr },
+        //{ "remotedebug.stdio", luaopen_remotedebug_stdio },
+        //{ "remotedebug.visitor", luaopen_remotedebug_visitor },
         { "rmlui", luaopen_rmlui },
         { "rp3d.core", luaopen_rp3d_core },
         { "window", luaopen_window },
@@ -109,6 +110,7 @@ void ant_loadmodules(lua_State* L) {
         { "fastio", luaopen_fastio},
         { "render.material",    luaopen_material},
         { "render.core",        luaopen_render},
+        { "motion.sampler",     luaopen_motion_sampler},
         { "image", luaopen_image },
 #if BX_PLATFORM_IOS
         { "gesture", luaopen_gesture },

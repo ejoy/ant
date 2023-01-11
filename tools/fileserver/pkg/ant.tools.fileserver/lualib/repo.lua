@@ -3,8 +3,8 @@
 
 local undef = nil
 local _DEBUG = _G._DEBUG
-local repo = {}
-repo.__index = repo
+local REPO_MT = {}
+REPO_MT.__index = REPO_MT
 
 local lfs = require "filesystem.local"
 local access = require "vfs.repoaccess"
@@ -59,7 +59,7 @@ local function refname(self, hash)
 	return self._repo / hash:sub(1,2) / (hash .. ".ref")
 end
 
-function repo.new(rootpath)
+function REPO_MT.new(rootpath)
 	local repopath = rootpath / ".repo"
 	if not lfs.is_directory(rootpath) then
 		return nil, "Not a dir"
@@ -81,17 +81,17 @@ function repo.new(rootpath)
 		_lock = filelock(repopath),	-- lock repo
 	}
 	access.readmount(r)
-	return setmetatable(r, repo)
+	return setmetatable(r, REPO_MT)
 end
 
 -- map path in repo to realpath (replace mountpoint)
-function repo:realpath(filepath)
+function REPO_MT:realpath(filepath)
 	local rp = access.realpath(self, filepath)
 	assert(rp ~= nil)
 	return rp
 end
 
-function repo:virtualpath(pathname)
+function REPO_MT:virtualpath(pathname)
 	return access.virtualpath(self, pathname)
 end
 
@@ -205,12 +205,12 @@ local function repo_write_root(self, roothash)
 	if _DEBUG then print("ROOT", roothash) end
 end
 
-function repo:rebuild()
+function REPO_MT:rebuild()
 	self._namecache = {}	-- clear cache
 	return self:build()
 end
 
-function repo:build()
+function REPO_MT:build()
 	access.readmount(self)
 
 	local cache = {}
@@ -225,10 +225,9 @@ function repo:build()
 	return roothash
 end
 
-function repo:close()
+function REPO_MT:close()
 	self._lock:close()
 	self._lock = nil
-	--self._mountname = nil
 	--self._mountpoint = nil
 	--self._root = nil
 	--self._repo = nil
@@ -236,7 +235,7 @@ function repo:close()
 end
 
 -- make file dirty, would build later
-function repo:touch(pathname)
+function REPO_MT:touch(pathname)
 	self.dirty = true
 	repeat
 		local path = pathname:match "(.*)/"
@@ -246,7 +245,7 @@ function repo:touch(pathname)
 	until path == nil
 end
 
-function repo:touch_path(pathname)
+function REPO_MT:touch_path(pathname)
 	self.dirty = true
 	if pathname == '' or pathname == '/' then
 		-- clear all
@@ -312,7 +311,7 @@ local function read_ref(self, hash)
 	end
 end
 
-function repo:index()
+function REPO_MT:index()
 	local repopath = self._repo
 	local namecache = {}
 	self._namecache = namecache
@@ -327,7 +326,7 @@ function repo:index()
 	return self:build()
 end
 
-function repo:root()
+function REPO_MT:root()
 	local f = lfs.open(self._repo / "root", "rb")
 	if not f then
 		return self:index()
@@ -338,7 +337,7 @@ function repo:root()
 end
 
 -- return hash file's real path or nil (invalid hash, need rebuild)
-function repo:hash(hash)
+function REPO_MT:hash(hash)
 	local filename = self._repo / hash:sub(1,2) / hash
 	local f = lfs.open(filename, "rb")
 	if f then
@@ -362,7 +361,7 @@ function repo:hash(hash)
 	f:close()
 end
 
-function repo:dir(hash)
+function REPO_MT:dir(hash)
 	local filename = self._repo / hash:sub(1,2) / hash
 	local f = lfs.open(filename, "rb")
 	if not f then
@@ -387,18 +386,17 @@ function repo:dir(hash)
 	return { dir = dir, file = file }
 end
 
-function repo:build_dir(lpath)
+function REPO_MT:build_dir(lpath)
 	lpath = lfs.path(lpath)
 	local r = {
 		_root = self._root,
 		_repo = self._repo,
 		_namecache = {},
-		_mountname = {},
 		_mountpoint = {},
 		_resource = true,
 	}
-	access.addmount(r, "", lpath)
-	setmetatable(r, repo)
+	access.addmount(r, lpath)
+	setmetatable(r, REPO_MT)
 	local cache = {}
 	local roothash = repo_build_dir(r, "/", cache, r._namecache)
 	repo_write_cache(r, cache)
@@ -424,7 +422,7 @@ local function fetchall(self, r, hash)
 	end
 end
 
-function repo:fetch(path)
+function REPO_MT:fetch(path)
 	local r = {}
 	local hash = self:root()
 	for _, name in ipairs(split(path)) do
@@ -440,4 +438,4 @@ function repo:fetch(path)
 	return r
 end
 
-return repo
+return REPO_MT

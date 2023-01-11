@@ -7,6 +7,7 @@ local REPOPATH = arg[1]
 
 local rebuild = false
 local repo
+local fswatch = fw.create()
 
 local function split(path)
 	local r = {}
@@ -60,7 +61,7 @@ end
 
 local function update_watch()
 	while true do
-		local type, path = fw.select()
+		local type, path = fswatch:select()
 		if not type then
 			break
 		end
@@ -103,7 +104,7 @@ function S.ROOT()
 		end
 		for i = 1, #paths do
 			local path = paths[i]
-			fw.add(path:string())
+			fswatch:add(path:string())
 		end
 		rebuild = true
 	end

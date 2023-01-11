@@ -80,6 +80,9 @@ local function event_del(fd)
 		for i, h in ipairs(event) do
 			if h == fd then
 				table.remove(event, i)
+				if next(event) == nil then
+					quit = true
+				end
 				break
 			end
 		end

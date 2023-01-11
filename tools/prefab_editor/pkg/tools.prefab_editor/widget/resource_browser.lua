@@ -4,11 +4,9 @@ local w = world.w
 local assetmgr  = import_package "ant.asset"
 
 local imgui     = require "imgui"
-local fw        = require "bee.filewatch"
 local lfs       = require "filesystem.local"
 local fs        = require "filesystem"
 local uiconfig  = require "widget.config"
-local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
 local gd        = require "common.global_data"
 local icons     = require "common.icons"(assetmgr)
@@ -78,9 +76,8 @@ local function construct_resource_tree(fspath)
 end
 
 local engine_package_resources = {
-    "/engine",
-    "/pkg/ant.resources",
-    "/pkg/ant.resources.binary",
+    "ant.resources",
+    "ant.resources.binary",
 }
 
 function m.update_resource_tree(hiden_engine_res)
@@ -106,7 +103,7 @@ function m.update_resource_tree(hiden_engine_res)
         packages = gd.packages
     end
     for _, item in ipairs(packages) do
-        local path = fs.path(item.name)
+        local path = fs.path("/pkg") / fs.path(item.name)
         resource_tree.dirs[#resource_tree.dirs + 1] = {path, construct_resource_tree(path)}
     end
 
@@ -176,14 +173,14 @@ function m.show()
     if not gd.project_root then
         return
     end
-    local type, path = fw.select()
+    local type, path = gd.filewatch:select()
     while type do
         if (not string.find(path, "\\.build\\"))
             and (not string.find(path, "\\.log\\"))
             and (not string.find(path, "\\.repo\\")) then
             m.dirty = true
         end
-        type, path = fw.select()
+        type, path = gd.filewatch:select()
     end
 
     local viewport = imgui.GetMainViewport()
