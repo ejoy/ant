@@ -6,13 +6,13 @@ local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
-local assetmgr  = import_package "ant.asset"
+local mathpkg   = import_package "ant.math"
+local mc, mu    = mathpkg.constant, mathpkg.util
 
-local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender   = ecs.import.interface "ant.render|irender"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 
-local decl<const> = "p3|t2"
+local decl<const> = "p3|T4|t2"
 local layout<const> = declmgr.get(decl)
 
 local max_buffersize<const> = 1024 * 1024 * 10    --10 M
@@ -24,7 +24,12 @@ function canvas_sys:init()
 
 end
 
-local itemfmt<const> = ("fffff"):rep(4)
+--[[
+    fff-> position
+    ffff->pack tangent frame
+    ff-> uv
+]]
+local itemfmt<const> = ("fffffffff"):rep(4)
 
 local function texmat(srt)
     if srt then
@@ -100,16 +105,28 @@ local function add_item(texsize, tex, rect)
             {x,     0.0, z}, {x,     0.0, z+hh},
             {x+ww,  0.0, z}, {x+ww,  0.0, z+hh}
 
+    local   vvt1, vvt2,
+            vvt3, vvt4=
+            math3d.vector(0.0, 0.0, -1.0), math3d.vector( 1.0, 0.0, 0.0),
+            math3d.vector(0.0, 0.0,  1.0), math3d.vector(-1.0, 0.0, 0.0)
+
     local pm = posmat(rect.srt)
     if pm then
         vv1, vv2, vv3, vv4 = trans_positions(pm, vv1, vv2, vv3, vv4)
+        vvt1, vvt2, vvt3, vvt4 = 
+            math3d.transform(pm, vvt1, 0), math3d.transform(pm, vvt2, 0),
+            math3d.transform(pm, vvt3, 0), math3d.transform(pm, vvt4, 0)
     end
 
+    vvt1, vvt2, vvt3, vvt4 =
+        math3d.tovalue(mu.pack_tangent_frame(mc.YAXIS, vvt1)), math3d.tovalue(mu.pack_tangent_frame(mc.YAXIS, vvt2)),
+        math3d.tovalue(mu.pack_tangent_frame(mc.YAXIS, vvt3)), math3d.tovalue(mu.pack_tangent_frame(mc.YAXIS, vvt4))
+
     return itemfmt:pack(
-        vv1[1], vv1[2], vv1[3], u0v1[1], u0v1[2],
-        vv2[1], vv2[2], vv2[3], u0v0[1], u0v0[2],
-        vv3[1], vv3[2], vv3[3], u1v1[1], u1v1[2],
-        vv4[1], vv4[2], vv4[3], u1v0[1], u1v0[2])
+        vv1[1], vv1[2], vv1[3], vvt1[1], vvt1[2], vvt1[3], vvt1[4], u0v1[1], u0v1[2],
+        vv2[1], vv2[2], vv2[3], vvt2[1], vvt2[2], vvt2[3], vvt2[4], u0v0[1], u0v0[2],
+        vv3[1], vv3[2], vv3[3], vvt3[1], vvt3[2], vvt3[3], vvt3[4], u1v1[1], u1v1[2],
+        vv4[1], vv4[2], vv4[3], vvt4[1], vvt4[2], vvt4[3], vvt4[4], u1v0[1], u1v0[2])
 end
 
 local function update_items()
