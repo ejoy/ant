@@ -40,6 +40,15 @@ mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 	return wolrdMat;
 }
 
+// mat4 get_world_matrix(VS_Input vsin)
+// {
+// #if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
+// 	return calc_bone_transform(a_indices, a_weight);
+// #else
+// 	return	u_model[0];
+// #endif
+// }
+
 #if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
 #define get_world_matrix()	calc_bone_transform(a_indices, a_weight)
 #else
