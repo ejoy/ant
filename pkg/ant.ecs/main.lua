@@ -3,7 +3,7 @@ local policy = require "policy"
 local ecs = require "world"
 local cr = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
-
+local fs  = require "filesystem"
 local world = {}
 
 local function sortpairs(t)
@@ -175,6 +175,21 @@ function create_template(w, filename)
     end
     if not templates[filename] then
         local t = serialize.parse(filename, cr.read_file(filename))
+        local patchfile = filename .. ".patch"
+        local count = #t
+        if fs.exists(fs.path(patchfile)) then
+            local patch = serialize.parse(patchfile, cr.read_file(patchfile))
+            for index, value in ipairs(patch) do
+                if value.mount then
+                    if value.mount ~= 1 then
+                        value.mount = count + index - 1
+                    end
+                else
+                    value.mount = 1
+                end
+                t[#t + 1] = value
+            end
+        end
         templates[filename] = create_template_(w, t)
     end
     return templates[filename]

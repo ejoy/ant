@@ -72,7 +72,7 @@ function blm_editor:data_changed()
             log.info("[bake process]bake message:\n", bp.msg)
 
             world:pub{"BakeFinished", bp.prefablefile}
-            prefabmgr:save_prefab(bp.prefablefile)  --save and reload prefab
+            prefabmgr:save(bp.prefablefile)  --save and reload prefab
             bake_processes.bake = nil
         end
     end

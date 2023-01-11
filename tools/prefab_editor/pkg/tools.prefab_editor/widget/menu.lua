@@ -77,13 +77,13 @@ function m.show()
             end
             imgui.cursor.Separator()
             if imgui.widget.MenuItem(faicons.ICON_FA_FLOPPY_DISK.." Save", "Ctrl+S") then
-                prefab_mgr:save_prefab()
+                prefab_mgr:save()
             end
             
             if imgui.widget.MenuItem(faicons.ICON_FA_DOWNLOAD.." Save As..") then
                 local path = widget_utils.get_saveas_path("Prefab", "prefab")
                 if path then
-                    prefab_mgr:save_prefab(path)
+                    prefab_mgr:save(path)
                 end
             end
             imgui.widget.EndMenu()

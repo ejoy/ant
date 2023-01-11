@@ -910,7 +910,7 @@ end
 local function reload(e, mpath)
     local prefab = hierarchy:get_template(e)
     prefab.template.data.material = mpath:string()
-    prefab_mgr:save_prefab()
+    prefab_mgr:save()
     prefab_mgr:reload()
 end
 
