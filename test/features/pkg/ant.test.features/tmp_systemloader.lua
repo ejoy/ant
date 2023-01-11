@@ -478,7 +478,7 @@ end
 local function motion_sampler_test()
     local ims = ecs.import.interface "ant.render|imotion_sampler"
     local g = ims.sampler_group()
-    g:create_entity {
+    local eid = g:create_entity {
         policy = {
             "ant.scene|scene_object",
             "ant.render|motion_sampler",
@@ -492,6 +492,8 @@ local function motion_sampler_test()
             end
         }
     }
+
+    ecs.create_instance("/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab", eid)
 end
 
 local canvas_eid
@@ -532,6 +534,8 @@ function init_loader_sys:init_world()
 
     render_layer_test()
     canvas_test()
+
+    --motion_sampler_test()
 end
 
 local kb_mb = world:sub{"keyboard"}
@@ -579,20 +583,26 @@ function init_loader_sys:entity_init()
             iom.set_position(d, {0, 1, 0})
         elseif key == "C" and press == 0 then
             local icanvas = ecs.import.interface "ant.terrain|icanvas"
-            icanvas.add_items(w:entity(canvas_eid), {
-                {
-                    x = 2, y = 2, w = 4, h = 4,
-                    texture = {
-                        path = "/pkg/ant.test.features/assets/canvas_texture.material",
-                        size = {w = 128, h = 128,},
-                        rect = {
-                            x = 0, y = 0,
-                            w = 32, h = 32,
-                        },
-                    }
-                }
-
-            })
+            icanvas.add_items(w:entity(canvas_eid), "/pkg/ant.test.features/assets/canvas_texture.material", "background",
+            {
+                x = 2, y = 2, w = 4, h = 4,
+                texture = {
+                    rect = {
+                        x = 0, y = 0,
+                        w = 32, h = 32,
+                    },
+                },
+            },
+            {
+                x = 0, y = 0, w = 2, h = 2,
+                texture = {
+                    rect = {
+                        x = 32, y = 32,
+                        w = 32, h = 32,
+                    },
+                },
+            }
+        )
         end
     end
 

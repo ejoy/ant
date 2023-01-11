@@ -9,7 +9,10 @@ local declmgr   = renderpkg.declmgr
 local mathpkg   = import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
 
+local assetmgr  = import_package "ant.asset"
+
 local irender   = ecs.import.interface "ant.render|irender"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 
 local decl<const> = "p3|T4|t2"
@@ -129,16 +132,24 @@ local function add_item(texsize, tex, rect)
         vv4[1], vv4[2], vv4[3], vvt4[1], vvt4[2], vvt4[3], vvt4[4], u1v0[1], u1v0[2])
 end
 
+local function get_texture_size(materialpath)
+    local res = assetmgr.resource(materialpath)
+    local texobj = assetmgr.resource(res.properties.s_basecolor.texture)
+    local ti = texobj.texinfo
+    return {w=ti.width, h=ti.height}
+end
+
 local function update_items()
     local bufferoffset = 0
     local buffers = {}
     for e in w:select "canvas:in" do
         local canvas = e.canvas
         local textures = canvas.textures
-        for texpath, tex in pairs(textures) do
+        for materialpath, tex in pairs(textures) do
             local values = {}
+            local texsize = get_texture_size(materialpath)
             for _, v in pairs(tex.items) do
-                values[#values+1] = add_item(v.texture.size, v.texture, v)
+                values[#values+1] = add_item(texsize, v.texture, v)
             end
 
             if tex.renderer_eid then
@@ -161,7 +172,7 @@ local function update_items()
                 else
                     -- if no items to draw, should remove this entity
                     w:remove(tex.renderer_eid)
-                    textures[texpath] = nil
+                    textures[materialpath] = nil
                 end
             end
         end
@@ -240,29 +251,29 @@ end
 
 local gen_item_id = id_generator()
 local item_cache = {}
-function icanvas.add_items(e, items, render_layer)
+function icanvas.add_items(e, materialpath, render_layer, ...)
     w:extend(e, "canvas:in")
     local canvas = e.canvas
     local textures = canvas.textures
 
     local added_items = {}
-    for _, item in ipairs(items) do
-        local texture = item.texture
-        local key = texture.path
-        local t = textures[key]
+
+    for i=1, select("#", ...) do
+        local item = select(i, ...)
+        local t = textures[materialpath]
         if t == nil then
-            create_texture_item_entity(key, e, render_layer)
+            create_texture_item_entity(materialpath, e, render_layer)
             t = {
                 items = {},
             }
-            textures[key] = t
+            textures[materialpath] = t
         end
         local id = gen_item_id()
         t.items[id] = item
-        item_cache[id] = key
+        item_cache[id] = materialpath
         added_items[#added_items+1] = id
     end
-    if #items > 0 then
+    if #added_items > 0 then
         world:pub{"canvas_update", "texture"}
     end
 
