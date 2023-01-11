@@ -6,6 +6,8 @@ local mc    = mathpkg.constant
 
 local lms   = ecs.clibs "motion.sampler"
 
+local itimer= ecs.import.interface "ant.timer|itimer"
+
 local cms = ecs.component "motion_sampler"
 
 local function init_ms()
@@ -48,7 +50,7 @@ function mss:entity_init()
 end
 
 function mss:do_motion_sample()
-    lms.sample(motion_sampler_group)
+    lms.sample(motion_sampler_group, itimer.delta())
 end
 
 local ims = ecs.interface "imotion_sample"

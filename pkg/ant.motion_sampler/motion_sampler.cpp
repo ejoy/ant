@@ -23,13 +23,14 @@ static int
 lsample(lua_State *L){
     auto w = getworld(L);
 	const int motion_groupid = (int)luaL_checkinteger(L, 1);
+	const float deltaMS = (float)luaL_checknumber(L, 2);
 
 	ecs_api::context ecs {w->ecs};
 	int gids[] = {motion_groupid};
 	ecs.group_enable<ecs::motion_sampler_tag>(gids);
 
 	for (auto e : ecs.select<ecs::view_visible, ecs::motion_sampler_tag, ecs::motion_sampler, ecs::scene>()){
-		const auto& ms = e.get<ecs::motion_sampler>();
+		auto& ms = e.get<ecs::motion_sampler>();
 		auto &scene = e.get<ecs::scene>();
 		//interplate s/r/t
 		const math_t* source_srt = &ms.source_s;
@@ -48,6 +49,8 @@ lsample(lua_State *L){
 				r = math_mark(w->math3d->M, math3d_lerp(w->math3d->M, s, d, ms.ratio));
 			}
 		}
+
+		ms.ratio += deltaMS;
 	}
     return 1;
 }
