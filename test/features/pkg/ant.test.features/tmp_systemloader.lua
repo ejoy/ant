@@ -476,24 +476,32 @@ local function render_layer_test()
 end
 
 local function motion_sampler_test()
-    local ims = ecs.import.interface "ant.render|imotion_sampler"
+    local ims = ecs.import.interface "ant.motion_sampler|imotion_sampler"
     local g = ims.sampler_group()
     local eid = g:create_entity {
         policy = {
             "ant.scene|scene_object",
-            "ant.render|motion_sampler",
+            "ant.motion_sampler|motion_sampler",
             "ant.general|name",
         },
         data = {
             scene = {},
-            name = "motion_sample",
+            name = "motion_sampler",
             on_ready = function (e)
-                ims.set_target(e, nil, math3d.vector(0.0, 1.2, 0.0), math3d.vector(0.0, 0.0, 2.0), 2000)
+                ims.set_target(e, nil, math3d.quaternion{0.0, 1.2, 0.0}, math3d.vector(0.0, 0.0, 2.0), 2000)
             end
         }
     }
 
-    ecs.create_instance("/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab", eid)
+    g:enable "view_visible"
+    g:enable "scene_update"
+
+    local p = g:create_instance("/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab", eid)
+    p.on_ready = function (e)
+        
+    end
+
+    world:create_object(p)
 end
 
 local canvas_eid
@@ -535,7 +543,7 @@ function init_loader_sys:init_world()
     render_layer_test()
     canvas_test()
 
-    --motion_sampler_test()
+    motion_sampler_test()
 end
 
 local kb_mb = world:sub{"keyboard"}

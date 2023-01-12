@@ -64,7 +64,7 @@ scene_changed(lua_State *L) {
 				e.disable_tag<ecs::scene_update>(ecs);
 				e.enable_tag<ecs::scene_changed>(ecs);
 				if (!worldmat_update(worldmats, math3d, s, id)) {
-					return luaL_error(L, "Unexpected Error.");
+					return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 				}
 			}
 			ecs.clear_type<ecs::scene_update_once>();
@@ -118,7 +118,7 @@ scene_changed(lua_State *L) {
 		auto& s = e.get<ecs::scene>();
 		auto id = e.get<ecs::eid>();
 		if (!worldmat_update(worldmats, math3d, s, id)) {
-			return luaL_error(L, "Unexpected Error.");
+			return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 		}
 	}
 

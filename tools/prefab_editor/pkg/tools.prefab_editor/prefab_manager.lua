@@ -103,7 +103,7 @@ end
 function m:add_entity(new_entity, parent, temp, no_hierarchy)
     self.entities[#self.entities+1] = new_entity
     if not no_hierarchy then
-        hierarchy:add(new_entity, {template = temp}, parent)
+        hierarchy:add(new_entity, {template = temp, patch = true}, parent)
     end
 end
 
@@ -190,7 +190,7 @@ function m:create(what, config)
         self:create_hitch(true)
     elseif what == "camera" then
         local new_camera, template = camera_mgr.create_camera()
-        hierarchy:add(new_camera, {template = template}, self.root)
+        hierarchy:add(new_camera, {template = template, patch = true}, self.root)
         self.entities[#self.entities+1] = new_camera
     elseif what == "empty" then
         local parent = gizmo.target_eid or self.root
@@ -353,9 +353,18 @@ function m:on_prefab_ready(prefab)
 
     local node_map = {}
 
+    local final_template = {}
+    for _, value in ipairs(self.prefab_template) do
+        final_template[#final_template + 1] = value
+    end
+    if self.patch_template then
+        for _, value in ipairs(self.patch_template) do
+            final_template[#final_template + 1] = value
+        end
+    end
+
     local j = 1
-    for i = 1, #self.prefab_template do
-        local pt = self.prefab_template[i]
+    for idx, pt in ipairs(final_template) do
         local eid = entitys[j]
         local e <close> = w:entity(eid, "scene?in light?in")
         local scene = e.scene
@@ -369,7 +378,7 @@ function m:on_prefab_ready(prefab)
             target_node.editor = pt.editor or false
         else
             self.entities[#self.entities + 1] = eid
-            node_map[eid] = {template = self.prefab_template[i], parent = parent}
+            node_map[eid] = {template = pt, parent = parent, patch = (idx > #self.prefab_template)}
             j = j + 1
         end
 
@@ -389,9 +398,9 @@ function m:on_prefab_ready(prefab)
         local tp = node.template
         if children then
             set_select_adapter(children, eid)
-            tp = {template = node.template, filename = node.filename, editor = node.editor}
+            tp = {template = node.template, filename = node.filename, editor = node.editor, patch = node.patch}
         else
-            tp = {template = node.template}
+            tp = {template = node.template, patch = node.patch}
         end
         hierarchy:add(eid, tp, node.parent or self.root)
     end
@@ -429,11 +438,17 @@ function m:open(filename)
     self:reset_prefab()
     self.prefab_filename = filename
     self.prefab_template = serialize.parse(filename, cr.read_file(filename))
-    for _, value in ipairs(self.prefab_template) do
+    local patchfile = filename .. ".patch"
+    if fs.exists(fs.path(patchfile)) then
+        self.patch_template = serialize.parse(patchfile, cr.read_file(patchfile))
+        
+    end
+    local eff_host_tpl = self.patch_template or self.prefab_template
+    for _, value in ipairs(eff_host_tpl) do
         if value.data and value.data.efk then
             self.check_effect_preload(value.data.efk.path)
         end
-    end
+    end 
     -- check_animation(self.prefab_template)
 
     local prefab = ecs.create_instance(filename)
@@ -524,6 +539,7 @@ function m:reset_prefab()
     hierarchy:set_root(self.root)
     self.prefab_filename = nil
     self.prefab_template = nil
+    self.patch_template = nil
     self.prefab_instance = nil
     gizmo:set_target()
     self:create_ground()
@@ -532,7 +548,7 @@ end
 function m:reload()
     local filename = self.prefab_filename
     if filename == 'nil' then
-        self:save_prefab((gd.project_root / "res/__temp__.prefab"):string())
+        self:save((gd.project_root / "res/__temp__.prefab"):string())
     else
         self:open(filename)
     end
@@ -572,7 +588,7 @@ function m:add_effect(filename)
 		data = {
             name = "root",
             tag = {"effect"},
-            scene = {parent = gizmo.target_eid},
+            scene = {parent = self.root},
             efk = {
                 path = filename,
                 auto_play = false,
@@ -586,8 +602,7 @@ function m:add_effect(filename)
     tpl.data.on_ready = function (e)
         iefk.play(e)
     end
-    -- tpl.data.scene.parent = gizmo.target_eid
-    self:add_entity(ecs.create_entity(tpl), gizmo.target_eid, template)
+    self:add_entity(ecs.create_entity(tpl), self.root, template)
 end
 
 function m:add_prefab(filename)
@@ -614,7 +629,7 @@ function m:add_prefab(filename)
     -- group:enable "scene_update"
     local v_root, temp = create_simple_entity(gen_prefab_name(), parent)
     self.entities[#self.entities+1] = v_root
-    hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false}, parent)
+    hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false, patch = true}, parent)
     prefab = ecs.create_instance(prefab_filename, v_root)
     prefab.on_ready = function(inst)
         local children = inst.tag["*"]
@@ -634,8 +649,9 @@ function m:add_prefab(filename)
     world:create_object(prefab)
 end
 
-function m:save_prefab(path)
+function m:save(path)
     local filename
+    local patchfilename
     if not path then
         if not self.prefab_filename or (string.find(self.prefab_filename, "__temp__")) then
             filename = widget_utils.get_saveas_path("Prefab", "prefab")
@@ -651,9 +667,10 @@ function m:save_prefab(path)
     end
     local prefab_filename = self.prefab_filename or ""
     filename = filename or prefab_filename
+    patchfilename = filename .. ".patch"
     local saveas = (lfs.path(filename) ~= lfs.path(prefab_filename))
 
-    local new_template = hierarchy:update_prefab_template(world)
+    local raw_tpl, patch_tpl = hierarchy:update_prefab_template()
     
     if not saveas then
         local path_list = split(prefab_filename)
@@ -666,7 +683,11 @@ function m:save_prefab(path)
             log.error({tag = "Editor", message = msg})
             widget_utils.message_box({title = "SaveError", info = msg})
         else
-            utils.write_file(filename, stringify(new_template))
+            utils.write_file(filename, stringify(raw_tpl))
+            if #patch_tpl > 0 then
+                utils.write_file(patchfilename, stringify(patch_tpl))  
+            end
+            
             anim_view.save_keyevent()
         end
         if prefab_filename then
@@ -674,7 +695,11 @@ function m:save_prefab(path)
         end
         return
     end
-    utils.write_file(filename, stringify(new_template))
+    utils.write_file(filename, stringify(raw_tpl))
+    if #patch_tpl > 0  then
+        utils.write_file(patchfilename, stringify(patch_tpl))
+    end
+
     anim_view.save_keyevent(string.sub(filename, 1, -8) .. ".event")
     local lfilename = lfs.path(filename)
     assert(lfilename:is_absolute(), ("filename should be local path:%s"):format(filename))

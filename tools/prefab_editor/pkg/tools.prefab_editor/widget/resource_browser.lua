@@ -177,7 +177,8 @@ function m.show()
     while type do
         if (not string.find(path, "\\.build\\"))
             and (not string.find(path, "\\.log\\"))
-            and (not string.find(path, "\\.repo\\")) then
+            and (not string.find(path, "\\.repo\\"))
+            and (not string.find(path, "log.txt")) then
             m.dirty = true
         end
         type, path = gd.filewatch:select()

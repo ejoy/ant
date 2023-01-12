@@ -485,7 +485,7 @@ function m:handle_event()
             -- world:create_object(prefab)
 
         elseif state.CTRL and key == "S" and press == 1 then
-            prefab_mgr:save_prefab()
+            prefab_mgr:save()
         elseif state.CTRL and key == "R" and press == 1 then
             -- ecs.create_instance "/pkg/tools.prefab_editor/res/skybox.prefab"
             -- anim_view:clear()

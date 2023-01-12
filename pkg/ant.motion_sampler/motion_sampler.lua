@@ -3,6 +3,7 @@ local world = ecs.world
 local w     = world.w
 local mathpkg=import_package "ant.math"
 local mc    = mathpkg.constant
+local math3d= require "math3d"
 
 local lms   = ecs.clibs "motion.sampler"
 
@@ -13,7 +14,7 @@ local cms = ecs.component "motion_sampler"
 local function init_ms()
     return {
         duration    = 0.0,
-        ratio       = 0.0,
+        deltatime   = 0.0,
 
         source_s    = mc.NULL,
         source_r    = mc.NULL,
@@ -30,8 +31,22 @@ function cms.init(s)
     return init_ms()
 end
 
-function cms.remove()
-    
+local function check_remove_m3d(m)
+    if m ~= mc.NULL then
+        math3d.unmark(m)
+    end
+
+    return mc.NULL
+end
+
+function cms.remove(s)
+    s.source_s = check_remove_m3d(s.source_s)
+    s.source_r = check_remove_m3d(s.source_r)
+    s.source_t = check_remove_m3d(s.source_t)
+
+    s.target_s = check_remove_m3d(s.target_s)
+    s.target_r = check_remove_m3d(s.target_r)
+    s.target_t = check_remove_m3d(s.target_t)
 end
 
 function cms.marshal()
@@ -44,7 +59,7 @@ end
 
 local motion_sampler_group<const> = 101010
 
-local mss = ecs.system "motion_sample_system"
+local mss = ecs.system "motion_sampler_system"
 
 function mss:entity_init()
 end
@@ -53,7 +68,7 @@ function mss:do_motion_sample()
     lms.sample(motion_sampler_group, itimer.delta())
 end
 
-local ims = ecs.interface "imotion_sample"
+local ims = ecs.interface "imotion_sampler"
 
 function ims.sampler_group()
     return ecs.group(motion_sampler_group)
@@ -64,24 +79,36 @@ function ims.set_duration(e, duration)
     e.motion_sampler.duration = duration
 end
 
+local function tom3d(old, new)
+    if old ~= mc.NULL then
+        math3d.unmark(old)
+    end
+    if new then
+        return math3d.mark(new)
+    end
+
+    return mc.NULL
+end
+
 function ims.set_target(e, s, r, t, duration)
     w:extend(e, "motion_sampler:update scene:in")
     local ss = e.motion_sampler
     if duration then
-        ss.duration     = duration
+        ss.duration = duration
     end
     
-    ss.ratio        = 0.0
+    ss.deltatime    = 0.0
 
-    ss.target_s     = s or mc.NULL
-    ss.target_r     = r or mc.NULL
-    ss.target_t     = t or mc.NULL
+    ss.target_s     = tom3d(ss.target_s, s)
+    ss.target_r     = tom3d(ss.target_r, r)
+    ss.target_t     = tom3d(ss.target_t, t)
 
     local scene = e.scene
 
-    ss.source_s     = scene.s
-    ss.source_r     = scene.r
-    ss.source_t     = scene.t
+    --we need to copy it
+    ss.source_s     = tom3d(ss.source_s, math3d.vector(scene.s))
+    ss.source_r     = tom3d(ss.source_r, math3d.quaternion(scene.r))
+    ss.source_t     = tom3d(ss.source_t, math3d.vector(scene.t))
 
     w:submit(e)
 end

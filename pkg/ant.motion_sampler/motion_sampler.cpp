@@ -32,27 +32,33 @@ lsample(lua_State *L){
 	for (auto e : ecs.select<ecs::view_visible, ecs::motion_sampler_tag, ecs::motion_sampler, ecs::scene>()){
 		auto& ms = e.get<ecs::motion_sampler>();
 		auto &scene = e.get<ecs::scene>();
-		//interplate s/r/t
-		const math_t* source_srt = &ms.source_s;
-		const math_t* target_srt = &ms.target_s;
-		math_t* scene_srt = &scene.s;
 
-		for (int i=0; i<3; ++i){
-			const math_t s = source_srt[i];
-			const math_t d = target_srt[i];
+		if (ms.deltatime <= ms.duration){
+			const float ratio = ms.deltatime / ms.duration;
+			auto update_m3d = [w](math_t& m, const math_t n){
+				math_unmark(w->math3d->M, m);
+				m = math_mark(w->math3d->M, n);
+			};
 
-			if (!math_isnull(d)){
-				assert(math_isnull(s));
-
-				auto &r = scene_srt[i];
-				math_unmark(w->math3d->M, r);
-				r = math_mark(w->math3d->M, math3d_lerp(w->math3d->M, s, d, ms.ratio));
+			if (!math_isnull(ms.target_s)){
+				update_m3d(scene.s, math3d_lerp(w->math3d->M, ms.source_s, ms.target_s, ratio));
 			}
-		}
 
-		ms.ratio += deltaMS;
+			if (!math_isnull(ms.target_r)){
+				const char* tt = math_typename(math_type(w->math3d->M, ms.target_r));
+				const char* tt1= math_typename(math_type(w->math3d->M, ms.source_r));
+				update_m3d(scene.r, math3d_quat_lerp(w->math3d->M, ms.source_r, ms.target_r, ratio));
+			}
+
+			if (!math_isnull(ms.target_t)){
+				update_m3d(scene.t, math3d_lerp(w->math3d->M, ms.source_t, ms.target_t, ratio));
+			}
+
+			e.enable_tag<ecs::scene_needchange>(ecs);
+		}
+		ms.deltatime += deltaMS;
 	}
-    return 1;
+    return 0;
 }
 
 extern "C" int

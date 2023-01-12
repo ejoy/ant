@@ -862,7 +862,7 @@ function m.show()
     end
     imgui.windows.End()
     if reload then
-        prefab_mgr:save_prefab()
+        prefab_mgr:save()
         prefab_mgr:reload()
     end
 end

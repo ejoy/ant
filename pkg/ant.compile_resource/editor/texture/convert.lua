@@ -34,7 +34,7 @@ return function (input, output, setting, localpath)
 		assert(param.value, "memory texture should define the texture memory")
 	
 		if param.format ~= "RGBA8" then
-			error(("memory texture only support format RGBA8"))
+			error(("memory texture only support format RGBA8, format:%s provided"):format(param.format))
 		end
 		
 		local s = param.size
