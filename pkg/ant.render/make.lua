@@ -129,7 +129,7 @@ lm:lua_source "render_core"{
         "render/material.c",
         "render/render.cpp",
     },
-    -[[
+    --[[
     macos = {
         deps = {
             "moltenvk",
