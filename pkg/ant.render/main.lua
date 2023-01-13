@@ -21,5 +21,4 @@ return {
 	fbmgr       = require "framebuffer_mgr",
     declmgr     = require "vertexdecl_mgr",
     sampler     = require "sampler",
-    layer       = require "render_layer"
 }
