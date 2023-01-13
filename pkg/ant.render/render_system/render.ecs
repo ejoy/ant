@@ -14,10 +14,6 @@ policy "main_queue"
     .require_policy "ant.render|render_queue"
     .component "main_queue"
 
-component "orthoview".type "lua"
-policy "orthoview_queue"
-    .component "orthoview"
-
 policy "render_object"
     .require_system "ant.render|render_system"
     .component_opt "render_object"
