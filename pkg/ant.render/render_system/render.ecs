@@ -26,7 +26,7 @@ policy "render_object"
 component "render_args"
     .type "c"
     .field "viewid:word"
-    .field "queue_index:byte"
+    .field "material_index:byte"
     .implement "render_system/render_object.lua"
     .method "init"
 

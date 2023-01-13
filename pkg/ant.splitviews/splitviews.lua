@@ -138,7 +138,7 @@ local viewqueue = {
 }
 
 local function show_ortho_view()
-    irq.set_view_rect(world:singleton_entity_id "main_queue", {x=mainqueue_rect.x, y=mainqueue_rect.y, w=mainqueue_rect.w*0.5, h=mainqueue_rect.h*0.5})
+    irq.set_view_rect("main_queue", {x=mainqueue_rect.x, y=mainqueue_rect.y, w=mainqueue_rect.w*0.5, h=mainqueue_rect.h*0.5})
 
     for _, n in ipairs(viewqueue[viewidx]) do
         local v = orthoview[n]

@@ -142,8 +142,8 @@ function render_sys:render_submit()
 		end
 
 		qe.render_args = {
-			viewid		= viewid,
-			queue_index	= rendercore.queue_index(qe.queue_name) or 0,
+			viewid			= viewid,
+			material_index	= rendercore.material_index(qe.queue_name) or 0,
 		}
 	end
 
