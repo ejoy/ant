@@ -153,7 +153,7 @@ template <typename Entity>
 void collect_render_objs(Entity& e, ecs_api::context& ecs, const matrix_array *mats, objarray &objs) {
 	auto& ro = e.template get<ecs::render_object>();
 #if defined(_MSC_VER) && defined(_DEBUG)
-	auto id = (uint64_t)e.sibling<ecs::eid>(ecs);
+	auto id = e.sibling<ecs::eid>(ecs);
 	objs.emplace_back(obj_data{ &ro, mats, id });
 #else
 	objs.emplace_back(obj_data{ &ro, mats });
