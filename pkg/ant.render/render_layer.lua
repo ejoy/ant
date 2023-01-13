@@ -16,7 +16,7 @@ local function find_layeridx(name)
     end
 end
 
-local irl = ecs.interface "ant.render|irender_layer"
+local irl = ecs.interface "irender_layer"
 
 local function update_objects_layer()
     for e in w:select "render_layer:in render_object:update" do

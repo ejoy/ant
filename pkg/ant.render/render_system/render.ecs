@@ -5,6 +5,7 @@ import "@ant.asset"
 import "@ant.objcontroller"
 
 import "render_system/depth/depth.ecs"
+import "render_layer.ecs"
 
 component "main_queue"
 component "main_queue_cull"

@@ -8,9 +8,9 @@ local irender	= ecs.import.interface "ant.render|irender"
 local ivs		= ecs.import.interface "ant.scene|ivisible_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local itimer	= ecs.import.interface "ant.timer|itimer"
-local render_sys = ecs.system "render_system"
+local irl		= ecs.import.interface "ant.render|irender_layer"
 
-local irl		= require "render_layer"
+local render_sys= ecs.system "render_system"
 
 local rendercore= ecs.clibs "render.core"
 local null = rendercore.null()
