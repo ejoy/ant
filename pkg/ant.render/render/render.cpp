@@ -26,6 +26,8 @@ struct transform {
 	uint32_t stride;
 };
 
+constexpr size_t MAX_MATERIAL_TYPE_COUNT = (offsetof(ecs::render_object, mat_ppoq) - offsetof(ecs::render_object, mat_def))/sizeof(intptr_t);
+
 using obj_transforms = std::unordered_map<const ecs::render_object*, transform>;
 static inline transform
 update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transforms &trans){
@@ -79,16 +81,17 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro){
 }
 
 static inline struct material_instance*
-get_material(const ecs::render_object* ro, size_t qidx){
-	return (struct material_instance*)(*(&ro->mat_mq + qidx));
+get_material(const ecs::render_object* ro, size_t midx){
+	assert(midx < MAX_MATERIAL_TYPE_COUNT);
+	return (struct material_instance*)(*(&ro->mat_def + midx));
 }
 
 static void
-draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_id_t viewid, size_t queueidx, obj_transforms &trans){
+draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_id_t viewid, size_t midx, obj_transforms &trans){
 	if (mesh_submit(w, ro)){
 		auto t = update_transform(w, ro, trans);
 		w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-		auto mi = get_material(ro, queueidx);
+		auto mi = get_material(ro, midx);
 		apply_material_instance(L, mi, w);
 
 		const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;

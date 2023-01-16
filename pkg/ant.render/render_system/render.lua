@@ -61,11 +61,11 @@ local MATERIAL_INDICES<const> = {
 	pre_depth_queue	= 1,
 	pickup_queue	= 2,
 	csm1_queue		= 3,
-	csm2_queue		= 4,
-	csm3_queue		= 5,
-	csm4_queue		= 6,
-	bake_lightmap_queue = 7,
-	postprocess_obj_queue = 8,
+	csm2_queue		= 3,
+	csm3_queue		= 3,
+	csm4_queue		= 3,
+	bake_lightmap_queue = 4,
+	postprocess_obj_queue = 5,
 }
 
 function irender.material_index(queue_name)

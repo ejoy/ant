@@ -76,7 +76,7 @@ function render_sys:entity_init()
 		local mi = mr.object:instance()
 		fm["main_queue"] = mi
 		local ro = e.render_object
-		ro.mat_mq = mi:ptr()
+		ro.mat_def = mi:ptr()
 	end
 
 	for e in w:select "INIT mesh?in simplemesh?in render_object:update" do
@@ -199,7 +199,7 @@ function s:update_filter()
 				local ro = e.render_object
 				local fm = e.filter_material
 				local m = fm.main_queue
-				ro.mat_mq = m:ptr()
+				ro.mat_def = m:ptr()
 				--Here, we no need to create new material object for this new state, because only main_queue render need this material object
 				m:get_material():set_state(check_set_depth_state_as_equal(m:get_state()))
 			end

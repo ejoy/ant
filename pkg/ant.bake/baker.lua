@@ -242,8 +242,6 @@ function downsampler:update(fbs)
     end
 end
 
-local mainqueue_index<const> = 0
-
 function downsampler:downsample(hemisize)
     local hsize = hemisize//2
     local viewid = lightmap_viewid + 1
