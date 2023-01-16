@@ -101,10 +101,10 @@ local platform_relates = {
 		renderer="VULKAN",
 	},
 	macos = {
-		renderer="METAL",
+		renderer="VULKAN",
 	},
 	ios = {
-		renderer="METAL",
+		renderer="VULKAN",
 	},
 	android = {
 		renderer="VULKAN",
@@ -114,12 +114,7 @@ local platform_relates = {
 function hw.default_renderer(plat)
 	plat = plat or platform.os
 	local pi = platform_relates[plat]
-	if pi then
-		if plat == "ios" then
-			assert(pi.renderer == "METAL")
-		end
-		return pi.renderer
-	end
+	return pi.renderer
 end
 
 function hw.shutdown()

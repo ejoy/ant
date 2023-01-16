@@ -53,9 +53,10 @@ end
 
 local ra = ecs.component "render_args"
 function ra.init(v)
-    v.visible_id = 0
-    v.cull_id = 0
+    v.queue_visible_id = 0
+    v.queue_cull_id = 0
     v.viewid = 0
     v.material_idx = 0
+    return v
 end
 

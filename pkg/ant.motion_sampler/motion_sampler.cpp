@@ -7,7 +7,7 @@ extern "C"{
 	#include "math3dfunc.h"
 }
 
-#include <ranges>
+#include <algorithm>
 
 static_assert((offsetof(ecs::motion_sampler, source_r) - offsetof(ecs::motion_sampler, source_s)) == sizeof(math_t), "Invalid motion_sampler defined");
 static_assert((offsetof(ecs::motion_sampler, source_t) - offsetof(ecs::motion_sampler, source_r)) == sizeof(math_t), "Invalid motion_sampler defined");
@@ -34,7 +34,8 @@ lsample(lua_State *L){
 		auto &scene = e.get<ecs::scene>();
 
 		if (ms.deltatime <= ms.duration){
-			const float ratio = ms.deltatime / ms.duration;
+			ms.deltatime += deltaMS;
+			const float ratio = std::min(1.f, ms.deltatime / ms.duration);
 			auto update_m3d = [w](math_t& m, const math_t n){
 				math_unmark(w->math3d->M, m);
 				m = math_mark(w->math3d->M, n);
@@ -56,7 +57,6 @@ lsample(lua_State *L){
 
 			e.enable_tag<ecs::scene_needchange>(ecs);
 		}
-		ms.deltatime += deltaMS;
 	}
     return 0;
 }

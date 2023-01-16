@@ -7,6 +7,7 @@ local ientity       = ecs.import.interface "ant.render|ientity"
 local imaterial     = ecs.import.interface "ant.asset|imaterial"
 local imesh         = ecs.import.interface "ant.asset|imesh"
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
+local irl           = ecs.import.interface "ant.render|irender_layer"
 
 local assetmgr      = import_package "ant.asset"
 
@@ -15,7 +16,6 @@ local mc, mu        = mathpkg.constant, mathpkg.util
 
 local renderpkg     = import_package "ant.render"
 local declmgr       = renderpkg.declmgr
-local rl            = renderpkg.layer
 
 local init_loader_sys   = ecs.system 'init_loader_system'
 
@@ -434,9 +434,7 @@ function init_loader_sys:init()
 end
 
 local function render_layer_test()
-    rl.add_layer("after_opacity", rl.layeridx "opacity")
-    rl.add_layer("after_opacity2", rl.layeridx "after_opacity")
-
+    irl.add_layers(irl.layeridx "opacity", "after_opacity", "after_opacity2")
     local m = imesh.init_mesh(ientity.plane_mesh())
 
     ecs.create_entity {

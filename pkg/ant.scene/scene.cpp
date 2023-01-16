@@ -91,7 +91,7 @@ scene_changed(lua_State *L) {
 	// step.2
 	flatmap<ecs::eid, math_t> worldmats;
 	flatset<ecs::eid> change;
-	for (auto& e : ecs.select<ecs::scene_update, ecs::eid>(L)) {
+	for (auto& e : ecs.select<ecs::scene_update, ecs::eid>()) {
 		auto id = e.get<ecs::eid>();
 		if (parents.contains(id)) {
 			auto s = e.sibling<ecs::scene>(ecs);
@@ -139,10 +139,10 @@ scene_remove(lua_State *L) {
 	if (removed.empty()) {
 		return 0;
 	}
-	for (auto& e : ecs.select<ecs::scene>(L)) {
+	for (auto& e : ecs.select<ecs::scene>()) {
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0 && removed.contains(s.parent)) {
-			auto id = e.sibling<ecs::eid>(ecs, L);
+			auto id = e.sibling<ecs::eid>(ecs);
 			removed.insert(id);
 			e.remove(ecs);
 		}

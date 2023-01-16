@@ -1,0 +1,6 @@
+interface "irender_layer"
+    .implement "render_layer.lua"
+    .method "add_layers"
+    .method "remove_layer"
+    .method "layeridx"
+    .method "layername"

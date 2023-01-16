@@ -67,13 +67,6 @@ namespace ecs_api {
             }
             return r;
         }
-        bool init(ecs_context* ctx, int i, lua_State* L) {
-            auto r = init_components(ctx, i, L);
-            if (r) {
-                index = i;
-            }
-            return r;
-        }
         void remove(ecs_context* ctx) const {
             entity_remove(ctx, component<MainKey>::id, index);
         }
@@ -96,9 +89,14 @@ namespace ecs_api {
             return !!impl::sibling<T>(ctx, component<MainKey>::id, index);
         }
         template <typename T>
-            requires (!component<T>::tag && !std::is_empty<T>::value)
+            requires (component<T>::id != EID && !component<T>::tag && !std::is_empty<T>::value)
         T* sibling(ecs_context* ctx) const {
             return impl::sibling<T>(ctx, component<MainKey>::id, index);
+        }
+        template <typename T>
+            requires (component<T>::id == EID)
+        T sibling(ecs_context* ctx) const {
+            return (T)impl::sibling<T>(ctx, component<MainKey>::id, index);
         }
         template <typename T>
             requires (component<T>::id == EID)
@@ -175,109 +173,12 @@ namespace ecs_api {
                 }
             }
         }
-        template <std::size_t Is, typename Component, typename ...Components>
-        void init_sibling(ecs_context* ctx, int i, lua_State* L) {
-            if constexpr (std::is_function<Component>::value) {
-                using C = typename std::invoke_result<Component, flags::absent>::type;
-                auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i);
-                if (v) {
-                    luaL_error(L, "component `%s` exists.", component<C>::name);
-                }
-                if constexpr (sizeof...(Components) > 0) {
-                    init_sibling<Is, Components...>(ctx, i, L);
-                }
-            }
-            else {
-                auto v = impl::sibling<Component>(ctx, component<MainKey>::id, i, L);
-                assgin<Is>(v);
-                if constexpr (sizeof...(Components) > 0) {
-                    init_sibling<impl::next<Is, Component>(), Components...>(ctx, i, L);
-                }
-            }
-        }
-        bool init_components(ecs_context* ctx, int i, lua_State* L) {
-            auto v = impl::iter<MainKey>(ctx, i);
-            if (!v) {
-                return false;
-            }
-            assgin<0>(v);
-            if constexpr (sizeof...(SubKey) > 0) {
-                init_sibling<impl::next<0, MainKey>(), SubKey...>(ctx, i, L);
-            }
-            return true;
-        }
     private:
         impl::components<MainKey, SubKey...> c;
         int index;
     };
 
     namespace impl {
-        template <typename ...Args>
-        struct strict_select_range {
-            struct iterator {
-                ecs_context* ctx;
-                int index;
-                entity<Args...>& e;
-                lua_State* L;
-                iterator(entity<Args...>& e)
-                    : ctx(NULL)
-                    , index(0)
-                    , e(e)
-                    , L(NULL)
-                { }
-                iterator(ecs_context* ctx, entity<Args...>& e, lua_State* L)
-                    : ctx(ctx)
-                    , index(0)
-                    , e(e)
-                    , L(L)
-                { }
-        
-                bool operator!=(iterator const& o) const {
-                    if (ctx != o.ctx) {
-                        return true;
-                    }
-                    if (ctx == NULL) {
-                        return false;
-                    }
-                    return index != o.index;
-                }
-                bool operator==(iterator const& o) const {
-                    return !(*this != o);
-                }
-                iterator& operator++() {
-                    index++;
-                    next();
-                    return *this;
-                }
-                entity<Args...>& operator*() {
-                    return e;
-                }
-                void next() {
-                    if (!e.init(ctx, index, L)) {
-                        ctx = NULL;
-                    }
-                }
-            };
-            ecs_context* ctx;
-            entity<Args...> e;
-            lua_State* L;
-
-            strict_select_range(ecs_context* ctx, lua_State* L)
-                : ctx(ctx)
-                , e()
-                , L(L)
-            {}
-
-            iterator begin() {
-                iterator iter {ctx, e, L};
-                iter.next();
-                return iter;
-            }
-            iterator end() {
-                return {e};
-            }
-        };
-
         template <typename ...Args>
         struct select_range {
             struct iterator {
@@ -356,11 +257,6 @@ namespace ecs_api {
             requires (component<Component>::tag)
         void group_enable(int (&ids)[N]) {
             entity_group_enable(ecs, component<Component>::id, N, ids);
-        }
-
-        template <typename ...Args>
-        auto select(lua_State* L) {
-            return impl::strict_select_range<Args...>(ecs, L);
         }
 
         template <typename ...Args>

@@ -8,9 +8,9 @@ local irender	= ecs.import.interface "ant.render|irender"
 local ivs		= ecs.import.interface "ant.scene|ivisible_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local itimer	= ecs.import.interface "ant.timer|itimer"
-local render_sys = ecs.system "render_system"
+local irl		= ecs.import.interface "ant.render|irender_layer"
 
-local irl		= require "render_layer"
+local render_sys= ecs.system "render_system"
 
 local rendercore= ecs.clibs "render.core"
 local null = rendercore.null()
@@ -85,6 +85,16 @@ function render_sys:entity_init()
 
 		e.render_object.render_layer = assert(irl.layeridx(rl))
 	end
+
+	for qe in w:select "INIT camera_ref queue_name:in render_target:in render_args:new" do
+		local qn = qe.queue_name
+		qe.render_args = {
+			viewid				= qe.render_target.viewid,
+			queue_visible_id	= w:component_id(qn .. "_visible"),
+			queue_cull_id		= w:component_id(qn .. "_cull"),
+			material_index		= rendercore.material_index(qn) or 0,
+		}
+	end
 end
 
 local time_param = math3d.ref(math3d.vector(0.0, 0.0, 0.0, 0.0))
@@ -129,8 +139,7 @@ function render_sys:scene_update()
 end
 
 function render_sys:render_submit()
-	w:clear "render_args"
-	for qe in w:select "visible queue_name:in camera_ref:in render_target:in render_args:new" do
+	for qe in w:select "visible camera_ref:in render_target:in" do
 		local rt = qe.render_target
 		local viewid = rt.viewid
 
@@ -140,11 +149,6 @@ function render_sys:render_submit()
 			w:extend(camera, "camera:in")
 			bgfx.set_view_transform(viewid, camera.camera.viewmat, camera.camera.projmat)
 		end
-
-		qe.render_args = {
-			viewid		= viewid,
-			queue_index	= rendercore.queue_index(qe.queue_name) or 0,
-		}
 	end
 
 	rendercore.submit()

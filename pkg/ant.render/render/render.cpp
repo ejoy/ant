@@ -153,7 +153,7 @@ template <typename Entity>
 void collect_render_objs(Entity& e, ecs_api::context& ecs, const matrix_array *mats, objarray &objs) {
 	auto& ro = e.template get<ecs::render_object>();
 #if defined(_MSC_VER) && defined(_DEBUG)
-	auto id = (uint64_t)e.sibling<ecs::eid>(ecs);
+	auto id = e.sibling<ecs::eid>(ecs);
 	objs.emplace_back(obj_data{ &ro, mats, id });
 #else
 	objs.emplace_back(obj_data{ &ro, mats });
@@ -230,7 +230,7 @@ update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const 
 static void
 draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const objarray &objs, obj_transforms &trans){
 	for (const auto &od : objs){
-		auto mi = get_material(od.obj, ra.queue_index);
+		auto mi = get_material(od.obj, ra.material_index);
 		if (mi && mesh_submit(w, od.obj)) {
 			apply_material_instance(L, mi, w);
 			const auto prog = material_prog(L, mi);
@@ -271,16 +271,16 @@ lsubmit(lua_State *L) {
 
 	for (auto a : ecs.select<ecs::render_args>()){
 		const auto& ra = a.get<ecs::render_args>();
-		if (ra.queue_index > tag_queue::N) {
-			luaL_error(L, "Invalid queue_index in render_args:%d", ra.queue_index);
+		if (ra.material_index > tag_queue::N) {
+			luaL_error(L, "Invalid material_index in render_args:%d", ra.material_index);
 		}
 
 		objarray objs;
-		s_collect_objects(ecs, nullptr, ra.queue_index, objs);
+		s_collect_objects(ecs, nullptr, ra.material_index, objs);
 		for (auto const& [groupid, mats] : groups) {
 			int gids[] = {groupid};
 			ecs.group_enable<ecs::hitch_tag>(gids);
-			s_collect_hitch_objects(ecs, &mats, ra.queue_index, objs);
+			s_collect_hitch_objects(ecs, &mats, ra.material_index, objs);
 		}
 
 		std::sort(std::begin(objs), std::end(objs), [](const auto &lhs, const auto &rhs){
@@ -342,27 +342,15 @@ lnull(lua_State *L){
 	return 1;
 }
 
+//TODO: queue index will failed when dynamic material is used
 static int
-lqueue_index(lua_State *L) {
-	auto name = luaL_checkstring(L, 1);
-	auto idx = find_queue(name, -1);
+lmaterial_index(lua_State *L) {
+	auto queuename = luaL_checkstring(L, 1);
+	auto idx = find_queue(queuename, -1);
 	if (idx == -1) {
 		return 0;
 	}
 	lua_pushinteger(L, idx);
-	return 1;
-}
-
-static int
-lqueue_count(lua_State *L){
-	lua_pushinteger(L, tag_queue::N);
-	return 1;
-}
-
-static int
-lqueue_name(lua_State *L){
-	size_t qidx = (size_t)luaL_checkinteger(L, 1);
-	lua_pushstring(L, find_queue_name<0>(qidx));
 	return 1;
 }
 
@@ -372,9 +360,7 @@ luaopen_render(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "submit", lsubmit},
 		{ "draw",	ldraw},
-		{ "queue_index", lqueue_index},
-		{ "queue_count", lqueue_count},
-		{ "queue_name", lqueue_name},
+		{ "material_index", lmaterial_index},
 		{ "null",	lnull},
 		{ nullptr, nullptr },
 	};
