@@ -150,10 +150,10 @@ using tag_queue = tag_array<
 static_assert(offsetof(ecs::render_object, mat_ppoq) - offsetof(ecs::render_object, mat_mq) == sizeof(int64_t) * (tag_queue::N-1), "Invalid material data size");
 
 template <typename Entity>
-void collect_render_objs(Entity& e, ecs_api::context& ecs, const matrix_array *mats, objarray &objs) {
+void collect_render_objs(Entity& e, const matrix_array *mats, objarray &objs) {
 	auto& ro = e.template get<ecs::render_object>();
 #if defined(_MSC_VER) && defined(_DEBUG)
-	auto id = e.sibling<ecs::eid>(ecs);
+	auto id = e.sibling<ecs::eid>();
 	objs.emplace_back(obj_data{ &ro, mats, id });
 #else
 	objs.emplace_back(obj_data{ &ro, mats });
@@ -163,7 +163,7 @@ void collect_render_objs(Entity& e, ecs_api::context& ecs, const matrix_array *m
 template<typename SubClass>
 struct collect_objects_base {
 	static constexpr size_t N = tag_queue::N;
-	using JumpTable = std::array<void(*)(ecs_api::context&, const matrix_array*, objarray &), N>;
+	using JumpTable = std::array<void(*)(ecs_context*, const matrix_array*, objarray &), N>;
 
 	template <size_t ...Is>
 	constexpr static void init_(JumpTable& jump, std::index_sequence<Is...>) {
@@ -174,7 +174,7 @@ struct collect_objects_base {
 		init_(jump, std::make_index_sequence<N>());
 		return jump;
 	}
-	void operator() (ecs_api::context& ecs, const matrix_array* mats, size_t i, objarray &objs) {
+	void operator() (ecs_context* ecs, const matrix_array* mats, size_t i, objarray &objs) {
 		constinit static auto jump = init();
 		if (i >= N) {
 			return;
@@ -185,10 +185,10 @@ struct collect_objects_base {
 
 struct collect_objects : public collect_objects_base<collect_objects> {
 	template <size_t Is>
-	static void run(ecs_api::context& ecs, const matrix_array* mats, objarray &objs) {
+	static void run(ecs_context* ecs, const matrix_array* mats, objarray &objs) {
 		using namespace ecs_api::flags;
-		for (auto& e : ecs.select<ecs::view_visible, typename tag_queue::at<Is>::visible, typename tag_queue::at<Is>::cull(absent), ecs::render_object>()){
-			collect_render_objs(e, ecs, mats, objs);
+		for (auto& e : ecs_api::select<ecs::view_visible, typename tag_queue::at<Is>::visible, typename tag_queue::at<Is>::cull(absent), ecs::render_object>(ecs)){
+			collect_render_objs(e, mats, objs);
 		}
 	}
 
@@ -197,10 +197,10 @@ collect_objects s_collect_objects;
 
 struct collect_hitch_objects : public collect_objects_base<collect_hitch_objects> {
 	template <size_t Is>
-	static void run(ecs_api::context& ecs, const matrix_array* mats, objarray &objs) {
+	static void run(ecs_context* ecs, const matrix_array* mats, objarray &objs) {
 		using namespace ecs_api::flags;
-		for (auto& e : ecs.select<ecs::hitch_tag, typename tag_queue::at<Is>::visible, ecs::render_object>()){
-			collect_render_objs(e, ecs, mats, objs);
+		for (auto& e : ecs_api::select<ecs::hitch_tag, typename tag_queue::at<Is>::visible, ecs::render_object>(ecs)){
+			collect_render_objs(e, mats, objs);
 		}
 	}
 };
@@ -256,10 +256,9 @@ draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const o
 static int
 lsubmit(lua_State *L) {
 	auto w = getworld(L);
-	ecs_api::context ecs {w->ecs};
 
 	group_matrices groups;
-	for (auto e : ecs.select<ecs::view_visible, ecs::hitch, ecs::scene>()){
+	for (auto e : ecs_api::select<ecs::view_visible, ecs::hitch, ecs::scene>(w->ecs)){
 		const auto &h = e.get<ecs::hitch>();
 		const auto &s = e.get<ecs::scene>();
 		if (h.group != 0){
@@ -269,18 +268,18 @@ lsubmit(lua_State *L) {
 
 	obj_transforms trans;
 
-	for (auto a : ecs.select<ecs::render_args>()){
+	for (auto a : ecs_api::select<ecs::render_args>(w->ecs)){
 		const auto& ra = a.get<ecs::render_args>();
 		if (ra.material_index > tag_queue::N) {
 			luaL_error(L, "Invalid material_index in render_args:%d", ra.material_index);
 		}
 
 		objarray objs;
-		s_collect_objects(ecs, nullptr, ra.material_index, objs);
+		s_collect_objects(w->ecs, nullptr, ra.material_index, objs);
 		for (auto const& [groupid, mats] : groups) {
 			int gids[] = {groupid};
-			ecs.group_enable<ecs::hitch_tag>(gids);
-			s_collect_hitch_objects(ecs, &mats, ra.material_index, objs);
+			ecs_api::group_enable<ecs::hitch_tag>(w->ecs, gids);
+			s_collect_hitch_objects(w->ecs, &mats, ra.material_index, objs);
 		}
 
 		std::sort(std::begin(objs), std::end(objs), [](const auto &lhs, const auto &rhs){
