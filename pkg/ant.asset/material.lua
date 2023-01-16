@@ -6,16 +6,11 @@ local assetmgr		= require "asset"
 local matobj		= require "matobj"
 local imaterial = ecs.interface "imaterial"
 
-function imaterial.set_property(e, who, what, isiter)
+function imaterial.set_property(e, who, what, mattype)
 	w:extend(e, "filter_material:in")
 	local fm = e.filter_material
-	fm.main_queue[who] = what
-end
-
-function imaterial.set_ppo_property(e, who, what, isiter)
-	w:extend(e, "filter_material:in")
-	local fm = e.filter_material
-	fm.postprocess_obj_queue[who] = what
+	mattype = mattype or "main_queue"
+	fm[mattype][who] = what
 end
 
 imaterial.load_res = assetmgr.resource
