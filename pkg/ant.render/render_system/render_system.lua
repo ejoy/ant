@@ -23,11 +23,13 @@ function vg_sys:init()
 end
 
 local viewidmgr = require "viewid_mgr"
-for n, b in pairs(viewidmgr.all_bindings()) do
-	for viewid=b[1], b[1]+b[2]-1 do
-		bgfx.set_view_name(viewid, n .. "_" .. viewid)
+local function update_bgfx_viewid_name()
+	for n, viewid in pairs(viewidmgr.all_bindings()) do
+		bgfx.set_view_name(viewid, n)
 	end
 end
+
+update_bgfx_viewid_name()
 
 function render_sys:component_init()
 	for e in w:select "INIT render_object filter_material:update render_object_update?out" do
@@ -144,6 +146,13 @@ function render_sys:scene_update()
 end
 
 function render_sys:render_submit()
+	if viewidmgr.remapping_changed() then
+		bgfx.set_view_order(viewidmgr.remapping())
+		viewidmgr.clear_remapping_changed()
+
+		update_bgfx_viewid_name()
+	end
+
 	w:clear "render_args"
 	for qe in w:select "visible queue_name:in camera_ref:in render_target:in render_args:new" do
 		local rt = qe.render_target
