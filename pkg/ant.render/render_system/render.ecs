@@ -208,6 +208,7 @@ interface "irender"
     .method "full_quad"
     .method "is_msaa_buffer"
     .method "use_pre_depth"
+    .method "material_index"
 
 interface "irenderqueue"
     .implement "render_system/renderqueue.lua"

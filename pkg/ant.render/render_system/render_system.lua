@@ -49,6 +49,16 @@ local function update_ro(ro, m)
 	end
 end
 
+local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
+	local v = {
+		queue_visible_id	= w:component_id(k .. "_visible"),
+		queue_cull_id		= w:component_id(k .. "_cull"),
+		material_index		= irender.material_index(k) or 0,
+	}
+	t[k] = v
+	return v
+end})
+
 function render_sys:entity_init()
 	for qe in w:select "INIT primitive_filter:in queue_name:in" do
 		local pf = qe.primitive_filter
@@ -86,14 +96,9 @@ function render_sys:entity_init()
 		e.render_object.render_layer = assert(irl.layeridx(rl))
 	end
 
-	for qe in w:select "INIT camera_ref queue_name:in render_target:in render_args:new" do
+	for qe in w:select "INIT camera_ref queue_name:in render_target:in" do
 		local qn = qe.queue_name
-		qe.render_args = {
-			viewid				= qe.render_target.viewid,
-			queue_visible_id	= w:component_id(qn .. "_visible"),
-			queue_cull_id		= w:component_id(qn .. "_cull"),
-			material_index		= rendercore.material_index(qn) or 0,
-		}
+		RENDER_ARGS[qn].viewid = qe.render_target.viewid
 	end
 end
 
@@ -139,7 +144,8 @@ function render_sys:scene_update()
 end
 
 function render_sys:render_submit()
-	for qe in w:select "visible camera_ref:in render_target:in" do
+	w:clear "render_args"
+	for qe in w:select "visible queue_name:in camera_ref:in render_target:in render_args:new" do
 		local rt = qe.render_target
 		local viewid = rt.viewid
 
@@ -149,6 +155,8 @@ function render_sys:render_submit()
 			w:extend(camera, "camera:in")
 			bgfx.set_view_transform(viewid, camera.camera.viewmat, camera.camera.projmat)
 		end
+
+		qe.render_args = RENDER_ARGS[qe.queue_name]
 	end
 
 	rendercore.submit()

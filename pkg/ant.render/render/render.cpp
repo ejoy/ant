@@ -109,103 +109,6 @@ struct obj_data {
 
 using objarray = std::vector<obj_data>;
 
-template <typename Name, typename TagCull, typename TagVisible>
-struct render_queue {
-	static constexpr inline const char* name = Name::name;
-	using cull = TagCull;
-	using visible = TagVisible;
-};
-
-template <typename ...Tags>
-struct tag_array {
-	static constexpr size_t N = sizeof...(Tags);
-	template <size_t Is>
-	using at = std::remove_cvref_t<decltype(std::get<Is>(std::tuple<Tags...>()))>;
-};
-
-#define ConstString(NAME) struct conststr_##NAME { static constexpr inline const char* name = #NAME; };
-#define RengerQueue(NAME) render_queue<conststr_##NAME, ecs::NAME##_cull, ecs::NAME##_visible>
-
-ConstString(main_queue)
-ConstString(pre_depth_queue)
-ConstString(pickup_queue)
-ConstString(csm1_queue)
-ConstString(csm2_queue)
-ConstString(csm3_queue)
-ConstString(csm4_queue)
-ConstString(bake_lightmap_queue)
-ConstString(postprocess_obj_queue)
-
-using tag_queue = tag_array<
-	RengerQueue(main_queue),
-	RengerQueue(pre_depth_queue),
-	RengerQueue(pickup_queue),
-	RengerQueue(csm1_queue),
-	RengerQueue(csm2_queue),
-	RengerQueue(csm3_queue),
-	RengerQueue(csm4_queue),
-	RengerQueue(bake_lightmap_queue),
-	RengerQueue(postprocess_obj_queue)
->;
-static_assert(offsetof(ecs::render_object, mat_ppoq) - offsetof(ecs::render_object, mat_mq) == sizeof(int64_t) * (tag_queue::N-1), "Invalid material data size");
-
-template <typename Entity>
-void collect_render_objs(Entity& e, const matrix_array *mats, objarray &objs) {
-	auto& ro = e.template get<ecs::render_object>();
-#if defined(_MSC_VER) && defined(_DEBUG)
-	auto id = e.sibling<ecs::eid>();
-	objs.emplace_back(obj_data{ &ro, mats, id });
-#else
-	objs.emplace_back(obj_data{ &ro, mats });
-#endif
-}
-
-template<typename SubClass>
-struct collect_objects_base {
-	static constexpr size_t N = tag_queue::N;
-	using JumpTable = std::array<void(*)(ecs_context*, const matrix_array*, objarray &), N>;
-
-	template <size_t ...Is>
-	constexpr static void init_(JumpTable& jump, std::index_sequence<Is...>) {
-		static_cast<void>(std::initializer_list<int>{(jump[Is] = SubClass::template run<Is>, 0)...});
-	}
-	constexpr static auto init() {
-		JumpTable jump;
-		init_(jump, std::make_index_sequence<N>());
-		return jump;
-	}
-	void operator() (ecs_context* ecs, const matrix_array* mats, size_t i, objarray &objs) {
-		constinit static auto jump = init();
-		if (i >= N) {
-			return;
-		}
-		jump[i](ecs, mats, objs);
-	}
-};
-
-struct collect_objects : public collect_objects_base<collect_objects> {
-	template <size_t Is>
-	static void run(ecs_context* ecs, const matrix_array* mats, objarray &objs) {
-		using namespace ecs_api::flags;
-		for (auto& e : ecs_api::select<ecs::view_visible, typename tag_queue::at<Is>::visible, typename tag_queue::at<Is>::cull(absent), ecs::render_object>(ecs)){
-			collect_render_objs(e, mats, objs);
-		}
-	}
-
-};
-collect_objects s_collect_objects;
-
-struct collect_hitch_objects : public collect_objects_base<collect_hitch_objects> {
-	template <size_t Is>
-	static void run(ecs_context* ecs, const matrix_array* mats, objarray &objs) {
-		using namespace ecs_api::flags;
-		for (auto& e : ecs_api::select<ecs::hitch_tag, typename tag_queue::at<Is>::visible, ecs::render_object>(ecs)){
-			collect_render_objs(e, mats, objs);
-		}
-	}
-};
-collect_hitch_objects s_collect_hitch_objects;
-
 static inline transform
 update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const matrix_array& worldmats, obj_transforms &trans_cache){
 	auto it = trans_cache.find(ro);
@@ -253,6 +156,17 @@ draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const o
 	}
 }
 
+static inline void
+add_obj(struct ecs_world* w, cid_t vv_id, int index, const matrix_array* mats, objarray &objs){
+	const ecs::render_object* obj = (const ecs::render_object*)entity_sibling(w->ecs, vv_id, index, ecs_api::component<ecs::render_object>::id);
+#if defined(_MSC_VER) && defined(_DEBUG)
+	ecs::eid id = (ecs::eid)entity_sibling(w->ecs, vv_id, index, ecs_api::component<ecs::eid>::id);
+	objs.emplace_back(obj_data{ obj, mats, id });
+#else
+	objs.emplace_back(obj_data{ obj, mats });
+#endif
+}
+
 static int
 lsubmit(lua_State *L) {
 	auto w = getworld(L);
@@ -270,16 +184,25 @@ lsubmit(lua_State *L) {
 
 	for (auto a : ecs_api::select<ecs::render_args>(w->ecs)){
 		const auto& ra = a.get<ecs::render_args>();
-		if (ra.material_index > tag_queue::N) {
-			luaL_error(L, "Invalid material_index in render_args:%d", ra.material_index);
-		}
 
 		objarray objs;
-		s_collect_objects(w->ecs, nullptr, ra.material_index, objs);
+		
+		const cid_t vv_id = ecs_api::component<ecs::view_visible>::id;
+		for (int i=0; entity_iter(w->ecs, vv_id, i); ++i){
+			if (entity_sibling(w->ecs, vv_id, i, ra.queue_visible_id) &&
+				!entity_sibling(w->ecs, vv_id, i, ra.queue_cull_id)){
+				add_obj(w, vv_id, i, nullptr, objs);
+			}
+		}
 		for (auto const& [groupid, mats] : groups) {
 			int gids[] = {groupid};
-			ecs_api::group_enable<ecs::hitch_tag>(w->ecs, gids);
-			s_collect_hitch_objects(w->ecs, &mats, ra.material_index, objs);
+			ecs.group_enable<ecs::hitch_tag>(gids);
+			const cid_t h_id = ecs_api::component<ecs::hitch_tag>::id;
+			for (int i=0; entity_iter(w->ecs, h_id, i); ++i){
+				if (entity_sibling(w->ecs, h_id, i, ra.queue_visible_id)){
+					add_obj(w, h_id, i, &mats, objs);
+				}
+			}
 		}
 
 		std::sort(std::begin(objs), std::end(objs), [](const auto &lhs, const auto &rhs){
@@ -290,47 +213,19 @@ lsubmit(lua_State *L) {
 	return 0;
 }
 
-template <size_t Is = 0>
-static size_t find_queue(const char* name, size_t def) {
-	if constexpr (Is < tag_queue::N) {
-		if (strcmp(tag_queue::at<Is>::name, name) == 0) {
-			return Is;
-		}
-		return find_queue<Is+1>(name, def);
-	}
-	return def;
-}
-
-template<size_t Qidx = 0>
-static const char* find_queue_name(size_t idx){
-	if constexpr (Qidx < tag_queue::N) {
-		return (Qidx != idx) ? find_queue_name<Qidx+1>(idx) : tag_queue::at<Qidx>::name;
-	}
-
-	return "";
-}
-
-static size_t to_queue_material_idx(lua_State *L, int idx) {
-	if (lua_type(L, idx) == LUA_TSTRING) {
-		auto name = lua_tostring(L, idx);
-		return find_queue(name, 0);
-	}
-	return 0;
-}
-
 static int
 ldraw(lua_State *L) {
 	auto w = getworld(L);
 	const cid_t draw_tagid = (cid_t)luaL_checkinteger(L, 1);
 	const bgfx_view_id_t viewid = (bgfx_view_id_t)luaL_checkinteger(L, 2);
+	const int material_index = (int)luaL_checkinteger(L, 3);
 	obj_transforms trans;
-	const size_t qm_idx = to_queue_material_idx(L, 3);
 	for (int i=0; entity_iter(w->ecs, draw_tagid, i); ++i){
 		const auto ro = (ecs::render_object*)entity_sibling(w->ecs, draw_tagid, i, ecs_api::component<ecs::render_object>::id);
 		if (ro == nullptr)
 			return luaL_error(L, "id:%d is not a render_object entity");
 		
-		draw(L, w, ro, viewid, qm_idx, trans);
+		draw(L, w, ro, viewid, material_index, trans);
 	}
 	return 0;
 }
@@ -341,25 +236,12 @@ lnull(lua_State *L){
 	return 1;
 }
 
-//TODO: queue index will failed when dynamic material is used
-static int
-lmaterial_index(lua_State *L) {
-	auto queuename = luaL_checkstring(L, 1);
-	auto idx = find_queue(queuename, -1);
-	if (idx == -1) {
-		return 0;
-	}
-	lua_pushinteger(L, idx);
-	return 1;
-}
-
 extern "C" int
 luaopen_render(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "submit", lsubmit},
 		{ "draw",	ldraw},
-		{ "material_index", lmaterial_index},
 		{ "null",	lnull},
 		{ nullptr, nullptr },
 	};
