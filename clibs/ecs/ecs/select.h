@@ -60,12 +60,33 @@ namespace ecs_api {
     template <typename MainKey, typename ...SubKey>
     struct entity {
     public:
-        bool init(ecs_context* ctx, int& i) {
-            auto r = init_components(ctx, i);
-            if (r) {
-                index = i;
+        static constexpr int kInvalidIndex = -1;
+        int init(ecs_context* ctx) {
+            for (;;++index) {
+                auto v = impl::iter<MainKey>(ctx, index);
+                if (!v) {
+                    index = kInvalidIndex;
+                    break;
+                }
+                assgin<0>(v);
+                if constexpr (sizeof...(SubKey) == 0) {
+                    break;
+                }
+                else {
+                    if (init_sibling<impl::next<0, MainKey>(), SubKey...>(ctx, index)) {
+                        break;
+                    }
+                }
             }
-            return r;
+            return index;
+        }
+        int next(ecs_context* ctx, int i) {
+            index = i;
+            if (index == kInvalidIndex) {
+                return kInvalidIndex;
+            }
+            ++index;
+            return init(ctx);
         }
         void remove(ecs_context* ctx) const {
             entity_remove(ctx, component<MainKey>::id, index);
@@ -156,88 +177,57 @@ namespace ecs_api {
                 return true;
             }
         }
-        bool init_components(ecs_context* ctx, int& i) {
-            for (;;++i) {
-                auto v = impl::iter<MainKey>(ctx, i);
-                if (!v) {
-                    return false;
-                }
-                assgin<0>(v);
-                if constexpr (sizeof...(SubKey) == 0) {
-                    return true;
-                }
-                else {
-                    if (init_sibling<impl::next<0, MainKey>(), SubKey...>(ctx, i)) {
-                        return true;
-                    }
-                }
-            }
-        }
     private:
         impl::components<MainKey, SubKey...> c;
-        int index;
+        int index = 0;
     };
 
     namespace impl {
         template <typename ...Args>
         struct select_range {
+            using entity_type = entity<Args...>;
+            struct begin_t {};
+            struct end_t {};
             struct iterator {
                 ecs_context* ctx;
+                entity_type& e;
                 int index;
-                entity<Args...>& e;
-                iterator(entity<Args...>& e)
-                    : ctx(NULL)
-                    , index(0)
-                    , e(e)
-                { }
-                iterator(ecs_context* ctx, entity<Args...>& e)
+                iterator(begin_t, ecs_context* ctx, entity_type& e)
                     : ctx(ctx)
-                    , index(0)
                     , e(e)
+                    , index(e.init(ctx))
                 { }
-        
+                iterator(end_t, ecs_context* ctx, entity_type& e)
+                    : ctx(ctx)
+                    , e(e)
+                    , index(entity_type::kInvalidIndex)
+                { }
                 bool operator!=(iterator const& o) const {
-                    if (ctx != o.ctx) {
-                        return true;
-                    }
-                    if (ctx == NULL) {
-                        return false;
-                    }
-                    return index != o.index;
+                    return (ctx != o.ctx) || (index != o.index);
                 }
                 bool operator==(iterator const& o) const {
                     return !(*this != o);
                 }
                 iterator& operator++() {
-                    index++;
-                    next();
+                    index = e.next(ctx, index);
                     return *this;
                 }
-                entity<Args...>& operator*() {
+                entity_type& operator*() {
                     return e;
                 }
-                void next() {
-                    if (!e.init(ctx, index)) {
-                        ctx = NULL;
-                    }
-                }
             };
-            ecs_context* ctx;
-            entity<Args...> e;
-
             select_range(ecs_context* ctx)
                 : ctx(ctx)
                 , e()
             {}
-
             iterator begin() {
-                iterator iter {ctx, e};
-                iter.next();
-                return iter;
+                return {begin_t{}, ctx, e};
             }
             iterator end() {
-                return {e};
+                return {end_t{}, ctx, e};
             }
+            ecs_context* ctx;
+            entity_type e;
         };
     }
 
