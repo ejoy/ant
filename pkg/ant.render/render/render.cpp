@@ -199,7 +199,7 @@ lsubmit(lua_State *L) {
 		}
 		for (auto const& [groupid, mats] : groups) {
 			int gids[] = {groupid};
-			ecs.group_enable<ecs::hitch_tag>(gids);
+			ecs_api::group_enable<ecs::hitch_tag>(w->ecs, gids);
 			const cid_t h_id = ecs_api::component<ecs::hitch_tag>::id;
 			for (int i=0; entity_iter(w->ecs, h_id, i); ++i){
 				if (entity_sibling(w->ecs, h_id, i, ra.queue_visible_id)){
