@@ -107,7 +107,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 		data = {
 			camera_ref = assert(camera_ref),
 			render_target = {
-				viewid		= viewidmgr.generate(view_queuename),
+				viewid		= viewidmgr.get(view_queuename),
 				view_mode 	= "s",
 				clear_state	= default_clear_state,
 				view_rect	= {x=view_rect.x, y=view_rect.y, w=view_rect.w, h=view_rect.h, ratio=view_rect.ratio},
