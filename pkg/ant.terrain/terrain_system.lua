@@ -24,41 +24,24 @@ local function calc_section_idx(idx)
     return y // size * (height / size)  + x // size + 1
 end
 
-local function parse_terrain_type_dir(type, shape, dir)
-    local t, s, d
-    if type == "Road" then
-        t = "1"
-    elseif type == "Red" then
-        t = "2"
-    elseif type == "White" then
-        t = "3"
-    end
-    if shape == "U" then
-        s = "U"
-    elseif shape == "I" then
-        s = "I"
-    elseif shape == "L" then
-        s = "L"
-    elseif shape == "T" then
-        s = "T"
-    elseif shape == "X" then
-        s = "X"
-    elseif shape == "O" then
-        s = "O"
-    else
-        s = "D"
-    end
+local TERRAIN_TYPES<const> = {
+    Road = "1",
+    Red = "2",
+    White = "3",
+}
 
-    if dir == "N" then
-        d = "1"
-    elseif dir == "E" then
-        d = "2"
-    elseif dir == "S" then
-        d = "3"
-    elseif dir == "W" then
-        d = "4"
-    end
-    return t..s..d
+local TERRAIN_DIRECTIONS<const> = {
+    N = "1",
+    E = "2",
+    S = "3",
+    W = "4",
+}
+
+local function parse_terrain_type_dir(type, shape, dir)
+    local t<const> = assert(TERRAIN_TYPES[type])
+    local s<const> = shape or "D"
+    local d<const> = assert(TERRAIN_DIRECTIONS[dir])
+    return ("%s%s%s"):format(t, s, d)
 end
 
 local function calc_shape_terrain(unit)

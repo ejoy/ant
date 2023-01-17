@@ -129,7 +129,7 @@ function hierarchy:update_prefab_template()
         for _, child in ipairs(node.children) do
             local nd = self.all[child.eid]
             if nd.parent ~= self.root.eid and nd.template.template then
-                nd.template.template.mount = #rpt + pidx
+                nd.template.template.mount = nd.template.patch and #rpt + pidx or pidx
             end
             construct_entity(child.eid, rpt, ppt)
         end

@@ -44,8 +44,6 @@ function pp_obj_sys:init_world()
                 render_target   = rt,
                 primitive_filter = {
                     filter_type = "postprocess_obj",
-                    "opacity",
-                    "translucent",
                 },
                 name = "postprocess_obj_queue",
                 postprocess_obj_queue = true,
