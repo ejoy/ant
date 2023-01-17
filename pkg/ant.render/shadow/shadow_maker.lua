@@ -533,15 +533,12 @@ function sm:update_filter()
 			
 			local mi = new_matobj:instance()
 
-			local h = mi:ptr()
 			fm["csm1_queue"] = mi
-			ro.mat_csm1 = h
 			fm["csm2_queue"] = mi
-			ro.mat_csm2 = h
 			fm["csm3_queue"] = mi
-			ro.mat_csm3 = h
 			fm["csm4_queue"] = mi
-			ro.mat_csm4 = h
+
+			ro.mat_csm = mi:ptr()
 		else
 			w:extend(e, "csm1_queue_visible?out csm2_queue_visible?out csm3_queue_visible?out csm4_queue_visible?out")
 			e.csm1_queue_visible = nil

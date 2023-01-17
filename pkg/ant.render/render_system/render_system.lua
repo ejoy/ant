@@ -23,11 +23,13 @@ function vg_sys:init()
 end
 
 local viewidmgr = require "viewid_mgr"
-for n, b in pairs(viewidmgr.all_bindings()) do
-	for viewid=b[1], b[1]+b[2]-1 do
-		bgfx.set_view_name(viewid, n .. "_" .. viewid)
+local function update_bgfx_viewid_name()
+	for n, viewid in pairs(viewidmgr.all_bindings()) do
+		bgfx.set_view_name(viewid, n)
 	end
 end
+
+update_bgfx_viewid_name()
 
 function render_sys:component_init()
 	for e in w:select "INIT render_object filter_material:update render_object_update?out" do
@@ -49,6 +51,16 @@ local function update_ro(ro, m)
 	end
 end
 
+local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
+	local v = {
+		queue_visible_id	= w:component_id(k .. "_visible"),
+		queue_cull_id		= w:component_id(k .. "_cull"),
+		material_index		= irender.material_index(k) or 0,
+	}
+	t[k] = v
+	return v
+end})
+
 function render_sys:entity_init()
 	for qe in w:select "INIT primitive_filter:in queue_name:in" do
 		local pf = qe.primitive_filter
@@ -66,7 +78,7 @@ function render_sys:entity_init()
 		local mi = mr.object:instance()
 		fm["main_queue"] = mi
 		local ro = e.render_object
-		ro.mat_mq = mi:ptr()
+		ro.mat_def = mi:ptr()
 	end
 
 	for e in w:select "INIT mesh?in simplemesh?in render_object:update" do
@@ -86,14 +98,9 @@ function render_sys:entity_init()
 		e.render_object.render_layer = assert(irl.layeridx(rl))
 	end
 
-	for qe in w:select "INIT camera_ref queue_name:in render_target:in render_args:new" do
+	for qe in w:select "INIT camera_ref queue_name:in render_target:in" do
 		local qn = qe.queue_name
-		qe.render_args = {
-			viewid				= qe.render_target.viewid,
-			queue_visible_id	= w:component_id(qn .. "_visible"),
-			queue_cull_id		= w:component_id(qn .. "_cull"),
-			material_index		= rendercore.material_index(qn) or 0,
-		}
+		RENDER_ARGS[qn].viewid = qe.render_target.viewid
 	end
 end
 
@@ -139,7 +146,15 @@ function render_sys:scene_update()
 end
 
 function render_sys:render_submit()
-	for qe in w:select "visible camera_ref:in render_target:in" do
+	if viewidmgr.remapping_changed() then
+		bgfx.set_view_order(viewidmgr.remapping())
+		viewidmgr.clear_remapping_changed()
+
+		update_bgfx_viewid_name()
+	end
+
+	w:clear "render_args"
+	for qe in w:select "visible queue_name:in camera_ref:in render_target:in render_args:new" do
 		local rt = qe.render_target
 		local viewid = rt.viewid
 
@@ -149,6 +164,8 @@ function render_sys:render_submit()
 			w:extend(camera, "camera:in")
 			bgfx.set_view_transform(viewid, camera.camera.viewmat, camera.camera.projmat)
 		end
+
+		qe.render_args = RENDER_ARGS[qe.queue_name]
 	end
 
 	rendercore.submit()
@@ -191,7 +208,7 @@ function s:update_filter()
 				local ro = e.render_object
 				local fm = e.filter_material
 				local m = fm.main_queue
-				ro.mat_mq = m:ptr()
+				ro.mat_def = m:ptr()
 				--Here, we no need to create new material object for this new state, because only main_queue render need this material object
 				m:get_material():set_state(check_set_depth_state_as_equal(m:get_state()))
 			end

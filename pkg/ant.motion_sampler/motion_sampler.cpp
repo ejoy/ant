@@ -25,11 +25,10 @@ lsample(lua_State *L){
 	const int motion_groupid = (int)luaL_checkinteger(L, 1);
 	const float deltaMS = (float)luaL_checknumber(L, 2);
 
-	ecs_api::context ecs {w->ecs};
 	int gids[] = {motion_groupid};
-	ecs.group_enable<ecs::motion_sampler_tag>(gids);
+	ecs_api::group_enable<ecs::motion_sampler_tag>(w->ecs, gids);
 
-	for (auto e : ecs.select<ecs::view_visible, ecs::motion_sampler_tag, ecs::motion_sampler, ecs::scene>()){
+	for (auto e : ecs_api::select<ecs::view_visible, ecs::motion_sampler_tag, ecs::motion_sampler, ecs::scene>(w->ecs)){
 		auto& ms = e.get<ecs::motion_sampler>();
 		auto &scene = e.get<ecs::scene>();
 
@@ -55,7 +54,7 @@ lsample(lua_State *L){
 				update_m3d(scene.t, math3d_lerp(w->math3d->M, ms.source_t, ms.target_t, ratio));
 			}
 
-			e.enable_tag<ecs::scene_needchange>(ecs);
+			e.enable_tag<ecs::scene_needchange>();
 		}
 	}
     return 0;

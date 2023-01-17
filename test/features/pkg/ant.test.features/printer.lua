@@ -97,7 +97,7 @@ function printer_sys:render_submit()
             local center, extent = math3d.aabb_center_extents(e.bounding.scene_aabb)
             local minY, maxY = math3d.index(center, 2) - math3d.index(extent, 2), math3d.index(center, 2) + math3d.index(extent, 2)
             local y = math3d.index(math3d.lerp(math3d.vector(minY, 0, 0), math3d.vector(maxY, 0, 0), current / e.printer.duration), 1)
-            imaterial.set_ppo_property(e, "u_printer_factor", math3d.vector(y, 0.0, 0.0, 0.0))
+            imaterial.set_property(e, "u_printer_factor", math3d.vector(y, 0.0, 0.0, 0.0), "postprocess_obj_queue")
         end
     end
 

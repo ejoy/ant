@@ -8,6 +8,9 @@ local irender   = ecs.import.interface "ant.render|irender"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
+local renderpkg = import_package "ant.render"
+local viewidmgr = renderpkg.viewidmgr
+
 local INV_Z<const> = true
 
 local svs = ecs.system "splitviews_system"
@@ -114,8 +117,11 @@ function svs:init()
         },
     }
 
+    local lastname = "main_view"
     for k, v in pairs(orthoview) do
+        viewidmgr.generate(v.name, lastname)
         irender.create_view_queue({x=0, y=0, w=1, h=1}, v.name, v.camera_ref)
+        lastname = v.name
     end
 end
 

@@ -56,10 +56,26 @@ function irender.check_set_state(dst_m, src_m, state_op)
 	return bgfx.make_state(t_dst_s)
 end
 
+local MATERIAL_INDICES<const> = {
+	main_queue		= 0,
+	pre_depth_queue	= 1,
+	pickup_queue	= 2,
+	csm1_queue		= 3,
+	csm2_queue		= 3,
+	csm3_queue		= 3,
+	csm4_queue		= 3,
+	bake_lightmap_queue = 4,
+	postprocess_obj_queue = 5,
+}
+
+function irender.material_index(queue_name)
+	return MATERIAL_INDICES[queue_name]
+end
+
 function irender.draw(viewid, drawer_tag, queuename)
 	local tagid = w:component_id(drawer_tag)
-
-	rendercore.draw(tagid, viewid, queuename)
+	local qn = queuename or ""
+	rendercore.draw(tagid, viewid, MATERIAL_INDICES[qn] or 0)
 end
 
 function irender.get_main_view_rendertexture()
@@ -91,7 +107,7 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 		data = {
 			camera_ref = assert(camera_ref),
 			render_target = {
-				viewid		= viewidmgr.generate(view_queuename),
+				viewid		= viewidmgr.get(view_queuename),
 				view_mode 	= "s",
 				clear_state	= default_clear_state,
 				view_rect	= {x=view_rect.x, y=view_rect.y, w=view_rect.w, h=view_rect.h, ratio=view_rect.ratio},

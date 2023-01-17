@@ -16,7 +16,6 @@ local initialized = false
 local init_width
 local init_height
 local debug_traceback = debug.traceback
-local viewids = {}
 
 local _, _timer_previous = ltask.now()
 local function timer_delta()
@@ -39,14 +38,18 @@ function message.size(width,height)
 	init_height = height
 end
 
-local uieditor_viewid<const>, imgui_max_viewid_count<const> = viewidmgr.get_range "uieditor"
+local imgui_max_viewid_count<const> = 16
+local uieditor_viewid<const> = viewidmgr.generate("uieditor", "uiruntime")
+local viewidcount = 1
 
 function message.viewid()
-	local viewid = uieditor_viewid+#viewids
-	if viewid >= uieditor_viewid + imgui_max_viewid_count then
+	if viewidcount > imgui_max_viewid_count then
 		error(("imgui viewid range exceeded, max count:%d"):format(imgui_max_viewid_count))
 	end
-	viewids[#viewids+1] = viewid
+	local lastname = viewidmgr.viewname(uieditor_viewid+viewidcount-1)
+	local newname = "uieditor" .. viewidcount
+	local viewid = viewidmgr.generate(newname, lastname)
+	viewidcount = viewidcount + 1
 	return viewid
 end
 
@@ -188,7 +191,7 @@ ltask.fork(function ()
     while imgui.NewFrame() do
         updateIO()
 		update_size()
-        cb.update(viewids[1], timer_delta())
+        cb.update(uieditor_viewid, timer_delta())
         imgui.Render()
         bgfx.encoder_end()
         rhwi.frame()

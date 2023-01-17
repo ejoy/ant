@@ -10,14 +10,10 @@ local function init_ro()
         worldmat    = mc.NULL,
         prog        = 0xffffffff,
         --materials
-        mat_mq      = null,
+        mat_def     = null,
         mat_predepth= null,
-        mat_scenedepth=null,
         mat_pickup  = null,
-        mat_csm1    = null,
-        mat_csm2    = null,
-        mat_csm3    = null,
-        mat_csm4    = null,
+        mat_csm     = null,
         mat_lightmap= null,
         mat_ppoq    = null,
         --mesh
