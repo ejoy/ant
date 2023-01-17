@@ -98,7 +98,7 @@ function m.show()
             imgui.cursor.Separator()
             if imgui.widget.MenuItem(faicons.ICON_FA_FLOPPY_DISK.. " SaveUILayout") then
                 local setting = imgui.util.SaveIniSettings()
-                local wf = assert(lfs.open(fs.path "":localpath() .. "/" .. "imgui.layout", "wb"))
+                local wf = assert(lfs.open(lfs.path(tostring(global_data.editor_root) .. "/" .. "imgui.layout"), "wb"))
                 wf:write(setting)
                 wf:close()
             end
