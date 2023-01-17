@@ -65,7 +65,6 @@ local MATERIAL_INDICES<const> = {
 	csm3_queue		= 3,
 	csm4_queue		= 3,
 	bake_lightmap_queue = 4,
-	postprocess_obj_queue = 5,
 }
 
 function irender.material_index(queue_name)

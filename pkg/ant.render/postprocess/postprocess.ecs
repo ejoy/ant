@@ -44,13 +44,10 @@ policy "postprocess_queue"
     .require_policy "render_target"
     .component "queue_name"
 
-component "postprocess_obj_queue"
-component "postprocess_obj_queue_cull"
-component "postprocess_obj_queue_visible"
 system "postprocess_obj_system"
+    .require_interface "ant.render|irender_layer"
     .implement "postprocess/postprocess_obj.lua"
-    .method "init_world"
-    .method "data_changed"
+    .method "init"
 
 component "resolver"
 

@@ -25,7 +25,7 @@ uniform vec4 u_construct_color;
 #define _ConstructColor u_construct_color
 
 uniform vec4 u_printer_factor;
-#define _ConstructY u_printer_factor.x
+#define _ConstructY u_printer_factor.y
 
 #include "pbr/input_attributes.sh"
 
@@ -33,31 +33,26 @@ void main()
 { 
     #include "pbr/attributes_getter.sh"
 
-    float building = 0;
-    float t = _ConstructY;
-    if(v_posWS.y > _ConstructY + 0.1){
+    
+    if(v_posWS.y > _ConstructY + 0.1)
         discard;
+    
+    int building;
+    if(v_posWS.y < _ConstructY){
+        //vec4 c = texture2D(s_basecolor, v_texcoord0) * u_basecolor_factor;
+        //input_attribs.basecolor = c;
+        building = 0;
+    } else{
+        input_attribs.basecolor = _ConstructColor;
+        building = 1;
     }
-    else{
-        if(v_posWS.y < _ConstructY){
-            //vec4 c = texture2D(s_basecolor, v_texcoord0) * u_basecolor_factor;
-            //input_attribs.basecolor = c;
-            building = 0;
-        }
-        else{
-            input_attribs.basecolor = _ConstructColor;
-            building = 1;
-        }
 
-        if(building){
-            gl_FragColor = _ConstructColor;
-        }
-        else if(dot(input_attribs.N, input_attribs.V) < 0){
-            gl_FragColor = _ConstructColor;
-        }
-        else{
-            gl_FragColor = compute_lighting(input_attribs);
-        }
+    if(building) {
+        gl_FragColor = _ConstructColor;
+    } else if(dot(input_attribs.N, input_attribs.V) < 0) {
+        gl_FragColor = _ConstructColor;
+    } else {
+        gl_FragColor = compute_lighting(input_attribs);
     }
 }
 

@@ -26,7 +26,7 @@ struct transform {
 	uint32_t stride;
 };
 
-constexpr size_t MAX_MATERIAL_TYPE_COUNT = (offsetof(ecs::render_object, mat_ppoq) - offsetof(ecs::render_object, mat_def))/sizeof(intptr_t)+1;
+constexpr size_t MAX_MATERIAL_TYPE_COUNT = (offsetof(ecs::render_object, mat_lightmap) - offsetof(ecs::render_object, mat_def))/sizeof(intptr_t)+1;
 
 using obj_transforms = std::unordered_map<const ecs::render_object*, transform>;
 static inline transform
