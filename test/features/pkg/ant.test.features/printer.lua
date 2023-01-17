@@ -11,7 +11,7 @@ local material_cache = {__mode="k"}
 local printer_material
 
 function printer_sys:init()
---[[     printer_material = imaterial.load_res "/pkg/ant.resources/materials/printer.material"
+     printer_material = imaterial.load_res "/pkg/ant.resources/materials/printer.material"
      ecs.create_entity {
         policy = {
             "ant.render|render",
@@ -36,7 +36,7 @@ function printer_sys:init()
                 duration = 5
             }
         },
-    }   ]]
+    }
 
 end
 
@@ -76,9 +76,9 @@ local delete_list = {
 }
 
 local update_list = {
-    {7, 1, "I", "E"},
-    {8, 1, "I", "E"},
-    {9, 1, "I", "E"},
+    {7, 1, "White", "I", "E"},
+    {8, 1, "Red",   "I", "E"},
+    {9, 1, "Red",   "I", "E"},
 }
 
 function printer_sys:render_submit()
