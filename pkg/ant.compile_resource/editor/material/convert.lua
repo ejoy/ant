@@ -177,6 +177,8 @@ local function mergeCfgSetting(fx, localpath)
     end
 end
 
+local DEF_VARYING_FILE<const> = SHADER_BASE / "common/varying_def.sh"
+
 return function (input, output, setting, localpath)
     local mat = readdatalist(input)
     local fx = mat.fx
@@ -191,10 +193,16 @@ return function (input, output, setting, localpath)
     end
     for _, stage in ipairs {"vs","fs","cs"} do
         if fx[stage] then
+            local inputpath = localpath(fx[stage])
+            if not varying_path then
+                if not lfs.exists(inputpath:parent_path() / "varying.def.sc") then
+                    varying_path = DEF_VARYING_FILE
+                end
+            end
             local ok, err, deps = toolset.compile {
                 platform = setting.os,
                 renderer = setting.renderer,
-                input = localpath(fx[stage]),
+                input = inputpath,
                 output = output / (stage..".bin"),
                 includes = shader_includes(),
                 stage = stage,
