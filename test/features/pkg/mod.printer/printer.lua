@@ -21,7 +21,7 @@ function printer_sys:init()
             },
             name        = "printer_test",
             scene  = {s = 0.2, t = {5, 0, 5}},
-            material    = "/pkg/ant.resources/materials/printer.material",
+            material    = "/pkg/mod.printer/assets/printer.material",
             visible_state = "main_view",
             mesh        = "/pkg/ant.test.features/assets/glb/electric-pole-1.glb|meshes/Cylinder.006_P1.meshbin",
             render_layer= "postprocess_obj",

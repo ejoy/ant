@@ -1,6 +1,6 @@
 fx:
   vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
-  fs: /pkg/ant.resources/shaders/printer/fs_printer.sc
+  fs: /pkg/mod.printer/assets/shaders/fs_printer.sc
 state:
   ALPHA_REF: 0
   CULL: NONE
@@ -20,11 +20,8 @@ properties:
   s_emissive:
     stage: 3
     texture: /pkg/ant.resources/textures/pbr/default/emissive.texture
-  u_IBLparam:  {1, 1, 0, 0}
-  u_alpha_info:  {0, 0, 0, 0}
   u_basecolor_factor:  {1, 1, 1, 1}
   u_emissive_factor:  {1, 1, 1, 1}
-  u_texture_flags:  {0, 0, 0, 0}
-  u_metallic_roughness_factor:  {0, 1, 0, 0}
+  u_pbr_factor:  {0, 1, 0, 0}
   u_construct_color : {0.5, 0.5, 0.5, 1}
   u_printer_factor:  {0, 0, 0, 0}
