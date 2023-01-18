@@ -23,7 +23,7 @@ function printer_sys:init()
             scene  = {s = 0.2, t = {5, 0, 5}},
             material    = "/pkg/mod.printer/assets/printer.material",
             visible_state = "main_view",
-            mesh        = "/pkg/ant.test.features/assets/glb/electric-pole-1.glb|meshes/Cylinder.006_P1.meshbin",
+            mesh        = "/pkg/mod.printer/assets/electric-pole-1.glb|meshes/Cylinder.006_P1.meshbin",
             render_layer= "postprocess_obj",
             -- add printer tag
             -- previous still be zero
