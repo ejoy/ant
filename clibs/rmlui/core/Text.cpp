@@ -36,11 +36,10 @@ std::unordered_map<uint8_t, uint8_t> ctod{
 
 void Text::ParseText(){
 	ctext.clear();
-	int i=0;
-	int n=text.size();
+	size_t i=0;
+	size_t n=text.size();
 	Color default_color = GetTextColor();
 	default_color.ApplyOpacity(GetOpacity());
-	std::vector<uint32_t> codepoints;
 	uint16_t start = 0;
 
 	while (text[i]) {
@@ -68,7 +67,7 @@ void Text::ParseText(){
 
             while (i + 1 < n && text[i + 1] != '[') {
 					ctext.push_back(text[i+1]);
-					groupmap.emplace_back(groups.size());
+					groupmap.emplace_back((int)groups.size());
 					start++;
 				
                 i++;                         
@@ -85,7 +84,7 @@ void Text::ParseText(){
 			if(groups.size()==0||!(group.color==groups[groups.size()-1].color))
 				groups.emplace_back(group);		
 				ctext.push_back(text[i]);
-				groupmap.emplace_back(groups.size()-1);
+				groupmap.emplace_back((int)(groups.size()-1));
 				start++;
 						
             i++;		
