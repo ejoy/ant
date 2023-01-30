@@ -40,8 +40,8 @@ function ui_rt_sys:entity_init()
         end        
     end
 end
-
- local kb_mb = world:sub{"keyboard"}
+--[[ 
+local kb_mb = world:sub{"keyboard"}
 local ientity   = ecs.import.interface "ant.render|ientity"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local math3d = require "math3d"
@@ -71,5 +71,5 @@ function ui_rt_sys:data_changed()
             }
         end
     end
-end 
+end  ]]
 
