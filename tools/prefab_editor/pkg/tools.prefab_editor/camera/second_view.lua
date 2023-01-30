@@ -59,11 +59,6 @@ function second_camera_sys:init_world()
                 clear_state = mqrt.clear_state,
                 fb_idx = mqrt.fb_idx,
             },
-            primitive_filter = {
-                filter_type = "main_view",
-                exclude_type = "auxgeom",
-                "foreground", "opacity", "background", "translucent",
-            },
             queue_name = "second_view",
             second_view = true,
             name = "second_view",

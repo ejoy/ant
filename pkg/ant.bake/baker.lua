@@ -295,10 +295,6 @@ local function create_lightmap_queue()
             "ant.general|name",
         },
         data = {
-            primitive_filter = {
-                filter_type = "lightmap",
-                "foreground", "opacity", "background",
-            },
             camera_ref = camera_ref_WONT_USED,
             render_target = {
                 view_rect = {x=0, y=0, w=bake_fbw, h=bake_fbh},

@@ -53,10 +53,6 @@ function sd_sys:post_init()
                 },
                 view_mode = "s",
             },
-            primitive_filter = {
-                filter_type = "main_view",
-                "opacity",
-            },
             queue_name = "scene_depth_queue",
             name = "scene_depth_queue",
             visible = false,

@@ -121,9 +121,6 @@ function S.render_target_create(width, height, name)
             [queuename]         = true,
 			name 				= queuename,
 			queue_name			= queuename,
-            primitive_filter = {
-                filter_type = "",
-            },
             visible = true,
 			watch_screen_buffer	= true,
 		}

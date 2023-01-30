@@ -246,10 +246,6 @@ function ios.create(point_eid)
                     light_eid = point_eid,
                     stencil_ref = t.stencil_ref,
                 },
-                primitive_filter = {
-                    filter_type = "cast_shadow",
-                    "opacity",
-                },
                 queue_name = queuename,
                 name = queuename,
                 visible = false,

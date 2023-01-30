@@ -220,12 +220,6 @@ local function create_pick_entity()
 				},
 				fb_idx = fbidx,
 			},
-			primitive_filter = {
-				filter_type = "selectable",
-				"opacity",
-				"translucent",
-				"ui_stage",
-			},
 			name 		= "pickup_queue",
 			queue_name 	= "pickup_queue",
 			pickup_queue= true,

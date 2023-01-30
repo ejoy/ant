@@ -62,16 +62,6 @@ local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
 end})
 
 function render_sys:entity_init()
-	for qe in w:select "INIT primitive_filter:in queue_name:in" do
-		local pf = qe.primitive_filter
-
-		pf._DEBUG_filter_type = pf.filter_type
-		pf.filter_type = ivs.filter_mask(pf.filter_type)
-		pf._DEBUG_excule_type = pf.exclude_type
-		pf.exclude_type = pf.exclude_type and ivs.filter_mask(pf.exclude_type) or 0
-	end
-
-	
 	for e in w:select "INIT material_result:in render_object:update filter_material:in" do
 		local mr = e.material_result
 		local fm = e.filter_material
@@ -121,9 +111,8 @@ end
 function render_sys:begin_filter()
 	w:clear "filter_result"
     for e in w:select "render_object_update render_object visible_state:in filter_result:new" do
-        local fs = e.visible_state
-
-		for qe in w:select "queue_name:in primitive_filter:in" do
+		local vs = e.visible_state
+		for qe in w:select "queue_name:in camera_ref" do
 			local qn = qe.queue_name
 			local function mark_tags(add)
 				local qn_visible = qn .. "_visible"
@@ -131,9 +120,7 @@ function render_sys:begin_filter()
 				w:extend(e, qn_visible .. "?out")
 			end
 
-			local pf = qe.primitive_filter
-			local add = ((fs & pf.filter_type) ~= 0) and ((fs & pf.exclude_type) == 0)
-			mark_tags(add)
+			mark_tags(vs[qn] ~= nil)
 		end
 		e.filter_result = true
     end

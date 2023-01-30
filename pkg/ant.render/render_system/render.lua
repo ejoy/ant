@@ -116,10 +116,6 @@ function irender.create_view_queue(view_rect, view_queuename, camera_ref, filter
 			[view_queuename]	= true,
 			name 				= view_queuename,
 			queue_name			= view_queuename,
-			primitive_filter	= {
-				filter_type = filtertype,
-				exclude_type = exclude,
-			},
 			visible 			= visible or false,
 			watch_screen_buffer	= true,
 		}
@@ -165,10 +161,6 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 				view_mode = "s",
 				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h, ratio=vr.ratio},
 				fb_idx = fbidx,
-			},
-			primitive_filter = {
-				filter_type = "main_view",
-				"opacity",
 			},
 			queue_name 		= "pre_depth_queue",
 			name 			= "pre_depth_queue",
@@ -219,10 +211,6 @@ function irender.create_main_queue(vr, camera_ref)
 				clear_state = default_clear_state,
 				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h, ratio=vr.ratio},
 				fb_idx = fbidx,
-			},
-			primitive_filter = {
-				filter_type = "main_view",
-				table.unpack(LAYER_NAMES)
 			},
 			visible = true,
 			main_queue = true,

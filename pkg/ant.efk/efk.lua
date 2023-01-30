@@ -14,6 +14,9 @@ local assetmgr  = import_package "ant.asset"
 local cr        = import_package "ant.compile_resource"
 local itimer    = ecs.import.interface "ant.timer|itimer"
 
+
+w:register {name = "efk_queue_visible"}
+
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 local efk_sys = ecs.system "efk_system"
@@ -141,7 +144,7 @@ local mq_vr_mb = world:sub{"view_rect_changed", "main_queue"}
 local mq_camera_changed = world:sub{"main_queue", "camera_changed"}
 
 local function update_framebuffer_texutre()
-    local eq = w:first("efk_queue render_target:in")
+    local eq = w:first "efk_queue render_target:in"
     local fbidx = eq.render_target.fb_idx
     local fb = fbmgr.get(fbidx)
     efk_cb_handle.background = fb[1].handle

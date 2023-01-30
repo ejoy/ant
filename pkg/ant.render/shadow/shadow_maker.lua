@@ -349,10 +349,6 @@ local function create_csm_entity(index, vr, fbidx)
 				},
 				fb_idx = fbidx,
 			},
-			primitive_filter = {
-				filter_type = "cast_shadow",
-				"opacity",
-			},
 			visible = false,
 			queue_name = queuename,
 			[queuename] = true,
