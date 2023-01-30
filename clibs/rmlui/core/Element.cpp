@@ -21,7 +21,6 @@
 #include <databinding/DataUtilities.h>
 #include <algorithm>
 #include <cmath>
-#include <yoga/YGNode.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 

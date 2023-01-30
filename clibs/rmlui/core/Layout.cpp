@@ -2,29 +2,34 @@
 #include <core/ID.h>
 #include <core/Property.h>
 #include <core/Text.h>
+#include <yoga/Yoga.h>
 
 namespace Rml {
 
-static int YogaLogger(YGConfigRef config, YGNodeRef node, YGLogLevel level, const char* format, va_list args) {
-	return vprintf(format, args);
-}
+struct DefaultConfig {
+	DefaultConfig()
+		: config(YGConfigNew()) {
+		YGConfigSetLogger(config, logger);
+		YGConfigSetPointScaleFactor(config, 0);
+		YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
+		YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
+	}
+	~DefaultConfig() {
+		YGConfigFree(config);
+	}
+	static int logger(YGConfigRef config, YGNodeRef node, YGLogLevel level, const char* format, va_list args) {
+		return vprintf(format, args);
+	}
+	YGConfigRef config;
+};
 
-static YGConfigRef createDefaultYogaConfig() {
-	YGConfigRef config = YGConfigNew();
-	YGConfigSetLogger(config, YogaLogger);
-	YGConfigSetPointScaleFactor(config, 0);
-	YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-	YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
-	return config;
-}
-
-static YGConfigRef DefaultYogaConfig() {
-	static YGConfigRef config = createDefaultYogaConfig();
-	return config;
+static YGConfigRef GetDefaultConfig() {
+	static DefaultConfig def;
+	return def.config;
 }
 
 Layout::Layout()
-: node(YGNodeNewWithConfig(DefaultYogaConfig()))
+: node(YGNodeNewWithConfig(GetDefaultConfig()))
 { }
 
 Layout::~Layout() {
