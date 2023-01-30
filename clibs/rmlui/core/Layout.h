@@ -82,7 +82,7 @@ public:
 	
 	bool IsDirty() const;
 	void MarkDirty();
-	std::string ToString() const;
+	void Print() const;
 
 	bool HasNewLayout();
 	Overflow GetOverflow() const;

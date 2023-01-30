@@ -2,7 +2,6 @@
 #include <core/ID.h>
 #include <core/Property.h>
 #include <core/Text.h>
-#include <yoga/YGNodePrint.h>
 
 namespace Rml {
 
@@ -59,13 +58,11 @@ void Layout::RemoveAllChildren() {
 	YGNodeRemoveAllChildren(node);
 }
 
-std::string Layout::ToString() const {
-	std::string result;
+void Layout::Print() const {
 #if defined(DEBUG)
 	auto options = static_cast<YGPrintOptions>(YGPrintOptionsLayout | YGPrintOptionsStyle | YGPrintOptionsChildren);
-	facebook::yoga::YGNodeToString(result, node, options, 0);
+	YGNodePrint(node, options);
 #endif
-	return result;
 }
 
 static void SetFloatProperty(YGNodeRef node, PropertyId id, float v) {
