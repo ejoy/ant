@@ -29,10 +29,12 @@ system "ui_rt_system"
     .require_system "ant.render|render_system"
     .implement "ui_rt_system.lua"
     .method "entity_init"
+    .method "data_changed"
 
-component "ui_rt_obj"
-component "ui_rt_queue"
-component "ui_rt_queue_cull"
-component "ui_rt_queue_visible"
+interface "iuirt"
+    .implement "ui_rt_system.lua"
+    .method "get_group_id"
+    .method "gen_group_id"
+
 
 

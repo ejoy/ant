@@ -13,7 +13,7 @@ local irq       = ecs.import.interface "ant.render|irenderqueue"
 local rmlui_sys = ecs.system "rmlui_system"
 local iRmlUi = ecs.interface "irmlui"
 local fs = require "filesystem"
-
+local iUiRt = ecs.interface "iuirt"
 local ui_viewid<const> = viewidmgr.get "uiruntime"
 
 function rmlui_sys:init()
@@ -90,14 +90,14 @@ local rb_flags = sampler{
 
 local lastname = "pickup_blit"
 
-function S.render_target_create(width, height)
-    local viewid = viewidmgr.generate("ui_rt", lastname)
+function S.render_target_create(width, height, name)
+    local viewid = viewidmgr.generate(name, lastname)
     local rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA32F", flags = rb_flags}
     local fbidx = fbmgr.create{
         rbidx = rbidx
     }
     local id = fbmgr.get_rb(fbidx, 1).handle
-    local queuename = "ui_rt_queue"
+    local queuename = name .. "_queue"
     local mq = w:first "main_queue camera_ref:in"
     ecs.create_entity {
 		policy = {
@@ -111,7 +111,7 @@ function S.render_target_create(width, height)
 				viewid		= viewid,
 				view_mode 	= "s",
                 clear_state = {
-                    color = 0xff0000ff,
+                    color = 0x00ff00ff,
                     depth = 0.0,
                     clear = "CD",
                 },
@@ -128,7 +128,8 @@ function S.render_target_create(width, height)
 			watch_screen_buffer	= true,
 		}
 	}
-    lastname = "ui_rt"
+    lastname = name
+    iUiRt.gen_group_id(name)
     return id
 end
 
