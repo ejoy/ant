@@ -29,7 +29,7 @@ system "ui_rt_system"
     .require_system "ant.render|render_system"
     .implement "ui_rt_system.lua"
     .method "entity_init"
-    .method "data_changed"
+    --.method "data_changed"
 
 interface "iuirt"
     .implement "ui_rt_system.lua"
