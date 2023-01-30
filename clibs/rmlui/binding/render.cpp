@@ -404,6 +404,11 @@ Rml::MaterialHandle Renderer::CreateTextureMaterial(Rml::TextureId texture, Rml:
     return reinterpret_cast<Rml::MaterialHandle>(material.release());
 }
 
+Rml::MaterialHandle Renderer::CreateRenderTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flags) {
+    auto material = std::make_unique<TextureMaterial>(mcontext->shader, (bgfx_texture_handle_t)texture, flags);
+    return reinterpret_cast<Rml::MaterialHandle>(material.release());
+} 
+
 struct TextEffectVisitor {
     const RmlContext* context;
     Rml::MaterialHandle operator() (Rml::TextStroke const& t) {

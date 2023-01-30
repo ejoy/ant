@@ -5,6 +5,7 @@
 #include <core/Document.h>
 #include <core/Interface.h>
 #include <core/Core.h>
+#include <regex>
 
 namespace Rml {
 
@@ -15,7 +16,12 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		return false;
 	}
 	std::string path = image->Get<std::string>();
-	auto const& texture = Texture::Fetch(element, path);
+	bool isRT = false;
+	if (regex_match(path, std::regex("\<.*\>"))) {
+		isRT = true;
+		path = regex_replace(path, std::regex("[<>]"), std::string(""));
+	}
+	auto const& texture = Texture::Fetch(element, path, isRT);
 	if (!texture) {
 		return false;
 	}
@@ -99,8 +105,14 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		}
 		break;
 	}
-
-	auto material = GetRenderInterface()->CreateTextureMaterial(texture.handle, repeat);
+	Rml::MaterialHandle material;
+ 	if (isRT) {
+		material = GetRenderInterface()->CreateRenderTextureMaterial(texture.handle, repeat);
+	} 
+	else {
+		material = GetRenderInterface()->CreateTextureMaterial(texture.handle, repeat);
+	} 
+	
 	geometry.SetMaterial(material);
 	if (paddingEdge.size() == 0 
 		|| (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{})

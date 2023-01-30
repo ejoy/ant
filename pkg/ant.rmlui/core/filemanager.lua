@@ -3,6 +3,7 @@ local ltask = require "ltask"
 local constructor = require "core.DOM.constructor"
 local bundle = import_package "ant.bundle"
 
+local WorldService = ltask.queryservice "ant.window|world"
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
 
 local m = {}
@@ -32,7 +33,9 @@ end
 local pendQueue = {}
 local readyQueue = {}
 
-function m.loadTexture(doc, e, path)
+function m.loadTexture(doc, e, path, width, height, isRT)
+    width  = math.floor(width)
+    height = math.floor(height)
     local realpath = fullpath(path)
     local element = constructor.Element(doc, false, e)
     local q = pendQueue[path]
@@ -41,17 +44,32 @@ function m.loadTexture(doc, e, path)
         return
     end
     pendQueue[path] = {element}
-    ltask.fork(function ()
-        local info = ltask.call(ServiceResource, "texture_create", realpath)
-        readyQueue[#readyQueue+1] = {
-            path = path,
-            elements = pendQueue[path],
-            id = info.id,
-            width = info.texinfo.width,
-            height = info.texinfo.height,
-        }
-        pendQueue[path] = nil
-    end)
+    if isRT then
+          ltask.fork(function ()
+            local id = ltask.call(WorldService, "render_target_create", width, height)
+            readyQueue[#readyQueue+1] = {
+                path = path,
+                elements = pendQueue[path],
+                id = id,
+                width = width,
+                height = height,
+            }
+            pendQueue[path] = nil
+        end)  
+    else
+        ltask.fork(function ()
+            local info = ltask.call(ServiceResource, "texture_create", realpath)
+            readyQueue[#readyQueue+1] = {
+                path = path,
+                elements = pendQueue[path],
+                id = info.id,
+                width = info.texinfo.width,
+                height = info.texinfo.height,
+            }
+            pendQueue[path] = nil
+        end)
+    end
+
 end
 
 function m.updateTexture()

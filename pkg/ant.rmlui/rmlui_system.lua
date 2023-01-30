@@ -5,7 +5,8 @@ local w = world.w
 local ltask     = require "ltask"
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
-
+local fbmgr     = renderpkg.fbmgr
+local sampler   = renderpkg.sampler
 local font      = import_package "ant.font"
 local ServiceRmlUi = ltask.queryservice "ant.rmlui|rmlui"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
@@ -70,12 +71,65 @@ function rmlui_sys:entity_init()
     end
 end
 
+
 local S = ltask.dispatch()
 
 local msgqueue = {}
 
 function S.rmlui_message(...)
 	msgqueue[#msgqueue+1] = {...}
+end
+
+local rb_flags = sampler{
+    MIN="POINT",
+    MAG="POINT",
+    U="CLAMP",
+    V="CLAMP",
+    RT="RT_ON",
+}
+
+local lastname = "pickup_blit"
+
+function S.render_target_create(width, height)
+    local viewid = viewidmgr.generate("ui_rt", lastname)
+    local rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA32F", flags = rb_flags}
+    local fbidx = fbmgr.create{
+        rbidx = rbidx
+    }
+    local id = fbmgr.get_rb(fbidx, 1).handle
+    local queuename = "ui_rt_queue"
+    local mq = w:first "main_queue camera_ref:in"
+    ecs.create_entity {
+		policy = {
+			"ant.render|render_queue",
+			"ant.render|watch_screen_buffer",
+			"ant.general|name",
+		},
+		data = {
+            camera_ref = mq.camera_ref,
+			render_target = {
+				viewid		= viewid,
+				view_mode 	= "s",
+                clear_state = {
+                    color = 0xff0000ff,
+                    depth = 0.0,
+                    clear = "CD",
+                },
+				view_rect	= {x = 0, y = 0, w = width, h = height},
+				fb_idx		= fbidx,
+			},
+            [queuename]         = true,
+			name 				= queuename,
+			queue_name			= queuename,
+            primitive_filter = {
+                filter_type = "",
+            },
+            visible = true,
+			watch_screen_buffer	= true,
+		}
+	}
+    lastname = "ui_rt"
+    return id
 end
 
 local windows = {}

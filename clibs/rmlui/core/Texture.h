@@ -8,6 +8,6 @@
 
 namespace Rml::Texture {
 	void Shutdown();
-	const TextureData& Fetch(Element* e, const std::string& path);
+	const TextureData& Fetch(Element* e, const std::string& path, bool isRT);
 	void Set(const std::string& path, TextureData&& data);
 }

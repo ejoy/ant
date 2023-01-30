@@ -58,6 +58,7 @@ end
 
 local MATERIAL_INDICES<const> = {
 	main_queue		= 0,
+	ui_rt_queue     = 0,
 	pre_depth_queue	= 1,
 	pickup_queue	= 2,
 	csm1_queue		= 3,
