@@ -405,32 +405,28 @@ function init_loader_sys:init()
     end
     world:create_object(ep) ]]
 
---[[ 
-    printer_material = imaterial.load_res "/pkg/ant.resources/materials/printer.material"
-     ecs.create_entity {
+    ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
+            "mod.printer|printer",
         },
         data = {
-            primitive_filter = {
-                filter_type = "postprocess_obj",
-                "opacity",
-                "translucent",
-            },
             name        = "printer_test",
-            scene  = {s = 1, t = {4, 1, 4}},
-            material    = "/pkg/ant.resources/materials/printer.material",
-            visible_state = "postprocess_obj",
-            mesh        = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",
-            printer = true
+            scene  = {s = 0.2, t = {5, 0, 5}},
+            material    = "/pkg/mod.printer/assets/printer.material",
+            visible_state = "main_view",
+            mesh        = "/pkg/mod.printer/assets/electric-pole-1.glb|meshes/Cylinder.006_P1.meshbin",
+            render_layer= "postprocess_obj",
+            -- add printer tag
+            -- previous still be zero
+            -- duration means generation duration time
+            printer = {
+                previous = 0,
+                duration = 5
+            }
         },
-    } 
-
-    local sa = imaterial.system_attribs()
-	sa:update("u_printer_factor", math3d.vector(0, 0, 0, 0))  ]]
-
-    
+    }
 end
 
 local function render_layer_test()

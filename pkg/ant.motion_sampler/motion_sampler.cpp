@@ -45,8 +45,6 @@ lsample(lua_State *L){
 			}
 
 			if (!math_isnull(ms.target_r)){
-				const char* tt = math_typename(math_type(w->math3d->M, ms.target_r));
-				const char* tt1= math_typename(math_type(w->math3d->M, ms.source_r));
 				update_m3d(scene.r, math3d_quat_lerp(w->math3d->M, ms.source_r, ms.target_r, ratio));
 			}
 

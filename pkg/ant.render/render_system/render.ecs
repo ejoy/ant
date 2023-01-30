@@ -37,7 +37,6 @@ component "render_object"
     .field "mat_pickup:userdata"
     .field "mat_csm:userdata"
     .field "mat_lightmap:userdata"
-    .field "mat_ppoq:userdata"
     --mesh
     .field "vb_start:dword"
     .field "vb_num:dword"
