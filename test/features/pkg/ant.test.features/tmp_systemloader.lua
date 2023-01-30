@@ -405,28 +405,28 @@ function init_loader_sys:init()
     end
     world:create_object(ep) ]]
 
-    ecs.create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.general|name",
-            "mod.printer|printer",
-        },
-        data = {
-            name        = "printer_test",
-            scene  = {s = 0.2, t = {5, 0, 5}},
-            material    = "/pkg/mod.printer/assets/printer.material",
-            visible_state = "main_view",
-            mesh        = "/pkg/mod.printer/assets/electric-pole-1.glb|meshes/Cylinder.006_P1.meshbin",
-            render_layer= "postprocess_obj",
-            -- add printer tag
-            -- previous still be zero
-            -- duration means generation duration time
-            printer = {
-                previous = 0,
-                duration = 5
-            }
-        },
-    }
+    -- ecs.create_entity {
+    --     policy = {
+    --         "ant.render|render",
+    --         "ant.general|name",
+    --         "mod.printer|printer",
+    --     },
+    --     data = {
+    --         name        = "printer_test",
+    --         scene  = {s = 0.2, t = {5, 0, 5}},
+    --         material    = "/pkg/mod.printer/assets/printer.material",
+    --         visible_state = "main_view",
+    --         mesh        = "/pkg/mod.printer/assets/electric-pole-1.glb|meshes/Cylinder.006_P1.meshbin",
+    --         render_layer= "postprocess_obj",
+    --         -- add printer tag
+    --         -- previous still be zero
+    --         -- duration means generation duration time
+    --         printer = {
+    --             previous = 0,
+    --             duration = 5
+    --         }
+    --     },
+    -- }
 end
 
 local function render_layer_test()

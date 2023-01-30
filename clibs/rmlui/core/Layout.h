@@ -2,9 +2,10 @@
 
 #include <core/Types.h>
 #include <core/PropertyIdSet.h>
-#include <yoga/Yoga.h>
 #include <string>
 #include <stdint.h>
+
+typedef struct YGNode* YGNodeRef;
 
 namespace Rml {
 
@@ -82,7 +83,7 @@ public:
 	
 	bool IsDirty() const;
 	void MarkDirty();
-	std::string ToString() const;
+	void Print() const;
 
 	bool HasNewLayout();
 	Overflow GetOverflow() const;

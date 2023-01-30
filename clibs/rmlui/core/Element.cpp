@@ -21,7 +21,6 @@
 #include <databinding/DataUtilities.h>
 #include <algorithm>
 #include <cmath>
-#include <yoga/YGNode.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 
@@ -421,7 +420,8 @@ void Element::AppendChild(Node* node, uint32_t index) {
 	}
 	GetLayout().InsertChild(node->GetLayout(), index);
 	childnodes.emplace_back(node);
-	if (Element* e = dynamic_cast<Element*>(node)) {
+	if (node->GetType() == Node::Type::Element) {
+		auto e = static_cast<Element*>(node);
 		children.emplace_back(e);
 	}
 	node->SetParentNode(this);
@@ -436,7 +436,9 @@ std::unique_ptr<Node> Element::RemoveChild(Node* node) {
 	}
 	auto detached_child = std::move(childnodes[index]);
 	childnodes.erase(childnodes.begin() + index);
-	if (Element* e = dynamic_cast<Element*>(node)) {
+	
+	if (node->GetType() == Node::Type::Element) {
+		auto e = static_cast<Element*>(node);
 		for (auto it = children.begin(); it != children.end(); ++it) {
 			if (*it == e) {
 				children.erase(it);
@@ -469,7 +471,8 @@ void Element::InsertBefore(Node* node, Node* adjacent) {
 
 	GetLayout().InsertChild(node->GetLayout(), (uint32_t)index);
 	childnodes.emplace(childnodes.begin() + index, node);
-	if (Element* e = dynamic_cast<Element*>(node)) {
+	if (node->GetType() == Node::Type::Element) {
+		auto e = static_cast<Element*>(node);
 		children.emplace_back(e);
 	}
 	node->SetParentNode(this);
@@ -663,7 +666,8 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 	}
 
 	for (auto& child : childnodes) {
-		if (Text* text = dynamic_cast<Text*>(child.get())) {
+		if (child->GetType() == Node::Type::Text) {
+			auto text = static_cast<Text*>(child.get());
 			text->ChangedProperties(changed_properties);
 		}
 	}

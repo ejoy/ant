@@ -2,30 +2,34 @@
 #include <core/ID.h>
 #include <core/Property.h>
 #include <core/Text.h>
-#include <yoga/YGNodePrint.h>
+#include <yoga/Yoga.h>
 
 namespace Rml {
 
-static int YogaLogger(YGConfigRef config, YGNodeRef node, YGLogLevel level, const char* format, va_list args) {
-	return vprintf(format, args);
-}
+struct DefaultConfig {
+	DefaultConfig()
+		: config(YGConfigNew()) {
+		YGConfigSetLogger(config, logger);
+		YGConfigSetPointScaleFactor(config, 0);
+		YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
+		YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
+	}
+	~DefaultConfig() {
+		YGConfigFree(config);
+	}
+	static int logger(YGConfigRef config, YGNodeRef node, YGLogLevel level, const char* format, va_list args) {
+		return vprintf(format, args);
+	}
+	YGConfigRef config;
+};
 
-static YGConfigRef createDefaultYogaConfig() {
-	YGConfigRef config = YGConfigNew();
-	YGConfigSetLogger(config, YogaLogger);
-	YGConfigSetPointScaleFactor(config, 0);
-	YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-	YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
-	return config;
-}
-
-static YGConfigRef DefaultYogaConfig() {
-	static YGConfigRef config = createDefaultYogaConfig();
-	return config;
+static YGConfigRef GetDefaultConfig() {
+	static DefaultConfig def;
+	return def.config;
 }
 
 Layout::Layout()
-: node(YGNodeNewWithConfig(DefaultYogaConfig()))
+: node(YGNodeNewWithConfig(GetDefaultConfig()))
 { }
 
 Layout::~Layout() {
@@ -59,13 +63,11 @@ void Layout::RemoveAllChildren() {
 	YGNodeRemoveAllChildren(node);
 }
 
-std::string Layout::ToString() const {
-	std::string result;
+void Layout::Print() const {
 #if defined(DEBUG)
 	auto options = static_cast<YGPrintOptions>(YGPrintOptionsLayout | YGPrintOptionsStyle | YGPrintOptionsChildren);
-	facebook::yoga::YGNodeToString(result, node, options, 0);
+	YGNodePrint(node, options);
 #endif
-	return result;
 }
 
 static void SetFloatProperty(YGNodeRef node, PropertyId id, float v) {

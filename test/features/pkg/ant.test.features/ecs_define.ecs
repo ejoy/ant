@@ -13,7 +13,7 @@ import "@ant.audio"
 import "@ant.efk"
 import "@ant.timer"
 import "@ant.motion_sampler"
-import "@mod.printer"
+--import "@mod.printer"
 
 system "init_loader_system"
     .implement "tmp_systemloader.lua"
@@ -56,7 +56,7 @@ system "init_loader_system"
     .require_policy "ant.render|skinrender"
     .require_policy "ant.motion_sampler|motion_sampler"
 
-    .require_policy "mod.printer|printer"
+    --.require_policy "mod.printer|printer"
 
     .require_interface "ant.camera|icamera"
     .require_interface "ant.objcontroller|iobj_motion"
