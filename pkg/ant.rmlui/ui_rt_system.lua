@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 local ui_rt_sys = ecs.system "ui_rt_system"
-
+local ivs		= ecs.import.interface "ant.scene|ivisible_state"
 local ui_rt_group_id = 110000
 
 local rt2g_table = {}
@@ -40,36 +40,4 @@ function ui_rt_sys:entity_init()
         end        
     end
 end
---[[ 
-local kb_mb = world:sub{"keyboard"}
-local ientity   = ecs.import.interface "ant.render|ientity"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
-local math3d = require "math3d"
-
-function ui_rt_sys:data_changed()
-    for _, key, press in kb_mb:unpack() do
-        if key == "T" and press == 0 then
-            local gid = iUiRt.get_group_id("rt1")
-            local g = ecs.group(gid)
-            g:create_entity{
-                policy = {
-                    "ant.render|simplerender",
-                    "ant.general|name",
-                },
-                data = {
-                    simplemesh = ientity.arrow_mesh(0.3),
-                    material = "/pkg/ant.resources/materials/meshcolor.material",
-                    visible_state = "main_view",
-                    scene = {
-
-                    },
-                    name = "arrow",
-                    on_ready = function (ee)
-                        imaterial.set_property(ee, "u_color", math3d.vector(1.0, 0.0, 0.0, 1.0))
-                    end
-                }
-            }
-        end
-    end
-end  ]]
-
+ 

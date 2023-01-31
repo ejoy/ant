@@ -111,7 +111,7 @@ function S.render_target_create(width, height, name)
 				viewid		= viewid,
 				view_mode 	= "s",
                 clear_state = {
-                    color = 0x00ff00ff,
+                    color = 0x000000ff,
                     depth = 0.0,
                     clear = "CD",
                 },
