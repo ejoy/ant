@@ -24,11 +24,12 @@
 3. 使用FXAA/TAA，解决bgfx在MSAA下，不同平台直接很多bug的问题。(2022.11.08已经完成)
 4. 使用compute shader将MSAA的深度resolve到普通的深度；(2022.11.08已经完成。但不同的机器resolve msaa的depth硬件不一定支持)
 5. 增强阴影的效果，包括精度和和filter的阴影，或对比使用PCF的效果；(2022.11.08已经完成)
+6. 着色器优化。尽可能使用mediump和lowp格式。目前默认全部都是highp格式；（2022.12.31已经完成）
 
 ##### 未完成
 1. 顶点相关：
   - 顶点数据使用不同的流。目前所有顶点都打包到一个流里面，当某个着色器不会访问到对应的顶点数据的时候，相应的带宽就会被浪费掉了。但目前代码很多地方都依赖着只有一个流的逻辑，多个流的情况是否真的能够提交性能还需要验证；
-2. 着色器优化。尽可能使用mediump和lowp格式。目前默认全部都是highp格式；
+2. 优化PBR中的GGX的计算。具体看：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；
 3. 优化polyline的效果。启用FXAA之后，polyline的线会丢失；
 4. 转换到Vulkan（全平台支持，Mac和iOS使用MoltenVK）。（目前在window和mac下都能够正常运行vulkan，iOS还有一些编译的问题。2023/1/3）
   1). 针对Vulkan上的subpass对渲染的render进行相应的优化；
