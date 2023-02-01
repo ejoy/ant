@@ -1,31 +1,3 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2018 Michael R. P. Ragazzon
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
 #include <core/ElementAnimation.h>
 #include <core/Element.h>
 #include <core/Transform.h>
@@ -105,9 +77,9 @@ static bool PrepareTransforms(AnimationKey& key, Element& element) {
 	return PrepareTransformPair(t0, t1, element);
 }
 
-ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element, float start_time, float duration, int num_iterations, bool alternate_direction)
+ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, float start_time, int num_iterations, bool alternate_direction)
 	: property_id(property_id)
-	, duration(duration)
+	, duration(0.f)
 	, num_iterations(num_iterations)
 	, alternate_direction(alternate_direction)
 	, time(start_time)
@@ -115,37 +87,26 @@ ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigi
 	, reverse_direction(false)
 	, animation_complete(false)
 	, origin(origin)
-{
-	InternalAddKey(0.0f, current_value, element, Tween{});
-}
+{}
 
-bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween) {
+bool ElementAnimation::AddKey(float target_time, const Property& out_prop, Element& element, Tween tween) {
 	if (!out_prop.AllowInterpolate()) {
 		Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", out_prop.ToString().c_str());
 		return false;
 	}
-
-	bool first = keys.size() == 0;
-	Property const& in_prop = first ? out_prop: keys.back().prop;
+	if (keys.size() == 0) {
+		keys.emplace_back(time, out_prop, out_prop, tween);
+		duration = target_time;
+		return true;
+	}
+	Property const& in_prop = keys.back().prop;
 	keys.emplace_back(time, in_prop, out_prop, tween);
-	bool result = true;
-	if (!first && out_prop.Has<Transform>()) {
-		result = PrepareTransforms(keys.back(), element);
-	}
-	if (!result) {
-		Log::Message(Log::Level::Warning, "Could not add animation key with property '%s'.", out_prop.ToString().c_str());
-		keys.pop_back();
-	}
-	return result;
-}
-
-bool ElementAnimation::AddKey(float target_time, const Property & in_property, Element& element, Tween tween) {
-	if (!IsInitalized()) {
-		Log::Message(Log::Level::Warning, "Element animation was not initialized properly, can't add key.");
-		return false;
-	}
-	if (!InternalAddKey(target_time, in_property, element, tween)) {
-		return false;
+	if (out_prop.Has<Transform>()) {
+		if (!PrepareTransforms(keys.back(), element)) {
+			Log::Message(Log::Level::Warning, "Could not add animation key with property '%s'.", out_prop.ToString().c_str());
+			keys.pop_back();
+			return false;
+		}
 	}
 	duration = target_time;
 	return true;

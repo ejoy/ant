@@ -810,47 +810,6 @@ void Element::UpdateStructure() {
 	}
 }
 
-void Element::StartAnimation(PropertyId property_id, const Property* start_value, int num_iterations, bool alternate_direction, float delay) {
-	ElementAnimation animation{ property_id, ElementAnimationOrigin::Animation, *start_value, *this, delay, 0.0f, num_iterations, alternate_direction };
-	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == property_id; });
-	if (it == animations.end()) {
-		if (animation.IsInitalized()) {
-			animations.emplace_back(std::move(animation));
-		}
-	}
-	else {
-		if (animation.IsInitalized()) {
-			*it = std::move(animation);
-		}
-		else {
-			animations.erase(it);
-		}
-	}
-}
-
-bool Element::AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween) {
-	std::optional<Property> property;
-	if (target_value) {
-		//TODO
-		property = *target_value;
-	}
-	else {
-		property = GetComputedProperty(property_id);
-	}
-	if (!property)
-		return false;
-	ElementAnimation* animation = nullptr;
-	for (auto& existing_animation : animations) {
-		if (existing_animation.GetPropertyId() == property_id) {
-			animation = &existing_animation;
-			break;
-		}
-	}
-	if (!animation)
-		return false;
-	return animation->AddKey(time, *property, *this, tween);
-}
-
 bool Element::StartTransition(PropertyId id, const Transition& transition, std::optional<Property> start_value, std::optional<Property> target_value) {
 	if (!start_value || !target_value || *start_value == *target_value) {
 		return false;
@@ -866,15 +825,19 @@ bool Element::StartTransition(PropertyId id, const Transition& transition, std::
 	if (it == animations.end()) {
 		// Add transition as new animation
 		animations.emplace_back(
-			id, ElementAnimationOrigin::Transition, *start_value, *this, delay, 0.0f, 1, false 
+			id, ElementAnimationOrigin::Transition, delay, 1, false 
 		);
 		it = (animations.end() - 1);
 	}
 	else {
 		// Replace old transition
-		*it = ElementAnimation{ id, ElementAnimationOrigin::Transition, *start_value, *this, delay, 0.0f, 1, false };
+		*it = ElementAnimation{ id, ElementAnimationOrigin::Transition, delay, 1, false };
 	}
 
+	if (!it->AddKey(0.f, *start_value, *this, {})) {
+		animations.erase(it);
+		return false;
+	}
 	if (!it->AddKey(duration, *target_value, *this, transition.tween)) {
 		animations.erase(it);
 		return false;
@@ -964,39 +927,51 @@ void Element::HandleAnimationProperty() {
 	const StyleSheet& stylesheet = GetStyleSheet();
 
 	for (const auto& animation : animation_list) {
-		const Keyframes* keyframes_ptr = stylesheet.GetKeyframes(animation.name);
-		if (keyframes_ptr && keyframes_ptr->blocks.size() >= 1 && !animation.paused) {
-			auto& property_ids = keyframes_ptr->property_ids;
-			auto& blocks = keyframes_ptr->blocks;
-			bool has_from_key = (blocks[0].normalized_time == 0);
-			bool has_to_key = (blocks.back().normalized_time == 1);
-			// If the first key defines initial conditions for a given property, use those values, else, use this element's current values.
-			for (PropertyId id : property_ids) {
-				const Property* start = nullptr;
-				if (has_from_key) {
-					start = PropertyVectorGet(blocks[0].properties, id);
-				}
-				if (start) {
-					StartAnimation(id, start, animation.num_iterations, animation.alternate, animation.transition.delay);
-				}
-				else {
-					auto property = GetComputedProperty(id);
-					if (property) {
-						StartAnimation(id, &*property, animation.num_iterations, animation.alternate, animation.transition.delay);
+		if (const Keyframes* keyframes_ptr = stylesheet.GetKeyframes(animation.name)) {
+			auto& properties = keyframes_ptr->properties;
+			if (keyframes_ptr->properties.size() >= 1 && !animation.paused) {
+				for (auto const& [id, vec] : properties) {
+					ElementAnimation ani { id, ElementAnimationOrigin::Animation, animation.transition.delay, animation.num_iterations,  animation.alternate };
+					bool has_from_key = (vec[0].normalized_time == 0);
+					bool has_to_key = (vec.back().normalized_time == 1);
+					if (has_from_key) {
+						if (!ani.AddKey(0.f, vec[0].value, *this, {})) {
+							continue;
+						}
+					}
+					else if (auto property = GetComputedProperty(id)) {
+						if (!ani.AddKey(0.f, *property, *this, {})) {
+							continue;
+						}
+					}
+					else {
+						continue;
+					}
+					for (int i = (has_from_key ? 1 : 0); i < (int)vec.size() + (has_to_key ? -1 : 0); i++) {
+						float time = vec[i].normalized_time * animation.transition.duration;
+						ani.AddKey(time, vec[i].value, *this, animation.transition.tween);
+					}
+					float time = animation.transition.duration;
+					if (has_to_key) {
+						if (!ani.AddKey(time, vec.back().value, *this, animation.transition.tween)) {
+							continue;
+						}
+					}
+					else if (auto property = GetComputedProperty(id)) {
+						if (!ani.AddKey(time, *property, *this, animation.transition.tween)) {
+							continue;
+						}
+					}
+
+					auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == id; });
+					if (it == animations.end()) {
+						animations.emplace_back(std::move(ani));
+					}
+					else {
+						*it = std::move(ani);
 					}
 				}
 			}
-			// Add middle keys: Need to skip the first and last keys if they set the initial and end conditions, respectively.
-			for (int i = (has_from_key ? 1 : 0); i < (int)blocks.size() + (has_to_key ? -1 : 0); i++) {
-				// Add properties of current key to animation
-				float time = blocks[i].normalized_time * animation.transition.duration;
-				for (auto& v : blocks[i].properties)
-					AddAnimationKeyTime(v.id, &v.value, time, animation.transition.tween);
-			}
-			// If the last key defines end conditions for a given property, use those values, else, use this element's current values.
-			float time = animation.transition.duration;
-			for (PropertyId id : property_ids)
-				AddAnimationKeyTime(id, (has_to_key ? PropertyVectorGet(blocks.back().properties, id) : nullptr), time, animation.transition.tween);
 		}
 	}
 }
