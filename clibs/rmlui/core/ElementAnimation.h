@@ -4,52 +4,48 @@
 #include <core/Tween.h>
 #include <core/ID.h>
 
-
 namespace Rml {
 
 struct AnimationKey {
-	AnimationKey(float time, const Property& in_prop, const Property& out_prop, Tween tween)
+	AnimationKey(float time, const Property& prop)
 		: time(time)
-		, in(in_prop)
-		, out(out_prop)
-		, prop(out_prop)
-		, tween(tween)
+		, prop(prop)
 	{}
-	float time;   // Local animation time (Zero means the time when the animation iteration starts)
-	Property in;
-	Property out;
+	float time;
 	Property prop;
-	Tween tween;  // Tweening between the previous and this key. Ignored for the first animation key.
 };
 
-// The origin is tracked for determining its behavior when adding and removing animations.
-// Animation: Animation started by the 'animation' property
-// Transition: Animation started by the 'transition' property
-enum class ElementAnimationOrigin : uint8_t { Animation, Transition };
-
-class ElementAnimation {
+class ElementTransition {
 public:
-	ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, float start_time, int num_iterations, bool alternate_direction);
-	bool AddKey(float target_time, const Property & property, Element & element, Tween tween);
-	void Update(Element& element, float delta);
-	PropertyId GetPropertyId() const { return property_id; }
+	ElementTransition(const Property& in_prop, const Property& out_prop, const Transition& transition);
+	void Update(Element& element, PropertyId id, float delta);
 	bool IsComplete() const { return animation_complete; }
-	bool IsTransition() const { return origin == ElementAnimationOrigin::Transition; }
-	bool IsInitalized() const { return !keys.empty(); }
-	void Release(Element& element);
-private:
-	float GetInterpolationFactorAndKeys(int* out_key) const;
-private:
-	PropertyId property_id;
-	float duration;           // for a single iteration
-	int num_iterations;       // -1 for infinity
-	bool alternate_direction; // between iterations
-	std::vector<AnimationKey> keys;
+	bool IsValid(Element& element);
+protected:
+	void UpdateProperty(Element& element, PropertyId id, float time);
+protected:
+	Property in_prop;
+	Property out_prop;
 	float time;
-	int current_iteration;
-	bool reverse_direction;
+	float duration;
+	Tween tween;
 	bool animation_complete;
-	ElementAnimationOrigin origin;
+};
+
+class ElementAnimation: public ElementTransition {
+public:
+	ElementAnimation(const Property& in_prop, const Property& out_prop, const Animation& animation);
+	void AddKey(float target_time, const Property& property, Element& element);
+	bool IsValid(Element& element);
+	void Update(Element& element, PropertyId id, float delta);
+protected:
+	void UpdateProperty(Element& element, PropertyId id, float time);
+private:
+	std::vector<AnimationKey> keys;
+	int num_iterations;       // -1 for infinity
+	int current_iteration;
+	bool alternate_direction; // between iterations
+	bool reverse_direction;
 };
 
 }

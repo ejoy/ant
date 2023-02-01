@@ -814,35 +814,16 @@ bool Element::StartTransition(PropertyId id, const Transition& transition, std::
 	if (!start_value || !target_value || *start_value == *target_value) {
 		return false;
 	}
-	auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == id; });
-
-	if (it != animations.end() && !it->IsTransition())
-		return false;
-
-	float duration = transition.duration;
-	float delay = transition.delay;
-
-	if (it == animations.end()) {
-		// Add transition as new animation
-		animations.emplace_back(
-			id, ElementAnimationOrigin::Transition, delay, 1, false 
-		);
-		it = (animations.end() - 1);
-	}
-	else {
-		// Replace old transition
-		*it = ElementAnimation{ id, ElementAnimationOrigin::Transition, delay, 1, false };
-	}
-
-	if (!it->AddKey(0.f, *start_value, *this, {})) {
-		animations.erase(it);
+	if (transitions.contains(id)) {
 		return false;
 	}
-	if (!it->AddKey(duration, *target_value, *this, transition.tween)) {
-		animations.erase(it);
+
+	ElementTransition ani {*start_value, *target_value, transition };
+	if (!ani.IsValid(*this)) {
 		return false;
 	}
 	SetAnimationProperty(id, *start_value);
+	transitions.insert_or_assign(id, std::move(ani));
 	return true;
 }
 
@@ -852,67 +833,47 @@ void Element::HandleTransitionProperty() {
 	}
 	dirty_transition = false;
 
-	// Remove all transitions that are no longer in our local list
 	auto keep_transitions = GetTransition();
-	auto it_remove = animations.end();
 
 	std::visit([&](auto&& arg) {
 		using T = std::decay_t<decltype(arg)>;
 		if constexpr (std::is_same_v<T, TransitionNone>) {
-			it_remove = std::partition(animations.begin(), animations.end(),
-				[](const ElementAnimation& animation) -> bool { return !animation.IsTransition(); }
-			);
+			for (auto& [id, _] : transitions) {
+				DelAnimationProperty(id);
+			}
+			transitions.clear();
 		}
 		else if constexpr (std::is_same_v<T, TransitionAll>) {
 		}
 		else if constexpr (std::is_same_v<T, TransitionList>) {
-			// Only remove the transitions that are not in our keep list.
-			const auto& keep_transitions_list = arg;
-			it_remove = std::partition(animations.begin(), animations.end(),
-				[&keep_transitions_list](const ElementAnimation& animation) -> bool {
-					if (!animation.IsTransition())
-						return true;
-					auto it = keep_transitions_list.find(animation.GetPropertyId());
-					bool keep_animation = (it != keep_transitions_list.end());
-					return keep_animation;
+			const auto& keep = arg;
+			for (auto it = transitions.begin(); it != transitions.end();) {
+				if (keep.find(it->first) == keep.end()) {
+					DelAnimationProperty(it->first);
+					it = transitions.erase(it);
 				}
-			);
+				else {
+					++it;
+				}
+			}
 		}
 		else {
 			static_assert(always_false_v<T>, "non-exhaustive visitor!");
 		}
 	}, keep_transitions);
-
-	if (it_remove == animations.end()) {
-		return;
-	}
-
-	// We can decide what to do with cancelled transitions here.
-	for (auto it = it_remove; it != animations.end(); ++it)
-		it->Release(*this);
-
-	animations.erase(it_remove, animations.end());
 }
 
 void Element::HandleAnimationProperty() {
-	// Note: We are effectively restarting all animations whenever 'dirty_animation' is set. Use the dirty flag with care,
-	// or find another approach which only updates actual "dirty" animations.
 	if (!dirty_animation) {
 		return;
 	}
 	dirty_animation = false;
 
-	// Remove existing animations
-	{
-		auto it_remove = std::partition(animations.begin(), animations.end(), 
-			[](const ElementAnimation & animation) { return animation.IsTransition(); }
-		);
-		for (auto it = it_remove; it != animations.end(); ++it)
-			it->Release(*this);
-		animations.erase(it_remove, animations.end());
+	for (auto& [id, _] : animations) {
+		DelAnimationProperty(id);
 	}
+	animations.clear();
 
-	// Start animations
 	auto property = GetComputedProperty(PropertyId::Animation);
 	if (!property) {
 		return;
@@ -931,45 +892,31 @@ void Element::HandleAnimationProperty() {
 			auto& properties = keyframes_ptr->properties;
 			if (keyframes_ptr->properties.size() >= 1 && !animation.paused) {
 				for (auto const& [id, vec] : properties) {
-					ElementAnimation ani { id, ElementAnimationOrigin::Animation, animation.transition.delay, animation.num_iterations,  animation.alternate };
 					bool has_from_key = (vec[0].normalized_time == 0);
 					bool has_to_key = (vec.back().normalized_time == 1);
+					std::optional<Property> start_value;
+					std::optional<Property> target_value;
 					if (has_from_key) {
-						if (!ani.AddKey(0.f, vec[0].value, *this, {})) {
-							continue;
-						}
-					}
-					else if (auto property = GetComputedProperty(id)) {
-						if (!ani.AddKey(0.f, *property, *this, {})) {
-							continue;
-						}
+						start_value = vec[0].value;
 					}
 					else {
+						start_value = GetComputedProperty(id);
+					}
+					if (has_to_key) {
+						target_value = vec.back().value;
+					}
+					else {
+						target_value = GetComputedProperty(id);
+					}
+					if (!start_value || !target_value) {
 						continue;
 					}
+					ElementAnimation ani { *start_value, *target_value, animation };
 					for (int i = (has_from_key ? 1 : 0); i < (int)vec.size() + (has_to_key ? -1 : 0); i++) {
 						float time = vec[i].normalized_time * animation.transition.duration;
-						ani.AddKey(time, vec[i].value, *this, animation.transition.tween);
+						ani.AddKey(time, vec[i].value, *this);
 					}
-					float time = animation.transition.duration;
-					if (has_to_key) {
-						if (!ani.AddKey(time, vec.back().value, *this, animation.transition.tween)) {
-							continue;
-						}
-					}
-					else if (auto property = GetComputedProperty(id)) {
-						if (!ani.AddKey(time, *property, *this, animation.transition.tween)) {
-							continue;
-						}
-					}
-
-					auto it = std::find_if(animations.begin(), animations.end(), [&](const ElementAnimation& el) { return el.GetPropertyId() == id; });
-					if (it == animations.end()) {
-						animations.emplace_back(std::move(ani));
-					}
-					else {
-						*it = std::move(ani);
-					}
+					animations.insert_or_assign(id, std::move(ani));
 				}
 			}
 		}
@@ -977,20 +924,34 @@ void Element::HandleAnimationProperty() {
 }
 
 void Element::AdvanceAnimations(float delta) {
-	if (animations.empty()) {
-		return;
+	if (!animations.empty()) {
+		for (auto& [id, e] : animations) {
+			e.Update(*this, id, delta);
+		}
+		for (auto it = animations.begin(); it != animations.end();) {
+			if (it->second.IsComplete()) {
+				DelAnimationProperty(it->first);
+				it = animations.erase(it);
+			}
+			else {
+				++it;
+			}
+		}
 	}
-	for (auto& animation : animations) {
-		animation.Update(*this, delta);
+	if (!transitions.empty()) {
+		for (auto& [id, e] : transitions) {
+			e.Update(*this, id, delta);
+		}
+		for (auto it = transitions.begin(); it != transitions.end();) {
+			if (it->second.IsComplete()) {
+				DelAnimationProperty(it->first);
+				it = transitions.erase(it);
+			}
+			else {
+				++it;
+			}
+		}
 	}
-	auto it_completed = std::partition(animations.begin(), animations.end(), [](const ElementAnimation& animation) { return !animation.IsComplete(); });
-	std::vector<bool> is_transition;
-	is_transition.reserve(animations.end() - it_completed);
-	for (auto it = it_completed; it != animations.end(); ++it) {
-		is_transition.push_back(it->IsTransition());
-		it->Release(*this);
-	}
-	animations.erase(it_completed, animations.end());
 	UpdateProperties();
 }
 

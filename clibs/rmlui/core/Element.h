@@ -19,6 +19,7 @@ class DataModel;
 class Document;
 class Element;
 class ElementAnimation;
+class ElementTransition;
 class EventListener;
 class Geometry;
 class StyleSheet;
@@ -178,7 +179,8 @@ protected:
 	std::unique_ptr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
 	mutable std::unique_ptr<glm::mat4x4> inv_transform;
-	std::vector<ElementAnimation> animations;
+	std::map<PropertyId, ElementAnimation> animations;
+	std::map<PropertyId, ElementTransition> transitions;
 	std::vector<std::string> classes;
 	PseudoClassSet pseudo_classes = 0;
 	std::vector<std::unique_ptr<EventListener>> listeners;
