@@ -29,7 +29,7 @@ enum class ElementAnimationOrigin : uint8_t { Animation, Transition };
 
 class ElementAnimation {
 public:
-	ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element, float start_time, float duration, int num_iterations, bool alternate_direction);
+	ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, float start_time, int num_iterations, bool alternate_direction);
 	bool AddKey(float target_time, const Property & property, Element & element, Tween tween);
 	void Update(Element& element, float delta);
 	PropertyId GetPropertyId() const { return property_id; }
@@ -38,7 +38,6 @@ public:
 	bool IsInitalized() const { return !keys.empty(); }
 	void Release(Element& element);
 private:
-	bool InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween);
 	float GetInterpolationFactorAndKeys(int* out_key) const;
 private:
 	PropertyId property_id;

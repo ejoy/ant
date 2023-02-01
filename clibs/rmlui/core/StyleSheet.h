@@ -14,11 +14,11 @@ class Stream;
 
 struct KeyframeBlock {
 	float normalized_time;  // [0, 1]
-	PropertyVector properties;
+    Property value;
 };
+
 struct Keyframes {
-	PropertyIdSet property_ids;
-	std::vector<KeyframeBlock> blocks;
+	std::map<PropertyId, std::vector<KeyframeBlock>> properties;
 };
 
 class StyleSheet {

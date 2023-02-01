@@ -10,12 +10,17 @@ StyleSheet::StyleSheet()
 StyleSheet::~StyleSheet()
 {}
 
+template <typename Vec>
+void vector_append(Vec& a, Vec const& b) {
+	a.insert(std::end(a), std::begin(b), std::end(b));
+}
+
 void StyleSheet::Merge(const StyleSheet& other_sheet) {
 	stylenode.insert(stylenode.end(), other_sheet.stylenode.begin(), other_sheet.stylenode.end());
-	for (auto const& [identifier, values] : other_sheet.keyframes) {
+	for (auto const& [identifier, other_kf] : other_sheet.keyframes) {
 		auto& kf = keyframes[identifier];
-		for (auto const& value : values.blocks) {
-			kf.blocks.emplace_back(value);
+		for (auto const& [id, value] : other_kf.properties) {
+			vector_append(kf.properties[id], value);
 		}
 	}
 }
@@ -43,8 +48,10 @@ void StyleSheet::AddNode(StyleSheetNode&& node) {
 
 void StyleSheet::AddKeyframe(const std::string& identifier, const std::vector<float>& rule_values, const PropertyVector& properties) {
 	auto& kf = keyframes[identifier];
-	for (float selector : rule_values) {
-		kf.blocks.emplace_back(KeyframeBlock { selector, properties });
+	for (float time : rule_values) {
+		for (auto const& [id, value] : properties) {
+			kf.properties[id].emplace_back(KeyframeBlock {time, value} );
+		}
 	}
 }
 
@@ -58,16 +65,8 @@ void StyleSheet::Sort() {
 	});
 
 	for (auto& [_, kf] : keyframes) {
-		auto& blocks = kf.blocks;
-		auto& property_ids = kf.property_ids;
-
-		// Sort keyframes on selector value.
-		std::sort(blocks.begin(), blocks.end(), [](const KeyframeBlock& a, const KeyframeBlock& b) { return a.normalized_time < b.normalized_time; });
-
-		// Add all property names specified by any block
-		for (auto& block : blocks) {
-			for (auto& v : block.properties)
-				property_ids.insert(v.id);
+		for (auto& [id, vec] : kf.properties) {
+			std::sort(vec.begin(), vec.end(), [](const KeyframeBlock& a, const KeyframeBlock& b) { return a.normalized_time < b.normalized_time; });
 		}
 	}
 }
