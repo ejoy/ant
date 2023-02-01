@@ -95,12 +95,12 @@ bool ElementAnimation::AddKey(float target_time, const Property& out_prop, Eleme
 		return false;
 	}
 	if (keys.size() == 0) {
-		keys.emplace_back(time, out_prop, out_prop, tween);
+		keys.emplace_back(target_time, out_prop, out_prop, tween);
 		duration = target_time;
 		return true;
 	}
 	Property const& in_prop = keys.back().prop;
-	keys.emplace_back(time, in_prop, out_prop, tween);
+	keys.emplace_back(target_time, in_prop, out_prop, tween);
 	if (out_prop.Has<Transform>()) {
 		if (!PrepareTransforms(keys.back(), element)) {
 			Log::Message(Log::Level::Warning, "Could not add animation key with property '%s'.", out_prop.ToString().c_str());
