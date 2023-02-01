@@ -53,7 +53,6 @@ function S.shutdown()
 	ltask.send(ServiceWindow, "unsubscribe_all")
     rmlui.RmlShutdown()
     bgfx.shutdown()
-    ltask.quit()
 end
 
 S.open = windowManager.open
