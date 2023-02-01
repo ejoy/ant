@@ -3,7 +3,6 @@ local ltask = require "ltask"
 local constructor = require "core.DOM.constructor"
 local bundle = import_package "ant.bundle"
 
-local WorldService = ltask.queryservice "ant.window|world"
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
 
 local m = {}
@@ -46,7 +45,7 @@ function m.loadTexture(doc, e, path, width, height, isRT)
     pendQueue[path] = {element}
     if isRT then
           ltask.fork(function ()
-            local id = ltask.call(WorldService, "render_target_create", width, height, path)
+            local id = ltask.call(ServiceWorld, "render_target_create", width, height, path)
             readyQueue[#readyQueue+1] = {
                 path = path,
                 elements = pendQueue[path],
