@@ -892,18 +892,18 @@ void Element::HandleAnimationProperty() {
 			auto& properties = keyframes_ptr->properties;
 			if (keyframes_ptr->properties.size() >= 1 && !animation.paused) {
 				for (auto const& [id, vec] : properties) {
-					bool has_from_key = (vec[0].normalized_time == 0);
-					bool has_to_key = (vec.back().normalized_time == 1);
+					bool has_from_key = (vec[0].time == 0);
+					bool has_to_key = (vec.back().time == 1);
 					std::optional<Property> start_value;
 					std::optional<Property> target_value;
 					if (has_from_key) {
-						start_value = vec[0].value;
+						start_value = vec[0].prop;
 					}
 					else {
 						start_value = GetComputedProperty(id);
 					}
 					if (has_to_key) {
-						target_value = vec.back().value;
+						target_value = vec.back().prop;
 					}
 					else {
 						target_value = GetComputedProperty(id);
@@ -913,8 +913,7 @@ void Element::HandleAnimationProperty() {
 					}
 					ElementAnimation ani { *start_value, *target_value, animation };
 					for (int i = (has_from_key ? 1 : 0); i < (int)vec.size() + (has_to_key ? -1 : 0); i++) {
-						float time = vec[i].normalized_time * animation.transition.duration;
-						ani.AddKey(time, vec[i].value, *this);
+						ani.AddKey(vec[i].time, vec[i].prop);
 					}
 					animations.insert_or_assign(id, std::move(ani));
 				}

@@ -3,17 +3,9 @@
 #include <core/Property.h>
 #include <core/Tween.h>
 #include <core/ID.h>
+#include <core/AnimationKey.h>
 
 namespace Rml {
-
-struct AnimationKey {
-	AnimationKey(float time, const Property& prop)
-		: time(time)
-		, prop(prop)
-	{}
-	float time;
-	Property prop;
-};
 
 class ElementTransition {
 public:
@@ -35,7 +27,7 @@ protected:
 class ElementAnimation: public ElementTransition {
 public:
 	ElementAnimation(const Property& in_prop, const Property& out_prop, const Animation& animation);
-	void AddKey(float target_time, const Property& property, Element& element);
+	void AddKey(float target_time, const Property& property);
 	bool IsValid(Element& element);
 	void Update(Element& element, PropertyId id, float delta);
 protected:

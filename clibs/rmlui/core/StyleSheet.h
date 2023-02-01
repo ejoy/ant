@@ -3,6 +3,7 @@
 #include <core/ID.h>
 #include <core/PropertyVector.h>
 #include <core/StyleCache.h>
+#include <core/AnimationKey.h>
 #include <unordered_map>
 #include <vector>
 
@@ -12,13 +13,8 @@ class Element;
 class StyleSheetNode;
 class Stream;
 
-struct KeyframeBlock {
-	float normalized_time;  // [0, 1]
-    Property value;
-};
-
 struct Keyframes {
-	std::map<PropertyId, std::vector<KeyframeBlock>> properties;
+	std::map<PropertyId, std::vector<AnimationKey>> properties;
 };
 
 class StyleSheet {

@@ -110,6 +110,10 @@ ElementTransition::ElementTransition(const Property& in_prop, const Property& ou
 {}
 
 bool ElementTransition::IsValid(Element& element) {
+	if (duration < 1e-3f) {
+		Log::Message(Log::Level::Warning, "Animation duration too samll.");
+		return false;
+	}
 	if (!AllowInterpolate(in_prop)) {
 		return false;
 	}
@@ -124,7 +128,7 @@ bool ElementTransition::IsValid(Element& element) {
 
 void ElementTransition::UpdateProperty(Element& element, PropertyId id, float t) {
 	const float t0 = 0.0f;
-	const float t1 = duration;
+	const float t1 = 1.0f;
 	const Property& p0 = in_prop;
 	const Property& p1 = out_prop;
 	InterpolateProperty(element, id, p0, p1, t0, t1, t, tween);
@@ -138,7 +142,7 @@ void ElementTransition::Update(Element& element, PropertyId id, float delta) {
 		animation_complete = true;
 		time = duration;
 	}
-	UpdateProperty(element, id, time);
+	UpdateProperty(element, id, time/duration);
 }
 
 ElementAnimation::ElementAnimation(const Property& in_prop, const Property& out_prop, const Animation& animation)
@@ -150,11 +154,15 @@ ElementAnimation::ElementAnimation(const Property& in_prop, const Property& out_
 	, reverse_direction(false)
 {}
 
-void ElementAnimation::AddKey(float target_time, const Property& out_prop, Element& element) {
-	keys.emplace_back(target_time, out_prop);
+void ElementAnimation::AddKey(float time, const Property& prop) {
+	keys.emplace_back(time, prop);
 }
 
 bool ElementAnimation::IsValid(Element& element) {
+	if (duration < 1e-3f) {
+		Log::Message(Log::Level::Warning, "Animation duration too samll.");
+		return false;
+	}
 	if (!AllowInterpolate(in_prop)) {
 		return false;
 	}
@@ -180,7 +188,7 @@ void ElementAnimation::UpdateProperty(Element& element, PropertyId id, float t) 
 		}
 	}
 	const float t0 = (key==0)? 0.0f: keys[key-1].time;
-	const float t1 = (key==n)? duration: keys[key].time;
+	const float t1 = (key==n)? 1.0f: keys[key].time;
 	const Property& p0 = (key==0)? in_prop: keys[key-1].prop;
 	const Property& p1 = (key==n)? out_prop: keys[key].prop;
 	InterpolateProperty(element, id, p0, p1, t0, t1, t, tween);
@@ -205,10 +213,10 @@ void ElementAnimation::Update(Element& element, PropertyId id, float delta) {
 	}
 
 	if (reverse_direction) {
-		UpdateProperty(element, id,  duration - time);
+		UpdateProperty(element, id,  duration - time/duration);
 	}
 	else {
-		UpdateProperty(element, id, time);
+		UpdateProperty(element, id, time/duration);
 	}
 }
 
