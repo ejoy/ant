@@ -262,8 +262,7 @@ struct InterpolateVisitor {
 		p0 = glm::lerp(p0, p1, alpha);
 	}
 	void interpolate(PropertyFloat& p0, const PropertyFloat& p1) {
-		assert(p0.unit == p1.unit);
-		interpolate(p0.value, p1.value);
+		p0.Interpolate(p1, alpha);
 	}
 	void interpolate(DecomposedMatrix4& p0, const DecomposedMatrix4& p1) {
 		p0.perspective = glm::lerp(p0.perspective, p1.perspective, alpha);
