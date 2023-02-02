@@ -250,65 +250,110 @@ struct InterpolateVisitor {
 	const TransformPrimitive& other_variant;
 	float alpha;
 	template <typename T>
-	bool operator()(T& p0) {
-		interpolate(p0, std::get<T>(other_variant));
-		return true;
+	Transforms::Primitive operator()(const T& p0) {
+		return interpolate(p0, std::get<T>(other_variant));
 	}
-	bool operator()(Matrix3D&) { return false; }
-	bool operator()(Matrix2D&) { return false; }
-	bool operator()(Perspective&) { return false; }
-
-	void interpolate(float& p0, const float& p1) {
-		p0 = glm::lerp(p0, p1, alpha);
+	float interpolate(const float& p0, const float& p1) const {
+		return glm::lerp(p0, p1, alpha);
 	}
-	void interpolate(PropertyFloat& p0, const PropertyFloat& p1) {
-		p0.Interpolate(p1, alpha);
+	Matrix3D interpolate(const Matrix3D& p0, const Matrix3D& p1) const {
+		return InterpolateFallback(p0, p1, alpha);
 	}
-	void interpolate(DecomposedMatrix4& p0, const DecomposedMatrix4& p1) {
-		p0.perspective = glm::lerp(p0.perspective, p1.perspective, alpha);
-		p0.quaternion = glm::slerp(p0.quaternion, p1.quaternion, alpha);
-		p0.translation = glm::lerp(p0.translation, p1.translation, alpha);
-		p0.scale = glm::lerp(p0.scale, p1.scale, alpha);
-		p0.skew = glm::lerp(p0.skew, p1.skew, alpha);
+	Matrix2D interpolate(const Matrix2D& p0, const Matrix2D& p1) const {
+		return InterpolateFallback(p0, p1, alpha);
 	}
-	void interpolate(TranslateX& p0, const TranslateX& p1) { interpolate(p0.x, p1.x); }
-	void interpolate(TranslateY& p0, const TranslateY& p1) { interpolate(p0.y, p1.y); }
-	void interpolate(TranslateZ& p0, const TranslateZ& p1) { interpolate(p0.z, p1.z); }
-	void interpolate(Translate2D& p0, const Translate2D& p1) {
-		interpolate(p0.x, p1.x);
-		interpolate(p0.y, p1.y);
+	Perspective interpolate(const Perspective& p0, const Perspective& p1) const {
+		return InterpolateFallback(p0, p1, alpha);
 	}
-	void interpolate(Translate3D& p0, const Translate3D& p1) {
-		interpolate(p0.x, p1.x);
-		interpolate(p0.y, p1.y);
-		interpolate(p0.z, p1.z);
+	PropertyFloat interpolate(const PropertyFloat& p0, const PropertyFloat& p1) const {
+		return p0.Interpolate(p1, alpha);
 	}
-	void interpolate(ScaleX& p0, const ScaleX& p1) { interpolate(p0.x, p1.x); }
-	void interpolate(ScaleY& p0, const ScaleY& p1) { interpolate(p0.y, p1.y); }
-	void interpolate(ScaleZ& p0, const ScaleZ& p1) { interpolate(p0.z, p1.z); }
-	void interpolate(Scale2D& p0, const Scale2D& p1) {
-		interpolate(p0.x, p1.x);
-		interpolate(p0.y, p1.y);
+	DecomposedMatrix4 interpolate(const DecomposedMatrix4& p0, const DecomposedMatrix4& p1) const {
+		return {
+			glm::lerp(p0.perspective, p1.perspective, alpha),
+			glm::slerp(p0.quaternion, p1.quaternion, alpha),
+			glm::lerp(p0.translation, p1.translation, alpha),
+			glm::lerp(p0.scale, p1.scale, alpha),
+			glm::lerp(p0.skew, p1.skew, alpha),
+		};
 	}
-	void interpolate(Scale3D& p0, const Scale3D& p1) {
-		interpolate(p0.x, p1.x);
-		interpolate(p0.y, p1.y);
-		interpolate(p0.z, p1.z);
+	TranslateX interpolate(const TranslateX& p0, const TranslateX& p1) const {
+		return { interpolate(p0.x, p1.x) };
 	}
-	void interpolate(RotateX& p0, const RotateX& p1) { interpolate(p0.angle, p1.angle); }
-	void interpolate(RotateY& p0, const RotateY& p1) { interpolate(p0.angle, p1.angle); }
-	void interpolate(RotateZ& p0, const RotateZ& p1) { interpolate(p0.angle, p1.angle); }
-	void interpolate(Rotate2D& p0, const Rotate2D& p1) { interpolate(p0.angle, p1.angle); }
-	void interpolate(Rotate3D& p0, const Rotate3D& p1) {
-		glm::quat q0(p0.angle.value, p0.axis);
-		glm::quat q1(p1.angle.value, p1.axis);
-		q0 = glm::slerp(q0, q1, alpha);
-		p0.axis = glm::axis(q0);
-		p0.angle.value = glm::angle(q0);
+	TranslateY interpolate(const TranslateY& p0, const TranslateY& p1) const {
+		return { interpolate(p0.y, p1.y) };
 	}
-	void interpolate(SkewX& p0, const SkewX& p1) { interpolate(p0.x, p1.x); }
-	void interpolate(SkewY& p0, const SkewY& p1) { interpolate(p0.y, p1.y); }
-	void interpolate(Skew2D& p0, const Skew2D& p1) { interpolate(p0.x, p1.x); interpolate(p0.y, p1.y); }
+	TranslateZ interpolate(const TranslateZ& p0, const TranslateZ& p1) const {
+		return { interpolate(p0.z, p1.z) };
+	}
+	Translate2D interpolate(const Translate2D& p0, const Translate2D& p1) const {
+		return {
+			interpolate(p0.x, p1.x),
+			interpolate(p0.y, p1.y),
+		};
+	}
+	Translate3D interpolate(const Translate3D& p0, const Translate3D& p1) const {
+		return {
+			interpolate(p0.x, p1.x),
+			interpolate(p0.y, p1.y),
+			interpolate(p0.z, p1.z),
+		};
+	}
+	ScaleX interpolate(const ScaleX& p0, const ScaleX& p1) const {
+		return { interpolate(p0.x, p1.x) };
+	}
+	ScaleY interpolate(const ScaleY& p0, const ScaleY& p1) const {
+		return { interpolate(p0.y, p1.y) };
+	}
+	ScaleZ interpolate(const ScaleZ& p0, const ScaleZ& p1) const {
+		return { interpolate(p0.z, p1.z) };
+	}
+	Scale2D interpolate(const Scale2D& p0, const Scale2D& p1) const {
+		return {
+			interpolate(p0.x, p1.x),
+			interpolate(p0.y, p1.y),
+		};
+	}
+	Scale3D interpolate(const Scale3D& p0, const Scale3D& p1) const {
+		return {
+			interpolate(p0.x, p1.x),
+			interpolate(p0.y, p1.y),
+			interpolate(p0.z, p1.z),
+		};
+	}
+	RotateX interpolate(const RotateX& p0, const RotateX& p1) const {
+		return { interpolate(p0.angle, p1.angle) };
+	}
+	RotateY interpolate(const RotateY& p0, const RotateY& p1) const {
+		return { interpolate(p0.angle, p1.angle) };
+	}
+	RotateZ interpolate(const RotateZ& p0, const RotateZ& p1) const {
+		return { interpolate(p0.angle, p1.angle) };
+	}
+	Rotate2D interpolate(const Rotate2D& p0, const Rotate2D& p1) const {
+		return { interpolate(p0.angle, p1.angle) };
+	}
+	Rotate3D interpolate(const Rotate3D& p0, const Rotate3D& p1) {
+		glm::quat q0(p0.angle.ComputeAngle(), p0.axis);
+		glm::quat q1(p1.angle.ComputeAngle(), p1.axis);
+		glm::quat q2 = glm::slerp(q0, q1, alpha);
+		return {
+			glm::axis(q2),
+			{ glm::angle(q2), PropertyUnit::RAD },
+		};
+	}
+	SkewX interpolate(const SkewX& p0, const SkewX& p1) const {
+		return { interpolate(p0.x, p1.x) };
+	}
+	SkewY interpolate(const SkewY& p0, const SkewY& p1) const {
+		return { interpolate(p0.y, p1.y) };
+	}
+	Skew2D interpolate(const Skew2D& p0, const Skew2D& p1) const {
+		return {
+			interpolate(p0.x, p1.x),
+			interpolate(p0.y, p1.y),
+		};
+	}
 };
 
 struct ToStringVisitor {
@@ -473,10 +518,11 @@ void TransformPrimitive::ConvertToGenericType() {
 	std::visit(ConvertToGenericTypeVisitor{ *this }, static_cast<Transforms::Primitive&>(*this));
 }
 
-bool TransformPrimitive::Interpolate(const TransformPrimitive& other, float alpha) {
-	if (index() != other.index())
-		return false;
-	return std::visit(InterpolateVisitor{ other, alpha }, static_cast<Transforms::Primitive&>(*this));
+TransformPrimitive TransformPrimitive::Interpolate(const TransformPrimitive& other, float alpha) const {
+	if (index() != other.index()) {
+		return InterpolateFallback(*this, other, alpha);
+	}
+	return std::visit(InterpolateVisitor{ other, alpha }, static_cast<const Transforms::Primitive&>(*this));
 }
 
 std::string TransformPrimitive::ToString() const {
@@ -494,11 +540,8 @@ Transform Transform::Interpolate(const Transform& other, float alpha) const {
 	Transform new_transform {};
 	new_transform.reserve(size());
 	for (size_t i = 0; i < size(); ++i) {
-		TransformPrimitive p = (*this)[i];
-		if (!p.Interpolate(other[i], alpha)) {
-			return {};
-		}
-		new_transform.emplace_back(std::move(p));
+		auto const& p = (*this)[i];
+		new_transform.emplace_back(p.Interpolate(other[i], alpha));
 	}
 	return new_transform;
 }

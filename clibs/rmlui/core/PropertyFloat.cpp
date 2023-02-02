@@ -34,6 +34,17 @@ std::string PropertyFloat::ToString() const {
     return v;
 }
 
+float PropertyFloat::ComputeAngle() const {
+	switch (unit) {
+	case PropertyUnit::RAD:
+		return value;
+	case PropertyUnit::DEG:
+		return value * (std::numbers::pi_v<float> / 180.0f);
+	default:
+		return 0.0f;
+	}
+}
+
 float PropertyFloat::Compute(const Element* e) const {
 	static constexpr float PixelsPerInch = 96.0f;
 	switch (unit) {

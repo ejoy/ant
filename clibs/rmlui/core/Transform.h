@@ -213,7 +213,7 @@ struct TransformPrimitive : public Transforms::Primitive {
 	void   SetIdentity();
 	bool   PrepareForInterpolation(Element& e);
 	void   ConvertToGenericType();
-	bool   Interpolate(const TransformPrimitive& other, float alpha);
+	TransformPrimitive Interpolate(const TransformPrimitive& other, float alpha) const;
 	TransformType GetType() const;
 	std::string ToString() const;
 };
