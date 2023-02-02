@@ -84,8 +84,8 @@ namespace ecs_api {
                 return false;
             }
         }
-        int init() {
-            index = 0;
+        int find(int id) {
+            index = id;
             for (;;++index) {
                 auto v = impl::iter<MainKey>(ctx, index);
                 if (!v) {
@@ -110,7 +110,7 @@ namespace ecs_api {
                 return kInvalidIndex;
             }
             ++index;
-            return init();
+            return find(index);
         }
         void remove() const {
             entity_remove(ctx, component<MainKey>::id, index);
@@ -218,7 +218,7 @@ namespace ecs_api {
                 int index;
                 iterator(begin_t, entity_type& e)
                     : e(e)
-                    , index(e.init())
+                    , index(e.find(0))
                 { }
                 iterator(end_t, entity_type& e)
                     : e(e)
