@@ -12,17 +12,6 @@ namespace Rml {
 //   https://www.w3.org/TR/css-transforms-2/#interpolation-of-transform-functions
 //
 static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element) {
-	for (auto& p0 : t0) {
-		if (!p0.PrepareForInterpolation(element)) {
-			return false;
-		}
-	}
-	for (auto& p1 : t1) {
-		if (!p1.PrepareForInterpolation(element)) {
-			return false;
-		}
-	}
-
 	if (t0.size() != t1.size()) {
 		bool t0_shorter = t0.size() < t1.size();
 		auto& shorter = t0_shorter ? t0 : t1;
@@ -79,8 +68,8 @@ static bool PrepareTransforms(Property& prop0, Property& prop1, Element& element
 	return true;
 }
 
-static bool AllowInterpolate(const Property& prop) {
-	if (!prop.AllowInterpolate()) {
+static bool AllowInterpolate(Property& prop, Element& element) {
+	if (!prop.AllowInterpolate(element)) {
 		Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", prop.ToString().c_str());
 		return false;
 	}
@@ -114,10 +103,10 @@ bool ElementTransition::IsValid(Element& element) {
 		Log::Message(Log::Level::Warning, "Animation duration too samll.");
 		return false;
 	}
-	if (!AllowInterpolate(in_prop)) {
+	if (!AllowInterpolate(in_prop, element)) {
 		return false;
 	}
-	if (!AllowInterpolate(out_prop)) {
+	if (!AllowInterpolate(out_prop, element)) {
 		return false;
 	}
 	if (!PrepareTransforms(in_prop, out_prop, element)) {
@@ -163,14 +152,14 @@ bool ElementAnimation::IsValid(Element& element) {
 		Log::Message(Log::Level::Warning, "Animation duration too samll.");
 		return false;
 	}
-	if (!AllowInterpolate(in_prop)) {
+	if (!AllowInterpolate(in_prop, element)) {
 		return false;
 	}
-	if (!AllowInterpolate(out_prop)) {
+	if (!AllowInterpolate(out_prop, element)) {
 		return false;
 	}
-	for (auto const& key : keys) {
-		if (!AllowInterpolate(key.prop)) {
+	for (auto& key : keys) {
+		if (!AllowInterpolate(key.prop, element)) {
 			return false;
 		}
 	}

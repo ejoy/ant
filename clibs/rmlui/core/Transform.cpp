@@ -508,7 +508,7 @@ void TransformPrimitive::SetIdentity() {
 	std::visit(SetIdentityVisitor(), static_cast<Transforms::Primitive&>(*this));
 }
 
-bool TransformPrimitive::PrepareForInterpolation(Element& e) {
+bool TransformPrimitive::AllowInterpolate(Element& e) {
 	PrepareVisitor visitor{ e, *this };
 	std::visit(visitor, static_cast<Transforms::Primitive&>(*this));
 	return visitor.ok;
@@ -531,6 +531,15 @@ std::string TransformPrimitive::ToString() const {
 
 TransformType TransformPrimitive::GetType() const {
 	return std::visit(GetTypeVisitor{}, static_cast<Transforms::Primitive const&>(*this));
+}
+
+bool Transform::AllowInterpolate(Element& e) {
+	for (auto& p0 : *this) {
+		if (!p0.AllowInterpolate(e)) {
+			return false;
+		}
+	}
+	return true;
 }
 
 Transform Transform::Interpolate(const Transform& other, float alpha) const {
