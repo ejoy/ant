@@ -37,7 +37,7 @@ local function create_view_buffer_entity()
 			simplemesh = m,
 			material = "/pkg/ant.resources/materials/texquad.material",
 			visible_state = "main_view",
-			render_layer = "translcuent",
+			render_layer = "translucent",
 			scene = {},
 			on_ready = function (e)
 				local pq = w:first("pickup_queue render_target:in")

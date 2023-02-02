@@ -24,9 +24,9 @@ local function create_dynamic_mesh(layout, vb, ib)
 		vb = {
 			handle=bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fffd", vb), decl.handle, "a")
 		},
-		ib = {
+		ib = ib and {
 			handle = bgfx.create_dynamic_index_buffer(bgfx.memory_buffer("d", ib), "ad")
-		}
+		} or nil
 	}
 end
 
@@ -61,7 +61,7 @@ ientity.create_mesh = create_mesh
 local nameidx = 0
 local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
 
-local function simple_render_entity_data(name, material, mesh, scene, color, hide, render_layer)
+local function simple_render_entity_data(name, material, mesh, scene, uniforms, hide, render_layer)
 	return {
 		policy = {
 			"ant.render|simplerender",
@@ -72,17 +72,23 @@ local function simple_render_entity_data(name, material, mesh, scene, color, hid
 			material	= material,
 			simplemesh	= imesh.init_mesh(mesh, true),
 			render_layer= render_layer,
-			visible_state= hide and "auxgeom" or "main_view|auxgeom",
+			visible_state= "main_view",
 			name		= name or gen_test_name(),
 			on_ready 	= function(e)
-				imaterial.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
+				if hide then
+					ivs.set_state(e, "main_view", false)
+				end
+				for key, value in pairs(uniforms) do
+					imaterial.set_property(e, key, math3d.vector(value))
+					-- imaterial.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
+				end
 			end
 		}
 	}
 end
 
-local function create_simple_render_entity(name, material, mesh, scene, color, hide, render_layer)
-	return ecs.create_entity(simple_render_entity_data(name, material, mesh, scene, color, hide, render_layer))
+local function create_simple_render_entity(name, material, mesh, scene, uniforms, hide, render_layer)
+	return ecs.create_entity(simple_render_entity_data(name, material, mesh, scene, uniforms, hide, render_layer))
 end
 
 ientity.create_simple_render_entity = create_simple_render_entity
@@ -97,12 +103,12 @@ local function grid_mesh_entity_data(name, materialpath, vb, ib, render_layer)
 		data = {
 			scene 		= {},
 			material 	= materialpath,
-			visible_state= "main_view|auxgeom",
+			visible_state= "main_view",
 			name 		= name or "GridMesh",
 			render_layer= render_layer,
 			simplemesh	= imesh.init_mesh(create_dynamic_mesh("p3|c40niu", vb, ib), true), --create_mesh({"p3|c40niu", vb}, ib)
 			on_ready = function(e)
-				ivs.set_state(e, "auxgeom", true)
+				-- ivs.set_state(e, "auxgeom", true)
 			end
 		},
 	}
@@ -164,7 +170,7 @@ function ientity.create_grid_entity_simple(name, w, h, unit, scene)
 	unit = unit or 1
 	local vb, ib = geolib.grid(w, h, nil, unit)
 	local mesh = create_mesh({"p3|c40niu", vb}, ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line.material", mesh, scene, nil, nil, "translucent")
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line.material", mesh, scene, {}, nil, "translucent")
 end
 
 function ientity.create_grid_entity(name, width, height, unit, linewidth)
@@ -298,7 +304,7 @@ function ientity.quad_mesh(rect)
 end
 
 function ientity.create_quad_entity(rect, material, name, render_layer)
-	return create_simple_render_entity(name, material, quad_mesh(rect), nil, nil, nil, render_layer)
+	return create_simple_render_entity(name, material, quad_mesh(rect), nil, {}, nil, render_layer)
 end
 
 local frustum_ib = {
@@ -325,7 +331,7 @@ function ientity.frustum_entity_data(frustum_points, name, color)
 	end
 	local mesh = create_mesh({"p3", vb}, frustum_ib)
 
-	return simple_render_entity_data(name, "/pkg/ant.resources/materials/line_color.material", mesh, {}, color, nil, "translucent")
+	return simple_render_entity_data(name, "/pkg/ant.resources/materials/line_color.material", mesh, {}, {u_color = color}, nil, "translucent")
 end
 
 function ientity.create_frustum_entity(frustum_points, name, color)
@@ -349,7 +355,7 @@ end
 
 function ientity.axis_entity_data(name, scene, color, material)
 	local mesh = axis_mesh(color)
-	return simple_render_entity_data(name, material or "/pkg/ant.resources/materials/line.material", mesh, scene, color, "translucent")
+	return simple_render_entity_data(name, material or "/pkg/ant.resources/materials/line.material", mesh, scene, {u_color = color}, "translucent")
 end
 
 function ientity.create_axis_entity(name, scene, color, material)
@@ -370,7 +376,7 @@ function ientity.create_screen_axis_entity(name, screen_3dobj, scene, color, mat
 			material	= "/pkg/ant.resources/materials/line.material",
 			render_layer= "translucent",
 			simplemesh	= imesh.init_mesh(mesh, true),
-			visible_state= "main_view|auxgeom",
+			visible_state= "main_view",
 			name		= name,
 		}
 	}
@@ -383,8 +389,34 @@ function ientity.create_line_entity(name, p0, p1, scene, color, hide)
 		p1[1], p1[2], p1[3], ic,
 	}
 	local mesh = create_mesh({"p3|c40niu", vb}, {0, 1})
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, scene, color, hide, "translucent")
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, scene, {u_color = color}, hide, "translucent")
 	
+end
+
+function ientity.create_screen_line_list(name, points, scene, uniforms, dynamic, hide)
+	local vb = {}
+	for _, pt in ipairs(points) do
+		vb[#vb + 1] = pt[1]
+		vb[#vb + 1] = pt[2]
+		vb[#vb + 1] = pt[3]
+	end
+	local layout_desc = "p3"
+	local mesh
+	if dynamic then
+		local correct_layout = declmgr.correct_layout(layout_desc)
+		local flag = declmgr.vertex_desc_str(correct_layout)
+		mesh = {
+			vb = {
+				start = 0,
+				num = #vb // #flag,
+				handle = bgfx.create_dynamic_vertex_buffer(bgfx.memory_buffer("fff", vb), declmgr.get(layout_desc).handle, "a"),
+			}
+		}
+	else
+		mesh = create_mesh({layout_desc, vb})
+	end
+	
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/screenline_color.material", mesh, scene, uniforms, hide, "translucent")
 end
 
 function ientity.create_circle_entity(name, radius, slices, scene, color, hide, arc)
@@ -398,7 +430,7 @@ function ientity.create_circle_entity(name, radius, slices, scene, color, hide, 
 		gvb[#gvb+1] = 0xffffffff
 	end
 	local mesh = create_mesh({"p3|c40niu", gvb}, circle_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, scene, color, hide, "translucent")
+	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, scene, {u_color = color}, hide, "translucent")
 end
 
 function ientity.create_circle_mesh_entity(name, radius, slices, mtl, scene, color, hide, render_layer)
@@ -424,7 +456,7 @@ function ientity.create_circle_mesh_entity(name, radius, slices, mtl, scene, col
 		idx = idx + 1
 	end
 	local mesh = create_mesh({"p3|n3", gvb}, ib)
-	return create_simple_render_entity(name, mtl, mesh, scene, color, hide, render_layer)
+	return create_simple_render_entity(name, mtl, mesh, scene, {u_color = color}, hide, render_layer)
 end
 
 local skybox_mesh
