@@ -50,7 +50,7 @@ void StyleSheet::AddKeyframe(const std::string& identifier, const std::vector<fl
 	auto& kf = keyframes[identifier];
 	for (float time : rule_values) {
 		for (auto const& [id, value] : properties) {
-			kf.properties[id].emplace_back(KeyframeBlock {time, value} );
+			kf.properties[id].emplace_back(AnimationKey {time, value} );
 		}
 	}
 }
@@ -66,7 +66,7 @@ void StyleSheet::Sort() {
 
 	for (auto& [_, kf] : keyframes) {
 		for (auto& [id, vec] : kf.properties) {
-			std::sort(vec.begin(), vec.end(), [](const KeyframeBlock& a, const KeyframeBlock& b) { return a.normalized_time < b.normalized_time; });
+			std::sort(vec.begin(), vec.end(), [](const AnimationKey& a, const AnimationKey& b) { return a.time < b.time; });
 		}
 	}
 }
