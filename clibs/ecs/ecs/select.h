@@ -64,7 +64,28 @@ namespace ecs_api {
             : ctx(ctx)
         { }
         static constexpr int kInvalidIndex = -1;
+        bool init(int id) {
+            auto v = impl::iter<MainKey>(ctx, id);
+            if (!v) {
+                index = kInvalidIndex;
+                return false;
+            }
+            assgin<0>(v);
+            if constexpr (sizeof...(SubKey) == 0) {
+                index = id;
+                return true;
+            }
+            else {
+                if (init_sibling<impl::next<0, MainKey>(), SubKey...>(id)) {
+                    index = id;
+                    return true;
+                }
+                index = kInvalidIndex;
+                return false;
+            }
+        }
         int init() {
+            index = 0;
             for (;;++index) {
                 auto v = impl::iter<MainKey>(ctx, index);
                 if (!v) {
@@ -183,7 +204,7 @@ namespace ecs_api {
     private:
         impl::components<MainKey, SubKey...> c;
         ecs_context* ctx;
-        int index = 0;
+        int index = kInvalidIndex;
     };
 
     namespace impl {
