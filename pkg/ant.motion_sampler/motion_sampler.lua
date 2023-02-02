@@ -35,18 +35,16 @@ local function check_remove_m3d(m)
     if m ~= mc.NULL then
         math3d.unmark(m)
     end
-
-    return mc.NULL
 end
 
 function cms.remove(s)
-    s.source_s = check_remove_m3d(s.source_s)
-    s.source_r = check_remove_m3d(s.source_r)
-    s.source_t = check_remove_m3d(s.source_t)
+    check_remove_m3d(s.source_s)
+    check_remove_m3d(s.source_r)
+    check_remove_m3d(s.source_t)
 
-    s.target_s = check_remove_m3d(s.target_s)
-    s.target_r = check_remove_m3d(s.target_r)
-    s.target_t = check_remove_m3d(s.target_t)
+    check_remove_m3d(s.target_s)
+    check_remove_m3d(s.target_r)
+    check_remove_m3d(s.target_t)
 end
 
 function cms.marshal()
