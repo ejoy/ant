@@ -13,6 +13,8 @@ local INV_Z<const> = true
 
 local ic = ecs.interface "icamera"
 
+w:register{ name = "camera_depend"}
+
 local defaultcamera<const> = {
     name = "default_camera",
     eyepos  = mc.ZERO_PT,
@@ -198,12 +200,15 @@ local function update_camera_info(e)
 	sa:update("u_camera_param", math3d.vector(nn, ff, inv_nn, inv_ff))
 end
 
-function cameraview_sys:update_mainview_camera()
-    for v in w:select "main_queue camera_ref:in" do
-        local e <close> = w:entity(v.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in")
-        if e.scene_changed or e.camera_changed then
+local has_updated = {}
+function cameraview_sys:update_camera()
+    has_updated = {}
+    for v in w:select "visible queue_name camera_depend:absent camera_ref:in" do
+        local e <close> = w:entity(v.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in eid:in")
+        if has_updated[e.eid] == nil and e.scene_changed or e.camera_changed then
             update_camera(e)
             update_camera_info(e)
+            has_updated[e.eid] = true
         end
     end
 end

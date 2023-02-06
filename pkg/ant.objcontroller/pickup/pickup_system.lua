@@ -224,6 +224,7 @@ local function create_pick_entity()
 			queue_name 	= "pickup_queue",
 			pickup_queue= true,
 			visible		= false,
+			camera_depend = true,
 		}
 	}
 end
@@ -259,7 +260,7 @@ local function close_pickup()
 	w:submit(e)
 end
 
-function pickup_sys:update_camera()
+function pickup_sys:update_camera_depend()
 	local puq = w:first "pickup_queue visible pickup:in camera_ref:in"
 	if puq then
 		update_camera(puq.camera_ref, puq.pickup.clickpt)
