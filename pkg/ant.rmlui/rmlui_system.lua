@@ -9,6 +9,7 @@ local fbmgr     = renderpkg.fbmgr
 local sampler   = renderpkg.sampler
 local font      = import_package "ant.font"
 local ServiceRmlUi = ltask.queryservice "ant.rmlui|rmlui"
+local icamera   = ecs.import.interface "ant.camera|icamera"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local rmlui_sys = ecs.system "rmlui_system"
 local iRmlUi = ecs.interface "irmlui"
@@ -87,15 +88,18 @@ local rb_flags = sampler{
     V="CLAMP",
     RT="RT_ON",
 }
-
-local lastname = "pickup_blit"
-
+local math3d = require "math3d"
+local lastname = "uiruntime"
+local mathpkg   = import_package "ant.math"
+local mu, mc    = mathpkg.uitl, mathpkg.constant
 function S.render_target_create(width, height, name)
     local viewid = viewidmgr.generate(name, lastname)
-    local rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA32F", flags = rb_flags}
-    local fbidx = fbmgr.create{
-        rbidx = rbidx
-    }
+    --local rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA32F", flags = rb_flags}
+    local fbidx = fbmgr.create(
+        {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA32F", flags = rb_flags}},
+         {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "D32F", flags = rb_flags}} 
+    )
+    
     local id = fbmgr.get_rb(fbidx, 1).handle
     local queuename = name .. "_queue"
     local mq = w:first "main_queue camera_ref:in"
@@ -106,7 +110,40 @@ function S.render_target_create(width, height, name)
 			"ant.general|name",
 		},
 		data = {
-            camera_ref = mq.camera_ref,
+            -- camera_ref = icamera.create{
+            --     eyepos  = mc.ZERO_PT,
+            --     viewdir = mc.ZAXIS,
+            --     updir   = mc.YAXIS,
+            --     name = "ui_rt camera"
+            -- },
+            camera_ref = ecs.create_entity{
+                policy = {
+                    "ant.general|name",
+                    "ant.camera|camera"
+                },
+                data = {
+                    scene = {
+                        r = {1, 0, 0},
+                        t = {0, -1, -2, 0},
+                        updir = {0.0, 1.0, 0.0}
+                },
+                  camera = {
+                    frustum = {
+                        aspect = 1.3333333333333333,
+                        f = 100,
+                        fov = 60,
+                        n = 1,
+                    }
+                  },
+                  exposure = {
+                    type          = "manual",
+                    aperture      = 16.0,
+                    shutter_speed = 0.008,
+                    ISO           = 100
+                  },
+                  name = "ui_rt camera",
+                }
+            },
 			render_target = {
 				viewid		= viewid,
 				view_mode 	= "s",
