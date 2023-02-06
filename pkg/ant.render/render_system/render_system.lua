@@ -88,7 +88,7 @@ function render_sys:entity_init()
 		e.render_object.render_layer = assert(irl.layeridx(rl))
 	end
 
-	for qe in w:select "INIT camera_ref queue_name:in render_target:in" do
+	for qe in w:select "INIT queue_name:in render_target:in" do
 		local qn = qe.queue_name
 		RENDER_ARGS[qn].viewid = qe.render_target.viewid
 	end
@@ -136,18 +136,21 @@ function render_sys:render_submit()
 		update_bgfx_viewid_name()
 	end
 
-	w:clear "render_args"
-	for qe in w:select "visible queue_name:in camera_ref:in render_target:in render_args:new" do
-		local rt = qe.render_target
-		local viewid = rt.viewid
-
-		bgfx.touch(viewid)
+	for qe in w:select "visible camera_ref:in render_target:in" do
+		local viewid = qe.render_target.viewid
 		local camera <close> = w:entity(qe.camera_ref, "scene_changed?in camera_changed?in")
 		if camera.scene_changed or camera.camera_changed then
 			w:extend(camera, "camera:in")
 			bgfx.set_view_transform(viewid, camera.camera.viewmat, camera.camera.projmat)
 		end
+	end
 
+	w:clear "render_args"
+	for qe in w:select "visible queue_name:in render_target:in render_args:new" do
+		local rt = qe.render_target
+		local viewid = rt.viewid
+
+		bgfx.touch(viewid)
 		qe.render_args = RENDER_ARGS[qe.queue_name]
 	end
 

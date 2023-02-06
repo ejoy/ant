@@ -217,23 +217,6 @@ lsubmit(lua_State *L) {
 }
 
 static int
-ldraw(lua_State *L) {
-	auto w = getworld(L);
-	const cid_t draw_tagid = (cid_t)luaL_checkinteger(L, 1);
-	const bgfx_view_id_t viewid = (bgfx_view_id_t)luaL_checkinteger(L, 2);
-	const int material_index = (int)luaL_checkinteger(L, 3);
-	obj_transforms trans;
-	for (int i=0; entity_iter(w->ecs, draw_tagid, i); ++i){
-		const auto ro = (ecs::render_object*)entity_sibling(w->ecs, draw_tagid, i, ecs_api::component<ecs::render_object>::id);
-		if (ro == nullptr)
-			return luaL_error(L, "id:%d is not a render_object entity");
-		
-		draw(L, w, ro, viewid, material_index, trans);
-	}
-	return 0;
-}
-
-static int
 lnull(lua_State *L){
 	lua_pushlightuserdata(L, nullptr);
 	return 1;
@@ -244,7 +227,6 @@ luaopen_render(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "submit", lsubmit},
-		{ "draw",	ldraw},
 		{ "null",	lnull},
 		{ nullptr, nullptr },
 	};

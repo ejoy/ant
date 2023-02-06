@@ -309,6 +309,7 @@ local function create_clear_shadowmap_queue(fbidx)
 				viewid = viewidmgr.get "csm_fb",
 				view_rect = {x=0, y=0, w=ww, h=hh},
 			},
+			clear_sm = true,
 			queue_name = "clear_sm",
 			name = "clear_sm",
 		}

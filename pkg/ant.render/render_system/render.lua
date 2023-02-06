@@ -72,12 +72,6 @@ function irender.material_index(queue_name)
 	return MATERIAL_INDICES[queue_name]
 end
 
-function irender.draw(viewid, drawer_tag, queuename)
-	local tagid = w:component_id(drawer_tag)
-	local qn = queuename or ""
-	rendercore.draw(tagid, viewid, MATERIAL_INDICES[qn] or 0)
-end
-
 function irender.get_main_view_rendertexture()
 	local mq = w:first("main_queue render_target:in")
 	return fbmgr.get_rb(mq.render_target.fb_idx, 1).handle

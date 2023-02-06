@@ -5,23 +5,6 @@ local irender = ecs.import.interface "ant.render|irender"
 local math3d = require "math3d"
 
 local util = {}
-function util.create_quad_drawer(tab, material)
-    return ecs.create_entity{
-        policy = {
-            "ant.render|simplerender",
-            "ant.general|name",
-        },
-        data = {
-            name = tab,
-            simplemesh = irender.full_quad(),
-            material = material,
-            visible_state = "",
-            scene = {},
-            [tab] = true,
-        }
-    }
-end
-
 function util.create_queue(viewid, vr, fbidx, queuename, tabname, autoresize)
     local template = {
         policy = {
@@ -40,6 +23,7 @@ function util.create_queue(viewid, vr, fbidx, queuename, tabname, autoresize)
             queue_name = queuename,
             watch_screen_buffer = autoresize,
             name = queuename,
+            visible = true,
         }
     }
 

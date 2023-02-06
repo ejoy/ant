@@ -14,9 +14,6 @@ local assetmgr  = import_package "ant.asset"
 local cr        = import_package "ant.compile_resource"
 local itimer    = ecs.import.interface "ant.timer|itimer"
 
-
-w:register {name = "efk_queue_visible"}
-
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 local efk_sys = ecs.system "efk_system"

@@ -45,3 +45,7 @@ for i=1, 4 do
     component(cn .. "_cull")
     component(cn .. "_visible")
 end
+
+component "clear_sm"
+component "clear_sm_visible"
+component "clear_sm_cull"
