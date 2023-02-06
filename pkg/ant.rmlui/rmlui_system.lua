@@ -39,7 +39,6 @@ function rmlui_sys:init()
             render_target = {
                 view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
                 viewid = ui_viewid,
-                view_mode = "s",
                 clear_state = {
                     clear = "",
                 },

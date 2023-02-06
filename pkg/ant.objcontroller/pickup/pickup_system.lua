@@ -209,7 +209,6 @@ local function create_pick_entity()
 			camera_ref = camera_ref,
 			render_target = {
 				viewid = pickupviewid,
-				view_mode = "s",
 				view_rect = {
 					x = 0, y = 0, w = pickup_buffer_w, h = pickup_buffer_h,
 				},

@@ -154,7 +154,7 @@ end
 
 function irq.update_rendertarget(queuename, rt, need_touch)
 	local viewid = rt.viewid
-	local vm = rt.view_mode or ""
+	local vm = rt.view_mode or "d"
 	bgfx.set_view_mode(viewid, vm)
 	set_view_rect(viewid, rt.view_rect, queuename)
 	local cs = rt.clear_state

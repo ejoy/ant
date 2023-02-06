@@ -6,10 +6,10 @@
 ##### 已经完成
 1. 修复引擎在D3D12/Vulkan中的问题；
 2. 修复bloom后处理，在emissive color值很高的时候，依然没有bloom的效果。具体使用furnace-1.glb这个文件用于测试；(2022.11.08已经完成)
+3. 将render_layer也bgfx.submit中的depth关联起来，并将viewmode改成与depth相关的设定；(2023.02.06已经完成)
 
 ##### 未完成
 1. 修复shader下的cubemap resource，绑定为texture2d array的问题。具体重现的方法是，在iOS开发环境下，打开对应的shader validation等相关的debug选项就会有相应的报错；
-2. 将render_layer也bgfx.submit中的depth关联起来，并将viewmode改成与depth相关的设定；
 
 #### 编辑器相关
 1. 优化材质编辑器

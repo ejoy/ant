@@ -343,7 +343,6 @@ local function create_csm_entity(index, vr, fbidx)
 			camera_ref = camera_ref,
 			render_target = {
 				viewid = viewidmgr.get(csmname),
-				view_mode = "s",
 				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
 				clear_state = {
 					clear = "",
