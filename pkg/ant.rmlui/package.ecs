@@ -11,7 +11,6 @@ system "rmlui_system"
     .method "init"
     .method "entity_init"
     .method "ui_update"
-    .method "update_camera"
     .method "exit"
 
 
@@ -29,12 +28,12 @@ component "rmlui_obj"
 system "ui_rt_system"
     .require_system "ant.render|render_system"
     .implement "ui_rt_system.lua"
-    .method "entity_init"
+    .method "data_changed"
+    --.method "update_camera"
 
 interface "iuirt"
     .implement "ui_rt_system.lua"
     .method "get_group_id"
-    .method "gen_group_id"
 
 
 

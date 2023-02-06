@@ -13,7 +13,7 @@
                 width: 50%;
                 height: 50%;
                 transition: left 1.0s linear-out, top 1.0s linear-out, width 1.0s linear-out, height 1.0s linear-out;
-                background-color: rgba(120, 255, 120, 150);
+                background-color: rgba(0, 0, 0, 255);
                 flex-direction: row;
             }
             .item {
