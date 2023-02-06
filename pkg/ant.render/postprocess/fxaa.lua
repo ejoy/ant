@@ -22,7 +22,20 @@ local irender   = ecs.import.interface "ant.render|irender"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
 function fxaasys:init()
-    util.create_quad_drawer("fxaa_drawer", "/pkg/ant.resources/materials/postprocess/fxaa.material")
+    ecs.create_entity{
+        policy = {
+            "ant.render|simplerender",
+            "ant.general|name",
+        },
+        data = {
+            name = "fxaa_drawer",
+            simplemesh = irender.full_quad(),
+            material = "/pkg/ant.resources/materials/postprocess/fxaa.material",
+            visible_state = "",
+            scene = {},
+            fxaa_queue_visible = true,
+        }
+    }
 end
 
 local fxaa_viewid<const> = viewidmgr.get "fxaa"
@@ -44,9 +57,7 @@ function fxaasys:fxaa()
     local tme = w:first "tonemapping_queue render_target:in"
     local sceneldr_handle = fbmgr.get_rb(tme.render_target.fb_idx, 1).handle
 
-    local fd = w:first "fxaa_drawer filter_material:in"
+    local fd = w:first "fxaa_queue_visible filter_material:in"
     imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)
-
-    irender.draw(fxaa_viewid, "fxaa_drawer")
 end
 

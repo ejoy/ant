@@ -19,7 +19,20 @@ local ENABLE_FXAA<const>    = setting:data().graphic.postprocess.fxaa.enable
 local tm_viewid<const>      = viewidmgr.get "tonemapping"
 
 function tm_sys:init()
-    util.create_quad_drawer("tonemapping_drawer", "/pkg/ant.resources/materials/postprocess/tonemapping.material")
+    ecs.create_entity{
+        policy = {
+            "ant.render|simplerender",
+            "ant.general|name",
+        },
+        data = {
+            name = "tonemapping_drawer",
+            simplemesh = irender.full_quad(),
+            material = "/pkg/ant.resources/materials/postprocess/tonemapping.material",
+            visible_state = "",
+            scene = {},
+            tonemapping_queue_visible = true,
+        }
+    }
 end
 
 function tm_sys:init_world()
@@ -71,7 +84,6 @@ local function update_properties(material)
 end
 
 function tm_sys:tonemapping()
-    local m = w:first("tonemapping_drawer filter_material:in")
+    local m = w:first "tonemapping_queue_visible filter_material:in"
     update_properties(m.filter_material.main_queue)
-    irender.draw(tm_viewid, "tonemapping_drawer")
 end

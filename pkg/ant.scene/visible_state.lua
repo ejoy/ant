@@ -43,6 +43,7 @@ function ivs.set_state(e, name, v)
 	w:extend(e, "visible_state:in render_object_update?out")
 	set_visible_states(e.visible_state, name, v)
 	e.render_object_update = true
+	w:submit(e)
 end
 
 local m = ecs.system "filter_state_system"
