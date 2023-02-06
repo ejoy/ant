@@ -114,16 +114,12 @@ function render_sys:begin_filter()
 		local vs = e.visible_state
 		for qe in w:select "queue_name:in camera_ref" do
 			local qn = qe.queue_name
-			local function mark_tags(add)
-				local qn_visible = qn .. "_visible"
-				e[qn_visible] = add
-				w:extend(e, qn_visible .. "?out")
-			end
-
-			mark_tags(vs[qn] ~= nil)
+			local qn_visible = qn .. "_visible"
+			e[qn_visible] = vs[qn]
+			w:extend(e, qn_visible .. "?out")
 		end
 		e.filter_result = true
-    end
+	end
 end
 
 function render_sys:scene_update()
