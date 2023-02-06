@@ -46,9 +46,8 @@ component "render_object"
     .field "ib_num:dword"
     .field "ib_handle:dword"
 
-    .field "depth:dword"
+    .field "render_layer:dword"
     .field "discard_flags:byte"
-    .field "render_layer:byte"
 
     .implement "render_system/render_object.lua"
     .method "init"

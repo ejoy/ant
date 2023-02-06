@@ -51,7 +51,6 @@ function sd_sys:post_init()
                     clear = "D",
                     depth = 0.0,
                 },
-                view_mode = "s",
             },
             queue_name = "scene_depth_queue",
             name = "scene_depth_queue",

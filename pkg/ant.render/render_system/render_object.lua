@@ -23,9 +23,8 @@ local function init_ro()
         ib_num      = 0,
         ib_handle   = 0xffffffff,
 
-        depth       = 0,
-        discard_flags=0xff,
         render_layer= 0,
+        discard_flags=0xff,
     }
 end
 

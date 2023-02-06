@@ -43,7 +43,6 @@ function rmlui_sys:init()
             render_target = {
                 view_rect = {x=vp.x, y=vp.y, w=vp.w, h=vp.h},
                 viewid = ui_viewid,
-                view_mode = "s",
                 clear_state = {
                     clear = "",
                 },
@@ -149,7 +148,6 @@ function S.render_target_create(width, height, name)
             },
 			render_target = {
 				viewid		= viewid,
-				view_mode 	= "s",
                 clear_state = {
                     color = 0x000000ff,
                     depth = 0.0,

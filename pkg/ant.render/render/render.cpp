@@ -86,20 +86,6 @@ get_material(const ecs::render_object* ro, size_t midx){
 	return (struct material_instance*)(*(&ro->mat_def + midx));
 }
 
-static void
-draw(lua_State *L, struct ecs_world *w, const ecs::render_object *ro, bgfx_view_id_t viewid, size_t midx, obj_transforms &trans){
-	if (mesh_submit(w, ro)){
-		auto t = update_transform(w, ro, trans);
-		w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-		auto mi = get_material(ro, midx);
-		apply_material_instance(L, mi, w);
-
-		const uint8_t discardflags = BGFX_DISCARD_ALL; //ro->discardflags;
-		const auto prog = material_prog(L, mi);
-		w->bgfx->encoder_submit(w->holder->encoder, viewid, prog, ro->depth, discardflags);
-	}
-}
-
 using matrix_array = std::vector<math_t>;
 using group_matrices = std::unordered_map<int, matrix_array>;
 struct obj_data {
@@ -146,7 +132,7 @@ draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const o
 				t = update_hitch_transform(w, od.obj, *od.mats, trans);
 				for (int i=0; i<od.mats->size()-1; ++i) {
 					w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-					w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->depth, BGFX_DISCARD_TRANSFORM);
+					w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->render_layer, BGFX_DISCARD_TRANSFORM);
 					t.tid += t.stride;
 				}
 			} else {
@@ -154,7 +140,7 @@ draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const o
 			}
 
 			w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-			w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->depth, BGFX_DISCARD_ALL);
+			w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->render_layer, BGFX_DISCARD_ALL);
 		}
 	}
 }
@@ -208,9 +194,6 @@ lsubmit(lua_State *L) {
 			}
 		}
 
-		std::sort(std::begin(objs), std::end(objs), [](const auto &lhs, const auto &rhs){
-			return lhs.obj->render_layer < rhs.obj->render_layer;
-		});
 		draw_objs(L, w, ra, objs, trans);
 	}
 	return 0;
