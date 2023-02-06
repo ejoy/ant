@@ -11,6 +11,7 @@ system "rmlui_system"
     .method "init"
     .method "entity_init"
     .method "ui_update"
+    .method "update_camera"
     .method "exit"
 
 

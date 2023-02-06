@@ -92,12 +92,15 @@ local math3d = require "math3d"
 local lastname = "uiruntime"
 local mathpkg   = import_package "ant.math"
 local mu, mc    = mathpkg.uitl, mathpkg.constant
+
+w:register{name = "dynamic_queue"}
+
 function S.render_target_create(width, height, name)
     local viewid = viewidmgr.generate(name, lastname)
     --local rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA32F", flags = rb_flags}
     local fbidx = fbmgr.create(
-        {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA32F", flags = rb_flags}},
-         {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "D32F", flags = rb_flags}} 
+        {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA8", flags = rb_flags}},
+         {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "D16", flags = rb_flags}} 
     )
     
     local id = fbmgr.get_rb(fbidx, 1).handle
@@ -155,6 +158,7 @@ function S.render_target_create(width, height, name)
 				view_rect	= {x = 0, y = 0, w = width, h = height},
 				fb_idx		= fbidx,
 			},
+            dynamic_queue = true,
             [queuename]         = true,
 			name 				= queuename,
 			queue_name			= queuename,
@@ -169,6 +173,16 @@ end
 
 local windows = {}
 local events = {}
+
+function rmlui_sys:update_camera()
+    for qe in w:select "dynamic_queue camera_ref:in" do
+        local ce = world:entity(qe.camera_ref, "camera:in")
+        local camera = ce.camera
+        camera.viewmat.m = math3d.inverse(ce.scene.worldmat)
+        camera.projmat.m = math3d.projmat(camera.frustum, true)
+        camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
+    end
+end
 
 function rmlui_sys:ui_update()
     if #msgqueue == 0 then
