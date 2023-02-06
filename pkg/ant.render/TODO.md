@@ -9,6 +9,7 @@
 
 ##### 未完成
 1. 修复shader下的cubemap resource，绑定为texture2d array的问题。具体重现的方法是，在iOS开发环境下，打开对应的shader validation等相关的debug选项就会有相应的报错；
+2. 将render_layer也bgfx.submit中的depth关联起来，并将viewmode改成与depth相关的设定；
 
 #### 编辑器相关
 1. 优化材质编辑器
