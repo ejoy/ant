@@ -353,6 +353,7 @@ local function create_csm_entity(index, vr, fbidx)
 			queue_name = queuename,
 			[queuename] = true,
 			name = "csm" .. index,
+			camera_depend = true
 		},
 	}
 end
@@ -421,7 +422,7 @@ function sm:init_world()
 	sa:update("u_shadow_param2", ishadow.shadow_param2())
 end
 
-function sm:update_camera()
+function sm:update_camera_depend()
 	local dl = w:first("csm_directional_light light:in scene:in scene_changed?in")
 	if dl then
 		local mq = w:first("main_queue camera_ref:in")
