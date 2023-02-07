@@ -29,7 +29,7 @@ graphic:
     fxaa:
       enable: true
   shadow:
-    enable: true
+    enable: false
     size: 1024
     type: inv_z
     bias: 0.003
