@@ -58,6 +58,7 @@
 
 ##### 未完成
 1. 天气系统。让目前游戏能够昼夜变化。一个简单的方式是使用后处理的color grading改变色调，另外一个更正确的方法是使用与烘培的大气散射模拟天空，将indirect lighting和天空和合拼；（2022.12.12正在进行）；
+2. FSR。详细看bgfx里面的fsr例子；
 2. SDF Shadow；
 3. Visibility Buffer；
 4. GI相关。SSGI、SSR、SDFGI(https://zhuanlan.zhihu.com/p/404520592)、DDGI(Dynamic Diffuse Global Illumination，https://morgan3d.github.io/articles/2019-04-01-ddgi/)等；
