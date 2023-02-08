@@ -161,9 +161,13 @@ vec4 compute_lighting(input_attributes input_attribs){
 
     vec3 color = calc_direct_light(input_attribs, mi);
 
-#   ifdef ENABLE_IBL
-    color += calc_indirect_light(input_attribs, mi);
-#   endif //ENABLE_IBL
+#ifdef ENABLE_IBL
+    vec3 indirect_light_color = calc_indirect_light(input_attribs, mi);
+#   ifdef ENABLE_INDIRECT_LIGHTING_EMITTIVE_COLOR
+    indirect_light_color *= u_indirect_lighting_emittive_color.rgb;
+#   endif //ENABLE_INDIRECT_LIGHTING_EMITTIVE_COLOR
+    color += indirect_light_color;
+#endif //ENABLE_IBL
     return vec4(color, input_attribs.basecolor.a) + input_attribs.emissive;
 }
 
