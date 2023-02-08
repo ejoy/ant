@@ -219,16 +219,16 @@ function BaseView:on_set_aabbmin(value)
     if template.template then
         if template.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
-            template.template.data.bounding.aabb.min = tv
+            template.template.data.bounding.scene_aabb.min = tv
             local e <close> = w:entity(self.eid, "bounding?in")
             local bounding = e.bounding
             if bounding then
                 local aabbmax = {0,0,0}
-                if bounding.aabb and bounding.aabb ~= mc.NULL then
-                    aabbmax = math3d.tovalue(math3d.array_index(bounding.aabb, 2)) or {}
-                    math3d.unmark(bounding.aabb)
+                if bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+                    aabbmax = math3d.tovalue(math3d.array_index(bounding.scene_aabb, 2)) or {}
+                    math3d.unmark(bounding.scene_aabb)
                 end
-                bounding.aabb = math3d.mark(math3d.aabb(tv, aabbmax))
+                bounding.scene_aabb = math3d.mark(math3d.aabb(tv, aabbmax))
                 world:pub {"UpdateAABB", self.eid}
             end
         end
@@ -240,7 +240,7 @@ function BaseView:on_get_aabbmin()
     if template.template then
         local bounding = template.template.data.bounding
         if bounding then
-            return bounding.aabb.min
+            return bounding.scene_aabb.min
         end
     end
     return {0,0,0}
@@ -251,16 +251,16 @@ function BaseView:on_set_aabbmax(value)
     if template.template then
         if template.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
-            template.template.data.bounding.aabb.max = tv
+            template.template.data.bounding.scene_aabb.max = tv
             local e <close> = w:entity(self.eid, "bounding?in")
             local bounding = e.bounding
             if bounding then
                 local aabbmin = {0,0,0}
-                if bounding.aabb and bounding.aabb ~= mc.NULL then
-                    aabbmin = math3d.tovalue(math3d.array_index(bounding.aabb, 1))
-                    math3d.unmark(bounding.aabb)
+                if bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+                    aabbmin = math3d.tovalue(math3d.array_index(bounding.scene_aabb, 1))
+                    math3d.unmark(bounding.scene_aabb)
                 end
-                bounding.aabb = math3d.mark(math3d.aabb(aabbmin, tv))
+                bounding.scene_aabb = math3d.mark(math3d.aabb(aabbmin, tv))
                 world:pub {"UpdateAABB", self.eid}
             end
         end
@@ -272,7 +272,7 @@ function BaseView:on_get_aabbmax()
     if template.template then
         local bounding = template.template.data.bounding
         if bounding then
-            return bounding.aabb.max
+            return bounding.scene_aabb.max
         end
     end
     return {0,0,0}
@@ -301,10 +301,10 @@ function BaseView:delete_aabb()
         self.base.aabbmax:set_visible(false)
         local e <close> = w:entity(self.eid, "bounding?in")
         local bounding = e.bounding
-        if bounding.aabb and bounding.aabb ~= mc.NULL then
-            bounding.aabb = mc.NULL
+        if bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+            bounding.scene_aabb = mc.NULL
         else
-            math3d.unmark(bounding.aabb)
+            math3d.unmark(bounding.scene_aabb)
         end
         world:pub {"UpdateAABB", self.eid}
     end

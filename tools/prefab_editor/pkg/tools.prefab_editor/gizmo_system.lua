@@ -1075,9 +1075,9 @@ end
 
 local function world_aabb(entity)
 	local bounding = entity.bounding
-	if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
+	if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
 		local wm = entity.scene and iom.worldmat(entity) or mc.IDENTITY_MAT
-		return math3d.aabb(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1), math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1))
+		return math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
 	else
 		return math3d.aabb(mc.ZERO, mc.ONE)
 	end
