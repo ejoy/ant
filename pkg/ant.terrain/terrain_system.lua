@@ -125,14 +125,14 @@ function iterrain.update_roadnet_entity(update_list)
             mark_layer = nil
         end
 
-        if layers and layers[1] ~= nil then
-            road_layer = parse_terrain_type_dir(layers, 1)
+        if layers and layers.road ~= nil then
+            road_layer = parse_terrain_type_dir(layers, "road")
         else
             road_layer = nil
         end
 
-        if layers and layers[2] ~= nil then
-            mark_layer = parse_terrain_type_dir(layers, 2)
+        if layers and layers.mark ~= nil then
+            mark_layer = parse_terrain_type_dir(layers, "mark")
         else
             mark_layer = nil
         end
@@ -141,7 +141,6 @@ function iterrain.update_roadnet_entity(update_list)
             [1] = road_layer,
             [2] = mark_layer
         }
-
         local section_idx = calc_section_idx(idx)
         if terrain_change[section_idx] == nil then
             tc_cnt = tc_cnt + 1
