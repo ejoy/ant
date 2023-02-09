@@ -14,24 +14,160 @@ end
 
 -- world coordinate x
 -- world coordinate y
--- road's type (Road Red White) 
--- road's shape 
-    --Road  (I L T U X O)
-    --Red   (U I O)
-    --White (U I O)
--- road's dirction (N E S W)
+-- layers: road/mark/road and mark
+--         road: type(1~3) shape(I L T U X O) dir(N E S W)
+--         mark: type(1~2) shape(U I O) dir(N E S W)     
 local create_list = {
-    {1, 2, "Red", "U", "S"},
-    {2, 2, "Red", "U", "E"},
-    {3, 2, "Red", "U", "W"},
-    {4, 2, "Red", "O", "N"},
-    {1, 1, "Red", "U", "N"},
-    {2, 1, "White", "U", "E"},
-    {3, 1, "White", "I", "W"},
-    {4, 1, "White", "U", "W"},
-    {7, 1, "Road", "I", "N"},
-    {8, 1, "Road", "I", "N"},
-    {9, 1, "Road", "I", "N"},
+    -- single road layer:road1 road2 road3
+    {
+        x = 6, y = 1,
+        layers =
+        {
+            road =
+            {
+                type  = "1",
+                shape = "I",
+                dir   = "N"
+            }
+        }
+    },
+    {
+        x = 7, y = 1,
+        layers =
+        {
+            road =
+            {
+                type  = "2",
+                shape = "I",
+                dir   = "N"
+            }
+        }
+    },
+    {
+        x = 8, y = 1,
+        layers =
+        {
+            road =
+            {
+                type  = "3",
+                shape = "I",
+                dir   = "N"
+            }
+        }
+    },
+    
+    --single mark layer:mark1 mark2
+    {
+        x = 2, y = 2,
+        layers =
+        {
+            mark =
+            {
+                type  = "1",
+                shape = "U",
+                dir   = "E"
+            }
+        }
+    },
+    {
+        x = 3, y = 2,
+        layers =
+        {
+            mark =
+            {
+                type  = "1",
+                shape = "U",
+                dir   = "W"
+            }
+        }
+    },
+    {
+        x = 4, y = 2,
+        layers =
+        {
+            mark =
+            {
+                type  = "1",
+                shape = "O",
+                dir   = "N"
+            }
+        }
+    },
+    {
+        x = 2, y = 1,
+        layers =
+        {
+            mark =
+            {
+                type  = "2",
+                shape = "U",
+                dir   = "E"
+            }
+        }
+    },
+    {
+        x = 3, y = 1,
+        layers =
+        {
+            mark =
+            {
+                type  = "2",
+                shape = "I",
+                dir   = "W"
+            }
+        }
+    },
+    {
+        x = 4, y = 1,
+        layers =
+        {
+            mark =
+            {
+                type  = "2",
+                shape = "U",
+                dir   = "W"
+            }
+        }
+    },
+
+    -- multiple layer: road1 road2 road3 and mark1 mark2
+    {
+        
+        x = 1, y = 1,
+        layers =
+        {
+            road =
+            {
+                type  = "1",
+                shape = "I",
+                dir   = "N"                
+            },
+            mark =
+            {
+                type  = "1",
+                shape = "I",
+                dir   = "N"
+            }
+        }
+    },
+    {
+        x = 1, y = 2,
+        layers =
+        {
+            road =
+            {
+                type  = "2",
+                shape = "L",
+                dir   = "N"                
+            },
+            mark =
+            {
+                type  = "2",
+                shape = "O",
+                dir   = "S"
+            }
+        }
+    },
 }
 
 local mark = false

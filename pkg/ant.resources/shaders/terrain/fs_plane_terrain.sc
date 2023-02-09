@@ -1,6 +1,6 @@
 #define NEW_LIGHTING
 #include "common/inputs.sh"
-$input v_texcoord0 v_texcoord1 v_texcoord2 v_normal v_tangent v_bitangent v_posWS v_idx1 v_idx2
+$input v_texcoord0 v_texcoord1 v_texcoord2 v_normal v_tangent v_bitangent v_posWS v_idx1 v_idx2 v_texcoord3
 
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
@@ -45,6 +45,8 @@ uniform vec4 u_metallic_roughness_factor2;
 #define v_road_shape          v_idx2.y
 #define v_sand_color_idx      v_idx2.z
 #define v_stone_color_idx     v_idx2.w
+#define v_mark_type           v_idx1.z
+#define v_mark_shape          v_idx1.w
 
 
 mediump vec3 terrain_normal_from_tangent_frame(mat3 tbn, mediump vec2 texcoord, mediump float normal_idx)
@@ -83,16 +85,34 @@ input_attributes init_input_attributes(vec3 gnormal, vec3 normal, vec4 posWS, ve
     return input_attribs;
 }
 
-vec3 calc_terrain_color(float cement_color_idx, vec3 cement_basecolor, float cement_alpha, float cement_height,
-    vec3 ground_color, float stone_height)
+vec3 calc_terrain_color(float cement_color_idx, vec3 cement_basecolor, float cement_alpha,
+    float mark_color_idx, vec3 mark_basecolor, float mark_alpha, float cement_height, vec3 ground_color, float stone_height)
 {
-    if(cement_color_idx == 5.0) {
+    if(cement_color_idx != 0.0 && mark_color_idx != 0.0)
+    {
+        vec3 tmp_color = blend(cement_basecolor, 1.0 - cement_alpha, cement_height, ground_color, cement_alpha, stone_height);
+        return blend(mark_basecolor, 1.0 - mark_alpha, cement_height, tmp_color, mark_alpha, stone_height);
+    }
+    else if(cement_color_idx != 0.0 && mark_color_idx == 0.0)
+    {
         return blend(cement_basecolor, 1.0 - cement_alpha, cement_height, ground_color, cement_alpha, stone_height);
-    } else if(cement_color_idx == 6.0 || cement_color_idx == 7.0){
+    }
+    else if(cement_color_idx == 0.0 && mark_color_idx != 0.0)
+    {
+        return blend(mark_basecolor, 1.0 - mark_alpha, cement_height, ground_color, mark_alpha, stone_height);
+    }
+    else
+    {
+        return ground_color;
+    }
+
+/*     if(cement_color_idx == 5.0 || cement_color_idx == 6.0 || cement_color_idx == 7.0) {
+        return blend(cement_basecolor, 1.0 - cement_alpha, cement_height, ground_color, cement_alpha, stone_height);
+    } else if(cement_color_idx == 8.0 || cement_color_idx == 9.0){
         return cement_alpha < 1.0 ? cement_basecolor : ground_color;
     } else {
         return ground_color;
-    }
+    } */
 }
 
 vec3 blend_ground_color(vec3 sand_basecolor, vec3 stone_basecolor, float sand_height, float sand_alpha)
@@ -106,6 +126,7 @@ void main()
     //v_texcoord0 -- road height coordinate 1x1 grid per texture
     //v_texcoord1 -- road alpha  coordinate 1x1 grid per texture
     //v_texcoord2 -- terrain color/road color/terrain height coordinate 4x4 grid per texture
+    //v_texcoord3 -- mark alpha  coordinate 1x1 grid per texture
 
 #ifdef HAS_MULTIPLE_LIGHTING
 
@@ -138,14 +159,31 @@ void main()
     
     cement_basecolor = texture2DArray(s_basecolor, vec3(uv, cement_color_idx));
 
-    float cement_alpha = texture2DArray(s_cement_alpha, vec3(v_texcoord1, v_road_shape) );
+    float cement_alpha = 0.0;
+
+    if(cement_color_idx != 0.0){
+        cement_alpha = texture2DArray(s_cement_alpha, vec3(v_texcoord1, v_road_shape) );
+    }
+
     float cement_height = texture2DArray(s_height, vec3(v_texcoord0, 2.0) );
+
+    const float mark_color_idx = v_mark_type;
+    vec4 mark_basecolor = vec4_splat(0.0);
+
+    mark_basecolor = texture2DArray(s_basecolor, vec3(uv, mark_color_idx));
+
+    float mark_alpha = 0.0;
+    
+     if(mark_color_idx != 0.0){
+        mark_alpha = texture2DArray(s_cement_alpha, vec3(v_texcoord3, v_mark_shape) );;
+    }   
+
     float sand_height   = texture2DArray(s_height, vec3(uv, 0.0) );
     float stone_height  = texture2DArray(s_height, vec3(uv, 1.0) );
 
     vec3 ground_color = blend_ground_color(sand_basecolor.rgb, stone_basecolor.rgb, sand_height, v_sand_alpha);
 
-    vec3 basecolor = calc_terrain_color(cement_color_idx, cement_basecolor, cement_alpha, cement_height, ground_color, stone_height);
+    vec3 basecolor = calc_terrain_color(cement_color_idx, cement_basecolor, cement_alpha, mark_color_idx, mark_basecolor, mark_alpha, cement_height, ground_color, stone_height);
 
     v_normal = normalize(v_normal);
     v_tangent = normalize(v_tangent);
