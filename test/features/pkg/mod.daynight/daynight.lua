@@ -60,7 +60,7 @@ local function update_cycle(dn, deltaMS)
 end
 
 local function interpolate_in_array(t, arrays, lerp_op)
-    local v = #arrays * t
+    local v = (#arrays-1) * t
     local x, y = math.modf(v)
 
     return lerp_op(arrays[x+1], arrays[x+2], y)
@@ -94,7 +94,7 @@ function dn_sys:entity_init()
 
     for dl in w:select "INIT directional_light light:in" do
         local dne = w:first "daynight:in"
-        dne.daynight.intensity = ilight.intensity(dl)
+        dne.daynight.light.intensity = ilight.intensity(dl)
     end
 end
 
