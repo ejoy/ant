@@ -15,19 +15,19 @@ local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local DAY_NIGHT_COLORS<const> = {
     -- day time
     mc.BLACK,
-    mc.YELLOW_HALF,
-    mc.BLUE,
-    mc.RED,
+    math3d.ref(math3d.mul(5.0, mc.YELLOW)),
+    math3d.ref(math3d.mul(5.0, mc.BLUE)),
+    math3d.ref(math3d.mul(5.0, mc.RED)),
 
     --night time
-    math3d.ref(math3d.mul(0.12, mc.BLUE)),
-    math3d.ref(math3d.mul(0.32, mc.BLUE)),
-    math3d.ref(math3d.mul(0.05, mc.BLUE)),
-    math3d.ref(math3d.mul(0.05, mc.BLUE)),
+    math3d.ref(math3d.mul(0.25, mc.BLUE)),
+    math3d.ref(math3d.mul(0.45, mc.BLUE)),
+    math3d.ref(math3d.mul(0.15, mc.BLUE)),
+    math3d.ref(math3d.mul(0.15, mc.BLUE)),
 }
 
 local DIRECTIONAL_LIGHT_INTENSITYS<const> = {
-    0.0, 1.0, 0.0,  -- day time
+    0.3, 1.0, 0.1,  -- day time
     0.0, 0.1, 0.0,  -- night time
 }
 
@@ -106,9 +106,9 @@ function dn_sys:data_changed()
     local tc = update_cycle(dn, itimer.delta())
 
     --interpolate indirect light color
-    local indirect_light_color = interpolate_indirect_light_color(tc)
+    local modulate_color = interpolate_indirect_light_color(tc)
     local sa = imaterial.system_attribs()
-    sa:update("u_indirect_lighting_emittive_color", indirect_light_color)
+    sa:update("u_indirect_modulate_color", modulate_color)
 
     --move directional light in cycle
     local dl = w:first "directional_light light:in scene:in"
@@ -117,18 +117,22 @@ function dn_sys:data_changed()
 
         -- interpolate directional light intensity
         local p = interpolate_directional_light_intensity(tc)
-        old_set_intensity(dl, dnl.intensity * p)
+        local l = dnl.intensity * p
+        old_set_intensity(dl, l)
 
         assert(0.0 <= tc and tc <= 1.0, "Invalid time cycle")
-        if tc > 0.5 then
+        local ntc = tc
+        if ntc > 0.5 then
             -- it's a moon time
-            tc = tc - 0.5
+            ntc = ntc - 0.5
         end
 
-        local ntc = tc * 2
+        ntc = ntc * 2
 
         local q = math3d.quaternion{axis=dnl.normal, r=math.pi*ntc}
         iom.set_direction(dl, math3d.transform(q, dnl.start_dir, 0))
+
+        --print("cycle:", tc, "intensity:", l, "direction:", math3d.tostring(math3d.transform(q, dnl.start_dir, 0)), "modulate color:", math3d.tostring(modulate_color))
     end
 end
 

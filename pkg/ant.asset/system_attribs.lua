@@ -55,7 +55,7 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	b_light_grids			= buffer_value(10, "r"),
 	b_light_index_lists		= buffer_value(11, "r"),
 	b_light_info			= buffer_value(12, "r"),
-	u_indirect_lighting_emittive_color = {type="u", value=mc.ONE_PT},
+	u_indirect_modulate_color = {type="u", value=mc.ONE_PT},
 	u_time					= {type="u", value=mc.ZERO},
 
 	--IBL
