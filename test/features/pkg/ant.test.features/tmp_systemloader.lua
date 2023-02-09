@@ -145,6 +145,8 @@ function init_loader_sys:init()
     quad_eid = ientity.create_quad_lines_entity("quads", {r=math3d.quaternion{0.0, math.pi*0.5, 0.0}}, 
         "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
 
+    ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
+
     -- create_texture_plane_entity(
     --     {1, 1.0, 1.0, 1.0}, 
     --     "/pkg/ant.resources/textures/texture_plane.texture",

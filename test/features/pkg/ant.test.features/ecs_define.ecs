@@ -13,6 +13,7 @@ import "@ant.audio"
 import "@ant.efk"
 import "@ant.timer"
 import "@ant.motion_sampler"
+import "@mod.daynight"
 --import "@mod.printer"
 
 system "init_loader_system"
@@ -57,6 +58,7 @@ system "init_loader_system"
     .require_policy "ant.motion_sampler|motion_sampler"
 
     --.require_policy "mod.printer|printer"
+    .require_policy "mod.daynight|daynight"
 
     .require_interface "ant.camera|icamera"
     .require_interface "ant.objcontroller|iobj_motion"

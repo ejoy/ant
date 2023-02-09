@@ -2,7 +2,7 @@
 #define _LIHGT_DATA_SH_
 
 uniform vec4 u_light_count;
-
+vec4 u_indirect_lighting_emittive_color;
 struct light_info{
 	vec3	pos;
 	float	range;
