@@ -379,7 +379,7 @@ function gizmo_sys:post_init()
 	-- roate axis
 	local uniform_rot_eid = ientity.create_circle_entity("rotate_gizmo_uniform", gizmo_const.UNIFORM_ROT_AXIS_LEN, gizmo_const.ROTATE_SLICES, {parent = uniform_rot_root}, gizmo_const.COLOR.GRAY, true)
 	local function create_rotate_fan(radius, scene)
-		local mesh_eid = ientity.create_circle_mesh_entity("rotate_mesh_gizmo_uniform", radius, gizmo_const.ROTATE_SLICES, "/pkg/ant.resources/materials/singlecolor_nocull.material", scene, gizmo_const.COLOR.Z_ALPHA, true)
+		local mesh_eid = ientity.create_circle_mesh_entity("rotate_mesh_gizmo_uniform", radius, gizmo_const.ROTATE_SLICES, "/pkg/ant.resources/materials/singlecolor_nocull.material", scene, gizmo_const.COLOR.Z_ALPHA, true, "translucent")
 		return mesh_eid
 	end
 	-- counterclockwise mesh
@@ -1075,9 +1075,9 @@ end
 
 local function world_aabb(entity)
 	local bounding = entity.bounding
-	if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
+	if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
 		local wm = entity.scene and iom.worldmat(entity) or mc.IDENTITY_MAT
-		return math3d.aabb(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1), math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1))
+		return math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
 	else
 		return math3d.aabb(mc.ZERO, mc.ONE)
 	end
