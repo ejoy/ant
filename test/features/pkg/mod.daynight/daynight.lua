@@ -74,20 +74,14 @@ local function interpolate_directional_light_intensity(t)
     return interpolate_in_array(t, DIRECTIONAL_LIGHT_INTENSITYS, mu.lerp)
 end
 
-local function update_light_direciont_range(dnl, sd, ed)
-    dnl.start_q.q, dnl.end_q.q =
-        math3d.torotation(math3d.vector(sd)),
-        math3d.torotation(math3d.vector(ed))
-end
-
 function dn_sys:entity_init()
     for dne in w:select "INIT daynight:in" do
         local dn = dne.daynight
         dn.current_timeMS = dn.time_rangeMS * dn.cycle
 
         local dnl = dn.light
-        dnl.start_q, dnl.end_q = math3d.ref(math3d.quaternion()), math3d.ref(math3d.quaternion())
-        update_light_direciont_range(dnl, dnl.start_dir, dnl.end_dir)
+        dnl.normal = math3d.mark(math3d.vector(dnl.normal))
+        dnl.start_dir = math3d.mark(math3d.vector(dnl.start_dir))
 
         dnl.intensity = 0
     end
@@ -95,6 +89,14 @@ function dn_sys:entity_init()
     for dl in w:select "INIT directional_light light:in" do
         local dne = w:first "daynight:in"
         dne.daynight.light.intensity = ilight.intensity(dl)
+    end
+end
+
+function dn_sys:entity_remove()
+    for dne in w:select "REMOVED daynight:in" do
+        local dnl = dne.daynight.light
+        math3d.unmark(dnl.normal)
+        math3d.unmark(dnl.start_dir)
     end
 end
 
@@ -125,8 +127,8 @@ function dn_sys:data_changed()
 
         local ntc = tc * 2
 
-        local nq = math3d.lerp(dnl.start_q, dnl.end_q, ntc)
-        iom.set_rotation(dl, nq)
+        local q = math3d.quaternion{axis=dnl.normal, r=math.pi*ntc}
+        iom.set_direction(dl, math3d.transform(q, dnl.start_dir, 0))
     end
 end
 
@@ -138,10 +140,13 @@ function idn.set_time_range(rangeMS)
     dn.time_rangeMS = rangeMS
 end
 
-function idn.set_light_directions(start_dir, end_dir)
-    assert(mu.equal(math3d.dot(start_dir, end_dir), math.pi), "start direction and end direction must be in opposite direction")
-
+function idn.set_rotation_data(start_dir, normal)
     local dne = w:first "daynight:in"
     local dnl = dne.daynight.light
-    update_light_direciont_range(dnl, start_dir, end_dir)
+
+    math3d.unmark(dnl.normal)
+    dnl.normal = math3d.mark(math3d.vector(normal))
+
+    math3d.unmark(dnl.start_dir)
+    dnl.start_dir = math3d.mark(math3d.vector(start_dir))
 end

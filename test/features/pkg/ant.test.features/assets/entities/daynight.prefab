@@ -5,8 +5,8 @@ policy:
 data:
   daynight:
       light:
-          start_dir: {-1.0, 0.0, 0.0}
-          end_dir  : { 1.0, 0.0, 0.0}
+          normal:     {0.0, 0.0, 1.0, 0.0}
+          start_dir:  {-1.0, 0.0, 0.0, 0.0}
       time_rangeMS: 20000
       cycle: 0.3
   name: daynight_test
