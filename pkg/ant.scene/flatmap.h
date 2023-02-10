@@ -198,7 +198,7 @@ public:
     }
 
     void reserve(size_t c) {
-        rehash(c, false);
+        rehash(c*100/kMaxLoadFactor, false);
     }
 
     struct iterator {

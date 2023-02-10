@@ -262,6 +262,12 @@ namespace ecs_api {
         entity_group_enable(ctx, component<Component>::id, N, ids);
     }
 
+
+    template <typename Component>
+    size_t count(ecs_context* ctx) {
+        return (size_t)entity_count(ctx, component<Component>::id);
+    }
+
     template <typename ...Args>
     auto select(ecs_context* ctx) {
         return impl::select_range<Args...>(ctx);
