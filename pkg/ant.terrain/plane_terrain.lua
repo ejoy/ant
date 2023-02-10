@@ -145,11 +145,11 @@ local function parse_layer(t, s, d)
         if d == "1" then
             pd = 0
         elseif d == "2" then
-            pd = 270
+            pd = 90
         elseif d == "3" then
             pd = 180
         elseif d == "4" then
-            pd = 90
+            pd = 270
         end
     elseif s == "X" then
         ps = 5
