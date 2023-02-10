@@ -139,6 +139,7 @@ function dn_sys:data_changed()
 
         local q = math3d.quaternion{axis=dnl.normal, r=math.pi*ntc}
         iom.set_direction(dl, math3d.transform(q, dnl.start_dir, 0))
+        w:submit(dl)
 
         --print("cycle:", tc, "intensity:", l, "direction:", math3d.tostring(math3d.transform(q, dnl.start_dir, 0)), "modulate color:", math3d.tostring(modulate_color))
     end

@@ -142,10 +142,18 @@ function init_loader_sys:init()
 
     --cp_eid = color_palette_test()
 
-    quad_eid = ientity.create_quad_lines_entity("quads", {r=math3d.quaternion{0.0, math.pi*0.5, 0.0}}, 
+    quad_eid = ientity.create_quad_lines_entity("quads", {r={0.0, math.pi*0.5, 0.0}}, 
         "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
 
-    ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
+    --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
+    do
+        local p = ecs.create_instance "/pkg/ant.test.features/assets/glb/headquater-1.glb|mesh.prefab"
+        p.on_ready = function(e)
+            local ee<close> = w:entity(e.tag['*'][1], "scene:in")
+            iom.set_scale(ee, 0.1)
+        end
+        world:create_object(p)
+    end
 
     -- create_texture_plane_entity(
     --     {1, 1.0, 1.0, 1.0}, 
@@ -277,6 +285,9 @@ function init_loader_sys:init()
                 end
             }
         }
+
+        local le<close> = w:entity(pid)
+        iom.set_direction(le, math3d.vector(0.0, -1.0, 0.0))
     end
     world:create_object(p)
 

@@ -3,7 +3,7 @@
 
 uniform vec4 u_light_count;
 
-//#define ENABLE_MODULATE_INDIRECT_COLOR
+#define ENABLE_MODULATE_INDIRECT_COLOR
 #ifdef ENABLE_MODULATE_INDIRECT_COLOR
 uniform vec4 u_indirect_modulate_color;
 #endif //ENABLE_MODULATE_INDIRECT_COLOR

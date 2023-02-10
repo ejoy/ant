@@ -48,10 +48,18 @@ uniform vec4 u_metallic_roughness_factor2;
 #define v_mark_type           v_idx1.z
 #define v_mark_shape          v_idx1.w
 
+vec2 texture2DArrayBc5(sampler2DArray _sampler, vec3 _uv)
+{
+#if BGFX_SHADER_LANGUAGE_HLSL && BGFX_SHADER_LANGUAGE_HLSL <= 300
+	return texture2DArray(_sampler, _uv).yx;
+#else
+	return texture2DArray(_sampler, _uv).xy;
+#endif
+}
 
 mediump vec3 terrain_normal_from_tangent_frame(mat3 tbn, mediump vec2 texcoord, mediump float normal_idx)
 {
-	mediump vec3 normalTS = texture2DArray(s_normal, mediump vec3(texcoord, normal_idx) );
+	mediump vec3 normalTS = remap_normal(texture2DArrayBc5(s_normal, mediump vec3(texcoord, normal_idx)));
 	// same as: mul(transpose(tbn), normalTS)
     return normalize(mul(normalTS, tbn));
 }
