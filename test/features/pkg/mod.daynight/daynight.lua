@@ -14,21 +14,24 @@ local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 --TODO: read from image(png/bmp, etc)
 local DAY_NIGHT_COLORS<const> = {
     -- day time
-    mc.BLACK,
-    math3d.ref(math3d.mul(5.0, mc.YELLOW)),
-    math3d.ref(math3d.mul(5.0, mc.BLUE)),
-    math3d.ref(math3d.mul(5.0, mc.RED)),
+    math3d.ref(math3d.vector(0, 0, 10, 1)),
+    math3d.ref(math3d.vector(10, 0, 0, 1)),
+    -- mc.BLACK,
+    -- math3d.ref(math3d.mul(5.0, mc.YELLOW)),
+    -- math3d.ref(math3d.mul(5.0, mc.BLUE)),
+    -- math3d.ref(math3d.mul(5.0, mc.RED)),
 
-    --night time
-    math3d.ref(math3d.mul(0.25, mc.BLUE)),
-    math3d.ref(math3d.mul(0.45, mc.BLUE)),
-    math3d.ref(math3d.mul(0.15, mc.BLUE)),
-    math3d.ref(math3d.mul(0.15, mc.BLUE)),
+    -- --night time
+    -- math3d.ref(math3d.mul(0.25, mc.BLUE)),
+    -- math3d.ref(math3d.mul(0.45, mc.BLUE)),
+    -- math3d.ref(math3d.mul(0.15, mc.BLUE)),
+    -- math3d.ref(math3d.mul(0.15, mc.BLUE)),
 }
 
 local DIRECTIONAL_LIGHT_INTENSITYS<const> = {
-    0.3, 1.0, 0.1,  -- day time
-    0.0, 0.1, 0.0,  -- night time
+    0.3, 1.0,
+    -- 0.5, 1.0, 0.5,  -- day time
+    -- 0.3, 0.3, 0.3,  -- night time
 }
 
 local dn_sys = ecs.system "daynight_system"
@@ -86,9 +89,11 @@ function dn_sys:entity_init()
         dnl.intensity = 0
     end
 
-    for dl in w:select "INIT directional_light light:in" do
-        local dne = w:first "daynight:in"
-        dne.daynight.light.intensity = ilight.intensity(dl)
+    local dne = w:first "daynight:in"
+    if dne then
+        for dl in w:select "INIT directional_light light:in" do
+            dne.daynight.light.intensity = ilight.intensity(dl)
+        end
     end
 end
 
@@ -102,6 +107,9 @@ end
 
 function dn_sys:data_changed()
     local dne = w:first "daynight:in"
+    if dne == nil then
+        return 
+    end
     local dn = dne.daynight
     local tc = update_cycle(dn, itimer.delta())
 
