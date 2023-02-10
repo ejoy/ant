@@ -20,6 +20,7 @@ interface "icamera"
     .method "focus_obj"
     .method "focus_aabb"
 
+component "camera_depend"
 component "exposure".type "lua"
 
 interface "iexposure"
