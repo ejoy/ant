@@ -209,7 +209,14 @@ function cterrain_fields:init()
             elseif layers and layers[2] == nil then
                 f.mark_type  = 0.0
                 f.mark_direction = 0.0
-                f.mark_shape = 0.0                         
+                f.mark_shape = 0.0
+            elseif layers and layers[1] == nil and layers[2] == nil then
+                f.alpha_type = 0.0
+                f.alpha_direction = 0.0
+                f.alpha_shape = 0.0
+                f.mark_type  = 0.0
+                f.mark_direction = 0.0
+                f.mark_shape = 0.0                                        
             end
         end
     end

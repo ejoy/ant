@@ -63,7 +63,15 @@ function iterrain.gen_terrain_field(width, height, offset_x, offset_z, unit)
     for ih=1, terrain_height do
         for iw=1, terrain_width do
             local idx = (ih - 1) * terrain_width + iw
-            terrain_field[idx] = {}
+            terrain_field[idx] = {
+                layers = {},
+                alpha_type = 0.0,
+                alpha_direction = 0.0,
+                alpha_shape = 0.0,
+                mark_type  = 0.0,
+                mark_direction = 0.0,
+                mark_shape = 0.0 
+            }
         end
     end
     terrain_fields = terrain_field
@@ -154,7 +162,15 @@ function iterrain.delete_roadnet_entity(delete_list)
         local dl = delete_list[ii]
         local x, y = dl.x + terrain_width_offset, dl.y + terrain_height_offset
         local idx = calc_tf_idx(x, y, terrain_width)
-        terrain_fields[idx] = {}
+        terrain_fields[idx] = {
+            layers = {},
+            alpha_type = 0.0,
+            alpha_direction = 0.0,
+            alpha_shape = 0.0,
+            mark_type  = 0.0,
+            mark_direction = 0.0,
+            mark_shape = 0.0
+        }
         local section_idx = calc_section_idx(idx)
         if terrain_change[section_idx] == nil then
             tc_cnt = tc_cnt + 1
