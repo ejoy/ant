@@ -50,23 +50,20 @@ scene_changed(lua_State *L) {
 	auto w = getworld(L);
 	auto math3d = w->math3d->M;
 
-	{
-		auto selector = ecs_api::select<ecs::scene_update_once, ecs::scene, ecs::eid>(w->ecs);
-		auto it = selector.begin();
-		if (it != selector.end()) {
-			flatmap<ecs::eid, math_t> worldmats;
-			for (; it != selector.end(); ++it) {
-				auto& e = *it;
-				auto& s = e.get<ecs::scene>();
-				auto id = e.get<ecs::eid>();
-				e.disable_tag<ecs::scene_update>();
-				e.enable_tag<ecs::scene_changed>();
-				if (!worldmat_update(worldmats, math3d, s, id)) {
-					return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
-				}
+	size_t UpdateOnceCount = ecs_api::count<ecs::scene_update_once>(w->ecs);
+	if (UpdateOnceCount > 0) {
+		flatmap<ecs::eid, math_t> worldmats;
+		worldmats.reserve(UpdateOnceCount);
+		for (auto& e : ecs_api::select<ecs::scene_update_once, ecs::scene, ecs::eid>(w->ecs)) {
+			auto& s = e.get<ecs::scene>();
+			auto id = e.get<ecs::eid>();
+			e.disable_tag<ecs::scene_update>();
+			e.enable_tag<ecs::scene_changed>();
+			if (!worldmat_update(worldmats, math3d, s, id)) {
+				return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 			}
-			ecs_api::clear_type<ecs::scene_update_once>(w->ecs);
 		}
+		ecs_api::clear_type<ecs::scene_update_once>(w->ecs);
 	}
 
 	// step.1
