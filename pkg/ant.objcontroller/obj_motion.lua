@@ -10,7 +10,6 @@ local iobj_motion = ecs.interface "iobj_motion"
 local function set_changed(e)
     w:extend(e, "scene:out scene_needchange?out")
     e.scene_needchange = true
-    w:submit(e)
 end
 
 local function set_s(srt, v)
