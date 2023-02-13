@@ -94,7 +94,8 @@ local function create_simple_entity(name, parent)
 		},
 		data = {
             name = name,
-            scene = {parent = parent}
+            scene = {parent = parent},
+            -- bounding = {aabb = {{0,0,0}, {1,1,1}}}
 		},
     }
     return ecs.create_entity(utils.deep_copy(template)), template
@@ -794,5 +795,31 @@ function m:get_eid_by_name(name)
             return eid
         end
     end
+end
+function m:get_world_aabb(eid)
+    local tpl = hierarchy:get_template(eid)
+    local children
+    if tpl.filename then
+        children = hierarchy:get_select_adaptee(eid)
+    else
+        local node = hierarchy:get_node(eid)
+        children = {}
+        for _, n in ipairs(node.children) do
+            children[#children + 1] = n.eid
+        end
+    end
+    local waabb
+    for _, c in ipairs(children) do
+        local e <close> = w:entity(c, "bounding?in")
+        local bounding = e.bounding
+        if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+            if not waabb then
+                waabb = math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
+            else
+                waabb = math3d.aabb_merge(bounding.scene_aabb, waabb)
+            end
+        end
+    end
+    return waabb
 end
 return m

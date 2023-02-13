@@ -14,7 +14,7 @@ local irq		= ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local imodifier = ecs.import.interface "ant.modifier|imodifier"
 local igui		= ecs.import.interface "tools.prefab_editor|igui"
-
+local prefab_mgr = ecs.require "prefab_manager"
 
 local cmd_queue = ecs.require "gizmo.command_queue"
 local utils 	= ecs.require "mathutils"
@@ -1073,65 +1073,6 @@ local function on_mouse_move()
 	end
 end
 
-local function world_aabb(entity)
-	local bounding = entity.bounding
-	if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
-		local wm = entity.scene and iom.worldmat(entity) or mc.IDENTITY_MAT
-		return math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
-	else
-		return math3d.aabb(mc.ZERO, mc.ONE)
-	end
-end
-
-local function check_calc_aabb(eid)
-	local function build_scene()
-		local rt = {}
-		local skin_eid
-		local skin_mesh = {}
-		for ee in w:select "bounding:in scene?in mesh?in meshskin?in eid:in" do
-			local id = ee.eid
-			if ee.meshskin then
-				skin_eid = id
-			elseif not ee.scene and ee.mesh then
-				skin_mesh[#skin_mesh + 1] = {id=id, aabb = world_aabb(ee)}
-			end
-			local pid = ee.scene and ee.scene.parent
-			if pid and pid > 0 then
-				local c = rt[pid]
-				if c == nil then
-					c = {}
-					rt[pid] = c
-				end
-				c[#c+1] = {id=id, aabb = world_aabb(ee)}
-			end
-		end
-		if skin_eid then
-			rt[skin_eid] = skin_mesh
-		end
-		return rt
-	end
-
-	local scenetree = build_scene()
-
-	local function build_aabb(tr)
-		local maabb = math3d.aabb(mc.ZERO, mc.ONE)
-		for _, it in ipairs(tr) do
-			local ctr = scenetree[it.id]
-			if ctr then
-				maabb = math3d.aabb_merge(build_aabb(ctr), maabb)
-			end
-			if it.aabb then
-				maabb = math3d.aabb_merge(it.aabb, maabb)
-			end
-		end
-		return maabb
-	end
-
-	local entity <close> = w:entity(eid, "bounding?in scene?in")
-	local e = scenetree[eid]
-	return e and build_aabb(e) or world_aabb(entity)
-end
-
 local function focus_aabb(ce, aabb)
     local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
     local center = math3d.mul(0.5, math3d.add(aabb_min, aabb_max))
@@ -1270,7 +1211,7 @@ function gizmo_sys:handle_event()
 	for _, tid, anim in look_at_target_mb:unpack() do
 		local target = tid or gizmo.target_eid
 		if target then
-			local aabb = check_calc_aabb(target)
+			local aabb = prefab_mgr:get_world_aabb(target)
 			if aabb then
 				if anim then
 					local aabb_min, aabb_max= math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
