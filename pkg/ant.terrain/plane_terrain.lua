@@ -152,7 +152,11 @@ local function parse_layer(t, s, d)
             pd = 270
         end
     elseif s == "X" then
-        ps = 5
+        if t >= "1" and t <= "3" then
+            ps = 5
+        else
+            ps = 11
+        end
     elseif s == 'O' then    
         if t >= "1" and t <= "3" then
             ps = 7
