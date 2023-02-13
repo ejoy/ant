@@ -809,14 +809,33 @@ function m:get_world_aabb(eid)
         end
     end
     local waabb
+    local e <close> = w:entity(eid, "bounding?in meshskin?in name:in")
+    local bounding = e.bounding
+    if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+        waabb = math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
+    end
     for _, c in ipairs(children) do
-        local e <close> = w:entity(c, "bounding?in")
-        local bounding = e.bounding
+        local ec <close> = w:entity(c, "bounding?in")
+        local bounding = ec.bounding
         if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
             if not waabb then
                 waabb = math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
             else
                 waabb = math3d.aabb_merge(bounding.scene_aabb, waabb)
+            end
+        end
+    end
+    -- TODO: if eid is scene root or meshskin, merge skinning node
+    if e.name == "Scene" or e.meshskin then
+        for key, _ in pairs(hierarchy.all) do
+            local ea <close> = w:entity(key, "bounding?in skinning?in")
+            local bounding = ea.bounding
+            if ea.skinning and bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+                if not waabb then
+                    waabb = math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
+                else
+                    waabb = math3d.aabb_merge(bounding.scene_aabb, waabb)
+                end
             end
         end
     end
