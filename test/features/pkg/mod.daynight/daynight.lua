@@ -5,52 +5,89 @@ local w     = world.w
 local mathpkg   = import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
 local math3d    = require "math3d"
+local image     = require "image"
+local fs        = require "filesystem"
 
 local itimer    = ecs.import.interface "ant.timer|itimer"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local ilight    = ecs.import.interface "ant.render|ilight"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 
---TODO: read from image(png/bmp, etc)
-local DAY_NIGHT_COLORS<const> = {
-    -- day time
-    math3d.ref(math3d.vector(0, 0, 10, 1)),
-    math3d.ref(math3d.vector(10, 0, 0, 1)),
-    -- mc.BLACK,
-    -- math3d.ref(math3d.mul(5.0, mc.YELLOW)),
-    -- math3d.ref(math3d.mul(5.0, mc.BLUE)),
-    -- math3d.ref(math3d.mul(5.0, mc.RED)),
+--just keep them to debug code
+-- local DAY_NIGHT_COLORS<const> = {
+--     -- day time
+--     math3d.ref(math3d.vector(0, 0, 10, 1)),
+--     math3d.ref(math3d.vector(10, 0, 0, 1)),
+--     -- mc.BLACK,
+--     -- math3d.ref(math3d.mul(5.0, mc.YELLOW)),
+--     -- math3d.ref(math3d.mul(5.0, mc.BLUE)),
+--     -- math3d.ref(math3d.mul(5.0, mc.RED)),
 
-    -- --night time
-    -- math3d.ref(math3d.mul(0.25, mc.BLUE)),
-    -- math3d.ref(math3d.mul(0.45, mc.BLUE)),
-    -- math3d.ref(math3d.mul(0.15, mc.BLUE)),
-    -- math3d.ref(math3d.mul(0.15, mc.BLUE)),
-}
+--     -- --night time
+--     -- math3d.ref(math3d.mul(0.25, mc.BLUE)),
+--     -- math3d.ref(math3d.mul(0.45, mc.BLUE)),
+--     -- math3d.ref(math3d.mul(0.15, mc.BLUE)),
+--     -- math3d.ref(math3d.mul(0.15, mc.BLUE)),
+-- }
 
-local DIRECTIONAL_LIGHT_INTENSITYS<const> = {
-    0.3, 1.0,
-    -- 0.5, 1.0, 0.5,  -- day time
-    -- 0.3, 0.3, 0.3,  -- night time
-}
+-- local DIRECTIONAL_LIGHT_COLORS<const> = {
+--     math3d.ref(math3d.vector(1.0, 1.0, 1.0, 0.3)),
+--     math3d.ref(math3d.vector(0.7, 0.7, 0.7, 1.0)),
+-- }
+
+local DIRECT_COLORS, INDIRECT_COLORS = {}, {}
 
 local dn_sys = ecs.system "daynight_system"
 
-local old_set_intensity
-local function set_directional_light_intensity(le, intensity)
-    w:extend(le, "light:in")
-    if le.light.type == "directional" then
-        old_set_intensity(le, intensity)
-        local dne = w:first "daynight:in"
-        dne.daynight.light.intensity = ilight.intensity(le)
-    else
-        old_set_intensity(le, intensity)
+local DEFAULT_DIRECTIONAL_LIGHT_INTENSITY
+
+local function read_colors_from_files()
+
+    local function read_image_content(p)
+        local f<close> = fs.open(fs.path(p), "rb")
+        local c = f:read "a"
+        return image.parse(c, true)
+    end
+    do
+        local direct_info, direct_c         = read_image_content "/pkg/mod.daynight/assets/light/direct.png"
+        local indirect_info, indirect_c     = read_image_content "/pkg/mod.daynight/assets/light/indirect.png"
+        local intensity_info, intensity_c   = read_image_content "/pkg/mod.daynight/assets/light/intensity.png"
+
+        assert(direct_info.depth == 1 and (not direct_info.cubemap))
+        assert(indirect_info.depth == 1 and (not indirect_info.cubemap))
+
+        assert(indirect_info.width == direct_info.width and indirect_info.width == intensity_info.width)
+
+        local direct_step<const>    = direct_info.bitsPerPixel // 8
+        local indirect_step<const>  = indirect_info.bitsPerPixel // 8
+        local intensity_step<const> = intensity_info.bitsPerPixel // 8
+
+        local function to_float(v, ...)
+            if v then
+                return v / 255.0, to_float(...)
+            end
+        end
+
+        --we just need a row
+        local direct_offset, indirect_offset, intensity_offset = 1, 1, 1
+        for iw=1, direct_info.width do
+            local r, g, b = to_float(('BBB'):unpack(direct_c, direct_offset))
+            local intensity = to_float(('B'):unpack(intensity_c, intensity_offset))
+            DIRECT_COLORS[iw] = math3d.ref(math3d.vector(r, g, b, intensity))
+
+            local ir, ig, ib = to_float(('BBB'):unpack(indirect_c, indirect_offset))
+            INDIRECT_COLORS[iw] = math3d.ref(math3d.vector(ir, ig, ib, 0.0))
+            direct_offset = direct_offset + direct_step
+            intensity_offset = intensity_offset + intensity_step
+            indirect_offset = indirect_offset + indirect_step
+        end
     end
 end
 
 function dn_sys:init()
-    old_set_intensity = ilight.set_intensity
-    ilight.set_intensity = set_directional_light_intensity
+    DEFAULT_DIRECTIONAL_LIGHT_INTENSITY = ilight.default_intensity "directional"
+
+    read_colors_from_files()
 end
 
 local function update_cycle(dn, deltaMS)
@@ -62,19 +99,11 @@ local function update_cycle(dn, deltaMS)
     return dn.cycle
 end
 
-local function interpolate_in_array(t, arrays, lerp_op)
+local function interpolate_in_array(t, arrays)
     local v = (#arrays-1) * t
     local x, y = math.modf(v)
 
-    return lerp_op(arrays[x+1], arrays[x+2], y)
-end
-
-local function interpolate_indirect_light_color(t)
-    return interpolate_in_array(t, DAY_NIGHT_COLORS, math3d.lerp)
-end
-
-local function interpolate_directional_light_intensity(t)
-    return interpolate_in_array(t, DIRECTIONAL_LIGHT_INTENSITYS, mu.lerp)
+    return math3d.lerp(arrays[x+1], arrays[x+2], y)
 end
 
 function dn_sys:entity_init()
@@ -114,7 +143,7 @@ function dn_sys:data_changed()
     local tc = update_cycle(dn, itimer.delta())
 
     --interpolate indirect light color
-    local modulate_color = interpolate_indirect_light_color(tc)
+    local modulate_color = interpolate_in_array(tc, INDIRECT_COLORS)
     local sa = imaterial.system_attribs()
     sa:update("u_indirect_modulate_color", modulate_color)
 
@@ -123,10 +152,13 @@ function dn_sys:data_changed()
     if dl then
         local dnl = dn.light
 
-        -- interpolate directional light intensity
-        local p = interpolate_directional_light_intensity(tc)
-        local l = dnl.intensity * p
-        old_set_intensity(dl, l)
+        do
+            local c<const> = interpolate_in_array(tc, DIRECT_COLORS)
+            local r, g, b, i = math3d.index(c, 1, 2, 3, 4)
+            ilight.set_color_rgb(dl, r, g, b)
+
+            ilight.set_intensity(dl, i * DEFAULT_DIRECTIONAL_LIGHT_INTENSITY)
+        end
 
         assert(0.0 <= tc and tc <= 1.0, "Invalid time cycle")
         local ntc = tc

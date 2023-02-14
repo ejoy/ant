@@ -103,9 +103,12 @@ function ilight.color(e)
 end
 
 function ilight.set_color(e, color)
-	local l = e.light
-	local c = l.color
-	for i=1, 4 do c[i] = color[i] end
+	ilight.set_color_rgb(e, color[1], color[2], color[3])
+end
+
+function ilight.set_color_rgb(e, r, g, b)
+	local c = e.light.color
+	c[1], c[2], c[3] = r, g, b
 	setChanged()
 end
 
@@ -252,7 +255,7 @@ local function create_light_buffers()
 		return ('f'):rep(16):pack(
 			p[1], p[2], p[3], e.light.range or math.maxinteger,
 			d[1], d[2], d[3], enable,
-			c[1], c[2], c[3], c[4],		--c[4] is no meaning
+			c[1], c[2], c[3], 0.0,	-- not use
 			lighttypes[t],
 			e.light.intensity * ev,
 			e.light.inner_cutoff or 0,
