@@ -18,6 +18,7 @@ interface "ilight"
 
     .method "color"
     .method "set_color"
+    .method "set_color_rgb"
     .method "make_shadow"
     .method "set_make_shadow"
     .method "motion_type"
