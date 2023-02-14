@@ -28,29 +28,16 @@ local DAY_NIGHT_COLORS<const> = {
     -- math3d.ref(math3d.mul(0.15, mc.BLUE)),
 }
 
-local DIRECTIONAL_LIGHT_INTENSITYS<const> = {
-    0.3, 1.0,
-    -- 0.5, 1.0, 0.5,  -- day time
-    -- 0.3, 0.3, 0.3,  -- night time
+local DIRECTIONAL_LIGHT_COLORS<const> = {
+    math3d.ref(math3d.vector(1.0, 1.0, 1.0, 0.3)),
+    math3d.ref(math3d.vector(0.7, 0.7, 0.7, 1.0)),
 }
 
 local dn_sys = ecs.system "daynight_system"
 
-local old_set_intensity
-local function set_directional_light_intensity(le, intensity)
-    w:extend(le, "light:in")
-    if le.light.type == "directional" then
-        old_set_intensity(le, intensity)
-        local dne = w:first "daynight:in"
-        dne.daynight.light.intensity = ilight.intensity(le)
-    else
-        old_set_intensity(le, intensity)
-    end
-end
-
+local DEFAULT_DIRECTIONAL_LIGHT_INTENSITY
 function dn_sys:init()
-    old_set_intensity = ilight.set_intensity
-    ilight.set_intensity = set_directional_light_intensity
+    DEFAULT_DIRECTIONAL_LIGHT_INTENSITY = ilight.default_intensity "directional"
 end
 
 local function update_cycle(dn, deltaMS)
@@ -73,8 +60,8 @@ local function interpolate_indirect_light_color(t)
     return interpolate_in_array(t, DAY_NIGHT_COLORS, math3d.lerp)
 end
 
-local function interpolate_directional_light_intensity(t)
-    return interpolate_in_array(t, DIRECTIONAL_LIGHT_INTENSITYS, mu.lerp)
+local function interpolate_directional_light_color(t)
+    return interpolate_in_array(t, DIRECTIONAL_LIGHT_COLORS, mu.lerp)
 end
 
 function dn_sys:entity_init()
@@ -123,10 +110,11 @@ function dn_sys:data_changed()
     if dl then
         local dnl = dn.light
 
-        -- interpolate directional light intensity
-        local p = interpolate_directional_light_intensity(tc)
-        local l = dnl.intensity * p
-        old_set_intensity(dl, l)
+        local c<const> = interpolate_directional_light_color()
+        ilight.set_color(dl, c)
+
+        local intensity<const> = math3d.index(c, 4)
+        ilight.set_intensity(dl, intensity * DEFAULT_DIRECTIONAL_LIGHT_INTENSITY)
 
         assert(0.0 <= tc and tc <= 1.0, "Invalid time cycle")
         local ntc = tc
