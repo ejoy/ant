@@ -240,7 +240,7 @@ local plane_vb<const> = {
 	0.5,  0,-0.5, 0, 1, 0,	--right bottom
 }
 
-function ientity.create_prim_plane_entity(name, materialpath, scene, color, hide, render_layer)
+function ientity.create_prim_plane_entity(materialpath, scene, color, hide, render_layer)
 	return ecs.create_entity{
 		policy = {
 			"ant.render|simplerender",
@@ -250,7 +250,7 @@ function ientity.create_prim_plane_entity(name, materialpath, scene, color, hide
 			scene 		= scene or {},
 			material 	= materialpath,
 			visible_state= "main_view",
-			name 		= name or "Plane",
+			name 		= "",
 			render_layer= render_layer,
 			simplemesh 	= imesh.init_mesh(create_mesh({"p3|n3", plane_vb}, nil, math3d.ref(math3d.aabb({-0.5, 0, -0.5}, {0.5, 0, 0.5}))), true),
 			on_ready = function (e)
@@ -382,18 +382,18 @@ function ientity.create_screen_axis_entity(name, screen_3dobj, scene, color, mat
 	}
 end
 
-function ientity.create_line_entity(name, p0, p1, scene, color, hide)
+function ientity.create_line_entity(p0, p1, scene, color, hide)
 	local ic = color and ((math.floor(color[1] * 255) & 0xFF) | ((math.floor(color[2] * 255) & 0xFF) << 8)| ((math.floor(color[3] * 255) & 0xFF) << 16)| ((math.floor(color[4] * 255) & 0xFF) << 24)) or 0xffffffff
 	local vb = {
 		p0[1], p0[2], p0[3], ic,
 		p1[1], p1[2], p1[3], ic,
 	}
 	local mesh = create_mesh({"p3|c40niu", vb}, {0, 1})
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, scene, {u_color = color}, hide, "translucent")
+	return create_simple_render_entity("", "/pkg/ant.resources/materials/line_color.material", mesh, scene, {u_color = color}, hide, "translucent")
 	
 end
 
-function ientity.create_screen_line_list(name, points, scene, uniforms, dynamic, hide)
+function ientity.create_screen_line_list(points, scene, uniforms, dynamic, hide)
 	local vb = {}
 	for _, pt in ipairs(points) do
 		vb[#vb + 1] = pt[1]
@@ -416,10 +416,10 @@ function ientity.create_screen_line_list(name, points, scene, uniforms, dynamic,
 		mesh = create_mesh({layout_desc, vb})
 	end
 	
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/screenline_color.material", mesh, scene, uniforms, hide, "translucent")
+	return create_simple_render_entity("", "/pkg/ant.resources/materials/screenline_color.material", mesh, scene, uniforms, hide, "translucent")
 end
 
-function ientity.create_circle_entity(name, radius, slices, scene, color, hide, arc)
+function ientity.create_circle_entity(radius, slices, scene, color, hide, arc)
 	local circle_vb, circle_ib = geolib.circle(radius, slices, arc)
 	local gvb = {}
 	--color = color or 0xffffffff
@@ -430,10 +430,10 @@ function ientity.create_circle_entity(name, radius, slices, scene, color, hide, 
 		gvb[#gvb+1] = 0xffffffff
 	end
 	local mesh = create_mesh({"p3|c40niu", gvb}, circle_ib)
-	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line_color.material", mesh, scene, {u_color = color}, hide, "translucent")
+	return create_simple_render_entity("", "/pkg/ant.resources/materials/line_color.material", mesh, scene, {u_color = color}, hide, "translucent")
 end
 
-function ientity.create_circle_mesh_entity(name, radius, slices, mtl, scene, color, hide, render_layer)
+function ientity.create_circle_mesh_entity(radius, slices, mtl, scene, color, hide, render_layer)
 	local circle_vb, _ = geolib.circle(radius, slices)
 	local gvb = {0,0,0,0,0,1}
 	local ib = {}
@@ -456,7 +456,7 @@ function ientity.create_circle_mesh_entity(name, radius, slices, mtl, scene, col
 		idx = idx + 1
 	end
 	local mesh = create_mesh({"p3|n3", gvb}, ib)
-	return create_simple_render_entity(name, mtl, mesh, scene, {u_color = color}, hide, render_layer)
+	return create_simple_render_entity("", mtl, mesh, scene, {u_color = color}, hide, render_layer)
 end
 
 local skybox_mesh

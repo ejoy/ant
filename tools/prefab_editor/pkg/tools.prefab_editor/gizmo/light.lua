@@ -101,14 +101,14 @@ end
 
 local function create_directional_gizmo(initpos, initrot)
     local root = create_gizmo_root(initpos, initrot)
-    local circle_eid = computil.create_circle_entity("directional gizmo circle", RADIUS, SLICES, {parent = root}, gizmo_const.COLOR.GRAY, true)
+    local circle_eid = computil.create_circle_entity(RADIUS, SLICES, {parent = root}, gizmo_const.COLOR.GRAY, true)
     local alleid = {}
     alleid[#alleid + 1] = circle_eid
     local radian_step = 2 * math.pi / SLICES
     for s=0, SLICES-1 do
         local radian = radian_step * s
         local x, y = math.cos(radian) * RADIUS, math.sin(radian) * RADIUS
-        local line_eid = computil.create_line_entity("", {x, y, 0}, {x, y, LENGTH}, {parent = root}, gizmo_const.COLOR.GRAY, true)
+        local line_eid = computil.create_line_entity({x, y, 0}, {x, y, LENGTH}, {parent = root}, gizmo_const.COLOR.GRAY, true)
         alleid[#alleid + 1] = line_eid
     end
     m.directional.root = root

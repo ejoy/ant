@@ -22,7 +22,6 @@ local widget_utils  = require "widget.utils"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local subprocess    = import_package "ant.subprocess"
-local bgfx      = require "bgfx"
 
 local anim_view
 local m = {
@@ -484,22 +483,8 @@ local function on_remove_entity(eid)
 end
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local tile_tex
 
 function m:create_ground()
-    if not tile_tex then
-        tile_tex = bgfx.create_texture2d(4, 4, true, 1, "RGBA8", "uwvwww-l+p*l", bgfx.memory_buffer("bbbb", {
-            100, 100, 100, 255,100, 100, 100, 255,200, 200, 200, 255,200, 200, 200, 255,
-            100, 100, 100, 255,100, 100, 100, 255,200, 200, 200, 255,200, 200, 200, 255,
-            200, 200, 200, 255,200, 200, 200, 255,100, 100, 100, 255,100, 100, 100, 255,
-            200, 200, 200, 255,200, 200, 200, 255,100, 100, 100, 255,100, 100, 100, 255,
-            100, 100, 100, 255,
-            200, 200, 200, 255,
-            200, 200, 200, 255,
-            100, 100, 100, 255,
-            150, 150, 150, 255
-        }))
-    end
     if not self.plane then
         self.plane = ecs.create_entity {
             policy = {
@@ -514,7 +499,6 @@ function m:create_ground()
                 visible_state= "main_view",
                 name        = "ground",
                 on_ready = function (e)
-                    -- imaterial.set_property(e, "s_basecolor", tile_tex)
                     -- ivs.set_state(e, "main_view", false)
                     imaterial.set_property(e, "u_uvmotion", math3d.vector{0, 0, 100, 100})
                 end
