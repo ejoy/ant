@@ -24,7 +24,7 @@ lm:source_set "imgui" {
         Ant3rd .. "imgui/imgui_tables.cpp",
         Ant3rd .. "imgui/imgui_widgets.cpp",
         Ant3rd .. "imgui/imgui.cpp",
-        Ant3rd .. "imgui/backends/imgui_impl_sdl.cpp",
+        Ant3rd .. "imgui/backends/imgui_impl_sdl2.cpp",
     },
     defines = defines,
 }
