@@ -75,7 +75,7 @@ local function simple_render_entity_data(name, material, mesh, scene, uniforms, 
 			visible_state= "main_view",
 			name		= name or gen_test_name(),
 			on_ready 	= function(e)
-				if hide then
+				if hide or queue then
 					ivs.set_state(e, "main_view", false)
 				end
 				if queue then
