@@ -3744,30 +3744,33 @@ static struct enum_pair eStyleCol[] = {
 };
 
 static struct enum_pair eStyleVar[] = {
-	ENUM(ImGuiStyleVar,Alpha),               // float     Alpha
-	ENUM(ImGuiStyleVar,DisabledAlpha),       // float     DisabledAlpha
-	ENUM(ImGuiStyleVar,WindowPadding),       // ImVec2    WindowPadding
-	ENUM(ImGuiStyleVar,WindowRounding),      // float     WindowRounding
-	ENUM(ImGuiStyleVar,WindowBorderSize),    // float     WindowBorderSize
-	ENUM(ImGuiStyleVar,WindowMinSize),       // ImVec2    WindowMinSize
-	ENUM(ImGuiStyleVar,WindowTitleAlign),    // ImVec2    WindowTitleAlign
-	ENUM(ImGuiStyleVar,ChildRounding),       // float     ChildRounding
-	ENUM(ImGuiStyleVar,ChildBorderSize),     // float     ChildBorderSize
-	ENUM(ImGuiStyleVar,PopupRounding),       // float     PopupRounding
-	ENUM(ImGuiStyleVar,PopupBorderSize),     // float     PopupBorderSize
-	ENUM(ImGuiStyleVar,FramePadding),        // ImVec2    FramePadding
-	ENUM(ImGuiStyleVar,FrameRounding),       // float     FrameRounding
-	ENUM(ImGuiStyleVar,FrameBorderSize),     // float     FrameBorderSize
-	ENUM(ImGuiStyleVar,ItemSpacing),         // ImVec2    ItemSpacing
-	ENUM(ImGuiStyleVar,ItemInnerSpacing),    // ImVec2    ItemInnerSpacing
-	ENUM(ImGuiStyleVar,IndentSpacing),       // float     IndentSpacing
-	ENUM(ImGuiStyleVar,ScrollbarSize),       // float     ScrollbarSize
-	ENUM(ImGuiStyleVar,ScrollbarRounding),   // float     ScrollbarRounding
-	ENUM(ImGuiStyleVar,GrabMinSize),         // float     GrabMinSize
-	ENUM(ImGuiStyleVar,GrabRounding),        // float     GrabRounding
-	ENUM(ImGuiStyleVar,TabRounding),         // float     TabRounding
-	ENUM(ImGuiStyleVar,ButtonTextAlign),     // ImVec2    ButtonTextAlign
-	ENUM(ImGuiStyleVar,SelectableTextAlign), // ImVec2    SelectableTextAlign
+	ENUM(ImGuiStyleVar,Alpha),                  // float     Alpha
+	ENUM(ImGuiStyleVar,DisabledAlpha),          // float     DisabledAlpha
+	ENUM(ImGuiStyleVar,WindowPadding),          // ImVec2    WindowPadding
+	ENUM(ImGuiStyleVar,WindowRounding),         // float     WindowRounding
+	ENUM(ImGuiStyleVar,WindowBorderSize),       // float     WindowBorderSize
+	ENUM(ImGuiStyleVar,WindowMinSize),          // ImVec2    WindowMinSize
+	ENUM(ImGuiStyleVar,WindowTitleAlign),       // ImVec2    WindowTitleAlign
+	ENUM(ImGuiStyleVar,ChildRounding),          // float     ChildRounding
+	ENUM(ImGuiStyleVar,ChildBorderSize),        // float     ChildBorderSize
+	ENUM(ImGuiStyleVar,PopupRounding),          // float     PopupRounding
+	ENUM(ImGuiStyleVar,PopupBorderSize),        // float     PopupBorderSize
+	ENUM(ImGuiStyleVar,FramePadding),           // ImVec2    FramePadding
+	ENUM(ImGuiStyleVar,FrameRounding),          // float     FrameRounding
+	ENUM(ImGuiStyleVar,FrameBorderSize),        // float     FrameBorderSize
+	ENUM(ImGuiStyleVar,ItemSpacing),            // ImVec2    ItemSpacing
+	ENUM(ImGuiStyleVar,ItemInnerSpacing),       // ImVec2    ItemInnerSpacing
+	ENUM(ImGuiStyleVar,IndentSpacing),          // float     IndentSpacing
+	ENUM(ImGuiStyleVar,ScrollbarSize),          // float     ScrollbarSize
+	ENUM(ImGuiStyleVar,ScrollbarRounding),      // float     ScrollbarRounding
+	ENUM(ImGuiStyleVar,GrabMinSize),            // float     GrabMinSize
+	ENUM(ImGuiStyleVar,GrabRounding),           // float     GrabRounding
+	ENUM(ImGuiStyleVar,TabRounding),            // float     TabRounding
+	ENUM(ImGuiStyleVar,ButtonTextAlign),        // ImVec2    ButtonTextAlign
+	ENUM(ImGuiStyleVar,SelectableTextAlign),    // ImVec2    SelectableTextAlign
+	ENUM(ImGuiStyleVar,SeparatorTextBorderSize),// float     SeparatorTextBorderSize
+	ENUM(ImGuiStyleVar,SeparatorTextAlign),     // ImVec2    SeparatorTextAlign
+	ENUM(ImGuiStyleVar,SeparatorTextPadding),   // ImVec2    SeparatorTextPadding
 	ENUM(ImGuiStyleVar,COUNT),
 	{ NULL, 0 },
 };
