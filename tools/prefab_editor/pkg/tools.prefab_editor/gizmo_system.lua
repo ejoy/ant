@@ -569,6 +569,11 @@ local function world_to_screen(wpos)
 	return mu.world_to_screen(vpmat, mqvr, wpos)
 end
 
+local function set_color(eid, color)
+	local e <close> = w:entity(eid)
+	imaterial.set_property(e, "u_color", color)
+end
+
 local function select_axis(x, y)
 	if not gizmo.target_eid then
 		return
@@ -600,20 +605,13 @@ local function select_axis(x, y)
 		if radius < gizmo_const.MOVE_HIT_RADIUS_PIXEL then
 			uniform_scale = true
 			local hlcolor = gizmo_const.COLOR.HIGHLIGHT
-			local ue <close> = w:entity(gizmo.uniform_scale_eid)
-			local sx1 <close> = w:entity(gizmo.sx.eid[1])
-			local sx2 <close> = w:entity(gizmo.sx.eid[2])
-			local sy1 <close> = w:entity(gizmo.sy.eid[1])
-			local sy2 <close> = w:entity(gizmo.sy.eid[2])
-			local sz1 <close> = w:entity(gizmo.sz.eid[1])
-			local sz2 <close> = w:entity(gizmo.sz.eid[2])
-			imaterial.set_property(ue, "u_color", hlcolor)
-			imaterial.set_property(sx1, "u_color", hlcolor)
-			imaterial.set_property(sx2, "u_color", hlcolor)
-			imaterial.set_property(sy1, "u_color", hlcolor)
-			imaterial.set_property(sy2, "u_color", hlcolor)
-			imaterial.set_property(sz1, "u_color", hlcolor)
-			imaterial.set_property(sz2, "u_color", hlcolor)
+			set_color(gizmo.uniform_scale_eid, hlcolor)
+			set_color(gizmo.sx.eid[1], hlcolor)
+			set_color(gizmo.sx.eid[2], hlcolor)
+			set_color(gizmo.sy.eid[1], hlcolor)
+			set_color(gizmo.sy.eid[2], hlcolor)
+			set_color(gizmo.sz.eid[1], hlcolor)
+			set_color(gizmo.sz.eid[2], hlcolor)
 			return
 		end
 	end
@@ -664,13 +662,13 @@ local function select_rotate_axis(x, y)
 		local a2 <close> = w:entity(axis.eid[2])
 		if math.abs(dist - gizmo.scale * adjust_axis_len) < gizmo_const.ROTATE_HIT_RADIUS * gizmo.scale then
 			local hlcolor = gizmo_const.COLOR.HIGHLIGHT
-			imaterial.set_property(a1, "u_color", hlcolor)
-			imaterial.set_property(a2, "u_color", hlcolor)
+			set_color(axis.eid[1], hlcolor)
+			set_color(axis.eid[2], hlcolor)
 			return hitPosVec
 		else
 			local cc = math3d.vector(axis.color)
-			imaterial.set_property(a1, "u_color", cc)
-			imaterial.set_property(a2, "u_color", cc)
+			set_color(axis.eid[1], cc)
+			set_color(axis.eid[2], cc)
 			return nil
 		end
 	end

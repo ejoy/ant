@@ -61,7 +61,7 @@ ientity.create_mesh = create_mesh
 local nameidx = 0
 local function gen_test_name() nameidx = nameidx + 1 return "entity" .. nameidx end
 
-local function simple_render_entity_data(name, material, mesh, scene, uniforms, hide, render_layer)
+local function simple_render_entity_data(name, material, mesh, scene, uniforms, hide, render_layer, queue)
 	return {
 		policy = {
 			"ant.render|simplerender",
@@ -78,6 +78,9 @@ local function simple_render_entity_data(name, material, mesh, scene, uniforms, 
 				if hide then
 					ivs.set_state(e, "main_view", false)
 				end
+				if queue then
+					ivs.set_state(e, queue, true)
+				end
 				for key, value in pairs(uniforms) do
 					imaterial.set_property(e, key, math3d.vector(value))
 					-- imaterial.set_property(e, "u_color", color and math3d.vector(color) or mc.ONE)
@@ -87,8 +90,8 @@ local function simple_render_entity_data(name, material, mesh, scene, uniforms, 
 	}
 end
 
-local function create_simple_render_entity(name, material, mesh, scene, uniforms, hide, render_layer)
-	return ecs.create_entity(simple_render_entity_data(name, material, mesh, scene, uniforms, hide, render_layer))
+local function create_simple_render_entity(name, material, mesh, scene, uniforms, hide, render_layer, queue)
+	return ecs.create_entity(simple_render_entity_data(name, material, mesh, scene, uniforms, hide, render_layer, queue))
 end
 
 ientity.create_simple_render_entity = create_simple_render_entity
@@ -393,7 +396,7 @@ function ientity.create_line_entity(p0, p1, scene, color, hide)
 	
 end
 
-function ientity.create_screen_line_list(points, scene, uniforms, dynamic, hide)
+function ientity.create_screen_line_list(points, scene, uniforms, dynamic, layer, queue)
 	local vb = {}
 	for _, pt in ipairs(points) do
 		vb[#vb + 1] = pt[1]
@@ -416,7 +419,7 @@ function ientity.create_screen_line_list(points, scene, uniforms, dynamic, hide)
 		mesh = create_mesh({layout_desc, vb})
 	end
 	
-	return create_simple_render_entity("", "/pkg/ant.resources/materials/screenline_color.material", mesh, scene, uniforms, hide, "translucent")
+	return create_simple_render_entity("", "/pkg/ant.resources/materials/screenline_color.material", mesh, scene, uniforms, false, layer, queue)
 end
 
 function ientity.create_circle_entity(radius, slices, scene, color, hide, arc)

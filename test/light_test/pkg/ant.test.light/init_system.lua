@@ -100,13 +100,13 @@ function S.init_world()
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
     iom.set_direction(camera_ref, dir)
 
-    create_simple_triangles()
+    -- create_simple_triangles()
 
-    -- create_instance("/pkg/ant.test.light/assets/building_station.prefab", function (e)
-    --     local leid = e.tag['*'][1]
-    --     local le<close> = w:entity(leid, "scene:update")
-    --     iom.set_scale(le, 0.1)
-    -- end)
+    create_instance("/pkg/ant.test.light/assets/building_station.prefab", function (e)
+        local leid = e.tag['*'][1]
+        local le<close> = w:entity(leid, "scene:update")
+        iom.set_scale(le, 0.1)
+    end)
 
     -- create_instance("/pkg/ant.test.light/assets/plane.glb|mesh.prefab", function (e)
     --     local normaltex = assetmgr.resource "/pkg/ant.test.light/assets/normal.texture"

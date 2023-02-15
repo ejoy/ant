@@ -27,23 +27,23 @@ local gizmo = {
 	sz = {dir = gizmo_const.DIR_Z, color = math3d.ref(math3d.vector(gizmo_const.COLOR.Z))},
 }
 
+local function set_color(eid, color)
+	local e <close> = w:entity(eid)
+	imaterial.set_property(e, "u_color", color)
+end
+
 local function highlight_axis(axis)
-	local e1 <close> = w:entity(axis.eid[1])
-	local e2 <close> = w:entity(axis.eid[2])
-	imaterial.set_property(e1, "u_color", gizmo_const.COLOR.HIGHLIGHT)
-	imaterial.set_property(e2, "u_color", gizmo_const.COLOR.HIGHLIGHT)
+	set_color(axis.eid[1], gizmo_const.COLOR.HIGHLIGHT)
+	set_color(axis.eid[2], gizmo_const.COLOR.HIGHLIGHT)
 end
 
 local function gray_axis(axis)
-	local e1 <close> = w:entity(axis.eid[1])
-	local e2 <close> = w:entity(axis.eid[2])
-	imaterial.set_property(e1, "u_color", gizmo_const.COLOR.GRAY_ALPHA)
-	imaterial.set_property(e2, "u_color", gizmo_const.COLOR.GRAY_ALPHA)
+	set_color(axis.eid[1], gizmo_const.COLOR.GRAY_ALPHA)
+	set_color(axis.eid[2], gizmo_const.COLOR.GRAY_ALPHA)
 end
 
 function gizmo:highlight_axis_plane(axis_plane)
-	local e <close> = w:entity(axis_plane.eid[1])
-	imaterial.set_property(e, "u_color", gizmo_const.COLOR.HIGHLIGHT_ALPHA)
+	set_color(axis_plane.eid[1], gizmo_const.COLOR.HIGHLIGHT_ALPHA)
 	if axis_plane == self.tyz then
 		highlight_axis(self.ty)
 		highlight_axis(self.tz)
@@ -212,65 +212,39 @@ end
 
 function gizmo:reset_move_axis_color()
 	if self.mode ~= gizmo_const.MOVE then return end
-	local uname = "u_color"
-	local tx1 <close> = w:entity(self.tx.eid[1])
-	local tx2 <close> = w:entity(self.tx.eid[2])
-	local ty1 <close> = w:entity(self.ty.eid[1])
-	local ty2 <close> = w:entity(self.ty.eid[2])
-	local tz1 <close> = w:entity(self.tz.eid[1])
-	local tz2 <close> = w:entity(self.tz.eid[2])
-	imaterial.set_property(tx1, uname, self.tx.color)
-	imaterial.set_property(tx2, uname, self.tx.color)
-	imaterial.set_property(ty1, uname, self.ty.color)
-	imaterial.set_property(ty2, uname, self.ty.color)
-	imaterial.set_property(tz1, uname, self.tz.color)
-	imaterial.set_property(tz2, uname, self.tz.color)
+	set_color(self.tx.eid[1], self.tx.color)
+	set_color(self.tx.eid[2], self.tx.color)
+	set_color(self.ty.eid[1], self.ty.color)
+	set_color(self.ty.eid[2], self.ty.color)
+	set_color(self.tz.eid[1], self.tz.color)
+	set_color(self.tz.eid[2], self.tz.color)
 	--plane
 	set_visible(self.txy.eid[1], self.target_eid ~= nil)
 	set_visible(self.tyz.eid[1], self.target_eid ~= nil)
 	set_visible(self.tzx.eid[1], self.target_eid ~= nil)
-	local txy <close> = w:entity(self.txy.eid[1])
-	local tyz <close> = w:entity(self.tyz.eid[1])
-	local tzx <close> = w:entity(self.tzx.eid[1])
-	imaterial.set_property(txy, uname, self.txy.color)
-	imaterial.set_property(tyz, uname, self.tyz.color)
-	imaterial.set_property(tzx, uname, self.tzx.color)
+	set_color(self.txy.eid[1], self.txy.color)
+	set_color(self.tyz.eid[1], self.tyz.color)
+	set_color(self.tzx.eid[1], self.tzx.color)
 end
 
 function gizmo:reset_rotate_axis_color()
-	local uname = "u_color"
-	local rx1 <close> = w:entity(self.rx.eid[1])
-	local rx2 <close> = w:entity(self.rx.eid[2])
-	local ry1 <close> = w:entity(self.ry.eid[1])
-	local ry2 <close> = w:entity(self.ry.eid[2])
-	local rz1 <close> = w:entity(self.rz.eid[1])
-	local rz2 <close> = w:entity(self.rz.eid[2])
-	local rw <close> = w:entity(self.rw.eid[1])
-	imaterial.set_property(rx1, uname, self.rx.color)
-	imaterial.set_property(rx2, uname, self.rx.color)
-	imaterial.set_property(ry1, uname, self.ry.color)
-	imaterial.set_property(ry2, uname, self.ry.color)
-	imaterial.set_property(rz1, uname, self.rz.color)
-	imaterial.set_property(rz2, uname, self.rz.color)
-	imaterial.set_property(rw, uname, self.rw.color)
+	set_color(self.rx.eid[1], self.rx.color)
+	set_color(self.rx.eid[2], self.rx.color)
+	set_color(self.ry.eid[1], self.ry.color)
+	set_color(self.ry.eid[2], self.ry.color)
+	set_color(self.rz.eid[1], self.rz.color)
+	set_color(self.rz.eid[2], self.rz.color)
+	set_color(self.rw.eid[1], self.rw.color)
 end
 
 function gizmo:reset_scale_axis_color()
-	local uname = "u_color"
-	local sx1 <close> = w:entity(self.sx.eid[1])
-	local sx2 <close> = w:entity(self.sx.eid[2])
-	local sy1 <close> = w:entity(self.sy.eid[1])
-	local sy2 <close> = w:entity(self.sy.eid[2])
-	local sz1 <close> = w:entity(self.sz.eid[1])
-	local sz2 <close> = w:entity(self.sz.eid[2])
-	local us <close> = w:entity(self.uniform_scale_eid)
-	imaterial.set_property(sx1, uname, self.sx.color)
-	imaterial.set_property(sx2, uname, self.sx.color)
-	imaterial.set_property(sy1, uname, self.sy.color)
-	imaterial.set_property(sy2, uname, self.sy.color)
-	imaterial.set_property(sz1, uname, self.sz.color)
-	imaterial.set_property(sz2, uname, self.sz.color)
-	imaterial.set_property(us, uname, math3d.vector(gizmo_const.COLOR.GRAY))
+	set_color(self.sx.eid[1], self.sx.color)
+	set_color(self.sx.eid[2], self.sx.color)
+	set_color(self.sy.eid[1], self.sy.color)
+	set_color(self.sy.eid[2], self.sy.color)
+	set_color(self.sz.eid[1], self.sz.color)
+	set_color(self.sz.eid[2], self.sz.color)
+	set_color(self.uniform_scale_eid, math3d.vector(gizmo_const.COLOR.GRAY))
 end
 
 return gizmo
