@@ -1,7 +1,7 @@
 #include <imgui.h>
 #include <SDL.h>
 #include <SDL_syswm.h>
-#include <backends/imgui_impl_sdl.h>
+#include <backends/imgui_impl_sdl2.h>
 #include "imgui_window.h"
 #include "imgui_platform.h"
 

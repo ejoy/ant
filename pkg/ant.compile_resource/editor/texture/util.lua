@@ -116,9 +116,8 @@ return function (output, param)
 		end
 		assert(lfs.exists(binfile))
 		lfs.rename(binfile, output / "main.bin")
-		
-		local m = bgfx.memory_buffer(readall(output / "main.bin"))
-		local info = image.parse(m)
+
+		local info = image.parse(readall(output / "main.bin"))
 		config.info = info
 	else
 		local s = param.size

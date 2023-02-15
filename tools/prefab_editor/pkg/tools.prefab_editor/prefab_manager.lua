@@ -22,7 +22,6 @@ local widget_utils  = require "widget.utils"
 local gd            = require "common.global_data"
 local utils         = require "common.utils"
 local subprocess    = import_package "ant.subprocess"
-local bgfx      = require "bgfx"
 
 local anim_view
 local m = {
@@ -484,22 +483,8 @@ local function on_remove_entity(eid)
 end
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local tile_tex
 
 function m:create_ground()
-    if not tile_tex then
-        tile_tex = bgfx.create_texture2d(4, 4, true, 1, "RGBA8", "uwvwww-l+p*l", bgfx.memory_buffer("bbbb", {
-            100, 100, 100, 255,100, 100, 100, 255,200, 200, 200, 255,200, 200, 200, 255,
-            100, 100, 100, 255,100, 100, 100, 255,200, 200, 200, 255,200, 200, 200, 255,
-            200, 200, 200, 255,200, 200, 200, 255,100, 100, 100, 255,100, 100, 100, 255,
-            200, 200, 200, 255,200, 200, 200, 255,100, 100, 100, 255,100, 100, 100, 255,
-            100, 100, 100, 255,
-            200, 200, 200, 255,
-            200, 200, 200, 255,
-            100, 100, 100, 255,
-            150, 150, 150, 255
-        }))
-    end
     if not self.plane then
         self.plane = ecs.create_entity {
             policy = {
@@ -514,7 +499,6 @@ function m:create_ground()
                 visible_state= "main_view",
                 name        = "ground",
                 on_ready = function (e)
-                    -- imaterial.set_property(e, "s_basecolor", tile_tex)
                     -- ivs.set_state(e, "main_view", false)
                     imaterial.set_property(e, "u_uvmotion", math3d.vector{0, 0, 100, 100})
                 end
@@ -809,14 +793,33 @@ function m:get_world_aabb(eid)
         end
     end
     local waabb
+    local e <close> = w:entity(eid, "bounding?in meshskin?in name:in")
+    local bounding = e.bounding
+    if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+        waabb = math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
+    end
     for _, c in ipairs(children) do
-        local e <close> = w:entity(c, "bounding?in")
-        local bounding = e.bounding
+        local ec <close> = w:entity(c, "bounding?in")
+        local bounding = ec.bounding
         if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
             if not waabb then
                 waabb = math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
             else
                 waabb = math3d.aabb_merge(bounding.scene_aabb, waabb)
+            end
+        end
+    end
+    -- TODO: if eid is scene root or meshskin, merge skinning node
+    if e.name == "Scene" or e.meshskin then
+        for key, _ in pairs(hierarchy.all) do
+            local ea <close> = w:entity(key, "bounding?in skinning?in")
+            local bounding = ea.bounding
+            if ea.skinning and bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+                if not waabb then
+                    waabb = math3d.aabb(math3d.array_index(bounding.scene_aabb, 1), math3d.array_index(bounding.scene_aabb, 2))
+                else
+                    waabb = math3d.aabb_merge(bounding.scene_aabb, waabb)
+                end
             end
         end
     end

@@ -159,7 +159,7 @@
                     return item
                 end
                 item.outerHTML = ([[
-                    <div style="width:50px; height:50px; background-size: cover; background-image:'%s';">
+                    <div style='width:50px; height:50px; background-size: cover; background-image:"%s";'>
                     </div>
                     <div>
                         %d
