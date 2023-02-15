@@ -30,6 +30,7 @@ local TERRAIN_TYPES<const> = {
     road3 = "3",
     mark1 = "4",
     mark2 = "5",
+    mark3 = "6"
 }
 
 local TERRAIN_DIRECTIONS<const> = {

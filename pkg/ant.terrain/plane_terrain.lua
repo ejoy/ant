@@ -97,6 +97,12 @@ end
 
 local function parse_layer(t, s, d)
     local pt, ps, pd
+    if t == "6" then
+        pt = 4
+        ps = 11
+        pd = 0
+        return pt, ps, pd
+    end
     if s == "U" then
         if t >= "1" and t <= "3" then
             ps = 1
