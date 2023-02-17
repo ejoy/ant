@@ -24,8 +24,13 @@ function fs.app_path(name)
     if platform.os == "ios" then
         local ios = require "ios"
         return fs.path(ios.directory(ios.NSDocumentDirectory))
+    elseif platform.os == 'windows' then
+        return fs.path(os.getenv "LOCALAPPDATA") / name
+    elseif platform.os == 'linux' then
+        return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share")) / name
+    elseif platform.os == 'macos' then
+        return fs.path(os.getenv "HOME" .. "/Library/Caches") / name
     end
-    return fs.appdata_path() / name
 end
 
 return fs
