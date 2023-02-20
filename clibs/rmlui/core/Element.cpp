@@ -69,7 +69,7 @@ static glm::vec3 PerspectiveOrigin(Element* e) {
 }
 
 Element::Element(Document* owner, const std::string& tag)
-	: Node(Node::Type::Element)
+	: Node(Layout::UseElement {})
 	, tag(tag)
 	, owner_document(owner)
 {
@@ -420,7 +420,7 @@ void Element::AppendChild(Node* node, uint32_t index) {
 	}
 	GetLayout().InsertChild(node->GetLayout(), index);
 	childnodes.emplace_back(node);
-	if (node->GetType() == Node::Type::Element) {
+	if (node->GetType() == Layout::Type::Element) {
 		auto e = static_cast<Element*>(node);
 		children.emplace_back(e);
 	}
@@ -437,7 +437,7 @@ std::unique_ptr<Node> Element::RemoveChild(Node* node) {
 	auto detached_child = std::move(childnodes[index]);
 	childnodes.erase(childnodes.begin() + index);
 	
-	if (node->GetType() == Node::Type::Element) {
+	if (node->GetType() == Layout::Type::Element) {
 		auto e = static_cast<Element*>(node);
 		for (auto it = children.begin(); it != children.end(); ++it) {
 			if (*it == e) {
@@ -471,7 +471,7 @@ void Element::InsertBefore(Node* node, Node* adjacent) {
 
 	GetLayout().InsertChild(node->GetLayout(), (uint32_t)index);
 	childnodes.emplace(childnodes.begin() + index, node);
-	if (node->GetType() == Node::Type::Element) {
+	if (node->GetType() == Layout::Type::Element) {
 		auto e = static_cast<Element*>(node);
 		children.emplace_back(e);
 	}
@@ -666,7 +666,7 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 	}
 
 	for (auto& child : childnodes) {
-		if (child->GetType() == Node::Type::Text) {
+		if (child->GetType() == Layout::Type::Text) {
 			auto text = static_cast<Text*>(child.get());
 			text->ChangedProperties(changed_properties);
 		}

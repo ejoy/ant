@@ -191,10 +191,9 @@ static bool BuildToken(std::string& token, const char*& token_begin, const char*
 }
 
 Text::Text(Document* owner, const std::string& text_)
-	: Node(Node::Type::Text)
+	: Node(Layout::UseText {}, this)
 	, text(text_)
 {
-	GetLayout().InitTextNode(this);
 	DirtyLayout();
 }
 

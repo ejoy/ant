@@ -10,7 +10,6 @@ typedef struct YGNode* YGNodeRef;
 namespace Rml {
 
 class Element;
-class Text;
 class Property;
 enum class PropertyId : uint8_t;
 
@@ -63,13 +62,22 @@ static inline const PropertyIdSet LayoutProperties = GetLayoutProperties();
 
 class Layout {
 public:
+	struct UseElement {};
+	struct UseText {};
+
 	enum class Overflow : uint8_t {
-		Visible,
+		Visible = 0,
 		Hidden,
 		Scroll,
 	};
 
-	Layout();
+	enum class Type : uint8_t {
+		Element = 0,
+		Text,
+	};
+
+	Layout(UseElement);
+	Layout(UseText, void* context);
 	~Layout();
 
 	Layout(const Layout&) = delete;
@@ -77,7 +85,6 @@ public:
 	Layout& operator=(const Layout&) = delete;
 	Layout& operator=(Layout&&) = delete;
 
-	void InitTextNode(Text* text);
 	void CalculateLayout(Size const& size);
 	void SetProperty(PropertyId id, const Property& property, const Element* element);
 	
@@ -87,6 +94,7 @@ public:
 
 	bool HasNewLayout();
 	Overflow GetOverflow() const;
+	Type GetType() const;
 
 	bool IsVisible() const;
 	void SetVisible(bool visible);

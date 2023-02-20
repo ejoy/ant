@@ -10,11 +10,8 @@ namespace Rml {
 
     class Node {
 	public:
-		enum class Type : uint8_t {
-			Text = 0,
-			Element,
-		};
-		Node(Type type);
+		Node(Layout::UseElement);
+		Node(Layout::UseText, void* context);
 		virtual ~Node();
 		void UpdateLayout();
 		Layout& GetLayout();
@@ -26,7 +23,7 @@ namespace Rml {
 
 		Element* GetParentNode() const;
 		DataModel* GetDataModel() const;
-		Type GetType() const;
+		Layout::Type GetType() const;
 
 		const Rect& GetBounds() const;
 
@@ -50,7 +47,6 @@ namespace Rml {
 		DataModel* data_model = nullptr;
 	private:
 		Rect bounds;
-		Type type;
 		bool visible = true;
 	};
 }
