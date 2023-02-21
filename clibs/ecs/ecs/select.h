@@ -262,10 +262,15 @@ namespace ecs_api {
         entity_group_enable(ctx, component<Component>::id, N, ids);
     }
 
-
     template <typename Component>
     size_t count(ecs_context* ctx) {
         return (size_t)entity_count(ctx, component<Component>::id);
+    }
+
+    template <typename Component>
+        requires (component<Component>::id == EID)
+    int index(ecs_context* ctx, Component eid) {
+        return entity_index(ctx, eid);
     }
 
     template <typename ...Args>
