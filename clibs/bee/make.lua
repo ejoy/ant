@@ -37,7 +37,7 @@ lm:source_set "bee" {
     },
     sources = {
         "bee/**/*.cpp",
-        "bee/nonstd/fmt/*.cc",
+        "bee/nonstd/3rd/*.cc",
     },
     windows = {
         sources = need "win"
@@ -82,7 +82,10 @@ lm:lua_source "bee" {
         "bee/nonstd",
         "."
     },
-    sources = "binding/*.cpp",
+    sources = {
+        "binding/*.cpp",
+        "!binding/luaref.cpp",
+    },
     windows = {
         defines = "_CRT_SECURE_NO_WARNINGS",
         links = {

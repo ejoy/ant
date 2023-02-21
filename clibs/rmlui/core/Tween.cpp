@@ -2,7 +2,7 @@
 #include <utility>
 #include <numbers>
 #include <math.h>
-#include <bee/utility/unreachable.h>
+#include <bee/nonstd/unreachable.h>
 
 namespace Rml {
 
@@ -97,7 +97,7 @@ static float TweenIn(Tween::Type type, float t) {
 	case Tween::Type::Sine:
 		return sine(t);
 	default:
-		bee::unreachable();
+		std::unreachable();
 	}
 }
 
