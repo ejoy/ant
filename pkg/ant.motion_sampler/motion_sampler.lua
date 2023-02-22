@@ -16,6 +16,9 @@ local function init_ms()
         duration    = 0.0,
         deltatime   = 0.0,
 
+        tween_in    = 0,
+        tween_out   = 0,
+
         source_s    = mc.NULL,
         source_r    = mc.NULL,
         source_t    = mc.NULL,
@@ -88,14 +91,17 @@ local function tom3d(old, new)
     return mc.NULL
 end
 
-function ims.set_target(e, s, r, t, duration)
+function ims.set_target(e, s, r, t, duration, tween_in, tween_out)
     w:extend(e, "motion_sampler:update scene:in")
     local ss = e.motion_sampler
     if duration then
         ss.duration = duration
     end
-    
+
     ss.deltatime    = 0.0
+
+    ss.tween_in     = tween_in or mc.TWEEN_NONE
+    ss.tween_out    = tween_out or mc.TWEEN_NONE
 
     ss.target_s     = tom3d(ss.target_s, s)
     ss.target_r     = tom3d(ss.target_r, r)
