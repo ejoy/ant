@@ -11,18 +11,18 @@ local stage_types = {
 
 local shader_options = {
 	direct3d9 = {
-		vs = "vs_3_0",
-		fs = "ps_3_0",
+		vs = "s_3_0",
+		fs = "s_3_0",
 	},
 	direct3d11 = {
-		vs = "vs_5_0",
-		fs = "ps_5_0",
-		cs = "cs_5_0",
+		vs = "s_5_0",
+		fs = "s_5_0",
+		cs = "s_5_0",
 	},
 	direct3d12 = {
-		vs = "vs_5_0",
-		fs = "ps_5_0",
-		cs = "cs_5_0",
+		vs = "s_5_0",
+		fs = "s_5_0",
+		cs = "s_5_0",
 	},
 	opengl = {
 		vs = "120",
@@ -35,9 +35,9 @@ local shader_options = {
 		cs = "metal",
 	},
 	vulkan = {
-		vs = "spirv",
-		fs = "spirv",
-		cs = "spirv",
+		vs = "spirv16-13",
+		fs = "spirv16-13",
+		cs = "spirv16-13",
 	},
 }
 
