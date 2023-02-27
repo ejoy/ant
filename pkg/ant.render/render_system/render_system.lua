@@ -23,11 +23,13 @@ function vg_sys:init()
 end
 
 local viewidmgr = require "viewid_mgr"
-for n, b in pairs(viewidmgr.all_bindings()) do
-	for viewid=b[1], b[1]+b[2]-1 do
-		bgfx.set_view_name(viewid, n .. "_" .. viewid)
+local function update_bgfx_viewid_name()
+	for n, viewid in pairs(viewidmgr.all_bindings()) do
+		bgfx.set_view_name(viewid, n)
 	end
 end
+
+update_bgfx_viewid_name()
 
 function render_sys:component_init()
 	for e in w:select "INIT render_object filter_material:update render_object_update?out" do
@@ -49,24 +51,24 @@ local function update_ro(ro, m)
 	end
 end
 
+local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
+	local v = {
+		queue_visible_id	= w:component_id(k .. "_visible"),
+		queue_cull_id		= w:component_id(k .. "_cull"),
+		material_index		= irender.material_index(k) or 0,
+	}
+	t[k] = v
+	return v
+end})
+
 function render_sys:entity_init()
-	for qe in w:select "INIT primitive_filter:in queue_name:in" do
-		local pf = qe.primitive_filter
-
-		pf._DEBUG_filter_type = pf.filter_type
-		pf.filter_type = ivs.filter_mask(pf.filter_type)
-		pf._DEBUG_excule_type = pf.exclude_type
-		pf.exclude_type = pf.exclude_type and ivs.filter_mask(pf.exclude_type) or 0
-	end
-
-	
 	for e in w:select "INIT material_result:in render_object:update filter_material:in" do
 		local mr = e.material_result
 		local fm = e.filter_material
 		local mi = mr.object:instance()
 		fm["main_queue"] = mi
 		local ro = e.render_object
-		ro.mat_mq = mi:ptr()
+		ro.mat_def = mi:ptr()
 	end
 
 	for e in w:select "INIT mesh?in simplemesh?in render_object:update" do
@@ -84,6 +86,11 @@ function render_sys:entity_init()
 		end
 
 		e.render_object.render_layer = assert(irl.layeridx(rl))
+	end
+
+	for qe in w:select "INIT queue_name:in render_target:in" do
+		local qn = qe.queue_name
+		RENDER_ARGS[qn].viewid = qe.render_target.viewid
 	end
 end
 
@@ -104,22 +111,15 @@ end
 function render_sys:begin_filter()
 	w:clear "filter_result"
     for e in w:select "render_object_update render_object visible_state:in filter_result:new" do
-        local fs = e.visible_state
-
-		for qe in w:select "queue_name:in primitive_filter:in" do
+		local vs = e.visible_state
+		for qe in w:select "queue_name:in camera_ref" do
 			local qn = qe.queue_name
-			local function mark_tags(add)
-				local qn_visible = qn .. "_visible"
-				e[qn_visible] = add
-				w:extend(e, qn_visible .. "?out")
-			end
-
-			local pf = qe.primitive_filter
-			local add = ((fs & pf.filter_type) ~= 0) and ((fs & pf.exclude_type) == 0)
-			mark_tags(add)
+			local qn_visible = qn .. "_visible"
+			e[qn_visible] = vs[qn]
+			w:extend(e, qn_visible .. "?out")
 		end
 		e.filter_result = true
-    end
+	end
 end
 
 function render_sys:scene_update()
@@ -129,22 +129,29 @@ function render_sys:scene_update()
 end
 
 function render_sys:render_submit()
-	w:clear "render_args"
-	for qe in w:select "visible queue_name:in camera_ref:in render_target:in render_args:new" do
-		local rt = qe.render_target
-		local viewid = rt.viewid
+	if viewidmgr.remapping_changed() then
+		bgfx.set_view_order(viewidmgr.remapping())
+		viewidmgr.clear_remapping_changed()
 
-		bgfx.touch(viewid)
+		update_bgfx_viewid_name()
+	end
+
+	for qe in w:select "visible camera_ref:in render_target:in" do
+		local viewid = qe.render_target.viewid
 		local camera <close> = w:entity(qe.camera_ref, "scene_changed?in camera_changed?in")
 		if camera.scene_changed or camera.camera_changed then
 			w:extend(camera, "camera:in")
 			bgfx.set_view_transform(viewid, camera.camera.viewmat, camera.camera.projmat)
 		end
+	end
 
-		qe.render_args = {
-			viewid		= viewid,
-			queue_index	= rendercore.queue_index(qe.queue_name) or 0,
-		}
+	w:clear "render_args"
+	for qe in w:select "visible queue_name:in render_target:in render_args:new" do
+		local rt = qe.render_target
+		local viewid = rt.viewid
+
+		bgfx.touch(viewid)
+		qe.render_args = RENDER_ARGS[qe.queue_name]
 	end
 
 	rendercore.submit()
@@ -187,7 +194,7 @@ function s:update_filter()
 				local ro = e.render_object
 				local fm = e.filter_material
 				local m = fm.main_queue
-				ro.mat_mq = m:ptr()
+				ro.mat_def = m:ptr()
 				--Here, we no need to create new material object for this new state, because only main_queue render need this material object
 				m:get_material():set_state(check_set_depth_state_as_equal(m:get_state()))
 			end

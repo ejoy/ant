@@ -56,6 +56,7 @@ public:
 	virtual void SetClipRect(const glm::u16vec4& r) = 0;
 	virtual void SetClipRect(glm::vec4 r[2]) = 0;
 	virtual MaterialHandle CreateTextureMaterial(TextureId texture, SamplerFlag flag) = 0;
+	virtual MaterialHandle CreateRenderTextureMaterial(TextureId texture, SamplerFlag flag) = 0;
 	virtual MaterialHandle CreateFontMaterial(const TextEffects& effects) = 0;
 	virtual MaterialHandle CreateDefaultMaterial() = 0;
 	virtual void DestroyMaterial(MaterialHandle mat) = 0;
@@ -78,7 +79,7 @@ public:
 	virtual void OnCreateElement(Document* document, Element* element, const std::string& tag) = 0;
 	virtual void OnDestroyNode(Document* document, Node* node) = 0;
 	virtual std::string OnRealPath(const std::string& path) = 0;
-	virtual void OnLoadTexture(Document* document, Element* element, const std::string& path) = 0;
+	virtual void OnLoadTexture(Document* document, Element* element, const std::string& path, Rect rect, bool isRT) = 0;
 	virtual void OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& groupmap,std::string& ctext,Rml::group& default_group)=0;
 };
 

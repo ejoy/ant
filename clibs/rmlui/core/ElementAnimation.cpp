@@ -1,31 +1,3 @@
-/*
- * This source file is part of RmlUi, the HTML/CSS Interface Middleware
- *
- * For the latest information, see http://github.com/mikke89/RmlUi
- *
- * Copyright (c) 2018 Michael R. P. Ragazzon
- * Copyright (c) 2019 The RmlUi Team, and contributors
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- *
- */
-
 #include <core/ElementAnimation.h>
 #include <core/Element.h>
 #include <core/Transform.h>
@@ -40,17 +12,6 @@ namespace Rml {
 //   https://www.w3.org/TR/css-transforms-2/#interpolation-of-transform-functions
 //
 static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element) {
-	for (auto& p0 : t0) {
-		if (!p0.PrepareForInterpolation(element)) {
-			return false;
-		}
-	}
-	for (auto& p1 : t1) {
-		if (!p1.PrepareForInterpolation(element)) {
-			return false;
-		}
-	}
-
 	if (t0.size() != t1.size()) {
 		bool t0_shorter = t0.size() < t1.size();
 		auto& shorter = t0_shorter ? t0 : t1;
@@ -94,103 +55,136 @@ static bool PrepareTransformPair(Transform& t0, Transform& t1, Element& element)
 	return true;
 }
 
-static bool PrepareTransforms(AnimationKey& key, Element& element) {
-	auto& prop0 = key.in;
-	auto& prop1 = key.out;
+static bool PrepareTransforms(Property& prop0, Property& prop1, Element& element) {
 	if (!prop0.Has<Transform>() || !prop1.Has<Transform>()) {
-		return false;
+		return true;
 	}
 	auto& t0 = prop0.Get<Transform>();
 	auto& t1 = prop1.Get<Transform>();
-	return PrepareTransformPair(t0, t1, element);
-}
-
-ElementAnimation::ElementAnimation(PropertyId property_id, ElementAnimationOrigin origin, const Property& current_value, Element& element, float start_time, float duration, int num_iterations, bool alternate_direction)
-	: property_id(property_id)
-	, duration(duration)
-	, num_iterations(num_iterations)
-	, alternate_direction(alternate_direction)
-	, time(start_time)
-	, current_iteration(0)
-	, reverse_direction(false)
-	, animation_complete(false)
-	, origin(origin)
-{
-	InternalAddKey(0.0f, current_value, element, Tween{});
-}
-
-bool ElementAnimation::InternalAddKey(float time, const Property& out_prop, Element& element, Tween tween) {
-	if (!out_prop.AllowInterpolate()) {
-		Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", out_prop.ToString().c_str());
+	if (!PrepareTransformPair(t0, t1, element)) {
+		Log::Message(Log::Level::Warning, "Property '%s' is not interpolation with property '%s'.", prop1.ToString().c_str(), prop0.ToString().c_str());
 		return false;
 	}
-
-	bool first = keys.size() == 0;
-	Property const& in_prop = first ? out_prop: keys.back().prop;
-	keys.emplace_back(time, in_prop, out_prop, tween);
-	bool result = true;
-	if (!first && out_prop.Has<Transform>()) {
-		result = PrepareTransforms(keys.back(), element);
-	}
-	if (!result) {
-		Log::Message(Log::Level::Warning, "Could not add animation key with property '%s'.", out_prop.ToString().c_str());
-		keys.pop_back();
-	}
-	return result;
-}
-
-bool ElementAnimation::AddKey(float target_time, const Property & in_property, Element& element, Tween tween) {
-	if (!IsInitalized()) {
-		Log::Message(Log::Level::Warning, "Element animation was not initialized properly, can't add key.");
-		return false;
-	}
-	if (!InternalAddKey(target_time, in_property, element, tween)) {
-		return false;
-	}
-	duration = target_time;
 	return true;
 }
 
-float ElementAnimation::GetInterpolationFactorAndKeys(int* out_key) const {
-	float t = time;
-
-	if (reverse_direction)
-		t = duration - t;
-
-	int key0 = -1;
-	int key1 = -1;
-
-	{
-		for (int i = 0; i < (int)keys.size(); i++) {
-			if (keys[i].time >= t) {
-				key1 = i;
-				break;
-			}
-		}
-
-		if (key1 < 0) key1 = (int)keys.size() - 1;
-		key0 = (key1 == 0 ? 0 : key1 - 1);
+static bool AllowInterpolate(Property& prop, Element& element) {
+	if (!prop.AllowInterpolate(element)) {
+		Log::Message(Log::Level::Warning, "Property '%s' is not a valid target for interpolation.", prop.ToString().c_str());
+		return false;
 	}
-
-	assert(key0 >= 0 && key0 < (int)keys.size() && key1 >= 0 && key1 < (int)keys.size());
-	float alpha = 0.0f;
-
-	{
-		const float t0 = keys[key0].time;
-		const float t1 = keys[key1].time;
-		const float eps = 1e-3f;
-		if (t1 - t0 > eps)
-			alpha = (t - t0) / (t1 - t0);
-		alpha = std::clamp(alpha, 0.0f, 1.0f);
-	}
-
-	alpha = keys[key1].tween.get(alpha);
-	if (out_key) *out_key = key1;
-	return alpha;
+	return true;
 }
 
-void ElementAnimation::Update(Element& element, float delta) {
-	if (keys.size() < 2 || animation_complete || delta <= 0.0f)
+static void InterpolateProperty(Element& element, PropertyId id, const Property& p0, const Property& p1, float t0, float t1, float t, const Tween& tween) {
+	float alpha = 0.0f;
+	const float eps = 1e-3f;
+	if (t1 - t0 > eps)
+		alpha = (t - t0) / (t1 - t0);
+	alpha = std::clamp(alpha, 0.0f, 1.0f);
+	alpha = tween.get(alpha);
+	if (alpha > 1.f) alpha = 1.f;
+	if (alpha < 0.f) alpha = 0.f;
+	Property p2 = p0.Interpolate(p1, alpha);
+	element.SetAnimationProperty(id, p2);
+}
+
+ElementTransition::ElementTransition(const Property& in_prop, const Property& out_prop, const Transition& transition)
+	: in_prop(in_prop)
+	, out_prop(out_prop)
+	, time(transition.delay)
+	, duration(transition.duration)
+	, tween(transition.tween)
+	, animation_complete(false)
+{}
+
+bool ElementTransition::IsValid(Element& element) {
+	if (duration < 1e-3f) {
+		Log::Message(Log::Level::Warning, "Animation duration too samll.");
+		return false;
+	}
+	if (!AllowInterpolate(in_prop, element)) {
+		return false;
+	}
+	if (!AllowInterpolate(out_prop, element)) {
+		return false;
+	}
+	if (!PrepareTransforms(in_prop, out_prop, element)) {
+		return false;
+	}
+	return true;
+}
+
+void ElementTransition::UpdateProperty(Element& element, PropertyId id, float t) {
+	const float t0 = 0.0f;
+	const float t1 = 1.0f;
+	const Property& p0 = in_prop;
+	const Property& p1 = out_prop;
+	InterpolateProperty(element, id, p0, p1, t0, t1, t, tween);
+}
+
+void ElementTransition::Update(Element& element, PropertyId id, float delta) {
+	if (animation_complete || delta <= 0.0f)
+		return;
+	time += delta;
+	if (time >= duration) {
+		animation_complete = true;
+		time = duration;
+	}
+	UpdateProperty(element, id, time/duration);
+}
+
+ElementAnimation::ElementAnimation(const Property& in_prop, const Property& out_prop, const Animation& animation)
+	: ElementTransition(in_prop, out_prop, animation.transition)
+	, keys()
+	, num_iterations(animation.num_iterations)
+	, current_iteration(0)
+	, alternate_direction(animation.alternate)
+	, reverse_direction(false)
+{}
+
+void ElementAnimation::AddKey(float time, const Property& prop) {
+	keys.emplace_back(time, prop);
+}
+
+bool ElementAnimation::IsValid(Element& element) {
+	if (duration < 1e-3f) {
+		Log::Message(Log::Level::Warning, "Animation duration too samll.");
+		return false;
+	}
+	if (!AllowInterpolate(in_prop, element)) {
+		return false;
+	}
+	if (!AllowInterpolate(out_prop, element)) {
+		return false;
+	}
+	for (auto& key : keys) {
+		if (!AllowInterpolate(key.prop, element)) {
+			return false;
+		}
+	}
+	//TODO: PrepareTransformPair
+	return true;
+}
+
+void ElementAnimation::UpdateProperty(Element& element, PropertyId id, float t) {
+	const size_t n = keys.size();
+	size_t key = n;
+	for (size_t i = 0; i < keys.size(); ++i) {
+		if (t <= keys[i].time) {
+			key = i;
+			break;
+		}
+	}
+	const float t0 = (key==0)? 0.0f: keys[key-1].time;
+	const float t1 = (key==n)? 1.0f: keys[key].time;
+	const Property& p0 = (key==0)? in_prop: keys[key-1].prop;
+	const Property& p1 = (key==n)? out_prop: keys[key].prop;
+	InterpolateProperty(element, id, p0, p1, t0, t1, t, tween);
+}
+
+void ElementAnimation::Update(Element& element, PropertyId id, float delta) {
+	if (animation_complete || delta <= 0.0f)
 		return;
 	time += delta;
 
@@ -207,21 +201,12 @@ void ElementAnimation::Update(Element& element, float delta) {
 		}
 	}
 
-	int key = -1;
-	float alpha = GetInterpolationFactorAndKeys(&key);
-	if (alpha > 1.f) alpha = 1.f;
-	if (alpha < 0.f) alpha = 0.f;
-	const Property& p0 = keys[key].in;
-	const Property& p1 = keys[key].out;
-	Property p2 = p0.Interpolate(p1, alpha);
-	element.SetAnimationProperty(GetPropertyId(), p2);
-}
-
-void ElementAnimation::Release(Element& element) {
-	if (!IsInitalized()) {
-		return;
+	if (reverse_direction) {
+		UpdateProperty(element, id,  duration - time/duration);
 	}
-	element.DelAnimationProperty(GetPropertyId());
+	else {
+		UpdateProperty(element, id, time/duration);
+	}
 }
 
 }

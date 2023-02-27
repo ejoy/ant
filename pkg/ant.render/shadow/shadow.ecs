@@ -9,7 +9,7 @@ system "shadow_system"
     .method "init_world"
     .method "entity_init"
     .method "entity_remove"
-    .method "update_camera"
+    .method "update_camera_depend"
     --.method "refine_filter"
     .method "refine_camera"
     .method "render_submit"
@@ -35,7 +35,7 @@ component "csm_directional_light"
 component "csm".type "lua"
 policy "csm_queue"
     .require_system "ant.render|shadow_system"
-    --.require_system "ant.render|shadow_debug_system"
+    .require_system "ant.render|shadow_debug_system"
     .require_interface "ant.render|ishadow"
     .component "csm"
 
@@ -45,3 +45,7 @@ for i=1, 4 do
     component(cn .. "_cull")
     component(cn .. "_visible")
 end
+
+component "clear_sm"
+component "clear_sm_visible"
+component "clear_sm_cull"

@@ -66,4 +66,16 @@ constant.R2L_MAT    = math3d.constant("mat", {
 
 constant.NULL = math3d.constant "null"  -- identity
 
+constant.TWEEN_NONE = 0
+constant.TWEEN_BACK = 1
+constant.TWEEN_BOUNCE = 2
+constant.TWEEN_CIRCULAR = 3
+constant.TWEEN_CUBIC = 4
+constant.TWEEN_ELASTIC = 5
+constant.TWEEN_EXPONENTIAL = 6
+constant.TWEEN_LINEAR = 7
+constant.TWEEN_QUADRATIC = 8
+constant.TWEEN_QUARTIC = 9
+constant.TWEEN_QUINTIC = 10
+constant.TWEEN_SINE = 11
 return constant

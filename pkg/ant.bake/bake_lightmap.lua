@@ -105,7 +105,6 @@ end
 
 function bake_lm_sys:update_filter()
     for e in w:select "filter_result bake_lightmap_queue_visible filter_material:in render_object:update" do
-        local le = w:first("bake_lightmap_queue primitive_filter:in")
         local ro = e.render_object
         local m = load_bake_material(ro)
         ro.mat_lightmap = m:ptr()
@@ -115,12 +114,9 @@ function bake_lm_sys:update_filter()
 end
 
 local function find_scene_render_objects(queuename)
-    local q = w:first(queuename .. " primitive_filter:in")
     local renderobjects = {}
-    for _, fn in ipairs(q.primitive_filter) do
-        for e in w:select(fn .. " render_object:in widget_entity:absent") do
-            renderobjects[#renderobjects+1] = e.render_object
-        end
+    for e in w:select(("%s_visible render_object:in widget_entity:absent"):format(queuename)) do
+        renderobjects[#renderobjects+1] = e.render_object
     end
 
     return renderobjects
@@ -151,12 +147,9 @@ end
 local function bake_all()
     local scene_renderobjects = find_scene_render_objects "main_queue"
 
-    local lmq = w:first("bake_lightmap_queue primitive_filter:in")
     local lme = get_lme()
-    for _, fn in ipairs(lmq.primitive_filter) do
-        for e in w:select (fn .. " mesh:in lightmap:in render_object widget_entity:absent name?in") do
-            bake_entity(e, scene_renderobjects, lme)
-        end
+    for e in w:select ("bake_lightmap_queue_visible render_object:in lightmap:in render_object widget_entity:absent name?in") do
+        bake_entity(e, scene_renderobjects, lme)
     end
 end
 

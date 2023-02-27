@@ -65,16 +65,20 @@ Property Property::Interpolate(const Property& other, float alpha) const {
 }
 
 struct AllowInterpolateVisitor {
+	Element& e;
 	template <typename T>
-	bool operator()(const T&) { return true; }
+	bool operator()(T&) { return true; }
 };
-template <> bool AllowInterpolateVisitor::operator()<PropertyKeyword>(const PropertyKeyword&) { return false; }
-template <> bool AllowInterpolateVisitor::operator()<std::string>(const std::string&) { return false; }
-template <> bool AllowInterpolateVisitor::operator()<Transitions>(const Transitions&) { return false; }
-template <> bool AllowInterpolateVisitor::operator()<AnimationList>(const AnimationList&) { return false; }
+template <> bool AllowInterpolateVisitor::operator()<PropertyKeyword>(PropertyKeyword&) { return false; }
+template <> bool AllowInterpolateVisitor::operator()<std::string>(std::string&) { return false; }
+template <> bool AllowInterpolateVisitor::operator()<Transitions>(Transitions&) { return false; }
+template <> bool AllowInterpolateVisitor::operator()<AnimationList>(AnimationList&) { return false; }
+template <> bool AllowInterpolateVisitor::operator()<Transform>(Transform& p0) {
+	return p0.AllowInterpolate(e);
+}
 
-bool Property::AllowInterpolate() const {
-	return std::visit(AllowInterpolateVisitor{}, (const PropertyVariant&)*this);
+bool Property::AllowInterpolate(Element& e) const {
+	return std::visit(AllowInterpolateVisitor{e}, (PropertyVariant&)*this);
 }
 
 }

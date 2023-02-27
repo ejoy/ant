@@ -22,11 +22,16 @@ end
 do
 	local fs = require "bee.filesystem"
 	local function app_path(name)
-		if is_ios() then
+		if platform.os == "ios" then
 			local ios = require "ios"
 			return fs.path(ios.directory(ios.NSDocumentDirectory))
+		elseif platform.os == 'windows' then
+			return fs.path(os.getenv "LOCALAPPDATA") / name
+		elseif platform.os == 'linux' then
+			return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share")) / name
+		elseif platform.os == 'macos' then
+			return fs.path(os.getenv "HOME" .. "/Library/Caches") / name
 		end
-		return fs.appdata_path() / name
 	end
 	local root = app_path "ant"
 	local repo = root / ".repo"

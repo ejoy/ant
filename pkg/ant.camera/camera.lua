@@ -13,28 +13,23 @@ local INV_Z<const> = true
 
 local ic = ecs.interface "icamera"
 
-local defaultcamera<const> = {
-    name = "default_camera",
-    eyepos  = mc.ZERO_PT,
-    viewdir = mc.ZAXIS,
-    updir   = mc.YAXIS,
-    frustum = defcomp.frustum(),
-}
-
-function ic.create(info)
-    info = info or defaultcamera
-    local frustum = info.frustum
-    if not frustum then
-        frustum = defcomp.frustum()
-    else
-        local df = frustum.ortho and defcomp.ortho_frustum() or defcomp.frustum()
-        for k ,v in pairs(df) do
-            if not frustum[k] then
-                frustum[k] = v
-            end
-        end
+local function def_frustum(f)
+    if not f then
+        return defcomp.frustum()
     end
 
+    local df = f.ortho and defcomp.ortho_frustum() or defcomp.frustum()
+    for k ,v in pairs(df) do
+        if not f[k] then
+            f[k] = v
+        end
+    end
+    return f
+end
+
+function ic.create(info)
+    info = info or {}
+    local frustum = def_frustum(info.frustum)
     local policy = {
         "ant.general|name",
         "ant.camera|camera",
@@ -45,26 +40,19 @@ function ic.create(info)
         policy[#policy+1] = "ant.camera|exposure"
     end
 
-    local viewdir = info.viewdir or defaultcamera.viewdir
-    local eyepos = info.eyepos or defaultcamera.eyepos
-    local updir = info.updir or defaultcamera.updir
-
     return ecs.create_entity {
         policy = policy,
         data = {
             scene = {
-                r = math3d.torotation(math3d.vector(viewdir)),
-                t = eyepos,
-                updir = updir,
+                r = info.viewdir and math3d.ref(math3d.torotation(math3d.vector(info.viewdir))) or mc.IDENTITY_QUAT,
+                t = info.eyepos or mc.ZERO_PT,
+                updir = info.updir or mc.YAXIS,
             },
             exposure = exposure,
             camera = {
                 frustum = frustum,
                 clip_range = info.clip_range,
                 dof     = info.dof,
-                -- exposure = {
-                --     type = 
-                -- },
             },
             name = info.name or "DEFAULT_CAMERA",
         }
@@ -198,12 +186,15 @@ local function update_camera_info(e)
 	sa:update("u_camera_param", math3d.vector(nn, ff, inv_nn, inv_ff))
 end
 
-function cameraview_sys:update_mainview_camera()
-    for v in w:select "main_queue camera_ref:in" do
-        local e <close> = w:entity(v.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in")
-        if e.scene_changed or e.camera_changed then
+local has_updated = {}
+function cameraview_sys:update_camera()
+    has_updated = {}
+    for v in w:select "visible queue_name camera_depend:absent camera_ref:in" do
+        local e <close> = w:entity(v.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in eid:in")
+        if has_updated[e.eid] == nil and e.scene_changed or e.camera_changed then
             update_camera(e)
             update_camera_info(e)
+            has_updated[e.eid] = true
         end
     end
 end

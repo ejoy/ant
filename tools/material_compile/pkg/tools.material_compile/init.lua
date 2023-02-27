@@ -17,7 +17,7 @@ end
 
 cr.set_setting("material", stringify {
     os = "windows",
-    renderer = "direct3d11",
+    renderer = "vulkan",
     hd = nil,
     obl = nil,
 })

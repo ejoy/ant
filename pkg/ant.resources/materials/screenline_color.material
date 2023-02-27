@@ -1,0 +1,17 @@
+fx:
+  fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
+  vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
+  setting:
+    lighting: off
+    SCREEN_SPACE: 1
+properties:
+  u_color: {1, 1, 1, 1}
+  u_canvas_size: {512, 512, 0, 0}
+state:
+  ALPHA_REF: 1
+  CULL: CCW
+  DEPTH_TEST: ALWAYS
+  LINEAA: true
+  MSAA: true
+  PT: LINES
+  WRITE_MASK: RGBAZ

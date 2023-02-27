@@ -24,41 +24,28 @@ local function calc_section_idx(idx)
     return y // size * (height / size)  + x // size + 1
 end
 
-local function parse_terrain_type_dir(type, shape, dir)
-    local t, s, d
-    if type == "Road" then
-        t = "1"
-    elseif type == "Red" then
-        t = "2"
-    elseif type == "White" then
-        t = "3"
-    end
-    if shape == "U" then
-        s = "U"
-    elseif shape == "I" then
-        s = "I"
-    elseif shape == "L" then
-        s = "L"
-    elseif shape == "T" then
-        s = "T"
-    elseif shape == "X" then
-        s = "X"
-    elseif shape == "O" then
-        s = "O"
-    else
-        s = "D"
-    end
+local TERRAIN_TYPES<const> = {
+    road1 = "1",
+    road2 = "2",
+    road3 = "3",
+    mark1 = "4",
+    mark2 = "5",
+    mark3 = "6"
+}
 
-    if dir == "N" then
-        d = "1"
-    elseif dir == "E" then
-        d = "2"
-    elseif dir == "S" then
-        d = "3"
-    elseif dir == "W" then
-        d = "4"
-    end
-    return t..s..d
+local TERRAIN_DIRECTIONS<const> = {
+    N = "1",
+    E = "2",
+    S = "3",
+    W = "4",
+}
+
+local function parse_terrain_type_dir(layers, tname)
+    local type, shape, dir = tname..layers[tname].type, layers[tname].shape, layers[tname].dir
+    local t<const> = assert(TERRAIN_TYPES[type])
+    local s<const> = shape or "D"
+    local d<const> = assert(TERRAIN_DIRECTIONS[dir])
+    return ("%s%s%s"):format(t, s, d)
 end
 
 local function calc_shape_terrain(unit)
@@ -77,7 +64,15 @@ function iterrain.gen_terrain_field(width, height, offset_x, offset_z, unit)
     for ih=1, terrain_height do
         for iw=1, terrain_width do
             local idx = (ih - 1) * terrain_width + iw
-            terrain_field[idx] = {}
+            terrain_field[idx] = {
+                layers = {},
+                alpha_type = 0.0,
+                alpha_direction = 0.0,
+                alpha_shape = 0.0,
+                mark_type  = 0.0,
+                mark_direction = 0.0,
+                mark_shape = 0.0 
+            }
         end
     end
     terrain_fields = terrain_field
@@ -94,10 +89,31 @@ end
 function iterrain.create_roadnet_entity(create_list)
     for ii = 1, #create_list do
         local cl = create_list[ii]
-        local x, y, type, shape, dir = cl[1] + terrain_width_offset, cl[2] + terrain_height_offset, cl[3], cl[4], cl[5]
+        local x, y = cl.x + terrain_width_offset, cl.y + terrain_height_offset
+        local layers = cl.layers
         local idx = calc_tf_idx(x, y, terrain_width)
-        local road = parse_terrain_type_dir(type, shape, dir)
-        terrain_fields[idx].type = road
+        local road_layer, mark_layer
+        if layers == nil then
+            road_layer = nil
+            mark_layer = nil
+        end
+
+        if layers and layers.road ~= nil then
+            road_layer = parse_terrain_type_dir(layers, "road")
+        else
+            road_layer = nil
+        end
+
+        if layers and layers.mark ~= nil then
+            mark_layer = parse_terrain_type_dir(layers, "mark")
+        else
+            mark_layer = nil
+        end
+
+        terrain_fields[idx].layers = {
+            [1] = road_layer,
+            [2] = mark_layer
+        }
         local section_idx = calc_section_idx(idx)
         if terrain_change[section_idx] == nil then
             tc_cnt = tc_cnt + 1
@@ -109,10 +125,31 @@ end
 function iterrain.update_roadnet_entity(update_list)
     for ii = 1, #update_list do
         local ul = update_list[ii]
-        local x, y, type, shape, dir = ul[1] + terrain_width_offset, ul[2] + terrain_height_offset, ul[3], ul[4], ul[5]
+        local x, y = ul.x + terrain_width_offset, ul.y + terrain_height_offset
+        local layers = ul.layers;
         local idx = calc_tf_idx(x, y, terrain_width)
-        local road = parse_terrain_type_dir(type, shape, dir)
-        terrain_fields[idx].type = road
+        local road_layer, mark_layer
+        if layers == nil then
+            road_layer = nil
+            mark_layer = nil
+        end
+
+        if layers and layers.road ~= nil then
+            road_layer = parse_terrain_type_dir(layers, "road")
+        else
+            road_layer = nil
+        end
+
+        if layers and layers.mark ~= nil then
+            mark_layer = parse_terrain_type_dir(layers, "mark")
+        else
+            mark_layer = nil
+        end
+
+        terrain_fields[idx].layers = {
+            [1] = road_layer,
+            [2] = mark_layer
+        }
         local section_idx = calc_section_idx(idx)
         if terrain_change[section_idx] == nil then
             tc_cnt = tc_cnt + 1
@@ -124,9 +161,17 @@ end
 function iterrain.delete_roadnet_entity(delete_list)
     for ii = 1, #delete_list do
         local dl = delete_list[ii]
-        local x, y = dl[1] + terrain_width_offset, dl[2] + terrain_height_offset
+        local x, y = dl.x + terrain_width_offset, dl.y + terrain_height_offset
         local idx = calc_tf_idx(x, y, terrain_width)
-        terrain_fields[idx] = {}
+        terrain_fields[idx] = {
+            layers = {},
+            alpha_type = 0.0,
+            alpha_direction = 0.0,
+            alpha_shape = 0.0,
+            mark_type  = 0.0,
+            mark_direction = 0.0,
+            mark_shape = 0.0
+        }
         local section_idx = calc_section_idx(idx)
         if terrain_change[section_idx] == nil then
             tc_cnt = tc_cnt + 1

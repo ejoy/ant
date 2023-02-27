@@ -2,31 +2,81 @@
 #include <core/ID.h>
 #include <core/Property.h>
 #include <core/Text.h>
-#include <yoga/YGNodePrint.h>
+#include <yoga/Yoga.h>
 
 namespace Rml {
 
-static int YogaLogger(YGConfigRef config, YGNodeRef node, YGLogLevel level, const char* format, va_list args) {
-	return vprintf(format, args);
+struct DefaultConfig {
+	DefaultConfig()
+		: config(YGConfigNew()) {
+		YGConfigSetLogger(config, logger);
+		YGConfigSetPointScaleFactor(config, 0);
+		YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
+		YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
+	}
+	~DefaultConfig() {
+		YGConfigFree(config);
+	}
+	static int logger(YGConfigRef config, YGNodeRef node, YGLogLevel level, const char* format, va_list args) {
+		return vprintf(format, args);
+	}
+	YGConfigRef config;
+};
+
+static YGConfigRef GetDefaultConfig() {
+	static DefaultConfig def;
+	return def.config;
 }
 
-static YGConfigRef createDefaultYogaConfig() {
-	YGConfigRef config = YGConfigNew();
-	YGConfigSetLogger(config, YogaLogger);
-	YGConfigSetPointScaleFactor(config, 0);
-	YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
-	YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
-	return config;
+static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
+	auto* element = static_cast<Text*>(YGNodeGetContext(node));
+	float minWidth = 0;
+	float maxWidth = std::numeric_limits<float>::max();
+	float minHeight = 0;
+	float maxHeight = std::numeric_limits<float>::max();
+	switch (widthMode) {
+	case YGMeasureModeUndefined:
+		break;
+	case YGMeasureModeExactly:
+		minWidth = width;
+		maxWidth = width;
+		break;
+	case YGMeasureModeAtMost:
+		maxWidth = width;
+		break;
+	}
+	switch (heightMode) {
+	case YGMeasureModeUndefined:
+		break;
+	case YGMeasureModeExactly:
+		minHeight = height;
+		maxHeight = height;
+		break;
+	case YGMeasureModeAtMost:
+		maxHeight = height;
+		break;
+	}
+	Size size = element->Measure(minWidth, maxWidth, minHeight, maxHeight);
+	return { size.w, size.h };
 }
 
-static YGConfigRef DefaultYogaConfig() {
-	static YGConfigRef config = createDefaultYogaConfig();
-	return config;
+static float BaselineFunc(YGNodeRef node, float width, float height) {
+	auto* element = static_cast<Text*>(YGNodeGetContext(node));
+	return element->GetBaseline();
 }
 
-Layout::Layout()
-: node(YGNodeNewWithConfig(DefaultYogaConfig()))
+Layout::Layout(UseElement)
+: node(YGNodeNewWithConfig(GetDefaultConfig()))
 { }
+
+Layout::Layout(UseText, void* context)
+: node(YGNodeNewWithConfig(GetDefaultConfig()))
+{
+	YGNodeSetContext(node, context);
+	YGNodeSetMeasureFunc(node, MeasureFunc);
+	YGNodeSetIsReferenceBaseline(node, true);
+	YGNodeSetBaselineFunc(node, BaselineFunc);
+}
 
 Layout::~Layout() {
 	YGNodeFree(node);
@@ -59,13 +109,11 @@ void Layout::RemoveAllChildren() {
 	YGNodeRemoveAllChildren(node);
 }
 
-std::string Layout::ToString() const {
-	std::string result;
+void Layout::Print() const {
 #if defined(DEBUG)
 	auto options = static_cast<YGPrintOptions>(YGPrintOptionsLayout | YGPrintOptionsStyle | YGPrintOptionsChildren);
-	facebook::yoga::YGNodeToString(result, node, options, 0);
+	YGNodePrint(node, options);
 #endif
-	return result;
 }
 
 static void SetFloatProperty(YGNodeRef node, PropertyId id, float v) {
@@ -166,50 +214,6 @@ void Layout::SetProperty(PropertyId id, const Property& property, const Element*
 	}
 }
 
-static YGSize MeasureFunc(YGNodeRef node, float width, YGMeasureMode widthMode, float height, YGMeasureMode heightMode) {
-	auto* element = static_cast<Text*>(YGNodeGetContext(node));
-	float minWidth = 0;
-	float maxWidth = std::numeric_limits<float>::max();
-	float minHeight = 0;
-	float maxHeight = std::numeric_limits<float>::max();
-	switch (widthMode) {
-	case YGMeasureModeUndefined:
-		break;
-	case YGMeasureModeExactly:
-		minWidth = width;
-		maxWidth = width;
-		break;
-	case YGMeasureModeAtMost:
-		maxWidth = width;
-		break;
-	}
-	switch (heightMode) {
-	case YGMeasureModeUndefined:
-		break;
-	case YGMeasureModeExactly:
-		minHeight = height;
-		maxHeight = height;
-		break;
-	case YGMeasureModeAtMost:
-		maxHeight = height;
-		break;
-	}
-	Size size = element->Measure(minWidth, maxWidth, minHeight, maxHeight);
-	return { size.w, size.h };
-}
-
-static float BaselineFunc(YGNodeRef node, float width, float height) {
-	auto* element = static_cast<Text*>(YGNodeGetContext(node));
-	return element->GetBaseline();
-}
-
-void Layout::InitTextNode(Text* text) {
-	YGNodeSetContext(node, text);
-	YGNodeSetMeasureFunc(node, MeasureFunc);
-	YGNodeSetIsReferenceBaseline(node, true);
-	YGNodeSetBaselineFunc(node, BaselineFunc);
-}
-
 bool Layout::IsDirty() const {
 	return YGNodeIsDirty(node);
 }
@@ -227,7 +231,11 @@ bool Layout::HasNewLayout() {
 }
 
 Layout::Overflow Layout::GetOverflow() const {
-	return (Layout::Overflow)YGNodeStyleGetOverflow(node);
+	return (Overflow)YGNodeStyleGetOverflow(node);
+}
+
+Layout::Type Layout::GetType() const {
+	return (Type)YGNodeGetNodeType(node);
 }
 
 bool Layout::IsVisible() const {

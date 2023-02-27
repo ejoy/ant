@@ -1,11 +1,14 @@
 #include <core/Node.h>
 #include <core/Element.h>
-#include <yoga/YGNode.h>
 
 namespace Rml {
 
-Node::Node(Type type)
-	: type(type)
+Node::Node(Layout::UseElement use)
+	: layout(use)
+{}
+
+Node::Node(Layout::UseText use, void* context)
+	: layout(use, context)
 {}
 
 Node::~Node()
@@ -43,8 +46,8 @@ DataModel* Node::GetDataModel() const {
 	return data_model;
 }
 
-Node::Type Node::GetType() const {
-	return type;
+Layout::Type Node::GetType() const {
+	return layout.GetType();
 }
 
 void Node::UpdateLayout() {

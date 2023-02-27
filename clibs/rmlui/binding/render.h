@@ -27,6 +27,7 @@ public:
     void SetClipRect(const glm::u16vec4& r) override;
     void SetClipRect(glm::vec4 r[2]) override;
     Rml::MaterialHandle CreateTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flag) override;
+    Rml::MaterialHandle CreateRenderTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flag) override;
     Rml::MaterialHandle CreateFontMaterial(const Rml::TextEffects& effects) override;
     Rml::MaterialHandle CreateDefaultMaterial() override;
     void DestroyMaterial(Rml::MaterialHandle mat) override;

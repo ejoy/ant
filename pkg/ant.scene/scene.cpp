@@ -37,11 +37,10 @@ worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3
 static int
 entity_init(lua_State *L) {
 	auto w = getworld(L);
-	ecs_api::context ecs {w->ecs};
 
 	using namespace ecs_api::flags;
-	for (auto& e : ecs.select<ecs::INIT, ecs::scene, ecs::scene_update_once(absent)>()) {
-		e.enable_tag<ecs::scene_needchange>(ecs);
+	for (auto& e : ecs_api::select<ecs::INIT, ecs::scene, ecs::scene_update_once(absent)>(w->ecs)) {
+		e.enable_tag<ecs::scene_needchange>();
 	}
 	return 0;
 }
@@ -49,30 +48,26 @@ entity_init(lua_State *L) {
 static int
 scene_changed(lua_State *L) {
 	auto w = getworld(L);
-	ecs_api::context ecs {w->ecs};
 	auto math3d = w->math3d->M;
 
-	{
-		auto selector = ecs.select<ecs::scene_update_once, ecs::scene, ecs::eid>();
-		auto it = selector.begin();
-		if (it != selector.end()) {
-			flatmap<ecs::eid, math_t> worldmats;
-			for (; it != selector.end(); ++it) {
-				auto& e = *it;
-				auto& s = e.get<ecs::scene>();
-				auto id = e.get<ecs::eid>();
-				e.disable_tag<ecs::scene_update>(ecs);
-				e.enable_tag<ecs::scene_changed>(ecs);
-				if (!worldmat_update(worldmats, math3d, s, id)) {
-					return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
-				}
+	size_t UpdateOnceCount = ecs_api::count<ecs::scene_update_once>(w->ecs);
+	if (UpdateOnceCount > 0) {
+		flatmap<ecs::eid, math_t> worldmats;
+		worldmats.reserve(UpdateOnceCount);
+		for (auto& e : ecs_api::select<ecs::scene_update_once, ecs::scene, ecs::eid>(w->ecs)) {
+			auto& s = e.get<ecs::scene>();
+			auto id = e.get<ecs::eid>();
+			e.disable_tag<ecs::scene_update>();
+			e.enable_tag<ecs::scene_changed>();
+			if (!worldmat_update(worldmats, math3d, s, id)) {
+				return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 			}
-			ecs.clear_type<ecs::scene_update_once>();
 		}
+		ecs_api::clear_type<ecs::scene_update_once>(w->ecs);
 	}
 
 	// step.1
-	auto selector = ecs.select<ecs::scene_needchange, ecs::scene_update, ecs::scene>();
+	auto selector = ecs_api::select<ecs::scene_needchange, ecs::scene_update, ecs::scene>(w->ecs);
 	auto it = selector.begin();
 	if (it == selector.end()) {
 		return 0;
@@ -84,37 +79,37 @@ scene_changed(lua_State *L) {
 		if (s.parent != 0) {
 			parents.insert(s.parent);
 		}
-		e.enable_tag<ecs::scene_changed>(ecs);
-		e.disable_tag<ecs::scene_needchange>(ecs);
+		e.enable_tag<ecs::scene_changed>();
+		e.disable_tag<ecs::scene_needchange>();
 	}
 
 	// step.2
 	flatmap<ecs::eid, math_t> worldmats;
 	flatset<ecs::eid> change;
-	for (auto& e : ecs.select<ecs::scene_update, ecs::eid>(L)) {
+	for (auto& e : ecs_api::select<ecs::scene_update, ecs::eid>(w->ecs)) {
 		auto id = e.get<ecs::eid>();
 		if (parents.contains(id)) {
-			auto s = e.sibling<ecs::scene>(ecs);
+			auto s = e.sibling<ecs::scene>();
 			if (s) {
 				worldmats.insert_or_assign(id, s->worldmat);
 			}
 		}
-		if (e.sibling<ecs::scene_changed>(ecs)) {
+		if (e.sibling<ecs::scene_changed>()) {
 			change.insert(id);
 		}
 		else {
-			auto s = e.sibling<ecs::scene>(ecs);
+			auto s = e.sibling<ecs::scene>();
 			if (s && s->parent != 0) {
 				if (change.contains(s->parent)) {
 					change.insert(id);
-					e.enable_tag<ecs::scene_changed>(ecs);
+					e.enable_tag<ecs::scene_changed>();
 				}
 			}
 		}
 	}
 
 	// step.3
-	for (auto& e : ecs.select<ecs::scene_changed, ecs::scene_update, ecs::scene, ecs::eid>()) {
+	for (auto& e : ecs_api::select<ecs::scene_changed, ecs::scene_update, ecs::scene, ecs::eid>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
 		auto id = e.get<ecs::eid>();
 		if (!worldmat_update(worldmats, math3d, s, id)) {
@@ -128,23 +123,22 @@ scene_changed(lua_State *L) {
 static int
 scene_remove(lua_State *L) {
 	auto w = getworld(L);
-	ecs_api::context ecs {w->ecs};
-	ecs.clear_type<ecs::scene_changed>();
+	ecs_api::clear_type<ecs::scene_changed>(w->ecs);
 	
 	flatset<ecs::eid> removed;
-	for (auto& e : ecs.select<ecs::REMOVED, ecs::scene, ecs::eid>()) {
+	for (auto& e : ecs_api::select<ecs::REMOVED, ecs::scene, ecs::eid>(w->ecs)) {
 		auto id = e.get<ecs::eid>();
 		removed.insert(id);
 	}
 	if (removed.empty()) {
 		return 0;
 	}
-	for (auto& e : ecs.select<ecs::scene>(L)) {
+	for (auto& e : ecs_api::select<ecs::scene>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0 && removed.contains(s.parent)) {
-			auto id = e.sibling<ecs::eid>(ecs, L);
+			auto id = e.sibling<ecs::eid>();
 			removed.insert(id);
-			e.remove(ecs);
+			e.remove();
 		}
 	}
 	return 0;
@@ -153,10 +147,9 @@ scene_remove(lua_State *L) {
 static int
 bounding_update(lua_State *L){
 	auto w = getworld(L);
-	ecs_api::context ecs {w->ecs};
 	auto math3d = w->math3d->M;
 
-	for (auto& e : ecs.select<ecs::scene_changed, ecs::bounding, ecs::scene>()){
+	for (auto& e : ecs_api::select<ecs::scene_changed, ecs::bounding, ecs::scene>(w->ecs)){
 		auto &b = e.get<ecs::bounding>();
 		if (math_isnull(b.aabb))
 			continue;

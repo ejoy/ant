@@ -100,32 +100,27 @@ function lm_sys:update_filter()
         local lr_e = w:first("lightmapper lightmap_result:in")
 
         local r = lr_e and lr_e.lightmap_cache or {}
-        local mq = w:first("main_queue primitive_filter:in")
-        local fr = e.filter_result
         local matpath = e.material
         local matres = imaterial.resource(e)
-        for _, fn in ipairs(mq.primitive_filter) do
-            if fr[fn] then
-                local lm = e.lightmap
-                local lmid = lm.id
 
-                local bm = load_lightmap_material(matpath, matres.fx.setting)
+        local lm = e.lightmap
+        local lmid = lm.id
 
-                local bi = r[lmid]
+        local bm = load_lightmap_material(matpath, matres.fx.setting)
 
-                local lmhandle
-                if bi then
-                    bi.texture = assetmgr.resource(bi.texture_path)
-                    lmhandle = bi.texture.handle
-                else
-                    lmhandle = default_lm.handle
-                end
+        local bi = r[lmid]
 
-                local new_mi = bm:material()
-                new_mi.s_lightmap = lmhandle
-                local qm = imaterial.get_materials(e.render_object)
-                qm:set("main_queue", new_mi)
-            end
+        local lmhandle
+        if bi then
+            bi.texture = assetmgr.resource(bi.texture_path)
+            lmhandle = bi.texture.handle
+        else
+            lmhandle = default_lm.handle
         end
+
+        local new_mi = bm:material()
+        new_mi.s_lightmap = lmhandle
+        local qm = imaterial.get_materials(e.render_object)
+        qm:set("main_queue", new_mi)
     end
 end

@@ -5,6 +5,7 @@ import "@ant.timer"
 system "rmlui_system"
     .implement "rmlui_system.lua"
     .require_system "ant.render|font_system"
+    .require_system "ant.rmlui|ui_rt_system"
     .require_interface "ant.render|irenderqueue"
     .require_interface "ant.timer|itimer"
     .method "init"
@@ -22,3 +23,17 @@ interface "irmlui"
     .method "open"
 
 component "rmlui_obj"
+
+
+system "ui_rt_system"
+    .require_system "ant.render|render_system"
+    .implement "ui_rt_system.lua"
+    .method "data_changed"
+    --.method "update_camera"
+
+interface "iuirt"
+    .implement "ui_rt_system.lua"
+    .method "get_group_id"
+
+
+

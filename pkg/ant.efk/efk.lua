@@ -141,7 +141,7 @@ local mq_vr_mb = world:sub{"view_rect_changed", "main_queue"}
 local mq_camera_changed = world:sub{"main_queue", "camera_changed"}
 
 local function update_framebuffer_texutre()
-    local eq = w:first("efk_queue render_target:in")
+    local eq = w:first "efk_queue render_target:in"
     local fbidx = eq.render_target.fb_idx
     local fb = fbmgr.get(fbidx)
     efk_cb_handle.background = fb[1].handle

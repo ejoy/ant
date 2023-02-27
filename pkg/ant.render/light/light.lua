@@ -31,10 +31,6 @@ local DEFAULT_LIGHT<const> = {
 	}
 }
 
-local DEFAULT_INTENSITY_UNIT<const> = {
-
-}
-
 local changed = false
 
 local function setChanged()
@@ -107,9 +103,12 @@ function ilight.color(e)
 end
 
 function ilight.set_color(e, color)
-	local l = e.light
-	local c = l.color
-	for i=1, 4 do c[i] = color[i] end
+	ilight.set_color_rgb(e, color[1], color[2], color[3])
+end
+
+function ilight.set_color_rgb(e, r, g, b)
+	local c = e.light.color
+	c[1], c[2], c[3] = r, g, b
 	setChanged()
 end
 
@@ -152,7 +151,7 @@ end
 
 function ilight.set_range(e, r)
 	if e.light.type == "directional" then
-		error("directional light do not have 'range' property")
+		error "directional light do not have 'range' property"
 	end
 	e.light.range = r
 	setChanged()
@@ -256,7 +255,7 @@ local function create_light_buffers()
 		return ('f'):rep(16):pack(
 			p[1], p[2], p[3], e.light.range or math.maxinteger,
 			d[1], d[2], d[3], enable,
-			c[1], c[2], c[3], c[4],		--c[4] is no meaning
+			c[1], c[2], c[3], 0.0,	-- not use
 			lighttypes[t],
 			e.light.intensity * ev,
 			e.light.inner_cutoff or 0,
@@ -281,11 +280,9 @@ local light_buffer = bgfx.create_dynamic_vertex_buffer(1, declmgr.get "t40".hand
 
 local function update_light_buffers()
 	local lights = create_light_buffers()
-	local count = #lights
-	if #lights > 0 then
-		bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
-	end
-	return count
+	bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
+	local sa = imaterial.system_attribs()
+	sa:update("u_light_count", math3d.vector(#lights, 0, 0, 0))
 end
 
 function ilight.light_buffer()
@@ -357,8 +354,6 @@ end
 
 function lightsys:update_system_properties()
 	if isChanged() then
-		local count = update_light_buffers()
-		local sa = imaterial.system_attribs()
-		sa:update("u_light_count", math3d.vector(count, 0, 0, 0))
+		update_light_buffers()
 	end
 end

@@ -28,7 +28,7 @@ local function create_pbr_entity(name, srt, material,
     }
 
     imaterial.set_property(eid, "u_basecolor_factor",           color)
-    imaterial.set_property(eid, "u_metallic_roughness_factor",  math3d.vector(metallic, roughness, 0.0, 0.0))
+    imaterial.set_property(eid, "u_pbr_factor",  math3d.vector(metallic, roughness, 0.0, 0.0))
     return eid
 end
 

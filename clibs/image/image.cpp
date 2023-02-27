@@ -58,20 +58,18 @@ push_texture_info(lua_State *L, const bimg::ImageContainer *ic){
 
 static int
 lparse(lua_State *L) {
-    auto mem = TO_MEM(L, 1);
-    bool readcontent = lua_isnoneornil(L, 2);
-    bx::Error err;
-    bimg::ImageContainer imageContainer;
-    if (!bimg::imageParse(imageContainer, mem->data, (uint32_t)mem->size, &err)) {
-        assert(!err.isOk());
-        auto errmsg = err.getMessage();
-        lua_pushlstring(L, errmsg.getPtr(), errmsg.getLength());
+    size_t srcsize = 0;
+    auto src = luaL_checklstring(L, 1, &srcsize);
+    bx::DefaultAllocator allocator;
+    bool readcontent = !lua_isnoneornil(L, 2);
+    auto image = bimg::imageParse(&allocator, src, (uint32_t)srcsize, bimg::TextureFormat::Enum(bimg::TextureFormat::Count), nullptr);
+    if (!image){
+        lua_pushstring(L, "Invalid image content");
         return lua_error(L);
     }
-
-    push_texture_info(L, &imageContainer);
+    push_texture_info(L, image);
     if (readcontent){
-        lua_pushlstring(L, (const char*)imageContainer.m_data, imageContainer.m_size);
+        lua_pushlstring(L, (const char*)image->m_data, image->m_size);
         return 2;
     }
     return 1;

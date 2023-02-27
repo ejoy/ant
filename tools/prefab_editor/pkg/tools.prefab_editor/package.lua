@@ -24,6 +24,8 @@ return {
         "ant.settings",
         "ant.objcontroller",
         "ant.terrain",
+        "ant.efk",
+        "ant.modifier"
     },
     entry = "editor.callback",
     ecs = {

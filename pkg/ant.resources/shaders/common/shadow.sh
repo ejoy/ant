@@ -37,8 +37,8 @@ uniform vec4 u_omni_param;
 #define USE_VIEW_SPACE_DISTANCE
 //#define SHADOW_COVERAGE_DEBUG
 
-//#define SM_HARD 
-#define SM_PCF
+#define SM_HARD 
+//#define SM_PCF
 //#define SM_ESM
 
 #if defined(SM_HARD)

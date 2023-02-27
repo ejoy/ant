@@ -10,17 +10,17 @@
             .item-container {
                 left: 0%;
                 top: 0%;
-                width: 10%;
-                height: 10%;
+                width: 50%;
+                height: 50%;
                 transition: left 1.0s linear-out, top 1.0s linear-out, width 1.0s linear-out, height 1.0s linear-out;
-                background-color: rgba(120, 255, 120, 150);
+                background-color: rgba(0, 0, 0, 255);
                 flex-direction: row;
             }
             .item {
                 width:33%;
                 height:50%;
                 background-size:cover;
-                background-image:"correct.png"
+                background-image:"<rt1>"
             }
         </style>
         <script type="text/x-lua" >

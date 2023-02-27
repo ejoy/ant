@@ -1,0 +1,12 @@
+---
+policy:
+  mod.daynight|daynight
+  ant.general|name
+data:
+  daynight:
+      light:
+          normal:     {0.0, 0.0, 1.0, 0.0}
+          start_dir:  {-1.0, 0.0, 0.0, 0.0}
+      time_rangeMS: 40000
+      cycle: 0
+  name: daynight_test

@@ -11,7 +11,7 @@ local declmgr   = renderpkg.declmgr
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local terrain_module = require "terrain"
-local layout_name<const>    = declmgr.correct_layout "p3|t20|t21|t22|t23|t24|t25"
+local layout_name<const>    = declmgr.correct_layout "p3|t20|t21|t22|t23|t24|t25|t26|t27"
 local layout                = declmgr.get(layout_name)
 local noise1 = {}
 local terrain_width, terrain_height, unit, origin_offset_width, origin_offset_height
@@ -24,9 +24,6 @@ local default_quad_ib<const> = {
 local function calc_tf_idx(iw, ih, w)
     return (ih - 1) * w + iw
 end
-
-
-
 
 local function noise(x, y, freq, exp, lb ,ub)
     local a = ub - lb
@@ -92,20 +89,91 @@ local function to_mesh_buffer(vb, aabb)
     }
 end
 
-
-
-local function is_edge_elem(iw, ih, w, h)
-    if iw == 0 or ih == 0 or iw == w + 1 or ih == h + 1 then
-        return false
-    else
-        return true
-    end
-end
-
 local cterrain_fields = {}
 
 function cterrain_fields.new(st)
     return setmetatable(st, {__index=cterrain_fields})
+end
+
+local function parse_layer(t, s, d)
+    local pt, ps, pd
+    if t == "6" then
+        pt = 4
+        ps = 11
+        pd = 0
+        return pt, ps, pd
+    end
+    if s == "U" then
+        if t >= "1" and t <= "3" then
+            ps = 1
+        else
+            ps = 8
+        end
+        if d == "1" then
+            pd = 0
+        elseif d == "2" then
+            pd = 90
+        elseif d == "3" then
+            pd = 180
+        elseif d == "4" then
+            pd = 270
+        end
+    elseif s == "I" then
+        if t >= "1" and t <= "3" then
+            ps = 2
+        else
+            ps = 10
+        end
+        if d == "1" then
+            pd = 90
+        elseif d == "2" then
+            pd = 0
+            
+        elseif d == "3" then
+            pd = 270
+            
+        elseif d == "4" then
+            pd = 180
+        end
+    elseif s == "L" then
+        ps = 3
+        if d == "1" then
+            pd = 180
+        elseif d == "2" then
+            pd = 270
+        elseif d == "3" then
+            pd = 0
+        elseif d == "4" then
+            pd = 90
+        end
+    elseif s == "T" then
+        ps = 4
+        if d == "1" then
+            pd = 0
+        elseif d == "2" then
+            pd = 90
+        elseif d == "3" then
+            pd = 180
+        elseif d == "4" then
+            pd = 270
+        end
+    elseif s == "X" then
+        if t >= "1" and t <= "3" then
+            ps = 5
+        else
+            ps = 11
+        end
+    elseif s == 'O' then    
+        if t >= "1" and t <= "3" then
+            ps = 7
+        else
+            ps = 9
+        end
+    else
+        ps = 6
+    end
+    pt = t
+    return pt, ps, pd                          
 end
 
 function cterrain_fields:init()
@@ -116,95 +184,92 @@ function cterrain_fields:init()
         for iw = 1, width do
             local idx = (ih - 1) * width + iw
             local f = tf[idx]
-            local a_type, a_shape, a_dir
-            if f.type == nil then
-                a_dir = 1
+            local layers = f.layers
+
+            if layers == nil then
+                f.alpha_type = 0.0
+                f.alpha_direction = 0.0
+                f.alpha_shape = 0.0
+                f.mark_type  = 0.0
+                f.mark_direction = 0.0
+                f.mark_shape = 0.0
             else
-                a_type  = string.sub(f.type, 1, 1)
-                f.alpha_type = a_type
-                a_shape = string.sub(f.type, 2, 2)
-                a_dir   = string.sub(f.type, 3, 3)
-            end
-            if a_shape == "U" then
-                if f.alpha_type == "1" then
-                    f.alpha_shape = 1
-                else
-                    f.alpha_shape = 8
+                for i, layer in pairs(layers) do
+                    local t, s, d
+                    t = string.sub(layer, 1, 1)
+                    s = string.sub(layer, 2, 2)
+                    d = string.sub(layer, 3, 3)
+                    local pt, ps, pd = parse_layer(t, s, d)
+                    if i == 1 then
+                        f["alpha_type"] = pt
+                        f["alpha_direction"] = pd
+                        f["alpha_shape"] = ps
+                    elseif i == 2 then
+                        f["mark_type"] = pt
+                        f["mark_direction"] = pd
+                        f["mark_shape"] = ps
+                    end
                 end
-                if a_dir == "1" then
-                    f.alpha_direction = 0
-                elseif a_dir == "2" then
-                    f.alpha_direction = 90
-                elseif a_dir == "3" then
-                    f.alpha_direction = 180
-                elseif a_dir == "4" then
-                    f.alpha_direction = 270
-                end
-            elseif a_shape == "I" then
-                if f.alpha_type == "1" then
-                    f.alpha_shape = 2
-                else
-                    f.alpha_shape = 10
-                end
-                if a_dir == "1" then
-                    f.alpha_direction = 90
-                elseif a_dir == "2" then
-                    f.alpha_direction = 0
-                    
-                elseif a_dir == "3" then
-                    f.alpha_direction = 270
-                    
-                elseif a_dir == "4" then
-                    f.alpha_direction = 180
-                end
-            elseif a_shape == "L" then
-                f.alpha_shape = 3
-                if a_dir == "1" then
-                    f.alpha_direction = 180
-                elseif a_dir == "2" then
-                    f.alpha_direction = 270
-                elseif a_dir == "3" then
-                    f.alpha_direction = 0
-                elseif a_dir == "4" then
-                    f.alpha_direction = 90
-                end
-            elseif a_shape == "T" then
-                f.alpha_shape = 4
-                if a_dir == "1" then
-                    f.alpha_direction = 0
-                elseif a_dir == "2" then
-                    f.alpha_direction = 270
-                elseif a_dir == "3" then
-                    f.alpha_direction = 180
-                elseif a_dir == "4" then
-                    f.alpha_direction = 90
-                end
-            elseif a_shape == "X" then
-                f.alpha_shape = 5
-            elseif a_shape == 'O' then    
-                if f.alpha_type == "1" then
-                    f.alpha_shape = 7
-                else
-                    f.alpha_shape = 9
-                end
-            else
-                f.alpha_shape = 6
-            end                         
+            end  
             
+            if layers and layers[1] == nil then
+                f.alpha_type = 0.0
+                f.alpha_direction = 0.0
+                f.alpha_shape = 0.0
+            elseif layers and layers[2] == nil then
+                f.mark_type  = 0.0
+                f.mark_direction = 0.0
+                f.mark_shape = 0.0
+            elseif layers and layers[1] == nil and layers[2] == nil then
+                f.alpha_type = 0.0
+                f.alpha_direction = 0.0
+                f.alpha_shape = 0.0
+                f.mark_type  = 0.0
+                f.mark_direction = 0.0
+                f.mark_shape = 0.0                                        
+            end
         end
     end
 end
 
-local packfmt<const> = "fffffffffffffff"
+local packfmt<const> = "fffffffffffffffffff"
 
-local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, direction, road_type, road_shape, sand_color_idx, stone_color_idx, stone_normal_idx, width)
-    local grid_type
+local direction_table ={
+    [0]   = {0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0},
+    [90]  = {1.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0},
+    [180] = {1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 0.0},
+    [270] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0}
+}
+
+local function get_vb(rd, rd_idx, md, md_idx)
+    local t1x, t1y, t7x, t7y
+    if rd == nil then
+        t1x, t1y = direction_table[0][rd_idx * 2 + 1], direction_table[0][rd_idx * 2 + 2]
+    else
+        t1x, t1y = direction_table[rd][rd_idx * 2 + 1], direction_table[rd][rd_idx * 2 + 2]
+    end
+    if md == nil then
+        t7x, t7y = direction_table[0][md_idx * 2 + 1], direction_table[0][md_idx * 2 + 2]
+    else
+        t7x, t7y = direction_table[md][md_idx * 2 + 1], direction_table[md][md_idx * 2 + 2]
+    end
+    return t1x, t1y, t7x, t7y
+end
+
+local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, rd, md, road_type, road_shape, mark_type, mark_shape, sand_color_idx, stone_color_idx, stone_normal_idx, width)
+    local grid_type, rmark_type
     -- road_type ground/road/red/white
-    if road_type == nil then
+    if road_type == nil or road_type == 0.0 then
         grid_type = 0.0
     else
         grid_type = road_type + 4.0
     end
+    if mark_type == nil or mark_type == 0.0 then
+        rmark_type = 0.0
+    else
+        rmark_type = mark_type + 4.0
+    end
+
     local ox, oy, oz = table.unpack(origin)
     local nx, ny, nz = ox + extent[1], oy + extent[2], oz + extent[3]
     local u00, v00, u01, v01 = table.unpack(uv0)
@@ -255,8 +320,27 @@ local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, direction, road_ty
     local i3 = calc_tf_idx(xx + 1, yy + 1 , width)
     local i4 = calc_tf_idx(xx    , yy + 1 , width)
     local ns1, ns2, ns3, ns4 = noise1[i1], noise1[i2], noise1[i3], noise1[i4]
-
-    if direction == 0 or direction == nil then
+    -- p3 position 
+    -- t20 road_height 
+    -- t21 road_alpha 
+    -- t22 terrain_color/road_color/terrain_height
+    -- t23 v_sand_alpha v_stone_normal_idx
+    -- t24 v_road_type v_road_shape(flat)
+    -- t25 v_sand_color_idx v_stone_color_idx(flat)
+    -- t26 v_mark_type v_mark_shape
+    -- t27 mark_alpha
+    local t1x0, t1y0, t7x0, t7y0 = get_vb(rd, 0, md, 0)
+    local t1x1, t1y1, t7x1, t7y1 = get_vb(rd, 1, md, 1)
+    local t1x2, t1y2, t7x2, t7y2 = get_vb(rd, 2, md, 2)
+    local t1x3, t1y3, t7x3, t7y3 = get_vb(rd, 3, md, 3)
+    local v = {
+        packfmt:pack(ox, oy, oz, u00, v01, t1x0, t1y0, u20, v20, ns1, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, rmark_type, mark_shape, t7x0, t7y0),
+        packfmt:pack(ox, oy, nz, u00, v00, t1x1, t1y1, u20, v21, ns2, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, rmark_type, mark_shape, t7x1, t7y1),
+        packfmt:pack(nx, ny, nz, u01, v00, t1x2, t1y2, u21, v21, ns3, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, rmark_type, mark_shape, t7x2, t7y2),
+        packfmt:pack(nx, ny, oz, u01, v01, t1x3, t1y3, u21, v20, ns4, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx, rmark_type, mark_shape, t7x3, t7y3)            
+    }
+    vb[#vb+1] = table.concat(v, "")
+   --[[  if direction == 0 or direction == nil then
         local v = {
             packfmt:pack(ox, oy, oz, u00, v01, u10, v11, u20, v20, ns1, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx),
             packfmt:pack(ox, oy, nz, u00, v00, u10, v10, u20, v21, ns2, stone_normal_idx, grid_type, road_shape, sand_color_idx, stone_color_idx),
@@ -291,7 +375,7 @@ local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, direction, road_ty
           
         }
         vb[#vb+1] = table.concat(v, "")      
-    end
+    end ]]
     
 end
 
@@ -332,7 +416,8 @@ local function build_mesh(sectionsize, sectionidx, cterrainfileds, width)
                     stone_normal_idx = 2
                 end
                 local uv1 = uv0
-                add_quad(vb, origin, extent, uv0, uv1, xx, yy, field.alpha_direction, field.alpha_type, field.alpha_shape - 1, sand_color_idx, stone_color_idx, stone_normal_idx, width)
+                --  add_quad(vb, origin, extent, uv0, uv1, xx, yy, rd, md, road_type, road_shape, mark_type, mark_shape, sand_color_idx, stone_color_idx, stone_normal_idx, width)
+                add_quad(vb, origin, extent, uv0, uv1, xx, yy, field.alpha_direction, field.mark_direction, field.alpha_type, field.alpha_shape - 1, field.mark_type, field.mark_shape - 1, sand_color_idx, stone_color_idx, stone_normal_idx, width)
             end
         end
     end

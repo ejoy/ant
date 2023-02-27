@@ -309,6 +309,7 @@ local function create_clear_shadowmap_queue(fbidx)
 				viewid = viewidmgr.get "csm_fb",
 				view_rect = {x=0, y=0, w=ww, h=hh},
 			},
+			clear_sm = true,
 			queue_name = "clear_sm",
 			name = "clear_sm",
 		}
@@ -342,21 +343,17 @@ local function create_csm_entity(index, vr, fbidx)
 			camera_ref = camera_ref,
 			render_target = {
 				viewid = viewidmgr.get(csmname),
-				view_mode = "s",
 				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h},
 				clear_state = {
 					clear = "",
 				},
 				fb_idx = fbidx,
 			},
-			primitive_filter = {
-				filter_type = "cast_shadow",
-				"opacity",
-			},
 			visible = false,
 			queue_name = queuename,
 			[queuename] = true,
 			name = "csm" .. index,
+			camera_depend = true
 		},
 	}
 end
@@ -425,7 +422,7 @@ function sm:init_world()
 	sa:update("u_shadow_param2", ishadow.shadow_param2())
 end
 
-function sm:update_camera()
+function sm:update_camera_depend()
 	local dl = w:first("csm_directional_light light:in scene:in scene_changed?in")
 	if dl then
 		local mq = w:first("main_queue camera_ref:in")
@@ -533,15 +530,12 @@ function sm:update_filter()
 			
 			local mi = new_matobj:instance()
 
-			local h = mi:ptr()
 			fm["csm1_queue"] = mi
-			ro.mat_csm1 = h
 			fm["csm2_queue"] = mi
-			ro.mat_csm2 = h
 			fm["csm3_queue"] = mi
-			ro.mat_csm3 = h
 			fm["csm4_queue"] = mi
-			ro.mat_csm4 = h
+
+			ro.mat_csm = mi:ptr()
 		else
 			w:extend(e, "csm1_queue_visible?out csm2_queue_visible?out csm3_queue_visible?out csm4_queue_visible?out")
 			e.csm1_queue_visible = nil

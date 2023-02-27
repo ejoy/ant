@@ -19,6 +19,7 @@ class DataModel;
 class Document;
 class Element;
 class ElementAnimation;
+class ElementTransition;
 class EventListener;
 class Geometry;
 class StyleSheet;
@@ -163,8 +164,6 @@ protected:
 	bool DelInlineProperty(const PropertyIdSet& set);
 	void RefreshProperties();
 
-	void StartAnimation(PropertyId property_id, const Property * start_value, int num_iterations, bool alternate_direction, float delay);
-	bool AddAnimationKeyTime(PropertyId property_id, const Property* target_value, float time, Tween tween);
 	bool StartTransition(PropertyId id, const Transition& transition, std::optional<Property> start_value, std::optional<Property> target_value);
 	void HandleTransitionProperty();
 	void HandleAnimationProperty();
@@ -180,7 +179,8 @@ protected:
 	std::unique_ptr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
 	mutable std::unique_ptr<glm::mat4x4> inv_transform;
-	std::vector<ElementAnimation> animations;
+	std::map<PropertyId, ElementAnimation> animations;
+	std::map<PropertyId, ElementTransition> transitions;
 	std::vector<std::string> classes;
 	PseudoClassSet pseudo_classes = 0;
 	std::vector<std::unique_ptr<EventListener>> listeners;

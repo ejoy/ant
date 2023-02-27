@@ -232,18 +232,25 @@ local highlight_aabb = {
 }
 
 local function update_highlight_aabb(eid)
+    local visible = false
     if eid then
         local e <close> = w:entity(eid, "bounding?in scene?in")
         local bounding = e.bounding
-        if bounding and bounding.aabb and bounding.aabb ~= mc.NULL then
-            local wm = e.scene and iom.worldmat(e) or mc.IDENTITY_MAT
-            highlight_aabb.min = math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.aabb, 1), 1))
-            highlight_aabb.max = math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.aabb, 2), 1))
-            highlight_aabb.visible = true
-            return
+        if bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then
+            -- local wm = e.scene and iom.worldmat(e) or mc.IDENTITY_MAT
+            highlight_aabb.min = math3d.tovalue(math3d.array_index(bounding.scene_aabb, 1))--math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.scene_aabb, 1), 1))
+            highlight_aabb.max = math3d.tovalue(math3d.array_index(bounding.scene_aabb, 2))--math3d.tovalue(math3d.transform(wm, math3d.array_index(bounding.scene_aabb, 2), 1))
+            visible = true
+        else
+            local waabb = prefab_mgr:get_world_aabb(eid)
+            if waabb then
+                highlight_aabb.min = math3d.tovalue(math3d.array_index(waabb, 1))
+                highlight_aabb.max = math3d.tovalue(math3d.array_index(waabb, 2))
+                visible = true
+            end
         end
     end
-    highlight_aabb.visible = false
+    highlight_aabb.visible = visible
 end
 
 local function on_target(old, new)

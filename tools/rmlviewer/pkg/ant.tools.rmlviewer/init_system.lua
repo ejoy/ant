@@ -1,4 +1,7 @@
 local ecs = ...
+local world = ecs.world
+local w = world.w
+
 
 local init_sys   = ecs.system "init_system"
 local iRmlUi     = ecs.import.interface "ant.rmlui|irmlui"
@@ -16,3 +19,5 @@ function init_sys:post_init()
         print("Message: " .. event.data)
     end)
 end
+
+

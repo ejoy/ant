@@ -101,14 +101,14 @@ end
 
 local function create_directional_gizmo(initpos, initrot)
     local root = create_gizmo_root(initpos, initrot)
-    local circle_eid = computil.create_circle_entity("directional gizmo circle", RADIUS, SLICES, {parent = root}, gizmo_const.COLOR.GRAY, true)
+    local circle_eid = computil.create_circle_entity(RADIUS, SLICES, {parent = root}, gizmo_const.COLOR.GRAY, true)
     local alleid = {}
     alleid[#alleid + 1] = circle_eid
     local radian_step = 2 * math.pi / SLICES
     for s=0, SLICES-1 do
         local radian = radian_step * s
         local x, y = math.cos(radian) * RADIUS, math.sin(radian) * RADIUS
-        local line_eid = computil.create_line_entity("", {x, y, 0}, {x, y, LENGTH}, {parent = root}, gizmo_const.COLOR.GRAY, true)
+        local line_eid = computil.create_line_entity({x, y, 0}, {x, y, LENGTH}, {parent = root}, gizmo_const.COLOR.GRAY, true)
         alleid[#alleid + 1] = line_eid
     end
     m.directional.root = root
@@ -133,9 +133,9 @@ local function update_point_gizmo()
     local radius = range
     
     if #m.point.eid == 0 then
-        local c0 = geo_utils.create_dynamic_circle("light gizmo circle", radius, gizmo_const.ROTATE_SLICES, {parent = root}, gizmo_const.COLOR.GRAY, true)
-        local c1 = geo_utils.create_dynamic_circle("light gizmo circle", radius, gizmo_const.ROTATE_SLICES, {parent = root, r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, gizmo_const.COLOR.GRAY, true)
-        local c2 = geo_utils.create_dynamic_circle("light gizmo circle", radius, gizmo_const.ROTATE_SLICES, {parent = root, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, gizmo_const.COLOR.GRAY, true)
+        local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {parent = root}, gizmo_const.COLOR.GRAY, true)
+        local c1 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {parent = root, r = math3d.tovalue(math3d.quaternion{0, math.rad(90), 0})}, gizmo_const.COLOR.GRAY, true)
+        local c2 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {parent = root, r = math3d.tovalue(math3d.quaternion{math.rad(90), 0, 0})}, gizmo_const.COLOR.GRAY, true)
         m.point.eid = {c0, c1, c2}
     else
         update_circle_vb(m.point.eid[1], radius)
@@ -155,12 +155,12 @@ local function update_spot_gizmo()
     local radius = range * math.tan(radian * 0.5)
     if #m.spot.eid == 0 then
         local root = m.spot.root
-        local c0 = geo_utils.create_dynamic_circle("light gizmo circle", radius, gizmo_const.ROTATE_SLICES, {parent = root, t = {0, 0, range}}, gizmo_const.COLOR.GRAY, true)
-        local line0 = geo_utils.create_dynamic_line("line", {0, 0, 0}, {0, radius, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
-        local line1 = geo_utils.create_dynamic_line("line", {0, 0, 0}, {radius, 0, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
-        local line2 = geo_utils.create_dynamic_line("line", {0, 0, 0}, {0, -radius, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
-        local line3 = geo_utils.create_dynamic_line("line", {0, 0, 0}, {-radius, 0, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
-        local line4 = geo_utils.create_dynamic_line("line", {0, 0, 0}, {0, 0, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
+        local c0 = geo_utils.create_dynamic_circle(radius, gizmo_const.ROTATE_SLICES, {parent = root, t = {0, 0, range}}, gizmo_const.COLOR.GRAY, true)
+        local line0 = geo_utils.create_dynamic_line({0, 0, 0}, {0, radius, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
+        local line1 = geo_utils.create_dynamic_line({0, 0, 0}, {radius, 0, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
+        local line2 = geo_utils.create_dynamic_line({0, 0, 0}, {0, -radius, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
+        local line3 = geo_utils.create_dynamic_line({0, 0, 0}, {-radius, 0, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
+        local line4 = geo_utils.create_dynamic_line({0, 0, 0}, {0, 0, range}, {parent = root}, gizmo_const.COLOR.GRAY, true)
         m.spot.eid = {line0, line1, line2, line3, line4, c0}
     else
         update_circle_vb(m.spot.eid[6], radius)

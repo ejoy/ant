@@ -111,7 +111,7 @@ local function ltask_init()
 	ltask = require "ltask"
 	ltask.dispatch(CMD)
 	local waitfunc, fd = exclusive.eventinit()
-	local ltaskfd = socket.fd(fd, "tcp6", "connect")
+	local ltaskfd = socket.fd(fd)
 	event[#event+1] = ltaskfd
 	eventfunc[ltaskfd] = function ()
 		waitfunc()

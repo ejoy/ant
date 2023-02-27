@@ -231,7 +231,6 @@ function ios.create(point_eid)
                 camera_ref = camera_ref,
                 render_target = {
                     view_rect = t.view_rect,
-                    view_mode = "s",
                     viewid = viewidmgr.get(queuename),
                     fb_idx = fb_index,
                 },
@@ -245,10 +244,6 @@ function ios.create(point_eid)
                     name = k,
                     light_eid = point_eid,
                     stencil_ref = t.stencil_ref,
-                },
-                primitive_filter = {
-                    filter_type = "cast_shadow",
-                    "opacity",
                 },
                 queue_name = queuename,
                 name = queuename,

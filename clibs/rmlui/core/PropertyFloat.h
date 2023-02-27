@@ -33,6 +33,7 @@ struct PropertyFloat {
 	float Compute(const Element* e) const;
 	float ComputeW(const Element* e) const;
 	float ComputeH(const Element* e) const;
+	float ComputeAngle() const;
 	PropertyFloat Interpolate(const PropertyFloat& p1, float alpha) const;
 
 	float value;

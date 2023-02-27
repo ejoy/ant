@@ -209,7 +209,6 @@ local function create_pick_entity()
 			camera_ref = camera_ref,
 			render_target = {
 				viewid = pickupviewid,
-				view_mode = "s",
 				view_rect = {
 					x = 0, y = 0, w = pickup_buffer_w, h = pickup_buffer_h,
 				},
@@ -220,16 +219,11 @@ local function create_pick_entity()
 				},
 				fb_idx = fbidx,
 			},
-			primitive_filter = {
-				filter_type = "selectable",
-				"opacity",
-				"translucent",
-				"ui_stage",
-			},
 			name 		= "pickup_queue",
 			queue_name 	= "pickup_queue",
 			pickup_queue= true,
 			visible		= false,
+			camera_depend = true,
 		}
 	}
 end
@@ -265,7 +259,7 @@ local function close_pickup()
 	w:submit(e)
 end
 
-function pickup_sys:update_camera()
+function pickup_sys:update_camera_depend()
 	local puq = w:first "pickup_queue visible pickup:in camera_ref:in"
 	if puq then
 		update_camera(puq.camera_ref, puq.pickup.clickpt)

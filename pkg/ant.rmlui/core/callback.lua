@@ -104,8 +104,8 @@ function m.OnRealPath(path)
 	return filemanager.realpath(path)
 end
 
-function m.OnLoadTexture(doc, e, path)
-	filemanager.loadTexture(doc, e, path)
+function m.OnLoadTexture(doc, e, path, width, height, isRT)
+	filemanager.loadTexture(doc, e, path, width, height, isRT)
 end
 
 

@@ -142,8 +142,18 @@ function init_loader_sys:init()
 
     --cp_eid = color_palette_test()
 
-    quad_eid = ientity.create_quad_lines_entity("quads", {r=math3d.quaternion{0.0, math.pi*0.5, 0.0}}, 
+    quad_eid = ientity.create_quad_lines_entity("quads", {r={0.0, math.pi*0.5, 0.0}}, 
         "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
+
+    --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
+    do
+        local p = ecs.create_instance "/pkg/ant.test.features/assets/glb/headquater-1.glb|mesh.prefab"
+        p.on_ready = function(e)
+            local ee<close> = w:entity(e.tag['*'][1], "scene:in")
+            iom.set_scale(ee, 0.1)
+        end
+        world:create_object(p)
+    end
 
     -- create_texture_plane_entity(
     --     {1, 1.0, 1.0, 1.0}, 
@@ -275,6 +285,9 @@ function init_loader_sys:init()
                 end
             }
         }
+
+        local le<close> = w:entity(pid)
+        iom.set_direction(le, math3d.vector(0.0, -1.0, 0.0))
     end
     world:create_object(p)
 
@@ -405,32 +418,28 @@ function init_loader_sys:init()
     end
     world:create_object(ep) ]]
 
---[[ 
-    printer_material = imaterial.load_res "/pkg/ant.resources/materials/printer.material"
-     ecs.create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.general|name",
-        },
-        data = {
-            primitive_filter = {
-                filter_type = "postprocess_obj",
-                "opacity",
-                "translucent",
-            },
-            name        = "printer_test",
-            scene  = {s = 1, t = {4, 1, 4}},
-            material    = "/pkg/ant.resources/materials/printer.material",
-            visible_state = "postprocess_obj",
-            mesh        = "/pkg/ant.resources.binary/meshes/base/sphere.glb|meshes/Sphere_P1.meshbin",
-            printer = true
-        },
-    } 
-
-    local sa = imaterial.system_attribs()
-	sa:update("u_printer_factor", math3d.vector(0, 0, 0, 0))  ]]
-
-    
+    -- ecs.create_entity {
+    --     policy = {
+    --         "ant.render|render",
+    --         "ant.general|name",
+    --         "mod.printer|printer",
+    --     },
+    --     data = {
+    --         name        = "printer_test",
+    --         scene  = {s = 0.2, t = {5, 0, 5}},
+    --         material    = "/pkg/mod.printer/assets/printer.material",
+    --         visible_state = "main_view",
+    --         mesh        = "/pkg/mod.printer/assets/electric-pole-1.glb|meshes/Cylinder.006_P1.meshbin",
+    --         render_layer= "postprocess_obj",
+    --         -- add printer tag
+    --         -- previous still be zero
+    --         -- duration means generation duration time
+    --         printer = {
+    --             previous = 0,
+    --             duration = 5
+    --         }
+    --     },
+    -- }
 end
 
 local function render_layer_test()
@@ -473,6 +482,7 @@ local function render_layer_test()
     }
 end
 
+local sampler_eid
 local function motion_sampler_test()
     local ims = ecs.import.interface "ant.motion_sampler|imotion_sampler"
     local g = ims.sampler_group()
@@ -490,6 +500,7 @@ local function motion_sampler_test()
             end
         }
     }
+    sampler_eid = eid
 
     g:enable "view_visible"
     g:enable "scene_update"
@@ -609,6 +620,15 @@ function init_loader_sys:entity_init()
                 },
             }
         )
+        elseif key == "P" and press == 0 then
+            local e = assert(w:entity(sampler_eid))
+            local p = math3d.add(iom.get_position(e), math3d.vector(0.0, 0.0, 1.0))
+            local ims = ecs.import.interface "ant.motion_sampler|imotion_sampler"
+            ims.set_target(e, nil, nil, p, 100)
+
+        elseif key == "O" and press == 0 then
+            local e = assert(w:entity(sampler_eid))
+            print(math3d.tostring(iom.get_position(e)))
         end
     end
 

@@ -37,7 +37,7 @@ local function create_view_buffer_entity()
 			simplemesh = m,
 			material = "/pkg/ant.resources/materials/texquad.material",
 			visible_state = "main_view",
-			render_layer = "translcuent",
+			render_layer = "translucent",
 			scene = {},
 			on_ready = function (e)
 				local pq = w:first("pickup_queue render_target:in")
@@ -53,20 +53,13 @@ function pickup_debug_sys:init()
 end
 
 local function log_pickup_queue_entities()
-	for q in w:select "pickup_queue visible pickup:in primitive_filter:in" do
-		log.info "pickup queue entities:"
-		for idx, fn in ipairs(q.primitive_filter) do
-			local s =
-				("pickup_queue %s render_object"):format(fn)
-			log.info(("filter type:%s, select: %s"):format(fn, s))
-			local entities = {}
-			for e in w:select(s .. " eid:in name?in") do
-				entities[#entities+1] = ("%d-%s"):format(e.eid, e.name or "")
-			end
-
-			log.info(table.concat(entities, "\t"))
-		end
+	log.info "pickup queue entities:"
+	local entities = {}
+	for e in w:select("pickup_queue_visible eid:in name?in") do
+		entities[#entities+1] = ("%d-%s"):format(e.eid, e.name or "")
 	end
+
+	log.info(table.concat(entities, "\t"))
 end
 
 

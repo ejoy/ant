@@ -219,7 +219,7 @@ function BaseView:on_set_aabbmin(value)
     if template.template then
         if template.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
-            template.template.data.bounding.aabb.min = tv
+            template.template.data.bounding.aabb[1] = tv
             local e <close> = w:entity(self.eid, "bounding?in")
             local bounding = e.bounding
             if bounding then
@@ -240,7 +240,7 @@ function BaseView:on_get_aabbmin()
     if template.template then
         local bounding = template.template.data.bounding
         if bounding then
-            return bounding.aabb.min
+            return bounding.aabb[1]
         end
     end
     return {0,0,0}
@@ -251,7 +251,7 @@ function BaseView:on_set_aabbmax(value)
     if template.template then
         if template.template.data.bounding then
             local tv = {value[1], value[2], value[3]}
-            template.template.data.bounding.aabb.max = tv
+            template.template.data.bounding.aabb[2] = tv
             local e <close> = w:entity(self.eid, "bounding?in")
             local bounding = e.bounding
             if bounding then
@@ -272,7 +272,7 @@ function BaseView:on_get_aabbmax()
     if template.template then
         local bounding = template.template.data.bounding
         if bounding then
-            return bounding.aabb.max
+            return bounding.aabb[2]
         end
     end
     return {0,0,0}

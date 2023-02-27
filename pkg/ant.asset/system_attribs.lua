@@ -55,6 +55,7 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	b_light_grids			= buffer_value(10, "r"),
 	b_light_index_lists		= buffer_value(11, "r"),
 	b_light_info			= buffer_value(12, "r"),
+	u_indirect_modulate_color = {type="u", value=mc.ONE_PT},
 	u_time					= {type="u", value=mc.ZERO},
 
 	--IBL
@@ -70,10 +71,9 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 		dis = length(u_eyepos-posWS);
 		offsetWS = (amp*((dis-flat)/base)^exp) * dirWS
 		posWS = posWS + offsetWS
+		u_curveworld_param		= {type="u", value=mc.ZERO},	-- flat distance, base distance, exp, amplification
+		u_curveworld_dir		= {type="u", value=mc.ZAXIS},	-- dir in view space
 	]]
-	u_curveworld_param		= {type="u", value=mc.ZERO},	-- flat distance, base distance, exp, amplification
-	u_curveworld_dir		= {type="u", value=mc.ZAXIS},	-- dir in view space
-
 	-- shadow
 	--   csm
 	u_csm_matrix 		= { type="u",
