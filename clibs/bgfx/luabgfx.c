@@ -2787,6 +2787,9 @@ buffer_flags(lua_State *L, int index) {
 				flags |= BGFX_BUFFER_COMPUTE_TYPE_FLOAT;
 				compute_type = 1;
 				break;
+			default:
+				return luaL_error(L, "Invalid buffer flag %c", f[i]);
+			}
 			if (compute_type) {
 #define FORMAT_TYPE(n, w) ( n << 8 | w )
 				int format = f[i+1];
@@ -2808,9 +2811,6 @@ buffer_flags(lua_State *L, int index) {
 				}
 #undef FORMAT_TYPE
 				i+=2;
-			}
-			default:
-				return luaL_error(L, "Invalid buffer flag %c", f[i]);
 			}
 		}
 	}
