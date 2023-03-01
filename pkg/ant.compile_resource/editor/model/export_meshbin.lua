@@ -144,6 +144,7 @@ local function get_obj_name(obj, idx, defname)
 end
 
 local jointidx_fmt<const> = "HHHH"
+local color8bit_fmt<const> ="BBBB"
 
 local typemapper<const> = {
 	f = 'f',
@@ -378,17 +379,35 @@ local function fetch_vertices(layouts, gltfbin, numv, reverse_wing_order)
 end
 
 
-local function pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_index)
+local function pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_index, need_convert_color_index, need_convert_weight_index)
 	local ll = {}
 	for _, l in ipairs(layouts) do
 		--remove NORMAL attrib
-		if need_pack_tangent_frame and l.name == "NORMAL" then
-			goto continue
+		if need_pack_tangent_frame then
+			if l.name == "NORMAL" then
+				goto continue
+			end
+
+			if l.name == "TANGENT" then
+				ll[#ll+1] = "T40nii"
+				goto continue
+			end
 		end
 		if need_convert_joint_index and l.name == "JOINTS_0" then
 			ll[#ll+1] = l.layout:sub(1, 5) .. 'i'
 			goto continue
 		end
+		if need_convert_weight_index and l.name:match "WEIGHTS_0" then
+			ll[#ll+1] = "w40nii"
+			goto continue
+		end
+
+		if need_convert_color_index and l.name:match "COLOR_" then
+			ll[#ll+1] = l.layout:sub(1, 5) .. 'u'
+			goto continue
+		end
+
+
 		ll[#ll+1] = l.layout
 		::continue::
 	end
@@ -411,6 +430,11 @@ local function pack_vertex_data(layouts, vertices)
 			fv[ii] = vv
 		end
 	end
+
+	local function u16tou8(vv)
+		return (math.floor(vv/65535.0+0.5)*255)
+	end
+
 	local function load_attrib(attribidx, vertex)
 		local l = layouts[attribidx]
 		return unpack_vec(vertex[attribidx], l.layout)
@@ -425,6 +449,8 @@ local function pack_vertex_data(layouts, vertices)
 
 	local color_attrib_idx 						= find_layout_idx(layouts, "COLOR_0")
 	local joint_attrib_idx 						= find_layout_idx(layouts, "JOINTS_0")
+	-- only convert color with 16 bits
+	local need_convert_color_index<const>		= color_attrib_idx and layouts[color_attrib_idx].layout:sub(6, 6) == 'i' or false
 	local need_convert_joint_index<const> 		= joint_attrib_idx and layouts[joint_attrib_idx].layout:sub(6, 6) == 'u' or false
 	local normal_attrib_idx, tangent_attrib_idx = find_layout_idx(layouts, "NORMAL"), find_layout_idx(layouts, "TANGENT")
 
@@ -436,6 +462,16 @@ local function pack_vertex_data(layouts, vertices)
 		if need_convert_joint_index then
 			local j = v[joint_attrib_idx]
 			v[joint_attrib_idx] = jointidx_fmt:pack(j:byte(1), j:byte(2), j:byte(3), j:byte(4))
+		end
+
+		if need_convert_color_index then
+			local c = v[color_attrib_idx]
+			local cv = unpack_vec(c, layouts[color_attrib_idx].layout)
+
+			for i=1, 4 do
+				cv[i] = u16tou8(cv[i])
+			end
+			v[color_attrib_idx] = color8bit_fmt:pack(cv[1], cv[2], cv[3], cv[4])
 		end
 
 		if need_pack_tangent_frame then
@@ -452,7 +488,7 @@ local function pack_vertex_data(layouts, vertices)
 	end
 
 	--local texcoord_attrib_idx 					= find_layout_idx(layouts, "TEXCOORD_0")
-	local weights_attrib_idx 					= find_layout_idx(layouts, "WEIGHTS_0")
+	local weights_attrib_idx = find_layout_idx(layouts, "WEIGHTS_0")
 	for iv=1, #vertices do
 		local v = vertices[iv]
 		--[[ texcoord will be integer overflow.
@@ -474,21 +510,12 @@ local function pack_vertex_data(layouts, vertices)
 		end
 		if need_pack_tangent_frame then
 			-- remove normal
-			table.remove(v, normal_attrib_idx)	
+			table.remove(v, normal_attrib_idx)
 		end	
 		new_vertices[#new_vertices+1] = table.concat(v,"")
 	end
-	if need_pack_tangent_frame then
-		layouts[tangent_attrib_idx].layout = "T40nii"
-	end
---[[ 	if texcoord_attrib_idx  then
-		layouts[texcoord_attrib_idx ].layout = "t20nii"
-	end ]]
-	if weights_attrib_idx then
-		layouts[weights_attrib_idx].layout = "w40nii"
-	end
 
-	return new_vertices, pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_index)
+	return new_vertices, pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_index, need_convert_color_index, weights_attrib_idx)
 end
 
 local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table, settings)
