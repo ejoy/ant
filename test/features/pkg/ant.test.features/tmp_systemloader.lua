@@ -18,7 +18,7 @@ local renderpkg     = import_package "ant.render"
 local declmgr       = renderpkg.declmgr
 
 local init_loader_sys   = ecs.system 'init_loader_system'
-
+local iheapmesh = ecs.import.interface "ant.render|iheapmesh"
 local printer
 local printer_material
 local function point_light_test()
@@ -147,12 +147,12 @@ function init_loader_sys:init()
 
     --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
     do
-        local p = ecs.create_instance "/pkg/ant.test.features/assets/glb/headquater-1.glb|mesh.prefab"
+--[[         local p = ecs.create_instance "/pkg/ant.test.features/assets/glb/headquater-1.glb|mesh.prefab"
         p.on_ready = function(e)
             local ee<close> = w:entity(e.tag['*'][1], "scene:in")
             iom.set_scale(ee, 0.1)
         end
-        world:create_object(p)
+        world:create_object(p) ]]
     end
 
     -- create_texture_plane_entity(
@@ -505,12 +505,51 @@ local function motion_sampler_test()
     g:enable "view_visible"
     g:enable "scene_update"
 
-    local p = g:create_instance("/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab", eid)
+--[[     local p = g:create_instance("/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab", eid)
     p.on_ready = function (e)
         
     end
 
-    world:create_object(p)
+    world:create_object(p) ]]
+
+    ecs.create_entity {
+        policy = {
+            "ant.render|render",
+            "ant.general|name",
+            "ant.render|heap_mesh",
+         },
+        data = {
+            name        = "heap_mesh_test",
+            scene  = {s = 0.2, t = {0, 3, 0}},
+            material    = "/pkg/ant.resources/materials/heap_test.material", -- 自定义material文件中需加入HEAP_MESH :1
+            visible_state = "main_view",
+            mesh        = "/pkg/ant.test.features/assets/glb/iron-ingot.glb|meshes/Cube.252_P1.meshbin",
+            heapmesh = {
+                curSideSize = 3, -- 当前 x y z方向最大堆叠数量均为curSideSize = 3，最大堆叠数为3*3*3 = 27
+                curHeapNum = 10, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
+                glbName = "iron-ingot" -- 当前entity对应的glb名字，用于筛选
+            }
+        },
+    }
+     ecs.create_entity {
+        policy = {
+            "ant.render|render",
+            "ant.general|name",
+            "ant.render|heap_mesh",
+         },
+        data = {
+            name        = "heap_mesh_test",
+            scene  = {s = 0.2, t = {0, 3, 0}},
+            material    = "/pkg/ant.resources/materials/heap_test.material",
+            visible_state = "main_view",
+            mesh        = "/pkg/ant.test.features/assets/glb/iron-ingot.glb|meshes/Cube.252_P2.meshbin",
+            heapmesh = {
+                curSideSize = 3,
+                curHeapNum = 10,
+                glbName = "iron-ingot"
+            }
+        },
+    }     
 end
 
 local canvas_eid
@@ -629,7 +668,15 @@ function init_loader_sys:entity_init()
         elseif key == "O" and press == 0 then
             local e = assert(w:entity(sampler_eid))
             print(math3d.tostring(iom.get_position(e)))
+        elseif key == "J" and press == 0 then
+            iheapmesh.update_heap_mesh_number(27, "iron-ingot") -- 更新当前堆叠数 参数一为待更新堆叠数 参数二为entity筛选的glb名字
+        elseif key == "K" and press == 0 then
+            iheapmesh.update_heap_mesh_number(0, "iron-ingot")   -- 更新当前堆叠数
+        elseif key == "L" and press == 0 then
+            iheapmesh.update_heap_mesh_sidesize(4, "iron-ingot")  -- 更新当前每个轴的最大堆叠数 参数一为待更新每个轴的最大堆叠数 参数二为entity筛选的glb名字
+
         end
+        
     end
 
 
