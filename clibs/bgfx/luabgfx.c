@@ -2752,7 +2752,7 @@ getMemory(lua_State *L, int idx) {
 	w BGFX_BUFFER_COMPUTE_WRITE
 	s BGFX_BUFFER_ALLOW_RESIZE ( for dynamic buffer )
 	d BGFX_BUFFER_INDEX32 ( for index buffer )
-	c BGFX_BUFFER_COMPUTE_TYPE
+	[i/u/f][1/2/4][b/w/d] BGFX_BUFFER_COMPUTE_TYPE
  */
 static uint16_t
 buffer_flags(lua_State *L, int index) {
@@ -2761,6 +2761,7 @@ buffer_flags(lua_State *L, int index) {
 		const char *f = lua_tostring(L, index);
 		int i;
 		for (i=0;f[i];i++) {
+			int compute_type = 0;
 			switch(f[i]) {
 			case 'r' :
 				flags |= BGFX_BUFFER_COMPUTE_READ;
@@ -2774,33 +2775,42 @@ buffer_flags(lua_State *L, int index) {
 			case 'd':
 				flags |= BGFX_BUFFER_INDEX32;
 				break;
-			case 'c':{
-				size_t sz;
-				const char* fmt = luaL_checklstring(L, index+1, &sz);
-				if (sz < 4)
-					return luaL_error(L, "invalid compute format:%s", fmt);
-
-				if ('f' == *fmt) flags |= BGFX_BUFFER_COMPUTE_TYPE_FLOAT;
-				else if ('f' == *fmt) flags |= BGFX_BUFFER_COMPUTE_TYPE_FLOAT;
-				else if ('f' == *fmt) flags |= BGFX_BUFFER_COMPUTE_TYPE_FLOAT;
-				else return luaL_error(L, "invalid compute format type:%c, type should be: f|i|u(float|int|uint)", *fmt);
-
-				if		(0 == strcmp(fmt+1, "8x1")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_8X1;
-				else if (0 == strcmp(fmt+1, "8x2")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_8X2;
-				else if (0 == strcmp(fmt+1, "8x4")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_8X4;
-
-				else if (0 == strcmp(fmt+1,"16x1")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_16X1;
-				else if (0 == strcmp(fmt+1,"16x2")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_16X2;
-				else if (0 == strcmp(fmt+1,"16x4")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_16X4;
-
-				else if (0 == strcmp(fmt+1,"32x1")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_32X1;
-				else if (0 == strcmp(fmt+1,"32x2")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_32X2;
-				else if (0 == strcmp(fmt+1,"32x4")) flags |= BGFX_BUFFER_COMPUTE_FORMAT_32X4;
-
-				else return luaL_error(L, "invalid compute format:%s, format should be: 8x1|8x2|8x4|16x1|16x2|16x4|32x1|32x2|32x4", fmt+1);
-			} break;
+			case 'i':
+				flags |= BGFX_BUFFER_COMPUTE_TYPE_INT;
+				compute_type = 1;
+				break;
+			case 'u':
+				flags |= BGFX_BUFFER_COMPUTE_TYPE_UINT;
+				compute_type = 1;
+				break;
+			case 'f':
+				flags |= BGFX_BUFFER_COMPUTE_TYPE_FLOAT;
+				compute_type = 1;
+				break;
 			default:
 				return luaL_error(L, "Invalid buffer flag %c", f[i]);
+			}
+			if (compute_type) {
+#define FORMAT_TYPE(n, w) ( n << 8 | w )
+				int format = f[i+1];
+				if (format != 0) {
+					format = format << 8 | f[i+2];
+				}
+				switch (format) {
+				case FORMAT_TYPE('1','b') : flags |= BGFX_BUFFER_COMPUTE_FORMAT_8X1; break;
+				case FORMAT_TYPE('1','w') : flags |= BGFX_BUFFER_COMPUTE_FORMAT_8X2; break;
+				case FORMAT_TYPE('1','d') : flags |= BGFX_BUFFER_COMPUTE_FORMAT_8X4; break;
+				case FORMAT_TYPE('2','b') : flags |= BGFX_BUFFER_COMPUTE_FORMAT_16X1; break;
+				case FORMAT_TYPE('2','w') : flags |= BGFX_BUFFER_COMPUTE_FORMAT_16X2; break;
+				case FORMAT_TYPE('2','d') : flags |= BGFX_BUFFER_COMPUTE_FORMAT_16X4; break;
+				case FORMAT_TYPE('4','b') : flags |= BGFX_BUFFER_COMPUTE_FORMAT_32X1; break;
+				case FORMAT_TYPE('4','w') : flags |= BGFX_BUFFER_COMPUTE_FORMAT_32X2; break;
+				case FORMAT_TYPE('4','d') : flags |= BGFX_BUFFER_COMPUTE_FORMAT_32X4; break;
+				default :
+					return luaL_error(L, "invalid compute format:%s", f);
+				}
+#undef FORMAT_TYPE
+				i+=2;
 			}
 		}
 	}

@@ -84,7 +84,6 @@ lm:lua_source "bee" {
     },
     sources = {
         "binding/*.cpp",
-        "!binding/luaref.cpp",
     },
     windows = {
         defines = "_CRT_SECURE_NO_WARNINGS",
@@ -97,6 +96,7 @@ lm:lua_source "bee" {
             "wbemuuid",
             "oleAut32",
             "shell32",
+            "ntdll"
         },
     },
     mingw = {
