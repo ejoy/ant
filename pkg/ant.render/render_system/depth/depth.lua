@@ -17,14 +17,16 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local pre_depth_material
 local pre_depth_skinning_material
+local pre_depth_heap_material
 
-local function which_material(skinning)
-	local res = skinning and pre_depth_skinning_material or pre_depth_material
+local function which_material(skinning, heapmesh)
+	local res = heapmesh and pre_depth_heap_material or skinning and pre_depth_skinning_material or pre_depth_material
     return res.object
 end
 
 function s:init()
     pre_depth_material 			= imaterial.load_res "/pkg/ant.resources/materials/predepth.material"
+    pre_depth_heap_material     = imaterial.load_res "/pkg/ant.resources/materials/predepth_heap.material"
     pre_depth_skinning_material = imaterial.load_res "/pkg/ant.resources/materials/predepth_skin.material"
 end
 
@@ -52,9 +54,9 @@ local function create_depth_only_material(mo, ro, fm)
 end
 
 function s:update_filter()
-    for e in w:select "filter_result pre_depth_queue_visible:update render_layer:in render_object:update filter_material:in skinning?in" do
+    for e in w:select "filter_result pre_depth_queue_visible:update render_layer:in render_object:update filter_material:in skinning?in heapmesh?in" do
         if e.render_layer == "opacity" then
-            local mo = assert(which_material(e.skinning))
+            local mo = assert(which_material(e.skinning, e.heapmesh))
             local ro = e.render_object
             local fm = e.filter_material
 

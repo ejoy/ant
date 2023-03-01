@@ -1,0 +1,13 @@
+fx:
+  fs: /pkg/ant.resources/shaders/depth/fs_depth.sc
+  vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  setting:
+    HEAP_MESH: 1
+    lighting: off
+    shadow_cast: off
+    shadow_receive: off
+    subsurface: off  
+state:
+  ALPHA_REF: 0
+  CULL: CCW
+  WRITE_MASK: RZ

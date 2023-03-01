@@ -46,6 +46,10 @@ component "render_object"
     .field "ib_num:dword"
     .field "ib_handle:dword"
 
+    .field "idb_handle:dword"
+    .field "itb_handle:dword"
+    .field "draw_num:float"
+
     .field "render_layer:dword"
     .field "discard_flags:byte"
 
@@ -70,6 +74,23 @@ policy "render"
     .component "mesh"
     .component "material"
     .component "visible_state"
+
+system "heap_mesh"
+    .implement "render_system/heap_mesh.lua"
+    .method "init"
+    .method "heap_mesh"
+
+component "heapmesh".type "lua"
+
+
+interface "iheapmesh"
+    .implement "render_system/heap_mesh.lua"
+    .method "update_heap_mesh_number"
+    .method "update_heap_mesh_sidesize"
+
+policy "heap_mesh"
+    .require_system "ant.render|heap_mesh"
+    .component "heapmesh"
 
 system "skinning_system"
     .implement "render_system/skinning_system.lua"
@@ -258,6 +279,7 @@ import "render_system/cluster_render.ecs"
 
 pipeline "render"
     .stage "skin_mesh"
+    .stage "heap_mesh"
     .stage "refine_filter"
     .stage "cull"
     .stage "refine_camera"

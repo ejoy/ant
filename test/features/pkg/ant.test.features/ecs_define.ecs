@@ -58,6 +58,7 @@ system "init_loader_system"
     .require_policy "ant.motion_sampler|motion_sampler"
 
     --.require_policy "mod.printer|printer"
+    .require_policy "ant.render|heap_mesh"
     .require_policy "mod.daynight|daynight"
 
     .require_interface "ant.camera|icamera"

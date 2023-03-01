@@ -2,6 +2,8 @@
 #error "input.sh file should define before bgfx_shader.sh"
 #endif //BGFX_SHADER_H_HEADER_GUARD
 
+# define INPUT_INSTANCE i_data0
+
 #ifdef GPU_SKINNING
 #   define BGFX_CONFIG_MAX_BONES 64
 

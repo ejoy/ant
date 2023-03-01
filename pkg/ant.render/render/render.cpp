@@ -52,7 +52,8 @@ update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transfor
 #define BUFFER_TYPE(_HANDLE)	(_HANDLE >> 16) & 0xffff
 
 static bool
-mesh_submit(struct ecs_world* w, const ecs::render_object* ro){
+mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid){
+
 	if (ro->vb_num == 0)
 		return false;
 
@@ -61,6 +62,7 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro){
 		return false;
 
 	const uint16_t vbtype = BUFFER_TYPE(ro->vb_handle);
+	
 	switch (vbtype){
 		case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 0, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
 		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:	//walk through
@@ -75,6 +77,10 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro){
 			case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32: w->bgfx->encoder_set_dynamic_index_buffer(w->holder->encoder, bgfx_dynamic_index_buffer_handle_t{(uint16_t)ro->ib_handle}, ro->ib_start, ro->ib_num); break;
 			default: assert(false && "ib_num == 0 and handle is not valid"); break;
 		}
+	}
+	const uint16_t itbtype = BUFFER_TYPE(ro->itb_handle);
+	if((int)ro->draw_num != 0 && (int)ro->draw_num != -1){
+		w->bgfx->encoder_set_instance_data_from_dynamic_vertex_buffer(w->holder->encoder, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->itb_handle}, 0, ro->draw_num);
 	}
 
 	return true;
@@ -122,8 +128,13 @@ update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const 
 static void
 draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const objarray &objs, obj_transforms &trans){
 	for (const auto &od : objs){
+		const uint16_t idbtype = BUFFER_TYPE(od.obj->idb_handle);
+		if((int)od.obj->draw_num == 0){
+			continue;
+		}
 		auto mi = get_material(od.obj, ra.material_index);
-		if (mi && mesh_submit(w, od.obj)) {
+		int vid = ra.viewid;
+		if (mi && mesh_submit(w, od.obj, vid)) {
 			apply_material_instance(L, mi, w);
 			const auto prog = material_prog(L, mi);
 
@@ -140,7 +151,12 @@ draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const o
 			}
 
 			w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-			w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->render_layer, BGFX_DISCARD_ALL);
+			if((int)od.obj->draw_num != 0 && (int)od.obj->draw_num != -1){
+				w->bgfx->encoder_submit_indirect(w->holder->encoder, ra.viewid, prog, bgfx_indirect_buffer_handle_t{(uint16_t)od.obj->idb_handle}, 0, od.obj->draw_num, od.obj->render_layer, BGFX_DISCARD_ALL);
+			}
+			else{
+				w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->render_layer, BGFX_DISCARD_ALL);
+			}
 		}
 	}
 }

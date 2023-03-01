@@ -1,0 +1,15 @@
+fx:
+  cs: /pkg/ant.resources/shaders/mesh/cs_heapmesh.sc
+  setting:
+    lighting: off
+    shadow_cast: off
+    shadow_receive: off
+    subsurface: off
+    HEAP_MESH: 1
+properties:
+  indirectBuffer:
+    stage: 0
+    access: w
+  instanceBufferOut:
+    stage: 1
+    access: w
