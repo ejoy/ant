@@ -114,6 +114,12 @@ end
 local cp_eid, quad_eid
 local testprefab
 
+local function create_instance(prefab, onready)
+    local p = ecs.create_instance(prefab)
+    p.on_ready = onready
+    world:create_object(p)
+end
+
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
@@ -146,14 +152,11 @@ function init_loader_sys:init()
         "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
 
     --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
-    do
---[[         local p = ecs.create_instance "/pkg/ant.test.features/assets/glb/headquater-1.glb|mesh.prefab"
-        p.on_ready = function(e)
-            local ee<close> = w:entity(e.tag['*'][1], "scene:in")
-            iom.set_scale(ee, 0.1)
-        end
-        world:create_object(p) ]]
-    end
+    create_instance("/pkg/ant.test.features/assets/glb/headquater-1.glb|mesh.prefab",
+    function(e)
+        local ee<close> = w:entity(e.tag['*'][1], "scene:in")
+        iom.set_scale(ee, 0.1)
+    end)
 
     -- create_texture_plane_entity(
     --     {1, 1.0, 1.0, 1.0}, 
@@ -588,7 +591,7 @@ function init_loader_sys:init_world()
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
     iom.set_direction(camera_ref, dir)
 
-    render_layer_test()
+    --render_layer_test()
     canvas_test()
 
     motion_sampler_test()
