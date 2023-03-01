@@ -36,15 +36,15 @@ local function get_layout(name, accessor)
 	local attribname, channel = name:match"(%w+)_(%d+)"
 	local shortname = SHORT_NAMES[attribname or name]
 	local comptype_name = gltfutil.comptype_name_mapper[accessor.componentType]
-
-	return table.concat({
+	local shorttype = gltfutil.decl_comptype_mapper[comptype_name]
+	local asInt = shorttype ~= 'f' and 'i' or 'I'
+	return ("%s%d%d%s%s%s"):format(
 		shortname,
-		tostring(gltfutil.type_count_mapper[accessor.type]),
-		tostring(channel or 0),
+		gltfutil.type_count_mapper[accessor.type],
+		channel or 0,
 		(accessor.normalized and "n" or "N"),
-		"I",
-		gltfutil.decl_comptype_mapper[comptype_name],
-	}, "")
+		asInt,
+		shorttype)
 end
 
 local function attrib_data(desc, iv, bin)
@@ -145,23 +145,24 @@ end
 
 local jointidx_fmt<const> = "HHHH"
 
+local typemapper<const> = {
+	f = 'f',
+	i = 'H',
+	u = 'B',
+}
+
 local function unpack_vec(v, l)
-	local type = l:sub(1, 1)
 	local t = l:sub(6, 6)
-	local n = tonumber(l:sub(2, 2))
-	if t == 'f' then
-		local fmt = ('f'):rep(n)
-		local vv = {fmt:unpack(v)}
-		vv[n+1] = nil -- remove unpack offset
-		return vv, fmt
- 	elseif t == 'i' and type == 'c' then
-		local fmt = ('B'):rep(n)
-		local vv = {fmt:unpack(v)}
-		vv[n+1] = nil -- remove unpack offset
-		return vv, fmt
+	t = typemapper[t]
+	if t == nil then
+		assert(("not support layout:%s, type:%s must be 'float'"):format(l, t))
 	end
 
-	assert(("not support layout:%s, type:%s must be 'float'"):format(l, t))
+	local n = tonumber(l:sub(2, 2))
+	local fmt = t:rep(n)
+	local vv = {fmt:unpack(v)}
+	vv[n+1] = nil -- remove unpack offset
+	return vv, fmt
 end
 
 -- change from right hand to left hand
@@ -428,7 +429,6 @@ local function pack_vertex_data(layouts, vertices)
 	local normal_attrib_idx, tangent_attrib_idx = find_layout_idx(layouts, "NORMAL"), find_layout_idx(layouts, "TANGENT")
 
 	local need_pack_tangent_frame<const> = normal_attrib_idx and tangent_attrib_idx
-	--local need_pack_tangent_frame<const> = false
 	local new_vertices = {}
 
 	for iv=1, #vertices do
@@ -451,7 +451,7 @@ local function pack_vertex_data(layouts, vertices)
 		end
 	end
 
-	local texcoord_attrib_idx 					= find_layout_idx(layouts, "TEXCOORD_0")
+	--local texcoord_attrib_idx 					= find_layout_idx(layouts, "TEXCOORD_0")
 	local weights_attrib_idx 					= find_layout_idx(layouts, "WEIGHTS_0")
 	for iv=1, #vertices do
 		local v = vertices[iv]
@@ -487,9 +487,6 @@ local function pack_vertex_data(layouts, vertices)
 	if weights_attrib_idx then
 		layouts[weights_attrib_idx].layout = "w40nii"
 	end
-	if color_attrib_idx then
-		layouts[color_attrib_idx].layout = "c40niu"
-	end
 
 	return new_vertices, pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_index)
 end
@@ -498,10 +495,6 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table, settings)
 	assert(prim.mode == nil or prim.mode == 4)
 
 	local layouts = generate_layouts(gltfscene, prim.attributes)
-
-	if find_layout(layouts, "COLOR_0") then
-		settings["COLOR_0"] = true
-	end
 
 	local numv = gltfutil.num_vertices(prim, gltfscene)
 	local vertices = fetch_vertices(layouts, gltfbin, numv, ib_table == nil)
@@ -693,7 +686,7 @@ local function save_meshbin_files(resname, meshgroup)
 end
 
 
- local function export_meshbin(gltfscene, bindata, exports, settings)
+ local function export_meshbin(gltfscene, bindata, exports)
 	exports.mesh = {}
 	local meshes = gltfscene.meshes
 	if meshes == nil then
@@ -713,7 +706,7 @@ end
 				group.ib = fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1], ib_table)
 			end
 
-			group.vb = fetch_vb_buffers(gltfscene, bindata, prim, ib_table, settings)
+			group.vb = fetch_vb_buffers(gltfscene, bindata, prim, ib_table)
 			local bb = create_prim_bounding(gltfscene, prim)
 			if bb then
 				local aabb = math3d.aabb(bb.aabb[1], bb.aabb[2])
@@ -724,7 +717,10 @@ end
 			end
 
 			local stemname = ("%s_P%d"):format(meshname, primidx)
-			exports.mesh[meshidx][primidx] = save_meshbin_files(stemname, group)
+			exports.mesh[meshidx][primidx] = {
+				meshbinfile = save_meshbin_files(stemname, group),
+				declname = group.vb.declname,
+			}
 		end
 	end
 

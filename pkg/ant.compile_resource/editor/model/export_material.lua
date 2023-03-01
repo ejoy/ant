@@ -132,7 +132,7 @@ local function read_datalist(statefile)
     return s
 end
 
-return function (output, glbdata, exports, tolocalpath, settings)
+return function (output, glbdata, exports, tolocalpath)
     local glbscene, glbbin = glbdata.info, glbdata.bin
     local materials = glbscene.materials
 
@@ -282,10 +282,6 @@ return function (output, glbdata, exports, tolocalpath, settings)
         end
         if mat.alphaCutoff then
             setting["ALPHAMODE_MASK"] = 1
-        end
-
-        if settings["COLOR_0"] then
-            setting["WITH_COLOR_ATTRIB"] = 1
         end
 
         if mat.doubleSided then

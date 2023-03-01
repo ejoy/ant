@@ -80,24 +80,25 @@ local primitive_names = {
 
 local material_cache = {}
 
-local function generate_material(mi, mode, hasskin)
+local function generate_material(mi, mode, hasskin, withcolorattrib)
     local sname = primitive_names[mode+1]
     if not sname then
         error(("not support primitate state, mode:%d"):format(mode))
     end
 
     local filename = mi.filename
-    local function gen_key(fn, sn, skn)
+    local function gen_key(fn, sn, skn, clr)
         fn = fn:sub(1, 4) == "/pkg" and fn or utility.full_path(fn):string()
-        return fn .. sn .. skn
+        return ("%s%s%s%s"):format(fn, sn, skn, clr)
     end
 
     local skn = hasskin and "_skin" or ""
-    local key = gen_key(filename:string(), sname, skn)
+    local clr = withcolorattrib and "_clr" or ""
+    local key = gen_key(filename:string(), sname, skn, clr)
 
     local m = material_cache[key]
     if m == nil then
-        if sname == "" and skn == "" then
+        if sname == "" and skn == "" and clr == "" then
             m = mi
         else
             local basename = filename:stem():string()
@@ -111,13 +112,20 @@ local function generate_material(mi, mode, hasskin)
                 basename = basename .. "_" .. sname
             end
 
-            if hasskin then
-                if nil == nm.fx.setting then
-                    nm.fx.setting = {}
+            local function mark_name(bn, suffix, settingname)
+                if suffix ~= "" then
+                    if nil == nm.fx.setting then
+                        nm.fx.setting = {}
+                    end
+                    nm.fx.setting[settingname] = 1
+                    return bn .. suffix
                 end
-                nm.fx.setting.GPU_SKINNING = 1
-                basename = basename .. "_skin"
+
+                return bn
             end
+
+            basename = mark_name(basename, skn, "GPU_SKINNING")
+            basename = mark_name(basename, clr, "WITH_COLOR_ATTRIB")
             m = {
                 filename = filename:parent_path() / (basename .. ".material"),
                 material = nm
@@ -199,7 +207,7 @@ local function has_skin(gltfscene, exports, nodeidx)
     end
 end
 
-local function seri_material(output, exports, mode, materialidx, hasskin)
+local function seri_material(output, exports, mode, materialidx, hasskin, withcolorattrib)
     local em = exports.material
     if em == nil or #em <= 0 then
         return
@@ -207,7 +215,7 @@ local function seri_material(output, exports, mode, materialidx, hasskin)
 
     if materialidx then
         local mi = assert(exports.material[materialidx+1])
-        local materialinfo = generate_material(mi, mode, hasskin)
+        local materialinfo = generate_material(mi, mode, hasskin, withcolorattrib)
         if materialinfo then
             save_material(output, exports, materialinfo)
             return materialinfo.filename
@@ -221,7 +229,7 @@ local function seri_material(output, exports, mode, materialidx, hasskin)
         }
     end
 
-    local materialinfo = generate_material(default_material_info, mode)
+    local materialinfo = generate_material(default_material_info, mode, hasskin, withcolorattrib)
     if materialinfo and materialinfo.filename ~= default_material_path then
         save_material(output, exports, materialinfo)
         return materialinfo.filename
@@ -254,6 +262,10 @@ local function check_create_skin_material(materialfile)
     return newpath
 end
 
+local function has_color_attrib(declname)
+    return declname:match "c%d%w%w%w%w" ~= nil
+end
+
 local function create_mesh_node_entity(output, gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(node)
@@ -262,14 +274,16 @@ local function create_mesh_node_entity(output, gltfscene, nodeidx, parent, expor
 
     local entity
     for primidx, prim in ipairs(mesh.primitives) do
-        local meshname = mesh.name and fix_invalid_name(mesh.name) or ("mesh" .. meshidx)
         local needskin = has_skin(gltfscene, exports, nodeidx)
-        local materialfile = seri_material(output, exports, prim.mode or 4, prim.material, needskin)
+
+        local em = exports.mesh[meshidx+1][primidx]
+
+        local materialfile = seri_material(output, exports, prim.mode or 4, prim.material, needskin, has_color_attrib(em.declname))
         if materialfile == nil then
             materialfile = fs.path "/pkg/ant.resources/materials/pbr_default.material"
             --error(("not found %s material %d"):format(meshname, prim.material or -1))
         end
-        local meshfile = exports.mesh[meshidx+1][primidx]
+        local meshfile = em.meshbinfile
         if meshfile == nil then
             error(("not found meshfile in export data:%d, %d"):format(meshidx+1, primidx))
         end
