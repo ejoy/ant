@@ -8,7 +8,7 @@ $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_BITANGEN
 
 void main()
 {
-	mat4 wm = get_world_matrix();
+	mat4 wm = u_model[0];
 	vec4 posWS = transformWS(wm, vec4(a_position, 1.0));
 	gl_Position = mul(u_viewProj, posWS);
 

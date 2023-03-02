@@ -21,6 +21,7 @@ local function add_view(name, afterview_idx)
 end
 
 add_view "csm_fb"
+add_view "skinning"
 add_view "csm1"
 add_view "csm2"
 add_view "csm3"

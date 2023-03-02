@@ -389,18 +389,22 @@ local function pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_
 			end
 
 			if l.name == "TANGENT" then
-				ll[#ll+1] = "T40nii"
+				if need_convert_joint_index and need_convert_weight_index then
+					ll[#ll+1] = "T40NIf"
+				else
+					ll[#ll+1] = "T40nii"
+				end
 				goto continue
 			end
 		end
-		if need_convert_joint_index and l.name == "JOINTS_0" then
+--[[ 		if need_convert_joint_index and l.name == "JOINTS_0" then
 			ll[#ll+1] = l.layout:sub(1, 5) .. 'i'
 			goto continue
 		end
 		if need_convert_weight_index and l.name:match "WEIGHTS_0" then
 			ll[#ll+1] = "w40nii"
 			goto continue
-		end
+		end ]]
 
 		if need_convert_color_index and l.name:match "COLOR_" then
 			ll[#ll+1] = l.layout:sub(1, 5) .. 'u'
@@ -430,7 +434,7 @@ local function pack_vertex_data(layouts, vertices)
 			fv[ii] = vv
 		end
 	end
-
+	
 	local function u16tou8(vv)
 		return (math.floor(vv/65535.0+0.5)*255)
 	end
@@ -447,10 +451,13 @@ local function pack_vertex_data(layouts, vertices)
 		return math3d.vector(r)
 	end
 
+	local position_attrib_idx                   = find_layout_idx(layouts, "POSITION")
+	local texcoord_attrib_idx 					= find_layout_idx(layouts, "TEXCOORD_0")
+	local weights_attrib_idx 					= find_layout_idx(layouts, "WEIGHTS_0")
 	local color_attrib_idx 						= find_layout_idx(layouts, "COLOR_0")
 	local joint_attrib_idx 						= find_layout_idx(layouts, "JOINTS_0")
-	-- only convert color with 16 bits
-	local need_convert_color_index<const>		= color_attrib_idx and layouts[color_attrib_idx].layout:sub(6, 6) == 'i' or false
+		-- only convert color with 16 bits
+		local need_convert_color_index<const>		= color_attrib_idx and layouts[color_attrib_idx].layout:sub(6, 6) == 'i' or false
 	local need_convert_joint_index<const> 		= joint_attrib_idx and layouts[joint_attrib_idx].layout:sub(6, 6) == 'u' or false
 	local normal_attrib_idx, tangent_attrib_idx = find_layout_idx(layouts, "NORMAL"), find_layout_idx(layouts, "TANGENT")
 
@@ -459,10 +466,6 @@ local function pack_vertex_data(layouts, vertices)
 
 	for iv=1, #vertices do
 		local v = vertices[iv]
-		if need_convert_joint_index then
-			local j = v[joint_attrib_idx]
-			v[joint_attrib_idx] = jointidx_fmt:pack(j:byte(1), j:byte(2), j:byte(3), j:byte(4))
-		end
 
 		if need_convert_color_index then
 			local c = v[color_attrib_idx]
@@ -480,40 +483,59 @@ local function pack_vertex_data(layouts, vertices)
 			
  			local quat = mu.pack_tangent_frame(normal, tangent)
 			local fv = table.pack(math3d.index(quat, 1, 2, 3, 4))
-			f2i(fv, #fv, 32767)
-			local fmt = ('h'):rep(4)
+			local fmt
+			if weights_attrib_idx and joint_attrib_idx 	then
+				fmt = ('f'):rep(4)
+			else
+				fmt = ('h'):rep(4)
+				f2i(fv, #fv, 32767)
+			end
 			local QUAT_tangent = fmt:pack(table.unpack(fv)) 
 			v[tangent_attrib_idx] = QUAT_tangent
 		end
 	end
 
-	--local texcoord_attrib_idx 					= find_layout_idx(layouts, "TEXCOORD_0")
-	local weights_attrib_idx = find_layout_idx(layouts, "WEIGHTS_0")
 	for iv=1, #vertices do
 		local v = vertices[iv]
-		--[[ texcoord will be integer overflow.
-		if texcoord_attrib_idx  then
-			local texture_coord = load_attrib_math3dvec(texcoord_attrib_idx , v)
-			local fv = table.pack(math3d.index(texture_coord, 1, 2))
-			f2i(fv, #fv, 32767)
-			local fmt = ('h'):rep(2)
-			local tc = fmt:pack(table.unpack(fv))
-			v[texcoord_attrib_idx ] = tc
-		end ]]
-		if weights_attrib_idx then
+		if weights_attrib_idx and joint_attrib_idx then
+			local fmt_f = ('f'):rep(4)
+			local fmt_h = ('h'):rep(4)
+
 			local weights = load_attrib_math3dvec(weights_attrib_idx, v)
-			local fv = table.pack(math3d.index(weights, 1, 2, 3, 4))
-			f2i(fv, #fv, 32767)
-			local fmt = ('h'):rep(4)
-			local w = fmt:pack(table.unpack(fv))
-			v[weights_attrib_idx] = w
+			local wv = table.pack(math3d.index(weights, 1, 2, 3, 4))
+			--f2i(wv, #wv, 32767)
+			v[weights_attrib_idx] = fmt_f:pack(table.unpack(wv))
+
+			local j = v[joint_attrib_idx]
+			local jv = table.pack(j:byte(1) * 1.0, j:byte(2) * 1.0, j:byte(3) * 1.0, j:byte(4) * 1.0)
+			v[joint_attrib_idx] = fmt_f:pack(table.unpack(jv))
+
+			local positions = load_attrib_math3dvec(position_attrib_idx, v)
+			local pv = table.pack(math3d.index(positions, 1), math3d.index(positions, 2),math3d.index(positions, 3), 0.0)
+			v[position_attrib_idx] = fmt_f:pack(table.unpack(pv))
+
+			local texs = load_attrib_math3dvec(texcoord_attrib_idx, v)
+			local tv = table.pack(math3d.index(texs, 1), math3d.index(texs, 2), 0.0, 0.0)
+			v[texcoord_attrib_idx] = fmt_f:pack(table.unpack(tv))
 		end
 		if need_pack_tangent_frame then
 			-- remove normal
-			table.remove(v, normal_attrib_idx)
+			table.remove(v, normal_attrib_idx)	
 		end	
 		new_vertices[#new_vertices+1] = table.concat(v,"")
 	end
+
+	if need_pack_tangent_frame then
+		layouts[tangent_attrib_idx].layout = "T40nii"
+	end
+	if weights_attrib_idx and joint_attrib_idx then
+		layouts[position_attrib_idx].layout = "p40NIf"
+		layouts[texcoord_attrib_idx].layout = "t40NIf"
+		layouts[joint_attrib_idx].layout    = "i40NIf"
+		layouts[texcoord_attrib_idx].layout = "w40NIf"
+		layouts[tangent_attrib_idx].layout  = "T40NIf"
+	end
+
 
 	return new_vertices, pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_index, need_convert_color_index, weights_attrib_idx)
 end

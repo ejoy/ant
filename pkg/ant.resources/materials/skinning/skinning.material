@@ -1,0 +1,18 @@
+fx:
+  cs: /pkg/ant.resources/shaders/skinning/cs_skinning.sc
+  setting:
+    lighting: off
+    shadow_cast: off
+    shadow_receive: off
+    subsurface: off
+    GPU_SKINNING: 1
+properties:
+  b_skinning_matrices_vb:
+    stage: 0
+    access: r
+  b_skinning_in_dynamic_vb:
+    stage: 1
+    access: r
+  b_skinning_out_dynamic_vb:
+    stage: 2
+    access: w

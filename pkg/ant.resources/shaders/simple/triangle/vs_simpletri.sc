@@ -8,7 +8,7 @@ $output OUTPUT_COLOR0
 
 void main()
 {
-    mat4 wm = get_world_matrix();
+    mat4 wm = u_model[0];
     vec4 posWS = mul(wm, vec4(a_position, 1.0));
 	gl_Position = mul(u_viewProj, posWS);
 #ifdef WITH_COLOR_ATTRIB

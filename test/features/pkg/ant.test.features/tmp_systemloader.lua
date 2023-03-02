@@ -152,7 +152,7 @@ function init_loader_sys:init()
         "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
 
     --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
-    create_instance("/pkg/ant.test.features/assets/glb/headquater-1.glb|mesh.prefab",
+    create_instance("/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab",
     function(e)
         local ee<close> = w:entity(e.tag['*'][1], "scene:in")
         iom.set_scale(ee, 0.1)

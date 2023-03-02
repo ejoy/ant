@@ -8,7 +8,7 @@ $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_LIGHTMAP
 
 void main()
 {
-	mediump mat4 wm = get_world_matrix();
+	mediump mat4 wm = u_model[0];
 #ifdef HEAP_MESH
 	wm[0][3] = wm[0][3] + i_data0.x;
 	wm[1][3] = wm[1][3] + i_data0.y;

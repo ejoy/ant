@@ -12,7 +12,14 @@ function proxy_vb:__index(k)
     if k == "handle" then
         assert(#self.memory <= 3 and (type(self.memory[1]) == "userdata" or type(self.memory[1]) == "string"))
         local membuf = bgfx.memory_buffer(table.unpack(self.memory))
-        local h = bgfx.create_vertex_buffer(membuf, declmgr.get(self.declname).handle)
+        local declname = self.declname
+        local h
+         if string.match(declname, "i40") or string.match(declname, "w40") then
+            h = bgfx.create_dynamic_vertex_buffer(membuf, declmgr.get(self.declname).handle, "r")
+        else
+            h = bgfx.create_vertex_buffer(membuf, declmgr.get(self.declname).handle)
+        end
+        --h = bgfx.create_vertex_buffer(membuf, declmgr.get(self.declname).handle)
         self.handle = h
         return h
     end
