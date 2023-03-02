@@ -9,15 +9,23 @@
 
 template <typename T>
 struct flatmap_hash {
-    typename std::enable_if<std::is_integral_v<T>, size_t>::type
-    operator()(T v) const noexcept {
-        uint64_t x = static_cast<uint64_t>(v);
-        x ^= x >> 33U;
-        x *= UINT64_C(0xff51afd7ed558ccd);
-        x ^= x >> 33U;
-        x *= UINT64_C(0xc4ceb9fe1a85ec53);
-        x ^= x >> 33U;
-        return static_cast<size_t>(x);
+    size_t operator()(T v) const noexcept {
+        if constexpr (std::is_integral_v<T>) {
+            uint64_t x = static_cast<uint64_t>(v);
+            x ^= x >> 33U;
+            x *= UINT64_C(0xff51afd7ed558ccd);
+            x ^= x >> 33U;
+            x *= UINT64_C(0xc4ceb9fe1a85ec53);
+            x ^= x >> 33U;
+            return static_cast<size_t>(x);
+        }
+        else {
+            static_assert(std::is_trivial_v<T>);
+            uint64_t i = 0;
+            memcpy(&i, &v, sizeof(v));
+            flatmap_hash<uint64_t> h;
+            return h(i);
+        }
     }
 };
 
@@ -110,6 +118,34 @@ public:
     }
 
     template <typename MappedType>
+    bool insert(const key_type& key, MappedType obj) {
+        if (m_size >= m_maxsize) {
+            increase_size();
+        }
+        uint8_t dib = 1;
+        size_t slot = KeyHash::operator()(key) & m_mask;
+        for (;;) {
+            if (m_buckets[slot].dib == 0) {
+                new (&m_buckets[slot]) bucket { key, std::forward<mapped_type>(obj), dib };
+                ++m_size;
+                return true;
+            }
+            if (KeyEqual::operator()(m_buckets[slot].key, key)) {
+                return false;
+            }
+            if (m_buckets[slot].dib < dib) {
+                bucket tmp { key, std::forward<mapped_type>(obj), dib };
+                std::swap(tmp, m_buckets[slot]);
+                ++tmp.dib;
+                internal_insert<kMaxTryRehash>((slot + 1) & m_mask, std::move(tmp));
+                return true;
+            }
+            ++dib;
+            slot = (slot + 1) & m_mask;
+        }
+    }
+
+    template <typename MappedType>
     void insert_or_assign(const key_type& key, MappedType obj) {
         if (m_size >= m_maxsize) {
             increase_size();
@@ -130,27 +166,28 @@ public:
                 bucket tmp { key, std::forward<mapped_type>(obj), dib };
                 std::swap(tmp, m_buckets[slot]);
                 ++tmp.dib;
-                return internal_insert<kMaxTryRehash>((slot + 1) & m_mask, std::move(tmp));
+                internal_insert<kMaxTryRehash>((slot + 1) & m_mask, std::move(tmp));
+                return;
             }
             ++dib;
             slot = (slot + 1) & m_mask;
         }
     }
 
-    bool contains(const key_type& key) const noexcept {
+    [[nodiscard]] bool contains(const key_type& key) const noexcept {
         auto slot = find_key(key);
         return slot != kInvalidSlot;
     }
 
-    size_t size() const {
+    [[nodiscard]] size_t size() const {
         return m_size;
     }
 
-    bool empty() const {
+    [[nodiscard]] bool empty() const {
         return size() == 0;
     }
 
-    mapped_type* find(const key_type& key) noexcept {
+    [[nodiscard]] mapped_type* find(const key_type& key) noexcept {
         auto slot = find_key(key);
         if (slot == kInvalidSlot) {
             return nullptr;
@@ -158,7 +195,7 @@ public:
         return &m_buckets[slot].obj;
     }
 
-    const mapped_type* find(const key_type& key) const noexcept {
+    [[nodiscard]] const mapped_type* find(const key_type& key) const noexcept {
         return const_cast<flatmap*>(this)->find(key);
     }
 
@@ -229,17 +266,17 @@ public:
     };
     using const_iterator = iterator;
 
-    const_iterator begin() const {
+    [[nodiscard]] const_iterator begin() const {
         return const_iterator { *this, 0 };
     }
-    const_iterator end() const {
+    [[nodiscard]] const_iterator end() const {
         return const_iterator {*this, m_mask+1};
     }
 
-    iterator begin() {
+    [[nodiscard]] iterator begin() {
         return iterator {*this, 0};
     }
-    iterator end() {
+    [[nodiscard]] iterator end() {
         return iterator {*this, m_mask+1};
     }
 
@@ -251,15 +288,15 @@ public:
         } h;
         bucket* buckets;
     };
-    rawdata const& toraw() const {
+    [[nodiscard]] rawdata const& toraw() const {
         return *reinterpret_cast<const rawdata*>(&m_mask);
     }
-    rawdata& toraw() {
+    [[nodiscard]] rawdata& toraw() {
         return *reinterpret_cast<rawdata*>(&m_mask);
     }
 
 #if 0
-    size_t max_distance() const noexcept {
+    [[nodiscard]] size_t max_distance() const noexcept {
         uint8_t distance = 0;
         for (size_t i = 0; i < m_mask + 1; ++i) {
             distance = (std::max)(m_buckets[i].dib, distance);
@@ -269,7 +306,7 @@ public:
 #endif
 
 private:
-    size_t find_key(const key_type& key) const noexcept {
+    [[nodiscard]] size_t find_key(const key_type& key) const noexcept {
         size_t slot = KeyHash::operator()(key) & m_mask;
         for (uint32_t dib = 1;; ++dib) {
             if (m_buckets[slot].dib != 0 && KeyEqual::operator()(key, m_buckets[slot].key)) {
@@ -282,7 +319,7 @@ private:
         }
     }
 
-    size_t calc_maxsize(size_t maxsize) const noexcept {
+    [[nodiscard]] size_t calc_maxsize(size_t maxsize) const noexcept {
         if (maxsize <= (std::numeric_limits<size_t>::max)() / 100) {
             return maxsize * kMaxLoadFactor / 100;
         }
@@ -388,7 +425,7 @@ private:
     using key_type = Key;
     using mybase = flatmap<Key, uint8_t, KeyHash, KeyEqual>;
 public:
-    void insert(const key_type& key) {
-        mybase::insert_or_assign(key, 0);
+    bool insert(const key_type& key) {
+        return mybase::insert(key, 0);
     }
 };
