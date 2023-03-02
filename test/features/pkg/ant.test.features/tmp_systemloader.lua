@@ -120,10 +120,78 @@ local function create_instance(prefab, onready)
     world:create_object(p)
 end
 
+
+local function gridmask_test()
+
+    local linesmesh = {
+            vb = {
+                start = 0,
+                num = 20,
+                declname = "p3",
+                memory = {"fff", {
+                    --rows
+                    -2.0,  0.0, -2.0,
+                     2.0,  0.0, -2.0,
+
+                    -2.0,  0.0, -1.0,
+                     2.0,  0.0, -1.0,
+
+                    -2.0,  0.0,  0.0,
+                     2.0,  0.0,  0.0,
+
+                    -2.0,  0.0,  1.0,
+                     2.0,  0.0,  1.0,
+
+                    -2.0,  0.0,  2.0,
+                     2.0,  0.0,  2.0,
+
+                    --columns
+                    -2.0,  0.0,  2.0,
+                    -2.0,  0.0, -2.0,
+
+                    -1.0,  0.0,  2.0,
+                    -1.0,  0.0, -2.0,
+
+                     0.0,  0.0,  2.0,
+                     0.0,  0.0, -2.0,
+
+                     1.0,  0.0,  2.0,
+                     1.0,  0.0, -2.0,
+
+                     2.0,  0.0,  2.0,
+                     2.0,  0.0, -2.0,
+                }},
+            },
+        }
+
+    ecs.create_entity{
+        policy = {
+            "ant.render|simplerender",
+            "ant.general|name",
+        },
+        data = {
+            --simplemesh = imesh.init_mesh(ientity.plane_mesh()),
+            simplemesh = imesh.init_mesh(linesmesh),
+            visible_state = "main_view",
+            material = "/pkg/mod.gridmask/assets/gridmask.material",
+            render_layer = "translucent",
+            scene = {
+                t = {10, 1.0, 0.0}
+            },
+            on_ready = function (e)
+                
+            end,
+            name = "gridmask_test",
+        }
+    }
+end
+
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
     local eid1, eid2, eid3 = ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+
+    gridmask_test()
     -- print(eid1, eid2, eid3)
 
     -- local pp = ecs.create_instance "/pkg/ant.resources.binary/meshes/up_box.glb|mesh.prefab"
@@ -486,35 +554,8 @@ local function render_layer_test()
 end
 
 local sampler_eid
-local function motion_sampler_test()
-    local ims = ecs.import.interface "ant.motion_sampler|imotion_sampler"
-    local g = ims.sampler_group()
-    local eid = g:create_entity {
-        policy = {
-            "ant.scene|scene_object",
-            "ant.motion_sampler|motion_sampler",
-            "ant.general|name",
-        },
-        data = {
-            scene = {},
-            name = "motion_sampler",
-            on_ready = function (e)
-                ims.set_target(e, nil, math3d.quaternion{0.0, 1.2, 0.0}, math3d.vector(0.0, 0.0, 2.0), 2000)
-            end
-        }
-    }
-    sampler_eid = eid
 
-    g:enable "view_visible"
-    g:enable "scene_update"
-
---[[     local p = g:create_instance("/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab", eid)
-    p.on_ready = function (e)
-        
-    end
-
-    world:create_object(p) ]]
-
+local function drawindirect_test()
     ecs.create_entity {
         policy = {
             "ant.render|render",
@@ -555,6 +596,36 @@ local function motion_sampler_test()
     }     
 end
 
+local function motion_sampler_test()
+    local ims = ecs.import.interface "ant.motion_sampler|imotion_sampler"
+    local g = ims.sampler_group()
+    local eid = g:create_entity {
+        policy = {
+            "ant.scene|scene_object",
+            "ant.motion_sampler|motion_sampler",
+            "ant.general|name",
+        },
+        data = {
+            scene = {},
+            name = "motion_sampler",
+            on_ready = function (e)
+                ims.set_target(e, nil, math3d.quaternion{0.0, 1.2, 0.0}, math3d.vector(0.0, 0.0, 2.0), 2000)
+            end
+        }
+    }
+    sampler_eid = eid
+
+    g:enable "view_visible"
+    g:enable "scene_update"
+
+    local p = g:create_instance("/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab", eid)
+    p.on_ready = function (e)
+        
+    end
+
+    world:create_object(p)
+end
+
 local canvas_eid
 local function canvas_test()
     canvas_eid = ecs.create_entity {
@@ -591,10 +662,11 @@ function init_loader_sys:init_world()
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
     iom.set_direction(camera_ref, dir)
 
-    --render_layer_test()
+    render_layer_test()
     canvas_test()
 
     motion_sampler_test()
+    drawindirect_test()
 end
 
 local kb_mb = world:sub{"keyboard"}
