@@ -189,7 +189,7 @@ end
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     --point_light_test()
-    local eid1, eid2, eid3 = ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5)
+    ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5, nil, "/pkg/ant.test.features/assets/polyline_mask.material", "background")
 
     gridmask_test()
     -- print(eid1, eid2, eid3)

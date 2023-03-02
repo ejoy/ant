@@ -1,4 +1,6 @@
-$input v_texcoord0
+#include "polyline/input.sh"
+
+$input v_texcoord0 MASK_UV
 
 //v_texcoord0: xy for uv, z for line counter
 
@@ -12,6 +14,10 @@ SAMPLER2D(s_tex, 0);
 SAMPLER2D(s_emissive, 1);
 uniform vec4 u_emissive_factor;
 #endif //ENABLE_POLYLINE_EMISSIVE_TEXTURE
+
+#ifdef ENABLE_POLYLINE_MASK
+SAMPLER2D(s_mask, 2);
+#endif //ENABLE_POLYLINE_MASK
 
 void main() {
     vec4 c  = u_color;
@@ -30,6 +36,10 @@ void main() {
     float dash = mod(v_counters, u_dash_round);
     c.a *= step(dash, u_dash_ratio);
 #endif //ENABLE_POLYLINE_DASH
+
+#ifdef ENABLE_POLYLINE_MASK
+    c.a *= texture2D(s_mask, MASK_UV).r;
+#endif //ENABLE_POLYLINE_MASK
 
     gl_FragColor = c;
 }

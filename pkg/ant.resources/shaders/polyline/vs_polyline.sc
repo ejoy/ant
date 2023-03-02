@@ -1,15 +1,15 @@
-#ifdef USE_WORLD_SPACE
-#define INPUT_NORMAL_ATTIRB	a_normal
-#else //!USE_WORLD_SPACE
-#define INPUT_NORMAL_ATTIRB
-#endif //USE_WORLD_SPACE
+#include "polyline/input.sh"
 
-$input a_position, a_texcoord0, a_texcoord1, a_texcoord2, a_texcoord3
-$output v_texcoord0
+$input a_position a_texcoord0 a_texcoord1 a_texcoord2 a_texcoord3
+$output v_texcoord0 MASK_UV
 
 #include <bgfx_shader.sh>
 #include "polyline/polyline.sh"
 #include "common/uvmotion.sh"
+
+#ifdef ENABLE_POLYLINE_MASK
+#include "polyline/mask.sh"
+#endif //ENABLE_POLYLINE_MASK
 
 #define a_prevpos	a_texcoord2
 #define a_nextpos	a_texcoord3
@@ -78,14 +78,20 @@ vec4 calc_line_vertex_in_world_space(vec3 pos, vec3 prev_pos, vec3 next_pos, flo
 	return mul(u_modelViewProj, vec4(pos, 1.0));
 }
 
-void main() {
-	gl_Position =
 #ifdef USE_WORLD_SPACE
-	calc_line_vertex_in_world_space(a_position, a_prevpos, a_nextpos, a_width, a_side);
+#define calc_line_vertex calc_line_vertex_in_world_space
 #else //!USE_WORLD_SPACE
-	calc_line_vertex_in_screen_space(a_position, a_prevpos, a_nextpos, a_width, a_side);
+#define calc_line_vertex calc_line_vertex_in_screen_space
 #endif //USE_WORLD_SPACE
+
+void main()
+{
+	gl_Position = calc_line_vertex(a_position, a_prevpos, a_nextpos, a_width, a_side);
 
     v_uv		= a_texcoord0;//uv_motion(a_texcoord0);
 	v_counters	= a_counters;
+
+#ifdef ENABLE_POLYLINE_MASK
+	MASK_UV = mask_uv(a_position);
+#endif //ENABLE_POLYLINE_MASK
 }

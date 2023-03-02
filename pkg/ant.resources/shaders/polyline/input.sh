@@ -1,0 +1,10 @@
+#ifndef __POLYLINE_INPUT_SH__
+#define __POLYLINE_INPUT_SH__
+
+#ifdef ENABLE_POLYLINE_MASK
+#define MASK_UV	v_maskuv
+#else	//!ENABLE_POLYLINE_MASK
+#define MASK_UV
+#endif //ENABLE_POLYLINE_MASK
+
+#endif //__POLYLINE_INPUT_SH__
