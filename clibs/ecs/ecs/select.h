@@ -129,6 +129,16 @@ namespace ecs_api {
             return *std::get<T*>(c);
         }
         template <typename T>
+            requires (component<T>::id == EID)
+        bool has() const {
+            return true;
+        }
+        template <typename T>
+            requires (component<T>::id != EID)
+        bool has() const {
+            return !!impl::sibling<T>(ctx, component<MainKey>::id, index);
+        }
+        template <typename T>
             requires (component<T>::tag)
         bool sibling() const {
             return !!impl::sibling<T>(ctx, component<MainKey>::id, index);
