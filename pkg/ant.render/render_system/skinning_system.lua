@@ -22,45 +22,25 @@ local assetmgr  = import_package "ant.asset"
 
 local skinning_material
 
-local function do_skinning_compute(vb_num, skinning_matrices_vb, skinning_in_dynamic_vb, skinning_out_dynamic_vb)
+local function create_skinning_compute(skininfo, vb_num)
 	local dispatchsize = {
 		math.floor((vb_num + 63) / 64), 1 , 1
 	}
     local dis = {}
 	dis.size = dispatchsize
 
-	local sm_buffer = {
-		build_stage = 0,
-		build_access = "r",
-		name = "skinning_matrices_vb",
-		layout = declmgr.get "p4".handle,
-		handle = skinning_matrices_vb
-	}
-
-	local dvb_in_buffer = {
-		build_stage = 1,
-		build_access = "r",
-		name = "skinning_dynamic_vb_in",
-		layout = declmgr.get "p40NIf|t40NIf|i40NIf|w40NIf|T40NIf".handle,
-		handle = skinning_in_dynamic_vb
-	}
-
-	local dvb_out_buffer = {
-		build_stage = 2,
-		build_access = "w",
-		name = "skinning_dynamic_vb_out",
-		layout = declmgr.get "p40NIf|t40NIf|T40NIf".handle,
-		handle = skinning_out_dynamic_vb		
-	}
-
 	local mo = skinning_material.object
-	mo:set_attrib("b_skinning_matrices_vb", icompute.create_buffer_property(sm_buffer, "build"))
-	mo:set_attrib("b_skinning_in_dynamic_vb", icompute.create_buffer_property(dvb_in_buffer, "build"))
-	mo:set_attrib("b_skinning_out_dynamic_vb", icompute.create_buffer_property(dvb_out_buffer, "build"))
-
 	dis.material = mo:instance()
 	dis.fx = skinning_material._data.fx
-    icompute.dispatch(sk_viewid, dis)
+	return dis
+end
+
+local function do_skinning_compute(skininfo)
+	local mat = skininfo.dispatch_entity.material
+	mat.b_skinning_matrices_vb = skininfo.skinning_matrices_vb
+	mat.b_skinning_in_dynamic_vb = skininfo.skinning_in_dynamic_vb
+	mat.b_skinning_out_dynamic_vb = skininfo.skinning_out_dynamic_vb
+    icompute.dispatch(sk_viewid, skininfo.dispatch_entity)
 end
 
 function skinning_sys:init()
@@ -69,21 +49,18 @@ end
 
 function skinning_sys:entity_init()
 	local meshskin
-	for e in w:select "skinning scene?in meshskin?update render_object?update" do
+	for e in w:select "INIT skinning:update scene?in meshskin?update render_object?update skininfo?update" do
 		if e.meshskin then
 			meshskin = e.meshskin
 		else
-			assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
-			if meshskin.skinning_matrices_vb == nil or meshskin.skinning_in_dynamic_vb == nil and meshskin.skinning_out_dynamic_vb == nil then
-				local sm = meshskin.skinning_matrices
-				local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count())
-				meshskin.skinning_matrices_vb = bgfx.create_dynamic_vertex_buffer(memory_buffer, declmgr.get("p4").handle, "r")
-				meshskin.skinning_in_dynamic_vb = e.render_object.vb_handle
-				local skinning_out_dynamic_vb = bgfx.create_dynamic_vertex_buffer(e.render_object.vb_num, declmgr.get "p40NIf|t40NIf|T40NIf".handle, "w")
-				meshskin.skinning_out_dynamic_vb = skinning_out_dynamic_vb
-	
-				e.render_object.vb_handle = skinning_out_dynamic_vb 
-			end
+			local sm = meshskin.skinning_matrices
+			local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count())
+			e.skininfo.skinning_matrices_vb = bgfx.create_dynamic_vertex_buffer(memory_buffer, declmgr.get("p4").handle, "r")
+			e.skininfo.skinning_in_dynamic_vb = e.render_object.vb_handle
+			local skinning_out_dynamic_vb = bgfx.create_dynamic_vertex_buffer(e.render_object.vb_num, declmgr.get "p40NIf|t40NIf|T40NIf".handle, "w")
+			e.skininfo.skinning_out_dynamic_vb = skinning_out_dynamic_vb
+			e.skininfo.dispatch_entity = create_skinning_compute(e.skininfo, e.render_object.vb_num)
+			e.render_object.vb_handle = skinning_out_dynamic_vb 
 		end
 	end
 end
@@ -101,14 +78,18 @@ function skinning_sys:skin_mesh()
 
 	local meshskin
 	local worldmat
-	for e in w:select "skinning scene?in meshskin?in render_object?update bounding?update" do
+	for e in w:select "skinning scene?in meshskin?in render_object?update bounding?update skininfo?update" do
 		if e.meshskin then
 			meshskin = e.meshskin
 			worldmat = e.scene.worldmat
 		else
+			local skininfo = e.skininfo
 			assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
 			e.render_object.worldmat = worldmat
-			do_skinning_compute(e.render_object.vb_num, meshskin.skinning_matrices_vb, meshskin.skinning_in_dynamic_vb, meshskin.skinning_out_dynamic_vb)
+			local sm = meshskin.skinning_matrices
+			local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count(), sm)
+			bgfx.update(skininfo.skinning_matrices_vb, 0, memory_buffer)
+			do_skinning_compute(skininfo)
 			if mc.NULL ~= e.bounding.aabb then
 				math3d.unmark(e.bounding.scene_aabb)
 				e.bounding.scene_aabb = math3d.mark(math3d.aabb_transform(worldmat, e.bounding.aabb))

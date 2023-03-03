@@ -99,6 +99,11 @@ local function generate_properties(fx, properties)
 			new_properties["b_light_index_lists"] = {type='b'}
 		end
 	end
+	if setting.skinning == "on" then
+		new_properties["b_skinning_matrices_vb"].type = 'b'
+		new_properties["b_skinning_in_dynamic_vb"].type = 'b'
+		new_properties["b_skinning_out_dynamic_vb"].type = 'b'
+	end
 	return new_properties
 end
 

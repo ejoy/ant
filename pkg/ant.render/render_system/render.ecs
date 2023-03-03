@@ -101,9 +101,7 @@ system "skinning_system"
 
 component "skinning"
 component "skinning_builder"
-component "skinning_matrices_vb".type "lua"
-component "skinning_in_dynamic_vb".type "lua"
-component "skinning_out_dynamic_vb".type "lua"
+component "skininfo".type "lua"
 
 policy "skinrender"
     .require_policy "ant.render|render_object"
