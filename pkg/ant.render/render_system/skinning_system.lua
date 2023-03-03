@@ -31,15 +31,15 @@ local function create_skinning_compute(skininfo, vb_num)
 
 	local mo = skinning_material.object
 	dis.material = mo:instance()
+	local mat = dis.material
+	mat.b_skinning_matrices_vb = skininfo.skinning_matrices_vb
+	mat.b_skinning_in_dynamic_vb = skininfo.skinning_in_dynamic_vb
+	mat.b_skinning_out_dynamic_vb = skininfo.skinning_out_dynamic_vb
 	dis.fx = skinning_material._data.fx
 	return dis
 end
 
 local function do_skinning_compute(skininfo)
-	local mat = skininfo.dispatch_entity.material
-	mat.b_skinning_matrices_vb = skininfo.skinning_matrices_vb
-	mat.b_skinning_in_dynamic_vb = skininfo.skinning_in_dynamic_vb
-	mat.b_skinning_out_dynamic_vb = skininfo.skinning_out_dynamic_vb
     icompute.dispatch(sk_viewid, skininfo.dispatch_entity)
 end
 
@@ -60,6 +60,7 @@ function skinning_sys:entity_init()
 			local skinning_out_dynamic_vb = bgfx.create_dynamic_vertex_buffer(e.render_object.vb_num, declmgr.get "p40NIf|t40NIf|T40NIf".handle, "w")
 			e.skininfo.skinning_out_dynamic_vb = skinning_out_dynamic_vb
 			e.skininfo.dispatch_entity = create_skinning_compute(e.skininfo, e.render_object.vb_num)
+
 			e.render_object.vb_handle = skinning_out_dynamic_vb 
 		end
 	end
@@ -97,3 +98,12 @@ function skinning_sys:skin_mesh()
 		end
 	end
 end  
+
+function skinning_sys:entity_remove()
+	for e in w:select "REMOVED skininfo:in" do
+		local skininfo = e.skininfo
+		bgfx.destroy(skininfo.skinning_matrices_vb)
+		bgfx.destroy(skininfo.skinning_in_dynamic_vb)
+		bgfx.destroy(skininfo.skinning_out_dynamic_vb)
+	end
+end

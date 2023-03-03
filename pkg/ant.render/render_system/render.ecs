@@ -97,6 +97,7 @@ system "skinning_system"
     .require_system "ant.animation|animation_system"
     .method "init"
     .method "entity_init"
+    .method "entity_remove"
     .method "skin_mesh"
 
 component "skinning"
