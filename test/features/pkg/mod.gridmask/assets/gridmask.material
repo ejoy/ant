@@ -1,0 +1,17 @@
+fx:
+  vs: ./vs_gridmask.sc
+  fs: ./fs_gridmask.sc
+properties:
+  u_grid_bound: {0.0, 0.0, 2.0, 2.0}
+  u_color: {0.8, 0.5, 0.5, 1.0}
+  s_mask:
+    texture: ./gridmask.texture
+    stage: 0
+state:
+  PT: LINES
+  ALPHA_REF: 0
+  CULL: CCW
+  DEPTH_TEST: ALWAYS
+  MSAA: true
+  WRITE_MASK: RGBA
+  BLEND: ALPHA

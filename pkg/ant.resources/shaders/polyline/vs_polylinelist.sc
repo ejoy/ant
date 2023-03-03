@@ -1,8 +1,13 @@
+#include "polyline/input.sh"
+
 $input a_position, a_texcoord0, a_texcoord1, a_texcoord2
-$output v_texcoord0
+$output v_texcoord0 MASK_UV
 
 #include <bgfx_shader.sh>
 #include "polyline/polyline.sh"
+#ifdef ENABLE_POLYLINE_MASK
+#include "polyline/mask.sh"
+#endif //ENABLE_POLYLINE_MASK
 #include "common/uvmotion.sh"
 
 #define a_linedir   a_texcoord2
@@ -21,4 +26,8 @@ void main() {
 
 	v_uv			= uv_motion(a_texcoord0);
     v_counters		= a_counters;
+
+#ifdef ENABLE_POLYLINE_MASK
+	MASK_UV = mask_uv(a_position);
+#endif //ENABLE_POLYLINE_MASK
 }

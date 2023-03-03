@@ -176,7 +176,7 @@ function ientity.create_grid_entity_simple(name, w, h, unit, scene)
 	return create_simple_render_entity(name, "/pkg/ant.resources/materials/line.material", mesh, scene, {}, nil, "translucent")
 end
 
-function ientity.create_grid_entity(name, width, height, unit, linewidth)
+function ientity.create_grid_entity(name, width, height, unit, linewidth, srt, material, render_layer)
 	local ipl = ecs.import.interface "ant.render|ipolyline"
 	
 	local hw = width * 0.5
@@ -210,11 +210,11 @@ function ientity.create_grid_entity(name, width, height, unit, linewidth)
 	end
 
 	local c<const> = 1
-	local eid1 = ipl.add_linelist(pl, linewidth, {c, c, c, 1.0})
+	local eid1 = ipl.add_linelist(pl, linewidth, {c, c, c, 1.0}, material, srt, render_layer)
 
 	local centerwidth<const> = linewidth * 2.0
-	return eid1, ipl.add_linelist({{-hw_len, 0, 0}, {hw_len, 0, 0},}, centerwidth, {c, 0.0, 0.0, 1.0}),
-	ipl.add_linelist({{0, 0, -hh_len}, {0, 0, hh_len},}, centerwidth, {0.0, 0.0, c, 1.0})
+	return eid1, ipl.add_linelist({{-hw_len, 0, 0}, {hw_len, 0, 0},}, centerwidth, {c, 0.0, 0.0, 1.0}, material, srt, render_layer),
+	ipl.add_linelist({{0, 0, -hh_len}, {0, 0, hh_len},}, centerwidth, {0.0, 0.0, c, 1.0}, material, srt, render_layer)
 end
 
 
