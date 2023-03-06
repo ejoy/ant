@@ -8,7 +8,7 @@ local setting, def_setting = settingpkg.setting, settingpkg.default
 local serialize = import_package "ant.serialize"
 local depends   = require "editor.depends"
 
-local ENABLE_SHADOW<const> = setting:data().graphic.shadow.enable
+local ENABLE_SHADOW<const>      = setting:data().graphic.shadow.enable
 
 local function DEF_FUNC() end
 
@@ -37,6 +37,8 @@ local SETTING_MAPPING = {
     subsurface  = DEF_FUNC,
     shadow_cast = DEF_FUNC,
 }
+
+local IRRADIANCE_SH_BAND_NUM<const> = setting:get "graphic/ibl/irradiance_bandnum"
 
 local enable_cs<const>      = setting:get 'graphic/lighting/cluster_shading' ~= 0
 local enable_bloom<const>   = setting:get "graphic/postprocess/bloom/enable"
@@ -85,6 +87,11 @@ local function default_macros(setting)
 
     if fxaa_setting.enable and not fxaa_setting.use_green_as_luma then
         m[#m+1] = "COMPUTE_LUMINANCE_TO_ALPHA=1"
+    end
+
+    if IRRADIANCE_SH_BAND_NUM then
+        m[#m+1] = "IRRADIANCE_SH_BAND_NUM=" .. IRRADIANCE_SH_BAND_NUM
+        m[#m+1] = "IRRADIANCE_SH_BAND_NUM=" .. IRRADIANCE_SH_BAND_NUM
     end
 
     return m

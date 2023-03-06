@@ -2,8 +2,6 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local bgfx      = require "bgfx"
-
 local cs2cm_sys = ecs.system "cs2cm_system"
 
 local renderpkg = import_package "ant.render"
@@ -12,6 +10,9 @@ local fbmgr     = renderpkg.fbmgr
 local sampler   = renderpkg.sampler
 
 local assetmgr  = import_package "ant.asset"
+
+local setting   = import_package "ant.settings".setting
+local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local icompute  = ecs.import.interface "ant.render|icompute"
@@ -104,6 +105,7 @@ function cs2cm_sys:filter_ibl()
         iibl.filter_all{
 			source 		= {value=cm_rbhandle, facesize=sb.facesize},
 			irradiance 	= se_ibl.irradiance,
+            irradianceSH= {bandnum=irradianceSH_bandnum},
 			prefilter 	= se_ibl.prefilter,
 			LUT			= se_ibl.LUT,
 			intensity	= se_ibl.intensity,

@@ -1,0 +1,15 @@
+fx:
+    cs: /pkg/ant.resources/shaders/pbr/ibl/cs_build_irradianceSH.sc
+    setting:
+        BUILD_IRRADIANCE_MAP: 1
+        lighting: off
+properties:
+    u_build_ibl_param: {512, 0, 256, 0}    #sample count, lod bais, cube face texture size, roughness
+    s_source:
+        stage: 0
+        texture: /pkg/ant.resources/textures/default.texture
+    s_irradianceSH:
+        stage: 1
+        access: w
+        mip: 1
+        image: /pkg/ant.resources/textures/default.texture
