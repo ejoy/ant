@@ -165,7 +165,7 @@ local sample_count<const> = 512
 
 
 local function SHindex(m, l)
-    return l * (l + 1) + m
+    return l * (l + 1) + m + 1
 end
 
 local factorial1, factorial2; do
@@ -263,7 +263,7 @@ local function read_Li()
 
     local Li = {}
     for i=1, #rbm, 4 do
-        Li[#Li+1] = {rbm[i], rbm[i+1], rbm[i+2], 0.0}
+        Li[#Li+1] = math3d.vector(rbm[i], rbm[i+1], rbm[i+2], 0.0)
     end
     return Li
 end
@@ -277,10 +277,7 @@ local function mark_coeffs(Li, bandnum)
         local cosSH = compute_cos_SH(l)
         for m = -l, l do
             local idx = SHindex(m, l)
-            local v = K[idx] * cosSH
-            for i=1, 3 do
-                Li[idx][i] = v * Li[idx][i]
-            end
+            Li[idx] = math3d.mul(K[idx] * cosSH, Li[idx])
         end
     end
 
