@@ -303,7 +303,6 @@ local function create_mesh_node_entity(output, gltfscene, nodeidx, parent, expor
         if needskin then
             policy[#policy+1] = "ant.render|skinrender"
             data.skinning = true
-            data.skininfo = {}
         else
             policy[#policy+1] = "ant.render|render"
             data.scene    = {s=srt.s,r=srt.r,t=srt.t}
@@ -352,7 +351,6 @@ local function create_skin_entity(exports, parent, withanim)
         name = "meshskin",
         skinning = true,
         scene = {},
-        skininfo = {},
     }
     data.skeleton = serialize.path(exports.skeleton)
     data.meshskin = serialize.path(exports.skin[1])

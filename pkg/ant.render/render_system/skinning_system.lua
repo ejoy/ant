@@ -55,12 +55,14 @@ function skinning_sys:entity_init()
 		else
 			local sm = meshskin.skinning_matrices
 			local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count())
-			e.skininfo.skinning_matrices_vb = bgfx.create_dynamic_vertex_buffer(memory_buffer, declmgr.get("p4").handle, "r")
-			e.skininfo.skinning_in_dynamic_vb = e.render_object.vb_handle
 			local skinning_out_dynamic_vb = bgfx.create_dynamic_vertex_buffer(e.render_object.vb_num, declmgr.get "p40NIf|t40NIf|T40NIf".handle, "w")
-			e.skininfo.skinning_out_dynamic_vb = skinning_out_dynamic_vb
-			e.skininfo.dispatch_entity = create_skinning_compute(e.skininfo, e.render_object.vb_num)
+			e.skininfo = {
+				skinning_matrices_vb 	= bgfx.create_dynamic_vertex_buffer(memory_buffer, declmgr.get("p4").handle, "r"),
+				skinning_in_dynamic_vb 	= e.render_object.vb_handle,
+				skinning_out_dynamic_vb = skinning_out_dynamic_vb,
+			}
 
+			e.skininfo.dispatch_entity	= create_skinning_compute(e.skininfo, e.render_object.vb_num)
 			e.render_object.vb_handle = skinning_out_dynamic_vb 
 		end
 	end
