@@ -164,7 +164,7 @@ local function save_material(output, exports, mi)
         local outfolder = output / "materials" / "_tmp"
         compile.do_compile(output / mi.filename, outfolder, exports.depfiles)
         lfs.remove_all(f)
-        lfs.rename(outfolder, output / mi.filename)
+        utility.rename(outfolder, output / mi.filename)
 
         material_files[f:string()] = true
     end

@@ -79,4 +79,15 @@ function m.full_path(path)
     return currentRoot / normalizePath(path)
 end
 
+function m.rename(src, dst)
+    -- try 10 times
+    for _= 1, 10 do
+        if pcall(lfs.rename, src, dst) then
+            return
+        end
+    end
+
+    error(("rename:%s, to:%s"):format(src:string(), dst:string()))
+end
+
 return m
