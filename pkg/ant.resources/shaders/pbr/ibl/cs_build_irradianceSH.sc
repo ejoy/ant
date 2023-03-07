@@ -167,7 +167,10 @@ void main()
 
     //SHBasics SHb = (SHBasics)0;
 
-    float SHb[IRRADIANCE_SH_COEFF_NUM] = {0.0};
+    float SHb[IRRADIANCE_SH_COEFF_NUM];
+    //init array
+    for(int i=0; i<IRRADIANCE_SH_COEFF_NUM; ++i) SHb[i] = 0.0;
+
     computeShBasics(SHb, IRRADIANCE_SH_BAND_NUM, N);
 
     for (int i=0 ; i<IRRADIANCE_SH_COEFF_NUM ; ++i) {
