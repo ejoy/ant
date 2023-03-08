@@ -468,37 +468,6 @@ local function pack_vertex_data(layouts, vertices)
 	local need_pack_tangent_frame<const> = normal_attrib_idx and tangent_attrib_idx
 	local new_vertices = {}
 
---[[ 	for iv=1, #vertices do
-		local v = vertices[iv]
-
-		if need_convert_color_index then
-			local c = v[color_attrib_idx]
-			local cv = unpack_vec(c, layouts[color_attrib_idx].layout)
-
-			for i=1, 4 do
-				cv[i] = u16tou8(cv[i])
-			end
-			v[color_attrib_idx] = color8bit_fmt:pack(cv[1], cv[2], cv[3], cv[4])
-		end
-
-		if need_pack_tangent_frame then
-			local normal = load_attrib_math3dvec(normal_attrib_idx, v)
-			local tangent = load_attrib_math3dvec(tangent_attrib_idx, v)
-			
- 			local quat = mu.pack_tangent_frame(normal, tangent)
-			local fv = table.pack(math3d.index(quat, 1, 2, 3, 4))
-			local fmt
-			if weights_attrib_idx and joint_attrib_idx 	then
-				fmt = ('f'):rep(4)
-			else
-				fmt = ('h'):rep(4)
-				f2i(fv, #fv, 32767)
-			end
-			local QUAT_tangent = fmt:pack(table.unpack(fv)) 
-			v[tangent_attrib_idx] = QUAT_tangent
-		end
-	end ]]
-
 	for iv=1, #vertices do
 		local v = vertices[iv]
 		local vv = {}
