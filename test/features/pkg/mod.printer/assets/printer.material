@@ -1,0 +1,27 @@
+fx:
+  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
+  fs: /pkg/mod.printer/assets/shaders/fs_printer.sc
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  DEPTH_TEST: GREATER
+  MSAA: true
+  WRITE_MASK: RGBAZ
+properties:
+  s_basecolor:
+    stage: 0
+    texture: /pkg/ant.resources/textures/pbr/default/basecolor.texture
+  s_metallic_roughness:
+    stage: 1
+    texture: /pkg/ant.resources/textures/pbr/default/metallic_roughness.texture
+  s_normal:
+    stage: 2
+    texture: /pkg/ant.resources/textures/pbr/default/normal.texture
+  s_emissive:
+    stage: 3
+    texture: /pkg/ant.resources/textures/pbr/default/emissive.texture
+  u_basecolor_factor:  {1, 1, 1, 1}
+  u_emissive_factor:  {1, 1, 1, 1}
+  u_pbr_factor:  {0, 1, 0, 0}
+  u_construct_color : {0.5, 0.5, 0.5, 1}
+  u_printer_factor:  {0, 0, 0, 0}
