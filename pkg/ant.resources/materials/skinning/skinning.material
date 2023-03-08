@@ -20,3 +20,4 @@ properties:
         stage: 2
         access: w
         buffer: b_skinning_out_dynamic_vb
+    u_skinning_param:  {0, 0, 0, 0}

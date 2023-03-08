@@ -8,6 +8,7 @@ BUFFER_RO(b_skinning_in_dynamic_vb, vec4, 1);
 //p3 t2 T4
 BUFFER_WR(b_skinning_out_dynamic_vb, vec4, 2);
 
+uniform float4 u_skinning_param;
 
 vec4 mat2quatrow(in mat4 m)
 {
@@ -100,30 +101,35 @@ NUM_THREADS(64, 1, 1)
 void main()
 {
     uint index = gl_GlobalInvocationID.x;
-
+	uint decl_in_cnt = u_skinning_param.x + 2;
+	uint decl_out_cnt = u_skinning_param.x;
     vec3 pos = 0;
     {
-        pos = b_skinning_in_dynamic_vb[index*5+0].xyz;
-    }
-
-    vec4 ind = 0;
-    {
-        ind = b_skinning_in_dynamic_vb[index*5+2];
-    }
-
-    vec4 wei = 0;
-    {
-        wei = b_skinning_in_dynamic_vb[index*5+3];
+        pos = b_skinning_in_dynamic_vb[index*decl_in_cnt+0].xyz;
     }
 
     vec4 tan = 0;
     {
-        tan = b_skinning_in_dynamic_vb[index*5+4];
+        tan = b_skinning_in_dynamic_vb[index*decl_in_cnt+1];
+    }
+
+    vec4 ind = 0;
+    {
+        ind = b_skinning_in_dynamic_vb[index*decl_in_cnt+decl_out_cnt];
+    }
+
+    vec4 wei = 0;
+    {
+        wei = b_skinning_in_dynamic_vb[index*decl_in_cnt+decl_out_cnt+1];
     }
 
     Skinning(pos, tan, ind, wei);
 
-    b_skinning_out_dynamic_vb[index*3+0] = vec4(pos, 0.0);
-    b_skinning_out_dynamic_vb[index*3+1] = b_skinning_in_dynamic_vb[index*5+1];
-    b_skinning_out_dynamic_vb[index*3+2] = tan;
+    b_skinning_out_dynamic_vb[index*decl_out_cnt+0] = vec4(pos, 0.0);
+    b_skinning_out_dynamic_vb[index*decl_out_cnt+1] = tan;
+
+	for(int i = 2; i < decl_out_cnt; ++i)
+	{
+		b_skinning_out_dynamic_vb[index*decl_out_cnt+i] = b_skinning_in_dynamic_vb[index*decl_in_cnt+i];
+	}
 }

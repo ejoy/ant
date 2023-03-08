@@ -35,6 +35,7 @@ local function create_skinning_compute(skininfo, vb_num)
 	mat.b_skinning_matrices_vb = skininfo.skinning_matrices_vb
 	mat.b_skinning_in_dynamic_vb = skininfo.skinning_in_dynamic_vb
 	mat.b_skinning_out_dynamic_vb = skininfo.skinning_out_dynamic_vb
+	mat.u_skinning_param = math3d.vector(skininfo.decl_cnt, 0, 0, 0)
 	dis.fx = skinning_material._data.fx
 	return dis
 end
@@ -43,23 +44,39 @@ local function do_skinning_compute(skininfo)
     icompute.dispatch(sk_viewid, skininfo.dispatch_entity)
 end
 
+local function get_output_layout(decl)
+	local layout = "p40NIf|T40NIf"
+	for ll in string.gmatch(decl, "[%w]+") do
+		if ll ~= "p40NIf" and ll ~= "T40NIf" and ll ~= "i40NIf" and ll~= "w40NIf" then
+			layout = layout .. '|' .. ll
+		end
+	end
+	return layout
+end
+
 function skinning_sys:init()
 	skinning_material = assetmgr.resource("/pkg/ant.resources/materials/skinning/skinning.material")
 end
 
 function skinning_sys:entity_init()
 	local meshskin
-	for e in w:select "INIT skinning:update scene?in meshskin?update render_object?update skininfo?update" do
+	for e in w:select "INIT skinning:update scene?in mesh?in meshskin?update render_object?update skininfo?update" do
 		if e.meshskin then
 			meshskin = e.meshskin
 		else
+			assert(e.mesh)
+			local decl = e.mesh.vb.declname
+			local _, cnt = string.gsub(decl, '|', "")
+			cnt = cnt + 1 - 2
+			local output_layout = get_output_layout(decl)
 			local sm = meshskin.skinning_matrices
 			local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count())
-			local skinning_out_dynamic_vb = bgfx.create_dynamic_vertex_buffer(e.render_object.vb_num, declmgr.get "p40NIf|t40NIf|T40NIf".handle, "w")
+			local skinning_out_dynamic_vb = bgfx.create_dynamic_vertex_buffer(e.render_object.vb_num, declmgr.get(output_layout).handle, "w")
 			e.skininfo = {
 				skinning_matrices_vb 	= bgfx.create_dynamic_vertex_buffer(memory_buffer, declmgr.get("p4").handle, "r"),
 				skinning_in_dynamic_vb 	= e.render_object.vb_handle,
 				skinning_out_dynamic_vb = skinning_out_dynamic_vb,
+				decl_cnt                = cnt
 			}
 
 			e.skininfo.dispatch_entity	= create_skinning_compute(e.skininfo, e.render_object.vb_num)
