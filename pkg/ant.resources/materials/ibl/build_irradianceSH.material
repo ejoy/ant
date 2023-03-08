@@ -11,5 +11,5 @@ properties:
     s_irradianceSH:
         stage: 1
         access: w
-        mip: 1
+        mip: 0
         image: /pkg/ant.resources/textures/default.texture
