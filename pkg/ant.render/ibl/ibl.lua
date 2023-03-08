@@ -255,15 +255,30 @@ local compute_cos_SH; do
     end
 end
 
+local decode_Li; do
+    local DECODE_FACTOR<const> = 1.0 / (1<<24)
+    decode_Li = function (rgb)
+        return math3d.mul(DECODE_FACTOR, rgb)
+    end
+end
+
 local function read_Li()
     local rbm = IBL_INFO.irradianceSH.readback_memory
     if rbm == nil then
         return
     end
 
+    local m = tostring(rbm)
+
     local Li = {}
-    for i=1, #rbm, 4 do
-        Li[#Li+1] = math3d.vector(rbm[i], rbm[i+1], rbm[i+2], 0.0)
+    local num_coeffs = irradianceSH_bandnum * irradianceSH_bandnum
+    local coeff_elemnum<const> = 3
+    local elem_size<const> = 4
+    local elem_bytes<const> = coeff_elemnum * elem_size
+    for i=1, num_coeffs do
+        local offset = (i-1) * elem_bytes
+        local r, g, b = ('III'):unpack(m, offset)
+        Li[#Li+1] = decode_Li(math3d.vector(r, g, b))
     end
     return Li
 end
@@ -309,17 +324,18 @@ function ibl_sys:render_preprocess()
             material.s_source = source_tex
             material.s_irradianceSH = irradianceSH.value
             material.u_build_ibl_param = math3d.vector(irradianceSH.bandnum, 0, IBL_INFO.source.facesize, 0)
-
             icompute.dispatch(ibl_viewid, dis)
 
             bgfx.blit(ibl_SH_readback_viewid, irradianceSH.readback_value, 0, 0, irradianceSH.value)
             bgfx.read_texture(irradianceSH.readback_value, irradianceSH.readback_memory)
 
-            irradianceSH.already_readed = true
-        else
+            irradianceSH.already_readed = 0
+        elseif irradianceSH.already_readed == 2 then
             --
             mark_coeffs(read_Li(), IBL_INFO.irradianceSH.bandnum)
             w:remove(e)
+        else
+            irradianceSH.already_readed = irradianceSH.already_readed + 1
         end
     end
 
@@ -382,18 +398,27 @@ local function build_ibl_textures(ibl)
         IBL_INFO.irradianceSH.bandnum = irradianceSH_bandnum
         check_destroy(IBL_INFO.irradianceSH.value)
         local coeffsnum = IBL_INFO.irradianceSH.bandnum * IBL_INFO.irradianceSH.bandnum
-        IBL_INFO.irradianceSH.value = bgfx.create_texture2d(coeffsnum, 1, false, 1, "RGBA32F", flags)
+        --must be R32U since we need to use imageAtmoicAdd, it only support R32U or R32I
+        local elemcount<const> = 3
+        local width<const> = coeffsnum * elemcount
+        IBL_INFO.irradianceSH.value = bgfx.create_texture2d(width, 1, false, 1, "R32U", sampler {
+            MIN="POINT",
+            MAG="POINT",
+            U="CLAMP",
+            V="CLAMP",
+            BLIT="BLIT_COMPUTEWRITE",
+        })
 
         check_destroy(IBL_INFO.irradianceSH.readback_value)
-        IBL_INFO.irradianceSH.readback_value = bgfx.create_texture2d(coeffsnum, 1, false, 1, "RGBA32F", sampler {
-            MIN="LINEAR",
-            MAG="LINEAR",
+        IBL_INFO.irradianceSH.readback_value = bgfx.create_texture2d(width, 1, false, 1, "R32U", sampler {
+            MIN="POINT",
+            MAG="POINT",
             U="CLAMP",
             V="CLAMP",
             BLIT="BLIT_AS_DST|BLIT_READBACK_ON",
         })
 
-        IBL_INFO.irradianceSH.readback_memory = bgfx.memory_texture(coeffsnum * 4)
+        IBL_INFO.irradianceSH.readback_memory = bgfx.memory_texture(width*4)    -- 4 for sizeof(uint32_t)
     else
         if ibl.irradiance.size ~= IBL_INFO.irradiance.size then
             IBL_INFO.irradiance.size = ibl.irradiance.size

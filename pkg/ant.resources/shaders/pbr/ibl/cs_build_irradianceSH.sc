@@ -7,7 +7,7 @@
 
 SAMPLERCUBE(s_source, 0);
 
-IMAGE2D_RW(s_irradianceSH, rgba32f, 1);
+IMAGE2D_RW(s_irradianceSH, r32ui, 1);
 
 #ifndef IRRADIANCE_SH_BAND_NUM
 #define IRRADIANCE_SH_BAND_NUM 2
@@ -152,6 +152,11 @@ void computeShBasics(inout float SHb[IRRADIANCE_SH_COEFF_NUM], int numBands, vec
     }
 }
 
+vec3 encode_vec3(vec3 v)
+{
+    return v * uint(1<<24);
+}
+
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
 {
@@ -165,16 +170,16 @@ void main()
 
     color *= solidAngle(u_cubemap_facesize, gl_GlobalInvocationID.xy);
 
-    //SHBasics SHb = (SHBasics)0;
-
-    float SHb[IRRADIANCE_SH_COEFF_NUM];
-    //init array
-    for(int i=0; i<IRRADIANCE_SH_COEFF_NUM; ++i) SHb[i] = 0.0;
+    float SHb[IRRADIANCE_SH_COEFF_NUM]; for(int i=0; i<IRRADIANCE_SH_COEFF_NUM; ++i) SHb[i] = 0.0;
 
     computeShBasics(SHb, IRRADIANCE_SH_BAND_NUM, N);
 
-    for (int i=0 ; i<IRRADIANCE_SH_COEFF_NUM ; ++i) {
-        memoryBarrierImage();
-        imageStore(s_irradianceSH, ivec2(i, 0), vec4(color * SHb[i], 0.0));
+    for (int i=0 ; i<IRRADIANCE_SH_COEFF_NUM; ++i) {
+        vec3 encoded_value = encode_vec3(color * SHb[i]);
+
+        int idx = i*3;
+        imageAtomicAdd(s_irradianceSH, ivec2(idx,   0), uint(encoded_value[0]));
+        imageAtomicAdd(s_irradianceSH, ivec2(idx+1, 0), uint(encoded_value[1]));
+        imageAtomicAdd(s_irradianceSH, ivec2(idx+2, 0), uint(encoded_value[2]));
     }
 }

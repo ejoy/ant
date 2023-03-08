@@ -34,6 +34,9 @@ lm:lua_source "ltask" {
         }
     },
     msvc = {
+        flags = {
+            "/experimental:c11atomics"
+        },
         ldflags = {
             "-export:luaopen_ltask",
             "-export:luaopen_ltask_bootstrap",

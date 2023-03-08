@@ -405,7 +405,7 @@ Rml::MaterialHandle Renderer::CreateTextureMaterial(Rml::TextureId texture, Rml:
 }
 
 Rml::MaterialHandle Renderer::CreateRenderTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flags) {
-    auto material = std::make_unique<TextureMaterial>(mcontext->shader, (bgfx_texture_handle_t)texture, flags);
+    auto material = std::make_unique<TextureMaterial>(mcontext->shader, bgfx_texture_handle_t{texture}, flags);
     return reinterpret_cast<Rml::MaterialHandle>(material.release());
 } 
 
