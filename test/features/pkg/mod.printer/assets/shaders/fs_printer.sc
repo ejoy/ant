@@ -28,7 +28,7 @@ uniform vec4 u_printer_factor;
 void main()
 { 
     //TODO: offset should move to u_printer_factor
-    const float offset = 0.1;
+    const float offset = 0.0;
     if(v_posWS.y > (u_building_topmost + offset))
         discard;
     

@@ -2,11 +2,15 @@ component "printer".type "lua"
 
 system "printer_system"
     .implement "printer.lua"
-    .method "init"
-    .method "follow_transform_updated"
+    .method "data_changed"
+    --.method "follow_transform_updated"
 
 policy "printer"
     .require_system "mod.printer|printer_system"
     .require_system "ant.render|postprocess_obj_system"
     .require_interface "ant.terrain|iterrain"
     .component "printer"
+
+interface "iprinter"
+    .implement "printer.lua"
+    .method "update_printer_percent"

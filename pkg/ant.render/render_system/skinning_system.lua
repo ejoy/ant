@@ -91,7 +91,7 @@ function skinning_sys:skin_mesh()
 		local skinning_matrices = e.meshskin.skinning_matrices
 		local pr = e.meshskin.pose.pose_result
 		if pr then
- 			local m = r2l_mat
+			local m = math3d.mul(e.scene.worldmat, r2l_mat)
 			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, m)  
 		end
 	end
@@ -105,7 +105,8 @@ function skinning_sys:skin_mesh()
 		else
 			local skininfo = e.skininfo
 			assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
-			e.render_object.worldmat = worldmat
+			--e.render_object.worldmat = worldmat
+			e.render_object.worldmat = mc.IDENTITY_MAT
 			local sm = meshskin.skinning_matrices
 			local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count(), sm)
 			bgfx.update(skininfo.skinning_matrices_vb, 0, memory_buffer)

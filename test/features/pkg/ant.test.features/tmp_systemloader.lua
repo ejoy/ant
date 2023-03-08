@@ -19,8 +19,11 @@ local declmgr       = renderpkg.declmgr
 
 local init_loader_sys   = ecs.system 'init_loader_system'
 local iheapmesh = ecs.import.interface "ant.render|iheapmesh"
+local iprinter= ecs.import.interface "mod.printer|iprinter"
 local printer
 local printer_material
+local printer_eid
+local printer_percent = 0
 local function point_light_test()
     local pl_pos = {
         {  1, 0, 1},
@@ -220,11 +223,11 @@ function init_loader_sys:init()
         "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
 
     --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
-    create_instance("/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab",
+     create_instance("/pkg/ant.test.features/assets/glb/construction_site.glb|mesh.prefab",
     function(e)
         local ee<close> = w:entity(e.tag['*'][1], "scene:in")
         iom.set_scale(ee, 0.1)
-    end)
+    end) 
 
     -- create_texture_plane_entity(
     --     {1, 1.0, 1.0, 1.0}, 
@@ -489,28 +492,27 @@ function init_loader_sys:init()
     end
     world:create_object(ep) ]]
 
-    -- ecs.create_entity {
-    --     policy = {
-    --         "ant.render|render",
-    --         "ant.general|name",
-    --         "mod.printer|printer",
-    --     },
-    --     data = {
-    --         name        = "printer_test",
-    --         scene  = {s = 0.2, t = {5, 0, 5}},
-    --         material    = "/pkg/mod.printer/assets/printer.material",
-    --         visible_state = "main_view",
-    --         mesh        = "/pkg/mod.printer/assets/electric-pole-1.glb|meshes/Cylinder.006_P1.meshbin",
-    --         render_layer= "postprocess_obj",
-    --         -- add printer tag
-    --         -- previous still be zero
-    --         -- duration means generation duration time
-    --         printer = {
-    --             previous = 0,
-    --             duration = 5
-    --         }
-    --     },
-    -- }
+    printer_eid = ecs.create_entity {
+        policy = {
+            "ant.render|render",
+            "ant.general|name",
+            "mod.printer|printer",
+        },
+        data = {
+            name        = "printer_test",
+            scene  = {s = 0.1, t = {5, 0, 5}},
+            material    = "/pkg/mod.printer/assets/printer.material",
+            visible_state = "main_view",
+            mesh        = "/pkg/mod.printer/assets/Duck.glb|meshes/LOD3spShape_P1.meshbin",
+            render_layer= "postprocess_obj",
+            -- add printer tag
+            -- previous still be zero
+            -- duration means generation duration time
+            printer = {
+                percent  = printer_percent
+            }
+        },
+    }
 end
 
 local function render_layer_test()
@@ -556,7 +558,7 @@ end
 local sampler_eid
 
 local function drawindirect_test()
-    ecs.create_entity {
+     ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -567,7 +569,7 @@ local function drawindirect_test()
             scene  = {s = 0.2, t = {0, 3, 0}},
             material    = "/pkg/ant.resources/materials/heap_test.material", -- 自定义material文件中需加入HEAP_MESH :1
             visible_state = "main_view",
-            mesh        = "/pkg/ant.test.features/assets/glb/iron-ingot.glb|meshes/Cube.252_P1.meshbin",
+            mesh        = "/pkg/ant.test.features/assets/glb/iron-ore.glb|meshes/Cube.248_P1.meshbin",
             heapmesh = {
                 curSideSize = 3, -- 当前 x y z方向最大堆叠数量均为curSideSize = 3，最大堆叠数为3*3*3 = 27
                 curHeapNum = 10, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
@@ -575,7 +577,7 @@ local function drawindirect_test()
             }
         },
     }
-     ecs.create_entity {
+--[[      ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -593,11 +595,11 @@ local function drawindirect_test()
                 glbName = "iron-ingot"
             }
         },
-    }     
+    }    ]] 
 end
 
 local function motion_sampler_test()
-    local ims = ecs.import.interface "ant.motion_sampler|imotion_sampler"
+--[[     local ims = ecs.import.interface "ant.motion_sampler|imotion_sampler"
     local g = ims.sampler_group()
     local eid = g:create_entity {
         policy = {
@@ -623,7 +625,7 @@ local function motion_sampler_test()
         
     end
 
-    world:create_object(p)
+    world:create_object(p) ]]
 end
 
 local canvas_eid
@@ -749,7 +751,13 @@ function init_loader_sys:entity_init()
             iheapmesh.update_heap_mesh_number(0, "iron-ingot")   -- 更新当前堆叠数
         elseif key == "L" and press == 0 then
             iheapmesh.update_heap_mesh_sidesize(4, "iron-ingot")  -- 更新当前每个轴的最大堆叠数 参数一为待更新每个轴的最大堆叠数 参数二为entity筛选的glb名字
+        elseif key == "M" and press == 0 then
+            printer_percent = printer_percent + 0.1
+            if printer_percent >= 1.0 then
+                printer_percent = 0.0
+            end
 
+            iprinter.update_printer_percent(printer_eid, printer_percent)
         end
         
     end
