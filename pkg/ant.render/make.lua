@@ -174,5 +174,6 @@ lm:lua_source "render" {
     sources = {
         "cull.cpp",
     },
+    objdeps = "compile_ecs",
     deps = "render_core",
 }
