@@ -6,6 +6,7 @@ BUFFER_WR(instanceBufferOut, vec4, 1);
 uniform vec4 u_heapParams;
 uniform vec4 u_meshOffset;
 uniform vec4 u_instanceParams;
+uniform vec4 u_worldOffset;
 
 NUM_THREADS(64, 1, 1)
 
@@ -31,7 +32,7 @@ void main()
 		int yy = n3 - 1;
         int zz = n2 - 1;
 		int xx = n1 - 1;
-        vec4 t = vec4(xx*u_meshOffset.x, yy*u_meshOffset.y, zz*u_meshOffset.z, 1);
+        vec4 t = vec4(xx*u_meshOffset.x-u_worldOffset.x, yy*u_meshOffset.y-u_worldOffset.y, zz*u_meshOffset.z-u_worldOffset.z, 1);
 		instanceBufferOut[k-1] = t;		
     }
 

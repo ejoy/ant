@@ -25,7 +25,7 @@ local function get_aabb(center, extent, cur_n, edge, xx, yy, zz)
     return min, max
 end
 
-local function create_heap_compute(numToDraw, idb_handle, itb_handle, u1, u2, u3)
+local function create_heap_compute(numToDraw, idb_handle, itb_handle, u1, u2, u3, u4)
     local dispatchsize = {
 		math.floor(numToDraw / 64 + 1), 1 , 1
 	}
@@ -50,6 +50,7 @@ local function create_heap_compute(numToDraw, idb_handle, itb_handle, u1, u2, u3
 	mo:set_attrib("u_heapParams", u1)
 	mo:set_attrib("u_meshOffset", u2)
 	mo:set_attrib("u_instanceParams", u3)
+    mo:set_attrib("u_worldOffset", u4)
     mo:set_attrib("indirectBuffer", icompute.create_buffer_property(idb, "build"))
 	mo:set_attrib("instanceBufferOut", icompute.create_buffer_property(itb, "build"))
 
@@ -109,10 +110,11 @@ function hm_sys:heap_mesh()
             local instanceParams = math3d.vector(0, ro.vb_num, 0, ro.ib_num)
             local indirectBuffer_handle = bgfx.create_indirect_buffer(curHeapNum)
             local instanceBufferOut_handle = bgfx.create_dynamic_vertex_buffer(curHeapNum, declmgr.get "t47NIf".handle, "w")
-            create_heap_compute(curHeapNum, indirectBuffer_handle, instanceBufferOut_handle, heapParams, meshOffset, instanceParams)
-
             local aabb_min, aabb_max = get_aabb(aabb_center, aabb_extent, curHeapNum, curSideSize, aabb_x, aabb_y, aabb_z)
             e.bounding.aabb = math3d.mark(math3d.aabb(aabb_min, aabb_max))
+            local _, extent = math3d.aabb_center_extents(e.bounding.aabb)
+            local worldOffset = math3d.vector(extent, 0)
+            create_heap_compute(curHeapNum, indirectBuffer_handle, instanceBufferOut_handle, heapParams, meshOffset, instanceParams, worldOffset)
             e.render_object.idb_handle = indirectBuffer_handle
             e.render_object.itb_handle = instanceBufferOut_handle
         end
