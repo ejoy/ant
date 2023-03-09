@@ -105,7 +105,7 @@ end
 function host.exit(apis)
 	if apis.fd then
 		if config.nettype == "listen" then
-			config.socket = socket.dump(apis.fd)
+			config.socket = apis.fd:detach()
 		else
 			apis.fd:close()
 		end

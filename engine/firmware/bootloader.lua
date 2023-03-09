@@ -31,7 +31,7 @@ thread.newchannel "IOreq"
 
 local s, c = socket.pair()
 local io_req = thread.channel "IOreq"
-io_req:push(config, nil, socket.dump(s))
+io_req:push(config, nil, s:detach())
 
 local SCRIPT = {"-- IO thread"}
 SCRIPT[#SCRIPT+1] = "local PRELOAD = {"
@@ -71,7 +71,7 @@ SCRIPT[#SCRIPT+1] = "assert(loadfile '/engine/firmware/io.lua')(loadfile, io_req
 
 vfs.iothread = boot.preinit (table.concat(SCRIPT, "\n"))
 
-vfs.initfunc("/engine/firmware/init_thread.lua", socket.dump(c))
+vfs.initfunc("/engine/firmware/init_thread.lua", c:detach())
 
 local function dofile(path)
     local f, err = vfs.loadfile(path)

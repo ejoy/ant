@@ -10,7 +10,7 @@ local io_req = thread.channel "IOreq"
 thread.setname "ant - IO thread"
 
 local quit = false
-local channelfd = socket.undump(fddata)
+local channelfd = socket.fd(fddata)
 
 local function loadfile(path)
 	local f = io.open(path)
