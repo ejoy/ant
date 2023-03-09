@@ -42,7 +42,7 @@ local function create_heap_compute(numToDraw, idb_handle, itb_handle, u1, u2, u3
 		build_stage = 1,
 		build_access = "w",
 		name = "instance_buffer",
-        layout = declmgr.get "p40NIf".handle,
+        layout = declmgr.get "t47NIf".handle,
 		handle = itb_handle         
     }
 
@@ -108,7 +108,7 @@ function hm_sys:heap_mesh()
             local meshOffset = math3d.vector(aabb_x, aabb_y, aabb_z, 0)
             local instanceParams = math3d.vector(0, ro.vb_num, 0, ro.ib_num)
             local indirectBuffer_handle = bgfx.create_indirect_buffer(curHeapNum)
-            local instanceBufferOut_handle = bgfx.create_dynamic_vertex_buffer(curHeapNum, declmgr.get "p40NIf".handle, "w")
+            local instanceBufferOut_handle = bgfx.create_dynamic_vertex_buffer(curHeapNum, declmgr.get "t47NIf".handle, "w")
             create_heap_compute(curHeapNum, indirectBuffer_handle, instanceBufferOut_handle, heapParams, meshOffset, instanceParams)
 
             local aabb_min, aabb_max = get_aabb(aabb_center, aabb_extent, curHeapNum, curSideSize, aabb_x, aabb_y, aabb_z)
