@@ -31,14 +31,13 @@ local function need(lst)
 end
 
 lm:source_set "bee" {
-    includes = {
-        "bee/nonstd",
-        "."
-    },
-    sources = {
-        "bee/**/*.cpp",
-        "bee/nonstd/3rd/*.cc",
-    },
+    includes = "bee/nonstd/3rd",
+    sources = "bee/nonstd/3rd/fmt/format.cc",
+}
+
+lm:source_set "bee" {
+    includes = ".",
+    sources = "bee/**/*.cpp",
     windows = {
         sources = need "win"
     },
@@ -77,14 +76,11 @@ lm:source_set "bee" {
 
 lm:lua_source "bee" {
     includes = {
-        "3rd/lua",
         "3rd/lua-seri",
-        "bee/nonstd",
         "."
     },
-    sources = {
-        "binding/*.cpp",
-    },
+    defines = "BEE_STATIC",
+    sources = "binding/*.cpp",
     windows = {
         defines = "_CRT_SECURE_NO_WARNINGS",
         links = {
