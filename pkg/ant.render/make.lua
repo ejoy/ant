@@ -2,6 +2,21 @@ local lm = require "luamake"
 
 local ROOT <const> = "../../"
 
+lm:build "moltenvk_rev_hdr" {
+    rootdir = ROOT,
+    "mkdir", "-p", "$builddir/tmpfile",
+    "&&", "rm", "-f", "$out",
+    "&&", "env", "BUILT_PRODUCTS_DIR=$builddir/tmpfile", "$in",
+    input = "3rd/MoltenVK/Scripts/gen_moltenvk_rev_hdr.sh",
+    output = "$builddir/tmpfile/mvkGitRevDerived.h",
+}
+
+lm:phony {
+    rootdir = ROOT,
+    input = "$builddir/tmpfile/mvkGitRevDerived.h",
+    output = "3rd/MoltenVK/MoltenVK/MoltenVK/GPUObjects/MVKDevice.mm",
+}
+
 lm:lua_source "moltenvk" {
     rootdir = ROOT,
     macos = {
@@ -21,8 +36,10 @@ lm:lua_source "moltenvk" {
             "3rd/MoltenVK/MoltenVK/MoltenVK/OS",
             "3rd/MoltenVK/MoltenVK/MoltenVK/Utility",
             "3rd/MoltenVK/MoltenVK/MoltenVK/Vulkan",
-            "3rd/MoltenVK/MoltenVKShaderConverter/glslang/OGLCompilersDLL",         
+            "3rd/MoltenVK/MoltenVKShaderConverter/glslang/OGLCompilersDLL",
+            "$builddir/tmpfile/",
         },
+        defines = "MVK_EXCLUDE_SPIRV_TOOLS",
         sources = {
             "3rd/MoltenVK/MoltenVK/MoltenVK/Commands/*.mm",
             "3rd/MoltenVK/MoltenVK/MoltenVK/GPUObjects/*.mm",
@@ -73,8 +90,10 @@ lm:lua_source "moltenvk" {
             "3rd/MoltenVK/MoltenVK/MoltenVK/OS",
             "3rd/MoltenVK/MoltenVK/MoltenVK/Utility",
             "3rd/MoltenVK/MoltenVK/MoltenVK/Vulkan",
-            "3rd/MoltenVK/MoltenVKShaderConverter/glslang/OGLCompilersDLL",         
+            "3rd/MoltenVK/MoltenVKShaderConverter/glslang/OGLCompilersDLL",
+            "$builddir/tmpfile/",
         },
+        defines = "MVK_EXCLUDE_SPIRV_TOOLS",
         sources = {
             "3rd/MoltenVK/MoltenVK/MoltenVK/Commands/*.mm",
             "3rd/MoltenVK/MoltenVK/MoltenVK/GPUObjects/*.mm",

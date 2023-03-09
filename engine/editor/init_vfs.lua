@@ -16,7 +16,7 @@ thread.newchannel "IOreq"
 
 local s, c = socket.pair()
 local io_req = thread.channel "IOreq"
-io_req:push(package.cpath, repopath, socket.dump(s))
+io_req:push(package.cpath, repopath, s:detach())
 
 vfs.iothread = boot.preinit (([[
     -- IO thread
@@ -39,4 +39,4 @@ vfs.iothread = boot.preinit (([[
     assert(loadfile "engine/editor/io.lua")(io_req:bpop())
 ]]):format(package.cpath, repopath))
 
-vfs.initfunc("engine/firmware/init_thread.lua", socket.dump(c))
+vfs.initfunc("engine/firmware/init_thread.lua", c:detach())

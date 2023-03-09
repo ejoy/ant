@@ -8,7 +8,7 @@ local _print
 local QUIT = false
 local OFFLINE = false
 
-local channelfd = fddata and socket.undump(fddata) or nil
+local channelfd = fddata and socket.fd(fddata) or nil
 
 thread.setname "ant - IO thread"
 
@@ -146,7 +146,7 @@ end
 
 local function wait_server()
 	if config.socket then
-		return socket.undump(config.socket)
+		return socket.fd(config.socket)
 	end
 	if config.nettype == nil then
 		return

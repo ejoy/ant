@@ -5,7 +5,7 @@ local io_req = thread.channel "IOreq"
 __ANT_RUNTIME__ = package.preload.firmware ~= nil
 
 local vfs, fddata = ...
-local fd = socket.undump(fddata)
+local fd = socket.fd(fddata)
 
 local function call(...)
 	local r, _ = thread.rpc_create()
