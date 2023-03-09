@@ -31,6 +31,7 @@ lm.cxx = "c++20"
 lm.msvc = {
     defines = {
         "_CRT_SECURE_NO_WARNINGS",
+        "_WIN32_WINNT=0x0601",
         lm.mode == "debug" and "_DISABLE_STRING_ANNOTATION",
     },
     flags = {

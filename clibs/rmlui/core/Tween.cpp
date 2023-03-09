@@ -137,7 +137,7 @@ static std::string TweenToString(Tween::Type type) {
 	case Tween::Type::Sine:
 		return "sine";
 	default:
-		bee::unreachable();
+		std::unreachable();
 	}
 }
 
@@ -150,7 +150,7 @@ static std::string TweenToString(Tween::Direction direction) {
 	case Tween::Direction::InOut:
 		return "-in-out";
 	default:
-		bee::unreachable();
+		std::unreachable();
 	}
 }
 
@@ -183,7 +183,7 @@ float Tween::get(float t) const {
 	case Direction::InOut:
 		return TweenInOut(TweenGetType(v), t);
 	default:
-		bee::unreachable();
+		std::unreachable();
 	}
 	return t;
 }
