@@ -32,7 +32,7 @@ void main()
 		int yy = n3 - 1;
         int zz = n2 - 1;
 		int xx = n1 - 1;
-        vec4 t = vec4(xx*u_meshOffset.x-u_worldOffset.x, yy*u_meshOffset.y-u_worldOffset.y, zz*u_meshOffset.z-u_worldOffset.z, 1);
+        vec4 t = vec4(xx*u_meshOffset.x-u_worldOffset.x, yy*u_meshOffset.y, zz*u_meshOffset.z-u_worldOffset.z, 1);
 		instanceBufferOut[k-1] = t;		
     }
 
