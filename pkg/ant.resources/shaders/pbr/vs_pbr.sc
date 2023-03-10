@@ -30,9 +30,9 @@ void main()
 
 #ifdef WITH_COLOR_ATTRIB
 	v_color0 = a_color0;
-	#ifdef HEAP_MESH
+/* 	#ifdef HEAP_MESH
    	 	v_emissive = vec4(vec3_splat(v_color0.w), 1.0);
-	#endif HEAP_MESH
+	#endif HEAP_MESH */
 #endif //WITH_COLOR_ATTRIB
 
 #ifndef MATERIAL_UNLIT
