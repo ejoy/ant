@@ -441,7 +441,6 @@ function m:open(filename)
     local patchfile = filename .. ".patch"
     if fs.exists(fs.path(patchfile)) then
         self.patch_template = serialize.parse(patchfile, cr.read_file(patchfile))
-        
     end
     local eff_host_tpl = self.patch_template or self.prefab_template
     for _, value in ipairs(eff_host_tpl) do
@@ -522,12 +521,15 @@ function m:reset_prefab()
     world:pub {"ResetEditor", ""}
     world:pub {"UpdateAABB"}
     hierarchy:set_root(self.root)
+    if self.prefab_filename then
+        ecs.release_cache(self.prefab_filename)
+    end
+    gizmo:set_target()
+    self:create_ground()
     self.prefab_filename = nil
     self.prefab_template = nil
     self.patch_template = nil
     self.prefab_instance = nil
-    gizmo:set_target()
-    self:create_ground()
 end
 
 function m:reload()
