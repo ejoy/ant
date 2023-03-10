@@ -8,7 +8,12 @@ $output v_texcoord0 v_texcoord1 v_texcoord2 v_normal v_tangent v_bitangent v_pos
 
 void main()
 {
-	mediump mat4 wm = u_model[0];
+#ifdef CS_SKINNING
+    mat4 wm = u_model[0];
+#else //!CS_SKINNING
+    mat4 wm = get_world_matrix();
+#endif //CS_SKINNING
+
 	highp vec4 posWS = transformWS(wm, mediump vec4(a_position, 1.0));
 	gl_Position = mul(u_viewProj, posWS);
 

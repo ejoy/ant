@@ -7,7 +7,12 @@ $input a_position a_normal INPUT_INDICES INPUT_WEIGHT INPUT_INSTANCE
 
 void main()
 {
+#ifdef CS_SKINNING
 	mat4 wm = u_model[0];
+#else //!CS_SKINNING
+	mat4 wm = get_world_matrix();
+#endif //CS_SKINNING
+
 #ifdef HEAP_MESH
 	wm[0][3] = wm[0][3] + i_data0.x;
 	wm[1][3] = wm[1][3] + i_data0.y;

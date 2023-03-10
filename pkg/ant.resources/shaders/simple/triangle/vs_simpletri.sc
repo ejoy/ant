@@ -8,7 +8,12 @@ $output OUTPUT_COLOR0
 
 void main()
 {
+#ifdef CS_SKINNING
     mat4 wm = u_model[0];
+#else //!CS_SKINNING
+    mat4 wm = get_world_matrix();
+#endif //CS_SKINNING
+
     vec4 posWS = mul(wm, vec4(a_position, 1.0));
 	gl_Position = mul(u_viewProj, posWS);
 #ifdef WITH_COLOR_ATTRIB

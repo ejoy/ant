@@ -1,14 +1,20 @@
 #include "common/inputs.sh"
 
 $input 	a_position a_texcoord0 INPUT_NORMAL INPUT_TANGENT INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT INPUT_INSTANCE
-$output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0
+$output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0 OUTPUT_EMISSIVE
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
 
 void main()
 {
-	mediump mat4 wm = u_model[0];
+
+#ifdef CS_SKINNING
+    mediump mat4 wm = u_model[0];
+#else //!CS_SKINNING
+    mediump mat4 wm = get_world_matrix();
+#endif //CS_SKINNING
+
 #ifdef HEAP_MESH
 	wm[0][3] = wm[0][3] + i_data0.x;
 	wm[1][3] = wm[1][3] + i_data0.y;
@@ -24,6 +30,9 @@ void main()
 
 #ifdef WITH_COLOR_ATTRIB
 	v_color0 = a_color0;
+	#ifdef HEAP_MESH
+   	 	v_emissive = vec4(vec3_splat(v_color0.w), 1.0);
+	#endif HEAP_MESH
 #endif //WITH_COLOR_ATTRIB
 
 #ifndef MATERIAL_UNLIT
@@ -44,5 +53,6 @@ void main()
 	v_normal	= mul(wm, mediump vec4(normal, 0.0)).xyz;
 	v_tangent	= mul(wm, mediump vec4(tangent, 0.0)).xyz * sign(a_tangent.w);
 #endif//CALC_TBN
+
 #endif //!MATERIAL_UNLIT
 }

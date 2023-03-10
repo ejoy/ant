@@ -6,7 +6,7 @@ local fastio    = require "fastio"
 local datalist  = require "datalist"
 local fs        = require "filesystem"
 local declmgr   = import_package "ant.render".declmgr
-
+local cs_skinning = false
 local proxy_vb = {}
 function proxy_vb:__index(k)
     if k == "handle" then
@@ -14,7 +14,7 @@ function proxy_vb:__index(k)
         local membuf = bgfx.memory_buffer(table.unpack(self.memory))
         local declname = self.declname
         local h
-         if string.match(declname, "i40") or string.match(declname, "w40") then
+         if cs_skinning == true and string.match(declname, "i40") and string.match(declname, "w40")  then
             h = bgfx.create_dynamic_vertex_buffer(membuf, declmgr.get(self.declname).handle, "r")
         else
             h = bgfx.create_vertex_buffer(membuf, declmgr.get(self.declname).handle)

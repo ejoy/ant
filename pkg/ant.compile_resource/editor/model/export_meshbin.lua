@@ -3,7 +3,7 @@ local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
-
+local cs_skinning = false
 local LAYOUT_NAMES<const> = {
 	"POSITION",
 	"NORMAL",
@@ -389,7 +389,7 @@ local function pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_
 			end
 
 			if l.name == "TANGENT" then
-				if need_convert_joint_index and need_convert_weight_index then
+				if need_convert_joint_index and need_convert_weight_index and cs_skinning == true then
 					ll[#ll+1] = "T40NIf"
 				else
 					ll[#ll+1] = "T40nii"
@@ -397,17 +397,20 @@ local function pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_
 				goto continue
 			end
 		end
---[[ 		if need_convert_joint_index and l.name == "JOINTS_0" then
+ 		if need_convert_joint_index and l.name == "JOINTS_0" and cs_skinning == false then
 			ll[#ll+1] = l.layout:sub(1, 5) .. 'i'
 			goto continue
 		end
-		if need_convert_weight_index and l.name:match "WEIGHTS_0" then
+		if need_convert_weight_index and l.name:match "WEIGHTS_0" and cs_skinning == false then
 			ll[#ll+1] = "w40nii"
 			goto continue
-		end ]]
+		end 
 
-		if need_convert_color_index and l.name:match "COLOR_" and need_convert_joint_index == false and need_convert_weight_index == nil then
-			ll[#ll+1] = l.layout:sub(1, 5) .. 'u'
+		if need_convert_color_index and l.name:match "COLOR_" then
+			if need_convert_joint_index == true and need_convert_weight_index ~= nil and cs_skinning == true then
+			else
+				ll[#ll+1] = l.layout:sub(1, 5) .. 'u'
+			end
 			goto continue
 		end
 
@@ -436,7 +439,7 @@ local function pack_vertex_data(layouts, vertices)
 	end
 	
 	local function u16tou8(vv)
-		return (math.floor(vv/65535.0+0.5)*255)
+		return math.floor(vv/65535.0*255+0.5)
 	end
 	local function u16tof(vv)
 		return vv/65535.0
@@ -453,7 +456,6 @@ local function pack_vertex_data(layouts, vertices)
 		end
 		return math3d.vector(r)
 	end
-
 	local position_attrib_idx                   = find_layout_idx(layouts, "POSITION")
 	local texcoord_attrib_idx_0 				= find_layout_idx(layouts, "TEXCOORD_0")
 	local texcoord_attrib_idx_1 				= find_layout_idx(layouts, "TEXCOORD_1")
@@ -476,7 +478,7 @@ local function pack_vertex_data(layouts, vertices)
 			local c = v[color_attrib_idx]
 			local cv = unpack_vec(c, layouts[color_attrib_idx].layout)
 			local fmt
-			if weights_attrib_idx and joint_attrib_idx 	then
+			if weights_attrib_idx and joint_attrib_idx 	and cs_skinning then
 				fmt = ('f'):rep(4)
 				for i=1, 4 do
 					cv[i] = u16tof(cv[i])
@@ -497,7 +499,7 @@ local function pack_vertex_data(layouts, vertices)
  			local quat = mu.pack_tangent_frame(normal, tangent)
 			local fv = table.pack(math3d.index(quat, 1, 2, 3, 4))
 			local fmt
-			if weights_attrib_idx and joint_attrib_idx 	then
+			if weights_attrib_idx and joint_attrib_idx and cs_skinning	then
 				fmt = ('f'):rep(4)
 			else
 				fmt = ('h'):rep(4)
@@ -508,7 +510,7 @@ local function pack_vertex_data(layouts, vertices)
 			T = QUAT_tangent
 		end
 
-		if weights_attrib_idx and joint_attrib_idx then
+		if weights_attrib_idx and joint_attrib_idx and cs_skinning then
 			local fmt_f = ('f'):rep(4)
 
 			local weights = load_attrib_math3dvec(weights_attrib_idx, v)
@@ -547,6 +549,19 @@ local function pack_vertex_data(layouts, vertices)
 
 			new_vertices[#new_vertices+1] = table.concat(vv,"")
 		else
+			if need_convert_joint_index then
+				local j = v[joint_attrib_idx]
+				v[joint_attrib_idx] = jointidx_fmt:pack(j:byte(1), j:byte(2), j:byte(3), j:byte(4))
+			end
+
+			if weights_attrib_idx then
+				local weights = load_attrib_math3dvec(weights_attrib_idx, v)
+				local fv = table.pack(math3d.index(weights, 1, 2, 3, 4))
+				f2i(fv, #fv, 32767)
+				local fmt = ('h'):rep(4)
+				local w = fmt:pack(table.unpack(fv))
+				v[weights_attrib_idx] = w				
+			end
 			if need_pack_tangent_frame then
 				-- remove normal
 				table.remove(v, normal_attrib_idx)	
@@ -557,7 +572,7 @@ local function pack_vertex_data(layouts, vertices)
 	if need_pack_tangent_frame then
 		layouts[tangent_attrib_idx].layout = "T40nii"
 	end
-	if weights_attrib_idx and joint_attrib_idx then
+	if weights_attrib_idx and joint_attrib_idx and cs_skinning == true then
 		layouts[position_attrib_idx].layout   = "p40NIf"
 		layouts[joint_attrib_idx].layout      = "i40NIf"
 		layouts[weights_attrib_idx ].layout   = "w40NIf"

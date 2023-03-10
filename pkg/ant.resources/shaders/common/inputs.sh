@@ -2,19 +2,39 @@
 #error "input.sh file should define before bgfx_shader.sh"
 #endif //BGFX_SHADER_H_HEADER_GUARD
 
+#ifdef HEAP_MESH
+    #define OUTPUT_EMISSIVE v_emissive
+#else !HEAP_MESH
+    #define OUTPUT_EMISSIVE
+#endif HEAP_MESH
+
+
+
 # define INPUT_INSTANCE i_data0
-#ifdef GPU_SKINNING
-#   define BGFX_CONFIG_MAX_BONES 64
 
-#   define INPUT_INDICES
-#   define INPUT_WEIGHT
+//#define CS_SKINNING 1
 
-#else //!GPU_SKINNING
-#   define BGFX_CONFIG_MAX_BONES 1
+#ifdef CS_SKINNING
 
-#   define INPUT_INDICES
-#   define INPUT_WEIGHT
-#endif //GPU_SKINNING
+    #   define INPUT_INDICES
+    #   define INPUT_WEIGHT
+
+#else //!CS_SKINNING
+
+    #ifdef GPU_SKINNING
+    #   define BGFX_CONFIG_MAX_BONES 64
+
+    #   define INPUT_INDICES a_indices
+    #   define INPUT_WEIGHT a_weight
+
+    #else //!GPU_SKINNING
+    #   define BGFX_CONFIG_MAX_BONES 1
+
+    #   define INPUT_INDICES
+    #   define INPUT_WEIGHT
+    #endif //GPU_SKINNING
+
+#endif //CS_SKINNING
 
 #ifdef WITH_COLOR_ATTRIB
 #   define INPUT_COLOR0    a_color0

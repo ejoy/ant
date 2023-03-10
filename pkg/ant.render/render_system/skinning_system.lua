@@ -18,7 +18,8 @@ local declmgr   = import_package "ant.render".declmgr
 local sk_viewid = viewidmgr.get "skinning"
 local bgfx 			= require "bgfx"
 local assetmgr  = import_package "ant.asset"
-
+local cs_skinning = false
+--cs_skinning: skinning_system export_meshbin ext_meshbin inputs.sh
 
 local skinning_material
 
@@ -55,33 +56,37 @@ local function get_output_layout(decl)
 end
 
 function skinning_sys:init()
-	skinning_material = assetmgr.resource("/pkg/ant.resources/materials/skinning/skinning.material")
+	if cs_skinning == true then
+		skinning_material = assetmgr.resource("/pkg/ant.resources/materials/skinning/skinning.material")
+	end
 end
 
 function skinning_sys:entity_init()
-	local meshskin
-	for e in w:select "INIT skinning:update scene?in mesh?in meshskin?update render_object?update skininfo?update" do
-		if e.meshskin then
-			meshskin = e.meshskin
-		else
-			assert(e.mesh)
-			local decl = e.mesh.vb.declname
-			local _, cnt = string.gsub(decl, '|', "")
-			cnt = cnt + 1 - 2
-			local output_layout = get_output_layout(decl)
-			local sm = meshskin.skinning_matrices
-			local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count())
-			local skinning_out_dynamic_vb = bgfx.create_dynamic_vertex_buffer(e.render_object.vb_num, declmgr.get(output_layout).handle, "w")
-			e.skininfo = {
-				skinning_matrices_vb 	= bgfx.create_dynamic_vertex_buffer(memory_buffer, declmgr.get("p4").handle, "r"),
-				skinning_in_dynamic_vb 	= e.render_object.vb_handle,
-				skinning_out_dynamic_vb = skinning_out_dynamic_vb,
-				decl_cnt                = cnt
-			}
-
-			e.skininfo.dispatch_entity	= create_skinning_compute(e.skininfo, e.render_object.vb_num)
-			e.render_object.vb_handle = skinning_out_dynamic_vb 
-		end
+	if cs_skinning == true then
+		local meshskin
+		for e in w:select "INIT skinning:update scene?in mesh?in meshskin?update render_object?update skininfo?update" do
+			if e.meshskin then
+				meshskin = e.meshskin
+			else
+				assert(e.mesh)
+				local decl = e.mesh.vb.declname
+				local _, cnt = string.gsub(decl, '|', "")
+				cnt = cnt + 1 - 2
+				local output_layout = get_output_layout(decl)
+				local sm = meshskin.skinning_matrices
+				local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count())
+				local skinning_out_dynamic_vb = bgfx.create_dynamic_vertex_buffer(e.render_object.vb_num, declmgr.get(output_layout).handle, "w")
+				e.skininfo = {
+					skinning_matrices_vb 	= bgfx.create_dynamic_vertex_buffer(memory_buffer, declmgr.get("p4").handle, "r"),
+					skinning_in_dynamic_vb 	= e.render_object.vb_handle,
+					skinning_out_dynamic_vb = skinning_out_dynamic_vb,
+					decl_cnt                = cnt
+				}
+	
+				e.skininfo.dispatch_entity	= create_skinning_compute(e.skininfo, e.render_object.vb_num)
+				e.render_object.vb_handle = skinning_out_dynamic_vb 
+			end
+		end		
 	end
 end
 
@@ -103,14 +108,20 @@ function skinning_sys:skin_mesh()
 			meshskin = e.meshskin
 			worldmat = e.scene.worldmat
 		else
-			local skininfo = e.skininfo
 			assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
-			--e.render_object.worldmat = worldmat
-			e.render_object.worldmat = mc.IDENTITY_MAT
-			local sm = meshskin.skinning_matrices
-			local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count(), sm)
-			bgfx.update(skininfo.skinning_matrices_vb, 0, memory_buffer)
-			do_skinning_compute(skininfo)
+			if cs_skinning == true then
+				local skininfo = e.skininfo
+				--e.render_object.worldmat = worldmat
+				e.render_object.worldmat = mc.IDENTITY_MAT
+				local sm = meshskin.skinning_matrices
+				local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count(), sm)
+				bgfx.update(skininfo.skinning_matrices_vb, 0, memory_buffer)
+				do_skinning_compute(skininfo)
+			else
+				local sm = meshskin.skinning_matrices
+				e.render_object.worldmat = math3d.array_matrix_ref(sm:pointer(), sm:count())							
+			end
+
 			if mc.NULL ~= e.bounding.aabb then
 				math3d.unmark(e.bounding.scene_aabb)
 				e.bounding.scene_aabb = math3d.mark(math3d.aabb_transform(worldmat, e.bounding.aabb))
@@ -120,10 +131,12 @@ function skinning_sys:skin_mesh()
 end  
 
 function skinning_sys:entity_remove()
-	for e in w:select "REMOVED skininfo:in" do
-		local skininfo = e.skininfo
-		bgfx.destroy(skininfo.skinning_matrices_vb)
-		bgfx.destroy(skininfo.skinning_in_dynamic_vb)
-		bgfx.destroy(skininfo.skinning_out_dynamic_vb)
+	if cs_skinning == true then
+		for e in w:select "REMOVED skininfo:in" do
+			local skininfo = e.skininfo
+			bgfx.destroy(skininfo.skinning_matrices_vb)
+			bgfx.destroy(skininfo.skinning_in_dynamic_vb)
+			bgfx.destroy(skininfo.skinning_out_dynamic_vb)
+		end
 	end
 end
