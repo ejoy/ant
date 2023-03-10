@@ -3,7 +3,7 @@
 #endif //BGFX_SHADER_H_HEADER_GUARD
 
 #ifdef HEAP_MESH
-    #define OUTPUT_EMISSIVE v_emissive
+    #define OUTPUT_EMISSIVE
 #else !HEAP_MESH
     #define OUTPUT_EMISSIVE
 #endif HEAP_MESH
