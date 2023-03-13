@@ -6,17 +6,20 @@ local bindings = {}
 local remapping_ids = {}
 
 local viewid_names = {}
+
+--viewid is base 0
 local function add_view(name, afterview_idx)
-	local c = #viewid_names
-	if c == max_viewid then
+	local id = #viewid_names
+	if id >= max_viewid then
 		error(("not enough view id, max viewid: %d"):format(max_viewid))
 	end
 
-	local id = c+1
-	local real_id = (afterview_idx or c)+1
-	table.insert(viewid_names, real_id, name)
+	local real_id = (afterview_idx and afterview_idx+1 or id)
+	viewid_names[#viewid_names+1] = name
+
 	bindings[name] = id
-	remapping_ids[id] = real_id
+	--id is base 0
+	remapping_ids[id+1] = real_id
 	return id
 end
 
@@ -93,7 +96,7 @@ function viewid_pool.get(name)
 end
 
 function viewid_pool.viewname(viewid)
-	return viewid_names[viewid]
+	return viewid_names[viewid+1]	--viewid base 0
 end
 
 --test
