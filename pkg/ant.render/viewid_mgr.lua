@@ -61,7 +61,6 @@ add_view "pickup"
 add_view "pickup_blit"
 add_view "uiruntime"
 
-local remapping_changed
 function viewid_pool.generate(name, afterwho, count)
 	assert(nil == viewid_pool.get(name), ("%s already defined"):format(name))
 
@@ -71,20 +70,11 @@ function viewid_pool.generate(name, afterwho, count)
 		add_view(name, viewid)
 	end
 
-	remapping_changed = true
 	return viewid
 end
 
 function viewid_pool.all_bindings()
 	return bindings
-end
-
-function viewid_pool.remapping_changed()
-	return remapping_changed
-end
-
-function viewid_pool.clear_remapping_changed()
-	remapping_changed = nil
 end
 
 function viewid_pool.remapping()
