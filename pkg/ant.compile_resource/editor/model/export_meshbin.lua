@@ -389,7 +389,7 @@ local function pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_
 			end
 
 			if l.name == "TANGENT" then
-				if need_convert_joint_index and need_convert_weight_index and cs_skinning == true then
+				if need_convert_joint_index and need_convert_weight_index and cs_skinning then
 					ll[#ll+1] = "T40NIf"
 				else
 					ll[#ll+1] = "T40nii"
@@ -407,7 +407,7 @@ local function pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_
 		end 
 
 		if need_convert_color_index and l.name:match "COLOR_" then
-			if need_convert_joint_index == true and need_convert_weight_index ~= nil and cs_skinning == true then
+			if need_convert_joint_index and need_convert_weight_index and cs_skinning then
 			else
 				ll[#ll+1] = l.layout:sub(1, 5) .. 'u'
 			end
@@ -463,7 +463,7 @@ local function pack_vertex_data(layouts, vertices)
 	local color_attrib_idx 						= find_layout_idx(layouts, "COLOR_0")
 	local joint_attrib_idx 						= find_layout_idx(layouts, "JOINTS_0")
 		-- only convert color with 16 bits
-		local need_convert_color_index<const>		= color_attrib_idx and layouts[color_attrib_idx].layout:sub(6, 6) == 'i' or false
+	local need_convert_color_index<const>		= color_attrib_idx and layouts[color_attrib_idx].layout:sub(6, 6) == 'i' or false
 	local need_convert_joint_index<const> 		= joint_attrib_idx and layouts[joint_attrib_idx].layout:sub(6, 6) == 'u' or false
 	local normal_attrib_idx, tangent_attrib_idx = find_layout_idx(layouts, "NORMAL"), find_layout_idx(layouts, "TANGENT")
 
@@ -572,7 +572,7 @@ local function pack_vertex_data(layouts, vertices)
 	if need_pack_tangent_frame then
 		layouts[tangent_attrib_idx].layout = "T40nii"
 	end
-	if weights_attrib_idx and joint_attrib_idx and cs_skinning == true then
+	if weights_attrib_idx and joint_attrib_idx and cs_skinning then
 		layouts[position_attrib_idx].layout   = "p40NIf"
 		layouts[joint_attrib_idx].layout      = "i40NIf"
 		layouts[weights_attrib_idx ].layout   = "w40NIf"

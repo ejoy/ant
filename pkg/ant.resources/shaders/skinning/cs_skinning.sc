@@ -101,35 +101,20 @@ NUM_THREADS(64, 1, 1)
 void main()
 {
     uint index = gl_GlobalInvocationID.x;
-	uint decl_in_cnt = u_skinning_param.x + 2;
-	uint decl_out_cnt = u_skinning_param.x;
-    vec3 pos = 0;
-    {
-        pos = b_skinning_in_dynamic_vb[index*decl_in_cnt+0].xyz;
-    }
-
-    vec4 tan = 0;
-    {
-        tan = b_skinning_in_dynamic_vb[index*decl_in_cnt+1];
-    }
-
-    vec4 ind = 0;
-    {
-        ind = b_skinning_in_dynamic_vb[index*decl_in_cnt+decl_out_cnt];
-    }
-
-    vec4 wei = 0;
-    {
-        wei = b_skinning_in_dynamic_vb[index*decl_in_cnt+decl_out_cnt+1];
-    }
+	uint stride_input = u_skinning_param.x;
+	uint stride_output = u_skinning_param.y;
+    vec3 pos = b_skinning_in_dynamic_vb[index*stride_input+0].xyz;
+	vec4 tan = b_skinning_in_dynamic_vb[index*stride_input+1];
+    vec4 ind = b_skinning_in_dynamic_vb[index*stride_input+stride_output];
+	vec4 wei = b_skinning_in_dynamic_vb[index*stride_input+stride_output+1];
 
     Skinning(pos, tan, ind, wei);
 
-    b_skinning_out_dynamic_vb[index*decl_out_cnt+0] = vec4(pos, 0.0);
-    b_skinning_out_dynamic_vb[index*decl_out_cnt+1] = tan;
+    b_skinning_out_dynamic_vb[index*stride_output+0] = vec4(pos, 0.0);
+    b_skinning_out_dynamic_vb[index*stride_output+1] = tan;
 
-	for(int i = 2; i < decl_out_cnt; ++i)
+	for(int i = 2; i < stride_output; ++i)
 	{
-		b_skinning_out_dynamic_vb[index*decl_out_cnt+i] = b_skinning_in_dynamic_vb[index*decl_in_cnt+i];
+		b_skinning_out_dynamic_vb[index*stride_output+i] = b_skinning_in_dynamic_vb[index*stride_input+i];
 	}
 }

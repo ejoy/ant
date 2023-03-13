@@ -14,7 +14,7 @@ function proxy_vb:__index(k)
         local membuf = bgfx.memory_buffer(table.unpack(self.memory))
         local declname = self.declname
         local h
-         if cs_skinning == true and string.match(declname, "i40") and string.match(declname, "w40")  then
+         if cs_skinning and string.match(declname, "i40") and string.match(declname, "w40")  then
             h = bgfx.create_dynamic_vertex_buffer(membuf, declmgr.get(self.declname).handle, "r")
         else
             h = bgfx.create_vertex_buffer(membuf, declmgr.get(self.declname).handle)
