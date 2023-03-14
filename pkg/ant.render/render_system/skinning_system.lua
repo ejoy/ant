@@ -46,9 +46,13 @@ local function do_skinning_compute(skininfo)
 end
 
 local function get_output_layout(decl)
-	local layout = "p40NIf|T40NIf"
+	local layout = "p40NIf"
+	if string.match(decl, "T40") then
+		layout = layout .. '|' .. "T40NIf"
+	end
 	for ll in string.gmatch(decl, "[%w]+") do
-		if ll ~= "p40NIf" and ll ~= "T40NIf" and ll ~= "i40NIf" and ll~= "w40NIf" then
+		local texture_or_color_layout = ll ~= "p40NIf" and ll ~= "i40NIf" and ll ~= "w40NIf" and ll ~= "T40NIf"
+		if texture_or_color_layout then
 			layout = layout .. '|' .. ll
 		end
 	end
@@ -97,7 +101,7 @@ function skinning_sys:skin_mesh()
 		local skinning_matrices = e.meshskin.skinning_matrices
 		local pr = e.meshskin.pose.pose_result
 		if pr then
-			local m = r2l_mat
+			local m = math3d.mul(e.scene.worldmat, r2l_mat)
 			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, m)  
 		end
 	end
@@ -112,8 +116,9 @@ function skinning_sys:skin_mesh()
 			assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
 			if cs_skinning then
 				local skininfo = e.skininfo
-				e.render_object.worldmat = worldmat
-				--e.render_object.worldmat = mc.IDENTITY_MAT
+				--e.render_object.worldmat = worldmat
+ 				local scale_factor = math3d.tovalue(worldmat)[1]
+				e.render_object.worldmat = math3d.matrix{s = scale_factor} 
 				local sm = meshskin.skinning_matrices
 				local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count(), sm)
 				bgfx.update(skininfo.skinning_matrices_vb, 0, memory_buffer)
