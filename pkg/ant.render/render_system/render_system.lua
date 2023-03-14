@@ -4,6 +4,7 @@ local w = world.w
 
 local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
+local viewidmgr = require "viewid_mgr"
 local irender	= ecs.import.interface "ant.render|irender"
 local ivs		= ecs.import.interface "ant.scene|ivisible_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
@@ -15,21 +16,19 @@ local render_sys= ecs.system "render_system"
 local rendercore= ecs.clibs "render.core"
 local null = rendercore.null()
 
+local function update_viewid_remappings()
+    bgfx.set_view_order(viewidmgr.remapping())
+    for n, viewid in pairs(viewidmgr.all_bindings()) do
+		bgfx.set_view_name(viewid, n)
+	end
+end
+
 local def_group_id<const> = 0
 local vg_sys = ecs.system "viewgroup_system"
 function vg_sys:init()
     ecs.group(def_group_id):enable "view_visible"
 	ecs.group_flush()
 end
-
-local viewidmgr = require "viewid_mgr"
-local function update_bgfx_viewid_name()
-	for n, viewid in pairs(viewidmgr.all_bindings()) do
-		bgfx.set_view_name(viewid, n)
-	end
-end
-
-update_bgfx_viewid_name()
 
 function render_sys:component_init()
 	for e in w:select "INIT render_object filter_material:update render_object_update?out" do
@@ -129,13 +128,10 @@ function render_sys:scene_update()
 end
 
 function render_sys:render_submit()
-	if viewidmgr.remapping_changed() then
-		bgfx.set_view_order(viewidmgr.remapping())
-		viewidmgr.clear_remapping_changed()
-
-		update_bgfx_viewid_name()
+	if viewidmgr.need_update_remapping() then
+		update_viewid_remappings()
+		viewidmgr.clear_remapping()
 	end
-
 	for qe in w:select "visible camera_ref:in render_target:in" do
 		local viewid = qe.render_target.viewid
 		local camera <close> = w:entity(qe.camera_ref, "scene_changed?in camera_changed?in")

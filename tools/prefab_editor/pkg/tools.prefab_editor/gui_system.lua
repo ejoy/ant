@@ -296,7 +296,13 @@ function hierarchy:set_adaptee_visible(nd, b, recursion)
         hierarchy:set_visible(self:get_node(e), b, recursion)
     end
 end
-
+local function set_visible(e, visible)
+    ivs.set_state(e, "main_view", visible)
+    ivs.set_state(e, "csm1_queue", visible)
+    ivs.set_state(e, "csm2_queue", visible)
+    ivs.set_state(e, "csm3_queue", visible)
+    ivs.set_state(e, "csm4_queue", visible)
+end
 local function update_visible(node, visible)
     for _, nd in ipairs(node.children) do
         update_visible(nd, visible)
@@ -305,16 +311,24 @@ local function update_visible(node, visible)
     local adaptee = hierarchy:get_select_adaptee(node.eid)
     for _, eid in ipairs(adaptee) do
         local e <close> = w:entity(eid, "visible_state?in")
-        ivs.set_state(e, "main_view", visible)
-        if e.visible_state and not rv then
-            rv = ivs.has_state(e, "main_view")
+        if e.visible_state then
+            set_visible(e, visible)
+            if not rv then
+                rv = ivs.has_state(e, "main_view")
+            end
         end
     end
     local ne <close> = w:entity(node.eid, "visible_state?in")
-    ivs.set_state(ne, "main_view", visible)
     if ne.visible_state then
+        set_visible(ne, visible)
         local template = hierarchy:get_template(node.eid)
-        template.template.data.visible_state = ivs.state_names(ne.visible_state)
+        local visible_str = ""
+        for key, value in pairs(ne.visible_state) do
+            if value then
+                visible_str = (visible_str == "") and key or (visible_str .. "|" .. key)
+            end
+        end
+        template.template.data.visible_state = visible_str
     elseif rv and rv ~= visible then
         hierarchy:set_visible(node, rv)
     end
