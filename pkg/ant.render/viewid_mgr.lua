@@ -2,24 +2,24 @@ local viewid_pool = {}
 
 local max_viewid<const>					= 256
 local bindings = {}
-
-local remapping_ids = {}
-
 local viewid_names = {}
+
+local remapping_id_list = {}
 
 --viewid is base 0
 local function add_view(name, afterview_idx)
-	local id = #viewid_names
+	local id = #remapping_id_list
 	if id >= max_viewid then
 		error(("not enough view id, max viewid: %d"):format(max_viewid))
 	end
 
 	local real_id = (afterview_idx and afterview_idx+1 or id)
-	viewid_names[#viewid_names+1] = name
 
 	bindings[name] = id
-	--id is base 0
-	remapping_ids[id+1] = real_id
+	viewid_names[id] = name
+	
+	assert(#remapping_id_list == id)
+	remapping_id_list[id+1] = real_id
 	return id
 end
 
@@ -61,6 +61,8 @@ add_view "pickup"
 add_view "pickup_blit"
 add_view "uiruntime"
 
+local remapping_need_update = true
+
 function viewid_pool.generate(name, afterwho, count)
 	assert(nil == viewid_pool.get(name), ("%s already defined"):format(name))
 
@@ -70,6 +72,7 @@ function viewid_pool.generate(name, afterwho, count)
 		add_view(name, viewid)
 	end
 
+	remapping_need_update = true
 	return viewid
 end
 
@@ -77,8 +80,16 @@ function viewid_pool.all_bindings()
 	return bindings
 end
 
+function viewid_pool.clear_remapping()
+	remapping_need_update = false
+end
+
+function viewid_pool.need_update_remapping()
+	return remapping_need_update
+end
+
 function viewid_pool.remapping()
-	return remapping_ids
+	return remapping_id_list
 end
 
 function viewid_pool.get(name)
@@ -86,7 +97,7 @@ function viewid_pool.get(name)
 end
 
 function viewid_pool.viewname(viewid)
-	return viewid_names[viewid+1]	--viewid base 0
+	return viewid_names[viewid]	--viewid base 0
 end
 
 --test
@@ -106,7 +117,7 @@ end
 
 
 -- local function print_rempping()
--- 	for viewid, mviewid in pairs(remapping_ids) do
+-- 	for viewid, mviewid in pairs(remapping_id_list) do
 -- 		local viewname = viewid_names[viewid]
 -- 		print("viewname:", viewname, "viewid:", viewid, "mapping_viewid:", mviewid)
 -- 	end
@@ -117,7 +128,7 @@ end
 -- 	viewid_pool.clear_remapping_changed()
 -- end
 
--- print("main_view:", viewid_pool.get "main_view", "main_view1:", viewid_pool.get "main_view1", "remapping main_view1:", remapping_ids[viewid_pool.get "main_view1"])
+-- print("main_view:", viewid_pool.get "main_view", "main_view1:", viewid_pool.get "main_view1", "remapping main_view1:", remapping_id_list[viewid_pool.get "main_view1"])
 -- if viewid_pool.get(viewid_names[#viewid_names]) >= viewid_pool.get "main_view1" then
 -- 	error "Invalid in generate viewid"
 -- end

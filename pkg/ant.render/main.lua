@@ -15,31 +15,9 @@ local function init_bgfx()
     require "render_system.bind_bgfx_math_adapter"	--for bind bgfx api to math adapter
 end
 
-local viewidmgr = require "viewid_mgr"
-local bgfx = require "bgfx"
-local function update_bgfx_viewid_name()
-	for n, viewid in pairs(viewidmgr.all_bindings()) do
-		bgfx.set_view_name(viewid, n)
-	end
-end
-
-function viewidmgr.update_view()
-    bgfx.set_view_order(viewidmgr.remapping())
-    update_bgfx_viewid_name()
-end
-
-do
-    local g = viewidmgr.generate
-	viewidmgr.generate = function (...)
-		g(...)
-        viewidmgr.update_view()
-	end
-end
-
-
 return {
 	init_bgfx   = init_bgfx,
-	viewidmgr   = viewidmgr,
+	viewidmgr   = require "viewid_mgr",
 	fbmgr       = require "framebuffer_mgr",
     declmgr     = require "vertexdecl_mgr",
     sampler     = require "sampler",
