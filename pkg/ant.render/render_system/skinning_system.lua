@@ -36,7 +36,7 @@ local function create_skinning_compute(skininfo, vb_num)
 	mat.b_skinning_matrices_vb = skininfo.skinning_matrices_vb
 	mat.b_skinning_in_dynamic_vb = skininfo.skinning_in_dynamic_vb
 	mat.b_skinning_out_dynamic_vb = skininfo.skinning_out_dynamic_vb
-	mat.u_skinning_param = math3d.vector(skininfo.stride_input, skininfo.stride_output, 0, 0)
+	mat.u_skinning_param = math3d.vector(skininfo.stride_input, skininfo.stride_output, skininfo.has_tangent, 0)
 	dis.fx = skinning_material._data.fx
 	return dis
 end
@@ -75,8 +75,12 @@ function skinning_sys:entity_init()
 				assert(e.mesh)
 				local decl = e.mesh.vb.declname
 				local _, stride_out = string.gsub(decl, '|', "")
-				stride_out = stride_out - 1
+				stride_out = stride_out - 1 -- default output layout:position
 				local output_layout = get_output_layout(decl)
+				local has_tangent = 0
+				if string.match(decl, "T40NIf") then
+					has_tangent = 1
+				end
 				local sm = meshskin.skinning_matrices
 				local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count())
 				local skinning_out_dynamic_vb = bgfx.create_dynamic_vertex_buffer(e.render_object.vb_num, declmgr.get(output_layout).handle, "w")
@@ -85,7 +89,8 @@ function skinning_sys:entity_init()
 					skinning_in_dynamic_vb 	= e.render_object.vb_handle,
 					skinning_out_dynamic_vb = skinning_out_dynamic_vb,
 					stride_input            = stride_out + 2,
-					stride_output           = stride_out
+					stride_output           = stride_out,
+					has_tangent             = has_tangent
 				}
 	
 				e.skininfo.dispatch_entity	= create_skinning_compute(e.skininfo, e.render_object.vb_num)
@@ -101,7 +106,12 @@ function skinning_sys:skin_mesh()
 		local skinning_matrices = e.meshskin.skinning_matrices
 		local pr = e.meshskin.pose.pose_result
 		if pr then
-			local m = math3d.mul(e.scene.worldmat, r2l_mat)
+			local m
+			if cs_skinning then
+				m = r2l_mat
+			else
+				m = math3d.mul(r2l_mat, e.scene.worldmat)
+			end
 			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, m)  
 		end
 	end
@@ -116,9 +126,7 @@ function skinning_sys:skin_mesh()
 			assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
 			if cs_skinning then
 				local skininfo = e.skininfo
-				--e.render_object.worldmat = worldmat
- 				local scale_factor = math3d.tovalue(worldmat)[1]
-				e.render_object.worldmat = math3d.matrix{s = scale_factor} 
+				e.render_object.worldmat = worldmat
 				local sm = meshskin.skinning_matrices
 				local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count(), sm)
 				bgfx.update(skininfo.skinning_matrices_vb, 0, memory_buffer)

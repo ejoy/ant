@@ -530,7 +530,7 @@ local function pack_vertex_data(layouts, vertices)
 		end
 
 		if need_vec4_format then
-			-- layout : p [T] t/c i w
+			-- layout : p i w [T] t/c
 			local fmt_f = ('f'):rep(4)
 
 			local weights = load_attrib_math3dvec(weights_attrib_idx, v)
@@ -545,8 +545,10 @@ local function pack_vertex_data(layouts, vertices)
 			local p = fmt_f:pack(table.unpack(pv))
 
 			vv[1] = p;
+			vv[2] = i
+			vv[3] = w
 			if need_pack_tangent_frame then
-				vv[2] = v[tangent_attrib_idx];
+				vv[4] = v[tangent_attrib_idx];
 			end
 			
 			for k, l in ipairs(layouts) do
@@ -566,8 +568,6 @@ local function pack_vertex_data(layouts, vertices)
 					end
 				end
 			end
-			vv[#vv+1] = i
-			vv[#vv+1] = w
 			new_vertices[#new_vertices+1] = table.concat(vv,"")
 		else
 			if need_convert_joint_index then
