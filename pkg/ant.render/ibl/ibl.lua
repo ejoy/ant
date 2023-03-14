@@ -256,9 +256,9 @@ local compute_cos_SH; do
 end
 
 local decode_Li; do
-    local DECODE_FACTOR<const> = 1.0 / (1<<24)
-    decode_Li = function (rgb)
-        return math3d.mul(DECODE_FACTOR, rgb)
+    local DECODE_FACTOR<const> = 1.0/1000000
+    decode_Li = function (r, g, b)
+        return math3d.mul(DECODE_FACTOR, math3d.vector(r, g, b, 0))
     end
 end
 
@@ -278,7 +278,7 @@ local function read_Li()
     for i=1, num_coeffs do
         local offset = (i-1) * elem_bytes
         local r, g, b = ('III'):unpack(m, offset)
-        Li[#Li+1] = decode_Li(math3d.vector(r, g, b))
+        Li[#Li+1] = decode_Li(r, g, b)
     end
     return Li
 end
