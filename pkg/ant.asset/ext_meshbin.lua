@@ -6,7 +6,7 @@ local fastio    = require "fastio"
 local datalist  = require "datalist"
 local fs        = require "filesystem"
 local declmgr   = import_package "ant.render".declmgr
-local cs_skinning = false
+local cs_skinning = true
 local proxy_vb = {}
 function proxy_vb:__index(k)
     if k == "handle" then

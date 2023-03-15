@@ -18,7 +18,7 @@ local declmgr   = import_package "ant.render".declmgr
 local sk_viewid = viewidmgr.get "skinning"
 local bgfx 			= require "bgfx"
 local assetmgr  = import_package "ant.asset"
-local cs_skinning = false
+local cs_skinning = true
 --cs_skinning: skinning_system export_meshbin ext_meshbin inputs.sh
 
 local skinning_material
@@ -46,17 +46,25 @@ local function do_skinning_compute(skininfo)
 end
 
 local function get_output_layout(decl)
-	local layout = "p40NIf"
-	if string.match(decl, "T40") then
-		layout = layout .. '|' .. "T40NIf"
-	end
-	for ll in string.gmatch(decl, "[%w]+") do
-		local texture_or_color_layout = ll ~= "p40NIf" and ll ~= "i40NIf" and ll ~= "w40NIf" and ll ~= "T40NIf"
-		if texture_or_color_layout then
-			layout = layout .. '|' .. ll
+	local lt = {}
+	-- p (T)
+	for ll in decl:gmatch "[%a+%d+]+" do
+		local at = ll:sub(1, 1)
+		if at == 'p' or at == 'T' then
+			lt[#lt+1] = ll
 		end
 	end
-	return layout
+	-- p (T) t/c
+	for ll in decl:gmatch "[%a+%d+]+" do
+
+		local at = ll:sub(1, 1)
+		local ot = at ~= 'p' and at ~= 'T' and at ~= 'i' and at ~= 'w'
+		if ot then
+			lt[#lt+1] = ll
+		end
+	end
+
+	return table.concat(lt, '|'), #lt
 end
 
 function skinning_sys:init()
@@ -74,9 +82,7 @@ function skinning_sys:entity_init()
 			else
 				assert(e.mesh)
 				local decl = e.mesh.vb.declname
-				local _, stride_out = string.gsub(decl, '|', "")
-				stride_out = stride_out - 1 -- default output layout:position
-				local output_layout = get_output_layout(decl)
+				local output_layout, stride_out = get_output_layout(decl)
 				local has_tangent = 0
 				if string.match(decl, "T40NIf") then
 					has_tangent = 1
@@ -110,7 +116,7 @@ function skinning_sys:skin_mesh()
 			if cs_skinning then
 				m = r2l_mat
 			else
-				m = math3d.mul(r2l_mat, e.scene.worldmat)
+				m = math3d.mul(e.scene.worldmat, r2l_mat)
 			end
 			animodule.build_skinning_matrices(skinning_matrices, pr, skin.inverse_bind_pose, skin.joint_remap, m)  
 		end

@@ -3,7 +3,7 @@ local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
-local cs_skinning = false
+local cs_skinning = true
 local LAYOUT_NAMES<const> = {
 	"POSITION",
 	"NORMAL",

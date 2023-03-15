@@ -12,7 +12,7 @@
 
 # define INPUT_INSTANCE i_data0
 
-//#define CS_SKINNING 1
+#define CS_SKINNING 1
 
 #ifdef CS_SKINNING
 
