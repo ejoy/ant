@@ -132,7 +132,7 @@ float ESM(
 	float occluder = texture2D(_sampler, texCoord).x;	
 
 	float visibility = clamp(exp(_depthMultiplier * (receiver - occluder) ), 0.0, 1.0);
-	return pow(visibility, 10);
+	return pow(visibility, 3);
 }
 #endif //SM_ESM
 
