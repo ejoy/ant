@@ -3,7 +3,9 @@ fx:
 properties:
   s_color_input:
     stage: 0
-    texture: /pkg/ant.resources/textures/black.texture
+    access: "r"
+    mip: 0
+    image: /pkg/ant.resources/textures/black.texture
   s_color_output:
     stage: 1
     access: "w"
