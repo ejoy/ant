@@ -219,14 +219,15 @@ function init_loader_sys:init()
 
     --cp_eid = color_palette_test()
 
-    quad_eid = ientity.create_quad_lines_entity("quads", {r={0.0, math.pi*0.5, 0.0}}, 
-        "/pkg/ant.test.features/assets/quad.material", 10, 1.0)
+--[[     quad_eid = ientity.create_quad_lines_entity("quads", {r={0.0, math.pi*0.5, 0.0}}, 
+        "/pkg/ant.test.features/assets/quad.material", 10, 1.0) ]]
 
     --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
-     create_instance("/pkg/ant.test.features/assets/glb/construction_site.glb|mesh.prefab",
+    create_instance("/pkg/ant.test.features/assets/glb/assembling-1.glb|mesh.prefab",
     function(e)
         local ee<close> = w:entity(e.tag['*'][1], "scene:in")
         iom.set_scale(ee, 0.1)
+        iom.set_position(ee,math3d.vector(0,3,0))
     end) 
 
     -- create_texture_plane_entity(
@@ -361,7 +362,7 @@ function init_loader_sys:init()
         }
 
         local le<close> = w:entity(pid)
-        iom.set_direction(le, math3d.vector(0.0, -1.0, 0.0))
+        iom.set_direction(le, math3d.vector(0.2664446532726288, -0.25660401582717896, 0.14578714966773987, 0.9175552725791931))
     end
     world:create_object(p)
 
@@ -558,7 +559,7 @@ end
 local sampler_eid
 
 local function drawindirect_test()
-     ecs.create_entity {
+      ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -567,16 +568,16 @@ local function drawindirect_test()
         data = {
             name        = "heap_mesh_test",
             scene  = {s = 0.2, t = {0, 3, 0}},
-            material    = "/pkg/ant.resources/materials/heap_test.material", -- 自定义material文件中需加入HEAP_MESH :1
+            material    = "/pkg/ant.resources/materials/pbr_heap.material", -- 自定义material文件中需加入HEAP_MESH :1
             visible_state = "main_view",
-            mesh        = "/pkg/ant.test.features/assets/glb/iron-ore.glb|meshes/Cube.248_P1.meshbin",
+            mesh        = "/pkg/ant.test.features/assets/glb/iron-ore.glb|meshes/Cube_P1.meshbin",
             heapmesh = {
                 curSideSize = 3, -- 当前 x y z方向最大堆叠数量均为curSideSize = 3，最大堆叠数为3*3*3 = 27
                 curHeapNum = 10, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
                 glbName = "iron-ingot" -- 当前entity对应的glb名字，用于筛选
             }
         },
-    }
+    } 
 --[[      ecs.create_entity {
         policy = {
             "ant.render|render",
