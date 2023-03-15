@@ -227,10 +227,9 @@ end
 -- 	end
 -- end
 
-local function calc_ortho_minmax(corners_view, main_view, light_view, corners_world, shadowmap_size)
-	local light_ortho_min, light_ortho_max = math3d.minmax(corners_view, math3d.mul(main_view, light_view))
-
-	local diagonal = math3d.sub(math3d.array_index(corners_world, 1), math3d.array_index(corners_world, 8))
+local function calc_ortho_minmax(corners_light_view, shadowmap_size)
+	local light_ortho_min, light_ortho_max = math3d.minmax(corners_light_view)
+	local diagonal = math3d.sub(math3d.array_index(corners_light_view, 1), math3d.array_index(corners_light_view, 8))
 	local bound = math3d.length(diagonal)
 	diagonal = math3d.vector(bound, bound, bound)
 
@@ -241,6 +240,8 @@ local function calc_ortho_minmax(corners_view, main_view, light_view, corners_wo
 	local world_unit_per_texel = bound / shadowmap_size
 	local vworld_unit_per_texel = math3d.vector(world_unit_per_texel, world_unit_per_texel, 0)
 
+	local light_ortho_min_z = math3d.index(light_ortho_min, 3)
+
 	light_ortho_min = math3d.mul(light_ortho_min, math3d.reciprocal(vworld_unit_per_texel))
 	light_ortho_min = math3d.floor(light_ortho_min)
 	light_ortho_min = math3d.mul(light_ortho_min, vworld_unit_per_texel)
@@ -248,44 +249,245 @@ local function calc_ortho_minmax(corners_view, main_view, light_view, corners_wo
 	light_ortho_max = math3d.floor(light_ortho_max)
 	light_ortho_max = math3d.mul(light_ortho_max, vworld_unit_per_texel)
 	
-	return light_ortho_min, light_ortho_max
+	return light_ortho_min, light_ortho_max, light_ortho_min_z
 end
 
-local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_view, far_offset)
+local aabb_tri_indexes = {
+	[1] = {1, 2, 3},
+	[2] = {2, 3, 4},
+	[3] = {5, 6, 7},
+	[4] = {6, 7, 8},
+	[5] = {1, 3, 5},
+	[6] = {3, 5, 7},
+	[7] = {2, 4, 6},
+	[8] = {4, 6, 8},
+	[9] = {1, 2, 5},
+	[10] = {2, 5, 6},
+	[11] = {3, 4, 7},
+	[12] = {4, 7, 8}	
+}
+
+local function compute_near_far(light_ortho_min, light_ortho_max, light_view_aabb_points)
+	local near = 100000000
+	local far  = -100000000
+	local triangle_list = {}
+	for i = 1, 16 do 
+		local tri = {
+			pt = {},
+			culled = true
+		}
+		local default_v = math3d.vector(far, far, far)
+		tri.pt[1], tri.pt[2], tri.pt[3] = default_v, default_v, default_v
+		triangle_list[i] = tri
+	end
+
+	local triangle_cnt  = 1
+	triangle_list[1] = {
+		pt = {
+			[1] = light_view_aabb_points[1],
+			[2] = light_view_aabb_points[2],
+			[3] = light_view_aabb_points[3]
+		},
+		culled = false 
+	}
+	local point_passes_collision = {}
+	local light_ortho_min_x, light_ortho_min_y = light_ortho_min[1], light_ortho_min[2]
+	local light_ortho_max_x, light_ortho_max_y = light_ortho_max[1], light_ortho_max[2]
+	for aabb_idx = 1, 12 do
+		local aabb_tri = aabb_tri_indexes[aabb_idx]
+		triangle_list[1].pt[1] = light_view_aabb_points[aabb_tri[1]]
+		triangle_list[1].pt[2] = light_view_aabb_points[aabb_tri[2]]
+		triangle_list[1].pt[3] = light_view_aabb_points[aabb_tri[3]]
+		triangle_cnt = 1
+		triangle_list[1].culled = false
+
+		for frustum_plane_idx = 1, 4 do
+			local fEdge
+			local iComponent
+			if frustum_plane_idx == 1 then
+				fEdge = light_ortho_min_x
+				iComponent = 1
+			elseif frustum_plane_idx == 2 then
+				fEdge = light_ortho_max_x
+				iComponent = 1
+			elseif frustum_plane_idx == 3 then
+				fEdge = light_ortho_min_y
+				iComponent = 2
+			elseif frustum_plane_idx == 4 then
+				fEdge = light_ortho_max_y
+				iComponent = 2
+			end
+
+			for tri_idx = 1, triangle_cnt do
+				if not triangle_list[tri_idx].culled then
+					local inside_vert_cnt = 0
+					local temp_order = {}
+					if frustum_plane_idx == 1 then
+						for tri_Pt_idx = 1, 3 do
+							if math3d.index(triangle_list[tri_idx].pt[tri_Pt_idx], 1) > light_ortho_min_x then
+								point_passes_collision[tri_Pt_idx] = 1
+							else
+								point_passes_collision[tri_Pt_idx] = 0
+							end
+							inside_vert_cnt = inside_vert_cnt + point_passes_collision[tri_Pt_idx]
+						end
+					elseif frustum_plane_idx == 2 then
+						for tri_Pt_idx = 1, 3 do
+							if math3d.index(triangle_list[tri_idx].pt[tri_Pt_idx], 1) < light_ortho_max_x then
+								point_passes_collision[tri_Pt_idx] = 1
+							else
+								point_passes_collision[tri_Pt_idx] = 0
+							end
+							inside_vert_cnt = inside_vert_cnt + point_passes_collision[tri_Pt_idx]
+						end
+					elseif frustum_plane_idx == 3 then
+						for tri_Pt_idx = 1, 3 do
+							if math3d.index(triangle_list[tri_idx].pt[tri_Pt_idx], 2) > light_ortho_min_y then
+								point_passes_collision[tri_Pt_idx] = 1
+							else
+								point_passes_collision[tri_Pt_idx] = 0
+							end
+							inside_vert_cnt = inside_vert_cnt + point_passes_collision[tri_Pt_idx]
+						end
+					else
+
+						for tri_Pt_idx = 1, 3 do
+							if math3d.index(triangle_list[tri_idx].pt[tri_Pt_idx], 2) < light_ortho_max_y then
+								point_passes_collision[tri_Pt_idx] = 1
+							else
+								point_passes_collision[tri_Pt_idx] = 0
+							end
+							inside_vert_cnt = inside_vert_cnt + point_passes_collision[tri_Pt_idx]
+						end						
+					end
+
+					if point_passes_collision[2] == 1 and point_passes_collision[1] == 0 then
+						temp_order = triangle_list[tri_idx].pt[1]
+						triangle_list[tri_idx].pt[1] = triangle_list[tri_idx].pt[2]
+						triangle_list[tri_idx].pt[2] = temp_order
+						point_passes_collision[1] = 1
+						point_passes_collision[2] = 0
+					end
+					if point_passes_collision[3] == 1 and point_passes_collision[2] == 0 then
+						temp_order = triangle_list[tri_idx].pt[2]
+						triangle_list[tri_idx].pt[2] = triangle_list[tri_idx].pt[3]
+						triangle_list[tri_idx].pt[3] = temp_order
+						point_passes_collision[2] = 1
+						point_passes_collision[3] = 0
+					end
+					if point_passes_collision[2] == 1 and point_passes_collision[1] == 0 then
+						temp_order = triangle_list[tri_idx].pt[1]
+						triangle_list[tri_idx].pt[1] = triangle_list[tri_idx].pt[2]
+						triangle_list[tri_idx].pt[2] = temp_order
+						point_passes_collision[1] = 1
+						point_passes_collision[2] = 0
+					end
+					if inside_vert_cnt == 0 then
+						triangle_list[tri_idx].culled = true
+					elseif inside_vert_cnt == 1 then
+						triangle_list[tri_idx].culled = false
+						local vert0_to_vert1 = math3d.sub(triangle_list[tri_idx].pt[2], triangle_list[tri_idx].pt[1])
+						local vert0_to_vert2 = math3d.sub(triangle_list[tri_idx].pt[3], triangle_list[tri_idx].pt[1])
+						local hit_point_time_ratio = fEdge - math3d.index(triangle_list[tri_idx].pt[1], iComponent)
+						local distance_along_vector01 = hit_point_time_ratio / math3d.index(vert0_to_vert1, iComponent)
+						local distance_along_vector02 = hit_point_time_ratio / math3d.index(vert0_to_vert2, iComponent)
+						vert0_to_vert1 = math3d.add(math3d.mul(vert0_to_vert1, distance_along_vector01), triangle_list[tri_idx].pt[1])
+						vert0_to_vert2 = math3d.add(math3d.mul(vert0_to_vert2, distance_along_vector02), triangle_list[tri_idx].pt[1])
+
+						triangle_list[tri_idx].pt[2] = vert0_to_vert2
+						triangle_list[tri_idx].pt[3] = vert0_to_vert1
+					elseif inside_vert_cnt == 2 then
+						triangle_list[triangle_cnt] = triangle_list[tri_idx+1]
+						triangle_list[tri_idx].culled = false
+						triangle_list[tri_idx+1].culled = false
+						local vert2_to_vert0 = math3d.sub(triangle_list[tri_idx].pt[1], triangle_list[tri_idx].pt[3])
+						local vert2_to_vert1 = math3d.sub(triangle_list[tri_idx].pt[2], triangle_list[tri_idx].pt[3])
+						local hit_point_time_2_0 = fEdge - math3d.index(triangle_list[tri_idx].pt[3], iComponent)
+						local distance_along_vector_2_0 = hit_point_time_2_0 / math3d.index(vert2_to_vert0, iComponent)
+						vert2_to_vert0 = math3d.add(math3d.mul(vert2_to_vert0, distance_along_vector_2_0), triangle_list[tri_idx].pt[3])
+
+						triangle_list[tri_idx+1].pt[1] = triangle_list[tri_idx].pt[1]
+						triangle_list[tri_idx+1].pt[2] = triangle_list[tri_idx].pt[2]
+						triangle_list[tri_idx+1].pt[3] = vert2_to_vert0
+
+						local hit_point_time_2_1 = fEdge - math3d.index(triangle_list[tri_idx].pt[3], iComponent)
+						local distance_along_vector_2_1 = hit_point_time_2_1 / math3d.index(vert2_to_vert1, iComponent)
+						vert2_to_vert1 = math3d.add(math3d.mul(vert2_to_vert1, distance_along_vector_2_1), triangle_list[tri_idx].pt[3])
+
+						triangle_list[tri_idx].pt[1] = triangle_list[tri_idx+1].pt[2]
+						triangle_list[tri_idx].pt[2] = triangle_list[tri_idx+1].pt[3]
+						triangle_list[tri_idx].pt[3] = vert2_to_vert1	
+						
+						triangle_cnt = triangle_cnt + 1
+						tri_idx = tri_idx + 1
+					else
+						triangle_list[tri_idx].culled = false
+					end
+				end
+			end
+		end
+
+		for idx = 1, triangle_cnt do
+			if not triangle_list[idx].culled then
+				for vert_idx = 1, 3 do
+					local tri_z = math3d.index(triangle_list[idx].pt[vert_idx], 3)
+					if near > tri_z then
+						near = tri_z
+					end
+					if far < tri_z then
+						far = tri_z
+					end
+				end
+			end
+		end
+	end
+	return near, far
+end
+
+local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_view, world_scene_aabb)
 	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
 	set_worldmat(shadow_ce.scene, shadow_ce.scene)
 
-	local inv_main_proj = math3d.projmat(csm_frustum, INV_Z)
-	local light_world = shadow_ce.scene.worldmat
-	local light_view = math3d.inverse(light_world)
-	local slice_view_proj = math3d.mul(math3d.projmat(csm_frustum, INV_Z), main_view)
+	local camera_proj = math3d.projmat(csm_frustum, INV_Z)
+	local light_view = shadow_ce.scene.worldmat
+	local light_view_inv = math3d.inverse(light_view)
+	local light_view_to_homo = math3d.mul(camera_proj, math3d.mul(main_view, light_view_inv))
+	local corners_light_view = math3d.frustum_points(light_view_to_homo)
 
-	local corners_world = math3d.frustum_points(slice_view_proj)
-	local corners_view = math3d.frustum_points(inv_main_proj)
-
-	local light_ortho_min, light_ortho_max = calc_ortho_minmax(corners_view, main_view, light_view, corners_world, shadowmap_size)
+	local light_ortho_min, light_ortho_max, light_ortho_min_z = calc_ortho_minmax(corners_light_view, shadowmap_size)
 	local min_extent, max_extent = math3d.tovalue(light_ortho_min), math3d.tovalue(light_ortho_max)
+
+	local light_view_scene_aabb = math3d.aabb_transform(light_view, world_scene_aabb)
+	local near, far = math3d.index(math3d.array_index(light_view_scene_aabb, 1), 3), math3d.index(math3d.array_index(light_view_scene_aabb, 2), 3)
+
 	local camera = shadow_ce.camera
 	local f = camera.frustum
-	local near_plane = -csm_frustum.f
-	local far_plane  =  csm_frustum.f
-	f.l, f.b, f.n = min_extent[1], min_extent[2], near_plane
-	f.r, f.t, f.f = max_extent[1], max_extent[2], far_plane + far_offset 	-- avoid scene AABB intersection
-	update_camera_matrices(camera, light_view)
+
+	f.l, f.b, f.n = min_extent[1], min_extent[2], near
+	f.r, f.t, f.f = max_extent[1], max_extent[2], far
+	update_camera_matrices(camera, light_view_inv)
 end
 
 local function update_shadow_frustum(dl, main_camera)
 	local lightdir = iom.get_direction(dl)
-	local setting = ishadow.setting()
+	local shadow_setting = ishadow.setting()
 	local csm_frustums = ishadow.calc_split_frustums(main_camera.frustum)
 	local main_view = main_camera.viewmat
+
+	--calculate scene_aabb in world space
+	local world_scene_aabb = math3d.aabb(mc.ZERO, mc.ZERO)
+	for e in w:select "bounding:in" do
+		if e.bounding.scene_aabb and e.bounding.scene_aabb ~= mc.NULL then
+			world_scene_aabb = math3d.aabb_merge(world_scene_aabb, e.bounding.scene_aabb)
+		end
+	end
 
 	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
 		local csm_frustum = csm_frustums[csm.index]
 		csm_frustum.n = 1
 		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in scene:in")
-		update_csm_frustum(lightdir, setting.shadowmap_size, csm_frustum, shadow_ce, main_view, setting.far_offset)
+		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_view, world_scene_aabb)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end
