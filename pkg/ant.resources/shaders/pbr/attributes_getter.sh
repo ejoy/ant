@@ -8,14 +8,8 @@ input_attributes input_attribs = (input_attributes)0;
     input_attribs.basecolor = get_basecolor(uv, vec4_splat(1.0));
 #endif //WITH_COLOR_ATTRIB
 
-/* #ifdef HEAP_MESH
-    vec4 emissive = v_emissive;
-#else //!HEAP_MESH
-    vec4 emissive = u_emissive_factor;
-#endif //!HEAP_MESH */
+    input_attribs.emissive = get_emissive_color(uv);
 
-    vec4 emissive = u_emissive_factor;
-    input_attribs.emissive = get_emissive_color(uv, emissive);
 #ifndef MATERIAL_UNLIT
     input_attribs.fragcoord = gl_FragCoord;
     input_attribs.posWS = v_posWS.xyz;

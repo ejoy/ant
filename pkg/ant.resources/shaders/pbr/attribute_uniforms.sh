@@ -47,12 +47,12 @@ mediump vec4 get_basecolor(mediump vec2 texcoord, mediump vec4 basecolor)
 #ifdef ALPHAMODE_OPAQUE
     basecolor.a = u_alpha_mask_cutoff;
 #endif //ALPHAMODE_OPAQUE
-    return vec4(basecolor.rgb, 1.0);
+    return basecolor;
 }
 
-mediump vec4 get_emissive_color(mediump vec2 texcoord, mediump vec4 emissive_color)
+mediump vec4 get_emissive_color(mediump vec2 texcoord)
 {
-    mediump vec4 emissivecolor = emissive_color;
+    mediump vec4 emissivecolor = u_emissive_factor;
 #ifdef HAS_EMISSIVE_TEXTURE
     emissivecolor *= texture2D(s_emissive, texcoord);
 #endif //HAS_EMISSIVE_TEXTURE
