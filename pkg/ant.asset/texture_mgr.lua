@@ -19,7 +19,8 @@ end
 setmetatable(textures, mt)
 
 local function invalid(id)
-	return textureman.texture_get(id) == DefaultTexture
+	local tid = textureman.texture_get(id)
+	return tid == DefaultTexture.TEX2D or tid == DefaultTexture.TEXCUBE
 end
 
 local function create(filename)

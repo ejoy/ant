@@ -63,28 +63,87 @@ local function loadTexture(name)
     return c
 end
 
-local DefaultTexture = createTexture {
-    info = {
-        width = 1,
-        height = 1,
-        format = "RGBA8",
-        mipmap = false,
-        depth = 1,
-        numLayers = 1,
-        cubemap = false,
-        storageSize = 4,
-        numMips = 1,
-        bitsPerPixel = 32,
+local DefaultTexture = {
+    TEX2D = createTexture {
+        info = {
+            width = 1,
+            height = 1,
+            format = "RGBA8",
+            mipmap = false,
+            depth = 1,
+            numLayers = 1,
+            cubeMap = false,
+            storageSize = 4,
+            numMips = 1,
+            bitsPerPixel = 32,
+        },
+        value = {0, 0, 0, 0},
+        flag = "umwwvm+l*p-l",
+        sampler = {
+            MAG = "LINEAR",
+            MIN = "LINEAR",
+            U = "CLAMP",
+            V = "CLAMP",
+        },
+        name = "<default2d>"
     },
-    value = {0, 0, 0, 0},
-    flag = "umwwvm+l*p-l",
-    sampler = {
-        MAG = "LINEAR",
-        MIN = "LINEAR",
-        U = "MIRROR",
-        V = "MIRROR",
+    --TODO: not support 3d texture right now
+    -- TEX3D = createTexture {
+    --     info = {
+    --         width = 1,
+    --         height = 1,
+    --         format = "RGBA8",
+    --         mipmap = false,
+    --         depth = 2,
+    --         numLayers = 1,
+    --         cubeMap = false,
+    --         storageSize = 8,
+    --         numMips = 1,
+    --         bitsPerPixel = 32,
+    --     },
+    --     value = {
+    --         0, 0, 0, 0, -- depth 1
+    --         0, 0, 0, 0, -- depth 2
+    --     },
+    --     flag = "umwwvm+l*p-l",
+    --     sampler = {
+    --         MAG = "LINEAR",
+    --         MIN = "LINEAR",
+    --         U = "CLAMP",
+    --         V = "CLAMP",
+    --     },
+    --     name = "<default3d>"
+    -- },
+    TEXCUBE = createTexture {
+        info = {
+            width = 1,
+            height = 1,
+            format = "RGBA8",
+            mipmap = false,
+            depth = 1,
+            numLayers = 1,
+            cubeMap = true,
+            storageSize = 24,   -- 4 x 6
+            numMips = 1,
+            bitsPerPixel = 32,
+        },
+        value = {
+            0, 0, 0, 0, --face 1
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0, --face 6
+        },
+        flag = "umwwvm+l*p-l",
+        sampler = {
+            MAG = "LINEAR",
+            MIN = "LINEAR",
+            U = "CLAMP",
+            V = "CLAMP",
+        },
+        name = "<defaultcube>"
     },
-    name = "<default>"
 }
 
 local textureByName = {}
@@ -124,11 +183,20 @@ function S.texture_default()
     return DefaultTexture
 end
 
+local function which_texture_type(info)
+    if info.cubemap then
+        return "TEXCUBE"
+    end
+
+    return info.depth > 1 and "TEX3D" or "TEX2D"
+end
+
 function S.texture_create(name)
     local c = textureByName[name]
     if not c then
-        local id = textureman.texture_create(DefaultTexture)
         local res = loadTexture(name)
+        local textype = which_texture_type(res.info)
+        local id = textureman.texture_create(assert(DefaultTexture[textype]))
         c = {
             name = name,
             input = res,
@@ -186,7 +254,7 @@ ltask.fork(function ()
     local FrameCur = 1
     local results = {}
     local OneMinute <const> = 30 * 60
-    local InvalidTexture <const> = string.pack("I2", DefaultTexture & 0xffff)
+    local InvalidTexture <const> = ("HH"):pack(DefaultTexture.TEX2D & 0xffff, DefaultTexture.TEXCUBE & 0xffff)
     while not quit do
         if #createQueue == 0 then
             textureman.frame_new(FrameCur - FrameNew + 1, InvalidTexture, results)
