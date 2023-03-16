@@ -101,18 +101,23 @@ read_timestamp(int index) {
 }
 
 static inline int
-is_invalid(int id, int filter) {
-	return (g_texture[id] == filter);
+is_invalid(int id, uint16_t* filter, size_t filter_n) {
+	for (size_t i = 0; i < filter_n; ++i) {
+		if (g_texture[id] == filter[i]) {
+			return 1;
+		}
+	}
+	return 0;
 }
 
 static void
-frame_get(lua_State *L,int index, int range, int filter) {
+frame_get(lua_State *L,int index, int range, uint16_t* filter, size_t filter_n) {
 	int i;
 	int n = 0;
 	if (range >= 0) {
 		// filter new
 		for (i=0;i<g_texture_id;i++) {
-			if (is_invalid(i, filter) && read_timestamp(i) <= range) {
+			if (is_invalid(i, filter, filter_n) && read_timestamp(i) <= range) {
 				lua_pushinteger(L, i+1);
 				lua_rawseti(L, index, ++n);
 			}
@@ -121,7 +126,7 @@ frame_get(lua_State *L,int index, int range, int filter) {
 		// filter old
 		int old = - range;
 		for (i=0;i<g_texture_id;i++) {
-			if (!is_invalid(i, filter) && read_timestamp(i) >= old) {
+			if (!is_invalid(i, filter, filter_n) && read_timestamp(i) >= old) {
 				lua_pushinteger(L, i+1);
 				lua_rawseti(L, index, ++n);
 			}
@@ -150,10 +155,10 @@ lframe_new(lua_State *L) {
 	int range = luaL_optinteger(L, 1, 0);
 	if (range < 0)
 		return luaL_error(L, "Invalid range %d", range);
-	int filter = luaL_optinteger(L, 2, 0xffff);
-	filter &= 0xffff;
+	size_t sz = 0;
+	const char* filter = luaL_checklstring(L, 2, &sz);
 	check_result(L, 3);
-	frame_get(L, 3, range, filter);
+	frame_get(L, 3, range, filter, sz / sizeof(uint16_t));
 	return 1;
 }
 
@@ -162,10 +167,10 @@ lframe_old(lua_State *L) {
 	int range = luaL_checkinteger(L, 1);
 	if (range <= 0)
 		return luaL_error(L, "Invalid range %d", range);
-	int filter = luaL_optinteger(L, 2, 0xffff);
-	filter &= 0xffff;
+	size_t sz = 0;
+	const char* filter = luaL_checklstring(L, 2, &sz);
 	check_result(L, 3);
-	frame_get(L, 3, -range, filter);
+	frame_get(L, 3, -range, filter, sz / sizeof(uint16_t));
 	return 1;
 }
 

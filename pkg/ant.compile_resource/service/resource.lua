@@ -186,9 +186,10 @@ ltask.fork(function ()
     local FrameCur = 1
     local results = {}
     local OneMinute <const> = 30 * 60
+    local InvalidTexture <const> = string.pack("I2", DefaultTexture & 0xffff)
     while not quit do
         if #createQueue == 0 then
-            textureman.frame_new(FrameCur - FrameNew + 1, DefaultTexture, results)
+            textureman.frame_new(FrameCur - FrameNew + 1, InvalidTexture, results)
             for i = 1, #results do
                 local id = results[i]
                 local c = textureById[id]
@@ -199,7 +200,7 @@ ltask.fork(function ()
             FrameNew = FrameCur - 1
         end
         if FrameCur % OneMinute == 0 then
-            textureman.frame_old(OneMinute, DefaultTexture, results)
+            textureman.frame_old(OneMinute, InvalidTexture, results)
             for i = 1, #results do
                 local id = results[i]
                 local c = textureById[id]
