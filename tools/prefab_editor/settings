@@ -33,15 +33,19 @@ graphic:
     fxaa:
       enable: true
   shadow:
-    enable: true
-    size: 1024
-    type: inv_z
     bias: 0.003
-    normal_offset: 0
-    color: {0.0, 0.0, 0.0, 1}
-    stabilize: true
-    #split_ratios: {0.05, 0.25, 0.6}
+    color: {0, 0, 0, 1}
+    enable: true
+    normal_offset: 0.012
+    size: 1024
     split_lamada: 0.8
-    split_num: 4
+    split_num: 1
+    split_ratios: {
+			{0.00, 0.10}
+    }
+    min_variance: 0.012
+    depth_multiplier: 1000
+    stabilize: true
+    type: inv_z
 debug:
   show_bounding: false

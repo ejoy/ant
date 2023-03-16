@@ -249,7 +249,7 @@ local function calc_ortho_minmax(corners_light_view, shadowmap_size)
 	light_ortho_max = math3d.floor(light_ortho_max)
 	light_ortho_max = math3d.mul(light_ortho_max, vworld_unit_per_texel)
 	
-	return light_ortho_min, light_ortho_max, light_ortho_min_z
+	return light_ortho_min, light_ortho_max
 end
 
 local aabb_tri_indexes = {
@@ -454,17 +454,19 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	local light_view_to_homo = math3d.mul(camera_proj, math3d.mul(main_view, light_view_inv))
 	local corners_light_view = math3d.frustum_points(light_view_to_homo)
 
-	local light_ortho_min, light_ortho_max, light_ortho_min_z = calc_ortho_minmax(corners_light_view, shadowmap_size)
-	local min_extent, max_extent = math3d.tovalue(light_ortho_min), math3d.tovalue(light_ortho_max)
+	local light_ortho_min, light_ortho_max = calc_ortho_minmax(corners_light_view, shadowmap_size)
 
 	local light_view_scene_aabb = math3d.aabb_transform(light_view, world_scene_aabb)
-	local near, far = math3d.index(math3d.array_index(light_view_scene_aabb, 1), 3), math3d.index(math3d.array_index(light_view_scene_aabb, 2), 3)
 
-	local camera = shadow_ce.camera
+	local light_frustum_aabb = math3d.aabb(light_ortho_min, light_ortho_max)
+	local light_intersected_aabb = math3d.aabb_intersection(light_frustum_aabb, light_view_scene_aabb)
+	local min_intersected, max_intersected = math3d.tovalue(math3d.array_index(light_intersected_aabb, 1)), math3d.tovalue(math3d.array_index(light_intersected_aabb, 2))
+ 	local camera = shadow_ce.camera
 	local f = camera.frustum
 
-	f.l, f.b, f.n = min_extent[1], min_extent[2], near
-	f.r, f.t, f.f = max_extent[1], max_extent[2], far
+	local max_far = math.max(max_intersected[3], csm_frustum.f)
+	f.l, f.b, f.n = min_intersected[1], min_intersected[2], min_intersected[3]
+	f.r, f.t, f.f = max_intersected[1], max_intersected[2], max_far
 	update_camera_matrices(camera, light_view_inv)
 end
 
@@ -476,7 +478,7 @@ local function update_shadow_frustum(dl, main_camera)
 
 	--calculate scene_aabb in world space
 	local world_scene_aabb = math3d.aabb(mc.ZERO, mc.ZERO)
-	for e in w:select "bounding:in" do
+	for e in w:select "scene:in render_object:in bounding:in name:in" do
 		if e.bounding.scene_aabb and e.bounding.scene_aabb ~= mc.NULL then
 			world_scene_aabb = math3d.aabb_merge(world_scene_aabb, e.bounding.scene_aabb)
 		end
