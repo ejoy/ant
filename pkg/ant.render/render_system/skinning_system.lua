@@ -47,23 +47,19 @@ end
 
 local function get_output_layout(decl)
 	local lt = {}
-	-- p (T)
+	-- p (T) other attributes
 	for ll in decl:gmatch "[%a+%d+]+" do
 		local at = ll:sub(1, 1)
-		if at == 'p' or at == 'T' then
-			lt[#lt+1] = ll
-		end
-	end
-	-- p (T) t/c
-	for ll in decl:gmatch "[%a+%d+]+" do
-
-		local at = ll:sub(1, 1)
-		local ot = at ~= 'p' and at ~= 'T' and at ~= 'i' and at ~= 'w'
-		if ot then
+		if at == 'p' then
+			table.insert(lt, 1, ll)
+		elseif at == 'T' then
+			table.insert(lt, 2, ll)
+		elseif at ~= 'i' and at ~= 'w'then
 			lt[#lt+1] = ll
 		end
 	end
 
+	assert(lt[1]:sub(1, 1) == 'p')
 	return table.concat(lt, '|'), #lt
 end
 
@@ -84,7 +80,7 @@ function skinning_sys:entity_init()
 				local decl = e.mesh.vb.declname
 				local output_layout, stride_out = get_output_layout(decl)
 				local has_tangent = 0
-				if string.match(decl, "T40NIf") then
+				if string.match(decl, "T%d%d%w%w%w") then
 					has_tangent = 1
 				end
 				local sm = meshskin.skinning_matrices

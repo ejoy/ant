@@ -408,36 +408,46 @@ local function pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_
 	end
 	if need_vec4_format then
 		for _, l in ipairs(layouts) do
-			if need_pack_tangent_frame then
-				if l.name == "TANGENT" then
-					l.layout = "T40NIf"
-					goto continue
+			if l.name == "NORMAL" then
+				goto continue
+			elseif l.name == "POSITION" then
+				table.insert(ll, 1, "p40NIf")
+				goto continue
+			elseif l.name == "JOINTS_0" then
+				assert(joint_attrib_idx)
+				table.insert(ll, 2, "i40NIf")
+				goto continue
+			elseif l.name == "WEIGHTS_0" then
+				assert(weights_attrib_idx)
+				table.insert(ll, 3, "w40NIf")
+				goto continue
+			elseif l.name == "TANGENT" then
+				assert(need_pack_tangent_frame)
+				if not ll[4] then
+					ll[4] = "T40NIf"
+				else
+					table.insert(ll, 4, "T40NIf")
 				end
-			end
-			 if joint_attrib_idx and l.name == "JOINTS_0" then
-				l.layout = "i40NIf"
 				goto continue
-			end
-			if weights_attrib_idx and l.name:match "WEIGHTS_0" then
-				l.layout = "w40NIf"
+			elseif l.name:match "COLOR_"  or l.name:match "TEXCOORD_" then
+				l.layout = l.layout:sub(1, 1) .. '4' .. l.layout:sub(3, l.layout:len())
+				ll[#ll+1] = l.layout:sub(1, 5) .. 'f'
 				goto continue
-			end 
-	
-			if need_convert_color_index and l.name:match "COLOR_" then
-				l.layout = "c40NIf"
-				goto continue
+			else
+				ll[#ll+1] = l.layout
 			end
 			::continue::
-		end		
-	end
-
-	for _, l in ipairs(layouts) do
-		if need_pack_tangent_frame and l.name == "NORMAL" then
-			goto continue
 		end
-		ll[#ll+1] = l.layout
-		::continue::
-	end	
+		assert(ll[1]:sub(1, 1) == 'p')
+	else
+		for _, l in ipairs(layouts) do
+			if need_pack_tangent_frame and l.name == "NORMAL" then
+				goto continue
+			end
+			ll[#ll+1] = l.layout
+			::continue::
+		end	
+	end
 	return table.concat(ll, '|')
 end
 
@@ -499,17 +509,17 @@ local function pack_vertex_data(layouts, vertices)
 			local cv = unpack_vec(c, layouts[color_attrib_idx].layout)
 			local fmt
 			if need_vec4_format then
-				fmt = ('f'):rep(4)
+--[[ 				fmt = ('f'):rep(4)
 				for i=1, 4 do
 					cv[i] = u16tof(cv[i])
-				end
+				end ]]
 			else
 				fmt = color8bit_fmt
 				for i=1, 4 do
 					cv[i] = u16tou8(cv[i])
 				end
+				v[color_attrib_idx] = fmt:pack(cv[1], cv[2], cv[3], cv[4])
 			end
-			v[color_attrib_idx] = fmt:pack(cv[1], cv[2], cv[3], cv[4])
 		end
 
 		if need_pack_tangent_frame then
@@ -539,10 +549,7 @@ local function pack_vertex_data(layouts, vertices)
 			local joint = load_attrib_math3dvec(joint_attrib_idx, v)
 			local i = fmt_f:pack(table.unpack(math3d.tovalue(joint)))
 
-			local positions = load_attrib_math3dvec(position_attrib_idx, v)
-			local pv = math3d.tovalue(positions)
-			pv[4] = 0.0
-			local p = fmt_f:pack(table.unpack(pv))
+			local p = v[position_attrib_idx] .. ('f'):pack("0")
 
 			vv[1] = p;
 			vv[2] = i
@@ -554,17 +561,17 @@ local function pack_vertex_data(layouts, vertices)
 			for k, l in ipairs(layouts) do
 				local skinning_relative_attribute_layout = string.match(l.layout, "p") or string.match(l.layout, "T") or string.match(l.layout, "i4") or string.match(l.layout, "w4") or string.match(l.layout, "n3")
 				if not skinning_relative_attribute_layout then
-					local v_cur = v[k]
-					if string.match(l.layout, "t20") then
-						local texs = load_attrib_math3dvec(texcoord_attrib_idx_0, v)
-						local tv = table.pack(math3d.index(texs, 1), math3d.index(texs, 2), 0.0, 0.0)
-						vv[#vv+1] = fmt_f:pack(table.unpack(tv))
-					elseif string.match(l.layout, "t21") then
-						local texs = load_attrib_math3dvec(texcoord_attrib_idx_1, v)
+					if string.match(l.layout, "t") then
+						local tidx = tonumber(l.layout:sub(3,3))
+						local texs = load_attrib_math3dvec(texcoord_attrib_idx_0 + tidx, v)
 						local tv = table.pack(math3d.index(texs, 1), math3d.index(texs, 2), 0.0, 0.0)
 						vv[#vv+1] = fmt_f:pack(table.unpack(tv))
 					elseif string.match(l.layout, "c") then
-						vv[#vv+1] = v_cur		
+						local cidx = tonumber(l.layout:sub(3,3))
+						local color = load_attrib_math3dvec(color_attrib_idx + cidx, v)
+						local re_u2f = 1 / 65536
+						local cv = table.pack(math3d.index(math3d.mul(color, re_u2f), 1, 2, 3, 4))
+						vv[#vv+1] = fmt_f:pack(table.unpack(cv))
 					end
 				end
 			end
@@ -599,15 +606,6 @@ local function pack_vertex_data(layouts, vertices)
 		layouts[weights_attrib_idx ].layout   = "w40NIf"
 		if need_pack_tangent_frame then
 			layouts[tangent_attrib_idx].layout    = "T40NIf"
-		end
-		if texcoord_attrib_idx_0 then
-			layouts[texcoord_attrib_idx_0].layout = "t40NIf"
-		end
-		if texcoord_attrib_idx_1 then
-			layouts[texcoord_attrib_idx_1].layout = "t41NIf"
-		end
-		if color_attrib_idx then
-			layouts[color_attrib_idx].layout = "c40NIf"
 		end
 	end
 
