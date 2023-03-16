@@ -122,6 +122,8 @@ lm:source_set "ant_links" {
             "UIKit",
             "Metal",
             "QuartzCore",
+            "IOSurface",
+            "CoreGraphics"
         },
         ldflags = {
             "-fembed-bitcode",
