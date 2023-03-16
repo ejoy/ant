@@ -223,12 +223,12 @@ function init_loader_sys:init()
         "/pkg/ant.test.features/assets/quad.material", 10, 1.0) ]]
 
     --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
-    create_instance("/pkg/ant.test.features/assets/glb/assembling-1.glb|mesh.prefab",
+--[[     create_instance("/pkg/ant.test.features/assets/glb/assembling-1.glb|mesh.prefab",
     function(e)
         local ee<close> = w:entity(e.tag['*'][1], "scene:in")
         iom.set_scale(ee, 0.1)
         iom.set_position(ee,math3d.vector(0,3,0))
-    end) 
+    end)  ]]
 
     -- create_texture_plane_entity(
     --     {1, 1.0, 1.0, 1.0}, 
@@ -435,14 +435,14 @@ function init_loader_sys:init()
     --     }
     -- }
 
---[[      local pp = ecs.create_instance "/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab"
+      local pp = ecs.create_instance "/pkg/ant.test.features/assets/glb/assembling-1.glb|mesh.prefab"
     pp.on_ready = function (e)
         local ee<close> = w:entity(e.tag['*'][1])
         iom.set_scale(ee, 0.1)
         iom.set_position(ee, math3d.vector(0, 0, 0))
     end
 
-    world:create_object(pp)  ]]
+    world:create_object(pp)  
 
 --[[     local t = ecs.create_instance  "/pkg/ant.test.features/assets/glb/test5.glb|mesh.prefab"
     t.on_ready = function (e)
@@ -559,7 +559,7 @@ end
 local sampler_eid
 
 local function drawindirect_test()
-      ecs.create_entity {
+       ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -572,12 +572,12 @@ local function drawindirect_test()
             visible_state = "main_view",
             mesh        = "/pkg/ant.test.features/assets/glb/iron-ore.glb|meshes/Cube_P1.meshbin",
             heapmesh = {
-                curSideSize = 3, -- 当前 x y z方向最大堆叠数量均为curSideSize = 3，最大堆叠数为3*3*3 = 27
-                curHeapNum = 10, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
+                curSideSize = {3, 4, 5}, -- 当前 x y z方向最大堆叠数量为3, 4, 5，通过表的形式赋值给curSideSize，最大堆叠数为3*4*5 = 60
+                curHeapNum = 45, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
                 glbName = "iron-ingot" -- 当前entity对应的glb名字，用于筛选
             }
         },
-    } 
+    }  
 --[[      ecs.create_entity {
         policy = {
             "ant.render|render",
@@ -651,6 +651,7 @@ local function canvas_test()
     }
 end
 
+local heap_num = 1
 function init_loader_sys:init_world()
     for msg in after_init_mb:each() do
         local e = msg[2]
@@ -747,11 +748,12 @@ function init_loader_sys:entity_init()
             local e = assert(w:entity(sampler_eid))
             print(math3d.tostring(iom.get_position(e)))
         elseif key == "J" and press == 0 then
-            iheapmesh.update_heap_mesh_number(27, "iron-ingot") -- 更新当前堆叠数 参数一为待更新堆叠数 参数二为entity筛选的glb名字
+            iheapmesh.update_heap_mesh_number(heap_num, "iron-ingot") -- 更新当前堆叠数 参数一为待更新堆叠数 参数二为entity筛选的glb名字
+            heap_num = heap_num + 1
         elseif key == "K" and press == 0 then
             iheapmesh.update_heap_mesh_number(0, "iron-ingot")   -- 更新当前堆叠数
         elseif key == "L" and press == 0 then
-            iheapmesh.update_heap_mesh_sidesize(4, "iron-ingot")  -- 更新当前每个轴的最大堆叠数 参数一为待更新每个轴的最大堆叠数 参数二为entity筛选的glb名字
+            iheapmesh.update_heap_mesh_sidesize({5, 4 ,3}, "iron-ingot")  -- 更新当前每个轴的最大堆叠数 参数一为待更新每个轴的最大堆叠数(表) 参数二为entity筛选的glb名字
         elseif key == "M" and press == 0 then
             printer_percent = printer_percent + 0.1
             if printer_percent >= 1.0 then
