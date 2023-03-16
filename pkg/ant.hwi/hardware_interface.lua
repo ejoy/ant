@@ -98,8 +98,7 @@ end
 
 local platform_relates = {
 	windows = {
-		--TODO: use image(bgfx.set_image) in VULKAN will failed, need fix
-		renderer="DIRECT3D11",
+		renderer="VULKAN",
 	},
 	macos = {
 		renderer="VULKAN",
