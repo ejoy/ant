@@ -224,7 +224,8 @@ ltask.fork(function ()
                 local c = textureByName[name]
                 bgfx.destroy(c.handle)
                 c.handle = nil
-                textureman.texture_set(c.output.id, DefaultTexture)
+                local textype = which_texture_type(c.input.info)
+                textureman.texture_set(c.output.id, DefaultTexture[textype])
             end
         end
         while true do
