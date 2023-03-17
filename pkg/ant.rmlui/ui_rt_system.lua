@@ -66,10 +66,10 @@ end ]]
 
 local S = ltask.dispatch()
 
-local lastname = "uiruntime"
+--local lastname = "blit_shadowmap"
 
 function S.render_target_create(width, height, name)
-    local viewid = viewidmgr.generate(name, lastname)
+    local viewid = viewidmgr.generate(name)
     local fbidx = fbmgr.create(
         {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA8", flags = rb_flags}},
         {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "D16", flags = rb_flags}} 
@@ -139,4 +139,19 @@ local iUiRt = ecs.interface "iuirt"
 
 function iUiRt.get_group_id(name)
     return rt2g_table[name]
+end
+
+local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
+
+function iUiRt.calc_camera_t(queuename, aabb)
+    local select_condition = queuename .. " camera_ref:in"
+    local rtq = w:first(select_condition)
+    if rtq then
+        local rt_camera<close> = w:entity(rtq.camera_ref, "scene:update")
+        local aabb_min, aabb_max = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
+        local triple_offset = 3 * math3d.length(math3d.sub(aabb_max, aabb_min))
+        local unit_dir = math3d.normalize(rt_camera.scene.t)
+       iom.set_position(rt_camera, math3d.mul(unit_dir, triple_offset)) 
+       --iom.set_position(rt_camera, math3d.vector({0, 5, -5, 0})) 
+    end
 end

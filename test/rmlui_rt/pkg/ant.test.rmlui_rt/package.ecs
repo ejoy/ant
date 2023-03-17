@@ -13,6 +13,7 @@ system "init_system"
     .method "init"
     .method "post_init"
     .method "entity_init"
+    .method "end_frame"
 
 pipeline "init"
     .stage "init"
