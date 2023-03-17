@@ -5,13 +5,14 @@ local mc            = mathpkg.constant
 
 local math3d        = require "math3d"
 local bgfx          = require "bgfx"
+local texmgr		= require "texture_mgr"
 local rmat          = ecs.clibs "render.material"
 
 local setting		= import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 
-local function texture_value(stage)
-	return {stage=stage, value=nil, handle=nil, type='t'}
+local function texture_value(stage, defaultid)
+	return {stage=stage, value=defaultid, handle=nil, type='t'}
 end
 
 local function buffer_value(stage, access)
@@ -67,6 +68,9 @@ local function uniform_value(value)
 	return {type='u', value=value}
 end
 
+local DEFAULT_TEXCUBE_ID<const> = texmgr.default_textureid "TEXCUBE"
+local DEFAULT_TEX2D_ID<const> = texmgr.default_textureid "TEX2D"
+
 local SYS_ATTRIBS = rmat.system_attribs(check{
 	--camera
 	u_eyepos				= uniform_value(mc.ZERO_PT),
@@ -85,9 +89,9 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	--IBL
 	u_ibl_param				= uniform_value(mc.ZERO),
 	u_irradianceSH			= uniform_value(default_irradiance_SH_value()),
-	s_irradiance			= texture_value(5),
-	s_prefilter				= texture_value(6),
-	s_LUT					= texture_value(7),
+	s_irradiance			= texture_value(5, DEFAULT_TEXCUBE_ID),
+	s_prefilter				= texture_value(6, DEFAULT_TEXCUBE_ID),
+	s_LUT					= texture_value(7, DEFAULT_TEX2D_ID),
 
 	--curve world
 	--[[
@@ -113,7 +117,7 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	u_shadow_param1		 = uniform_value(mc.ZERO),
 	u_shadow_param2		 = uniform_value(mc.ZERO),
 
-	s_shadowmap			 = texture_value(8),
+	s_shadowmap			 = texture_value(8, DEFAULT_TEX2D_ID),
 	u_main_camera_matrix = uniform_value(mc.IDENTITY_MAT),
 	--   omni
 	u_omni_matrix = uniform_value{
@@ -130,7 +134,7 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 
 	--s_omni_shadowmap	= texture_value(9),
 
-	s_ssao				= texture_value(9),
+	s_ssao				= texture_value(9, DEFAULT_TEX2D_ID),
 	--postprocess
 	u_reverse_pos_param	= uniform_value(mc.ZERO),
 })

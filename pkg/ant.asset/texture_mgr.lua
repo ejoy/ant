@@ -31,10 +31,16 @@ local function destroy(res)
 	--TODO
 end
 
+local function default_textureid(t)
+	t = t or "TEX2D"
+	return assert(DefaultTexture[t], ("Invalid default texture type:%s"):format(t))
+end
+
 return {
 	init = init,
 	invalid = invalid,
     create = create,
     destroy = destroy,
+	default_textureid = default_textureid,
     textures = textures,
 }
