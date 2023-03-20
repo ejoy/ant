@@ -102,7 +102,13 @@ function S.init_world()
 
     -- create_simple_triangles()
 
-    create_instance("/pkg/ant.test.light/assets/building_station.prefab", function (e)
+    -- create_instance("/pkg/ant.test.light/assets/building_station.prefab", function (e)
+    --     local leid = e.tag['*'][1]
+    --     local le<close> = w:entity(leid, "scene:update")
+    --     iom.set_scale(le, 0.1)
+    -- end)
+
+        create_instance("/pkg/ant.test.light/assets/shelf-input.glb|mesh.prefab", function (e)
         local leid = e.tag['*'][1]
         local le<close> = w:entity(leid, "scene:update")
         iom.set_scale(le, 0.1)
