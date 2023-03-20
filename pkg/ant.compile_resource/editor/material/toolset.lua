@@ -35,9 +35,9 @@ local shader_options = {
 		cs = "metal",
 	},
 	vulkan = {
-		vs = "spirv16-13",
-		fs = "spirv16-13",
-		cs = "spirv16-13",
+		vs = "spirv",
+		fs = "spirv",
+		cs = "spirv",
 	},
 }
 
