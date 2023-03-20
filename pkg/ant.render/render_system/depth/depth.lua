@@ -20,8 +20,15 @@ local pre_depth_skinning_material
 local pre_depth_heap_material
 
 local function which_material(skinning, heapmesh)
-	local res = heapmesh and pre_depth_heap_material or skinning and pre_depth_skinning_material or pre_depth_material
-    return res.object
+    if heapmesh then
+        return pre_depth_heap_material.object
+    end
+
+    if skinning then
+        return pre_depth_skinning_material.object
+    end
+
+    return pre_depth_material.object
 end
 
 function s:init()
@@ -46,7 +53,7 @@ end
 
 local material_cache = {__mode="k"}
 
-local function create_depth_only_material(mo, ro, fm)
+local function create_depth_only_material(mo, fm)
     local newstate = irender.check_set_state(mo, fm.main_queue:get_material())
     local new_mo = irender.create_material_from_template(mo, newstate, material_cache)
 
@@ -60,7 +67,7 @@ function s:update_filter()
             local ro = e.render_object
             local fm = e.filter_material
 
-            local mi = create_depth_only_material(mo, ro, fm)
+            local mi = create_depth_only_material(mo, fm)
 
             local h = mi:ptr()
             fm["pre_depth_queue"] = mi

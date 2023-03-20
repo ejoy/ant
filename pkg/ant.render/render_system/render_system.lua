@@ -183,16 +183,26 @@ local function check_set_depth_state_as_equal(state)
 	return bgfx.make_state(ss)
 end
 
+local material_cache = {__mode="k"}
+
 function s:update_filter()
 	if irender.use_pre_depth() then
+		--we should check 'filter_result' here and change the default material
+		--because render entity will change it's visible state after it created
+		--but not create this new material instance in entity_init stage
 		for e in w:select "filter_result main_queue_visible render_layer:in render_object:update filter_material:in" do
 			if e.render_layer == "opacity" then
 				local ro = e.render_object
 				local fm = e.filter_material
-				local m = fm.main_queue
-				ro.mat_def = m:ptr()
-				--Here, we no need to create new material object for this new state, because only main_queue render need this material object
-				m:get_material():set_state(check_set_depth_state_as_equal(m:get_state()))
+
+				local mo = fm.main_queue:get_material()
+
+				local state = check_set_depth_state_as_equal(mo:get_state())
+				local new_mo = irender.create_material_from_template(mo, state, material_cache)
+				local new_mi = new_mo:instance()
+				fm.main_queue = new_mi
+
+				ro.mat_def = new_mi:ptr()
 			end
 		end
 	end
