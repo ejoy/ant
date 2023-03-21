@@ -128,7 +128,7 @@ function iUiRt.get_group_id(name)
     return rt2g_table[name]
 end
 
-function iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, light_path, scale, rotation, translation)
+function iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, scale, rotation, translation)
     focused_rt_table[rt_name] = true
     local queue_name = rt_name .. "_queue"
     local gid = iUiRt.get_group_id(rt_name)
@@ -137,18 +137,6 @@ function iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, light_path, s
     g:enable "view_visible"
     g:enable "scene_update"
 
---[[     local light = g:create_instance(light_path)
-    light.on_ready = function (inst)
-        local alleid = inst.tag['*']
-        for _, eid in ipairs(alleid) do
-            local ee <close> = w:entity(eid, "visible_state?in")
-            if ee.visible_state then
-                ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
-                ivs.set_state(ee, queue_name, true)
-            end
-        end
-    end
-    world:create_object(light)   ]]
      if plane_path_type == "vaststars" then
         g:create_entity {
             policy = {

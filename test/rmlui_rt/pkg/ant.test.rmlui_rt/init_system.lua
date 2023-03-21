@@ -37,7 +37,7 @@ function init_sys:entity_init()
             local focus_path = "/pkg/ant.resources/glb/drone.glb|mesh.prefab"
             local plane_path_type = "ant" -- "vaststars"/"ant"
             local focus_entity_scale = {1, 1, 1}
-            iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, light_path, focus_entity_scale)
+            iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, focus_entity_scale)
         elseif key == "J" and press == 0 then
             iUiRt.close_ui_rt(rt_name)
         end
