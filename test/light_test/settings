@@ -8,6 +8,8 @@ _windows:
   graphic:
     api: d3d11
 graphic:
+  ibl:
+    irradiance_bandnum: 2
   ao:
     enable: true
     bent_normal : false
@@ -34,7 +36,7 @@ graphic:
     clear: CDS
   postprocess:
     bloom:
-      enable: false
+      enable: true
       inv_highlight: 0.1
       threshold: 2.3
     fxaa:

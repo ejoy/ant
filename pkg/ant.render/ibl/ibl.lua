@@ -276,7 +276,7 @@ local function read_Li()
     local elem_size<const> = 4
     local elem_bytes<const> = coeff_elemnum * elem_size
     for i=1, num_coeffs do
-        local offset = (i-1) * elem_bytes
+        local offset = (i-1) * elem_bytes+1
         local r, g, b = ('III'):unpack(m, offset)
         Li[#Li+1] = decode_Li(r, g, b)
     end

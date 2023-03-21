@@ -112,7 +112,7 @@ function bloom_sys:bloom()
     local bloom_handle = fbmgr.get_rb(ds_dis.bloom_texture_idx).handle
 
     local function output_image_size(ww, hh)
-        return math.floor(ww * 0.5 + 0.5), math.floor(hh * 0.5 + 0.5)
+        return math.floor(ww * 0.5), math.floor(hh * 0.5)
     end
 
     local ww, hh = vr.w, vr.h

@@ -97,21 +97,32 @@ function cs2cm_sys:entity_ready()
 end
 
 function cs2cm_sys:filter_ibl()
-    for e in w:select "filter_ibl render_object ibl:in skybox:in" do
+    for e in w:select "filter_ibl:update render_object ibl:in skybox:in" do
         local se_ibl = e.ibl
         local sb = e.skybox
-        local cm_rbhandle = sb.cm_rbidx and fbmgr.get_rb(sb.cm_rbidx).handle or load_res_tex(e).id
+        local cm_rbhandle
+        if sb.cm_rbidx then
+            cm_rbhandle = fbmgr.get_rb(sb.cm_rbidx).handle
+        else
+            local texid = load_res_tex(e).id
+            if not assetmgr.invalid_texture(texid) then
+                cm_rbhandle = texid
+            end
+        end
+        
+        if cm_rbhandle then
+            iibl.filter_all{
+                source 		= {value=cm_rbhandle, facesize=sb.facesize},
+                irradiance 	= se_ibl.irradiance,
+                irradianceSH= {bandnum=irradianceSH_bandnum},
+                prefilter 	= se_ibl.prefilter,
+                LUT			= se_ibl.LUT,
+                intensity	= se_ibl.intensity,
+            }
+            world:pub{"ibl_updated", e}
 
-        iibl.filter_all{
-			source 		= {value=cm_rbhandle, facesize=sb.facesize},
-			irradiance 	= se_ibl.irradiance,
-            irradianceSH= {bandnum=irradianceSH_bandnum},
-			prefilter 	= se_ibl.prefilter,
-			LUT			= se_ibl.LUT,
-			intensity	= se_ibl.intensity,
-		}
-		world:pub{"ibl_updated", e}
+            e.filter_ibl = false
+        end
     end
-    w:clear "filter_ibl"
 end
 
