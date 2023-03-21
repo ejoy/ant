@@ -36,7 +36,7 @@ local function gen_commands(commands, param, input, output)
 	if param.normalmap then
 		add_option(commands, "-n")
 	end
- 	if param.cubemap then
+ 	if param.equirect then
 		add_option(commands, "--equirect")
 	end 
 	param.colorspace = param.colorspace or "sRGB"
