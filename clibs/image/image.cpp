@@ -347,6 +347,65 @@ create_png_lib(lua_State *L){
     luaL_setfuncs(L, pnglib, 0);
 }
 
+enum class CubemapFace : uint8_t { PX, NX, PY, NY, PZ, NZ, Count};
+
+static int32_t
+to_ktx_file(bx::AllocatorI *allocator, bimg::ImageContainer *ic){
+    bx::MemoryBlock mb(allocator);
+    bx::MemoryWriter sw(&mb);
+    bx::Error err;
+    return bimg::imageWriteKtx(&sw, *ic, ic->m_data, (uint32_t)ic->m_size, &err);
+}
+
+static int
+lpack2cubemap(lua_State *L){
+    luaL_checktype(L, 1, LUA_TTABLE);
+    const lua_Unsigned n = lua_rawlen(L, 1);
+    if (n != 6){
+        luaL_error(L, "pack 6 image to cubemap texture need 6 image:%d", n);
+    }
+
+    bx::DefaultAllocator allocator;
+
+    bimg::ImageContainer* cubemap = nullptr;
+    for (int i=0; i<n; ++i){
+        lua_geti(L, 1, i+1);{
+            bx::Error err;
+            size_t srcsize = 0;
+            const char* src = lua_tolstring(L, -1, &srcsize);
+            auto face = bimg::imageParse(&allocator, src, (uint32_t)srcsize, bimg::TextureFormat::RGBA32F, &err);
+            if (!face){
+                luaL_error(L, "parse image failed:%d", i);
+            }
+
+            if (!cubemap){
+                cubemap = bimg::imageAlloc(&allocator, bimg::TextureFormat::RGBA32F, face->m_width, face->m_height, 1, 1, true, false);
+            }
+
+            bimg::ImageMip cm_mip;
+            bimg::imageGetRawData(*cubemap, i, 0, cubemap->m_data, cubemap->m_size, cm_mip);
+
+            const uint32_t pitch = cm_mip.m_width * cm_mip.m_bpp/8;
+            bimg::imageCopy((uint8_t*)cm_mip.m_data, cm_mip.m_height, pitch, cm_mip.m_depth, face->m_data, pitch);
+
+            bimg::imageFree(face);
+        }
+
+        lua_pop(L, 1);
+    }
+
+    bx::MemoryBlock mb(&allocator);
+    bx::MemoryWriter sw(&mb);
+    bx::Error err;
+    if (!bimg::imageWriteKtx(&sw, *cubemap, cubemap->m_data, (uint32_t)cubemap->m_size, &err)){
+        luaL_error(L, "Write to memory as ktx failed");
+    }
+
+    lua_pushlstring(L, (const char*)mb.more(), mb.getSize());
+    bimg::imageFree(cubemap);
+    return 1;
+}
+
 extern "C" int
 luaopen_image(lua_State* L) {
     luaL_Reg lib[] = {
@@ -355,6 +414,7 @@ luaopen_image(lua_State* L) {
         { "encode_image",       lencode_image},
         { "get_bits_pre_pixel", lget_bits_pre_pixel},
         { "get_format_name",    lget_format_name},
+        { "pack2cubemap",       lpack2cubemap},
         { nullptr,              nullptr },
     };
     luaL_newlib(L, lib);

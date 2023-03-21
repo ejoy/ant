@@ -1,0 +1,12 @@
+colorspace: sRGB
+normalmap: false
+path: ./result.ktx
+mipmap: 0
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+  W: CLAMP
+type: texture
