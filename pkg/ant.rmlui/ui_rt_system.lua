@@ -137,7 +137,7 @@ function iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, light_path, s
     g:enable "view_visible"
     g:enable "scene_update"
 
-    local light = g:create_instance(light_path)
+--[[     local light = g:create_instance(light_path)
     light.on_ready = function (inst)
         local alleid = inst.tag['*']
         for _, eid in ipairs(alleid) do
@@ -148,23 +148,8 @@ function iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, light_path, s
             end
         end
     end
-    world:create_object(light)  
-
---[[     local ground = g:create_instance(plane_path)
-    ground.on_ready = function (inst)
-        local alleid = inst.tag['*']
-        local re <close> = w:entity(alleid[1])
-        iom.set_scale(re, math3d.vector(100, 1, 100))
-        for _, eid in ipairs(alleid) do
-            local ee <close> = w:entity(eid, "visible_state?in name:in")
-            if ee.visible_state then
-                ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
-                ivs.set_state(ee, queue_name, true)
-            end
-        end
-    end
-    world:create_object(ground)   ]]
-    if plane_path_type == "vaststars" then
+    world:create_object(light)   ]]
+     if plane_path_type == "vaststars" then
         g:create_entity {
             policy = {
                 "ant.general|name",
@@ -202,7 +187,7 @@ function iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, light_path, s
                 end
             }
         } 
-    end
+    end 
 
     local focus_entity = g:create_instance(focus_path)
     focus_entity.on_ready = function (inst)
@@ -257,31 +242,7 @@ function iUiRt.adjust_camera(rt_name)
     end      
 end
 
-function iUiRt.open_rt_lighting(rt_name, light_path)
-    if iUiRt.get_group_id(rt_name) then
-        local queue_name = rt_name .. "_queue"
-        local gid = iUiRt.get_group_id(rt_name)
-        local g = ecs.group(gid)
-    
-        g:enable "view_visible"
-        g:enable "scene_update"
-    
-        local light = g:create_instance(light_path)
-        light.on_ready = function (inst)
-            local alleid = inst.tag['*']
-            for _, eid in ipairs(alleid) do
-                local ee <close> = w:entity(eid, "visible_state?in")
-                if ee.visible_state then
-                    ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
-                    ivs.set_state(ee, queue_name, true)
-                end
-            end
-        end
-        world:create_object(light)  
-    end      
-end 
-
-function iUiRt.close_rt_lighting(rt_name)
+function iUiRt.close_ui_rt(rt_name)
     if iUiRt.get_group_id(rt_name) then
         local gid = iUiRt.get_group_id(rt_name)
         local g = ecs.group(gid)
@@ -289,24 +250,12 @@ function iUiRt.close_rt_lighting(rt_name)
         local select_tag = enable_tag .. " name?in"
         g:enable(enable_tag)
         for ee in w:select(select_tag) do
-            if not ee then
-                goto continue
-            end
-            if ee.name and ee.name == "skybox_rt" then
-                w:remove(ee)
-                goto continue
-            end
-            ::continue::
+            w:remove(ee)
         end
         g:disable(enable_tag)
-        for ee in w:select "light:in name?in visible?update" do
-            if ee.name == "directional_light_rt" then
-                ee.visible = false
-            end
-        end
     end      
 end 
-
+local kb_mb = world:sub{"keyboard"}
 function ui_rt_sys:data_changed()
     for gid, name in pairs(g2rt_table) do
         local g = ecs.group(gid)
@@ -325,3 +274,4 @@ function ui_rt_sys:data_changed()
         iUiRt.adjust_camera(rt_name)
     end
 end
+

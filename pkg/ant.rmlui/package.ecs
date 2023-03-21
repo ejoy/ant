@@ -35,8 +35,7 @@ interface "iuirt"
     .method "get_group_id"
     .method "adjust_camera"
     .method "create_new_rt"
-    .method "open_rt_lighting"
-    .method "close_rt_lighting"
+    .method "close_ui_rt"
 
 
 
