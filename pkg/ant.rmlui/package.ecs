@@ -29,12 +29,14 @@ system "ui_rt_system"
     .require_system "ant.render|render_system"
     .implement "ui_rt_system.lua"
     .method "data_changed"
-    --.method "update_camera"
 
 interface "iuirt"
     .implement "ui_rt_system.lua"
     .method "get_group_id"
-    .method "calc_camera_t"
+    .method "adjust_camera"
+    .method "create_new_rt"
+    .method "open_rt_lighting"
+    .method "close_rt_lighting"
 
 
 

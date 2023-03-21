@@ -9,11 +9,14 @@ local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 local fbmgr     = renderpkg.fbmgr
 local sampler   = renderpkg.sampler
-
+local mc 		= import_package "ant.math".constant
+local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
+local iUiRt = ecs.interface "iuirt"
 local ui_rt_group_id = 110000
 
 local rt2g_table = {}
 local g2rt_table = {}
+local focused_rt_table = {}
 
 local rb_flags = sampler{
     MIN="POINT",
@@ -24,45 +27,19 @@ local rb_flags = sampler{
 }
 
 local function gen_group_id(name)
-    local queuename = name.."_queue"
-    local gid = ui_rt_group_id + 1
-    ui_rt_group_id = gid
-    rt2g_table[name] = gid
-    g2rt_table[gid]  = name
-    w:register{ name = name.."_obj"}
-    w:register{ name = queuename}
-    w:register{ name = queuename.."_cull"}
-    w:register{ name = queuename.."_visible"}
-end
-
-
-function ui_rt_sys:data_changed()
-    for gid, name in pairs(g2rt_table) do
-        local g = ecs.group(gid)
-        local obj = name.."_obj"
-        local queue_visible = name.."_queue_visible"
-        g:enable(obj)
-        local s_select = ("%s%s%s"):format(obj, " render_object", " visible_state?in")
-        local s_visible = ("%s%s"):format(queue_visible, "?out")
-        for e in w:select(s_select) do
-            w:extend(e, s_visible)
-            e[queue_visible] = true
-        end        
+    if not rt2g_table[name] then
+        local queuename = name.."_queue"
+        local gid = ui_rt_group_id + 1
+        ui_rt_group_id = gid
+        rt2g_table[name] = gid
+        g2rt_table[gid]  = name
+        w:register{ name = name.."_obj"}
+        w:register{ name = queuename}
+        w:register{ name = queuename.."_cull"}
+        w:register{ name = queuename.."_visible"} 
     end
 end
 
---[[ function ui_rt_sys:update_camera_depend()
-    for _, name in pairs(g2rt_table) do
-        local s_select = ("%s%s"):format(name, "_queue camera_ref:in")
-        for qe in w:select(s_select) do
-            local ce = world:entity(qe.camera_ref, "camera:in")
-            local camera = ce.camera
-            camera.viewmat.m = math3d.inverse(ce.scene.worldmat)
-            camera.projmat.m = math3d.projmat(camera.frustum, true)
-            camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
-        end        
-    end
-end ]]
 
 local S = ltask.dispatch()
 
@@ -93,7 +70,7 @@ function S.render_target_create(width, height, name)
                 data = {
                     scene = {
                         r = {1, 0, 0},
-                        t = {0, 5, -5, 0},
+                        t = {0, 8, -5, 0},
                         updir = {0.0, 1.0, 0.0}
                 },
                   camera = {
@@ -135,15 +112,7 @@ function S.render_target_create(width, height, name)
     return id
 end
 
-local iUiRt = ecs.interface "iuirt"
-
-function iUiRt.get_group_id(name)
-    return rt2g_table[name]
-end
-
-local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
-
-function iUiRt.calc_camera_t(queuename, aabb)
+local function calc_camera_t(queuename, aabb)
     local select_condition = queuename .. " camera_ref:in"
     local rtq = w:first(select_condition)
     if rtq then
@@ -152,6 +121,207 @@ function iUiRt.calc_camera_t(queuename, aabb)
         local triple_offset = 3 * math3d.length(math3d.sub(aabb_max, aabb_min))
         local unit_dir = math3d.normalize(rt_camera.scene.t)
        iom.set_position(rt_camera, math3d.mul(unit_dir, triple_offset)) 
-       --iom.set_position(rt_camera, math3d.vector({0, 5, -5, 0})) 
+    end
+end
+
+function iUiRt.get_group_id(name)
+    return rt2g_table[name]
+end
+
+function iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, light_path, scale, rotation, translation)
+    focused_rt_table[rt_name] = true
+    local queue_name = rt_name .. "_queue"
+    local gid = iUiRt.get_group_id(rt_name)
+    local g = ecs.group(gid)
+
+    g:enable "view_visible"
+    g:enable "scene_update"
+
+    local light = g:create_instance(light_path)
+    light.on_ready = function (inst)
+        local alleid = inst.tag['*']
+        for _, eid in ipairs(alleid) do
+            local ee <close> = w:entity(eid, "visible_state?in")
+            if ee.visible_state then
+                ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
+                ivs.set_state(ee, queue_name, true)
+            end
+        end
+    end
+    world:create_object(light)  
+
+--[[     local ground = g:create_instance(plane_path)
+    ground.on_ready = function (inst)
+        local alleid = inst.tag['*']
+        local re <close> = w:entity(alleid[1])
+        iom.set_scale(re, math3d.vector(100, 1, 100))
+        for _, eid in ipairs(alleid) do
+            local ee <close> = w:entity(eid, "visible_state?in name:in")
+            if ee.visible_state then
+                ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
+                ivs.set_state(ee, queue_name, true)
+            end
+        end
+    end
+    world:create_object(ground)   ]]
+    if plane_path_type == "vaststars" then
+        g:create_entity {
+            policy = {
+                "ant.general|name",
+                "ant.render|render",
+            },
+            data = {
+                mesh = "/pkg/vaststars.resources/glb/plane_rt.glb|meshes/Plane_P1.meshbin",
+                material = "/pkg/vaststars.resources/materials/plane_rt.material",
+                visible_state= "main_view",
+                scene = {},
+                name = "Plane",
+                on_ready = function (e)
+                    ivs.set_state(e, "main_view|selectable|cast_shadow", false)
+                    ivs.set_state(e, queue_name, true)
+                    iom.set_scale(e, math3d.vector(100, 1, 100))
+                end
+            }
+        }
+    elseif plane_path_type == "ant" then
+        g:create_entity {
+            policy = {
+                "ant.general|name",
+                "ant.render|render",
+            },
+            data = {
+                mesh = "/pkg/ant.resources/glb/plane_rt.glb|meshes/Plane_P1.meshbin",
+                material = "/pkg/ant.resources/materials/plane_rt.material",
+                visible_state= "main_view",
+                scene = {},
+                name = "Plane",
+                on_ready = function (e)
+                    ivs.set_state(e, "main_view|selectable|cast_shadow", false)
+                    ivs.set_state(e, queue_name, true)
+                    iom.set_scale(e, math3d.vector(100, 1, 100))
+                end
+            }
+        } 
+    end
+
+    local focus_entity = g:create_instance(focus_path)
+    focus_entity.on_ready = function (inst)
+        local alleid = inst.tag['*']
+        local re <close> = w:entity(alleid[1])
+        if scale then
+            iom.set_scale(re, math3d.vector(scale))
+        end
+        if rotation then
+            iom.set_direction(re, math3d.vector(rotation))
+        end
+        if translation then
+            iom.set_position(re, math3d.vector(translation))
+        end
+
+        for _, eid in ipairs(alleid) do
+            local ee <close> = w:entity(eid, "visible_state?in")
+            if ee.visible_state then
+                ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
+                ivs.set_state(ee, queue_name, true)
+            end
+        end 
+    end       
+    world:create_object(focus_entity)        
+end
+
+function iUiRt.adjust_camera(rt_name)
+    if iUiRt.get_group_id(rt_name) then
+        local gid = iUiRt.get_group_id(rt_name)
+        local g = ecs.group(gid)
+        local queue_name = rt_name .. "_queue"
+        --local enable_tag = "main_queue_visible"
+        local enable_tag = rt_name .. "_queue_visible"
+        local select_tag = enable_tag .. " bounding:in scene:in eid:in name?in visible_state?update"
+        g:enable(enable_tag)
+        for ee in w:select(select_tag) do
+            if not ee then
+                goto continue
+            end
+            if ee.name and ee.name == "Plane" or ee.name == "skybox_rt" then
+                goto continue
+            end 
+            if ee.bounding.scene_aabb and ee.bounding.scene_aabb ~= mc.NULL and ee.name then
+                local aabb = ee.bounding.scene_aabb
+                if aabb ~= mc.NULL then
+                    calc_camera_t(queue_name, aabb) 
+                end              
+            end
+            ::continue::
+        end
+        g:disable(enable_tag)
+    end      
+end
+
+function iUiRt.open_rt_lighting(rt_name, light_path)
+    if iUiRt.get_group_id(rt_name) then
+        local queue_name = rt_name .. "_queue"
+        local gid = iUiRt.get_group_id(rt_name)
+        local g = ecs.group(gid)
+    
+        g:enable "view_visible"
+        g:enable "scene_update"
+    
+        local light = g:create_instance(light_path)
+        light.on_ready = function (inst)
+            local alleid = inst.tag['*']
+            for _, eid in ipairs(alleid) do
+                local ee <close> = w:entity(eid, "visible_state?in")
+                if ee.visible_state then
+                    ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
+                    ivs.set_state(ee, queue_name, true)
+                end
+            end
+        end
+        world:create_object(light)  
+    end      
+end 
+
+function iUiRt.close_rt_lighting(rt_name)
+    if iUiRt.get_group_id(rt_name) then
+        local gid = iUiRt.get_group_id(rt_name)
+        local g = ecs.group(gid)
+        local enable_tag = rt_name .. "_queue_visible"
+        local select_tag = enable_tag .. " name?in"
+        g:enable(enable_tag)
+        for ee in w:select(select_tag) do
+            if not ee then
+                goto continue
+            end
+            if ee.name and ee.name == "skybox_rt" then
+                w:remove(ee)
+                goto continue
+            end
+            ::continue::
+        end
+        g:disable(enable_tag)
+        for ee in w:select "light:in name?in visible?update" do
+            if ee.name == "directional_light_rt" then
+                ee.visible = false
+            end
+        end
+    end      
+end 
+
+function ui_rt_sys:data_changed()
+    for gid, name in pairs(g2rt_table) do
+        local g = ecs.group(gid)
+        local obj = name.."_obj"
+        local queue_visible = name.."_queue_visible"
+        g:enable(obj)
+        local s_select = ("%s%s%s"):format(obj, " render_object", " visible_state?in")
+        local s_visible = ("%s%s"):format(queue_visible, "?out")
+        for e in w:select(s_select) do
+            w:extend(e, s_visible)
+            e[queue_visible] = true
+        end        
+    end
+
+    for rt_name, _ in pairs(focused_rt_table) do
+        iUiRt.adjust_camera(rt_name)
     end
 end

@@ -1,0 +1,22 @@
+---
+policy:
+    ant.sky|skybox
+    ant.render|simplerender
+    ant.general|name
+data:
+    name: skybox_rt
+    visible_state: main_view
+    scene: {}
+    ibl:
+        intensity: 65000
+        irradiance:
+            size: 32
+        prefilter:
+            size: 128
+        LUT:
+            size: 256
+    material:/pkg/ant.resources/materials/sky/skybox.material
+    render_layer: "background"
+    simplemesh: false
+    skybox:
+        facesize: 512
