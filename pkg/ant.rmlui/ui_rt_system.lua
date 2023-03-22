@@ -133,11 +133,12 @@ function iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, scale, rotati
     local queue_name = rt_name .. "_queue"
     local gid = iUiRt.get_group_id(rt_name)
     local g = ecs.group(gid)
-
+    local enable_tag = rt_name .. "_obj"
     g:enable "view_visible"
     g:enable "scene_update"
-
-     if plane_path_type == "vaststars" then
+    g:enable(enable_tag)
+    
+    if plane_path_type == "vaststars" then
         g:create_entity {
             policy = {
                 "ant.general|name",
@@ -176,6 +177,8 @@ function iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, scale, rotati
             }
         } 
     end 
+
+
 
     local focus_entity = g:create_instance(focus_path)
     focus_entity.on_ready = function (inst)
@@ -234,11 +237,12 @@ function iUiRt.close_ui_rt(rt_name)
     if iUiRt.get_group_id(rt_name) then
         local gid = iUiRt.get_group_id(rt_name)
         local g = ecs.group(gid)
-        local enable_tag = rt_name .. "_queue_visible"
-        local select_tag = enable_tag .. " name?in"
+        local enable_tag = rt_name .. "_obj"
+        local select_tag = enable_tag
         g:enable(enable_tag)
         for ee in w:select(select_tag) do
             w:remove(ee)
+            --ee.rt_remove = true
         end
         g:disable(enable_tag)
     end      
@@ -263,3 +267,21 @@ function ui_rt_sys:data_changed()
     end
 end
 
+function ui_rt_sys:end_frame()
+--[[ 
+    for rt_name, _ in pairs(focused_rt_table) do
+        if iUiRt.get_group_id(rt_name) then
+            local gid = iUiRt.get_group_id(rt_name)
+            local g = ecs.group(gid)
+            local enable_tag = rt_name .. "_queue_visible"
+            local select_tag = enable_tag .. " name?in rt_remove?in"
+            g:enable(enable_tag)
+            for ee in w:select(select_tag) do
+                if ee.rt_remove then
+                    w:remove(ee)
+                end
+            end
+            g:disable(enable_tag)
+        end         
+    end ]]
+end

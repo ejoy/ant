@@ -29,6 +29,7 @@ system "ui_rt_system"
     .require_system "ant.render|render_system"
     .implement "ui_rt_system.lua"
     .method "data_changed"
+    .method "end_frame"
 
 interface "iuirt"
     .implement "ui_rt_system.lua"
@@ -37,5 +38,5 @@ interface "iuirt"
     .method "create_new_rt"
     .method "close_ui_rt"
 
-
+component "rt_remove"
 

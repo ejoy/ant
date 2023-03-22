@@ -34,9 +34,9 @@ function init_sys:entity_init()
         local rt_name = "rt1"
 
         if key == "T" and press == 0 then
-            local focus_path = "/pkg/ant.resources/glb/drone.glb|mesh.prefab"
+            local focus_path = "/pkg/ant.resources/glb/mars-assembling-machine.glb|mesh.prefab"
             local plane_path_type = "ant" -- "vaststars"/"ant"
-            local focus_entity_scale = {1, 1, 1}
+            local focus_entity_scale = {0.1, 0.1, 0.1}
             iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, focus_entity_scale)
         elseif key == "J" and press == 0 then
             iUiRt.close_ui_rt(rt_name)
