@@ -36,7 +36,8 @@ public:
 	void OnCreateElement(Rml::Document* document, Rml::Element* element, const std::string& tag) override;
 	void OnDestroyNode(Rml::Document* document, Rml::Node* node) override;
 	std::string OnRealPath(const std::string& path) override;
-	void OnLoadTexture(Rml::Document* document, Rml::Element* element, const std::string& path, Rml::Rect rect, bool isRT) override;
+	void OnLoadTexture(Rml::Document* document, Rml::Element* element, const std::string& path) override;
+	void OnLoadTexture(Rml::Document* document, Rml::Element* element, const std::string& path, Rml::Size size) override;
 	void OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& layoutMap,std::string& ctext,Rml::group& default_group) override;
 
 	void register_event(lua_State* L);

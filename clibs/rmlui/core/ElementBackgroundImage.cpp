@@ -15,17 +15,6 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		// "none"
 		return false;
 	}
-	std::string path = image->Get<std::string>();
-	bool isRT = false;
-	if (regex_match(path, std::regex("\<.*\>"))) {
-		isRT = true;
-		path = regex_replace(path, std::regex("[<>]"), std::string(""));
-	}
-	auto const& texture = Texture::Fetch(element, path, isRT);
-	if (!texture) {
-		return false;
-	}
-
 	const auto& bounds = element->GetBounds();
 	const auto& border = element->GetBorder();
 	const auto& padding = element->GetPadding();
@@ -66,6 +55,17 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	color.ApplyOpacity(element->GetOpacity());
 	if (!color.IsVisible())
 		return false;
+
+	std::string path = image->Get<std::string>();
+	bool isRT = false;
+	if (regex_match(path, std::regex("\<.*\>"))) {
+		isRT = true;
+		path = regex_replace(path, std::regex("[<>]"), std::string(""));
+	}
+	auto const& texture = isRT? Texture::Fetch(element, path, surface.size): Texture::Fetch(element, path);
+	if (!texture) {
+		return false;
+	}
 
 	if (texSize.IsEmpty()) {
 		texSize = texture.dimensions;

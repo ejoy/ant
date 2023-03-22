@@ -106,14 +106,26 @@ std::string lua_plugin::OnRealPath(const std::string& path) {
     return res;
 }
 
-void lua_plugin::OnLoadTexture(Rml::Document* document, Rml::Element* element, const std::string& path, Rml::Rect rect, bool isRT) {
+void lua_plugin::OnLoadTexture(Rml::Document* document, Rml::Element* element, const std::string& path) {
     luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
 		lua_pushlightuserdata(L, (void*)element);
         lua_pushlstring(L, path.data(), path.size());
-		lua_pushnumber(L, rect.width());
-		lua_pushnumber(L, rect.height());
-		lua_pushboolean(L, isRT);
+		lua_pushnumber(L, 0);
+		lua_pushnumber(L, 0);
+		lua_pushboolean(L, false);
+        call(L, LuaEvent::OnLoadTexture, 6, 0);
+    });
+}
+
+void lua_plugin::OnLoadTexture(Rml::Document* document, Rml::Element* element, const std::string& path, Rml::Size size) {
+    luabind::invoke([&](lua_State* L) {
+		lua_pushlightuserdata(L, (void*)document);
+		lua_pushlightuserdata(L, (void*)element);
+        lua_pushlstring(L, path.data(), path.size());
+		lua_pushnumber(L, size.w);
+		lua_pushnumber(L, size.h);
+		lua_pushboolean(L, true);
         call(L, LuaEvent::OnLoadTexture, 6, 0);
     });
 }

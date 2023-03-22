@@ -15,12 +15,24 @@ void Shutdown() {
 
 static TextureData InvalidTexture;
 
-const TextureData& Fetch(Element* e, const std::string& path, bool isRT) {
+const TextureData& Fetch(Element* e, const std::string& path) {
 	auto iterator = textures.find(path);
 	if (iterator != textures.end()) {
 		return iterator->second;
 	}
-	Rml::GetPlugin()->OnLoadTexture(e->GetOwnerDocument(), e, path, e->GetContentRect(), isRT );
+	Rml::GetPlugin()->OnLoadTexture(e->GetOwnerDocument(), e, path);
+	return InvalidTexture;
+}
+
+const TextureData& Fetch(Element* e, const std::string& path, Size size) {
+	auto iterator = textures.find(path);
+	if (iterator != textures.end()) {
+		if (iterator->second.dimensions != size) {
+			Rml::GetPlugin()->OnLoadTexture(e->GetOwnerDocument(), e, path, size);
+		}
+		return iterator->second;
+	}
+	Rml::GetPlugin()->OnLoadTexture(e->GetOwnerDocument(), e, path, size);
 	return InvalidTexture;
 }
 

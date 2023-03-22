@@ -79,7 +79,8 @@ public:
 	virtual void OnCreateElement(Document* document, Element* element, const std::string& tag) = 0;
 	virtual void OnDestroyNode(Document* document, Node* node) = 0;
 	virtual std::string OnRealPath(const std::string& path) = 0;
-	virtual void OnLoadTexture(Document* document, Element* element, const std::string& path, Rect rect, bool isRT) = 0;
+	virtual void OnLoadTexture(Document* document, Element* element, const std::string& path) = 0;
+	virtual void OnLoadTexture(Document* document, Element* element, const std::string& path, Size size) = 0;
 	virtual void OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& groupmap,std::string& ctext,Rml::group& default_group)=0;
 };
 
