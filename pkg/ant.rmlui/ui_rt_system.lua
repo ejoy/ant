@@ -266,22 +266,3 @@ function ui_rt_sys:data_changed()
         iUiRt.adjust_camera(rt_name)
     end
 end
-
-function ui_rt_sys:end_frame()
---[[ 
-    for rt_name, _ in pairs(focused_rt_table) do
-        if iUiRt.get_group_id(rt_name) then
-            local gid = iUiRt.get_group_id(rt_name)
-            local g = ecs.group(gid)
-            local enable_tag = rt_name .. "_queue_visible"
-            local select_tag = enable_tag .. " name?in rt_remove?in"
-            g:enable(enable_tag)
-            for ee in w:select(select_tag) do
-                if ee.rt_remove then
-                    w:remove(ee)
-                end
-            end
-            g:disable(enable_tag)
-        end         
-    end ]]
-end

@@ -151,7 +151,8 @@ function skinning_sys:entity_remove()
 		for e in w:select "REMOVED skininfo:in" do
 			local skininfo = e.skininfo
 			bgfx.destroy(skininfo.skinning_matrices_vb)
-			bgfx.destroy(skininfo.skinning_in_dynamic_vb)
+			--skinning_in_dynamic_vb shoule be released by mesh manager
+			--bgfx.destroy(skininfo.skinning_in_dynamic_vb) 
 			bgfx.destroy(skininfo.skinning_out_dynamic_vb)
 		end
 	end
