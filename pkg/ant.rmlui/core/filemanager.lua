@@ -7,6 +7,8 @@ local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
 
 local m = {}
 
+local rt_table = {}
+
 local prefixPath = fs.path "/"
 
 local function fullpath(path)
@@ -44,17 +46,32 @@ function m.loadTexture(doc, e, path, width, height, isRT)
     end
     pendQueue[path] = {element}
     if isRT then
-          ltask.fork(function ()
-            local id = ltask.call(ServiceWorld, "render_target_create", width, height, path)
-            readyQueue[#readyQueue+1] = {
-                path = path,
-                elements = pendQueue[path],
-                id = id,
-                width = width,
-                height = height,
-            }
-            pendQueue[path] = nil
-        end)  
+        if not rt_table[path] then
+            rt_table[path] = true
+            ltask.fork(function ()
+                local id = ltask.call(ServiceWorld, "render_target_create", width, height, path)
+                readyQueue[#readyQueue+1] = {
+                    path = path,
+                    elements = pendQueue[path],
+                    id = id,
+                    width = width,
+                    height = height,
+                }
+                pendQueue[path] = nil
+            end) 
+        else
+            ltask.fork(function ()
+                local id = ltask.call(ServiceWorld, "render_target_adjust", width, height, path)
+                readyQueue[#readyQueue+1] = {
+                    path = path,
+                    elements = pendQueue[path],
+                    id = id,
+                    width = width,
+                    height = height,
+                }
+                pendQueue[path] = nil
+            end) 
+        end 
     else
         ltask.fork(function ()
             local info = ltask.call(ServiceResource, "texture_create", realpath)

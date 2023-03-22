@@ -12,8 +12,10 @@ local sampler   = renderpkg.sampler
 local mc 		= import_package "ant.math".constant
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local iUiRt = ecs.interface "iuirt"
+local icamera	= ecs.import.interface "ant.camera|icamera"
+local irq		= ecs.import.interface "ant.render|irenderqueue"
 local ui_rt_group_id = 110000
-
+local fb_cache, rb_cache = {}, {}
 local rt2g_table = {}
 local g2rt_table = {}
 local focused_rt_table = {}
@@ -44,6 +46,32 @@ end
 local S = ltask.dispatch()
 
 --local lastname = "blit_shadowmap"
+local function resize_framebuffer(w, h, fbidx)
+	if fbidx == nil or fb_cache[fbidx] then
+		return 
+	end
+
+	local fb = fbmgr.get(fbidx)
+
+
+	local changed = false
+	local rbs = {}
+	for _, attachment in ipairs(fb)do
+		local rbidx = attachment.rbidx
+		rbs[#rbs+1] = attachment
+		local c = rb_cache[rbidx]
+		if c == nil then
+			changed = fbmgr.resize_rb(rbidx, w, h) or changed
+			rb_cache[rbidx] = changed
+		else
+			changed = true
+		end
+	end
+	
+	if changed then
+		fbmgr.recreate(fbidx, fb)
+	end
+end
 
 function S.render_target_create(width, height, name)
     local viewid = viewidmgr.generate(name)
@@ -58,7 +86,7 @@ function S.render_target_create(width, height, name)
     ecs.create_entity {
 		policy = {
 			"ant.render|render_queue",
-			"ant.render|watch_screen_buffer",
+			--"ant.render|watch_screen_buffer",
 			"ant.general|name",
 		},
 		data = {
@@ -105,11 +133,33 @@ function S.render_target_create(width, height, name)
 			name 				= queuename,
 			queue_name			= queuename,
             visible = true,
-			watch_screen_buffer	= true,
+			--watch_screen_buffer	= true,
 		}
 	}
     lastname = name
     return id
+end
+
+function S.render_target_adjust(width, height, name)
+    local queuename = name .. "_queue"
+    local select_tag = queuename .. " render_target:in camera_ref:in queue_name:in"
+    local qe = w:first(select_tag)
+    local rt = qe.render_target
+    local vr = rt.view_rect
+    vr.w, vr.h = width, height
+    
+    if qe.camera_ref then
+		local camera <close> = w:entity(qe.camera_ref)
+		icamera.set_frustum_aspect(camera, vr.w/vr.h)
+	end
+
+    local fbidx = fbmgr.create(
+        {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA8", flags = rb_flags}},
+        {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "D16", flags = rb_flags}} 
+    )
+    rt.fb_idx = fbidx
+    resize_framebuffer(width, height, fbidx)
+    irq.update_rendertarget(qe.queue_name, rt) 
 end
 
 local function calc_camera_t(queuename, aabb)
@@ -121,7 +171,7 @@ local function calc_camera_t(queuename, aabb)
         local triple_offset = 3 * math3d.length(math3d.sub(aabb_max, aabb_min))
         local unit_dir = math3d.normalize(rt_camera.scene.t)
        iom.set_position(rt_camera, math3d.mul(unit_dir, triple_offset)) 
-    end
+    end 
 end
 
 function iUiRt.get_group_id(name)
