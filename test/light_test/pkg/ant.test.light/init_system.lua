@@ -92,6 +92,8 @@ function S.init()
     --ecs.create_instance "/pkg/ant.test.light/assets/skybox.prefab"
 end
 
+local peids
+
 function S.init_world()
     local mq = w:first("main_queue camera_ref:in")
     local camera_ref<close> = w:entity(mq.camera_ref)
@@ -108,7 +110,8 @@ function S.init_world()
     --     iom.set_scale(le, 0.1)
     -- end)
 
-        create_instance("/pkg/ant.test.light/assets/shelf-input.glb|mesh.prefab", function (e)
+    create_instance("/pkg/ant.test.light/assets/assembling-1.glb|mesh.prefab", function (e)
+        peids = e.tag['*']
         local leid = e.tag['*'][1]
         local le<close> = w:entity(leid, "scene:update")
         iom.set_scale(le, 0.1)
@@ -150,6 +153,19 @@ function S.init_world()
     --create_simple_triangles()
     -- iom.set_position(camera_ref, math3d.vector(0, 2, -5))
     -- iom.set_direction(camera_ref, math3d.vector(0.0, 0.0, 1.0))
+end
+
+local kb_mb = world:sub{"keyboard"}
+
+function S:data_changed()
+    for _, code, press, state in kb_mb:unpack() do
+        if code == "T" and press == 0 then
+            for _, eid in ipairs(peids) do
+                local e<close> = w:entity(eid)
+                w:remove(e)
+            end
+        end
+    end
 end
 
 function S:camera_usage()
