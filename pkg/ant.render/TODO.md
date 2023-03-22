@@ -10,6 +10,8 @@
 
 ##### 未完成
 1. 修复shader下的cubemap resource，绑定为texture2d array的问题。具体重现的方法是，在iOS开发环境下，打开对应的shader validation等相关的debug选项就会有相应的报错；
+2. 修复Vulkan下，使用spirv16-13方式编译着色器后，打开bgfx的debuglog，会在renderer_vk中的debugReportCb函数里面报错。目前使用spirv编译vulkan的着色器；
+3. 目前高光在features的例子里面会爆掉，高光会变成纯白色；
 
 #### 编辑器相关
 1. 优化材质编辑器

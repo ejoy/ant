@@ -1,7 +1,6 @@
 colorspace: linear
 normalmap: false
-equirect: true
-path: /pkg/ant.test.light/assets/materials/aerodynamics_workshop_2k.hdr
+path: ./result.ktx
 mipmap: 0
 sampler:
   MAG: LINEAR
