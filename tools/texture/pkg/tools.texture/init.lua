@@ -20,7 +20,10 @@ for idx, f in ipairs(facefiles) do
 end
 
 do
-    local cubemap_content = image.pack2cubemap(faces_content)
-    local f<close> = lfs.open(fs.path "/pkg/tools.texture/assets":localpath() /"result.ktx", "wb")
+    local ext = "HDR"
+    local cubemap_content = image.pack2cubemap(faces_content, true, ext)
+
+    local filename = "result." .. ext
+    local f<close> = lfs.open(fs.path "/pkg/tools.texture/assets":localpath() /filename, "wb")
     f:write(cubemap_content)
 end

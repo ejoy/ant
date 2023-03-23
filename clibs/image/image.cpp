@@ -349,12 +349,69 @@ create_png_lib(lua_State *L){
 
 enum class CubemapFace : uint8_t { PX, NX, PY, NY, PZ, NZ, Count};
 
-static int32_t
-to_ktx_file(bx::AllocatorI *allocator, bimg::ImageContainer *ic){
-    bx::MemoryBlock mb(allocator);
-    bx::MemoryWriter sw(&mb);
-    bx::Error err;
-    return bimg::imageWriteKtx(&sw, *ic, ic->m_data, (uint32_t)ic->m_size, &err);
+static void
+fill_cubemap_face(bimg::ImageContainer* &ic, const bimg::ImageContainer *face, CubemapFace cf, bx::DefaultAllocator &allocator){
+    if (!ic){
+        ic = bimg::imageAlloc(&allocator, bimg::TextureFormat::RGBA32F, face->m_width, face->m_height, 1, 1, true, false);
+    }
+
+    bimg::ImageMip cm_mip;
+    bimg::imageGetRawData(*ic, (uint8_t)cf, 0, ic->m_data, ic->m_size, cm_mip);
+
+    const uint32_t pitch = cm_mip.m_width * cm_mip.m_bpp/8;
+    bimg::imageCopy((uint8_t*)cm_mip.m_data, cm_mip.m_height, pitch, cm_mip.m_depth, face->m_data, pitch);
+}
+
+static void
+fill_cross_cubemap_face(bimg::ImageContainer* &ic, const bimg::ImageContainer *face, CubemapFace cf, bx::DefaultAllocator &allocator){
+    if (!ic){
+        assert(face->m_width == face->m_height);
+        const uint32_t w = face->m_width * 4;
+        const uint32_t h = face->m_height * 3;
+        ic = bimg::imageAlloc(&allocator, bimg::TextureFormat::RGBA32F, w, h, 1, 1, false, false);
+    }
+
+//    --> U    _____
+//   |        |     |
+//   v        | +Y  |
+//   V   _____|_____|_____ _____
+//      |     |     |     |     |
+//      | -X  | +Z  | +X  | -Z  |
+//      |_____|_____|_____|_____|
+//            |     |
+//            | -Y  |
+//            |_____|
+//
+
+    const uint32_t bytes_pp = getBitsPerPixel(ic->m_format)/8;
+    uint32_t srcpitch = face->m_width * bytes_pp;
+    uint32_t dstpitch = face->m_width * 4 * bytes_pp;
+    uint8_t* srcdata = nullptr;
+    const uint32_t facerow_offset = face->m_height * dstpitch;
+    switch (cf){
+        case CubemapFace::PX:{
+            srcdata = (uint8_t*)ic->m_data + facerow_offset + srcpitch * 2;
+        } break;
+        case CubemapFace::NX:{
+            srcdata = (uint8_t*)ic->m_data + facerow_offset;
+        } break;
+        case CubemapFace::PY:{
+            srcdata = (uint8_t*)ic->m_data + srcpitch;
+        } break;
+        case CubemapFace::NY:{
+            srcdata = (uint8_t*)ic->m_data + facerow_offset * 2 + srcpitch;
+        } break;
+        case CubemapFace::PZ:{
+            srcdata = (uint8_t*)ic->m_data + facerow_offset + srcpitch;
+        } break;
+        case CubemapFace::NZ:{
+            srcdata = (uint8_t*)ic->m_data + facerow_offset + srcpitch * 3;
+        } break;
+        default:
+        assert(false);
+    }
+
+    bimg::imageCopy(srcdata, face->m_height, srcpitch, 1, face->m_data, dstpitch);
 }
 
 static int
@@ -365,9 +422,16 @@ lpack2cubemap(lua_State *L){
         luaL_error(L, "pack 6 image to cubemap texture need 6 image:%d", n);
     }
 
+    const bool iscross = lua_toboolean(L, 2);
+    const char* outfile_fmt = lua_isnoneornil(L, 3) ? nullptr : lua_tostring(L, 3);
+
+    if (iscross && !outfile_fmt){
+        return luaL_error(L, "cross cubemap texture must specify output file format as png/hdr/exr");
+    }
+
     bx::DefaultAllocator allocator;
 
-    bimg::ImageContainer* cubemap = nullptr;
+    bimg::ImageContainer* ic = nullptr;
     for (int i=0; i<n; ++i){
         lua_geti(L, 1, i+1);{
             bx::Error err;
@@ -378,15 +442,11 @@ lpack2cubemap(lua_State *L){
                 luaL_error(L, "parse image failed:%d", i);
             }
 
-            if (!cubemap){
-                cubemap = bimg::imageAlloc(&allocator, bimg::TextureFormat::RGBA32F, face->m_width, face->m_height, 1, 1, true, false);
+            if (iscross){
+                fill_cross_cubemap_face(ic, face, CubemapFace(i), allocator);
+            } else {
+                fill_cubemap_face(ic, face, CubemapFace(i), allocator);
             }
-
-            bimg::ImageMip cm_mip;
-            bimg::imageGetRawData(*cubemap, i, 0, cubemap->m_data, cubemap->m_size, cm_mip);
-
-            const uint32_t pitch = cm_mip.m_width * cm_mip.m_bpp/8;
-            bimg::imageCopy((uint8_t*)cm_mip.m_data, cm_mip.m_height, pitch, cm_mip.m_depth, face->m_data, pitch);
 
             bimg::imageFree(face);
         }
@@ -397,12 +457,30 @@ lpack2cubemap(lua_State *L){
     bx::MemoryBlock mb(&allocator);
     bx::MemoryWriter sw(&mb);
     bx::Error err;
-    if (!bimg::imageWriteKtx(&sw, *cubemap, cubemap->m_data, (uint32_t)cubemap->m_size, &err)){
-        luaL_error(L, "Write to memory as ktx failed");
+    if (iscross){
+        if (strcmp(outfile_fmt, "HDR") == 0){
+            if (!bimg::imageWriteHdr(&sw, ic->m_width, ic->m_height, ic->m_width * getBitsPerPixel(ic->m_format)/8, ic->m_data, ic->m_format, false, &err)){
+                return luaL_error(L, "Save to HDR file failed");
+            }
+        } else if (strcmp(outfile_fmt, "EXR") == 0){
+            if (!bimg::imageWriteExr(&sw, ic->m_width, ic->m_height, ic->m_width * getBitsPerPixel(ic->m_format)/8, ic->m_data, ic->m_format, false, &err)){
+                return luaL_error(L, "Save to EXR file failed");
+            }
+        } else if (strcmp(outfile_fmt, "PNG") == 0){
+            if (!bimg::imageWritePng(&sw, ic->m_width, ic->m_height, ic->m_width * getBitsPerPixel(ic->m_format)/8, ic->m_data, ic->m_format, false, &err)){
+                return luaL_error(L, "Save to PNG file failed");
+            }
+        } else {
+            return luaL_error(L, "Invalid output file format:%s", outfile_fmt);
+        }
+    } else {
+        if (!bimg::imageWriteKtx(&sw, *ic, ic->m_data, (uint32_t)ic->m_size, &err)){
+            return luaL_error(L, "Write to memory as ktx failed");
+        }
     }
 
     lua_pushlstring(L, (const char*)mb.more(), mb.getSize());
-    bimg::imageFree(cubemap);
+    bimg::imageFree(ic);
     return 1;
 }
 
