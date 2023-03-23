@@ -1443,8 +1443,9 @@ wPlotHistogram(lua_State *L) {
 
 static int
 wBeginTooltip(lua_State *L) {
-	ImGui::BeginTooltip();
-	return 0;
+	bool change = ImGui::BeginTooltip();
+	lua_pushboolean(L, change);
+	return 1;
 }
 
 static int

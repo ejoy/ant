@@ -29,9 +29,10 @@ end
 
 local function imgui_tooltip(text, wrap)
     if imgui.util.IsItemHovered() then
-        imgui.widget.BeginTooltip()
-        imgui.widget.TextWrapped(text, wrap or 200)
-        imgui.widget.EndTooltip()
+        if imgui.widget.BeginTooltip() then
+            imgui.widget.TextWrapped(text, wrap or 200)
+            imgui.widget.EndTooltip()
+        end
     end
 end
 
