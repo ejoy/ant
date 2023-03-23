@@ -31,8 +31,7 @@ local function need(lst)
 end
 
 lm:source_set "bee" {
-    includes = "bee/nonstd/3rd",
-    sources = "bee/nonstd/3rd/fmt/format.cc",
+    sources = "3rd/fmt/format.cc",
 }
 
 lm:source_set "bee" {
