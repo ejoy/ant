@@ -73,8 +73,14 @@ local function resize_framebuffer(w, h, fbidx)
 	end
 end
 
+local lastname = "ui_runtime"
+
 function S.render_target_create(width, height, name)
-    local viewid = viewidmgr.generate(name)
+    if name == lastname then
+        return
+    end
+    local viewid = viewidmgr.generate(name, lastname)
+    lastname = name
     local fbidx = fbmgr.create(
         {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "RGBA8", flags = rb_flags}},
         {rbidx = fbmgr.create_rb{w = width, h = height, layers = 1, format = "D16", flags = rb_flags}} 
@@ -136,7 +142,6 @@ function S.render_target_create(width, height, name)
 			--watch_screen_buffer	= true,
 		}
 	}
-    lastname = name
     return id
 end
 
@@ -159,7 +164,9 @@ function S.render_target_adjust(width, height, name)
     )
     rt.fb_idx = fbidx
     resize_framebuffer(width, height, fbidx)
-    irq.update_rendertarget(qe.queue_name, rt) 
+    irq.update_rendertarget(qe.queue_name, rt)
+    local id = fbmgr.get_rb(fbidx, 1).handle
+    return id
 end
 
 local function calc_camera_t(queuename, aabb)
@@ -177,6 +184,7 @@ end
 function iUiRt.get_group_id(name)
     return rt2g_table[name]
 end
+
 
 function iUiRt.create_new_rt(rt_name, focus_path, plane_path_type, scale, rotation, translation)
     focused_rt_table[rt_name] = true

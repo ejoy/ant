@@ -47,7 +47,10 @@ function m.loadTexture(doc, e, path, width, height, isRT)
     pendQueue[path] = {element}
     if isRT then
         if not rt_table[path] then
-            rt_table[path] = true
+            rt_table[path] = {
+                w = width,
+                h = height
+            }
             ltask.fork(function ()
                 local id = ltask.call(ServiceWorld, "render_target_create", width, height, path)
                 readyQueue[#readyQueue+1] = {
@@ -59,7 +62,7 @@ function m.loadTexture(doc, e, path, width, height, isRT)
                 }
                 pendQueue[path] = nil
             end) 
-        else
+        elseif rt_table[path] and rt_table[path].w ~= width or rt_table[path].h ~= height then
             ltask.fork(function ()
                 local id = ltask.call(ServiceWorld, "render_target_adjust", width, height, path)
                 readyQueue[#readyQueue+1] = {
