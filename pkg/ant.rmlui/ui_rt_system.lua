@@ -73,7 +73,7 @@ local function resize_framebuffer(w, h, fbidx)
 	end
 end
 
-local lastname = "ui_runtime"
+local lastname = "fxaa"
 
 function S.render_target_create(width, height, name)
     if name == lastname then
