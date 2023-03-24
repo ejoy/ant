@@ -317,25 +317,42 @@ function ibl_sys:render_preprocess()
     end
 
     for e in w:select "irradianceSH_builder dispatch:in" do
+
         local irradianceSH = IBL_INFO.irradianceSH
-        if not irradianceSH.already_readed then
-            local dis = e.dispatch
-            local material = dis.material
-            material.s_source = source_tex
-            material.s_irradianceSH = irradianceSH.value
-            material.u_build_ibl_param = math3d.vector(irradianceSH.bandnum, 0, IBL_INFO.source.facesize, 0)
-            icompute.dispatch(ibl_viewid, dis)
-
-            bgfx.blit(ibl_SH_readback_viewid, irradianceSH.readback_value, 0, 0, irradianceSH.value)
-            bgfx.read_texture(irradianceSH.readback_value, irradianceSH.readback_memory)
-
-            irradianceSH.already_readed = 0
-        elseif irradianceSH.already_readed == 2 then
-            --
-            mark_coeffs(read_Li(), IBL_INFO.irradianceSH.bandnum)
-            w:remove(e)
+        if irradianceSH.CPU then
+            local sh = require "ibl.sh"
+            local image = require "image"
+            local restex = IBL_INFO.source.res_tex
+            local lfs = require "filesystem.local"
+            local cr = import_package "ant.compile_resource"
+            local r = cr.compile(restex .. "|main.bin")
+            local f<close> = lfs.open(r, "rb")
+            local texinfo, texcontent = image.parse(f:read "a", true)
+            local Li = sh({
+                w = texinfo.width, h = texinfo.height,
+                data = texcontent,
+            }, irradianceSH_bandnum)
+            print(Li)
         else
-            irradianceSH.already_readed = irradianceSH.already_readed + 1
+            if not irradianceSH.already_readed then
+                local dis = e.dispatch
+                local material = dis.material
+                material.s_source = source_tex
+                material.s_irradianceSH = irradianceSH.value
+                material.u_build_ibl_param = math3d.vector(irradianceSH.bandnum, 0, IBL_INFO.source.facesize, 0)
+                icompute.dispatch(ibl_viewid, dis)
+
+                bgfx.blit(ibl_SH_readback_viewid, irradianceSH.readback_value, 0, 0, irradianceSH.value)
+                bgfx.read_texture(irradianceSH.readback_value, irradianceSH.readback_memory)
+
+                irradianceSH.already_readed = 0
+            elseif irradianceSH.already_readed == 2 then
+                --
+                mark_coeffs(read_Li(), IBL_INFO.irradianceSH.bandnum)
+                w:remove(e)
+            else
+                irradianceSH.already_readed = irradianceSH.already_readed + 1
+            end
         end
     end
 
@@ -393,9 +410,11 @@ local function build_ibl_textures(ibl)
 
     IBL_INFO.source.value = assert(ibl.source.value)
     IBL_INFO.source.facesize = assert(ibl.source.facesize)
+    IBL_INFO.source.res_tex = ibl.source.res_tex
 
     if irradianceSH_bandnum then
         IBL_INFO.irradianceSH.bandnum = irradianceSH_bandnum
+        IBL_INFO.irradianceSH.CPU = ibl.irradianceSH.CPU
         check_destroy(IBL_INFO.irradianceSH.value)
         local coeffsnum = IBL_INFO.irradianceSH.bandnum * IBL_INFO.irradianceSH.bandnum
         --must be R32U since we need to use imageAtmoicAdd, it only support R32U or R32I
