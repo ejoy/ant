@@ -95,25 +95,87 @@ local function SHindex(m, l)
     return l * (l + 1) + m
 end
 
+local factorial1, factorial2; do
+    local F = setmetatable({}, {__index=function (t, n)
+        local v = 1.0
+        if n > 1 then
+            for i=1, n do
+                v = v * i
+            end
+        end
+
+        t[n] = v
+        return v
+    end})
+    factorial1 = function(n) return F[n] end
+    factorial2 = function(n, d) return F[n]/F[d] end
+end
+
+local function factorial(n, d)
+    d = d or 1
+
+    d = math.max(1, d)
+    n = math.max(1, n)
+    local r = 1.0
+    if n == d then
+        -- intentionally left blank 
+    elseif n > d then
+        while n > d do
+            r = r * n
+            n = n - 1
+        end
+    else
+        while d > n do
+            r = r * d
+            d = d - 1
+        end
+        r = 1.0 / r
+    end
+    return r
+end
+
+local Ki; do
+    --   sqrt((2*l + 1) / 4*pi) * sqrt( (l-|m|)! / (l+|m|)! )
+    local function Kml(m, l)
+        m = math.abs(m)
+        local K = (2 * l + 1) * factorial2(l - m, l + m) * (1.0 / math.pi) * 0.25
+        return math.sqrt(K)
+    end
+
+    local K = setmetatable({}, {__index=function(t, bandnum)
+        local k = {}
+        local sqrt2 = math.sqrt(2)
+        for l=0, bandnum-1 do
+            for m = -l, l do
+                k[SHindex(m, l)] = sqrt2 * Kml(m, l)
+            end
+        end
+        t[bandnum] = k
+        return k
+    end})
+    Ki = function(bandnum) return K[bandnum] end
+end
+
 --[[
- * Calculates non-normalized SH bases, i.e.:
- *  m > 0, cos(m*phi)   * P(m,l)
- *  m < 0, sin(|m|*phi) * P(|m|,l)
- *  m = 0, P(0,l)
+    SHb:
+    m > 0, cos(m*phi)   * P(m,l)
+    m < 0, sin(|m|*phi) * P(|m|,l)
+    m = 0, P(0,l)
+
+    Pml is associated Legendre polynomials
 ]]
-local function computeShBasics(SHb, numBands, N)
--- #if 0
---     // Reference implementation
---     float phi = atan2(s.x, s.y);
---     for (int l = 0; l < numBands; l++) {
---         SHb[SHindex(0, l)] = Legendre(l, 0, s.z);
---         for (int m = 1; m <= l; m++) {
+local function computeShBasics(numBands, N)
+    local SHb = {}
+--     Reference implementation
+--     local phi = math.atan(s.x, s.y);
+--     for l=0, numBands-1 do
+--         SHb[SHindex(0, l)] = Legendre(l, 0, s.z)
+--         for m = 1, l do
 --             float p = Legendre(l, m, s.z);
---             SHb[SHindex(-m, l)] = std::sin(m * phi) * p;
---             SHb[SHindex( m, l)] = std::cos(m * phi) * p;
---         }
---     }
--- #endif
+--             SHb[SHindex(-m, l)] = math.sin(m * phi) * p
+--             SHb[SHindex( m, l)] = math.cos(m * phi) * p
+--         end
+--     end
 
     --[[
      * Below, we compute the associated Legendre polynomials using recursion.
@@ -188,71 +250,6 @@ local function computeShBasics(SHb, numBands, N)
     end
 end
 
-local function SHindex(m, l)
-    return l * (l + 1) + m + 1
-end
-
-local factorial1, factorial2; do
-    local F = setmetatable({}, {__index=function (t, n)
-        local v = 1.0
-        if n > 1 then
-            for i=1, n do
-                v = v * i
-            end
-        end
-
-        t[n] = v
-        return v
-    end})
-    factorial1 = function(n) return F[n] end
-    factorial2 = function(n, d) return F[n]/F[d] end
-end
-
-local function factorial(n, d)
-    d = d or 1
-
-    d = math.max(1, d)
-    n = math.max(1, n)
-    local r = 1.0
-    if n == d then
-        -- intentionally left blank 
-    elseif n > d then
-        while n > d do
-            r = r * n
-            n = n - 1
-        end
-    else
-        while d > n do
-            r = r * d
-            d = d - 1
-        end
-        r = 1.0 / r
-    end
-    return r
-end
-
-local Ki; do
-    --   sqrt((2*l + 1) / 4*pi) * sqrt( (l-|m|)! / (l+|m|)! )
-    local function Kml(m, l)
-        m = math.abs(m)
-        local K = (2 * l + 1) * factorial2(l - m, l + m) * (1.0 / math.pi) * 0.25
-        return math.sqrt(K)
-    end
-
-    local K = setmetatable({}, {__index=function(t, bandnum)
-        local k = {}
-        local sqrt2 = math.sqrt(2)
-        for l=0, bandnum-1 do
-            for m = -l, l do
-                k[SHindex(m, l)] = sqrt2 * Kml(m, l)
-            end
-        end
-        t[bandnum] = k
-        return k
-    end})
-    Ki = function(bandnum) return K[bandnum] end
-end
-
 -- < cos(theta) > SH coefficients pre-multiplied by 1 / K(0,l)
 local compute_cos_SH; do
     local COS = setmetatable({}, {__index=function(t, l)
@@ -279,6 +276,44 @@ local compute_cos_SH; do
     end
 end
 
+--[[
+    using SH to compress irradiance, we need to do two step:
+        1. compress, projection the irradiance map to Eml with SH basics function
+        2. render, use the compress Eml value with sample direction(the normal value of this function), and reprojection the Eml with SH basics function the get the irradiance value
+    see the reference: 'An efficient Representation for Irradiance Environment Maps'
+
+    Kml = K(m, l) = sqrt(A/B), where:
+            A = (2l+1)*(l-|m|)! = (2l+1) * factorial(l - abs(m))
+            B = 4*pi*(l+|m|)! = 4 * pi * factorial(l+abs(m))
+    
+    Yml(theta, phi) = Kml * e^(i*m*phi) * P|m|l(cos(theta)), where:
+        m > 0, sqrt(2) * Kml * cos(m*phi)   * Pml(cos(theta))
+        m < 0, sqrt(2) * Kml * sin(|m|*phi) * P-ml(cos(theta))
+        m = 0, K0l * P0l(cos(theta))
+
+    Kml = K(m, l) ==> K0l = K(0, l)
+    Pml = P(|m|, l) ==> P0l = P(0, l)
+    here, Pml is Associated Legendre polynomials
+
+    the enviment map SH formula is:
+        E = integral[omega](Li * cos(theta) * domega)
+        Lml = integral[omega](Li(theta, phi) * Yml(theta, phi) * domega) ==> Sum(Li(theta, phi) * Yml(theta, phi) * SolidAngle(theta, phi))
+        EE = Sum(Lml * Al)
+        BB = albedo * EE, where albedo is the material color, i.e. from base color texture
+
+        the BB is what we need
+
+        here, if bandnum = 2/3, Lml is 4/9 coefficients with RGB values
+        and, the Al is n dot w, which is the normal vector with sample direction's dot value, which projection to SH basics function
+            Al = Sum((n dot w) * Yml(theta, phi)) = Sum(max(cos theta, 0) * Yml(theta, phi))
+
+]]
+local function computeLml(Kml, bandnum, N)
+    local Yml
+    local Kml
+
+end
+
 local function LiSH (cm, bandnum)
     local cmtexel = create_cmtexel(cm.w, cm.h, 1, 1, 1)
     local coeffnum = bandnum * bandnum
@@ -294,18 +329,14 @@ local function LiSH (cm, bandnum)
             for x=1, cm.h do
                 cmtexel.x = x
                 local N = cmtexel:normal()
-                local Li = read_cmtexel(cmtexel, cm.data)
+                local color = read_cmtexel(cmtexel, cm.data)
 
-                Li = math3d.mul(Li, solidAngle(cmtexel.w, x, y))
+                color = math3d.mul(color, solidAngle(cmtexel.w, x, y))
 
-                local SHb = {}
-                for i=1, coeffnum do
-                    SHb[i] = 0.0
-                end
-                computeShBasics(SHb, bandnum, N)
+                local SHb = computeShBasics(bandnum, N)
 
                 for i=1, coeffnum do
-                    SH[i].v = math3d.add(SH[i], math3d.mul(Li, SHb[i]))
+                    SH[i].v = math3d.add(SH[i], math3d.mul(color, SHb[i]))
                 end
             end
         end
