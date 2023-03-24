@@ -47,7 +47,7 @@ namespace Rml {
             return *this;
         }
         std::span<char_t> string() {
-            size_t sz = data.size() * N + pos + 1;
+            size_t sz = (data.size() - 1) * N + pos + 1;
             auto r = new char_t[sz];
             for (size_t i = 0; i < data.size() - 1;++i) {
                 memcpy(r + i * N * sizeof(char_t), &data[i], N * sizeof(char_t));
