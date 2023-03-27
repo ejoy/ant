@@ -300,6 +300,9 @@ local function set_visible(e, visible)
     ivs.set_state(e, "main_view", visible)
     ivs.set_state(e, "cast_shadow", visible)
 end
+local function combine_state(states, st)
+    return (states == "") and st or (states .."|"..st)
+end
 local function update_visible(node, visible)
     for _, nd in ipairs(node.children) do
         update_visible(nd, visible)
@@ -319,23 +322,23 @@ local function update_visible(node, visible)
     if ne.visible_state then
         set_visible(ne, visible)
         local template = hierarchy:get_template(node.eid)
-        local visible_str = ""
+        local visible_state = ""
         local shadow = false
         for key, value in pairs(ne.visible_state) do
             if value then
                 if key == "pickup_queue" then
-                    visible_str = (visible_str == "") and "selectable" or (visible_str .. "|selectable")
+                    visible_state = combine_state(visible_state, "selectable")
                 elseif key == "main_queue" then
-                    visible_str = (visible_str == "") and "main_view" or (visible_str .. "|main_view")
+                    visible_state = combine_state(visible_state, "main_view")
                 elseif key == "csm1_queue" or key == "csm2_queue" or key == "csm3_queue" or key == "csm4_queue" then
                     shadow = true
                 end
             end
         end
         if shadow then
-            visible_str = (visible_str == "") and "cast_shadow" or (visible_str .. "|cast_shadow")
+            visible_state = combine_state(visible_state, "cast_shadow")
         end
-        template.template.data.visible_state = visible_str
+        template.template.data.visible_state = visible_state
     elseif rv and rv ~= visible then
         hierarchy:set_visible(node, rv)
     end
