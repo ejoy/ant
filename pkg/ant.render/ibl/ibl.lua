@@ -47,6 +47,7 @@ local IBL_INFO = {
     irradiance   = {
         value = nil,
         size = 0,
+        enable_readback = true,
     },
     irradianceSH = {
         value = nil,
@@ -300,26 +301,55 @@ local function mark_coeffs(Li, bandnum)
     sa:update("u_irradianceSH", Li)
 end
 
+local function read_irradiance_map()
+    local rbm = IBL_INFO.irradiance.readback_memory
+    if rbm == nil then return end
+
+    return {
+        w = IBL_INFO.irradiance.size,
+        h = IBL_INFO.irradiance.size,
+        data = tostring(rbm),
+    }
+end
+
 function ibl_sys:render_preprocess()
     local source_tex = IBL_INFO.source
     for e in w:select "irradiance_builder dispatch:in" do
-        local dis = e.dispatch
-        local material = dis.material
-        material.s_source = source_tex
-        material.u_build_ibl_param = math3d.vector(sample_count, 0, IBL_INFO.source.facesize, 0.0)
+        local function dispatch_irradiance_map()
+            local dis = e.dispatch
+            local material = dis.material
+            material.s_source = source_tex
+            material.u_build_ibl_param = math3d.vector(sample_count, 0, IBL_INFO.source.facesize, 0.0)
+    
+            -- there no binding attrib in material, but we just use this entity only once
+            local mobj = material:get_material()
+            mobj:set_attrib("s_irradiance", icompute.create_image_property(IBL_INFO.irradiance.value, 1, 0, "w"))
+    
+            icompute.dispatch(ibl_viewid, dis)
+        end
 
-        -- there no binding attrib in material, but we just use this entity only once
-        local mobj = material:get_material()
-        mobj:set_attrib("s_irradiance", icompute.create_image_property(IBL_INFO.irradiance.value, 1, 0, "w"))
-
-        icompute.dispatch(ibl_viewid, dis)
-        w:remove(e)
+        if IBL_INFO.irradiance.enable_readback then
+            if not IBL_INFO.irradiance.already_readed then
+                dispatch_irradiance_map()
+                bgfx.blit(ibl_SH_readback_viewid, IBL_INFO.irradiance.readback_value, 0, 0, IBL_INFO.irradiance.value)
+                bgfx.read_texture(IBL_INFO.irradiance.readback_value, IBL_INFO.irradiance.readback_memory)
+                IBL_INFO.irradiance.already_readed = 1
+            elseif IBL_INFO.irradiance.already_readed == 2 then
+                IBL_INFO.irradiance.readback_irradiance_value = read_irradiance_map()
+                w:remove(e)
+            else
+                IBL_INFO.irradiance.already_readed = IBL_INFO.irradiance.already_readed + 1
+            end
+        else
+            dispatch_irradiance_map()
+            w:remove(e)
+        end
     end
 
     for e in w:select "irradianceSH_builder dispatch:in" do
 
         local irradianceSH = IBL_INFO.irradianceSH
-        if irradianceSH.CPU then
+        if irradianceSH.CPU and IBL_INFO.irradiance.already_readed == 2 and irradianceSH.already_readed == 2 then
             local sh = require "ibl.sh"
             local image = require "image"
             local restex = IBL_INFO.source.res_tex
@@ -328,11 +358,18 @@ function ibl_sys:render_preprocess()
             local r = cr.compile(restex .. "|main.bin")
             local f<close> = lfs.open(r, "rb")
             local texinfo, texcontent = image.parse(f:read "a", true)
-            local Li = sh({
+            local tu = require "ibl.texture"
+            local Eml = sh.calc_Eml(tu.create_cubemap{
                 w = texinfo.width, h = texinfo.height,
-                data = texcontent,
+                data = texcontent, texelsize = image.get_bpp "RGBA32F" // 8
             }, irradianceSH_bandnum)
-            print(Li)
+            
+            local N = math3d.normalize(math3d.vector(1, 1, 1, 1))
+
+            local irrad_cm = assert(IBL_INFO.irradiance.readback_irradiance_value)
+            local sample_result = tu.create_cubemap{w=irrad_cm.w, h=irrad_cm.h, data=irrad_cm.data, texelsize = image.get_bpp "RGBA32F" // 8}:sample(N)
+            local render_result = sh.render_SH(Eml, N)
+            print(sample_result, render_result)
         else
             if not irradianceSH.already_readed then
                 local dis = e.dispatch
@@ -345,7 +382,7 @@ function ibl_sys:render_preprocess()
                 bgfx.blit(ibl_SH_readback_viewid, irradianceSH.readback_value, 0, 0, irradianceSH.value)
                 bgfx.read_texture(irradianceSH.readback_value, irradianceSH.readback_memory)
 
-                irradianceSH.already_readed = 0
+                irradianceSH.already_readed = 1
             elseif irradianceSH.already_readed == 2 then
                 --
                 mark_coeffs(read_Li(), IBL_INFO.irradianceSH.bandnum)
@@ -438,12 +475,29 @@ local function build_ibl_textures(ibl)
         })
 
         IBL_INFO.irradianceSH.readback_memory = bgfx.memory_texture(width*4)    -- 4 for sizeof(uint32_t)
-    else
-        if ibl.irradiance.size ~= IBL_INFO.irradiance.size then
-            IBL_INFO.irradiance.size = ibl.irradiance.size
-            check_destroy(IBL_INFO.irradiance.value)
+    end
+
+    if ibl.irradiance.size ~= IBL_INFO.irradiance.size then
+        IBL_INFO.irradiance.size = ibl.irradiance.size
+        check_destroy(IBL_INFO.irradiance.value)
+
+        local fmt = IBL_INFO.irradiance.enable_readback and "RGBA32F" or "RGBA16F"
+
+        IBL_INFO.irradiance.value = bgfx.create_texturecube(IBL_INFO.irradiance.size, false, 1, fmt, flags)
+
+        if IBL_INFO.irradiance.enable_readback then
+            local readback_flags = sampler {
+                MIN="POINT",
+                MAG="POINT",
+                U="CLAMP",
+                V="CLAMP",
+                BLIT="BLIT_AS_DST|BLIT_READBACK_ON",
+            }
+
+            local face_bytes = IBL_INFO.irradiance.size * IBL_INFO.irradiance.size * 16
     
-            IBL_INFO.irradiance.value = bgfx.create_texturecube(IBL_INFO.irradiance.size, false, 1, "RGBA16F", flags)
+            IBL_INFO.irradiance.readback_value = bgfx.create_texturecube(IBL_INFO.irradiance.size, false, 1, fmt, readback_flags)
+            IBL_INFO.irradiance.readback_memory = bgfx.memory_texture(face_bytes * 6)
         end
     end
 
@@ -463,9 +517,8 @@ end
 
 
 local function create_ibl_entities()
-    if irradianceSH_bandnum then
-        create_irradianceSH_entity()
-    else
+    create_irradianceSH_entity()
+    if IBL_INFO.irradiance.enable_readback then
         create_irradiance_entity()
     end
     create_prefilter_entities()

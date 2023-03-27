@@ -1,62 +1,6 @@
 local math3d = require "math3d"
 local mathpkg = import_package "ant.math"
 local mc = mathpkg.constant
-local function create_cmtexel(w, h, face, x, y)
-    return {
-        w = w, h = h,
-        facenum = w * h,
-        face = face, x = x, y = y,
-        index = function(self)
-            return (self.face-1)*self.facenum+ (self.y-1)*self.w + self.x
-        end,
-        normal = function(self)
-            local function id2uv(iu, iv, w, h)
-                return {
-                    (iu+0.5)/w,
-                    (iv+0.5)/h,
-                }
-            end
-
-            local function uvface2dir(uv, face)
-                if face == 1 then
-                    return math3d.vector( 1.0, uv.y,-uv.x);
-                elseif face == 2 then
-                    return math3d.vector(-1.0, uv.y, uv.x);
-                elseif face == 3 then
-                    return math3d.vector( uv.x, 1.0,-uv.y);
-                elseif face == 4 then
-                    return math3d.vector( uv.x,-1.0, uv.y);
-                elseif face == 5 then
-                    return math3d.vector( uv.x, uv.y, 1.0);
-                else
-                    assert(face == 6)
-                    return math3d.vector(-uv.x, uv.y,-1.0);
-                end
-            end
-
-
-            local function n2s(uv)
-                return {
-                    uv[1]*2.0 - 1.0,
-                    uv[2]*2.0 - 1.0,
-                }
-            end
-        
-            local uv = n2s(id2uv(self.x, self.y, self.w, self.h));
-            return math3d.normalize(uvface2dir(uv, self.face));
-        end
-    }
-end
-
-
-local function read_cmtexel(cmtexel, data)
-    local idx = cmtexel:index()
-    local texelsize<const> = 4*3    --sizeof(float) * count(rgb)
-    local offset = (idx-1) * texelsize
-    local r, g, b = ('fff'):unpack(data, offset)
-    return math3d.vector(r, g, b, 0.0)
-end
-
 --[[
  * Area of a cube face's quadrant projected onto a sphere
  *
@@ -88,11 +32,15 @@ local function solidAngle(dim, iu, iv)
     return  sphereQuadrantArea(x0, y0) -
             sphereQuadrantArea(x0, y1) -
             sphereQuadrantArea(x1, y0) +
-            sphereQuadrantArea(x1, y1);
+            sphereQuadrantArea(x1, y1)
 end
 
 local function SHindex(m, l)
     return l * (l + 1) + m
+end
+
+local function lSHindex(m, l)
+    return SHindex(m, l) + 1
 end
 
 local factorial1, factorial2; do
@@ -147,7 +95,7 @@ local Ki; do
         local sqrt2 = math.sqrt(2)
         for l=0, bandnum-1 do
             for m = -l, l do
-                k[SHindex(m, l)] = sqrt2 * Kml(m, l)
+                k[lSHindex(m, l)] = sqrt2 * Kml(m, l)
             end
         end
         t[bandnum] = k
@@ -192,12 +140,12 @@ local function computeShBasics(numBands, N)
 
     -- handle m=0 separately, since it produces only one coefficient
     local Pml_2, Pml_1 = 0, 1
-    SHb[0] =  Pml_1
+    SHb[1] =  Pml_1
     for l=1, numBands-1 do
         local Pml = ((2*l-1.0)*Pml_1*N.z - (l-1.0)*Pml_2) / l
         Pml_2 = Pml_1;
         Pml_1 = Pml;
-        SHb[SHindex(0, l)] = Pml;
+        SHb[lSHindex(0, l)] = Pml;
     end
 
     local Pmm = 1
@@ -206,18 +154,18 @@ local function computeShBasics(numBands, N)
         Pml_2 = Pmm;
         Pml_1 = (2*m + 1.0)*Pmm*N.z
         -- l == m
-        SHb[SHindex(-m, m)] = Pml_2
-        SHb[SHindex( m, m)] = Pml_2
+        SHb[lSHindex(-m, m)] = Pml_2
+        SHb[lSHindex( m, m)] = Pml_2
         if m+1 < numBands then
             -- l == m+1
-            SHb[SHindex(-m, m+1)] = Pml_1
-            SHb[SHindex( m, m+1)] = Pml_1
-            for l=m+2, numBands do
+            SHb[lSHindex(-m, m+1)] = Pml_1
+            SHb[lSHindex( m, m+1)] = Pml_1
+            for l=m+2, numBands-1 do
                 local Pml = ((2*l - 1.0)*Pml_1*N.z - (l + m - 1.0)*Pml_2) / (l-m)
                 Pml_2 = Pml_1
                 Pml_1 = Pml
-                SHb[SHindex(-m, l)] = Pml
-                SHb[SHindex( m, l)] = Pml
+                SHb[lSHindex(-m, l)] = Pml
+                SHb[lSHindex( m, l)] = Pml
             end
         end
     end
@@ -237,10 +185,10 @@ local function computeShBasics(numBands, N)
     local Cm, Sm = N.x, N.y
     for m=1, numBands do
         for l = m, numBands-1 do
-            local idx = SHindex(-m, l)
+            local idx = lSHindex(-m, l)
             SHb[idx] = SHb[idx] * Sm
 
-            idx = SHindex(m, l)
+            idx = lSHindex(m, l)
             SHb[idx] = SHb[idx] * Cm
         end
         local Cm1 = Cm * N.x - Sm * N.y
@@ -248,6 +196,8 @@ local function computeShBasics(numBands, N)
         Cm = Cm1
         Sm = Sm1
     end
+
+    return SHb
 end
 
 -- < cos(theta) > SH coefficients pre-multiplied by 1 / K(0,l)
@@ -346,24 +296,25 @@ local function computeLml(Kml, bandnum, N)
 
 end
 
+local function m3d_xyz(v)
+    local x, y, z = math3d.index(v, 1, 2, 3)
+    return {x=x, y=y, z=z}
+end
+
 local function LiSH (cm, bandnum)
-    local cmtexel = create_cmtexel(cm.w, cm.h, 1, 1, 1)
     local coeffnum = bandnum * bandnum
     local SH = {}
     for i=1, coeffnum do
         SH[i] = math3d.ref(mc.ZERO)
     end
     for face=1, 6 do
-        cmtexel.face = face
-        math3d.reset()
         for y=1, cm.w do
-            cmtexel.y = y
             for x=1, cm.h do
-                cmtexel.x = x
-                local N = cmtexel:normal()
-                local color = read_cmtexel(cmtexel, cm.data)
+                local N = m3d_xyz(cm:normal_fxy(face, x, y))
 
-                color = math3d.mul(color, solidAngle(cmtexel.w, x, y))
+                local color = cm:load_fxy(face, x, y)
+
+                color = math3d.mul(color, solidAngle(cm.w, x, y))
 
                 local SHb = computeShBasics(bandnum, N)
 
@@ -377,19 +328,23 @@ local function LiSH (cm, bandnum)
     return SH
 end
 
+return {
+    calc_Eml = function (cm, bandnum)
+        local K = Ki(bandnum)
+        local Lml = LiSH(cm, bandnum)
 
-
-return function (cm, bandnum)
-    local K = Ki(bandnum)
-    local Li = LiSH(cm, bandnum)
-
-    for l=0, bandnum-1 do
-        local cosSH = compute_cos_SH(l)
-        for m = -l, l do
-            local idx = SHindex(m, l)
-            Li[idx].v = math3d.mul(K[idx] * cosSH, Li[idx])
+        local Eml = {}
+        for l=0, bandnum-1 do
+            local A = compute_cos_SH(l)
+            for m = -l, l do
+                local idx = lSHindex(m, l)
+                Eml[idx] = math3d.mul(K[idx] * A, Lml[idx])
+            end
         end
-    end
 
-    return Li
-end
+        return Eml
+    end,
+    render_SH = function(Eml, N)
+        N = m3d_xyz(N)
+    end,
+}
