@@ -21,7 +21,7 @@ local function split_metallic_roughness(filename, outputdir)
     local info, m = image.parse(c, true)
     local fmt = image.get_format_name(info.format)
     assert(fmt == "RGBA8" or fmt == "RGB8")
-    local texelsize = image.get_bits_pre_pixel(info.format) / 8
+    local texelsize = image.get_bpp(info.format) / 8
 
     local roughness_offset, metallic_offset = 1, 2  -- roughness in B channel, metallic in G channel
     local metallic_data, roughness_data = {}, {}
@@ -37,7 +37,7 @@ local function split_metallic_roughness(filename, outputdir)
     end
 
     local function default_tex_info(w, h, fmt)
-        local bits = image.get_bits_pre_pixel(fmt)
+        local bits = image.get_bpp(fmt)
         local s = (bits//8) * w * h
         return {
             width=w, height=h, format=fmt,

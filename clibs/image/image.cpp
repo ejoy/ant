@@ -204,7 +204,7 @@ lencode_image(lua_State *L){
 }
 
 static int
-lget_bits_pre_pixel(lua_State *L){
+lget_bits_per_pixel(lua_State *L){
     auto fmt = bimg::getFormat(luaL_checkstring(L, 1));
     auto bits = bimg::getBitsPerPixel(fmt);
     lua_pushinteger(L, bits);
@@ -490,7 +490,7 @@ luaopen_image(lua_State* L) {
         { "parse",              lparse },
         { "convert",            lconvert},
         { "encode_image",       lencode_image},
-        { "get_bits_pre_pixel", lget_bits_pre_pixel},
+        { "get_bpp",            lget_bits_per_pixel},
         { "get_format_name",    lget_format_name},
         { "pack2cubemap",       lpack2cubemap},
         { nullptr,              nullptr },
