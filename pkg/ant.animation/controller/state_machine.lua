@@ -374,6 +374,10 @@ end
 function iani.attach_hitch(eid, heid, attach)
 	if not eid then return end
 	local e <close> = get_anim_e(eid)
+	local events = e.anim_ctrl.keyframe_events
+	if not events or not next(events) then
+		return
+	end
 	if not e.anim_ctrl.hitchs then
 		e.anim_ctrl.hitchs = {}
 	end
