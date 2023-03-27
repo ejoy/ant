@@ -28,6 +28,7 @@ interface "ianimation"
     .method "release_pose"
     .method "load_events"
     .method "attach_hitch"
+    .method "detach_hitch"
 
 policy "animation_controller.state_machine"
     .require_system "state_machine_system"
