@@ -1444,7 +1444,10 @@ std::optional<Property> Element::GetComputedProperty(PropertyId id) const {
 	if (auto property = c.Find(global_properties, id)) {
 		return property;
 	}
-	return c.Find(StyleSheetSpecification::GetDefaultProperties(), id);
+	if (auto property = c.Find(StyleSheetSpecification::GetDefaultProperties(), id)) {
+		return property;
+	}
+	return std::nullopt;
 }
 
 void Element::UpdateDefinition() {
