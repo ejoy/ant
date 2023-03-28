@@ -115,9 +115,9 @@ public:
 	void SetAnimationProperty(PropertyId id, const Property& property);
 	void DelAnimationProperty(PropertyId id);
 
-	std::optional<Property> GetProperty(PropertyId id) const;
+	std::optional<Property> GetInlineProperty(PropertyId id) const;
+	std::optional<Property> GetLocalProperty(PropertyId id) const;
 	std::optional<Property> GetComputedProperty(PropertyId id) const;
-	std::optional<Property> GetComputedLocalProperty(PropertyId id) const;
 	Transitions GetTransition() const;
 
 	bool SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);

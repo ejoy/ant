@@ -216,7 +216,7 @@ static float ComputeFontsize(const Property& property, Element* element) {
 
 bool Element::UpdataFontSize() {
 	float new_size = font_size;
-	if (auto p = GetComputedLocalProperty(PropertyId::FontSize))
+	if (auto p = GetLocalProperty(PropertyId::FontSize))
 		new_size = ComputeFontsize(*p, this);
 	else if (parent) {
 		new_size = parent->GetFontSize();
@@ -1393,12 +1393,12 @@ void Element::DirtyPropertiesWithUnitRecursive(PropertyUnit unit) {
 	}
 }
 
-std::optional<Property> Element::GetProperty(PropertyId id) const {
+std::optional<Property> Element::GetInlineProperty(PropertyId id) const {
 	auto& c = Style::Instance();
 	return c.Find(inline_properties, id);
 }
 
-std::optional<Property> Element::GetComputedLocalProperty(PropertyId id) const {
+std::optional<Property> Element::GetLocalProperty(PropertyId id) const {
 	auto& c = Style::Instance();
     return c.Find(local_properties, id);
 }
@@ -1431,7 +1431,7 @@ std::optional<std::string> Element::GetProperty(const std::string& name) const {
 
 	std::string res;
 	for (const auto& property_id : properties) {
-		auto property = GetProperty(property_id);
+		auto property = GetInlineProperty(property_id);
 		if (property) {
 			if (!res.empty()) {
 				res += " ";
