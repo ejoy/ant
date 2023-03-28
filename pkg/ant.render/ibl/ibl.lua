@@ -359,8 +359,13 @@ function ibl_sys:render_preprocess()
             local f<close> = lfs.open(r, "rb")
             local texinfo, texcontent = image.parse(f:read "a", true)
             local tu = require "ibl.texture"
-            local texelsize = image.lget_format_sizebytes "RGBA32F"
+            local texelsize = image.get_format_sizebytes "RGBA32F"
             local src_cm = tu.create_cubemap{w=texinfo.width, h=texinfo.height, data=texcontent, texelsize=texelsize}
+
+            local rr = src_cm:sample(tu.uvface2dir(tu.face_index "+X", 0.25, 0.25))
+            local rr1 = src_cm:sample_fuv(1, 0.25, 0.25)
+            local rr2 = src_cm:load_fxy(1, 1, 1)
+
             local Eml = sh.calc_Eml(src_cm, irradianceSH_bandnum)
             
             local N = math3d.normalize(math3d.vector(1, 0, 0, 1))

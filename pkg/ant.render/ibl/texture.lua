@@ -15,6 +15,7 @@ local function s2n(v)
 end
 
 local function uvface2dir(face, u, v)
+    u, v = n2s(u), n2s(v)
     if face == 1 then
         return math3d.vector( 1.0, v,-u);
     elseif face == 2 then
@@ -93,16 +94,17 @@ local DEFAULT_SAMPLER<const> = {
     }
 }
 
-local function sample_tex(u, v, w, h, load_op, sampler)
+local function sample_tex(u, v, w, h, sampler, load_op)
     local iw, ih = 1.0 / w, 1.0 / h
 
-    local function to_xy_index(u, v)
+    local function toXY(u, v)
         local a_u, a_v = sampler.address.u(u, 0.0, 1.0), sampler.address.v(v, 0.0, 1.0)
-        return a_u * w, a_v * h
+        local OX<const>, OY<const> = 0.5, 0.5
+        return a_u * w - OX, a_v * h - OY
     end
 
-    local  fx,  fy = to_xy_index(u, v)
-    local nfx, nfy = to_xy_index(u+iw, v+ih)
+    local  fx,  fy = toXY(u, v)
+    local nfx, nfy = toXY(u+iw, v+ih)
 
     -- x, y, nx, ny are base 0
     local  x,  y = math.floor(fx),  math.floor(fy)
@@ -126,7 +128,7 @@ local cm_mt = {
     end,
     normal_fxy = function(self, face, x, y)
         local u, v = id2uv(x, y, self.w, self.h)
-        return math3d.normalize(uvface2dir(face, n2s(u), n2s(v)))
+        return math3d.normalize(uvface2dir(face, u, v))
     end,
 
     load = function (self, v3d)
@@ -149,7 +151,7 @@ local cm_mt = {
         return self:sample_fuv(face, u, v)
     end,
     sample_fuv = function (self, face, u, v)
-        return sample_tex(u, v, self.w, self.h, function (x, y)
+        return sample_tex(u, v, self.w, self.h, self.sampler, function (x, y)
             return self:load_fxy(face, x, y)
         end)
     end,
@@ -171,6 +173,22 @@ end
 
 tu.uvface2dir = uvface2dir
 tu.dir2uvface = dir2uvface
+local FACE_INDEX<const> = {
+    ["+X"]=1, ["-X"]=2,
+    ["+Y"]=3, ["-Y"]=4,
+    ["+Z"]=5, ["-Z"]=6,
+}
+function tu.face_index(n)
+    return assert(FACE_INDEX[n], ("Invalid face name:%s"):format(n))
+end
+
+function tu.face_name(idx)
+    for k, v in pairs(FACE_INDEX) do
+        if v == idx then return k end
+    end
+
+    error(("Invalid face index:%d"):format(idx))
+end
 
 tu.create_sampler = create_sampler
 

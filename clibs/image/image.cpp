@@ -499,7 +499,7 @@ luaopen_image(lua_State* L) {
         { "convert",            lconvert},
         { "encode_image",       lencode_image},
         { "get_bpp",            lget_bits_per_pixel},
-        { "get_fmt_sizebytes",  lget_format_sizebytes},
+        { "get_format_sizebytes",lget_format_sizebytes},
         { "get_format_name",    lget_format_name},
         { "pack2cubemap",       lpack2cubemap},
         { nullptr,              nullptr },
