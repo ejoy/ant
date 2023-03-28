@@ -346,5 +346,37 @@ return {
     end,
     render_SH = function(Eml, N)
         N = m3d_xyz(N)
+
+        local num_coeffs = #Eml
+        if num_coeffs > 9 then
+            error("not support coefficients more than 9")
+        end
+
+        local r
+        if num_coeffs >= 1 then
+            r = Eml[1]
+        end
+
+        if num_coeffs >= 4 then
+            r = math3d.add(
+                r,
+                math3d.mul(Eml[2], N.y),
+                math3d.mul(Eml[3], N.z),
+                math3d.mul(Eml[4], N.x))
+        end
+
+        if num_coeffs >= 9 then
+            r = math3d.add(
+                r,
+                math3d.mul(Eml[5], (N.y * N.x)),
+                math3d.mul(Eml[6], (N.y * N.z)),
+                math3d.mul(Eml[7], (3.0 * N.z * N.z - 1.0)),
+                math3d.mul(Eml[8], (N.z * N.x)),
+                math3d.mul(Eml[9], (N.x * N.x - N.y * N.y)))
+        end
+
+        local x,y,z = math3d.index(r, 1, 2, 3)
+        x, y, z = math.max(x, 0.0), math.max(y, 0.0), math.max(z, 0.0)
+        return math3d.vector(x, y, z, 0.0)
     end,
 }

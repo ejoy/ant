@@ -362,17 +362,13 @@ function ibl_sys:render_preprocess()
             local texelsize = image.get_format_sizebytes "RGBA32F"
             local src_cm = tu.create_cubemap{w=texinfo.width, h=texinfo.height, data=texcontent, texelsize=texelsize}
 
-            local rr = src_cm:sample(tu.uvface2dir(tu.face_index "+X", 0.25, 0.25))
-            local rr1 = src_cm:sample_fuv(1, 0.25, 0.25)
-            local rr2 = src_cm:load_fxy(1, 1, 1)
-
             local Eml = sh.calc_Eml(src_cm, irradianceSH_bandnum)
             
             local N = math3d.normalize(math3d.vector(1, 0, 0, 1))
 
             local irrad_cm_decl = assert(IBL_INFO.irradiance.readback_irradiance_value)
             irrad_cm_decl.texelsize = texelsize
-            local cm_irrad = tu.create_cubemap(IBL_INFO.irradiance.readback_irradiance_value)
+            local cm_irrad = tu.create_cubemap(irrad_cm_decl)
             local sample_result = cm_irrad:sample(N)
             local render_result = sh.render_SH(Eml, N)
             print("sample:", math3d.tostring(sample_result), "sh render:", math3d.tostring(render_result))
