@@ -61,20 +61,43 @@ local function dir2uvface(v)
     end
 end
 
-local function address_clamp(v, minv, maxv)
-    return math.max(minv, math.min(v, maxv))
-end
+local function DEF_IMPL() assert(false, "need implement") end
 
-local default_address = address_clamp
+local ADDRESS_FINDER<const> = {
+    CLAMP = function (v, minv, maxv)
+        return math.max(minv, math.min(v, maxv))
+    end,
+    MIRROR = DEF_IMPL,
+    BORDER = DEF_IMPL,
+    WRAP = DEF_IMPL,
+}
 
+local FILTER_FINDER<const> = {
+    POINT = DEF_IMPL,
+    LINEAR = function(x, y, nx, ny, px, py, load_op)
+        local lt, rt, lb, rb = load_op( x+1,  y+1), load_op(nx+1,  y+1), load_op( x+1, ny+1), load_op(nx+1, ny+1)
 
+        local tv = math3d.lerp(lt, rt, px)
+        local bv = math3d.lerp(lb, rb, px)
+        return math3d.lerp(tv, bv, py)
+    end,
+    ANISOTROPIC = DEF_IMPL,
+}
 
-local function sample_tex(u, v, w, h, load_op, address_op)
-    address_op = address_op or default_address
+local DEFAULT_SAMPLER<const> = {
+    address = {u = ADDRESS_FINDER.CLAMP, v = ADDRESS_FINDER.CLAMP},
+    filter = {
+        mip = FILTER_FINDER.LINEAR,
+        min = FILTER_FINDER.LINEAR,
+        mag = FILTER_FINDER.LINEAR,
+    }
+}
+
+local function sample_tex(u, v, w, h, load_op, sampler)
     local iw, ih = 1.0 / w, 1.0 / h
 
     local function to_xy_index(u, v)
-        local a_u, a_v = address_op(u, 0.0, 1.0), address_op(v, 0.0, 1.0)
+        local a_u, a_v = sampler.address.u(u, 0.0, 1.0), sampler.address.v(v, 0.0, 1.0)
         return a_u * w, a_v * h
     end
 
@@ -87,12 +110,10 @@ local function sample_tex(u, v, w, h, load_op, address_op)
 
     local px, py = fx - x, fy - y
 
-    -- load_op is base 1
-    local lt, rt, lb, rb = load_op( x+1,  y+1), load_op(nx+1,  y+1), load_op( x+1, ny+1), load_op(nx+1, ny+1)
-
-    local tv = math3d.lerp(lt, rt, px)
-    local bv = math3d.lerp(lb, rb, px)
-    return math3d.lerp(tv, bv, py)
+    --TODO: we need to implement ddx/ddy, to find which filter mode is, and select filter after mode is found.
+    -- we just keep all sample is linear
+    -- FILTER_FINDER.LINEAR is base 1
+    return FILTER_FINDER.LINEAR(x+1, y+1, nx+1, ny+1, px, py, load_op)
 end
 
 local cm_mt = {
@@ -134,15 +155,23 @@ local cm_mt = {
     end,
 }
 
-function tu.create_cubemap(cm)
+local function create_sampler(s)
+    --TODO: need to check sampler flags to create a sampler obj
+    return DEFAULT_SAMPLER
+end
+
+function tu.create_cubemap(cm, sampler)
     assert(cm.w and cm.h)
     cm.facenum = cm.w * cm.h
     cm.max_index = cm.facenum * 6
     
+    cm.sampler = sampler or DEFAULT_SAMPLER
     return setmetatable(cm, {__index=cm_mt})
 end
 
 tu.uvface2dir = uvface2dir
 tu.dir2uvface = dir2uvface
+
+tu.create_sampler = create_sampler
 
 return tu

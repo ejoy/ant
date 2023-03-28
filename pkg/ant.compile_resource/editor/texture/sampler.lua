@@ -10,9 +10,9 @@ local sample_types = {
 }
 
 local sample_value = {
-	-- filter mode
-	CLAMP="c", MIRROR = "m", BORDER="b", WRAP="w",	--default
 	-- filter address
+	CLAMP="c", MIRROR = "m", BORDER="b", WRAP="w",	--default
+	-- filter mode
 	POINT="p", ANISOTROPIC="a", LINEAR="l", --default,
 
 	-- color space

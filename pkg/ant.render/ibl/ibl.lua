@@ -359,15 +359,15 @@ function ibl_sys:render_preprocess()
             local f<close> = lfs.open(r, "rb")
             local texinfo, texcontent = image.parse(f:read "a", true)
             local tu = require "ibl.texture"
-            local Eml = sh.calc_Eml(tu.create_cubemap{
-                w = texinfo.width, h = texinfo.height,
-                data = texcontent, texelsize = image.get_bpp "RGBA32F" // 8
-            }, irradianceSH_bandnum)
+            local texelsize = image.lget_format_sizebytes "RGBA32F"
+            local src_cm = tu.create_cubemap{w=texinfo.width, h=texinfo.height, data=texcontent, texelsize=texelsize}
+            local Eml = sh.calc_Eml(src_cm, irradianceSH_bandnum)
             
             local N = math3d.normalize(math3d.vector(1, 0, 0, 1))
 
-            local irrad_cm = assert(IBL_INFO.irradiance.readback_irradiance_value)
-            local cm_irrad = tu.create_cubemap{w=irrad_cm.w, h=irrad_cm.h, data=irrad_cm.data, texelsize = image.get_bpp "RGBA32F" // 8}
+            local irrad_cm_decl = assert(IBL_INFO.irradiance.readback_irradiance_value)
+            irrad_cm_decl.texelsize = texelsize
+            local cm_irrad = tu.create_cubemap(IBL_INFO.irradiance.readback_irradiance_value)
             local sample_result = cm_irrad:sample(N)
             local render_result = sh.render_SH(Eml, N)
             print("sample:", math3d.tostring(sample_result), "sh render:", math3d.tostring(render_result))
