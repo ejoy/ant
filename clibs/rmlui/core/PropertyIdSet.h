@@ -7,7 +7,6 @@
 #include <iterator>
 #include <type_traits>
 
-
 namespace Rml {
 
 template <typename T, size_t N>

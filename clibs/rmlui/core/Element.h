@@ -118,7 +118,6 @@ public:
 	std::optional<Property> GetInlineProperty(PropertyId id) const;
 	std::optional<Property> GetLocalProperty(PropertyId id) const;
 	std::optional<Property> GetComputedProperty(PropertyId id) const;
-	Transitions GetTransition() const;
 
 	bool SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
 	std::optional<std::string> GetProperty(const std::string& name) const;

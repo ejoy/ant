@@ -174,7 +174,6 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 	std::vector<std::string> transition_values;
 	StringUtilities::ExpandString(transition_values, StringUtilities::ToLower(value), ',');
 
-	bool all = false;
 	TransitionList transition_list;
 
 	for (const std::string& single_transition_value : transition_values) {
@@ -197,12 +196,7 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 				if (it->second.type == Keyword::NONE) {
 					if (transition_list.size() > 0) // The none keyword can not be part of multiple definitions
 						return std::nullopt;
-					return TransitionNone {};
-				}
-				else if (it->second.type == Keyword::ALL) {
-					if (transition_list.size() > 0) // The all keyword can not be part of multiple definitions
-						return false;
-					all = true;
+					return transition_list;
 				}
 				else if (it->second.type == Keyword::TWEEN) {
 					transition.tween = it->second.tween;
@@ -247,19 +241,11 @@ std::optional<Property> PropertyParserTransition::ParseValue(const std::string& 
 			return std::nullopt;
 		}
 
-		if (all) {
-			if (!target_property_ids.empty()) {
-				return std::nullopt;
-			}
-			return TransitionAll {transition};
+		if (target_property_ids.empty()) {
+			return std::nullopt;
 		}
-		else {
-			if (target_property_ids.empty()) {
-				return std::nullopt;
-			}
-			for (const auto& id : target_property_ids) {
-				transition_list.emplace(id, transition);
-			}
+		for (const auto& id : target_property_ids) {
+			transition_list.emplace(id, transition);
 		}
 	}
 
