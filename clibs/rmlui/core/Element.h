@@ -105,7 +105,7 @@ public:
 
 	void UpdateDefinition();
 	void DirtyDefinition();
-	void DirtyInheritedProperties();
+	void DirtyInheritableProperties();
 	void DirtyProperty(PropertyId id);
 	void DirtyProperties(const PropertyIdSet& properties);
 	void DirtyProperties(PropertyUnit unit);

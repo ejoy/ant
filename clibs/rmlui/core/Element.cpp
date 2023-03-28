@@ -733,7 +733,7 @@ void Element::RefreshProperties() {
 	c.Release(global_properties);
 	if (parent) {
 		DirtyDefinition();
-		DirtyInheritedProperties();
+		DirtyInheritableProperties();
 		global_properties = c.Inherit(local_properties, parent->global_properties);
 	}
 	else {
@@ -1620,8 +1620,8 @@ void Element::DirtyDefinition() {
 	dirty_definition = true;
 }
 
-void Element::DirtyInheritedProperties() {
-	dirty_properties |= StyleSheetSpecification::GetInheritedProperties();
+void Element::DirtyInheritableProperties() {
+	dirty_properties |= StyleSheetSpecification::GetInheritableProperties();
 }
 
 void Element::DirtyProperties(PropertyUnit unit) {
@@ -1660,10 +1660,10 @@ void Element::UpdateProperties() {
 		}
 	}
 
-	PropertyIdSet dirty_inherited_properties = (dirty_properties & StyleSheetSpecification::GetInheritedProperties());
-	if (!dirty_inherited_properties.empty()) {
+	PropertyIdSet dirty_inheritable_properties = (dirty_properties & StyleSheetSpecification::GetInheritableProperties());
+	if (!dirty_inheritable_properties.empty()) {
 		for (auto& child : children) {
-			child->DirtyProperties(dirty_inherited_properties);
+			child->DirtyProperties(dirty_inheritable_properties);
 		}
 	}
 
