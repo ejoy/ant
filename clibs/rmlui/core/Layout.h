@@ -13,7 +13,7 @@ class Element;
 class Property;
 enum class PropertyId : uint8_t;
 
-static inline PropertyIdSet GetLayoutProperties() {
+static constexpr inline PropertyIdSet GetLayoutProperties() {
 	PropertyIdSet set;
 	set.insert(PropertyId::Left);
 	set.insert(PropertyId::Top);
@@ -58,7 +58,7 @@ static inline PropertyIdSet GetLayoutProperties() {
 	return set;
 }
 
-static inline const PropertyIdSet LayoutProperties = GetLayoutProperties();
+static constexpr inline const PropertyIdSet LayoutProperties = GetLayoutProperties();
 
 class Layout {
 public:
