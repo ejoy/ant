@@ -364,12 +364,13 @@ function ibl_sys:render_preprocess()
                 data = texcontent, texelsize = image.get_bpp "RGBA32F" // 8
             }, irradianceSH_bandnum)
             
-            local N = math3d.normalize(math3d.vector(1, 1, 1, 1))
+            local N = math3d.normalize(math3d.vector(1, 0, 0, 1))
 
             local irrad_cm = assert(IBL_INFO.irradiance.readback_irradiance_value)
-            local sample_result = tu.create_cubemap{w=irrad_cm.w, h=irrad_cm.h, data=irrad_cm.data, texelsize = image.get_bpp "RGBA32F" // 8}:sample(N)
+            local cm_irrad = tu.create_cubemap{w=irrad_cm.w, h=irrad_cm.h, data=irrad_cm.data, texelsize = image.get_bpp "RGBA32F" // 8}
+            local sample_result = cm_irrad:sample(N)
             local render_result = sh.render_SH(Eml, N)
-            print(sample_result, render_result)
+            print("sample:", math3d.tostring(sample_result), "sh render:", math3d.tostring(render_result))
         else
             if not irradianceSH.already_readed then
                 local dis = e.dispatch

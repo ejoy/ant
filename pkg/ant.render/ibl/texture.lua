@@ -67,14 +67,28 @@ end
 
 local default_address = address_clamp
 
+
+
 local function sample_tex(u, v, w, h, load_op, address_op)
     address_op = address_op or default_address
-    local x, y = address_op(math.floor(u * w), 0, w), address_op(math.floor(v * h), 0, h)
-    local nx, ny = address_op(x+1, 0, w), address_op(y+1, 0, h)
+    local iw, ih = 1.0 / w, 1.0 / h
 
-    local px, py = u-math.floor(u), v-math.floor(v)
+    local function to_xy_index(u, v)
+        local a_u, a_v = address_op(u, 0.0, 1.0), address_op(v, 0.0, 1.0)
+        return a_u * w, a_v * h
+    end
 
-    local lt, rt, lb, rb = load_op( x,  y), load_op(nx,  y), load_op( x, ny), load_op(nx, ny)
+    local  fx,  fy = to_xy_index(u, v)
+    local nfx, nfy = to_xy_index(u+iw, v+ih)
+
+    -- x, y, nx, ny are base 0
+    local  x,  y = math.floor(fx),  math.floor(fy)
+    local nx, ny = math.floor(nfx), math.floor(nfy)
+
+    local px, py = fx - x, fy - y
+
+    -- load_op is base 1
+    local lt, rt, lb, rb = load_op( x+1,  y+1), load_op(nx+1,  y+1), load_op( x+1, ny+1), load_op(nx+1, ny+1)
 
     local tv = math3d.lerp(lt, rt, px)
     local bv = math3d.lerp(lb, rb, px)
@@ -105,7 +119,7 @@ local cm_mt = {
     load_fxy = function (self, face, x, y)
         local idx = self:index_fxy(face, x, y)
         idx = math.min(idx, self.max_index)
-        local offset = (idx-1) * self.texelsize
+        local offset = (idx-1) * self.texelsize+1
         local r, g, b = ('fff'):unpack(self.data, offset)
         return math3d.vector(r, g, b, 0.0)
     end,
