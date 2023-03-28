@@ -122,8 +122,6 @@ public:
 	bool SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
 	std::optional<std::string> GetProperty(const std::string& name) const;
 
-	void TransitionPropertyChanges(const PropertyIdSet & properties, const Style::Combination& new_definition);
-
 	void UpdateProperties();
 	void UpdateAnimations(float delta);
 
@@ -163,7 +161,7 @@ protected:
 	bool DelInlineProperty(const PropertyIdSet& set);
 	void RefreshProperties();
 
-	bool StartTransition(PropertyId id, const Transition& transition, std::optional<Property> start_value, std::optional<Property> target_value);
+	void StartTransition(std::function<void()> f);
 	void HandleTransitionProperty();
 	void HandleAnimationProperty();
 	void AdvanceAnimations(float delta);

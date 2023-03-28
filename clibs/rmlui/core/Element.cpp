@@ -26,19 +26,6 @@
 
 namespace Rml {
 
-struct PropertyTransition {
-	PropertyId              id;
-	const Transition&       transition;
-	std::optional<Property> oldProperty;
-	const Property*         newProperty;
-	PropertyTransition(PropertyId id, const Transition& transition, std::optional<Property> oldProperty, const Property* newProperty)
-		: id(id)
-		, transition(transition)
-		, oldProperty(oldProperty)
-		, newProperty(newProperty)
-	{}
-};
-
 static const Property* PropertyVectorGet(const PropertyVector& vec, PropertyId id) {
 	for (auto const& v : vec) {
 		if (v.id == id) {
@@ -810,21 +797,41 @@ void Element::UpdateStructure() {
 	}
 }
 
-bool Element::StartTransition(PropertyId id, const Transition& transition, std::optional<Property> start_value, std::optional<Property> target_value) {
-	if (!start_value || !target_value || *start_value == *target_value) {
-		return false;
+void Element::StartTransition(std::function<void()> f) {
+	auto transition_list = GetComputedProperty(PropertyId::Transition)->Get<TransitionList>();
+	if (transition_list.empty()) {
+		f();
+		return;
 	}
-	if (transitions.contains(id)) {
-		return false;
+	struct PropertyTransition {
+		PropertyId              id;
+		const Transition&       transition;
+		std::optional<Property> start_value;
+		PropertyTransition(PropertyId id, const Transition& transition, std::optional<Property> start_value)
+			: id(id)
+			, transition(transition)
+			, start_value(start_value)
+		{}
+	};
+	std::vector<PropertyTransition> pt;
+	pt.reserve(transition_list.size());
+	for (auto const& [id, transition] : transition_list) {
+		auto start_value = GetComputedProperty(id);
+		pt.emplace_back(id, transition, start_value);
 	}
-
-	ElementTransition ani {*start_value, *target_value, transition };
-	if (!ani.IsValid(*this)) {
-		return false;
+	f();
+	for (auto& [id, transition, start_value] : pt) {
+		auto target_value = GetComputedProperty(id);
+		if (start_value && target_value && *start_value != *target_value) {
+			if (!transitions.contains(id)) {
+				ElementTransition ani {*start_value, *target_value, transition };
+				if (ani.IsValid(*this)) {
+					SetAnimationProperty(id, *start_value);
+					transitions.insert_or_assign(id, std::move(ani));
+				}
+			}
+		}
 	}
-	SetAnimationProperty(id, *start_value);
-	transitions.insert_or_assign(id, std::move(ani));
-	return true;
 }
 
 void Element::HandleTransitionProperty() {
@@ -1440,19 +1447,6 @@ std::optional<Property> Element::GetComputedProperty(PropertyId id) const {
 	return c.Find(StyleSheetSpecification::GetDefaultProperties(), id);
 }
 
-void Element::TransitionPropertyChanges(const PropertyIdSet& properties, const Style::Combination& new_definition) {
-	auto transitions = GetComputedProperty(PropertyId::Transition)->Get<TransitionList>();
-	if (!transitions.empty()) {
-		for (auto const& [id, transition] : transitions) {
-			if (properties.contains(id)) {
-				auto from = GetComputedProperty(id);
-				auto to = Style::Instance().Find(new_definition, id);
-				StartTransition(id, transition, from, to);
-			}
-		}
-	}
-}
-
 void Element::UpdateDefinition() {
 	if (!dirty_definition) {
 		return;
@@ -1466,10 +1460,9 @@ void Element::UpdateDefinition() {
 			changed_properties.erase(id);
 		}
 	}
-	if (!changed_properties.empty()) {
-		TransitionPropertyChanges(changed_properties, new_definition);
-	}
-	c.Assgin(definition_properties, new_definition);
+	StartTransition([&](){
+		c.Assgin(definition_properties, new_definition);
+	});
 	DirtyProperties(changed_properties);
 	for (auto& child : children) {
 		child->DirtyDefinition();
@@ -1496,45 +1489,17 @@ bool Element::DelInlineProperty(const PropertyIdSet& set) {
 
 bool Element::SetProperty(const PropertyVector& vec) {
 	bool change;
-	auto transitions = GetComputedProperty(PropertyId::Transition)->Get<TransitionList>();
-	if (transitions.empty()) {
+	StartTransition([&](){
 		change = SetInlineProperty(vec);
-	}
-	else {
-		std::vector<PropertyTransition> pt;
-		for (auto const& [id, transition] : transitions) {
-			if (auto oldProperty = GetComputedProperty(id)) {
-				if (auto newProperty = PropertyVectorGet(vec, id)) {
-					pt.emplace_back(id, transition, oldProperty, newProperty);
-				}
-			}
-		}
-		change = SetInlineProperty(vec);
-		for (auto& [id, transition, oldProperty, newProperty] : pt) {
-			StartTransition(id, transition, oldProperty, *newProperty);
-		}
-	}
+	});
 	return change;
 }
 
 bool Element::DelProperty(const PropertyIdSet& set) {
 	bool change;
-	auto transitions = GetComputedProperty(PropertyId::Transition)->Get<TransitionList>();
-	if (transitions.empty()) {
+	StartTransition([&](){
 		change = DelInlineProperty(set);
-	}
-	else {
-		std::vector<PropertyTransition> pt;
-		for (auto const& [id, transition] : transitions) {
-			if (auto oldProperty = GetComputedProperty(id)) {
-				pt.emplace_back(id, transition, oldProperty, nullptr);
-			}
-		}
-		change = DelInlineProperty(set);
-		for (auto& [id, transition, oldProperty, _] : pt) {
-			StartTransition(id, transition, oldProperty, GetComputedProperty(id));
-		}
-	}
+	});
 	return change;
 }
 
