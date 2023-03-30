@@ -739,7 +739,7 @@ function m.new()
         if imgui.widget.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
             new_anim_widget = false
             if anim_name ~= "" then
-                create_animation(create_context.type, anim_name, anim_duration)
+                create_animation("ske", anim_name, anim_duration)
             end
         end
         imgui.cursor.SameLine()
