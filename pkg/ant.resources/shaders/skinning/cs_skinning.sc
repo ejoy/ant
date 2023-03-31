@@ -9,7 +9,24 @@ BUFFER_RO(b_skinning_in_dynamic_vb, vec4, 1);
 // p [T] t/c
 BUFFER_WR(b_skinning_out_dynamic_vb, vec4, 2);
 
-uniform float4 u_skinning_param;
+struct attrib_input{
+	vec3 pos;
+	uvec4 indices;
+	vec4 weights;
+	vec4 tangent;
+	vec3 normal;
+	bool hastangent;
+	bool hasnormal;
+	bool is_tangentframe;
+};
+
+uniform vec4 u_attrib_indices[3];
+
+#define u_attrib_pos		u_attrib_indices[0].x
+#define u_attrib_index		u_attrib_indices[0].y
+#define u_attrib_weight		u_attrib_indices[0].z
+#define u_attrib_tangent	u_attrib_indices[0].w
+#define u_attrib_normal		u_attrib_indices[1].z
 
 vec4 mat2quat(in mat4 m)
 {
@@ -70,17 +87,28 @@ vec4 convert2quat(vec4 wm, vec4 tan)
     );
 }
 
-void transform_attributes_to_world(mat4 wm, inout vec3 pos, inout vec4 tan, bool has_tangent)
+void transform_attributes_to_world(mat4 wm, inout attrib_input ai)
 {
-    pos = mul(wm, vec4(pos, 1.0)).xyz;
-  	if(has_tangent){
-		vec4 quat_wm  = mat2quat(wm);
- 		vec4 quat_tan = tan;
-		tan = convert2quat(quat_wm, quat_tan);  
-	}  
+	ai.pos = mul(wm, vec4(ai.pos, 1.0)).xyz;
+	if (ai.is_tangentframe)
+	{
+		ai.tangent = convert2quat(mat2quat(wm), ai.tangent);
+	}
+	else
+	{
+		if (ai.hastangent)
+		{
+			ai.tangent = vec4(mul(wm, vec4(ai.tangent.xyz, 0.0)).xyz, ai.tangent.w);
+		}
+
+		if (ai.hasnormal)
+		{
+			ai.normal = mul(wm, vec4(ai.normal, 0.0)).xyz;
+		}
+	}
 }
 
-mat4 get_skinning_matrix(in vec4 index, in vec4 weight)
+mat4 get_skinning_matrix(in uvec4 index, in vec4 weight)
 {
     mat4 wm = mat4(
 		0, 0, 0, 0, 
@@ -93,42 +121,73 @@ mat4 get_skinning_matrix(in vec4 index, in vec4 weight)
 	{
         int id = int(index[ii]);
         mat4 m = mtxFromCols(b_skinning_matrices_vb[id*4+0], b_skinning_matrices_vb[id*4+1], b_skinning_matrices_vb[id*4+2], b_skinning_matrices_vb[id*4+3]);
-		float wei = weight[ii];
-		wm += m * wei;
+		wm += m * weight[ii];
 	}
 	return wm;
+}
+
+uint input_attrib_num()
+{
+	float s = 0;
+	for (int i=0; i<3; ++i)
+	{
+		bvec4 b = u_attrib_indices[i] >= 0.0;
+		s += dot(b, vec4_splat(1.0));
+	}
+
+	return (uint)s;
+}
+
+attrib_input load_attrib_input(uint offset)
+{
+	attrib_input ai;
+	ai.pos = b_skinning_in_dynamic_vb[offset+u_attrib_pos].xyz;
+	vec4 indices = b_skinning_in_dynamic_vb[offset+u_attrib_index];
+	//TODO: we assume indices is always uint16 and pack as float
+	ai.indices = uvec4(indices * 65535.0);
+	ai.weights = b_skinning_in_dynamic_vb[offset+u_attrib_weight];
+
+	ai.hastangent		= u_attrib_tangent >= 0;
+	ai.hasnormal		= u_attrib_normal >= 0;
+	ai.is_tangentframe	= !ai.hasnormal && ai.hastangent;
+
+	ai.tangent = ai.hastangent ? b_skinning_in_dynamic_vb[offset+u_attrib_tangent] : vec4_splat(0);
+	ai.normal  = ai.hasnormal ? b_skinning_in_dynamic_vb[offset+u_attrib_normal].xyz : vec3_splat(0);
+	return ai;
 }
 
 NUM_THREADS(64, 1, 1)
 void main()
 {
     uint vi = gl_GlobalInvocationID.x;
-	uint stride_input  = u_skinning_param.x;
-	uint stride_output = u_skinning_param.y;
-	bool has_tangent   = u_skinning_param.z;
 
-    vec3 pos = b_skinning_in_dynamic_vb[vi*stride_input].xyz;
-    vec4 index  = b_skinning_in_dynamic_vb[vi*stride_input+1];
-	vec4 weight = b_skinning_in_dynamic_vb[vi*stride_input+2];
+	uint input_num	= input_attrib_num();
+	uint output_num	= input_num - 2;
 
-	vec4 tan = 0;
-	if(has_tangent){
-		tan = b_skinning_in_dynamic_vb[vi*stride_input+3];
-	}
+	uint input_offset = vi*input_num;
+	uint output_offset= vi*output_num;
 
-    mat4 wm = get_skinning_matrix(index, weight);
+	attrib_input ai = load_attrib_input(input_offset);
 
-	transform_attributes_to_world(wm, pos, tan, has_tangent);
+    mat4 wm = get_skinning_matrix(ai.indices, ai.weights);
 
-    b_skinning_out_dynamic_vb[vi*stride_output] = vec4(pos, 0.0);
+	transform_attributes_to_world(wm, ai);
 
-	int ii = 1;
-	if(has_tangent){
-		b_skinning_out_dynamic_vb[vi*stride_output+1] = tan;
-		ii = 2;
-	}
-	for(; ii < stride_output; ++ii)
+	int ii = 0;
+	b_skinning_out_dynamic_vb[output_offset+ii] = vec4(ai.pos, 0.0); ++ii;
+
+	if(ai.hastangent)
 	{
-		b_skinning_out_dynamic_vb[vi*stride_output+ii] = b_skinning_in_dynamic_vb[vi*stride_input+ii+2];
+		b_skinning_out_dynamic_vb[output_offset+ii] = ai.tangent; ++ii;
+	}
+
+	if (ai.hasnormal)
+	{
+		b_skinning_out_dynamic_vb[output_offset+ii] = vec4(ai.normal, 0.0); ++ii;
+	}
+
+	for(; ii < output_num; ++ii)
+	{
+		b_skinning_out_dynamic_vb[output_offset+ii] = b_skinning_in_dynamic_vb[input_offset+ii+2];	// +2 for indices and weights attrib
 	}
 }

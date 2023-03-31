@@ -20,4 +20,7 @@ properties:
         stage: 2
         access: w
         buffer: b_skinning_out_dynamic_vb
-    u_skinning_param:  {0, 0, 0, 0}
+    u_attrib_indices:
+        {-1.0, -1.0, -1.0, -1.0}
+        {-1.0, -1.0, -1.0, -1.0}
+        {-1.0, -1.0, -1.0, -1.0}

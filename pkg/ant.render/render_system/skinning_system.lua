@@ -23,7 +23,59 @@ local cs_skinning = true
 
 local skinning_material
 
-local function create_skinning_compute(skininfo, vb_num)
+local ATTRIB_INDEX_MAPPER<const> = {
+	p = 1, i = 2, w = 3, T = 4, n = 5,
+}
+
+local function pack_attrib_indices(layout)
+	--we should make all the attribute have index in uniforms, but we assume that postion/indices/weights must have, and the 5 indices(include tangent and normal) is fix right now
+	-- local LAYOUT_NAMES<const> = {
+	-- 	"POSITION",
+	-- 	"NORMAL",
+	-- 	"TANGENT",
+	-- 	"BITANGENT",
+	-- 	"COLOR_0",
+	-- 	"COLOR_1",
+	-- 	"COLOR_2",
+	-- 	"COLOR_3",
+	-- 	"TEXCOORD_0",
+	-- 	"TEXCOORD_1",
+	-- 	"TEXCOORD_2",
+	-- 	"TEXCOORD_3",
+	-- 	"TEXCOORD_4",
+	-- 	"TEXCOORD_5",
+	-- 	"TEXCOORD_6",
+	-- 	"TEXCOORD_7",
+	-- 	"JOINTS_0",
+	-- 	"WEIGHTS_0",
+	-- }
+
+	local indices = {}; for i=1, 3*4 do indices[i] = -1.0 end
+
+	local other_attrib_idx = 6
+	local idx = 0
+	for l in layout:gmatch "%w+" do
+		assert(idx <= 12, ("Too many attirbute in the layout:%s"):format(layout))
+		assert(l:sub(2, 2) == '4' and l:sub(6, 6) == 'f')
+		local t = l:sub(1, 1)
+		local aidx = ATTRIB_INDEX_MAPPER[t]
+		if aidx then
+			indices[aidx] = idx
+		else
+			indices[other_attrib_idx] = idx
+			other_attrib_idx = other_attrib_idx + 1
+		end
+		idx = idx + 1
+	end
+
+	return {
+		math3d.vector(indices[1], indices[2], indices[3], indices[4]),
+		math3d.vector(indices[5], indices[6], indices[7], indices[8]),
+		math3d.vector(indices[9], indices[10], indices[11], indices[12]),
+	}
+end
+
+local function create_skinning_compute(skininfo, vb_num, attrib_indices)
 	local dispatchsize = {
 		math.floor((vb_num + 63) / 64), 1 , 1
 	}
@@ -32,12 +84,13 @@ local function create_skinning_compute(skininfo, vb_num)
 
 	local mo = skinning_material.object
 	dis.material = mo:instance()
-	local mat = dis.material
-	mat.b_skinning_matrices_vb = skininfo.skinning_matrices_vb
-	mat.b_skinning_in_dynamic_vb = skininfo.skinning_in_dynamic_vb
-	mat.b_skinning_out_dynamic_vb = skininfo.skinning_out_dynamic_vb
-	mat.u_skinning_param = math3d.vector(skininfo.stride_input, skininfo.stride_output, skininfo.has_tangent, 0)
-	dis.fx = skinning_material._data.fx
+	local m = dis.material
+	m.b_skinning_matrices_vb	= skininfo.skinning_matrices_vb
+	m.b_skinning_in_dynamic_vb	= skininfo.skinning_in_dynamic_vb
+	m.b_skinning_out_dynamic_vb	= skininfo.skinning_out_dynamic_vb
+
+	m.u_attrib_indices			= attrib_indices
+	dis.fx 						= skinning_material._data.fx
 	return dis
 end
 
@@ -60,7 +113,7 @@ local function get_output_layout(decl)
 	end
 
 	assert(lt[1]:sub(1, 1) == 'p')
-	return table.concat(lt, '|'), #lt
+	return table.concat(lt, '|')
 end
 
 function skinning_sys:init()
@@ -77,12 +130,8 @@ function skinning_sys:entity_init()
 				meshskin = e.meshskin
 			else
 				assert(e.mesh)
-				local decl = e.mesh.vb.declname
-				local output_layout, stride_out = get_output_layout(decl)
-				local has_tangent = 0
-				if string.match(decl, "T%d%d%w%w%w") then
-					has_tangent = 1
-				end
+				local layout = e.mesh.vb.declname
+				local output_layout = get_output_layout(layout)
 				local sm = meshskin.skinning_matrices
 				local memory_buffer = bgfx.memory_buffer(sm:pointer(), 64 * sm:count())
 				local skinning_out_dynamic_vb = bgfx.create_dynamic_vertex_buffer(e.render_object.vb_num, declmgr.get(output_layout).handle, "w")
@@ -90,12 +139,9 @@ function skinning_sys:entity_init()
 					skinning_matrices_vb 	= bgfx.create_dynamic_vertex_buffer(memory_buffer, declmgr.get("p4").handle, "r"),
 					skinning_in_dynamic_vb 	= e.render_object.vb_handle,
 					skinning_out_dynamic_vb = skinning_out_dynamic_vb,
-					stride_input            = stride_out + 2,
-					stride_output           = stride_out,
-					has_tangent             = has_tangent
 				}
 	
-				e.skininfo.dispatch_entity	= create_skinning_compute(e.skininfo, e.render_object.vb_num)
+				e.skininfo.dispatch_entity	= create_skinning_compute(e.skininfo, e.render_object.vb_num, pack_attrib_indices(layout))
 				e.render_object.vb_handle = skinning_out_dynamic_vb 
 			end
 		end		
