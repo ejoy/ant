@@ -300,20 +300,34 @@ local function calc_tangents(ib, vb, layouts)
 
 	local normal_attrib_idx = find_layout_idx(layouts, "NORMAL")
 	local normal_layout = layouts[normal_attrib_idx].layout
+
+	-- see: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-13-normal-mapping/#tangent-and-bitangent
+	local function make_vector_perpendicular(srcvec, basevec)
+		local ndt	= math3d.dot(srcvec, basevec)
+		return math3d.sub(srcvec, math3d.mul(basevec, ndt))
+	end
+
 	for iv=1, #vb do
 		local tanu 		= tangents[iv]
 		local tanv 		= bitangents[iv]
-
 		local normal 	= load_vec(vb[iv], normal_attrib_idx, normal_layout)
-		local nxt    	= math3d.cross(normal, tanu)
-		
-		-- see: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-13-normal-mapping/#tangent-and-bitangent
-		-- make tangent vector perpendicular to normal
-		-- tangent = tangent - normal * normal dot tangent
-		local ndt	= math3d.dot(normal, tanu)
-		local tangent	= math3d.sub(tanu, math3d.mul(normal, ndt))
-		tangent	= math3d.set_index(tangent, 4, math3d.dot(nxt, tanv) < 0 and -1.0 or 1.0)
-		store(iv, math3d.normalize(tangent))
+
+		local tangent	= make_vector_perpendicular(tanu, normal)
+		local bitangent	= make_vector_perpendicular(tanv, normal)
+
+		if mu.iszero_math3dvec(tangent) or mu.isnan_math3dvec(tangent) then
+			if mu.iszero_math3dvec(bitangent) or mu.isnan_math3dvec(bitangent) then
+				tangent = mc.XAXIS
+			else
+				tangent = math3d.cross(bitangent, normal)
+			end
+		end
+
+		tangent	= math3d.normalize(tangent)
+
+		local nxt    	= math3d.cross(normal, tangent)
+		tangent	= math3d.set_index(tangent, 4, math3d.dot(nxt, bitangent) < 0 and -1.0 or 1.0)
+		store(iv, tangent)
 	end
 end
 
