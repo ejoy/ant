@@ -6,6 +6,7 @@
 #include <cstring>
 #include <iterator>
 #include <type_traits>
+#include <climits>
 
 namespace Rml {
 
