@@ -41,8 +41,8 @@ public:
         constexpr bool operator!=(const const_iterator& rhs) const {
             return !operator==(rhs);
         }
-        friend const_iterator enumset::begin() const;
-        friend const_iterator enumset::end() const;
+        friend constexpr const_iterator enumset::begin() const;
+        friend constexpr const_iterator enumset::end() const;
     protected:
         size_t index;
     private:
