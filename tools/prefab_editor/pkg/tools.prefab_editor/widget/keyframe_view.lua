@@ -1222,7 +1222,7 @@ local function create_joint_entity(joint_name)
             name = joint_name,
             on_ready = function(e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
-				ivs.set_state(e, "auxgeom", true)
+				-- ivs.set_state(e, "auxgeom", true)
                 ivs.set_state(e, "main_view", false)
 			end
         }
@@ -1293,7 +1293,7 @@ local function create_bone_entity(joint_name)
 			name		= joint_name,
 			on_ready 	= function(e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
-                ivs.set_state(e, "auxgeom", true)
+                -- ivs.set_state(e, "auxgeom", true)
                 ivs.set_state(e, "main_view", false)
 			end
 		}
