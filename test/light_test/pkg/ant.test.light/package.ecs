@@ -5,6 +5,7 @@ import "@ant.camera"
 import "@ant.asset"
 import "@ant.animation"
 import "@ant.efk"
+import "@ant.terrain"
 
 system "init_system"
     .implement "init_system.lua"
