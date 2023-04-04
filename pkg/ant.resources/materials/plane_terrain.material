@@ -15,9 +15,9 @@ properties:
   s_normal:
     stage: 2
     texture: /pkg/ant.resources/textures/shape_terrain/shape_normal.texture
-  s_cement_alpha:
+  s_mark_alpha:
     stage: 3
-    texture: /pkg/ant.resources/textures/shape_terrain/shape_cement_alpha.texture
+    texture: /pkg/ant.resources/textures/shape_terrain/shape_mark_alpha.texture
 state: 
     ALPHA_REF: 0
     CULL: CCW
