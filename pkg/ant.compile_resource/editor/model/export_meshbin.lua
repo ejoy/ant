@@ -473,7 +473,7 @@ local function pack_vertex_data(layouts, vertices)
 
 	local need_vec4_format                      = weights_attrib_idx and joint_attrib_idx and cs_skinning
 
-	local function check_need_compress_color(color_attrib_idx)
+	local function check_need_compress_color()
 		if not color_attrib_idx then
 			return false
 		end
