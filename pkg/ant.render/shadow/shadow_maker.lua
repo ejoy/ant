@@ -713,10 +713,10 @@ function sm:render_submit()
 end
 
 function sm:camera_usage()
-	local sa = imaterial.system_attribs()
-	local mq = w:first("main_queue camera_ref:in")
-	local camera <close> = w:entity(mq.camera_ref, "camera:in")
-	sa:update("u_main_camera_matrix",camera.camera.viewmat)
+	-- local sa = imaterial.system_attribs()
+	-- local mq = w:first("main_queue camera_ref:in")
+	-- local camera <close> = w:entity(mq.camera_ref, "camera:in")
+	-- sa:update("u_main_camera_matrix",camera.camera.viewmat)
 end
 
 local function which_material(skinning, stonemountain)
