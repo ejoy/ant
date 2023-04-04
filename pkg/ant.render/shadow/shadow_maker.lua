@@ -478,7 +478,7 @@ local function update_shadow_frustum(dl, main_camera)
 
 	--calculate scene_aabb in world space
 	local world_scene_aabb = math3d.aabb(mc.ZERO, mc.ZERO)
-	for e in w:select "scene:in render_object:in bounding:in name:in" do
+	for e in w:select "scene:in render_object:in bounding:in" do
 		if e.bounding.scene_aabb and e.bounding.scene_aabb ~= mc.NULL then
 			world_scene_aabb = math3d.aabb_merge(world_scene_aabb, e.bounding.scene_aabb)
 		end
@@ -699,10 +699,10 @@ function sm:render_submit()
 end
 
 function sm:camera_usage()
-	local sa = imaterial.system_attribs()
-	local mq = w:first("main_queue camera_ref:in")
-	local camera <close> = w:entity(mq.camera_ref, "camera:in")
-	sa:update("u_main_camera_matrix",camera.camera.viewmat)
+	-- local sa = imaterial.system_attribs()
+	-- local mq = w:first("main_queue camera_ref:in")
+	-- local camera <close> = w:entity(mq.camera_ref, "camera:in")
+	-- sa:update("u_main_camera_matrix",camera.camera.viewmat)
 end
 
 local function which_material(skinning)

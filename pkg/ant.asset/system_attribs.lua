@@ -118,7 +118,7 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	u_shadow_param2		 = uniform_value(mc.ZERO),
 
 	s_shadowmap			 = texture_value(8, DEFAULT_TEX2D_ID),
-	u_main_camera_matrix = uniform_value(mc.IDENTITY_MAT),
+	--u_main_camera_matrix = uniform_value(mc.IDENTITY_MAT),
 	--   omni
 	u_omni_matrix = uniform_value{
 			mc.IDENTITY_MAT,
