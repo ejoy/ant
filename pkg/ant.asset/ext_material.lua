@@ -125,6 +125,8 @@ local function loader(filename)
 			elseif v.image then
                 v.type = 'i'
                 v.value = assetmgr.resource(v.image).id
+			elseif v.buffer then
+				v.type = 'b'
             end
         end
     end

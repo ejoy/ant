@@ -1,0 +1,18 @@
+fx:
+  cs: /pkg/ant.resources/shaders/mesh/cs_stone_mountain.sc
+  setting:
+    lighting: off
+    shadow_cast: on
+    shadow_receive: on
+    subsurface: off
+properties:
+    b_indirect_vb:
+      stage: 0
+      access: w
+      buffer: b_indirect
+    b_visibility_vb:
+      stage: 1
+      access: r
+      buffer: b_visibility_vb
+    u_instance_params:  {0, 0, 0, 0}
+    u_indirect_params:  {0, 0, 0, 0}

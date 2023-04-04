@@ -2,15 +2,12 @@
 #error "input.sh file should define before bgfx_shader.sh"
 #endif //BGFX_SHADER_H_HEADER_GUARD
 
-#ifdef HEAP_MESH
-    #define OUTPUT_EMISSIVE
-#else !HEAP_MESH
-    #define OUTPUT_EMISSIVE
-#endif HEAP_MESH
+#ifdef INDIRECT_BUFFER
+    #define INPUT_INSTANCE i_data0
+#else // !INDIRECT_BUFFER
+    #define INPUT_INSTANCE
+#endif // INDIRECT_BUFFER
 
-
-
-# define INPUT_INSTANCE i_data0
 
 #define CS_SKINNING 1
 

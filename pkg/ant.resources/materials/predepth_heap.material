@@ -3,6 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
   setting:
     HEAP_MESH: 1
+    INDIRECT_BUFFER: 1
     lighting: off
     shadow_cast: off
     shadow_receive: off

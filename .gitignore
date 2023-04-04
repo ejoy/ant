@@ -26,3 +26,11 @@ projects/xcode/lua/Build
 projects/xcode/lua/DerivedData
 projects/xcode/lua/lua.xcodeproj/project.xcworkspace/xcuserdata/ejoy.xcuserdatad/UserInterfaceState.xcuserstate
 tools/prefab_editor/pkg/tools.prefab_editor/editor.settings
+pkg/ant.resources/shaders/common/fs_default.sc
+pkg/ant.resources/shaders/common/default_varying_def.sh
+pkg/ant.resources/shaders/common/default_func.sh
+pkg/ant.resources/shaders/common/default_inputs_define.sh
+pkg/ant.resources/shaders/common/default_inputs_structure.sh
+pkg/ant.resources/shaders/pbr/vs_default.sc
+pkg/ant.resources/shaders/pbr/vs_inputs.sh
+pkg/ant.resources/shaders/pbr/vs_inputs.sh
