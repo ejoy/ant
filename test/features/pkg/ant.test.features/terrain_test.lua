@@ -2,14 +2,14 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local iterrain  = ecs.import.interface "ant.terrain|iterrain"
+--local iterrain  = ecs.import.interface "ant.terrain|iterrain"
 local terrain_test_sys = ecs.system "terrain_test_system"
 
 function terrain_test_sys:init_world()
     -- 32 32 means terrain's width and height
     -- 10 means origin's x and z offset to left-bottom dirction
     -- terrain should be generated in initial stage
-    iterrain.gen_terrain_field(256, 256, 0, 0)
+    --iterrain.gen_terrain_field(256, 256, 0)
 end
 
 -- world coordinate x
@@ -19,6 +19,18 @@ end
 --         mark: type(1~2) shape(U I O) dir(N E S W)     
 local create_list = {
     -- single road layer:road1 road2 road3
+    {
+        x = 0, y = 0,
+        layers =
+        {
+            road =
+            {
+                type  = "1",
+                shape = "I",
+                dir   = "N"
+            }
+        }
+    },
     {
         x = 6, y = 1,
         layers =
@@ -173,11 +185,12 @@ local create_list = {
 local mark = false
 
 function terrain_test_sys:data_changed()
-    if mark == false then
+--[[     if mark == false then
         -- create/update/delete road need a create/update/delete list,
         -- and it should be executed once.
         -- otherwise, vertex buffer will overflow
         iterrain.create_roadnet_entity(create_list)
         mark = true
     end
+    iterrain.is_stone_mountain(46, 0) ]]
 end

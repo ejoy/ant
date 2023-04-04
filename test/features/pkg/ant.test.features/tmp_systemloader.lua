@@ -8,7 +8,6 @@ local imaterial     = ecs.import.interface "ant.asset|imaterial"
 local imesh         = ecs.import.interface "ant.asset|imesh"
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local irl           = ecs.import.interface "ant.render|irender_layer"
-
 local assetmgr      = import_package "ant.asset"
 
 local mathpkg       = import_package"ant.math"
@@ -20,11 +19,12 @@ local declmgr       = renderpkg.declmgr
 local init_loader_sys   = ecs.system 'init_loader_system'
 local iheapmesh = ecs.import.interface "ant.render|iheapmesh"
 local iprinter= ecs.import.interface "mod.printer|iprinter"
+local istonemountain= ecs.import.interface "mod.stonemountain|istonemountain"
+local iterrain      = ecs.import.interface "mod.terrain|iterrain"
 local printer
 local printer_material
 local printer_eid
 local printer_percent = 0
-local ism = ecs.import.interface "ant.render|istonemountain"
 local function point_light_test()
     local pl_pos = {
         {  1, 0, 1},
@@ -193,7 +193,7 @@ end
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     -- width height unit offset freq depth, section_size
-    ism.create_sm_entity(256, 256, 10, 0, 4, 4, 16)
+    --ism.create_sm_entity(256, 256, 0)
     --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5, nil, "/pkg/ant.test.features/assets/polyline_mask.material", "background")
 
@@ -701,7 +701,181 @@ local function canvas_test()
 end
 
 local heap_num = 1
+-- world coordinate x
+-- world coordinate y
+-- layers: road/mark/road and mark
+--         road: type(1~3) shape(I L T U X O) dir(N E S W)
+--         mark: type(1~2) shape(U I O) dir(N E S W)     
+local create_list = {
+    -- single road layer:road1 road2 road3
+    {
+        x = 0, y = 0,
+        layers =
+        {
+            road =
+            {
+                type  = "1",
+                shape = "I",
+                dir   = "N"
+            }
+        }
+    },
+    {
+        x = 6, y = 1,
+        layers =
+        {
+            road =
+            {
+                type  = "1",
+                shape = "I",
+                dir   = "N"
+            }
+        }
+    },
+    {
+        x = 7, y = 1,
+        layers =
+        {
+            road =
+            {
+                type  = "2",
+                shape = "I",
+                dir   = "N"
+            }
+        }
+    },
+    {
+        x = 8, y = 1,
+        layers =
+        {
+            road =
+            {
+                type  = "3",
+                shape = "I",
+                dir   = "N"
+            }
+        }
+    },
+    
+    --single mark layer:mark1 mark2
+    {
+        x = 2, y = 2,
+        layers =
+        {
+            mark =
+            {
+                type  = "1",
+                shape = "U",
+                dir   = "E"
+            }
+        }
+    },
+    {
+        x = 3, y = 2,
+        layers =
+        {
+            mark =
+            {
+                type  = "1",
+                shape = "U",
+                dir   = "W"
+            }
+        }
+    },
+    {
+        x = 4, y = 2,
+        layers =
+        {
+            mark =
+            {
+                type  = "1",
+                shape = "O",
+                dir   = "N"
+            }
+        }
+    },
+    {
+        x = 2, y = 1,
+        layers =
+        {
+            mark =
+            {
+                type  = "2",
+                shape = "U",
+                dir   = "E"
+            }
+        }
+    },
+    {
+        x = 3, y = 1,
+        layers =
+        {
+            mark =
+            {
+                type  = "2",
+                shape = "I",
+                dir   = "W"
+            }
+        }
+    },
+    {
+        x = 4, y = 1,
+        layers =
+        {
+            mark =
+            {
+                type  = "2",
+                shape = "U",
+                dir   = "W"
+            }
+        }
+    },
+
+    -- multiple layer: road1 road2 road3 and mark1 mark2
+    {
+        
+        x = 1, y = 1,
+        layers =
+        {
+            road =
+            {
+                type  = "1",
+                shape = "I",
+                dir   = "N"                
+            },
+            mark =
+            {
+                type  = "1",
+                shape = "I",
+                dir   = "N"
+            }
+        }
+    },
+    {
+        x = 1, y = 2,
+        layers =
+        {
+            road =
+            {
+                type  = "2",
+                shape = "L",
+                dir   = "N"                
+            },
+            mark =
+            {
+                type  = "2",
+                shape = "O",
+                dir   = "S"
+            }
+        }
+    },
+}
 function init_loader_sys:init_world()
+    iterrain.gen_terrain_field(256, 256, 0)
+    iterrain.create_roadnet_entity(create_list)
+    istonemountain.create_sm_entity(256, 256, 0)
+    iterrain.is_stone_mountain(46, 0)
+    
     for msg in after_init_mb:each() do
         local e = msg[2]
         local s = iom.get_scale(e)

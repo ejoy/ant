@@ -1,0 +1,26 @@
+fx:
+  fs: /pkg/mod.terrain/assets/shaders/fs_plane_terrain.sc
+  vs: /pkg/mod.terrain/assets/shaders/vs_plane_terrain.sc
+  setting:
+    lighting: on
+properties:
+  u_metallic_roughness_factor1: {0.2, 1.0, 0.1, 0.6}  #xy: sand, zw: stone
+  u_metallic_roughness_factor2: {0.1, 0.8, 0.0, 0.0}  #xy: cement
+  s_basecolor:
+    stage: 0
+    texture: /pkg/mod.terrain/assets/textures/shape_basecolor.texture
+  s_height:
+    stage: 1
+    texture: /pkg/mod.terrain/assets/textures/shape_height.texture
+  s_normal:
+    stage: 2
+    texture: /pkg/mod.terrain/assets/textures/shape_normal.texture
+  s_mark_alpha:
+    stage: 3
+    texture: /pkg/mod.terrain/assets/textures/shape_mark_alpha.texture
+state: 
+    ALPHA_REF: 0
+    CULL: CCW
+    DEPTH_TEST: GREATER
+    MSAA: true
+    WRITE_MASK: RGBAZ

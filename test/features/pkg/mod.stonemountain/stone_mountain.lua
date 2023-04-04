@@ -14,16 +14,15 @@ local icompute = ecs.import.interface "ant.render|icompute"
 local terrain_module = require "terrain"
 local ism = ecs.interface "istonemountain"
 local sm_sys = ecs.system "stone_mountain"
-local iplane_terrain  = ecs.import.interface "ant.terrain|iplane_terrain"
-local width, height, freq, depth, unit, offset, section_size
 local sm_material
+local width, height, section_size
+local freq, depth, unit, offset = 4, 4, 10, 0
 local is_build_sm = false
 local instance_num = 0
 -- mapping between instance idx and sm_idx
 local real_to_sm_table = {}
 local sm_to_real_table = {}
 local sm_table = {}
-
 -- 1. mapping between mesh_idx and sm_idx with size_idx with count_idx (before get_final_map)
 -- 1. mapping between mesh_idx and sm_idx with size_idx (after get_final_map)
 local mesh_to_sm_table = {
@@ -366,7 +365,6 @@ local function get_rotation()
                     local offset_y = ix * size_idx * count_idx
                     local seed = sm_idx * size_idx * count_idx
                     local e = terrain_module.noise(ix, iy, freq + size_idx, depth + size_idx, seed, offset_y, offset_x) * 2 - 1
-                    e = e * (terrain_module.noise(ix, iy, freq - size_idx, depth - size_idx, seed, offset_x, offset_y) * 2 - 1)
                     if size_idx == 1 then
                         sm_table[sm_idx][size_idx].r = e
                     else
@@ -548,7 +546,7 @@ local function get_translation()
     get_final_map()
 end
 
-local function get_real_sm()  
+local function get_real_sm() 
     for sm_idx, _ in pairs(sm_table) do
         instance_num = instance_num + 1
         real_to_sm_table[instance_num] = sm_idx
@@ -614,10 +612,22 @@ local function get_sections_sm()
     end
 end
 
-local function record_sm_idx_to_terrain_field(t, stone)
+local function record_sm_idx_to_terrain_field(tf, stone, sm_idx, size_idx)
+    local mesh_idx = sm_bms_to_mesh_table[sm_idx][size_idx]
+    local center_x, center_z = stone.t.x, stone.t.z
+    local extent_x, extent_z = mesh_aabb_table[mesh_idx].extent[1] * stone.s, mesh_aabb_table[mesh_idx].extent[2] * stone.s
+    local min_x, max_x = math.floor((center_x - extent_x) / unit) + 1, math.ceil((center_x + extent_x) / unit)
+    local min_z, max_z = math.floor((center_z - extent_z) / unit), math.ceil((center_z + extent_z) / unit)
+    for y = min_z, max_z do
+        for x = min_x, max_x do
+            local cur_idx= x - 1 + (y - 1) * width + 1
+            tf[cur_idx].is_sm = true
+        end
+    end
 end
+
 local function set_terrain_sm()
---[[     for e in w:select "shape_terrain st:update" do
+     for e in w:select "shape_terrain st:update" do
         local st = e.st
         if st.prev_terrain_fields == nil then
             error "need define terrain_field, it should be file or table"
@@ -625,21 +635,34 @@ local function set_terrain_sm()
         for sm_idx, stones in pairs(sm_table) do
             local big_stone, middle_stone, small_stone = stones[1], stones[2], stones[3]
             if big_stone.s then
-                record_sm_idx_to_terrain_field(st.prev_terrain_fields, big_stone)
+                record_sm_idx_to_terrain_field(st.prev_terrain_fields, big_stone, sm_idx, 1)
             end
             if middle_stone.s then
-                record_sm_idx_to_terrain_field(st.prev_terrain_fields, middle_stone)
+                record_sm_idx_to_terrain_field(st.prev_terrain_fields, middle_stone, sm_idx, 2)
             end
             if small_stone.s then
-                record_sm_idx_to_terrain_field(st.prev_terrain_fields, small_stone)
+                record_sm_idx_to_terrain_field(st.prev_terrain_fields, small_stone, sm_idx, 3)
             end
         end
-    end ]]
+    end
 end
 
-function ism.create_sm_entity(ww, hh, un, off, f, d, sz)
+function ism.create_sm_entity(ww, hh, off, un, f, d)
     open_sm = true
-    width, height, unit, offset, freq, depth, section_size = ww, hh, un, off, f, d, sz
+    width, height= ww, hh
+    if off then
+        offset = off
+    end
+    if un then
+        un = unit
+    end
+    if f then
+        freq = f
+    end
+    if d then
+        depth = d
+    end
+    section_size = math.min(math.max(1, width > 4 and width//4 or width//2), 16)
     for center_idx = 1, width * height do
         sm_table[center_idx] = {[1] = {}, [2] = {}, [3] = {}} -- b m s
     end
@@ -647,14 +670,14 @@ function ism.create_sm_entity(ww, hh, un, off, f, d, sz)
         policy = {
             "ant.render|render",
             "ant.general|name",
-            "ant.render|stone_mountain",
+            "mod.stonemountain|stone_mountain",
          },
         data = {
             name          = "sm1",
             scene         = {},
-            material      = "/pkg/ant.resources/materials/pbr_sm.material", 
+            material      ="/pkg/mod.stonemountain/assets/pbr_sm.material", 
             visible_state = "main_view|cast_shadow",
-            mesh          = "/pkg/ant.test.features/assets/glb/mountain1.glb|meshes/Cylinder.002_P1.meshbin",
+            mesh          = "/pkg/mod.stonemountain/assets/mountain1.glb|meshes/Cylinder.002_P1.meshbin",
             stonemountain = true,
             sm_info       ={
                 mesh_idx  = 1
@@ -665,14 +688,14 @@ function ism.create_sm_entity(ww, hh, un, off, f, d, sz)
         policy = {
             "ant.render|render",
             "ant.general|name",
-            "ant.render|stone_mountain",
+            "mod.stonemountain|stone_mountain",
          },
         data = {
             name          = "sm2",
             scene         = {},
-            material      = "/pkg/ant.resources/materials/pbr_sm.material", 
+            material      = "/pkg/mod.stonemountain/assets/pbr_sm.material", 
             visible_state = "main_view|cast_shadow",
-            mesh          = "/pkg/ant.test.features/assets/glb/mountain2.glb|meshes/Cylinder.004_P1.meshbin",
+            mesh          = "/pkg/mod.stonemountain/assets/mountain2.glb|meshes/Cylinder.004_P1.meshbin",
             stonemountain = true,
             sm_info       ={
                 mesh_idx  = 2
@@ -683,14 +706,14 @@ function ism.create_sm_entity(ww, hh, un, off, f, d, sz)
         policy = {
             "ant.render|render",
             "ant.general|name",
-            "ant.render|stone_mountain",
+            "mod.stonemountain|stone_mountain",
          },
         data = {
             name          = "sm3",
             scene         = {},
-            material      = "/pkg/ant.resources/materials/pbr_sm.material", 
+            material      = "/pkg/mod.stonemountain/assets/pbr_sm.material", 
             visible_state = "main_view|cast_shadow",
-            mesh          = "/pkg/ant.test.features/assets/glb/mountain3.glb|meshes/Cylinder_P1.meshbin",
+            mesh          = "/pkg/mod.stonemountain/assets/mountain3.glb|meshes/Cylinder_P1.meshbin",
             stonemountain = true,
             sm_info       ={
                 mesh_idx  = 3
@@ -701,14 +724,14 @@ function ism.create_sm_entity(ww, hh, un, off, f, d, sz)
         policy = {
             "ant.render|render",
             "ant.general|name",
-            "ant.render|stone_mountain",
+            "mod.stonemountain|stone_mountain",
          },
         data = {
             name          = "sm4",
             scene         = {},
-            material      = "/pkg/ant.resources/materials/pbr_sm.material", 
+            material      = "/pkg/mod.stonemountain/assets/pbr_sm.material", 
             visible_state = "main_view|cast_shadow",
-            mesh          = "/pkg/ant.test.features/assets/glb/mountain4.glb|meshes/Cylinder.021_P1.meshbin",
+            mesh          = "/pkg/mod.stonemountain/assets/mountain4.glb|meshes/Cylinder.021_P1.meshbin",
             stonemountain = true,
             sm_info       ={
                 mesh_idx  = 4

@@ -1,0 +1,34 @@
+system "plane_terrain_system"
+    .implement "plane_terrain.lua"
+    .require_interface "mod.terrain|iterrain"
+    .method "init"
+
+component "plane_terrain".type "lua"
+component "section_index".type "lua"
+
+interface "iplane_terrain"
+    .implement "plane_terrain.lua"
+    .method "init_plane_terrain"
+    .method "update_plane_terrain"
+    .method "set_wh"
+
+component "shape_terrain".type "lua"
+
+policy "shape_terrain"
+    .require_system "mod.terrain|plane_terrain_system"
+    .component "shape_terrain"
+
+component "st".type "lua"
+
+system "terrain_system"
+    .implement "terrain_system.lua"
+    .method "init"
+    .method "data_changed"
+
+interface "iterrain"
+    .implement "terrain_system.lua"
+    .method "gen_terrain_field"
+    .method "create_roadnet_entity"
+    .method "update_roadnet_entity"
+    .method "delete_roadnet_entity"
+    .method "is_stone_mountain"

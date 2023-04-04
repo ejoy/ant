@@ -3,7 +3,7 @@ local world = ecs.world
 local w		= world.w
 local iterrain = ecs.interface "iterrain"
 local terrain_sys = ecs.system "terrain_system"
-local iplane_terrain  = ecs.import.interface "ant.terrain|iplane_terrain"
+local iplane_terrain  = ecs.import.interface "mod.terrain|iplane_terrain"
 local terrain_change = {}
 local tc_cnt = 0
 local terrain_fields = {}
@@ -54,10 +54,10 @@ local function calc_shape_terrain(unit)
     shape_terrain.unit = unit
     shape_terrain.prev_terrain_fields = terrain_fields
     shape_terrain.section_size = math.min(math.max(1, terrain_width > 4 and terrain_width//4 or terrain_width//2), 16)
-    shape_terrain.material = "/pkg/ant.resources/materials/plane_terrain.material"
+    shape_terrain.material = "/pkg/mod.terrain/assets/plane_terrain.material"
 end
 
-function iterrain.gen_terrain_field(width, height, offset_x, offset_z, unit)
+function iterrain.gen_terrain_field(width, height, offset, unit)
     local terrain_field = {}
     terrain_width  = width
     terrain_height = height
@@ -76,14 +76,15 @@ function iterrain.gen_terrain_field(width, height, offset_x, offset_z, unit)
         end
     end
     terrain_fields = terrain_field
-    if unit == nil then
+    if not unit then
         unit = 10.0
     end
     calc_shape_terrain(unit)
-    iplane_terrain.set_wh(width, height, offset_x, offset_z)
+    --iplane_terrain.set_wh(width, height, offset_x, offset_z)
+    iplane_terrain.set_wh(width, height, offset)
     iplane_terrain.init_plane_terrain(shape_terrain)
-    terrain_width_offset  = offset_x
-    terrain_height_offset = offset_z
+    terrain_width_offset  = offset
+    terrain_height_offset = offset
 end
 
 function iterrain.create_roadnet_entity(create_list)
@@ -196,6 +197,23 @@ function terrain_sys:init()
             end,
         },
     }
+end
+
+function iterrain.is_stone_mountain(width, height)
+    
+    for e in w:select "shape_terrain st:update eid:in" do
+        local st = e.st
+        if st.prev_terrain_fields == nil then
+            error "need define terrain_field, it should be file or table"
+        end
+        local cur_idx=  width + height * terrain_width + 1  --width and heights' value from game world 0
+        if st.prev_terrain_fields[cur_idx].is_sm then
+            return true
+        else
+            return false
+        end
+
+    end
 end
 
 function terrain_sys:data_changed()

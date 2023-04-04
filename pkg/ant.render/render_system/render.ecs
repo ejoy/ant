@@ -92,24 +92,6 @@ policy "heap_mesh"
     .require_system "ant.render|heap_mesh"
     .component "heapmesh"
 
-system "stone_mountain"
-    .implement "render_system/stone_mountain.lua"
-    .method "init"
-    .method "stone_mountain"
-
-
-interface "istonemountain"
-    .implement "render_system/stone_mountain.lua"
-    .method "create_sm_entity"
-    .method "get_sm_aabb"
-
-component "stonemountain"
-component "sm_info".type "lua"
-
-policy "stone_mountain"
-    .require_system "ant.render|stone_mountain"
-    .component "stonemountain"
-    .component "sm_info"
 
 system "skinning_system"
     .implement "render_system/skinning_system.lua"

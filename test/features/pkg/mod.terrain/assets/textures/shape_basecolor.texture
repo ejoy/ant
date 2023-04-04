@@ -1,0 +1,15 @@
+compress:
+  android: ASTC4x4
+  ios: ASTC4x4
+  windows: BC3
+maxsize: 512x512
+mipmap: 0
+colorspace: sRGB
+path:/pkg/mod.terrain/assets/shapes/basecolor.dds
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: WRAP
+  V: WRAP
+type: texture

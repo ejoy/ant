@@ -4,7 +4,7 @@ import "@ant.asset"
 import "shape_terrain.ecs"
 import "water.ecs"
 
-component "shape_terrain".type "lua"
+--[[ component "shape_terrain".type "lua"
 component "st".type "lua"
 system "terrain_system"
     .implement "terrain_system.lua"
@@ -17,6 +17,7 @@ interface "iterrain"
     .method "create_roadnet_entity"
     .method "update_roadnet_entity"
     .method "delete_roadnet_entity"
+    .method "is_stone_mountain" ]]
 
 -- interface "terrain"
 --     .implement "terrain_system.lua"

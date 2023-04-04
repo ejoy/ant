@@ -1,0 +1,18 @@
+system "stone_mountain"
+    .implement "stone_mountain.lua"
+    .method "init"
+    .method "stone_mountain"
+
+
+interface "istonemountain"
+    .implement "stone_mountain.lua"
+    .method "create_sm_entity"
+    .method "get_sm_aabb"
+
+component "stonemountain"
+component "sm_info".type "lua"
+
+policy "stone_mountain"
+    .require_system "mod.stonemountain|stone_mountain"
+    .component "stonemountain"
+    .component "sm_info"

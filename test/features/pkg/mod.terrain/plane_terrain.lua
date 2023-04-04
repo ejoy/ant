@@ -559,18 +559,6 @@ function iplane_terrain.update_plane_terrain(tc)
     end
 end
 
-function iplane_terrain.is_stone_mountain(width, height)
-    
-    for e in ww:select "shape_terrain st:update eid:in" do
-        local st = e.st
-        if st.prev_terrain_fields == nil then
-            error "need define terrain_field, it should be file or table"
-        end
-
-
-    end
-end
-
 function p_ts:init()
 
 

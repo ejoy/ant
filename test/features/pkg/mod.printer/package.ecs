@@ -8,7 +8,7 @@ system "printer_system"
 policy "printer"
     .require_system "mod.printer|printer_system"
     .require_system "ant.render|postprocess_obj_system"
-    .require_interface "ant.terrain|iterrain"
+    .require_interface "mod.terrain|iterrain"
     .component "printer"
 
 interface "iprinter"

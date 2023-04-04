@@ -1,0 +1,14 @@
+compress:
+  android: ASTC4x4
+  ios: ASTC4x4
+  windows: BC5
+maxsize: 1024x1024
+mipmap: 0
+path: /pkg/mod.terrain/assets/shapes/normal.dds
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: WRAP
+  V: WRAP
+type: texture

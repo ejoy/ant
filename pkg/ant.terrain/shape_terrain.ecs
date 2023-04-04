@@ -1,4 +1,4 @@
-system "plane_terrain_system"
+--[[ system "plane_terrain_system"
     .implement "plane_terrain.lua"
     .require_interface "ant.terrain|iterrain"
     .method "init"
@@ -10,8 +10,7 @@ interface "iplane_terrain"
     .implement "plane_terrain.lua"
     .method "init_plane_terrain"
     .method "update_plane_terrain"
-    .method "set_wh"
-    .method "is_stone_mountain"
+    .method "set_wh" ]]
 
 system "cube_shape_terrain_system"
     .implement "cube_shape_terrain.lua"
@@ -35,11 +34,11 @@ interface "imeshshape"
     .method "set"
     .method "set_resource"
 
-policy "shape_terrain"
+--[[ policy "shape_terrain"
     --.require_system "ant.terrain|mesh_terrain_system"
     .require_system "ant.terrain|plane_terrain_system"
     .require_interface "ant.terrain|imeshshape"
-    .component "shape_terrain"
+    .component "shape_terrain" ]]
 
 -- quad_strip
 component "quad_strip".type "lua"

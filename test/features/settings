@@ -27,7 +27,7 @@ graphic:
     clear: CDS
   postprocess:
     bloom:
-      enable: true
+      enable: false
       inv_highlight: 0.1
       threshold: 2.3
     fxaa:
@@ -45,9 +45,9 @@ graphic:
     split_num: 4
     split_ratios:
       {0.0, 0.1},
-      {0.1, 0.2},
-      {0.2, 0.3},
-      {0.3, 1.0}
+      {0.1, 0.3},
+      {0.3, 0.5},
+      {0.5, 1.0}
     stabilize: true
     type: inv_z
 debug:

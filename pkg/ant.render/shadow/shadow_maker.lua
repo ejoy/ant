@@ -8,7 +8,7 @@ local setting	= import_package "ant.settings".setting
 local ENABLE_SHADOW<const> = setting:get "graphic/shadow/enable"
 local renderutil= require "util"
 local sm = ecs.system "shadow_system"
-local istonemountain = ecs.import.interface "ant.render|istonemountain"
+local istonemountain = ecs.import.interface "mod.stonemountain|istonemountain"
 if not ENABLE_SHADOW then
 	renderutil.default_system(sm, 	"init",
 									"init_world",
