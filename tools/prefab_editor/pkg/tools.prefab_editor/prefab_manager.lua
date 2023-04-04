@@ -564,7 +564,7 @@ function m:add_effect(filename)
     if not self.root then
         self:reset_prefab()
     end
-
+    local parent = gizmo.target_eid or self.root
     local template = {
 		policy = {
             "ant.general|name",
@@ -575,7 +575,7 @@ function m:add_effect(filename)
 		data = {
             name = "root",
             tag = {"effect"},
-            scene = {parent = self.root},
+            scene = {parent = parent},
             efk = {
                 path = filename,
                 auto_play = false,
@@ -589,7 +589,7 @@ function m:add_effect(filename)
     tpl.data.on_ready = function (e)
         iefk.play(e)
     end
-    self:add_entity(ecs.create_entity(tpl), self.root, template)
+    self:add_entity(ecs.create_entity(tpl), parent, template)
 end
 
 function m:add_prefab(filename)

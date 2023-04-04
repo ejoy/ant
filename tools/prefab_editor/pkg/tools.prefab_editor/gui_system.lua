@@ -513,8 +513,6 @@ function m:handle_event()
                             end
                         end
                     end
-                    -- iani.play(instance, {name = "idle_start", loop = false, speed = 1.0, manual = false, forwards = true})
-                    -- iani.play(instance, {name = "work_start", loop = false, speed = 1.0, manual = false, forwards = true})
                     iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
                 end
                 function prefab:on_message(msg) end

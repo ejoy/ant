@@ -65,15 +65,6 @@ local dir_name = {
     "XYZ",
 }
 
-local function get_init_value(anim)
-    if anim.type == "srt" then
-        --{s, rx, ry, rz, tx, ty, tz}
-        return 
-    elseif anim.type == "mtl" then
-        
-    end
-end
-
 local function update_animation()
     local animtype = current_anim.type
     local runtime_anim = current_anim.runtime_anim
@@ -824,20 +815,7 @@ local function show_joints()
         end
     end
 end
--- local function set_mode(mode)
---     edit_mode = mode
---     if current_anim then
---         current_anim.selected_layer_index = 0
---         current_anim.selected_clip_index = 0
---     end
---     current_anim = current[edit_mode]
---     if current_anim then
---         current_anim.dirty = true
---         current_anim.dirty_layer = -1
---     end
---     current_uniform = nil
---     current_joint = nil
--- end
+
 local function play_animation(current)
     if current.type == "ske" then
         iani.play(anim_eid, {name = current.name, loop = ui_loop[1], speed = ui_speed[1], manual = false})
@@ -880,19 +858,6 @@ function m.show()
         end
         imgui.cursor.SameLine()
         imgui.widget.Text("Mode: "..(current_anim and current_anim.type or ""))
-        -- imgui.cursor.SameLine()
-        -- imgui.cursor.PushItemWidth(120)
-        -- if imgui.widget.BeginCombo("##EditMode", {edit_mode_name[edit_mode], flags = imgui.flags.Combo {}}) then
-        --     for i, type in ipairs(edit_mode_name) do
-        --         if imgui.widget.Selectable(type, i == edit_mode) then
-        --             set_mode(i)
-        --         end
-        --     end
-        --     imgui.widget.EndCombo()
-        -- end
-
-        -- imgui.cursor.PopItemWidth()
-        
         if #anim_name_list > 0 then
             imgui.cursor.SameLine()
             imgui.cursor.PushItemWidth(150)
@@ -1110,22 +1075,9 @@ function m.load(path)
     f:close()
     local animlist = datalist.parse(data)
     for _, anim in ipairs(animlist) do
-        -- local mtl
-        -- if edit_mode == MODE_MTL then
-        --     local e <close> = w:entity(current_target, "material:in")
-        --     local mtl_path = e.material
-        --     if string.find(e.material, ".glb|") then
-        --         mtl_path = mtl_path .. "/main.cfg"
-        --     end
-        --     mtl = serialize.parse(mtl_path, cr.read_file(mtl_path))
-        -- end
         local is_valid = true
         for _, subanim in ipairs(anim.target_anims) do
             if anim.type == "mtl" then
-                -- if not mtl.properties[subanim.target_name] then
-                --     is_valid = false
-                --     assert(false)
-                -- end
                 for _, clip in ipairs(subanim.clips) do
                     clip.range_ui = {clip.range[1], clip.range[2], speed = 1}
                     clip.value_ui = {clip.value[1], clip.value[2], clip.value[3], clip.value[4], speed = 1}
