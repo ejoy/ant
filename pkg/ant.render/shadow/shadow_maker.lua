@@ -8,7 +8,7 @@ local setting	= import_package "ant.settings".setting
 local ENABLE_SHADOW<const> = setting:get "graphic/shadow/enable"
 local renderutil= require "util"
 local sm = ecs.system "shadow_system"
-
+local istonemountain = ecs.import.interface "ant.render|istonemountain"
 if not ENABLE_SHADOW then
 	renderutil.default_system(sm, 	"init",
 									"init_world",
@@ -240,8 +240,6 @@ local function calc_ortho_minmax(corners_light_view, shadowmap_size)
 	local world_unit_per_texel = bound / shadowmap_size
 	local vworld_unit_per_texel = math3d.vector(world_unit_per_texel, world_unit_per_texel, 0)
 
-	local light_ortho_min_z = math3d.index(light_ortho_min, 3)
-
 	light_ortho_min = math3d.mul(light_ortho_min, math3d.reciprocal(vworld_unit_per_texel))
 	light_ortho_min = math3d.floor(light_ortho_min)
 	light_ortho_min = math3d.mul(light_ortho_min, vworld_unit_per_texel)
@@ -449,27 +447,31 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	set_worldmat(shadow_ce.scene, shadow_ce.scene)
 
 	local camera_proj = math3d.projmat(csm_frustum, INV_Z)
-	local light_view = shadow_ce.scene.worldmat
-	local light_view_inv = math3d.inverse(light_view)
-	local light_view_to_homo = math3d.mul(camera_proj, math3d.mul(main_view, light_view_inv))
+	local light_world = shadow_ce.scene.worldmat
+	local light_view = math3d.inverse(light_world)
+	-- light_view main_view-1 camera_proj-1 homo
+	-- camera_proj main_view light_world
+	local light_view_to_homo = math3d.mul(camera_proj, math3d.mul(main_view, light_world))
 	local corners_light_view = math3d.frustum_points(light_view_to_homo)
 
 	local light_ortho_min, light_ortho_max = calc_ortho_minmax(corners_light_view, shadowmap_size)
-
-	local light_view_scene_aabb = math3d.aabb_transform(light_view, world_scene_aabb)
-
+	--[[ local light_view_scene_aabb = math3d.aabb_transform(light_view, world_scene_aabb)
 	local light_frustum_aabb = math3d.aabb(light_ortho_min, light_ortho_max)
 	local light_intersected_aabb = math3d.aabb_intersection(light_frustum_aabb, light_view_scene_aabb)
-	local min_intersected, max_intersected = math3d.tovalue(math3d.array_index(light_intersected_aabb, 1)), math3d.tovalue(math3d.array_index(light_intersected_aabb, 2))
+	local light_intersected_aabb = light_view_scene_aabb
+	local min_intersected, max_intersected = math3d.tovalue(math3d.array_index(light_intersected_aabb, 1)), math3d.tovalue(math3d.array_index(light_intersected_aabb, 2)) ]]
  	local camera = shadow_ce.camera
 	local f = camera.frustum
-
-	local max_far = math.max(max_intersected[3], csm_frustum.f)
-	f.l, f.b, f.n = min_intersected[1], min_intersected[2], min_intersected[3]
-	f.r, f.t, f.f = max_intersected[1], max_intersected[2], max_far
-	update_camera_matrices(camera, light_view_inv)
+ 	local minx, miny = math3d.index(light_ortho_min, 1, 2)
+	local maxx, maxy = math3d.index(light_ortho_max, 1, 2) 
+	f.l, f.b, f.n = minx, miny, csm_frustum.n
+	f.r, f.t, f.f = maxx, maxy, csm_frustum.f * 10
+	update_camera_matrices(camera, light_view)
 end
 
+--[[ local select_table = {
+	[1] = "csm1_"
+} ]]
 local function update_shadow_frustum(dl, main_camera)
 	local lightdir = iom.get_direction(dl)
 	local shadow_setting = ishadow.setting()
@@ -477,15 +479,25 @@ local function update_shadow_frustum(dl, main_camera)
 	local main_view = main_camera.viewmat
 
 	--calculate scene_aabb in world space
-	local world_scene_aabb = math3d.aabb(mc.ZERO, mc.ZERO)
-	for e in w:select "scene:in render_object:in bounding:in name:in" do
+ 	local world_scene_aabb = math3d.aabb()
+--[[ 	for e in w:select "scene:in render_object:in bounding:in name?in" do
 		if e.bounding.scene_aabb and e.bounding.scene_aabb ~= mc.NULL then
-			world_scene_aabb = math3d.aabb_merge(world_scene_aabb, e.bounding.scene_aabb)
+			if not math3d.aabb_isvalid(world_scene_aabb) then
+				world_scene_aabb = e.bounding.scene_aabb
+			else
+				if math3d.aabb_isvalid(e.bounding.scene_aabb) then
+					world_scene_aabb = math3d.aabb_merge(world_scene_aabb, e.bounding.scene_aabb)
+				end
+			end
 		end
-	end
-
+	end  ]]
 	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
+--[[ 		local queue_name = "csm" .. csm.index
+ 		local sm_aabb = math3d.ref(istonemountain.get_sm_aabb(queue_name))
+		if math3d.aabb_isvalid(sm_aabb) then
+			world_scene_aabb = math3d.aabb_merge(sm_aabb, world_scene_aabb)
+		end  ]]
 		local csm_frustum = csm_frustums[csm.index]
 		csm_frustum.n = 1
 		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in scene:in")
@@ -564,12 +576,14 @@ end
 
 local shadow_material
 local gpu_skinning_material
+local shadow_sm_material
 function sm:init()
 	local fbidx = ishadow.fb_index()
 	local s = ishadow.shadowmap_size()
 	create_clear_shadowmap_queue(fbidx)
 	shadow_material = imaterial.load_res "/pkg/ant.resources/materials/depth.material"
 	gpu_skinning_material = imaterial.load_res "/pkg/ant.resources/materials/depth_skin.material"
+	shadow_sm_material = imaterial.load_res "/pkg/ant.resources/materials/depth_sm.material"
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx)
@@ -705,8 +719,15 @@ function sm:camera_usage()
 	sa:update("u_main_camera_matrix",camera.camera.viewmat)
 end
 
-local function which_material(skinning)
-	return skinning and gpu_skinning_material or shadow_material
+local function which_material(skinning, stonemountain)
+ 	if stonemountain then
+		return shadow_sm_material
+	elseif skinning then
+		return gpu_skinning_material
+	else
+		return shadow_material
+	end 
+	--return skinning and gpu_skinning_material or shadow_material
 end
 
 local omni_stencils = {
@@ -723,10 +744,10 @@ local omni_stencils = {
 local material_cache = {__mode="k"}
 
 function sm:update_filter()
-    for e in w:select "filter_result render_layer:in render_object:update filter_material:in skinning?in" do
+    for e in w:select "filter_result render_layer:in render_object:update filter_material:in skinning?in stonemountain?in name?in" do
 		if e.render_layer == "opacity" then
 			local ro = e.render_object
-			local m = which_material(e.skinning)
+			local m = which_material(e.skinning, e.stonemountain)
 			local mo = m.object
 			local fm = e.filter_material
 			local newstate = irender.check_set_state(mo, fm.main_queue)
@@ -747,3 +768,5 @@ function sm:update_filter()
 		end
 	end
 end
+
+
