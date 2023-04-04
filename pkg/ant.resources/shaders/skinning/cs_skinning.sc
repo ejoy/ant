@@ -1,6 +1,4 @@
 #include "bgfx_compute.sh"
-#include "uniforms.sh"
-
 
 BUFFER_RO(b_skinning_matrices_vb, vec4, 0);
 
@@ -27,6 +25,9 @@ uniform vec4 u_attrib_indices[3];
 #define u_attrib_weight		u_attrib_indices[0].z
 #define u_attrib_tangent	u_attrib_indices[0].w
 #define u_attrib_normal		u_attrib_indices[1].z
+
+#define ATTRIB_OFFSET		5
+#define ATTRIB_COUNT		(3*4)
 
 vec4 mat2quat(in mat4 m)
 {
@@ -156,6 +157,22 @@ attrib_input load_attrib_input(uint offset)
 	return ai;
 }
 
+int find_next_attrib_index(int startidx)
+{
+	for(; startidx<ATTRIB_COUNT; ++startidx)
+	{
+		int vidx = startidx / 4;
+		int sidx = startidx % 4;
+		float aidx = u_attrib_indices[vidx][sidx];
+		if (aidx >= 0)
+		{
+			return (int)aidx;
+		}
+	}
+
+	return -1;
+}
+
 NUM_THREADS(64, 1, 1)
 void main()
 {
@@ -186,8 +203,16 @@ void main()
 		b_skinning_out_dynamic_vb[output_offset+ii] = vec4(ai.normal, 0.0); ++ii;
 	}
 
+	int next_attrib_idx = ATTRIB_OFFSET;
+
 	for(; ii < output_num; ++ii)
 	{
-		b_skinning_out_dynamic_vb[output_offset+ii] = b_skinning_in_dynamic_vb[input_offset+ii+2];	// +2 for indices and weights attrib
+		int aidx = find_next_attrib_index(next_attrib_idx);
+		if (aidx < 0)
+			break;
+
+		b_skinning_out_dynamic_vb[output_offset+ii] = b_skinning_in_dynamic_vb[input_offset+aidx];
+
+		next_attrib_idx = aidx + 1;
 	}
 }
