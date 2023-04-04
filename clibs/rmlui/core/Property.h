@@ -18,7 +18,7 @@ using PropertyVariant = std::variant<
 	Color,
 	std::string,
 	Transform,
-	Transitions,
+	TransitionList,
 	AnimationList
 >;
 

@@ -710,6 +710,7 @@ local function create_animation(animtype, name, duration, target_anims)
             elseif animtype == "srt" then
                 get_or_create_target_anim(create_context.desc[1].name)
             end
+            create_context = nil
         end
     end
 end
@@ -739,7 +740,7 @@ function m.new()
         if imgui.widget.Button(faicons.ICON_FA_SQUARE_CHECK.." OK") then
             new_anim_widget = false
             if anim_name ~= "" then
-                create_animation(create_context.type, anim_name, anim_duration)
+                create_animation(create_context and create_context.type or "ske", anim_name, anim_duration)
             end
         end
         imgui.cursor.SameLine()
@@ -1222,7 +1223,6 @@ local function create_joint_entity(joint_name)
             name = joint_name,
             on_ready = function(e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
-				ivs.set_state(e, "auxgeom", true)
                 ivs.set_state(e, "main_view", false)
 			end
         }
@@ -1293,7 +1293,6 @@ local function create_bone_entity(joint_name)
 			name		= joint_name,
 			on_ready 	= function(e)
                 imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
-                ivs.set_state(e, "auxgeom", true)
                 ivs.set_state(e, "main_view", false)
 			end
 		}

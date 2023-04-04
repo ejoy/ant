@@ -9,7 +9,7 @@ _windows:
     api: d3d11
 graphic:
   ibl:
-    irradiance_bandnum: 2
+    irradiance_bandnum: 3
   ao:
     enable: true
     bent_normal : false

@@ -47,7 +47,7 @@ namespace Rml {
             return *this;
         }
         std::span<char_t> string() {
-            size_t sz = data.size() * N + pos + 1;
+            size_t sz = (data.size() - 1) * N + pos + 1;
             auto r = new char_t[sz];
             for (size_t i = 0; i < data.size() - 1;++i) {
                 memcpy(r + i * N * sizeof(char_t), &data[i], N * sizeof(char_t));
@@ -124,9 +124,6 @@ namespace Rml {
         }
     }
 
-    inline void PropertyEncode(strbuilder<uint8_t>& b, TransitionNone const& v) {
-        // do nothing
-    }
     inline void PropertyEncode(strbuilder<uint8_t>& b, TransitionList const& v) {
         PropertyEncodeSize<uint8_t>(b, v);
         for (auto const& [id, value]: v) {
@@ -215,10 +212,6 @@ namespace Rml {
             t.emplace_back(PropertyDecode(tag_v<Transforms::Primitive>, data));
         }
         return t;
-    }
-
-    inline TransitionNone PropertyDecode(tag<TransitionNone>, strparser<uint8_t>& data) {
-        return {};
     }
 
     inline TransitionList PropertyDecode(tag<TransitionList>, strparser<uint8_t>& data) {

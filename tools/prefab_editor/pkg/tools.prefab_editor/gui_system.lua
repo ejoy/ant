@@ -300,6 +300,9 @@ local function set_visible(e, visible)
     ivs.set_state(e, "main_view", visible)
     ivs.set_state(e, "cast_shadow", visible)
 end
+local function combine_state(states, st)
+    return (states == "") and st or (states .."|"..st)
+end
 local function update_visible(node, visible)
     for _, nd in ipairs(node.children) do
         update_visible(nd, visible)
@@ -319,23 +322,23 @@ local function update_visible(node, visible)
     if ne.visible_state then
         set_visible(ne, visible)
         local template = hierarchy:get_template(node.eid)
-        local visible_str = ""
+        local visible_state = ""
         local shadow = false
         for key, value in pairs(ne.visible_state) do
             if value then
                 if key == "pickup_queue" then
-                    visible_str = (visible_str == "") and "selectable" or (visible_str .. "|selectable")
+                    visible_state = combine_state(visible_state, "selectable")
                 elseif key == "main_queue" then
-                    visible_str = (visible_str == "") and "main_view" or (visible_str .. "|main_view")
+                    visible_state = combine_state(visible_state, "main_view")
                 elseif key == "csm1_queue" or key == "csm2_queue" or key == "csm3_queue" or key == "csm4_queue" then
                     shadow = true
                 end
             end
         end
         if shadow then
-            visible_str = (visible_str == "") and "cast_shadow" or (visible_str .. "|cast_shadow")
+            visible_state = combine_state(visible_state, "cast_shadow")
         end
-        template.template.data.visible_state = visible_str
+        template.template.data.visible_state = visible_state
     elseif rv and rv ~= visible then
         hierarchy:set_visible(node, rv)
     end
@@ -348,148 +351,10 @@ local test_m2
 local test1
 local test2
 local test3
-local ika = ecs.import.interface "ant.animation|ikeyframe"
-local ims = ecs.import.interface "ant.motion_sampler|imotion_sampler"
-local sampler_group
-local timer = ecs.import.interface "ant.timer|itimer"
---[[
-local function create_motion_object(s, r, t, parent)
-    if not sampler_group then
-        sampler_group = ims.sampler_group()
-        sampler_group:enable "view_visible"
-        sampler_group:enable "scene_update"
-    end
-    return sampler_group:create_entity {
-        policy = {
-            "ant.scene|scene_object",
-            "ant.motion_sampler|motion_sampler",
-            "ant.general|name",
-        },
-        data = {
-            scene = {
-                parent = parent,
-                s = s,
-                r = r,
-                t = t,
-            },
-            name = "motion_sampler",
-        }
-    }
-end
-local motion_xz
-local run_flag = 0
-local current_time = 0
-local function create_station(p0, p1, p2, p3, inout, inside, tween)
-    local task = {
-        stage = 0,--{0,1,2}
-        prepare = false,
-        running = false,
-        elapsed_time = 0,
-        inout_duration = inout,
-        inside_duration = inside,
-        p0 = p0,
-        p1 = p1,
-        p2 = p2,
-        p3 = p3,
-        tween = tween,
-        moveto = function (self, to, time, tin, tout)
-            local e <close> = w:entity(self.motion_xz)
-            ims.set_target(e, nil, nil, math3d.vector(to), time * 1000, tin, tout)
-        end,
-        motion_xz = create_motion_object(nil, nil, math3d.vector(p0)),
-        change_dir = function (self, angle)
-            local e <close> = w:entity(self.target)
-            local newrot = math3d.mul(iom.get_rotation(e), math3d.quaternion{0, math.rad(angle), 0})
-            iom.set_rotation(e, newrot)
-        end,
-        run = function (self)
-            -- local em <close> = w:entity(self.motion_xz)
-            -- iom.set_position(em, self.p0)
-            self:change_dir(45)
-            self.prepare = true
-        end,
-        update = function (self, timeStep)
-            if self.prepare then
-                self.running = true
-                self.prepare = false
-                self:moveto(self.p1, self.inout_duration, self.tween[1][1], self.tween[1][2])
-            end
-            if self.running then
-                self.elapsed_time = self.elapsed_time + timeStep
-                if self.stage == 0 then
-                    if self.elapsed_time >= self.inout_duration then
-                        self:change_dir(-45)
-                        self:moveto(self.p2, self.inside_duration, self.tween[2][1], self.tween[2][2])
-                        self.stage = 1
-                    end
-                elseif self.stage == 1 then
-                    if self.elapsed_time >= self.inout_duration + self.inside_duration then
-                        self:change_dir(-45)
-                        self:moveto(self.p3, self.inside_duration, self.tween[2][1], self.tween[2][2])
-                        self.stage = 2
-                    end
-                elseif self.stage == 2 then
-                    if self.elapsed_time >= 2.0 * self.inout_duration + self.inside_duration then
-                        self:change_dir(45)
-                        self:reset()
-                    end
-                end
-            end
-        end,
-        reset = function (self)
-            self.running = false
-            self.elapsed_time = 0
-            self.stage = 0
-            self.prepare = false
-            run_flag = 3
-        end
-    }
-    ecs.create_instance("/pkg/vaststars.resources/prefabs/goods-station-1.prefab")
-    local prefab = sampler_group:create_instance("/pkg/vaststars.resources/prefabs/lorry-1.prefab", task.motion_xz)
-    function prefab:on_init() end
-    prefab.on_ready = function(instance)
-        local e <close> = w:entity(instance.tag["*"][1])
-        local newrot = math3d.mul(iom.get_rotation(e), math3d.quaternion{0, math.rad(-90), 0})
-        iom.set_rotation(e, newrot)
-    end
-    function prefab:on_message(msg) end
-    function prefab:on_update() end
-    world:create_object(prefab)
-    task.target = prefab.tag["*"][1]
-    motion_xz = task.motion_xz
-    return task
-end
+local iani = ecs.import.interface "ant.animation|ianimation"
+local attach_count = 0
 
-local carstation
---]]
 function m:handle_event()
-    --[[
-    local timeStep = timer.delta() * 0.001
-    if carstation then
-        if run_flag > 0 then
-            current_time = current_time + timeStep
-        end
-
-        if run_flag == 1 and current_time >= 1.0 then
-            carstation:run()
-            run_flag = 2
-        end
-
-        if run_flag == 3 and current_time >= 1.0 + 2.0 * carstation.inout_duration + carstation.inside_duration then
-            local e <close> = w:entity(motion_xz)
-            ims.set_target(e, nil, nil, math3d.vector(-20, 0, -6), 1000, mc.TWEEN_NONE, mc.TWEEN_NONE)
-            run_flag = 4
-        end
-        if run_flag == 4 and current_time >= 2.0 + 2.0 * carstation.inout_duration + carstation.inside_duration then
-            run_flag = 0
-            local e <close> = w:entity(motion_xz)
-            ims.set_target(e, nil, nil, math3d.vector(20, 0, -6), 10, mc.TWEEN_NONE, mc.TWEEN_NONE)
-        end
-        if run_flag == 2 then
-            carstation:update(timeStep)
-        end
-    end
-  --]]
     for _, e in event_update_aabb:unpack() do
         update_highlight_aabb(e)
     end
@@ -611,101 +476,66 @@ function m:handle_event()
             end
         elseif state.CTRL and key == "O" and press == 1 then
             on_open_proj()
-            -- local g1 = ecs.group(1)
-            -- g1:enable "scene_update"
-            -- g1:enable "view_visible"
-            -- local prefab = g1:create_instance("/pkg/tools.prefab_editor/res/cube.prefab")
-            -- function prefab:on_init() end
-            -- prefab.on_ready = function(instance)
-            --     test1 = instance.tag["*"][1]
-            -- end
-            -- function prefab:on_message(msg) end
-            -- function prefab:on_update() end
-            -- world:create_object(prefab)
-            -- prefab = ecs.create_instance("/pkg/tools.prefab_editor/res/cube.prefab")
-            -- function prefab:on_init() end
-            -- prefab.on_ready = function(instance)
-            --     test2 = instance.tag["*"][1]
-            -- end
-            -- function prefab:on_message(msg) end
-            -- function prefab:on_update() end
-            -- world:create_object(prefab)
-
-
-            -- local prefab = ecs.create_instance("/pkg/tools.prefab_editor/res/building_station_new.prefab")
-            -- function prefab:on_init() end
-            -- prefab.on_ready = function(instance)
-            --     test3 = {}
-            --     local alleid = instance.tag["*"]
-            --     for _, eid in ipairs(alleid) do
-            --         local e <close> = w:entity(eid, "name:in")
-            --         if e.name == "Cylinder" then
-            --             test3.centre = eid
-            --         else
-            --             if e.name == "anim_group" then
-            --                 test3.edge = eid
-            --             end
-            --         end
-            --     end
-            -- end
-            -- function prefab:on_message(msg) end
-            -- function prefab:on_update() end
-            -- world:create_object(prefab)
-
         elseif state.CTRL and key == "S" and press == 1 then
             prefab_mgr:save()
-        elseif state.CTRL and key == "R" and press == 1 then
-            -- ecs.create_instance "/pkg/tools.prefab_editor/res/skybox.prefab"
-            -- anim_view:clear()
-            -- prefab_mgr:reload()
-            -- imodifier.start(test_m, {name="confirm"})
-            -- imodifier.start(test_m1, {name="confirm"})
-
-            -- imodifier.start(test_m2.centre, {})
-            -- imodifier.start(test_m2.edge, {})
-            --[[
-            if not carstation then
-                carstation = create_station({9, 0, -6}, {3, 0, 0}, {-3, 0, 0}, {-9, 0, -6}, 1.0, 1.0, {{mc.TWEEN_NONE, mc.TWEEN_NONE},{mc.TWEEN_NONE, mc.TWEEN_NONE}})
-            else
-                run_flag = 1
-                current_time = 0
-                local e <close> = w:entity(motion_xz)
-                ims.set_target(e, nil, nil, math3d.vector(9, 0, -6), 1000, mc.TWEEN_NONE, mc.TWEEN_NONE)
-            end
-            --]]
         elseif state.CTRL and key == "T" and press == 1 then
-            -- local empty_node = sampler_group:create_entity({
-            --         policy = {
-            --             "ant.general|name",
-            --             "ant.scene|scene_object",
-            --         },
-            --         data = {
-            --             name = "",
-            --             scene = {parent = motion_main},
-            --         },
-            --     }
-            -- )
-            -- test_m = imodifier.create_bone_modifier(test1, 1, "/pkg/tools.prefab_editor/res/Interact_build.glb|animation.prefab", "Bone")
-            -- local te <close> = w:entity(test2, "scene?in")
-            -- iom.set_position(te, math3d.vector{0, 0, -5})
-            -- test_m1 = imodifier.create_bone_modifier(test2, 1, "/pkg/tools.prefab_editor/res/Interact_build.glb|animation.prefab", "Bone")
+            if not test_m then
+                prefab_mgr.check_effect_preload("/pkg/vaststars.resources/effect/efk/miner_dust.efk")
 
-            -- test_m = ipl.add_linelist({{0.0, 0.0, 0.0}, {5.0, 5.0, 100.0}, {5.0, 5.0, 100.0}, {5.0, 0.0, 0.0}}, 80, {1.0, 0.0, 0.0, 0.7})
-            
-            -- local function get_value(kfe, time)
-            --     local e <close> = w:entity(kfe, "keyframe:in")
-            --     local kfanim = e.keyframe
-            --     return kfanim.play_state.current_value, kfanim.play_state.playing
-            -- end
-            -- test_m2 = {}
-            -- test_m2.centre = imodifier.create_srt_modifier(test3.centre, 0, {
-            --     {time = 0, value = {1, 0, 0, 0, 0, 0, 0}},
-            --     {time = 4, value = {1, 0, 360, 0, 0, 25, 0}},
-            -- })
-            -- test_m2.edge = imodifier.create_srt_modifier(test3.edge, 0, {
-            --     {time = 0, value = {1, 0, 0, 0, 0, 0, 0}},
-            --     {time = 4, value = {1, 0, 0, 0, 0, 25, 0}},
-            -- })
+                local hitch_test_group_id<const> = 1000
+                test1 = ecs.create_entity {
+                    policy = "ant.scene|hitch_object",
+                    data = {
+                        scene = { t = math3d.vector(-25, 0, 0) },
+                        hitch = { group = hitch_test_group_id },
+                    }
+                }
+
+                test2 = ecs.create_entity {
+                    policy = "ant.scene|hitch_object",
+                    data = {
+                        scene = { t = math3d.vector(25, 0, 0) },
+                        hitch = { group = hitch_test_group_id },
+                    }
+                }
+                local g1 = ecs.group(hitch_test_group_id)
+                g1:enable "scene_update"
+                -- g1:enable "view_visible"
+                local prefab = g1:create_instance("/pkg/vaststars.resources/prefabs/miner-1.prefab")
+                function prefab:on_init() end
+                prefab.on_ready = function(instance)
+                    for _, eid in ipairs(instance.tag["*"]) do
+                        local e <close> = w:entity(eid, "tag?in anim_ctrl?in")
+                        if e.anim_ctrl then
+                            iani.load_events(eid, "/pkg/vaststars.resources/prefabs/miner-1.event")
+                            if not e.anim_ctrl.hitchs then
+                                e.anim_ctrl.hitchs = {}
+                            end
+                        end
+                    end
+                    -- iani.play(instance, {name = "idle_start", loop = false, speed = 1.0, manual = false, forwards = true})
+                    -- iani.play(instance, {name = "work_start", loop = false, speed = 1.0, manual = false, forwards = true})
+                    iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
+                end
+                function prefab:on_message(msg) end
+                function prefab:on_update() end
+                world:create_object(prefab)
+                test_m = prefab
+            else
+                if attach_count == 0 then
+                    iani.attach_hitch(test_m, test1)
+                    attach_count = attach_count + 1
+                elseif attach_count == 1 then
+                    iani.attach_hitch(test_m, test2)
+                    attach_count = attach_count + 1
+                elseif attach_count == 2 then
+                    iani.detach_hitch(test_m, test1)
+                    attach_count = attach_count + 1
+                elseif attach_count == 3 then
+                    iani.detach_hitch(test_m, test2)
+                    attach_count = 0
+                end
+            end
         end
     end
 

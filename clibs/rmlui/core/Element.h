@@ -105,7 +105,7 @@ public:
 
 	void UpdateDefinition();
 	void DirtyDefinition();
-	void DirtyInheritedProperties();
+	void DirtyInheritableProperties();
 	void DirtyProperty(PropertyId id);
 	void DirtyProperties(const PropertyIdSet& properties);
 	void DirtyProperties(PropertyUnit unit);
@@ -115,15 +115,12 @@ public:
 	void SetAnimationProperty(PropertyId id, const Property& property);
 	void DelAnimationProperty(PropertyId id);
 
-	std::optional<Property> GetProperty(PropertyId id) const;
+	std::optional<Property> GetInlineProperty(PropertyId id) const;
+	std::optional<Property> GetLocalProperty(PropertyId id) const;
 	std::optional<Property> GetComputedProperty(PropertyId id) const;
-	std::optional<Property> GetComputedLocalProperty(PropertyId id) const;
-	Transitions GetTransition() const;
 
 	bool SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
 	std::optional<std::string> GetProperty(const std::string& name) const;
-
-	void TransitionPropertyChanges(const PropertyIdSet & properties, const Style::Combination& new_definition);
 
 	void UpdateProperties();
 	void UpdateAnimations(float delta);
@@ -164,7 +161,7 @@ protected:
 	bool DelInlineProperty(const PropertyIdSet& set);
 	void RefreshProperties();
 
-	bool StartTransition(PropertyId id, const Transition& transition, std::optional<Property> start_value, std::optional<Property> target_value);
+	void StartTransition(std::function<void()> f);
 	void HandleTransitionProperty();
 	void HandleAnimationProperty();
 	void AdvanceAnimations(float delta);

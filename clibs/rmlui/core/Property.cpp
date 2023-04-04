@@ -18,7 +18,7 @@ struct ToStringVisitor {
 	std::string operator()(const Transform& p) {
 		return p.ToString();
 	}
-	std::string operator()(const Transitions& p) {
+	std::string operator()(const TransitionList& p) {
 		return "<transition>";
 	}
 	std::string operator()(const AnimationList& p) {
@@ -71,7 +71,7 @@ struct AllowInterpolateVisitor {
 };
 template <> bool AllowInterpolateVisitor::operator()<PropertyKeyword>(PropertyKeyword&) { return false; }
 template <> bool AllowInterpolateVisitor::operator()<std::string>(std::string&) { return false; }
-template <> bool AllowInterpolateVisitor::operator()<Transitions>(Transitions&) { return false; }
+template <> bool AllowInterpolateVisitor::operator()<TransitionList>(TransitionList&) { return false; }
 template <> bool AllowInterpolateVisitor::operator()<AnimationList>(AnimationList&) { return false; }
 template <> bool AllowInterpolateVisitor::operator()<Transform>(Transform& p0) {
 	return p0.AllowInterpolate(e);

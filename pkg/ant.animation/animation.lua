@@ -43,15 +43,25 @@ local function process_keyframe_event(task)
 			elseif event.event_type == "Effect" then
 				if not event.effect and event.asset_path ~= "" then
 					local parent
+					local slot_eid
 					if task.slot_eid then
-						local slot_eid = task.slot_eid[event.link_info.slot_name]
+						slot_eid = task.slot_eid[event.link_info.slot_name]
 						if slot_eid then
-							parent = slot_eid
+							if not task.for_hitch then
+								parent = slot_eid
+							end
 						end
+					end
+					local s, r, t
+					if not parent and slot_eid then
+						local e <close> = w:entity(slot_eid, "scene:in")
+						s, r, t = iom.get_scale(e), iom.get_rotation(e), iom.get_position(e)
 					end
 					event.effect = iefk.create(event.asset_path, {
 						auto_play = true,
-						scene = {parent = parent},
+						scene = {parent = parent, s = s, r = r, t = t},
+						group_id = task.group_id,
+						hitchs = task.hitchs
 					})
 				elseif event.effect then
 					local e <close> = w:entity(event.effect)

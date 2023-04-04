@@ -764,6 +764,9 @@ function sm:update_filter()
 		else
 			w:extend(e, "csm1_queue_visible?out csm2_queue_visible?out csm3_queue_visible?out csm4_queue_visible?out")
 			e.csm1_queue_visible = nil
+			e.csm2_queue_visible = nil
+			e.csm3_queue_visible = nil
+			e.csm4_queue_visible = nil
 			w:submit(e)
 		end
 	end

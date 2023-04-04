@@ -217,6 +217,28 @@ end
 function efk_sys:follow_transform_updated()
     for v in w:select "efk:in scene:in scene_changed?in" do
         local efk = v.efk
+        if efk.play_handle_hitchs then
+            local new_handles = {}
+            local del_handles = {}
+            for eid, handle in pairs(efk.play_handle_hitchs) do
+                if not efk_ctx:is_alive(handle) then
+                    if efk.loop then
+                        local e <close> = w:entity(eid, "scene:in")
+                        local wm = math3d.mul(v.scene.worldmat, e.scene.worldmat)
+                        new_handles[eid] = efk_ctx:play(efk.handle, math3d.value_ptr(wm), efk.speed)
+                    else
+                        del_handles[#del_handles + 1] = eid
+                    end
+                end
+            end
+            for eid, handle in pairs(new_handles) do
+                efk.play_handle_hitchs[eid] = handle
+            end
+            for _, eid in ipairs(del_handles) do
+                efk.play_handle_hitchs[eid] = nil
+            end
+        end
+        
         if efk.play_handle then
             if not efk_ctx:is_alive(efk.play_handle) then
                 if efk.loop then
@@ -230,7 +252,18 @@ function efk_sys:follow_transform_updated()
         else
             if efk.visible then
                 if efk.do_play or efk.do_settime then
-                    efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene.worldmat), efk.speed)
+                    if efk.hitchs and next(efk.hitchs) then
+                        if not efk.play_handle_hitchs then
+                            efk.play_handle_hitchs = {}
+                        end
+                        for eid, _ in pairs(efk.hitchs) do
+                            local e <close> = w:entity(eid, "scene:in")
+                            local wm = math3d.mul(e.scene.worldmat, v.scene.worldmat)
+                            efk.play_handle_hitchs[eid] = efk_ctx:play(efk.handle, math3d.value_ptr(wm), efk.speed)
+                        end
+                    else
+                        efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene.worldmat), efk.speed)
+                    end
                 end
                 if efk.do_play then
                     efk.do_play = nil
@@ -257,7 +290,8 @@ function iefk.create(filename, config)
         auto_play = config.auto_play or false,
         loop = config.loop or false,
         speed = config.speed or 1.0,
-        visible = config.visible or true
+        visible = config.visible or true,
+        hitchs = config.hitchs
     }
     local template = {
         policy = {
@@ -275,17 +309,18 @@ function iefk.create(filename, config)
                 auto_play = cfg.auto_play,
                 loop = cfg.loop,
                 speed = cfg.speed,
-                visible = cfg.visible
+                visible = cfg.visible,
+                hitchs = config.hitchs
             },
-            on_ready = function (e)
-                w:extend(e, "efk:in")
-                if cfg.auto_play then
-                    iefk.play(e)
-                end
-            end
+            -- on_ready = function (e)
+            --     w:extend(e, "efk:in")
+            --     if cfg.auto_play then
+            --         iefk.play(e)
+            --     end
+            -- end
         },
     }
-    return ecs.create_entity(template)
+    return config.group_id and ecs.group(config.group_id):create_entity(template) or ecs.create_entity(template)
 end
 
 function iefk.preload(textures)

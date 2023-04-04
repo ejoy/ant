@@ -91,6 +91,18 @@ function render_sys:entity_init()
 		local qn = qe.queue_name
 		RENDER_ARGS[qn].viewid = qe.render_target.viewid
 	end
+
+	w:clear "filter_result"
+	for e in w:select "INIT render_object visible_state:in filter_result:new" do
+		local vs = e.visible_state
+		for qe in w:select "queue_name:in camera_ref" do
+			local qn = qe.queue_name
+			local qn_visible = qn .. "_visible"
+			e[qn_visible] = vs[qn]
+			w:extend(e, qn_visible .. "?out")
+		end
+		e.filter_result = true
+	end
 end
 
 local time_param = math3d.ref(math3d.vector(0.0, 0.0, 0.0, 0.0))
@@ -108,17 +120,8 @@ end
 
 
 function render_sys:begin_filter()
-	w:clear "filter_result"
-    for e in w:select "render_object_update render_object visible_state:in filter_result:new" do
-		local vs = e.visible_state
-		for qe in w:select "queue_name:in camera_ref" do
-			local qn = qe.queue_name
-			local qn_visible = qn .. "_visible"
-			e[qn_visible] = vs[qn]
-			w:extend(e, qn_visible .. "?out")
-		end
-		e.filter_result = true
-	end
+	
+
 end
 
 function render_sys:scene_update()

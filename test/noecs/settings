@@ -17,7 +17,7 @@ graphic:
     clear: CDS
   postprocess:
     bloom:
-      enable: false
+      enable: true
       inv_highlight: 0.1
       threshold: 2.3
     fxaa:

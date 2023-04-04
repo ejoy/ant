@@ -55,9 +55,12 @@ local cm_flags = sampler{
     BLIT="BLIT_COMPUTEWRITE",
 }
 
+local function res_tex(e)
+    return imaterial.resource(e).properties.s_skybox.texture
+end
+
 local function load_res_tex(e)
-    local res = imaterial.resource(e)
-    return assetmgr.resource(res.properties.s_skybox.texture)
+    return assetmgr.resource(res_tex(e))
 end
 
 
@@ -112,9 +115,9 @@ function cs2cm_sys:filter_ibl()
         
         if cm_rbhandle then
             iibl.filter_all{
-                source 		= {value=cm_rbhandle, facesize=sb.facesize},
+                source 		= {value=cm_rbhandle, facesize=sb.facesize, res_tex = res_tex(e)},
                 irradiance 	= se_ibl.irradiance,
-                irradianceSH= {bandnum=irradianceSH_bandnum},
+                irradianceSH= {CPU=true, bandnum=irradianceSH_bandnum},
                 prefilter 	= se_ibl.prefilter,
                 LUT			= se_ibl.LUT,
                 intensity	= se_ibl.intensity,

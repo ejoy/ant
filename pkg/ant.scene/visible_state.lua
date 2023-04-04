@@ -40,15 +40,22 @@ local function set_visible_states(vs, s, v)
 end
 
 function ivs.set_state(e, name, v)
-	w:extend(e, "visible_state:in render_object_update?out")
-	set_visible_states(e.visible_state, name, v)
-	e.render_object_update = true
+	w:extend(e, "visible_state:in")
+	local vs = e.visible_state
+	set_visible_states(vs, name, v)
+	local tags = {}
+	for k, vv in pairs(vs) do
+		local vt = k .. "_visible"
+		tags[#tags+1] = vt .. "?out"
+		e[vt] = vv
+	end
+	w:extend(e, table.concat(tags, " "))
 	w:submit(e)
 end
 
-local m = ecs.system "filter_state_system"
+local m = ecs.system "visible_state_system"
 
-function m:entity_init()
+function m:component_init()
     for e in w:select "INIT visible_state:update" do
 		local vs = {}
 		set_visible_states(vs, e.visible_state, true)

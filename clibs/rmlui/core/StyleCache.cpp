@@ -171,37 +171,29 @@ namespace Rml::Style {
         }
     }
 
+    static auto Fetch(style_cache* c, ValueOrCombination t) {
+        std::array<void*, (size_t)PropertyId::NumDefinedIds> datas;
+        datas.fill(nullptr);
+        for (int i = 0;; ++i) {
+            PropertyId id;
+            void* data = style_index(c, {t.idx}, i, (uint8_t*)&id);
+            if (!data) {
+                break;
+            }
+            datas[(size_t)id] = data;
+        }
+        return datas;
+    }
+
     PropertyIdSet Cache::Diff(ValueOrCombination a, ValueOrCombination b) {
-        PropertyIdSet mark;
         PropertyIdSet ids;
-        
-        for (int i = 0;; ++i) {
-            PropertyId id;
-            void* data_a = style_index(c, {a.idx}, i, (uint8_t*)&id);
-            if (!data_a) {
-                break;
-            }
-            mark.insert(id);
-            void* data_b = style_find(c, {b.idx}, (uint8_t)id);
-            if (!data_b || data_a != data_b) {
-                ids.insert(id);
+        auto a_datas = Fetch(c, a);
+        auto b_datas = Fetch(c, b);
+        for (size_t i = 0; i < (size_t)PropertyId::NumDefinedIds; ++i) {
+            if (a_datas[i] != b_datas[i]) {
+                ids.insert((PropertyId)i);
             }
         }
-
-        for (int i = 0;; ++i) {
-            PropertyId id;
-            void* data_b = style_index(c, {b.idx}, i, (uint8_t*)&id);
-            if (!data_b) {
-                break;
-            }
-            if (!mark.contains(id)) {
-                void* data_a = style_find(c, {a.idx}, (uint8_t)id);
-                if (!data_a || data_a != data_b) {
-                    ids.insert(id);
-                }
-            }
-        }
-
         return ids;
     }
 
