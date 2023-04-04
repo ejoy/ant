@@ -12,7 +12,6 @@ policy "pre_depth_queue"
 
 system "pre_depth_system"
     .implement "render_system/depth/depth.lua"
-    .require_system "end_filter_system"
     .require_interface "ant.render|irender"
     .method "init"
     .method "data_changed"

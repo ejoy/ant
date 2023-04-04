@@ -80,6 +80,7 @@ function sd_sys:data_changed()
 end
 
 function sd_sys:end_filter()
+    assert(false, "filter_result is miss here, it have been clear in render_system.lua:end_filter")
     for e in w:select "filter_result pre_depth_queue_visible opacity render_object:update filter_material:in scene_depth_visible?out" do
         local ro = e.render_object
         local fm = e.filter_material

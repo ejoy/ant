@@ -92,7 +92,6 @@ function render_sys:entity_init()
 		RENDER_ARGS[qn].viewid = qe.render_target.viewid
 	end
 
-	w:clear "filter_result"
 	for e in w:select "INIT render_object visible_state:in filter_result:new" do
 		local vs = e.visible_state
 		for qe in w:select "queue_name:in camera_ref" do
@@ -176,8 +175,6 @@ function render_sys:entity_remove()
 	end
 end
 
-local s = ecs.system "end_filter_system"
-
 local function check_set_depth_state_as_equal(state)
 	local ss = bgfx.parse_state(state)
 	ss.DEPTH_TEST = "EQUAL"
@@ -188,7 +185,7 @@ end
 
 local material_cache = {__mode="k"}
 
-function s:update_filter()
+function render_sys:update_filter()
 	if irender.use_pre_depth() then
 		--we should check 'filter_result' here and change the default material
 		--because render entity will change it's visible state after it created
@@ -210,4 +207,8 @@ function s:update_filter()
 		end
 	end
 	w:clear "render_object_update"
+end
+
+function render_sys:end_filter()
+	w:clear "filter_result"
 end
