@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-
+local open_sm = false
 local math3d 	= require "math3d"
 local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
@@ -638,6 +638,7 @@ local function set_terrain_sm()
 end
 
 function ism.create_sm_entity(ww, hh, un, off, f, d, sz)
+    open_sm = true
     width, height, unit, offset, freq, depth, section_size = ww, hh, un, off, f, d, sz
     for center_idx = 1, width * height do
         sm_table[center_idx] = {[1] = {}, [2] = {}, [3] = {}} -- b m s
@@ -880,34 +881,36 @@ function sm_sys:init()
 end
 
 function sm_sys:stone_mountain()
-    if not is_build_sm then
-        is_build_sm = true
-        for e in w:select "stonemountain sm_info?in bounding:update" do
-            local sm_info = e.sm_info
-            local center, extent = math3d.aabb_center_extents(e.bounding.aabb)
-            mesh_aabb_table[sm_info.mesh_idx] = {center = math3d.tovalue(center), extent = math3d.tovalue(extent)}
-            e.bounding.scene_aabb = mc.NULL
-            e.bounding.aabb = mc.NULL
-        end
-        make_sm_noise()
-        create_constant_buffer() 
-    else
-        update_sections()
-        for e in w:select "stonemountain sm_info?update render_object?update" do
-            local mesh_idx = e.sm_info.mesh_idx
-            local ro = e.render_object
-            local sm_info = e.sm_info
-            local need_create_dyb = not e.sm_info.dispatch_entity_table
-
-            if need_create_dyb then -- first create dynamic vertex buffer
-                create_sm_dyb(sm_info, ro)
+    if open_sm then
+        if not is_build_sm then
+            is_build_sm = true
+            for e in w:select "stonemountain sm_info?in bounding:update" do
+                local sm_info = e.sm_info
+                local center, extent = math3d.aabb_center_extents(e.bounding.aabb)
+                mesh_aabb_table[sm_info.mesh_idx] = {center = math3d.tovalue(center), extent = math3d.tovalue(extent)}
+                e.bounding.scene_aabb = mc.NULL
+                e.bounding.aabb = mc.NULL
             end
-            update_sm_dyb_table(mesh_idx, sm_info)
-            ro.idb_handle = constant_buffer_table.indirect_buffer_table[mesh_idx]
-            ro.itb_handle = constant_buffer_table.sm_srt_buffer
-            ro.draw_num   = instance_num * 3
-        end
-    end  
+            make_sm_noise()
+            create_constant_buffer() 
+        else
+            update_sections()
+            for e in w:select "stonemountain sm_info?update render_object?update" do
+                local mesh_idx = e.sm_info.mesh_idx
+                local ro = e.render_object
+                local sm_info = e.sm_info
+                local need_create_dyb = not e.sm_info.dispatch_entity_table
+    
+                if need_create_dyb then -- first create dynamic vertex buffer
+                    create_sm_dyb(sm_info, ro)
+                end
+                update_sm_dyb_table(mesh_idx, sm_info)
+                ro.idb_handle = constant_buffer_table.indirect_buffer_table[mesh_idx]
+                ro.itb_handle = constant_buffer_table.sm_srt_buffer
+                ro.draw_num   = instance_num * 3
+            end
+        end   
+    end
 end
 
 
