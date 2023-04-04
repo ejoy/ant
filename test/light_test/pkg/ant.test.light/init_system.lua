@@ -110,7 +110,7 @@ function S.init_world()
     --     iom.set_scale(le, 0.1)
     -- end)
 
-    create_instance("/pkg/ant.test.light/assets/assembling-1.glb|mesh.prefab", function (e)
+    create_instance("/pkg/ant.test.light/assets/chimney-1.glb|mesh.prefab", function (e)
         peids = e.tag['*']
         local leid = e.tag['*'][1]
         local le<close> = w:entity(leid, "scene:update")
