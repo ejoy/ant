@@ -607,7 +607,7 @@ end
 local sampler_eid
 
 local function drawindirect_test()
---[[        ecs.create_entity {
+        ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -615,17 +615,18 @@ local function drawindirect_test()
          },
         data = {
             name        = "heap_mesh_test",
-            scene  = {s = 0.2, t = {0, 3, 0}},
+            scene  = {s = 0.2, t = {0, 0, 0}},
             material    = "/pkg/ant.resources/materials/pbr_heap.material", -- 自定义material文件中需加入HEAP_MESH :1
             visible_state = "main_view",
             mesh        = "/pkg/ant.test.features/assets/glb/iron-ore.glb|meshes/Cube_P1.meshbin",
             heapmesh = {
                 curSideSize = {3, 4, 5}, -- 当前 x y z方向最大堆叠数量为3, 4, 5，通过表的形式赋值给curSideSize，最大堆叠数为3*4*5 = 60
                 curHeapNum = 45, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
-                glbName = "iron-ingot" -- 当前entity对应的glb名字，用于筛选
+                glbName = "iron-ingot", -- 当前entity对应的glb名字，用于筛选
+                interval = {0.5, 0.5, 0.5}
             }
         },
-    } ]]
+    } 
    
 --[[      ecs.create_entity {
         policy = {
