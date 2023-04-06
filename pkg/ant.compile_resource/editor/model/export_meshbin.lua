@@ -464,7 +464,7 @@ local function pack_vertex_data(layouts, vertices)
 		end
 	end
 	local function f2i(v)
-		return math.floor(check_nan(v) * 32768)
+		return math.floor(check_nan(v) * 32767)
 	end
 
 	local weights_attrib_idx, joint_attrib_idx	= find_layout_idx(layouts, "WEIGHTS_0"), 	find_layout_idx(layouts, "JOINTS_0")
