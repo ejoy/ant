@@ -22,8 +22,6 @@ void main()
 #endif //HEAP_MESH
 
 #ifdef STONE_MOUNTAIN
-	float cos_theta = i_data0.w;
-	float sin_theta = sqrt(1-i_data0.w*i_data0.w);
 	float scale = i_data0.x;
 	float scale_y = scale;
 	float tx = i_data0.y;
@@ -32,10 +30,10 @@ void main()
 		scale_y = scale_y * 0.5;
 	} 
 	wm = mat4(
-		cos_theta * scale,  0      , sin_theta * scale, tx, 
-		0                ,  scale_y,                 0,  0, 
-	   -sin_theta * scale,  0      , cos_theta * scale, tz, 
-		0                ,  0      , 0                ,  1
+		scale          ,            0,     0,       tx, 
+		0              ,      scale_y,     0,        0, 
+	    0              ,            0,     scale,   tz, 
+		0              ,            0,     0,         1
 	);	
 #endif //STONE_MOUNTAIN
 

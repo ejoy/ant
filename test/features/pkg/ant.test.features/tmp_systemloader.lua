@@ -874,6 +874,8 @@ function init_loader_sys:init_world()
     iterrain.gen_terrain_field(256, 256, 0)
     iterrain.create_roadnet_entity(create_list)
     istonemountain.create_sm_entity(256, 256, 0)
+    -- input: x and z coordinates
+    -- output: whether current grid is stonemountain? true = yes nil = false
     iterrain.is_stone_mountain(46, 0)
     
     for msg in after_init_mb:each() do

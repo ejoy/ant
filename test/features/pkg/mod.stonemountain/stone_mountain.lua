@@ -855,6 +855,16 @@ local function update_sections()
 end
 
 local function create_constant_buffer()
+    local function check_nan(v)
+		if v ~= v then
+			return 0
+		else
+			return v
+		end
+	end
+	local function f2i(v)
+		return math.floor(check_nan(v) * 32767+0.5)
+	end
     constant_buffer_table.sm_srt_memory_buffer = bgfx.memory_buffer(16 * instance_num * 3)
     local fmt<const> = "ffff"
     for real_idx = 1, instance_num do
@@ -862,7 +872,12 @@ local function create_constant_buffer()
         for size_idx = 1, 3 do
             local srt_idx = 16 * ((real_idx - 1) * 3 + size_idx - 1) + 1
             if sm_table[sm_idx][size_idx].s then
+--[[                 local is = string.format("%.1f", sm_table[sm_idx][size_idx].s)+0
+                local itx = string.format("%.1f", sm_table[sm_idx][size_idx].t.x)+0
+                local itz = string.format("%.1f", sm_table[sm_idx][size_idx].t.z)+0
+                local ir = string.format("%.1f", sm_table[sm_idx][size_idx].r)+0 ]]
                 local stone = {sm_table[sm_idx][size_idx].s, sm_table[sm_idx][size_idx].t.x, sm_table[sm_idx][size_idx].t.z, sm_table[sm_idx][size_idx].r}
+                --local stone = {is, itx, itz, ir}
                 constant_buffer_table.sm_srt_memory_buffer[srt_idx] = fmt:pack(table.unpack(stone))
             else
                 constant_buffer_table.sm_srt_memory_buffer[srt_idx] = fmt:pack(table.unpack({0, 0, 0, 0}))
