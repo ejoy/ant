@@ -20,12 +20,12 @@ local pre_depth_skinning_material
 local pre_depth_heap_material
 local pre_depth_sm_material
 
-local function which_material(skinning, heapmesh, stonemountain)
+local function which_material(skinning, heapmesh, indirect)
     if heapmesh then
         return pre_depth_heap_material.object
     end
 
-    if stonemountain then
+    if indirect then
         return pre_depth_sm_material.object
     end
     if skinning then
@@ -66,9 +66,9 @@ local function create_depth_only_material(mo, fm)
 end
 
 function s:update_filter()
-    for e in w:select "filter_result pre_depth_queue_visible:update render_layer:in render_object:update filter_material:in skinning?in heapmesh?in stonemountain?in" do
+    for e in w:select "filter_result pre_depth_queue_visible:update render_layer:in render_object:update filter_material:in skinning?in heapmesh?in indirect?in" do
         if e.render_layer == "opacity" then
-            local mo = assert(which_material(e.skinning, e.heapmesh, e.stonemountain))
+            local mo = assert(which_material(e.skinning, e.heapmesh, e.indirect))
             local ro = e.render_object
             local fm = e.filter_material
 

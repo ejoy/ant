@@ -8,7 +8,6 @@ local setting	= import_package "ant.settings".setting
 local ENABLE_SHADOW<const> = setting:get "graphic/shadow/enable"
 local renderutil= require "util"
 local sm = ecs.system "shadow_system"
-local istonemountain = ecs.import.interface "mod.stonemountain|istonemountain"
 if not ENABLE_SHADOW then
 	renderutil.default_system(sm, 	"init",
 									"init_world",
@@ -465,7 +464,7 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
  	local minx, miny = math3d.index(light_ortho_min, 1, 2)
 	local maxx, maxy = math3d.index(light_ortho_max, 1, 2) 
 	f.l, f.b, f.n = minx, miny, csm_frustum.n
-	f.r, f.t, f.f = maxx, maxy, csm_frustum.f * 10
+	f.r, f.t, f.f = maxx, maxy, csm_frustum.f * 5
 	update_camera_matrices(camera, light_view)
 end
 
@@ -719,8 +718,8 @@ function sm:camera_usage()
 	-- sa:update("u_main_camera_matrix",camera.camera.viewmat)
 end
 
-local function which_material(skinning, stonemountain)
- 	if stonemountain then
+local function which_material(skinning, indirect)
+ 	if indirect then
 		return shadow_sm_material
 	elseif skinning then
 		return gpu_skinning_material
@@ -744,10 +743,10 @@ local omni_stencils = {
 local material_cache = {__mode="k"}
 
 function sm:update_filter()
-    for e in w:select "filter_result render_layer:in render_object:update filter_material:in skinning?in stonemountain?in name?in" do
+    for e in w:select "filter_result render_layer:in render_object:update filter_material:in skinning?in indirect?in" do
 		if e.render_layer == "opacity" then
 			local ro = e.render_object
-			local m = which_material(e.skinning, e.stonemountain)
+			local m = which_material(e.skinning, e.indirect)
 			local mo = m.object
 			local fm = e.filter_material
 			local newstate = irender.check_set_state(mo, fm.main_queue)

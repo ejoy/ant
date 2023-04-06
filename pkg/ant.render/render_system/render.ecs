@@ -92,7 +92,11 @@ policy "heap_mesh"
     .require_system "ant.render|heap_mesh"
     .component "heapmesh"
 
+system "indirect_system"
+    .implement "render_system/indirect_system.lua"
+    .method "entity_init"
 
+component "indirect"
 system "skinning_system"
     .implement "render_system/skinning_system.lua"
     .require_system "ant.animation|animation_system"
