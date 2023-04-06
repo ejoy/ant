@@ -464,7 +464,7 @@ local function pack_vertex_data(layouts, vertices)
 		end
 	end
 	local function f2i(v)
-		return math.floor(check_nan(v) * 32767)
+		return math.floor(check_nan(v) * 32767+0.5)
 	end
 
 	local weights_attrib_idx, joint_attrib_idx	= find_layout_idx(layouts, "WEIGHTS_0"), 	find_layout_idx(layouts, "JOINTS_0")
@@ -497,7 +497,7 @@ local function pack_vertex_data(layouts, vertices)
 
 	local function pack_tangent_frame(v)
 		local normal = load_attrib_math3dvec(normal_attrib_idx, v, layouts[normal_attrib_idx].layout)
-		local tangent = load_attrib_math3dvec(tangent_attrib_idx, v, layouts[normal_attrib_idx].layout)
+		local tangent = load_attrib_math3dvec(tangent_attrib_idx, v, layouts[tangent_attrib_idx].layout)
 		
 		local q = mu.pack_tangent_frame(normal, tangent)
 		local qx, qy, qz, qw = math3d.index(q, 1, 2, 3, 4)
