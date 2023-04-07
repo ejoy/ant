@@ -34,3 +34,4 @@ pkg/ant.resources/shaders/common/default_inputs_structure.sh
 pkg/ant.resources/shaders/pbr/vs_default.sc
 pkg/ant.resources/shaders/pbr/vs_inputs.sh
 pkg/ant.resources/shaders/pbr/vs_inputs.sh
+tools/rmlviewer/mod

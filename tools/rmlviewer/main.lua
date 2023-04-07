@@ -8,8 +8,6 @@ if __ANT_RUNTIME__ then
 else
     local fs = require "bee.filesystem"
     local inputfile = fs.path(assert(arg[1], "Need rml file"))
-    local vfs = require "vfs"
-    vfs.mount("test/rmlui/")
     arguments = {inputfile:string()}
 end
 
