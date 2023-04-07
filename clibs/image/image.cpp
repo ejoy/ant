@@ -6,6 +6,11 @@
 #include <bx/readerwriter.h>
 #include <bx/pixelformat.h>
 #include <bimg/decode.h>
+
+#include <glm/glm.hpp>
+#include <glm/ext/scalar_constants.hpp>
+#include <glm/gtx/compatibility.hpp>
+
 #include "luabgfx.h"
 
 #include <vector>
@@ -423,6 +428,32 @@ fill_cross_cubemap_face(bimg::ImageContainer* &ic, const bimg::ImageContainer *f
 }
 
 static int
+write2memory(lua_State *L, bx::MemoryBlock &mb, bimg::ImageContainer *ic, const char* fmt){
+    bx::MemoryWriter sw(&mb);
+    bx::Error err;
+    if (strcmp(fmt, "HDR") == 0){
+        if (!bimg::imageWriteHdr(&sw, ic->m_width, ic->m_height, ic->m_width * getBitsPerPixel(ic->m_format)/8, ic->m_data, ic->m_format, false, &err)){
+            return luaL_error(L, "Save to HDR file failed");
+        }
+    } else if (strcmp(fmt, "EXR") == 0){
+        if (!bimg::imageWriteExr(&sw, ic->m_width, ic->m_height, ic->m_width * getBitsPerPixel(ic->m_format)/8, ic->m_data, ic->m_format, false, &err)){
+            return luaL_error(L, "Save to EXR file failed");
+        }
+    } else if (strcmp(fmt, "PNG") == 0){
+        if (!bimg::imageWritePng(&sw, ic->m_width, ic->m_height, ic->m_width * getBitsPerPixel(ic->m_format)/8, ic->m_data, ic->m_format, false, &err)){
+            return luaL_error(L, "Save to PNG file failed");
+        }
+    } else if (strcmp(fmt, "KTX") == 0) {
+        if (!bimg::imageWriteKtx(&sw, *ic, ic->m_data, (uint32_t)ic->m_size, &err)){
+            return luaL_error(L, "Write to memory as ktx failed");
+        }
+    } else {
+        return luaL_error(L, "Invalid output file format:%s", fmt);
+    }
+    return 1;
+}
+
+static int
 lpack2cubemap(lua_State *L){
     luaL_checktype(L, 1, LUA_TTABLE);
     const lua_Unsigned n = lua_rawlen(L, 1);
@@ -463,32 +494,132 @@ lpack2cubemap(lua_State *L){
     }
 
     bx::MemoryBlock mb(&allocator);
-    bx::MemoryWriter sw(&mb);
-    bx::Error err;
-    if (iscross){
-        if (strcmp(outfile_fmt, "HDR") == 0){
-            if (!bimg::imageWriteHdr(&sw, ic->m_width, ic->m_height, ic->m_width * getBitsPerPixel(ic->m_format)/8, ic->m_data, ic->m_format, false, &err)){
-                return luaL_error(L, "Save to HDR file failed");
-            }
-        } else if (strcmp(outfile_fmt, "EXR") == 0){
-            if (!bimg::imageWriteExr(&sw, ic->m_width, ic->m_height, ic->m_width * getBitsPerPixel(ic->m_format)/8, ic->m_data, ic->m_format, false, &err)){
-                return luaL_error(L, "Save to EXR file failed");
-            }
-        } else if (strcmp(outfile_fmt, "PNG") == 0){
-            if (!bimg::imageWritePng(&sw, ic->m_width, ic->m_height, ic->m_width * getBitsPerPixel(ic->m_format)/8, ic->m_data, ic->m_format, false, &err)){
-                return luaL_error(L, "Save to PNG file failed");
-            }
-        } else {
-            return luaL_error(L, "Invalid output file format:%s", outfile_fmt);
-        }
-    } else {
-        if (!bimg::imageWriteKtx(&sw, *ic, ic->m_data, (uint32_t)ic->m_size, &err)){
-            return luaL_error(L, "Write to memory as ktx failed");
-        }
-    }
+    write2memory(L, mb, ic, iscross ? "KTX" : outfile_fmt);
 
     lua_pushlstring(L, (const char*)mb.more(), mb.getSize());
     bimg::imageFree(ic);
+    return 1;
+}
+
+static inline glm::vec2
+hammersley(uint32_t i, float iN) {
+    constexpr float tof = 0.5f / 0x80000000U;
+    uint32_t bits = i;
+    bits = (bits << 16u) | (bits >> 16u);
+    bits = ((bits & 0x55555555u) << 1u) | ((bits & 0xAAAAAAAAu) >> 1u);
+    bits = ((bits & 0x33333333u) << 2u) | ((bits & 0xCCCCCCCCu) >> 2u);
+    bits = ((bits & 0x0F0F0F0Fu) << 4u) | ((bits & 0xF0F0F0F0u) >> 4u);
+    bits = ((bits & 0x00FF00FFu) << 8u) | ((bits & 0xFF00FF00u) >> 8u);
+    return{ i * iN, bits * tof};
+}
+
+struct face_address
+{
+    int face;
+    float u, v;
+};
+
+static inline face_address
+dir2uvface(const glm::vec3 &dir){
+    const float x = dir.x, y = dir.y, z = dir.z;
+    const float ax = glm::abs(x), ay = glm::abs(y), az = glm::abs(z);
+    auto s2n = [](float v){ return (v+1.f)*0.5f; };
+    if (ax > ay){
+        if (ax > az){
+            return (x > 0) ? face_address{0, s2n(-z/ax), s2n(y/ax)}     // +X
+                           : face_address{1, s2n(z/ax), s2n(y/ax)};     // -X
+        }
+    } else {
+        if (ay > az){
+            return (y > 0) ? face_address{2, s2n(x/ay), s2n(z/ay)}      // +Y
+                           : face_address{3, s2n(x/ay), s2n(-z/ay)};    // -Y
+        }
+    }
+
+    return z > 0 ? face_address{4, s2n(x/az), s2n(y/az)}                // +Z
+                 : face_address{5, s2n(x/az), s2n(-y/az)};              // -Z
+}
+
+static inline glm::vec3
+filter_at(const bimg::ImageContainer &cm, const glm::vec3 &direction){
+    auto addr = dir2uvface(direction);
+    bimg::ImageMip cm_mip;
+    if (!bimg::imageGetRawData(cm, (uint8_t)addr.face, 0, cm.m_data, cm.m_size, cm_mip))
+        return glm::vec3(0.f);
+
+    const float maxwidth = (float)cm.m_width-1, maxheight = (float)cm.m_height-1;
+    const glm::vec2 xy(std::min(addr.u * maxwidth,  maxwidth),
+                 std::min(addr.v * maxheight, maxheight));
+
+    const glm::uvec2 uxy = glm::floor(xy);
+
+    auto read_texel = [&cm_mip](uint32_t x, uint32_t y){
+        return *((glm::vec4*)cm_mip.m_data + cm_mip.m_width * y + x);
+    };
+
+    const uint32_t x0 = uxy.x, y0 = uxy.y;
+    const uint32_t x1 = uxy.x+1, y1 = uxy.y+1;
+
+    const auto texel_x0y0 = read_texel(x0, y0);
+    const auto texel_x1y0 = read_texel(x1, y0);
+    const auto texel_x0y1 = read_texel(x0, y1);
+    const auto texel_x1y1 = read_texel(x1, y1);
+
+    const glm::vec2 st = glm::fract(xy);
+
+    return glm::vec3(
+            glm::lerp(
+                glm::lerp(texel_x0y0, texel_x1y0, st.s), 
+                glm::lerp(texel_x1y0, texel_x1y1, st.s), 
+                st.t));
+}
+
+static inline void
+write_at(bimg::ImageContainer &equirectangular, size_t iw, size_t ih, const glm::vec3 &v){
+    auto d = (glm::vec4*)equirectangular.m_data;
+    *(d + equirectangular.m_width * ih + iw) = glm::vec4(v, 0.f);
+}
+
+static int
+lcubemap2equirectangular(lua_State *L){
+    constexpr float pi = glm::pi<float>();
+
+    size_t cmsize;
+    const char* cmdata = luaL_checklstring(L, 1, &cmsize);
+    bx::DefaultAllocator allocator;
+    bx::Error err;
+    auto cm = bimg::imageParse(&allocator, cmdata, (uint32_t)cmsize, bimg::TextureFormat::RGBA32F, &err);
+    if (cm == nullptr){
+        return luaL_error(L, "Invalid cubemap texture");
+    }
+
+    auto equirectangular = bimg::imageAlloc(&allocator, bimg::TextureFormat::RGBA32F, cm->m_width*2, cm->m_height, 1, 1, false, false);
+
+    const size_t w = cm->m_width * 2, h = cm->m_height;
+    for (size_t ih = 0; ih < h; ++ih){
+        for (size_t iw = 0; iw < w; ++iw) {
+            glm::vec3 c(0.0);
+            const size_t numSamples = 64; // TODO: how to chose numsamples
+            for (size_t sample = 0; sample < numSamples; sample++) {
+                const glm::vec2 u = hammersley(uint32_t(sample), 1.0f / numSamples);
+                float x = 2.0f * (iw + u.x) / w - 1.0f;
+                float y = 1.0f - 2.0f * (ih + u.y) / h;
+                float theta = x * pi;
+                float phi = y * pi * 0.5f;
+                glm::vec3 s = {
+                        std::cos(phi) * std::sin(theta),
+                        std::sin(phi),
+                        std::cos(phi) * std::cos(theta) };
+                c += filter_at(*cm, s);
+            }
+            write_at(*equirectangular, iw, ih, c * (1.0f / numSamples));
+        }
+    }
+
+    bx::MemoryBlock mb(&allocator);
+    write2memory(L, mb, equirectangular, "HDR");
+    lua_pushlstring(L, (const char*)mb.more(), mb.getSize());
+    bimg::imageFree(equirectangular);
     return 1;
 }
 
@@ -502,6 +633,7 @@ luaopen_image(lua_State* L) {
         { "get_format_sizebytes",lget_format_sizebytes},
         { "get_format_name",    lget_format_name},
         { "pack2cubemap",       lpack2cubemap},
+        { "cubemap2equirectangular", lcubemap2equirectangular},
         { nullptr,              nullptr },
     };
     luaL_newlib(L, lib);
