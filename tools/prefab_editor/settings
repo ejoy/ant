@@ -39,10 +39,12 @@ graphic:
     normal_offset: 0.012
     size: 1024
     split_lamada: 0.8
-    split_num: 1
-    split_ratios: {
-			{0.00, 0.10}
-    }
+    split_num: 4
+    split_ratios:
+      {0.00, 0.05}
+      {0.05, 0.15}
+      {0.15, 0.30}
+      {0.30, 0.70}
     min_variance: 0.012
     depth_multiplier: 1000
     stabilize: true
