@@ -124,7 +124,11 @@ local function parse_layer(t, s, d)
             pd = 180
         end
     elseif s == "L" then
-        ps = 3
+        if t >= "1" and t <= "3" then
+            ps = 3 
+        else
+            ps = 5
+        end
         if d == "1" then
             pd = 180
         elseif d == "2" then
@@ -135,7 +139,11 @@ local function parse_layer(t, s, d)
             pd = 90
         end
     elseif s == "T" then
-        ps = 4
+        if t >= "1" and t <= "3" then
+            ps = 4 
+        else
+            ps = 6
+        end
         if d == "1" then
             pd = 0
         elseif d == "2" then

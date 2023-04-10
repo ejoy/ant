@@ -189,7 +189,7 @@ void main()
     float mark_alpha = 0;
     
     if(v_mark_type != 0){
-        mark_alpha = texture2DArray(s_mark_alpha, vec3(v_texcoord3, v_mark_shape));
+        mark_alpha = texture2DArray(s_mark_alpha, vec3(v_texcoord3, mark_shape_idx));
     }   
 
     float sand_height   = texture2DArray(s_height, vec3(uv, 0.0) );
