@@ -49,6 +49,7 @@ update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transfor
 }
 
 #define INVALID_BUFFER_TYPE UINT16_MAX
+#define INVALID_NUM_TYPE UINT32_MAX
 #define BUFFER_TYPE(_HANDLE)	(_HANDLE >> 16) & 0xffff
 
 static bool
@@ -79,7 +80,7 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid){
 		}
 	}
 	const uint16_t itbtype = BUFFER_TYPE(ro->itb_handle);
-	if((int)ro->draw_num != 0 && (int)ro->draw_num != -1){
+	if(ro->draw_num != 0 && ro->draw_num != INVALID_NUM_TYPE){
 		w->bgfx->encoder_set_instance_data_from_dynamic_vertex_buffer(w->holder->encoder, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->itb_handle}, 0, ro->draw_num);
 	}
 
@@ -129,7 +130,7 @@ static void
 draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const objarray &objs, obj_transforms &trans){
 	for (const auto &od : objs){
 		const uint16_t idbtype = BUFFER_TYPE(od.obj->idb_handle);
-		if((int)od.obj->draw_num == 0){
+		if(od.obj->draw_num == 0){
 			continue;
 		}
 		auto mi = get_material(od.obj, ra.material_index);
@@ -151,7 +152,7 @@ draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const o
 			}
 
 			w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-			if((int)od.obj->draw_num != 0 && (int)od.obj->draw_num != -1){
+			if(od.obj->draw_num != 0 && od.obj->draw_num != INVALID_NUM_TYPE){
 				w->bgfx->encoder_submit_indirect(w->holder->encoder, ra.viewid, prog, bgfx_indirect_buffer_handle_t{(uint16_t)od.obj->idb_handle}, 0, od.obj->draw_num, od.obj->render_layer, BGFX_DISCARD_ALL);
 			}
 			else{

@@ -48,7 +48,7 @@ component "render_object"
 
     .field "idb_handle:dword"
     .field "itb_handle:dword"
-    .field "draw_num:float"
+    .field "draw_num:dword"
 
     .field "render_layer:dword"
     .field "discard_flags:byte"
