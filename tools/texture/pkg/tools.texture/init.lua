@@ -14,12 +14,15 @@ do
     end
 
     local function default_read(v) return v end
-    local keys = {
-        {"--faces", "-f", faces_refine},
+    local function cvt2int(v) return math.tointeger(v) end
+    local function cvt2size(v) local w, h = v:match "(%d+)[Xx](%d+)"; return {math.tointeger(w), math.tointeger(h)} end
+    local options_keys = {
+        {"--faces",            "-f", faces_refine},
         {"--cubemap2equirect", "-c", default_read},
         {"--equirect2cubemap", "-e", default_read},
-        {"--outdir", "-o", default_read},
-        {"--outfile", "-O", default_read},
+        {"--facesize",         "-s", cvt2int},
+        {"--size",             "-S", cvt2size},
+        {"--outfile",          "-o", default_read},
     }
     for i=1, #arg do
         local a = arg[i]
@@ -36,7 +39,7 @@ do
             end
         end
 
-        for _, key in ipairs(keys)do
+        for _, key in ipairs(options_keys)do
             local k, v = read_pairs(a, key)
             if k and v then
                 options[k] = v
@@ -82,13 +85,19 @@ if options.faces then
     write_file(outfile, cubemap_content)
 elseif options.cubemap2equirect then
     local cubemap_content = read_file(lfs.path(options.cubemap2equirect))
-    local equirectangular = image.cubemap2equirectangular(cubemap_content, fileformat)
+    local s = options.size
+    local w, h = 2, 2
+    if s then
+        w, h = s[1], s[2]
+    end
+    local equirectangular = image.cubemap2equirectangular(cubemap_content, fileformat, w, h)
     write_file(outfile, equirectangular)
 elseif options.equirect2cubemap then
     local equirectangular = read_file(lfs.path(options.equirect2cubemap))
     if outfile:extension():string():lower() ~= ".ktx" then
         error "cubemap file output file should be ktx format"
     end
-    local cm = image.equirectangular2cubemap(equirectangular)
+
+    local cm = image.equirectangular2cubemap(equirectangular, options.facesize)
     write_file(outfile, cm)
 end
