@@ -12,8 +12,9 @@ lm:lua_source "image" {
     includes = {
         BgfxInclude,
         Ant3rd .. "bimg/include",
+        Ant3rd .. "glm",
         "../bgfx",
-        "../luabind"
+        "../luabind",
     },
     sources = {
         "image.cpp",

@@ -220,7 +220,7 @@ function imodifier.create_srt_modifier(target, group_id, generator, keep, foreup
 		},
     }
     return {
-        eid = ecs.group(group_id):create_entity(template),
+        eid = group_id and ecs.group(group_id):create_entity(template) or ecs.create_entity(template),
         anim_eid = anim_eid
     }
 end

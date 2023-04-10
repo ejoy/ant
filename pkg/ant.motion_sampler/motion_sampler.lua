@@ -92,7 +92,13 @@ local function tom3d(old, new)
 end
 
 function ims.set_target(e, s, r, t, duration, tween_in, tween_out)
-    w:extend(e, "motion_sampler:update scene:in")
+    w:extend(e, "scene:in")
+    local scene = e.scene
+    ims.set_target_ex(e, {s = math3d.vector(scene.s), r = math3d.quaternion(scene.r), t = math3d.vector(scene.t)}, {s = s, r = r, t = t}, duration, tween_in, tween_out)
+end
+
+function ims.set_target_ex(e, src, dst, duration, tween_in, tween_out)
+    w:extend(e, "motion_sampler:update")
     local ss = e.motion_sampler
     if duration then
         ss.duration = duration
@@ -103,16 +109,14 @@ function ims.set_target(e, s, r, t, duration, tween_in, tween_out)
     ss.tween_in     = tween_in or mc.TWEEN_NONE
     ss.tween_out    = tween_out or mc.TWEEN_NONE
 
-    ss.target_s     = tom3d(ss.target_s, s)
-    ss.target_r     = tom3d(ss.target_r, r)
-    ss.target_t     = tom3d(ss.target_t, t)
-
-    local scene = e.scene
+    ss.target_s     = tom3d(ss.target_s, dst.s)
+    ss.target_r     = tom3d(ss.target_r, dst.r)
+    ss.target_t     = tom3d(ss.target_t, dst.t)
 
     --we need to copy it
-    ss.source_s     = tom3d(ss.source_s, math3d.vector(scene.s))
-    ss.source_r     = tom3d(ss.source_r, math3d.quaternion(scene.r))
-    ss.source_t     = tom3d(ss.source_t, math3d.vector(scene.t))
+    ss.source_s     = tom3d(ss.source_s, src.s)
+    ss.source_r     = tom3d(ss.source_r, src.r)
+    ss.source_t     = tom3d(ss.source_t, src.t)
 
     w:submit(e)
 end
