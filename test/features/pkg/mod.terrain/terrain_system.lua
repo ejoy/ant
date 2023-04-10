@@ -81,7 +81,7 @@ function iterrain.gen_terrain_field(width, height, offset, unit)
     end
     calc_shape_terrain(unit)
     --iplane_terrain.set_wh(width, height, offset_x, offset_z)
-    iplane_terrain.set_wh(width, height, offset)
+    iplane_terrain.set_wh(width, height, offset, offset)
     iplane_terrain.init_plane_terrain(shape_terrain)
     terrain_width_offset  = offset
     terrain_height_offset = offset
