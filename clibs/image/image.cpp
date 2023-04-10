@@ -515,7 +515,7 @@ hammersley(uint32_t i, float iN) {
 
 struct face_address
 {
-    int face;
+    uint8_t face;
     float u, v;
 };
 
@@ -538,6 +538,21 @@ dir2uvface(const glm::vec3 &dir){
 
     return z > 0 ? face_address{4, s2n(x/az), s2n(y/az)}                // +Z
                  : face_address{5, s2n(x/az), s2n(-y/az)};              // -Z
+}
+
+static inline glm::vec3
+uvface2dir(int face, float u, float v){
+    auto n2s = [](float v){return v*2.f - 1.f;};
+    u = n2s(u), v = n2s(v);
+    switch (face){
+        case 0: return glm::vec3( 1.0, v,-u); break;
+        case 1: return glm::vec3(-1.0, v, u); break;
+        case 2: return glm::vec3( u, 1.0,-v); break;
+        case 3: return glm::vec3( u,-1.0, v); break;
+        case 4: return glm::vec3( u, v, 1.0); break;
+        case 5: 
+        default: return glm::vec3(-u, v,-1.0); break;
+    }
 }
 
 static inline glm::vec3
@@ -574,10 +589,11 @@ filter_at(const bimg::ImageContainer &cm, const glm::vec3 &direction){
                 st.t));
 }
 
+template<class ImageType>
 static inline void
-write_at(bimg::ImageContainer &equirectangular, size_t iw, size_t ih, const glm::vec3 &v){
-    auto d = (glm::vec4*)equirectangular.m_data;
-    *(d + equirectangular.m_width * ih + iw) = glm::vec4(v, 0.f);
+write_at(ImageType &face, size_t iw, size_t ih, const glm::vec3 &v){
+    auto d = (glm::vec4*)face.m_data;
+    d[face.m_width * ih + iw] = glm::vec4(v, 0.f);
 }
 
 static int
@@ -623,6 +639,98 @@ lcubemap2equirectangular(lua_State *L){
     return 1;
 }
 
+static int
+lequirectangular2cubemap(lua_State *L) {
+    size_t esize;
+    const char* edata = luaL_checklstring(L, 1, &esize);
+    bx::DefaultAllocator allocator;
+    bx::Error err;
+    auto equirectangular = bimg::imageParse(&allocator, edata, (uint32_t)esize, bimg::TextureFormat::RGBA32F, &err);
+    if (equirectangular == nullptr){
+        return luaL_error(L, "Invalid cubemap texture");
+    }
+
+    const size_t width = equirectangular->m_width;
+    const size_t height = equirectangular->m_height;
+
+    if (height * 2 != width){
+        return luaL_error(L, "Invalid equirectangular map, width:%d = 2 * height:%d", width, height);
+    }
+
+    auto load_at = [](const auto equirectangular, size_t x, size_t y){
+        const glm::vec4 *d = (const glm::vec4*)(equirectangular->m_data);
+        return d[y*equirectangular->m_width+x];
+    };
+
+    const float pi = glm::pi<float>();
+    const float pioverone = 1.f / pi;
+
+    auto toRectilinear = [=](glm::vec3 s){
+        float xf = std::atan2(s.x, s.z) * pioverone;   // range [-1.0, 1.0]
+        float yf = std::asin(s.y) * (2 * pioverone);   // range [-1.0, 1.0]
+        xf = (xf + 1.0f) * 0.5f * (width  - 1);        // range [0, width [
+        yf = (1.0f - yf) * 0.5f * (height - 1);        // range [0, height[
+        return glm::vec2(xf, yf);
+    };
+
+    const uint16_t facesize = (uint16_t)height;
+    auto cm = bimg::imageAlloc(&allocator, bimg::TextureFormat::RGBA32F, facesize, facesize, 1, 1, true, false);
+
+    for (uint8_t face=0; face < 6; ++face){
+        bimg::ImageMip cmface;
+        bimg::imageGetRawData(*cm, (uint8_t)face, 0, cm->m_data, cm->m_size, cmface);
+        for (uint16_t y=0; y<facesize; ++y){
+            for (uint16_t x=0 ; x<facesize ; ++x) {
+                // calculate how many samples we need based on dx, dy in the source
+                // x = cos(phi) sin(theta)
+                // y = sin(phi)
+                // z = cos(phi) cos(theta)
+
+                // here we try to figure out how many samples we need, by evaluating the surface
+                // (in pixels) in the equirectangular -- we take the bounding box of the
+                // projection of the cubemap texel's corners.
+
+                auto pos0 = toRectilinear(uvface2dir(face, x + 0.0f, y + 0.0f)); // make sure to use the float version
+                auto pos1 = toRectilinear(uvface2dir(face, x + 1.0f, y + 0.0f)); // make sure to use the float version
+                auto pos2 = toRectilinear(uvface2dir(face, x + 0.0f, y + 1.0f)); // make sure to use the float version
+                auto pos3 = toRectilinear(uvface2dir(face, x + 1.0f, y + 1.0f)); // make sure to use the float version
+                const float minx = std::min(pos0.x, std::min(pos1.x, std::min(pos2.x, pos3.x)));
+                const float maxx = std::max(pos0.x, std::max(pos1.x, std::max(pos2.x, pos3.x)));
+                const float miny = std::min(pos0.y, std::min(pos1.y, std::min(pos2.y, pos3.y)));
+                const float maxy = std::max(pos0.y, std::max(pos1.y, std::max(pos2.y, pos3.y)));
+                const float dx = std::max(1.0f, maxx - minx);
+                const float dy = std::max(1.0f, maxy - miny);
+                const size_t numSamples = size_t(dx * dy);
+
+                const float iNumSamples = 1.0f / numSamples;
+                glm::vec3 c(0.f);
+                for (size_t sample = 0; sample < numSamples; sample++) {
+                    // Generate numSamples in our destination pixels and map them to input pixels
+                    const glm::vec2 h = hammersley(uint32_t(sample), iNumSamples);
+                    const glm::vec3 s(uvface2dir(face, x + h.x, y + h.y));
+                    auto pos = toRectilinear(s);
+
+                    // we can't use filterAt() here because it reads past the width/height
+                    // which is okay for cubmaps but not for square images
+
+                    // TODO: the sample should be weighed by the area it covers in the cubemap texel
+
+                    c += glm::vec3(load_at(equirectangular, (uint32_t)pos.x, (uint32_t)pos.y));
+                }
+                c *= iNumSamples;
+                
+                write_at(cmface, x, y, c);
+            }
+        }
+    }
+
+    bx::MemoryBlock mb(&allocator);
+    write2memory(L, mb, cm, "KTX");
+    lua_pushlstring(L, (const char*)mb.more(), mb.getSize());
+    bimg::imageFree(cm);
+    return 1;
+}
+
 extern "C" int
 luaopen_image(lua_State* L) {
     luaL_Reg lib[] = {
@@ -634,6 +742,7 @@ luaopen_image(lua_State* L) {
         { "get_format_name",    lget_format_name},
         { "pack2cubemap",       lpack2cubemap},
         { "cubemap2equirectangular", lcubemap2equirectangular},
+        { "equirectangular2cubemap", lequirectangular2cubemap},
         { nullptr,              nullptr },
     };
     luaL_newlib(L, lib);

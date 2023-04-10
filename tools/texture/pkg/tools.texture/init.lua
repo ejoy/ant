@@ -36,4 +36,6 @@ do
     local equirectangular = image.cubemap2equirectangular(cubemap_content)
     write_file(dir / "tt.hdr", equirectangular)
 
+    local cm2 = image.equirectangular2cubemap(equirectangular)
+    write_file(dir / "cm.ktx", cm2)
 end
