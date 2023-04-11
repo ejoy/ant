@@ -37,9 +37,10 @@ public:
 	int GetBaseline(Rml::FontFaceHandle handle) override;
 	void GetUnderline(Rml::FontFaceHandle handle, float& position, float& thickness) override;
 	int GetStringWidth(Rml::FontFaceHandle handle, const std::string& string) override;
+    int GetRichStringWidth(Rml::FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx,float line_height) override;
 	void GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry) override;
-    void GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<uint32_t>& codepoints, Rml::Geometry& geometry) override;
-    float PrepareText(Rml::FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<Rml::group>& groups,std::vector<Rml::layout>& line_layouts,int start,int num) override;
+    void GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<uint32_t>& codepoints, Rml::Geometry& textgeometry, std::vector<std::unique_ptr<Rml::Geometry>> & imagegeometries, std::vector<Rml::image>& images, int& cur_image_idx, float line_height) override;
+    float PrepareText(Rml::FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<Rml::group>& groups,std::vector<Rml::image>& images,std::vector<Rml::layout>& line_layouts,int start,int num) override;
 private:
     void submitScissorRect(bgfx_encoder_t* encoder);
     void setScissorRect(bgfx_encoder_t* encoder, const glm::u16vec4 *r);

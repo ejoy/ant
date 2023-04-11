@@ -1,0 +1,14 @@
+compress:
+  android: ASTC4x4
+  ios: ASTC4x4
+  windows: BC3
+noresize: true
+mipmap: true
+path: /pkg/ant.resources.binary/textures/color_text.png
+sampler:
+  MAG: LINEAR
+  MIN: LINEAR
+  MIP: LINEAR
+  U: CLAMP
+  V: CLAMP
+type: texture

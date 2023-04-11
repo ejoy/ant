@@ -29,6 +29,12 @@ struct group{
 	//todo
 };
 
+struct image{
+	Rml::TextureId id;
+	Rect rect;
+	uint16_t width;
+	uint16_t height;
+};
 struct Line {
 	std::vector<layout> layouts;
 	std::string text;
@@ -66,9 +72,10 @@ public:
 	virtual int GetBaseline(FontFaceHandle handle) = 0;
 	virtual void GetUnderline(FontFaceHandle handle, float& position, float &thickness) = 0;
 	virtual int GetStringWidth(FontFaceHandle handle, const std::string& string) = 0;
+	virtual int GetRichStringWidth(FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx,float line_height) = 0;
 	virtual void GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry) =0;
-	virtual void GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<uint32_t>& codepoints, Rml::Geometry& geometry)=0;
-	virtual float PrepareText(FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<group>& groups,std::vector<layout>& line_layouts,int start,int num)=0;
+	virtual void GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<uint32_t>& codepoints, Rml::Geometry& textgeometry, std::vector<std::unique_ptr<Geometry>> & imagegeometries, std::vector<Rml::image>& images, int& cur_image_idx, float line_height)=0;
+	virtual float PrepareText(FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<group>& groups,std::vector<Rml::image>& images,std::vector<layout>& line_layouts,int start,int num)=0;
 };
 
 class Plugin {
@@ -81,7 +88,7 @@ public:
 	virtual std::string OnRealPath(const std::string& path) = 0;
 	virtual void OnLoadTexture(Document* document, Element* element, const std::string& path) = 0;
 	virtual void OnLoadTexture(Document* document, Element* element, const std::string& path, Size size) = 0;
-	virtual void OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& groupmap,std::string& ctext,Rml::group& default_group)=0;
+	virtual void OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& groupmap,std::vector<Rml::image>& images,std::vector<int>& imageMap,std::string& ctext,Rml::group& default_group)=0;
 };
 
 }

@@ -34,6 +34,10 @@ end
 local pendQueue = {}
 local readyQueue = {}
 
+function m.getTextureTable()
+    return ltask.call(ServiceWorld, "get_texture_table") 
+end
+
 function m.loadTexture(doc, e, path, width, height, isRT)
     width  = math.floor(width)
     height = math.floor(height)

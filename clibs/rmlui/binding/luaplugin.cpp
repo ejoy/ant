@@ -130,18 +130,74 @@ void lua_plugin::OnLoadTexture(Rml::Document* document, Rml::Element* element, c
     });
 }
 
-void lua_plugin::OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& groupMap,std::string& ctext,Rml::group& default_group) {
+
+void lua_plugin::OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& groupMap,std::vector<Rml::image>& images,std::vector<int>& imageMap,std::string& ctext,Rml::group& default_group) {
     luabind::invoke([&](lua_State* L) {
         lua_pushstring(L, str.data());
-		call(L, LuaEvent::OnParseText, 1, 3);
+		call(L, LuaEvent::OnParseText, 1, 5);
 
-		//-1 -2 -3 - groupmap groups ctext
+		//-1 -2 -3 -4 -5 - imagemap images groupmap groups ctext
+
+		lua_pushnil(L);//-1 -2 - nil imagemap
+		while(lua_next(L,-2)){//-1 -2 idx imagemap
+			imageMap.emplace_back((int)lua_tointeger(L,-1)-1);
+			lua_pop(L,1);
+		}
+		lua_pop(L,1);
+
+		lua_pushnil(L);
+		while(lua_next(L,-2)){
+			Rml::image image;
+
+			lua_getfield(L,-1,"width");
+			uint16_t width = lua_tointeger(L, -1);
+			image.width = width;
+			lua_pop(L,1);
+
+			lua_getfield(L,-1,"height");
+			uint16_t height = lua_tointeger(L, -1);
+			image.height = height;
+			lua_pop(L,1);
+
+
+			lua_getfield(L,-1,"id");
+			float id = lua_tonumber(L, -1);
+			image.id = id;
+			lua_pop(L,1);
+
+			lua_getfield(L,-1,"rect");
+			lua_getfield(L,-1,"x");
+			float x = lua_tonumber(L, -1);
+			lua_pop(L,1);
+
+			lua_getfield(L,-1,"y");
+			float y = lua_tonumber(L, -1);
+			lua_pop(L,1);
+
+			lua_getfield(L,-1,"w");
+			float w = lua_tonumber(L, -1);
+			lua_pop(L,1);
+
+			lua_getfield(L,-1,"h");
+			float h = lua_tonumber(L, -1);
+			lua_pop(L,1);
+
+			lua_pop(L,1);
+
+			image.rect = Rml::Rect(x, y, w, h)	;
+
+			lua_pop(L,1);
+			images.emplace_back(image);
+		}
+		lua_pop(L,1);
+
+
 		lua_pushnil(L);//-1 -2 - nil groupmap
 		while(lua_next(L,-2)){//-1 -2 idx groupmap
+			float tmp_idx = (int)lua_tointeger(L,-1);
 			groupMap.emplace_back((int)lua_tointeger(L,-1)-1);
 			lua_pop(L,1);
 		}
-
 		lua_pop(L,1);
 
 		lua_pushnil(L);

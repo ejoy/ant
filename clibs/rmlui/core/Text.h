@@ -9,16 +9,15 @@
 
 namespace Rml {
 
-class Text final : public Node, public EnableObserverPtr<Text> {
+class Text : public Node, public EnableObserverPtr<Text> {
 public:
 	Text(Document* owner, const std::string& text);
 	virtual ~Text();
 	void SetText(const std::string& text);
 	const std::string& GetText() const;
-	Size Measure(float minWidth, float maxWidth, float minHeight, float maxHeight);
+	virtual Size Measure(float minWidth, float maxWidth, float minHeight, float maxHeight);
 	float GetBaseline();
 	void ChangedProperties(const PropertyIdSet& properties);
-	void SetRichText(bool isRichText);
 protected:
 	std::optional<Property> GetComputedProperty(PropertyId id);
 	template <typename T>
@@ -43,12 +42,14 @@ protected:
 	void SetInnerHTML(const std::string& html) override;
 	void SetOuterHTML(const std::string& html) override;
 	const Rect& GetContentRect() const override;
-private:
-	void ParseText();
+	std::string text;
+	std::vector<uint32_t> codepoints;
+	LineList lines;
 	void UpdateTextEffects();
-	void UpdateGeometry(const FontFaceHandle font_face_handle);
+	virtual void UpdateGeometry(const FontFaceHandle font_face_handle);
 	void UpdateDecoration(const FontFaceHandle font_face_handle);
-	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts);
+	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, 
+		float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext);
 	float GetLineHeight();
 	std::optional<TextShadow> GetTextShadow();
 	std::optional<TextStroke> GetTextStroke();
@@ -56,22 +57,34 @@ private:
 	Color GetTextDecorationColor();
 	Color GetTextColor();
 	FontFaceHandle GetFontFaceHandle();
-	std::string text;
-	std::string ctext;
-	std::vector<uint32_t> codepoints;
-	//std::vector<Rml::layout> text_layouts;
-	std::vector<int> groupmap;
-	LineList lines;
 	Geometry geometry;
 	Geometry decoration;
 	FontFaceHandle font_handle = 0;
-	bool decoration_under = true;
-	bool dirty_geometry = true;
-	bool dirty_decoration = true;
-	bool dirty_effects = true;
-	bool dirty_font = true;
-	bool isRichText = false;
+	//7      6    5          4              3                2              1            0
+	//null null null decoration_under dirty_geometry dirty_decoration dirty_effects dirty_font
+	uint8_t dirty_data = 0x1f;
+
+private:
+};
+
+class RichText final : public Text {
+public:
+	RichText(Document* owner, const std::string& text);
+	virtual ~RichText();
+	Size Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) override;
+protected:
+	void Render() override;
+	void UpdateGeometry(const FontFaceHandle font_face_handle)override;
+private:
+	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, 
+		float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext, int& cur_image_idx,float line_height);
+	void UpdateImageMaterials();
 	std::vector<Rml::group> groups;
+	std::vector<Rml::image> images;
+	std::vector<int> groupmap;
+	std::vector<int> imagemap;
+	std::vector<std::unique_ptr<Geometry>> imagegeometries;
+	std::string ctext;
 };
 
 }

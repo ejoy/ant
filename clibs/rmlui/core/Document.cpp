@@ -205,6 +205,10 @@ Text* Document::CreateTextNode(const std::string& str) {
 	return new Text(this, str);
 }
 
+RichText* Document::CreateRichTextNode(const std::string& str) {
+	return new RichText(this, str);
+}
+
 void Document::NotifyCustomElement(Element* e){
 	if (custom_element.find(e->GetTagName()) != custom_element.end()) {
 		GetPlugin()->OnCreateElement(this, e, e->GetTagName());

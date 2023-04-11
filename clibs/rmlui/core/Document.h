@@ -9,6 +9,7 @@
 namespace Rml {
 
 class Text;
+class RichText;
 class StyleSheet;
 class DataModel;
 class Factory;
@@ -38,6 +39,7 @@ public:
 	const Element* GetBody() const;
 	Element* CreateElement(const std::string& tag);
 	Text* CreateTextNode(const std::string& str);
+	RichText* CreateRichTextNode(const std::string& str);
 	void NotifyCustomElement(Element* e);
 	void DefineCustomElement(const std::string& name);
 	void Instance(const HtmlElement& html);

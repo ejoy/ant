@@ -38,7 +38,7 @@ public:
 	std::string OnRealPath(const std::string& path) override;
 	void OnLoadTexture(Rml::Document* document, Rml::Element* element, const std::string& path) override;
 	void OnLoadTexture(Rml::Document* document, Rml::Element* element, const std::string& path, Rml::Size size) override;
-	void OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& layoutMap,std::string& ctext,Rml::group& default_group) override;
+	void OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& groupMap,std::vector<Rml::image>& images,std::vector<int>& imageMap,std::string& ctext,Rml::group& default_group) override;
 
 	void register_event(lua_State* L);
 	luaref_box ref(lua_State* L);

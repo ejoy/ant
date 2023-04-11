@@ -28,10 +28,16 @@ typedef unsigned int utfint;
 #define FIXPOINT FONT_POSTION_FIX_POINT
 
 const char* utf8_decode1(const char* s, utfint* val, int strict,int& cnt) {
+
     static const utfint limits[] =
     { ~(utfint)0, 0x80, 0x800, 0x10000u, 0x200000u, 0x4000000u };
     unsigned int c = (unsigned char)s[0];
     utfint res = 0;  /* final result */
+    if(c == '`'){
+        *val = 0x8000000u;
+        cnt  = 1;
+        return s + 1;
+    }
     if (c < 0x80)  /* ascii? */
         res = c,cnt=0;
     else {
@@ -546,6 +552,24 @@ int Renderer::GetStringWidth(Rml::FontFaceHandle handle, const std::string& stri
     return width;
 }
 
+int Renderer::GetRichStringWidth(Rml::FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx,float line_height){
+    FontFace face;
+    face.handle = handle;
+    int width = 0;
+    for (auto c : utf8::view(string)) {
+        if(c == '`'){
+            //width += images[cur_image_idx].rect.size.w;
+            width += line_height;
+            cur_image_idx++;
+        }
+        else{
+            auto glyph = GetGlyph(mcontext, face, c);
+            width += glyph.advance_x;
+        }
+    }
+    return width;
+}
+
 // why 32768, which want to use vs_uifont.sc shader to render font
 // and vs_uifont.sc also use in runtime font render.
 // the runtime font renderer store vertex position in int16
@@ -594,9 +618,9 @@ void Renderer::GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, 
     }
 }
 
-void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<uint32_t>& codepoints, Rml::Geometry& geometry){
-    auto& vertices = geometry.GetVertices();
-    auto& indices = geometry.GetIndices();
+void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<uint32_t>& codepoints, Rml::Geometry& textgeometry, std::vector<std::unique_ptr<Rml::Geometry>> & imagegeometries, std::vector<Rml::image>& images, int& cur_image_idx, float line_height){
+    auto& vertices = textgeometry.GetVertices();
+    auto& indices = textgeometry.GetIndices();
     vertices.clear();
     indices.clear();
     for (size_t i = 0; i < lines.size(); ++i) {
@@ -609,57 +633,57 @@ void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lin
         const Rml::Point fonttexel(1.f / mcontext->font_tex.width, 1.f / mcontext->font_tex.height);
 
         int x = int(line.position.x + 0.5f), y = int(line.position.y + 0.5f);
-
+        
         Rml::Color color;
         for (auto& layout:line.layouts){
-            color=layout.color;
             for(int ii=0;ii<layout.num;++ii){
                 uint32_t codepoint=codepoints[layout.start+ii];
-                struct font_glyph og;
-                auto g = GetGlyph(mcontext, face, codepoint, &og);
+                if(codepoint == 0x8000000u){
+                    color.r = color.g = color.b = 255;
+                    auto& image_vertices = imagegeometries[cur_image_idx]->GetVertices();
+                    auto& image_indices = imagegeometries[cur_image_idx]->GetIndices();
+                    image_vertices.clear();
+                    image_indices.clear();
+                    image_vertices.reserve(4);
+                    image_indices.reserve(6); 
+                    float u0 = images[cur_image_idx].rect.origin.x/images[cur_image_idx].width;
+                    float v0 = images[cur_image_idx].rect.origin.y/images[cur_image_idx].height;
+                    float w0 = images[cur_image_idx].rect.size.w/images[cur_image_idx].width;
+                    float h0 = images[cur_image_idx].rect.size.h/images[cur_image_idx].height;
+                    imagegeometries[cur_image_idx]->AddRectFilled(
+                        { float(x + line_height * 0.1) , float(y - line_height * 0.8), float(line_height * 0.9) , float(line_height * 0.8)},
+                        { u0 , v0 , w0 , h0 },
+                        color
+                    );
+                    cur_image_idx++;
+                    x += line_height;
+                }
+                else{
+                    color=layout.color;
+                    struct font_glyph og;
+                    auto g = GetGlyph(mcontext, face, codepoint, &og);
 
-                const int x0 = x + g.offset_x;
-                const int y0 = y + g.offset_y;
-                const int16_t u0 = g.u;
-                const int16_t v0 = g.v;
+                    const int x0 = x + g.offset_x;
+                    const int y0 = y + g.offset_y;
+                    const int16_t u0 = g.u;
+                    const int16_t v0 = g.v;
 
-                const float scale = FONT_POSTION_FIX_POINT / MAGIC_FACTOR;
-                geometry.AddRectFilled(
-                    { x0 * scale, y0 * scale, g.w * scale, g.h * scale },
-                    { u0 * fonttexel.x, v0 * fonttexel.y ,og.w * fonttexel.x , og.h * fonttexel.y },
-                    color
-                );
-                x += g.advance_x;                
+                    const float scale = FONT_POSTION_FIX_POINT / MAGIC_FACTOR;
+                    textgeometry.AddRectFilled(
+                        { x0 * scale, y0 * scale, g.w * scale, g.h * scale },
+                        { u0 * fonttexel.x, v0 * fonttexel.y ,og.w * fonttexel.x , og.h * fonttexel.y },
+                        color
+                    );
+                    x += g.advance_x;   
+                }             
             }
         }
-/* 
-        for (auto codepoint : utf8::view(line.text)) {
-
-            struct font_glyph og;
-            auto g = GetGlyph(mcontext, face, codepoint, &og);
-
-            // Generate the geometry for the character.
-            const int x0 = x + g.offset_x;
-            const int y0 = y + g.offset_y;
-            const int16_t u0 = g.u;
-            const int16_t v0 = g.v;
-
-            const float scale = FONT_POSTION_FIX_POINT / MAGIC_FACTOR;
-            geometry.AddRectFilled(
-                { x0 * scale, y0 * scale, g.w * scale, g.h * scale },
-                { u0 * fonttexel.x, v0 * fonttexel.y ,og.w * fonttexel.x , og.h * fonttexel.y },
-                color
-            );
-
-            //x += g.advance_x + (dim.x - olddim.x);
-            x += g.advance_x;
-        } */
-
         line.width = x - int(line.position.x + 0.5f);
     }
+
 }
 
-float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<Rml::group>& groups,std::vector<Rml::layout>& line_layouts,int start,int num){
+float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<Rml::group>& groups, std::vector<Rml::image>& images, std::vector<Rml::layout>& line_layouts,int start,int num){
     float line_width=0.f;
 
     FontFace face;
@@ -669,12 +693,17 @@ float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string
     int lstart=codepoints.size();
     int lnum=0;
     Rml::Color pre_color,cur_color;
-
-    int pre_lm=start+0,cur_lm;
     int i=0;//i代表是当前string的位移 //start+i代表在ctext中的位移
+    int cur_lm;
 
     if(num){
-        pre_color=groups[groupmap[pre_lm]].color;
+        float group_idx = groupmap[start+i];
+        if(group_idx>=100){
+            pre_color=groups[0].color;
+        }
+        else{
+            pre_color=groups[group_idx].color;
+        }
         l.color=pre_color;
         l.start=lstart;
 
@@ -684,8 +713,13 @@ float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string
         str=utf8_decode1(str, &codepoint, 1,cnt);
         codepoints.emplace_back(codepoint);
         assert(str);
-        auto glyph=GetGlyph(mcontext,face,codepoint);
-        line_width+=glyph.advance_x;
+        if(codepoint == 0x8000000u){
+            line_width+=images[group_idx-100].rect.size.w;
+        } 
+        else{
+            auto glyph=GetGlyph(mcontext,face,codepoint);
+            line_width+=glyph.advance_x;
+        }
         if(cnt>1){
             i+=3;
         }
@@ -698,7 +732,13 @@ float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string
     else return 0.f;
 
     while(i<num){
-        cur_lm=groupmap[start+i];
+        float group_idx = groupmap[start+i];
+        if(group_idx>=100){
+            cur_lm = 0;
+        }
+        else{
+            cur_lm=group_idx;
+        }        
         cur_color=groups[cur_lm].color;
         if(!(cur_color==pre_color)){
             l.num=lnum;
@@ -715,8 +755,13 @@ float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string
         str=utf8_decode1(str, &codepoint, 1,cnt);
         codepoints.emplace_back(codepoint);
         assert(str);
-        auto glyph=GetGlyph(mcontext,face,codepoint);
-        line_width+=glyph.advance_x;
+        if(codepoint == 0x8000000u){
+            line_width+=images[group_idx-100].rect.size.w;
+        } 
+        else{
+            auto glyph=GetGlyph(mcontext,face,codepoint);
+            line_width+=glyph.advance_x;
+        }
         if(cnt>1){
             i+=3;
         }

@@ -85,7 +85,7 @@ public:
 
 	void Update();
 	void UpdateRender();
-	void SetRednerStatus();
+	void SetRenderStatus();
 
 	Size GetScrollOffset() const;
 	float GetScrollLeft() const;

@@ -50,7 +50,6 @@ public:
 	void OnElementRemove(Element* element);
 
 	void Update(bool clear_dirty_variables);
-	bool RichText();
 private:
 	using DataViewList = std::vector<DataViewPtr>;
 	using NameViewMap = std::unordered_multimap<std::string, DataView*>;

@@ -33,66 +33,6 @@ std::unordered_map<uint8_t, uint8_t> ctod{
 };
 
 
-
-void Text::ParseText(){
-	ctext.clear();
-	size_t i=0;
-	size_t n=text.size();
-	Color default_color = GetTextColor();
-	default_color.ApplyOpacity(GetOpacity());
-	uint16_t start = 0;
-
-	while (text[i]) {
-        group group;
-		group.color=default_color;
-
-		Color color;
-
-        assert(i < n && text[i] != ']');
-        if (text[i] == '[') {
-            assert((i + 1) < n && text[i + 1] == '#');
-            i++; 
-
-			assert((i + 6) < n );
-			color.r=ctod[text[i+1]]*16+ctod[text[i+2]];
-			color.g=ctod[text[i+3]]*16+ctod[text[i+4]];
-			color.b=ctod[text[i+5]]*16+ctod[text[i+6]];
-			color.a=default_color.a;
-			i+=6;
-
-            assert((i + 1) < n && text[i + 1] == ']');
-            i++;
-
-            group.color = color;
-
-            while (i + 1 < n && text[i + 1] != '[') {
-					ctext.push_back(text[i+1]);
-					groupmap.emplace_back((int)groups.size());
-					start++;
-				
-                i++;                         
-            }
-
-            assert(i + 3 < n && text[i + 1] == '[' && text[i + 2] == '#' && text[i + 3] == ']');
-			if(groups.size()==0||!(group.color==groups[groups.size()-1].color))
-				groups.emplace_back(group);	
-            i += 3;
-            ++i;
-        }
-        else {
-
-			if(groups.size()==0||!(group.color==groups[groups.size()-1].color))
-				groups.emplace_back(group);		
-				ctext.push_back(text[i]);
-				groupmap.emplace_back((int)(groups.size()-1));
-				start++;
-						
-            i++;		
-        }
-    }
-	
-}
-
 static bool LastToken(const char* token_begin, const char* string_end, bool collapse_white_space, bool break_at_endline) {
 	bool last_token = (token_begin == string_end);
 	if (collapse_white_space && !last_token) {
@@ -252,8 +192,8 @@ void Text::Render() {
 	UpdateGeometry(font_face_handle);
 	UpdateDecoration(font_face_handle);
 
-	parent->SetRednerStatus();
-
+	parent->SetRenderStatus();
+	bool decoration_under = (dirty_data & (0x10))>>4;//decoration_under
 	if (decoration_under) {
 		decoration.Render();
 	}
@@ -263,7 +203,7 @@ void Text::Render() {
 	}
 }
 
-bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts) {
+bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext) {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 
 	// Initialise the output variables.
@@ -294,7 +234,6 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 	// Starting at the line_begin character, we generate sections of the text (we'll call them tokens) depending on the
 	// white-space parsing parameters. Each section is then appended to the line if it can fit. If not, or if an
 	// endline is found (and we're processing them), then the line is ended. kthxbai!
-	std::string ttext=isRichText?ctext:text;
 	const char* token_begin = ttext.c_str() + line_begin;
 	const char* string_end = ttext.c_str() + ttext.size();
 	while (token_begin != string_end)
@@ -305,7 +244,6 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 		// Generate the next token and determine its pixel-length.
 		bool break_line = BuildToken(token, next_token_begin, string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline);
 		int token_width = GetRenderInterface()->GetStringWidth(font_face_handle, token);
-
 		// If we're breaking to fit a line box, check if the token can fit on the line before we add it.
 		if (break_at_line)
 		{
@@ -387,9 +325,9 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::FontSize))
 	{
 		DirtyLayout();
-		dirty_decoration = true;
-		dirty_effects = true;
-		dirty_font = true;
+		dirty_data = dirty_data | (1<<2);//dirty_decoration = true
+		dirty_data = dirty_data | (1<<1);//dirty_effects = true
+		dirty_data = dirty_data | 1;//dirty_font = true
 		layout_changed = true;
 	}
 
@@ -399,12 +337,12 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::TextStrokeWidth) ||
 		changed_properties.contains(PropertyId::TextStrokeColor))
 	{
-		dirty_effects = true;
+		dirty_data = dirty_data | (1<<1);//dirty_effects = true
 	}
 
 	if (changed_properties.contains(PropertyId::LineHeight)) {
 		DirtyLayout();
-		dirty_decoration = true;
+		dirty_data = dirty_data | (1<<2);//dirty_decoration = true
 		layout_changed = true;
 	}
 
@@ -413,13 +351,15 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 	}
 
 	if (changed_properties.contains(PropertyId::TextDecorationLine)) {
-		dirty_decoration = true;
+		dirty_data = dirty_data | (1<<2);//dirty_decoration = true
 	}
 	if (changed_properties.contains(PropertyId::Opacity)) {
-		dirty_effects = true;
+		dirty_data = dirty_data | (1<<1);//dirty_effects = true
 	}
 	if (changed_properties.contains(PropertyId::Color) || changed_properties.contains(PropertyId::Opacity)) {
-		dirty_geometry = true;
+		dirty_data = dirty_data | (1<<3);//dirty_geometry = true
+		dirty_data = dirty_data | (1<<2);//dirty_decoration = true
+		bool dirty_decoration = (dirty_data & (0x4)) >> 2; //dirty_decoration 
 		if (!dirty_decoration) {
 			Color color = GetTextDecorationColor();
 			color.ApplyOpacity(GetOpacity());
@@ -431,9 +371,11 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 }
 
 void Text::UpdateTextEffects() {
+	bool dirty_effects = (dirty_data & (0x2)) >> 1; //dirty_dirty_effects
 	if (!dirty_effects || GetFontFaceHandle() == 0)
 		return;
-	dirty_effects = false;
+	
+	dirty_data = dirty_data & (0x1d);//dirty_effects = false;
 
 	auto shadow = GetTextShadow();
 	auto stroke = GetTextStroke();
@@ -451,26 +393,24 @@ void Text::UpdateTextEffects() {
 }
 
 void Text::UpdateGeometry(const FontFaceHandle font_face_handle) {
+	bool dirty_geometry = dirty_data & (1<<3);
 	if (!dirty_geometry) {
 		return;
 	}
-	dirty_geometry = false;
-	dirty_decoration = true;
-	if(!isRichText){
-		Color color = GetTextColor();
-		color.ApplyOpacity(GetOpacity());
-		GetRenderInterface()->GenerateString(font_face_handle, lines, color, geometry);		
-	}
-	else{
-			GetRenderInterface()->GenerateRichString(font_face_handle, lines, codepoints, geometry);
-	}
+	dirty_data = dirty_data & (0x17);//dirty_geometry = false
+	dirty_data = dirty_data | (1<<2);//dirty_decoration = true
+	Color color = GetTextColor();
+	color.ApplyOpacity(GetOpacity());
+	GetRenderInterface()->GenerateString(font_face_handle, lines, color, geometry);		
+
 }
 
 void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
+	bool dirty_decoration = (dirty_data & (0x4)) >> 2; //dirty_decoration 
 	if (!dirty_decoration) {
 		return;
 	}
-	dirty_decoration = false;
+	dirty_data = dirty_data & (0x1b);//dirty_decoration = false;
 	decoration.Release();
 	Style::TextDecorationLine text_decoration_line = GetTextDecorationLine();
 	if (text_decoration_line == Style::TextDecorationLine::None) {
@@ -488,21 +428,21 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 		switch (text_decoration_line) {
 		case Style::TextDecorationLine::Underline: {
 			position.y += -underline_position;
-			decoration_under = true;
+			dirty_data = dirty_data | (1<<4);//decoration_under = true
 			break;
 		}
 		case Style::TextDecorationLine::Overline: {
 			int baseline = GetRenderInterface()->GetBaseline(font_face_handle);
 			int line_height = GetRenderInterface()->GetLineHeight(font_face_handle);
 			position.y += baseline - line_height;
-			decoration_under = true;
+			dirty_data = dirty_data | (1<<4);//decoration_under = true
 			break;
 		}
 		case Style::TextDecorationLine::LineThrough: {
 			int baseline = GetRenderInterface()->GetBaseline(font_face_handle);
 			int line_height = GetRenderInterface()->GetLineHeight(font_face_handle);
 			position.y += baseline - 0.5f * line_height;
-			decoration_under = false;
+			dirty_data = dirty_data & (0xf);//decoration_under = false
 			break;
 		}
 		default: return;
@@ -517,8 +457,8 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 
 Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {
 	lines.clear();
-	dirty_geometry = true;
-	dirty_decoration = true;
+	dirty_data = dirty_data | (1<<3);//dirty_geometry = true
+	dirty_data = dirty_data | (1<<2);//dirty_decoration = true
 
 	if (GetFontFaceHandle() == 0) {
 		return Size(0, 0);
@@ -530,31 +470,16 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 	float height = 0.0f;
 	float first_line = true;
 	float baseline = GetBaseline();
-	
-	if(data_model)
-		isRichText=data_model->RichText();
-	
+
 	Style::TextAlign text_align = GetProperty<Style::TextAlign>(PropertyId::TextAlign);
-	groups.clear();
-	groupmap.clear();
-	codepoints.clear();
-	ctext.clear();
-	if(isRichText){
-		//ParseText();
-		Color default_color = GetTextColor();
-		group default_group;
-		default_group.color=default_color;
-		GetPlugin()->OnParseText(text,groups,groupmap,ctext,default_group);
-	}
+
 	std::string line;
 	std::vector<Rml::layout> line_layouts;
 	codepoints.clear();
 	while (!finish && height < maxHeight) {
 		float line_width;
 		int line_length;
-		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line,line_layouts);
-		if(isRichText)
-			line_width=GetRenderInterface()->PrepareText(GetFontFaceHandle(),line,codepoints,groupmap,groups,line_layouts,line_begin,line_length);
+		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line,line_layouts, text);
 		lines.push_back(Line { line_layouts,line, Point(line_width, height + baseline), 0 });
 		width = std::max(width, line_width);
 		height += line_height;
@@ -637,10 +562,11 @@ Color Text::GetTextColor() {
 }
 
 FontFaceHandle Text::GetFontFaceHandle() {
+	bool dirty_font= dirty_data & 1;//dirty_font
 	if (!dirty_font) {
 		return font_handle;
 	}
-	dirty_font = false;
+	dirty_data = dirty_data & (0x1e);//dirty_font = false;
 	std::string family = StringUtilities::ToLower(GetProperty<std::string>(PropertyId::FontFamily));
 	Style::FontStyle style   = GetProperty<Style::FontStyle>(PropertyId::FontStyle);
 	Style::FontWeight weight = GetProperty<Style::FontWeight>(PropertyId::FontWeight);
@@ -722,8 +648,236 @@ const Rect& Text::GetContentRect() const {
 	return GetBounds();
 }
 
-void Text::SetRichText(bool rt){
+/* void Text::SetRichText(bool rt){
 	isRichText=rt;
+} */
+
+RichText::RichText(Document* owner, const std::string& text_)
+	: Text(owner, text_)
+{
+	DirtyLayout();
 }
 
+RichText::~RichText()
+{ }
+
+bool RichText::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext, int& cur_image_idx,float line_height) {
+	FontFaceHandle font_face_handle = GetFontFaceHandle();
+
+	// Initialise the output variables.
+	line.clear();
+	line_layouts.clear();
+	line_length = 0;
+	line_width = 0;
+
+	// Bail if we don't have a valid font face.
+	if (font_face_handle == 0)
+		return true;
+
+	// Determine how we are processing white-space while formatting the text.
+	Style::WhiteSpace white_space_property = GetProperty<Style::WhiteSpace>(PropertyId::WhiteSpace);
+	Style::WordBreak word_break = GetProperty<Style::WordBreak>(PropertyId::WordBreak);
+
+	bool collapse_white_space = white_space_property == Style::WhiteSpace::Normal ||
+								white_space_property == Style::WhiteSpace::Nowrap ||
+								white_space_property == Style::WhiteSpace::Preline;
+	bool break_at_line = (maximum_line_width >= 0) && 
+		                   (white_space_property == Style::WhiteSpace::Normal ||
+							white_space_property == Style::WhiteSpace::Prewrap ||
+							white_space_property == Style::WhiteSpace::Preline);
+	bool break_at_endline = white_space_property == Style::WhiteSpace::Pre ||
+							white_space_property == Style::WhiteSpace::Prewrap ||
+							white_space_property == Style::WhiteSpace::Preline;
+
+	// Starting at the line_begin character, we generate sections of the text (we'll call them tokens) depending on the
+	// white-space parsing parameters. Each section is then appended to the line if it can fit. If not, or if an
+	// endline is found (and we're processing them), then the line is ended. kthxbai!
+	const char* token_begin = ttext.c_str() + line_begin;
+	const char* string_end = ttext.c_str() + ttext.size();
+	while (token_begin != string_end)
+	{
+		std::string token;
+		const char* next_token_begin = token_begin;
+
+		// Generate the next token and determine its pixel-length.
+		bool break_line = BuildToken(token, next_token_begin, string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline);
+		int token_width = GetRenderInterface()->GetRichStringWidth(font_face_handle, token, images, cur_image_idx, line_height);
+		// If we're breaking to fit a line box, check if the token can fit on the line before we add it.
+		if (break_at_line)
+		{
+			int max_token_width = int(maximum_line_width - line_width);
+
+			if (token_width > max_token_width)
+			{
+				if (word_break == Style::WordBreak::BreakAll || (word_break == Style::WordBreak::BreakWord && line.empty()))
+				{
+					// Try to break up the word
+					max_token_width = int(maximum_line_width - line_width);
+					const int token_max_size = int(next_token_begin - token_begin);
+					bool force_loop_break_after_next = false;
+
+					// @performance: Can be made much faster. Use string width heuristics and logarithmic search.
+					for (int i = token_max_size - 1; i > 0; --i)
+					{
+						token.clear();
+						next_token_begin = token_begin;
+						const char* partial_string_end = StringUtilities::SeekBackwardUTF8(token_begin + i, token_begin);
+						break_line = BuildToken(token, next_token_begin, partial_string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline);
+						token_width = GetRenderInterface()->GetRichStringWidth(font_face_handle, token, images, cur_image_idx, line_height);
+
+						if (force_loop_break_after_next || token_width <= max_token_width)
+						{
+							break;
+						}
+						else if (next_token_begin == token_begin)
+						{
+							// This means the first character of the token doesn't fit. Let it overflow into the next line if we can.
+							if (!line.empty())
+								return false;
+
+							// Not even the first character of the line fits. Go back to consume the first character even though it will overflow.
+							i += 2;
+							force_loop_break_after_next = true;
+						}
+					}
+
+					break_line = true;
+				}
+				else if (!line.empty())
+				{
+					// Let the token overflow into the next line.
+					return false;
+				}
+			}
+		}
+
+		// The token can fit on the end of the line, so add it onto the end and increment our width and length counters.
+		line += token;
+		line_length += (int)(next_token_begin - token_begin);
+		line_width += token_width;
+
+		// Break out of the loop if an endline was forced.
+		if (break_line)
+			return false;
+
+		// Set the beginning of the next token.
+		token_begin = next_token_begin;
+	}
+
+	//GetRenderInterface()->PrepareText(font_face_handle,line,codepoints,groupmap,groups,line_layouts,line_begin,line_length);
+	return true;
 }
+
+
+Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {
+	lines.clear();
+	dirty_data = dirty_data | (1<<3);//dirty_geometry = true
+	dirty_data = dirty_data | (1<<2);//dirty_decoration = true
+	if (GetFontFaceHandle() == 0) {
+		return Size(0, 0);
+	}
+	int line_begin = 0;
+	bool finish = false;
+	float line_height = GetLineHeight();
+	float width = minWidth;
+	float height = 0.0f;
+	float first_line = true;
+	float baseline = GetBaseline();
+	
+	Style::TextAlign text_align = GetProperty<Style::TextAlign>(PropertyId::TextAlign);
+	groups.clear();
+	groupmap.clear();
+	codepoints.clear();
+	ctext.clear();
+	images.clear();
+	imagemap.clear();
+	imagegeometries.clear();
+	//richtext
+	Color default_color = GetTextColor();
+	group default_group;
+	default_group.color = default_color;
+	GetPlugin()->OnParseText(text, groups, groupmap, images, imagemap, ctext, default_group);
+	imagegeometries.reserve(images.size());
+  	for (size_t i = 0 ; i < images.size(); ++i){
+		std::unique_ptr<Rml::Geometry> ug(new Rml::Geometry());
+		imagegeometries.emplace_back(std::move(ug));
+	}  
+	std::string line;
+	std::vector<Rml::layout> line_layouts;
+	codepoints.clear();
+	int cur_image_idx = 0;
+	while (!finish && height < maxHeight) {
+		float line_width;
+		int line_length;
+		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line,line_layouts, ctext, cur_image_idx,line_height);
+		//richtext
+		line_width=GetRenderInterface()->PrepareText(GetFontFaceHandle(),line,codepoints,groupmap,groups,images,line_layouts,line_begin,line_length);
+
+		lines.push_back(Line { line_layouts,line, Point(line_width, height + baseline), 0 });
+		width = std::max(width, line_width);
+		height += line_height;
+		first_line = false;
+		line_begin += line_length;
+	}
+	for (auto& line : lines) {
+		float start_width = 0.0f;
+		float line_width = line.position.x;
+		float start_height = line.position.y;
+		if (line_width < width) {
+			switch (text_align) {
+			case Style::TextAlign::Right: start_width = width - line_width; break;
+			case Style::TextAlign::Center: start_width = (width - line_width) / 2.0f; break;
+			default: break;
+			}
+		}
+		line.position = Point(start_width, start_height);
+	}
+	height = std::max(minHeight, height);
+	return Size(width, height);
+}
+
+void RichText::UpdateGeometry(const FontFaceHandle font_face_handle) {
+	bool dirty_geometry = dirty_data & (1<<3);//dirty_geometry
+	if (!dirty_geometry) {
+		return;
+	}
+	dirty_data = dirty_data & (0x17);//dirty_geometry = false
+	dirty_data = dirty_data | (1<<2);//dirty_decoration = true
+	int cur_image_idx = 0;
+	float line_height = GetLineHeight();
+	GetRenderInterface()->GenerateRichString(font_face_handle, lines, codepoints, geometry, imagegeometries, images, cur_image_idx, line_height);
+}
+
+void RichText::UpdateImageMaterials() {
+	for(size_t i = 0; i < images.size(); ++i){
+		Rml::TextureId& id = images[i].id;
+		auto material = GetRenderInterface()->CreateTextureMaterial(id, Rml::SamplerFlag::Repeat);
+		imagegeometries[i]->SetMaterial(material);
+	}
+}
+
+void RichText::Render() {
+	FontFaceHandle font_face_handle = GetFontFaceHandle();
+	if (font_face_handle == 0)
+		return;
+	UpdateTextEffects();
+	UpdateImageMaterials();
+	UpdateDecoration(font_face_handle);
+	UpdateGeometry(font_face_handle);
+	parent->SetRenderStatus();
+	bool decoration_under = (dirty_data & (0x10))>>4; //decoration_under
+	if (decoration_under) {
+		decoration.Render();
+	}
+	geometry.Render();
+	for(size_t i = 0; i < images.size(); ++i){
+		imagegeometries[i]->Render();
+	}
+		if (!decoration_under) {
+		decoration.Render();
+	}
+}
+
+
+}
+

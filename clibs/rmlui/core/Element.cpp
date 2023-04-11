@@ -118,7 +118,7 @@ void Element::Render() {
 	for (; i < stacking_context.size() && stacking_context[i]->GetZIndex() < 0; ++i) {
 		stacking_context[i]->Render();
 	}
-	SetRednerStatus();
+	SetRenderStatus();
 	if (geometry_background && *geometry_background) {
 		geometry_background->Render();
 	}
@@ -364,9 +364,17 @@ void Element::InstanceInner(const HtmlElement& html) {
 				}
 			}
 			else if constexpr (std::is_same_v<T, HtmlString>) {
-				Text* e = owner_document->CreateTextNode(arg);
-				if (e) {
-					AppendChild(e);
+				if(this->tag == "richtext"){
+					RichText* e = owner_document->CreateRichTextNode(arg);
+					if(e){
+						AppendChild(e);
+					}
+				}
+				else{
+					Text* e = owner_document->CreateTextNode(arg);
+					if(e){
+						AppendChild(e);
+					}					
 				}
 			}
 			else {
@@ -1200,7 +1208,7 @@ void Element::UpdateClip() {
 	}
 }
 
-void Element::SetRednerStatus() {
+void Element::SetRenderStatus() {
 	auto render = GetRenderInterface();
 	render->SetTransform(transform);
 	switch (clip.type) {
