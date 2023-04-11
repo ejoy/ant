@@ -18,7 +18,10 @@ lm:source_set "lua_source" {
     macos = {
         visibility = "default",
         defines = "LUA_USE_MACOSX",
-    }
+    },
+    ios = {
+        defines = "LUA_USE_IOS",
+    },
 }
 
 if lm.os == "windows" then
