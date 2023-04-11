@@ -703,48 +703,16 @@ lequirectangular2cubemap(lua_State *L) {
 
     const float invsize = 1.f / facesize;
 
-    // auto remap_x = [=](float v){
-    //     return (v * invsize) // [0, 1]
-    //      * 2.f - 1.f; // [-1, 1]
-    // };
-
-    // auto remap_y = [](float v){
-
-    // };
-
-    // auto getDirectionFor = [](int face, float x, float y) {
-    //     // map [0, dim] to [-1,1] with (-1,-1) at bottom left
-    //     float cx = x - 1;
-    //     float cy = 1 - y;
-
-    //     glm::vec3 dir;
-    //     const float l = std::sqrt(cx * cx + cy * cy + 1);
-    //     switch (face) {
-    //         // case Face::PX:  dir = {   1, cy, -cx }; break;
-    //         // case Face::NX:  dir = {  -1, cy,  cx }; break;
-    //         // case Face::PY:  dir = {  cx,  1, -cy }; break;
-    //         // case Face::NY:  dir = {  cx, -1,  cy }; break;
-    //         // case Face::PZ:  dir = {  cx, cy,   1 }; break;
-    //         // case Face::NZ:  dir = { -cx, cy,  -1 }; break;
-    //         case 0:  dir = {   1, cy, -cx }; break; // +X
-    //         case 1:  dir = {  -1, cy,  cx }; break; // -X
-    //         case 2:  dir = {  cx,  1, -cy }; break; // +Y
-    //         case 3:  dir = {  cx, -1,  cy }; break; // -Y
-    //         case 4:  dir = {  cx, cy,   1 }; break; // +Z
-    //         case 5:  dir = { -cx, cy,  -1 }; break; // -Z
-    //     }
-    //     return dir * (1 / l);
-    // };
+    auto remap_index = [=](float v){ return ((v+0.5f) * invsize);};
 
     for (uint8_t face=0; face < 6; ++face){
         bimg::ImageMip cmface;
         bimg::imageGetRawData(*cm, (uint8_t)face, 0, cm->m_data, cm->m_size, cmface);
         for (uint16_t y=0; y<facesize; ++y){
             for (uint16_t x=0 ; x<facesize ; ++x) {
-                //TODO: x, y should offset (0.5, 0.5), and invsize = 1.f/(facesize-1.f);
-                const glm::vec3 dir = glm::normalize(uvface2dir(face, x*invsize, y*invsize));
+                const glm::vec3 dir = glm::normalize(uvface2dir(face, remap_index(x), remap_index(y)));
                 const glm::vec2 suv = dir2spherecoord(dir);
-                const glm::uvec2 uv = glm::uvec2(suv * glm::vec2(width-1, height-1) + glm::vec2(0.5f));
+                const glm::uvec2 uv = glm::uvec2(suv * glm::vec2(width, height));
                 auto c = load_at(equirectangular, uv.x, uv.y);
                 /////////////////////////////////////////////////////////////////////////////////////////////
                 // calculate how many samples we need based on dx, dy in the source
@@ -756,10 +724,10 @@ lequirectangular2cubemap(lua_State *L) {
                 // (in pixels) in the equirectangular -- we take the bounding box of the
                 // projection of the cubemap texel's corners.
 
-                // auto pos0 = toRectilinear(glm::normalize(uvface2dir(face, x + 0.0f, y + 0.0f))); // make sure to use the float version
-                // auto pos1 = toRectilinear(glm::normalize(uvface2dir(face, x + 1.0f, y + 0.0f))); // make sure to use the float version
-                // auto pos2 = toRectilinear(glm::normalize(uvface2dir(face, x + 0.0f, y + 1.0f))); // make sure to use the float version
-                // auto pos3 = toRectilinear(glm::normalize(uvface2dir(face, x + 1.0f, y + 1.0f))); // make sure to use the float version
+                // auto pos0 = toRectilinear(glm::normalize(uvface2dir(face, remap_index(x + 0.0f), remap_index(y + 0.0f)))); // make sure to use the float version
+                // auto pos1 = toRectilinear(glm::normalize(uvface2dir(face, remap_index(x + 1.0f), remap_index(y + 0.0f)))); // make sure to use the float version
+                // auto pos2 = toRectilinear(glm::normalize(uvface2dir(face, remap_index(x + 0.0f), remap_index(y + 1.0f)))); // make sure to use the float version
+                // auto pos3 = toRectilinear(glm::normalize(uvface2dir(face, remap_index(x + 1.0f), remap_index(y + 1.0f)))); // make sure to use the float version
                 // const float minx = std::min(pos0.x, std::min(pos1.x, std::min(pos2.x, pos3.x)));
                 // const float maxx = std::max(pos0.x, std::max(pos1.x, std::max(pos2.x, pos3.x)));
                 // const float miny = std::min(pos0.y, std::min(pos1.y, std::min(pos2.y, pos3.y)));
@@ -773,7 +741,7 @@ lequirectangular2cubemap(lua_State *L) {
                 // for (size_t sample = 0; sample < numSamples; sample++) {
                 //     // Generate numSamples in our destination pixels and map them to input pixels
                 //     const glm::vec2 h = hammersley(uint32_t(sample), iNumSamples);
-                //     const glm::vec3 s(glm::normalize(uvface2dir(face, x + h.x, y + h.y)));
+                //     const glm::vec3 s(glm::normalize(uvface2dir(face, remap_index(x + h.x), remap_index(y + h.y))));
                 //     auto pos = toRectilinear(s);
 
                 //     // we can't use filterAt() here because it reads past the width/height
