@@ -20,11 +20,16 @@ local heap_mesh_material
 
 local function get_aabb(center, extent, cur_n, edge, xx, yy, zz, interval)
     local edgeX, edgeY, edgeZ = edge[1], edge[2], edge[3]
-    local radius = math3d.vector(xx/2, yy/2, zz/2)
-    local aabb_min = math3d.sub(center, radius)
-    local aabb_max = math3d.vector(math3d.add(aabb_min, math3d.vector(edgeX*xx + (edgeX-1)*interval[1]*xx, edgeY*yy + (edgeY-1)*interval[2]*yy, edgeY*zz + (edgeZ-1)*interval[3]*zz)))
-    local offset_extent = math3d.tovalue(math3d.mul(math3d.sub(aabb_max, aabb_min), 0.5))
-    local offset = math3d.vector(offset_extent[1], 0, offset_extent[3])
+    local bottem_center = math3d.vector(0, 0, 0)
+    local radiusX = (edgeX * xx + (edgeX - 1) * interval[1] * xx) * 0.5
+    local radiusY = (edgeY * yy + (edgeY - 1) * interval[2] * yy) * 0.5
+    local radiusZ = (edgeZ * zz + (edgeZ - 1) * interval[3] * zz) * 0.5
+    local aabb_min = math3d.sub(bottem_center, math3d.vector(radiusX, 0, radiusZ))
+    local aabb_max = math3d.add(bottem_center, math3d.vector(radiusX, radiusY * 2, radiusZ))
+    local x = ((edgeX - 1) * xx + (edgeX - 1) * interval[1] * xx) * 0.5
+    local z = ((edgeZ - 1) * zz + (edgeZ - 1) * interval[3] * zz) * 0.5
+    local y = ((edgeY - 1) * yy + (edgeY - 1) * interval[2] * yy) * 0.5
+    local offset = math3d.vector(x, y, z)
     return offset, math3d.mark(math3d.aabb(aabb_min, aabb_max))
 end
 
@@ -54,7 +59,7 @@ local function create_heap_compute(numToDraw, idb_handle, itb_handle, u1, u2, u3
 	mo:set_attrib("u_meshOffset", u2)
 	mo:set_attrib("u_instanceParams", u3)
     mo:set_attrib("u_worldOffset", u4)
-    mo:set_attrib("u_specialParam", u5)
+    --mo:set_attrib("u_specialParam", u5)
     mo:set_attrib("u_intervalParam", u6)
     mo:set_attrib("indirectBuffer", icompute.create_buffer_property(idb, "build"))
 	mo:set_attrib("instanceBufferOut", icompute.create_buffer_property(itb, "build"))

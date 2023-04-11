@@ -7,7 +7,7 @@ uniform vec4 u_heapParams;
 uniform vec4 u_meshOffset;
 uniform vec4 u_instanceParams;
 uniform vec4 u_worldOffset;
-uniform vec4 u_specialParam;
+//uniform vec4 u_specialParam;
 uniform vec4 u_intervalParam;
 
 NUM_THREADS(64, 1, 1)
@@ -30,9 +30,9 @@ void main()
 		float yy = n3 - 1.0;
 		float zz = n2 - 1.0;
 		float xx = n1 - 1.0;
-		float tx = (xx + 0.5) * u_meshOffset.x - u_worldOffset.x + u_intervalParam.x * xx;
-		float ty = (yy + 0.5) * u_meshOffset.y;
-		float tz = (zz + 0.5) * u_meshOffset.z - u_worldOffset.z + u_intervalParam.z * zz;
+		float tx = xx * u_meshOffset.x - u_worldOffset.x + u_intervalParam.x * xx;
+		float ty = yy * u_meshOffset.y;
+		float tz = zz * u_meshOffset.z - u_worldOffset.z + u_intervalParam.z * zz;
 		vec4 t = vec4(tx, ty, tz, 1);
 		instanceBufferOut[tId] = t;
 		drawIndexedIndirect(
@@ -46,9 +46,9 @@ void main()
 			u_instanceParams.x,	// offset in the vertex buffer. Note that you can use this to "reindex" submeshses - all indicies in this draw will be decremented by this amount
 			tId						// offset in the instance buffer. If you are drawing more than 1 instance per call see gpudrivenrendering for how to handle
 		);
-		if(tId == 44){
+/* 		if(tId == 44){
 			instanceBufferOut[tId] = u_specialParam;
-		} 
+		}  */
 	}
 	
 }

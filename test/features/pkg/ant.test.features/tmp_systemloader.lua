@@ -197,13 +197,13 @@ function init_loader_sys:init()
     --point_light_test()
     ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5, nil, "/pkg/ant.test.features/assets/polyline_mask.material", "background")
 
-    local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab"
+--[[     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab"
     p.on_ready = function (e)
         local ee<close> = w:entity(e.tag['*'][1], "name:update")
         ee.name = "hahahah"
     end
 
-    world:create_object(p)
+    world:create_object(p) ]]
 
     gridmask_test()
     -- print(eid1, eid2, eid3)
@@ -615,13 +615,13 @@ local function drawindirect_test()
          },
         data = {
             name        = "heap_mesh_test",
-            scene  = {s = 0.2, t = {0, 0, 0}},
+            scene  = {s = 0.2, t = {2, 0, 0}},
             material    = "/pkg/ant.resources/materials/pbr_heap.material", -- 自定义material文件中需加入HEAP_MESH :1
             visible_state = "main_view",
             mesh        = "/pkg/ant.test.features/assets/glb/iron-ore.glb|meshes/Cube_P1.meshbin",
             heapmesh = {
-                curSideSize = {3, 4, 5}, -- 当前 x y z方向最大堆叠数量为3, 4, 5，通过表的形式赋值给curSideSize，最大堆叠数为3*4*5 = 60
-                curHeapNum = 45, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
+                curSideSize = {4, 4, 4}, -- 当前 x y z方向最大堆叠数量为3, 4, 5，通过表的形式赋值给curSideSize，最大堆叠数为3*4*5 = 60
+                curHeapNum = 64, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
                 glbName = "iron-ingot", -- 当前entity对应的glb名字，用于筛选
                 interval = {0.5, 0.5, 0.5}
             }
@@ -709,19 +709,8 @@ local heap_num = 1
 --         mark: type(1~2) shape(U I O) dir(N E S W)     
 local create_list = {
     -- single road layer:road1 road2 road3
-    {
-        x = 0, y = 0,
-        layers =
-        {
-            road =
-            {
-                type  = "1",
-                shape = "I",
-                dir   = "N"
-            }
-        }
-    },
-    {
+
+   --[[  {
         x = 6, y = 1,
         layers =
         {
@@ -756,7 +745,7 @@ local create_list = {
                 dir   = "N"
             }
         }
-    },
+    }, ]]
     
     --single mark layer:mark1 mark2
     {
@@ -766,12 +755,12 @@ local create_list = {
             mark =
             {
                 type  = "1",
-                shape = "U",
+                shape = "X",
                 dir   = "E"
             }
         }
     },
-    {
+--[[     {
         x = 3, y = 2,
         layers =
         {
@@ -830,9 +819,9 @@ local create_list = {
                 dir   = "W"
             }
         }
-    },
+    }, ]]
 
-    -- multiple layer: road1 road2 road3 and mark1 mark2
+--[[     -- multiple layer: road1 road2 road3 and mark1 mark2
     {
         
         x = 1, y = 1,
@@ -869,15 +858,38 @@ local create_list = {
                 dir   = "S"
             }
         }
-    },
+    },  ]]
 }
+
+local function create_mark()
+    local t = {}
+    local x, y = 0, 0
+    for _, shape in ipairs({"I", "L", "T", "U", "X", "O"}) do
+        y = y + 2
+        x = 0
+        for rtype = 1, 2 do
+            for _, dir in ipairs({"N", "E", "S", "W"}) do
+                x = x + 2
+                --
+                t[#t+1] = {
+                    x = x, y = y,
+                    layers = {
+                        mark = {type  = rtype, shape = shape, dir = dir}
+                    }
+                }
+            end
+        end
+    end
+    iterrain.create_roadnet_entity(t)
+end
 function init_loader_sys:init_world()
     iterrain.gen_terrain_field(256, 256, 0)
-    iterrain.create_roadnet_entity(create_list)
-    istonemountain.create_sm_entity(256, 256, 0)
+    --iterrain.create_roadnet_entity(create_list)
+    create_mark()
+    --istonemountain.create_sm_entity(256, 256, 0)
     -- input: x and z coordinates
     -- output: whether current grid is stonemountain? true = yes nil = false
-    iterrain.is_stone_mountain(46, 0)
+    --iterrain.is_stone_mountain(46, 0)
     
     for msg in after_init_mb:each() do
         local e = msg[2]
