@@ -3,8 +3,6 @@ local world = ecs.world
 local w = world.w
 
 local math3d 	= require "math3d"
-local mathpkg	= import_package "ant.math"
-local mc		= mathpkg.constant
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 local declmgr   = import_package "ant.render".declmgr
@@ -89,12 +87,9 @@ local function calc_special_t(meshOffset, worldOffset, curSideSize)
     return math3d.vector(xx * mx - wx, yy * my, zz * mz - wz)
 end
 
-
 function hm_sys:init()
 	heap_mesh_material = assetmgr.resource("/pkg/ant.resources/materials/heapmesh/heapmesh.material")
 end
-
-
 
 function hm_sys:heap_mesh()
     for e in w:select "heapmesh:update render_object?update bounding?update scene?in" do
@@ -165,19 +160,12 @@ function hm_sys:heap_mesh()
 	end
 end
 
-function iheapmesh.update_heap_mesh_number(num, name)
-    for e in w:select "heapmesh:update" do
-        if e.heapmesh.glbName == name then
-            e.heapmesh.curHeapNum = num
-        end
-    end
+function iheapmesh.update_heap_mesh_number(eid, num)
+    local e <close> = w:entity(eid, "heapmesh:update")
+    e.heapmesh.curHeapNum = num
 end
 
-function iheapmesh.update_heap_mesh_sidesize(size, name)
-    for e in w:select "heapmesh:update" do
-        if e.heapmesh.glbName == name then
-            e.heapmesh.curSideSize = size
-        end
-    end
-end 
-
+function iheapmesh.update_heap_mesh_sidesize(eid, size)
+    local e <close> = w:entity(eid, "heapmesh:update")
+    e.heapmesh.curSideSize = size
+end
