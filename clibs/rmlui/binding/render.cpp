@@ -651,7 +651,8 @@ void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lin
                     float w0 = images[cur_image_idx].rect.size.w/images[cur_image_idx].width;
                     float h0 = images[cur_image_idx].rect.size.h/images[cur_image_idx].height;
                     imagegeometries[cur_image_idx]->AddRectFilled(
-                        { float(x + line_height * 0.1) , float(y - line_height * 0.8), float(line_height * 0.9) , float(line_height * 0.8)},
+                        //{ float(x + line_height * 0.1) , float(y - line_height * 0.8), float(line_height * 0.9) , float(line_height * 0.8)},
+                        { float(x ) , float(y - line_height), float(line_height ) , float(line_height )},
                         { u0 , v0 , w0 , h0 },
                         color
                     );

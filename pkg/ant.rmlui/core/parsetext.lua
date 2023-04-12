@@ -1,19 +1,32 @@
 local m={}
-local filemanager = require "core.filemanager"
 local ltask = require "ltask"
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
-local texture_map = {}
-local texture_table = filemanager.getTextureTable()
-local path_table = texture_table.path_table
-local rect_table = texture_table.rect_table
-for path_idx, path in pairs(path_table) do
-    ltask.fork(function ()
-    local info = ltask.call(ServiceResource, "texture_create", path)
-        texture_map[path_idx] = {
-            id = info.id,
-            width = info.texinfo.width,
-            height = info.texinfo.height
+local config_table, path_table
+while(not config_table ) do
+    config_table, path_table = ltask.call(ServiceResource, "get_texture_table") 
+end
+local texture_table = {}
+for path_idx, t_table in pairs(config_table) do
+    for texture_path, texture_info in pairs(t_table) do
+        --local texture_name_temp = string.match(texture_path, "[%w%-]+%.")
+        local texture_name      = texture_path
+        texture_table[texture_name] = {
+            path_idx = path_idx,
+            rect = {x = texture_info.x, y = texture_info.y, w = texture_info.width, h = texture_info.height},
+            id = nil, width = nil, height = nil
         }
+        path_table[path_idx].list[texture_name] = true
+    end
+end
+
+for path_idx, path_info in pairs(path_table) do
+    ltask.fork(function ()
+        local info = ltask.call(ServiceResource, "texture_create", path_info.path)
+        for abbrev, _ in pairs(path_info.list) do
+            texture_table[abbrev].id = info.id
+            texture_table[abbrev].width = info.texinfo.width
+            texture_table[abbrev].height = info.texinfo.height
+        end
     end) 
 end 
 
@@ -107,21 +120,21 @@ end
 
 local function replace_image(os)
 
-    for image_text in string.gmatch(os, "%([_,%.%w]+%)") do
+    for image_text in string.gmatch(os, "<.+>") do
         images[#images+1] = {id = nil, rect = {}}
         local str = string.sub(image_text, 2, string.len(image_text) - 1)
         for k in string.gmatch(str, "[^,]+") do
             local texture_info
             while(not texture_info) do
-                texture_info = texture_map[rect_table[k].path_idx]
+                texture_info = texture_table[k]
             end
             images[#images].id = texture_info.id
-            images[#images].rect = rect_table[k].rect
+            images[#images].rect = texture_info.rect
             images[#images].width = texture_info.width
             images[#images].height = texture_info.height
         end
    end
-   os = string.gsub(os, "%([_,%.%w]+%)", "`")
+   os = string.gsub(os, "<.+>", "`")
    return os
 end
 

@@ -76,13 +76,13 @@
     </head>
     <body>
         <div data-model="start">
-            <richtext id = "new" data-event-click="new()">(irbtn_active)(irbtn_hover)(irbtn_normal)</richtext>
+            <richtext id = "new" data-event-click="new()">(gas-air)(gas-butadiene)(gas-ch4)</richtext>
             <button data-event-click="load()">t1</button>
 
             <button data-event-click="setting()">t2</button>
 
             <button data-if="show">(irbtn_active)(irbtn_hover)(irbtn_normal)</button>
-            <richtext data-event-click="exit()">(color_text_L){/r a1 }{/g a2}{/color:ff00ff a3}(color_text_R)(color_text_T) (color_text_B) (color_text_N) (color_text_F)</richtext>
+            <richtext data-event-click="exit()">(gas-chlorine){/r a1 }{/g a2}{/color:ff00ff a3}</richtext>
         </div>
     </body>
 </rml>

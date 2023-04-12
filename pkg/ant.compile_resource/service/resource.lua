@@ -4,6 +4,7 @@ local datalist   = require "datalist"
 local fastio     = require "fastio"
 local textureman = require "textureman.server"
 local cr         = import_package "ant.compile_resource"
+local fs = require "filesystem"
 import_package "ant.render".init_bgfx()
 
 bgfx.init()
@@ -189,6 +190,26 @@ local function which_texture_type(info)
     end
 
     return info.depth > 1 and "TEX3D" or "TEX2D"
+end
+
+local config_table
+local path_table
+
+function S.create_texture_table(texture_table)
+    for idx, info in pairs(texture_table) do
+        if not config_table then
+            config_table = {}
+        end
+        config_table[idx] = datalist.parse(fs.open(fs.path(info.cfg_path)):read "a")
+        if not path_table then
+            path_table = {}
+        end
+        path_table[idx] = {path = info.texture_path, list = {}}
+    end
+end
+
+function S.get_texture_table()
+    return config_table, path_table
 end
 
 function S.texture_create(name)
