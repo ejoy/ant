@@ -19,6 +19,8 @@ struct attrib_input{
 };
 
 uniform vec4 u_attrib_indices[3];
+uniform vec4 u_skinning_param;
+#define u_vertex_count u_skinning_param.x
 
 #define u_attrib_pos		u_attrib_indices[0].x
 #define u_attrib_index		u_attrib_indices[0].y
@@ -177,6 +179,10 @@ NUM_THREADS(64, 1, 1)
 void main()
 {
     uint vi = gl_GlobalInvocationID.x;
+	if (vi >= u_vertex_count)
+	{
+		return ;
+	}
 
 	uint input_num	= input_attrib_num();
 	uint output_num	= input_num - 2;

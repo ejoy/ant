@@ -90,6 +90,7 @@ local function create_skinning_compute(skininfo, vb_num, attrib_indices)
 	m.b_skinning_out_dynamic_vb	= skininfo.skinning_out_dynamic_vb
 
 	m.u_attrib_indices			= attrib_indices
+	m.u_skinning_param			= math3d.vector(vb_num, 0.0, 0.0, 0.0)
 	dis.fx 						= skinning_material._data.fx
 	return dis
 end
