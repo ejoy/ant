@@ -33,7 +33,9 @@ lm:exe "texturev" {
         frameworks = {
             "Metal",
             "QuartzCore",
-            "OpenGL"
+            "OpenGL",
+            "Cocoa",
+			"IOKit",
         }
     }
 }
