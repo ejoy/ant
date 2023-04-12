@@ -19,6 +19,7 @@ public:
 	float GetBaseline();
 	void ChangedProperties(const PropertyIdSet& properties);
 protected:
+	virtual float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float& line_height);
 	std::optional<Property> GetComputedProperty(PropertyId id);
 	template <typename T>
 	T GetProperty(PropertyId id, typename std::enable_if<!std::is_enum<T>::value>::type* = 0);
@@ -49,7 +50,7 @@ protected:
 	virtual void UpdateGeometry(const FontFaceHandle font_face_handle);
 	void UpdateDecoration(const FontFaceHandle font_face_handle);
 	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, 
-		float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext);
+		float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext, float& line_height);
 	float GetLineHeight();
 	std::optional<TextShadow> GetTextShadow();
 	std::optional<TextStroke> GetTextStroke();
@@ -75,9 +76,8 @@ public:
 protected:
 	void Render() override;
 	void UpdateGeometry(const FontFaceHandle font_face_handle)override;
+	float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float& line_height) override;
 private:
-	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, 
-		float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext, int& cur_image_idx,float line_height);
 	void UpdateImageMaterials();
 	std::vector<Rml::group> groups;
 	std::vector<Rml::image> images;
@@ -85,6 +85,7 @@ private:
 	std::vector<int> imagemap;
 	std::vector<std::unique_ptr<Geometry>> imagegeometries;
 	std::string ctext;
+	int cur_image_idx = 0;
 };
 
 }

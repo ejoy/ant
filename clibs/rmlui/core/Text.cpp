@@ -202,8 +202,11 @@ void Text::Render() {
 		decoration.Render();
 	}
 }
+float Text::GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float& line_height){
+	return GetRenderInterface()->GetStringWidth(font_face_handle, token);
+}
 
-bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext) {
+bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext, float& line_height) {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 
 	// Initialise the output variables.
@@ -243,18 +246,18 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 
 		// Generate the next token and determine its pixel-length.
 		bool break_line = BuildToken(token, next_token_begin, string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline);
-		int token_width = GetRenderInterface()->GetStringWidth(font_face_handle, token);
+		float token_width = GetRenderInterface()->GetStringWidth(font_face_handle, token);
 		// If we're breaking to fit a line box, check if the token can fit on the line before we add it.
 		if (break_at_line)
 		{
-			int max_token_width = int(maximum_line_width - line_width);
+			float max_token_width = maximum_line_width - line_width;
 
 			if (token_width > max_token_width)
 			{
 				if (word_break == Style::WordBreak::BreakAll || (word_break == Style::WordBreak::BreakWord && line.empty()))
 				{
 					// Try to break up the word
-					max_token_width = int(maximum_line_width - line_width);
+					max_token_width = maximum_line_width - line_width;
 					const int token_max_size = int(next_token_begin - token_begin);
 					bool force_loop_break_after_next = false;
 
@@ -265,7 +268,7 @@ bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, 
 						next_token_begin = token_begin;
 						const char* partial_string_end = StringUtilities::SeekBackwardUTF8(token_begin + i, token_begin);
 						break_line = BuildToken(token, next_token_begin, partial_string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline);
-						token_width = GetRenderInterface()->GetStringWidth(font_face_handle, token);
+						token_width = GetTokenWidth(font_face_handle, token, line_height);
 
 						if (force_loop_break_after_next || token_width <= max_token_width)
 						{
@@ -479,7 +482,7 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 	while (!finish && height < maxHeight) {
 		float line_width;
 		int line_length;
-		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line,line_layouts, text);
+		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line,line_layouts, text, line_height);
 		lines.push_back(Line { line_layouts,line, Point(line_width, height + baseline), 0 });
 		width = std::max(width, line_width);
 		height += line_height;
@@ -661,113 +664,9 @@ RichText::RichText(Document* owner, const std::string& text_)
 RichText::~RichText()
 { }
 
-bool RichText::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext, int& cur_image_idx,float line_height) {
-	FontFaceHandle font_face_handle = GetFontFaceHandle();
-
-	// Initialise the output variables.
-	line.clear();
-	line_layouts.clear();
-	line_length = 0;
-	line_width = 0;
-
-	// Bail if we don't have a valid font face.
-	if (font_face_handle == 0)
-		return true;
-
-	// Determine how we are processing white-space while formatting the text.
-	Style::WhiteSpace white_space_property = GetProperty<Style::WhiteSpace>(PropertyId::WhiteSpace);
-	Style::WordBreak word_break = GetProperty<Style::WordBreak>(PropertyId::WordBreak);
-
-	bool collapse_white_space = white_space_property == Style::WhiteSpace::Normal ||
-								white_space_property == Style::WhiteSpace::Nowrap ||
-								white_space_property == Style::WhiteSpace::Preline;
-	bool break_at_line = (maximum_line_width >= 0) && 
-		                   (white_space_property == Style::WhiteSpace::Normal ||
-							white_space_property == Style::WhiteSpace::Prewrap ||
-							white_space_property == Style::WhiteSpace::Preline);
-	bool break_at_endline = white_space_property == Style::WhiteSpace::Pre ||
-							white_space_property == Style::WhiteSpace::Prewrap ||
-							white_space_property == Style::WhiteSpace::Preline;
-
-	// Starting at the line_begin character, we generate sections of the text (we'll call them tokens) depending on the
-	// white-space parsing parameters. Each section is then appended to the line if it can fit. If not, or if an
-	// endline is found (and we're processing them), then the line is ended. kthxbai!
-	const char* token_begin = ttext.c_str() + line_begin;
-	const char* string_end = ttext.c_str() + ttext.size();
-	while (token_begin != string_end)
-	{
-		std::string token;
-		const char* next_token_begin = token_begin;
-
-		// Generate the next token and determine its pixel-length.
-		bool break_line = BuildToken(token, next_token_begin, string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline);
-		int token_width = GetRenderInterface()->GetRichStringWidth(font_face_handle, token, images, cur_image_idx, line_height);
-		// If we're breaking to fit a line box, check if the token can fit on the line before we add it.
-		if (break_at_line)
-		{
-			int max_token_width = int(maximum_line_width - line_width);
-
-			if (token_width > max_token_width)
-			{
-				if (word_break == Style::WordBreak::BreakAll || (word_break == Style::WordBreak::BreakWord && line.empty()))
-				{
-					// Try to break up the word
-					max_token_width = int(maximum_line_width - line_width);
-					const int token_max_size = int(next_token_begin - token_begin);
-					bool force_loop_break_after_next = false;
-
-					// @performance: Can be made much faster. Use string width heuristics and logarithmic search.
-					for (int i = token_max_size - 1; i > 0; --i)
-					{
-						token.clear();
-						next_token_begin = token_begin;
-						const char* partial_string_end = StringUtilities::SeekBackwardUTF8(token_begin + i, token_begin);
-						break_line = BuildToken(token, next_token_begin, partial_string_end, line.empty() && trim_whitespace_prefix, collapse_white_space, break_at_endline);
-						token_width = GetRenderInterface()->GetRichStringWidth(font_face_handle, token, images, cur_image_idx, line_height);
-
-						if (force_loop_break_after_next || token_width <= max_token_width)
-						{
-							break;
-						}
-						else if (next_token_begin == token_begin)
-						{
-							// This means the first character of the token doesn't fit. Let it overflow into the next line if we can.
-							if (!line.empty())
-								return false;
-
-							// Not even the first character of the line fits. Go back to consume the first character even though it will overflow.
-							i += 2;
-							force_loop_break_after_next = true;
-						}
-					}
-
-					break_line = true;
-				}
-				else if (!line.empty())
-				{
-					// Let the token overflow into the next line.
-					return false;
-				}
-			}
-		}
-
-		// The token can fit on the end of the line, so add it onto the end and increment our width and length counters.
-		line += token;
-		line_length += (int)(next_token_begin - token_begin);
-		line_width += token_width;
-
-		// Break out of the loop if an endline was forced.
-		if (break_line)
-			return false;
-
-		// Set the beginning of the next token.
-		token_begin = next_token_begin;
-	}
-
-	//GetRenderInterface()->PrepareText(font_face_handle,line,codepoints,groupmap,groups,line_layouts,line_begin,line_length);
-	return true;
+float RichText::GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float& line_height){
+	return GetRenderInterface()->GetRichStringWidth(font_face_handle, token, images, cur_image_idx, line_height);
 }
-
 
 Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {
 	lines.clear();
@@ -805,11 +704,11 @@ Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float ma
 	std::string line;
 	std::vector<Rml::layout> line_layouts;
 	codepoints.clear();
-	int cur_image_idx = 0;
+	cur_image_idx = 0;
 	while (!finish && height < maxHeight) {
 		float line_width;
 		int line_length;
-		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line,line_layouts, ctext, cur_image_idx,line_height);
+		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, first_line,line_layouts, ctext, line_height);
 		//richtext
 		line_width=GetRenderInterface()->PrepareText(GetFontFaceHandle(),line,codepoints,groupmap,groups,images,line_layouts,line_begin,line_length);
 
@@ -843,7 +742,7 @@ void RichText::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	}
 	dirty_data = dirty_data & (0x17);//dirty_geometry = false
 	dirty_data = dirty_data | (1<<2);//dirty_decoration = true
-	int cur_image_idx = 0;
+	cur_image_idx = 0;
 	float line_height = GetLineHeight();
 	GetRenderInterface()->GenerateRichString(font_face_handle, lines, codepoints, geometry, imagegeometries, images, cur_image_idx, line_height);
 }

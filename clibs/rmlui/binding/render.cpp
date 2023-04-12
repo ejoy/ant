@@ -541,30 +541,29 @@ void Renderer::GetUnderline(Rml::FontFaceHandle handle, float& position, float &
     F->font_manager_underline(F, face.fontid, face.pixelsize, &position, &thickness);
 }
 
-int Renderer::GetStringWidth(Rml::FontFaceHandle handle, const std::string& string){
+float Renderer::GetStringWidth(Rml::FontFaceHandle handle, const std::string& string){
     FontFace face;
     face.handle = handle;
-    int width = 0;
+    float width = 0;
     for (auto c : utf8::view(string)) {
         auto glyph = GetGlyph(mcontext, face, c);
-        width += glyph.advance_x;
+        width += (float)glyph.advance_x;
     }
     return width;
 }
 
-int Renderer::GetRichStringWidth(Rml::FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx,float line_height){
+float Renderer::GetRichStringWidth(Rml::FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx, float& line_height){
     FontFace face;
     face.handle = handle;
-    int width = 0;
+    float width = 0;
     for (auto c : utf8::view(string)) {
         if(c == '`'){
-            //width += images[cur_image_idx].rect.size.w;
             width += line_height;
             cur_image_idx++;
         }
         else{
             auto glyph = GetGlyph(mcontext, face, c);
-            width += glyph.advance_x;
+            width += (float)glyph.advance_x;
         }
     }
     return width;
