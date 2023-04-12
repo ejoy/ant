@@ -101,10 +101,10 @@ local platform_relates = {
 		renderer="VULKAN",
 	},
 	macos = {
-		renderer="VULKAN",
+		renderer="METAL",
 	},
 	ios = {
-		renderer="VULKAN",
+		renderer="METAL",
 	},
 	android = {
 		renderer="VULKAN",
