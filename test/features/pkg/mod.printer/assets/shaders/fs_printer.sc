@@ -28,12 +28,12 @@ uniform vec4 u_printer_factor;
 
 void main()
 { 
-    if(v_posWS.y > (u_building_topmost + u_building_offset))
+    if(v_posWS.y > (u_building_topmost))
         discard;
     
     #include "pbr/attributes_getter.sh"
     int building;
-    if(v_posWS.y > u_building_topmost){
+    if(v_posWS.y > u_building_topmost - u_building_offset){
         building = 1;
     } else{
         building = 0;

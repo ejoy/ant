@@ -52,10 +52,13 @@ function iprinter.update_printer_percent(eid, percent)
             local boty = math3d.index(math3d.array_index(aabb, 1), 2)
             local cury = percent * (topy - boty) + boty
             local offy
-            if cury + 0.1 * (topy - boty) >= topy then
-                offy = topy - cury
-            else
+            if cury - 0.1 * (topy - boty) >= boty then
                 offy = 0.1 * (topy - boty)
+            else
+                offy = cury-boty
+            end
+            if topy - cury <= 0.1 * (topy - boty) then
+                offy = 0
             end
             local factor = math3d.vector(offy, cury, 0, 0)
             imaterial.set_property(e, "u_printer_factor", factor)
