@@ -34,6 +34,8 @@ struct image{
 	Rect rect;
 	uint16_t width;
 	uint16_t height;
+	image(){}
+	image(Rml::TextureId id, Rect rect, uint16_t width, uint16_t height):id(id), rect(rect), width(width), height(height){}
 };
 struct Line {
 	std::vector<layout> layouts;

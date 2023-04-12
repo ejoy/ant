@@ -631,7 +631,7 @@ void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lin
         face.handle = handle;
         const Rml::Point fonttexel(1.f / mcontext->font_tex.width, 1.f / mcontext->font_tex.height);
 
-        int x = int(line.position.x + 0.5f), y = int(line.position.y + 0.5f);
+        float x = line.position.x + 0.5f, y = line.position.y + 0.5f;
         
         Rml::Color color;
         for (auto& layout:line.layouts){
@@ -663,8 +663,8 @@ void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lin
                     struct font_glyph og;
                     auto g = GetGlyph(mcontext, face, codepoint, &og);
 
-                    const int x0 = x + g.offset_x;
-                    const int y0 = y + g.offset_y;
+                    const float x0 = x + g.offset_x;
+                    const float y0 = y + g.offset_y;
                     const int16_t u0 = g.u;
                     const int16_t v0 = g.v;
 
@@ -678,7 +678,7 @@ void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lin
                 }             
             }
         }
-        line.width = x - int(line.position.x + 0.5f);
+        line.width = int(x - (line.position.x + 0.5f));
     }
 
 }
@@ -690,14 +690,14 @@ float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string
     face.handle = handle;
 
     Rml::layout l;
-    int lstart=codepoints.size();
+    uint16_t lstart=(uint16_t)codepoints.size();
     int lnum=0;
     Rml::Color pre_color,cur_color;
     int i=0;//i代表是当前string的位移 //start+i代表在ctext中的位移
     int cur_lm;
 
     if(num){
-        float group_idx = groupmap[start+i];
+        int group_idx = groupmap[start+i];
         if(group_idx>=100){
             pre_color=groups[0].color;
         }
@@ -732,7 +732,7 @@ float Renderer::PrepareText(Rml::FontFaceHandle handle,const std::string& string
     else return 0.f;
 
     while(i<num){
-        float group_idx = groupmap[start+i];
+        int group_idx = groupmap[start+i];
         if(group_idx>=100){
             cur_lm = 0;
         }

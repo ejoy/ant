@@ -6,7 +6,7 @@
 #include <core/EventListener.h>
 #include <binding/luaplugin.h>
 #include <binding/luabind.h>
-
+#include "lua2struct.h"
 extern "C" {
 #include <lua.h>
 #include "lauxlib.h"
@@ -130,7 +130,32 @@ void lua_plugin::OnLoadTexture(Rml::Document* document, Rml::Element* element, c
     });
 }
 
-
+namespace lua_struct {
+	template <>
+    inline void unpack<Rml::Rect>(lua_State* L, int idx, Rml::Rect& rect, void*) {
+        luaL_checktype(L, idx, LUA_TTABLE);
+        float x, y, w, h;
+        unpack_field(L, idx, "x", x);
+		unpack_field(L, idx, "y", y);
+		unpack_field(L, idx, "w", w);
+		unpack_field(L, idx, "h", h);
+        rect = Rml::Rect(x, y, w, h);
+    }
+	template <>
+    inline void unpack<Rml::image>(lua_State* L, int idx, Rml::image& image, void*) {
+        luaL_checktype(L, idx, LUA_TTABLE);
+        Rml::TextureId id;
+		Rml::Rect rect;
+		uint16_t width, height;
+        unpack_field(L, idx, "id", id);
+		lua_getfield(L,-1,"rect");
+		unpack(L, idx, rect);
+		lua_pop(L, 1);
+		unpack_field(L, idx, "width", width);
+		unpack_field(L, idx, "height", height);
+        image = Rml::image(id, rect, width, height);
+    }
+}
 void lua_plugin::OnParseText(const std::string& str,std::vector<Rml::group>& groups,std::vector<int>& groupMap,std::vector<Rml::image>& images,std::vector<int>& imageMap,std::string& ctext,Rml::group& default_group) {
     luabind::invoke([&](lua_State* L) {
         lua_pushstring(L, str.data());
@@ -148,44 +173,8 @@ void lua_plugin::OnParseText(const std::string& str,std::vector<Rml::group>& gro
 		lua_pushnil(L);
 		while(lua_next(L,-2)){
 			Rml::image image;
-
-			lua_getfield(L,-1,"width");
-			uint16_t width = lua_tointeger(L, -1);
-			image.width = width;
-			lua_pop(L,1);
-
-			lua_getfield(L,-1,"height");
-			uint16_t height = lua_tointeger(L, -1);
-			image.height = height;
-			lua_pop(L,1);
-
-
-			lua_getfield(L,-1,"id");
-			float id = lua_tonumber(L, -1);
-			image.id = id;
-			lua_pop(L,1);
-
-			lua_getfield(L,-1,"rect");
-			lua_getfield(L,-1,"x");
-			float x = lua_tonumber(L, -1);
-			lua_pop(L,1);
-
-			lua_getfield(L,-1,"y");
-			float y = lua_tonumber(L, -1);
-			lua_pop(L,1);
-
-			lua_getfield(L,-1,"w");
-			float w = lua_tonumber(L, -1);
-			lua_pop(L,1);
-
-			lua_getfield(L,-1,"h");
-			float h = lua_tonumber(L, -1);
-			lua_pop(L,1);
-
-			lua_pop(L,1);
-
-			image.rect = Rml::Rect(x, y, w, h)	;
-
+			//id rect width height
+			lua_struct::unpack(L, -1, image);
 			lua_pop(L,1);
 			images.emplace_back(image);
 		}
@@ -194,7 +183,7 @@ void lua_plugin::OnParseText(const std::string& str,std::vector<Rml::group>& gro
 
 		lua_pushnil(L);//-1 -2 - nil groupmap
 		while(lua_next(L,-2)){//-1 -2 idx groupmap
-			float tmp_idx = (int)lua_tointeger(L,-1);
+			//float tmp_idx = (int)lua_tointeger(L,-1);
 			groupMap.emplace_back((int)lua_tointeger(L,-1)-1);
 			lua_pop(L,1);
 		}
