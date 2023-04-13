@@ -15,13 +15,13 @@ component "procedural_sky"
     .type "lua"
 component "procedural_sky_changed"
 
-import "panorama/panorama.ecs"
+--import "panorama/panorama.ecs"
 
 policy "skybox"
     .require_policy "ant.render|simplerender"
     .require_policy "ant.render|ibl"
     .require_system "ant.sky|skybox_system"
-    .require_system "ant.sky|cs2cm_system"
+    --.require_system "ant.sky|cs2cm_system"
     --.require_system "ant.sky|render2cm_system"
     .component "skybox"
 
@@ -32,6 +32,7 @@ component "skybox_changed"
 system "skybox_system"
     .implement "skybox.lua"
     .method "component_init"
+    .method "entity_ready"
 
 pipeline "sky"
     .stage "convert_sky"
