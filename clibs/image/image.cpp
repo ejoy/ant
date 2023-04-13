@@ -40,11 +40,6 @@ struct encode_dds_info {
 
 LUA2STRUCT(encode_dds_info, srgb);
 
-static inline struct memory*
-TO_MEM(lua_State *L, int idx){
-    return (struct memory *)luaL_checkudata(L, idx, "BGFX_MEMORY");
-}
-
 static inline void
 push_texture_info(lua_State *L, const bimg::ImageContainer *ic){
     bimg::TextureInfo info;
@@ -78,57 +73,6 @@ lparse(lua_State *L) {
         return 2;
     }
     return 1;
-}
-
-static int
-lpack_memory(lua_State *L){
-    luaL_checktype(L, 1, LUA_TTABLE);
-    const uint32_t n = (uint32_t)luaL_len(L, 1);
-
-    const uint32_t memorywidth = (uint32_t)luaL_checkinteger(L, 2);
-    const uint32_t memoryheight = (uint32_t)luaL_checkinteger(L, 3);
-
-    const uint32_t packwidth = (uint32_t)luaL_checkinteger(L, 4);
-    const uint32_t packheight = (uint32_t)luaL_checkinteger(L, 5);
-
-    struct memory* packmemory = (struct memory*)luaL_checkudata(L, 6, "BGFX_MEMORY");
-
-    std::vector<struct memory*> memories(n);
-    uint32_t totalsize = 0;
-    for (uint32_t i=0; i<n; ++i){
-        lua_geti(L, 1, i+1);
-        auto m = (struct memory*)luaL_checkudata(L, -1, "BGFX_MEMORY");
-        totalsize += (uint32_t)m->size;
-        memories[i] = m;
-        lua_pop(L, 1);
-    }
-
-    if (packmemory->size != totalsize){
-        luaL_error(L, "pack memory size is not enough: %d, %d", packmemory->size, totalsize);
-    }
-
-    if (packwidth*packheight != n){
-        luaL_error(L, "pack width*height not equal memories count: %d, %d", packwidth*packheight, n);
-    }
-
-    const uint32_t sizeheight = packheight * memoryheight;
-    uint8_t *pdata = (uint8_t*)packmemory->data;
-    for (uint32_t ish=0; ish<sizeheight; ++ish){
-        const uint32_t iph = ish/memoryheight;
-        const uint32_t ph_idx = iph*packwidth;
-        const uint32_t ish_offset = ish*memorywidth*packwidth;
-        const uint32_t mh = ish % memoryheight;
-        const uint32_t moffset = mh*memorywidth;
-        for (uint32_t ipw=0; ipw<packwidth; ++ipw){
-            const uint32_t poffset = ipw*memorywidth + ish_offset;
-            const uint32_t idx = ipw + ph_idx;
-            
-            auto m = memories[idx];
-            memcpy(pdata+poffset, (const uint8_t *)m->data+moffset, memorywidth);
-        }
-    }
-
-    return 0;
 }
 
 static bimg::TextureFormat::Enum
@@ -266,26 +210,11 @@ lconvert(lua_State *L){
     
 }
 
-static inline int
-check_mem(lua_State *L, int memidx, int fmtidx, struct memory *& m, bimg::TextureFormat::Enum &fmt){
-    m = TO_MEM(L, 1);
-    fmt = bimg::getFormat(luaL_checkstring(L, 2));
-    const auto srcbytes = bimg::getBitsPerPixel(fmt) / 8;
-    if ( m->size % srcbytes != 0){
-        return luaL_error(L, "invalid format:%s, memory size:%d", bimg::getName(fmt), m->size);
-    }
-
-    return 1;
-}
-
 static bimg::ImageContainer*
 gray2rgba(const bimg::ImageContainer &ic, bx::DefaultAllocator &allocator){
     auto unpack = [](float* dst, const void* src){
         const uint8_t* _src = (const uint8_t*)src;
         dst[0] = dst[1] = dst[2] = bx::fromUnorm(_src[0], 255.0f);
-        if (_src[1] != 255 && _src[1] != 0){
-            int debug = 0;
-        }
         dst[3] = bx::fromUnorm(_src[1], 255.0f);
     };
 
@@ -587,7 +516,7 @@ filter_at(const bimg::ImageContainer &cm, const glm::vec3 &direction){
     return glm::vec3(
             glm::lerp(
                 glm::lerp(texel_x0y0, texel_x1y0, st.s), 
-                glm::lerp(texel_x1y0, texel_x1y1, st.s), 
+                glm::lerp(texel_x0y1, texel_x1y1, st.s), 
                 st.t));
 }
 
