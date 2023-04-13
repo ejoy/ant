@@ -196,16 +196,22 @@ local config_table
 local path_table
 
 function S.create_texture_table(texture_table)
-    for idx, info in pairs(texture_table) do
-        if not config_table then
-            config_table = {}
+    if texture_table and (not texture_table[1]) then
+        config_table = {}
+        path_table = {}
+    else
+        for idx, info in pairs(texture_table) do
+            if not config_table then
+                config_table = {}
+            end
+            config_table[idx] = datalist.parse(fs.open(fs.path(info.cfg_path)):read "a")
+            if not path_table then
+                path_table = {}
+            end
+            path_table[idx] = {path = info.texture_path, list = {}}
         end
-        config_table[idx] = datalist.parse(fs.open(fs.path(info.cfg_path)):read "a")
-        if not path_table then
-            path_table = {}
-        end
-        path_table[idx] = {path = info.texture_path, list = {}}
     end
+    
 end
 
 function S.get_texture_table()
