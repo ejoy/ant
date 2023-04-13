@@ -83,13 +83,6 @@ vec2 hammersley2d(int i, int N)
     return vec2(float(i)/float(N), radicalInverse_VdC(uint(i)));
 }
 
-//NOTICE: this D_GGX is not the same as pbr.sh D_GGX, that is more complexity
-float D_GGX_ibl(float NdotH, float roughness) {
-    float a = NdotH * roughness;
-    float k = roughness / (1.0 - NdotH * NdotH + a * a);
-    return k * k * (1.0 / M_PI);
-}
-
 struct MicrofacetDistributionSample
 {
     float pdf;
@@ -116,7 +109,7 @@ vec3 tangent2world(vec3 dir_TS, vec3 normal_WS)
 
 float D_GGX(float NdotH, float roughness) {
     float a = NdotH * roughness;
-    float k = roughness / (1.0 - NdotH * NdotH + a * a);
+    float k = roughness / max(1.0 - NdotH * NdotH + a * a, 1e-6);
     return k * k * (1.0 / M_PI);
 }
 
