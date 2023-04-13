@@ -79,7 +79,6 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid){
 			default: assert(false && "ib_num == 0 and handle is not valid"); break;
 		}
 	}
-	const uint16_t itbtype = BUFFER_TYPE(ro->itb_handle);
 	if(ro->draw_num != 0 && ro->draw_num != INVALID_NUM_TYPE){
 		w->bgfx->encoder_set_instance_data_from_dynamic_vertex_buffer(w->holder->encoder, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->itb_handle}, 0, ro->draw_num);
 	}
@@ -129,7 +128,6 @@ update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const 
 static void
 draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const objarray &objs, obj_transforms &trans){
 	for (const auto &od : objs){
-		const uint16_t idbtype = BUFFER_TYPE(od.obj->idb_handle);
 		if(od.obj->draw_num == 0){
 			continue;
 		}
