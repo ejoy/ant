@@ -56,7 +56,7 @@ local hitch_id = 1
 function m:create_hitch(slot)
     local auto_name = (slot and "slot" or "hitch") .. hitch_id
     hitch_id = hitch_id + 1
-    local parent_eid = gizmo.target_eid or self.root
+    local parent_eid = gizmo.target_eid or (self.scene and self.scene or self.root)
     local template = {
         policy = {
             "ant.general|name"
@@ -100,11 +100,9 @@ local function create_simple_entity(name, parent)
     return ecs.create_entity(utils.deep_copy(template)), template
 end
 
-function m:add_entity(new_entity, parent, temp, no_hierarchy)
+function m:add_entity(new_entity, parent, temp)
     self.entities[#self.entities+1] = new_entity
-    if not no_hierarchy then
-        hierarchy:add(new_entity, {template = temp, patch = true}, parent)
-    end
+    hierarchy:add(new_entity, {template = temp, patch = self.create_as_patch}, parent)
 end
 
 local function create_default_light(lt, parent)
@@ -193,7 +191,7 @@ function m:create(what, config)
         hierarchy:add(new_camera, {template = template, patch = true}, self.root)
         self.entities[#self.entities+1] = new_camera
     elseif what == "empty" then
-        local parent = gizmo.target_eid or self.root
+        local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
         local new_entity, temp = create_simple_entity("empty" .. gen_geometry_id(), parent)
         self:add_entity(new_entity, parent, temp)
     elseif what == "geometry" then
@@ -435,9 +433,16 @@ local function check_animation(template)
     end
 end
 function m:open(filename)
-    self:reset_prefab()
+    self:reset_prefab(true)
     self.prefab_filename = filename
     self.prefab_template = serialize.parse(filename, cr.read_file(filename))
+    for _, value in ipairs(self.prefab_template) do
+        if value.data and value.data.mesh then
+            -- if prefab from glb file, create entity as patch node
+            self.create_as_patch = true
+            break
+        end
+    end
     local patchfile = filename .. ".patch"
     if fs.exists(fs.path(patchfile)) then
         self.patch_template = serialize.parse(patchfile, cr.read_file(patchfile))
@@ -506,7 +511,7 @@ function m:create_ground()
     end
 end
 
-function m:reset_prefab()
+function m:reset_prefab(noscene)
     for _, e in ipairs(self.entities) do
         on_remove_entity(e)
         w:remove(e)
@@ -524,12 +529,22 @@ function m:reset_prefab()
     if self.prefab_filename then
         ecs.release_cache(self.prefab_filename)
     end
+
     gizmo:set_target()
     self:create_ground()
     self.prefab_filename = nil
     self.prefab_template = nil
     self.patch_template = nil
     self.prefab_instance = nil
+    self.scene = nil
+    self.create_as_patch = false
+    if not noscene then
+        local parent = self.root
+        local new_entity, temp = create_simple_entity("Scene", parent)
+        self:add_entity(new_entity, parent, temp)
+        self.scene = new_entity
+        self.entities[#self.entities + 1] = new_entity
+    end
 end
 
 function m:reload()
@@ -564,7 +579,7 @@ function m:add_effect(filename)
     if not self.root then
         self:reset_prefab()
     end
-    local parent = gizmo.target_eid or self.root
+    local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
     local template = {
 		policy = {
             "ant.general|name",
@@ -602,7 +617,7 @@ function m:add_prefab(filename)
         self:reset_prefab()
     end
     local prefab
-    local parent = gizmo.target_eid or self.root
+    local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
     -- local group_id = get_group_id()
     -- local v_root = ecs.create_entity {
     --     policy = "ant.scene|hitch_object",
