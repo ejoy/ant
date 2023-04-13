@@ -139,8 +139,15 @@ vec3 calc_all_blend_color(float road_type, vec4 road_basecolor, float mark_type,
 
 vec3 blend_terrain_color(vec3 sand_basecolor, vec3 stone_basecolor, float sand_height, float sand_alpha)
 {
+    float sand_weight = min(1.0, 4 * abs(sand_height - sand_alpha));
+    float stone_weight = 1 - sand_weight;
+    return stone_basecolor*stone_weight + sand_basecolor*sand_weight;
+}
+
+vec3 blend_terrain_normal(vec3 sand_normal, vec3 stone_normal, float sand_height, float sand_alpha)
+{
     float sand_weight = 4 * abs(sand_height - sand_alpha);
-    return stone_basecolor*sand_weight + sand_basecolor;
+    return stone_normal*sand_weight + sand_normal;
 }
 
 void main()
@@ -210,12 +217,14 @@ void main()
         v_tangent = normalize(v_tangent);
         vec3 bitangent = cross(v_normal, v_tangent);
         mat3 tbn = mat3(v_tangent, bitangent, v_normal);
-        vec3 normal = terrain_normal_from_tangent_frame(tbn, uv, v_stone_normal_idx);
-
-        input_attributes input_attribs = init_input_attributes(v_normal, normal, v_posWS, vec4(basecolor, 1.0), gl_FragCoord);
+        vec3 sand_normal  = terrain_normal_from_tangent_frame(tbn, uv, 0);
+        vec3 stone_normal = terrain_normal_from_tangent_frame(tbn, uv, v_stone_normal_idx);
+        vec3 normal = blend_terrain_normal(sand_normal, stone_normal, sand_height, v_sand_alpha);
+        input_attributes input_attribs = init_input_attributes(v_normal, stone_normal, v_posWS, vec4(basecolor, 1.0), gl_FragCoord);
 
         gl_FragColor = compute_lighting(input_attribs);
-
+        //gl_FragColor = vec4(terrain_color, 1.0);
+        //gl_FragColor = vec4(stone_basecolor.rgb, 1.0);
     }
 #endif  //HAS_MULTIPLE_LIGHTING
 }
