@@ -53,7 +53,7 @@ local function calc_shape_terrain(unit)
     shape_terrain.height = terrain_height
     shape_terrain.unit = unit
     shape_terrain.prev_terrain_fields = terrain_fields
-    shape_terrain.section_size = math.min(math.max(1, terrain_width > 4 and terrain_width//4 or terrain_width//2), 16)
+    shape_terrain.section_size = math.min(math.max(1, terrain_width > 4 and terrain_width//4 or terrain_width//2), 32)
     shape_terrain.material = "/pkg/mod.terrain/assets/plane_terrain.material"
 end
 
