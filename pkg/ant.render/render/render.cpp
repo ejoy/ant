@@ -198,6 +198,9 @@ lsubmit(lua_State *L) {
 			if (entity_sibling(w->ecs, vv_id, i, ra.queue_visible_id) &&
 				!entity_sibling(w->ecs, vv_id, i, ra.queue_cull_id)){
 				add_obj(w, vv_id, i, nullptr, objs);
+				if (objs.back().obj == nullptr){
+					luaL_error(L, "111render_object should not empty");
+				}
 			}
 		}
 		for (auto const& [groupid, mats] : groups) {
@@ -207,6 +210,9 @@ lsubmit(lua_State *L) {
 			for (int i=0; entity_iter(w->ecs, h_id, i); ++i){
 				if (entity_sibling(w->ecs, h_id, i, ra.queue_visible_id)){
 					add_obj(w, h_id, i, &mats, objs);
+					if (objs.back().obj == nullptr){
+						luaL_error(L, "222render_object should not empty");
+					}
 				}
 			}
 		}
