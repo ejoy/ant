@@ -329,7 +329,7 @@ local function check_irradiance()
     if irradianceSH.CPU and irradianceSH.GPU and not (ib or iSHb) then
         local sh = require "ibl.sh"
         local image = require "image"
-        local restex = IBL_INFO.source.res_tex
+        local restex = IBL_INFO.source.tex_name
         local lfs = require "filesystem.local"
         local cr = import_package "ant.compile_resource"
         local r = cr.compile(restex .. "|main.bin")
@@ -468,7 +468,7 @@ local function build_ibl_textures(ibl)
 
     IBL_INFO.source.value = assert(ibl.source.value)
     IBL_INFO.source.facesize = assert(ibl.source.facesize)
-    IBL_INFO.source.res_tex = ibl.source.res_tex
+    IBL_INFO.source.tex_name = ibl.source.tex_name
 
     if irradianceSH_bandnum then
         IBL_INFO.irradianceSH.bandnum = irradianceSH_bandnum
