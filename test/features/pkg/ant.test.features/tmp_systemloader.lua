@@ -909,6 +909,13 @@ function init_loader_sys:init_world()
 
     motion_sampler_test()
     drawindirect_test()
+
+    local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/outline.prefab"
+    p.on_ready = function (e)
+        local ee<close> = w:entity(e.tag['*'][1], "scene:in")
+        iom.set_scale(ee, 0.3)
+    end
+    world:create_object(p)
 end
 
 local kb_mb = world:sub{"keyboard"}
