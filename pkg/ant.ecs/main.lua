@@ -181,9 +181,7 @@ function create_template(w, filename)
             local patch = serialize.parse(patchfile, cr.read_file(patchfile))
             for index, value in ipairs(patch) do
                 if value.mount then
-                    if value.mount ~= 1 then
-                        value.mount = count + index - 1
-                    end
+                    value.mount = count + index - 1
                 else
                     value.mount = 1
                 end
