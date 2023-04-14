@@ -47,7 +47,7 @@ local function process_keyframe_event(task)
 					if task.slot_eid then
 						slot_eid = task.slot_eid[event.link_info.slot_name]
 						if slot_eid then
-							if not task.for_hitch then
+							if not task.hitchs then
 								parent = slot_eid
 							end
 						end
