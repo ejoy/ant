@@ -3,13 +3,13 @@ local world     = ecs.world
 local w         = world.w
 
 local math3d    = require "math3d"
-
+local mathpkg = import_package "ant.math"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local timer 	= ecs.import.interface "ant.timer|itimer"
 
 local printer_sys = ecs.system 'printer_system'
 local iprinter = ecs.interface "iprinter"
-
+local mc    = mathpkg.constant
 
 
 
@@ -48,24 +48,25 @@ function iprinter.update_printer_percent(eid, percent)
         if printer.eid == eid then
             assert(percent <= 1.0 and percent >= 0.0)
             local aabb = e.bounding.scene_aabb
-            if not math3d.isvalid(aabb) then
+            if mc.NULL == aabb  then
                 e.printer = nil
-            end
-            local topy = math3d.index(math3d.array_index(aabb, 2), 2)
-            local boty = math3d.index(math3d.array_index(aabb, 1), 2)
-            local cury = percent * (topy - boty) + boty
-            local offy
-            if cury - 0.1 * (topy - boty) >= boty then
-                offy = 0.1 * (topy - boty)
             else
-                offy = cury-boty
+                local topy = math3d.index(math3d.array_index(aabb, 2), 2)
+                local boty = math3d.index(math3d.array_index(aabb, 1), 2)
+                local cury = percent * (topy - boty) + boty
+                local offy
+                if cury - 0.1 * (topy - boty) >= boty then
+                    offy = 0.1 * (topy - boty)
+                else
+                    offy = cury-boty
+                end
+                if topy - cury <= 0.1 * (topy - boty) then
+                    offy = 0
+                end
+                local factor = math3d.vector(offy, cury, 0, 0)
+                imaterial.set_property(e, "u_printer_factor", factor)
+                printer.percent = percent  
             end
-            if topy - cury <= 0.1 * (topy - boty) then
-                offy = 0
-            end
-            local factor = math3d.vector(offy, cury, 0, 0)
-            imaterial.set_property(e, "u_printer_factor", factor)
-            printer.percent = percent  
         end
     end    
 end
