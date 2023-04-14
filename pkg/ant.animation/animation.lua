@@ -47,7 +47,7 @@ local function process_keyframe_event(task)
 					if task.slot_eid then
 						slot_eid = task.slot_eid[event.link_info.slot_name]
 						if slot_eid then
-							if not task.for_hitch then
+							if not task.hitchs then
 								parent = slot_eid
 							end
 						end
@@ -58,14 +58,15 @@ local function process_keyframe_event(task)
 						s, r, t = iom.get_scale(e), iom.get_rotation(e), iom.get_position(e)
 					end
 					event.effect = iefk.create(event.asset_path, {
-						auto_play = true,
+						auto_play = not task.hitchs,
 						scene = {parent = parent, s = s, r = r, t = t},
 						group_id = task.group_id,
 						hitchs = task.hitchs
 					})
 				elseif event.effect then
-					local e <close> = w:entity(event.effect)
-					iefk.play(e)
+					if not task.hitchs or next(task.hitchs) then
+						iefk.play(event.effect)
+					end
 				end
 			elseif event.event_type == "Move" then
 				for _, eid in ipairs(task.eid) do

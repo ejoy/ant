@@ -165,6 +165,8 @@ draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const o
 static inline void
 add_obj(struct ecs_world* w, cid_t vv_id, int index, const matrix_array* mats, objarray &objs){
 	const ecs::render_object* obj = (const ecs::render_object*)entity_sibling(w->ecs, vv_id, index, ecs_api::component<ecs::render_object>::id);
+	if (obj == nullptr)
+		return ;
 #if defined(_MSC_VER) && defined(_DEBUG)
 	ecs::eid id = (ecs::eid)entity_sibling(w->ecs, vv_id, index, ecs_api::component<ecs::eid>::id);
 	objs.emplace_back(obj_data{ obj, mats, id });
@@ -198,11 +200,6 @@ lsubmit(lua_State *L) {
 			if (entity_sibling(w->ecs, vv_id, i, ra.queue_visible_id) &&
 				!entity_sibling(w->ecs, vv_id, i, ra.queue_cull_id)){
 				add_obj(w, vv_id, i, nullptr, objs);
-				#ifdef _DEBUG
-				if (objs.back().obj == nullptr){
-					luaL_error(L, "111render_object should not empty:%d", objs.back().id);
-				}
-				#endif //_DEBUG
 			}
 		}
 		for (auto const& [groupid, mats] : groups) {
@@ -212,11 +209,6 @@ lsubmit(lua_State *L) {
 			for (int i=0; entity_iter(w->ecs, h_id, i); ++i){
 				if (entity_sibling(w->ecs, h_id, i, ra.queue_visible_id)){
 					add_obj(w, h_id, i, &mats, objs);
-					#ifdef _DEBUG
-					if (objs.back().obj == nullptr){
-						luaL_error(L, "222render_object should not empty:%d", objs.back().id);
-					}
-					#endif //_DEBUG
 				}
 			}
 		}

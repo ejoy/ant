@@ -601,9 +601,7 @@ function m:add_effect(filename)
 		},
     }
     local tpl = utils.deep_copy(template)
-    tpl.data.on_ready = function (e)
-        iefk.play(e)
-    end
+    tpl.data.efk.auto_play = true
     self:add_entity(ecs.create_entity(tpl), parent, template)
 end
 

@@ -131,7 +131,7 @@ function hierarchy:update_prefab_template()
             local tt = nd.template.template
             if nd.parent ~= self.root.eid and tt then
                 if nd.template.patch then
-                    if tt.mount and tt.mount ~= 1 then
+                    if self.all[nd.parent].template.patch or (tt.mount and tt.mount ~= 1) then
                         tt.mount = #ppt
                     end
                 else
