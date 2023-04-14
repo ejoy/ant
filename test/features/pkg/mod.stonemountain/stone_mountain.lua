@@ -15,7 +15,7 @@ local terrain_module = require "terrain"
 local ism = ecs.interface "istonemountain"
 local sm_sys = ecs.system "stone_mountain"
 local sm_material
-local width, height, section_size
+local ratio, width, height, section_size
 local freq, depth, unit, offset = 4, 4, 10, 0
 local is_build_sm = false
 local instance_num = 0
@@ -128,7 +128,9 @@ local function get_inter_range(corner_idx, extent)
     end
 end
 
-local function get_center(b_clamp, m_clamp)
+local function get_center()
+    local m_clamp = (ratio + 0.2) * 0.1 -- [0.02, 0.12]
+    local b_clamp = 1 - m_clamp -- [0.88, 0.98]
     local tmp_center_table = {}
     for iy = 6, height - 6 do
       for ix = 6, width - 6 do
@@ -614,7 +616,7 @@ end
 
 local function record_sm_idx_to_terrain_field(tf, stone, sm_idx, size_idx)
     local mesh_idx = sm_bms_to_mesh_table[sm_idx][size_idx]
-    local center_x, center_z = stone.t.x, stone.t.z
+    local center_x, center_z = stone.t.x + offset * unit, stone.t.z + offset * unit
     local extent_x, extent_z = mesh_aabb_table[mesh_idx].extent[1] * stone.s, mesh_aabb_table[mesh_idx].extent[2] * stone.s
     local min_x, max_x = math.floor((center_x - extent_x) / unit) + 1, math.ceil((center_x + extent_x) / unit)
     local min_z, max_z = math.floor((center_z - extent_z) / unit), math.ceil((center_z + extent_z) / unit)
@@ -644,12 +646,12 @@ local function set_terrain_sm()
                 record_sm_idx_to_terrain_field(st.prev_terrain_fields, small_stone, sm_idx, 3)
             end
         end
-    end
+    end 
 end
 
-function ism.create_sm_entity(ww, hh, off, un, f, d)
+function ism.create_sm_entity(r, ww, hh, off, un, f, d)
     open_sm = true
-    width, height= ww, hh
+    ratio, width, height= r, ww, hh
     if off then
         offset = off
     end
@@ -662,7 +664,7 @@ function ism.create_sm_entity(ww, hh, off, un, f, d)
     if d then
         depth = d
     end
-    section_size = math.min(math.max(1, width > 4 and width//4 or width//2), 16)
+    section_size = math.min(math.max(1, width > 4 and width//4 or width//2), 32)
     for center_idx = 1, width * height do
         sm_table[center_idx] = {[1] = {}, [2] = {}, [3] = {}} -- b m s
     end
@@ -903,7 +905,7 @@ local function create_constant_buffer()
 end
 
 local function make_sm_noise()
-    get_center(0.9, 0.1)
+    get_center()
     get_count()
     get_map()
     get_scale()

@@ -917,14 +917,15 @@ local function create_zone()
 end
 
 function init_loader_sys:init_world()
-    iterrain.gen_terrain_field(256, 256, 0)
+    iterrain.gen_terrain_field(256, 256, 128)
     --iterrain.create_roadnet_entity(create_list)
     create_mark()
     create_zone()
-    --istonemountain.create_sm_entity(256, 256, 0)
+    -- stonemountain ratio(0~1) width height offset unit
+    istonemountain.create_sm_entity(0.8, 256, 256, 128)
     -- input: x and z coordinates
     -- output: whether current grid is stonemountain? true = yes nil = false
-    --iterrain.is_stone_mountain(46, 0)
+    iterrain.is_stone_mountain(46, 0)
     
     for msg in after_init_mb:each() do
         local e = msg[2]
