@@ -49,13 +49,11 @@ function EffectView:show()
     end
     imgui.cursor.Separator()
     if imgui.widget.Button("Play") then
-        local e <close> = w:entity(self.eid)
-        iefk.play(e)
+        iefk.play(self.eid)
     end
     imgui.cursor.SameLine()
     if imgui.widget.Button("Stop") then
-        local e <close> = w:entity(self.eid)
-        iefk.stop(e)
+        iefk.stop(self.eid)
     end
 end
 
@@ -72,8 +70,7 @@ end
 function EffectView:on_set_speed(value)
     local template = hierarchy:get_template(self.eid)
     template.template.data.efk.speed = value
-    local e <close> = w:entity(self.eid)
-    iefk.set_speed(e, value)
+    iefk.set_speed(self.eid, value)
 end
 
 function EffectView:on_set_auto_play(value)
@@ -84,8 +81,7 @@ end
 function EffectView:on_set_loop(value)
     local template = hierarchy:get_template(self.eid)
     template.template.data.efk.loop = value
-    local e <close> = w:entity(self.eid)
-    iefk.set_loop(e, value)
+    iefk.set_loop(self.eid, value)
 end
 
 return EffectView
