@@ -552,7 +552,7 @@ function init_loader_sys:init()
             scene  = {s = 0.1, t = {5, 0, 5}},
             material    = "/pkg/mod.printer/assets/printer.material",
             visible_state = "main_view",
-            mesh        = "/pkg/mod.printer/assets/Duck.glb|meshes/LOD3spShape_P1.meshbin",
+            mesh        = "/pkg/ant.test.features/assets/glb/road_X.glb|meshes/立方体.001_P1.meshbin",
             render_layer= "postprocess_obj",
             -- add printer tag
             -- previous still be zero
@@ -562,6 +562,7 @@ function init_loader_sys:init()
             }
         },
     }
+
 end
 
 local function render_layer_test()
@@ -922,7 +923,7 @@ function init_loader_sys:init_world()
     create_mark()
     create_zone()
     -- stonemountain ratio(0~1) width height offset unit
-    istonemountain.create_sm_entity(0.8, 256, 256, 128)
+    --istonemountain.create_sm_entity(0.8, 256, 256, 128)
     -- input: x and z coordinates
     -- output: whether current grid is stonemountain? true = yes nil = false
     iterrain.is_stone_mountain(46, 0)

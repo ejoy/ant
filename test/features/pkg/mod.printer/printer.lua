@@ -48,6 +48,9 @@ function iprinter.update_printer_percent(eid, percent)
         if printer.eid == eid then
             assert(percent <= 1.0 and percent >= 0.0)
             local aabb = e.bounding.scene_aabb
+            if not math3d.isvalid(aabb) then
+                e.printer = nil
+            end
             local topy = math3d.index(math3d.array_index(aabb, 2), 2)
             local boty = math3d.index(math3d.array_index(aabb, 1), 2)
             local cury = percent * (topy - boty) + boty
