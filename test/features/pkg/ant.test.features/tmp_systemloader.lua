@@ -880,12 +880,47 @@ local function create_mark()
             end
         end
     end
+    t[#t+1] =     {
+        x = 0, y = 0,
+        layers =
+        {
+            road =
+            {
+                type  = "3",
+                shape = "I",
+                dir   = "N"
+            }
+        }
+    }
+    t[#t+1] =     {
+        x = 1, y = 0,
+        layers =
+        {
+            road =
+            {
+                type  = "3",
+                shape = "I",
+                dir   = "N"
+            }
+        }
+    }
     iterrain.create_roadnet_entity(t)
 end
+
+local function create_zone()
+    local t = {
+        [1] = {x = 0, y = 0, zone_color  = "blue"}, 
+        [2] = {x = 2, y = 0, zone_color  = "blue"},
+        [3] = {x = 3, y = 0, zone_color  = "opaque"}
+    }
+    iterrain.update_zone_entity(t)
+end
+
 function init_loader_sys:init_world()
     iterrain.gen_terrain_field(256, 256, 0)
     --iterrain.create_roadnet_entity(create_list)
     create_mark()
+    create_zone()
     --istonemountain.create_sm_entity(256, 256, 0)
     -- input: x and z coordinates
     -- output: whether current grid is stonemountain? true = yes nil = false

@@ -40,6 +40,11 @@ local TERRAIN_DIRECTIONS<const> = {
     W = "4",
 }
 
+local TERRAIN_ZONE_COLORS<const> = {
+    opaque = 0,
+    blue = 1
+}
+
 local function parse_terrain_type_dir(layers, tname)
     local type, shape, dir = tname..layers[tname].type, layers[tname].shape, layers[tname].dir
     local t<const> = assert(TERRAIN_TYPES[type])
@@ -173,6 +178,20 @@ function iterrain.delete_roadnet_entity(delete_list)
             mark_direction = 0.0,
             mark_shape = 0.0
         }
+        local section_idx = calc_section_idx(idx)
+        if terrain_change[section_idx] == nil then
+            tc_cnt = tc_cnt + 1
+            terrain_change[section_idx] = true
+        end
+    end
+end
+
+function iterrain.update_zone_entity(update_list)
+    for ii = 1, #update_list do
+        local ul = update_list[ii]
+        local x, y = ul.x + terrain_width_offset, ul.y + terrain_height_offset
+        local idx = calc_tf_idx(x, y, terrain_width)
+        terrain_fields[idx].zone_color = TERRAIN_ZONE_COLORS[ul.zone_color]
         local section_idx = calc_section_idx(idx)
         if terrain_change[section_idx] == nil then
             tc_cnt = tc_cnt + 1

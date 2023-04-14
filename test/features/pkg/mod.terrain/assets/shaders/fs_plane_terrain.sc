@@ -30,6 +30,7 @@ SAMPLER2DARRAY(s_mark_alpha,            3);
 
 uniform vec4 u_metallic_roughness_factor1;
 uniform vec4 u_metallic_roughness_factor2;
+uniform vec4 u_zone_color_alpha;
 #define u_sand_metallic_factor      u_metallic_roughness_factor1.x
 #define u_sand_roughness_factor     u_metallic_roughness_factor1.y
 
@@ -39,7 +40,7 @@ uniform vec4 u_metallic_roughness_factor2;
 #define u_road_metallic_factor    u_metallic_roughness_factor2.x
 #define u_road_roughness_factor   u_metallic_roughness_factor2.y
 
-#define v_sand_alpha          v_idx1.x
+#define v_zone_color          v_idx1.x
 #define v_stone_normal_idx    v_idx1.y
 #define v_road_type           v_idx2.x
 #define v_road_shape          v_idx2.y
@@ -47,6 +48,7 @@ uniform vec4 u_metallic_roughness_factor2;
 #define v_stone_color_idx     v_idx2.w
 #define v_mark_type           v_idx1.z
 #define v_mark_shape          v_idx1.w
+#define v_zone_alpha          u_zone_color_alpha.x
 
 vec2 texture2DArrayBc5(sampler2DArray _sampler, vec3 _uv)
 {
@@ -144,13 +146,26 @@ vec3 blend_terrain_color(vec3 sand_basecolor, vec3 stone_basecolor, float sand_h
     return stone_basecolor*stone_weight + sand_basecolor*sand_weight;
 }
 
+vec3 blend_zone(vec3 terrain_color, float zone_color_idx)
+{
+    vec3 zone_color;
+    if(zone_color_idx == 1){
+        zone_color = vec3(0/255, 255/255, 255/255);
+        vec3 final_color = terrain_color * (1 - v_zone_alpha) + zone_color * v_zone_alpha;
+        return final_color;
+    }
+    else{
+        return terrain_color;
+    }
+}
+
 void main()
 { 
 
 
 #ifdef HAS_MULTIPLE_LIGHTING
 
-    const float road_color_idx = v_road_type;
+/*     const float road_color_idx = v_road_type;
     
     #include "attributes_getter.sh"
     
@@ -167,7 +182,8 @@ void main()
 
     vec3 color = calc_terrain_color(road_color_idx, road_basecolor, road_alpha, road_height, terrain_color, stone_height);
 
-    gl_FragColor = vec4(color.rgb, 1.0);
+    gl_FragColor = vec4(color.rgb, 1.0); */
+    gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0); 
 
 #else
     //v_texcoord0 terrain_basecolor/terrain_height/terrain_normal 8x8
@@ -202,10 +218,13 @@ void main()
     float sand_alpha = texture2DArray(s_height, vec3(sand_alpha_uv, 2.0) );
     vec3 terrain_color = blend_terrain_color(sand_basecolor.rgb, stone_basecolor.rgb, sand_height, sand_alpha);
 
-    vec3 basecolor = calc_all_blend_color(v_road_type, road_basecolor, v_mark_type, mark_basecolor, mark_alpha, road_height, terrain_color, stone_height);
+    vec3 terrain_blended_color = calc_all_blend_color(v_road_type, road_basecolor, v_mark_type, mark_basecolor, mark_alpha, road_height, terrain_color, stone_height);
+
+    vec3 basecolor = blend_zone(terrain_blended_color, v_zone_color);
     bool is_road_part = v_road_type != 0.0 && road_basecolor.a != 0.0;
     bool is_mark_part = v_mark_type != 0 && mark_alpha != 1;
-    if(is_road_part || is_mark_part)
+    bool is_zone_part = v_zone_color != 0;
+    if(is_road_part || is_mark_part||v_zone_color)
     {
         gl_FragColor = vec4(basecolor, 1.0);
     }

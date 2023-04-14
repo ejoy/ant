@@ -290,7 +290,10 @@ local function get_terrain_uv(size, sectionx, sectiony)
     return u0, v0, u1, v1
 end 
 
-local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, rd, md, rtype, road_shape, mtype, mark_shape, sand_color_idx, stone_color_idx, stone_normal_idx, width, alphax, alphay)
+local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, rd, md, rtype, road_shape, mtype, mark_shape, sand_color_idx, stone_color_idx, stone_normal_idx, zone_color)
+    if not zone_color then
+        zone_color = 0
+    end
     local road_type, mark_type
     -- road_type ground/road/red/white
     if not rtype or rtype == 0 then
@@ -312,16 +315,11 @@ local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, rd, md, rtype, roa
     local u20, v20, u21, v21 = get_terrain_uv(32, xx, yy)
 
 
-    local i1 = calc_tf_idx(alphax    , alphay     , width)
-    local i2 = calc_tf_idx(alphax    , alphay + 1 , width)
-    local i3 = calc_tf_idx(alphax + 1, alphay + 1 , width)
-    local i4 = calc_tf_idx(alphax + 1, alphay     , width)
-    local ns1, ns2, ns3, ns4 = noise1[i1], noise1[i2], noise1[i3], noise1[i4]
     -- p3 position 
     -- t20 terrain_basecolor/terrain_height/terrain_normal 8x8
     -- t21 road_basecolor/road_height 1x1
     -- t22 sand_alpha 32x32
-    -- t23 v_sand_road v_stone_normal_idx
+    -- t23 zone_color v_stone_normal_idx
     -- t24 v_road_type v_road_shape(flat)
     -- t25 v_sand_color_idx v_stone_color_idx(flat)
     -- t26 v_mark_type v_mark_shape
@@ -331,10 +329,10 @@ local function add_quad(vb, origin, extent, uv0, uv1, xx, yy, rd, md, rtype, roa
     local t1x2, t1y2, t7x2, t7y2 = get_vb(rd, 2, md, 2)
     local t1x3, t1y3, t7x3, t7y3 = get_vb(rd, 3, md, 3)
     local v = {
-        packfmt:pack(ox, oy, oz, u00, v00, t1x0, t1y0, u20, v20, ns1, stone_normal_idx, road_type, road_shape, sand_color_idx, stone_color_idx, mark_type, mark_shape, t7x0, t7y0),
-        packfmt:pack(ox, oy, nz, u00, v01, t1x1, t1y1, u20, v21, ns2, stone_normal_idx, road_type, road_shape, sand_color_idx, stone_color_idx, mark_type, mark_shape, t7x1, t7y1),
-        packfmt:pack(nx, ny, nz, u01, v01, t1x2, t1y2, u21, v21, ns3, stone_normal_idx, road_type, road_shape, sand_color_idx, stone_color_idx, mark_type, mark_shape, t7x2, t7y2),
-        packfmt:pack(nx, ny, oz, u01, v00, t1x3, t1y3, u21, v20, ns4, stone_normal_idx, road_type, road_shape, sand_color_idx, stone_color_idx, mark_type, mark_shape, t7x3, t7y3)            
+        packfmt:pack(ox, oy, oz, u00, v00, t1x0, t1y0, u20, v20, zone_color, stone_normal_idx, road_type, road_shape, sand_color_idx, stone_color_idx, mark_type, mark_shape, t7x0, t7y0),
+        packfmt:pack(ox, oy, nz, u00, v01, t1x1, t1y1, u20, v21, zone_color, stone_normal_idx, road_type, road_shape, sand_color_idx, stone_color_idx, mark_type, mark_shape, t7x1, t7y1),
+        packfmt:pack(nx, ny, nz, u01, v01, t1x2, t1y2, u21, v21, zone_color, stone_normal_idx, road_type, road_shape, sand_color_idx, stone_color_idx, mark_type, mark_shape, t7x2, t7y2),
+        packfmt:pack(nx, ny, oz, u01, v00, t1x3, t1y3, u21, v20, zone_color, stone_normal_idx, road_type, road_shape, sand_color_idx, stone_color_idx, mark_type, mark_shape, t7x3, t7y3)            
     }  
     vb[#vb+1] = table.concat(v, "")
     
@@ -380,7 +378,7 @@ local function build_mesh(sectionsize, sectionidx, cterrainfileds, width)
                 local uv1 = uv0
                 --  add_quad(vb, origin, extent, uv0, uv1, xx, yy, rd, md, road_type, road_shape, mark_type, mark_shape, sand_color_idx, stone_color_idx, stone_normal_idx, width)
                 add_quad(vb, origin, extent, uv0, uv1, xx, yy, field.road_direction, field.mark_direction, field.road_type, field.road_shape, 
-                field.mark_type, field.mark_shape, sand_color_idx, stone_color_idx, stone_normal_idx, width, alphax, alphay)
+                field.mark_type, field.mark_shape, sand_color_idx, stone_color_idx, stone_normal_idx, field.zone_color)
             end
         end
     end
