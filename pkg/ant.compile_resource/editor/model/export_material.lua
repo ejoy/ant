@@ -160,13 +160,15 @@ return function (output, glbdata, exports, tolocalpath)
             name = name .. ext
         end
 
-        local bv = bufferviews[img.bufferView+1]
-        local buf = buffers[bv.buffer+1]
-        local begidx = (bv.byteOffset or 0)+1
-        local endidx = begidx + bv.byteLength
-        assert((endidx - 1) <= buf.byteLength)
-        local c = glbbin:sub(begidx, endidx)
-        utility.save_file("./images/"..name, c)
+        if not fs.exists(output / "images" / name) then
+            local bv = bufferviews[img.bufferView+1]
+            local buf = buffers[bv.buffer+1]
+            local begidx = (bv.byteOffset or 0)+1
+            local endidx = begidx + bv.byteLength
+            assert((endidx - 1) <= buf.byteLength)
+            local c = glbbin:sub(begidx, endidx)
+            utility.save_file("./images/"..name, c)
+        end
         return name
     end
 
