@@ -29,7 +29,7 @@ local function run(commands, input, output)
     if lfs.exists(path / "bin") then
         local deps = depends.read_if_not_dirty(path / ".dep")
         if deps then
-            lfs.copy_file(path / "bin", output)
+            lfs.copy_file(path / "bin", output, lfs.copy_options.overwrite_existing)
             return true, deps
         end
     end
@@ -72,7 +72,7 @@ local function run(commands, input, output)
     end
     depends.writefile(path / ".dep", deps)
     writefile(path / ".arguments", cmdstring)
-    lfs.copy_file(path / "bin", output)
+    lfs.copy_file(path / "bin", output, lfs.copy_options.overwrite_existing)
     return true, deps
 end
 
