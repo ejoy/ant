@@ -11,6 +11,6 @@ return function(input, output, setting)
         return ok, err
     end
     local deps = {}
-    depends.add(input)
+    depends.add(deps, input)
     return true, deps
 end
