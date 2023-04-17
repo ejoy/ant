@@ -1,6 +1,6 @@
+local shader = require "editor.material.shader"
+
 local lfs = require "filesystem.local"
-local subprocess = import_package "ant.subprocess"
-local SHADERC = subprocess.tool_exe_path "shaderc"
 local toolset = {}
 
 local stage_types = {
@@ -57,13 +57,10 @@ end
 
 function toolset.compile(config)
 	local commands = {
-		SHADERC,
 		"--platform", config.platform,
 		"--type", stage_types[config.stage],
 		"-p", get_shader_option(config.platform, config.renderer, config.stage),
-		"-f", config.input,
-		"-o", config.output,
-		"--depends",
+		"-f", config.input:string(),
 	}
 
 	if config.includes then
@@ -107,56 +104,9 @@ function toolset.compile(config)
 
 	if config.varying_path then
         commands[#commands+1] = "--varyingdef"
-        commands[#commands+1] = config.varying_path
+        commands[#commands+1] = tostring(config.varying_path)
     end
-
-	print("shader compile:")
-	local cmdstring = {}
-	for _, c in ipairs(commands) do
-		cmdstring[#cmdstring+1] = tostring(c)
-	end
-
-	print(table.concat(cmdstring, " "))
-
-	do
-		-- Fixes bgfx shaderc bug
-		lfs.remove(config.output)
-		lfs.open(config.output, "wb"):close()
-	end
-
-	local ok, msg = subprocess.spawn_process(commands)
-	if ok then
-		local INFO = msg:upper()
-		for _, term in ipairs {
-			"ERROR",
-			"FAILED TO BUILD SHADER"
-		} do
-			if INFO:find(term, 1, true) then
-				ok = false
-				break
-			end
-		end
-	end
-	if not ok then
-		return false, msg
-	end
-	local depends = {}
-	local dependpath = config.output .. ".d"
-	local f = lfs.open(dependpath)
-	if f then
-		f:read "l"
-		for line in f:lines() do
-			local path = line:match "^%s*(.-)%s*\\?$"
-			if path then
-				depends[#depends+1] = path
-			end
-		end
-		f:close()
-		os.remove(dependpath:string())
-		table.sort(depends)
-		table.insert(depends, 1, config.input)
-	end
-	return true, msg, depends
+	return shader(commands, config.input, config.output)
 end
 
 return toolset

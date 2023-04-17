@@ -141,6 +141,7 @@ local function get_macros(setting, mat)
             end
         end
     end
+    table.sort(macros)
 	return macros
 end
 
@@ -190,9 +191,8 @@ return function (input, output, setting, localpath)
     local mat = readdatalist(input)
     local fx = mat.fx
     mergeCfgSetting(fx, localpath)
-    local depfiles = {
-        localpath "/settings"
-    }
+    local depfiles = {}
+    depends.add(depfiles, localpath "/settings")
 
     local varying_path = fx.varying_path
     if varying_path then
@@ -206,7 +206,8 @@ return function (input, output, setting, localpath)
                     varying_path = DEF_VARYING_FILE
                 end
             end
-            local ok, err, deps = toolset.compile {
+            lfs.create_directories(output)
+            local ok, res = toolset.compile {
                 platform = setting.os,
                 renderer = setting.renderer,
                 input = inputpath,
@@ -218,9 +219,9 @@ return function (input, output, setting, localpath)
                 debug = compile_debug_shader(setting.os, setting.renderer),
             }
             if not ok then
-                return false, ("compile failed: " .. input:string() .. "\n\n" .. err)
+                return false, ("compile failed: " .. input:string() .. "\n\n" .. res)
             end
-            depends.append(depfiles, deps)
+            depends.append(depfiles, res)
         end
     end
     writefile(output / "main.cfg", mat)

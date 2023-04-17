@@ -2,7 +2,6 @@ local lfs = require "filesystem.local"
 local sha1 = require "editor.hash".sha1
 local serialize = import_package "ant.serialize"
 local vfs = require "vfs"
-local ltask = require "ltask"
 
 local function writefile(filename, data)
     local f = assert(lfs.open(filename, "wb"))
