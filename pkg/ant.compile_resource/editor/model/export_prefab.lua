@@ -4,7 +4,8 @@ local serialize = import_package "ant.serialize"
 local datalist = require "datalist"
 local lfs = require "filesystem.local"
 local fs = require "filesystem"
-local compile = require "editor.compile"
+local config   = require "editor.config"
+local material_compile = require "editor.material.compile"
 
 local invalid_chars<const> = {
     '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
@@ -160,12 +161,14 @@ local function save_material(output, exports, mi)
     local f = utility.full_path(mi.filename:string())
     if not material_files[f:string()] then
         lfs.remove_all(f)
-        utility.save_txt_file(mi.filename:string(), mi.material)
-        local outfolder = output / "materials" / "_tmp"
-        compile.do_compile(output / mi.filename, outfolder, exports.depfiles)
-        lfs.remove_all(f)
-        utility.rename(outfolder, output / mi.filename)
-
+        lfs.create_directory(output)
+        local cfg = config.get "material"
+        local ok, err = material_compile(mi.material, output / mi.filename, cfg.setting, function (path)
+            return fs.path(path):localpath()
+        end)
+        if not ok then
+            error("compile failed: " .. (output / mi.filename):string() .. "\n" .. err)
+        end
         material_files[f:string()] = true
     end
 end
