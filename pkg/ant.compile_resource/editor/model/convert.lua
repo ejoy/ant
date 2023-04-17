@@ -1,6 +1,7 @@
 local glb = require "editor.model.glb"
 local datalist = require "datalist"
 local fs = require "filesystem.local"
+local depends   = require "editor.depends"
 
 local function readdatalist(filepath)
 	local f = assert(fs.open(filepath, "r"))
@@ -18,6 +19,6 @@ return function (input, output, _, localpath)
     if not ok then
         return ok, res
     end
-    table.insert(res, 1, input)
+    depends.insert_front(res, input)
     return ok, res
 end
