@@ -66,10 +66,7 @@ function compile(pathstring)
     end
 end
 
-local set_setting = config.set
-
 return {
-    set_setting = set_setting,
     do_compile = do_compile,
     compile = compile,
     compile_file = compile_file,
