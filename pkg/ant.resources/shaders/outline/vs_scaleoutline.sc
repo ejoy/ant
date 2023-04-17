@@ -6,6 +6,14 @@ uniform vec4 u_outlinescale;
 
 void main()
 {
+#ifdef VIEW_SPACE
+    vec4 pos = mul(u_modelView, vec4(a_position, 1.0));
+    mat4 it_modelView = transpose(u_invViewProj);
+    vec3 normal = mul(it_modelView, vec4(a_normal, 0.0));
+    normal.z = -0.5;
+    pos = pos + vec4(normal, 0) * u_outline_width;
+    gl_Position = mul(u_proj, pos); 
+#else // SCREEN_SPACE
     mat4 it_view = transpose(u_invView);
     vec4 view_normal = mul(it_view, vec4(a_normal, 0.0));
 
@@ -15,5 +23,6 @@ void main()
     // offset posision in clip space
     vec4 clipPos = mul(u_modelViewProj, vec4(a_position, 1.0));
     gl_Position = clipPos;
-    gl_Position.xy += screen_normal * u_outline_width * clipPos.w;
+    gl_Position.xy += screen_normal * u_outline_width * clipPos.w; 
+#endif //VIEW_SPACE
 }
