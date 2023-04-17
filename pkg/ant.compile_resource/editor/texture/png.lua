@@ -1,5 +1,6 @@
 local convert_image = require "editor.texture.util"
 local pngparam = require "editor.texture.png_param"
+local depends  = require "editor.depends"
 
 return function(input, output, setting)
     local p = pngparam.default(input)
@@ -9,5 +10,7 @@ return function(input, output, setting)
     if not ok then
         return ok, err
     end
-    return true, { input }
+    local deps = {}
+    depends.add(input)
+    return true, deps
 end
