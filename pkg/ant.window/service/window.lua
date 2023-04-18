@@ -31,13 +31,8 @@ end
 local function gesture_init()
     gesture = require "gesture"
     gesture.tap {}
-    gesture.pan {}
     gesture.pinch {}
     gesture.long_press {}
-    gesture.swipe {direction=1}
-    gesture.swipe {direction=2}
-    gesture.swipe {direction=4}
-    gesture.swipe {direction=8}
 end
 
 local function gesture_dispatch(name, ...)

@@ -25,6 +25,7 @@ system "init_system"
     .require_interface "ant.collision|icollider"
     .require_interface "ant.animation|ianimation"
     .method "init_world"
+    .method "data_changed"
 
 pipeline "init"
     .stage "init"

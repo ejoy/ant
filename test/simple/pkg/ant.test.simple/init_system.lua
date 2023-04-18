@@ -36,3 +36,24 @@ function m:init_world()
     irq.set_view_clear_color("main_queue", 0xff0000ff)
     ecs.create_instance "/res/scenes.prefab"
 end
+
+local EventGesture = world:sub { "gesture" }
+
+local function stringify(str, n, t)
+	for k, v in pairs(t) do
+		if type(v) == "table" then
+			str[#str+1] = string.rep('  ', n)..k..': '
+			stringify(str, n+1, v)
+		else
+			str[#str+1] = string.rep('  ', n)..k..': '..v
+		end
+	end
+end
+
+function m:data_changed()
+	for _, what, e in EventGesture:unpack() do
+		local str = {'',what}
+		stringify(str, 1, e)
+		print(table.concat(str, "\n"))
+	end
+end

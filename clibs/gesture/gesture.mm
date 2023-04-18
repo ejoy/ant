@@ -116,6 +116,13 @@ static void add_gesture(UIGestureRecognizer* gesture) {
     });
 }
 
+static void remove_gesture(UIGestureRecognizer* gesture) {
+    CFRunLoopPerformBlock([[NSRunLoop mainRunLoop] getCFRunLoop], kCFRunLoopCommonModes,
+    ^{
+        [global_window removeGestureRecognizer:gesture];
+    });
+}
+
 @interface LuaTapGesture : UITapGestureRecognizer {
     NSString* name;
 }
@@ -151,66 +158,94 @@ static void add_gesture(UIGestureRecognizer* gesture) {
 @implementation LuaPanGesture
 @end
 
+static void setState(lua_State* L, int idx, UIGestureRecognizer* gesture) {
+    push_value(L, gesture.state);
+    lua_setfield(L, idx, "state");
+}
+
+static void setLocationInView(lua_State* L, int idx, UIGestureRecognizer* gesture) {
+    CGPoint pt = [gesture locationInView:global_window];
+    pt.x *= global_window.contentScaleFactor;
+    pt.y *= global_window.contentScaleFactor;
+    lua_createtable(L, 0, 2);
+    lua_pushnumber(L, static_cast<lua_Number>(pt.x));
+    lua_setfield(L, -2, "x");
+    lua_pushnumber(L, static_cast<lua_Number>(pt.y));
+    lua_setfield(L, -2, "y");
+    lua_setfield(L, idx, "locationInView");
+}
+
+static void setLocationOfTouch(lua_State* L, int idx, UIGestureRecognizer* gesture) {
+    NSUInteger n = gesture.numberOfTouches;
+    lua_createtable(L, static_cast<int>(n), 0);
+    for (NSUInteger i = 0; i < n; ++i) {
+        CGPoint pt = [gesture locationOfTouch:i inView:global_window];
+        pt.x *= global_window.contentScaleFactor;
+        pt.y *= global_window.contentScaleFactor;
+        lua_createtable(L, 0, 2);
+        lua_pushnumber(L, static_cast<lua_Number>(pt.x));
+        lua_setfield(L, -2, "x");
+        lua_pushnumber(L, static_cast<lua_Number>(pt.y));
+        lua_setfield(L, -2, "y");
+        lua_seti(L, -2, static_cast<lua_Integer>(i + 1));
+    }
+    lua_setfield(L, idx, "locationOfTouch");
+}
+
 @interface LuaGestureHandler : NSObject {
     @public lua_State* L;
 }
 @end
 @implementation LuaGestureHandler
 -(void)handleTap:(LuaTapGesture *)gesture {
-    CGPoint pt = [gesture locationInView:global_window];
-    pt.x *= global_window.contentScaleFactor;
-    pt.y *= global_window.contentScaleFactor;
     lua_settop(L, 0);
     push_value(L, [gesture name]);
-    push_value(L, gesture.state);
-    push_value(L, pt.x);
-    push_value(L, pt.y);
+    lua_newtable(L);
+    setLocationInView(L, 2, gesture);
+    setLocationOfTouch(L, 2, gesture);
     void* data = seri_pack(L, 0, NULL);
     queue_push(data);
 }
 -(void)handleLongPress:(LuaLongPressGesture *)gesture {
-    CGPoint pt = [gesture locationInView:global_window];
-    pt.x *= global_window.contentScaleFactor;
-    pt.y *= global_window.contentScaleFactor;
     lua_settop(L, 0);
     push_value(L, [gesture name]);
-    push_value(L, gesture.state);
-    push_value(L, pt.x);
-    push_value(L, pt.y);
+    lua_newtable(L);
+    setState(L, 2, gesture);
+    setLocationInView(L, 2, gesture);
+    setLocationOfTouch(L, 2, gesture);
     void* data = seri_pack(L, 0, NULL);
     queue_push(data);
 }
 -(void)handlePinch:(LuaPinchGesture *)gesture {
     lua_settop(L, 0);
     push_value(L, [gesture name]);
-    push_value(L, gesture.state);
+    lua_newtable(L);
+    setState(L, 2, gesture);
     push_value(L, gesture.scale);
+    lua_setfield(L, 2, "scale");
     push_value(L, gesture.velocity);
+    lua_setfield(L, 2, "velocity");
     void* data = seri_pack(L, 0, NULL);
     queue_push(data);
 }
 -(void)handleSwipe:(LuaSwipeGesture *)gesture {
-    CGPoint pt = [gesture locationInView:global_window];
-    pt.x *= global_window.contentScaleFactor;
-    pt.y *= global_window.contentScaleFactor;
     lua_settop(L, 0);
     push_value(L, [gesture name]);
-    push_value(L, gesture.state);
-    push_value(L, pt.x);
-    push_value(L, pt.y);
+    lua_newtable(L);
+    setLocationInView(L, 2, gesture);
+    setLocationOfTouch(L, 2, gesture);
     push_value(L, gesture.direction);
+    lua_setfield(L, 2, "direction");
     void* data = seri_pack(L, 0, NULL);
     queue_push(data);
 }
 -(void)handlePan:(LuaPanGesture *)gesture {
-    CGPoint pt = [gesture locationInView:global_window];
-    pt.x *= global_window.contentScaleFactor;
-    pt.y *= global_window.contentScaleFactor;
     lua_settop(L, 0);
     push_value(L, [gesture name]);
-    push_value(L, gesture.state);
-    push_value(L, pt.x);
-    push_value(L, pt.y);
+    lua_newtable(L);
+    setState(L, 2, gesture);
+    setLocationInView(L, 2, gesture);
+    setLocationOfTouch(L, 2, gesture);
     void* data = seri_pack(L, 0, NULL);
     queue_push(data);
 }
@@ -231,7 +266,8 @@ static int ltap(lua_State* L) {
         gesture.numberOfTouchesRequired = v;
     });
     add_gesture(gesture);
-    return 0;
+    lua_pushlightuserdata(L, (__bridge_retained void*)gesture);
+    return 1;
 }
 
 static int llong_press(lua_State* L) {
@@ -255,7 +291,8 @@ static int llong_press(lua_State* L) {
         gesture.allowableMovement = v;
     });
     add_gesture(gesture);
-    return 0;
+    lua_pushlightuserdata(L, (__bridge_retained void*)gesture);
+    return 1;
 }
 
 static int lpinch(lua_State* L) {
@@ -267,7 +304,8 @@ static int lpinch(lua_State* L) {
     LuaPinchGesture* gesture = [[LuaPinchGesture alloc] initWithTarget:handler action:@selector(handlePinch:)];
     gesture.name = lua_getnsstring(L, 1, "name", @"pinch");
     add_gesture(gesture);
-    return 0;
+    lua_pushlightuserdata(L, (__bridge_retained void*)gesture);
+    return 1;
 }
 
 static int lswipe(lua_State* L) {
@@ -285,7 +323,8 @@ static int lswipe(lua_State* L) {
         gesture.direction = v;
     });
     add_gesture(gesture);
-    return 0;
+    lua_pushlightuserdata(L, (__bridge_retained void*)gesture);
+    return 1;
 }
 
 static int lpan(lua_State* L) {
@@ -303,7 +342,8 @@ static int lpan(lua_State* L) {
         gesture.minimumNumberOfTouches = v;
     });
     add_gesture(gesture);
-    return 0;
+    lua_pushlightuserdata(L, (__bridge_retained void*)gesture);
+    return 1;
 }
 
 static int levent(lua_State* L) {
@@ -312,6 +352,16 @@ static int levent(lua_State* L) {
         return 0;
     }
     return seri_unpackptr(L, data);
+}
+
+static int lremove(lua_State* L) {
+    if (!global_window) {
+        return luaL_error(L, "window not initialized.");
+    }
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    UIGestureRecognizer* gesture = (__bridge_transfer UIGestureRecognizer*)lua_touserdata(L, 1);
+    remove_gesture(gesture);
+    return 0;
 }
 
 extern "C"
@@ -324,6 +374,7 @@ int luaopen_gesture(lua_State* L) {
         { "swipe", lswipe },
         { "pan", lpan },
         { "event", levent },
+        { "remove", lremove },
         { NULL, NULL },
     };
     luaL_newlibtable(L, l);
