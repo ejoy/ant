@@ -340,7 +340,7 @@ function m.process_touch(state, touches)
 end
 
 local gesture = {}
-function gesture.tap(x, y)
+function gesture.tap(_, x, y)
     m.process_mouse(x, y, 1, MOUSE_MOVE)
     m.process_mouse(x, y, 1, MOUSE_DOWN)
     return m.process_mouse(x, y, 1, MOUSE_UP)
