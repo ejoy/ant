@@ -10,7 +10,9 @@ local cc_sys = ecs.system "default_camera_controller"
 
 local kb_mb             = world:sub {"keyboard"}
 local mouse_mb          = world:sub {"mouse"}
-local mouse_wheel_mb    = world:sub {"mouse_wheel"}
+local EventMouseWheel   = world:sub {"mouse_wheel"}
+local EventGesturePinch = world:sub {"gesture", "pinch"}
+
 local viewat_change_mb      = world:sub{"camera_controller", "viewat"}
 local move_speed_change_mb  = world:sub{"camera_controller", "move_speed"}
 local inc_move_speed_mb     = world:sub{"camera_controller", "inc_move_speed"}
@@ -96,6 +98,16 @@ local function camera_entity()
     return w:entity(mq.camera_ref, "scene:update")
 end
 
+local action = {}
+
+function action.scale(v)
+    local mq = w:first("main_queue camera_ref:in render_target:in")
+    local ce <close> = w:entity(mq.camera_ref, "scene:update")
+    calc_zoom_distance(v)
+    local cur_lookat = calc_cur_lookat()
+    iom.set_position(ce, math3d.add(last_ru, cur_lookat))
+end
+
 function cc_sys:camera_usage()
     if check_stop_camera() then
         return
@@ -119,13 +131,11 @@ function cc_sys:camera_usage()
 
     check_update_control()
 
-    for _, delta in mouse_wheel_mb:unpack() do
-        local mq = w:first("main_queue camera_ref:in render_target:in")
-        local ce<close> = w:entity(mq.camera_ref, "scene:update")
-        local d = delta > 0 and 5 or -5
-        calc_zoom_distance(d)
-        local cur_lookat = calc_cur_lookat()
-        iom.set_position(ce, math3d.add(last_ru, cur_lookat))
+    for _, delta in EventMouseWheel:unpack() do
+        action.scale(5 * delta)
+    end
+    for _, _, e in EventGesturePinch:unpack() do
+        action.scale(10 * e.velocity)
     end
 
     local rotatetype="rotate_point"
