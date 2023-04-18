@@ -60,6 +60,11 @@ void push_value<UIGestureRecognizerState>(lua_State* L, UIGestureRecognizerState
     }
 }
 
+template <>
+void push_value<UISwipeGestureRecognizerDirection>(lua_State* L, UISwipeGestureRecognizerDirection v) {
+    lua_pushinteger(L, v);
+}
+
 template <typename T>
     requires (std::is_floating_point_v<T>)
 void push_value(lua_State* L, T v) {
@@ -125,6 +130,27 @@ static void add_gesture(UIGestureRecognizer* gesture) {
 @implementation LuaLongPressGesture
 @end
 
+@interface LuaPinchGesture : UIPinchGestureRecognizer {
+    NSString* name;
+}
+@end
+@implementation LuaPinchGesture
+@end
+
+@interface LuaSwipeGesture : UISwipeGestureRecognizer {
+    NSString* name;
+}
+@end
+@implementation LuaSwipeGesture
+@end
+
+@interface LuaPanGesture : UIPanGestureRecognizer {
+    NSString* name;
+}
+@end
+@implementation LuaPanGesture
+@end
+
 @interface LuaGestureHandler : NSObject {
     @public lua_State* L;
 }
@@ -143,6 +169,40 @@ static void add_gesture(UIGestureRecognizer* gesture) {
     queue_push(data);
 }
 -(void)handleLongPress:(LuaLongPressGesture *)gesture {
+    CGPoint pt = [gesture locationInView:global_window];
+    pt.x *= global_window.contentScaleFactor;
+    pt.y *= global_window.contentScaleFactor;
+    lua_settop(L, 0);
+    push_value(L, [gesture name]);
+    push_value(L, gesture.state);
+    push_value(L, pt.x);
+    push_value(L, pt.y);
+    void* data = seri_pack(L, 0, NULL);
+    queue_push(data);
+}
+-(void)handlePinch:(LuaPinchGesture *)gesture {
+    lua_settop(L, 0);
+    push_value(L, [gesture name]);
+    push_value(L, gesture.state);
+    push_value(L, gesture.scale);
+    push_value(L, gesture.velocity);
+    void* data = seri_pack(L, 0, NULL);
+    queue_push(data);
+}
+-(void)handleSwipe:(LuaSwipeGesture *)gesture {
+    CGPoint pt = [gesture locationInView:global_window];
+    pt.x *= global_window.contentScaleFactor;
+    pt.y *= global_window.contentScaleFactor;
+    lua_settop(L, 0);
+    push_value(L, [gesture name]);
+    push_value(L, gesture.state);
+    push_value(L, pt.x);
+    push_value(L, pt.y);
+    push_value(L, gesture.direction);
+    void* data = seri_pack(L, 0, NULL);
+    queue_push(data);
+}
+-(void)handlePan:(LuaPanGesture *)gesture {
     CGPoint pt = [gesture locationInView:global_window];
     pt.x *= global_window.contentScaleFactor;
     pt.y *= global_window.contentScaleFactor;
@@ -198,6 +258,54 @@ static int llong_press(lua_State* L) {
     return 0;
 }
 
+static int lpinch(lua_State* L) {
+    if (!global_window) {
+        return luaL_error(L, "window not initialized.");
+    }
+    luaL_checktype(L, 1, LUA_TTABLE);
+    id handler = (__bridge id)lua_touserdata(L, lua_upvalueindex(1));
+    LuaPinchGesture* gesture = [[LuaPinchGesture alloc] initWithTarget:handler action:@selector(handlePinch:)];
+    gesture.name = lua_getnsstring(L, 1, "name", @"pinch");
+    add_gesture(gesture);
+    return 0;
+}
+
+static int lswipe(lua_State* L) {
+    if (!global_window) {
+        return luaL_error(L, "window not initialized.");
+    }
+    luaL_checktype(L, 1, LUA_TTABLE);
+    id handler = (__bridge id)lua_touserdata(L, lua_upvalueindex(1));
+    LuaSwipeGesture* gesture = [[LuaSwipeGesture alloc] initWithTarget:handler action:@selector(handleSwipe:)];
+    gesture.name = lua_getnsstring(L, 1, "name", @"swipe");
+    set_arg<NSUInteger>(L, "numberOfTouchesRequired", [&](auto v){
+        gesture.numberOfTouchesRequired = v;
+    });
+    set_arg<UISwipeGestureRecognizerDirection>(L, "direction", [&](auto v){
+        gesture.direction = v;
+    });
+    add_gesture(gesture);
+    return 0;
+}
+
+static int lpan(lua_State* L) {
+    if (!global_window) {
+        return luaL_error(L, "window not initialized.");
+    }
+    luaL_checktype(L, 1, LUA_TTABLE);
+    id handler = (__bridge id)lua_touserdata(L, lua_upvalueindex(1));
+    LuaPanGesture* gesture = [[LuaPanGesture alloc] initWithTarget:handler action:@selector(handlePan:)];
+    gesture.name = lua_getnsstring(L, 1, "name", @"pan");
+    set_arg<NSUInteger>(L, "maximumNumberOfTouches", [&](auto v){
+        gesture.maximumNumberOfTouches = v;
+    });
+    set_arg<NSUInteger>(L, "minimumNumberOfTouches", [&](auto v){
+        gesture.minimumNumberOfTouches = v;
+    });
+    add_gesture(gesture);
+    return 0;
+}
+
 static int levent(lua_State* L) {
     void* data = queue_pop();
     if (!data) {
@@ -212,6 +320,9 @@ int luaopen_gesture(lua_State* L) {
     luaL_Reg l[] = {
         { "tap", ltap },
         { "long_press", llong_press },
+        { "pinch", lpinch },
+        { "swipe", lswipe },
+        { "pan", lpan },
         { "event", levent },
         { NULL, NULL },
     };
