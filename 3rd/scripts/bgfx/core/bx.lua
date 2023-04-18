@@ -14,7 +14,15 @@ lm:source_set "bx" {
         "!src/amalgamated.cpp",
     },
     gcc = {
-        flags = "-Wno-maybe-uninitialized"
+        flags = {
+            "-ffast-math",
+            "-Wno-maybe-uninitialized",
+        }
+    },
+    clang = {
+        flags = {
+            "-ffast-math",
+        }
     },
     linux = {
         ldflags = "-pthread",
