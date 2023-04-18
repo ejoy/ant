@@ -135,7 +135,7 @@ function cc_sys:camera_usage()
         action.scale(5 * delta)
     end
     for _, _, e in EventGesturePinch:unpack() do
-        action.scale(10 * e.velocity)
+        action.scale(5 * e.velocity)
     end
 
     local rotatetype="rotate_point"
