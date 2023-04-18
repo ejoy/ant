@@ -236,6 +236,7 @@ return function (output, glbdata, exports, tolocalpath)
             fs.remove(outtexfile)   --remove temporary file
 
             utility.rename(output / "images" / "_tmp", outtexfile)
+            saved_files[outtexfile:string()] = true
         end
 
         --we need output texture path which is relate to *.material file, so we need ..
