@@ -136,6 +136,8 @@ return function (output, glbdata, exports, tolocalpath)
     local glbscene, glbbin = glbdata.info, glbdata.bin
     local materials = glbscene.materials
 
+    local saved_files = {}
+
     if not materials then
         return
     end
@@ -160,7 +162,8 @@ return function (output, glbdata, exports, tolocalpath)
             name = name .. ext
         end
 
-        if not fs.exists(output / "images" / name) then
+        local outfile = output / "images" / name
+        if not saved_files[outfile:string()] then
             local bv = bufferviews[img.bufferView+1]
             local buf = buffers[bv.buffer+1]
             local begidx = (bv.byteOffset or 0)+1
@@ -168,6 +171,8 @@ return function (output, glbdata, exports, tolocalpath)
             assert((endidx - 1) <= buf.byteLength)
             local c = glbbin:sub(begidx, endidx)
             utility.save_file("./images/"..name, c)
+
+            saved_files[outfile:string()] = true
         end
         return name
     end
@@ -218,18 +223,23 @@ return function (output, glbdata, exports, tolocalpath)
         local need_compress<const> = true
         add_texture_format(texture_desc, need_compress)
         local imgname_noext = fs.path(imgname):stem():string()
-        local texfilename = "./images/" .. imgname_noext .. ".texture"
-        if fs.exists(fs.path(output / texfilename)) then
-            return serialize.path("./../images/" .. imgname_noext .. ".texture")
-        end
-        utility.save_txt_file(texfilename, texture_desc)
-        compile.do_compile(output / texfilename, output / "images" / "_tmp", {})
-        fs.remove(output / "images" / imgname)
-        fs.remove(output / texfilename)
-        fs.remove_all(output / texfilename)
+        local texname = imgname_noext .. ".texture"
+        local texfilename = "./images/" .. texname
+        local outtexfile = output / texfilename
+        if not saved_files[outtexfile:string()] then
+            fs.remove_all(outtexfile)   --remove the old files
 
-        utility.rename(output / "images" / "_tmp", output / texfilename)
-        return serialize.path("./../images/" .. imgname_noext .. ".texture")
+            utility.save_txt_file(texfilename, texture_desc)
+            compile.do_compile(outtexfile, output / "images" / "_tmp", {})
+            fs.remove(output / "images" / imgname)  -- already compiled in main.bin file, no need to keep it
+
+            fs.remove(outtexfile)   --remove temporary file
+
+            utility.rename(output / "images" / "_tmp", outtexfile)
+        end
+
+        --we need output texture path which is relate to *.material file, so we need ..
+        return serialize.path("./../images/" .. texname)
     end
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
