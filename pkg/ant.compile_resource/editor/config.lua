@@ -2,6 +2,7 @@ local lfs = require "filesystem.local"
 local sha1 = require "editor.hash".sha1
 local serialize = import_package "ant.serialize"
 local vfs = require "vfs"
+local shader = require "editor.material.shader"
 
 local function writefile(filename, data)
     local f = assert(lfs.open(filename, "wb"))
@@ -33,6 +34,10 @@ local function parse(arguments)
     return setting
 end
 
+local function init()
+    shader.init()
+end
+
 local function set(ext, arguments)
     local cfg = config[ext]
     if not cfg then
@@ -51,6 +56,7 @@ local function get(ext)
 end
 
 return {
+    init = init,
     set = set,
     get = get,
 }

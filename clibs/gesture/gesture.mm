@@ -25,12 +25,45 @@ static void* queue_pop() {
     return data;
 }
 
-static NSString* lua_nsstring(lua_State* L, int idx) {
-    return [NSString stringWithUTF8String:lua_tostring(L, idx)];
+template <typename T>
+void push_value(lua_State* L, T v);
+
+template <>
+void push_value<NSString*>(lua_State* L, NSString* v) {
+    lua_pushstring(L, [v UTF8String]);
 }
 
-static void lua_pushnsstring(lua_State* L, NSString* str) {
-    lua_pushstring(L, [str UTF8String]);
+template <>
+void push_value<UIGestureRecognizerState>(lua_State* L, UIGestureRecognizerState v) {
+    switch (v) {
+    case UIGestureRecognizerStatePossible:
+        lua_pushstring(L, "possible");
+        break;
+    case UIGestureRecognizerStateBegan:
+        lua_pushstring(L, "began");
+        break;
+    case UIGestureRecognizerStateChanged:
+        lua_pushstring(L, "changed");
+        break;
+    case UIGestureRecognizerStateEnded:
+        lua_pushstring(L, "ended");
+        break;
+    case UIGestureRecognizerStateCancelled:
+        lua_pushstring(L, "cancelled");
+        break;
+    case UIGestureRecognizerStateFailed:
+        lua_pushstring(L, "failed");
+        break;
+    default:
+        lua_pushstring(L, "unknown");
+        break;
+    }
+}
+
+template <typename T>
+    requires (std::is_floating_point_v<T>)
+void push_value(lua_State* L, T v) {
+    lua_pushnumber(L, static_cast<lua_Number>(v));
 }
 
 static NSString* lua_getnsstring(lua_State* L, int idx, const char* field, NSString* def) {
@@ -38,23 +71,44 @@ static NSString* lua_getnsstring(lua_State* L, int idx, const char* field, NSStr
         lua_pop(L, 1);
         return def;
     }
-    NSString* r = lua_nsstring(L, -1);
+    NSString* r = [NSString stringWithUTF8String:lua_tostring(L, -1)];
     lua_pop(L, 1);
     return r;
 }
 
-static lua_Integer lua_getinteger(lua_State* L, int idx, const char* field, lua_Integer def) {
-    if (LUA_TNUMBER != lua_getfield(L, idx, field)) {
+template <typename T>
+    requires (std::is_integral_v<T>)
+void set_arg(lua_State* L, const char* field, std::function<void(T)> func) {
+    if (LUA_TNUMBER != lua_getfield(L, 1, field)) {
         lua_pop(L, 1);
-        return def;
+        return;
     }
     if (!lua_isinteger(L, -1)) {
         lua_pop(L, 1);
-        return def;
+        return;
     }
     lua_Integer r = lua_tointeger(L, -1);
     lua_pop(L, 1);
-    return r;
+    func(static_cast<T>(r));
+}
+
+template <typename T>
+    requires (std::is_floating_point_v<T>)
+void set_arg(lua_State* L, const char* field, std::function<void(T)> func) {
+    if (LUA_TNUMBER != lua_getfield(L, 1, field)) {
+        lua_pop(L, 1);
+        return;
+    }
+    lua_Number r = lua_tonumber(L, -1);
+    lua_pop(L, 1);
+    func(static_cast<T>(r));
+}
+
+static void add_gesture(UIGestureRecognizer* gesture) {
+    CFRunLoopPerformBlock([[NSRunLoop mainRunLoop] getCFRunLoop], kCFRunLoopCommonModes,
+    ^{
+        [global_window addGestureRecognizer:gesture];
+    });
 }
 
 @interface LuaTapGesture : UITapGestureRecognizer {
@@ -64,30 +118,43 @@ static lua_Integer lua_getinteger(lua_State* L, int idx, const char* field, lua_
 @implementation LuaTapGesture
 @end
 
+@interface LuaLongPressGesture : UILongPressGestureRecognizer {
+    NSString* name;
+}
+@end
+@implementation LuaLongPressGesture
+@end
+
 @interface LuaGestureHandler : NSObject {
     @public lua_State* L;
 }
 @end
 @implementation LuaGestureHandler
 -(void)handleTap:(LuaTapGesture *)gesture {
-    lua_settop(L, 0);
-    lua_pushnsstring(L, [gesture name]);
     CGPoint pt = [gesture locationInView:global_window];
     pt.x *= global_window.contentScaleFactor;
     pt.y *= global_window.contentScaleFactor;
-    lua_pushnumber(L, pt.x);
-    lua_pushnumber(L, pt.y);
+    lua_settop(L, 0);
+    push_value(L, [gesture name]);
+    push_value(L, gesture.state);
+    push_value(L, pt.x);
+    push_value(L, pt.y);
+    void* data = seri_pack(L, 0, NULL);
+    queue_push(data);
+}
+-(void)handleLongPress:(LuaLongPressGesture *)gesture {
+    CGPoint pt = [gesture locationInView:global_window];
+    pt.x *= global_window.contentScaleFactor;
+    pt.y *= global_window.contentScaleFactor;
+    lua_settop(L, 0);
+    push_value(L, [gesture name]);
+    push_value(L, gesture.state);
+    push_value(L, pt.x);
+    push_value(L, pt.y);
     void* data = seri_pack(L, 0, NULL);
     queue_push(data);
 }
 @end
-
-static void add_gesture(UIGestureRecognizer* gesture) {
-    CFRunLoopPerformBlock([[NSRunLoop mainRunLoop] getCFRunLoop], kCFRunLoopCommonModes,
-    ^{
-        [global_window addGestureRecognizer:gesture];
-    });
-}
 
 static int ltap(lua_State* L) {
     if (!global_window) {
@@ -97,8 +164,36 @@ static int ltap(lua_State* L) {
     id handler = (__bridge id)lua_touserdata(L, lua_upvalueindex(1));
     LuaTapGesture* gesture = [[LuaTapGesture alloc] initWithTarget:handler action:@selector(handleTap:)];
     gesture.name = lua_getnsstring(L, 1, "name", @"tap");
-    gesture.numberOfTapsRequired = lua_getinteger(L, 1, "tap", 1);
-    gesture.numberOfTouchesRequired = lua_getinteger(L, 1, "touch", 1);
+    set_arg<NSUInteger>(L, "numberOfTapsRequired", [&](auto v){
+        gesture.numberOfTapsRequired = v;
+    });
+    set_arg<NSUInteger>(L, "numberOfTouchesRequired", [&](auto v){
+        gesture.numberOfTouchesRequired = v;
+    });
+    add_gesture(gesture);
+    return 0;
+}
+
+static int llong_press(lua_State* L) {
+    if (!global_window) {
+        return luaL_error(L, "window not initialized.");
+    }
+    luaL_checktype(L, 1, LUA_TTABLE);
+    id handler = (__bridge id)lua_touserdata(L, lua_upvalueindex(1));
+    LuaLongPressGesture* gesture = [[LuaLongPressGesture alloc] initWithTarget:handler action:@selector(handleLongPress:)];
+    gesture.name = lua_getnsstring(L, 1, "name", @"long_press");
+    set_arg<NSUInteger>(L, "numberOfTapsRequired", [&](auto v){
+        gesture.numberOfTapsRequired = v;
+    });
+    set_arg<NSUInteger>(L, "numberOfTouchesRequired", [&](auto v){
+        gesture.numberOfTouchesRequired = v;
+    });
+    set_arg<NSTimeInterval>(L, "minimumPressDuration", [&](auto v){
+        gesture.minimumPressDuration = v;
+    });
+    set_arg<CGFloat>(L, "allowableMovement", [&](auto v){
+        gesture.allowableMovement = v;
+    });
     add_gesture(gesture);
     return 0;
 }
@@ -116,6 +211,7 @@ int luaopen_gesture(lua_State* L) {
     luaL_checkversion(L);
     luaL_Reg l[] = {
         { "tap", ltap },
+        { "long_press", llong_press },
         { "event", levent },
         { NULL, NULL },
     };

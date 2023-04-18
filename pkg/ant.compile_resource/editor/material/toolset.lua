@@ -106,7 +106,7 @@ function toolset.compile(config)
         commands[#commands+1] = "--varyingdef"
         commands[#commands+1] = tostring(config.varying_path)
     end
-	return shader(commands, config.input, config.output)
+	return shader.run(commands, config.input, config.output)
 end
 
 return toolset

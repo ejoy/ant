@@ -13,6 +13,7 @@ local vfs       = require "vfs"
 local compile
 local compile_file
 local do_compile
+local init_setting
 local set_setting
 
 if __ANT_RUNTIME__ then
@@ -33,13 +34,17 @@ if __ANT_RUNTIME__ then
         pathstring = normalize(pathstring)
         return lfs.path(vfs.realpath(pathstring))
     end
+    init_setting = function ()
+    end
     set_setting = vfs.resource_setting
 else
     local editor = require "editor.compile"
+    local config   = require "editor.config"
     compile = editor.compile
     compile_file = editor.compile_file
     do_compile = editor.do_compile
-    set_setting = editor.set_setting
+    init_setting = config.init
+    set_setting = config.set
 end
 
 local function read_file(filename)
@@ -96,6 +101,7 @@ local function init()
     local caps = bgfx.get_caps()
     local renderer = caps.rendererType:lower()
     local texture = assert(texture_extensions[renderer])
+    init_setting()
     set_setting("model", stringify {})
     set_setting("glb", stringify {})
     set_setting("material", stringify {
@@ -114,6 +120,7 @@ return {
     compile      = compile,
     do_compile   = do_compile,
     compile_file = compile_file,
+    init_setting  = init_setting,
     set_setting  = set_setting,
     sampler      = require "editor.texture.sampler",
 }

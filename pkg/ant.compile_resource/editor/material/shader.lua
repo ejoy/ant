@@ -5,8 +5,11 @@ local lfs        = require "filesystem.local"
 local vfs        = require "vfs"
 local depends    = require "editor.depends"
 
---TODO init
-local ROOT       = lfs.path(vfs.repopath()) / ".build" / "shader"
+local ROOT
+
+local function init()
+    ROOT = lfs.path(vfs.repopath()) / ".build" / "shader"
+end
 
 local function cmdtostr(commands)
     return table.concat(commands, " ")
@@ -76,4 +79,7 @@ local function run(commands, input, output)
     return true, deps
 end
 
-return run
+return {
+    init = init,
+    run = run,
+}

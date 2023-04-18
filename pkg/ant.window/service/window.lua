@@ -33,6 +33,9 @@ local function gesture_init()
     gesture.tap {
         name = "tap"
     }
+    gesture.long_press {
+        name = "long_press"
+    }
 end
 
 local function gesture_dispatch(name, ...)
