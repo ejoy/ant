@@ -158,7 +158,7 @@ lframe_new(lua_State *L) {
 	size_t sz = 0;
 	const char* filter = luaL_checklstring(L, 2, &sz);
 	check_result(L, 3);
-	frame_get(L, 3, range, filter, sz / sizeof(uint16_t));
+	frame_get(L, 3, range, (uint16_t*)filter, sz / sizeof(uint16_t));
 	return 1;
 }
 
@@ -170,7 +170,7 @@ lframe_old(lua_State *L) {
 	size_t sz = 0;
 	const char* filter = luaL_checklstring(L, 2, &sz);
 	check_result(L, 3);
-	frame_get(L, 3, -range, filter, sz / sizeof(uint16_t));
+	frame_get(L, 3, -range, (uint16_t*)filter, sz / sizeof(uint16_t));
 	return 1;
 }
 

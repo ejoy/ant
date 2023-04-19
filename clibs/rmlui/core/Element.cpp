@@ -26,15 +26,6 @@
 
 namespace Rml {
 
-static const Property* PropertyVectorGet(const PropertyVector& vec, PropertyId id) {
-	for (auto const& v : vec) {
-		if (v.id == id) {
-			return &v.value;
-		}
-	}
-	return nullptr;
-}
-
 static PropertyFloat ComputeOrigin(const std::optional<Property>& p) {
 	if (p->Has<PropertyKeyword>()) {
 		switch (p->Get<PropertyKeyword>()) {

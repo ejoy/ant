@@ -43,7 +43,7 @@ struct lua_State;
 
 struct RmlContext {
     struct font_manager*  font_mgr;
-    shader                shader;
+    struct shader         shader;
     texture_desc          font_tex;
     uint16_t              viewid;
     bgfx_vertex_layout_t* layout;

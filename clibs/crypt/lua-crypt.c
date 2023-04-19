@@ -1,21 +1,20 @@
 #define LUA_LIB
 
-#include <lua.h>
-#include <lauxlib.h>
 #ifndef _MSC_VER
+#include <sys/types.h>
 #include <unistd.h>
 #else
 #include <process.h>
+typedef size_t pid_t;
+#define getpid _getpid
 #endif //_MSC_VER
+
+#include <lua.h>
+#include <lauxlib.h>
 #include <time.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
-
-#if _MSC_VER > 0
-typedef size_t pid_t;
-#define getpid _getpid
-#endif //_MSC_VER
 
 #ifdef _WIN32
 
