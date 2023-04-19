@@ -364,6 +364,15 @@ static int lremove(lua_State* L) {
     return 0;
 }
 
+static int lrequireToFail(lua_State* L) {
+    luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+    luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
+    UIGestureRecognizer* a = (__bridge UIGestureRecognizer*)lua_touserdata(L, 1);
+    UIGestureRecognizer* b = (__bridge UIGestureRecognizer*)lua_touserdata(L, 2);
+    [a requireGestureRecognizerToFail:b];
+    return 0;
+}
+
 extern "C"
 int luaopen_gesture(lua_State* L) {
     luaL_checkversion(L);
@@ -375,6 +384,7 @@ int luaopen_gesture(lua_State* L) {
         { "pan", lpan },
         { "event", levent },
         { "remove", lremove },
+        { "requireToFail", lrequireToFail },
         { NULL, NULL },
     };
     luaL_newlibtable(L, l);
