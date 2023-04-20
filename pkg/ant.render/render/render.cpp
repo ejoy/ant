@@ -26,8 +26,17 @@ struct transform {
 	uint32_t stride;
 };
 
-constexpr size_t MAX_MATERIAL_TYPE_COUNT = (offsetof(ecs::render_object, mat_lightmap) - offsetof(ecs::render_object, mat_def))/sizeof(intptr_t)+1;
+/* enum queue_type{
+	qt_mat_def = 0,
 
+	xxx
+
+	qt_count,
+};
+
+
+static_assert(MAX_MATERIAL_TYPE_COUNT == queue_type::qt_count); */
+constexpr size_t MAX_MATERIAL_TYPE_COUNT = (offsetof(ecs::render_object, mat_lightmap) - offsetof(ecs::render_object, mat_def))/sizeof(intptr_t)+1;
 using obj_transforms = std::unordered_map<const ecs::render_object*, transform>;
 static inline transform
 update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transforms &trans){
@@ -62,13 +71,24 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid){
 	if (ibtype != INVALID_BUFFER_TYPE && ro->ib_num == 0)
 		return false;
 
-	const uint16_t vbtype = BUFFER_TYPE(ro->vb_handle);
+	const uint16_t vb_type = BUFFER_TYPE(ro->vb_handle);
 	
-	switch (vbtype){
+	switch (vb_type){
 		case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 0, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
 		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:	//walk through
 		case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: w->bgfx->encoder_set_dynamic_vertex_buffer(w->holder->encoder, 0, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->vb_handle}, ro->vb_start, ro->vb_num); break;
 		default: assert(false && "Invalid vertex buffer type");
+	}
+
+	if(ro->vb2_handle != INVALID_NUM_TYPE){
+		const uint16_t vb2_type = BUFFER_TYPE(ro->vb2_handle);
+		
+		switch (vb2_type){
+			case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 1, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb2_handle}, ro->vb2_start, ro->vb2_num); break;
+			case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:	//walk through
+			case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER: w->bgfx->encoder_set_dynamic_vertex_buffer(w->holder->encoder, 1, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->vb2_handle}, ro->vb2_start, ro->vb2_num); break;
+			default: assert(false && "Invalid vertex buffer type");
+		}
 	}
 
 	if (ro->ib_num > 0){

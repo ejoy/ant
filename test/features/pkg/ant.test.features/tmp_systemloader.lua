@@ -168,7 +168,7 @@ local function gridmask_test()
             },
         }
 
-    ecs.create_entity{
+--[[     ecs.create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -187,7 +187,7 @@ local function gridmask_test()
             end,
             name = "gridmask_test",
         }
-    }
+    } ]]
 end
 
 local after_init_mb = world:sub{"after_init"}
@@ -195,7 +195,7 @@ function init_loader_sys:init()
     -- width height unit offset freq depth, section_size
     --ism.create_sm_entity(256, 256, 0)
     --point_light_test()
-    ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5, nil, "/pkg/ant.test.features/assets/polyline_mask.material", "background")
+    --ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5, nil, "/pkg/ant.test.features/assets/polyline_mask.material", "background")
 
 --[[     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab"
     p.on_ready = function (e)
@@ -205,7 +205,7 @@ function init_loader_sys:init()
 
     world:create_object(p) ]]
 
-    gridmask_test()
+    --gridmask_test()
     -- print(eid1, eid2, eid3)
 
     -- local pp = ecs.create_instance "/pkg/ant.resources.binary/meshes/up_box.glb|mesh.prefab"
@@ -234,21 +234,21 @@ function init_loader_sys:init()
         "/pkg/ant.test.features/assets/quad.material", 10, 1.0) ]]
 
     --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
-       create_instance("/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab",
+--[[        create_instance("/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab",
     function(e)
         local ee<close> = w:entity(e.tag['*'][1], "scene:in name:in")
         ee.name = "miner_test"
         iom.set_scale(ee, 0.5)
         iom.set_position(ee,math3d.vector(90, 0, 30))
-    end)    
+    end)   ]]  
 
-    create_instance("/pkg/ant.test.features/assets/glb/assembling-1.glb|mesh.prefab",
+--[[     create_instance("/pkg/ant.test.features/assets/glb/assembling-1.glb|mesh.prefab",
     function(e)
         local ee<close> = w:entity(e.tag['*'][1], "scene:in name:in")
         ee.name = "miner_test"
         iom.set_scale(ee, 0.5)
         iom.set_position(ee,math3d.vector(200, 0, 60))
-    end)   
+    end)    ]]
 
 --[[     create_instance("/pkg/ant.test.features/assets/glb/assembling-1.glb|mesh.prefab",
     function(e)
@@ -364,12 +364,12 @@ function init_loader_sys:init()
         },
     } ]]
     
-    ecs.create_instance"/pkg/ant.test.features/assets/entities/skybox_test.prefab"
+    --ecs.create_instance"/pkg/ant.test.features/assets/entities/skybox_test.prefab"
     local p = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
     p.on_ready = function (e)
         local pid = e.tag["*"][1]
 
-        ecs.create_entity{
+--[[         ecs.create_entity{
             policy = {
                 "ant.render|simplerender",
                 "ant.general|name",
@@ -386,18 +386,18 @@ function init_loader_sys:init()
                     imaterial.set_property(ee, "u_color", math3d.vector(1.0, 0.0, 0.0, 1.0))
                 end
             }
-        }
+        } ]]
 
         local le<close> = w:entity(pid)
         iom.set_direction(le, math3d.vector(0.2664446532726288, -0.25660401582717896, 0.14578714966773987, 0.9175552725791931))
     end
     world:create_object(p)
---[[     local q = ecs.create_instance"/pkg/ant.test.features/assets/glb/mountain1.glb|mesh.prefab"
+     local q = ecs.create_instance"/pkg/ant.test.features/assets/glb/mountain1.glb|mesh.prefab"
     q.on_ready = function (e)
         local ee<close> = w:entity(e.tag['*'][1])
         iom.set_scale(ee, 1)
     end 
-    world:create_object(q)  ]]
+    world:create_object(q)  
 
 --[[     ecs.create_entity {
         policy = {
@@ -432,7 +432,7 @@ function init_loader_sys:init()
 
 
     local off = 0.1
-	ientity.create_screen_axis_entity("global_axes", {type = "percent", screen_pos = {off, 1-off}}, {s=0.1})
+	--ientity.create_screen_axis_entity("global_axes", {type = "percent", screen_pos = {off, 1-off}}, {s=0.1})
     --ecs.create_instance "/pkg/ant.test.features/assets/glb/logistics_center.glb|mesh.prefab"
 
 --[[      local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
@@ -541,7 +541,7 @@ function init_loader_sys:init()
     end
     world:create_object(ep) ]]
 
-    printer_eid = ecs.create_entity {
+--[[     printer_eid = ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -552,7 +552,7 @@ function init_loader_sys:init()
             scene  = {s = 0.1, t = {5, 0, 5}},
             material    = "/pkg/mod.printer/assets/printer.material",
             visible_state = "main_view",
-            mesh        = "/pkg/ant.test.features/assets/glb/road_X.glb|meshes/立方体.001_P1.meshbin",
+            mesh        = "/pkg/ant.test.features/assets/glb/road_X.glb|meshes/LOD3spShape_P1.meshbin",
             render_layer= "postprocess_obj",
             -- add printer tag
             -- previous still be zero
@@ -561,15 +561,14 @@ function init_loader_sys:init()
                 percent  = printer_percent
             }
         },
-    }
-
+    } ]]
 end
 
 local function render_layer_test()
     irl.add_layers(irl.layeridx "opacity", "after_opacity", "after_opacity2")
     local m = imesh.init_mesh(ientity.plane_mesh())
 
-    ecs.create_entity {
+--[[     ecs.create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -602,13 +601,13 @@ local function render_layer_test()
             end,
             name = "test",
         }
-    }
+    } ]]
 end
 
 local sampler_eid
 
 local function drawindirect_test()
-        ecs.create_entity {
+--[[         ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -627,7 +626,7 @@ local function drawindirect_test()
                 interval = {0.5, 0.5, 0.5}
             }
         },
-    } 
+    }  ]]
    
 --[[      ecs.create_entity {
         policy = {
@@ -923,7 +922,7 @@ function init_loader_sys:init_world()
     create_mark()
     create_zone()
     -- stonemountain ratio(0~1) width height offset unit
-    --istonemountain.create_sm_entity(0.8, 256, 256, 128)
+    --istonemountain.create_sm_entity(0.1, 256, 256, 128)
     -- input: x and z coordinates
     -- output: whether current grid is stonemountain? true = yes nil = false
     iterrain.is_stone_mountain(46, 0)
@@ -947,12 +946,13 @@ function init_loader_sys:init_world()
     motion_sampler_test()
     drawindirect_test()
 
-    local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/outline.prefab"
+--[[     local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/outline.prefab"
     p.on_ready = function (e)
         local ee<close> = w:entity(e.tag['*'][1], "scene:in")
-        iom.set_scale(ee, 0.3)
+        iom.set_scale(ee, 1)
+        iom.set_position(ee, math3d.vector(0, 3, 0))
     end
-    world:create_object(p)
+    world:create_object(p) ]]
 end
 
 local kb_mb = world:sub{"keyboard"}

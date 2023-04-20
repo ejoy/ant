@@ -1,5 +1,5 @@
 #include "common/inputs.sh"
-$input a_position a_normal INPUT_INDICES INPUT_WEIGHT INPUT_INSTANCE
+$input a_position INPUT_INDICES INPUT_WEIGHT INPUT_INSTANCE
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"

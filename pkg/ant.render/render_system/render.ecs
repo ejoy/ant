@@ -42,6 +42,10 @@ component "render_object"
     .field "vb_num:dword"
     .field "vb_handle:dword"
 
+    .field "vb2_start:dword"
+    .field "vb2_num:dword"
+    .field "vb2_handle:dword"
+
     .field "ib_start:dword"
     .field "ib_num:dword"
     .field "ib_handle:dword"
