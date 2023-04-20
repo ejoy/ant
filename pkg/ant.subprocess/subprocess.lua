@@ -87,6 +87,54 @@ function util.spawn_process(commands, notwait)
 	return true, table.concat(msg, "\n")
 end
 
+function util.spawn(command)
+    command.stdout     = true
+    command.stderr     = "stdout"
+    command.hideWindow = true
+    local prog, err = subprocess.spawn(command)
+    if not prog then
+        return nil, err
+    end
+    local msg = prog.stdout:read "a"
+    local errcode = prog:wait()
+    return errcode, msg
+end
+
+function util.mutil_spawn(commands)
+    local retval = {}
+    local index = {}
+    local progs = {}
+    for i, command in ipairs(commands) do
+        command.stdout     = true
+        command.stderr     = "stdout"
+        command.hideWindow = true
+        local prog, err = subprocess.spawn(command)
+        if not prog then
+            retval[i] = {nil, err}
+        else
+            progs[#progs+1] = prog
+            index[prog] = i
+        end
+    end
+    while #progs > 0 do
+        local ok = subprocess.select(progs)
+        assert(ok)
+        local i  = 1
+        while i <= #progs do
+            local prog = progs[i]
+            if prog:is_running() then
+                i = i + 1
+            else
+                local msg = prog.stdout:read "a"
+                local errcode = prog:wait()
+                local idx = index[prog]
+                retval[idx] = {errcode, msg}
+                table.remove(progs, i)
+            end
+        end
+    end
+    return retval
+end
 
 local function find_bindir()
     local antdir = os.getenv "antdir"

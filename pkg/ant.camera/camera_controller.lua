@@ -12,6 +12,7 @@ local kb_mb             = world:sub {"keyboard"}
 local mouse_mb          = world:sub {"mouse"}
 local EventMouseWheel   = world:sub {"mouse_wheel"}
 local EventGesturePinch = world:sub {"gesture", "pinch"}
+local EventGesturePan   = world:sub {"gesture", "pan"}
 
 local viewat_change_mb      = world:sub{"camera_controller", "viewat"}
 local move_speed_change_mb  = world:sub{"camera_controller", "move_speed"}
@@ -68,8 +69,8 @@ local function check_update_control()
 end
 
 local function dxdy(x, y, rect)
-    local dx = (x - mouse_lastx) / rect.w
-    local dy = (y - mouse_lasty) / rect.h
+    local dx = x / rect.w
+    local dy = y / rect.h
     local speed = calc_dxdy_speed()
     return dx*speed, dy*speed
 end
@@ -108,6 +109,29 @@ function action.scale(v)
     iom.set_position(ce, math3d.add(last_ru, cur_lookat))
 end
 
+local pan_x, pan_y
+function action.pan_reset(x, y)
+    pan_x, pan_y = x, y
+end
+
+function action.pan(x, y)
+    local dx, dy = x - pan_x, y - pan_y
+    if dx == 0.0 and dy == 0.0 then
+        return
+    end
+    pan_x, pan_y = x, y
+    local mq = w:first("main_queue camera_ref:in render_target:in")
+    local ce <close> = w:entity(mq.camera_ref, "scene:update")
+    dx, dy = dxdy(dx, dy, mq.render_target.view_rect)
+    local right = math3d.transform(ce.scene.r, mc.XAXIS, 0)
+    right = math3d.normalize(right)
+    local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
+    up = math3d.normalize(up)
+    last_ru.v = math3d.add(last_ru, math3d.mul(right, -dx*math.max(1.0,distance)), math3d.mul(up, dy*0.5*math.max(1.0, distance)))
+    local cur_lookat = calc_cur_lookat()
+    iom.set_position(ce, math3d.add(cur_lookat, last_ru))
+end
+
 function cc_sys:camera_usage()
     if check_stop_camera() then
         return
@@ -136,6 +160,13 @@ function cc_sys:camera_usage()
     end
     for _, _, e in EventGesturePinch:unpack() do
         action.scale(5 * e.velocity)
+    end
+    for _, _, e in EventGesturePan:unpack() do
+        if e.state == "began" then
+            action.pan_reset(0,0)
+        end
+        local x, y = e.translationInView.x, e.translationInView.y
+        action.pan(x, y)
     end
 
     local rotatetype="rotate_point"
@@ -191,7 +222,6 @@ function cc_sys:camera_usage()
         end
     end
 
-
     if move_x then
         local mq = w:first("main_queue camera_ref:in render_target:in")
         local ce<close> = w:entity(mq.camera_ref, "scene:update")
@@ -225,7 +255,7 @@ function cc_sys:camera_usage()
     if motiontype and newx and newy then
         local mq = w:first("main_queue camera_ref:in render_target:in")
         local ce<close> = w:entity(mq.camera_ref, "scene:update")
-        local dx, dy = dxdy(newx, newy, mq.render_target.view_rect)
+        local dx, dy = dxdy(newx-mouse_lastx, newy-mouse_lasty, mq.render_target.view_rect)
         if dx ~= 0.0 or dy ~= 0.0 then
             if motiontype == "rotate_point" then
                 mouse_lastx, mouse_lasty = newx, newy
@@ -238,13 +268,8 @@ function cc_sys:camera_usage()
                 mouse_lastx, mouse_lasty = newx, newy
                 iom.rotate_forward_vector(ce, dy, dx)
             elseif motiontype == "move_pan" then
-                local right = math3d.transform(ce.scene.r, mc.XAXIS, 0)
-                right = math3d.normalize(right)
-                local up = math3d.transform(ce.scene.r, mc.YAXIS, 0)
-                up = math3d.normalize(up)
-                last_ru.v = math3d.add(last_ru, math3d.mul(right, -dx*math.max(1.0,distance)), math3d.mul(up, dy*0.5*math.max(1.0, distance)))
-                local cur_lookat = calc_cur_lookat()
-                iom.set_position(ce, math3d.add(cur_lookat, last_ru))
+                action.pan_reset(mouse_lastx, mouse_lasty)
+                action.pan(newx, newy)
                 mouse_lastx, mouse_lasty = newx, newy
             end
         end
