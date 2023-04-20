@@ -266,8 +266,11 @@ local function check_create_skin_material(materialfile)
 end
 
 local function has_color_attrib(declname)
+--[[     local has_color1 = declname[1]:match "c%d%w%w%w%w" ~= nil
+    local has_color2 = declname[2] and declname[2]:match "c%d%w%w%w%w" ~= nil
+    return has_color1 or has_color2  ]]
     return declname:match "c%d%w%w%w%w" ~= nil
-end
+    end
 
 local function create_mesh_node_entity(output, gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]

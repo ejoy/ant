@@ -38,7 +38,7 @@ function render_sys:component_init()
 end
 
 local function update_ro(ro, m)
-	ro.vb_start = m.vb.start
+--[[ 	ro.vb_start = m.vb.start
 	ro.vb_num = m.vb.num
 	ro.vb_handle = m.vb.handle
 
@@ -47,7 +47,23 @@ local function update_ro(ro, m)
 		ro.ib_start = m.ib.start
 		ro.ib_num = m.ib.num
 		ro.ib_handle = m.ib.handle
+	end ]]
+
+ 	ro.vb_start = m.vb.start
+	ro.vb_num = m.vb.num
+	ro.vb_handle = m.vb.handle
+	if m.vb2 then
+		ro.vb2_start = m.vb2.start
+		ro.vb2_num = m.vb2.num
+		ro.vb2_handle = m.vb2.handle
 	end
+
+	local ib = m.ib
+	if ib then
+		ro.ib_start = m.ib.start
+		ro.ib_num = m.ib.num
+		ro.ib_handle = m.ib.handle
+	end 
 end
 
 local RENDER_ARGS = setmetatable({}, {__index = function (t, k)

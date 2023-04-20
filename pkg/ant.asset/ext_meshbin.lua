@@ -37,14 +37,26 @@ function proxy_ib:__index(k)
 end
 
 local function init(mesh)
-    local vb = mesh.vb
+--[[     local vb = mesh.vb
+    setmetatable(vb, proxy_vb)
+     local vb2 = mesh.vb2
+    if vb2 then
+        setmetatable(vb2, proxy_vb)
+    end
+    local ib = mesh.ib
+    if ib then
+        setmetatable(ib, proxy_ib)
+    end
+    return mesh   ]]
+
+     local vb = mesh.vb
     setmetatable(vb, proxy_vb)
 
     local ib = mesh.ib
     if ib then
         setmetatable(ib, proxy_ib)
     end
-    return mesh
+    return mesh 
 end
 
 local function destroy_handle(v)
@@ -74,7 +86,7 @@ end
 
 local function load_mem(m, filename)
     local binname = m[1]
-    assert(type(binname) == "string" and binname:match "%.[iv]bbin")
+    assert(type(binname) == "string" and (binname:match "%.[iv]bbin" or binname:match "%.[iv]b[2]bin"))
 
     local data, err = fastio.readall(cr.compile(parent_path(filename) .. "/" .. binname):string())
     if not data then
@@ -89,6 +101,10 @@ local function loader(filename)
 
     local vb = assert(mesh.vb)
     load_mem(vb.memory, filename)
+--[[     local vb2 = mesh.vb2
+    if vb2 then
+        load_mem(vb2.memory, filename)
+    end ]]
     local ib = mesh.ib
     if ib then
         load_mem(ib.memory, filename)
