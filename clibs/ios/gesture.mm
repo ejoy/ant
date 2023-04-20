@@ -389,7 +389,7 @@ static int lrequireToFail(lua_State* L) {
 }
 
 extern "C"
-int luaopen_gesture(lua_State* L) {
+int luaopen_ios_gesture(lua_State* L) {
     luaL_checkversion(L);
     luaL_Reg l[] = {
         { "tap", ltap },

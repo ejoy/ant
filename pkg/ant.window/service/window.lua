@@ -29,7 +29,10 @@ for CMD, e in pairs(event) do
 end
 
 local function gesture_init()
-    gesture = require "gesture"
+    if require "bee.platform".os ~= "ios" then
+        return
+    end
+    gesture = require "ios.gesture"
     gesture.tap {}
     gesture.pinch {}
     gesture.long_press {}
@@ -59,9 +62,7 @@ local function dispatch(CMD,...)
         until ltask.schedule_message() ~= SCHEDULE_SUCCESS
     else
         if CMD == "init" then
-            if require "bee.platform".os == "ios" then
-                gesture_init()
-            end
+            gesture_init()
         end
         ltask.send(ltask.self(), "send_"..CMD, ...)
     end
