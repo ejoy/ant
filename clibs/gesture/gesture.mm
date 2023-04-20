@@ -65,6 +65,15 @@ void push_value<UISwipeGestureRecognizerDirection>(lua_State* L, UISwipeGestureR
     lua_pushinteger(L, v);
 }
 
+template <>
+void push_value<CGPoint>(lua_State* L, CGPoint v) {
+    lua_createtable(L, 0, 2);
+    lua_pushnumber(L, static_cast<lua_Number>(v.x));
+    lua_setfield(L, -2, "x");
+    lua_pushnumber(L, static_cast<lua_Number>(v.y));
+    lua_setfield(L, -2, "y");
+}
+
 template <typename T>
     requires (std::is_floating_point_v<T>)
 void push_value(lua_State* L, T v) {
@@ -167,11 +176,7 @@ static void setLocationInView(lua_State* L, int idx, UIGestureRecognizer* gestur
     CGPoint pt = [gesture locationInView:global_window];
     pt.x *= global_window.contentScaleFactor;
     pt.y *= global_window.contentScaleFactor;
-    lua_createtable(L, 0, 2);
-    lua_pushnumber(L, static_cast<lua_Number>(pt.x));
-    lua_setfield(L, -2, "x");
-    lua_pushnumber(L, static_cast<lua_Number>(pt.y));
-    lua_setfield(L, -2, "y");
+    push_value(L, pt);
     lua_setfield(L, idx, "locationInView");
 }
 
@@ -182,14 +187,22 @@ static void setLocationOfTouch(lua_State* L, int idx, UIGestureRecognizer* gestu
         CGPoint pt = [gesture locationOfTouch:i inView:global_window];
         pt.x *= global_window.contentScaleFactor;
         pt.y *= global_window.contentScaleFactor;
-        lua_createtable(L, 0, 2);
-        lua_pushnumber(L, static_cast<lua_Number>(pt.x));
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, static_cast<lua_Number>(pt.y));
-        lua_setfield(L, -2, "y");
+        push_value(L, pt);
         lua_seti(L, -2, static_cast<lua_Integer>(i + 1));
     }
     lua_setfield(L, idx, "locationOfTouch");
+}
+
+static void setTranslationInView(lua_State* L, int idx, UIPanGestureRecognizer* gesture) {
+    CGPoint pt = [gesture translationInView:global_window];
+    push_value(L, pt);
+    lua_setfield(L, idx, "translationInView");
+}
+
+static void setVelocityInView(lua_State* L, int idx, UIPanGestureRecognizer* gesture) {
+    CGPoint pt = [gesture velocityInView:global_window];
+    push_value(L, pt);
+    lua_setfield(L, idx, "velocityInView");
 }
 
 @interface LuaGestureHandler : NSObject {
@@ -246,6 +259,8 @@ static void setLocationOfTouch(lua_State* L, int idx, UIGestureRecognizer* gestu
     setState(L, 2, gesture);
     setLocationInView(L, 2, gesture);
     setLocationOfTouch(L, 2, gesture);
+    setTranslationInView(L, 2, gesture);
+    setVelocityInView(L, 2, gesture);
     void* data = seri_pack(L, 0, NULL);
     queue_push(data);
 }
