@@ -36,10 +36,7 @@ local function gesture_init()
     gesture.tap {}
     gesture.pinch {}
     gesture.long_press {}
-    gesture.swipe {direction=1}
-    gesture.swipe {direction=2}
-    gesture.swipe {direction=4}
-    gesture.swipe {direction=8}
+    gesture.pan {}
 end
 
 local function gesture_dispatch(name, ...)
