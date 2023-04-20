@@ -26,17 +26,17 @@ struct transform {
 	uint32_t stride;
 };
 
-/* enum queue_type{
+enum queue_type{
 	qt_mat_def = 0,
-
-	xxx
-
-	qt_count,
+	qt_mat_pre_depth = 1,
+	qt_mat_pickup = 2,
+	qt_mat_csm = 3,
+	qt_mat_lightmap = 4,
+	qt_count = 5
 };
 
-
-static_assert(MAX_MATERIAL_TYPE_COUNT == queue_type::qt_count); */
 constexpr size_t MAX_MATERIAL_TYPE_COUNT = (offsetof(ecs::render_object, mat_lightmap) - offsetof(ecs::render_object, mat_def))/sizeof(intptr_t)+1;
+static_assert(MAX_MATERIAL_TYPE_COUNT == queue_type::qt_count); 
 using obj_transforms = std::unordered_map<const ecs::render_object*, transform>;
 static inline transform
 update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transforms &trans){
@@ -62,8 +62,9 @@ update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transfor
 #define BUFFER_TYPE(_HANDLE)	(_HANDLE >> 16) & 0xffff
 
 static bool
-mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid){
-
+mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid, uint8_t mat_idx){
+	bool exist_vb2_handle = ro->vb2_handle != INVALID_NUM_TYPE;
+	bool mat_need_vb2 = (mat_idx == qt_mat_def) || (mat_idx == qt_mat_lightmap);
 	if (ro->vb_num == 0)
 		return false;
 
@@ -80,7 +81,7 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid){
 		default: assert(false && "Invalid vertex buffer type");
 	}
 
-	if(ro->vb2_handle != INVALID_NUM_TYPE){
+	if(exist_vb2_handle && mat_need_vb2){
 		const uint16_t vb2_type = BUFFER_TYPE(ro->vb2_handle);
 		
 		switch (vb2_type){
@@ -153,7 +154,7 @@ draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const o
 		}
 		auto mi = get_material(od.obj, ra.material_index);
 		int vid = ra.viewid;
-		if (mi && mesh_submit(w, od.obj, vid)) {
+		if (mi && mesh_submit(w, od.obj, vid, ra.material_index)) {
 			apply_material_instance(L, mi, w);
 			const auto prog = material_prog(L, mi);
 

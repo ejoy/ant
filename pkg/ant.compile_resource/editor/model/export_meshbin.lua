@@ -1,11 +1,10 @@
-local setting	= import_package "ant.settings".setting
-
 local gltfutil  = require "editor.model.glTF.util"
 local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
-local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
+local pack_vertex_data = require "editor.model.pack_vertex_data"
+local cs_skinning = true
 local LAYOUT_NAMES<const> = {
 	"POSITION",
 	"NORMAL",
@@ -145,9 +144,6 @@ local function get_obj_name(obj, idx, defname)
 	return defname .. idx
 end
 
-local jointidx_fmt<const> = "HHHH"
-local color8bit_fmt<const> ="BBBB"
-
 local typemapper<const> = {
 	f = 'f',
 	i = 'H',
@@ -214,6 +210,11 @@ local function calc_tangents(ib, vb, layouts)
 
 	local pos_attrib_idx, tex_attrib_idx = find_layout_idx(layouts, "POSITION"), find_layout_idx(layouts, "TEXCOORD_0")
 	local pos_layout, tex_layout = layouts[pos_attrib_idx].layout, layouts[tex_attrib_idx].layout
+	local function remove(iv, idx)
+		local vv = vb[iv]
+		table.remove(vv, idx)
+	end
+
 	local function store(iv, v)
 		local x, y, z, w = math3d.index(v, 1, 2, 3, 4)
 		local vv = vb[iv]
@@ -330,7 +331,9 @@ local function calc_tangents(ib, vb, layouts)
 		local nxt    	= math3d.cross(normal, tangent)
 		tangent	= math3d.set_index(tangent, 4, math3d.dot(nxt, bitangent) < 0 and -1.0 or 1.0)
 		store(iv, tangent)
+		remove(iv, tex_attrib_idx)
 	end
+	table.remove(layouts, tex_attrib_idx)
 end
 
 local function r2l_buf(d, iv, gltfbin)
@@ -343,13 +346,13 @@ local function is_vec_attrib(an)
 end
 
 local function need_calc_tangent(layouts)
-	return find_layout(layouts, "TANGENT") == nil and find_layout(layouts, "NORMAL") and find_layout(layouts, "TEXCOORD_0")
+	return find_layout(layouts, "TANGENT") == nil and find_layout(layouts, "NORMAL")
 end
 
 local function generate_layouts(gltfscene, attributes)
 	local accessors, bufferViews = gltfscene.accessors, gltfscene.bufferViews
-
-	local layouts = {}
+	local layouts1 = {}
+	local layouts2 = {}
 	for _, attribname in ipairs(LAYOUT_NAMES) do
 		local accidx = attributes[attribname]
 		if accidx then
@@ -368,10 +371,20 @@ local function generate_layouts(gltfscene, attributes)
 			 	stride	= bv.byteStride or elemsize,
 				fetch_buf = is_vec_attrib(layouttype) and r2l_buf or attrib_data,
 			}
-			layouts[#layouts+1] = l
+			local attr, _ = attribname:match"(%w+)_(%d+)"
+			local color = SHORT_NAMES[attr] == 'c' 
+			local tex = SHORT_NAMES[attr] == 't'
+			if color then
+				layouts2[#layouts2+1] = l
+			elseif tex then
+				layouts1[#layouts1+1] = l
+				layouts2[#layouts2+1] = l
+			else
+				layouts1[#layouts1+1] = l
+			end
 		end
 	end
-	return layouts
+	return layouts1, layouts2
 end
 
 local function fetch_vertices(layouts, gltfbin, numv, reverse_wing_order)
@@ -394,298 +407,40 @@ local function fetch_vertices(layouts, gltfbin, numv, reverse_wing_order)
 	return vertices
 end
 
-local function pack_cs_skinning_layout(layouts)
-	local ll = {}
-	for _, l in ipairs(layouts) do
-		local t = l.layout:sub(1, 1)
-		local idx = l.layout:sub(3, 3)
-		ll[#ll+1] = ("%s4%sNIf"):format(t, idx)
-	end
-	return table.concat(ll, "|")
-end
-
-
-local function pack_layout(layouts, need_pack_tangent_frame, need_convert_joint_index, need_compress_color, need_convert_weight_index)
-	local ll = {}
-	for _, l in ipairs(layouts) do
-		if need_pack_tangent_frame and l.name == "TANGENT" then
-			ll[#ll+1] = "T40nii"
-			goto continue
-		end
- 		if need_convert_joint_index and l.name == "JOINTS_0" then
-			ll[#ll+1] = l.layout:sub(1, 5) .. 'i'
-			goto continue
-		end
-		if need_convert_weight_index and l.name:match "WEIGHTS_0" then
-			ll[#ll+1] = "w40nii"
-			goto continue
-		end 
-		if need_compress_color and l.name:match "COLOR_" then
-			ll[#ll+1] = l.layout:sub(1, 5) .. 'u'
-			goto continue
-		end
-		-- skip NORMAL when pack tangent frame
-		if need_pack_tangent_frame and l.name == "NORMAL" then
-			goto continue
-		end
-		ll[#ll+1] = l.layout
-		::continue::
-	end
-	return table.concat(ll, '|')
-end
-
-local fmt_f<const> = ('f'):rep(4)
-
-local function u16tou8(vv)
-	return math.floor(vv/65535.0*255+0.5)
-end
-local function u16tof(vv)
-	return vv/65535.0
-end
-local function u8tof(vv)
-	return vv/255.0
-end
-
-local function load_attrib(attribidx, vertex, layout)
-	return unpack_vec(vertex[attribidx], layout)
-end
-local function load_attrib_math3dvec(attribidx, vertex, layout)
-	local r = load_attrib(attribidx, vertex, layout)
-	if #r < 3 then
-		r[3] = 0
-	end
-	return math3d.vector(r)
-end
-
-local function pack_vertex_data(layouts, vertices)
-	local function check_nan(v)
-		if v ~= v then
-			return 0
-		else
-			return v
-		end
-	end
-	local function f2i(v)
-		return math.floor(check_nan(v) * 32767+0.5)
-	end
-
-	local weights_attrib_idx, joint_attrib_idx	= find_layout_idx(layouts, "WEIGHTS_0"), 	find_layout_idx(layouts, "JOINTS_0")
-	local normal_attrib_idx, tangent_attrib_idx = find_layout_idx(layouts, "NORMAL"), 		find_layout_idx(layouts, "TANGENT")
-	local color_attrib_idx 						= find_layout_idx(layouts, "COLOR_0")
-
-	local need_vec4_format                      = weights_attrib_idx and joint_attrib_idx and USE_CS_SKINNING
-
-	local function check_need_compress_color()
-		if not color_attrib_idx then
-			return false
-		end
-
-		if need_vec4_format then
-			return false
-		end
-
-		--TODO: only convert color with 16 bits, we need to compress float to uint8
-		return layouts[color_attrib_idx].layout:sub(6, 6) == 'i'
-	end
-
-	local need_compress_color<const>			= check_need_compress_color()
-	local need_convert_joint_index<const> 		= joint_attrib_idx and layouts[joint_attrib_idx].layout:sub(6, 6) == 'u' or false
-
-	local need_pack_tangent_frame<const>        = normal_attrib_idx and tangent_attrib_idx
-
-	local need_compress_tangent_frame<const>	= need_pack_tangent_frame and (not need_vec4_format)
-	local need_compress_weights<const>			= weights_attrib_idx and (not need_vec4_format)
-	local new_vertices = {}
-
-	local function pack_tangent_frame(v)
-		local normal = load_attrib_math3dvec(normal_attrib_idx, v, layouts[normal_attrib_idx].layout)
-		local tangent = load_attrib_math3dvec(tangent_attrib_idx, v, layouts[tangent_attrib_idx].layout)
-		
-		local q = mu.pack_tangent_frame(normal, tangent)
-		local qx, qy, qz, qw = math3d.index(q, 1, 2, 3, 4)
-
-		v[tangent_attrib_idx] = ('f'):rep(4):pack(qx, qy, qz, qw)
-	end
-
-	local function compress_tangent_frame(v)
-		local tv = load_attrib(tangent_attrib_idx, v, layouts[tangent_attrib_idx].layout)
-		v[tangent_attrib_idx] = ('h'):rep(4):pack(f2i(tv[1]), f2i(tv[2]), f2i(tv[3]), f2i(tv[4]))
-	end
-
-	local function build_new_layout()
-		for _, l in ipairs(layouts) do
-			if l.name == "TANGENT" then
-				if need_pack_tangent_frame and need_compress_tangent_frame then
-					l.new_layout = "T40nii"
-					goto continue
-				end
-			elseif l.name:match "JOINTS" then
-				if need_convert_joint_index then
-					l.new_layout = l.layout:sub(1, 5) .. 'i'
-					goto continue
-				end
-			elseif l.name:match "WEIGHTS" then
-				if need_compress_weights then
-					l.new_layout = "w40nii"
-					goto continue
-				end
-			elseif l.name:match "COLOR" then
-				if need_compress_color then
-					l.new_layout = l.layout:sub(1, 5) .. 'u'
-					goto continue
-				end
-			end
-
-			l.new_layout = l.layout
-			::continue::
-		end
-	end
-
-	build_new_layout()
-
-	local function compress_color(v)
-		local cv = load_attrib(color_attrib_idx, v, layouts[color_attrib_idx].layout)
-		for i=1, 4 do
-			cv[i] = u16tou8(cv[i])
-		end
-		v[color_attrib_idx] = color8bit_fmt:pack(cv[1], cv[2], cv[3], cv[4])
-	end
-
-	local function make_joint_index_as_int16(v)
-		local j = v[joint_attrib_idx]
-		v[joint_attrib_idx] = jointidx_fmt:pack(j:byte(1), j:byte(2), j:byte(3), j:byte(4))
-	end
-
-	local function convert_vertex(v)
-		if need_pack_tangent_frame then
-			pack_tangent_frame(v)
-			if need_compress_tangent_frame then
-				compress_tangent_frame(v)
-			end
-		end
-
-		if need_compress_color then
-			compress_color(v)
-		end
-
-		if need_convert_joint_index then
-			make_joint_index_as_int16(v)
-		end
-
-		if need_compress_weights then
-			local w = load_attrib(weights_attrib_idx, v, layouts[weights_attrib_idx].layout)
-			v[weights_attrib_idx] = ('h'):rep(4):pack(f2i(w[1]), f2i(w[2]), f2i(w[3]), f2i(w[4]))
-		end
-	end
-
-	local function pack_vertex(v)
-		convert_vertex(v)
-
-		if need_pack_tangent_frame then
-			-- remove normal
-			table.remove(v, normal_attrib_idx)
-		end
-		new_vertices[#new_vertices+1] = table.concat(v, "")
-	end
-
-	local function pack_vertex_as_vec4(v)
-		convert_vertex(v)
-
-		local nv = {}
-
-		local function attrib2vec4(ai, layout)
-			local av = load_attrib(ai, v, layout)
-			local elemtype = layout:sub(6, 6)
-			local cvt
-			if elemtype == 'i' then
-				cvt = u16tof
-			elseif elemtype == 'u' then
-				cvt = u8tof
-			else
-				if elemtype ~= 'f' then
-					error(("Invalid element format type:%s, only support [iuf]/[int16/uint8/float]"):format(elemtype))
-				end
-			end
-		
-			if cvt then
-				for i=1, #av do
-					av[i] = u16tof(av[i])
-				end
-			end
-		
-			assert(#av <= 4, "Not support attrib element more than 4")
-			for i=#av+1, 4 do
-				av[i] = 0	--padding
-			end
-			return fmt_f:pack(table.unpack(av))
-		end
-
-		for ai, l in ipairs(layouts) do
-			local canskip = need_pack_tangent_frame and l.name == "NORMAL"
-			if not canskip then
-				nv[#nv+1] = attrib2vec4(ai, l.new_layout)
-			end
-		end
-		new_vertices[#new_vertices+1] = table.concat(nv,"")
-	end
-
-	local pv_func = need_vec4_format and pack_vertex_as_vec4 or pack_vertex
-
-	for iv=1, #vertices do
-		pv_func(vertices[iv])
-	end
-
-	local new_layouts = {}
-	if need_vec4_format then
-		for _, l in ipairs(layouts) do
-			local t = l.new_layout:sub(1, 1)
-			local idx = l.new_layout:sub(3, 3)
-			local canskip = need_pack_tangent_frame and l.name == "NORMAL"
-			if not canskip then
-				new_layouts[#new_layouts+1] = ("%s4%sNIf"):format(t, idx)
-			end
-		end
-	else
-		for _, l in ipairs(layouts) do
-			--SKIP normal
-			local canskip = need_pack_tangent_frame and l.name == "NORMAL"
-			if not canskip then
-				new_layouts[#new_layouts+1] = l.new_layout
-			end
-		end
-	end
-
-	return new_vertices, table.concat(new_layouts, "|")
-end
-
 local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table, settings)
 	assert(prim.mode == nil or prim.mode == 4)
-
-	local layouts = generate_layouts(gltfscene, prim.attributes)
-
 	local numv = gltfutil.num_vertices(prim, gltfscene)
-	local vertices = fetch_vertices(layouts, gltfbin, numv, ib_table == nil)
 
-	if need_calc_tangent(layouts) then
+	local function get_vb(layouts, vertices)
+		local new_vertices, new_layout = pack_vertex_data(layouts, vertices)
+		local bindata = table.concat(new_vertices, "")
+		return {
+			declname = new_layout,
+			memory = {bindata, 1, #bindata},
+			start = 0,
+			num = numv,
+		}
+	end
+
+	local layouts1, layouts2 = generate_layouts(gltfscene, prim.attributes)
+	local vertices1 = fetch_vertices(layouts1, gltfbin, numv, ib_table == nil)
+	if need_calc_tangent(layouts1) then
 		math3d.reset()
-		calc_tangents(ib_table, vertices, layouts)
+		calc_tangents(ib_table, vertices1, layouts1)
 		math3d.reset()
-		layouts[#layouts+1] = {
+		layouts1[#layouts1+1] = {
 			layout		= "T40NIf",
 			fetch_buf	= attrib_data,	-- this tangent already in left hand space
 			name		= "TANGENT",
 		}
 	end
-
-	local new_vertices, new_layout = pack_vertex_data(layouts, vertices)
-	local bindata = table.concat(new_vertices, "")
-
-	return {
-		declname = new_layout,
-		memory = {bindata, 1, #bindata},
-		start = 0,
-		num = numv,
-	}
+	local vb = get_vb(layouts1, vertices1)
+	local vb2
+	if #layouts2 ~= 0 then
+		local vertices2 = fetch_vertices(layouts2, gltfbin, numv, ib_table == nil)
+		vb2 = get_vb(layouts2, vertices2)
+	end
+	return vb, vb2
 end
 
 local function find_skin_root_idx(skin, nodetree)
@@ -843,6 +598,10 @@ local function save_meshbin_files(resname, meshgroup)
 
 	local vb = assert(meshgroup.vb)
 	vb.memory[1] = write_bin_file(resname .. ".vbbin", vb.memory[1])
+	local vb2 = assert(meshgroup.vb2)
+	if meshgroup.vb2 then
+		vb2.memory[1] = write_bin_file(resname .. ".vb2bin", vb2.memory[1])
+	end
 	local ib = meshgroup.ib
 	if ib then
 		ib.memory[1] = write_bin_file(resname .. ".ibbin", ib.memory[1])
@@ -873,7 +632,7 @@ end
 				group.ib = fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1], ib_table)
 			end
 
-			group.vb = fetch_vb_buffers(gltfscene, bindata, prim, ib_table)
+			group.vb, group.vb2 = fetch_vb_buffers(gltfscene, bindata, prim, ib_table)
 			local bb = create_prim_bounding(gltfscene, prim)
 			if bb then
 				local aabb = math3d.aabb(bb.aabb[1], bb.aabb[2])
@@ -886,7 +645,10 @@ end
 			local stemname = ("%s_P%d"):format(meshname, primidx)
 			exports.mesh[meshidx][primidx] = {
 				meshbinfile = save_meshbin_files(stemname, group),
-				declname = group.vb.declname,
+				declname = {
+					[1] = group.vb.declname,
+					[2] = group.vb2.declname,
+				}
 			}
 		end
 	end

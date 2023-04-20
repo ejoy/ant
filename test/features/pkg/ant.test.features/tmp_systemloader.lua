@@ -392,7 +392,7 @@ function init_loader_sys:init()
         iom.set_direction(le, math3d.vector(0.2664446532726288, -0.25660401582717896, 0.14578714966773987, 0.9175552725791931))
     end
     world:create_object(p)
-     local q = ecs.create_instance"/pkg/ant.test.features/assets/glb/mountain1.glb|mesh.prefab"
+     local q = ecs.create_instance"/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab"
     q.on_ready = function (e)
         local ee<close> = w:entity(e.tag['*'][1])
         iom.set_scale(ee, 1)

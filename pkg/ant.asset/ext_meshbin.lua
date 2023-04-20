@@ -38,7 +38,7 @@ function proxy_ib:__index(k)
 end
 
 local function init(mesh)
---[[     local vb = mesh.vb
+    local vb = mesh.vb
     setmetatable(vb, proxy_vb)
      local vb2 = mesh.vb2
     if vb2 then
@@ -48,16 +48,7 @@ local function init(mesh)
     if ib then
         setmetatable(ib, proxy_ib)
     end
-    return mesh   ]]
-
-     local vb = mesh.vb
-    setmetatable(vb, proxy_vb)
-
-    local ib = mesh.ib
-    if ib then
-        setmetatable(ib, proxy_ib)
-    end
-    return mesh 
+    return mesh   
 end
 
 local function destroy_handle(v)
@@ -102,10 +93,10 @@ local function loader(filename)
 
     local vb = assert(mesh.vb)
     load_mem(vb.memory, filename)
---[[     local vb2 = mesh.vb2
+    local vb2 = mesh.vb2
     if vb2 then
         load_mem(vb2.memory, filename)
-    end ]]
+    end 
     local ib = mesh.ib
     if ib then
         load_mem(ib.memory, filename)
