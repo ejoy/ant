@@ -2,6 +2,7 @@
 #include <bgfx_shader.sh>
 #include <bgfx_compute.sh>
 
+#ifdef ENABLE_IRRADIANCE_SH
 #include "common/utils.sh"
 #include "pbr/ibl/common.sh"
 
@@ -177,3 +178,10 @@ void main()
         imageAtomicAdd(s_irradianceSH, ivec2(idx+2, 0), ev[2]);
     }
 }
+#else //!ENABLE_IRRADIANCE_SH
+NUM_THREADS(1, 1, 1)
+void main()
+{
+
+}
+#endif //ENABLE_IRRADIANCE_SH
