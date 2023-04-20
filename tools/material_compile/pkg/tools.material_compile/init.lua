@@ -24,6 +24,8 @@ cr.set_setting("material", stringify {
 
 local output = lfs.path "./tools/material_compile/output"
 
+cr.init()
+
 if srcpath:equal_extension "material" then
     cr.compile_file(srcpath:localpath())
 else

@@ -1273,6 +1273,16 @@ linstance_get_material(lua_State *L){
 }
 
 static int
+linstance_replace_material(lua_State *L){
+	struct material_instance* mi = to_instance(L, 1);
+	struct material* m = check_material_index(L, 2);
+	mi->m = m;
+	lua_pushvalue(L, 2);
+	verfiy(lua_setiuservalue(L, 1, INSTANCE_UV_MATERIAL));
+	return 0;
+}
+
+static int
 linstance_get_state(lua_State *L){
 	struct material_instance* mi = to_instance(L, 1);
 	return push_material_state(L, mi->m);
@@ -1311,6 +1321,7 @@ lmaterial_instance(lua_State *L) {
 			{ "release",		linstance_release},
 			{ "attribs",		linstance_attribs},
 			{ "get_material",	linstance_get_material},
+			{ "replace_material",linstance_replace_material},
 			{ "get_state",		linstance_get_state},
 			{ "ptr",			linstance_ptr},
 			{ NULL, 		NULL },

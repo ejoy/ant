@@ -11,3 +11,13 @@ lm:lua_source "ios" {
         "ios.mm",
     }
 }
+
+lm:lua_source "ios" {
+    includes = {
+        "../window",
+        Ant3rd.."bee.lua/3rd/lua-seri",
+    },
+    sources = {
+        "gesture.mm",
+    }
+}

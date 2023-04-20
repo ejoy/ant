@@ -340,7 +340,9 @@ function m.process_touch(state, touches)
 end
 
 local gesture = {}
-function gesture.tap(_, x, y)
+function gesture.tap(e)
+    local loc = e.locationInView
+    local x, y = loc.x, loc.y
     m.process_mouse(x, y, 1, MOUSE_MOVE)
     m.process_mouse(x, y, 1, MOUSE_DOWN)
     return m.process_mouse(x, y, 1, MOUSE_UP)

@@ -1,9 +1,11 @@
+local setting	= import_package "ant.settings".setting
+
 local gltfutil  = require "editor.model.glTF.util"
 local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
-local cs_skinning = true
+local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
 local LAYOUT_NAMES<const> = {
 	"POSITION",
 	"NORMAL",
@@ -471,7 +473,7 @@ local function pack_vertex_data(layouts, vertices)
 	local normal_attrib_idx, tangent_attrib_idx = find_layout_idx(layouts, "NORMAL"), 		find_layout_idx(layouts, "TANGENT")
 	local color_attrib_idx 						= find_layout_idx(layouts, "COLOR_0")
 
-	local need_vec4_format                      = weights_attrib_idx and joint_attrib_idx and cs_skinning
+	local need_vec4_format                      = weights_attrib_idx and joint_attrib_idx and USE_CS_SKINNING
 
 	local function check_need_compress_color()
 		if not color_attrib_idx then

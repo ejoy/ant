@@ -10,6 +10,8 @@ _windows:
 graphic:
   ibl:
     irradiance_bandnum: 3
+  skinning:
+    use_cs: true
   ao:
     enable: true
     bent_normal : false

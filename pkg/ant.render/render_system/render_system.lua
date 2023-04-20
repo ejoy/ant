@@ -215,10 +215,8 @@ function render_sys:update_filter()
 
 				local state = check_set_depth_state_as_equal(mo:get_state())
 				local new_mo = irender.create_material_from_template(mo, state, material_cache)
-				local new_mi = new_mo:instance()
-				fm.main_queue = new_mi
-
-				ro.mat_def = new_mi:ptr()
+				fm.main_queue:replace_material(new_mo)
+				ro.mat_def = fm.main_queue:ptr()
 			end
 		end
 	end

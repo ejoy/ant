@@ -51,7 +51,8 @@ local function run(commands, input, output)
             "ERROR",
             "FAILED TO BUILD SHADER"
         } do
-            if INFO:find(term, 1, true) then
+            local VARYING_ERROR<const> = ("Failed to parse varying def file"):upper()
+            if INFO:find(term, 1, true) and not INFO:find(VARYING_ERROR, 1, true) then
                 ok = false
                 break
             end
