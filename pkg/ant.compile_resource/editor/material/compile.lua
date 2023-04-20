@@ -1,11 +1,11 @@
-local lfs = require "filesystem.local"
-local fs = require "filesystem"
-local toolset = require "editor.material.toolset"
-local fxsetting = require "editor.material.setting"
-local settingpkg = import_package "ant.settings"
+local lfs           = require "filesystem.local"
+local fs            = require "filesystem"
+local toolset       = require "editor.material.toolset"
+local fxsetting     = require "editor.material.setting"
+local settingpkg    = import_package "ant.settings"
 local setting, def_setting = settingpkg.setting, settingpkg.default
-local serialize = import_package "ant.serialize"
-local depends   = require "editor.depends"
+local serialize     = import_package "ant.serialize"
+local depends       = require "editor.depends"
 
 local ENABLE_SHADOW<const>      = setting:data().graphic.shadow.enable
 
@@ -38,6 +38,7 @@ local SETTING_MAPPING = {
 }
 
 local IRRADIANCE_SH_BAND_NUM<const> = setting:get "graphic/ibl/irradiance_bandnum"
+local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
 
 local enable_cs<const>      = setting:get 'graphic/lighting/cluster_shading' ~= 0
 local enable_bloom<const>   = setting:get "graphic/postprocess/bloom/enable"
@@ -91,6 +92,10 @@ local function default_macros(setting)
     if IRRADIANCE_SH_BAND_NUM then
         m[#m+1] = "IRRADIANCE_SH_BAND_NUM=" .. IRRADIANCE_SH_BAND_NUM
         m[#m+1] = "IRRADIANCE_SH_BAND_NUM=" .. IRRADIANCE_SH_BAND_NUM
+    end
+
+    if USE_CS_SKINNING then
+        m[#m+1] = "CS_SKINNING=1"
     end
 
     return m

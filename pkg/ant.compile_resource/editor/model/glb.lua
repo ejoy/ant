@@ -1,10 +1,10 @@
-local export_prefab = require "editor.model.export_prefab"
-local export_meshbin = require "editor.model.export_meshbin"
-local export_animation = require "editor.model.export_animation"
-local export_material = require "editor.model.export_material"
-local glbloader = require "editor.model.glTF.glb"
-local utility = require "editor.model.utility"
-local depends = require "editor.depends"
+local export_prefab     = require "editor.model.export_prefab"
+local export_meshbin    = require "editor.model.export_meshbin"
+local export_animation  = require "editor.model.export_animation"
+local export_material   = require "editor.model.export_material"
+local glbloader         = require "editor.model.glTF.glb"
+local utility           = require "editor.model.utility"
+local depends           = require "editor.depends"
 
 local function build_scene_tree(gltfscene)
     local scenetree = {}

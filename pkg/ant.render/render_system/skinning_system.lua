@@ -1,25 +1,28 @@
-local ecs = ...
-local world = ecs.world
-local w = world.w
-
-local animodule = require "hierarchy".animation
-local math3d 	= require "math3d"
+local ecs 		= ...
+local world 	= ecs.world
+local w 		= world.w
 
 local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
+
+local renderpkg = import_package "ant.render"
+local viewidmgr = renderpkg.viewidmgr
+local declmgr   = import_package "ant.render".declmgr
+local sk_viewid = viewidmgr.get "skinning"
+
+local assetmgr  = import_package "ant.asset"
+
+local setting	= import_package "ant.settings".setting
+local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
+
+local animodule = require "hierarchy".animation
+local math3d 	= require "math3d"
+local bgfx 		= require "bgfx"
 
 -- skinning system
 local icompute = ecs.import.interface "ant.render|icompute"
 local skinning_sys = ecs.system "skinning_system"
 local r2l_mat<const> = mc.R2L_MAT
-local renderpkg = import_package "ant.render"
-local viewidmgr = renderpkg.viewidmgr
-local declmgr   = import_package "ant.render".declmgr
-local sk_viewid = viewidmgr.get "skinning"
-local bgfx 			= require "bgfx"
-local assetmgr  = import_package "ant.asset"
-local cs_skinning = true
---cs_skinning: skinning_system export_meshbin ext_meshbin inputs.sh
 
 local skinning_material
 
@@ -118,13 +121,13 @@ local function get_output_layout(decl)
 end
 
 function skinning_sys:init()
-	if cs_skinning then
+	if USE_CS_SKINNING then
 		skinning_material = assetmgr.resource("/pkg/ant.resources/materials/skinning/skinning.material")
 	end
 end
 
 function skinning_sys:entity_init()
-	if cs_skinning then
+	if USE_CS_SKINNING then
 		local meshskin
 		for e in w:select "INIT skinning:update scene?in mesh?in meshskin?update render_object?update skininfo?update" do
 			if e.meshskin then
@@ -156,7 +159,7 @@ function skinning_sys:skin_mesh()
 		local pr = e.meshskin.pose.pose_result
 		if pr then
 			local m
-			if cs_skinning then
+			if USE_CS_SKINNING then
 				m = r2l_mat
 			else
 				m = math3d.mul(e.scene.worldmat, r2l_mat)
@@ -173,7 +176,7 @@ function skinning_sys:skin_mesh()
 			worldmat = e.scene.worldmat
 		else
 			assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
-			if cs_skinning then
+			if USE_CS_SKINNING then
 				local skininfo = e.skininfo
 				e.render_object.worldmat = worldmat
 				local sm = meshskin.skinning_matrices
@@ -191,10 +194,10 @@ function skinning_sys:skin_mesh()
 			end
 		end
 	end
-end  
+end
 
 function skinning_sys:entity_remove()
-	if cs_skinning then
+	if USE_CS_SKINNING then
 		for e in w:select "REMOVED skininfo:in" do
 			local skininfo = e.skininfo
 			bgfx.destroy(skininfo.skinning_matrices_vb)

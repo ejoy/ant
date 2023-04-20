@@ -9,8 +9,6 @@
 #endif // INDIRECT_BUFFER
 
 
-#define CS_SKINNING 1
-
 #ifdef CS_SKINNING
 
     #   define INPUT_INDICES
