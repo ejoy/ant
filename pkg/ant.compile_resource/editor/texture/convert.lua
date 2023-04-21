@@ -6,6 +6,9 @@ local depends 		= require "editor.depends"
 local function which_format(os, param)
 	local compress = param.compress
 	if compress then
+		if os == "ios" or os == "macos" then
+			return "ASTC4x4"
+		end
 		return compress[os]
 	end
 

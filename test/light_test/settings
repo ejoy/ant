@@ -8,10 +8,10 @@ _windows:
   graphic:
     api: d3d11
 graphic:
-  ibl:
-    irradiance_bandnum: 3
-  skinning:
-    use_cs: true
+  # ibl:
+  #   irradiance_bandnum: 3
+  # skinning:
+  #   use_cs: true
   ao:
     enable: true
     bent_normal : false
