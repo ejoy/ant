@@ -19,10 +19,6 @@ local platform      = require "bee.platform"
 local font          = imgui.font
 local Font          = require "platform".font
 local math3d        = require "math3d"
-local ltask     = require "ltask"
-local texture_table = {}
-local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
-ltask.call(ServiceResource, "create_texture_table", texture_table)
 local bind_billboard_camera_mb = world:sub{"bind_billboard_camera"}
 function ecs.method.bind_billboard_camera(e, camera_ref)
     world:pub{"bind_billboard_camera", e, camera_ref}

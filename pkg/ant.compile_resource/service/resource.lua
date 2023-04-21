@@ -192,42 +192,6 @@ local function which_texture_type(info)
     return info.depth > 1 and "TEX3D" or "TEX2D"
 end
 
-local config_table
-local path_table
-
-function S.create_texture_table(texture_table)
-    for idx, info in pairs(texture_table) do
-        local cfg = datalist.parse(fs.open(fs.path(info.cfg_path)):read "a")
-        if cfg then
-            if not config_table then
-                config_table = {}
-                config_table[idx] = cfg
-            end
-        end
-        if not path_table then
-            path_table = {}
-        end
-        path_table[idx] = {path = info.texture_path, list = {}}
-    end  
-end
-
-function S.get_texture_table()
-    while not config_table do
-        ltask.sleep(1)
-    end
-    return config_table, path_table
-end
-
-local texture_flag
-
-function S.set_texture_flag()
-    texture_flag = true
-end
-
-function S.get_texture_flag()
-    return texture_flag
-end
-
 function S.texture_create(name)
     local c = textureByName[name]
     if not c then

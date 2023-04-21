@@ -1,13 +1,16 @@
 local m={}
 local ltask = require "ltask"
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
+local filemanager = require "core.filemanager"
+local datalist   = require "datalist"
+local fs = require "filesystem"
 local config_table, path_table
-local texture_cfg_table = {
+ local texture_cfg_table = {
     [1] = {
-        cfg_path = "/pkg/vaststars.resources/textures/fluid_icon_canvas.cfg",
-        texture_path = "/pkg/vaststars.resources/textures/fluid_icon_canvas.texture"
+        cfg_path = "fluid_icon_canvas.cfg",
+        texture_path = "fluid_icon_canvas.texture"
     }
-}
+} 
 local texture_table = {}
 
 local ctext = ""
@@ -118,11 +121,29 @@ local function replace_image(os)
    return os
 end
 
-local open_texture = ltask.call(ServiceResource, "get_texture_flag")
-if open_texture then
-    ltask.call(ServiceResource, "create_texture_table", texture_cfg_table)
-    config_table, path_table = ltask.call(ServiceResource, "get_texture_table")
-    while not config_table or (#config_table ~= #texture_cfg_table) do
+
+for idx, info in pairs(texture_cfg_table) do
+    --local cfg = datalist.parse(fs.open(fs.path(info.cfg_path)):read "a")
+    if filemanager.exists(info.cfg_path) then
+        local bundle_cfg_path = fs.path(filemanager.prepath(info.cfg_path))
+        local file = fs.open(bundle_cfg_path):read "a"
+        local cfg = datalist.parse(file) 
+        if cfg then
+            if not config_table then
+                config_table = {}
+                config_table[idx] = cfg
+            end
+        end
+        if not path_table then
+            path_table = {}
+        end
+        local bundle_texture_path = filemanager.prepath(info.texture_path)
+        path_table[idx] = {path = bundle_texture_path, list = {}} 
+    end
+end 
+
+if config_table then
+    while (#config_table ~= #texture_cfg_table) do
         ltask.sleep(1)
     end
     for path_idx, t_table in pairs(config_table) do
@@ -130,14 +151,14 @@ if open_texture then
             --local texture_name_temp = string.match(texture_path, "[%w%-]+%.")
             local texture_name      = texture_path
             texture_table[texture_name] = {
-                path_idx = path_idx,
-                rect = {x = texture_info.x, y = texture_info.y, w = texture_info.width, h = texture_info.height},
-                id = nil, width = nil, height = nil
+                    path_idx = path_idx,
+                    rect = {x = texture_info.x, y = texture_info.y, w = texture_info.width, h = texture_info.height},
+                    id = nil, width = nil, height = nil
             }
             path_table[path_idx].list[texture_name] = true
         end
     end
-    
+        
     for path_idx, path_info in pairs(path_table) do
         local info = ltask.call(ServiceResource, "texture_create", path_info.path)
         for abbrev, _ in pairs(path_info.list) do
@@ -147,6 +168,7 @@ if open_texture then
         end
     end
 end
+
 
 function m.ParseText(os)
     ctext = ""

@@ -27,6 +27,10 @@ function m.set_prefix(v)
     prefixPath = fs.path(v)
 end
 
+function m.prepath(source_path)
+    return fullpath(source_path)
+end
+
 function m.realpath(source_path)
     return bundle.get(fullpath(source_path))
 end
@@ -34,9 +38,6 @@ end
 local pendQueue = {}
 local readyQueue = {}
 
-function m.getTextureTable()
-    return ltask.call(ServiceWorld, "get_texture_table") 
-end
 
 function m.loadTexture(doc, e, path, width, height, isRT)
     width  = math.floor(width)
