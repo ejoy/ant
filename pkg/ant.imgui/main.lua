@@ -5,7 +5,7 @@ local function start(packagename, w, h)
         service_path = "${package}/service/?.lua",
         bootstrap = { "ant.imgui|boot" },
         logger = { "logger" },
-        exclusive = { {"ant.imgui|imgui", packagename, w, h}, "timer", "ant.render|bgfx_main" },
+        exclusive = { {"ant.imgui|imgui", packagename, w, h}, "timer", "ant.render|bgfx_main", "subprocess" },
         --debuglog = "log.txt",
     }
 end

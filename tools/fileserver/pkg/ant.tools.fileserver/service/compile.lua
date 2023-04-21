@@ -5,7 +5,8 @@ if package.loaded.math3d then
 end
 debug.getregistry().MATH3D_MAXPAGE = 10240
 
-local arg = ...
+local ltask = require "ltask"
+local arg = ltask.call(ltask.queryservice "arguments", "QUERY")
 local REPOPATH = arg[1]
 
 local access = require "vfs.repoaccess"

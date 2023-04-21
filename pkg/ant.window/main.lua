@@ -5,7 +5,7 @@ local function start(initargs)
         service_path = "${package}/service/?.lua",
         bootstrap = { "ant.window|boot", initargs },
         logger = { "logger" },
-        exclusive = { "ant.window|window", "timer", "ant.render|bgfx_main" },
+        exclusive = { "ant.window|window", "timer", "ant.render|bgfx_main", "subprocess" },
         debuglog = "log.txt",
     }
 end

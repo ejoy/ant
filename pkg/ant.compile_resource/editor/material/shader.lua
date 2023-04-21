@@ -1,5 +1,5 @@
-local subprocess = import_package "ant.subprocess"
-local SHADERC    = subprocess.tool_exe_path "shaderc"
+local SHADERC    = import_package "ant.subprocess".tool_exe_path "shaderc"
+local subprocess = require "editor.subprocess"
 local sha1       = require "editor.hash".sha1
 local lfs        = require "filesystem.local"
 local vfs        = require "vfs"

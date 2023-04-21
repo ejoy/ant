@@ -1,5 +1,6 @@
 local fs = require "filesystem.local"
-local subprocess = import_package "ant.subprocess"
+local GLTF2OZZ = import_package "ant.subprocess".tool_exe_path "gltf2ozz"
+local subprocess = require "editor.subprocess"
 
 return function (input, output, exports)
     local folder = output / "animations"
@@ -19,7 +20,7 @@ return function (input, output, exports)
     ]]
     local cwd = fs.current_path()
     local success, msg = subprocess.spawn_process {
-        subprocess.tool_exe_path "gltf2ozz",
+        GLTF2OZZ,
         "--file=" .. (cwd / input):string(),
         cwd = folder,
     }

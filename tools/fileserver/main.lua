@@ -6,6 +6,6 @@ task {
     lua_path = "/pkg/ant.tools.fileserver/lualib/?.lua",
     bootstrap = { "listen", arg },
     logger = { "log.server" },
-    exclusive = { "timer", "network", { "compile", arg } },
+    exclusive = { "timer", "network", "subprocess" },
     debuglog = "server_log.txt",
 }

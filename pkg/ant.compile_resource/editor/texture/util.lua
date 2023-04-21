@@ -1,15 +1,10 @@
 local stringify 	= import_package "ant.serialize".stringify
-local subprocess 	= import_package "ant.subprocess"
-
+local subprocess 	= require "editor.subprocess"
 local sampler 		= require "editor.texture.sampler"
 local lfs 			= require "filesystem.local"
-
-local bgfx 			= require "bgfx"
 local image 		= require "image"
-
 local pngparam = require "editor.texture.png_param"
-
-local TEXTUREC = subprocess.tool_exe_path "texturec"
+local TEXTUREC = import_package "ant.subprocess".tool_exe_path "texturec"
 
 local function add_option(commands, name, value)
 	if name then
