@@ -1,15 +1,10 @@
 local stringify 	= import_package "ant.serialize".stringify
-local subprocess 	= import_package "ant.subprocess"
-
+local subprocess 	= require "editor.subprocess"
 local sampler 		= require "editor.texture.sampler"
 local lfs 			= require "filesystem.local"
-
-local bgfx 			= require "bgfx"
 local image 		= require "image"
-
 local pngparam = require "editor.texture.png_param"
-
-local TEXTUREC = subprocess.tool_exe_path "texturec"
+local TEXTUREC = import_package "ant.subprocess".tool_exe_path "texturec"
 
 local function add_option(commands, name, value)
 	if name then
@@ -88,6 +83,8 @@ return function (output, param)
         config.flag = config.flag .. 'Sg'
     end
 	local imgpath = param.local_texpath
+
+	local buildcmd
 	if imgpath then
 		local binfile = output / ("main."..param.setting.ext)
 		if is_png(imgpath) and param.gray2rgb then
@@ -103,7 +100,8 @@ return function (output, param)
 			for _, c in ipairs(commands) do
 				ss[#ss+1] = tostring(c)
 			end
-			print("convert texture command:", table.concat(ss, " "))
+			buildcmd = table.concat(ss, " ")
+			print("convert texture command:", buildcmd)
 		end
 		local success, msg = subprocess.spawn_process(commands)
 		if success then
@@ -120,6 +118,7 @@ return function (output, param)
 		local info = image.parse(readall(output / "main.bin"))
 		config.info = info
 	else
+		buildcmd = ""
 		local s = param.size
 		local fmt = param.format
 		local ti = {}
@@ -136,6 +135,8 @@ return function (output, param)
 		config.info = ti
 		config.value = param.value
 	end
-    writefile(output / "main.cfg", stringify(config))
+
+	local content = ("#%s\n%s"):format(buildcmd, stringify(config))
+    writefile(output / "main.cfg", content)
     return true
 end

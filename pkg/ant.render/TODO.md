@@ -12,6 +12,7 @@
 1. 修复shader下的cubemap resource，绑定为texture2d array的问题。具体重现的方法是，在iOS开发环境下，打开对应的shader validation等相关的debug选项就会有相应的报错；
 2. 修复Vulkan下，使用spirv16-13方式编译着色器后，打开bgfx的debuglog，会在renderer_vk中的debugReportCb函数里面报错。目前使用spirv编译vulkan的着色器；
 3. 目前高光在features的例子里面会爆掉，高光会变成纯白色；
+4. 调整iOS和Android下的ASTC压缩格式。目前强制使用了ASTC4x4，因为之前bgfx不支持ASTC6x6，最近更新了，看看是否ASTC的格式都支持全了（2023.4.21。经过测试，能够通过texturec工具把纹理压缩成ASTC6x6，但纹理会出现错误，目前需要查一下是什么问题）；
 
 #### 编辑器相关
 1. 优化材质编辑器
@@ -30,23 +31,23 @@
 6. 着色器优化。尽可能使用mediump和lowp格式。目前默认全部都是highp格式；（2022.12.31已经完成）
 7. 转换到Vulkan（全平台支持，Mac和iOS使用MoltenVK）。（2023.1.10已经完成）
 8. 清理引擎中的varying.def.sc文件。引擎内，应该只使用一个varying的文件定义，不应该过度的随意添加。后续需要针对VS_Output与FS_Input进行关联；
-9. 调整iOS和Android下的ASTC压缩格式。目前强制使用了ASTC4x4，因为之前bgfx不支持ASTC6x6，最近更新了，看看是否ASTC的格式都支持全了；
+9. 优化动画计算，将skinning的代码从vertex shader放到compute shader中，并消除shadow/pre-depth/main pass中分别重复的计算（https://wickedengine.net/2017/09/09/skinning-in-compute-shader/）。（2023.04.21.这种方法有一个问题，会导致所有的顶点、法线需要复制一份出来作为中间数据，不管顶点数据是否是共用的，每一个实例都需要一份。这会导致D3D11在创建大量entity后报错，目前使用vs中的skinning计算方法）；
 ##### 未完成
 1. 顶点相关：
   - 顶点数据使用不同的流。目前所有顶点都打包到一个流里面，当某个着色器不会访问到对应的顶点数据的时候，相应的带宽就会被浪费掉了。但目前代码很多地方都依赖着只有一个流的逻辑，多个流的情况是否真的能够提交性能还需要验证；
 2. Outline问题的修复。目前使用放大模型的方式实现描边的效果，但会有被遮挡的问题。要不使用屏幕空间算法，要不调整放大模型的渲染，防止被遮挡。https://zhuanlan.zhihu.com/p/410710318；https://zhuanlan.zhihu.com/p/109101851；https://juejin.cn/post/7163670845343137800；
 3. 优化PBR中的GGX的计算。具体看：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；
-4. 关于ibl:
+4. 修复pre-depth/csm/pickup等队列中的cullstate的状态。对于metal/vulkan/d3d12等api，pipeline都是一个整体，会导致pipeline数据不停的切换；
+5. 关于ibl:
   1) 离线计算ibl相关的数据，将目前的compute shader中计算的内容转移到cpu端，并离线计算；
   2) 使用sh(Spherical Harmonic)来表示irradiance中的数据；
-5. 优化polyline的效果。启用FXAA之后，polyline的线会丢失；
-6. 针对Vulkan上的subpass对渲染的render进行相应的优化；
-7. 后处理优化
+6. 优化polyline的效果。启用FXAA之后，polyline的线会丢失；
+7. 针对Vulkan上的subpass对渲染的render进行相应的优化；
+8. 后处理优化
   1) 后处理的DoF是时候要解决了。bgfx里面有一个one pass的DoF例子，非常值得参考；
   2) Color Grading需要用于调整颜色；
   3) tonemapping能够预先bake到一张贴图里面，而不需要单独在fragment阶段进行计算。具体要看filament里面的tonemapping的操作；
-  4）AO效果和效率的优化。效果：修复bent_normal和cone tracing的bug；效率：使用hi-z提高深度图的采样（主要是采样更低的mipmap，提高缓存效率）；
-8. 优化动画计算，将skinning的代码从vertex shader放到compute shader中，并消除shadow/pre-depth/main pass中分别重复的计算（https://wickedengine.net/2017/09/09/skinning-in-compute-shader/）；
+  4）AO效果和效率的优化。效果：修复iOS下，出现一大堆线段的bug；修复bent_normal和cone tracing的bug；效率：使用hi-z提高深度图的采样（主要是采样更低的mipmap，提高缓存效率）；
 9. 水渲染；
 10. 点光源，包括point、spot和rectangle/plane的区域光，包括其对应的阴影；
 11. 使用Hi-Z的方式进行剔除；

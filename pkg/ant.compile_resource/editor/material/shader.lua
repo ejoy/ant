@@ -1,5 +1,5 @@
-local subprocess = import_package "ant.subprocess"
-local SHADERC    = subprocess.tool_exe_path "shaderc"
+local SHADERC    = import_package "ant.subprocess".tool_exe_path "shaderc"
+local subprocess = require "editor.subprocess"
 local sha1       = require "editor.hash".sha1
 local lfs        = require "filesystem.local"
 local vfs        = require "vfs"
@@ -25,6 +25,23 @@ local function writefile(filename, data)
     f:write(data)
 end
 
+local function print_cmd(C)
+    print "shader compile:"
+
+    local function unpack_table(t, cc)
+        for _, tt in ipairs(t) do
+            if type(tt) == "table" then
+                unpack_table(tt, cc)
+            else
+                cc[#cc+1] = tt
+            end
+        end
+    end
+    local cc = {}
+    unpack_table(C, cc)
+    print(table.concat(cc, " "))
+end
+
 local function run(commands, input, output)
     table.insert(commands, 1, SHADERC:string())
     local cmdstring = cmdtostr(commands)
@@ -38,13 +55,13 @@ local function run(commands, input, output)
     end
     lfs.remove_all(path)
     lfs.create_directories(path)
-	print("shader compile:")
-    print(cmdstring)
-    local ok, msg = subprocess.spawn_process {
+    local C = {
         commands,
-        "-o", path / "bin",
+        "-o", (path / "bin"):string(),
         "--depends",
     }
+    print_cmd(C)
+    local ok, msg = subprocess.spawn_process(C)
     if ok then
         local INFO = msg:upper()
         for _, term in ipairs {

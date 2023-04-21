@@ -3,12 +3,11 @@ system "daynight_system"
     .method "init"
     .method "entity_init"
     .method "entity_remove"
-    .method "data_changed"
 
 
 interface "idaynight"
     .implement "daynight.lua"
-    .method "set_time_range"
+    .method "update_cycle"
     .method "set_rotation_data"
 
 component "daynight".type "lua"
