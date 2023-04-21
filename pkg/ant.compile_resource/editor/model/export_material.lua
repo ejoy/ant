@@ -133,22 +133,24 @@ local function read_datalist(statefile)
     return s
 end
 
-local function save_texture(saved_files, output, texture_desc)
+local function save_texture(saved_files, output, exports, texture_desc)
     if not saved_files[output:string()] then
-        fs.remove_all(output)
-        fs.create_directory(output)
-        local cfg = config.get "texture"
-        local ok, err = texture_compile(texture_desc, output, cfg.setting, function (path)
-            path = path[1]
-            if path:sub(1,1) == "/" then
-                return fs.path(path):localpath()
-            end
-            return fs.absolute(output:parent_path() / (path:match "^%./(.+)$" or path))
-        end)
-        if not ok then
-            error("compile failed: " .. output:string() .. "\n" .. err)
-        end
         saved_files[output:string()] = true
+        exports.async(function ()
+            fs.remove_all(output)
+            fs.create_directory(output)
+            local cfg = config.get "texture"
+            local ok, err = texture_compile(texture_desc, output, cfg.setting, function (path)
+                path = path[1]
+                if path:sub(1,1) == "/" then
+                    return fs.path(path):localpath()
+                end
+                return fs.absolute(output:parent_path() / (path:match "^%./(.+)$" or path))
+            end)
+            if not ok then
+                error("compile failed: " .. output:string() .. "\n" .. err)
+            end
+        end)
     end
 end
 
@@ -246,7 +248,7 @@ return function (output, glbdata, exports, tolocalpath)
         local texname = imgname_noext .. ".texture"
         local texfilename = "./images/" .. texname
         local outtexfile = output / texfilename
-        save_texture(saved_files, outtexfile, texture_desc)
+        save_texture(saved_files, outtexfile, exports, texture_desc)
 
         --we need output texture path which is relate to *.material file, so we need ..
         return serialize.path("./../images/" .. texname)

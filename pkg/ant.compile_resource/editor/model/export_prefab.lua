@@ -161,17 +161,19 @@ local material_files = {}
 local function save_material(output, exports, mi)
     local f = utility.full_path(mi.filename:string())
     if not material_files[f:string()] then
-        lfs.remove_all(f)
-        lfs.create_directory(output)
-        local cfg = config.get "material"
-        local ok, err = material_compile(mi.material, output / mi.filename, cfg.setting, function (path)
-            return fs.path(path):localpath()
-        end)
-        if not ok then
-            error("compile failed: " .. (output / mi.filename):string() .. "\n" .. err)
-        end
-        depends.append(exports.depfiles, err)
         material_files[f:string()] = true
+        exports.async(function ()
+            lfs.remove_all(f)
+            lfs.create_directory(output)
+            local cfg = config.get "material"
+            local ok, err = material_compile(mi.material, output / mi.filename, cfg.setting, function (path)
+                return fs.path(path):localpath()
+            end)
+            if not ok then
+                error("compile failed: " .. (output / mi.filename):string() .. "\n" .. err)
+            end
+            depends.append(exports.depfiles, err)
+        end)
     end
 end
 

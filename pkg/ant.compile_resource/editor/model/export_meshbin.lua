@@ -690,9 +690,9 @@ end
 	end
 end ]]
 
-return function (_, glbdata, exports, settings)
+return function (_, glbdata, exports)
 	joint_trees = {}
-	export_meshbin(glbdata.info, glbdata.bin, exports, settings)
+	export_meshbin(glbdata.info, glbdata.bin, exports)
 	export_skinbin(glbdata.info, glbdata.bin, exports)
 	return exports
 end
