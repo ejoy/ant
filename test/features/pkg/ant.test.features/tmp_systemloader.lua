@@ -233,14 +233,16 @@ function init_loader_sys:init()
 --[[     quad_eid = ientity.create_quad_lines_entity("quads", {r={0.0, math.pi*0.5, 0.0}}, 
         "/pkg/ant.test.features/assets/quad.material", 10, 1.0) ]]
 
-    --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
---[[        create_instance("/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab",
-    function(e)
-        local ee<close> = w:entity(e.tag['*'][1], "scene:in name:in")
-        ee.name = "miner_test"
-        iom.set_scale(ee, 0.5)
-        iom.set_position(ee,math3d.vector(90, 0, 30))
-    end)   ]]  
+
+    ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
+
+    -- create_instance("/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab",
+    --     function(e)
+    --         local ee<close> = w:entity(e.tag['*'][1], "scene:in name:in")
+    --         ee.name = "miner_test"
+    --         iom.set_scale(ee, 0.5)
+    --         iom.set_position(ee,math3d.vector(90, 0, 30))
+    --     end)
 
 --[[     create_instance("/pkg/ant.test.features/assets/glb/assembling-1.glb|mesh.prefab",
     function(e)
@@ -541,27 +543,28 @@ function init_loader_sys:init()
     end
     world:create_object(ep) ]]
 
---[[     printer_eid = ecs.create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.general|name",
-            "mod.printer|printer",
-        },
-        data = {
-            name        = "printer_test",
-            scene  = {s = 0.1, t = {5, 0, 5}},
-            material    = "/pkg/mod.printer/assets/printer.material",
-            visible_state = "main_view",
-            mesh        = "/pkg/ant.test.features/assets/glb/road_X.glb|meshes/LOD3spShape_P1.meshbin",
-            render_layer= "postprocess_obj",
-            -- add printer tag
-            -- previous still be zero
-            -- duration means generation duration time
-            printer = {
-                percent  = printer_percent
-            }
-        },
-    } ]]
+    -- printer_eid = ecs.create_entity {
+    --     policy = {
+    --         "ant.render|render",
+    --         "ant.general|name",
+    --         "mod.printer|printer",
+    --     },
+    --     data = {
+    --         name        = "printer_test",
+    --         scene  = {s = 0.1, t = {5, 0, 5}},
+    --         material    = "/pkg/mod.printer/assets/printer.material",
+    --         visible_state = "main_view",
+    --         mesh        = "/pkg/ant.test.features/assets/glb/road_X.glb|meshes/立方体.001_P1.meshbin",
+    --         render_layer= "postprocess_obj",
+    --         -- add printer tag
+    --         -- previous still be zero
+    --         -- duration means generation duration time
+    --         printer = {
+    --             percent  = printer_percent
+    --         }
+    --     },
+    -- }
+
 end
 
 local function render_layer_test()
@@ -1059,6 +1062,15 @@ function init_loader_sys:entity_init()--[[
     end
 
 
+end
+
+function init_loader_sys:data_changed()
+    local idn = ecs.import.interface "mod.daynight|idaynight"
+    local itimer = ecs.import.interface "ant.timer|itimer"
+    local dne = w:first "daynight:in"
+    local tenSecondMS<const> = 10000
+    local cycle = (itimer.current() % tenSecondMS) / tenSecondMS
+    idn.update_cycle(dne, cycle)
 end
 
 function init_loader_sys:camera_usage()

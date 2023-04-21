@@ -77,6 +77,7 @@ system "init_loader_system"
     .method "init"
     .method "init_world"
     .method "entity_init"
+    .method "data_changed"
     .method "camera_usage"
 
 system "animation_test_system"

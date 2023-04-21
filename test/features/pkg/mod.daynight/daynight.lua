@@ -90,15 +90,6 @@ function dn_sys:init()
     read_colors_from_files()
 end
 
-local function update_cycle(dn, deltaMS)
-    local time_rangeMS = dn.time_rangeMS
-    local a = dn.current_timeMS % time_rangeMS
-    dn.cycle = a / time_rangeMS
-
-    dn.current_timeMS = dn.current_timeMS + deltaMS
-    return dn.cycle
-end
-
 local function interpolate_in_array(t, arrays)
     local v = (#arrays-1) * t
     local x, y = math.modf(v)
@@ -109,7 +100,6 @@ end
 function dn_sys:entity_init()
     for dne in w:select "INIT daynight:in" do
         local dn = dne.daynight
-        dn.current_timeMS = dn.time_rangeMS * dn.cycle
 
         local dnl = dn.light
         dnl.normal = math3d.mark(math3d.vector(dnl.normal))
@@ -134,13 +124,9 @@ function dn_sys:entity_remove()
     end
 end
 
-function dn_sys:data_changed()
-    local dne = w:first "daynight:in"
-    if dne == nil then
-        return 
-    end
+local function update_daynight_value(dne)
     local dn = dne.daynight
-    local tc = update_cycle(dn, itimer.delta())
+    local tc = dn.cycle
 
     --interpolate indirect light color
     local modulate_color = interpolate_in_array(tc, INDIRECT_COLORS)
@@ -179,10 +165,9 @@ end
 
 
 local idn = ecs.interface "idaynight"
-function idn.set_time_range(rangeMS)
-    local dne = w:first "daynight:in"
-    local dn = dne.daynight
-    dn.time_rangeMS = rangeMS
+function idn.update_cycle(e, cycle)
+    e.daynight.cycle = cycle
+    update_daynight_value(e)
 end
 
 function idn.set_rotation_data(start_dir, normal)
