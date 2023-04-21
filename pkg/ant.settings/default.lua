@@ -1,7 +1,7 @@
 return {
     graphic = {
         ao = {
-            enable      = true,
+            enable      = false,
             bent_normal = false,
             quality     = "low",
             radius      = 3.0,      -- Ambient Occlusion radius in meters, between 0 and ~10.
