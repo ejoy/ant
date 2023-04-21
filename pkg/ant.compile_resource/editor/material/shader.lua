@@ -26,18 +26,19 @@ local function writefile(filename, data)
 end
 
 local function print_cmd(C)
-    print("shader compile:")
-    local cc = {}
+    print "shader compile:"
 
-    local function unpack_table(t)
+    local function unpack_table(t, cc)
         for _, tt in ipairs(t) do
             if type(tt) == "table" then
-                unpack_table(tt)
+                unpack_table(tt, cc)
+            else
+                cc[#cc+1] = tt
             end
-            cc[#cc+1] = tt
         end
     end
-    unpack_table(C)
+    local cc = {}
+    unpack_table(C, cc)
     print(table.concat(cc, " "))
 end
 
@@ -56,7 +57,7 @@ local function run(commands, input, output)
     lfs.create_directories(path)
     local C = {
         commands,
-        "-o", path / "bin",
+        "-o", (path / "bin"):string(),
         "--depends",
     }
     print_cmd(C)
