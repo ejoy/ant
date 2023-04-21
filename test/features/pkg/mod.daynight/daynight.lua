@@ -49,9 +49,9 @@ local function read_colors_from_files()
         return image.parse(c, true)
     end
     do
-        local direct_info, direct_c         = read_image_content "/pkg/mod.daynight/assets/light/direct.png"
-        local indirect_info, indirect_c     = read_image_content "/pkg/mod.daynight/assets/light/indirect.png"
-        local intensity_info, intensity_c   = read_image_content "/pkg/mod.daynight/assets/light/intensity.png"
+        local direct_info, direct_c         = read_image_content "/pkg/mod.daynight/assets/light/direct.pngx"
+        local indirect_info, indirect_c     = read_image_content "/pkg/mod.daynight/assets/light/indirect.pngx"
+        local intensity_info, intensity_c   = read_image_content "/pkg/mod.daynight/assets/light/intensity.pngx"
 
         assert(direct_info.depth == 1 and (not direct_info.cubemap))
         assert(indirect_info.depth == 1 and (not indirect_info.cubemap))
