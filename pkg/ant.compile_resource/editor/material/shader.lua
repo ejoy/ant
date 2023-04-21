@@ -25,6 +25,22 @@ local function writefile(filename, data)
     f:write(data)
 end
 
+local function print_cmd(C)
+    print("shader compile:")
+    local cc = {}
+
+    local function unpack_table(t)
+        for _, tt in ipairs(t) do
+            if type(tt) == "table" then
+                unpack_table(tt)
+            end
+            cc[#cc+1] = tt
+        end
+    end
+    unpack_table(C)
+    print(table.concat(cc, " "))
+end
+
 local function run(commands, input, output)
     table.insert(commands, 1, SHADERC:string())
     local cmdstring = cmdtostr(commands)
@@ -38,13 +54,13 @@ local function run(commands, input, output)
     end
     lfs.remove_all(path)
     lfs.create_directories(path)
-	print("shader compile:")
-    print(cmdstring)
-    local ok, msg = subprocess.spawn_process {
+    local C = {
         commands,
         "-o", path / "bin",
         "--depends",
     }
+    print_cmd(C)
+    local ok, msg = subprocess.spawn_process(C)
     if ok then
         local INFO = msg:upper()
         for _, term in ipairs {
