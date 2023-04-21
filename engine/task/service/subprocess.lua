@@ -16,8 +16,10 @@ function S.run(command)
 end
 
 local function update()
-    local ok = subprocess.select(progs)
-    assert(ok)
+    local ok = subprocess.select(progs, 100)
+    if not ok then
+        return
+    end
     local i = 1
     while i <= #progs do
         local prog = progs[i]
