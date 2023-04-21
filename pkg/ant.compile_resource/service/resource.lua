@@ -258,6 +258,8 @@ function S.texture_create(name)
     return c.output
 end
 
+local FrameLoaded = 0
+local MaxFrameLoaded <const> = 64
 
 ltask.fork(function ()
     while true do
@@ -278,12 +280,16 @@ ltask.fork(function ()
             if not name then
                 break
             end
+            while FrameLoaded > MaxFrameLoaded do
+                ltask.sleep(10)
+            end
             createQueue[name] = nil
             local c = textureByName[name]
             local handle = createTexture(c.input)
             c.handle = handle
             c.input = nil
             textureman.texture_set(c.output.id, handle)
+            FrameLoaded = FrameLoaded + 1
             ltask.sleep(0)
         end
     end
@@ -322,6 +328,7 @@ ltask.fork(function ()
             end
         end
         FrameCur = FrameCur + 1
+        FrameLoaded = 0
         textureman.frame_tick()
         bgfx.encoder_frame()
     end
