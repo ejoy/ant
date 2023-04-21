@@ -22,7 +22,7 @@ return function (input, output, exports)
     local success, msg = subprocess.spawn_process {
         GLTF2OZZ,
         "--file=" .. (cwd / input):string(),
-        cwd = folder,
+        cwd = folder:string(),
     }
 
     if not success then

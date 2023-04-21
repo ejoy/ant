@@ -11,14 +11,14 @@ function S.run(command)
     if not prog then
         return nil, err
     end
-    progs[#progs+1] = prog
+    progs[#progs + 1] = prog
     return ltask.wait(prog)
 end
 
 local function update()
     local ok = subprocess.select(progs)
     assert(ok)
-    local i  = 1
+    local i = 1
     while i <= #progs do
         local prog = progs[i]
         if prog:is_running() then
@@ -32,7 +32,7 @@ local function update()
     end
 end
 
-ltask.fork(function ()
+ltask.fork(function()
     while true do
         ltask.sleep(0)
         if #progs == 0 then
