@@ -160,10 +160,18 @@ local function asyncCreateTexture(name)
     if destroyQueue[name] then
         destroyQueue[name] = nil
     end
-    createQueue[name] = true
-    createQueue[#createQueue+1] = name
-    if #createQueue == 1 then
-        ltask.wakeup(token)
+    if textureByName[name].input then
+        createQueue[name] = true
+        createQueue[#createQueue+1] = name
+        if #createQueue == 1 then
+            ltask.wakeup(token)
+        end
+    else
+        ltask.fork(function ()
+            local c = textureByName[name]
+            c.input = loadTexture(name)
+            asyncCreateTexture(name)
+        end)
     end
 end
 
@@ -208,7 +216,7 @@ function S.create_texture_table(texture_table)
             path_table = {}
         end
         path_table[idx] = {path = info.texture_path, list = {}}
-    end  
+    end
 end
 
 function S.get_texture_table()
@@ -272,9 +280,6 @@ ltask.fork(function ()
             end
             createQueue[name] = nil
             local c = textureByName[name]
-            if not c.input then
-                c.input = loadTexture(name)
-            end
             local handle = createTexture(c.input)
             c.handle = handle
             c.input = nil
