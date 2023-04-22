@@ -1,5 +1,5 @@
 local ltask = require "ltask"
-local gesture
+local SupportGesture <const> = require "bee.platform".os == "ios"
 local scheduling
 
 local S = {}
@@ -28,40 +28,46 @@ for CMD, e in pairs(event) do
     end
 end
 
-local function gesture_init()
-    if require "bee.platform".os ~= "ios" then
-        return
-    end
-    gesture = require "ios.gesture"
-    gesture.tap {}
-    gesture.pinch {}
-    gesture.long_press {}
-    gesture.pan {}
-end
+local SCHEDULE_SUCCESS <const> = 3
 
-local function gesture_dispatch(name, ...)
-    if not name then
-        return
+local dispatch; if SupportGesture then
+    local gesture = require "ios.gesture"
+    local function gesture_init()
+        gesture.tap {}
+        gesture.pinch {}
+        gesture.long_press {}
+        gesture.pan {}
     end
-    ltask.send(ltask.self(), "send_gesture", name, ...)
-    return true
-end
-
-local function dispatch(CMD,...)
-    local SCHEDULE_SUCCESS <const> = 3
-    if CMD == "update" then
-        if gesture then
+    local function gesture_dispatch(name, ...)
+        if not name then
+            return
+        end
+        ltask.send(ltask.self(), "send_gesture", name, ...)
+        return true
+    end
+    function dispatch(CMD,...)
+        if CMD == "update" then
             while gesture_dispatch(gesture.event()) do
             end
+            repeat
+                scheduling()
+            until ltask.schedule_message() ~= SCHEDULE_SUCCESS
+        else
+            if CMD == "init" then
+                gesture_init()
+            end
+            ltask.send(ltask.self(), "send_"..CMD, ...)
         end
-        repeat
-            scheduling()
-        until ltask.schedule_message() ~= SCHEDULE_SUCCESS
-    else
-        if CMD == "init" then
-            gesture_init()
+    end
+else
+    function dispatch(CMD,...)
+        if CMD == "update" then
+            repeat
+                scheduling()
+            until ltask.schedule_message() ~= SCHEDULE_SUCCESS
+        else
+            ltask.send(ltask.self(), "send_"..CMD, ...)
         end
-        ltask.send(ltask.self(), "send_"..CMD, ...)
     end
 end
 
