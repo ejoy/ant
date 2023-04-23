@@ -18,11 +18,6 @@ local declmgr       = renderpkg.declmgr
 
 local init_loader_sys   = ecs.system 'init_loader_system'
 local iheapmesh = ecs.import.interface "ant.render|iheapmesh"
-local iprinter= ecs.import.interface "mod.printer|iprinter"
-local istonemountain= ecs.import.interface "mod.stonemountain|istonemountain"
-local iterrain      = ecs.import.interface "mod.terrain|iterrain"
-local printer
-local printer_material
 local printer_eid
 local printer_percent = 0
 local function point_light_test()
@@ -124,446 +119,22 @@ local function create_instance(prefab, onready)
     world:create_object(p)
 end
 
-
-local function gridmask_test()
-
-    local linesmesh = {
-            vb = {
-                start = 0,
-                num = 20,
-                declname = "p3",
-                memory = {"fff", {
-                    --rows
-                    -2.0,  0.0, -2.0,
-                     2.0,  0.0, -2.0,
-
-                    -2.0,  0.0, -1.0,
-                     2.0,  0.0, -1.0,
-
-                    -2.0,  0.0,  0.0,
-                     2.0,  0.0,  0.0,
-
-                    -2.0,  0.0,  1.0,
-                     2.0,  0.0,  1.0,
-
-                    -2.0,  0.0,  2.0,
-                     2.0,  0.0,  2.0,
-
-                    --columns
-                    -2.0,  0.0,  2.0,
-                    -2.0,  0.0, -2.0,
-
-                    -1.0,  0.0,  2.0,
-                    -1.0,  0.0, -2.0,
-
-                     0.0,  0.0,  2.0,
-                     0.0,  0.0, -2.0,
-
-                     1.0,  0.0,  2.0,
-                     1.0,  0.0, -2.0,
-
-                     2.0,  0.0,  2.0,
-                     2.0,  0.0, -2.0,
-                }},
-            },
-        }
-
---[[     ecs.create_entity{
-        policy = {
-            "ant.render|simplerender",
-            "ant.general|name",
-        },
-        data = {
-            --simplemesh = imesh.init_mesh(ientity.plane_mesh()),
-            simplemesh = imesh.init_mesh(linesmesh),
-            visible_state = "main_view",
-            material = "/pkg/mod.gridmask/assets/gridmask.material",
-            render_layer = "translucent",
-            scene = {
-                t = {10, 1.0, 0.0}
-            },
-            on_ready = function (e)
-                
-            end,
-            name = "gridmask_test",
-        }
-    } ]]
-end
-
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
-    -- width height unit offset freq depth, section_size
-    --ism.create_sm_entity(256, 256, 0)
-    --point_light_test()
-    --ientity.create_grid_entity("polyline_grid", 64, 64, 1, 5, nil, "/pkg/ant.test.features/assets/polyline_mask.material", "background")
-
---[[     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/base/cube.glb|mesh.prefab"
-    p.on_ready = function (e)
-        local ee<close> = w:entity(e.tag['*'][1], "name:update")
-        ee.name = "hahahah"
-    end
-
-    world:create_object(p) ]]
-
-    --gridmask_test()
-    -- print(eid1, eid2, eid3)
-
-    -- local pp = ecs.create_instance "/pkg/ant.resources.binary/meshes/up_box.glb|mesh.prefab"
-    -- function pp.on_ready(e)
-    --     local ee<close> = w:entity(e.root)
-    --     iom.set_scale(ee, 2.5)
-    -- end
-    -- world:create_object(pp)
-    -- local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab"
-    -- p.on_ready = function (e)
-    --     local ee<close> = w:entity(e.root)
-    --     iom.set_position(ee, math3d.vector(0, 5, 0, 1))
-    -- end
-    -- world:create_object(p)
-
-    -- local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/headquater.glb|mesh.prefab"
-    -- p.on_ready = function (e)
-    --     local ee<close> = w:entity(e.root)
-    --     iom.set_scale(ee, 0.1)
-    -- end
-    -- world:create_object(p)
-
-    --cp_eid = color_palette_test()
-
---[[     quad_eid = ientity.create_quad_lines_entity("quads", {r={0.0, math.pi*0.5, 0.0}}, 
-        "/pkg/ant.test.features/assets/quad.material", 10, 1.0) ]]
-
-
-    ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
-
-    -- create_instance("/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab",
-    --     function(e)
-    --         local ee<close> = w:entity(e.tag['*'][1], "scene:in name:in")
-    --         ee.name = "miner_test"
-    --         iom.set_scale(ee, 0.5)
-    --         iom.set_position(ee,math3d.vector(90, 0, 30))
-    --     end)
-
---[[     create_instance("/pkg/ant.test.features/assets/glb/assembling-1.glb|mesh.prefab",
-    function(e)
-        local ee<close> = w:entity(e.tag['*'][1], "scene:in name:in")
-        ee.name = "miner_test"
-        iom.set_scale(ee, 0.5)
-        iom.set_position(ee,math3d.vector(200, 0, 60))
-    end)    ]]
-
---[[     create_instance("/pkg/ant.test.features/assets/glb/assembling-1.glb|mesh.prefab",
-    function(e)
-        local ee<close> = w:entity(e.tag['*'][1], "scene:in")
-        iom.set_scale(ee, 0.1)
-        iom.set_position(ee,math3d.vector(0,0,0))
-    end)  ]] 
-
-    -- create_texture_plane_entity(
-    --     {1, 1.0, 1.0, 1.0}, 
-    --     "/pkg/ant.resources/textures/texture_plane.texture",
-    --     {x=64, y=0, w=64, h=64}, {w=384, h=64})
-
-    -- do
-    --     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/world_simple.glb|mesh.prefab"
-    --     p.on_ready = function (e)
-    --         local ee<close> = w:entity(e.root)
-    --         iom.set_scale(ee, 0.1)
-    --     end
-    --     world:create_object(p)
-    -- end
-
-    -- do
-    --     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/plane.glb|mesh.prefab"
-    --     p.on_ready = function (e)
-    --         local ee<close> = w:entity(e.root)
-    --         iom.set_scale(ee, 0.1)
-    --         local ivav = ecs.import.interface "ant.test.features|ivertex_attrib_visualizer"
-
-    --         local dl = w:first("directional_light scene:in")
-    --         local d = math3d.inverse(math3d.todirection(dl.scene.r))
-    --         for _, eid in ipairs(e.tag["*"]) do
-    --             local ee<close> = w:entity(eid)
-    --             ivav.display_normal(ee, d)
-    --         end
-            
-    --     end
-    --     world:create_object(p)
-    -- end
-
-    -- do
-    --     local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/world_simple.glb|mesh.prefab"
-    --     p.on_ready = function (e)
-    --         local ee<close> = w:entity(e.root)
-    --         iom.set_scale(ee, 0.1)
-    --         -- local ivav = ecs.import.interface "ant.test.features|ivertex_attrib_visualizer"
-
-    --         -- local dl = w:first("directional_light scene:in")
-    --         -- local d = math3d.inverse(math3d.todirection(dl.scene.r))
-    --         -- for _, eid in ipairs(e.tag["*"]) do
-    --         --     local ee<close> = w:entity(eid)
-    --         --     ivav.display_normal(ee, d)
-    --         -- end
-            
-    --     end
-    --     world:create_object(p)
-    -- end
-
-    --ientity.create_grid_entity_simple "grid"
-
-    -- ecs.create_entity{
-	-- 	policy = {
-	-- 		"ant.render|simplerender",
-	-- 		"ant.general|name",
-	-- 	},
-	-- 	data = {
-	-- 		scene 		= {
-    --             srt = {
-    --                 s = {50, 1, 50, 0}
-    --             }
-    --         },
-	-- 		material 	= "/pkg/ant.resources/materials/singlecolor1.material",
-	-- 		visible_state= "main_view",
-	-- 		name 		= "test_shadow_plane",
-	-- 		simplemesh 	= imesh.init_mesh(ientity.plane_mesh()),
-	-- 		on_ready = function (e)
-	-- 			imaterial.set_property(e, "u_basecolor_factor", {0.5, 0.5, 0.5, 1})
-	-- 		end,
-	-- 	}
-    -- }
-    --ientity.create_procedural_sky()
-    --local p = ecs.create_instance "/pkg/ant.resources.binary/meshes/headquater.glb|mesh.prefab"
---[[     local g1 = ecs.group(1)
-    local group_root = g1:create_entity{
-        policy = {
-            "ant.scene|scene_object",
-            "ant.general|name",
-        },
-        data = {
-            scene = {},
-            on_ready = function (e)
-                iom.set_position(e, math3d.vector(-20, 0, 0))
-            end,
-            name = "test_group",
-        },
-    }
-    g1:create_entity{
-        policy = {
-            "ant.render|render",
-            "ant.general|name",
-        },
-        data = {
-            mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
-            material = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material",
-            visible_state = "main_view",
-            scene = {
-                parent = group_root,
-            },
-            on_ready = function (e)
-                iom.set_scale(e, 10)
-            end,
-            name = "test_group",
-        },
-    } ]]
-    
-    --ecs.create_instance"/pkg/ant.test.features/assets/entities/skybox_test.prefab"
-    local p = ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_directional.prefab"
-    p.on_ready = function (e)
-        local pid = e.tag["*"][1]
-
---[[         ecs.create_entity{
-            policy = {
-                "ant.render|simplerender",
-                "ant.general|name",
-            },
-            data = {
-                simplemesh = ientity.arrow_mesh(0.3),
-                material = "/pkg/ant.resources/materials/meshcolor.material",
-                visible_state = "main_view",
-                scene = {
-                    parent = pid
-                },
-                name = "arrow",
-                on_ready = function (ee)
-                    imaterial.set_property(ee, "u_color", math3d.vector(1.0, 0.0, 0.0, 1.0))
-                end
-            }
-        } ]]
+    ientity.create_grid_entity("grid", 128, 128, 1, 3)
+    create_instance("/pkg/ant.test.features/assets/entities/light.prefab",
+    function (e)
+        local pid = e.tag["*"][2]
 
         local le<close> = w:entity(pid)
         iom.set_direction(le, math3d.vector(0.2664446532726288, -0.25660401582717896, 0.14578714966773987, 0.9175552725791931))
-    end
-    world:create_object(p)
-     local q = ecs.create_instance"/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab"
-    q.on_ready = function (e)
-        local ee<close> = w:entity(e.tag['*'][1])
-        iom.set_scale(ee, 1)
-    end 
-    world:create_object(q)  
-
---[[     ecs.create_entity {
-        policy = {
-            "ant.render|render",
-            "ant.general|name",
-         },
-        data = {
-            name          = "sm1",
-            scene         = {s=0.5},
-            material      = "/pkg/ant.resources/materials/pbr_default.material", 
-            visible_state = "main_view|cast_shadow",
-            mesh          = "/pkg/ant.test.features/assets/glb/mountain1.glb|meshes/Cylinder.002_P1.meshbin",
-            stonemountain = true,
-        },
-    }  ]]
-
---[[     do
-        testprefab = ecs.create_instance "/pkg/ant.test.features/assets/glb/headquater-1.glb|mesh.prefab"
-        function testprefab.on_ready(e)
-            local t = assetmgr.resource "/pkg/ant.test.features/assets/textures/headquater_basecolor_red.texture"
-            local mesh_eid = e.tag["*"][2]
-            local te<close> = w:entity(mesh_eid)
-            imaterial.set_property(te, "s_basecolor", t.id)
-            iom.set_scale(te, 0.1)
-        end
-        world:create_object(testprefab)
-    end ]]
-
-    -- do
-    --     ecs.create_instance "/pkg/ant.test.features/assets/glb/electric-pole-1.glb|mesh.prefab"
-    -- end
-
-
-    local off = 0.1
-	--ientity.create_screen_axis_entity("global_axes", {type = "percent", screen_pos = {off, 1-off}}, {s=0.1})
-    --ecs.create_instance "/pkg/ant.test.features/assets/glb/logistics_center.glb|mesh.prefab"
-
---[[      local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/cube.prefab"
-     function p:on_ready()
-         local e = self.tag.cube[1]
-         e.render_object.material.u_color = math3d.vector(0.8, 0, 0.8, 1.0)
-     end
-
-    world:create_object(p) ]]
-    --print(p)
-    --ecs.create_instance  "/pkg/ant.test.features/assets/entities/test_scene.prefab"
-    --ecs.create_instance  "/pkg/ant.test.features/assets/entities/skybox_test.prefab"
-    --ecs.create_instance  "/pkg/ant.test.features/assets/glb/cloud.glb|mesh.prefab"
-    --ecs.create_instance  "/pkg/ant.test.features/assets/glb/shadow.glb|mesh.prefab"
-    -- local p = ecs.create_instance  "/pkg/ant.test.features/assets/glb/Fox.glb|mesh.prefab"
-    -- foxeid = p[3]
-    
-    --ecs.create_instance  "/pkg/ant.test.features/assets/glb/shuijing.glb|mesh.prefab"
-    --ecs.create_instance  "/pkg/ant.resources/meshes/SimpleSkin/SimpleSkin.glb|mesh.prefab"
-    -- ecs.create_instance  "/pkg/ant.test.features/assets/entities/light_point.prefab"
-    -- local eid = ecs.create_instance  "/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab"[1]
-    -- world:pub{"after_init", eid}
-    --ecs.create_instance  "/pkg/ant.test.features/assets/entities/font_tt.prefab"
-    --ecs.create_instance  "/pkg/ant.resources.binary/meshes/female/female.glb|mesh.prefab"
-
-    --ientity.create_procedural_sky()
-    --target_lock_test()
-
-    --ientity.create_skybox()
-    --ecs.create_instance  "/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab"
-
-    --ecs.create_instance  "/pkg/ant.resources.binary/meshes/cloud_run.glb|mesh.prefab"
-    --ecs.create_instance  "/pkg/ant.test.features/assets/CloudTestRun.glb|mesh.prefab"
-
-    -- local eid = world:deprecated_create_entity {
-    --     policy = {
-    --         "ant.general|name",
-    --         "ant.render|render",
-    --         "ant.scene|transform_policy",
-    --     },
-    --     data = {
-    --         name = "collider",
-    --         scene_entity = true,
-    --         sceme = {srt={s=100}},
-    --         filterstate = "main_view|selectable",
-    --         material = "/pkg/ant.resources/materials/singlecolor.material",
-    --         mesh = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
-    --     }
-    -- }
-
---[[       local pp = ecs.create_instance "/pkg/ant.test.features/assets/glb/assembling-1.glb|mesh.prefab"
-    pp.on_ready = function (e)
-        local ee<close> = w:entity(e.tag['*'][1])
-        iom.set_scale(ee, 0.1)
-        iom.set_position(ee, math3d.vector(0, 0, 0))
-    end
-
-    world:create_object(pp)   ]]
-
---[[     local t = ecs.create_instance  "/pkg/ant.test.features/assets/glb/test5.glb|mesh.prefab"
-    t.on_ready = function (e)
-        local pid<close> = w:entity(e.tag['*'][1])
-        iom.set_scale(pid, 0.1)
-        iom.set_position(pid, math3d.vector(5, 0, 5))
-    end
-    world:create_object(t) ]]
-
---[[     local units = 1
-    local tt1 = ecs.create_instance "/pkg/ant.test.features/assets/glb/truck2.glb|mesh.prefab"
-    tt1.on_ready = function (e)
-        local pid<close> = w:entity(e.tag['*'][1])
-        iom.set_scale(pid, 0.1)
-        iom.set_position(pid, math3d.vector(2.25*units, 0, 1.25*units))
-    end
-
-    local tt2 = ecs.create_instance "/pkg/ant.test.features/assets/glb/truck2.glb|mesh.prefab"
-    tt2.on_ready = function (e)
-        local pid<close> = w:entity(e.tag['*'][1])
-        iom.set_scale(pid, 0.1)
-        iom.set_position(pid, math3d.vector(2.75*units, 0, 1.25*units))
-    end
-
-    local tt3 = ecs.create_instance "/pkg/ant.test.features/assets/glb/truck2.glb|mesh.prefab"
-    tt3.on_ready = function (e)
-        local pid<close> = w:entity(e.tag['*'][1])
-        iom.set_scale(pid, 0.1)
-        iom.set_position(pid, math3d.vector(2.25*units, 0, 1.75*units))
-    end
-
-    local tt4 = ecs.create_instance "/pkg/ant.test.features/assets/glb/truck2.glb|mesh.prefab"
-    tt4.on_ready = function (e)
-        local pid<close> = w:entity(e.tag['*'][1])
-        iom.set_scale(pid, 0.1)
-        iom.set_position(pid, math3d.vector(2.75*units, 0, 1.75*units))
-    end
-    world:create_object(tt1)
-    world:create_object(tt2)
-    world:create_object(tt3)
-    world:create_object(tt4)
-
-    local ep = ecs.create_instance "/pkg/ant.test.features/assets/glb/electric-pole-1.glb|mesh.prefab"
-    ep.on_ready = function (e)
-        local pid<close> = w:entity(e.tag['*'][1])
-        iom.set_scale(pid, 0.1)
-        iom.set_position(pid, math3d.vector(8*units, 0, 8*units))
-    end
-    world:create_object(ep) ]]
-
-    -- printer_eid = ecs.create_entity {
-    --     policy = {
-    --         "ant.render|render",
-    --         "ant.general|name",
-    --         "mod.printer|printer",
-    --     },
-    --     data = {
-    --         name        = "printer_test",
-    --         scene  = {s = 0.1, t = {5, 0, 5}},
-    --         material    = "/pkg/mod.printer/assets/printer.material",
-    --         visible_state = "main_view",
-    --         mesh        = "/pkg/ant.test.features/assets/glb/road_X.glb|meshes/立方体.001_P1.meshbin",
-    --         render_layer= "postprocess_obj",
-    --         -- add printer tag
-    --         -- previous still be zero
-    --         -- duration means generation duration time
-    --         printer = {
-    --             percent  = printer_percent
-    --         }
-    --     },
-    -- }
+    end)
+    create_instance("/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab",
+            function (e)
+                local ee<close> = w:entity(e.tag['*'][1])
+                iom.set_scale(ee, 0.1)
+                iom.set_position(ee, math3d.vector(10, 0, 0, 1))
+            end)
 
 end
 
@@ -571,7 +142,7 @@ local function render_layer_test()
     irl.add_layers(irl.layeridx "opacity", "after_opacity", "after_opacity2")
     local m = imesh.init_mesh(ientity.plane_mesh())
 
---[[     ecs.create_entity {
+    ecs.create_entity {
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -604,7 +175,7 @@ local function render_layer_test()
             end,
             name = "test",
         }
-    } ]]
+    }
 end
 
 local sampler_eid
@@ -653,7 +224,7 @@ local function drawindirect_test()
 end
 
 local function motion_sampler_test()
---[[     local ims = ecs.import.interface "ant.motion_sampler|imotion_sampler"
+    local ims = ecs.import.interface "ant.motion_sampler|imotion_sampler"
     local g = ims.sampler_group()
     local eid = g:create_entity {
         policy = {
@@ -679,7 +250,7 @@ local function motion_sampler_test()
         
     end
 
-    world:create_object(p) ]]
+    world:create_object(p)
 end
 
 local canvas_eid
@@ -705,231 +276,8 @@ local function canvas_test()
 end
 
 local heap_num = 1
--- world coordinate x
--- world coordinate y
--- layers: road/mark/road and mark
---         road: type(1~3) shape(I L T U X O) dir(N E S W)
---         mark: type(1~2) shape(U I O) dir(N E S W)     
-local create_list = {
-    -- single road layer:road1 road2 road3
-
-   --[[  {
-        x = 6, y = 1,
-        layers =
-        {
-            road =
-            {
-                type  = "1",
-                shape = "I",
-                dir   = "N"
-            }
-        }
-    },
-    {
-        x = 7, y = 1,
-        layers =
-        {
-            road =
-            {
-                type  = "2",
-                shape = "I",
-                dir   = "N"
-            }
-        }
-    },
-    {
-        x = 8, y = 1,
-        layers =
-        {
-            road =
-            {
-                type  = "3",
-                shape = "I",
-                dir   = "N"
-            }
-        }
-    }, ]]
-    
-    --single mark layer:mark1 mark2
-    {
-        x = 2, y = 2,
-        layers =
-        {
-            mark =
-            {
-                type  = "1",
-                shape = "X",
-                dir   = "E"
-            }
-        }
-    },
---[[     {
-        x = 3, y = 2,
-        layers =
-        {
-            mark =
-            {
-                type  = "1",
-                shape = "U",
-                dir   = "W"
-            }
-        }
-    },
-    {
-        x = 4, y = 2,
-        layers =
-        {
-            mark =
-            {
-                type  = "1",
-                shape = "O",
-                dir   = "N"
-            }
-        }
-    },
-    {
-        x = 2, y = 1,
-        layers =
-        {
-            mark =
-            {
-                type  = "2",
-                shape = "U",
-                dir   = "E"
-            }
-        }
-    },
-    {
-        x = 3, y = 1,
-        layers =
-        {
-            mark =
-            {
-                type  = "2",
-                shape = "I",
-                dir   = "W"
-            }
-        }
-    },
-    {
-        x = 4, y = 1,
-        layers =
-        {
-            mark =
-            {
-                type  = "2",
-                shape = "U",
-                dir   = "W"
-            }
-        }
-    }, ]]
-
---[[     -- multiple layer: road1 road2 road3 and mark1 mark2
-    {
-        
-        x = 1, y = 1,
-        layers =
-        {
-            road =
-            {
-                type  = "1",
-                shape = "I",
-                dir   = "N"                
-            },
-            mark =
-            {
-                type  = "1",
-                shape = "I",
-                dir   = "N"
-            }
-        }
-    },
-    {
-        x = 1, y = 2,
-        layers =
-        {
-            road =
-            {
-                type  = "2",
-                shape = "L",
-                dir   = "N"                
-            },
-            mark =
-            {
-                type  = "2",
-                shape = "O",
-                dir   = "S"
-            }
-        }
-    },  ]]
-}
-
-local function create_mark()
-    local t = {}
-    local x, y = 0, 0
-    for _, shape in ipairs({"I", "L", "T", "U", "X", "O"}) do
-        y = y + 2
-        x = 0
-        for rtype = 1, 2 do
-            for _, dir in ipairs({"N", "E", "S", "W"}) do
-                x = x + 2
-                --
-                t[#t+1] = {
-                    x = x, y = y,
-                    layers = {
-                        mark = {type  = rtype, shape = shape, dir = dir}
-                    }
-                }
-            end
-        end
-    end
-    t[#t+1] =     {
-        x = 0, y = 0,
-        layers =
-        {
-            road =
-            {
-                type  = "3",
-                shape = "I",
-                dir   = "N"
-            }
-        }
-    }
-    t[#t+1] =     {
-        x = 1, y = 0,
-        layers =
-        {
-            road =
-            {
-                type  = "3",
-                shape = "I",
-                dir   = "N"
-            }
-        }
-    }
-    iterrain.create_roadnet_entity(t)
-end
-
-local function create_zone()
-    local t = {
-        [1] = {x = 0, y = 0, zone_color  = "blue"}, 
-        [2] = {x = 2, y = 0, zone_color  = "blue"},
-        [3] = {x = 3, y = 0, zone_color  = "opaque"}
-    }
-    iterrain.update_zone_entity(t)
-end
-
 function init_loader_sys:init_world()
-    iterrain.gen_terrain_field(256, 256, 128)
-    --iterrain.create_roadnet_entity(create_list)
-    create_mark()
-    create_zone()
-    -- stonemountain ratio(0~1) width height offset unit
-    --istonemountain.create_sm_entity(0.1, 256, 256, 128)
-    -- input: x and z coordinates
-    -- output: whether current grid is stonemountain? true = yes nil = false
-    iterrain.is_stone_mountain(46, 0)
-    
+
     for msg in after_init_mb:each() do
         local e = msg[2]
         local s = iom.get_scale(e)
@@ -948,14 +296,6 @@ function init_loader_sys:init_world()
 
     motion_sampler_test()
     drawindirect_test()
-
---[[     local p = ecs.create_instance "/pkg/ant.test.features/assets/entities/outline.prefab"
-    p.on_ready = function (e)
-        local ee<close> = w:entity(e.tag['*'][1], "scene:in")
-        iom.set_scale(ee, 1)
-        iom.set_position(ee, math3d.vector(0, 3, 0))
-    end
-    world:create_object(p) ]]
 end
 
 local kb_mb = world:sub{"keyboard"}
@@ -964,19 +304,7 @@ local mouse_mb = world:sub{"mouse", "LEFT"}
 
 local enable = 1
 local sm_test = false
-function init_loader_sys:entity_init()--[[ 
-    for e in w:select "name:in bounding:in" do
-        if e.name == "sm1" then
-            local t = e.bounding.scene_aabb
-            local center, extent = math3d.aabb_center_extents(e.bounding.scene_aabb)
-            local u = 1
-        end
-    end   ]]  
---[[     if not sm_test then
-        ism.create_sm_entity(256, 256, 10, 0, 4, 4, 16)
-        sm_test = true
-    end ]]
-
+function init_loader_sys:entity_init()
     for _, key, press in kb_mb:unpack() do
         if key == "T" and press == 0 then
             -- local e<close> = w:entity(quad_eid)
@@ -1049,28 +377,14 @@ function init_loader_sys:entity_init()--[[
             heap_num = heap_num + 1
         elseif key == "K" and press == 0 then
             iheapmesh.update_heap_mesh_number(0, "iron-ingot")   -- 更新当前堆叠数
-        elseif key == "L" and press == 0 then
-            iheapmesh.update_heap_mesh_sidesize({5, 4 ,3}, "iron-ingot")  -- 更新当前每个轴的最大堆叠数 参数一为待更新每个轴的最大堆叠数(表) 参数二为entity筛选的glb名字
-        elseif key == "M" and press == 0 then
-            printer_percent = printer_percent + 0.1
-            if printer_percent >= 1.0 then
-                printer_percent = 0.0
-            end
-            iprinter.update_printer_percent(printer_eid, printer_percent)
         end
-        
     end
 
 
 end
 
 function init_loader_sys:data_changed()
-    local idn = ecs.import.interface "mod.daynight|idaynight"
-    local itimer = ecs.import.interface "ant.timer|itimer"
-    local dne = w:first "daynight:in"
-    local tenSecondMS<const> = 10000
-    local cycle = (itimer.current() % tenSecondMS) / tenSecondMS
-    idn.update_cycle(dne, cycle)
+
 end
 
 function init_loader_sys:camera_usage()
