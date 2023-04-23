@@ -64,7 +64,7 @@ end
 	local frustum_ortho = {
 		l=-1, r=1,
 		t=-1, b=1,
-		n=csm_frustum.n, f=csm_frustum.f,
+		n=-csm_frustum.f, f=csm_frustum.f,
 		ortho = true,
 	}
 	local ortho_proj = math3d.projmat(frustum_ortho, INV_Z)
@@ -91,7 +91,7 @@ end
 	 	scalex, 0, 0, 0,
 	 	0, scaley, 0, 0,
 	 	0, 0, 1, 0,
-	 	offsetx, offsety, 0, 1,		
+	 	0, 0, 0, 1,		
 	}
 
 	local camera = shadow_ce.camera
@@ -126,7 +126,7 @@ local function update_shadow_frustum(dl, main_camera)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end
-end   ]]
+end   ]] 
 
 --[[ local function calc_ortho_minmax(light_view, world_frustum_points, shadowmap_size)
 	local light_ortho_min, light_ortho_max = math3d.minmax(world_frustum_points, light_view)
@@ -203,7 +203,7 @@ local function update_shadow_frustum(dl, main_camera)
 	end
 end ]]
 
-local function calc_ortho_minmax(light_view, world_frustum_points, shadowmap_size)
+ local function calc_ortho_minmax(light_view, world_frustum_points, shadowmap_size)
 	local light_ortho_min, light_ortho_max = math3d.minmax(world_frustum_points, light_view)
 
 	local diagonal = math3d.sub(math3d.array_index(world_frustum_points, 1), math3d.array_index(world_frustum_points, 8))

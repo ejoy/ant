@@ -175,7 +175,7 @@ vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
             shading_color(input_attribs, mi, ilight, color);
         }
     }
-    return color;
+    return color * dl_visibility;
 }
 
 vec4 compute_lighting(input_attributes input_attribs){
