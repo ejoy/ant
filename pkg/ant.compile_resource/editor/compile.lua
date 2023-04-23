@@ -24,15 +24,16 @@ local function compile_file(input)
     local ext = inputstr:match "[^/]%.([%w*?_%-]*)$"
     local cfg = config.get(ext)
     local output = cfg.binpath / get_filename(inputstr)
-    if depends.dirty(output / ".dep") then
+    local changed = depends.dirty(output / ".dep")
+    if changed then
         local ok, deps = cfg.compiler(input, output, function (path)
             return absolute_path(input, path)
-        end)
+        end, changed)
         if not ok then
             local err = deps
             error("compile failed: " .. input:string() .. "\n" .. err)
         end
-        depends.add(deps, input)
+        depends.insert_front(deps, input)
         depends.writefile(output / ".dep", deps)
     end
     return output

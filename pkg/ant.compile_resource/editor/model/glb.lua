@@ -7,6 +7,9 @@ local utility           = require "editor.model.utility"
 local depends           = require "editor.depends"
 local parallel_task     = require "editor.parallel_task"
 local lfs               = require "filesystem.local"
+local fs                = require "filesystem"
+local datalist          = require "datalist"
+local material_compile  = require "editor.material.compile"
 
 local function build_scene_tree(gltfscene)
     local scenetree = {}
@@ -20,7 +23,36 @@ local function build_scene_tree(gltfscene)
     return scenetree
 end
 
-return function (input, output, tolocalpath)
+local function readfile(filename)
+	local f <close> = assert(lfs.open(filename, "r"))
+	return f:read "a"
+end
+
+local function readdatalist(filepath)
+	return datalist.parse(readfile(filepath), function(args)
+		return args[2]
+	end)
+end
+
+local function recompile_materials(input, output)
+    assert(lfs.exists(output))
+    local depfiles = {}
+    depends.add(depfiles, input .. ".patch")
+    local tasks = parallel_task.new()
+    for material_path in lfs.pairs(output / "materials") do
+        local mat = readdatalist(material_path / "main.cfg")
+        material_compile(tasks, depfiles, mat, material_path, function (path)
+            return fs.path(path):localpath()
+        end)
+    end
+    parallel_task.wait(tasks)
+    return true, depfiles
+end
+
+return function (input, output, tolocalpath, changed)
+    if changed ~= true and changed:match "%.s[ch]$" then
+        return recompile_materials(input, output)
+    end
     lfs.remove_all(output)
     lfs.create_directories(output)
     local depfiles = {}

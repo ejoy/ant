@@ -65,14 +65,14 @@ function m.dirty(path)
         return true
     end
     for _, dep in ipairs(readconfig(path)) do
-        local timestamp, filename = dep[1], lfs.path(dep[2])
+        local timestamp, filename = dep[1], dep[2]
         if timestamp == 0 then
             if lfs.exists(filename) then
-                return true
+                return filename
             end
         else
             if not lfs.exists(filename) or timestamp ~= lfs.last_write_time(filename) then
-                return true
+                return filename
             end
         end
     end
