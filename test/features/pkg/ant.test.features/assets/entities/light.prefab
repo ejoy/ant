@@ -1,26 +1,25 @@
-# ---
-# data:
-#   ibl:
-#     LUT:
-#       size: 256
-#     intensity: 8000
-#     irradiance:
-#       size: 32
-#     prefilter:
-#       size: 128
-#   material: $path ../skybox.material
-#   name: skybox_test
-#   render_layer: background
-#   scene: {}
-#   simplemesh: false
-#   skybox:
-#     facesize: 512
-#   visible_state: main_view
-# policy:
-#   ant.sky|skybox
-#   ant.render|simplerender
-#   ant.general|name
-
+---
+data:
+  ibl:
+    LUT:
+      size: 256
+    intensity: 8000
+    irradiance:
+      size: 32
+    prefilter:
+      size: 128
+  material: $path ../skybox.material
+  name: skybox_test
+  render_layer: background
+  scene: {}
+  simplemesh: false
+  skybox:
+    facesize: 512
+  visible_state: main_view
+policy:
+  ant.sky|skybox
+  ant.render|simplerender
+  ant.general|name
 ---
 data:
   light:
@@ -31,8 +30,7 @@ data:
   make_shadow: true
   name: directional_light
   scene:
-    r: {0.2664446532726288, -0.25660401582717896, 0.14578714966773987, 0.9175552725791931}
-    t: {0, 5, 0, 1}
+    r: {0.7, 0.1, 0.0}
   visible: true
 policy:
   ant.render|light

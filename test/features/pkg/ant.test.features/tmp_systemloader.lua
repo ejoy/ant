@@ -122,11 +122,9 @@ end
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
     ientity.create_grid_entity("grid", 128, 128, 1, 3)
-
-    ecs.create_instance"/pkg/ant.test.features/assets/entities/skybox_test.prefab"
     create_instance("/pkg/ant.test.features/assets/entities/light.prefab",
     function (e)
-        local pid = e.tag["*"][1]
+        local pid = e.tag["*"][2]
 
         local le<close> = w:entity(pid)
         iom.set_direction(le, math3d.vector(0.2664446532726288, -0.25660401582717896, 0.14578714966773987, 0.9175552725791931))

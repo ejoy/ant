@@ -1,25 +1,3 @@
-# ---
-# policy:
-#     ant.sky|skybox
-#     ant.render|simplerender
-#     ant.general|name
-# data:
-#     name: skybox_test
-#     visible_state: main_view
-#     scene: {}
-#     ibl:
-#         intensity: 1000
-#         irradiance:
-#             size: 64
-#         prefilter:
-#             size: 256
-#         LUT:
-#             size: 256
-#     material: /pkg/ant.resources/materials/sky/skybox.material
-#     render_layer: "background"
-#     simplemesh: false
-#     skybox:
-#         facesize: 1024
 ---
 data:
   ibl:
