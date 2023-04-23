@@ -34,9 +34,14 @@ local function update()
             i = i + 1
         else
             table.remove(progs, i)
-            local errmsg = prog.stdout:read "a"
-            local errcode = prog:wait()
-            ltask.wakeup(prog, errcode, errmsg)
+            if prog.stdout then
+                local errmsg = prog.stdout:read "a"
+                local errcode = prog:wait()
+                ltask.wakeup(prog, errcode, errmsg)
+            else
+                local errcode = prog:wait()
+                ltask.wakeup(prog, errcode, "")
+            end
         end
     end
     if #WaitQueue > 0 and #progs < MaxSubprocess then
