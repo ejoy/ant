@@ -1,5 +1,5 @@
 local shader = require "editor.material.shader"
-
+local subprocess = require "editor.subprocess"
 local lfs = require "filesystem.local"
 local toolset = {}
 
@@ -110,34 +110,31 @@ local function gen_commands(config)
 	return commands
 end
 
-function toolset.preprocess(config)
-	local commands = gen_commands(config)
-	commands[#commands+1] = "--preprocess"
-	return shader.run(commands, config.input, lfs.path(config.output:string() .. ".prerocess"))
-end
-
 function toolset.compile(config)
 	if true then
 		local commands = gen_commands(config)
 		return shader.run(commands, config.input, config.output)
 	else
-	
-		local ok, err = toolset.preprocess(config)
-		if ok then
-			local inputfile = lfs.path(config.output:string() .. ".prerocess")
-			local commands = {
-				"--platform",	config.platform,
-				"--type",		stage_types[config.stage],
-				"-p",			get_shader_option(config.platform, config.renderer, config.stage),
-				"-f",			inputfile:string(),
-				"--raw",
-			}
-
-			return shader.run(commands, inputfile, config.output)
+		local prerocessfile = lfs.path(config.output:string() .. ".prerocess")
+		local commands = gen_commands(config)
+		commands[#commands+1] = "--preprocess"
+		local ok, err = shader.run(commands, config.input, prerocessfile)
+		if not ok then
+			return ok, err
 		end
-
-		print "preprocess failed"
-		return ok, err
+		local deps = err
+		ok, err = subprocess.spawn_process {
+			"--platform",	config.platform,
+			"--type",		stage_types[config.stage],
+			"-p",			get_shader_option(config.platform, config.renderer, config.stage),
+			"-f",			prerocessfile:string(),
+			"-o", 			(config.output / "bin"):string(),
+			"--raw",
+		}
+		if not ok then
+			return ok, err
+		end
+		return true, deps
 	end
 end
 

@@ -12,7 +12,6 @@ local vfs       = require "vfs"
 
 local compile
 local compile_file
-local do_compile
 local init_setting
 local set_setting
 
@@ -42,7 +41,6 @@ else
     local config   = require "editor.config"
     compile = editor.compile
     compile_file = editor.compile_file
-    do_compile = editor.do_compile
     init_setting = config.init
     set_setting = config.set
 end
@@ -118,7 +116,6 @@ return {
     init         = init,
     read_file    = read_file,
     compile      = compile,
-    do_compile   = do_compile,
     compile_file = compile_file,
     init_setting  = init_setting,
     set_setting  = set_setting,

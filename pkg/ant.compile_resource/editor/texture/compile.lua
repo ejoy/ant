@@ -1,4 +1,5 @@
 local convert_image = require "editor.texture.util"
+local config        = require "editor.config"
 
 local function which_format(os, param)
 	local compress = param.compress
@@ -12,9 +13,9 @@ local function which_format(os, param)
 	return param.format
 end
 
-return function (content, output, setting, localpath)
+return function (content, output, localpath)
+    local setting = config.get "texture".setting
 	if content.path then
-		content.setting = setting
 		content.local_texpath = localpath(assert(content.path))
 		content.format = which_format(setting.os, content)
 	else

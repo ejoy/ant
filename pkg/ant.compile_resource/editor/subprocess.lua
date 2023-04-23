@@ -64,13 +64,13 @@ end
 
 function util.spawn_process(commands)
     local cmdstring = normalize(commands)
+    print(cmdstring)
     commands.stdout       = true
     commands.stderr       = "stdout"
     commands.hideWindow   = true
     local errcode, errmsg = ltask.call(ServiceSubprocess, "run", commands)
     local ok              = false
     local msg             = {}
-    msg[#msg + 1]         = cmdstring
     msg[#msg + 1]         = "----------------------------"
     msg[#msg + 1]         = errmsg
     msg[#msg + 1]         = "----------------------------"

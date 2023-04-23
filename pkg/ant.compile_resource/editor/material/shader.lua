@@ -3,6 +3,7 @@ local subprocess = require "editor.subprocess"
 local sha1       = require "editor.hash".sha1
 local lfs        = require "filesystem.local"
 local vfs        = require "vfs"
+local ltask      = require "ltask"
 local depends    = require "editor.depends"
 
 local ROOT
@@ -25,27 +26,26 @@ local function writefile(filename, data)
     f:write(data)
 end
 
-local function print_cmd(C)
-    print "shader compile:"
-
-    local function unpack_table(t, cc)
-        for _, tt in ipairs(t) do
-            if type(tt) == "table" then
-                unpack_table(tt, cc)
-            else
-                cc[#cc+1] = tt
-            end
-        end
+local waiting = {}
+local function wait_close(t)
+    waiting[t._] = nil
+    ltask.multi_wakeup(t._)
+end
+local wait_closeable = {__close=wait_close}
+local function wait_start(pathkey)
+    if waiting[pathkey] then
+        ltask.multi_wait(pathkey)
     end
-    local cc = {}
-    unpack_table(C, cc)
-    print(table.concat(cc, " "))
+    waiting[pathkey] = true
+    return setmetatable({_=pathkey}, wait_closeable)
 end
 
 local function run(commands, input, output)
     table.insert(commands, 1, SHADERC:string())
     local cmdstring = cmdtostr(commands)
     local path = ROOT / get_filename(cmdstring, input)
+    local pathkey = path:string()
+    local _ <close> = wait_start(pathkey)
     if lfs.exists(path / "bin") then
         local deps = depends.read_if_not_dirty(path / ".dep")
         if deps then
@@ -60,7 +60,7 @@ local function run(commands, input, output)
         "-o", (path / "bin"):string(),
         "--depends",
     }
-    print_cmd(C)
+    print "shader compile:"
     local ok, msg = subprocess.spawn_process(C)
     if ok then
         local INFO = msg:upper()

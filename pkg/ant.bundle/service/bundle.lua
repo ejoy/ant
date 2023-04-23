@@ -104,7 +104,11 @@ function S.open_file(path)
     if v.status == STATUS_OK then
     elseif v.status == STATUS_NULL then
         v.status = STATUS_WAIT
-        v.value = vfs.realpath(path)
+        local r = vfs.realpath(path)
+        if type(r) ~= "string" then
+            error("bundle can't open file: " ..path)
+        end
+        v.value = r
         for _, b in ipairs(v.bundle) do
             Bundle[b].obj[path] = v.value
         end

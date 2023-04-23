@@ -19,31 +19,13 @@ local function absolute_path(base, path)
 	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
 end
 
-local function do_compile(input, output, depfiles)
-    local inputstr = input:string()
-    local ext = inputstr:match "[^/]%.([%w*?_%-]*)$"
-    local cfg = config.get(ext)
-    lfs.create_directory(output)
-    local ok, deps = cfg.compiler(input, output, cfg.setting, function (path)
-        return absolute_path(input, path)
-    end)
-    if not ok then
-        local err = deps
-        error("compile failed: " .. input:string() .. "\n" .. err)
-    end
-    if depfiles then
-        depends.append(depfiles, deps)
-    end
-end
-
 local function compile_file(input)
     local inputstr = input:string()
     local ext = inputstr:match "[^/]%.([%w*?_%-]*)$"
     local cfg = config.get(ext)
     local output = cfg.binpath / get_filename(inputstr)
     if depends.dirty(output / ".dep") then
-        lfs.create_directory(output)
-        local ok, deps = cfg.compiler(input, output, cfg.setting, function (path)
+        local ok, deps = cfg.compiler(input, output, function (path)
             return absolute_path(input, path)
         end)
         if not ok then
@@ -67,7 +49,6 @@ function compile(pathstring)
 end
 
 return {
-    do_compile = do_compile,
     compile = compile,
     compile_file = compile_file,
 }

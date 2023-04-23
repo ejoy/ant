@@ -5,6 +5,8 @@ local export_material   = require "editor.model.export_material"
 local glbloader         = require "editor.model.glTF.glb"
 local utility           = require "editor.model.utility"
 local depends           = require "editor.depends"
+local parallel_task     = require "editor.parallel_task"
+local lfs               = require "filesystem.local"
 
 local function build_scene_tree(gltfscene)
     local scenetree = {}
@@ -18,20 +20,23 @@ local function build_scene_tree(gltfscene)
     return scenetree
 end
 
-return function (input, output, _, tolocalpath)
+return function (input, output, tolocalpath)
+    lfs.remove_all(output)
+    lfs.create_directories(output)
     local depfiles = {}
     depends.add(depfiles, input .. ".patch")
     utility.init(input, output)
     local glbdata = glbloader.decode(input)
     local exports = {}
-    local settings = {}
     assert(glbdata.version == 2)
     exports.scenetree = build_scene_tree(glbdata.info)
     exports.depfiles = depfiles
-
-    export_meshbin(output, glbdata, exports, settings)
-    export_material(output, glbdata, exports, tolocalpath, settings)
+    local tasks = parallel_task.new()
+    exports.tasks = tasks
+    export_meshbin(output, glbdata, exports)
+    export_material(output, glbdata, exports, tolocalpath)
     export_animation(input, output, exports)
     export_prefab(output, glbdata, exports, tolocalpath)
+    parallel_task.wait(tasks)
     return true, depfiles
 end
