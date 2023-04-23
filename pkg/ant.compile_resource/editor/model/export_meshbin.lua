@@ -346,7 +346,7 @@ local function is_vec_attrib(an)
 end
 
 local function need_calc_tangent(layouts)
-	return find_layout(layouts, "TANGENT") == nil and find_layout(layouts, "NORMAL")
+	return find_layout(layouts, "TANGENT") == nil and find_layout(layouts, "NORMAL") and find_layout(layouts, "TEXCOORD_0")
 end
 
 local function generate_layouts(gltfscene, attributes)
@@ -598,7 +598,7 @@ local function save_meshbin_files(resname, meshgroup)
 
 	local vb = assert(meshgroup.vb)
 	vb.memory[1] = write_bin_file(resname .. ".vbbin", vb.memory[1])
-	local vb2 = assert(meshgroup.vb2)
+	local vb2 = meshgroup.vb2
 	if meshgroup.vb2 then
 		vb2.memory[1] = write_bin_file(resname .. ".vb2bin", vb2.memory[1])
 	end
@@ -646,8 +646,8 @@ end
 			exports.mesh[meshidx][primidx] = {
 				meshbinfile = save_meshbin_files(stemname, group),
 				declname = {
-					[1] = group.vb.declname,
-					[2] = group.vb2.declname,
+					group.vb.declname,
+					group.vb2 and group.vb2.declname or nil,
 				}
 			}
 		end
