@@ -99,14 +99,7 @@ return function (output, param)
 			TEXTUREC
 		}
 		gen_commands(commands, param, imgpath, binfile)
-		do
-			local ss = {}
-			for _, c in ipairs(commands) do
-				ss[#ss+1] = tostring(c)
-			end
-			buildcmd = table.concat(ss, " ")
-			print("convert texture command:", buildcmd)
-		end
+		print("texture compile:")
 		local success, msg = subprocess.spawn_process(commands)
 		if success then
 			if msg:upper():find("ERROR:", 1, true) then

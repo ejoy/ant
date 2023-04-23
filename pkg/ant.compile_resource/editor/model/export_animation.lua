@@ -19,6 +19,7 @@ return function (input, output, exports)
         }
     ]]
     local cwd = fs.current_path()
+    print("animation compile:")
     local success, msg = subprocess.spawn_process {
         GLTF2OZZ,
         "--file=" .. (cwd / input):string(),

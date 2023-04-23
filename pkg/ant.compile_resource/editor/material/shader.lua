@@ -26,23 +26,6 @@ local function writefile(filename, data)
     f:write(data)
 end
 
-local function print_cmd(C)
-    print "shader compile:"
-
-    local function unpack_table(t, cc)
-        for _, tt in ipairs(t) do
-            if type(tt) == "table" then
-                unpack_table(tt, cc)
-            else
-                cc[#cc+1] = tt
-            end
-        end
-    end
-    local cc = {}
-    unpack_table(C, cc)
-    print(table.concat(cc, " "))
-end
-
 local waiting = {}
 local function wait_close(t)
     waiting[t._] = nil
@@ -77,7 +60,7 @@ local function run(commands, input, output)
         "-o", (path / "bin"):string(),
         "--depends",
     }
-    print_cmd(C)
+    print "shader compile:"
     local ok, msg = subprocess.spawn_process(C)
     if ok then
         local INFO = msg:upper()
