@@ -129,6 +129,24 @@ void shading_color(in input_attributes input_attribs, in material_info mi, in ui
     }
 }
 
+#ifdef ENABLE_DEBUG_CASCADE_LEVEL
+vec3 debug_cascade_level(input_attributes input_attrib, vec3 color)
+{
+    int cascadeidx = select_cascade(input_attribs.distanceVS);
+    vec4 colors[4] = {
+        vec4(1.0, 0.0, 0.0, 1.0),
+        vec4(0.0, 1.0, 0.0, 1.0),
+        vec4(0.0, 0.0, 1.0, 1.0),
+        vec4(1.0, 0.0, 1.0, 1.0)
+    };
+    if (cascadeidx < 0){
+        return color * vec4(0.0,0.0, 0.0, 1.0);
+    } else {
+        return color * colors[cascadeidx];
+    }
+}
+#endif //ENABLE_DEBUG_CASCADE_LEVEL
+
 vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
 {
     vec3 color = vec3_splat(0.0);
@@ -142,6 +160,10 @@ vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
         shading_color(input_attribs, mi, 0, color);
     }
 #endif //USING_LIGHTMAP
+
+#ifdef ENABLE_DEBUG_CASCADE_LEVEL
+    color = debug_cascade_level(input_attrib, color);
+#endif //ENABLE_DEBUG_CASCADE_LEVEL
 
     if (u_light_count[0] > 1)
     {
