@@ -2,6 +2,7 @@ local compile = require "editor.material.compile"
 local depends = require "editor.depends"
 local lfs = require "filesystem.local"
 local datalist = require "datalist"
+local parallel_task = require "editor.parallel_task"
 
 local function readfile(filename)
 	local f <close> = assert(lfs.open(filename, "r"))
@@ -16,10 +17,10 @@ end
 
 return function(input, output, localpath)
     local mat = readdatalist(input)
-    local ok, deps = compile(mat, output, localpath)
-    if not ok then
-        return false, ("compile failed: " .. input:string() .. "\n\n" .. deps)
-    end
-    depends.add(deps, localpath "/settings")
-    return true, deps
+    local depfiles = {}
+    local tasks = parallel_task.new()
+    compile(tasks, depfiles, mat, output, localpath)
+    parallel_task.wait(tasks)
+    depends.add(depfiles, localpath "/settings")
+    return true, depfiles
 end

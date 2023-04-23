@@ -45,7 +45,7 @@ end
 
 local waiting = {}
 local function wait_close(t)
-    waiting[t._] = false
+    waiting[t._] = nil
     ltask.multi_wakeup(t._)
 end
 local wait_closeable = {__close=wait_close}

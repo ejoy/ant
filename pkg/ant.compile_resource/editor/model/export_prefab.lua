@@ -4,9 +4,7 @@ local serialize = import_package "ant.serialize"
 local datalist = require "datalist"
 local lfs = require "filesystem.local"
 local fs = require "filesystem"
-local depends  = require "editor.depends"
 local material_compile = require "editor.material.compile"
-local parallel_task    = require "editor.parallel_task"
 
 local invalid_chars<const> = {
     '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
@@ -162,14 +160,8 @@ local function save_material(output, exports, mi)
     local f = utility.full_path(mi.filename:string())
     if not material_files[f:string()] then
         material_files[f:string()] = true
-        parallel_task.add(exports.tasks, function ()
-            local ok, err = material_compile(mi.material, output / mi.filename, function (path)
-                return fs.path(path):localpath()
-            end)
-            if not ok then
-                error("compile failed: " .. (output / mi.filename):string() .. "\n" .. err)
-            end
-            depends.append(exports.depfiles, err)
+        material_compile(exports.tasks, exports.depfiles, mi.material, output / mi.filename, function (path)
+            return fs.path(path):localpath()
         end)
     end
 end

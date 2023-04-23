@@ -7,6 +7,7 @@ local setting, def_setting = settingpkg.setting, settingpkg.default
 local serialize     = import_package "ant.serialize"
 local depends       = require "editor.depends"
 local config        = require "editor.config"
+local parallel_task = require "editor.parallel_task"
 
 local ENABLE_SHADOW<const>      = setting:data().graphic.shadow.enable
 
@@ -186,45 +187,43 @@ end
 
 local DEF_VARYING_FILE<const> = SHADER_BASE / "common/varying_def.sh"
 
-local function compile(mat, output, localpath)
+local function compile(tasks, deps, mat, output, localpath)
     local setting = config.get "material".setting
     lfs.remove_all(output)
     lfs.create_directories(output)
     local fx = mat.fx
     mergeCfgSetting(fx, localpath)
-    local depfiles = {}
-
-    local varying_path = fx.varying_path
-    if varying_path then
-        varying_path = localpath(varying_path)
-    end
+    writefile(output / "main.cfg", mat)
     for _, stage in ipairs {"vs","fs","cs"} do
         if fx[stage] then
-            local inputpath = localpath(fx[stage])
-            if not varying_path then
-                if not lfs.exists(inputpath:parent_path() / "varying.def.sc") then
-                    varying_path = DEF_VARYING_FILE
+            parallel_task.add(tasks, function ()
+                local inputpath = localpath(fx[stage])
+                local varying_path = fx.varying_path
+                if varying_path then
+                    varying_path = localpath(varying_path)
+                else
+                    if not lfs.exists(inputpath:parent_path() / "varying.def.sc") then
+                        varying_path = DEF_VARYING_FILE
+                    end
                 end
-            end
-            local ok, res = toolset.compile {
-                platform = setting.os,
-                renderer = setting.renderer,
-                input = inputpath,
-                output = output / (stage..".bin"),
-                includes = shader_includes(),
-                stage = stage,
-                varying_path = varying_path,
-                macros = get_macros(setting, mat),
-                debug = compile_debug_shader(setting.os, setting.renderer),
-            }
-            if not ok then
-                return false, res
-            end
-            depends.append(depfiles, res)
+                local ok, res = toolset.compile {
+                    platform = setting.os,
+                    renderer = setting.renderer,
+                    input = inputpath,
+                    output = output / (stage..".bin"),
+                    includes = shader_includes(),
+                    stage = stage,
+                    varying_path = varying_path,
+                    macros = get_macros(setting, mat),
+                    debug = compile_debug_shader(setting.os, setting.renderer),
+                }
+                if not ok then
+                    error("compile failed: " .. output:string() .. "\n" .. res)
+                end
+                depends.append(deps, res)
+            end)
         end
     end
-    writefile(output / "main.cfg", mat)
-    return true, depfiles
 end
 
 return compile
