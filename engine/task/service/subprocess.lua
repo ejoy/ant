@@ -18,6 +18,7 @@ function S.run(command)
     if not prog then
         return nil, err
     end
+    progs[#progs+1] = prog
     return ltask.wait(prog)
 end
 
