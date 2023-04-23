@@ -3,6 +3,7 @@ local subprocess 	= require "editor.subprocess"
 local sampler 		= require "editor.texture.sampler"
 local lfs 			= require "filesystem.local"
 local image 		= require "image"
+local config        = require "editor.config"
 local pngparam = require "editor.texture.png_param"
 local TEXTUREC = import_package "ant.subprocess".tool_exe_path "texturec"
 
@@ -75,6 +76,9 @@ local function gray2rgb(path, outfile)
 end
 
 return function (output, param)
+    lfs.remove_all(output)
+    lfs.create_directories(output)
+    local setting = config.get "texture".setting
 	local config = {
         sampler = pngparam.sampler(param),
         flag	= sampler(param.sampler),
@@ -86,9 +90,9 @@ return function (output, param)
 
 	local buildcmd
 	if imgpath then
-		local binfile = output / ("main."..param.setting.ext)
+		local binfile = output / ("main."..setting.ext)
 		if is_png(imgpath) and param.gray2rgb then
-			local tmpfile = output / ("tmp." .. param.setting.ext)
+			local tmpfile = output / ("tmp." .. setting.ext)
 			imgpath = gray2rgb(imgpath, tmpfile)
 		end
 		local commands = {

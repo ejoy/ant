@@ -6,6 +6,7 @@ local settingpkg    = import_package "ant.settings"
 local setting, def_setting = settingpkg.setting, settingpkg.default
 local serialize     = import_package "ant.serialize"
 local depends       = require "editor.depends"
+local config        = require "editor.config"
 
 local ENABLE_SHADOW<const>      = setting:data().graphic.shadow.enable
 
@@ -185,7 +186,10 @@ end
 
 local DEF_VARYING_FILE<const> = SHADER_BASE / "common/varying_def.sh"
 
-local function compile(mat, output, setting, localpath)
+local function compile(mat, output, localpath)
+    local setting = config.get "material".setting
+    lfs.remove_all(output)
+    lfs.create_directories(output)
     local fx = mat.fx
     mergeCfgSetting(fx, localpath)
     local depfiles = {}
@@ -202,7 +206,6 @@ local function compile(mat, output, setting, localpath)
                     varying_path = DEF_VARYING_FILE
                 end
             end
-            lfs.create_directories(output)
             local ok, res = toolset.compile {
                 platform = setting.os,
                 renderer = setting.renderer,

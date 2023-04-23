@@ -2,8 +2,8 @@ local serialize = import_package "ant.serialize"
 local fs = require "filesystem.local"
 local utility = require "editor.model.utility"
 local datalist = require "datalist"
-local config   = require "editor.config"
 local texture_compile = require "editor.texture.compile"
+local parallel_task   = require "editor.parallel_task"
 
 local image_extension = {
     ["image/jpeg"] = ".jpg",
@@ -136,11 +136,8 @@ end
 local function save_texture(saved_files, output, exports, texture_desc)
     if not saved_files[output:string()] then
         saved_files[output:string()] = true
-        exports.async(function ()
-            fs.remove_all(output)
-            fs.create_directory(output)
-            local cfg = config.get "texture"
-            local ok, err = texture_compile(texture_desc, output, cfg.setting, function (path)
+        parallel_task.add(exports.tasks, function ()
+            local ok, err = texture_compile(texture_desc, output, function (path)
                 path = path[1]
                 if path:sub(1,1) == "/" then
                     return fs.path(path):localpath()

@@ -5,8 +5,8 @@ local datalist = require "datalist"
 local lfs = require "filesystem.local"
 local fs = require "filesystem"
 local depends  = require "editor.depends"
-local config   = require "editor.config"
 local material_compile = require "editor.material.compile"
+local parallel_task    = require "editor.parallel_task"
 
 local invalid_chars<const> = {
     '<', '>', ':', '/', '\\', '|', '?', '*', ' ', '\t', '\r', '%[', '%]', '%(', '%)'
@@ -162,11 +162,8 @@ local function save_material(output, exports, mi)
     local f = utility.full_path(mi.filename:string())
     if not material_files[f:string()] then
         material_files[f:string()] = true
-        exports.async(function ()
-            lfs.remove_all(f)
-            lfs.create_directory(output)
-            local cfg = config.get "material"
-            local ok, err = material_compile(mi.material, output / mi.filename, cfg.setting, function (path)
+        parallel_task.add(exports.tasks, function ()
+            local ok, err = material_compile(mi.material, output / mi.filename, function (path)
                 return fs.path(path):localpath()
             end)
             if not ok then

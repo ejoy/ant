@@ -14,9 +14,9 @@ local function readdatalist(filepath)
 	end)
 end
 
-return function(input, output, setting, localpath)
+return function(input, output, localpath)
     local mat = readdatalist(input)
-    local ok, deps = compile(mat, output, setting, localpath)
+    local ok, deps = compile(mat, output, localpath)
     if not ok then
         return false, ("compile failed: " .. input:string() .. "\n\n" .. deps)
     end
