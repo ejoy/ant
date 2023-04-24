@@ -431,7 +431,6 @@ local function fetch_hash(status, hash)
 	if not f then
 		local progress = status.progress
 		progress.waiting = progress.waiting + 1
-		status.waiting[hash] = true
 		request_start("GET", hash, status.promise)
 	end
 end
@@ -440,6 +439,8 @@ local function fetch_resource(status, hash)
 	if not repo:get_resource(hash) then
 		return
 	end
+	local progress = status.progress
+	progress.waiting = progress.waiting + 1
 	request_start("RESOURCE", hash, status.promise)
 end
 
@@ -504,14 +505,14 @@ function CMD.FETCH_ADD(_, session, path)
 		return
 	end
 	if retval.uncomplete then
-		fetch_request(status, "FECTH_PATH", session, retval.hash, retval.path)
+		fetch_request(status, "FETCH_PATH", session, retval.hash, retval.path)
 		return
 	end
 	if retval.type == "f" then
 		fetch_hash(status, retval.hash)
 	elseif retval.type == "d" then
 		fetch_hash(status, retval.hash)
-		fetch_request(status, "FECTH_DIR", session, retval.hash)
+		fetch_request(status, "FETCH_DIR", session, retval.hash)
 	elseif retval.type == "r" then
 		fetch_resource(status, retval.hash)
 	else
@@ -533,7 +534,7 @@ function response.FECTH_RESPONSE(session, hashs, resource_hashs, unsolved_hashs,
 	end)
 	unsolved_hashs:gsub("[^|]+", function(hash)
 		fetch_hash(status, hash)
-		fetch_request(status, "FECTH_DIR", session, hash)
+		fetch_request(status, "FETCH_DIR", session, hash)
 	end)
 	error_hashs:gsub("[^|]+", function()
 		fetch_error(status)

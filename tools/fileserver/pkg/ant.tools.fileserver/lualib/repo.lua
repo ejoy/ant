@@ -476,10 +476,13 @@ end
 
 function REPO_MT:fetch_path(hash, path)
 	local hashs = {}
+	local unsolved_hashs = {}
 	local resource_hashs = {}
 	local error_hashs = {}
-	fetch_path(self, hash, path, hashs, resource_hashs, error_hashs)
+	fetch_path(self, hash, path, hashs, unsolved_hashs, resource_hashs, error_hashs)
 	return table.concat(hashs, "|")
+		, table.concat(resource_hashs, "|")
+		, table.concat(unsolved_hashs, "|")
 		, table.concat(error_hashs, "|")
 end
 
@@ -512,6 +515,7 @@ function REPO_MT:fetch_dir(hash)
 	local error_hashs = {}
 	fetch_dir(self, hash, 2, hashs, resource_hashs, unsolved_hashs, error_hashs)
 	return table.concat(hashs, "|")
+		, table.concat(resource_hashs, "|")
 		, table.concat(unsolved_hashs, "|")
 		, table.concat(error_hashs, "|")
 end
