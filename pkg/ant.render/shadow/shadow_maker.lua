@@ -65,7 +65,7 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	local frustum_ortho = {
 		l = -1, r = 1,
 		t = -1, b = 1,
-		n = -main_camera.frustum.f, f = main_camera.frustum.f,
+		n = -csm_frustum.f, f = csm_frustum.f,
 		ortho = true,
 	}
 	local ortho_proj = math3d.projmat(frustum_ortho, INV_Z)
@@ -127,7 +127,7 @@ local function update_shadow_frustum(dl, main_camera)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end
-end    
+end
 
 -- microsoft method
 --[[  local function calc_ortho_minmax(light_view, world_frustum_points, shadowmap_size)
@@ -173,7 +173,7 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	local maxx, maxy = math3d.index(light_ortho_max, 1, 2) 
 	local aabb_min, aabb_max = math3d.tovalue(light_scene_aabb_min), math3d.tovalue(light_scene_aabb_max)
 	f.l, f.b, f.n = minx, miny, aabb_min[3]
-	f.r, f.t, f.f = maxx, maxy, math.max(aabb_min[3], csm_frustum.f)
+	f.r, f.t, f.f = maxx, maxy, math.max(aabb_max[3], csm_frustum.f)
 	update_camera_matrices(camera, light_view)
 end
 
@@ -204,7 +204,7 @@ local function update_shadow_frustum(dl, main_camera)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end
-end  ]]
+end   ]] 
 
 --[[ local function update_shadow_frustum_2015(dl, main_camera)
 
