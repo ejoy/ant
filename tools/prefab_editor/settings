@@ -33,7 +33,7 @@ graphic:
     fxaa:
       enable: true
   shadow:
-    bias: 0.003
+    bias: 0.20
     color: {0, 0, 0, 1}
     enable: true
     normal_offset: 0.012

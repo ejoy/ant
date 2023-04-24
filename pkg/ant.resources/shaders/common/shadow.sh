@@ -37,9 +37,9 @@ uniform vec4 u_omni_param;
 #define USE_VIEW_SPACE_DISTANCE
 //#define SHADOW_COVERAGE_DEBUG
 
-#define SM_HARD 
+//#define SM_HARD 
 //#define SM_PCF
-//#define SM_ESM
+#define SM_ESM
 
 #if defined(SM_HARD)
 #define USE_SHADOW_COMPARE
@@ -127,7 +127,7 @@ float ESM(
 	{
 		return 1.0;
 	}	
-	float receiver = (_shadowCoord.z + _bias) / _shadowCoord.w;
+	float receiver = (_shadowCoord.z - _bias) / _shadowCoord.w;
 
 	float occluder = texture2D(_sampler, texCoord).x;	
 
