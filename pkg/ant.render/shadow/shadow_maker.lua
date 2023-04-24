@@ -55,21 +55,22 @@ local function calc_csm_matrix_attrib(csmidx, vp)
 	return math3d.mul(ishadow.crop_matrix(csmidx), vp)
 end
 
---[[ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_view, world_scene_aabb)
+-- bgfx method
+local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_camera, world_scene_aabb)
 	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
 	set_worldmat(shadow_ce.scene, shadow_ce.scene)
-
+	local main_view = main_camera.viewmat
 	local light_world = shadow_ce.scene.worldmat
 	local light_view = math3d.inverse(light_world)
 	local frustum_ortho = {
-		l=-1, r=1,
-		t=-1, b=1,
-		n=-csm_frustum.f, f=csm_frustum.f,
+		l = -1, r = 1,
+		t = -1, b = 1,
+		n = -csm_frustum.f, f = csm_frustum.f,
 		ortho = true,
 	}
 	local ortho_proj = math3d.projmat(frustum_ortho, INV_Z)
-
-	local world_frustum_points = math3d.frustum_points(math3d.mul(ortho_proj, main_view))
+	local csm_proj = math3d.projmat(csm_frustum, INV_Z)
+	local world_frustum_points = math3d.frustum_points(math3d.mul(csm_proj, main_view))
 
 	local light_frustum_min, light_frustum_max = math3d.minmax(world_frustum_points, light_view)
 
@@ -91,7 +92,7 @@ end
 	 	scalex, 0, 0, 0,
 	 	0, scaley, 0, 0,
 	 	0, 0, 1, 0,
-	 	0, 0, 0, 1,		
+	 	offsetx, offsety, 0, 1,		
 	}
 
 	local camera = shadow_ce.camera
@@ -122,88 +123,14 @@ local function update_shadow_frustum(dl, main_camera)
 		local csm = qe.csm
 		local csm_frustum = csm_frustums[csm.index]
 		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in scene:in")
-		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_view, world_scene_aabb)
+		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_camera, world_scene_aabb)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end
-end   ]] 
-
---[[ local function calc_ortho_minmax(light_view, world_frustum_points, shadowmap_size)
-	local light_ortho_min, light_ortho_max = math3d.minmax(world_frustum_points, light_view)
-
-	local diagonal = math3d.sub(math3d.array_index(world_frustum_points, 1), math3d.array_index(world_frustum_points, 8))
-	local bound = math3d.length(diagonal)
-	diagonal = math3d.vector(bound, bound, bound)
-
-	local offset = math3d.mul(math3d.sub(diagonal, math3d.sub(light_ortho_max, light_ortho_min)), 0.5)
-	offset = math3d.vector(math3d.index(offset, 1), math3d.index(offset, 2), 0)
-	light_ortho_max = math3d.add(light_ortho_max, offset)
-	light_ortho_min = math3d.sub(light_ortho_min, offset)
-	local world_unit_per_texel = bound / shadowmap_size
-	local vworld_unit_per_texel = math3d.vector(world_unit_per_texel, world_unit_per_texel, 0)
-
-	light_ortho_min = math3d.mul(light_ortho_min, math3d.reciprocal(vworld_unit_per_texel))
-	light_ortho_min = math3d.floor(light_ortho_min)
-	light_ortho_min = math3d.mul(light_ortho_min, vworld_unit_per_texel)
-	light_ortho_max = math3d.mul(light_ortho_max, math3d.reciprocal(vworld_unit_per_texel))
-	light_ortho_max = math3d.floor(light_ortho_max)
-	light_ortho_max = math3d.mul(light_ortho_max, vworld_unit_per_texel)
-	
-	return light_ortho_min, light_ortho_max
 end
 
-local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_view, world_scene_aabb)
-	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
-	set_worldmat(shadow_ce.scene, shadow_ce.scene)
-
-	local light_world = shadow_ce.scene.worldmat
-	local light_view = math3d.inverse(light_world)
-	local main_viewproj = math3d.mul(math3d.projmat(csm_frustum, INV_Z), main_view)
-
-	local world_frustum_points = math3d.frustum_points(main_viewproj)
-
-	local light_ortho_min, light_ortho_max = calc_ortho_minmax(light_view, world_frustum_points, shadowmap_size)
-	local min_extent, max_extent = math3d.tovalue(light_ortho_min), math3d.tovalue(light_ortho_max)
-	local camera = shadow_ce.camera
-	local f = camera.frustum
-	local world_scene_aabb_points = math3d.aabb_points(world_scene_aabb)
-	local light_scene_aabb_min, light_scene_aabb_max = math3d.minmax(world_scene_aabb_points, light_view)
-	local near, far = math3d.index(light_scene_aabb_min, 3), math3d.index(light_scene_aabb_max, 3)
-	f.l, f.b, f.n = min_extent[1], min_extent[2], near
-	f.r, f.t, f.f = max_extent[1], max_extent[2], math.max(csm_frustum.f, far)
-	update_camera_matrices(camera, light_view)
-end
-
-local function update_shadow_frustum(dl, main_camera)
-
-	local lightdir = iom.get_direction(dl)
-	local setting = ishadow.setting()
-	local csm_frustums = ishadow.calc_split_frustums(main_camera.frustum)
-	local main_view = main_camera.viewmat
-	local world_scene_aabb = math3d.aabb()
- 	for e in w:select "scene:in render_object:in bounding:in name?in" do
-		if e.bounding.scene_aabb and e.bounding.scene_aabb ~= mc.NULL then
-			if not math3d.aabb_isvalid(world_scene_aabb) then
-				world_scene_aabb = e.bounding.scene_aabb
-			else
-				if math3d.aabb_isvalid(e.bounding.scene_aabb) then
-					world_scene_aabb = math3d.aabb_merge(world_scene_aabb, e.bounding.scene_aabb)
-				end
-			end
-		end
-	end  
-	for qe in w:select "csm:in camera_ref:in" do
-		local csm = qe.csm
-		local csm_frustum = csm_frustums[csm.index]
-		csm_frustum.n = 1
-		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in scene:in")
-		update_csm_frustum(lightdir, setting.shadowmap_size, csm_frustum, shadow_ce, main_view, world_scene_aabb)
-		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
-		split_distances_VS[csm.index] = csm_frustum.f
-	end
-end ]]
-
- local function calc_ortho_minmax(light_view, world_frustum_points, shadowmap_size)
+-- microsoft method
+--[[  local function calc_ortho_minmax(light_view, world_frustum_points, shadowmap_size)
 	local light_ortho_min, light_ortho_max = math3d.minmax(world_frustum_points, light_view)
 
 	local diagonal = math3d.sub(math3d.array_index(world_frustum_points, 1), math3d.array_index(world_frustum_points, 8))
@@ -277,7 +204,72 @@ local function update_shadow_frustum(dl, main_camera)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end
-end
+end   ]] 
+
+--[[ local function update_shadow_frustum_2015(dl, main_camera)
+
+	local lightdir = iom.get_direction(dl)
+	local shadow_setting = ishadow.setting()
+	local csm_frustums = ishadow.calc_split_frustums(main_camera.frustum)
+	local main_view = main_camera.viewmat
+	for qe in w:select "csm:in camera_ref:in" do
+		local csm = qe.csm
+		local csm_frustum = csm_frustums[csm.index]
+		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in scene:in")
+
+ 		local main_viewproj = main_camera.viewprojmat
+		local frustum_corners_world = math3d.frustum_points(main_viewproj)
+		local prev_split_dist, split_dist = shadow_setting.split_ratios[csm.index][1], shadow_setting.split_ratios[csm.index][2] 
+
+		-- local frustum_corners_table = {}
+		-- for idx = 1, 4 do
+		-- 	local corner_ray = math3d.sub(math3d.array_index(frustum_corners_world, idx), math3d.array_index(frustum_corners_world, idx + 4))
+		-- 	local near_corner_ray = math3d.mul(corner_ray, prev_split_dist)
+		-- 	local far_corner_ray = math3d.mul(corner_ray, split_dist)
+		-- 	frustum_corners_table[idx + 4] = math3d.add(math3d.array_index(frustum_corners_world, idx + 4), far_corner_ray)
+		-- 	frustum_corners_table[idx] = math3d.add(math3d.array_index(frustum_corners_world, idx + 4), near_corner_ray)
+		-- end 
+
+		local main_viewproj = math3d.mul(math3d.projmat(csm_frustum, INV_Z), main_view)
+
+		local world_frustum_points = math3d.frustum_points(main_viewproj)
+		local frustum_center = math3d.vector(0, 0, 0)
+
+		for idx = 1, 8 do
+			frustum_center = math3d.add(frustum_center, math3d.array_index(world_frustum_points, idx))
+		end
+		
+		frustum_center = math3d.mul(frustum_center, 0.125)
+
+		iom.set_rotation(shadow_ce, math3d.torotation(math3d.sub(frustum_center, lightdir)))
+		iom.set_position(shadow_ce, frustum_center)
+		set_worldmat(shadow_ce.scene, shadow_ce.scene)
+
+		local light_world = shadow_ce.scene.worldmat
+		local light_view = math3d.inverse(light_world)
+
+		local aabb_min, aabb_max = math3d.minmax(world_frustum_points, light_view)
+
+		local cascade_extents = math3d.sub(aabb_max, aabb_min)
+
+		local shadow_camera_pos = math3d.add(frustum_center, math3d.mul(lightdir, -math3d.index(aabb_min, 3)))
+
+
+		local f = shadow_ce.camera.frustum
+		f.l, f.b, f.n = math3d.index(aabb_min, 1), math3d.index(aabb_min, 2), 0
+		f.r, f.t, f.f = math3d.index(aabb_max, 1), math3d.index(aabb_max, 2), math3d.index(cascade_extents, 3)
+
+		iom.set_rotation(shadow_ce, math3d.torotation(frustum_center))
+		iom.set_position(shadow_ce, shadow_camera_pos)
+		set_worldmat(shadow_ce.scene, shadow_ce.scene)
+
+		light_world = shadow_ce.scene.worldmat
+		light_view = math3d.inverse(light_world)
+		update_camera_matrices(shadow_ce.camera, light_view)
+		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
+		split_distances_VS[csm.index] = csm_frustum.f
+	end
+end ]]
 
 local function create_clear_shadowmap_queue(fbidx)
 	local rb = fbmgr.get_rb(fbidx, 1)
