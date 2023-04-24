@@ -132,6 +132,14 @@ function S.FETCH(path)
 	end
 end
 
+function S.FETCH_PATH(hash, path)
+	return repo:fetch_path(hash, path)
+end
+
+function S.FETCH_DIR(hash)
+	return repo:fetch_dir(hash)
+end
+
 function S.BUILD(lpath)
 	return repo:build_dir(lpath)
 end

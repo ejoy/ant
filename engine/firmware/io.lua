@@ -416,6 +416,130 @@ function CMD.FETCH(id, path)
 	})
 end
 
+local fetch_session = {}
+local fetch_seesion_id = 0
+
+local function fetch_request(status, ...)
+	local progress = status.progress
+	progress.waiting = progress.waiting + 1
+	connection_send(...)
+end
+
+local function fetch_hash(status, hash)
+	local realpath = repo:hashpath(hash)
+	local f <close> = io.open(realpath, "rb")
+	if not f then
+		local progress = status.progress
+		progress.waiting = progress.waiting + 1
+		status.waiting[hash] = true
+		request_start("GET", hash, status.promise)
+	end
+end
+
+local function fetch_resource(status, hash)
+	if not repo:get_resource(hash) then
+		return
+	end
+	request_start("RESOURCE", hash, status.promise)
+end
+
+local function fetch_response(status)
+	local progress = status.progress
+	progress.success = progress.success + 1
+	progress.waiting = progress.waiting - 1
+end
+
+local function fetch_error(status)
+	local progress = status.progress
+	progress.failed = progress.failed + 1
+end
+
+function CMD.FETCH_BEGIN(id, path)
+	fetch_seesion_id = fetch_seesion_id + 1
+	local session = tostring(fetch_seesion_id)
+	local progress = {
+		success = 0,
+		failed = 0,
+		waiting = 0,
+	}
+	fetch_session[session] = {
+		progress = progress,
+		promise = {
+			resolve = function ()
+				progress.success = progress.success + 1
+				progress.waiting = progress.waiting - 1
+			end,
+			reject = function ()
+				progress.failed = progress.failed + 1
+				progress.waiting = progress.waiting - 1
+			end
+		}
+	}
+	CMD.FETCH_ADD(nil, session, path)
+	response_id(id, session)
+end
+
+function CMD.FETCH_UPDATE(id, session)
+	local status = fetch_session[session]
+	if not status then
+		response_id(id, nil)
+		return
+	end
+	response_id(id, status.progress)
+end
+
+function CMD.FETCH_END(id, session)
+	fetch_session[session] = nil
+	response_id(id, nil)
+end
+
+function CMD.FETCH_ADD(_, session, path)
+	local status = fetch_session[session]
+	if not status then
+		return
+	end
+	local retval, errmsg = repo:gethash(path)
+	if retval == nil then
+		fetch_error(status)
+		return
+	end
+	if retval.uncomplete then
+		fetch_request(status, "FECTH_PATH", session, retval.hash, retval.path)
+		return
+	end
+	if retval.type == "f" then
+		fetch_hash(status, retval.hash)
+	elseif retval.type == "d" then
+		fetch_hash(status, retval.hash)
+		fetch_request(status, "FECTH_DIR", session, retval.hash)
+	elseif retval.type == "r" then
+		fetch_resource(status, retval.hash)
+	else
+		fetch_error(status)
+	end
+end
+
+function response.FECTH_RESPONSE(session, hashs, resource_hashs, unsolved_hashs, error_hashs)
+	local status = fetch_session[session]
+	if not status then
+		return
+	end
+	fetch_response(status)
+	hashs:gsub("[^|]+", function(hash)
+		fetch_hash(status, hash)
+	end)
+	resource_hashs:gsub("[^|]+", function(hash)
+		fetch_resource(status, hash)
+	end)
+	unsolved_hashs:gsub("[^|]+", function(hash)
+		fetch_hash(status, hash)
+		fetch_request(status, "FECTH_DIR", session, hash)
+	end)
+	error_hashs:gsub("[^|]+", function()
+		fetch_error(status)
+	end)
+end
+
 function CMD.TYPE(id, fullpath)
 	print("[request] TYPE", fullpath)
 	local path, name = fullpath:match "(.*)/(.-)$"

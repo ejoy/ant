@@ -98,6 +98,16 @@ function message.FETCH(path)
 	response("FETCH", path, hashs)
 end
 
+function message.FETCH_PATH(session, hash, path)
+	local hashs, resource_hashs, unsolved_hashs, error_hashs = ltask.call(ServiceVfsMgr, "FETCH_PATH", hash, path)
+	response("FECTH_RESPONSE", session, hashs, resource_hashs, unsolved_hashs, error_hashs)
+end
+
+function message.FETCH_DIR(session, hash, path)
+	local hashs, resource_hashs, unsolved_hashs, error_hashs = ltask.call(ServiceVfsMgr, "FETCH_DIR", hash, path)
+	response("FECTH_RESPONSE", session, hashs, resource_hashs, unsolved_hashs, error_hashs)
+end
+
 function message.DBG(data)
 	--if not ServiceDebugProxy then
 	--	ServiceDebugProxy = ltask.spawn("debug.proxy", FD)

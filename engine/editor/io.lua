@@ -47,6 +47,44 @@ local CMD = {
 	FETCH = function() end,
 }
 
+local fetch_session = {}
+local fetch_seesion_id = 0
+
+function CMD.FETCH_BEGIN(path)
+	fetch_seesion_id = fetch_seesion_id + 1
+	local session = tostring(fetch_seesion_id)
+	fetch_session[session] = {
+		progress = {
+			success = 0,
+			failed = 0,
+			waiting = 0,
+		},
+	}
+	CMD.FETCH_ADD(session, path)
+	return session
+end
+
+function CMD.FETCH_UPDATE(session)
+	local status = fetch_session[session]
+	if not status then
+		return
+	end
+	return status.progress
+end
+
+function CMD.FETCH_END(session)
+	fetch_session[session] = nil
+end
+
+function CMD.FETCH_ADD(session, path)
+	local status = fetch_session[session]
+	if not status then
+		return
+	end
+	local progress = status.progress
+	progress.success = progress.success + 1
+end
+
 local S_CMD = {}
 for k, f in pairs(CMD) do
 	S_CMD[k] = function (id, ...)
