@@ -31,15 +31,9 @@ function page_meta.create(document, e, item_init, item_update, detail_renderer, 
     end
     e.appendChild(panel)
     panel.className = "pagestyle"
-    -- if platform.OS == 'Windows' then
-        panel.addEventListener('mousedown', function(event) page:on_mousedown(event) end)
-        panel.addEventListener('mousemove', function(event) page:on_drag(event) end)
-        panel.addEventListener('mouseup', function(event) page:on_mouseup(event) end)
-    -- else
-        panel.addEventListener('touchstart', function(event) page:on_mousedown(event) end)
-        panel.addEventListener('touchmove', function(event) page:on_drag(event) end)
-        panel.addEventListener('touchend', function(event) page:on_mouseup(event) end)
-    -- end
+    panel.addEventListener('mousedown', function(event) page:on_mousedown(event) end)
+    panel.addEventListener('mousemove', function(event) page:on_drag(event) end)
+    panel.addEventListener('mouseup', function(event) page:on_mouseup(event) end)
     panel.style.height = page.height
     panel.style.flexDirection = 'row'
     panel.style.alignItems = 'flex-start'
