@@ -343,9 +343,20 @@ local gesture = {}
 function gesture.tap(e)
     local loc = e.locationInView
     local x, y = loc.x, loc.y
-    m.process_mouse(x, y, 1, MOUSE_MOVE)
     m.process_mouse(x, y, 1, MOUSE_DOWN)
     return m.process_mouse(x, y, 1, MOUSE_UP)
+end
+
+function gesture.pan(e)
+    local loc = e.locationInView
+    local x, y = loc.x, loc.y
+    if e.state == "began" then
+        return m.process_mouse(x, y, 1, MOUSE_DOWN)
+    elseif e.state == "changed" then
+        return m.process_mouse(x, y, 1, MOUSE_MOVE)
+    elseif e.state == "ended" then
+        return m.process_mouse(x, y, 1, MOUSE_UP)
+    end
 end
 
 function m.process_gesture(name, ...)
