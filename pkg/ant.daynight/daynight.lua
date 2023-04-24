@@ -96,19 +96,19 @@ end
 function dn_sys:init()
     DAYNIGHT.DAY.DIRECT_COLORS, DAYNIGHT.DAY.INDIRECT_COLORS = 
         read_colors_from_files{
-            direct = "/pkg/ant.daynight/assets/light/day_direct.pngx",
-            indirect = "/pkg/ant.daynight/assets/light/day_indirect.pngx",
-            intensity = "/pkg/ant.daynight/assets/light/day_intensity.pngx",
+            direct = "/pkg/ant.resources.binary/assets/light/day_direct.pngx",
+            indirect = "/pkg/ant.resources.binary/assets/light/day_indirect.pngx",
+            intensity = "/pkg/ant.resources.binary/assets/light/day_intensity.pngx",
         }
 
     DAYNIGHT.NIGHT.DIRECT_COLORS, DAYNIGHT.NIGHT.INDIRECT_COLORS = 
         read_colors_from_files{
-            direct = "/pkg/ant.daynight/assets/light/day_direct.pngx",
-            indirect = "/pkg/ant.daynight/assets/light/day_indirect.pngx",
-            intensity = "/pkg/ant.daynight/assets/light/day_intensity.pngx",
-            -- direct = "/pkg/ant.daynight/assets/light/night_direct.pngx",
-            -- indirect = "/pkg/ant.daynight/assets/light/night_indirect.pngx",
-            -- intensity = "/pkg/ant.daynight/assets/light/night_intensity.pngx",
+            direct = "/pkg/ant.resources.binary/assets/light/day_direct.pngx",
+            indirect = "/pkg/ant.resources.binary/assets/light/day_indirect.pngx",
+            intensity = "/pkg/ant.resources.binary/assets/light/day_intensity.pngx",
+            -- direct = "/pkg/ant.resources.binary/assets/light/night_direct.pngx",
+            -- indirect = "/pkg/ant.resources.binary/assets/light/night_indirect.pngx",
+            -- intensity = "/pkg/ant.resources.binary/assets/light/night_intensity.pngx",
         }
 end
 
