@@ -7,7 +7,8 @@ system "daynight_system"
 
 interface "idaynight"
     .implement "daynight.lua"
-    .method "update_cycle"
+    .method "update_day_cycle"
+    .method "update_night_cycle"
     .method "set_rotation"
 
 component "daynight".type "lua"

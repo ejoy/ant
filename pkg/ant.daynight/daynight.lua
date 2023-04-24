@@ -96,19 +96,16 @@ end
 function dn_sys:init()
     DAYNIGHT.DAY.DIRECT_COLORS, DAYNIGHT.DAY.INDIRECT_COLORS = 
         read_colors_from_files{
-            direct = "/pkg/ant.resources.binary/assets/light/day_direct.pngx",
-            indirect = "/pkg/ant.resources.binary/assets/light/day_indirect.pngx",
-            intensity = "/pkg/ant.resources.binary/assets/light/day_intensity.pngx",
+            direct      = "/pkg/ant.resources.binary/textures/daynight/day_direct.pngx",
+            indirect    = "/pkg/ant.resources.binary/textures/daynight/day_indirect.pngx",
+            intensity   = "/pkg/ant.resources.binary/textures/daynight/day_intensity.pngx",
         }
 
     DAYNIGHT.NIGHT.DIRECT_COLORS, DAYNIGHT.NIGHT.INDIRECT_COLORS = 
         read_colors_from_files{
-            direct = "/pkg/ant.resources.binary/assets/light/day_direct.pngx",
-            indirect = "/pkg/ant.resources.binary/assets/light/day_indirect.pngx",
-            intensity = "/pkg/ant.resources.binary/assets/light/day_intensity.pngx",
-            -- direct = "/pkg/ant.resources.binary/assets/light/night_direct.pngx",
-            -- indirect = "/pkg/ant.resources.binary/assets/light/night_indirect.pngx",
-            -- intensity = "/pkg/ant.resources.binary/assets/light/night_intensity.pngx",
+            direct      = "/pkg/ant.resources.binary/textures/daynight/night_direct.pngx",
+            indirect    = "/pkg/ant.resources.binary/textures/daynight/night_indirect.pngx",
+            intensity   = "/pkg/ant.resources.binary/textures/daynight/night_intensity.pngx",
         }
 end
 
@@ -119,12 +116,17 @@ local function interpolate_in_array(t, arrays)
     return math3d.lerp(arrays[x+1], arrays[x+2], y)
 end
 
-local function update_rotation_frame(dn, q)
-    math3d.unmark(dn.normal)
-    math3d.unmark(dn.start_dir)
+local function update_rotation_frame(r, q)
+    if r.normal then
+        math3d.unmark(r.normal)
+    end
 
-    dn.start_dir= math3d.mark(math3d.transform(q, mc.NXAXIS, 0))
-    dn.normal   = math3d.mark(math3d.transform(q, mc.ZAXIS, 0))
+    if r.start_dir then
+        math3d.unmark(r.start_dir)
+    end
+
+    r.start_dir= math3d.mark(math3d.transform(q, mc.NXAXIS, 0))
+    r.normal   = math3d.mark(math3d.transform(q, mc.ZAXIS, 0))
 end
 
 function dn_sys:entity_init()
@@ -135,17 +137,21 @@ function dn_sys:entity_init()
             dn.cycle = 0
         end
 
-        local function init_rotator(r)
+        local function init_cycle_value(r)
             if r.start_rotator then
-                update_rotation_frame(math3d.quaternion(r.start_rotator))
+                update_rotation_frame(r, math3d.quaternion(r.start_rotator))
             else
                 r.start_dir = math3d.mark(mc.NXAXIS)
                 r.normal = math3d.mark(mc.ZAXIS)
             end
+
+            if not r.intensity then
+                r.intensity = ilight.default_intensity "directional"
+            end
         end
 
-        init_rotator(dn.day)
-        init_rotator(dn.night)
+        init_cycle_value(dn.day)
+        init_cycle_value(dn.night)
 
         if not dn.intensity then
             dn.intensity = ilight.default_intensity "directional"
@@ -200,9 +206,9 @@ function idn.update_night_cycle(e, cycle)
     update_cycle(cycle, e.daynight.night, DAYNIGHT.NIGHT)
 end
 
-function idn.set_rotation(e, rotator)
+function idn.set_rotation(e, type, rotator)
     w:extend(e, "daynight:in")
-    update_rotation_frame(e.daynight, rotator)
+    update_rotation_frame(assert(e.daynight[type], "Invalid type"), rotator)
 end
 
 --[[test code:
@@ -213,6 +219,9 @@ function sys:data_changed()
     local dne = w:first "daynight:in"
     local tenSecondMS<const> = 10000
     local cycle = (itimer.current() % tenSecondMS) / tenSecondMS
-    idn.update_cycle(dne, cycle)
+    idn.update_day_cycle(dne, cycle)
+
+    --
+    idn.update_night_cycle(dne, cycle)
 end
 ]]

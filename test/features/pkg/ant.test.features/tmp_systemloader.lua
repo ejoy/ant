@@ -136,6 +136,8 @@ function init_loader_sys:init()
                 iom.set_position(ee, math3d.vector(10, 0, 0, 1))
             end)
 
+    ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
+
 end
 
 local function render_layer_test()
@@ -384,7 +386,12 @@ function init_loader_sys:entity_init()
 end
 
 function init_loader_sys:data_changed()
-
+    local idn = ecs.import.interface "ant.daynight|idaynight"
+    local itimer = ecs.import.interface "ant.timer|itimer"
+    local dne = w:first "daynight:in"
+    local tenSecondMS<const> = 10000
+    local cycle = (itimer.current() % tenSecondMS) / tenSecondMS
+    idn.update_day_cycle(dne, cycle)
 end
 
 function init_loader_sys:camera_usage()
