@@ -4,6 +4,7 @@ local serialize = import_package "ant.serialize"
 local fs = require "filesystem"
 local lfs = require "filesystem.local"
 
+local arg = select(1, ...)
 local srcfile = arg[1]
 local srcpath = fs.path(srcfile)
 
