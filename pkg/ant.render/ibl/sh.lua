@@ -227,46 +227,57 @@ local compute_cos_SH; do
 end
 
 --[[
-    using SH for irradiance, we need to do two step:
+    using SH for irradiance, we need two step:
         1. compress, projection the irradiance map to Eml with SH basics function
         2. render, use the compress Eml value with sample direction(the normal value), and reprojection the Eml with SH basics function to get the irradiance value
     see the reference: 'An efficient Representation for Irradiance Environment Maps'[1]
 
+    what are l and m mean:
+        l for level, m:[-l, l], we say 3 level sh, it mean lmax = 3, so, total sh number: l^2
+        for example: l = 3, sh number is: l^2 = 9, where level 1 has one element, level 2 have 3 elements, level 3 have 5 elements, 1 + 3 + 5 = 9
+
     the 'sh.lua' file, only for compress irradiance map, the render part is in ibl.sh file, defined by 'IRRADIANCE_SH_BAND_NUM'
 
     Kml = K(m, l) = sqrt(A/B), where:
-            A = (2l+1)*(l-|m|)! = (2l+1) * factorial(l - abs(m))
-            B = 4*pi*(l+|m|)! = 4 * pi * factorial(l+abs(m))
+            A = (2l+1)*(l-|m|)! = (2l+1) * factorial(l-abs(m))
+            B =   4*pi*(l+|m|)! =   4*pi * factorial(l+abs(m))
     
     Yml(theta, phi) = Kml * e^(i*m*phi) * P|m|l(cos(theta)), where:
         m > 0, sqrt(2) * Kml * cos(m*phi)   * Pml(cos(theta))
         m < 0, sqrt(2) * Kml * sin(|m|*phi) * P-ml(cos(theta))
         m = 0, K0l * P0l(cos(theta))
 
-            Yml(theta, phi) has another version defined in Cartesian coordinates space:
-                (x, y, z) = (sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta))
-                Y00(theta, phi)                 = 0.282095
-                (Y11; Y10; Y1-1)(theta, phi)    = 0.488603(x; z; y)
-                (Y21; Y2-1;Y2-2)(theta, phi)    = 1.092548(xz;yz;xy)
-                Y20(theta, phi)                 = 0.315392(3*z*z-1)
-                Y22(theta, phi)                 = 0.546274(x*x-y*y)
+        Yml(theta, phi) has another version defined in Cartesian coordinates space:
+            (x, y, z) = (sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta))
+            Y00(theta, phi)                 = 0.282095
+            (Y11; Y10; Y1-1)(theta, phi)    = 0.488603*(x; z; y)
+            (Y21; Y2-1;Y2-2)(theta, phi)    = 1.092548*(xz;yz;xy)
+            Y20(theta, phi)                 = 0.315392*(3*z*z-1)
+            Y22(theta, phi)                 = 0.546274*(x*x-y*y)
 
-    Kml = K(m, l) ==> K0l = K(0, l)
-    Pml = P(|m|, l) ==> P0l = P(0, l)
-    here, Pml is Associated Legendre polynomials
+            !!Y11; Y10;Y1-1; these symbols use Ylm, they reverse m and l order in suffix, so using Yml, Y11 = Y11, Y10 = Y01, Y1-1 = Y-11
+        those constant value:
+            0.282095 = K(0, 0) = sqrt(1/(2*pi))
+            0.488603 = K(-1, 1) = K(0, 1) = K(1, 1) = A = (2*1+1) * 0! = 3, B = 4*pi*0!= 4*pi; Kml = sqrt(A/B) = sqrt(3/(4*pi))
+            ...
+
+    Kml = K( m , l) ==> K0l = K(0, l)
+    Yml = Y(|m|, l) ==> Y0l = Y(0, l)
+    here, Yml is Associated Legendre polynomials, sometime we call Yml as Pml, they point to the same meanings
 
     the compress part of SH formula:
         E = integral[omega](Li * cos(theta) * domega)
             the E is the irradiance at some point, cos(theta) is the normal dot soild angle direction
             and BRDF is miss here, bacause the reflection and visibility are ignore here, so only Li and cos(theta) will affect the result
         
-        so, we need to use SH basics function Yml to weight Li and cos(theta), which is Lml and Al:
+        so, we need to use SH basics function Yml to weight Li and cos(theta), which is Lml and Al: 
+            L = integral[omega](Li(theta, phi) * Yml(theta, phi) * domega) ==> Lml = Sum(Li(theta, phi) * Yml(theta, phi) * SolidAngle(theta, phi))
 
-            Lml = integral[omega](Li(theta, phi) * Yml(theta, phi) * domega) ==> Sum(Li(theta, phi) * Yml(theta, phi) * SolidAngle(theta, phi))
+            (we use '==>' here, not '=', because L is not equal to Lml)
 
-            Al = integral[omega](cos(theta) * Yml(theta, phi) * domega) ==> Sum(cos(theta) * Yml(theta, phi))
+            A = integral[omega](cos(theta) * Yml(theta, phi) * domega) ==> Al = Sum(cos(theta) * Yml(theta, phi))
                 Al has some special features we can use. Because A = (normal dot solid angle direction), so A has no azimuthal dependence, then
-                    only m = 0 is valid for any l index.
+                    only m = 0 is valid for any l index. so we write Al not A0l, just for convenient
 
                 we make:
                     Al* = sqrt(4*math.pi/(2l+1)) * Al
@@ -283,6 +294,9 @@ end
                 if bandnum = 2/3, Eml is 4/9 coefficients with RGB values
 
     the render part of SH:
+        here is come to the magic of SH base functions. 
+        multiply the compress value with the base function Yml, we can get the approximation of E, which is Eml.
+            (of cause, if we get l to inifinte value, E is equal to Eml)
         we need to use Eml to recover E, so:
             E = Sum(Eml * Yml(theta, phi))  -- all the (theta, phi) paris mean it's a direction that is normal value of the sample point
 
@@ -290,11 +304,6 @@ end
     [1] An efficient Representation for Irradiance Environment Maps
     [2] R. Ramamoorthi and P. Hanrahan. On the relationship between radiance and irradiance: Determining the illumination from images of a convex lambertian object. To appear, Journal of the Optical Society of America A, 2001
 ]]
-local function computeLml(Kml, bandnum, N)
-    local Yml
-    local Kml
-
-end
 
 local function m3d_xyz(v)
     local x, y, z = math3d.index(v, 1, 2, 3)
