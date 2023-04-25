@@ -112,6 +112,35 @@ float PCF(
 }
 #endif //SM_PCF
 
+#ifdef SM_VSM
+float VSM(
+	shadow_sampler_type _sampler,
+	vec4 _shadowCoord, float _bias,
+	float _depthMultiplier, float _minVariance) 
+{
+	vec2 texCoord = _shadowCoord.xy / _shadowCoord.w;
+	bool outside = any(greaterThan(texCoord, vec2_splat(1.0)))
+				|| any(lessThan   (texCoord, vec2_splat(0.0)))
+				 ;
+
+	if (outside)
+	{
+		return 1.0;
+	}	
+	float receiver = (_shadowCoord.z - _bias) / _shadowCoord.w * _depthMultiplier;
+	float depth = texture2D(_sampler, texCoord).x * _depthMultiplier;
+	float depthSq = texture2D(_sampler, texCoord).y * _depthMultiplier;
+	if (receiver > depth)
+	{
+		return 1.0;
+	}	
+	float variance = max(depthSq - depth * depth, _minVariance);
+	float d = receiver - depth;
+	float visibility = variance / (variance + d * d);
+	return pow(visibility, 10);
+}
+#endif //SM_VSM
+
 #ifdef SM_ESM
 float ESM(
 	shadow_sampler_type _sampler,
@@ -214,6 +243,10 @@ float sample_visibility(vec4 shadowcoord)
 #ifdef SM_ESM
 	return ESM(s_shadowmap, shadowcoord, u_shadowmap_bias, u_depthMultiplier);
 #endif //SM_ESM
+
+#ifdef SM_VSM
+	return VSM(s_shadowmap, shadowcoord, u_shadowmap_bias, 1, 0.012);
+#endif //SM_VSM
 
 	return 0.0;
 }

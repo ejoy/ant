@@ -35,7 +35,7 @@ component "csm_directional_light"
 component "csm".type "lua"
 policy "csm_queue"
     .require_system "ant.render|shadow_system"
-    .require_system "ant.render|shadow_debug_system"
+    --.require_system "ant.render|shadow_debug_system"
     .require_interface "ant.render|ishadow"
     .component "csm"
 
