@@ -8,7 +8,6 @@ function page_meta.create(document, e, item_init, item_update, detail_renderer, 
     local page = {
         current_page    = 1,
         pos             = 0,
-        draging         = false,
         drag            = {mouse_pos = 0, anchor = 0, delta = 0},
         row             = row and tonumber(row) or 0,
         col             = col and tonumber(col) or 0,
@@ -250,7 +249,8 @@ function page_meta:on_mousedown(event)
     end
     self.drag.mouse_pos = posx
     self.drag.anchor = self.pos
-    self.draging = false
+    self.oldClassName = self.panel.className
+    self.panel.className = self.panel.className .. " notransition"
 end
 
 function page_meta:on_mouseup(event)
@@ -269,7 +269,7 @@ function page_meta:on_mouseup(event)
     if old_value ~= self.current_page then
         self:update_footer_status()
     end
-
+    self.panel.className = self.oldClassName
     if not self.panel.childNodes[1] then
         return
     end
@@ -287,11 +287,7 @@ function page_meta:on_drag(event)
         self.drag.delta = posx - self.drag.mouse_pos
         self.pos = self.drag.anchor + self.drag.delta
         local e = self.panel
-        local oldClassName = e.className
-        e.className = e.className .. " notransition"
         e.style.left = tostring(math.floor(self.pos)) .. 'px'
-        e.className = oldClassName
-        self.draging = true
     else
         self.drag.delta = 0
     end

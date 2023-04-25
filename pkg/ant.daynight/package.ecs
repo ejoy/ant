@@ -1,0 +1,19 @@
+system "daynight_system"
+    .implement "daynight.lua"
+    .method "init"
+    .method "entity_init"
+    .method "entity_remove"
+
+
+interface "idaynight"
+    .implement "daynight.lua"
+    .method "update_day_cycle"
+    .method "update_night_cycle"
+    .method "set_rotation"
+
+component "daynight".type "lua"
+
+policy "daynight"
+    .require_system "ant.daynight|daynight_system"
+    .require_interface "ant.daynight|idaynight"
+    .component "daynight"

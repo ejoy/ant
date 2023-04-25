@@ -369,6 +369,7 @@ function REPO_MT:dir(hash)
 	end
 	local dir = {}
 	local file = {}
+	local resource = {}
 	for line in f:lines() do
 		local t, name, hash = line:match "^([dfr]) (%S*) (%S*)$"
 		if t == 'd' then
@@ -376,6 +377,7 @@ function REPO_MT:dir(hash)
 		elseif t == 'f' then
 			file[name] = hash
 		elseif t == 'r' then
+			resource[name] = hash
 		else
 			if _DEBUG then print ("INVALID", filename) end
 			f:close()
@@ -383,7 +385,7 @@ function REPO_MT:dir(hash)
 		end
 	end
 	f:close()
-	return { dir = dir, file = file }
+	return { dir = dir, file = file, resource = resource }
 end
 
 function REPO_MT:build_dir(lpath)
@@ -436,6 +438,86 @@ function REPO_MT:fetch(path)
 	r[#r+1] = hash
 	fetchall(self, r, hash)
 	return r
+end
+
+local function fetch_path(repo, hash, path, hashs, resource_hashs, unsolved_hashs, error_hashs)
+	local pathlst = split(path)
+	local n = #pathlst
+	for i = 1, n-1 do
+		local name = pathlst[i]
+		local v = repo:dir(hash)
+		if not v or not v.dir[name] then
+			error_hashs[#error_hashs+1] = hash
+			return
+		end
+		hashs[#hashs+1] = hash
+		hash = v.dir[name]
+	end
+	local name = pathlst[n]
+	local v = repo:dir(hash)
+	if not v then
+		error_hashs[#error_hashs+1] = hash
+		return
+	end
+	if v.resource[name] then
+		resource_hashs[#resource_hashs+1] = hash
+		return
+	end
+	if v.file[name] then
+		hashs[#hashs+1] = hash
+		return
+	end
+	if v.dir[name] then
+		unsolved_hashs[#unsolved_hashs+1] = hash
+		return
+	end
+	error_hashs[#error_hashs+1] = hash
+end
+
+function REPO_MT:fetch_path(hash, path)
+	local hashs = {}
+	local unsolved_hashs = {}
+	local resource_hashs = {}
+	local error_hashs = {}
+	fetch_path(self, hash, path, hashs, unsolved_hashs, resource_hashs, error_hashs)
+	return table.concat(hashs, "|")
+		, table.concat(resource_hashs, "|")
+		, table.concat(unsolved_hashs, "|")
+		, table.concat(error_hashs, "|")
+end
+
+local function fetch_dir(repo, hash, n, hashs, resource_hashs, unsolved_hashs, error_hashs)
+	local v = repo:dir(hash)
+	if not v then
+		error_hashs[#error_hashs+1] = hash
+		return
+	end
+	for _, h in pairs(v.file) do
+		hashs[#hashs+1] = h
+	end
+	for _, h in pairs(v.resource) do
+		resource_hashs[#resource_hashs+1] = h
+	end
+	for _, h in pairs(v.dir) do
+		if n <= 0 then
+			unsolved_hashs[#unsolved_hashs+1] = hash
+		else
+			hashs[#hashs+1] = h
+			fetch_dir(repo, h, n-1, hashs, resource_hashs, unsolved_hashs, error_hashs)
+		end
+	end
+end
+
+function REPO_MT:fetch_dir(hash)
+	local hashs = {}
+	local resource_hashs = {}
+	local unsolved_hashs = {}
+	local error_hashs = {}
+	fetch_dir(self, hash, 2, hashs, resource_hashs, unsolved_hashs, error_hashs)
+	return table.concat(hashs, "|")
+		, table.concat(resource_hashs, "|")
+		, table.concat(unsolved_hashs, "|")
+		, table.concat(error_hashs, "|")
 end
 
 return REPO_MT

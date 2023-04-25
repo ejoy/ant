@@ -55,6 +55,10 @@ function vfs.new(repopath)
 end
 
 local function dir_object(self, hash)
+	local dir = self.cache[hash]
+	if dir then
+		return dir
+	end
 	local realname = self.path .. hash:sub(1,2) .. "/" .. hash
 	local df = io.open(realname, "rb")
 	if df then
@@ -69,6 +73,7 @@ local function dir_object(self, hash)
 			end
 		end
 		df:close()
+		self.cache[hash] = dir
 		return dir
 	end
 end
@@ -79,13 +84,9 @@ local ListNeedGet <const> = 3
 local ListNeedResource <const> = 4
 
 local function fetch_file(self, hash, fullpath)
-	local dir = self.cache[hash]
+	local dir = dir_object(self, hash)
 	if not dir then
-		dir = dir_object(self, hash)
-		if not dir then
-			return ListNeedGet, hash
-		end
-		self.cache[hash] = dir
+		return ListNeedGet, hash
 	end
 
 	local path, name = fullpath:match "/?([^/]+)/?(.*)"
@@ -126,15 +127,62 @@ function vfs:list(path)
 		end
 		hash = h
 	end
-	local dir = self.cache[hash]
+	local dir = dir_object(self, hash)
 	if not dir then
-		dir = dir_object(self, hash)
-		if not dir then
-			return nil, ListNeedGet, hash
-		end
-		self.cache[hash] = dir
+		return nil, ListNeedGet, hash
 	end
 	return dir
+end
+
+local function split_path(path)
+	local r = {}
+	path:gsub("[^/]+", function(s)
+		r[#r+1] = s
+	end)
+	return r
+end
+
+function vfs:gethash(path)
+	local hash = self.root
+	local pathlst = split_path(path)
+	local n = #pathlst
+	for i = 1, n-1 do
+		local v = dir_object(self, hash)
+		if not v then
+			return {
+				uncomplete = true,
+				hash = hash,
+				path = table.concat(pathlst, "/", i, n)
+			}
+		end
+		local name = pathlst[i]
+		local info = v[name]
+		if not info or info.type ~= 'd' then
+			local errorpath = table.concat(pathlst, "/", 1, i)
+			return nil, "Not exist: "..errorpath.." (when get "..path..")"
+		end
+		hash = info.hash
+	end
+	local v = dir_object(self, hash)
+	if not v then
+		return {
+			uncomplete = true,
+			hash = hash,
+			path = "",
+		}
+	end
+	if n == 0 then
+		return {
+			hash = hash,
+			type = "d"
+		}
+	end
+	local name = pathlst[n]
+	local info = v[name]
+	if not info then
+		return nil, "Not exist path: "..path
+	end
+	return info
 end
 
 function vfs:updatehistory(hash)
