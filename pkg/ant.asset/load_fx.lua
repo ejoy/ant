@@ -8,25 +8,30 @@ local function readall(filename)
     return f:read "a"
 end
 
-local function create_uniform(h, mark)
-    local name, type, num = bgfx.get_uniform_info(h)
-    if mark[name] then
-        return
-    end
-    mark[name] = true
-    return { handle = h, name = name, type = type, num = num }
-end
-
 local function uniform_info(shader, uniforms, mark)
     local shader_uniforms = bgfx.get_shader_uniforms(shader)
     if shader_uniforms then
         for _, h in ipairs(shader_uniforms) do
-            uniforms[#uniforms+1] = create_uniform(h, mark)
+            local name, type, num = bgfx.get_uniform_info(h)
+            if not mark[name] then
+                mark[name] = true
+                uniforms[#uniforms + 1] = { handle = h, name = name, type = type, num = num }
+            end
         end
     end
 end
 
-local function createRenderProgram(vs, fs)
+local function loadShader(filename, data, stage)
+    if data[stage] then
+        local h = bgfx.create_shader(readall(filename .. "|" .. stage .. ".bin"))
+        bgfx.set_name(h, data[stage])
+        return h
+    end
+end
+
+local function createRenderProgram(fx, filename, data)
+    local vs = loadShader(filename, data, "vs")
+    local fs = loadShader(filename, data, "fs")
     local prog = bgfx.create_program(vs, fs, false)
     if prog then
         local uniforms = {}
@@ -35,47 +40,43 @@ local function createRenderProgram(vs, fs)
         if fs then
             uniform_info(fs, uniforms, mark)
         end
-        return prog, uniforms
+        fx.vs = vs
+        fx.fs = fs
+        fx.prog = prog
+        fx.uniforms = uniforms
     else
         error(string.format("create program failed, vs:%d, fs:%d", vs, fs))
     end
 end
 
-local function createComputeProgram(cs)
+local function createComputeProgram(fx, filename, data)
+    local cs = loadShader(filename, data, "cs")
     local prog = bgfx.create_program(cs, false)
     if prog then
         local uniforms = {}
         local mark = {}
         uniform_info(cs, uniforms, mark)
-        return prog, uniforms
+        fx.cs = cs
+        fx.prog = prog
+        fx.uniforms = uniforms
     else
         error(string.format("create program failed, cs:%d", cs))
     end
 end
 
-local function createProgram(filename, fx)
-    local function loadFxShader(stage)
-        if fx[stage] then
-            local h = bgfx.create_shader(readall(filename.."|"..stage..".bin"))
-            bgfx.set_name(h, fx[stage])
-            return h
-        end
-    end
-
-    local result = {}
-    if fx.cs then
-        result.cs = loadFxShader "cs"
-        result.prog, result.uniforms = createComputeProgram(result.cs)
+return function(filename)
+    local material = serialize.parse(filename, readall(filename .. "|main.cfg"))
+    local data = material.fx
+    local fx = {
+        setting = data.setting or {}
+    }
+    if data.vs then
+        createRenderProgram(fx, filename, data)
+    elseif data.cs then
+        createComputeProgram(fx, filename, data)
     else
-        result.vs, result.fs = loadFxShader "vs", loadFxShader "fs"
-        result.prog, result.uniforms = createRenderProgram(result.vs, result.fs)
+        error("material needs to contain at least cs or vs")
     end
-    result.setting = fx.setting or {}
-    return result
-end
-
-return function (filename)
-    local material = serialize.parse(filename, readall(filename.."|main.cfg"))
-    material.fx = createProgram(filename, material.fx)
+    material.fx = fx
     return material
 end
