@@ -1,0 +1,27 @@
+fx:
+  vs: /pkg/ant.terrain/assets/shaders/vs_water_simple.sc
+  fs: /pkg/ant.terrain/assets/shaders/fs_water_simple.sc
+  setting:
+    lighting: off
+properties:
+  u_noise_scale_bais:     {1.0, 4.0, 0.0, 0.0}
+  u_distort_scale_bais:   {1.0, 1.0, 0.0, 0.0}
+  u_gradient_shallow_color: {0.325, 0.807, 0.971, 0.725}
+  u_gradient_deep_color:    {0.086, 0.407, 1, 0.749}
+  u_foam_color:            {1.0, 1.0, 1.0, 1.0}
+  u_distance_param:       {1.0, 0.04, 0.4, 0.0}  #u_depth_max_distance, u_foam_min_distance, u_foam_max_distance
+  u_surface_param:        {0.03, 0.03, 0.777, 0.27}  #u_noise_scroll.xy, u_noise_cutoff, u_distortion_scale
+  s_nosie:
+    stage: 0
+    texture: /pkg/ant.resources/textures/water/noise.texture
+  s_distortion:
+    stage: 1
+    texture: /pkg/ant.resources/textures/water/distortion.texture
+  s_scene_depth:
+    stage: 2
+    texture: /pkg/ant.resources/textures/black.texture
+
+state:
+  WRITE_MASK: RGBA
+  DEPTH_TEST: GREATER
+  BLEND: ALPHA

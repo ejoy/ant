@@ -1,0 +1,10 @@
+fx:
+  fs: /pkg/ant.objcontroller/pickup/assets/fs_picking.sc
+  vs: /pkg/ant.objcontroller/pickup/assets/vs_picking.sc
+  setting:
+    lighting: off
+properties:
+  u_id: {0, 0, 0, 0}
+state:
+  DEPTH_TEST: ALWAYS
+  WRITE_MASK: RGBA

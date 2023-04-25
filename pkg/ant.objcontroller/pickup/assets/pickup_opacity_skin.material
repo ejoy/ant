@@ -1,0 +1,9 @@
+fx:
+  fs: /pkg/ant.objcontroller/pickup/assets/fs_picking.sc
+  vs: /pkg/ant.objcontroller/pickup/assets/vs_picking.sc
+  setting:
+    lighting: off
+    GPU_SKINNING: 1
+properties:
+  u_id: {0, 0, 0, 0}
+state: /pkg/ant.resources/materials/states/default.state

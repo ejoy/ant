@@ -230,8 +230,8 @@ end
 
 function pickup_sys:init()
 	create_pick_entity()
-	pickup_material			= imaterial.load_res '/pkg/ant.resources/materials/pickup_opacity.material'
-	pickup_skin_material	= imaterial.load_res '/pkg/ant.resources/materials/pickup_opacity_skin.material'
+	pickup_material			= imaterial.load_res '/pkg/ant.objcontroller/pickup/assets/pickup_opacity.material'
+	pickup_skin_material	= imaterial.load_res '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_skin.material'
 end
 
 function pickup_sys:entity_init()

@@ -32,7 +32,7 @@ function cs2cm_sys:init()
         },
         data = {
             name        = "cs2cm_convertor",
-            material    = "/pkg/ant.resources/materials/panorama2cubemap.material",
+            material    = "/pkg/ant.sky/assets/panorama2cubemap.material",
             dispatch    ={
                 size    = {
                     0, 0, 0
