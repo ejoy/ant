@@ -44,18 +44,6 @@ local function get_internal(t, sp, n)
     return get_internal(node, sp, n+1)
 end
 
-local function set_internal(t, sp, n)
-    if n >= #sp then
-        return t
-    end
-    local node = t[sp[n]]
-    if type(node) ~= 'table' then
-        node = {}
-        t[sp[n]] = node
-    end
-    return set_internal(node, sp, n+1)
-end
-
 function mt:get(path)
     local sp = split(path)
     for _, l in ipairs(self._l) do
@@ -68,69 +56,6 @@ function mt:get(path)
             end
             return r
         end
-    end
-end
-
-function mt:set(path, value)
-    local sp = split(path)
-    local t = set_internal(self._data, sp, 1)
-    if not t then
-        return false
-    end
-    local k = sp[#sp]
-    t[k] = value
-    return true
-end
-
-function mt:setting_path()
-    return self._path
-end
-
-function mt:enum_key(path)
-    local sort = {}
-    local mark = {}
-    for _, l in ipairs(self._l) do
-        local t, k = query(l, path)
-        if t then
-            for k, v in pairs(t[k]) do
-                if not mark[k] and type(v) == 'table' then
-                    sort[#sort+1] = k
-                    mark[k] = true
-                end
-            end
-        end
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if not k then return end
-        n = n + 1
-        return k
-    end
-end
-
-function mt:enum_value(path)
-    local sort = {}
-    local mark = {}
-    for _, l in ipairs(self._l) do
-        local t, k = query(l, path)
-        if t then
-            for k, v in pairs(t[k]) do
-                if not mark[k] and type(v) ~= 'table' then
-                    sort[#sort+1] = {k, v}
-                    mark[k] = true
-                end
-            end
-        end
-    end
-    table.sort(sort, function(a, b) return a[1] < b[1] end)
-    local n = 1
-    return function ()
-        local kv = sort[n]
-        if not kv then return end
-        n = n + 1
-        return kv[1], kv[2]
     end
 end
 
@@ -165,7 +90,7 @@ function mt:data()
             end
         end
         function mt:__newindex()
-            error "Modify registry needs to use the `set` method."
+            error "setting is readonly."
         end
 
         function mt:__len()
@@ -226,21 +151,6 @@ function mt:data()
     return proxy('')
 end
 
-function mt:use(path)
-    local t = query(self._data, '_'..path)
-    if not t then
-        return false
-    end
-    local l = self._l
-    for i = #l, 1, -1 do
-        if l[i] == t then
-            return false
-        end
-        l[i+1] = l[i]
-    end
-    l[1] = t
-    return true
-end
 
 local m = {}
 
@@ -254,6 +164,22 @@ function m.create(path)
     self._data = data
     self._l = {data}
     return self
+end
+
+function m.use(self, path)
+    local t = query(self._data, '_'..path)
+    if not t then
+        return false
+    end
+    local l = self._l
+    for i = #l, 1, -1 do
+        if l[i] == t then
+            return false
+        end
+        l[i+1] = l[i]
+    end
+    l[1] = t
+    return true
 end
 
 return m

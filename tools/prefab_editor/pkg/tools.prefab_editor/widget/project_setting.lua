@@ -1,11 +1,7 @@
-local fs  = require "filesystem"
 local lfs           = require "filesystem.local"
 local imgui         = require "imgui"
 local global_data   = require "common.global_data"
-local access        = global_data.repo_access
 local datalist      = require "datalist"
-
-local setting       = import_package "ant.settings"
 local serialize     = import_package "ant.serialize"
 
 local ps = {
