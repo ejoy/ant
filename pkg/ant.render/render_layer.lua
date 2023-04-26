@@ -27,21 +27,17 @@ end
 
 function irl.add_layers(after_layeridx, ...)
     local num_new_layers = select('#', ...)
-    for i=1, num_new_layers do
-        local n = #layer_names
-        if #layer_names >= MAX_LAYER then
-            error(("Too many render layer, max is :%d"):format(MAX_LAYER))
-        end
-
-        after_layeridx = after_layeridx or n
-        if after_layeridx == MAX_LAYER then
-            error "Can not push another layer, it will larger than MAX_LAYER"
-        end
-
-        layer_names[#layer_names+1] = select(i, ...)
-    end
 
     if num_new_layers > 0 then
+        if (#layer_names + num_new_layers) > MAX_LAYER then
+            error(("Not enough render layers to use, max is:%d"):format(MAX_LAYER))
+        end
+
+        local insertidx = after_layeridx or 0
+        for i=1, num_new_layers do
+            local name = select(i, ...)
+            table.insert(layer_names, insertidx+i, name)
+        end
         update_objects_layer()
     end
 end
