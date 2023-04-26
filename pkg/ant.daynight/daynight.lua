@@ -138,6 +138,7 @@ local function update_rotation_data(r)
     if not n then
         n = q and math3d.transform(q, mc.ZAXIS, 0) or mc.ZAXIS
     end
+    n = math3d.normalize(n)
     r.rotation_normal = math3d.mark(n)
 end
 
