@@ -117,9 +117,9 @@ local function interpolate_in_array(t, arrays)
 end
 
 local function clean_rotation_data(r)
-    if r.rotation_normal then
-        math3d.unmark(r.rotation_normal)
-        r.rotation_normal = nil
+    if r.rotate_normal then
+        math3d.unmark(r.rotate_normal)
+        r.rotate_normal = nil
     end
 
     if r.direction then
@@ -139,7 +139,7 @@ local function update_rotation_data(r)
         n = q and math3d.transform(q, mc.ZAXIS, 0) or mc.ZAXIS
     end
     n = math3d.normalize(n)
-    r.rotation_normal = math3d.mark(n)
+    r.rotate_normal = math3d.mark(n)
 end
 
 function dn_sys:entity_init()
@@ -152,6 +152,9 @@ function dn_sys:entity_init()
 
         local function init_cycle_value(r)
             update_rotation_data(r)
+            if not r.rotate_range then
+                r.rotate_range = math.pi
+            end
             if not r.intensity then
                 r.intensity = ilight.default_intensity "directional"
             end
@@ -176,30 +179,24 @@ function dn_sys:entity_remove()
 end
 
 local function update_cycle(cycle, cyclevalue, COLOR_VALUES)
-    local tc = cycle
-
     --interpolate indirect light color
-    local modulate_color = interpolate_in_array(tc, COLOR_VALUES.INDIRECT_COLORS)
+    local modulate_color = interpolate_in_array(cycle, COLOR_VALUES.INDIRECT_COLORS)
     local sa = imaterial.system_attribs()
     sa:update("u_indirect_modulate_color", modulate_color)
 
     --move directional light in cycle
     local dl = w:first "directional_light light:in scene:in"
     if dl then
-        do
-            local c<const> = interpolate_in_array(tc, COLOR_VALUES.DIRECT_COLORS)
-            local r, g, b, i = math3d.index(c, 1, 2, 3, 4)
-            ilight.set_color_rgb(dl, r, g, b)
+        local c<const> = interpolate_in_array(cycle, COLOR_VALUES.DIRECT_COLORS)
+        local r, g, b, i = math3d.index(c, 1, 2, 3, 4)
+        ilight.set_color_rgb(dl, r, g, b)
+        ilight.set_intensity(dl, i * cyclevalue.intensity)
 
-            ilight.set_intensity(dl, i * cyclevalue.intensity)
+        if not cyclevalue.disable_rotator then
+            local q = math3d.quaternion{axis=cyclevalue.rotate_normal, r=cyclevalue.rotate_range*cycle}
+            iom.set_direction(dl, math3d.transform(q, cyclevalue.direction, 0))
+            w:submit(dl)
         end
-
-        assert(0.0 <= tc and tc <= 1.0, "Invalid time cycle")
-
-        local q = math3d.quaternion{axis=cyclevalue.rotation_normal, r=math.pi*tc}
-        iom.set_direction(dl, math3d.transform(q, cyclevalue.direction, 0))
-        w:submit(dl)
-
         --print("cycle:", tc, "intensity:", l, "direction:", math3d.tostring(math3d.transform(q, dnl.direction, 0)), "modulate color:", math3d.tostring(modulate_color))
     end
 end
