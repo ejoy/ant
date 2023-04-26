@@ -116,17 +116,29 @@ local function interpolate_in_array(t, arrays)
     return math3d.lerp(arrays[x+1], arrays[x+2], y)
 end
 
-local function update_rotation_frame(r, q)
-    if r.normal then
-        math3d.unmark(r.normal)
+local function clean_rotation_data(r)
+    if r.rotation_normal then
+        math3d.unmark(r.rotation_normal)
+        r.rotation_normal = nil
     end
 
-    if r.start_dir then
-        math3d.unmark(r.start_dir)
+    if r.direction then
+        math3d.unmark(r.direction)
+        r.direction = nil
     end
+end
 
-    r.start_dir= math3d.mark(math3d.transform(q, mc.NXAXIS, 0))
-    r.normal   = math3d.mark(math3d.transform(q, mc.ZAXIS, 0))
+local function update_rotation_data(r)
+    clean_rotation_data(r)
+
+    local q = r.start_rotator and math3d.quaternion(r.start_rotator) or nil
+    local n = r.rotate_axis and math3d.vector(r.rotate_axis) or nil
+
+    r.direction = math3d.mark(q and math3d.transform(q, mc.NXAXIS, 0) or mc.NXAXIS)
+    if not n then
+        n = q and math3d.transform(q, mc.ZAXIS, 0) or mc.ZAXIS
+    end
+    r.rotation_normal = math3d.mark(n)
 end
 
 function dn_sys:entity_init()
@@ -138,13 +150,7 @@ function dn_sys:entity_init()
         end
 
         local function init_cycle_value(r)
-            if r.start_rotator then
-                update_rotation_frame(r, math3d.quaternion(r.start_rotator))
-            else
-                r.start_dir = math3d.mark(mc.NXAXIS)
-                r.normal = math3d.mark(mc.ZAXIS)
-            end
-
+            update_rotation_data(r)
             if not r.intensity then
                 r.intensity = ilight.default_intensity "directional"
             end
@@ -162,8 +168,9 @@ end
 function dn_sys:entity_remove()
     for dne in w:select "REMOVED daynight:in" do
         local dn = dne.daynight
-        math3d.unmark(dn.normal)
-        math3d.unmark(dn.start_dir)
+
+        clean_rotation_data(dn.day)
+        clean_rotation_data(dn.night)
     end
 end
 
@@ -188,11 +195,11 @@ local function update_cycle(cycle, cyclevalue, COLOR_VALUES)
 
         assert(0.0 <= tc and tc <= 1.0, "Invalid time cycle")
 
-        local q = math3d.quaternion{axis=cyclevalue.normal, r=math.pi*tc}
-        iom.set_direction(dl, math3d.transform(q, cyclevalue.start_dir, 0))
+        local q = math3d.quaternion{axis=cyclevalue.rotation_normal, r=math.pi*tc}
+        iom.set_direction(dl, math3d.transform(q, cyclevalue.direction, 0))
         w:submit(dl)
 
-        --print("cycle:", tc, "intensity:", l, "direction:", math3d.tostring(math3d.transform(q, dnl.start_dir, 0)), "modulate color:", math3d.tostring(modulate_color))
+        --print("cycle:", tc, "intensity:", l, "direction:", math3d.tostring(math3d.transform(q, dnl.direction, 0)), "modulate color:", math3d.tostring(modulate_color))
     end
 end
 
@@ -206,9 +213,12 @@ function idn.update_night_cycle(e, cycle)
     update_cycle(cycle, e.daynight.night, DAYNIGHT.NIGHT)
 end
 
-function idn.set_rotation(e, type, rotator)
+function idn.set_rotation(e, type, start_rotator, rotate_axis)
     w:extend(e, "daynight:in")
-    update_rotation_frame(assert(e.daynight[type], "Invalid type"), rotator)
+    local r = assert(e.daynight[type], "Invalid type")
+    r.start_rotator = start_rotator
+    r.rotate_axis = rotate_axis
+    update_rotation_data(r)
 end
 
 --[[test code:
