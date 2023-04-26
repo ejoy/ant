@@ -83,7 +83,7 @@ local function factorial(n, d)
 end
 
 local Ki; do
-    --   sqrt((2*l + 1) / 4*pi) * sqrt( (l-|m|)! / (l+|m|)! )
+    -- sqrt((2*l+1)/4*pi)*sqrt((l-|m|)!/(l+|m|)! ) = sqrt(A/B), A = (2*l+1)*((l-|m|)!), B = 4*pi/((l+|m|)!)
     local function Kml(m, l)
         m = math.abs(m)
         local K = (2 * l + 1) * factorial2(l - m, l + m) * (1.0 / math.pi) * 0.25
@@ -104,15 +104,34 @@ local Ki; do
     Ki = function(bandnum) return K[bandnum] end
 end
 
+
+local function calc_Yml(num_bands, N)
+    -- Y00(theta, phi)                 = 0.282095
+    -- (Y11; Y10; Y1-1)(theta, phi)    = 0.488603*(x; z; y)
+    -- (Y21; Y2-1;Y2-2)(theta, phi)    = 1.092548*(xz;yz;xy)
+    -- Y20(theta, phi)                 = 0.315392*(3*z*z-1)
+    -- Y22(theta, phi)                 = 0.546274*(x*x-y*y)
+
+    local Yml = {
+        0.282095,
+        0.488603 * N.x, 0.488603 * N.z, 0.488603 * N.y,
+    }
+    if num_bands == 1 then
+        
+    end
+
+    return Yml
+end
+
 --[[
     SHb:
-    m > 0, cos(m*phi)   * P(m,l)
-    m < 0, sin(|m|*phi) * P(|m|,l)
-    m = 0, P(0,l)
+    m > 0, cos(m*phi)   * Yml(m,l)
+    m < 0, sin(|m|*phi) * Yml(|m|,l)
+    m = 0, Yml(0,l)
 
-    Pml is associated Legendre polynomials
+    Yml is associated Legendre polynomials
 ]]
-local function computeShBasics(numBands, N)
+local function calc_Yml(numBands, N)
     local SHb = {}
 --     Reference implementation
 --     local phi = math.atan(s.x, s.y);
@@ -201,8 +220,8 @@ local function computeShBasics(numBands, N)
 end
 
 -- < cos(theta) > SH coefficients pre-multiplied by 1 / K(0,l)
-local compute_cos_SH; do
-    local COS = setmetatable({}, {__index=function(t, l)
+local A; do
+    A = setmetatable({}, {__index=function(t, l)
         local R
         if l == 0 then
             R = math.pi
@@ -220,10 +239,6 @@ local compute_cos_SH; do
         t[l] = R
         return R
     end})
-
-    compute_cos_SH = function (l)
-        return COS[l]
-    end
 end
 
 --[[
@@ -310,7 +325,7 @@ local function m3d_xyz(v)
     return {x=x, y=y, z=z}
 end
 
-local function LiSH (cm, bandnum)
+local function calc_Lml (cm, bandnum)
     local coeffnum = bandnum * bandnum
     local SH = {}
     for i=1, coeffnum do
@@ -325,10 +340,10 @@ local function LiSH (cm, bandnum)
 
                 color = math3d.mul(color, solidAngle(cm.w, x, y))
 
-                local SHb = computeShBasics(bandnum, N)
+                local Yml = calc_Yml(bandnum, N)
 
                 for i=1, coeffnum do
-                    SH[i].v = math3d.add(SH[i], math3d.mul(color, SHb[i]))
+                    SH[i].v = math3d.add(SH[i], math3d.mul(color, Yml[i]))
                 end
             end
         end
@@ -340,14 +355,14 @@ end
 return {
     calc_Eml = function (cm, bandnum)
         local K = Ki(bandnum)
-        local Lml = LiSH(cm, bandnum)
+        local Lml = calc_Lml(cm, bandnum)
 
         local Eml = {}
         for l=0, bandnum-1 do
-            local A = compute_cos_SH(l)
+            local a = A[l]
             for m = -l, l do
                 local idx = lSHindex(m, l)
-                Eml[idx] = math3d.mul(K[idx] * A, Lml[idx])
+                Eml[idx] = math3d.mul(K[idx] * a, Lml[idx])
             end
         end
 
