@@ -129,13 +129,6 @@ function init_loader_sys:init()
         local le<close> = w:entity(pid)
         iom.set_direction(le, math3d.vector(0.2664446532726288, -0.25660401582717896, 0.14578714966773987, 0.9175552725791931))
     end)
-    create_instance("/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab",
-            function (e)
-                local ee<close> = w:entity(e.tag['*'][1])
-                iom.set_scale(ee, 0.1)
-                iom.set_position(ee, math3d.vector(10, 0, 0, 1))
-            end)
-
     ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
 
 end
