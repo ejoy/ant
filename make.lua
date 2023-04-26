@@ -26,7 +26,7 @@ if lm.os == "ios" then
     end
 end
 
-lm.c = "c11"
+lm.c = "c17"
 lm.cxx = "c++20"
 lm.msvc = {
     defines = {
