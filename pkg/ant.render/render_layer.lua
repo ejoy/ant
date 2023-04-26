@@ -19,10 +19,7 @@ end
 local irl = ecs.interface "irender_layer"
 
 local function update_objects_layer()
-    for e in w:select "render_layer:in render_object:update" do
-        local idx = irl.layeridx(e.render_layer)
-        e.render_object.render_layer = idx
-    end
+
 end
 
 function irl.add_layers(after_layeridx, ...)
@@ -39,6 +36,8 @@ function irl.add_layers(after_layeridx, ...)
             table.insert(layer_names, insertidx+i, name)
         end
         update_objects_layer()
+
+
     end
 end
 
@@ -66,4 +65,15 @@ function irl.set_layer(e, layername)
     e.render_layer = layername
     e.render_object.render_layer = lidx
     w:submit(e)
+end
+
+local rl_mb = world:sub {"render_layer_changed"}
+local rl_sys = ecs.system "render_layer_system"
+function rl_sys:start_frame()
+    for _ in rl_mb:unpack() do
+        for e in w:select "render_layer:in render_object:update" do
+            local idx = irl.layeridx(e.render_layer)
+            e.render_object.render_layer = idx
+        end
+    end
 end
