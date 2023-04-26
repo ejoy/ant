@@ -18,9 +18,7 @@ end
 
 local irl = ecs.interface "irender_layer"
 
-local function update_objects_layer()
-
-end
+local rl_mb = world:sub {"render_layer_changed"}
 
 function irl.add_layers(after_layeridx, ...)
     local num_new_layers = select('#', ...)
@@ -35,9 +33,8 @@ function irl.add_layers(after_layeridx, ...)
             local name = select(i, ...)
             table.insert(layer_names, insertidx+i, name)
         end
-        update_objects_layer()
 
-
+        world:pub{"render_layer_changed"}
     end
 end
 
@@ -48,7 +45,7 @@ function irl.remove_layer(layeridx)
     end
 
     table.remove(layer_names, layeridx)
-    update_objects_layer()
+    world:pub{"render_layer_changed"}
 end
 
 function irl.layeridx(name)
@@ -67,7 +64,6 @@ function irl.set_layer(e, layername)
     w:submit(e)
 end
 
-local rl_mb = world:sub {"render_layer_changed"}
 local rl_sys = ecs.system "render_layer_system"
 function rl_sys:start_frame()
     for _ in rl_mb:unpack() do
