@@ -247,7 +247,7 @@ local function motion_sampler_test()
     g:enable "view_visible"
     g:enable "scene_update"
 
-    local p = g:create_instance("/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab", eid)
+    local p = g:create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", eid)
     p.on_ready = function (e)
         
     end
