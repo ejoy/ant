@@ -431,17 +431,17 @@ local function fetch_hash(status, hash)
 	if not f then
 		local progress = status.progress
 		progress.waiting = progress.waiting + 1
-		request_start("GET", hash, status.promise)
+		request_start("GET", hash, status.hash_promise)
 	end
 end
 
-local function fetch_resource(status, hash)
-	if not repo:get_resource(hash) then
+local function fetch_resource(status, path)
+	if not repo:get_resource(path) then
 		return
 	end
 	local progress = status.progress
 	progress.waiting = progress.waiting + 1
-	request_start("RESOURCE", hash, status.promise)
+	request_start("RESOURCE", path, status.resource_promise)
 end
 
 local function fetch_response(status)
@@ -465,10 +465,25 @@ function CMD.FETCH_BEGIN(id, path)
 	}
 	fetch_session[session] = {
 		progress = progress,
-		promise = {
+		hash_promise = {
 			resolve = function ()
 				progress.success = progress.success + 1
 				progress.waiting = progress.waiting - 1
+			end,
+			reject = function ()
+				progress.failed = progress.failed + 1
+				progress.waiting = progress.waiting - 1
+			end
+		},
+		resource_promise = {
+			resolve = function (path)
+				progress.success = progress.success + 1
+				progress.waiting = progress.waiting - 1
+				local hash = repo:get_resource(path)
+				local status = fetch_session[session]
+				if status then
+					fetch_request(status, "FETCH_DIR", session, hash)
+				end
 			end,
 			reject = function ()
 				progress.failed = progress.failed + 1
