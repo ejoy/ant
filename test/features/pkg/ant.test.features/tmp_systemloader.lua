@@ -124,12 +124,14 @@ function init_loader_sys:init()
     ientity.create_grid_entity("grid", 128, 128, 1, 3)
     create_instance("/pkg/ant.test.features/assets/entities/light.prefab",
     function (e)
-        local pid = e.tag["*"][2]
 
-        local le<close> = w:entity(pid)
-        iom.set_direction(le, math3d.vector(0.2664446532726288, -0.25660401582717896, 0.14578714966773987, 0.9175552725791931))
     end)
-    ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
+
+    create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
+        local root<close> = w:entity(e.tag['*'][1])
+        iom.set_position(root, math3d.vector(3, 1, 0))
+    end)
+    --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
 
 end
 
@@ -386,9 +388,11 @@ function init_loader_sys:data_changed()
     local idn = ecs.import.interface "ant.daynight|idaynight"
     local itimer = ecs.import.interface "ant.timer|itimer"
     local dne = w:first "daynight:in"
-    local tenSecondMS<const> = 10000
-    local cycle = (itimer.current() % tenSecondMS) / tenSecondMS
-    idn.update_day_cycle(dne, cycle)
+    if dne then
+        local tenSecondMS<const> = 10000
+        local cycle = (itimer.current() % tenSecondMS) / tenSecondMS
+        idn.update_day_cycle(dne, cycle)
+    end
 end
 
 function init_loader_sys:camera_usage()
