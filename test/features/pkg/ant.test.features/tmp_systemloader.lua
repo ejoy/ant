@@ -129,35 +129,25 @@ function init_loader_sys:init()
         local le<close> = w:entity(pid)
         iom.set_direction(le, math3d.vector(0.2664446532726288, -0.25660401582717896, 0.14578714966773987, 0.9175552725791931))
     end)
-    create_instance("/pkg/ant.test.features/assets/glb/miner-1.glb|mesh.prefab",
-            function (e)
-                local ee<close> = w:entity(e.tag['*'][1])
-                iom.set_scale(ee, 0.1)
-                iom.set_position(ee, math3d.vector(10, 0, 0, 1))
-            end)
-
     ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
 
 end
 
 local function render_layer_test()
-    irl.add_layers(irl.layeridx "opacity", "after_opacity", "after_opacity2")
+    irl.add_layers(irl.layeridx "background", "mineral", "translucent_plane", "translucent_plane1")
     local m = imesh.init_mesh(ientity.plane_mesh())
 
-    ecs.create_entity {
-        policy = {
-            "ant.render|simplerender",
-            "ant.general|name",
-        },
-        data = {
-            simplemesh = m,
-            scene = {},
-            material = "/pkg/ant.test.features/assets/render_layer_test.material",
-            render_layer = "after_opacity2",
-            visible_state = "main_view",
-            name = "test",
-        }
-    }
+    create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", function (e)
+        local ee <close> = w:entity(e.tag['*'][1])
+        iom.set_position(ee, math3d.vector(-10, -2, 0))
+        iom.set_scale(ee, 3)
+        for _, eid in ipairs(e.tag['*']) do
+            local ee <close> = w:entity(eid, "render_layer?update render_object?update")
+            if ee.render_layer and ee.render_object then
+                irl.set_layer(ee, "mineral")
+            end
+        end
+    end)
 
     ecs.create_entity {
         policy = {
@@ -166,18 +156,25 @@ local function render_layer_test()
         },
         data = {
             simplemesh = m,
-            scene = {
-                t = {0.5, 0.0, 0.0}
-            },
+            scene = {t = {-10, 0, 0}, s = 10},
             material = "/pkg/ant.test.features/assets/render_layer_test.material",
-            render_layer = "after_opacity",
+            render_layer = "translucent_plane",
             visible_state = "main_view",
-            on_ready = function (e)
-                imaterial.set_property(e, "u_basecolor_factor", math3d.vector(1.0, 0.0, 0.0, 1.0))
-            end,
             name = "test",
         }
     }
+
+    create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
+        local ee <close> = w:entity(e.tag['*'][1])
+        iom.set_position(ee, math3d.vector(-10, 0, -1))
+
+        for _, eid in ipairs(e.tag['*']) do
+            local ee <close> = w:entity(eid, "render_layer?update render_object?update")
+            if ee.render_layer and ee.render_object then
+                irl.set_layer(ee, "translucent_plane1")
+            end
+        end
+    end)
 end
 
 local sampler_eid
@@ -247,7 +244,7 @@ local function motion_sampler_test()
     g:enable "view_visible"
     g:enable "scene_update"
 
-    local p = g:create_instance("/pkg/ant.test.features/assets/glb/Duck.glb|mesh.prefab", eid)
+    local p = g:create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", eid)
     p.on_ready = function (e)
         
     end
