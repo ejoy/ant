@@ -35,19 +35,6 @@ local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 --     math3d.ref(math3d.vector(0.7, 0.7, 0.7, 1.0)),
 -- }
 
-local DAYNIGHT = {
-    DAY = {
-        DIRECT_COLORS = {},
-        DIRECT_INTENSITIES = {},
-        INDIRECT_COLORS = {},
-    },
-    NIGHT = {
-        DIRECT_COLORS = {},
-        DIRECT_INTENSITIES = {},
-        INDIRECT_COLORS = {},
-    }
-}
-
 local dn_sys = ecs.system "daynight_system"
 
 local function read_image_content(p)
@@ -56,10 +43,10 @@ local function read_image_content(p)
     return image.parse(c, true)
 end
 
-local function read_colors_from_files(srcfiles, cyclevalues)
-    local direct_info, direct_c         = read_image_content(srcfiles.direct)
-    local indirect_info, indirect_c     = read_image_content(srcfiles.indirect)
-    local intensity_info, intensity_c   = read_image_content(srcfiles.intensity)
+local function init_colors_from_resources(cyclevalues)
+    local direct_info, direct_c         = read_image_content(cyclevalues.resources.direct)
+    local indirect_info, indirect_c     = read_image_content(cyclevalues.resources.indirect)
+    local intensity_info, intensity_c   = read_image_content(cyclevalues.resources.intensity)
 
     assert(direct_info.depth == 1 and (not direct_info.cubemap))
     assert(indirect_info.depth == 1 and (not indirect_info.cubemap))
@@ -74,9 +61,7 @@ local function read_colors_from_files(srcfiles, cyclevalues)
         end
     end
 
-    local directcolors, direct_intensities, indirectcolors = 
-        cyclevalues.DIRECT_COLORS, cyclevalues.DIRECT_INTENSITIES, cyclevalues.INDIRECT_COLORS
-
+    local directcolors, direct_intensities, indirectcolors = {}, {}, {}
     --we just need a row
     local direct_offset, indirect_offset, intensity_offset = 1, 1, 1
     for iw=1, direct_info.width do
@@ -96,21 +81,11 @@ local function read_colors_from_files(srcfiles, cyclevalues)
         indirect_offset = indirect_offset + indirect_step
     end
 
-    return directcolors, indirectcolors
+    cyclevalues.DIRECT_COLORS, cyclevalues.DIRECT_INTENSITIES, cyclevalues.INDIRECT_COLORS = directcolors, direct_intensities, indirectcolors
 end
 
 function dn_sys:init()
-        read_colors_from_files({
-            direct      = "/pkg/ant.resources.binary/textures/daynight/day_direct.pngx",
-            indirect    = "/pkg/ant.resources.binary/textures/daynight/day_indirect.pngx",
-            intensity   = "/pkg/ant.resources.binary/textures/daynight/day_intensity.pngx",
-        }, DAYNIGHT.DAY)
 
-        read_colors_from_files({
-            direct      = "/pkg/ant.resources.binary/textures/daynight/night_direct.pngx",
-            indirect    = "/pkg/ant.resources.binary/textures/daynight/night_indirect.pngx",
-            intensity   = "/pkg/ant.resources.binary/textures/daynight/night_intensity.pngx",
-        }, DAYNIGHT.NIGHT)
 end
 
 local function interpolate_in_array(t, arrays, lerp)
@@ -170,6 +145,8 @@ function dn_sys:entity_init()
             if not r.intensity then
                 r.intensity = ilight.default_intensity "directional"
             end
+
+            init_colors_from_resources(r)
         end
 
         init_cycle_value(dn.day)
@@ -190,20 +167,20 @@ function dn_sys:entity_remove()
     end
 end
 
-local function update_cycle(cycle, cyclevalue, COLOR_VALUES)
+local function update_cycle(cycle, cyclevalue)
     --interpolate indirect light color
-    local modulate_color = math3d_interpolate_in_array(cycle, COLOR_VALUES.INDIRECT_COLORS)
+    local modulate_color = math3d_interpolate_in_array(cycle, cyclevalue.INDIRECT_COLORS)
     local sa = imaterial.system_attribs()
     sa:update("u_indirect_modulate_color", modulate_color)
 
     --move directional light in cycle
     local dl = w:first "directional_light light:in scene:in"
     if dl then
-        local c<const> = math3d_interpolate_in_array(cycle, COLOR_VALUES.DIRECT_COLORS)
+        local c<const> = math3d_interpolate_in_array(cycle, cyclevalue.DIRECT_COLORS)
         local r, g, b = math3d.index(c, 1, 2, 3)
         ilight.set_color_rgb(dl, r, g, b)
 
-        local intensity<const> = float_interpolate_in_array(cycle, COLOR_VALUES.DIRECT_INTENSITIES)
+        local intensity<const> = float_interpolate_in_array(cycle, cyclevalue.DIRECT_INTENSITIES)
         ilight.set_intensity(dl, intensity * cyclevalue.intensity)
 
         if not cyclevalue.disable_rotator then
@@ -218,11 +195,11 @@ end
 
 local idn = ecs.interface "idaynight"
 function idn.update_day_cycle(e, cycle)
-    update_cycle(cycle, e.daynight.day, DAYNIGHT.DAY)
+    update_cycle(cycle, e.daynight.day)
 end
 
 function idn.update_night_cycle(e, cycle)
-    update_cycle(cycle, e.daynight.night, DAYNIGHT.NIGHT)
+    update_cycle(cycle, e.daynight.night)
 end
 
 function idn.set_rotation(e, type, start_rotator, rotate_axis)
