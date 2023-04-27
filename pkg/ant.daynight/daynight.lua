@@ -38,10 +38,12 @@ local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local DAYNIGHT = {
     DAY = {
         DIRECT_COLORS = {},
+        DIRECT_INTENSITIES = {},
         INDIRECT_COLORS = {},
     },
     NIGHT = {
         DIRECT_COLORS = {},
+        DIRECT_INTENSITIES = {},
         INDIRECT_COLORS = {},
     }
 }
@@ -54,15 +56,13 @@ local function read_image_content(p)
     return image.parse(c, true)
 end
 
-local function read_colors_from_files(srcfiles)
+local function read_colors_from_files(srcfiles, cyclevalues)
     local direct_info, direct_c         = read_image_content(srcfiles.direct)
     local indirect_info, indirect_c     = read_image_content(srcfiles.indirect)
     local intensity_info, intensity_c   = read_image_content(srcfiles.intensity)
 
     assert(direct_info.depth == 1 and (not direct_info.cubemap))
     assert(indirect_info.depth == 1 and (not indirect_info.cubemap))
-
-    assert(indirect_info.width == direct_info.width and indirect_info.width == intensity_info.width)
 
     local direct_step<const>    = direct_info.bitsPerPixel // 8
     local indirect_step<const>  = indirect_info.bitsPerPixel // 8
@@ -74,19 +74,25 @@ local function read_colors_from_files(srcfiles)
         end
     end
 
-    local directcolors, indirectcolors = {}, {}
+    local directcolors, direct_intensities, indirectcolors = 
+        cyclevalues.DIRECT_COLORS, cyclevalues.DIRECT_INTENSITIES, cyclevalues.INDIRECT_COLORS
 
     --we just need a row
     local direct_offset, indirect_offset, intensity_offset = 1, 1, 1
     for iw=1, direct_info.width do
         local r, g, b = to_float(('BBB'):unpack(direct_c, direct_offset))
-        local intensity = to_float(('B'):unpack(intensity_c, intensity_offset))
-        directcolors[iw] = math3d.ref(math3d.vector(r, g, b, intensity))
-
-        local ir, ig, ib = to_float(('BBB'):unpack(indirect_c, indirect_offset))
-        indirectcolors[iw] = math3d.ref(math3d.vector(ir, ig, ib, 0.0))
+        directcolors[iw] = math3d.ref(math3d.vector(r, g, b, 0.0))
         direct_offset = direct_offset + direct_step
+    end
+
+    for iw=1, intensity_info.width do
+        direct_intensities[iw] = to_float(('B'):unpack(intensity_c, intensity_offset))
         intensity_offset = intensity_offset + intensity_step
+    end
+
+    for iw=1, indirect_info.width do
+        local r, g, b = to_float(('BBB'):unpack(indirect_c, indirect_offset))
+        indirectcolors[iw] = math3d.ref(math3d.vector(r, g, b, 0.0))
         indirect_offset = indirect_offset + indirect_step
     end
 
@@ -94,26 +100,32 @@ local function read_colors_from_files(srcfiles)
 end
 
 function dn_sys:init()
-    DAYNIGHT.DAY.DIRECT_COLORS, DAYNIGHT.DAY.INDIRECT_COLORS = 
-        read_colors_from_files{
+        read_colors_from_files({
             direct      = "/pkg/ant.resources.binary/textures/daynight/day_direct.pngx",
             indirect    = "/pkg/ant.resources.binary/textures/daynight/day_indirect.pngx",
             intensity   = "/pkg/ant.resources.binary/textures/daynight/day_intensity.pngx",
-        }
+        }, DAYNIGHT.DAY)
 
-    DAYNIGHT.NIGHT.DIRECT_COLORS, DAYNIGHT.NIGHT.INDIRECT_COLORS = 
-        read_colors_from_files{
+        read_colors_from_files({
             direct      = "/pkg/ant.resources.binary/textures/daynight/night_direct.pngx",
             indirect    = "/pkg/ant.resources.binary/textures/daynight/night_indirect.pngx",
             intensity   = "/pkg/ant.resources.binary/textures/daynight/night_intensity.pngx",
-        }
+        }, DAYNIGHT.NIGHT)
 end
 
-local function interpolate_in_array(t, arrays)
+local function interpolate_in_array(t, arrays, lerp)
     local v = (#arrays-1) * t
     local x, y = math.modf(v)
 
-    return math3d.lerp(arrays[x+1], arrays[x+2], y)
+    return lerp(arrays[x+1], arrays[x+2], y)
+end
+
+local function math3d_interpolate_in_array(t, arrays)
+    return interpolate_in_array(t, arrays, math3d.lerp)
+end
+
+local function float_interpolate_in_array(t, arrays)
+    return interpolate_in_array(t, arrays, mu.lerp)
 end
 
 local function clean_rotation_data(r)
@@ -180,23 +192,25 @@ end
 
 local function update_cycle(cycle, cyclevalue, COLOR_VALUES)
     --interpolate indirect light color
-    local modulate_color = interpolate_in_array(cycle, COLOR_VALUES.INDIRECT_COLORS)
+    local modulate_color = math3d_interpolate_in_array(cycle, COLOR_VALUES.INDIRECT_COLORS)
     local sa = imaterial.system_attribs()
     sa:update("u_indirect_modulate_color", modulate_color)
 
     --move directional light in cycle
     local dl = w:first "directional_light light:in scene:in"
     if dl then
-        local c<const> = interpolate_in_array(cycle, COLOR_VALUES.DIRECT_COLORS)
-        local r, g, b, i = math3d.index(c, 1, 2, 3, 4)
+        local c<const> = math3d_interpolate_in_array(cycle, COLOR_VALUES.DIRECT_COLORS)
+        local r, g, b = math3d.index(c, 1, 2, 3)
         ilight.set_color_rgb(dl, r, g, b)
-        ilight.set_intensity(dl, i * cyclevalue.intensity)
+
+        local intensity<const> = float_interpolate_in_array(cycle, COLOR_VALUES.DIRECT_INTENSITIES)
+        ilight.set_intensity(dl, intensity * cyclevalue.intensity)
 
         if not cyclevalue.disable_rotator then
             local q = math3d.quaternion{axis=cyclevalue.rotate_normal, r=cyclevalue.rotate_range*cycle}
             iom.set_direction(dl, math3d.transform(q, cyclevalue.direction, 0))
-            w:submit(dl)
         end
+        w:submit(dl)
         --print("cycle:", tc, "intensity:", l, "direction:", math3d.tostring(math3d.transform(q, dnl.direction, 0)), "modulate color:", math3d.tostring(modulate_color))
     end
 end
