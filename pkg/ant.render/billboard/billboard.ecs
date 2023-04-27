@@ -1,9 +1,0 @@
-policy "billboard"
-    .require_system "billboard_system"
-    .component "billboard"
-
-component "billboard"
-
-system "billboard_system"
-    .implement "billboard/billboard.lua"
-    .method "camera_usage"

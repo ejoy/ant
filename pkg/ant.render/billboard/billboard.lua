@@ -1,4 +1,4 @@
-local ecs = ...
+--[[ local ecs = ...
 local world = ecs.world
 local w = world.w
 
@@ -29,4 +29,4 @@ function bb_sys:camera_usage()
         local ro=e.render_object
         ro.worldmat=e.scene.worldmat
     end
-end
+end ]]

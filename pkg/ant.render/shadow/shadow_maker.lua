@@ -67,7 +67,10 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	local world_frustum_min, world_frustum_max = math3d.minmax(world_frustum_points)
 
 	local main_camera_frustum_aabb = math3d.aabb(world_frustum_min, world_frustum_max)
-	local intersected_aabb = math3d.aabb_intersection(main_camera_frustum_aabb, scene_aabb)
+	local intersected_aabb = main_camera_frustum_aabb
+	if math3d.aabb_isvalid(scene_aabb) then
+		intersected_aabb = math3d.aabb_intersection(main_camera_frustum_aabb, scene_aabb)
+	end
 	local aabb_points = math3d.aabb_points(intersected_aabb)
 	local light_frustum_min, light_frustum_max = math3d.minmax(aabb_points, light_view)
 	light_frustum_max = math3d.mul(light_frustum_max, 2)
