@@ -234,6 +234,8 @@ static void setVelocityInView(lua_State* L, int idx, UIPanGestureRecognizer* ges
     push_value(L, [gesture name]);
     lua_newtable(L);
     setState(L, 2, gesture);
+    setLocationInView(L, 2, gesture);
+    setLocationOfTouch(L, 2, gesture);
     push_value(L, gesture.scale);
     lua_setfield(L, 2, "scale");
     push_value(L, gesture.velocity);
