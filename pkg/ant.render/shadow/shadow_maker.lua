@@ -22,6 +22,8 @@ if not ENABLE_SHADOW then
 	return
 end
 
+local assetmgr	= import_package "ant.asset"
+
 local viewidmgr = require "viewid_mgr"
 --local mu		= mathpkg.util
 local mc 		= import_package "ant.math".constant
@@ -520,8 +522,9 @@ local omni_stencils = {
 local material_cache = {__mode="k"}
 
 function sm:update_filter()
-    for e in w:select "filter_result render_layer:in render_object:update filter_material:in skinning?in indirect?in" do
-		if e.render_layer == "opacity" then
+    for e in w:select "filter_result render_object:update filter_material:in material:in skinning?in indirect?in" do
+		local mt = assetmgr.resource(e.material)
+		if mt.fx.setting.shadow_cast then
 			local ro = e.render_object
 			local m = which_material(e.skinning, e.indirect)
 			local mo = m.object
