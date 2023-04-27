@@ -524,7 +524,7 @@ local material_cache = {__mode="k"}
 function sm:update_filter()
     for e in w:select "filter_result render_object:update filter_material:in material:in skinning?in indirect?in" do
 		local mt = assetmgr.resource(e.material)
-		if mt.fx.setting.shadow_cast then
+		if mt.fx.setting.shadow_cast == "on" then
 			local ro = e.render_object
 			local m = which_material(e.skinning, e.indirect)
 			local mo = m.object
