@@ -549,7 +549,7 @@ function sm:render_submit()
 	bgfx.touch(viewid)
 end
 
-function sm:scene_update()
+function sm:camera_usage()
 	-- local sa = imaterial.system_attribs()
 	-- local mq = w:first("main_queue camera_ref:in")
 	-- local camera <close> = w:entity(mq.camera_ref, "camera:in")
