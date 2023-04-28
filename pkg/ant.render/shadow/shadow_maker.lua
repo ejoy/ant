@@ -40,7 +40,8 @@ local INV_Z<const> = true
 
 local csm_matrices			= {mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
-
+local scene_aabb = math3d.ref(math3d.aabb())
+local aabb_tick = 0
 local function update_camera_matrices(camera, light_view)
 	camera.viewmat.m = light_view
 	camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
@@ -57,7 +58,7 @@ local function calc_csm_matrix_attrib(csmidx, vp)
 end
 
 -- bgfx method
-local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_camera, scene_aabb)
+local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_camera)
 	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
 	set_worldmat(shadow_ce.scene, shadow_ce.scene)
 	local main_view = main_camera.viewmat
@@ -70,17 +71,16 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 
 	local main_camera_frustum_aabb = math3d.aabb(world_frustum_min, world_frustum_max)
 	local intersected_aabb = main_camera_frustum_aabb
-	if math3d.aabb_isvalid(scene_aabb) then
-		intersected_aabb = math3d.aabb_intersection(main_camera_frustum_aabb, scene_aabb)
+	if math3d.aabb_isvalid(math3d.ref(scene_aabb)) then
+		intersected_aabb = math3d.aabb_intersection(main_camera_frustum_aabb, math3d.ref(scene_aabb))
 	end
+
 	local aabb_points = math3d.aabb_points(intersected_aabb)
 	local light_frustum_min, light_frustum_max = math3d.minmax(aabb_points, light_view)
-	light_frustum_max = math3d.mul(light_frustum_max, 2)
-
 	local frustum_ortho = {
 		l = 1, r = -1,
-		t = -1, b = 1,
-		n = -main_camera.frustum.f, f = main_camera.frustum.f,
+		t = 1, b = -1,
+		n = -csm_frustum.f, f = csm_frustum.f,
 		ortho = true,
 	}
 	local ortho_proj = math3d.projmat(frustum_ortho, INV_Z)
@@ -90,51 +90,110 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 
 	local scalex, scaley = 2 / (maxp[1] - minp[1]), 2 / (maxp[2] - minp[2])
 
-	local quantizer = 64
-	scalex, scaley = 64 / math.ceil(quantizer / scalex),  64 / math.ceil(quantizer / scaley)
+--[[ 	local quantizer = 64
+	scalex, scaley = 64 / math.ceil(quantizer / scalex),  64 / math.ceil(quantizer / scaley) ]]
 
 	local offsetx, offsety = 0.5 * (maxp[1] + minp[1]) * scalex, 0.5 * (maxp[2] + minp[2]) * scaley
 
-	local half_size = shadowmap_size * 0.5
+--[[ 	local half_size = shadowmap_size * 0.5
 	offsetx, offsety = math.ceil(offsetx * half_size) / half_size, math.ceil(offsety * half_size) / half_size
+ ]]
 
 	local crop = math3d.matrix{
 	 	scalex, 0, 0, 0,
 	 	0, scaley, 0, 0,
 	 	0, 0, 1, 0,
-	 	offsetx, offsety, 0, 1,		
+	 	-offsetx, -offsety, 0, 1
 	}
 	local camera = shadow_ce.camera
-	camera.viewmat.m = light_view
-	camera.projmat.m = math3d.mul(crop, ortho_proj)
+ 	camera.viewmat.m = light_view
+	camera.projmat.m = math3d.mul(crop, ortho_proj) 
 	camera.viewprojmat.m = math3d.mul(camera.projmat, camera.viewmat)
 end
 
-local function update_shadow_frustum(dl, main_camera)
+local function calculate_scene_aabb(frustum_planes)
+	local groups = {}
+	local tmp_eids = {}
+	--select visible groups
+	for e in w:select "scene:in hitch:in view_visible:in" do
+		local cur_group = e.hitch.group
+		if not groups[cur_group] then groups[cur_group] = {} end
+		local hitch_worldmats = groups[cur_group]
+		hitch_worldmats[#hitch_worldmats+1] = e.scene.worldmat
+	end
+	--merge aabb which is contained in main camera's frustum
+	for gid, wms in pairs(groups) do
+		local select_tag = "hitch_tag:in scene:in bounding:in eid:in material:in"
+		local g = ecs.group(gid)
+        g:enable("hitch_tag")
+		ecs.group_flush()
+		for ee in w:select(select_tag) do
+				tmp_eids[ee.eid] = true
+				local mt = assetmgr.resource(ee.material)
+				local is_shadow_cast = mt.fx.setting.shadow_cast
+				local is_aabb_valid = ee.bounding.aabb and ee.bounding.aabb ~= mc.NULL and math3d.aabb_isvalid(ee.bounding.aabb)
+				if is_aabb_valid and is_shadow_cast then
+					for _, wm in pairs(wms) do
+						local world_aabb = ee.bounding.scene_aabb
+						local tmp_aabb = math3d.aabb_transform(wm, world_aabb)
+						local is_intersect = math3d.frustum_intersect_aabb(frustum_planes, tmp_aabb)
+						if is_intersect >= 0 then
+							if not math3d.aabb_isvalid(math3d.ref(scene_aabb)) then
+								scene_aabb = math3d.ref(tmp_aabb)
+							else
+								scene_aabb = math3d.ref(math3d.aabb_merge(math3d.ref(scene_aabb), tmp_aabb))
+							end
+						end
+					end
+				end
+        end
+        g:disable("hitch_tag")
+	end
+	-- merge other none-hitch objects
+	for e in w:select "scene:in material:in bounding:in main_queue_cull:absent eid:in render_object:in" do
+		if not tmp_eids[e.eid] then
+			local mt = assetmgr.resource(e.material)
+			local is_shadow_cast = mt.fx.setting.shadow_cast
+			local is_aabb_valid = e.bounding.aabb and e.bounding.aabb ~= mc.NULL and math3d.aabb_isvalid(e.bounding.aabb)
+			if is_shadow_cast and is_aabb_valid then
+					local world_aabb = e.bounding.scene_aabb
+					if e.scene.parent then
+						local ee <close> = w:entity(e.scene.parent, "scene:in")
+						world_aabb = math3d.aabb_transform(ee.scene.worldmat, world_aabb)
+					end
+					if not math3d.aabb_isvalid(math3d.ref(scene_aabb)) then
+						scene_aabb = math3d.ref(world_aabb)
+					else
+						scene_aabb = math3d.ref(math3d.aabb_merge(math3d.ref(scene_aabb), world_aabb))
+					end
+			end
+		end
+	end
+end
 
+local function update_shadow_frustum(dl, main_camera)
+	local frustum_planes = math3d.frustum_planes(main_camera.viewprojmat)
 	local lightdir = iom.get_direction(dl)
 	local shadow_setting = ishadow.setting()
 	local csm_frustums = ishadow.calc_split_frustums(main_camera.frustum)
-	local scene_aabb = math3d.aabb()
-	for e in w:select "scene:in bounding:in main_queue_cull:absent" do
-		if e.bounding.scene_aabb and e.bounding.scene_aabb ~= mc.NULL and math3d.aabb_isvalid(e.bounding.scene_aabb) then
-				local world_aabb = math3d.aabb_transform(e.scene.worldmat, e.bounding.scene_aabb)
-				if not math3d.aabb_isvalid(scene_aabb) then
-					scene_aabb = world_aabb
-				else
-					scene_aabb = math3d.aabb_merge(scene_aabb, world_aabb)
-				end
-		end
+	if aabb_tick == 0 then
+		calculate_scene_aabb(frustum_planes)
+	end
+	aabb_tick = aabb_tick + 1
+	if aabb_tick >= 5 then
+		aabb_tick = 0
+		scene_aabb = math3d.ref(math3d.aabb())
 	end
 	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
 		local csm_frustum = csm_frustums[csm.index]
 		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in scene:in")
-		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_camera, scene_aabb)
+		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_camera)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end
 end 
+
 -- microsoft method
 --[[ local function calc_ortho_minmax(light_view, world_frustum_points, shadowmap_size, world_scene_aabb)
 	local world_frustum_points_min, world_frustum_points_max = math3d.minmax(world_frustum_points)
@@ -490,11 +549,43 @@ function sm:render_submit()
 	bgfx.touch(viewid)
 end
 
-function sm:camera_usage()
+function sm:scene_update()
 	-- local sa = imaterial.system_attribs()
 	-- local mq = w:first("main_queue camera_ref:in")
 	-- local camera <close> = w:entity(mq.camera_ref, "camera:in")
-	-- sa:update("u_main_camera_matrix",camera.camera.viewmat)
+	-- sa:update("u_main_camera_matrix",camera.camera.viewmat)	local scene_aabb = math3d.aabb()
+--[[ 	local scene_aabb = {}
+	local groups = {}
+	local tmp_eids = {}
+	for e in w:select "scene:in hitch:in" do
+		local cur_group = e.hitch.group
+		if not groups[cur_group] then groups[cur_group] = {} end
+		local hitch_worldmats = groups[cur_group]
+		hitch_worldmats[#hitch_worldmats+1] = e.scene.worldmat
+	end
+
+	for gid, wms in pairs(groups) do
+        --local select_tag = "view_visible:in scene_update:in scene:in bounding:in eid:in"
+		local select_tag = "hitch_tag:in scene:in bounding:in eid:in"
+		local g = ecs.group(gid)
+        g:enable("hitch_tag")
+		for ee in w:select(select_tag) do
+			tmp_eids[ee.eid] = true
+			local is_aabb_valid = ee.bounding.aabb and ee.bounding.aabb ~= mc.NULL and math3d.aabb_isvalid(ee.bounding.aabb)
+			if is_aabb_valid then
+				for _, wm in pairs(wms) do
+					local world_aabb = ee.bounding.scene_aabb
+					local tmp_aabb = math3d.aabb_transform(wm, world_aabb)
+					if not math3d.aabb_isvalid(scene_aabb) then
+						scene_aabb = tmp_aabb
+					else
+						scene_aabb = math3d.aabb_merge(scene_aabb, tmp_aabb)
+					end
+				end
+			end
+        end
+        g:disable("hitch_tag")
+	end ]]
 end
 
 local function which_material(skinning, indirect)

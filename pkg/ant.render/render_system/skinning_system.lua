@@ -36,7 +36,7 @@ function skinning_sys:skin_mesh()
 
 	local meshskin
 	local worldmat
-	for e in w:select "skinning scene?in meshskin?in render_object?update bounding?update skininfo?update" do
+	for e in w:select "skinning scene?in meshskin?in render_object?update bounding?update skininfo?update eid:in" do
 		if e.meshskin then
 			meshskin = e.meshskin
 			worldmat = e.scene.worldmat
