@@ -15,6 +15,7 @@ local function init_ms()
     return {
         duration    = 0.0,
         deltatime   = 0.0,
+        ratio       = 0.0,
 
         tween_in    = 0,
         tween_out   = 0,

@@ -129,6 +129,26 @@ namespace {
 	}
 }
 
+static inline void
+sample_value(struct ecs_world* w, const ecs::motion_sampler &ms, float ratio, ecs::scene &scene){
+	auto update_m3d = [w](math_t& m, const math_t n){
+		math_unmark(w->math3d->M, m);
+		m = math_mark(w->math3d->M, n);
+	};
+
+	if (!math_isnull(ms.target_s)){
+		update_m3d(scene.s, math3d_lerp(w->math3d->M, ms.source_s, ms.target_s, ratio));
+	}
+
+	if (!math_isnull(ms.target_r)){
+		update_m3d(scene.r, math3d_quat_lerp(w->math3d->M, ms.source_r, ms.target_r, ratio));
+	}
+
+	if (!math_isnull(ms.target_t)){
+		update_m3d(scene.t, math3d_lerp(w->math3d->M, ms.source_t, ms.target_t, ratio));
+	}
+}
+
 static int
 lsample(lua_State *L){
     auto w = getworld(L);
@@ -142,26 +162,16 @@ lsample(lua_State *L){
 		auto& ms = e.get<ecs::motion_sampler>();
 		auto &scene = e.get<ecs::scene>();
 
-		if (ms.deltatime <= ms.duration){
-			ms.deltatime += deltaMS;
-			const float ratio = tween(std::min(1.f, ms.deltatime / ms.duration), (tween_type)ms.tween_in, (tween_type)ms.tween_out);
-			auto update_m3d = [w](math_t& m, const math_t n){
-				math_unmark(w->math3d->M, m);
-				m = math_mark(w->math3d->M, n);
-			};
+		if (ms.duration >= 0){
+			if (ms.deltatime <= ms.duration){
+				ms.deltatime += deltaMS;
+				ms.ratio = tween(std::min(1.f, ms.deltatime / ms.duration), (tween_type)ms.tween_in, (tween_type)ms.tween_out);
 
-			if (!math_isnull(ms.target_s)){
-				update_m3d(scene.s, math3d_lerp(w->math3d->M, ms.source_s, ms.target_s, ratio));
+				sample_value(w, ms, ms.ratio, scene);
+				e.enable_tag<ecs::scene_needchange>();
 			}
-
-			if (!math_isnull(ms.target_r)){
-				update_m3d(scene.r, math3d_quat_lerp(w->math3d->M, ms.source_r, ms.target_r, ratio));
-			}
-
-			if (!math_isnull(ms.target_t)){
-				update_m3d(scene.t, math3d_lerp(w->math3d->M, ms.source_t, ms.target_t, ratio));
-			}
-
+		} else {
+			sample_value(w, ms, ms.ratio, scene);
 			e.enable_tag<ecs::scene_needchange>();
 		}
 	}
