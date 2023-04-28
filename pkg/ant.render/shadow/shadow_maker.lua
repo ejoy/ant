@@ -40,8 +40,8 @@ local INV_Z<const> = true
 
 local csm_matrices			= {mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT, mc.IDENTITY_MAT}
 local split_distances_VS	= math3d.ref(math3d.vector(math.maxinteger, math.maxinteger, math.maxinteger, math.maxinteger))
-local scene_aabb = math3d.ref(math3d.aabb())
-local aabb_tick = 0
+--[[ local scene_aabb = math3d.ref(math3d.aabb())
+local aabb_tick = 0 ]]
 local function update_camera_matrices(camera, light_view)
 	camera.viewmat.m = light_view
 	camera.projmat.m = math3d.projmat(camera.frustum, INV_Z)
@@ -58,7 +58,7 @@ local function calc_csm_matrix_attrib(csmidx, vp)
 end
 
 -- bgfx method
-local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_camera)
+local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_ce, main_camera, scene_aabb)
 	iom.set_rotation(shadow_ce, math3d.torotation(lightdir))
 	set_worldmat(shadow_ce.scene, shadow_ce.scene)
 	local main_view = main_camera.viewmat
@@ -80,7 +80,7 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	local frustum_ortho = {
 		l = 1, r = -1,
 		t = 1, b = -1,
-		n = -csm_frustum.f, f = csm_frustum.f,
+		n = -main_camera.frustum.f, f = main_camera.frustum.f,
 		ortho = true,
 	}
 	local ortho_proj = math3d.projmat(frustum_ortho, INV_Z)
@@ -112,6 +112,7 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 end
 
 local function calculate_scene_aabb(frustum_planes)
+	local scene_aabb = math3d.aabb()
 	local groups = {}
 	local tmp_eids = {}
 	--select visible groups
@@ -157,10 +158,6 @@ local function calculate_scene_aabb(frustum_planes)
 			local is_aabb_valid = e.bounding.aabb and e.bounding.aabb ~= mc.NULL and math3d.aabb_isvalid(e.bounding.aabb)
 			if is_shadow_cast and is_aabb_valid then
 					local world_aabb = e.bounding.scene_aabb
-					if e.scene.parent then
-						local ee <close> = w:entity(e.scene.parent, "scene:in")
-						world_aabb = math3d.aabb_transform(ee.scene.worldmat, world_aabb)
-					end
 					if not math3d.aabb_isvalid(math3d.ref(scene_aabb)) then
 						scene_aabb = math3d.ref(world_aabb)
 					else
@@ -169,6 +166,7 @@ local function calculate_scene_aabb(frustum_planes)
 			end
 		end
 	end
+	return scene_aabb
 end
 
 local function update_shadow_frustum(dl, main_camera)
@@ -176,19 +174,20 @@ local function update_shadow_frustum(dl, main_camera)
 	local lightdir = iom.get_direction(dl)
 	local shadow_setting = ishadow.setting()
 	local csm_frustums = ishadow.calc_split_frustums(main_camera.frustum)
-	if aabb_tick == 0 then
+	local scene_aabb = calculate_scene_aabb(frustum_planes)
+--[[ 	if aabb_tick == 0 then
 		calculate_scene_aabb(frustum_planes)
 	end
 	aabb_tick = aabb_tick + 1
 	if aabb_tick >= 5 then
 		aabb_tick = 0
 		scene_aabb = math3d.ref(math3d.aabb())
-	end
+	end ]]
 	for qe in w:select "csm:in camera_ref:in" do
 		local csm = qe.csm
 		local csm_frustum = csm_frustums[csm.index]
 		local shadow_ce <close> = w:entity(qe.camera_ref, "camera:in scene:in")
-		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_camera)
+		update_csm_frustum(lightdir, shadow_setting.shadowmap_size, csm_frustum, shadow_ce, main_camera, scene_aabb)
 		csm_matrices[csm.index] = calc_csm_matrix_attrib(csm.index, shadow_ce.camera.viewprojmat)
 		split_distances_VS[csm.index] = csm_frustum.f
 	end
