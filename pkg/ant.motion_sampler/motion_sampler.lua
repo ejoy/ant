@@ -121,3 +121,12 @@ function ims.set_target_ex(e, src, dst, duration, tween_in, tween_out)
 
     w:submit(e)
 end
+
+function ims.set_ratio(e, ratio)
+    w:extend(e, "motion_sampler:update")
+    if e.motion_sampler.duration >= 0 then
+        error "set motion_sampler ratio need duration is less than 0"
+    end
+    e.motion_sampler.ratio = ratio
+    w:submit(e)
+end

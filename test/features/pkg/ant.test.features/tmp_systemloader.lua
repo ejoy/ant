@@ -8,6 +8,12 @@ local imaterial     = ecs.import.interface "ant.asset|imaterial"
 local imesh         = ecs.import.interface "ant.asset|imesh"
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local irl           = ecs.import.interface "ant.render|irender_layer"
+
+local idn           = ecs.import.interface "ant.daynight|idaynight"
+local itimer        = ecs.import.interface "ant.timer|itimer"
+
+local ims           = ecs.import.interface "ant.motion_sampler|imotion_sampler"
+
 local assetmgr      = import_package "ant.asset"
 
 local mathpkg       = import_package"ant.math"
@@ -237,7 +243,7 @@ local function motion_sampler_test()
             scene = {},
             name = "motion_sampler",
             on_ready = function (e)
-                ims.set_target(e, nil, math3d.quaternion{0.0, 1.2, 0.0}, math3d.vector(0.0, 0.0, 2.0), 2000)
+                ims.set_target(e, nil, math3d.quaternion{0.0, 1.2, 0.0}, math3d.vector(0.0, 0.0, 2.0), -1)
             end
         }
     }
@@ -385,13 +391,17 @@ function init_loader_sys:entity_init()
 end
 
 function init_loader_sys:data_changed()
-    local idn = ecs.import.interface "ant.daynight|idaynight"
-    local itimer = ecs.import.interface "ant.timer|itimer"
     local dne = w:first "daynight:in"
     if dne then
         local tenSecondMS<const> = 10000
         local cycle = (itimer.current() % tenSecondMS) / tenSecondMS
         idn.update_day_cycle(dne, cycle)
+    end
+
+    local mse = w:first "motion_sampler:update"
+    if mse then
+        local tenSecondMS<const> = 10000
+        ims.set_ratio(mse, (itimer.current() % tenSecondMS) / tenSecondMS)
     end
 end
 

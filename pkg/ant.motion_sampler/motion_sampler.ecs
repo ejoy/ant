@@ -33,6 +33,7 @@ interface "imotion_sampler"
     .method "set_duration"
     .method "set_target"
     .method "set_target_ex"
+    .method "set_ratio"
 
 system "motion_sampler_system"
     .implement "motion_sampler.lua"
