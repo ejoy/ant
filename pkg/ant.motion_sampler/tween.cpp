@@ -1,6 +1,7 @@
 #include "lua.hpp"
 
 #include <cmath>
+#include <cstring>
 
 enum tween_type { None, Back, Bounce, Circular, Cubic, Elastic, Exponential, Linear, Quadratic, Quartic, Quintic, Sine };
 const float kPI = 3.141592f;
