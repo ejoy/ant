@@ -11,6 +11,7 @@ struct DefaultConfig {
 		: config(YGConfigNew()) {
 		YGConfigSetLogger(config, logger);
 		YGConfigSetPointScaleFactor(config, 0);
+		YGConfigSetErrata(config, YGErrataNone);
 		YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
 		YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureFixAbsoluteTrailingColumnMargin, true);
 	}
