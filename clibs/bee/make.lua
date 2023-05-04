@@ -91,7 +91,8 @@ lm:lua_source "bee" {
             "wbemuuid",
             "oleAut32",
             "shell32",
-            "ntdll"
+            "ntdll",
+            "synchronization"
         },
     },
     mingw = {
