@@ -6,6 +6,7 @@ local mc    = mathpkg.constant
 local math3d= require "math3d"
 
 local lms   = ecs.clibs "motion.sampler"
+local ltween = require "motion.tween"
 
 local itimer= ecs.import.interface "ant.timer|itimer"
 
@@ -66,7 +67,24 @@ local mss = ecs.system "motion_sampler_system"
 function mss:entity_init()
 end
 
+
 function mss:do_motion_sample()
+    --ms.ratio = tween(std::min(1.f, ms.deltatime / ms.duration), (tween_type)ms.tween_in, (tween_type)ms.tween_out);
+
+    local g = ecs.group(motion_sampler_group)
+    g:enable "motion_sampler_tag"
+    ecs.group_flush()
+
+    local dt = itimer.delta()
+    for e in w:select "motion_sampler:update scene_needchange?update" do
+        local ms = e.motion_sampler
+        if ms.duration >= 0 and ms.deltatime <= ms.duration then
+            ms.deltatime = ms.deltatime + dt
+            ms.ratio = ltween.interp(math.min(1.0, ms.deltatime / ms.duration), ms.tween_in, ms.tween_out)
+            e.scene_needchange = true
+        end
+    end
+
     lms.sample(motion_sampler_group, itimer.delta())
 end
 
@@ -123,10 +141,11 @@ function ims.set_target_ex(e, src, dst, duration, tween_in, tween_out)
 end
 
 function ims.set_ratio(e, ratio)
-    w:extend(e, "motion_sampler:update")
+    w:extend(e, "motion_sampler:update scene_needchange?update")
     if e.motion_sampler.duration >= 0 then
         error "set motion_sampler ratio need duration is less than 0"
     end
     e.motion_sampler.ratio = ratio
+    e.scene_needchange = true
     w:submit(e)
 end

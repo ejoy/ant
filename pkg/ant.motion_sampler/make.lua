@@ -13,6 +13,7 @@ lm:lua_source "motion_sampler" {
         ROOT .. "clibs/ecs",
     },
     sources = {
+        "tween.cpp",
         "motion_sampler.cpp",
     },
     objdeps = "compile_ecs",

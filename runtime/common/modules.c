@@ -46,6 +46,7 @@ int luaopen_fileinterface(lua_State *L);
 int luaopen_material(lua_State *L);
 int luaopen_render(lua_State *L);
 int luaopen_motion_sampler(lua_State *L);
+int luaopen_motion_tween(lua_State *L);
 int luaopen_image(lua_State* L);
 int luaopen_layout(lua_State* L);
 //int luaopen_layout_init(lua_State* L);
@@ -111,6 +112,7 @@ void ant_loadmodules(lua_State* L) {
         { "render.material",    luaopen_material},
         { "render.core",        luaopen_render},
         { "motion.sampler",     luaopen_motion_sampler},
+        { "motion.tween",       luaopen_motion_tween},
         { "image", luaopen_image },
 #if BX_PLATFORM_IOS
         { "ios", luaopen_ios },
