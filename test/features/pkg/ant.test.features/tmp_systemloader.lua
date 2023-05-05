@@ -231,7 +231,6 @@ local function drawindirect_test()
 end
 
 local function motion_sampler_test()
-    local ims = ecs.import.interface "ant.motion_sampler|imotion_sampler"
     local g = ims.sampler_group()
     local eid = g:create_entity {
         policy = {
@@ -242,9 +241,13 @@ local function motion_sampler_test()
         data = {
             scene = {},
             name = "motion_sampler",
-            on_ready = function (e)
-                ims.set_target(e, nil, math3d.quaternion{0.0, 1.2, 0.0}, math3d.vector(0.0, 0.0, 2.0), -1)
-            end
+            motion_sampler = {
+                keyframes = {
+                    {r = math3d.quaternion{0.0, 0.0, 0.0}, t = math3d.vector(0.0, 0.0, 0.0), step = 0.0},
+                    {                                      t = math3d.vector(1.0, 0.0, 2.0), step = 0.5},
+                    {r = math3d.quaternion{0.0, 1.2, 0.0}, t = math3d.vector(0.0, 0.0, 2.0), step = 1.0}
+                }
+            }
         }
     }
     sampler_eid = eid
@@ -372,9 +375,10 @@ function init_loader_sys:entity_init()
         )
         elseif key == "P" and press == 0 then
             local e = assert(w:entity(sampler_eid))
-            local p = math3d.add(iom.get_position(e), math3d.vector(0.0, 0.0, 1.0))
-            local ims = ecs.import.interface "ant.motion_sampler|imotion_sampler"
-            ims.set_target(e, nil, nil, p, 100)
+            ims.set_keyframes(e, 
+                {t = math3d.vector(0.0, 0.0, 0.0), 0.0},
+                {t = math3d.vector(0.0, 0.0, 2.0), 1.0}
+            )
 
         elseif key == "O" and press == 0 then
             local e = assert(w:entity(sampler_eid))

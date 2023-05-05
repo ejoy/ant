@@ -11,28 +11,11 @@ extern "C"{
 	#include "math3dfunc.h"
 }
 
-#include <algorithm>
-
-static_assert((offsetof(ecs::motion_sampler, source_r) - offsetof(ecs::motion_sampler, source_s)) == sizeof(math_t), "Invalid motion_sampler defined");
-static_assert((offsetof(ecs::motion_sampler, source_t) - offsetof(ecs::motion_sampler, source_r)) == sizeof(math_t), "Invalid motion_sampler defined");
-
-static_assert((offsetof(ecs::motion_sampler, target_r) - offsetof(ecs::motion_sampler, target_s)) == sizeof(math_t), "Invalid motion_sampler defined");
-static_assert((offsetof(ecs::motion_sampler, target_t) - offsetof(ecs::motion_sampler, target_r)) == sizeof(math_t), "Invalid motion_sampler defined");
-
-
-static_assert((offsetof(ecs::scene, r) - offsetof(ecs::scene, s)) == sizeof(math_t), "Invalid motion_sampler defined");
-static_assert((offsetof(ecs::scene, t) - offsetof(ecs::scene, r)) == sizeof(math_t), "Invalid motion_sampler defined");
 
 struct motion_tracks {
 	ozz::unique_ptr<ozz::animation::Float3Track>		s;
 	ozz::unique_ptr<ozz::animation::QuaternionTrack>	r;
 	ozz::unique_ptr<ozz::animation::Float3Track>		t;
-
-	struct result {
-		math_t s, r, t;
-	};
-
-	result res;
 };
 
 struct motion_keyframe {
@@ -41,52 +24,9 @@ struct motion_keyframe {
 	ozz::animation::offline::RawFloat3Track::Keyframe		t;
 };
 
-
-static inline void
-sample_value(struct ecs_world* w, const ecs::motion_sampler &ms, float ratio, ecs::scene &scene){
-	auto update_m3d = [w](math_t& m, const math_t n){
-		math_unmark(w->math3d->M, m);
-		m = math_mark(w->math3d->M, n);
-	};
-
-	if (!math_isnull(ms.target_s)){
-		update_m3d(scene.s, math3d_lerp(w->math3d->M, ms.source_s, ms.target_s, ratio));
-	}
-
-	if (!math_isnull(ms.target_r)){
-		update_m3d(scene.r, math3d_quat_lerp(w->math3d->M, ms.source_r, ms.target_r, ratio));
-	}
-
-	if (!math_isnull(ms.target_t)){
-		update_m3d(scene.t, math3d_lerp(w->math3d->M, ms.source_t, ms.target_t, ratio));
-	}
-}
-
-static int
-lsample(lua_State *L){
-    auto w = getworld(L);
-	const int motion_groupid = (int)luaL_checkinteger(L, 1);
-
-	int gids[] = {motion_groupid};
-	ecs_api::group_enable<ecs::motion_sampler_tag>(w->ecs, gids);
-
-	for (auto e : ecs_api::select<ecs::view_visible, ecs::motion_sampler_tag, ecs::motion_sampler, ecs::scene>(w->ecs)){
-		auto& ms = e.get<ecs::motion_sampler>();
-		auto &scene = e.get<ecs::scene>();
-
-		sample_value(w, ms, ms.ratio, scene);
-	}
-    return 0;
-}
-
 static inline motion_tracks*
 MT(lua_State *L, int index = 1){
 	return (motion_tracks*)luaL_checkudata(L, index, "TRACKS_MT");
-}
-
-static inline void
-sampling_motion_tracks(motion_tracks *mt){
-
 }
 
 static int
@@ -98,26 +38,15 @@ ltracks_delete(lua_State *L){
 	mt->r = nullptr;
 	mt->t = nullptr;
 
-	if (!math_isnull(mt->res.s)){
-		math_unmark(w->math3d->M, mt->res.s);
-		mt->res.s = MATH_NULL;
-	}
-
-	if (!math_isnull(mt->res.r)){
-		math_unmark(w->math3d->M, mt->res.r);
-		mt->res.r = MATH_NULL;
-	}
-
-	if (!math_isnull(mt->res.t)){
-		math_unmark(w->math3d->M, mt->res.t);
-		mt->res.t = MATH_NULL;
-	}
+	mt->~motion_tracks();
 	return 0;
 }
 
-static inline void
-extract_keyframe(lua_State *L, int index, ecs_world* w, motion_keyframe &kf){
+static inline motion_keyframe
+extract_keyframe(lua_State *L, int index, ecs_world* w){
 	luaL_checktype(L, index, LUA_TTABLE);
+
+	motion_keyframe kf;
 
 	//step
 	const int steptype = lua_getfield(L, index, "step");
@@ -131,7 +60,7 @@ extract_keyframe(lua_State *L, int index, ecs_world* w, motion_keyframe &kf){
 	// s
 	const int st = lua_getfield(L, index, "s");
 	if (st != LUA_TNIL){
-		const math_t s = {(size_t)lua_touserdata(L, -1)};	//math_t type
+		const math_t s = math3d_from_lua_id(L, w->math3d, -1);
 		if (!math_valid(M, s)){
 			luaL_error(L, "Invalid 's' data: %d", index);
 		}
@@ -141,13 +70,15 @@ extract_keyframe(lua_State *L, int index, ecs_world* w, motion_keyframe &kf){
 			ozz::animation::offline::RawTrackInterpolation::kLinear, step,
 			ozz::math::Float3(sv[0], sv[1], sv[2])
 		};
+	} else {
+		kf.s.ratio = -1.f;
 	}
 	lua_pop(L, 1);
 
 	// r
 	const int rt = lua_getfield(L, index, "r");
 	if (rt != LUA_TNIL){
-		const math_t r = {(size_t)lua_touserdata(L, -1)};	//math_t type
+		const math_t r = math3d_from_lua_id(L, w->math3d, -1);
 		if (!math_valid(M, r)){
 			luaL_error(L, "Invalid 'r' data: %d", index);
 		}
@@ -157,13 +88,15 @@ extract_keyframe(lua_State *L, int index, ecs_world* w, motion_keyframe &kf){
 			ozz::animation::offline::RawTrackInterpolation::kLinear, step,
 			ozz::math::Quaternion(rv[0], rv[1], rv[2], rv[3])
 		};
+	} else {
+		kf.r.ratio = -1.f;
 	}
 	lua_pop(L, 1);
 
 	// t
 	const int tt = lua_getfield(L, index, "t");
 	if (tt != LUA_TNIL){
-		const math_t t = {(size_t)lua_touserdata(L, -1)};	//math_t type
+		const math_t t = math3d_from_lua_id(L, w->math3d, -1);
 		if (!math_valid(M, t)){
 			luaL_error(L, "Invalid 't' data: %d", index);
 		}
@@ -173,8 +106,22 @@ extract_keyframe(lua_State *L, int index, ecs_world* w, motion_keyframe &kf){
 			ozz::animation::offline::RawTrackInterpolation::kLinear, step,
 			ozz::math::Float3(rv[0], rv[1], rv[2])
 		};
+	} else {
+		kf.t.ratio = -1.f;
 	}
 	lua_pop(L, 1);
+
+	return kf;
+}
+
+static inline void *
+MATH_TO_HANDLE(math_t id) {
+	return (void *)id.idx;
+}
+
+static inline void
+lua_pushmath(lua_State *L, math_t id) {
+	lua_pushlightuserdata(L, MATH_TO_HANDLE(id));
 }
 
 static int
@@ -183,84 +130,109 @@ ltracks_sample(lua_State *L){
 	auto w = getworld(L);
 	const float ratio = (float)luaL_checknumber(L, 2);
 	const auto M = w->math3d->M;
-	if (!mt->s->ratios().empty()){
-		ozz::math::Float3 s;
+
+	auto sample_track = [L, M](auto track, float ratio, const char* errmsg, auto tomathid){
+		using TrackType = std::remove_pointer_t<decltype(track)>;
+
+		if (track){
+			typename TrackType::ValueType result;
+			ozz::animation::internal::TrackSamplingJob<TrackType> job;
+			job.track = track;
+			job.result = &result;
+			job.ratio = ratio;
+			if (!job.Run()){
+				luaL_error(L, errmsg);
+			}
+
+			lua_pushmath(L, tomathid(result));
+		} else {
+			lua_pushnil(L);
+		}
+	};
+
+	ozz::animation::Float3Track track;
+
+	sample_track(mt->s.get(), ratio, "Sampling scale track failed", [M](const ozz::math::Float3 &result){
+		float v[] = {result.x, result.y, result.z, 0.f};
+		return math_vec4(M, v);
+	});
+
+	sample_track(mt->r.get(), ratio, "Sampling rotation track failed", [M](const ozz::math::Quaternion &result){
+		return math_quat(M, &result.x);
+	});
+
+	sample_track(mt->t.get(), ratio, "Sampling translation track failed", [M](const ozz::math::Float3 &result){
+		float v[] = {result.x, result.y, result.z, 1.f};
+		return math_vec4(M, v);
+	});
+
+	return 3;
+}
+
+static inline void
+build_tracks(lua_State *L, ecs_world *w, int index, motion_tracks *mt){
+	luaL_checktype(L, index, LUA_TTABLE);
+	const int n = (int)lua_rawlen(L, index);
+	
+	ozz::animation::offline::RawFloat3Track s_tracks, t_tracks;
+	ozz::animation::offline::RawQuaternionTrack r_tracks;
+	for (int i=0; i<n; ++i){
+		lua_geti(L, index, i+1);
+		const motion_keyframe kf = extract_keyframe(L, -1, w);
+		lua_pop(L, 1);
+
+		if (kf.s.ratio >= 0.f)
+			s_tracks.keyframes.push_back(kf.s);
 		
-		ozz::animation::Float3TrackSamplingJob job;
-		job.track = mt->s.get();
-		job.result = &s;
-		job.ratio = ratio;
+		if (kf.r.ratio >= 0.f) 
+			r_tracks.keyframes.push_back(kf.r);
 
-		math_unmark(M, mt->res.s);
-		float v[] = {s.x, s.y, s.z, 0.0f};
-		mt->res.s = math_mark(M, math_vec4(M, v));
+		if (kf.t.ratio >= 0.f)
+			t_tracks.keyframes.push_back(kf.t);
 	}
+	ozz::animation::offline::TrackBuilder builder;
+	mt->s = s_tracks.keyframes.empty() ? nullptr : builder(s_tracks);
+	mt->r = r_tracks.keyframes.empty() ? nullptr : builder(r_tracks);
+	mt->t = t_tracks.keyframes.empty() ? nullptr : builder(t_tracks);
+}
 
-	if (!mt->r->ratios().empty()){
-		ozz::math::Quaternion r;
-		ozz::animation::QuaternionTrackSamplingJob job;
-		job.track = mt->r.get();
-		job.result = &r;
-		job.ratio = ratio;
-
-		math_unmark(M, mt->res.r);
-		mt->res.r = math_mark(M, math_quat(M, &r.x));
-	}
-
-	if (!mt->t->ratios().empty()){
-		ozz::math::Float3 t;
-		ozz::animation::Float3TrackSamplingJob job;
-		job.track = mt->t.get();
-		job.result = &t;
-		job.ratio = ratio;
-
-		float v[] = {t.x, t.y, t.z, 1.0f};
-		math_unmark(M, mt->res.t);
-		mt->res.t = math_mark(M, math_vec4(M, v));
-	}
-
-	ozz::animation::QuaternionTrackSamplingJob r_job;
-	ozz::animation::Float3TrackSamplingJob t_job;
-
+static int
+ltracks_build(lua_State *L){
+	auto mt = MT(L);
+	auto w = getworld(L);
+	build_tracks(L, w, 2, mt);
 	return 0;
+}
+
+static inline void
+check_ecs_world_in_upvalue1(lua_State *L){
+	luaL_checkstring(L, lua_upvalueindex(1));
 }
 
 static int
 lcreate_tracks(lua_State *L){
-	const int n = lua_gettop(L);
 	auto mt = (motion_tracks*)lua_newuserdatauv(L, sizeof(motion_tracks), 0);
 	new (mt) motion_tracks();
 
 	auto w = getworld(L);
-	if (n > 0){
-		motion_keyframe kf;
-		ozz::animation::offline::RawFloat3Track s_tracks, t_tracks;
-		ozz::animation::offline::RawQuaternionTrack r_tracks;
-		for (int i=1; i<=n; ++i){
-			extract_keyframe(L, i, w, kf);
-			s_tracks.keyframes.push_back(kf.s);
-			r_tracks.keyframes.push_back(kf.r);
-			t_tracks.keyframes.push_back(kf.t);
-		}
-		ozz::animation::offline::TrackBuilder builder;
-		mt->s = builder(s_tracks);
-		mt->r = builder(r_tracks);
-		mt->t = builder(t_tracks);
+	if (!lua_isnoneornil(L, 1)){
+		build_tracks(L, w, 1, mt);
 	}
 
-	mt->res.s = math_mark(w->math3d->M, math_identity(MATH_TYPE_VEC4));
-	mt->res.r = math_mark(w->math3d->M, math_identity(MATH_TYPE_QUAT));
-	mt->res.t = math_mark(w->math3d->M, math_identity(MATH_TYPE_VEC4));
-
 	if (luaL_newmetatable(L, "TRACKS_MT")){
-		lua_pushvalue(L, -1);
-		lua_setfield(L, -2, "__index");
+
 		luaL_Reg l[] = {
 			{ "sample",		ltracks_sample},
+			{ "build",		ltracks_build},
 			{ "__gc",		ltracks_delete},
 			{ nullptr, 		nullptr},
 		};
-		luaL_setfuncs(L, l, 0);
+		check_ecs_world_in_upvalue1(L);
+		lua_pushvalue(L, lua_upvalueindex(1));
+		luaL_setfuncs(L, l, 1);
+
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
 	}
 
 	lua_setmetatable(L, -2);
@@ -271,7 +243,6 @@ extern "C" int
 luaopen_motion_sampler(lua_State *L) {
     luaL_checkversion(L);
 	luaL_Reg l[] = {
-        { "sample",			lsample},
 		{ "create_tracks",	lcreate_tracks},
 		{ nullptr,			nullptr },
 	};
