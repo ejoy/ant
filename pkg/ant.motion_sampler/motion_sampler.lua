@@ -99,6 +99,13 @@ function ims.set_duration(e, duration)
     e.motion_sampler.duration = duration
 end
 
+function ims.set_tween(e, tween_in, tween_out)
+    w:extend(e, "motion_sampler:in")
+    local ms = e.motion_sampler
+    ms.tween_in = tween_in
+    ms.tween_out = tween_out
+end
+
 function ims.set_keyframes(e, ...)
     w:extend(e, "motion_sampler:in")
     local ms = e.motion_sampler
