@@ -1,43 +1,24 @@
 component "motion_sampler_tag"
 
-component "motion_sampler"
-    .type "c"
-    .field "duration:float"
-    .field "deltatime:float"
-    .field "ratio:float"
-    .field "tween_in:int"
-    .field "tween_out:int"
-    .field "source_s:userdata|math_t"
-    .field "source_r:userdata|math_t"
-    .field "source_t:userdata|math_t"
-
-    .field "target_s:userdata|math_t"
-    .field "target_r:userdata|math_t"
-    .field "target_t:userdata|math_t"
-
-    .implement "motion_sampler.lua"
-    .method "init"
-    .method "remove"
-    .method "marshal"
-    .method "unmarshal"
+component "motion_sampler".type "lua"
 
 
 policy "motion_sampler"
     .require_system "ant.motion_sampler|motion_sampler_system"
     .require_interface "ant.motion_sampler|imotion_sampler"
-    .component_opt "motion_sampler"
+    .component "motion_sampler"
 
 interface "imotion_sampler"
     .implement "motion_sampler.lua"
     .method "sampler_group"
     .method "set_duration"
-    .method "set_target"
-    .method "set_target_ex"
+    .method "set_keyframes"
     .method "set_ratio"
+    .method "set_tween"
 
 system "motion_sampler_system"
     .implement "motion_sampler.lua"
-    .method "entity_init"
+    .method "component_init"
     .method "do_motion_sample"
 
 pipeline "motion_sample"
