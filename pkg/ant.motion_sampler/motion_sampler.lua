@@ -97,6 +97,7 @@ end
 function ims.set_duration(e, duration)
     w:extend(e, "motion_sampler:in")
     e.motion_sampler.duration = duration
+    e.motion_sampler.deltatime = duration >= 0 and 0 or nil
 end
 
 function ims.set_tween(e, tween_in, tween_out)
