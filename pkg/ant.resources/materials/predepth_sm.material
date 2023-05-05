@@ -2,8 +2,6 @@ fx:
   fs: /pkg/ant.resources/shaders/depth/fs_depth.sc
   vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
   setting:
-    STONE_MOUNTAIN: 1
-    INDIRECT_BUFFER: 1
     lighting: off
     shadow_cast: off
     shadow_receive: off

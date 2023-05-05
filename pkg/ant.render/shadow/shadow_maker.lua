@@ -481,13 +481,13 @@ end
 
 
 function sm:refine_camera()
-	for se in w:select "render_object:in csm1_queue_cull eid:in bounding?in view_visible?in" do
+--[[ 	for se in w:select "render_object:in csm1_queue_cull eid:in bounding?in view_visible?in" do
 		local t = 1
 	end
 
 	for se in w:select "render_object:in csm1_queue_cull:absent eid:in bounding?in view_visible?in" do
 		local t = 1
-	end
+	end ]]
 
 
 	-- local setting = ishadow.setting()
