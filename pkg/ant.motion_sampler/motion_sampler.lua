@@ -57,7 +57,7 @@ function mss:do_motion_sample()
     ecs.group_flush()
 
     local dt = itimer.delta()
-    for e in w:select "motion_sampler:update scene_needchange?update" do
+    for e in w:select "motion_sampler_tag motion_sampler:update scene_needchange?update" do
         local ms = e.motion_sampler
 
         local needupdate = true
