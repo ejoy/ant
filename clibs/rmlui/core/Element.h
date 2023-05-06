@@ -12,6 +12,7 @@
 #include <core/PropertyVector.h>
 #include <core/StyleCache.h>
 #include <optional>
+#include "luavalue.h"
 
 namespace Rml {
 
@@ -60,7 +61,9 @@ public:
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);
 	void RemoveEventListener(const std::string& type);
-	bool DispatchEvent(const std::string& type, int parameters, bool interruptible, bool bubbles);
+	bool DispatchEvent(const std::string& type, int parameters_ref, bool interruptible, bool bubbles);
+	bool DispatchEvent(const std::string& type, const luavalue::table& parameters, bool interruptible, bool bubbles);
+	bool DispatchAnimationEvent(const std::string& type, const ElementAnimation& animation);
 	void RemoveAllEvents();
 	const std::vector<std::unique_ptr<EventListener>>& GetEventListeners() const;
 

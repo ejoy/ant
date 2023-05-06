@@ -136,6 +136,7 @@ void ElementTransition::Update(Element& element, PropertyId id, float delta) {
 
 ElementAnimation::ElementAnimation(const Property& in_prop, const Property& out_prop, const Animation& animation)
 	: ElementTransition(in_prop, out_prop, animation.transition)
+	, name(animation.name)
 	, keys()
 	, num_iterations(animation.num_iterations)
 	, current_iteration(0)

@@ -13,6 +13,7 @@ public:
 	void Update(Element& element, PropertyId id, float delta);
 	bool IsComplete() const { return animation_complete; }
 	bool IsValid(Element& element);
+	float GetTime() const { return time; }
 protected:
 	void UpdateProperty(Element& element, PropertyId id, float time);
 protected:
@@ -30,9 +31,11 @@ public:
 	void AddKey(float target_time, const Property& property);
 	bool IsValid(Element& element);
 	void Update(Element& element, PropertyId id, float delta);
+	const std::string& GetName() const { return name; }
 protected:
 	void UpdateProperty(Element& element, PropertyId id, float time);
 private:
+	std::string name;
 	std::vector<AnimationKey> keys;
 	int num_iterations;       // -1 for infinity
 	int current_iteration;
