@@ -1,7 +1,7 @@
 #include <Windows.h>
 #include <stdint.h>
 #include "../window.h"
-#include "mingw_window.h"
+#include "win32_window.h"
 #include <tlhelp32.h>
 
 
@@ -176,44 +176,6 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			msg.u.unichar.code = code;
 			cb->message(cb->ud, &msg);
 		}
-		break;
-	}
-	case WM_DROPFILES: {
-		cb = (struct ant_window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		HDROP drop = (HDROP)wParam;
-		UINT file_count = DragQueryFile(drop, 0xFFFFFFFF, NULL, 0);
-		msg.type = ANT_WINDOW_DROPFILES;
-		msg.u.dropfiles.paths = malloc(sizeof(char*) * file_count);
-		msg.u.dropfiles.path_counts = malloc(sizeof(int) * file_count);
-		msg.u.dropfiles.count = file_count;
-		for (UINT i = 0; i < file_count; i++)
-		{
-			msg.u.dropfiles.path_counts[i] = 0;
-			msg.u.dropfiles.paths[i] = NULL;
-			WCHAR * str_w = malloc(sizeof(WCHAR) * MAX_DROP_PATH);
-			UINT size_w = DragQueryFileW(drop, i, str_w, MAX_DROP_PATH);
-			if (str_w !=NULL && size_w > 0) {
-				int len_a = WideCharToMultiByte(CP_UTF8, 0, str_w, size_w, NULL, 0, NULL, NULL);
-				if (len_a > 0)
-				{
-					msg.u.dropfiles.paths[i] = malloc(sizeof(char) * (len_a + 1));
-					if (msg.u.dropfiles.paths[i] != NULL)
-					{
-						int out_len = WideCharToMultiByte(CP_UTF8, 0, str_w, size_w, msg.u.dropfiles.paths[i], len_a, NULL, NULL);
-						msg.u.dropfiles.path_counts[i] = out_len;
-					}
-				}
-			}
-			free(str_w);
-		}
-		cb->message(cb->ud, &msg);
-		for (UINT i = 0; i < file_count; i++)
-		{
-			if(msg.u.dropfiles.paths[i]!=NULL)
-				free(msg.u.dropfiles.paths[i]);
-		}
-		free(msg.u.dropfiles.paths);
-		free(msg.u.dropfiles.path_counts);
 		break;
 	}
 	case WM_USER_WINDOW_SETCURSOR:

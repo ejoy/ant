@@ -11,7 +11,7 @@ lm:lua_source "window" {
     },
     windows = {
         sources = {
-            "mingw/mingw_window.c",
+            "win32/*.c",
         },
         links = {
             "user32",
@@ -20,12 +20,17 @@ lm:lua_source "window" {
     },
     macos = {
         sources = {
-            "osx/osx_window.m",
+            "osx/*.m",
         },
     },
     ios = {
         sources = {
-            "ios/ios_window.m",
+            "ios/*.m",
+        },
+    },
+    android = {
+        sources = {
+            "android/*.cpp",
         },
     }
 }
