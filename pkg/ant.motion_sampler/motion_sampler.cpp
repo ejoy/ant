@@ -56,60 +56,29 @@ extract_keyframe(lua_State *L, int index, ecs_world* w){
 	const float step = (float)lua_tonumber(L, -1);
 	lua_pop(L, 1);
 
-	const auto M = w->math3d->M;
-	// s
-	const int st = lua_getfield(L, index, "s");
-	if (st != LUA_TNIL){
-		const math_t s = math3d_from_lua_id(L, w->math3d, -1);
-		if (!math_valid(M, s)){
-			luaL_error(L, "Invalid 's' data: %d", index);
+	auto pull_keyframe = [L, w, step](int index, const char* name, auto& keyframe){
+		const int st = lua_getfield(L, index, name);
+		if (st != LUA_TNIL){
+			const math_t s = math3d_from_lua_id(L, w->math3d, -1);
+			if (!math_valid(w->math3d->M, s)){
+				luaL_error(L, "Invalid '%s' data: %d", name, index);
+			}
+
+			const float *sv = math_value(w->math3d->M, s);
+			keyframe.interpolation = ozz::animation::offline::RawTrackInterpolation::kLinear;
+			keyframe.ratio = step;
+
+			using ValueType = decltype(keyframe.value);
+			keyframe.value = *((ValueType*)sv);
+		} else {
+			keyframe.ratio = -1.f;
 		}
+		lua_pop(L, 1);
+	};
 
-		const float *sv = math_value(M, s);
-		kf.s = ozz::animation::offline::RawFloat3Track::Keyframe {
-			ozz::animation::offline::RawTrackInterpolation::kLinear, step,
-			ozz::math::Float3(sv[0], sv[1], sv[2])
-		};
-	} else {
-		kf.s.ratio = -1.f;
-	}
-	lua_pop(L, 1);
-
-	// r
-	const int rt = lua_getfield(L, index, "r");
-	if (rt != LUA_TNIL){
-		const math_t r = math3d_from_lua_id(L, w->math3d, -1);
-		if (!math_valid(M, r)){
-			luaL_error(L, "Invalid 'r' data: %d", index);
-		}
-
-		const float *rv = math_value(M, r);
-		kf.r = ozz::animation::offline::RawQuaternionTrack::Keyframe {
-			ozz::animation::offline::RawTrackInterpolation::kLinear, step,
-			ozz::math::Quaternion(rv[0], rv[1], rv[2], rv[3])
-		};
-	} else {
-		kf.r.ratio = -1.f;
-	}
-	lua_pop(L, 1);
-
-	// t
-	const int tt = lua_getfield(L, index, "t");
-	if (tt != LUA_TNIL){
-		const math_t t = math3d_from_lua_id(L, w->math3d, -1);
-		if (!math_valid(M, t)){
-			luaL_error(L, "Invalid 't' data: %d", index);
-		}
-
-		const float *rv = math_value(M, t);
-		kf.t = ozz::animation::offline::RawFloat3Track::Keyframe {
-			ozz::animation::offline::RawTrackInterpolation::kLinear, step,
-			ozz::math::Float3(rv[0], rv[1], rv[2])
-		};
-	} else {
-		kf.t.ratio = -1.f;
-	}
-	lua_pop(L, 1);
+	pull_keyframe(index, "s", kf.s);
+	pull_keyframe(index, "r", kf.r);
+	pull_keyframe(index, "t", kf.t);
 
 	return kf;
 }

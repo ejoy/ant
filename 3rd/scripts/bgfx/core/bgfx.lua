@@ -66,7 +66,12 @@ local bgfxLib = {
             "src/*.mm",
             "!src/amalgamated.mm",
         }
-    }
+    },
+    android = {
+        defines = {
+            "BGFX_CONFIG_RENDERER_VULKAN=1",
+        },
+    },
 }
 
 local bgfxDll = deepcopy(bgfxLib)

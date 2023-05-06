@@ -1,8 +1,15 @@
 #include <core/PropertyFloat.h>
 #include <core/Document.h>
 #include <core/Element.h>
-#include <numbers>
 #include <glm/gtx/compatibility.hpp>
+
+#include <version>
+#if defined(__cpp_lib_math_constants)
+#	include <numbers>
+static constexpr float const_pi = std::numbers::pi_v<float>;
+#else
+static constexpr float const_pi = static_cast<float>(3.141592653589793);
+#endif
 
 namespace Rml {
 
@@ -39,7 +46,7 @@ float PropertyFloat::ComputeAngle() const {
 	case PropertyUnit::RAD:
 		return value;
 	case PropertyUnit::DEG:
-		return value * (std::numbers::pi_v<float> / 180.0f);
+		return value * (const_pi / 180.0f);
 	default:
 		return 0.0f;
 	}
@@ -57,7 +64,7 @@ float PropertyFloat::Compute(const Element* e) const {
 	case PropertyUnit::REM:
 		return value * e->GetOwnerDocument()->GetBody()->GetFontSize();
 	case PropertyUnit::DEG:
-		return value * (std::numbers::pi_v<float> / 180.0f);
+		return value * (const_pi / 180.0f);
 	case PropertyUnit::VW:
 		return value * e->GetOwnerDocument()->GetDimensions().w * 0.01f;
 	case PropertyUnit::VH:

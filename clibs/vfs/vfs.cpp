@@ -2,86 +2,11 @@
 #include <string>
 #include <string_view>
 #include <mutex>
-#include <variant>
 
-template<class> inline constexpr bool always_false_v = false;
-
-struct lua_value {
-    std::variant<
-        std::monostate, // LUA_TNIL
-        bool,           // LUA_TBOOLEAN
-        void*,          // LUA_TLIGHTUSERDATA
-        lua_Integer,    // LUA_TNUMBER
-        lua_Number,     // LUA_TNUMBER
-        std::string,    // LUA_TSTRING
-        lua_CFunction   // LUA_TFUNCTION
-    > storage;
-
-    void set(lua_State* L, int idx) {
-        switch (lua_type(L, idx)) {
-        case LUA_TNIL:
-            storage.emplace<std::monostate>();
-            break;
-        case LUA_TBOOLEAN:
-            storage.emplace<bool>(!!lua_toboolean(L, idx));
-            break;
-        case LUA_TLIGHTUSERDATA:
-            storage.emplace<void*>(lua_touserdata(L, idx));
-            break;
-        case LUA_TNUMBER:
-            if (lua_isinteger(L, idx)) {
-                storage.emplace<lua_Integer>(lua_tointeger(L, idx));
-            }
-            else {
-                storage.emplace<lua_Number>(lua_tonumber(L, idx));
-            }
-            break;
-        case LUA_TSTRING: {
-            size_t sz = 0;
-            const char* str = lua_tolstring(L, idx, &sz);
-            storage.emplace<std::string>(str, sz);
-            break;
-        }
-        case LUA_TFUNCTION: {
-            lua_CFunction func = lua_tocfunction(L, idx);
-            if (func == NULL || lua_getupvalue(L, idx, 1) != NULL) {
-                luaL_error(L, "Only light C function can be serialized");
-                return;
-            }
-            storage.emplace<lua_CFunction>(func);
-            break;
-        }
-        default:
-            luaL_error(L, "Unsupport type %s to serialize", lua_typename(L, idx));
-        }
-    }
-
-    void get(lua_State* L) {
-        std::visit([=](auto&& arg) {
-            using T = std::decay_t<decltype(arg)>;
-            if constexpr (std::is_same_v<T, std::monostate>) {
-                lua_pushnil(L);
-            } else if constexpr (std::is_same_v<T, bool>) {
-                lua_pushboolean(L, arg);
-            } else if constexpr (std::is_same_v<T, void*>) {
-                lua_pushlightuserdata(L, arg);
-            } else if constexpr (std::is_same_v<T, lua_Integer>) {
-                lua_pushinteger(L, arg);
-            } else if constexpr (std::is_same_v<T, lua_Number>) {
-                lua_pushnumber(L, arg);
-            } else if constexpr (std::is_same_v<T, std::string>) {
-                lua_pushlstring(L, arg.data(), arg.size());
-            } else if constexpr (std::is_same_v<T, lua_CFunction>) {
-                lua_pushcfunction(L, arg);
-            } else {
-                static_assert(always_false_v<T>, "non-exhaustive visitor!");
-            }
-        }, storage);
-    }
-};
+#include "../luabind/luavalue.h"
 
 std::string initfunc;
-lua_value initargs;
+luavalue::value initargs;
 std::mutex mutex;
 
 static const std::string_view initscript = R"(
@@ -195,7 +120,7 @@ static int setinitfunc(lua_State* L) {
     const char* s_initfunc = luaL_checklstring(L, 1, &sz_initfunc);
     std::lock_guard<std::mutex> lock(mutex);
     initfunc.assign(s_initfunc, sz_initfunc);
-    initargs.set(L, 2);
+    luavalue::set(L, 2, initargs);
     if (!lua_toboolean(L, 3)) {
         LoadScript(L, updateinitfunc);
         lua_pushvalue(L, lua_upvalueindex(1));
@@ -212,7 +137,7 @@ static int push_initfunc(lua_State* L) {
         return 0;
     }
     lua_pushlstring(L, initfunc.data(), initfunc.size());
-    initargs.get(L);
+    luavalue::get(L, initargs);
     return 2;
 }
 

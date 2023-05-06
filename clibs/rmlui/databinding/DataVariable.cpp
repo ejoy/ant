@@ -41,7 +41,7 @@ public:
     LiteralIntDefinition() : VariableDefinition() {}
 
     bool Get(void* ptr, DataVariant& variant) override {
-        variant = static_cast<int>(reinterpret_cast<intptr_t>(ptr));
+        variant.emplace<lua_Integer>(reinterpret_cast<intptr_t>(ptr));
         return true;
     }
 };

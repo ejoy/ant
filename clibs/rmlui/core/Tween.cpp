@@ -1,8 +1,15 @@
 #include <core/Tween.h>
 #include <utility>
-#include <numbers>
 #include <math.h>
 #include <bee/nonstd/unreachable.h>
+
+#include <version>
+#if defined(__cpp_lib_math_constants)
+#	include <numbers>
+static constexpr float const_pi = std::numbers::pi_v<float>;
+#else
+static constexpr float const_pi = static_cast<float>(3.141592653589793);
+#endif
 
 namespace Rml {
 
@@ -40,7 +47,7 @@ static float cubic(float t) {
 static float elastic(float t) {
 	if (t == 0) return t;
 	if (t == 1) return t;
-	return -expf(7.24f * (t - 1.f)) * sinf((t - 1.1f) * 2.f * std::numbers::pi_v<float> / 0.4f);
+	return -expf(7.24f * (t - 1.f)) * sinf((t - 1.1f) * 2.f * const_pi / 0.4f);
 }
 
 static float exponential(float t) {
@@ -66,7 +73,7 @@ static float quintic(float t) {
 }
 
 static float sine(float t) {
-	return 1.f - cosf(t * std::numbers::pi_v<float> * 0.5f);
+	return 1.f - cosf(t * const_pi * 0.5f);
 }
 
 }

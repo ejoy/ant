@@ -23,6 +23,14 @@ lm:lib "example-common" {
             "examples/common/**/*.mm"
         }
     },
+    android = {
+        includes = "3rdparty/native_app_glue",
+        links = {
+            "android",
+            "log",
+            "m",
+        }
+    },
     gcc = {
         flags = {
             "-Wno-comment",

@@ -20,9 +20,7 @@ lm:source_set "bx" {
         }
     },
     clang = {
-        flags = {
-            "-ffast-math",
-        }
+        flags = "-ffast-math",
     },
     linux = {
         ldflags = "-pthread",

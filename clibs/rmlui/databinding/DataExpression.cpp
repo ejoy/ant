@@ -717,21 +717,21 @@ private:
 	bool Execute(const Instruction instruction, const DataVariant& data)
 	{
 		auto AnyString = [](const DataVariant& v1, const DataVariant& v2) {
-			return std::holds_alternative<std::string>(v1) || std::holds_alternative<std::string>(v2);
+			return VariantHelper::Has<std::string>(v1) || VariantHelper::Has<std::string>(v2);
 		};
 
 		auto Compute = [](const Instruction op, const DataVariant& l, const DataVariant& r) {
-			auto lv = (VariantHelper::Has<float>(l) ? VariantHelper::Get<float>(l) : VariantHelper::Get<int>(l));
-			auto rv = (VariantHelper::Has<float>(r) ? VariantHelper::Get<float>(r) : VariantHelper::Get<int>(r));
-			float value = 0.0f;
+			auto lv = (VariantHelper::Has<lua_Number>(l) ? VariantHelper::Get<lua_Number>(l) : VariantHelper::Get<lua_Integer>(l));
+			auto rv = (VariantHelper::Has<lua_Number>(r) ? VariantHelper::Get<lua_Number>(r) : VariantHelper::Get<lua_Integer>(r));
+			lua_Number value = 0.0;
 			switch (op) {
 			case Instruction::Add: value = lv + rv; break;
 			case Instruction::Subtract: value = lv - rv; break;
 			case Instruction::Multiply: value = lv * rv; break;
 			default: break;
 			}
-			if (VariantHelper::Has<int>(l) && VariantHelper::Has<int>(r)) {
-				return DataVariant((int)value);
+			if (VariantHelper::Has<lua_Integer>(l) && VariantHelper::Has<lua_Integer>(r)) {
+				return DataVariant((lua_Integer)value);
 			} else {
 				return DataVariant(value);
 			}
@@ -750,7 +750,7 @@ private:
 			if (stack.empty())
 				return Error("Cannot pop stack, it is empty.");
 
-			Register reg = Register(VariantHelper::Get<int>(data, -1));
+			Register reg = Register(VariantHelper::GetOpt<lua_Integer>(data, -1));
 			switch (reg) {
 			case Register::R:  R = stack.top(); stack.pop(); break;
 			case Register::L:  L = stack.top(); stack.pop(); break;
@@ -767,7 +767,7 @@ private:
 		break;
 		case Instruction::Variable:
 		{
-			size_t variable_index = size_t(VariantHelper::Get<int>(data, -1));
+			size_t variable_index = size_t(VariantHelper::GetOpt<lua_Integer>(data, -1));
 			if (variable_index < addresses.size())
 				R = expression_interface.GetValue(addresses[variable_index]);
 			else
@@ -779,27 +779,27 @@ private:
 			if (AnyString(L, R))
 				R = DataVariant(VariantHelper::ToString(L) + VariantHelper::ToString(R));
 			else {
-				//R = DataVariant(VariantHelper::Get<float>(L) + VariantHelper::Get<float>(R));
+				//R = DataVariant(VariantHelper::Get<lua_Number>(L) + VariantHelper::Get<lua_Number>(R));
 				R = Compute(instruction, L, R);
 			}
 		}
 		break;
 		case Instruction::Subtract:  R = Compute(instruction, L, R); break;
 		case Instruction::Multiply:  R = Compute(instruction, L, R); break;
-		case Instruction::Divide:    R = DataVariant(VariantHelper::Get<float>(L) / VariantHelper::Get<float>(R));  break;
+		case Instruction::Divide:    R = DataVariant(VariantHelper::Get<lua_Number>(L) / VariantHelper::Get<lua_Number>(R));  break;
 		case Instruction::Not:       R = DataVariant(!VariantHelper::Get<bool>(R));                     break;
 		case Instruction::And:       R = DataVariant(VariantHelper::Get<bool>(L) && VariantHelper::Get<bool>(R));     break;
 		case Instruction::Or:        R = DataVariant(VariantHelper::Get<bool>(L) || VariantHelper::Get<bool>(R));     break;
-		case Instruction::Less:      R = DataVariant(VariantHelper::ConvertGet<float>(L) < VariantHelper::ConvertGet<float>(R));  break;
-		case Instruction::LessEq:    R = DataVariant(VariantHelper::ConvertGet<float>(L) <= VariantHelper::ConvertGet<float>(R)); break;
-		case Instruction::Greater:   R = DataVariant(VariantHelper::ConvertGet<float>(L) > VariantHelper::ConvertGet<float>(R));  break;
-		case Instruction::GreaterEq: R = DataVariant(VariantHelper::ConvertGet<float>(L) >= VariantHelper::ConvertGet<float>(R)); break;
+		case Instruction::Less:      R = DataVariant(VariantHelper::ConvertGet<lua_Number>(L) < VariantHelper::ConvertGet<lua_Number>(R));  break;
+		case Instruction::LessEq:    R = DataVariant(VariantHelper::ConvertGet<lua_Number>(L) <= VariantHelper::ConvertGet<lua_Number>(R)); break;
+		case Instruction::Greater:   R = DataVariant(VariantHelper::ConvertGet<lua_Number>(L) > VariantHelper::ConvertGet<lua_Number>(R));  break;
+		case Instruction::GreaterEq: R = DataVariant(VariantHelper::ConvertGet<lua_Number>(L) >= VariantHelper::ConvertGet<lua_Number>(R)); break;
 		case Instruction::Equal:
 		{
 			if (AnyString(L, R))
 				R = DataVariant(VariantHelper::Get<std::string>(L) == VariantHelper::Get<std::string>(R));
 			else
-				R = DataVariant(VariantHelper::ConvertGet<float>(L) == VariantHelper::ConvertGet<float>(R));
+				R = DataVariant(VariantHelper::ConvertGet<lua_Number>(L) == VariantHelper::ConvertGet<lua_Number>(R));
 		}
 		break;
 		case Instruction::NotEqual:
@@ -807,7 +807,7 @@ private:
 			if (AnyString(L, R))
 				R = DataVariant(VariantHelper::Get<std::string>(L) != VariantHelper::Get<std::string>(R));
 			else
-				R = DataVariant(VariantHelper::Get<float>(L) != VariantHelper::Get<float>(R));
+				R = DataVariant(VariantHelper::Get<lua_Number>(L) != VariantHelper::Get<lua_Number>(R));
 		}
 		break;
 		case Instruction::Ternary:
@@ -821,7 +821,7 @@ private:
 			if (!arguments.empty())
 				return Error("Argument stack is not empty.");
 
-			int num_arguments = VariantHelper::Get<int>(data, -1);
+			int num_arguments = int(VariantHelper::GetOpt<lua_Integer>(data, -1));
 			if (num_arguments < 0)
 				return Error("Invalid number of arguments.");
 			if (stack.size() < size_t(num_arguments))
@@ -856,7 +856,7 @@ private:
 		break;
 		case Instruction::Assign:
 		{
-			size_t variable_index = size_t(VariantHelper::Get<int>(data, -1));
+			size_t variable_index = size_t(VariantHelper::GetOpt<lua_Integer>(data, -1));
 			if (variable_index < addresses.size())
 			{
 				if (!expression_interface.SetValue(addresses[variable_index], R))

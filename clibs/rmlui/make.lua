@@ -29,13 +29,14 @@ lm:source_set "stylecache" {
     }
 }
 
-lm:source_set "rmlui_core" {
+lm:lua_source "rmlui_core" {
     includes = {
         ".",
         Ant3rd .. "glm",
         Ant3rd .. "yoga",
         Ant3rd .. "stylecache",
         Ant3rd .. "bee.lua",
+        "../luabind",
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
@@ -46,11 +47,12 @@ lm:source_set "rmlui_core" {
     }
 }
 
-lm:source_set "rmlui_databinding" {
+lm:lua_source "rmlui_databinding" {
     includes = {
         ".",
         Ant3rd .. "glm",
         Ant3rd .. "yoga",
+        "../luabind",
     },
     defines = "GLM_FORCE_QUAT_DATA_XYZW",
     sources = {

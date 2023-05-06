@@ -36,8 +36,6 @@ function mss:component_init()
         local ms = e.motion_sampler
 
         w:extend(e, "name?in")
-        print("motion_sampler:", e.name)
-        print_keyframes(ms.keyframes)
         ms.motion_tracks = lms.create_tracks(ms.keyframes)
 
         ms.ratio = 0
@@ -123,7 +121,6 @@ function ims.set_keyframes(e, ...)
     end
 
     if c > 0 then
-        print_keyframes(keyframes)
         ms.motion_tracks:build(keyframes)
     end
 end

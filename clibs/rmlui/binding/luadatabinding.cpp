@@ -26,33 +26,15 @@ struct LuaPushVariantVisitor {
 };
 
 void
-lua_pushvariant(lua_State *L, const Rml::DataVariant &v) {
-	std::visit(LuaPushVariantVisitor{L}, v);
+lua_pushvariant(lua_State *L, const Rml::DataVariant& variant) {
+	luavalue::get(L, variant);
 }
 
 void
 lua_getvariant(lua_State *L, int index, Rml::DataVariant* variant) {
 	if (!variant)
 		return;
-	switch(lua_type(L, index)) {
-	case LUA_TBOOLEAN:
-		*variant = (bool)lua_toboolean(L, index);
-		break;
-	case LUA_TNUMBER:
-		if (lua_isinteger(L, index)) {
-			*variant = (int)lua_tointeger(L, index);
-		} else {
-			*variant = (float)lua_tonumber(L, index);
-		}
-		break;
-	case LUA_TSTRING:
-		*variant = std::string(lua_tostring(L, index));
-		break;
-	case LUA_TNIL:
-	default:	// todo
-		*variant = Rml::DataVariant {};
-		break;
-	}
+	luavalue::set(L, index, *variant);
 }
 
 class LuaScalarDef;

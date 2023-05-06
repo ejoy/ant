@@ -23,6 +23,7 @@
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
+#include <binding/luaplugin.h>
 
 namespace Rml {
 
@@ -911,6 +912,7 @@ void Element::HandleAnimationProperty() {
 					for (int i = (has_from_key ? 1 : 0); i < (int)vec.size() + (has_to_key ? -1 : 0); i++) {
 						ani.AddKey(vec[i].time, vec[i].prop);
 					}
+					DispatchAnimationEvent("animationstart", ani);
 					animations.insert_or_assign(id, std::move(ani));
 				}
 			}
@@ -925,6 +927,8 @@ void Element::AdvanceAnimations(float delta) {
 		}
 		for (auto it = animations.begin(); it != animations.end();) {
 			if (it->second.IsComplete()) {
+				//TODO animationcancel
+				DispatchAnimationEvent("animationend", it->second);
 				DelAnimationProperty(it->first);
 				it = animations.erase(it);
 			}
@@ -1247,11 +1251,24 @@ void Element::RemoveAllEvents() {
 	}
 }
 
-bool Element::DispatchEvent(const std::string& type, int parameters, bool interruptible, bool bubbles) {
-	Event event(this, type, parameters, interruptible);
+bool Element::DispatchEvent(const std::string& type, int parameters_ref, bool interruptible, bool bubbles) {
+	Event event(this, type, parameters_ref, interruptible);
 	return Rml::DispatchEvent(event, bubbles);
 }
 
+bool Element::DispatchEvent(const std::string& type, const luavalue::table& parameters, bool interruptible, bool bubbles) {
+	lua_State* L = luabind::thread();
+	luavalue::get(L, parameters);
+	auto ref = get_lua_plugin()->ref(L);
+	return DispatchEvent(type, ref.handle(), interruptible, bubbles);
+}
+
+bool Element::DispatchAnimationEvent(const std::string& type, const ElementAnimation& animation) {
+	return DispatchEvent(type, {
+		{ "animationName", animation.GetName() },
+		{ "elapsedTime", animation.GetTime() },
+	}, true, true);
+}
 
 const std::vector<std::unique_ptr<EventListener>>& Element::GetEventListeners() const {
 	return listeners;
