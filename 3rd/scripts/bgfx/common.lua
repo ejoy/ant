@@ -32,6 +32,11 @@ lm.ios = {
     }
 }
 
+lm.android  = {
+    flags = "-fPIC",
+    target = "aarch64-linux-android33"
+}
+
 lm.clang = {
     flags = {
         "-Wno-unknown-warning-option",

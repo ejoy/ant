@@ -129,6 +129,13 @@ lm:source_set "ant_links" {
             "-fembed-bitcode",
             "-fobjc-arc"
         }
+    },
+    android = {
+        links = {
+            "android",
+            "log",
+            "m",
+        }
     }
 }
 

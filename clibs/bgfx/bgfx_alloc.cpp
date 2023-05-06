@@ -12,7 +12,7 @@ static std::atomic<int64_t> allocator_memory (0);
 
 #if BX_PLATFORM_WINDOWS
 #define bx_malloc_size _msize
-#elif BX_PLATFORM_LINUX
+#elif BX_PLATFORM_LINUX || BX_PLATFORM_ANDROID
 #include <malloc.h>
 #define bx_malloc_size malloc_usable_size
 #elif BX_PLATFORM_OSX

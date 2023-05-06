@@ -26,6 +26,10 @@ if lm.os == "ios" then
     end
 end
 
+if lm.os == "android" then
+    EnableEditor = false
+end
+
 lm.c = "c17"
 lm.cxx = "c++20"
 lm.msvc = {
@@ -50,6 +54,11 @@ lm.ios = {
         "-fembed-bitcode",
         "-fobjc-arc"
     }
+}
+
+lm.android  = {
+    flags = "-fPIC",
+    target = "aarch64-linux-android33"
 }
 
 --TODO
