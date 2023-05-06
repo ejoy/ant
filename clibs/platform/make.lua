@@ -11,8 +11,7 @@ lm:lua_source "platform" {
     },
     windows = {
         sources = {
-            "platform_mingw.cpp",
-            "win32/wmi.cpp"
+            "win32/*.cpp"
         },
         links = {
             "gdi32",
@@ -24,9 +23,7 @@ lm:lua_source "platform" {
     },
     macos = {
         sources = {
-            "platform_osx.mm",
-            "osx/font_info.mm",
-            "osx/task_info.mm",
+            "osx/*.mm",
         },
         frameworks = {
             "AppKit"
@@ -34,11 +31,10 @@ lm:lua_source "platform" {
     },
     ios = {
         sources = {
-            "platform_ios.mm",
-            "osx/font_info.mm",
-            "osx/task_info.mm",
-            "ios/setting.mm",
-            "ios/NetReachability.m",
+            "osx/*.mm",
+            "!osx/platform.mm",
+            "ios/*.mm",
+            "ios/*.m",
         }
     }
 }

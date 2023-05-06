@@ -4,7 +4,7 @@
 #include <string_view>
 #include <memory>
 #include <algorithm>
-#include "win32/wmi.h"
+#include "wmi.h"
 
 #if !defined(__MINGW32__)
 #include <shellscalingapi.h>
