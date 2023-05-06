@@ -1,5 +1,7 @@
 local lm = require "luamake"
 
+local GEOMETRYC = require "examples.util".tools_path ("geometryc")
+
 require "tools.geometryc"
 
 local geometryc_rule <const> = {
@@ -36,7 +38,7 @@ local function set_rule(rulename)
     end
     rule[rulename] = true
     lm:rule (rulename) {
-        "$bin/geometryc",
+        GEOMETRYC,
         "-f", "$in","-o", "$out",
         "--packnormal", "1",
         geometryc_args[rulename],

@@ -79,6 +79,7 @@ local function generator(name)
     table.sort(copyfiles)
 
     write "local lm = require 'luamake'"
+    write "local example_target = require 'examples.util'.example_target"
     if #shaders > 0 then
         write "local shaderc = require 'examples.shaderc'"
     end
@@ -92,7 +93,7 @@ local function generator(name)
         write "local copy = require 'examples.copyfile'"
     end
     write ""
-    write "lm:exe '${NAME}' {"
+    write "example_target '${NAME}' {"
     write "    rootdir = lm.BgfxDir,"
     write "    deps = {"
     write "        'example-runtime',"
@@ -113,7 +114,7 @@ local function generator(name)
         write(("        copy.compile 'examples/runtime/%s',"):format(copyfile))
     end
     write "    },"
-    write "    defines = 'ENTRY_CONFIG_IMPLEMENT_MAIN=1',"
+    write "    defines = lm.os ~= 'android' and 'ENTRY_CONFIG_IMPLEMENT_MAIN=1',"
     write "    includes = {"
     write "        lm.BxDir / 'include',"
     write "        lm.BimgDir / 'include',"

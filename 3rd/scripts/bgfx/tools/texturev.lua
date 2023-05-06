@@ -35,7 +35,7 @@ lm:exe "texturev" {
             "QuartzCore",
             "OpenGL",
             "Cocoa",
-			"IOKit",
+            "IOKit",
         }
     }
 }

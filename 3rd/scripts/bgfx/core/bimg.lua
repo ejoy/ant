@@ -73,7 +73,6 @@ lm:source_set "bimg-encode" {
         "3rdparty/etc2/*.cpp",
         "3rdparty/nvtt/**/*.cpp",
         "3rdparty/pvrtc/*.cpp",
-        "3rdparty/astc/*.cpp",
     },
     msvc = {
         flags = {
