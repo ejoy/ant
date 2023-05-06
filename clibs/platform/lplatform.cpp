@@ -24,8 +24,10 @@ int luaopen_platform(lua_State* L) {
         { "init_dpi", linit_dpi },
 #endif
         { "info", linfo },
-        { "font", lfont },
         { "dpi", ldpi },
+#if BX_PLATFORM_WINDOWS || BX_PLATFORM_OSX || BX_PLATFORM_LINUX
+        { "font", lfont },
+#endif
 #if BX_PLATFORM_IOS
         { "setting", lsetting },
         { "machine", lmachine },

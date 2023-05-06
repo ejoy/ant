@@ -31,10 +31,14 @@ lm:lua_source "platform" {
     },
     ios = {
         sources = {
-            "osx/*.mm",
-            "!osx/platform.mm",
+            "osx/task_info.mm",
             "ios/*.mm",
             "ios/*.m",
+        }
+    },
+    android = {
+        sources = {
+            "android/*.cpp",
         }
     }
 }

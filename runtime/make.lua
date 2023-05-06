@@ -164,6 +164,22 @@ lm:lua_source "ant_editor" {
     sources = "common/modules.c",
 }
 
+if lm.os == "android" then
+    lm:dll "ant" {
+        deps = {
+            "ant_runtime",
+            "ant_openlibs",
+            "bgfx-lib",
+            "ant_links",
+            "copy_mainlua"
+        }
+    }
+    lm:phony "runtime" {
+        deps = "ant"
+    }
+    return
+end
+
 lm:exe "lua" {
     deps = {
         "ant_editor",
