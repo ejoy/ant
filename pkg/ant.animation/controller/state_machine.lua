@@ -200,7 +200,6 @@ local function stop_all_effect(all_events, delay)
 	if not all_events then
 		return
 	end
-	print("----stop_all_effect----")
 	for _, events in ipairs(all_events) do
 		for _, ev in ipairs(events.event_list) do
 			if ev.event_type == "Effect" and ev.effect then
@@ -271,7 +270,6 @@ function iani.play(eid, anim_state)
 	e.anim_ctrl.owner = anim_state.owner
 	e.anim_ctrl.animation = anim
 	e.anim_ctrl.play_state = { ratio = 0.0, previous_ratio = 0.0, play = true, speed = anim_state.speed or 1.0, loop = anim_state.loop, manual_update = anim_state.manual, forwards = anim_state.forwards}
-	print("----Call stop_all_effect----iani.play")
 	stop_all_effect(e.anim_ctrl.event_state.keyframe_events)
 	e.anim_ctrl.event_state = { next_index = 1, keyframe_events = e.anim_ctrl.keyframe_events[anim_name] }
 	
@@ -306,7 +304,6 @@ function iani.step(anim_e, s_delta, absolute)
 		else
 			play_state.ratio = (next_time - duration) / duration
 		end
-		print("----Call stop_all_effect----iani.step")
 		stop_all_effect(ctrl.event_state.keyframe_events, true)
 	else
 		play_state.ratio = next_time / duration
@@ -338,7 +335,6 @@ end
 function iani.stop_effect(eid)
 	if not eid then return end
 	local e <close> = get_anim_e(eid)
-	print("----Call stop_all_effect----iani.stop_effect")
 	stop_all_effect(e.anim_ctrl.event_state.keyframe_events)
 end
 

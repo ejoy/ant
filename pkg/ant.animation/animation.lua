@@ -57,7 +57,6 @@ local function process_keyframe_event(task)
 						local e <close> = w:entity(slot_eid, "scene:in")
 						s, r, t = iom.get_scale(e), iom.get_rotation(e), iom.get_position(e)
 					end
-					print("----create event.effect----", event.asset_path)
 					event.effect = iefk.create(event.asset_path, {
 						auto_play = not task.hitchs,
 						scene = {parent = parent, s = s, r = r, t = t},
@@ -66,7 +65,6 @@ local function process_keyframe_event(task)
 					})
 				elseif event.effect then
 					if not task.hitchs or next(task.hitchs) then
-						print("----play event.effect----")
 						iefk.play(event.effect)
 					end
 				end

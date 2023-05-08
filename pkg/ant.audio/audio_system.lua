@@ -74,31 +74,31 @@ local sound_click_
 function audio_sys:init()    
     audio.init()
     --test
-    local bankname = "/pkg/tools.prefab_editor/res/sounds/Master.bank"
-    local bank0 = ia.load_bank(bankname)
-    if not bank0 then
-        print("LoadBank Faied. :", bankname)
-    end
-    local bankname = "/pkg/tools.prefab_editor/res/sounds/Master.strings.bank"
-    local bank1 = ia.load_bank(bankname)
-    if not bank1 then
-        print("LoadBank Faied. :", bankname)
-    end
-
-    -- local bank_list = audio.get_bank_list()
-    -- for _, v in ipairs(bank_list) do
-    --     print(audio.get_bank_name(v))
+    -- local bankname = "/pkg/tools.prefab_editor/res/sounds/Master.bank"
+    -- local bank0 = ia.load_bank(bankname)
+    -- if not bank0 then
+    --     print("LoadBank Faied. :", bankname)
+    -- end
+    -- local bankname = "/pkg/tools.prefab_editor/res/sounds/Master.strings.bank"
+    -- local bank1 = ia.load_bank(bankname)
+    -- if not bank1 then
+    --     print("LoadBank Faied. :", bankname)
     -- end
 
-    local event_list = audio.get_event_list(bank0)
-    for _, v in ipairs(event_list) do
-        print(audio.get_event_name(v))
-    end
-    local event_name = "event:/Scene/attack"
-    sound_event[event_name] = ia.create(event_name)
-    event_name = "event:/UI/click"
-    sound_event[event_name] = ia.create(event_name)
-    ia.play(event_name)
+    -- -- local bank_list = audio.get_bank_list()
+    -- -- for _, v in ipairs(bank_list) do
+    -- --     print(audio.get_bank_name(v))
+    -- -- end
+
+    -- local event_list = audio.get_event_list(bank0)
+    -- for _, v in ipairs(event_list) do
+    --     print(audio.get_event_name(v))
+    -- end
+    -- local event_name = "event:/Scene/attack"
+    -- sound_event[event_name] = ia.create(event_name)
+    -- event_name = "event:/UI/click"
+    -- sound_event[event_name] = ia.create(event_name)
+    -- ia.play(event_name)
 end
 
 function audio_sys:data_changed()
