@@ -1,4 +1,6 @@
+extern "C" {
 #include "../window.h"
+}
 
 int window_init(struct ant_window_callback* cb) {
     return 0;
