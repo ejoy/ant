@@ -58,6 +58,7 @@ lm.ios = {
 
 lm.android  = {
     flags = "-fPIC",
+    ldflags = "-Wl,--no-undefined",
     target = "aarch64-linux-android33"
 }
 
