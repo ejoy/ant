@@ -169,6 +169,15 @@ local function render_layer_test()
             render_layer = "translucent_plane",
             visible_state = "main_view",
             name = "test",
+            on_ready = function (e)
+                imaterial.set_state(e, {
+                    ALPHA_REF = 0,
+                    CULL = "CCW",
+                    DEPTH_TEST = "GREATER",
+                    MSAA = true,
+                    WRITE_MASK = "RGBAZ"
+                })
+            end
         }
     }
 

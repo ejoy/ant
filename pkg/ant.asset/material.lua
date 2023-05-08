@@ -4,6 +4,7 @@ local w		= world.w
 
 local assetmgr		= require "asset"
 local matobj		= require "matobj"
+local bgfx			= require "bgfx"
 local imaterial = ecs.interface "imaterial"
 
 function imaterial.set_property(e, who, what, mattype)
@@ -36,6 +37,13 @@ end
 function imaterial.resource(e)
 	w:extend(e, "material:in")
 	return assetmgr.resource(e.material)
+end
+
+function imaterial.set_state(e, state)
+	w:extend(e, "filter_material:in")
+	local fm = e.filter_material
+	local defmat = fm.main_queue
+	return defmat:get_material():set_state(bgfx.make_state(state))
 end
 
 local ms = ecs.system "material_system"

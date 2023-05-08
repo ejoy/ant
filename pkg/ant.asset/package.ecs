@@ -6,7 +6,7 @@ interface "imaterial"
     .method "system_attribs"
     .method "get_color_palette"
     .method "set_color_palette"
-    
+    .method "set_state"
 
 interface "imesh"
     .implement "mesh.lua"
