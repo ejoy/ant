@@ -509,115 +509,91 @@ function m:handle_event()
             prefab_mgr:save()
         elseif state.CTRL and key == "T" and press == 1 then
             -- if not test_prefab1 then
-            --     motion_xz = create_motion_object(nil, nil, math3d.vector(10, 0, 0))
-            --     motion_y = create_motion_object(nil, nil, math3d.vector(0, 0, 0), motion_xz)
-            --     test_prefab1 = sampler_group:create_instance("/pkg/vaststars.resources/prefabs/drone.prefab", motion_y)
-            -- else
-            --     local exz <close> = w:entity(motion_xz)
-            --     ims.set_duration(exz, 2 * 1000)
-            --     ims.set_tween(exz, ltween.type("Sine"), ltween.type("Sine"))
-            --     local first_track = {t = math3d.vector(10, 0, 0), step = 0.0}
-            --     local last_track  = {t = math3d.vector(-10, 0, 0), step = 1.0}
-            --     ims.set_keyframes(exz, first_track, last_track)
-            --     --
-            --     local ey <close> = w:entity(motion_y)
-            --     ims.set_duration(ey, 2 * 1000)
-            --     ims.set_tween(ey, ltween.type("Quartic"), ltween.type("Quartic"))
-            --     ims.set_keyframes(ey,
-            --         {t = math3d.vector(0, 0, 0), step = 0.0},
-            --         {t = math3d.vector(0, 10, 0), step = 0.25},
-            --         {t = math3d.vector(0, 10, 0), step = 0.75},
-            --         {t = math3d.vector(0, 0, 0), step = 1.0}
-            --     )
-            -- end
+            --     prefab_mgr.check_effect_preload("/pkg/vaststars.resources/effect/efk/miner_dust.efk")
 
-            if not test_prefab1 then
-                prefab_mgr.check_effect_preload("/pkg/vaststars.resources/effect/efk/miner_dust.efk")
+            --     local hitch_test_group_id<const> = 1000
+            --     test1 = ecs.create_entity {
+            --         policy = "ant.scene|hitch_object",
+            --         data = {
+            --             scene = { t = math3d.vector(-50, 0, 0) },
+            --             hitch = { group = hitch_test_group_id },
+            --         }
+            --     }
 
-                local hitch_test_group_id<const> = 1000
-                test1 = ecs.create_entity {
-                    policy = "ant.scene|hitch_object",
-                    data = {
-                        scene = { t = math3d.vector(-50, 0, 0) },
-                        hitch = { group = hitch_test_group_id },
-                    }
-                }
-
-                test2 = ecs.create_entity {
-                    policy = "ant.scene|hitch_object",
-                    data = {
-                        scene = { t = math3d.vector(50, 0, 0) },
-                        hitch = { group = hitch_test_group_id },
-                    }
-                }
-                local g1 = ecs.group(hitch_test_group_id)
-                g1:enable "scene_update"
+            --     test2 = ecs.create_entity {
+            --         policy = "ant.scene|hitch_object",
+            --         data = {
+            --             scene = { t = math3d.vector(50, 0, 0) },
+            --             hitch = { group = hitch_test_group_id },
+            --         }
+            --     }
+            --     local g1 = ecs.group(hitch_test_group_id)
+            --     g1:enable "scene_update"
                 
-                -- g1:enable "view_visible"
-                local prefab = ecs.create_instance("/pkg/vaststars.resources/prefabs/miner-1.prefab")
-                -- local prefab = g1:create_instance("/pkg/vaststars.resources/prefabs/distillery-1.prefab")
-                function prefab:on_init() end
-                prefab.on_ready = function(instance)
-                    -- local e <close> = w:entity(instance.tag["*"][1])
-                    -- iom.set_position(e, math3d.vector(-50, 0, 0))
-                    for _, eid in ipairs(instance.tag["*"]) do
-                        local e <close> = w:entity(eid, "tag?in anim_ctrl?in")
-                        if e.anim_ctrl then
-                            iani.load_events(eid, "/pkg/vaststars.resources/prefabs/miner-1.event")
-                            -- if not e.anim_ctrl.hitchs then
-                            --     e.anim_ctrl.hitchs = {}
-                            -- end
-                        end
-                    end
-                    iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
-                end
-                function prefab:on_message(msg) end
-                function prefab:on_update() end
-                world:create_object(prefab)
-                local e <close> = w:entity(prefab.tag["*"][1], "efk?in")
-                if e.efk then
-                    print("")
-                end
-                test_prefab1 = prefab
+            --     -- g1:enable "view_visible"
+            --     local prefab = g1:create_instance("/pkg/vaststars.resources/prefabs/distillery-1.prefab")
+            --     function prefab:on_init() end
+            --     prefab.on_ready = function(instance)
+            --         -- local e <close> = w:entity(instance.tag["*"][1])
+            --         -- iom.set_position(e, math3d.vector(-50, 0, 0))
+            --         for _, eid in ipairs(instance.tag["*"]) do
+            --             local e <close> = w:entity(eid, "tag?in anim_ctrl?in")
+            --             if e.anim_ctrl then
+            --                 iani.load_events(eid, "/pkg/vaststars.resources/prefabs/miner-1.event")
+            --                 -- if not e.anim_ctrl.hitchs then
+            --                 --     e.anim_ctrl.hitchs = {}
+            --                 -- end
+            --             end
+            --         end
+            --         iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
+            --     end
+            --     function prefab:on_message(msg) end
+            --     function prefab:on_update() end
+            --     world:create_object(prefab)
+            --     local e <close> = w:entity(prefab.tag["*"][1], "efk?in")
+            --     if e.efk then
+            --         print("")
+            --     end
+            --     test_prefab1 = prefab
 
-                -- local prefab2 = g1:create_instance("/pkg/vaststars.resources/prefabs/miner-1.prefab")
-                -- function prefab2:on_init() end
-                -- prefab2.on_ready = function(instance)
-                --     for _, eid in ipairs(instance.tag["*"]) do
-                --         local e <close> = w:entity(eid, "tag?in anim_ctrl?in")
-                --         if e.anim_ctrl then
-                --             iani.load_events(eid, "/pkg/vaststars.resources/prefabs/miner-1.event")
-                --             if not e.anim_ctrl.hitchs then
-                --                 e.anim_ctrl.hitchs = {}
-                --             end
-                --         end
-                --     end
-                --     iani.play(instance, {name = "idle", loop = true, speed = 1.0, manual = false})
-                -- end
-                -- function prefab2:on_message(msg) end
-                -- function prefab2:on_update() end
-                -- world:create_object(prefab2)
-                -- test_prefab2 = prefab2
-            else
-                -- if attach_count == 0 then
-                --     iani.attach_hitch(test_prefab1, test1)
-                --     attach_count = attach_count + 1
-                -- elseif attach_count == 1 then
-                --     iani.detach_hitch(test_prefab1, test1)
-                --     iani.attach_hitch(test_prefab2, test1)
-                --     -- iani.attach_hitch(test_prefab1, test2)
-                --     attach_count = attach_count + 1
-                -- elseif attach_count == 2 then
-                --     iani.detach_hitch(test_prefab2, test1)
-                --     iani.attach_hitch(test_prefab1, test1)
-                --     -- iani.detach_hitch(test_prefab1, test1)
-                --     attach_count = attach_count + 1
-                -- elseif attach_count == 3 then
-                --     iani.detach_hitch(test_prefab1, test1)
-                --     -- iani.detach_hitch(test_prefab1, test2)
-                --     attach_count = 0
-                -- end
-            end
+            --     local prefab2 = g1:create_instance("/pkg/vaststars.resources/prefabs/miner-1.prefab")
+            --     function prefab2:on_init() end
+            --     prefab2.on_ready = function(instance)
+            --         for _, eid in ipairs(instance.tag["*"]) do
+            --             local e <close> = w:entity(eid, "tag?in anim_ctrl?in")
+            --             if e.anim_ctrl then
+            --                 iani.load_events(eid, "/pkg/vaststars.resources/prefabs/miner-1.event")
+            --                 if not e.anim_ctrl.hitchs then
+            --                     e.anim_ctrl.hitchs = {}
+            --                 end
+            --             end
+            --         end
+            --         iani.play(instance, {name = "idle", loop = true, speed = 1.0, manual = false})
+            --     end
+            --     function prefab2:on_message(msg) end
+            --     function prefab2:on_update() end
+            --     world:create_object(prefab2)
+            --     test_prefab2 = prefab2
+            -- else
+            --     if attach_count == 0 then
+            --         iani.attach_hitch(test_prefab1, test1)
+            --         attach_count = attach_count + 1
+            --     elseif attach_count == 1 then
+            --         iani.detach_hitch(test_prefab1, test1)
+            --         iani.attach_hitch(test_prefab2, test1)
+            --         -- iani.attach_hitch(test_prefab1, test2)
+            --         attach_count = attach_count + 1
+            --     elseif attach_count == 2 then
+            --         iani.detach_hitch(test_prefab2, test1)
+            --         iani.attach_hitch(test_prefab1, test1)
+            --         -- iani.detach_hitch(test_prefab1, test1)
+            --         attach_count = attach_count + 1
+            --     elseif attach_count == 3 then
+            --         iani.detach_hitch(test_prefab1, test1)
+            --         -- iani.detach_hitch(test_prefab1, test2)
+            --         attach_count = 0
+            --     end
+            -- end
         end
     end
 
