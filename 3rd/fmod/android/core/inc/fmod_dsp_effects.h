@@ -1,12 +1,12 @@
 /* ============================================================================================================= */
 /* FMOD Core API - Built-in effects header file.                                                                 */
-/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2021.                                                    */
+/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2023.                                                    */
 /*                                                                                                               */
 /* In this header you can find parameter structures for FMOD system registered DSP effects                       */
 /* and generators.                                                                                               */
 /*                                                                                                               */
 /* For more detail visit:                                                                                        */
-/* https://fmod.com/resources/documentation-api?version=2.0&page=core-api-common-dsp-effects.html#fmod_dsp_type  */
+/* https://fmod.com/docs/2.02/api/core-api-common-dsp-effects.html#fmod_dsp_type                                 */
 /* ============================================================================================================= */
 
 #ifndef _FMOD_DSP_EFFECTS_H

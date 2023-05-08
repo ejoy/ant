@@ -101,7 +101,7 @@ void ant_loadmodules(lua_State* L) {
         { "layout", luaopen_layout},
         //{ "layout.init", luaopen_layout_init },
 #if defined(_WIN32) && !defined(__MINGW32__)
-        //{ "audio", luaopen_audio},
+        { "audio", luaopen_audio},
 #endif
         { "ltask", luaopen_ltask},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},

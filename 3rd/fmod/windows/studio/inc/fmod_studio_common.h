@@ -1,12 +1,12 @@
 /* ======================================================================================== */
 /* FMOD Studio API - Common C/C++ header file.                                              */
-/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2021.                               */
+/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2023.                               */
 /*                                                                                          */
 /* This header defines common enumerations, structs and callbacks that are shared between   */
 /* the C and C++ interfaces.                                                                */
 /*                                                                                          */
 /* For more detail visit:                                                                   */
-/* https://fmod.com/resources/documentation-api?version=2.0&page=page=studio-api.html       */
+/* https://fmod.com/docs/2.02/api/studio-api.html                                           */
 /* ======================================================================================== */
 #ifndef FMOD_STUDIO_COMMON_H
 #define FMOD_STUDIO_COMMON_H

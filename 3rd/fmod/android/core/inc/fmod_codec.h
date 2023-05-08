@@ -1,6 +1,6 @@
 /* ======================================================================================== */
 /* FMOD Core API - Codec development header file.                                           */
-/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2021.                               */
+/* Copyright (c), Firelight Technologies Pty, Ltd. 2004-2023.                               */
 /*                                                                                          */
 /* Use this header if you are wanting to develop your own file format plugin to use with    */
 /* FMOD's codec system.  With this header you can make your own fileformat plugin that FMOD */
@@ -8,7 +8,7 @@
 /* plugin.                                                                                  */
 /*                                                                                          */
 /* For more detail visit:                                                                   */
-/* https://fmod.com/resources/documentation-api?version=2.0&page=core-api.html              */
+/* https://fmod.com/docs/2.02/api/core-api.html                                             */
 /* ======================================================================================== */
 #ifndef _FMOD_CODEC_H
 #define _FMOD_CODEC_H
@@ -115,7 +115,7 @@ struct FMOD_CODEC_STATE
     Codec macros
 */
 #define FMOD_CODEC_METADATA(_state, _tagtype, _name, _data, _datalen, _datatype, _unique) \
-    (_state)->functions->metadata(_size, _tagtype, _name, _data, _datalen, _datatype, _unique)
+    (_state)->functions->metadata(_state, _tagtype, _name, _data, _datalen, _datatype, _unique)
 #define FMOD_CODEC_ALLOC(_state, _size, _align) \
     (_state)->functions->alloc(_size, _align, __FILE__, __LINE__)
 #define FMOD_CODEC_FREE(_state, _ptr) \

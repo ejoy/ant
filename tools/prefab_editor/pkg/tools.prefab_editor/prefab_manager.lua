@@ -1,6 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
+local assetmgr      = import_package "ant.asset"
 local cr            = import_package "ant.compile_resource"
 local serialize     = import_package "ant.serialize"
 local mathpkg       = import_package "ant.math"
@@ -529,7 +530,10 @@ function m:reset_prefab(noscene)
     if self.prefab_filename then
         ecs.release_cache(self.prefab_filename)
     end
-
+    -- for _, value in ipairs(assetmgr.textures) do
+    --     -- value:unload()
+    --     print(value)
+    -- end
     gizmo:set_target()
     self:create_ground()
     self.prefab_filename = nil
