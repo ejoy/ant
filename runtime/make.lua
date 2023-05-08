@@ -6,7 +6,7 @@ local runtime = false
 local RuntimeBacklist = {
     filedialog = true,
     imgui = true,
-    audio = true,
+    -- audio = true,
     effekseer = true,
     remotedebug = true,
 }

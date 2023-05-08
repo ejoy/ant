@@ -75,29 +75,46 @@ function audio_sys:init()
     audio.init()
     --test
     -- local bankname = "/pkg/tools.prefab_editor/res/sounds/Master.bank"
-    -- local bank0 = ia.load_bank(bankname)
-    -- if not bank0 then
+    -- local master = ia.load_bank(bankname)
+    -- if not master then
     --     print("LoadBank Faied. :", bankname)
     -- end
-    -- local bankname = "/pkg/tools.prefab_editor/res/sounds/Master.strings.bank"
+    -- bankname = "/pkg/tools.prefab_editor/res/sounds/Master.strings.bank"
     -- local bank1 = ia.load_bank(bankname)
     -- if not bank1 then
     --     print("LoadBank Faied. :", bankname)
     -- end
+    -- bankname = "/pkg/tools.prefab_editor/res/sounds/Construt.bank"
+    -- local construt = ia.load_bank(bankname)
+    -- if not construt then
+    --     print("LoadBank Faied. :", bankname)
+    -- end
+    -- bankname = "/pkg/tools.prefab_editor/res/sounds/UI.bank"
+    -- local ui = ia.load_bank(bankname)
+    -- if not ui then
+    --     print("LoadBank Faied. :", bankname)
+    -- end
+    -- local bank_list = audio.get_bank_list()
+    -- for _, v in ipairs(bank_list) do
+    --     print(audio.get_bank_name(v))
+    -- end
 
-    -- -- local bank_list = audio.get_bank_list()
-    -- -- for _, v in ipairs(bank_list) do
-    -- --     print(audio.get_bank_name(v))
-    -- -- end
-
-    -- local event_list = audio.get_event_list(bank0)
+    -- local event_list = audio.get_event_list(master)
     -- for _, v in ipairs(event_list) do
     --     print(audio.get_event_name(v))
     -- end
-    -- local event_name = "event:/Scene/attack"
+    -- local event_list = audio.get_event_list(construt)
+    -- for _, v in ipairs(event_list) do
+    --     print(audio.get_event_name(v))
+    -- end
+    -- local event_list = audio.get_event_list(ui)
+    -- for _, v in ipairs(event_list) do
+    --     print(audio.get_event_name(v))
+    -- end
+    -- local event_name = "event:/openui1"
     -- sound_event[event_name] = ia.create(event_name)
-    -- event_name = "event:/UI/click"
-    -- sound_event[event_name] = ia.create(event_name)
+    -- -- event_name = "event:/UI/click"
+    -- -- sound_event[event_name] = ia.create(event_name)
     -- ia.play(event_name)
 end
 
