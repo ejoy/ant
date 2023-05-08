@@ -1,6 +1,54 @@
-local math3d = require "math3d"
-local mathpkg = import_package "ant.math"
-local mc = mathpkg.constant
+local math3d    = require "math3d"
+local mathpkg   = import_package "ant.math"
+local mc        = mathpkg.constant
+local shutil    = require "ibl.sh.util"
+local sh_rt     = require "ibl.sh.sh_rt"
+
+local USE_BAKED = true
+local A<const> = USE_BAKED and {
+    math.pi,
+    math.pi * 2.0/ 3.0,
+    math.pi * 1.0 / 4.0,
+    0.0,
+   -math.pi * 1.0 / 24.0,
+} or sh_rt.A
+
+local pi<const>         = math.pi
+local sqrtpi<const>     = math.sqrt(pi)
+local inv_sqrtpi<const> = 1.0 / sqrtpi
+
+local calc_Yml = USE_BAKED and function(numband, N)
+    local Yml = {}
+
+    Yml[1] =  0.5 * inv_sqrtpi
+
+    local x, y, z = N.x, N.y, N.z
+
+    if numband >= 2 then
+        local factor<const> = math.sqrt(3.0/(4.0*pi))
+        Yml[2] = -factor*y
+        Yml[3] =  factor*z
+        Yml[4] = -factor*x
+    end
+
+    if numband >= 3 then
+        local sq15<const>, sq5<const> = math.sqrt(15), math.sqrt(5)
+        -- 0.5 for 1/sqrt(4), 0.25 for 1/sqrt(16)
+        local f1<const> = sq15*inv_sqrtpi*0.5   --math.sqrt(15.0/(4.0*pi))
+        local f2<const> = sq5*inv_sqrtpi*0.25   --math.sqrt(5.0/(16.0*pi))
+        local f3<const> = sq15*inv_sqrtpi*0.25  --math.sqrt(15.0/(16.0*pi))
+
+        local x2, y2, z2 = x*x, y*y, z*z
+        Yml[5] =  f1*y*x
+        Yml[6] = -f1*y*z
+        Yml[7] =  f2*(3.0*z2-1.0)
+        Yml[8] = -f1*x*z
+        Yml[9] =  f3*(x2-y2)
+    end
+
+    return Yml
+end or sh_rt.calc_Yml
+
 --[[
  * Area of a cube face's quadrant projected onto a sphere
  *
@@ -35,211 +83,7 @@ local function solidAngle(dim, iu, iv)
             sphereQuadrantArea(x1, y1)
 end
 
-local function SHindex(m, l)
-    return l * (l + 1) + m
-end
-
-local function lSHindex(m, l)
-    return SHindex(m, l) + 1
-end
-
-local factorial1, factorial2; do
-    local F = setmetatable({}, {__index=function (t, n)
-        local v = 1.0
-        if n > 1 then
-            for i=1, n do
-                v = v * i
-            end
-        end
-
-        t[n] = v
-        return v
-    end})
-    factorial1 = function(n) return F[n] end
-    factorial2 = function(n, d) return F[n]/F[d] end
-end
-
-local function factorial(n, d)
-    d = d or 1
-
-    d = math.max(1, d)
-    n = math.max(1, n)
-    local r = 1.0
-    if n == d then
-        -- intentionally left blank 
-    elseif n > d then
-        while n > d do
-            r = r * n
-            n = n - 1
-        end
-    else
-        while d > n do
-            r = r * d
-            d = d - 1
-        end
-        r = 1.0 / r
-    end
-    return r
-end
-
-local Ki; do
-    -- sqrt((2*l+1)/4*pi)*sqrt((l-|m|)!/(l+|m|)! ) = sqrt(A/B), A = (2*l+1)*((l-|m|)!), B = 4*pi/((l+|m|)!)
-    local function Kml(m, l)
-        m = math.abs(m)
-        local K = (2 * l + 1) * factorial2(l - m, l + m) * (1.0 / math.pi) * 0.25
-        return math.sqrt(K)
-    end
-
-    local K = setmetatable({}, {__index=function(t, bandnum)
-        local k = {}
-        local sqrt2 = math.sqrt(2)
-        for l=0, bandnum-1 do
-            for m = -l, l do
-                k[lSHindex(m, l)] = sqrt2 * Kml(m, l)
-            end
-        end
-        t[bandnum] = k
-        return k
-    end})
-    Ki = function(bandnum) return K[bandnum] end
-end
-
-
-local function calc_Yml(num_bands, N)
-    -- Y00(theta, phi)                 = 0.282095
-    -- (Y11; Y10; Y1-1)(theta, phi)    = 0.488603*(x; z; y)
-    -- (Y21; Y2-1;Y2-2)(theta, phi)    = 1.092548*(xz;yz;xy)
-    -- Y20(theta, phi)                 = 0.315392*(3*z*z-1)
-    -- Y22(theta, phi)                 = 0.546274*(x*x-y*y)
-
-    local Yml = {
-        0.282095,
-        0.488603 * N.x, 0.488603 * N.z, 0.488603 * N.y,
-    }
-    if num_bands == 1 then
-        
-    end
-
-    return Yml
-end
-
---[[
-    SHb:
-    m > 0, cos(m*phi)   * Yml(m,l)
-    m < 0, sin(|m|*phi) * Yml(|m|,l)
-    m = 0, Yml(0,l)
-
-    Yml is associated Legendre polynomials
-]]
-local function calc_Yml(numBands, N)
-    local SHb = {}
---     Reference implementation
---     local phi = math.atan(s.x, s.y);
---     for l=0, numBands-1 do
---         SHb[SHindex(0, l)] = Legendre(l, 0, s.z)
---         for m = 1, l do
---             float p = Legendre(l, m, s.z);
---             SHb[SHindex(-m, l)] = math.sin(m * phi) * p
---             SHb[SHindex( m, l)] = math.cos(m * phi) * p
---         end
---     end
-
-    --[[
-     * Below, we compute the associated Legendre polynomials using recursion.
-     * see: http://mathworld.wolfram.com/AssociatedLegendrePolynomial.html
-     *
-     * Note [0]: s.z == cos(theta) ==> we only need to compute P(s.z)
-     *
-     * Note [1]: We in fact compute P(s.z) / sin(theta)^|m|, by removing
-     * the "sqrt(1 - s.z*s.z)" [i.e.: sin(theta)] factor from the recursion.
-     * This is later corrected in the ( cos(m*phi), sin(m*phi) ) recursion.
-    ]]
-
-    -- s = (x, y, z) = (sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta))
-
-    -- handle m=0 separately, since it produces only one coefficient
-    local Pml_2, Pml_1 = 0, 1
-    SHb[1] =  Pml_1
-    for l=1, numBands-1 do
-        local Pml = ((2*l-1.0)*Pml_1*N.z - (l-1.0)*Pml_2) / l
-        Pml_2 = Pml_1;
-        Pml_1 = Pml;
-        SHb[lSHindex(0, l)] = Pml;
-    end
-
-    local Pmm = 1
-    for m=1, numBands-1 do
-        Pmm = (1.0 - 2*m) * Pmm      -- See [1], divide by sqrt(1 - s.z*s.z);
-        Pml_2 = Pmm;
-        Pml_1 = (2*m + 1.0)*Pmm*N.z
-        -- l == m
-        SHb[lSHindex(-m, m)] = Pml_2
-        SHb[lSHindex( m, m)] = Pml_2
-        if m+1 < numBands then
-            -- l == m+1
-            SHb[lSHindex(-m, m+1)] = Pml_1
-            SHb[lSHindex( m, m+1)] = Pml_1
-            for l=m+2, numBands-1 do
-                local Pml = ((2*l - 1.0)*Pml_1*N.z - (l + m - 1.0)*Pml_2) / (l-m)
-                Pml_2 = Pml_1
-                Pml_1 = Pml
-                SHb[lSHindex(-m, l)] = Pml
-                SHb[lSHindex( m, l)] = Pml
-            end
-        end
-    end
-
-    --  At this point, SHb contains the associated Legendre polynomials divided
-    --  by sin(theta)^|m|. Below we compute the SH basis.
-    -- 
-    --  ( cos(m*phi), sin(m*phi) ) recursion:
-    --  cos(m*phi + phi) == cos(m*phi)*cos(phi) - sin(m*phi)*sin(phi)
-    --  sin(m*phi + phi) == sin(m*phi)*cos(phi) + cos(m*phi)*sin(phi)
-    --  cos[m+1] == cos[m]*s.x - sin[m]*s.y
-    --  sin[m+1] == sin[m]*s.x + cos[m]*s.y
-    -- 
-    --  Note that (d.x, d.y) == (cos(phi), sin(phi)) * sin(theta), so the
-    --  code below actually evaluates:
-    --       (cos((m*phi), sin(m*phi)) * sin(theta)^|m|
-    local Cm, Sm = N.x, N.y
-    for m=1, numBands do
-        for l = m, numBands-1 do
-            local idx = lSHindex(-m, l)
-            SHb[idx] = SHb[idx] * Sm
-
-            idx = lSHindex(m, l)
-            SHb[idx] = SHb[idx] * Cm
-        end
-        local Cm1 = Cm * N.x - Sm * N.y
-        local Sm1 = Sm * N.x + Cm * N.y
-        Cm = Cm1
-        Sm = Sm1
-    end
-
-    return SHb
-end
-
--- < cos(theta) > SH coefficients pre-multiplied by 1 / K(0,l)
-local A; do
-    A = setmetatable({}, {__index=function(t, l)
-        local R
-        if l == 0 then
-            R = math.pi
-        elseif (l == 1) then
-            R = 2 * math.pi / 3;
-        elseif l & 1 then
-            R = 0
-        else
-            local l_2 = l // 2;
-            local A0 = ((l_2 & 1) and 1.0 and -1.0) / ((l + 2) * (l - 1))
-            local A1 = factorial2(l, l_2) / (factorial2(l_2) * (1 << l))
-            R = 2 * math.pi * A0 * A1
-        end
-
-        t[l] = R
-        return R
-    end})
-end
+local lSHindex0 = shutil.lSHindex0
 
 --[[
     using SH for irradiance, we need two step:
@@ -327,9 +171,9 @@ end
 
 local function calc_Lml (cm, bandnum)
     local coeffnum = bandnum * bandnum
-    local SH = {}
+    local Lml = {}
     for i=1, coeffnum do
-        SH[i] = math3d.ref(mc.ZERO)
+        Lml[i] = mc.ZERO
     end
     for face=1, 6 do
         for y=1, cm.w do
@@ -343,26 +187,25 @@ local function calc_Lml (cm, bandnum)
                 local Yml = calc_Yml(bandnum, N)
 
                 for i=1, coeffnum do
-                    SH[i].v = math3d.add(SH[i], math3d.mul(color, Yml[i]))
+                    Lml[i] = math3d.add(Lml[i], math3d.mul(color, Yml[i]))
                 end
             end
         end
     end
 
-    return SH
+    return Lml
 end
 
 return {
     calc_Eml = function (cm, bandnum)
-        local K = Ki(bandnum)
         local Lml = calc_Lml(cm, bandnum)
 
         local Eml = {}
         for l=0, bandnum-1 do
-            local a = A[l]
+            local a = A[l+1]
             for m = -l, l do
-                local idx = lSHindex(m, l)
-                Eml[idx] = math3d.mul(K[idx] * a, Lml[idx])
+                local idx = lSHindex0(m, l)
+                Eml[idx] = math3d.mul(a, Lml[idx])
             end
         end
 

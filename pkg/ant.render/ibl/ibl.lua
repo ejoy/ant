@@ -1,25 +1,30 @@
-local ecs = ...
-local world = ecs.world
-local w = world.w
+local ecs       = ...
+local world     = ecs.world
+local w         = world.w
 
-local bgfx = require "bgfx"
-local math3d = require "math3d"
+local bgfx      = require "bgfx"
+local math3d    = require "math3d"
+local lfs       = require "filesystem.local"
+local image     = require "image"
 
 local renderpkg = import_package "ant.render"
-local sampler = renderpkg.sampler
+local sampler   = renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
-local icompute = ecs.import.interface "ant.render|icompute"
+local cr        = import_package "ant.compile_resource"
+
+local icompute  = ecs.import.interface "ant.render|icompute"
 local iexposure = ecs.import.interface "ant.camera|iexposure"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 
-local setting = import_package "ant.settings".setting
+local setting   = import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
+local shutil    = require "ibl.sh"
+local texutil   = require "ibl.texture"
 
-local ibl_viewid                = viewidmgr.get "ibl"
+local ibl_viewid= viewidmgr.get "ibl"
 
 local thread_group_size<const> = 8
-
-local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local ibl_sys = ecs.system "ibl_system"
 
@@ -78,12 +83,10 @@ local function create_irradianceSH_entity()
     ecs.create_entity {
         policy = {
             "ant.general|name",
-            "ant.ibl|irradianceSH_builder",
         },
         data = {
             irradianceSH_builder = true,
             name = "irradianceSH_builder",
-            irradianceSH = {},
         }
     }
 end
@@ -146,14 +149,13 @@ local ibl_mb = world:sub{"ibl_changed"}
 local exp_mb = world:sub{"exposure_changed"}
 
 local function update_ibl_param(intensity)
-    local sa = imaterial.system_attribs()
     local mq = w:first("main_queue camera_ref:in")
     local camera <close> = w:entity(mq.camera_ref)
     local ev = iexposure.exposure(camera)
 
     intensity = intensity or 1
     intensity = intensity * IBL_INFO.intensity * ev
-    sa:update("u_ibl_param", math3d.vector(IBL_INFO.prefilter.mipmap_count, intensity, 0.0 ,0.0))
+    imaterial.system_attribs():update("u_ibl_param", math3d.vector(IBL_INFO.prefilter.mipmap_count, intensity, 0.0 ,0.0))
 end
 
 function ibl_sys:data_changed()
@@ -184,8 +186,26 @@ function ibl_sys:render_preprocess()
         w:remove(e)
     end
 
-    for e in w:select "irradianceSH_builder irradianceSH:in" do
-        
+    for e in w:select "irradianceSH_builder" do
+        local function load_cm()
+            local function read_file(fn)
+                local f<close> = lfs.open(fn, "rb")
+                return f:read "a"
+            end
+    
+            local c = read_file(cr.compile(source_tex.tex_name .. "|main.bin"))
+            local info, content = image.parse(c, true, "RGBA32F")
+            assert(info.bitsPerPixel // 8 == 16)
+            return texutil.create_cubemap{w=info.width, h=info.height, texelsize=16, data=content}
+        end
+
+        local Eml = shutil.calc_Eml(load_cm(), irradianceSH_bandnum)
+        for i=1, #Eml do
+            Eml[i] = math3d.vector(Eml[i])
+        end
+
+        imaterial.system_attribs():update("u_irradianceSH", Eml)
+        w:remove(e)
     end
 
     local registered

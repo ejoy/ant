@@ -62,7 +62,15 @@ lparse(lua_State *L) {
     auto src = luaL_checklstring(L, 1, &srcsize);
     bx::DefaultAllocator allocator;
     bool readcontent = !lua_isnoneornil(L, 2);
-    auto image = bimg::imageParse(&allocator, src, (uint32_t)srcsize, bimg::TextureFormat::Enum(bimg::TextureFormat::Count), nullptr);
+    auto texfmt = bimg::TextureFormat::Count;
+    if(!lua_isnoneornil(L, 3)){
+        texfmt = bimg::getFormat(lua_tostring(L, 3));
+        if (texfmt == bimg::TextureFormat::Unknown){
+            return luaL_error(L, "Unkown texture format: %s", texfmt);
+        }
+    }
+    
+    auto image = bimg::imageParse(&allocator, src, (uint32_t)srcsize, texfmt, nullptr);
     if (!image){
         lua_pushstring(L, "Invalid image content");
         return lua_error(L);

@@ -184,7 +184,7 @@ end
 tu.create_sampler = create_sampler
 
 --test
-local ENABLE_TEST<const> = true
+local ENABLE_TEST<const> = false
 
 if ENABLE_TEST then
     local function fequal(l, r, t)
