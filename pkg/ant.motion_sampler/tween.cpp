@@ -116,7 +116,7 @@ ltween_type(lua_State *L){
     tween_type type = None;
     if (0 == strcmp(tt, "None")){
         type = None;
-    } else if (0 == strcmp(tt, "Bounce")){
+    } else if (0 == strcmp(tt, "Back")){
         type = Back;
     } else if (0 == strcmp(tt, "Bounce")){
         type = Bounce;

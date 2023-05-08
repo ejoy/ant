@@ -331,8 +331,9 @@ function iefk.preload(textures)
 end
 
 local function do_play(eid)
+    local e <close> = w:entity(eid, "efk?in")
+    if not e.efk then return end
     iefk.stop(eid)
-    local e <close> = w:entity(eid, "efk:in")
     e.efk.do_play = true
 end
 
@@ -340,10 +341,7 @@ function iefk.play(efk)
     if type(efk) == "table" then
 		local entitys = efk.tag["*"]
 		for _, eid in ipairs(entitys) do
-			local ee <close> = w:entity(eid, "efk?in")
-			if ee.efk then
-				do_play(eid)
-			end
+			do_play(eid)
 		end
     else
         do_play(efk)
@@ -351,14 +349,15 @@ function iefk.play(efk)
 end
 
 function iefk.pause(eid, b)
-    local e <close> = w:entity(eid, "efk:in")
-    if e.efk.play_handle then
+    local e <close> = w:entity(eid, "efk?in")
+    if e.efk and e.efk.play_handle then
         efk_ctx:pause(e.efk.play_handle, b)
     end
 end
 
 function iefk.set_time(eid, t)
-    local e <close> = w:entity(eid, "efk:in")
+    local e <close> = w:entity(eid, "efk?in")
+    if not e.efk then return end
     if e.efk.do_settime then
         return
     end
@@ -378,7 +377,8 @@ function iefk.set_speed(eid, s)
 end
 
 function iefk.set_visible(eid, b)
-    local e <close> = w:entity(eid, "efk:in")
+    local e <close> = w:entity(eid, "efk?in")
+    if not e.efk then return end
     e.efk.visible = b
     if e.efk.play_handle then
         efk_ctx:set_visible(e.efk.play_handle, b)
@@ -386,19 +386,21 @@ function iefk.set_visible(eid, b)
 end
 
 function iefk.set_loop(eid, b)
-    local e <close> = w:entity(eid, "efk:in")
+    local e <close> = w:entity(eid, "efk?in")
+    if not e.efk then return end
     e.efk.loop = b
 end
 
 function iefk.destroy(eid)
-    local e <close> = w:entity(eid, "efk:in")
+    local e <close> = w:entity(eid, "efk?in")
+    if not e.efk then return end
     efk_ctx:destroy(e.efk.play_handle)
     e.efk.play_handle = nil
 end
 
 local function do_stop(eid, delay)
-    local e <close> = w:entity(eid, "efk:in")
-    if e.efk.play_handle then
+    local e <close> = w:entity(eid, "efk?in")
+    if e.efk and e.efk.play_handle then
         efk_ctx:stop(e.efk.play_handle, delay)
         e.efk.play_handle = nil
     end
@@ -408,10 +410,7 @@ function iefk.stop(efk, delay)
     if type(efk) == "table" then
 		local entitys = efk.tag["*"]
 		for _, eid in ipairs(entitys) do
-			local ee <close> = w:entity(eid, "efk?in")
-			if ee.efk then
-				do_stop(eid, delay)
-			end
+			do_stop(eid, delay)
 		end
     else
         do_stop(efk, delay)
@@ -419,6 +418,6 @@ function iefk.stop(efk, delay)
 end
 
 function iefk.is_playing(eid)
-    local e <close> = w:entity(eid, "efk:in")
-    return e.efk.play_handle ~= nil
+    local e <close> = w:entity(eid, "efk?in")
+    return e.efk and e.efk.play_handle ~= nil
 end
