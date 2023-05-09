@@ -327,7 +327,7 @@ local function create_exposure_property(cv)
     end
 
     return uiproperty.SameLineContainer({}, {
-        uiproperty.Bool({label=""}, {
+        uiproperty.Bool({label="##"}, {
             getter = function ()
                 return camera_exposure(cv.eid) ~= nil
             end,
