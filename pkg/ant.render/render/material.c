@@ -1282,6 +1282,11 @@ apply_material_instance(lua_State *L, struct material_instance *mi, struct ecs_w
 		(mi->patch_state.state == 0 ? mi->m->state.state : mi->patch_state.state), 
 		(mi->patch_state.rgba == 0 ? mi->m->state.rgba : mi->patch_state.rgba));
 
+	const uint64_t stencil = mi->patch_state.stencil == 0 ? mi->m->state.stencil : mi->patch_state.stencil;
+	BGFX(encoder_set_stencil)(w->holder->encoder,
+		(uint32_t)(stencil & 0xffffffff), (uint32_t)(stencil >> 32)
+	);
+
 	if (mi->patch_attrib == INVALID_ATTRIB) {
 		for (attrib_id id = mi->m->attrib; id != INVALID_ATTRIB; id = al_attrib_next_uniform_id(arena, id, NULL)){
 			attrib_type* a = al_attrib(arena, id);
