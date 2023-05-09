@@ -227,10 +227,10 @@ return {
 
         local Eml = {}
         for l=0, bandnum-1 do
-            local a = A[l+1]
+            local s = A[l+1] * inv_sqrtpi
             for m = -l, l do
                 local idx = lSHindex0(m, l)
-                Eml[idx] = math3d.mul(a, Lml[idx])
+                Eml[idx] = math3d.mul(s, Lml[idx])
             end
         end
 
