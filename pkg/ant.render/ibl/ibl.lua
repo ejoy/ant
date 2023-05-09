@@ -19,7 +19,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local setting   = import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
-local shutil    = require "ibl.sh"
+local shutil    = require "ibl.sh.sh"
 local texutil   = require "ibl.texture"
 
 local ibl_viewid= viewidmgr.get "ibl"

@@ -5,19 +5,17 @@ local shutil    = require "ibl.sh.util"
 local sh_rt     = require "ibl.sh.sh_rt"
 
 local USE_BAKED = true
-local A<const> = USE_BAKED and {
+local A = {
     math.pi,
     math.pi * 2.0/ 3.0,
     math.pi * 1.0 / 4.0,
-    0.0,
-   -math.pi * 1.0 / 24.0,
-} or sh_rt.A
+}
 
 local pi<const>         = math.pi
 local sqrtpi<const>     = math.sqrt(pi)
 local inv_sqrtpi<const> = 1.0 / sqrtpi
 
-local calc_Yml = USE_BAKED and function(numband, N)
+local function calc_Yml(numband, N)
     local Yml = {}
 
     Yml[1] =  0.5 * inv_sqrtpi
@@ -47,7 +45,34 @@ local calc_Yml = USE_BAKED and function(numband, N)
     end
 
     return Yml
-end or sh_rt.calc_Yml
+end
+
+local ENABLE_TEST = true
+if ENABLE_TEST then
+    local x, y, z = math3d.index(math3d.normalize(math3d.vector(1, 1, 1)), 1, 2, 3)
+    local N = {x=x, y=y, z=z}
+    local result1 = calc_Yml(3, N)
+
+    local result2 = sh_rt.calc_Yml(3, N)
+
+    assert(#result1 == #result2, "Not sample number with 'calc_Yml'")
+
+    local function isequal(lhs, rhs)
+        return math.abs(lhs-rhs) <= 1e-6
+    end
+    for i=1, #result1 do
+        assert(isequal(result1[i], result2[i]), "One of result in 'calc_Yml' is not equal")
+    end
+
+    for i=1, #A do
+        assert(isequal(A[i], sh_rt.A[i]), "One of 'cos(theta): A' is not equal:" ..i)
+    end
+end
+
+if not USE_BAKED then
+    A = sh_rt.A
+    calc_Yml = sh_rt.calc_Yml
+end
 
 --[[
  * Area of a cube face's quadrant projected onto a sphere

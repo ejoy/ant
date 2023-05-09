@@ -31,7 +31,7 @@ local factorial1, factorial2; do
         return v
     end})
     factorial1 = function(n) return F[n] end
-    factorial2 = function(n, d) return F[n]/F[d] end
+    factorial2 = function(n, d) return d and F[n]/F[d] or F[n] end
 end
 
 local function factorial(n, d)

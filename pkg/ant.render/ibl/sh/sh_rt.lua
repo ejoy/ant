@@ -17,7 +17,7 @@ local Ki; do
         local k = {}
         for l=0, bandnum-1 do
             k[lSHindex0(0, l)] = Kml(0, l)
-            for m = 1, l-1 do
+            for m = 1, l do
                 local v = SQRT_2 * Kml(m, l)
                 k[lSHindex0(-m, l)] = v
                 k[lSHindex0( m, l)] = v
@@ -64,7 +64,7 @@ local calc_SHb; do
             local Pml = ((2*l-1.0)*Pml_1*N.z - (l-1.0)*Pml_2) / l
             Pml_2 = Pml_1;
             Pml_1 = Pml;
-            Pml[lSHindex0(0, l)] = Pml;
+            P[lSHindex0(0, l)] = Pml;
         end
 
         local Pmm = 1
@@ -145,16 +145,18 @@ local A; do
     -- l is base 1
     A = setmetatable({}, {__index=function(t, l)
         local R
-        local ll = l - 1
-        if ll == 0 then
+        -- l base 1
+        l = l-1
+        assert(l >= 0)
+        if l == 0 then
             R = math.pi
-        elseif ll == 1 then
+        elseif l == 1 then
             R = 2 * math.pi / 3;
-        elseif ll & 1 then
+        elseif 0 ~= (l & 1) then
             R = 0
         else
             local l_2 = l // 2;
-            local A0 = ((l_2 & 1) and 1.0 and -1.0) / ((l + 2) * (l - 1))
+            local A0 = ((0 ~= l_2 & 1) and 1.0 or -1.0) / ((l + 2) * (l - 1))
             local A1 = factorial2(l, l_2) / (factorial2(l_2) * (1 << l))
             R = 2 * math.pi * A0 * A1
         end
