@@ -2,13 +2,9 @@ __ANT_RUNTIME__ = "0.0.1"
 
 local platform = require "bee.platform"
 
-local function is_ios()
-	return "ios" == platform.os
-end
-
 local needcleanup, type, address
 
-if is_ios() then
+if platform.os == "ios" then
 	local setting = require "platform".setting
 	local clean_up_next_time = setting("clean_up_next_time")
 	if clean_up_next_time == true then
@@ -60,7 +56,7 @@ local config = {
 }
 
 if type == nil then
-	if is_ios() then
+	if platform.os == "ios" or platform.os == "android" then
 		type = "usb"
 	else
 		type = "remote"
@@ -86,7 +82,6 @@ elseif type == "offline" then
 end
 
 local fw = require "firmware"
-local socket = require "bee.socket"
 local host = {}
 local bootloader
 local first = true
