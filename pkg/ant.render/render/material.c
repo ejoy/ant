@@ -529,18 +529,7 @@ fetch_material_stencil(lua_State *L, int idx, struct material_state *ms){
 		return;
 	}
 
-	size_t sz;
-	const uint8_t * data = (const uint8_t *)luaL_checklstring(L, idx, &sz);
-	if (sz != 8 && sz != 16){
-		luaL_error(L, "Invalid stencil length %d", sz);
-	}
-
-	ms->stencil = 0;
-	for (int i=0;i<sz-1;i++) {
-		ms->stencil |= hex2n(L,data[i]);
-		ms->stencil <<= 4;
-	}
-	ms->stencil |= hex2n(L,data[sz-1]);
+	ms->stencil = (uint64_t)luaL_checkinteger(L, idx);
 }
 
 static inline vla_handle_t
@@ -901,12 +890,7 @@ push_material_state(lua_State *L, uint64_t state, uint32_t rgba){
 
 static inline int
 push_material_stencil(lua_State *L, uint64_t stencil){
-	uint8_t temp[16];
-	for (int i=0;i<8;i++) {
-		byte2hex((stencil >> ((7-i) * 8)) & 0xff, &temp[i*2]);
-	}
-
-	lua_pushlstring(L, (const char *)temp, 16);
+	lua_pushinteger(L, stencil);
 	return 1;
 }
 
