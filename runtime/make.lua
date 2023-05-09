@@ -6,7 +6,7 @@ local runtime = false
 local RuntimeBacklist = {
     filedialog = true,
     imgui = true,
-    -- audio = true,
+    audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os == "android"),
     effekseer = true,
     remotedebug = true,
 }
