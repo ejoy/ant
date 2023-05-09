@@ -111,7 +111,7 @@ local function loader(filename)
     local material = load_fx(filename)
 
     if material.state then
-        material.state = bgfx.make_state(load(material.state))
+		material.state = bgfx.make_state(load(material.state))
     end
 
     if material.stencil then
@@ -132,7 +132,7 @@ local function loader(filename)
     end
 
     material.properties = generate_properties(material.fx, material.properties)
-    material.object = matobj.rmat.material(material.state, material.properties, material.fx.prog)
+    material.object = matobj.rmat.material(material.state, material.stencil, material.properties, material.fx.prog)
     return material
 end
 

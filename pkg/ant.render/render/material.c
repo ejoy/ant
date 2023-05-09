@@ -136,6 +136,7 @@ struct attrib_arena {
 //uv3: invalid list handle
 struct material_state {
 	uint64_t state;
+	uint64_t stencil;
 	uint32_t rgba;
 };
 
@@ -489,7 +490,7 @@ byte2hex(uint8_t c, uint8_t *t) {
 }
 
 static inline void
-get_state(lua_State *L, int idx, struct material_state *ms) {
+fetch_material_state(lua_State *L, int idx, struct material_state *ms) {
 	// compute shader
 	if (lua_isnoneornil(L, idx)){
 		ms->state = 0;
@@ -518,6 +519,28 @@ get_state(lua_State *L, int idx, struct material_state *ms) {
 	}
 	ms->state = state;
 	ms->rgba = rgba;
+}
+
+static inline void
+fetch_material_stencil(lua_State *L, int idx, struct material_state *ms){
+	// compute shader
+	if (lua_isnoneornil(L, idx)){
+		ms->stencil = 0;
+		return;
+	}
+
+	size_t sz;
+	const uint8_t * data = (const uint8_t *)luaL_checklstring(L, idx, &sz);
+	if (sz != 16){
+		luaL_error(L, "Invalid stencil length %d", sz);
+	}
+
+	ms->stencil = 0;
+	for (int i=0;i<15;i++) {
+		ms->stencil |= hex2n(L,data[i]);
+		ms->stencil <<= 4;
+	}
+	ms->stencil |= hex2n(L,data[15]);
 }
 
 static inline vla_handle_t
@@ -862,6 +885,7 @@ static inline int
 push_material_state(lua_State *L, uint64_t state, uint32_t rgba){
 	uint8_t temp[24];
 	int i;
+	int count = 16;
 	for (i=0;i<8;i++) {
 		byte2hex((state >> ((7-i) * 8)) & 0xff, &temp[i*2]);
 	}
@@ -869,10 +893,20 @@ push_material_state(lua_State *L, uint64_t state, uint32_t rgba){
 		for (i=0;i<4;i++) {
 			byte2hex( (rgba >> ((3-i) * 8)) & 0xff, &temp[16+i*2]);
 		}
-		lua_pushlstring(L, (const char *)temp, 24);
-	} else {
-		lua_pushlstring(L, (const char *)temp, 16);
+		count += 8;
 	}
+	lua_pushlstring(L, (const char *)temp, count);
+	return 1;
+}
+
+static inline int
+push_material_stencil(lua_State *L, uint64_t stencil){
+	uint8_t temp[16];
+	for (int i=0;i<8;i++) {
+		byte2hex((stencil >> ((7-i) * 8)) & 0xff, &temp[i*2]);
+	}
+
+	lua_pushlstring(L, (const char *)temp, 16);
 	return 1;
 }
 
@@ -886,7 +920,21 @@ static int
 lmaterial_set_state(lua_State *L){
 	//only ANT_MATERIAL can set
 	struct material* mat = (struct material*)luaL_checkudata(L, 1, "ANT_MATERIAL");
-	get_state(L, 2, &mat->state);
+	fetch_material_state(L, 2, &mat->state);
+	return 0;
+}
+
+static int
+lmaterial_get_stencil(lua_State *L){
+	struct material* mat = (struct material*)luaL_checkudata(L, 1, "ANT_MATERIAL");
+	push_material_stencil(L, mat->state.stencil);
+	return 1;
+}
+
+static int
+lmaterial_set_stencil(lua_State *L){
+	struct material* mat = (struct material*)luaL_checkudata(L, 1, "ANT_MATERIAL");
+	fetch_material_stencil(L, 2, &mat->state);
 	return 0;
 }
 
@@ -1298,7 +1346,21 @@ linstance_get_state(lua_State *L){
 static int
 linstance_set_state(lua_State *L){
 	struct material_instance* mi = to_instance(L, 1);
-	get_state(L, 2, &mi->patch_state);
+	fetch_material_state(L, 2, &mi->patch_state);
+	return 0;
+}
+
+static int
+linstance_get_stencil(lua_State *L){
+	struct material_instance* mi = to_instance(L, 1);
+	return push_material_stencil(L,
+		mi->patch_state.stencil == 0 ? mi->m->state.stencil : mi->patch_state.stencil);
+}
+
+static int
+linstance_set_stencil(lua_State *L){
+	struct material_instance* mi = to_instance(L, 1);
+	fetch_material_stencil(L, 2, &mi->patch_state);
 	return 0;
 }
 
@@ -1338,8 +1400,12 @@ lmaterial_instance(lua_State *L) {
 			{ "attribs",		linstance_attribs},
 			{ "get_material",	linstance_get_material},
 			{ "replace_material",linstance_replace_material},
+
 			{ "get_state",		linstance_get_state},
 			{ "set_state",		linstance_set_state},
+			{ "get_stencil",	linstance_get_stencil},
+			{ "set_stencil",	linstance_set_stencil},
+
 			{ "ptr",			linstance_ptr},
 			{ NULL, 		NULL },
 		};
@@ -1396,6 +1462,8 @@ set_material_matatable(lua_State *L, const char* mtname, int issubtype){
 			{ "set_attrib",	lmaterial_set_attrib},
 			{ "get_state",	lmaterial_get_state},
 			{ "set_state",	lmaterial_set_state},
+			{ "fetch_material_stencil",lmaterial_get_stencil},
+			{ "set_stencil",lmaterial_set_stencil},
 			{ "copy",		(issubtype ? NULL : lmaterial_copy)},
 			{ NULL, 		NULL },
 		};
@@ -1417,10 +1485,13 @@ lmaterial_copy(lua_State *L){
 	struct material* new_mat = (struct material*)lua_newuserdatauv(L, sizeof(*new_mat), MATERIAL_UV_NUM);
 	new_mat->attrib = temp_mat->attrib;
 	new_mat->prog = temp_mat->prog;
+	new_mat->state = temp_mat->state;
 	if (!lua_isnoneornil(L, 2)){
-		get_state(L, 2, &(new_mat->state));
-	} else {
-		new_mat->state = temp_mat->state;
+		fetch_material_state(L, 2, &(new_mat->state));
+	}
+
+	if (!lua_isnoneornil(L, 3)){
+		fetch_material_stencil(L, 3, &new_mat->state);
 	}
 
 	//uv1
@@ -1446,13 +1517,14 @@ lmaterial_copy(lua_State *L){
 static int
 lmaterial_new(lua_State *L) {
 	struct material_state state;
-	get_state(L, 1, &state);
-	lua_settop(L, 3);
+	fetch_material_state(L, 1, &state);
+	fetch_material_stencil(L, 2, &state);
+	lua_settop(L, 4);
 	struct material *mat = (struct material *)lua_newuserdatauv(L, sizeof(*mat), MATERIAL_UV_NUM);
 	mat->state = state;
 
 	mat->attrib = INVALID_ATTRIB;
-	mat->prog.idx = luaL_checkinteger(L, 3) & 0xffff;
+	mat->prog.idx = luaL_checkinteger(L, 4) & 0xffff;
 	set_material_matatable(L, "ANT_MATERIAL", 0);
 	const int matidx = lua_absindex(L, -1);
 
@@ -1473,7 +1545,7 @@ lmaterial_new(lua_State *L) {
 
 	lua_newtable(L);
 	const int lookup_idx = lua_absindex(L, -1);
-	const int properties_idx = 2;
+	const int properties_idx = 3;
 	for (lua_pushnil(L); lua_next(L, properties_idx) != 0; lua_pop(L, 1)) {
 		const char* key = lua_tostring(L, -2);
 		mat->attrib = fetch_material_attrib_value(L, arena, sa_lookup_idx, lookup_idx, key, mat->attrib);
