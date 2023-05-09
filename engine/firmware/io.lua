@@ -334,7 +334,7 @@ end
 
 function response.MISSING(hash)
 	print("[response] MISSING", hash)
-	request_complete(hash, false)
+	request_complete(hash, false, "MISSING "..hash)
 end
 
 function response.SLICE(hash, offset, data)
@@ -873,7 +873,7 @@ local function main()
 		table.insert(uncomplete_req, hash)
 	end
 	for _, hash in ipairs(uncomplete_req) do
-		request_complete(hash, false)
+		request_complete(hash, false, "UNCOMPLETE "..hash)
 	end
 	if QUIT then
 		return
