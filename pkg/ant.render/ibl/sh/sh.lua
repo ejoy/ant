@@ -15,33 +15,51 @@ local pi<const>         = math.pi
 local sqrtpi<const>     = math.sqrt(pi)
 local inv_sqrtpi<const> = 1.0 / sqrtpi
 
+local SHb; do
+    local L1_f<const>  = 0.5 * inv_sqrtpi
+
+    local L2_f<const> = math.sqrt(3.0/(4.0*pi))
+    local sq15<const>, sq5<const> = math.sqrt(15), math.sqrt(5)
+    -- 0.5 for 1/sqrt(4), 0.25 for 1/sqrt(16)
+    local L3_f1<const> = sq15*inv_sqrtpi*0.5   --math.sqrt(15.0/(4.0*pi))
+    local L3_f2<const> = sq5*inv_sqrtpi*0.25   --math.sqrt(5.0/(16.0*pi))
+    local L3_f3<const> = sq15*inv_sqrtpi*0.25  --math.sqrt(15.0/(16.0*pi))
+    
+    SHb = {
+         L1_f,
+
+        -L2_f,
+         L2_f,
+        -L2_f,
+
+         L3_f1,
+        -L3_f1,
+         L3_f2,
+        -L3_f1,
+         L3_f3,
+    }
+end
+
 local function calc_Yml(numband, N)
     local Yml = {}
 
-    Yml[1] =  0.5 * inv_sqrtpi
+    Yml[1] = SHb[1]
 
     local x, y, z = N.x, N.y, N.z
 
     if numband >= 2 then
-        local factor<const> = math.sqrt(3.0/(4.0*pi))
-        Yml[2] = -factor*y
-        Yml[3] =  factor*z
-        Yml[4] = -factor*x
+        Yml[2] = SHb[2]*y
+        Yml[3] = SHb[3]*z
+        Yml[4] = SHb[4]*x
     end
 
     if numband >= 3 then
-        local sq15<const>, sq5<const> = math.sqrt(15), math.sqrt(5)
-        -- 0.5 for 1/sqrt(4), 0.25 for 1/sqrt(16)
-        local f1<const> = sq15*inv_sqrtpi*0.5   --math.sqrt(15.0/(4.0*pi))
-        local f2<const> = sq5*inv_sqrtpi*0.25   --math.sqrt(5.0/(16.0*pi))
-        local f3<const> = sq15*inv_sqrtpi*0.25  --math.sqrt(15.0/(16.0*pi))
-
         local x2, y2, z2 = x*x, y*y, z*z
-        Yml[5] =  f1*y*x
-        Yml[6] = -f1*y*z
-        Yml[7] =  f2*(3.0*z2-1.0)
-        Yml[8] = -f1*x*z
-        Yml[9] =  f3*(x2-y2)
+        Yml[5] = SHb[5]*y*x
+        Yml[6] = SHb[6]*y*z
+        Yml[7] = SHb[7]*(3.0*z2-1.0)
+        Yml[8] = SHb[8]*x*z
+        Yml[9] = SHb[9]*(x2-y2)
     end
 
     return Yml
@@ -227,10 +245,10 @@ return {
 
         local Eml = {}
         for l=0, bandnum-1 do
-            local s = A[l+1] * inv_sqrtpi
+            local s = A[l+1] * inv_sqrtpi   --pre bake 1/pi
             for m = -l, l do
                 local idx = lSHindex0(m, l)
-                Eml[idx] = math3d.mul(s, Lml[idx])
+                Eml[idx] = math3d.mul(s * SHb[idx], Lml[idx])
             end
         end
 
