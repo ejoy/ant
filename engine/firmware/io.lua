@@ -3,6 +3,7 @@ local loadfile, config, host, fddata = ...
 -- C libs only
 local thread = require "bee.thread"
 local socket = require "bee.socket"
+local platform = require "bee.platform"
 local protocol = require "protocol"
 local _print
 local QUIT = false
@@ -56,6 +57,12 @@ local function init_channels()
 		return table.concat(t, '\t')
 	end
 	_print = _G.print
+	if platform.os == 'android' then
+		local android = require "android"
+		_print = function (text)
+			android.rawlog("info", "", text)
+		end
+	end
 	function _G.print(...)
 		local info = debug.getinfo(2, 'Sl')
 		local text = ('[%s][IO   ](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), info.short_src, info.currentline, packstring(...))

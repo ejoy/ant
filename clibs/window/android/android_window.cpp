@@ -4,6 +4,7 @@ extern "C" {
 #include "include/android_native_app_glue.h"
 #include <lua.hpp>
 #include <bee/nonstd/to_underlying.h>
+#include <android/log.h>
 
 static struct android_app* g_app;
 
@@ -41,11 +42,21 @@ static int ldirectory(lua_State* L) {
     }
 }
 
+static int lrawlog(lua_State* L) {
+    static const char* const opts[] = { "unknown", "default", "verbose", "debug", "info", "warn", "error", "fatal", "silent", NULL };
+    android_LogPriority prio = (android_LogPriority)luaL_checkoption(L, 1, NULL, opts);
+    const char* tag = luaL_checkstring(L, 2);
+    const char* text = luaL_checkstring(L, 3);
+    __android_log_write(1, tag, text);
+    return 0;
+}
+
 extern "C"
 int luaopen_android(lua_State* L) {
     luaL_checkversion(L);
     luaL_Reg l[] = {
         { "directory", ldirectory },
+        { "rawlog", lrawlog },
         { NULL, NULL },
     };
     luaL_newlibtable(L, l);
