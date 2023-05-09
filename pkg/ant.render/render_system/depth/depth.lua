@@ -56,13 +56,16 @@ function s:data_changed()
     end
 end
 
-local material_cache = {__mode="k"}
-
 local function create_depth_only_material(mo, fm)
-    local newstate = irender.check_set_state(mo, fm.main_queue:get_material())
-    local new_mo = irender.create_material_from_template(mo, newstate, material_cache)
+    local newstate = irender.check_set_state(mo, fm.main_queue:get_material(), function (d, s)
+        d.PT, d.CULL = s.PT, s.CULL
+        d.DEPTH_TEST = "GREATER"
+        return d
+    end)
 
-    return new_mo:instance()
+    local mi = mo:instance()
+    mi:set_state(newstate)
+    return mi
 end
 
 function s:update_filter()

@@ -134,9 +134,13 @@ struct attrib_arena {
 //uv1: arena
 //uv2: lookup table, [name: id]
 //uv3: invalid list handle
-struct material {
+struct material_state {
 	uint64_t state;
 	uint32_t rgba;
+};
+
+struct material {
+	struct material_state state;
 	attrib_id attrib;
 	bgfx_program_handle_t prog;
 };
@@ -147,6 +151,7 @@ struct material {
 
 struct material_instance {
 	struct material *m;
+	struct material_state patch_state;
 	attrib_id patch_attrib;
 };
 
@@ -484,11 +489,11 @@ byte2hex(uint8_t c, uint8_t *t) {
 }
 
 static inline void
-get_state(lua_State *L, int idx, uint64_t *pstate, uint32_t *prgba) {
+get_state(lua_State *L, int idx, struct material_state *ms) {
 	// compute shader
 	if (lua_isnoneornil(L, idx)){
-		*pstate = 0;
-		*prgba = 0;
+		ms->state = 0;
+		ms->rgba = 0;
 		return;
 	}
 	size_t sz;
@@ -511,8 +516,8 @@ get_state(lua_State *L, int idx, uint64_t *pstate, uint32_t *prgba) {
 		}
 		rgba |= hex2n(L,data[23]);
 	}
-	*pstate = state;
-	*prgba = rgba;
+	ms->state = state;
+	ms->rgba = rgba;
 }
 
 static inline vla_handle_t
@@ -854,9 +859,7 @@ lmaterial_set_attrib(lua_State *L){
 }
 
 static inline int 
-push_material_state(lua_State *L, struct material *mat){
-	uint64_t state = mat->state;
-	uint32_t rgba = mat->rgba;
+push_material_state(lua_State *L, uint64_t state, uint32_t rgba){
 	uint8_t temp[24];
 	int i;
 	for (i=0;i<8;i++) {
@@ -876,14 +879,14 @@ push_material_state(lua_State *L, struct material *mat){
 static int
 lmaterial_get_state(lua_State *L){
 	struct material* mat = check_material_index(L, 1);
-	return push_material_state(L, mat);
+	return push_material_state(L, mat->state.state, mat->state.rgba);
 }
 
 static int
 lmaterial_set_state(lua_State *L){
 	//only ANT_MATERIAL can set
 	struct material* mat = (struct material*)luaL_checkudata(L, 1, "ANT_MATERIAL");
-	get_state(L, 2, &mat->state, &mat->rgba);
+	get_state(L, 2, &mat->state);
 	return 0;
 }
 
@@ -1227,7 +1230,9 @@ linstance_attribs(lua_State *L){
 void
 apply_material_instance(lua_State *L, struct material_instance *mi, struct ecs_world *w){
 	struct attrib_arena* arena = arena_from_reg(L);
-	BGFX(encoder_set_state)(w->holder->encoder, mi->m->state, mi->m->rgba);
+	BGFX(encoder_set_state)(w->holder->encoder, 
+		(mi->patch_state.state == 0 ? mi->m->state.state : mi->patch_state.state), 
+		(mi->patch_state.rgba == 0 ? mi->m->state.rgba : mi->patch_state.rgba));
 
 	if (mi->patch_attrib == INVALID_ATTRIB) {
 		for (attrib_id id = mi->m->attrib; id != INVALID_ATTRIB; id = al_attrib_next_uniform_id(arena, id, NULL)){
@@ -1285,7 +1290,16 @@ linstance_replace_material(lua_State *L){
 static int
 linstance_get_state(lua_State *L){
 	struct material_instance* mi = to_instance(L, 1);
-	return push_material_state(L, mi->m);
+	return push_material_state(L,
+		mi->patch_state.state == 0 ? mi->m->state.state : mi->patch_state.state,
+		mi->patch_state.rgba == 0 ? mi->m->state.rgba : mi->patch_state.rgba);
+}
+
+static int
+linstance_set_state(lua_State *L){
+	struct material_instance* mi = to_instance(L, 1);
+	get_state(L, 2, &mi->patch_state);
+	return 0;
 }
 
 static int
@@ -1308,6 +1322,8 @@ lmaterial_instance(lua_State *L) {
 
 	struct material_instance * mi = (struct material_instance *)lua_newuserdatauv(L, sizeof(*mi), INSTANCE_UV_NUM);
 	mi->patch_attrib = INVALID_ATTRIB;
+	mi->patch_state.state = 0;
+	mi->patch_state.rgba = 0;
 	mi->m = check_material_index(L, 1);
 	vla_lua_new(L, 0, sizeof(attrib_id));
 	verfiy(lua_setiuservalue(L, -2, INSTANCE_UV_INVALID_LIST));
@@ -1323,6 +1339,7 @@ lmaterial_instance(lua_State *L) {
 			{ "get_material",	linstance_get_material},
 			{ "replace_material",linstance_replace_material},
 			{ "get_state",		linstance_get_state},
+			{ "set_state",		linstance_set_state},
 			{ "ptr",			linstance_ptr},
 			{ NULL, 		NULL },
 		};
@@ -1401,10 +1418,9 @@ lmaterial_copy(lua_State *L){
 	new_mat->attrib = temp_mat->attrib;
 	new_mat->prog = temp_mat->prog;
 	if (!lua_isnoneornil(L, 2)){
-		get_state(L, 2, &new_mat->state, &new_mat->rgba);
+		get_state(L, 2, &(new_mat->state));
 	} else {
 		new_mat->state = temp_mat->state;
-		new_mat->rgba = temp_mat->rgba;
 	}
 
 	//uv1
@@ -1429,13 +1445,12 @@ lmaterial_copy(lua_State *L){
 // 3: uniforms (table)
 static int
 lmaterial_new(lua_State *L) {
-	uint64_t state;
-	uint32_t rgba;
-	get_state(L, 1, &state, &rgba);
+	struct material_state state;
+	get_state(L, 1, &state);
 	lua_settop(L, 3);
 	struct material *mat = (struct material *)lua_newuserdatauv(L, sizeof(*mat), MATERIAL_UV_NUM);
 	mat->state = state;
-	mat->rgba = rgba;
+
 	mat->attrib = INVALID_ATTRIB;
 	mat->prog.idx = luaL_checkinteger(L, 3) & 0xffff;
 	set_material_matatable(L, "ANT_MATERIAL", 0);

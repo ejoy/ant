@@ -332,8 +332,6 @@ local function which_material(isskin)
 	return isskin and pickup_skin_material or pickup_material
 end
 
-local material_cache = {__mode="k"}
-
 function pickup_sys:update_filter()
 	for e in w:select "filter_result pickup_queue_visible render_object:update filter_material:in eid:in skinning?in" do
 		local ro = e.render_object
@@ -343,9 +341,13 @@ function pickup_sys:update_filter()
 		local src_mo = matres.object
 		local mat = which_material(e.skinning)
 		local dst_mo = mat.object
-		local newstate = irender.check_set_state(dst_mo, src_mo)
-		local new_matobj = irender.create_material_from_template(dst_mo, newstate, material_cache)
-		local new_mi = new_matobj:instance()
+		local newstate = irender.check_set_state(dst_mo, src_mo, function (d, s)
+				d.PT, d.CULL = s.PT, s.CULL
+				d.DEPTH_TEST   = "GREATER"
+				return d
+		end)
+		local new_mi = dst_mo:instance()
+		new_mi:set_state(newstate)
 		new_mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
 
 		fm["pickup_queue"] = new_mi

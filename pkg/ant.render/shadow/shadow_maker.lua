@@ -601,8 +601,6 @@ local omni_stencils = {
 	},
 }
 
-local material_cache = {__mode="k"}
-
 function sm:update_filter()
     for e in w:select "filter_result render_object:update filter_material:in material:in skinning?in indirect?in" do
 		local mt = assetmgr.resource(e.material)
@@ -611,10 +609,14 @@ function sm:update_filter()
 			local m = which_material(e.skinning, e.indirect)
 			local mo = m.object
 			local fm = e.filter_material
-			local newstate = irender.check_set_state(mo, fm.main_queue)
-			local new_matobj = irender.create_material_from_template(mo, newstate, material_cache)
-			
-			local mi = new_matobj:instance()
+			local newstate = irender.check_set_state(mo, fm.main_queue:get_material(), function (d, s)
+				d.PT, d.CULL = s.PT, d.CULL
+				d.DEPTH_TEST = "GREATER"
+				return d
+			end)
+
+			local mi = mo:instance()
+			mi:set_state(newstate)
 
 			fm["csm1_queue"] = mi
 			fm["csm2_queue"] = mi

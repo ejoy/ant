@@ -199,8 +199,6 @@ local function check_set_depth_state_as_equal(state)
 	return bgfx.make_state(ss)
 end
 
-local material_cache = {__mode="k"}
-
 function render_sys:update_filter()
 	if irender.use_pre_depth() then
 		--we should check 'filter_result' here and change the default material
@@ -214,8 +212,7 @@ function render_sys:update_filter()
 				local mo = fm.main_queue:get_material()
 
 				local state = check_set_depth_state_as_equal(mo:get_state())
-				local new_mo = irender.create_material_from_template(mo, state, material_cache)
-				fm.main_queue:replace_material(new_mo)
+				fm.main_queue:set_state(state)
 				ro.mat_def = fm.main_queue:ptr()
 			end
 		end

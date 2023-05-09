@@ -26,11 +26,7 @@ function irender.layer_names()
 	return LAYER_NAMES
 end
 
-local function def_state_op(dst_s, src_s)
-	dst_s.PT           = src_s.PT
-	dst_s.CULL         = src_s.CULL
-	dst_s.DEPTH_TEST   = "GREATER"
-end
+
 
 function irender.create_material_from_template(template_material_obj, state, cache)
 	local mo = cache[template_material_obj]
@@ -49,11 +45,10 @@ function irender.create_material_from_template(template_material_obj, state, cac
 end
 
 function irender.check_set_state(dst_m, src_m, state_op)
-	local t_dst_s = bgfx.parse_state(dst_m:get_state())
-	local t_src_s = bgfx.parse_state(src_m:get_state())
-	state_op = state_op or def_state_op
-	state_op(t_dst_s, t_src_s)
-	return bgfx.make_state(t_dst_s)
+	return bgfx.make_state(state_op(
+		bgfx.parse_state(dst_m:get_state()),
+		bgfx.parse_state(src_m:get_state())
+	))
 end
 
 local MATERIAL_INDICES<const> = {

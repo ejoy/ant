@@ -42,8 +42,7 @@ end
 function imaterial.set_state(e, state)
 	w:extend(e, "filter_material:in")
 	local fm = e.filter_material
-	local defmat = fm.main_queue
-	return defmat:get_material():set_state(bgfx.make_state(state))
+	return fm.main_queue:set_state(bgfx.make_state(state))
 end
 
 local ms = ecs.system "material_system"
