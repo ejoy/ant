@@ -47,7 +47,7 @@ static int lrawlog(lua_State* L) {
     android_LogPriority prio = (android_LogPriority)luaL_checkoption(L, 1, NULL, opts);
     const char* tag = luaL_checkstring(L, 2);
     const char* text = luaL_checkstring(L, 3);
-    __android_log_write(1, tag, text);
+    __android_log_write(prio, tag, text);
     return 0;
 }
 
