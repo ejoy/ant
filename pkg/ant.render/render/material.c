@@ -531,16 +531,16 @@ fetch_material_stencil(lua_State *L, int idx, struct material_state *ms){
 
 	size_t sz;
 	const uint8_t * data = (const uint8_t *)luaL_checklstring(L, idx, &sz);
-	if (sz != 16){
+	if (sz != 8 && sz != 16){
 		luaL_error(L, "Invalid stencil length %d", sz);
 	}
 
 	ms->stencil = 0;
-	for (int i=0;i<15;i++) {
+	for (int i=0;i<sz-1;i++) {
 		ms->stencil |= hex2n(L,data[i]);
 		ms->stencil <<= 4;
 	}
-	ms->stencil |= hex2n(L,data[15]);
+	ms->stencil |= hex2n(L,data[sz-1]);
 }
 
 static inline vla_handle_t
