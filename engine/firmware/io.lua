@@ -5,9 +5,16 @@ local thread = require "bee.thread"
 local socket = require "bee.socket"
 local platform = require "bee.platform"
 local protocol = require "protocol"
-local _print
 local QUIT = false
 local OFFLINE = false
+
+local _print = _G.print
+if platform.os == 'android' then
+	local android = require "android"
+	_print = function (text)
+		android.rawlog("info", "IO", text)
+	end
+end
 
 local channelfd = fddata and socket.fd(fddata) or nil
 
@@ -56,13 +63,6 @@ local function init_channels()
 		end
 		return table.concat(t, '\t')
 	end
-	_print = _G.print
-	if platform.os == 'android' then
-		local android = require "android"
-		_print = function (text)
-			android.rawlog("info", "", text)
-		end
-	end
 	function _G.print(...)
 		local info = debug.getinfo(2, 'Sl')
 		local text = ('[%s][IO   ](%s:%3d) %s'):format(os_date('%Y-%m-%d %H:%M:%S:{ms}'), info.short_src, info.currentline, packstring(...))
@@ -84,20 +84,20 @@ local function connect_server(address, port)
 	print("Connecting", address, port)
 	local fd, err = socket "tcp"
 	if not fd then
-		print("[ERROR] socket:", err)
+		_print("[ERROR] socket: "..err)
 		return
 	end
 	local ok
 	ok, err = fd:connect(address, port)
 	if ok == nil then
 		fd:close()
-		print("[ERROR] connect:", err)
+		_print("[ERROR] connect: "..err)
 		return
 	end
 	if ok == false then
 		local rd,wt = socket.select(nil, {fd})
 		if not rd then
-			print("[ERROR] select:", wt)	-- select error
+			_print("[ERROR] select: "..wt)	-- select error
 			fd:close()
 			return
 		end
@@ -105,7 +105,7 @@ local function connect_server(address, port)
 	local ok, err = fd:status()
 	if not ok then
 		fd:close()
-		print("[ERROR] status:", err)
+		_print("[ERROR] status: "..err)
 		return
 	end
 	print("Connected")
@@ -116,35 +116,35 @@ local function listen_server(address, port)
 	print("Listening", address, port)
 	local fd, err = socket "tcp"
 	if not fd then
-		print("[ERROR] socket:", err)
+		_print("[ERROR] socket: "..err)
 		return
 	end
 	fd:option("reuseaddr", 1)
 	local ok
 	ok, err = fd:bind(address, port)
 	if not ok then
-		print("[ERROR] bind:", err)
+		_print("[ERROR] bind: "..err)
 		return
 	end
 	ok, err = fd:listen()
 	if not ok then
-		print("[ERROR] listen:", err)
+		_print("[ERROR] listen: "..err)
 		return
 	end
 	local rd,wt = socket.select({fd}, nil, 2)
 	if rd == false then
-		print("[ERROR] select:", 'timeout')
+		_print("[ERROR] select: timeout")
 		fd:close()
 		return
 	elseif rd == nil then
-		print("[ERROR] select:", wt)	-- select error
+		_print("[ERROR] select: "..wt)	-- select error
 		fd:close()
 		return
 	end
 	local newfd, err = fd:accept()
 	if not newfd then
 		fd:close()
-		print("[ERROR] accept:", err)
+		_print("[ERROR] accept: "..err)
 		return
 	end
 	print("Accepted")
@@ -763,6 +763,7 @@ local function work_offline()
 end
 
 local function work_online()
+	request_send("SHAKEHANDS")
 	request_send("ROOT")
 	while not QUIT do
 		if host.update(status) then

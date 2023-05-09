@@ -8,6 +8,7 @@ end
 
 ltask.uniqueservice("arguments", ...)
 post_spawn "ios.event"
+post_spawn "android.event"
 
 local fd = socket.bind("tcp", "0.0.0.0", 2018)
 while true do
