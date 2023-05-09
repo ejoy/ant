@@ -5,6 +5,7 @@ dofile "../common.lua"
 lm:lua_source "window" {
     includes = {
         Ant3rd.."bee.lua/3rd/lua-seri",
+        Ant3rd.."bee.lua",
     },
     sources = {
         "window.c",

@@ -9,4 +9,4 @@
 #define RT_COMMAND char**
 #endif
 
-void runtime_main(int argc, RT_COMMAND argv, void(*errfunc)(const char*));
+extern "C" void runtime_main(int argc, RT_COMMAND argv, void(*errfunc)(const char*));

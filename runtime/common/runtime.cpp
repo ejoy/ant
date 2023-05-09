@@ -52,7 +52,7 @@ static void dostring(lua_State* L, const char* str) {
             return;
         }
     }
-    lua_writestringerror("%s\n", lua_tostring(L, -1));
+    lua_error(L);
 }
 
 static void createargtable(lua_State *L, int argc, RT_COMMAND argv) {
