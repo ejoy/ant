@@ -39,6 +39,34 @@ lm:lua_source "audio" {
             "fmodstudioL_vc"
         },
 	},
+    macos = {
+        includes = {
+            fmodDir.."/macos/core/inc",
+            fmodDir.."/macos/studio/inc",
+        },
+        linkdirs ={
+            fmodDir.."/macos/core/lib",
+            fmodDir.."/macos/studio/lib",
+        },
+        links = {
+            "fmodL",
+            "fmodstudioL"
+        },
+    },
+    ios = {
+        includes = {
+            fmodDir.."/ios/core/inc",
+            fmodDir.."/ios/studio/inc",
+        },
+        linkdirs ={
+            fmodDir.."/ios/core/lib",
+            fmodDir.."/ios/studio/lib",
+        },
+        links = {
+            "fmodL_iphoneos",
+            "fmodstudioL_iphoneos"
+        },
+    },
     mingw = {
         includes = {
             fmodDir.."/windows/core/inc",
