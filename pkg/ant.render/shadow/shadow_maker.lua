@@ -72,10 +72,6 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	local main_camera_frustum_aabb = math3d.aabb(world_frustum_min, world_frustum_max)
 	local intersected_aabb = main_camera_frustum_aabb
 	if math3d.aabb_isvalid(scene_aabb) then
-		local scene_center, scene_extent = math3d.aabb_center_extents(scene_aabb)
-		local scc, see = math3d.tovalue(scene_center), math3d.tovalue(scene_extent)
-		local main_center, main_extent = math3d.aabb_center_extents(main_camera_frustum_aabb)
-		local mcc, mee = math3d.tovalue(main_center), math3d.tovalue(main_extent)
 		intersected_aabb = math3d.aabb_intersection(main_camera_frustum_aabb, scene_aabb)
 	end
 
@@ -142,7 +138,7 @@ local function calculate_scene_aabb(frustum_planes)
 						local final_wm = math3d.mul(wm, ee.scene.worldmat)
 						local world_aabb = math3d.aabb_transform(final_wm, ee.bounding.aabb)
 						local is_intersect = math3d.frustum_intersect_aabb(frustum_planes, world_aabb)
-						if is_intersect > 0 then
+						if is_intersect >= 0 then
 							scene_aabb = math3d.aabb_merge(scene_aabb, world_aabb)
 						end
 					end
@@ -159,7 +155,7 @@ local function calculate_scene_aabb(frustum_planes)
 			if is_shadow_cast and is_aabb_valid then
 					local world_aabb = e.bounding.scene_aabb
 					local is_intersect = math3d.frustum_intersect_aabb(frustum_planes, world_aabb)
-					if is_intersect > 0 then
+					if is_intersect >= 0 then
 						scene_aabb = math3d.aabb_merge(scene_aabb, world_aabb)
 					end
 			end
