@@ -30,6 +30,11 @@ function fs.app_path(name)
         return fs.path(os.getenv "XDG_DATA_HOME" or (os.getenv "HOME" .. "/.local/share")) / name
     elseif platform.os == 'macos' then
         return fs.path(os.getenv "HOME" .. "/Library/Caches") / name
+    elseif platform.os == 'android' then
+        local android = require "android"
+        return fs.path(android.directory(android.ExternalDataPath))
+    else
+        error "unknown os"
     end
 end
 
