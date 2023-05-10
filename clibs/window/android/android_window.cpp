@@ -1,11 +1,12 @@
 extern "C" {
 #include "../window.h"
 }
-#include "include/android_native_app_glue.h"
+#include "include/game-activity/native_app_glue/android_native_app_glue.h"
 #include <lua.hpp>
 #include <bee/nonstd/to_underlying.h>
 #include <android/log.h>
 #include <cassert>
+#include "runtime.h"
 
 static struct android_app* g_app = NULL;
 static struct ant_window_callback* g_cb = NULL;
@@ -91,9 +92,24 @@ static void handle_cmd(android_app* app, int32_t cmd) {
     }
 }
 
-extern "C" void window_set_android_app(struct android_app* app) {
+static void errfunc(const char* msg) {
+    __android_log_write(ANDROID_LOG_FATAL, "",  msg);
+}
+
+static bool motion_event_filter_func(const GameActivityMotionEvent *motionEvent) {
+    auto sourceClass = motionEvent->source & AINPUT_SOURCE_CLASS_MASK;
+    return (sourceClass == AINPUT_SOURCE_CLASS_POINTER || sourceClass == AINPUT_SOURCE_CLASS_JOYSTICK);
+}
+
+extern "C" void android_main(struct android_app* app) {
     g_app = app;
     app->onAppCmd = handle_cmd;
+
+    android_app_set_motion_event_filter(app, motion_event_filter_func);
+    int argc = 0;
+    char* argv[] = {
+    };
+    runtime_main(argc, argv, errfunc);
 }
 
 static int ldirectory(lua_State* L) {
