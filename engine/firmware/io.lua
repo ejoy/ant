@@ -771,7 +771,7 @@ local function work_online()
 		end
 		local ok, err = event_select()
 		if ok == nil then
-			print("[ERROR] Connection Error", err)
+			_print("[ERROR] Connection Error: "..err)
 			break
 		end
 	end

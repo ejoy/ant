@@ -17,9 +17,9 @@ local function devices_list(str)
             first = false
         else
             if not w:match "^%s+$" then
-                local id, info = w:match "^%s*([^%s]+)%s+([^%s].*)$"
+                local id, status = w:match "^%s*([^%s]+)%s+([^%s]+)%s*$"
                 if id then
-                    r[id] = info
+                    r[id] = status
                 end
             end
         end
@@ -30,29 +30,28 @@ end
 local function update_devices(msg)
     local list = devices_list(msg)
     for k, v in pairs(devices) do
-        if list[k] == nil then
-            print('Android Device Detached:', k, v)
-            ltask.send(devices[k].sid, "Detached")
+        if list[k] ~= "device" then
+            print('Android Device Detached:', k)
+            ltask.send(v.sid, "Detached")
             devices[k] = nil
         end
     end
     for k, v in pairs(list) do
-        if devices[k] == nil then
-            print('Android Device Attached:', k, v)
-            devices[k] = {
-                sid = ltask.spawn("android.proxy", adb, 17001),
-                info = v,
-            }
-            ltask.send(devices[k].sid, "Attached")
-        else
-            devices[k].info = v
+        if v == "device" then
+            if devices[k] == nil then
+                print('Android Device Attached:', k)
+                devices[k] = {
+                    sid = ltask.spawn("android.proxy", adb, k, 17001),
+                }
+                ltask.send(devices[k].sid, "Attached")
+            end
         end
     end
 end
 
 local function wait_connect()
     local exitcode, msg = ltask.call(ServiceSubprocess, "run", {
-        adb, "wait-for-usb-device", "devices", "-l",
+        adb, "wait-for-usb-device", "devices",
         stdout     = true,
         stderr     = "stdout",
         hideWindow = true,
@@ -66,7 +65,7 @@ end
 
 local function wait_disconnect()
     local exitcode, msg = ltask.call(ServiceSubprocess, "run", {
-        adb, "wait-for-usb-disconnect", "devices", "-l",
+        adb, "wait-for-usb-disconnect", "devices",
         stdout     = true,
         stderr     = "stdout",
         hideWindow = true,

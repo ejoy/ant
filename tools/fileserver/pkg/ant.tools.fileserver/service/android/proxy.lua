@@ -1,4 +1,4 @@
-local adb, port = ...
+local adb, deviceid, port = ...
 local ltask = require "ltask"
 local socket = require "socket"
 local ServiceSubprocess = ltask.uniqueservice "subprocess"
@@ -26,7 +26,7 @@ local function connectAndroid()
             hideWindow = true,
         })
         if exitcode ~= 0 then
-            error(('Adb failed: [%d]%s'):format(exitcode, msg))
+            --print(('Adb failed: [%d]%s'):format(exitcode, msg))
             return
         end
         local fd = assert(socket.connect('tcp', '127.0.0.1', port))
@@ -42,6 +42,10 @@ end
 local function updateProxy()
     while STATUS == "Attached" do
         local cfd = connectAndroid()
+        if not cfd then
+            STATUS = "Error"
+            break
+        end
         local sfd = socket.connect('tcp', '127.0.0.1', 2018)
         SERVER_FD, CLIENT_FD = sfd, cfd
         for _ in ltask.request
@@ -51,7 +55,6 @@ local function updateProxy()
             SERVER_FD, CLIENT_FD = nil, nil
             socket.close(sfd)
             socket.close(cfd)
-            break
         end
     end
 end
