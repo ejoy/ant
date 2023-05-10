@@ -77,47 +77,47 @@ function audio_sys:init()
     if not caudio then return end
     caudio.init()
     --test
-    local bankname = "/pkg/tools.prefab_editor/res/sounds/Master.bank"
-    local master = ia.load_bank(bankname)
-    if not master then
-        print("LoadBank Faied. :", bankname)
-    end
-    bankname = "/pkg/tools.prefab_editor/res/sounds/Master.strings.bank"
-    local bank1 = ia.load_bank(bankname)
-    if not bank1 then
-        print("LoadBank Faied. :", bankname)
-    end
-    bankname = "/pkg/tools.prefab_editor/res/sounds/Construt.bank"
-    local construt = ia.load_bank(bankname)
-    if not construt then
-        print("LoadBank Faied. :", bankname)
-    end
-    bankname = "/pkg/tools.prefab_editor/res/sounds/UI.bank"
-    local ui = ia.load_bank(bankname)
-    if not ui then
-        print("LoadBank Faied. :", bankname)
-    end
-    local bank_list = caudio.get_bank_list()
-    for _, v in ipairs(bank_list) do
-        print(caudio.get_bank_name(v))
-    end
+    -- local bankname = "/pkg/tools.prefab_editor/res/sounds/Master.bank"
+    -- local master = ia.load_bank(bankname)
+    -- if not master then
+    --     print("LoadBank Faied. :", bankname)
+    -- end
+    -- bankname = "/pkg/tools.prefab_editor/res/sounds/Master.strings.bank"
+    -- local bank1 = ia.load_bank(bankname)
+    -- if not bank1 then
+    --     print("LoadBank Faied. :", bankname)
+    -- end
+    -- bankname = "/pkg/tools.prefab_editor/res/sounds/Construt.bank"
+    -- local construt = ia.load_bank(bankname)
+    -- if not construt then
+    --     print("LoadBank Faied. :", bankname)
+    -- end
+    -- bankname = "/pkg/tools.prefab_editor/res/sounds/UI.bank"
+    -- local ui = ia.load_bank(bankname)
+    -- if not ui then
+    --     print("LoadBank Faied. :", bankname)
+    -- end
+    -- local bank_list = caudio.get_bank_list()
+    -- for _, v in ipairs(bank_list) do
+    --     print(caudio.get_bank_name(v))
+    -- end
 
-    local event_list = caudio.get_event_list(master)
-    for _, v in ipairs(event_list) do
-        print(caudio.get_event_name(v))
-    end
-    local event_list = caudio.get_event_list(construt)
-    for _, v in ipairs(event_list) do
-        print(caudio.get_event_name(v))
-    end
-    local event_list = caudio.get_event_list(ui)
-    for _, v in ipairs(event_list) do
-        print(caudio.get_event_name(v))
-    end
-    -- sound_event[event_name] = ia.create(event_name)
-    -- event_name = "event:/UI/click"
-    -- sound_event[event_name] = ia.create(event_name)
-    ia.play("event:/background")
+    -- local event_list = caudio.get_event_list(master)
+    -- for _, v in ipairs(event_list) do
+    --     print(caudio.get_event_name(v))
+    -- end
+    -- local event_list = caudio.get_event_list(construt)
+    -- for _, v in ipairs(event_list) do
+    --     print(caudio.get_event_name(v))
+    -- end
+    -- local event_list = caudio.get_event_list(ui)
+    -- for _, v in ipairs(event_list) do
+    --     print(caudio.get_event_name(v))
+    -- end
+    -- -- sound_event[event_name] = ia.create(event_name)
+    -- -- event_name = "event:/UI/click"
+    -- -- sound_event[event_name] = ia.create(event_name)
+    -- ia.play("event:/background")
 end
 
 function audio_sys:data_changed()
