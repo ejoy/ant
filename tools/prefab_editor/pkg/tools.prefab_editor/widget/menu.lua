@@ -1,11 +1,12 @@
 local ecs = ...
 local world = ecs.world
+local w = world.w
 
 local widget_utils      = require "widget.utils"
 local prefab_mgr        = ecs.require "prefab_manager"
 
-local projsetting       = require "widget.project_setting"
-
+local projsetting_view  = require "widget.project_setting_view"
+local camerasetting_view= ecs.require "widget.camera_setting_view"
 local rhwi              = import_package "ant.hwi"
 local editor_setting    = require "editor_setting"
 
@@ -53,6 +54,7 @@ end
 
 function m.show()
     local click_project_setting
+    local camera_setting
     if imgui.widget.BeginMainMenuBar() then
         if imgui.widget.BeginMenu "File" then
             if imgui.widget.MenuItem(faicons.ICON_FA_FILE_PEN.." New", "Ctrl+N") then
@@ -117,13 +119,21 @@ function m.show()
                 end
                 imgui.widget.EndMenu()
             end
+
+            imgui.cursor.Separator()
+            
+            if imgui.widget.MenuItem(faicons.ICON_FA_GEAR .. camerasetting_view.viewname) then
+                camera_setting = true
+            end
+
             imgui.widget.EndMenu()
         end
       
         imgui.widget.EndMainMenuBar()
     end
 
-    projsetting.show(click_project_setting)
+    camerasetting_view.show(camera_setting)
+    projsetting_view.show(click_project_setting)
 end
 
 return m
