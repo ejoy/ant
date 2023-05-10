@@ -30,7 +30,13 @@ lm:lua_source "window" {
         },
     },
     android = {
+        includes = {
+            "android/include",
+            Ant3rd.."../runtime/common",
+        },
         sources = {
+            "android/include/**/*.cpp",
+            "android/include/**/*.c",
             "android/*.cpp",
         },
     }
