@@ -8,8 +8,8 @@ void main()
 {
 #ifdef VIEW_SPACE
     vec4 pos = mul(u_modelView, vec4(a_position, 1.0));
-    mat4 it_modelView = transpose(u_invViewProj);
-    vec3 normal = mul(it_modelView, vec4(a_normal, 0.0));
+    // normal should be transformed corredctly by transpose of inverse modelview matrix when anti-uniform scaled
+    vec3 normal	= normalize(mul(u_modelView, mediump vec4(a_normal, 0.0)).xyz);
     normal.z = -0.5;
     pos = pos + vec4(normal, 0) * u_outline_width;
     gl_Position = mul(u_proj, pos); 

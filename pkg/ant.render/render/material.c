@@ -1374,6 +1374,7 @@ lmaterial_instance(lua_State *L) {
 	struct material_instance * mi = (struct material_instance *)lua_newuserdatauv(L, sizeof(*mi), INSTANCE_UV_NUM);
 	mi->patch_attrib = INVALID_ATTRIB;
 	mi->patch_state.state = 0;
+	mi->patch_state.stencil = 0;
 	mi->patch_state.rgba = 0;
 	mi->m = check_material_index(L, 1);
 	vla_lua_new(L, 0, sizeof(attrib_id));

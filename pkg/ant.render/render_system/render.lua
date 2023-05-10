@@ -75,7 +75,8 @@ end
 local default_clear_state = {
 	color = setting:data().graphic.render.clear_color or 0x000000ff,
 	depth = 0.0,
-	clear = "CD",
+	clear = "SCD",
+	stencil = 0.0
 }
 
 if ENABLE_PRE_DEPTH then
@@ -112,7 +113,7 @@ end
 
 local function create_depth_rb(ww, hh)
 	return fbmgr.create_rb{
-		format = "D16F",
+		format = "D24S8",
 		w = ww, h = hh,
 		layers = 1,
 		flags = sampler {
@@ -143,8 +144,9 @@ function irender.create_pre_depth_queue(vr, camera_ref)
 			render_target = {
 				viewid = depth_viewid,
 				clear_state = {
-					clear = "D",
+					clear = "SD",
 					depth = 0,
+					stencil = 0
 				},
 				view_rect = {x=vr.x, y=vr.y, w=vr.w, h=vr.h, ratio=vr.ratio},
 				fb_idx = fbidx,

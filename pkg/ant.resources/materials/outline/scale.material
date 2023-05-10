@@ -9,6 +9,13 @@ properties:
 state:
   ALPHA_REF: 0
   CULL: CW
-  DEPTH_TEST: GREATER
+  DEPTH_TEST: ALWAYS
   MSAA: true
   WRITE_MASK: RGBA
+stencil:
+  TEST: NOTEQUAL
+  FUNC_REF: 1
+  FUNC_RMASK: 0xff
+  OP_FAIL_S: KEEP
+  OP_FAIL_Z: INCR
+  OP_PASS_Z: INCR

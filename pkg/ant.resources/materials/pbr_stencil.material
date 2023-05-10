@@ -1,0 +1,18 @@
+fx:
+  fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
+  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
+  setting:
+    ALPHAMODE_OPAQUE: 1
+    MAKE_STENCIL: 1
+properties:
+  u_pbr_factor: {1, 1, 0, 0}  #metallic, roughness, alpha_cutoff, occlusion strength
+  u_emissive_factor: {0, 0, 0, 0}
+  u_basecolor_factor: {1, 1, 1, 1}
+state: /pkg/ant.resources/materials/states/default.state
+stencil:
+    TEST: ALWAYS
+    FUNC_REF: 1
+    FUNC_RMASK: 0xff
+    OP_FAIL_S: REPLACE
+    OP_FAIL_Z: REPLACE
+    OP_PASS_Z: REPLACE
