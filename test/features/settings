@@ -42,11 +42,9 @@ graphic:
     normal_offset: 0.012
     size: 1024
     split_lamada: 0.8
-    split_num: 3
+    split_num: 1
     split_ratios:
-      {0.00, 0.25},
-      {0.25, 0.50},
-      {0.50, 0.75},
+      {0.00, 1.00}
     stabilize: true
     type: inv_z
 debug:

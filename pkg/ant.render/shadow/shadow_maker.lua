@@ -72,6 +72,10 @@ local function update_csm_frustum(lightdir, shadowmap_size, csm_frustum, shadow_
 	local main_camera_frustum_aabb = math3d.aabb(world_frustum_min, world_frustum_max)
 	local intersected_aabb = main_camera_frustum_aabb
 	if math3d.aabb_isvalid(scene_aabb) then
+		local scene_center, scene_extent = math3d.aabb_center_extents(scene_aabb)
+		local scc, see = math3d.tovalue(scene_center), math3d.tovalue(scene_extent)
+		local main_center, main_extent = math3d.aabb_center_extents(main_camera_frustum_aabb)
+		local mcc, mee = math3d.tovalue(main_center), math3d.tovalue(main_extent)
 		intersected_aabb = math3d.aabb_intersection(main_camera_frustum_aabb, scene_aabb)
 	end
 
@@ -135,11 +139,11 @@ local function calculate_scene_aabb(frustum_planes)
 				local is_aabb_valid = ee.bounding.aabb and ee.bounding.aabb ~= mc.NULL and math3d.aabb_isvalid(ee.bounding.aabb)
 				if is_aabb_valid and is_shadow_cast then
 					for _, wm in pairs(wms) do
-						local world_aabb = ee.bounding.scene_aabb
-						local tmp_aabb = math3d.aabb_transform(wm, world_aabb)
-						local is_intersect = math3d.frustum_intersect_aabb(frustum_planes, tmp_aabb)
-						if is_intersect >= 0 then
-								scene_aabb = math3d.aabb_merge(scene_aabb, tmp_aabb)
+						local final_wm = math3d.mul(wm, ee.scene.worldmat)
+						local world_aabb = math3d.aabb_transform(final_wm, ee.bounding.aabb)
+						local is_intersect = math3d.frustum_intersect_aabb(frustum_planes, world_aabb)
+						if is_intersect > 0 then
+							scene_aabb = math3d.aabb_merge(scene_aabb, world_aabb)
 						end
 					end
 				end
@@ -147,14 +151,17 @@ local function calculate_scene_aabb(frustum_planes)
         g:disable("hitch_tag")
 	end
 	-- merge other none-hitch objects
-	for e in w:select "scene:in material:in bounding:in main_queue_cull:absent eid:in render_object:in" do
+	for e in w:select "scene:in material:in bounding:in view_visible:in eid:in render_object:in" do
 		if not tmp_eids[e.eid] then
 			local mt = assetmgr.resource(e.material)
-			local is_shadow_cast = mt.fx.setting.shadow_cast
+			local is_shadow_cast = mt.fx.setting.shadow_cast and mt.fx.setting.shadow_cast == 'on'
 			local is_aabb_valid = e.bounding.aabb and e.bounding.aabb ~= mc.NULL and math3d.aabb_isvalid(e.bounding.aabb)
 			if is_shadow_cast and is_aabb_valid then
 					local world_aabb = e.bounding.scene_aabb
-					scene_aabb = math3d.aabb_merge(scene_aabb, world_aabb)
+					local is_intersect = math3d.frustum_intersect_aabb(frustum_planes, world_aabb)
+					if is_intersect > 0 then
+						scene_aabb = math3d.aabb_merge(scene_aabb, world_aabb)
+					end
 			end
 		end
 	end
