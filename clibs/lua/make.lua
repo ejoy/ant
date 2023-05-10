@@ -22,6 +22,9 @@ lm:source_set "lua_source" {
     ios = {
         defines = "LUA_USE_IOS",
     },
+    android = {
+        defines = "LUA_USE_LINUX",
+    },
 }
 
 if lm.os == "windows" then
