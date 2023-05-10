@@ -36,6 +36,9 @@ end
 
 local roothash = ltask.call(ServiceVfsMgr, "ROOT")
 
+function message.SHAKEHANDS()
+end
+
 function message.ROOT()
 	response("ROOT", roothash)
 end

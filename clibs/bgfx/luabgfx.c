@@ -1219,7 +1219,7 @@ lframe(lua_State *L) {
 static int
 lrenderFrame(lua_State *L) {
 	int msecs = luaL_optinteger(L, 1, -1);
-	bgfx_render_frame_t status = bgfx_render_frame(msecs);
+	bgfx_render_frame_t status = BGFX(render_frame)(msecs);
 	lua_pushinteger(L, status);
 	return 1;
 }
