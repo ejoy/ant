@@ -1,22 +1,22 @@
 local ecs = ...
-local world = ecs.world
-local w = world.w
-
-local assetmgr      = import_package "ant.asset"
-local audio     = require "audio"
-
+local platform = require "bee.platform"
+local assetmgr = import_package "ant.asset"
 local audio_sys = ecs.system "audio_system"
-
 local ia = ecs.interface "audio_interface"
-
+local caudio
+if "android" ~= platform.os then
+    caudio = require "audio"
+end
 function ia.create(eventname)
-    return audio.create(eventname)
+    if not caudio then return end
+    return caudio.create(eventname)
 end
 local bank = {}
 function ia.load_bank(filename)
+    if not caudio then return end
     if not bank[filename] then
         local res = assetmgr.resource(filename)
-        bank[filename] = audio.load_bank(res.rawdata)
+        bank[filename] = caudio.load_bank(res.rawdata)
     end
     return bank[filename]
 end
@@ -24,55 +24,58 @@ end
 local sound_event = {}
 
 function ia.play(event_name)
+    if not caudio then return end
     if not sound_event[event_name] then
         sound_event[event_name] = ia.create(event_name)
     end
     local ev = sound_event[event_name]
     if ev then
-        audio.play(ev)
+        caudio.play(ev)
     end
 end
 
 function ia.destroy(event_name)
+    if not caudio then return end
     if event_name then
         local event = sound_event[event_name]
         if event then
-            audio.destroy(event)
+            caudio.destroy(event)
             sound_event[event_name] = nil
         end
     else
         for _, value in pairs(sound_event) do
-            audio.destroy(value)
+            caudio.destroy(value)
         end
         sound_event = {}
     end
 end
 
 -- function ia.play(event)
---     audio.play(event)
+--     caudio.play(event)
 -- end
 
 -- function ia.destroy(event)
---     audio.destroy(event)
+--     caudio.destroy(event)
 -- end
 
 function ia.stop(event)
-    audio.stop(event)
+    if not caudio then return end
+    caudio.stop(event)
 end
 
 function ia.get_event_list(b)
-    return audio.get_event_list(b)
+    if not caudio then return {} end
+    return caudio.get_event_list(b)
 end
 
 function ia.get_event_name(se)
-    return audio.get_event_name(se)
+    if not caudio then return "" end
+    return caudio.get_event_name(se)
 end
 
-local sound_attack_
-local sound_click_
-
-function audio_sys:init()    
-    audio.init()
+function audio_sys:init()
+    if not caudio then return end
+    caudio.init()
     --test
     -- local bankname = "/pkg/tools.prefab_editor/res/sounds/Master.bank"
     -- local master = ia.load_bank(bankname)
@@ -94,35 +97,36 @@ function audio_sys:init()
     -- if not ui then
     --     print("LoadBank Faied. :", bankname)
     -- end
-    -- local bank_list = audio.get_bank_list()
+    -- local bank_list = caudio.get_bank_list()
     -- for _, v in ipairs(bank_list) do
-    --     print(audio.get_bank_name(v))
+    --     print(caudio.get_bank_name(v))
     -- end
 
-    -- local event_list = audio.get_event_list(master)
+    -- local event_list = caudio.get_event_list(master)
     -- for _, v in ipairs(event_list) do
-    --     print(audio.get_event_name(v))
+    --     print(caudio.get_event_name(v))
     -- end
-    -- local event_list = audio.get_event_list(construt)
+    -- local event_list = caudio.get_event_list(construt)
     -- for _, v in ipairs(event_list) do
-    --     print(audio.get_event_name(v))
+    --     print(caudio.get_event_name(v))
     -- end
-    -- local event_list = audio.get_event_list(ui)
+    -- local event_list = caudio.get_event_list(ui)
     -- for _, v in ipairs(event_list) do
-    --     print(audio.get_event_name(v))
+    --     print(caudio.get_event_name(v))
     -- end
-    -- local event_name = "event:/openui1"
-    -- sound_event[event_name] = ia.create(event_name)
+    -- -- sound_event[event_name] = ia.create(event_name)
     -- -- event_name = "event:/UI/click"
     -- -- sound_event[event_name] = ia.create(event_name)
-    -- ia.play(event_name)
+    -- ia.play("event:/background")
 end
 
 function audio_sys:data_changed()
-    audio.update()
+    if not caudio then return end
+    caudio.update()
 end
 
 function audio_sys:exit()
+    if not caudio then return end
     ia.destroy()
-    audio.shutdown()
+    caudio.shutdown()
 end

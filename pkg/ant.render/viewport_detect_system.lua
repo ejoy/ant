@@ -62,7 +62,7 @@ local function update_render_queue(q, viewsize)
 
 	if q.camera_ref then
 		local camera <close> = w:entity(q.camera_ref)
-		icamera.set_frustum_aspect(camera, vr.w/vr.h)
+		icamera.update_frustum(camera, vr.w, vr.h)
 	end
 	resize_framebuffer(vr.w, vr.h, rt.fb_idx)
 	irq.update_rendertarget(q.queue_name, rt)

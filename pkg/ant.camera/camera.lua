@@ -127,6 +127,19 @@ function ic.set_frustum_far(ce, f)
     frustum_changed(ce, "f", f)
 end
 
+function ic.update_frustum(ce, ww, hh)
+    w:extend(ce, "camera:in")
+    local f = ce.camera.frustum
+    if f.ortho then
+        local hw, hh2 = ww // 2, hh // 2
+        f.l, f.r = hw,  -hw
+        f.t, f.b = hh2, -hh2
+    else
+        f.aspect = ww/hh
+    end
+    mark_camera_changed(ce, true)
+end
+
 local iom = ecs.import.interface "ant.objcontroller|iobj_motion"
 function ic.lookto(ce, ...)
     iom.lookto(ce, ...)

@@ -5,8 +5,17 @@ extern "C" {
 #include <lua.hpp>
 #include <bee/nonstd/to_underlying.h>
 #include <android/log.h>
+#include <cassert>
 
-static struct android_app* g_app;
+static struct android_app* g_app = NULL;
+static struct ant_window_callback* g_cb = NULL;
+static ANativeWindow* g_window = NULL;
+
+static void push_message(struct ant_window_message* msg) {
+    if (g_cb) {
+        g_cb->message(g_cb->ud, msg);
+    }
+}
 
 enum class AndroidPath {
     InternalDataPath,
@@ -14,6 +23,7 @@ enum class AndroidPath {
 };
 
 int window_init(struct ant_window_callback* cb) {
+    g_cb = cb;
     return 0;
 }
 
@@ -22,10 +32,68 @@ int window_create(struct ant_window_callback* cb, int w, int h) {
 }
 
 void window_mainloop(struct ant_window_callback* cb, int update) {
+    int events;
+    android_poll_source* source;
+    struct ant_window_message update_msg;
+    update_msg.type = ANT_WINDOW_UPDATE;
+    do {
+        if (ALooper_pollAll(0, nullptr, &events, (void **) &source) >= 0) {
+            if (source) {
+                source->process(g_app, source);
+            }
+        }
+        if (g_window) {
+            cb->message(cb->ud, &update_msg);
+        }
+    } while (!g_app->destroyRequested);
+}
+
+static void handle_cmd(android_app* app, int32_t cmd) {
+    switch (cmd) {
+        case APP_CMD_INIT_WINDOW: {
+            if (g_window == app->window) {
+                break;
+            }
+            assert(g_window == NULL);
+            g_window = app->window;
+            int32_t w = ANativeWindow_getWidth(app->window);
+            int32_t h = ANativeWindow_getHeight(app->window);
+            struct ant_window_message msg;
+            msg.type = ANT_WINDOW_INIT;
+            msg.u.init.window = app->window;
+            msg.u.init.context = NULL;
+            msg.u.init.w = w;
+            msg.u.init.h = h;
+            push_message(&msg);
+            break;
+        }
+        case APP_CMD_DESTROY: {
+            struct ant_window_message msg;
+            msg.type = ANT_WINDOW_EXIT;
+            push_message(&msg);
+            break;
+        }
+        case APP_CMD_TERM_WINDOW:
+        case APP_CMD_WINDOW_RESIZED:
+        case APP_CMD_WINDOW_REDRAW_NEEDED:
+        case APP_CMD_CONTENT_RECT_CHANGED:
+        case APP_CMD_GAINED_FOCUS:
+        case APP_CMD_LOST_FOCUS:
+        case APP_CMD_CONFIG_CHANGED:
+        case APP_CMD_LOW_MEMORY:
+        case APP_CMD_START:
+        case APP_CMD_RESUME:
+        case APP_CMD_SAVE_STATE:
+        case APP_CMD_PAUSE:
+        case APP_CMD_STOP:
+        case APP_CMD_WINDOW_INSETS_CHANGED:
+            break;
+    }
 }
 
 extern "C" void window_set_android_app(struct android_app* app) {
     g_app = app;
+    app->onAppCmd = handle_cmd;
 }
 
 static int ldirectory(lua_State* L) {

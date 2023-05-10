@@ -17,6 +17,10 @@
 #include "bgfx_alloc.h"
 #include "transient_buffer.h"
 
+#if BX_PLATFORM_ANDROID
+#include <android/log.h>
+#endif
+
 #if BGFX_API_VERSION != 118
 #   error BGFX_API_VERSION mismatch
 #endif
@@ -346,8 +350,12 @@ fatal_code_str(bgfx_fatal_t code) {
 
 static void
 cb_fatal(bgfx_callback_interface_t *self, const char* filePath, uint16_t line, bgfx_fatal_t code, const char *str) {
+#if BX_PLATFORM_ANDROID
+	__android_log_print(ANDROID_LOG_FATAL, "bgfx", "Fatal error at %s(%d): [%s] %s\n", filePath, line, fatal_code_str(code), str);
+#else
 	fprintf(stderr, "Fatal error at %s(%d): [%s] %s\n", filePath, line, fatal_code_str(code), str);
 	fflush(stderr);
+#endif
 	abort();
 }
 
