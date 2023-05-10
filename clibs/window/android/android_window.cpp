@@ -5,7 +5,7 @@ extern "C" {
 #include <lua.hpp>
 #include <bee/nonstd/to_underlying.h>
 #include <android/log.h>
-#include <cassert.h>
+#include <cassert>
 
 static struct android_app* g_app = NULL;
 static struct ant_window_callback* g_cb = NULL;
