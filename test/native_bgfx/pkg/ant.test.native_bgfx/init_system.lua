@@ -132,7 +132,7 @@ function is:init()
     
 end
 
-local fb_size = {w=world.args.fbw, h=world.args.fbh}
+local fb_size = {w=world.args.viewport.w, h=world.args.viewport.h}
 
 local function create_fb1(rbs, viewid)
     local fbhandle = bgfx.create_frame_buffer(rbs, true)
@@ -149,7 +149,7 @@ local function create_fb(rbs, viewid)
     return create_fb1(handles, viewid)
 end
 local sampleflag = sampler{
-    RT="RT_MSAA4",
+    RT = "RT_ON",
     MIN="LINEAR",
     MAG="LINEAR",
     U="CLAMP",
@@ -176,14 +176,12 @@ local fb_viewid, fb = create_fb1({
         sampleflag), depth_fb.rb_handles[1]}, 1)
 
 function is:update()
-    local eye = {0, 0, -10}
-    local viewmat = math3d.lookat(math3d.vector(eye), math3d.vector(0, 0, 0), math3d.vector(0, 1, 0))
-    
+    local viewmat = math3d.lookat(math3d.vector(0, 0, -10), math3d.vector(0, 0, 0), math3d.vector(0, 1, 0))
     local projmat = math3d.projmat{aspect=fb_size.w/fb_size.h, fov=90, n=0.01, f=100}
 
     bgfx.touch(depth_viewid)
     bgfx.set_view_clear(depth_viewid, "D", 0, 1.0, 0.0)
-    bgfx.set_view_transform(depth_viewid, math3d.value_ptr(viewmat), math3d.value_ptr(projmat))
+    bgfx.set_view_transform(depth_viewid, viewmat, projmat)
     bgfx.set_view_rect(depth_viewid, 0, 0, fb_size.w, fb_size.h)
     bgfx.set_state(material.depth.state)
     bgfx.set_vertex_buffer(0, mesh.vb.handle, mesh.vb.start, mesh.vb.num)
@@ -192,7 +190,7 @@ function is:update()
 
     bgfx.touch(fb_viewid)
     bgfx.set_view_clear(fb_viewid, "C", 0x000000ff, 1.0, 0.0)
-    bgfx.set_view_transform(fb_viewid, math3d.value_ptr(viewmat), math3d.value_ptr(projmat))
+    bgfx.set_view_transform(fb_viewid, viewmat, projmat)
     bgfx.set_view_rect(fb_viewid, 0, 0, fb_size.w, fb_size.h)
     bgfx.set_state(material.mesh.state)
     bgfx.set_vertex_buffer(0, mesh.vb.handle, mesh.vb.start, mesh.vb.num)

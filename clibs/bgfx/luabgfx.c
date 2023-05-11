@@ -398,8 +398,12 @@ cb_trace_vargs(bgfx_callback_interface_t *self, const char *file, uint16_t line,
 		append_log(&(cb->lc), tmp, n);
 	}
 	if (cb->filterlog > 0 && trace_filter(format, cb->filterlog)) {
+#if BX_PLATFORM_ANDROID
+		__android_log_write(ANDROID_LOG_INFO, "bgfx", tmp);
+#else
 		fputs(tmp, stdout);
 		fflush(stdout);
+#endif
 	}
 }
 
