@@ -13,7 +13,7 @@ local RuntimeBacklist = {
 
 local EditorBacklist = {
     firmware = true,
-    audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os ~= "windows"),
+    audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os == "android"),
     effekseer = true,
     remotedebug = true,
 }
