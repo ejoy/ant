@@ -17,13 +17,9 @@ local shadowcfg = setmetatable({}, {__index= setting:data().graphic.shadow})
 bgfx.set_palette_color(0, 0.0, 0.0, 0.0, 0.0)
 
 shadowcfg.shadowmap_size	= shadowcfg.size
-shadowcfg.shadow_param		= math3d.ref(math3d.vector(shadowcfg.bias, shadowcfg.min_variance or 0.0, 1/shadowcfg.size, shadowcfg.depth_multiplier or 1.0))
+shadowcfg.shadow_param		= math3d.ref(math3d.vector(0, shadowcfg.min_variance or 0.0, 1/shadowcfg.size, shadowcfg.depth_multiplier or 1.0))
 shadowcfg.shadow_param2		= math3d.ref(math3d.vector(shadowcfg.color[1], shadowcfg.color[2], shadowcfg.color[3], shadowcfg.normal_offset))
 shadowcfg.split_frustums	= {nil, nil, nil, nil}
-
-if shadowcfg.bias == nil then 
-	shadowcfg.bias = 0.003
-end
 
 if shadowcfg.min_variance == nil then
 	shadowcfg.min_variance = 0.012
