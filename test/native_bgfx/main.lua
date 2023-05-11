@@ -13,12 +13,7 @@ import_package "ant.window".start {
         "ant.test.native_bgfx|init_system",
     },
     interface = {
-        "ant.objcontroller|iobj_motion",
     },
     policy = {
-        "ant.general|name",
-        "ant.scene|scene_object",
-        "ant.render|render",
-        "ant.render|render_queue",
     }
 }

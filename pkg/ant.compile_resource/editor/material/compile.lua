@@ -47,11 +47,11 @@ local enable_bloom<const>   = setting:get "graphic/postprocess/bloom/enable"
 local fxaa_setting<const>    = setting:data().graphic.postprocess.fxaa
 local ao_setting<const>     = setting:data().graphic.ao or def_setting.graphic.ao
 
-local curve_world = setting:data().graphic.curve_world
-local curve_world_type_macros<const> = {
-    view_sphere = 1,
-    cylinder = 2,
-}
+-- local curve_world = setting:data().graphic.curve_world
+-- local curve_world_type_macros<const> = {
+--     view_sphere = 1,
+--     cylinder = 2,
+-- }
 
 local function default_macros(setting)
     local m = {
@@ -67,9 +67,9 @@ local function default_macros(setting)
         m[#m+1] = "CLUSTER_SHADING=1"
     end
 
-    if curve_world.enable then
-        m[#m+1] = "ENABLE_CURVE_WORLD=" .. curve_world_type_macros[curve_world.type]
-    end
+    -- if curve_world.enable then
+    --     m[#m+1] = "ENABLE_CURVE_WORLD=" .. curve_world_type_macros[curve_world.type]
+    -- end
 
     if enable_bloom then
         m[#m+1] = "BLOOM_ENABLE=1"
