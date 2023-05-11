@@ -103,7 +103,7 @@ void ant_loadmodules(lua_State* L) {
         { "fileinterface", luaopen_fileinterface },
         { "layout", luaopen_layout},
         //{ "layout.init", luaopen_layout_init },
-#if (defined(_WIN32) && !defined(__MINGW32__)) || BX_PLATFORM_OSX || BX_PLATFORM_IOS
+#if (defined(_WIN32) && !defined(__MINGW32__)) || BX_PLATFORM_IOS
         { "audio", luaopen_audio},
 #endif
         { "ltask", luaopen_ltask},
