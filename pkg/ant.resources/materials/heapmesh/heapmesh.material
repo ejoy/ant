@@ -1,7 +1,7 @@
 fx:
   cs: /pkg/ant.resources/shaders/mesh/cs_heapmesh.sc
   setting:
-    lighting: off
+    lighting: on
     shadow_cast: off
     shadow_receive: off
     subsurface: off
