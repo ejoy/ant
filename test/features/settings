@@ -33,7 +33,6 @@ graphic:
     fxaa:
       enable: true
   shadow:
-    bias: 0.003
     color: {0, 0, 0, 1}
     depth_multiplier: 1000
     enable: true
