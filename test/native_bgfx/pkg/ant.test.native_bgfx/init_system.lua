@@ -5,7 +5,8 @@ local math3d    = require "math3d"
 local declmgr   = require "declmgr"
 local fs        = require "filesystem"
 local sampler   = require "sampler"
-
+local platform  = require "bee.platform"
+local OS        = platform.os
 
 local is = ecs.system "init_system"
 
@@ -121,10 +122,14 @@ local function load_program(shader, vsfile, fsfile)
     shader.prog, shader.uniforms = create_render_program(vshandle, fshandle)
 end
 
-load_program(material.mesh.shader, fs.path "/pkg/ant.test.native_bgfx/shaders/mesh/vs_mesh.bin", fs.path "/pkg/ant.test.native_bgfx/shaders/mesh/fs_mesh.bin")
-load_program(material.fullscreen.shader, fs.path "/pkg/ant.test.native_bgfx/shaders/fullquad/vs_quad.bin", fs.path "/pkg/ant.test.native_bgfx/shaders/fullquad/fs_quad.bin")
+local function shader_path(name)
+    return fs.path(("/pkg/ant.test.native_bgfx/shaders/bin/%s/%s"):format(OS, name))
+end
 
-load_program(material.depth.shader, fs.path "/pkg/ant.test.native_bgfx/shaders/mesh/vs_mesh.bin")
+load_program(material.mesh.shader,          shader_path "vs_mesh.bin", shader_path "fs_mesh.bin")
+load_program(material.fullscreen.shader,    shader_path "vs_quad.bin", shader_path "fs_quad.bin")
+
+load_program(material.depth.shader,         shader_path "vs_mesh.bin")
 
 local viewid = 2
 
