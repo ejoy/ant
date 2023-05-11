@@ -91,6 +91,15 @@ function hm_sys:init()
 	heap_mesh_material = assetmgr.resource("/pkg/ant.resources/materials/heapmesh/heapmesh.material")
 end
 
+local function check_destroy(ro)
+    if ro and ro.idb_handle ~= 0xffffffff then
+        bgfx.destroy(ro.idb_handle)
+    end
+    if ro and ro.idb_handle ~= 0xffffffff then
+        bgfx.destroy(ro.itb_handle)
+    end
+end
+
 function hm_sys:heap_mesh()
     for e in w:select "heapmesh:update render_object?update bounding?update scene?in" do
         local heapmesh = e.heapmesh
@@ -147,7 +156,7 @@ function hm_sys:heap_mesh()
             local specialParam = calc_special_t(meshOffset, worldOffset, curSideSize)
 
             create_heap_compute(curHeapNum, indirectBuffer_handle, instanceBufferOut_handle, heapParams, meshOffset, instanceParams, worldOffset, specialParam, intervalParam)
-
+            check_destroy(e.render_object)
             e.render_object.idb_handle = indirectBuffer_handle
             e.render_object.itb_handle = instanceBufferOut_handle
         end
@@ -159,6 +168,7 @@ function hm_sys:heap_mesh()
         e.render_object.draw_num = curHeapNum
 	end
 end
+
 
 function iheapmesh.update_heap_mesh_number(eid, num)
     local e <close> = w:entity(eid, "heapmesh:update")
