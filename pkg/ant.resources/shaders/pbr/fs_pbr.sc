@@ -16,6 +16,8 @@ $input v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_LIGHTMAP_
 #include "pbr/lighting.sh"
 #include "pbr/indirect_lighting.sh"
 #include "pbr/pbr.sh"
+#include "postprocess/tonemapping.sh"
+
 #include "input_attributes.sh"
 
 void main()
@@ -23,7 +25,7 @@ void main()
 #include "attributes_getter.sh"
 
 #ifdef MATERIAL_UNLIT
-    gl_FragColor = input_attribs.basecolor + input_attribs.emissive;
+    gl_FragColor = mul_inverse_tonemap(input_attribs.basecolor + input_attribs.emissive);
 #else //!MATERIAL_UNLIT
     gl_FragColor = compute_lighting(input_attribs);
 #endif //MATERIAL_UNLIT
