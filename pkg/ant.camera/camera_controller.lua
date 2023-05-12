@@ -31,7 +31,7 @@ local init = false
 local distance = 1
 local baseDistance = 1
 local zoomExponent = 2
-local zoomFactor = 0.01
+local zoomFactor = 0.1
 
 local lookat = math3d.ref(math3d.vector(0, 0, 1))
 --right up偏移
@@ -84,10 +84,7 @@ local function check_stop_camera()
 end
 
 local function calc_zoom_distance(dz)
-    local zoomDistance=(distance/baseDistance)^(1.0/zoomExponent)
-    zoomDistance=zoomDistance-dz*zoomFactor
-    zoomDistance=math.max(zoomDistance,0.0001)
-    distance=(zoomDistance*zoomDistance)*baseDistance
+    distance = distance - dz * zoomFactor
 end
 
 local function calc_cur_lookat()
