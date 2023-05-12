@@ -11,6 +11,7 @@ extern "C" {
 static struct android_app* g_app = NULL;
 static struct ant_window_callback* g_cb = NULL;
 static ANativeWindow* g_window = NULL;
+static bool g_initialized = false;
 
 static void push_message(struct ant_window_message* msg) {
     if (g_cb) {
@@ -38,12 +39,12 @@ void window_mainloop(struct ant_window_callback* cb, int update) {
     struct ant_window_message update_msg;
     update_msg.type = ANT_WINDOW_UPDATE;
     do {
-        if (ALooper_pollAll(0, nullptr, &events, (void **) &source) >= 0) {
+        if (ALooper_pollAll(g_window ? 0 : -1, nullptr, &events, (void **) &source) >= 0) {
             if (source) {
                 source->process(g_app, source);
             }
         }
-        if (g_window) {
+        if (g_initialized) {
             cb->message(cb->ud, &update_msg);
         }
     } while (!g_app->destroyRequested);
@@ -51,16 +52,21 @@ void window_mainloop(struct ant_window_callback* cb, int update) {
 
 static void handle_cmd(android_app* app, int32_t cmd) {
     switch (cmd) {
+        case APP_CMD_START:
         case APP_CMD_INIT_WINDOW: {
             if (g_window == app->window) {
                 break;
             }
-            assert(g_window == NULL);
+            if (app->window == NULL) {
+                g_window = NULL;
+                return;
+            }
             g_window = app->window;
+            g_initialized = true;
             int32_t w = ANativeWindow_getWidth(app->window);
             int32_t h = ANativeWindow_getHeight(app->window);
             struct ant_window_message msg;
-            msg.type = ANT_WINDOW_INIT;
+            msg.type = g_initialized? ANT_WINDOW_INIT: ANT_WINDOW_RECREATE;
             msg.u.init.window = app->window;
             msg.u.init.context = NULL;
             msg.u.init.w = w;
@@ -68,24 +74,36 @@ static void handle_cmd(android_app* app, int32_t cmd) {
             push_message(&msg);
             break;
         }
+        case APP_CMD_TERM_WINDOW:
+            g_window = NULL;
+            break;
         case APP_CMD_DESTROY: {
             struct ant_window_message msg;
             msg.type = ANT_WINDOW_EXIT;
             push_message(&msg);
             break;
         }
-        case APP_CMD_TERM_WINDOW:
-        case APP_CMD_WINDOW_RESIZED:
+        case APP_CMD_WINDOW_RESIZED: {
+            int32_t w = ANativeWindow_getWidth(app->window);
+            int32_t h = ANativeWindow_getHeight(app->window);
+            struct ant_window_message msg;
+            msg.type = ANT_WINDOW_SIZE;
+            msg.u.size.x = w;
+            msg.u.size.y = h;
+            msg.u.size.type = 0;
+            push_message(&msg);
+            break;
+        }
+        case APP_CMD_LOST_FOCUS:
+        case APP_CMD_PAUSE:
+        case APP_CMD_GAINED_FOCUS:
+        case APP_CMD_RESUME:
+            break;
         case APP_CMD_WINDOW_REDRAW_NEEDED:
         case APP_CMD_CONTENT_RECT_CHANGED:
-        case APP_CMD_GAINED_FOCUS:
-        case APP_CMD_LOST_FOCUS:
         case APP_CMD_CONFIG_CHANGED:
         case APP_CMD_LOW_MEMORY:
-        case APP_CMD_START:
-        case APP_CMD_RESUME:
         case APP_CMD_SAVE_STATE:
-        case APP_CMD_PAUSE:
         case APP_CMD_STOP:
         case APP_CMD_WINDOW_INSETS_CHANGED:
             break;

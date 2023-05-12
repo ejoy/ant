@@ -644,6 +644,44 @@ private:
 		return 0;
 	}
 
+	int joint_local_srt(lua_State *L){
+		const auto poses = m_results.empty() ? m_ske->joint_rest_poses() : ozz::make_span(m_results.back());
+		const int joint_idx = (int)luaL_checkinteger(L, 2)-1;
+		if (joint_idx >= poses.size() || joint_idx < 0){
+			return luaL_error(L, "Invalid joint index:%d", joint_idx);
+		}
+
+		const int si = joint_idx & 3;
+		const auto pose = poses[joint_idx];
+		
+    	float * s = (float*)lua_touserdata(L, 3);
+		float * r = (float*)lua_touserdata(L, 4);
+		float * t = (float*)lua_touserdata(L, 5);
+
+		
+		float ss[4][3];
+		ozz::math::StorePtr(pose.scale.x, ss[0]);
+		ozz::math::StorePtr(pose.scale.y, ss[1]);
+		ozz::math::StorePtr(pose.scale.z, ss[2]);
+		s[0] = ss[0][si]; s[1] = ss[1][si]; s[0] = ss[2][si];
+
+		float rr[4][4];
+		ozz::math::StorePtr(pose.rotation.x, rr[0]);
+		ozz::math::StorePtr(pose.rotation.y, rr[1]);
+		ozz::math::StorePtr(pose.rotation.z, rr[2]);
+		ozz::math::StorePtr(pose.rotation.w, rr[3]);
+
+		r[0] = rr[0][si]; r[1] = rr[1][si]; r[0] = rr[2][si]; r[0] = rr[3][si];
+
+		float tt[4][3];
+		ozz::math::StorePtr(pose.translation.x, tt[0]);
+		ozz::math::StorePtr(pose.translation.y, tt[1]);
+		ozz::math::StorePtr(pose.translation.z, tt[2]);
+		t[0] = tt[0][si]; t[1] = tt[1][si]; t[0] = tt[2][si];
+
+		return 0;
+	}
+
 #define STATIC_MEM_FUNC(_NAME)	static int l##_NAME(lua_State* L){ auto pr = ozzPoseResult::get(L, 1); return pr->_NAME(L); }
 	STATIC_MEM_FUNC(setup);
 	STATIC_MEM_FUNC(do_sample);
@@ -651,6 +689,7 @@ private:
 	STATIC_MEM_FUNC(do_ik);
 	STATIC_MEM_FUNC(clear);
 	STATIC_MEM_FUNC(fix_root_XZ);
+	STATIC_MEM_FUNC(joint_local_srt);
 #undef MEM_FUNC
 
 public:
@@ -665,6 +704,7 @@ public:
 			{ "fix_root_XZ", 	lfix_root_XZ},
 			{ "count", 			lcount},
 			{ "joint", 			ljoint},
+			{ "joint_local_srt",ljoint_local_srt},
 			{ nullptr, 			nullptr},
 		};
 

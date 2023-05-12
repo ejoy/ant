@@ -152,6 +152,13 @@ function S.init(nwh, context, width, height)
 	ltask.fork(render)
 end
 
+function S.recreate(nwh, _, width, height)
+	bgfx.set_platform_data {
+		nwh = nwh
+	}
+	S.size(width, height)
+end
+
 S.mouse_wheel = function () end
 S.mouse = function () end
 S.touch = function () end

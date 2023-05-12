@@ -259,6 +259,8 @@ mathadapter.bind(
 
 		mt = animodule.pose_result_mt()
 		mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
+		mt.joint_local_srt = math3d_adapter.format(mt.joint_local_srt, "vqv", 3)
+
 		mt.fetch_result = math3d_adapter.getter(mt.fetch_result, "m", 2)
 
 		mt = animodule.raw_animation_mt()

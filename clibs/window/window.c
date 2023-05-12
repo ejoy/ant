@@ -93,6 +93,7 @@ push_arg(lua_State *L, struct ant_window_message *msg) {
 		push_update_args(L, &msg->u.update);
 		break;
 	case ANT_WINDOW_INIT:
+	case ANT_WINDOW_RECREATE:
 		push_init_args(L, &msg->u.init);
 		break;
 	case ANT_WINDOW_EXIT:
