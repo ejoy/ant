@@ -6,6 +6,7 @@ local initialized = false
 
 local CALL = {
     "init",
+    "set_platform_data",
     "frame",
     "shutdown",
     "request_screenshot",
