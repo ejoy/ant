@@ -43,7 +43,7 @@ end
 
 local debug_entities = {}
 local function create_debug_entity()
-	do
+--[[ 	do
 		local splitnum = ishadow.split_num()
 		debug_entities[#debug_entities+1] = ecs.create_entity {
 			policy = {
@@ -57,7 +57,7 @@ local function create_debug_entity()
 				visible_state= "main_view",
 			}
 		}
-	end
+	end ]]
 
 	do
 		local mq = w:first "main_queue camera_ref:in"

@@ -195,9 +195,9 @@ local function render_layer_test()
 end
 
 local sampler_eid
-
+local heap_eid
 local function drawindirect_test()
---[[         ecs.create_entity {
+     heap_eid = ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -208,7 +208,7 @@ local function drawindirect_test()
             scene  = {s = 0.2, t = {2, 0, 0}},
             material    = "/pkg/ant.resources/materials/pbr_heap.material", -- 自定义material文件中需加入HEAP_MESH :1
             visible_state = "main_view",
-            mesh        = "/pkg/ant.test.features/assets/glb/iron-ore.glb|meshes/Cube_P1.meshbin",
+            mesh        = "/pkg/ant.resources.binary/meshes/iron-ore.glb|meshes/Cube.001_P1.meshbin",
             heapmesh = {
                 curSideSize = {4, 4, 4}, -- 当前 x y z方向最大堆叠数量为3, 4, 5，通过表的形式赋值给curSideSize，最大堆叠数为3*4*5 = 60
                 curHeapNum = 64, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
@@ -216,8 +216,8 @@ local function drawindirect_test()
                 interval = {0.5, 0.5, 0.5}
             }
         },
-    }  ]]
-   
+    }  
+   local t = 1 
 --[[      ecs.create_entity {
         policy = {
             "ant.render|render",
@@ -393,7 +393,7 @@ function init_loader_sys:entity_init()
             local e = assert(w:entity(sampler_eid))
             print(math3d.tostring(iom.get_position(e)))
         elseif key == "J" and press == 0 then
-            iheapmesh.update_heap_mesh_number(heap_num, "iron-ingot") -- 更新当前堆叠数 参数一为待更新堆叠数 参数二为entity筛选的glb名字
+            iheapmesh.update_heap_mesh_number(heap_eid, heap_num) -- 更新当前堆叠数 参数一为待更新堆叠数 参数二为entity筛选的eid
             heap_num = heap_num + 1
         elseif key == "K" and press == 0 then
             iheapmesh.update_heap_mesh_number(0, "iron-ingot")   -- 更新当前堆叠数
