@@ -94,15 +94,16 @@ static void handle_cmd(android_app* app, int32_t cmd) {
             push_message(&msg);
             break;
         }
+        case APP_CMD_LOST_FOCUS:
+        case APP_CMD_PAUSE:
+        case APP_CMD_GAINED_FOCUS:
+        case APP_CMD_RESUME:
+            break;
         case APP_CMD_WINDOW_REDRAW_NEEDED:
         case APP_CMD_CONTENT_RECT_CHANGED:
-        case APP_CMD_GAINED_FOCUS:
-        case APP_CMD_LOST_FOCUS:
         case APP_CMD_CONFIG_CHANGED:
         case APP_CMD_LOW_MEMORY:
-        case APP_CMD_RESUME:
         case APP_CMD_SAVE_STATE:
-        case APP_CMD_PAUSE:
         case APP_CMD_STOP:
         case APP_CMD_WINDOW_INSETS_CHANGED:
             break;
