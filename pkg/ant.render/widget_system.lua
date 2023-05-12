@@ -194,10 +194,10 @@ function rmb_sys:follow_transform_updated()
 	local sd  = setting:data()
 	if sd.debug and sd.debug.show_bounding then
 		local desc={vb={}, ib={}}
-		for e in w:select "render_object scene:in" do
-			local aabb = e.scene.scene_aabb
+		for e in w:select "render_object scene bounding:in" do
+			local aabb = e.bounding.scene_aabb
 			if aabb ~= mc.NULL and ivs.has_state(e, "main_view") then
-				local minv, maxv = math3d.array_index(aabb, 1) math3d.array_index(aabb, 2)
+				local minv, maxv = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
 				local aabb_shape = {min=math3d.tovalue(minv), max=math3d.tovalue(maxv)}
 				local voffset = #desc.vb//4
 				local ibstart = #desc.ib
