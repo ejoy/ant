@@ -128,6 +128,8 @@ static void push_touch_message(int type, UIView* view, NSSet* touches) {
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    application.idleTimerDisabled = true;
+
     CGRect rect = [[UIScreen mainScreen] bounds];
     float scale = [[UIScreen mainScreen] scale];
     self.m_window = [[UIWindow alloc] initWithFrame: rect];
