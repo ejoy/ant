@@ -52,10 +52,9 @@ void window_mainloop(struct ant_window_callback* cb, int update) {
 static void handle_cmd(android_app* app, int32_t cmd) {
     switch (cmd) {
         case APP_CMD_INIT_WINDOW: {
-            if (g_window == app->window) {
+            if (g_window != NULL) {
                 break;
             }
-            assert(g_window == NULL);
             g_window = app->window;
             int32_t w = ANativeWindow_getWidth(app->window);
             int32_t h = ANativeWindow_getHeight(app->window);
@@ -75,6 +74,7 @@ static void handle_cmd(android_app* app, int32_t cmd) {
             break;
         }
         case APP_CMD_TERM_WINDOW:
+            break;
         case APP_CMD_WINDOW_RESIZED:
         case APP_CMD_WINDOW_REDRAW_NEEDED:
         case APP_CMD_CONTENT_RECT_CHANGED:
