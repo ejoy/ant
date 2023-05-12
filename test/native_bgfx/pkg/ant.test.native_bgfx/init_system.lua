@@ -8,6 +8,10 @@ local sampler   = require "sampler"
 local platform  = require "bee.platform"
 local OS        = platform.os
 
+local caps = bgfx.get_caps()
+
+local renderer<const> = caps.rendererType
+
 local is = ecs.system "init_system"
 
 local mesh = {
@@ -123,7 +127,7 @@ local function load_program(shader, vsfile, fsfile)
 end
 
 local function shader_path(name)
-    return fs.path(("/pkg/ant.test.native_bgfx/shaders/bin/%s/%s"):format(OS, name))
+    return fs.path(("/pkg/ant.test.native_bgfx/shaders/bin/%s/%s/%s"):format(OS, renderer:lower(), name))
 end
 
 load_program(material.mesh.shader,          shader_path "vs_mesh.bin", shader_path "fs_mesh.bin")
