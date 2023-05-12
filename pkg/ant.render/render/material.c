@@ -305,19 +305,6 @@ pop_arena(lua_State*L){
 	lua_pop(L, 1);
 }
 
-static inline int
-push_arena_uv(lua_State *L, int uvidx){
-	const int arenaidx = check_push_arena(L);
-	//system attrib table
-	if (lua_getiuservalue(L, arenaidx, uvidx) != LUA_TTABLE){
-		luaL_error(L, "Invalid system atrrib table");
-	}
-
-	lua_insert(L, -2);	//swap with arena
-	pop_arena(L);
-	return lua_absindex(L, -1);	// -1 is 'uvidx' object in stack
-}
-
 static inline struct attrib_arena*
 arena_from_reg(lua_State *L){
 	const int arenaidx = check_push_arena(L);

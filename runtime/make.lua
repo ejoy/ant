@@ -3,17 +3,30 @@ local fs = require "bee.filesystem"
 
 local runtime = false
 
+local function support_audio()
+    if lm.os == "windows" and lm.compiler == "gcc" then
+        return false
+    end
+    if lm.os == "android" then
+        return false
+    end
+    if lm.os == "macos" then
+        return false
+    end
+    return true
+end
+
 local RuntimeBacklist = {
     filedialog = true,
     imgui = true,
-    audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os == "android"),
+    audio = not support_audio(),
     effekseer = true,
     remotedebug = true,
 }
 
 local EditorBacklist = {
     firmware = true,
-    audio = (lm.os == "windows" and lm.compiler == "gcc") or (lm.os == "android"),
+    audio = not support_audio(),
     effekseer = true,
     remotedebug = true,
 }

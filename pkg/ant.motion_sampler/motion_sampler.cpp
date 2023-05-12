@@ -32,7 +32,6 @@ MT(lua_State *L, int index = 1){
 static int
 ltracks_delete(lua_State *L){
 	auto mt = MT(L);
-	auto w = getworld(L);
 
 	mt->s = nullptr;
 	mt->r = nullptr;
@@ -100,7 +99,7 @@ ltracks_sample(lua_State *L){
 	const float ratio = (float)luaL_checknumber(L, 2);
 	const auto M = w->math3d->M;
 
-	auto sample_track = [L, M](auto track, float ratio, const char* errmsg, auto tomathid){
+	auto sample_track = [L](auto track, float ratio, const char* errmsg, auto tomathid){
 		using TrackType = std::remove_pointer_t<decltype(track)>;
 
 		if (track){
