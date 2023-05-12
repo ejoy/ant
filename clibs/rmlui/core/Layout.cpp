@@ -9,7 +9,6 @@ namespace Rml {
 struct DefaultConfig {
 	DefaultConfig()
 		: config(YGConfigNew()) {
-		YGConfigSetLogger(config, logger);
 		YGConfigSetPointScaleFactor(config, 0);
 		YGConfigSetErrata(config, YGErrataNone);
 		YGConfigSetExperimentalFeatureEnabled(config, YGExperimentalFeatureAbsolutePercentageAgainstPaddingEdge, true);
@@ -17,9 +16,6 @@ struct DefaultConfig {
 	}
 	~DefaultConfig() {
 		YGConfigFree(config);
-	}
-	static int logger(YGConfigRef config, YGNodeRef node, YGLogLevel level, const char* format, va_list args) {
-		return vprintf(format, args);
 	}
 	YGConfigRef config;
 };

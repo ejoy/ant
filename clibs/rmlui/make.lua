@@ -9,12 +9,11 @@ lm:import "../luabind/build.lua"
 
 lm:source_set "yoga" {
     rootdir = Ant3rd .. "yoga",
-    includes = {
-        ".",
-    },
+    includes = ".",
     defines = lm.mode == "debug" and "DEBUG",
-    sources = {
-        "yoga/**/*.cpp",
+    sources = "yoga/**/*.cpp",
+    android = {
+        defines = "ANDROID"
     }
 }
 
