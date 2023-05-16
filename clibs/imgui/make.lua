@@ -14,17 +14,47 @@ local defines = {
 }
 
 lm:source_set "imgui" {
+    windows = {
+        includes = {
+            ".",
+            Ant3rd .. "imgui",
+        },
+        sources = {
+            "platform/windows/imgui_platform.cpp",
+            Ant3rd .. "imgui/backends/imgui_impl_win32.cpp",
+        },
+        defines = {
+            "_UNICODE",
+            "UNICODE",
+            defines,
+        }
+    },
+    macos = {
+        --TODO
+        deps = "sdl",
+        includes = {
+            ".",
+            Ant3rd .. "imgui",
+            Ant3rd .. "SDL/include",
+        },
+        sources = {
+            "platform/sdl/imgui_platform.cpp",
+            Ant3rd .. "imgui/backends/imgui_impl_sdl2.cpp",
+        },
+        defines = defines,
+    },
+}
+
+lm:source_set "imgui" {
     includes = {
         ".",
         Ant3rd .. "imgui",
-        Ant3rd .. "SDL/include",
     },
     sources = {
         Ant3rd .. "imgui/imgui_draw.cpp",
         Ant3rd .. "imgui/imgui_tables.cpp",
         Ant3rd .. "imgui/imgui_widgets.cpp",
         Ant3rd .. "imgui/imgui.cpp",
-        Ant3rd .. "imgui/backends/imgui_impl_sdl2.cpp",
     },
     defines = defines,
 }
@@ -41,15 +71,11 @@ lm:source_set "imgui" {
 }
 
 lm:lua_source "imgui" {
-    deps = {
-        "sdl",
-        "luabind"
-    },
+    deps = "luabind",
     includes = {
         ".",
         Ant3rd .. "imgui",
         Ant3rd .. "glm",
-        Ant3rd .. "SDL/include",
         BgfxInclude,
         "../bgfx",
         "../luabind"
@@ -57,7 +83,6 @@ lm:lua_source "imgui" {
     sources = {
         "imgui_config.cpp",
         "imgui_renderer.cpp",
-        "imgui_platform.cpp",
         "imgui_window.cpp",
         "luaimgui_tables.cpp",
         "luaimgui.cpp",
