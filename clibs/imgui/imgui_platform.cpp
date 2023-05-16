@@ -4,6 +4,7 @@
 #include <backends/imgui_impl_sdl2.h>
 #include "imgui_window.h"
 #include "imgui_platform.h"
+#include <stdio.h>
 
 #if defined(SDL_VIDEO_DRIVER_COCOA)
 	void* setupMetalLayer(void* wnd);
