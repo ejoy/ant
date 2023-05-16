@@ -14,17 +14,35 @@ local defines = {
 }
 
 lm:source_set "imgui" {
-    deps = "sdl",
-    includes = {
-        ".",
-        Ant3rd .. "imgui",
-        Ant3rd .. "SDL/include",
+    windows = {
+        includes = {
+            ".",
+            Ant3rd .. "imgui",
+        },
+        sources = {
+            "platform/windows/imgui_platform.cpp",
+            Ant3rd .. "imgui/backends/imgui_impl_win32.cpp",
+        },
+        defines = {
+            "_UNICODE",
+            "UNICODE",
+            defines,
+        }
     },
-    sources = {
-        "imgui_platform.cpp",
-        Ant3rd .. "imgui/backends/imgui_impl_sdl2.cpp",
+    macos = {
+        --TODO
+        deps = "sdl",
+        includes = {
+            ".",
+            Ant3rd .. "imgui",
+            Ant3rd .. "SDL/include",
+        },
+        sources = {
+            "platform/sdl/imgui_platform.cpp",
+            Ant3rd .. "imgui/backends/imgui_impl_sdl2.cpp",
+        },
+        defines = defines,
     },
-    defines = defines,
 }
 
 lm:source_set "imgui" {
