@@ -21,21 +21,11 @@ shadowcfg.shadow_param		= math3d.ref(math3d.vector(0, shadowcfg.min_variance or 
 shadowcfg.shadow_param2		= math3d.ref(math3d.vector(shadowcfg.color[1], shadowcfg.color[2], shadowcfg.color[3], shadowcfg.normal_offset))
 shadowcfg.split_frustums	= {nil, nil, nil, nil}
 
-if shadowcfg.min_variance == nil then
-	shadowcfg.min_variance = 0.012
-end
-
-if shadowcfg.depth_multiplier == nil then
-	shadowcfg.depth_multiplier = 1000
-end
-
-if shadowcfg.normal_offset == nil then
-	shadowcfg.normal_offset = 0.012
-end
-
-if shadowcfg.far_offset == nil then
-	shadowcfg.far_offset = 0
-end
+if not shadowcfg.height then shadowcfg.height = 5 end
+if not shadowcfg.min_variance then shadowcfg.min_variance = 0.012 end
+if not shadowcfg.depth_multiplier then shadowcfg.depth_multiplier = 1000 end
+if not shadowcfg.normal_offset then shadowcfg.normal_offset = 0.012 end
+if not shadowcfg.far_offset then shadowcfg.far_offset = 0 end
 if shadowcfg.split_ratios then
 	if shadowcfg.split_num then
 		if #shadowcfg.split_ratios ~= (shadowcfg.split_num)  then
