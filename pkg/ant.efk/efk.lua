@@ -162,7 +162,10 @@ function efk_sys:camera_usage()
         need_update_framebuffer = nil
     end
 
-    ltask.call(EFK_SERVER, "update", MP(camera.viewmat), MP(camera.projmat), itimer.delta())
+    local viewmat, projmat = math3d.ref(camera.viewmat), math3d.ref(camera.projmat)
+    ltask.fork(function ()
+        ltask.call(EFK_SERVER, "update", MP(viewmat), MP(projmat), itimer.delta())
+    end)
 end
 
 function efk_sys:follow_transform_updated()
