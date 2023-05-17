@@ -14,47 +14,12 @@ local assetmgr  = import_package "ant.asset"
 
 local itimer    = ecs.import.interface "ant.timer|itimer"
 
+local PH
+
 local efk_sys = ecs.system "efk_system"
 local iefk = ecs.interface "iefk"
 
 local MP<const> = math3d.value_ptr
-
---TODO: this function should not call ltask.call to get the result, we need to keep them async
-local function is_alive(handle)
-    return ltask.call(EFK_SERVER, "is_alive", handle)
-end
-
-local function play(handle, mat, speed)
-    return ltask.call(EFK_SERVER, "play", handle, MP(mat), speed)
-end
-
-local function stop(handle, delay)
-    return ltask.call(EFK_SERVER, "stop", handle, delay)
-end
-
-local function update_transform(handle, mat)
-    return ltask.call(EFK_SERVER, "update_transform", handle, MP(mat))
-end
-
-local function set_time(handle, time)
-    return ltask.call(EFK_SERVER, "set_time", handle, time)
-end
-
-local function pause(handle, p)
-    return ltask.call(EFK_SERVER, "pause", handle, p)
-end
-
-local function set_speed(handle, speed)
-    return ltask.call(EFK_SERVER, "set_speed", handle, speed)
-end
-
-local function destroy(handle)
-    return ltask.call(EFK_SERVER, "destroy", handle)
-end
-
-local function set_visible(handle, v)
-    return ltask.call(EFK_SERVER, "set_visible", handle, v)
-end
 
 local function init_fx_files()
     local FxFiles = {}
@@ -83,6 +48,7 @@ end
 function efk_sys:init()
     EFK_SERVER = ltask.uniqueservice "ant.efk|efk"
     ltask.call(EFK_SERVER, "init", init_fx_files())
+    PH = require "playhandle"
 end
 
 function efk_sys:exit()
@@ -110,7 +76,7 @@ end
 function efk_sys:entity_remove()
     for e in w:select "REMOVED efk:in" do
         if e.efk.play_handle then
-            stop(e.efk.play_handle)
+            e.efk.play_handle:set_stop()
         end
         e.efk.play_handle = nil
     end
@@ -206,11 +172,11 @@ function efk_sys:follow_transform_updated()
             local new_handles = {}
             local del_handles = {}
             for eid, handle in pairs(efk.play_handle_hitchs) do
-                if not is_alive(handle) then
+                if not handle:is_alive() then
                     if efk.loop then
                         local e <close> = w:entity(eid, "scene:in")
                         local wm = math3d.mul(v.scene.worldmat, e.scene.worldmat)
-                        new_handles[eid] = play(efk.handle, wm, efk.speed)
+                        new_handles[eid] = PH.create(efk.handle, wm, efk.speed)
                     else
                         del_handles[#del_handles + 1] = eid
                     end
@@ -225,14 +191,14 @@ function efk_sys:follow_transform_updated()
         end
         
         if efk.play_handle then
-            if not is_alive(efk.play_handle) then
+            if not efk.play_handle:is_alive() then
                 if efk.loop then
-                    efk.play_handle = play(efk.handle, v.scene.worldmat, efk.speed)
+                    efk.play_handle = PH.create(efk.handle, v.scene.worldmat, efk.speed)
                 else
                     efk.play_handle = nil
                 end
             elseif v.scene_changed then
-                update_transform(efk.play_handle, v.scene.worldmat)
+                efk.play_handle:set_transform(v.scene.worldmat)
             end
         else
             if efk.visible then
@@ -244,21 +210,23 @@ function efk_sys:follow_transform_updated()
                         for eid, _ in pairs(efk.hitchs) do
                             local e <close> = w:entity(eid, "scene:in")
                             local wm = math3d.mul(e.scene.worldmat, v.scene.worldmat)
-                            efk.play_handle_hitchs[eid] = play(efk.handle, wm, efk.speed)
+                            efk.play_handle_hitchs[eid] = PH.create(efk.handle, wm, efk.speed)
                         end
                     else
-                        efk.play_handle = play(efk.handle, v.scene.worldmat, efk.speed)
+                        efk.play_handle = PH.create(efk.handle, v.scene.worldmat, efk.speed)
                     end
                 end
                 if efk.do_play then
                     efk.do_play = nil
                 elseif efk.do_settime then
-                    set_time(efk.play_handle, efk.do_settime)
+                    efk.play_handle:set_time(efk.do_settime)
                     efk.do_settime = nil
                 end
             end
         end
     end
+
+    PH.update_all()
 end
 
 function iefk.create(filename, config)
@@ -328,7 +296,7 @@ end
 function iefk.pause(eid, b)
     local e <close> = w:entity(eid, "efk?in")
     if e.efk and e.efk.play_handle then
-        pause(e.efk.play_handle, b)
+        e.efk.play_handle:set_pause(b)
     end
 end
 
@@ -339,7 +307,7 @@ function iefk.set_time(eid, t)
         return
     end
     if e.efk.play_handle then
-        set_time(e.efk.play_handle, t)
+        e.efk.play_handle:set_time(t)
     else
         e.efk.do_settime = t
     end
@@ -349,7 +317,7 @@ function iefk.set_speed(eid, s)
     local e <close> = w:entity(eid, "efk:in")
     e.efk.speed = s
     if e.efk.play_handle then
-        set_speed(e.efk.play_handle, s)
+        e.efk.play_handle:set_speed(s)
     end
 end
 
@@ -358,7 +326,7 @@ function iefk.set_visible(eid, b)
     if not e.efk then return end
     e.efk.visible = b
     if e.efk.play_handle then
-        set_visible(e.efk.play_handle, b)
+        e.efk.play_handle:set_visible(b)
     end
 end
 
@@ -371,14 +339,14 @@ end
 function iefk.destroy(eid)
     local e <close> = w:entity(eid, "efk?in")
     if not e.efk then return end
-    destroy(e.efk.play_handle)
+    e.efk.play_handle:destroy(e.efk.play_handle)
     e.efk.play_handle = nil
 end
 
 local function do_stop(eid, delay)
     local e <close> = w:entity(eid, "efk?in")
     if e.efk and e.efk.play_handle then
-        stop(e.efk.play_handle, delay)
+        e.efk.play_handle:set_stop(delay)
         e.efk.play_handle = nil
     end
 end

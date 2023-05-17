@@ -127,32 +127,37 @@ function S.play(handle, mat, speed)
     return efk_ctx:play(handle, mat, speed)
 end
 
-function S.stop(handle, delay)
-    return efk_ctx:stop(handle, delay)
-end
+function S.update_state(handle, s)
+    if s.delete then
+        efk_ctx:destroy(handle)
+        return false
+    end
 
-function S.update_transform(handle, mat)
-    return efk_ctx:update_transform(handle, mat)
-end
+    if s.stop then
+        efk_ctx:stop(handle, s.delay)
+    end
 
-function S.set_time(handle, time)
-    return efk_ctx:set_time(handle, time)
-end
+    if s.mat then
+        efk_ctx:update_transform(handle, s.mat)
+    end
 
-function S.pause(handle, p)
-    return efk_ctx:pause(handle, p)
-end
+    if s.speed then
+        efk_ctx:set_speed(handle, s.speed)
+    end
 
-function S.set_speed(handle, speed)
-    return efk_ctx:set_speed(handle, speed)
-end
+    if s.pause ~= nil then
+        efk_ctx:pause(handle, s.pause)
+    end
 
-function S.destroy(handle)
-    return efk_ctx:destroy(handle)
-end
+    if s.time then
+        efk_ctx:set_time(handle, s.time)
+    end
 
-function S.set_visible(handle, v)
-    return efk_ctx:set_visible(handle, v)
+    if s.visible then
+        efk_ctx:set_visible(handle, s.visible)
+    end
+
+    return true
 end
 
 function S.quit()
