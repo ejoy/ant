@@ -2,25 +2,62 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local efk_cb    = require "effekseer.callback"
-local efk       = require "efk"
-local fs        = require "filesystem"
-local math3d    = require "math3d"
-local fileinterface = require "fileinterface"
-local renderpkg = import_package "ant.render"
-local fbmgr     = renderpkg.fbmgr
-local viewidmgr = renderpkg.viewidmgr
-local assetmgr  = import_package "ant.asset"
-local cr        = import_package "ant.compile_resource"
-local itimer    = ecs.import.interface "ant.timer|itimer"
+local ltask     = require "ltask"
+local EFK_SERVER
 
-local irq       = ecs.import.interface "ant.render|irenderqueue"
+
+local math3d    = require "math3d"
+local renderpkg = import_package "ant.render"
+local viewidmgr = renderpkg.viewidmgr
+local fbmgr     = renderpkg.fbmgr
+local assetmgr  = import_package "ant.asset"
+
+local itimer    = ecs.import.interface "ant.timer|itimer"
 
 local efk_sys = ecs.system "efk_system"
 local iefk = ecs.interface "iefk"
 
-local FxFiles = {};
+local MP<const> = math3d.value_ptr
+
+--TODO: this function should not call ltask.call to get the result, we need to keep them async
+local function is_alive(handle)
+    return ltask.call(EFK_SERVER, "is_alive", handle)
+end
+
+local function play(handle, mat, speed)
+    return ltask.call(EFK_SERVER, "play", handle, MP(mat), speed)
+end
+
+local function stop(handle, delay)
+    return ltask.call(EFK_SERVER, "stop", handle, delay)
+end
+
+local function update_transform(handle, mat)
+    return ltask.call(EFK_SERVER, "update_transform", handle, MP(mat))
+end
+
+local function set_time(handle, time)
+    return ltask.call(EFK_SERVER, "set_time", handle, time)
+end
+
+local function pause(handle, p)
+    return ltask.call(EFK_SERVER, "pause", handle, p)
+end
+
+local function set_speed(handle, speed)
+    return ltask.call(EFK_SERVER, "set_speed", handle, speed)
+end
+
+local function destroy(handle)
+    return ltask.call(EFK_SERVER, "destroy", handle)
+end
+
+local function set_visible(handle, v)
+    return ltask.call(EFK_SERVER, "set_visible", handle, v)
+end
+
 local function init_fx_files()
+    local FxFiles = {}
     for _, name in ipairs{
         "sprite_unlit",
         "sprite_lit",
@@ -40,71 +77,15 @@ local function init_fx_files()
         local r = assetmgr.resource(filename)
         FxFiles[name] = r.fx
     end
+    return FxFiles
 end
 
-local function preopen(filename)
-    local _ <close> = fs.switch_sync()
-    return cr.compile(filename):string()
-end
-
-local filefactory = fileinterface.factory { preopen = preopen }
-
-local function shader_load(materialfile, shadername, stagetype)
-    assert(materialfile == nil)
-    local fx = assert(FxFiles[shadername], ("unkonw shader name:%s"):format(shadername))
-    return fx[stagetype]
-end
-
-local TEXTURES = {}
-
-local function texture_load(texname, srgb)
-    --TODO: need use srgb texture
-    assert(texname:match "^/pkg" ~= nil)
-    local tex = TEXTURES[fs.path(texname):replace_extension "texture":string()]
-    if not tex then
-        print("[EFK ERROR]", debug.traceback(("%s: need corresponding .texture file to describe how this png file to use"):format(texname)) )
-    end
-    return tex
-end
-
-local function texture_unload(texhandle)
-    --TODO
-end
-
-local function error_handle(msg)
-    print("[EFK ERROR]", debug.traceback(msg))
-end
-
-local effect_viewid<const> = viewidmgr.get "effect_view"
-local efk_cb_handle, efk_ctx
 function efk_sys:init()
-    init_fx_files()
-    efk_cb_handle =  efk_cb.callback{
-        shader_load     = shader_load,
-        texture_load    = texture_load,
-        texture_unload  = texture_unload,
-        texture_map     = {},
-        error           = error_handle,
-    }
-
-    efk_ctx = efk.startup{
-        max_count       = 2000,
-        viewid          = effect_viewid,
-        shader_load     = efk_cb.shader_load,
-        texture_load    = efk_cb.texture_load,
-        texture_get     = efk_cb.texture_get,
-        texture_unload  = efk_cb.texture_unload,
-        userdata        = {
-            callback = efk_cb_handle,
-            filefactory = filefactory,
-        }
-    }
-
-    assetmgr.set_efkobj(efk_ctx)
+    EFK_SERVER = ltask.uniqueservice "ant.efk|efk"
+    ltask.call(EFK_SERVER, "init", init_fx_files())
 end
 
 function efk_sys:exit()
-    efk.shutdown(efk_ctx)
 end
 
 function efk_sys:component_init()
@@ -129,9 +110,8 @@ end
 function efk_sys:entity_remove()
     for e in w:select "REMOVED efk:in" do
         if e.efk.play_handle then
-            efk_ctx:stop(e.efk.play_handle)
+            stop(e.efk.play_handle)
         end
-        -- efk_ctx:destroy(e.efk.play_handle)
         e.efk.play_handle = nil
     end
 end
@@ -139,28 +119,28 @@ end
 local mq_vr_mb = world:sub{"view_rect_changed", "main_queue"}
 local mq_camera_changed = world:sub{"main_queue", "camera_changed"}
 
-local function update_framebuffer_texutre()
+local function update_framebuffer_texutre(projmat)
     local eq = w:first "efk_queue render_target:in"
     local fbidx = eq.render_target.fb_idx
     local fb = fbmgr.get(fbidx)
-    efk_cb_handle.background = fb[1].handle
 
-    local mq = w:first("main_queue camera_ref:in")
-    local ce <close> = w:entity(mq.camera_ref, "camera:in")
-    local projmat = ce.camera.projmat
-    local col3, col4 = math3d.index(projmat, 3, 4)
-    local m33, m34 = math3d.index(col3, 3, 4)
-    local m43, m44 = math3d.index(col4, 3, 4)
-    efk_cb_handle.depth = {
+    local c3, c4 = math3d.index(projmat, 3, 4)
+    local m33, m34 = math3d.index(c3, 3, 4)
+    local m43, m44 = math3d.index(c4, 3, 4)
+    local depth = {
         handle = fbmgr.get_depth(fbidx).handle,
         1.0, --depth buffer scale
         0.0, --depth buffer offset
         m33, m34,
         m43, m44,
     }
+
+    ltask.call(EFK_SERVER, "update_cb_data", fb[1].handle, depth)
 end
 
 local need_update_framebuffer
+
+local effect_viewid<const> = viewidmgr.get "effect_view"
 
 function efk_sys:init_world()
     local mq = w:first("main_queue render_target:in camera_ref:in")
@@ -207,10 +187,16 @@ function efk_sys:camera_usage()
         need_update_framebuffer = ce.camera_changed
     end
 
+    local mq = w:first "main_queue camera_ref:in"
+    local ce <close> = w:entity(mq.camera_ref, "camera:in camera_changed?in scene_changed?in")
+    local camera = ce.camera
+
     if need_update_framebuffer then
-        update_framebuffer_texutre()
+        update_framebuffer_texutre(camera.projmat)
         need_update_framebuffer = nil
     end
+
+    ltask.call(EFK_SERVER, "update", MP(camera.viewmat), MP(camera.projmat), itimer.delta())
 end
 
 function efk_sys:follow_transform_updated()
@@ -220,11 +206,11 @@ function efk_sys:follow_transform_updated()
             local new_handles = {}
             local del_handles = {}
             for eid, handle in pairs(efk.play_handle_hitchs) do
-                if not efk_ctx:is_alive(handle) then
+                if not is_alive(handle) then
                     if efk.loop then
                         local e <close> = w:entity(eid, "scene:in")
                         local wm = math3d.mul(v.scene.worldmat, e.scene.worldmat)
-                        new_handles[eid] = efk_ctx:play(efk.handle, math3d.value_ptr(wm), efk.speed)
+                        new_handles[eid] = play(efk.handle, wm, efk.speed)
                     else
                         del_handles[#del_handles + 1] = eid
                     end
@@ -239,14 +225,14 @@ function efk_sys:follow_transform_updated()
         end
         
         if efk.play_handle then
-            if not efk_ctx:is_alive(efk.play_handle) then
+            if not is_alive(efk.play_handle) then
                 if efk.loop then
-                    efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene.worldmat), efk.speed)
+                    efk.play_handle = play(efk.handle, v.scene.worldmat, efk.speed)
                 else
                     efk.play_handle = nil
                 end
             elseif v.scene_changed then
-                efk_ctx:update_transform(efk.play_handle, math3d.value_ptr(v.scene.worldmat))
+                update_transform(efk.play_handle, v.scene.worldmat)
             end
         else
             if efk.visible then
@@ -258,16 +244,16 @@ function efk_sys:follow_transform_updated()
                         for eid, _ in pairs(efk.hitchs) do
                             local e <close> = w:entity(eid, "scene:in")
                             local wm = math3d.mul(e.scene.worldmat, v.scene.worldmat)
-                            efk.play_handle_hitchs[eid] = efk_ctx:play(efk.handle, math3d.value_ptr(wm), efk.speed)
+                            efk.play_handle_hitchs[eid] = play(efk.handle, wm, efk.speed)
                         end
                     else
-                        efk.play_handle = efk_ctx:play(efk.handle, math3d.value_ptr(v.scene.worldmat), efk.speed)
+                        efk.play_handle = play(efk.handle, v.scene.worldmat, efk.speed)
                     end
                 end
                 if efk.do_play then
                     efk.do_play = nil
                 elseif efk.do_settime then
-                    efk_ctx:set_time(efk.play_handle, efk.do_settime)
+                    set_time(efk.play_handle, efk.do_settime)
                     efk.do_settime = nil
                 end
             end
@@ -275,15 +261,8 @@ function efk_sys:follow_transform_updated()
     end
 end
 
---TODO: need remove, should put it on the ltask
-function efk_sys:render_submit()
-    local mq = w:first("main_queue camera_ref:in")
-    local ce <close> = w:entity(mq.camera_ref, "camera:in")
-    local camera = ce.camera
-    efk_ctx:render(math3d.value_ptr(camera.viewmat), math3d.value_ptr(camera.projmat), itimer.delta())
-end
-
 function iefk.create(filename, config)
+    config = config or {}
     local cfg = {
         scene = config.scene or {},
         auto_play = config.auto_play or false,
@@ -324,9 +303,7 @@ end
 
 function iefk.preload(textures)
     for _, texture in ipairs(textures) do
-        if not TEXTURES[texture] then
-            TEXTURES[texture] = assetmgr.resource(texture).id
-        end
+        ltask.call(EFK_SERVER, "preload_texture", texture, assetmgr.resource(texture).id)
     end
 end
 
@@ -351,7 +328,7 @@ end
 function iefk.pause(eid, b)
     local e <close> = w:entity(eid, "efk?in")
     if e.efk and e.efk.play_handle then
-        efk_ctx:pause(e.efk.play_handle, b)
+        pause(e.efk.play_handle, b)
     end
 end
 
@@ -362,7 +339,7 @@ function iefk.set_time(eid, t)
         return
     end
     if e.efk.play_handle then
-        efk_ctx:set_time(e.efk.play_handle, t)
+        set_time(e.efk.play_handle, t)
     else
         e.efk.do_settime = t
     end
@@ -372,7 +349,7 @@ function iefk.set_speed(eid, s)
     local e <close> = w:entity(eid, "efk:in")
     e.efk.speed = s
     if e.efk.play_handle then
-        efk_ctx:set_speed(e.efk.play_handle, s)
+        set_speed(e.efk.play_handle, s)
     end
 end
 
@@ -381,7 +358,7 @@ function iefk.set_visible(eid, b)
     if not e.efk then return end
     e.efk.visible = b
     if e.efk.play_handle then
-        efk_ctx:set_visible(e.efk.play_handle, b)
+        set_visible(e.efk.play_handle, b)
     end
 end
 
@@ -394,14 +371,14 @@ end
 function iefk.destroy(eid)
     local e <close> = w:entity(eid, "efk?in")
     if not e.efk then return end
-    efk_ctx:destroy(e.efk.play_handle)
+    destroy(e.efk.play_handle)
     e.efk.play_handle = nil
 end
 
 local function do_stop(eid, delay)
     local e <close> = w:entity(eid, "efk?in")
     if e.efk and e.efk.play_handle then
-        efk_ctx:stop(e.efk.play_handle, delay)
+        stop(e.efk.play_handle, delay)
         e.efk.play_handle = nil
     end
 end

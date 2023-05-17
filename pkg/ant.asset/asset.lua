@@ -1,9 +1,7 @@
-local resource = require "resource"
-local texture_mgr = require "texture_mgr"
-local async = require "async"
-local efkobj = require "efkobj"
-
-local respath = require "respath"
+local resource		= require "resource"
+local texture_mgr	= require "texture_mgr"
+local async			= require "async"
+local respath		= require "respath"
 
 local assetmgr = {}
 
@@ -39,10 +37,6 @@ function assetmgr.init()
 	async.init()
 	texture_mgr.init()
 	initialize()
-end
-
-function assetmgr.set_efkobj(efkctx)
-	efkobj.ctx = efkctx
 end
 
 assetmgr.edit = resource.edit

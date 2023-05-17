@@ -1,8 +1,10 @@
-local efkobj= require "efkobj"
+local ltask = require "ltask"
+local EFKSERVER = ltask.queryservice "ant.efk|efk"
+
 return {
     loader = function (filename)
         return {
-            handle = efkobj.ctx:create(filename),
+            handle = ltask.call(EFKSERVER, "create", filename)
         }
     end,
     unloader = function (res)
