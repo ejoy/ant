@@ -119,7 +119,7 @@ function S.create_window()
     local exclusive = require "ltask.exclusive"
     scheduling = exclusive.scheduling()
     local window = require "window"
-    window.create(dispatch, 1334, 750)
+    window.create(dispatch)
     ltask.fork(function()
         window.mainloop(true)
         ltask.multi_wakeup "quit"

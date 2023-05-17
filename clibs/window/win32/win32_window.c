@@ -208,11 +208,8 @@ register_class()
 }
 
 int window_init(struct ant_window_callback* cb) {
-    // do noting
-    return 0;
-}
-
-int window_create(struct ant_window_callback* cb, int w, int h) {
+	int w = 1334;
+	int h = 750;
 	RECT rect;
 	rect.left=0;
 	rect.right=w;

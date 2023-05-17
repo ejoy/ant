@@ -187,15 +187,8 @@ get_callback(lua_State *L) {
 	return (struct ant_window_callback*)lua_touserdata(L, -1);
 }
 
-static int
-registercallback(lua_State *L) {
+static int registercallback(lua_State *L, struct ant_window_callback* cb) {
 	luaL_checktype(L, 1, LUA_TFUNCTION);
-
-	if (lua_getfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK) != LUA_TUSERDATA) {
-		return luaL_error(L, "Create native window first");
-	}
-	struct ant_window_callback *cb = (struct ant_window_callback *)lua_touserdata(L, -1);
-	lua_pop(L, 1);
 
 	struct callback_context * context = lua_newuserdatauv(L, sizeof(*context), 2);
 	context->surrogate = 0;
@@ -215,11 +208,14 @@ registercallback(lua_State *L) {
 
 static int
 lcreate(lua_State *L) {
-	registercallback(L);
-
-	int width = (int)luaL_checkinteger(L, 2);
-	int height = (int)luaL_checkinteger(L, 3);
-	if (0 != window_create(get_callback(L), width, height)) {
+	struct ant_window_callback* cb = lua_newuserdatauv(L, sizeof(*cb), 1);
+	cb->ud = NULL;
+	cb->message = message_callback;
+	cb->L = lua_newthread(L);
+	lua_setiuservalue(L, -2, 1);
+	lua_setfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK);
+	registercallback(L, cb);
+	if (0 != window_init(cb)) {
 		return luaL_error(L, "Create window failed");
 	}
 	lua_pushboolean(L, 1);
@@ -233,21 +229,8 @@ lmainloop(lua_State *L) {
 	return 0;
 }
 
-static void
-init(lua_State *L) {
-	struct ant_window_callback* cb = lua_newuserdatauv(L, sizeof(*cb), 1);
-	cb->ud = NULL;
-	cb->message = message_callback;
-	cb->L = lua_newthread(L);
-	lua_setiuservalue(L, -2, 1);
-
-	lua_setfield(L, LUA_REGISTRYINDEX, ANT_WINDOW_CALLBACK);
-	window_init(cb);
-}
-
 LUAMOD_API int
 luaopen_window(lua_State *L) {
-	init(L);
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "create", lcreate },

@@ -214,11 +214,8 @@ int32_t g_mx = 0;
 int32_t g_my = 0;
 
 int window_init(struct ant_window_callback* cb) {
-    // do noting
-    return 0;
-}
-
-int window_create(struct ant_window_callback* cb, int w, int h) {
+	int w = 1334;
+	int h = 750;
     NSRect rc = NSMakeRect(0, 0, w, h);
 	NSUInteger uiStyle = 0
 		| NSWindowStyleMaskTitled
