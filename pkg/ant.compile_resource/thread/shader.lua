@@ -64,19 +64,32 @@ local function createComputeProgram(fx, filename, data)
     end
 end
 
-return function(filename)
-    local material = serialize.parse(filename, readall(filename .. "|main.cfg"))
+local shaderByName = {}
+
+local S = {}
+
+function S.shader_create(name)
+    local c = shaderByName[name]
+    if c then
+        return c
+    end
+    local material = serialize.parse(name, readall(name .. "|main.cfg"))
     local data = material.fx
     local fx = {
         setting = data.setting or {}
     }
     if data.vs then
-        createRenderProgram(fx, filename, data)
+        createRenderProgram(fx, name, data)
     elseif data.cs then
-        createComputeProgram(fx, filename, data)
+        createComputeProgram(fx, name, data)
     else
         error("material needs to contain at least cs or vs")
     end
     material.fx = fx
+    shaderByName[name] = material
     return material
 end
+
+return {
+    S = S
+}

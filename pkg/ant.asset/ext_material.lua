@@ -1,4 +1,3 @@
-local cr        = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
 local assetmgr  = require "asset"
 local bgfx      = require "bgfx"
@@ -6,8 +5,7 @@ local math3d    = require "math3d"
 local sd        = import_package "ant.settings".setting
 local use_cluster_shading = sd:data().graphic.cluster_shading ~= 0
 local matobj	= require "matobj"
-local load_fx 	= require "load_fx"
-local respath 	= require "respath"
+local async 	= require "async"
 local fs 	    = require "filesystem"
 
 local function readall(filename)
@@ -108,7 +106,7 @@ local function generate_properties(fx, properties)
 end
 
 local function loader(filename)
-    local material = load_fx(filename)
+    local material = async.shader_create(filename)
 
     if material.state then
 		material.state = bgfx.make_state(load(material.state))

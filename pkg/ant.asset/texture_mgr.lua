@@ -1,13 +1,11 @@
-local ltask = require "ltask"
 local textureman = require "textureman.client"
-local ServiceResource
+local async = require "async"
 local DefaultTexture
 
 local textures = {}
 
 local function init()
-	ServiceResource = ltask.uniqueservice "ant.compile_resource|resource"
-	DefaultTexture = ltask.call(ServiceResource, "texture_default")
+	DefaultTexture = async.texture_default()
 end
 
 local mt = {}
@@ -23,10 +21,6 @@ local function invalid(id)
 	return tid == DefaultTexture.TEX2D or tid == DefaultTexture.TEXCUBE
 end
 
-local function create(filename)
-	return ltask.call(ServiceResource, "texture_create", filename)
-end
-
 local function destroy(res)
 	--TODO
 end
@@ -39,8 +33,8 @@ end
 return {
 	init = init,
 	invalid = invalid,
-    create = create,
-    destroy = destroy,
+	create = async.texture_create,
+	destroy = destroy,
 	default_textureid = default_textureid,
-    textures = textures,
+	textures = textures,
 }

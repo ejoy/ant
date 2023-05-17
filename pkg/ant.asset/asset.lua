@@ -1,6 +1,7 @@
 local resource = require "resource"
 local texture_mgr = require "texture_mgr"
-local efkobj		= require "efkobj"
+local async = require "async"
+local efkobj = require "efkobj"
 
 local respath = require "respath"
 
@@ -35,6 +36,7 @@ function assetmgr.resource(path, world)
 end
 
 function assetmgr.init()
+	async.init()
 	texture_mgr.init()
 	initialize()
 end
@@ -48,6 +50,6 @@ assetmgr.unload = resource.unload
 assetmgr.reload = resource.reload
 assetmgr.textures = texture_mgr.textures
 assetmgr.invalid_texture = texture_mgr.invalid
-assetmgr.load_fx = require "load_fx"
+assetmgr.load_fx = async.shader_create
 
 return assetmgr
