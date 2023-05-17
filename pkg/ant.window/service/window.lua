@@ -15,22 +15,54 @@ local event = {
     gesture = {},
     keyboard = {},
     char = {},
-    update = {},
 }
 
-for CMD, e in pairs(event) do
-    S["send_"..CMD] = function (...)
-        for i = 1, #e do
-            if ltask.call(e[i], CMD, ...) then
-                return
-            end
+local SCHEDULE_SUCCESS <const> = 3
+
+local CMD = {}
+local queue = {}
+local initialized = {}
+local noempty = {}
+
+for cmd in pairs(event) do
+    CMD[cmd] = function (...)
+        queue[#queue+1] = table.pack(cmd, ...)
+        if #queue == 1 then
+            ltask.wakeup(noempty)
         end
     end
 end
 
-local SCHEDULE_SUCCESS <const> = 3
+local function dispatch(cmd,...)
+    CMD[cmd](...)
+end
 
-local dispatch; if SupportGesture then
+local function call_event(cmd, ...)
+    local user = event[cmd]
+    for i = 1, #user do
+        if ltask.call(user[i], cmd, ...) then
+            return
+        end
+    end
+end
+
+ltask.fork(function ()
+    ltask.wait(initialized)
+    while true do
+        if #queue == 0 then
+            ltask.wait(noempty)
+        else
+            local q = queue
+            queue = {}
+            for k = 1, #q do
+                local e = q[k]
+                call_event(table.unpack(e, 1, e.n))
+            end
+        end
+    end
+end)
+
+if SupportGesture then
     local gesture = require "ios.gesture"
     local function gesture_init()
         gesture.tap {}
@@ -45,29 +77,41 @@ local dispatch; if SupportGesture then
         ltask.send(ltask.self(), "send_gesture", name, ...)
         return true
     end
-    function dispatch(CMD,...)
-        if CMD == "update" then
-            while gesture_dispatch(gesture.event()) do
+    local event_init = event.init
+    function CMD.init(...)
+        ltask.fork(function (...)
+            gesture_init()
+            for i = 1, #event_init do
+                if ltask.call(event_init[i], 'init', ...) then
+                    return
+                end
             end
-            repeat
-                scheduling()
-            until ltask.schedule_message() ~= SCHEDULE_SUCCESS
-        else
-            if CMD == "init" then
-                gesture_init()
-            end
-            ltask.send(ltask.self(), "send_"..CMD, ...)
+            ltask.wakeup(initialized)
+        end, ...)
+    end
+    function CMD.update()
+        while gesture_dispatch(gesture.event()) do
         end
+        repeat
+            scheduling()
+        until ltask.schedule_message() ~= SCHEDULE_SUCCESS
     end
 else
-    function dispatch(CMD,...)
-        if CMD == "update" then
-            repeat
-                scheduling()
-            until ltask.schedule_message() ~= SCHEDULE_SUCCESS
-        else
-            ltask.send(ltask.self(), "send_"..CMD, ...)
-        end
+    local event_init = event.init
+    function CMD.init(...)
+        ltask.fork(function (...)
+            for i = 1, #event_init do
+                if ltask.call(event_init[i], 'init', ...) then
+                    return
+                end
+            end
+            ltask.wakeup(initialized)
+        end, ...)
+    end
+    function CMD.update()
+        repeat
+            scheduling()
+        until ltask.schedule_message() ~= SCHEDULE_SUCCESS
     end
 end
 
