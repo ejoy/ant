@@ -75,32 +75,11 @@ local function check_size()
 	end
 end
 
-local function render()
-	while true do
-		check_size()
-		world:pipeline_update()
-		bgfx.encoder_end()
-		encoderBegin = false
-		do
-			rhwi.frame()
-		end
-		if quit then
-			ltask.wakeup(quit)
-			return
-		end
-		bgfx.encoder_begin()
-		encoderBegin = true
-		ltask.sleep(0)
-	end
-end
-
 local function calc_fb_size(w, h, ratio)
 	return mu.cvt_size(w, ratio), mu.cvt_size(h, ratio)
 end
 
-function S.init(nwh, context, width, height)
-	import_package "ant.render".init_bgfx()
-
+local function render(nwh, context, width, height, initialized)
 	local scene_ratio = setting:get "graphic/framebuffer/scene_ratio" or 1.0
 	local ratio = setting:get "graphic/framebuffer/ratio" or 1.0
 	log.info(("framebuffer ratio:%2f, scene:%2f"):format(ratio, scene_ratio))
@@ -148,8 +127,32 @@ function S.init(nwh, context, width, height)
 	for _, size in ipairs(resizeQueue) do
 		S.size(size[1], size[2])
 	end
+	ltask.wakeup(initialized)
+	initialized = nil
 
-	ltask.fork(render)
+	while true do
+		check_size()
+		world:pipeline_update()
+		bgfx.encoder_end()
+		encoderBegin = false
+		do
+			rhwi.frame()
+		end
+		if quit then
+			ltask.wakeup(quit)
+			return
+		end
+		bgfx.encoder_begin()
+		encoderBegin = true
+		ltask.sleep(0)
+	end
+end
+
+function S.init(nwh, context, width, height)
+	import_package "ant.render".init_bgfx()
+	local initialized = {}
+	ltask.fork(render, nwh, context, width, height, initialized)
+	ltask.wait(initialized)
 end
 
 function S.recreate(nwh, _, width, height)

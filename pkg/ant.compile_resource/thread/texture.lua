@@ -4,7 +4,6 @@ local datalist   = require "datalist"
 local fastio     = require "fastio"
 local textureman = require "textureman.server"
 local cr         = import_package "ant.compile_resource"
-import_package "ant.render".init_bgfx()
 
 local mem_formats <const> = {
     RGBA8 = "bbbb",
