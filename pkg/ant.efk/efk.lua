@@ -19,8 +19,6 @@ local PH
 local efk_sys = ecs.system "efk_system"
 local iefk = ecs.interface "iefk"
 
-local MP<const> = math3d.value_ptr
-
 local function init_fx_files()
     local FxFiles = {}
     for _, name in ipairs{
@@ -162,10 +160,7 @@ function efk_sys:camera_usage()
         need_update_framebuffer = nil
     end
 
-    local viewmat, projmat = math3d.ref(camera.viewmat), math3d.ref(camera.projmat)
-    ltask.fork(function ()
-        ltask.call(EFK_SERVER, "update", MP(viewmat), MP(projmat), itimer.delta())
-    end)
+    ltask.send(EFK_SERVER, "update", math3d.serialize(camera.viewmat), math3d.serialize(camera.projmat), itimer.delta())
 end
 
 function efk_sys:follow_transform_updated()

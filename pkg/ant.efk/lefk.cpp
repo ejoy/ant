@@ -36,11 +36,27 @@ EC(lua_State *L){
     return (efk_ctx*)lua_touserdata(L, 1);
 }
 
+static inline Effekseer::Matrix44*
+TOM(lua_State *L, int index){
+    const int t = lua_type(L, index);
+    if (t == LUA_TUSERDATA || t == LUA_TLIGHTUSERDATA){
+        return (Effekseer::Matrix44*)lua_touserdata(L, index);
+    }
+
+    if (t == LUA_TSTRING){
+        return (Effekseer::Matrix44*)lua_tostring(L, index);
+    }
+
+    luaL_error(L, "Invalid data:%d, type:%s", index, lua_typename(L, index));
+
+    return nullptr;
+}
+
 static int
 lefkctx_render(lua_State *L){
     auto ctx = EC(L);
-    auto viewmat = (Effekseer::Matrix44*)lua_touserdata(L, 2);
-    auto projmat = (Effekseer::Matrix44*)lua_touserdata(L, 3);
+    auto viewmat = TOM(L, 2);
+    auto projmat = TOM(L, 3);
     auto delta = (float)luaL_checknumber(L, 4) * 0.001f;
 
     ctx->renderer->SetCameraMatrix(*viewmat);
@@ -119,7 +135,7 @@ lefkctx_update_transform(lua_State* L) {
 	auto play_handle = (int)luaL_checkinteger(L, 2);
     if (ctx->manager->Exists(play_handle)) {
 		Effekseer::Matrix43 effekMat;
-		auto effekMat44 = (Effekseer::Matrix44*)lua_touserdata(L, 3);
+		auto effekMat44 = TOM(L, 3);
 		ToMatrix43(*effekMat44, effekMat);
 		ctx->manager->SetMatrix(play_handle, effekMat);
     }
@@ -141,11 +157,11 @@ lefkctx_play(lua_State *L){
     assert(check_effect_valid(ctx, handle));
 	
     Effekseer::Matrix43 effekMat;
-	auto effekMat44 = (Effekseer::Matrix44*)lua_touserdata(L, 3);
+	auto effekMat44 = TOM(L, 3);
 	ToMatrix43(*effekMat44, effekMat);
     auto play_handle = ctx->manager->Play(ctx->effects[handle].eff, 0, 0, 0);
 	ctx->manager->SetMatrix(play_handle, effekMat);
-	float speed = (float)lua_tonumber(L, 4);
+	float speed = (float)luaL_checknumber(L, 4);
 	ctx->manager->SetSpeed(play_handle, speed);
 
     lua_pushinteger(L, play_handle);
