@@ -10,19 +10,22 @@ void main()
     vec4 pos = mul(u_modelView, vec4(a_position, 1.0));
     // normal should be transformed corredctly by transpose of inverse modelview matrix when anti-uniform scaled
     vec3 normal	= normalize(mul(u_modelView, mediump vec4(a_normal, 0.0)).xyz);
-    normal.z = -0.5;
+    normal.z = -2;
     pos = pos + vec4(normal, 0) * u_outline_width;
     gl_Position = mul(u_proj, pos); 
 #else // SCREEN_SPACE
-    mat4 it_view = transpose(u_invView);
-    vec4 view_normal = mul(it_view, vec4(a_normal, 0.0));
-
-    vec2 screen_normal = mul(u_proj, view_normal).xy;
+    vec2 screen_normal = mul(u_modelViewProj, vec4(a_normal, 0.0)).xy;
     screen_normal = normalize(screen_normal);
 
+    //make x direction offset same as y direction
+    float w = u_viewRect.z;
+    float h = u_viewRect.w;
+    screen_normal.x *= h / w;
+
     // offset posision in clip space
+    float zoffset = 0.01;
     vec4 clipPos = mul(u_modelViewProj, vec4(a_position, 1.0));
     gl_Position = clipPos;
-    gl_Position.xy += screen_normal * u_outline_width * clipPos.w; 
+    gl_Position.xyz += vec3(screen_normal * u_outline_width, zoffset) * clipPos.w;
 #endif //VIEW_SPACE
 }

@@ -127,8 +127,10 @@ end
 
 local after_init_mb = world:sub{"after_init"}
 function init_loader_sys:init()
+    
     ientity.create_grid_entity("grid", 128, 128, 1, 3)
     create_instance("/pkg/ant.test.features/assets/entities/light.prefab",
+    
     function (e)
 
     end)
@@ -144,7 +146,8 @@ end
 local function render_layer_test()
     irl.add_layers(irl.layeridx "background", "mineral", "translucent_plane", "translucent_plane1")
     local m = imesh.init_mesh(ientity.plane_mesh())
-
+    ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_duck.prefab"
+    ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_wind.prefab"
     create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", function (e)
         local ee <close> = w:entity(e.tag['*'][1])
         iom.set_position(ee, math3d.vector(-10, -2, 0))
