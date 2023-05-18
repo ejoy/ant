@@ -194,6 +194,7 @@ end
 
 function fontsys:exit()
     dvb:destroy()
+    fontpkg.close()
 end
 
 function ecs.method.show_name(eid, attach)

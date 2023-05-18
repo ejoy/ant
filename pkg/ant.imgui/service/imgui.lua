@@ -143,14 +143,64 @@ for n, f in pairs(message) do
 	end
 end
 
-local ServiceWindow = ltask.uniqueservice "ant.window|window"
+local VirtualWindow = {}; do
+	local event = {
+		mouse = {},
+		touch = {},
+		gesture = {},
+	}
+	local queue = {}
+	local noempty = {}
+	local ServiceRmlui; do
+		ltask.fork(function ()
+			ServiceRmlui = ltask.queryservice "ant.rmlui|rmlui"
+		end)
+	end
+	for cmd in pairs(event) do
+		VirtualWindow[cmd] = function (...)
+			queue[#queue+1] = table.pack(cmd, ...)
+			if #queue == 1 then
+				ltask.wakeup(noempty)
+			end
+		end
+	end
+	local function call_event(cmd, ...)
+		if ServiceRmlui then
+			ltask.call(ServiceRmlui, cmd, ...)
+		end
+	end
+	function VirtualWindow.init()
+		ltask.fork(function ()
+			while true do
+				if #queue == 0 then
+					ltask.wait(noempty)
+				else
+					local q = queue
+					queue = {}
+					for k = 1, #q do
+						local e = q[k]
+						call_event(table.unpack(e, 1, e.n))
+					end
+				end
+			end
+		end)
+	end
+end
+
 local pm = require "packagemanager"
 local callback = pm.import(packagename)
 for _, name in ipairs {"init","update","exit","size","mouse_wheel","mouse","keyboard"} do
     local f = callback[name]
-    cb[name] = function (...)
-		if f then f(...) end
-		ltask.send(ServiceWindow, "send_"..name, ...)
+	local vf = VirtualWindow[name]
+	if f and vf then
+		cb[name] = function (...)
+			f(...)
+			vf(...)
+		end
+	elseif f then
+		cb[name] = f
+	else
+		cb[name] = function () end
 	end
 end
 

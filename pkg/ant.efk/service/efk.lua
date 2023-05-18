@@ -64,7 +64,13 @@ end
 
 local efk_cb_handle, efk_ctx
 
-local viewmat, projmat
+local ident_mat<const> = ("f"):rep(16):pack(
+    1.0, 0.0, 0.0, 0.0,
+    0.0, 1.0, 0.0, 0.0,
+    0.0, 0.0, 1.0, 0.0,
+    0.0, 0.0, 0.0, 1.0)
+
+local viewmat, projmat = ident_mat, ident_mat
 local deltatime = 0
 
 function S.init(fx_files)
@@ -133,6 +139,10 @@ function S.update_state(handle, s)
         return false
     end
 
+    if not efk_ctx:is_alive(handle) then
+        return false
+    end
+    
     if s.stop then
         efk_ctx:stop(handle, s.delay)
     end
@@ -172,9 +182,7 @@ function ()
     bgfx.encoder_create "efx"
     while not quit do
         if efk_ctx then
-            if viewmat then
-                efk_ctx:render(viewmat, projmat, deltatime)
-            end
+            efk_ctx:render(viewmat, projmat, deltatime)
         end
         bgfx.encoder_frame()
     end

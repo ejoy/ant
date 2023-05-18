@@ -12,6 +12,7 @@ local A = {
 }
 
 local pi<const>         = math.pi
+local inv_pi<const>     = 1.0 / pi
 local sqrtpi<const>     = math.sqrt(pi)
 local inv_sqrtpi<const> = 1.0 / sqrtpi
 
@@ -245,7 +246,7 @@ return {
 
         local Eml = {}
         for l=0, bandnum-1 do
-            local s = A[l+1] * inv_sqrtpi   --pre bake 1/pi
+            local s = A[l+1] * inv_pi   --pre bake 1/pi
             for m = -l, l do
                 local idx = lSHindex0(m, l)
                 Eml[idx] = math3d.mul(s * SHb[idx], Lml[idx])

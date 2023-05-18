@@ -17,19 +17,6 @@ local mu		= import_package "ant.math".util
 local platform  = require "bee.platform"
 local bgfx      = require "bgfx"
 
-local ServiceWindow = ltask.queryservice "ant.window|window"
-ltask.send(ServiceWindow, "subscribe", {
-	"init",
-	"exit",
-	"mouse_wheel",
-	"mouse",
-	"touch",
-	"keyboard",
-	"char",
-	"size",
-	"gesture"
-})
-
 local S = {}
 
 local config = {
@@ -172,7 +159,6 @@ function S.exit()
 		bgfx.encoder_end()
 	end
 	bgfx.encoder_destroy()
-	ltask.send(ServiceWindow, "unsubscribe_all")
 	rhwi.shutdown()
     print "exit"
 end

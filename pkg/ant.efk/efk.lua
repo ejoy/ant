@@ -19,8 +19,6 @@ local PH
 local efk_sys = ecs.system "efk_system"
 local iefk = ecs.interface "iefk"
 
-local MP<const> = math3d.value_ptr
-
 local function init_fx_files()
     local FxFiles = {}
     for _, name in ipairs{
@@ -162,11 +160,11 @@ function efk_sys:camera_usage()
         need_update_framebuffer = nil
     end
 
-    ltask.call(EFK_SERVER, "update", MP(camera.viewmat), MP(camera.projmat), itimer.delta())
+    ltask.send(EFK_SERVER, "update", math3d.serialize(camera.viewmat), math3d.serialize(camera.projmat), itimer.delta())
 end
 
 function efk_sys:follow_transform_updated()
-    for v in w:select "efk:in scene:in scene_changed?in" do
+    for v in w:select "view_visible efk:in scene:in scene_changed?in" do
         local efk = v.efk
         if efk.play_handle_hitchs then
             local new_handles = {}

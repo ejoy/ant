@@ -8,21 +8,10 @@ _windows:
   graphic:
     api: d3d11
 graphic:
-  ibl:
-    irradiance_bandnum: 3
+  # ibl:
+  #   irradiance_bandnum: 3
   # skinning:
   #   use_cs: true
-  ao:
-    enable: true
-    bent_normal : false
-    quality     : "low"
-    radius      : 0.3
-    power       : 1.0
-    bias        : 0.0005
-    resolution  : 0.5
-    intensity   : 1.0
-    bilateral_threshold: 0.05
-    min_horizon_angle: 0.0
   curve_world:
     enable: false
     type: "cylinder"
@@ -44,18 +33,18 @@ graphic:
     fxaa:
       enable: true
   shadow:
+    color: {0, 0, 0, 1}
+    depth_multiplier: 100
     enable: true
+    far_offset: 0
+    min_variance: 0.012
+    normal_offset: 1.0
     size: 1024
-    type: inv_z
-    bias: 0.003
-    normal_offset: 0
-    color: {0.0, 0.0, 0.0, 1}
-    stabilize: true
-    # split_ratios:
-    #   {0.05, 0.25}
-    #   {0.23, 0.48}
-    #   {0.45, 0.85}
     split_lamada: 0.8
-    split_num: 4
+    split_num: 1
+    height: 5
+    split_ratios:
+      {0.00, 1.00}
+    type: inv_z
 debug:
   show_bounding: true

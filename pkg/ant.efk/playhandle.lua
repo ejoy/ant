@@ -1,7 +1,6 @@
 local ltask     = require "ltask"
 
 local math3d    = require "math3d"
-local MP<const> = math3d.value_ptr
 
 local EFK_SERVER<const> = ltask.queryservice "ant.efk|efk"
 
@@ -20,7 +19,7 @@ local handle_mt = {
         self.delay = delay
     end,
     set_transform = function(self, mat)
-        self.mat = math3d.ref(mat)
+        self.mat = math3d.serialize(mat)
     end,
     set_time = function(self, time)
         assert(time ~= nil)
@@ -78,7 +77,7 @@ local function create(efk_handle, mat, speed)
     local h = setmetatable({
         efk_handle  = efk_handle,
         id          = id,
-        mat         = math3d.ref(mat),
+        mat         = math3d.serialize(mat),
         speed       = speed,
         init        = true,
         alive       = true,
@@ -89,10 +88,6 @@ local function create(efk_handle, mat, speed)
 end
 
 local function update_state(h, s)
-    if s.mat then
-        s.mat = MP(s.mat)
-    end
-
     if h.init then
         h.handle    = ltask.call(EFK_SERVER, "play", s.efk_handle, s.mat, s.speed)
         h.init      = nil

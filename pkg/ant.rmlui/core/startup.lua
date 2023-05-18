@@ -8,7 +8,6 @@ local contextManager = require "core.contextManager"
 local initRender = require "core.initRender"
 local ltask = require "ltask"
 local bgfx = require "bgfx"
-local ServiceWindow = ltask.queryservice "ant.window|window"
 
 require "core.DOM.constructor":init()
 
@@ -50,7 +49,6 @@ end
 function S.shutdown()
     quit = {}
     ltask.wait(quit)
-	ltask.send(ServiceWindow, "unsubscribe_all")
     rmlui.RmlShutdown()
     bgfx.shutdown()
 end
@@ -65,13 +63,5 @@ S.mouse = contextManager.process_mouse
 S.touch = contextManager.process_touch
 S.gesture = contextManager.process_gesture
 S.update_context_size = contextManager.set_dimensions
-
-ltask.send(ServiceWindow, "priority", 1)
-
-ltask.send(ServiceWindow, "subscribe", {
-    "mouse",
-    "touch",
-    "gesture",
-})
 
 return S
