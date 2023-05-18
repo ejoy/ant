@@ -361,7 +361,7 @@ luavm_create(lua_State *L, const char* boot) {
 }
 
 static int
-linit(lua_State *L){
+vm_init(lua_State *L) {
 	struct font_manager *F = (struct font_manager*)lua_touserdata(L, lua_upvalueindex(1));
 	const char* boot = luaL_checkstring(L, 1);
 	font_manager_init(F, luavm_create(L, boot));
@@ -369,10 +369,23 @@ linit(lua_State *L){
 	return 1;
 }
 
+static int
+vm_close(lua_State *L) {
+	struct font_manager *F = (struct font_manager*)lua_touserdata(L, lua_upvalueindex(1));
+	lua_close(F->L);
+	return 0;
+}
+
 LUAMOD_API int
-luaopen_font_init(lua_State *L) {
+luaopen_font_vm(lua_State *L) {
 	luaL_checkversion(L);
+	luaL_Reg l[] = {
+		{ "init", vm_init },
+		{ "close", vm_close },
+		{ NULL, NULL },
+	};
+	luaL_newlibtable(L, l);
 	struct font_manager * F = (struct font_manager *)lua_newuserdatauv(L, sizeof(*F), 0);
-	lua_pushcclosure(L, linit, 1);
+	luaL_setfuncs(L, l, 1);
 	return 1;
 }
