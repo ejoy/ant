@@ -4,10 +4,11 @@ local fs = require "bee.filesystem"
 dofile "../common.lua"
 
 local fmodDir = Ant3rd .. "fmod"
+local EnableLog = false
 
-local inputpaths = {
-    fmodDir .. "/windows/core/lib/x64/fmodL.dll",
-    fmodDir .. "/windows/studio/lib/x64/fmodstudioL.dll",
+local inputpaths =  {
+    fmodDir .. "/windows/core/lib/x64/" .. (EnableLog and "fmodL.dll" or "fmod.dll"),
+    fmodDir .. "/windows/studio/lib/x64/" .. (EnableLog and "fmodstudioL.dll" or "fmodstudio.dll"),
 }
 
 local outputpaths = {}
@@ -20,8 +21,6 @@ lm:copy "copy_fmod" {
     input = inputpaths,
     output = outputpaths,
 }
-
-local EnableLog = false
 
 lm:lua_source "audio" {
     sources = {
