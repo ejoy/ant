@@ -1,6 +1,6 @@
 #include "common/inputs.sh"
 
-$input 	a_position INPUT_NORMAL INPUT_TANGENT
+$input 	a_position INPUT_NORMAL INPUT_TANGENT INPUT_INDICES INPUT_WEIGHT
 
 #include <bgfx_shader.sh>
 
@@ -18,9 +18,11 @@ void main()
 #	endif//PACK_TANGENT_TO_QUAT
 
 #ifdef VIEW_SPACE
-    vec4 pos = mul(u_modelView, vec4(a_position, 1.0));
+    mediump mat4 wm = get_world_matrix();
+    mat4 modelView = mul(u_view, wm);
+    vec4 pos = mul(modelView, vec4(a_position, 1.0));
     // normal should be transformed corredctly by transpose of inverse modelview matrix when anti-uniform scaled
-    normal	= normalize(mul(u_modelView, mediump vec4(normal, 0.0)).xyz);
+    normal	= normalize(mul(modelView, mediump vec4(normal, 0.0)).xyz);
     normal.z = -2;
     pos = pos + vec4(normal, 0) * u_outline_width;
     gl_Position = mul(u_proj, pos); 

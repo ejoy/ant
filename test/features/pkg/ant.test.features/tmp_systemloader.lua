@@ -8,7 +8,7 @@ local imaterial     = ecs.import.interface "ant.asset|imaterial"
 local imesh         = ecs.import.interface "ant.asset|imesh"
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local irl           = ecs.import.interface "ant.render|irender_layer"
-
+local ioutline           = ecs.import.interface "ant.render|ioutline"
 local idn           = ecs.import.interface "ant.daynight|idaynight"
 local itimer        = ecs.import.interface "ant.timer|itimer"
 
@@ -143,11 +143,30 @@ function init_loader_sys:init()
 
 end
 
+local outline_eid
 local function render_layer_test()
     irl.add_layers(irl.layeridx "background", "mineral", "translucent_plane", "translucent_plane1")
     local m = imesh.init_mesh(ientity.plane_mesh())
-    ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_duck.prefab"
-    ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_wind.prefab"
+    outline_eid = ecs.create_entity {
+        policy = {
+            "ant.render|render"
+         },
+        data = {
+            scene  = {s = 0.2, t = {5, 1, 5}},
+            material    = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|materials/Material.001_skin.material", -- 自定义material文件中需加入HEAP_MESH :1
+            visible_state = "main_view",
+            mesh        = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin",
+            skinning = true,
+            outline = {
+                render_layer = "translucent_plane",
+                outline_scale = 0.01,
+                outline_color = {0.5, 0, 0, 1},
+                outline_mesh = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin"
+            }
+        },
+    } 
+     --ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_duck.prefab"
+    --ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_wind.prefab" 
     create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", function (e)
         local ee <close> = w:entity(e.tag['*'][1])
         iom.set_position(ee, math3d.vector(-10, -2, 0))
@@ -197,10 +216,12 @@ local function render_layer_test()
     end)
 end
 
+
 local sampler_eid
 local heap_eid
 local function drawindirect_test()
-     heap_eid = ecs.create_entity {
+
+--[[      heap_eid = ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -219,8 +240,9 @@ local function drawindirect_test()
                 interval = {0.5, 0.5, 0.5}
             }
         },
-    }  
-   local t = 1 
+    } 
+    
+   local t = 1  ]]
 --[[      ecs.create_entity {
         policy = {
             "ant.render|render",
@@ -400,6 +422,8 @@ function init_loader_sys:entity_init()
             heap_num = heap_num + 1
         elseif key == "K" and press == 0 then
             iheapmesh.update_heap_mesh_number(0, "iron-ingot")   -- 更新当前堆叠数
+        elseif key == "L" and press == 0 then
+            ioutline.remove_outline(outline_eid)
         end
     end
 
