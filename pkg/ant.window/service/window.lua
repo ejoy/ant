@@ -4,7 +4,6 @@ local scheduling
 
 local S = {}
 
-local priority = {}
 local event = {
     init = {},
     exit = {},
@@ -116,6 +115,18 @@ else
 end
 
 function S.create_window()
+    local ServiceWorld = ltask.queryservice "ant.window|world"
+    for _, v in pairs(event) do
+        v[1] = ServiceWorld
+    end
+
+    ltask.fork(function ()
+        local ServiceRmlui = ltask.queryservice "ant.rmlui|rmlui"
+        for _, e in ipairs {"mouse", "touch", "gesture"} do
+            table.insert(event[e], 1, ServiceRmlui)
+        end
+    end)
+
     local exclusive = require "ltask.exclusive"
     scheduling = exclusive.scheduling()
     local window = require "window"
@@ -128,47 +139,6 @@ end
 
 function S.wait()
     ltask.multi_wait "quit"
-end
-
-function S.priority(v)
-    local s = ltask.current_session()
-    priority[s] = v
-end
-
-local function insert(t, s)
-    local function get_priority(ss)
-        return priority[ss] or 0
-    end
-    local p = get_priority(s)
-    for i = #t, 1, -1 do
-        if p <= get_priority(t[i]) then
-            table.insert(t, i, s)
-            return
-        end
-    end
-    table.insert(t, s)
-end
-
-function S.subscribe(events)
-    local s = ltask.current_session()
-    for _, name in ipairs(events) do
-        local e = event[name]
-        if e then
-            insert(e, s.from)
-        end
-    end
-end
-
-function S.unsubscribe_all()
-    local s = ltask.current_session()
-    for _, e in pairs(event) do
-        for i, addr in ipairs(e) do
-            if addr == s.from then
-                table.remove(e, i)
-                break
-            end
-        end
-    end
 end
 
 return S
