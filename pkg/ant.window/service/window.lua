@@ -81,7 +81,7 @@ if SupportGesture then
         if not name then
             return
         end
-        ltask.send(ltask.self(), "send_gesture", name, ...)
+        CMD.gesture(name, ...)
         return true
     end
     function CMD.init(...)
