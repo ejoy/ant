@@ -5,7 +5,7 @@ local audio_sys = ecs.system "audio_system"
 local ia = ecs.interface "audio_interface"
 local caudio
 if "android" ~= platform.os then
-    caudio = require "audio"
+    _, caudio = pcall(require, "audio")
 end
 function ia.create(eventname)
     if not caudio then return end
