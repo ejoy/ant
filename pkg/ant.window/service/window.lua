@@ -20,7 +20,6 @@ local SCHEDULE_SUCCESS <const> = 3
 
 local CMD = {}
 local queue = {}
-local initialized = {}
 local noempty = {}
 
 for cmd in pairs(event) do
@@ -36,18 +35,26 @@ local function dispatch(cmd,...)
     CMD[cmd](...)
 end
 
+local quit = false
+
 local function call_event(cmd, ...)
     local user = event[cmd]
     for i = 1, #user do
         if ltask.call(user[i], cmd, ...) then
+            break
+        end
+    end
+    quit = (cmd == "exit")
+end
+
+local function messageloop(...)
+    local event_init = event.init
+    for i = 1, #event_init do
+        if ltask.call(event_init[i], 'init', ...) then
             return
         end
     end
-end
-
-ltask.fork(function ()
-    ltask.wait(initialized)
-    while true do
+    while not quit do
         if #queue == 0 then
             ltask.wait(noempty)
         else
@@ -59,7 +66,8 @@ ltask.fork(function ()
             end
         end
     end
-end)
+    ltask.multi_wakeup "quit"
+end
 
 if SupportGesture then
     local gesture = require "ios.gesture"
@@ -76,16 +84,10 @@ if SupportGesture then
         ltask.send(ltask.self(), "send_gesture", name, ...)
         return true
     end
-    local event_init = event.init
     function CMD.init(...)
         ltask.fork(function (...)
             gesture_init()
-            for i = 1, #event_init do
-                if ltask.call(event_init[i], 'init', ...) then
-                    return
-                end
-            end
-            ltask.wakeup(initialized)
+            messageloop(...)
         end, ...)
     end
     function CMD.update()
@@ -96,16 +98,8 @@ if SupportGesture then
         until ltask.schedule_message() ~= SCHEDULE_SUCCESS
     end
 else
-    local event_init = event.init
     function CMD.init(...)
-        ltask.fork(function (...)
-            for i = 1, #event_init do
-                if ltask.call(event_init[i], 'init', ...) then
-                    return
-                end
-            end
-            ltask.wakeup(initialized)
-        end, ...)
+        ltask.fork(messageloop, ...)
     end
     function CMD.update()
         repeat
@@ -133,7 +127,6 @@ function S.create_window()
     local handle = window.init(dispatch)
     ltask.fork(function()
         window.mainloop(handle, true)
-        ltask.multi_wakeup "quit"
     end)
 end
 
