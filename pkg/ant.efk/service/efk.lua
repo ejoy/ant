@@ -139,6 +139,10 @@ function S.update_state(handle, s)
         return false
     end
 
+    if not efk_ctx:is_alive(handle) then
+        return false
+    end
+    
     if s.stop then
         efk_ctx:stop(handle, s.delay)
     end
