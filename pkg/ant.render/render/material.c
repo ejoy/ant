@@ -18,11 +18,15 @@
 static int s_key;
 #define ATTRIB_ARENA (void*)(&s_key)
 
-#ifdef _DEBUG
+#if !defined(MATERIAL_DEBUG)
+#define MATERIAL_DEBUG 0
+#endif
+
+#if MATERIAL_DEBUG
 #define verfiy(_CON)	assert(_CON)
-#else //!_DEBUG
+#else //!MATERIAL_DEBUG
 #define verfiy(_CON)	_CON
-#endif //_DEBUG
+#endif //MATERIAL_DEBUG
 
 
 #define INVALID_ATTRIB	0xffff
@@ -1033,9 +1037,9 @@ to_instance(lua_State *L, int instanceidx){
 static int
 linstance_set_attrib(lua_State *L) {
 	struct material_instance * mi = to_instance(L, 1);
-#ifdef _DEBUG
+#if MATERIAL_DEBUG
 	const char* attribname = luaL_checkstring(L, 2);
-#endif //_DEBUG
+#endif //MATERIAL_DEBUG
 
 	const int mat_idx = get_material_index(L, 1);	// push material in stack
 	const attrib_id id = lookup_material_attrib_id(L, mat_idx, 2);
@@ -1129,9 +1133,9 @@ apply_attrib(lua_State *L, struct attrib_arena * arena, struct ecs_world* w, att
 			break;
 		case ATTRIB_SAMPLER: {
 			const bgfx_texture_handle_t tex = check_get_texture_handle(L, a->u.t.handle);
-			#ifdef _DEBUG
+			#if MATERIAL_DEBUG
 			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
-			#endif //_DEBUG
+			#endif //MATERIAL_DEBUG
 			BGFX(encoder_set_texture)(w->holder->encoder, a->u.t.stage, a->u.handle, tex, UINT32_MAX);
 		}	break;
 		case ATTRIB_IMAGE: {
