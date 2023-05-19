@@ -28,7 +28,6 @@ lm:lua_source "window" {
     },
     ios = {
         sources = {
-            "platform/ios/*.m",
             "platform/ios/*.mm",
             "loop/*.cpp",
         },
