@@ -22,7 +22,7 @@ function world:pipeline_func(what)
 		local total = w._cpu_stat
 		local printtext = {}
 		local MaxFrame <const> = 10
-		local MaxText <const> = 5
+		local MaxText <const> = 10
 		local MaxName <const> = 48
 		local CurFrame = 0
 		for i = 1, #funcs do

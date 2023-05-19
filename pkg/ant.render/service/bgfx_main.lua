@@ -40,6 +40,7 @@ local profile_label = {}
 local profile_time = 0
 local profile_n = 0
 local MaxFrame <const> = 30
+local MaxText <const> = 10
 local MaxName <const> = 48
 local profile_printtext = {}
 
@@ -58,9 +59,9 @@ local function profile_print()
         end
     end
 
-    S.dbg_text_print(0, 8, 0x02, "--- encoder")
+    S.dbg_text_print(0, 3+MaxText, 0x02, "--- encoder")
     for i = 1, #profile_printtext do
-        S.dbg_text_print(2, 8+i, 0x02, profile_printtext[i])
+        S.dbg_text_print(2, 3+MaxText+i, 0x02, profile_printtext[i])
     end
 end
 
