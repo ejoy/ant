@@ -141,7 +141,7 @@ int window_init(struct ant_window_callback* cb) {
     return 0;
 }
 
-void window_mainloop(struct ant_window_callback* cb, int update) {
+void window_mainloop() {
     int argc = 0;
     char **argv = 0;
     UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
