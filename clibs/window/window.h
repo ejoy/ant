@@ -1,13 +1,8 @@
 #pragma once
 
 #include <functional>
-
-#include <stdint.h>
-#include <stddef.h>
-#ifdef _WIN32
-#include <windows.h>
-#include <WinNT.h>
-#endif //_WIN32
+#include <cstdint>
+#include <cstddef>
 
 struct lua_State;
 
@@ -17,7 +12,7 @@ typedef enum {
 	KB_ALT,
 	KB_SYS,
 	KB_CAPSLOCK,
-}KEYBOARD_STATE;
+} KEYBOARD_STATE;
 
 struct ant_window_callback {
 	void (*update)(struct ant_window_callback* cb);
@@ -37,5 +32,4 @@ void window_message_mouse_wheel(struct ant_window_callback* cb, int x, int y, fl
 void window_message_mouse(struct ant_window_callback* cb, int x, int y, uint8_t type, uint8_t state);
 void window_message_size(struct ant_window_callback* cb, int x, int y, uint8_t type);
 void window_message_char(struct ant_window_callback* cb, int code);
-
 void window_message(struct ant_window_callback* cb, std::function<void(struct lua_State*)> func);

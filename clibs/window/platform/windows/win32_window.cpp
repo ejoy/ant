@@ -1,9 +1,16 @@
 #include <Windows.h>
 #include <stdint.h>
 #include "../../window.h"
-#include "win32_window.h"
 #include <tlhelp32.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <Windows.h>
 
+#define MAX_DROP_PATH 255*3
+
+enum {
+	WM_USER_WINDOW_SETCURSOR = WM_USER,
+};
 
 // project path in my documents
 #define CLASSNAME L"ANTCLIENT"
@@ -229,7 +236,4 @@ bool window_peekmessage() {
 			return true;
 		}
 	}
-}
-
-void window_mainloop(struct ant_window_callback* cb, int update) {
 }
