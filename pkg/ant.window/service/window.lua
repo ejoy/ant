@@ -9,19 +9,9 @@ local function ios_init()
     local exclusive = require "ltask.exclusive"
     local scheduling = exclusive.scheduling()
     local window = require "window"
-    local gesture = require "ios.gesture"
     local message = {}
-    local function gesture_dispatch(name, ...)
-        if not name then
-            return
-        end
-        message[#message+1] = table.pack("gesture", name, ...)
-        return true
-    end
     local function update()
         local SCHEDULE_SUCCESS <const> = 3
-        while gesture_dispatch(gesture.event()) do
-        end
         ltask.wakeup "update"
         repeat
             scheduling()

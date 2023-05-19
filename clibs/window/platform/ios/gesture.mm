@@ -1,29 +1,6 @@
 #include <lua.hpp>
 #include "window.h"
-#include <queue>
-#include <mutex>
-
-extern "C" {
-#include <lua-seri.h>
-}
-
-static std::queue<void*> g_queue;
-static std::mutex        g_mutex;
-
-static void queue_push(void* data) {
-    std::unique_lock<std::mutex> _(g_mutex);
-    g_queue.push(data);
-}
-
-static void* queue_pop() {
-    std::unique_lock<std::mutex> _(g_mutex);
-    if (g_queue.empty()) {
-        return NULL;
-    }
-    void* data = g_queue.front();
-    g_queue.pop();
-    return data;
-}
+#include "../../window.h"
 
 template <typename T>
 void push_value(lua_State* L, T v);
@@ -206,65 +183,64 @@ static void setVelocityInView(lua_State* L, int idx, UIPanGestureRecognizer* ges
 }
 
 @interface LuaGestureHandler : NSObject {
-    @public lua_State* L;
 }
 @end
 @implementation LuaGestureHandler
 -(void)handleTap:(LuaTapGesture *)gesture {
-    lua_settop(L, 0);
-    push_value(L, [gesture name]);
-    lua_newtable(L);
-    setLocationInView(L, 2, gesture);
-    setLocationOfTouch(L, 2, gesture);
-    void* data = seri_pack(L, 0, NULL);
-    queue_push(data);
+    window_message(g_cb, [&](lua_State* L) {
+        lua_pushstring(L, "gesture");
+        push_value(L, [gesture name]);
+        lua_newtable(L);
+        setLocationInView(L, 4, gesture);
+        setLocationOfTouch(L, 4, gesture);
+    });
 }
 -(void)handleLongPress:(LuaLongPressGesture *)gesture {
-    lua_settop(L, 0);
-    push_value(L, [gesture name]);
-    lua_newtable(L);
-    setState(L, 2, gesture);
-    setLocationInView(L, 2, gesture);
-    setLocationOfTouch(L, 2, gesture);
-    void* data = seri_pack(L, 0, NULL);
-    queue_push(data);
+    window_message(g_cb, [&](lua_State* L) {
+        lua_pushstring(L, "gesture");
+        push_value(L, [gesture name]);
+        lua_newtable(L);
+        setState(L, 4, gesture);
+        setLocationInView(L, 4, gesture);
+        setLocationOfTouch(L, 4, gesture);
+    });
 }
 -(void)handlePinch:(LuaPinchGesture *)gesture {
-    lua_settop(L, 0);
-    push_value(L, [gesture name]);
-    lua_newtable(L);
-    setState(L, 2, gesture);
-    setLocationInView(L, 2, gesture);
-    setLocationOfTouch(L, 2, gesture);
-    push_value(L, gesture.scale);
-    lua_setfield(L, 2, "scale");
-    push_value(L, gesture.velocity);
-    lua_setfield(L, 2, "velocity");
-    void* data = seri_pack(L, 0, NULL);
-    queue_push(data);
+    window_message(g_cb, [&](lua_State* L) {
+        lua_pushstring(L, "gesture");
+        push_value(L, [gesture name]);
+        lua_newtable(L);
+        setState(L, 4, gesture);
+        setLocationInView(L, 4, gesture);
+        setLocationOfTouch(L, 4, gesture);
+        push_value(L, gesture.scale);
+        lua_setfield(L, 4, "scale");
+        push_value(L, gesture.velocity);
+        lua_setfield(L, 4, "velocity");
+    });
 }
 -(void)handleSwipe:(LuaSwipeGesture *)gesture {
-    lua_settop(L, 0);
-    push_value(L, [gesture name]);
-    lua_newtable(L);
-    setLocationInView(L, 2, gesture);
-    setLocationOfTouch(L, 2, gesture);
-    push_value(L, gesture.direction);
-    lua_setfield(L, 2, "direction");
-    void* data = seri_pack(L, 0, NULL);
-    queue_push(data);
+    window_message(g_cb, [&](lua_State* L) {
+        lua_pushstring(L, "gesture");
+        push_value(L, [gesture name]);
+        lua_newtable(L);
+        setLocationInView(L, 4, gesture);
+        setLocationOfTouch(L, 4, gesture);
+        push_value(L, gesture.direction);
+        lua_setfield(L, 4, "direction");
+    });
 }
 -(void)handlePan:(LuaPanGesture *)gesture {
-    lua_settop(L, 0);
-    push_value(L, [gesture name]);
-    lua_newtable(L);
-    setState(L, 2, gesture);
-    setLocationInView(L, 2, gesture);
-    setLocationOfTouch(L, 2, gesture);
-    setTranslationInView(L, 2, gesture);
-    setVelocityInView(L, 2, gesture);
-    void* data = seri_pack(L, 0, NULL);
-    queue_push(data);
+    window_message(g_cb, [&](lua_State* L) {
+        lua_pushstring(L, "gesture");
+        push_value(L, [gesture name]);
+        lua_newtable(L);
+        setState(L, 4, gesture);
+        setLocationInView(L, 4, gesture);
+        setLocationOfTouch(L, 4, gesture);
+        setTranslationInView(L, 4, gesture);
+        setVelocityInView(L, 4, gesture);
+    });
 }
 @end
 
@@ -363,14 +339,6 @@ static int lpan(lua_State* L) {
     return 1;
 }
 
-static int levent(lua_State* L) {
-    void* data = queue_pop();
-    if (!data) {
-        return 0;
-    }
-    return seri_unpackptr(L, data);
-}
-
 static int lremove(lua_State* L) {
     if (!global_window) {
         return luaL_error(L, "window not initialized.");
@@ -399,7 +367,6 @@ int luaopen_ios_gesture(lua_State* L) {
         { "pinch", lpinch },
         { "swipe", lswipe },
         { "pan", lpan },
-        { "event", levent },
         { "remove", lremove },
         { "requireToFail", lrequireToFail },
         { NULL, NULL },
@@ -407,8 +374,6 @@ int luaopen_ios_gesture(lua_State* L) {
     luaL_newlibtable(L, l);
     LuaGestureHandler* handler = [[LuaGestureHandler alloc] init];
     lua_pushlightuserdata(L, (__bridge_retained void*)handler);
-    lua_newthread(L);
-    handler->L = lua_tothread(L, -1);
-    luaL_setfuncs(L, l, 2);
+    luaL_setfuncs(L, l, 1);
     return 1;
 }

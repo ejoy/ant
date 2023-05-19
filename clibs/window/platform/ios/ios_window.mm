@@ -6,6 +6,8 @@ extern "C" {
 }
 
 UIView* global_window = NULL;
+static id<MTLDevice> g_device = NULL;
+struct ant_window_callback* g_cb = NULL;
 
 @interface ViewController : UIViewController
 @end
@@ -15,8 +17,6 @@ UIView* global_window = NULL;
 }
 @end
 
-static id<MTLDevice> g_device = NULL;
-static struct ant_window_callback* g_cb = NULL;
 
 static void push_touch_message(int type, UIView* view, NSSet* touches) {
     if (!g_cb) {
