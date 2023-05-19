@@ -1,10 +1,16 @@
 local ltask = require "ltask"
 local exclusive = require "ltask.exclusive"
 local platform = require "bee.platform"
-local SupportGesture <const> = platform.os == "ios"
+
+local WindowModePeek <const> = 0
+local WindowModeLoop <const> = 0
+local WindowMode <const> = {
+    windows = WindowModePeek,
+    ios = WindowModeLoop,
+}
 
 local function init()
-    if SupportGesture then
+    if platform.os == "ios" then
         local gesture = require "ios.gesture"
         gesture.tap {}
         gesture.pinch {}
@@ -44,7 +50,20 @@ end
 
 local S = {}
 
-local function ios_init()
+local function create_peek_window()
+    local window = require "window"
+    window.init(message)
+    ltask.fork(message_loop, false)
+    ltask.fork(function()
+        repeat
+            exclusive.sleep(0)
+            ltask.sleep(0)
+        until not window.peekmessage()
+        quit = true
+    end)
+end
+
+local function create_loop_window()
     local scheduling = exclusive.scheduling()
     local window = require "window"
     local function update()
@@ -61,23 +80,12 @@ local function ios_init()
     end)
 end
 
-local function windows_init()
-    local window = require "window"
-    window.init(message)
-    ltask.fork(message_loop, false)
-    ltask.fork(function()
-        repeat
-            exclusive.sleep(0)
-            ltask.sleep(0)
-        until not window.peekmessage()
-        quit = true
-    end)
-end
-
-if platform.os == "windows" then
-    S.create_window = windows_init
+if WindowMode[platform.os] == WindowModePeek then
+    S.create_window = create_peek_window
+elseif WindowMode[platform.os] == WindowModeLoop then
+    S.create_window = create_loop_window
 else
-    S.create_window = ios_init
+    error "window service unimplemented"
 end
 
 function S.wait()
