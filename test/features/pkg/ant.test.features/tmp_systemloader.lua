@@ -8,7 +8,6 @@ local imaterial     = ecs.import.interface "ant.asset|imaterial"
 local imesh         = ecs.import.interface "ant.asset|imesh"
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local irl           = ecs.import.interface "ant.render|irender_layer"
-local ioutline           = ecs.import.interface "ant.render|ioutline"
 local idn           = ecs.import.interface "ant.daynight|idaynight"
 local itimer        = ecs.import.interface "ant.timer|itimer"
 
@@ -149,7 +148,8 @@ local function render_layer_test()
     local m = imesh.init_mesh(ientity.plane_mesh())
     outline_eid = ecs.create_entity {
         policy = {
-            "ant.render|render"
+            "ant.render|render",
+            "ant.render|outline_create",
          },
         data = {
             scene  = {s = 0.02, t = {5, 1, 5}},
@@ -159,8 +159,8 @@ local function render_layer_test()
             mesh        = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin",
             --mesh        = "/pkg/ant.resources.binary/meshes/Duck.glb|meshes/LOD3spShape_P1.meshbin",
             skinning = true,
-            outline = {
-                render_layer = "translucent_plane", --outline layer, should be behind of main queue
+            outline_create = {
+                render_layer = "background", --outline layer, should be behind of main queue
                 outline_scale = 0.1,    -- outline width
                 outline_color = {0.5, 0.5, 0, 1}, -- outline color
                 outline_mesh = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin" -- same as origin mesh address
@@ -338,7 +338,7 @@ function init_loader_sys:init_world()
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
     iom.set_direction(camera_ref, dir)
 
-    render_layer_test()
+    --render_layer_test()
     canvas_test()
 
     motion_sampler_test()
@@ -351,7 +351,7 @@ local mouse_mb = world:sub{"mouse", "LEFT"}
 
 local enable = 1
 local sm_test = false
-function init_loader_sys:entity_init()
+function init_loader_sys:ui_update()
     for _, key, press in kb_mb:unpack() do
         if key == "T" and press == 0 then
             -- local e<close> = w:entity(quad_eid)
@@ -424,19 +424,13 @@ function init_loader_sys:entity_init()
             iheapmesh.update_heap_mesh_number(heap_eid, heap_num) -- 更新当前堆叠数 参数一为待更新堆叠数 参数二为entity筛选的eid
             heap_num = heap_num + 1
         elseif key == "K" and press == 0 then
-            iheapmesh.update_heap_mesh_number(0, "iron-ingot")   -- 更新当前堆叠数
+            --iheapmesh.update_heap_mesh_number(0, "iron-ingot")   -- 更新当前堆叠数
+            render_layer_test()
         elseif key == "L" and press == 0 then
-            ioutline.remove_outline(outline_eid)    -- remove outline entity
+            local ee <close> = w:entity(outline_eid, "outline_remove?update")
+            ee.outline_remove = true
         elseif key == "M" and press == 0 then
-            local ee <close> = w:entity(outline_eid, "outline?update")
-            local outline = {
-                render_layer = "translucent_plane",
-                outline_scale = 0.1,
-                outline_color = {0.5, 0.5, 0, 1},
-                outline_mesh = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin"
-                --outline_mesh = "/pkg/ant.resources.binary/meshes/Duck.glb|meshes/LOD3spShape_P1.meshbin"
-            }
-            ee.outline = outline
+
         end
     end
 

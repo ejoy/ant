@@ -2,9 +2,11 @@ system "outline_system"
     .implement "outline/outline.lua"
     .method "data_changed"
 
-interface "ioutline"
-    .implement "outline/outline.lua"
-    .method "remove_outline"
+component "outline_create".type "lua"
+component "outline_remove"
 
-component "outline".type "lua"
-component "outline_info".type "lua"
+policy "outline_create"
+    .component "outline_create"
+
+policy "outline_remove"
+    .component "outline_remove"
