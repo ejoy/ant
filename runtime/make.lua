@@ -4,9 +4,6 @@ local fs = require "bee.filesystem"
 local runtime = false
 
 local function support_audio()
-    if lm.os == "windows" and lm.compiler == "gcc" then
-        return false
-    end
     if lm.os == "android" then
         return false
     end

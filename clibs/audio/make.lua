@@ -24,9 +24,9 @@ lm:copy "copy_fmod" {
 
 lm:lua_source "audio" {
     sources = {
-        "*.cpp",
+        "*.c",
     },
-	windows = {
+	msvc = {
         includes = {
             fmodDir.."/windows/core/inc",
             fmodDir.."/windows/studio/inc",
@@ -38,6 +38,20 @@ lm:lua_source "audio" {
         links = {
             EnableLog and "fmodL_vc" or "fmod_vc",
             EnableLog and "fmodstudioL_vc" or "fmodstudio_vc"
+        },
+	},
+	mingw = {
+        includes = {
+            fmodDir.."/windows/core/inc",
+            fmodDir.."/windows/studio/inc",
+        },
+        linkdirs ={
+            fmodDir.."/windows/core/lib/x64",
+            fmodDir.."/windows/studio/lib/x64",
+        },
+        links = {
+            EnableLog and "fmodL" or "fmod",
+            EnableLog and "fmodstudioL" or "fmodstudio"
         },
 	},
     macos = {
@@ -67,20 +81,6 @@ lm:lua_source "audio" {
             EnableLog and "fmodL_iphoneos" or "fmod_iphoneos",
             EnableLog and "fmodstudioL_iphoneos" or "fmodstudio_iphoneos"
         },
-    },
-    mingw = {
-        includes = {
-            fmodDir.."/windows/core/inc",
-            fmodDir.."/windows/studio/inc",
-        },
-        linkdirs ={
-            fmodDir.."/windows/core/lib/x64",
-            fmodDir.."/windows/studio/lib/x64",
-        },
-        -- links = {
-        --     "fmodL",
-        --     "fmodstudioL"
-        -- },
     },
     deps = {
         "copy_fmod",
