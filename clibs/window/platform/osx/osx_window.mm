@@ -1,6 +1,6 @@
 #include <Cocoa/Cocoa.h>
-#include "../window.h"
-#include "../virtual_keys.h"
+#include "../../window.h"
+#include "../../virtual_keys.h"
 
 static uint8_t keyboard_state(NSEvent* event) {
     int flags = [event modifierFlags];
@@ -196,7 +196,7 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 	(void)notification;
 	struct ant_window_message msg;
     msg.type = ANT_WINDOW_EXIT;
-	m_cb->message(m_cb->ud, &msg);
+	m_cb->message(m_cb, &msg);
 }
 - (BOOL)windowShouldClose:(NSWindow*)window {
 	assert(window);
@@ -241,7 +241,7 @@ int window_init(struct ant_window_callback* cb) {
 	msg.u.init.context = 0;
 	msg.u.init.w = w;
 	msg.u.init.h = h;
-	cb->message(cb->ud, &msg);
+	cb->message(cb, &msg);
 
     return 0;
 }
@@ -279,14 +279,14 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
         case NSEventTypeOtherMouseDragged: msg.u.mouse.type = 3; break;
         default: break;
         }
-		cb->message(cb->ud, &msg);
+		cb->message(cb, &msg);
         break;
 	case NSEventTypeScrollWheel:{
 		msg.type = ANT_WINDOW_MOUSE_WHEEL;
         msg.u.mouse_wheel.x = g_mx;
         msg.u.mouse_wheel.y = g_my;
 		msg.u.mouse_wheel.delta = 0.5f * [event scrollingDeltaY];
-		cb->message(cb->ud, &msg);
+		cb->message(cb, &msg);
         break;
     }
 	case NSEventTypeLeftMouseDown:
@@ -296,7 +296,7 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
 		msg.u.mouse.state = (eventType == NSEventTypeLeftMouseDown) ? 1 : 3;
         msg.u.mouse.x = g_mx;
         msg.u.mouse.y = g_my;
-		cb->message(cb->ud, &msg);
+		cb->message(cb, &msg);
         break;
 	case NSEventTypeRightMouseDown:
 	case NSEventTypeRightMouseUp:
@@ -305,7 +305,7 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
 		msg.u.mouse.state = (eventType == NSEventTypeRightMouseDown) ? 1 : 3;
         msg.u.mouse.x = g_mx;
         msg.u.mouse.y = g_my;
-		cb->message(cb->ud, &msg);
+		cb->message(cb, &msg);
         break;
 	case NSEventTypeOtherMouseDown:
 	case NSEventTypeOtherMouseUp:
@@ -314,7 +314,7 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
 		msg.u.mouse.state = (eventType == NSEventTypeOtherMouseDown) ? 1 : 3;
         msg.u.mouse.x = g_mx;
         msg.u.mouse.y = g_my;
-		cb->message(cb->ud, &msg);
+		cb->message(cb, &msg);
         break;
 	case NSEventTypeKeyDown:
 	case NSEventTypeKeyUp:
@@ -322,7 +322,7 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
 		msg.u.keyboard.state = keyboard_state(event);
 		msg.u.keyboard.press = (eventType == NSEventTypeKeyDown) ? 1 : 0;
 		msg.u.keyboard.key = keyboard_key(event);
-		cb->message(cb->ud, &msg);
+		cb->message(cb, &msg);
 		break;
 	default:
 		break;
@@ -346,7 +346,7 @@ void window_mainloop(struct ant_window_callback* cb, int update) {
     [NSApp finishLaunching];
     while (![dg applicationHasTerminated]) {
         if (update) {
-            cb->message(cb->ud, &update_msg);
+            cb->message(cb, &update_msg);
         }
         @autoreleasepool {
             while (dispatch_event(cb, peek_event())) { }

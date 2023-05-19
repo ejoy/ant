@@ -1,7 +1,9 @@
-#include "../window.h"
+#include "../../window.h"
 #include "ios_window.h"
 #include "window.h"
+extern "C" {
 #include <lua-seri.h>
+}
 
 UIView* global_window = NULL;
 
@@ -18,7 +20,7 @@ static struct ant_window_callback* g_cb = NULL;
 
 static void push_message(struct ant_window_message* msg) {
     if (g_cb) {
-        g_cb->message(g_cb->ud, msg);
+        g_cb->message(g_cb, msg);
     }
 }
 
@@ -26,8 +28,8 @@ static void push_touch_message(int type, UIView* view, NSSet* touches) {
     if (!g_cb) {
         return;
     }
-    lua_State* L = g_cb->L;
-    lua_settop(L, 0);
+    lua_State* L = g_cb->messageL;
+    lua_pushstring(L, "touch");
     lua_pushinteger(L, type);
     lua_newtable(L);
     lua_Integer n = 0;
@@ -46,7 +48,6 @@ static void push_touch_message(int type, UIView* view, NSSet* touches) {
     }
     struct ant_window_message msg;
     msg.type = ANT_WINDOW_TOUCH;
-    msg.u.touch.data = seri_pack(L, 0, NULL);
     push_message(&msg);
 }
 
@@ -107,9 +108,7 @@ static void push_touch_message(int type, UIView* view, NSSet* touches) {
     }
 }
 - (void)renderFrame {
-    struct ant_window_message msg;
-    msg.type = ANT_WINDOW_UPDATE;
-    push_message(&msg);
+    g_cb->update(g_cb);
 }
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     push_touch_message(1, self, touches);

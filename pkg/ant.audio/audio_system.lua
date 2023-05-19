@@ -6,6 +6,7 @@ local audio_sys = ecs.system "audio_system"
 local ia = ecs.interface "audio_interface"
 local caudio
 local play_sound = function() end
+
 if "android" ~= platform.os then
     caudio = require "audio"
 	play_sound = caudio.play
