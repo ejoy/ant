@@ -18,6 +18,13 @@ local default_stencil = {
 
 local scale_id_table = {}
 
+--[[ local function is_gpu_skinning(declname)
+    if string.find(declname, "w40") or string.find(declname, "i40") then
+        return true
+    else return 
+    end
+end ]]
+
 function outline_system:data_changed()
     for e in w:select "outline:update filter_material:in scene:in mesh:in scene:in eid:in skinning?in" do
         if e.filter_material and e.outline.outline_mesh then
@@ -68,5 +75,7 @@ function outline_system:data_changed()
 end
 
 function ioutline.remove_outline(outline_eid)
-    w:remove(scale_id_table[outline_eid])
+    if scale_id_table[outline_eid] then
+        w:remove(scale_id_table[outline_eid]) 
+    end
 end

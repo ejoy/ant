@@ -152,16 +152,19 @@ local function render_layer_test()
             "ant.render|render"
          },
         data = {
-            scene  = {s = 0.2, t = {5, 1, 5}},
-            material    = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|materials/Material.001_skin.material", -- 自定义material文件中需加入HEAP_MESH :1
+            scene  = {s = 0.02, t = {5, 1, 5}},
+            material    = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|materials/Material.001_skin.material", 
+            --material    = "/pkg/ant.resources.binary/meshes/Duck.glb|materials/blinn3-fx.material", 
             visible_state = "main_view",
             mesh        = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin",
+            --mesh        = "/pkg/ant.resources.binary/meshes/Duck.glb|meshes/LOD3spShape_P1.meshbin",
             skinning = true,
             outline = {
-                render_layer = "translucent_plane",
-                outline_scale = 0.01,
-                outline_color = {0.5, 0, 0, 1},
-                outline_mesh = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin"
+                render_layer = "translucent_plane", --outline layer, should be behind of main queue
+                outline_scale = 0.1,    -- outline width
+                outline_color = {0.5, 0.5, 0, 1}, -- outline color
+                outline_mesh = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin" -- same as origin mesh address
+                --outline_mesh = "/pkg/ant.resources.binary/meshes/Duck.glb|meshes/LOD3spShape_P1.meshbin"
             }
         },
     } 
@@ -423,7 +426,17 @@ function init_loader_sys:entity_init()
         elseif key == "K" and press == 0 then
             iheapmesh.update_heap_mesh_number(0, "iron-ingot")   -- 更新当前堆叠数
         elseif key == "L" and press == 0 then
-            ioutline.remove_outline(outline_eid)
+            ioutline.remove_outline(outline_eid)    -- remove outline entity
+        elseif key == "M" and press == 0 then
+            local ee <close> = w:entity(outline_eid, "outline?update")
+            local outline = {
+                render_layer = "translucent_plane",
+                outline_scale = 0.1,
+                outline_color = {0.5, 0.5, 0, 1},
+                outline_mesh = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin"
+                --outline_mesh = "/pkg/ant.resources.binary/meshes/Duck.glb|meshes/LOD3spShape_P1.meshbin"
+            }
+            ee.outline = outline
         end
     end
 
