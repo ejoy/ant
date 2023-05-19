@@ -21,7 +21,7 @@ function world:pipeline_func(what)
 		local dbg_print = bgfx.dbg_text_print
 		local total = w._cpu_stat
 		local printtext = {}
-		local MaxFrame <const> = 10
+		local MaxFrame <const> = 30
 		local MaxText <const> = 10
 		local MaxName <const> = 48
 		local CurFrame = 0
