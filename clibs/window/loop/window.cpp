@@ -1,17 +1,7 @@
-#include <stdio.h>
 #include <lua.hpp>
-#include <stdint.h>
-#include <assert.h>
+#include <stdio.h>
 #include "../window.h"
-#include "../virtual_keys.h"
-#ifdef _WIN32
-#include <windows.h>
-#include <WinNT.h>
-#endif //_WIN32
 
-extern "C" {
-#include <lua-seri.h>
-}
 
 static void
 update_callback(struct ant_window_callback* cb) {

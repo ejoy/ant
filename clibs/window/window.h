@@ -1,13 +1,8 @@
 #pragma once
 
 #include <functional>
-
-#include <stdint.h>
-#include <stddef.h>
-#ifdef _WIN32
-#include <windows.h>
-#include <WinNT.h>
-#endif //_WIN32
+#include <cstdint>
+#include <cstddef>
 
 struct lua_State;
 
