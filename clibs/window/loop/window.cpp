@@ -14,24 +14,7 @@ extern "C" {
 }
 
 static void
-push_update_args(lua_State *L, struct ant_window_update *update) {
-}
-
-static void
-push_init_args(lua_State *L, struct ant_window_init *init) {
-	lua_pushlightuserdata(L, init->window);
-	lua_pushlightuserdata(L, init->context);
-	lua_pushinteger(L, init->w);
-	lua_pushinteger(L, init->h);
-}
-
-static void
 push_exit_args(lua_State *L, struct ant_window_exit *exit) {
-}
-
-static void
-push_touch_args(lua_State *L, struct ant_window_touch *touch) {
-    seri_unpackptr(L, touch->data);
 }
 
 static void
@@ -71,10 +54,6 @@ push_char_arg(lua_State *L, struct ant_window_char *c) {
 static int
 push_arg(lua_State *L, struct ant_window_message *msg) {
 	switch(msg->type) {
-	case ANT_WINDOW_UPDATE:
-		lua_pushstring(L, "update");
-		push_update_args(L, &msg->u.update);
-		break;
 	case ANT_WINDOW_INIT:
 		lua_pushstring(L, "init");
 		push_init_args(L, &msg->u.init);
