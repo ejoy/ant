@@ -22,7 +22,7 @@ lm:lua_source "window" {
     },
     macos = {
         sources = {
-            "platform/osx/*.m",
+            "platform/osx/*.mm",
             "loop/*.cpp",
         },
     },
