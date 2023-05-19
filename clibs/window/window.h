@@ -1,5 +1,6 @@
-#ifndef ant_window_h
-#define ant_window_h
+#pragma once
+
+#include <functional>
 
 #include <stdint.h>
 #include <stddef.h>
@@ -37,6 +38,4 @@ void window_message_mouse(struct ant_window_callback* cb, int x, int y, uint8_t 
 void window_message_size(struct ant_window_callback* cb, int x, int y, uint8_t type);
 void window_message_char(struct ant_window_callback* cb, int code);
 
-void window_message(struct ant_window_callback* cb, void(*func)(struct lua_State* L));
-
-#endif
+void window_message(struct ant_window_callback* cb, std::function<void(struct lua_State*)> func);

@@ -18,37 +18,29 @@ UIView* global_window = NULL;
 static id<MTLDevice> g_device = NULL;
 static struct ant_window_callback* g_cb = NULL;
 
-static void push_message(struct ant_window_message* msg) {
-    if (g_cb) {
-        g_cb->message(g_cb, msg);
-    }
-}
-
 static void push_touch_message(int type, UIView* view, NSSet* touches) {
     if (!g_cb) {
         return;
     }
-    lua_State* L = g_cb->messageL;
-    lua_pushstring(L, "touch");
-    lua_pushinteger(L, type);
-    lua_newtable(L);
-    lua_Integer n = 0;
-    for (UITouch *touch in touches) {
+    window_message(g_cb, [&](lua_State* L){
+        lua_pushstring(L, "touch");
+        lua_pushinteger(L, type);
         lua_newtable(L);
-        CGPoint pt = [touch locationInView:view];
-        pt.x *= view.contentScaleFactor;
-        pt.y *= view.contentScaleFactor;
-        lua_pushinteger(L, (lua_Integer)(uintptr_t)touch);
-        lua_setfield(L, -2, "id");
-        lua_pushnumber(L, pt.x);
-        lua_setfield(L, -2, "x");
-        lua_pushnumber(L, pt.y);
-        lua_setfield(L, -2, "y");
-        lua_seti(L, -2, ++n);
-    }
-    struct ant_window_message msg;
-    msg.type = ANT_WINDOW_TOUCH;
-    push_message(&msg);
+        lua_Integer n = 0;
+        for (UITouch *touch in touches) {
+            lua_newtable(L);
+            CGPoint pt = [touch locationInView:view];
+            pt.x *= view.contentScaleFactor;
+            pt.y *= view.contentScaleFactor;
+            lua_pushinteger(L, (lua_Integer)(uintptr_t)touch);
+            lua_setfield(L, -2, "id");
+            lua_pushnumber(L, pt.x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, pt.y);
+            lua_setfield(L, -2, "y");
+            lua_seti(L, -2, ++n);
+        }
+    });
 }
 
 @implementation View
@@ -76,24 +68,13 @@ static void push_touch_message(int type, UIView* view, NSSet* touches) {
 
     int w = (int)(self.contentScaleFactor * self.frame.size.width);
     int h = (int)(self.contentScaleFactor * self.frame.size.height);
-    struct ant_window_message msg;
-    msg.type = ANT_WINDOW_INIT;
-    msg.u.init.window = (__bridge void*)self.layer;
-    msg.u.init.context = (__bridge void*)g_device;
-    msg.u.init.w = w;
-    msg.u.init.h = h;
-    push_message(&msg);
+    window_message_init(g_cb, (__bridge void*)self.layer, (__bridge void*)g_device, w, h);
     return self;
 }
 - (void)layoutSubviews {
     uint32_t frameW = (uint32_t)(self.contentScaleFactor * self.frame.size.width);
     uint32_t frameH = (uint32_t)(self.contentScaleFactor * self.frame.size.height);
-    struct ant_window_message msg;
-    msg.type = ANT_WINDOW_SIZE;
-    msg.u.size.x = frameW;
-    msg.u.size.y = frameH;
-    msg.u.size.type = 0;
-    push_message(&msg);
+    window_message_size(g_cb, frameW, frameH, 0);
 }
 - (void)start {
     if (nil == self.m_displayLink) {
@@ -147,9 +128,7 @@ static void push_touch_message(int type, UIView* view, NSSet* touches) {
     return YES;
 }
 - (void) applicationWillTerminate:(UIApplication *)application {
-    struct ant_window_message msg;
-    msg.type = ANT_WINDOW_EXIT;
-    push_message(&msg);
+    window_message_exit(g_cb);
     [self.m_view stop];
 }
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {

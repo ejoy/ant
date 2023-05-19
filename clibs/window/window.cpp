@@ -78,7 +78,7 @@ void window_message_char(struct ant_window_callback* cb, int code) {
 	push_message(L);
 }
 
-void window_message(struct ant_window_callback* cb, void(*func)(struct lua_State* L)) {
+void window_message(struct ant_window_callback* cb, std::function<void(struct lua_State*)> func) {
 	lua_State* L = cb->messageL;
 	lua_settop(L, 1);
 	func(L);
