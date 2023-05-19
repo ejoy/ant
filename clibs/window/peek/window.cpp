@@ -123,7 +123,7 @@ push_arg(lua_State *L, struct ant_window_message *msg) {
 
 static void
 message_callback(struct ant_window_callback* cb, struct ant_window_message *msg) {
-	lua_State* L = cb->L;
+	lua_State* L = cb->messageL;
 	lua_settop(L, 1);
 	if (!push_arg(L, msg)) {
 		return;
@@ -141,15 +141,14 @@ message_callback(struct ant_window_callback* cb, struct ant_window_message *msg)
 static int
 linit(lua_State *L) {
 	struct ant_window_callback* cb = (struct ant_window_callback*)lua_newuserdatauv(L, sizeof(*cb), 1);
-	lua_State* dataL = lua_newthread(L);
-	lua_setiuservalue(L, -2, 1);
 	cb->message = message_callback;
 	cb->surrogate = 0;
-	cb->L = dataL;
+	cb->messageL = lua_newthread(L);
+	lua_setiuservalue(L, -2, 1);
 	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CONTEXT");
 
 	lua_pushvalue(L, 1);
-	lua_xmove(L, dataL, 1);
+	lua_xmove(L, cb->messageL, 1);
 
 	if (0 != window_init(cb)) {
 		return luaL_error(L, "window init failed");

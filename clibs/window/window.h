@@ -97,7 +97,9 @@ struct lua_State;
 
 struct ant_window_callback {
 	void (*message)(struct ant_window_callback* cb, struct ant_window_message *);
-	struct lua_State* L;
+	void (*update)(struct ant_window_callback* cb);
+	struct lua_State* messageL;
+	struct lua_State* updateL;
 	int surrogate;
 };
 

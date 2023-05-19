@@ -149,7 +149,8 @@ function S.recreate(nwh, _, width, height)
 end
 
 local function dispatch(cmd, ...)
-	S[cmd](...)
+	local f = assert(S[cmd], cmd)
+	f(...)
 end
 
 function S.msg(message)

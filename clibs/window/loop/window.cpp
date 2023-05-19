@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <lua.hpp>
 #include <stdint.h>
+#include <assert.h>
 #include "../window.h"
 #include "../virtual_keys.h"
 #ifdef _WIN32
@@ -87,8 +88,6 @@ push_arg(lua_State *L, struct ant_window_message *msg) {
 		push_exit_args(L, &msg->u.exit);
 		break;
 	case ANT_WINDOW_TOUCH:
-		lua_pushstring(L, "touch");
-		push_touch_args(L, &msg->u.touch);
 		break;
 	case ANT_WINDOW_KEYBOARD:
 		lua_pushstring(L, "keyboard");
@@ -118,14 +117,25 @@ push_arg(lua_State *L, struct ant_window_message *msg) {
 
 static void
 message_callback(struct ant_window_callback* cb, struct ant_window_message *msg) {
-	lua_State *L = cb->L;
-	lua_pushvalue(L, 2);
+	lua_State* L = cb->messageL;
 	if (!push_arg(L, msg)) {
-		lua_pop(L, 1);
 		return;
 	}
-	int nargs = lua_gettop(L) - 3;
-	if (lua_pcall(L, nargs, 0, 1) != LUA_OK) {
+	int n = lua_gettop(L) - 1;
+	lua_createtable(L, n, 1);
+	lua_insert(L, 2);
+	for (int i = n; i >= 1; i--)
+		lua_seti(L, 2, i);
+	lua_pushinteger(L, n);
+	lua_setfield(L, 2, "n");
+	lua_seti(L, 1, luaL_len(L, 1)+1);
+}
+
+static void
+update_callback(struct ant_window_callback* cb) {
+	lua_State* L = cb->updateL;
+	lua_pushvalue(L, 2);
+	if (lua_pcall(L, 0, 0, 1) != LUA_OK) {
 		printf("Error: %s\n", lua_tostring(L, -1));
 		lua_pop(L, 1);
 	}
@@ -144,17 +154,22 @@ ltraceback(lua_State *L) {
 
 static int
 linit(lua_State *L) {
-	struct ant_window_callback* cb = (struct ant_window_callback*)lua_newuserdatauv(L, sizeof(*cb), 1);
-	lua_State* dataL = lua_newthread(L);
-	lua_setiuservalue(L, -2, 1);
-	cb->message = message_callback;
+	struct ant_window_callback* cb = (struct ant_window_callback*)lua_newuserdatauv(L, sizeof(*cb), 2);
 	cb->surrogate = 0;
-	cb->L = dataL;
+	cb->message = message_callback;
+	cb->update = update_callback;
+	cb->messageL = lua_newthread(L);
+	lua_setiuservalue(L, -2, 1);
+	cb->updateL = lua_newthread(L);
+	lua_setiuservalue(L, -2, 2);
 	lua_setfield(L, LUA_REGISTRYINDEX, "ANT_WINDOW_CONTEXT");
 
-	lua_pushcfunction(dataL, ltraceback);
 	lua_pushvalue(L, 1);
-	lua_xmove(L, dataL, 1);
+	lua_xmove(L, cb->messageL, 1);
+
+	lua_pushcfunction(cb->updateL, ltraceback);
+	lua_pushvalue(L, 2);
+	lua_xmove(L, cb->updateL, 1);
 
 	if (0 != window_init(cb)) {
 		return luaL_error(L, "window init failed");
