@@ -125,49 +125,36 @@ function S.preload_texture(texture, id)
     end
 end
 
+function S.play(efkhandle, mat, speed)
+    return efk_ctx:play(efkhandle, mat, speed)
+end
+
 function S.is_alive(handle)
     return efk_ctx:is_alive(handle)
 end
 
-function S.play(handle, mat, speed)
-    return efk_ctx:play(handle, mat, speed)
+function S.set_stop(handle, delay)
+    return efk_ctx:stop(handle, delay)
 end
 
-function S.update_state(handle, s)
-    if s.delete then
-        efk_ctx:destroy(handle)
-        return false
-    end
+function S.set_time(handle, time)
+    efk_ctx:set_time(handle, time)
+end
 
-    if not efk_ctx:is_alive(handle) then
-        return false
-    end
-    
-    if s.stop then
-        efk_ctx:stop(handle, s.delay)
-    end
+function S.set_transform(handle, mat)
+    efk_ctx:update_transform(handle, mat)
+end
 
-    if s.mat then
-        efk_ctx:update_transform(handle, s.mat)
-    end
+function S.set_speed(handle, speed)
+    efk_ctx:set_speed(handle, speed)
+end
 
-    if s.speed then
-        efk_ctx:set_speed(handle, s.speed)
-    end
+function S.set_pause(handle, p)
+    efk_ctx:pause(handle, p)
+end
 
-    if s.pause ~= nil then
-        efk_ctx:pause(handle, s.pause)
-    end
-
-    if s.time then
-        efk_ctx:set_time(handle, s.time)
-    end
-
-    if s.visible then
-        efk_ctx:set_visible(handle, s.visible)
-    end
-
-    return true
+function S.set_visible(handle, v)
+    efk_ctx:set_visible(handle, v)
 end
 
 function S.quit()

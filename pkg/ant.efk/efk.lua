@@ -159,7 +159,6 @@ function efk_sys:camera_usage()
         update_framebuffer_texutre(camera.projmat)
         need_update_framebuffer = nil
     end
-
     ltask.send(EFK_SERVER, "update", math3d.serialize(camera.viewmat), math3d.serialize(camera.projmat), itimer.delta())
 end
 
@@ -223,8 +222,6 @@ function efk_sys:follow_transform_updated()
             end
         end
     end
-
-    PH.update_all()
 end
 
 function iefk.create(filename, config)
@@ -337,7 +334,6 @@ end
 function iefk.destroy(eid)
     local e <close> = w:entity(eid, "efk?in")
     if not e.efk then return end
-    e.efk.play_handle:destroy(e.efk.play_handle)
     e.efk.play_handle = nil
 end
 
