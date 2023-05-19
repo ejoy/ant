@@ -1,17 +1,16 @@
-#define LUA_LIB
-
 #include <stdio.h>
-#include <lua.h>
-#include <lauxlib.h>
+#include <lua.hpp>
 #include <stdint.h>
-#include <lua-seri.h>
 #include "window.h"
-#include "virtual_keys.h"
+#include "../virtual_keys.h"
 #ifdef _WIN32
 #include <windows.h>
 #include <WinNT.h>
 #endif //_WIN32
 
+extern "C" {
+#include <lua-seri.h>
+}
 
 struct callback_context {
 	lua_State *callback;
@@ -181,7 +180,7 @@ ltraceback(lua_State *L) {
 static int registercallback(lua_State *L, struct ant_window_callback* cb) {
 	luaL_checktype(L, 1, LUA_TFUNCTION);
 
-	struct callback_context * context = lua_newuserdatauv(L, sizeof(*context), 2);
+	struct callback_context* context = (struct callback_context*)lua_newuserdatauv(L, sizeof(*context), 2);
 	context->surrogate = 0;
 	context->callback = lua_newthread(L);
 	lua_setiuservalue(L, -2, 1);
@@ -199,7 +198,7 @@ static int registercallback(lua_State *L, struct ant_window_callback* cb) {
 
 static int
 linit(lua_State *L) {
-	struct ant_window_callback* cb = lua_newuserdatauv(L, sizeof(*cb), 1);
+	struct ant_window_callback* cb = (struct ant_window_callback*)lua_newuserdatauv(L, sizeof(*cb), 1);
 	cb->ud = NULL;
 	cb->message = message_callback;
 	cb->L = lua_newthread(L);
@@ -212,18 +211,32 @@ linit(lua_State *L) {
 }
 
 static int
+lclose(lua_State *L) {
+	window_close();
+	return 0;
+}
+
+static int
+lpeekmessage(lua_State *L) {
+	window_peekmessage();
+	return 0;
+}
+
+static int
 lmainloop(lua_State *L) {
-	struct ant_window_callback* cb = lua_touserdata(L, 1);
+	struct ant_window_callback* cb = (struct ant_window_callback*)lua_touserdata(L, 1);
 	int update = lua_toboolean(L, 2);
 	window_mainloop(cb, update);
 	return 0;
 }
 
-LUAMOD_API int
+extern "C" int
 luaopen_window(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "init", linit },
+		{ "close", lclose },
+		{ "peekmessage", lpeekmessage },
 		{ "mainloop", lmainloop },
 		{ NULL, NULL },
 	};

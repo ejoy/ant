@@ -17,7 +17,7 @@ local mu		= import_package "ant.math".util
 local platform  = require "bee.platform"
 local bgfx      = require "bgfx"
 
-local S = {}
+local S = ltask.dispatch {}
 
 local config = {
 	ecs = initargs,
@@ -102,14 +102,14 @@ local function render(nwh, context, width, height, initialized)
 	log.info("main viewport:", world.args.viewport.x, world.args.viewport.y, world.args.viewport.w, world.args.viewport.h)
 	world:pub{"world_viewport_changed", world.args.viewport}
 	local ev 		= inputmgr.create(world, "win32")
-	local s = ltask.dispatch()
-	s.mouse_wheel	= ev.mouse_wheel
-	s.mouse 		= ev.mouse
-	s.touch			= ev.touch
-	s.gesture		= ev.gesture
-	s.keyboard		= ev.keyboard
-	s.char			= ev.char
-	s.size			= resize
+
+	S.mouse_wheel	= ev.mouse_wheel
+	S.mouse 		= ev.mouse
+	S.touch			= ev.touch
+	S.gesture		= ev.gesture
+	S.keyboard		= ev.keyboard
+	S.char			= ev.char
+	S.size			= resize
 	do_size			= ev.size
 	world:pipeline_init()
 
@@ -148,6 +148,17 @@ function S.recreate(nwh, _, width, height)
 	S.size(width, height)
 end
 
+local function dispatch(cmd, ...)
+	S[cmd](...)
+end
+
+function S.msg(message)
+	for i = 1, #message do
+		local m = message[i]
+		dispatch(table.unpack(m, 1, m.n))
+	end
+end
+
 function S.exit()
 	quit = {}
 	ltask.wait(quit)
@@ -162,5 +173,3 @@ function S.exit()
 	rhwi.shutdown()
     print "exit"
 end
-
-return S

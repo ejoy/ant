@@ -93,12 +93,16 @@ struct ant_window_message {
 	} u;
 };
 
+struct lua_State;
+
 struct ant_window_callback {
-	void (*message)(void *ud, struct ant_window_message *);
-	void *ud;
-	void* L;
+	void (*message)(ant_window_callback* cb, struct ant_window_message *);
+	lua_State* L;
+	int surrogate;
 };
 
 int  window_init(struct ant_window_callback* cb);
+void window_close();
+bool window_peekmessage();
 void window_mainloop(struct ant_window_callback* cb, int update);
 #endif

@@ -8,11 +8,12 @@ lm:lua_source "window" {
         Ant3rd.."bee.lua",
     },
     sources = {
-        "window.c",
+        "*.cpp",
     },
     windows = {
         sources = {
-            "win32/*.c",
+            "platform/windows/*.cpp",
+            "peek/*.cpp",
         },
         links = {
             "user32",
@@ -21,24 +22,27 @@ lm:lua_source "window" {
     },
     macos = {
         sources = {
-            "osx/*.m",
+            "platform/osx/*.m",
+            "loop/*.cpp",
         },
     },
     ios = {
         sources = {
-            "ios/*.m",
-            "ios/*.mm",
+            "platform/ios/*.m",
+            "platform/ios/*.mm",
+            "loop/*.cpp",
         },
     },
     android = {
         includes = {
-            "android/include",
+            "platform/android/include",
             Ant3rd.."../runtime/common",
         },
         sources = {
-            "android/include/**/*.cpp",
-            "android/include/**/*.c",
-            "android/*.cpp",
+            "platform/android/include/**/*.cpp",
+            "platform/android/include/**/*.c",
+            "platform/android/*.cpp",
+            "loop/*.cpp",
         },
     }
 }
