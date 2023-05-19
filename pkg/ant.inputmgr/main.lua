@@ -2,6 +2,13 @@ local mouse_what  = { 'LEFT', 'RIGHT', 'MIDDLE' }
 local mouse_state = { 'DOWN', 'MOVE', 'UP' }
 local touch_state = { 'START', 'MOVE', 'END', "CANCEL" }
 
+local ltask = require "ltask"
+local ServiceRmlui; do
+    ltask.fork(function ()
+        ServiceRmlui = ltask.queryservice "ant.rmlui|rmlui"
+    end)
+end
+
 local function create(world, type)
     local keymap = require(type.."_keymap")
     local ev = {}
@@ -9,12 +16,27 @@ local function create(world, type)
         world:pub {"mouse_wheel", delta, x, y}
     end
     function ev.mouse(x, y, what, state)
+        if ServiceRmlui then
+            if ltask.call(ServiceRmlui, "mouse", x, y, what, state) then
+                return
+            end
+        end
         world:pub {"mouse", mouse_what[what] or "UNKNOWN", mouse_state[state] or "UNKNOWN", x, y}
     end
     function ev.touch(state, data)
+        if ServiceRmlui then
+            if ltask.call(ServiceRmlui, "touch", state, data) then
+                return
+            end
+        end
         world:pub {"touch", touch_state[state] or "UNKNOWN", data}
     end
     function ev.gesture(...)
+        if ServiceRmlui then
+            if ltask.call(ServiceRmlui, "gesture", ...) then
+                return
+            end
+        end
         world:pub {"gesture", ...}
     end
     function ev.keyboard(key, press, state)

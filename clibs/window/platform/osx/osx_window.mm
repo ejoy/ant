@@ -1,6 +1,6 @@
 #include <Cocoa/Cocoa.h>
-#include "../window.h"
-#include "../virtual_keys.h"
+#include "../../window.h"
+#include "../../virtual_keys.h"
 
 static uint8_t keyboard_state(NSEvent* event) {
     int flags = [event modifierFlags];
@@ -194,9 +194,7 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 }
 - (void)windowWillClose:(NSNotification*)notification {
 	(void)notification;
-	struct ant_window_message msg;
-    msg.type = ANT_WINDOW_EXIT;
-	m_cb->message(m_cb->ud, &msg);
+    window_message_exit(m_cb);
 }
 - (BOOL)windowShouldClose:(NSWindow*)window {
 	assert(window);
@@ -235,14 +233,7 @@ int window_init(struct ant_window_callback* cb) {
     g_wd = [WindowDelegate new];
     [g_wd windowCreated:win initCallback:cb];
 
-	struct ant_window_message msg;
-	msg.type = ANT_WINDOW_INIT;
-	msg.u.init.window = win;
-	msg.u.init.context = 0;
-	msg.u.init.w = w;
-	msg.u.init.h = h;
-	cb->message(cb->ud, &msg);
-
+    window_message_init(cb, win, 0, w, h);
     return 0;
 }
 
@@ -260,69 +251,42 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
 	    return false;
 	}
 	NSEventType eventType = [event type];
-	struct ant_window_message msg;
 
 	switch (eventType) {
 	case NSEventTypeMouseMoved:
 	case NSEventTypeLeftMouseDragged:
 	case NSEventTypeRightMouseDragged:
-	case NSEventTypeOtherMouseDragged:
+	case NSEventTypeOtherMouseDragged: {
 		[g_wd getMouseX:&g_mx getMouseY:&g_my];
-		msg.type = ANT_WINDOW_MOUSE;
-        msg.u.mouse.state = 2;
-        msg.u.mouse.x = g_mx;
-        msg.u.mouse.y = g_my;
+		uint8_t type = 0;
         switch (eventType) {
-        case NSEventTypeMouseMoved:        msg.u.mouse.type = 0; break;
-        case NSEventTypeLeftMouseDragged:  msg.u.mouse.type = 1; break;
-        case NSEventTypeRightMouseDragged: msg.u.mouse.type = 2; break;
-        case NSEventTypeOtherMouseDragged: msg.u.mouse.type = 3; break;
+        case NSEventTypeMouseMoved:        type = 0; break;
+        case NSEventTypeLeftMouseDragged:  type = 1; break;
+        case NSEventTypeRightMouseDragged: type = 2; break;
+        case NSEventTypeOtherMouseDragged: type = 3; break;
         default: break;
         }
-		cb->message(cb->ud, &msg);
-        break;
-	case NSEventTypeScrollWheel:{
-		msg.type = ANT_WINDOW_MOUSE_WHEEL;
-        msg.u.mouse_wheel.x = g_mx;
-        msg.u.mouse_wheel.y = g_my;
-		msg.u.mouse_wheel.delta = 0.5f * [event scrollingDeltaY];
-		cb->message(cb->ud, &msg);
+        window_message_mouse(cb, g_mx, g_my, type, 2);
         break;
     }
+	case NSEventTypeScrollWheel:
+        window_message_mouse_wheel(cb, g_mx, g_my, 0.5f * [event scrollingDeltaY]);
+        break;
 	case NSEventTypeLeftMouseDown:
 	case NSEventTypeLeftMouseUp:
-		msg.type = ANT_WINDOW_MOUSE;
-		msg.u.mouse.type = 1;
-		msg.u.mouse.state = (eventType == NSEventTypeLeftMouseDown) ? 1 : 3;
-        msg.u.mouse.x = g_mx;
-        msg.u.mouse.y = g_my;
-		cb->message(cb->ud, &msg);
+        window_message_mouse(cb, g_mx, g_my, 1, (eventType == NSEventTypeLeftMouseDown) ? 1 : 3);
         break;
 	case NSEventTypeRightMouseDown:
 	case NSEventTypeRightMouseUp:
-		msg.type = ANT_WINDOW_MOUSE;
-		msg.u.mouse.type = 2;
-		msg.u.mouse.state = (eventType == NSEventTypeRightMouseDown) ? 1 : 3;
-        msg.u.mouse.x = g_mx;
-        msg.u.mouse.y = g_my;
-		cb->message(cb->ud, &msg);
+        window_message_mouse(cb, g_mx, g_my, 2, (eventType == NSEventTypeRightMouseDown) ? 1 : 3);
         break;
 	case NSEventTypeOtherMouseDown:
 	case NSEventTypeOtherMouseUp:
-		msg.type = ANT_WINDOW_MOUSE;
-		msg.u.mouse.type = 3;
-		msg.u.mouse.state = (eventType == NSEventTypeOtherMouseDown) ? 1 : 3;
-        msg.u.mouse.x = g_mx;
-        msg.u.mouse.y = g_my;
-		cb->message(cb->ud, &msg);
+        window_message_mouse(cb, g_mx, g_my, 3, (eventType == NSEventTypeOtherMouseDown) ? 1 : 3);
         break;
 	case NSEventTypeKeyDown:
 	case NSEventTypeKeyUp:
-		msg.type = ANT_WINDOW_KEYBOARD;
-		msg.u.keyboard.state = keyboard_state(event);
-		msg.u.keyboard.press = (eventType == NSEventTypeKeyDown) ? 1 : 0;
-		msg.u.keyboard.key = keyboard_key(event);
-		cb->message(cb->ud, &msg);
+        window_message_keyboard(cb, keyboard_key(event), keyboard_state(event), (eventType == NSEventTypeKeyDown) ? 1 : 0);
 		break;
 	default:
 		break;
@@ -336,8 +300,6 @@ void window_mainloop(struct ant_window_callback* cb, int update) {
     if (!g_wd) {
         return;
     }
-    struct ant_window_message update_msg;
-    update_msg.type = ANT_WINDOW_UPDATE;
     [NSApplication sharedApplication];
     id dg = [AppDelegate new];
     [NSApp setDelegate:dg];
@@ -346,7 +308,7 @@ void window_mainloop(struct ant_window_callback* cb, int update) {
     [NSApp finishLaunching];
     while (![dg applicationHasTerminated]) {
         if (update) {
-            cb->message(cb->ud, &update_msg);
+            cb->update(cb);
         }
         @autoreleasepool {
             while (dispatch_event(cb, peek_event())) { }

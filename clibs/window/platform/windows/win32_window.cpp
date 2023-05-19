@@ -1,6 +1,6 @@
 #include <Windows.h>
 #include <stdint.h>
-#include "../window.h"
+#include "../../window.h"
 #include "win32_window.h"
 #include <tlhelp32.h>
 
@@ -46,122 +46,103 @@ static LRESULT CALLBACK
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	struct ant_window_callback *cb = NULL;
-	struct ant_window_message msg;
 	switch (message) {
 	case WM_CREATE: {
 		LPCREATESTRUCTA cs = (LPCREATESTRUCTA)lParam;
 		cb = (struct ant_window_callback *)cs->lpCreateParams;
 		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)cb);
-		
 		RECT r;
 		GetClientRect(hWnd, &r);
-		msg.type = ANT_WINDOW_INIT;
-		msg.u.init.window = hWnd;
-		msg.u.init.context = 0;
-		msg.u.init.w = r.right-r.left;
-		msg.u.init.h = r.bottom-r.top;
-
-		cb->message(cb->ud, &msg);
-
+		window_message_init(cb, hWnd, 0, r.right-r.left, r.bottom-r.top);
 		break;
 	}
 	case WM_DESTROY:
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_EXIT;
-		cb->message(cb->ud, &msg);
 		PostQuitMessage(0);
 		return 0;
-	case WM_MOUSEMOVE:
+	case WM_MOUSEMOVE: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_MOUSE;
-		msg.u.mouse.state = 2;
-		get_xy(lParam, &msg.u.mouse.x, &msg.u.mouse.y);
+		int x, y;
+		get_xy(lParam, &x, &y);
 		if ((wParam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON)) == 0) {
-			msg.u.mouse.type = 0;
-			cb->message(cb->ud, &msg);
+			window_message_mouse(cb, x, y, 0, 2);
 		}
 		else {
-
 			if (wParam & MK_LBUTTON) {
-				msg.u.mouse.type = 1;
-				cb->message(cb->ud, &msg);
+				window_message_mouse(cb, x, y, 1, 2);
 			}
 			if (wParam & MK_RBUTTON) {
-				msg.u.mouse.type = 2;
-				cb->message(cb->ud, &msg);
+				window_message_mouse(cb, x, y, 2, 2);
 			}
 			if (wParam & MK_MBUTTON) {
-				msg.u.mouse.type = 3;
-				cb->message(cb->ud, &msg);
+				window_message_mouse(cb, x, y, 3, 2);
 			}
 		}
 		break;
-	case WM_MOUSEWHEEL:
+	}
+	case WM_MOUSEWHEEL: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_MOUSE_WHEEL;
-		get_screen_xy(hWnd, lParam, &msg.u.mouse_wheel.x, &msg.u.mouse_wheel.y);
-		msg.u.mouse_wheel.delta = 1.0f * GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
-		cb->message(cb->ud, &msg);
+		int x, y;
+		float delta = 1.0f * GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
+		get_screen_xy(hWnd, lParam, &x, &y);
+		window_message_mouse_wheel(cb, x, y, delta);
 		break;
+	}
 	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
+	case WM_LBUTTONUP: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_MOUSE;
-		msg.u.mouse.type = 1;
-		msg.u.mouse.state = (message == WM_LBUTTONDOWN) ? 1 : 3;
-		get_xy(lParam, &msg.u.mouse.x, &msg.u.mouse.y);
-		cb->message(cb->ud, &msg);
+		int x, y;
+		get_xy(lParam, &x, &y);
+		window_message_mouse(cb, x, y, 1, (message == WM_LBUTTONDOWN) ? 1 : 3);
 		break;
+	}
 	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
+	case WM_RBUTTONUP: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_MOUSE;
-		msg.u.mouse.type = 2;
-		msg.u.mouse.state = (message == WM_RBUTTONDOWN) ? 1 : 3;
-		get_xy(lParam, &msg.u.mouse.x, &msg.u.mouse.y);
-		cb->message(cb->ud, &msg);
+		int x, y;
+		get_xy(lParam, &x, &y);
+		window_message_mouse(cb, x, y, 2, (message == WM_RBUTTONDOWN) ? 1 : 3);
 		break;
+	}
 	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP:
+	case WM_MBUTTONUP: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_MOUSE;
-		msg.u.mouse.type = 3;
-		msg.u.mouse.state = (message == WM_MBUTTONDOWN) ? 1 : 3;
-		get_xy(lParam, &msg.u.mouse.x, &msg.u.mouse.y);
-		cb->message(cb->ud, &msg);
+		int x, y;
+		get_xy(lParam, &x, &y);
+		window_message_mouse(cb, x, y, 3, (message == WM_MBUTTONDOWN) ? 1 : 3);
 		break;
+	}
 	case WM_KEYDOWN:
-	case WM_KEYUP:
+	case WM_KEYUP: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_KEYBOARD;
-		msg.u.keyboard.state = get_keystate(lParam);
+		uint8_t press;
 		if (message == WM_KEYUP) {
-			msg.u.keyboard.press = 0;
+			press = 0;
 		}
 		else {
-			msg.u.keyboard.press = (lParam & (1 << 30))? 2: 1;
+			press = (lParam & (1 << 30))? 2: 1;
 		}
-		msg.u.keyboard.key = (int)wParam;
-		cb->message(cb->ud, &msg);
+		window_message_keyboard(cb, (int)wParam, get_keystate(lParam), press);
 		break;
-	case WM_SIZE:
+	}
+	case WM_SIZE: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		msg.type = ANT_WINDOW_SIZE;
-		msg.u.size.x = LOWORD(lParam);
-		msg.u.size.y = HIWORD(lParam);
+		int x = LOWORD(lParam);
+		int y = HIWORD(lParam);
+		uint8_t type;
 		switch (wParam) {
 		case SIZE_MINIMIZED:
-			msg.u.size.type = 1;
+			type = 1;
 			break;
 		case SIZE_MAXIMIZED:
-			msg.u.size.type = 2;
+			type = 2;
 			break;
 		default:
-			msg.u.size.type = 0;
+			type = 0;
 			break;
 		}
-		cb->message(cb->ud, &msg);
+		window_message_size(cb, x, y, type);
 		break;
+	}
 	case WM_CHAR: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		int code = (int)wParam;
@@ -172,9 +153,7 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				code = ((g_surrogate - 0xD800) << 10) + (code - 0xDC00) + 0x10000;
 				g_surrogate = 0;
 			}
-			msg.type = ANT_WINDOW_CHAR;
-			msg.u.unichar.code = code;
-			cb->message(cb->ud, &msg);
+			window_message_char(cb, code);
 		}
 		break;
 	}
@@ -233,30 +212,24 @@ int window_init(struct ant_window_callback* cb) {
 	return 0;
 }
 
+void window_close() {
+	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
+}
 
+bool window_peekmessage() {
+	MSG msg;
+	for (;;) {
+		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
+			if (msg.message == WM_QUIT)
+				return false;
+			TranslateMessage(&msg);
+			DispatchMessageW(&msg);
+		}
+		else {
+			return true;
+		}
+	}
+}
 
 void window_mainloop(struct ant_window_callback* cb, int update) {
-	MSG msg;
-	struct ant_window_message update_msg;
-	update_msg.type = ANT_WINDOW_UPDATE;
-	if (update) {
-		for (;;) {
-			if (PeekMessageW (&msg, NULL, 0, 0, PM_REMOVE)) {
-				if (msg.message == WM_QUIT)
-					break;
-				TranslateMessage(&msg); 
-				DispatchMessageW(&msg); 
-			} else {
-				cb->message(cb->ud, &update_msg);
-				Sleep(0);
-			}
-		}
-	}
-	else {
-		while (GetMessage(&msg, NULL, 0, 0)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-	}
-	UnregisterClassW(CLASSNAME, GetModuleHandleW(0));
 }
