@@ -47,6 +47,7 @@ void window_message_mouse_wheel(struct ant_window_callback* cb, int x, int y, fl
 	lua_pushinteger(L, x);
 	lua_pushinteger(L, y);
 	lua_pushnumber(L, delta);
+	push_message(L);
 }
 
 void window_message_mouse(struct ant_window_callback* cb, int x, int y, uint8_t type, uint8_t state) {
