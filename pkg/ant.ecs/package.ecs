@@ -4,13 +4,16 @@ pipeline "_entity_init"
     .stage "animation_ready"
     .stage "entity_ready"
 
+pipeline "_entity_remove"
+    .stage "scene_remove"
+    .stage "entity_remove"
+
 pipeline "_frame_start"
     .stage "entity_create"
 
 pipeline "_frame_finish"
     .stage "prefab_remove"
-    .stage "scene_remove"
-    .stage "entity_remove"
+    .stage "entity_destory"
     .stage "update_world"
 
 pipeline "_init"
@@ -28,10 +31,9 @@ system "entity_system"
     .implement "entity_system.lua"
     .method "init"
     .method "entity_create"
-    .method "entity_ready"
     .method "update_world"
-    .method "entity_remove"
-
+    .method "entity_destory"
+    
 system "prefab_system"
     .implement "prefab_system.lua"
     .method "entity_init"

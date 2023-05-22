@@ -99,6 +99,7 @@ end
 
 function world:pipeline_init()
 	self.pipeline_entity_init = self:pipeline_func "_entity_init"
+	self.pipeline_entity_remove = self:pipeline_func "_entity_remove"
 	self.pipeline_update = self:pipeline_func "_update"
 	self:pipeline_func "_init" ()
 end

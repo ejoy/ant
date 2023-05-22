@@ -120,11 +120,17 @@ scene_changed(lua_State *L) {
 	return 0;
 }
 
+// TODO: change stage name
+static int
+prefab_remove(lua_State *L) {
+	auto w = getworld(L);
+	ecs_api::clear_type<ecs::scene_changed>(w->ecs);
+	return 0;
+}
+
 static int
 scene_remove(lua_State *L) {
 	auto w = getworld(L);
-	ecs_api::clear_type<ecs::scene_changed>(w->ecs);
-	
 	flatset<ecs::eid> removed;
 	for (auto& e : ecs_api::select<ecs::REMOVED, ecs::scene, ecs::eid>(w->ecs)) {
 		auto id = e.get<ecs::eid>();
@@ -166,6 +172,7 @@ luaopen_system_scene(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "entity_init", entity_init },
 		{ "scene_changed", scene_changed },
+		{ "prefab_remove", prefab_remove },
 		{ "scene_remove", scene_remove },
 		{ "bounding_update", bounding_update},
 		{ NULL, NULL },

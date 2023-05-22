@@ -50,9 +50,6 @@ function m:entity_create()
     end
 
     world:pipeline_entity_init()
-end
-
-function m:entity_ready()
     w:clear "INIT"
 end
 
@@ -81,10 +78,13 @@ function m:init()
     end
 end
 
-function m:entity_remove()
-    for name, func in pairs(MethodRemove) do
-        for v in w:select("REMOVED "..name..":in") do
-            func(v[name])
+function m:entity_destory()
+    if w:check "REMOVED" then
+        world:pipeline_entity_remove()
+        for name, func in pairs(MethodRemove) do
+            for v in w:select("REMOVED "..name..":in") do
+                func(v[name])
+            end
         end
     end
 end
