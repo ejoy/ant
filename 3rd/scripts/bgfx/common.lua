@@ -2,7 +2,17 @@ local lm = require "luamake"
 
 lm.cxx = "c++17"
 
-lm.defines = "BX_CONFIG_DEBUG=" .. (lm.mode == "debug" and 1 or 0)
+if lm.mode == "debug" then
+    lm.defines = {
+        "BX_CONFIG_DEBUG=1",
+        "BGFX_CONFIG_DEBUG_UNIFORM=0",
+    }
+else
+    lm.defines = {
+        "BX_CONFIG_DEBUG=0",
+    }
+end
+
 
 lm.msvc = {
     defines = {
