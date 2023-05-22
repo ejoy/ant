@@ -1,6 +1,6 @@
 local ltask = require "ltask"
 local SERVICE_ROOT <const> = 1
-local ServiceWindow
+local ServiceWorld
 
 local request = ltask.request()
 request:add { SERVICE_ROOT, "uniqueservice", "ant.window|world", ...}
@@ -11,9 +11,10 @@ for req, resp in request:select() do
         return
     end
     if req[3] == "ant.window|world" then
-        ServiceWindow = ltask.queryservice "ant.window|window"
+        ServiceWorld = resp[1]
+        local ServiceWindow = ltask.queryservice "ant.window|window"
         ltask.call(ServiceWindow, "create_window")
     end
 end
 
-ltask.call(ServiceWindow, "wait")
+ltask.call(ServiceWorld, "wait")

@@ -148,19 +148,48 @@ function S.recreate(nwh, _, width, height)
 	S.size(width, height)
 end
 
+local ms_queue
+local ms_quit
+local ms_token = {}
+
+local function table_append(t, a)
+	table.move(a, 1, #a, #t+1, t)
+end
+
 local function dispatch(cmd, ...)
 	local f = assert(S[cmd], cmd)
 	f(...)
 end
 
-function S.msg(message)
-	for i = 1, #message do
-		local m = message[i]
+local function dispatch_all()
+	local mq = ms_queue
+	ms_queue = nil
+	for i = 1, #mq do
+		local m = mq[i]
 		dispatch(table.unpack(m, 1, m.n))
 	end
 end
 
+ltask.fork(function ()
+	while not ms_quit do
+		if ms_queue == nil then
+			ltask.wait(ms_token)
+		end
+		dispatch_all()
+	end
+end)
+
+function S.msg(messages)
+	if ms_queue == nil then
+		ms_queue = messages
+		ltask.wakeup(ms_token)
+	else
+		table_append(ms_queue, messages)
+	end
+end
+
 function S.exit()
+	ms_quit = true
 	quit = {}
 	ltask.wait(quit)
 	if world then
@@ -173,4 +202,9 @@ function S.exit()
 	bgfx.encoder_destroy()
 	rhwi.shutdown()
     print "exit"
+    ltask.multi_wakeup "quit"
+end
+
+function S.wait()
+    ltask.multi_wait "quit"
 end

@@ -64,7 +64,9 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	case WM_DESTROY:
+		cb = (struct ant_window_callback*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 		PostQuitMessage(0);
+		window_message_exit(cb);
 		return 0;
 	case WM_MOUSEMOVE: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);

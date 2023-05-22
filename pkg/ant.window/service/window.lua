@@ -25,9 +25,6 @@ local quit = false
 
 local function message_loop(update)
     local ServiceWorld = ltask.queryservice "ant.window|world"
-    assert(#message > 0 and message[1][1] == "init")
-    local initmsg = table.remove(message, 1)
-    ltask.call(ServiceWorld, table.unpack(initmsg, 1, initmsg.n))
     init()
     while not quit do
         if #message > 0 then
@@ -45,8 +42,6 @@ local function message_loop(update)
     if #message > 0 then
         ltask.send(ServiceWorld, "msg", message)
     end
-    ltask.call(ServiceWorld, "exit")
-    ltask.multi_wakeup "quit"
 end
 
 local S = {}
@@ -87,10 +82,6 @@ elseif WindowMode[platform.os] == WindowModeLoop then
     S.create_window = create_loop_window
 else
     error "window service unimplemented"
-end
-
-function S.wait()
-    ltask.multi_wait "quit"
 end
 
 return S
