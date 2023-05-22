@@ -24,14 +24,6 @@ enable_tags(Entity &e, const tags& t){
 	}
 }
 
-template<typename Entity>
-static inline void
-distable_tags(Entity &e, tags t){
-	for (auto id : t){
-		e.disable_tag(id);
-	}
-}
-
 static int
 lcull(lua_State *L){
 	auto w = getworld(L);
@@ -39,7 +31,9 @@ lcull(lua_State *L){
 	cull_infos ci;
 	for (auto e : ecs_api::select<ecs::cull_args>(w->ecs)){
 		const auto& i = e.get<ecs::cull_args>();
-		ci[i.frustum_planes.idx].push_back((cid_t)i.renderable_id);
+		const auto id = (cid_t)i.renderable_id;
+		ci[i.frustum_planes.idx].push_back(id);
+		entity_clear_type(w->ecs, id);
 	}
 
 	if (ci.empty())
@@ -48,15 +42,10 @@ lcull(lua_State *L){
 	for (auto e : ecs_api::select<ecs::view_visible, ecs::render_object, ecs::bounding>(w->ecs)){
 		const auto &b = e.get<ecs::bounding>();
 		for (const auto& kv : ci){
-			if (!math_isnull(b.scene_aabb)){
-				if (math3d_frustum_intersect_aabb(w->math3d->M, math_t{kv.first}, b.scene_aabb) < 0){
-					distable_tags(e, kv.second);
-
-					continue;
-				}
+			if (math_isnull(b.scene_aabb) || 
+				(math3d_frustum_intersect_aabb(w->math3d->M, math_t{kv.first}, b.scene_aabb) >= 0)){
+				enable_tags(e, kv.second);
 			}
-
-			enable_tags(e, kv.second);
 		}
 
 	}
