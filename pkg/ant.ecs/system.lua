@@ -96,6 +96,7 @@ function system.lists(w, what)
 			if emptyfunc(info) then
 				log.warn(("`%s` is an empty method, it has been ignored. (%s:%d)"):format(symbols[i], info.source:sub(2), info.linedefined))
 				table.remove(funcs, i)
+				table.remove(symbols, i)
 				goto continue
 			end
 		end
