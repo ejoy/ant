@@ -98,8 +98,9 @@ function world:memory_stat(what)
 end
 
 function world:pipeline_init()
-	self:pipeline_func "_init" ()
+	self.pipeline_entity_init = self:pipeline_func "_entity_init"
 	self.pipeline_update = self:pipeline_func "_update"
+	self:pipeline_func "_init" ()
 end
 
 function world:pipeline_exit()

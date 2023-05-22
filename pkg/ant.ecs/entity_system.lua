@@ -14,6 +14,9 @@ end
 
 function m:entity_create()
     local queue = world._create_queue
+    if #queue == 0 then
+        return
+    end
     world._create_queue = {}
 
     for i = 1, #queue do
@@ -45,6 +48,8 @@ function m:entity_create()
         w:group_add(groupid, eid)
         ::continue::
     end
+
+    world:pipeline_entity_init()
 end
 
 function m:entity_ready()

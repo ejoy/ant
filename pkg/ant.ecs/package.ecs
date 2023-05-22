@@ -1,9 +1,11 @@
-pipeline "_frame_start"
-    .stage "entity_create"
+pipeline "_entity_init"
     .stage "component_init"
     .stage "entity_init"
     .stage "animation_ready"
     .stage "entity_ready"
+
+pipeline "_frame_start"
+    .stage "entity_create"
 
 pipeline "_frame_finish"
     .stage "prefab_remove"
