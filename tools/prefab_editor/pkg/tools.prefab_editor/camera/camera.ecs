@@ -20,10 +20,10 @@ system "second_view_frustum_system"
     .method "entity_remove"
 
 component "second_view"
-component "second_view_cull"
 component "second_view_visible"
+component "second_view_cull"
+component "second_view_renderable"
 component "second_view_frustum"
-
 
 policy "second_view"
     .require_system "tools.prefab_editor|second_view_camera_system"

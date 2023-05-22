@@ -209,16 +209,16 @@ lsubmit(lua_State *L) {
 
 	obj_transforms trans;
 
+	//TODO: move render_arg to render_object, reduce entity traverse times
 	for (auto a : ecs_api::select<ecs::render_args>(w->ecs)){
 		const auto& ra = a.get<ecs::render_args>();
 
 		objarray objs;
-		
-		const cid_t vv_id = ecs_api::component<ecs::view_visible>::id;
-		for (int i=0; entity_iter(w->ecs, vv_id, i); ++i){
-			if (entity_sibling(w->ecs, vv_id, i, ra.queue_visible_id) &&
-				!entity_sibling(w->ecs, vv_id, i, ra.queue_cull_id)){
-				add_obj(w, vv_id, i, nullptr, objs);
+
+		const cid_t r_id = ra.queue_renderable_id;
+		for (int i=0; entity_iter(w->ecs, r_id, i); ++i){
+			if (entity_sibling(w->ecs, r_id, i, ra.queue_visible_id)){
+				add_obj(w, r_id, i, nullptr, objs);
 			}
 		}
 		for (auto const& [groupid, mats] : groups) {

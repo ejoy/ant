@@ -16,6 +16,7 @@ local q = {
 for i=1, #q do
     local n = q[i]
     component (n)
-    component (n .. "_cull")
     component (n .. "_visible")
+    component (n .. "_cull")
+    component (n .. "_renderable")
 end

@@ -10,8 +10,27 @@ extern "C"{
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
-using cull_infos = std::unordered_map<uint64_t, std::vector<cid_t>>;
+
+using tags = std::vector<cid_t>;
+using cull_infos = std::unordered_map<uint64_t, tags>;
+
+template<typename Entity>
+static inline void
+enable_tags(Entity &e, const tags& t){
+	for (auto id : t){
+		e.enable_tag(id);
+	}
+}
+
+template<typename Entity>
+static inline void
+distable_tags(Entity &e, tags t){
+	for (auto id : t){
+		e.disable_tag(id);
+	}
+}
 
 static int
 lcull(lua_State *L){
@@ -20,7 +39,7 @@ lcull(lua_State *L){
 	cull_infos ci;
 	for (auto e : ecs_api::select<ecs::cull_args>(w->ecs)){
 		const auto& i = e.get<ecs::cull_args>();
-		ci[i.frustum_planes.idx].push_back((cid_t)i.cull_id);
+		ci[i.frustum_planes.idx].push_back((cid_t)i.renderable_id);
 	}
 
 	if (ci.empty())
@@ -28,20 +47,18 @@ lcull(lua_State *L){
 
 	for (auto e : ecs_api::select<ecs::view_visible, ecs::render_object, ecs::bounding>(w->ecs)){
 		const auto &b = e.get<ecs::bounding>();
-		if (math_isnull(b.scene_aabb))
-			continue;
-
 		for (const auto& kv : ci){
-			if (math3d_frustum_intersect_aabb(w->math3d->M, math_t{kv.first}, b.scene_aabb) < 0){
-				for (auto id : kv.second){
-					e.enable_tag(id);
-				}
-			} else {
-				for (auto id : kv.second){
-					e.disable_tag(id);
+			if (!math_isnull(b.scene_aabb)){
+				if (math3d_frustum_intersect_aabb(w->math3d->M, math_t{kv.first}, b.scene_aabb) < 0){
+					distable_tags(e, kv.second);
+
+					continue;
 				}
 			}
+
+			enable_tags(e, kv.second);
 		}
+
 	}
 
 	return 0;

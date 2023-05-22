@@ -11,6 +11,8 @@ system "efk_system"
 component "efk_queue"
 component "efk_queue_visible"
 component "efk_queue_cull"
+component "efk_queue_renderable"
+
 policy "efk_queue"
     .require_policy "ant.render|render_target"
     .component "queue_name"

@@ -42,10 +42,12 @@ policy "csm_queue"
 for i=1, 4 do
     local cn = "csm" .. i .. "_queue"
     component(cn)
-    component(cn .. "_cull")
     component(cn .. "_visible")
+    component(cn .. "_cull")
+    component(cn .. "_renderable")
 end
 
 component "clear_sm"
 component "clear_sm_visible"
 component "clear_sm_cull"
+component "clear_sm_renderable"

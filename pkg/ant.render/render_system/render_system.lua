@@ -69,7 +69,7 @@ end
 local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
 	local v = {
 		queue_visible_id	= w:component_id(k .. "_visible"),
-		queue_cull_id		= w:component_id(k .. "_cull"),
+		queue_renderable_id	= w:component_id(k .. "_renderable"),
 		material_index		= irender.material_index(k) or 0,
 	}
 	t[k] = v

@@ -9,6 +9,7 @@ system "bake_lightmap_system"
 component "bake_finish"
 component "bake_lightmap_queue"
 component "bake_lightmap_queue_cull"
+component "bake_lightmap_queue_renderable"
 component "bake_lightmap_queue_visible"
 
 policy "bake_lightmap"
