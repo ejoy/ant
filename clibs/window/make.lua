@@ -23,7 +23,7 @@ lm:lua_source "window" {
     macos = {
         sources = {
             "platform/osx/*.mm",
-            "loop/*.cpp",
+            "peek/*.cpp",
         },
     },
     ios = {
@@ -41,7 +41,7 @@ lm:lua_source "window" {
             "platform/android/include/**/*.cpp",
             "platform/android/include/**/*.c",
             "platform/android/*.cpp",
-            "loop/*.cpp",
+            "peek/*.cpp",
         },
     }
 }

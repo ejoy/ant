@@ -296,22 +296,30 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
 	return true;
 }
 
-void window_mainloop(struct ant_window_callback* cb, int update) {
-    if (!g_wd) {
-        return;
-    }
-    [NSApplication sharedApplication];
-    id dg = [AppDelegate new];
-    [NSApp setDelegate:dg];
-    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    [NSApp activateIgnoringOtherApps:YES];
-    [NSApp finishLaunching];
-    while (![dg applicationHasTerminated]) {
-        if (update) {
-            cb->update(cb);
-        }
-        @autoreleasepool {
-            while (dispatch_event(cb, peek_event())) { }
-        }
-    }
+void window_close() {
 }
+
+bool window_peekmessage() {
+    //TODO
+    return false;
+}
+
+//void window_mainloop(struct ant_window_callback* cb, int update) {
+//    if (!g_wd) {
+//        return;
+//    }
+//    [NSApplication sharedApplication];
+//    id dg = [AppDelegate new];
+//    [NSApp setDelegate:dg];
+//    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+//    [NSApp activateIgnoringOtherApps:YES];
+//    [NSApp finishLaunching];
+//    while (![dg applicationHasTerminated]) {
+//        if (update) {
+//            cb->update(cb);
+//        }
+//        @autoreleasepool {
+//            while (dispatch_event(cb, peek_event())) { }
+//        }
+//    }
+//}

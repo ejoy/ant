@@ -3,9 +3,10 @@ local exclusive = require "ltask.exclusive"
 local platform = require "bee.platform"
 
 local WindowModePeek <const> = 0
-local WindowModeLoop <const> = 0
+local WindowModeLoop <const> = 1
 local WindowMode <const> = {
     windows = WindowModePeek,
+    android = WindowModePeek,
     ios = WindowModeLoop,
 }
 
@@ -73,10 +74,10 @@ local function create_loop_window()
             scheduling()
         until ltask.schedule_message() ~= SCHEDULE_SUCCESS
     end
-    local handle = window.init(message, update)
+    window.init(message, update)
     ltask.fork(message_loop, true)
     ltask.fork(function()
-        window.mainloop(handle, true)
+        window.mainloop()
     end)
 end
 

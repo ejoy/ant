@@ -23,9 +23,10 @@ struct ant_window_callback {
 int  window_init(struct ant_window_callback* cb);
 void window_close();
 bool window_peekmessage();
-void window_mainloop(struct ant_window_callback* cb, int update);
+void window_mainloop();
 
 void window_message_init(struct ant_window_callback* cb, void* window, void* context, int w, int h);
+void window_message_recreate(struct ant_window_callback* cb, void* window, void* context, int w, int h);
 void window_message_exit(struct ant_window_callback* cb);
 void window_message_keyboard(struct ant_window_callback* cb, int key, uint8_t state, uint8_t press);
 void window_message_mouse_wheel(struct ant_window_callback* cb, int x, int y, float delta);
