@@ -25,6 +25,9 @@ lm:source_set "lua_source" {
     android = {
         defines = "LUA_USE_LINUX",
     },
+    msvc = {
+        sources = ("fast_setjmp_%s.s"):format(lm.arch)
+    }
 }
 
 if lm.os == "windows" then
