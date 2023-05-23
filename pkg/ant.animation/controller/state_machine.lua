@@ -293,7 +293,6 @@ function iani.step(anim_e, s_delta, absolute)
 	if not ani then
 		return
 	end
-	local stop = false
 	local play_state = ctrl.play_state
 	local playspeed = play_state.manual_update and 1.0 or play_state.speed
 	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
@@ -304,7 +303,6 @@ function iani.step(anim_e, s_delta, absolute)
 			play_state.ratio = play_state.forwards and 1.0 or 0.0
 			play_state.play = false
 			world:pub{"animation", ctrl.name, "stop", ctrl.owner}
-			stop = true
 		else
 			play_state.ratio = (next_time - duration) / duration
 		end
@@ -316,7 +314,6 @@ function iani.step(anim_e, s_delta, absolute)
 	pr:setup(anim_e.skeleton._handle)
 	pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, ctrl.weight)
 	ctrl.dirty = true
-	anim_e.playing = not stop
 end
 
 function iani.set_time(eid, second)

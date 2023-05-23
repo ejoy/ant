@@ -90,7 +90,7 @@ local iani = ecs.import.interface "ant.animation|ianimation"
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for e in w:select "auto_update playing:out skeleton:in anim_ctrl:in eid:in" do
+	for e in w:select "auto_update playing skeleton:in anim_ctrl:in eid:in" do
 		--w:readall(eid)
 		local ctrl = e.anim_ctrl
 		if ctrl.animation then
@@ -103,7 +103,7 @@ function ani_sys:do_refine()
 end
 
 function ani_sys:end_animation()
-	for e in w:select "auto_update playing anim_ctrl:in" do
+	for e in w:select "auto_update playing:out anim_ctrl:in" do
 		local ctrl = e.anim_ctrl
 		if ctrl.dirty then
 			local pr = ctrl.pose_result
@@ -111,6 +111,7 @@ function ani_sys:end_animation()
 			pr:end_animation()
 			ctrl.dirty = false
 		end
+		e.playing = ctrl.play_state.play
 	end
 end
 
