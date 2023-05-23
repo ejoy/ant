@@ -180,7 +180,7 @@ function create_template(w, filename)
         if fs.exists(fs.path(patchfile)) then
             local patch = serialize.parse(patchfile, cr.read_file(patchfile))
             for index, value in ipairs(patch) do
-                if value.mount then
+                if value.mount and value.mount ~= 1 then
                     value.mount = count + index - 1
                 else
                     value.mount = 1
