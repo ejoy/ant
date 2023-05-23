@@ -88,21 +88,24 @@ scene_changed(lua_State *L) {
 	flatset<ecs::eid> change;
 	for (auto& e : ecs_api::select<ecs::scene_update, ecs::eid>(w->ecs)) {
 		auto id = e.get<ecs::eid>();
-		if (parents.contains(id)) {
-			auto s = e.sibling<ecs::scene>();
-			if (s) {
-				worldmats.insert_or_assign(id, s->worldmat);
-			}
-		}
 		if (e.sibling<ecs::scene_changed>()) {
 			change.insert(id);
+			if (parents.contains(id)) {
+				auto s = e.sibling<ecs::scene>();
+				if (s) {
+					worldmats.insert_or_assign(id, s->worldmat);
+				}
+			}
 		}
 		else {
 			auto s = e.sibling<ecs::scene>();
-			if (s && s->parent != 0) {
-				if (change.contains(s->parent)) {
+			if (s) {
+				if (s->parent != 0 && change.contains(s->parent)) {
 					change.insert(id);
 					e.enable_tag<ecs::scene_changed>();
+				}
+				if (parents.contains(id)) {
+					worldmats.insert_or_assign(id, s->worldmat);
 				}
 			}
 		}
