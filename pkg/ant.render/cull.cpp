@@ -67,7 +67,7 @@ lcull(lua_State *L) {
 	if (a_n == 0)
 		return 0;
 
-	for (auto e : ecs_api::select<ecs::view_visible, ecs::render_object, ecs::bounding>(w->ecs)){
+	for (auto e : ecs_api::select<ecs::view_visible, ecs::bounding>(w->ecs)){
 		const auto &b = e.get<ecs::bounding>();
 		int i,j,offset = 0;
 		for (i = 0; i < a_n; i++) {
