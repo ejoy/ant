@@ -137,10 +137,10 @@ local function shader_path(name)
     return fs.path(("/pkg/ant.test.native_bgfx/shaders/bin/%s/%s/%s"):format(OS, renderer:lower(), name))
 end
 
-load_program(material.mesh.shader,          shader_path "vs_mesh.bin", shader_path "fs_mesh.bin")
+load_program(material.mesh.shader,          shader_path "vs_mesh_raw.bin", shader_path "fs_mesh_raw.bin")
 load_program(material.fullscreen.shader,    shader_path "vs_quad.bin", shader_path "fs_quad.bin")
 
-load_program(material.depth.shader,         shader_path "vs_mesh.bin")
+load_program(material.depth.shader,         shader_path "vs_mesh_raw.bin")
 
 local viewid = 2
 
@@ -226,6 +226,13 @@ local function draw_simple_mode(viewmat, projmat)
     bgfx.set_view_transform(viewid, viewmat, projmat)
     bgfx.set_view_rect(viewid, 0, 0, fb_size.w, fb_size.h)
     bgfx.set_state(material.mesh.simple_state)
+
+    local uniforms = material.mesh.shader.uniforms
+    if uniforms and #uniforms > 0 then
+        local mvp = math3d.mul(projmat, viewmat)
+        bgfx.set_uniform(material.mesh.shader.uniforms[1].handle, math3d.value_ptr(mvp))
+    end
+
     bgfx.set_vertex_buffer(0, mesh.vb.handle, mesh.vb.start, mesh.vb.num)
     bgfx.set_index_buffer(mesh.ib.handle, mesh.ib.start, mesh.ib.num)
     
