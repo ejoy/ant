@@ -47,7 +47,7 @@ function world:pipeline_func(what)
 					t[total[i]] = i
 				end
 				table.sort(total)
-				for i = 1, MaxText do
+				for i = 1, math.min(MaxText, #total) do
 					local v = total[#total + 1 - i]
 					local m = v / MaxFrame * 1000
 					local name = symbols[t[v]]
