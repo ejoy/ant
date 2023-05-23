@@ -97,10 +97,6 @@ policy "heap_mesh"
     .require_system "ant.render|heap_mesh"
     .component "heapmesh"
 
-system "indirect_system"
-    .implement "render_system/indirect_system.lua"
-    .method "entity_init"
-
 component "indirect"
 system "skinning_system"
     .implement "render_system/skinning_system.lua"
@@ -213,6 +209,22 @@ system "render_system"
     .method "scene_update"
     .method "render_submit"
 
+policy "indirect_update"
+    .component "indirect_update"
+
+component "indirect_update".type "lua"
+component "indirect_draw"
+
+system "indirect_system"
+    .implement "indirect_system.lua"
+    .require_system "ant.render|indirect_system"
+    .method "init"
+    .method "data_changed"
+
+interface "iindirect"
+    .implement "indirect_system.lua"
+    .require_interface "ant.render|iindirect"
+    .method "remove_old_entity"
 
 system "cull_system"
     .implement "cull_system.lua"

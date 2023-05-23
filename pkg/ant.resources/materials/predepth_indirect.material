@@ -1,14 +1,13 @@
 fx:
-  vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
   fs: /pkg/ant.resources/shaders/depth/fs_depth.sc
-  setting: 
+  vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  setting:
+    INDIRECT_BUFFER: 1
     lighting: off
     shadow_cast: off
     shadow_receive: off
-    subsurface: off
-    INDIRECT_BUFFER: 1
-    STONE_MOUNTAIN: 1
+    subsurface: off  
 state:
+  ALPHA_REF: 0
   CULL: CCW
-  DEPTH_TEST: GREATER
   WRITE_MASK: RZ

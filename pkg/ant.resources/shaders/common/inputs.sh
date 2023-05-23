@@ -3,9 +3,13 @@
 #endif //BGFX_SHADER_H_HEADER_GUARD
 
 #ifdef INDIRECT_BUFFER
-    #define INPUT_INSTANCE i_data0
+    #define INPUT_INSTANCE1 i_data0
+    #define INPUT_INSTANCE2 i_data1
+    #define INPUT_INSTANCE3 i_data2
 #else // !INDIRECT_BUFFER
-    #define INPUT_INSTANCE
+    #define INPUT_INSTANCE1
+    #define INPUT_INSTANCE2
+    #define INPUT_INSTANCE3
 #endif // INDIRECT_BUFFER
 
 

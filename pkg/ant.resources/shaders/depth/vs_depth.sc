@@ -1,5 +1,5 @@
 #include "common/inputs.sh"
-$input a_position INPUT_INDICES INPUT_WEIGHT INPUT_INSTANCE
+$input a_position INPUT_INDICES INPUT_WEIGHT INPUT_INSTANCE1 INPUT_INSTANCE2 INPUT_INSTANCE3
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
@@ -7,17 +7,17 @@ $input a_position INPUT_INDICES INPUT_WEIGHT INPUT_INSTANCE
 
 void main()
 {
-#ifdef CS_SKINNING
+#ifdef GPU_SKINNING
 	mat4 wm = u_model[0];
-#else //!CS_SKINNING
+#else //!GPU_SKINNING
 	mat4 wm = get_world_matrix();
-#endif //CS_SKINNING
+#endif //GPU_SKINNING
 
-#ifdef HEAP_MESH
+#if (defined HEAP_MESH) || (defined ROAD)
 	wm[0][3] = wm[0][3] + i_data0.x;
 	wm[1][3] = wm[1][3] + i_data0.y;
 	wm[2][3] = wm[2][3] + i_data0.z;
-#endif //HEAP_MESH
+#endif 
 
 #ifdef STONE_MOUNTAIN
 	float scale = i_data0.x;

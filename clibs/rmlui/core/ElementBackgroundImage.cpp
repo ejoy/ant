@@ -58,7 +58,7 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 
 	std::string path = image->Get<std::string>();
 	bool isRT = false;
-	if (regex_match(path, std::regex("\<.*\>"))) {
+	if (regex_match(path, std::regex("<.*>"))) {
 		isRT = true;
 		path = regex_replace(path, std::regex("[<>]"), std::string(""));
 	}

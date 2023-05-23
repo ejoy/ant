@@ -348,6 +348,8 @@ end
 local shadow_material
 local gpu_skinning_material
 local shadow_sm_material
+local shadow_heap_material
+local shadow_indirect_material
 function sm:init()
 	local fbidx = ishadow.fb_index()
 	local s = ishadow.shadowmap_size()
@@ -355,6 +357,8 @@ function sm:init()
 	shadow_material = imaterial.load_res "/pkg/ant.resources/materials/depth.material"
 	gpu_skinning_material = imaterial.load_res "/pkg/ant.resources/materials/depth_skin.material"
 	shadow_sm_material = imaterial.load_res "/pkg/ant.resources/materials/depth_sm.material"
+	shadow_heap_material = imaterial.load_res "/pkg/ant.resources/materials/depth_heap.material"
+	shadow_indirect_material = imaterial.load_res "/pkg/ant.resources/materials/depth_indirect.material"
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}
 		create_csm_entity(ii, vr, fbidx)
@@ -531,14 +535,21 @@ function sm:camera_usage()
 	end ]]
 end
 
-local function which_material(skinning, indirect)
- 	if indirect then
-		return shadow_sm_material
-	elseif skinning then
+local function which_material(skinning, heapmesh, indirect_update)
+	if heapmesh then
+        return shadow_heap_material
+    end
+	if indirect_update then
+        if indirect_update.type == "STONEMOUNTAIN" then
+            return shadow_sm_material
+        else
+            return shadow_indirect_material
+        end
+    end
+	if skinning then
 		return gpu_skinning_material
-	else
+	end
 		return shadow_material
-	end 
 	--return skinning and gpu_skinning_material or shadow_material
 end
 
@@ -554,11 +565,11 @@ local omni_stencils = {
 }
 
 function sm:update_filter()
-    for e in w:select "filter_result render_object:update filter_material:in material:in skinning?in indirect?in" do
+    for e in w:select "filter_result render_object:update filter_material:in material:in skinning?in indirect_update?in bounding:in" do
 		local mt = assetmgr.resource(e.material)
 		if mt.fx.setting.shadow_cast == "on" then
 			local ro = e.render_object
-			local m = which_material(e.skinning, e.indirect)
+			local m = which_material(e.skinning, e.heapmesh, e.indirect_update)
 			local mo = m.object
 			local fm = e.filter_material
 			local newstate = irender.check_set_state(mo, fm.main_queue:get_material(), function (d, s)

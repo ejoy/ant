@@ -1,8 +1,6 @@
 fx:
   fs: /pkg/ant.resources/shaders/outline/fs_scaleoutline.sc
   vs: /pkg/ant.resources/shaders/outline/vs_scaleoutline.sc
-  setting:
-    VIEW_SPACE:1
 properties:
   u_outlinecolor: {0.8, 0.8, 0, 1}
   u_outlinescale: {0.05, 0, 0, 0}

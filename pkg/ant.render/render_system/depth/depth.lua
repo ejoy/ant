@@ -18,15 +18,23 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local pre_depth_material
 local pre_depth_skinning_material
 local pre_depth_heap_material
+local pre_depth_indirect_material
+local pre_depth_road_material
 local pre_depth_sm_material
 
-local function which_material(skinning, heapmesh, indirect)
+
+local function which_material(skinning, heapmesh, indirect_update)
     if heapmesh then
         return pre_depth_heap_material.object
     end
-
-    if indirect then
-        return pre_depth_sm_material.object
+    if indirect_update then
+        if indirect_update.type == "ROAD" then
+            return pre_depth_road_material.object
+        elseif indirect_update.type == "STONEMOUNTAIN" then
+            return pre_depth_sm_material.object
+        else
+            return pre_depth_indirect_material.object
+        end
     end
     if skinning then
         return pre_depth_skinning_material.object
@@ -38,8 +46,10 @@ end
 function s:init()
     pre_depth_material 			= imaterial.load_res "/pkg/ant.resources/materials/predepth.material"
     pre_depth_heap_material     = imaterial.load_res "/pkg/ant.resources/materials/predepth_heap.material"
-    pre_depth_sm_material       = imaterial.load_res "/pkg/ant.resources/materials/predepth_sm.material"
+    pre_depth_indirect_material = imaterial.load_res "/pkg/ant.resources/materials/predepth_indirect.material"
     pre_depth_skinning_material = imaterial.load_res "/pkg/ant.resources/materials/predepth_skin.material"
+    pre_depth_road_material     = imaterial.load_res "/pkg/ant.resources/materials/predepth_road.material"
+    pre_depth_sm_material       = imaterial.load_res "/pkg/ant.resources/materials/predepth_sm.material"
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
@@ -69,9 +79,9 @@ local function create_depth_only_material(mo, fm)
 end
 
 function s:update_filter()
-    for e in w:select "filter_result pre_depth_queue_visible:update render_layer:in render_object:update filter_material:in skinning?in heapmesh?in indirect?in" do
+    for e in w:select "filter_result pre_depth_queue_visible:update render_layer:in render_object:update filter_material:in skinning?in heapmesh?in indirect_update?in" do
         if e.render_layer == "opacity" then
-            local mo = assert(which_material(e.skinning, e.heapmesh, e.indirect))
+            local mo = assert(which_material(e.skinning, e.heapmesh, e.indirect_update))
             local ro = e.render_object
             local fm = e.filter_material
 

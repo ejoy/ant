@@ -1,0 +1,14 @@
+fx:
+  cs: /pkg/ant.resources/shaders/mesh/cs_indirect.sc
+  setting:
+    lighting: on
+    shadow_cast: off
+    shadow_receive: off
+    subsurface: off
+properties:
+  indirect_buffer:
+    stage: 0
+    access: w
+  instance_buffer:
+    stage: 1
+    access: w
