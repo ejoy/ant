@@ -230,6 +230,7 @@ end
 
 function iani.play(eid, anim_state)
 	local e <close> = get_anim_e(eid)
+	w:extend(e, "playing?out auto_update?out")
 	local anim_name = anim_state.name
 	local anim = e.animation[anim_name]
 	if not anim then
@@ -272,7 +273,8 @@ function iani.play(eid, anim_state)
 	e.anim_ctrl.play_state = { ratio = 0.0, previous_ratio = 0.0, play = true, speed = anim_state.speed or 1.0, loop = anim_state.loop, manual_update = anim_state.manual, forwards = anim_state.forwards}
 	stop_all_effect(e.anim_ctrl.event_state.keyframe_events)
 	e.anim_ctrl.event_state = { next_index = 1, keyframe_events = e.anim_ctrl.keyframe_events[anim_name] }
-	
+	e.playing = true
+	e.auto_update = not anim_state.manual
 	world:pub{"animation", anim_name, "play", anim_state.owner}
 end
 
@@ -291,6 +293,7 @@ function iani.step(anim_e, s_delta, absolute)
 	if not ani then
 		return
 	end
+	local stop = false
 	local play_state = ctrl.play_state
 	local playspeed = play_state.manual_update and 1.0 or play_state.speed
 	local adjust_delta = play_state.play and s_delta * playspeed or s_delta
@@ -301,6 +304,7 @@ function iani.step(anim_e, s_delta, absolute)
 			play_state.ratio = play_state.forwards and 1.0 or 0.0
 			play_state.play = false
 			world:pub{"animation", ctrl.name, "stop", ctrl.owner}
+			stop = true
 		else
 			play_state.ratio = (next_time - duration) / duration
 		end
@@ -312,6 +316,7 @@ function iani.step(anim_e, s_delta, absolute)
 	pr:setup(anim_e.skeleton._handle)
 	pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, ctrl.weight)
 	ctrl.dirty = true
+	anim_e.playing = not stop
 end
 
 function iani.set_time(eid, second)

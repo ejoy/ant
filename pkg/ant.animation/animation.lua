@@ -17,7 +17,6 @@ local function process_keyframe_event(task)
 	if not task then
 		return
 	end
-	if task.play_state.manual_update or not task.play_state.play then return end
 	local event_state = task.event_state
 	local all_events = event_state.keyframe_events
 	local current_events = all_events and all_events[event_state.next_index] or nil
@@ -91,13 +90,11 @@ local iani = ecs.import.interface "ant.animation|ianimation"
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for e in w:select "skeleton:in anim_ctrl:in" do
+	for e in w:select "auto_update playing:out skeleton:in anim_ctrl:in eid:in" do
+		--w:readall(eid)
 		local ctrl = e.anim_ctrl
 		if ctrl.animation then
-			local play_state = ctrl.play_state
-			if not play_state.manual_update and play_state.play then
-				iani.step(e, delta_time * 0.001)
-			end
+			iani.step(e, delta_time * 0.001)
 		end
 	end
 end
@@ -106,7 +103,7 @@ function ani_sys:do_refine()
 end
 
 function ani_sys:end_animation()
-	for e in w:select "anim_ctrl:in" do
+	for e in w:select "auto_update playing anim_ctrl:in" do
 		local ctrl = e.anim_ctrl
 		if ctrl.dirty then
 			local pr = ctrl.pose_result
@@ -118,7 +115,7 @@ function ani_sys:end_animation()
 end
 
 function ani_sys:data_changed()
-	for e in w:select "anim_ctrl:in" do
+	for e in w:select "auto_update playing anim_ctrl:in" do
 		process_keyframe_event(e.anim_ctrl)
 	end
 end
