@@ -214,6 +214,10 @@ local function init_prefab_anim(entity)
 		local slot = slot_e.slot
 		if slot.joint_name and skeleton then
 			slot.joint_index = skeleton._handle:joint_index(slot.joint_name)
+			if slot.joint_index then
+				w:extend(slot_e, "boneslot?out")
+				slot_e.boneslot = true
+			end
 		end
 		slot.pose = pose
 	end

@@ -440,6 +440,10 @@ function iani.set_pose_to_prefab(instance, pose)
 			e.meshskin.pose = pose
 		elseif e.slot then
 			e.slot.pose = pose
+			if e.slot.joint_name and e.slot.joint_name ~= "None" then
+				w:extend(e, "boneslot?out")
+				e.boneslot = true
+			end
 		elseif e.animation then
 			w:extend(e, "anim_ctrl:in skeleton:in")
 			pose.pose_result = e.anim_ctrl.pose_result
