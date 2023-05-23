@@ -4,8 +4,8 @@ system "slot_system"
     .method "entity_init"
     .method "update_slot"
 
-component "slot"
-    .type "lua"
+component "slot".type "lua"
+component "boneslot"
 
 policy "slot"
     .require_system "ant.animation|slot_system"

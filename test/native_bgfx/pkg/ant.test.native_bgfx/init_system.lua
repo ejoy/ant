@@ -102,7 +102,14 @@ local material = {
             DEPTH_TEST = "EQUAL",
             MSAA = true,
             WRITE_MASK = "RGBA",
-        }
+        },
+        simple_state = bgfx.make_state {
+            ALPHA_REF = 0,
+            CULL = "CCW",
+            DEPTH_TEST = "LEQUAL",
+            MSAA = true,
+            WRITE_MASK = "RGBAZ",
+        },
     },
     fullscreen = {
         shader = {},
@@ -184,10 +191,7 @@ local fb_viewid, fb = create_fb1({
         "RGBA16F",
         sampleflag), depth_fb.rb_handles[1]}, 1)
 
-function is:update()
-    local viewmat = math3d.lookat(math3d.vector(0, 0, -10), math3d.vector(0, 0, 0), math3d.vector(0, 1, 0))
-    local projmat = math3d.projmat{aspect=fb_size.w/fb_size.h, fov=90, n=0.01, f=100}
-
+local function test_fb(viewmat, projmat)
     bgfx.touch(depth_viewid)
     bgfx.set_view_clear(depth_viewid, "D", 0, 1.0, 0.0)
     bgfx.set_view_transform(depth_viewid, viewmat, projmat)
@@ -213,4 +217,26 @@ function is:update()
     bgfx.set_vertex_buffer(0, mesh.vb.handle, 0, 3)
     bgfx.set_texture(0, material.fullscreen.shader.uniforms[1].handle, fb.rb_handles[1])
     bgfx.submit(viewid, material.fullscreen.shader.prog, 0)
+end
+
+
+local function draw_simple_mode(viewmat, projmat)
+    bgfx.touch(viewid)
+    bgfx.set_view_clear(viewid, "CD", 0x000000ff, 1.0, 0.0)
+    bgfx.set_view_transform(viewid, viewmat, projmat)
+    bgfx.set_view_rect(viewid, 0, 0, fb_size.w, fb_size.h)
+    bgfx.set_state(material.mesh.simple_state)
+    bgfx.set_vertex_buffer(0, mesh.vb.handle, mesh.vb.start, mesh.vb.num)
+    bgfx.set_index_buffer(mesh.ib.handle, mesh.ib.start, mesh.ib.num)
+    
+    bgfx.submit(viewid, material.mesh.shader.prog, 0)
+end
+
+function is:update()
+    local viewmat = math3d.lookat(math3d.vector(0, 0, -10), math3d.vector(0, 0, 0), math3d.vector(0, 1, 0))
+    local projmat = math3d.projmat{aspect=fb_size.w/fb_size.h, fov=90, n=0.01, f=100}
+
+    draw_simple_mode(viewmat, projmat)
+
+
 end

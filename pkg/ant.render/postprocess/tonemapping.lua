@@ -31,6 +31,7 @@ function tm_sys:init()
             visible_state = "",
             scene = {},
             tonemapping_queue_visible = true,
+            tonemapping_queue_renderable = true,
         }
     }
 end

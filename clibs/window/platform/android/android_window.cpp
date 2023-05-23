@@ -1,6 +1,4 @@
-extern "C" {
-#include "../window.h"
-}
+#include "../../window.h"
 #include "include/game-activity/native_app_glue/android_native_app_glue.h"
 #include <lua.hpp>
 #include <bee/nonstd/to_underlying.h>
@@ -13,12 +11,6 @@ static struct ant_window_callback* g_cb = NULL;
 static ANativeWindow* g_window = NULL;
 static bool g_initialized = false;
 
-static void push_message(struct ant_window_message* msg) {
-    if (g_cb) {
-        g_cb->message(g_cb->ud, msg);
-    }
-}
-
 enum class AndroidPath {
     InternalDataPath,
     ExternalDataPath,
@@ -29,21 +21,23 @@ int window_init(struct ant_window_callback* cb) {
     return 0;
 }
 
-void window_mainloop(struct ant_window_callback* cb, int update) {
-    int events;
-    android_poll_source* source;
-    struct ant_window_message update_msg;
-    update_msg.type = ANT_WINDOW_UPDATE;
-    do {
+void window_close() {
+}
+
+bool window_peekmessage() {
+    for (;;) {
+        if (g_app->destroyRequested) {
+            return false;
+        }
+        int events;
+        android_poll_source* source;
         if (ALooper_pollAll(g_window ? 0 : -1, nullptr, &events, (void **) &source) >= 0) {
             if (source) {
                 source->process(g_app, source);
             }
         }
-        if (g_initialized) {
-            cb->message(cb->ud, &update_msg);
-        }
-    } while (!g_app->destroyRequested);
+        return true;
+    }
 }
 
 static void handle_cmd(android_app* app, int32_t cmd) {
@@ -58,36 +52,28 @@ static void handle_cmd(android_app* app, int32_t cmd) {
                 return;
             }
             g_window = app->window;
-            g_initialized = true;
             int32_t w = ANativeWindow_getWidth(app->window);
             int32_t h = ANativeWindow_getHeight(app->window);
-            struct ant_window_message msg;
-            msg.type = g_initialized? ANT_WINDOW_INIT: ANT_WINDOW_RECREATE;
-            msg.u.init.window = app->window;
-            msg.u.init.context = NULL;
-            msg.u.init.w = w;
-            msg.u.init.h = h;
-            push_message(&msg);
+            if (!g_initialized) {
+                window_message_init(g_cb, app->window, NULL, w, h);
+                g_initialized = true;
+            }
+            else {
+                window_message_recreate(g_cb, app->window, NULL, w, h);
+            }
             break;
         }
         case APP_CMD_TERM_WINDOW:
             g_window = NULL;
             break;
         case APP_CMD_DESTROY: {
-            struct ant_window_message msg;
-            msg.type = ANT_WINDOW_EXIT;
-            push_message(&msg);
+            window_message_exit(g_cb);
             break;
         }
         case APP_CMD_WINDOW_RESIZED: {
             int32_t w = ANativeWindow_getWidth(app->window);
             int32_t h = ANativeWindow_getHeight(app->window);
-            struct ant_window_message msg;
-            msg.type = ANT_WINDOW_SIZE;
-            msg.u.size.x = w;
-            msg.u.size.y = h;
-            msg.u.size.type = 0;
-            push_message(&msg);
+            window_message_size(g_cb, w, h, 0);
             break;
         }
         case APP_CMD_LOST_FOCUS:

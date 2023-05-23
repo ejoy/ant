@@ -23,6 +23,17 @@ void window_message_init(struct ant_window_callback* cb, void* window, void* con
 	push_message(L);
 }
 
+void window_message_recreate(struct ant_window_callback* cb, void* window, void* context, int w, int h) {
+	lua_State* L = cb->messageL;
+	lua_settop(L, 1);
+	lua_pushstring(L, "recreate");
+	lua_pushlightuserdata(L, window);
+	lua_pushlightuserdata(L, context);
+	lua_pushinteger(L, w);
+	lua_pushinteger(L, h);
+	push_message(L);
+}
+
 void window_message_exit(struct ant_window_callback* cb) {
 	lua_State* L = cb->messageL;
 	lua_settop(L, 1);
@@ -47,6 +58,7 @@ void window_message_mouse_wheel(struct ant_window_callback* cb, int x, int y, fl
 	lua_pushinteger(L, x);
 	lua_pushinteger(L, y);
 	lua_pushnumber(L, delta);
+	push_message(L);
 }
 
 void window_message_mouse(struct ant_window_callback* cb, int x, int y, uint8_t type, uint8_t state) {

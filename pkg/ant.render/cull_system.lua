@@ -1,18 +1,21 @@
-local ecs = ...
-local world = ecs.world
-local w = world.w
+local ecs	= ...
+local world	= ecs.world
+local w		= world.w
 
-local math3d = require "math3d"
-local mc = import_package "ant.math".constant
-local setting = import_package "ant.settings".setting
-local disable_cull = setting:data().graphic.disable_cull
+local math3d				= require "math3d"
+local setting				= import_package "ant.settings".setting
+local disable_cull<const>	= setting:data().graphic.disable_cull
 
 local cullcore = ecs.clibs "cull.core"
 
-local cull_ids = setmetatable({}, {__index = function (t, k)
-	local id = w:component_id(k .. "_cull")
-	t[k] = id
-	return id
+local CULL_ARGS = setmetatable({}, {__index = function (t, k)
+	local v = {
+		cull_id			= w:component_id(k .. "_cull"),
+		renderable_id	= w:component_id(k .. "_renderable"),
+		frustum_planes	= nil,
+	}
+	t[k] = v
+	return v
 end})
 
 
@@ -22,12 +25,9 @@ local function build_cull_args()
 	
 	for qe in w:select "visible queue_name:in camera_ref:in cull_args:new" do
 		local ce <close> = w:entity(qe.camera_ref, "camera:in")
-		local vpmat = ce.camera.viewprojmat
-		qe.cull_args = {
-			viewprojmat		= vpmat.i,
-			frustum_planes 	= math3d.frustum_planes(vpmat),
-			cull_id			= cull_ids[qe.queue_name],
-		}
+		local ca = CULL_ARGS[qe.queue_name]
+		ca.frustum_planes = math3d.frustum_planes(ce.camera.viewprojmat)
+		qe.cull_args = ca
 	end
 end
 

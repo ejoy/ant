@@ -17,7 +17,6 @@ local function process_keyframe_event(task)
 	if not task then
 		return
 	end
-	if task.play_state.manual_update or not task.play_state.play then return end
 	local event_state = task.event_state
 	local all_events = event_state.keyframe_events
 	local current_events = all_events and all_events[event_state.next_index] or nil
@@ -91,13 +90,11 @@ local iani = ecs.import.interface "ant.animation|ianimation"
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for e in w:select "skeleton:in anim_ctrl:in" do
+	for e in w:select "playing pose_dirty?out skeleton:in anim_ctrl:in eid:in" do
+		--w:readall(eid)
 		local ctrl = e.anim_ctrl
 		if ctrl.animation then
-			local play_state = ctrl.play_state
-			if not play_state.manual_update and play_state.play then
-				iani.step(e, delta_time * 0.001)
-			end
+			iani.step(e, delta_time * 0.001)
 		end
 	end
 end
@@ -106,19 +103,18 @@ function ani_sys:do_refine()
 end
 
 function ani_sys:end_animation()
-	for e in w:select "anim_ctrl:in" do
+	for e in w:select "pose_dirty:out playing?out anim_ctrl:in" do
 		local ctrl = e.anim_ctrl
-		if ctrl.dirty then
-			local pr = ctrl.pose_result
-			pr:fetch_result()
-			pr:end_animation()
-			ctrl.dirty = false
-		end
+		local pr = ctrl.pose_result
+		pr:fetch_result()
+		pr:end_animation()
+		e.playing = ctrl.play_state.play
+		e.pose_dirty = false
 	end
 end
 
 function ani_sys:data_changed()
-	for e in w:select "anim_ctrl:in" do
+	for e in w:select "playing anim_ctrl:in" do
 		process_keyframe_event(e.anim_ctrl)
 	end
 end
@@ -218,14 +214,19 @@ local function init_prefab_anim(entity)
 		local slot = slot_e.slot
 		if slot.joint_name and skeleton then
 			slot.joint_index = skeleton._handle:joint_index(slot.joint_name)
+			if slot.joint_index then
+				w:extend(slot_e, "boneslot?out")
+				slot_e.boneslot = true
+			end
 		end
 		slot.pose = pose
 	end
 	if ctrl_eid then
-		local ctrl_e <close> = w:entity(ctrl_eid, "anim_ctrl:in")
+		local ctrl_e <close> = w:entity(ctrl_eid, "anim_ctrl:in pose_dirty?out")
 		local ctrl = ctrl_e.anim_ctrl
 		pose.pose_result = ctrl.pose_result
 		ctrl.slot_eid = slot_eid
+		ctrl_e.pose_dirty = true
 	end
 end
 

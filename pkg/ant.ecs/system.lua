@@ -88,15 +88,20 @@ function system.lists(w, what)
 	local funcs = {}
 	local symbols = {}
 	solve_depend(funcs, symbols, w._systems, w._decl.pipeline, what)
-	if w.args.DEBUG then
-		for i, f in ipairs(funcs) do
-			local info = debug.getinfo(f, "SL")
-			if info.what ~= "C" then
-				if emptyfunc(info) then
-					log.warn(("`%s` is an empty method. (%s:%d)"):format(symbols[i], info.source:sub(2), info.linedefined))
-				end
+	local i = 1
+	while i <= #funcs do
+		local f = funcs[i]
+		local info = debug.getinfo(f, "SL")
+		if info.what ~= "C" then
+			if emptyfunc(info) then
+				log.warn(("`%s` is an empty method, it has been ignored. (%s:%d)"):format(symbols[i], info.source:sub(2), info.linedefined))
+				table.remove(funcs, i)
+				table.remove(symbols, i)
+				goto continue
 			end
 		end
+		i = i + 1
+		::continue::
 	end
 	return funcs, symbols
 end

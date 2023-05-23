@@ -5,10 +5,7 @@
 				content = "bgfx stat"
 			}
 			window.addEventListener("message", function(event)
-				if string.sub(event.data, 1, 8) == "Particle" then
-				else
-					bgfx_model.content = event.data
-				end
+				bgfx_model.content = event.data
 			end)
 		</script>
 		<style>
@@ -17,13 +14,11 @@
 				height: auto;
 				font: 120% "宋体";
 				color: #7FFF7F;
-				text-align:"left"
+				text-align: "left";
 			}
 		</style>
 	</head>
-	<body onload="">
-		<bgfx data-model="bgfx_stat">
-			{{content}}
-		</bgfx>
+	<body style = "pointer-events: none;">
+		<bgfx data-model="bgfx_stat">{{content}}</bgfx>
 	</body>
 </rml>

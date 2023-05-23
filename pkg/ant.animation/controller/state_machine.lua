@@ -230,6 +230,7 @@ end
 
 function iani.play(eid, anim_state)
 	local e <close> = get_anim_e(eid)
+	w:extend(e, "playing?out")
 	local anim_name = anim_state.name
 	local anim = e.animation[anim_name]
 	if not anim then
@@ -272,7 +273,7 @@ function iani.play(eid, anim_state)
 	e.anim_ctrl.play_state = { ratio = 0.0, previous_ratio = 0.0, play = true, speed = anim_state.speed or 1.0, loop = anim_state.loop, manual_update = anim_state.manual, forwards = anim_state.forwards}
 	stop_all_effect(e.anim_ctrl.event_state.keyframe_events)
 	e.anim_ctrl.event_state = { next_index = 1, keyframe_events = e.anim_ctrl.keyframe_events[anim_name] }
-	
+	e.playing = true
 	world:pub{"animation", anim_name, "play", anim_state.owner}
 end
 
@@ -312,11 +313,13 @@ function iani.step(anim_e, s_delta, absolute)
 	pr:setup(anim_e.skeleton._handle)
 	pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, ctrl.weight)
 	ctrl.dirty = true
+	anim_e.pose_dirty = true
 end
 
 function iani.set_time(eid, second)
 	if not eid then return end
 	local e <close> = get_anim_e(eid)
+	w:extend(e, "pose_dirty?out")
 	iani.step(e, second, true)
 	-- effect
 	local current_time = iani.get_time(eid);
@@ -437,6 +440,10 @@ function iani.set_pose_to_prefab(instance, pose)
 			e.meshskin.pose = pose
 		elseif e.slot then
 			e.slot.pose = pose
+			if e.slot.joint_name and e.slot.joint_name ~= "None" then
+				w:extend(e, "boneslot?out")
+				e.boneslot = true
+			end
 		elseif e.animation then
 			w:extend(e, "anim_ctrl:in skeleton:in")
 			pose.pose_result = e.anim_ctrl.pose_result

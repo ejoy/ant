@@ -88,21 +88,24 @@ scene_changed(lua_State *L) {
 	flatset<ecs::eid> change;
 	for (auto& e : ecs_api::select<ecs::scene_update, ecs::eid>(w->ecs)) {
 		auto id = e.get<ecs::eid>();
-		if (parents.contains(id)) {
-			auto s = e.sibling<ecs::scene>();
-			if (s) {
-				worldmats.insert_or_assign(id, s->worldmat);
-			}
-		}
 		if (e.sibling<ecs::scene_changed>()) {
 			change.insert(id);
+			if (parents.contains(id)) {
+				auto s = e.sibling<ecs::scene>();
+				if (s) {
+					worldmats.insert_or_assign(id, s->worldmat);
+				}
+			}
 		}
 		else {
 			auto s = e.sibling<ecs::scene>();
-			if (s && s->parent != 0) {
-				if (change.contains(s->parent)) {
+			if (s) {
+				if (s->parent != 0 && change.contains(s->parent)) {
 					change.insert(id);
 					e.enable_tag<ecs::scene_changed>();
+				}
+				if (parents.contains(id)) {
+					worldmats.insert_or_assign(id, s->worldmat);
 				}
 			}
 		}
@@ -120,11 +123,17 @@ scene_changed(lua_State *L) {
 	return 0;
 }
 
+// TODO: change stage name
+static int
+prefab_remove(lua_State *L) {
+	auto w = getworld(L);
+	ecs_api::clear_type<ecs::scene_changed>(w->ecs);
+	return 0;
+}
+
 static int
 scene_remove(lua_State *L) {
 	auto w = getworld(L);
-	ecs_api::clear_type<ecs::scene_changed>(w->ecs);
-	
 	flatset<ecs::eid> removed;
 	for (auto& e : ecs_api::select<ecs::REMOVED, ecs::scene, ecs::eid>(w->ecs)) {
 		auto id = e.get<ecs::eid>();
@@ -166,6 +175,7 @@ luaopen_system_scene(lua_State *L) {
 	luaL_Reg l[] = {
 		{ "entity_init", entity_init },
 		{ "scene_changed", scene_changed },
+		{ "prefab_remove", prefab_remove },
 		{ "scene_remove", scene_remove },
 		{ "bounding_update", bounding_update},
 		{ NULL, NULL },

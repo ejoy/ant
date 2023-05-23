@@ -21,8 +21,8 @@ function world:pipeline_func(what)
 		local dbg_print = bgfx.dbg_text_print
 		local total = w._cpu_stat
 		local printtext = {}
-		local MaxFrame <const> = 10
-		local MaxText <const> = 5
+		local MaxFrame <const> = 30
+		local MaxText <const> = 10
 		local MaxName <const> = 48
 		local CurFrame = 0
 		for i = 1, #funcs do
@@ -98,8 +98,10 @@ function world:memory_stat(what)
 end
 
 function world:pipeline_init()
-	self:pipeline_func "_init" ()
+	self.pipeline_entity_init = self:pipeline_func "_entity_init"
+	self.pipeline_entity_remove = self:pipeline_func "_entity_remove"
 	self.pipeline_update = self:pipeline_func "_update"
+	self:pipeline_func "_init" ()
 end
 
 function world:pipeline_exit()

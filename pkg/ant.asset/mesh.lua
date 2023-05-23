@@ -18,7 +18,7 @@ function ms:component_init()
 	end
 end
 
-function ms:end_frame()
+function ms:entity_remove()
 	for e in w:select "REMOVED owned_mesh_buffer simplemesh:in" do
 		ext_meshbin.delete(e.simplemesh)
 	end

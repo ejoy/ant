@@ -49,9 +49,7 @@ linit(lua_State *L) {
 
 static int
 lmainloop(lua_State *L) {
-	struct ant_window_callback* cb = (struct ant_window_callback*)lua_touserdata(L, 1);
-	int update = lua_toboolean(L, 2);
-	window_mainloop(cb, update);
+	window_mainloop();
 	return 0;
 }
 

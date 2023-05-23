@@ -34,6 +34,7 @@ function fxaasys:init()
             visible_state = "",
             scene = {},
             fxaa_queue_visible = true,
+            fxaa_queue_renderable = true,
         }
     }
 end

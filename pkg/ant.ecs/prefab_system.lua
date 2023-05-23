@@ -23,15 +23,15 @@ function m:entity_ready()
         v:on_ready()
     end
     w:clear "on_ready"
+end
+
+function m:data_changed()
     for _, prefab in evObjectDetach:unpack() do
         world:pub{"prefab_system", "detach", prefab}
     end
     for _, prefab in evObjectRemove:unpack() do
         world:pub{"prefab_system", "remove", prefab}
     end
-end
-
-function m:data_changed()
     for msg in evObjectMessage:each() do
         local f = msg[2]
         f(table.unpack(msg, 3))

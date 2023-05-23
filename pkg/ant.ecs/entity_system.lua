@@ -14,6 +14,9 @@ end
 
 function m:entity_create()
     local queue = world._create_queue
+    if #queue == 0 then
+        return
+    end
     world._create_queue = {}
 
     for i = 1, #queue do
@@ -45,9 +48,8 @@ function m:entity_create()
         w:group_add(groupid, eid)
         ::continue::
     end
-end
 
-function m:entity_ready()
+    world:pipeline_entity_init()
     w:clear "INIT"
 end
 
@@ -76,10 +78,13 @@ function m:init()
     end
 end
 
-function m:entity_remove()
-    for name, func in pairs(MethodRemove) do
-        for v in w:select("REMOVED "..name..":in") do
-            func(v[name])
+function m:entity_destory()
+    if w:check "REMOVED" then
+        world:pipeline_entity_remove()
+        for name, func in pairs(MethodRemove) do
+            for v in w:select("REMOVED "..name..":in") do
+                func(v[name])
+            end
         end
     end
 end
