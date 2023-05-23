@@ -47,7 +47,6 @@ insert_cull_array(struct cull_array cull_a[], int n_cull, cid_t cid_a[], int n_c
 	return n_cull + 1;
 }
 
-/*
 static int
 lcull(lua_State *L) {
 	struct cull_array a[MAX_CULL_ARRAY];
@@ -79,44 +78,6 @@ lcull(lua_State *L) {
 				}
 			}
 			offset += a[i].n;
-		}
-
-	}
-
-	return 0;
-}
-*/
-
-template<typename Entity>
-static inline void
-enable_tags(Entity &e, const tags& t){
-	for (auto id : t){
-		e.enable_tag(id);
-	}
-}
-
-static int
-lcull(lua_State *L){
-	auto w = getworld(L);
-
-	cull_infos ci;
-	for (auto e : ecs_api::select<ecs::cull_args>(w->ecs)){
-		const auto& i = e.get<ecs::cull_args>();
-		const auto id = (cid_t)i.renderable_id;
-		ci[i.frustum_planes.idx].push_back(id);
-		entity_clear_type(w->ecs, id);
-	}
-
-	if (ci.empty())
-		return 0;
-
-	for (auto e : ecs_api::select<ecs::view_visible, ecs::render_object, ecs::bounding>(w->ecs)){
-		const auto &b = e.get<ecs::bounding>();
-		for (const auto& kv : ci){
-			if (math_isnull(b.scene_aabb) || 
-				(math3d_frustum_intersect_aabb(w->math3d->M, math_t{kv.first}, b.scene_aabb) >= 0)){
-				enable_tags(e, kv.second);
-			}
 		}
 
 	}
