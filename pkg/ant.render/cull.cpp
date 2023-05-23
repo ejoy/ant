@@ -67,7 +67,8 @@ lcull(lua_State *L) {
 	if (a_n == 0)
 		return 0;
 
-	for (auto e : ecs_api::select<ecs::view_visible, ecs::bounding>(w->ecs)){
+	static ecs_api::cached<ecs::view_visible, ecs::bounding> cached_select(w->ecs);
+	for (auto e : ecs_api::select(cached_select)) {
 		const auto &b = e.get<ecs::bounding>();
 		int i,j,offset = 0;
 		for (i = 0; i < a_n; i++) {
@@ -79,9 +80,7 @@ lcull(lua_State *L) {
 			}
 			offset += a[i].n;
 		}
-
 	}
-
 	return 0;
 }
 
