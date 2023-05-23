@@ -17,13 +17,13 @@ namespace ecs_api {
 
     namespace impl {
         template <typename Component>
-        Component* iter(ecs_context* ctx, int i) {
+        Component* iter(ecs_context* ctx, int i) noexcept {
             static_assert(!std::is_function<Component>::value);
             return (Component*)entity_iter(ctx, component<Component>::id, i);
         }
 
         template <typename Component>
-        Component* sibling(ecs_context* ctx, int mainkey, int i) {
+        Component* sibling(ecs_context* ctx, int mainkey, int i) noexcept {
             static_assert(!std::is_function<Component>::value);
             return (Component*)entity_sibling(ctx, mainkey, i, component<Component>::id);
         }
@@ -47,7 +47,7 @@ namespace ecs_api {
         ));
 
         template <std::size_t Is, typename T>
-        static constexpr std::size_t next() {
+        static constexpr std::size_t next() noexcept {
             if constexpr (std::is_empty<T>::value || std::is_function<T>::value) {
                 return Is;
             }
@@ -60,11 +60,11 @@ namespace ecs_api {
     template <typename MainKey, typename ...SubKey>
     struct entity {
     public:
-        entity(ecs_context* ctx)
+        entity(ecs_context* ctx) noexcept
             : ctx(ctx)
         { }
         static constexpr int kInvalidIndex = -1;
-        bool init(int id) {
+        bool init(int id) noexcept {
             auto v = impl::iter<MainKey>(ctx, id);
             if (!v) {
                 index = kInvalidIndex;
@@ -84,7 +84,7 @@ namespace ecs_api {
                 return false;
             }
         }
-        int find(int id) {
+        int find(int id) noexcept {
             index = id;
             for (;;++index) {
                 auto v = impl::iter<MainKey>(ctx, index);
@@ -104,7 +104,7 @@ namespace ecs_api {
             }
             return index;
         }
-        int next(int i) {
+        int next(int i) noexcept {
             index = i;
             if (index == kInvalidIndex) {
                 return kInvalidIndex;
@@ -112,45 +112,45 @@ namespace ecs_api {
             ++index;
             return find(index);
         }
-        void remove() const {
+        void remove() const noexcept {
             entity_remove(ctx, component<MainKey>::id, index);
         }
-        int getid() const {
+        int getid() const noexcept {
             return index;
         }
         template <typename T>
             requires (component<T>::id == EID)
-        T get() {
+        T get() noexcept {
             return (T)std::get<T*>(c);
         }
         template <typename T>
             requires (component<T>::id != EID && !std::is_empty<T>::value)
-        T& get() {
+        T& get() noexcept {
             return *std::get<T*>(c);
         }
         template <typename T>
             requires (component<T>::id == EID)
-        bool has() const {
+        bool has() const noexcept {
             return true;
         }
         template <typename T>
             requires (component<T>::id != EID)
-        bool has() const {
+        bool has() const noexcept {
             return !!impl::sibling<T>(ctx, component<MainKey>::id, index);
         }
         template <typename T>
             requires (component<T>::tag)
-        bool sibling() const {
+        bool sibling() const noexcept {
             return !!impl::sibling<T>(ctx, component<MainKey>::id, index);
         }
         template <typename T>
             requires (component<T>::id != EID && !component<T>::tag && !std::is_empty<T>::value)
-        T* sibling() const {
+        T* sibling() const noexcept {
             return impl::sibling<T>(ctx, component<MainKey>::id, index);
         }
         template <typename T>
             requires (component<T>::id == EID)
-        T sibling() const {
+        T sibling() const noexcept {
             return (T)impl::sibling<T>(ctx, component<MainKey>::id, index);
         }
         template <typename T>
@@ -165,29 +165,29 @@ namespace ecs_api {
         }
         template <typename T>
             requires (component<T>::tag)
-        void enable_tag() {
+        void enable_tag() noexcept {
             entity_enable_tag(ctx, component<MainKey>::id, index, component<T>::id);
         }
-        void enable_tag(int id) {
+        void enable_tag(int id) noexcept {
             entity_enable_tag(ctx, component<MainKey>::id, index, id);
         }
         template <typename T>
             requires (component<T>::tag)
-        void disable_tag() {
+        void disable_tag() noexcept {
             entity_disable_tag(ctx, component<MainKey>::id, index, component<T>::id);
         }
-        void disable_tag(int id) {
+        void disable_tag(int id) noexcept {
             entity_disable_tag(ctx, component<MainKey>::id, index, id);
         }
     private:
         template <std::size_t Is, typename T>
-        void assgin(T* v) {
+        void assgin(T* v) noexcept {
             if constexpr (!std::is_empty<T>::value) {
                 std::get<Is>(c) = v;
             }
         }
         template <std::size_t Is, typename Component, typename ...Components>
-        bool init_sibling(int i) {
+        bool init_sibling(int i) noexcept {
             if constexpr (std::is_function<Component>::value) {
                 using C = typename std::invoke_result<Component, flags::absent>::type;
                 auto v = impl::sibling<C>(ctx, component<MainKey>::id, i);
@@ -226,35 +226,35 @@ namespace ecs_api {
             struct iterator {
                 entity_type& e;
                 int index;
-                iterator(begin_t, entity_type& e)
+                iterator(begin_t, entity_type& e) noexcept
                     : e(e)
                     , index(e.find(0))
                 { }
-                iterator(end_t, entity_type& e)
+                iterator(end_t, entity_type& e) noexcept
                     : e(e)
                     , index(entity_type::kInvalidIndex)
                 { }
-                bool operator!=(iterator const& o) const {
+                bool operator!=(iterator const& o) const noexcept {
                     return index != o.index;
                 }
-                bool operator==(iterator const& o) const {
+                bool operator==(iterator const& o) const noexcept {
                     return !(*this != o);
                 }
-                iterator& operator++() {
+                iterator& operator++() noexcept {
                     index = e.next(index);
                     return *this;
                 }
-                entity_type& operator*() {
+                entity_type& operator*() noexcept {
                     return e;
                 }
             };
-            select_range(ecs_context* ctx)
+            select_range(ecs_context* ctx) noexcept
                 : e(ctx)
             {}
-            iterator begin() {
+            iterator begin() noexcept {
                 return {begin_t{}, e};
             }
-            iterator end() {
+            iterator end() noexcept {
                 return {end_t{}, e};
             }
             entity_type e;
@@ -262,29 +262,29 @@ namespace ecs_api {
     }
 
     template <typename Component>
-    void clear_type(ecs_context* ctx) {
+    void clear_type(ecs_context* ctx) noexcept {
         entity_clear_type(ctx, component<Component>::id);
     }
 
     template <typename Component, size_t N>
         requires (component<Component>::tag)
-    void group_enable(ecs_context* ctx, int (&ids)[N]) {
+    void group_enable(ecs_context* ctx, int (&ids)[N]) noexcept {
         entity_group_enable(ctx, component<Component>::id, N, ids);
     }
 
     template <typename Component>
-    size_t count(ecs_context* ctx) {
+    size_t count(ecs_context* ctx) noexcept {
         return (size_t)entity_count(ctx, component<Component>::id);
     }
 
     template <typename Component>
         requires (component<Component>::id == EID)
-    int index(ecs_context* ctx, Component eid) {
+    int index(ecs_context* ctx, Component eid) noexcept {
         return entity_index(ctx, eid);
     }
 
     template <typename ...Args>
-    auto select(ecs_context* ctx) {
+    auto select(ecs_context* ctx) noexcept {
         return impl::select_range<Args...>(ctx);
     }
 }
