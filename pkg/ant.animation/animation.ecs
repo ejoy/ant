@@ -40,7 +40,7 @@ component "meshskin".type "lua"
 component "anim_ctrl".type "lua"
 component "animation_birth".type "lua"
 component "playing"
-component "auto_update"
+component "pose_dirty"
 
 system "keyframe_system"
     .implement "keyframe.lua"

@@ -230,7 +230,7 @@ end
 
 function iani.play(eid, anim_state)
 	local e <close> = get_anim_e(eid)
-	w:extend(e, "playing?out auto_update?out")
+	w:extend(e, "playing?out")
 	local anim_name = anim_state.name
 	local anim = e.animation[anim_name]
 	if not anim then
@@ -274,7 +274,6 @@ function iani.play(eid, anim_state)
 	stop_all_effect(e.anim_ctrl.event_state.keyframe_events)
 	e.anim_ctrl.event_state = { next_index = 1, keyframe_events = e.anim_ctrl.keyframe_events[anim_name] }
 	e.playing = true
-	e.auto_update = not anim_state.manual
 	world:pub{"animation", anim_name, "play", anim_state.owner}
 end
 
@@ -314,11 +313,13 @@ function iani.step(anim_e, s_delta, absolute)
 	pr:setup(anim_e.skeleton._handle)
 	pr:do_sample(ani._sampling_context, ani._handle, play_state.ratio, ctrl.weight)
 	ctrl.dirty = true
+	anim_e.pose_dirty = true
 end
 
 function iani.set_time(eid, second)
 	if not eid then return end
 	local e <close> = get_anim_e(eid)
+	w:extend(e, "pose_dirty?out")
 	iani.step(e, second, true)
 	-- effect
 	local current_time = iani.get_time(eid);
