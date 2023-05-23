@@ -67,7 +67,8 @@ lcull(lua_State *L) {
 	if (a_n == 0)
 		return 0;
 
-	for (auto e : ecs_api::select<ecs::view_visible, ecs::bounding>(w->ecs)){
+	using namespace ecs_api::flags;
+	for (auto e : ecs_api::select<ecs::view_visible, ecs::bounding, ecs::indirect_update(absent)>(w->ecs)){
 		const auto &b = e.get<ecs::bounding>();
 		int i,j,offset = 0;
 		for (i = 0; i < a_n; i++) {
@@ -82,6 +83,16 @@ lcull(lua_State *L) {
 
 	}
 
+	for (auto e : ecs_api::select<ecs::indirect_update>(w->ecs)){
+		int i,j,offset = 0;
+		for (i = 0; i < a_n; i++) {
+			for (j = 0; j < a[i].n; j++) {
+				e.enable_tag(cid[offset+j]);
+			}			
+			offset += a[i].n;
+		}
+
+	}
 	return 0;
 }
 

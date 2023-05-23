@@ -73,13 +73,13 @@ local function check_destroy(ro)
     end
 end
 
-function iindirect.remove_old_entity(gid, cur_gid)
+function iindirect.remove_old_entity(gid, indirect_type)
     ecs.group(gid):enable "view_visible"
     ecs.group(gid):enable "scene_update"
     local select_tag = "view_visible:in scene_update:in indirect_update:in indirect_draw:in render_object:in eid:in"
     ecs.group_flush()
     for e in w:select(select_tag) do
-        if e.indirect_update.group == cur_gid then
+        if e.indirect_update.group == gid and e.indirect_update.type == indirect_type then
             check_destroy(e.render_object)
             w:remove(e.eid) 
         end
@@ -87,9 +87,12 @@ function iindirect.remove_old_entity(gid, cur_gid)
 end
 
 function indirect_system:data_changed()
-    for e in w:select "indirect_update:update indirect_draw?update render_object?update eid:in road?in stonemountain?in bounding:update" do
+    for e in w:select "indirect_update:update indirect_draw?update render_object?update eid:in road?in stonemountain?in bounding?update" do
         if e.indirect_update.indirect_info then
-            iindirect.remove_old_entity(e.indirect_update.group, e.indirect_update.group)
+            local indirect_type = "OTHER"
+            if e.road then indirect_type = "ROAD"
+            elseif e.stonemountain then indirect_type = "STONEMOUNTAIN" end
+            iindirect.remove_old_entity(e.indirect_update.group, indirect_type)
             local indirect_info = e.indirect_update.indirect_info
             local indirect_num = #indirect_info
             local indirect_buffer = bgfx.create_indirect_buffer(indirect_num)
@@ -101,15 +104,8 @@ function indirect_system:data_changed()
             e.render_object.idb_handle = indirect_buffer
             e.render_object.itb_handle = instance_buffer
             e.render_object.draw_num = indirect_num
-            if e.road then
-                e.indirect_update = {group = e.indirect_update.group, type = "ROAD"}
-            elseif e.stonemountain then
-                e.indirect_update = {group = e.indirect_update.group, type = "STONEMOUNTAIN"}
-            else
-                e.indirect_update = {group = e.indirect_update.group, type = "OTHER"}
-            end
+            e.indirect_update = {group = e.indirect_update.group, type = indirect_type}
             e.indirect_draw = true
-            e.bounding.aabb = math3d.aabb(math3d.vector(-10000, -10000, -10000), math3d.vector(10000, 10000, 10000))
         end
     end
 end
