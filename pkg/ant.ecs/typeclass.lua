@@ -123,6 +123,9 @@ local function toint(v)
 		s = s:match "^%a+: (%x+)$" or s:match "^%a+: 0x(%x+)$"
 		return tonumber(assert(s), 16)
 	end
+	if t == "number" then
+		return v
+	end
 	assert(false)
 end
 
@@ -152,7 +155,8 @@ local function create_context(w)
 		ecs_context,
 		bgfx.CINTERFACE,
 		math3d.CINTERFACE,
-		bgfx.encoder_get()
+		bgfx.encoder_get(),
+		0,0,0,0 --kMaxMember == 4
 	)
 end
 
