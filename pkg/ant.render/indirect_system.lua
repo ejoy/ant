@@ -11,7 +11,6 @@ local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
 local main_viewid = viewidmgr.get "csm_fb"
 local indirect_material
-
 local function get_instance_memory_buffer(indirect_info)
     local indirect_num = #indirect_info
     local fmt<const> = "ffff"
@@ -33,27 +32,13 @@ local function create_indirect_compute(indirect_num, indirect_buffer, instance_b
 		math.floor((indirect_num - 1) / 64) + 1, 1, 1
 	}
     local dis = { size = dispatchsize }
-    local idb = {
-		build_stage = 0,
-		build_access = "w",
-		name = "indirect_buffer",
-		handle = indirect_buffer      
-    }
-
-    local itb = {
-		build_stage = 1,
-		build_access = "w",
-		name = "instance_buffer",
-        layout = declmgr.get "t45NIf|t46NIf|t47NIf".handle,
-		handle = instance_buffer       
-    }
-
     local mo = indirect_material.object
-    mo:set_attrib("indirect_buffer", icompute.create_buffer_property(idb, "build"))
-	mo:set_attrib("instance_buffer", icompute.create_buffer_property(itb, "build"))
-    mo:set_attrib("u_instance_params", instance_params)
-    mo:set_attrib("u_indirect_params", indirect_params)
-	dis.material = mo:instance()
+    dis.material = mo:instance()
+    local m = dis.material
+    m.u_instance_params			= instance_params
+    m.u_indirect_params         = indirect_params
+    m.indirect_buffer           = indirect_buffer
+    m.instance_buffer           = instance_buffer
 	dis.fx = indirect_material._data.fx
     icompute.dispatch(main_viewid, dis)
 end

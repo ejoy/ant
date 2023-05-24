@@ -9,6 +9,8 @@ properties:
   indirect_buffer:
     stage: 0
     access: w
+    buffer: indirect_buffer
   instance_buffer:
     stage: 1
     access: w
+    buffer: instance_buffer
