@@ -5,6 +5,8 @@
 #ifdef INDIRECT_BUFFER
     #if (defined HEAP_MESH) || (defined STONE_MOUNTAIN)
         #define INPUT_INSTANCE1 i_data0
+        #define INPUT_INSTANCE2
+        #define INPUT_INSTANCE3
     #else
         #define INPUT_INSTANCE1 i_data0
         #define INPUT_INSTANCE2 i_data1
