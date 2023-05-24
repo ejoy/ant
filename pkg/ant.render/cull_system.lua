@@ -20,6 +20,10 @@ end})
 
 
 local cull_sys = ecs.system "cull_system"
+
+cull_sys.init = cullcore.init
+cull_sys.exit = cullcore.exit
+
 local function build_cull_args()
 	w:clear "cull_args"
 	

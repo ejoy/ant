@@ -89,7 +89,7 @@ local iani = ecs.import.interface "ant.animation|ianimation"
 
 function ani_sys:sample_animation_pose()
 	local delta_time = timer.delta()
-	for e in w:select "playing pose_dirty?out skeleton:in anim_ctrl:in eid:in" do
+	for e in w:select "playing pose_dirty?out skeleton:in anim_ctrl:in" do
 		--w:readall(eid)
 		local ctrl = e.anim_ctrl
 		if ctrl.animation then

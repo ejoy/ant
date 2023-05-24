@@ -1,20 +1,8 @@
 local ltask = require "ltask"
-local SERVICE_ROOT <const> = 1
-local ServiceWorld
 
-local request = ltask.request()
-request:add { SERVICE_ROOT, "uniqueservice", "ant.window|world", ...}
-request:add { SERVICE_ROOT, "uniqueservice", "ant.rmlui|rmlui"}
-for req, resp in request:select() do
-    if not resp then
-        error(string.format("service %s init error: %s", req[3], req.error))
-        return
-    end
-    if req[3] == "ant.window|world" then
-        ServiceWorld = resp[1]
-        local ServiceWindow = ltask.queryservice "ant.window|window"
-        ltask.call(ServiceWindow, "create_window")
-    end
-end
+ltask.fork(function ()
+    ltask.uniqueservice "ant.rmlui|rmlui"
+end)
 
+local ServiceWorld = ltask.uniqueservice("ant.window|world", ...)
 ltask.call(ServiceWorld, "wait")

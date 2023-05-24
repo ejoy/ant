@@ -47,6 +47,22 @@ insert_cull_array(struct cull_array cull_a[], int n_cull, cid_t cid_a[], int n_c
 	return n_cull + 1;
 }
 
+using cull_cached_select = ecs_api::cached<ecs::view_visible, ecs::bounding>;
+
+static int
+linit(lua_State *L) {
+	auto w = getworld(L);
+	w->create_member<cull_cached_select>(w->ecs);
+	return 0;
+}
+
+static int
+lexit(lua_State *L) {
+	auto w = getworld(L);
+	w->destroy_member<cull_cached_select>();
+	return 0;
+}
+
 static int
 lcull(lua_State *L) {
 	struct cull_array a[MAX_CULL_ARRAY];
@@ -67,8 +83,7 @@ lcull(lua_State *L) {
 	if (a_n == 0)
 		return 0;
 
-	static ecs_api::cached<ecs::view_visible, ecs::bounding> cached_select(w->ecs);
-	for (auto e : ecs_api::select(cached_select)) {
+	for (auto e : ecs_api::select(w->get_member<cull_cached_select>())) {
 		const auto &b = e.get<ecs::bounding>();
 		int i,j,offset = 0;
 		for (i = 0; i < a_n; i++) {
@@ -90,6 +105,8 @@ extern "C" int
 luaopen_system_cull(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
+		{ "init", linit },
+		{ "exit", lexit },
 		{ "cull", lcull },
 		{ NULL, NULL },
 	};

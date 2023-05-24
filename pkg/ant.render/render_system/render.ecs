@@ -225,6 +225,8 @@ system "indirect_system"
 system "cull_system"
     .implement "cull_system.lua"
     .require_system "ant.render|viewgroup_system"
+    .method "init"
+    .method "exit"
     .method "cull"
 
 interface "icull_primitive"
