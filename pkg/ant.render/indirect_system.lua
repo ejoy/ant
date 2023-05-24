@@ -6,7 +6,6 @@ local math3d = require "math3d"
 local indirect_system = ecs.system "indirect_system"
 local declmgr   = import_package "ant.render".declmgr
 local icompute = ecs.import.interface "ant.render|icompute"
-local iindirect = ecs.import.interface "ant.render|iindirect"
 local assetmgr  = import_package "ant.asset"
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
@@ -73,40 +72,31 @@ local function check_destroy(ro)
     end
 end
 
-function iindirect.remove_old_entity(gid, indirect_type)
-    ecs.group(gid):enable "view_visible"
-    ecs.group(gid):enable "scene_update"
-    local select_tag = "view_visible:in scene_update:in indirect_update:in indirect_draw:in render_object:in eid:in"
-    ecs.group_flush()
-    for e in w:select(select_tag) do
-        if e.indirect_update.group == gid and e.indirect_update.type == indirect_type then
-            check_destroy(e.render_object)
-            w:remove(e.eid) 
-        end
+local function update_indirect_buffer(e)
+    check_destroy(e.render_object)
+    local indirect_info = e.indirect.indirect_info
+    local indirect_num = #indirect_info
+    if indirect_num > 0 then
+        local indirect_buffer = bgfx.create_indirect_buffer(indirect_num)
+        local instance_memory_buffer = get_instance_memory_buffer(indirect_info)
+        local instance_buffer = bgfx.create_dynamic_vertex_buffer(instance_memory_buffer, declmgr.get "t45NIf|t46NIf|t47NIf".handle, "r")
+        local instance_params = math3d.vector(0, e.render_object.vb_num, 0, e.render_object.ib_num)
+        local indirect_params = math3d.vector(indirect_num, 0, 0, 0)
+        create_indirect_compute(indirect_num, indirect_buffer, instance_buffer, instance_params, indirect_params)
+        e.render_object.idb_handle = indirect_buffer
+        e.render_object.itb_handle = instance_buffer
+        e.render_object.draw_num = indirect_num
+    else
+        e.render_object.idb_handle = 0xffffffff
+        e.render_object.itb_handle = 0xffffffff
+        e.render_object.draw_num = 0
     end
 end
 
 function indirect_system:data_changed()
-    for e in w:select "indirect_update:update indirect_draw?update render_object?update eid:in road?in stonemountain?in bounding:update" do
-        if e.indirect_update.indirect_info then
-            local indirect_type = "OTHER"
-            if e.road then indirect_type = "ROAD"
-            elseif e.stonemountain then indirect_type = "STONEMOUNTAIN" end
-            iindirect.remove_old_entity(e.indirect_update.group, indirect_type)
-            local indirect_info = e.indirect_update.indirect_info
-            local indirect_num = #indirect_info
-            local indirect_buffer = bgfx.create_indirect_buffer(indirect_num)
-            local instance_memory_buffer = get_instance_memory_buffer(indirect_info)
-            local instance_buffer = bgfx.create_dynamic_vertex_buffer(instance_memory_buffer, declmgr.get "t45NIf|t46NIf|t47NIf".handle, "r")
-            local instance_params = math3d.vector(0, e.render_object.vb_num, 0, e.render_object.ib_num)
-            local indirect_params = math3d.vector(indirect_num, 0, 0, 0)
-            create_indirect_compute(indirect_num, indirect_buffer, instance_buffer, instance_params, indirect_params)
-            e.render_object.idb_handle = indirect_buffer
-            e.render_object.itb_handle = instance_buffer
-            e.render_object.draw_num = indirect_num
-            e.indirect_update = {group = e.indirect_update.group, type = indirect_type}
-            e.indirect_draw = true
-            e.bounding.aabb = math3d.mark(math3d.aabb())
-        end
+    for e in w:select "indirect_update:update indirect:in render_object?update bounding:update" do
+        update_indirect_buffer(e)
+        e.bounding.aabb = math3d.aabb()
+        e.indirect_update = nil
     end
 end

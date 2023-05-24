@@ -535,12 +535,12 @@ function sm:camera_usage()
 	end ]]
 end
 
-local function which_material(skinning, heapmesh, indirect_update)
+local function which_material(skinning, heapmesh, indirect)
 	if heapmesh then
         return shadow_heap_material
     end
-	if indirect_update then
-        if indirect_update.type == "STONEMOUNTAIN" then
+	if indirect then
+        if indirect.type == "STONEMOUNTAIN" then
             return shadow_sm_material
         else
             return shadow_indirect_material
@@ -565,11 +565,11 @@ local omni_stencils = {
 }
 
 function sm:update_filter()
-    for e in w:select "filter_result render_object:update filter_material:in material:in skinning?in indirect_update?in bounding:in" do
+    for e in w:select "filter_result render_object:update filter_material:in material:in skinning?in indirect?in bounding:in" do
 		local mt = assetmgr.resource(e.material)
 		if mt.fx.setting.shadow_cast == "on" then
 			local ro = e.render_object
-			local m = which_material(e.skinning, e.heapmesh, e.indirect_update)
+			local m = which_material(e.skinning, e.heapmesh, e.indirect)
 			local mo = m.object
 			local fm = e.filter_material
 			local newstate = irender.check_set_state(mo, fm.main_queue:get_material(), function (d, s)

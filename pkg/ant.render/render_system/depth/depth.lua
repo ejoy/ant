@@ -23,14 +23,14 @@ local pre_depth_road_material
 local pre_depth_sm_material
 
 
-local function which_material(skinning, heapmesh, indirect_update)
+local function which_material(skinning, heapmesh, indirect)
     if heapmesh then
         return pre_depth_heap_material.object
     end
-    if indirect_update then
-        if indirect_update.type == "ROAD" then
+    if indirect then
+        if indirect.type == "ROAD" then
             return pre_depth_road_material.object
-        elseif indirect_update.type == "STONEMOUNTAIN" then
+        elseif indirect.type == "STONEMOUNTAIN" then
             return pre_depth_sm_material.object
         else
             return pre_depth_indirect_material.object
@@ -79,9 +79,9 @@ local function create_depth_only_material(mo, fm)
 end
 
 function s:update_filter()
-    for e in w:select "filter_result pre_depth_queue_visible:update render_layer:in render_object:update filter_material:in skinning?in heapmesh?in indirect_update?in" do
+    for e in w:select "filter_result pre_depth_queue_visible:update render_layer:in render_object:update filter_material:in skinning?in heapmesh?in indirect?in" do
         if e.render_layer == "opacity" then
-            local mo = assert(which_material(e.skinning, e.heapmesh, e.indirect_update))
+            local mo = assert(which_material(e.skinning, e.heapmesh, e.indirect))
             local ro = e.render_object
             local fm = e.filter_material
 
