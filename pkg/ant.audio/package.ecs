@@ -1,7 +1,0 @@
-import "@ant.asset"
-
-component "sound_event"
-    .type "lua"
-
-policy "audio"
-    .component "sound_event"

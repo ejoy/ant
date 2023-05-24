@@ -209,7 +209,7 @@ laudio_background(lua_State *L) {
 }
 
 LUAMOD_API int
-luaopen_audio(lua_State * L) {
+luaopen_fmod(lua_State * L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "init", laudio_init },

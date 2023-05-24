@@ -1,7 +1,8 @@
 local lm = require "luamake"
 local fs = require "bee.filesystem"
 
-dofile "../common.lua"
+local ROOT <const> = "../../"
+local Ant3rd <const> = ROOT.."3rd/"
 
 local fmodDir = Ant3rd .. "fmod"
 local EnableLog = false
@@ -23,10 +24,8 @@ lm:copy "copy_fmod" {
 }
 
 lm:lua_source "audio" {
-    sources = {
-        "*.c",
-    },
-	msvc = {
+    msvc = {
+        sources = "src/luafmod.c",
         includes = {
             fmodDir.."/windows/core/inc",
             fmodDir.."/windows/studio/inc",
@@ -39,8 +38,9 @@ lm:lua_source "audio" {
             EnableLog and "fmodL_vc" or "fmod_vc",
             EnableLog and "fmodstudioL_vc" or "fmodstudio_vc"
         },
-	},
-	mingw = {
+    },
+    mingw = {
+        sources = "src/luafmod.c",
         includes = {
             fmodDir.."/windows/core/inc",
             fmodDir.."/windows/studio/inc",
@@ -53,8 +53,9 @@ lm:lua_source "audio" {
             EnableLog and "fmodL" or "fmod",
             EnableLog and "fmodstudioL" or "fmodstudio"
         },
-	},
+    },
     macos = {
+        sources = "src/empty_luafmod.c",
         includes = {
             fmodDir.."/macos/core/inc",
             fmodDir.."/macos/studio/inc",
@@ -69,6 +70,7 @@ lm:lua_source "audio" {
         },
     },
     ios = {
+        sources = "src/luafmod.c",
         includes = {
             fmodDir.."/ios/core/inc",
             fmodDir.."/ios/studio/inc",
@@ -81,6 +83,9 @@ lm:lua_source "audio" {
             EnableLog and "fmodL_iphoneos" or "fmod_iphoneos",
             EnableLog and "fmodstudioL_iphoneos" or "fmodstudio_iphoneos"
         },
+    },
+    android = {
+        sources = "src/empty_luafmod.c",
     },
     deps = {
         "copy_fmod",
