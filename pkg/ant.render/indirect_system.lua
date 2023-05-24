@@ -87,7 +87,7 @@ function iindirect.remove_old_entity(gid, indirect_type)
 end
 
 function indirect_system:data_changed()
-    for e in w:select "indirect_update:update indirect_draw?update render_object?update eid:in road?in stonemountain?in bounding?update" do
+    for e in w:select "indirect_update:update indirect_draw?update render_object?update eid:in road?in stonemountain?in bounding:update" do
         if e.indirect_update.indirect_info then
             local indirect_type = "OTHER"
             if e.road then indirect_type = "ROAD"
@@ -106,6 +106,7 @@ function indirect_system:data_changed()
             e.render_object.draw_num = indirect_num
             e.indirect_update = {group = e.indirect_update.group, type = indirect_type}
             e.indirect_draw = true
+            e.bounding.aabb = math3d.mark(math3d.aabb())
         end
     end
 end

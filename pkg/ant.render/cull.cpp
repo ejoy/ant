@@ -82,16 +82,7 @@ lcull(lua_State *L) {
 		}
 	}
 
-	for (auto e : ecs_api::select<ecs::indirect_update>(w->ecs)){
-		int i,j,offset = 0;
-		for (i = 0; i < a_n; i++) {
-			for (j = 0; j < a[i].n; j++) {
-				e.enable_tag(cid[offset+j]);
-			}			
-			offset += a[i].n;
-		}
 
-	}
 	return 0;
 }
 
