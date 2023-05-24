@@ -44,8 +44,6 @@ local function message_loop(update)
     end
 end
 
-local S = {}
-
 local function create_peek_window()
     local window = require "window"
     window.init(message)
@@ -77,11 +75,11 @@ local function create_loop_window()
 end
 
 if WindowMode[platform.os] == WindowModePeek then
-    S.create_window = create_peek_window
+    create_peek_window()
 elseif WindowMode[platform.os] == WindowModeLoop then
-    S.create_window = create_loop_window
+    create_loop_window()
 else
     error "window service unimplemented"
 end
 
-return S
+return {}
