@@ -49,18 +49,6 @@ lm:lua_source "audio" {
     },
     macos = {
         sources = "src/empty_luafmod.c",
-        includes = {
-            fmodDir.."/macos/core/inc",
-            fmodDir.."/macos/studio/inc",
-        },
-        linkdirs ={
-            fmodDir.."/macos/core/lib",
-            fmodDir.."/macos/studio/lib",
-        },
-        links = {
-            EnableLog and "fmodL" or "fmod",
-            EnableLog and "fmodstudioL" or "fmodstudio"
-        },
     },
     ios = {
         sources = "src/luafmod.c",
