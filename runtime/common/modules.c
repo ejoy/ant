@@ -29,12 +29,12 @@ int luaopen_window(lua_State* L);
 int luaopen_terrain(lua_State *L);
 int luaopen_textureman_client(lua_State *L);
 int luaopen_textureman_server(lua_State *L);
+int luaopen_fmod(lua_State* L);
 int luaopen_font(lua_State *L);
 int luaopen_font_vm(lua_State *L);
 int luaopen_font_truetype(lua_State *L);
 int luaopen_efk(lua_State* L);
 int luaopen_effekseer_callback(lua_State* L);
-int luaopen_audio(lua_State* L);
 int luaopen_ltask(lua_State* L);
 int luaopen_ltask_bootstrap(lua_State* L);
 int luaopen_ltask_root(lua_State* L);
@@ -103,9 +103,7 @@ void ant_loadmodules(lua_State* L) {
         { "fileinterface", luaopen_fileinterface },
         { "layout", luaopen_layout},
         //{ "layout.init", luaopen_layout_init },
-#if defined(_WIN32) || BX_PLATFORM_IOS
-        { "audio", luaopen_audio},
-#endif
+        { "fmod", luaopen_fmod},
         { "ltask", luaopen_ltask},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},

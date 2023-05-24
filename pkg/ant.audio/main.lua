@@ -1,13 +1,14 @@
-local fs = require "filesystem"
-
 local ltask = require "ltask"
-local ServiceAudio = ltask.uniqueservice "ant.audio|audio"
+local ServiceAudio
 
 local m = {}
 
-function m.load_bank(filename)
-	local localf = fs.path(filename):localpath():string()
-	ltask.call(ServiceAudio, "load_bank", localf)
+function m.init(banks)
+	if banks ~= nil then
+		ServiceAudio = ltask.uniqueservice("ant.audio|audio", banks)
+	else
+		ServiceAudio = ltask.queryservice "ant.audio|audio"
+	end
 end
 
 function m.play(event_name)
