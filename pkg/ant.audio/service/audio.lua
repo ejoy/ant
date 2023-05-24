@@ -5,7 +5,7 @@ local fmod = require "fmod"
 local fs = require "filesystem"
 
 local instance = fmod.init()
-local background = fmod.background()
+local background = instance:background()
 local event_list = {}
 for _, f in ipairs(banks) do
     local localf = fs.path(f):localpath():string()
