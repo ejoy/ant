@@ -103,7 +103,7 @@ namespace ecs_api {
         template <typename Component, typename Cached>
             requires (!std::is_function_v<Component> && component<Component>::id == EID)
         Component* sibling(Cached& cache, int i) noexcept {
-            return (Component*)entity_sibling(cache.ctx, component<Cached::mainkey>::id, i, EID);
+            return (Component*)entity_sibling(cache.ctx, component<typename Cached::mainkey>::id, i, EID);
         }
 
         template <typename Component>
