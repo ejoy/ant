@@ -62,7 +62,30 @@ laudio_event_play(lua_State *L) {
 }
 
 static int
+lbackground_play(lua_State *L) {
+	return 0;
+}
+
+static int
+lbackground_stop(lua_State *L) {
+	return 0;
+}
+
+static int
 laudio_background(lua_State *L) {
+	lua_newtable(L);
+	if (luaL_newmetatable(L, "AUDIO_BACKGROUND")) {
+		luaL_Reg l[] = {
+			{ "__index", NULL },
+			{ "play", lbackground_play },
+			{ "stop", lbackground_stop },
+		};
+		luaL_setfuncs(L, l, 0);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+	}
+	lua_setmetatable(L, -2);
+	return 1;
 	return 0;
 }
 
