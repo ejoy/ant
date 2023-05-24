@@ -23,8 +23,9 @@ end
 
 local function loadShader(filename, data, stage)
     if data[stage] then
-        local h = bgfx.create_shader(readall(filename .. "|" .. stage .. ".bin"))
-        bgfx.set_name(h, data[stage])
+        local n = filename .. "|" .. stage .. ".bin"
+        local h = bgfx.create_shader(readall(n))
+        bgfx.set_name(h, n)
         return h
     end
 end
