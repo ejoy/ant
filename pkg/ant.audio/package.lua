@@ -1,7 +1,6 @@
 return {
     name = "ant.audio",
+    entry = "main",
     dependencies = {
-        "ant.asset",
-        "ant.compile_resource",
     }
 }

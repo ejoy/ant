@@ -1,7 +1,6 @@
 local ecs = ...
 local world = ecs.world
 local w     = world.w
--- local iaudio    = ecs.import.interface "ant.audio|audio_interface"
 local iani      = ecs.import.interface "ant.animation|ianimation"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
