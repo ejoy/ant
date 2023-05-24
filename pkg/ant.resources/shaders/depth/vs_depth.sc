@@ -7,11 +7,11 @@ $input a_position INPUT_INDICES INPUT_WEIGHT INPUT_INSTANCE1 INPUT_INSTANCE2 INP
 
 void main()
 {
-#ifdef GPU_SKINNING
+#ifdef CS_SKINNING
 	mat4 wm = u_model[0];
-#else //!GPU_SKINNING
+#else //!CS_SKINNING
 	mat4 wm = get_world_matrix();
-#endif //GPU_SKINNING
+#endif //CS_SKINNING
 
 #if (defined HEAP_MESH) || (defined ROAD)
 	wm[0][3] = wm[0][3] + i_data0.x;

@@ -9,11 +9,11 @@ $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_LIGHTMAP
 void main()
 {
 
-#ifdef GPU_SKINNING
+#ifdef CS_SKINNING
     mediump mat4 wm = u_model[0];
-#else //!GPU_SKINNING
+#else //!CS_SKINNING
     mediump mat4 wm = get_world_matrix();
-#endif //GPU_SKINNING
+#endif //CS_SKINNING
 
 #ifdef HEAP_MESH
 	wm[0][3] = wm[0][3] + i_data0.x;
