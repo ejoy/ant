@@ -415,21 +415,6 @@ function iani.get_collider(e, anim, time)
 	return colliders
 end
 
-function iani.set_value(e, name, key, value)
-	local sm = e.state_machine
-	if not sm or not sm.nodes then
-		return
-	end
-	local node = sm.nodes[name]
-	if not node then
-		return
-	end
-	node[key] = value
-	if sm.current == name then
-		set_state(e, name, 0)
-	end
-end
-
 function iani.set_pose_to_prefab(instance, pose)
 	local entitys = instance.tag["*"]
 	for _, eid in ipairs(entitys) do
