@@ -102,37 +102,6 @@ laudio_event_get(lua_State *L) {
 	return 1;
 }
 
-
-static int
-laudio_init(lua_State *L) {
-	int maxchannel = luaL_optinteger(L, 1, 1024);
-	struct audio * a = (struct audio *)lua_newuserdatauv(L, sizeof(*a), 0);
-	ERRCHECK(L, FMOD_Studio_System_Create(&a->system, FMOD_VERSION));
-	FMOD_SYSTEM * sys = NULL;
-	ERRCHECK(L, FMOD_Studio_System_GetCoreSystem(a->system, &sys));
-	ERRCHECK(L, FMOD_System_SetSoftwareFormat(sys, 0, FMOD_SPEAKERMODE_5POINT1, 0));
-	ERRCHECK(L, FMOD_Studio_System_Initialize(a->system, maxchannel, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, NULL));
-	if (luaL_newmetatable(L, "AUDIO_FMOD")) {
-		luaL_Reg l[] = {
-			{ "__gc", laudio_shutdown },
-			{ "__index", NULL },
-			{ "shutdown", laudio_shutdown },
-			{ "load_bank", laudio_load_bank },
-			{ "unload_bank", laudio_unload_bank },
-			{ "unload_all", laudio_unload_all },
-			{ "update", laudio_update },
-			{ "event_get",  laudio_event_get },
-			{ NULL, NULL },
-		};
-		luaL_setfuncs(L, l, 0);
-		lua_pushvalue(L, -1);
-		lua_setfield(L, -2, "__index");
-	}
-	lua_setmetatable(L, -2);
-	return 1;
-}
-
-
 static int
 laudio_event_play(lua_State *L) {
 	FMOD_STUDIO_EVENTDESCRIPTION *event = lua_touserdata(L, 1);
@@ -199,6 +168,37 @@ laudio_background(lua_State *L) {
 			{ "__index", NULL },
 			{ "play", lbackground_play },
 			{ "stop", lbackground_stop },
+			{ NULL, NULL },
+		};
+		luaL_setfuncs(L, l, 0);
+		lua_pushvalue(L, -1);
+		lua_setfield(L, -2, "__index");
+	}
+	lua_setmetatable(L, -2);
+	return 1;
+}
+
+static int
+laudio_init(lua_State *L) {
+	int maxchannel = luaL_optinteger(L, 1, 1024);
+	struct audio * a = (struct audio *)lua_newuserdatauv(L, sizeof(*a), 0);
+	ERRCHECK(L, FMOD_Studio_System_Create(&a->system, FMOD_VERSION));
+	FMOD_SYSTEM * sys = NULL;
+	ERRCHECK(L, FMOD_Studio_System_GetCoreSystem(a->system, &sys));
+	ERRCHECK(L, FMOD_System_SetSoftwareFormat(sys, 0, FMOD_SPEAKERMODE_5POINT1, 0));
+	ERRCHECK(L, FMOD_Studio_System_Initialize(a->system, maxchannel, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, NULL));
+	if (luaL_newmetatable(L, "AUDIO_FMOD")) {
+		luaL_Reg l[] = {
+			{ "__gc", laudio_shutdown },
+			{ "__index", NULL },
+			{ "shutdown", laudio_shutdown },
+			{ "load_bank", laudio_load_bank },
+			{ "unload_bank", laudio_unload_bank },
+			{ "unload_all", laudio_unload_all },
+			{ "update", laudio_update },
+			{ "event_get",  laudio_event_get },
+			{ "background", laudio_background },
+			{ NULL, NULL },
 		};
 		luaL_setfuncs(L, l, 0);
 		lua_pushvalue(L, -1);
@@ -214,7 +214,6 @@ luaopen_fmod(lua_State * L) {
 	luaL_Reg l[] = {
 		{ "init", laudio_init },
 		{ "play", laudio_event_play },
-		{ "background", laudio_background },
 		{ NULL, NULL },
 	};
 	luaL_newlib(L, l);
