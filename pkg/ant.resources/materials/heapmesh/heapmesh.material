@@ -11,6 +11,8 @@ properties:
   indirectBuffer:
     stage: 0
     access: w
+    buffer: indirectBuffer
   instanceBufferOut:
     stage: 1
     access: w
+    buffer: instanceBufferOut
