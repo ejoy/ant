@@ -62,7 +62,7 @@ void main()
     vec3 ndc_normal = mul(pos.w, normalize(mul(u_proj, vec4(view_normal, 0.0)).xyz));
     float aspect = u_viewRect.w / u_viewRect.z;
     ndc_normal.x *= aspect;
-    pos.xy += 0.1 * u_outline_width * ndc_normal.xy;
+    pos.xy += 0.01 * u_outline_width * ndc_normal.xy;
     gl_Position = pos; 
 #endif //VIEW_SPACE
 }

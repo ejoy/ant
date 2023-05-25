@@ -4,6 +4,7 @@ system "outline_system"
 
 component "outline_create".type "lua"
 component "outline_remove"
+component "outline"
 
 policy "outline_create"
     .component "outline_create"

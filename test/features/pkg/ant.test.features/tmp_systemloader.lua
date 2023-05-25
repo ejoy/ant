@@ -152,30 +152,28 @@ local function render_layer_test()
             --"ant.render|outline_create",
          },
         data = {
-            scene  = {s = 0.2, t = {5, 2, 5}},
+            scene  = {s = 0.5, t = {5, 15, 5}},
+            --material    = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material",
             --material    = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|materials/Material.001_skin.material",
-           -- material    = "/pkg/ant.resources/materials/pbr_stencil.material", 
+            --material    = "/pkg/ant.resources/materials/pbr_stencil.material", 
             --material    = "/pkg/ant.resources.binary/meshes/Duck.glb|materials/blinn3-fx.material", 
             --material    = "/pkg/ant.resources.binary/meshes/Damagedhelmet.glb|materials/Material_MR.material", 
             --material    = "/pkg/ant.resources.binary/meshes/chimney-1.glb|materials/Material_skin_clr.material",
             material    = "/pkg/ant.resources.binary/meshes/furnace-1.glb|materials/Material_skin.material",
             visible_state = "main_view",
+            --mesh        = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
             --mesh        = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin",
             --mesh        = "/pkg/ant.resources.binary/meshes/Duck.glb|meshes/LOD3spShape_P1.meshbin",
             --mesh        = "/pkg/ant.resources.binary/meshes/Damagedhelmet.glb|meshes/mesh_helmet_LP_13930damagedHelmet_P1.meshbin",
             --mesh        = "/pkg/ant.resources.binary/meshes/chimney-1.glb|meshes/Plane_P1.meshbin",
             mesh        = "/pkg/ant.resources.binary/meshes/furnace-1.glb|meshes/Cylinder.001_P1.meshbin",
             skinning = true,
-             outline_create = {
+            outline_create = {
                 render_layer = "background", --outline layer, should be behind of main queue
-                outline_scale = 5,    -- outline width
-                outline_color = {0.5, 0.5, 0, 1}, -- outline color
-                --outline_mesh = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin" -- same as origin mesh address
-                --outline_mesh = "/pkg/ant.resources.binary/meshes/Duck.glb|meshes/LOD3spShape_P1.meshbin"
-                --outline_mesh = "/pkg/ant.resources.binary/meshes/Damagedhelmet.glb|meshes/mesh_helmet_LP_13930damagedHelmet_P1.meshbin"
-                --outline_mesh = "/pkg/ant.resources.binary/meshes/chimney-1.glb|meshes/Plane_P1.meshbin"
-                outline_mesh = "/pkg/ant.resources.binary/meshes/furnace-1.glb|meshes/Cylinder.001_P1.meshbin"
-            } 
+                outline_scale = 0.5,    -- outline width 0~1
+                outline_color = {0.5, 0.5, 0, 1}, -- outline color_hash
+            },
+            outline = true
         },
     }
      --ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_duck.prefab"
@@ -234,7 +232,7 @@ local sampler_eid
 local heap_eid
 local function drawindirect_test()
 
-      heap_eid = ecs.create_entity {
+--[[       heap_eid = ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.general|name",
@@ -253,7 +251,7 @@ local function drawindirect_test()
                 interval = {0.5, 0.5, 0.5}
             }
         },
-    } 
+    }  ]]
     
    local t = 1  
 --[[      ecs.create_entity {
