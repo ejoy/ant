@@ -1,5 +1,3 @@
-local banks = ...
-
 local ltask = require "ltask"
 local fmod = require "fmod"
 local fs = require "filesystem"
@@ -7,12 +5,14 @@ local fs = require "filesystem"
 local instance = fmod.init()
 local background = instance:background()
 local event_list = {}
-for _, f in ipairs(banks) do
-    local localf = fs.path(f):localpath():string()
-    instance:load_bank(localf, event_list)
-end
 
 local S = {}
+
+function S.load(banks)
+    for _, f in ipairs(banks) do
+        instance:load_bank(f, event_list)
+    end
+end
 
 function S.play(event_name)
     fmod.play(event_list[event_name])

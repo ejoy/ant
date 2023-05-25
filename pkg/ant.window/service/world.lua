@@ -112,6 +112,8 @@ local function render(nwh, context, width, height, initialized)
 	S.char			= ev.char
 	S.size			= resize
 	do_size			= ev.size
+
+	audio.init()
 	world:pipeline_init()
 
 	ltask.wakeup(initialized)

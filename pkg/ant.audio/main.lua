@@ -1,15 +1,19 @@
 local ltask = require "ltask"
+local fs = require "filesystem"
 local ServiceAudio
 
 local m = {}
 
-function m.init(banks)
-	if banks ~= nil then
-		ServiceAudio = ltask.uniqueservice("ant.audio|audio", banks)
-	else
-		ServiceAudio = ltask.queryservice "ant.audio|audio"
-	end
+function m.init()
+	ServiceAudio = ltask.uniqueservice "ant.audio|audio"
 	ltask.send(ServiceAudio, "worker_init")
+end
+
+function m.load(banks)
+    for i, f in ipairs(banks) do
+        banks[i] = fs.path(f):localpath():string()
+    end
+	ltask.send(ServiceAudio, "load", banks)
 end
 
 function m.play(event_name)
