@@ -12,6 +12,7 @@ local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.ecs"
 local rhwi      = import_package "ant.hwi"
 local cr        = import_package "ant.compile_resource"
+local audio     = import_package "ant.audio"
 local setting	= import_package "ant.settings".setting
 local mu		= import_package "ant.math".util
 local platform  = require "bee.platform"
@@ -122,6 +123,7 @@ local function render(nwh, context, width, height, initialized)
 		bgfx.encoder_end()
 		encoderBegin = false
 		do
+			audio.frame()
 			rhwi.frame()
 		end
 		if quit then

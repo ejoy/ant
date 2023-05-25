@@ -26,17 +26,47 @@ function S.stop_background(fadeout)
     background:stop(fadeout)
 end
 
+local worker = {}
+local worker_num = 0
+local worker_cur = 0
+local worker_frame = 0
+
+function S.worker_init()
+    local who = ltask.current_session().from
+    worker[who] = nil
+    worker_num = worker_num + 1
+end
+
+function S.worker_exit()
+    local who = ltask.current_session().from
+    if worker[who] == worker_frame then
+        worker_cur = worker_cur - 1
+    end
+    worker[who] = nil
+    worker_num = worker_num - 1
+end
+
+local function frame()
+    worker_frame = worker_frame + 1
+    worker_cur = 0
+    instance:update()
+end
+
+function S.worker_frame()
+    local who = ltask.current_session().from
+    if worker[who] ~= worker_frame then
+        worker[who] = worker_frame
+        worker_cur = worker_cur + 1
+        if worker_cur == worker_num then
+            frame()
+        end
+    end
+end
+
 function S.quit()
     background:stop()
     instance:shutdown()
     ltask.quit()
 end
-
-ltask.fork(function()
-    while true do
-        ltask.sleep(100)
-        instance:update()
-    end
-end)
 
 return S

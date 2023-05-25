@@ -186,7 +186,7 @@ laudio_init(lua_State *L) {
 	FMOD_SYSTEM * sys = NULL;
 	ERRCHECK(L, FMOD_Studio_System_GetCoreSystem(a->system, &sys));
 	ERRCHECK(L, FMOD_System_SetSoftwareFormat(sys, 0, FMOD_SPEAKERMODE_5POINT1, 0));
-	ERRCHECK(L, FMOD_Studio_System_Initialize(a->system, maxchannel, FMOD_STUDIO_INIT_NORMAL, FMOD_INIT_NORMAL, NULL));
+	ERRCHECK(L, FMOD_Studio_System_Initialize(a->system, maxchannel, FMOD_STUDIO_INIT_SYNCHRONOUS_UPDATE, FMOD_INIT_THREAD_UNSAFE, NULL));
 	if (luaL_newmetatable(L, "AUDIO_FMOD")) {
 		luaL_Reg l[] = {
 			{ "__gc", laudio_shutdown },
