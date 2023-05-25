@@ -1,6 +1,5 @@
 local ltask = require "ltask"
 local fmod = require "fmod"
-local fs = require "filesystem"
 
 local instance = fmod.init()
 local background = instance:background()
