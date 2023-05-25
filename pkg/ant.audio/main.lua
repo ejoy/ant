@@ -16,20 +16,27 @@ function m.load(banks)
 	ltask.send(ServiceAudio, "load", banks)
 end
 
+local cmdqueue = {}
+
 function m.play(event_name)
-	ltask.send(ServiceAudio, "play", event_name)
+	cmdqueue[#cmdqueue+1] = { "play", event_name }
 end
 
 function m.play_background(event_name)
-	ltask.send(ServiceAudio, "play_background", event_name)
+	cmdqueue[#cmdqueue+1] = { "play_background", event_name }
 end
 
 function m.stop_background(fadeout)
-	ltask.send(ServiceAudio, "stop_background", fadeout)
+	cmdqueue[#cmdqueue+1] = { "stop_background", fadeout }
 end
 
 function m.frame()
-	ltask.send(ServiceAudio, "worker_frame")
+	if #cmdqueue > 0 then
+		ltask.send(ServiceAudio, "worker_frame", cmdqueue)
+		cmdqueue = {}
+	else
+		ltask.send(ServiceAudio, "worker_frame")
+	end
 end
 
 return m

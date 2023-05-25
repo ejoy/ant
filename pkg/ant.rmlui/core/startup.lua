@@ -6,6 +6,7 @@ local filemanager = require "core.filemanager"
 local windowManager = require "core.windowManager"
 local contextManager = require "core.contextManager"
 local initRender = require "core.initRender"
+local audio = import_package "ant.audio"
 local ltask = require "ltask"
 local bgfx = require "bgfx"
 
@@ -30,6 +31,7 @@ local function Render()
         end
         contextManager.update(delta)
         task.update()
+        audio.frame()
         bgfx.encoder_frame()
     end
     bgfx.encoder_destroy()
@@ -40,6 +42,7 @@ local S = {}
 
 function S.initialize(t)
     bgfx.init()
+    audio.init()
     ServiceWorld = t.service_world
     require "font" (t.font_mgr)
     initRender(t)

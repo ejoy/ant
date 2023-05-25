@@ -28,6 +28,7 @@ local stdlib = {
     _VERSION = _VERSION,
 
     console = require "core.sandbox.console",
+    audio = require "core.sandbox.audio",
 }
 
 return function ()
