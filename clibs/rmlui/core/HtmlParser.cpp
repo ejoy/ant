@@ -678,7 +678,8 @@ void HtmlParser::EnterAttribute(HtmlString& name, HtmlString& value, char c) {
 // 					attribute->m_value += temp;
 // 					break;
 // 				default:
-					value += c;
+				value += c;
+				break;
 //				}
 			}
 		}
