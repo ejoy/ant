@@ -39,6 +39,7 @@ local function gen_group_id(name)
         w:register{ name = queuename}
         w:register{ name = queuename.."_cull"}
         w:register{ name = queuename.."_visible"} 
+        w:register{ name = queuename.."_renderable"} 
     end
 end
 
