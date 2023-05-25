@@ -1,6 +1,7 @@
 #pragma once
 
 #include <databinding/DataTypes.h>
+#include <cstdint>
 
 namespace Rml {
 
