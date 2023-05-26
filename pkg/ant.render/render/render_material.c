@@ -48,11 +48,11 @@ render_material_fetch(struct render_material *R, int index, uint64_t mask, void 
 	for (;;) {
 		int i;
 		for (i=0;i<TUPLE_N;i++) {
-			int t = m->type[i];
+			uint8_t t = m->type[i];
 			if (t >= RENDER_MATERIAL_TYPE_MAX) {
 				return;
 			}
-			if (mask & (1 << t)) {
+			if (mask & (1ull << t)) {
 				mat[t] = m->mat[i];
 			}
 		}
