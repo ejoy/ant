@@ -132,12 +132,13 @@ local function listen_server(address, port)
 		return
 	end
 	local rd,wt = socket.select({fd}, nil, 2)
-	if rd == false then
-		_print("[ERROR] select: timeout")
+	if rd == nil then
+		_print("[ERROR] select: "..wt)	-- select error
 		fd:close()
 		return
-	elseif rd == nil then
-		_print("[ERROR] select: "..wt)	-- select error
+	end
+	if rd[1] == nil then
+		_print("[ERROR] select: timeout")
 		fd:close()
 		return
 	end

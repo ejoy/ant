@@ -7,6 +7,7 @@ local WindowModeLoop <const> = 1
 local WindowMode <const> = {
     windows = WindowModePeek,
     android = WindowModePeek,
+    macos = WindowModePeek,
     ios = WindowModeLoop,
 }
 

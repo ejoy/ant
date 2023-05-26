@@ -207,6 +207,8 @@ static int32_t clamp(int32_t v, int32_t min, int32_t max) {
 }
 @end
 
+id g_dg;
+struct ant_window_callback* g_cb;
 WindowDelegate* g_wd = nil;
 int32_t g_mx = 0;
 int32_t g_my = 0;
@@ -232,6 +234,14 @@ int window_init(struct ant_window_callback* cb) {
 
     g_wd = [WindowDelegate new];
     [g_wd windowCreated:win initCallback:cb];
+
+    [NSApplication sharedApplication];
+    g_dg = [AppDelegate new];
+    [NSApp setDelegate:g_dg];
+    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    [NSApp activateIgnoringOtherApps:YES];
+    [NSApp finishLaunching];
+    g_cb = cb;
 
     window_message_init(cb, win, 0, w, h);
     return 0;
@@ -300,26 +310,12 @@ void window_close() {
 }
 
 bool window_peekmessage() {
-    //TODO
-    return false;
+    if ([g_dg applicationHasTerminated]) {
+        return false;
+    }
+    @autoreleasepool {
+        while (dispatch_event(g_cb, peek_event())) { }
+    }
+    return true;
 }
 
-//void window_mainloop(struct ant_window_callback* cb, int update) {
-//    if (!g_wd) {
-//        return;
-//    }
-//    [NSApplication sharedApplication];
-//    id dg = [AppDelegate new];
-//    [NSApp setDelegate:dg];
-//    [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-//    [NSApp activateIgnoringOtherApps:YES];
-//    [NSApp finishLaunching];
-//    while (![dg applicationHasTerminated]) {
-//        if (update) {
-//            cb->update(cb);
-//        }
-//        @autoreleasepool {
-//            while (dispatch_event(cb, peek_event())) { }
-//        }
-//    }
-//}

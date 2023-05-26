@@ -5,6 +5,7 @@
 #include <stack>
 #include <vector>
 #include <variant>
+#include <cstdint>
 
 namespace Rml {
 

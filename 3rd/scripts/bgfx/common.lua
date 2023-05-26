@@ -44,8 +44,13 @@ lm.ios = {
 
 lm.android  = {
     flags = "-fPIC",
-    target = "aarch64-linux-android33"
 }
+
+if lm.os == "android" then
+    lm.arch = "aarch64"
+    lm.vendor = "linux"
+    lm.sys = "android33"
+end
 
 lm.clang = {
     flags = {

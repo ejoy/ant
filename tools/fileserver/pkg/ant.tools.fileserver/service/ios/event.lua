@@ -33,7 +33,9 @@ while true do
         return
     end
     if event.MessageType == 'Result' then
-        assert(event.Number == 0, event.Number)
+        if event.Number ~= 0 then
+            error "usbmuxd fatal error"
+        end
     elseif event.MessageType == 'Attached' then
         local info = devices[event.DeviceID]
         if not info then
