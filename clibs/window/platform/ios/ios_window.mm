@@ -18,7 +18,7 @@ struct ant_window_callback* g_cb = NULL;
 @end
 
 
-static void push_touch_message(int type, UIView* view, NSSet* touches) {
+static void push_touch_message(TOUCH_TYPE type, UIView* view, NSSet* touches) {
     if (!g_cb) {
         return;
     }
@@ -92,16 +92,16 @@ static void push_touch_message(int type, UIView* view, NSSet* touches) {
     g_cb->update(g_cb);
 }
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(1, self, touches);
+    push_touch_message(TOUCH_BEGAN, self, touches);
 }
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(2, self, touches);
+    push_touch_message(TOUCH_MOVED, self, touches);
 }
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(3, self, touches);
+    push_touch_message(TOUCH_ENDED, self, touches);
 }
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(4, self, touches);
+    push_touch_message(TOUCH_CANCELLED, self, touches);
 }
 @end
 
