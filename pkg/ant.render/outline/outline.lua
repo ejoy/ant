@@ -7,7 +7,7 @@ local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
-local default_stencil = {
+local DEFAULT_STENCIL<const> = bgfx.make_stencil{
     TEST =  "ALWAYS",
     FUNC_REF =  1,
     FUNC_RMASK = 255,
@@ -26,7 +26,6 @@ function outline_system:data_changed()
             local outline_color = e.outline_create.outline_color
             local outline_scale = e.outline_create.outline_scale
             local fm = e.filter_material
-            local new_stencil = bgfx.make_stencil(default_stencil)
             local outline_material
             local scene = {}
             if e.scene then
@@ -34,7 +33,7 @@ function outline_system:data_changed()
             end
             if e.skinning then outline_material = "/pkg/ant.resources/materials/outline/scale_skinning.material"
             else outline_material = "/pkg/ant.resources/materials/outline/scale.material" end
-            fm["main_queue"]:set_stencil(new_stencil)
+            fm["main_queue"]:set_stencil(DEFAULT_STENCIL)
             local outline_eid = ecs.create_entity{
                 policy = {
                     "ant.scene|scene_object",
