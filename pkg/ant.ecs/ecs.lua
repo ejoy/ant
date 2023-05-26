@@ -54,13 +54,13 @@ return function (w, package)
                     __index = object,
                     __newindex = function(_, key, func)
                         if type(func) ~= "function" then
-                            error("Method should be a function")
+                            error(decl.defined..":Method should be a function")
                         end
                         if callback[key] == nil then
-                            error("Invalid callback function " .. key)
+                            error(decl.defined..":Invalid callback function " .. key)
                         end
                         if decl.source[key] ~= nil then
-                            error("Method " .. key .. " has already defined at " .. decl.source[key])
+                            error(decl.defined..":Method " .. key .. " has already defined at " .. decl.source[key])
                         end
                         decl.source[key] = sourceinfo()
                         object[key] = func
