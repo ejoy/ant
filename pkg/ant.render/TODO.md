@@ -33,7 +33,7 @@
 7. 转换到Vulkan（全平台支持，Mac和iOS使用MoltenVK）。（2023.1.10已经完成）
 8. 清理引擎中的varying.def.sc文件。引擎内，应该只使用一个varying的文件定义，不应该过度的随意添加。后续需要针对VS_Output与FS_Input进行关联；
 9. 优化动画计算，将skinning的代码从vertex shader放到compute shader中，并消除shadow/pre-depth/main pass中分别重复的计算（https://wickedengine.net/2017/09/09/skinning-in-compute-shader/）。（2023.04.21.这种方法有一个问题，会导致所有的顶点、法线需要复制一份出来作为中间数据，不管顶点数据是否是共用的，每一个实例都需要一份。这会导致D3D11在创建大量entity后报错，目前使用vs中的skinning计算方法）；
-10. Outline问题的修复。目前使用放大模型的方式实现描边的效果，但会有被遮挡的问题。要不使用屏幕空间算法，要不调整放大模型的渲染，防止被遮挡。https://zhuanlan.zhihu.com/p/410710318；https://zhuanlan.zhihu.com/p/109101851；https://juejin.cn/post/7163670845343137800；
+10. Outline问题的修复。目前使用放大模型的方式实现描边的效果，但会有被遮挡的问题。要不使用屏幕空间算法，要不调整放大模型的渲染，防止被遮挡。https://zhuanlan.zhihu.com/p/410710318；https://zhuanlan.zhihu.com/p/109101851；https://juejin.cn/post/7163670845343137800；目前继续使用沿法线放大模型的方式，结合模板的方式，实现。(2023.05.26)；
 ##### 未完成
 1. 优化PBR的计算量：
   - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；
@@ -42,32 +42,34 @@
   - 使用sh(Spherical Harmonic)来表示irradiance中的数据；
   - 使用多项式直接计算LUT，而不使用一张额外的贴图（节省带宽和采样器）：https://knarkowicz.wordpress.com/2014/12/27/analytical-dfg-term-for-ibl/
 3. 优化polyline的效果。启用FXAA之后，polyline的线会丢失；
-4. 修复pre-depth/csm/pickup等队列中的cullstate的状态。对于metal/vulkan/d3d12等api，pipeline都是一个整体，会导致pipeline数据不停的切换；
-5. 针对Vulkan上的subpass对渲染的render进行相应的优化；
-6. 后处理优化
+4. 使用延迟渲染。目前的predepth系统、FXAA（以及将要实现的TAA）实际上是延迟渲染的一部分，实现延迟渲染能够减少目前的drawcall（目前的draw call由predepth，shadow，render和pickup 4部分组成）；
+5. 修复pre-depth/csm/pickup等队列中的cullstate的状态。对于metal/vulkan/d3d12等api，pipeline都是一个整体，会导致pipeline数据不停的切换；
+6. 针对Vulkan上的subpass对渲染的render进行相应的优化；
+7. 后处理优化
   - 充分利用全屏/半屏的render_target，而不是每个后处理的draw都用一个新的target；
   - 后处理的DoF是时候要解决了。bgfx里面有一个one pass的DoF例子，非常值得参考；
   - Color Grading需要用于调整颜色；
   - tonemapping能够预先bake到一张贴图里面，而不需要单独在fragment阶段进行计算。具体要看filament里面的tonemapping的操作；
   - AO效果和效率的优化。效果：修复bent_normal和cone tracing的bug；效率：使用hi-z提高深度图的采样（主要是采样更低的mipmap，提高缓存效率）；
-7. 优化动画计算，将skinning的代码从vertex shader放到compute shader中，并消除shadow/pre-depth/main pass中分别重复的计算（https://wickedengine.net/2017/09/09/skinning-in-compute-shader/）；
-8. 水渲染；
-9. 点光源，包括point、spot和rectangle/plane的区域光，包括其对应的阴影；
-10. 使用Hi-Z的方式进行剔除；
-11. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；
-12. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
-13. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
-14. 优化bgfx的draw viewid和compute shader viewid；
-15. 解决动态材质的问题；
+8. 优化动画计算，将skinning的代码从vertex shader放到compute shader中，并消除shadow/pre-depth/main pass中分别重复的计算（https://wickedengine.net/2017/09/09/skinning-in-compute-shader/）；
+9. 水渲染；
+10. 点光源，包括point、spot和rectangle/plane的区域光，包括其对应的阴影；
+11. 使用Hi-Z的方式进行剔除；
+12. 对相同材质的物体进行排序渲染，目前渲染顺序的提交，都是按照提交的先后次序来的。还需要单独对alpha test的物体进行分类（分类的队列顺序应该为：opaque->alpha test-> translucent）。而对于translucent的物体来讲，还需要根据从远到近的排序来渲染（避免alpha blend错误）；
+13. 考虑一下把所有的光照计算都放在view space下面进行计算。带来的好处是，u_eyePos/v_distanceVS/v_posWS这些数据都不需要占用varying，都能够通过gl_FragCoord反算回来（某些算法一定需要做这种计算）；
+14. 渲染遍历在场景没有任何变化的时候，直接用上一帧的数据进行提交，而不是现在每一帧都在遍历；
+15. 优化bgfx的draw viewid和compute shader viewid；
+16. 解决动态材质的问题；
   - 需要把vs_pbr.sc里面的VS_Input和VS_Ouput拆分出来。目前已经定义好了，还需要后续的跟进；
+17. 充分理解ASTC压缩，修复6x6的贴图无法正确压缩的bug。https://registry.khronos.org/DataFormat/specs/1.3/dataformat.1.3.html#ASTC https://github.com/ARM-software/astc-encoder/blob/main/Docs/FormatOverview.md；
 
 #### 新功能/探索
 ##### 已经完成
 1. 阴影的VSM；  //2022.09.29已经完成，使用的是ESM。
+2. 天气系统。让目前游戏能够昼夜变化。一个简单的方式是使用后处理的color grading改变色调，另外一个更正确的方法是使用预烘培的大气散射模拟天空，将indirect lighting和天空和合拼；（2023.02.22已经暂停，对于移动设备并不友好）（2023.05.26目前使用的方法是，动态调整平行光的方向、intensity以及环境光的intensity来实现昼夜变化（intensity都是通过读取美术给的图来实现的）。由于基于物理的与烘培的大气散射还有很多的理论知识没有搞清楚，暂时停下来了）；
 
 ##### 未完成
-1. 天气系统。让目前游戏能够昼夜变化。一个简单的方式是使用后处理的color grading改变色调，另外一个更正确的方法是使用与烘培的大气散射模拟天空，将indirect lighting和天空和合拼；（2023.02.22已经暂停，对于移动设备并不友好）；
-2. FSR。详细看bgfx里面的fsr例子；
+1. FSR。详细看bgfx里面的fsr例子；
 2. SDF Shadow；
 3. Visibility Buffer；
 4. GI相关。SSGI、SSR、SDFGI(https://zhuanlan.zhihu.com/p/404520592)、DDGI(Dynamic Diffuse Global Illumination，https://morgan3d.github.io/articles/2019-04-01-ddgi/)等；
