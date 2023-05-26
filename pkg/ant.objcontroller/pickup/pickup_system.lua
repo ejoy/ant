@@ -18,6 +18,10 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local INV_Z<const> = true
 
 local pickup_material, pickup_skin_material
+local pickup_heap_material
+local pickup_indirect_material
+local pickup_road_material
+local pickup_sm_material
 
 local function packeid_as_rgba(eid)
     return {(eid & 0x000000ff) / 0xff,
@@ -232,6 +236,10 @@ function pickup_sys:init()
 	create_pick_entity()
 	pickup_material			= imaterial.load_res '/pkg/ant.objcontroller/pickup/assets/pickup_opacity.material'
 	pickup_skin_material	= imaterial.load_res '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_skin.material'
+	pickup_heap_material	= imaterial.load_res '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_heap.material'
+	pickup_road_material	= imaterial.load_res '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_road.material'
+	pickup_sm_material	= imaterial.load_res '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_sm.material'
+	pickup_indirect_material	= imaterial.load_res '/pkg/ant.objcontroller/pickup/assets/pickup_opacity_indirect.material'
 end
 
 function pickup_sys:entity_init()
@@ -328,18 +336,34 @@ function pickup_sys:pickup()
 	end
 end
 
-local function which_material(isskin)
-	return isskin and pickup_skin_material or pickup_material
+local function which_material(skinning, heapmesh, indirect)
+	if heapmesh then
+        return pickup_heap_material
+    end
+    if indirect then
+        if indirect.type == "ROAD" then
+            return pickup_road_material
+        elseif indirect.type == "STONEMOUNTAIN" then
+            return pickup_sm_material
+        else
+            return pickup_indirect_material
+        end
+    end
+    if skinning then
+        return pickup_skin_material
+    end
+
+    return pickup_material
 end
 
 function pickup_sys:update_filter()
-	for e in w:select "filter_result pickup_queue_visible render_object:update filter_material:in eid:in skinning?in" do
+	for e in w:select "filter_result pickup_queue_visible render_object:update filter_material:in eid:in skinning?in heapmesh?in indirect?in" do
 		local ro = e.render_object
 		local fm = e.filter_material
 		local matres = imaterial.resource(e)
 
 		local src_mo = matres.object
-		local mat = which_material(e.skinning)
+		local mat = which_material(e.skinning, e.heapmesh, e.indirect)
 		local dst_mo = mat.object
 		local newstate = irender.check_set_state(dst_mo, src_mo, function (d, s)
 				d.PT, d.CULL = s.PT, s.CULL

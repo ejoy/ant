@@ -1,0 +1,16 @@
+fx:
+  fs: /pkg/ant.objcontroller/pickup/assets/fs_picking.sc
+  vs: /pkg/ant.objcontroller/pickup/assets/vs_picking.sc
+  setting:
+    ROAD: 1
+    INDIRECT_BUFFER: 1  
+    lighting: off
+    GPU_SKINNING: 1
+properties:
+  u_id: {0, 0, 0, 0}
+state:
+    ALPHA_REF: 0
+    CULL: CCW
+    DEPTH_TEST: GREATER
+    MSAA: true
+    WRITE_MASK: RGBAZ

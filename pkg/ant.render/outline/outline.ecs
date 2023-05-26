@@ -1,12 +1,13 @@
 system "outline_system"
     .implement "outline/outline.lua"
-    .method "data_changed"
+    .method "end_frame"
 
 component "outline_create".type "lua"
 component "outline_remove"
 component "outline"
 
 policy "outline_create"
+    .component "outline"
     .component "outline_create"
 
 policy "outline_remove"
