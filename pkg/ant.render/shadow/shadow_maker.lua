@@ -1,6 +1,4 @@
--- TODO: should move to scene package
-
-local ecs = ...
+local ecs 	= ...
 local world = ecs.world
 local w     = world.w
 
@@ -30,6 +28,7 @@ local mc 		= import_package "ant.math".constant
 
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
+local rendercore= ecs.clibs "render.core"
 local icamera	= ecs.import.interface "ant.camera|icamera"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
 local irender	= ecs.import.interface "ant.render|irender"
@@ -586,7 +585,8 @@ function sm:update_filter()
 			fm["csm3_queue"] = mi
 			fm["csm4_queue"] = mi
 
-			ro.mat_csm = mi:ptr()
+			local type = irender.material_index "csm1_queue"
+			rendercore.rm_set(ro.rm_idx, type, mi:ptr())
 		else
 			w:extend(e, "csm1_queue_visible?out csm2_queue_visible?out csm3_queue_visible?out csm4_queue_visible?out")
 			e.csm1_queue_visible = nil

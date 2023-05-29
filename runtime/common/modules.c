@@ -45,6 +45,7 @@ int luaopen_fastio(lua_State* L);
 int luaopen_fileinterface(lua_State *L);
 int luaopen_material(lua_State *L);
 int luaopen_render(lua_State *L);
+int luaopen_render_material(lua_State *L);
 int luaopen_motion_sampler(lua_State *L);
 int luaopen_motion_tween(lua_State *L);
 int luaopen_image(lua_State* L);
@@ -111,6 +112,7 @@ void ant_loadmodules(lua_State* L) {
         { "fastio", luaopen_fastio},
         { "render.material",    luaopen_material},
         { "render.core",        luaopen_render},
+        { "render.render_material", luaopen_render_material},
         { "motion.sampler",     luaopen_motion_sampler},
         { "motion.tween",       luaopen_motion_tween},
         { "image", luaopen_image },

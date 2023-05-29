@@ -10,11 +10,8 @@ local function init_ro()
         worldmat    = mc.NULL,
         prog        = 0xffffffff,
         --materials
-        mat_def     = null,
-        mat_predepth= null,
-        mat_pickup  = null,
-        mat_csm     = null,
-        mat_lightmap= null,
+        rm_idx      = 0xffffffff,
+        rm_mask     = 0,
         --mesh
         vb_start    = 0,
         vb_num      = 0,

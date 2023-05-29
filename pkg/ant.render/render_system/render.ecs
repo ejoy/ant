@@ -33,11 +33,9 @@ component "render_object"
     .type "c"
     .field "worldmat:userdata|math_t"
     --materials
-    .field "mat_def:userdata"
-    .field "mat_predepth:userdata"
-    .field "mat_pickup:userdata"
-    .field "mat_csm:userdata"
-    .field "mat_lightmap:userdata"
+    .field "rm_idx:dword"
+    .field "rm_mask:int64"
+
     --mesh
     .field "vb_start:dword"
     .field "vb_num:dword"
@@ -208,6 +206,7 @@ system "render_system"
     .method "end_filter"
     .method "scene_update"
     .method "render_submit"
+    .method "exit"
 
 policy "indirect"
     .component "indirect"

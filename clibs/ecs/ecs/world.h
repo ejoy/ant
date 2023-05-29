@@ -12,6 +12,7 @@ struct ecs_context;
 struct bgfx_interface_vtbl;
 struct bgfx_encoder_s;
 struct math3d_api;
+struct render_material;
 
 struct bgfx_encoder_holder {
 	struct bgfx_encoder_s* encoder;
@@ -58,6 +59,7 @@ struct ecs_world {
 	struct bgfx_interface_vtbl*   bgfx;
 	struct math3d_api*            math3d;
 	struct bgfx_encoder_holder*   holder;
+	struct render_material*		  R;
 #if defined(__cplusplus)
 	static constexpr size_t kMaxMember = 4;
 	uintptr_t member[kMaxMember];

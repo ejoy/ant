@@ -2,9 +2,11 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local setting   = import_package "ant.settings".setting
-local renderutil = require "util"
-local s = ecs.system "pre_depth_system"
+local setting       = import_package "ant.settings".setting
+local renderutil    = require "util"
+local s             = ecs.system "pre_depth_system"
+
+local rendercore    = ecs.clibs "render.core"
 
 if setting:get "graphic/disable_pre_z" then
     renderutil.default_system(s, "init", "data_changed", "update_filter")
@@ -86,10 +88,8 @@ function s:update_filter()
             local fm = e.filter_material
 
             local mi = create_depth_only_material(mo, fm)
-
-            local h = mi:ptr()
             fm["pre_depth_queue"] = mi
-            ro.mat_predepth = h
+            rendercore.rm_set(ro.rm_idx, irender.material_index "pre_depth_queue", mi:ptr())
         else
             e.pre_depth_queue_visible = nil
         end

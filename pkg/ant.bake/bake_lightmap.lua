@@ -10,8 +10,10 @@ require "bake_mathadapter"
 local bgfx      = require "bgfx"
 local bake      = require "bake"
 local ltask     = require "ltask"
+local rendercore= ecs.clibs "render.core"
 
 local ibaker    = ecs.import.interface "ant.bake|ibaker"
+local irender   = ecs.import.interface "ant.render|irender"
 
 local bake_lm_sys = ecs.system "bake_lightmap_system"
 local bake_fx<const> = {
@@ -104,12 +106,13 @@ local function has_filter_stage(pf, stage)
 end
 
 function bake_lm_sys:update_filter()
-    for e in w:select "filter_result bake_lightmap_queue_visible filter_material:in render_object:update" do
+    for e in w:select "filter_result bake_lightmap_queue_visible filter_material:in render_object:in" do
         local ro = e.render_object
         local m = load_bake_material(ro)
-        ro.mat_lightmap = m:ptr()
         local fm = e.filter_material
         fm["bake_lightmap_queue"] = m
+
+        rendercore.rm_set(ro.rm_idx, irender.material_index "bake_lightmap_queue", m:ptr())
     end
 end
 

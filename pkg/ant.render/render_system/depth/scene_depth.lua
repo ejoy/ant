@@ -7,6 +7,8 @@ local setting   = import_package "ant.settings".setting
 local ENABLE_FXAA<const> = setting:get "graphic/postprocess/fxaa/enable"
 
 local sd_sys = ecs.system "scene_depth_system"
+local rendercore = ecs.clibs "render.core"
+local irender = ecs.import.interface "ant.render|irender"
 
 if not ENABLE_FXAA then
     local function DEF_FUNC() end
@@ -85,7 +87,8 @@ function sd_sys:end_filter()
         local ro = e.render_object
         local fm = e.filter_material
         fm["scene_depth_queue"] = fm.pre_depth_queue
-        ro.mat_scenedepth = fm.pre_depth_queue:ptr()
+
+        rendercore.rm_set(ro.rm_idx, irender.material_index "scene_depth_queue", fm.pre_depth_queue:ptr())
         e.scene_depth_visible = true
     end
 end

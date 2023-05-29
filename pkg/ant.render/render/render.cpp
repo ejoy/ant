@@ -6,6 +6,8 @@ extern "C"{
 	#include "math3d.h"
 	#include "math3dfunc.h"
 	#include "material.h"
+
+	#include "render_material.h"
 }
 
 #include "lua.hpp"
@@ -27,16 +29,14 @@ struct transform {
 };
 
 enum queue_type{
-	qt_mat_def = 0,
-	qt_mat_pre_depth = 1,
-	qt_mat_pickup = 2,
-	qt_mat_csm = 3,
-	qt_mat_lightmap = 4,
-	qt_count = 5
+	qt_mat_def			= 0,
+	qt_mat_pre_depth,
+	qt_mat_pickup,
+	qt_mat_csm,
+	qt_mat_lightmap,
+	qt_count,
 };
 
-constexpr size_t MAX_MATERIAL_TYPE_COUNT = (offsetof(ecs::render_object, mat_lightmap) - offsetof(ecs::render_object, mat_def))/sizeof(intptr_t)+1;
-static_assert(MAX_MATERIAL_TYPE_COUNT == queue_type::qt_count); 
 using obj_transforms = std::unordered_map<const ecs::render_object*, transform>;
 static inline transform
 update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transforms &trans){
@@ -57,14 +57,14 @@ update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transfor
 	return it->second;
 }
 
-#define INVALID_BUFFER_TYPE UINT16_MAX
-#define INVALID_NUM_TYPE UINT32_MAX
+#define INVALID_BUFFER_TYPE		UINT16_MAX
 #define BUFFER_TYPE(_HANDLE)	(_HANDLE >> 16) & 0xffff
 
+static inline bool is_indirect_draw(const ecs::render_object *ro){
+	return ro->draw_num != 0 && ro->draw_num != UINT32_MAX;
+}
 static bool
 mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid, uint8_t mat_idx){
-	bool exist_vb2_handle = ro->vb2_handle != INVALID_NUM_TYPE;
-	bool mat_need_vb2 = (mat_idx == qt_mat_def) || (mat_idx == qt_mat_lightmap);
 	if (ro->vb_num == 0)
 		return false;
 
@@ -81,9 +81,8 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid, uint8_t 
 		default: assert(false && "Invalid vertex buffer type");
 	}
 
-	if(exist_vb2_handle && mat_need_vb2){
-		const uint16_t vb2_type = BUFFER_TYPE(ro->vb2_handle);
-		
+	const uint16_t vb2_type = BUFFER_TYPE(ro->vb2_handle);
+	if((vb2_type != INVALID_BUFFER_TYPE) && (mat_idx == qt_mat_def) || (mat_idx == qt_mat_lightmap)){
 		switch (vb2_type){
 			case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 1, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb2_handle}, ro->vb2_start, ro->vb2_num); break;
 			case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:	//walk through
@@ -97,20 +96,26 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid, uint8_t 
 			case BGFX_HANDLE_INDEX_BUFFER: w->bgfx->encoder_set_index_buffer(w->holder->encoder, bgfx_index_buffer_handle_t{(uint16_t)ro->ib_handle}, ro->ib_start, ro->ib_num); break;
 			case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER:	//walk through
 			case BGFX_HANDLE_DYNAMIC_INDEX_BUFFER_32: w->bgfx->encoder_set_dynamic_index_buffer(w->holder->encoder, bgfx_dynamic_index_buffer_handle_t{(uint16_t)ro->ib_handle}, ro->ib_start, ro->ib_num); break;
-			default: assert(false && "ib_num == 0 and handle is not valid"); break;
+			default: assert(false && "Unknown index buffer type"); break;
 		}
 	}
-	if(ro->draw_num != 0 && ro->draw_num != INVALID_NUM_TYPE){
-		w->bgfx->encoder_set_instance_data_from_dynamic_vertex_buffer(w->holder->encoder, bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->itb_handle}, 0, ro->draw_num);
-	}
 
+	if(is_indirect_draw(ro)){
+		const auto itb = bgfx_dynamic_vertex_buffer_handle_t{(uint16_t)ro->itb_handle};
+		assert(BGFX_HANDLE_IS_VALID(itb));
+		w->bgfx->encoder_set_instance_data_from_dynamic_vertex_buffer(w->holder->encoder, itb, 0, ro->draw_num);
+	}
 	return true;
 }
 
 static inline struct material_instance*
-get_material(const ecs::render_object* ro, size_t midx){
-	assert(midx < MAX_MATERIAL_TYPE_COUNT);
-	return (struct material_instance*)(*(&ro->mat_def + midx));
+get_material(struct render_material * R, const ecs::render_object* ro, size_t midx){
+	assert(midx < qt_count);
+	//TODO: get all the materials by mask
+	const uint64_t mask = 1ull << midx;
+	void* mat[64];
+	render_material_fetch(R, ro->rm_idx, mask, mat);
+	return (struct material_instance*)(mat[midx]);
 }
 
 using matrix_array = std::vector<math_t>;
@@ -146,15 +151,25 @@ update_hitch_transform(struct ecs_world *w, const ecs::render_object *ro, const 
 	return it->second;
 }
 
+static inline void
+submit_draw(struct ecs_world*w, bgfx_view_id_t viewid, const ecs::render_object *obj, bgfx_program_handle_t prog, uint8_t discardflags){
+	if(is_indirect_draw(obj)){
+		const auto idb = bgfx_indirect_buffer_handle_t{(uint16_t)obj->idb_handle};
+		assert(BGFX_HANDLE_IS_VALID(idb));
+		w->bgfx->encoder_submit_indirect(w->holder->encoder, viewid, prog, idb, 0, obj->draw_num, obj->render_layer, discardflags);
+	}else{
+		w->bgfx->encoder_submit(w->holder->encoder, viewid, prog, obj->render_layer, discardflags);
+	}
+}
+
 static void
 draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const objarray &objs, obj_transforms &trans){
 	for (const auto &od : objs){
 		if(od.obj->draw_num == 0){
 			continue;
 		}
-		auto mi = get_material(od.obj, ra.material_index);
-		int vid = ra.viewid;
-		if (mi && mesh_submit(w, od.obj, vid, ra.material_index)) {
+		auto mi = get_material(w->R, od.obj, ra.material_index);
+		if (mi && mesh_submit(w, od.obj, ra.viewid, ra.material_index)) {
 			apply_material_instance(L, mi, w);
 			const auto prog = material_prog(L, mi);
 
@@ -163,7 +178,7 @@ draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const o
 				t = update_hitch_transform(w, od.obj, *od.mats, trans);
 				for (int i=0; i<od.mats->size()-1; ++i) {
 					w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-					w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->render_layer, BGFX_DISCARD_TRANSFORM);
+					submit_draw(w, ra.viewid, od.obj, prog, BGFX_DISCARD_TRANSFORM);
 					t.tid += t.stride;
 				}
 			} else {
@@ -171,12 +186,7 @@ draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const o
 			}
 
 			w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-			if(od.obj->draw_num != 0 && od.obj->draw_num != INVALID_NUM_TYPE){
-				w->bgfx->encoder_submit_indirect(w->holder->encoder, ra.viewid, prog, bgfx_indirect_buffer_handle_t{(uint16_t)od.obj->idb_handle}, 0, od.obj->draw_num, od.obj->render_layer, BGFX_DISCARD_ALL);
-			}
-			else{
-				w->bgfx->encoder_submit(w->holder->encoder, ra.viewid, prog, od.obj->render_layer, BGFX_DISCARD_ALL);
-			}
+			submit_draw(w, ra.viewid, od.obj, prog, BGFX_DISCARD_ALL);
 		}
 	}
 }
@@ -243,16 +253,92 @@ lnull(lua_State *L){
 	return 1;
 }
 
+static inline struct render_material*
+TO_R(lua_State *L, int index=1){
+	return (struct render_material*)lua_touserdata(L, index);
+}
+
+static int
+lrm_dealloc(lua_State *L){
+	auto w = getworld(L);
+	const int index = (int)luaL_checkinteger(L, 1);
+	render_material_dealloc(w->R, index);
+	return 0;
+}
+
+static int
+lrm_alloc(lua_State *L){
+	auto w = getworld(L);
+	lua_pushinteger(L, render_material_alloc(w->R));
+	return 1;
+}
+
+static int
+lrm_set(lua_State *L){
+	auto w = getworld(L);
+	const int index = (int)luaL_checkinteger(L, 1);
+	if (index < 0){
+		return luaL_error(L, "Invalid index:%d", index);
+	}
+	const int type = (int)luaL_checkinteger(L, 2);
+	if (type < 0 || type > RENDER_MATERIAL_TYPE_MAX){
+		luaL_error(L, "Invalid render_material type: %d, should be : 0 <= type <= %d", type, RENDER_MATERIAL_TYPE_MAX);
+	}
+
+	if (lua_type(L, 3) != LUA_TLIGHTUSERDATA){
+		luaL_error(L, "Set render_material material type should be lightuserdata:%s", lua_typename(L, 3));
+	}
+	const auto m = lua_touserdata(L, 3);
+
+	render_material_set(w->R, index, type, m);
+	return 0;
+}
+
+static int
+lrm_release(lua_State *L){
+	auto w = getworld(L);
+	if (w->R){
+		render_material_release(w->R);
+		w->R = nullptr;
+	}
+	return 0;
+}
+
 extern "C" int
 luaopen_render(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "submit", lsubmit},
-		{ "null",	lnull},
-		{ nullptr, nullptr },
+		{ "submit", 	lsubmit},
+		{ "null",		lnull},
+		// render_material
+		{ "rm_release",	lrm_release},
+		{ "rm_dealloc",	lrm_dealloc},
+		{ "rm_alloc",	lrm_alloc},
+		{ "rm_set",		lrm_set},
+
+		{ nullptr, 		nullptr },
 	};
 	luaL_newlibtable(L,l);
 	lua_pushnil(L);
 	luaL_setfuncs(L,l,1);
+	return 1;
+}
+
+// 'luaopen_render' need ecs_world as function upvalue, but ecs_world depend 'lrm_create' result, so need another c moudle
+static int
+lrm_create(lua_State *L){
+	lua_pushlightuserdata(L, render_material_create());
+	return 1;
+}
+
+extern "C" int
+luaopen_render_material(lua_State *L){
+	luaL_checkversion(L);
+	luaL_Reg l[] = {
+		{ "create",		lrm_create},
+		{ nullptr, 		nullptr },
+	};
+	luaL_newlibtable(L,l);
+	luaL_setfuncs(L,l,0);
 	return 1;
 }

@@ -31,9 +31,10 @@ function vg_sys:init()
 end
 
 function render_sys:component_init()
-	for e in w:select "INIT render_object filter_material:update render_object_update?out" do
-		e.filter_material = e.filter_material or {}
-		e.render_object_update = true
+	for e in w:select "INIT render_object:update filter_material:update render_object_update?out" do
+		e.render_object.rm_idx 	= rendercore.rm_alloc()
+		e.filter_material 		= e.filter_material or {}
+		e.render_object_update 	= true
 	end
 end
 
@@ -77,13 +78,13 @@ local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
 end})
 
 function render_sys:entity_init()
-	for e in w:select "INIT material_result:in render_object:update filter_material:in" do
+	for e in w:select "INIT material_result:in render_object:in filter_material:in" do
 		local mr = e.material_result
 		local fm = e.filter_material
 		local mi = mr.object:instance()
 		fm["main_queue"] = mi
 		local ro = e.render_object
-		ro.mat_def = mi:ptr()
+		rendercore.rm_set(ro.rm_idx, irender.material_index "main_queue", mi:ptr())
 	end
 
 	for e in w:select "INIT mesh?in simplemesh?in render_object:update" do
@@ -175,6 +176,7 @@ function render_sys:entity_remove()
 	for e in w:select "REMOVED render_object:update filter_material:in" do
 		local fm = e.filter_material
 		local ro = e.render_object
+		rendercore.rm_release(ro.rm_idx)
 		local mm = {}
 		for k, m in pairs(fm) do
 			if mm[m] == nil then
@@ -213,7 +215,8 @@ function render_sys:update_filter()
 
 				local state = check_set_depth_state_as_equal(mo:get_state())
 				fm.main_queue:set_state(state)
-				ro.mat_def = fm.main_queue:ptr()
+
+				rendercore.rm_set(ro.rm_idx, irender.material_index "main_queue", fm.main_queue:ptr())
 			end
 		end
 	end
@@ -222,4 +225,8 @@ end
 
 function render_sys:end_filter()
 	w:clear "filter_result"
+end
+
+function render_sys:exit()
+	rendercore.rm_release()
 end
