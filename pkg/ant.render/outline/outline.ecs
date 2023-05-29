@@ -2,13 +2,8 @@ system "outline_system"
     .implement "outline/outline.lua"
     .method "data_changed"
 
-component "outline_create".type "lua"
-component "outline_remove"
-component "outline"
+component "outline_info".type "lua"
+component "outline_pre"
 
-policy "outline_create"
-    .component "outline"
-    .component "outline_create"
-
-policy "outline_remove"
-    .component "outline_remove"
+policy "outline_info"
+    .component "outline_info"

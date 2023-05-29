@@ -17,10 +17,22 @@ local DEFAULT_STENCIL<const> = bgfx.make_stencil{
 }
 
 
-local outline_eid_table = {}
-
 function outline_system:data_changed()
-    for e in w:select "outline:update outline_create:update filter_material:in eid:in skinning?in scene?in mesh?in" do
+    for e in w:select "outline_pre:update filter_material:update" do
+        local fm = e.filter_material
+        fm["main_queue"]:set_stencil(DEFAULT_STENCIL)
+        e.outline_pre = nil
+    end
+
+    for e in w:select "outline_info:update" do
+        if e.outline_info.outline_color then
+            local outline_scale, outline_color = e.outline_info.outline_scale, e.outline_info.outline_color
+            imaterial.set_property(e, "u_outlinescale", math3d.vector(outline_scale, 0, 0, 0))
+            imaterial.set_property(e, "u_outlinecolor", math3d.vector(outline_color))
+            e.outline_info = {} 
+        end
+    end  
+--[[     for e in w:select "outline:update outline_create:update filter_material:in eid:in skinning?in scene?in mesh?in" do
         if e.filter_material then
             local render_layer = e.outline_create.render_layer
             local outline_color = e.outline_create.outline_color
@@ -66,5 +78,5 @@ function outline_system:data_changed()
     for e in w:select "outline_remove:update eid:in" do
         w:remove(outline_eid_table[e.eid])
         e.outline_remove = nil
-    end
+    end ]]
 end
