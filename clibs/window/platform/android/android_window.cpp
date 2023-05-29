@@ -24,6 +24,76 @@ int window_init(struct ant_window_callback* cb) {
 void window_close() {
 }
 
+static void push_touch_message(TOUCH_TYPE type, const GameActivityMotionEvent& motionEvent) {
+    window_message(g_cb, [&](lua_State* L){
+        lua_pushstring(L, "touch");
+        lua_pushinteger(L, type);
+        lua_newtable(L);
+        lua_Integer n = 0;
+        for (auto index = 0; index < motionEvent.pointerCount; ++index) {
+            auto& pointer = motionEvent.pointers[index];
+            auto x = GameActivityPointerAxes_getX(&pointer);
+            auto y = GameActivityPointerAxes_getY(&pointer);
+            lua_newtable(L);
+            lua_pushinteger(L, (lua_Integer)(uintptr_t)pointer.id);
+            lua_setfield(L, -2, "id");
+            lua_pushnumber(L, x);
+            lua_setfield(L, -2, "x");
+            lua_pushnumber(L, y);
+            lua_setfield(L, -2, "y");
+            lua_seti(L, -2, ++n);
+        }
+    });
+}
+
+static void handle_input(struct android_app* app) {
+    auto* inputBuffer = android_app_swap_input_buffers(app);
+    if (!inputBuffer) {
+        return;
+    }
+
+    for (auto i = 0; i < inputBuffer->motionEventsCount; ++i) {
+        auto& motionEvent = inputBuffer->motionEvents[i];
+        auto action = motionEvent.action;
+        switch (action & AMOTION_EVENT_ACTION_MASK) {
+            case AMOTION_EVENT_ACTION_DOWN:
+            case AMOTION_EVENT_ACTION_POINTER_DOWN:
+                push_touch_message(TOUCH_BEGAN, motionEvent);
+                break;
+            case AMOTION_EVENT_ACTION_MOVE:
+                push_touch_message(TOUCH_MOVED, motionEvent);
+                break;
+            case AMOTION_EVENT_ACTION_UP:
+            case AMOTION_EVENT_ACTION_POINTER_UP:
+                push_touch_message(TOUCH_ENDED, motionEvent);
+                break;
+            case AMOTION_EVENT_ACTION_CANCEL:
+                push_touch_message(TOUCH_CANCELLED, motionEvent);
+                break;
+            default:
+                break;
+        }
+    }
+    android_app_clear_motion_events(inputBuffer);
+/*
+    for (auto i = 0; i < inputBuffer->keyEventsCount; ++i) {
+        auto& keyEvent = inputBuffer->keyEvents[i];
+        switch (keyEvent.action) {
+            case AKEY_EVENT_ACTION_DOWN:
+                window_message_keyboard(g_cb, keyEvent.keyCode, 0, 1);
+                break;
+            case AKEY_EVENT_ACTION_UP:
+                window_message_keyboard(g_cb, keyEvent.keyCode, 0, 0);
+                break;
+            case AKEY_EVENT_ACTION_MULTIPLE:
+            default:
+                break;
+        }
+    }
+*/
+    android_app_clear_key_events(inputBuffer);
+}
+
 bool window_peekmessage() {
     for (;;) {
         if (g_app->destroyRequested) {
@@ -36,6 +106,7 @@ bool window_peekmessage() {
                 source->process(g_app, source);
             }
         }
+        handle_input(g_app);
         return true;
     }
 }

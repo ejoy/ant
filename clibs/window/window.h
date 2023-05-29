@@ -14,6 +14,13 @@ typedef enum {
 	KB_CAPSLOCK,
 } KEYBOARD_STATE;
 
+typedef enum {
+	TOUCH_BEGAN = 1,
+	TOUCH_MOVED = 2,
+	TOUCH_ENDED = 3,
+	TOUCH_CANCELLED = 4,
+} TOUCH_TYPE;
+
 struct ant_window_callback {
 	void (*update)(struct ant_window_callback* cb);
 	struct lua_State* messageL;
