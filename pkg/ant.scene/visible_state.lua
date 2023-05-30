@@ -33,9 +33,9 @@ local function set_visible_states(vs, s, v)
 			vs["csm2_queue"] = v
 			vs["csm3_queue"] = v
 			vs["csm4_queue"] = v
-		else
-			vs[s] = v
 		end
+
+		vs[n] = v
 	end
 end
 
