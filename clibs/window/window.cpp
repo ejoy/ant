@@ -90,6 +90,93 @@ void window_message_char(struct ant_window_callback* cb, int code) {
 	push_message(L);
 }
 
+void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_tap const& gesture) {
+	lua_State* L = cb->messageL;
+	lua_settop(L, 1);
+	lua_pushstring(L, "gesture");
+	lua_pushstring(L, "tap");
+	lua_createtable(L, 0, 2);
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.x));
+	lua_setfield(L, -2, "x");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.y));
+	lua_setfield(L, -2, "y");
+	push_message(L);
+}
+
+void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_pinch const& gesture) {
+	lua_State* L = cb->messageL;
+	lua_settop(L, 1);
+	lua_pushstring(L, "gesture");
+	lua_pushstring(L, "pinch");
+	lua_createtable(L, 0, 4);
+	switch (gesture.state) {
+	case 0: lua_pushstring(L, "began"); break;
+	case 1: lua_pushstring(L, "changed"); break;
+	default: case 2: lua_pushstring(L, "ended"); break;
+	}
+	lua_setfield(L, -2, "state");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.x));
+	lua_setfield(L, -2, "x");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.y));
+	lua_setfield(L, -2, "y");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.velocity));
+	lua_setfield(L, -2, "velocity");
+	push_message(L);
+}
+
+void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_longpress const& gesture) {
+	lua_State* L = cb->messageL;
+	lua_settop(L, 1);
+	lua_pushstring(L, "gesture");
+	lua_pushstring(L, "long_press");
+	lua_createtable(L, 0, 2);
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.x));
+	lua_setfield(L, -2, "x");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.y));
+	lua_setfield(L, -2, "y");
+	push_message(L);
+}
+
+void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_pan const& gesture) {
+	lua_State* L = cb->messageL;
+	lua_settop(L, 1);
+	lua_pushstring(L, "gesture");
+	lua_pushstring(L, "pan");
+	lua_createtable(L, 0, 6);
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.x));
+	lua_setfield(L, -2, "x");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.y));
+	lua_setfield(L, -2, "y");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.dx));
+	lua_setfield(L, -2, "dx");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.dy));
+	lua_setfield(L, -2, "dy");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.vx));
+	lua_setfield(L, -2, "vx");
+	lua_pushnumber(L, static_cast<lua_Number>(gesture.vy));
+	lua_setfield(L, -2, "vy");
+	push_message(L);
+}
+
+void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture const& gesture) {
+	switch (gesture.type) {
+	case GESTURE_TAP:
+		window_message_gesture(cb, gesture.tap);
+		break;
+	case GESTURE_PINCH:
+		window_message_gesture(cb, gesture.pinch);
+		break;
+	case GESTURE_LONGPRESS:
+		window_message_gesture(cb, gesture.longpress);
+		break;
+	case GESTURE_PAN:
+		window_message_gesture(cb, gesture.pan);
+		break;
+	default:
+		break;
+	}
+}
+
 void window_message(struct ant_window_callback* cb, std::function<void(struct lua_State*)> func) {
 	lua_State* L = cb->messageL;
 	lua_settop(L, 1);

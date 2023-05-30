@@ -79,4 +79,9 @@ void window_message_mouse_wheel(struct ant_window_callback* cb, int x, int y, fl
 void window_message_mouse(struct ant_window_callback* cb, int x, int y, uint8_t type, uint8_t state);
 void window_message_size(struct ant_window_callback* cb, int x, int y, uint8_t type);
 void window_message_char(struct ant_window_callback* cb, int code);
+void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_tap const& gesture);
+void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_pinch const& gesture);
+void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_longpress const& gesture);
+void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_pan const& gesture);
+void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture const& gesture);
 void window_message(struct ant_window_callback* cb, std::function<void(struct lua_State*)> func);
