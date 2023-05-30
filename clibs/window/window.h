@@ -21,6 +21,45 @@ typedef enum {
 	TOUCH_CANCELLED = 4,
 } TOUCH_TYPE;
 
+typedef enum {
+	GESTURE_TAP = 0,
+	GESTURE_PINCH = 1,
+	GESTURE_LONGPRESS = 2,
+	GESTURE_PAN = 3,
+} GESTURE_TYPE;
+
+struct ant_gesture_tap {
+	float x;
+	float y;
+};
+struct ant_gesture_pinch {
+	int state;
+	float x;
+	float y;
+	float velocity;
+};
+struct ant_gesture_longpress {
+	float x;
+	float y;
+};
+struct ant_gesture_pan {
+	float x;
+	float y;
+	float dx;
+	float dy;
+	float vx;
+	float vy;
+};
+struct ant_gesture {
+	GESTURE_TYPE type;
+	union {
+		struct ant_gesture_tap tap;
+		struct ant_gesture_pinch pinch;
+		struct ant_gesture_longpress longpress;
+		struct ant_gesture_pan pan;
+	};
+};
+
 struct ant_window_callback {
 	void (*update)(struct ant_window_callback* cb);
 	struct lua_State* messageL;
