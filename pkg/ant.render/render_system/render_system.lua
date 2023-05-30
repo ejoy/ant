@@ -186,6 +186,7 @@ function render_sys:entity_remove()
 		for _, v in pairs(queuemgr.material_indices()) do
 			R.set(ro.rm_idx, v, nil)
 		end
+		R.dealloc(ro.rm_idx)
 	end
 end
 
