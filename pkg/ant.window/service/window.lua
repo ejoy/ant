@@ -11,22 +11,11 @@ local WindowMode <const> = {
     ios = WindowModeLoop,
 }
 
-local function init()
-    if platform.os == "ios" then
-        local gesture = require "ios.gesture"
-        gesture.tap {}
-        gesture.pinch {}
-        gesture.long_press {}
-        gesture.pan {}
-    end
-end
-
 local message = {}
 local quit = false
 
 local function message_loop(update)
     local ServiceWorld = ltask.queryservice "ant.window|world"
-    init()
     while not quit do
         if #message > 0 then
             ltask.send(ServiceWorld, "msg", message)

@@ -52,7 +52,6 @@ int luaopen_layout(lua_State* L);
 //int luaopen_layout_init(lua_State* L);
 #if BX_PLATFORM_IOS
 int luaopen_ios(lua_State* L);
-int luaopen_ios_gesture(lua_State* L);
 #endif
 #if BX_PLATFORM_ANDROID
 int luaopen_android(lua_State* L);
@@ -117,7 +116,6 @@ void ant_loadmodules(lua_State* L) {
         { "image", luaopen_image },
 #if BX_PLATFORM_IOS
         { "ios", luaopen_ios },
-        { "ios.gesture", luaopen_ios_gesture },
 #endif
 #if BX_PLATFORM_ANDROID
         { "android", luaopen_android },

@@ -5,9 +5,12 @@ extern "C" {
 #include <lua-seri.h>
 }
 
+id init_gesture();
+
 UIView* global_window = NULL;
 static id<MTLDevice> g_device = NULL;
 struct ant_window_callback* g_cb = NULL;
+id g_gesture;
 
 @interface ViewController : UIViewController
 @end
@@ -69,6 +72,8 @@ static void push_touch_message(TOUCH_TYPE type, UIView* view, NSSet* touches) {
     int w = (int)(self.contentScaleFactor * self.frame.size.width);
     int h = (int)(self.contentScaleFactor * self.frame.size.height);
     window_message_init(g_cb, (__bridge void*)self.layer, (__bridge void*)g_device, w, h);
+
+    g_gesture = init_gesture();
     return self;
 }
 - (void)layoutSubviews {
