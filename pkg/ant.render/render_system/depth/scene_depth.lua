@@ -8,7 +8,7 @@ local ENABLE_FXAA<const> = setting:get "graphic/postprocess/fxaa/enable"
 
 local ivs           = ecs.import.interface "ant.scene|ivisible_state"
 local sd_sys        = ecs.system "scene_depth_system"
-local rendercore    = ecs.clibs "render.core"
+local R             = ecs.clibs "render.render_material"
 local queuemgr      = require "queue_mgr"
 
 if not ENABLE_FXAA then
@@ -89,7 +89,7 @@ function sd_sys:end_filter()
             local fm = e.filter_material
             fm["scene_depth_queue"] = fm.pre_depth_queue
     
-            rendercore.rm_set(e.render_object.rm_idx, queuemgr.material_index "scene_depth_queue", fm.pre_depth_queue:ptr())
+            R.set(e.render_object.rm_idx, queuemgr.material_index "scene_depth_queue", fm.pre_depth_queue:ptr())
             ivs.set_state(e, "scene_depth_queue", true)
         end
     end

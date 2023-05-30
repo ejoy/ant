@@ -7,7 +7,7 @@ local renderutil    = require "util"
 local queuemgr      = require "queue_mgr"
 local s             = ecs.system "pre_depth_system"
 
-local rendercore    = ecs.clibs "render.core"
+local R             = ecs.clibs "render.render_material"
 
 if setting:get "graphic/disable_pre_z" then
     renderutil.default_system(s, "init", "data_changed", "update_filter")
@@ -90,7 +90,7 @@ function s:update_filter()
 
             local mi = create_depth_only_material(mo, fm)
             fm["pre_depth_queue"] = mi
-            rendercore.rm_set(ro.rm_idx, queuemgr.material_index "pre_depth_queue", mi:ptr())
+            R.set(ro.rm_idx, queuemgr.material_index "pre_depth_queue", mi:ptr())
         end
     end
 end

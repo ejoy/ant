@@ -1,8 +1,6 @@
 local ecs = ...
 
 local mc = import_package "ant.math".constant
-local rendercore = ecs.clibs "render.core"
-local null = rendercore.null()
 
 local ro = ecs.component "render_object"
 local function init_ro()

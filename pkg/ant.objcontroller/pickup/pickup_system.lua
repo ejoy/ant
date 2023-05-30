@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local mu 		= import_package "ant.math".util
-local rendercore= ecs.clibs "render.core"
+local R         = ecs.clibs "render.render_material"
 local math3d	= require "math3d"
 local bgfx 		= require "bgfx"
 
@@ -378,7 +378,7 @@ function pickup_sys:update_filter()
 
 			fm["pickup_queue"] = new_mi
 
-			rendercore.rm_set(ro.rm_idx, queuemgr.material_index "pickup_queue", new_mi:ptr())
+			R.set(ro.rm_idx, queuemgr.material_index "pickup_queue", new_mi:ptr())
 		end
 	end
 end

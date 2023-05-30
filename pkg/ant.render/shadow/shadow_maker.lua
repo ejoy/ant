@@ -29,7 +29,7 @@ local mc 		= import_package "ant.math".constant
 
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
-local rendercore= ecs.clibs "render.core"
+local R         = ecs.clibs "render.render_material"
 local icamera	= ecs.import.interface "ant.camera|icamera"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
 local irender	= ecs.import.interface "ant.render|irender"
@@ -594,10 +594,10 @@ function sm:update_filter()
 			mat_ptr = mi:ptr()
 		end
 
-		rendercore.rm_set(ro.rm_idx, queuemgr.material_index "csm1_queue", mat_ptr)
-		rendercore.rm_set(ro.rm_idx, queuemgr.material_index "csm2_queue", mat_ptr)
-		rendercore.rm_set(ro.rm_idx, queuemgr.material_index "csm3_queue", mat_ptr)
-		rendercore.rm_set(ro.rm_idx, queuemgr.material_index "csm4_queue", mat_ptr)
+		R.set(ro.rm_idx, queuemgr.material_index "csm1_queue", mat_ptr)
+		R.set(ro.rm_idx, queuemgr.material_index "csm2_queue", mat_ptr)
+		R.set(ro.rm_idx, queuemgr.material_index "csm3_queue", mat_ptr)
+		R.set(ro.rm_idx, queuemgr.material_index "csm4_queue", mat_ptr)
 	    ::continue::
 	end
 end

@@ -143,7 +143,6 @@ local function create_context(w)
 	local bgfx 		= require "bgfx"
 	local math3d 	= require "math3d"
 	local component = require "component"
-	local rm		= require "render.render_material"
 	local decl = w._decl.component
 	for i, c in ipairs(component) do
 		if not decl[c] then
@@ -157,7 +156,6 @@ local function create_context(w)
 		bgfx.CINTERFACE,
 		math3d.CINTERFACE,
 		bgfx.encoder_get(),
-		rm.create(),
 		0,0,0,0 --kMaxMember == 4
 	)
 end

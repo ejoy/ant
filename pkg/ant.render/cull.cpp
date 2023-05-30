@@ -34,6 +34,8 @@ insert_cull_array(struct cull_array cull_a[], int n_cull, uint64_t cullmasks[], 
 		offset += cull_a[i].n;
 		if (cull_a[i].mid == mid) {
 			++cull_a[i].n;
+			assert(cull_a[i].n < MAX_CULL_ARRAY);
+			assert(offset < MAX_CULL_MASK);
 			memmove(cullmasks + offset + 1, cullmasks + offset, sizeof(uint64_t) * (n_mask - offset));
 			cullmasks[offset] = cullmask;
 			return n_cull;

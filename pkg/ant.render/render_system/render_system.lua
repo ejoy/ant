@@ -14,8 +14,7 @@ local irl		= ecs.import.interface "ant.render|irender_layer"
 
 local render_sys= ecs.system "render_system"
 
-local rendercore= ecs.clibs "render.core"
-local null = rendercore.null()
+local R			= ecs.clibs "render.render_material"
 
 local function update_viewid_remappings()
     bgfx.set_view_order(viewidmgr.remapping())
@@ -33,7 +32,7 @@ end
 
 function render_sys:component_init()
 	for e in w:select "INIT render_object:update filter_material:update render_object_update?out" do
-		e.render_object.rm_idx 	= rendercore.rm_alloc()
+		e.render_object.rm_idx 	= R.alloc()
 		e.filter_material 		= e.filter_material or {}
 		e.render_object_update 	= true
 	end
@@ -93,7 +92,7 @@ function render_sys:entity_init()
 		local mi = mr.object:instance()
 		fm["main_queue"] = mi
 		local ro = e.render_object
-		rendercore.rm_set(ro.rm_idx, queuemgr.material_index "main_queue", mi:ptr())
+		R.set(ro.rm_idx, queuemgr.material_index "main_queue", mi:ptr())
 	end
 
 	for e in w:select "INIT mesh?in simplemesh?in render_object:update" do
@@ -147,7 +146,7 @@ function render_sys:scene_update()
 	end
 end
 
-function render_sys:render_submit()
+function render_sys:render_preprocess()
 	if viewidmgr.need_update_remapping() then
 		update_viewid_remappings()
 		viewidmgr.clear_remapping()
@@ -169,15 +168,12 @@ function render_sys:render_submit()
 		bgfx.touch(viewid)
 		qe.render_args = RENDER_ARGS[qe.queue_name]
 	end
-
-	rendercore.submit()
 end
 
 function render_sys:entity_remove()
 	for e in w:select "REMOVED render_object:update filter_material:in" do
 		local fm = e.filter_material
 		local ro = e.render_object
-		rendercore.rm_release(ro.rm_idx)
 		local mm = {}
 		for k, m in pairs(fm) do
 			if mm[m] == nil then
@@ -186,10 +182,9 @@ function render_sys:entity_remove()
 				fm[k] = nil
 			end
 		end
-		for k in pairs(ro) do
-			if k:match "mat_" then
-				ro[k] = null
-			end
+
+		for _, v in pairs(queuemgr.material_indices()) do
+			R.set(ro.rm_idx, v, nil)
 		end
 	end
 end
@@ -217,7 +212,7 @@ function render_sys:update_filter()
 				local state = check_set_depth_state_as_equal(mo:get_state())
 				fm.main_queue:set_state(state)
 
-				rendercore.rm_set(ro.rm_idx, queuemgr.material_index "main_queue", fm.main_queue:ptr())
+				R.set(ro.rm_idx, queuemgr.material_index "main_queue", fm.main_queue:ptr())
 			end
 		end
 	end
@@ -226,8 +221,4 @@ end
 
 function render_sys:end_filter()
 	w:clear "filter_result"
-end
-
-function render_sys:exit()
-	rendercore.rm_release()
 end

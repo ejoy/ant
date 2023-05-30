@@ -59,17 +59,17 @@ struct ecs_world {
 	struct bgfx_interface_vtbl*   bgfx;
 	struct math3d_api*            math3d;
 	struct bgfx_encoder_holder*   holder;
-	struct render_material*		  R;
 #if defined(__cplusplus)
 	static constexpr size_t kMaxMember = 4;
 	uintptr_t member[kMaxMember];
 
 	template <typename T, typename ...Args>
-	void create_member(Args&&... args) {
+	T& create_member(Args&&... args) {
 		constexpr size_t ID = ecs_world_::type<T>::type_id();
 		static_assert(ID < kMaxMember);
 		T* v = new T(std::forward<Args>(args)...);
 		member[ID] = (uintptr_t)v;
+		return *v;
 	}
 
 	template <typename T>

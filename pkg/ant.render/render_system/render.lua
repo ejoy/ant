@@ -12,7 +12,6 @@ local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local declmgr		= require "vertexdecl_mgr"
 local sampler		= require "sampler"
-local rendercore	= ecs.clibs "render.core"
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
 

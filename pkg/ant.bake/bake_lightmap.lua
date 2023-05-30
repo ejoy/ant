@@ -10,7 +10,7 @@ require "bake_mathadapter"
 local bgfx      = require "bgfx"
 local bake      = require "bake"
 local ltask     = require "ltask"
-local rendercore= ecs.clibs "render.core"
+local R         = ecs.clibs "render.render_material"
 
 local queuemgr  = import_package "ant.render".queuemgr
 
@@ -115,7 +115,7 @@ function bake_lm_sys:update_filter()
             local fm = e.filter_material
             fm["bake_lightmap_queue"] = m
 
-            rendercore.rm_set(ro.rm_idx, queuemgr.material_index "bake_lightmap_queue", m:ptr())
+            R.set(ro.rm_idx, queuemgr.material_index "bake_lightmap_queue", m:ptr())
         end
     end
 end

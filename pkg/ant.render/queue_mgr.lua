@@ -2,8 +2,14 @@ local m = {}
 
 local MATERIAL_INDICES = {}
 
+local QUEUE_MATERIALS = {}
+
 function m.material_index(queue_name)
-	return MATERIAL_INDICES[queue_name]
+	return QUEUE_MATERIALS[queue_name]
+end
+
+function m.material_indices()
+    return MATERIAL_INDICES
 end
 
 local QUEUE_INDICES, QUEUE_MASKS = {}, {}
@@ -22,12 +28,13 @@ do
 		QUEUE_INDICES[qn] = qidx
 		QUEUE_MASKS[qn] = (1 << qidx)
 
-		assert(MATERIAL_INDICES[qn] == nil, qn .. " material index already register")
+		assert(QUEUE_MATERIALS[qn] == nil, qn .. " material index already register")
 
 		if midx >= 64 then
 			error(("Max material index is 64, %d is provided"):format(midx))
 		end
-		MATERIAL_INDICES[qn] = midx
+		QUEUE_MATERIALS[qn] = midx
+        MATERIAL_INDICES[midx] = true
 		return qidx
 	end
 

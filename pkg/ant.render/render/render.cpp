@@ -39,6 +39,12 @@ enum queue_type{
 
 static constexpr uint8_t MAX_VISIBLE_QUEUE = 64;
 
+using R_ptr = struct render_material*;
+static inline R_ptr&
+TO_R(struct ecs_world* w){
+	return w->get_member<R_ptr>();
+}
+
 using obj_transforms = std::unordered_map<const ecs::render_object*, transform>;
 static inline transform
 update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transforms &trans){
@@ -166,7 +172,8 @@ submit_draw(struct ecs_world*w, bgfx_view_id_t viewid, const ecs::render_object 
 
 static inline void
 draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ecs::render_object *obj, const matrix_array *mats, obj_transforms &trans){
-	auto mi = get_material(w->R, obj, ra->material_index);
+	auto R = TO_R(w);
+	auto mi = get_material(R, obj, ra->material_index);
 	if (mi && mesh_submit(w, obj, ra->viewid, ra->material_index)) {
 		apply_material_instance(L, mi, w);
 		const auto prog = material_prog(L, mi);
@@ -290,14 +297,14 @@ static int
 lrm_dealloc(lua_State *L){
 	auto w = getworld(L);
 	const int index = (int)luaL_checkinteger(L, 1);
-	render_material_dealloc(w->R, index);
+	render_material_dealloc(TO_R(w), index);
 	return 0;
 }
 
 static int
 lrm_alloc(lua_State *L){
 	auto w = getworld(L);
-	lua_pushinteger(L, render_material_alloc(w->R));
+	lua_pushinteger(L, render_material_alloc(TO_R(w)));
 	return 1;
 }
 
@@ -318,31 +325,18 @@ lrm_set(lua_State *L){
 	}
 	const auto m = lua_touserdata(L, 3);
 
-	render_material_set(w->R, index, type, m);
-	return 0;
-}
-
-static int
-lrm_release(lua_State *L){
-	auto w = getworld(L);
-	if (w->R){
-		render_material_release(w->R);
-		w->R = nullptr;
-	}
+	render_material_set(TO_R(w), index, type, m);
 	return 0;
 }
 
 extern "C" int
-luaopen_render(lua_State *L) {
+luaopen_render_material(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "submit", 	lsubmit},
 		{ "null",		lnull},
-		// render_material
-		{ "rm_release",	lrm_release},
-		{ "rm_dealloc",	lrm_dealloc},
-		{ "rm_alloc",	lrm_alloc},
-		{ "rm_set",		lrm_set},
+		{ "dealloc",	lrm_dealloc},
+		{ "alloc",		lrm_alloc},
+		{ "set",		lrm_set},
 
 		{ nullptr, 		nullptr },
 	};
@@ -352,21 +346,33 @@ luaopen_render(lua_State *L) {
 	return 1;
 }
 
-// 'luaopen_render' need ecs_world as function upvalue, but ecs_world depend 'lrm_create' result, so need another c moudle
 static int
-lrm_create(lua_State *L){
-	lua_pushlightuserdata(L, render_material_create());
+linit(lua_State *L){
+	auto w = getworld(L);
+	w->create_member<R_ptr>() = render_material_create();
 	return 1;
 }
 
+static int
+lexit(lua_State *L){
+	auto w = getworld(L);
+	auto& R = w->get_member<R_ptr>();
+	render_material_release(R);
+	R = nullptr;
+	return 0;
+}
+
 extern "C" int
-luaopen_render_material(lua_State *L){
+luaopen_system_render(lua_State *L){
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "create",		lrm_create},
-		{ nullptr, 		nullptr },
+		{ "init",			linit},
+		{ "exit",			lexit},
+		{ "render_submit", 	lsubmit},
+		{ nullptr, 			nullptr },
 	};
 	luaL_newlibtable(L,l);
-	luaL_setfuncs(L,l,0);
+	lua_pushnil(L);
+	luaL_setfuncs(L,l,1);
 	return 1;
 }
