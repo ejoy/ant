@@ -308,7 +308,8 @@ lrm_set(lua_State *L){
 		luaL_error(L, "Invalid render_material type: %d, should be : 0 <= type <= %d", type, RENDER_MATERIAL_TYPE_MAX);
 	}
 
-	if (lua_type(L, 3) != LUA_TLIGHTUSERDATA){
+	const int valuetype = lua_type(L, 3);
+	if (valuetype != LUA_TLIGHTUSERDATA && valuetype != LUA_TNIL){
 		luaL_error(L, "Set render_material material type should be lightuserdata:%s", lua_typename(L, 3));
 	}
 	const auto m = lua_touserdata(L, 3);
