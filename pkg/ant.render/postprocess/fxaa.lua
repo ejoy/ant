@@ -28,13 +28,13 @@ function fxaasys:init()
             "ant.general|name",
         },
         data = {
-            name = "fxaa_drawer",
-            simplemesh = irender.full_quad(),
-            material = "/pkg/ant.resources/materials/postprocess/fxaa.material",
-            visible_state = "",
-            scene = {},
-            fxaa_queue_visible = true,
-            fxaa_queue_renderable = true,
+            name            = "fxaa_drawer",
+            simplemesh      = irender.full_quad(),
+            material        = "/pkg/ant.resources/materials/postprocess/fxaa.material",
+            visible_state   = "fxaa_queue",
+            view_visible    = true,
+            fxaa_drawer     = true,
+            scene           = {},
         }
     }
 end
@@ -58,7 +58,7 @@ function fxaasys:fxaa()
     local tme = w:first "tonemapping_queue render_target:in"
     local sceneldr_handle = fbmgr.get_rb(tme.render_target.fb_idx, 1).handle
 
-    local fd = w:first "fxaa_queue_visible filter_material:in"
+    local fd = w:first "fxaa_drawer filter_material:in"
     imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)
 end
 

@@ -51,24 +51,8 @@ function irender.check_set_state(dst_m, src_m, state_op)
 	))
 end
 
-local MATERIAL_INDICES<const> = {
-	main_queue		= 0,
-	ui_rt_queue     = 0,
-	pre_depth_queue	= 1,
-	pickup_queue	= 2,
-	csm1_queue		= 3,
-	csm2_queue		= 3,
-	csm3_queue		= 3,
-	csm4_queue		= 3,
-	bake_lightmap_queue = 4,
-}
-
-function irender.material_index(queue_name)
-	return MATERIAL_INDICES[queue_name]
-end
-
 function irender.get_main_view_rendertexture()
-	local mq = w:first("main_queue render_target:in")
+	local mq = w:first "main_queue render_target:in"
 	return fbmgr.get_rb(mq.render_target.fb_idx, 1).handle
 end
 

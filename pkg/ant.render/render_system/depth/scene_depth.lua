@@ -6,9 +6,10 @@ local setting   = import_package "ant.settings".setting
 
 local ENABLE_FXAA<const> = setting:get "graphic/postprocess/fxaa/enable"
 
-local sd_sys = ecs.system "scene_depth_system"
-local rendercore = ecs.clibs "render.core"
-local irender = ecs.import.interface "ant.render|irender"
+local ivs           = ecs.import.interface "ant.scene|ivisible_state"
+local sd_sys        = ecs.system "scene_depth_system"
+local rendercore    = ecs.clibs "render.core"
+local queuemgr      = require "queue_mgr"
 
 if not ENABLE_FXAA then
     local function DEF_FUNC() end
@@ -83,12 +84,13 @@ end
 
 function sd_sys:end_filter()
     assert(false, "filter_result is miss here, it have been clear in render_system.lua:end_filter")
-    for e in w:select "filter_result pre_depth_queue_visible opacity render_object:update filter_material:in scene_depth_visible?out" do
-        local ro = e.render_object
-        local fm = e.filter_material
-        fm["scene_depth_queue"] = fm.pre_depth_queue
-
-        rendercore.rm_set(ro.rm_idx, irender.material_index "scene_depth_queue", fm.pre_depth_queue:ptr())
-        e.scene_depth_visible = true
+    for e in w:select "filter_result visible_state:in opacity render_object:update filter_material:in" do
+        if e.visible_state["pre_depth_queue"] then
+            local fm = e.filter_material
+            fm["scene_depth_queue"] = fm.pre_depth_queue
+    
+            rendercore.rm_set(e.render_object.rm_idx, queuemgr.material_index "scene_depth_queue", fm.pre_depth_queue:ptr())
+            ivs.set_state(e, "scene_depth_queue", true)
+        end
     end
 end

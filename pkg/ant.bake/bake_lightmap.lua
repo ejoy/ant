@@ -2,15 +2,17 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local lfs = require "filesystem.local"
-local fs = require "filesystem"
-local image = require "image"
+local lfs       = require "filesystem.local"
+local fs        = require "filesystem"
+local image     = require "image"
 require "bake_mathadapter"
 
 local bgfx      = require "bgfx"
 local bake      = require "bake"
 local ltask     = require "ltask"
 local rendercore= ecs.clibs "render.core"
+
+local queuemgr  = import_package "ant.render".queuemgr
 
 local ibaker    = ecs.import.interface "ant.bake|ibaker"
 local irender   = ecs.import.interface "ant.render|irender"
@@ -106,13 +108,15 @@ local function has_filter_stage(pf, stage)
 end
 
 function bake_lm_sys:update_filter()
-    for e in w:select "filter_result bake_lightmap_queue_visible filter_material:in render_object:in" do
-        local ro = e.render_object
-        local m = load_bake_material(ro)
-        local fm = e.filter_material
-        fm["bake_lightmap_queue"] = m
+    for e in w:select "filter_result visible_state:in filter_material:in render_object:in" do
+        if e.visible_state["bake_lightmap_queue"] then
+            local ro = e.render_object
+            local m = load_bake_material(ro)
+            local fm = e.filter_material
+            fm["bake_lightmap_queue"] = m
 
-        rendercore.rm_set(ro.rm_idx, irender.material_index "bake_lightmap_queue", m:ptr())
+            rendercore.rm_set(ro.rm_idx, queuemgr.material_index "bake_lightmap_queue", m:ptr())
+        end
     end
 end
 
@@ -151,8 +155,10 @@ local function bake_all()
     local scene_renderobjects = find_scene_render_objects "main_queue"
 
     local lme = get_lme()
-    for e in w:select ("bake_lightmap_queue_visible render_object:in lightmap:in render_object widget_entity:absent name?in") do
-        bake_entity(e, scene_renderobjects, lme)
+    for e in w:select "view_visible lightmap:in visible_state:in render_object:in widget_entity:absent" do
+        if e.visible_state["bake_lightmap_queue"] then
+            bake_entity(e, scene_renderobjects, lme)
+        end
     end
 end
 

@@ -25,13 +25,13 @@ function tm_sys:init()
             "ant.general|name",
         },
         data = {
-            name = "tonemapping_drawer",
-            simplemesh = irender.full_quad(),
-            material = "/pkg/ant.resources/materials/postprocess/tonemapping.material",
-            visible_state = "",
-            scene = {},
-            tonemapping_queue_visible = true,
-            tonemapping_queue_renderable = true,
+            name            = "tonemapping_drawer",
+            simplemesh      = irender.full_quad(),
+            material        = "/pkg/ant.resources/materials/postprocess/tonemapping.material",
+            visible_state   = "tonemapping_queue",
+            view_visible    = true,
+            tonemapping_drawer=true,
+            scene           = {},
         }
     }
 end
@@ -85,6 +85,6 @@ local function update_properties(material)
 end
 
 function tm_sys:tonemapping()
-    local m = w:first "tonemapping_queue_visible filter_material:in"
+    local m = w:first "tonemapping_drawer filter_material:in"
     update_properties(m.filter_material.main_queue)
 end

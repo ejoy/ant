@@ -9,8 +9,9 @@ local bgfx 		= require "bgfx"
 
 local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
-local sampler= renderpkg.sampler
+local sampler	= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
+local queuemgr	= renderpkg.queuemgr
 
 local irender   = ecs.import.interface "ant.render|irender"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
@@ -357,26 +358,28 @@ local function which_material(skinning, heapmesh, indirect)
 end
 
 function pickup_sys:update_filter()
-	for e in w:select "filter_result pickup_queue_visible render_object:update filter_material:in eid:in skinning?in heapmesh?in indirect?in" do
-		local ro = e.render_object
-		local fm = e.filter_material
-		local matres = imaterial.resource(e)
+	for e in w:select "filter_result visible_state:in render_object:update filter_material:in eid:in skinning?in heapmesh?in indirect?in" do
+		if e.visible_state["pickup_queue"] then
+			local ro = e.render_object
+			local fm = e.filter_material
+			local matres = imaterial.resource(e)
 
-		local src_mo = matres.object
-		local mat = which_material(e.skinning, e.heapmesh, e.indirect)
-		local dst_mo = mat.object
-		local newstate = irender.check_set_state(dst_mo, src_mo, function (d, s)
-				d.PT, d.CULL = s.PT, s.CULL
-				d.DEPTH_TEST   = "GREATER"
-				return d
-		end)
-		local new_mi = dst_mo:instance()
-		new_mi:set_state(newstate)
-		new_mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
+			local src_mo = matres.object
+			local mat = which_material(e.skinning, e.heapmesh, e.indirect)
+			local dst_mo = mat.object
+			local newstate = irender.check_set_state(dst_mo, src_mo, function (d, s)
+					d.PT, d.CULL = s.PT, s.CULL
+					d.DEPTH_TEST   = "GREATER"
+					return d
+			end)
+			local new_mi = dst_mo:instance()
+			new_mi:set_state(newstate)
+			new_mi.u_id = math3d.vector(packeid_as_rgba(e.eid))
 
-		fm["pickup_queue"] = new_mi
+			fm["pickup_queue"] = new_mi
 
-		rendercore.rm_set(ro.rm_idx, irender.material_index "pickup_queue", new_mi:ptr())
+			rendercore.rm_set(ro.rm_idx, queuemgr.material_index "pickup_queue", new_mi:ptr())
+		end
 	end
 end
 

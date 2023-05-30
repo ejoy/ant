@@ -16,9 +16,6 @@ pipeline "select"
     .stage "after_pickup"
 
 component "pickup_queue"
-component "pickup_queue_visible"
-component "pickup_queue_cull"
-component "pickup_queue_renderable"
 
 component "pickup"
     .type "lua"

@@ -55,8 +55,10 @@ end
 local function log_pickup_queue_entities()
 	log.info "pickup queue entities:"
 	local entities = {}
-	for e in w:select("pickup_queue_visible eid:in name?in") do
-		entities[#entities+1] = ("%d-%s"):format(e.eid, e.name or "")
+	for e in w:select "visible_state:in eid:in name?in" do
+		if e.visible_state["pickup_queue"] then
+			entities[#entities+1] = ("%d-%s"):format(e.eid, e.name or "")
+		end
 	end
 
 	log.info(table.concat(entities, "\t"))

@@ -1,7 +1,5 @@
 component "scene_depth_queue"
-component "scene_depth_queue_cull"
-component "scene_depth_queue_visible"
-component "scene_depth_queue_renderable"
+
 policy "scene_depth_queue"
     .require_policy "ant.render|render_queue"
     .require_system "ant.render|scene_depth_system"

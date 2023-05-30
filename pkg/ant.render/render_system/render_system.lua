@@ -5,8 +5,9 @@ local w = world.w
 local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
 local viewidmgr = require "viewid_mgr"
+local queuemgr	= require "queue_mgr"
+
 local irender	= ecs.import.interface "ant.render|irender"
-local ivs		= ecs.import.interface "ant.scene|ivisible_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local itimer	= ecs.import.interface "ant.timer|itimer"
 local irl		= ecs.import.interface "ant.render|irender_layer"
@@ -69,13 +70,21 @@ end
 
 local RENDER_ARGS = setmetatable({}, {__index = function (t, k)
 	local v = {
-		queue_visible_id	= w:component_id(k .. "_visible"),
-		queue_renderable_id	= w:component_id(k .. "_renderable"),
-		material_index		= irender.material_index(k) or 0,
+		queue_mask			= queuemgr.queue_mask(k),
+		material_index		= queuemgr.material_index(k),
 	}
 	t[k] = v
 	return v
 end})
+
+local function update_visible_masks(ro, vs)
+	for qe in w:select "queue_name:in" do
+		local qn = qe.queue_name
+		
+		local mask = assert(queuemgr.queue_mask(qn))
+		ro.visible_masks = vs[qn] and (ro.visible_masks | mask) or (ro.visible_masks & (~mask))
+	end
+end
 
 function render_sys:entity_init()
 	for e in w:select "INIT material_result:in render_object:in filter_material:in" do
@@ -84,7 +93,7 @@ function render_sys:entity_init()
 		local mi = mr.object:instance()
 		fm["main_queue"] = mi
 		local ro = e.render_object
-		rendercore.rm_set(ro.rm_idx, irender.material_index "main_queue", mi:ptr())
+		rendercore.rm_set(ro.rm_idx, queuemgr.material_index "main_queue", mi:ptr())
 	end
 
 	for e in w:select "INIT mesh?in simplemesh?in render_object:update" do
@@ -109,15 +118,9 @@ function render_sys:entity_init()
 		RENDER_ARGS[qn].viewid = qe.render_target.viewid
 	end
 
-	for e in w:select "INIT render_object visible_state:in filter_result:new" do
-		local vs = e.visible_state
-		for qe in w:select "queue_name:in camera_ref" do
-			local qn = qe.queue_name
-			local qn_visible = qn .. "_visible"
-			e[qn_visible] = vs[qn]
-			w:extend(e, qn_visible .. "?out")
-		end
+	for e in w:select "INIT render_object visible_state_changed?out filter_result:new" do
 		e.filter_result = true
+		e.visible_state_changed = true
 	end
 end
 
@@ -134,15 +137,13 @@ function render_sys:commit_system_properties()
 	update_timer_param()
 end
 
-
-function render_sys:begin_filter()
-	
-
-end
-
 function render_sys:scene_update()
 	for e in w:select "scene_changed scene:in render_object:update" do
 		e.render_object.worldmat = e.scene.worldmat
+	end
+
+	for e in w:select "visible_state_changed visible_state:in render_object:update" do
+		update_visible_masks(e.render_object, e.visible_state)
 	end
 end
 
@@ -206,8 +207,8 @@ function render_sys:update_filter()
 		--we should check 'filter_result' here and change the default material
 		--because render entity will change it's visible state after it created
 		--but not create this new material instance in entity_init stage
-		for e in w:select "filter_result main_queue_visible render_layer:in render_object:update filter_material:in" do
-			if e.render_layer == "opacity" then
+		for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in" do
+			if e.visible_state["main_queue"] and e.render_layer == "opacity" then
 				local ro = e.render_object
 				local fm = e.filter_material
 
@@ -216,7 +217,7 @@ function render_sys:update_filter()
 				local state = check_set_depth_state_as_equal(mo:get_state())
 				fm.main_queue:set_state(state)
 
-				rendercore.rm_set(ro.rm_idx, irender.material_index "main_queue", fm.main_queue:ptr())
+				rendercore.rm_set(ro.rm_idx, queuemgr.material_index "main_queue", fm.main_queue:ptr())
 			end
 		end
 	end

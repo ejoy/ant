@@ -23,12 +23,12 @@ local function add_view(name, afterview_idx)
 	return id
 end
 
-add_view "csm_fb"
+add_view "csm_fb"		-- 0
 add_view "skinning"
 add_view "csm1"
 add_view "csm2"
 add_view "csm3"
-add_view "csm4"
+add_view "csm4"			-- 5
 --TODO: vblur and hblur can use only 1 viewid
 add_view "vblur"
 add_view "hblur"
@@ -39,26 +39,26 @@ add_view "hblur"
 -- add_view "omni_Red"
 add_view "panorama2cubmap"
 add_view "panorama2cubmapMips"
-add_view "ibl"
+add_view "ibl"					--10
 add_view "ibl_SH_readback"
 add_view "pre_depth"
 add_view "scene_depth"
 add_view "depth_resolve"
-add_view "depth_mipmap"
+add_view "depth_mipmap"			--15
 add_view "ssao"
 add_view "main_view"
 
 --start postprocess
-add_view "postprocess_obj"		--26
+add_view "postprocess_obj"
 add_view "bloom"
-add_view "effect_view"
+add_view "effect_view"			--20
 add_view "tonemapping"
 add_view "fxaa"
 --end postprocess
 
 add_view "lightmap_storage"
 add_view "pickup"
-add_view "pickup_blit"
+add_view "pickup_blit"			--25
 add_view "uiruntime"
 
 local remapping_need_update = true

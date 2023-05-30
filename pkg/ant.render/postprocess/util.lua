@@ -21,7 +21,7 @@ function util.create_queue(viewid, vr, fbidx, queuename, tabname, autoresize)
             },
             [queuename] = true,
             queue_name = queuename,
-            watch_screen_buffer = autoresize,
+            
             name = queuename,
             visible = true,
         }
@@ -29,6 +29,11 @@ function util.create_queue(viewid, vr, fbidx, queuename, tabname, autoresize)
 
     if tabname then
         template.data[tabname] = true
+    end
+
+    if autoresize then
+        template.policy[#template.policy+1] = "ant.render|watch_screen_buffer"
+        template.data.watch_screen_buffer = true
     end
     ecs.create_entity(template)
 end

@@ -40,16 +40,9 @@ local function set_visible_states(vs, s, v)
 end
 
 function ivs.set_state(e, name, v)
-	w:extend(e, "visible_state:in")
-	local vs = e.visible_state
-	set_visible_states(vs, name, v)
-	local tags = {}
-	for k, vv in pairs(vs) do
-		local vt = k .. "_visible"
-		tags[#tags+1] = vt .. "?out"
-		e[vt] = vv
-	end
-	w:extend(e, table.concat(tags, " "))
+	w:extend(e, "visible_state:in visible_state_changed?out")
+	set_visible_states(e.visible_state, name, v)
+	e.visible_state_changed = true
 	w:submit(e)
 end
 
@@ -61,4 +54,8 @@ function m:component_init()
 		set_visible_states(vs, e.visible_state, true)
         e.visible_state = vs
     end
+end
+
+function m:end_frame()
+	w:clear "visible_state_changed"
 end

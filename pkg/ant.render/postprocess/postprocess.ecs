@@ -57,9 +57,8 @@ system "resolve_msaa_system"
     .method "resolve"
 
 component "tonemapping_queue"
-component "tonemapping_queue_visible"
-component "tonemapping_queue_cull"
-component "tonemapping_queue_renderable"
+component "tonemapping_drawer"
+
 system "tonemapping_system"
     .implement "postprocess/tonemapping.lua"
     .method "init"
@@ -78,9 +77,8 @@ system "bloom_system"
     .method "bloom"
 
 component "fxaa_queue"
-component "fxaa_queue_visible"
-component "fxaa_queue_cull"
-component "fxaa_queue_renderable"
+component "fxaa_drawer"
+
 system "fxaa_system"
     .implement "postprocess/fxaa.lua"
     .method "init"

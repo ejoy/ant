@@ -3,6 +3,7 @@ local world	= ecs.world
 local w		= world.w
 
 local math3d				= require "math3d"
+local queuemgr				= require "queue_mgr"
 local setting				= import_package "ant.settings".setting
 local disable_cull<const>	= setting:data().graphic.disable_cull
 
@@ -10,8 +11,7 @@ local cullcore = ecs.clibs "cull.core"
 
 local CULL_ARGS = setmetatable({}, {__index = function (t, k)
 	local v = {
-		cull_id			= w:component_id(k .. "_cull"),
-		renderable_id	= w:component_id(k .. "_renderable"),
+		cull_mask		= queuemgr.queue_mask(k),
 		frustum_planes	= nil,
 	}
 	t[k] = v

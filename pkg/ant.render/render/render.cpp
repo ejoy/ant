@@ -37,6 +37,8 @@ enum queue_type{
 	qt_count,
 };
 
+static constexpr uint8_t MAX_VISIBLE_QUEUE = 64;
+
 using obj_transforms = std::unordered_map<const ecs::render_object*, transform>;
 static inline transform
 update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transforms &trans){
@@ -113,7 +115,7 @@ get_material(struct render_material * R, const ecs::render_object* ro, size_t mi
 	assert(midx < qt_count);
 	//TODO: get all the materials by mask
 	const uint64_t mask = 1ull << midx;
-	void* mat[64];
+	void* mat[64] = {nullptr};
 	render_material_fetch(R, ro->rm_idx, mask, mat);
 	return (struct material_instance*)(mat[midx]);
 }
@@ -162,88 +164,114 @@ submit_draw(struct ecs_world*w, bgfx_view_id_t viewid, const ecs::render_object 
 	}
 }
 
-static void
-draw_objs(lua_State *L, struct ecs_world *w, const ecs::render_args& ra, const objarray &objs, obj_transforms &trans){
-	for (const auto &od : objs){
-		if(od.obj->draw_num == 0){
-			continue;
-		}
-		auto mi = get_material(w->R, od.obj, ra.material_index);
-		if (mi && mesh_submit(w, od.obj, ra.viewid, ra.material_index)) {
-			apply_material_instance(L, mi, w);
-			const auto prog = material_prog(L, mi);
+static inline void
+draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ecs::render_object *obj, const matrix_array *mats, obj_transforms &trans){
+	auto mi = get_material(w->R, obj, ra->material_index);
+	if (mi && mesh_submit(w, obj, ra->viewid, ra->material_index)) {
+		apply_material_instance(L, mi, w);
+		const auto prog = material_prog(L, mi);
 
-			transform t;
-			if (od.mats){
-				t = update_hitch_transform(w, od.obj, *od.mats, trans);
-				for (int i=0; i<od.mats->size()-1; ++i) {
-					w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-					submit_draw(w, ra.viewid, od.obj, prog, BGFX_DISCARD_TRANSFORM);
-					t.tid += t.stride;
-				}
-			} else {
-				t = update_transform(w, od.obj, trans);
+		transform t;
+		if (mats){
+			t = update_hitch_transform(w, obj, *mats, trans);
+			for (int i=0; i<mats->size()-1; ++i) {
+				w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
+				submit_draw(w, ra->viewid, obj, prog, BGFX_DISCARD_TRANSFORM);
+				t.tid += t.stride;
 			}
+		} else {
+			t = update_transform(w, obj, trans);
+		}
 
-			w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-			submit_draw(w, ra.viewid, od.obj, prog, BGFX_DISCARD_ALL);
+		w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
+		submit_draw(w, ra->viewid, obj, prog, BGFX_DISCARD_ALL);
+	}
+}
+
+static inline void
+add_obj(struct ecs_world* w, cid_t main_id, int index, const ecs::render_object* obj, const matrix_array* mats, objarray &objs){
+#if defined(_MSC_VER) && defined(_DEBUG)
+	ecs::eid id = (ecs::eid)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::eid>::id);
+	objs.emplace_back(obj_data{ obj, mats, id });
+#else
+	(void)main_id; (void) index;
+	objs.emplace_back(obj_data{ obj, mats });
+#endif
+}
+
+struct submit_cache{
+	obj_transforms	transforms;
+
+	//TODO: need more fine control of the cache
+	group_matrices	groups;
+
+	const ecs::render_args* ra[MAX_VISIBLE_QUEUE] = {0};
+	uint8_t ra_count = 0;
+
+	void clear(){
+		transforms.clear();
+		groups.clear();
+
+		ra_count = 0;
+
+#ifdef _DEBUG
+		memset(ra, 0xdeaddead, sizeof(ra));
+#endif //_DEBUG
+	}
+};
+
+static inline void
+draw_objs(lua_State *L, struct ecs_world *w, cid_t main_id, int index, const matrix_array *mats, submit_cache &cc){
+	const ecs::render_object* obj = (const ecs::render_object*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::render_object>::id);
+	if (obj){
+		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
+			const auto ra = cc.ra[ii];
+			if (0 != (obj->visible_masks & ra->queue_mask) && 
+				(0 == (obj->cull_masks & ra->queue_mask))){
+				draw_obj(L, w, cc.ra[ii], obj, mats, cc.transforms);
+			}
 		}
 	}
 }
 
 static inline void
-add_obj(struct ecs_world* w, cid_t vv_id, int index, const matrix_array* mats, objarray &objs){
-	const ecs::render_object* obj = (const ecs::render_object*)entity_sibling(w->ecs, vv_id, index, ecs_api::component<ecs::render_object>::id);
-	if (obj == nullptr)
-		return ;
-#if defined(_MSC_VER) && defined(_DEBUG)
-	ecs::eid id = (ecs::eid)entity_sibling(w->ecs, vv_id, index, ecs_api::component<ecs::eid>::id);
-	objs.emplace_back(obj_data{ obj, mats, id });
-#else
-	objs.emplace_back(obj_data{ obj, mats });
-#endif
+find_render_args(struct ecs_world *w, submit_cache &cc) {
+	for (auto a : ecs_api::select<ecs::render_args>(w->ecs)){
+		auto& r = a.get<ecs::render_args>();
+		cc.ra[cc.ra_count++] = &r;
+	}
 }
 
 static int
 lsubmit(lua_State *L) {
 	auto w = getworld(L);
 
-	group_matrices groups;
+	static submit_cache cc;
+
 	for (auto e : ecs_api::select<ecs::view_visible, ecs::hitch, ecs::scene>(w->ecs)){
 		const auto &h = e.get<ecs::hitch>();
 		const auto &s = e.get<ecs::scene>();
 		if (h.group != 0){
-			groups[h.group].push_back(s.worldmat);
+			cc.groups[h.group].push_back(s.worldmat);
 		}
 	}
 
-	obj_transforms trans;
-
-	//TODO: move render_arg to render_object, reduce entity traverse times
-	for (auto a : ecs_api::select<ecs::render_args>(w->ecs)){
-		const auto& ra = a.get<ecs::render_args>();
-
-		objarray objs;
-
-		const cid_t r_id = ra.queue_renderable_id;
-		for (int i=0; entity_iter(w->ecs, r_id, i); ++i){
-			if (entity_sibling(w->ecs, r_id, i, ra.queue_visible_id)){
-				add_obj(w, r_id, i, nullptr, objs);
-			}
-		}
-		for (auto const& [groupid, mats] : groups) {
-			int gids[] = {groupid};
-			ecs_api::group_enable<ecs::hitch_tag>(w->ecs, gids);
-			const cid_t h_id = ecs_api::component<ecs::hitch_tag>::id;
-			for (int i=0; entity_iter(w->ecs, h_id, i); ++i){
-				if (entity_sibling(w->ecs, h_id, i, ra.queue_visible_id)){
-					add_obj(w, h_id, i, &mats, objs);
-				}
-			}
-		}
-
-		draw_objs(L, w, ra, objs, trans);
+	find_render_args(w, cc);
+	
+	const cid_t vv_id = ecs_api::component<ecs::view_visible>::id;
+	for (int i=0; entity_iter(w->ecs, vv_id, i); ++i){
+		draw_objs(L, w, vv_id, i, nullptr, cc);
 	}
+	for (auto const& [groupid, mats] : cc.groups) {
+		int gids[] = {groupid};
+		ecs_api::group_enable<ecs::hitch_tag>(w->ecs, gids);
+		const cid_t h_id = ecs_api::component<ecs::hitch_tag>::id;
+		for (int i=0; entity_iter(w->ecs, h_id, i); ++i){
+			draw_objs(L, w, h_id, i, &mats, cc);
+		}
+	}
+
+	cc.clear();
 	return 0;
 }
 

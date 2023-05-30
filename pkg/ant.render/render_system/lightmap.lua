@@ -96,6 +96,7 @@ local function load_lightmap_material(mf, setting)
 end
 
 function lm_sys:update_filter()
+    assert(false, "Invalid code")
     for e in w:select "filter_result lightmap:in render_object:update material:in" do
         local lr_e = w:first("lightmapper lightmap_result:in")
 

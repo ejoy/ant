@@ -22,6 +22,7 @@ end
 
 local assetmgr	= import_package "ant.asset"
 
+local queuemgr	= require "queue_mgr"
 local viewidmgr = require "viewid_mgr"
 --local mu		= mathpkg.util
 local mc 		= import_package "ant.math".constant
@@ -564,10 +565,15 @@ local omni_stencils = {
 }
 
 function sm:update_filter()
-    for e in w:select "filter_result render_object:update filter_material:in material:in skinning?in indirect?in bounding:in" do
+    for e in w:select "filter_result visible_state:in render_object:in filter_material:in material:in skinning?in indirect?in bounding:in" do
+		if not e.visible_state["cast_shadow"] then
+			goto continue
+		end
 		local mt = assetmgr.resource(e.material)
+		local ro = e.render_object
+
+		local mat_ptr
 		if mt.fx.setting.shadow_cast == "on" then
-			local ro = e.render_object
 			local m = which_material(e.skinning, e.heapmesh, e.indirect)
 			local mo = m.object
 			local fm = e.filter_material
@@ -585,16 +591,14 @@ function sm:update_filter()
 			fm["csm3_queue"] = mi
 			fm["csm4_queue"] = mi
 
-			local type = irender.material_index "csm1_queue"
-			rendercore.rm_set(ro.rm_idx, type, mi:ptr())
-		else
-			w:extend(e, "csm1_queue_visible?out csm2_queue_visible?out csm3_queue_visible?out csm4_queue_visible?out")
-			e.csm1_queue_visible = nil
-			e.csm2_queue_visible = nil
-			e.csm3_queue_visible = nil
-			e.csm4_queue_visible = nil
-			w:submit(e)
+			mat_ptr = mi:ptr()
 		end
+
+		rendercore.rm_set(ro.rm_idx, queuemgr.material_index "csm1_queue", mat_ptr)
+		rendercore.rm_set(ro.rm_idx, queuemgr.material_index "csm2_queue", mat_ptr)
+		rendercore.rm_set(ro.rm_idx, queuemgr.material_index "csm3_queue", mat_ptr)
+		rendercore.rm_set(ro.rm_idx, queuemgr.material_index "csm4_queue", mat_ptr)
+	    ::continue::
 	end
 end
 

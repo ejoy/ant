@@ -11,7 +11,8 @@ local function init_ro()
         prog        = 0xffffffff,
         --materials
         rm_idx      = 0xffffffff,
-        rm_mask     = 0,
+        visible_masks = 0,
+        cull_masks  = 0,
         --mesh
         vb_start    = 0,
         vb_num      = 0,
@@ -46,13 +47,3 @@ end
 function ro.unmarshal(s)
     return init_ro()
 end
-
-local ra = ecs.component "render_args"
-function ra.init(v)
-    v.queue_visible_id = 0
-    v.queue_cull_id = 0
-    v.viewid = 0
-    v.material_idx = 0
-    return v
-end
-

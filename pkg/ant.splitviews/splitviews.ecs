@@ -5,18 +5,9 @@ system "splitviews_system"
     .method "data_changed"
     .method "update_camera"
 
-local q = {
-    "ortho_right_queue",
-    "ortho_left_queue",
-    "ortho_back_queue",
-    "ortho_front_queue",
-    "ortho_top_queue",
-    "ortho_bottom_queue",
-}
-for i=1, #q do
-    local n = q[i]
-    component (n)
-    component (n .. "_visible")
-    component (n .. "_cull")
-    component (n .. "_renderable")
-end
+component "ortho_right_queue"
+component "ortho_left_queue"
+component "ortho_back_queue"
+component "ortho_front_queue"
+component "ortho_top_queue"
+component "ortho_bottom_queue"

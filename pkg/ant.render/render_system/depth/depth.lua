@@ -4,6 +4,7 @@ local w     = world.w
 
 local setting       = import_package "ant.settings".setting
 local renderutil    = require "util"
+local queuemgr      = require "queue_mgr"
 local s             = ecs.system "pre_depth_system"
 
 local rendercore    = ecs.clibs "render.core"
@@ -81,20 +82,15 @@ local function create_depth_only_material(mo, fm)
 end
 
 function s:update_filter()
-    for e in w:select "filter_result pre_depth_queue_visible:update render_layer:in render_object:update filter_material:in skinning?in heapmesh?in indirect?in" do
-        if e.render_layer == "opacity" then
+    for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in heapmesh?in indirect?in" do
+        if e.visible_state["pre_depth_queue"] and e.render_layer == "opacity" then
             local mo = assert(which_material(e.skinning, e.heapmesh, e.indirect))
             local ro = e.render_object
             local fm = e.filter_material
 
             local mi = create_depth_only_material(mo, fm)
             fm["pre_depth_queue"] = mi
-            rendercore.rm_set(ro.rm_idx, irender.material_index "pre_depth_queue", mi:ptr())
-        else
-            e.pre_depth_queue_visible = nil
+            rendercore.rm_set(ro.rm_idx, queuemgr.material_index "pre_depth_queue", mi:ptr())
         end
-        -- fm["scene_depth_queue"] = mi
-        -- ro.mat_scenedepth = h
-        --e["scene_depth_queue_visible"] = true
     end
 end
