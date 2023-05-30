@@ -39,12 +39,6 @@ enum queue_type{
 
 static constexpr uint8_t MAX_VISIBLE_QUEUE = 64;
 
-using R_ptr = struct render_material*;
-static inline R_ptr&
-TO_R(struct ecs_world* w){
-	return w->render_material;
-}
-
 using obj_transforms = std::unordered_map<const ecs::render_object*, transform>;
 static inline transform
 update_transform(struct ecs_world* w, const ecs::render_object *ro, obj_transforms &trans){
@@ -172,8 +166,7 @@ submit_draw(struct ecs_world*w, bgfx_view_id_t viewid, const ecs::render_object 
 
 static inline void
 draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ecs::render_object *obj, const matrix_array *mats, obj_transforms &trans){
-	auto R = TO_R(w);
-	auto mi = get_material(R, obj, ra->material_index);
+	auto mi = get_material(w->R, obj, ra->material_index);
 	if (mi && mesh_submit(w, obj, ra->viewid, ra->material_index)) {
 		apply_material_instance(L, mi, w);
 		const auto prog = material_prog(L, mi);
@@ -288,23 +281,18 @@ lnull(lua_State *L){
 	return 1;
 }
 
-static inline struct render_material*
-TO_R(lua_State *L, int index=1){
-	return (struct render_material*)lua_touserdata(L, index);
-}
-
 static int
 lrm_dealloc(lua_State *L){
 	auto w = getworld(L);
 	const int index = (int)luaL_checkinteger(L, 1);
-	render_material_dealloc(TO_R(w), index);
+	render_material_dealloc(w->R, index);
 	return 0;
 }
 
 static int
 lrm_alloc(lua_State *L){
 	auto w = getworld(L);
-	lua_pushinteger(L, render_material_alloc(TO_R(w)));
+	lua_pushinteger(L, render_material_alloc(w->R));
 	return 1;
 }
 
@@ -325,7 +313,7 @@ lrm_set(lua_State *L){
 	}
 	const auto m = lua_touserdata(L, 3);
 
-	render_material_set(TO_R(w), index, type, m);
+	render_material_set(w->R, index, type, m);
 	return 0;
 }
 
@@ -349,16 +337,15 @@ luaopen_render_material(lua_State *L) {
 static int
 linit(lua_State *L){
 	auto w = getworld(L);
-	w->render_material = render_material_create();
+	w->R = render_material_create();
 	return 1;
 }
 
 static int
 lexit(lua_State *L){
 	auto w = getworld(L);
-	auto& R = w->render_material;
-	render_material_release(R);
-	R = nullptr;
+	render_material_release(w->R);
+	w->R = nullptr;
 	return 0;
 }
 

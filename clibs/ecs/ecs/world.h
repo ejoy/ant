@@ -27,7 +27,7 @@ struct ecs_world {
 	struct math3d_api*            math3d;
 	struct bgfx_encoder_holder*   holder;
 	struct cull_cached*           cull_cached;
-	struct render_material*       render_material;
+	struct render_material*       R;
 	uintptr_t                     unused_0;
 	uintptr_t                     unused_1;
 };
