@@ -15,6 +15,13 @@ end
 local QUEUE_INDICES, QUEUE_MASKS = {}, {}
 do
 	local NEXT_QUEUE_IDX = 0
+	local NEXT_MATERIAL_IDX = 0
+
+	local function alloc_material()
+		local idx = NEXT_MATERIAL_IDX
+		NEXT_MATERIAL_IDX = NEXT_MATERIAL_IDX + 1
+		return idx
+	end
 	--qidx&midx is base 0
 	local function register_queue(qn, midx)
 		assert(QUEUE_INDICES[qn] == nil, qn .. " already register")
@@ -38,15 +45,17 @@ do
 		return qidx
 	end
 
-	register_queue("main_queue", 			0)
-	register_queue("pre_depth_queue", 		1)
-	register_queue("pickup_queue", 			2)
-	register_queue("csm1_queue", 			3)
-	register_queue("csm2_queue", 			3)
-	register_queue("csm3_queue", 			3)
-	register_queue("csm4_queue", 			3)
-	register_queue("bake_lightmap_queue",	4)
+	register_queue("main_queue", 			alloc_material())
+	register_queue("pre_depth_queue", 		alloc_material())
+	register_queue("pickup_queue", 			alloc_material())
+	local shadow_material_idx	= alloc_material()
+	register_queue("csm1_queue", 			shadow_material_idx)
+	register_queue("csm2_queue", 			shadow_material_idx)
+	register_queue("csm3_queue", 			shadow_material_idx)
+	register_queue("csm4_queue", 			shadow_material_idx)
+	register_queue("bake_lightmap_queue",	alloc_material())
 
+	m.alloc_material = alloc_material
 	m.register_queue = register_queue
 end
 
