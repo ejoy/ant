@@ -48,19 +48,22 @@ insert_cull_array(struct cull_array cull_a[], int n_cull, uint64_t cullmasks[], 
 	return n_cull + 1;
 }
 
-using cull_cached_select = ecs_api::cached<ecs::view_visible, ecs::bounding, ecs::render_object>;
+struct cull_cached: public ecs_api::cached<ecs::view_visible, ecs::bounding, ecs::render_object> {
+	cull_cached(struct ecs_context* ctx)
+		: ecs_api::cached<ecs::view_visible, ecs::bounding, ecs::render_object>(ctx) {}
+};
 
 static int
 linit(lua_State *L) {
 	auto w = getworld(L);
-	w->create_member<cull_cached_select>(w->ecs);
+	w->cull_cached = new struct cull_cached(w->ecs);
 	return 0;
 }
 
 static int
 lexit(lua_State *L) {
 	auto w = getworld(L);
-	w->destroy_member<cull_cached_select>();
+	delete w->cull_cached;
 	return 0;
 }
 
@@ -82,7 +85,7 @@ lcull(lua_State *L) {
 	if (a_n == 0)
 		return 0;
 
-	for (auto e : ecs_api::select(w->get_member<cull_cached_select>())) {
+	for (auto e : ecs_api::select(*w->cull_cached)) {
 		const auto &b = e.get<ecs::bounding>();
 
 		if (math_isnull(b.scene_aabb))

@@ -42,7 +42,7 @@ static constexpr uint8_t MAX_VISIBLE_QUEUE = 64;
 using R_ptr = struct render_material*;
 static inline R_ptr&
 TO_R(struct ecs_world* w){
-	return w->get_member<R_ptr>();
+	return w->render_material;
 }
 
 using obj_transforms = std::unordered_map<const ecs::render_object*, transform>;
@@ -349,14 +349,14 @@ luaopen_render_material(lua_State *L) {
 static int
 linit(lua_State *L){
 	auto w = getworld(L);
-	w->create_member<R_ptr>() = render_material_create();
+	w->render_material = render_material_create();
 	return 1;
 }
 
 static int
 lexit(lua_State *L){
 	auto w = getworld(L);
-	auto& R = w->get_member<R_ptr>();
+	auto& R = w->render_material;
 	render_material_release(R);
 	R = nullptr;
 	return 0;
