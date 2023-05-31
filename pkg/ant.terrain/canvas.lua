@@ -211,6 +211,7 @@ local function create_texture_item_entity(materialpath, render_layer)
                     start = 0,
                     num = 0,
                     handle = bgfx.create_dynamic_vertex_buffer(1, "a"),
+                    owned = true
                 },
                 ib = {
                     start = 0,
