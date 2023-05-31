@@ -7,8 +7,7 @@ local MouseUp <const> = 3
 
 local function start_timer(timeout, f)
     local t = {}
-    ltask.fork(function()
-        ltask.sleep(timeout / 10)
+    ltask.timeout(timeout / 10, function ()
         if not t.stop then
             f()
         end
