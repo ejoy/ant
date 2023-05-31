@@ -23,8 +23,10 @@ local bufferhandle<const> = bgfx.create_dynamic_vertex_buffer(max_buffersize, la
 
 local canvas_sys = ecs.system "canvas_system"
 
-function canvas_sys:init()
-
+function canvas_sys:component_init()
+    for e in w:select "INIT canvas:in" do
+        e.canvas.materials = {}
+    end
 end
 
 --[[
@@ -151,57 +153,39 @@ local function get_texture_size(materialpath)
     return {w=ti.width, h=ti.height}
 end
 
-local function update_items()
-    local bufferoffset = 0
-    local buffers = {}
-    for e in w:select "canvas:in" do
-        local canvas = e.canvas
-        local textures = canvas.textures
-        for materialpath, tex in pairs(textures) do
-            local values = {}
-            local texsize = get_texture_size(materialpath)
-            for _, v in pairs(tex.items) do
-                values[#values+1] = add_item(texsize, v.texture, v)
-            end
-
-            if tex.renderer_eid then
-                local hasitem = #values > 0
-                if hasitem then
-                    local re <close> = w:entity(tex.renderer_eid, "render_object:update")
-                    local objbuffer = table.concat(values, "")
-                    local ro = re.render_object
-
-                    local buffersize = #objbuffer
-                    local vbnum = buffersize//layout.stride
-                    ro.vb_start, ro.vb_num = bufferoffset, vbnum
-                    ro.ib_start, ro.ib_num = 0, (vbnum//4)*6
-
-                    bufferoffset = bufferoffset + vbnum
-                    buffers[#buffers+1] = objbuffer
-
-                    ivs.set_state(re, "main_view", canvas.show)
-                    ivs.set_state(re, "selectable", canvas.show)
-                else
-                    -- if no items to draw, should remove this entity
-                    w:remove(tex.renderer_eid)
-                    textures[materialpath] = nil
-                end
-            end
+local function update_drawer_items(de)
+    w:extend(de, "canvas_drawer:in material:in render_object:update")
+    local ro = de.render_object
+    if #de.canvas_drawer.items > 0 then
+        local buffers = {}
+        local texsize = get_texture_size(de.material)
+        for _, v in pairs(de.canvas_drawer.items) do
+            buffers[#buffers+1] = add_item(texsize, v.texture, v)
         end
-    end
+    
+        local objbuffer = table.concat(buffers, "")
+        local vbnum = #objbuffer//layout.stride
+        ro.vb_start, ro.vb_num = 0, vbnum
+        ro.ib_start, ro.ib_num = 0, (vbnum//4)*6
 
-    if bufferoffset > 0 then
-        local b = table.concat(buffers, "")
-        assert(max_buffersize >= #b)
-        bgfx.update(bufferhandle, 0, bgfx.memory_buffer(b))
+        bgfx.update(ro.vb_handle, 0, bgfx.memory_buffer(objbuffer))
+    else
+        ro.vb_num, ro.ib_num = 0, 0
     end
+    w:submit(de)
 end
 
-local canvas_texture_mb = world:sub{"canvas_update", "texture"}
+local canvas_mb = world:sub{"canvas_update", "add_items"}
+
 function canvas_sys:data_changed()
-    for _ in canvas_texture_mb:each() do
-        update_items()
-        break
+    for _, _, eid, items in canvas_mb:unpack() do
+        local de = w:entity(eid, "canvas_drawer:in")
+        local citems = de.canvas_drawer.items
+        for id, item in pairs(items) do
+            assert(citems[id] == nil, "Ivalid item id!")
+            citems[id] = item
+        end
+        update_drawer_items(de)
     end
 end
 
@@ -217,12 +201,10 @@ local function id_generator()
 end
 
 local gen_texture_id = id_generator()
+local gen_item_id = id_generator()
 
-local function create_texture_item_entity(materialpath, canvasentity, render_layer)
-    w:extend(canvasentity, "eid:in canvas:in")
-    local canvas_id = canvasentity.eid
-    local canvas = canvasentity.canvas
-    local eid; eid = ecs.create_entity{
+local function create_texture_item_entity(materialpath, render_layer)
+    local eid = ecs.create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -232,7 +214,7 @@ local function create_texture_item_entity(materialpath, canvasentity, render_lay
                 vb = {
                     start = 0,
                     num = 0,
-                    handle = bufferhandle,
+                    handle = bgfx.create_dynamic_vertex_buffer(1, "a"),
                 },
                 ib = {
                     start = 0,
@@ -241,76 +223,68 @@ local function create_texture_item_entity(materialpath, canvasentity, render_lay
                 }
             },
             material    = materialpath,
-            scene       = {
-                parent = canvas_id,
-            },
+            scene       = {},
             render_layer = render_layer or "ui",
             visible_state= "main_view",
             name        = "canvas_texture" .. gen_texture_id(),
-            canvas_item = "texture",
-            on_ready = function (e)
-                --update renderer_eid
-                local textures = canvas.textures
-                local t = textures[materialpath]
-                t.renderer_eid = eid
-                world:pub{"canvas_update", "texture"}
-                world:pub{"canvas_update", "new_entity", eid}
-            end
+            canvas_drawer = {
+                type = "texture",
+                items = {},
+            },
         }
     }
     return eid
 end
 
-local gen_item_id = id_generator()
 local item_cache = {}
 function icanvas.add_items(e, materialpath, render_layer, ...)
     w:extend(e, "canvas:in")
     local canvas = e.canvas
-    local textures = canvas.textures
+    local materials = canvas.materials
 
-    local added_items = {}
-
+    local item_ids = {}
+    local items = {}
     for i=1, select("#", ...) do
         local item = select(i, ...)
-        local t = textures[materialpath]
-        if t == nil then
-            create_texture_item_entity(materialpath, e, render_layer)
-            t = {
-                items = {},
-            }
-            textures[materialpath] = t
-        end
+        
         local id = gen_item_id()
-        t.items[id] = item
+        item_ids[#item_ids+1] = id
+        items[id] = item
+
         item_cache[id] = materialpath
-        added_items[#added_items+1] = id
-    end
-    if #added_items > 0 then
-        world:pub{"canvas_update", "texture"}
+        item_ids[#item_ids+1] = id
     end
 
-    return added_items
+    local itemeid = materials[materialpath]
+    if itemeid == nil then
+        itemeid = create_texture_item_entity(materialpath, render_layer)
+        materials[materialpath] = itemeid
+    end
+
+    world:pub{"canvas_update", "add_items", itemeid, items}
+    return item_ids
 end
 
-local function get_texture(e, itemid)
-    w:extend(e, "canvas:in")
-    local canvas = e.canvas
-    local textures = canvas.textures
-
-    local texkey = assert(item_cache[itemid])
-    return assert(textures[texkey])
+local function find_drawer_eid(e, itemid)
+    local mp = assert(item_cache[itemid], "Ivalid itemid")
+    local materials = e.canvas.materials
+    return assert(materials[mp], "Invalid itemid, nout found valid materialpath")
 end
 
 function icanvas.remove_item(e, itemid)
-    local t = get_texture(e, itemid)
-    t.items[itemid] = nil
+    local deid = find_drawer_eid(e, itemid)
+    local de = w:entity(deid, "canvas_drawer:in")
+    if de.canvas_drawer[itemid] then
+        de.canvas_drawer[itemid] = nil
+        update_drawer_items(de)
+    end
     item_cache[itemid] = nil
-    world:pub{"canvas_update", "texture"}
 end
 
 local function get_item(e, itemid)
-    local t = get_texture(e, itemid)
-    return t.items[itemid]
+    local deid = find_drawer_eid(e, itemid)
+    local de = w:entity(deid, "canvas_drawer:in")
+    return assert(de.canvas_drawer.items[itemid], "Invalid itemid")
 end
 
 local function update_item(item, posrect, tex_rect)
@@ -358,12 +332,8 @@ function icanvas.show(e, b)
     local canvas = e.canvas
     canvas.show = b
 
-    local textures = canvas.textures
-    for _, tex in pairs(textures) do
-        if tex.renderer_eid then
-            local re <close> = w:entity(tex.renderer_eid)
-            ivs.set_state(re, "main_view", b)
-            ivs.set_state(re, "selectable", b)
-        end
+    for _, eid in pairs(canvas.materials) do
+        local re <close> = w:entity(eid)
+        ivs.set_state(re, "main_view|selectable", b)
     end
 end
