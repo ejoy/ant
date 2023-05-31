@@ -1,6 +1,5 @@
 local mouse_what  = { 'LEFT', 'RIGHT', 'MIDDLE' }
 local mouse_state = { 'DOWN', 'MOVE', 'UP' }
-local touch_state = { 'START', 'MOVE', 'END', "CANCEL" }
 
 local ltask = require "ltask"
 local ServiceRmlui; do
@@ -23,14 +22,6 @@ local function create(world, type)
         end
         world:pub {"mouse", mouse_what[what] or "UNKNOWN", mouse_state[state] or "UNKNOWN", x, y}
     end
-    function ev.touch(state, data)
-        if ServiceRmlui then
-            if ltask.call(ServiceRmlui, "touch", state, data) then
-                return
-            end
-        end
-        world:pub {"touch", touch_state[state] or "UNKNOWN", data}
-    end
     function ev.gesture(...)
         if ServiceRmlui then
             if ltask.call(ServiceRmlui, "gesture", ...) then
@@ -46,9 +37,6 @@ local function create(world, type)
             ALT		= (state & 0x04) ~= 0,
             SYS		= (state & 0x08) ~= 0,
         }}
-    end
-    function ev.char(char)
-        world:pub {"char", char}
     end
     function ev.size(w, h)
         world:pub {"resize", w, h}

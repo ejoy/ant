@@ -20,32 +20,6 @@ id g_gesture;
 }
 @end
 
-
-static void push_touch_message(TOUCH_TYPE type, UIView* view, NSSet* touches) {
-    if (!g_cb) {
-        return;
-    }
-    window_message(g_cb, [&](lua_State* L){
-        lua_pushstring(L, "touch");
-        lua_pushinteger(L, type);
-        lua_newtable(L);
-        lua_Integer n = 0;
-        for (UITouch *touch in touches) {
-            lua_newtable(L);
-            CGPoint pt = [touch locationInView:view];
-            pt.x *= view.contentScaleFactor;
-            pt.y *= view.contentScaleFactor;
-            lua_pushinteger(L, (lua_Integer)(uintptr_t)touch);
-            lua_setfield(L, -2, "id");
-            lua_pushnumber(L, pt.x);
-            lua_setfield(L, -2, "x");
-            lua_pushnumber(L, pt.y);
-            lua_setfield(L, -2, "y");
-            lua_seti(L, -2, ++n);
-        }
-    });
-}
-
 @implementation View
 + (Class)layerClass  {
     Class metalClass = NSClassFromString(@"CAMetalLayer");
@@ -95,18 +69,6 @@ static void push_touch_message(TOUCH_TYPE type, UIView* view, NSSet* touches) {
 }
 - (void)renderFrame {
     g_cb->update(g_cb);
-}
-- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(TOUCH_BEGAN, self, touches);
-}
-- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(TOUCH_MOVED, self, touches);
-}
-- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(TOUCH_ENDED, self, touches);
-}
-- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(TOUCH_CANCELLED, self, touches);
 }
 @end
 

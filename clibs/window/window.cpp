@@ -82,14 +82,6 @@ void window_message_size(struct ant_window_callback* cb, int x, int y, uint8_t t
 	push_message(L);
 }
 
-void window_message_char(struct ant_window_callback* cb, int code) {
-	lua_State* L = cb->messageL;
-	lua_settop(L, 1);
-	lua_pushstring(L, "char");
-	lua_pushinteger(L, code);
-	push_message(L);
-}
-
 void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_tap const& gesture) {
 	lua_State* L = cb->messageL;
 	lua_settop(L, 1);
@@ -175,11 +167,4 @@ void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture c
 	default:
 		break;
 	}
-}
-
-void window_message(struct ant_window_callback* cb, std::function<void(struct lua_State*)> func) {
-	lua_State* L = cb->messageL;
-	lua_settop(L, 1);
-	func(L);
-	push_message(L);
 }
