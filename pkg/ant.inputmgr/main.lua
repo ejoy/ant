@@ -1,6 +1,3 @@
-local mouse_what  = { 'LEFT', 'RIGHT', 'MIDDLE' }
-local mouse_state = { 'DOWN', 'MOVE', 'UP' }
-
 local ltask = require "ltask"
 local ServiceRmlui; do
     ltask.fork(function ()
@@ -11,17 +8,6 @@ end
 local function create(world, type)
     local keymap = require(type.."_keymap")
     local ev = {}
-    function ev.mouse_wheel(x, y, delta)
-        world:pub {"mouse_wheel", delta, x, y}
-    end
-    function ev.mouse(x, y, what, state)
-        if ServiceRmlui then
-            if ltask.call(ServiceRmlui, "mouse", x, y, what, state) then
-                return
-            end
-        end
-        world:pub {"mouse", mouse_what[what] or "UNKNOWN", mouse_state[state] or "UNKNOWN", x, y}
-    end
     function ev.gesture(...)
         if ServiceRmlui then
             if ltask.call(ServiceRmlui, "gesture", ...) then
@@ -41,6 +27,7 @@ local function create(world, type)
     function ev.size(w, h)
         world:pub {"resize", w, h}
     end
+    require "mouse_gesture" (ev)
     return ev
 end
 
