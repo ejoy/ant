@@ -1,9 +1,19 @@
 system "outline_system"
     .implement "outline/outline.lua"
+    .method "init"
+    .method "init_world"
+    .method "end_filter"
+    .method "update_filter"
+    .method "render_submit"
     .method "data_changed"
 
 component "outline_info".type "lua"
-component "outline_pre"
 
 policy "outline_info"
     .component "outline_info"
+
+component "outline_queue"
+policy "outline_queue"
+    .require_policy "ant.render|render_queue"
+    .require_system  "ant.render|outline_system"
+    .component   "outline_queue"

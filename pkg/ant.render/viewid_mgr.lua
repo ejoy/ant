@@ -47,7 +47,7 @@ add_view "depth_resolve"
 add_view "depth_mipmap"			--15
 add_view "ssao"
 add_view "main_view"
-
+add_view "outline"
 --start postprocess
 add_view "postprocess_obj"
 add_view "bloom"

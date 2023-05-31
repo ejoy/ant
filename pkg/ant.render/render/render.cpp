@@ -34,6 +34,7 @@ enum queue_type{
 	qt_mat_pickup,
 	qt_mat_csm,
 	qt_mat_lightmap,
+	qt_mat_outline,
 	qt_count,
 };
 
@@ -67,7 +68,7 @@ static inline bool is_indirect_draw(const ecs::render_object *ro){
 }
 static bool
 mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid, uint8_t mat_idx){
-	if (ro->vb_num == 0)
+	if (ro->vb_num == 0 || ro->draw_num == 0)
 		return false;
 
 	const uint16_t ibtype = BUFFER_TYPE(ro->ib_handle);
@@ -170,7 +171,6 @@ draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ec
 	if (mi && mesh_submit(w, obj, ra->viewid, ra->material_index)) {
 		apply_material_instance(L, mi, w);
 		const auto prog = material_prog(L, mi);
-
 		transform t;
 		if (mats){
 			t = update_hitch_transform(w, obj, *mats, trans);
