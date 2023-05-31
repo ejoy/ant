@@ -159,11 +159,8 @@ function cc_sys:camera_usage()
         action.scale(5 * e.velocity)
     end
     for _, _, e in EventGesturePan:unpack() do
-        if e.state == "began" then
-            action.pan_reset(0,0)
-        end
-        local x, y = e.translationInView.x, e.translationInView.y
-        action.pan(x, y)
+        action.pan_reset(e.x - e.dx, e.y - e.dy)
+        action.pan(e.x, e.y)
     end
 
     local rotatetype="rotate_point"
