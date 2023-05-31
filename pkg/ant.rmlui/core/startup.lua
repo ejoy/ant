@@ -63,7 +63,6 @@ S.add_bundle = filemanager.add_bundle
 S.del_bundle = filemanager.del_bundle
 S.set_prefix = filemanager.set_prefix
 S.mouse = contextManager.process_mouse
-S.touch = contextManager.process_touch
 S.gesture = contextManager.process_gesture
 S.update_context_size = contextManager.set_dimensions
 

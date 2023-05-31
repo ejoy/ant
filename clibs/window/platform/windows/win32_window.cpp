@@ -1,30 +1,17 @@
 #include <Windows.h>
 #include <stdint.h>
-#include "../../window.h"
-#include <tlhelp32.h>
-#include <stdint.h>
 #include <stddef.h>
-#include <Windows.h>
+#include "../../window.h"
 
-#define MAX_DROP_PATH 255*3
-
-enum {
-	WM_USER_WINDOW_SETCURSOR = WM_USER,
-};
-
-// project path in my documents
 #define CLASSNAME L"ANTCLIENT"
 #define WINDOWSTYLE (WS_OVERLAPPEDWINDOW)
 
-
-static void
-get_xy(LPARAM lParam, int *x, int *y) {
+static void get_xy(LPARAM lParam, int *x, int *y) {
 	*x = (short)(lParam & 0xffff); 
 	*y = (short)((lParam>>16) & 0xffff); 
 }
 
-static void
-get_screen_xy(HWND hwnd, LPARAM lParam, int *x, int *y) {
+static void get_screen_xy(HWND hwnd, LPARAM lParam, int *x, int *y) {
 	get_xy(lParam, x, y);
 	POINT pt = { *x, *y };
 	ScreenToClient(hwnd, &pt);
@@ -47,11 +34,7 @@ static uint8_t get_keystate(LPARAM lParam) {
 		;
 }
 
-int g_surrogate = 0;
-
-static LRESULT CALLBACK
-WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
+static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
 	struct ant_window_callback *cb = NULL;
 	switch (message) {
 	case WM_CREATE: {
@@ -152,35 +135,13 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		window_message_size(cb, x, y, type);
 		break;
 	}
-	case WM_CHAR: {
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		int code = (int)wParam;
-		if (code >= 0xD800 && code <= 0xDBFF) {
-			g_surrogate = code;
-		} else {
-			if (code >= 0xDC00 && code <= 0xDFFF) {
-				code = ((g_surrogate - 0xD800) << 10) + (code - 0xDC00) + 0x10000;
-				g_surrogate = 0;
-			}
-			window_message_char(cb, code);
-		}
+	default:
 		break;
-	}
-	case WM_USER_WINDOW_SETCURSOR:
-	{
-		LPTSTR cursor = (LPTSTR)lParam;
-		HCURSOR hcursor = LoadCursor(NULL, cursor);
-		SetCursor(hcursor);
-		break;
-	}
-
 	}
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
 
-static void
-register_class()
-{
+static void register_class() {
 	WNDCLASSEXW wndclass;
 	memset(&wndclass, 0, sizeof(wndclass));
 	wndclass.cbSize = sizeof(wndclass);
@@ -191,7 +152,6 @@ register_class()
 	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wndclass.lpszClassName = CLASSNAME;
 	wndclass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
-
 	RegisterClassExW(&wndclass);
 }
 
@@ -205,8 +165,8 @@ int window_init(struct ant_window_callback* cb) {
 	rect.bottom=h;
 	AdjustWindowRect(&rect,WINDOWSTYLE,0);
 	register_class();
-	HWND wnd=CreateWindowExW(0,CLASSNAME,NULL,
-		WINDOWSTYLE, CW_USEDEFAULT,0,
+	HWND wnd=CreateWindowExW(0, CLASSNAME, NULL,
+		WINDOWSTYLE, CW_USEDEFAULT, 0,
 		rect.right-rect.left,rect.bottom-rect.top,
 		0,0,
 		GetModuleHandleW(0),

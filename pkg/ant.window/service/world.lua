@@ -106,10 +106,8 @@ local function render(nwh, context, width, height, initialized)
 
 	S.mouse_wheel	= ev.mouse_wheel
 	S.mouse 		= ev.mouse
-	S.touch			= ev.touch
 	S.gesture		= ev.gesture
 	S.keyboard		= ev.keyboard
-	S.char			= ev.char
 	S.size			= resize
 	do_size			= ev.size
 

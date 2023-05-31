@@ -21,6 +21,12 @@ struct render_material {
 	struct material_tuple *arena;
 };
 
+#define MAX_CHUNK ((RENDER_MATERIAL_TYPE_MAX + TUPLE_N - 1) / TUPLE_N)
+
+struct material_chunk {
+	struct material_tuple * c[MAX_CHUNK];
+};
+
 static inline int
 highest_bit(uint64_t xx) {
 	int r = 0;
@@ -107,145 +113,112 @@ allocnode(struct render_material *R) {
 	return R->n++;
 }
 
-static void
-shift_next(struct render_material *R, struct material_tuple *m) {
-	int index = m->next;
-	if (index < 0) {
-		m->type[TUPLE_N-1] = RENDER_MATERIAL_TYPE_MAX;
-		return;
-	}
-	struct material_tuple *next = &R->arena[index];
-	assert(next->type[0] < RENDER_MATERIAL_TYPE_MAX);
-	m->type[TUPLE_N-1] = next->type[0];
-	m->mat[TUPLE_N-1] = next->mat[0];
-	
+static int
+fetch_chunk(struct render_material *R, int index, struct material_chunk *C) {
 	int i = 0;
-	while (i < TUPLE_N - 1) {
-		next->type[i] = next->type[i+1];
-		if (next->type[i] >= RENDER_MATERIAL_TYPE_MAX) {
-			break;
+	while (i < MAX_CHUNK) {
+		struct material_tuple * m = &R->arena[index];
+		C->c[i] = m;
+		index = m->next;
+		if (index < 0) {
+			int j;
+			for (j=0;j<TUPLE_N;j++) {
+				if (m->type[j] >= RENDER_MATERIAL_TYPE_MAX) {
+					break;
+				}
+			}
+			return i * TUPLE_N + j;
 		}
-		next->mat[i] = next->mat[i+1];
 		++i;
 	}
-	if (i == 0) {
-		// remove next tuple
-		m->next = -1;
-		next->next = R->freelist;
-		R->freelist = index;
-	} else {
-		shift_next(R, next);
-	}
+	assert(0);
+	return -1;
 }
 
-static void
-remove_mat(struct render_material *R, int index, int type) {
-	assert(index < R->n);
-	struct material_tuple * m = &R->arena[index];
-	for (;;) {
-		int i;
-		for (i=0;i<TUPLE_N;i++) {
-			int t = m->type[i];
-			if (t == type) {
-				// move [i+1],... -> [i], ...
-				while (i < TUPLE_N - 1) {
-					m->type[i] = m->type[i+1];
-					if (m->type[i] >= RENDER_MATERIAL_TYPE_MAX) {
-						return;
-					}
-					m->mat[i] = m->mat[i+1];
-					++i;
-				}
-				shift_next(R, m);
-				return;
-			}
-			if (t > type) {
-				return;
-			}
-		}
-		if (m->next < 0)
-			return;
-		m = &R->arena[m->next];
-	}
+static inline void *
+get_material(struct material_chunk *C, int index, int *type) {
+	int page = index / TUPLE_N;
+	index = index % TUPLE_N;
+	*type = C->c[page]->type[index];
+	return C->c[page]->mat[index];
 }
 
-static void
-insert_mat_at(struct render_material *R, struct material_tuple *m,int i, int type, void *mat) {
-	for (;;) {
-		int temp_type = m->type[i];
-		void * temp_mat = m->mat[i];
-		m->type[i] = type;
-		m->mat[i] = mat;
-		++i;
-		if (i >= TUPLE_N) {
-			int index = m->next;
-			if (index < 0) {
-				index = allocnode(R);
-				m->next = index;
-				m = &R->arena[index];
-				m->next = -1;
-				m->type[0] = type;
-				m->mat[0] = mat;
-				m->type[1] = RENDER_MATERIAL_TYPE_MAX;
-			} else {
-				m = &R->arena[index];
-				insert_mat_at(R, m, 0, temp_type, temp_mat);
-			}
-			return;
-		}
-		type = temp_type;
-		mat = temp_mat;
-	}
+static inline void
+set_material(struct material_chunk *C, int index, int type, void *ud) {
+	int page = index / TUPLE_N;
+	index = index % TUPLE_N;
+	C->c[page]->type[index] = (uint8_t)type;
+	C->c[page]->mat[index] = ud;
 }
 
-static void
-insert_mat(struct render_material *R, int index, int type, void * mat) {
-	struct material_tuple * m = &R->arena[index];
-	for (;;) {
-		int i;
-		for (i=0;i<TUPLE_N;i++) {
-			int t = m->type[i];
-			if (t >= RENDER_MATERIAL_TYPE_MAX) {
-				// replace [i]
-				m->type[i] = (uint8_t)type;
-				m->mat[i] = mat;
-				++i;
-				if (i < TUPLE_N) {
-					m->type[i] = RENDER_MATERIAL_TYPE_MAX;
-				}
-				return;
-			}
-			if (t > type) {
-				insert_mat_at(R, m , i, type, mat);
-				return;
-			}
-			if (t == type) {
-				// replace
-				m->type[i] = (uint8_t)type;
-				m->mat[i] = mat;
-				return;
-			}
-		}
-		if (m->next < 0) {
-			m->next = allocnode(R);
-			m = &R->arena[m->next];
-			m->next = -1;
-			m->type[0] = type;
-			m->mat[0] = mat;
-			m->type[1] = RENDER_MATERIAL_TYPE_MAX;
-			return;
-		}
-		m = &R->arena[m->next];
+static inline void
+expand_chunk(struct render_material *R, struct material_chunk *C, int n) {
+	if (n % TUPLE_N != 0 || n == 0)
+		return;
+	assert(n < RENDER_MATERIAL_TYPE_MAX);
+	int node = allocnode(R);
+	int last = (n - 1) / TUPLE_N;
+	C->c[last]->next = node;
+	C->c[last+1] = &R->arena[node];
+	C->c[last+1]->next = -1;
+}
+
+static inline void
+close_chunk(struct material_chunk *C, int n) {
+	if ((n+1) % TUPLE_N != 0) {
+		set_material(C, n+1, RENDER_MATERIAL_TYPE_MAX, NULL);
 	}
 }
 
 void
 render_material_set(struct render_material *R, int index, int type, void *mat) {
-	if (mat == NULL) {
-		remove_mat(R, index, type);
-	} else {
-		insert_mat(R, index, type, mat);
+	struct material_chunk C;
+	int n = fetch_chunk(R, index, &C);
+	int i;
+	for (i=0;i<n;i++) {
+		int t;
+		void *ud = get_material(&C, i, &t);
+		if (t == type) {
+			if (mat == NULL) {
+				// remove [i]
+				for (;i<n-1;i++) {
+					ud = get_material(&C, i+1, &t);
+					set_material(&C, i, t, ud);
+				}
+				set_material(&C, i, RENDER_MATERIAL_TYPE_MAX, NULL);
+				if (n > TUPLE_N && ((n-1) % TUPLE_N == 0)) {
+					n /= TUPLE_N;
+					C.c[n]->next = R->freelist;
+					R->freelist = C.c[n-1]->next;
+					C.c[n-1]->next = -1;
+				}
+			} else {
+				// replace [i]
+				set_material(&C, i, type, mat);
+			}
+			return;
+		}
+		if (t > type) {
+			if (mat == NULL)
+				return;
+			expand_chunk(R, &C, n);
+			// insert at i
+			int j;
+			for (j = n; j > i; j--) {
+				ud = get_material(&C, j-1, &t);
+				set_material(&C, j, t, ud);
+			}
+			set_material(&C, i, type, mat);
+			close_chunk(&C, n);
+			return;
+		}
 	}
+	if (mat == NULL)
+		return;
+	// append
+	expand_chunk(R, &C, n);
+	set_material(&C, n, type, mat);
+	close_chunk(&C, n);
 }
 
 int
@@ -272,7 +245,7 @@ render_material_dealloc(struct render_material *R, int index) {
 
 #include <stdio.h>
 
-static void
+static inline void
 dump(struct render_material *R, int index) {
 	printf("FETCH %d\n", index);
 	void *mat[RENDER_MATERIAL_TYPE_MAX];
@@ -285,7 +258,7 @@ dump(struct render_material *R, int index) {
 	}
 }
 
-static void
+static inline void
 dump_index(struct render_material *R, int index) {
 	printf("DEBUG %d\n", index);
 	struct material_tuple *m = &R->arena[index];
@@ -311,22 +284,22 @@ main() {
 
 	int index = render_material_alloc(R);
 	int i;
-	for (i=0;i<10;i++) {
+	for (i=0;i<10;i+=2) {
 		render_material_set(R, index, i, (void *)(uintptr_t)(i+1));
 	}
-	dump(R, index);
 	dump_index(R, index);
-
+	for (i=1;i<10;i+=2) {
+		render_material_set(R, index, i, (void *)(uintptr_t)(i+1));
+	}
+	dump_index(R, index);
 	for (i=0;i<10;i+=2) {
 		render_material_set(R, index, i, NULL);
 	}
-	dump(R, index);
 	dump_index(R, index);
 
 	for (i=1;i<10;i+=2) {
 		render_material_set(R, index, i, NULL);
 	}
-	dump(R, index);
 	dump_index(R, index);
 
 	render_material_dealloc(R, index);
