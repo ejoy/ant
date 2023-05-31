@@ -274,8 +274,8 @@ end
 function icanvas.remove_item(e, itemid)
     local deid = find_drawer_eid(e, itemid)
     local de = w:entity(deid, "canvas_drawer:in")
-    if de.canvas_drawer[itemid] then
-        de.canvas_drawer[itemid] = nil
+    if de.canvas_drawer.items[itemid] then
+        de.canvas_drawer.items[itemid] = nil
         update_drawer_items(de)
     end
     item_cache[itemid] = nil
