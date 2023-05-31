@@ -1,3 +1,4 @@
+local platform = require "bee.platform"
 local ltask = require "ltask"
 local ServiceRmlui; do
     ltask.fork(function ()
@@ -27,7 +28,9 @@ local function create(world, type)
     function ev.size(w, h)
         world:pub {"resize", w, h}
     end
-    require "mouse_gesture" (ev)
+    if platform.os ~= "ios" and platform.os ~= "android" then
+        require "mouse_gesture" (ev)
+    end
     return ev
 end
 
