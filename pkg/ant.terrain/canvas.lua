@@ -204,7 +204,7 @@ local gen_texture_id = id_generator()
 local gen_item_id = id_generator()
 
 local function create_texture_item_entity(materialpath, render_layer)
-    local eid = ecs.create_entity{
+    return ecs.create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -222,6 +222,7 @@ local function create_texture_item_entity(materialpath, render_layer)
                     handle = irender.quad_ib(),
                 }
             },
+            owned_mesh_buffer = true,
             material    = materialpath,
             scene       = {},
             render_layer = render_layer or "ui",
@@ -233,7 +234,6 @@ local function create_texture_item_entity(materialpath, render_layer)
             },
         }
     }
-    return eid
 end
 
 local item_cache = {}
