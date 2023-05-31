@@ -65,14 +65,11 @@ local function posmat(srt)
     end
 end
 
-local vec<const> = math3d.vector
-
 local function trans_positions(m, v1, v2, v3, v4)
-    v1, v2, v3, v4 = vec(v1), vec(v2), vec(v3), vec(v4)
     local center = math3d.mul(math3d.add(v1, v4), 0.5)
     local function trans(v)
         local vv = math3d.sub(v, center)
-        return math3d.tovalue(math3d.add(math3d.transform(m, vv, 1), center))
+        return math3d.add(math3d.transform(m, vv, 1), center)
     end
 
     return trans(v1), trans(v2), trans(v3), trans(v4)
@@ -97,21 +94,21 @@ local function add_item(texsize, tex, rect)
 
     local   u0v1, u0v0,
             u1v1, u1v0 = 
-            {u0, v1, 0.0}, {u0, v0, 0.0},
-            {u1, v1, 0.0}, {u1, v0, 0.0}
+            math3d.vector(u0, v1, 0.0), math3d.vector(u0, v0, 0.0),
+            math3d.vector(u1, v1, 0.0), math3d.vector(u1, v0, 0.0)
     if tm then
         u0v1, u0v0, u1v1, u1v0 = trans_positions(tm, u0v1, u0v0, u1v1, u1v0)
     end
 
     local   vv1, vv2,
             vv3, vv4=
-            {x,     0.0, z}, {x,     0.0, z+hh},
-            {x+ww,  0.0, z}, {x+ww,  0.0, z+hh}
+            math3d.vector(x,     0.0, z), math3d.vector(x,     0.0, z+hh),
+            math3d.vector(x+ww,  0.0, z), math3d.vector(x+ww,  0.0, z+hh)
 
     local   vvt1, vvt2,
             vvt3, vvt4=
-            math3d.vector(0.0, 0.0, -1.0), math3d.vector( 1.0, 0.0, 0.0),
-            math3d.vector(0.0, 0.0,  1.0), math3d.vector(-1.0, 0.0, 0.0)
+            mc.NZAXIS, mc.XAXIS,
+            mc.ZAXIS,  mc.NXAXIS
 
     local pm = posmat(rect.srt)
     if pm then
@@ -122,14 +119,29 @@ local function add_item(texsize, tex, rect)
     end
 
     vvt1, vvt2, vvt3, vvt4 =
-        math3d.tovalue(mu.pack_tangent_frame(mc.YAXIS, vvt1)), math3d.tovalue(mu.pack_tangent_frame(mc.YAXIS, vvt2)),
-        math3d.tovalue(mu.pack_tangent_frame(mc.YAXIS, vvt3)), math3d.tovalue(mu.pack_tangent_frame(mc.YAXIS, vvt4))
+    mu.pack_tangent_frame(mc.YAXIS, vvt1), mu.pack_tangent_frame(mc.YAXIS, vvt2),
+    mu.pack_tangent_frame(mc.YAXIS, vvt3), mu.pack_tangent_frame(mc.YAXIS, vvt4)
 
-    return itemfmt:pack(
-        vv1[1], vv1[2], vv1[3], vvt1[1], vvt1[2], vvt1[3], vvt1[4], u0v1[1], u0v1[2],
-        vv2[1], vv2[2], vv2[3], vvt2[1], vvt2[2], vvt2[3], vvt2[4], u0v0[1], u0v0[2],
-        vv3[1], vv3[2], vv3[3], vvt3[1], vvt3[2], vvt3[3], vvt3[4], u1v1[1], u1v1[2],
-        vv4[1], vv4[2], vv4[3], vvt4[1], vvt4[2], vvt4[3], vvt4[4], u1v0[1], u1v0[2])
+    u0v1, u0v0, u1v1, u1v0 = 
+    math3d.serialize(u0v1), math3d.serialize(u0v0), 
+    math3d.serialize(u1v1), math3d.serialize(u1v0)
+
+    vv1, vv2, vv3, vv4 = 
+    math3d.serialize(vv1), math3d.serialize(vv2), 
+    math3d.serialize(vv3), math3d.serialize(vv4)
+
+    vvt1, vvt2, vvt3, vvt4 =
+    math3d.serialize(vvt1), math3d.serialize(vvt2),
+    math3d.serialize(vvt3), math3d.serialize(vvt4)
+
+    local r = ("c12c16c8"):rep(4):pack(
+        vv1:sub(1, 12), vvt1, u0v1:sub(1, 8),
+        vv2:sub(1, 12), vvt2, u0v0:sub(1, 8),
+        vv3:sub(1, 12), vvt3, u1v1:sub(1, 8),
+        vv4:sub(1, 12), vvt4, u1v0:sub(1, 8))
+
+    assert(#r ~= #itemfmt*4*4, "Invalid vertex format")
+    return r
 end
 
 local function get_texture_size(materialpath)
