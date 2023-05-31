@@ -319,11 +319,9 @@ local function canvas_test()
         data = {
             name = "canvas",
             scene = {
-                t = {0.0, 10, 0.0},
+                t = {0.0, 2, 0.0},
             },
             canvas = {
-                textures = {},
-                texts = {},
                 show = true,
             },
         }
