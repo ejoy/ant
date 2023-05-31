@@ -27,7 +27,7 @@ return function (ev)
     local inLongPress
     local alwaysInTapRegion
     local longPressTimer = {}
-    local touchSlopSquare <const> = 22 * 22
+    local touchSlopSquare <const> = 11 * 11
     local longPressTimeout <const> = 400
 
     local function dispatch_long_press()
