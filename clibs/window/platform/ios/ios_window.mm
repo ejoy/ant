@@ -1,9 +1,20 @@
 #include "../../window.h"
-#include "ios_window.h"
-#include "window.h"
 extern "C" {
 #include <lua-seri.h>
 }
+
+#import <UIKit/UIKit.h>
+#import <Metal/Metal.h>
+#import <QuartzCore/CAMetalLayer.h>
+
+@interface View : UIView
+    @property (nonatomic, retain) CADisplayLink* m_displayLink;
+@end
+
+@interface AppDelegate : UIResponder <UIApplicationDelegate>
+    @property (nonatomic, retain) UIWindow* m_window;
+    @property (nonatomic, retain) View*     m_view;
+@end
 
 id init_gesture();
 

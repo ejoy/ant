@@ -1,5 +1,9 @@
-#include "window.h"
 #include "../../window.h"
+
+#import <UIKit/UIKit.h>
+
+extern UIView* global_window;
+extern struct ant_window_callback* g_cb;
 
 static int getState(UIGestureRecognizerState v) {
     switch (v) {
