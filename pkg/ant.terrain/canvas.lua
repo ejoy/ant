@@ -12,14 +12,10 @@ local mc, mu    = mathpkg.constant, mathpkg.util
 local assetmgr  = import_package "ant.asset"
 
 local irender   = ecs.import.interface "ant.render|irender"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 
 local decl<const> = "p3|T4|t2"
 local layout<const> = declmgr.get(decl)
-
-local max_buffersize<const> = 1024 * 1024 * 10    --10 M
-local bufferhandle<const> = bgfx.create_dynamic_vertex_buffer(max_buffersize, layout.handle)
 
 local canvas_sys = ecs.system "canvas_system"
 
