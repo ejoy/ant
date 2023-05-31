@@ -12,38 +12,25 @@ local WindowMode <const> = {
 }
 
 local message = {}
-local quit = false
-
-local function message_loop(update)
-    local ServiceWorld = ltask.queryservice "ant.window|world"
-    while not quit do
-        if #message > 0 then
-            ltask.send(ServiceWorld, "msg", message)
-            for i = 1, #message do
-                message[i] = nil
-            end
-        end
-        if update then
-            ltask.wait "update"
-        else
-            ltask.sleep(0)
-        end
-    end
-    if #message > 0 then
-        ltask.send(ServiceWorld, "msg", message)
-    end
-end
 
 local function create_peek_window()
     local window = require "window"
     window.init(message)
-    ltask.fork(message_loop, false)
     ltask.fork(function()
+        local ServiceWorld = ltask.queryservice "ant.window|world"
         repeat
+            if #message > 0 then
+                ltask.send(ServiceWorld, "msg", message)
+                for i = 1, #message do
+                    message[i] = nil
+                end
+            end
             exclusive.sleep(0)
             ltask.sleep(0)
         until not window.peekmessage()
-        quit = true
+        if #message > 0 then
+            ltask.send(ServiceWorld, "msg", message)
+        end
     end)
 end
 
@@ -58,9 +45,21 @@ local function create_loop_window()
         until ltask.schedule_message() ~= SCHEDULE_SUCCESS
     end
     window.init(message, update)
-    ltask.fork(message_loop, true)
+    ltask.fork(function ()
+        local ServiceWorld = ltask.queryservice "ant.window|world"
+        while true do
+            if #message > 0 then
+                ltask.send(ServiceWorld, "msg", message)
+                for i = 1, #message do
+                    message[i] = nil
+                end
+            end
+            ltask.wait "update"
+        end
+    end)
     ltask.fork(function()
         window.mainloop()
+        update()
     end)
 end
 
