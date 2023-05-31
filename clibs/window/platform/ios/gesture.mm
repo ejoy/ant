@@ -24,6 +24,21 @@ static CGPoint getLocationInView(UIGestureRecognizer* gesture) {
     return pt;
 }
 
+static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
+    NSUInteger n = gesture.numberOfTouches;
+    CGPoint sum;
+    sum.x = 0;
+    sum.y = 0;
+    for (NSUInteger i = 0; i < n; ++i) {
+        CGPoint pt = [gesture locationOfTouch:i inView:global_window];
+        sum.x += pt.x;
+        sum.y += pt.y;
+    }
+    sum.x *= global_window.contentScaleFactor / n;
+    sum.y *= global_window.contentScaleFactor / n;
+    return sum;
+}
+
 @interface LuaGestureHandler : NSObject {
     CGPoint pan_began;
     CGPoint pan_last;
@@ -42,7 +57,7 @@ static CGPoint getLocationInView(UIGestureRecognizer* gesture) {
     if (state < 0) {
         return;
     }
-    auto pt = getLocationInView(gesture);
+    auto pt = getLocationOfTouch(gesture);
     struct ant_gesture_pinch msg;
     msg.state = getState(gesture.state);
     msg.x = pt.x;
