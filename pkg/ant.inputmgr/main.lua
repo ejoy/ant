@@ -34,8 +34,15 @@ local function create(world, type)
         world:pub {"resize", w, h}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
-        function ev.touch_event(...)
-            world:pub {"touch", ...}
+        if world.args.ecs.enable_mouse then
+            local mouse_what  = { 'LEFT', 'RIGHT', 'MIDDLE' }
+            local mouse_state = { 'DOWN', 'MOVE', 'UP' }
+            function ev.mouse_event(x, y, what, state)
+                world:pub {"mouse", mouse_what[what] or "UNKNOWN", mouse_state[state] or "UNKNOWN", x, y}
+            end
+        else
+            function ev.mouse_event()
+            end
         end
         require "mouse_gesture" (ev)
     end

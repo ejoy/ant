@@ -112,7 +112,7 @@ return function (ev)
         })
     end
     function ev.mouse(x, y, what, state)
-        ev.touch_event(what, state, x, y)
+        ev.mouse_event(x, y, what, state)
         if what ~= MOUSE_LEFT then
             return
         end
