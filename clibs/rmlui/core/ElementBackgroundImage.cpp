@@ -139,7 +139,7 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	geometry.SetMaterial(material);
 
 	auto lattice = element->GetComputedProperty(PropertyId::BackgroundLattice);
-	if(lattice->Has<PropertyFloat>()){
+	if(lattice && lattice->Has<PropertyFloat>()){
 		std::vector<Rect> surface_array(9);
 		std::vector<Rect> uv_array(9);
 		GetRectArray(lattice->Get<PropertyFloat>().value / 100.0, surface, surface_array);
