@@ -23,18 +23,28 @@ void window_message_size(struct ant_window_callback* cb, int x, int y, uint8_t t
 
 
 namespace ant::window {
-	enum KEYBOARD_STATE {
+	enum KEYBOARD_STATE : uint8_t {
 		KB_CTRL,
 		KB_SHIFT,
 		KB_ALT,
 		KB_SYS,
 		KB_CAPSLOCK,
 	};
-	enum TOUCH_TYPE {
+	enum TOUCH_TYPE : uint8_t {
 		TOUCH_BEGAN = 1,
 		TOUCH_MOVED = 2,
 		TOUCH_ENDED = 3,
 		TOUCH_CANCELLED = 4,
+	};
+	enum MOUSE_TYPE : uint8_t {
+		MOUSE_LEFT = 1,
+		MOUSE_MIDDLE = 2,
+		MOUSE_RIGHT = 3,
+	};
+	enum MOUSE_STATE : uint8_t {
+		MOUSE_DOWN = 1,
+		MOUSE_MOVE = 2,
+		MOUSE_UP = 3,
 	};
 	inline uint8_t get_keystate(bool kb_ctrl, bool kb_shift, bool kb_alt, bool kb_sys, bool kb_capslock) {
 		return 0
@@ -53,8 +63,8 @@ namespace ant::window {
 	struct msg_mouse {
 		int x;
 		int y;
-		uint8_t type;
-		uint8_t state;
+		MOUSE_TYPE type;
+		MOUSE_STATE state;
 	};
 	struct msg_mousewheel {
 		int x;

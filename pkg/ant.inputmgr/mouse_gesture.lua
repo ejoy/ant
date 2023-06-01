@@ -1,6 +1,9 @@
 local ltask = require "ltask"
 
 local MOUSE_LEFT <const> = 1
+local MOUSE_MIDDLE <const> = 2
+local MOUSE_RIGHT <const> = 3
+
 local MOUSE_DOWN <const> = 1
 local MOUSE_MOVE <const> = 2
 local MOUSE_UP <const> = 3
@@ -109,22 +112,23 @@ return function (ev)
         })
     end
     function ev.mouse(x, y, what, state)
+        ev.touch_event(what, state, x, y)
         if what ~= MOUSE_LEFT then
             return
         end
         if state == MOUSE_DOWN then
-            ev.touch(0, TOUCH_BEGAN, x, y)
+            ev.touch(what, TOUCH_BEGAN, x, y)
             mouse_down(x, y)
             return
         end
         if state == MOUSE_MOVE then
-            ev.touch(0, TOUCH_MOVED, x, y)
+            ev.touch(what, TOUCH_MOVED, x, y)
             mouse_move(x, y)
             return
         end
         if state == MOUSE_UP then
             mouse_up(x, y)
-            ev.touch(0, TOUCH_ENDED, x, y)
+            ev.touch(what, TOUCH_ENDED, x, y)
             return
         end
     end

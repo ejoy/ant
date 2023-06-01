@@ -274,22 +274,50 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
     case NSEventTypeLeftMouseDragged: {
         [g_wd getMouseX:&g_mx getMouseY:&g_my];
         struct ant::window::msg_mouse msg;
-        msg.type = 1;
-        msg.state = 2;
+        msg.state = ant::window::MOUSE_MOVE;
         msg.x = g_mx;
         msg.y = g_my;
+        switch (eventType) {
+        case NSEventTypeLeftMouseDragged:  msg.type = ant::window::MOUSE_LEFT; break;
+        case NSEventTypeRightMouseDragged: msg.type = ant::window::MOUSE_MIDDLE; break;
+        case NSEventTypeOtherMouseDragged: msg.type = ant::window::MOUSE_RIGHT; break;
+        default: break;
+        }
         ant::window::input_message(cb, msg);
         break;
     }
     case NSEventTypeLeftMouseDown:
-    case NSEventTypeLeftMouseUp:
+    case NSEventTypeRightMouseDown:
+    case NSEventTypeOtherMouseDown: {
         struct ant::window::msg_mouse msg;
-        msg.type = 1;
-        msg.state = (eventType == NSEventTypeLeftMouseDown) ? 1 : 3;
+        msg.state = ant::window::MOUSE_DOWN;
         msg.x = g_mx;
         msg.y = g_my;
+        switch (eventType) {
+        case NSEventTypeLeftMouseDown:  msg.type = ant::window::MOUSE_LEFT; break;
+        case NSEventTypeRightMouseDown: msg.type = ant::window::MOUSE_MIDDLE; break;
+        case NSEventTypeOtherMouseDown: msg.type = ant::window::MOUSE_RIGHT; break;
+        default: break;
+        }
         ant::window::input_message(cb, msg);
         break;
+    }
+    case NSEventTypeLeftMouseUp:
+    case NSEventTypeRightMouseUp:
+    case NSEventTypeOtherMouseUp: {
+        struct ant::window::msg_mouse msg;
+        msg.state = ant::window::MOUSE_UP;
+        msg.x = g_mx;
+        msg.y = g_my;
+        switch (eventType) {
+        case NSEventTypeLeftMouseUp:  msg.type = ant::window::MOUSE_LEFT; break;
+        case NSEventTypeRightMouseUp: msg.type = ant::window::MOUSE_MIDDLE; break;
+        case NSEventTypeOtherMouseUp: msg.type = ant::window::MOUSE_RIGHT; break;
+        default: break;
+        }
+        ant::window::input_message(cb, msg);
+        break;
+    }
     case NSEventTypeKeyDown:
     case NSEventTypeKeyUp: {
         struct ant::window::msg_keyboard msg;

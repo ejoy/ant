@@ -34,6 +34,9 @@ local function create(world, type)
         world:pub {"resize", w, h}
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
+        function ev.touch_event(...)
+            world:pub {"touch", ...}
+        end
         require "mouse_gesture" (ev)
     end
     return ev
