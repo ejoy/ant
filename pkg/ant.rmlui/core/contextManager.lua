@@ -3,10 +3,13 @@ local event = require "core.event"
 local environment = require "core.environment"
 local createSandbox = require "core.sandbox.create"
 local filemanager = require "core.filemanager"
+local constructor = require "core.DOM.constructor"
 
 local elementFromPoint = rmlui.DocumentElementFromPoint
 local getBody = rmlui.DocumentGetBody
 local dispatchEvent = rmlui.ElementDispatchEvent
+local getParent = rmlui.NodeGetParent
+local setPseudoClass = rmlui.ElementSetPseudoClass
 local project = rmlui.ElementProject
 
 local m = {}
@@ -160,6 +163,62 @@ function m.process_gesture(name, ...)
         return
     end
     return f(...)
+end
+
+local function walkElement(doc, e)
+    local r = {}
+    while true do
+        local element = constructor.Element(doc, false, e)
+        r[#r+1] = element
+        r[element] = true
+        e = getParent(e)
+        if not e then
+            break
+        end
+    end
+    return r
+end
+
+local activeElement = {}
+
+local function cancelActive(id)
+    local actives = activeElement[id]
+    if not actives then
+        return
+    end
+    for _, e in ipairs(actives) do
+        if e._handle then
+            setPseudoClass(e._handle, "active", false)
+        end
+    end
+    activeElement[id] = nil
+end
+
+local function setActive(doc, e, id)
+    cancelActive(id)
+    local actives = walkElement(doc, e)
+    activeElement[id] = actives
+    for _, e in ipairs(actives) do
+        setPseudoClass(e._handle, "active", true)
+    end
+end
+
+function m.process_touch(id, state, x, y)
+    local TOUCH_BEGAN <const> = 1
+    local TOUCH_MOVED <const> = 2
+    local TOUCH_ENDED <const> = 3
+    local TOUCH_CANCELLED <const> = 4
+    if state == TOUCH_BEGAN then
+        x, y = round(x), round(y)
+        local doc, e = fromPoint(x, y)
+        if e then
+            setActive(doc, e, id)
+        end
+    elseif state == TOUCH_ENDED or state == TOUCH_CANCELLED then
+        cancelActive(id)
+    elseif state == TOUCH_MOVED then
+        return
+    end
 end
 
 function m.set_dimensions(w, h, ratio)

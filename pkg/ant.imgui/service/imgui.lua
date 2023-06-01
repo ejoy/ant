@@ -85,7 +85,7 @@ local function updateIO()
 			MousePosX, MousePosY = x, y
 			cb.mouse(MousePosX, MousePosY, 4, 2)
 		elseif what == "MouseWheel" then
-			cb.mouse_wheel(MousePosX, MousePosY, y)
+			cb.mousewheel(MousePosX, MousePosY, y)
 		elseif what == "MouseButton" then
 			local button, down = x + 1, DOWN[y]
 			local cur = Mouse[button]
@@ -145,7 +145,7 @@ end
 
 local pm = require "packagemanager"
 local callback = pm.import(packagename)
-for _, name in ipairs {"init","update","exit","size","mouse_wheel","mouse","keyboard"} do
+for _, name in ipairs {"init","update","exit","size","mousewheel","mouse","keyboard"} do
 	cb[name] = callback[name] or (function () end)
 end
 

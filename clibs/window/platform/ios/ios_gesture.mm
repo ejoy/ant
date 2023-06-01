@@ -51,10 +51,10 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
 @implementation LuaGestureHandler
 -(void)handleTap:(UITapGestureRecognizer *)gesture {
     auto pt = getLocationInView(gesture);
-    struct ant_gesture_tap msg;
+    struct ant::window::msg_gesture_tap msg;
     msg.x = pt.x;
     msg.y = pt.y;
-    window_message_gesture(g_cb, msg);
+    ant::window::input_message(g_cb, msg);
 }
 -(void)handlePinch:(UIPinchGestureRecognizer *)gesture {
     int state = getState(gesture.state);
@@ -62,19 +62,19 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
         return;
     }
     auto pt = getLocationOfTouch(gesture);
-    struct ant_gesture_pinch msg;
+    struct ant::window::msg_gesture_pinch msg;
     msg.state = getState(gesture.state);
     msg.x = pt.x;
     msg.y = pt.y;
     msg.velocity = gesture.velocity;
-    window_message_gesture(g_cb, msg);
+    ant::window::input_message(g_cb, msg);
 }
 -(void)handleLongPress:(UILongPressGestureRecognizer *)gesture {
     auto pt = getLocationInView(gesture);
-    struct ant_gesture_longpress msg;
+    struct ant::window::msg_gesture_longpress msg;
     msg.x = pt.x;
     msg.y = pt.y;
-    window_message_gesture(g_cb, msg);
+    ant::window::input_message(g_cb, msg);
 }
 -(void)handlePan:(UIPanGestureRecognizer *)gesture {
     switch (gesture.state) {
@@ -86,14 +86,14 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     }
     case UIGestureRecognizerStateChanged: {
         auto pt = getLocationInView(gesture);
-        struct ant_gesture_pan msg;
+        struct ant::window::msg_gesture_pan msg;
         msg.x = pt.x;
         msg.y = pt.y;
         msg.dx = pt.x - pan_last.x;
         msg.dy = pt.y - pan_last.y;
         msg.vx = pt.x - pan_began.x;
         msg.vy = pt.y - pan_began.y;
-        window_message_gesture(g_cb, msg);
+        ant::window::input_message(g_cb, msg);
         pan_last = pt;
         break;
     }

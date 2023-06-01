@@ -4,13 +4,13 @@
 
 static uint8_t keyboard_state(NSEvent* event) {
     int flags = [event modifierFlags];
-	return 0
-		| ((0 != (flags & NSEventModifierFlagShift  ))  ? (uint8_t)(1 << KB_SHIFT)    : 0)
-		| ((0 != (flags & NSEventModifierFlagOption ))  ? (uint8_t)(1 << KB_ALT)      : 0)
-		| ((0 != (flags & NSEventModifierFlagControl))  ? (uint8_t)(1 << KB_CTRL)     : 0)
-		| ((0 != (flags & NSEventModifierFlagCommand))  ? (uint8_t)(1 << KB_SYS)      : 0)
-		| ((0 != (flags & NSEventModifierFlagCapsLock)) ? (uint8_t)(1 << KB_CAPSLOCK) : 0)
-		;
+    return ant::window::get_keystate(
+        0 != (flags & NSEventModifierFlagShift  ),
+        0 != (flags & NSEventModifierFlagOption ),
+        0 != (flags & NSEventModifierFlagControl),
+        0 != (flags & NSEventModifierFlagCommand),
+        0 != (flags & NSEventModifierFlagCapsLock)
+    );
 }
 
 static int keyboard_key(NSEvent* event) {
@@ -262,48 +262,49 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
 	}
 	NSEventType eventType = [event type];
 
-	switch (eventType) {
-	case NSEventTypeMouseMoved:
-	case NSEventTypeLeftMouseDragged:
-	case NSEventTypeRightMouseDragged:
-	case NSEventTypeOtherMouseDragged: {
-		[g_wd getMouseX:&g_mx getMouseY:&g_my];
-		uint8_t type = 0;
-        switch (eventType) {
-        case NSEventTypeMouseMoved:        type = 0; break;
-        case NSEventTypeLeftMouseDragged:  type = 1; break;
-        case NSEventTypeRightMouseDragged: type = 2; break;
-        case NSEventTypeOtherMouseDragged: type = 3; break;
-        default: break;
-        }
-        window_message_mouse(cb, g_mx, g_my, type, 2);
+    switch (eventType) {
+    case NSEventTypeScrollWheel: {
+        struct ant::window::msg_mousewheel msg;
+        msg.delta = 0.5f * [event scrollingDeltaY];
+        msg.x = g_mx;
+        msg.y = g_my;
+        ant::window::input_message(cb, msg);
         break;
     }
-	case NSEventTypeScrollWheel:
-        window_message_mouse_wheel(cb, g_mx, g_my, 0.5f * [event scrollingDeltaY]);
+    case NSEventTypeLeftMouseDragged: {
+        [g_wd getMouseX:&g_mx getMouseY:&g_my];
+        struct ant::window::msg_mouse msg;
+        msg.type = 1;
+        msg.state = 2;
+        msg.x = g_mx;
+        msg.y = g_my;
+        ant::window::input_message(cb, msg);
         break;
-	case NSEventTypeLeftMouseDown:
-	case NSEventTypeLeftMouseUp:
-        window_message_mouse(cb, g_mx, g_my, 1, (eventType == NSEventTypeLeftMouseDown) ? 1 : 3);
-        break;
-	case NSEventTypeRightMouseDown:
-	case NSEventTypeRightMouseUp:
-        window_message_mouse(cb, g_mx, g_my, 2, (eventType == NSEventTypeRightMouseDown) ? 1 : 3);
-        break;
-	case NSEventTypeOtherMouseDown:
-	case NSEventTypeOtherMouseUp:
-        window_message_mouse(cb, g_mx, g_my, 3, (eventType == NSEventTypeOtherMouseDown) ? 1 : 3);
-        break;
-	case NSEventTypeKeyDown:
-	case NSEventTypeKeyUp:
-        window_message_keyboard(cb, keyboard_key(event), keyboard_state(event), (eventType == NSEventTypeKeyDown) ? 1 : 0);
-		break;
-	default:
-		break;
     }
-	[NSApp sendEvent:event];
-	[NSApp updateWindows];
-	return true;
+    case NSEventTypeLeftMouseDown:
+    case NSEventTypeLeftMouseUp:
+        struct ant::window::msg_mouse msg;
+        msg.type = 1;
+        msg.state = (eventType == NSEventTypeLeftMouseDown) ? 1 : 3;
+        msg.x = g_mx;
+        msg.y = g_my;
+        ant::window::input_message(cb, msg);
+        break;
+    case NSEventTypeKeyDown:
+    case NSEventTypeKeyUp: {
+        struct ant::window::msg_keyboard msg;
+        msg.key = keyboard_key(event);
+        msg.state = keyboard_state(event);
+        msg.press = (eventType == NSEventTypeKeyDown) ? 1 : 0;
+        ant::window::input_message(cb, msg);
+        break;
+    }
+    default:
+        break;
+    }
+    [NSApp sendEvent:event];
+    [NSApp updateWindows];
+    return true;
 }
 
 void window_close() {

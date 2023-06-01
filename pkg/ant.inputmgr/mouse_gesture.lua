@@ -1,9 +1,14 @@
 local ltask = require "ltask"
 
-local MouseLeft <const> = 1
-local MouseDown <const> = 1
-local MouseMove <const> = 2
-local MouseUp <const> = 3
+local MOUSE_LEFT <const> = 1
+local MOUSE_DOWN <const> = 1
+local MOUSE_MOVE <const> = 2
+local MOUSE_UP <const> = 3
+
+local TOUCH_BEGAN <const> = 1
+local TOUCH_MOVED <const> = 2
+local TOUCH_ENDED <const> = 3
+local TOUCH_CANCELLED <const> = 4
 
 local function start_timer(timeout, f)
     local t = {}
@@ -96,7 +101,7 @@ return function (ev)
         end
         stop_timer(longPressTimer)
     end
-    function ev.mouse_wheel(x, y, delta)
+    function ev.mousewheel(x, y, delta)
         ev.gesture("pinch", {
             x = x,
             y = y,
@@ -104,19 +109,22 @@ return function (ev)
         })
     end
     function ev.mouse(x, y, what, state)
-        if what ~= MouseLeft then
+        if what ~= MOUSE_LEFT then
             return
         end
-        if state == MouseDown then
+        if state == MOUSE_DOWN then
+            ev.touch(0, TOUCH_BEGAN, x, y)
             mouse_down(x, y)
             return
         end
-        if state == MouseMove then
+        if state == MOUSE_MOVE then
+            ev.touch(0, TOUCH_MOVED, x, y)
             mouse_move(x, y)
             return
         end
-        if state == MouseUp then
+        if state == MOUSE_UP then
             mouse_up(x, y)
+            ev.touch(0, TOUCH_ENDED, x, y)
             return
         end
     end

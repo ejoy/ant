@@ -10,32 +10,32 @@
 #include <stdlib.h>
 #include <cassert>
 
-static_assert(sizeof(struct ant_gesture) < PIPE_BUF);
+static_assert(sizeof(struct ant::window::msg) < PIPE_BUF);
 
 extern struct ant_window_callback* g_cb;
 
-void android_gesture::queue_push(struct ant_gesture const& gesture) {
+void android_gesture::queue_push(struct ant::window::msg const& msg) {
     int r;
     do
-        r = write(pipe_write, &gesture, sizeof(gesture));
+        r = write(pipe_write, &msg, sizeof(msg));
     while (r == -1 && errno == EINTR);
-    assert(r == sizeof(gesture));
+    assert(r == sizeof(msg));
 }
 
-bool android_gesture::queue_pop(struct ant_gesture& gesture) {
-    int r = read(pipe_read, &gesture, sizeof(gesture));
-    if (r == sizeof(gesture)) return true;
+bool android_gesture::queue_pop(struct ant::window::msg& msg) {
+    int r = read(pipe_read, &msg, sizeof(msg));
+    if (r == sizeof(msg)) return true;
     assert(r <= 0);
     return false;
 }
 
 void android_gesture::queue_process() {
     for (;;) {
-        struct ant_gesture gesture;
-        if (!queue_pop(gesture)) {
+        struct ant::window::msg msg;
+        if (!queue_pop(msg)) {
             break;
         }
-        window_message_gesture(g_cb, gesture);
+        ant::window::input_message(g_cb, msg);
     }
 }
 
@@ -62,38 +62,38 @@ void android_gesture::destroy(android_app* app) {
     pipe_write = -1;
 }
 void android_gesture::onTap(android_app* app, float x, float y) {
-    struct ant_gesture gesture;
-    gesture.type = GESTURE_TAP;
-    gesture.tap.x = x;
-    gesture.tap.y = y;
-    queue_push(gesture);
+    struct ant::window::msg msg;
+    msg.type = ant::window::msg_type::gesture_tap;
+    msg.tap.x = x;
+    msg.tap.y = y;
+    queue_push(msg);
 }
 void android_gesture::onLongPress(android_app* app, float x, float y) {
-    struct ant_gesture gesture;
-    gesture.type = GESTURE_LONGPRESS;
-    gesture.longpress.x = x;
-    gesture.longpress.y = y;
-    queue_push(gesture);
+    struct ant::window::msg msg;
+    msg.type = ant::window::msg_type::gesture_longpress;
+    msg.longpress.x = x;
+    msg.longpress.y = y;
+    queue_push(msg);
 
 }
 void android_gesture::onPan(android_app* app, float x, float y, float dx, float dy, float vx, float vy) {
-    struct ant_gesture gesture;
-    gesture.type = GESTURE_PAN;
-    gesture.pan.x = x;
-    gesture.pan.y = y;
-    gesture.pan.dx = dx;
-    gesture.pan.dy = dy;
-    gesture.pan.vx = vx;
-    gesture.pan.vy = vy;
-    queue_push(gesture);
+    struct ant::window::msg msg;
+    msg.type = ant::window::msg_type::gesture_pan;
+    msg.pan.x = x;
+    msg.pan.y = y;
+    msg.pan.dx = dx;
+    msg.pan.dy = dy;
+    msg.pan.vx = vx;
+    msg.pan.vy = vy;
+    queue_push(msg);
 }
 void android_gesture::onPinch(android_app* app, int state, float x, float y, float velocity) {
-    struct ant_gesture gesture;
-    gesture.type = GESTURE_PINCH;
-    gesture.pinch.state = state;
-    gesture.pinch.x = x;
-    gesture.pinch.y = y;
-    gesture.pinch.velocity = velocity;
-    queue_push(gesture);
+    struct ant::window::msg msg;
+    msg.type = ant::window::msg_type::gesture_pinch;
+    msg.pinch.state = state;
+    msg.pinch.x = x;
+    msg.pinch.y = y;
+    msg.pinch.velocity = velocity;
+    queue_push(msg);
 }
 

@@ -5,60 +5,6 @@
 
 struct lua_State;
 
-typedef enum {
-	KB_CTRL,
-	KB_SHIFT,
-	KB_ALT,
-	KB_SYS,
-	KB_CAPSLOCK,
-} KEYBOARD_STATE;
-
-typedef enum {
-	TOUCH_BEGAN = 1,
-	TOUCH_MOVED = 2,
-	TOUCH_ENDED = 3,
-	TOUCH_CANCELLED = 4,
-} TOUCH_TYPE;
-
-typedef enum {
-	GESTURE_TAP = 0,
-	GESTURE_PINCH = 1,
-	GESTURE_LONGPRESS = 2,
-	GESTURE_PAN = 3,
-} GESTURE_TYPE;
-
-struct ant_gesture_tap {
-	float x;
-	float y;
-};
-struct ant_gesture_pinch {
-	int state;
-	float x;
-	float y;
-	float velocity;
-};
-struct ant_gesture_longpress {
-	float x;
-	float y;
-};
-struct ant_gesture_pan {
-	float x;
-	float y;
-	float dx;
-	float dy;
-	float vx;
-	float vy;
-};
-struct ant_gesture {
-	GESTURE_TYPE type;
-	union {
-		struct ant_gesture_tap tap;
-		struct ant_gesture_pinch pinch;
-		struct ant_gesture_longpress longpress;
-		struct ant_gesture_pan pan;
-	};
-};
-
 struct ant_window_callback {
 	void (*update)(struct ant_window_callback* cb);
 	struct lua_State* messageL;
@@ -73,12 +19,108 @@ void window_mainloop();
 void window_message_init(struct ant_window_callback* cb, void* window, void* context, int w, int h);
 void window_message_recreate(struct ant_window_callback* cb, void* window, void* context, int w, int h);
 void window_message_exit(struct ant_window_callback* cb);
-void window_message_keyboard(struct ant_window_callback* cb, int key, uint8_t state, uint8_t press);
-void window_message_mouse_wheel(struct ant_window_callback* cb, int x, int y, float delta);
-void window_message_mouse(struct ant_window_callback* cb, int x, int y, uint8_t type, uint8_t state);
 void window_message_size(struct ant_window_callback* cb, int x, int y, uint8_t type);
-void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_tap const& gesture);
-void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_pinch const& gesture);
-void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_longpress const& gesture);
-void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_pan const& gesture);
-void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture const& gesture);
+
+
+namespace ant::window {
+	enum KEYBOARD_STATE {
+		KB_CTRL,
+		KB_SHIFT,
+		KB_ALT,
+		KB_SYS,
+		KB_CAPSLOCK,
+	};
+	enum TOUCH_TYPE {
+		TOUCH_BEGAN = 1,
+		TOUCH_MOVED = 2,
+		TOUCH_ENDED = 3,
+		TOUCH_CANCELLED = 4,
+	};
+	inline uint8_t get_keystate(bool kb_ctrl, bool kb_shift, bool kb_alt, bool kb_sys, bool kb_capslock) {
+		return 0
+			| (kb_ctrl ? (uint8_t)(1 << KB_CTRL) : 0)
+			| (kb_shift ? (uint8_t)(1 << KB_SHIFT) : 0)
+			| (kb_alt ? (uint8_t)(1 << KB_ALT) : 0)
+			| (kb_sys ? (uint8_t)(1 << KB_SYS) : 0)
+			| (kb_capslock ? (uint8_t)(1 << KB_CAPSLOCK) : 0)
+			;
+	}
+	struct msg_keyboard {
+		int key;
+		uint8_t state;
+		uint8_t press;
+	};
+	struct msg_mouse {
+		int x;
+		int y;
+		uint8_t type;
+		uint8_t state;
+	};
+	struct msg_mousewheel {
+		int x;
+		int y;
+		float delta;
+	};
+	struct msg_touch {
+		uintptr_t id;
+		TOUCH_TYPE type;
+		float x;
+		float y;
+	};
+	struct msg_gesture_tap {
+		float x;
+		float y;
+	};
+	struct msg_gesture_pinch {
+		int state;
+		float x;
+		float y;
+		float velocity;
+	};
+	struct msg_gesture_longpress {
+		float x;
+		float y;
+	};
+	struct msg_gesture_pan {
+		float x;
+		float y;
+		float dx;
+		float dy;
+		float vx;
+		float vy;
+	};
+
+	enum class msg_type {
+		keyboard,
+		mouse,
+		mousewheel,
+		touch,
+		gesture_tap,
+		gesture_pinch,
+		gesture_longpress,
+		gesture_pan,
+	};
+	struct msg {
+		msg_type type;
+		union {
+			struct msg_keyboard keyboard;
+			struct msg_mouse mouse;
+			struct msg_mousewheel mousewheel;
+			struct msg_touch touch;
+			struct msg_gesture_tap tap;
+			struct msg_gesture_pinch pinch;
+			struct msg_gesture_longpress longpress;
+			struct msg_gesture_pan pan;
+		};
+	};
+
+	void input_message(struct ant_window_callback* cb, struct msg_keyboard const& keyboard);
+	void input_message(struct ant_window_callback* cb, struct msg_mouse const& mouse);
+	void input_message(struct ant_window_callback* cb, struct msg_mousewheel const& mousewheel);
+	void input_message(struct ant_window_callback* cb, struct msg_touch const& touch);
+	void input_message(struct ant_window_callback* cb, struct msg_gesture_tap const& gesture);
+	void input_message(struct ant_window_callback* cb, struct msg_gesture_pinch const& gesture);
+	void input_message(struct ant_window_callback* cb, struct msg_gesture_longpress const& gesture);
+	void input_message(struct ant_window_callback* cb, struct msg_gesture_pan const& gesture);
+	void input_message(struct ant_window_callback* cb, struct msg const& m);
+}

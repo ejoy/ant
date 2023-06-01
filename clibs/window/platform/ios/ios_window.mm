@@ -23,6 +23,20 @@ static id<MTLDevice> g_device = NULL;
 struct ant_window_callback* g_cb = NULL;
 id g_gesture;
 
+static void push_touch_message(TOUCH_TYPE type, UIView* view, NSSet* touches) {
+    struct ant::window::msg_touch touch;
+    touch.type = type;
+    for (UITouch *touch in touches) {
+        CGPoint pt = [touch locationInView:view];
+        pt.x *= view.contentScaleFactor;
+        pt.y *= view.contentScaleFactor;
+        touch.id = (uintptr_t)touch;
+        touch.x = pt.x;
+        touch.y = pt.y;
+        ant::window::input_message(g_cb, touch);
+    }
+}
+
 @interface ViewController : UIViewController
 @end
 @implementation ViewController
@@ -81,6 +95,18 @@ id g_gesture;
 - (void)renderFrame {
     g_cb->update(g_cb);
 }
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    push_touch_message(TOUCH_BEGAN, self, [event allTouches]);
+}
+- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
+    push_touch_message(TOUCH_MOVED, self,  [event allTouches]);
+}
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
+    push_touch_message(TOUCH_ENDED, self,  [event allTouches]);
+}
+- (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
+    push_touch_message(TOUCH_CANCELLED, self,  [event allTouches]);
+}
 @end
 
 @implementation AppDelegate
@@ -95,7 +121,7 @@ id g_gesture;
     [self.m_window setBackgroundColor:[UIColor whiteColor]];
     
     self.m_view = [[View alloc] initWithRect: rect WithScale: scale];
-    self.m_view.multipleTouchEnabled = true;
+    self.m_view.multipleTouchEnabled = false;
     //[self.m_window addSubview: self.m_view];
 
     ViewController* mvc = [[ViewController alloc] init];

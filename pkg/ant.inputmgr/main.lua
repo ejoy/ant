@@ -9,6 +9,11 @@ end
 local function create(world, type)
     local keymap = require(type.."_keymap")
     local ev = {}
+    function ev.touch(...)
+        if ServiceRmlui then
+            ltask.call(ServiceRmlui, "touch", ...)
+        end
+    end
     function ev.gesture(...)
         if ServiceRmlui then
             if ltask.call(ServiceRmlui, "gesture", ...) then

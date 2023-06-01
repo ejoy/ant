@@ -41,37 +41,6 @@ void window_message_exit(struct ant_window_callback* cb) {
 	push_message(L);
 }
 
-void window_message_keyboard(struct ant_window_callback* cb, int key, uint8_t state, uint8_t press) {
-	lua_State* L = cb->messageL;
-	lua_settop(L, 1);
-	lua_pushstring(L, "keyboard");
-	lua_pushinteger(L, key);
-	lua_pushinteger(L, press);
-	lua_pushinteger(L, state);
-	push_message(L);
-}
-
-void window_message_mouse_wheel(struct ant_window_callback* cb, int x, int y, float delta) {
-	lua_State* L = cb->messageL;
-	lua_settop(L, 1);
-	lua_pushstring(L, "mouse_wheel");
-	lua_pushinteger(L, x);
-	lua_pushinteger(L, y);
-	lua_pushnumber(L, delta);
-	push_message(L);
-}
-
-void window_message_mouse(struct ant_window_callback* cb, int x, int y, uint8_t type, uint8_t state) {
-	lua_State* L = cb->messageL;
-	lua_settop(L, 1);
-	lua_pushstring(L, "mouse");
-	lua_pushinteger(L, x);
-	lua_pushinteger(L, y);
-	lua_pushinteger(L, type);
-	lua_pushinteger(L, state);
-	push_message(L);
-}
-
 void window_message_size(struct ant_window_callback* cb, int x, int y, uint8_t type) {
 	lua_State* L = cb->messageL;
 	lua_settop(L, 1);
@@ -82,7 +51,50 @@ void window_message_size(struct ant_window_callback* cb, int x, int y, uint8_t t
 	push_message(L);
 }
 
-void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_tap const& gesture) {
+namespace ant::window {
+void input_message(struct ant_window_callback* cb, struct msg_keyboard const& keyboard) {
+	lua_State* L = cb->messageL;
+	lua_settop(L, 1);
+	lua_pushstring(L, "keyboard");
+	lua_pushinteger(L, keyboard.key);
+	lua_pushinteger(L, keyboard.press);
+	lua_pushinteger(L, keyboard.state);
+	push_message(L);
+}
+
+void input_message(struct ant_window_callback* cb, struct msg_mouse const& mouse) {
+	lua_State* L = cb->messageL;
+	lua_settop(L, 1);
+	lua_pushstring(L, "mouse");
+	lua_pushinteger(L, mouse.x);
+	lua_pushinteger(L, mouse.y);
+	lua_pushinteger(L, mouse.type);
+	lua_pushinteger(L, mouse.state);
+	push_message(L);
+}
+
+void input_message(struct ant_window_callback* cb, struct msg_mousewheel const& mousewheel) {
+	lua_State* L = cb->messageL;
+	lua_settop(L, 1);
+	lua_pushstring(L, "mousewheel");
+	lua_pushinteger(L, mousewheel.x);
+	lua_pushinteger(L, mousewheel.y);
+	lua_pushnumber(L, mousewheel.delta);
+	push_message(L);
+}
+
+void input_message(struct ant_window_callback* cb, struct msg_touch const& touch) {
+	lua_State* L = cb->messageL;
+	lua_settop(L, 1);
+	lua_pushstring(L, "touch");
+	lua_pushinteger(L, (lua_Integer)touch.id);
+	lua_pushinteger(L, (lua_Integer)touch.type);
+	lua_pushnumber(L, static_cast<lua_Number>(touch.y));
+	lua_pushnumber(L, static_cast<lua_Number>(touch.y));
+	push_message(L);
+}
+
+void input_message(struct ant_window_callback* cb, struct msg_gesture_tap const& gesture) {
 	lua_State* L = cb->messageL;
 	lua_settop(L, 1);
 	lua_pushstring(L, "gesture");
@@ -95,7 +107,7 @@ void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_t
 	push_message(L);
 }
 
-void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_pinch const& gesture) {
+void input_message(struct ant_window_callback* cb, struct msg_gesture_pinch const& gesture) {
 	lua_State* L = cb->messageL;
 	lua_settop(L, 1);
 	lua_pushstring(L, "gesture");
@@ -116,7 +128,7 @@ void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_p
 	push_message(L);
 }
 
-void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_longpress const& gesture) {
+void input_message(struct ant_window_callback* cb, struct msg_gesture_longpress const& gesture) {
 	lua_State* L = cb->messageL;
 	lua_settop(L, 1);
 	lua_pushstring(L, "gesture");
@@ -129,7 +141,7 @@ void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_l
 	push_message(L);
 }
 
-void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_pan const& gesture) {
+void input_message(struct ant_window_callback* cb, struct msg_gesture_pan const& gesture) {
 	lua_State* L = cb->messageL;
 	lua_settop(L, 1);
 	lua_pushstring(L, "gesture");
@@ -150,21 +162,34 @@ void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture_p
 	push_message(L);
 }
 
-void window_message_gesture(struct ant_window_callback* cb, struct ant_gesture const& gesture) {
-	switch (gesture.type) {
-	case GESTURE_TAP:
-		window_message_gesture(cb, gesture.tap);
+void input_message(struct ant_window_callback* cb, struct msg const& m) {
+	switch (m.type) {
+	case msg_type::keyboard:
+		input_message(cb, m.keyboard);
 		break;
-	case GESTURE_PINCH:
-		window_message_gesture(cb, gesture.pinch);
+	case msg_type::mouse:
+		input_message(cb, m.mouse);
 		break;
-	case GESTURE_LONGPRESS:
-		window_message_gesture(cb, gesture.longpress);
+	case msg_type::mousewheel:
+		input_message(cb, m.mousewheel);
 		break;
-	case GESTURE_PAN:
-		window_message_gesture(cb, gesture.pan);
+	case msg_type::touch:
+		input_message(cb, m.touch);
+		break;
+	case msg_type::gesture_tap:
+		input_message(cb, m.tap);
+		break;
+	case msg_type::gesture_pinch:
+		input_message(cb, m.pinch);
+		break;
+	case msg_type::gesture_longpress:
+		input_message(cb, m.longpress);
+		break;
+	case msg_type::gesture_pan:
+		input_message(cb, m.pan);
 		break;
 	default:
 		break;
 	}
+}
 }

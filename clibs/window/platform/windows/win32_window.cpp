@@ -4,7 +4,6 @@
 #include "../../window.h"
 
 #define CLASSNAME L"ANTCLIENT"
-#define WINDOWSTYLE (WS_OVERLAPPEDWINDOW)
 
 static void get_xy(LPARAM lParam, int *x, int *y) {
 	*x = (short)(lParam & 0xffff); 
@@ -17,21 +16,6 @@ static void get_screen_xy(HWND hwnd, LPARAM lParam, int *x, int *y) {
 	ScreenToClient(hwnd, &pt);
 	*x = pt.x;
 	*y = pt.y;
-}
-
-static uint8_t get_keystate(LPARAM lParam) {
-	return 0
-		| ((GetKeyState(VK_CONTROL) < 0)
-			? (uint8_t)(1 << KB_CTRL) : 0)
-		| ((GetKeyState(VK_SHIFT) < 0)
-			? (uint8_t)(1 << KB_SHIFT) : 0)
-		| ((GetKeyState(VK_MENU) < 0)
-			? (uint8_t)(1 << KB_ALT) : 0)
-		| (((GetKeyState(VK_LWIN) < 0) || (GetKeyState(VK_RWIN) < 0)) 
-			? (uint8_t)(1 << KB_SYS) : 0)
-		| ((lParam & (0x1 << 24))
-			? (uint8_t)(1 << KB_CAPSLOCK) : 0)
-		;
 }
 
 static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -51,56 +35,32 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		PostQuitMessage(0);
 		window_message_exit(cb);
 		return 0;
-	case WM_MOUSEMOVE: {
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		int x, y;
-		get_xy(lParam, &x, &y);
-		if ((wParam & (MK_LBUTTON | MK_RBUTTON | MK_MBUTTON)) == 0) {
-			window_message_mouse(cb, x, y, 0, 2);
-		}
-		else {
-			if (wParam & MK_LBUTTON) {
-				window_message_mouse(cb, x, y, 1, 2);
-			}
-			if (wParam & MK_RBUTTON) {
-				window_message_mouse(cb, x, y, 2, 2);
-			}
-			if (wParam & MK_MBUTTON) {
-				window_message_mouse(cb, x, y, 3, 2);
-			}
-		}
-		break;
-	}
 	case WM_MOUSEWHEEL: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		int x, y;
-		float delta = 1.0f * GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
-		get_screen_xy(hWnd, lParam, &x, &y);
-		window_message_mouse_wheel(cb, x, y, delta);
+		struct ant::window::msg_mousewheel msg;
+		msg.delta = 1.0f * GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA;
+		get_screen_xy(hWnd, lParam, &msg.x, &msg.y);
+		ant::window::input_message(cb, msg);
 		break;
 	}
+	case WM_MOUSEMOVE:
+		if (wParam & MK_LBUTTON) {
+			cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+			struct ant::window::msg_mouse msg;
+			msg.type = 1;
+			msg.state = 2;
+			get_xy(lParam, &msg.x, &msg.y);
+			ant::window::input_message(cb, msg);
+		}
+		break;
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONUP: {
 		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		int x, y;
-		get_xy(lParam, &x, &y);
-		window_message_mouse(cb, x, y, 1, (message == WM_LBUTTONDOWN) ? 1 : 3);
-		break;
-	}
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP: {
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		int x, y;
-		get_xy(lParam, &x, &y);
-		window_message_mouse(cb, x, y, 2, (message == WM_RBUTTONDOWN) ? 1 : 3);
-		break;
-	}
-	case WM_MBUTTONDOWN:
-	case WM_MBUTTONUP: {
-		cb = (struct ant_window_callback *)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-		int x, y;
-		get_xy(lParam, &x, &y);
-		window_message_mouse(cb, x, y, 3, (message == WM_MBUTTONDOWN) ? 1 : 3);
+		struct ant::window::msg_mouse msg;
+		msg.type = 1;
+		msg.state = (message == WM_LBUTTONDOWN) ? 1 : 3;
+		get_xy(lParam, &msg.x, &msg.y);
+		ant::window::input_message(cb, msg);
 		break;
 	}
 	case WM_KEYDOWN:
@@ -113,7 +73,17 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 		else {
 			press = (lParam & (1 << 30))? 2: 1;
 		}
-		window_message_keyboard(cb, (int)wParam, get_keystate(lParam), press);
+		struct ant::window::msg_keyboard msg;
+		msg.key = (int)wParam;
+		msg.state = ant::window::get_keystate(
+			GetKeyState(VK_CONTROL) < 0,
+			GetKeyState(VK_SHIFT) < 0,
+			GetKeyState(VK_MENU) < 0,
+			(GetKeyState(VK_LWIN) < 0) || (GetKeyState(VK_RWIN) < 0),
+			lParam & (0x1 << 24)
+		);
+		msg.press = press;
+		ant::window::input_message(cb, msg);
 		break;
 	}
 	case WM_SIZE: {
@@ -141,43 +111,39 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
 
-static void register_class() {
+int window_init(struct ant_window_callback* cb) {
+	int w = 1334;
+	int h = 750;
+	RECT rect;
+	rect.left = 0;
+	rect.right = w;
+	rect.top = 0;
+	rect.bottom = h;
+	AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, 0);
+
 	WNDCLASSEXW wndclass;
 	memset(&wndclass, 0, sizeof(wndclass));
 	wndclass.cbSize = sizeof(wndclass);
 	wndclass.style = CS_HREDRAW | CS_VREDRAW;// | CS_OWNDC;
 	wndclass.lpfnWndProc = WndProc;
 	wndclass.hInstance = GetModuleHandleW(0);
-	wndclass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
-	wndclass.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wndclass.hIcon = LoadIconW(NULL, (LPCWSTR)IDI_APPLICATION);
+	wndclass.hCursor = LoadCursorW(NULL, (LPCWSTR)IDC_ARROW);
 	wndclass.lpszClassName = CLASSNAME;
-	wndclass.hIconSm = LoadIcon(NULL, IDI_APPLICATION);
 	RegisterClassExW(&wndclass);
-}
 
-int window_init(struct ant_window_callback* cb) {
-	int w = 1334;
-	int h = 750;
-	RECT rect;
-	rect.left=0;
-	rect.right=w;
-	rect.top=0;
-	rect.bottom=h;
-	AdjustWindowRect(&rect,WINDOWSTYLE,0);
-	register_class();
-	HWND wnd=CreateWindowExW(0, CLASSNAME, NULL,
-		WINDOWSTYLE, CW_USEDEFAULT, 0,
-		rect.right-rect.left,rect.bottom-rect.top,
-		0,0,
+	HWND wnd = CreateWindowExW(0, CLASSNAME, NULL,
+		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
+		rect.right-rect.left,
+		rect.bottom-rect.top,
+		0, 0,
 		GetModuleHandleW(0),
 		cb);
 	if (wnd == NULL) {
-		return 3;
+		return 1;
 	}
-	DragAcceptFiles(wnd, TRUE);
 	ShowWindow(wnd, SW_SHOWDEFAULT);
 	UpdateWindow(wnd);
-
 	return 0;
 }
 

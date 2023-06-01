@@ -104,10 +104,11 @@ local function render(nwh, context, width, height, initialized)
 	world:pub{"world_viewport_changed", world.args.viewport}
 	local ev 		= inputmgr.create(world, "win32")
 
-	S.mouse_wheel	= ev.mouse_wheel
-	S.mouse 		= ev.mouse
-	S.gesture		= ev.gesture
 	S.keyboard		= ev.keyboard
+	S.mouse 		= ev.mouse
+	S.mousewheel	= ev.mousewheel
+	S.touch			= ev.touch
+	S.gesture		= ev.gesture
 	S.size			= resize
 	do_size			= ev.size
 

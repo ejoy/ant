@@ -10,7 +10,7 @@ local cc_sys = ecs.system "default_camera_controller"
 
 local kb_mb             = world:sub {"keyboard"}
 local mouse_mb          = world:sub {"mouse"}
-local EventMouseWheel   = world:sub {"mouse_wheel"}
+local EventMouseWheel   = world:sub {"mousewheel"}
 local EventGesturePinch = world:sub {"gesture", "pinch"}
 local EventGesturePan   = world:sub {"gesture", "pan"}
 
