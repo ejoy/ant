@@ -8,8 +8,8 @@ _windows:
   graphic:
     api: d3d11
 graphic:
-  # ibl:
-  #   irradiance_bandnum: 3
+  ibl:
+    irradiance_bandnum: 3
   # skinning:
   #   use_cs: true
   curve_world:
