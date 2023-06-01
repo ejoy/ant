@@ -152,7 +152,7 @@ end
 local function update_drawer_items(de)
     w:extend(de, "canvas_drawer:in material:in render_object:update")
     local ro = de.render_object
-    if #de.canvas_drawer.items > 0 then
+    if next(de.canvas_drawer.items) then
         local buffers = {}
         local texsize = get_texture_size(de.material)
         for _, v in pairs(de.canvas_drawer.items) do
@@ -223,7 +223,7 @@ local function create_texture_item_entity(materialpath, render_layer)
             material    = materialpath,
             scene       = {},
             render_layer = render_layer or "ui",
-            visible_state= "main_view",
+            visible_state= "main_view|selectable",
             name        = "canvas_texture" .. gen_texture_id(),
             canvas_drawer = {
                 type = "texture",
@@ -249,7 +249,6 @@ function icanvas.add_items(e, materialpath, render_layer, ...)
         items[id] = item
 
         item_cache[id] = materialpath
-        item_ids[#item_ids+1] = id
     end
 
     local itemeid = materials[materialpath]
