@@ -35,7 +35,7 @@ local function create(world, type)
     end
     if platform.os ~= "ios" and platform.os ~= "android" then
         if world.args.ecs.enable_mouse then
-            local mouse_what  = { 'LEFT', 'RIGHT', 'MIDDLE' }
+            local mouse_what  = { 'LEFT', 'MIDDLE', 'RIGHT' }
             local mouse_state = { 'DOWN', 'MOVE', 'UP' }
             function ev.mouse_event(x, y, what, state)
                 world:pub {"mouse", mouse_what[what] or "UNKNOWN", mouse_state[state] or "UNKNOWN", x, y}
