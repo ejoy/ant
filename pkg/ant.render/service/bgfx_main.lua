@@ -49,13 +49,21 @@ local function profile_print()
         profile_n = profile_n + 1
     else
         profile_n = 1
-        local i = 1
+
+        local r = {}
         for who, time in pairs(profile) do
+            r[#r+1] = {who, time}
+        end
+        table.sort(r, function (a, b)
+            return a[2] > b[2]
+        end)
+
+        for i = 1, #r do
+            local who, time = r[i][1], r[i][2]
             local m = time / MaxFrame * 1000
             local name = ("%s(%d)"):format(profile_label[who], who)
             profile_printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(m)
             profile[who] = 0
-            i = i + 1
         end
     end
 
