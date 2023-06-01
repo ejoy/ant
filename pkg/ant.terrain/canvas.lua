@@ -138,7 +138,7 @@ local function add_item(texsize, tex, rect)
         vv3:sub(1, 12), vvt3, u1v1:sub(1, 8),
         vv4:sub(1, 12), vvt4, u1v0:sub(1, 8))
 
-    assert(#r ~= #itemfmt*4*4, "Invalid vertex format")
+    assert(#r == #itemfmt*4, "Invalid vertex format")
     return r
 end
 
