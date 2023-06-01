@@ -186,9 +186,9 @@ function canvas_sys:data_changed()
 end
 
 function canvas_sys:entity_remove()
-    for e in "REMOVED canvas:in" do
+    for e in w:select "REMOVED canvas:in" do
         for _, eid in pairs(e.canvas.materials) do
-            w:remove()
+            w:remove(w:entity(eid))
         end
     end
 end
