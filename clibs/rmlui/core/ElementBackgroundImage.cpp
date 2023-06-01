@@ -9,6 +9,28 @@
 
 namespace Rml {
 
+void ElementBackgroundImage::GetRectArray(float ratio, Rect& rect, std::vector<Rect> &rect_array){
+		float x = rect.origin.x;
+		float y = rect.origin.y;
+		float w = rect.size.w;
+		float h = rect.size.h;
+		float w1 = ratio * w;
+		float w2 = (1 - ratio) * w;
+		float w3 = (1 - 2 * ratio) * w;
+		float h1 = ratio * h;
+		float h2 = (1 - ratio) * h;
+		float h3 = (1 - 2 * ratio) * h;
+		rect_array[0] = Rect{x, y, w1, h1};
+		rect_array[1] = Rect{w1, y, w3, h1};
+		rect_array[2] = Rect{w2, y, w1, h1};
+		rect_array[3] = Rect{x, h1, w1, h3};
+		rect_array[4] = Rect{w1, h1, w3, h3};
+		rect_array[5] = Rect{w2, h1, w1, h3};
+		rect_array[6] = Rect{x, h2, w1, h1};
+		rect_array[7] = Rect{w1, h2, w3, h1};
+		rect_array[8] = Rect{w2, h2, w1, h1};
+}
+
 bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge) {
 	auto image = element->GetComputedProperty(PropertyId::BackgroundImage);
 	if (!image->Has<std::string>()) {
@@ -79,6 +101,7 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		texPosition.y / texSize.h
 	}, {} };
 	float aspectRatio = scale.w / scale.h;
+	//uv
 	switch (backgroundSize) {
 	case Style::BackgroundSize::Auto:
 		uv.size.w = scale.w;
@@ -114,15 +137,29 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	} 
 	
 	geometry.SetMaterial(material);
-	if (paddingEdge.size() == 0 
-		|| (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{})
-	) {
-		geometry.AddRectFilled(surface, color);
-		geometry.UpdateUV(4, surface, uv);
+
+	auto lattice = element->GetComputedProperty(PropertyId::BackgroundLattice);
+	if(lattice->Has<PropertyFloat>()){
+		std::vector<Rect> surface_array(9);
+		std::vector<Rect> uv_array(9);
+		GetRectArray(lattice->Get<PropertyFloat>().value / 100.0, surface, surface_array);
+		GetRectArray((float)0.49, uv, uv_array);
+		for(int idx = 0; idx < 9; ++idx){
+			geometry.AddRectFilled(surface_array[idx], color);
+			geometry.UpdateUV(4, surface_array[idx], uv_array[idx]);
+		}		
 	}
-	else {
-		geometry.AddPolygon(paddingEdge, color);
-		geometry.UpdateUV(paddingEdge.size(), surface, uv);
+	else{
+		if (paddingEdge.size() == 0 
+			|| (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{})
+		) {
+			geometry.AddRectFilled(surface, color);
+			geometry.UpdateUV(4, surface, uv);
+		}
+		else {
+			geometry.AddPolygon(paddingEdge, color);
+			geometry.UpdateUV(paddingEdge.size(), surface, uv);
+		}
 	}
 	return true;
 }

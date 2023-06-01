@@ -871,7 +871,8 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("length");
 	RegisterProperty(PropertyId::ScrollTop, "scroll-top", "0px")
 		.AddParser("length");
-
+	RegisterProperty(PropertyId::BackgroundLattice, "background-lattice")
+		.AddParser("length_percent");
 	PropertyVector properties;
 	for (auto const& [id, value] : unparsed_default) {
 		if (!ParsePropertyDeclaration(properties, id, value)) {

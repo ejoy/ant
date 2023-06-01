@@ -114,6 +114,7 @@ enum class PropertyId : uint8_t {
 
 	BackgroundColor,
 	BackgroundImage,
+	BackgroundLattice,
 	BackgroundOrigin,
 	BackgroundSize,
 	BackgroundSizeX,

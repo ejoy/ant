@@ -13,14 +13,15 @@
                 width: 50%;
                 height: 50%;
                 transition: left 1.0s linear-out, top 1.0s linear-out, width 1.0s linear-out, height 1.0s linear-out;
-                background-color: rgba(0, 0, 0, 255);
+                background-color: rgba(255, 255, 255, 255);
                 flex-direction: row;
             }
             .item {
                 width:33%;
                 height:50%;
                 background-size:cover;
-                background-image:"<rt1>"
+                background-image:"lattice.png";
+                background-lattice: 10%;
             }
         </style>
         <script type="text/x-lua" >
