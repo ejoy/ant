@@ -171,36 +171,6 @@ local function update_drawer_items(de)
     w:submit(de)
 end
 
-local canvas_add_items_mb   = world:sub{"canvas_update", "add_items"}
-local canvas_show_mb        = world:sub{"canvas_update", "show"}
-local canvas_remove_item_mb = world:sub{"canvas_update", "remove_item"}
-
-function canvas_sys:data_changed()
-    for _, _, eid, items in canvas_add_items_mb:unpack() do
-        local de = w:entity(eid, "canvas_drawer:in")
-        local citems = de.canvas_drawer.items
-        for id, item in pairs(items) do
-            assert(citems[id] == nil, "Ivalid item id!")
-            citems[id] = item
-        end
-        update_drawer_items(de)
-    end
-
-    for _, _, eid, show in canvas_show_mb:unpack() do
-        local re <close> = w:entity(eid)
-        ivs.set_state(re, "main_view|selectable", show)
-    end
-
-    for _, _, eid, itemid in canvas_remove_item_mb:unpack() do
-        local re <close> = w:entity(eid)
-        local de = w:entity(eid, "canvas_drawer:in")
-        if de.canvas_drawer.items[itemid] then
-            de.canvas_drawer.items[itemid] = nil
-            update_drawer_items(de)
-        end
-    end
-end
-
 function canvas_sys:entity_remove()
     for e in w:select "REMOVED canvas:in" do
         for _, eid in pairs(e.canvas.materials) do
@@ -259,31 +229,42 @@ local function create_texture_item_entity(canvas_eid, materialpath, render_layer
     }
 end
 
+function icanvas.build(e, render_layer, ...)
+    w:extend(e, "canvas:in eid:in")
+    local materials = e.canvas.materials
+    for i=1, select("#", ...) do
+        local mp = select(i, ...)
+        if nil == materials[mp] then
+            materials[mp] = create_texture_item_entity(e.eid, mp, render_layer)
+        end
+    end
+end
+
 local item_cache = {}
-function icanvas.add_items(e, materialpath, render_layer, ...)
+function icanvas.add_items(e, materialpath, ...)
+    local newitem_count = select("#", ...)
+    if newitem_count == 0 then
+        return 
+    end
+
     w:extend(e, "canvas:in eid:in")
     local canvas = e.canvas
     local materials = canvas.materials
 
     local item_ids = {}
-    local items = {}
-    for i=1, select("#", ...) do
-        local item = select(i, ...)
-        
+    local de = assert(w:entity(materials[materialpath], "canvas_drawer:in"), ("%s materialpath is not found, use this materialpath to call icanvas.build() in 'init' stage"):format(materialpath))
+    local items = de.canvas_drawer.items
+
+    for i=1, newitem_count do
         local id = gen_item_id()
         item_ids[#item_ids+1] = id
-        items[id] = item
+        assert(items[id], "Duplicate item id!")
+
+        items[id] = select(i, ...)
 
         item_cache[id] = materialpath
     end
-
-    local itemeid = materials[materialpath]
-    if itemeid == nil then
-        itemeid = create_texture_item_entity(e.eid, materialpath, render_layer)
-        materials[materialpath] = itemeid
-    end
-
-    world:pub{"canvas_update", "add_items", itemeid, items}
+    update_drawer_items(de)
     return item_ids
 end
 
@@ -296,7 +277,11 @@ end
 
 function icanvas.remove_item(e, itemid)
     local deid = find_drawer_eid(e, itemid)
-    world:pub{"canvas_update", "remove_item", deid, itemid}
+    local de = w:entity(deid, "canvas_drawer:in")
+    if de.canvas_drawer.items[itemid] then
+        de.canvas_drawer.items[itemid] = nil
+        update_drawer_items(de)
+    end
     item_cache[itemid] = nil
 end
 
@@ -313,6 +298,7 @@ function icanvas.show(e, b)
     canvas.show = b
 
     for _, eid in pairs(canvas.materials) do
-        world:pub{"canvas_update", "show", eid}
+        local re <close> = w:entity(eid)
+        ivs.set_state(re, "main_view|selectable", b)
     end
 end
