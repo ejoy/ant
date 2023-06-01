@@ -185,6 +185,14 @@ function canvas_sys:data_changed()
     end
 end
 
+function canvas_sys:entity_remove()
+    for e in "REMOVED canvas:in" do
+        for _, eid in pairs(e.canvas.materials) do
+            w:remove()
+        end
+    end
+end
+
 local icanvas = ecs.interface "icanvas"
 
 local function id_generator()

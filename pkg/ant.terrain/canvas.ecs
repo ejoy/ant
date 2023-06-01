@@ -2,6 +2,7 @@ system "canvas_system"
     .implement "canvas.lua"
     .method "component_init"
     .method "data_changed"
+    .method "entity_remove"
 
 interface "icanvas"
     .implement "canvas.lua"
