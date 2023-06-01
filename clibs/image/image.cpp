@@ -384,6 +384,10 @@ write2memory(lua_State *L, bx::MemoryBlock &mb, bimg::ImageContainer *ic, const 
         if (!bimg::imageWriteKtx(&sw, *ic, ic->m_data, (uint32_t)ic->m_size, &err)){
             return luaL_error(L, "Write to memory as ktx failed");
         }
+    } else if (strcmp(fmt, "DDS") == 0) {
+        if (!bimg::imageWriteDds(&sw, *ic, ic->m_data, (uint32_t)ic->m_size, &err)){
+            return luaL_error(L, "Write to memory as dds failed");
+        }
     } else {
         return luaL_error(L, "Invalid output file format:%s", fmt);
     }

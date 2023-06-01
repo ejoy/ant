@@ -7,7 +7,7 @@ local options = {};
 do
     local function faces_refine(v)
         local vv = {}
-        for p in v:gmatch "^|+" do
+        for p in v:gmatch "[^|]+" do
             vv[#vv+1] = p
         end
         return vv
@@ -49,7 +49,7 @@ do
 end
 
 local function read_file(f)
-    local ff<close> = lfs.open(f, "rb")
+    local ff<close> = lfs.open(f:localpath(), "rb")
     return ff:read "a"
 end
 
@@ -77,7 +77,7 @@ if options.faces then
     end
     local faces_content = {}
     for idx, f in ipairs(options.faces) do
-        faces_content[idx] = read_file(lfs.path(f))
+        faces_content[idx] = read_file(fs.path(f))
     end
 
     local cubemap_content = image.pack2cubemap(faces_content, false, fileformat)
