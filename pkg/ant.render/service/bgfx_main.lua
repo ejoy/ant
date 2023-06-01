@@ -236,7 +236,6 @@ end
 
 local function mainloop()
     while initialized do
-        ltask.sleep(0)
         if encoder_num > 0 and encoder_cur == encoder_num then
             encoder_frame = encoder_frame + 1
             encoder_cur = 0
@@ -250,9 +249,11 @@ local function mainloop()
             end
             frame_control()
             ltask.multi_wakeup("bgfx.frame", f)
+            ltask.sleep(0)
             profile_begin()
         else
             exclusive.sleep(1)
+            ltask.sleep(0)
         end
     end
 end

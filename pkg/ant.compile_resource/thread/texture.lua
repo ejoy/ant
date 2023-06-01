@@ -250,22 +250,25 @@ local update; do
     local FrameNew = 0
     local FrameCur = 1
     local results = {}
-    local OneMinute <const> = 30 * 60
+    local UpdateNewInterval <const> = 30 *  1 --  1s
+    local UpdateOldInterval <const> = 30 * 60 -- 60s
     local InvalidTexture <const> = ("HH"):pack(DefaultTexture.TEX2D & 0xffff, DefaultTexture.TEXCUBE & 0xffff)
     function update()
-        if #createQueue == 0 then
-            textureman.frame_new(FrameCur - FrameNew + 1, InvalidTexture, results)
-            for i = 1, #results do
-                local id = results[i]
-                local c = textureById[id]
-                if c then
-                    asyncCreateTexture(c.name)
+        if FrameCur % UpdateNewInterval == 0 then
+            if #createQueue == 0 then
+                textureman.frame_new(FrameCur - FrameNew + 1, InvalidTexture, results)
+                for i = 1, #results do
+                    local id = results[i]
+                    local c = textureById[id]
+                    if c then
+                        asyncCreateTexture(c.name)
+                    end
                 end
+                FrameNew = FrameCur - 1
             end
-            FrameNew = FrameCur - 1
         end
-        if FrameCur % OneMinute == 0 then
-            textureman.frame_old(OneMinute, InvalidTexture, results)
+        if FrameCur % UpdateOldInterval == 0 then
+            textureman.frame_old(UpdateOldInterval, InvalidTexture, results)
             for i = 1, #results do
                 local id = results[i]
                 local c = textureById[id]
