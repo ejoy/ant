@@ -11,7 +11,6 @@ local ltask     = require "ltask"
 local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.ecs"
 local rhwi      = import_package "ant.hwi"
-local cr        = import_package "ant.compile_resource"
 local audio     = import_package "ant.audio"
 local setting	= import_package "ant.settings".setting
 local mu		= import_package "ant.math".util
@@ -90,7 +89,6 @@ local function render(nwh, context, width, height, initialized)
 		context	= context,
 		framebuffer = framebuffer,
 	}
-	cr.init()
 	bgfx.set_debug "T"
 	bgfx.encoder_create "world"
 	bgfx.encoder_init()

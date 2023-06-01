@@ -1,10 +1,10 @@
-local cr        = import_package "ant.compile_resource"
 local setting   = import_package "ant.settings".setting
 
 local math3d    = require "math3d"
 local bgfx      = require "bgfx"
 local fastio    = require "fastio"
 local datalist  = require "datalist"
+local async     = require "async"
 local declmgr   = import_package "ant.render".declmgr
 
 local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
@@ -48,7 +48,7 @@ local function init(mesh)
     if ib then
         setmetatable(ib, proxy_ib)
     end
-    return mesh   
+    return mesh
 end
 
 local function destroy_handle(v)
@@ -80,7 +80,7 @@ local function load_mem(m, filename)
     local binname = m[1]
     assert(type(binname) == "string" and (binname:match "%.[iv]bbin" or binname:match "%.[iv]b[2]bin"))
 
-    local data, err = fastio.readall(cr.compile(parent_path(filename) .. "/" .. binname):string())
+    local data, err = fastio.readall(async.compile(parent_path(filename) .. "/" .. binname))
     if not data then
         error(("read file failed:%s, error:%s"):format(binname, err))
     end
@@ -88,8 +88,8 @@ local function load_mem(m, filename)
 end
 
 local function loader(filename)
-    local local_filename = cr.compile(filename)
-    local mesh = datalist.parse(fastio.readall_s(local_filename:string()))
+    local local_filename = async.compile(filename)
+    local mesh = datalist.parse(fastio.readall_s(local_filename))
 
     local vb = assert(mesh.vb)
     load_mem(vb.memory, filename)

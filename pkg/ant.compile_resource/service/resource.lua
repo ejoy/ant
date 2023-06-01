@@ -17,6 +17,10 @@ for k, v in pairs(shader.S) do
     S[k] = v
 end
 
+function S.compile(path)
+    return cr.compile(path):string()
+end
+
 local quit
 
 ltask.fork(function ()

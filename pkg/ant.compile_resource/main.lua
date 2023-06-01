@@ -45,18 +45,6 @@ else
     set_setting = config.set
 end
 
-local function read_file(filename)
-    local f
-    if string.sub(filename, 1, 1) == "/" then
-        f = assert(lfs.open(compile(filename), "rb"))
-    else
-        f = assert(lfs.open(lfs.path(filename), "rb"))
-    end
-    local c = f:read "a"
-    f:close()
-    return c
-end
-
 local function sortpairs(t)
     local sort = {}
     for k in pairs(t) do
@@ -113,11 +101,13 @@ local function init()
 end
 
 return {
+    -- resouce service
     init         = init,
-    read_file    = read_file,
     compile      = compile,
-    compile_file = compile_file,
+    -- fileserver
     init_setting  = init_setting,
     set_setting  = set_setting,
+    compile_file = compile_file,
+    -- render package
     sampler      = require "editor.texture.sampler",
 }

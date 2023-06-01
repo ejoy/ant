@@ -1,9 +1,10 @@
 local luaecs = import_package "ant.luaecs"
 local policy = require "policy"
 local ecs = require "world"
-local cr = import_package "ant.compile_resource"
+local assetmgr = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
-local fs  = require "filesystem"
+local fs = require "filesystem"
+local lfs = require "filesystem.local"
 local world = {}
 
 local function sortpairs(t)
@@ -169,16 +170,28 @@ local function create_template_(w, t)
     return prefab
 end
 
+local function read_file(filename)
+    local f
+    if string.sub(filename, 1, 1) == "/" then
+        f = assert(io.open(assetmgr.compile(filename), "rb"))
+    else
+        f = assert(io.open(filename, "rb"))
+    end
+    local c = f:read "a"
+    f:close()
+    return c
+end
+
 function create_template(w, filename)
     if type(filename) ~= "string" then
         return create_template_(w, filename)
     end
     if not templates[filename] then
-        local t = serialize.parse(filename, cr.read_file(filename))
+        local t = serialize.parse(filename, read_file(filename))
         local patchfile = filename .. ".patch"
         local count = #t
         if fs.exists(fs.path(patchfile)) then
-            local patch = serialize.parse(patchfile, cr.read_file(patchfile))
+            local patch = serialize.parse(patchfile, read_file(patchfile))
             for index, value in ipairs(patch) do
                 if value.mount and value.mount ~= 1 then
                     value.mount = count + index - 1

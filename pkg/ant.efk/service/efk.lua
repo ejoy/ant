@@ -10,9 +10,6 @@ local efk       = require "efk"
 
 local FI        = require "fileinterface"
 
-local cr        = import_package "ant.compile_resource"
-local mathpkg   = import_package "ant.math"
-local mc        = mathpkg.constant
 local renderpkg = import_package "ant.render"
 
 local viewidmgr = renderpkg.viewidmgr
@@ -22,7 +19,6 @@ renderpkg.init_bgfx()
 local effect_viewid<const> = viewidmgr.get "effect_view"
 
 bgfx.init()
-cr.init()
 assetmgr.init()
 
 local quit
@@ -31,7 +27,7 @@ local FxFiles = {};
 
 local function preopen(filename)
     local _ <close> = fs.switch_sync()
-    return cr.compile(filename):string()
+    return fs.path(filename):localpath():string()
 end
 
 local filefactory = FI.factory { preopen = preopen }

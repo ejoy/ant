@@ -7,11 +7,11 @@ local math3d    = require "math3d"
 local lfs       = require "filesystem.local"
 local image     = require "image"
 
+local assetmgr  = import_package "ant.asset"
 local renderpkg = import_package "ant.render"
 local sampler   = renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
-local cr        = import_package "ant.compile_resource"
 
 local icompute  = ecs.import.interface "ant.render|icompute"
 local iexposure = ecs.import.interface "ant.camera|iexposure"
@@ -189,11 +189,11 @@ function ibl_sys:render_preprocess()
     for e in w:select "irradianceSH_builder" do
         local function load_cm()
             local function read_file(fn)
-                local f<close> = lfs.open(fn, "rb")
+                local f <close> = assert(io.open(fn, "rb"))
                 return f:read "a"
             end
     
-            local c = read_file(cr.compile(source_tex.tex_name .. "|main.bin"))
+            local c = read_file(assetmgr.compile(source_tex.tex_name .. "|main.bin"))
             local info, content = image.parse(c, true, "RGBA32F")
             assert(info.bitsPerPixel // 8 == 16)
             return texutil.create_cubemap{w=info.width, h=info.height, texelsize=16, data=content}

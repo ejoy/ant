@@ -19,4 +19,8 @@ function m.texture_default()
 	return ltask.call(ServiceResource, "texture_default")
 end
 
+function m.compile(path)
+	return ltask.call(ServiceResource, "compile", path)
+end
+
 return m

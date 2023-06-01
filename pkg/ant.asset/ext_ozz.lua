@@ -1,5 +1,5 @@
 local lfs = require "filesystem.local"
-local cr = import_package "ant.compile_resource"
+local async = require "async"
 local loaders = {}
 
 loaders["ozz-animation"] = function (fn)
@@ -33,20 +33,20 @@ loaders["ozz-skeleton"] = function(fn)
 end
 
 local function find_loader(localfilepath)
-	local f <close> = lfs.open(localfilepath, "rb")
-	f:read(1)
+	local f <close> = assert(io.open(localfilepath, "rb"))
+	f:seek("set", 1)
 	local tag = ("z"):unpack(f:read(16))
 	return loaders[tag]
 end
 
 local function loader(filename)
-	local localfilename = cr.compile(filename)
+	local localfilename = async.compile(filename)
 	local fn = find_loader(localfilename)
 	if not fn then
 		error "not support type"
 		return
 	end
-	return fn(localfilename:string())
+	return fn(localfilename)
 end
 
 local function unloader()

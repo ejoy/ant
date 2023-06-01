@@ -1,10 +1,8 @@
 local rmlui = require "rmlui"
 local assetmgr = import_package "ant.asset"
-local cr = import_package "ant.compile_resource"
 local renderpkg = import_package "ant.render"
 renderpkg.init_bgfx()
 assetmgr.init()
-cr.init()
 
 local function create_shaders()
     local shaders = {

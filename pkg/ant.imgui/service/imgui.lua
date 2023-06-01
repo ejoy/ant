@@ -164,7 +164,6 @@ ltask.fork(function ()
 			ui_ratio = 1,
 		}
     }
-	import_package "ant.compile_resource".init()
     bgfx.encoder_create "imgui"
     bgfx.encoder_init()
 	assetmgr.init()

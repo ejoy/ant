@@ -2,6 +2,10 @@ local ecs 	= ...
 local world = ecs.world
 local w 	= world.w
 
+local assetmgr  = import_package "ant.asset"
+local serialize = import_package "ant.serialize"
+local lfs = require "filesystem.local"
+
 local modifier_sys = ecs.system "modifier_system"
 local imodifier = ecs.interface "imodifier"
 local iani      = ecs.import.interface "ant.animation|ianimation"
@@ -51,8 +55,17 @@ function modifier_sys:exit()
 
 end
 
-local cr        = import_package "ant.compile_resource"
-local serialize = import_package "ant.serialize"
+local function read_file(filename)
+    local f
+    if string.sub(filename, 1, 1) == "/" then
+        f = assert(io.open(assetmgr.compile(filename), "rb"))
+    else
+        f = assert(io.open(filename, "rb"))
+    end
+    local c = f:read "a"
+    f:close()
+    return c
+end
 
 function imodifier.delete(m)
     if not m then
@@ -86,7 +99,7 @@ function imodifier.set_target(m, target)
         if not filename then
             return
         end
-        local mtl = serialize.parse(filename, cr.read_file(filename))
+        local mtl = serialize.parse(filename, read_file(filename))
         if not mtl.properties[mf.property] then
             return
         end
@@ -113,7 +126,7 @@ function imodifier.create_mtl_modifier(target, property, keyframes, keep, foreup
         if string.find(filename, ".glb|") then
             filename = filename .. "/main.cfg"
         end
-        local mtl = serialize.parse(filename, cr.read_file(filename))
+        local mtl = serialize.parse(filename, read_file(filename))
         assert(mtl.properties[property])
         init_value = math3d.ref(math3d.vector(mtl.properties[property]))
     end
