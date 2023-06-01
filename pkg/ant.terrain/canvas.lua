@@ -263,6 +263,7 @@ function icanvas.add_items(e, materialpath, render_layer, ...)
 end
 
 local function find_drawer_eid(e, itemid)
+    w:extend(e, "canvas:in")
     local mp = assert(item_cache[itemid], "Ivalid itemid")
     local materials = e.canvas.materials
     return assert(materials[mp], "Invalid itemid, nout found valid materialpath")

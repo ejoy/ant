@@ -357,6 +357,7 @@ local mouse_mb = world:sub{"mouse", "LEFT"}
 
 local enable = 1
 local sm_test = false
+local itemsids
 function init_loader_sys:ui_update()
     for _, key, press in kb_mb:unpack() do
         if key == "T" and press == 0 then
@@ -396,7 +397,12 @@ function init_loader_sys:ui_update()
             iom.set_position(d, {0, 1, 0})
         elseif key == "C" and press == 0 then
             local icanvas = ecs.import.interface "ant.terrain|icanvas"
-            icanvas.add_items(w:entity(canvas_eid), "/pkg/ant.test.features/assets/canvas_texture.material", "background",
+            if itemsids then
+                icanvas.remove_item(w:entity(canvas_eid), itemsids[1])
+                itemsids = nil
+                return
+            end
+            itemsids = icanvas.add_items(w:entity(canvas_eid), "/pkg/ant.test.features/assets/canvas_texture.material", "background",
             {
                 x = 2, y = 2, w = 4, h = 4,
                 texture = {
