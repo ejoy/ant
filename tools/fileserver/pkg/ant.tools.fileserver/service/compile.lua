@@ -12,7 +12,7 @@ local REPOPATH = arg[1]
 local access = require "vfs.repoaccess"
 require "editor.create_repo" (REPOPATH, access)
 local fs = require "filesystem"
-local cr = import_package "ant.compile_resource"
+local cr = import_package "ant.compile_resource".fileserver()
 cr.init_setting()
 
 local S = {}

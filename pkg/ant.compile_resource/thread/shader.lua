@@ -1,4 +1,4 @@
-local cr = import_package "ant.compile_resource"
+local cr = require "main"
 local serialize = import_package "ant.serialize"
 local lfs = require "filesystem.local"
 local bgfx = require "bgfx"

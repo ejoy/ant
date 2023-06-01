@@ -105,9 +105,7 @@ return {
     init         = init,
     compile      = compile,
     -- fileserver
-    init_setting  = init_setting,
+    init_setting = init_setting,
     set_setting  = set_setting,
     compile_file = compile_file,
-    -- render package
-    sampler      = require "editor.texture.sampler",
 }
