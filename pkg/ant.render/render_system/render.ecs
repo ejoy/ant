@@ -96,6 +96,8 @@ policy "heap_mesh"
 system "skinning_system"
     .implement "render_system/skinning_system.lua"
     .require_system "ant.animation|animation_system"
+    .method "entity_init"
+    .method "entity_remove"
     .method "skin_mesh"
 
 component "cs_skinning_ready"

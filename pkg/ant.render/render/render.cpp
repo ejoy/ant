@@ -224,6 +224,9 @@ static inline void
 draw_objs(lua_State *L, struct ecs_world *w, cid_t main_id, int index, const matrix_array *mats, submit_cache &cc){
 	const ecs::render_object* obj = (const ecs::render_object*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::render_object>::id);
 	if (obj){
+		#ifdef _DEBUG
+		const ecs::eid id = (ecs::eid)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::eid>::id);
+		#endif //_DEBUG
 		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
 			const auto ra = cc.ra[ii];
 			if (0 != (obj->visible_masks & ra->queue_mask) && 
