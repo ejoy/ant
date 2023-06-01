@@ -398,6 +398,7 @@ function init_loader_sys:ui_update()
         elseif key == "C" and press == 0 then
             local icanvas = ecs.import.interface "ant.terrain|icanvas"
             if itemsids then
+                icanvas.show(w:entity(canvas_eid), false)
                 icanvas.remove_item(w:entity(canvas_eid), itemsids[1])
                 itemsids = nil
                 return

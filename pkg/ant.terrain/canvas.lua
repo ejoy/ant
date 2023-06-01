@@ -171,10 +171,12 @@ local function update_drawer_items(de)
     w:submit(de)
 end
 
-local canvas_mb = world:sub{"canvas_update", "add_items"}
+local canvas_add_items_mb   = world:sub{"canvas_update", "add_items"}
+local canvas_show_mb        = world:sub{"canvas_update", "show"}
+local canvas_remove_item_mb = world:sub{"canvas_update", "remove_item"}
 
 function canvas_sys:data_changed()
-    for _, _, eid, items in canvas_mb:unpack() do
+    for _, _, eid, items in canvas_add_items_mb:unpack() do
         local de = w:entity(eid, "canvas_drawer:in")
         local citems = de.canvas_drawer.items
         for id, item in pairs(items) do
@@ -182,6 +184,20 @@ function canvas_sys:data_changed()
             citems[id] = item
         end
         update_drawer_items(de)
+    end
+
+    for _, _, eid, show in canvas_show_mb:unpack() do
+        local re <close> = w:entity(eid)
+        ivs.set_state(re, "main_view|selectable", show)
+    end
+
+    for _, _, eid, itemid in canvas_remove_item_mb:unpack() do
+        local re <close> = w:entity(eid)
+        local de = w:entity(eid, "canvas_drawer:in")
+        if de.canvas_drawer.items[itemid] then
+            de.canvas_drawer.items[itemid] = nil
+            update_drawer_items(de)
+        end
     end
 end
 
@@ -280,51 +296,8 @@ end
 
 function icanvas.remove_item(e, itemid)
     local deid = find_drawer_eid(e, itemid)
-    local de = w:entity(deid, "canvas_drawer:in")
-    if de.canvas_drawer.items[itemid] then
-        de.canvas_drawer.items[itemid] = nil
-        update_drawer_items(de)
-    end
+    world:pub{"canvas_update", "remove_item", deid, itemid}
     item_cache[itemid] = nil
-end
-
-local function get_item(e, itemid)
-    local deid = find_drawer_eid(e, itemid)
-    local de = w:entity(deid, "canvas_drawer:in")
-    return assert(de.canvas_drawer.items[itemid], "Invalid itemid")
-end
-
-local function update_item(item, posrect, tex_rect)
-    local changed
-    if posrect then
-        item.x, item.y = posrect.x, posrect.y
-        item.w, item.h = posrect.w, posrect.h
-        changed = true
-    end
-
-    if tex_rect then
-        local rt = item.texture.rect
-
-        rt.x, rt.y = tex_rect.x, tex_rect.y
-        rt.w, rt.h = tex_rect.w, tex_rect.h
-        changed = true
-    end
-
-    if changed then
-        world:pub{"canvas_update", "texture"}
-    end
-end
-
-function icanvas.update_item_rect(e, itemid, rect)
-    update_item(get_item(e, itemid), rect)
-end
-
-function icanvas.update_item_tex_rect(e, itemid, texrect)
-    update_item(get_item(e, itemid), nil, texrect)
-end
-
-function icanvas.update_item(e, itemid, item)
-    update_item(get_item(e, itemid), item, item.texture.rect)
 end
 
 function icanvas.add_text(e, ...)
@@ -340,7 +313,6 @@ function icanvas.show(e, b)
     canvas.show = b
 
     for _, eid in pairs(canvas.materials) do
-        local re <close> = w:entity(eid)
-        ivs.set_state(re, "main_view|selectable", b)
+        world:pub{"canvas_update", "show", eid}
     end
 end
