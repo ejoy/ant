@@ -31,6 +31,9 @@ local function create_heap_compute(numToDraw, idb_handle, itb_handle, u1, u2, u3
 	}
     local dis = { size = dispatchsize }
     local mo = heap_mesh_material.object
+    if dis.material then
+        dis.material:release()
+    end
     dis.material = mo:instance()
     local m = dis.material
 
