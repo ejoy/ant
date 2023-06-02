@@ -1,6 +1,6 @@
 return {
     name = "ant.compile_resource",
-    entry = "entry",
+    entry = "main",
     dependencies = {
         "ant.json",
         "ant.serialize",

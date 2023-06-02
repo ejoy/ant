@@ -3,7 +3,7 @@ local bgfx       = require "bgfx"
 local datalist   = require "datalist"
 local fastio     = require "fastio"
 local textureman = require "textureman.server"
-local cr         = require "main"
+local cr         = require "thread.compile"
 
 local mem_formats <const> = {
     RGBA8 = "bbbb",

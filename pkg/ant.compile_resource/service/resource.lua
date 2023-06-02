@@ -1,6 +1,6 @@
 local ltask   = require "ltask"
 local bgfx    = require "bgfx"
-local cr      = require "main"
+local cr      = require "thread.compile"
 local texture = require "thread.texture"
 local shader  = require "thread.shader"
 import_package "ant.render".init_bgfx()

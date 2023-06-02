@@ -1,3 +1,8 @@
+if package.loaded.math3d then
+    error "need init math3d MAXPAGE"
+end
+debug.getregistry().MATH3D_MAXPAGE = 10240
+
 local fs       = require "filesystem"
 local lfs      = require "filesystem.local"
 local sha1     = require "editor.hash".sha1
