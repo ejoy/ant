@@ -71,6 +71,7 @@ local bgfxLib = {
     },
     android = {
         defines = {
+            "BGFX_CONFIG_RENDERER_VULKAN=1",
         },
     },
 }
