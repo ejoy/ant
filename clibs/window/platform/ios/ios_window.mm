@@ -23,17 +23,17 @@ static id<MTLDevice> g_device = NULL;
 struct ant_window_callback* g_cb = NULL;
 id g_gesture;
 
-static void push_touch_message(TOUCH_TYPE type, UIView* view, NSSet* touches) {
-    struct ant::window::msg_touch touch;
-    touch.type = type;
+static void push_touch_message(ant::window::TOUCH_TYPE type, UIView* view, NSSet* touches) {
+    struct ant::window::msg_touch msg;
+    msg.type = type;
     for (UITouch *touch in touches) {
         CGPoint pt = [touch locationInView:view];
         pt.x *= view.contentScaleFactor;
         pt.y *= view.contentScaleFactor;
-        touch.id = (uintptr_t)touch;
-        touch.x = pt.x;
-        touch.y = pt.y;
-        ant::window::input_message(g_cb, touch);
+        msg.id = (uintptr_t)touch;
+        msg.x = pt.x;
+        msg.y = pt.y;
+        ant::window::input_message(g_cb, msg);
     }
 }
 
@@ -96,16 +96,16 @@ static void push_touch_message(TOUCH_TYPE type, UIView* view, NSSet* touches) {
     g_cb->update(g_cb);
 }
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(TOUCH_BEGAN, self, [event allTouches]);
+    push_touch_message(ant::window::TOUCH_BEGAN, self, [event allTouches]);
 }
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(TOUCH_MOVED, self,  [event allTouches]);
+    push_touch_message(ant::window::TOUCH_MOVED, self,  [event allTouches]);
 }
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(TOUCH_ENDED, self,  [event allTouches]);
+    push_touch_message(ant::window::TOUCH_ENDED, self,  [event allTouches]);
 }
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    push_touch_message(TOUCH_CANCELLED, self,  [event allTouches]);
+    push_touch_message(ant::window::TOUCH_CANCELLED, self,  [event allTouches]);
 }
 @end
 
