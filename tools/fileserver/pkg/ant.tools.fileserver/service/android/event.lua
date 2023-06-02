@@ -51,7 +51,7 @@ end
 
 local function wait_connect()
     local exitcode, msg = ltask.call(ServiceSubprocess, "run", {
-        adb, "wait-for-usb-device", "devices",
+        adb, "wait-for-device", "devices",
         stdout     = true,
         stderr     = "stdout",
         hideWindow = true,
@@ -65,7 +65,7 @@ end
 
 local function wait_disconnect()
     local exitcode, msg = ltask.call(ServiceSubprocess, "run", {
-        adb, "wait-for-usb-disconnect", "devices",
+        adb, "wait-for-disconnect", "devices",
         stdout     = true,
         stderr     = "stdout",
         hideWindow = true,
