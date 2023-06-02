@@ -80,6 +80,8 @@ system "heap_mesh"
     .implement "render_system/heap_mesh.lua"
     .method "init"
     .method "heap_mesh"
+    .method "entity_init"
+    .method "entity_remove"
 
 component "heapmesh".type "lua"
 

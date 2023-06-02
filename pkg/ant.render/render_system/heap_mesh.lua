@@ -25,27 +25,17 @@ local function get_offset(edge, xx, yy, zz, interval)
     return offset
 end
 
-local function create_heap_compute(numToDraw, idb_handle, itb_handle, u1, u2, u3, u4, u5)
-    local dispatchsize = {
-		math.floor((numToDraw - 1) / 64) + 1, 1, 1
-	}
-    local dis = { size = dispatchsize }
-    local mo = heap_mesh_material.object
-    if dis.material then
-        dis.material:release()
-    end
-    dis.material = mo:instance()
-    local m = dis.material
-
+local function create_heap_compute(dispatch, numToDraw, idb_handle, itb_handle, u1, u2, u3, u4, u5)
+    dispatch.size[1] = math.floor((numToDraw - 1) / 64) + 1
+    local m = dispatch.material
     m.u_heapParams		= u1
     m.u_meshOffset      = u2
     m.u_instanceParams  = u3
     m.u_worldOffset     = u4
     m.u_intervalParam   = u5
-    m.indirectBuffer      = idb_handle
-    m.instanceBufferOut   = itb_handle
-	dis.fx = heap_mesh_material._data.fx
-    icompute.dispatch(main_viewid, dis)
+    m.indirectBuffer     = idb_handle
+    m.instanceBufferOut  = itb_handle
+    icompute.dispatch(main_viewid, dispatch)
 end
 
 local function calc_max_num(side_size_table)
@@ -65,8 +55,54 @@ local function check_destroy(ro)
     end
 end
 
+function hm_sys:entity_init()
+    for e in w:select "INIT heapmesh:update render_object?update mesh:in scene:in" do
+        local heapmesh = e.heapmesh
+        local curSideSize = heapmesh.curSideSize
+        local curMaxSize  = calc_max_num(curSideSize)
+        local idb_handle = bgfx.create_indirect_buffer(curMaxSize)
+        local itb_handle = bgfx.create_dynamic_vertex_buffer(curMaxSize, declmgr.get "t47NIf".handle, "w")
+        local eid = ecs.create_entity {
+            policy = {
+                "ant.render|compute_policy",
+            },
+            data = {
+                material    = "/pkg/ant.resources/materials/heapmesh/heapmesh.material",
+                dispatch    = {
+                    size    = {0, 0, 0},
+                },
+                compute = true,
+--[[                 on_ready = function(ce)
+                    e.heapmesh.ready = true
+                end ]]
+            }
+        }
+        local aabb = assetmgr.resource(tostring(e.mesh)).bounding.aabb
+        local _, extent = math3d.aabb_center_extents(aabb)
+        local dx, dy, dz = math3d.index(math3d.mul(2, extent), 1, 2, 3)
+        local sx, sy, sz = math3d.index(e.scene.s, 1, 2, 3)
+        heapmesh.eid = eid
+        heapmesh.idb_handle = idb_handle
+        heapmesh.itb_handle = itb_handle
+        heapmesh.extent = {dx * sx, dy * sy, dz * sz}
+    end
+end
+
+function hm_sys:entity_remove()
+    for e in w:select "REMOVED heapmesh:update render_object?update" do
+        w:remove(e.heapmesh.eid)
+        check_destroy(e.render_object)
+    end
+end
+
 function hm_sys:heap_mesh()
     for e in w:select "heapmesh:update render_object?update bounding?update scene?in" do
+        if e.heapmesh.eid then
+            if not e.heapmesh.ready then
+                e.heapmesh.ready = true
+                goto continue
+            end
+        end
         local heapmesh = e.heapmesh
         local interval = heapmesh.interval
         local curSideSize = heapmesh.curSideSize
@@ -94,42 +130,25 @@ function hm_sys:heap_mesh()
         end
         local heap_mesh_unchanged = lastHeapNum == curHeapNum and lastSideSize == curSideSize or curHeapNum == 0
         if not heap_mesh_unchanged then
-            local sx, sy, sz = math3d.index(e.scene.s, 1, 2, 3)
             local ro = e.render_object
-            math3d.unmark(e.bounding.aabb)
-            
-            local aabb_center, aabb_extent
-            if not e.heapmesh.aabb_center and not e.heapmesh.aabb_extent then
-                aabb_center, aabb_extent = math3d.aabb_center_extents(e.bounding.aabb)
-                e.heapmesh.aabb_center, e.heapmesh.aabb_extent = math3d.mark(aabb_center), math3d.mark(aabb_extent)
-            else
-                aabb_center, aabb_extent = e.heapmesh.aabb_center, e.heapmesh.aabb_extent
-            end
-            
-            local aabb_x, aabb_y, aabb_z = math3d.index(aabb_extent, 1, 2, 3)
-            aabb_x, aabb_y, aabb_z = sx * 2 * aabb_x, sy * 2 * aabb_y, sz * 2 * aabb_z
+            local extent = e.heapmesh.extent
             local heapParams = math3d.vector(curHeapNum, curSideSize[1], curSideSize[2], curSideSize[3])
-            local meshOffset = math3d.vector(aabb_x, aabb_y, aabb_z, 0)
+            local meshOffset = math3d.vector(extent[1], extent[2], extent[3], 0)
             local instanceParams = math3d.vector(0, ro.vb_num, 0, ro.ib_num)
-            local indirectBuffer_handle = bgfx.create_indirect_buffer(curHeapNum)
-            local instanceBufferOut_handle = bgfx.create_dynamic_vertex_buffer(curHeapNum, declmgr.get "t47NIf".handle, "w")
-            local intervalParam = math3d.vector(aabb_x * interval[1], aabb_y * interval[2], aabb_z * interval[3], 0)
-            local offset_extent = get_offset(curSideSize, aabb_x, aabb_y, aabb_z, interval)
-            e.bounding.aabb = math3d.mark(math3d.aabb())
-
+            local intervalParam = math3d.vector(extent[1] * interval[1], extent[2] * interval[2], extent[3] * interval[3], 0)
+            local offset_extent = get_offset(curSideSize, extent[1], extent[2], extent[3], interval)
             local worldOffset = math3d.vector(offset_extent, 0)
-
-            create_heap_compute(curHeapNum, indirectBuffer_handle, instanceBufferOut_handle, heapParams, meshOffset, instanceParams, worldOffset, intervalParam)
-            check_destroy(e.render_object)
-            e.render_object.idb_handle = indirectBuffer_handle
-            e.render_object.itb_handle = instanceBufferOut_handle
+            local ce <close> = w:entity(heapmesh.eid, "dispatch:in")
+            create_heap_compute(ce.dispatch, curHeapNum, heapmesh.idb_handle, heapmesh.itb_handle, heapParams, meshOffset, instanceParams, worldOffset, intervalParam)
+            e.render_object.idb_handle = heapmesh.idb_handle
+            e.render_object.itb_handle = heapmesh.itb_handle
         end
-
         e.heapmesh.curHeapNum = curHeapNum
         e.heapmesh.lastHeapNum = curHeapNum
         e.heapmesh.curSideSize = curSideSize
         e.heapmesh.lastSideSize = curSideSize
         e.render_object.draw_num = curHeapNum
+        ::continue::
 	end
 end
 
