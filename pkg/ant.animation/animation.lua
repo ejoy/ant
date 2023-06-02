@@ -9,8 +9,13 @@ local animodule 	= require "hierarchy".animation
 local ani_sys 		= ecs.system "animation_system"
 local timer 		= ecs.import.interface "ant.timer|itimer"
 local iefk          = ecs.import.interface "ant.efk|iefk"
+local audio 		= import_package "ant.audio"
 local fs        = require "filesystem"
 local datalist  = require "datalist"
+local fmod
+if world.__EDITOR__ then
+	fmod = require "fmod"
+end
 
 local function process_keyframe_event(task)
 	if not task then
@@ -29,7 +34,13 @@ local function process_keyframe_event(task)
 	while not event_state.finish and current_events.time <= current_time do
 		for _, event in ipairs(current_events.event_list) do
 			if event.event_type == "Sound" then
-				-- iaudio.play(event.sound_event)
+				if world.__EDITOR__ then
+					if event.sound_event ~= '' then
+						fmod.play(world.sound_event_list[event.sound_event])
+					end
+				else
+					audio.play(event.sound_event)
+				end
 			elseif event.event_type == "Collision" then
 				local collision = event.collision
 				if collision and collision.col_eid and collision.col_eid ~= -1 then

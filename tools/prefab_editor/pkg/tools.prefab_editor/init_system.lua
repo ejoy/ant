@@ -19,6 +19,7 @@ local platform      = require "bee.platform"
 local font          = imgui.font
 local Font          = require "platform".font
 local math3d        = require "math3d"
+local fmod 			= require "fmod"
 local bind_billboard_camera_mb = world:sub{"bind_billboard_camera"}
 function ecs.method.bind_billboard_camera(e, camera_ref)
     world:pub{"bind_billboard_camera", e, camera_ref}
@@ -122,6 +123,7 @@ function m:init()
     else -- iOS
         font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
     end
+	gd.audio = fmod.init()
 end
 
 local function init_camera()
@@ -154,4 +156,9 @@ function m:data_changed()
         w:extend(e, "render_object?in")
         e.render_object.camera_ref = camera_ref or w:first("main_queue camera_ref:in").camera_ref
     end
+	gd.audio:update()
+end
+
+function m:exit()
+	gd.audio:shutdown()
 end

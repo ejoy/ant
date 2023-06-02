@@ -21,8 +21,7 @@ local global_data = require "common.global_data"
 local access    = global_data.repo_access
 local faicons   = require "common.fa_icons"
 local fs        = require "filesystem"
-local global_data = require "common.global_data"
-
+local fmod      = require "fmod"
 local m = {}
 local edit_anims
 local anim_eid
@@ -372,9 +371,9 @@ local function do_record(collision, eid)
     local factor = e.collider.sphere and 100 or 200
     collision.size = {scale[1] / factor, scale[2] / factor, scale[3] / factor}
 end
-
+local sound_event_name_list = {}
 local sound_event_list = {}
-
+local bank_path
 local function show_current_event()
     if not current_event then return end
     imgui.widget.PropertyLabel("EventType")
@@ -424,9 +423,35 @@ local function show_current_event()
             dirty = true
         end
     elseif current_event.event_type == "Sound" then
-        if imgui.widget.Button("SelectBank") then
-            -- local path = uiutils.get_open_file_path("Bank", "bank")
-            -- if path then
+        if not bank_path and imgui.widget.Button("SelectBankPath") then
+            local filename = uiutils.get_open_file_path("Bank", "bank")
+            if filename then
+                bank_path = filename:match("^(.+/)[%w*?_.%-]*$")
+                for _, pkg in ipairs(global_data.packages) do
+                    local pv = tostring(pkg.path)
+                    if pv == string.sub(bank_path, 1, #pv) then
+                        bank_path = "/pkg/"..pkg.name .. string.sub(bank_path, #pv + 1)
+                        break;
+                    end
+                end
+                local files = access.list_files(global_data.repo, bank_path)
+                local bank_files = {
+                    bank_path .. "Master.strings.bank",
+                    bank_path .. "Master.bank"
+                }
+                for _, value in ipairs(files) do
+                    if string.sub(value, -5) == ".bank" and (value ~= "Master.strings.bank") and (value ~= "Master.bank") then
+                        bank_files[#bank_files + 1] = bank_path .. value
+                    end
+                end
+                local audio = global_data.audio
+                for _, file in ipairs(bank_files) do
+                    audio:load_bank(fs.path(file):localpath():string(), sound_event_list)
+                end
+                for key, _ in pairs(sound_event_list) do
+                    sound_event_name_list[#sound_event_name_list + 1] = key
+                end
+                world.sound_event_list = sound_event_list
             --     local rp = lfs.relative(lfs.path(path), global_data.project_root)
             --     local fullpath = (global_data.package_path and global_data.package_path or global_data.editor_package_path) .. tostring(rp)
             --     local bank = iaudio.load_bank(fullpath)
@@ -446,17 +471,18 @@ local function show_current_event()
             --     current_event.asset_path_ui.text = fullpath
             --     current_event.asset_path = fullpath
             --     dirty = true
-            -- end
+            end
         end
         imgui.widget.Text("BankPath : " .. current_event.asset_path)
         imgui.widget.Text("SoundEvent : " .. current_event.sound_event)
         imgui.cursor.Separator();
-        for _, se in ipairs(sound_event_list) do
+        for _, se in ipairs(sound_event_name_list) do
             if imgui.widget.Selectable(se, current_event.sound_event == se, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                 current_event.sound_event = se
-                -- if (imgui.util.IsMouseDoubleClicked(0)) then
-                --     iaudio.play(se)
-                -- end
+                if (imgui.util.IsMouseDoubleClicked(0)) then
+                    fmod.play(sound_event_list[se])
+                    dirty = true
+                end
             end
         end
     elseif current_event.event_type == "Effect" then
