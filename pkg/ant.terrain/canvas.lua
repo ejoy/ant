@@ -232,16 +232,21 @@ end
 function icanvas.build(e, render_layer, ...)
     w:extend(e, "canvas:in eid:in")
     local materials = e.canvas.materials
+    local keys = {}
     for i=1, select("#", ...) do
         local mp = select(i, ...)
-        if nil == materials[mp] then
-            materials[mp] = create_texture_item_entity(e.eid, mp, render_layer)
+        local key = ("%s|%s"):format(mp, render_layer)
+        keys[#keys+1] = key
+        if nil == materials[key] then
+            materials[key] = create_texture_item_entity(e.eid, mp, render_layer)
         end
     end
+
+    return keys
 end
 
 local item_cache = {}
-function icanvas.add_items(e, materialpath, ...)
+function icanvas.add_items(e, key, ...)
     local newitem_count = select("#", ...)
     if newitem_count == 0 then
         return 
@@ -252,17 +257,17 @@ function icanvas.add_items(e, materialpath, ...)
     local materials = canvas.materials
 
     local item_ids = {}
-    local de = assert(w:entity(materials[materialpath], "canvas_drawer:in"), ("%s materialpath is not found, use this materialpath to call icanvas.build() in 'init' stage"):format(materialpath))
+    local de = assert(w:entity(materials[key], "canvas_drawer:in"), ("%s materialpath is not found, use this materialpath to call icanvas.build() in 'init' stage"):format(materialpath))
     local items = de.canvas_drawer.items
 
     for i=1, newitem_count do
         local id = gen_item_id()
         item_ids[#item_ids+1] = id
-        assert(items[id], "Duplicate item id!")
+        assert(not items[id], "Duplicate item id!")
 
         items[id] = select(i, ...)
 
-        item_cache[id] = materialpath
+        item_cache[id] = key
     end
     update_drawer_items(de)
     return item_ids
