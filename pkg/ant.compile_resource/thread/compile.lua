@@ -30,10 +30,17 @@ if __ANT_RUNTIME__ then
     set_setting = vfs.resource_setting
 else
     local editor = require "editor.compile"
-    local config   = require "editor.config"
-    compile = editor.compile
-    init_setting = config.init
-    set_setting = config.set
+    function compile(pathstring)
+        local pos = pathstring:find("|", 1, true)
+        if pos then
+            local resource = vfs.realpath(pathstring:sub(1,pos-1))
+            return editor.compile_file(lfs.path(resource)) / pathstring:sub(pos+1):gsub("|", "/")
+        else
+            return lfs.path(vfs.realpath(pathstring))
+        end
+    end
+    init_setting = editor.init_setting
+    set_setting = editor.set_setting
 end
 
 local function sortpairs(t)

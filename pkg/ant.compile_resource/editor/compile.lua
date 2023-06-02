@@ -3,7 +3,6 @@ if package.loaded.math3d then
 end
 debug.getregistry().MATH3D_MAXPAGE = 10240
 
-local fs       = require "filesystem"
 local lfs      = require "filesystem.local"
 local sha1     = require "editor.hash".sha1
 local config   = require "editor.config"
@@ -44,17 +43,8 @@ local function compile_file(input)
     return output
 end
 
-function compile(pathstring)
-    local pos = pathstring:find("|", 1, true)
-    if pos then
-        local resource = fs.path(pathstring:sub(1,pos-1)):localpath()
-        return compile_file(resource) / pathstring:sub(pos+1):gsub("|", "/")
-    else
-        return fs.path(pathstring):localpath()
-    end
-end
-
 return {
-    compile = compile,
+    init_setting = config.init,
+    set_setting  = config.set,
     compile_file = compile_file,
 }
