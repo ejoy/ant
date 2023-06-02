@@ -93,23 +93,23 @@ static void handle_cmd(android_app* app, int32_t cmd) {
     }
 }
 
-static void errfunc(const char* msg) {
-    __android_log_write(ANDROID_LOG_FATAL, "",  msg);
-}
-
-static bool motion_event_filter_func(const GameActivityMotionEvent *motionEvent) {
-    return false;
-}
-
 extern "C" void android_main(struct android_app* app) {
     g_app = app;
     app->onAppCmd = handle_cmd;
 
-    android_app_set_motion_event_filter(app, motion_event_filter_func);
+    android_app_set_motion_event_filter(app, +[](GameActivityMotionEvent const*) {
+        return false;
+    });
+    android_app_set_key_event_filter(app, +[](GameActivityKeyEvent const*) {
+        return false;
+    });
+
     int argc = 0;
     char* argv[] = {
     };
-    runtime_main(argc, argv, errfunc);
+    runtime_main(argc, argv, +[](const char* msg) {
+        __android_log_write(ANDROID_LOG_FATAL, "",  msg);
+    });
 }
 
 static int ldirectory(lua_State* L) {
