@@ -3,10 +3,11 @@ if package.loaded.math3d then
 end
 debug.getregistry().MATH3D_MAXPAGE = 10240
 
-local lfs      = require "filesystem.local"
-local sha1     = require "editor.hash".sha1
-local config   = require "editor.config"
-local depends  = require "editor.depends"
+local lfs     = require "filesystem.local"
+local sha1    = require "editor.hash".sha1
+local config  = require "editor.config"
+local depends = require "editor.depends"
+local vfs     = require "vfs"
 
 local function get_filename(pathname)
     pathname = pathname:lower()
@@ -14,7 +15,17 @@ local function get_filename(pathname)
     return filename.."_"..sha1(pathname)
 end
 
-local compile
+local compile_file
+
+local function compile(pathstring)
+    local pos = pathstring:find("|", 1, true)
+    if pos then
+        local resource = vfs.realpath(pathstring:sub(1,pos-1))
+        return compile_file(lfs.path(resource)) / pathstring:sub(pos+1):gsub("|", "/")
+    else
+        return lfs.path(vfs.realpath(pathstring))
+    end
+end
 
 local function absolute_path(base, path)
 	if path:sub(1,1) == "/" then
@@ -23,7 +34,7 @@ local function absolute_path(base, path)
 	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
 end
 
-local function compile_file(input)
+function compile_file(input)
     local inputstr = input:string()
     local ext = inputstr:match "[^/]%.([%w*?_%-]*)$"
     local cfg = config.get(ext)
