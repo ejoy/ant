@@ -114,7 +114,6 @@ local function generator(name)
         write(("        copy.compile 'examples/runtime/%s',"):format(copyfile))
     end
     write "    },"
-    write "    defines = lm.os ~= 'android' and 'ENTRY_CONFIG_IMPLEMENT_MAIN=1',"
     write "    includes = {"
     write "        lm.BxDir / 'include',"
     write "        lm.BimgDir / 'include',"

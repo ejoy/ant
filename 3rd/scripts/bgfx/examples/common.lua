@@ -25,11 +25,6 @@ lm:lib "example-common" {
     },
     android = {
         includes = "3rdparty/native_app_glue",
-        links = {
-            "android",
-            "log",
-            "m",
-        }
     },
     gcc = {
         flags = {
@@ -73,5 +68,14 @@ lm:source_set "example-runtime" {
             "Metal",
             "QuartzCore",
         }
-    }
+    },
+    android = {
+        links = {
+            "android",
+            "log",
+            "m",
+            "EGL",
+            "GLESv2",
+        }
+    },
 }
