@@ -44,6 +44,7 @@ system "init_system"
     .method "init_world"
     .method "post_init"
     .method "data_changed"
+    .method "exit"
 
 system "gizmo_system"
     .implement "gizmo_system.lua"
