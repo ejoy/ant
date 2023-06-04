@@ -6,10 +6,6 @@ local datalist   = require "datalist"
 local fs = require "filesystem"
 local config_table, path_table
  local texture_cfg_table = {
-    [1] = {
-        cfg_path = "fluid_icon_canvas.cfg",
-        texture_path = "fluid_icon_canvas.texture"
-    }
 } 
 local texture_table = {}
 

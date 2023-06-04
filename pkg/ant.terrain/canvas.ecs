@@ -9,6 +9,7 @@ interface "icanvas"
     .method "remove_item"
     .method "add_text"
     .method "show"
+    .method "build"
 
 component "canvas".type "lua"
 component "canvas_drawer".type "lua"
