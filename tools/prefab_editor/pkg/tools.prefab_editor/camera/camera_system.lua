@@ -129,7 +129,6 @@ local mouse_wheel_mb    = world:sub {"mousewheel"}
 local smooth_lookat_mb  = world:sub {"SmoothLookAt"}
 local event_camera_speed = world:sub{"camera_controller", "move_speed"}
 local event_gesture 	= world:sub { "gesture", "pinch"}
--- local event_gesture 	= world:sub {"gesture"}
 local function do_animation()
 	if not animation.running then
 		return true
@@ -158,17 +157,6 @@ local function do_animation()
 		animation.to_rot = nil
 		animation.from_pos = nil
 		animation.to_pos = nil
-	end
-end
-
-local function stringify(str, n, t)
-	for k, v in pairs(t) do
-		if type(v) == "table" then
-			str[#str+1] = string.rep('  ', n)..k..': '
-			stringify(str, n+1, v)
-		else
-			str[#str+1] = string.rep('  ', n)..k..': '..v
-		end
 	end
 end
 
