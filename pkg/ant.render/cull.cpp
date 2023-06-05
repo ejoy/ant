@@ -42,12 +42,11 @@ lexit(lua_State *L) {
 	return 0;
 }
 
+constexpr uint8_t MAX_QUEUE_COUNT = 64;
+
 static int
 lcull(lua_State *L) {
 	auto w = getworld(L);
-	constexpr uint8_t MAX_QUEUE_COUNT = 64;
-
-	uint8_t c0 = 0;
 	struct cullinfo{
 		math_t		mid;
 		uint64_t	masks;
@@ -55,24 +54,23 @@ lcull(lua_State *L) {
 	uint8_t c = 0;
 	struct cullinfo ci[MAX_QUEUE_COUNT];
 
-	auto find_cull = [ci, c](math_t mid){
-		for (uint8_t ii=0; ii<c;++ii){
-			if (ci->mid.idx == mid.idx)
-				return ii;
+	auto add_cull_info = [&ci, &c](math_t mid, uint64_t mask){
+		uint8_t idx = MAX_QUEUE_COUNT;
+		for (; idx<c; ++idx){
+			if (ci[idx].mid.idx == mid.idx)
+				break;
 		}
-		return MAX_QUEUE_COUNT;
+		if (idx == MAX_QUEUE_COUNT){
+			assert(c < MAX_QUEUE_COUNT);
+			ci[c++] = {mid, mask};
+		} else {
+			ci[idx].masks |= mask;
+		}
 	};
 
 	for (auto e : ecs_api::select<ecs::cull_args>(w->ecs)){
 		const auto& i = e.get<ecs::cull_args>();
-
-		uint8_t which = find_cull(i.frustum_planes);
-		if (MAX_QUEUE_COUNT == which){
-			assert(c < MAX_QUEUE_COUNT);
-			which = c;
-			ci[c++] = {i.frustum_planes, 0};
-		}
-		ci[which].masks |= i.cull_mask;
+		add_cull_info(i.frustum_planes, i.cull_mask);
 	}
 
 	if (0 == c)
@@ -86,13 +84,8 @@ lcull(lua_State *L) {
 
 		auto &ro = e.get<ecs::render_object>();
 		for (uint8_t ii=0; ii<c; ++ii){
-			
 			const bool isculled = math3d_frustum_intersect_aabb(w->math3d->M, ci[ii].mid, b.scene_aabb) < 0;
-			if (isculled){
-				ro.cull_masks |= ci[ii].masks;
-			} else {
-				ro.cull_masks &= ~ci[ii].masks;
-			}
+			ro.cull_masks = isculled ? (ro.cull_masks|ci[ii].masks) : (ro.cull_masks&(~ci[ii].masks));
 		}
 	}
 
