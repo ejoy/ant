@@ -68,13 +68,12 @@ lcull(lua_State *L) {
 
 		uint8_t which = find_cull(i.frustum_planes);
 		if (MAX_QUEUE_COUNT == which){
-			ci[c++] = {i.frustum_planes, 0};
+			assert(c < MAX_QUEUE_COUNT);
 			which = c;
+			ci[c++] = {i.frustum_planes, 0};
 		}
 		ci[which].masks |= i.cull_mask;
 	}
-
-	assert(c < MAX_QUEUE_COUNT);
 
 	if (0 == c)
 		return 0;
