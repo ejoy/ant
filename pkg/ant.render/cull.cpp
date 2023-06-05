@@ -23,31 +23,6 @@ struct cull_array {
 	int n;
 };
 
-#define MAX_CULL_ARRAY	16
-#define MAX_CULL_MASK	64
-
-static inline int
-insert_cull_array(struct cull_array cull_a[], int n_cull, uint64_t cullmasks[], int n_mask, uint64_t mid, uint64_t cullmask) {
-	int i;
-	int offset = 0;
-	for (i=0;i<n_cull;i++) {
-		offset += cull_a[i].n;
-		if (cull_a[i].mid == mid) {
-			++cull_a[i].n;
-			assert(cull_a[i].n < MAX_CULL_ARRAY);
-			assert(offset < MAX_CULL_MASK);
-			memmove(cullmasks + offset + 1, cullmasks + offset, sizeof(uint64_t) * (n_mask - offset));
-			cullmasks[offset] = cullmask;
-			return n_cull;
-		}
-	}
-	assert(n_cull < MAX_CULL_ARRAY);
-	assert(offset == n_mask);
-	cull_a[n_cull].mid = mid;
-	cull_a[n_cull].n = 1;
-	return n_cull + 1;
-}
-
 struct cull_cached: public ecs_api::cached<ecs::view_visible, ecs::bounding, ecs::render_object> {
 	cull_cached(struct ecs_context* ctx)
 		: ecs_api::cached<ecs::view_visible, ecs::bounding, ecs::render_object>(ctx) {}
@@ -69,20 +44,39 @@ lexit(lua_State *L) {
 
 static int
 lcull(lua_State *L) {
-	struct cull_array a[MAX_CULL_ARRAY];
-	int a_n = 0;
-	uint64_t cullmasks[MAX_CULL_MASK];
-	int c_n = 0;
-
 	auto w = getworld(L);
+	constexpr uint8_t MAX_QUEUE_COUNT = 64;
+
+	uint8_t c0 = 0;
+	struct cullinfo{
+		math_t		mid;
+		uint64_t	masks;
+	};
+	uint8_t c = 0;
+	struct cullinfo ci[MAX_QUEUE_COUNT];
+
+	auto find_cull = [ci, c](math_t mid){
+		for (uint8_t ii=0; ii<c;++ii){
+			if (ci->mid.idx == mid.idx)
+				return ii;
+		}
+		return MAX_QUEUE_COUNT;
+	};
 
 	for (auto e : ecs_api::select<ecs::cull_args>(w->ecs)){
 		const auto& i = e.get<ecs::cull_args>();
-		assert(c_n < MAX_CULL_MASK);
-		a_n = insert_cull_array(a, a_n, cullmasks, c_n++, i.frustum_planes.idx, i.cull_mask);
+
+		uint8_t which = find_cull(i.frustum_planes);
+		if (MAX_QUEUE_COUNT == which){
+			ci[c++] = {i.frustum_planes, 0};
+			which = c;
+		}
+		ci[which].masks |= i.cull_mask;
 	}
 
-	if (a_n == 0)
+	assert(c < MAX_QUEUE_COUNT);
+
+	if (0 == c)
 		return 0;
 
 	for (auto e : ecs_api::select(*w->cull_cached)) {
@@ -92,20 +86,14 @@ lcull(lua_State *L) {
 			continue;
 
 		auto &ro = e.get<ecs::render_object>();
-
-		int i,j,offset = 0;
-		for (i = 0; i < a_n; i++) {
-			const bool isculled = math3d_frustum_intersect_aabb(w->math3d->M, math_t{a[i].mid}, b.scene_aabb) < 0;
+		for (uint8_t ii=0; ii<c; ++ii){
+			
+			const bool isculled = math3d_frustum_intersect_aabb(w->math3d->M, ci[ii].mid, b.scene_aabb) < 0;
 			if (isculled){
-				for (j = 0; j < a[i].n; j++) {
-					ro.cull_masks |= cullmasks[offset+j];
-				}
+				ro.cull_masks |= ci[ii].masks;
 			} else {
-				for (j = 0; j < a[i].n; j++) {
-					ro.cull_masks &= ~cullmasks[offset+j];
-				}
+				ro.cull_masks &= ~ci[ii].masks;
 			}
-			offset += a[i].n;
 		}
 	}
 
