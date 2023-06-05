@@ -83,7 +83,7 @@ require "vfs"
 		dbg:event("setThreadName", "Bootstrap")
 		initstr = initstr .. [[
 local ltask = require "ltask"
-local name = ("Service:%d <%s>"):format(ltask.self(), ltask.label():sub(9) or "unk")
+local name = ("Service:%d <%s>"):format(ltask.self(), ltask.label() or "unk")
 local function dbg_dofile(filename, ...)
     local f = assert(io.open(filename))
     local str = f:read "a"

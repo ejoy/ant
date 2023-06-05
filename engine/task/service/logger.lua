@@ -23,7 +23,7 @@ local function service(id)
 end
 
 function command.startup(id, label)
-	lables[id] = label:sub(9)
+	lables[id] = label
 	return service(id) .. " startup."
 end
 
