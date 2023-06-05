@@ -45,11 +45,11 @@ function cb.exit()
     event "exit"
 end
 
-function cb.mouse_wheel(x, y, delta)
+function cb.mousewheel(x, y, delta)
     local mvp = imgui.GetMainViewport()
     x, y = x - mvp.WorkPos[1], y - mvp.WorkPos[2]
     for _, w in ipairs(worlds) do
-        w.mouse_wheel(x, y, delta)
+        w.mousewheel(x, y, delta)
     end
 end
 function cb.mouse(x, y, what, state)

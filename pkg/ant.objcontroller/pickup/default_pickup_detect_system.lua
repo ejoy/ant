@@ -29,8 +29,8 @@ function dpd_sys:data_changed()
         end
     end
 
-    for _, _, x, y in gesture_mb:unpack() do
-        x, y = remap_xy(x, y)
+    for _, _, pt in gesture_mb:unpack() do
+        local x, y = remap_xy(pt.x, pt.y)
         ipu.pick(x, y)
     end
 end
