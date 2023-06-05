@@ -1120,7 +1120,10 @@ function m.load(path)
     end
     file_path = path:string()
 end
-
+local function read_file(fn)
+    local f<close> = lfs.open(fn)
+    return f:read "a"
+end
 function m.create_target_animation(at, target)
     local e <close> = w:entity(target, "material?in name:in")
     create_context = {}
@@ -1136,7 +1139,7 @@ function m.create_target_animation(at, target)
                 mtlpath = mtlpath .. "/main.cfg"
             end
             local desc = {}
-            local mtl = serialize.parse(mtlpath, cr.read_file(mtlpath))
+            local mtl = serialize.parse(mtlpath, read_file(lfs.path(assetmgr.compile(mtlpath))))
             local keys = {}
             for k, v in pairs(mtl.properties) do
                 if not v.stage then

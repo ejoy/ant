@@ -37,11 +37,14 @@ local access    = global_data.repo_access
 local rb        = ecs.require "widget.resource_browser"
 
 local file_cache = {}
-
+local function read_file(fn)
+    local f<close> = lfs.open(fn)
+    return f:read "a"
+end
 local function read_datalist_file(p)
     local c = file_cache[p]
     if c == nil then
-        c = serialize.parse(p, cr.read_file(p))
+        c = serialize.parse(p, read_file(lfs.path(assetmgr.compile(p))))
         file_cache[p] = c
     end
     return c
