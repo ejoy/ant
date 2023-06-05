@@ -29,6 +29,7 @@ return {
     },
     entry = "editor.callback",
     ecs = {
+        enable_mouse = true,
         import = {
             "@tools.prefab_editor"
         },
