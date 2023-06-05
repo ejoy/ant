@@ -412,6 +412,11 @@ function m:on_prefab_ready(prefab)
     self.root_mat = math3d.ref(math3d.matrix(srt))
 end
 
+local function read_file(fn)
+    local f<close> = lfs.open(fn)
+    return f:read "a"
+end
+
 local function check_animation(template)
     local has_animation = false
     local anim_template
@@ -421,7 +426,7 @@ local function check_animation(template)
             local pos = string.find(mesh_file, ".glb|")
             local anim_path = string.sub(mesh_file, 1, pos + 4) .. "animation.prefab"
             if fs.exists(anim_path) then
-                anim_template = serialize.parse(anim_path, cr.read_file(anim_path))
+                anim_template = serialize.parse(anim_path, read_file(lfs.path(assetmgr.compile(anim_path))))
             end
         end
         if tpl.data.animation then
@@ -436,7 +441,7 @@ end
 function m:open(filename)
     self:reset_prefab(true)
     self.prefab_filename = filename
-    self.prefab_template = serialize.parse(filename, cr.read_file(filename))
+    self.prefab_template = serialize.parse(filename, read_file(lfs.path(assetmgr.compile(filename))))
     for _, value in ipairs(self.prefab_template) do
         if value.data and value.data.mesh then
             -- if prefab from glb file, create entity as patch node
@@ -446,7 +451,7 @@ function m:open(filename)
     end
     local patchfile = filename .. ".patch"
     if fs.exists(fs.path(patchfile)) then
-        self.patch_template = serialize.parse(patchfile, cr.read_file(patchfile))
+        self.patch_template = serialize.parse(patchfile, read_file(lfs.path(assetmgr.compile(patchfile))))
     end
     local eff_host_tpl = self.patch_template or self.prefab_template
     for _, value in ipairs(eff_host_tpl) do
@@ -641,7 +646,7 @@ function m:add_prefab(filename)
             local child = children[1]
             local e <close> = w:entity(child, "camera?in")
             if e.camera then
-                local temp = serialize.parse(prefab_filename, cr.read_file(prefab_filename))
+                local temp = serialize.parse(prefab_filename, read_file(lfs.path(assetmgr.compile(prefab_filename))))
                 hierarchy:add(child, {template = temp[1], editor = true, temporary = true}, parent)
                 return
             end
