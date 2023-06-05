@@ -125,10 +125,10 @@ end
 
 local key_mb			= world:sub {"keyboard"}
 local mouse_mb          = world:sub {"mouse"}
-local mouse_wheel_mb    = world:sub {"mouse_wheel"}
+local mouse_wheel_mb    = world:sub {"mousewheel"}
 local smooth_lookat_mb  = world:sub {"SmoothLookAt"}
 local event_camera_speed = world:sub{"camera_controller", "move_speed"}
-
+local event_gesture 	= world:sub { "gesture", "pinch"}
 local function do_animation()
 	if not animation.running then
 		return true
@@ -174,6 +174,11 @@ function camera_sys:handle_input()
 	for _, _, speed in event_camera_speed:unpack()  do
 		camera_speed = speed
 	end
+
+	for _, what, e in event_gesture:unpack() do
+		on_wheel(e.velocity)
+	end
+
 	for _, btn, state, x, y in mouse_mb:unpack() do
 		if state == "DOWN" then
 			last_mousex, last_mousey = x, y

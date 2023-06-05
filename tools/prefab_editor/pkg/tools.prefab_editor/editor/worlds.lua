@@ -14,7 +14,7 @@ local function create_world(config)
     function m.exit()
         world:pipeline_exit()
     end
-    m.mouse_wheel   = ev.mouse_wheel
+    m.mousewheel   = ev.mousewheel
     m.mouse         = ev.mouse
     m.keyboard      = ev.keyboard
     m.size          = ev.size
