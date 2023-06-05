@@ -24,17 +24,16 @@ interface "irmlui"
 
 component "rmlui_obj"
 
-
+component "focus_obj"
 system "ui_rt_system"
     .require_system "ant.render|render_system"
     .implement "ui_rt_system.lua"
-    .method "data_changed"
-
+    .method "update_filter"
 interface "iuirt"
     .implement "ui_rt_system.lua"
     .method "get_group_id"
-    .method "adjust_camera"
     .method "create_new_rt"
+    .method "open_ui_rt"
     .method "close_ui_rt"
 
 
