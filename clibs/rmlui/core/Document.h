@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>
+#include <deque>
 
 namespace Rml {
 
@@ -43,12 +44,14 @@ public:
 	void NotifyCustomElement(Element* e);
 	void DefineCustomElement(const std::string& name);
 	void Instance(const HtmlElement& html);
+	void RecycleNode(std::unique_ptr<Node>&& node);
 
 private:
 	std::string source_url;
 	StyleSheet style_sheet;
 	std::unordered_set<std::string> custom_element;
 	std::unordered_map<std::string, std::unique_ptr<DataModel>> data_models;
+	std::deque<std::unique_ptr<Node>> removednodes;
 	Element body;
 	Size dimensions;
 	bool dirty_dimensions = false;
