@@ -1,6 +1,7 @@
 local ltask = require "ltask"
 local exclusive = require "ltask.exclusive"
 local bgfx = require "bgfx"
+local fontmanager = require "font.fontmanager"
 
 local initialized = false
 
@@ -16,7 +17,8 @@ local CALL = {
     "encoder_create",
     "encoder_destroy",
     "encoder_frame",
-    "maxfps"
+    "maxfps",
+    "fontmanager",
 }
 
 local SEND = {
@@ -234,6 +236,10 @@ function S.dbg_text_print(x, y, ...)
     return bgfx.dbg_text_print(x + 16, y + 1, ...)
 end
 
+function S.fontmanager()
+    return fontmanager.instance()
+end
+
 local function mainloop()
     while initialized do
         if encoder_num > 0 and encoder_cur == encoder_num then
@@ -279,6 +285,7 @@ function S.shutdown()
     thread_num = thread_num - 1
     if thread_num == 0 then
         initialized = false
+        fontmanager.shutdown()
         bgfx.shutdown()
     end
 end

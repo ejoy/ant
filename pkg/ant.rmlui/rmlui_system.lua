@@ -19,7 +19,6 @@ function rmlui_sys:init()
     ltask.call(ServiceRmlUi, "initialize", {
         service_world = ltask.self(),
         viewid = ui_viewid,
-        font_mgr = font.handle(),
         font_tex = {
             texid = ft_handle,
             width = ft_w, height = ft_h,

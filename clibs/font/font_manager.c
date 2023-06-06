@@ -71,32 +71,6 @@ ttf_with_family(struct font_manager *F, const char* family){
 	#endif //TEST_CASE
 }
 
-static void
-font_manager_init_unsafe(struct font_manager *F, struct truetype_font *ttf, void *L) {
-	F->version = 1;
-	F->count = 0;
-	F->ttf = ttf;
-	F->L = L;
-	F->dpi_perinch = 0;
-// init priority list
-	int i;
-	for (i=0;i<FONT_MANAGER_SLOTS;i++) {
-		F->priority[i].prev = i+1;
-		F->priority[i].next = i-1;
-	}
-	int lastslot = FONT_MANAGER_SLOTS-1;
-	F->priority[0].next = lastslot;
-	F->priority[lastslot].prev = 0;
-	F->list_head = lastslot;
-// init hash
-	for (i=0;i<FONT_MANAGER_SLOTS;i++) {
-		F->slots[i].codepoint_key = -1;
-	}
-	for (i=0;i<FONT_MANAGER_HASHSLOTS;i++) {
-		F->hash[i] = -1;	// empty slot
-	}
-}
-
 static inline int
 hash(int value) {
 	return (value * 0xdeece66d + 0xb) % FONT_MANAGER_HASHSLOTS;
@@ -432,10 +406,37 @@ font_manager_sdf_distance(struct font_manager *F, uint8_t numpixel){
 }
 
 void
-font_manager_init(struct font_manager *F, void *L) {
-	F->mutex = mutex_create();
+font_manager_init(struct font_manager *F) {
+	F->mutex = mutex_create();	
+	F->version = 1;
+	F->count = 0;
+	F->ttf = NULL;
+	F->L = NULL;
+	F->dpi_perinch = 0;
+// init priority list
+	int i;
+	for (i=0;i<FONT_MANAGER_SLOTS;i++) {
+		F->priority[i].prev = i+1;
+		F->priority[i].next = i-1;
+	}
+	int lastslot = FONT_MANAGER_SLOTS-1;
+	F->priority[0].next = lastslot;
+	F->priority[lastslot].prev = 0;
+	F->list_head = lastslot;
+// init hash
+	for (i=0;i<FONT_MANAGER_SLOTS;i++) {
+		F->slots[i].codepoint_key = -1;
+	}
+	for (i=0;i<FONT_MANAGER_HASHSLOTS;i++) {
+		F->hash[i] = -1;	// empty slot
+	}
+}
+
+void
+font_manager_init_lua(struct font_manager *F, void *L) {
 	lock(F);
-	font_manager_init_unsafe(F, truetype_cstruct(L), L);
+	F->ttf = truetype_cstruct(L);
+	F->L = L;
 	#define SETAPI(n) F->n = n
 	SETAPI(font_manager_import);
 	SETAPI(font_manager_addfont_with_family);
@@ -451,6 +452,16 @@ font_manager_init(struct font_manager *F, void *L) {
 	SETAPI(font_manager_sdf_distance);
 	#undef SETAPI
 	unlock(F);
+}
+
+void*
+font_manager_release_lua(struct font_manager *F) {
+	lock(F);
+	void *L = F->L;
+	F->ttf = NULL;
+	F->L = NULL;
+	unlock(F);
+	return L;
 }
 
 #ifdef TEST_CASE

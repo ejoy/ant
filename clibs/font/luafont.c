@@ -313,8 +313,6 @@ initfont(lua_State *L) {
 	lua_settop(L, 2);
 	lua_pushinteger(L, FONT_MANAGER_TEXSIZE);
 	lua_setfield(L, 1, "fonttexture_size");
-	lua_pushvalue(L, 2);
-	lua_setfield(L, 1, "font_manager");
 	luaL_setfuncs(L, l, 1);
 	lua_settop(L, 1);
 	return 1;
@@ -361,31 +359,35 @@ luavm_create(lua_State *L, const char* boot) {
 }
 
 static int
-vm_init(lua_State *L) {
+fontm_init(lua_State *L) {
 	struct font_manager *F = (struct font_manager*)lua_touserdata(L, lua_upvalueindex(1));
 	const char* boot = luaL_checkstring(L, 1);
-	font_manager_init(F, luavm_create(L, boot));
+	font_manager_init_lua(F, luavm_create(L, boot));
 	lua_pushlightuserdata(L, F);
 	return 1;
 }
 
 static int
-vm_close(lua_State *L) {
+fontm_shutdown(lua_State *L) {
 	struct font_manager *F = (struct font_manager*)lua_touserdata(L, lua_upvalueindex(1));
-	lua_close(F->L);
+	void* managerL = font_manager_release_lua(F);
+	if (managerL) {
+		lua_close(managerL);
+	}
 	return 0;
 }
 
 LUAMOD_API int
-luaopen_font_vm(lua_State *L) {
+luaopen_font_manager(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
-		{ "init", vm_init },
-		{ "close", vm_close },
+		{ "init", fontm_init },
+		{ "shutdown", fontm_shutdown },
 		{ NULL, NULL },
 	};
 	luaL_newlibtable(L, l);
 	struct font_manager * F = (struct font_manager *)lua_newuserdatauv(L, sizeof(*F), 0);
+	font_manager_init(F);
 	luaL_setfuncs(L, l, 1);
 	return 1;
 }
