@@ -1,5 +1,5 @@
 local lib = require "rp3d.core"
-local math3d_adapter = require "math3d.adapter"
+local math3d_adapter = import_package "ant.math.adapter"
 
 local function shape_interning(shape)
 	local all_shapes = {}
