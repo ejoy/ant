@@ -157,7 +157,7 @@ end
 
 local config = pm.loadcfg(packagename)
 ltask.fork(function ()
-	renderpkg.init_bgfx()
+	import_package "ant.service".init_bgfx()
     init_width, init_height = w, h
 
     local nwh = imgui.Create(dispatch, w, h)
