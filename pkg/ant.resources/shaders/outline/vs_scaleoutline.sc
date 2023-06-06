@@ -57,7 +57,8 @@ void main()
 #else // SCREEN_SPACE    
     mediump mat4 wm = get_world_matrix();
     mat4 modelView = mul(u_view, wm);
-    vec4 pos = mul(u_modelViewProj, vec4(a_position, 1.0));
+    mat4 modelViewPorj = mul(u_proj, modelView);
+    vec4 pos = mul(modelViewPorj, vec4(a_position, 1.0));
     vec3 view_normal = mul(modelView, vec4(normal, 0.0)).xyz;
     vec3 ndc_normal = mul(pos.w, normalize(mul(u_proj, vec4(view_normal, 0.0)).xyz));
     float aspect = u_viewRect.w / u_viewRect.z;
