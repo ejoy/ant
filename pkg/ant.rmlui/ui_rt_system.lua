@@ -18,8 +18,6 @@ local ui_rt_group_id = 110000
 local fb_cache, rb_cache = {}, {}
 local rt2g_table = {}
 local g2rt_table = {}
-local g2pf_table = {}
-local focused_rt_table = {}
 local R             = ecs.clibs "render.render_material"
 local queuemgr      = renderpkg.queuemgr
 
@@ -197,13 +195,13 @@ end
 function iUiRt.create_new_rt(rt_name, plane_path, light_path, focus_path, srt)
     local queue_name = rt_name .. "_queue"
     local gid = rt2g_table[rt_name]
-    g2pf_table[gid] = focus_path
     local g = ecs.group(gid)
     local light_instance = g:create_instance(light_path)
     local plane_instance = g:create_instance(plane_path)
     local focus_instance = g:create_instance(focus_path)
     focus_instance.on_ready = function (inst)
         local alleid = inst.tag['*']
+        
         local re <close> = w:entity(alleid[1])
         if srt.s then
             iom.set_scale(re, math3d.vector(srt.s))
@@ -256,61 +254,16 @@ function iUiRt.create_new_rt(rt_name, plane_path, light_path, focus_path, srt)
     return focus_instance
 end
 
-function iUiRt.open_ui_rt(rt_name, focus_path, srt)
-    local queue_name = rt_name .. "_queue"
-    local gid = rt2g_table[rt_name]
-    local g = ecs.group(gid)
-    local pre_focus_path = g2pf_table[gid]
-    if pre_focus_path == focus_path then
-        g:enable "view_visible"
-        g:enable "scene_update"
-        return
-    else
-        local enable_tag = rt_name .. "_obj"
-        local select_tag = enable_tag .. " focus_obj:in eid:in"
-        for ee in w:select(select_tag) do
-            w:remove(ee.eid)
-        end
-        local focus_instance = g:create_instance(focus_path)
-        focus_instance.on_ready = function (inst)
-            local alleid = inst.tag['*']
-            local re <close> = w:entity(alleid[1])
-            if srt.s then
-                iom.set_scale(re, math3d.vector(srt.s))
-            end
-            if srt.r then
-                iom.set_direction(re, math3d.vector(srt.r))
-            end
-            if srt.t then
-                iom.set_position(re, math3d.vector(srt.t))
-            end
-            for _, eid in ipairs(alleid) do
-                local ee <close> = w:entity(eid, "visible_state?in focus_obj?update mesh?in")
-                if ee.mesh then
-                    if ee.visible_state then
-                        ivs.set_state(ee, "main_view|selectable", false)
-                        ivs.set_state(ee, queue_name, true)
-                        ee.focus_obj = true
-                    end 
-                end
-            end
-        end
-        world:create_object(focus_instance)
-        g:enable "view_visible"
-        g:enable "scene_update"
-        g2pf_table[gid] = focus_path
-        return focus_instance
-    end
-end
-
 function iUiRt.close_ui_rt(rt_name)
     local gid = rt2g_table[rt_name]
     if gid then
+        local obj_name = rt_name .. "_obj"
+        local select_tag = obj_name .. " eid:in"
         local g = ecs.group(gid)
-        local enable_tag = rt_name .. "_obj"
-        g:enable(enable_tag)
-        g:disable "view_visible"
-        g:disable "scene_update"
+        g:enable(obj_name)
+        for e in w:select(select_tag) do
+            w:remove(e.eid)
+        end
     end      
 end 
 

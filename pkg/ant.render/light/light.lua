@@ -280,7 +280,9 @@ local light_buffer = bgfx.create_dynamic_vertex_buffer(1, declmgr.get "t40".hand
 
 local function update_light_buffers()
 	local lights = create_light_buffers()
-	bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
+	if #lights ~= 0 then
+		bgfx.update(light_buffer, 0, bgfx.memory_buffer(table.concat(lights, "")))
+	end
 	local sa = imaterial.system_attribs()
 	sa:update("u_light_count", math3d.vector(#lights, 0, 0, 0))
 end

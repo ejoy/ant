@@ -33,7 +33,6 @@ interface "iuirt"
     .implement "ui_rt_system.lua"
     .method "get_group_id"
     .method "create_new_rt"
-    .method "open_ui_rt"
     .method "close_ui_rt"
 
 

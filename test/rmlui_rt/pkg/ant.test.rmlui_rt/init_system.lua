@@ -32,7 +32,7 @@ local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 function init_sys:data_changed()
     for _, key, press in kb_mb:unpack() do
         local rt_name = "rt1"
-        local focus_path = "/pkg/ant.resources.binary/meshes/furnace-1.glb|mesh.prefab"
+        local focus_path = "/pkg/ant.resources.binary/meshes/drone.prefab"
         local plane_path = "/pkg/ant.resources.binary/meshes/plane_rt.glb|mesh.prefab"
         local light_path= "/pkg/ant.resources/light_rt.prefab"
         local focus_srt = {
@@ -46,7 +46,7 @@ function init_sys:data_changed()
         elseif key == "K" and press == 0 then
             focus_path = "/pkg/ant.resources.binary/meshes/chimney-1.glb|mesh.prefab"
             focus_path = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|mesh.prefab"
-            local focus_prefab_instance = iUiRt.open_ui_rt(rt_name, focus_path, focus_srt)
+            local focus_prefab_instance = iUiRt.create_new_rt(rt_name, plane_path, light_path, focus_path, focus_srt)
         end
     end
 end
