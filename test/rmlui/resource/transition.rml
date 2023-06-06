@@ -20,7 +20,8 @@
                 width:33%;
                 height:50%;
                 background-size:cover;
-                background-image:"<rt1>"
+                background-image:"lattice1.png";
+                background-lattice:10%;
             }
         </style>
         <script type="text/x-lua" >

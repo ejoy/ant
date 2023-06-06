@@ -9,17 +9,17 @@
 
 namespace Rml {
 
-void ElementBackgroundImage::GetRectArray(float ratio, Rect& rect, std::vector<Rect> &rect_array){
+void ElementBackgroundImage::GetRectArray(float ratiow,float ratioh, Rect& rect, std::vector<Rect> &rect_array){
 		float x = rect.origin.x;
 		float y = rect.origin.y;
 		float w = rect.size.w;
 		float h = rect.size.h;
-		float w1 = ratio * w;
-		float w2 = (1 - ratio) * w;
-		float w3 = (1 - 2 * ratio) * w;
-		float h1 = ratio * h;
-		float h2 = (1 - ratio) * h;
-		float h3 = (1 - 2 * ratio) * h;
+		float w1 = ratiow * w;
+		float w2 = (1 - ratiow) * w;
+		float w3 = (1 - 2 * ratiow) * w;
+		float h1 = ratioh * h;
+		float h2 = (1 - ratioh) * h;
+		float h3 = (1 - 2 * ratioh) * h;
 		rect_array[0] = Rect{x, y, w1, h1};
 		rect_array[1] = Rect{w1, y, w3, h1};
 		rect_array[2] = Rect{w2, y, w1, h1};
@@ -142,8 +142,10 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	if(lattice && lattice->Has<PropertyFloat>()){
 		std::vector<Rect> surface_array(9);
 		std::vector<Rect> uv_array(9);
-		GetRectArray(lattice->Get<PropertyFloat>().value / 100.0, surface, surface_array);
-		GetRectArray((float)0.49, uv, uv_array);
+		float ratiow = lattice->Get<PropertyFloat>().value / 100.0;
+		float ratioh = ratiow * surface.size.w / surface.size.h;
+		GetRectArray(ratiow, ratioh, surface, surface_array);
+		GetRectArray((float)0.49, (float)0.49, uv, uv_array);
 		for(int idx = 0; idx < 9; ++idx){
 			geometry.AddRectFilled(surface_array[idx], color);
 			geometry.UpdateUV(4, surface_array[idx], uv_array[idx]);
