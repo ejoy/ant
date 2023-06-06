@@ -12,10 +12,9 @@ local mu        = mathpkg.util
 
 local fontpkg   = import_package "ant.font"
 local lfont     = require "font"
-fontpkg.init()
+local fontmanager = fontpkg.init()
 
-
-local layout    = require "layout"(fontpkg.handle())
+local layout    = require "layout"(fontmanager)
 
 local dyn_vb = require "font.dyn_vb"
 local fontidx_table={}
@@ -194,7 +193,6 @@ end
 
 function fontsys:exit()
     dvb:destroy()
-    fontpkg.close()
 end
 
 function ecs.method.show_name(eid, attach)

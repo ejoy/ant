@@ -91,7 +91,9 @@ struct font_manager {
 	float (*font_manager_sdf_distance)(struct font_manager *F, uint8_t numpixel);
 };
 
-void font_manager_init(struct font_manager *, void *L);
+void font_manager_init(struct font_manager *);
+void font_manager_init_lua(struct font_manager *, void *L);
+void* font_manager_release_lua(struct font_manager *);
 void font_manager_import(struct font_manager *F, const char* fontpath);
 
 int font_manager_addfont_with_family(struct font_manager *F, const char* family);

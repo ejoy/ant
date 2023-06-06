@@ -44,7 +44,6 @@ function S.initialize(t)
     bgfx.init()
     audio.init()
     ServiceWorld = t.service_world
-    require "font" (t.font_mgr)
     initRender(t)
     ltask.fork(Render)
 end

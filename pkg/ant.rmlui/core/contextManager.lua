@@ -90,24 +90,11 @@ end
 
 local gesture = {}
 
-local function createClickEvent(doc, e, x, y)
-    local ev = {
-        x = x,
-        y = y,
-    }
-    local body = getBody(doc)
-    ev.clientX, ev.clientY = x, y
-    ev.offsetX, ev.offsetY = project(e, x, y)
-    ev.pageX,   ev.pageY   = project(body, x, y)
-    return ev
-end
-
 function gesture.tap(ev)
     local x, y = round(ev.x), round(ev.y)
-    local doc, e = fromPoint(x, y)
+    local _, e = fromPoint(x, y)
     if e then
-        dispatchEvent(e, "click", createClickEvent(doc, e, x, y))
-        dispatchEvent(e, "tap", {
+        dispatchEvent(e, "click", {
             x = x,
             y = y,
         })

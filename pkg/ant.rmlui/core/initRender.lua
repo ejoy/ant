@@ -1,4 +1,5 @@
 local rmlui = require "rmlui"
+local bgfx = require "bgfx"
 local assetmgr = import_package "ant.asset"
 local renderpkg = import_package "ant.render"
 renderpkg.init_bgfx()
@@ -43,5 +44,6 @@ return function(t)
     t.layout  = layouhandle
     t.shader = shaders
     t.callback = require "core.callback"
+    t.font_mgr = bgfx.fontmanager()
     rmlui.RmlInitialise(t)
 end

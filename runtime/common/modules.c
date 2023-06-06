@@ -31,7 +31,7 @@ int luaopen_textureman_client(lua_State *L);
 int luaopen_textureman_server(lua_State *L);
 int luaopen_fmod(lua_State* L);
 int luaopen_font(lua_State *L);
-int luaopen_font_vm(lua_State *L);
+int luaopen_font_manager(lua_State *L);
 int luaopen_font_truetype(lua_State *L);
 int luaopen_efk(lua_State* L);
 int luaopen_effekseer_callback(lua_State* L);
@@ -79,7 +79,7 @@ void ant_loadmodules(lua_State* L) {
         { "bgfx.util", luaopen_bgfx_util },
         { "bundle", luaopen_bundle },
         { "font", luaopen_font },
-        { "font.vm", luaopen_font_vm },
+        { "font.manager", luaopen_font_manager },
         { "font.truetype", luaopen_font_truetype },
         { "crypt", luaopen_crypt },
         { "datalist", luaopen_datalist },
