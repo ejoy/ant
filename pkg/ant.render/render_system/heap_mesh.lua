@@ -84,6 +84,7 @@ function hm_sys:entity_init()
         heapmesh.eid = eid
         heapmesh.idb_handle = idb_handle
         heapmesh.itb_handle = itb_handle
+        e.render_object.draw_num = 0
         heapmesh.extent = {dx * sx, dy * sy, dz * sz}
     end
 end

@@ -4,7 +4,6 @@ fx:
   setting:
     INDIRECT_BUFFER: 1  
     lighting: off
-    GPU_SKINNING: 1
 properties:
   u_id: {0, 0, 0, 0}
 state:
