@@ -1,12 +1,3 @@
-local adapter = {}; adapter.__index = adapter
-
-local bindings = {}
-
-function adapter.bind(name, binding)
-	if not bindings[name] then
-		binding()
-		bindings[name] = true
-	end
-end
-
-return adapter
+local math3d = require "math3d"
+local math3d_adapter = require "math3d.adapter" (math3d._COBJECT)
+return math3d_adapter

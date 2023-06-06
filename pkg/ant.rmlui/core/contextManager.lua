@@ -10,7 +10,6 @@ local getBody = rmlui.DocumentGetBody
 local dispatchEvent = rmlui.ElementDispatchEvent
 local getParent = rmlui.NodeGetParent
 local setPseudoClass = rmlui.ElementSetPseudoClass
-local project = rmlui.ElementProject
 
 local m = {}
 

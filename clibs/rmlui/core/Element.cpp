@@ -59,10 +59,8 @@ Element::Element(Document* owner, const std::string& tag)
 Element::~Element() {
 	GetPlugin()->OnDestroyNode(GetOwnerDocument(), this);
 	assert(parent == nullptr);
+	assert(childnodes.empty());
 	SetDataModel(nullptr);
-	for (auto& child : childnodes) {
-		child->SetParentNode(nullptr);
-	}
 
 	auto& c = Style::Instance();
 	c.Release(animation_properties);
@@ -400,7 +398,7 @@ void Element::NotifyCustomElement() {
 void Element::AppendChild(Node* node, uint32_t index) {
 	Element* p = node->GetParentNode();
 	if (p) {
-		p->RemoveChild(node).release();
+		p->DetachChild(node).release();
 	}
 	if (index > childnodes.size()) {
 		index = (uint32_t)childnodes.size();
@@ -416,7 +414,7 @@ void Element::AppendChild(Node* node, uint32_t index) {
 	DirtyStructure();
 }
 
-std::unique_ptr<Node> Element::RemoveChild(Node* node) {
+std::unique_ptr<Node> Element::DetachChild(Node* node) {
 	size_t index = GetChildNodeIndex(node);
 	if (index == size_t(-1)) {
 		return nullptr;
@@ -438,6 +436,17 @@ std::unique_ptr<Node> Element::RemoveChild(Node* node) {
 	DirtyStackingContext();
 	DirtyStructure();
 	return detached_child;
+}
+
+void Element::RemoveChild(Node* node) {
+	auto detached_child = DetachChild(node);
+	if (detached_child) {
+		if (node->GetType() == Layout::Type::Element) {
+			auto e = static_cast<Element*>(node);
+			e->RemoveAllChildren();
+		}
+		GetOwnerDocument()->RecycleNode(std::move(detached_child));
+	}
 }
 
 size_t Element::GetChildNodeIndex(Node* node) const {
@@ -482,8 +491,12 @@ Node* Element::GetPreviousSibling() {
 }
 
 void Element::RemoveAllChildren() {
-	for (auto& child : childnodes) {
+	for (auto& child : children) {
+		child->RemoveAllChildren();
+	}
+	for (auto&& child : childnodes) {
 		child->SetParentNode(nullptr);
+		GetOwnerDocument()->RecycleNode(std::move(child));
 	}
 	children.clear();
 	childnodes.clear();

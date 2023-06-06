@@ -10,11 +10,11 @@ local efk       = require "efk"
 
 local FI        = require "fileinterface"
 
+import_package "ant.service".init_bgfx()
 local renderpkg = import_package "ant.render"
 
 local viewidmgr = renderpkg.viewidmgr
 local assetmgr  = import_package "ant.asset"
-renderpkg.init_bgfx()
 
 local effect_viewid<const> = viewidmgr.get "effect_view"
 

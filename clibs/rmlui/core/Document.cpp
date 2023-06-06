@@ -20,6 +20,7 @@ Document::Document(const Size& _dimensions)
 
 Document::~Document() {
 	body.RemoveAllEvents();
+	body.RemoveAllChildren();
 }
 
 bool Document::Load(const std::string& path) {
@@ -166,6 +167,7 @@ const Size& Document::GetDimensions() {
 }
 
 void Document::Update(float delta) {
+	removednodes.clear();
 	UpdateDataModel(true);
 	body.Update();
 	body.UpdateAnimations(delta);
@@ -219,4 +221,7 @@ void Document::DefineCustomElement(const std::string& name) {
 	custom_element.emplace(name);
 }
 
+void Document::RecycleNode(std::unique_ptr<Node>&& node) {
+	removednodes.emplace_back(std::forward<std::unique_ptr<Node>>(node));
+}
 }

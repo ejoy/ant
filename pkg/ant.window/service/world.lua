@@ -1,11 +1,9 @@
 local initargs = ...
 
-if not __ANT_RUNTIME__ then
-	if package.loaded.math3d then
-		error "need init math3d MAXPAGE"
-	end
-	debug.getregistry().MATH3D_MAXPAGE = 10240
+if package.loaded.math3d then
+	error "need init math3d MAXPAGE"
 end
+debug.getregistry().MATH3D_MAXPAGE = 4096
 
 local ltask     = require "ltask"
 local inputmgr  = import_package "ant.inputmgr"
@@ -136,7 +134,7 @@ local function render(nwh, context, width, height, initialized)
 end
 
 function S.init(nwh, context, width, height)
-	import_package "ant.render".init_bgfx()
+	import_package "ant.service".init_bgfx()
 	local initialized = {}
 	ltask.fork(render, nwh, context, width, height, initialized)
 	ltask.wait(initialized)

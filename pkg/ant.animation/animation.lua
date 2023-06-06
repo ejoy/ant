@@ -257,25 +257,15 @@ function ani_sys:entity_ready()
 	end
 end
 
-local mathadapter = import_package "ant.math.adapter"
-local math3d_adapter = require "math3d.adapter"
+local math3d_adapter = import_package "ant.math.adapter"
 require "skeleton" -- for mathadapter bind
-mathadapter.bind(
-	"animation",
-	function ()
-		local mt
 
-		mt = animodule.bind_pose_mt()
-		mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
-
-		mt = animodule.pose_result_mt()
-		mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
-		mt.joint_local_srt = math3d_adapter.format(mt.joint_local_srt, "vqv", 3)
-
-		mt.fetch_result = math3d_adapter.getter(mt.fetch_result, "m", 2)
-
-		mt = animodule.raw_animation_mt()
-		mt.push_prekey = math3d_adapter.format(mt.push_prekey, "vqv", 4)
-
-		animodule.build_skinning_matrices = math3d_adapter.matrix(animodule.build_skinning_matrices, 5)
-	end)
+local mt = animodule.bind_pose_mt()
+mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
+mt = animodule.pose_result_mt()
+mt.joint = math3d_adapter.getter(mt.joint, "m", 3)
+mt.joint_local_srt = math3d_adapter.format(mt.joint_local_srt, "vqv", 3)
+mt.fetch_result = math3d_adapter.getter(mt.fetch_result, "m", 2)
+mt = animodule.raw_animation_mt()
+mt.push_prekey = math3d_adapter.format(mt.push_prekey, "vqv", 4)
+animodule.build_skinning_matrices = math3d_adapter.matrix(animodule.build_skinning_matrices, 5)
