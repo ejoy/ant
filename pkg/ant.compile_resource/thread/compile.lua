@@ -86,13 +86,21 @@ local function init()
     local renderer = caps.rendererType:lower()
     local texture = assert(texture_extensions[renderer])
     init_setting()
-    set_setting("model", stringify {})
-    set_setting("glb", stringify {})
+    local hd = caps.homogeneousDepth and true or nil
+    local obl = caps.originBottomLeft and true or nil
+    set_setting("model", stringify {
+        hd = hd,
+        obl = obl,
+    })
+    set_setting("glb", stringify {
+        hd = hd,
+        obl = obl,
+    })
     set_setting("material", stringify {
         os = BgfxOS[platform.os] or platform.os,
         renderer = renderer,
-        hd = caps.homogeneousDepth and true or nil,
-        obl = caps.originBottomLeft and true or nil,
+        hd = hd,
+        obl = obl,
     })
     set_setting("texture", stringify {os=platform.os, ext=texture})
     set_setting("png", stringify {os=platform.os, ext=texture})
