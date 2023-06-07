@@ -1,12 +1,3 @@
-
-
-
-
-local m = {}
-local math3d    = require "math3d"
-local mathpkg	= import_package "ant.math"
-local mc, mu	= mathpkg.constant, mathpkg.util
-
 local typemapper<const> = {
 	f = 'f',
 	i = 'H',
@@ -44,7 +35,7 @@ end
 local function load_attrib(attribidx, vertex, layout)
 	return unpack_vec(vertex[attribidx], layout)
 end
-local function load_attrib_math3dvec(attribidx, vertex, layout)
+local function load_attrib_math3dvec(math3d, attribidx, vertex, layout)
 	local r = load_attrib(attribidx, vertex, layout)
 	if #r < 3 then
 		r[3] = 0
@@ -63,7 +54,7 @@ local function f2i(v)
     return math.floor(check_nan(v) * 32767+0.5)
 end
 
-return function (layouts, vertices)
+return function (math3d, layouts, vertices)
 	local weights_attrib_idx, joint_attrib_idx	= find_layout_idx(layouts, "WEIGHTS_0"), 	find_layout_idx(layouts, "JOINTS_0")
 	local normal_attrib_idx, tangent_attrib_idx = find_layout_idx(layouts, "NORMAL"), 		find_layout_idx(layouts, "TANGENT")
 	local color_attrib_idx 						= find_layout_idx(layouts, "COLOR_0")
@@ -85,10 +76,10 @@ return function (layouts, vertices)
 	local new_vertices = {}
 
 	local function pack_tangent_frame(v)
-		local normal = load_attrib_math3dvec(normal_attrib_idx, v, layouts[normal_attrib_idx].layout)
-		local tangent = load_attrib_math3dvec(tangent_attrib_idx, v, layouts[tangent_attrib_idx].layout)
+		local normal = load_attrib_math3dvec(math3d, normal_attrib_idx, v, layouts[normal_attrib_idx].layout)
+		local tangent = load_attrib_math3dvec(math3d, tangent_attrib_idx, v, layouts[tangent_attrib_idx].layout)
 		
-		local q = mu.pack_tangent_frame(normal, tangent)
+		local q = math3d.ext_util.pack_tangent_frame(normal, tangent)
 		local qx, qy, qz, qw = math3d.index(q, 1, 2, 3, 4)
 
 		v[tangent_attrib_idx] = ('f'):rep(4):pack(qx, qy, qz, qw)

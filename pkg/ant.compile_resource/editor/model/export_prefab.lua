@@ -1,4 +1,3 @@
-local math3d = require "math3d"
 local utility = require "editor.model.utility"
 local serialize = import_package "ant.serialize"
 local datalist = require "datalist"
@@ -33,7 +32,7 @@ local function create_entity(t)
     return #prefab
 end
 
-local function get_transform(node)
+local function get_transform(math3d, node)
     if node.matrix then
         local s, r, t = math3d.srt(math3d.matrix(node.matrix))
         local rr = math3d.tovalue(r)
@@ -264,9 +263,9 @@ local function has_color_attrib(declname)
     return has_color1 or has_color2
 end
 
-local function create_mesh_node_entity(output, gltfscene, nodeidx, parent, exports)
+local function create_mesh_node_entity(math3d, output, gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
-    local srt = get_transform(node)
+    local srt = get_transform(math3d, node)
     local meshidx = node.mesh
     local mesh = gltfscene.meshes[meshidx+1]
 
@@ -316,9 +315,9 @@ local function create_mesh_node_entity(output, gltfscene, nodeidx, parent, expor
     return entity
 end
 
-local function create_node_entity(gltfscene, nodeidx, parent, exports)
+local function create_node_entity(math3d, gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
-    local srt = get_transform(node)
+    local srt = get_transform(math3d, node)
     local nname = node.name and fix_invalid_name(node.name) or ("node" .. nodeidx)
     local policy = {
         "ant.general|name",
@@ -397,7 +396,7 @@ local function find_mesh_nodes(gltfscene, scenenodes, meshnodes)
     end
 end
 
-return function(output, glbdata, exports, localpath)
+return function (math3d, output, glbdata, exports, localpath)
     prefab = {}
     material_files = {}
     local gltfscene = glbdata.info
@@ -437,9 +436,9 @@ return function(output, glbdata, exports, localpath)
         local node = gltfscene.nodes[nodeidx+1]
         local e
         if node.mesh then
-            e = create_mesh_node_entity(output, gltfscene, nodeidx, parent, exports)
+            e = create_mesh_node_entity(math3d, output, gltfscene, nodeidx, parent, exports)
         else
-            e = create_node_entity(gltfscene, nodeidx, parent, exports)
+            e = create_node_entity(math3d, gltfscene, nodeidx, parent, exports)
         end
 
         C[nodeidx] = e
