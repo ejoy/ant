@@ -2,6 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
+local math3d = require "math3d"
 local m = ecs.system "entity_system"
 
 local function update_group_tag(groupid, data)
@@ -56,7 +57,7 @@ end
 function m:update_world()
     w:visitor_update()
     w:update()
-    world._frame = world._frame+ 1
+    math3d.reset()
 end
 
 local function emptyfunc(f)

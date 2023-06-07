@@ -7,63 +7,124 @@ local bgfx = require "bgfx"
 local world = {}
 world.__index = world
 
+local function update_cpu_stat(w, funcs, symbols)
+	local math3d = require "math3d"
+	local ecs_world = w._ecs_world
+	local get_time = ltask.counter
+	local MaxFrame <const> = 30
+	local MaxText <const> = math.min(10, #funcs)
+	local MaxName <const> = 48
+	local CurFrame = 0
+	local dbg_print = bgfx.dbg_text_print
+	local printtext = {}
+	local stat = {}
+	for i = 1, #funcs do
+		stat[i] = 0
+	end
+	for i = 1, MaxText do
+		printtext[i] = ""
+	end
+	return function()
+		math3d.reset()
+		for i = 1, #funcs do
+			local f = funcs[i]
+			local now = get_time()
+			f(ecs_world)
+			stat[i] = stat[i] + (get_time() - now)
+		end
+		if CurFrame ~= MaxFrame then
+			CurFrame = CurFrame + 1
+		else
+			CurFrame = 1
+			local t = {}
+			for i = 1, #funcs do
+				t[i] = {stat[i], i}
+				stat[i] = 0
+			end
+			table.sort(t, function (a, b)
+				return a[1] > b[1]
+			end)
+			for i = 1, MaxText do
+				local m = t[i]
+				local v, idx = m[1], m[2]
+				local name = symbols[idx]
+				printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(v / MaxFrame * 1000)
+			end
+		end
+		dbg_print(0, 2, 0x02, "--- system")
+		for i = 1, MaxText do
+			dbg_print(2, 2+i, 0x02, printtext[i])
+		end
+	end
+end
+
+local function update_math3d_stat(w, funcs, symbols)
+	local math3d = require "math3d"
+	local ecs_world = w._ecs_world
+	local MATH_INFO_TRANSIENT <const> = 2
+	local MaxFrame <const> = 30
+	local MaxText <const> = math.min(10, #funcs)
+	local MaxName <const> = 48
+	local CurFrame = 0
+	local dbg_print = bgfx.dbg_text_print
+	local printtext = {}
+	local stat = {}
+	for i = 1, #funcs do
+		stat[i] = 0
+	end
+	for i = 1, MaxText do
+		printtext[i] = ""
+	end
+	return function ()
+		local last = math3d.info(MATH_INFO_TRANSIENT)
+		for i = 1, #funcs do
+			local f = funcs[i]
+			f(ecs_world)
+			local transient = math3d.info(MATH_INFO_TRANSIENT)
+			stat[i] = math.max(stat[i], (transient - last))
+			last = transient
+		end
+		if CurFrame ~= MaxFrame then
+			CurFrame = CurFrame + 1
+		else
+			CurFrame = 1
+			local t = {}
+			for i = 1, #funcs do
+				t[i] = {stat[i], i}
+			end
+			table.sort(t, function (a, b)
+				return a[1] > b[1]
+			end)
+			for i = 1, MaxText do
+				local m = t[i]
+				local v, idx = m[1], m[2]
+				local name = symbols[idx]
+				printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %d   "):format(v)
+			end
+		end
+		dbg_print(0, 2, 0x02, "--- system")
+		for i = 1, MaxText do
+			dbg_print(2, 2+i, 0x02, printtext[i])
+		end
+	end
+end
+
 function world:pipeline_func(what)
 	local w = self
 	local funcs, symbols = system.lists(w, what)
 	if not funcs or #funcs == 0 then
 		return function() end
 	end
-	local ecs_world = w._ecs_world
-
-	local STAT <const> = true
-	if STAT and what == "_update" then
-		local get_time = ltask.counter
-		local dbg_print = bgfx.dbg_text_print
-		local total = w._cpu_stat
-		local printtext = {}
-		local MaxFrame <const> = 30
-		local MaxText <const> = 10
-		local MaxName <const> = 48
-		local CurFrame = 0
-		for i = 1, #funcs do
-			total[i] = 0
-		end
-		for i = 1, MaxText do
-			printtext[i] = ""
-		end
-		return function()
-			for i = 1, #funcs do
-				local f = funcs[i]
-				local now = get_time()
-				f(ecs_world)
-				total[i] = total[i] + (get_time() - now)
-			end
-			if CurFrame ~= MaxFrame then
-				CurFrame = CurFrame + 1
-			else
-				CurFrame = 1
-				local t = {}
-				for i = 1, #funcs do
-					t[total[i]] = i
-				end
-				table.sort(total)
-				for i = 1, math.min(MaxText, #total) do
-					local v = total[#total + 1 - i]
-					local m = v / MaxFrame * 1000
-					local name = symbols[t[v]]
-					printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(m)
-				end
-				for i = 1, #funcs do
-					total[i] = 0
-				end
-			end
-			dbg_print(0, 2, 0x02, "--- system")
-			for i = 1, MaxText do
-				dbg_print(2, 2+i, 0x02, printtext[i])
-			end
+	local CPU_STAT <const> = true
+	local MATH3D_STAT <const> = true
+	if what == "_init" or what == "_update" then
+		if CPU_STAT then
+			return update_cpu_stat(w, funcs, symbols)
+		elseif MATH3D_STAT then
+			return update_math3d_stat(w, funcs, symbols)
 		end
 	end
-
+	local ecs_world = w._ecs_world
 	return function()
 		for i = 1, #funcs do
 			local f = funcs[i]
@@ -201,10 +262,8 @@ function m.new_world(config)
 		args = config,
 		_memory = {},
 		_memory_stat = setmetatable({start={}, finish={}}, {__close = finish_memory_stat}),
-		_cpu_stat = {},
 		_ecs = {},
 		_methods = {},
-		_frame = 0,
 		_group = {
 			tags = {}
 		},
