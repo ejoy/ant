@@ -271,6 +271,7 @@ function m.new_world(config)
 			tags = {}
 		},
 		_create_queue = {},
+		_destruct = {},
 		w = ecs,
 		_entity = ecs:visitor_create(),
 	}, world)

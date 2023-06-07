@@ -65,6 +65,14 @@ function m.marshal(scene)
 	return serialize.pack(init_scene(scene))
 end
 
+function m.demarshal(s)
+	local scene = serialize.unpack(s)
+	math3d.unmark(scene.s)
+	math3d.unmark(scene.r)
+	math3d.unmark(scene.t)
+	math3d.unmark(scene.updir)
+end
+
 function m.unmarshal(s)
 	local scene = serialize.unpack(s)
     math3d.mark(scene.s)
@@ -100,6 +108,12 @@ end
 
 function b.marshal(v)
 	return serialize.pack(init_bounding(v))
+end
+
+function b.demarshal(s)
+	local bounding = serialize.unpack(s)
+	math3d.unmark(bounding.aabb)
+	math3d.unmark(bounding.scene_aabb)
 end
 
 function b.unmarshal(v)

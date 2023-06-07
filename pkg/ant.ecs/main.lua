@@ -114,6 +114,16 @@ local function create_instance(w, group, prefab)
     return entities, noparent
 end
 
+local template_mt = {}
+
+function template_mt:__gc()
+    local destruct = self._world._destruct
+    local template = self.template
+    destruct[#destruct+1] = function (world)
+        world.w:template_destruct(template)
+    end
+end
+
 local function create_entity_template(w, v)
     local res = policy.create(w, nil, v.policy)
     local data = v.data
@@ -128,12 +138,14 @@ local function create_entity_template(w, v)
             error(("component `%s` must exists"):format(c))
         end
     end
-    return {
+
+    return setmetatable({
+        _world = w,
         action = v.action,
         mount = v.mount,
         template = w.w:template(data),
         tag = v.tag,
-    }
+    }, template_mt)
 end
 
 local templates = {}
@@ -455,6 +467,7 @@ local function update_decl(self)
                 type = "lua",
                 init = class.init,
                 marshal = class.marshal or serialize.pack,
+                demarshal = class.demarshal or nil,
                 unmarshal = class.unmarshal or serialize.unpack,
             }
         elseif type == "c" then
@@ -462,6 +475,7 @@ local function update_decl(self)
                 name = name,
                 init = class.init,
                 marshal = class.marshal,
+                demarshal = class.demarshal,
                 unmarshal = class.unmarshal,
             }
             for i, v in ipairs(info.field) do
@@ -475,6 +489,7 @@ local function update_decl(self)
                 size = assert(math.tointeger(info.size[1])),
                 init = class.init,
                 marshal = class.marshal,
+                demarshal = class.demarshal,
                 unmarshal = class.unmarshal,
             }
             w:register(t)
