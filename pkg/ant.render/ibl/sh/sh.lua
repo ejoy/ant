@@ -113,8 +113,9 @@ local function sphereQuadrantArea(x, y)
     return math.atan(x*y, math.sqrt(x*x + y*y + 1))
 end
 
-local function solidAngle(dim, iu, iv)
-    local idim = 1.0 / dim;
+--iu, iv is base 0
+local function solidAngle(idim, iu, iv)
+    iu, iv = iu-1, iv-1
     local s = ((iu + 0.5) * 2.0 * idim)-1.0
     local t = ((iv + 0.5) * 2.0 * idim)-1.0
 
@@ -219,6 +220,7 @@ local function calc_Lml (cm, bandnum)
     for i=1, coeffnum do
         Lml[i] = mc.ZERO
     end
+    local idim<const> = cm.w
     for face=1, 6 do
         for y=1, cm.w do
             for x=1, cm.h do
@@ -226,7 +228,7 @@ local function calc_Lml (cm, bandnum)
 
                 local color = cm:load_fxy(face, x, y)
 
-                color = math3d.mul(color, solidAngle(cm.w, x, y))
+                color = math3d.mul(color, solidAngle(idim, x, y))
 
                 local Yml = calc_Yml(bandnum, N)
 

@@ -188,6 +188,41 @@ function ibl_sys:render_preprocess()
 
     for e in w:select "irradianceSH_builder" do
         local function load_cm()
+            if true then
+                local i = 5
+                local black = ('ffff'):pack(0, 0, 0, 0)
+                local colors = {
+                    ('ffff'):pack(i, i, i, 0), -- +X /  r  - white
+                    ('ffff'):pack(i, 0, 0, 0), -- -X /  l  - red
+                    ('ffff'):pack(0, 0, i, 0), -- +Y /  t  - blue
+                    ('ffff'):pack(0, i, 0, 0), -- -Y /  b  - green
+                    ('ffff'):pack(i, i, 0, 0), -- +Z / fr - yellow
+                    ('ffff'):pack(i, 0, i, 0), -- -Z / bk - magenta
+                };
+
+                local R, L, T, B, FR, BK = 1, 2, 3, 4, 5, 6
+
+                -- 2x2x6
+                local data = ("c16"):rep(4 * 6):pack(
+                    black, colors[R],
+                    colors[R], black,
+
+                    black, colors[L],
+                    colors[L], black,
+
+                    black, colors[T],
+                    colors[T], black,
+
+                    black, colors[B],
+                    colors[B], black,
+
+                    black, colors[FR],
+                    colors[FR], black,
+
+                    black, colors[BK],
+                    colors[BK], black)
+                return texutil.create_cubemap{w=2,h=2, texelsize=16,data=data}
+            end
             local function read_file(fn)
                 local f <close> = assert(io.open(fn, "rb"))
                 return f:read "a"
@@ -200,26 +235,6 @@ function ibl_sys:render_preprocess()
         end
 
         local Eml = shutil.calc_Eml(load_cm(), irradianceSH_bandnum)
-
-        -- for idx, eml in ipairs(Eml) do
-        --     print("index: ", idx, math3d.tostring(eml))
-        -- end
-
-        -- for _, n in ipairs{
-        --     math3d.vector( 1.0, 0.0, 0.0),
-        --     math3d.vector(-1.0, 0.0, 0.0),
-        --     math3d.vector( 0.0, 1.0, 0.0),
-        --     math3d.vector( 0.0,-1.0, 0.0),
-        --     math3d.vector( 0.0, 0.0, 1.0),
-        --     math3d.vector( 0.0, 0.0,-1.0),
-        -- } do
-            
-        -- end
-        -- local result = shutil.render_SH(Eml, math3d.vector(0.0, 0.0, 1.0))
-        -- print("render_SH result:", math3d.tostring(result))
-        -- result = shutil.render_SH(Eml, math3d.vector(0.0, 0.0, -1.0))
-        -- print("render_SH result:", math3d.tostring(result))
-
         imaterial.system_attribs():update("u_irradianceSH", Eml)
         w:remove(e)
     end
