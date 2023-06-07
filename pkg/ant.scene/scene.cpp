@@ -10,6 +10,18 @@ extern "C" {
 	#include "math3dfunc.h"
 }
 
+struct math3d_checkpoint {
+	math3d_checkpoint(struct math_context* math3d)
+		: math3d(math3d) {
+		cp = math_checkpoint(math3d);
+	}
+	~math3d_checkpoint() {
+		math_recover(math3d, cp);
+	}
+	struct math_context* math3d;
+	int cp;
+};
+
 static void
 math_update(struct math_context* math3d, math_t& id, math_t const& m) {
 	math_unmark(math3d, id);
@@ -49,6 +61,7 @@ static int
 scene_changed(lua_State *L) {
 	auto w = getworld(L);
 	auto math3d = w->math3d->M;
+	math3d_checkpoint cp(math3d);
 
 	size_t UpdateOnceCount = ecs_api::count<ecs::scene_update_once>(w->ecs);
 	if (UpdateOnceCount > 0) {

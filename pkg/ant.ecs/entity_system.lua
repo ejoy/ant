@@ -55,6 +55,13 @@ function m:entity_create()
 end
 
 function m:update_world()
+    local destruct = world._destruct
+    if #destruct > 0 then
+        world._destruct = {}
+        for _, f in ipairs(destruct) do
+            f(world)
+        end
+    end
     w:visitor_update()
     w:update()
     math3d.reset()

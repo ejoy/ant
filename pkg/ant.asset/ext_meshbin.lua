@@ -68,7 +68,7 @@ end
 
 local function create_bounding(bounding)
     if bounding then
-        bounding.aabb = math3d.mark(math3d.aabb(bounding.aabb[1], bounding.aabb[2]))
+        bounding.aabb = math3d.marked_aabb(bounding.aabb[1], bounding.aabb[2])
     end
 end
 

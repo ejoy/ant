@@ -29,18 +29,18 @@ local function init_scene(scene)
 	scene.r = mc.IDENTITY_QUAT
 	scene.t = mc.ZERO_PT
 	if s and not equal_vec3(s, mc.T_ONE) then
-		scene.s = math3d.mark(math3d.vector(s))
+		scene.s = math3d.marked_vector(s)
 	end
 	if r and not equal_quat(r, mc.T_IDENTITY_QUAT) then
-		scene.r = math3d.mark(math3d.quaternion(r))
+		scene.r = math3d.marked_quat(r)
 	end
 	if t and not equal_vec3(t, mc.T_ZERO_PT) then
-		scene.t = math3d.mark(math3d.vector(t))
+		scene.t = math3d.marked_vector(t)
 	end
 	scene.mat = mc.NULL
 	scene.worldmat = mc.NULL
 	if scene.updir then
-		scene.updir = math3d.mark(math3d.vector(scene.updir))
+		scene.updir = math3d.marked_vector(scene.updir)
 	else
 		scene.updir = mc.NULL
 	end
@@ -65,6 +65,14 @@ function m.marshal(scene)
 	return serialize.pack(init_scene(scene))
 end
 
+function m.demarshal(s)
+	local scene = serialize.unpack(s)
+	math3d.unmark(scene.s)
+	math3d.unmark(scene.r)
+	math3d.unmark(scene.t)
+	math3d.unmark(scene.updir)
+end
+
 function m.unmarshal(s)
 	local scene = serialize.unpack(s)
     math3d.mark(scene.s)
@@ -81,8 +89,8 @@ local function init_bounding(v)
 		v = {}
 	end
 	if v.aabb then
-		v.aabb = math3d.mark(math3d.aabb(v.aabb[1], v.aabb[2]))
-		v.scene_aabb = math3d.mark(math3d.aabb())
+		v.aabb = math3d.marked_aabb(v.aabb[1], v.aabb[2])
+		v.scene_aabb = math3d.marked_aabb()
 	else
 		v.aabb = mc.NULL
 		v.scene_aabb = mc.NULL
@@ -100,6 +108,12 @@ end
 
 function b.marshal(v)
 	return serialize.pack(init_bounding(v))
+end
+
+function b.demarshal(s)
+	local bounding = serialize.unpack(s)
+	math3d.unmark(bounding.aabb)
+	math3d.unmark(bounding.scene_aabb)
 end
 
 function b.unmarshal(v)

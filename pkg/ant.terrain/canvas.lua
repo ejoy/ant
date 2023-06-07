@@ -155,9 +155,11 @@ local function update_drawer_items(de)
     if next(de.canvas_drawer.items) then
         local buffers = {}
         local texsize = get_texture_size(de.material)
+        local cp = math3d.checkpoint()
         for _, v in pairs(de.canvas_drawer.items) do
             buffers[#buffers+1] = add_item(texsize, v.texture, v)
         end
+        math3d.recover(cp)
     
         local objbuffer = table.concat(buffers, "")
         local vbnum = #objbuffer//layout.stride
