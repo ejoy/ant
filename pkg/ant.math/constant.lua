@@ -1,4 +1,4 @@
-local math3d = require "math3d"
+return function (math3d)
 
 local constant = {}
 -- color
@@ -78,4 +78,7 @@ constant.TWEEN_QUADRATIC = 8
 constant.TWEEN_QUARTIC = 9
 constant.TWEEN_QUINTIC = 10
 constant.TWEEN_SINE = 11
+
 return constant
+
+end

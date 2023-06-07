@@ -1,4 +1,20 @@
+local init_constant = require 'constant'
+local init_util = require 'util'
+
+local function init(math3d)
+    local constant = init_constant(math3d)
+    local util = init_util(math3d, constant)
+    math3d.ext = {
+        util = util,
+        constant = constant
+    }
+end
+
+local math3d = require 'math3d'
+init(math3d)
+
 return {
-    util    = require 'util',
-    constant= require 'constant',
+    init = init,
+    util = math3d.ext.util,
+    constant = math3d.ext.constant,
 }

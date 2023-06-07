@@ -1,8 +1,6 @@
+return function (math3d, constant)
+
 local util = {}
-
-
-local math3d = require "math3d"
-local constant = require "constant"
 
 local function bounce_time(time)
     if time < 1 / 2.75 then
@@ -388,3 +386,5 @@ end
 
 
 return util
+
+end
