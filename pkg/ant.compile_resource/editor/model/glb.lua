@@ -11,6 +11,7 @@ local lfs               = require "filesystem.local"
 local fs                = require "filesystem"
 local datalist          = require "datalist"
 local material_compile  = require "editor.material.compile"
+local config            = require "editor.config"
 
 local function build_scene_tree(gltfscene)
     local scenetree = {}
@@ -54,7 +55,8 @@ return function (input, output, tolocalpath, changed)
     if changed ~= true and changed:match "%.s[ch]$" then
         return recompile_materials(input, output)
     end
-    local math3d = math3d_pool.alloc()
+    local setting = config.get "glb".setting
+    local math3d = math3d_pool.alloc(setting)
     lfs.remove_all(output)
     lfs.create_directories(output)
     local depfiles = {}

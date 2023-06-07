@@ -294,8 +294,6 @@ function util.isnan_math3dvec(v)
 	return isnan(math3d.index(v, 1, 2, 3, 4))
 end
 
-local hwi = import_package "ant.hwi"
-
 function util.calc_texture_matrix()
 	-- topleft origin and homogeneous depth matrix
 	local m = {
@@ -305,12 +303,11 @@ function util.calc_texture_matrix()
 		0.5, 0.5, 0.0, 1.0,
 	}
 
-	local caps = hwi.get_caps()
-	if caps.originBottomLeft then
+	if math3d.get_origin_bottom_left() then
 		m[6] = -m[6]
 	end
 	
-	if caps.homogeneousDepth then
+	if math3d.get_homogeneous_depth() then
 		m[11], m[15] = 0.5, 0.5
 	end
 

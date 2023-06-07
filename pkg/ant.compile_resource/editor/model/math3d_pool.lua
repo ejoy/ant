@@ -11,9 +11,11 @@ local pool = {}
 
 local m = {}
 
-function m.alloc()
+function m.alloc(setting)
     if #pool == 0 then
         local obj = math3d.new(MATH3D_MAXPAGE)
+        obj.set_homogeneous_depth(setting.hd)
+        obj.set_origin_bottom_left(setting.obl)
         mathpkg.init(obj)
         return obj
     end
