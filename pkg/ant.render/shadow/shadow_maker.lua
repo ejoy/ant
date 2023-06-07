@@ -391,7 +391,7 @@ function sm:entity_init()
 			w:extend(e, "csm_directional_light?out")
 			set_csm_visible(true)
 		else
-			error("already have 'make_shadow' directional light")
+			--error("already have 'make_shadow' directional light")
 		end
 	end
 end
