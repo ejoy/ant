@@ -4,7 +4,6 @@ local ecs = require "world"
 local assetmgr = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
 local fs = require "filesystem"
-local lfs = require "filesystem.local"
 local world = {}
 
 local function sortpairs(t)

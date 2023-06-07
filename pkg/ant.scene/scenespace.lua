@@ -13,9 +13,9 @@ local function init_bounding(bounding, bb)
 		local aabbmin, aabbmax = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
 		-- copy 2 aabb
 		math3d.unmark(bounding.aabb)
-        bounding.aabb = math3d.mark(math3d.aabb(aabbmin, aabbmax))
+        bounding.aabb = math3d.marked_aabb(aabbmin, aabbmax)
 		math3d.unmark(bounding.scene_aabb)
-        bounding.scene_aabb = math3d.mark(math3d.aabb(aabbmin, aabbmax))
+        bounding.scene_aabb = math3d.marked_aabb(aabbmin, aabbmax)
     end
 end
 

@@ -14,17 +14,17 @@ end
 
 local function set_s(srt, v)
     math3d.unmark(srt.s)
-    srt.s = math3d.mark(math3d.vector(v))
+    srt.s = math3d.marked_vector(v)
 end
 
 local function set_r(srt, v)
     math3d.unmark(srt.r)
-    srt.r = math3d.mark(math3d.quaternion(v))
+    srt.r = math3d.marked_quat(v)
 end
 
 local function set_t(srt, v)
     math3d.unmark(srt.t)
-    srt.t = math3d.mark(math3d.vector(v))
+    srt.t = math3d.marked_vector(v)
 end
 
 local function set_mat(srt, v)

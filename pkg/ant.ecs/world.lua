@@ -63,7 +63,7 @@ local function update_math3d_stat(w, funcs, symbols)
 	local ecs_world = w._ecs_world
 	local MATH_INFO_TRANSIENT <const> = 2
 	local MaxFrame <const> = 30
-	local MaxText <const> = math.min(10, #funcs)
+	local MaxText <const> = math.min(9, #funcs)
 	local MaxName <const> = 48
 	local CurFrame = 0
 	local dbg_print = bgfx.dbg_text_print
@@ -88,18 +88,21 @@ local function update_math3d_stat(w, funcs, symbols)
 			CurFrame = CurFrame + 1
 		else
 			CurFrame = 1
+			local total = 0
 			local t = {}
 			for i = 1, #funcs do
 				t[i] = {stat[i], i}
+				total = total + stat[i]
 			end
 			table.sort(t, function (a, b)
 				return a[1] > b[1]
 			end)
+			printtext[1] = "total" .. (" "):rep(MaxName-5) .. (" | %d   "):format(total)
 			for i = 1, MaxText do
 				local m = t[i]
 				local v, idx = m[1], m[2]
 				local name = symbols[idx]
-				printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %d   "):format(v)
+				printtext[i+1] = name .. (" "):rep(MaxName-#name) .. (" | %d   "):format(v)
 			end
 		end
 		dbg_print(0, 2, 0x02, "--- system")

@@ -50,7 +50,7 @@ end
 
 local function set_worldmat(srt, mat)
 	math3d.unmark(srt.worldmat)
-	srt.worldmat = math3d.mark(math3d.matrix(mat))
+	srt.worldmat = math3d.marked_matrix(mat)
 end
 
 local function calc_csm_matrix_attrib(csmidx, vp)

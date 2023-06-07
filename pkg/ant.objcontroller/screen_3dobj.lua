@@ -44,7 +44,7 @@ function screen_3dobj_sys:camera_usage()
                 assert(scene.parent == 0, "global_axes should not have any parent")
                 iom.set_position(e, posWS)
                 math3d.unmark(scene.worldmat)
-                scene.worldmat = math3d.mark(math3d.matrix(scene))
+                scene.worldmat = math3d.marked_matrix(scene)
                 e.render_object.worldmat = scene.worldmat
             end
         end
