@@ -1,8 +1,5 @@
 local gltfutil  = require "editor.model.glTF.util"
-local math3d    = require "math3d"
 local utility   = require "editor.model.utility"
-local mathpkg	= import_package "ant.math"
-local mc, mu	= mathpkg.constant, mathpkg.util
 local pack_vertex_data = require "editor.model.pack_vertex_data"
 local cs_skinning = true
 local LAYOUT_NAMES<const> = {
@@ -99,7 +96,7 @@ end
 	return to_ib(indexbin, elemsize == 4 and 'd' or '', index_accessor.count)
 end 
 
-local function create_prim_bounding(meshscene, prim)	
+local function create_prim_bounding(math3d, meshscene, prim)
 	local posacc = meshscene.accessors[assert(prim.attributes.POSITION)+1]
 	local minv = posacc.min
 	if minv then
@@ -205,7 +202,7 @@ local function find_layout_idx(layouts, name)
 	end
 end
 
-local function calc_tangents(ib, vb, layouts)
+local function calc_tangents(math3d, ib, vb, layouts)
 	local tangents, bitangents = {}, {}
 
 	local pos_attrib_idx, tex_attrib_idx = find_layout_idx(layouts, "POSITION"), find_layout_idx(layouts, "TEXCOORD_0")
@@ -269,8 +266,8 @@ local function calc_tangents(ib, vb, layouts)
 
 		local det<const> = bau * cav - bav * cau
 		local t, bi
-		if mu.iszero(det) then
-			t, bi = mc.XAXIS, mc.ZAXIS
+		if math3d.ext_util.iszero(det) then
+			t, bi = math3d.ext_constant.XAXIS, math3d.ext_constant.ZAXIS
 		else
 			local invDet<const> = 1.0 / det
 
@@ -318,9 +315,9 @@ local function calc_tangents(ib, vb, layouts)
 		local tangent	= make_vector_perpendicular(tanu, normal)
 		local bitangent	= make_vector_perpendicular(tanv, normal)
 
-		if mu.iszero_math3dvec(tangent) or mu.isnan_math3dvec(tangent) then
-			if mu.iszero_math3dvec(bitangent) or mu.isnan_math3dvec(bitangent) then
-				tangent = mc.XAXIS
+		if math3d.ext_util.iszero_math3dvec(tangent) or math3d.ext_util.isnan_math3dvec(tangent) then
+			if math3d.ext_util.iszero_math3dvec(bitangent) or math3d.ext_util.isnan_math3dvec(bitangent) then
+				tangent = math3d.ext_constant.XAXIS
 			else
 				tangent = math3d.cross(bitangent, normal)
 			end
@@ -407,12 +404,12 @@ local function fetch_vertices(layouts, gltfbin, numv, reverse_wing_order)
 	return vertices
 end
 
-local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table, settings)
+local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, settings)
 	assert(prim.mode == nil or prim.mode == 4)
 	local numv = gltfutil.num_vertices(prim, gltfscene)
 
 	local function get_vb(layouts, vertices)
-		local new_vertices, new_layout = pack_vertex_data(layouts, vertices)
+		local new_vertices, new_layout = pack_vertex_data(math3d, layouts, vertices)
 		local bindata = table.concat(new_vertices, "")
 		return {
 			declname = new_layout,
@@ -426,7 +423,7 @@ local function fetch_vb_buffers(gltfscene, gltfbin, prim, ib_table, settings)
 	local vertices1 = fetch_vertices(layouts1, gltfbin, numv, ib_table == nil)
 	if need_calc_tangent(layouts1) then
 		math3d.reset()
-		calc_tangents(ib_table, vertices1, layouts1)
+		calc_tangents(math3d, ib_table, vertices1, layouts1)
 		math3d.reset()
 		layouts1[#layouts1+1] = {
 			layout		= "T40NIf",
@@ -612,7 +609,7 @@ local function save_meshbin_files(resname, meshgroup)
 end
 
 
- local function export_meshbin(gltfscene, bindata, exports)
+ local function export_meshbin(math3d, gltfscene, bindata, exports)
 	exports.mesh = {}
 	local meshes = gltfscene.meshes
 	if meshes == nil then
@@ -632,8 +629,8 @@ end
 				group.ib = fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1], ib_table)
 			end
 
-			group.vb, group.vb2 = fetch_vb_buffers(gltfscene, bindata, prim, ib_table)
-			local bb = create_prim_bounding(gltfscene, prim)
+			group.vb, group.vb2 = fetch_vb_buffers(math3d, gltfscene, bindata, prim, ib_table)
+			local bb = create_prim_bounding(math3d, gltfscene, prim)
 			if bb then
 				local aabb = math3d.aabb(bb.aabb[1], bb.aabb[2])
 				if math3d.aabb_isvalid(aabb) then
@@ -669,13 +666,13 @@ end
 		exports.mesh[meshidx] = {}
 		for primidx, prim in ipairs(mesh.primitives) do
 			local group = {}
-			group.vb = fetch_vb_buffers(gltfscene, bindata, prim)
+			group.vb = fetch_vb_buffers(math3d, gltfscene, bindata, prim)
 			local indices_accidx = prim.indices
 			group.ib = indices_accidx and
 				fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1]) or
 				gen_ib(group.vb.num)
 
-			local bb = create_prim_bounding(gltfscene, prim)
+			local bb = create_prim_bounding(math3d, gltfscene, prim)
 			if bb then
 				local aabb = math3d.aabb(bb.aabb[1], bb.aabb[2])
 				if math3d.aabb_isvalid(aabb) then
@@ -690,9 +687,9 @@ end
 	end
 end ]]
 
-return function (_, glbdata, exports)
+return function (math3d, glbdata, exports)
 	joint_trees = {}
-	export_meshbin(glbdata.info, glbdata.bin, exports)
+	export_meshbin(math3d, glbdata.info, glbdata.bin, exports)
 	export_skinbin(glbdata.info, glbdata.bin, exports)
 	return exports
 end

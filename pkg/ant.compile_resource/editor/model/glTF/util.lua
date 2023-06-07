@@ -1,5 +1,5 @@
 local util = {}; util.__index = util
-local math3d    = require "math3d"
+
 local comptype_name_mapper = {
 	[5120] = "BYTE",
 	[5121] = "UNSIGNED_BYTE",
