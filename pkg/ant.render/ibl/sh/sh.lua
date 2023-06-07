@@ -4,17 +4,19 @@ local mc        = mathpkg.constant
 local shutil    = require "ibl.sh.util"
 local sh_rt     = require "ibl.sh.sh_rt"
 
-local USE_BAKED = true
-local A = {
-    math.pi,
-    math.pi * 2.0/ 3.0,
-    math.pi * 1.0 / 4.0,
-}
-
 local pi<const>         = math.pi
 local inv_pi<const>     = 1.0 / pi
 local sqrtpi<const>     = math.sqrt(pi)
 local inv_sqrtpi<const> = 1.0 / sqrtpi
+
+local USE_BAKED = true
+local A = {
+    pi,
+    pi * 2.0/ 3.0,
+    pi * 1.0 / 4.0,
+}
+
+
 
 local SHb; do
     local L1_f<const>  = 0.5 * inv_sqrtpi
@@ -22,8 +24,8 @@ local SHb; do
     local L2_f<const> = math.sqrt(3.0/(4.0*pi))
     local sq15<const>, sq5<const> = math.sqrt(15), math.sqrt(5)
     -- 0.5 for 1/sqrt(4), 0.25 for 1/sqrt(16)
-    local L3_f1<const> = sq15*inv_sqrtpi*0.5   --math.sqrt(15.0/(4.0*pi))
-    local L3_f2<const> = sq5*inv_sqrtpi*0.25   --math.sqrt(5.0/(16.0*pi))
+    local L3_f1<const> = sq15*inv_sqrtpi*0.5   --math.sqrt(15.0/( 4.0*pi))
+    local L3_f2<const> = sq5 *inv_sqrtpi*0.25  --math.sqrt( 5.0/(16.0*pi))
     local L3_f3<const> = sq15*inv_sqrtpi*0.25  --math.sqrt(15.0/(16.0*pi))
     
     SHb = {
@@ -220,10 +222,10 @@ local function calc_Lml (cm, bandnum)
     for i=1, coeffnum do
         Lml[i] = mc.ZERO
     end
-    local idim<const> = cm.w
+    local dim<const>, idim<const> = cm.w, 1.0 / cm.w
     for face=1, 6 do
-        for y=1, cm.w do
-            for x=1, cm.h do
+        for y=1, dim do
+            for x=1, dim do
                 local N = m3d_xyz(cm:normal_fxy(face, x, y))
 
                 local color = cm:load_fxy(face, x, y)
