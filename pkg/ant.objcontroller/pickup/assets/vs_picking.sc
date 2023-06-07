@@ -24,11 +24,17 @@ void main()
 	mat4 wm = get_world_matrix();
 #endif //CS_SKINNING
 
-#if (defined HEAP_MESH) || (defined ROAD)
+#ifdef ROAD
 	wm[0][3] = wm[0][3] + i_data0.x;
 	wm[1][3] = wm[1][3] + i_data0.y;
 	wm[2][3] = wm[2][3] + i_data0.z;
 #endif 
+
+#ifdef HEAP_MESH
+	wm[0][3] = wm[0][3] + i_data2.x;
+	wm[1][3] = wm[1][3] + i_data2.y;
+	wm[2][3] = wm[2][3] + i_data2.z;
+#endif  
 
 #ifdef STONE_MOUNTAIN
 	float scale = i_data0.x;

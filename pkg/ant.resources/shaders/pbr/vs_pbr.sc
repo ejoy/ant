@@ -16,9 +16,9 @@ void main()
 #endif //CS_SKINNING
 
 #ifdef HEAP_MESH
-	wm[0][3] = wm[0][3] + i_data0.x;
-	wm[1][3] = wm[1][3] + i_data0.y;
-	wm[2][3] = wm[2][3] + i_data0.z;
+	wm[0][3] = wm[0][3] + i_data2.x;
+	wm[1][3] = wm[1][3] + i_data2.y;
+	wm[2][3] = wm[2][3] + i_data2.z;
 #endif //HEAP_MESH
 
 #ifdef STONE_MOUNTAIN
@@ -50,9 +50,6 @@ void main()
 
 #ifdef WITH_COLOR_ATTRIB
 	v_color0 = a_color0;
-/* 	#ifdef HEAP_MESH
-   	 	v_emissive = vec4(vec3_splat(v_color0.w), 1.0);
-	#endif HEAP_MESH */
 #endif //WITH_COLOR_ATTRIB
 
 #ifndef MATERIAL_UNLIT

@@ -33,8 +33,12 @@ void main()
 		float tx = xx * u_meshOffset.x - u_worldOffset.x + u_intervalParam.x * xx;
 		float ty = yy * u_meshOffset.y;
 		float tz = zz * u_meshOffset.z - u_worldOffset.z + u_intervalParam.z * zz;
+		vec4 s = vec4(0, 0, 0, 0);
+		vec4 r = vec4(0, 0, 0, 0);
 		vec4 t = vec4(tx, ty, tz, 1);
-		instanceBufferOut[tId] = t;
+		instanceBufferOut[tId * 3 + 0] = s;
+		instanceBufferOut[tId * 3 + 1] = r;
+		instanceBufferOut[tId * 3 + 2] = t;
 		drawIndexedIndirect(
 						// Target location params:
 			indirectBuffer,			// target buffer

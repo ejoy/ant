@@ -77,13 +77,16 @@ policy "render"
     .component "visible_state"
 
 system "heap_mesh"
+    .require_policy "ant.render|draw_indirect"
+    .require_system "ant.render|draw_indirect_system"
     .implement "render_system/heap_mesh.lua"
-    .method "init"
     .method "heap_mesh"
     .method "entity_init"
+    .method "entity_ready"
     .method "entity_remove"
 
 component "heapmesh".type "lua"
+component "heapmesh_ready"
 
 
 interface "iheapmesh"
@@ -224,6 +227,16 @@ system "indirect_system"
     .require_system "ant.render|indirect_system"
     .method "init"
     .method "data_changed"
+
+policy "draw_indirect"
+    .component "draw_indirect"
+component "draw_indirect".type "lua"
+system "draw_indirect_system"
+    .implement "draw_indirect_system.lua"
+    .require_system "ant.render|draw_indirect_system"
+    .method "entity_init"
+    .method "entity_remove"
+
 
 system "cull_system"
     .implement "cull_system.lua"

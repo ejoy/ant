@@ -3,7 +3,7 @@
 #endif //BGFX_SHADER_H_HEADER_GUARD
 
 #ifdef INDIRECT_BUFFER
-    #if (defined HEAP_MESH) || (defined STONE_MOUNTAIN)
+    #ifdef defined STONE_MOUNTAIN
         #define INPUT_INSTANCE1 i_data0
         #define INPUT_INSTANCE2
         #define INPUT_INSTANCE3

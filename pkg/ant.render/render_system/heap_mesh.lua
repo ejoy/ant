@@ -1,4 +1,4 @@
- local ecs = ...
+local ecs = ...
 local world = ecs.world
 local w = world.w
 
@@ -14,8 +14,6 @@ local iheapmesh = ecs.interface "iheapmesh"
 
 local hm_sys = ecs.system "heap_mesh"
 
-local heap_mesh_material
-
 local function get_offset(edge, xx, yy, zz, interval)
     local edgeX, edgeY, edgeZ = edge[1], edge[2], edge[3]
     local x = ((edgeX - 1) * xx + (edgeX - 1) * interval[1] * xx) * 0.5
@@ -25,7 +23,8 @@ local function get_offset(edge, xx, yy, zz, interval)
     return offset
 end
 
-local function create_heap_compute(dispatch, numToDraw, idb_handle, itb_handle, u1, u2, u3, u4, u5)
+local function update_heap_compute(draw_indirect, dispatch, numToDraw, u1, u2, u3, u4, u5)
+    local idb_handle, itb_handle = draw_indirect.idb_handle, draw_indirect.itb_handle
     dispatch.size[1] = math.floor((numToDraw - 1) / 64) + 1
     local m = dispatch.material
     m.u_heapParams		= u1
@@ -42,29 +41,17 @@ local function calc_max_num(side_size_table)
     return side_size_table[1] * side_size_table[2] * side_size_table[3]
 end
 
-function hm_sys:init()
-	heap_mesh_material = assetmgr.resource("/pkg/ant.resources/materials/heapmesh/heapmesh.material")
-end
-
-local function check_destroy(ro)
-    if ro and ro.idb_handle ~= 0xffffffff then
-        bgfx.destroy(ro.idb_handle)
-    end
-    if ro and ro.idb_handle ~= 0xffffffff then
-        bgfx.destroy(ro.itb_handle)
-    end
-end
 
 function hm_sys:entity_init()
-    for e in w:select "INIT heapmesh:update render_object?update mesh:in scene:in" do
+    for e in w:select "INIT heapmesh:update render_object?update mesh:in scene:in heapmesh_ready?update" do
         local heapmesh = e.heapmesh
         local curSideSize = heapmesh.curSideSize
         local curMaxSize  = calc_max_num(curSideSize)
-        local idb_handle = bgfx.create_indirect_buffer(curMaxSize)
-        local itb_handle = bgfx.create_dynamic_vertex_buffer(curMaxSize, declmgr.get "t47NIf".handle, "w")
-        local eid = ecs.create_entity {
+        local max_num = curMaxSize
+        local draw_indirect_eid = ecs.create_entity {
             policy = {
                 "ant.render|compute_policy",
+                "ant.render|draw_indirect"
             },
             data = {
                 material    = "/pkg/ant.resources/materials/heapmesh/heapmesh.material",
@@ -72,37 +59,40 @@ function hm_sys:entity_init()
                     size    = {0, 0, 0},
                 },
                 compute = true,
---[[                 on_ready = function(ce)
-                    e.heapmesh.ready = true
-                end ]]
+                draw_indirect = {
+                    itb_flag = "w",
+                    max_num = max_num
+                },
+                on_ready = function()
+                    heapmesh.draw_indirect_ready = true
+                end 
             }
         }
-        local aabb = assetmgr.resource(tostring(e.mesh)).bounding.aabb
-        local _, extent = math3d.aabb_center_extents(aabb)
-        local dx, dy, dz = math3d.index(math3d.mul(2, extent), 1, 2, 3)
-        local sx, sy, sz = math3d.index(e.scene.s, 1, 2, 3)
-        heapmesh.eid = eid
-        heapmesh.idb_handle = idb_handle
-        heapmesh.itb_handle = itb_handle
+        heapmesh.draw_indirect_eid = draw_indirect_eid
         e.render_object.draw_num = 0
-        heapmesh.extent = {dx * sx, dy * sy, dz * sz}
+        e.heapmesh_ready = true
+    end
+end
+
+function hm_sys:entity_ready()
+    for e in w:select "heapmesh_ready heapmesh:update bounding:in scene:in" do
+        local _, extent = math3d.aabb_center_extents(e.bounding.aabb)
+        extent = math3d.mul(e.scene.s, math3d.mul(2, extent))
+        e.heapmesh.extent = math3d.tovalue(extent)
+        e.heapmesh_ready = nil
     end
 end
 
 function hm_sys:entity_remove()
-    for e in w:select "REMOVED heapmesh:update render_object?update" do
-        w:remove(e.heapmesh.eid)
-        check_destroy(e.render_object)
+    for e in w:select "REMOVED heapmesh:update" do
+        w:remove(e.heapmesh.draw_indirect_eid)
     end
 end
 
 function hm_sys:heap_mesh()
     for e in w:select "heapmesh:update render_object?update bounding?update scene?in" do
-        if e.heapmesh.eid then
-            if not e.heapmesh.ready then
-                e.heapmesh.ready = true
-                goto continue
-            end
+        if not e.heapmesh.draw_indirect_ready then
+            goto continue
         end
         local heapmesh = e.heapmesh
         local interval = heapmesh.interval
@@ -139,10 +129,10 @@ function hm_sys:heap_mesh()
             local intervalParam = math3d.vector(extent[1] * interval[1], extent[2] * interval[2], extent[3] * interval[3], 0)
             local offset_extent = get_offset(curSideSize, extent[1], extent[2], extent[3], interval)
             local worldOffset = math3d.vector(offset_extent, 0)
-            local ce <close> = w:entity(heapmesh.eid, "dispatch:in")
-            create_heap_compute(ce.dispatch, curHeapNum, heapmesh.idb_handle, heapmesh.itb_handle, heapParams, meshOffset, instanceParams, worldOffset, intervalParam)
-            e.render_object.idb_handle = heapmesh.idb_handle
-            e.render_object.itb_handle = heapmesh.itb_handle
+            local de <close> = w:entity(heapmesh.draw_indirect_eid, "draw_indirect:in dispatch:in")
+            update_heap_compute(de.draw_indirect, de.dispatch, curHeapNum, heapParams, meshOffset, instanceParams, worldOffset, intervalParam)
+            e.render_object.idb_handle = de.draw_indirect.idb_handle
+            e.render_object.itb_handle = de.draw_indirect.itb_handle
         end
         e.heapmesh.curHeapNum = curHeapNum
         e.heapmesh.lastHeapNum = curHeapNum
