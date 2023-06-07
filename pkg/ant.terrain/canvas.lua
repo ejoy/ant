@@ -259,7 +259,7 @@ function icanvas.add_items(e, key, ...)
     local materials = canvas.materials
 
     local item_ids = {}
-    local de = assert(w:entity(materials[key], "canvas_drawer:in"), ("%s materialpath is not found, use this materialpath to call icanvas.build() in 'init' stage"):format(materialpath))
+    local de = assert(w:entity(materials[key], "canvas_drawer:in"), ("%s materialpath is not found, use this materialpath to call icanvas.build() in 'init' stage"):format(key))
     local items = de.canvas_drawer.items
 
     for i=1, newitem_count do
