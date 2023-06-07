@@ -7,6 +7,7 @@ local serialize     = import_package "ant.serialize"
 local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
+local irq           = ecs.import.interface "ant.render|irenderqueue"
 local stringify     = import_package "ant.serialize".stringify
 local ilight        = ecs.import.interface "ant.render|ilight"
 local iefk          = ecs.import.interface "ant.efk|iefk"
@@ -553,6 +554,14 @@ function m:reset_prefab(noscene)
         self:add_entity(new_entity, parent, temp)
         self.scene = new_entity
         self.entities[#self.entities + 1] = new_entity
+    end
+    if not self.main_camera then
+        self.main_camera = irq.camera "main_queue"
+    end
+    local mq_camera = irq.camera "main_queue"
+    if mq_camera ~= self.main_camera then
+        irq.set_camera("main_queue", self.main_camera)
+        irq.set_visible("second_view", false)
     end
 end
 
