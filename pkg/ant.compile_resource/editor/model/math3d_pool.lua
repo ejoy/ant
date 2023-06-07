@@ -1,7 +1,9 @@
+local MATH3D_MAXPAGE <const> = 10240
+
 if package.loaded.math3d then
     error "need init math3d MAXPAGE"
 end
-debug.getregistry().MATH3D_MAXPAGE = 10240
+debug.getregistry().MATH3D_MAXPAGE = MATH3D_MAXPAGE
 
 local mathpkg = import_package "ant.math"
 local math3d = require "math3d"
@@ -11,7 +13,7 @@ local m = {}
 
 function m.alloc()
     if #pool == 0 then
-        local obj = math3d.new()
+        local obj = math3d.new(MATH3D_MAXPAGE)
         mathpkg.init(obj)
         return obj
     end
