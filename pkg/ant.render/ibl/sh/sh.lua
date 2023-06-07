@@ -43,34 +43,44 @@ local SHb; do
     }
 end
 
-local function calc_Yml(numband, N)
-    local Yml = {}
-
-    Yml[1] = SHb[1]
-
-    local x, y, z = N.x, N.y, N.z
-
-    if numband >= 2 then
-        Yml[2] = SHb[2]*y
-        Yml[3] = SHb[3]*z
-        Yml[4] = SHb[4]*x
+local calc_Yml; do
+    local function band1(N)
+        return {SHb[1]}
     end
 
-    if numband >= 3 then
-        local x2, y2, z2 = x*x, y*y, z*z
+    local function band2(N)
+        local Yml = band1(N)
+        Yml[2] = SHb[2]*N.y
+        Yml[3] = SHb[3]*N.z
+        Yml[4] = SHb[4]*N.x
+        return Yml
+    end
+
+    local function band3(N)
+        local Yml = band2(N)
+        local x, y, z = N.x, N.y, N.z
         Yml[5] = SHb[5]*y*x
         Yml[6] = SHb[6]*y*z
-        Yml[7] = SHb[7]*(3.0*z2-1.0)
+        Yml[7] = SHb[7]*(3.0*z*z-1.0)
         Yml[8] = SHb[8]*x*z
-        Yml[9] = SHb[9]*(x2-y2)
+        Yml[9] = SHb[9]*(x*x-y*y)
+        return Yml
     end
 
-    return Yml
+
+    local Yml_calculators = {
+        band1, band2, band3
+    }
+    calc_Yml = function (numband, N)
+        local calculator = assert(Yml_calculators[numband], "Invalid bandnum")
+        return calculator(N)
+    end
 end
+
 
 local ENABLE_TEST = true
 if ENABLE_TEST then
-    local x, y, z = math3d.index(math3d.normalize(math3d.vector(1, 1, 1)), 1, 2, 3)
+    local x, y, z = math3d.index(math3d.normalize(math3d.vector(1, 3, 5)), 1, 2, 3)
     local N = {x=x, y=y, z=z}
     local result1 = calc_Yml(3, N)
 
@@ -230,7 +240,8 @@ local function calc_Lml (cm, bandnum)
 
                 local color = cm:load_fxy(face, x, y)
 
-                color = math3d.mul(color, solidAngle(idim, x, y))
+                local sa = solidAngle(idim, x, y)
+                color = math3d.mul(color, sa)
 
                 local Yml = calc_Yml(bandnum, N)
 

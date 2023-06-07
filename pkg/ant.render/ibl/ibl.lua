@@ -204,23 +204,40 @@ function ibl_sys:render_preprocess()
 
                 -- 2x2x6
                 local data = ("c16"):rep(4 * 6):pack(
-                    black, colors[R],
-                    colors[R], black,
+                    -- black, colors[R],
+                    -- colors[R], black,
 
-                    black, colors[L],
-                    colors[L], black,
+                    -- black, colors[L],
+                    -- colors[L], black,
 
-                    black, colors[T],
-                    colors[T], black,
+                    -- black, colors[T],
+                    -- colors[T], black,
 
-                    black, colors[B],
-                    colors[B], black,
+                    -- black, colors[B],
+                    -- colors[B], black,
 
-                    black, colors[FR],
-                    colors[FR], black,
+                    -- black, colors[FR],
+                    -- colors[FR], black,
 
-                    black, colors[BK],
-                    colors[BK], black)
+                    -- black, colors[BK],
+                    -- colors[BK], black)
+                    colors[R], colors[R],
+                    colors[R], colors[R],
+
+                    colors[L], colors[L],
+                    colors[L], colors[L],
+
+                    colors[T], colors[T],
+                    colors[T], colors[T],
+
+                    colors[B], colors[B],
+                    colors[B], colors[B],
+
+                    colors[FR], colors[FR],
+                    colors[FR], colors[FR],
+
+                    colors[BK], colors[BK],
+                    colors[BK], colors[BK])
                 return texutil.create_cubemap{w=2,h=2, texelsize=16,data=data}
             end
             local function read_file(fn)
