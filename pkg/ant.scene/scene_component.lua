@@ -41,11 +41,11 @@ local function init_scene(scene)
 	scene.worldmat = mc.NULL
 	if scene.updir then
 		scene.updir = math3d.mark(math3d.vector(scene.updir))
-    else
+	else
 		scene.updir = mc.NULL
 	end
-    scene.parent = scene.parent or 0
-    return scene
+	scene.parent = scene.parent or 0
+	return scene
 end
 
 function m.init(v)
@@ -61,16 +61,22 @@ function m.remove(v)
     math3d.unmark(v.updir)
 end
 
-function m.marshal(v)
-    return serialize.pack(v)
+function m.marshal(scene)
+	return serialize.pack(init_scene(scene))
 end
 
 function m.unmarshal(s)
-    return init_scene(serialize.unpack(s))
+	local scene = serialize.unpack(s)
+    math3d.mark(scene.s)
+    math3d.mark(scene.r)
+    math3d.mark(scene.t)
+    math3d.mark(scene.updir)
+	return scene
 end
 
 local b = ecs.component "bounding"
-local function init_b(v)
+
+local function init_bounding(v)
 	if not v then
 		v = {}
 	end
@@ -84,7 +90,7 @@ local function init_b(v)
 	return v
 end
 function b.init(v)
-	return init_b(v)
+	return init_bounding(v)
 end
 
 function b.remove(v)
@@ -93,9 +99,12 @@ function b.remove(v)
 end
 
 function b.marshal(v)
-	return serialize.pack(v)
+	return serialize.pack(init_bounding(v))
 end
 
 function b.unmarshal(v)
-	return init_b(serialize.unpack(v))
+	local bounding = serialize.unpack(v)
+	math3d.mark(bounding.aabb)
+	math3d.mark(bounding.scene_aabb)
+	return bounding
 end
