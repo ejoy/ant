@@ -23,7 +23,7 @@ struct math3d_checkpoint {
 };
 
 static void
-math_update(struct math_context* math3d, math_t& id, math_t const& m) {
+math3d_update(struct math_context* math3d, math_t& id, math_t const& m) {
 	math_unmark(math3d, id);
 	id = math_mark(math3d, m);
 }
@@ -41,7 +41,7 @@ worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3
 		}
 		mat = math3d_mul_matrix(math3d, *parentmat, mat);
 	}
-	math_update(math3d, s.worldmat, mat);
+	math3d_update(math3d, s.worldmat, mat);
 	worldmats.insert_or_assign(id, s.worldmat);
 	return true;
 }
@@ -98,38 +98,24 @@ scene_changed(lua_State *L) {
 
 	// step.2
 	flatmap<ecs::eid, math_t> worldmats;
-	flatset<ecs::eid> change;
-	for (auto& e : ecs_api::select<ecs::scene_update, ecs::eid>(w->ecs)) {
+	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene, ecs::eid>(w->ecs)) {
 		auto id = e.get<ecs::eid>();
+		auto& s = e.get<ecs::scene>();
+		if (parents.contains(id)) {
+			worldmats.insert_or_assign(id, s.worldmat);
+		}
 		if (e.sibling<ecs::scene_changed>()) {
-			change.insert(id);
-			if (parents.contains(id)) {
-				auto s = e.sibling<ecs::scene>();
-				if (s) {
-					worldmats.insert_or_assign(id, s->worldmat);
-				}
+			if (!worldmat_update(worldmats, math3d, s, id)) {
+				return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 			}
 		}
 		else {
-			auto s = e.sibling<ecs::scene>();
-			if (s) {
-				if (s->parent != 0 && change.contains(s->parent)) {
-					change.insert(id);
-					e.enable_tag<ecs::scene_changed>();
-				}
-				if (parents.contains(id)) {
-					worldmats.insert_or_assign(id, s->worldmat);
+			if (s.parent != 0 && worldmats.contains(s.parent)) {
+				e.enable_tag<ecs::scene_changed>();
+				if (!worldmat_update(worldmats, math3d, s, id)) {
+					return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 				}
 			}
-		}
-	}
-
-	// step.3
-	for (auto& e : ecs_api::select<ecs::scene_changed, ecs::scene_update, ecs::scene, ecs::eid>(w->ecs)) {
-		auto& s = e.get<ecs::scene>();
-		auto id = e.get<ecs::eid>();
-		if (!worldmat_update(worldmats, math3d, s, id)) {
-			return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 		}
 	}
 
@@ -170,14 +156,14 @@ static int
 bounding_update(lua_State *L){
 	auto w = getworld(L);
 	auto math3d = w->math3d->M;
-
+	math3d_checkpoint cp(math3d);
 	for (auto& e : ecs_api::select<ecs::scene_changed, ecs::bounding, ecs::scene>(w->ecs)){
 		auto &b = e.get<ecs::bounding>();
 		if (math_isnull(b.aabb))
 			continue;
 		const auto &s = e.get<ecs::scene>();
 		const math_t aabb = math3d_aabb_transform(math3d, s.worldmat, b.aabb);
-		math_update(math3d, b.scene_aabb, aabb);
+		math3d_update(math3d, b.scene_aabb, aabb);
 	}
 	return 0;
 }
