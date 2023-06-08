@@ -45,6 +45,7 @@ local function init_scene(scene)
 		scene.updir = mc.NULL
 	end
 	scene.parent = scene.parent or 0
+	scene.movement = 0
 	return scene
 end
 
