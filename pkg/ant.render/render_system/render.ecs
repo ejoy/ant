@@ -217,16 +217,8 @@ system "render_system"
 
 policy "indirect"
     .component "indirect"
-    .component "indirect_update"
 
 component "indirect".type "lua"
-component "indirect_update"
-
-system "indirect_system"
-    .implement "indirect_system.lua"
-    .require_system "ant.render|indirect_system"
-    .method "init"
-    .method "data_changed"
 
 policy "draw_indirect"
     .component "draw_indirect"

@@ -5,8 +5,7 @@ fx:
     shadow_cast: off
     shadow_receive: off
     subsurface: off
-    HEAP_MESH: 1
-    INDIRECT_BUFFER: 1
+    DRAW_INDIRECT: 1
 properties:
   indirectBuffer:
     stage: 0

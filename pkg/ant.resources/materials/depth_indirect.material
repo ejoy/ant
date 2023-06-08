@@ -6,7 +6,7 @@ fx:
     shadow_cast: off
     shadow_receive: off
     subsurface: off
-    INDIRECT_BUFFER: 1
+    DRAW_INDIRECT: 1
 state:
   CULL: CCW
   DEPTH_TEST: GREATER

@@ -5,7 +5,13 @@ local bgfx 			= require "bgfx"
 local math3d = require "math3d"
 local draw_indirect_system = ecs.system "draw_indirect_system"
 local declmgr   = import_package "ant.render".declmgr
+local idrawindirect = ecs.interface "idrawindirect"
 
+local type_table = {
+    ["ROAD"] = {1, 0, 0, 0},
+    ["STONE_MOUNTAIN"] = {0, 1, 0, 0},
+    ["HEAP_MESH"] = {0, 0, 1, 0}
+}
 function draw_indirect_system:entity_init()
     for e in w:select "INIT draw_indirect:update" do
         local max_num = e.draw_indirect.max_num
@@ -27,3 +33,6 @@ function draw_indirect_system:entity_remove()
     end
 end
 
+function idrawindirect.get_draw_indirect_type(indirect_type)
+    return type_table[indirect_type]
+end

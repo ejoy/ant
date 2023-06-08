@@ -2,7 +2,7 @@ fx:
   fs: /pkg/ant.resources/shaders/depth/fs_depth.sc
   vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
   setting:
-    INDIRECT_BUFFER: 1
+    DRAW_INDIRECT: 1
     lighting: off
     shadow_cast: off
     shadow_receive: off

@@ -2,7 +2,7 @@ fx:
   fs: /pkg/ant.objcontroller/pickup/assets/fs_picking.sc
   vs: /pkg/ant.objcontroller/pickup/assets/vs_picking.sc
   setting:
-    INDIRECT_BUFFER: 1  
+    DRAW_INDIRECT: 1  
     lighting: off
 properties:
   u_id: {0, 0, 0, 0}

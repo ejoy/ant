@@ -1,12 +1,12 @@
 local ecs   = ...
 local world = ecs.world
 local w     = world.w
-
+local idrawindirect = ecs.import.interface "ant.render|idrawindirect"
 local setting       = import_package "ant.settings".setting
 local renderutil    = require "util"
 local queuemgr      = require "queue_mgr"
 local s             = ecs.system "pre_depth_system"
-
+local math3d    = require "math3d"
 local R             = ecs.clibs "render.render_material"
 
 if setting:get "graphic/disable_pre_z" then
@@ -20,24 +20,12 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local pre_depth_material
 local pre_depth_skinning_material
-local pre_depth_heap_material
 local pre_depth_indirect_material
-local pre_depth_road_material
-local pre_depth_sm_material
 
-
-local function which_material(skinning, heapmesh, indirect)
-    if heapmesh then
-        return pre_depth_heap_material.object
-    end
+local function which_material(skinning, indirect)
     if indirect then
-        if indirect.type == "ROAD" then
-            return pre_depth_road_material.object
-        elseif indirect.type == "STONEMOUNTAIN" then
-            return pre_depth_sm_material.object
-        else
-            return pre_depth_indirect_material.object
-        end
+       return pre_depth_indirect_material.object
+
     end
     if skinning then
         return pre_depth_skinning_material.object
@@ -48,11 +36,8 @@ end
 
 function s:init()
     pre_depth_material 			= imaterial.load_res "/pkg/ant.resources/materials/predepth.material"
-    pre_depth_heap_material     = imaterial.load_res "/pkg/ant.resources/materials/predepth_heap.material"
     pre_depth_indirect_material = imaterial.load_res "/pkg/ant.resources/materials/predepth_indirect.material"
     pre_depth_skinning_material = imaterial.load_res "/pkg/ant.resources/materials/predepth_skin.material"
-    pre_depth_road_material     = imaterial.load_res "/pkg/ant.resources/materials/predepth_road.material"
-    pre_depth_sm_material       = imaterial.load_res "/pkg/ant.resources/materials/predepth_sm.material"
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
@@ -82,13 +67,16 @@ local function create_depth_only_material(mo, fm)
 end
 
 function s:update_filter()
-    for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in heapmesh?in indirect?in" do
-        if e.visible_state["pre_depth_queue"] and e.render_layer == "opacity" then
-            local mo = assert(which_material(e.skinning, e.heapmesh, e.indirect))
+    for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in indirect?in" do
+        if e.visible_state["pre_depth_queue"] and (e.render_layer == "opacity" or e.render_layer == "foreground") then
+            local mo = assert(which_material(e.skinning, e.indirect))
             local ro = e.render_object
             local fm = e.filter_material
-
             local mi = create_depth_only_material(mo, fm)
+            if e.indirect then
+				local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect)
+				mi.u_draw_indirect_type = math3d.vector(draw_indirect_type)
+			end
             fm["pre_depth_queue"] = mi
             R.set(ro.rm_idx, queuemgr.material_index "pre_depth_queue", mi:ptr())
         end

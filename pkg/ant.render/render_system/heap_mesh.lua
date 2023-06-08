@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-
+local idrawindirect = ecs.import.interface "ant.render|idrawindirect"
 local math3d 	= require "math3d"
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr
@@ -11,7 +11,7 @@ local bgfx 			= require "bgfx"
 local assetmgr  = import_package "ant.asset"
 local icompute = ecs.import.interface "ant.render|icompute"
 local iheapmesh = ecs.interface "iheapmesh"
-
+local imaterial = ecs.import.interface "ant.asset|imaterial"
 local hm_sys = ecs.system "heap_mesh"
 
 local function get_offset(edge, xx, yy, zz, interval)
@@ -43,7 +43,7 @@ end
 
 
 function hm_sys:entity_init()
-    for e in w:select "INIT heapmesh:update render_object?update mesh:in scene:in heapmesh_ready?update" do
+    for e in w:select "INIT heapmesh:update render_object?update mesh:in scene:in heapmesh_ready?update indirect?update" do
         local heapmesh = e.heapmesh
         local curSideSize = heapmesh.curSideSize
         local curMaxSize  = calc_max_num(curSideSize)
@@ -75,11 +75,12 @@ function hm_sys:entity_init()
 end
 
 function hm_sys:entity_ready()
-    for e in w:select "heapmesh_ready heapmesh:update bounding:in scene:in" do
+    for e in w:select "heapmesh_ready heapmesh:update bounding:in scene:in material:in indirect:in" do
         local _, extent = math3d.aabb_center_extents(e.bounding.aabb)
         extent = math3d.mul(e.scene.s, math3d.mul(2, extent))
         e.heapmesh.extent = math3d.tovalue(extent)
-        e.heapmesh_ready = nil
+        local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect)
+        imaterial.set_property(e, "u_draw_indirect_type", math3d.vector(draw_indirect_type))
     end
 end
 
