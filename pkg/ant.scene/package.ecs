@@ -94,7 +94,6 @@ component "scene_needchange"
 component "scene_changed"
 component "scene_mutable"
 component "scene_constant"
-component "scene_stop"
 
 component "hitch_tag"
 component "hitch"

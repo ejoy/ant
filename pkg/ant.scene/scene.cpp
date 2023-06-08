@@ -30,7 +30,7 @@ math3d_update(struct math_context* math3d, math_t& id, math_t const& m) {
 }
 
 static bool
-worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3d, ecs::scene& s, ecs::eid& id) {
+worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3d, ecs::scene& s, ecs::eid& id, struct ecs_world *w) {
 	math_t mat = math3d_make_srt(math3d, s.s, s.r, s.t);
 	if (!math_isnull(s.mat)) {
 		mat = math3d_mul_matrix(math3d, mat, s.mat);
@@ -38,7 +38,18 @@ worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3
 	if (s.parent != 0) {
 		auto parentmat = worldmats.find(s.parent);
 		if (!parentmat) {
-			return false;
+			if (w) {
+				if (s.parent >= id)
+					return false;
+				int id = entity_index(w->ecs, (void *)s.parent);
+				ecs::scene *ps = (ecs::scene *)entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene>::id);
+				if (ps == nullptr)
+					return false;
+				parentmat = &ps->worldmat;
+				worldmats.insert_or_assign(s.parent, ps->worldmat);
+			} else {
+				return false;
+			}
 		}
 		mat = math3d_mul_matrix(math3d, *parentmat, mat);
 	}
@@ -72,12 +83,6 @@ is_constant(struct ecs_world *w, ecs::eid eid) {
 	return entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_constant>::id) != nullptr;
 }
 
-static inline bool
-is_stop(struct ecs_world *w, ecs::eid eid) {
-	int id = entity_index(w->ecs, (void *)eid);
-	return entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_stop>::id) != nullptr;
-}
-
 static void
 rebuild_constant_set(struct ecs_world *w) {
 	for (auto& e : ecs_api::select<ecs::scene_constant, ecs::scene>(w->ecs)) {
@@ -88,13 +93,6 @@ rebuild_constant_set(struct ecs_world *w) {
 			e.disable_tag<ecs::scene_constant>();
 		}
 	}
-	for (auto& e : ecs_api::select<ecs::scene_stop, ecs::scene>(w->ecs)) {
-		auto& s = e.get<ecs::scene>();
-		s.movement = g_frame;
-		e.disable_tag<ecs::scene_constant>();
-		e.enable_tag<ecs::scene_mutable>();
-	}
-	ecs_api::clear_type<ecs::scene_stop>(w->ecs);
 }
 
 static int
@@ -112,7 +110,7 @@ scene_changed(lua_State *L) {
 			auto id = e.get<ecs::eid>();
 			e.disable_tag<ecs::scene_update>();
 			e.enable_tag<ecs::scene_changed>();
-			if (!worldmat_update(worldmats, math3d, s, id)) {
+			if (!worldmat_update(worldmats, math3d, s, id, nullptr)) {
 				return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 			}
 		}
@@ -135,12 +133,6 @@ scene_changed(lua_State *L) {
 		}
 		if (e.sibling<ecs::scene_constant>()) {
 			need_rebuild_constant_set = true;
-			// move it and its parent from constant set into mutable set
-			if (s.parent != 0) {
-				// mark parent with tag ecs::scene_stop
-				int id = entity_index(w->ecs, (void *)s.parent);
-				entity_enable_tag(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_stop>::id);
-			}
 			e.disable_tag<ecs::scene_constant>();
 			e.enable_tag<ecs::scene_mutable>();
 		}
@@ -153,7 +145,6 @@ scene_changed(lua_State *L) {
 	}
 
 	// step.2
-	int mutable_stop = 0;
 	flatmap<ecs::eid, math_t> worldmats;
 	for (auto& e : ecs_api::select<ecs::scene_mutable, ecs::scene>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
@@ -173,29 +164,15 @@ scene_changed(lua_State *L) {
 			}
 		}
 		if (changed) {
-			if (!worldmat_update(worldmats, math3d, s, id)) {
+			if (!worldmat_update(worldmats, math3d, s, id, w)) {
 				return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 			}
 			s.movement = g_frame;
-			if (mutable_stop > 0 && s.parent != 0 && is_stop(w, s.parent)) {
-				// The parent of changing entity should remain in mutable set
-				--mutable_stop;
-				e.disable_tag<ecs::scene_stop>();
-			}
 		} else if (g_frame - s.movement > MOTIONLESS_TICK &&
 			(s.parent == 0 || is_constant(w, s.parent))) {
-			++mutable_stop;
-			s.movement = g_frame;
-			e.enable_tag<ecs::scene_stop>();
-		}
-	}
-
-	if (mutable_stop > 0) {
-		for (auto& e : ecs_api::select<ecs::scene_stop, ecs::eid>(w->ecs)) {
-			e.disable_tag<ecs::scene_mutable>();
 			e.enable_tag<ecs::scene_constant>();
+			e.disable_tag<ecs::scene_mutable>();
 		}
-		ecs_api::clear_type<ecs::scene_stop>(w->ecs);
 	}
 
 	++g_frame;
