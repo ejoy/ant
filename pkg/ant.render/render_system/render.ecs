@@ -230,12 +230,18 @@ system "indirect_system"
 
 policy "draw_indirect"
     .component "draw_indirect"
+
 component "draw_indirect".type "lua"
+
 system "draw_indirect_system"
     .implement "draw_indirect_system.lua"
     .require_system "ant.render|draw_indirect_system"
     .method "entity_init"
     .method "entity_remove"
+
+interface "idrawindirect"
+    .implement "draw_indirect_system.lua"
+    .method "get_draw_indirect_type"
 
 
 system "cull_system"
@@ -340,9 +346,3 @@ system "viewgroup_system"
     .method "init"
 
 component "render_layer".type "lua"
-
-component "draw_indirect".type "lua"
-
-policy "draw_indirect"
-    .require_system "ant.render|indirect_system"
-    .component "draw_indirect"
