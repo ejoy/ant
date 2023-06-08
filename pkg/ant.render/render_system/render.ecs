@@ -171,7 +171,7 @@ policy "render_pipeline"
 
 component "postprocess_obj"
 component "filter_result".type "lua"
-component "camera_ref".type "lua"
+component "camera_ref".type "int64"
 component "camera_changed"
 component "queue_name".type "lua"
 policy "render_queue"

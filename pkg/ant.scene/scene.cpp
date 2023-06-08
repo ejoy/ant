@@ -4,6 +4,7 @@
 #include "flatmap.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <cstdio>
 
 extern "C" {
 	#include "math3d.h"
@@ -55,9 +56,6 @@ entity_init(lua_State *L) {
 	auto w = getworld(L);
 
 	using namespace ecs_api::flags;
-//	for (auto& e : ecs_api::select<ecs::INIT, ecs::scene, ecs::scene_update_once(absent)>(w->ecs)) {
-//		e.enable_tag<ecs::scene_needchange>();
-//	}
 	for (auto& e : ecs_api::select<ecs::INIT, ecs::scene>(w->ecs)) {
 		if (!e.sibling<ecs::scene_update_once>())
 			e.enable_tag<ecs::scene_needchange>();
@@ -85,10 +83,18 @@ rebuild_constant_set(struct ecs_world *w) {
 	for (auto& e : ecs_api::select<ecs::scene_constant, ecs::scene>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0 && !is_constant(w, s.parent)) {
-			e.disable_tag<ecs::scene_constant>();
 			e.enable_tag<ecs::scene_mutable>();
+			// scene_constant is main key, must disable at the end
+			e.disable_tag<ecs::scene_constant>();
 		}
 	}
+	for (auto& e : ecs_api::select<ecs::scene_stop, ecs::scene>(w->ecs)) {
+		auto& s = e.get<ecs::scene>();
+		s.movement = g_frame;
+		e.disable_tag<ecs::scene_constant>();
+		e.enable_tag<ecs::scene_mutable>();
+	}
+	ecs_api::clear_type<ecs::scene_stop>(w->ecs);
 }
 
 static int
@@ -127,14 +133,20 @@ scene_changed(lua_State *L) {
 		if (s.parent != 0) {
 			parents.insert(s.parent);
 		}
-		e.enable_tag<ecs::scene_changed>();
-		e.disable_tag<ecs::scene_needchange>();
 		if (e.sibling<ecs::scene_constant>()) {
 			need_rebuild_constant_set = true;
-			// move it from constant set into mutable set
+			// move it and its parent from constant set into mutable set
+			if (s.parent != 0) {
+				// mark parent with tag ecs::scene_stop
+				int id = entity_index(w->ecs, (void *)s.parent);
+				entity_enable_tag(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_stop>::id);
+			}
 			e.disable_tag<ecs::scene_constant>();
 			e.enable_tag<ecs::scene_mutable>();
 		}
+		e.enable_tag<ecs::scene_changed>();
+		// disable main key must at the end
+		e.disable_tag<ecs::scene_needchange>();
 	}
 	if (need_rebuild_constant_set) {
 		rebuild_constant_set(w);
@@ -179,7 +191,7 @@ scene_changed(lua_State *L) {
 	}
 
 	if (mutable_stop > 0) {
-		for (auto& e : ecs_api::select<ecs::scene_stop>(w->ecs)) {
+		for (auto& e : ecs_api::select<ecs::scene_stop, ecs::eid>(w->ecs)) {
 			e.disable_tag<ecs::scene_mutable>();
 			e.enable_tag<ecs::scene_constant>();
 		}
