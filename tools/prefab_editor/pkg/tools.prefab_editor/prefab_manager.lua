@@ -481,7 +481,7 @@ function m:open(filename)
     world:pub {"WindowTitle", filename}
 end
 
-local function on_remove_entity(eid)
+local function pre_remove_entity(eid)
     local e <close> = w:entity(eid, "light?in")
     if e.light then
         light_gizmo.on_remove_light(eid)
@@ -520,7 +520,7 @@ end
 
 function m:reset_prefab(noscene)
     for _, e in ipairs(self.entities) do
-        on_remove_entity(e)
+        pre_remove_entity(e)
         w:remove(e)
     end
     imodifier.set_target(imodifier.highlight, nil)
@@ -656,7 +656,7 @@ function m:add_prefab(filename)
             local e <close> = w:entity(child, "camera?in")
             if e.camera then
                 local temp = serialize.parse(prefab_filename, read_file(lfs.path(assetmgr.compile(prefab_filename))))
-                hierarchy:add(child, {template = temp[1], editor = true, temporary = true}, parent)
+                hierarchy:add(child, {template = temp[1], editor = true, temporary = true}, v_root)
                 return
             end
         end
@@ -773,16 +773,19 @@ function m:set_parent(target, parent)
         return e
     end
 end
-
-function m:remove_entity(e)
-    if not e then
+function m:do_remove_entity(eid)
+    if not eid then
         return
     end
-    on_remove_entity(e)
-    w:remove(e)
+    local en = hierarchy:get_node(eid)
+    for _, child in ipairs(en.children) do
+        self:do_remove_entity(child.eid)
+    end
+    pre_remove_entity(eid)
+    w:remove(eid)
     local index
     for idx, entity in ipairs(self.entities) do
-        if entity == e then
+        if entity == eid then
             index = idx
             break
         end
@@ -790,6 +793,9 @@ function m:remove_entity(e)
     if index then
         table.remove(self.entities, index)
     end
+end
+function m:remove_entity(eid)
+    self:do_remove_entity(eid)
     hierarchy:update_slot_list(world)
     hierarchy:update_collider_list(world)
     gizmo:set_target(nil)
