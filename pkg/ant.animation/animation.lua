@@ -50,30 +50,18 @@ local function process_keyframe_event(task)
             		iom.set_scale(eid, {collision.size[1] * factor, collision.size[2] * factor, collision.size[3] * factor})
 				end
 			elseif event.event_type == "Effect" then
-				if not event.effect and event.asset_path ~= "" then
-					local parent
-					local slot_eid
-					if task.slot_eid then
-						slot_eid = task.slot_eid[event.link_info.slot_name]
-						if slot_eid then
-							if not task.hitchs then
-								parent = slot_eid
-							end
-						end
+				if task.hitchs then
+					if next(task.hitchs)then
+						world:pub {"AnimationKeyevent", task.name, event.name, task.hitchs}
 					end
-					local s, r, t
-					if not parent and slot_eid then
-						local e <close> = w:entity(slot_eid, "scene:in")
-						s, r, t = iom.get_scale(e), iom.get_rotation(e), iom.get_position(e)
-					end
-					event.effect = iefk.create(event.asset_path, {
-						auto_play = not task.hitchs,
-						scene = {parent = parent, s = s, r = r, t = t},
-						group_id = task.group_id,
-						hitchs = task.hitchs
-					})
-				elseif event.effect then
-					if not task.hitchs or next(task.hitchs) then
+				else
+					if not event.effect and event.asset_path ~= "" then
+						event.effect = iefk.create(event.asset_path, {
+							auto_play = true,
+							scene = {parent = task.slot_eid and task.slot_eid[event.link_info.slot_name] or nil},
+							group_id = task.group_id,
+						})
+					elseif event.effect then
 						iefk.play(event.effect)
 					end
 				end
