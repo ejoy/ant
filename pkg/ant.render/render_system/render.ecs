@@ -340,3 +340,9 @@ system "viewgroup_system"
     .method "init"
 
 component "render_layer".type "lua"
+
+component "draw_indirect".type "lua"
+
+policy "draw_indirect"
+    .require_system "ant.render|indirect_system"
+    .component "draw_indirect"
