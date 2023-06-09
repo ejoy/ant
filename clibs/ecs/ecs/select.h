@@ -33,7 +33,6 @@ namespace ecs_api {
     }
 
     template <typename MainKey, typename...Components>
-        requires (component<MainKey>::id != EID)
     struct cached {
         using mainkey = MainKey;
         struct ecs_context* ctx;
@@ -462,7 +461,7 @@ namespace ecs_api {
     template <typename Component>
         requires (component<Component>::id == EID)
     int index(ecs_context* ctx, Component eid) noexcept {
-        return entity_index(ctx, eid);
+        return entity_index(ctx, (void*)eid);
     }
 
     template <typename ...Args>
