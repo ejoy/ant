@@ -16,8 +16,6 @@ local A = {
     pi * 1.0 / 4.0,
 }
 
-
-
 local SHb; do
     local L1_f<const>  = 0.5 * inv_sqrtpi
 
@@ -232,17 +230,16 @@ local function calc_Lml (cm, bandnum)
     for i=1, coeffnum do
         Lml[i] = mc.ZERO
     end
+
     local dim<const>, idim<const> = cm.w, 1.0 / cm.w
     for face=1, 6 do
         for y=1, dim do
             for x=1, dim do
                 local N = m3d_xyz(cm:normal_fxy(face, x, y))
-
                 local color = cm:load_fxy(face, x, y)
-
                 local sa = solidAngle(idim, x, y)
-                color = math3d.mul(color, sa)
 
+                color = math3d.mul(color, sa)
                 local Yml = calc_Yml(bandnum, N)
 
                 for i=1, coeffnum do
@@ -254,6 +251,34 @@ local function calc_Lml (cm, bandnum)
 
     return Lml
 end
+
+local function render1(Eml, N)
+    return Eml[1]
+end
+
+local function render4(Eml, N)
+    return math3d.add(
+        render1(Eml, N),
+        math3d.mul(Eml[2], N.y),
+        math3d.mul(Eml[3], N.z),
+        math3d.mul(Eml[4], N.x))
+end
+
+local function render9(Eml, N)
+    return math3d.add(
+        render4(Eml, N),
+        math3d.mul(Eml[5], (N.y * N.x)),
+        math3d.mul(Eml[6], (N.y * N.z)),
+        math3d.mul(Eml[7], (3.0 * N.z * N.z - 1.0)),
+        math3d.mul(Eml[8], (N.z * N.x)),
+        math3d.mul(Eml[9], (N.x * N.x - N.y * N.y)))
+end
+
+local renderers = {
+    [1] = render1,
+    [4] = render4,
+    [9] = render9
+}
 
 return {
     calc_Eml = function (cm, bandnum)
@@ -272,35 +297,8 @@ return {
     end,
     render_SH = function(Eml, N)
         N = m3d_xyz(N)
-
-        local num_coeffs = #Eml
-        if num_coeffs > 9 then
-            error("not support coefficients more than 9")
-        end
-
-        local r
-        if num_coeffs >= 1 then
-            r = Eml[1]
-        end
-
-        if num_coeffs >= 4 then
-            r = math3d.add(
-                r,
-                math3d.mul(Eml[2], N.y),
-                math3d.mul(Eml[3], N.z),
-                math3d.mul(Eml[4], N.x))
-        end
-
-        if num_coeffs >= 9 then
-            r = math3d.add(
-                r,
-                math3d.mul(Eml[5], (N.y * N.x)),
-                math3d.mul(Eml[6], (N.y * N.z)),
-                math3d.mul(Eml[7], (3.0 * N.z * N.z - 1.0)),
-                math3d.mul(Eml[8], (N.z * N.x)),
-                math3d.mul(Eml[9], (N.x * N.x - N.y * N.y)))
-        end
-
+        local renderer = assert(renderers[#Eml], "not support coefficients more than 9")
+        local r = renderer(Eml, N)
         local x,y,z = math3d.index(r, 1, 2, 3)
         x, y, z = math.max(x, 0.0), math.max(y, 0.0), math.max(z, 0.0)
         return math3d.vector(x, y, z, 0.0)
