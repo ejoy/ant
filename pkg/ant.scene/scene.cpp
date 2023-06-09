@@ -59,8 +59,6 @@ worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3
 }
 
 #define MUTABLE_TICK 128
-//todo: move into world
-static int64_t g_frame = 0;
 
 static int
 entity_init(lua_State *L) {
@@ -71,7 +69,7 @@ entity_init(lua_State *L) {
 		if (!e.sibling<ecs::scene_update_once>())
 			e.enable_tag<ecs::scene_needchange>();
 		auto& s = e.get<ecs::scene>();
-		s.movement = g_frame;
+		s.movement = w->frame;
 		e.enable_tag<ecs::scene_mutable>();
 	}
 	return 0;
@@ -163,14 +161,14 @@ scene_changed(lua_State *L) {
 			if (!worldmat_update(worldmats, math3d, s, id, w)) {
 				return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 			}
-			s.movement = g_frame;
-		} else if (g_frame - s.movement > MUTABLE_TICK &&
+			s.movement = w->frame;
+		} else if (w->frame - s.movement > MUTABLE_TICK &&
 			(s.parent == 0 || is_constant(w, s.parent))) {
 			e.disable_tag<ecs::scene_mutable>();
 		}
 	}
 
-	++g_frame;
+	++w->frame;
 
 	return 0;
 }
