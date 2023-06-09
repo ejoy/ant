@@ -4,6 +4,7 @@
 #include "flatmap.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <cstdio>
 
 extern "C" {
 	#include "math3d.h"
@@ -29,7 +30,7 @@ math3d_update(struct math_context* math3d, math_t& id, math_t const& m) {
 }
 
 static bool
-worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3d, ecs::scene& s, ecs::eid& id) {
+worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3d, ecs::scene& s, ecs::eid& id, struct ecs_world *w) {
 	math_t mat = math3d_make_srt(math3d, s.s, s.r, s.t);
 	if (!math_isnull(s.mat)) {
 		mat = math3d_mul_matrix(math3d, mat, s.mat);
@@ -37,7 +38,18 @@ worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3
 	if (s.parent != 0) {
 		auto parentmat = worldmats.find(s.parent);
 		if (!parentmat) {
-			return false;
+			if (w) {
+				if ((ecs::eid)s.parent >= id)
+					return false;
+				int index = entity_index(w->ecs, (void *)s.parent);
+				ecs::scene *ps = (ecs::scene *)entity_sibling(w->ecs, COMPONENT_EID, index, ecs_api::component<ecs::scene>::id);
+				if (ps == nullptr)
+					return false;
+				parentmat = &ps->worldmat;
+				worldmats.insert_or_assign(s.parent, ps->worldmat);
+			} else {
+				return false;
+			}
 		}
 		mat = math3d_mul_matrix(math3d, *parentmat, mat);
 	}
@@ -46,15 +58,44 @@ worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3
 	return true;
 }
 
+#define MUTABLE_TICK 128
+
 static int
 entity_init(lua_State *L) {
 	auto w = getworld(L);
 
 	using namespace ecs_api::flags;
-	for (auto& e : ecs_api::select<ecs::INIT, ecs::scene, ecs::scene_update_once(absent)>(w->ecs)) {
-		e.enable_tag<ecs::scene_needchange>();
+	for (auto& e : ecs_api::select<ecs::INIT, ecs::scene>(w->ecs)) {
+		if (!e.sibling<ecs::scene_update_once>())
+			e.enable_tag<ecs::scene_needchange>();
+		auto& s = e.get<ecs::scene>();
+		s.movement = w->frame;
+		e.enable_tag<ecs::scene_mutable>();
 	}
 	return 0;
+}
+
+static inline bool
+is_constant(struct ecs_world *w, ecs::eid eid) {
+	int id = entity_index(w->ecs, (void *)eid);
+	return entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_mutable>::id) == nullptr;
+}
+
+static inline bool
+is_changed(struct ecs_world *w, ecs::eid eid) {
+	int id = entity_index(w->ecs, (void *)eid);
+	return entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_changed>::id) != nullptr;
+}
+
+static void
+rebuild_mutable_set(struct ecs_world *w) {
+	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene_mutable(ecs_api::flags::absent), ecs::scene>(w->ecs)) {
+		auto& s = e.get<ecs::scene>();
+		if (s.parent != 0 && is_changed(w, s.parent)) {
+			e.enable_tag<ecs::scene_mutable>();
+			e.enable_tag<ecs::scene_changed>();
+		}
+	}
 }
 
 static int
@@ -72,7 +113,7 @@ scene_changed(lua_State *L) {
 			auto id = e.get<ecs::eid>();
 			e.disable_tag<ecs::scene_update>();
 			e.enable_tag<ecs::scene_changed>();
-			if (!worldmat_update(worldmats, math3d, s, id)) {
+			if (!worldmat_update(worldmats, math3d, s, id, nullptr)) {
 				return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 			}
 		}
@@ -80,44 +121,54 @@ scene_changed(lua_State *L) {
 	}
 
 	// step.1
-	auto selector = ecs_api::select<ecs::scene_needchange, ecs::scene_update, ecs::scene>(w->ecs);
+	auto selector = ecs_api::select<ecs::scene_needchange, ecs::scene_update>(w->ecs);
 	auto it = selector.begin();
 	if (it == selector.end()) {
 		return 0;
 	}
-	flatset<ecs::eid> parents;
+	bool need_rebuild_mutable_set = false;
 	for (; it != selector.end(); ++it) {
 		auto& e = *it;
-		auto& s = e.get<ecs::scene>();
-		if (s.parent != 0) {
-			parents.insert(s.parent);
+		if (!e.sibling<ecs::scene_mutable>()) {
+			need_rebuild_mutable_set = true;
+			ecs::eid eid = e.sibling<ecs::eid>();
+			e.enable_tag<ecs::scene_mutable>();
 		}
 		e.enable_tag<ecs::scene_changed>();
+		// disable main key must at the end
 		e.disable_tag<ecs::scene_needchange>();
+	}
+	if (need_rebuild_mutable_set) {
+		rebuild_mutable_set(w);
 	}
 
 	// step.2
 	flatmap<ecs::eid, math_t> worldmats;
-	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene, ecs::eid>(w->ecs)) {
-		auto id = e.get<ecs::eid>();
+	for (auto& e : ecs_api::select<ecs::scene_mutable, ecs::scene>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
-		if (parents.contains(id)) {
-			worldmats.insert_or_assign(id, s.worldmat);
+		bool changed = false;
+		ecs::eid id;
+		if (e.sibling<ecs::scene_update>()) {
+			id = e.sibling<ecs::eid>();
+			if (e.sibling<ecs::scene_changed>()) {
+				changed = true;
+			} else if (s.parent != 0 && is_changed(w, s.parent)) {
+				e.enable_tag<ecs::scene_changed>();
+				changed = true;
+			}
 		}
-		if (e.sibling<ecs::scene_changed>()) {
-			if (!worldmat_update(worldmats, math3d, s, id)) {
+		if (changed) {
+			if (!worldmat_update(worldmats, math3d, s, id, w)) {
 				return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 			}
-		}
-		else {
-			if (s.parent != 0 && worldmats.contains(s.parent)) {
-				e.enable_tag<ecs::scene_changed>();
-				if (!worldmat_update(worldmats, math3d, s, id)) {
-					return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
-				}
-			}
+			s.movement = w->frame;
+		} else if (w->frame - s.movement > MUTABLE_TICK &&
+			(s.parent == 0 || is_constant(w, s.parent))) {
+			e.disable_tag<ecs::scene_mutable>();
 		}
 	}
+
+	++w->frame;
 
 	return 0;
 }

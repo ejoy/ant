@@ -28,8 +28,8 @@ struct ecs_world {
 	struct bgfx_encoder_holder*   holder;
 	struct cull_cached*           cull_cached;
 	struct render_material*       R;
+	uint64_t                      frame;
 	uintptr_t                     unused_0;
-	uintptr_t                     unused_1;
 };
 
 static inline struct ecs_world* getworld(lua_State* L) {
