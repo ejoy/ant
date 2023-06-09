@@ -76,7 +76,7 @@ lcull(lua_State *L) {
 	if (0 == c)
 		return 0;
 
-	for (auto e : ecs_api::select(*w->cull_cached)) {
+	for (auto e : ecs_api::cached_select(*w->cull_cached)) {
 		const auto &b = e.get<ecs::bounding>();
 
 		if (math_isnull(b.scene_aabb))

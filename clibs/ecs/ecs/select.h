@@ -62,15 +62,15 @@ namespace ecs_api {
 
     namespace impl {
         template <typename Component>
-        Component* iter(ecs_context* ctx, int i) noexcept {
+        Component* iter(ecs_context& ctx, int i) noexcept {
             static_assert(!std::is_function<Component>::value);
-            return (Component*)entity_iter(ctx, component<Component>::id, i);
+            return (Component*)entity_iter(&ctx, component<Component>::id, i);
         }
 
         template <typename Component>
-        Component* sibling(ecs_context* ctx, int mainkey, int i) noexcept {
+        Component* sibling(ecs_context& ctx, int mainkey, int i) noexcept {
             static_assert(!std::is_function<Component>::value);
-            return (Component*)entity_sibling(ctx, mainkey, i, component<Component>::id);
+            return (Component*)entity_sibling(&ctx, mainkey, i, component<Component>::id);
         }
 
         template <typename Component, typename Cached>
@@ -95,13 +95,13 @@ namespace ecs_api {
 
         template <typename Component, typename Cached>
             requires (!std::is_function_v<Component> && component<Component>::id != EID)
-        Component* sibling(Cached& cache, int i) noexcept {
+        Component* sibling(Cached& cache, [[maybe_unused]] int mainkey, int i) noexcept {
             return cache_fetch<Component>(cache, i);
         }
 
         template <typename Component, typename Cached>
             requires (!std::is_function_v<Component> && component<Component>::id == EID)
-        Component* sibling(Cached& cache, int i) noexcept {
+        Component* sibling(Cached& cache, [[maybe_unused]] int mainkey, int i) noexcept {
             return (Component*)entity_sibling(cache.ctx, component<typename Cached::mainkey>::id, i, EID);
         }
 
@@ -113,6 +113,44 @@ namespace ecs_api {
                 luaL_error(L, "component `%s` not found.", component<Component>::name);
             }
             return c;
+        }
+
+        template <typename Component>
+        void remove(ecs_context& ctx, int i) noexcept {
+            entity_remove(&ctx, component<Component>::id, i);
+        }
+
+        template <typename Component, typename Cached>
+        void remove(Cached& cache, int i) noexcept {
+            entity_remove(cache.ctx, component<Component>::id, i);
+        }
+
+        template <typename MainKey>
+        void enable_tag(ecs_context& ctx, int i, int tag_id) noexcept {
+            entity_enable_tag(&ctx, component<MainKey>::id, i, tag_id);
+        }
+
+        template <typename MainKey, typename Cached>
+        void enable_tag(Cached& cache, int i, int tag_id) noexcept {
+            entity_enable_tag(cache.ctx, component<MainKey>::id, i, tag_id);
+        }
+
+        template <typename MainKey>
+        void disable_tag(ecs_context& ctx, int i, int tag_id) noexcept {
+            entity_disable_tag(&ctx, component<MainKey>::id, i, tag_id);
+        }
+
+        template <typename MainKey, typename Cached>
+        void disable_tag(Cached& cache, int i, int tag_id) noexcept {
+            entity_disable_tag(cache.ctx, component<MainKey>::id, i, tag_id);
+        }
+
+        inline void sync(ecs_context& ctx) noexcept {
+        }
+
+        template <typename Cached>
+        void sync(Cached& cache) noexcept {
+            cache_sync(cache);
         }
 
         template <typename...Ts>
@@ -134,93 +172,57 @@ namespace ecs_api {
         }
     }
 
-    template <typename MainKey, typename ...SubKey>
-    struct entity {
+    template <typename Context, typename MainKey, typename ...SubKey>
+    struct basic_entity {
     public:
-        using cached_type = cached<MainKey, SubKey...>;
-
-        entity(ecs_context* ctx) noexcept
+        basic_entity(Context& ctx) noexcept
             : ctx(ctx)
         { }
         static constexpr int kInvalidIndex = -1;
-        bool init(int id) noexcept {
+        enum class fetch_status: uint8_t {
+            success,
+            failed,
+            eof,
+        };
+        fetch_status fetch(int id) noexcept {
             auto v = impl::iter<MainKey>(ctx, id);
             if (!v) {
-                index = kInvalidIndex;
-                return false;
+                return fetch_status::eof;
             }
             assgin<0>(v);
             if constexpr (sizeof...(SubKey) == 0) {
-                index = id;
-                return true;
+                return fetch_status::success;
             }
             else {
                 if (init_sibling<impl::next<0, MainKey>(), SubKey...>(id)) {
-                    index = id;
-                    return true;
+                    return fetch_status::success;
                 }
+                return fetch_status::failed;
+            }
+        }
+        bool init(int id) noexcept {
+            if (fetch_status::success != fetch(id)) {
                 index = kInvalidIndex;
                 return false;
             }
-        }
-        int find(int id) noexcept {
             index = id;
-            for (;;++index) {
-                auto v = impl::iter<MainKey>(ctx, index);
-                if (!v) {
+            return true;
+        }
+        void next() noexcept {
+            for (++index;;++index) {
+                switch (fetch(index)) {
+                case fetch_status::success:
+                    return;
+                case fetch_status::eof:
                     index = kInvalidIndex;
+                    return;
+                default:
                     break;
                 }
-                assgin<0>(v);
-                if constexpr (sizeof...(SubKey) == 0) {
-                    break;
-                }
-                else {
-                    if (init_sibling<impl::next<0, MainKey>(), SubKey...>(index)) {
-                        break;
-                    }
-                }
             }
-            return index;
-        }
-        int next(int i) noexcept {
-            index = i;
-            if (index == kInvalidIndex) {
-                return kInvalidIndex;
-            }
-            ++index;
-            return find(index);
-        }
-        int find(cached_type& cache, int id) noexcept {
-            index = id;
-            for (;;++index) {
-                auto v = impl::iter<MainKey>(cache, index);
-                if (!v) {
-                    index = kInvalidIndex;
-                    break;
-                }
-                assgin<0>(v);
-                if constexpr (sizeof...(SubKey) == 0) {
-                    break;
-                }
-                else {
-                    if (init_sibling<impl::next<0, MainKey>(), SubKey...>(cache, index)) {
-                        break;
-                    }
-                }
-            }
-            return index;
-        }
-        int next(cached_type& cache, int i) noexcept {
-            index = i;
-            if (index == kInvalidIndex) {
-                return kInvalidIndex;
-            }
-            ++index;
-            return find(cache, index);
         }
         void remove() const noexcept {
-            entity_remove(ctx, component<MainKey>::id, index);
+            impl::remove<MainKey>(ctx, index);
         }
         int getid() const noexcept {
             return index;
@@ -273,18 +275,18 @@ namespace ecs_api {
         template <typename T>
             requires (component<T>::tag)
         void enable_tag() noexcept {
-            entity_enable_tag(ctx, component<MainKey>::id, index, component<T>::id);
+            impl::enable_tag<MainKey>(ctx, index, component<T>::id);
         }
         void enable_tag(int id) noexcept {
-            entity_enable_tag(ctx, component<MainKey>::id, index, id);
+            impl::enable_tag<MainKey>(ctx, index, id);
         }
         template <typename T>
             requires (component<T>::tag)
         void disable_tag() noexcept {
-            entity_disable_tag(ctx, component<MainKey>::id, index, component<T>::id);
+            impl::disable_tag<MainKey>(ctx, index, component<T>::id);
         }
         void disable_tag(int id) noexcept {
-            entity_disable_tag(ctx, component<MainKey>::id, index, id);
+            impl::disable_tag<MainKey>(ctx, index, id);
         }
     private:
         template <std::size_t Is, typename T>
@@ -318,128 +320,68 @@ namespace ecs_api {
                 return true;
             }
         }
-        template <std::size_t Is, typename Component, typename ...Components>
-        bool init_sibling(cached_type& cache, int i) noexcept {
-            if constexpr (std::is_function<Component>::value) {
-                using C = typename std::invoke_result<Component, flags::absent>::type;
-                auto v = impl::sibling<C>(cache, i);
-                if (v) {
-                    return false;
-                }
-                if constexpr (sizeof...(Components) > 0) {
-                    return init_sibling<Is, Components...>(i);
-                }
-                return true;
-            }
-            else {
-                auto v = impl::sibling<Component>(cache, i);
-                if (!v) {
-                    return false;
-                }
-                assgin<Is>(v);
-                if constexpr (sizeof...(Components) > 0) {
-                    return init_sibling<impl::next<Is, Component>(), Components...>(cache, i);
-                }
-                return true;
-            }
-        }
-    private:
+    public:
         impl::components<MainKey, SubKey...> c;
-        ecs_context* ctx;
+        Context& ctx;
         int index = kInvalidIndex;
     };
 
+    template <typename MainKey, typename ...SubKey>
+    using entity = basic_entity<ecs_context, MainKey, SubKey...>;
+
+    template <typename MainKey, typename ...SubKey>
+    using cached_entity = basic_entity<cached<MainKey, SubKey...>, MainKey, SubKey...>;
+
     namespace impl {
-        template <typename ...Args>
-        struct selector {
-            using entity_type = entity<Args...>;
+        template <typename Context, typename ...Args>
+        struct basic_selector {
+            using entity_type = basic_entity<Context, Args...>;
             struct begin_t {};
             struct end_t {};
             struct iterator {
-                entity_type& e;
-                int index;
-                iterator(begin_t, entity_type& e) noexcept
-                    : e(e)
-                    , index(e.find(0))
-                { }
-                iterator(end_t, entity_type& e) noexcept
-                    : e(e)
-                    , index(entity_type::kInvalidIndex)
-                { }
+                entity_type e;
+                iterator(begin_t, Context& ctx) noexcept
+                    : e(ctx) {
+                    impl::sync(ctx);
+                    e.next();
+                }
+                iterator(end_t, Context& ctx) noexcept
+                    : e(ctx)
+                {}
                 bool operator!=(iterator const& o) const noexcept {
-                    return index != o.index;
+                    return e.index != o.e.index;
                 }
                 bool operator==(iterator const& o) const noexcept {
                     return !(*this != o);
                 }
                 iterator& operator++() noexcept {
-                    index = e.next(index);
+                    if (e.getid() == entity_type::kInvalidIndex) {
+                        return *this;
+                    }
+                    e.next();
                     return *this;
                 }
                 entity_type& operator*() noexcept {
                     return e;
                 }
             };
-            selector(ecs_context* ctx) noexcept
-                : e(ctx)
+            basic_selector(Context& ctx) noexcept
+                : ctx(ctx)
             {}
             iterator begin() noexcept {
-                return {begin_t{}, e};
+                return {begin_t{}, ctx};
             }
             iterator end() noexcept {
-                return {end_t{}, e};
+                return { end_t{}, ctx };
             }
-            entity_type e;
+            Context& ctx;
         };
         
         template <typename ...Args>
-        struct cached_selector {
-            using entity_type = entity<Args...>;
-            using cached_type = cached<Args...>;
-            struct begin_t {};
-            struct end_t {};
-            struct iterator {
-                cached_type& c;
-                entity_type& e;
-                int index;
-                iterator(begin_t, cached_type& c, entity_type& e) noexcept
-                    : c(c)
-                    , e(e)
-                    , index(e.find(c, 0))
-                { }
-                iterator(end_t, cached_type& c, entity_type& e) noexcept
-                    : c(c)
-                    , e(e)
-                    , index(entity_type::kInvalidIndex)
-                { }
-                bool operator!=(iterator const& o) const noexcept {
-                    return index != o.index;
-                }
-                bool operator==(iterator const& o) const noexcept {
-                    return !(*this != o);
-                }
-                iterator& operator++() noexcept {
-                    index = e.next(c, index);
-                    return *this;
-                }
-                entity_type& operator*() noexcept {
-                    return e;
-                }
-            };
-            cached_selector(cached_type& cache) noexcept
-                : c(cache)
-                , e(cache.ctx)
-            {}
-            iterator begin() noexcept {
-                cache_sync(c);
-                return {begin_t{}, c, e};
-            }
-            iterator end() noexcept {
-                return {end_t{}, c, e};
-            }
-            cached_type& c;
-            entity_type e;
-        };
+        using selector = basic_selector<ecs_context, Args...>;
+
+        template <typename ...Args>
+        using cached_selector = basic_selector<cached<Args...>, Args...>;
     }
 
     template <typename Component>
@@ -466,11 +408,16 @@ namespace ecs_api {
 
     template <typename ...Args>
     auto select(ecs_context* ctx) noexcept {
-        return impl::selector<Args...>(ctx);
+        return impl::selector<Args...>(*ctx);
+    }
+
+    template <typename Context, typename ...Args>
+    auto select(Context& ctx) noexcept {
+        return impl::basic_selector<Context, Args...>(ctx);
     }
 
     template <typename ...Args>
-    auto select(cached<Args...>& cache) noexcept {
+    auto cached_select(cached<Args...>& cache) noexcept {
         return impl::cached_selector<Args...>(cache);
     }
 }
