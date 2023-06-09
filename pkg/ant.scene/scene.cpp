@@ -39,10 +39,10 @@ worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3
 		auto parentmat = worldmats.find(s.parent);
 		if (!parentmat) {
 			if (w) {
-				if (s.parent >= id)
+				if ((ecs::eid)s.parent >= id)
 					return false;
-				int id = entity_index(w->ecs, (void *)s.parent);
-				ecs::scene *ps = (ecs::scene *)entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene>::id);
+				int index = entity_index(w->ecs, (void *)s.parent);
+				ecs::scene *ps = (ecs::scene *)entity_sibling(w->ecs, COMPONENT_EID, index, ecs_api::component<ecs::scene>::id);
 				if (ps == nullptr)
 					return false;
 				parentmat = &ps->worldmat;
@@ -80,17 +80,16 @@ entity_init(lua_State *L) {
 static inline bool
 is_constant(struct ecs_world *w, ecs::eid eid) {
 	int id = entity_index(w->ecs, (void *)eid);
-	return entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_constant>::id) != nullptr;
+	return entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_mutable>::id) == nullptr;
 }
 
 static void
-rebuild_constant_set(struct ecs_world *w) {
-	for (auto& e : ecs_api::select<ecs::scene_constant, ecs::scene>(w->ecs)) {
+rebuild_mutable_set(struct ecs_world *w, flatset<ecs::eid> &parents) {
+	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene, ecs::scene_mutable(ecs_api::flags::absent)>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
-		if (s.parent != 0 && !is_constant(w, s.parent)) {
+		if (s.parent != 0 && parents.contains(s.parent)) {
 			e.enable_tag<ecs::scene_mutable>();
-			// scene_constant is main key, must disable at the end
-			e.disable_tag<ecs::scene_constant>();
+			parents.insert(e.sibling<ecs::eid>());
 		}
 	}
 }
@@ -123,25 +122,26 @@ scene_changed(lua_State *L) {
 	if (it == selector.end()) {
 		return 0;
 	}
-	bool need_rebuild_constant_set = false;
+	bool need_rebuild_mutable_set = false;
 	flatset<ecs::eid> parents;
+	flatset<ecs::eid> parents_mutable;
 	for (; it != selector.end(); ++it) {
 		auto& e = *it;
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0) {
 			parents.insert(s.parent);
 		}
-		if (e.sibling<ecs::scene_constant>()) {
-			need_rebuild_constant_set = true;
-			e.disable_tag<ecs::scene_constant>();
+		if (!e.sibling<ecs::scene_mutable>()) {
+			need_rebuild_mutable_set = true;
 			e.enable_tag<ecs::scene_mutable>();
+			parents_mutable.insert(e.sibling<ecs::eid>());
 		}
 		e.enable_tag<ecs::scene_changed>();
 		// disable main key must at the end
 		e.disable_tag<ecs::scene_needchange>();
 	}
-	if (need_rebuild_constant_set) {
-		rebuild_constant_set(w);
+	if (need_rebuild_mutable_set) {
+		rebuild_mutable_set(w, parents_mutable);
 	}
 
 	// step.2
@@ -170,7 +170,6 @@ scene_changed(lua_State *L) {
 			s.movement = g_frame;
 		} else if (g_frame - s.movement > MOTIONLESS_TICK &&
 			(s.parent == 0 || is_constant(w, s.parent))) {
-			e.enable_tag<ecs::scene_constant>();
 			e.disable_tag<ecs::scene_mutable>();
 		}
 	}
