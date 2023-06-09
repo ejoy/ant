@@ -85,7 +85,7 @@ is_constant(struct ecs_world *w, ecs::eid eid) {
 
 static void
 rebuild_mutable_set(struct ecs_world *w, flatset<ecs::eid> &parents) {
-	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene, ecs::scene_mutable(ecs_api::flags::absent)>(w->ecs)) {
+	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene_mutable(ecs_api::flags::absent), ecs::scene>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0 && parents.contains(s.parent)) {
 			e.enable_tag<ecs::scene_mutable>();
