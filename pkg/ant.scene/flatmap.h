@@ -98,23 +98,8 @@ public:
     flatmap(const flatmap&) = delete;
     flatmap& operator=(const flatmap&) = delete;
 
-    ~flatmap() noexcept {
-        if (m_size == 0) {
-            return;
-        }
-        if constexpr (!std::is_trivially_destructible<bucket>::value) {
-            for (size_t i = 0; i < m_mask+1; ++i) {
-                if (m_buckets[i].dib != 0) {
-                    m_buckets[i].key.~key_type();
-                    m_buckets[i].obj.~mapped_type();
-                    --m_size;
-                    if (m_size == 0) {
-                        break;
-                    }
-                }
-            }
-        }
-        std::free(m_buckets);
+    ~flatmap() {
+        clear();
     }
 
     template <typename MappedType>
@@ -221,6 +206,21 @@ public:
     }
 
     void clear() {
+        if constexpr (!std::is_trivially_destructible<bucket>::value) {
+            if (m_size != 0) {
+                for (size_t i = 0; i < m_mask+1; ++i) {
+                    if (m_buckets[i].dib != 0) {
+                        m_buckets[i].key.~key_type();
+                        m_buckets[i].obj.~mapped_type();
+                        --m_size;
+                        if (m_size == 0) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
         if (m_mask != 0) {
             std::free(m_buckets);
         }
