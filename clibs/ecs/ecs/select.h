@@ -6,6 +6,7 @@ struct lua_State;
 #include <type_traits>
 #include <tuple>
 #include <array>
+#include <cstdint>
 
 namespace ecs_api {
     namespace flags {

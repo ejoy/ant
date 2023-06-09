@@ -3,9 +3,11 @@
 #if defined(__cplusplus)
 #	include <lua.hpp>
 #	include <utility>
+#	include <cstdint>
 #else
 #	include <lua.h>
 #	include <lauxlib.h>
+#	include <stdint.h>
 #endif
 
 struct ecs_context;
