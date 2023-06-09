@@ -4,11 +4,12 @@
 #include <shaderlib.sh>
 #include "common/constants.sh"
 #include "common/camera.sh"
-
 #ifdef ENABLE_CURVE_WORLD
 #include "common/curve_world.sh"
 #endif //ENABLE_CURVE_WORLD
-
+#ifdef DRAW_INDIRECT
+	uniform vec4 u_draw_indirect_type;
+#endif
 highp vec3 quat_to_normal(const highp vec4 q){
     return	vec3( 0.0,  0.0,  1.0 ) + 
         	vec3( 2.0, -2.0, -2.0 ) * q.x * q.zwx +
@@ -19,6 +20,43 @@ highp vec3 quat_to_tangent(const highp vec4 q){
     return	vec3( 1.0,  0.0,  0.0 ) + 
         	vec3(-2.0,  2.0, -2.0 ) * q.y * q.yxw +
         	vec3(-2.0,  2.0,  2.0 ) * q.z * q.zwx;
+}
+
+mat4 get_indirect_wolrd_matrix(vec4 d1, vec4 d2, vec4 d3, vec4 draw_indirect_type)
+{
+	mat4 wm = u_model[0];
+	if(draw_indirect_type.x == 1){
+		wm[0][3] = wm[0][3] + d1.x;
+		wm[1][3] = wm[1][3] + d1.y;
+		wm[2][3] = wm[2][3] + d1.z;
+	}
+	else if(draw_indirect_type.y == 1){
+		float scale = d1.x;
+		float scale_y = scale;
+		float tx = d1.y;
+		float tz = d1.z;
+		float cosy = d1.w;
+		float scosy = cosy * scale;
+		float ssiny = sqrt(1 - cosy*cosy) * scale;
+		if(scale_y > 1){
+			scale_y = scale_y * 0.5;
+		}
+		wm = mat4(
+			scosy,            0,     -ssiny,       tx, 
+			0    ,      scale_y,          0,        0, 
+			ssiny,            0,      scosy,       tz, 
+			0    ,            0,          0,        1
+		);	 
+	}
+	else if(draw_indirect_type.z == 1){
+		wm[0][3] = wm[0][3] + d3.x;
+		wm[1][3] = wm[1][3] + d3.y;
+		wm[2][3] = wm[2][3] + d3.z;
+	}
+	else{
+		
+	}
+	return wm;
 }
 
 mat4 calc_bone_transform(ivec4 indices, vec4 weights)

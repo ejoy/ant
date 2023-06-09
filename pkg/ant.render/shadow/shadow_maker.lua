@@ -26,7 +26,7 @@ local queuemgr	= require "queue_mgr"
 local viewidmgr = require "viewid_mgr"
 --local mu		= mathpkg.util
 local mc 		= import_package "ant.math".constant
-
+local idrawindirect = ecs.import.interface "ant.render|idrawindirect"
 local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local R         = ecs.clibs "render.render_material"
@@ -535,21 +535,15 @@ function sm:camera_usage()
 	end ]]
 end
 
-local function which_material(skinning, heapmesh, indirect)
-	if heapmesh then
-        return shadow_heap_material
-    end
+local function which_material(skinning, indirect)
 	if indirect then
-        if indirect.type == "STONEMOUNTAIN" then
-            return shadow_sm_material
-        else
-            return shadow_indirect_material
-        end
-    end
-	if skinning then
-		return gpu_skinning_material
+		return shadow_indirect_material.object
 	end
-		return shadow_material
+	if skinning then
+		return gpu_skinning_material.object
+	end
+	
+		return shadow_material.object		
 	--return skinning and gpu_skinning_material or shadow_material
 end
 
@@ -574,8 +568,7 @@ function sm:update_filter()
 
 		local mat_ptr
 		if mt.fx.setting.shadow_cast == "on" then
-			local m = which_material(e.skinning, e.heapmesh, e.indirect)
-			local mo = m.object
+			local mo = which_material(e.skinning, e.indirect)
 			local fm = e.filter_material
 			local newstate = irender.check_set_state(mo, fm.main_queue:get_material(), function (d, s)
 				d.PT, d.CULL = s.PT, d.CULL
@@ -585,7 +578,10 @@ function sm:update_filter()
 
 			local mi = mo:instance()
 			mi:set_state(newstate)
-
+			if e.indirect then
+				local draw_indirect_type = idrawindirect.get_draw_indirect_type(e.indirect)
+				mi.u_draw_indirect_type = math3d.vector(draw_indirect_type)
+			end
 			fm["csm1_queue"] = mi
 			fm["csm2_queue"] = mi
 			fm["csm3_queue"] = mi

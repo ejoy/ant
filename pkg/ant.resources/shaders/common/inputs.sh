@@ -2,22 +2,15 @@
 #error "input.sh file should define before bgfx_shader.sh"
 #endif //BGFX_SHADER_H_HEADER_GUARD
 
-#ifdef INDIRECT_BUFFER
-    #ifdef defined STONE_MOUNTAIN
-        #define INPUT_INSTANCE1 i_data0
-        #define INPUT_INSTANCE2
-        #define INPUT_INSTANCE3
-    #else
-        #define INPUT_INSTANCE1 i_data0
-        #define INPUT_INSTANCE2 i_data1
-        #define INPUT_INSTANCE3 i_data2
-    #endif
-#else // !INDIRECT_BUFFER
+#ifdef DRAW_INDIRECT
+    #define INPUT_INSTANCE1 i_data0
+    #define INPUT_INSTANCE2 i_data1
+    #define INPUT_INSTANCE3 i_data2
+#else
     #define INPUT_INSTANCE1
     #define INPUT_INSTANCE2
     #define INPUT_INSTANCE3
-#endif // INDIRECT_BUFFER
-
+#endif
 
 #ifdef CS_SKINNING
 

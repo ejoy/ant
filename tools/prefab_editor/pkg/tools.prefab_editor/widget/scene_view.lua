@@ -21,7 +21,7 @@ local function is_editable(eid)
     return not hierarchy:is_locked(eid)
 end
 
-local function is_delete_disable()
+local function as_main_camera_mode()
     local mq = w:first("main_queue camera_ref:in")
     local sv = w:first("second_view camera_ref:in")
     return mq.camera_ref == sv.camera_ref
@@ -52,11 +52,27 @@ local function node_context_menu(eid)
             world:pub { "HierarchyEvent", "visible", hierarchy:get_node(eid), not current_visible }
         end
         imgui.cursor.Separator()
-        imgui.windows.BeginDisabled(is_delete_disable())
         if imgui.widget.MenuItem(faicons.ICON_FA_TRASH.." Delete", "Delete") then
-            world:pub { "HierarchyEvent", "delete", eid }
+            local can_delete = true
+            if as_main_camera_mode() then
+                local e <close> = w:entity(eid, "camera?in")
+                if e.camera then
+                    can_delete = false
+                else
+                    local children = hierarchy:get_node(eid).children
+                    if #children > 0 then
+                        --TODO: for camera
+                        local ce <close> = w:entity(children[1].eid, "camera?in")
+                        if ce.camera then
+                            can_delete = false
+                        end
+                    end
+                end
+            end
+            if can_delete then
+                world:pub { "HierarchyEvent", "delete", eid }
+            end
         end
-        imgui.windows.EndDisabled()
         imgui.cursor.Separator()
         if imgui.widget.MenuItem(faicons.ICON_FA_ARROW_DOWN.." MoveDown") then
             world:pub { "HierarchyEvent", "movedown", eid }
