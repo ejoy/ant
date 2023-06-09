@@ -284,9 +284,7 @@ local function render_SH(Eml, N)
     N = m3d_xyz(N)
     local renderer = assert(renderers[#Eml], "not support coefficients more than 9")
     local r = renderer(Eml, N)
-    local x,y,z = math3d.index(r, 1, 2, 3)
-    x, y, z = math.max(x, 0.0), math.max(y, 0.0), math.max(z, 0.0)
-    return math3d.vector(x, y, z, 0.0)
+    return math3d.max(r, mc.ZERO)
 end
 
 local function calc_Eml(cm, bandnum)

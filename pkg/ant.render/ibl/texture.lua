@@ -35,8 +35,7 @@ end
 
 local function dir2uvface(v)
     local x, y, z = math3d.index(v, 1, 2, 3)
-    local abs = math.abs
-    local ax, ay, az = abs(x), abs(y), abs(z)
+    local ax, ay, az = math3d.index(math3d.vec_abs(x), 1, 2, 3)
     
     if ax > ay then
         if ax > az then
