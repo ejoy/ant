@@ -4,6 +4,7 @@
 #include <functional>
 #include <limits>
 #include <stdexcept>
+#include <type_traits>
 #include <cstdint>
 #include <cstring>
 
@@ -29,6 +30,50 @@ struct flatmap_hash {
     }
 };
 
+template <typename key_type, typename mapped_type>
+struct flatmap_bucket_kv {
+    key_type    key;
+    mapped_type obj;
+    uint8_t     dib;
+    flatmap_bucket_kv(const key_type& key, mapped_type&& obj, uint8_t dib)
+        : key(key)
+        , obj(std::forward<mapped_type>(obj))
+        , dib(dib)
+    {}
+};
+
+template <typename key_type>
+struct flatmap_bucket_kv<key_type, void> {
+    key_type key;
+    uint8_t  dib;
+    flatmap_bucket_kv(const key_type& key, uint8_t dib)
+        : key(key)
+        , dib(dib)
+    {}
+};
+
+template <typename key_type, typename mapped_type>
+struct flatmap_bucket_vk {
+    mapped_type obj;
+    key_type    key;
+    uint8_t     dib;
+    flatmap_bucket_vk(const key_type& key, mapped_type&& obj, uint8_t dib)
+        : obj(std::forward<mapped_type>(obj))
+        , key(key)
+        , dib(dib)
+    {}
+};
+
+template <typename key_type>
+struct flatmap_bucket_vk<key_type, void> {
+    key_type key;
+    uint8_t  dib;
+    flatmap_bucket_vk(const key_type& key, uint8_t dib)
+        : key(key)
+        , dib(dib)
+    {}
+};
+
 template <typename Key,
           typename T,
           typename KeyHash = flatmap_hash<Key>,
@@ -40,33 +85,14 @@ class flatmap
 private:
     using key_type = Key;
     using mapped_type = T;
-    struct bucket_kv {
-        key_type    key;
-        mapped_type obj;
-        uint8_t     dib;
-        bucket_kv(const key_type& key, mapped_type&& obj, uint8_t dib)
-            : key(key)
-            , obj(std::forward<mapped_type>(obj))
-            , dib(dib)
-        {}
-    };
-    struct bucket_vk {
-        mapped_type obj;
-        key_type    key;
-        uint8_t     dib;
-        bucket_vk(const key_type& key, mapped_type&& obj, uint8_t dib)
-            : obj(std::forward<mapped_type>(obj))
-            , key(key)
-            , dib(dib)
-        {}
-    };
     static constexpr size_t kInvalidSlot = size_t(-1);
     static constexpr size_t kMaxLoadFactor = 80;
     static constexpr uint8_t kMaxDistance = 128;
     static constexpr size_t kMaxTryRehash = 1;
-
+    using bucket_kv = flatmap_bucket_kv<key_type, mapped_type>;
+    using bucket_vk = flatmap_bucket_vk<key_type, mapped_type>;
 public:
-    using bucket = typename std::conditional<sizeof(bucket_kv) <= sizeof(bucket_vk), bucket_kv, bucket_vk>::type;
+    using bucket = std::conditional_t<sizeof(bucket_kv) <= sizeof(bucket_vk), bucket_kv, bucket_vk>;
     static_assert(sizeof(bucket) <= 3 * sizeof(size_t));
 
     flatmap() noexcept
@@ -105,7 +131,12 @@ public:
         size_t slot = KeyHash::operator()(key) & m_mask;
         for (;;) {
             if (m_buckets[slot].dib == 0) {
-                new (&m_buckets[slot]) bucket { key, std::forward<mapped_type>(obj), dib };
+                if constexpr (std::is_same_v<mapped_type, void>) {
+                    new (&m_buckets[slot]) bucket { key, dib };
+                }
+                else {
+                    new (&m_buckets[slot]) bucket { key, std::forward<mapped_type>(obj), dib };
+                }
                 ++m_size;
                 return true;
             }
@@ -113,10 +144,18 @@ public:
                 return false;
             }
             if (m_buckets[slot].dib < dib) {
-                bucket tmp { key, std::forward<mapped_type>(obj), dib };
-                std::swap(tmp, m_buckets[slot]);
-                ++tmp.dib;
-                internal_insert<kMaxTryRehash>((slot + 1) & m_mask, std::move(tmp));
+                if constexpr (std::is_same_v<mapped_type, void>) {
+                    bucket tmp { key, dib };
+                    std::swap(tmp, m_buckets[slot]);
+                    ++tmp.dib;
+                    internal_insert<kMaxTryRehash>((slot + 1) & m_mask, std::move(tmp));
+                }
+                else {
+                    bucket tmp { key, std::forward<mapped_type>(obj), dib };
+                    std::swap(tmp, m_buckets[slot]);
+                    ++tmp.dib;
+                    internal_insert<kMaxTryRehash>((slot + 1) & m_mask, std::move(tmp));
+                }
                 return true;
             }
             ++dib;
@@ -248,9 +287,14 @@ public:
             n++;
             next_valid();
         }
-        std::pair<key_type, mapped_type> operator*() {
+        auto operator*() {
             auto& bucket = m.m_buckets[n];
-            return {bucket.key, bucket.obj};
+            if constexpr (std::is_same_v<mapped_type, void>) {
+                return bucket.key;
+            }
+            else {
+                return std::make_pair(bucket.key, bucket.obj);
+            }
         }
         void next_valid() {
             while (n != (m.m_mask + 1) && m.m_buckets[n].dib == 0) {
@@ -414,10 +458,10 @@ private:
 template <typename Key,
           typename KeyHash = flatmap_hash<Key>,
           typename KeyEqual = std::equal_to<Key>>
-class flatset: public flatmap<Key, uint8_t, KeyHash, KeyEqual> {
+class flatset: public flatmap<Key, void, KeyHash, KeyEqual> {
 private:
     using key_type = Key;
-    using mybase = flatmap<Key, uint8_t, KeyHash, KeyEqual>;
+    using mybase = flatmap<Key, void, KeyHash, KeyEqual>;
 public:
     bool insert(const key_type& key) {
         return mybase::insert(key, 0);
