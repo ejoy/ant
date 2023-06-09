@@ -58,7 +58,7 @@ worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3
 	return true;
 }
 
-#define MOTIONLESS_TICK 128
+#define MUTABLE_TICK 128
 //todo: move into world
 static int64_t g_frame = 0;
 
@@ -83,13 +83,19 @@ is_constant(struct ecs_world *w, ecs::eid eid) {
 	return entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_mutable>::id) == nullptr;
 }
 
+static inline bool
+is_changed(struct ecs_world *w, ecs::eid eid) {
+	int id = entity_index(w->ecs, (void *)eid);
+	return entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_changed>::id) != nullptr;
+}
+
 static void
-rebuild_mutable_set(struct ecs_world *w, flatset<ecs::eid> &parents) {
+rebuild_mutable_set(struct ecs_world *w) {
 	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene_mutable(ecs_api::flags::absent), ecs::scene>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
-		if (s.parent != 0 && parents.contains(s.parent)) {
+		if (s.parent != 0 && is_changed(w, s.parent)) {
 			e.enable_tag<ecs::scene_mutable>();
-			parents.insert(e.sibling<ecs::eid>());
+			e.enable_tag<ecs::scene_changed>();
 		}
 	}
 }
@@ -117,31 +123,25 @@ scene_changed(lua_State *L) {
 	}
 
 	// step.1
-	auto selector = ecs_api::select<ecs::scene_needchange, ecs::scene_update, ecs::scene>(w->ecs);
+	auto selector = ecs_api::select<ecs::scene_needchange, ecs::scene_update>(w->ecs);
 	auto it = selector.begin();
 	if (it == selector.end()) {
 		return 0;
 	}
 	bool need_rebuild_mutable_set = false;
-	flatset<ecs::eid> parents;
-	flatset<ecs::eid> parents_mutable;
 	for (; it != selector.end(); ++it) {
 		auto& e = *it;
-		auto& s = e.get<ecs::scene>();
-		if (s.parent != 0) {
-			parents.insert(s.parent);
-		}
 		if (!e.sibling<ecs::scene_mutable>()) {
 			need_rebuild_mutable_set = true;
+			ecs::eid eid = e.sibling<ecs::eid>();
 			e.enable_tag<ecs::scene_mutable>();
-			parents_mutable.insert(e.sibling<ecs::eid>());
 		}
 		e.enable_tag<ecs::scene_changed>();
 		// disable main key must at the end
 		e.disable_tag<ecs::scene_needchange>();
 	}
 	if (need_rebuild_mutable_set) {
-		rebuild_mutable_set(w, parents_mutable);
+		rebuild_mutable_set(w);
 	}
 
 	// step.2
@@ -152,13 +152,9 @@ scene_changed(lua_State *L) {
 		ecs::eid id;
 		if (e.sibling<ecs::scene_update>()) {
 			id = e.sibling<ecs::eid>();
-			if (parents.contains(id)) {
-				worldmats.insert_or_assign(id, s.worldmat);
-			}
 			if (e.sibling<ecs::scene_changed>()) {
 				changed = true;
-			}
-			else if (s.parent != 0 && worldmats.contains(s.parent)) {
+			} else if (s.parent != 0 && is_changed(w, s.parent)) {
 				e.enable_tag<ecs::scene_changed>();
 				changed = true;
 			}
@@ -168,7 +164,7 @@ scene_changed(lua_State *L) {
 				return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 			}
 			s.movement = g_frame;
-		} else if (g_frame - s.movement > MOTIONLESS_TICK &&
+		} else if (g_frame - s.movement > MUTABLE_TICK &&
 			(s.parent == 0 || is_constant(w, s.parent))) {
 			e.disable_tag<ecs::scene_mutable>();
 		}
