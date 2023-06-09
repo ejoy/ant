@@ -131,7 +131,6 @@ scene_changed(lua_State *L) {
 		auto& e = *it;
 		if (!e.sibling<ecs::scene_mutable>()) {
 			need_rebuild_mutable_set = true;
-			ecs::eid eid = e.sibling<ecs::eid>();
 			e.enable_tag<ecs::scene_mutable>();
 		}
 		e.enable_tag<ecs::scene_changed>();
