@@ -188,66 +188,17 @@ function ibl_sys:render_preprocess()
 
     for e in w:select "irradianceSH_builder" do
         local function load_cm()
-            if true then
-                local i = 5
-                local black = ('ffff'):pack(0, 0, 0, 0)
-                local colors = {
-                    ('ffff'):pack(i, i, i, 0), -- +X /  r  - white
-                    ('ffff'):pack(i, 0, 0, 0), -- -X /  l  - red
-                    ('ffff'):pack(0, 0, i, 0), -- +Y /  t  - blue
-                    ('ffff'):pack(0, i, 0, 0), -- -Y /  b  - green
-                    ('ffff'):pack(i, i, 0, 0), -- +Z / fr - yellow
-                    ('ffff'):pack(i, 0, i, 0), -- -Z / bk - magenta
-                };
-
-                local R, L, T, B, FR, BK = 1, 2, 3, 4, 5, 6
-
-                -- 2x2x6
-                local data = ("c16"):rep(4 * 6):pack(
-                    -- black, colors[R],
-                    -- colors[R], black,
-
-                    -- black, colors[L],
-                    -- colors[L], black,
-
-                    -- black, colors[T],
-                    -- colors[T], black,
-
-                    -- black, colors[B],
-                    -- colors[B], black,
-
-                    -- black, colors[FR],
-                    -- colors[FR], black,
-
-                    -- black, colors[BK],
-                    -- colors[BK], black)
-                    colors[R], colors[R],
-                    colors[R], colors[R],
-
-                    colors[L], colors[L],
-                    colors[L], colors[L],
-
-                    colors[T], colors[T],
-                    colors[T], colors[T],
-
-                    colors[B], colors[B],
-                    colors[B], colors[B],
-
-                    colors[FR], colors[FR],
-                    colors[FR], colors[FR],
-
-                    colors[BK], colors[BK],
-                    colors[BK], colors[BK])
-                return texutil.create_cubemap{w=2,h=2, texelsize=16,data=data}
-            end
             local function read_file(fn)
                 local f <close> = assert(io.open(fn, "rb"))
                 return f:read "a"
             end
     
             local c = read_file(assetmgr.compile(source_tex.tex_name .. "|main.bin"))
-            local info, content = image.parse(c, true, "RGBA32F")
+            local nomip<const> = true
+            local info, content = image.parse(c, true, "RGBA32F", nomip)
             assert(info.bitsPerPixel // 8 == 16)
+
+            local t = table.pack(('ffff'):rep(info.width*info.height*6):unpack(content))
             return texutil.create_cubemap{w=info.width, h=info.height, texelsize=16, data=content}
         end
 
