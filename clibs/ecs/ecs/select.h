@@ -61,16 +61,18 @@ namespace ecs_api {
     }
 
     namespace impl {
+        inline ecs_context* context(ecs_context& ctx) {
+            return &ctx;
+        }
+        template <typename Cached>
+        ecs_context* context(Cached& cache) {
+            return cache.ctx;
+        }
+
         template <typename Component>
         Component* iter(ecs_context& ctx, int i) noexcept {
             static_assert(!std::is_function<Component>::value);
             return (Component*)entity_iter(&ctx, component<Component>::id, i);
-        }
-
-        template <typename Component>
-        Component* sibling(ecs_context& ctx, int mainkey, int i) noexcept {
-            static_assert(!std::is_function<Component>::value);
-            return (Component*)entity_sibling(&ctx, mainkey, i, component<Component>::id);
         }
 
         template <typename Component, typename Cached>
@@ -93,6 +95,12 @@ namespace ecs_api {
             return (Component*)entity_iter(cache.ctx, EID, i);
         }
 
+        template <typename Component>
+        Component* sibling(ecs_context& ctx, int mainkey, int i) noexcept {
+            static_assert(!std::is_function<Component>::value);
+            return (Component*)entity_sibling(&ctx, mainkey, i, component<Component>::id);
+        }
+
         template <typename Component, typename Cached>
             requires (!std::is_function_v<Component> && component<Component>::id != EID)
         Component* sibling(Cached& cache, [[maybe_unused]] int mainkey, int i) noexcept {
@@ -113,36 +121,6 @@ namespace ecs_api {
                 luaL_error(L, "component `%s` not found.", component<Component>::name);
             }
             return c;
-        }
-
-        template <typename Component>
-        void remove(ecs_context& ctx, int i) noexcept {
-            entity_remove(&ctx, component<Component>::id, i);
-        }
-
-        template <typename Component, typename Cached>
-        void remove(Cached& cache, int i) noexcept {
-            entity_remove(cache.ctx, component<Component>::id, i);
-        }
-
-        template <typename MainKey>
-        void enable_tag(ecs_context& ctx, int i, int tag_id) noexcept {
-            entity_enable_tag(&ctx, component<MainKey>::id, i, tag_id);
-        }
-
-        template <typename MainKey, typename Cached>
-        void enable_tag(Cached& cache, int i, int tag_id) noexcept {
-            entity_enable_tag(cache.ctx, component<MainKey>::id, i, tag_id);
-        }
-
-        template <typename MainKey>
-        void disable_tag(ecs_context& ctx, int i, int tag_id) noexcept {
-            entity_disable_tag(&ctx, component<MainKey>::id, i, tag_id);
-        }
-
-        template <typename MainKey, typename Cached>
-        void disable_tag(Cached& cache, int i, int tag_id) noexcept {
-            entity_disable_tag(cache.ctx, component<MainKey>::id, i, tag_id);
         }
 
         inline void sync(ecs_context& ctx) noexcept {
@@ -178,6 +156,12 @@ namespace ecs_api {
         basic_entity(Context& ctx) noexcept
             : ctx(ctx)
         { }
+        template <typename Component>
+            requires (component<Component>::id == EID)
+        basic_entity(Context& ctx, Component eid) noexcept
+            : ctx(ctx) {
+            index = entity_index(impl::context(ctx), (void*)eid);
+        }
         static constexpr int kInvalidIndex = -1;
         enum class fetch_status: uint8_t {
             success,
@@ -222,7 +206,7 @@ namespace ecs_api {
             }
         }
         void remove() const noexcept {
-            impl::remove<MainKey>(ctx, index);
+            entity_remove(impl::context(ctx), component<MainKey>::id, index);
         }
         int getid() const noexcept {
             return index;
@@ -275,18 +259,18 @@ namespace ecs_api {
         template <typename T>
             requires (component<T>::tag)
         void enable_tag() noexcept {
-            impl::enable_tag<MainKey>(ctx, index, component<T>::id);
+            entity_enable_tag(impl::context(ctx), component<MainKey>::id, index, component<T>::id);
         }
         void enable_tag(int id) noexcept {
-            impl::enable_tag<MainKey>(ctx, index, id);
+            entity_enable_tag(impl::context(ctx), component<MainKey>::id, index, id);
         }
         template <typename T>
             requires (component<T>::tag)
         void disable_tag() noexcept {
-            impl::disable_tag<MainKey>(ctx, index, component<T>::id);
+            entity_disable_tag(impl::context(ctx), component<MainKey>::id, index, component<T>::id);
         }
         void disable_tag(int id) noexcept {
-            impl::disable_tag<MainKey>(ctx, index, id);
+            entity_disable_tag(impl::context(ctx), component<MainKey>::id, index, id);
         }
     private:
         template <std::size_t Is, typename T>
@@ -398,12 +382,6 @@ namespace ecs_api {
     template <typename Component>
     size_t count(ecs_context* ctx) noexcept {
         return (size_t)entity_count(ctx, component<Component>::id);
-    }
-
-    template <typename Component>
-        requires (component<Component>::id == EID)
-    int index(ecs_context* ctx, Component eid) noexcept {
-        return entity_index(ctx, (void*)eid);
     }
 
     template <typename ...Args>
