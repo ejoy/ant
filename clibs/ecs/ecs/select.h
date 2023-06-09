@@ -158,10 +158,11 @@ namespace ecs_api {
             : ctx(ctx)
         { }
         template <typename Component>
-            requires (component<Component>::id == EID)
+            requires (component<Component>::id == EID && component<MainKey>::id == EID)
         basic_entity(Context& ctx, Component eid) noexcept
             : ctx(ctx) {
             index = entity_index(impl::context(ctx), (void*)eid);
+            std::get<Component*>(c) = (Component*)eid;
         }
         static constexpr int kInvalidIndex = -1;
         enum class fetch_status: uint8_t {
