@@ -86,13 +86,12 @@ system "heap_mesh"
     .method "entity_remove"
 
 component "heapmesh".type "lua"
-component "heapmesh_ready"
+component "heapmesh_changed"
 
 
 interface "iheapmesh"
     .implement "render_system/heap_mesh.lua"
     .method "update_heap_mesh_number"
-    .method "update_heap_mesh_sidesize"
 
 policy "heap_mesh"
     .require_system "ant.render|heap_mesh"
