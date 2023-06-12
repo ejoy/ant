@@ -16,8 +16,6 @@ local A = {
     pi * 1.0 / 4.0,
 }
 
-
-
 local SHb; do
     local L1_f<const>  = 0.5 * inv_sqrtpi
 
@@ -232,17 +230,16 @@ local function calc_Lml (cm, bandnum)
     for i=1, coeffnum do
         Lml[i] = mc.ZERO
     end
+
     local dim<const>, idim<const> = cm.w, 1.0 / cm.w
     for face=1, 6 do
         for y=1, dim do
             for x=1, dim do
                 local N = m3d_xyz(cm:normal_fxy(face, x, y))
-
                 local color = cm:load_fxy(face, x, y)
-
                 local sa = solidAngle(idim, x, y)
-                color = math3d.mul(color, sa)
 
+                color = math3d.mul(color, sa)
                 local Yml = calc_Yml(bandnum, N)
 
                 for i=1, coeffnum do
@@ -255,54 +252,136 @@ local function calc_Lml (cm, bandnum)
     return Lml
 end
 
+local function render1(Eml, N)
+    return Eml[1]
+end
+
+local function render4(Eml, N)
+    return math3d.add(
+        render1(Eml, N),
+        math3d.mul(Eml[2], N.y),
+        math3d.mul(Eml[3], N.z),
+        math3d.mul(Eml[4], N.x))
+end
+
+local function render9(Eml, N)
+    return math3d.add(
+        render4(Eml, N),
+        math3d.mul(Eml[5], (N.y * N.x)),
+        math3d.mul(Eml[6], (N.y * N.z)),
+        math3d.mul(Eml[7], (3.0 * N.z * N.z - 1.0)),
+        math3d.mul(Eml[8], (N.z * N.x)),
+        math3d.mul(Eml[9], (N.x * N.x - N.y * N.y)))
+end
+
+local renderers = {
+    [1] = render1,
+    [4] = render4,
+    [9] = render9
+}
+
+local function render_SH(Eml, N)
+    N = m3d_xyz(N)
+    local renderer = assert(renderers[#Eml], "not support coefficients more than 9")
+    local r = renderer(Eml, N)
+    return math3d.max(r, mc.ZERO)
+end
+
+local function calc_Eml(cm, bandnum)
+    local Lml = calc_Lml(cm, bandnum)
+
+    local Eml = {}
+    for l=0, bandnum-1 do
+        local s = A[l+1] * inv_pi   --pre bake 1/pi
+        for m = -l, l do
+            local idx = lSHindex0(m, l)
+            Eml[idx] = math3d.mul(s * SHb[idx], Lml[idx])
+        end
+    end
+
+    return Eml
+end
+
+-- if false then
+--     local texutil = require "ibl.texture"
+--     local function create_test_cubemap()
+--         local black = ('ffff'):pack(0, 0, 0, 0)
+--         local colors = {
+--             ('ffff'):pack(1, 1, 1, 0), -- +X /  r  - white
+--             ('ffff'):pack(1, 0, 0, 0), -- -X /  l  - red
+--             ('ffff'):pack(0, 0, 1, 0), -- +Y /  t  - blue
+--             ('ffff'):pack(0, 1, 0, 0), -- -Y /  b  - green
+--             ('ffff'):pack(1, 1, 0, 0), -- +Z / fr - yellow
+--             ('ffff'):pack(1, 0, 1, 0), -- -Z / bk - magenta
+--         };
+    
+--         local R, L, T, B, FR, BK = 1, 2, 3, 4, 5, 6
+    
+--         local content = {}
+--         local dim = 32
+--         for f=1, 6 do
+--             for y=1, dim do
+--                 for x=1, dim do
+--                     content[#content+1] = colors[f]
+--                 end
+--             end
+--         end
+    
+--         local data = ("c16"):rep(dim*dim*6):pack(table.unpack(content))
+    
+    
+--         -- -- 2x2x6
+--         -- local data = ("c16"):rep(4 * 6):pack(
+--         --     -- black, colors[R],
+--         --     -- colors[R], black,
+    
+--         --     -- black, colors[L],
+--         --     -- colors[L], black,
+    
+--         --     -- black, colors[T],
+--         --     -- colors[T], black,
+    
+--         --     -- black, colors[B],
+--         --     -- colors[B], black,
+    
+--         --     -- black, colors[FR],
+--         --     -- colors[FR], black,
+    
+--         --     -- black, colors[BK],
+--         --     -- colors[BK], black)
+--         --     colors[R], colors[R],
+--         --     colors[R], colors[R],
+    
+--         --     colors[L], colors[L],
+--         --     colors[L], colors[L],
+    
+--         --     colors[T], colors[T],
+--         --     colors[T], colors[T],
+    
+--         --     colors[B], colors[B],
+--         --     colors[B], colors[B],
+    
+--         --     colors[FR], colors[FR],
+--         --     colors[FR], colors[FR],
+    
+--         --     colors[BK], colors[BK],
+--         --     colors[BK], colors[BK])
+--         return texutil.create_cubemap{w=dim,h=dim, texelsize=16,data=data}
+--     end
+
+--     local Eml = calc_Eml(create_test_cubemap(), 3)
+
+--     local results = {
+--         math3d.tovalue(shutil.render_SH(Eml, math3d.vector( 1.0, 0.0, 0.0))),
+--         math3d.tovalue(shutil.render_SH(Eml, math3d.vector(-1.0, 0.0, 0.0))),
+--         math3d.tovalue(shutil.render_SH(Eml, math3d.vector( 0.0, 1.0, 0.0))),
+--         math3d.tovalue(shutil.render_SH(Eml, math3d.vector( 0.0,-1.0, 0.0))),
+--         math3d.tovalue(shutil.render_SH(Eml, math3d.vector( 0.0, 0.0, 1.0))),
+--         math3d.tovalue(shutil.render_SH(Eml, math3d.vector( 0.0, 0.0,-1.0))),
+--     }
+-- end
+
 return {
-    calc_Eml = function (cm, bandnum)
-        local Lml = calc_Lml(cm, bandnum)
-
-        local Eml = {}
-        for l=0, bandnum-1 do
-            local s = A[l+1] * inv_pi   --pre bake 1/pi
-            for m = -l, l do
-                local idx = lSHindex0(m, l)
-                Eml[idx] = math3d.mul(s * SHb[idx], Lml[idx])
-            end
-        end
-
-        return Eml
-    end,
-    render_SH = function(Eml, N)
-        N = m3d_xyz(N)
-
-        local num_coeffs = #Eml
-        if num_coeffs > 9 then
-            error("not support coefficients more than 9")
-        end
-
-        local r
-        if num_coeffs >= 1 then
-            r = Eml[1]
-        end
-
-        if num_coeffs >= 4 then
-            r = math3d.add(
-                r,
-                math3d.mul(Eml[2], N.y),
-                math3d.mul(Eml[3], N.z),
-                math3d.mul(Eml[4], N.x))
-        end
-
-        if num_coeffs >= 9 then
-            r = math3d.add(
-                r,
-                math3d.mul(Eml[5], (N.y * N.x)),
-                math3d.mul(Eml[6], (N.y * N.z)),
-                math3d.mul(Eml[7], (3.0 * N.z * N.z - 1.0)),
-                math3d.mul(Eml[8], (N.z * N.x)),
-                math3d.mul(Eml[9], (N.x * N.x - N.y * N.y)))
-        end
-
-        local x,y,z = math3d.index(r, 1, 2, 3)
-        x, y, z = math.max(x, 0.0), math.max(y, 0.0), math.max(z, 0.0)
-        return math3d.vector(x, y, z, 0.0)
-    end,
+    calc_Eml    = calc_Eml,
+    render_SH   = render_SH,
 }

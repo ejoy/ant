@@ -56,6 +56,30 @@ push_texture_info(lua_State *L, const bimg::ImageContainer *ic){
     lua_struct::pack(L, info);
 }
 
+static bimg::ImageContainer* create_nomip_image(bx::DefaultAllocator &allocator, const bimg::ImageContainer *image){
+    auto nomip_image = bimg::imageAlloc(&allocator, image->m_format, image->m_width, image->m_height, image->m_depth, image->m_numLayers, image->m_cubeMap, false, nullptr);
+    for (uint32_t ilayer = 0; ilayer < image->m_numLayers; ++ilayer){
+        auto copy_mip = [](const auto& image_src, uint32_t side, auto &dst_image){
+            bimg::ImageMip srcmip;
+            bimg::imageGetRawData(image_src, side, 0, image_src.m_data, image_src.m_size, srcmip);
+
+            bimg::ImageMip dstmip;
+            bimg::imageGetRawData(dst_image, side, 0, dst_image.m_data, dst_image.m_size, dstmip);
+
+            const uint32_t pitch = srcmip.m_width * srcmip.m_bpp / 8;
+            bimg::imageCopy((void*)dstmip.m_data, srcmip.m_height, pitch, srcmip.m_depth, srcmip.m_data, pitch);
+        };
+        if (image->m_cubeMap){
+            for (uint32_t iside=0; iside<6; ++iside){
+                copy_mip(*image, iside, *nomip_image);
+            }
+        } else {
+            copy_mip(*image, 0, *nomip_image);
+        }
+    }
+    return nomip_image;
+}
+
 static int
 lparse(lua_State *L) {
     size_t srcsize = 0;
@@ -69,18 +93,28 @@ lparse(lua_State *L) {
             return luaL_error(L, "Unkown texture format: %s", texfmt);
         }
     }
+
+    const bool nomip = !lua_isnoneornil(L, 4);
     
     auto image = bimg::imageParse(&allocator, src, (uint32_t)srcsize, texfmt, nullptr);
     if (!image){
         lua_pushstring(L, "Invalid image content");
         return lua_error(L);
     }
+
+    if (nomip){
+        auto nomip_image = create_nomip_image(allocator, image);
+        bimg::imageFree(image);
+        image = nomip_image;
+    }
+
     push_texture_info(L, image);
     if (readcontent){
         lua_pushlstring(L, (const char*)image->m_data, image->m_size);
-        return 2;
     }
-    return 1;
+
+    bimg::imageFree(image);
+    return readcontent ? 2 : 1;
 }
 
 static bimg::TextureFormat::Enum
@@ -302,7 +336,7 @@ enum class CubemapFace : uint8_t { PX, NX, PY, NY, PZ, NZ, Count};
 static void
 fill_cubemap_face(bimg::ImageContainer* &ic, const bimg::ImageContainer *face, CubemapFace cf, bx::DefaultAllocator &allocator){
     if (!ic){
-        ic = bimg::imageAlloc(&allocator, bimg::TextureFormat::RGBA32F, face->m_width, face->m_height, 1, 1, true, false);
+        ic = bimg::imageAlloc(&allocator, bimg::TextureFormat::RGBA32F, face->m_width, face->m_height, 1, 1, false, false);
     }
 
     bimg::ImageMip cm_mip;

@@ -2,16 +2,17 @@ local tu = {}
 
 local math3d = require "math3d"
 
-local function id2uv(iu, iv, w, h)
-    return (iu+0.5)/w, (iv+0.5)/h
-end
-
+-- all these helper function's parameters: id2uv, n2s, s2, muvface2dir, are base 0
 local function n2s(v)
     return v*2.0 - 1.0
 end
 
 local function s2n(v)
     return (v + 1.0) * 0.5
+end
+
+local function id2uv(iu, iv, w, h)
+    return (iu+0.5)/w, (iv+0.5)/h
 end
 
 local function uvface2dir(face, u, v)
@@ -34,8 +35,7 @@ end
 
 local function dir2uvface(v)
     local x, y, z = math3d.index(v, 1, 2, 3)
-    local abs = math.abs
-    local ax, ay, az = abs(x), abs(y), abs(z)
+    local ax, ay, az = math3d.index(math3d.vec_abs(x), 1, 2, 3)
     
     if ax > ay then
         if ax > az then
@@ -118,6 +118,7 @@ local function sample_tex(u, v, w, h, sampler, load_op)
     return FILTER_FINDER.LINEAR(x+1, y+1, nx+1, ny+1, px, py, load_op)
 end
 
+--all the method parameters, like: face, x, y, they all base 1
 local cm_mt = {
     index_fxy = function(self, face, x, y)
         x, y = math.floor(x), math.floor(y)
@@ -127,6 +128,8 @@ local cm_mt = {
         assert(false)
     end,
     normal_fxy = function(self, face, x, y)
+        x, y = x-1, y-1
+        assert(x >= 0 and y >= 0, "Invalid x or y")
         local u, v = id2uv(x, y, self.w, self.h)
         return math3d.normalize(uvface2dir(face, u, v))
     end,
