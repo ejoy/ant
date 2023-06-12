@@ -199,9 +199,10 @@ function ibl_sys:render_preprocess()
             assert(info.bitsPerPixel // 8 == 16)
             return texutil.create_cubemap{w=info.width, h=info.height, texelsize=16, data=content}
         end
-        local timebegin = ltask.now()
+        local _, timebegin = ltask.now()
         local Eml = shutil.calc_Eml(load_cm(), irradianceSH_bandnum)
-        print("build irradiance SH:", ltask.now() - timebegin)
+        local _, tiemend = ltask.now()
+        print("build irradiance SH time(ms):", tiemend - timebegin)
         imaterial.system_attribs():update("u_irradianceSH", Eml)
         w:remove(e)
     end
