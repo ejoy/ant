@@ -55,7 +55,3 @@ function m:component_init()
         e.visible_state = vs
     end
 end
-
-function m:end_frame()
-	w:clear "visible_state_changed"
-end

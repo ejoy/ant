@@ -37,7 +37,6 @@ system "scenespace_system"
 system "visible_state_system"
     .implement "visible_state.lua"
     .method "component_init"
-    .method "end_frame"
 
 interface "ivisible_state"
     .implement "visible_state.lua"
