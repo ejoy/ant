@@ -229,7 +229,7 @@ function iUiRt.create_new_rt(rt_name, light_path, focus_path, focus_srt, distanc
             local ee <close> = w:entity(eid, "visible_state?in focus_obj?update mesh?in")
             if ee.mesh then
                 if ee.visible_state then
-                    ivs.set_state(ee, "main_view|selectable", false)
+                    ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
                     ivs.set_state(ee, queue_name, true)
                     ee.focus_obj = true
                 end 
