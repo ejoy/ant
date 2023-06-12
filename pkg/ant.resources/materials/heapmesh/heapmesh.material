@@ -7,11 +7,11 @@ fx:
     subsurface: off
     DRAW_INDIRECT: 1
 properties:
-  indirectBuffer:
+  indirect_buffer:
     stage: 0
     access: w
-    buffer: indirectBuffer
-  instanceBufferOut:
+    buffer: indirect_buffer
+  instance_buffer:
     stage: 1
     access: w
-    buffer: instanceBufferOut
+    buffer: instance_buffer

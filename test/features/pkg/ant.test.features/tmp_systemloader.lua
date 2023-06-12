@@ -149,7 +149,7 @@ local function render_layer_test()
     outline_eid = ecs.create_entity {
         policy = {
             "ant.render|render",
-            --"ant.render|outline_create",
+            "ant.render|outline_info",
          },
         data = {
             scene  = {s = 0.5, t = {5, 15, 5}},
@@ -160,7 +160,7 @@ local function render_layer_test()
             --material    = "/pkg/ant.resources.binary/meshes/Damagedhelmet.glb|materials/Material_MR.material", 
             --material    = "/pkg/ant.resources.binary/meshes/chimney-1.glb|materials/Material_skin_clr.material",
             material    = "/pkg/ant.resources.binary/meshes/furnace-1.glb|materials/Material_skin.material",
-            visible_state = "main_view",
+            visible_state = "main_view|outline_queue",
             --mesh        = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
             --mesh        = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin",
             --mesh        = "/pkg/ant.resources.binary/meshes/Duck.glb|meshes/LOD3spShape_P1.meshbin",
@@ -168,17 +168,15 @@ local function render_layer_test()
             --mesh        = "/pkg/ant.resources.binary/meshes/chimney-1.glb|meshes/Plane_P1.meshbin",
             mesh        = "/pkg/ant.resources.binary/meshes/furnace-1.glb|meshes/Cylinder.001_P1.meshbin",
             skinning = true,
-            outline_create = {
-                render_layer = "background", --outline layer, should be behind of main queue
+            outline_info= {
                 outline_scale = 0.5,    -- outline width 0~1
                 outline_color = {0.5, 0.5, 0, 1}, -- outline color_hash
             },
-            outline = true
         },
     }
      --ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_duck.prefab"
     --ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_wind.prefab" 
-    create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", function (e)
+--[[     create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", function (e)
         local ee <close> = w:entity(e.tag['*'][1])
         iom.set_position(ee, math3d.vector(-10, -2, 0))
         iom.set_scale(ee, 3)
@@ -224,7 +222,7 @@ local function render_layer_test()
                 irl.set_layer(ee, "translucent_plane1")
             end
         end
-    end)
+    end) ]]
 end
 
 
@@ -232,27 +230,47 @@ local sampler_eid
 local heap_eid
 local function drawindirect_test()
 
---[[       heap_eid = ecs.create_entity {
+    heap_eid = ecs.create_entity {
         policy = {
             "ant.render|render",
-            "ant.general|name",
             "ant.render|heap_mesh",
+            "ant.render|indirect"
          },
         data = {
-            name        = "heap_mesh_test",
-            scene  = {s = 0.2, t = {2, 0, 0}},
+            scene  = {s = 0.2, t = {0, 0, 0}},
             material    = "/pkg/ant.resources/materials/pbr_heap.material", -- 自定义material文件中需加入HEAP_MESH :1
             visible_state = "main_view",
             mesh        = "/pkg/ant.resources.binary/meshes/iron-ore.glb|meshes/Cube.001_P1.meshbin",
             heapmesh = {
                 curSideSize = {4, 4, 4}, -- 当前 x y z方向最大堆叠数量为3, 4, 5，通过表的形式赋值给curSideSize，最大堆叠数为3*4*5 = 60
-                curHeapNum = 64, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
+                curHeapNum = 20, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
                 glbName = "iron-ingot", -- 当前entity对应的glb名字，用于筛选
                 interval = {0.5, 0.5, 0.5}
-            }
+            },
+            indirect = "HEAP_MESH"
         },
-    }  ]]
+    }  
     
+--[[     ecs.create_entity {
+        policy = {
+            "ant.render|render",
+            "ant.render|heap_mesh",
+         },
+        data = {
+            scene  = {s = 0.2, t = {20, 0, 0}},
+            material    = "/pkg/ant.resources/materials/pbr_heap.material", -- 自定义material文件中需加入HEAP_MESH :1
+            visible_state = "main_view",
+            mesh        = "/pkg/ant.resources.binary/meshes/iron-ore.glb|meshes/Cube.001_P1.meshbin",
+            heapmesh = {
+                curSideSize = {3, 3, 3}, -- 当前 x y z方向最大堆叠数量为3, 4, 5，通过表的形式赋值给curSideSize，最大堆叠数为3*4*5 = 60
+                curHeapNum = 15, -- 当前堆叠数为10，以x->z->y轴的正方向顺序堆叠。最小为0，最大为10，超过边界值时会clamp到边界值。
+                glbName = "iron-ingot", -- 当前entity对应的glb名字，用于筛选
+                interval = {0.5, 0.5, 0.5}
+            },
+            indirect = "HEAP_MESH"
+        },
+    }   ]]
+
    local t = 1  
 --[[      ecs.create_entity {
         policy = {
