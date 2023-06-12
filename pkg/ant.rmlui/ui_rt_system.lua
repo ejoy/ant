@@ -18,6 +18,7 @@ local ui_rt_group_id = 110000
 local fb_cache, rb_cache = {}, {}
 local rt2g_table = {}
 local g2rt_table = {}
+local rt2d_table = {}
 local R             = ecs.clibs "render.render_material"
 local queuemgr      = renderpkg.queuemgr
 
@@ -170,7 +171,7 @@ function S.render_target_adjust(width, height, name)
     return id
 end
 
-local function calc_camera_t(queuename, aabb, scene)
+local function calc_camera_t(queuename, aabb, scene, distance)
     if scene and scene.parent ~= 0 then
         local p<close> = w:entity(scene.parent, "scene?in")
         if p.scene then
@@ -184,7 +185,11 @@ local function calc_camera_t(queuename, aabb, scene)
         local aabb_min, aabb_max = math3d.array_index(aabb, 1), math3d.array_index(aabb, 2)
         local triple_offset = 3 * math3d.length(math3d.sub(aabb_max, aabb_min))
         local unit_dir = math3d.normalize(rt_camera.scene.t)
-       iom.set_position(rt_camera, math3d.mul(unit_dir, triple_offset)) 
+        if distance then
+            iom.set_position(rt_camera, math3d.mul(unit_dir, distance)) 
+        else
+            iom.set_position(rt_camera, math3d.mul(unit_dir, triple_offset)) 
+        end
     end 
 end
 
@@ -192,12 +197,20 @@ function iUiRt.get_group_id(name)
     return rt2g_table[name]
 end
 
-function iUiRt.create_new_rt(rt_name, plane_path, light_path, focus_path, srt)
+function iUiRt.create_new_rt(rt_name, light_path, focus_path, focus_srt, distance, color)
+    local srt = focus_srt
+    local clear_color
+    if not color then
+        clear_color = 0x000000ff
+    else 
+        clear_color = color
+    end
     local queue_name = rt_name .. "_queue"
+    irq.set_view_clear_color(queue_name, clear_color)
     local gid = rt2g_table[rt_name]
+    rt2d_table[rt_name] = distance
     local g = ecs.group(gid)
     local light_instance = g:create_instance(light_path)
-    local plane_instance = g:create_instance(plane_path)
     local focus_instance = g:create_instance(focus_path)
     focus_instance.on_ready = function (inst)
         local alleid = inst.tag['*']
@@ -234,20 +247,7 @@ function iUiRt.create_new_rt(rt_name, plane_path, light_path, focus_path, srt)
             end 
         end
     end 
-    plane_instance.on_ready = function (inst)
-        local alleid = inst.tag['*']
-        local re <close> = w:entity(alleid[1])
-        iom.set_scale(re, math3d.vector(500, 1, 500))
-        for _, eid in ipairs(alleid) do
-            local ee <close> = w:entity(eid, "visible_state?in")
-            if ee.visible_state then
-                ivs.set_state(ee, "main_view|selectable|cast_shadow", false)
-                ivs.set_state(ee, queue_name, true)
-            end 
-        end
-    end 
     world:create_object(light_instance)
-    world:create_object(plane_instance)
     world:create_object(focus_instance)
     g:enable "view_visible"
     g:enable "scene_update"
@@ -278,6 +278,7 @@ local DEFAULT_STATE = {
 local bgfx      = require "bgfx"
 function ui_rt_sys:update_filter()
     for gid, rt_name in pairs(g2rt_table) do
+        local distance = rt2d_table[rt_name]
         local queue_name = rt_name .. "_queue"
         local obj_name = rt_name .. "_obj"
         local g = ecs.group(gid)
@@ -291,7 +292,7 @@ function ui_rt_sys:update_filter()
                 --fm[queue_name]:set_state(bgfx.make_state(DEFAULT_STATE))
                 R.set(e.render_object.rm_idx, queuemgr.material_index(queue_name), mi:ptr())
                 if e.bounding and e.focus_obj then
-                    calc_camera_t(queue_name, e.bounding.scene_aabb, e.scene) 
+                    calc_camera_t(queue_name, e.bounding.scene_aabb, e.scene, distance) 
                 end
             end
         end
