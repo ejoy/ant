@@ -19,6 +19,7 @@ local fb_cache, rb_cache = {}, {}
 local rt2g_table = {}
 local g2rt_table = {}
 local rt2d_table = {}
+local rt2c_table = {}
 local R             = ecs.clibs "render.render_material"
 local queuemgr      = renderpkg.queuemgr
 
@@ -197,16 +198,9 @@ function iUiRt.get_group_id(name)
     return rt2g_table[name]
 end
 
-function iUiRt.create_new_rt(rt_name, light_path, focus_path, focus_srt, distance, color)
+function iUiRt.create_new_rt(rt_name, light_path, focus_path, focus_srt, distance, clear_color)
     local srt = focus_srt
-    local clear_color
-    if not color then
-        clear_color = 0x000000ff
-    else 
-        clear_color = color
-    end
     local queue_name = rt_name .. "_queue"
-    irq.set_view_clear_color(queue_name, clear_color)
     local gid = rt2g_table[rt_name]
     rt2d_table[rt_name] = distance
     local g = ecs.group(gid)
@@ -214,7 +208,9 @@ function iUiRt.create_new_rt(rt_name, light_path, focus_path, focus_srt, distanc
     local focus_instance = g:create_instance(focus_path)
     focus_instance.on_ready = function (inst)
         local alleid = inst.tag['*']
-        
+        if clear_color then
+            irq.set_view_clear_color(queue_name, clear_color)  
+        end
         local re <close> = w:entity(alleid[1])
         if srt.s then
             iom.set_scale(re, math3d.vector(srt.s))
