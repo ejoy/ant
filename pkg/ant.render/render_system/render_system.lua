@@ -144,6 +144,7 @@ function render_sys:scene_update()
 	for e in w:select "visible_state_changed visible_state:in render_object:update" do
 		update_visible_masks(e.render_object, e.visible_state)
 	end
+	w:clear "visible_state_changed"
 end
 
 function render_sys:render_preprocess()
