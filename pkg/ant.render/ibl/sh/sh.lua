@@ -227,14 +227,16 @@ end
 local function calc_Lml (cm, bandnum)
     local coeffnum = bandnum * bandnum
     local Lml = {}
+    local zero = math3d.serialize(mc.ZERO)
     for i=1, coeffnum do
-        Lml[i] = mc.ZERO
+        Lml[i] = zero
     end
 
     local dim<const>, idim<const> = cm.w, 1.0 / cm.w
     for face=1, 6 do
         for y=1, dim do
             for x=1, dim do
+                local cp = math3d.checkpoint()
                 local N = m3d_xyz(cm:normal_fxy(face, x, y))
                 local color = cm:load_fxy(face, x, y)
                 local sa = solidAngle(idim, x, y)
@@ -243,10 +245,15 @@ local function calc_Lml (cm, bandnum)
                 local Yml = calc_Yml(bandnum, N)
 
                 for i=1, coeffnum do
-                    Lml[i] = math3d.add(Lml[i], math3d.mul(color, Yml[i]))
+                    Lml[i] = math3d.serialize(math3d.add(math3d.vector(Lml[i]), math3d.mul(color, Yml[i])))
                 end
+                math3d.recover(cp)
             end
         end
+    end
+
+    for i=1, coeffnum do
+        Lml[i] = math3d.vector(Lml[i])
     end
 
     return Lml

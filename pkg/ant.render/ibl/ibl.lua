@@ -4,7 +4,7 @@ local w         = world.w
 
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local lfs       = require "filesystem.local"
+local ltask     = require "ltask"
 local image     = require "image"
 
 local assetmgr  = import_package "ant.asset"
@@ -197,12 +197,11 @@ function ibl_sys:render_preprocess()
             local nomip<const> = true
             local info, content = image.parse(c, true, "RGBA32F", nomip)
             assert(info.bitsPerPixel // 8 == 16)
-
-            local t = table.pack(('ffff'):rep(info.width*info.height*6):unpack(content))
             return texutil.create_cubemap{w=info.width, h=info.height, texelsize=16, data=content}
         end
-
+        local timebegin = ltask.now()
         local Eml = shutil.calc_Eml(load_cm(), irradianceSH_bandnum)
+        print("build irradiance SH:", ltask.now() - timebegin)
         imaterial.system_attribs():update("u_irradianceSH", Eml)
         w:remove(e)
     end
