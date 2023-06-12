@@ -4,25 +4,50 @@
 // IBL
 
 #ifdef IRRADIANCE_SH_BAND_NUM
-uniform vec4 u_irradianceSH[IRRADIANCE_SH_BAND_NUM*IRRADIANCE_SH_BAND_NUM];
+
+#if IRRADIANCE_SH_BAND_NUM == 2
+uniform vec4 u_irradianceSH[3];
+
+vec3 getSH(uint idx)
+{
+    return vec3(u_irradianceSH[0][idx], u_irradianceSH[1][idx], u_irradianceSH[2][idx]);
+}
+#elif IRRADIANCE_SH_BAND_NUM == 3
+uniform vec4 u_irradianceSH[7];
+vec3 getSH(uint idx)
+{
+    uint sidx = (idx / 4) * 3 + 1;    //1 for base SH
+    uint eidx = idx % 4;
+    return vec3(u_irradianceSH[0+sidx][eidx], u_irradianceSH[1+sidx][eidx], u_irradianceSH[2+sidx][eidx]);
+}
+#else
+#error "Invalid SH band num"
+#endif //
 
 vec3 compute_irradiance_SH(vec3 N)
 {
+#if IRRADIANCE_SH_BAND_NUM == 2
+    return max(
+          getSH(0)
+        + getSH(1) * (N.y)
+        + getSH(2) * (N.z)
+        + getSH(3) * (N.x), 0.0);
+
+#elif IRRADIANCE_SH_BAND_NUM == 3
     return max(
           u_irradianceSH[0].rgb
-#if IRRADIANCE_SH_BAND_NUM >= 2
-        + u_irradianceSH[1].rgb * (N.y)
-        + u_irradianceSH[2].rgb * (N.z)
-        + u_irradianceSH[3].rgb * (N.x)
-#endif
-#if IRRADIANCE_SH_BAND_NUM >= 3
-        + u_irradianceSH[4].rgb * (N.y * N.x)
-        + u_irradianceSH[5].rgb * (N.y * N.z)
-        + u_irradianceSH[6].rgb * (3.0 * N.z * N.z - 1.0)
-        + u_irradianceSH[7].rgb * (N.z * N.x)
-        + u_irradianceSH[8].rgb * (N.x * N.x - N.y * N.y)
-#endif
+        + getSH(0) * (N.y)
+        + getSH(1) * (N.z)
+        + getSH(2) * (N.x)
+
+        + getSH(3) * (N.y * N.x)
+        + getSH(4) * (N.y * N.z)
+        + getSH(5) * (3.0 * N.z * N.z - 1.0)
+        + getSH(6) * (N.z * N.x)
+        + getSH(7) * (N.x * N.x - N.y * N.y)
+
         , 0.0);
+#endif //
 }
 #else //!IRRADIANCE_SH_BAND_NUM
 

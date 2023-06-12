@@ -11,7 +11,8 @@ local assetmgr  = import_package "ant.asset"
 local renderpkg = import_package "ant.render"
 local sampler   = renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
-
+local mathpkg   = import_package "ant.math"
+local mc        = mathpkg.constant
 
 local icompute  = ecs.import.interface "ant.render|icompute"
 local iexposure = ecs.import.interface "ant.camera|iexposure"
@@ -19,6 +20,10 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local setting   = import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
+if irradianceSH_bandnum ~= 2 and irradianceSH_bandnum ~= 3 then
+    error "Irradiance SH only support band num 2/3"
+end
+
 local shutil    = require "ibl.sh.sh"
 local texutil   = require "ibl.texture"
 
@@ -170,6 +175,27 @@ end
 
 local sample_count<const> = 512
 
+local update_SH_attributes; do
+    local P<const> = {
+        [2] = function (Eml)
+            local m = math3d.set_columns(mc.IDENTITY_MAT, Eml[1], Eml[2], Eml[3], Eml[4])
+            local c1, c2, c3 = math3d.index(math3d.transpose(m), 1, 2, 3)
+            imaterial.system_attribs():update("u_irradianceSH", {c1, c2, c3})
+        end,
+        [3] = function (Eml)
+            local sa = imaterial.system_attribs()
+            local m1 = math3d.transpose(math3d.matrix(Eml[2], Eml[3], Eml[4], Eml[5]))
+            local m2 = math3d.transpose(math3d.matrix(Eml[6], Eml[7], Eml[8], Eml[9]))
+            local c1, c2, c3 = math3d.index(m1, 1, 2, 3)
+            local c4, c5, c6 = math3d.index(m2, 1, 2, 3)
+            sa:update("u_irradianceSH", {Eml[1], c1, c2, c3, c4, c5, c6})
+        end
+    }
+    function update_SH_attributes(Eml)
+        return P[irradianceSH_bandnum](Eml)
+    end
+end
+
 function ibl_sys:render_preprocess()
     local source_tex = IBL_INFO.source
     for e in w:select "irradiance_builder dispatch:in" do
@@ -203,7 +229,8 @@ function ibl_sys:render_preprocess()
         local Eml = shutil.calc_Eml(load_cm(), irradianceSH_bandnum)
         local _, tiemend = ltask.now()
         print("build irradiance SH time(ms):", tiemend - timebegin)
-        imaterial.system_attribs():update("u_irradianceSH", Eml)
+
+        update_SH_attributes(Eml)
         w:remove(e)
     end
 

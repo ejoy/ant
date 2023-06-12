@@ -265,13 +265,11 @@ local function calc_Lml (cm, bandnum)
             for x=1, dim do
                 local N = m3d_xyz(cm:normal_fxy(face, x, y))
                 local color = cm:load_fxy(face, x, y)
-                local sa = solidAngle(idim, x, y)
-
-                color = math3d.mul(color, sa)
+                local radiance = math3d.mul(color, solidAngle(idim, x, y))
                 local Yml = calc_Yml(bandnum, N)
 
                 for i=1, #Lml do
-                    Lml[i] = math3d.add(Lml[i], math3d.mul(color, Yml[i]))
+                    Lml[i] = math3d.add(Lml[i], math3d.mul(radiance, Yml[i]))
                 end
             end
         end

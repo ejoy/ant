@@ -47,19 +47,20 @@ local function check(properties)
 end
 
 local function default_irradiance_SH_value()
+	--See, ibl.lua:update_SH_attributes
 	if irradianceSH_bandnum == nil then
 		return mc.ZERO
 	end
 	if irradianceSH_bandnum == 2 then
 		return {
 			mc.ZERO,
-			mc.ZERO, mc.ZERO, mc.ZERO,
+			mc.ZERO, mc.ZERO
 		}
 	elseif irradianceSH_bandnum == 3 then
 		return {
 			mc.ZERO,
 			mc.ZERO, mc.ZERO, mc.ZERO,
-			mc.ZERO, mc.ZERO, mc.ZERO, mc.ZERO, mc.ZERO,
+			mc.ZERO, mc.ZERO, mc.ZERO,
 		}
 	end
 end
