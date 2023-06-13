@@ -247,7 +247,8 @@ local function drawindirect_test()
                 glbName = "iron-ingot", -- 当前entity对应的glb名字，用于筛选
                 interval = {0.5, 0.5, 0.5}
             },
-            indirect = "HEAP_MESH"
+            indirect = "HEAP_MESH",
+            render_layer = "background"
         },
     }  
     
