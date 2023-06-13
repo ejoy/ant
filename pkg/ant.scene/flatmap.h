@@ -21,7 +21,7 @@ struct flatmap_hash {
             return static_cast<size_t>(x);
         }
         else {
-            static_assert(std::is_trivial_v<T>);
+            static_assert(std::is_trivially_copy_constructible_v<T>);
             uint64_t i = 0;
             memcpy(&i, &v, sizeof(v));
             flatmap_hash<uint64_t> h;
