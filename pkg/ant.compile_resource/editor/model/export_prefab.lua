@@ -79,25 +79,26 @@ local primitive_names = {
 
 local material_cache = {}
 
-local function generate_material(mi, mode, hasskin, withcolorattrib)
+local function generate_material(mi, mode, cfg)
     local sname = primitive_names[mode+1]
     if not sname then
         error(("not support primitate state, mode:%d"):format(mode))
     end
 
     local filename = mi.filename
-    local function gen_key(fn, sn, skn, clr)
+    local function gen_key(fn, sn, skn, clr, unpack_tf)
         fn = fn:sub(1, 4) == "/pkg" and fn or utility.full_path(fn):string()
-        return ("%s%s%s%s"):format(fn, sn, skn, clr)
+        return ("%s%s%s%s%s"):format(fn, sn, skn, clr, unpack_tf)
     end
 
-    local skn = hasskin and "_skin" or ""
-    local clr = withcolorattrib and "_clr" or ""
-    local key = gen_key(filename:string(), sname, skn, clr)
+    local skn = cfg.hasskin and "_skin" or ""
+    local clr = cfg.withcolorattrib and "_clr" or ""
+    local unpack_tf = (not cfg.pack_tangent_frame) and "_unpack_tf" or ""
+    local key = gen_key(filename:string(), sname, skn, clr, unpack_tf)
 
     local m = material_cache[key]
     if m == nil then
-        if sname == "" and skn == "" and clr == "" then
+        if sname == "" and skn == "" and clr == "" and unpack_tf == "" then
             m = mi
         else
             local basename = filename:stem():string()
@@ -125,6 +126,12 @@ local function generate_material(mi, mode, hasskin, withcolorattrib)
 
             basename = mark_name(basename, skn, "GPU_SKINNING")
             basename = mark_name(basename, clr, "WITH_COLOR_ATTRIB")
+
+            if nil == nm.fx.setting then
+                nm.fx.setting = {}
+            end
+            nm.fx.setting["PACK_TANGENT_TO_QUAT"] = unpack_tf == "" and 1 or 0
+            
             m = {
                 filename = filename:parent_path() / (basename .. ".material"),
                 material = nm
@@ -202,7 +209,7 @@ local function has_skin(gltfscene, exports, nodeidx)
     end
 end
 
-local function seri_material(output, exports, mode, materialidx, hasskin, withcolorattrib)
+local function seri_material(output, exports, mode, materialidx, cfg)
     local em = exports.material
     if em == nil or #em <= 0 then
         return
@@ -210,7 +217,7 @@ local function seri_material(output, exports, mode, materialidx, hasskin, withco
 
     if materialidx then
         local mi = assert(exports.material[materialidx+1])
-        local materialinfo = generate_material(mi, mode, hasskin, withcolorattrib)
+        local materialinfo = generate_material(mi, mode, cfg)
         if materialinfo then
             save_material(output, exports, materialinfo)
             return materialinfo.filename
@@ -224,7 +231,7 @@ local function seri_material(output, exports, mode, materialidx, hasskin, withco
         }
     end
 
-    local materialinfo = generate_material(default_material_info, mode, hasskin, withcolorattrib)
+    local materialinfo = generate_material(default_material_info, mode, cfg)
     if materialinfo and materialinfo.filename ~= default_material_path then
         save_material(output, exports, materialinfo)
         return materialinfo.filename
@@ -258,9 +265,11 @@ local function check_create_skin_material(materialfile)
 end
 
 local function has_color_attrib(declname)
-    local has_color1 = declname[1]:match "c%d%w%w%w%w" ~= nil
-    local has_color2 = declname[2] and declname[2]:match "c%d%w%w%w%w" ~= nil
-    return has_color1 or has_color2
+    for _, d in ipairs(declname) do
+        if d:sub(1, 1) == 'c' then
+            return true
+        end
+    end
 end
 
 local function create_mesh_node_entity(math3d, output, gltfscene, nodeidx, parent, exports)
@@ -271,11 +280,14 @@ local function create_mesh_node_entity(math3d, output, gltfscene, nodeidx, paren
 
     local entity
     for primidx, prim in ipairs(mesh.primitives) do
-        local needskin = has_skin(gltfscene, exports, nodeidx)
-
         local em = exports.mesh[meshidx+1][primidx]
+        local cfg = {
+            needskin = has_skin(gltfscene, exports, nodeidx),
+            withcolorattrib = has_color_attrib(em.declname),
+            pack_tangent_frame = em.pack_tangent_frame,
+        }
 
-        local materialfile = seri_material(output, exports, prim.mode or 4, prim.material, needskin, has_color_attrib(em.declname))
+        local materialfile = seri_material(output, exports, prim.mode or 4, prim.material, cfg)
         if materialfile == nil then
             materialfile = fs.path "/pkg/ant.resources/materials/pbr_default.material"
             --error(("not found %s material %d"):format(meshname, prim.material or -1))

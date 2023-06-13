@@ -1,7 +1,7 @@
 local gltfutil  = require "editor.model.glTF.util"
 local utility   = require "editor.model.utility"
 local pack_vertex_data = require "editor.model.pack_vertex_data"
-local cs_skinning = true
+
 local LAYOUT_NAMES<const> = {
 	"POSITION",
 	"NORMAL",
@@ -367,7 +367,7 @@ local function generate_layouts(gltfscene, attributes)
 			 	stride	= bv.byteStride or elemsize,
 				fetch_buf = is_vec_attrib(layouttype) and r2l_buf or attrib_data,
 			}
-			local attr, _ = attribname:match"(%w+)_(%d+)"
+			local attr = attribname:match"(%w+)_%d+"
 			local color = SHORT_NAMES[attr] == 'c' 
 			local tex = SHORT_NAMES[attr] == 't'
 			if color then
@@ -403,12 +403,12 @@ local function fetch_vertices(layouts, gltfbin, numv, reverse_wing_order)
 	return vertices
 end
 
-local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, settings)
+local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, meshexport)
 	assert(prim.mode == nil or prim.mode == 4)
 	local numv = gltfutil.num_vertices(prim, gltfscene)
 
 	local function get_vb(layouts, vertices)
-		local new_vertices, new_layout = pack_vertex_data(math3d, layouts, vertices)
+		local new_vertices, new_layout = pack_vertex_data(math3d, layouts, vertices, meshexport)
 		local bindata = table.concat(new_vertices, "")
 		return {
 			declname = new_layout,
@@ -628,7 +628,9 @@ end
 				group.ib = fetch_ib_buffer(gltfscene, bindata, gltfscene.accessors[indices_accidx+1], ib_table)
 			end
 
-			group.vb, group.vb2 = fetch_vb_buffers(math3d, gltfscene, bindata, prim, ib_table)
+			local meshexport = {}
+
+			group.vb, group.vb2 = fetch_vb_buffers(math3d, gltfscene, bindata, prim, ib_table, meshexport)
 			local bb = create_prim_bounding(math3d, gltfscene, prim)
 			if bb then
 				local aabb = math3d.aabb(bb.aabb[1], bb.aabb[2])
@@ -639,13 +641,13 @@ end
 			end
 
 			local stemname = ("%s_P%d"):format(meshname, primidx)
-			exports.mesh[meshidx][primidx] = {
-				meshbinfile = save_meshbin_files(stemname, group),
-				declname = {
-					group.vb.declname,
-					group.vb2 and group.vb2.declname or nil,
-				}
+
+			meshexport.meshbinfile = save_meshbin_files(stemname, group)
+			meshexport.declname = {
+				group.vb.declname,
+				group.vb2 and group.vb2.declname or nil,
 			}
+			exports.mesh[meshidx][primidx] = meshexport
 		end
 	end
 

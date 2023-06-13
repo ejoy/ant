@@ -54,7 +54,7 @@ local function f2i(v)
     return math.floor(check_nan(v) * 32767+0.5)
 end
 
-return function (math3d, layouts, vertices)
+return function (math3d, layouts, vertices, exportmesh)
 	local weights_attrib_idx, joint_attrib_idx	= find_layout_idx(layouts, "WEIGHTS_0"), 	find_layout_idx(layouts, "JOINTS_0")
 	local normal_attrib_idx, tangent_attrib_idx = find_layout_idx(layouts, "NORMAL"), 		find_layout_idx(layouts, "TANGENT")
 	local color_attrib_idx 						= find_layout_idx(layouts, "COLOR_0")
@@ -70,6 +70,7 @@ return function (math3d, layouts, vertices)
 	local need_convert_joint_index<const> 		= joint_attrib_idx and layouts[joint_attrib_idx].layout:sub(6, 6) == 'u' or false
 
 	local need_pack_tangent_frame<const>        = normal_attrib_idx and tangent_attrib_idx
+	exportmesh.pack_tangent_frame = need_pack_tangent_frame
 
 	local need_compress_tangent_frame<const>	= need_pack_tangent_frame
 	local need_compress_weights<const>			= weights_attrib_idx
