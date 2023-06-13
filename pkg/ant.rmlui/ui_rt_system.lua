@@ -114,7 +114,7 @@ function S.render_target_create(width, height, name)
                     frustum = {
                         aspect = 1,
                         f = 300,
-                        fov = 90,
+                        fov = 45,
                         n = 1,
                     }
                   },
