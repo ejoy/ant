@@ -159,7 +159,7 @@ local function add_polylines(polymesh, line_width, color, material, srt, render_
         data = {
             polyline = {
                 width = line_width,
-                color = math3d.ref(math3d.vector(color)),
+                color = math3d.vector(color),
             },
             scene = {s = srt.s, r = srt.r, t = srt.t},
             simplemesh  = polymesh,
