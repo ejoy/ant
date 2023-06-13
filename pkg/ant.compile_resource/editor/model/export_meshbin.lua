@@ -213,9 +213,8 @@ local function calc_tangents(math3d, ib, vb, layouts)
 	end
 
 	local function store(iv, v)
-		local x, y, z, w = math3d.index(v, 1, 2, 3, 4)
 		local vv = vb[iv]
-		vv[#vv+1] = ('ffff'):pack(x, y, z, w)
+		vv[#vv+1] = math3d.serialize(v)
 	end
 
 	local function load_vec(v, idx, layout)
@@ -422,9 +421,9 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, sett
 	local layouts1, layouts2 = generate_layouts(gltfscene, prim.attributes)
 	local vertices1 = fetch_vertices(layouts1, gltfbin, numv, ib_table == nil)
 	if need_calc_tangent(layouts1) then
-		math3d.reset()
+		local cp = math3d.checkpoint()
 		calc_tangents(math3d, ib_table, vertices1, layouts1)
-		math3d.reset()
+		math3d.recover(cp)
 		layouts1[#layouts1+1] = {
 			layout		= "T40NIf",
 			fetch_buf	= attrib_data,	-- this tangent already in left hand space
