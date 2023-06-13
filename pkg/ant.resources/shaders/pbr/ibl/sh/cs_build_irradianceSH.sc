@@ -6,18 +6,11 @@
 #include "common/utils.sh"
 #include "pbr/ibl/common.sh"
 
+#include "pbr/ibl/sh/common.sh"
+
 SAMPLERCUBE(s_source, 0);
 
-IMAGE2D_RW(s_irradianceSH, rgba32f, 1);
-
-uniform vec4 u_SH_param;
-#define u_cubemap_facesize u_SH_param.x
-
-#ifndef IRRADIANCE_SH_BAND_NUM
-#define IRRADIANCE_SH_BAND_NUM 2
-#endif //IRRADIANCE_SH_BAND_NUM
-
-#define IRRADIANCE_SH_COEFF_NUM (IRRADIANCE_SH_BAND_NUM*IRRADIANCE_SH_BAND_NUM)
+IMAGE2D_ARRAY_WR(s_irradianceSH, rgba32f, 1);
 
 struct SH_basic {
     float v[IRRADIANCE_SH_COEFF_NUM];
@@ -129,17 +122,17 @@ float solidAngle(float dim, uint iu, uint iv)
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
 {
-    ivec2 size = ivec2(u_cubemap_facesize, u_cubemap_facesize);
+    ivec2 size = ivec2(u_facesize, u_facesize);
 
     vec3 N = id2dir(gl_GlobalInvocationID, size);
 
     vec3 color      = textureCubeLod(s_source, N, 0);
-    vec3 radiance   = color * solidAngle(u_cubemap_facesize, gl_GlobalInvocationID.xy);
+    vec3 radiance   = color * solidAngle(u_facesize, gl_GlobalInvocationID.xy);
     SH_basic Yml    = calc_Yml(N);
 
     for (int i=0; i<IRRADIANCE_SH_COEFF_NUM; ++i)
     {
-        imageStore(s_irradianceSH, ivec2(gl_GlobalInvocationID.x * IRRADIANCE_SH_COEFF_NUM, gl_GlobalInvocationID.y), radiance * Yml.v[i]);
+        imageStore(s_irradianceSH, ivec3(gl_GlobalInvocationID.x * IRRADIANCE_SH_COEFF_NUM+i, gl_GlobalInvocationID.yz), radiance * Yml.v[i]);
     }
 }
 #else //!ENABLE_IRRADIANCE_SH

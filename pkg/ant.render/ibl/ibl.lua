@@ -56,13 +56,13 @@ local IBL_INFO = {
     irradiance   = {
         value = nil,
         size = 0,
-        --enable_readback = true,
     },
     irradianceSH = {
-        value = nil,
-        readback_value = nil,
+        CPU             = true,
+        value           = nil,
+        readback_value  = nil,
         readback_memory = nil,
-        bandnum = irradianceSH_bandnum,
+        bandnum         = irradianceSH_bandnum,
     },
     prefilter    = {
         value = nil,
@@ -88,13 +88,58 @@ local function create_irradianceSH_entity()
     ecs.create_entity {
         policy = {
             "ant.general|name",
+            "ant.render|irradianceSH_builder",
         },
         data = {
-            irradianceSH_builder = true,
+            irradianceSH_builder = {},
             name = "irradianceSH_builder",
         }
     }
 end
+
+local function create_irradianceSH_entitiecs()
+    ecs.create_entity {
+        policy = {
+            "ant.render|compute",
+            "ant.render|irradianceSH_builder",
+            "ant.general|name",
+        },
+        data = {
+            irradianceSH_builder = {
+                irradianceSH_tex = {
+                    stage = 1,
+                    mip = 0,
+                    access = "w",
+                    value = bgfx.create_texture2d(),
+                }
+            },
+            material = "/pkg/ant.resources/material/ibl/build_irradianceSH.material",
+            dispatch = {
+                size = {0, 0, 0}
+            },
+            name = "irradianceSH_builder",
+        }
+    }
+
+    ecs.create_entity {
+        policy = {
+            "ant.render|compute",
+            "ant.render|irradianceSH_downsample",
+            "ant.general|name",
+        },
+        data = {
+            irradianceSH_downsampler = {
+                reading_back = 0
+            },
+            material = "/pkg/ant.resources/material/ibl/downsample_irradianceSH.material",
+            dispatch = {
+                size = {0, 0, 0}
+            },
+            name = "irradianceSH_downsample"
+        }
+    }
+end
+
 
 local function create_prefilter_entities()
     local size = IBL_INFO.prefilter.size
@@ -212,26 +257,96 @@ function ibl_sys:render_preprocess()
         w:remove(e)
     end
 
-    for e in w:select "irradianceSH_builder" do
-        local function load_cm()
-            local function read_file(fn)
-                local f <close> = assert(io.open(fn, "rb"))
-                return f:read "a"
+    for e in w:select "irradianceSH_builder:in" do
+        
+        if IBL_INFO.irradianceSH.CPU then
+            local function load_cm()
+                local function read_file(fn)
+                    local f <close> = assert(io.open(fn, "rb"))
+                    return f:read "a"
+                end
+        
+                local c = read_file(assetmgr.compile(source_tex.tex_name .. "|main.bin"))
+                local nomip<const> = true
+                local info, content = image.parse(c, true, "RGBA32F", nomip)
+                assert(info.bitsPerPixel // 8 == 16)
+                return texutil.create_cubemap{w=info.width, h=info.height, texelsize=16, data=content}
             end
+            local _, timebegin = ltask.now()
+            local Eml = shutil.calc_Eml(load_cm(), irradianceSH_bandnum)
+            local _, tiemend = ltask.now()
+            print("build irradiance SH time(ms):", tiemend - timebegin)
     
-            local c = read_file(assetmgr.compile(source_tex.tex_name .. "|main.bin"))
-            local nomip<const> = true
-            local info, content = image.parse(c, true, "RGBA32F", nomip)
-            assert(info.bitsPerPixel // 8 == 16)
-            return texutil.create_cubemap{w=info.width, h=info.height, texelsize=16, data=content}
-        end
-        local _, timebegin = ltask.now()
-        local Eml = shutil.calc_Eml(load_cm(), irradianceSH_bandnum)
-        local _, tiemend = ltask.now()
-        print("build irradiance SH time(ms):", tiemend - timebegin)
+            update_SH_attributes(Eml)
+        else
+            local builder = e.irradianceSH_builder
+            w:extend(e, "dispatch:in")
+            if builder.reading_back == 0 then
+                --calculate SH value
+                do
+                    local dis = e.dispatch
+                    local m = dis.material
+                    m.s_source = source_tex
+                    m.s_irradianceSH = {
+                        stage = 1,
+                        access = "w",
+                        mip = 0,
+                        value = IBL_INFO.irradianceSH.value
+                    }
+                    m.u_build_SH_param = math3d.vector(source_tex.facesize, 0.0, 0.0, 0.0)
+                    dis.size = {source_tex.facesize//thread_group_size, source_tex.facesize//thread_group_size, 6}
+                    icompute.dispatch(ibl_viewid, dis)
+                end
 
-        update_SH_attributes(Eml)
-        w:remove(e)
+                --downsample to 1x1x6 cubemap data
+                do
+                    local de = w:first "irradianceSH_downsampler:in dispatch:in"
+                    local dis = de.dispatch
+                    local m = dis.material
+
+                    local facesize = source_tex.facesize
+                    for i=1, math.log(facesize, 2) do
+                        local nexmip = i
+                        local mip   = i-1
+                        m.u_build_SH_param = math3d.vector(facesize, mip, 0.0, 0.0)
+                        facesize = facesize >> 1
+
+                        m.s_color_input = {
+                            stage = 0,
+                            access = "r",
+                            mip = mip,
+                            value = IBL_INFO.irradianceSH.value,
+                        }
+
+                        m.s_color_output = {
+                            stage = 1,
+                            access = "w",
+                            mip = nexmip,
+                            value = IBL_INFO.irradianceSH.value,
+                        }
+                        
+                        dis.size = {facesize//thread_group_size, facesize//thread_group_size, 6}
+                        icompute.dispatch(ibl_viewid, dis)
+                    end
+                end
+            end
+
+            --read back 1x1x6 data, and acculatme the result
+            do
+                bgfx.blit()
+                bgfx.read_texture()
+            end
+
+            builder.reading_back = builder.reading_back + 1
+            --read back 1x1x6 data, and acculatme the result
+            if builder.reading_back == 2 then
+                local Eml = {}
+                
+                update_SH_attributes(Eml)
+    
+                w:remove(e)
+            end
+        end
     end
 
     local registered
@@ -294,9 +409,43 @@ local function build_ibl_textures(ibl)
         IBL_INFO.irradiance.size = ibl.irradiance.size
         check_destroy(IBL_INFO.irradiance.value)
 
-        local fmt = IBL_INFO.irradiance.enable_readback and "RGBA32F" or "RGBA16F"
+        IBL_INFO.irradiance.value = bgfx.create_texturecube(IBL_INFO.irradiance.size, false, 1, "RGBA16F", flags)
+    end
 
-        IBL_INFO.irradiance.value = bgfx.create_texturecube(IBL_INFO.irradiance.size, false, 1, fmt, flags)
+    if irradianceSH_bandnum and (not IBL_INFO.irradianceSH.CPU) then
+        local SH_coeff_count<const> = irradianceSH_bandnum * irradianceSH_bandnum
+        -- 1x1x6 readback data
+        IBL_INFO.irradianceSH.readback_value = bgfx.create_texture2d(
+            SH_coeff_count,
+            1,
+            false,
+            6,
+            "RGBA32F",
+            sampler {
+                BLIT="BLIT_AS_DST|BLIT_READBACK_ON",
+                MIN="POINT",
+                MAG="POINT",
+                U="CLAMP",
+                V="CLAMP",
+            }
+        )
+        IBL_INFO.irradianceSH.readback_memory = bgfx.memory_texture()
+
+        local ww = IBL_INFO.source.facesize * SH_coeff_count
+        local hh = IBL_INFO.source.facesize
+
+        -- facesizexfacesizex6 texture array
+        IBL_INFO.irradianceSH.value = bgfx.create_texture2d(
+            ww, hh,
+            true,   -- mipmap is true, it for downsample
+            6,
+            "RGBA32F",
+            sampler {
+                MIN="POINT",
+                MAG="POINT",
+                U="CLAMP",
+                V="CLAMP",
+            })
     end
 
     if ibl.prefilter.size ~= IBL_INFO.prefilter.size then
@@ -317,6 +466,7 @@ end
 local function create_ibl_entities()
     if irradianceSH_bandnum then
         create_irradianceSH_entity()
+        --create_irradianceSH_entitiecs()
     else
         create_irradiance_entity()
     end

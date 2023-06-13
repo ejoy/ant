@@ -15,7 +15,16 @@ component "panorama2cubemap_converter"
 component "prefilter".type "lua"
 component "LUT_builder"
 
-component "irradianceSH_builder"
+component "irradianceSH_builder".type "lua"
+component "irradianceSH_downsampler".type "lua"
+
+policy "irradianceSH_builder"
+    .require_system "ant.render|ibl_system"
+    .component "irradianceSH_builder"
+
+policy "irradianceSH_downsample"
+    .require_system "ant.render|ibl_system"
+    .component "irradianceSH_downsampler"
 
 policy "panorama2cubemap_converter"
     .component "panorama2cubemap_converter"
