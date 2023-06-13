@@ -112,9 +112,9 @@ function S.render_target_create(width, height, name)
                 },
                   camera = {
                     frustum = {
-                        aspect = 1.3333333333333333,
+                        aspect = 1,
                         f = 300,
-                        fov = 60,
+                        fov = 90,
                         n = 1,
                     }
                   },
