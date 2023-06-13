@@ -20,7 +20,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local setting   = import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
-if irradianceSH_bandnum ~= 2 and irradianceSH_bandnum ~= 3 then
+if nil ~= irradianceSH_bandnum and irradianceSH_bandnum ~= 2 and irradianceSH_bandnum ~= 3 then
     error "Irradiance SH only support band num 2/3"
 end
 
