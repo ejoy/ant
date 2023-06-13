@@ -8,13 +8,87 @@
 
 SAMPLERCUBE(s_source, 0);
 
-IMAGE2D_RW(s_irradianceSH, r32ui, 1);
+IMAGE2D_RW(s_irradianceSH, rgba32f, 1);
+
+uniform vec4 u_SH_param;
+#define u_cubemap_facesize u_SH_param.x
 
 #ifndef IRRADIANCE_SH_BAND_NUM
 #define IRRADIANCE_SH_BAND_NUM 2
 #endif //IRRADIANCE_SH_BAND_NUM
 
 #define IRRADIANCE_SH_COEFF_NUM (IRRADIANCE_SH_BAND_NUM*IRRADIANCE_SH_BAND_NUM)
+
+struct SH_basic {
+    float v[IRRADIANCE_SH_COEFF_NUM];
+};
+
+struct SH_Yml {
+    vec3 Yml[IRRADIANCE_SH_COEFF_NUM];
+};
+
+SH_basic get_SH_basic()
+{
+    SH_basic s = (SH_basic)0;
+
+    const float INV_PI      = 1.0 / M_PI;
+    const float SQRT_PI     = sqrt(M_PI);
+    const float INV_SQRT_PI = 1.0 / SQRT_PI;
+
+    const float L1_f = 0.5 * M_PI;
+
+    const float L2_f = sqrt(3.0/(4.0*M_PI));
+    const float sq15 = sqrt(15.0);
+    const float sq5  = sqrt(5.0);
+
+    const float L3_f1 = sq15*INV_SQRT_PI*0.5 ;//math.sqrt(15.0/( 4.0*pi))
+    const float L3_f2 = sq5 *INV_SQRT_PI*0.25;//math.sqrt( 5.0/(16.0*pi))
+    const float L3_f3 = sq15*INV_SQRT_PI*0.25;//math.sqrt(15.0/(16.0*pi))
+
+    s.v[0] = L1_f;
+
+#if IRRADIANCE_SH_COEFF_NUM == 2
+    s.v[1] = -L2_f;
+    s.v[2] =  L2_f;
+    s.v[3] = -L2_f;
+#elif IRRADIANCE_SH_COEFF_NUM == 3
+    s.v[4] =  L3_f1;
+    s.v[5] = -L3_f1;
+    s.v[6] =  L3_f2;
+    s.v[7] = -L3_f1;
+    s.v[8] =  L3_f3;
+#endif //IRRADIANCE_SH_COEFF_NUM != 2/3
+    return s;
+}
+
+SH_basic calc_Yml(N)
+{
+    SH_basic s = get_SH_basic();
+
+    SH_basic Yml = (SH_basic)0;
+    Yml.v[0] = s.v[0];
+    
+    const float x = N.x, y = N.y, z = N.z;
+
+#if IRRADIANCE_SH_COEFF_NUM == 2
+    Yml.v[2] = s.v[2]*y;
+    Yml.v[3] = s.v[3]*z;
+    Yml.v[4] = s.v[4]*x;
+#elif IRRADIANCE_SH_COEFF_NUM == 3
+
+    Yml.v[5] = s.v[5]*y*x;
+    Yml.v[6] = s.v[6]*y*z;
+    Yml.v[7] = s.v[7]*(3.0*z*z-1.0);
+    Yml.v[8] = s.v[8]*x*z;
+    Yml.v[9] = s.v[9]*(x*x-y*y);
+#endif //IRRADIANCE_SH_COEFF_NUM != 2/3
+
+    return Yml;
+}
+
+struct Lml{
+    vec3 v[IRRADIANCE_SH_BAND_NUM];
+};
 
 /*
  * Area of a cube face's quadrant projected onto a sphere
@@ -31,151 +105,41 @@ IMAGE2D_RW(s_irradianceSH, r32ui, 1);
  *
  * The quadrant (-1,1)-(x,y) is projected onto the unit sphere
  *
- */
-float sphereQuadrantArea(float x, float y) {
-    return atan2(x*y, sqrt(x*x + y*y + 1));
-}
-
-float solidAngle(int dim, ivec2 uv)
+*/
+float sphereQuadrantArea(float x, float y)
 {
-    const float iDim = 1.0f / dim;
-
-    vec2 st = ((uv + 0.5) * 2.0 * iDim)-1.0;
-
-    const vec2 xy0 = st - iDim;
-    const vec2 xy1 = st + iDim;
-
-    float solidAngle =  sphereQuadrantArea(xy0.x, xy0.y) -
-                        sphereQuadrantArea(xy0.x, xy1.y) -
-                        sphereQuadrantArea(xy1.x, xy0.y) +
-                        sphereQuadrantArea(xy1.x, xy1.y);
-    return solidAngle;
+    return atan(x*y, sqrt(x*x + y*y + 1.0));
 }
 
-int SHindex(int m, int l) {
-    return l * (l + 1) + m;
-}
-
-/*
- * Calculates non-normalized SH bases, i.e.:
- *  m > 0, cos(m*phi)   * P(m,l)
- *  m < 0, sin(|m|*phi) * P(|m|,l)
- *  m = 0, P(0,l)
- */
-void computeShBasics(inout float SHb[IRRADIANCE_SH_COEFF_NUM], int numBands, vec3 s)
+float solidAngle(float dim, uint iu, uint iv)
 {
-#if 0
-    // Reference implementation
-    float phi = atan2(s.x, s.y);
-    for (int l = 0; l < numBands; l++) {
-        SHb[SHindex(0, l)] = Legendre(l, 0, s.z);
-        for (int m = 1; m <= l; m++) {
-            float p = Legendre(l, m, s.z);
-            SHb[SHindex(-m, l)] = std::sin(m * phi) * p;
-            SHb[SHindex( m, l)] = std::cos(m * phi) * p;
-        }
-    }
-#endif
-    /*
-     * Below, we compute the associated Legendre polynomials using recursion.
-     * see: http://mathworld.wolfram.com/AssociatedLegendrePolynomial.html
-     *
-     * Note [0]: s.z == cos(theta) ==> we only need to compute P(s.z)
-     *
-     * Note [1]: We in fact compute P(s.z) / sin(theta)^|m|, by removing
-     * the "sqrt(1 - s.z*s.z)" [i.e.: sin(theta)] factor from the recursion.
-     * This is later corrected in the ( cos(m*phi), sin(m*phi) ) recursion.
-     */
+    const float idiam = 1.0 / dim;
+    float s = ((iu + 0.5) * 2.0 * idim)-1.0;
+    float t = ((iv + 0.5) * 2.0 * idim)-1.0;
 
-    // s = (x, y, z) = (sin(theta)*cos(phi), sin(theta)*sin(phi), cos(theta))
+    float x0, y0 = s-idim, t-idim;
+    float x1, y1 = s+idim, t+idim;
 
-    // handle m=0 separately, since it produces only one coefficient
-    float Pml_2 = 0;
-    float Pml_1 = 1;
-    SHb[0] =  Pml_1;
-    for (int l=1; l<numBands; l++) {
-        float Pml = ((2*l-1.0f)*Pml_1*s.z - (l-1.0f)*Pml_2) / l;
-        Pml_2 = Pml_1;
-        Pml_1 = Pml;
-        SHb[SHindex(0, l)] = Pml;
-    }
-    float Pmm = 1;
-    for (int m=1 ; m<numBands ; m++) {
-        Pmm = (1.0f - 2*m) * Pmm;      // See [1], divide by sqrt(1 - s.z*s.z);
-        Pml_2 = Pmm;
-        Pml_1 = (2*m + 1.0f)*Pmm*s.z;
-        // l == m
-        SHb[SHindex(-m, m)] = Pml_2;
-        SHb[SHindex( m, m)] = Pml_2;
-        if (m+1 < numBands) {
-            // l == m+1
-            SHb[SHindex(-m, m+1)] = Pml_1;
-            SHb[SHindex( m, m+1)] = Pml_1;
-            for (int l=m+2 ; l<numBands ; l++) {
-                float Pml = ((2*l - 1.0f)*Pml_1*s.z - (l + m - 1.0f)*Pml_2) / (l-m);
-                Pml_2 = Pml_1;
-                Pml_1 = Pml;
-                SHb[SHindex(-m, l)] = Pml;
-                SHb[SHindex( m, l)] = Pml;
-            }
-        }
-    }
-
-    // At this point, SHb contains the associated Legendre polynomials divided
-    // by sin(theta)^|m|. Below we compute the SH basis.
-    //
-    // ( cos(m*phi), sin(m*phi) ) recursion:
-    // cos(m*phi + phi) == cos(m*phi)*cos(phi) - sin(m*phi)*sin(phi)
-    // sin(m*phi + phi) == sin(m*phi)*cos(phi) + cos(m*phi)*sin(phi)
-    // cos[m+1] == cos[m]*s.x - sin[m]*s.y
-    // sin[m+1] == sin[m]*s.x + cos[m]*s.y
-    //
-    // Note that (d.x, d.y) == (cos(phi), sin(phi)) * sin(theta), so the
-    // code below actually evaluates:
-    //      (cos((m*phi), sin(m*phi)) * sin(theta)^|m|
-    float Cm = s.x;
-    float Sm = s.y;
-    for (int m = 1; m <= numBands; m++) {
-        for (int l = m; l < numBands; l++) {
-            SHb[SHindex(-m, l)] *= Sm;
-            SHb[SHindex( m, l)] *= Cm;
-        }
-        float Cm1 = Cm * s.x - Sm * s.y;
-        float Sm1 = Sm * s.x + Cm * s.y;
-        Cm = Cm1;
-        Sm = Sm1;
-    }
-}
-
-uvec3 encode_vec3(vec3 v)
-{
-    return uvec3(v * 1000000);
+    return  sphereQuadrantArea(x0, y0) -
+            sphereQuadrantArea(x0, y1) -
+            sphereQuadrantArea(x1, y0) +
+            sphereQuadrantArea(x1, y1);
 }
 
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
 {
     ivec2 size = ivec2(u_cubemap_facesize, u_cubemap_facesize);
-    if (any(gl_GlobalInvocationID.xy >= size))
-        return ;
 
     vec3 N = id2dir(gl_GlobalInvocationID, size);
 
-    vec3 color = textureCubeLod(s_source, N, 0).rgb;
+    vec3 color      = textureCubeLod(s_source, N, 0);
+    vec3 radiance   = color * solidAngle(u_cubemap_facesize, gl_GlobalInvocationID.xy);
+    SH_basic Yml    = calc_Yml(N);
 
-    color *= solidAngle(u_cubemap_facesize, gl_GlobalInvocationID.xy);
-
-    float SHb[IRRADIANCE_SH_COEFF_NUM]; for(int i=0; i<IRRADIANCE_SH_COEFF_NUM; ++i) SHb[i] = 0.0;
-
-    computeShBasics(SHb, IRRADIANCE_SH_BAND_NUM, N);
-
-    for (int i=0 ; i<IRRADIANCE_SH_COEFF_NUM; ++i) {
-        uvec3 ev = encode_vec3(color * SHb[i]);
-
-        int idx = i*3;
-        imageAtomicAdd(s_irradianceSH, ivec2(idx+0, 0), ev[0]);
-        imageAtomicAdd(s_irradianceSH, ivec2(idx+1, 0), ev[1]);
-        imageAtomicAdd(s_irradianceSH, ivec2(idx+2, 0), ev[2]);
+    for (int i=0; i<IRRADIANCE_SH_COEFF_NUM; ++i)
+    {
+        imageStore(s_irradianceSH, ivec2(gl_GlobalInvocationID.x * IRRADIANCE_SH_COEFF_NUM, gl_GlobalInvocationID.y), radiance * Yml.v[i]);
     }
 }
 #else //!ENABLE_IRRADIANCE_SH
