@@ -8,7 +8,6 @@ local world = {}
 world.__index = world
 
 local function update_cpu_stat(w, funcs, symbols)
-	local math3d = require "math3d"
 	local ecs_world = w._ecs_world
 	local get_time = ltask.counter
 	local MaxFrame <const> = 30
@@ -25,7 +24,6 @@ local function update_cpu_stat(w, funcs, symbols)
 		printtext[i] = ""
 	end
 	return function()
-		math3d.reset()
 		for i = 1, #funcs do
 			local f = funcs[i]
 			local now = get_time()
