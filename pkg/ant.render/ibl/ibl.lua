@@ -20,6 +20,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local setting   = import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
+local SH_coeff_count<const> = irradianceSH_bandnum and irradianceSH_bandnum * irradianceSH_bandnum or nil
 if nil ~= irradianceSH_bandnum and irradianceSH_bandnum ~= 2 and irradianceSH_bandnum ~= 3 then
     error "Irradiance SH only support band num 2/3"
 end
@@ -260,6 +261,7 @@ function ibl_sys:render_preprocess()
     for e in w:select "irradianceSH_builder:in" do
         
         if IBL_INFO.irradianceSH.CPU then
+            local _, timebegin = ltask.now()
             local function load_cm()
                 local function read_file(fn)
                     local f <close> = assert(io.open(fn, "rb"))
@@ -272,7 +274,7 @@ function ibl_sys:render_preprocess()
                 assert(info.bitsPerPixel // 8 == 16)
                 return texutil.create_cubemap{w=info.width, h=info.height, texelsize=16, data=content}
             end
-            local _, timebegin = ltask.now()
+
             local Eml = shutil.calc_Eml(load_cm(), irradianceSH_bandnum)
             local _, tiemend = ltask.now()
             print("build irradiance SH time(ms):", tiemend - timebegin)
@@ -330,21 +332,25 @@ function ibl_sys:render_preprocess()
                         icompute.dispatch(ibl_viewid, dis)
                     end
                 end
-            end
 
-            --read back 1x1x6 data, and acculatme the result
-            do
-                bgfx.blit()
-                bgfx.read_texture()
+                --read back data
+                do
+                    local shviewid = viewidmgr.get "ibl_SH_readback"
+                    bgfx.blit(shviewid, IBL_INFO.irradianceSH.readback_value, 0, 0, IBL_INFO.irradianceSH.value)
+                    bgfx.read_texture(IBL_INFO.irradianceSH.readback_value, IBL_INFO.irradianceSH.readback_memory)
+                end
             end
 
             builder.reading_back = builder.reading_back + 1
             --read back 1x1x6 data, and acculatme the result
             if builder.reading_back == 2 then
+                local m = tostring(IBL_INFO.irradianceSH.readback_memory)
                 local Eml = {}
-                
+                for i=1, irradianceSH_bandnum * irradianceSH_bandnum do
+                    local offset = (i-1)*4
+                    Eml[#Eml+1] = math3d.vector(m:sub(offset+1, offset+4))
+                end
                 update_SH_attributes(Eml)
-    
                 w:remove(e)
             end
         end
@@ -414,13 +420,12 @@ local function build_ibl_textures(ibl)
     end
 
     if irradianceSH_bandnum and (not IBL_INFO.irradianceSH.CPU) then
-        local SH_coeff_count<const> = irradianceSH_bandnum * irradianceSH_bandnum
-        -- 1x1x6 readback data
+        -- 1x1 readback data
         IBL_INFO.irradianceSH.readback_value = bgfx.create_texture2d(
             SH_coeff_count,
             1,
             false,
-            6,
+            1,
             "RGBA32F",
             sampler {
                 BLIT="BLIT_AS_DST|BLIT_READBACK_ON",
@@ -433,13 +438,13 @@ local function build_ibl_textures(ibl)
         IBL_INFO.irradianceSH.readback_memory = bgfx.memory_texture()
 
         local ww = IBL_INFO.source.facesize * SH_coeff_count
-        local hh = IBL_INFO.source.facesize
+        local hh = IBL_INFO.source.facesize * 6
 
         -- facesizexfacesizex6 texture array
         IBL_INFO.irradianceSH.value = bgfx.create_texture2d(
             ww, hh,
             true,   -- mipmap is true, it for downsample
-            6,
+            1,
             "RGBA32F",
             sampler {
                 MIN="POINT",

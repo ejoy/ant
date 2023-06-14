@@ -10,7 +10,7 @@
 
 SAMPLERCUBE(s_source, 0);
 
-IMAGE2D_ARRAY_WR(s_irradianceSH, rgba32f, 1);
+IMAGE2D_WR(s_irradianceSH, rgba32f, 1);
 
 struct SH_basic {
     float v[IRRADIANCE_SH_COEFF_NUM];
@@ -119,10 +119,17 @@ float solidAngle(float dim, uint iu, uint iv)
             sphereQuadrantArea(x1, y1);
 }
 
+//we rearrange 6 cubemap face into 1 x 6
 NUM_THREADS(WORKGROUP_THREADS, WORKGROUP_THREADS, 1)
 void main()
 {
     ivec2 size = ivec2(u_facesize, u_facesize);
+    if (size <= gl_GlobalInvocationID.xy)
+        return ;
+
+    const int face = gl_GlobalInvocationID.z;
+
+    const ivec2 out_uv = ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y + face * u_facesize);
 
     vec3 N = id2dir(gl_GlobalInvocationID, size);
 
@@ -132,7 +139,7 @@ void main()
 
     for (int i=0; i<IRRADIANCE_SH_COEFF_NUM; ++i)
     {
-        imageStore(s_irradianceSH, ivec3(gl_GlobalInvocationID.x * IRRADIANCE_SH_COEFF_NUM+i, gl_GlobalInvocationID.yz), radiance * Yml.v[i]);
+        imageStore(s_irradianceSH, ivec2(out_uv.x * IRRADIANCE_SH_COEFF_NUM + i, out_uv.y), radiance * Yml.v[i]);
     }
 }
 #else //!ENABLE_IRRADIANCE_SH
