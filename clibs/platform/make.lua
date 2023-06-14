@@ -28,16 +28,5 @@ lm:lua_source "platform" {
         frameworks = {
             "AppKit"
         }
-    },
-    ios = {
-        sources = {
-            "ios/*.mm",
-            "ios/*.m",
-        }
-    },
-    android = {
-        sources = {
-            "android/*.cpp",
-        }
     }
 }
