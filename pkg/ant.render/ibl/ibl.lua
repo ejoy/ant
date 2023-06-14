@@ -278,6 +278,7 @@ function ibl_sys:render_preprocess()
             print("build irradiance SH time(ms):", tiemend - timebegin)
     
             update_SH_attributes(Eml)
+            w:remove(e)
         else
             local builder = e.irradianceSH_builder
             w:extend(e, "dispatch:in")
