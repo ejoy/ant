@@ -349,6 +349,7 @@ local function generate_layouts(gltfscene, attributes)
 	local accessors, bufferViews = gltfscene.accessors, gltfscene.bufferViews
 	local layouts1 = {}
 	local layouts2 = {}
+	local tex_layout_idx
 	for _, attribname in ipairs(LAYOUT_NAMES) do
 		local accidx = attributes[attribname]
 		if accidx then
@@ -375,12 +376,13 @@ local function generate_layouts(gltfscene, attributes)
 			elseif tex then
 				layouts1[#layouts1+1] = l
 				layouts2[#layouts2+1] = l
+				tex_layout_idx = #layouts1 
 			else
 				layouts1[#layouts1+1] = l
 			end
 		end
 	end
-	return layouts1, layouts2
+	return layouts1, layouts2, tex_layout_idx
 end
 
 local function fetch_vertices(layouts, gltfbin, numv, reverse_wing_order)
@@ -415,12 +417,16 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 			memory = {bindata, 1, #bindata},
 			start = 0,
 			num = numv,
-		}
+		}, meshexport.pack_tangent_frame
 	end
 
-	local layouts1, layouts2 = generate_layouts(gltfscene, prim.attributes)
+	local layouts1, layouts2, tex_layout_idx = generate_layouts(gltfscene, prim.attributes)
+	local need_calc_tan = need_calc_tangent(layouts1)
+	if need_calc_tan == false then
+		table.remove(layouts1, tex_layout_idx)
+	end
 	local vertices1 = fetch_vertices(layouts1, gltfbin, numv, ib_table == nil)
-	if need_calc_tangent(layouts1) then
+	if need_calc_tan then
 		local cp = math3d.checkpoint()
 		calc_tangents(math3d, ib_table, vertices1, layouts1)
 		math3d.recover(cp)
@@ -430,13 +436,13 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 			name		= "TANGENT",
 		}
 	end
-	local vb = get_vb(layouts1, vertices1)
+	local vb, pack_tangent_frame = get_vb(layouts1, vertices1)
 	local vb2
 	if #layouts2 ~= 0 then
 		local vertices2 = fetch_vertices(layouts2, gltfbin, numv, ib_table == nil)
 		vb2 = get_vb(layouts2, vertices2)
 	end
-	return vb, vb2
+	return vb, vb2, pack_tangent_frame
 end
 
 local function find_skin_root_idx(skin, nodetree)
@@ -629,8 +635,8 @@ end
 			end
 
 			local meshexport = {}
-
-			group.vb, group.vb2 = fetch_vb_buffers(math3d, gltfscene, bindata, prim, ib_table, meshexport)
+			local pack_tangent_frame
+			group.vb, group.vb2, pack_tangent_frame = fetch_vb_buffers(math3d, gltfscene, bindata, prim, ib_table, meshexport)
 			local bb = create_prim_bounding(math3d, gltfscene, prim)
 			if bb then
 				local aabb = math3d.aabb(bb.aabb[1], bb.aabb[2])
@@ -647,6 +653,7 @@ end
 				group.vb.declname,
 				group.vb2 and group.vb2.declname or nil,
 			}
+			meshexport.pack_tangent_frame = pack_tangent_frame
 			exports.mesh[meshidx][primidx] = meshexport
 		end
 	end
