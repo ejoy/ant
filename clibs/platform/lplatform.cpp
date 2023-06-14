@@ -1,17 +1,9 @@
 #include <lua.hpp>
 #include <bx/platform.h>
 
-
-#if BX_PLATFORM_WINDOWS
-int linit_dpi(lua_State* L);
-#endif
-int ldpi(lua_State* L);
 int lfont(lua_State* L);
-int linfo(lua_State* L);
 #if BX_PLATFORM_IOS
 int lsetting(lua_State* L);
-int lmachine(lua_State* L);
-bool isiOSAppOnMac();
 #endif
 
 extern "C"
@@ -20,17 +12,11 @@ __declspec(dllexport)
 #endif
 int luaopen_platform(lua_State* L) {
     static luaL_Reg lib[] = {
-#if BX_PLATFORM_WINDOWS
-        { "init_dpi", linit_dpi },
-#endif
-        { "info", linfo },
-        { "dpi", ldpi },
 #if BX_PLATFORM_WINDOWS || BX_PLATFORM_OSX || BX_PLATFORM_LINUX
         { "font", lfont },
 #endif
 #if BX_PLATFORM_IOS
         { "setting", lsetting },
-        { "machine", lmachine },
 #endif
         { NULL, NULL },
     };
