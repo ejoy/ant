@@ -2,7 +2,7 @@
 #include <Foundation/Foundation.h>
 #include <CoreText/CoreText.h>
 
-int lfont(lua_State* L) {
+int ImGuiSystemFont(lua_State* L) {
     const char* familyName = luaL_checkstring(L, 1);
     CTFontDescriptorRef fontRef = CTFontDescriptorCreateWithNameAndSize(CFStringCreateWithCString(NULL, familyName, kCFStringEncodingUTF8), 0.0);
     CFURLRef url = (CFURLRef)CTFontDescriptorCopyAttribute(fontRef, kCTFontURLAttribute);
