@@ -267,11 +267,20 @@ end
 local init_token = {}
 local thread_num = 0
 
+local function init_args(args)
+    if args.width > 1920 then
+        args.debugTextScale = 2
+    else
+        args.debugTextScale = 1
+    end
+end
+
 function S.init(args)
     if init_token == nil then
     elseif args == nil then
         ltask.wait(init_token)
     else
+        init_args(args)
         bgfx.init(args)
         initialized = true
         ltask.fork(mainloop)
