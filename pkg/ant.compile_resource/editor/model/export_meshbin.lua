@@ -418,7 +418,7 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 			memory = {bindata, 1, #bindata},
 			start = 0,
 			num = numv,
-		}, meshexport.pack_tangent_frame
+		}
 	end
 
 	local layouts1, layouts2, tex_layout_idx = generate_layouts(gltfscene, prim.attributes)
@@ -445,7 +445,7 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 		local vertices2 = fetch_vertices(layouts2, gltfbin, numv, ib_table == nil)
 		vb2 = get_vb(layouts2, vertices2)
 	end
-	return vb, vb2, pack_tangent_frame
+	return vb, vb2
 end
 
 local function find_skin_root_idx(skin, nodetree)
@@ -656,7 +656,6 @@ end
 				group.vb.declname,
 				group.vb2 and group.vb2.declname or nil,
 			}
-			meshexport.pack_tangent_frame = pack_tangent_frame
 			exports.mesh[meshidx][primidx] = meshexport
 		end
 	end
