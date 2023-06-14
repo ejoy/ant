@@ -31,7 +31,6 @@ lm:lua_source "platform" {
     },
     ios = {
         sources = {
-            "osx/task_info.mm",
             "ios/*.mm",
             "ios/*.m",
         }
