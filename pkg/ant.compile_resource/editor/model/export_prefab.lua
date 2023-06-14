@@ -282,7 +282,7 @@ local function create_mesh_node_entity(math3d, output, gltfscene, nodeidx, paren
     for primidx, prim in ipairs(mesh.primitives) do
         local em = exports.mesh[meshidx+1][primidx]
         local cfg = {
-            needskin = has_skin(gltfscene, exports, nodeidx),
+            hasskin = has_skin(gltfscene, exports, nodeidx),
             withcolorattrib = has_color_attrib(em.declname),
             pack_tangent_frame = em.pack_tangent_frame,
         }

@@ -1,6 +1,7 @@
 local gltfutil  = require "editor.model.glTF.util"
 local utility   = require "editor.model.utility"
-local pack_vertex_data = require "editor.model.pack_vertex_data"
+local packer = require "editor.model.pack_vertex_data"
+local pack_vertex_data = packer.pack
 
 local LAYOUT_NAMES<const> = {
 	"POSITION",
@@ -408,7 +409,7 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 	local numv = gltfutil.num_vertices(prim, gltfscene)
 
 	local function get_vb(layouts, vertices)
-		local new_vertices, new_layout = pack_vertex_data(math3d, layouts, vertices, meshexport)
+		local new_vertices, new_layout = pack_vertex_data(math3d, layouts, vertices)
 		local bindata = table.concat(new_vertices, "")
 		return {
 			declname = new_layout,
@@ -431,6 +432,8 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 		}
 	end
 	local vb = get_vb(layouts1, vertices1)
+	-- normal and tangent info only valid in layouts1
+	meshexport.pack_tangent_frame = packer.is_pack2tangentframe(layouts1)
 	local vb2
 	if #layouts2 ~= 0 then
 		local vertices2 = fetch_vertices(layouts2, gltfbin, numv, ib_table == nil)
