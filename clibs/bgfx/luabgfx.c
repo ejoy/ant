@@ -21,7 +21,7 @@
 #include <android/log.h>
 #endif
 
-#if BGFX_API_VERSION != 118
+#if BGFX_API_VERSION != 120
 #   error BGFX_API_VERSION mismatch
 #endif
 
@@ -616,6 +616,7 @@ linit(lua_State *L) {
 	init.resolution.reset = BGFX_RESET_NONE;	// reset flags
 	init.resolution.numBackBuffers = 2;
 	init.resolution.maxFrameLatency = 0;
+	init.resolution.debugTextScale = 0;
 
 	init.limits.maxEncoders     = 8;	// BGFX_CONFIG_DEFAULT_MAX_ENCODERS;
 	init.limits.minResourceCbSize = (64<<10); // BGFX_CONFIG_MIN_RESOURCE_setter_buffer_SIZE
@@ -653,6 +654,10 @@ linit(lua_State *L) {
 
 		lua_getfield(L, 1, "numBackBuffers");
 		init.resolution.numBackBuffers = luaL_optinteger(L, -1, 2);
+		lua_pop(L, 1);
+
+		lua_getfield(L, 1, "debugTextScale");
+		init.resolution.debugTextScale = luaL_optinteger(L, -1, 0);
 		lua_pop(L, 1);
 
 		lua_getfield(L, 1, "maxFrameLatency");

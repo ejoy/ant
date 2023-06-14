@@ -1,6 +1,7 @@
 local gltfutil  = require "editor.model.glTF.util"
 local utility   = require "editor.model.utility"
-local pack_vertex_data = require "editor.model.pack_vertex_data"
+local packer = require "editor.model.pack_vertex_data"
+local pack_vertex_data = packer.pack
 
 local LAYOUT_NAMES<const> = {
 	"POSITION",
@@ -349,6 +350,7 @@ local function generate_layouts(gltfscene, attributes)
 	local accessors, bufferViews = gltfscene.accessors, gltfscene.bufferViews
 	local layouts1 = {}
 	local layouts2 = {}
+	local tex_layout_idx
 	for _, attribname in ipairs(LAYOUT_NAMES) do
 		local accidx = attributes[attribname]
 		if accidx then
@@ -375,12 +377,13 @@ local function generate_layouts(gltfscene, attributes)
 			elseif tex then
 				layouts1[#layouts1+1] = l
 				layouts2[#layouts2+1] = l
+				tex_layout_idx = #layouts1 
 			else
 				layouts1[#layouts1+1] = l
 			end
 		end
 	end
-	return layouts1, layouts2
+	return layouts1, layouts2, tex_layout_idx
 end
 
 local function fetch_vertices(layouts, gltfbin, numv, reverse_wing_order)
@@ -408,7 +411,7 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 	local numv = gltfutil.num_vertices(prim, gltfscene)
 
 	local function get_vb(layouts, vertices)
-		local new_vertices, new_layout = pack_vertex_data(math3d, layouts, vertices, meshexport)
+		local new_vertices, new_layout = pack_vertex_data(math3d, layouts, vertices)
 		local bindata = table.concat(new_vertices, "")
 		return {
 			declname = new_layout,
@@ -418,9 +421,13 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 		}
 	end
 
-	local layouts1, layouts2 = generate_layouts(gltfscene, prim.attributes)
+	local layouts1, layouts2, tex_layout_idx = generate_layouts(gltfscene, prim.attributes)
+	local need_calc_tan = need_calc_tangent(layouts1)
+	if need_calc_tan == false then
+		table.remove(layouts1, tex_layout_idx)
+	end
 	local vertices1 = fetch_vertices(layouts1, gltfbin, numv, ib_table == nil)
-	if need_calc_tangent(layouts1) then
+	if need_calc_tan then
 		local cp = math3d.checkpoint()
 		calc_tangents(math3d, ib_table, vertices1, layouts1)
 		math3d.recover(cp)
@@ -431,6 +438,8 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 		}
 	end
 	local vb = get_vb(layouts1, vertices1)
+	-- normal and tangent info only valid in layouts1
+	meshexport.pack_tangent_frame = packer.is_pack2tangentframe(layouts1)
 	local vb2
 	if #layouts2 ~= 0 then
 		local vertices2 = fetch_vertices(layouts2, gltfbin, numv, ib_table == nil)
@@ -629,7 +638,6 @@ end
 			end
 
 			local meshexport = {}
-
 			group.vb, group.vb2 = fetch_vb_buffers(math3d, gltfscene, bindata, prim, ib_table, meshexport)
 			local bb = create_prim_bounding(math3d, gltfscene, prim)
 			if bb then
