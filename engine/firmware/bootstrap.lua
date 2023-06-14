@@ -5,14 +5,14 @@ local platform = require "bee.platform"
 local needcleanup, type, address
 
 if platform.os == "ios" then
-	local setting = require "platform".setting
-	local clean_up_next_time = setting("clean_up_next_time")
+	local ios = require "ios"
+	local clean_up_next_time = ios.setting("clean_up_next_time")
 	if clean_up_next_time == true then
-		setting("clean_up_next_time", false)
+		ios.setting("clean_up_next_time", false)
 		needcleanup = true
 	end
-	type = setting "server_type"
-	address = setting "server_address"
+	type = ios.setting "server_type"
+	address = ios.setting "server_address"
 end
 
 do

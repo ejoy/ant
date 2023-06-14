@@ -1,4 +1,4 @@
-local shutil = require "ibl.sh.util"
+local shutil = require "util"
 
 local lSHindex0 = shutil.lSHindex0
 local factorial2 = shutil.factorial2

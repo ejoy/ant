@@ -69,10 +69,6 @@ function hw.init(args)
 	math3d.set_origin_bottom_left(caps.originBottomLeft)
 end
 
-function hw.dpi()
-	return require "platform".dpi(init_args.nwh)
-end
-
 function hw.native_window()
 	return init_args.nwh
 end

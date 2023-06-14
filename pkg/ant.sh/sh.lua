@@ -1,8 +1,8 @@
 local math3d    = require "math3d"
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
-local shutil    = require "ibl.sh.util"
-local sh_rt     = require "ibl.sh.sh_rt"
+local shutil    = require "util"
+local sh_rt     = require "sh_rt"
 
 local pi<const>         = math.pi
 local inv_pi<const>     = 1.0 / pi

@@ -4,7 +4,6 @@
 #include <string_view>
 #include <memory>
 #include <algorithm>
-#include "wmi.h"
 
 #if !defined(__MINGW32__)
 #include <shellscalingapi.h>
@@ -141,40 +140,3 @@ int lfont(lua_State* L) {
     return 1;
 }
 
-static int WMI = 0;
-static wmi& wmi_initialize(lua_State* L) {
-    if (LUA_TUSERDATA != lua_rawgetp(L, LUA_REGISTRYINDEX, &WMI)) {
-        lua_pop(L, 1);
-        wmi* w = (wmi*)lua_newuserdata(L, sizeof(wmi));
-        new (w) wmi;
-        if (!*w) {
-            luaL_error(L, "WMI initialize failed");
-            return *w;
-        }
-        lua_rawsetp(L, LUA_REGISTRYINDEX, &WMI);
-        return *w;
-    }
-    wmi* w = (wmi*)lua_touserdata(L, -1);
-    lua_pop(L, 1);
-    return *w;
-}
-
-int linfo(lua_State* L) {
-    const char* lst[] = {"memory", NULL};
-    int opt = luaL_checkoption(L, 1, NULL, lst);
-    switch (opt) {
-    case 0: {
-        wmi& wmi = wmi_initialize(L);
-        static std::wstring query = L"SELECT WorkingSetPrivate FROM Win32_PerfRawData_PerfProc_Process WHERE IDProcess=" + std::to_wstring(GetCurrentProcessId());
-        auto process_object = wmi.query(query);
-        if (!process_object) {
-            return luaL_error(L, "WMI query failed");
-        }
-        std::wstring memory = process_object.get_string(L"WorkingSetPrivate");
-        lua_pushinteger(L, (lua_Integer)std::stoll(memory));
-        return 1;
-    }
-    default:
-        return luaL_error(L, "invalid option");
-    }
-}
