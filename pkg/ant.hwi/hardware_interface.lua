@@ -83,7 +83,7 @@ local DEBUG_FLAGS<const> = {
 function hw.set_debug(t)
 	local f = ""
 	for _, v in pairs(t) do
-		f = f .. v
+		f = f .. assert(DEBUG_FLAGS[v])
 	end
 	bgfx.set_debug(f)
 end
