@@ -281,8 +281,9 @@ local function create_mesh_node_entity(math3d, output, gltfscene, nodeidx, paren
     local entity
     for primidx, prim in ipairs(mesh.primitives) do
         local em = exports.mesh[meshidx+1][primidx]
+        local hasskin = has_skin(gltfscene, exports, nodeidx)
         local cfg = {
-            needskin = has_skin(gltfscene, exports, nodeidx),
+            hasskin = hasskin,
             withcolorattrib = has_color_attrib(em.declname),
             pack_tangent_frame = em.pack_tangent_frame,
         }
@@ -309,7 +310,7 @@ local function create_mesh_node_entity(math3d, output, gltfscene, nodeidx, paren
             "ant.general|name",
         }
 
-        if needskin then
+        if hasskin then
             policy[#policy+1] = "ant.render|skinrender"
             data.skinning = true
         else
@@ -321,7 +322,7 @@ local function create_mesh_node_entity(math3d, output, gltfscene, nodeidx, paren
         entity = create_entity {
             policy = policy,
             data = data,
-            parent = (not needskin) and parent,
+            parent = (not hasskin) and parent,
         }
     end
     return entity
