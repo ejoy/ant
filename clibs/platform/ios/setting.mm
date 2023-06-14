@@ -4,21 +4,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #import <UIKit/UIKit.h>
-#import "NetReachability.h"
-
-void net_reachability() {
-    NetReachability *reachability = [NetReachability reachabilityWithHostName:@"www.taobao.com"];
-    NetReachWorkStatus netStatus = [reachability currentReachabilityStatus];
-    switch (netStatus) {
-    case NetReachWorkNotReachable: NSLog(@"网络不可用"); break;
-    case NetReachWorkStatusUnknown: NSLog(@"未知网络"); break;
-    case NetReachWorkStatusWWAN2G: NSLog(@"2G网络"); break;
-    case NetReachWorkStatusWWAN3G: NSLog(@"3G网络"); break;
-    case NetReachWorkStatusWWAN4G: NSLog(@"4G网络"); break;
-    case NetReachWorkStatusWiFi: NSLog(@"WiFi"); break;
-    default: break;
-    }
-}
 
 static int get(lua_State* L) {
     const char* key = luaL_checkstring(L, 1);
