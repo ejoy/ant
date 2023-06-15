@@ -34,7 +34,7 @@ void main()
 		float ty = yy * (1 + u_interval_size.y) * u_aabb_size.y ;
 		float tz = zz * (1 + u_interval_size.z) * u_aabb_size.z - world_offset_z;
 		vec4 t = vec4(tx, ty, tz, 1);
-		instance_buffer[tId * 3 + 2] = t;
+		instance_buffer[tId * 3] = t;
 		drawIndexedIndirect(
 						// Target location params:
 			indirect_buffer,			// target buffer

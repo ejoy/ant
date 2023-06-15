@@ -25,7 +25,7 @@ highp vec3 quat_to_tangent(const highp vec4 q){
 mat4 get_indirect_wolrd_matrix(vec4 d1, vec4 d2, vec4 d3, vec4 draw_indirect_type)
 {
 	mat4 wm = u_model[0];
-	if(draw_indirect_type.x == 1){
+	if(draw_indirect_type.x == 1 || draw_indirect_type.z == 1){
 		wm[0][3] = wm[0][3] + d1.x;
 		wm[1][3] = wm[1][3] + d1.y;
 		wm[2][3] = wm[2][3] + d1.z;
@@ -47,11 +47,6 @@ mat4 get_indirect_wolrd_matrix(vec4 d1, vec4 d2, vec4 d3, vec4 draw_indirect_typ
 			ssiny,            0,      scosy,       tz, 
 			0    ,            0,          0,        1
 		);	 
-	}
-	else if(draw_indirect_type.z == 1){
-		wm[0][3] = wm[0][3] + d3.x;
-		wm[1][3] = wm[1][3] + d3.y;
-		wm[2][3] = wm[2][3] + d3.z;
 	}
 	else{
 		
