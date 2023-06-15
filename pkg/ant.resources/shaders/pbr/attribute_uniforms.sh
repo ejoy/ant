@@ -93,8 +93,8 @@ void get_metallic_roughness(mediump vec2 uv, inout input_attributes input_attrib
     input_attribs.metallic *= mrSample.b;
 #endif //HAS_METALLIC_ROUGHNESS_TEXTURE
 
-    input_attribs.perceptual_roughness  = clamp(input_attribs.perceptual_roughness, 0.0, 1.0);
-    input_attribs.metallic              = clamp(input_attribs.metallic, 0.0, 1.0);
+    input_attribs.perceptual_roughness  = clamp(input_attribs.perceptual_roughness, pow(10, -4), 1.0);
+    input_attribs.metallic              = clamp(input_attribs.metallic, pow(10, -4), 1.0);
 }
 
 void get_occlusion(mediump vec2 uv, inout input_attributes input_attribs)
