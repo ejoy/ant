@@ -92,6 +92,9 @@ lm:lua_source "imgui" {
         defines,
     },
     windows = {
+        sources = {
+            "platform/windows/imgui_font.cpp",
+        },
         links = {
             "user32",
             "shell32",
@@ -103,6 +106,9 @@ lm:lua_source "imgui" {
         },
     },
     macos = {
-        sources = "platform/imgui_osx.mm",
+        sources = {
+            "platform/imgui_osx.mm",
+            "platform/macos/imgui_font.mm",
+        }
     }
 }

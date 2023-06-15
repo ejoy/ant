@@ -268,7 +268,8 @@ local init_token = {}
 local thread_num = 0
 
 local function init_args(args)
-    if args.width > 1920 then
+    local maxwh = math.max(args.width, args.height)
+    if maxwh > 1920 then
         args.debugTextScale = 2
     else
         args.debugTextScale = 1

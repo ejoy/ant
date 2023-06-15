@@ -3932,6 +3932,8 @@ lmemory(lua_State* L) {
 	return 1;
 }
 
+int ImGuiSystemFont(lua_State* L);
+
 extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -4173,6 +4175,7 @@ luaopen_imgui(lua_State *L) {
 		{ "Push", fPush },
 		{ "Pop", fPop },
 		{ "Create", fCreate },
+		{ "SystemFont", ImGuiSystemFont },
 		{ NULL, NULL },
 	};
 

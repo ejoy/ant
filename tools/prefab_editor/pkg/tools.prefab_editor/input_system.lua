@@ -14,8 +14,8 @@ function m:input_filter()
                 last_mouse = what
                 world:pub {"mousedown", what, x, y}
             elseif state == "MOVE" and last_mouse == what then
-                local dpiX, dpiY = rhwi.dpi()
-                local dx, dy = (x - last_vx) / dpiX, (y - last_vy) / dpiY
+                -- local dpiX, dpiY = rhwi.dpi()
+                local dx, dy = x - last_vx, y - last_vy
                 if what == "LEFT" or what == "RIGHT" or what == "MIDDLE" then
                     world:pub { "mousedrag", what, x, y, dx, dy }
                 end

@@ -16,8 +16,6 @@ int luaopen_datalist(lua_State* L);
 int luaopen_hierarchy(lua_State* L);
 int luaopen_math3d(lua_State* L);
 int luaopen_math3d_adapter(lua_State* L);
-int luaopen_platform(lua_State* L);
-int luaopen_platform_timer(lua_State* L);
 int luaopen_protocol(lua_State* L);
 int luaopen_remotedebug(lua_State* L);
 int luaopen_remotedebug_hookmgr(lua_State* L);
@@ -86,7 +84,6 @@ void ant_loadmodules(lua_State* L) {
         { "hierarchy", luaopen_hierarchy },
         { "math3d", luaopen_math3d },
         { "math3d.adapter", luaopen_math3d_adapter },
-        { "platform", luaopen_platform },
         { "protocol", luaopen_protocol },
         //{ "remotedebug", luaopen_remotedebug },
         //{ "remotedebug.hookmgr", luaopen_remotedebug_hookmgr },

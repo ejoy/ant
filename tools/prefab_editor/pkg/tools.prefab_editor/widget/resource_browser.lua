@@ -169,6 +169,51 @@ local function ShowContextMenu()
     end
 end
 
+local key_mb    = world:sub {"keyboard"}
+local filter_cache = {}
+local function create_filter_cache(parent, dirs, files)
+    local key = tostring(parent)
+    if filter_cache[key] then
+       return
+    end
+    local cache = {}
+    local function cache_path(path, at)
+        local str = tostring(path:filename())
+        local prefix = string.upper(string.sub(str, 1, 1))
+        if not at[prefix] then
+            at[prefix] = {}
+        end
+        local t = at[prefix]
+        t[#t + 1] = path
+    end
+    for _, v in pairs(dirs) do
+        cache_path(v[1], cache)
+    end
+    for _, v in pairs(files) do
+        cache_path(v, cache)
+    end
+    filter_cache[key] = cache
+end
+local current_filter_idx
+local current_filter_key
+local function get_filter_path(parent, key)
+    if #key > 1 then
+        return
+    end
+    if key ~= current_filter_key then
+        current_filter_key = key
+        current_filter_idx = 1
+    end
+    local filter = filter_cache[tostring(parent)][current_filter_key]
+    if not filter or #filter < 1 then
+        return
+    end
+    current_filter_idx = current_filter_idx + 1
+    if current_filter_idx > #filter then
+        current_filter_idx = 1
+    end
+    return filter[current_filter_idx]
+end
 function m.show()
     if not gd.project_root then
         return
@@ -257,14 +302,34 @@ function m.show()
             imgui.table.NextColumn()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
             imgui.windows.BeginChild("##ResourceBrowserContent", child_width, child_height, false);
+            
             local folder = selected_folder[2]
             if folder then
+                -- if imgui.windows.IsWindowHovered() then
+                --     for _, key, press, status in key_mb:unpack() do
+                --         print(key, press)
+                --     end
+                -- end
+                if imgui.windows.IsWindowFocused() then
+                    create_filter_cache(selected_folder[1], folder.dirs, folder.files)
+                    for _, key, press, status in key_mb:unpack() do
+                        if press == 1 then
+                            selected_file = get_filter_path(selected_folder[1], key) or selected_file
+                        end
+                    end
+                else
+                    if current_filter_key then
+                        current_filter_key = nil
+                        selected_file = nil
+                    end
+                end
                 rename_file(selected_file)
                 for _, path in pairs(folder.dirs) do
                     imgui.widget.Image(assetmgr.textures[icons.ICON_FOLD.id], icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
                     imgui.cursor.SameLine()
                     if imgui.widget.Selectable(tostring(path[1]:filename()), selected_file == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path[1]
+                        current_filter_key = 1
                         if imgui.util.IsMouseDoubleClicked(0) then
                             selected_folder = path
                         end
@@ -279,6 +344,7 @@ function m.show()
                     imgui.cursor.SameLine()
                     if imgui.widget.Selectable(tostring(path:filename()), selected_file == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path
+                        current_filter_key = 1
                         if imgui.util.IsMouseDoubleClicked(0) then
                             local prefab_file
                             if path:equal_extension(".prefab") then

@@ -37,7 +37,7 @@ local function init_fx_files()
         "model_adv_distortion",
     } do
         local filename = ("/pkg/ant.efk/materials/%s.material"):format(name)
-        local r = assetmgr.resource(filename)
+        local r = assetmgr.load_fx(filename)
         FxFiles[name] = r.fx
     end
     return FxFiles

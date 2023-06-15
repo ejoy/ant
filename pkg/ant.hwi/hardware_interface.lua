@@ -73,6 +73,21 @@ function hw.native_window()
 	return init_args.nwh
 end
 
+local DEBUG_FLAGS<const> = {
+	IFH = "I",
+	WIREFRAME = "W",
+	STATS = "S",
+	TEXT = "T",
+	PROFILER = "P",
+}
+function hw.set_debug(t)
+	local f = ""
+	for _, v in pairs(t) do
+		f = f .. assert(DEBUG_FLAGS[v])
+	end
+	bgfx.set_debug(f)
+end
+
 function hw.screen_size()
 	return init_args.width, init_args.height
 end

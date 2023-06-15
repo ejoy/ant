@@ -56,7 +56,7 @@ local test_cb = {true}
 
 local function init()
     local platform    = require "bee.platform"
-    local Font        = require "platform".font
+    local Font        = imgui.font.SystemFont
     local function glyphRanges(t)
         assert(#t % 2 == 0)
         local s = {}
