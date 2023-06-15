@@ -203,35 +203,17 @@ local function find_layout_idx(layouts, name)
 	end
 end
 
-local function calc_tangents(math3d, ib, vb, layouts)
+local function calc_tangents(math3d, ib, vb_num, positions, normals, uvs, pos_layout, normal_layout, uv_layout, store)
 	local tangents, bitangents = {}, {}
 
-	local pos_attrib_idx, tex_attrib_idx = find_layout_idx(layouts, "POSITION"), find_layout_idx(layouts, "TEXCOORD_0")
-	local pos_layout, tex_layout = layouts[pos_attrib_idx].layout, layouts[tex_attrib_idx].layout
-	local function remove(iv, idx)
-		local vv = vb[iv]
-		table.remove(vv, idx)
-	end
-
-	local function store(iv, v)
-		local vv = vb[iv]
-		vv[#vv+1] = math3d.serialize(v)
-	end
-
-	local function load_vec(v, idx, layout)
-		local p = unpack_vec(v[idx], layout)
-		return math3d.vector(p)
-	end
-
 	local function load_vertex(vidx)
-		local v = vb[vidx]
-		local t = unpack_vec(v[tex_attrib_idx], tex_layout)
+		local p = unpack_vec(positions[vidx][1], pos_layout)
+		local t = unpack_vec(uvs[vidx][1], uv_layout)
 		return {
-			p = load_vec(v, pos_attrib_idx, pos_layout),
+			p = math3d.vector(p),
 			u = t[1], v = t[2]
 		}
 	end
-
 	--[[
 		tangent calculation:
 		we have 3 vertices: a, b, c, which have position and uv defined in triangle abc, we make:
@@ -293,13 +275,10 @@ local function calc_tangents(math3d, ib, vb, layouts)
 			calc_tangent(vidx0, vidx1, vidx2)
 		end
 	else
-		for iv=1, #vb, 3 do
+		for iv=1, vb_num, 3 do
 			calc_tangent(iv, iv+1, iv+2)
 		end
 	end
-
-	local normal_attrib_idx = find_layout_idx(layouts, "NORMAL")
-	local normal_layout = layouts[normal_attrib_idx].layout
 
 	-- see: http://www.opengl-tutorial.org/intermediate-tutorials/tutorial-13-normal-mapping/#tangent-and-bitangent
 	local function make_vector_perpendicular(srcvec, basevec)
@@ -307,10 +286,11 @@ local function calc_tangents(math3d, ib, vb, layouts)
 		return math3d.sub(srcvec, math3d.mul(basevec, ndt))
 	end
 
-	for iv=1, #vb do
+	for iv=1, vb_num do
 		local tanu 		= tangents[iv]
 		local tanv 		= bitangents[iv]
-		local normal 	= load_vec(vb[iv], normal_attrib_idx, normal_layout)
+		local normal 	= unpack_vec(normals[iv][1], normal_layout)
+		normal = math3d.vector(normal)
 
 		local tangent	= make_vector_perpendicular(tanu, normal)
 		local bitangent	= make_vector_perpendicular(tanv, normal)
@@ -328,9 +308,7 @@ local function calc_tangents(math3d, ib, vb, layouts)
 		local nxt    	= math3d.cross(normal, tangent)
 		tangent	= math3d.set_index(tangent, 4, math3d.dot(nxt, bitangent) < 0 and -1.0 or 1.0)
 		store(iv, tangent)
-		remove(iv, tex_attrib_idx)
 	end
-	table.remove(layouts, tex_attrib_idx)
 end
 
 local function r2l_buf(d, iv, gltfbin)
@@ -342,15 +320,14 @@ local function is_vec_attrib(an)
 	return ("pnTbc"):match(an)
 end
 
-local function need_calc_tangent(layouts)
-	return find_layout(layouts, "TANGENT") == nil and find_layout(layouts, "NORMAL") and find_layout(layouts, "TEXCOORD_0")
+local function need_calc_tangent(layouts1, layouts2)
+	return find_layout(layouts1, "TANGENT") == nil and find_layout(layouts1, "NORMAL") and find_layout(layouts2, "TEXCOORD_0")
 end
 
 local function generate_layouts(gltfscene, attributes)
 	local accessors, bufferViews = gltfscene.accessors, gltfscene.bufferViews
 	local layouts1 = {}
 	local layouts2 = {}
-	local tex_layout_idx
 	for _, attribname in ipairs(LAYOUT_NAMES) do
 		local accidx = attributes[attribname]
 		if accidx then
@@ -369,21 +346,15 @@ local function generate_layouts(gltfscene, attributes)
 			 	stride	= bv.byteStride or elemsize,
 				fetch_buf = is_vec_attrib(layouttype) and r2l_buf or attrib_data,
 			}
-			local attr = attribname:match"(%w+)_%d+"
-			local color = SHORT_NAMES[attr] == 'c' 
-			local tex = SHORT_NAMES[attr] == 't'
-			if color then
-				layouts2[#layouts2+1] = l
-			elseif tex then
+			local layout1_attr = attribname:match "POSITION" or attribname:match "TANGENT" or attribname:match "NORMAL" or attribname:match "JOINTS_0" or attribname:match "WEIGHTS_0"
+			if layout1_attr then
 				layouts1[#layouts1+1] = l
-				layouts2[#layouts2+1] = l
-				tex_layout_idx = #layouts1 
 			else
-				layouts1[#layouts1+1] = l
+				layouts2[#layouts2+1] = l
 			end
 		end
 	end
-	return layouts1, layouts2, tex_layout_idx
+	return layouts1, layouts2
 end
 
 local function fetch_vertices(layouts, gltfbin, numv, reverse_wing_order)
@@ -421,15 +392,23 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 		}
 	end
 
-	local layouts1, layouts2, tex_layout_idx = generate_layouts(gltfscene, prim.attributes)
-	local need_calc_tan = need_calc_tangent(layouts1)
-	if need_calc_tan == false then
-		table.remove(layouts1, tex_layout_idx)
-	end
+	local layouts1, layouts2 = generate_layouts(gltfscene, prim.attributes)
+
 	local vertices1 = fetch_vertices(layouts1, gltfbin, numv, ib_table == nil)
-	if need_calc_tan then
+	if need_calc_tangent(layouts1, layouts2) then
 		local cp = math3d.checkpoint()
-		calc_tangents(math3d, ib_table, vertices1, layouts1)
+		local pos_layout = layouts1[find_layout_idx(layouts1, "POSITION")]
+		local normal_layout = layouts1[find_layout_idx(layouts1, "NORMAL")]
+		local uv_layout  = layouts2[find_layout_idx(layouts2, "TEXCOORD_0")]
+		local pos = fetch_vertices({pos_layout}, gltfbin, numv, ib_table == nil)
+		local n   = fetch_vertices({normal_layout}, gltfbin, numv, ib_table == nil)
+		local uv = fetch_vertices({uv_layout}, gltfbin, numv, ib_table == nil)
+		calc_tangents(math3d, ib_table, #vertices1, pos, n, uv, pos_layout.layout, normal_layout.layout, uv_layout.layout,
+		function (iv, v)
+			local vv = vertices1[iv]
+			vv[#vv+1] = math3d.serialize(v)
+		end
+		)
 		math3d.recover(cp)
 		layouts1[#layouts1+1] = {
 			layout		= "T40NIf",
