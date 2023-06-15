@@ -11,27 +11,16 @@
 #include <binding/render.h>
 #include <binding/context.h>
 
-#include "../bgfx/bgfx_interface.h"
-#include "../bgfx/luabgfx.h"
-#include <bgfx/c99/bgfx.h>
-#include <assert.h>
 #include <string.h>
 
-struct RmlInterface {
-	lua_plugin      m_plugin;
-    Renderer        m_renderer;
-    RmlInterface(lua_State* L, RmlContext* context)
-        : m_plugin(L)
-        , m_renderer(context)
-    {}
-};
-
 struct RmlWrapper {
-    RmlContext   context;
-    RmlInterface interface;
-    RmlWrapper(lua_State* L, int idx)
-        : context(L, idx)
-        , interface(L, &context)
+	RmlContext m_context;
+	lua_plugin m_plugin;
+	Renderer   m_renderer;
+	RmlWrapper(lua_State* L, int idx)
+		: m_context(L, idx)
+		, m_plugin(L)
+		, m_renderer(&m_context)
 	{}
 };
 
@@ -561,7 +550,7 @@ int lDataModelSet(lua_State* L);
 int lDataModelDirty(lua_State* L);
 
 lua_plugin* get_lua_plugin() {
-    return &g_wrapper->interface.m_plugin;
+    return &g_wrapper->m_plugin;
 }
 
 extern "C"
