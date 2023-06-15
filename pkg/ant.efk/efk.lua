@@ -12,6 +12,8 @@ local viewidmgr = renderpkg.viewidmgr
 local fbmgr     = renderpkg.fbmgr
 local assetmgr  = import_package "ant.asset"
 
+local bgfxmainS = ltask.queryservice "ant.render|bgfx_main"
+
 local itimer    = ecs.import.interface "ant.timer|itimer"
 
 local PH
@@ -159,7 +161,8 @@ function efk_sys:camera_usage()
         update_framebuffer_texutre(camera.projmat)
         need_update_framebuffer = nil
     end
-    ltask.send(EFK_SERVER, "update", math3d.serialize(camera.viewmat), math3d.serialize(camera.projmat), itimer.delta())
+
+    ltask.call(bgfxmainS, "update_world_camera", math3d.serialize(camera.viewmat), math3d.serialize(camera.projmat), itimer.delta())
 end
 
 function efk_sys:follow_transform_updated()

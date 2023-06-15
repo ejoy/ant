@@ -10,6 +10,8 @@ local efk       = require "efk"
 
 local FI        = require "fileinterface"
 
+local bgfxmainS = ltask.queryservice "ant.render|bgfx_main"
+
 import_package "ant.service".init_bgfx()
 local renderpkg = import_package "ant.render"
 
@@ -66,9 +68,6 @@ local ident_mat<const> = ("f"):rep(16):pack(
     0.0, 0.0, 1.0, 0.0,
     0.0, 0.0, 0.0, 1.0)
 
-local viewmat, projmat = ident_mat, ident_mat
-local deltatime = 0
-
 function S.init(fx_files)
     FxFiles = fx_files
     efk_cb_handle =  efk_cb.callback{
@@ -91,11 +90,6 @@ function S.init(fx_files)
             filefactory = filefactory,
         }
     }
-end
-
-function S.update(view, proj, dt)
-    viewmat, projmat = view, proj
-    deltatime = dt
 end
 
 function S.update_cb_data(background_handle, depth)
@@ -165,6 +159,7 @@ function ()
     bgfx.encoder_create "efx"
     while not quit do
         if efk_ctx then
+            local viewmat, projmat, deltatime = ltask.call(bgfxmainS, "fetch_world_camera")
             efk_ctx:render(viewmat, projmat, deltatime)
         end
         bgfx.encoder_frame()

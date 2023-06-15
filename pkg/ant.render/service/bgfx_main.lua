@@ -1,7 +1,8 @@
-local ltask = require "ltask"
-local exclusive = require "ltask.exclusive"
-local bgfx = require "bgfx"
-local fontmanager = require "font.fontmanager"
+local ltask         = require "ltask"
+local exclusive     = require "ltask.exclusive"
+local bgfx          = require "bgfx"
+local fontmanager   = require "font.fontmanager"
+local math3d        = require "math3d"
 
 local initialized = false
 
@@ -19,6 +20,9 @@ local CALL = {
     "encoder_frame",
     "maxfps",
     "fontmanager",
+
+    "fetch_world_camera",
+    "update_world_camera",
 }
 
 local SEND = {
@@ -130,6 +134,49 @@ function S.pause()
     pause_token = {}
     ltask.wait(pause_token)
     pause_token = nil
+end
+
+local WORLD_CAMERA_STATE = {
+    viewmat = nil,
+    projmat = nil,
+    deltatime = 0,
+    which_consumer  = nil,
+    clear = function (self)
+        self.viewmat = nil
+        self.projmat = nil
+        self.deltatime = 0
+    end,
+    update = function(self, viewmat, projmat, deltatime)
+        assert(not self:already_update())
+        self.viewmat = viewmat
+        self.projmat = projmat
+        self.deltatime = deltatime
+        self:check_wakeup()
+    end,
+    already_update = function(self)
+        return nil ~= self.viewmat
+    end,
+    check_wakeup = function (self)
+        if nil ~= self.which_consumer then
+            ltask.wakeup(self.which_consumer)
+        end
+    end,
+    check_and_wait = function (self)
+        if not self:already_update() then
+            self.which_consumer = coroutine.running()
+            ltask.wait(self.which_consumer)
+            self.which_consumer = nil
+        end
+    end,
+}
+
+function S.fetch_world_camera()
+    WORLD_CAMERA_STATE:check_and_wait()
+    return WORLD_CAMERA_STATE.viewmat, WORLD_CAMERA_STATE.projmat, WORLD_CAMERA_STATE.deltatime
+end
+
+function S.update_world_camera(...)
+    WORLD_CAMERA_STATE:update(...)
 end
 
 function S.continue()
@@ -255,6 +302,7 @@ local function mainloop()
             end
             frame_control()
             ltask.multi_wakeup("bgfx.frame", f)
+            WORLD_CAMERA_STATE:clear()
             ltask.sleep(0)
             profile_begin()
         else
