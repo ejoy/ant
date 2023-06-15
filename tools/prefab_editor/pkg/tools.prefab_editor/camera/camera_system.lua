@@ -8,8 +8,8 @@ local math3d	= require "math3d"
 local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
 local timer		= ecs.import.interface "ant.timer|itimer"
-local camera_sys	= ecs.system "camera_system"
-
+local camera_sys = ecs.system "camera_system"
+local global_data = require "common.global_data"
 function camera_sys:init_world()
 end
 
@@ -36,6 +36,9 @@ local animation = {
 }
 
 local function on_key(key, press)
+	if global_data.camera_lock then
+		return
+	end
 	local pressed = press == 1 or press == 2
 	if not pressed then -- or not rotate_mode
 		return
@@ -210,6 +213,7 @@ function camera_sys:handle_input()
 	end
 
 	for _, key, press, status in key_mb:unpack() do
+		-- print(key, press, status)
 		if key == "LeftShift" then
 			shift_down = (press == 1 or press == 2)
 		end
