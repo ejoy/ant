@@ -1157,8 +1157,8 @@ end
 
 local ivs		= ecs.import.interface "ant.scene|ivisible_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local bone_color = math3d.ref(math3d.vector(0.4, 0.4, 1, 0.8))
-local bone_highlight_color = math3d.ref(math3d.vector(1.0, 0.4, 0.4, 0.8))
+local bone_color = math3d.constant("v4", {0.4, 0.4, 1, 0.8})
+local bone_highlight_color = math3d.constant("v4", {1.0, 0.4, 0.4, 0.8})
 
 local ientity 	= ecs.import.interface "ant.render|ientity"
 local imesh 	= ecs.import.interface "ant.asset|imesh"
@@ -1177,7 +1177,7 @@ local function create_joint_entity(joint_name)
             render_layer = "translucent",
             name = joint_name,
             on_ready = function(e)
-                imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
+                imaterial.set_property(e, "u_basecolor_factor", bone_color)
                 ivs.set_state(e, "main_view", false)
 			end
         }
@@ -1247,7 +1247,7 @@ local function create_bone_entity(joint_name)
 			visible_state= "main_view|selectable",
 			name		= joint_name,
 			on_ready 	= function(e)
-                imaterial.set_property(e, "u_basecolor_factor", math3d.vector(bone_color))
+                imaterial.set_property(e, "u_basecolor_factor", bone_color)
                 ivs.set_state(e, "main_view", false)
 			end
 		}
@@ -1287,7 +1287,7 @@ function m.init(skeleton)
     joint_utils.on_select_joint = function(old, new)
         if old and old.mesh then
             local e <close> = w:entity(old.mesh)
-            imaterial.set_property(e, "u_basecolor_factor", bone_color) 
+            imaterial.set_property(e, "u_basecolor_factor", bone_color)
         end
         if new then
             local e <close> = w:entity(new.mesh)
