@@ -87,6 +87,7 @@ system "heap_mesh"
 
 component "heapmesh".type "lua"
 component "heapmesh_changed"
+component "heapmesh_ready"
 
 
 interface "iheapmesh"
