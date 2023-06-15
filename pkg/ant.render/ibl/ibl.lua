@@ -4,8 +4,7 @@ local w         = world.w
 
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local ltask     = require "ltask"
-local image     = require "image"
+local fs        = require "filesystem"
 
 local assetmgr  = import_package "ant.asset"
 local renderpkg = import_package "ant.render"
@@ -24,10 +23,6 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local setting   = import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
-local SH_coeff_count<const> = irradianceSH_bandnum and irradianceSH_bandnum * irradianceSH_bandnum or nil
-if nil ~= irradianceSH_bandnum and irradianceSH_bandnum ~= 2 and irradianceSH_bandnum ~= 3 then
-    error "Irradiance SH only support band num 2/3"
-end
 
 local ibl_viewid= viewidmgr.get "ibl"
 
@@ -172,28 +167,6 @@ end
 
 local sample_count<const> = 512
 
-local update_SH_attributes; do
-    local P<const> = {
-        [2] = function (Eml)
-            local m = math3d.set_columns(mc.IDENTITY_MAT, Eml[1], Eml[2], Eml[3], Eml[4])
-            local c1, c2, c3 = math3d.index(math3d.transpose(m), 1, 2, 3)
-            imaterial.system_attribs():update("u_irradianceSH", {c1, c2, c3})
-        end,
-        [3] = function (Eml)
-            local m1 = math3d.transpose(math3d.matrix(Eml[2], Eml[3], Eml[4], Eml[5]))
-            local m2 = math3d.transpose(math3d.matrix(Eml[6], Eml[7], Eml[8], Eml[9]))
-            local c1, c2, c3 = math3d.index(m1, 1, 2, 3)
-            local c4, c5, c6 = math3d.index(m2, 1, 2, 3)
-            imaterial.system_attribs():update("u_irradianceSH", {Eml[1], c1, c2, c3, c4, c5, c6})
-        end
-    }
-
-    local compresser = P[irradianceSH_bandnum]
-    function update_SH_attributes(Eml)
-        return compresser(Eml)
-    end
-end
-
 function ibl_sys:render_preprocess()
     local source_tex = IBL_INFO.source
     for e in w:select "irradiance_builder dispatch:in" do
@@ -211,21 +184,10 @@ function ibl_sys:render_preprocess()
     end
 
     for e in w:select "irradianceSH_builder" do
-        local function load_cm()
-            local function read_file(fn)
-                local f <close> = assert(io.open(fn, "rb"))
-                return f:read "a"
-            end
-    
-            local c = read_file(assetmgr.compile(source_tex.tex_name .. "|main.bin"))
-            local nomip<const> = true
-            local info, content = image.parse(c, true, "RGBA32F", nomip)
-            assert(info.bitsPerPixel // 8 == 16)
-            return texutil.create_cubemap{w=info.width, h=info.height, texelsize=16, data=content}
-        end
-
-        local Eml = SH.calc_Eml(load_cm(), irradianceSH_bandnum)
-        update_SH_attributes(Eml)
+        local irradianceSH_path = fs.path(IBL_INFO.source.tex_name):replace_extension "irradianceSH"
+        local Eml = assetmgr.resource(irradianceSH_path:string())
+        assert((irradianceSH_bandnum == 2 and #Eml == 3) or (irradianceSH_bandnum == 3 and #Eml == 7), "Invalid Eml data")
+        imaterial.system_attribs():update("u_irradianceSH", Eml)
         w:remove(e)
     end
 
