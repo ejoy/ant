@@ -330,17 +330,17 @@ function m.show()
                     create_filter_cache(selected_folder[1], folder.dirs, folder.files)
                     for _, key, press, status in key_mb:unpack() do
                         if #key == 1 and press == 1 then
-                            local cache = filter_cache[tostring(selected_folder[1])]
-                            local file_count = cache and cache.count or 0
+                            -- local cache = filter_cache[tostring(selected_folder[1])]
+                            -- local file_count = cache and cache.count or 0
                             local file_path, file_pos = get_filter_path(selected_folder[1], key)
                             if file_path then
-                                local _, sy = imgui.windows.GetWindowSize()
-                                -- local max_scrolly = imgui.windows.GetScrollMaxY()
-                                selected_file = file_path or selected_file
+                                local max_scrolly = imgui.windows.GetScrollMaxY()
                                 -- local scroll_pos = ((file_pos - 1) / file_count) * max_scrolly
                                 -- if file_pos > 1 then
                                 --     scroll_pos = scroll_pos + 22
                                 -- end
+                                local _, sy = imgui.windows.GetWindowSize()
+                                selected_file = file_path or selected_file
                                 local current_pos = imgui.windows.GetScrollY()
                                 local target_pos = file_pos * 22
                                 if target_pos > current_pos + sy or target_pos < sy or target_pos < (current_pos - sy) then
@@ -362,6 +362,12 @@ function m.show()
                 end
                 rename_file(selected_file)
                 for _, path in pairs(folder.dirs) do
+                    -- imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderActive, 0.26, 0.59, 0.98, 0.31)
+                    if selected_file ~= path[1] then
+                        imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderHovered, 0.45, 0.45, 0.90, 0.0)
+                    else
+                        imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
+                    end
                     imgui.widget.Image(assetmgr.textures[icons.ICON_FOLD.id], icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
                     imgui.cursor.SameLine()
                     if imgui.widget.Selectable(tostring(path[1]:filename()), selected_file == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
@@ -374,8 +380,15 @@ function m.show()
                     if selected_file == path[1] then
                         ShowContextMenu()
                     end
+                    imgui.windows.PopStyleColor()
                 end
                 for _, path in pairs(folder.files) do
+                    -- imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderActive, 0.26, 0.59, 0.98, 0.31)
+                    if selected_file ~= path then
+                        imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderHovered, 0.45, 0.45, 0.90, 0.0)
+                    else
+                        imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
+                    end
                     local icon = icons.get_file_icon(path)
                     imgui.widget.Image(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height)
                     imgui.cursor.SameLine()
@@ -418,6 +431,8 @@ function m.show()
                     if selected_file == path then
                         ShowContextMenu()
                     end
+                    imgui.windows.PopStyleColor()
+                    
                     if path:equal_extension(".material")
                         or path:equal_extension(".texture")
                         or path:equal_extension(".png")
@@ -434,7 +449,7 @@ function m.show()
                 end
             end
             imgui.windows.EndChild()
-
+            
             imgui.cursor.SameLine()
             imgui.table.NextColumn()
             child_width, child_height = imgui.windows.GetContentRegionAvail()
