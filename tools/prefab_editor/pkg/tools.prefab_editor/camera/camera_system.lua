@@ -213,7 +213,6 @@ function camera_sys:handle_input()
 	end
 
 	for _, key, press, status in key_mb:unpack() do
-		-- print(key, press, status)
 		if key == "LeftShift" then
 			shift_down = (press == 1 or press == 2)
 		end

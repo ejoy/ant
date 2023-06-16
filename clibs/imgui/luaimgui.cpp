@@ -171,7 +171,14 @@ static int lPairsInputEvents(lua_State* L) {
 				break;
 			}
 			auto key = e->Key.Key;
-			if (key < ImGuiKey_KeysData_OFFSET || key >= ImGuiKey_KeysData_OFFSET + ImGuiKey_KeysData_SIZE) {
+			// TODO: fix Ctrl+Space bug, if Ctrl release before Space, there is no ImGuiKey_LeftCtrl event.
+			if (key == ImGuiKey_LeftCtrl) {
+				break;
+			}
+			else if (key == ImGuiMod_Ctrl) {
+				key = ImGuiKey_LeftCtrl;
+			}
+			else if (key < ImGuiKey_KeysData_OFFSET || key >= ImGuiKey_KeysData_OFFSET + ImGuiKey_KeysData_SIZE) {
 				break;
 			}
 			lua_pushinteger(L, ++event_n);
