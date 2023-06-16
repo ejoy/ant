@@ -361,15 +361,21 @@ function m.show()
                     end
                 end
                 rename_file(selected_file)
-                for _, path in pairs(folder.dirs) do
-                    -- imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderActive, 0.26, 0.59, 0.98, 0.31)
-                    if selected_file ~= path[1] then
-                        imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderHovered, 0.45, 0.45, 0.90, 0.0)
+                local function pre_selectable(icon, noselected)
+                    imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderActive, 0.0, 0.0, 0.0, 0.0)
+                    if noselected then
+                        imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderHovered, 0.0, 0.0, 0.0, 0.0)
                     else
                         imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
                     end
-                    imgui.widget.Image(assetmgr.textures[icons.ICON_FOLD.id], icons.ICON_FOLD.texinfo.width, icons.ICON_FOLD.texinfo.height)
+                    imgui.widget.Image(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height)
                     imgui.cursor.SameLine()
+                end
+                local function post_selectable()
+                    imgui.windows.PopStyleColor(2)
+                end
+                for _, path in pairs(folder.dirs) do
+                    pre_selectable(icons.ICON_FOLD, selected_file ~= path[1])
                     if imgui.widget.Selectable(tostring(path[1]:filename()), selected_file == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path[1]
                         current_filter_key = 1
@@ -380,18 +386,10 @@ function m.show()
                     if selected_file == path[1] then
                         ShowContextMenu()
                     end
-                    imgui.windows.PopStyleColor()
+                    post_selectable()
                 end
                 for _, path in pairs(folder.files) do
-                    -- imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderActive, 0.26, 0.59, 0.98, 0.31)
-                    if selected_file ~= path then
-                        imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderHovered, 0.45, 0.45, 0.90, 0.0)
-                    else
-                        imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
-                    end
-                    local icon = icons.get_file_icon(path)
-                    imgui.widget.Image(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height)
-                    imgui.cursor.SameLine()
+                    pre_selectable(icons.ICON_FOLD, selected_file ~= path)
                     if imgui.widget.Selectable(tostring(path:filename()), selected_file == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path
                         current_filter_key = 1
@@ -431,7 +429,7 @@ function m.show()
                     if selected_file == path then
                         ShowContextMenu()
                     end
-                    imgui.windows.PopStyleColor()
+                    post_selectable()
                     
                     if path:equal_extension(".material")
                         or path:equal_extension(".texture")
