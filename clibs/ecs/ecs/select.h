@@ -17,6 +17,9 @@ namespace ecs_api {
     template <typename T>
     struct component {};
 
+    template <typename T>
+    constexpr int component_id = component<T>::id;
+
     namespace impl {
         template <typename Component, typename...Components>
         constexpr bool has_element() {
@@ -213,6 +216,9 @@ namespace ecs_api {
         int getid() const noexcept {
             return index;
         }
+        bool invalid() const {
+            return index == kInvalidIndex;
+        }
         template <typename T>
             requires (component<T>::id == EID)
         T get() noexcept {
@@ -341,7 +347,7 @@ namespace ecs_api {
                     return !(*this != o);
                 }
                 iterator& operator++() noexcept {
-                    if (e.getid() == entity_type::kInvalidIndex) {
+                    if (e.invalid()) {
                         return *this;
                     }
                     e.next();
