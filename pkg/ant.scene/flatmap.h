@@ -233,7 +233,9 @@ public:
         }
 
         m_buckets[slot].key.~key_type();
-        m_buckets[slot].obj.~mapped_type();
+        if constexpr (!std::is_same_v<mapped_type, void>) {
+            m_buckets[slot].obj.~mapped_type();
+        }
         m_buckets[slot].dib = 0;
         m_size--;
     }
