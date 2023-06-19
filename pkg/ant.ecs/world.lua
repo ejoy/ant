@@ -60,6 +60,7 @@ local function update_math3d_stat(w, funcs, symbols)
 	local math3d = require "math3d"
 	local ecs_world = w._ecs_world
 	local MATH_INFO_TRANSIENT <const> = 2
+	local MATH_INFO_LAST <const> = 4
 	local MaxFrame <const> = 30
 	local MaxText <const> = math.min(9, #funcs)
 	local MaxName <const> = 48
@@ -67,6 +68,7 @@ local function update_math3d_stat(w, funcs, symbols)
 	local dbg_print = bgfx.dbg_text_print
 	local printtext = {}
 	local stat = {}
+	local total = 0
 	for i = 1, #funcs do
 		stat[i] = 0
 	end
@@ -82,15 +84,17 @@ local function update_math3d_stat(w, funcs, symbols)
 			stat[i] = math.max(stat[i], (transient - last))
 			last = transient
 		end
+		local frame_total = math3d.info(MATH_INFO_LAST)
+		if total < frame_total then
+			total = frame_total
+		end
 		if CurFrame ~= MaxFrame then
 			CurFrame = CurFrame + 1
 		else
 			CurFrame = 1
-			local total = 0
 			local t = {}
 			for i = 1, #funcs do
 				t[i] = {stat[i], i}
-				total = total + stat[i]
 			end
 			table.sort(t, function (a, b)
 				return a[1] > b[1]
@@ -116,7 +120,7 @@ function world:pipeline_func(what)
 	if not funcs or #funcs == 0 then
 		return function() end
 	end
-	local CPU_STAT <const> = true
+	local CPU_STAT <const> = false
 	local MATH3D_STAT <const> = true
 	if what == "_init" or what == "_update" then
 		if CPU_STAT then
