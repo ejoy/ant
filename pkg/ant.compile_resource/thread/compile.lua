@@ -88,6 +88,7 @@ local function init()
     init_setting()
     local hd = caps.homogeneousDepth and true or nil
     local obl = caps.originBottomLeft and true or nil
+
     set_setting("glb", stringify {
         hd = hd,
         obl = obl,
@@ -100,6 +101,8 @@ local function init()
     })
     set_setting("texture", stringify {os=platform.os, ext=texture})
     set_setting("png", stringify {os=platform.os, ext=texture})
+
+    set_setting("irradianceSH", stringify {os=platform.os})
 end
 
 return {

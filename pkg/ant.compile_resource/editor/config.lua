@@ -25,7 +25,7 @@ local ResourceCompiler <const> = {
     texture = "editor.texture.convert",
     material = "editor.material.convert",
     png     = "editor.texture.png",
-    irradianceSH = "editor.irradianceSH.convert",
+    irradianceSH = "editor.ibl.convert",
 }
 
 local function parse(arguments)

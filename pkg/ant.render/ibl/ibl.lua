@@ -50,9 +50,13 @@ local cubemap_flags<const> = sampler {
 
 local IBL_INFO = {
     source = {facesize = 0, stage=0, value=nil},
+    --TODO: need remove
     irradiance   = {
         value = nil,
         size = 0,
+    },
+    irradianceSH = {
+        path = nil
     },
     prefilter    = {
         value = nil,
@@ -184,8 +188,7 @@ function ibl_sys:render_preprocess()
     end
 
     for e in w:select "irradianceSH_builder" do
-        local irradianceSH_path = fs.path(IBL_INFO.source.tex_name):replace_extension "irradianceSH"
-        local Eml = assetmgr.resource(irradianceSH_path:string())
+        local Eml = assetmgr.resource(IBL_INFO.irradianceSH.path)
         assert((irradianceSH_bandnum == 2 and #Eml == 3) or (irradianceSH_bandnum == 3 and #Eml == 7), "Invalid Eml data")
         imaterial.system_attribs():update("u_irradianceSH", Eml)
         w:remove(e)
@@ -247,11 +250,18 @@ local function build_ibl_textures(ibl)
     IBL_INFO.source.facesize = assert(ibl.source.facesize)
     IBL_INFO.source.tex_name = ibl.source.tex_name
 
-    if ibl.irradiance.size ~= IBL_INFO.irradiance.size then
-        IBL_INFO.irradiance.size = ibl.irradiance.size
-        check_destroy(IBL_INFO.irradiance.value)
+    --TODO: need remove
+    if ibl.irradiance then
+        if ibl.irradiance.size ~= IBL_INFO.irradiance.size then
+            IBL_INFO.irradiance.size = ibl.irradiance.size
+            check_destroy(IBL_INFO.irradiance.value)
 
-        IBL_INFO.irradiance.value = bgfx.create_texturecube(IBL_INFO.irradiance.size, false, 1, "RGBA16F", flags)
+            IBL_INFO.irradiance.value = bgfx.create_texturecube(IBL_INFO.irradiance.size, false, 1, "RGBA16F", flags)
+        end
+    end
+
+    if ibl.irradianceSH and IBL_INFO.irradianceSH.path ~= ibl.irradianceSH.path then
+        IBL_INFO.irradianceSH.path = ibl.irradianceSH.path
     end
 
     if ibl.prefilter.size ~= IBL_INFO.prefilter.size then

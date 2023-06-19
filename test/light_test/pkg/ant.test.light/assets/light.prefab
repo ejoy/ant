@@ -9,8 +9,8 @@ data:
     scene: {}
     ibl:
         intensity: 65000
-        irradiance:
-            size: 32
+        irradianceSH:
+          path: /pkg/ant.test.light/assets/materials/aerodynamics_workshop_2k.irradianceSH
         prefilter:
             size: 128
         LUT:
@@ -27,7 +27,6 @@ policy:
 data:
   scene:
     r: {1.8, 0, 0}
-    t: {0, 10, 0, 1}
   name: directional_light
   visible: true
   light:

@@ -61,8 +61,9 @@ function skybox_sys:entity_ready()
 			end
             iibl.filter_all{
                 source 		= {value=texid, facesize=sb.facesize, tex_name = tn},
+				--TODO: need remove, only use irradianceSH
                 irradiance 	= se_ibl.irradiance,
-                irradianceSH= {CPU=true, bandnum=irradianceSH_bandnum},
+                irradianceSH= se_ibl.irradianceSH,
                 prefilter 	= se_ibl.prefilter,
                 LUT			= se_ibl.LUT,
                 intensity	= se_ibl.intensity,

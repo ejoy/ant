@@ -3,9 +3,9 @@ local lfs       = require "filesystem.local"
 local datalist  = require "datalist"
 local image     = require "image"
 local math3d    = require "math3d"
+local ltask     = require "ltask"
 
-local mathpkg   = import_package "ant.math"
-local mc        = mathpkg.constant
+local depends = require "editor.depends"
 
 local setting   = import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
@@ -17,8 +17,13 @@ local SH        = shpkg.sh
 local texutil   = shpkg.texture
 
 local function readfile(filename)
-	local f <close> = assert(lfs.open(filename, "r"))
+	local f <close> = assert(lfs.open(filename, "rb"))
 	return f:read "a"
+end
+
+local function writefile(filename, c)
+    local f <close> = lfs.open(filename, "wb")
+    f:write(c)
 end
 
 local function readdatalist(filepath)
@@ -46,15 +51,32 @@ local compress_SH; do
     compress_SH = P[irradianceSH_bandnum]
 end
 
-return function(input, output, localpath)
-    assert(not lfs.exists(input))
-    local texinput = lfs.path(input):replace_extension "texture"
-    assert(lfs.exists(texinput))
+local function build_Eml(cm)
+    local _, begin = ltask.now()
+    print("start build irradiance SH, bandnum:", irradianceSH_bandnum)
+    local Eml = SH.calc_Eml(cm, irradianceSH_bandnum)
+    local _, now = ltask.now()
+    print("finish build irradiance SH, time used:", now - begin)
+    return Eml
+end
 
-    local tex_desc = readdatalist(texinput)
+local function serialize_results(Eml, output)
+    local s = {}
+    for _, e in ipairs(Eml) do
+        s[#s+1] = math3d.serialize(e)
+    end
 
-    local ok, err = texture_compile(tex_desc, output, function (path)
-        path = path[1]
+    writefile(output / "main.bin", table.concat(s))
+end
+
+return function(input, output)
+    local sh_desc = readdatalist(input)
+    local texpath = fs.path(sh_desc.path):localpath()
+    local tex_desc = readdatalist(texpath)
+
+    local tex_outputpath = output / "image"
+
+    local ok, err = texture_compile(tex_desc, tex_outputpath, function (path)
         if path:sub(1,1) == "/" then
             return fs.path(path):localpath()
         end
@@ -62,21 +84,19 @@ return function(input, output, localpath)
     end)
 
     if not ok or err then
-        error(("irradiance SH need texture file:%s, but it can not compile, error:%s"):format(texinput:string(), err))
+        error(("irradiance SH need texture file:%s, but it can not compile, error:%s"):format(texpath:string(), err))
     end
 
-    local c = readfile(lfs.path(texinput:string() .. "/main.bin"))
+    local c = readfile(tex_outputpath / "main.bin")
     local nomip<const> = true
     local info, content = image.parse(c, true, "RGBA32F", nomip)
     assert(info.bitsPerPixel // 8 == 16)
     local cm = texutil.create_cubemap{w=info.width, h=info.height, texelsize=16, data=content}
-    local Eml = SH.calc_Eml(cm, irradianceSH_bandnum)
-    Eml = compress_SH(Eml)
-    local s = {}
-    for _, e in ipairs(Eml) do
-        s[#s+1] = math3d.serialize(e)
-    end
-    local f <close> = lfs.open(output, "wb")
-    f:write(table.concat(s))
-    return true
+    local Eml = compress_SH(build_Eml(cm))
+
+    serialize_results(Eml, output)
+
+    local deps = {}
+    depends.add(deps, texpath:string())
+    return true, deps
 end
