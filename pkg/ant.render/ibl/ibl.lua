@@ -5,17 +5,13 @@ local w         = world.w
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local fs        = require "filesystem"
+local lfs       = require "filesystem.local"
+local datalist  = require "datalist"
 
 local assetmgr  = import_package "ant.asset"
 local renderpkg = import_package "ant.render"
 local sampler   = renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
-local mathpkg   = import_package "ant.math"
-local mc        = mathpkg.constant
-
-local shpkg     = import_package "ant.sh"
-local SH        = shpkg.sh
-local texutil   = shpkg.texture
 
 local icompute  = ecs.import.interface "ant.render|icompute"
 local iexposure = ecs.import.interface "ant.camera|iexposure"
@@ -188,7 +184,24 @@ function ibl_sys:render_preprocess()
     end
 
     for e in w:select "irradianceSH_builder" do
-        local Eml = assetmgr.resource(IBL_INFO.irradianceSH.path)
+        --local c = datalist.parse(readall_s(cr.compile(name.."|main.cfg")))
+        local function load_Eml()
+            local cfgpath = assetmgr.compile(source_tex.tex_name .. "|main.cfg")
+            local ff<close> = lfs.open(lfs.path(cfgpath))
+            local c = datalist.parse(ff:read "a")
+
+            if nil == c.irradiance_SH then
+                error(("source texture:%s, did not build irradiance SH, 'build_irradiance_sh' should add to cubemap texture"):format(source_tex.tex_name))
+            end
+
+            local Eml = {}
+            for idx, eml in ipairs(c.irradiance_SH) do
+                Eml[idx] = math3d.vector(eml)
+            end
+            return Eml
+        end
+
+        local Eml = load_Eml()
         assert((irradianceSH_bandnum == 2 and #Eml == 3) or (irradianceSH_bandnum == 3 and #Eml == 7), "Invalid Eml data")
         imaterial.system_attribs():update("u_irradianceSH", Eml)
         w:remove(e)

@@ -16,7 +16,6 @@ local config = {
     texture  = {setting={},arguments=""},
     material = {setting={},arguments=""},
     png      = {setting={},arguments=""},
-    irradianceSH = {setting={},arguments=""},
 }
 
 local ResourceCompiler <const> = {
@@ -25,7 +24,6 @@ local ResourceCompiler <const> = {
     texture = "editor.texture.convert",
     material = "editor.material.convert",
     png     = "editor.texture.png",
-    irradianceSH = "editor.ibl.convert",
 }
 
 local function parse(arguments)

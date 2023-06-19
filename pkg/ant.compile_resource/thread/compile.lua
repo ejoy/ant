@@ -101,8 +101,6 @@ local function init()
     })
     set_setting("texture", stringify {os=platform.os, ext=texture})
     set_setting("png", stringify {os=platform.os, ext=texture})
-
-    set_setting("irradianceSH", stringify {os=platform.os})
 end
 
 return {
