@@ -9,8 +9,7 @@ data:
     scene: {}
     ibl:
         intensity: 65000
-        irradianceSH:
-          path: /pkg/ant.test.light/assets/materials/aerodynamics_workshop_2k.irradianceSH
+        irradianceSH: true
         prefilter:
             size: 128
         LUT:

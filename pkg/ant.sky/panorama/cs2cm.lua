@@ -117,7 +117,7 @@ function cs2cm_sys:filter_ibl()
             iibl.filter_all{
                 source 		= {value=cm_rbhandle, facesize=sb.facesize, res_tex = res_tex(e)},
                 irradiance 	= se_ibl.irradiance,
-                irradianceSH= {CPU=true, bandnum=irradianceSH_bandnum},
+                irradianceSH= se_ibl.irradianceSH,
                 prefilter 	= se_ibl.prefilter,
                 LUT			= se_ibl.LUT,
                 intensity	= se_ibl.intensity,

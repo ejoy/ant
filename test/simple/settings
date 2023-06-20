@@ -8,6 +8,8 @@ _windows:
   graphic:
     api: d3d11
 graphic:
+  ibl:
+    irradiance_bandnum: 3
   curve_world:
     enable: false
     type: "cylinder"
@@ -39,4 +41,4 @@ graphic:
     split_num: 4
     min_variance: 0.012
     depth_multiplier: 500
-    --split_weight: 0.75
+    #split_weight: 0.75

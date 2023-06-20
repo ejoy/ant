@@ -8,6 +8,8 @@ _windows:
   graphic:
     api: d3d11
 graphic:
+  ibl:
+    irradiance_bandnum: 3
   inv_z: true
   framebuffer:
     scene_ratio: 1

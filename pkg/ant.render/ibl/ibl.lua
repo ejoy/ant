@@ -46,7 +46,6 @@ local cubemap_flags<const> = sampler {
 
 local IBL_INFO = {
     source = {facesize = 0, stage=0, value=nil},
-    --TODO: need remove
     irradiance   = {
         value = nil,
         size = 0,
@@ -169,22 +168,8 @@ local sample_count<const> = 512
 
 function ibl_sys:render_preprocess()
     local source_tex = IBL_INFO.source
-    for e in w:select "irradiance_builder dispatch:in" do
-        local dis = e.dispatch
-        local material = dis.material
-        material.s_source = source_tex
-        material.u_build_ibl_param = math3d.vector(sample_count, 0, IBL_INFO.source.facesize, 0.0)
-
-        -- there no binding attrib in material, but we just use this entity only once
-        local mobj = material:get_material()
-        mobj:set_attrib("s_irradiance", icompute.create_image_property(IBL_INFO.irradiance.value, 1, 0, "w"))
-
-        icompute.dispatch(ibl_viewid, dis)
-        w:remove(e)
-    end
 
     for e in w:select "irradianceSH_builder" do
-        --local c = datalist.parse(readall_s(cr.compile(name.."|main.cfg")))
         local function load_Eml()
             local cfgpath = assetmgr.compile(source_tex.tex_name .. "|main.cfg")
             local ff<close> = lfs.open(lfs.path(cfgpath))
@@ -263,7 +248,6 @@ local function build_ibl_textures(ibl)
     IBL_INFO.source.facesize = assert(ibl.source.facesize)
     IBL_INFO.source.tex_name = ibl.source.tex_name
 
-    --TODO: need remove
     if ibl.irradiance then
         if ibl.irradiance.size ~= IBL_INFO.irradiance.size then
             IBL_INFO.irradiance.size = ibl.irradiance.size
@@ -271,10 +255,6 @@ local function build_ibl_textures(ibl)
 
             IBL_INFO.irradiance.value = bgfx.create_texturecube(IBL_INFO.irradiance.size, false, 1, "RGBA16F", flags)
         end
-    end
-
-    if ibl.irradianceSH and IBL_INFO.irradianceSH.path ~= ibl.irradianceSH.path then
-        IBL_INFO.irradianceSH.path = ibl.irradianceSH.path
     end
 
     if ibl.prefilter.size ~= IBL_INFO.prefilter.size then

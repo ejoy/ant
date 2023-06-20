@@ -4,6 +4,7 @@ normalmap: false
 mipmap: 0
 equirect: true
 path: /pkg/ant.resources.binary/textures/equirectangularmap/kiara_4_mid-morning_4k.hdr
+build_irradianceSH: true
 sampler:
   MAG: LINEAR
   MIN: LINEAR
