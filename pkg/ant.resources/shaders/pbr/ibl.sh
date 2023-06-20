@@ -80,6 +80,33 @@ vec3 get_IBL_radiance_Lambertian(in material_info mi)
     return irradiancecolor * mi.albedo;
 }
 
+float3 IndirectSpecularProcessing_New(float3 rf0specColor, float rf90glossinessColor, float NoV)
+{
+    float x = rf90glossinessColor;
+    float y = NoV;
+    
+    float b1 = -0.1688;
+    float b2 = 1.895;
+    float b3 = 0.9903;
+    float b4 = -4.853;
+    float b5 = 8.404;
+    float b6 = -5.069;
+    float bias = saturate( min( b1 * x + b2 * x * x, b3 + b4 * y + b5 * y * y + b6 * y * y * y ) );
+    
+    float d0 = 0.6045;
+    float d1 = 1.699;
+    float d2 = -0.5228;
+    float d3 = -3.603;
+    float d4 = 1.404;
+    float d5 = 0.1939;
+    float d6 = 2.661;
+    float delta = saturate( d0 + d1 * x + d2 * y + d3 * x * x + d4 * x * y + d5 * y * y + d6 * x * x * x );
+    float scale = delta - bias;
+    
+    bias *= saturate( 50.0 * rf0specColor.y );
+    return rf0specColor * scale + bias;
+}
+
 vec3 get_IBL_radiance_GGX(in material_info mi)
 {
     const float last_mipmap = u_ibl_prefilter_mipmap_count-1.0; //make roughness [0, 1] to [0, last_mipmap]
@@ -88,7 +115,18 @@ vec3 get_IBL_radiance_GGX(in material_info mi)
     const vec2 lut_uv = vec2(mi.NdotV, mi.perceptual_roughness);
     const vec2 lut = texture2D(s_LUT, lut_uv).rg;
     const vec3 specular_light = textureCubeLod(s_prefilter, mi.reflect_vector, lod).rgb;
-    return specular_light * (mi.f0 * lut.x + lut.y);
+    return specular_light * (mi.f0 * lut.x + mi.f90 * lut.y);
+}
+
+vec3 get_IBL_radiance_GGX_New(in material_info mi)
+{
+    const float last_mipmap = u_ibl_prefilter_mipmap_count-1.0; //make roughness [0, 1] to [0, last_mipmap]
+    const float lod = clamp(mi.perceptual_roughness*last_mipmap, 0.0, last_mipmap);
+
+    const vec3 specular_color = IndirectSpecularProcessing_New(mi.f0, mi.f90.x, mi.NdotV);
+    const vec3 specular_light = textureCubeLod(s_prefilter, mi.reflect_vector, lod).rgb;
+    const float surface_reduction = 1.0 / (mi.roughness + 1.0);
+    return specular_light * specular_color;
 }
 
 #endif //_IBL_SH_

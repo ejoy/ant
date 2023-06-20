@@ -16,7 +16,8 @@
 vec3 calc_indirect_light(in input_attributes input_attribs, in material_info mi)
 {
     vec3 indirect_diffuse = get_IBL_radiance_Lambertian(mi);
-    vec3 indirect_specular = get_IBL_radiance_GGX(mi);
+    //vec3 indirect_specular = get_IBL_radiance_GGX(mi);
+    vec3 indirect_specular = get_IBL_radiance_GGX_New(mi);
 
 #ifdef UI_RT
     return (indirect_diffuse + indirect_specular) * u_ibl_indirect_intensity;
