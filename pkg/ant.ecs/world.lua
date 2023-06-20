@@ -60,33 +60,45 @@ local function update_math3d_stat(w, funcs, symbols)
 	local math3d = require "math3d"
 	local ecs_world = w._ecs_world
 	local MATH_INFO_TRANSIENT <const> = 2
+	local MATH_INFO_MARKED <const> = 3
 	local MATH_INFO_LAST <const> = 4
+	local MATH_INFO_REF <const> = 6
 	local MaxFrame <const> = 30
 	local MaxText <const> = math.min(9, #funcs)
 	local MaxName <const> = 48
 	local CurFrame = 0
 	local dbg_print = bgfx.dbg_text_print
 	local printtext = {}
-	local stat = {}
-	local total = 0
+	local transient_total = 0
+	local marked_total = 0
+	local ref_total = 0
+	local transient_stat = {}
 	for i = 1, #funcs do
-		stat[i] = 0
+		transient_stat[i] = 0
 	end
 	for i = 1, MaxText do
 		printtext[i] = ""
 	end
 	return function ()
-		local last = math3d.info(MATH_INFO_TRANSIENT)
+		local last_transient = math3d.info(MATH_INFO_TRANSIENT)
 		for i = 1, #funcs do
 			local f = funcs[i]
 			f(ecs_world)
 			local transient = math3d.info(MATH_INFO_TRANSIENT)
-			stat[i] = math.max(stat[i], (transient - last))
-			last = transient
+			transient_stat[i] = math.max(transient_stat[i], (transient - last_transient))
+			last_transient = transient
 		end
-		local frame_total = math3d.info(MATH_INFO_LAST)
-		if total < frame_total then
-			total = frame_total
+		local ref_frame = math3d.info(MATH_INFO_REF)
+		if ref_total < ref_frame then
+			ref_total = ref_frame
+		end
+		local marked_frame = math3d.info(MATH_INFO_MARKED) - math3d.info(MATH_INFO_REF)
+		if marked_total < marked_frame then
+			marked_total = marked_frame
+		end
+		local transient_frame = math3d.info(MATH_INFO_LAST)
+		if transient_total < transient_frame then
+			transient_total = transient_frame
 		end
 		if CurFrame ~= MaxFrame then
 			CurFrame = CurFrame + 1
@@ -94,17 +106,17 @@ local function update_math3d_stat(w, funcs, symbols)
 			CurFrame = 1
 			local t = {}
 			for i = 1, #funcs do
-				t[i] = {stat[i], i}
+				t[i] = {transient_stat[i], i}
 			end
 			table.sort(t, function (a, b)
 				return a[1] > b[1]
 			end)
-			printtext[1] = "total" .. (" "):rep(MaxName-5) .. (" | %d   "):format(total)
+			printtext[1] = "total" .. (" "):rep(MaxName-5) .. (" | %d %d %d "):format(transient_total, marked_total, ref_total)
 			for i = 1, MaxText do
 				local m = t[i]
-				local v, idx = m[1], m[2]
+				local transient, idx = m[1], m[2]
 				local name = symbols[idx]
-				printtext[i+1] = name .. (" "):rep(MaxName-#name) .. (" | %d   "):format(v)
+				printtext[i+1] = name .. (" "):rep(MaxName-#name) .. (" | %d  "):format(transient)
 			end
 		end
 		dbg_print(0, 2, 0x02, "--- system")
