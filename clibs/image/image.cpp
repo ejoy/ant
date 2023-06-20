@@ -34,6 +34,30 @@ namespace lua_struct {
     }
 }
 
+class AlignedAllocator : public bx::AllocatorI
+{
+public:
+	AlignedAllocator(bx::AllocatorI* _allocator, size_t _minAlignment)
+		: m_allocator(_allocator)
+		, m_minAlignment(_minAlignment)
+	{
+	}
+
+	virtual void* realloc(
+			void* _ptr
+		, size_t _size
+		, size_t _align
+		, const char* _file
+		, uint32_t _line
+		)
+	{
+		return m_allocator->realloc(_ptr, _size, bx::max(_align, m_minAlignment), _file, _line);
+	}
+
+	bx::AllocatorI* m_allocator;
+	size_t m_minAlignment;
+};
+
 struct encode_dds_info {
     bool srgb;
 };
@@ -56,7 +80,7 @@ push_texture_info(lua_State *L, const bimg::ImageContainer *ic){
     lua_struct::pack(L, info);
 }
 
-static bimg::ImageContainer* create_nomip_image(bx::DefaultAllocator &allocator, const bimg::ImageContainer *image){
+static bimg::ImageContainer* create_nomip_image(bx::AllocatorI &allocator, const bimg::ImageContainer *image){
     auto nomip_image = bimg::imageAlloc(&allocator, image->m_format, image->m_width, image->m_height, image->m_depth, image->m_numLayers, image->m_cubeMap, false, nullptr);
     for (uint32_t ilayer = 0; ilayer < image->m_numLayers; ++ilayer){
         auto copy_mip = [](const auto& image_src, uint32_t side, auto &dst_image){
@@ -84,7 +108,9 @@ static int
 lparse(lua_State *L) {
     size_t srcsize = 0;
     auto src = luaL_checklstring(L, 1, &srcsize);
-    bx::DefaultAllocator allocator;
+    bx::DefaultAllocator defaultAllocator;
+    AlignedAllocator allocator(&defaultAllocator, 16);
+
     bool readcontent = !lua_isnoneornil(L, 2);
     auto texfmt = bimg::TextureFormat::Count;
     if(!lua_isnoneornil(L, 3)){
@@ -131,7 +157,8 @@ format_from_field(lua_State *L, int idx, const char* fieldname){
 
 static int
 lencode_image(lua_State *L){
-    bx::DefaultAllocator allocator;
+    bx::DefaultAllocator defaultAllocator;
+    AlignedAllocator allocator(&defaultAllocator, 16);
     
     bimg::TextureInfo info;
     lua_struct::unpack(L, 1, info);
@@ -237,7 +264,8 @@ lconvert(lua_State *L){
     auto buf = luaL_checklstring(L, 1, &bufsize);
     auto fmt = bimg::getFormat(luaL_checkstring(L, 2));
 
-    bx::DefaultAllocator allocator;
+    bx::DefaultAllocator defaultAllocator;
+    AlignedAllocator allocator(&defaultAllocator, 16);
     bimg::ImageContainer ic;
     ic.m_allocator = &allocator;
     bx::Error err;
@@ -253,7 +281,7 @@ lconvert(lua_State *L){
 }
 
 static bimg::ImageContainer*
-gray2rgba(const bimg::ImageContainer &ic, bx::DefaultAllocator &allocator){
+gray2rgba(const bimg::ImageContainer &ic, AlignedAllocator &allocator){
     auto unpack = [](float* dst, const void* src){
         const uint8_t* _src = (const uint8_t*)src;
         dst[0] = dst[1] = dst[2] = bx::fromUnorm(_src[0], 255.0f);
@@ -284,7 +312,8 @@ static int
 lpng_convert(lua_State *L){
     size_t srcsize = 0;
     auto src = luaL_checklstring(L, 1, &srcsize);
-    bx::DefaultAllocator allocator;
+    bx::DefaultAllocator defaultAllocator;
+    AlignedAllocator allocator(&defaultAllocator, 16);
     bimg::ImageContainer ic;
     bx::Error err;
     bimg::imageParse(ic, src, (uint32_t)srcsize, &err);
@@ -305,7 +334,8 @@ static int
 lpng_gray2rgba(lua_State *L){
     size_t srcsize = 0;
     auto src = luaL_checklstring(L, 1, &srcsize);
-    bx::DefaultAllocator allocator;
+    bx::DefaultAllocator defaultAllocator;
+    AlignedAllocator allocator(&defaultAllocator, 16);
     bimg::ImageContainer ic;
     bx::Error err;
     bimg::imageParse(ic, src, (uint32_t)srcsize, &err);
@@ -334,7 +364,7 @@ create_png_lib(lua_State *L){
 enum class CubemapFace : uint8_t { PX, NX, PY, NY, PZ, NZ, Count};
 
 static void
-fill_cubemap_face(bimg::ImageContainer* &ic, const bimg::ImageContainer *face, CubemapFace cf, bx::DefaultAllocator &allocator){
+fill_cubemap_face(bimg::ImageContainer* &ic, const bimg::ImageContainer *face, CubemapFace cf, AlignedAllocator &allocator){
     if (!ic){
         ic = bimg::imageAlloc(&allocator, bimg::TextureFormat::RGBA32F, face->m_width, face->m_height, 1, 1, false, false);
     }
@@ -347,7 +377,7 @@ fill_cubemap_face(bimg::ImageContainer* &ic, const bimg::ImageContainer *face, C
 }
 
 static void
-fill_cross_cubemap_face(bimg::ImageContainer* &ic, const bimg::ImageContainer *face, CubemapFace cf, bx::DefaultAllocator &allocator){
+fill_cross_cubemap_face(bimg::ImageContainer* &ic, const bimg::ImageContainer *face, CubemapFace cf, AlignedAllocator &allocator){
     if (!ic){
         assert(face->m_width == face->m_height);
         const uint32_t w = face->m_width * 4;
@@ -443,8 +473,8 @@ lpack2cubemap(lua_State *L){
         return luaL_error(L, "cross cubemap texture must specify output file format as png/hdr/exr");
     }
 
-    bx::DefaultAllocator allocator;
-
+    bx::DefaultAllocator defaultAllocator;
+    AlignedAllocator allocator(&defaultAllocator, 16);
     bimg::ImageContainer* ic = nullptr;
     for (int i=0; i<n; ++i){
         lua_geti(L, 1, i+1);{
