@@ -62,7 +62,10 @@ uniform vec4 u_ibl_param;
 #include "pbr/material_info.sh"
 
 SAMPLERCUBE(s_prefilter,        6);
+
+#ifdef USE_IBL_LUT
 SAMPLER2D(s_LUT,                7);
+#endif //USE_IBL_LUT
 
 vec3 get_IBL_radiance_Lambertian(in material_info mi)
 {
@@ -112,18 +115,14 @@ vec3 get_IBL_radiance_GGX(in material_info mi)
     const float last_mipmap = u_ibl_prefilter_mipmap_count-1.0; //make roughness [0, 1] to [0, last_mipmap]
     const float lod = clamp(mi.perceptual_roughness*last_mipmap, 0.0, last_mipmap);
 
+#ifdef USE_IBL_LUT
     const vec2 lut_uv = vec2(mi.NdotV, mi.perceptual_roughness);
     const vec2 lut = texture2D(s_LUT, lut_uv).rg;
-    const vec3 specular_light = textureCubeLod(s_prefilter, mi.reflect_vector, lod).rgb;
-    return specular_light * (mi.f0 * lut.x + mi.f90 * lut.y);
-}
-
-vec3 get_IBL_radiance_GGX_New(in material_info mi)
-{
-    const float last_mipmap = u_ibl_prefilter_mipmap_count-1.0; //make roughness [0, 1] to [0, last_mipmap]
-    const float lod = clamp(mi.perceptual_roughness*last_mipmap, 0.0, last_mipmap);
-
+    const vec3 specular_color = (mi.f0 * lut.x + mi.f90 * lut.y);
+#else   //!USE_IBL_LUT
     const vec3 specular_color = IndirectSpecularProcessing_New(mi.f0, mi.f90.x, mi.NdotV);
+#endif  //USE_IBL_LUT
+
     const vec3 specular_light = textureCubeLod(s_prefilter, mi.reflect_vector, lod).rgb;
     const float surface_reduction = 1.0 / (mi.roughness + 1.0);
     return specular_light * specular_color;

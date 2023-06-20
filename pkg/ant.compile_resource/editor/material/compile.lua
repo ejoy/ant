@@ -40,6 +40,7 @@ local SETTING_MAPPING = {
 }
 
 local IRRADIANCE_SH_BAND_NUM<const> = setting:get "graphic/ibl/irradiance_bandnum"
+local ENABLE_IBL_LUT<const>         = setting:get "graphic/ibl/enable_lut"
 local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
 
 local enable_cs<const>      = setting:get 'graphic/lighting/cluster_shading' ~= 0
@@ -98,6 +99,10 @@ local function default_macros(setting)
 
     if USE_CS_SKINNING then
         m[#m+1] = "CS_SKINNING=1"
+    end
+
+    if ENABLE_IBL_LUT then
+        m[#m+1] = "ENABLE_IBL_LUT=1"
     end
 
     return m

@@ -19,6 +19,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local setting   = import_package "ant.settings".setting
 local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
+local ENABLE_IBL_LUT<const>       = setting:get "graphic/ibl/enable_lut"
 
 local ibl_viewid= viewidmgr.get "ibl"
 
@@ -46,23 +47,28 @@ local cubemap_flags<const> = sampler {
 
 local IBL_INFO = {
     source = {facesize = 0, stage=0, value=nil},
-    irradiance   = {
-        value = nil,
-        size = 0,
-    },
-    irradianceSH = {
-        path = nil
-    },
     prefilter    = {
         value = nil,
         size = 0,
         mipmap_count = 0,
     },
-    LUT             = {
+}
+
+if irradianceSH_bandnum then
+    IBL_INFO.irradiance = {
         value = nil,
         size = 0,
     }
-}
+else
+    IBL_INFO.irradianceSH = {}
+end
+
+if ENABLE_IBL_LUT then
+    IBL_INFO.LUT = {
+        value = nil,
+        size = 0,
+    }
+end
 
 local function create_irradiance_entity()
     local size = IBL_INFO.irradiance.size
@@ -169,6 +175,20 @@ local sample_count<const> = 512
 function ibl_sys:render_preprocess()
     local source_tex = IBL_INFO.source
 
+    for e in w:select "irradiance_builder dispatch:in" do
+        local dis = e.dispatch
+        local material = dis.material
+        material.s_source = source_tex
+        material.u_build_ibl_param = math3d.vector(sample_count, 0, IBL_INFO.source.facesize, 0.0)
+
+        -- there no binding attrib in material, but we just use this entity only once
+        local mobj = material:get_material()
+        mobj:set_attrib("s_irradiance", icompute.create_image_property(IBL_INFO.irradiance.value, 1, 0, "w"))
+
+        icompute.dispatch(ibl_viewid, dis)
+        w:remove(e)
+    end
+
     for e in w:select "irradianceSH_builder" do
         local function load_Eml()
             local cfgpath = assetmgr.compile(source_tex.tex_name .. "|main.cfg")
@@ -248,7 +268,7 @@ local function build_ibl_textures(ibl)
     IBL_INFO.source.facesize = assert(ibl.source.facesize)
     IBL_INFO.source.tex_name = ibl.source.tex_name
 
-    if ibl.irradiance then
+    if ibl.irradiance and (not irradianceSH_bandnum) then
         if ibl.irradiance.size ~= IBL_INFO.irradiance.size then
             IBL_INFO.irradiance.size = ibl.irradiance.size
             check_destroy(IBL_INFO.irradiance.value)
@@ -264,7 +284,7 @@ local function build_ibl_textures(ibl)
         IBL_INFO.prefilter.mipmap_count = math.log(ibl.prefilter.size, 2)+1
     end
 
-    if ibl.LUT.size ~= IBL_INFO.LUT.size then
+    if ENABLE_IBL_LUT and ibl.LUT.size ~= IBL_INFO.LUT.size then
         IBL_INFO.LUT.size = ibl.LUT.size
         check_destroy(IBL_INFO.LUT.value)
         IBL_INFO.LUT.value = bgfx.create_texture2d(IBL_INFO.LUT.size, IBL_INFO.LUT.size, false, 1, "RG16F", flags)
@@ -273,23 +293,29 @@ end
 
 
 local function create_ibl_entities()
+    create_prefilter_entities()
+
     if irradianceSH_bandnum then
         create_irradianceSH_entity()
     else
         create_irradiance_entity()
     end
-    create_prefilter_entities()
-    create_LUT_entity()
+
+    if ENABLE_IBL_LUT then
+        create_LUT_entity()
+    end
 end
 
 local function update_ibl_texture_info()
     local sa = imaterial.system_attribs()
+    sa:update("s_prefilter", IBL_INFO.prefilter.value)
+
     if not irradianceSH_bandnum then
         sa:update("s_irradiance", IBL_INFO.irradiance.value)
     end
-    sa:update("s_prefilter", IBL_INFO.prefilter.value)
-    sa:update("s_LUT",  IBL_INFO.LUT.value)
-
+    if ENABLE_IBL_LUT then
+        sa:update("s_LUT",  IBL_INFO.LUT.value)
+    end
     update_ibl_param()
 end
 

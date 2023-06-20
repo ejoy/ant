@@ -9,6 +9,7 @@ _windows:
     api: d3d11
 graphic:
   ibl:
+    #enable_lut: true
     irradiance_bandnum: 3
   # skinning:
   #   use_cs: true

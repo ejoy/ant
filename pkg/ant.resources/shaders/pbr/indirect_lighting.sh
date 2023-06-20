@@ -16,14 +16,9 @@
 vec3 calc_indirect_light(in input_attributes input_attribs, in material_info mi)
 {
     vec3 indirect_diffuse = get_IBL_radiance_Lambertian(mi);
-    //vec3 indirect_specular = get_IBL_radiance_GGX(mi);
-    vec3 indirect_specular = get_IBL_radiance_GGX_New(mi);
+    vec3 indirect_specular = get_IBL_radiance_GGX(mi);
 
-#ifdef UI_RT
-    return (indirect_diffuse + indirect_specular) * u_ibl_indirect_intensity;
-#endif //UI_RT
-
-#ifdef ENABLE_SSAO
+#if defined(ENABLE_SSAO) && !defined(UI_RT)
     apply_occlusion(input_attribs, mi, input_attribs.distanceVS, indirect_diffuse, indirect_specular);
 #endif //ENABLE_SSAO
     return (indirect_diffuse + indirect_specular) * u_ibl_indirect_intensity;
