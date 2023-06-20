@@ -92,7 +92,7 @@ local function update_math3d_stat(w, funcs, symbols)
 		if ref_total < ref_frame then
 			ref_total = ref_frame
 		end
-		local marked_frame = math3d.info(MATH_INFO_MARKED) - math3d.info(MATH_INFO_REF)
+		local marked_frame = math3d.info(MATH_INFO_MARKED) - ref_frame
 		if marked_total < marked_frame then
 			marked_total = marked_frame
 		end
