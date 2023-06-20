@@ -88,10 +88,7 @@ local function init()
     init_setting()
     local hd = caps.homogeneousDepth and true or nil
     local obl = caps.originBottomLeft and true or nil
-    set_setting("model", stringify {
-        hd = hd,
-        obl = obl,
-    })
+
     set_setting("glb", stringify {
         hd = hd,
         obl = obl,

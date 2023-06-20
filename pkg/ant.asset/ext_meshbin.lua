@@ -66,12 +66,6 @@ local function delete(mesh)
     destroy_handle(mesh.ib)
 end
 
-local function create_bounding(bounding)
-    if bounding then
-        bounding.aabb = math3d.marked_aabb(bounding.aabb[1], bounding.aabb[2])
-    end
-end
-
 local function parent_path(v)
     return v:match("^(.+)/[^/]*$")
 end
@@ -101,12 +95,20 @@ local function loader(filename)
     if ib then
         load_mem(ib.memory, filename)
     end
-    create_bounding(mesh.bounding)
+    local bounding = mesh.bounding
+    if bounding then
+        bounding.aabb = math3d.marked_aabb(bounding.aabb[1], bounding.aabb[2])
+    end
     return init(mesh)
 end
 
 local function unloader(filename, res, obj)
-    delete(res)
+    local mesh = res
+    local bounding = mesh.bounding
+    if bounding and bounding.aabb then
+        math3d.unmark(bounding.aabb)
+    end
+    delete(mesh)
 end
 
 return {

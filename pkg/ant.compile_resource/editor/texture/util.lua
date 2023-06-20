@@ -1,11 +1,21 @@
-local stringify 	= import_package "ant.serialize".stringify
 local subprocess 	= require "editor.subprocess"
 local sampler 		= require "editor.texture.sampler"
 local lfs 			= require "filesystem.local"
 local image 		= require "image"
 local config        = require "editor.config"
-local pngparam = require "editor.texture.png_param"
-local TEXTUREC = import_package "ant.subprocess".tool_exe_path "texturec"
+
+local math3d		= require "math3d"
+local ltask			= require "ltask"
+
+local stringify 	= import_package "ant.serialize".stringify
+
+local pngparam 		= require "editor.texture.png_param"
+local TEXTUREC 		= import_package "ant.subprocess".tool_exe_path "texturec"
+local shpkg			= import_package "ant.sh"
+local SH, texutil	= shpkg.sh, shpkg.texture
+
+local setting   = import_package "ant.settings".setting
+local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
 
 local function add_option(commands, name, value)
 	if name then
@@ -75,6 +85,47 @@ local function gray2rgb(path, outfile)
 	return path
 end
 
+local compress_SH; do
+    local P<const> = {
+        [2] = function (Eml)
+            local m = math3d.transpose(math3d.matrix(Eml[1], Eml[2], Eml[3], Eml[4]))
+            local c1, c2, c3 = math3d.index(m, 1, 2, 3)
+            return {c1, c2, c3}
+        end,
+        [3] = function (Eml)
+            local m1 = math3d.transpose(math3d.matrix(Eml[2], Eml[3], Eml[4], Eml[5]))
+            local m2 = math3d.transpose(math3d.matrix(Eml[6], Eml[7], Eml[8], Eml[9]))
+            local c1, c2, c3 = math3d.index(m1, 1, 2, 3)
+            local c4, c5, c6 = math3d.index(m2, 1, 2, 3)
+            return {Eml[1], c1, c2, c3, c4, c5, c6}
+        end
+    }
+
+    compress_SH = P[irradianceSH_bandnum]
+end
+
+local function build_Eml(cm)
+    local _, begin = ltask.now()
+    print("start build irradiance SH, bandnum:", irradianceSH_bandnum)
+    local Eml = SH.calc_Eml(cm, irradianceSH_bandnum)
+    local _, now = ltask.now()
+    print("finish build irradiance SH, time used:", now - begin)
+    return Eml
+end
+
+local function serialize_results(Eml)
+    local s = {}
+    for _, e in ipairs(Eml) do
+        s[#s+1] = math3d.tovalue(e)
+    end
+	return s
+end
+
+local function build_irradiance_sh(cm)
+    local Eml = compress_SH(build_Eml(cm))
+	return serialize_results(Eml)
+end
+
 return function (output, param)
     lfs.remove_all(output)
     lfs.create_directories(output)
@@ -87,6 +138,8 @@ return function (output, param)
         config.flag = config.flag .. 'Sg'
     end
 	local imgpath = param.local_texpath
+
+	config.build_irradianceSH = param.build_irradianceSH
 
 	local buildcmd
 	if imgpath then
@@ -110,10 +163,23 @@ return function (output, param)
 			return false, msg
 		end
 		assert(lfs.exists(binfile))
-		lfs.rename(binfile, output / "main.bin")
+		local output_bin = output / "main.bin"
+		lfs.rename(binfile, output_bin)
 
-		local info = image.parse(readall(output / "main.bin"))
+		local info = image.parse(readall(output_bin))
 		config.info = info
+
+		if config.build_irradianceSH then
+			local c = readall(output_bin)
+			local nomip<const> = true
+			local info, content = image.parse(c, true, "RGBA32F", nomip)
+			if not info.cubeMap then
+				error "build SH need cubemap texture"
+			end
+			assert(info.bitsPerPixel // 8 == 16)
+			local cm = texutil.create_cubemap{w=info.width, h=info.height, texelsize=16, data=content}
+			config.irradiance_SH = build_irradiance_sh(cm)
+		end
 	else
 		buildcmd = ""
 		local s = param.size

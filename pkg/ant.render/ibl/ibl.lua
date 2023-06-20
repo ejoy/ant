@@ -5,17 +5,13 @@ local w         = world.w
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local fs        = require "filesystem"
+local lfs       = require "filesystem.local"
+local datalist  = require "datalist"
 
 local assetmgr  = import_package "ant.asset"
 local renderpkg = import_package "ant.render"
 local sampler   = renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
-local mathpkg   = import_package "ant.math"
-local mc        = mathpkg.constant
-
-local shpkg     = import_package "ant.sh"
-local SH        = shpkg.sh
-local texutil   = shpkg.texture
 
 local icompute  = ecs.import.interface "ant.render|icompute"
 local iexposure = ecs.import.interface "ant.camera|iexposure"
@@ -53,6 +49,9 @@ local IBL_INFO = {
     irradiance   = {
         value = nil,
         size = 0,
+    },
+    irradianceSH = {
+        path = nil
     },
     prefilter    = {
         value = nil,
@@ -169,23 +168,25 @@ local sample_count<const> = 512
 
 function ibl_sys:render_preprocess()
     local source_tex = IBL_INFO.source
-    for e in w:select "irradiance_builder dispatch:in" do
-        local dis = e.dispatch
-        local material = dis.material
-        material.s_source = source_tex
-        material.u_build_ibl_param = math3d.vector(sample_count, 0, IBL_INFO.source.facesize, 0.0)
-
-        -- there no binding attrib in material, but we just use this entity only once
-        local mobj = material:get_material()
-        mobj:set_attrib("s_irradiance", icompute.create_image_property(IBL_INFO.irradiance.value, 1, 0, "w"))
-
-        icompute.dispatch(ibl_viewid, dis)
-        w:remove(e)
-    end
 
     for e in w:select "irradianceSH_builder" do
-        local irradianceSH_path = fs.path(IBL_INFO.source.tex_name):replace_extension "irradianceSH"
-        local Eml = assetmgr.resource(irradianceSH_path:string())
+        local function load_Eml()
+            local cfgpath = assetmgr.compile(source_tex.tex_name .. "|main.cfg")
+            local ff<close> = lfs.open(lfs.path(cfgpath))
+            local c = datalist.parse(ff:read "a")
+
+            if nil == c.irradiance_SH then
+                error(("source texture:%s, did not build irradiance SH, 'build_irradiance_sh' should add to cubemap texture"):format(source_tex.tex_name))
+            end
+
+            local Eml = {}
+            for idx, eml in ipairs(c.irradiance_SH) do
+                Eml[idx] = math3d.vector(eml)
+            end
+            return Eml
+        end
+
+        local Eml = load_Eml()
         assert((irradianceSH_bandnum == 2 and #Eml == 3) or (irradianceSH_bandnum == 3 and #Eml == 7), "Invalid Eml data")
         imaterial.system_attribs():update("u_irradianceSH", Eml)
         w:remove(e)
@@ -247,11 +248,13 @@ local function build_ibl_textures(ibl)
     IBL_INFO.source.facesize = assert(ibl.source.facesize)
     IBL_INFO.source.tex_name = ibl.source.tex_name
 
-    if ibl.irradiance.size ~= IBL_INFO.irradiance.size then
-        IBL_INFO.irradiance.size = ibl.irradiance.size
-        check_destroy(IBL_INFO.irradiance.value)
+    if ibl.irradiance then
+        if ibl.irradiance.size ~= IBL_INFO.irradiance.size then
+            IBL_INFO.irradiance.size = ibl.irradiance.size
+            check_destroy(IBL_INFO.irradiance.value)
 
-        IBL_INFO.irradiance.value = bgfx.create_texturecube(IBL_INFO.irradiance.size, false, 1, "RGBA16F", flags)
+            IBL_INFO.irradiance.value = bgfx.create_texturecube(IBL_INFO.irradiance.size, false, 1, "RGBA16F", flags)
+        end
     end
 
     if ibl.prefilter.size ~= IBL_INFO.prefilter.size then
