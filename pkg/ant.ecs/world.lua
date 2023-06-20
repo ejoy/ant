@@ -63,8 +63,9 @@ local function update_math3d_stat(w, funcs, symbols)
 	local MATH_INFO_MARKED <const> = 3
 	local MATH_INFO_LAST <const> = 4
 	local MATH_INFO_REF <const> = 6
+	local MATH_INFO_SLOT <const> = 7
 	local MaxFrame <const> = 30
-	local MaxText <const> = math.min(9, #funcs)
+	local MaxText <const> = math.min(8, #funcs)
 	local MaxName <const> = 48
 	local CurFrame = 0
 	local dbg_print = bgfx.dbg_text_print
@@ -72,6 +73,7 @@ local function update_math3d_stat(w, funcs, symbols)
 	local transient_total = 0
 	local marked_total = 0
 	local ref_total = 0
+	local slot_total = 0
 	local transient_stat = {}
 	for i = 1, #funcs do
 		transient_stat[i] = 0
@@ -79,6 +81,7 @@ local function update_math3d_stat(w, funcs, symbols)
 	for i = 1, MaxText do
 		printtext[i] = ""
 	end
+	local ecs = w.w
 	return function ()
 		local last_transient = math3d.info(MATH_INFO_TRANSIENT)
 		for i = 1, #funcs do
@@ -100,6 +103,10 @@ local function update_math3d_stat(w, funcs, symbols)
 		if transient_total < transient_frame then
 			transient_total = transient_frame
 		end
+		local slot_frame = math3d.info(MATH_INFO_SLOT)
+		if slot_total < slot_frame then
+			slot_total = slot_frame
+		end
 		if CurFrame ~= MaxFrame then
 			CurFrame = CurFrame + 1
 		else
@@ -111,12 +118,13 @@ local function update_math3d_stat(w, funcs, symbols)
 			table.sort(t, function (a, b)
 				return a[1] > b[1]
 			end)
-			printtext[1] = "total" .. (" "):rep(MaxName-5) .. (" | %d %d %d "):format(transient_total, marked_total, ref_total)
+			printtext[1] = ("total | transient:%d marked_slot:%d marked:%d ref:%d "):format(transient_total, slot_total, marked_total, ref_total)
+			printtext[2] = ("      | scene:%d bounding:%d mesh:%d simplemesh:%d meshskin:%d daynight:%d"):format(ecs:count "scene", ecs:count "bounding", ecs:count "mesh", ecs:count "simplemesh", ecs:count "meshskin", ecs:count "daynight")
 			for i = 1, MaxText do
 				local m = t[i]
 				local transient, idx = m[1], m[2]
 				local name = symbols[idx]
-				printtext[i+1] = name .. (" "):rep(MaxName-#name) .. (" | %d  "):format(transient)
+				printtext[i+2] = name .. (" "):rep(MaxName-#name) .. (" | %d  "):format(transient)
 			end
 		end
 		dbg_print(0, 2, 0x02, "--- system")
