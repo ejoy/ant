@@ -193,6 +193,9 @@ bool window_peekmessage() {
 		if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
 			if (msg.message == WM_QUIT)
 				return false;
+			if ((msg.message == WM_KEYDOWN || msg.message == WM_KEYUP) && msg.wParam == VK_PROCESSKEY) {
+				msg.wParam = ImmGetVirtualKey(msg.hwnd);
+			}
 			TranslateMessage(&msg);
 			DispatchMessageW(&msg);
 		}
