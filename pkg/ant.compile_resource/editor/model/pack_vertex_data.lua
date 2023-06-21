@@ -167,9 +167,11 @@ return {
 			new_vertices[#new_vertices+1] = table.concat(v, "")
 		end
 
+		local cp = math3d.checkpoint()
 		for iv=1, #vertices do
 			pack_vertex(vertices[iv])
 		end
+		math3d.recover(cp)
 
 		local new_layouts = {}
 
