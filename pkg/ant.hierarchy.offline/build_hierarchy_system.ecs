@@ -1,2 +1,0 @@
-system "build_hierarchy_system"
-    .implement "build_hierarchy_system.lua"
