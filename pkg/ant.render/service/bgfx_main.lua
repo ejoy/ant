@@ -20,6 +20,7 @@ local CALL = {
     "encoder_frame",
     "maxfps",
     "fontmanager",
+    "enable_system_profile",
 
     "fetch_world_camera",
     "update_world_camera",
@@ -41,6 +42,7 @@ function S.SEND()
     return SEND
 end
 
+local profile_enable = true
 local profile = {}
 local profile_label = {}
 local profile_time = 0
@@ -51,6 +53,9 @@ local MaxName <const> = 48
 local profile_printtext = {}
 
 local function profile_print()
+    if not profile_enable then
+        return
+    end
     if profile_n ~= MaxFrame then
         profile_n = profile_n + 1
     else
@@ -277,6 +282,10 @@ function S.maxfps(v)
         maxfps = v
     end
     return maxfps
+end
+
+function S.enable_system_profile(v)
+    profile_enable = v
 end
 
 function S.dbg_text_print(x, y, ...)
