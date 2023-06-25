@@ -29,6 +29,7 @@ function list_meta.create(document, e, item_init, item_update, detail_renderer, 
         list.index_map = {}
     end
     panel.className = "liststyle"
+    panel.className = panel.className .. " notransition"
     panel.style.width = list.width
     if list.direction == 0 then
         panel.style.height = '100%'--list.height

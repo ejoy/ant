@@ -30,6 +30,7 @@ function page_meta.create(document, e, item_init, item_update, detail_renderer, 
     end
     e.appendChild(panel)
     panel.className = "pagestyle"
+    panel.className = panel.className .. " notransition"
     -- panel.addEventListener('mousedown', function(event) page:on_mousedown(event) end)
     -- panel.addEventListener('mousemove', function(event) page:on_drag(event) end)
     -- panel.addEventListener('mouseup', function(event) page:on_mouseup(event) end)
@@ -255,10 +256,15 @@ function page_meta:on_pan(event)
         self.page_width = self.panel.childNodes[1].clientWidth
     end
     local target_pos = self.pos + event.dx
-    if target_pos > 0 or target_pos < (1 - self.page_count) * self.page_width then
+    if target_pos > 0 or target_pos < (1 - self.page_count) * self.page_width - 1 then
         return
     end
     self.pos = target_pos
+    local page_index = math.floor(-target_pos / self.page_width) + 1
+    if page_index ~= self.current_page then
+        self.current_page = page_index
+        self:update_footer_status()
+    end
     self.panel.style.left = tostring(math.floor(self.pos)) .. 'px'
 end
 
