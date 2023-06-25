@@ -1,6 +1,9 @@
 <rml>
     <head>
         <style>
+            body {
+                font: 100% "宋体";
+            }
             .panel {
                 background-color: rgba(120, 120, 120, 255);
                 width: 100%;
