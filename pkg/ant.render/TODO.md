@@ -75,6 +75,7 @@
 4. GI相关。SSGI、SSR、SDFGI(https://zhuanlan.zhihu.com/p/404520592)、DDGI(Dynamic Diffuse Global Illumination，https://morgan3d.github.io/articles/2019-04-01-ddgi/)等；
 5. LOD；
 6. 延迟渲染。延迟渲染能够降低为大量动态光源的计算。但移动设备需要one pass deferred的支持。Vulkan在API层面上支持subpass的操作，能够很好地实现这个功能。唯一需要注意的是，使用了MoltenVK的iOS是否能够支持这个功能；
+7. 尝试一下虚拟纹理。后面的GIProbe、点光源阴影都需要大量的纹理贴图。探索一下虚拟纹理是否解决这些问题，BGFX里面就有相关的例子；
 
 #### 增强调试功能
 1. 修复bgfx编译后的vulkan着色器无法在renderdoc进行单步调试；
