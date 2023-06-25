@@ -1,2 +1,0 @@
-import "build_hierarchy_system.ecs"
-import "editable_hierarchy.ecs"

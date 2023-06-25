@@ -2,14 +2,13 @@ local lfs           = require "filesystem.local"
 local fs            = require "filesystem"
 local toolset       = require "editor.material.toolset"
 local fxsetting     = require "editor.material.setting"
-local settingpkg    = import_package "ant.settings"
-local setting, def_setting = settingpkg.setting, settingpkg.default
+local setting       = import_package "ant.settings".setting
 local serialize     = import_package "ant.serialize"
 local depends       = require "editor.depends"
 local config        = require "editor.config"
 local parallel_task = require "editor.parallel_task"
 
-local ENABLE_SHADOW<const>      = setting:data().graphic.shadow.enable
+local ENABLE_SHADOW<const>      = setting:get "graphic/shadow/enable"
 
 local function DEF_FUNC() end
 
@@ -43,10 +42,12 @@ local IRRADIANCE_SH_BAND_NUM<const> = setting:get "graphic/ibl/irradiance_bandnu
 local ENABLE_IBL_LUT<const>         = setting:get "graphic/ibl/enable_lut"
 local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
 
-local enable_cs<const>      = setting:get 'graphic/lighting/cluster_shading' ~= 0
+local enable_cs<const>      = setting:get "graphic/lighting/cluster_shading" ~= 0
 local enable_bloom<const>   = setting:get "graphic/postprocess/bloom/enable"
-local fxaa_setting<const>    = setting:data().graphic.postprocess.fxaa
-local ao_setting<const>     = setting:data().graphic.ao or def_setting.graphic.ao
+local fxaa_setting<const>   = setting:data().graphic.postprocess.fxaa
+local enable_ao<const>      = setting:get "graphic/ao/enable"
+local enable_ao_bentnormal<const> = setting:get "graphic/ao/bent_normal"
+local ao_qulity<const>      = enable_ao and setting:get "graphic/ao/qulity" or ""
 
 -- local curve_world = setting:data().graphic.curve_world
 -- local curve_world_type_macros<const> = {
@@ -76,13 +77,13 @@ local function default_macros(setting)
         m[#m+1] = "BLOOM_ENABLE=1"
     end
 
-    if ao_setting.enable then
+    if enable_ao then
         m[#m+1] = "ENABLE_SSAO=1"
-        if ao_setting.bent_normal then
+        if enable_ao_bentnormal then
             m[#m+1] = "ENABLE_BENT_NORMAL=1"
         end
 
-        if ao_setting.qulity == "high" then
+        if ao_qulity == "high" then
             m[#m+1] = "HIGH_QULITY_SPECULAR_AO=1"
             m[#m+1] = "HIGH_QULITY_NORMAL_RECONSTRUCT=1"
         end

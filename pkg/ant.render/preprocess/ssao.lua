@@ -2,16 +2,15 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local settingpkg = import_package "ant.settings"
-local setting, def_setting = settingpkg.setting, settingpkg.default
+local setting = import_package "ant.settings".setting
 
-local ao_setting<const> = setting:data().graphic.ao or def_setting.graphic.ao
+local ao_setting<const> = setting:data().graphic.ao
 
 local ssao_sys  = ecs.system "ssao_system"
 
 local renderutil= require "util"
 
-local ENABLE_SSAO<const>                = ao_setting.enable
+local ENABLE_SSAO<const> = ao_setting.enable
 
 if not ENABLE_SSAO then
     renderutil.default_system(ssao_sys, "init", "init_world", "data_changed", "build_ssao", "bilateral_filter")

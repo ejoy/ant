@@ -83,7 +83,25 @@ local function update_math3d_stat(w, funcs, symbols)
 	for i = 1, MaxText+4 do
 		printtext[i] = ""
 	end
+	local components <const> = {
+		"scene",
+		"bounding",
+		"mesh",
+		"simplemesh",
+		"meshskin",
+		"daynight",
+	}
 	local ecs = w.w
+	local function components_count()
+		local s = {}
+		for i = 1, #components do
+			local name = components[i]
+			if w._class.component[name] then
+				s[#s+1] = ("%s:%d"):format(name, ecs:count(name))
+			end
+		end
+		return table.concat(s, " ")
+	end
 	return function ()
 		local last_transient = math3d.info(MATH_INFO_TRANSIENT)
 		for i = 1, #funcs do
@@ -129,7 +147,7 @@ local function update_math3d_stat(w, funcs, symbols)
 			end
 			printtext[MaxText+2] = "--- total"
 			printtext[MaxText+3] = ("transient:%d marked_slot:%d marked:%d ref:%d "):format(transient_total, slot_total, marked_total, ref_total)
-			printtext[MaxText+4] = ("scene:%d bounding:%d mesh:%d simplemesh:%d meshskin:%d daynight:%d"):format(ecs:count "scene", ecs:count "bounding", ecs:count "mesh", ecs:count "simplemesh", ecs:count "meshskin", ecs:count "daynight")
+			printtext[MaxText+4] = components_count()
 		end
 		for i = 1, #printtext do
 			dbg_print(2, 1+i, 0x02, printtext[i])
