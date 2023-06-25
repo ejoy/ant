@@ -31,29 +31,22 @@ mat4 get_indirect_wolrd_matrix(vec4 d1, vec4 d2, vec4 d3, vec4 draw_indirect_typ
 		wm[2][3] = wm[2][3] + d1.z;
 	}
 	else if(draw_indirect_type.y == 1){
-
-		float s = d1.x;
-		float r = d1.y;
-		float tx = d1.z;
-		float tz = d1.w;
-		float rad = radians(r);
-		float cosy = cos(rad);
-		float siny = sin(rad);	
-		wm = mat4( 
-			   s,          0,          0,        0, 
-			   0,          s,          0,        0, 
-			   0,          0,          s,        0, 
-			   0,          0,          0,        1
-		);
-		mat4 rm = mat4(
-			cosy,          0,      -siny,        0, 
-			   0,          1,          0,        0, 
-			siny,          0,       cosy,        0, 
-			   0,          0,          0,        1
-		);
-		wm = mul(rm, wm);
-		wm[0][3] = wm[0][3] + tx;
-		wm[2][3] = wm[2][3] + tz;
+		float scale = d1.x;
+		float scale_y = scale;
+		float tx = d1.y;
+		float tz = d1.z;
+		float cosy = d1.w;
+		float scosy = cosy * scale;
+		float ssiny = sqrt(1 - cosy*cosy) * scale;
+		if(scale_y > 1){
+			scale_y = scale_y * 0.5;
+		}
+		wm = mat4(
+			scosy,            0,     -ssiny,       tx, 
+			0    ,      scale_y,          0,        0, 
+			ssiny,            0,      scosy,       tz, 
+			0    ,            0,          0,        1
+		);	 
 	}
 	else{
 		
