@@ -122,8 +122,8 @@ public:
         clear();
     }
 
-    template <typename MappedType>
-    bool insert(const key_type& key, MappedType obj) {
+    std::conditional_t<std::is_same_v<mapped_type, void>, bool, std::tuple<bool, mapped_type*>>
+    find_or_insert(const key_type& key) {
         if (m_size >= m_maxsize) {
             increase_size();
         }
@@ -131,32 +131,36 @@ public:
         size_t slot = KeyHash::operator()(key) & m_mask;
         for (;;) {
             if (m_buckets[slot].dib == 0) {
+                ++m_size;
+                new (&m_buckets[slot].key) key_type { key };
+                m_buckets[slot].dib = dib;
                 if constexpr (std::is_same_v<mapped_type, void>) {
-                    new (&m_buckets[slot]) bucket { key, dib };
+                    return false;
                 }
                 else {
-                    new (&m_buckets[slot]) bucket { key, std::forward<mapped_type>(obj), dib };
+                    return {false, &m_buckets[slot].obj};
                 }
-                ++m_size;
-                return true;
             }
             if (KeyEqual::operator()(m_buckets[slot].key, key)) {
-                return false;
-            }
-            if (m_buckets[slot].dib < dib) {
                 if constexpr (std::is_same_v<mapped_type, void>) {
-                    bucket tmp { key, dib };
-                    std::swap(tmp, m_buckets[slot]);
-                    ++tmp.dib;
-                    internal_insert<kMaxTryRehash>((slot + 1) & m_mask, std::move(tmp));
+                    return true;
                 }
                 else {
-                    bucket tmp { key, std::forward<mapped_type>(obj), dib };
-                    std::swap(tmp, m_buckets[slot]);
-                    ++tmp.dib;
-                    internal_insert<kMaxTryRehash>((slot + 1) & m_mask, std::move(tmp));
+                    return {true, &m_buckets[slot].obj};
                 }
-                return true;
+            }
+            if (m_buckets[slot].dib < dib) {
+                bucket tmp = std::move(m_buckets[slot]);
+                ++tmp.dib;
+                internal_insert<kMaxTryRehash>((slot + 1) & m_mask, std::move(tmp));
+                new (&m_buckets[slot].key) key_type { key };
+                m_buckets[slot].dib = dib;
+                if constexpr (std::is_same_v<mapped_type, void>) {
+                    return false;
+                }
+                else {
+                    return {false, &m_buckets[slot].obj};
+                }
             }
             ++dib;
             slot = (slot + 1) & m_mask;
@@ -164,32 +168,23 @@ public:
     }
 
     template <typename MappedType>
+    bool insert(const key_type& key, MappedType obj) {
+        if constexpr (std::is_same_v<mapped_type, void>) {
+            return !find_or_insert(key);
+        }
+        else {
+            auto [found, value] = find_or_insert(key);
+            if (!found) {
+                new (value) mapped_type { std::forward<mapped_type>(obj) };
+            }
+            return !found;
+        }
+    }
+
+    template <typename MappedType>
     void insert_or_assign(const key_type& key, MappedType obj) {
-        if (m_size >= m_maxsize) {
-            increase_size();
-        }
-        uint8_t dib = 1;
-        size_t slot = KeyHash::operator()(key) & m_mask;
-        for (;;) {
-            if (m_buckets[slot].dib == 0) {
-                new (&m_buckets[slot]) bucket { key, std::forward<mapped_type>(obj), dib };
-                ++m_size;
-                return;
-            }
-            if (KeyEqual::operator()(m_buckets[slot].key, key)) {
-                m_buckets[slot].obj = std::forward<mapped_type>(obj);
-                return;
-            }
-            if (m_buckets[slot].dib < dib) {
-                bucket tmp { key, std::forward<mapped_type>(obj), dib };
-                std::swap(tmp, m_buckets[slot]);
-                ++tmp.dib;
-                internal_insert<kMaxTryRehash>((slot + 1) & m_mask, std::move(tmp));
-                return;
-            }
-            ++dib;
-            slot = (slot + 1) & m_mask;
-        }
+        auto [_, value] = find_or_insert(key);
+        new (value) mapped_type { std::forward<mapped_type>(obj) };
     }
 
     [[nodiscard]] bool contains(const key_type& key) const noexcept {

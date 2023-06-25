@@ -203,12 +203,14 @@ local function find_layout_idx(layouts, name)
 	end
 end
 
-local function calc_tangents(math3d, ib, vb_num, positions, normals, uvs, pos_layout, normal_layout, uv_layout, store)
+local function calc_tangents(math3d, ib, vb_num, vertices, layouts, store)
 	local tangents, bitangents = {}, {}
 
+	local P_IDX<const>, N_IDX<const>, UV_IDX<const> = 1, 2, 3
 	local function load_vertex(vidx)
-		local p = unpack_vec(positions[vidx][1], pos_layout)
-		local t = unpack_vec(uvs[vidx][1], uv_layout)
+		local vertex = vertices[vidx]
+		local p = unpack_vec(vertex[P_IDX], layouts[P_IDX].layout)
+		local t = unpack_vec(vertex[UV_IDX], layouts[UV_IDX].layout)
 		return {
 			p = math3d.vector(p),
 			u = t[1], v = t[2]
@@ -289,9 +291,8 @@ local function calc_tangents(math3d, ib, vb_num, positions, normals, uvs, pos_la
 	for iv=1, vb_num do
 		local tanu 		= tangents[iv]
 		local tanv 		= bitangents[iv]
-		local normal 	= unpack_vec(normals[iv][1], normal_layout)
-		normal = math3d.vector(normal)
-
+		local normal 	= unpack_vec(vertices[iv][N_IDX], layouts[N_IDX].layout)
+		normal 			= math3d.vector(normal)
 		local tangent	= make_vector_perpendicular(tanu, normal)
 		local bitangent	= make_vector_perpendicular(tanv, normal)
 
@@ -397,13 +398,9 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 	local vertices1 = fetch_vertices(layouts1, gltfbin, numv, ib_table == nil)
 	if need_calc_tangent(layouts1, layouts2) then
 		local cp = math3d.checkpoint()
-		local pos_layout = layouts1[find_layout_idx(layouts1, "POSITION")]
-		local normal_layout = layouts1[find_layout_idx(layouts1, "NORMAL")]
-		local uv_layout  = layouts2[find_layout_idx(layouts2, "TEXCOORD_0")]
-		local pos = fetch_vertices({pos_layout}, gltfbin, numv, ib_table == nil)
-		local n   = fetch_vertices({normal_layout}, gltfbin, numv, ib_table == nil)
-		local uv = fetch_vertices({uv_layout}, gltfbin, numv, ib_table == nil)
-		calc_tangents(math3d, ib_table, #vertices1, pos, n, uv, pos_layout.layout, normal_layout.layout, uv_layout.layout,
+		local tmp_layouts = {layouts1[find_layout_idx(layouts1, "POSITION")], layouts1[find_layout_idx(layouts1, "NORMAL")], layouts2[find_layout_idx(layouts2, "TEXCOORD_0")]}
+		local tmp_vertices = fetch_vertices(tmp_layouts, gltfbin, numv, ib_table == nil)
+		calc_tangents(math3d, ib_table, #vertices1, tmp_vertices, tmp_layouts,
 		function (iv, v)
 			local vv = vertices1[iv]
 			vv[#vv+1] = math3d.serialize(v)
