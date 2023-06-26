@@ -694,7 +694,7 @@ local function select_rotate_axis(x, y)
 	end
 end
 
-local camera_zoom = world:sub {"camera"}
+local camera_event = world:sub {"camera"}
 local mouse_drag = world:sub {"mousedrag"}
 local mouse_down = world:sub {"mousedown"}
 local mouse_move = world:sub {"mousemove"}
@@ -1079,7 +1079,7 @@ local function focus_aabb(ce, aabb)
 end
 
 function gizmo_sys:handle_event()
-	for _ in camera_zoom:unpack() do
+	for _ in camera_event:unpack() do
 		gizmo:update_scale()
 		gizmo:updata_uniform_scale()
 		break
