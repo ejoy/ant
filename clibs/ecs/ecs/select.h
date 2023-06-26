@@ -6,6 +6,7 @@ struct lua_State;
 #include <type_traits>
 #include <tuple>
 #include <array>
+#include <optional>
 #include <cstdint>
 
 namespace ecs_api {
@@ -390,6 +391,17 @@ namespace ecs_api {
     template <typename Component>
     size_t count(ecs_context* ctx) noexcept {
         return (size_t)entity_count(ctx, component<Component>::id);
+    }
+
+    template <typename Component>
+    auto create_entity(ecs_context* ctx) noexcept {
+        entity<Component> e(*ctx);
+        int index = entity_new(ctx, component<Component>::id, NULL);
+        if (index >= 0) {
+            bool ok = e.init(index);
+            assert(ok);
+        }
+        return e;
     }
 
     template <typename ...Args>
