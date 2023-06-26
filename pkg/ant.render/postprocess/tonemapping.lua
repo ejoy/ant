@@ -40,7 +40,24 @@ function tm_sys:init_world()
     local vp = world.args.viewport
     local vr = {x=vp.x, y=vp.y, w=vp.w, h=vp.h}
     local tm_fbidx
-    if ENABLE_FXAA then
+      if ENABLE_FXAA then
+        tm_fbidx = fbmgr.create{
+            rbidx = fbmgr.create_rb{
+                w = vr.w, h = vr.h, layers = 1,
+                format = "RGBA8",
+                flags = sampler{
+                    U = "CLAMP",
+                    V = "CLAMP",
+                    MIN="POINT",
+                    MAG="POINT",
+                    RT="RT_ON",
+                    COLOR_SPACE="sRGB",
+                },
+            }
+        }
+    end  
+    --[[ 
+     if ENABLE_FXAA then
         tm_fbidx = fbmgr.create{
             rbidx = fbmgr.create_rb{
                 w = vr.w, h = vr.h, layers = 1,
@@ -55,7 +72,7 @@ function tm_sys:init_world()
                 },
             }
         }
-    end
+    end  ]]
     util.create_queue(tm_viewid, vr, tm_fbidx, "tonemapping_queue", "tonemapping_queue", ENABLE_FXAA)
 end
 
@@ -76,7 +93,9 @@ local function update_properties(material)
     -- render target here, is one of the virtual resource
     local pp = w:first("postprocess postprocess_input:in")
     local ppi = pp.postprocess_input
-    material.s_scene_color = assert(ppi.scene_color_handle)
+     material.s_scene_color = assert(ppi.scene_color_handle) 
+--[[      local tame = w:first "taa_queue render_target:in"
+    material.s_scene_color = fbmgr.get_rb(tame.render_target.fb_idx, 1).handle  ]]
     local bloomhandle = ppi.bloom_color_handle
     if bloomhandle then
         assert(ENABLE_BLOOM)

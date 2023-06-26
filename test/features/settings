@@ -45,6 +45,8 @@ graphic:
       threshold: 2.3
     fxaa:
       enable: true
+    taa:
+      enable: true
   shadow:
     color: {0, 0, 0, 1}
     depth_multiplier: 1000

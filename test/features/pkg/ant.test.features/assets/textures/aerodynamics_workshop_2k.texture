@@ -2,6 +2,7 @@ colorspace: linear
 normalmap: false
 equirect: true
 path: /pkg/ant.test.features/assets/textures/aerodynamics_workshop_2k.hdr
+build_irradianceSH: true
 mipmap: 0
 sampler:
   MAG: LINEAR

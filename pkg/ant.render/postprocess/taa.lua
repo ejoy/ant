@@ -77,14 +77,6 @@ local taa_viewid<const> = viewidmgr.get "taa"
 local taa_copy_viewid<const> = viewidmgr.get "taa_copy"
 local taa_present_viewid<const> = viewidmgr.get "taa_present"
 
-local tex_flags = sampler{
-    U = "CLAMP",
-    V = "CLAMP",
-    MIN="LINEAR",
-    MAG="LINEAR",
-    BLIT="BLIT_AS_DST",
-    COLOR_SPACE="sRGB",
-}
 
 function taasys:init_world()
     local vp = world.args.viewport

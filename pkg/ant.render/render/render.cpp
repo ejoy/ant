@@ -35,6 +35,7 @@ enum queue_type{
 	qt_mat_csm,
 	qt_mat_lightmap,
 	qt_mat_outline,
+	qt_mat_velocity,
 	qt_count,
 };
 

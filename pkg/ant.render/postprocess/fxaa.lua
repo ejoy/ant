@@ -54,11 +54,27 @@ function fxaasys:data_changed()
     end
 end
 
+local not_first_frame
+
 function fxaasys:fxaa()
-    local tme = w:first "tonemapping_queue render_target:in"
+      if not_first_frame then
+        local tame = w:first "taa_queue render_target:in"
+        local sceneldr_handle = fbmgr.get_rb(tame.render_target.fb_idx, 1).handle
+
+        local fd = w:first "fxaa_drawer filter_material:in"
+        imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)
+    else
+        local tme = w:first "tonemapping_queue render_target:in"
+        local sceneldr_handle = fbmgr.get_rb(tme.render_target.fb_idx, 1).handle
+    
+        local fd = w:first "fxaa_drawer filter_material:in"
+        imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle) 
+        not_first_frame = true
+    end  
+--[[      local tme = w:first "tonemapping_queue render_target:in"
     local sceneldr_handle = fbmgr.get_rb(tme.render_target.fb_idx, 1).handle
 
     local fd = w:first "fxaa_drawer filter_material:in"
-    imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)
+    imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)  ]]
 end
 

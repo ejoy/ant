@@ -1,0 +1,13 @@
+fx:
+  fs: /pkg/ant.resources/shaders/velocity/fs_velocity.sc
+  vs: /pkg/ant.resources/shaders/velocity/vs_velocity.sc
+  setting:
+    GPU_SKINNING: 1
+properties:
+  u_prev_vp: {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  DEPTH_TEST: ALWAYS
+  MSAA: true
+  WRITE_MASK: RGBA

@@ -5,7 +5,7 @@ $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_LIGHTMAP
 
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
-
+#include "common/common.sh"
 void main()
 {
 #ifdef DRAW_INDIRECT
@@ -15,7 +15,9 @@ void main()
 #endif //DRAW_INDIRECT
 
 	highp vec4 posWS = transformWS(wm, mediump vec4(a_position, 1.0));
-	gl_Position = mul(u_viewProj, posWS);
+	vec4 clipPos = mul(u_viewProj, posWS);
+	clipPos += u_jitter * clipPos.w; // Apply Jittering
+	gl_Position = clipPos;
 
 	v_texcoord0	= a_texcoord0;
 #ifdef USING_LIGHTMAP
