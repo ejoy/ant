@@ -362,7 +362,7 @@ push_attrib_value(lua_State *L, struct attrib_arena *arena, struct ecs_world* w,
 		case ATTRIB_SAMPLER:
 		case ATTRIB_COLOR_PAL:{
 			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
-			assert(a->h.type != ATTRIB_UNIFORM || math_size(w->math3d->M, a->u.m) == info.num);
+			assert(a->h.type != ATTRIB_UNIFORM || math_size(w->math3d->M, a->u.m) <= info.num);
 			lua_createtable(L, 0, 0);
 
 			lua_pushstring(L, info.name);
@@ -826,17 +826,6 @@ lmaterial_set_stencil(lua_State *L){
 	return 0;
 }
 
-
-static inline int
-check_uniform_num(struct attrib_arena *arena, struct ecs_world* w, attrib_type *a, int n){
-	if (al_attrib_is_uniform(arena, a)){
-		bgfx_uniform_info_t info;
-		BGFX(get_uniform_info)(a->u.handle, &info);
-		return (n == info.num);
-	}
-	return 1;
-}
-
 static inline void
 init_instance_attrib(struct attrib_arena* arena, attrib_id pid, attrib_id id){
 	attrib_type* a = al_attrib(arena, id);
@@ -1096,7 +1085,7 @@ apply_attrib(lua_State *L, struct attrib_arena * arena, struct ecs_world* w, att
 			const int n = math_size(w->math3d->M, a->u.m);
 			#ifdef MATERIAL_DEBUG
 			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
-			assert(info.num == n);
+			assert(n <= info.num);
 			#endif //MATERIAL_DEBUG
 			BGFX(encoder_set_uniform)(w->holder->encoder, a->u.handle, math_value(w->math3d->M, a->u.m), n);
 		}	break;
