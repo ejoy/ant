@@ -18,7 +18,18 @@ local function load(filename)
 end
 
 local function to_math_v(v)
-	return #v == 4 and math3d.vector(v) or math3d.matrix(v)
+	local function is_vec(v) return #v == 4 end
+	local T = type(v[1])
+	if T == 'number' then
+		return is_vec(v) and math3d.vector(v) or math3d.matrix(v)
+	end
+
+	if T == 'table' then
+		assert(type(v[1]) == 'table')
+		return is_vec(v[1]) and math3d.array_vector(v) or math3d.array_matrix(v)
+	end
+
+	error "Invalid property"
 end
 
 local function to_v(t, h)
@@ -42,15 +53,7 @@ local function to_v(t, h)
 	end
 
 	v.type = 'u'
-	if type(t[1]) == "number" then
-		v.value = to_math_v(t)
-	else
-		local res = {}
-		for i, v in ipairs(t) do
-			res[i] = to_math_v(v)
-		end
-		v.value = res
-	end
+	v.value = to_math_v(t)
 	return v
 end
 

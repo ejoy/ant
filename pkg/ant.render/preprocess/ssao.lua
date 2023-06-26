@@ -111,7 +111,9 @@ local bilateral_config = {
 
 local KERNEL_MAX_RADIUS_SIZE<const> = 8
 
-local function generate_gaussian_kernels(radius, std_dev, kernels)
+local function generate_gaussian_kernels(radius, std_dev)
+    local kernels = {{0, 0, 0, 0}, {0, 0, 0, 0}}
+    assert(KERNEL_MAX_RADIUS_SIZE // 4 <= #kernels)
     radius = math.min(KERNEL_MAX_RADIUS_SIZE, radius)
     for i=1, radius do
         local x = i-1
@@ -120,11 +122,10 @@ local function generate_gaussian_kernels(radius, std_dev, kernels)
         local k = kernels[kidx]
         k[vidx] = math.exp(-(x * x) / (2.0 * std_dev * std_dev))
     end
-    return radius
+    return math3d.ref(math3d.array_vector(kernels)), radius
 end
 
-local KERNELS       = {math3d.ref(mc.ZERO),math3d.ref(mc.ZERO),}
-local KERNELS_COUNT = generate_gaussian_kernels(bilateral_config.kernel_radius, bilateral_config.std_deviation, KERNELS)
+local KERNELS, KERNELS_COUNT = generate_gaussian_kernels(bilateral_config.kernel_radius, bilateral_config.std_deviation)
 
 local function update_bilateral_filter_kernels(material)
     material.u_bilateral_kernels = KERNELS

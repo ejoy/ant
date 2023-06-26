@@ -404,8 +404,8 @@ end
 
 local function commit_csm_matrices_attribs()
 	local sa = imaterial.system_attribs()
-	sa:update("u_csm_matrix", csm_matrices)
-	sa:update("u_csm_split_distances", split_distances_VS)
+	sa:update("u_csm_matrix",			math3d.array_matrix(csm_matrices))
+	sa:update("u_csm_split_distances",	split_distances_VS)
 end
 
 function sm:init_world()

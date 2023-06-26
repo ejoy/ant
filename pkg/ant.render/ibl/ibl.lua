@@ -199,16 +199,11 @@ function ibl_sys:render_preprocess()
                 error(("source texture:%s, did not build irradiance SH, 'build_irradiance_sh' should add to cubemap texture"):format(source_tex.tex_name))
             end
 
-            local Eml = {}
-            for idx, eml in ipairs(c.irradiance_SH) do
-                Eml[idx] = math3d.vector(eml)
-            end
-            return Eml
+            assert((irradianceSH_bandnum == 2 and #c.irradiance_SH == 3) or (irradianceSH_bandnum == 3 and #c.irradiance_SH == 7), "Invalid Eml data")
+            return math3d.array_vector(c.irradiance_SH)
         end
 
-        local Eml = load_Eml()
-        assert((irradianceSH_bandnum == 2 and #Eml == 3) or (irradianceSH_bandnum == 3 and #Eml == 7), "Invalid Eml data")
-        imaterial.system_attribs():update("u_irradianceSH", Eml)
+        imaterial.system_attribs():update("u_irradianceSH", load_Eml())
         w:remove(e)
     end
 

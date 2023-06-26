@@ -204,6 +204,11 @@ al_attrib_id(struct attrib_arena *arena, attrib_type *a) {
 	return (attrib_id)(a - arena->a);
 }
 
+static inline attrib_id
+al_attrib_next_id(struct attrib_arena *arena, attrib_id id){
+	return al_attrib(arena, id)->h.next;
+}
+
 static inline attrib_type*
 al_next_attrib(struct attrib_arena *arena, attrib_type* a){
 	return a->h.next == INVALID_ATTRIB ? NULL : al_attrib(arena, a->h.next);
@@ -218,41 +223,6 @@ static inline int
 al_attrib_is_uniform(struct attrib_arena* arena, attrib_type *a){
 	(void)arena;
 	return is_uniform_attrib(a->h.type);
-}
-
-static inline int
-al_attrib_uniform_handle_equal(struct attrib_arena* arena, attrib_type *a1, attrib_type *a2){
-	assert(al_attrib_is_uniform(arena, a1) && al_attrib_is_uniform(arena, a2));
-	return BGFX_EQUAL(a1->u.handle, a2->u.handle);
-}
-
-static inline attrib_id
-al_attrib_next_uniform_id(struct attrib_arena* arena, attrib_id id, uint32_t *count){
-	assert(id != INVALID_ATTRIB);
-	
-	attrib_type* a = al_attrib(arena, id);
-	attrib_id c = 1;
-	if (a->h.type == ATTRIB_UNIFORM){
-		while (a->h.next != INVALID_ATTRIB){
-			attrib_type* na = al_attrib(arena, a->h.next);
-			if (na->h.type != ATTRIB_UNIFORM ||
-				!al_attrib_uniform_handle_equal(arena, a, na))
-				break;
-			++c;
-			a = na;
-		}
-	}
-
-	if (count)
-		*count = c;
-	return a->h.next;
-}
-
-static inline uint32_t
-al_attrib_num(struct attrib_arena* arena, attrib_type *a){
-	uint32_t c = 0;
-	al_attrib_next_uniform_id(arena, al_attrib_id(arena, a), &c);
-	return c;
 }
 
 static inline void
@@ -278,7 +248,7 @@ al_attrib_clear(struct attrib_arena * arena, struct ecs_world *w, attrib_id id) 
 static inline attrib_id
 mi_find_patch_attrib(struct attrib_arena *arena, struct material_instance *mi, attrib_id id){
 	assert(id != INVALID_ATTRIB);
-	for (attrib_id pid = mi->patch_attrib; pid != INVALID_ATTRIB; pid = al_attrib_next_uniform_id(arena, pid, NULL)){
+	for (attrib_id pid = mi->patch_attrib; pid != INVALID_ATTRIB; pid = al_attrib_next_id(arena, pid)){
 		attrib_type *pa = al_attrib(arena, pid);
 		if (pa->h.patch == id)
 			return pid;
@@ -391,26 +361,14 @@ push_attrib_value(lua_State *L, struct attrib_arena *arena, struct ecs_world* w,
 		case ATTRIB_UNIFORM:
 		case ATTRIB_SAMPLER:
 		case ATTRIB_COLOR_PAL:{
-			uint32_t num = al_attrib_num(arena, a);
-			bgfx_uniform_info_t info;
-			BGFX(get_uniform_info)(a->u.handle, &info);
+			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
+			assert(a->h.type != ATTRIB_UNIFORM || math_size(w->math3d->M, a->u.m) == info.num);
 			lua_createtable(L, 0, 0);
+
 			lua_pushstring(L, info.name);
 			lua_setfield(L, -2, "name");
-			if (num == 1) {
-				uniform_value(L, a);
-			} else {
-				lua_createtable(L, info.num, 0);
-				int i;
-				for (i=0;i<info.num;i++) {
-					if (a == NULL)
-						luaL_error(L, "Invalid multiple uniform");
-					uniform_value(L, a);
-					lua_rawseti(L, -2, i+1);
-					a = al_next_attrib(arena, a);
-				}
-			}
 
+			uniform_value(L, a);
 			lua_setfield(L, -2, "value");
 		}
 		break;
@@ -455,7 +413,7 @@ lmaterial_attribs(lua_State *L) {
 
 	struct ecs_world* w = getworld(L);
 	int idx = 1;
-	for (attrib_id id = mat->attrib; id != INVALID_ATTRIB; id = al_attrib_next_uniform_id(arena, id, NULL)) {
+	for (attrib_id id = mat->attrib; id != INVALID_ATTRIB; id = al_attrib_next_id(arena, id)) {
 		push_attrib_value(L, arena, w, id);
 		lua_seti(L, result_index, idx++);
 	}
@@ -535,11 +493,7 @@ unset_instance_attrib(lua_State* L, struct material_instance *mi, struct attrib_
 	attrib_id ref = mi_find_patch_attrib(arena, mi, al_attrib_id(arena, a));
 	struct ecs_world* w = getworld(L);
 	if (ref != INVALID_ATTRIB){
-		const int num = al_attrib_num(arena, a);
-		attrib_id id = ref;
-		for (int i=0;i<num;i++) {
-			id = al_attrib_clear(arena, w, id);
-		}
+		al_attrib_clear(arena, w, ref);
 	}
 }
 
@@ -559,7 +513,8 @@ fetch_attrib_type(lua_State *L, int index){
 	if (lt == LUA_TNIL){
 		lua_pop(L, 1);
 		if (lua_rawlen(L, index) > 0){
-			return ATTRIB_UNIFORM;
+			luaL_error(L, "Not support table array, use math3d.array_[matrix/vector] instead");
+			return ATTRIB_NONE;
 		}
 	}
 	if (lt != LUA_TSTRING){
@@ -742,30 +697,15 @@ fetch_color_pal(lua_State *L, attrib_type *a, int index){
 	lua_pop(L, 1);
 }
 
-static void
-fetch_attrib(lua_State *L, attrib_type *a, int index) {
-	switch (a->h.type){
-		case ATTRIB_UNIFORM:	fetch_math_value(L, a, index);						break;
-		case ATTRIB_SAMPLER:	fetch_sampler(L, a, index);							break;
-		case ATTRIB_IMAGE:		fetch_image(L, a, index);							break;
-		case ATTRIB_BUFFER:		fetch_buffer(L, a, index);							break;
-		case ATTRIB_COLOR_PAL:	fetch_color_pal(L, a, index);				break;
-		default: luaL_error(L, "Attribute type:%d, could not update", a->h.type);	break;
-	}
-}
-
 static inline attrib_id
-create_attrib(lua_State *L, struct attrib_arena* arena, int n, attrib_id id, uint16_t attribtype, bgfx_uniform_handle_t h){
-	for (int i=0; i<n; ++i){
-		attrib_type* na = arena_alloc(L);
-		na->h.type = attribtype;
-		na->h.next = id;
-		if (is_uniform_attrib(attribtype)){
-			na->u.handle = h;
-		}
-		id = al_attrib_id(arena, na);
+create_attrib(lua_State *L, struct attrib_arena* arena, attrib_id id, uint16_t attribtype, bgfx_uniform_handle_t h){
+	attrib_type* na = arena_alloc(L);
+	na->h.type = attribtype;
+	na->h.next = id;
+	if (is_uniform_attrib(attribtype)){
+		na->u.handle = h;
 	}
-	return id;
+	return al_attrib_id(arena, na);
 }
 
 static inline int
@@ -790,55 +730,22 @@ end_fetch_attrib_array(lua_State *L, int ltype){
 }
 
 static void
-update_attrib(lua_State *L, struct attrib_arena *arena, attrib_type *a, int data_idx) {
-	const uint32_t n = al_attrib_num(arena, a);
-	if (n == 1) {
-		fetch_attrib(L, a, data_idx);
-	} else {
-		int didx;
-		const int lt = begin_fetch_attrib_array(L, data_idx, &didx);
-		for (uint32_t i=0;i<n;i++) {
-			assert(a && "Invalid attrib");
-			lua_geti(L, didx, i+1);
-			fetch_attrib(L, a, -1);
-			lua_pop(L, 1);
-			a = al_next_attrib(arena, a);
-		}
-		end_fetch_attrib_array(L, lt);
+update_attrib(lua_State *L, struct attrib_arena *arena, attrib_type *a, int index) {
+	switch (a->h.type){
+		case ATTRIB_UNIFORM:	fetch_math_value(L, a, index);						break;
+		case ATTRIB_SAMPLER:	fetch_sampler(L, a, index);							break;
+		case ATTRIB_IMAGE:		fetch_image(L, a, index);							break;
+		case ATTRIB_BUFFER:		fetch_buffer(L, a, index);							break;
+		case ATTRIB_COLOR_PAL:	fetch_color_pal(L, a, index);						break;
+		default: luaL_error(L, "Attribute type:%d, could not update", a->h.type);	break;
 	}
-}
-
-static inline uint16_t
-count_data_num(lua_State *L, int data_index, uint16_t type){
-	uint16_t n = 1;
-	if (type == ATTRIB_UNIFORM){
-		if (LUA_TTABLE == lua_type(L, data_index)){
-			if (LUA_TNIL != lua_getfield(L, data_index, "num")){
-				n = lua_tonumber(L, -1);
-				lua_pop(L, 1);
-				return n;
-			}
-			lua_pop(L, 1);
-
-			const int nn = (int)lua_rawlen(L, data_index);
-			if (nn > 0){
-				n = nn;
-			} else {
-				if (LUA_TTABLE == lua_getfield(L, data_index, "value"))
-					n = (uint16_t)lua_rawlen(L, -1);
-				lua_pop(L, 1);
-			}
-		}
-	}
-	return n;
 }
 
 static attrib_id
 load_attrib_from_data(lua_State *L, struct attrib_arena* arena, int data_index, attrib_id id) {
 	const uint16_t type = fetch_attrib_type(L, data_index);
-	const int n = count_data_num(L, data_index, type);
 	const bgfx_uniform_handle_t h = {is_uniform_attrib(type) ? fetch_handle(L, data_index).idx : UINT16_MAX};
-	attrib_id nid = create_attrib(L, arena, n, id, type, h);
+	attrib_id nid = create_attrib(L, arena, id, type, h);
 	update_attrib(L, arena, al_attrib(arena, nid), data_index);
 	return nid;
 }
@@ -931,38 +838,31 @@ check_uniform_num(struct attrib_arena *arena, struct ecs_world* w, attrib_type *
 }
 
 static inline void
-init_instance_attrib(struct attrib_arena* arena, attrib_id pid, attrib_id id, int n){
-	attrib_id nid = id;
-	attrib_id npid = pid;
-	for (int i=0; i<n; ++i){
-		attrib_type* a = al_attrib(arena, nid);
-		attrib_type* pa = al_attrib(arena, npid);
-		pa->h.patch = nid;
+init_instance_attrib(struct attrib_arena* arena, attrib_id pid, attrib_id id){
+	attrib_type* a = al_attrib(arena, id);
+	attrib_type* pa = al_attrib(arena, pid);
+	pa->h.patch = id;
 
-		switch (pa->h.type){
-			case ATTRIB_UNIFORM:
-			case ATTRIB_COLOR_PAL:
-				break;
-			case ATTRIB_SAMPLER:
-				pa->u.t.stage = a->u.t.stage;
-				break;
-			case ATTRIB_IMAGE:
-				pa->r.mip = a->r.mip;
-			// walk through
-			case ATTRIB_BUFFER:
-				pa->r.stage = a->r.stage;
-				pa->r.access = a->r.access;
-				break;
-			case ATTRIB_REF:
-				assert(false && "Invalid instance attrib to patch system attrib");
-				break;
-			default:
-				assert(false && "");
-				break;
-		}
-
-		nid = a->h.next;
-		npid = pa->h.next;
+	switch (pa->h.type){
+		case ATTRIB_UNIFORM:
+		case ATTRIB_COLOR_PAL:
+			break;
+		case ATTRIB_SAMPLER:
+			pa->u.t.stage = a->u.t.stage;
+			break;
+		case ATTRIB_IMAGE:
+			pa->r.mip = a->r.mip;
+		// walk through
+		case ATTRIB_BUFFER:
+			pa->r.stage = a->r.stage;
+			pa->r.access = a->r.access;
+			break;
+		case ATTRIB_REF:
+			assert(false && "Invalid instance attrib to patch system attrib");
+			break;
+		default:
+			assert(false && "");
+			break;
 	}
 }
 
@@ -971,10 +871,8 @@ set_instance_attrib(lua_State *L, struct material_instance *mi, struct attrib_ar
 	const attrib_id id = al_attrib_id(arena, a);
 	attrib_id pid = mi_find_patch_attrib(arena, mi, id);
 	if (pid == INVALID_ATTRIB) {
-		const int n = al_attrib_num(arena, a);
-		assert(check_uniform_num(arena, getworld(L), a, n));
-		pid = create_attrib(L, arena, n, mi->patch_attrib, a->h.type, a->u.handle);
-		init_instance_attrib(arena, pid, id, n);
+		pid = create_attrib(L, arena, mi->patch_attrib, a->h.type, a->u.handle);
+		init_instance_attrib(arena, pid, id);
 		mi->patch_attrib = pid;
 	}
 	update_attrib(L, arena, al_attrib(arena, pid), value_index);
@@ -1189,50 +1087,18 @@ apply_attrib(lua_State *L, struct attrib_arena * arena, struct ecs_world* w, att
 			#ifdef MATERIAL_DEBUG
 			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
 			#endif //MATERIAL_DEBUG
-			const uint32_t n = al_attrib_num(arena, a);
-			if (n == 1) {
-				struct color_palette* cp = arena->color_palettes + a->u.cp.pal;
-				struct color* c = cp->colors+a->u.cp.color;
-				BGFX(encoder_set_uniform)(w->holder->encoder, a->u.handle, c->rgba, 1);
-			} else {
-				luaL_error(L, "Not implement multi color pal");
-			}
+
+			struct color_palette* cp = arena->color_palettes + a->u.cp.pal;
+			struct color* c = cp->colors+a->u.cp.color;
+			BGFX(encoder_set_uniform)(w->holder->encoder, a->u.handle, c->rgba, 1);
 		}	break;
 		case ATTRIB_UNIFORM: {
+			const int n = math_size(w->math3d->M, a->u.m);
 			#ifdef MATERIAL_DEBUG
 			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
+			assert(info.num == n);
 			#endif //MATERIAL_DEBUG
-			// const int n = math_size(w->math3d->M, a->u.m);
-			// BGFX(encoder_set_uniform)(w->holder->encoder, a->u.handle, math_value(w->math3d->M, a->u.m), n);
-
-			const uint32_t n = al_attrib_num(arena, a);
-			// most case is n == 1
-			if (n == 1){
-				const float * v = math_value(w->math3d->M, a->u.m);
-				BGFX(encoder_set_uniform)(w->holder->encoder, a->u.handle, v, 1);
-			} else {
-				// multiple uniforms
-				float buffer[MAX_UNIFORM_NUM * 16];
-				float *ptr = buffer;
-				
-				attrib_type* na = a;
-				for (uint16_t i=0; i<n; ++i){
-					int stride;
-					int t = math_type(w->math3d->M, na->u.m);
-					const float * v = math_value(w->math3d->M, na->u.m);
-					if (t == MATH_TYPE_MAT) {
-						stride = 16;
-					} else {
-						stride = 4;
-					}
-					if (ptr + stride - buffer > MAX_UNIFORM_NUM * 16)
-						luaL_error(L, "Too many uniforms %d", n);
-					memcpy(ptr, v, stride * sizeof(float));
-					ptr += stride;
-					na = al_next_attrib(arena, na);
-				}
-				BGFX(encoder_set_uniform)(w->holder->encoder, a->u.handle, buffer, n);
-			}
+			BGFX(encoder_set_uniform)(w->holder->encoder, a->u.handle, math_value(w->math3d->M, a->u.m), n);
 		}	break;
 		default:
 			luaL_error(L, "Invalid attrib type:%d", a->h.type);
@@ -1250,7 +1116,7 @@ linstance_attribs(lua_State *L){
 	const int resultidx = lua_absindex(L, -1);
 
 	int idx = 1;
-	for (attrib_id pid = mi->patch_attrib; pid != INVALID_ATTRIB; pid = al_attrib_next_uniform_id(arena, pid, NULL)){
+	for (attrib_id pid = mi->patch_attrib; pid != INVALID_ATTRIB; pid = al_attrib_next_id(arena, pid)){
 		push_attrib_value(L, arena, w, pid);
 		lua_seti(L, resultidx, idx++);
 	}
@@ -1271,14 +1137,14 @@ apply_material_instance(lua_State *L, struct material_instance *mi, struct ecs_w
 	);
 
 	if (mi->patch_attrib == INVALID_ATTRIB) {
-		for (attrib_id id = mi->m->attrib; id != INVALID_ATTRIB; id = al_attrib_next_uniform_id(arena, id, NULL)){
+		for (attrib_id id = mi->m->attrib; id != INVALID_ATTRIB; id = al_attrib_next_id(arena, id)){
 			attrib_type* a = al_attrib(arena, id);
 			apply_attrib(L, arena, w, a);
 		}
 	} else {
-		for (attrib_id id = mi->m->attrib; id != INVALID_ATTRIB; id = al_attrib_next_uniform_id(arena, id, NULL)){
+		for (attrib_id id = mi->m->attrib; id != INVALID_ATTRIB; id = al_attrib_next_id(arena, id)){
 			attrib_id apply_id = id;
-			for (attrib_id pid = mi->patch_attrib; pid != INVALID_ATTRIB; pid = al_attrib_next_uniform_id(arena, pid, NULL)){
+			for (attrib_id pid = mi->patch_attrib; pid != INVALID_ATTRIB; pid = al_attrib_next_id(arena, pid)){
 				attrib_type* pa = al_attrib(arena, pid);
 				if (pa->h.patch == id){
 					apply_id = pid;

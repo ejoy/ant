@@ -126,7 +126,7 @@ local function compute_PerezCoeff(turbidity)
 		local v0, v1 = ABCDE_t[i], ABCDE[i]
 		r[i] = math3d.muladd(v0, turbidity, v1)
 	end
-	return r
+	return math3d.array_vector(r)
 end
 
 local days_in_month<const> = {
@@ -232,7 +232,6 @@ end
 local sun_luminance_fetch = fetch_value_operation(sun_luminance_XYZ)
 local sky_luminance_fetch = fetch_value_operation(sky_luminance_XYZ)
 
-local shader_parameters = math3d.ref(math3d.vector(0.02, 3.0, 8, 0))
 local function update_sky_parameters(e)
 	local skycomp = e.procedural_sky
 	local hour = skycomp.which_hour
@@ -240,11 +239,9 @@ local function update_sky_parameters(e)
 	
 	--imaterial.set_property(e, "u_sunLuminance", xyz2rgb(sun_luminance_fetch(hour)))
 	imaterial.set_property(e, "u_skyLuminanceXYZ", sky_luminance_fetch(hour))
-	shader_parameters.v = math3d.set_index(shader_parameters, 1, skycomp.sun_size, skycomp.sun_bloom, skycomp.intensity, hour)
-	imaterial.set_property(e, "u_parameters", shader_parameters)
+	imaterial.set_property(e, "u_parameters", math3d.vector(skycomp.sun_size, skycomp.sun_bloom, skycomp.intensity, hour))
 
-	local values = compute_PerezCoeff(skycomp.turbidity)
-	imaterial.set_property(e, "u_perezCoeff", values)
+	imaterial.set_property(e, "u_perezCoeff", compute_PerezCoeff(skycomp.turbidity))
 end
 
 local function sync_directional_light(e)

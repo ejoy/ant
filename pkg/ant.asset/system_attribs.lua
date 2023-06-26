@@ -52,16 +52,12 @@ local function default_irradiance_SH_value()
 		return mc.ZERO
 	end
 	if irradianceSH_bandnum == 2 then
-		return {
-			mc.ZERO,
-			mc.ZERO, mc.ZERO
-		}
+		return math3d.array_vector{mc.ZERO,	mc.ZERO, mc.ZERO}
 	elseif irradianceSH_bandnum == 3 then
-		return {
+		return math3d.array_vector{
 			mc.ZERO,
 			mc.ZERO, mc.ZERO, mc.ZERO,
-			mc.ZERO, mc.ZERO, mc.ZERO,
-		}
+			mc.ZERO, mc.ZERO, mc.ZERO}
 	end
 end
 
@@ -106,12 +102,11 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	]]
 	-- shadow
 	--   csm
-	u_csm_matrix 		= uniform_value{
+	u_csm_matrix 		= uniform_value(math3d.array_matrix{
 			mc.IDENTITY_MAT,
 			mc.IDENTITY_MAT,
 			mc.IDENTITY_MAT,
-			mc.IDENTITY_MAT,
-		},
+			mc.IDENTITY_MAT}),
 
 	u_csm_split_distances= uniform_value(mc.ZERO),
 	u_depth_scale_offset = uniform_value(mc.ZERO),
@@ -121,12 +116,11 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	s_shadowmap			 = texture_value(8, DEFAULT_TEX2D_ID),
 	--u_main_camera_matrix = uniform_value(mc.IDENTITY_MAT),
 	--   omni
-	u_omni_matrix = uniform_value{
+	u_omni_matrix = uniform_value(math3d.array_matrix{
 			mc.IDENTITY_MAT,
 			mc.IDENTITY_MAT,
 			mc.IDENTITY_MAT,
-			mc.IDENTITY_MAT,
-		},
+			mc.IDENTITY_MAT}),
 
 	u_tetra_normal_Green	= uniform_value(mc.ZERO),
 	u_tetra_normal_Yellow	= uniform_value(mc.ZERO),
