@@ -813,6 +813,13 @@ count_data_num(lua_State *L, int data_index, uint16_t type){
 	uint16_t n = 1;
 	if (type == ATTRIB_UNIFORM){
 		if (LUA_TTABLE == lua_type(L, data_index)){
+			if (LUA_TNIL != lua_getfield(L, data_index, "num")){
+				n = lua_tonumber(L, -1);
+				lua_pop(L, 1);
+				return n;
+			}
+			lua_pop(L, 1);
+
 			const int nn = (int)lua_rawlen(L, data_index);
 			if (nn > 0){
 				n = nn;
@@ -821,7 +828,6 @@ count_data_num(lua_State *L, int data_index, uint16_t type){
 					n = (uint16_t)lua_rawlen(L, -1);
 				lua_pop(L, 1);
 			}
-			
 		}
 	}
 	return n;
