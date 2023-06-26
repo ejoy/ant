@@ -1,0 +1,11 @@
+fx:
+  fs: /pkg/ant.resources/shaders/velocity/fs_velocity.sc
+  vs: /pkg/ant.resources/shaders/velocity/vs_velocity.sc
+properties:
+  u_prev_map: {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
+state:
+  ALPHA_REF: 0
+  CULL: NONE
+  DEPTH_TEST: ALWAYS
+  MSAA: true
+  WRITE_MASK: RGBA
