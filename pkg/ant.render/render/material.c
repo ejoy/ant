@@ -1186,9 +1186,9 @@ apply_attrib(lua_State *L, struct attrib_arena * arena, struct ecs_world* w, att
 			}
 		}	break;
 		case ATTRIB_COLOR_PAL:{
-			#ifdef _DEBUG
+			#ifdef MATERIAL_DEBUG
 			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
-			#endif //_DEBUG
+			#endif //MATERIAL_DEBUG
 			const uint32_t n = al_attrib_num(arena, a);
 			if (n == 1) {
 				struct color_palette* cp = arena->color_palettes + a->u.cp.pal;
@@ -1199,9 +1199,11 @@ apply_attrib(lua_State *L, struct attrib_arena * arena, struct ecs_world* w, att
 			}
 		}	break;
 		case ATTRIB_UNIFORM: {
-			#ifdef _DEBUG
+			#ifdef MATERIAL_DEBUG
 			bgfx_uniform_info_t info; BGFX(get_uniform_info)(a->u.handle, &info);
-			#endif //_DEBUG
+			#endif //MATERIAL_DEBUG
+			// const int n = math_size(w->math3d->M, a->u.m);
+			// BGFX(encoder_set_uniform)(w->holder->encoder, a->u.handle, math_value(w->math3d->M, a->u.m), n);
 
 			const uint32_t n = al_attrib_num(arena, a);
 			// most case is n == 1
