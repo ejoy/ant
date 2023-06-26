@@ -5,13 +5,14 @@ local w = world.w
 local setting   = import_package "ant.settings".setting
 
 local ENABLE_FXAA<const> = setting:get "graphic/postprocess/fxaa/enable"
+local ENABLE_TAA<const> = setting:get "graphic/postprocess/taa/enable"
 
 local ivs           = ecs.import.interface "ant.scene|ivisible_state"
 local sd_sys        = ecs.system "scene_depth_system"
 local R             = ecs.clibs "render.render_material"
 local queuemgr      = require "queue_mgr"
 
-if not ENABLE_FXAA then
+if (not ENABLE_FXAA) and (not ENABLE_TAA) then
     local function DEF_FUNC() end
     sd_sys.post_init = DEF_FUNC
 end

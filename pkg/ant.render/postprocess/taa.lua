@@ -6,9 +6,9 @@ local setting = import_package "ant.settings".setting
 local ENABLE_TAA<const> = setting:data().graphic.postprocess.taa.enable
 local renderutil = require "util"
 local taasys = ecs.system "taa_system"
-local math3d	= require "math3d"
+local declmgr		= require "vertexdecl_mgr"
 if not ENABLE_TAA then
-    renderutil.default_system(taasys, "init", "init_world", "taa", "data_changed")
+    renderutil.default_system(taasys, "init", "init_world", "taa", "taa_copy", "taa_present", "data_changed", "end_frame")
     return
 end
 
@@ -22,8 +22,10 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irender   = ecs.import.interface "ant.render|irender"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 
+local taa_first_frame_eid
+local taa_after_first_frame
 function taasys:init()
-    ecs.create_entity{
+     ecs.create_entity{
         policy = {
             "ant.render|simplerender",
             "ant.general|name",
@@ -35,6 +37,29 @@ function taasys:init()
             visible_state   = "taa_queue",
             view_visible    = true,
             taa_drawer     = true,
+            scene           = {},
+        }
+    } 
+    local fullquad_vbhandle = bgfx.create_vertex_buffer(bgfx.memory_buffer("b", {1, 1, 1}), declmgr.get "p10NIu".handle)
+    local fullquad<const> = {
+        vb = {
+            start = 0, num = 3,
+            handle = fullquad_vbhandle,
+        }
+    }
+    taa_first_frame_eid = ecs.create_entity{
+        policy = {
+            "ant.render|simplerender",
+            "ant.general|name",
+        },
+        data = {
+            name            = "taa_first_frame_drawer",
+            owned_mesh_buffer = true,
+            simplemesh      = fullquad,
+            material        = "/pkg/ant.resources/materials/postprocess/taa_first_frame.material",
+            visible_state   = "taa_queue",
+            view_visible    = true,
+            taa_first_frame_drawer     = true,
             scene           = {},
         }
     }
@@ -133,7 +158,11 @@ function taasys:data_changed()
 
 end
 
-function taasys:taa()
+function taasys:taa()--[[ 
+    if taa_first_frame_eid then
+        w:remove(taa_first_frame_eid)
+        taa_first_frame_eid = nil
+    end ]]
     local tm_qe = w:first "tonemapping_queue render_target:in"
     local taa_copy_qe = w:first "taa_copy_queue render_target:in"
     local v_qe = w:first "velocity_queue render_target:in"
@@ -142,11 +171,17 @@ function taasys:taa()
     local prev_sceneldr_handle = fbmgr.get_rb(taa_copy_qe.render_target.fb_idx, 1).handle
     local velocity_handle = fbmgr.get_rb(v_qe.render_target.fb_idx, 1).handle 
 
+    -- ffd exist frame0 frame1
+    -- fd exist frame0 frame1 frame2 ...
+    -- ffd draw before fd
+    local ffd = w:first "taa_first_frame_drawer filter_material:in"
     local fd = w:first "taa_drawer filter_material:in"
-
-    imaterial.set_property(fd, "s_prev_scene_ldr_color", prev_sceneldr_handle)
-    imaterial.set_property(fd, "s_velocity", velocity_handle) 
+    if ffd then
+        imaterial.set_property(ffd, "s_scene_ldr_color", sceneldr_handle)
+    end
     imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)
+    imaterial.set_property(fd, "s_prev_scene_ldr_color", prev_sceneldr_handle)
+    imaterial.set_property(fd, "s_velocity", velocity_handle)
 end
 
 function taasys:taa_copy()
@@ -167,4 +202,16 @@ function taasys:taa_present()
     local fd = w:first "taa_present_drawer filter_material:in"
 
     imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)
+end
+
+
+function taasys:end_frame()
+    if taa_first_frame_eid then
+        if taa_after_first_frame then
+            w:remove(taa_first_frame_eid)
+            taa_first_frame_eid = nil
+        else
+            taa_after_first_frame = true 
+        end
+    end 
 end

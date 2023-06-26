@@ -16,8 +16,15 @@ local velocity_material
 local velocity_polylinelist_material
 local velocity_material_idx
 local mathpkg	= import_package "ant.math"
+local renderutil = require "util"
 local mc		= mathpkg.constant
 local velocity_skinning_material
+local setting = import_package "ant.settings".setting
+local ENABLE_TAA<const> = setting:data().graphic.postprocess.taa.enable
+if not ENABLE_TAA then
+    renderutil.default_system(velocity_system, "init", "init_world", "update_filter", "data_changed", "end_frame", "render_submit")
+    return
+end
 
 function velocity_system:end_frame()
     local mq = w:first("main_queue camera_ref:in")

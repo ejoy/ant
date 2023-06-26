@@ -58,8 +58,8 @@ local not_first_frame
 
 function fxaasys:fxaa()
       if not_first_frame then
-        local tame = w:first "taa_queue render_target:in"
-        local sceneldr_handle = fbmgr.get_rb(tame.render_target.fb_idx, 1).handle
+        local tme = w:first "tonemapping_queue render_target:in"
+        local sceneldr_handle = fbmgr.get_rb(tme.render_target.fb_idx, 1).handle
 
         local fd = w:first "fxaa_drawer filter_material:in"
         imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)

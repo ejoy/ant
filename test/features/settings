@@ -44,7 +44,7 @@ graphic:
       inv_highlight: 0.1
       threshold: 2.3
     fxaa:
-      enable: true
+      enable: nil
     taa:
       enable: true
   shadow:
