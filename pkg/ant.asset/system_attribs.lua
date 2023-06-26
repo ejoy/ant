@@ -132,8 +132,7 @@ local SYS_ATTRIBS = rmat.system_attribs(check{
 	s_ssao				= texture_value(9, DEFAULT_TEX2D_ID),
 	--postprocess
 	u_reverse_pos_param	= uniform_value(mc.ZERO),
-	u_jitter            = uniform_value(mc.ZERO),
-	u_first_frame       = uniform_value(mc.ZERO)
+	u_jitter            = uniform_value(mc.ZERO)
 })
 
 return SYS_ATTRIBS

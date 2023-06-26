@@ -22,14 +22,8 @@ void main() {
 
 	#ifdef ENABLE_TAA
 		vec4 dirCS2 = vec4(0, 0, 0, 0);
-		if(u_first_frame.x == 0){
-			v_prev_pos = posCS;
-			dirCS2 = dirCS;
-		}
-		else{
-			v_prev_pos = mul(u_prev_mvp, vec4(a_position, 1.0));
-			dirCS2 = mul(u_prev_mvp, vec4(a_linedir, 0.0));
-		}
+		v_prev_pos = mul(u_prev_mvp, vec4(a_position, 1.0));
+		dirCS2 = mul(u_prev_mvp, vec4(a_linedir, 0.0));
 
 		float w1 = calc_line_width(posCS.w, a_width);
 		vec2 offset1 = calc_offset(dirCS.xy, aspect, w1);

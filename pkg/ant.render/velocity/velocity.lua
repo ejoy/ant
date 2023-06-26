@@ -170,7 +170,6 @@ local function update_jitter_param()
 	jitter_param.v = math3d.set_index(jitter_param, 1, jw, jh)
 	sa:update("u_jitter", jitter_param)
 	jitter_cnt = jitter_cnt + 1
-	if jitter_cnt == 3 then sa:update("u_first_frame", math3d.vector(1, 0, 0, 0)) end
 end
 
 local function update_jitter_table()
