@@ -119,31 +119,24 @@ float directional_light_visibility(in input_attributes input_attribs)
 #   endif //ENABLE_SHADOW
 }
 
-void shading_color(in input_attributes input_attribs, in material_info mi, in uint ilight, inout vec3 color)
+vec3 shading_color(in input_attributes input_attribs, in material_info mi, in uint ilight)
 {
     const light_info l = get_light(0, input_attribs.posWS);
     mi.NdotL = dot(mi.N, l.pt2l);
-    if (mi.NdotL > 0)
-    {
-        color += surfaceShading(mi, l);
-    }
+    return mi.NdotL > 0 ? surfaceShading(mi, l) : vec3_splat(0.0);
 }
 
 #ifdef ENABLE_DEBUG_CASCADE_LEVEL
-vec3 debug_cascade_level(input_attributes input_attrib, vec3 color)
+vec3 debug_cascade_level(input_attributes input_attrib)
 {
     int cascadeidx = select_cascade(input_attribs.distanceVS);
-    vec4 colors[4] = {
-        vec4(1.0, 0.0, 0.0, 1.0),
-        vec4(0.0, 1.0, 0.0, 1.0),
-        vec4(0.0, 0.0, 1.0, 1.0),
-        vec4(1.0, 0.0, 1.0, 1.0)
+    vec3 colors[4] = {
+        vec3(1.0, 0.0, 0.0),
+        vec3(0.0, 1.0, 0.0),
+        vec3(0.0, 0.0, 1.0),
+        vec3(1.0, 0.0, 1.0)
     };
-    if (cascadeidx < 0){
-        return color * vec4(0.0,0.0, 0.0, 1.0);
-    } else {
-        return color * colors[cascadeidx];
-    }
+    return (cascadeidx < 0) ? vec3_splat(0.0) : colors[cascadeidx];
 }
 #endif //ENABLE_DEBUG_CASCADE_LEVEL
 
@@ -157,12 +150,12 @@ vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
     const float dl_visibility = directional_light_visibility(input_attribs);
     if (dl_visibility > 0.0)
     {
-        shading_color(input_attribs, mi, 0, color);
+        color += shading_color(input_attribs, mi, 0);
     }
 #endif //USING_LIGHTMAP
 
 #ifdef ENABLE_DEBUG_CASCADE_LEVEL
-    color = debug_cascade_level(input_attrib, color);
+    color += debug_cascade_level(input_attrib);
 #endif //ENABLE_DEBUG_CASCADE_LEVEL
 
     if (u_light_count[0] > 1)
@@ -172,7 +165,7 @@ vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
         for (uint ii=g.offset; ii<g.offset + g.count; ++ii)
         {
             uint ilight = get_light_index(ii);
-            shading_color(input_attribs, mi, ilight, color);
+            color += shading_color(input_attribs, mi, ilight);
         }
     }
     return color * dl_visibility;
