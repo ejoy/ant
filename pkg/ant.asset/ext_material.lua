@@ -3,7 +3,8 @@ local assetmgr  = require "asset"
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local sd        = import_package "ant.settings".setting
-local use_cluster_shading = sd:data().graphic.cluster_shading ~= 0
+local use_cluster_shading = sd:get "graphic.cluster_shading" ~= 0
+local cs_skinning = sd:get "graphic.skinning.use_cs"
 local matobj	= require "matobj"
 local async 	= require "async"
 local fs 	    = require "filesystem"
@@ -100,11 +101,14 @@ local function generate_properties(fx, properties)
 			new_properties["b_light_index_lists"] = {type='b'}
 		end
 	end
-	if setting.skinning == "on" then
-		new_properties["b_skinning_matrices_vb"].type = 'b'
-		new_properties["b_skinning_in_dynamic_vb"].type = 'b'
-		new_properties["b_skinning_out_dynamic_vb"].type = 'b'
+	if cs_skinning then
+		if setting.skinning == "on" then
+			new_properties["b_skinning_matrices_vb"].type = 'b'
+			new_properties["b_skinning_in_dynamic_vb"].type = 'b'
+			new_properties["b_skinning_out_dynamic_vb"].type = 'b'
+		end
 	end
+
 	return new_properties
 end
 
