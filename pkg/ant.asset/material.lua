@@ -90,12 +90,24 @@ local function stat_material_info(verbose)
 	print("material cobject, attrib number:", s.attrib_num, "attrib cap:", s.attrib_cap)
 end
 
-local DEBUG_MATERIAL_ATTRIBUTES<const> = true
+local DEBUG_MATERIAL_ATTRIBUTES<const> = false
 function ms:component_init()
 	w:clear "material_result"
 
 	for e in w:select "INIT material:in material_result:new" do
 		e.material_result = imaterial.load_res(e.material)
+		if DEBUG_MATERIAL_ATTRIBUTES then
+			w:extend(e, "name?in eid:in")
+			print("created material entity:", e.eid, e.name, e.material)
+		end
+	end
+end
+
+function ms:entity_remove()
+	if DEBUG_MATERIAL_ATTRIBUTES then
+		for e in w:select "REMOVED material:in name?in eid:in" do
+			print("removed material entity:", e.eid, e.name, e.material)
+		end
 	end
 end
 
