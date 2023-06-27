@@ -570,7 +570,7 @@ function sm:update_filter()
 		if mt.fx.setting.shadow_cast == "on" then
 			local mo = which_material(e.skinning, e.indirect)
 			local fm = e.filter_material
-			local newstate = irender.check_set_state(mo, fm.main_queue:get_material(), function (d, s)
+			local newstate = irender.check_set_state(mo, fm.main_queue, function (d, s)
 				d.PT, d.CULL = s.PT, d.CULL
 				d.DEPTH_TEST = "GREATER"
 				return d

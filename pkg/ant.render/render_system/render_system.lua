@@ -172,7 +172,7 @@ function render_sys:render_preprocess()
 end
 
 function render_sys:entity_remove()
-	for e in w:select "REMOVED render_object:update filter_material:in" do
+	for e in w:select "REMOVED render_object:in filter_material:in" do
 		local fm = e.filter_material
 		local ro = e.render_object
 		local mm = {}
@@ -180,8 +180,8 @@ function render_sys:entity_remove()
 			if mm[m] == nil then
 				mm[m] = true
 				m:release()
-				fm[k] = nil
 			end
+			fm[k] = nil
 		end
 
 		R.dealloc(ro.rm_idx)
@@ -206,9 +206,7 @@ function render_sys:update_filter()
 				local ro = e.render_object
 				local fm = e.filter_material
 
-				local mo = fm.main_queue:get_material()
-
-				local state = check_set_depth_state_as_equal(mo:get_state())
+				local state = check_set_depth_state_as_equal(fm.main_queue:get_state())
 				fm.main_queue:set_state(state)
 
 				R.set(ro.rm_idx, queuemgr.material_index "main_queue", fm.main_queue:ptr())

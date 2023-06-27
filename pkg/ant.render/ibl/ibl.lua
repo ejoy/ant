@@ -175,15 +175,13 @@ local sample_count<const> = 512
 function ibl_sys:render_preprocess()
     local source_tex = IBL_INFO.source
 
-    for e in w:select "irradiance_builder dispatch:in" do
+    for e in w:select "irradiance_builder material:in dispatch:in" do
         local dis = e.dispatch
-        local material = dis.material
-        material.s_source = source_tex
-        material.u_build_ibl_param = math3d.vector(sample_count, 0, IBL_INFO.source.facesize, 0.0)
+        local mo = assetmgr.resource(e.material).object
 
-        -- there no binding attrib in material, but we just use this entity only once
-        local mobj = material:get_material()
-        mobj:set_attrib("s_irradiance", icompute.create_image_property(IBL_INFO.irradiance.value, 1, 0, "w"))
+        mo:set_attrib("s_source",           source_tex)
+        mo:set_attrib("s_irradiance",       icompute.create_image_property(IBL_INFO.irradiance.value, 1, 0, "w"))
+        mo:set_attrib("u_build_ibl_param",  math3d.vector(sample_count, 0, IBL_INFO.source.facesize, 0.0))
 
         icompute.dispatch(ibl_viewid, dis)
         w:remove(e)
@@ -207,32 +205,26 @@ function ibl_sys:render_preprocess()
         w:remove(e)
     end
 
-    local registered
-    for e in w:select "prefilter_builder dispatch:in prefilter:in" do
-        local dis = e.dispatch
-        local material = dis.material
-        local prefilter_stage<const> = 1
-        if registered == nil then
-            local matobj = material:get_material()
-            matobj:set_attrib("s_prefilter", {type='i', mip=0, access='w', stage=prefilter_stage})
-            registered = true
-        end
-
-        material.s_source = source_tex
+    for e in w:select "prefilter_builder material:in dispatch:in prefilter:in" do
         local prefilter = e.prefilter
-        material.u_build_ibl_param = math3d.vector(sample_count, 0, IBL_INFO.source.facesize, prefilter.roughness)
-        material.s_prefilter = icompute.create_image_property(IBL_INFO.prefilter.value, prefilter_stage, prefilter.mipidx, "w")
+        local dis = e.dispatch
+        local prefilter_stage<const> = 1
+
+        local mo = assetmgr.resource(e.material).object
+        mo:set_attrib("s_source",           source_tex)
+        mo:set_attrib("s_prefilter",        icompute.create_image_property(IBL_INFO.prefilter.value, prefilter_stage, prefilter.mipidx, "w"))
+        mo:set_attrib("u_build_ibl_param",  math3d.vector(sample_count, 0, IBL_INFO.source.facesize, prefilter.roughness))
 
         icompute.dispatch(ibl_viewid, dis)
         w:remove(e)
     end
 
     local LUT_stage<const> = 0
-    for e in w:select "LUT_builder dispatch:in" do
+    for e in w:select "LUT_builder material:in dispatch:in" do
         local dis = e.dispatch
-        local material = dis.material
-        local matobj = material:get_material()
-        matobj:set_attrib("s_LUT", icompute.create_image_property(IBL_INFO.LUT.value, LUT_stage, 0, "w"))
+        local mo = assetmgr.resource(e.material).object
+
+        mo:set_attrib("s_LUT", icompute.create_image_property(IBL_INFO.LUT.value, LUT_stage, 0, "w"))
         icompute.dispatch(ibl_viewid, dis)
 
         w:remove(e)

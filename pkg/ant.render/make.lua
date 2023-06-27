@@ -145,7 +145,7 @@ lm:lua_source "render_core"{
     },
     objdeps = "compile_ecs",
     sources = {
-        "render/material.c",
+        "render/material.cpp",
         "render/render_material.c",
         "render/render.cpp",
     },

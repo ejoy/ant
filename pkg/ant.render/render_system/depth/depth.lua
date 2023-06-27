@@ -55,7 +55,7 @@ function s:data_changed()
 end
 
 local function create_depth_only_material(mo, fm)
-    local newstate = irender.check_set_state(mo, fm.main_queue:get_material(), function (d, s)
+    local newstate = irender.check_set_state(mo, fm.main_queue, function (d, s)
         d.PT, d.CULL = s.PT, s.CULL
         d.DEPTH_TEST = "GREATER"
         return d

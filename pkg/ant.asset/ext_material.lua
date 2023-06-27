@@ -137,7 +137,9 @@ local function loader(filename)
     return material
 end
 
-local function unloader()
+local function unloader(m)
+	m.object:release()
+	m.object = nil
 end
 
 return {
