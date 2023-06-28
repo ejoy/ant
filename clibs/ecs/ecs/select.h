@@ -426,6 +426,7 @@ namespace ecs_api {
     }
 
     template <typename Component>
+        requires (!component<Component>::tag)
     auto array(ecs_context* ctx) noexcept {
         return impl::array_range<Component>(ctx);
     }
