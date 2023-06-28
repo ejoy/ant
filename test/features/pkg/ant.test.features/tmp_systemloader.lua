@@ -134,44 +134,39 @@ function init_loader_sys:init()
 
     end)
 
-    create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
+--[[     create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
         local root<close> = w:entity(e.tag['*'][1])
         iom.set_position(root, math3d.vector(3, 1, 0))
-    end)
+    end) ]]
     --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
 
 end
 
-local outline_eid
+local velocity_eid
 local function render_layer_test()
     irl.add_layers(irl.layeridx "background", "mineral", "translucent_plane", "translucent_plane1")
     local m = imesh.init_mesh(ientity.plane_mesh())
-    outline_eid = ecs.create_entity {
+    velocity_eid = ecs.create_entity {
         policy = {
             "ant.render|render",
-            "ant.render|outline_info",
          },
         data = {
-            scene  = {s = 0.5, t = {5, 15, 5}},
+            scene  = {s = 1, t = {0, 1, 0}},
             --material    = "/pkg/ant.resources.binary/meshes/base/cube.glb|materials/Material.001.material",
             --material    = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|materials/Material.001_skin.material",
             --material    = "/pkg/ant.resources/materials/pbr_stencil.material", 
             --material    = "/pkg/ant.resources.binary/meshes/Duck.glb|materials/blinn3-fx.material", 
-            --material    = "/pkg/ant.resources.binary/meshes/Damagedhelmet.glb|materials/Material_MR.material", 
+            material    = "/pkg/ant.resources.binary/meshes/Damagedhelmet.glb|materials/Material_MR.material", 
             --material    = "/pkg/ant.resources.binary/meshes/chimney-1.glb|materials/Material_skin_clr.material",
-            material    = "/pkg/ant.resources.binary/meshes/furnace-1.glb|materials/Material_skin.material",
-            visible_state = "main_view|outline_queue",
+            --material    = "/pkg/ant.resources.binary/meshes/furnace-1.glb|materials/Material_skin.material",
+            visible_state = "main_view|velocity_queue",
             --mesh        = "/pkg/ant.resources.binary/meshes/base/cube.glb|meshes/Cube_P1.meshbin",
             --mesh        = "/pkg/ant.resources.binary/meshes/wind-turbine-1.glb|meshes/Plane.003_P1.meshbin",
             --mesh        = "/pkg/ant.resources.binary/meshes/Duck.glb|meshes/LOD3spShape_P1.meshbin",
-            --mesh        = "/pkg/ant.resources.binary/meshes/Damagedhelmet.glb|meshes/mesh_helmet_LP_13930damagedHelmet_P1.meshbin",
+            mesh        = "/pkg/ant.resources.binary/meshes/Damagedhelmet.glb|meshes/mesh_helmet_LP_13930damagedHelmet_P1.meshbin",
             --mesh        = "/pkg/ant.resources.binary/meshes/chimney-1.glb|meshes/Plane_P1.meshbin",
-            mesh        = "/pkg/ant.resources.binary/meshes/furnace-1.glb|meshes/Cylinder.001_P1.meshbin",
-            skinning = true,
-            outline_info= {
-                outline_scale = 0.5,    -- outline width 0~1
-                outline_color = {0.5, 0.5, 0, 1}, -- outline color_hash
-            },
+            --mesh        = "/pkg/ant.resources.binary/meshes/furnace-1.glb|meshes/Cylinder.001_P1.meshbin",
+
         },
     }
      --ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_duck.prefab"
@@ -228,9 +223,48 @@ end
 
 local sampler_eid
 local heap_eid
+local sm_id
 local function drawindirect_test()
-
-    heap_eid = ecs.create_entity {
+    sm_id = ecs.create_entity {
+        policy = {
+            "ant.render|render",
+            "ant.general|name",
+        },
+        data = {
+            mesh = "/pkg/ant.test.features/mountain1.glb|meshes/Cylinder.002_P1.meshbin",
+            scene = {s = {0.125, 0.125, 0.125}, t = {5, 0, 5}},
+            material = "/pkg/ant.test.features/mountain1.glb|materials/Material_clr.material",
+            visible_state = "main_view|velocity_queue",
+            name = "test",
+        }
+    }
+--[[     ecs.create_entity {
+        policy = {
+            "ant.render|render",
+            "ant.general|name",
+        },
+        data = {
+            mesh = "/pkg/ant.test.features/assets/t1.glb|meshes/zhuti.025_P1.meshbin",
+            scene = {},
+            material = "/pkg/ant.test.features/assets/t1.glb|materials/Material.material",
+            visible_state = "main_view",
+            name = "test",
+        }
+    }
+    ecs.create_entity {
+        policy = {
+            "ant.render|render",
+            "ant.general|name",
+        },
+        data = {
+            mesh = "/pkg/ant.test.features/assets/cube.glb|meshes/Cube_P1.meshbin",
+            scene = {t = {-5, 5, 0}},
+            material = "/pkg/ant.test.features/assets/cube.glb|materials/Material.001.material",
+            visible_state = "main_view",
+            name = "test",
+        }
+    } ]]
+--[[     heap_eid = ecs.create_entity {
         policy = {
             "ant.render|render",
             "ant.render|heap_mesh",
@@ -250,7 +284,7 @@ local function drawindirect_test()
             indirect = "HEAP_MESH",
             render_layer = "background"
         },
-    }  
+    }   ]]
     
 --[[     ecs.create_entity {
         policy = {
@@ -319,12 +353,12 @@ local function motion_sampler_test()
     g:enable "view_visible"
     g:enable "scene_update"
 
-    local p = g:create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", eid)
+--[[     local p = g:create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", eid)
     p.on_ready = function (e)
         
     end
 
-    world:create_object(p)
+    world:create_object(p) ]]
 end
 
 local canvas_eid
@@ -348,6 +382,9 @@ local function canvas_test()
 end
 
 local heap_num = 1
+
+
+
 function init_loader_sys:init_world()
 
     for msg in after_init_mb:each() do
@@ -363,7 +400,7 @@ function init_loader_sys:init_world()
     local dir = math3d.normalize(math3d.sub(mc.ZERO_PT, eyepos))
     iom.set_direction(camera_ref, dir)
 
-    --render_layer_test()
+    render_layer_test()
     canvas_test()
 
     motion_sampler_test()
@@ -443,12 +480,15 @@ function init_loader_sys:ui_update()
             }
         )
         elseif key == "P" and press == 0 then
-            local e = assert(w:entity(sampler_eid))
+--[[             local e = assert(w:entity(sampler_eid))
             ims.set_keyframes(e, 
                 {t = math3d.vector(0.0, 0.0, 0.0), 0.0},
                 {t = math3d.vector(0.0, 0.0, 2.0), 1.0}
-            )
-
+            ) ]]
+            local sm = w:entity(sm_id, "bounding:in")
+            local center, extent = math3d.aabb_center_extents(sm.bounding.aabb)
+            local t1, t2 = math3d.tovalue(center), math3d.tovalue(extent)
+            local t3 =  1
         elseif key == "O" and press == 0 then
             local e = assert(w:entity(sampler_eid))
             print(math3d.tostring(iom.get_position(e)))

@@ -159,12 +159,12 @@ local function add_polylines(polymesh, line_width, color, material, srt, render_
         data = {
             polyline = {
                 width = line_width,
-                color = math3d.vector(color),
+                color = math3d.ref(math3d.vector(color)),
             },
             scene = {s = srt.s, r = srt.r, t = srt.t},
             simplemesh  = polymesh,
             material    = material,
-            visible_state= "main_view",
+            visible_state= "main_view|velocity_queue",
             name        = "polyline",
             render_layer= render_layer or "background",
             on_ready = function (e)

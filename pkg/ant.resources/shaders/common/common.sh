@@ -15,4 +15,5 @@ uniform vec4 u_time;
 #define u_current_time  u_time.x
 #define u_delta_time    u_time.y
 
+uniform vec4 u_jitter;
 #endif //_COMMON_SH_

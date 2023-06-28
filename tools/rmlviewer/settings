@@ -33,6 +33,8 @@ graphic:
       threshold: 2.3
     fxaa:
       enable: true
+    taa:
+      enable: nil
   shadow:
     enable: true
     size: 1024

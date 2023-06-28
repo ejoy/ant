@@ -4,6 +4,7 @@ local w     = world.w
 
 local setting = import_package "ant.settings".setting
 local ENABLE_FXAA<const> = setting:data().graphic.postprocess.fxaa.enable
+local ENABLE_TAA<const> = setting:data().graphic.postprocess.taa.enable
 local renderutil = require "util"
 local fxaasys = ecs.system "fxaa_system"
 
@@ -54,11 +55,25 @@ function fxaasys:data_changed()
     end
 end
 
+
 function fxaasys:fxaa()
-    local tme = w:first "tonemapping_queue render_target:in"
-    local sceneldr_handle = fbmgr.get_rb(tme.render_target.fb_idx, 1).handle
+    local sceneldr_handle
+    if not ENABLE_TAA then
+        local tme = w:first "tonemapping_queue render_target:in"
+        sceneldr_handle = fbmgr.get_rb(tme.render_target.fb_idx, 1).handle
+    else
+        local tame = w:first "taa_queue render_target:in"
+        sceneldr_handle = fbmgr.get_rb(tame.render_target.fb_idx, 1).handle
+    end
+
 
     local fd = w:first "fxaa_drawer filter_material:in"
     imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)
+
+--[[      local tme = w:first "tonemapping_queue render_target:in"
+    local sceneldr_handle = fbmgr.get_rb(tme.render_target.fb_idx, 1).handle
+
+    local fd = w:first "fxaa_drawer filter_material:in"
+    imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)  ]]
 end
 

@@ -168,7 +168,8 @@ function ani_sys:component_init()
 		e.meshskin = {
 			skin = skin,
 			pose = iani.create_pose(),
-			skinning_matrices = animodule.new_bind_pose(count)
+			skinning_matrices = animodule.new_bind_pose(count),
+			prev_skinning_matrices = animodule.new_bind_pose(count)
 		}
 	end
 end

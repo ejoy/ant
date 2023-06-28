@@ -6,6 +6,7 @@ local default_comp 	= import_package "ant.general".default
 local setting		= import_package "ant.settings".setting
 local ENABLE_PRE_DEPTH<const> = not setting:get "graphic/disable_pre_z"
 local ENABLE_FXAA<const> = setting:get "graphic/postprocess/fxaa/enable"
+local ENABLE_TAA<const> = setting:get "graphic/postprocess/taa/enable"
 
 local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
@@ -100,7 +101,7 @@ local function create_depth_rb(ww, hh)
 		w = ww, h = hh,
 		layers = 1,
 		flags = sampler {
-			RT = ENABLE_FXAA and "RT_ON" or "RT_MSAA4|RT_WRITE",
+			RT = (ENABLE_FXAA or ENABLE_TAA) and "RT_ON" or "RT_MSAA4|RT_WRITE",
 			MIN="LINEAR",
 			MAG="LINEAR",
 			U="CLAMP",
@@ -156,7 +157,7 @@ local function create_main_fb(fbsize)
 		rbidx=fbmgr.create_rb(
 		default_comp.render_buffer(
 			fbsize.w, fbsize.h, "RGBA16F", sampler {
-				RT= ENABLE_FXAA and "RT_ON" or "RT_MSAA4",
+				RT= (ENABLE_FXAA or ENABLE_TAA) and "RT_ON" or "RT_MSAA4",
 				MIN="LINEAR",
 				MAG="LINEAR",
 				U="CLAMP",

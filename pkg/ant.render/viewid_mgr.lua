@@ -48,11 +48,15 @@ add_view "depth_mipmap"			--15
 add_view "ssao"
 add_view "main_view"
 add_view "outline"
+add_view "velocity"
 --start postprocess
 add_view "postprocess_obj"
 add_view "bloom"
 add_view "effect_view"			--20
 add_view "tonemapping"
+add_view "taa"
+add_view "taa_copy"
+add_view "taa_present"
 add_view "fxaa"
 --end postprocess
 
