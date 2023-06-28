@@ -375,6 +375,32 @@ namespace ecs_api {
 
         template <typename ...Args>
         using cached_selector = basic_selector<cached<Args...>, Args...>;
+
+        
+        template <typename Component>
+        struct array_range {
+            array_range(ecs_context* ctx) noexcept {
+                size_t count = (size_t)entity_count(ctx, component<Component>::id);
+                if (count == 0) {
+                    first = nullptr;
+                    last = nullptr;
+                    return;
+                }
+                ecs_api::entity<Component> e(*ctx);
+                bool ok = e.init(0);
+                assert(ok);
+                first = &e.get<Component>();
+                last = first + count;
+            }
+            Component* begin() noexcept {
+                return first;
+            }
+            Component* end() noexcept {
+                return last;
+            }
+            Component* first;
+            Component* last;
+        };
     }
 
     template <typename Component>
@@ -402,6 +428,11 @@ namespace ecs_api {
             assert(ok);
         }
         return e;
+    }
+
+    template <typename Component>
+    auto array(ecs_context* ctx) noexcept {
+        return impl::array_range<Component>(ctx);
     }
 
     template <typename ...Args>
