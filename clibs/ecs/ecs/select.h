@@ -389,7 +389,7 @@ namespace ecs_api {
                 ecs_api::entity<Component> e(*ctx);
                 bool ok = e.init(0);
                 assert(ok);
-                first = &e.get<Component>();
+                first = &e.template get<Component>();
                 last = first + count;
             }
             Component* begin() noexcept {
