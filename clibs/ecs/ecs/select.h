@@ -380,17 +380,12 @@ namespace ecs_api {
         template <typename Component>
         struct array_range {
             array_range(ecs_context* ctx) noexcept {
-                size_t count = (size_t)entity_count(ctx, component<Component>::id);
-                if (count == 0) {
-                    first = nullptr;
+                first = (Component*)entity_iter(ctx, component<Component>::id, 0);
+                if (!first) {
                     last = nullptr;
                     return;
                 }
-                ecs_api::entity<Component> e(*ctx);
-                bool ok = e.init(0);
-                assert(ok);
-                first = &e.template get<Component>();
-                last = first + count;
+                last = first + (size_t)entity_count(ctx, component<Component>::id);
             }
             Component* begin() noexcept {
                 return first;
