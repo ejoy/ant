@@ -3,8 +3,8 @@ local world = ecs.world
 local w     = world.w
 
 local setting = import_package "ant.settings".setting
-local ENABLE_FXAA<const> = setting:data().graphic.postprocess.fxaa.enable
-local ENABLE_TAA<const> = setting:data().graphic.postprocess.taa.enable
+local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
+local ENABLE_TAA<const>    = setting:get "graphic/postprocess/taa/enable"
 local renderutil = require "util"
 local fxaasys = ecs.system "fxaa_system"
 

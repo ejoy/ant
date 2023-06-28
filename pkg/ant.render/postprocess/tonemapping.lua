@@ -14,9 +14,9 @@ local sampler   = require "sampler"
 
 local setting   = import_package "ant.settings".setting
 
-local ENABLE_BLOOM<const>   = setting:data().graphic.postprocess.bloom.enable
-local ENABLE_FXAA<const>    = setting:data().graphic.postprocess.fxaa.enable
-local ENABLE_TAA<const>    = setting:data().graphic.postprocess.taa.enable
+local ENABLE_BLOOM<const>   = setting:get "graphic/postprocess/bloom/enable"
+local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
+local ENABLE_TAA<const>    = setting:get "graphic/postprocess/taa/enable"
 local tm_viewid<const>      = viewidmgr.get "tonemapping"
 
 function tm_sys:init()
