@@ -1,5 +1,3 @@
-#define LUA_LIB
-
 #include "lua.hpp"
 #include "ecs/world.h"
 
@@ -698,7 +696,7 @@ update_attrib(lua_State *L, struct attrib_arena *arena, attrib_type *a, int inde
 static attrib_id
 load_attrib_from_data(lua_State *L, struct attrib_arena* arena, int data_index, attrib_id id) {
 	const uint16_t type = fetch_attrib_type(L, data_index);
-	const bgfx_uniform_handle_t h = {is_uniform_attrib(type) ? fetch_handle(L, data_index).idx : UINT16_MAX};
+	const bgfx_uniform_handle_t h = {is_uniform_attrib(type) ? fetch_handle(L, data_index).idx : (uint16_t)UINT16_MAX};
 	attrib_id nid = create_attrib(L, arena, id, type, h);
 	update_attrib(L, arena, al_attrib(arena, nid), data_index);
 	return nid;
@@ -1289,7 +1287,7 @@ lstat(lua_State *L){
 	return 1;
 }
 
-extern "C" LUAMOD_API int
+extern "C" int
 luaopen_material(lua_State *L) {
 	luaL_checkversion(L);
 	luaL_Reg l[] = {
