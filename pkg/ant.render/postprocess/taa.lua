@@ -4,18 +4,23 @@ local w     = world.w
 local bgfx      = require "bgfx"
 local setting = import_package "ant.settings".setting
 local ENABLE_TAA<const> = setting:data().graphic.postprocess.taa.enable
+local ENABLE_FXAA<const> = setting:data().graphic.postprocess.fxaa.enable
 local renderutil = require "util"
 local taasys = ecs.system "taa_system"
 local declmgr		= require "vertexdecl_mgr"
+local viewidmgr = require "viewid_mgr"
 if not ENABLE_TAA then
     renderutil.default_system(taasys, "init", "init_world", "taa", "taa_copy", "taa_present", "data_changed", "end_frame")
     return
+end
+local taa_present_viewid
+if not ENABLE_FXAA then
+    taa_present_viewid = viewidmgr.get "taa_present"
 end
 
 local mu        = import_package "ant.math".util
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
-local viewidmgr = require "viewid_mgr"
 local util      = ecs.require "postprocess.util"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
@@ -78,29 +83,29 @@ function taasys:init()
             scene           = {},
         }
     }
-    ecs.create_entity{
-        policy = {
-            "ant.render|simplerender",
-            "ant.general|name",
-        },
-        data = {
-            name            = "taa_present_drawer",
-            simplemesh      = irender.full_quad(),
-            material        = "/pkg/ant.resources/materials/postprocess/taa_copy.material",
-            visible_state   = "taa_present_queue",
-            view_visible    = true,
-            taa_present_drawer     = true,
-            scene           = {},
-            
-        }
-    }
-
+    if not ENABLE_FXAA then
+        ecs.create_entity{
+            policy = {
+                "ant.render|simplerender",
+                "ant.general|name",
+            },
+            data = {
+                name            = "taa_present_drawer",
+                simplemesh      = irender.full_quad(),
+                material        = "/pkg/ant.resources/materials/postprocess/taa_copy.material",
+                visible_state   = "taa_present_queue",
+                view_visible    = true,
+                taa_present_drawer     = true,
+                scene           = {},
+                
+            }
+        } 
+    end
 end
 
 
 local taa_viewid<const> = viewidmgr.get "taa"
 local taa_copy_viewid<const> = viewidmgr.get "taa_copy"
-local taa_present_viewid<const> = viewidmgr.get "taa_present"
 
 
 function taasys:init_world()
@@ -127,24 +132,26 @@ function taasys:init_world()
 
     taa_copy_fbidx = fbmgr.create(
         {
-        rbidx = fbmgr.create_rb{
-            w = vr.w, h = vr.h, layers = 1,
-            format = "RGBA8",
-            flags = sampler{
-                U = "CLAMP",
-                V = "CLAMP",
-                MIN="LINEAR",
-                MAG="LINEAR",
-                RT="RT_ON",
-                COLOR_SPACE="sRGB",
-                }
-            },
+            rbidx = fbmgr.create_rb{
+                w = vr.w, h = vr.h, layers = 1,
+                format = "RGBA8",
+                flags = sampler{
+                    U = "CLAMP",
+                    V = "CLAMP",
+                    MIN="LINEAR",
+                    MAG="LINEAR",
+                    RT="RT_ON",
+                    COLOR_SPACE="sRGB",
+                    }
+                },
         }
     ) 
 
     util.create_queue(taa_viewid, mu.copy_viewrect(world.args.viewport), taa_fbidx, "taa_queue", "taa_queue", true)
     util.create_queue(taa_copy_viewid, mu.copy_viewrect(world.args.viewport), taa_copy_fbidx, "taa_copy_queue", "taa_copy_queue", true)
-    util.create_queue(taa_present_viewid, mu.copy_viewrect(world.args.viewport), nil, "taa_present_queue", "taa_present_queue", true)
+    if not ENABLE_FXAA then
+        util.create_queue(taa_present_viewid, mu.copy_viewrect(world.args.viewport), nil, "taa_present_queue", "taa_present_queue", true) 
+    end
 end
 
 local vr_mb = world:sub{"view_rect_changed", "main_queue"}
@@ -152,17 +159,15 @@ function taasys:data_changed()
     for _, _, vr in vr_mb:unpack() do
         irq.set_view_rect("taa_queue", vr)
         irq.set_view_rect("taa_copy_queue", vr)
-        irq.set_view_rect("taa_present_queue", vr)
+        if not ENABLE_FXAA then
+            irq.set_view_rect("taa_present_queue", vr)
+        end
         break
     end
 
 end
 
-function taasys:taa()--[[ 
-    if taa_first_frame_eid then
-        w:remove(taa_first_frame_eid)
-        taa_first_frame_eid = nil
-    end ]]
+function taasys:taa()
     local tm_qe = w:first "tonemapping_queue render_target:in"
     local taa_copy_qe = w:first "taa_copy_queue render_target:in"
     local v_qe = w:first "velocity_queue render_target:in"
@@ -185,23 +190,27 @@ function taasys:taa()--[[
 end
 
 function taasys:taa_copy()
+    local mq = w:first "main_queue render_target:in camera_ref:in"
+    local fb = fbmgr.get(mq.render_target.fb_idx)
+
     local taa_qe = w:first "taa_queue render_target:in"
 
     local sceneldr_handle = fbmgr.get_rb(taa_qe.render_target.fb_idx, 1).handle  
 
-    local fd = w:first "taa_copy_drawer filter_material:in"
-
-    imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)
+    local fc = w:first "taa_copy_drawer filter_material:in"
+    imaterial.set_property(fc, "s_scene_ldr_color", sceneldr_handle)
 end
 
 function taasys:taa_present()
-    local taa_qe = w:first "taa_queue render_target:in"
+    if not ENABLE_FXAA then
+        local taa_qe = w:first "taa_queue render_target:in"
 
-    local sceneldr_handle = fbmgr.get_rb(taa_qe.render_target.fb_idx, 1).handle
-
-    local fd = w:first "taa_present_drawer filter_material:in"
-
-    imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle)
+        local sceneldr_handle = fbmgr.get_rb(taa_qe.render_target.fb_idx, 1).handle
+    
+        local fd = w:first "taa_present_drawer filter_material:in"
+    
+        imaterial.set_property(fd, "s_scene_ldr_color", sceneldr_handle) 
+    end
 end
 
 

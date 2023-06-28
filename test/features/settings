@@ -44,9 +44,9 @@ graphic:
       inv_highlight: 0.1
       threshold: 2.3
     fxaa:
-      enable: nil
-    taa:
       enable: true
+    taa:
+      enable: nil
   shadow:
     color: {0, 0, 0, 1}
     depth_multiplier: 1000

@@ -41,7 +41,7 @@ void main() {
 
 		posCS.xy += offset * a_side;
 
-		posCS.xy += u_jitter.xy * w; // Apply Jittering
+		posCS.xy += u_jitter.xy * posCS.w; // Apply Jittering
 		gl_Position = posCS;
 	#endif
 
