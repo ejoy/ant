@@ -45,6 +45,8 @@ graphic:
       threshold: 2
     fxaa:
       enable: true
+    taa:
+      enable: nil
   shadow:
     bias: 0.20
     color: {0, 0, 0, 1}
