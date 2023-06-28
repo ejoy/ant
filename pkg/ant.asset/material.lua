@@ -50,20 +50,15 @@ local ms = ecs.system "material_system"
 local function stat_material_info(verbose)
 	local materials = {}
 	local instances = {}
-	for e in w:select "material:in render_object:in" do
-		local function mark(mi, matpath)
+	for e in w:select "material:in render_object:in filter_material:in" do
+		for _, mi in pairs(e.filter_material) do
 			if instances[mi] == nil then
 				instances[mi] = true
-				local mobj = mi:get_material()
-				if nil == materials[mobj] then
-					materials[mobj] = matpath
-				end
 			end
 		end
 
-		for _, m in pairs(e.filter_material) do
-			mark(m, e.material)
-		end
+		local r = assetmgr.resource(e.material)
+		materials[r.object] = e.material
 	end
 
 	local material_attribs = {}
@@ -95,19 +90,36 @@ local function stat_material_info(verbose)
 	print("material cobject, attrib number:", s.attrib_num, "attrib cap:", s.attrib_cap)
 end
 
---local debug_material
+local DEBUG_MATERIAL_ATTRIBUTES<const> = false
 function ms:component_init()
 	w:clear "material_result"
 
 	for e in w:select "INIT material:in material_result:new" do
 		e.material_result = imaterial.load_res(e.material)
-		--debug_material = true
+		if DEBUG_MATERIAL_ATTRIBUTES then
+			w:extend(e, "name?in eid:in")
+			print("created material entity:", e.eid, e.name, e.material)
+		end
 	end
 end
 
+function ms:entity_remove()
+	if DEBUG_MATERIAL_ATTRIBUTES then
+		for e in w:select "REMOVED material:in name?in eid:in" do
+			print("removed material entity:", e.eid, e.name, e.material)
+		end
+	end
+end
+
+local counter = 0
+local itimer = ecs.import.interface "ant.timer|itimer"
 function ms:end_frame()
-	-- if debug_material then
-	-- 	stat_material_info()
-	-- 	debug_material = nil
-	-- end
+	if DEBUG_MATERIAL_ATTRIBUTES then
+		counter = counter + itimer.delta()
+		if counter >= 1000 then
+			print("material entity count:", w:count "material")
+			stat_material_info()
+			counter = 0
+		end
+	end
 end

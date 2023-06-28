@@ -2,12 +2,9 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local prefab_mgr    = ecs.require "prefab_manager"
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
-local gizmo         = ecs.require "gizmo.gizmo"
 local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant
-local utils         = require "common.utils"
 local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local hierarchy     = require "hierarchy_edit"
@@ -140,7 +137,7 @@ function BaseView:on_get_tag()
     if type(tags) == "table" then
         return table.concat(tags, "|")
     end
-    return tags
+    return tags or ""
 end
 
 function BaseView:on_set_position(value)

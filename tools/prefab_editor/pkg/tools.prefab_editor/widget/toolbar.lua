@@ -102,6 +102,7 @@ function m.show()
                     LAST_main_camera = nil
                     irq.set_visible("second_view", true)
                 end
+                world:pub {"camera", "change"}
             end
         end
         uiutils.imguiEndToolbar()

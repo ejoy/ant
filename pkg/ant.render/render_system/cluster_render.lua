@@ -6,6 +6,9 @@ local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local declmgr   = require "vertexdecl_mgr"
 local viewidmgr = require "viewid_mgr"
+
+local assetmgr  = import_package "ant.asset"
+
 local ilight    = ecs.import.interface "ant.render|ilight"
 local icompute  = ecs.import.interface "ant.render|icompute"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
@@ -125,8 +128,8 @@ local function check_light_index_list()
     end
     if lil.handle ~= oldhandle then
         assert(lil.handle)
-        local ce = w:first("cluster_cull_light dispatch:in")
-        local mo = ce.dispatch.material:get_material()
+        local ce = w:first "cluster_cull_light material:in"
+        local mo = assetmgr.resource(ce.material).object
         mo:set_attrib("b_light_index_lists", lil.handle)
 
         local sa = imaterial.system_attribs()
@@ -193,21 +196,21 @@ function cfs:init_world()
     update_render_info()
 
     --build
-    local be = w:first("cluster_build_aabb dispatch:in")
-    local bmo= be.dispatch.material:get_material()
-    bmo:set_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "build"))
-    bmo:set_attrib("b_light_info",          icompute.create_buffer_property(cluster_buffers.light_info, "build"))
+    local be = w:first "cluster_build_aabb material:in"
+    local bmo = assetmgr.resource(be.material).object
+    bmo:set_attrib("b_cluster_AABBs",   icompute.create_buffer_property(cluster_buffers.AABB, "build"))
+    bmo:set_attrib("b_light_info",      icompute.create_buffer_property(cluster_buffers.light_info, "build"))
 
     build_cluster_aabb_struct(main_viewid, ceid)
 
     --cull
-    local ce = w:first("cluster_cull_light dispatch:in")
-    local cmo = ce.dispatch.material:get_material()
-    cmo:set_attrib("b_cluster_AABBs",       icompute.create_buffer_property(cluster_buffers.AABB, "cull"))
-    cmo:set_attrib("b_global_index_count",  icompute.create_buffer_property(cluster_buffers.global_index_count, "cull"))
-    cmo:set_attrib("b_light_grids",         icompute.create_buffer_property(cluster_buffers.light_grids, "cull"))
-    cmo:set_attrib("b_light_index_lists",   icompute.create_buffer_property(cluster_buffers.light_index_lists, "cull"))
-    cmo:set_attrib("b_light_info",          icompute.create_buffer_property(cluster_buffers.light_info, "cull"))
+    local ce = w:first "cluster_cull_light material:in"
+    local cmo = assetmgr.resource(ce.material).object
+    cmo:set_attrib("b_cluster_AABBs",      icompute.create_buffer_property(cluster_buffers.AABB, "cull"))
+    cmo:set_attrib("b_global_index_count", icompute.create_buffer_property(cluster_buffers.global_index_count, "cull"))
+    cmo:set_attrib("b_light_grids",        icompute.create_buffer_property(cluster_buffers.light_grids, "cull"))
+    cmo:set_attrib("b_light_index_lists",  icompute.create_buffer_property(cluster_buffers.light_index_lists, "cull"))
+    cmo:set_attrib("b_light_info",         icompute.create_buffer_property(cluster_buffers.light_info, "cull"))
 end
 
 local function cull_lights(viewid)

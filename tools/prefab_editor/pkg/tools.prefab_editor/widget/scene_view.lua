@@ -141,6 +141,7 @@ local function show_scene_node(node)
     local function select_or_move(nd)
         local eid = nd.eid
         if imgui.util.IsItemClicked() then
+            -- imgui.util.SetKeyboardFocusHere()
             if is_editable(eid) then
                 gizmo:set_target(eid)
             end
@@ -273,7 +274,7 @@ function m.show()
                 world:pub {"Create", "empty"}
             end
             if imgui.widget.BeginMenu("Geometry") then
-                for i, type in ipairs(geom_type) do
+                for _, type in ipairs(geom_type) do
                     if imgui.widget.MenuItem(type) then
                         world:pub { "Create", "geometry", {type = type}}
                     end
@@ -281,7 +282,7 @@ function m.show()
                 imgui.widget.EndMenu()
             end
             if imgui.widget.BeginMenu("Light") then
-                for i, type in ipairs(light_types) do
+                for _, type in ipairs(light_types) do
                     if imgui.widget.MenuItem(type) then
                         world:pub { "Create", "light", {type = type}}
                     end
@@ -308,7 +309,7 @@ function m.show()
         end
         imgui.cursor.Separator()
         if imgui.table.Begin("InspectorTable", 3, imgui.flags.Table {'ScrollY'}) then
-            local child_width, child_height = imgui.windows.GetContentRegionAvail()
+            -- local child_width, child_height = imgui.windows.GetContentRegionAvail()
             imgui.table.SetupColumn("Entity", imgui.flags.TableColumn {'NoHide', 'WidthStretch'}, 1.0)
             imgui.table.SetupColumn("Lock", imgui.flags.TableColumn {'WidthFixed'}, 24.0)
             imgui.table.SetupColumn("Visible", imgui.flags.TableColumn {'WidthFixed'}, 24.0)
