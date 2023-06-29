@@ -161,7 +161,7 @@ function world:pipeline_func(what)
 	if not funcs or #funcs == 0 then
 		return function() end
 	end
-	local CPU_STAT <const> = false
+	local CPU_STAT <const> = true
 	local MATH3D_STAT <const> = true
 	if what == "_init" or what == "_update" then
 		if CPU_STAT then
