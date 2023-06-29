@@ -84,7 +84,6 @@ namespace ecs_api {
     private:
         struct ecs_context* context;
         struct ecs_cache* c;
-        int n = 0;
     public:
         cached_context(struct ecs_context* ctx) noexcept {
             std::array<int, 1+sizeof...(Components)> keys {component<MainKey>::id, component<Components>::id...};
@@ -99,20 +98,10 @@ namespace ecs_api {
             return context;
         }
         void sync() noexcept {
-            n = entity_cache_sync(ctx(), c);
+            entity_cache_sync(ctx(), c);
         }
 
-        // TODO
-        //template <typename Component>
-        //    requires (!std::is_function_v<Component> && component<Component>::tag)
-        //Component* iter(int i) noexcept {
-        //    static_assert(std::is_same_v<Component, MainKey>);
-        //    return i < n
-        //        ? (Component*)(~(uintptr_t)0)
-        //        : nullptr;
-        //}
         template <typename Component>
-        //    requires (!std::is_function_v<Component> && !component<Component>::tag)
         Component* iter(int i, ecs_token& token) noexcept {
             static_assert(std::is_same_v<Component, MainKey>);
             return (Component*)entity_iter(ctx(), component<Component>::id, i, &token);
