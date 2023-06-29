@@ -34,13 +34,14 @@
 8. 清理引擎中的varying.def.sc文件。引擎内，应该只使用一个varying的文件定义，不应该过度的随意添加。后续需要针对VS_Output与FS_Input进行关联；
 9. 优化动画计算，将skinning的代码从vertex shader放到compute shader中，并消除shadow/pre-depth/main pass中分别重复的计算（https://wickedengine.net/2017/09/09/skinning-in-compute-shader/）。（2023.04.21.这种方法有一个问题，会导致所有的顶点、法线需要复制一份出来作为中间数据，不管顶点数据是否是共用的，每一个实例都需要一份。这会导致D3D11在创建大量entity后报错，目前使用vs中的skinning计算方法）；
 10. Outline问题的修复。目前使用放大模型的方式实现描边的效果，但会有被遮挡的问题。要不使用屏幕空间算法，要不调整放大模型的渲染，防止被遮挡。https://zhuanlan.zhihu.com/p/410710318；https://zhuanlan.zhihu.com/p/109101851；https://juejin.cn/post/7163670845343137800；目前继续使用沿法线放大模型的方式，结合模板的方式，实现。(2023.05.26)；
+11. 关于ibl：
+  - 使用sh(Spherical Harmonic)来表示irradiance中的数据；
+  - 使用多项式直接计算LUT，而不使用一张额外的贴图（节省带宽和采样器）：https://knarkowicz.wordpress.com/2014/12/27/analytical-dfg-term-for-ibl/；（2023.06.27已经完成）
 ##### 未完成
 1. 优化PBR的计算量：
   - 预烘培GGX：http://filmicworlds.com/blog/optimizing-ggx-shaders-with-dotlh/；
 2. 关于ibl:
   - 离线计算ibl相关的数据，将目前的compute shader中计算的内容转移到cpu端，并离线计算；
-  - 使用sh(Spherical Harmonic)来表示irradiance中的数据；
-  - 使用多项式直接计算LUT，而不使用一张额外的贴图（节省带宽和采样器）：https://knarkowicz.wordpress.com/2014/12/27/analytical-dfg-term-for-ibl/
 3. 优化polyline的效果。启用FXAA之后，polyline的线会丢失；
 4. 使用延迟渲染。目前的predepth系统、FXAA（以及将要实现的TAA）实际上是延迟渲染的一部分，实现延迟渲染能够减少目前的drawcall（目前的draw call由predepth，shadow，render和pickup 4部分组成）；
 5. 修复pre-depth/csm/pickup等队列中的cullstate的状态。对于metal/vulkan/d3d12等api，pipeline都是一个整体，会导致pipeline数据不停的切换；
@@ -62,6 +63,9 @@
 16. 解决动态材质的问题；
   - 需要把vs_pbr.sc里面的VS_Input和VS_Ouput拆分出来。目前已经定义好了，还需要后续的跟进；
 17. 充分理解ASTC压缩，修复6x6的贴图无法正确压缩的bug。https://registry.khronos.org/DataFormat/specs/1.3/dataformat.1.3.html#ASTC https://github.com/ARM-software/astc-encoder/blob/main/Docs/FormatOverview.md；
+18. 使用无穷远的far plane构建透视投影矩阵，并将near plane的位置设定为0.1，而不是现在1，1的距离有时候会导致近处能够看到的物体，但被裁剪掉的问题；
+19. 在方向光的基础上，定义太阳光。目前方向光是只有方向，没有大小和位置，而太阳实际上是有位置和大小的；
+20. 摄像机的fov需要根据聚焦的距离来定义fov；
 
 #### 新功能/探索
 ##### 已经完成
