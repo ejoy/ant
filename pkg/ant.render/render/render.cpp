@@ -220,8 +220,7 @@ draw_objs(lua_State *L, struct ecs_world *w, ecs::render_object& obj, const matr
 
 static inline void
 find_render_args(struct ecs_world *w, submit_cache &cc) {
-	for (auto a : ecs_api::select<ecs::render_args>(w->ecs)){
-		auto& r = a.get<ecs::render_args>();
+	for (auto& r : ecs_api::array<ecs::render_args>(w->ecs)) {
 		cc.ra[cc.ra_count++] = &r;
 	}
 }

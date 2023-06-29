@@ -68,8 +68,7 @@ lcull(lua_State *L) {
 		}
 	};
 
-	for (auto e : ecs_api::select<ecs::cull_args>(w->ecs)){
-		const auto& i = e.get<ecs::cull_args>();
+	for (auto& i : ecs_api::array<ecs::cull_args>(w->ecs)){
 		add_cull_info(i.frustum_planes, i.cull_mask);
 	}
 
