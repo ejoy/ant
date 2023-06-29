@@ -49,24 +49,28 @@ namespace ecs_api {
         }
         void sync() noexcept {
         }
-        template <typename Component>
-        Component* iter(int i, ecs_token& token) noexcept {
-            static_assert(!std::is_function<Component>::value);
-            return (Component*)entity_iter(ctx(), component<Component>::id, i, &token);
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+            )
+        T* iter(int i, ecs_token& token) noexcept {
+            return (T*)entity_iter(ctx(), component<T>::id, i, &token);
         }
-        template <typename Component>
-        Component* sibling(ecs_token token, [[maybe_unused]] int i) noexcept {
-            static_assert(!std::is_function<Component>::value);
-            return (Component*)entity_component(ctx(), token, component<Component>::id);
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && component<T>::tag
+            )
+        bool sibling(ecs_token token, [[maybe_unused]] int i) noexcept {
+            return entity_component_index(ctx(), token, component<T>::id) >= 0;
         }
-        template <typename Component>
-        Component* sibling(ecs_token token, lua_State* L) {
-            static_assert(!std::is_function<Component>::value);
-            auto c = sibling<Component>(ctx(), token);
-            if (c == NULL) {
-                luaL_error(L, "component `%s` not found.", component<Component>::name);
-            }
-            return c;
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && !component<T>::tag
+            )
+        T* sibling(ecs_token token, [[maybe_unused]] int i) noexcept {
+            return (T*)entity_component(ctx(), token, component<T>::id);
         }
         void disable_tag(int tagid, int i) noexcept {
             entity_disable_tag(ctx(), tagid, i);
@@ -101,21 +105,42 @@ namespace ecs_api {
             entity_cache_sync(ctx(), c);
         }
 
-        template <typename Component>
-        Component* iter(int i, ecs_token& token) noexcept {
-            static_assert(std::is_same_v<Component, MainKey>);
-            return (Component*)entity_iter(ctx(), component<Component>::id, i, &token);
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && std::is_same_v<T, MainKey>
+            )
+        T* iter(int i, ecs_token& token) noexcept {
+            return (T*)entity_iter(ctx(), component<T>::id, i, &token);
         }
-        template <typename Component>
-            requires (!std::is_function_v<Component> && component<Component>::id != EID)
-        Component* sibling([[maybe_unused]] ecs_token token, int i) noexcept {
-            static_assert(impl::has_element_v<Component, Components...>);
-            return (Component*)entity_cache_fetch(ctx(), c, i, component<Component>::id);
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && impl::has_element_v<T, Components...>
+                && component<T>::id != EID
+                && component<T>::tag
+            )
+        bool sibling([[maybe_unused]] ecs_token token, int i) noexcept {
+            return entity_cache_fetch_index(ctx(), c, i, component<T>::id) >= 0;
         }
-        template <typename Component>
-            requires (!std::is_function_v<Component> && component<Component>::id == EID)
-        Component* sibling(ecs_token token, [[maybe_unused]] int i) noexcept {
-            return (Component*)entity_component(ctx(), token, EID);
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && impl::has_element_v<T, Components...>
+                && component<T>::id != EID
+                && !component<T>::tag
+            )
+        T* sibling([[maybe_unused]] ecs_token token, int i) noexcept {
+            return (T*)entity_cache_fetch(ctx(), c, i, component<T>::id);
+        }
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && component<T>::id == EID
+                && impl::has_element_v<T, Components...>
+            )
+        T* sibling(ecs_token token, [[maybe_unused]] int i) noexcept {
+            return (T*)entity_component(ctx(), token, EID);
         }
         void disable_tag(int tagid, int i) noexcept {
             entity_disable_tag(ctx(), tagid, i);
@@ -245,7 +270,7 @@ namespace ecs_api {
         template <typename T>
             requires (component<T>::tag)
         bool sibling() const noexcept {
-            return !!ctx.sibling<T>(token, index);
+            return ctx.sibling<T>(token, index);
         }
         template <typename T>
             requires (component<T>::id != EID && !component<T>::tag && !std::is_empty<T>::value)
@@ -256,16 +281,6 @@ namespace ecs_api {
             requires (component<T>::id == EID)
         T sibling() const noexcept {
             return (T)ctx.sibling<T>(token, index);
-        }
-        template <typename T>
-            requires (component<T>::id == EID)
-        T sibling(lua_State* L) const {
-            return (T)ctx.sibling<T>(token, L);
-        }
-        template <typename T>
-            requires (component<T>::id != EID && !std::is_empty<T>::value)
-        T& sibling(lua_State* L) const {
-            return *ctx.sibling<T>(token, L);
         }
         template <typename T>
             requires (component<T>::tag)
@@ -310,6 +325,16 @@ namespace ecs_api {
                 }
                 if constexpr (sizeof...(Components) > 0) {
                     return init_sibling<Is, Components...>(i);
+                }
+                return true;
+            }
+            else if constexpr (component<Component>::tag) {
+                auto v = ctx.sibling<Component>(token, i);
+                if (!v) {
+                    return false;
+                }
+                if constexpr (sizeof...(Components) > 0) {
+                    return init_sibling<impl::next<Is, Component>(), Components...>(i);
                 }
                 return true;
             }
