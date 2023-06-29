@@ -1,16 +1,11 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-ecs.require "widget.base_view"
 
 local imgui     = require "imgui"
-local utils     = require "common.utils"
-local math3d    = require "math3d"
 local joint_utils = require "widget.joint_utils"
 local uiproperty = require "widget.uiproperty"
 local hierarchy = require "hierarchy_edit"
-local BaseView = require "widget.view_class".BaseView
-local SlotView = require "widget.view_class".SlotView
 
 local follow_flag = {
     "pos",
@@ -18,8 +13,12 @@ local follow_flag = {
     "scale|rot|pos"
 }
 
+local SlotView = {}
 function SlotView:_init()
-    BaseView._init(self)
+    if self.inited then
+        return
+    end
+    self.inited = true
     self.slot = uiproperty.Group({label="Slot", flags=imgui.flags.TreeNode{"DefaultOpen"}}, {
             uiproperty.Combo({label="FollowJoint", options={}}, {
                 getter = function()
@@ -74,26 +73,42 @@ function SlotView:set_model(eid)
         end
     end
 
-    if not BaseView.set_model(self, eid) then return false end
+    if self.eid == eid then
+        return
+    end
+    if not eid then
+        self.eid = nil
+        return
+    end
+    local e <close> = w:entity(eid, "slot?in")
+    if not e.slot then
+        self.eid = nil
+        return
+    end
 
     local fj = self.slot:find_property_by_label "FollowJoint"
     fj:set_options(joint_name_list)
-
     local ff = self.slot:find_property_by_label "FollowFlag"
     ff:set_options(follow_flag)
-
+    self.eid = eid
     self:update()
-    return true
 end
 
 function SlotView:update()
-    BaseView.update(self)
+    if not self.eid then
+        return
+    end
     self.slot:update()
 end
 
 function SlotView:show()
-    BaseView.show(self)
+    if not self.eid then
+        return
+    end
     self.slot:show()
 end
 
-return SlotView
+return function ()
+    SlotView:_init()
+    return SlotView
+end

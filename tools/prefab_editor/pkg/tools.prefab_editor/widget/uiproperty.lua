@@ -1,11 +1,8 @@
 local imgui     = require "imgui"
 local assetmgr  = import_package "ant.asset"
-local cr        = import_package "ant.compile_resource"
-local datalist  = require "datalist"
 local uiconfig  = require "widget.config"
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
-local vfs       = require "vfs"
 local global_data = require "common.global_data"
 local access    = global_data.repo_access
 
@@ -23,8 +20,8 @@ function PropertyBase:_init(config, modifier)
     self.id         = config.id
     self.dim        = config.dim or 1
     self.mode       = config.mode
-    self.modifier = modifier or {}
-    self.uidata = {speed = config.speed, min = config.min, max = config.max, flags = config.flags}
+    self.modifier   = modifier or {}
+    self.uidata     = {speed = config.speed, min = config.min, max = config.max, flags = config.flags}
 end
 
 function PropertyBase:set_getter(getter)
@@ -66,7 +63,7 @@ function PropertyBase:update()
     end
 end
 
-function PropertyBase:the_label()
+function PropertyBase:show_label()
     if self.mode == nil or self.mode == "label_left" then
         imgui.widget.PropertyLabel(self.label)
     end
@@ -85,7 +82,7 @@ end
 
 function PropertyBase:show()
     if self:is_visible() then
-        self:the_label()
+        self:show_label()
         if self:widget() then
             local d = self.uidata
             if self.dim == 1 then
@@ -135,7 +132,7 @@ end
 
 function Combo:show()
     if self:is_visible() then
-        self:the_label()
+        self:show_label()
         imgui.util.PushID(tostring(self))
         local current_option = self.modifier.getter()
         if imgui.widget.BeginCombo(self:get_label(), {current_option, flags = self.uidata.flags}) then

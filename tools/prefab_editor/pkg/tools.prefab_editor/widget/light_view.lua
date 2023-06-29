@@ -1,27 +1,17 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local ilight    = ecs.import.interface "ant.render|ilight"
-local light_gizmo = ecs.require "gizmo.light"
-local gizmo = ecs.require "gizmo.gizmo"
-ecs.require "widget.base_view"
-
-local utils     = require "common.utils"
-local math3d    = require "math3d"
-local uiproperty= require "widget.uiproperty"
-local hierarchy = require "hierarchy_edit"
-
-local imgui     = require "imgui"
-
-local view_class = require "widget.view_class"
-local BaseView, LightView  = view_class.BaseView, view_class.LightView
-
-local MOTION_TYPE_options<const> = {
-    "dynamic", "station", "static"
-}
-
+local ilight        = ecs.import.interface "ant.render|ilight"
+local light_gizmo   = ecs.require "gizmo.light"
+local uiproperty    = require "widget.uiproperty"
+local hierarchy     = require "hierarchy_edit"
+local MOTION_TYPE_options<const> = { "dynamic", "station", "static" }
+local LightView = {}
 function LightView:_init()
-    BaseView._init(self)
+    if self.inited then
+        return
+    end
+    self.inited = true
     self.subproperty = {
         color        = uiproperty.Color({label = "Color", dim = 4}, {
             getter = function() return self:on_get_color() end,
@@ -74,7 +64,7 @@ function LightView:_init()
                 ilight.set_motion_type(e, value)
              end,
         }),
-        angular_radius= uiproperty.Float({label="AngularRadius", disable=true,}, {
+        angular_radius = uiproperty.Float({label="AngularRadius", disable=true,}, {
             getter = function()
                 local e <close> = w:entity(self.eid, "light:in")
                 return math.deg(ilight.angular_radius(e))
@@ -90,17 +80,26 @@ function LightView:_init()
 end
 
 function LightView:set_model(eid)
-    if not BaseView.set_model(self, eid) then return false end
+    if self.eid == eid then
+        return
+    end
+    if not eid then
+        self.eid = nil
+        return
+    end
+    local e <close> = w:entity(eid, "light?in")
+    if not e.light then
+        self.eid = nil
+        return
+    end
+    self.eid = eid
     local subproperty = {}
     subproperty[#subproperty + 1] = self.subproperty.color
     subproperty[#subproperty + 1] = self.subproperty.intensity
-
     subproperty[#subproperty + 1] = self.subproperty.motion_type
     subproperty[#subproperty + 1] = self.subproperty.make_shadow
     subproperty[#subproperty + 1] = self.subproperty.bake
     subproperty[#subproperty + 1] = self.subproperty.angular_radius
-
-    local e <close> = w:entity(eid, "light:in")
     if e.light.type ~= "directional" then
         subproperty[#subproperty + 1] = self.subproperty.range
         if e.light.type == "spot" then
@@ -110,7 +109,6 @@ function LightView:set_model(eid)
     end
     self.light_property:set_subproperty(subproperty)
     self:update()
-    return true
 end
 
 function LightView:on_set_color(...)
@@ -184,12 +182,16 @@ function LightView:on_get_outter_radian()
 end
 
 function LightView:update()
-    BaseView.update(self)
-    self.light_property:update() 
+    if not self.eid then
+        return
+    end
+    self.light_property:update()
 end
 
 function LightView:show()
-    BaseView.show(self)
+    if not self.eid then
+        return
+    end
     self.light_property:show()
 end
 
@@ -202,4 +204,7 @@ function LightView:has_scale()
     return false
 end
 
-return LightView
+return function ()
+    LightView:_init()
+    return LightView
+end

@@ -12,30 +12,19 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
     We need a **Material Editor** to edit material, not show material file content in entity property tab
 ]]
 
-local irender     = ecs.import.interface "ant.render|irender"
-
 local prefab_mgr  = ecs.require "prefab_manager"
-ecs.require "widget.base_view"
-
 local assetmgr  = import_package "ant.asset"
-local cr        = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
-
 local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy_edit"
-
 local uiproperty= require "widget.uiproperty"
-local view_class= require "widget.view_class"
 local global_data=require "common.global_data"
-
-local BaseView, MaterialView = view_class.BaseView, view_class.MaterialView
-
 local fs        = require "filesystem"
 local lfs       = require "filesystem.local"
 local access    = global_data.repo_access
-
 local rb        = ecs.require "widget.resource_browser"
 
+local MaterialView = {}
 local file_cache = {}
 local function read_file(fn)
     local f<close> = lfs.open(fn)
@@ -1001,7 +990,10 @@ local function refine_material_data(eid, newmaterial_path)
 end
 
 function MaterialView:_init()
-    BaseView._init(self)
+    if self.inited then
+        return
+    end
+    self.inited = true
     
     self.mat_file = build_file_ui(self)
 
@@ -1039,11 +1031,21 @@ function MaterialView:_init()
 end
 
 function MaterialView:set_model(eid)
-    if not BaseView.set_model(self, eid) then 
-        return false
+    if self.eid == eid then
+        return
     end
+    if not eid then
+        self.eid = nil
+        return
+    end
+    local e <close> = w:entity(eid, "filter_material?in render_object?in")
+    if not e.filter_material and not e.render_object then
+        self.eid = nil
+        return
+    end
+    self.eid = eid
 
-    local t = material_template(eid)
+    local t = material_template(self.eid)
     if t.fx.cs == nil then
         local cs = self.fx:find_property_by_label "cs"
         cs.visible = false
@@ -1066,19 +1068,25 @@ function MaterialView:set_model(eid)
         end
     end
 
-    local readonly_res = is_readonly_resource(hierarchy:get_template(eid).template.data.material)
+    local readonly_res = is_readonly_resource(hierarchy:get_template(self.eid).template.data.material)
     self.save.disable = readonly_res
     self.saveas.disable = is_glb_resource()
     self.material.disable = prefab_mgr:get_current_filename() == nil
     
-    self:enable_properties_ui(eid)
-
+    self:enable_properties_ui()
+    
     self:update()
-    return true
 end
 
-function MaterialView:enable_properties_ui(eid)
-    local t = material_template(eid)
+function MaterialView:update()
+    if not self.eid then
+        return
+    end
+    self.material:update()
+end
+
+function MaterialView:enable_properties_ui()
+    local t = material_template(self.eid)
     if is_pbr_material(t) then
         local p_ui = assert(self.material:find_property_by_label "Properties")
         local function is_unlit()
@@ -1114,15 +1122,15 @@ function MaterialView:enable_properties_ui(eid)
 end
 
 function MaterialView:show()
-    if self.eid then
-        BaseView.update(self)
-        self.material:update()
-
-        BaseView.show(self)
-        check_disable_file_fetch_ui(self.mat_file)
-        self.material:show()
+    if not self.eid then
+        return
     end
-
+    -- self.material:update()
+    check_disable_file_fetch_ui(self.mat_file)
+    self.material:show()
 end
 
-return MaterialView
+return function ()
+    MaterialView:_init()
+    return MaterialView
+end

@@ -241,7 +241,7 @@ local function create_frustum_property(cv)
 end
 
 local function camera_exposure(eid)
-    local e <close> = w:entity(eid, "exposure:in") 
+    local e <close> = w:entity(eid, "exposure?in")
     return e.exposure
 end
 
@@ -332,7 +332,7 @@ local function create_exposure_property(cv)
                 return camera_exposure(cv.eid) ~= nil
             end,
             setter = function (value)
-                local e <close> = w:entity(cv.eid, "exposure:in")
+                local e <close> = w:entity(cv.eid, "exposure?in")
                 local template = hierarchy:get_template(cv.eid).template
 
                 local p_idx = find_exposure_policy(template.policy)
