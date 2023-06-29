@@ -79,7 +79,7 @@ function LightView:_init()
     self.light_property= uiproperty.Group({label = "Light"}, {})
 end
 
-function LightView:set_model(eid)
+function LightView:set_eid(eid)
     if self.eid == eid then
         return
     end

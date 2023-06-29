@@ -58,7 +58,7 @@ function ColliderView:_init()
     })
 end
 
-function ColliderView:set_model(eid)
+function ColliderView:set_eid(eid)
     if self.eid == eid then
         return
     end

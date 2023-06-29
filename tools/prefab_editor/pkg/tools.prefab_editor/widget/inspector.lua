@@ -41,14 +41,14 @@ local function update_eid()
     end
     current_eid = gizmo.target_eid
 
-    base_panel:set_model(current_eid)
-    camera_panel:set_model(current_eid)
-    light_panel:set_model(current_eid)
-    slot_panel:set_model(current_eid)
-    collider_panel:set_model(current_eid)
-    effect_panel:set_model(current_eid)
-    skybox_panel:set_model(current_eid)
-    material_panel:set_model(current_eid)
+    base_panel:set_eid(current_eid)
+    camera_panel:set_eid(current_eid)
+    light_panel:set_eid(current_eid)
+    slot_panel:set_eid(current_eid)
+    collider_panel:set_eid(current_eid)
+    effect_panel:set_eid(current_eid)
+    skybox_panel:set_eid(current_eid)
+    material_panel:set_eid(current_eid)
 end
 
 function m.show()

@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-
+local event_gizmo   = world:sub {"Gizmo"}
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant
@@ -48,7 +48,7 @@ function BaseView:_init()
     self.base.delete_aabb:set_click(function() self:delete_aabb() end)
 end
 
-function BaseView:set_model(eid)
+function BaseView:set_eid(eid)
     if self.eid == eid then return false end
     --TODO: need remove 'eid', there is no more eid
     self.eid = eid
@@ -328,6 +328,9 @@ end
 function BaseView:show()
     if not self.eid then return end
     --self.base.script:show()
+    for _, _, _, _ in event_gizmo:unpack() do
+        self:update()
+    end
     if self.is_prefab then
         self.base.prefab:show()
         self.base.preview:show()

@@ -63,7 +63,7 @@ end
 
 local joint_name_list = {"None"}
 
-function SlotView:set_model(eid)
+function SlotView:set_eid(eid)
     if #joint_name_list < 2 then
         local _, joint_list = joint_utils:get_joints()
         if joint_list then

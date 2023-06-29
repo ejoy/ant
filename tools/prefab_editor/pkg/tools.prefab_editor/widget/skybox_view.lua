@@ -95,7 +95,7 @@ function SkyboxView:_init()
     })
 end
 
-function SkyboxView:set_model(eid)
+function SkyboxView:set_eid(eid)
     if self.eid == eid then
         return
     end

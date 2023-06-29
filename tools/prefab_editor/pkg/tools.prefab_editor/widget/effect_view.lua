@@ -23,7 +23,7 @@ function EffectView:_init()
     })
 end
 
-function EffectView:set_model(eid)
+function EffectView:set_eid(eid)
     if self.eid == eid then
         return
     end

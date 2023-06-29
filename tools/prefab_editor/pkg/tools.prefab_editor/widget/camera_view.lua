@@ -422,7 +422,7 @@ function CameraView:update()
     self.serialize:update()
 end
 
-function CameraView:set_model(eid)
+function CameraView:set_eid(eid)
     if self.eid == eid then
         return
     end

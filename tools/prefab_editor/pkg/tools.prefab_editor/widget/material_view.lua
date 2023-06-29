@@ -1030,7 +1030,7 @@ function MaterialView:_init()
     })
 end
 
-function MaterialView:set_model(eid)
+function MaterialView:set_eid(eid)
     if self.eid == eid then
         return
     end
