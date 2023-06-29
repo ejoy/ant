@@ -17,7 +17,7 @@ local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local icamera       = ecs.import.interface "ant.camera|icamera"
 local irq           = ecs.import.interface "ant.render|irenderqueue"
 
-local cameraview = {}
+local CameraView = {}
 
 local function camera_template(eid)
     local p = hierarchy:get_template(eid)
@@ -400,33 +400,56 @@ local function create_serialize_ui(cv)
     })
 end
 
-function cameraview:init()
+function CameraView:_init()
+    if self.inited then
+        return
+    end
+    self.inited = true
+
     self.transform = create_transform_property(self)
     self.frustum = create_frustum_property(self)
-
     self.exposure = create_exposure_property(self)
-
     self.serialize = create_serialize_ui(self)
 end
 
-function cameraview:update()
-    self.transform:update()
+function CameraView:update()
+    if not self.eid then
+        return
+    end
+    -- self.transform:update()
     self.frustum:update()
     self.exposure:update()
     self.serialize:update()
 end
 
-function cameraview:set_model(eid)
+function CameraView:set_model(eid)
+    if self.eid == eid then
+        return
+    end
+    if not eid then
+        self.eid = nil
+        return
+    end
+    local e <close> = w:entity(eid, "camera?in")
+    if not e.camera then
+        self.eid = nil
+        return
+    end
     self.eid = eid
     self:update()
 end
 
-function cameraview:show()
-    self:update()
-    self.transform:show()
+function CameraView:show()
+    if not self.eid then
+        return
+    end
+    -- self.transform:show()
     self.frustum:show()
     self.exposure:show()
     self.serialize:show()
 end
 
-return cameraview
+return function ()
+    CameraView:_init()
+    return CameraView
+end

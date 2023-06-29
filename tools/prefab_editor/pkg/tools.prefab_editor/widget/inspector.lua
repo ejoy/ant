@@ -13,7 +13,7 @@ local slot_panel        = ecs.require "widget.slot_view"()
 local collider_panel    = ecs.require "widget.collider_view"()
 local effect_panel      = ecs.require "widget.effect_view"()
 local skybox_panel      = ecs.require "widget.skybox_view"()
-local camera_panel
+local camera_panel      = ecs.require "widget.camera_view"()
 
 local m = {}
 local current_panel
@@ -35,20 +35,6 @@ function m.update_ui(ut)
     update_ui_data(gizmo.target_eid)
 end
 
-local function get_material_panel()
-    if not material_panel then
-        material_panel = ecs.require "widget.material_view"()
-    end
-    return material_panel
-end
-
-local function get_skybox_panel()
-    if not skybox_panel then
-        skybox_panel = ecs.require "widget.skybox_view"()
-    end
-    return skybox_panel
-end
-
 local function update_eid()
     if current_eid == gizmo.target_eid then
         return
@@ -56,6 +42,7 @@ local function update_eid()
     current_eid = gizmo.target_eid
 
     base_panel:set_model(current_eid)
+    camera_panel:set_model(current_eid)
     light_panel:set_model(current_eid)
     slot_panel:set_model(current_eid)
     collider_panel:set_model(current_eid)
@@ -71,6 +58,7 @@ function m.show()
     imgui.windows.SetNextWindowSize(uiconfig.PropertyWidgetWidth, viewport.WorkSize[2] - uiconfig.BottomWidgetHeight - uiconfig.ToolBarHeight, 'F')
     if imgui.windows.Begin("Inspector", imgui.flags.Window { "NoCollapse", "NoClosed" }) then
         base_panel:show()
+        camera_panel:show()
         light_panel:show()
         slot_panel:show()
         collider_panel:show()
