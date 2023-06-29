@@ -41,10 +41,14 @@ worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3
 			if (w) {
 				if ((ecs::eid)s.parent >= id)
 					return false;
-				int index = entity_index(w->ecs, (void *)s.parent);
-				ecs::scene *ps = (ecs::scene *)entity_sibling(w->ecs, COMPONENT_EID, index, ecs_api::component<ecs::scene>::id);
-				if (ps == nullptr)
+				auto e = ecs_api::find_entity(w->ecs, (ecs::eid)s.parent);
+				if (e.invalid()) {
 					return false;
+				}
+				ecs::scene *ps = e.sibling<ecs::scene>();
+				if (ps == nullptr) {
+					return false;
+				}
 				parentmat = &ps->worldmat;
 				worldmats.insert_or_assign(s.parent, ps->worldmat);
 			} else {
@@ -77,14 +81,20 @@ entity_init(lua_State *L) {
 
 static inline bool
 is_constant(struct ecs_world *w, ecs::eid eid) {
-	int id = entity_index(w->ecs, (void *)eid);
-	return entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_mutable>::id) == nullptr;
+	auto e = ecs_api::find_entity(w->ecs, eid);
+	if (e.invalid()) {
+		return false;
+	}
+	return !e.sibling<ecs::scene_mutable>();
 }
 
 static inline bool
 is_changed(struct ecs_world *w, ecs::eid eid) {
-	int id = entity_index(w->ecs, (void *)eid);
-	return entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_changed>::id) != nullptr;
+	auto e = ecs_api::find_entity(w->ecs, eid);
+	if (e.invalid()) {
+		return false;
+	}
+	return e.sibling<ecs::scene_changed>();
 }
 
 static void
