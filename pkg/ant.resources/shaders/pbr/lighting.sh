@@ -25,32 +25,6 @@ float get_spot_attenuation(vec3 pt2l, vec3 spotdir, float outter_cone, float inn
     return smoothstep(outter_cone, inner_cone, cosv);	//outter_cone is less than inner_cone
 }
 
-vec3 get_light_radiance(in light_info l, in vec3 posWS, in material_info mi)
-{
-    vec3 color = vec3_splat(0.0);
-    vec3 intensity = l.attenuation * l.intensity * l.color.rgb;
-
-    vec3 L = l.pt2l;    // pt2l is normalize
-    vec3 N = mi.N;
-    vec3 V = mi.V;
-
-    vec3 H = normalize(L+V);
-    float NdotL = clamp_dot(N, L);
-    float NdotH = clamp_dot(N, H);
-    float LdotH = clamp_dot(L, H);
-    float VdotH = clamp_dot(V, H);
-
-    if (NdotL > 0.0)
-    {
-        // Calculation of analytical light
-        // https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#acknowledgments AppendixB
-        color += intensity * NdotL * (
-                BRDF_lambertian(mi.f0, mi.f90, mi.albedo, VdotH) +
-                BRDF_specularGGX(mi.f0, mi.f90, mi.roughness, VdotH, NdotL, mi.NdotV, NdotH));
-    }
-    return color;
-}
-
 light_grid get_light_grid(vec4 fragcoord)
 {
     light_grid g;

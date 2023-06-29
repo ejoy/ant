@@ -32,37 +32,6 @@ float clearCoatLobe(const material_info mi, const vec3 h, float NoH, float LoH, 
 }
 #endif
 
-#if defined(MATERIAL_HAS_ANISOTROPY)
-vec3 anisotropicLobe(const material_info mi, const light_info light, const vec3 h,
-        float NoV, float NoL, float NoH, float LoH) {
-
-    vec3 l = light.l;
-    vec3 t = mi.anisotropicT;
-    vec3 b = mi.anisotropicB;
-    vec3 v = shading_view;
-
-    float ToV = dot(t, v);
-    float BoV = dot(b, v);
-    float ToL = dot(t, l);
-    float BoL = dot(b, l);
-    float ToH = dot(t, h);
-    float BoH = dot(b, h);
-
-    // Anisotropic parameters: at and ab are the roughness along the tangent and bitangent
-    // to simplify materials, we derive them from a single roughness parameter
-    // Kulla 2017, "Revisiting Physically Based Shading at Imageworks"
-    float at = max(mi.roughness * (1.0 + mi.anisotropy), MIN_ROUGHNESS);
-    float ab = max(mi.roughness * (1.0 - mi.anisotropy), MIN_ROUGHNESS);
-
-    // specular anisotropic BRDF
-    float D = distributionAnisotropic(at, ab, ToH, BoH, NoH);
-    float V = visibilityAnisotropic(pixel.roughness, at, ab, ToV, BoV, ToL, BoL, NoV, NoL);
-    vec3  F = fresnel(pixel.f0, LoH);
-
-    return (D * V) * F;
-}
-#endif
-
 vec3 isotropicLobe(const material_info mi, const vec3 h,
         float NoV, float NoL, float NoH, float LoH) {
 
@@ -75,11 +44,7 @@ vec3 isotropicLobe(const material_info mi, const vec3 h,
 
 vec3 specularLobe(const material_info mi, const light_info light, const vec3 h,
         float NoV, float NoL, float NoH, float LoH) {
-#if defined(MATERIAL_HAS_ANISOTROPY)
-    return anisotropicLobe(mi, light, h, NoV, NoL, NoH, LoH);
-#else
     return isotropicLobe(mi, h, NoV, NoL, NoH, LoH);
-#endif
 }
 
 vec3 diffuseLobe(const material_info mi, float NoV, float NoL, float LoH) {
@@ -113,9 +78,6 @@ vec3 surfaceShading(const material_info mi, const light_info light) {
 
     vec3 Fr = specularLobe(mi, light, h, NoV, NoL, NoH, LoH);
     vec3 Fd = diffuseLobe(mi, NoV, NoL, LoH);
-#if defined(MATERIAL_HAS_REFRACTION)
-    Fd *= (1.0 - mi.transmission);
-#endif
 
     // TODO: attenuate the diffuse lobe to avoid energy gain
 
@@ -123,33 +85,6 @@ vec3 surfaceShading(const material_info mi, const light_info light) {
     // at high roughness
     float energyCompensation = 1.0;//mi.energyCompensation;
     vec3 color = Fd + Fr * energyCompensation;
-
-#if defined(MATERIAL_HAS_SHEEN_COLOR)
-    color *= mi.sheenScaling;
-    color += sheenLobe(mi, NoV, NoL, NoH);
-#endif
-
-#if defined(MATERIAL_HAS_CLEAR_COAT)
-    float Fcc;
-    float clearCoat = clearCoatLobe(mi, h, NoH, LoH, Fcc);
-    float attenuation = 1.0 - Fcc;
-
-#if defined(MATERIAL_HAS_NORMAL) || defined(MATERIAL_HAS_CLEAR_COAT_NORMAL)
-    color *= attenuation * NoL;
-
-    // If the material has a normal map, we want to use the geometric normal
-    // instead to avoid applying the normal map details to the clear coat layer
-    float clearCoatNoL = saturate(dot(shading_clearCoatNormal, light.l));
-    color += clearCoat * clearCoatNoL;
-
-    // Early exit to avoid the extra multiplication by NoL
-    return (color * light.colorIntensity.rgb) *
-            (light.colorIntensity.w * light.attenuation);
-#else
-    color *= attenuation;
-    color += clearCoat;
-#endif
-#endif
 
     return (color * light.color.rgb) *
             (light.intensity * light.attenuation * NoL);
