@@ -143,13 +143,23 @@ local function create_context(w)
 	local bgfx 		= require "bgfx"
 	local math3d 	= require "math3d"
 	local component = require "component"
-	local decl = w._decl.component
-	for i, c in ipairs(component) do
-		if not decl[c] then
+	local ecs = w.w
+	local component_decl = w._component_decl
+	for i, name in ipairs(component) do
+		local decl = component_decl[name]
+		if decl then
+			ecs:register(decl)
+			component_decl[name] = nil
+		else
+			ecs:register { name = "_unused_"..i }
 			component[i] = "REMOVED"
 		end
 	end
-	local ecs_context = w.w:context(component)
+	for _, decl in pairs(component_decl) do
+		ecs:register(decl)
+	end
+	w._component_decl = nil
+	local ecs_context = ecs:context(component)
 	w._ecs_world,
 	w._ecs_ref = cstruct(
 		ecs_context,
