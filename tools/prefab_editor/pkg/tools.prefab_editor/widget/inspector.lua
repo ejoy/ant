@@ -40,15 +40,16 @@ local function update_eid()
         return
     end
     current_eid = gizmo.target_eid
-
-    base_panel:set_eid(current_eid)
-    camera_panel:set_eid(current_eid)
-    light_panel:set_eid(current_eid)
+    --
+    base_panel:reset_disable()
+    camera_panel:set_eid(current_eid, base_panel)
+    light_panel:set_eid(current_eid, base_panel)
     slot_panel:set_eid(current_eid)
     collider_panel:set_eid(current_eid)
     effect_panel:set_eid(current_eid)
     skybox_panel:set_eid(current_eid)
     material_panel:set_eid(current_eid)
+    base_panel:set_eid(current_eid)
 end
 
 function m.show()

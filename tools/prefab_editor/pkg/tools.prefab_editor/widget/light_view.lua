@@ -79,7 +79,7 @@ function LightView:_init()
     self.light_property= uiproperty.Group({label = "Light"}, {})
 end
 
-function LightView:set_eid(eid)
+function LightView:set_eid(eid, base_panel)
     if self.eid == eid then
         return
     end
@@ -109,6 +109,9 @@ function LightView:set_eid(eid)
     end
     self.light_property:set_subproperty(subproperty)
     self:update()
+    if e.light.type ~= "point" then
+        base_panel:disable_rotate()
+    end
 end
 
 function LightView:on_set_color(...)
@@ -193,11 +196,6 @@ function LightView:show()
         return
     end
     self.light_property:show()
-end
-
-function LightView:has_rotate()
-    local e <close> = w:entity(self.eid, "light:in")
-    return e.light.type ~= "point"
 end
 
 function LightView:has_scale()

@@ -8,9 +8,14 @@ local mc            = mathpkg.constant
 local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local hierarchy     = require "hierarchy_edit"
-local BaseView      = require "widget.view_class".BaseView
-
+local BaseView = {}
 function BaseView:_init()
+    if self.inited then
+        return
+    end
+    self.inited = true
+    self.has_rotate = true
+    self.has_scale = true
     local base = {}
     base["script"]   = uiproperty.ResourcePath({label = "Script", extension = ".lua"})
     base["prefab"]   = uiproperty.EditText({label = "Prefabe", readonly = true})
@@ -49,26 +54,28 @@ function BaseView:_init()
 end
 
 function BaseView:set_eid(eid)
-    if self.eid == eid then return false end
-    --TODO: need remove 'eid', there is no more eid
+    if self.eid == eid then
+        return
+    end
+    if not eid then
+        self.eid = nil
+        return
+    end
     self.eid = eid
-    if not self.eid then return false end
-
-    local template = hierarchy:get_template(eid)
+    local template = hierarchy:get_template(self.eid)
     self.is_prefab = template and template.filename
     local property = {}
     property[#property + 1] = self.base.name
     property[#property + 1] = self.base.tag
-    local e <close> = w:entity(eid, "scene?in")
+    local e <close> = w:entity(self.eid, "scene?in")
     if e.scene then
         property[#property + 1] = self.base.position
-        if self:has_rotate() then
+        if self.has_rotate then
             property[#property + 1] = self.base.rotate
         end
-        if self:has_scale() then
+        if self.has_scale then
             property[#property + 1] = self.base.scale
         end
-
         property[#property + 1] = self.base.aabbmin
         property[#property + 1] = self.base.aabbmax
         property[#property + 1] = self.base.create_aabb
@@ -86,7 +93,6 @@ function BaseView:set_eid(eid)
     end
     self.general_property:set_subproperty(property)
     BaseView.update(self)
-    return true
 end
 
 function BaseView:on_get_prefab()
@@ -307,17 +313,21 @@ function BaseView:delete_aabb()
     end
 end
 
-function BaseView:has_rotate()
-    return true
+function BaseView:reset_disable()
+    self.has_rotate = true
+    self.has_scale = true
 end
 
-function BaseView:has_scale()
-    return true
+function BaseView:disable_rotate()
+    self.has_rotate = false
+end
+
+function BaseView:disable_scale()
+    self.has_scale = false
 end
 
 function BaseView:update()
     if not self.eid then return end
-    --self.base.script:update()
     if self.is_prefab then
         self.base.prefab:update()
         self.base.preview:update()
@@ -327,7 +337,6 @@ end
 
 function BaseView:show()
     if not self.eid then return end
-    --self.base.script:show()
     for _, _, _, _ in event_gizmo:unpack() do
         self:update()
     end
@@ -338,4 +347,7 @@ function BaseView:show()
     self.general_property:show()
 end
 
-return BaseView
+return function ()
+    BaseView:_init()
+    return BaseView
+end

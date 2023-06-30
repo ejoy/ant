@@ -422,7 +422,7 @@ function CameraView:update()
     self.serialize:update()
 end
 
-function CameraView:set_eid(eid)
+function CameraView:set_eid(eid, base_panel)
     if self.eid == eid then
         return
     end
@@ -437,6 +437,7 @@ function CameraView:set_eid(eid)
     end
     self.eid = eid
     self:update()
+    base_panel:disable_scale()
 end
 
 function CameraView:show()
