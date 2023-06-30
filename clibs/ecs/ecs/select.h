@@ -278,7 +278,7 @@ namespace ecs_api {
         void remove() const noexcept {
             entity_remove(ctx.ctx(), token);
         }
-        int getid() const noexcept {
+        int get_index() const noexcept {
             return index;
         }
         ecs_token get_token() const noexcept {
@@ -296,16 +296,6 @@ namespace ecs_api {
             requires (component_meta<T>::id != EID && !std::is_empty_v<T>)
         T& get() noexcept {
             return *std::get<T*>(c);
-        }
-        template <typename T>
-            requires (component_meta<T>::id == EID)
-        bool has() const noexcept {
-            return true;
-        }
-        template <typename T>
-            requires (component_meta<T>::id != EID)
-        bool has() const noexcept {
-            return !!ctx.template component<T>(token, index);
         }
         template <typename T>
             requires (component_meta<T>::tag)
@@ -327,9 +317,6 @@ namespace ecs_api {
         void enable_tag() noexcept {
             entity_enable_tag(ctx.ctx(), token, component_meta<T>::id);
         }
-        void enable_tag(int id) noexcept {
-            entity_enable_tag(ctx.ctx(), token, id);
-        }
         template <typename T>
             requires (component_meta<T>::tag)
         void disable_tag() noexcept {
@@ -338,14 +325,6 @@ namespace ecs_api {
             }
             else {
                 ctx.disable_tag(token, index, component_meta<T>::id);
-            }
-        }
-        void disable_tag(int id) noexcept {
-            if (component_meta<MainKey>::id == id) {
-                ctx.disable_tag(component_meta<MainKey>::id, index);
-            }
-            else {
-                ctx.disable_tag(token, index, id);
             }
         }
     private:
