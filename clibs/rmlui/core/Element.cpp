@@ -1347,7 +1347,7 @@ void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
 }
 
 template <typename T>
-void clamp(T& v, T min, T max) {
+static void clamp(T& v, T min, T max) {
 	assert(min <= max);
 	if (v < min) {
 		v = min;
@@ -1357,7 +1357,7 @@ void clamp(T& v, T min, T max) {
 	}
 }
 
-void clamp(Size& s, Rect r) {
+static void clamp(Size& s, Rect r) {
 	clamp(s.w, r.left(), r.right());
 	clamp(s.h, r.top(), r.bottom());
 }
