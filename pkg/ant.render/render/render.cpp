@@ -86,7 +86,7 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid, uint8_t 
 	}
 
 	const uint16_t vb2_type = BUFFER_TYPE(ro->vb2_handle);
-	if((vb2_type != INVALID_BUFFER_TYPE) && (mat_idx == qt_mat_def) || (mat_idx == qt_mat_lightmap)){
+	if((vb2_type != INVALID_BUFFER_TYPE) && ((mat_idx == qt_mat_def) || (mat_idx == qt_mat_lightmap))){
 		switch (vb2_type){
 			case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 1, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb2_handle}, ro->vb2_start, ro->vb2_num); break;
 			case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:	//walk through
