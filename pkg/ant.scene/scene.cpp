@@ -45,7 +45,7 @@ worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3
 				if (e.invalid()) {
 					return false;
 				}
-				ecs::scene *ps = e.sibling<ecs::scene>();
+				ecs::scene *ps = e.component<ecs::scene>();
 				if (ps == nullptr) {
 					return false;
 				}
@@ -69,7 +69,7 @@ entity_init(lua_State *L) {
 	auto w = getworld(L);
 
 	for (auto& e : ecs_api::select<ecs::INIT, ecs::scene>(w->ecs)) {
-		if (!e.sibling<ecs::scene_update_once>())
+		if (!e.component<ecs::scene_update_once>())
 			e.enable_tag<ecs::scene_needchange>();
 		auto& s = e.get<ecs::scene>();
 		s.movement = w->frame;
@@ -84,7 +84,7 @@ is_constant(struct ecs_world *w, ecs::eid eid) {
 	if (e.invalid()) {
 		return false;
 	}
-	return !e.sibling<ecs::scene_mutable>();
+	return !e.component<ecs::scene_mutable>();
 }
 
 static inline bool
@@ -93,7 +93,7 @@ is_changed(struct ecs_world *w, ecs::eid eid) {
 	if (e.invalid()) {
 		return false;
 	}
-	return e.sibling<ecs::scene_changed>();
+	return e.component<ecs::scene_changed>();
 }
 
 static void
@@ -139,7 +139,7 @@ scene_changed(lua_State *L) {
 	bool need_rebuild_mutable_set = false;
 	for (; it != selector.end(); ++it) {
 		auto& e = *it;
-		if (!e.sibling<ecs::scene_mutable>()) {
+		if (!e.component<ecs::scene_mutable>()) {
 			need_rebuild_mutable_set = true;
 			e.enable_tag<ecs::scene_mutable>();
 		}
@@ -157,9 +157,9 @@ scene_changed(lua_State *L) {
 		auto& s = e.get<ecs::scene>();
 		bool changed = false;
 		ecs::eid id;
-		if (e.sibling<ecs::scene_update>()) {
-			id = e.sibling<ecs::eid>();
-			if (e.sibling<ecs::scene_changed>()) {
+		if (e.component<ecs::scene_update>()) {
+			id = e.component<ecs::eid>();
+			if (e.component<ecs::scene_changed>()) {
 				changed = true;
 			} else if (s.parent != 0 && is_changed(w, s.parent)) {
 				e.enable_tag<ecs::scene_changed>();
@@ -204,7 +204,7 @@ scene_remove(lua_State *L) {
 	for (auto& e : ecs_api::select<ecs::scene>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0 && removed.contains(s.parent)) {
-			auto id = e.sibling<ecs::eid>();
+			auto id = e.component<ecs::eid>();
 			removed.insert(id);
 			e.remove();
 		}
