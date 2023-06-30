@@ -72,7 +72,7 @@ entity_init(lua_State *L) {
 		if (!e.component<ecs::scene_update_once>())
 			e.enable_tag<ecs::scene_needchange>();
 		auto& s = e.get<ecs::scene>();
-		s.movement = w->frame;
+		s.movement = 0;
 		e.enable_tag<ecs::scene_mutable>();
 	}
 	return 0;
