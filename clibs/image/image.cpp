@@ -685,16 +685,16 @@ lequirectangular2cubemap(lua_State *L) {
         return d[y*equirectangular->m_width+x];
     };
 
-    const float pi = glm::pi<float>();
-    const float pioverone = 1.f / pi;
+    // const float pi = glm::pi<float>();
+    // const float pioverone = 1.f / pi;
 
-    auto toRectilinear = [=](glm::vec3 s){
-        float xf = std::atan2(s.x, s.z) * pioverone;   // range [-1.0, 1.0]
-        float yf = std::asin(s.y) * (2 * pioverone);   // range [-1.0, 1.0]
-        xf = (xf + 1.0f) * 0.5f * (width  - 1);        // range [0, width [
-        yf = (1.0f - yf) * 0.5f * (height - 1);        // range [0, height[
-        return glm::vec2(xf, yf);
-    };
+    // auto toRectilinear = [=](glm::vec3 s){
+    //     float xf = std::atan2(s.x, s.z) * pioverone;   // range [-1.0, 1.0]
+    //     float yf = std::asin(s.y) * (2 * pioverone);   // range [-1.0, 1.0]
+    //     xf = (xf + 1.0f) * 0.5f * (width  - 1);        // range [0, width [
+    //     yf = (1.0f - yf) * 0.5f * (height - 1);        // range [0, height[
+    //     return glm::vec2(xf, yf);
+    // };
 
     auto cm = bimg::imageAlloc(&allocator, bimg::TextureFormat::RGBA32F, facesize, facesize, 1, 1, true, false);
 
