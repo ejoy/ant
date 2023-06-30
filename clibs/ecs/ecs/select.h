@@ -194,31 +194,58 @@ namespace ecs_api {
         }
     }
 
+    struct create_t {};
+    struct first_t {};
+
     template <typename Context, typename MainKey, typename ...SubKey>
     struct basic_entity {
     public:
-        basic_entity(ecs_context* ctx) noexcept
-            : ctx(context::create(ctx))
-        { }
         basic_entity(Context& ctx) noexcept
             : ctx(ctx)
         { }
+        template <typename Component>
+            requires (
+                component_meta<Component>::id == EID
+                && component_meta<MainKey>::id == EID
+                && sizeof...(SubKey) == 0
+            )
+        basic_entity(ecs_context* ctx, Component eid) noexcept
+            : ctx(context::create(ctx)) {
+            index = entity_index(ctx, (void*)eid, &token);
+            if (index >= 0) {
+                std::get<Component*>(c) = (Component*)eid;
+            }
+        }
+        template <typename Tag>
+            requires (
+                std::is_same_v<Tag, create_t>
+                && sizeof...(SubKey) == 0
+            )
+        basic_entity(ecs_context* ctx, Tag) noexcept
+            : ctx(context::create(ctx)) {
+            index = entity_new(ctx, component_meta<MainKey>::id, NULL);
+            if (index >= 0) {
+                if (fetch_status::success != fetch(index)) {
+                    index = kInvalidIndex;
+                    assert(false);
+                    return;
+                }
+            }
+        }
+        template <typename Tag>
+            requires (
+                std::is_same_v<Tag, first_t>
+            )
+        basic_entity(ecs_context* ctx, Tag) noexcept
+            : ctx(context::create(ctx)) {
+            next();
+        }
         static constexpr int kInvalidIndex = -1;
         enum class fetch_status: uint8_t {
             success,
             failed,
             eof,
         };
-        template <typename Component>
-            requires (component_meta<Component>::id == EID && component_meta<MainKey>::id == EID)
-        bool from_eid(Component eid) noexcept {
-            index = entity_index(ctx.ctx(), (void*)eid, &token);
-            if (index < 0) {
-                return false;
-            }
-            std::get<Component*>(c) = (Component*)eid;
-            return true;
-        }
         fetch_status fetch(int id) noexcept {
             auto v = ctx.template iter<MainKey>(id, token);
             if (!v) {
@@ -234,14 +261,6 @@ namespace ecs_api {
                 }
                 return fetch_status::failed;
             }
-        }
-        bool init(int id) noexcept {
-            if (fetch_status::success != fetch(id)) {
-                index = kInvalidIndex;
-                return false;
-            }
-            index = id;
-            return true;
         }
         void next() noexcept {
             for (++index;;++index) {
@@ -474,21 +493,18 @@ namespace ecs_api {
 
     template <typename Component>
     auto create_entity(ecs_context* ctx) noexcept {
-        entity<Component> e(ctx);
-        int index = entity_new(ctx, component_meta<Component>::id, NULL);
-        if (index >= 0) {
-            bool ok = e.init(index);
-            assert(ok);
-        }
-        return e;
+        return entity<Component>(ctx, create_t {});
+    }
+
+    template <typename ...Args>
+    auto first_entity(ecs_context* ctx) noexcept {
+        return entity<Args...>(ctx, first_t {});
     }
 
     template <typename Component>
         requires (component_meta<Component>::id == EID)
     auto find_entity(ecs_context* ctx, Component eid) noexcept {
-        entity<Component> e(ctx);
-        e.from_eid(eid);
-        return e;
+        return entity<Component>(ctx, eid);
     }
 
     template <typename Component>
