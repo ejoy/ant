@@ -52,6 +52,16 @@ namespace ecs_api {
         template <typename T>
             requires (
                 !std::is_function_v<T>
+                && component_meta<T>::tag
+            )
+        T* iter(int i, ecs_token& token) noexcept {
+            entity_trim_tag(ctx(), component_meta<T>::id, i);
+            return (T*)entity_iter(ctx(), component_meta<T>::id, i, &token);
+        }
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && !component_meta<T>::tag
             )
         T* iter(int i, ecs_token& token) noexcept {
             return (T*)entity_iter(ctx(), component_meta<T>::id, i, &token);
@@ -109,6 +119,17 @@ namespace ecs_api {
             requires (
                 !std::is_function_v<T>
                 && std::is_same_v<T, MainKey>
+                && component_meta<T>::tag
+            )
+        T* iter(int i, ecs_token& token) noexcept {
+            entity_trim_tag(ctx(), component_meta<T>::id, i);
+            return (T*)entity_iter(ctx(), component_meta<T>::id, i, &token);
+        }
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && std::is_same_v<T, MainKey>
+                && !component_meta<T>::tag
             )
         T* iter(int i, ecs_token& token) noexcept {
             return (T*)entity_iter(ctx(), component_meta<T>::id, i, &token);
