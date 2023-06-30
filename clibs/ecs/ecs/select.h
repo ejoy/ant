@@ -156,7 +156,7 @@ namespace ecs_api {
     namespace impl {
         template <typename...Ts>
         using components = decltype(std::tuple_cat(
-            std::declval<std::conditional_t<std::is_empty<Ts>::value || std::is_function<Ts>::value,
+            std::declval<std::conditional_t<std::is_empty_v<Ts> || std::is_function_v<Ts>,
                 std::tuple<>,
                 std::tuple<Ts*>
             >>()...
@@ -164,7 +164,7 @@ namespace ecs_api {
 
         template <std::size_t Is, typename T>
         static constexpr std::size_t next() noexcept {
-            if constexpr (std::is_empty<T>::value || std::is_function<T>::value) {
+            if constexpr (std::is_empty_v<T> || std::is_function_v<T>) {
                 return Is;
             }
             else {
@@ -253,7 +253,7 @@ namespace ecs_api {
             return (T)std::get<T*>(c);
         }
         template <typename T>
-            requires (component<T>::id != EID && !std::is_empty<T>::value)
+            requires (component<T>::id != EID && !std::is_empty_v<T>)
         T& get() noexcept {
             return *std::get<T*>(c);
         }
@@ -273,7 +273,7 @@ namespace ecs_api {
             return ctx.sibling<T>(token, index);
         }
         template <typename T>
-            requires (component<T>::id != EID && !component<T>::tag && !std::is_empty<T>::value)
+            requires (component<T>::id != EID && !component<T>::tag && !std::is_empty_v<T>)
         T* sibling() const noexcept {
             return ctx.sibling<T>(token, index);
         }
@@ -311,13 +311,13 @@ namespace ecs_api {
     private:
         template <std::size_t Is, typename T>
         void assgin(T* v) noexcept {
-            if constexpr (!std::is_empty<T>::value) {
+            if constexpr (!std::is_empty_v<T>) {
                 std::get<Is>(c) = v;
             }
         }
         template <std::size_t Is, typename Component, typename ...Components>
         bool init_sibling(int i) noexcept {
-            if constexpr (std::is_function<Component>::value) {
+            if constexpr (std::is_function_v<Component>) {
                 using C = typename std::invoke_result<Component, flags::absent>::type;
                 auto v = ctx.sibling<C>(token, i);
                 if (v) {
