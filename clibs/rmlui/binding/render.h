@@ -9,6 +9,7 @@ struct RenderState {
     glm::vec4 rectVerteices[2] {glm::vec4(0), glm::vec4(0)};
     uint16_t lastScissorId = UINT16_MAX;
     bool needShaderClipRect = false;
+    bool needGray = false;
 };
 
 class TextureMaterial;

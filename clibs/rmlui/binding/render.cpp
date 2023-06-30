@@ -150,6 +150,14 @@ public:
     virtual uint16_t Program(const RenderState& state, const shader& s) = 0;
 };
 
+static uint16_t _FindTextureProgram(const RenderState &state, const shader& s){
+    if (state.needShaderClipRect){
+        return state.needGray ? s.image_cr_gray : s.image_cr;
+    }
+
+    return state.needGray ? s.image_gray : s.image;
+}
+
 class TextureMaterial: public Material {
 public:
     TextureMaterial(shader const& s, bgfx_texture_handle_t tex, Rml::SamplerFlag flags)
@@ -160,10 +168,7 @@ public:
         tex_uniform.Submit(encoder, flags);
     }
     uint16_t Program(const RenderState& state, const shader& s) override {
-        return state.needShaderClipRect
-            ? s.image_cr
-            : s.image
-            ;
+        return _FindTextureProgram(state, s);
     }
 private:
     TextureUniform tex_uniform;
@@ -180,10 +185,7 @@ public:
         tex_uniform.Submit(encoder, flags);
     }
     uint16_t Program(const RenderState& state, const shader& s) override {
-        return state.needShaderClipRect
-            ? s.image_cr
-            : s.image
-            ;
+        return _FindTextureProgram(state, s);
     }
 private:
     AsyncTextureUniform tex_uniform;

@@ -25,6 +25,8 @@ struct shader {
     uint16_t font_outline_cr;
     uint16_t font_shadow_cr;
     uint16_t image_cr;
+    uint16_t image_gray;
+    uint16_t image_cr_gray;
 
     #ifdef _DEBUG
     uint16_t debug_draw;
