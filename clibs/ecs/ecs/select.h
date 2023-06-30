@@ -199,7 +199,7 @@ namespace ecs_api {
             return true;
         }
         fetch_status fetch(int id) noexcept {
-            auto v = ctx.iter<MainKey>(id, token);
+            auto v = ctx.template iter<MainKey>(id, token);
             if (!v) {
                 return fetch_status::eof;
             }
@@ -265,22 +265,22 @@ namespace ecs_api {
         template <typename T>
             requires (component_meta<T>::id != EID)
         bool has() const noexcept {
-            return !!ctx.component<T>(token, index);
+            return !!ctx.template component<T>(token, index);
         }
         template <typename T>
             requires (component_meta<T>::tag)
         bool component() const noexcept {
-            return ctx.component<T>(token, index);
+            return ctx.template component<T>(token, index);
         }
         template <typename T>
             requires (component_meta<T>::id != EID && !component_meta<T>::tag && !std::is_empty_v<T>)
         T* component() const noexcept {
-            return ctx.component<T>(token, index);
+            return ctx.template component<T>(token, index);
         }
         template <typename T>
             requires (component_meta<T>::id == EID)
         T component() const noexcept {
-            return (T)ctx.component<T>(token, index);
+            return (T)ctx.template component<T>(token, index);
         }
         template <typename T>
             requires (component_meta<T>::tag)
@@ -319,7 +319,7 @@ namespace ecs_api {
         bool init_component(int i) noexcept {
             if constexpr (std::is_function_v<Component>) {
                 using C = typename std::invoke_result<Component, flags::absent>::type;
-                auto v = ctx.component<C>(token, i);
+                auto v = ctx.template component<C>(token, i);
                 if (v) {
                     return false;
                 }
@@ -329,7 +329,7 @@ namespace ecs_api {
                 return true;
             }
             else if constexpr (component_meta<Component>::tag) {
-                auto v = ctx.component<Component>(token, i);
+                auto v = ctx.template component<Component>(token, i);
                 if (!v) {
                     return false;
                 }
@@ -339,7 +339,7 @@ namespace ecs_api {
                 return true;
             }
             else {
-                auto v = ctx.component<Component>(token, i);
+                auto v = ctx.template component<Component>(token, i);
                 if (!v) {
                     return false;
                 }
