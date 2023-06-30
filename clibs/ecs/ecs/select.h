@@ -419,7 +419,7 @@ namespace ecs_api {
                 : ctx(ctx)
             {}
             iterator begin() noexcept {
-                return {begin_t{}, ctx};
+                return { begin_t{}, ctx };
             }
             iterator end() noexcept {
                 return { end_t{}, ctx };
