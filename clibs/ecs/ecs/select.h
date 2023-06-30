@@ -54,17 +54,17 @@ namespace ecs_api {
                 !std::is_function_v<T>
                 && component_meta<T>::tag
             )
-        T* iter(int i, ecs_token& token) noexcept {
+        T* fetch(int i, ecs_token& token) noexcept {
             entity_trim_tag(ctx(), component_meta<T>::id, i);
-            return (T*)entity_iter(ctx(), component_meta<T>::id, i, &token);
+            return (T*)entity_fetch(ctx(), component_meta<T>::id, i, &token);
         }
         template <typename T>
             requires (
                 !std::is_function_v<T>
                 && !component_meta<T>::tag
             )
-        T* iter(int i, ecs_token& token) noexcept {
-            return (T*)entity_iter(ctx(), component_meta<T>::id, i, &token);
+        T* fetch(int i, ecs_token& token) noexcept {
+            return (T*)entity_fetch(ctx(), component_meta<T>::id, i, &token);
         }
         template <typename T>
             requires (
@@ -121,9 +121,9 @@ namespace ecs_api {
                 && std::is_same_v<T, MainKey>
                 && component_meta<T>::tag
             )
-        T* iter(int i, ecs_token& token) noexcept {
+        T* fetch(int i, ecs_token& token) noexcept {
             entity_trim_tag(ctx(), component_meta<T>::id, i);
-            return (T*)entity_iter(ctx(), component_meta<T>::id, i, &token);
+            return (T*)entity_fetch(ctx(), component_meta<T>::id, i, &token);
         }
         template <typename T>
             requires (
@@ -131,8 +131,8 @@ namespace ecs_api {
                 && std::is_same_v<T, MainKey>
                 && !component_meta<T>::tag
             )
-        T* iter(int i, ecs_token& token) noexcept {
-            return (T*)entity_iter(ctx(), component_meta<T>::id, i, &token);
+        T* fetch(int i, ecs_token& token) noexcept {
+            return (T*)entity_fetch(ctx(), component_meta<T>::id, i, &token);
         }
         template <typename T>
             requires (
@@ -247,7 +247,7 @@ namespace ecs_api {
             eof,
         };
         fetch_status fetch(int id) noexcept {
-            auto v = ctx.template iter<MainKey>(id, token);
+            auto v = ctx.template fetch<MainKey>(id, token);
             if (!v) {
                 return fetch_status::eof;
             }
@@ -457,7 +457,7 @@ namespace ecs_api {
         template <typename Component>
         struct array_range {
             array_range(ecs_context* ctx) noexcept {
-                first = (Component*)entity_iter(ctx, component_meta<Component>::id, 0, NULL);
+                first = (Component*)entity_fetch(ctx, component_meta<Component>::id, 0, NULL);
                 if (!first) {
                     last = nullptr;
                     return;
