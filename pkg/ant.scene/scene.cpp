@@ -68,7 +68,6 @@ static int
 entity_init(lua_State *L) {
 	auto w = getworld(L);
 
-	using namespace ecs_api::flags;
 	for (auto& e : ecs_api::select<ecs::INIT, ecs::scene>(w->ecs)) {
 		if (!e.sibling<ecs::scene_update_once>())
 			e.enable_tag<ecs::scene_needchange>();
@@ -99,7 +98,8 @@ is_changed(struct ecs_world *w, ecs::eid eid) {
 
 static void
 rebuild_mutable_set(struct ecs_world *w) {
-	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene_mutable(ecs_api::flags::absent), ecs::scene>(w->ecs)) {
+	using namespace ecs_api::flags;
+	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene_mutable(absent), ecs::scene>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0 && is_changed(w, s.parent)) {
 			e.enable_tag<ecs::scene_mutable>();
