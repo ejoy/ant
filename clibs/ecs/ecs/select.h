@@ -483,9 +483,9 @@ namespace ecs_api {
         return entity<Component>(create_t {}, ctx, std::forward<Args>(args)...);
     }
 
-    template <typename ...Args>
+    template <typename MainKey, typename ...SubKey>
     auto first_entity(ecs_context* ctx) noexcept {
-        return entity<Args...>(first_t {}, ctx);
+        return entity<MainKey, SubKey...>(first_t {}, ctx);
     }
 
     template <typename Component>
