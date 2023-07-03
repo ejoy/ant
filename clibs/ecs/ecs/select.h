@@ -54,9 +54,8 @@ namespace ecs_api {
                 !std::is_function_v<T>
                 && component_meta<T>::tag
             )
-        T* fetch(int i, ecs_token& token) noexcept {
-            entity_trim_tag(ctx(), component_meta<T>::id, i);
-            return (T*)entity_fetch(ctx(), component_meta<T>::id, i, &token);
+        void next(int& i, ecs_token& token) noexcept {
+            i = entity_next(ctx(), component_meta<T>::id, i, &token);
         }
         template <typename T>
             requires (
@@ -118,12 +117,10 @@ namespace ecs_api {
         template <typename T>
             requires (
                 !std::is_function_v<T>
-                && std::is_same_v<T, MainKey>
                 && component_meta<T>::tag
             )
-        T* fetch(int i, ecs_token& token) noexcept {
-            entity_trim_tag(ctx(), component_meta<T>::id, i);
-            return (T*)entity_fetch(ctx(), component_meta<T>::id, i, &token);
+        void next(int& i, ecs_token& token) noexcept {
+            i = entity_next(ctx(), component_meta<T>::id, i, &token);
         }
         template <typename T>
             requires (
@@ -200,6 +197,7 @@ namespace ecs_api {
     template <typename Context, typename MainKey, typename ...SubKey>
     struct basic_entity {
     public:
+        static constexpr int kInvalidIndex = -1;
         basic_entity(Context& ctx) noexcept
             : ctx(ctx)
         { }
@@ -224,12 +222,13 @@ namespace ecs_api {
         basic_entity(ecs_context* ctx, Tag) noexcept
             : ctx(context::create(ctx)) {
             index = entity_new(ctx, component_meta<MainKey>::id, NULL);
-            if (index >= 0) {
-                if (fetch_status::success != fetch(index)) {
-                    index = kInvalidIndex;
-                    assert(false);
-                    return;
-                }
+            if (index == kInvalidIndex) {
+                return;
+            }
+            auto v = this->ctx.template fetch<MainKey>(index, token);
+            if (v) {
+                assert(v);
+                assgin<0>(v);
             }
         }
         template <typename Tag>
@@ -240,38 +239,40 @@ namespace ecs_api {
             : ctx(context::create(ctx)) {
             next();
         }
-        static constexpr int kInvalidIndex = -1;
-        enum class fetch_status: uint8_t {
-            success,
-            failed,
-            eof,
-        };
-        fetch_status fetch(int id) noexcept {
-            auto v = ctx.template fetch<MainKey>(id, token);
-            if (!v) {
-                return fetch_status::eof;
-            }
-            assgin<0>(v);
+        bool fetch_sibiling(int id) noexcept {
             if constexpr (sizeof...(SubKey) == 0) {
-                return fetch_status::success;
+                return true;
             }
             else {
                 if (init_component<impl::next<0, MainKey>(), SubKey...>(id)) {
-                    return fetch_status::success;
+                    return true;
                 }
-                return fetch_status::failed;
+                return false;
             }
         }
         void next() noexcept {
-            for (++index;;++index) {
-                switch (fetch(index)) {
-                case fetch_status::success:
-                    return;
-                case fetch_status::eof:
-                    index = kInvalidIndex;
-                    return;
-                default:
-                    break;
+            if constexpr (component_meta<MainKey>::tag) {
+                for (;;) {
+                    ctx.template next<MainKey>(index, token);
+                    if (index == kInvalidIndex) {
+                        return;
+                    }
+                    if (fetch_sibiling(index)) {
+                        return;
+                    }
+                }
+            }
+            else {
+                for (++index;;++index) {
+                    auto v = ctx.template fetch<MainKey>(index, token);
+                    if (!v) {
+                        index = kInvalidIndex;
+                        return;
+                    }
+                    assgin<0>(v);
+                    if (fetch_sibiling(index)) {
+                        return;
+                    }
                 }
             }
         }
