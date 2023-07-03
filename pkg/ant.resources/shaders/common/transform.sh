@@ -4,6 +4,7 @@
 #include <shaderlib.sh>
 #include "common/constants.sh"
 #include "common/camera.sh"
+#include "common/default_inputs_structure.sh"
 #ifdef ENABLE_CURVE_WORLD
 #include "common/curve_world.sh"
 #endif //ENABLE_CURVE_WORLD
@@ -79,20 +80,20 @@ mat4 calc_bone_transform(ivec4 indices, vec4 weights)
 	return wolrdMat;
 }
 
-// mat4 get_world_matrix(VS_Input vsin)
-// {
-// #if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
-// 	return calc_bone_transform(a_indices, a_weight);
-// #else
-// 	return	u_model[0];
-// #endif
-// }
-
+mat4 get_world_matrix_default(VSInput vs_input)
+{
 #if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
+ 	return calc_bone_transform(vs_input.index, vs_input.weight);
+#else
+ 	return	u_model[0];
+#endif
+}
+
+ #if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
 #define get_world_matrix()	calc_bone_transform(a_indices, a_weight)
 #else
 #define get_world_matrix()	u_model[0]
-#endif
+#endif 
 
 vec4 transformWS(mat4 wm, vec4 pos)
 {
