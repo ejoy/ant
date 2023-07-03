@@ -9,7 +9,7 @@
 
 namespace Rml {
 
-void ElementBackgroundImage::GetRectArray(float ratiow,float ratioh, Rect& rect, std::vector<Rect> &rect_array){
+static void GetRectArray(float ratiow,float ratioh, Rect& rect, std::vector<Rect> &rect_array){
 		float x = rect.origin.x;
 		float y = rect.origin.y;
 		float w = rect.size.w;
@@ -41,7 +41,7 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	const auto& border = element->GetBorder();
 	const auto& padding = element->GetPadding();
 
-	Style::BoxType origin = (Style::BoxType)element->GetComputedProperty(PropertyId::BackgroundOrigin)->Get<PropertyKeyword>();
+	Style::BoxType origin = element->GetComputedProperty(PropertyId::BackgroundOrigin)->Get<Style::BoxType>();
 
 	Rect surface = Rect{ {0, 0}, bounds.size };
 	if (surface.size.IsEmpty()) {
@@ -62,8 +62,8 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		return false;
 	}
 
-	SamplerFlag repeat = (SamplerFlag)element->GetComputedProperty(PropertyId::BackgroundRepeat)->Get<PropertyKeyword>();
-	Style::BackgroundSize backgroundSize = (Style::BackgroundSize)element->GetComputedProperty(PropertyId::BackgroundSize)->Get<PropertyKeyword>();
+	SamplerFlag repeat = element->GetComputedProperty(PropertyId::BackgroundRepeat)->Get<SamplerFlag>();
+	Style::BackgroundSize backgroundSize = element->GetComputedProperty(PropertyId::BackgroundSize)->Get<Style::BackgroundSize>();
 	Size texSize {
 		element->GetComputedProperty(PropertyId::BackgroundSizeX)->Get<PropertyFloat>().ComputeW(element),
 		element->GetComputedProperty(PropertyId::BackgroundSizeY)->Get<PropertyFloat>().ComputeH(element)
@@ -142,10 +142,10 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	if(lattice && lattice->Has<PropertyFloat>()){
 		std::vector<Rect> surface_array(9);
 		std::vector<Rect> uv_array(9);
-		float ratiow = lattice->Get<PropertyFloat>().value / 100.0;
+		float ratiow = lattice->Get<PropertyFloat>().value / 100.0f;
 		float ratioh = ratiow * surface.size.w / surface.size.h;
 		GetRectArray(ratiow, ratioh, surface, surface_array);
-		GetRectArray((float)0.49, (float)0.49, uv, uv_array);
+		GetRectArray(0.49f, 0.49f, uv, uv_array);
 		for(int idx = 0; idx < 9; ++idx){
 			geometry.AddRectFilled(surface_array[idx], color);
 			geometry.UpdateUV(4, surface_array[idx], uv_array[idx]);

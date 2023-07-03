@@ -13,5 +13,6 @@ enum class WordBreak : uint8_t { Normal, BreakAll, BreakWord };
 enum class BoxType : uint8_t { PaddingBox, BorderBox, ContentBox };
 enum class BackgroundSize : uint8_t { Auto, Cover, Contain };
 enum class PointerEvents : uint8_t { None, Auto };
+enum class Filter : uint8_t { None, Gray };
 
 }}

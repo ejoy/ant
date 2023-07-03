@@ -5,6 +5,7 @@
 #include <core/Geometry.h>
 #include <core/Interface.h>
 #include <core/PropertyIdSet.h>
+#include <core/Property.h>
 #include <optional>
 
 namespace Rml {
@@ -21,12 +22,15 @@ public:
 protected:
 	virtual float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float& line_height);
 	std::optional<Property> GetComputedProperty(PropertyId id);
-	template <typename T>
-	T GetProperty(PropertyId id, typename std::enable_if<!std::is_enum<T>::value>::type* = 0);
 
-	template <typename ENUM>
-	ENUM GetProperty(PropertyId id, typename std::enable_if<std::is_enum<ENUM>::value>::type* = 0) {
-		return (ENUM)GetProperty<int>(id);
+	template <typename T>
+	auto GetProperty(PropertyId id) {
+		if constexpr(std::is_same_v<T, float>) {
+			return GetComputedProperty(id)->Get<T>(parent);
+		}
+		else {
+			return GetComputedProperty(id)->Get<T>();
+		}
 	}
 
 	float GetOpacity();

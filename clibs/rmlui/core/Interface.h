@@ -63,6 +63,7 @@ public:
 	virtual void SetClipRect() = 0;
 	virtual void SetClipRect(const glm::u16vec4& r) = 0;
 	virtual void SetClipRect(glm::vec4 r[2]) = 0;
+	virtual void SetGray(bool enable) = 0;
 	virtual MaterialHandle CreateTextureMaterial(TextureId texture, SamplerFlag flag) = 0;
 	virtual MaterialHandle CreateRenderTextureMaterial(TextureId texture, SamplerFlag flag) = 0;
 	virtual MaterialHandle CreateFontMaterial(const TextEffects& effects) = 0;

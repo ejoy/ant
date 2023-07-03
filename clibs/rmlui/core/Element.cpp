@@ -159,7 +159,7 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 }
 
 bool Element::IgnorePointerEvents() const {
-	return Style::PointerEvents(GetComputedProperty(PropertyId::PointerEvents)->Get<PropertyKeyword>()) == Style::PointerEvents::None;
+	return GetComputedProperty(PropertyId::PointerEvents)->Get<Style::PointerEvents>() == Style::PointerEvents::None;
 }
 
 float Element::GetZIndex() const {
@@ -1219,6 +1219,7 @@ void Element::UpdateClip() {
 void Element::SetRenderStatus() {
 	auto render = GetRenderInterface();
 	render->SetTransform(transform);
+	render->SetGray(GetComputedProperty(PropertyId::Filter)->Get<Style::Filter>() == Style::Filter::Gray);
 	switch (clip.type) {
 	case Clip::Type::None:    render->SetClipRect();             break;
 	case Clip::Type::Scissor: render->SetClipRect(clip.scissor); break;

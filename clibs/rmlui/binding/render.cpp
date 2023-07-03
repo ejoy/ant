@@ -407,6 +407,10 @@ void Renderer::SetClipRect(glm::vec4 r[2]) {
     setShaderScissorRect(mEncoder, r);
 }
 
+void Renderer::SetGray(bool enable) {
+    state.needGray = enable;
+}
+
 Rml::MaterialHandle Renderer::CreateTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flags) {
     auto material = std::make_unique<AsyncTextureMaterial>(mcontext->shader, texture, flags);
     return reinterpret_cast<Rml::MaterialHandle>(material.release());

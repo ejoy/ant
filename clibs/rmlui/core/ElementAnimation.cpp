@@ -59,8 +59,8 @@ static bool PrepareTransforms(Property& prop0, Property& prop1, Element& element
 	if (!prop0.Has<Transform>() || !prop1.Has<Transform>()) {
 		return true;
 	}
-	auto& t0 = prop0.Get<Transform>();
-	auto& t1 = prop1.Get<Transform>();
+	auto& t0 = prop0.GetRef<Transform>();
+	auto& t1 = prop1.GetRef<Transform>();
 	if (!PrepareTransformPair(t0, t1, element)) {
 		Log::Message(Log::Level::Warning, "Property '%s' is not interpolation with property '%s'.", prop1.ToString().c_str(), prop0.ToString().c_str());
 		return false;
