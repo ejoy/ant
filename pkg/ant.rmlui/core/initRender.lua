@@ -27,6 +27,8 @@ local function create_shaders()
         font_shadow_cr  = "/pkg/ant.rmlui/materials/font_shadow_cr.material",
         image           = "/pkg/ant.rmlui/materials/image.material",
         image_cr        = "/pkg/ant.rmlui/materials/image_cr.material",
+        image_gray      = "/pkg/ant.rmlui/materials/image_gray.material",
+        image_cr_gray   = "/pkg/ant.rmlui/materials/image_cr.material",
         debug_draw      = "/pkg/ant.rmlui/materials/debug_draw.material",
     }
 

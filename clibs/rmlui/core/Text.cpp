@@ -156,26 +156,6 @@ std::optional<Property> Text::GetComputedProperty(PropertyId id) {
 	return parent->GetComputedProperty(id);
 }
 
-template <>
-float Text::GetProperty<float>(PropertyId id, void* v) {
-	return GetComputedProperty(id)->Get<PropertyFloat>().Compute(parent);
-}
-
-template <>
-Color Text::GetProperty<Color>(PropertyId id, void* v) {
-	return GetComputedProperty(id)->Get<Color>();
-}
-
-template <>
-std::string Text::GetProperty<std::string>(PropertyId id, void* v) {
-	return GetComputedProperty(id)->Get<std::string>();
-}
-
-template <>
-int Text::GetProperty<int>(PropertyId id, void* v) {
-	return GetComputedProperty(id)->Get<PropertyKeyword>();
-}
-
 float Text::GetOpacity() {
 	if (!parent) {
 		return 1.f;

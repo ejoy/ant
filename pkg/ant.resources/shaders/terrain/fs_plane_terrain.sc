@@ -1,4 +1,3 @@
-#define NEW_LIGHTING
 #include "common/inputs.sh"
 $input v_texcoord0 v_texcoord1 v_texcoord2 v_normal v_tangent v_bitangent v_posWS v_idx1 v_idx2 v_texcoord3
 
@@ -13,8 +12,7 @@ $input v_texcoord0 v_texcoord1 v_texcoord2 v_normal v_tangent v_bitangent v_posW
 #include "common/constants.sh"
 #include "common/uvmotion.sh"
 #include "pbr/lighting.sh"
-#include "pbr/indirect_lighting.sh"
-#include "pbr/pbr.sh"
+
 
 #define v_distanceVS v_posWS.w
 #ifdef ENABLE_SHADOW

@@ -2,15 +2,8 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-ecs.require "widget.material_view"
-local prefab_mgr = ecs.require "prefab_manager"
-local imgui     = require "imgui"
-local utils     = require "common.utils"
-local math3d    = require "math3d"
 local uiproperty = require "widget.uiproperty"
 local hierarchy     = require "hierarchy_edit"
-local MaterialView = require "widget.view_class".MaterialView
-local SkyboxView  = require "widget.view_class".SkyboxView
 local size_str = {"16","32","64","128","256","512","1024"}
 local prefilter_size_str = {"256","512","1024"}
 
@@ -34,9 +27,12 @@ local function set_ibl_value(eid, key, value)
     -- prefab_mgr:save_prefab()
     -- prefab_mgr:reload()
 end
-
+local SkyboxView = {}
 function SkyboxView:_init()
-    MaterialView._init(self)
+    if self.inited then
+        return
+    end
+    self.inited = true
     self.skybox = uiproperty.Group({label="Skybox"},{
         uiproperty.Float({label="FaceSize", min=0, speed=1, max=250000}, {
             getter = function ()
@@ -99,22 +95,50 @@ function SkyboxView:_init()
     })
 end
 
-function SkyboxView:set_model(eid)
-    if not MaterialView.set_model(self, eid) then return false end
+function SkyboxView:set_eid(eid)
+    if self.eid == eid then
+        return
+    end
+    if not eid then
+        self.eid = nil
+        return
+    end
+    local e <close> = w:entity(eid, "skybox?in ibl?in")
+    if not e.skybox and not e.ibl then
+        self.eid = nil
+        return
+    end
+    self.eid = eid
     self:update()
-    return true
 end
 
 function SkyboxView:update()
-    MaterialView.update(self)
-    self.IBL:update()
-    self.skybox:update()
+    if not self.eid then
+        return
+    end
+    local e <close> = w:entity(self.eid, "skybox?in ibl?in")
+    if e.ibl then
+        self.IBL:update()
+    end
+    if e.skybox then
+        self.skybox:update()
+    end
 end
 
 function SkyboxView:show()
-    MaterialView.show(self)
-    self.IBL:show()
-    self.skybox:show()
+    if not self.eid then
+        return
+    end
+    local e <close> = w:entity(self.eid, "skybox?in ibl?in")
+    if e.ibl then
+        self.IBL:show()
+    end
+    if e.skybox then
+        self.skybox:show()
+    end
 end
 
-return SkyboxView
+return function ()
+    SkyboxView:_init()
+    return SkyboxView
+end

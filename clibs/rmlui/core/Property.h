@@ -9,6 +9,8 @@
 
 namespace Rml {
 
+class Element;
+
 using PropertyKeyword = int;
 using AnimationList = std::vector<Animation>;
 
@@ -38,15 +40,30 @@ public:
 	bool        AllowInterpolate(Element& e) const;
 
 	template <typename T>
-	T& Get() {
-		assert (Has<T>());
+	T& GetRef() {
+		assert(Has<T>());
 		return std::get<T>(*this);
 	}
 
 	template <typename T>
+		requires (!std::is_enum_v<T> && !std::is_same_v<T, float>)
 	const T& Get() const {
-		assert (Has<T>());
+		assert(Has<T>());
 		return std::get<T>(*this);
+	}
+
+	template <typename T>
+		requires (std::is_enum_v<T>)
+	T Get() const {
+		assert(Has<PropertyKeyword>());
+		return (T)std::get<PropertyKeyword>(*this);
+	}
+
+	template <typename T>
+		requires (std::is_same_v<T, float>)
+	float Get(const Element* e) const {
+		assert(Has<PropertyFloat>());
+		return std::get<PropertyFloat>(*this).Compute(e);
 	}
 
 	template <typename T>

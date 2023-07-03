@@ -86,7 +86,7 @@ mesh_submit(struct ecs_world* w, const ecs::render_object* ro, int vid, uint8_t 
 	}
 
 	const uint16_t vb2_type = BUFFER_TYPE(ro->vb2_handle);
-	if((vb2_type != INVALID_BUFFER_TYPE) && (mat_idx == qt_mat_def) || (mat_idx == qt_mat_lightmap)){
+	if((vb2_type != INVALID_BUFFER_TYPE) && ((mat_idx == qt_mat_def) || (mat_idx == qt_mat_lightmap))){
 		switch (vb2_type){
 			case BGFX_HANDLE_VERTEX_BUFFER:	w->bgfx->encoder_set_vertex_buffer(w->holder->encoder, 1, bgfx_vertex_buffer_handle_t{(uint16_t)ro->vb2_handle}, ro->vb2_start, ro->vb2_num); break;
 			case BGFX_HANDLE_DYNAMIC_VERTEX_BUFFER_TYPELESS:	//walk through
@@ -127,9 +127,6 @@ using group_matrices = std::unordered_map<int, matrix_array>;
 struct obj_data {
 	const ecs::render_object* obj;
 	const matrix_array* mats;
-#if defined(_MSC_VER) && defined(_DEBUG)
-	uint64_t id;
-#endif
 };
 
 using objarray = std::vector<obj_data>;
@@ -189,17 +186,6 @@ draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ec
 	}
 }
 
-static inline void
-add_obj(struct ecs_world* w, cid_t main_id, int index, const ecs::render_object* obj, const matrix_array* mats, objarray &objs){
-#if defined(_MSC_VER) && defined(_DEBUG)
-	ecs::eid id = (ecs::eid)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::eid>::id);
-	objs.emplace_back(obj_data{ obj, mats, id });
-#else
-	(void)main_id; (void) index;
-	objs.emplace_back(obj_data{ obj, mats });
-#endif
-}
-
 struct submit_cache{
 	obj_transforms	transforms;
 
@@ -222,26 +208,19 @@ struct submit_cache{
 };
 
 static inline void
-draw_objs(lua_State *L, struct ecs_world *w, cid_t main_id, int index, const matrix_array *mats, submit_cache &cc){
-	const ecs::render_object* obj = (const ecs::render_object*)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::render_object>::id);
-	if (obj){
-		#ifdef _DEBUG
-		const ecs::eid id = (ecs::eid)entity_sibling(w->ecs, main_id, index, ecs_api::component<ecs::eid>::id);
-		#endif //_DEBUG
-		for (uint8_t ii=0; ii<cc.ra_count; ++ii){
-			const auto ra = cc.ra[ii];
-			if (0 != (obj->visible_masks & ra->queue_mask) && 
-				(0 == (obj->cull_masks & ra->queue_mask))){
-				draw_obj(L, w, cc.ra[ii], obj, mats, cc.transforms);
-			}
+draw_objs(lua_State *L, struct ecs_world *w, ecs::render_object& obj, const matrix_array *mats, submit_cache &cc){
+	for (uint8_t ii=0; ii<cc.ra_count; ++ii){
+		const auto ra = cc.ra[ii];
+		if (0 != (obj.visible_masks & ra->queue_mask) && 
+			(0 == (obj.cull_masks & ra->queue_mask))){
+			draw_obj(L, w, cc.ra[ii], &obj, mats, cc.transforms);
 		}
 	}
 }
 
 static inline void
 find_render_args(struct ecs_world *w, submit_cache &cc) {
-	for (auto a : ecs_api::select<ecs::render_args>(w->ecs)){
-		auto& r = a.get<ecs::render_args>();
+	for (auto& r : ecs_api::array<ecs::render_args>(w->ecs)) {
 		cc.ra[cc.ra_count++] = &r;
 	}
 }
@@ -252,7 +231,7 @@ lsubmit(lua_State *L) {
 
 	static submit_cache cc;
 
-	for (auto e : ecs_api::select<ecs::view_visible, ecs::hitch, ecs::scene>(w->ecs)){
+	for (auto e : ecs_api::select<ecs::view_visible, ecs::hitch, ecs::scene>(w->ecs)) {
 		const auto &h = e.get<ecs::hitch>();
 		const auto &s = e.get<ecs::scene>();
 		if (h.group != 0){
@@ -262,16 +241,14 @@ lsubmit(lua_State *L) {
 
 	find_render_args(w, cc);
 	
-	const cid_t vv_id = ecs_api::component<ecs::view_visible>::id;
-	for (int i=0; entity_iter(w->ecs, vv_id, i); ++i){
-		draw_objs(L, w, vv_id, i, nullptr, cc);
+	for (auto& e : ecs_api::select<ecs::view_visible, ecs::render_object>(w->ecs)) {
+		draw_objs(L, w, e.get<ecs::render_object>(), nullptr, cc);
 	}
 	for (auto const& [groupid, mats] : cc.groups) {
 		int gids[] = {groupid};
 		ecs_api::group_enable<ecs::hitch_tag>(w->ecs, gids);
-		const cid_t h_id = ecs_api::component<ecs::hitch_tag>::id;
-		for (int i=0; entity_iter(w->ecs, h_id, i); ++i){
-			draw_objs(L, w, h_id, i, &mats, cc);
+		for (auto& e : ecs_api::select<ecs::hitch_tag, ecs::render_object>(w->ecs)) {
+			draw_objs(L, w, e.get<ecs::render_object>(), &mats, cc);
 		}
 	}
 

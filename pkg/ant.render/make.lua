@@ -149,16 +149,16 @@ lm:lua_source "render_core"{
         "render/render_material.c",
         "render/render.cpp",
     },
-    macos = {
-        deps = {
-            "moltenvk",
-        }
-    },
-    ios = {
-        deps = {
-            "moltenvk",
-        }
-    }
+    -- macos = {
+    --     deps = {
+    --         "moltenvk",
+    --     }
+    -- },
+    -- ios = {
+    --     deps = {
+    --         "moltenvk",
+    --     }
+    -- }
 }
 
 lm:lua_source "render" {

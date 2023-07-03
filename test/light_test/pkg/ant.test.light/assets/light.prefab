@@ -29,8 +29,8 @@ data:
   name: directional_light
   visible: true
   light:
-    color: {1, 1, 1, 1}
-    intensity: 250000
+    color: {0.955104649, 0.827570975, 0.767768800, 1}
+    intensity: 100000
     intensity_unit: lux
     type: directional
   make_shadow: true

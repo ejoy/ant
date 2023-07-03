@@ -217,20 +217,9 @@ al_attrib_next_id(struct attrib_arena *arena, attrib_id id){
 	return al_attrib(arena, id)->h.next;
 }
 
-static inline attrib_type*
-al_next_attrib(struct attrib_arena *arena, attrib_type* a){
-	return a->h.next == INVALID_ATTRIB ? NULL : al_attrib(arena, a->h.next);
-}
-
 static inline int
 is_uniform_attrib(uint16_t type){
 	return type == ATTRIB_UNIFORM || type == ATTRIB_SAMPLER || type == ATTRIB_COLOR_PAL;
-}
-
-static inline int
-al_attrib_is_uniform(struct attrib_arena* arena, attrib_type *a){
-	(void)arena;
-	return is_uniform_attrib(a->h.type);
 }
 
 static inline void
@@ -658,27 +647,6 @@ create_attrib(lua_State *L, struct attrib_arena* arena, attrib_id id, uint16_t a
 		na->u.handle = h;
 	}
 	return al_attrib_id(arena, na);
-}
-
-static inline int
-begin_fetch_attrib_array(lua_State *L, int data_idx, int* didx){
-	const int lt = lua_getfield(L, data_idx, "value");
-	if (lt == LUA_TNIL){
-		*didx = data_idx;
-		lua_pop(L, 1);
-	} else {
-		assert(lt == LUA_TTABLE);
-		*didx = -1;
-	}
-
-	return lt;
-}
-
-static inline void
-end_fetch_attrib_array(lua_State *L, int ltype){
-	if (ltype != LUA_TNIL){
-		lua_pop(L, 1);
-	}
 }
 
 static void

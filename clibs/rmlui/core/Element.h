@@ -122,6 +122,15 @@ public:
 	std::optional<Property> GetInlineProperty(PropertyId id) const;
 	std::optional<Property> GetLocalProperty(PropertyId id) const;
 	std::optional<Property> GetComputedProperty(PropertyId id) const;
+	template <typename T>
+	auto GetProperty(PropertyId id) const {
+		if constexpr(std::is_same_v<T, float>) {
+			return GetComputedProperty(id)->Get<T>(this);
+		}
+		else {
+			return GetComputedProperty(id)->Get<T>();
+		}
+	}
 
 	bool SetProperty(const std::string& name, std::optional<std::string> value = std::nullopt);
 	std::optional<std::string> GetProperty(const std::string& name) const;

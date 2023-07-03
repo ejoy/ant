@@ -9,6 +9,7 @@ struct RenderState {
     glm::vec4 rectVerteices[2] {glm::vec4(0), glm::vec4(0)};
     uint16_t lastScissorId = UINT16_MAX;
     bool needShaderClipRect = false;
+    bool needGray = false;
 };
 
 class TextureMaterial;
@@ -26,6 +27,7 @@ public:
     void SetClipRect() override;
     void SetClipRect(const glm::u16vec4& r) override;
     void SetClipRect(glm::vec4 r[2]) override;
+    void SetGray(bool enable) override;
     Rml::MaterialHandle CreateTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flag) override;
     Rml::MaterialHandle CreateRenderTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flag) override;
     Rml::MaterialHandle CreateFontMaterial(const Rml::TextEffects& effects) override;

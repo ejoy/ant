@@ -752,6 +752,8 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 	
 	RegisterProperty(PropertyId::BackgroundRepeat, "background-repeat", "repeat")
 		.AddParser("keyword", "repeat, repeat-x, repeat-y, no-repeat");
+	RegisterProperty(PropertyId::BackgroundLattice, "background-lattice")
+		.AddParser("length_percent");
 	RegisterShorthand(ShorthandId::Background, "background", "background-image, background-position-x, background-position-y, background-size-x, background-size-y", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::TextShadowH, "text-shadow-h", "0px")
@@ -871,8 +873,8 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("length");
 	RegisterProperty(PropertyId::ScrollTop, "scroll-top", "0px")
 		.AddParser("length");
-	RegisterProperty(PropertyId::BackgroundLattice, "background-lattice")
-		.AddParser("length_percent");
+	RegisterProperty(PropertyId::Filter, "filter", "none")
+		.AddParser("keyword", "none,gray");
 	PropertyVector properties;
 	for (auto const& [id, value] : unparsed_default) {
 		if (!ParsePropertyDeclaration(properties, id, value)) {

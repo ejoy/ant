@@ -16,10 +16,10 @@ namespace ecs_api {
     constexpr int EID = 0xFFFFFFFF;
 
     template <typename T>
-    struct component {};
+    struct component_meta {};
 
     template <typename T>
-    constexpr int component_id = component<T>::id;
+    constexpr int component_id = component_meta<T>::id;
 
     namespace impl {
         template <typename Component, typename...Components>
@@ -49,24 +49,54 @@ namespace ecs_api {
         }
         void sync() noexcept {
         }
-        template <typename Component>
-        Component* iter(int i) noexcept {
-            static_assert(!std::is_function<Component>::value);
-            return (Component*)entity_iter(ctx(), component<Component>::id, i);
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && component_meta<T>::tag
+            )
+        void next(int& i, ecs_token& token) noexcept {
+            i = entity_next(ctx(), component_meta<T>::id, i, &token);
         }
-        template <typename Component>
-        Component* sibling(int mainkey, int i) noexcept {
-            static_assert(!std::is_function<Component>::value);
-            return (Component*)entity_sibling(ctx(), mainkey, i, component<Component>::id);
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && !component_meta<T>::tag
+            )
+        T* fetch(int i, ecs_token& token) noexcept {
+            return (T*)entity_fetch(ctx(), component_meta<T>::id, i, &token);
         }
-        template <typename Component>
-        Component* sibling(int mainkey, int i, lua_State* L) {
-            static_assert(!std::is_function<Component>::value);
-            auto c = sibling<Component>(ctx(), mainkey, i);
-            if (c == NULL) {
-                luaL_error(L, "component `%s` not found.", component<Component>::name);
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && !component_meta<T>::tag
+            )
+        T* fetch(int i) noexcept {
+            return (T*)entity_fetch(ctx(), component_meta<T>::id, i, nullptr);
+        }
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && component_meta<T>::tag
+            )
+        bool component(ecs_token token, [[maybe_unused]] int i) noexcept {
+            return entity_component_index(ctx(), token, component_meta<T>::id) >= 0;
+        }
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && !component_meta<T>::tag
+            )
+        T* component(ecs_token token, [[maybe_unused]] int i) noexcept {
+            return (T*)entity_component(ctx(), token, component_meta<T>::id);
+        }
+        void disable_tag(int tagid, int i) noexcept {
+            entity_disable_tag(ctx(), tagid, i);
+        }
+        void disable_tag(ecs_token token, [[maybe_unused]] int i, int tagid) noexcept {
+            int index = entity_component_index(ctx(), token, tagid);
+            if (index >= 0) {
+                disable_tag(tagid, index);
             }
-            return c;
         }
     };
 
@@ -75,10 +105,9 @@ namespace ecs_api {
     private:
         struct ecs_context* context;
         struct ecs_cache* c;
-        int n = 0;
     public:
         cached_context(struct ecs_context* ctx) noexcept {
-            std::array<int, 1+sizeof...(Components)> keys {component<MainKey>::id, component<Components>::id...};
+            std::array<int, 1+sizeof...(Components)> keys {component_meta<MainKey>::id, component_meta<Components>::id...};
             struct ecs_cache* c = entity_cache_create(ctx, keys.data(), static_cast<int>(keys.size()));
             this->context = ctx;
             this->c = c;
@@ -89,51 +118,71 @@ namespace ecs_api {
         ecs_context* ctx() const noexcept {
             return context;
         }
-        template <typename Component>
-        Component* _fetch(int index) noexcept {
-            static_assert(impl::has_element_v<Component, Components...>);
-            return (Component*)entity_cache_fetch(ctx(), c, index, component<Component>::id);
-        }
         void sync() noexcept {
-            n = entity_cache_sync(ctx(), c);
+            entity_cache_sync(ctx(), c);
         }
 
-        template <typename Component>
-            requires (!std::is_function_v<Component> && component<Component>::tag)
-        Component* iter(int i) noexcept {
-            static_assert(std::is_same_v<Component, MainKey>);
-            return i < n
-                ? (Component*)(~(uintptr_t)0)
-                : nullptr;
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && component_meta<T>::tag
+            )
+        void next(int& i, ecs_token& token) noexcept {
+            i = entity_next(ctx(), component_meta<T>::id, i, &token);
         }
-        template <typename Component>
-            requires (!std::is_function_v<Component> && !component<Component>::tag && component<Component>::id != EID)
-        Component* iter(int i) noexcept {
-            static_assert(std::is_same_v<Component, MainKey>);
-            return _fetch<Component>(i);
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && std::is_same_v<T, MainKey>
+                && !component_meta<T>::tag
+            )
+        T* fetch(int i, ecs_token& token) noexcept {
+            return (T*)entity_fetch(ctx(), component_meta<T>::id, i, &token);
         }
-        template <typename Component>
-            requires (!std::is_function_v<Component> && component<Component>::id == EID)
-        Component* iter(int i) noexcept {
-            static_assert(std::is_same_v<Component, MainKey>);
-            return (Component*)entity_iter(ctx(), EID, i);
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && impl::has_element_v<T, Components...>
+                && component_meta<T>::id != EID
+                && component_meta<T>::tag
+            )
+        bool component([[maybe_unused]] ecs_token token, int i) noexcept {
+            return entity_cache_fetch_index(ctx(), c, i, component_meta<T>::id) >= 0;
         }
-        template <typename Component>
-            requires (!std::is_function_v<Component> && component<Component>::id != EID)
-        Component* sibling([[maybe_unused]] int mainkey, int i) noexcept {
-            return _fetch<Component>(i);
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && impl::has_element_v<T, Components...>
+                && component_meta<T>::id != EID
+                && !component_meta<T>::tag
+            )
+        T* component([[maybe_unused]] ecs_token token, int i) noexcept {
+            return (T*)entity_cache_fetch(ctx(), c, i, component_meta<T>::id);
         }
-        template <typename Component>
-            requires (!std::is_function_v<Component> && component<Component>::id == EID)
-        Component* sibling([[maybe_unused]] int mainkey, int i) noexcept {
-            return (Component*)entity_sibling(ctx(), component<MainKey>::id, i, EID);
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
+                && component_meta<T>::id == EID
+                && impl::has_element_v<T, Components...>
+            )
+        T* component(ecs_token token, [[maybe_unused]] int i) noexcept {
+            return (T*)entity_component(ctx(), token, EID);
+        }
+        void disable_tag(int tagid, int i) noexcept {
+            entity_disable_tag(ctx(), tagid, i);
+        }
+        void disable_tag([[maybe_unused]] ecs_token token, int i, int tagid) noexcept {
+            int index = entity_cache_fetch_index(ctx(), c, i, tagid);
+            if (index >= 0) {
+                disable_tag(tagid, index);
+            }
         }
     };
 
     namespace impl {
         template <typename...Ts>
         using components = decltype(std::tuple_cat(
-            std::declval<std::conditional_t<std::is_empty<Ts>::value || std::is_function<Ts>::value,
+            std::declval<std::conditional_t<std::is_empty_v<Ts> || std::is_function_v<Ts>,
                 std::tuple<>,
                 std::tuple<Ts*>
             >>()...
@@ -141,7 +190,7 @@ namespace ecs_api {
 
         template <std::size_t Is, typename T>
         static constexpr std::size_t next() noexcept {
-            if constexpr (std::is_empty<T>::value || std::is_function<T>::value) {
+            if constexpr (std::is_empty_v<T> || std::is_function_v<T>) {
                 return Is;
             }
             else {
@@ -150,163 +199,180 @@ namespace ecs_api {
         }
     }
 
+    struct find_t {};
+    struct create_t {};
+    struct first_t {};
+
     template <typename Context, typename MainKey, typename ...SubKey>
     struct basic_entity {
     public:
-        basic_entity(ecs_context* ctx) noexcept
-            : ctx(context::create(ctx))
-        { }
+        static constexpr int kInvalidIndex = -1;
         basic_entity(Context& ctx) noexcept
             : ctx(ctx)
         { }
         template <typename Component>
-            requires (component<Component>::id == EID && component<MainKey>::id == EID)
-        basic_entity(Context& ctx, Component eid) noexcept
-            : ctx(ctx) {
-            index = entity_index(ctx.ctx(), (void*)eid);
-            std::get<Component*>(c) = (Component*)eid;
-        }
-        static constexpr int kInvalidIndex = -1;
-        enum class fetch_status: uint8_t {
-            success,
-            failed,
-            eof,
-        };
-        fetch_status fetch(int id) noexcept {
-            auto v = ctx.iter<MainKey>(id);
-            if (!v) {
-                return fetch_status::eof;
+            requires (
+                component_meta<Component>::id == EID
+                && component_meta<MainKey>::id == EID
+                && sizeof...(SubKey) == 0
+            )
+        basic_entity(find_t, ecs_context* ctx, Component eid) noexcept
+            : ctx(context::create(ctx)) {
+            index = entity_index(ctx, (void*)eid, &token);
+            if (index >= 0) {
+                std::get<Component*>(c) = (Component*)eid;
             }
-            assgin<0>(v);
+        }
+        template <typename ...Args>
+            requires (
+                sizeof...(SubKey) == 0
+            )
+        basic_entity(create_t, ecs_context* ctx, Args... args) noexcept
+            : ctx(context::create(ctx)) {
+            index = entity_new(ctx, component_meta<MainKey>::id, &token);
+            if (index == kInvalidIndex) {
+                return;
+            }
+            if constexpr (!component_meta<MainKey>::tag) {
+                auto v = this->ctx.template fetch<MainKey>(index);
+                assert(v);
+                if (v) {
+                    assgin<0>(v);
+                    new (v) MainKey(std::forward<Args>(args)...);
+                }
+            }
+        }
+        basic_entity(first_t, ecs_context* ctx) noexcept
+            : ctx(context::create(ctx)) {
+            next();
+        }
+        bool fetch_sibiling(int id) noexcept {
             if constexpr (sizeof...(SubKey) == 0) {
-                return fetch_status::success;
+                return true;
             }
             else {
-                if (init_sibling<impl::next<0, MainKey>(), SubKey...>(id)) {
-                    return fetch_status::success;
+                if (init_component<impl::next<0, MainKey>(), SubKey...>(id)) {
+                    return true;
                 }
-                return fetch_status::failed;
-            }
-        }
-        bool init(int id) noexcept {
-            if (fetch_status::success != fetch(id)) {
-                index = kInvalidIndex;
                 return false;
             }
-            index = id;
-            return true;
         }
         void next() noexcept {
-            for (++index;;++index) {
-                switch (fetch(index)) {
-                case fetch_status::success:
-                    return;
-                case fetch_status::eof:
-                    index = kInvalidIndex;
-                    return;
-                default:
-                    break;
+            if constexpr (component_meta<MainKey>::tag) {
+                for (;;) {
+                    ctx.template next<MainKey>(index, token);
+                    if (index == kInvalidIndex) {
+                        return;
+                    }
+                    if (fetch_sibiling(index)) {
+                        return;
+                    }
+                }
+            }
+            else {
+                for (++index;;++index) {
+                    auto v = ctx.template fetch<MainKey>(index, token);
+                    if (!v) {
+                        index = kInvalidIndex;
+                        return;
+                    }
+                    assgin<0>(v);
+                    if (fetch_sibiling(index)) {
+                        return;
+                    }
                 }
             }
         }
         void remove() const noexcept {
-            entity_remove(ctx.ctx(), component<MainKey>::id, index);
+            entity_remove(ctx.ctx(), token);
         }
-        int getid() const noexcept {
+        int get_index() const noexcept {
             return index;
+        }
+        ecs_token get_token() const noexcept {
+            return token;
         }
         bool invalid() const {
             return index == kInvalidIndex;
         }
         template <typename T>
-            requires (component<T>::id == EID)
+            requires (component_meta<T>::id == EID)
         T get() noexcept {
             return (T)std::get<T*>(c);
         }
         template <typename T>
-            requires (component<T>::id != EID && !std::is_empty<T>::value)
+            requires (component_meta<T>::id != EID && !std::is_empty_v<T>)
         T& get() noexcept {
             return *std::get<T*>(c);
         }
         template <typename T>
-            requires (component<T>::id == EID)
-        bool has() const noexcept {
-            return true;
+            requires (component_meta<T>::tag)
+        bool component() const noexcept {
+            return ctx.template component<T>(token, index);
         }
         template <typename T>
-            requires (component<T>::id != EID)
-        bool has() const noexcept {
-            return !!ctx.sibling<T>(component<MainKey>::id, index);
+            requires (component_meta<T>::id != EID && !component_meta<T>::tag && !std::is_empty_v<T>)
+        T* component() const noexcept {
+            return ctx.template component<T>(token, index);
         }
         template <typename T>
-            requires (component<T>::tag)
-        bool sibling() const noexcept {
-            return !!ctx.sibling<T>(component<MainKey>::id, index);
+            requires (component_meta<T>::id == EID)
+        T component() const noexcept {
+            return (T)ctx.template component<T>(token, index);
         }
         template <typename T>
-            requires (component<T>::id != EID && !component<T>::tag && !std::is_empty<T>::value)
-        T* sibling() const noexcept {
-            return ctx.sibling<T>(component<MainKey>::id, index);
-        }
-        template <typename T>
-            requires (component<T>::id == EID)
-        T sibling() const noexcept {
-            return (T)ctx.sibling<T>(component<MainKey>::id, index);
-        }
-        template <typename T>
-            requires (component<T>::id == EID)
-        T sibling(lua_State* L) const {
-            return (T)ctx.sibling<T>(component<MainKey>::id, index, L);
-        }
-        template <typename T>
-            requires (component<T>::id != EID && !std::is_empty<T>::value)
-        T& sibling(lua_State* L) const {
-            return *ctx.sibling<T>(component<MainKey>::id, index, L);
-        }
-        template <typename T>
-            requires (component<T>::tag)
+            requires (component_meta<T>::tag)
         void enable_tag() noexcept {
-            entity_enable_tag(ctx.ctx(), component<MainKey>::id, index, component<T>::id);
-        }
-        void enable_tag(int id) noexcept {
-            entity_enable_tag(ctx.ctx(), component<MainKey>::id, index, id);
+            entity_enable_tag(ctx.ctx(), token, component_meta<T>::id);
         }
         template <typename T>
-            requires (component<T>::tag)
+            requires (component_meta<T>::tag)
         void disable_tag() noexcept {
-            entity_disable_tag(ctx.ctx(), component<MainKey>::id, index, component<T>::id);
-        }
-        void disable_tag(int id) noexcept {
-            entity_disable_tag(ctx.ctx(), component<MainKey>::id, index, id);
+            if constexpr (component_meta<MainKey>::id == component_meta<T>::id) {
+                ctx.disable_tag(component_meta<MainKey>::id, index);
+            }
+            else {
+                ctx.disable_tag(token, index, component_meta<T>::id);
+            }
         }
     private:
         template <std::size_t Is, typename T>
         void assgin(T* v) noexcept {
-            if constexpr (!std::is_empty<T>::value) {
+            if constexpr (!std::is_empty_v<T>) {
                 std::get<Is>(c) = v;
             }
         }
         template <std::size_t Is, typename Component, typename ...Components>
-        bool init_sibling(int i) noexcept {
-            if constexpr (std::is_function<Component>::value) {
+        bool init_component(int i) noexcept {
+            if constexpr (std::is_function_v<Component>) {
                 using C = typename std::invoke_result<Component, flags::absent>::type;
-                auto v = ctx.sibling<C>(component<MainKey>::id, i);
+                auto v = ctx.template component<C>(token, i);
                 if (v) {
                     return false;
                 }
                 if constexpr (sizeof...(Components) > 0) {
-                    return init_sibling<Is, Components...>(i);
+                    return init_component<Is, Components...>(i);
+                }
+                return true;
+            }
+            else if constexpr (component_meta<Component>::tag) {
+                auto v = ctx.template component<Component>(token, i);
+                if (!v) {
+                    return false;
+                }
+                if constexpr (sizeof...(Components) > 0) {
+                    return init_component<impl::next<Is, Component>(), Components...>(i);
                 }
                 return true;
             }
             else {
-                auto v = ctx.sibling<Component>(component<MainKey>::id, i);
+                auto v = ctx.template component<Component>(token, i);
                 if (!v) {
                     return false;
                 }
                 assgin<Is>(v);
                 if constexpr (sizeof...(Components) > 0) {
-                    return init_sibling<impl::next<Is, Component>(), Components...>(i);
+                    return init_component<impl::next<Is, Component>(), Components...>(i);
                 }
                 return true;
             }
@@ -314,6 +380,7 @@ namespace ecs_api {
     public:
         impl::components<MainKey, SubKey...> c;
         Context& ctx;
+        ecs_token token;
         int index = kInvalidIndex;
     };
 
@@ -360,7 +427,7 @@ namespace ecs_api {
                 : ctx(ctx)
             {}
             iterator begin() noexcept {
-                return {begin_t{}, ctx};
+                return { begin_t{}, ctx };
             }
             iterator end() noexcept {
                 return { end_t{}, ctx };
@@ -377,12 +444,12 @@ namespace ecs_api {
         template <typename Component>
         struct array_range {
             array_range(ecs_context* ctx) noexcept {
-                first = (Component*)entity_iter(ctx, component<Component>::id, 0);
+                first = (Component*)entity_fetch(ctx, component_meta<Component>::id, 0, NULL);
                 if (!first) {
                     last = nullptr;
                     return;
                 }
-                last = first + (size_t)entity_count(ctx, component<Component>::id);
+                last = first + (size_t)entity_count(ctx, component_meta<Component>::id);
             }
             Component* begin() noexcept {
                 return first;
@@ -397,33 +464,38 @@ namespace ecs_api {
 
     template <typename Component>
     void clear_type(ecs_context* ctx) noexcept {
-        entity_clear_type(ctx, component<Component>::id);
+        entity_clear_type(ctx, component_meta<Component>::id);
     }
 
     template <typename Component, size_t N>
-        requires (component<Component>::tag)
+        requires (component_meta<Component>::tag)
     void group_enable(ecs_context* ctx, int (&ids)[N]) noexcept {
-        entity_group_enable(ctx, component<Component>::id, N, ids);
+        entity_group_enable(ctx, component_meta<Component>::id, N, ids);
     }
 
     template <typename Component>
     size_t count(ecs_context* ctx) noexcept {
-        return (size_t)entity_count(ctx, component<Component>::id);
+        return (size_t)entity_count(ctx, component_meta<Component>::id);
+    }
+
+    template <typename Component, typename ...Args>
+    auto create_entity(ecs_context* ctx, Args... args) noexcept {
+        return entity<Component>(create_t {}, ctx, std::forward<Args>(args)...);
+    }
+
+    template <typename ...Args>
+    auto first_entity(ecs_context* ctx) noexcept {
+        return entity<Args...>(first_t {}, ctx);
     }
 
     template <typename Component>
-    auto create_entity(ecs_context* ctx) noexcept {
-        entity<Component> e({ctx});
-        int index = entity_new(ctx, component<Component>::id, NULL);
-        if (index >= 0) {
-            bool ok = e.init(index);
-            assert(ok);
-        }
-        return e;
+        requires (component_meta<Component>::id == EID)
+    auto find_entity(ecs_context* ctx, Component eid) noexcept {
+        return entity<Component>(find_t {}, ctx, eid);
     }
 
     template <typename Component>
-        requires (!component<Component>::tag)
+        requires (!component_meta<Component>::tag)
     auto array(ecs_context* ctx) noexcept {
         return impl::array_range<Component>(ctx);
     }

@@ -84,9 +84,12 @@ end
 
 function S.init()
     create_instance( "/pkg/ant.test.light/assets/light.prefab", function (e)
-        --local leid = e.tag['*'][1]
-        --local le<close> = w:entity(leid, "scene:update")
-        --iom.set_direction(le, math3d.vector(1.0, 1.0, 1.0))
+        local leid = e.tag['*'][2]
+        local le<close> = w:entity(leid, "directional_light scene:update")
+
+        local r2l_mat<const> = mc.R2L_MAT
+        local v = math3d.transform(r2l_mat, math3d.vector(0.424264073, -0.707106769, -0.565685451), 0)
+        iom.set_direction(le, v)
     end)
 
     --ecs.create_instance "/pkg/ant.test.light/assets/skybox.prefab"
@@ -95,12 +98,12 @@ end
 local peids
 
 function S.init_world()
-    local mq = w:first("main_queue camera_ref:in")
-    local camera_ref<close> = w:entity(mq.camera_ref)
-    local eyepos = math3d.vector(0, 8, -8)
-    iom.set_position(camera_ref, eyepos)
+    local mq = w:first "main_queue camera_ref:in"
+    local ce<close> = w:entity(mq.camera_ref, "camera:in")
+    local eyepos = math3d.vector(0, 10, -10)
+    iom.set_position(ce, eyepos)
     local dir = math3d.normalize(math3d.sub(math3d.vector(0.0, 0.0, 0.0, 1.0), eyepos))
-    iom.set_direction(camera_ref, dir)
+    iom.set_direction(ce, dir)
 
     -- create_simple_triangles()
 

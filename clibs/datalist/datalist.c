@@ -366,10 +366,10 @@ push_token_string(lua_State *L, const char *ptr, size_t sz) {
 					buffer[n] = '\v';
 					break;
 				case '\'':
-					buffer[n] = '\'';
-					break;
 				case '"':
-					buffer[n] = '"';
+				case '\n':
+				case '\r':
+					buffer[n] = *ptr;
 					break;
 				default:
 					return 1;

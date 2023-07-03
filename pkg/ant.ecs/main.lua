@@ -459,14 +459,17 @@ function world:multicast(set, name, ...)
     end
 end
 
-local function update_decl(self)
-    local w = self.w
-    local component_class =  self._class.component
-    for name, info in pairs(self._decl.component) do
+local function update_decl(world)
+    world._component_decl = {}
+    local function register_component(decl)
+        world._component_decl[decl.name] = decl
+    end
+    local component_class = world._class.component
+    for name, info in pairs(world._decl.component) do
         local type = info.type[1]
         local class = component_class[name] or {}
         if type == "lua" then
-            w:register {
+            register_component {
                 name = name,
                 type = "lua",
                 init = class.init,
@@ -485,7 +488,7 @@ local function update_decl(self)
             for i, v in ipairs(info.field) do
                 t[i] = v:match "^(.*)|.*$" or v
             end
-            w:register(t)
+            register_component(t)
         elseif type == "raw" then
             local t = {
                 name = name,
@@ -496,13 +499,13 @@ local function update_decl(self)
                 demarshal = class.demarshal,
                 unmarshal = class.unmarshal,
             }
-            w:register(t)
+            register_component(t)
         elseif type == nil then
-            w:register {
+            register_component {
                 name = name
             }
         else
-            w:register {
+            register_component {
                 name = name,
                 type = type,
             }

@@ -1,32 +1,49 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-ecs.require "widget.base_view"
 local iefk          = ecs.import.interface "ant.efk|iefk"
 local imgui         = require "imgui"
 local uiproperty    = require "widget.uiproperty"
 local hierarchy     = require "hierarchy_edit"
-local BaseView      = require "widget.view_class".BaseView
-local EffectView    = require "widget.view_class".EffectView
+local EffectView    = {}
 local ui_auto_play  = {false}
-local ui_loop  = {false}
+local ui_loop       = {false}
+
 function EffectView:_init()
-    BaseView._init(self)
-    self.speed = uiproperty.Float({label = "Speed", min = 0.01, max = 10.0, speed = 0.01}, {})
-    self.path = uiproperty.EditText({label = "path", readonly = true})
-    self.path:set_getter(function() return self:on_get_path() end)
+    if self.inited then
+        return
+    end
+    self.inited = true
+    self.speed = uiproperty.Float({label = "Speed", min = 0.01, max = 10.0, speed = 0.01}, {
+        getter = function() return self:on_get_speed() end,
+        setter = function(v) self:on_set_speed(v) end
+    })
+    self.path = uiproperty.EditText({label = "path", readonly = true}, {
+        getter = function() return self:on_get_path() end
+    })
 end
 
-function EffectView:set_model(eid)
-    if not BaseView.set_model(self, eid) then return false end
-    self.speed:set_getter(function() return self:on_get_speed() end)
-    self.speed:set_setter(function(v) self:on_set_speed(v) end)
+function EffectView:set_eid(eid)
+    if self.eid == eid then
+        return
+    end
+    if not eid then
+        self.eid = nil
+        return
+    end
+    local e <close> = w:entity(eid, "efk?in")
+    if not e.efk then
+        self.eid = nil
+        return
+    end
+    self.eid = eid
     self:update()
-    return true
 end
 
 function EffectView:update()
-    BaseView.update(self)
+    if not self.eid then
+        return
+    end
     self.path:update()
     self.speed:update()
     local template = hierarchy:get_template(self.eid)
@@ -35,7 +52,9 @@ function EffectView:update()
 end
 
 function EffectView:show()
-    BaseView.show(self)
+    if not self.eid then
+        return
+    end
     imgui.cursor.Separator()
     self.path:show()
     self.speed:show()
@@ -62,7 +81,7 @@ function EffectView:on_get_speed()
     return tpl.template.data.efk.speed or 1.0
 end
 
-function BaseView:on_get_path()
+function EffectView:on_get_path()
     local tpl = hierarchy:get_template(self.eid)
     return tpl.template.data.efk.path
 end
@@ -84,4 +103,7 @@ function EffectView:on_set_loop(value)
     iefk.set_loop(self.eid, value)
 end
 
-return EffectView
+return function ()
+    EffectView:_init()
+    return EffectView
+end

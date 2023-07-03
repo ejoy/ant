@@ -161,7 +161,7 @@ function world:pipeline_func(what)
 	if not funcs or #funcs == 0 then
 		return function() end
 	end
-	local CPU_STAT <const> = false
+	local CPU_STAT <const> = true
 	local MATH3D_STAT <const> = true
 	if what == "_init" or what == "_update" then
 		if CPU_STAT then
@@ -274,14 +274,6 @@ function world:memory(async)
 	return m
 end
 
-function world:entity(eid)
-	return self._entity[eid]
-end
-
-function world:debug_entity(eid)
-	return self.w:readall(eid)
-end
-
 function world:clibs(name)
 	local w = self
 	local funcs = require(name)
@@ -316,7 +308,6 @@ function m.new_world(config)
 		_create_queue = {},
 		_destruct = {},
 		w = ecs,
-		_entity = ecs:visitor_create(),
 	}, world)
 
 	event.init(world)

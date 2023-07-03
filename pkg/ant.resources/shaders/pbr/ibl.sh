@@ -83,7 +83,7 @@ vec3 get_IBL_radiance_Lambertian(in material_info mi)
     return irradiancecolor * mi.albedo;
 }
 
-float3 IndirectSpecularProcessing_New(float3 rf0specColor, float rf90glossinessColor, float NoV)
+vec3 IndirectSpecularProcessing_New(vec3 rf0specColor, float rf90glossinessColor, float NoV)
 {
     float x = rf90glossinessColor;
     float y = NoV;
@@ -118,9 +118,9 @@ vec3 get_IBL_radiance_GGX(in material_info mi)
 #ifdef USE_IBL_LUT
     const vec2 lut_uv = vec2(mi.NdotV, mi.perceptual_roughness);
     const vec2 lut = texture2D(s_LUT, lut_uv).rg;
-    const vec3 specular_color = (mi.f0 * lut.x + mi.f90 * lut.y);
+    const vec3 specular_color = (mi.f0 * lut.x + vec3_splat(mi.f90 * lut.y));
 #else   //!USE_IBL_LUT
-    const vec3 specular_color = IndirectSpecularProcessing_New(mi.f0, mi.f90.x, mi.NdotV);
+    const vec3 specular_color = IndirectSpecularProcessing_New(mi.f0, mi.f90, mi.NdotV);
 #endif  //USE_IBL_LUT
 
     const vec3 specular_light = textureCubeLod(s_prefilter, mi.reflect_vector, lod).rgb;

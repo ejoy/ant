@@ -41,10 +41,14 @@ worldmat_update(flatmap<ecs::eid, math_t>& worldmats, struct math_context* math3
 			if (w) {
 				if ((ecs::eid)s.parent >= id)
 					return false;
-				int index = entity_index(w->ecs, (void *)s.parent);
-				ecs::scene *ps = (ecs::scene *)entity_sibling(w->ecs, COMPONENT_EID, index, ecs_api::component<ecs::scene>::id);
-				if (ps == nullptr)
+				auto e = ecs_api::find_entity(w->ecs, (ecs::eid)s.parent);
+				if (e.invalid()) {
 					return false;
+				}
+				ecs::scene *ps = e.component<ecs::scene>();
+				if (ps == nullptr) {
+					return false;
+				}
 				parentmat = &ps->worldmat;
 				worldmats.insert_or_assign(s.parent, ps->worldmat);
 			} else {
@@ -64,12 +68,11 @@ static int
 entity_init(lua_State *L) {
 	auto w = getworld(L);
 
-	using namespace ecs_api::flags;
 	for (auto& e : ecs_api::select<ecs::INIT, ecs::scene>(w->ecs)) {
-		if (!e.sibling<ecs::scene_update_once>())
+		if (!e.component<ecs::scene_update_once>())
 			e.enable_tag<ecs::scene_needchange>();
 		auto& s = e.get<ecs::scene>();
-		s.movement = w->frame;
+		s.movement = 0;
 		e.enable_tag<ecs::scene_mutable>();
 	}
 	return 0;
@@ -77,19 +80,26 @@ entity_init(lua_State *L) {
 
 static inline bool
 is_constant(struct ecs_world *w, ecs::eid eid) {
-	int id = entity_index(w->ecs, (void *)eid);
-	return entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_mutable>::id) == nullptr;
+	auto e = ecs_api::find_entity(w->ecs, eid);
+	if (e.invalid()) {
+		return false;
+	}
+	return !e.component<ecs::scene_mutable>();
 }
 
 static inline bool
 is_changed(struct ecs_world *w, ecs::eid eid) {
-	int id = entity_index(w->ecs, (void *)eid);
-	return entity_sibling(w->ecs, COMPONENT_EID, id, ecs_api::component<ecs::scene_changed>::id) != nullptr;
+	auto e = ecs_api::find_entity(w->ecs, eid);
+	if (e.invalid()) {
+		return false;
+	}
+	return e.component<ecs::scene_changed>();
 }
 
 static void
 rebuild_mutable_set(struct ecs_world *w) {
-	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene_mutable(ecs_api::flags::absent), ecs::scene>(w->ecs)) {
+	using namespace ecs_api::flags;
+	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene_mutable(absent), ecs::scene>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0 && is_changed(w, s.parent)) {
 			e.enable_tag<ecs::scene_mutable>();
@@ -129,7 +139,7 @@ scene_changed(lua_State *L) {
 	bool need_rebuild_mutable_set = false;
 	for (; it != selector.end(); ++it) {
 		auto& e = *it;
-		if (!e.sibling<ecs::scene_mutable>()) {
+		if (!e.component<ecs::scene_mutable>()) {
 			need_rebuild_mutable_set = true;
 			e.enable_tag<ecs::scene_mutable>();
 		}
@@ -147,9 +157,9 @@ scene_changed(lua_State *L) {
 		auto& s = e.get<ecs::scene>();
 		bool changed = false;
 		ecs::eid id;
-		if (e.sibling<ecs::scene_update>()) {
-			id = e.sibling<ecs::eid>();
-			if (e.sibling<ecs::scene_changed>()) {
+		if (e.component<ecs::scene_update>()) {
+			id = e.component<ecs::eid>();
+			if (e.component<ecs::scene_changed>()) {
 				changed = true;
 			} else if (s.parent != 0 && is_changed(w, s.parent)) {
 				e.enable_tag<ecs::scene_changed>();
@@ -194,7 +204,7 @@ scene_remove(lua_State *L) {
 	for (auto& e : ecs_api::select<ecs::scene>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
 		if (s.parent != 0 && removed.contains(s.parent)) {
-			auto id = e.sibling<ecs::eid>();
+			auto id = e.component<ecs::eid>();
 			removed.insert(id);
 			e.remove();
 		}

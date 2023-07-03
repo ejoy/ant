@@ -123,6 +123,8 @@ enum class PropertyId : uint8_t {
 	BackgroundPositionY,
 	BackgroundRepeat,
 
+	Filter,
+
 	OutlineColor,
 	OutlineWidth,
 

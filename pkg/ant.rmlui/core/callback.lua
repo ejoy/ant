@@ -83,6 +83,7 @@ function m.OnEventAttach(document, element, source)
 	end
 	local eventid = genEventId()
 	events[eventid] = {f, upvalue.event}
+	return eventid
 end
 function m.OnEvent(eventid, e)
 	local delegate = events[eventid]

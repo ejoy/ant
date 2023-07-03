@@ -62,7 +62,6 @@ function m:update_world()
             f(world)
         end
     end
-    w:visitor_update()
     w:update()
     math3d.reset()
 end

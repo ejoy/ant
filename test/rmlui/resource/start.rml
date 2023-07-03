@@ -9,9 +9,9 @@
                 margin-right: 10%;
                 margin-top: 10%;
                 margin-bottom: 20%;
+                gap: 20px;
             }
             button {
-                margin: 10px;
                 padding: 0 20px;
                 text-align: center;
                 text-decoration: none;
@@ -21,14 +21,14 @@
                 
                 transition: color background-color transform 2s elastic-out;
                 background-color: #f22222;
-                color: #ffffff;
+                background-image: "correct.png";
+                background-size: contain;
+                color: yellow;
                 transform: scale(1.0);
-                
             }
-            button:hover {
+            button:active {
                 transform: scale(1.2);
-                background-color: #222222;
-                color: #f5d057;
+                filter: gray;
             }
             button>span {
                 opacity: 1;
@@ -40,8 +40,7 @@
         <script type="text/x-lua" >
             local start = window.createModel "start" {
                 show = false,
-                richtext = true,
-                label = "测试1"
+                label = "新游戏"
             }
             function start.new(event)
                 console.log(event.target.id)
@@ -75,14 +74,12 @@
         </script>
     </head>
     <body>
-        <div data-model="start">
-            <richtext id = "new" data-event-click="new()">(gas-air)(gas-butadiene)(gas-ch4)</richtext>
-            <button data-event-click="load()">t1</button>
-
-            <button data-event-click="setting()">t2</button>
-
-            <button data-if="show">(irbtn_active)(irbtn_hover)(irbtn_normal)</button>
-            <richtext data-event-click="exit()">(gas-chlorine){/r a1 }{/g a2}{/color:ff00ff a3}</richtext>
+        <div id="test" data-model="start">
+            <button id = "new" data-event-click="new()">{{label}}</button>
+            <button data-event-click="load()">载入游戏</button>
+            <button data-event-click="setting()">设置</button>
+            <button data-if="show">隐藏菜单</button>
+            <button data-event-click="exit()">退出</button>
         </div>
     </body>
 </rml>
