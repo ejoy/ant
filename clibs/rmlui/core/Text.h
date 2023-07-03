@@ -62,14 +62,19 @@ protected:
 	Color GetTextDecorationColor();
 	Color GetTextColor();
 	FontFaceHandle GetFontFaceHandle();
+
+protected:
 	Geometry geometry;
 	Geometry decoration;
 	FontFaceHandle font_handle = 0;
-	//7      6    5          4              3                2              1            0
-	//null null null decoration_under dirty_geometry dirty_decoration dirty_effects dirty_font
-	uint8_t dirty_data = 0x1f;
-
-private:
+	enum class Dirty {
+		Font,
+		Effects,
+		Decoration,
+		Geometry,
+	};
+	EnumSet<Dirty> dirty;
+	bool decoration_under = false;
 };
 
 class RichText final : public Text {

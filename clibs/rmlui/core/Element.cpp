@@ -52,6 +52,7 @@ Element::Element(Document* owner, const std::string& tag)
 	, tag(tag)
 	, owner_document(owner)
 {
+	dirty.insert(Dirty::Definition);
 	assert(tag == StringUtilities::ToLower(tag));
 	assert(owner);
 }
@@ -590,7 +591,7 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::BackgroundImage) ||
 		changed_properties.contains(PropertyId::Opacity))
 	{
-		dirty_background = true;
+		dirty.insert(Dirty::Background);
 	}
 
 	if (border_radius_changed ||
@@ -604,13 +605,13 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::BorderLeftColor) ||
 		changed_properties.contains(PropertyId::Opacity))
 	{
-		dirty_background = true;
+		dirty.insert(Dirty::Background);
 	}
 
 	if (changed_properties.contains(PropertyId::OutlineWidth) ||
 		changed_properties.contains(PropertyId::OutlineColor))
 	{
-		dirty_background = true;
+		dirty.insert(Dirty::Background);
 	}
 
 	if (border_radius_changed ||
@@ -624,7 +625,7 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::BackgroundRepeat) ||
 		changed_properties.contains(PropertyId::Opacity))
 	{
-		dirty_image = true;
+		dirty.insert(Dirty::Image);
 	}
 
 	if (changed_properties.contains(PropertyId::Perspective) ||
@@ -658,11 +659,11 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 	}
 
 	if (changed_properties.contains(PropertyId::Animation)) {
-		dirty_animation = true;
+		dirty.insert(Dirty::Animation);
 	}
 
 	if (changed_properties.contains(PropertyId::Transition)) {
-		dirty_transition = true;
+		dirty.insert(Dirty::Transition);
 	}
 
 	for (auto& child : childnodes) {
@@ -779,10 +780,10 @@ void Element::SetParentNode(Element* _parent) {
 }
 
 void Element::UpdateStackingContext() {
-	if (!dirty_stacking_context) {
+	if (!dirty.contains(Dirty::StackingContext)) {
 		return;
 	}
-	dirty_stacking_context = false;
+	dirty.erase(Dirty::StackingContext);
 	stacking_context.clear();
 	stacking_context.reserve(childnodes.size());
 	for (auto& child : childnodes) {
@@ -796,16 +797,16 @@ void Element::UpdateStackingContext() {
 }
 
 void Element::DirtyStackingContext() {
-	dirty_stacking_context = true;
+	dirty.insert(Dirty::StackingContext);
 }
 
 void Element::DirtyStructure() {
-	dirty_structure = true;
+	dirty.insert(Dirty::Structure);
 }
 
 void Element::UpdateStructure() {
-	if (dirty_structure) {
-		dirty_structure = false;
+	if (dirty.contains(Dirty::Structure)) {
+		dirty.erase(Dirty::Structure);
 		DirtyDefinition();
 	}
 }
@@ -848,10 +849,10 @@ void Element::StartTransition(std::function<void()> f) {
 }
 
 void Element::HandleTransitionProperty() {
-	if (!dirty_transition) {
+	if (!dirty.contains(Dirty::Transition)) {
 		return;
 	}
-	dirty_transition = false;
+	dirty.erase(Dirty::Transition);
 
 	auto keep = GetComputedProperty(PropertyId::Transition)->Get<TransitionList>();
 	if (keep.empty()) {
@@ -874,10 +875,10 @@ void Element::HandleTransitionProperty() {
 }
 
 void Element::HandleAnimationProperty() {
-	if (!dirty_animation) {
+	if (!dirty.contains(Dirty::Animation)) {
 		return;
 	}
-	dirty_animation = false;
+	dirty.erase(Dirty::Animation);
 
 	for (auto& [id, _] : animations) {
 		DelAnimationProperty(id);
@@ -968,13 +969,13 @@ void Element::AdvanceAnimations(float delta) {
 }
 
 void Element::DirtyPerspective() {
-	dirty_perspective = true;
+	dirty.insert(Dirty::Perspective);
 }
 
 void Element::UpdateTransform() {
-	if (!dirty_transform)
+	if (!dirty.contains(Dirty::Transform))
 		return;
-	dirty_transform = false;
+	dirty.erase(Dirty::Transform);
 	glm::mat4x4 new_transform(1);
 	Point origin2d = GetBounds().origin;
 	if (parent) {
@@ -1009,9 +1010,9 @@ void Element::UpdateTransform() {
 }
 
 void Element::UpdatePerspective() {
-	if (!dirty_perspective)
+	if (!dirty.contains(Dirty::Perspective))
 		return;
-	dirty_perspective = false;
+	dirty.erase(Dirty::Perspective);
 	auto p = GetComputedProperty(PropertyId::Perspective);
 	if (!p->Has<PropertyFloat>()) {
 		return;
@@ -1048,7 +1049,7 @@ void Element::UpdatePerspective() {
 }
 
 void Element::UpdateGeometry() {
-	if (dirty_background) {
+	if (dirty.contains(Dirty::Background)) {
 		if (!geometry_background) {
 			geometry_background.reset(new Geometry);
 		}
@@ -1056,10 +1057,10 @@ void Element::UpdateGeometry() {
 			geometry_background->Release();
 		}
 		ElementBackgroundBorder::GenerateGeometry(this, *geometry_background, padding_edge);
-		dirty_background = false;
-		dirty_image = true;
+		dirty.erase(Dirty::Background);
+		dirty.insert(Dirty::Image);
 	}
-	if (dirty_image) {
+	if (dirty.contains(Dirty::Image)) {
 		if (!geometry_image) {
 			geometry_image.reset(new Geometry);
 		}
@@ -1069,7 +1070,7 @@ void Element::UpdateGeometry() {
 		if (!ElementBackgroundImage::GenerateGeometry(this, *geometry_image, padding_edge)) {
 			geometry_image.reset();
 		}
-		dirty_image = false;
+		dirty.erase(Dirty::Image);
 	}
 }
 
@@ -1087,8 +1088,8 @@ void Element::CalculateLayout() {
 	border = GetLayout().GetBorder();
 	DirtyTransform();
 	DirtyClip();
-	dirty_background = true;
-	dirty_image = true;
+	dirty.insert(Dirty::Background);
+	dirty.insert(Dirty::Image);
 	Rect content {};
 	for (auto& child : childnodes) {
 		child->UpdateLayout();
@@ -1159,9 +1160,9 @@ void Element::UnionClip(Clip& c) {
 }
 
 void Element::UpdateClip() {
-	if (!dirty_clip)
+	if (!dirty.contains(Dirty::Clip))
 		return;
-	dirty_clip = false;
+	dirty.erase(Dirty::Clip);
 	for (auto& child : children) {
 		child->DirtyClip();
 	}
@@ -1228,15 +1229,15 @@ void Element::SetRenderStatus() {
 }
 
 void Element::DirtyTransform() {
-	dirty_transform = true;
+	dirty.insert(Dirty::Transform);
 }
 
 void Element::DirtyClip() {
-	dirty_clip = true;
+	dirty.insert(Dirty::Clip);
 }
 
 void Element::DirtyImage() {
-	dirty_image = true;
+	dirty.insert(Dirty::Image);
 }
 
 void Element::AddEventListener(EventListener* listener) {
@@ -1481,10 +1482,10 @@ std::optional<Property> Element::GetComputedProperty(PropertyId id) const {
 }
 
 void Element::UpdateDefinition() {
-	if (!dirty_definition) {
+	if (!dirty.contains(Dirty::Definition)) {
 		return;
 	}
-	dirty_definition = false;
+	dirty.erase(Dirty::Definition);
 	auto new_definition = GetStyleSheet().GetElementDefinition(this);
 	auto& c = Style::Instance();
 	PropertyIdSet changed_properties = c.Diff(definition_properties, new_definition);
@@ -1549,7 +1550,7 @@ void Element::DelAnimationProperty(PropertyId id) {
 }
 
 void Element::DirtyDefinition() {
-	dirty_definition = true;
+	dirty.insert(Dirty::Definition);
 }
 
 void Element::DirtyInheritableProperties() {

@@ -222,16 +222,19 @@ protected:
 	} clip;
 	void UnionClip(Clip& clip);
 
-	bool dirty_transform = false;
-	bool dirty_clip = false;
-	bool dirty_stacking_context = false;
-	bool dirty_structure = false;
-	bool dirty_perspective = false;
-	bool dirty_animation = false;
-	bool dirty_transition = false;
-	bool dirty_background = false;
-	bool dirty_image = false;
-	bool dirty_definition = true;
+	enum class Dirty {
+		Transform,
+		Clip,
+		StackingContext,
+		Structure,
+		Perspective,
+		Animation,
+		Transition,
+		Background,
+		Image,
+		Definition,
+	};
+	EnumSet<Dirty> dirty;
 };
 
 }

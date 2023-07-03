@@ -173,7 +173,6 @@ void Text::Render() {
 	UpdateDecoration(font_face_handle);
 
 	parent->SetRenderStatus();
-	bool decoration_under = (dirty_data & (0x10))>>4;//decoration_under
 	if (decoration_under) {
 		decoration.Render();
 	}
@@ -308,9 +307,9 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::FontSize))
 	{
 		DirtyLayout();
-		dirty_data = dirty_data | (1<<2);//dirty_decoration = true
-		dirty_data = dirty_data | (1<<1);//dirty_effects = true
-		dirty_data = dirty_data | 1;//dirty_font = true
+		dirty.insert(Dirty::Decoration);
+		dirty.insert(Dirty::Effects);
+		dirty.insert(Dirty::Font);
 		layout_changed = true;
 	}
 
@@ -320,12 +319,12 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::TextStrokeWidth) ||
 		changed_properties.contains(PropertyId::TextStrokeColor))
 	{
-		dirty_data = dirty_data | (1<<1);//dirty_effects = true
+		dirty.insert(Dirty::Effects);
 	}
 
 	if (changed_properties.contains(PropertyId::LineHeight)) {
 		DirtyLayout();
-		dirty_data = dirty_data | (1<<2);//dirty_decoration = true
+		dirty.insert(Dirty::Decoration);
 		layout_changed = true;
 	}
 
@@ -334,16 +333,15 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 	}
 
 	if (changed_properties.contains(PropertyId::TextDecorationLine)) {
-		dirty_data = dirty_data | (1<<2);//dirty_decoration = true
+		dirty.insert(Dirty::Decoration);
 	}
 	if (changed_properties.contains(PropertyId::Opacity)) {
-		dirty_data = dirty_data | (1<<1);//dirty_effects = true
+		dirty.insert(Dirty::Effects);
 	}
 	if (changed_properties.contains(PropertyId::Color) || changed_properties.contains(PropertyId::Opacity)) {
-		dirty_data = dirty_data | (1<<3);//dirty_geometry = true
-		dirty_data = dirty_data | (1<<2);//dirty_decoration = true
-		bool dirty_decoration = (dirty_data & (0x4)) >> 2; //dirty_decoration 
-		if (!dirty_decoration) {
+		dirty.insert(Dirty::Geometry);
+		if (decoration) {
+			dirty.insert(Dirty::Decoration);
 			Color color = GetTextDecorationColor();
 			color.ApplyOpacity(GetOpacity());
 			for (auto& vtx : decoration.GetVertices()) {
@@ -354,11 +352,10 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 }
 
 void Text::UpdateTextEffects() {
-	bool dirty_effects = (dirty_data & (0x2)) >> 1; //dirty_dirty_effects
-	if (!dirty_effects || GetFontFaceHandle() == 0)
+	if (!dirty.contains(Dirty::Effects) || GetFontFaceHandle() == 0)
 		return;
 	
-	dirty_data = dirty_data & (0x1d);//dirty_effects = false;
+	dirty.erase(Dirty::Effects);
 
 	auto shadow = GetTextShadow();
 	auto stroke = GetTextStroke();
@@ -376,12 +373,11 @@ void Text::UpdateTextEffects() {
 }
 
 void Text::UpdateGeometry(const FontFaceHandle font_face_handle) {
-	bool dirty_geometry = dirty_data & (1<<3);
-	if (!dirty_geometry) {
+	if (!dirty.contains(Dirty::Geometry)) {
 		return;
 	}
-	dirty_data = dirty_data & (0x17);//dirty_geometry = false
-	dirty_data = dirty_data | (1<<2);//dirty_decoration = true
+	dirty.erase(Dirty::Geometry);
+	dirty.insert(Dirty::Decoration);
 	Color color = GetTextColor();
 	color.ApplyOpacity(GetOpacity());
 	GetRenderInterface()->GenerateString(font_face_handle, lines, color, geometry);		
@@ -389,11 +385,10 @@ void Text::UpdateGeometry(const FontFaceHandle font_face_handle) {
 }
 
 void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
-	bool dirty_decoration = (dirty_data & (0x4)) >> 2; //dirty_decoration 
-	if (!dirty_decoration) {
+	if (!dirty.contains(Dirty::Decoration)) {
 		return;
 	}
-	dirty_data = dirty_data & (0x1b);//dirty_decoration = false;
+	dirty.erase(Dirty::Decoration);
 	decoration.Release();
 	Style::TextDecorationLine text_decoration_line = GetTextDecorationLine();
 	if (text_decoration_line == Style::TextDecorationLine::None) {
@@ -411,21 +406,21 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 		switch (text_decoration_line) {
 		case Style::TextDecorationLine::Underline: {
 			position.y += -underline_position;
-			dirty_data = dirty_data | (1<<4);//decoration_under = true
+			decoration_under = true;
 			break;
 		}
 		case Style::TextDecorationLine::Overline: {
 			int baseline = GetRenderInterface()->GetBaseline(font_face_handle);
 			int line_height = GetRenderInterface()->GetLineHeight(font_face_handle);
 			position.y += baseline - line_height;
-			dirty_data = dirty_data | (1<<4);//decoration_under = true
+			decoration_under = true;
 			break;
 		}
 		case Style::TextDecorationLine::LineThrough: {
 			int baseline = GetRenderInterface()->GetBaseline(font_face_handle);
 			int line_height = GetRenderInterface()->GetLineHeight(font_face_handle);
 			position.y += baseline - 0.5f * line_height;
-			dirty_data = dirty_data & (0xf);//decoration_under = false
+			decoration_under = false;
 			break;
 		}
 		default: return;
@@ -440,8 +435,8 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 
 Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {
 	lines.clear();
-	dirty_data = dirty_data | (1<<3);//dirty_geometry = true
-	dirty_data = dirty_data | (1<<2);//dirty_decoration = true
+	dirty.insert(Dirty::Geometry);
+	dirty.insert(Dirty::Decoration);
 
 	if (GetFontFaceHandle() == 0) {
 		return Size(0, 0);
@@ -545,11 +540,10 @@ Color Text::GetTextColor() {
 }
 
 FontFaceHandle Text::GetFontFaceHandle() {
-	bool dirty_font= dirty_data & 1;//dirty_font
-	if (!dirty_font) {
+	if (!dirty.contains(Dirty::Font)) {
 		return font_handle;
 	}
-	dirty_data = dirty_data & (0x1e);//dirty_font = false;
+	dirty.erase(Dirty::Font);
 	std::string family = StringUtilities::ToLower(GetProperty<std::string>(PropertyId::FontFamily));
 	Style::FontStyle style   = GetProperty<Style::FontStyle>(PropertyId::FontStyle);
 	Style::FontWeight weight = GetProperty<Style::FontWeight>(PropertyId::FontWeight);
@@ -650,8 +644,8 @@ float RichText::GetTokenWidth(FontFaceHandle font_face_handle, std::string& toke
 
 Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {
 	lines.clear();
-	dirty_data = dirty_data | (1<<3);//dirty_geometry = true
-	dirty_data = dirty_data | (1<<2);//dirty_decoration = true
+	dirty.insert(Dirty::Geometry);
+	dirty.insert(Dirty::Decoration);
 	if (GetFontFaceHandle() == 0) {
 		return Size(0, 0);
 	}
@@ -716,12 +710,11 @@ Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float ma
 }
 
 void RichText::UpdateGeometry(const FontFaceHandle font_face_handle) {
-	bool dirty_geometry = dirty_data & (1<<3);//dirty_geometry
-	if (!dirty_geometry) {
+	if (!dirty.contains(Dirty::Geometry)) {
 		return;
 	}
-	dirty_data = dirty_data & (0x17);//dirty_geometry = false
-	dirty_data = dirty_data | (1<<2);//dirty_decoration = true
+	dirty.erase(Dirty::Geometry);
+	dirty.insert(Dirty::Decoration);
 	cur_image_idx = 0;
 	float line_height = GetLineHeight();
 	GetRenderInterface()->GenerateRichString(font_face_handle, lines, codepoints, geometry, imagegeometries, images, cur_image_idx, line_height);
@@ -744,7 +737,6 @@ void RichText::Render() {
 	UpdateDecoration(font_face_handle);
 	UpdateGeometry(font_face_handle);
 	parent->SetRenderStatus();
-	bool decoration_under = (dirty_data & (0x10))>>4; //decoration_under
 	if (decoration_under) {
 		decoration.Render();
 	}
