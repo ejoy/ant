@@ -38,6 +38,9 @@ local modifierevent = world:sub {"modifier"}
 function modifier_sys:entity_ready()
     for _, m, desc in modifierevent:unpack() do
         local e <close> = w:entity(m.eid, "modifier:in")
+        if not e then
+            goto continue
+        end
         local mf = e.modifier
         mf.continue = true
         mf.keep = desc.forwards
@@ -49,6 +52,7 @@ function modifier_sys:entity_ready()
                 ika.play(anim, desc)
             end
         end
+        ::continue::
     end
 end
 function modifier_sys:exit()
