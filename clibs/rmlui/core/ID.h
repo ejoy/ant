@@ -26,8 +26,6 @@ enum class ShorthandId : uint8_t {
 	TextStroke,
 	TextDecoration,
 	Outline,
-
-	NumDefinedIds,
 };
 
 enum class PropertyId : uint8_t {
@@ -131,8 +129,6 @@ enum class PropertyId : uint8_t {
 	PointerEvents,
 	ScrollLeft,
 	ScrollTop,
-
-	NumDefinedIds,
 };
 
 }
