@@ -68,6 +68,14 @@ namespace ecs_api {
         template <typename T>
             requires (
                 !std::is_function_v<T>
+                && !component_meta<T>::tag
+            )
+        T* fetch(int i) noexcept {
+            return (T*)entity_fetch(ctx(), component_meta<T>::id, i, nullptr);
+        }
+        template <typename T>
+            requires (
+                !std::is_function_v<T>
                 && component_meta<T>::tag
             )
         bool component(ecs_token token, [[maybe_unused]] int i) noexcept {
@@ -191,6 +199,7 @@ namespace ecs_api {
         }
     }
 
+    struct find_t {};
     struct create_t {};
     struct first_t {};
 
@@ -207,35 +216,33 @@ namespace ecs_api {
                 && component_meta<MainKey>::id == EID
                 && sizeof...(SubKey) == 0
             )
-        basic_entity(ecs_context* ctx, Component eid) noexcept
+        basic_entity(find_t, ecs_context* ctx, Component eid) noexcept
             : ctx(context::create(ctx)) {
             index = entity_index(ctx, (void*)eid, &token);
             if (index >= 0) {
                 std::get<Component*>(c) = (Component*)eid;
             }
         }
-        template <typename Tag>
+        template <typename ...Args>
             requires (
-                std::is_same_v<Tag, create_t>
-                && sizeof...(SubKey) == 0
+                sizeof...(SubKey) == 0
             )
-        basic_entity(ecs_context* ctx, Tag) noexcept
+        basic_entity(create_t, ecs_context* ctx, Args... args) noexcept
             : ctx(context::create(ctx)) {
-            index = entity_new(ctx, component_meta<MainKey>::id, NULL);
+            index = entity_new(ctx, component_meta<MainKey>::id, &token);
             if (index == kInvalidIndex) {
                 return;
             }
-            auto v = this->ctx.template fetch<MainKey>(index, token);
-            if (v) {
+            if constexpr (!component_meta<MainKey>::tag) {
+                auto v = this->ctx.template fetch<MainKey>(index);
                 assert(v);
-                assgin<0>(v);
+                if (v) {
+                    assgin<0>(v);
+                    new (v) MainKey(std::forward<Args>(args)...);
+                }
             }
         }
-        template <typename Tag>
-            requires (
-                std::is_same_v<Tag, first_t>
-            )
-        basic_entity(ecs_context* ctx, Tag) noexcept
+        basic_entity(first_t, ecs_context* ctx) noexcept
             : ctx(context::create(ctx)) {
             next();
         }
@@ -471,20 +478,20 @@ namespace ecs_api {
         return (size_t)entity_count(ctx, component_meta<Component>::id);
     }
 
-    template <typename Component>
-    auto create_entity(ecs_context* ctx) noexcept {
-        return entity<Component>(ctx, create_t {});
+    template <typename Component, typename ...Args>
+    auto create_entity(ecs_context* ctx, Args... args) noexcept {
+        return entity<Component>(create_t {}, ctx, std::forward<Args>(args)...);
     }
 
     template <typename ...Args>
     auto first_entity(ecs_context* ctx) noexcept {
-        return entity<Args...>(ctx, first_t {});
+        return entity<Args...>(first_t {}, ctx);
     }
 
     template <typename Component>
         requires (component_meta<Component>::id == EID)
     auto find_entity(ecs_context* ctx, Component eid) noexcept {
-        return entity<Component>(ctx, eid);
+        return entity<Component>(find_t {}, ctx, eid);
     }
 
     template <typename Component>
