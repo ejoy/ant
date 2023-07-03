@@ -38,8 +38,9 @@ public:
 	std::string GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
 	bool IgnorePointerEvents() const;
 
-	float GetFontSize() const;
 	float GetOpacity();
+	bool IsGray();
+	float GetFontSize() const;
 	bool UpdataFontSize();
 
 	void SetAttribute(const std::string& name, const std::string& value);

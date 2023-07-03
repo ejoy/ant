@@ -33,8 +33,6 @@ protected:
 		}
 	}
 
-	float GetOpacity();
-
 	void SetParentNode(Element* parent) override;
 	void SetDataModel(DataModel* data_model) override;
 	Node* Clone(bool deep = true) const override;

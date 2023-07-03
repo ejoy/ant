@@ -206,6 +206,10 @@ bool Element::UpdataFontSize() {
 	return false;
 }
 
+bool Element::IsGray() {
+	return GetComputedProperty(PropertyId::Filter)->Get<Style::Filter>() == Style::Filter::Gray;
+}
+
 float Element::GetOpacity() {
 	auto property = GetComputedProperty(PropertyId::Opacity);
 	return property->Get<PropertyFloat>().value;
@@ -1220,7 +1224,7 @@ void Element::UpdateClip() {
 void Element::SetRenderStatus() {
 	auto render = GetRenderInterface();
 	render->SetTransform(transform);
-	render->SetGray(GetComputedProperty(PropertyId::Filter)->Get<Style::Filter>() == Style::Filter::Gray);
+	render->SetGray(IsGray());
 	switch (clip.type) {
 	case Clip::Type::None:    render->SetClipRect();             break;
 	case Clip::Type::Scissor: render->SetClipRect(clip.scissor); break;

@@ -156,13 +156,6 @@ std::optional<Property> Text::GetComputedProperty(PropertyId id) {
 	return parent->GetComputedProperty(id);
 }
 
-float Text::GetOpacity() {
-	if (!parent) {
-		return 1.f;
-	}
-	return parent->GetOpacity();
-}
-
 void Text::Render() {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 	if (font_face_handle == 0)
@@ -338,16 +331,21 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 	if (changed_properties.contains(PropertyId::Opacity)) {
 		dirty.insert(Dirty::Effects);
 	}
-	if (changed_properties.contains(PropertyId::Color) || changed_properties.contains(PropertyId::Opacity)) {
+	if (changed_properties.contains(PropertyId::Color) ||
+		changed_properties.contains(PropertyId::Opacity)
+	) {
 		dirty.insert(Dirty::Geometry);
 		if (decoration) {
 			dirty.insert(Dirty::Decoration);
 			Color color = GetTextDecorationColor();
-			color.ApplyOpacity(GetOpacity());
+			color.ApplyOpacity(parent->GetOpacity());
 			for (auto& vtx : decoration.GetVertices()) {
 				vtx.col = color;
 			}
 		}
+	}
+	if (changed_properties.contains(PropertyId::Filter)) {
+		dirty.insert(Dirty::Geometry);
 	}
 }
 
@@ -361,11 +359,11 @@ void Text::UpdateTextEffects() {
 	auto stroke = GetTextStroke();
 	TextEffects text_effects;
 	if (shadow) {
-		shadow->color.ApplyOpacity(GetOpacity());
+		shadow->color.ApplyOpacity(parent->GetOpacity());
 		text_effects.emplace_back(*shadow);
 	}
 	if (stroke) {
-		stroke->color.ApplyOpacity(GetOpacity());
+		stroke->color.ApplyOpacity(parent->GetOpacity());
 		text_effects.emplace_back(*stroke);
 	}
 	auto material = GetRenderInterface()->CreateFontMaterial(text_effects);
@@ -377,11 +375,12 @@ void Text::UpdateGeometry(const FontFaceHandle font_face_handle) {
 		return;
 	}
 	dirty.erase(Dirty::Geometry);
-	dirty.insert(Dirty::Decoration);
 	Color color = GetTextColor();
-	color.ApplyOpacity(GetOpacity());
-	GetRenderInterface()->GenerateString(font_face_handle, lines, color, geometry);		
-
+	color.ApplyOpacity(parent->GetOpacity());
+	GetRenderInterface()->GenerateString(font_face_handle, lines, color, geometry);
+	if (parent->IsGray()) {
+		geometry.SetGray();
+	}
 }
 
 void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
@@ -395,7 +394,7 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 		return;
 	}
 	Color color = GetTextDecorationColor();
-	color.ApplyOpacity(GetOpacity());
+	color.ApplyOpacity(parent->GetOpacity());
 	for (const Line& line : lines) {
 		Point position = line.position;
 		float width = (float)line.width;
@@ -714,10 +713,12 @@ void RichText::UpdateGeometry(const FontFaceHandle font_face_handle) {
 		return;
 	}
 	dirty.erase(Dirty::Geometry);
-	dirty.insert(Dirty::Decoration);
 	cur_image_idx = 0;
 	float line_height = GetLineHeight();
 	GetRenderInterface()->GenerateRichString(font_face_handle, lines, codepoints, geometry, imagegeometries, images, cur_image_idx, line_height);
+	if (parent->IsGray()) {
+		geometry.SetGray();
+	}
 }
 
 void RichText::UpdateImageMaterials() {

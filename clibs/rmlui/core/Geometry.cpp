@@ -296,4 +296,10 @@ void Geometry::Path::DrawArc(const Point& center, float radius_a, float radius_b
 	}
 }
 
+void Geometry::SetGray() {
+	for (auto& vtx : vertices) {
+		vtx.col.SetGray();
+	}
+}
+
 }
