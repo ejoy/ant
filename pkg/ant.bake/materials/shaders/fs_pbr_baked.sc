@@ -7,7 +7,6 @@ $input v_texcoord0, v_normal, v_tangent, v_bitangent, v_posWS
 #include "common/transform.sh"
 #include "common/utils.sh"
 #include "common/cluster_shading.sh"
-#include "pbr/pbr.sh"
 #include "pbr/lighting.sh"
 
 // material properites

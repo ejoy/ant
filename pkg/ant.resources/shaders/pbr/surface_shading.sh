@@ -1,92 +1,144 @@
 #ifndef __SURFACE_SHADING_SH__
 #define __SURFACE_SHADING_SH__
 
-#include "brdf.sh"
+#include "common/math.sh"
 
-#if defined(MATERIAL_HAS_SHEEN_COLOR)
-vec3 sheenLobe(const material_info mi, float NoV, float NoL, float NoH) {
-    float D = distributionCloth(mi.sheenRoughness, NoH);
-    float V = visibilityCloth(NoV, NoL);
+#ifndef SHADING_WITH_HIGH_QUALITY
+#define SHADING_WITH_HIGH_QUALITY 1
+#endif //
 
-    return (D * V) * mi.sheenColor;
+//------------------------------------------------------------------------------
+// Specular BRDF implementations
+//------------------------------------------------------------------------------
+
+float D_GGX(float roughness, float NdotH, vec3 h, vec3 N) {
+    // Walter et al. 2007, "Microfacet Models for Refraction through Rough Surfaces"
+
+    // In mediump, there are two problems computing 1.0 - NdotH^2
+    // 1) 1.0 - NdotH^2 suffers floating point cancellation when NdotH^2 is close to 1 (highlights)
+    // 2) NdotH doesn't have enough precision around 1.0
+    // Both problem can be fixed by computing 1-NdotH^2 in highp and providing NdotH in highp as well
+
+    // However, we can do better using Lagrange's identity:
+    //      ||a x b||^2 = ||a||^2 ||b||^2 - (a . b)^2
+    // since N and H are unit vectors: ||N x H||^2 = 1.0 - NdotH^2
+    // This computes 1.0 - NdotH^2 directly (which is close to zero in the highlights and has
+    // enough precision).
+    // Overall this yields better performance, keeping all computations in mediump
+#if SHADING_WITH_HIGH_QUALITY
+    float oneMinusNoHSquared = 1.0 - NdotH * NdotH;
+#else //!SHADING_WITH_HIGH_QUALITY
+    vec3 NxH = cross(N, h);
+    float oneMinusNoHSquared = dot(NxH, NxH);
+#endif //SHADING_WITH_HIGH_QUALITY
+
+    float a = NdotH * roughness;
+    float k = roughness / (oneMinusNoHSquared + a * a);
+    float d = k * k * (1.0 / PI);
+    return saturateMediump(d);
 }
-#endif
 
-#if defined(MATERIAL_HAS_CLEAR_COAT)
-float clearCoatLobe(const material_info mi, const vec3 h, float NoH, float LoH, out float Fcc) {
-#if defined(MATERIAL_HAS_NORMAL) || defined(MATERIAL_HAS_CLEAR_COAT_NORMAL)
-    // If the material has a normal map, we want to use the geometric normal
-    // instead to avoid applying the normal map details to the clear coat layer
-    float clearCoatNoH = saturate(dot(shading_clearCoatNormal, h));
-#else
-    float clearCoatNoH = NoH;
-#endif
-
-    // clear coat specular lobe
-    float D = distributionClearCoat(mi.clearCoatRoughness, clearCoatNoH, h);
-    float V = visibilityClearCoat(LoH);
-    float F = F_Schlick(0.04, 1.0, LoH) * mi.clearCoat; // fix IOR to 1.5
-
-    Fcc = F;
-    return D * V * F;
+float V_SmithGGXCorrelated(float roughness, float NdotV, float NdotL) {
+    // Heitz 2014, "Understanding the Masking-Shadowing Function in Microfacet-Based BRDFs"
+    float a2 = roughness * roughness;
+    // TODO: lambdaV can be pre-computed for all the lights, it should be moved out of this function
+    float lambdaV = NdotL * sqrt((NdotV - a2 * NdotV) * NdotV + a2);
+    float lambdaL = NdotV * sqrt((NdotL - a2 * NdotL) * NdotL + a2);
+    float v = 0.5 / (lambdaV + lambdaL);
+    // a2=0 => v = 1 / 4*NdotL*NdotV   => min=1/4, max=+inf
+    // a2=1 => v = 1 / 2*(NdotL+NdotV) => min=1/4, max=+inf
+    // clamp to the maximum value representable in mediump
+    return saturateMediump(v);
 }
-#endif
 
-vec3 isotropicLobe(const material_info mi, const vec3 h,
-        float NoV, float NoL, float NoH, float LoH) {
+float V_SmithGGXCorrelated_Fast(float roughness, float NdotV, float NdotL) {
+    // Hammon 2017, "PBR Diffuse Lighting for GGX+Smith Microsurfaces"
+    float v = 0.5 / mix(2.0 * NdotL * NdotV, NdotL + NdotV, roughness);
+    return saturateMediump(v);
+}
 
-    float D = distribution(mi.roughness, NoH, h);
-    float V = visibility(mi.roughness, NoV, NoL);
-    vec3  F = fresnel(mi.f0, LoH);
+float V_Neubelt(float NdotV, float NdotL) {
+    // Neubelt and Pettineo 2013, "Crafting a Next-gen Material Pipeline for The Order: 1886"
+    return saturateMediump(1.0 / (4.0 * (NdotL + NdotV - NdotL * NdotV)));
+}
+
+vec3 F_Schlick(const vec3 f0, float f90, float VdotH) {
+    // Schlick 1994, "An Inexpensive BRDF Model for Physically-Based Rendering"
+    return f0 + (f90 - f0) * pow5(1.0 - VdotH);
+}
+
+vec3 F_Schlick(const vec3 f0, float VdotH) {
+    float f = pow(1.0 - VdotH, 5.0);
+    return f + f0 * (1.0 - f);
+}
+
+float F_Schlick(float f0, float f90, float VdotH) {
+    return f0 + (f90 - f0) * pow5(1.0 - VdotH);
+}
+
+///// Specular
+float distribution(float roughness, float NdotH, vec3 h, vec3 N) {
+    return D_GGX(roughness, NdotH, h, N);
+}
+
+float visibility(float roughness, float NdotV, float NdotL) {
+#if SHADING_WITH_HIGH_QUALITY
+    return V_SmithGGXCorrelated(roughness, NdotV, NdotL);
+#else //!SHADING_WITH_HIGH_QUALITY
+    return V_SmithGGXCorrelated_Fast(roughness, NdotV, NdotL);
+#endif //SHADING_WITH_HIGH_QUALITY
+}
+
+vec3 fresnel(vec3 f0, float LdotH) {
+#if SHADING_WITH_HIGH_QUALITY
+    float f90 = saturate(dot(f0, vec3_splat(50.0 * 0.33)));
+    return F_Schlick(f0, f90, LdotH);
+#else //!SHADING_WITH_HIGH_QUALITY
+    return F_Schlick(f0, LdotH); // f90 = 1.0
+#endif //SHADING_WITH_HIGH_QUALITY
+}
+
+vec3 specular_lobe(material_info mi, light_info light, vec3 h,
+        float NdotH, float LdotH) {
+
+    float D = distribution(mi.roughness, NdotH, h, mi.N);
+    float V = visibility(mi.roughness, mi.NdotV, mi.NdotL);
+    vec3  F = fresnel(mi.f0, LdotH);
 
     return (D * V) * F;
 }
 
-vec3 specularLobe(const material_info mi, const light_info light, const vec3 h,
-        float NoV, float NoL, float NoH, float LoH) {
-    return isotropicLobe(mi, h, NoV, NoL, NoH, LoH);
+///////// diffuse
+float Fd_Lambert() {
+    return 1.0 / PI;
 }
 
-vec3 diffuseLobe(const material_info mi, float NoV, float NoL, float LoH) {
-    return mi.albedo * diffuse(mi.roughness, NoV, NoL, LoH);
+float Fd_Burley(float roughness, float NdotV, float NdotL, float LdotH) {
+    // Burley 2012, "Physically-Based Shading at Disney"
+    float f90 = 0.5 + 2.0 * roughness * LdotH * LdotH;
+    float lightScatter = F_Schlick(1.0, f90, NdotL);
+    float viewScatter  = F_Schlick(1.0, f90, NdotV);
+    return lightScatter * viewScatter * (1.0 / PI);
 }
 
-/**
- * Evaluates lit materials with the standard shading model. This model comprises
- * of 2 BRDFs: an optional clear coat BRDF, and a regular surface BRDF.
- *
- * Surface BRDF
- * The surface BRDF uses a diffuse lobe and a specular lobe to render both
- * dielectrics and conductors. The specular lobe is based on the Cook-Torrance
- * micro-facet model (see brdf.fs for more details). In addition, the specular
- * can be either isotropic or anisotropic.
- *
- * Clear coat BRDF
- * The clear coat BRDF simulates a transparent, absorbing dielectric layer on
- * top of the surface. Its IOR is set to 1.5 (polyutherane) to simplify
- * our computations. This BRDF only contains a specular lobe and while based
- * on the Cook-Torrance microfacet model, it uses cheaper terms than the surface
- * BRDF's specular lobe (see brdf.fs).
- */
-vec3 surfaceShading(const material_info mi, const light_info light) {
+vec3 diffuse_lobe(const material_info mi, float LdotH) {
+#if SHADING_WITH_HIGH_QUALITY
+    return mi.albedo * Fd_Burley(mi.roughness, mi.NdotV, mi.NdotL, LdotH);
+#else //!SHADING_WITH_HIGH_QUALITY
+    return mi.albedo * Fd_Lambert();
+#endif //SHADING_WITH_HIGH_QUALITY
+}
+
+vec3 surface_shading(const material_info mi, const light_info light) {
     vec3 h = normalize(mi.V + light.pt2l);
 
-    float NoV = mi.NdotV;
-    float NoL = mi.NdotL;
-    float NoH = saturate(dot(mi.N, h));
-    float LoH = saturate(dot(light.pt2l, h));
+    float NdotH = saturate(dot(mi.N, h));
+    float LdotH = saturate(dot(light.pt2l, h));
 
-    vec3 Fr = specularLobe(mi, light, h, NoV, NoL, NoH, LoH);
-    vec3 Fd = diffuseLobe(mi, NoV, NoL, LoH);
-
-    // TODO: attenuate the diffuse lobe to avoid energy gain
-
-    // The energy compensation term is used to counteract the darkening effect
-    // at high roughness
-    float energyCompensation = 1.0;//mi.energyCompensation;
-    vec3 color = Fd + Fr * energyCompensation;
+    vec3 color =    diffuse_lobe(mi, LdotH) + 
+                    specular_lobe(mi, light, h, NdotH, LdotH);
 
     return (color * light.color.rgb) *
-            (light.intensity * light.attenuation * NoL);
+            (light.intensity * light.attenuation * mi.NdotL);
 }
 #endif //__SURFACE_SHADING_SH__

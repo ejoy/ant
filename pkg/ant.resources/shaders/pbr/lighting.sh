@@ -7,7 +7,6 @@
 #include "common/shadow.sh"
 #endif //ENABLE_SHADOW
 
-#include "pbr/pbr.sh"
 #include "pbr/material_info.sh"
 
 #include "pbr/indirect_lighting.sh"
@@ -78,9 +77,7 @@ light_info get_light(uint ilight, vec3 posWS)
     return l;
 }
 
-#ifdef NEW_LIGHTING
 #include "pbr/surface_shading.sh"
-#endif //NEW_LIGHTING
 
 #if BGFX_SHADER_TYPE_FRAGMENT
 float directional_light_visibility(in input_attributes input_attribs)
@@ -97,7 +94,7 @@ vec3 shading_color(in input_attributes input_attribs, in material_info mi, in ui
 {
     const light_info l = get_light(0, input_attribs.posWS);
     mi.NdotL = dot(mi.N, l.pt2l);
-    return mi.NdotL > 0 ? surfaceShading(mi, l) : vec3_splat(0.0);
+    return mi.NdotL > 0 ? surface_shading(mi, l) : vec3_splat(0.0);
 }
 
 #ifdef ENABLE_DEBUG_CASCADE_LEVEL
