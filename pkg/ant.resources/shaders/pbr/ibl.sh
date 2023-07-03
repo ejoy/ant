@@ -110,22 +110,23 @@ vec3 IndirectSpecularProcessing_New(vec3 rf0specColor, float rf90glossinessColor
     return rf0specColor * scale + bias;
 }
 
-vec3 get_IBL_radiance_GGX(in material_info mi)
+vec3 get_IBL_DFG(vec3 f0, float f90, float NdotV, float perceptual_roughness)
+{
+#ifdef USE_IBL_LUT
+    const vec2 lut_uv = vec2(NdotV, perceptual_roughness);
+    const vec2 lut = texture2D(s_LUT, lut_uv).rg;
+    return (f0 * lut.x + vec3_splat(f90 * lut.y));
+#else   //!USE_IBL_LUT
+    return IndirectSpecularProcessing_New(f0, f90, NdotV);
+#endif  //USE_IBL_LUT
+}
+
+vec3 get_IBL_radiance(in material_info mi)
 {
     const float last_mipmap = u_ibl_prefilter_mipmap_count-1.0; //make roughness [0, 1] to [0, last_mipmap]
     const float lod = clamp(mi.perceptual_roughness*last_mipmap, 0.0, last_mipmap);
 
-#ifdef USE_IBL_LUT
-    const vec2 lut_uv = vec2(mi.NdotV, mi.perceptual_roughness);
-    const vec2 lut = texture2D(s_LUT, lut_uv).rg;
-    const vec3 specular_color = (mi.f0 * lut.x + vec3_splat(mi.f90 * lut.y));
-#else   //!USE_IBL_LUT
-    const vec3 specular_color = IndirectSpecularProcessing_New(mi.f0, mi.f90, mi.NdotV);
-#endif  //USE_IBL_LUT
-
-    const vec3 specular_light = textureCubeLod(s_prefilter, mi.reflect_vector, lod).rgb;
-    const float surface_reduction = 1.0 / (mi.roughness + 1.0);
-    return specular_light * specular_color;
+    return textureCubeLod(s_prefilter, mi.reflect_vector, lod).rgb;
 }
 
 #endif //_IBL_SH_

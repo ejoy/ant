@@ -136,7 +136,7 @@ vec3 surface_shading(const material_info mi, const light_info light) {
     float LdotH = saturate(dot(light.pt2l, h));
 
     vec3 color =    diffuse_lobe(mi, LdotH) + 
-                    specular_lobe(mi, light, h, NdotH, LdotH);
+                    specular_lobe(mi, light, h, NdotH, LdotH) * mi.energy_compensation;
 
     return (color * light.color.rgb) *
             (light.intensity * light.attenuation * mi.NdotL);
