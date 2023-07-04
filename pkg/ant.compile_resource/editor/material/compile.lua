@@ -12,10 +12,13 @@ local ENABLE_SHADOW<const>      = setting:get "graphic/shadow/enable"
 
 local function DEF_FUNC() end
 
+local SHADER_BASE_LOCAL = "/pkg/ant.resources/shaders"
 local SHADER_BASE<const>            = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
-local function shader_includes()
+local function shader_includes(include_path)
+    local INCLUDE_BASE = lfs.absolute(include_path)
     return {
         SHADER_BASE,
+        INCLUDE_BASE
     }
 end
 
@@ -110,17 +113,14 @@ local function default_macros(setting)
 end
 
 local function is_pbr_material(mat)
-    local is_default_func = (not mat.fx.fs_code) or mat.fx.fs_code:match('\n#include "common/default_fs_func.sh"\n')
-    local is_glb_pbr
-    local pbr
-    if mat.fx.vs and mat.fx.fs then
-        is_glb_pbr = mat.fx.vs:match "/pkg/ant.resources/shaders/dynamic_material/vs_default.sc" and
-        mat.fx.fs:match "/pkg/ant.resources/shaders/dynamic_material/fs_default.sc"
-        pbr = mat.fx.vs:match "/pkg/ant.resources/shaders/pbr/vs_pbr.sc" and mat.fx.fs:match "/pkg/ant.resources/shaders/pbr/fs_pbr.sc"
+    local is_dynamic_material = mat.fx.shader_type
+    if is_dynamic_material then
+        return mat.fx.shader_type == "PBR"
+    else
+        if mat.fx.vs and mat.fx.fs then
+            return mat.fx.vs:match "/pkg/ant.resources/shaders/pbr/vs_pbr.sc" and mat.fx.fs:match "/pkg/ant.resources/shaders/pbr/fs_pbr.sc"
+        end
     end
-    local glb_pbr = is_default_func and is_glb_pbr
-
-    return glb_pbr or pbr
 end
 
 local PBR_TEXTURE_MACROS<const> = {
@@ -202,6 +202,8 @@ local DEF_VARYING_FILE<const> = SHADER_BASE / "common/varying_def.sh"
 local DEF_VARYING_FILE_GLB<const> = SHADER_BASE / "common/varying.def.sc"
 local DEF_VS_FILE<const> = SHADER_BASE / "dynamic_material/vs_default.sc"
 local DEF_FS_FILE<const> = SHADER_BASE / "dynamic_material/fs_default.sc"
+local DEF_VS_FILE_LOCAL<const> = SHADER_BASE_LOCAL .. "dynamic_material/vs_default.sc"
+local DEF_FS_FILE_LOCAL<const> = SHADER_BASE_LOCAL .. "dynamic_material/fs_default.sc"
 
 local function replace_custom_func(default_file, temp_file, mat, stage)
     local file_read<close> = assert(lfs.open(default_file, "r"))
@@ -217,81 +219,66 @@ local function replace_custom_func(default_file, temp_file, mat, stage)
     file_write:write(file_read_compile)
 end
 
-local function compile(tasks, deps, mat, output, localpath)
+local function compile(tasks, deps, mat, input, output, localpath)
     local setting = config.get "material".setting
+    local include_path = string.gsub(tostring(input), "%/[%w_]+%.material", "")
     lfs.remove_all(output)
     lfs.create_directories(output)
     local fx = mat.fx
     mergeCfgSetting(fx, localpath)
     writefile(output / "main.cfg", mat)
+    if fx.shader_type == "DEPTH" then
+        fx["vs"] = DEF_VS_FILE_LOCAL
+    elseif fx.shader_type == "CUSTOM" or fx.shader_type == "PBR" then
+        fx["vs"] = DEF_VS_FILE_LOCAL
+        fx["fs"] = DEF_FS_FILE_LOCAL
+    end
     for _, stage in ipairs {"vs","fs","cs"} do
         local temp_file = output / (stage..".sc")
         local default_file
         if fx[stage] then
-            local is_glb_mat = (mat.fx[stage] == "/pkg/ant.resources/shaders/dynamic_material/fs_default.sc") or (mat.fx[stage] == "/pkg/ant.resources/shaders/dynamic_material/vs_default.sc")
-            if is_glb_mat then
-                parallel_task.add(tasks, function ()
+            parallel_task.add(tasks, function ()
+                local is_dynamic_material = fx.shader_type
+                if not is_dynamic_material then
+                    temp_file = localpath(fx[stage])
+                else
                     if stage == "vs" then
                         default_file = DEF_VS_FILE
                     else
                         default_file = DEF_FS_FILE
                     end
-                    
                     replace_custom_func(default_file, temp_file, mat, stage)
-                    
-                    local varying_path = fx.varying_path
+                end
+
+                local varying_path
+                if is_dynamic_material then
+                    varying_path = DEF_VARYING_FILE_GLB
+                else
+                    varying_path = fx.varying_path
                     if varying_path then
                         varying_path = localpath(varying_path)
                     else
-                        if not lfs.exists(default_file:parent_path() / "varying.def.sc") then
-                            varying_path = DEF_VARYING_FILE_GLB
-                        end
-                    end
-                    local ok, res = toolset.compile {
-                        platform = setting.os,
-                        renderer = setting.renderer,
-                        input = temp_file,
-                        output = output / (stage..".bin"),
-                        includes = shader_includes(),
-                        stage = stage,
-                        varying_path = varying_path,
-                        macros = get_macros(setting, mat),
-                        debug = compile_debug_shader(setting.os, setting.renderer),
-                    }
-                    if not ok then
-                        error("compile failed: " .. output:string() .. "\n" .. res)
-                    end
-                    depends.append(deps, res)
-                    --os.remove(tostring(temp_file))
-                end)
-            else
-                parallel_task.add(tasks, function ()
-                    local inputpath = localpath(fx[stage])
-                    local varying_path = fx.varying_path
-                    if varying_path then
-                        varying_path = localpath(varying_path)
-                    else
-                        if not lfs.exists(inputpath:parent_path() / "varying.def.sc") then
+                        if not lfs.exists(temp_file:parent_path() / "varying.def.sc") then
                             varying_path = DEF_VARYING_FILE
                         end
                     end
-                    local ok, res = toolset.compile {
-                        platform = setting.os,
-                        renderer = setting.renderer,
-                        input = inputpath,
-                        output = output / (stage..".bin"),
-                        includes = shader_includes(),
-                        stage = stage,
-                        varying_path = varying_path,
-                        macros = get_macros(setting, mat),
-                        debug = compile_debug_shader(setting.os, setting.renderer),
-                    }
-                    if not ok then
-                        error("compile failed: " .. output:string() .. "\n" .. res)
-                    end
-                    depends.append(deps, res)
-                end) 
-            end
+                end
+                local ok, res = toolset.compile {
+                    platform = setting.os,
+                    renderer = setting.renderer,
+                    input = temp_file,
+                    output = output / (stage..".bin"),
+                    includes = shader_includes(include_path),
+                    stage = stage,
+                    varying_path = varying_path,
+                    macros = get_macros(setting, mat),
+                    debug = compile_debug_shader(setting.os, setting.renderer),
+                }
+                if not ok then
+                    error("compile failed: " .. output:string() .. "\n" .. res)
+                end
+                depends.append(deps, res)
+            end)            
         end
     end
 end

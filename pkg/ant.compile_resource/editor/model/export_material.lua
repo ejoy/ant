@@ -121,6 +121,7 @@ end
 
 local function get_default_fx()
     return {
+        shader_type = "PBR",
         fs = "/pkg/ant.resources/shaders/dynamic_material/fs_default.sc",
         vs = "/pkg/ant.resources/shaders/dynamic_material/vs_default.sc",
         vs_code     = get_default_code('vs'),
