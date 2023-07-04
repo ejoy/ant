@@ -409,15 +409,19 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 			break;
 		}
 		case Style::TextDecorationLine::Overline: {
-			int baseline = GetRenderInterface()->GetBaseline(font_face_handle);
-			int line_height = GetRenderInterface()->GetLineHeight(font_face_handle);
+			int ascent, descent, lineGap;
+			GetRenderInterface()->GetHeight(font_face_handle, ascent, descent, lineGap);
+			int baseline = -descent + lineGap;
+			int line_height = ascent - descent + lineGap;
 			position.y += baseline - line_height;
 			decoration_under = true;
 			break;
 		}
 		case Style::TextDecorationLine::LineThrough: {
-			int baseline = GetRenderInterface()->GetBaseline(font_face_handle);
-			int line_height = GetRenderInterface()->GetLineHeight(font_face_handle);
+			int ascent, descent, lineGap;
+			GetRenderInterface()->GetHeight(font_face_handle, ascent, descent, lineGap);
+			int baseline = -descent + lineGap;
+			int line_height = ascent - descent + lineGap;
 			position.y += baseline - 0.5f * line_height;
 			decoration_under = false;
 			break;
@@ -481,15 +485,25 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 }
 
 float Text::GetLineHeight() {
-	float line_height = (float)GetRenderInterface()->GetLineHeight(GetFontFaceHandle());
-	float percent = GetProperty<float>(PropertyId::LineHeight);
-	return line_height * percent;
+	int ascent, descent, lineGap;
+	GetRenderInterface()->GetHeight(GetFontFaceHandle(), ascent, descent, lineGap);
+	auto property = GetComputedProperty(PropertyId::LineHeight);
+	if (property->Has<PropertyKeyword>()) {
+		return float(ascent - descent + lineGap);
+	}
+	float percent = property->Get<float>(parent);
+	return (ascent - descent) * percent;
 }
 
 float Text::GetBaseline() {
-	float line_height = (float)GetRenderInterface()->GetLineHeight(GetFontFaceHandle());
-	float percent = GetProperty<float>(PropertyId::LineHeight);
-	return line_height * (1 + percent) / 2.0f - GetRenderInterface()->GetBaseline(GetFontFaceHandle());
+	int ascent, descent, lineGap;
+	GetRenderInterface()->GetHeight(GetFontFaceHandle(), ascent, descent, lineGap);
+	auto property = GetComputedProperty(PropertyId::LineHeight);
+	if (property->Has<PropertyKeyword>()) {
+		return ascent + lineGap / 2.f;
+	}
+	float percent = property->Get<float>(parent);
+	return ascent + (ascent - descent) * (percent-1.f) / 2.f;
 }
 
 std::optional<TextShadow> Text::GetTextShadow() {

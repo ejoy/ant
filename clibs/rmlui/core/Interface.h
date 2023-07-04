@@ -71,8 +71,7 @@ public:
 	virtual void DestroyMaterial(MaterialHandle mat) = 0;
 
 	virtual FontFaceHandle GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, uint32_t size) = 0;
-	virtual int GetLineHeight(FontFaceHandle handle) = 0;
-	virtual int GetBaseline(FontFaceHandle handle) = 0;
+	virtual void GetHeight(Rml::FontFaceHandle handle, int& ascent, int& descent, int& lineGap) = 0;
 	virtual void GetUnderline(FontFaceHandle handle, float& position, float &thickness) = 0;
 	virtual float GetStringWidth(FontFaceHandle handle, const std::string& string) = 0;
 	virtual float GetRichStringWidth(FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx,float line_height) = 0;

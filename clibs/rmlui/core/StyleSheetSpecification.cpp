@@ -660,7 +660,8 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 	RegisterProperty(PropertyId::ZIndex, "z-index", "0")
 		.AddParser("number");
 
-	RegisterProperty(PropertyId::LineHeight, "line-height", "1.2")
+	RegisterProperty(PropertyId::LineHeight, "line-height", "normal")
+		.AddParser("keyword", "normal")
 		.AddParser("number");
 
 	RegisterProperty(PropertyId::Color, "color", "white")
