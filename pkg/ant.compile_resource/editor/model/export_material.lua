@@ -112,10 +112,19 @@ local UV_map = {
     REPEAT          = "WRAP",
 }
 
+
+local function get_default_code(stage)
+    if stage == 'vs' then return '\n#include "common/default_vs_func.sh"\n'
+    elseif stage == 'fs' then return '\n#include "common/default_fs_func.sh"\n'
+    end
+end
+
 local function get_default_fx()
     return {
         fs = "/pkg/ant.resources/shaders/dynamic_material/fs_default.sc",
         vs = "/pkg/ant.resources/shaders/dynamic_material/vs_default.sc",
+        vs_code     = get_default_code('vs'),
+        fs_code     = get_default_code('fs'),
     }
 end
 
@@ -268,11 +277,6 @@ return function (output, glbdata, exports, tolocalpath)
         return read_datalist(tolocalpath(name))
     end
 
-    local function get_default_code(stage)
-        if stage == 'vs' then return '\n#include "common/default_vs_func.sh"\n'
-        elseif stage == 'fs' then return '\n#include "common/default_fs_func.sh"\n'
-        end
-    end
 
     exports.material = {}
     for matidx, mat in ipairs(materials) do
@@ -281,8 +285,6 @@ return function (output, glbdata, exports, tolocalpath)
 
         local isopaque = mat.alphaMode == nil or mat.alphaMode == "OPAQUE"
         local material = {
-            vs_code     = get_default_code('vs'),
-            fs_code     = get_default_code('fs'),
             fx          = get_default_fx(),
             state       = get_state(isopaque),
             properties  = {

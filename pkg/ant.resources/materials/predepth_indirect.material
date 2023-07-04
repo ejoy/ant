@@ -1,8 +1,8 @@
-vs_code: "\n#include \"depth/depth_vs_func.sh\"\n"
-fs_code: "\n#include \"depth/depth_fs_func.sh\"\n"
 fx:
   fs: /pkg/ant.resources/shaders/dynamic_material/fs_default.sc
   vs: /pkg/ant.resources/shaders/dynamic_material/vs_default.sc
+  vs_code: "\n#include \"depth/depth_vs_func.sh\"\n"
+  fs_code: "\n#include \"depth/depth_fs_func.sh\"\n"
   setting:
     DRAW_INDIRECT: 1
     lighting: off

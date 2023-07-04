@@ -110,7 +110,7 @@ local function default_macros(setting)
 end
 
 local function is_pbr_material(mat)
-    local is_default_func = (not mat.fs_code) or mat.fs_code:match('\n#include "common/default_fs_func.sh"\n')
+    local is_default_func = (not mat.fx.fs_code) or mat.fx.fs_code:match('\n#include "common/default_fs_func.sh"\n')
     local is_glb_pbr
     local pbr
     if mat.fx.vs and mat.fx.fs then
@@ -207,11 +207,11 @@ local function replace_custom_func(default_file, temp_file, mat, stage)
     local file_read<close> = assert(lfs.open(default_file, "r"))
     local file_read_compile = file_read:read "a"
     if stage == "vs" then
-        if not mat.vs_code then mat.vs_code = '\n#include "common/default_vs_func.sh"\n' end
-        file_read_compile = file_read_compile:gsub("%s*$$CUSTOM_VS_FUNC$$%s*", mat.vs_code)
+        if not mat.fx.vs_code then mat.fx.vs_code = '\n#include "common/default_vs_func.sh"\n' end
+        file_read_compile = file_read_compile:gsub("%s*$$CUSTOM_VS_FUNC$$%s*", mat.fx.vs_code)
     elseif stage == "fs" then
-        if not mat.fs_code then mat.fs_code = '\n#include "common/default_fs_func.sh"\n' end
-        file_read_compile = file_read_compile:gsub("%s*$$CUSTOM_FS_FUNC$$%s*", mat.fs_code)
+        if not mat.fx.fs_code then mat.fx.fs_code = '\n#include "common/default_fs_func.sh"\n' end
+        file_read_compile = file_read_compile:gsub("%s*$$CUSTOM_FS_FUNC$$%s*", mat.fx.fs_code)
     end
     local file_write<close> = assert(lfs.open(temp_file, "wb"))
     file_write:write(file_read_compile)
