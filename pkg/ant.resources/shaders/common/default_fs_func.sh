@@ -12,7 +12,7 @@
 #include "pbr/indirect_lighting.sh"
 #include "pbr/pbr.sh"
 #include "postprocess/tonemapping.sh"
-#include "default_inputs_structure.sh"
+#include "common/default_inputs_structure.sh"
 void CUSTOM_FS_FUNC(in FSInput fs_input, inout FSOutput fs_output)
 {
 #include "pbr/input_attributes.sh"

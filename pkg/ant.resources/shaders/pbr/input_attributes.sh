@@ -5,6 +5,24 @@
 #include "pbr/attribute_uniforms.sh"
 #include "common/default_inputs_structure.sh"
 
+input_attributes init_input_attributes(vec3 gnormal, vec3 normal, vec4 posWS, vec4 basecolor, vec4 fragcoord, vec4 metallic, vec4 roughness)
+{
+    input_attributes input_attribs  = (input_attributes)0;
+    input_attribs.basecolor         = basecolor;
+    input_attribs.posWS             = posWS.xyz;
+    input_attribs.distanceVS        = posWS.w;
+    input_attribs.V                 = normalize(u_eyepos.xyz - posWS.xyz);
+    input_attribs.gN                = gnormal;  //geomtery normal
+    input_attribs.N                 = normal;
+
+    input_attribs.perceptual_roughness  = roughness;
+    input_attribs.metallic              = metallic;
+    input_attribs.occlusion         = 1.0;
+
+    input_attribs.screen_uv         = get_normalize_fragcoord(fragcoord.xy);
+    return input_attribs;
+}
+
 void build_fs_input_attribs(in FSInput fs_input, inout input_attributes input_attribs)
 {
     vec2 uv = uv_motion(fs_input.uv0);

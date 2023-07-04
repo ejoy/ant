@@ -19,7 +19,7 @@ highp   vec4 v_posWS      : TEXCOORD2;
 mediump vec3 v_normal     : TEXCOORD3;
 mediump vec3 v_tangent    : TEXCOORD4;
 mediump vec4 v_color0     : TEXCOORD5;
-mediump vec4 v_texcoord2  : TEXCOORD6;
+flat    vec4 v_texcoord2  : TEXCOORD6 = vec4(0.0, 0.0, 0.0, 0.0);
 mediump vec4 v_texcoord3  : TEXCOORD7;
 mediump vec4 v_texcoord4  : TEXCOORD8;
 mediump vec4 v_texcoord5  : TEXCOORD9;

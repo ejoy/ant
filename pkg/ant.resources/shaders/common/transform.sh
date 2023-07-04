@@ -11,6 +11,35 @@
 #ifdef DRAW_INDIRECT
 	uniform vec4 u_draw_indirect_type;
 #endif
+
+vec2 get_tex(float idx){
+	if(idx == 0){
+		return vec2(0, 1);
+	}
+	else if(idx == 1){
+		return vec2(0, 0);
+	}
+	else if(idx == 2){
+		return vec2(1, 0);
+	}
+	else return vec2(1, 1);
+}
+
+vec2 get_rotated_texcoord(float r, vec2 tex){
+	if(tex.x == 0 && tex.y == 1){
+		return get_tex((r / 90) % 4);
+	}
+	else if(tex.x == 0 && tex.y == 0){
+		return get_tex((r / 90 + 1) % 4);
+	}
+	else if(tex.x == 1 && tex.y == 0){
+		return get_tex((r / 90 + 2) % 4);
+	}
+	else{
+		return get_tex((r / 90 + 3) % 4);
+	}
+}
+
 highp vec3 quat_to_normal(const highp vec4 q){
     return	vec3( 0.0,  0.0,  1.0 ) + 
         	vec3( 2.0, -2.0, -2.0 ) * q.x * q.zwx +
@@ -23,7 +52,7 @@ highp vec3 quat_to_tangent(const highp vec4 q){
         	vec3(-2.0,  2.0,  2.0 ) * q.z * q.zwx;
 }
 
-mat4 get_indirect_wolrd_matrix(vec4 d1, vec4 d2, vec4 d3, vec4 draw_indirect_type)
+mat4 get_indirect_world_matrix(vec4 d1, vec4 d2, vec4 d3, vec4 draw_indirect_type)
 {
 	mat4 wm = u_model[0];
 	if(draw_indirect_type.x == 1 || draw_indirect_type.z == 1){

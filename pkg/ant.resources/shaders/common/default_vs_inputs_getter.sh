@@ -36,15 +36,15 @@ vs_input.pos = a_position;
     vs_input.idata2 = i_data2;
 #endif
 
-#ifdef USER0
+#ifdef INPUT_USER_ATTR_0
     vs_input.user0 = a_texcoord2;
-#endif //USER0
+#endif
 
-#ifdef USER1
+#ifdef INPUT_USER_ATTR_1
     vs_input.user1 = a_texcoord3;
-#endif //USER1
+#endif
 
-#ifdef USER2
+#ifdef INPUT_USER_ATTR_2
     vs_input.user2 = a_texcoord4;
-#endif //USER2
+#endif
 }

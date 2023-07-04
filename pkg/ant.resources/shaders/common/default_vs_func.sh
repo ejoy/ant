@@ -1,12 +1,12 @@
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
 #include "common/common.sh"
-#include "default_inputs_structure.sh"
+#include "common/default_inputs_structure.sh"
 
 void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 {
 #ifdef DRAW_INDIRECT
-	mediump mat4 wm = get_indirect_wolrd_matrix(vs_input.idata0, vs_input.idata1, vs_input.idata2, u_draw_indirect_type);
+	mediump mat4 wm = get_indirect_world_matrix(vs_input.idata0, vs_input.idata1, vs_input.idata2, u_draw_indirect_type);
 #else
 	mediump mat4 wm = get_world_matrix_default(vs_input);
 #endif //DRAW_INDIRECT

@@ -111,12 +111,16 @@ end
 
 local function is_pbr_material(mat)
     local is_default_func = (not mat.fs_code) or mat.fs_code:match('\n#include "common/default_fs_func.sh"\n')
-    local is_pbr
+    local is_glb_pbr
+    local pbr
     if mat.fx.vs and mat.fx.fs then
-        is_pbr = mat.fx.vs:match "/pkg/ant.resources/shaders/dynamic_material/vs_default.sc" and
+        is_glb_pbr = mat.fx.vs:match "/pkg/ant.resources/shaders/dynamic_material/vs_default.sc" and
         mat.fx.fs:match "/pkg/ant.resources/shaders/dynamic_material/fs_default.sc"
+        pbr = mat.fx.vs:match "/pkg/ant.resources/shaders/pbr/vs_pbr.sc" and mat.fx.fs:match "/pkg/ant.resources/shaders/pbr/fs_pbr.sc"
     end
-    return is_default_func and is_pbr
+    local glb_pbr = is_default_func and is_glb_pbr
+
+    return glb_pbr or pbr
 end
 
 local PBR_TEXTURE_MACROS<const> = {

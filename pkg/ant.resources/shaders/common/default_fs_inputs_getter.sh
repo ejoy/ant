@@ -19,22 +19,22 @@
 #endif //USING_LIGHTMAP
 
 #ifdef OUTPUT_USER_ATTR_0
-    fs_input.user0 = v_texcoord6;
-#endif //OUTPUT_USER_ATTR_0
+    fs_input.user0 = v_texcoord2;
+#endif
 
 #ifdef OUTPUT_USER_ATTR_1
-    fs_input.user1 = v_texcoord7;
-#endif //OUTPUT_USER_ATTR_1
+    fs_input.user1 = v_texcoord3;
+#endif
 
 #ifdef OUTPUT_USER_ATTR_2
-    fs_input.user2 = v_texcoord8;
-#endif //OUTPUT_USER_ATTR_2
+    fs_input.user2 = v_texcoord4;
+#endif
 
 #ifdef OUTPUT_USER_ATTR_3
-    fs_input.user3 = v_texcoord9;
-#endif //OUTPUT_USER_ATTR_3
+    fs_input.user3 = v_texcoord5;
+#endif
 
 #ifdef OUTPUT_USER_ATTR_4
-    fs_input.user4 = v_texcoord10;
-#endif //OUTPUT_USER_ATTR_4
+    fs_input.user4 = v_texcoord6;
+#endif
 }
