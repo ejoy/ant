@@ -42,11 +42,7 @@ bool Document::Load(const std::string& path) {
 		return false;
 	}
 
-	body.UpdateProperties();
-	UpdateDataModel(false);
-	body.Update();
-	UpdateLayout();
-	body.UpdateRender();
+	Flush();
 	return true;
 }
 
@@ -115,8 +111,13 @@ void Document::LoadExternalStyle(const std::string& source_path) {
 
 void Document::UpdateDataModel(bool clear_dirty_variables) {
 	if (data_model) {
-		body.UpdateDataModel();
-		data_model->Update(clear_dirty_variables);
+		for (int i = 1; i < 10; ++i) {
+			body.UpdateDataModel();
+			data_model->Update(clear_dirty_variables);
+			if (!data_model->IsDirty()) {
+				break;
+			}
+		}
 	}
 }
 
@@ -150,6 +151,13 @@ void Document::SetDimensions(const Size& _dimensions) {
 
 const Size& Document::GetDimensions() {
 	return dimensions;
+}
+
+void Document::Flush() {
+	UpdateDataModel(true);
+	body.Update();
+	UpdateLayout();
+	body.UpdateRender();
 }
 
 void Document::Update(float delta) {

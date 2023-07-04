@@ -62,6 +62,10 @@ function m.hide(doc)
     hidden[doc] = true
 end
 
+function m.flush(doc)
+    rmlui.DocumentFlush(doc)
+end
+
 function m.close(doc)
     dispatchEvent(getBody(doc), "unload", {})
     notifyDocumentDestroy(doc)

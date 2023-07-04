@@ -30,6 +30,7 @@ public:
 	void SetDimensions(const Size& dimensions);
 	const Size& GetDimensions();
 	Element* ElementFromPoint(Point pt);
+	void Flush();
 	void Update(float delta);
 	void UpdateLayout();
 	DataModel* CreateDataModel();

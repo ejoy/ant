@@ -278,71 +278,77 @@ bool DataModel::IsVariableDirty(const std::string& variable_name) const {
 	return dirty_variables.count(variable_name) == 1;
 }
 
+void DataModel::MarkDirty() {
+	dirty = true;
+}
+
+bool DataModel::IsDirty() const {
+	return dirty;
+}
+
 void DataModel::OnElementRemove(Element* element) {
 	EraseAliases(element);
 	events.erase(element);
 }
 
 void DataModel::Update(bool clear_dirty_variables) {
+	dirty = false;
 	// View updates may result in newly added views, thus we do it recursively but with an upper limit.
 	//   Without the loop, newly added views won't be updated until the next Update() call.
 	std::set<DataView*> views_to_remove;
-	for(int i = 0; i == 0 || (!views_to_add.empty() && i < 10); i++) {
-		std::vector<DataView*> dirty_views;
+	std::vector<DataView*> dirty_views;
 
-		if (!views_to_add.empty()) {
-			views.reserve(views.size() + views_to_add.size());
-			for (auto&& view : views_to_add) {
-				dirty_views.push_back(view.get());
-				for (const std::string& variable_name : view->GetVariableNameList())
-					name_view_map.emplace(variable_name, view.get());
-
-				views.push_back(std::move(view));
-			}
-			views_to_add.clear();
+	if (!views_to_add.empty()) {
+		views.reserve(views.size() + views_to_add.size());
+		for (auto&& view : views_to_add) {
+			dirty_views.push_back(view.get());
+			for (const std::string& variable_name : view->GetVariableNameList())
+				name_view_map.emplace(variable_name, view.get());
+			views.push_back(std::move(view));
 		}
+		views_to_add.clear();
+	}
 
-		for (const std::string& variable_name : dirty_variables) {
-			auto pair = name_view_map.equal_range(variable_name);
-			for (auto it = pair.first; it != pair.second; ++it)
-				dirty_views.push_back(it->second);
+	for (const std::string& variable_name : dirty_variables) {
+		auto pair = name_view_map.equal_range(variable_name);
+		for (auto it = pair.first; it != pair.second; ++it)
+			dirty_views.push_back(it->second);
+	}
+
+	// Remove duplicate entries
+	std::sort(dirty_views.begin(), dirty_views.end());
+	auto it_remove = std::unique(dirty_views.begin(), dirty_views.end());
+	dirty_views.erase(it_remove, dirty_views.end());
+
+	// Sort by the element's depth in the document tree so that any structural changes due to a changed variable are reflected in the element's children.
+	// Eg. the 'data-for' view will remove children if any of its data variable array size is reduced.
+	std::sort(dirty_views.begin(), dirty_views.end(), [](auto&& left, auto&& right) { return left->GetDepth() < right->GetDepth(); });
+
+	for (DataView* view : dirty_views) {
+		assert(view);
+		if (!view)
+			continue;
+		if (view->IsValid())
+			view->Update(*this);
+		else {
+			views_to_remove.insert(view);
 		}
+	}
 
-		// Remove duplicate entries
-		std::sort(dirty_views.begin(), dirty_views.end());
-		auto it_remove = std::unique(dirty_views.begin(), dirty_views.end());
-		dirty_views.erase(it_remove, dirty_views.end());
-
-		// Sort by the element's depth in the document tree so that any structural changes due to a changed variable are reflected in the element's children.
-		// Eg. the 'data-for' view will remove children if any of its data variable array size is reduced.
-		std::sort(dirty_views.begin(), dirty_views.end(), [](auto&& left, auto&& right) { return left->GetDepth() < right->GetDepth(); });
-
-		for (DataView* view : dirty_views) {
-			assert(view);
-			if (!view)
-				continue;
-			if (view->IsValid())
-				view->Update(*this);
-			else {
-				views_to_remove.insert(view);
-			}
+	if (!views_to_remove.empty()) {
+		for (auto it = views.begin(); it != views.end(); ) {
+			if (views_to_remove.contains(it->get()))
+				it = views.erase(it);
+			else
+				++it;
 		}
-
-		if (!views_to_remove.empty()) {
-			for (auto it = views.begin(); it != views.end(); ) {
-				if (views_to_remove.contains(it->get()))
-					it = views.erase(it);
-				else
-					++it;
-			}
-			for (auto it = name_view_map.begin(); it != name_view_map.end(); ) {
-				if (views_to_remove.contains(it->second))
-					it = name_view_map.erase(it);
-				else
-					++it;
-			}
-			views_to_remove.clear();
+		for (auto it = name_view_map.begin(); it != name_view_map.end(); ) {
+			if (views_to_remove.contains(it->second))
+				it = name_view_map.erase(it);
+			else
+				++it;
 		}
+		views_to_remove.clear();
 	}
 
 	if (clear_dirty_variables)

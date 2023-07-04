@@ -114,6 +114,13 @@ lDocumentUpdate(lua_State* L) {
 }
 
 static int
+lDocumentFlush(lua_State* L) {
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	doc->Flush();
+	return 0;
+}
+
+static int
 lDocumentSetDimensions(lua_State *L){
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	doc->SetDimensions(Rml::Size(
@@ -572,6 +579,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentLoad", lDocumentLoad },
 		{ "DocumentDestroy", lDocumentDestroy },
 		{ "DocumentUpdate", lDocumentUpdate },
+		{ "DocumentFlush", lDocumentFlush },
 		{ "DocumentSetDimensions", lDocumentSetDimensions},
 		{ "DocumentElementFromPoint", lDocumentElementFromPoint },
 		{ "DocumentGetElementById", lDocumentGetElementById },

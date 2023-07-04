@@ -54,6 +54,9 @@ local function createWindow(document, source)
     function window.hide()
         contextManager.hide(document)
     end
+    function window.flush()
+        contextManager.flush(document)
+    end
     function window.setTimeout(f, delay)
         local t = timer.wait(delay, f)
         timer_object[t] = true

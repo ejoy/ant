@@ -200,11 +200,13 @@ bool DataViewFor::Update(DataModel& model) {
 		Node* sibling = element->Clone();
 		model.InsertAlias(sibling, iterator_name, std::move(iterator_address));
 		model.InsertAlias(sibling, iterator_index_name, std::move(iterator_index_address));
+		model.MarkDirty();
 		element->GetParentNode()->InsertBefore(sibling, element.get());
 	}
 	for (size_t i = size; i < num_elements; ++i) {
 		Node* sibling = element->GetPreviousSibling();
 		model.EraseAliases(sibling);
+		model.MarkDirty();
 		element->GetParentNode()->RemoveChild(sibling);
 	}
 	num_elements = size;
@@ -226,9 +228,11 @@ DataViewText::DataViewText(Text* element)
 {}
 
 bool DataViewText::Initialize(DataModel& model) {
+	if (!element->GetParentNode()->IsVisible()) {
+		return false;
+	}
 	const std::string& in_text = element->GetText();
 	text.reserve(in_text.size());
-
 	DataExpressionInterface expression_interface(&model, element.get());
 
 	size_t previous_close_brackets = 0;
@@ -263,6 +267,9 @@ bool DataViewText::Initialize(DataModel& model) {
 }
 
 bool DataViewText::Update(DataModel& model) {
+	if (!element->GetParentNode()->IsVisible()) {
+		return false;
+	}
 	bool entries_modified = false;
 	{
 		DataExpressionInterface expression_interface(&model, element.get());

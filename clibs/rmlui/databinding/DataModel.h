@@ -42,10 +42,11 @@ public:
 
 	void DirtyVariable(const std::string& variable_name);
 	bool IsVariableDirty(const std::string& variable_name) const;
-
+	void MarkDirty();
+	bool IsDirty() const;
 	void OnElementRemove(Element* element);
-
 	void Update(bool clear_dirty_variables);
+
 private:
 	using DataViewList = std::vector<DataViewPtr>;
 	using NameViewMap = std::unordered_multimap<std::string, DataView*>;
@@ -59,6 +60,7 @@ private:
 	DirtyVariables dirty_variables;
 	std::unordered_map<std::string, DataEventFunc> event_callbacks;
 	ScopedAliases aliases;
+	bool dirty = false;
 };
 
 }
