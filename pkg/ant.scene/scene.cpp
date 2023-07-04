@@ -153,18 +153,15 @@ scene_changed(lua_State *L) {
 
 	// step.2
 	flatmap<ecs::eid, math_t> worldmats;
-	for (auto& e : ecs_api::select<ecs::scene_mutable, ecs::scene>(w->ecs)) {
+	for (auto& e : ecs_api::select<ecs::scene_mutable, ecs::scene, ecs::eid>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
 		bool changed = false;
-		ecs::eid id;
-		if (e.component<ecs::scene_update>()) {
-			id = e.component<ecs::eid>();
-			if (e.component<ecs::scene_changed>()) {
-				changed = true;
-			} else if (s.parent != 0 && is_changed(w, s.parent)) {
-				e.enable_tag<ecs::scene_changed>();
-				changed = true;
-			}
+		ecs::eid id = e.get<ecs::eid>();
+		if (e.component<ecs::scene_changed>()) {
+			changed = true;
+		} else if (s.parent != 0 && is_changed(w, s.parent)) {
+			e.enable_tag<ecs::scene_changed>();
+			changed = true;
 		}
 		if (changed) {
 			if (!worldmat_update(worldmats, math3d, s, id, w)) {
@@ -175,11 +172,6 @@ scene_changed(lua_State *L) {
 			(s.parent == 0 || is_constant(w, s.parent))) {
 			e.disable_tag<ecs::scene_mutable>();
 		}
-	}
-
-	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene>(w->ecs)) {
-		auto& s = e.get<ecs::scene>();
-		assert(!math_isnull(s.worldmat));
 	}
 
 	++w->frame;
