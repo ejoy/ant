@@ -115,6 +115,7 @@ void Document::LoadExternalStyle(const std::string& source_path) {
 
 void Document::UpdateDataModel(bool clear_dirty_variables) {
 	if (data_model) {
+		body.UpdateDataModel();
 		data_model->Update(clear_dirty_variables);
 	}
 }

@@ -143,7 +143,7 @@ public:
 	const EdgeInsets<float>& GetBorder() const;
 
 	void SetParentNode(Element* parent) override;
-	void InitDataModel() override;
+	void UpdateDataModel() override;
 	DataModel* GetDataModel() const override;
 	Node* Clone(bool deep = true) const override;
 	void CalculateLayout() override;
@@ -164,6 +164,7 @@ protected:
 	void UpdateStackingContext();
 	void DirtyStackingContext();
 	void DirtyStructure();
+	void DirtyDataModel() override;
 	void UpdateStructure();
 	void DirtyPerspective();
 	void UpdateTransform();
@@ -235,6 +236,7 @@ protected:
 		Background,
 		Image,
 		Definition,
+		DataModel,
 	};
 	EnumSet<Dirty> dirty;
 };

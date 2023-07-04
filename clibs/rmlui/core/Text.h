@@ -35,7 +35,8 @@ protected:
 	}
 
 	void SetParentNode(Element* parent) override;
-	void InitDataModel() override;
+	void UpdateDataModel() override;
+	void DirtyDataModel() override;
 	Node* Clone(bool deep = true) const override;
 	void CalculateLayout() override;
 	void Render() override;
@@ -71,6 +72,7 @@ protected:
 		Effects,
 		Decoration,
 		Geometry,
+		DataModel,
 	};
 	EnumSet<Dirty> dirty;
 	bool decoration_under = false;

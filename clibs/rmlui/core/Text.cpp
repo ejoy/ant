@@ -570,13 +570,21 @@ FontFaceHandle Text::GetFontFaceHandle() {
 
 void Text::SetParentNode(Element* _parent) {
 	parent = _parent;
-	InitDataModel();
+	DirtyDataModel();
 }
 
-void Text::InitDataModel() {
-	if (!GetDataModel()) {
+void Text::DirtyDataModel() {
+	dirty.insert(Dirty::DataModel);
+}
+
+void Text::UpdateDataModel() {
+	if (!IsVisible()) {
 		return;
 	}
+	if (!dirty.contains(Dirty::DataModel)) {
+		return;
+	}
+	dirty.erase(Dirty::DataModel);
 	bool has_data_expression = false;
 	bool inside_brackets = false;
 	char previous = 0;

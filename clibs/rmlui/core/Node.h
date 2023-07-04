@@ -27,7 +27,8 @@ namespace Rml {
 		const Rect& GetBounds() const;
 
 		virtual void SetParentNode(Element* parent) = 0;
-		virtual void InitDataModel() = 0;
+		virtual void UpdateDataModel() = 0;
+		virtual void DirtyDataModel() = 0;
 		virtual DataModel* GetDataModel() const = 0;
 		virtual Node* Clone(bool deep = true) const = 0;
 		virtual void CalculateLayout() = 0;

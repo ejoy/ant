@@ -196,18 +196,14 @@ DataAddress DataModel::ResolveAddress(const std::string& address_str, Node* elem
 
 	// Look for a variable alias for the first name.
 	Node* ancestor = element;
-	while (ancestor && ancestor->GetDataModel() == this)
-	{
+	while (ancestor) {
 		auto it_element = aliases.find(ancestor);
-		if (it_element != aliases.end())
-		{
+		if (it_element != aliases.end()) {
 			const auto& alias_names = it_element->second;
 			auto it_alias_name = alias_names.find(first_name);
-			if (it_alias_name != alias_names.end())
-			{
+			if (it_alias_name != alias_names.end()) {
 				const DataAddress& replace_address = it_alias_name->second;
-				if (replace_address.empty() || replace_address.front().name.empty())
-				{
+				if (replace_address.empty() || replace_address.front().name.empty()) {
 					// Variable alias is invalid
 					return DataAddress();
 				}

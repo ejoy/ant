@@ -30,10 +30,6 @@ void Node::SetVisible(bool visible) {
 	layout.SetVisible(visible);
 }
 
-void Node::SetParentNode(Element* parent_) {
-	parent = parent_;
-}
-
 Element* Node::GetParentNode() const {
 	return parent;
 }

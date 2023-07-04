@@ -707,20 +707,24 @@ std::string Element::GetOuterHTML() const {
 	return html;
 }
 
-void Element::InitDataModel() {
-	if (!GetDataModel()) {
+void Element::UpdateDataModel() {
+	if (!IsVisible()) {
+		return;
+	}
+	if (!dirty.contains(Dirty::DataModel)) {
 		for (auto& child : childnodes) {
-			child->InitDataModel();
+			child->UpdateDataModel();
 		}
 		return;
 	}
+	dirty.erase(Dirty::DataModel);
 	if (attributes.find("data-for") != attributes.end()) {
 		DataUtilities::ApplyDataViewFor(this);
 	}
 	else {
 		DataUtilities::ApplyDataViewsControllers(this);
 		for (auto& child : childnodes) {
-			child->InitDataModel();
+			child->UpdateDataModel();
 		}
 	}
 }
@@ -752,7 +756,7 @@ void Element::SetParentNode(Element* _parent) {
 	DirtyTransform();
 	DirtyClip();
 	DirtyPerspective();
-	InitDataModel();
+	DirtyDataModel();
 }
 
 void Element::UpdateStackingContext() {
@@ -778,6 +782,13 @@ void Element::DirtyStackingContext() {
 
 void Element::DirtyStructure() {
 	dirty.insert(Dirty::Structure);
+}
+
+void Element::DirtyDataModel() {
+	dirty.insert(Dirty::DataModel);
+	for (auto& child : childnodes) {
+		child->DirtyDataModel();
+	}
 }
 
 void Element::UpdateStructure() {
