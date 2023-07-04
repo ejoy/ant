@@ -21,7 +21,7 @@ public:
 	void ChangedProperties(const PropertyIdSet& properties);
 	DataModel* GetDataModel() const override;
 protected:
-	virtual float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float& line_height);
+	virtual float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float line_height);
 	std::optional<Property> GetComputedProperty(PropertyId id);
 
 	template <typename T>
@@ -53,7 +53,7 @@ protected:
 	virtual void UpdateGeometry(const FontFaceHandle font_face_handle);
 	void UpdateDecoration(const FontFaceHandle font_face_handle);
 	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, 
-		float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext, float& line_height);
+		float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext, float line_height);
 	float GetLineHeight();
 	std::optional<TextShadow> GetTextShadow();
 	std::optional<TextStroke> GetTextStroke();
@@ -84,7 +84,7 @@ public:
 protected:
 	void Render() override;
 	void UpdateGeometry(const FontFaceHandle font_face_handle)override;
-	float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float& line_height) override;
+	float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float line_height) override;
 private:
 	void UpdateImageMaterials();
 	std::vector<Rml::group> groups;

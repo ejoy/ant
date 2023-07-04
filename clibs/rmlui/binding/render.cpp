@@ -558,7 +558,7 @@ float Renderer::GetStringWidth(Rml::FontFaceHandle handle, const std::string& st
     return width;
 }
 
-float Renderer::GetRichStringWidth(Rml::FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx, float& line_height){
+float Renderer::GetRichStringWidth(Rml::FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx, float line_height){
     FontFace face;
     face.handle = handle;
     float width = 0;

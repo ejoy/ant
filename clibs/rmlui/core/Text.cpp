@@ -174,11 +174,11 @@ void Text::Render() {
 		decoration.Render();
 	}
 }
-float Text::GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float& line_height){
+float Text::GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float){
 	return GetRenderInterface()->GetStringWidth(font_face_handle, token);
 }
 
-bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext, float& line_height) {
+bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext, float line_height) {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
 
 	// Initialise the output variables.
@@ -632,7 +632,7 @@ RichText::RichText(Document* owner, const std::string& text_)
 RichText::~RichText()
 { }
 
-float RichText::GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float& line_height){
+float RichText::GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float line_height){
 	return GetRenderInterface()->GetRichStringWidth(font_face_handle, token, images, cur_image_idx, line_height);
 }
 
