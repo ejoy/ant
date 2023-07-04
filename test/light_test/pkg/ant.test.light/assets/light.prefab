@@ -8,7 +8,7 @@ data:
     visible_state: main_view
     scene: {}
     ibl:
-        intensity: 65000
+        intensity: 30000
         irradianceSH: true
         prefilter:
             size: 128

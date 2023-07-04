@@ -110,8 +110,8 @@ struct StyleSheetSpecificationInstance {
 		{"transform", new PropertyParserTransform()},
 	};
 	std::unordered_map<std::string, PropertyParser*> keyword_parsers;
-	std::array<PropertyDefinition,  (size_t)PropertyId::NumDefinedIds>  properties;
-	std::array<ShorthandDefinition, (size_t)ShorthandId::NumDefinedIds> shorthands;
+	std::array<PropertyDefinition,  EnumCountV<PropertyId>>  properties;
+	std::array<ShorthandDefinition, EnumCountV<ShorthandId>> shorthands;
 	std::unordered_map<std::string, PropertyId> property_map;
 	std::unordered_map<std::string, ShorthandId> shorthand_map;
 	std::unordered_map<PropertyId, std::string> unparsed_default;
@@ -214,7 +214,6 @@ StyleSheetSpecificationInstance::~StyleSheetSpecificationInstance() {
 }
 
 PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id, const std::string& property_name, const std::string& default_value) {
-	assert (id < PropertyId::NumDefinedIds);
 	MapAdd(property_map, property_name, id);
 	size_t index = (size_t)id;
 	unparsed_default[id] = default_value;
@@ -222,14 +221,12 @@ PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id
 }
 
 PropertyRegister StyleSheetSpecificationInstance::RegisterProperty(PropertyId id, const std::string& property_name) {
-	assert (id < PropertyId::NumDefinedIds);
 	MapAdd(property_map, property_name, id);
 	size_t index = (size_t)id;
 	return { *this, properties[index] };
 }
 
 std::optional<Property> StyleSheetSpecificationInstance::ParseProperty(PropertyId id, const std::string& value) const {
-	assert (id < PropertyId::NumDefinedIds);
 	auto& definition = properties[(size_t)id];
 	for (auto parser : definition.parsers) {
 		auto property = parser->ParseValue(value);
@@ -249,7 +246,6 @@ const PropertyIdSet& StyleSheetSpecificationInstance::GetInheritableProperties()
 }
 
 bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const std::string& shorthand_name, const std::string& property_names, ShorthandType type) {
-	assert (id < ShorthandId::NumDefinedIds);
 	MapAdd(shorthand_map, shorthand_name, id);
 
 	std::vector<std::string> property_list;
@@ -294,7 +290,6 @@ bool StyleSheetSpecificationInstance::RegisterShorthand(ShorthandId id, const st
 }
 
 const ShorthandDefinition& StyleSheetSpecificationInstance::GetShorthandDefinition(ShorthandId id) const {
-	assert (id < ShorthandId::NumDefinedIds);
 	return shorthands[(size_t)id];
 }
 

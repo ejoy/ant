@@ -59,6 +59,7 @@ public:
 	void AddPolygon(const Path& points, Color col);
 	void UpdateUV(size_t count, const Rect& surface, const Rect& uv);
 	void Reserve(size_t idx_count, size_t vtx_count);
+	void SetGray();
 
 protected:
 	std::vector<Vertex> vertices;

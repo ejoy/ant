@@ -66,11 +66,6 @@ void get_metallic_roughness(out float metallic, out float roughness, vec2 uv)
     metallic   = clamp(metallic, 0.0, 1.0);
 }
 
-float clamp_dot(vec3 x, vec3 y)
-{
-    return clamp(dot(x, y), 0.0, 1.0);
-}
-
 material_info get_material_info(vec4 basecolor, vec2 uv)
 {
     material_info mi;
@@ -161,7 +156,7 @@ void main()
         vec3 intensity = attenuation * l.intensity * l.color.rgb;
 
         vec3 L = normalize(pt2l);
-        float NdotL = clamp_dot(N, L);
+        float NdotL = saturate(dot(N, L));
         color += intensity * NdotL * BRDF_lambertian_baked(mi.albedo);
     }
 

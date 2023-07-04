@@ -12,6 +12,7 @@ public:
 	std::string ToString() const;
 	Color Interpolate(const Color& c1, float alpha) const;
 	void ApplyOpacity(float opacity);
+	void SetGray();
 	bool IsVisible() const;
 	bool operator==(const Color& r) const;
 

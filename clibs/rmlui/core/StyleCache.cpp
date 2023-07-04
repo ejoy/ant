@@ -172,7 +172,7 @@ namespace Rml::Style {
     }
 
     static auto Fetch(style_cache* c, ValueOrCombination t) {
-        std::array<void*, (size_t)PropertyId::NumDefinedIds> datas;
+        std::array<void*, (size_t)EnumCountV<PropertyId>> datas;
         datas.fill(nullptr);
         for (int i = 0;; ++i) {
             PropertyId id;
@@ -189,7 +189,7 @@ namespace Rml::Style {
         PropertyIdSet ids;
         auto a_datas = Fetch(c, a);
         auto b_datas = Fetch(c, b);
-        for (size_t i = 0; i < (size_t)PropertyId::NumDefinedIds; ++i) {
+        for (size_t i = 0; i < (size_t)EnumCountV<PropertyId>; ++i) {
             if (a_datas[i] != b_datas[i]) {
                 ids.insert((PropertyId)i);
             }

@@ -47,6 +47,12 @@ void Color::ApplyOpacity(float opacity) {
 	a = uint8_t((float)a * opacity);
 }
 
+void Color::SetGray() {
+	float gray[] = { 0.2126f, 0.7152f, 0.0722f};
+	float s = gray[0] * r + gray[1] * g + gray[2] * b;
+	r = g = b = (uint8_t)s;
+}
+
 bool Color::IsVisible() const {
 	return a != 0;
 }
