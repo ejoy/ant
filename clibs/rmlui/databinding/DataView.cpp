@@ -43,7 +43,7 @@ std::vector<std::string> DataViewStyle::GetVariableNameList() const {
 }
 
 bool DataViewStyle::IsValid() const {
-	return static_cast<bool>(element);
+	return element && !element->IsRemoved();
 }
 
 bool DataViewStyle::Update(DataModel& model) {
@@ -81,7 +81,7 @@ std::vector<std::string> DataViewAttr::GetVariableNameList() const {
 }
 
 bool DataViewAttr::IsValid() const {
-	return static_cast<bool>(element);
+	return element && !element->IsRemoved();
 }
 
 bool DataViewAttr::Update(DataModel& model) {
@@ -119,7 +119,7 @@ std::vector<std::string> DataViewIf::GetVariableNameList() const {
 }
 
 bool DataViewIf::IsValid() const {
-	return static_cast<bool>(element);
+	return element && !element->IsRemoved();
 }
 
 bool DataViewIf::Update(DataModel& model) {
@@ -217,7 +217,7 @@ std::vector<std::string> DataViewFor::GetVariableNameList() const {
 }
 
 bool DataViewFor::IsValid() const {
-	return static_cast<bool>(element);
+	return element && !element->IsRemoved();
 }
 
 DataViewText::DataViewText(Text* element)
@@ -329,7 +329,7 @@ std::string DataViewText::BuildText() const {
 }
 
 bool DataViewText::IsValid() const {
-	return static_cast<bool>(element);
+	return element && element->GetParentNode() && !element->GetParentNode()->IsRemoved();
 }
 
 }

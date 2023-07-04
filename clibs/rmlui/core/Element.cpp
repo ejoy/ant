@@ -1604,4 +1604,8 @@ const EdgeInsets<float>& Element::GetBorder() const {
 	return border;
 }
 
+bool Element::IsRemoved() const {
+	return parent == nullptr && GetOwnerDocument()->GetBody() != this;
+}
+
 }

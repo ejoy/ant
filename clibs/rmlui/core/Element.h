@@ -38,6 +38,7 @@ public:
 	std::string GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
 	bool IgnorePointerEvents() const;
 
+	bool IsRemoved() const;
 	float GetOpacity();
 	bool IsGray();
 	float GetFontSize() const;
