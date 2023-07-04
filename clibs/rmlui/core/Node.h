@@ -22,13 +22,13 @@ namespace Rml {
 		void DirtyLayout();
 
 		Element* GetParentNode() const;
-		DataModel* GetDataModel() const;
 		Layout::Type GetType() const;
 
 		const Rect& GetBounds() const;
 
 		virtual void SetParentNode(Element* parent) = 0;
-		virtual void SetDataModel(DataModel* data_model) = 0;
+		virtual void InitDataModel() = 0;
+		virtual DataModel* GetDataModel() const = 0;
 		virtual Node* Clone(bool deep = true) const = 0;
 		virtual void CalculateLayout() = 0;
 		virtual void Render() = 0;
@@ -44,7 +44,6 @@ namespace Rml {
 		Layout layout;
 	protected:
 		Element* parent = nullptr;
-		DataModel* data_model = nullptr;
 	private:
 		Rect bounds;
 		bool visible = true;

@@ -114,41 +114,26 @@ void Document::LoadExternalStyle(const std::string& source_path) {
 }
 
 void Document::UpdateDataModel(bool clear_dirty_variables) {
-	for (auto& data_model : data_models) {
-		data_model.second->Update(clear_dirty_variables);
+	if (data_model) {
+		data_model->Update(clear_dirty_variables);
 	}
 }
 
-DataModel* Document::CreateDataModel(const std::string& name) {
-	auto result = data_models.emplace(name, std::make_unique<DataModel>());
-	bool inserted = result.second;
-	if (inserted)
-		return result.first->second.get();
-	Log::Message(Log::Level::Error, "Data model name '%s' already exists.", name.c_str());
-	return nullptr;
+DataModel* Document::CreateDataModel() {
+	if (data_model) {
+		Log::Message(Log::Level::Error, "Data model already exists.");
+		return nullptr;
+	}
+	data_model = std::make_unique<DataModel>();
+	return data_model.get();
 }
 
-bool Document::RemoveDataModel(const std::string& name) {
-	auto it = data_models.find(name);
-	if (it == data_models.end())
-		return false;
-
-	DataModel* model = it->second.get();
-	ElementList elements = model->GetAttachedModelRootElements();
-
-	for (Element* element : elements)
-		element->SetDataModel(nullptr);
-
-	data_models.erase(it);
-
-	return true;
+void Document::RemoveDataModel() {
+	data_model.reset();
 }
 
-DataModel* Document::GetDataModelPtr(const std::string& name) const {
-	auto it = data_models.find(name);
-	if (it != data_models.end())
-		return it->second.get();
-	return nullptr;
+DataModel* Document::GetDataModel() const {
+	return data_model.get();
 }
 
 void Document::SetDimensions(const Size& _dimensions) {

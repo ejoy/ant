@@ -42,10 +42,6 @@ void Node::DirtyLayout() {
 	layout.MarkDirty();
 }
 
-DataModel* Node::GetDataModel() const {
-	return data_model;
-}
-
 Layout::Type Node::GetType() const {
 	return layout.GetType();
 }

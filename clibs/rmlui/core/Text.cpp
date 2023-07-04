@@ -556,20 +556,11 @@ FontFaceHandle Text::GetFontFaceHandle() {
 
 void Text::SetParentNode(Element* _parent) {
 	parent = _parent;
-	if (parent) {
-		SetDataModel(parent->GetDataModel());
-	}
-	else {
-		SetDataModel(nullptr);
-	}
+	InitDataModel();
 }
 
-void Text::SetDataModel(DataModel* new_data_model) {
-	assert(!data_model || !new_data_model);
-	if (data_model == new_data_model)
-		return;
-	data_model = new_data_model;
-	if (!data_model) {
+void Text::InitDataModel() {
+	if (!GetDataModel()) {
 		return;
 	}
 	bool has_data_expression = false;
@@ -590,6 +581,10 @@ void Text::SetDataModel(DataModel* new_data_model) {
 	if (has_data_expression) {
 		DataUtilities::ApplyDataViewText(this);
 	}
+}
+
+DataModel* Text::GetDataModel() const {
+	return parent->GetDataModel();
 }
 
 Node* Text::Clone(bool deep) const {

@@ -46,7 +46,7 @@ struct LuaDataModel {
 	LuaTableDef* tableDef;
 	lua_State* dataL;
 	int top;
-	LuaDataModel(Rml::Document* document, const std::string& name);
+	LuaDataModel(Rml::Document* document);
 	~LuaDataModel() { release(); }
 	void release();
 	bool valid() { return !!datamodel; }
@@ -276,8 +276,8 @@ lDataModelDelete(lua_State* L) {
 	return 0;
 }
 
-LuaDataModel::LuaDataModel(Rml::Document* document, const std::string& name)
-	: datamodel(document->CreateDataModel(name))
+LuaDataModel::LuaDataModel(Rml::Document* document)
+	: datamodel(document->CreateDataModel())
 	, scalarDef(new LuaScalarDef(this))
 	, tableDef(new LuaTableDef(this))
 	, dataL(nullptr)
@@ -296,20 +296,19 @@ void LuaDataModel::release() {
 int
 lDataModelCreate(lua_State *L) {
 	Rml::Document* document = (Rml::Document*)lua_touserdata(L, 1);
-	std::string name = luaL_checkstring(L, 2);
-	luaL_checktype(L, 3, LUA_TTABLE);
+	luaL_checktype(L, 2, LUA_TTABLE);
 
 	struct LuaDataModel* D = (struct LuaDataModel*)lua_newuserdata(L, sizeof(*D));
-	new (D) LuaDataModel(document, name);
+	new (D) LuaDataModel(document);
 	if (!D->valid()) {
-		return luaL_error(L, "Can't create DataModel with name %s", name.c_str());
+		return luaL_error(L, "Can't create DataModel");
 	}
 
 	D->dataL = lua_newthread(L);
 	D->top = 1;
 	lua_newtable(D->dataL);
 	lua_pushnil(L);
-	while (lua_next(L, 3) != 0) {
+	while (lua_next(L, 2) != 0) {
 		BindVariable(D, L);
 	}
 	lua_setuservalue(L, -2);

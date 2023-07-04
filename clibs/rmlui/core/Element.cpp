@@ -61,7 +61,6 @@ Element::~Element() {
 	GetPlugin()->OnDestroyNode(GetOwnerDocument(), this);
 	assert(parent == nullptr);
 	assert(childnodes.empty());
-	SetDataModel(nullptr);
 
 	auto& c = Style::Instance();
 	c.Release(animation_properties);
@@ -708,17 +707,10 @@ std::string Element::GetOuterHTML() const {
 	return html;
 }
 
-
-void Element::SetDataModel(DataModel* new_data_model) {
-	assert(!data_model || !new_data_model);
-	if (data_model == new_data_model)
-		return;
-	if (data_model)
-		data_model->OnElementRemove(this);
-	data_model = new_data_model;
-	if (!data_model) {
+void Element::InitDataModel() {
+	if (!GetDataModel()) {
 		for (auto& child : childnodes) {
-			child->SetDataModel(nullptr);
+			child->InitDataModel();
 		}
 		return;
 	}
@@ -728,9 +720,13 @@ void Element::SetDataModel(DataModel* new_data_model) {
 	else {
 		DataUtilities::ApplyDataViewsControllers(this);
 		for (auto& child : childnodes) {
-			child->SetDataModel(data_model);
+			child->InitDataModel();
 		}
 	}
+}
+
+DataModel* Element::GetDataModel() const {
+	return GetOwnerDocument()->GetDataModel();
 }
 
 void Element::RefreshProperties() {
@@ -756,31 +752,7 @@ void Element::SetParentNode(Element* _parent) {
 	DirtyTransform();
 	DirtyClip();
 	DirtyPerspective();
-
-	if (!parent) {
-		if (data_model)
-			SetDataModel(nullptr);
-	}
-	else {
-		auto it = attributes.find("data-model");
-		if (it == attributes.end()) {
-			SetDataModel(parent->data_model);
-		}
-		else if (parent->data_model) {
-			std::string const& name = it->second;
-			Log::Message(Log::Level::Error, "Nested data models are not allowed. Data model '%s' given in element %s.", name.c_str(), GetAddress().c_str());
-		}
-		else {
-			std::string const& name = it->second;
-			if (DataModel* model = GetOwnerDocument()->GetDataModelPtr(name)) {
-				model->AttachModelRootElement(this);
-				SetDataModel(model);
-			}
-			else {
-				Log::Message(Log::Level::Error, "Could not locate data model '%s' in element %s.", name.c_str(), GetAddress().c_str());
-			}
-		}
-	}
+	InitDataModel();
 }
 
 void Element::UpdateStackingContext() {

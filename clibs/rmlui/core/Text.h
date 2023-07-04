@@ -19,6 +19,7 @@ public:
 	virtual Size Measure(float minWidth, float maxWidth, float minHeight, float maxHeight);
 	float GetBaseline();
 	void ChangedProperties(const PropertyIdSet& properties);
+	DataModel* GetDataModel() const override;
 protected:
 	virtual float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float& line_height);
 	std::optional<Property> GetComputedProperty(PropertyId id);
@@ -34,7 +35,7 @@ protected:
 	}
 
 	void SetParentNode(Element* parent) override;
-	void SetDataModel(DataModel* data_model) override;
+	void InitDataModel() override;
 	Node* Clone(bool deep = true) const override;
 	void CalculateLayout() override;
 	void Render() override;

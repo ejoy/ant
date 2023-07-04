@@ -43,10 +43,6 @@ public:
 	void DirtyVariable(const std::string& variable_name);
 	bool IsVariableDirty(const std::string& variable_name) const;
 
-	// Elements declaring 'data-model' need to be attached.
-	void AttachModelRootElement(Element* element);
-	std::vector<Element*> GetAttachedModelRootElements() const;
-
 	void OnElementRemove(Element* element);
 
 	void Update(bool clear_dirty_variables);
@@ -63,7 +59,6 @@ private:
 	DirtyVariables dirty_variables;
 	std::unordered_map<std::string, DataEventFunc> event_callbacks;
 	ScopedAliases aliases;
-	std::unordered_set<Element*> attached_elements;
 };
 
 }

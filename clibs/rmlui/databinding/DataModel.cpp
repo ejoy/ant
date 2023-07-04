@@ -96,7 +96,6 @@ DataModel::DataModel()
 {}
 
 DataModel::~DataModel() {
-	assert(attached_elements.empty());
 }
 
 void DataModel::AddView(DataViewPtr view) {
@@ -283,18 +282,9 @@ bool DataModel::IsVariableDirty(const std::string& variable_name) const {
 	return dirty_variables.count(variable_name) == 1;
 }
 
-void DataModel::AttachModelRootElement(Element* element) {
-	attached_elements.insert(element);
-}
-
-ElementList DataModel::GetAttachedModelRootElements() const {
-	return ElementList(attached_elements.begin(), attached_elements.end());
-}
-
 void DataModel::OnElementRemove(Element* element) {
 	EraseAliases(element);
 	events.erase(element);
-	attached_elements.erase(element);
 }
 
 void DataModel::Update(bool clear_dirty_variables) {

@@ -26,13 +26,11 @@ local function createWindow(document, source)
     --TODO: pool
     local window = {}
     local timer_object = setmetatable({}, {__mode = "k"})
-    function window.createModel(name)
-        return function (init)
-            local model = rmlui.DataModelCreate(document, name, init)
-            datamodels[document][name] = model
-            debug.setmetatable(model, datamodel_mt)
-            return model
-        end
+    function window.createModel(init)
+        local model = rmlui.DataModelCreate(document, init)
+        datamodels[document] = model
+        debug.setmetatable(model, datamodel_mt)
+        return model
     end
     function window.open(url)
         local newdoc = contextManager.open(url)
@@ -118,15 +116,16 @@ local function createWindow(document, source)
 end
 
 function event.OnDocumentCreate(document, globals)
-    datamodels[document] = {}
+    datamodels[document] = nil
     globals.window = createWindow(document)
 end
 
 function event.OnDocumentDestroy(document)
-    for _, model in pairs(datamodels[document]) do
+    local model = datamodels[document]
+    if model then
         rmlui.DataModelRelease(model)
+        datamodels[document] = nil
     end
-    datamodels[document] = nil
 end
 
 return createWindow

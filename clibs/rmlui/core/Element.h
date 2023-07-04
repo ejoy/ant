@@ -143,7 +143,8 @@ public:
 	const EdgeInsets<float>& GetBorder() const;
 
 	void SetParentNode(Element* parent) override;
-	void SetDataModel(DataModel* data_model) override;
+	void InitDataModel() override;
+	DataModel* GetDataModel() const override;
 	Node* Clone(bool deep = true) const override;
 	void CalculateLayout() override;
 	void Render() override;

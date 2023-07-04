@@ -38,7 +38,7 @@
             }
         </style>
         <script type="text/x-lua" >
-            local start = window.createModel "start" {
+            local start = window.createModel {
                 show = false,
                 label = "新游戏"
             }
@@ -74,7 +74,7 @@
         </script>
     </head>
     <body>
-        <div id="test" data-model="start">
+        <div id="test">
             <button id = "new" data-event-click="new()">{{label}}</button>
             <button data-event-click="load()">载入游戏</button>
             <button data-event-click="setting()">设置</button>

@@ -32,10 +32,10 @@ public:
 	Element* ElementFromPoint(Point pt);
 	void Update(float delta);
 	void UpdateLayout();
-	DataModel* CreateDataModel(const std::string& name);
-	bool RemoveDataModel(const std::string& name);
+	DataModel* CreateDataModel();
+	void RemoveDataModel();
 	void UpdateDataModel(bool clear_dirty_variables);
-	DataModel* GetDataModelPtr(const std::string& name) const;
+	DataModel* GetDataModel() const;
 	Element* GetBody();
 	const Element* GetBody() const;
 	Element* CreateElement(const std::string& tag);
@@ -50,7 +50,7 @@ private:
 	std::string source_url;
 	StyleSheet style_sheet;
 	std::unordered_set<std::string> custom_element;
-	std::unordered_map<std::string, std::unique_ptr<DataModel>> data_models;
+	std::unique_ptr<DataModel> data_model;
 	std::deque<std::unique_ptr<Node>> removednodes;
 	Element body;
 	Size dimensions;

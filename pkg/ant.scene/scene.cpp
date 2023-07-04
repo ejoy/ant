@@ -177,6 +177,11 @@ scene_changed(lua_State *L) {
 		}
 	}
 
+	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene>(w->ecs)) {
+		auto& s = e.get<ecs::scene>();
+		assert(!math_isnull(s.worldmat));
+	}
+
 	++w->frame;
 
 	return 0;
