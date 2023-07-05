@@ -228,9 +228,6 @@ DataViewText::DataViewText(Text* element)
 {}
 
 bool DataViewText::Initialize(DataModel& model) {
-	if (!element->GetParentNode()->IsVisible()) {
-		return false;
-	}
 	const std::string& in_text = element->GetText();
 	text.reserve(in_text.size());
 	DataExpressionInterface expression_interface(&model, element.get());
@@ -267,9 +264,6 @@ bool DataViewText::Initialize(DataModel& model) {
 }
 
 bool DataViewText::Update(DataModel& model) {
-	if (!element->GetParentNode()->IsVisible()) {
-		return false;
-	}
 	bool entries_modified = false;
 	{
 		DataExpressionInterface expression_interface(&model, element.get());

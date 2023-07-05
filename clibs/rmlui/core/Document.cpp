@@ -109,11 +109,11 @@ void Document::LoadExternalStyle(const std::string& source_path) {
 	StyleSheetFactory::CombineStyleSheet(style_sheet, source_path);
 }
 
-void Document::UpdateDataModel(bool clear_dirty_variables) {
+void Document::UpdateDataModel() {
 	if (data_model) {
 		for (int i = 1; i < 10; ++i) {
 			body.UpdateDataModel();
-			data_model->Update(clear_dirty_variables);
+			data_model->Update();
 			if (!data_model->IsDirty()) {
 				break;
 			}
@@ -154,7 +154,7 @@ const Size& Document::GetDimensions() {
 }
 
 void Document::Flush() {
-	UpdateDataModel(true);
+	UpdateDataModel();
 	body.Update();
 	UpdateLayout();
 	body.UpdateRender();
@@ -162,7 +162,7 @@ void Document::Flush() {
 
 void Document::Update(float delta) {
 	removednodes.clear();
-	UpdateDataModel(true);
+	UpdateDataModel();
 	body.Update();
 	body.UpdateAnimations(delta);
 	Style::Instance().Flush();//TODO

@@ -6,10 +6,12 @@ $input v_texcoord0 v_posWS v_normal v_tangent v_bitangent
 #include "common/camera.sh"
 #include "common/common.sh"
 #include "common/transform.sh"
+#include "common/utils.sh"
+#include "common/postprocess.sh"
+#include "common/uvmotion.sh"
+
 #include "pbr/lighting.sh"
 #include "pbr/input_attributes.sh"
-
-#include "common/postprocess.sh"
 
 // Surface settings:
 //s_scene_color/s_scene_depth define in postprocess.sh as stage 0/1
@@ -140,5 +142,6 @@ void main()
 	l.pt2l	= l.dir;
 	l.attenuation = 1.0;
 
-    gl_FragColor = vec4(get_light_radiance(l, v_posWS.xyz, mi), 1.0);
+	//TODO: need calculate lighting
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);// vec4(get_light_radiance(l, v_posWS.xyz, mi), 1.0);
 }

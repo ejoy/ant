@@ -35,7 +35,7 @@ public:
 	void UpdateLayout();
 	DataModel* CreateDataModel();
 	void RemoveDataModel();
-	void UpdateDataModel(bool clear_dirty_variables);
+	void UpdateDataModel();
 	DataModel* GetDataModel() const;
 	Element* GetBody();
 	const Element* GetBody() const;

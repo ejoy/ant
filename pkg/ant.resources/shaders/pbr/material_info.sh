@@ -23,7 +23,7 @@ struct material_info
     // Energy compensation for multiple scattering in a microfacet model
     // See "Multiple-Scattering Microfacet BSDFs with the Smith Model"
     vec3 DFG;
-    float energy_compensation;
+    vec3 energy_compensation;
 
 #ifdef ENABLE_BENT_NORMAL
     mediump vec3 bent_normal;
@@ -33,15 +33,6 @@ struct material_info
 #include "pbr/common.sh"
 #include "pbr/input_attributes.sh"
 #include "pbr/ibl.sh"
-
-void calc_reflectance(in input_attributes input_attribs, inout material_info mi)
-{
-    vec3 f0_ior = vec3_splat(MIN_ROUGHNESS);
-    mi.f0 = lerp(f0_ior, input_attribs.basecolor.rgb, input_attribs.metallic);
-    mi.f90 = saturate(dot(mi.f0, vec3_splat(50.0 * 0.33)));
-
-    mi.albedo = input_attribs.basecolor.rgb * (1.0 - mi.metallic);
-}
 
 material_info init_material_info(in input_attributes input_attribs)
 {
@@ -63,11 +54,14 @@ material_info init_material_info(in input_attributes input_attribs)
 #endif //ENABLE_BENT_NORMAL
 
     mi.reflect_vector = normalize(reflect(-mi.V, mi.N));
-    
-    calc_reflectance(input_attribs, mi);
+
+    mi.f0 = lerp(vec3_splat(MIN_ROUGHNESS), input_attribs.basecolor.rgb, input_attribs.metallic);
+    mi.f90 = saturate(dot(mi.f0, vec3_splat(50.0 * 0.33)));
+
+    mi.albedo = input_attribs.basecolor.rgb * (1.0 - mi.metallic);
 
     mi.DFG = get_IBL_DFG(mi.f0, mi.f90, mi.NdotV, mi.perceptual_roughness);
-    mi.energy_compensation = 1.0 + mi.f0 * (1.0 / mi.DFG.y - 1.0);
+    mi.energy_compensation = vec3_splat(1.0); //1.0 + mi.f0 * (1.0 / mi.DFG.y - 1.0);
     return mi;
 }
 

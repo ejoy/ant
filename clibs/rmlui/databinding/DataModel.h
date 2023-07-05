@@ -45,7 +45,7 @@ public:
 	void MarkDirty();
 	bool IsDirty() const;
 	void OnElementRemove(Element* element);
-	void Update(bool clear_dirty_variables);
+	void Update();
 
 private:
 	using DataViewList = std::vector<DataViewPtr>;
