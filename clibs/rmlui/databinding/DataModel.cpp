@@ -291,7 +291,7 @@ void DataModel::OnElementRemove(Element* element) {
 	events.erase(element);
 }
 
-void DataModel::Update(bool clear_dirty_variables) {
+void DataModel::Update() {
 	dirty = false;
 	// View updates may result in newly added views, thus we do it recursively but with an upper limit.
 	//   Without the loop, newly added views won't be updated until the next Update() call.
@@ -351,7 +351,6 @@ void DataModel::Update(bool clear_dirty_variables) {
 		views_to_remove.clear();
 	}
 
-	if (clear_dirty_variables)
-		dirty_variables.clear();
+	dirty_variables.clear();
 }
 }
