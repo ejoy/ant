@@ -162,11 +162,11 @@ local default_material_info
 
 local material_files = {}
 
-local function save_material(output, exports, mi)
+local function save_material(input, output, exports, mi)
     local f = utility.full_path(mi.filename:string())
     if not material_files[f:string()] then
         material_files[f:string()] = true
-        material_compile(exports.tasks, exports.depfiles, mi.material, output / mi.filename, function (path)
+        material_compile(exports.tasks, exports.depfiles, mi.material, input, output / mi.filename, function (path)
             return fs.path(path):localpath()
         end)
     end
@@ -209,7 +209,7 @@ local function has_skin(gltfscene, exports, nodeidx)
     end
 end
 
-local function seri_material(output, exports, mode, materialidx, cfg)
+local function seri_material(input, output, exports, mode, materialidx, cfg)
     local em = exports.material
     if em == nil or #em <= 0 then
         return
@@ -219,7 +219,7 @@ local function seri_material(output, exports, mode, materialidx, cfg)
         local mi = assert(exports.material[materialidx+1])
         local materialinfo = generate_material(mi, mode, cfg)
         if materialinfo then
-            save_material(output, exports, materialinfo)
+            save_material(input, output, exports, materialinfo)
             return materialinfo.filename
         end
     end
@@ -272,7 +272,7 @@ local function has_color_attrib(declname)
     end
 end
 
-local function create_mesh_node_entity(math3d, output, gltfscene, nodeidx, parent, exports)
+local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, exports)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
     local meshidx = node.mesh
@@ -288,7 +288,7 @@ local function create_mesh_node_entity(math3d, output, gltfscene, nodeidx, paren
             pack_tangent_frame = em.pack_tangent_frame,
         }
 
-        local materialfile = seri_material(output, exports, prim.mode or 4, prim.material, cfg)
+        local materialfile = seri_material(input, output, exports, prim.mode or 4, prim.material, cfg)
         if materialfile == nil then
             materialfile = fs.path "/pkg/ant.resources/materials/pbr_default.material"
             --error(("not found %s material %d"):format(meshname, prim.material or -1))
@@ -409,7 +409,7 @@ local function find_mesh_nodes(gltfscene, scenenodes, meshnodes)
     end
 end
 
-return function (math3d, output, glbdata, exports, localpath)
+return function (math3d, input, output, glbdata, exports, localpath)
     prefab = {}
     material_files = {}
     local gltfscene = glbdata.info
@@ -449,7 +449,7 @@ return function (math3d, output, glbdata, exports, localpath)
         local node = gltfscene.nodes[nodeidx+1]
         local e
         if node.mesh then
-            e = create_mesh_node_entity(math3d, output, gltfscene, nodeidx, parent, exports)
+            e = create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, exports)
         else
             e = create_node_entity(math3d, gltfscene, nodeidx, parent, exports)
         end

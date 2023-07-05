@@ -134,10 +134,10 @@ function init_loader_sys:init()
 
     end)
 
---[[     create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
+     create_instance("/pkg/ant.resources.binary/meshes/DamagedHelmet.glb|mesh.prefab", function (e)
         local root<close> = w:entity(e.tag['*'][1])
         iom.set_position(root, math3d.vector(3, 1, 0))
-    end) ]]
+    end) 
     --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
 
 end
@@ -146,7 +146,7 @@ local velocity_eid
 local function render_layer_test()
     irl.add_layers(irl.layeridx "background", "mineral", "translucent_plane", "translucent_plane1")
     local m = imesh.init_mesh(ientity.plane_mesh())
-    velocity_eid = ecs.create_entity {
+--[[     velocity_eid = ecs.create_entity {
         policy = {
             "ant.render|render",
          },
@@ -168,7 +168,7 @@ local function render_layer_test()
             --mesh        = "/pkg/ant.resources.binary/meshes/furnace-1.glb|meshes/Cylinder.001_P1.meshbin",
 
         },
-    }
+    } ]]
      --ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_duck.prefab"
     --ecs.create_instance  "/pkg/ant.test.features/assets/entities/outline_wind.prefab" 
 --[[     create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", function (e)
@@ -234,7 +234,8 @@ local function drawindirect_test()
             mesh = "/pkg/ant.test.features/mountain1.glb|meshes/Cylinder.002_P1.meshbin",
             scene = {s = {0.125, 0.125, 0.125}, t = {5, 0, 5}},
             material = "/pkg/ant.test.features/mountain1.glb|materials/Material_clr.material",
-            visible_state = "main_view|velocity_queue",
+            --material = "/pkg/ant.test.features/assets/pbr_test.material",
+            visible_state = "main_view",
             name = "test",
         }
     }

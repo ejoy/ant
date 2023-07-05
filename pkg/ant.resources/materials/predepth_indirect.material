@@ -1,6 +1,7 @@
 fx:
-  fs: /pkg/ant.resources/shaders/depth/fs_depth.sc
-  vs: /pkg/ant.resources/shaders/depth/vs_depth.sc
+  shader_type: "DEPTH"
+  vs_code: "depth/depth_vs_func.sh"
+  fs_code: "depth/depth_fs_func.sh"
   setting:
     DRAW_INDIRECT: 1
     lighting: off

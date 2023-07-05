@@ -9,7 +9,7 @@ $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_LIGHTMAP
 void main()
 {
 #ifdef DRAW_INDIRECT
-	mediump mat4 wm = get_indirect_wolrd_matrix(i_data0, i_data1, i_data2, u_draw_indirect_type);
+	mediump mat4 wm = get_indirect_world_matrix(i_data0, i_data1, i_data2, u_draw_indirect_type);
 #else
 	mediump mat4 wm = get_world_matrix();
 #endif //DRAW_INDIRECT

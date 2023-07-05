@@ -112,10 +112,20 @@ local UV_map = {
     REPEAT          = "WRAP",
 }
 
+
+local function get_default_code(stage)
+    if stage == 'vs' then return "common/default_vs_func.sh"
+    elseif stage == 'fs' then return "common/default_fs_func.sh"
+    end
+end
+
 local function get_default_fx()
     return {
-        fs = "/pkg/ant.resources/shaders/pbr/fs_pbr.sc",
-        vs = "/pkg/ant.resources/shaders/pbr/vs_pbr.sc",
+        shader_type = "PBR",
+        fs = "/pkg/ant.resources/shaders/dynamic_material/fs_default.sc",
+        vs = "/pkg/ant.resources/shaders/dynamic_material/vs_default.sc",
+        vs_code     = get_default_code('vs'),
+        fs_code     = get_default_code('fs'),
     }
 end
 
@@ -267,6 +277,7 @@ return function (output, glbdata, exports, tolocalpath)
             "/pkg/ant.resources/materials/states/translucent.state"
         return read_datalist(tolocalpath(name))
     end
+
 
     exports.material = {}
     for matidx, mat in ipairs(materials) do

@@ -28,6 +28,23 @@ mediump SAMPLER2D(s_occlusion,          4);
 mediump SAMPLER2D(s_lightmap,           8);
 #endif //USING_LIGHTMAP
 
+#ifdef HAS_MARK_ALPHA_TEXTURE
+SAMPLER2DARRAY(s_mark_alpha,       3);
+#endif
+
+#ifdef HAS_TERRAIN_BASECOLOR_ARRAY_TEXTURE
+SAMPLER2DARRAY(s_basecolor,       0);
+#endif
+
+#ifdef HAS_TERRAIN_HEIGHT_ARRAY_TEXTURE
+SAMPLER2DARRAY(s_height,       1);
+#endif
+
+#ifdef HAS_TERRAIN_NORMAL_ARRAY_TEXTURE
+SAMPLER2DARRAY(s_normal,       2);
+#endif
+
+
 uniform mediump vec4 u_basecolor_factor;
 uniform mediump vec4 u_emissive_factor;
 uniform mediump vec4 u_pbr_factor;
