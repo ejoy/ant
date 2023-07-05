@@ -395,12 +395,14 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 	}
 	Color color = GetTextDecorationColor();
 	color.ApplyOpacity(parent->GetOpacity());
+	float underline_thickness = 0;
+	float underline_position = 0;
+	if (!GetRenderInterface()->GetUnderline(font_face_handle, underline_position, underline_thickness)) {
+		return;
+	}
 	for (const Line& line : lines) {
 		Point position = line.position;
 		float width = (float)line.width;
-		float underline_thickness = 0;
-		float underline_position = 0;
-		GetRenderInterface()->GetUnderline(font_face_handle, underline_position, underline_thickness);
 
 		switch (text_decoration_line) {
 		case Style::TextDecorationLine::Underline: {
