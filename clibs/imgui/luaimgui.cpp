@@ -2994,8 +2994,8 @@ uGetItemRectSize(lua_State *L) {
 }
 
 static int
-uSetItemAllowOverlap(lua_State *L) {
-	ImGui::SetItemAllowOverlap();
+uSetNextItemAllowOverlap(lua_State *L) {
+	ImGui::SetNextItemAllowOverlap();
 	return 0;
 }
 
@@ -3346,9 +3346,7 @@ static struct enum_pair eSelectableFlags[] = {
 	ENUM(ImGuiSelectableFlags, DontClosePopups),
 	ENUM(ImGuiSelectableFlags, SpanAllColumns),
 	ENUM(ImGuiSelectableFlags, AllowDoubleClick),
-#if(IMGUI_VERSION_NUM >= 17300)
-	ENUM(ImGuiSelectableFlags, AllowItemOverlap),
-#endif
+	ENUM(ImGuiSelectableFlags, AllowOverlap),
 	// Use boolean(disabled) in Selectable(_,_, disabled)
 	//	ENUM(ImGuiSelectableFlags, Disabled),
 	{ NULL, 0 },
@@ -3358,7 +3356,7 @@ static struct enum_pair eTreeNodeFlags[] = {
 	ENUM(ImGuiTreeNodeFlags, None),
 	ENUM(ImGuiTreeNodeFlags, Selected),
 	ENUM(ImGuiTreeNodeFlags, Framed),
-	ENUM(ImGuiTreeNodeFlags, AllowItemOverlap),
+	ENUM(ImGuiTreeNodeFlags, AllowOverlap),
 	ENUM(ImGuiTreeNodeFlags, NoTreePushOnOpen),
 	ENUM(ImGuiTreeNodeFlags, NoAutoOpenOnLog),
 	ENUM(ImGuiTreeNodeFlags, DefaultOpen),
@@ -3367,10 +3365,8 @@ static struct enum_pair eTreeNodeFlags[] = {
 	ENUM(ImGuiTreeNodeFlags, Leaf),
 	ENUM(ImGuiTreeNodeFlags, Bullet),
 	ENUM(ImGuiTreeNodeFlags, FramePadding),
-#if(IMGUI_VERSION_NUM >= 17300)
 	ENUM(ImGuiTreeNodeFlags, SpanAvailWidth),
 	ENUM(ImGuiTreeNodeFlags, SpanFullWidth),
-#endif
 	ENUM(ImGuiTreeNodeFlags, NavLeftJumpsBackHere),
 	ENUM(ImGuiTreeNodeFlags, CollapsingHeader),
 	{ NULL, 0 },
@@ -4170,7 +4166,7 @@ luaopen_imgui(lua_State *L) {
 		{ "GetItemRectMin", uGetItemRectMin },
 		{ "GetItemRectMax", uGetItemRectMax },
 		{ "GetItemRectSize", uGetItemRectSize },
-		{ "SetItemAllowOverlap", uSetItemAllowOverlap },
+		{ "SetNextItemAllowOverlap", uSetNextItemAllowOverlap },
 		{ "LoadIniSettings", uLoadIniSettings },
 		{ "SaveIniSettings", uSaveIniSettings },
 		{ "SetNextFrameWantCaptureKeyboard", uSetNextFrameWantCaptureKeyboard },
