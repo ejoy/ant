@@ -43,7 +43,7 @@ local function recompile_materials(input, output)
     local tasks = parallel_task.new()
     for material_path in lfs.pairs(output / "materials") do
         local mat = readdatalist(material_path / "main.cfg")
-        material_compile(tasks, depfiles, mat, material_path, function (path)
+        material_compile(tasks, depfiles, mat, input, material_path, function (path)
             return fs.path(path):localpath()
         end)
     end
@@ -54,7 +54,7 @@ end
 return function (input, output, tolocalpath, changed)
     if changed ~= true and changed:match "%.s[ch]$" then
         return recompile_materials(input, output)
-    end
+    end 
     local setting = config.get "glb".setting
     local math3d = math3d_pool.alloc(setting)
     lfs.remove_all(output)

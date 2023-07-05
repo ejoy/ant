@@ -80,6 +80,10 @@ local primitive_names = {
 local material_cache = {}
 
 local function generate_material(mi, mode, cfg)
+    if mi.material.fx.shader_type then
+        mi.material.fx.vs = nil
+        mi.material.fx.fs = nil
+    end
     local sname = primitive_names[mode+1]
     if not sname then
         error(("not support primitate state, mode:%d"):format(mode))
@@ -289,6 +293,7 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
         }
 
         local materialfile = seri_material(input, output, exports, prim.mode or 4, prim.material, cfg)
+
         if materialfile == nil then
             materialfile = fs.path "/pkg/ant.resources/materials/pbr_default.material"
             --error(("not found %s material %d"):format(meshname, prim.material or -1))

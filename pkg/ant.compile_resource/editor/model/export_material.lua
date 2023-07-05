@@ -114,16 +114,16 @@ local UV_map = {
 
 
 local function get_default_code(stage)
-    if stage == 'vs' then return "common/default_vs_func.sh"
-    elseif stage == 'fs' then return "common/default_fs_func.sh"
+    if stage == 'vs' then return '\n#include "common/default_vs_func.sh"\n' 
+    elseif stage == 'fs' then return '\n#include "common/default_fs_func.sh"\n' 
     end
 end
 
 local function get_default_fx()
     return {
         shader_type = "PBR",
-        fs = "/pkg/ant.resources/shaders/dynamic_material/fs_default.sc",
-        vs = "/pkg/ant.resources/shaders/dynamic_material/vs_default.sc",
+        --fs = "/pkg/ant.resources/shaders/dynamic_material/fs_default.sc",
+        --vs = "/pkg/ant.resources/shaders/dynamic_material/vs_default.sc",
         vs_code     = get_default_code('vs'),
         fs_code     = get_default_code('fs'),
     }

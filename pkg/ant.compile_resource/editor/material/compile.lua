@@ -202,24 +202,30 @@ local DEF_VARYING_FILE<const> = SHADER_BASE / "common/varying_def.sh"
 local DEF_VARYING_FILE_DYNAMIC<const> = SHADER_BASE / "common/varying.def.sc"
 local DEF_VS_FILE<const> = SHADER_BASE / "dynamic_material/vs_default.sc"
 local DEF_FS_FILE<const> = SHADER_BASE / "dynamic_material/fs_default.sc"
-local DEF_VS_FILE_LOCAL<const> = SHADER_BASE_LOCAL .. "dynamic_material/vs_default.sc"
-local DEF_FS_FILE_LOCAL<const> = SHADER_BASE_LOCAL .. "dynamic_material/fs_default.sc"
+local DEF_VS_FILE_LOCAL<const> = SHADER_BASE_LOCAL .. "/dynamic_material/vs_default.sc"
+local DEF_FS_FILE_LOCAL<const> = SHADER_BASE_LOCAL .. "/dynamic_material/fs_default.sc"
 
-local function replace_custom_func(defaultpath, inputpath, mat, stage)
+local function replace_custom_func(inputpath, mat, stage)
+    local defaultpath
+    if stage == "vs" then
+        defaultpath = DEF_VS_FILE
+    elseif stage == "fs" then
+        defaultpath = DEF_FS_FILE
+    end
     local file_read<close> = assert(lfs.open(defaultpath, "r"))
     local file_read_compile = file_read:read "a"
     if stage == "vs" then
         if not mat.fx.vs_code then 
             mat.fx.vs_code = '\n#include "common/default_vs_func.sh"\n' 
         else
-            mat.fx.vs_code = '\n#include "' .. mat.fx.vs_code ..'"\n' 
+            mat.fx.vs_code = mat.fx.vs_code
         end
         file_read_compile = file_read_compile:gsub("%s*$$CUSTOM_VS_FUNC$$%s*", mat.fx.vs_code)
     elseif stage == "fs" then
         if not mat.fx.fs_code then 
             mat.fx.fs_code = '\n#include "common/default_fs_func.sh"\n' 
         else
-            mat.fx.fs_code = '\n#include "' .. mat.fx.fs_code ..'"\n' 
+            mat.fx.fs_code = mat.fx.fs_code
         end
         file_read_compile = file_read_compile:gsub("%s*$$CUSTOM_FS_FUNC$$%s*", mat.fx.fs_code)
     end
@@ -235,11 +241,12 @@ local function compile(tasks, deps, mat, input, output, localpath)
     local fx = mat.fx
     mergeCfgSetting(fx, localpath)
     writefile(output / "main.cfg", mat)
-    if fx.shader_type == "DEPTH" then
+    if fx.shader_type then
+        assert((not fx["vs"]) and (not fx["fs"]), "dynamic material must not exist vs/fs")
         fx["vs"] = DEF_VS_FILE_LOCAL
-    elseif fx.shader_type == "CUSTOM" or fx.shader_type == "PBR" then
-        fx["vs"] = DEF_VS_FILE_LOCAL
-        fx["fs"] = DEF_FS_FILE_LOCAL
+        if fx.shader_type == "CUSTOM" or fx.shader_type == "PBR" then
+            fx["fs"] = DEF_FS_FILE_LOCAL
+        end
     end
     for _, stage in ipairs {"vs","fs","cs"} do
         local inputpath = output / (stage..".sc")
@@ -258,13 +265,7 @@ local function compile(tasks, deps, mat, input, output, localpath)
                         end
                     end
                 else
-                    local defaultpath
-                    if stage == "vs" then
-                        defaultpath = DEF_VS_FILE
-                    elseif stage == "fs" then
-                        defaultpath = DEF_FS_FILE
-                    end
-                    replace_custom_func(defaultpath, inputpath, mat, stage)
+                    replace_custom_func(inputpath, mat, stage)
                     varying_path = DEF_VARYING_FILE_DYNAMIC
                 end
                 local ok, res = toolset.compile {

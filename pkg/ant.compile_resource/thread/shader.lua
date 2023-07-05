@@ -4,11 +4,6 @@ local lfs = require "filesystem.local"
 local fs  = require "filesystem"
 local bgfx = require "bgfx"
 
-local SHADER_BASE_LOCAL<const> = "/pkg/ant.resources/shaders"
-local DEF_VS_FILE_LOCAL<const> = SHADER_BASE_LOCAL .. "dynamic_material/vs_default.sc"
-local DEF_FS_FILE_LOCAL<const> = SHADER_BASE_LOCAL .. "dynamic_material/fs_default.sc"
-
-
 local function readall(filename)
     local f <close> = assert(lfs.open(cr.compile(filename), "rb"))
     return f:read "a"
@@ -76,11 +71,11 @@ local S = {}
 function S.shader_create(name)
     local material = serialize.parse(name, readall(name .. "|main.cfg"))
     local data = material.fx
-    if data.shader_type == "DEPTH" then
-        data["vs"] = DEF_VS_FILE_LOCAL
-    elseif data.shader_type == "CUSTOM" or data.shader_type == "PBR" then
-        data["vs"] = DEF_VS_FILE_LOCAL
-        data["fs"] = DEF_FS_FILE_LOCAL
+    if data.shader_type then
+        data["vs"] = true
+        if data.shader_type == "CUSTOM" or data.shader_type == "PBR" then
+            data["fs"] = true
+        end
     end
     local fx = {
         setting = data.setting or {}
