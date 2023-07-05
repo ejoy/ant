@@ -4,7 +4,8 @@
 #include "pbr/attribute_define.sh"
 #include "pbr/attribute_uniforms.sh"
 #include "common/default_inputs_structure.sh"
-
+#include "common/utils.sh"
+#include "common/uvmotion.sh"
 input_attributes init_input_attributes(vec3 gnormal, vec3 normal, vec4 posWS, vec4 basecolor, vec4 fragcoord, vec4 metallic, vec4 roughness)
 {
     input_attributes input_attribs  = (input_attributes)0;
