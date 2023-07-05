@@ -24,7 +24,6 @@ function rmlui_sys:init()
             width = ft_w, height = ft_h,
         },
     })
-    iRmlUi.font_dir "/pkg/ant.resources.binary/ui/test/assets/font/"
 
     local vp = world.args.viewport
     ecs.create_entity{
