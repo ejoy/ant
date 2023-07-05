@@ -411,18 +411,14 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 		case Style::TextDecorationLine::Overline: {
 			int ascent, descent, lineGap;
 			GetRenderInterface()->GetFontHeight(font_face_handle, ascent, descent, lineGap);
-			int baseline = -descent + lineGap;
-			int line_height = ascent - descent + lineGap;
-			position.y += baseline - line_height;
+			position.y -= ascent;
 			decoration_under = true;
 			break;
 		}
 		case Style::TextDecorationLine::LineThrough: {
 			int ascent, descent, lineGap;
 			GetRenderInterface()->GetFontHeight(font_face_handle, ascent, descent, lineGap);
-			int baseline = -descent + lineGap;
-			int line_height = ascent - descent + lineGap;
-			position.y += baseline - 0.5f * line_height;
+			position.y -= (ascent + descent) * 0.5f;
 			decoration_under = false;
 			break;
 		}
