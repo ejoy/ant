@@ -235,7 +235,7 @@ end
 
 local function compile(tasks, deps, mat, input, output, localpath)
     local setting = config.get "material".setting
-    local include_path = string.gsub(tostring(input), "%/[%w_]+%.material", "")
+    local include_path = input:parent_path()
     lfs.remove_all(output)
     lfs.create_directories(output)
     local fx = mat.fx
