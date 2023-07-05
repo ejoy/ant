@@ -719,6 +719,8 @@ void Element::UpdateDataModel() {
 	}
 	dirty.erase(Dirty::DataModel);
 	if (attributes.find("data-for") != attributes.end()) {
+		SetVisible(false);
+		UpdateLayout();
 		DataUtilities::ApplyDataViewFor(this);
 	}
 	else {
