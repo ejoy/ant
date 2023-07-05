@@ -559,7 +559,7 @@ local omni_stencils = {
 }
 
 function sm:update_filter()
-    for e in w:select "filter_result visible_state:in render_object:in filter_material:in material:in skinning?in indirect?in bounding:in" do
+    for e in w:select "filter_result visible_state:in render_object:in filter_material:in material:in skinning?in indirect?in bounding:in name:in" do
 		if not e.visible_state["cast_shadow"] then
 			goto continue
 		end
@@ -571,7 +571,13 @@ function sm:update_filter()
 			local mo = which_material(e.skinning, e.indirect)
 			local fm = e.filter_material
 			local newstate = irender.check_set_state(mo, fm.main_queue, function (d, s)
-				d.PT, d.CULL = s.PT, d.CULL
+				d.PT = s.PT
+				-- not s.CULL equals s.CULL == "NONE"
+				if not s.CULL then
+					d.CULL = s.CULL
+				else
+					d.CULL = "CW"
+				end
 				d.DEPTH_TEST = "GREATER"
 				return d
 			end)
