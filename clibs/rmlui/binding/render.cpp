@@ -529,11 +529,11 @@ void Renderer::GetFontHeight(Rml::FontFaceHandle handle, int& ascent, int& desce
     F->font_manager_fontheight(F, face.fontid, face.pixelsize, &ascent, &descent, &lineGap);
 }
 
-void Renderer::GetUnderline(Rml::FontFaceHandle handle, float& position, float &thickness){
+bool Renderer::GetUnderline(Rml::FontFaceHandle handle, float& position, float &thickness) {
     font_manager* F = mcontext->font_mgr;
     FontFace face;
     face.handle = handle;
-    F->font_manager_underline(F, face.fontid, face.pixelsize, &position, &thickness);
+    return 0 == F->font_manager_underline(F, face.fontid, face.pixelsize, &position, &thickness);
 }
 
 float Renderer::GetStringWidth(Rml::FontFaceHandle handle, const std::string& string){

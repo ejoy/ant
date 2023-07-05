@@ -85,7 +85,7 @@ struct font_manager {
 	const char* (*font_manager_update)(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer);
 	void (*font_manager_flush)(struct font_manager *);
 	void (*font_manager_scale)(struct font_manager *F, struct font_glyph *glyph, int size);
-	void (*font_manager_underline)(struct font_manager *F, int fontid, int size, float *underline_position, float *thickness);
+	int (*font_manager_underline)(struct font_manager *F, int fontid, int size, float *underline_position, float *thickness);
 
 	float (*font_manager_sdf_mask)(struct font_manager *F);
 	float (*font_manager_sdf_distance)(struct font_manager *F, uint8_t numpixel);
@@ -104,7 +104,7 @@ int font_manager_touch(struct font_manager *, int font, int codepoint, struct fo
 const char * font_manager_update(struct font_manager *, int font, int codepoint, struct font_glyph *glyph, uint8_t *buffer);
 void font_manager_flush(struct font_manager *);
 void font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size);
-void font_manager_underline(struct font_manager *F, int fontid, int size, float *underline_position, float *thickness);
+int font_manager_underline(struct font_manager *F, int fontid, int size, float *underline_position, float *thickness);
 float font_manager_sdf_mask(struct font_manager *F);
 float font_manager_sdf_distance(struct font_manager *F, uint8_t numpixel);
 

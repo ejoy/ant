@@ -185,12 +185,14 @@ font_manager_touch_unsafe(struct font_manager *F, int font, int codepoint, struc
 
 	const struct stbtt_fontinfo *fi = get_ttf_unsafe(F, font);
 
-	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
+	float scale = stbtt_ScaleForMappingEmToPixels(fi, ORIGINAL_SIZE);
 	int ascent, descent, lineGap;
 	int advance, lsb;
 	int ix0, iy0, ix1, iy1;
 
-	stbtt_GetFontVMetrics(fi, &ascent, &descent, &lineGap);
+	if (!stbtt_GetFontVMetricsOS2(fi, &ascent, &descent, &lineGap)) {
+		stbtt_GetFontVMetrics(fi, &ascent, &descent, &lineGap);
+	}
 	stbtt_GetCodepointHMetrics(fi, codepoint, &advance, &lsb);
 	stbtt_GetCodepointBitmapBox(fi, codepoint, scale, scale, &ix0, &iy0, &ix1, &iy1);
 
@@ -199,7 +201,7 @@ font_manager_touch_unsafe(struct font_manager *F, int font, int codepoint, struc
 	glyph->offset_x = (short)(lsb * scale) - DISTANCE_OFFSET;
 	glyph->offset_y = iy0 - DISTANCE_OFFSET;
 	glyph->advance_x = (short)(((float)advance) * scale + 0.5f);
-	glyph->advance_y = (short)((ascent + descent + lineGap) * scale + 0.5f);
+	glyph->advance_y = (short)((ascent - descent) * scale + 0.5f);
 	glyph->u = 0;
 	glyph->v = 0;
 
@@ -236,25 +238,28 @@ font_manager_fontheight(struct font_manager *F, int fontid, int size, int *ascen
 	}
 
 	const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
-	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
-	stbtt_GetFontVMetrics(fi, ascent, descent, lineGap);
+	float scale = stbtt_ScaleForMappingEmToPixels(fi, ORIGINAL_SIZE);
+	if (!stbtt_GetFontVMetricsOS2(fi, ascent, descent, lineGap)) {
+		stbtt_GetFontVMetrics(fi, ascent, descent, lineGap);
+	}
 	*ascent = scale_font(*ascent, scale, size);
 	*descent = scale_font(*descent, scale, size);
 	*lineGap = scale_font(*lineGap, scale, size);
 }
 
-void 
+int 
 font_manager_underline(struct font_manager *F, int fontid, int size, float *position, float *thickness){
 	const struct stbtt_fontinfo *fi = get_ttf(F, fontid);
-	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
+	float scale = stbtt_ScaleForMappingEmToPixels(fi, ORIGINAL_SIZE);
 	stbtt_uint32 post = stbtt__find_table(fi->data, fi->fontstart, "post");
 	if (!post) {
-		return;
+		return -1;
 	}
 	int16_t underline_position = ttSHORT(fi->data + post + 8);
 	int16_t underline_thickness = ttSHORT(fi->data + post + 10);
 	*position = fscale_font(underline_position, scale, size);
 	*thickness = fscale_font(underline_thickness, scale, size);
+	return 0;
 }
 
 // F->dpi_perinch is a constant, so do not need to lock
@@ -323,7 +328,7 @@ font_manager_update_unsafe(struct font_manager *F, int fontid, int codepoint, st
 	}
 
 	const struct stbtt_fontinfo *fi = get_ttf_unsafe(F, fontid);
-	float scale = stbtt_ScaleForPixelHeight(fi, ORIGINAL_SIZE);
+	float scale = stbtt_ScaleForMappingEmToPixels(fi, ORIGINAL_SIZE);
 
 	int width, height, xoff, yoff;
 
