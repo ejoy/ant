@@ -410,7 +410,7 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 		}
 		case Style::TextDecorationLine::Overline: {
 			int ascent, descent, lineGap;
-			GetRenderInterface()->GetHeight(font_face_handle, ascent, descent, lineGap);
+			GetRenderInterface()->GetFontHeight(font_face_handle, ascent, descent, lineGap);
 			int baseline = -descent + lineGap;
 			int line_height = ascent - descent + lineGap;
 			position.y += baseline - line_height;
@@ -419,7 +419,7 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 		}
 		case Style::TextDecorationLine::LineThrough: {
 			int ascent, descent, lineGap;
-			GetRenderInterface()->GetHeight(font_face_handle, ascent, descent, lineGap);
+			GetRenderInterface()->GetFontHeight(font_face_handle, ascent, descent, lineGap);
 			int baseline = -descent + lineGap;
 			int line_height = ascent - descent + lineGap;
 			position.y += baseline - 0.5f * line_height;
@@ -486,7 +486,7 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 
 float Text::GetLineHeight() {
 	int ascent, descent, lineGap;
-	GetRenderInterface()->GetHeight(GetFontFaceHandle(), ascent, descent, lineGap);
+	GetRenderInterface()->GetFontHeight(GetFontFaceHandle(), ascent, descent, lineGap);
 	auto property = GetComputedProperty(PropertyId::LineHeight);
 	if (property->Has<PropertyKeyword>()) {
 		return float(ascent - descent + lineGap);
@@ -497,7 +497,7 @@ float Text::GetLineHeight() {
 
 float Text::GetBaseline() {
 	int ascent, descent, lineGap;
-	GetRenderInterface()->GetHeight(GetFontFaceHandle(), ascent, descent, lineGap);
+	GetRenderInterface()->GetFontHeight(GetFontFaceHandle(), ascent, descent, lineGap);
 	auto property = GetComputedProperty(PropertyId::LineHeight);
 	if (property->Has<PropertyKeyword>()) {
 		return ascent + lineGap / 2.f;

@@ -522,7 +522,7 @@ static struct font_glyph GetGlyph(const RmlContext* mcontext, const FontFace& fa
     return g;
 }
 
-void Renderer::GetHeight(Rml::FontFaceHandle handle, int& ascent, int& descent, int& lineGap) {
+void Renderer::GetFontHeight(Rml::FontFaceHandle handle, int& ascent, int& descent, int& lineGap) {
     font_manager* F = mcontext->font_mgr;
     FontFace face;
     face.handle = handle;

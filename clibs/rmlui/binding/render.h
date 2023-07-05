@@ -35,7 +35,7 @@ public:
     void DestroyMaterial(Rml::MaterialHandle mat) override;
 
 	Rml::FontFaceHandle GetFontFaceHandle(const std::string& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, uint32_t size) override;
-    void GetHeight(Rml::FontFaceHandle handle, int& ascent, int& descent, int& lineGap) override;
+    void GetFontHeight(Rml::FontFaceHandle handle, int& ascent, int& descent, int& lineGap) override;
 	void GetUnderline(Rml::FontFaceHandle handle, float& position, float& thickness) override;
 	float GetStringWidth(Rml::FontFaceHandle handle, const std::string& string) override;
     float GetRichStringWidth(Rml::FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx,float line_height) override;
