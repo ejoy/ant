@@ -1,7 +1,7 @@
 fx:
   shader_type: "DEPTH"
-  vs_code: "\n#include \"depth/depth_vs_func.sh\"\n"
-  fs_code: "\n#include \"depth/depth_fs_func.sh\"\n"
+  vs_code: "depth/depth_vs_func.sh"
+  fs_code: "depth/depth_fs_func.sh"
   setting:
     DRAW_INDIRECT: 1
     lighting: off

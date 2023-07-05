@@ -114,8 +114,8 @@ local UV_map = {
 
 
 local function get_default_code(stage)
-    if stage == 'vs' then return '\n#include "common/default_vs_func.sh"\n'
-    elseif stage == 'fs' then return '\n#include "common/default_fs_func.sh"\n'
+    if stage == 'vs' then return "common/default_vs_func.sh"
+    elseif stage == 'fs' then return "common/default_fs_func.sh"
     end
 end
 
