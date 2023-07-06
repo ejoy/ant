@@ -4301,6 +4301,30 @@ lcreateTextureCube(lua_State *L){
 	return 1;
 }
 
+static int
+lcreateTexture3D(lua_State *L){
+	const int w = luaL_checkinteger(L, 1);
+	const int h = luaL_checkinteger(L, 2);
+	const int d = luaL_checkinteger(L, 3);
+
+	const int hasMips = lua_toboolean(L, 4);
+
+	const bgfx_texture_format_t fmt = texture_format_from_string(L, 5);
+
+	const uint64_t flags = lua_isnoneornil(L, 6) ? 
+						(BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE) :
+						get_texture_flags(L, luaL_checkstring(L, 6));
+
+	const bgfx_memory_t *mem = lua_isnoneornil(L, 7) ? NULL : getMemory(L, 7);
+
+	const bgfx_texture_handle_t handle = BGFX(create_texture_3d)(w, h, d, hasMips, fmt, flags, mem);
+
+	if (!BGFX_HANDLE_IS_VALID(handle))
+		return luaL_error(L, "create texture 3d failed");
+	lua_pushinteger(L, BGFX_LUAHANDLE(TEXTURE, handle));
+	return 1;
+}
+
 static inline int
 get_cubemap_side(lua_State*L, const char *s){
 	if (strcmp("+X", s) == 0)
@@ -5443,6 +5467,7 @@ luaopen_bgfx(lua_State *L) {
 		{ "create_uniform", lcreateUniform },
 		{ "create_texture2d", lcreateTexture2D },
 		{ "create_texturecube", lcreateTextureCube},
+		{ "create_texture3d", lcreateTexture3D},
 		{ "create_frame_buffer", lcreateFrameBuffer },
 		{ "create_indirect_buffer", lcreateIndirectBuffer },
 		{ "create_occlusion_query", lcreateOcclusionQuery },

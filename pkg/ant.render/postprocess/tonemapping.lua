@@ -7,19 +7,23 @@ local viewidmgr = require "viewid_mgr"
 local tm_sys    = ecs.system "tonemapping_system"
 local irender   = ecs.import.interface "ant.render|irender"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
+local imaterial = ecs.import.interface "ant.asset|imaterial"
+
 local util      = ecs.require "postprocess.util"
 
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
-
+local bgfx      = require "bgfx"
 local setting   = import_package "ant.settings".setting
 
 local ENABLE_BLOOM<const>   = setting:get "graphic/postprocess/bloom/enable"
 local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
-local ENABLE_TAA<const>    = setting:get "graphic/postprocess/taa/enable"
+local ENABLE_TAA<const>     = setting:get "graphic/postprocess/taa/enable"
+local ENABLE_TM_LUT<const>  = setting:get "graphic/postprocess/tonemapping/use_lut"
 local tm_viewid<const>      = viewidmgr.get "tonemapping"
 
 function tm_sys:init()
+    local drawer_material = ENABLE_TM_LUT and "/pkg/ant.resources/materials/postprocess/tonemapping_lut.material" or "/pkg/ant.resources/materials/postprocess/tonemapping.material"
     ecs.create_entity{
         policy = {
             "ant.render|simplerender",
@@ -28,10 +32,27 @@ function tm_sys:init()
         data = {
             name            = "tonemapping_drawer",
             simplemesh      = irender.full_quad(),
-            material        = "/pkg/ant.resources/materials/postprocess/tonemapping.material",
+            material        = drawer_material,
             visible_state   = "tonemapping_queue",
             view_visible    = true,
             tonemapping_drawer=true,
+            on_ready = function (e)
+                if ENABLE_TM_LUT then
+                    local cfg = {
+                        w = 32, h = 32, d = 32, 
+                    }
+                    local cg = util.bake_color_grading(cfg)
+                    local flags = sampler{
+                        U = "CLAMP",
+                        V = "CLAMP",
+                        W = "CLAMP",
+                        MIN="LINEAR",
+                        MAG="LINEAR",
+                    }
+                    local handle = bgfx.create_texture3d(cfg.w, cfg.h, cfg.d, false, "R10G10B10A2", flags, cg)
+                    imaterial.set_property(e, "s_colorgrading_lut", handle)
+                end
+            end,
             scene           = {},
         }
     }
