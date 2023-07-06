@@ -16,21 +16,21 @@ function BaseView:_init()
     self.inited = true
     self.has_rotate = true
     self.has_scale = true
-    local base = {}
-    base["script"]   = uiproperty.ResourcePath({label = "Script", extension = ".lua"})
-    base["prefab"]   = uiproperty.EditText({label = "Prefabe", readonly = true})
-    base["preview"]  = uiproperty.Bool({label = "OnlyPreview"})
-    base["name"]     = uiproperty.EditText({label = "Name"})
-    base["tag"]      = uiproperty.EditText({label = "Tag"})
-    base["position"] = uiproperty.Float({label = "Position", dim = 3, speed = 0.1})
-    base["rotate"]   = uiproperty.Float({label = "Rotate", dim = 3})
-    base["scale"]    = uiproperty.Float({label = "Scale", dim = 3, speed = 0.05})
-    base["aabbmin"]  = uiproperty.Float({label = "AABB Min", dim = 3, speed = 0.05})
-    base["aabbmax"]  = uiproperty.Float({label = "AABB Max", dim = 3, speed = 0.05})
-    base["create_aabb"]  = uiproperty.Button({label="Create AABB"})
-    base["delete_aabb"]  = uiproperty.Button({label="Delete AABB"})
-    self.base        = base
-    self.general_property = uiproperty.Group({label = "General"}, base)
+    self.base = {
+        script   = uiproperty.ResourcePath({label = "Script", extension = ".lua"}),
+        prefab   = uiproperty.EditText({label = "Prefabe", readonly = true}),
+        preview  = uiproperty.Bool({label = "OnlyPreview"}),
+        name     = uiproperty.EditText({label = "Name"}),
+        tag      = uiproperty.EditText({label = "Tag"}),
+        position = uiproperty.Float({label = "Position", dim = 3, speed = 0.1}),
+        rotate   = uiproperty.Float({label = "Rotate", dim = 3}),
+        scale    = uiproperty.Float({label = "Scale", dim = 3, speed = 0.05}),
+        aabbmin  = uiproperty.Float({label = "AABB Min", dim = 3, speed = 0.05}),
+        aabbmax  = uiproperty.Float({label = "AABB Max", dim = 3, speed = 0.05}),
+        create_aabb  = uiproperty.Button({label="Create AABB"}),
+        delete_aabb  = uiproperty.Button({label="Delete AABB"})
+    }
+    self.general_property = uiproperty.Group({label = "General"}, self.base)
     --
     self.base.prefab:set_getter(function() return self:on_get_prefab() end)
     self.base.preview:set_setter(function(value) self:on_set_preview(value) end)      
@@ -92,7 +92,7 @@ function BaseView:set_eid(eid)
         end
     end
     self.general_property:set_subproperty(property)
-    BaseView.update(self)
+    BaseView:update()
 end
 
 function BaseView:on_get_prefab()

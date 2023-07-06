@@ -145,8 +145,7 @@ end
 --TODO: hard code here, just check pbr material for show pbr ui
 --should add info in material file to let the ui system know how to show
 local function is_pbr_material(t)
-    local fx = t.fx
-    return fx.vs:match "vs_pbr" and fx.fs:match "fs_pbr"
+    return t.fx.shader_type == "PBR"
 end
 
 local function which_property_type(p)
