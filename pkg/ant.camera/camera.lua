@@ -196,11 +196,13 @@ local function update_camera_info(e)
 end
 
 function cameraview_sys:update_camera()
-    for v in w:select "visible queue_name camera_depend:absent camera_ref:in" do
+    for v in w:select "visible queue_name:in camera_depend:absent camera_ref:in" do
         local e <close> = w:entity(v.camera_ref, "scene_changed?in camera_changed?in camera:in scene:in")
         if e.scene_changed or e.camera_changed then
             update_camera(e)
-            update_camera_info(e)
+            if v.queue_name == "main_queue" then
+                update_camera_info(e) 
+            end
         end
     end
 end

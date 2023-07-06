@@ -204,7 +204,7 @@ function iUiRt.create_new_rt(rt_name, light_path, focus_path, focus_srt, distanc
     local gid = rt2g_table[rt_name]
     rt2d_table[rt_name] = distance
     local g = ecs.group(gid)
-    local light_instance = g:create_instance(light_path)
+    --local light_instance = g:create_instance(light_path)
     local focus_instance = g:create_instance(focus_path)
     focus_instance.on_ready = function (inst)
         local alleid = inst.tag['*']
@@ -232,7 +232,7 @@ function iUiRt.create_new_rt(rt_name, light_path, focus_path, focus_srt, distanc
             end
         end
     end
-    light_instance.on_ready = function (inst)
+--[[     light_instance.on_ready = function (inst)
         local alleid = inst.tag['*']
         local re <close> = w:entity(alleid[1])
         for _, eid in ipairs(alleid) do
@@ -243,7 +243,7 @@ function iUiRt.create_new_rt(rt_name, light_path, focus_path, focus_srt, distanc
             end 
         end
     end 
-    world:create_object(light_instance)
+    world:create_object(light_instance) ]]
     world:create_object(focus_instance)
     g:enable "view_visible"
     g:enable "scene_update"
