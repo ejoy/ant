@@ -1,7 +1,5 @@
 local rmlui = require "rmlui"
 local event = require "core.event"
-local constructor = require "core.DOM.constructor"
-local environment = require "core.environment"
 local data_event = require "core.datamodel.event"
 
 local datamodels = {}
