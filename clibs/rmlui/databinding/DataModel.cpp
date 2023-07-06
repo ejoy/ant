@@ -2,7 +2,6 @@
 #include <core/Element.h>
 #include <core/Log.h>
 #include <core/StringUtilities.h>
-#include <databinding/DataEvent.h>
 #include <databinding/DataView.h>
 #include <algorithm>
 #include <set>
@@ -100,13 +99,6 @@ DataModel::~DataModel() {
 
 void DataModel::AddView(DataViewPtr view) {
 	views_to_add.push_back(std::move(view));
-}
-
-void DataModel::AddEvent(DataEventPtr event) {
-	Element* element = event->GetElement();
-	if (!element)
-		return;
-	events.emplace(element, std::move(event));
 }
 
 bool DataModel::BindVariable(const std::string& name, DataVariable variable) {
@@ -287,7 +279,6 @@ bool DataModel::IsDirty() const {
 
 void DataModel::OnElementRemove(Element* element) {
 	EraseAliases(element);
-	events.erase(element);
 }
 
 void DataModel::Update() {

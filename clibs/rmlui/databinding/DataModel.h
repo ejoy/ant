@@ -55,7 +55,6 @@ private:
 	DataViewList views;
 	DataViewList views_to_add;
 	NameViewMap name_view_map;
-    std::unordered_multimap<Element*, DataEventPtr> events;
 	std::unordered_map<std::string, DataVariable> variables;
 	DirtyVariables dirty_variables;
 	std::unordered_map<std::string, DataEventFunc> event_callbacks;
