@@ -273,9 +273,8 @@ void DataModel::DirtyVariable(const std::string& variable_name) {
 	dirty_variables.emplace(variable_name);
 }
 
-bool DataModel::IsVariableDirty(const std::string& variable_name) const {
-	assert(LegalVariableName(variable_name) == nullptr);
-	return dirty_variables.count(variable_name) == 1;
+bool DataModel::IsVariableDirty() const {
+	return !dirty_variables.empty();
 }
 
 void DataModel::MarkDirty() {

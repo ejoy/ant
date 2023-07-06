@@ -53,13 +53,14 @@ void DataUtilities::ApplyDataViewsControllers(Element* element) {
 				}
 			}
 			else if (type_name == "event") {
-				auto event = std::make_unique<DataEvent>(element);
-				if (event->Initialize(*data_model, element, value, modifier)) {
-					data_model->AddEvent(std::move(event));
-				}
-				else {
-					Log::Message(Log::Level::Warning, "Could not add data-%s to element: %s", type_name.c_str(), element->GetAddress().c_str());
-				}
+				element->DataModelLoad(name, value);
+				//auto event = std::make_unique<DataEvent>(element);
+				//if (event->Initialize(*data_model, element, value, modifier)) {
+				//	data_model->AddEvent(std::move(event));
+				//}
+				//else {
+				//	Log::Message(Log::Level::Warning, "Could not add data-%s to element: %s", type_name.c_str(), element->GetAddress().c_str());
+				//}
 			}
 		}
 	}

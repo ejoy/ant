@@ -3,7 +3,8 @@ local filemanager = require "core.filemanager"
 local constructor = require "core.DOM.constructor"
 local environment = require "core.environment"
 local event = require "core.event"
-local parsetext=require "core.parsetext"
+local parsetext = require "core.parsetext"
+local datamodel = require "core.datamodel.api"
 local m = {}
 
 local events = {}
@@ -49,6 +50,18 @@ function m.OnCreateElement(document, element, name)
 end
 function m.OnDestroyNode(document, node)
 	event("OnDestroyNode", document, node)
+end
+
+function m.OnDataModelLoad(document, element, name, value)
+	datamodel.load(document, element, name, value)
+end
+
+function m.OnDataModelSetVariable(document, element, name, value)
+	datamodel.setVariable(document, element, name, value)
+end
+
+function m.OnDataModelRefresh(document)
+	datamodel.refresh(document)
 end
 
 local maxEventId = 0

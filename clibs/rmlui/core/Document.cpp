@@ -114,6 +114,9 @@ void Document::UpdateDataModel() {
 		for (int i = 1; i < 10; ++i) {
 			body.UpdateDataModel();
 			data_model->Update();
+			if (data_model->IsDirty() || data_model->IsVariableDirty()) {
+				GetPlugin()->OnDataModelRefresh(this);
+			}
 			if (!data_model->IsDirty()) {
 				break;
 			}

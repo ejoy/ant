@@ -182,6 +182,25 @@ bool DataViewFor::Initialize(DataModel& model, const std::string& in_expression)
 	return true;
 }
 
+static std::string ToString(DataAddress& address) {
+	std::string s;
+	for (auto& entry : address) {
+		if (entry.index == -1) {
+			if (!s.empty()) {
+				s += ".";
+			}
+			s += entry.name;
+		}
+		else {
+			assert(!s.empty());
+			s += "[";
+			s += std::to_string(entry.index);
+			s += "]";
+		}
+	}
+	return s;
+}
+
 bool DataViewFor::Update(DataModel& model) {
 	DataVariable variable = model.GetVariable(container_address);
 	if (!variable)
@@ -198,6 +217,8 @@ bool DataViewFor::Update(DataModel& model) {
 			{"literal"}, {"int"}, {(int)i}
 		};
 		Node* sibling = element->Clone();
+		((Element*)sibling)->DataModelSetVariable(iterator_name, ToString(container_address)+"["+std::to_string(i + 1) + "]");
+		((Element*)sibling)->DataModelSetVariable(iterator_index_name, std::to_string(i+1));
 		model.InsertAlias(sibling, iterator_name, std::move(iterator_address));
 		model.InsertAlias(sibling, iterator_index_name, std::move(iterator_index_address));
 		model.MarkDirty();

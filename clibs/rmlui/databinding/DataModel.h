@@ -41,7 +41,7 @@ public:
 	bool GetVariableInto(const DataAddress& address, DataVariant& out_value) const;
 
 	void DirtyVariable(const std::string& variable_name);
-	bool IsVariableDirty(const std::string& variable_name) const;
+	bool IsVariableDirty() const;
 	void MarkDirty();
 	bool IsDirty() const;
 	void OnElementRemove(Element* element);

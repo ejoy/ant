@@ -735,6 +735,14 @@ DataModel* Element::GetDataModel() const {
 	return GetOwnerDocument()->GetDataModel();
 }
 
+void Element::DataModelLoad(const std::string& name, const std::string& value) {
+	GetPlugin()->OnDataModelLoad(GetOwnerDocument(), this, name, value);
+}
+
+void Element::DataModelSetVariable(const std::string& name, const std::string& value) {
+	GetPlugin()->OnDataModelSetVariable(GetOwnerDocument(), this, name, value);
+}
+
 void Element::RefreshProperties() {
 	auto& c = Style::Instance();
 	c.Release(global_properties);

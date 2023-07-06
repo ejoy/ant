@@ -17,6 +17,9 @@ enum class LuaEvent : uint8_t {
 	OnLoadInlineScript = 2,
 	OnLoadExternalScript,
 	OnCreateElement,
+	OnDataModelLoad,
+	OnDataModelSetVariable,
+	OnDataModelRefresh,
 	OnDestroyNode,
 	OnEvent,
 	OnEventAttach,
@@ -34,6 +37,9 @@ public:
 	void OnLoadInlineScript(Rml::Document* document, const std::string& content, const std::string& source_path, int source_line) override;
 	void OnLoadExternalScript(Rml::Document* document, const std::string& source_path) override;
 	void OnCreateElement(Rml::Document* document, Rml::Element* element, const std::string& tag) override;
+	void OnDataModelLoad(Rml::Document* document, Rml::Element* element, const std::string& name, const std::string& value) override;
+	void OnDataModelSetVariable(Rml::Document* document, Rml::Element* element, const std::string& name, const std::string& value) override;
+	void OnDataModelRefresh(Rml::Document* document) override;
 	void OnDestroyNode(Rml::Document* document, Rml::Node* node) override;
 	std::string OnRealPath(const std::string& path) override;
 	void OnLoadTexture(Rml::Document* document, Rml::Element* element, const std::string& path) override;
