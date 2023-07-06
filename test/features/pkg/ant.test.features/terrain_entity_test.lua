@@ -61,10 +61,8 @@ local function update_group(ce)
         local culled = math3d.frustum_intersect_aabb(frustum_planes, aabb) < 0
         local g = ecs.group(gid)
         if culled then
-            g:disable "view_visible"
             g:disable "scene_update"
         else
-            g:enable "view_visible"
             g:enable "scene_update"
         end
     end

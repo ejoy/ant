@@ -33,7 +33,7 @@ function fxaasys:init()
             simplemesh      = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/fxaa.material",
             visible_state   = "fxaa_queue",
-            view_visible    = true,
+            scene_update    = true,
             fxaa_drawer     = true,
             scene           = {},
         }

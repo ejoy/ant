@@ -155,7 +155,7 @@ local function bake_all()
     local scene_renderobjects = find_scene_render_objects "main_queue"
 
     local lme = get_lme()
-    for e in w:select "view_visible lightmap:in visible_state:in render_object:in widget_entity:absent" do
+    for e in w:select "scene_update lightmap:in visible_state:in render_object:in widget_entity:absent" do
         if e.visible_state["bake_lightmap_queue"] then
             bake_entity(e, scene_renderobjects, lme)
         end

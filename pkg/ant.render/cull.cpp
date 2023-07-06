@@ -23,9 +23,9 @@ struct cull_array {
 	int n;
 };
 
-struct cull_cached: public ecs_api::cached_context<ecs::view_visible, ecs::bounding, ecs::render_object> {
+struct cull_cached: public ecs_api::cached_context<ecs::scene_update, ecs::bounding, ecs::render_object> {
 	cull_cached(struct ecs_context* ctx)
-		: ecs_api::cached_context<ecs::view_visible, ecs::bounding, ecs::render_object>(ctx) {}
+		: ecs_api::cached_context<ecs::scene_update, ecs::bounding, ecs::render_object>(ctx) {}
 };
 
 static int

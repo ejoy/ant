@@ -245,7 +245,6 @@ function iUiRt.create_new_rt(rt_name, light_path, focus_path, focus_srt, distanc
     end 
     world:create_object(light_instance) ]]
     world:create_object(focus_instance)
-    g:enable "view_visible"
     g:enable "scene_update"
     return focus_instance
 end

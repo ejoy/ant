@@ -332,7 +332,6 @@ pipeline "render"
 
 import "ibl/ibl.ecs"
 
-component "view_visible"
 system "viewgroup_system"
     .implement "render_system/render_system.lua"
     .method "init"

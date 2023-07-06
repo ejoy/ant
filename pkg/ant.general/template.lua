@@ -44,10 +44,10 @@ return template
 local template = require "template"
 local keys = template.keys
 
-local t = template.format "view_visible %s %s:absent render_object:in filter_material:in"
-local t2 = template.format "view_visible %s:absent render_object:in filter_material:in"
+local t = template.format "scene_update %s %s:absent render_object:in filter_material:in"
+local t2 = template.format "scene_update %s:absent render_object:in filter_material:in"
 
-assert(t[keys.a.b] == "view_visible a b:absent render_object:in filter_material:in")
-assert(t2.xxx == "view_visible xxx:absent render_object:in filter_material:in")
+assert(t[keys.a.b] == "scene_update a b:absent render_object:in filter_material:in")
+assert(t2.xxx == "scene_update xxx:absent render_object:in filter_material:in")
 
 ]]
