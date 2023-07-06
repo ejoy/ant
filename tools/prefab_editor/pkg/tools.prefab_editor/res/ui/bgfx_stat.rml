@@ -1,7 +1,7 @@
 <rml>
 	<head>
 		<script type="text/x-lua">
-			local bgfx_model = window.createModel "bgfx_stat" {
+			local bgfx_model = window.createModel {
 				content = "bgfx stat"
 			}
 			window.addEventListener("message", function(event)
@@ -19,6 +19,6 @@
 		</style>
 	</head>
 	<body style = "pointer-events: none;">
-		<bgfx data-model="bgfx_stat">{{content}}</bgfx>
+		<bgfx>{{content}}</bgfx>
 	</body>
 </rml>
