@@ -576,7 +576,7 @@ function sm:update_filter()
 				if not s.CULL then
 					d.CULL = s.CULL
 				else
-					d.CULL = "CW"
+					d.CULL = "CCW"
 				end 
 				d.DEPTH_TEST = "GREATER"
 				return d
