@@ -381,6 +381,29 @@ function util.pack_tangent_frame(normal, tangent, storage_size)
 	return q
 end
 
+function util.from_mat3(
+    c11, c12, c13,
+    c21, c22, c23,
+    c31, c32, c33)
+    return math3d.matrix(
+        c11, c12, c13, 0.0,
+        c21, c22, c23, 0.0,
+        c31, c32, c33, 0.0,
+        0.0, 0.0, 0.0, 0.0)
+end
+
+function util.from_cmat3(...)
+    return math3d.constant(util.from_mat3(...))
+end
+
+
+function util.clamp(v, minv, maxv)
+	return math3d.max(minv, math3d.min(v, maxv))
+end
+
+function util.saturate(v)
+	return util.clamp(v, constant.ZERO, constant.ONE_PT)
+end
 
 return util
 
