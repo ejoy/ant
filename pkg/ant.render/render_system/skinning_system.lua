@@ -74,14 +74,15 @@ function skinning_sys:skin_mesh()
 	local meshskin
 	local worldmat
 	
-	for e in w:select "skinning scene?in meshskin?in render_object?update bounding?update skininfo?update visible_state?in" do
+	for e in w:select "skinning scene?in meshskin?in" do
 		if e.meshskin then
 			meshskin = e.meshskin
 			worldmat = e.scene.worldmat
 		else
 			assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
+			w:extend(e, "render_object:update bounding:update visible_state:in")
 			e.render_object.worldmat = meshskin.sm_matrix_ref
-			if e.visible_state and e.visible_state["velocity_queue"] then
+			if e.visible_state["velocity_queue"] then
 				imaterial.set_property(e, "u_prev_model", meshskin.prev_sm_matrix_ref, "velocity_queue")
 			end
 			if mc.NULL ~= e.bounding.aabb then
