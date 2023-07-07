@@ -21,7 +21,7 @@ end
 function m.load(datamodel, data, node, value)
     local n = 0
     data.code = {}
-    data.script = value:gsub('{{.*}}', function(str)
+    data.script = value:gsub('{{[^}]*}}', function(str)
         n = n + 1
         local key = ('{%d}'):format(n)
         local script = data.variables.."\nreturn "..str:sub(3, -3)

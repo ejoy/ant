@@ -36,7 +36,8 @@ local function collectVariables(datamodel, element, t)
     if vars then
         for name, value in pairs(vars) do
             if not t[name] then
-                t[name] = value
+                t[name] = true
+                t[#t+1] = {name, value}
             end
         end
     end
@@ -50,8 +51,9 @@ end
 local function compileVariables(datamodel, element)
     local variables = collectVariables(datamodel, element, {})
     local s = {}
-    for name, value in pairs(variables) do
-        s[#s+1] = ("local %s = %s"):format(name, value)
+    for i = #variables, 1, -1 do
+        local t = variables[i]
+        s[#s+1] = ("local %s = %s"):format(t[1], t[2])
     end
     return table.concat(s, "\n")
 end
