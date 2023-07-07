@@ -58,20 +58,15 @@ local function compileVariables(datamodel, element)
     return table.concat(s, "\n")
 end
 
+m.compileVariables = compileVariables
+
 function m.load(document, element, name, value)
     local datamodel = datamodels[document]
     if not datamodel then
         return
     end
     if name == "data-text" then
-        local view = datamodel.texts[element]
-        if not view then
-            view = {
-                variables = compileVariables(datamodel, element)
-            }
-            datamodel.texts[element] = view
-        end
-        data_text.load(datamodel, view, element, value)
+        data_text.load(datamodel, element, value)
         return
     end
     local view = datamodel.views[element]
@@ -104,19 +99,6 @@ function m.load(document, element, name, value)
             error("unknown data-model attribute:"..name)
         end
     end
-end
-
-function m.setVariable(document, element, name, value)
-    local datamodel = datamodels[document]
-    if not datamodel then
-        return
-    end
-    local vars = datamodel.variables[element]
-    if not vars then
-        vars = {}
-        datamodel.variables[element] = vars
-    end
-    vars[name] = value
 end
 
 function m.refresh(document)

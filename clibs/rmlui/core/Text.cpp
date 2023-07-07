@@ -5,7 +5,6 @@
 #include <core/Log.h>
 #include <core/Property.h>
 #include <core/StringUtilities.h>
-#include <databinding/DataUtilities.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include "../databinding/DataModel.h"
 #include<iostream>
@@ -587,28 +586,10 @@ void Text::UpdateDataModel() {
 		return;
 	}
 	dirty.erase(Dirty::DataModel);
-	bool has_data_expression = false;
-	bool inside_brackets = false;
-	char previous = 0;
-	for (const char c : text) {
-		if (inside_brackets) {
-			if (c == '}' && previous == '}') {
-				has_data_expression = true;
-				break;
-			}
-		}
-		else if (c == '{' && previous == '{') {
-			inside_brackets = true;
-		}
-		previous = c;
+	if (!parent->GetOwnerDocument()->HasDataModel()) {
+		return;
 	}
-	if (has_data_expression) {
-		DataUtilities::ApplyDataViewText(this);
-	}
-}
-
-DataModel* Text::GetDataModel() const {
-	return parent->GetDataModel();
+	DataModelLoad();
 }
 
 Node* Text::Clone(bool deep) const {

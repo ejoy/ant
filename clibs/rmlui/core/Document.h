@@ -37,7 +37,7 @@ public:
 	void DirtyDataModel();
 	void RemoveDataModel();
 	void UpdateDataModel();
-	DataModel* GetDataModel() const;
+	bool HasDataModel() const;
 	Element* GetBody();
 	const Element* GetBody() const;
 	Element* CreateElement(const std::string& tag);

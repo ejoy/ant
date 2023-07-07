@@ -7,7 +7,6 @@
 #include <core/Text.h>
 #include <core/StyleSheetFactory.h>
 #include <databinding/DataModel.h>
-#include <databinding/DataUtilities.h>
 #include <core/HtmlParser.h>
 #include <fstream>
 
@@ -144,8 +143,8 @@ void Document::RemoveDataModel() {
 	data_model.reset();
 }
 
-DataModel* Document::GetDataModel() const {
-	return data_model.get();
+bool Document::HasDataModel() const {
+	return !!data_model;
 }
 
 void Document::SetDimensions(const Size& _dimensions) {

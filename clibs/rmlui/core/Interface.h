@@ -87,7 +87,6 @@ public:
 	virtual void OnLoadExternalScript(Document* document, const std::string& source_path) = 0;
 	virtual void OnCreateElement(Document* document, Element* element, const std::string& tag) = 0;
 	virtual void OnDataModelLoad(Document* document, Node* node, const std::string& name, const std::string& value) = 0;
-	virtual void OnDataModelSetVariable(Document* document, Element* element, const std::string& name, const std::string& value) = 0;
 	virtual void OnDataModelRefresh(Document* document) = 0;
 	virtual void OnDestroyNode(Document* document, Node* node) = 0;
 	virtual std::string OnRealPath(const std::string& path) = 0;

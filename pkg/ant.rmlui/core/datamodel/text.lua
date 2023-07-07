@@ -18,21 +18,36 @@ local function refresh(data, node)
     rmlui.TextSetText(node, res)
 end
 
-function m.load(datamodel, data, node, value)
+
+function m.load(datamodel, node, value)
     local n = 0
-    data.code = {}
-    data.script = value:gsub('{{[^}]*}}', function(str)
+    local code = {}
+    local variables
+    local script = value:gsub('{{[^}]*}}', function(str)
         n = n + 1
+        if not variables then
+            local api = require "core.datamodel.api"
+            variables = api.compileVariables(datamodel, node)
+        end
         local key = ('{%d}'):format(n)
-        local script = data.variables.."\nreturn "..str:sub(3, -3)
+        local script = variables.."\nreturn "..str:sub(3, -3)
         local compiled, err = load(script, script, "t", datamodel.model)
         if not compiled then
             console.warn(err)
             return str
         end
-        data.code[key] = compiled
+        code[key] = compiled
         return key
     end)
+    if n == 0 then
+        datamodel.texts[node] = nil
+        return
+    end
+    local data = {
+        script = script,
+        code = code,
+    }
+    datamodel.texts[node] = data
     refresh(data, node)
 end
 

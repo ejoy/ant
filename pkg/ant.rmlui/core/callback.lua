@@ -56,10 +56,6 @@ function m.OnDataModelLoad(document, element, name, value)
 	datamodel.load(document, element, name, value)
 end
 
-function m.OnDataModelSetVariable(document, element, name, value)
-	datamodel.setVariable(document, element, name, value)
-end
-
 function m.OnDataModelRefresh(document)
 	datamodel.refresh(document)
 end

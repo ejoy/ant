@@ -18,7 +18,6 @@
 #include <core/Text.h>
 #include <core/Transform.h>
 #include <databinding/DataModel.h>
-#include <databinding/DataUtilities.h>
 #include <algorithm>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
@@ -714,6 +713,9 @@ void Element::UpdateDataModel() {
 	if (!IsVisible()) {
 		return;
 	}
+	if (!GetOwnerDocument()->HasDataModel()) {
+		return;
+	}
 	if (!dirty.contains(Dirty::DataModel)) {
 		for (auto& child : childnodes) {
 			child->UpdateDataModel();
@@ -721,29 +723,28 @@ void Element::UpdateDataModel() {
 		return;
 	}
 	dirty.erase(Dirty::DataModel);
-	if (attributes.find("data-for") != attributes.end()) {
+	auto it = attributes.find("data-for");
+	if (it != attributes.end()) {
 		SetVisible(false);
 		UpdateLayout();
-		DataUtilities::ApplyDataViewFor(this);
+		DataModelLoad(it->first, it->second);
 	}
 	else {
-		DataUtilities::ApplyDataViewsControllers(this);
+		for (auto const& [name, value] : attributes) {
+			constexpr size_t data_str_length = sizeof("data-") - 1;
+			if (name.size() > data_str_length && name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {
+				DataModelLoad(name, value);
+			}
+		}
 		for (auto& child : childnodes) {
 			child->UpdateDataModel();
 		}
 	}
 }
 
-DataModel* Element::GetDataModel() const {
-	return GetOwnerDocument()->GetDataModel();
-}
 
 void Element::DataModelLoad(const std::string& name, const std::string& value) {
 	GetPlugin()->OnDataModelLoad(GetOwnerDocument(), this, name, value);
-}
-
-void Element::DataModelSetVariable(const std::string& name, const std::string& value) {
-	GetPlugin()->OnDataModelSetVariable(GetOwnerDocument(), this, name, value);
 }
 
 void Element::RefreshProperties() {

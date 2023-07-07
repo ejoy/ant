@@ -19,7 +19,6 @@ public:
 	virtual Size Measure(float minWidth, float maxWidth, float minHeight, float maxHeight);
 	float GetBaseline();
 	void ChangedProperties(const PropertyIdSet& properties);
-	DataModel* GetDataModel() const override;
 	void DataModelLoad();
 protected:
 	virtual float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float line_height);
