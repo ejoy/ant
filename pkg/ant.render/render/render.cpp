@@ -231,7 +231,7 @@ lsubmit(lua_State *L) {
 
 	static submit_cache cc;
 
-	for (auto e : ecs_api::select<ecs::scene_update, ecs::hitch, ecs::scene>(w->ecs)) {
+	for (auto e : ecs_api::select<ecs::view_visible, ecs::hitch, ecs::scene>(w->ecs)) {
 		const auto &h = e.get<ecs::hitch>();
 		const auto &s = e.get<ecs::scene>();
 		if (h.group != 0){
@@ -241,7 +241,7 @@ lsubmit(lua_State *L) {
 
 	find_render_args(w, cc);
 	
-	for (auto& e : ecs_api::select<ecs::scene_update, ecs::render_object>(w->ecs)) {
+	for (auto& e : ecs_api::select<ecs::view_visible, ecs::render_object>(w->ecs)) {
 		draw_objs(L, w, e.get<ecs::render_object>(), nullptr, cc);
 	}
 	for (auto const& [groupid, mats] : cc.groups) {

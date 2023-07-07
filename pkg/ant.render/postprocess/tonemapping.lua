@@ -30,7 +30,7 @@ function tm_sys:init()
             simplemesh      = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/tonemapping.material",
             visible_state   = "tonemapping_queue",
-            scene_update    = true,
+            view_visible    = true,
             tonemapping_drawer=true,
             scene           = {},
         }

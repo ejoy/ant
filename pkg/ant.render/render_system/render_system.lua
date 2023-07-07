@@ -26,7 +26,7 @@ end
 local def_group_id<const> = 0
 local vg_sys = ecs.system "viewgroup_system"
 function vg_sys:init()
-    ecs.group(def_group_id):enable "scene_update"
+    ecs.group(def_group_id):enable "view_visible"
 	ecs.group_flush()
 end
 

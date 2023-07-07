@@ -166,7 +166,7 @@ function efk_sys:camera_usage()
 end
 
 function efk_sys:follow_transform_updated()
-    for v in w:select "scene_update efk:in scene:in scene_changed?in" do
+    for v in w:select "view_visible efk:in scene:in scene_changed?in" do
         local efk = v.efk
         if efk.play_handle_hitchs then
             local new_handles = {}
