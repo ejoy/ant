@@ -69,11 +69,10 @@ entity_init(lua_State *L) {
 	auto w = getworld(L);
 
 	for (auto& e : ecs_api::select<ecs::INIT, ecs::scene>(w->ecs)) {
-		if (!e.component<ecs::scene_update_once>())
-			e.enable_tag<ecs::scene_needchange>();
 		auto& s = e.get<ecs::scene>();
 		s.movement = 0;
 		e.enable_tag<ecs::scene_mutable>();
+		e.enable_tag<ecs::scene_needchange>();
 	}
 	return 0;
 }
@@ -88,22 +87,18 @@ is_constant(struct ecs_world *w, ecs::eid eid) {
 }
 
 static inline bool
-is_changed(struct ecs_world *w, ecs::eid eid) {
-	auto e = ecs_api::find_entity(w->ecs, eid);
-	if (e.invalid()) {
-		return false;
-	}
-	return e.component<ecs::scene_changed>();
+is_changed(flatset<ecs::eid> &changed, ecs::eid eid) {
+	return changed.contains(eid);
 }
 
 static void
-rebuild_mutable_set(struct ecs_world *w) {
+rebuild_mutable_set(struct ecs_world *w, flatset<ecs::eid> &changed) {
 	using namespace ecs_api::flags;
-	for (auto& e : ecs_api::select<ecs::scene_update, ecs::scene_mutable(absent), ecs::scene>(w->ecs)) {
+	for (auto& e : ecs_api::select< ecs::scene, ecs::scene_mutable(absent), ecs::eid>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
-		if (s.parent != 0 && is_changed(w, s.parent)) {
+		if (s.parent != 0 && is_changed(changed, s.parent)) {
 			e.enable_tag<ecs::scene_mutable>();
-			e.enable_tag<ecs::scene_changed>();
+			changed.insert(e.get<ecs::eid>());
 		}
 	}
 }
@@ -114,24 +109,10 @@ scene_changed(lua_State *L) {
 	auto math3d = w->math3d->M;
 	math3d_checkpoint cp(math3d);
 
-	size_t UpdateOnceCount = ecs_api::count<ecs::scene_update_once>(w->ecs);
-	if (UpdateOnceCount > 0) {
-		flatmap<ecs::eid, math_t> worldmats;
-		worldmats.reserve(UpdateOnceCount);
-		for (auto& e : ecs_api::select<ecs::scene_update_once, ecs::scene, ecs::eid>(w->ecs)) {
-			auto& s = e.get<ecs::scene>();
-			auto id = e.get<ecs::eid>();
-			e.disable_tag<ecs::scene_update>();
-			e.enable_tag<ecs::scene_changed>();
-			if (!worldmat_update(worldmats, math3d, s, id, nullptr)) {
-				return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
-			}
-		}
-		ecs_api::clear_type<ecs::scene_update_once>(w->ecs);
-	}
+	flatset<ecs::eid> changed;
 
 	// step.1
-	auto selector = ecs_api::select<ecs::scene_needchange, ecs::scene_update>(w->ecs);
+	auto selector = ecs_api::select<ecs::scene_needchange, ecs::eid>(w->ecs);
 	auto it = selector.begin();
 	if (it == selector.end()) {
 		return 0;
@@ -143,27 +124,22 @@ scene_changed(lua_State *L) {
 			need_rebuild_mutable_set = true;
 			e.enable_tag<ecs::scene_mutable>();
 		}
-		e.enable_tag<ecs::scene_changed>();
-		// disable main key must at the end
-		e.disable_tag<ecs::scene_needchange>();
+		changed.insert(e.get<ecs::eid>());
 	}
+
+	ecs_api::clear_type<ecs::scene_needchange>(w->ecs);
+
 	if (need_rebuild_mutable_set) {
-		rebuild_mutable_set(w);
+		rebuild_mutable_set(w, changed);
 	}
 
 	// step.2
 	flatmap<ecs::eid, math_t> worldmats;
 	for (auto& e : ecs_api::select<ecs::scene_mutable, ecs::scene, ecs::eid>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
-		bool changed = false;
 		ecs::eid id = e.get<ecs::eid>();
-		if (e.component<ecs::scene_changed>()) {
-			changed = true;
-		} else if (s.parent != 0 && is_changed(w, s.parent)) {
+		if (is_changed(changed, id) || (s.parent != 0 && is_changed(changed, s.parent))) {
 			e.enable_tag<ecs::scene_changed>();
-			changed = true;
-		}
-		if (changed) {
 			if (!worldmat_update(worldmats, math3d, s, id, w)) {
 				return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 			}
