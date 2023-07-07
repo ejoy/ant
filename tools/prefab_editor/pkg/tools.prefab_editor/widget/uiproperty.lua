@@ -20,6 +20,7 @@ function PropertyBase:_init(config, modifier)
     self.id         = config.id
     self.dim        = config.dim or 1
     self.mode       = config.mode
+    self.sameline   = config.sameline
     self.modifier   = modifier or {}
     self.uidata     = {speed = config.speed, min = config.min, max = config.max, flags = config.flags}
 end
@@ -472,6 +473,9 @@ function Group:show()
     if imgui.widget.TreeNode(self.label, self.uidata.flags) then
         for _, c in ipairs(self.subproperty) do
             self:_show_child(c)
+            if c.sameline then
+                imgui.cursor.SameLine()
+            end
         end
         imgui.widget.TreePop()
     end
