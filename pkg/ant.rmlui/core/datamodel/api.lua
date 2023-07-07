@@ -62,6 +62,18 @@ end
 
 m.compileVariables = compileVariables
 
+local function getDepth(element)
+    local n = 1
+    while true do
+        local parent = rmlui.NodeGetParent(element)
+        if not parent then
+            return n
+        end
+        element = parent
+        n = n + 1
+    end
+end
+
 function m.load(document, element, name, value)
     local datamodel = datamodels[document]
     if not datamodel then
@@ -81,7 +93,8 @@ function m.load(document, element, name, value)
             events = {},
             styles = {},
             attributes = {},
-            variables = compileVariables(datamodel, element)
+            variables = compileVariables(datamodel, element),
+            depth = getDepth(element),
         }
         datamodel.views[element] = view
     end
@@ -103,13 +116,36 @@ function m.load(document, element, name, value)
     end
 end
 
+local function sortpairs(t, sortfunc)
+    local sort = {}
+    for k, v in pairs(t) do
+        sort[#sort+1] = {k, v}
+    end
+    table.sort(sort, sortfunc)
+    local n = 1
+    return function ()
+        local kv = sort[n]
+        if kv == nil then
+            return
+        end
+        n = n + 1
+        return kv[1], kv[2]
+    end
+end
+
+local function sortfunc(a, b)
+    return a[2].depth < b[2].depth
+end
+
 function m.refresh(document)
     local datamodel = datamodels[document]
     if not datamodel then
         return
     end
-    for element, view in pairs(datamodel.views) do
+    for element, view in sortpairs(datamodel.views, sortfunc) do
         data_for.refresh(datamodel, element, view)
+    end
+    for element, view in sortpairs(datamodel.views, sortfunc) do
         data_if.refresh(datamodel, element, view)
         data_event.refresh(datamodel, view)
         data_style.refresh(datamodel, element, view)
