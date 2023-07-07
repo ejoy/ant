@@ -120,22 +120,30 @@ local function create_skeleton_test_group()
         }
     }
 
-    local dynamic_group = ecs.group(skeleton_test_group_id)
-    dynamic_group:enable "scene_update"
-
-    local function create_obj(g, file)
+    local function create_obj(g, file, s, t)
         local p = g:create_instance(file)
         p.on_init = function ()
             for _, eid in ipairs(p.tag["*"]) do
                 local e <close> = w:entity(eid, "scene_update_once?out")
                 e.scene_update_once = true
-                w:submit(e)
+            end
+        end
+        p.on_ready = function (e)
+            local ee<close> = w:entity(e.tag['*'][1], "scene:in")
+            if s then
+                iom.set_scale(ee, s)
+            end
+            if t then
+                iom.set_position(ee, t)
             end
         end
         world:create_object(p)
     end
 
-    create_obj(dynamic_group, "/pkg/ant.resources.binary/meshes/BrainStem.glb|mesh.prefab")
+    local dynamic_group = ecs.group(skeleton_test_group_id)
+    dynamic_group:enable "scene_update"
+    create_obj(dynamic_group, "/pkg/ant.resources.binary/meshes/BrainStem.glb|mesh.prefab", 10)
+
     local d2g = ecs.group(skeleton_test_group_id+1)
     d2g:enable "scene_update"
     create_obj(d2g, "/pkg/ant.resources.binary/meshes/chimney-1.glb|mesh.prefab")
@@ -150,7 +158,7 @@ local key_mb = world:sub {"keyboard"}
 function hn_test_sys:data_changed()
     for _, key, press in key_mb:unpack() do
         if key == "Y" and press == 0 then
-            local e <close> = w:entity(change_hitch_eid, "hitch:in")
+            local e <close> = w:entity(change_hitch_eid, "hitch:update")
             e.hitch.group = skeleton_test_group_id+1
         end
     end
