@@ -325,8 +325,8 @@ function m.show()
             
             local folder = selected_folder[2]
             if folder then
-                if imgui.windows.IsWindowFocused() then
-                    filter_focuse2 = true
+                filter_focuse2 = imgui.windows.IsWindowFocused()
+                if filter_focuse2 then
                     create_filter_cache(selected_folder[1], folder.dirs, folder.files)
                     for _, key, press, status in key_mb:unpack() do
                         if #key == 1 and press == 1 then
@@ -354,7 +354,6 @@ function m.show()
                         end
                     end
                 else
-                    filter_focuse2 = false
                     if current_filter_key then
                         current_filter_key = nil
                         selected_file = nil
@@ -389,7 +388,7 @@ function m.show()
                     post_selectable()
                 end
                 for _, path in pairs(folder.files) do
-                    pre_selectable(icons.ICON_FOLD, selected_file ~= path)
+                    pre_selectable(icons.ICON_FILE, selected_file ~= path)
                     if imgui.widget.Selectable(tostring(path:filename()), selected_file == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path
                         current_filter_key = 1
