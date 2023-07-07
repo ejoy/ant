@@ -60,6 +60,9 @@ return function (ev)
         if inLongPress then
             return
         end
+        if not lastX then
+            return
+        end
         local scrollX = x - lastX
         local scrollY = y - lastY
         local deltaX = x - downX
@@ -94,6 +97,10 @@ return function (ev)
         end
     end
     local function mouse_up(x, y)
+        lastX = nil
+        lastY = nil
+        downX = nil
+        downY = nil
         if inLongPress then
             inLongPress = false
         elseif alwaysInTapRegion then
