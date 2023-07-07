@@ -243,10 +243,13 @@ bool Element::Project(Point& point) const noexcept {
 }
 
 void Element::SetAttribute(const std::string& name, const std::string& value) {
-	attributes[name] = value;
-    ElementAttributes changed_attributes;
-    changed_attributes.emplace(name, value);
-	OnAttributeChange(changed_attributes);
+	auto it = attributes.find(name);
+	if (it == attributes.end() || it->second != value) {
+		attributes[name] = value;
+		ElementAttributes changed_attributes;
+		changed_attributes.emplace(name, value);
+		OnAttributeChange(changed_attributes);
+	}
 }
 
 const std::string* Element::GetAttribute(const std::string& name) const {
