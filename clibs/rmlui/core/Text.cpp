@@ -136,7 +136,7 @@ Text::Text(Document* owner, const std::string& text_)
 }
 
 Text::~Text()
-{ }
+{}
 
 void Text::SetText(const std::string& _text) {
 	if (text != _text) {

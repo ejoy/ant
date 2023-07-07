@@ -213,6 +213,7 @@ void Document::DefineCustomElement(const std::string& name) {
 }
 
 void Document::RecycleNode(std::unique_ptr<Node>&& node) {
+	GetPlugin()->OnDestroyNode(this, node.get());
 	removednodes.emplace_back(std::forward<std::unique_ptr<Node>>(node));
 }
 }

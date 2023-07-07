@@ -120,9 +120,11 @@ function event.OnDestroyNode(document, node)
         return
     end
     datamodel.variables[node] = nil
+    datamodel.texts[node] = nil
     local view = datamodel.views[node]
     if view then
         data_event.destroyNode(view, node)
+        datamodel.views[node] = nil
     end
 end
 

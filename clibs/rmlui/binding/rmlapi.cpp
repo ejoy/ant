@@ -360,7 +360,7 @@ static int
 lElementGetPreviousSibling(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	lua_pushRmlNode(L, e->GetPreviousSibling());
-	return 1;
+	return 2;
 }
 
 static int
