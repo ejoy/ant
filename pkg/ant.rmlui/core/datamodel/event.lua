@@ -14,6 +14,34 @@ local function invoke(f, ...)
 	return ok, err
 end
 
+local function findUpValue(f, name)
+    local i = 1
+    while true do
+        local v = debug.getupvalue(f, i)
+        if v == nil then
+            return
+        end
+        if v == name then
+            return i
+        end
+        i = i + 1
+    end
+end
+
+local function updateUpValue(f, t)
+    local i = 1
+    while true do
+        local v = debug.getupvalue(f, i)
+        if v == nil then
+            return
+        end
+        if t[v] ~= nil then
+            debug.setupvalue(f, i, t[v])
+        end
+        i = i + 1
+    end
+end
+
 local function refresh(datamodel, data)
     local compiled, err = load(data.script, data.script, "t", datamodel.data_table)
     if not compiled then
@@ -21,9 +49,11 @@ local function refresh(datamodel, data)
         return
     end
     local f = compiled()
-    local has_ev = debug.getupvalue(f, 1) == "ev"
-    debug.setupvalue(data.callback, 1, f)
-    debug.setupvalue(data.callback, 2, has_ev)
+    local ev = findUpValue(f, "ev")
+    updateUpValue(data.callback, {
+        f = f,
+        ev = ev,
+    })
 end
 
 function m.load(datamodel, view, element, event_type, event_value)
@@ -32,11 +62,11 @@ function m.load(datamodel, view, element, event_type, event_value)
         data = {}
         view.events[event_type] = data
         local f
-        local has_ev
+        local ev
         data.callback = function (e)
             local func = f
-            if has_ev then
-                debug.setupvalue(func, 1, constructor.Event(e))
+            if ev then
+                debug.setupvalue(func, ev, constructor.Event(e))
             end
             invoke(func)
         end
