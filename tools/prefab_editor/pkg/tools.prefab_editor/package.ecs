@@ -60,6 +60,7 @@ system "input_system"
 
 system "gui_system"
     .implement "gui_system.lua"
+    .method "start_frame"
     .method "init_world"
     .method "data_changed"
     .method "handle_event"

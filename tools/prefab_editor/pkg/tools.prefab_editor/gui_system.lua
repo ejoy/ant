@@ -172,6 +172,10 @@ local function choose_project()
     end
 end
 
+function m:start_frame()
+    global_data.camera_lock = false
+end
+
 local stat_window
 function m:init_world()
     local iRmlUi = ecs.import.interface "ant.rmlui|irmlui"
@@ -179,7 +183,6 @@ function m:init_world()
 end
 
 function m:ui_update()
-    global_data.camera_lock = false
     imgui.windows.PushStyleVar(imgui.enum.StyleVar.WindowRounding, 0)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.WindowBg, 0.2, 0.2, 0.2, 1)
     imgui.windows.PushStyleColor(imgui.enum.StyleCol.TitleBg, 0.2, 0.2, 0.2, 1)
