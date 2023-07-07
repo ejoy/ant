@@ -2,6 +2,7 @@ local rmlui = require "rmlui"
 local event = require "core.event"
 local data_event = require "core.datamodel.event"
 local data_modifier = require "core.datamodel.modifier"
+local data_text = require "core.datamodel.text"
 
 local datamodels = {}
 
@@ -14,6 +15,7 @@ function m.create(document, data_table)
         data_table = data_table,
         variables = {},
         views = {},
+        texts = {},
     }
     local mt = {
         __index = rmlui.DataModelGet,
@@ -58,6 +60,17 @@ end
 function m.load(document, element, name, value)
     local datamodel = datamodels[document]
     if not datamodel then
+        return
+    end
+    if name == "data-text" then
+        local view = datamodel.texts[element]
+        if not view then
+            view = {
+                variables = compileVariables(datamodel, element)
+            }
+            datamodel.texts[element] = view
+        end
+        data_text.load(datamodel, view, element, value)
         return
     end
     local view = datamodel.views[element]
@@ -109,6 +122,7 @@ function m.refresh(document)
         data_event.refresh(datamodel, view)
         data_modifier.refresh(datamodel, element, view)
     end
+    data_text.refresh(datamodel)
 end
 
 function event.OnDestroyNode(document, node)

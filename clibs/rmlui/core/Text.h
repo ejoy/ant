@@ -20,6 +20,7 @@ public:
 	float GetBaseline();
 	void ChangedProperties(const PropertyIdSet& properties);
 	DataModel* GetDataModel() const override;
+	void DataModelLoad();
 protected:
 	virtual float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float line_height);
 	std::optional<Property> GetComputedProperty(PropertyId id);

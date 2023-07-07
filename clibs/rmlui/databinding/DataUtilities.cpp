@@ -44,6 +44,7 @@ void DataUtilities::ApplyDataViewText(Text* element) {
 	if (!data_model) {
 		return;
 	}
+	element->DataModelLoad();
 	if (auto view = std::make_unique<DataViewText>(element)) {
 		if (view->Initialize(*data_model)) {
 			data_model->AddView(std::move(view));

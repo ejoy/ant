@@ -503,6 +503,13 @@ lTextGetText(lua_State* L) {
 }
 
 static int
+lTextSetText(lua_State* L) {
+	Rml::Text* e = lua_checkobject<Rml::Text>(L, 1);
+	e->SetText(lua_checkstdstring(L, 2));
+	return 0;
+}
+
+static int
 lTextDelete(lua_State* L) {
 	Rml::Text* e = lua_checkobject<Rml::Text>(L, 1);
 	delete e;
@@ -629,6 +636,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "NodeGetParent", lNodeGetParent },
 		{ "NodeClone", lNodeClone },
 		{ "TextGetText", lTextGetText },
+		{ "TextSetText", lTextSetText },
 		{ "TextDelete", lTextDelete },
 		{ "RenderBegin", lRenderBegin },
 		{ "RenderFrame", lRenderFrame },

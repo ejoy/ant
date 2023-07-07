@@ -151,6 +151,10 @@ const std::string& Text::GetText() const {
 	return text;
 }
 
+void Text::DataModelLoad() {
+	GetPlugin()->OnDataModelLoad(parent->GetOwnerDocument(), this, "data-text", text);
+}
+
 std::optional<Property> Text::GetComputedProperty(PropertyId id) {
 	assert(parent);
 	return parent->GetComputedProperty(id);

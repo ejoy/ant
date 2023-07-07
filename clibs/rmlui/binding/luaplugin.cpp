@@ -84,10 +84,10 @@ void lua_plugin::OnCreateElement(Rml::Document* document, Rml::Element* element,
 	});
 }
 
-void lua_plugin::OnDataModelLoad(Rml::Document* document, Rml::Element* element, const std::string& name, const std::string& value) {
+void lua_plugin::OnDataModelLoad(Rml::Document* document, Rml::Node* node, const std::string& name, const std::string& value) {
 	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
-		lua_pushlightuserdata(L, (void*)element);
+		lua_pushlightuserdata(L, (void*)node);
 		lua_pushlstring(L, name.data(), name.size());
 		lua_pushlstring(L, value.data(), value.size());
 		call(L, LuaEvent::OnDataModelLoad, 4);
