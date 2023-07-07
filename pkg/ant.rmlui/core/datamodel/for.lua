@@ -51,7 +51,7 @@ function m.load(datamodel, view, element, value)
         data.var_index = var_index
         data.var_t = var_t
     else
-        var_it, var_t = value:match "^%s*([%w_%.]+):%s*([%w_%.]+)%s*$"
+        var_it, var_t = value:match "^%s*([%w_%.]+)%s*:%s*([%w_%.]+)%s*$"
         if var_t then
             data.var_it = var_it
             data.var_index = "it_index"
