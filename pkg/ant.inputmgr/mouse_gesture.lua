@@ -99,8 +99,6 @@ return function (ev)
     local function mouse_up(x, y)
         lastX = nil
         lastY = nil
-        downX = nil
-        downY = nil
         if inLongPress then
             inLongPress = false
         elseif alwaysInTapRegion then
