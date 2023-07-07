@@ -37,6 +37,7 @@ public:
 
 	void DirtyVariable(const std::string& variable_name);
 	bool IsVariableDirty() const;
+	void CleanVariableDirty();
 	void MarkDirty();
 	bool IsDirty() const;
 	void OnElementRemove(Element* element);

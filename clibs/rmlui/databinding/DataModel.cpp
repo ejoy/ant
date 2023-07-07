@@ -235,6 +235,10 @@ bool DataModel::IsVariableDirty() const {
 	return !dirty_variables.empty();
 }
 
+void DataModel::CleanVariableDirty() {
+	dirty_variables.clear();
+}
+
 void DataModel::MarkDirty() {
 	dirty = true;
 }
@@ -306,7 +310,5 @@ void DataModel::Update() {
 		}
 		views_to_remove.clear();
 	}
-
-	dirty_variables.clear();
 }
 }

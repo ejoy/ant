@@ -117,6 +117,7 @@ void Document::UpdateDataModel() {
 			if (data_model->IsDirty() || data_model->IsVariableDirty()) {
 				GetPlugin()->OnDataModelRefresh(this);
 			}
+			data_model->CleanVariableDirty();
 			if (!data_model->IsDirty()) {
 				break;
 			}
