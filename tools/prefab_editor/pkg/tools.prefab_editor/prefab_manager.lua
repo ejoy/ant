@@ -232,7 +232,6 @@ function m:create(what, config)
                 end
                 local group = ecs.group(hitch.group)
                 new_entity = group:create_entity(tmp)
-                group:enable "scene_update"
             else
                 tmp.data.scene.parent = parent_eid
                 new_entity = ecs.create_entity(tmp)

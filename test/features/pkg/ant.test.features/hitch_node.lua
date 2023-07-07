@@ -48,7 +48,6 @@ local function create_simple_test_group()
 
     local static_group = ecs.group(hitch_test_group_id)
     --standalone sub tree
-    static_group:enable "scene_update"
     local p1 = static_group:create_entity {
         policy = {
             "ant.render|render",
@@ -133,11 +132,9 @@ local function create_skeleton_test_group()
     end
 
     local dynamic_group = ecs.group(skeleton_test_group_id)
-    dynamic_group:enable "scene_update"
     create_obj(dynamic_group, "/pkg/ant.resources.binary/meshes/BrainStem.glb|mesh.prefab", 10)
 
     local d2g = ecs.group(skeleton_test_group_id+1)
-    d2g:enable "scene_update"
     create_obj(d2g, "/pkg/ant.resources.binary/meshes/chimney-1.glb|mesh.prefab")
 end
 

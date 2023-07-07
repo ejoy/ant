@@ -512,7 +512,7 @@ function sm:camera_usage()
 	end
 
 	for gid, wms in pairs(groups) do
-        --local select_tag = "view_visible:in scene_update:in scene:in bounding:in eid:in"
+        --local select_tag = "view_visible:in scene:in bounding:in eid:in"
 		local select_tag = "hitch_tag:in scene:in bounding:in eid:in"
 		local g = ecs.group(gid)
         g:enable("hitch_tag")

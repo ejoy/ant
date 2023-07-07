@@ -25,14 +25,3 @@ function b:entity_init()
 		end
 	end
 end
-
-local sceneupdate_sys = ecs.system "scene_update_system"
-function sceneupdate_sys:init()
-	ecs.group(0):enable "scene_update"
-	ecs.group_flush()
-end
-
-local g_sys = ecs.system "group_system"
-function g_sys:start_frame()
-	ecs.group_flush()
-end

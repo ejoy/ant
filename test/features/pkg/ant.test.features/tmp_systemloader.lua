@@ -352,7 +352,6 @@ local function motion_sampler_test()
     sampler_eid = eid
 
     g:enable "view_visible"
-    g:enable "scene_update"
 
 --[[     local p = g:create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", eid)
     p.on_ready = function (e)
@@ -436,16 +435,10 @@ function init_loader_sys:ui_update()
             
             if enable == 1 then
                 ecs.group(1):enable "view_visible"
-                ecs.group(1):enable "scene_update"
-
                 ecs.group(0):disable "view_visible"
-                ecs.group(0):disable "scene_update"
             else
                 ecs.group(0):enable "view_visible"
-                ecs.group(0):enable "scene_update"
-
                 ecs.group(1):disable "view_visible"
-                ecs.group(1):disable "scene_update"
             end
             enable = enable == 1 and 0 or 1
 
