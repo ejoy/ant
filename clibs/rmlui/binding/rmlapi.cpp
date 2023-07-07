@@ -351,7 +351,7 @@ static int
 lElementInsertBefore(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::Node* child = lua_checkobject<Rml::Node>(L, 2);
-	Rml::Node* adjacent = lua_checkobject<Rml::Node>(L, 2);
+	Rml::Node* adjacent = lua_checkobject<Rml::Node>(L, 3);
 	e->InsertBefore(child, adjacent);
 	return 0;
 }
