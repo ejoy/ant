@@ -427,6 +427,14 @@ lElementSetProperty(lua_State* L) {
 }
 
 static int
+lElementSetVisible(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	bool visible = lua_toboolean(L, 2);
+	e->SetVisible(visible);
+	return 0;
+}
+
+static int
 lElementProject(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::Point pt(
@@ -600,6 +608,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementRemoveAttribute", lElementRemoveAttribute },
 		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
+		{ "ElementSetVisible", lElementSetVisible },
 		{ "ElementSetPseudoClass", lElementSetPseudoClass },
 		{ "ElementGetScrollLeft", lElementGetScrollLeft },
 		{ "ElementGetScrollTop", lElementGetScrollTop },
