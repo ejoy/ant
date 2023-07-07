@@ -37,6 +37,10 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		// "none"
 		return false;
 	}
+	std::string path = image->Get<std::string>();
+	if (path.empty()) {
+		return false;
+	}
 	const auto& bounds = element->GetBounds();
 	const auto& border = element->GetBorder();
 	const auto& padding = element->GetPadding();
@@ -78,7 +82,6 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	if (!color.IsVisible())
 		return false;
 
-	std::string path = image->Get<std::string>();
 	bool isRT = false;
 	if (regex_match(path, std::regex("<.*>"))) {
 		isRT = true;
