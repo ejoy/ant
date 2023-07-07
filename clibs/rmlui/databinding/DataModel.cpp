@@ -125,30 +125,6 @@ bool DataModel::BindVariable(const std::string& name, DataVariable variable) {
 	return true;
 }
 
-bool DataModel::BindEventCallback(const std::string& name, DataEventFunc event_func) {
-	const char* name_error_str = LegalVariableName(name);
-	if (name_error_str)
-	{
-		Log::Message(Log::Level::Warning, "Could not bind data event callback '%s'. %s", name.c_str(), name_error_str);
-		return false;
-	}
-
-	if (!event_func)
-	{
-		Log::Message(Log::Level::Warning, "Could not bind data event callback '%s' to data model, empty function provided.", name.c_str());
-		return false;
-	}
-
-	bool inserted = event_callbacks.emplace(name, std::move(event_func)).second;
-	if (!inserted)
-	{
-		Log::Message(Log::Level::Warning, "Data event callback with name '%s' already exists.", name.c_str());
-		return false;
-	}
-
-	return true;
-}
-
 bool DataModel::InsertAlias(Node* element, const std::string& alias_name, DataAddress replace_with_address) {
 	if (replace_with_address.empty() || replace_with_address.front().name.empty())
 	{
@@ -239,16 +215,6 @@ DataVariable DataModel::GetVariable(const DataAddress& address) const {
 	}
 
 	return DataVariable();
-}
-
-const DataEventFunc* DataModel::GetEventCallback(const std::string& name) {
-	auto it = event_callbacks.find(name);
-	if (it == event_callbacks.end()) {
-		Log::Message(Log::Level::Warning, "Could not find data event callback '%s' in data model.", name.c_str());
-		return nullptr;
-	}
-
-	return &it->second;
 }
 
 bool DataModel::GetVariableInto(const DataAddress& address, DataVariant& out_value) const {

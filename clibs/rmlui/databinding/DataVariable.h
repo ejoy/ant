@@ -5,6 +5,8 @@
 
 namespace Rml {
 
+class DataVariable;
+
 class VariableDefinition {
 public:
 	virtual ~VariableDefinition() = default;

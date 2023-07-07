@@ -180,20 +180,7 @@ BindVariable(struct LuaDataModel* D, lua_State* L) {
 	lua_pushinteger(dataL, id);
 	lua_rawset(dataL, 1);
 	const char* key = lua_tostring(L, -1);
-	if (lua_type(dataL, D->top) == LUA_TFUNCTION) {
-		D->datamodel->BindEventCallback(key, [=](Rml::Event& event, const std::vector<Rml::DataVariant>& list) {
-			luabind::invoke([&](lua_State* L){
-				lua_pushvalue(dataL, id);
-				lua_xmove(dataL, L, 1);
-				get_lua_plugin()->pushevent(L, event);
-				for (auto const& e : list) {
-					lua_pushvariant(L, e);
-				}
-				lua_call(L, (int)list.size() + 1, 0);
-			});
-		});
-	}
-	else {
+	if (lua_type(dataL, D->top) != LUA_TFUNCTION) {
 		D->datamodel->BindVariable(key,
 			Rml::DataVariable(D->scalarDef, (void*)(intptr_t)id)
 		);

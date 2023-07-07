@@ -1,6 +1,5 @@
 #pragma once
 
-#include <databinding/DataVariant.h>
 #include <functional>
 #include <string>
 #include <unordered_set>
@@ -8,10 +7,8 @@
 
 namespace Rml {
 
-class DataVariable;
 class Event;
 
-using DataEventFunc = std::function<void(Event&, const std::vector<DataVariant>&)>;
 using DirtyVariables = std::unordered_set<std::string>;
 
 struct DataAddressEntry {

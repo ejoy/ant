@@ -1,7 +1,7 @@
 #pragma once
 
 #include <databinding/DataVariant.h>
-#include <databinding/DataExpression.h>
+#include <databinding/DataTypes.h>
 #include <core/ObserverPtr.h>
 #include <memory>
 #include <string>
@@ -13,8 +13,6 @@ class DataModel;
 class Node;
 class Text;
 class Element;
-class DataExpression;
-using DataExpressionPtr = std::unique_ptr<DataExpression>;
 
 class DataView {
 public:
@@ -43,26 +41,6 @@ private:
 	std::string iterator_name;
 	std::string iterator_index_name;
 	size_t num_elements = 0;
-};
-
-class DataViewText final : public DataView {
-public:
-	DataViewText(Text* element);
-	bool Initialize(DataModel& model);
-	bool Update(DataModel& model) override;
-	std::vector<std::string> GetVariableNameList() const override;
-	bool IsValid() const override;
-
-private:
-	std::string BuildText() const;
-	struct DataEntry {
-		size_t index = 0; // Index into 'text'
-		DataExpressionPtr data_expression;
-		std::string value;
-	};
-	ObserverPtr<Text> element;
-	std::string text;
-	std::vector<DataEntry> data_entries;
 };
 
 }

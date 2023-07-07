@@ -1,5 +1,6 @@
 #include <databinding/DataView.h>
 #include <databinding/DataModel.h>
+#include <databinding/DataVariable.h>
 #include <core/Document.h>
 #include <core/Element.h>
 #include <core/Text.h>
@@ -126,117 +127,6 @@ std::vector<std::string> DataViewFor::GetVariableNameList() const {
 
 bool DataViewFor::IsValid() const {
 	return element && !element->IsRemoved();
-}
-
-DataViewText::DataViewText(Text* element)
-	: DataView(element)
-	, element(element->GetObserverPtr())
-{}
-
-bool DataViewText::Initialize(DataModel& model) {
-	const std::string& in_text = element->GetText();
-	text.reserve(in_text.size());
-	DataExpressionInterface expression_interface(&model, element.get());
-
-	size_t previous_close_brackets = 0;
-	size_t begin_brackets = 0;
-	while ((begin_brackets = in_text.find("{{", begin_brackets)) != std::string::npos) {
-		text.insert(text.end(), in_text.begin() + previous_close_brackets, in_text.begin() + begin_brackets);
-
-		const size_t begin_name = begin_brackets + 2;
-		const size_t end_name = in_text.find("}}", begin_name);
-
-		if (end_name == std::string::npos)
-			return false;
-
-		DataEntry entry;
-		entry.index = text.size();
-		entry.data_expression = std::make_unique<DataExpression>();
-		std::string expression_str(in_text.begin() + begin_name, in_text.begin() + end_name);
-		if (entry.data_expression->Parse(expression_interface, expression_str, false))
-			data_entries.push_back(std::move(entry));
-
-		previous_close_brackets = end_name + 2;
-		begin_brackets = previous_close_brackets;
-	}
-
-	if (data_entries.empty())
-		return false;
-
-	if (previous_close_brackets < in_text.size())
-		text.insert(text.end(), in_text.begin() + previous_close_brackets, in_text.end());
-
-	return true;
-}
-
-bool DataViewText::Update(DataModel& model) {
-	bool entries_modified = false;
-	{
-		DataExpressionInterface expression_interface(&model, element.get());
-
-		for (DataEntry& entry : data_entries) {
-			assert(entry.data_expression);
-			DataVariant variant;
-			bool result = entry.data_expression->Run(expression_interface, variant);
-			const std::string value = VariantHelper::ToString(variant);
-			if (result && entry.value != value) {
-				entry.value = value;
-				entries_modified = true;
-			}
-		}
-	}
-
-	if (entries_modified) {
-		if (Text* text_element = static_cast<Text*>(element.get())) {
-			std::string new_text = BuildText();
-			text_element->SetText(new_text);
-		}
-	}
-
-	return entries_modified;
-}
-
-std::vector<std::string> DataViewText::GetVariableNameList() const {
-	std::vector<std::string> full_list;
-	full_list.reserve(data_entries.size());
-
-	for (const DataEntry& entry : data_entries) {
-		assert(entry.data_expression);
-
-		std::vector<std::string> entry_list = entry.data_expression->GetVariableNameList();
-		full_list.insert(full_list.end(),
-			std::make_move_iterator(entry_list.begin()),
-			std::make_move_iterator(entry_list.end())
-		);
-	}
-
-	return full_list;
-}
-
-std::string DataViewText::BuildText() const {
-	size_t reserve_size = text.size();
-
-	for (const DataEntry& entry : data_entries)
-		reserve_size += entry.value.size();
-
-	std::string result;
-	result.reserve(reserve_size);
-
-	size_t previous_index = 0;
-	for (const DataEntry& entry : data_entries) {
-		result += text.substr(previous_index, entry.index - previous_index);
-		result += entry.value;
-		previous_index = entry.index;
-	}
-
-	if (previous_index < text.size())
-		result += text.substr(previous_index);
-
-	return result;
-}
-
-bool DataViewText::IsValid() const {
-	return element && element->GetParentNode() && !element->GetParentNode()->IsRemoved();
 }
 
 }

@@ -14,8 +14,6 @@ class Node;
 
 class DataView;
 using DataViewPtr = std::unique_ptr<DataView>;
-class DataEvent;
-using DataEventPtr = std::unique_ptr<DataEvent>;
 
 class DataModel {
 public:
@@ -26,16 +24,13 @@ public:
 	DataModel& operator=(const DataModel&) = delete;
 
 	void AddView(DataViewPtr view);
-	void AddEvent(DataEventPtr event);
 
 	bool BindVariable(const std::string& name, DataVariable variable);
-	bool BindEventCallback(const std::string& name, DataEventFunc event_func);
 
 	bool InsertAlias(Node* element, const std::string& alias_name, DataAddress replace_with_address);
 	bool EraseAliases(Node* element);
 
 	DataAddress ResolveAddress(const std::string& address_str, Node* element) const;
-	const DataEventFunc* GetEventCallback(const std::string& name);
 
 	DataVariable GetVariable(const DataAddress& address) const;
 	bool GetVariableInto(const DataAddress& address, DataVariant& out_value) const;
@@ -57,7 +52,6 @@ private:
 	NameViewMap name_view_map;
 	std::unordered_map<std::string, DataVariable> variables;
 	DirtyVariables dirty_variables;
-	std::unordered_map<std::string, DataEventFunc> event_callbacks;
 	ScopedAliases aliases;
 	bool dirty = false;
 };
