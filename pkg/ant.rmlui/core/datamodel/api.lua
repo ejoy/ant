@@ -1,25 +1,26 @@
 local rmlui = require "rmlui"
 local event = require "core.event"
 local data_event = require "core.datamodel.event"
+local data_modifier = require "core.datamodel.modifier"
 
 local datamodels = {}
 
 local m = {}
 
-function m.create(document, view)
-    local model = rmlui.DataModelCreate(document, view)
+function m.create(document, data_table)
+    local model = rmlui.DataModelCreate(document, data_table)
     datamodels[document] = {
         model = model,
-        view = view,
+        data_table = data_table,
         variables = {},
-        events = {},
+        views = {},
     }
     local mt = {
         __index = rmlui.DataModelGet,
         __call  = rmlui.DataModelDirty,
     }
     function mt:__newindex(k, v)
-        view[k] = v
+        data_table[k] = v
         if type(v) == "function" then
             return
         end
@@ -29,14 +30,59 @@ function m.create(document, view)
     return model
 end
 
+local function collectVariables(datamodel, element, t)
+    local vars = datamodel.variables[element]
+    if vars then
+        for name, value in pairs(vars) do
+            if not t[name] then
+                t[name] = value
+            end
+        end
+    end
+    local parent = rmlui.NodeGetParent(element)
+    if parent then
+        return collectVariables(datamodel, parent, t)
+    end
+    return t
+end
+
+local function compileVariables(datamodel, element)
+    local variables = collectVariables(datamodel, element, {})
+    local s = {}
+    for name, value in pairs(variables) do
+        s[#s+1] = ("local %s = %s"):format(name, value)
+    end
+    return table.concat(s, "\n")
+end
+
 function m.load(document, element, name, value)
     local datamodel = datamodels[document]
     if not datamodel then
         return
     end
+    local view = datamodel.views[element]
+    if not view then
+        view = {
+            events = {},
+            modifiers = {
+                style = {},
+                attr = {},
+                ["if"] = {},
+            },
+            variables = compileVariables(datamodel, element)
+        }
+        datamodel.views[element] = view
+    end
     local type, modifier = name:match "data%-(%a+)%-(%a+)"
     if type == "event" then
-        data_event.load(datamodel, element, modifier, value)
+        data_event.load(datamodel, view, element, modifier, value)
+    elseif type == "style" or type == "attr" then
+        data_modifier.load(datamodel, view, element, type, modifier, value)
+    else
+        type = name:match "data%-(%a+)"
+        if type == "if" then
+            data_modifier.load(datamodel, view, element, type, "", value)
+        end
     end
 end
 
@@ -51,7 +97,6 @@ function m.setVariable(document, element, name, value)
         datamodel.variables[element] = vars
     end
     vars[name] = value
-    data_event.setVariable(datamodel, element)
 end
 
 function m.refresh(document)
@@ -59,7 +104,10 @@ function m.refresh(document)
     if not datamodel then
         return
     end
-    data_event.refresh(datamodel)
+    for element, view in pairs(datamodel.views) do
+        data_event.refresh(datamodel, view)
+        data_modifier.refresh(datamodel, element, view)
+    end
 end
 
 function event.OnDestroyNode(document, node)
@@ -68,7 +116,10 @@ function event.OnDestroyNode(document, node)
         return
     end
     datamodel.variables[node] = nil
-    data_event.destroyNode(datamodel, node)
+    local view = datamodel.views[node]
+    if view then
+        data_event.destroyNode(view, node)
+    end
 end
 
 function event.OnDocumentCreate(document)
