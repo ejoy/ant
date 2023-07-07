@@ -2,8 +2,10 @@ local rmlui = require "rmlui"
 local event = require "core.event"
 local data_for = require "core.datamodel.for"
 local data_event = require "core.datamodel.event"
-local data_modifier = require "core.datamodel.modifier"
 local data_text = require "core.datamodel.text"
+local data_if = require "core.datamodel.if"
+local data_attr = require "core.datamodel.attr"
+local data_style = require "core.datamodel.style"
 
 local datamodels = {}
 
@@ -75,26 +77,26 @@ function m.load(document, element, name, value)
             ["for"] = {
                 num_elements = 0,
             },
+            ["if"] = nil,
             events = {},
-            modifiers = {
-                style = {},
-                attr = {},
-                ["if"] = {},
-            },
+            styles = {},
+            attributes = {},
             variables = compileVariables(datamodel, element)
         }
         datamodel.views[element] = view
     end
     if name == "data-if" then
-        data_modifier.load(datamodel, view, element, "if", "", value)
+        data_if.load(datamodel, view, element, value)
     elseif name == "data-for" then
         data_for.load(datamodel, view, element, value)
     else
         local type, modifier = name:match "^data%-(%a+)%-(.+)$"
         if type == "event" then
             data_event.load(datamodel, view, element, modifier, value)
-        elseif type == "style" or type == "attr" then
-            data_modifier.load(datamodel, view, element, type, modifier, value)
+        elseif type == "style" then
+            data_style.load(datamodel, view, element, modifier, value)
+        elseif type == "attr" then
+            data_attr.load(datamodel, view, element, modifier, value)
         else
             error("unknown data-model attribute:"..name)
         end
@@ -108,8 +110,10 @@ function m.refresh(document)
     end
     for element, view in pairs(datamodel.views) do
         data_for.refresh(datamodel, element, view)
+        data_if.refresh(datamodel, element, view)
         data_event.refresh(datamodel, view)
-        data_modifier.refresh(datamodel, element, view)
+        data_style.refresh(datamodel, element, view)
+        data_attr.refresh(datamodel, element, view)
     end
     data_text.refresh(datamodel)
 end
