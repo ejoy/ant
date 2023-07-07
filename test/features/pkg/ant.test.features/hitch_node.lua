@@ -63,7 +63,6 @@ local function create_simple_test_group()
                 iom.set_position(e, math3d.vector(0, 2, 0))
                 iom.set_scale(e, 3)
             end,
-            scene_update_once =true,
             name = "virtual_node_p1",
         },
     }
@@ -83,7 +82,6 @@ local function create_simple_test_group()
             on_ready = function (e)
                 iom.set_position(e, math3d.vector(1, 2, 3))
             end,
-            scene_update_once = true,
             name = "virtual_node",
         },
     }
@@ -122,12 +120,6 @@ local function create_skeleton_test_group()
 
     local function create_obj(g, file, s, t)
         local p = g:create_instance(file)
-        p.on_init = function ()
-            for _, eid in ipairs(p.tag["*"]) do
-                local e <close> = w:entity(eid, "scene_update_once?out")
-                e.scene_update_once = true
-            end
-        end
         p.on_ready = function (e)
             local ee<close> = w:entity(e.tag['*'][1], "scene:in")
             if s then

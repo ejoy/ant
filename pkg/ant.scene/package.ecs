@@ -101,5 +101,3 @@ component "hitch"
 policy "hitch_object"
     .require_policy "ant.scene|scene_object"
     .component "hitch"
-
-component "scene_update_once"
