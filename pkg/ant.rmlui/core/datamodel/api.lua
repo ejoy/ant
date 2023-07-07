@@ -1,5 +1,6 @@
 local rmlui = require "rmlui"
 local event = require "core.event"
+local data_for = require "core.datamodel.for"
 local data_event = require "core.datamodel.event"
 local data_modifier = require "core.datamodel.modifier"
 local data_text = require "core.datamodel.text"
@@ -76,6 +77,9 @@ function m.load(document, element, name, value)
     local view = datamodel.views[element]
     if not view then
         view = {
+            ["for"] = {
+                num_elements = 0,
+            },
             events = {},
             modifiers = {
                 style = {},
@@ -88,6 +92,8 @@ function m.load(document, element, name, value)
     end
     if name == "data-if" then
         data_modifier.load(datamodel, view, element, "if", "", value)
+    elseif name == "data-for" then
+        data_for.load(datamodel, view, element, value)
     else
         local type, modifier = name:match "^data%-(%a+)%-(.+)$"
         if type == "event" then
@@ -119,6 +125,7 @@ function m.refresh(document)
         return
     end
     for element, view in pairs(datamodel.views) do
+        data_for.refresh(datamodel, element, view)
         data_event.refresh(datamodel, view)
         data_modifier.refresh(datamodel, element, view)
     end

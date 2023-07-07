@@ -228,7 +228,7 @@ lDataModelSet(lua_State *L) {
 		lua_pop(dataL, 1);
 		lua_xmove(L, dataL, 1);
 		lua_replace(dataL, id);
-		D->datamodel->DirtyVariable(lua_tostring(L, 2));
+		D->datamodel->MarkDirty();
 		return 0;
 	}
 	lua_pop(dataL, 1);
@@ -239,10 +239,7 @@ lDataModelSet(lua_State *L) {
 int
 lDataModelDirty(lua_State* L) {
 	struct LuaDataModel* D = (struct LuaDataModel*)lua_touserdata(L, 1);
-	int n = lua_gettop(L);
-	for (int i = 2; i <= n; ++i) {
-		D->datamodel->DirtyVariable(luaL_checkstring(L, i));
-	}
+	D->datamodel->MarkDirty();
 	return 0;
 }
 

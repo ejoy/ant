@@ -348,6 +348,22 @@ lElementAppendChild(lua_State* L) {
 }
 
 static int
+lElementInsertBefore(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	Rml::Node* child = lua_checkobject<Rml::Node>(L, 2);
+	Rml::Node* adjacent = lua_checkobject<Rml::Node>(L, 2);
+	e->InsertBefore(child, adjacent);
+	return 0;
+}
+
+static int
+lElementGetPreviousSibling(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	lua_pushRmlNode(L, e->GetPreviousSibling());
+	return 1;
+}
+
+static int
 lElementRemoveChild(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	Rml::Element* child = lua_checkobject<Rml::Element>(L, 2);
@@ -627,6 +643,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementGetOuterHTML", lElementGetOuterHTML },
 		{ "ElementSetOuterHTML", lElementSetOuterHTML },
 		{ "ElementAppendChild", lElementAppendChild },
+		{ "ElementInsertBefore", lElementInsertBefore },
+		{ "ElementGetPreviousSibling", lElementGetPreviousSibling },
 		{ "ElementRemoveChild", lElementRemoveChild },
 		{ "ElementRemoveAllChildren", lElementRemoveAllChildren},
 		{ "ElementGetElementById", lElementGetElementById },

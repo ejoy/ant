@@ -3,7 +3,6 @@
 #include <core/Text.h>
 #include <core/Log.h>
 #include <databinding/DataModel.h>
-#include <databinding/DataView.h>
 
 namespace Rml {
 
@@ -27,13 +26,7 @@ void DataUtilities::ApplyDataViewFor(Element* element) {
 	}
 	for (auto const& [name, value] : element->GetAttributes()) {
 		if (name == "data-for") {
-			auto view = std::make_unique<DataViewFor>(element);
-			if (view->Initialize(*data_model, value)) {
-				data_model->AddView(std::move(view));
-			}
-			else {
-				Log::Message(Log::Level::Warning, "Could not add data-for view to element: %s", element->GetAddress().c_str());
-			}
+			element->DataModelLoad(name, value);
 			return;
 		}
 	}

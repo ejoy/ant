@@ -2,7 +2,6 @@
 #include <core/Element.h>
 #include <core/Log.h>
 #include <core/StringUtilities.h>
-#include <databinding/DataView.h>
 #include <algorithm>
 #include <set>
 
@@ -97,10 +96,6 @@ DataModel::DataModel()
 DataModel::~DataModel() {
 }
 
-void DataModel::AddView(DataViewPtr view) {
-	views_to_add.push_back(std::move(view));
-}
-
 bool DataModel::BindVariable(const std::string& name, DataVariable variable) {
 	const char* name_error_str = LegalVariableName(name);
 	if (name_error_str)
@@ -125,118 +120,8 @@ bool DataModel::BindVariable(const std::string& name, DataVariable variable) {
 	return true;
 }
 
-bool DataModel::InsertAlias(Node* element, const std::string& alias_name, DataAddress replace_with_address) {
-	if (replace_with_address.empty() || replace_with_address.front().name.empty())
-	{
-		Log::Message(Log::Level::Warning, "Could not add alias variable '%s' to data model, replacement address invalid.", alias_name.c_str());
-		return false;
-	}
-
-	if (variables.count(alias_name) == 1)
-		Log::Message(Log::Level::Warning, "Alias variable '%s' is shadowed by a global variable.", alias_name.c_str());
-
-	auto& map = aliases.emplace(element, std::unordered_map<std::string, DataAddress>()).first->second;
-	
-	auto it = map.find(alias_name);
-	if (it != map.end())
-		Log::Message(Log::Level::Warning, "Alias name '%s' in data model already exists, replaced.", alias_name.c_str());
-
-	map[alias_name] = std::move(replace_with_address);
-
-	return true;
-}
-
-bool DataModel::EraseAliases(Node* element) {
-	return aliases.erase(element) == 1;
-}
-
-DataAddress DataModel::ResolveAddress(const std::string& address_str, Node* element) const {
-	DataAddress address = ParseAddress(address_str);
-
-	if (address.empty())
-		return address;
-
-	const std::string& first_name = address.front().name;
-
-	auto it = variables.find(first_name);
-	if (it != variables.end())
-		return address;
-
-	// Look for a variable alias for the first name.
-	Node* ancestor = element;
-	while (ancestor) {
-		auto it_element = aliases.find(ancestor);
-		if (it_element != aliases.end()) {
-			const auto& alias_names = it_element->second;
-			auto it_alias_name = alias_names.find(first_name);
-			if (it_alias_name != alias_names.end()) {
-				const DataAddress& replace_address = it_alias_name->second;
-				if (replace_address.empty() || replace_address.front().name.empty()) {
-					// Variable alias is invalid
-					return DataAddress();
-				}
-
-				// Insert the full alias address, replacing the first element.
-				address[0] = replace_address[0];
-				address.insert(address.begin() + 1, replace_address.begin() + 1, replace_address.end());
-				return address;
-			}
-		}
-
-		ancestor = ancestor->GetParentNode();
-	}
-
-	Log::Message(Log::Level::Warning, "Could not find variable name '%s' in data model.", address_str.c_str());
-
-	return DataAddress();
-}
-
-DataVariable DataModel::GetVariable(const DataAddress& address) const {
-	if (address.empty())
-		return DataVariable();
-
-	auto it = variables.find(address.front().name);
-	if (it != variables.end()) {
-		DataVariable variable = it->second;
-
-		for (int i = 1; i < (int)address.size() && variable; i++) {
-			variable = variable.Child(address[i]);
-			if (!variable)
-				return DataVariable();
-		}
-
-		return variable;
-	}
-
-	if (address[0].name == "literal")
-	{
-		if (address.size() > 2 && address[1].name == "int")
-			return MakeLiteralIntVariable(address[2].index);
-	}
-
-	return DataVariable();
-}
-
-bool DataModel::GetVariableInto(const DataAddress& address, DataVariant& out_value) const {
-	DataVariable variable = GetVariable(address);
-	bool result = (variable && variable.Get(out_value));
-	if (!result)
-		Log::Message(Log::Level::Warning, "Could not get value from data variable '%s'.", DataAddressToString(address).c_str());
-	return result;
-}
-
-void DataModel::DirtyVariable(const std::string& variable_name) {
-	assert(LegalVariableName(variable_name) == nullptr);
-	assert(variables.count(variable_name) == 1);
-	dirty_variables.emplace(variable_name);
-}
-
-bool DataModel::IsVariableDirty() const {
-	return !dirty_variables.empty();
-}
-
-void DataModel::CleanVariableDirty() {
-	dirty_variables.clear();
+void DataModel::CleanDirty() {
+	dirty = false;
 }
 
 void DataModel::MarkDirty() {
@@ -247,68 +132,4 @@ bool DataModel::IsDirty() const {
 	return dirty;
 }
 
-void DataModel::OnElementRemove(Element* element) {
-	EraseAliases(element);
-}
-
-void DataModel::Update() {
-	dirty = false;
-	// View updates may result in newly added views, thus we do it recursively but with an upper limit.
-	//   Without the loop, newly added views won't be updated until the next Update() call.
-	std::set<DataView*> views_to_remove;
-	std::vector<DataView*> dirty_views;
-
-	if (!views_to_add.empty()) {
-		views.reserve(views.size() + views_to_add.size());
-		for (auto&& view : views_to_add) {
-			dirty_views.push_back(view.get());
-			for (const std::string& variable_name : view->GetVariableNameList())
-				name_view_map.emplace(variable_name, view.get());
-			views.push_back(std::move(view));
-		}
-		views_to_add.clear();
-	}
-
-	for (const std::string& variable_name : dirty_variables) {
-		auto pair = name_view_map.equal_range(variable_name);
-		for (auto it = pair.first; it != pair.second; ++it)
-			dirty_views.push_back(it->second);
-	}
-
-	// Remove duplicate entries
-	std::sort(dirty_views.begin(), dirty_views.end());
-	auto it_remove = std::unique(dirty_views.begin(), dirty_views.end());
-	dirty_views.erase(it_remove, dirty_views.end());
-
-	// Sort by the element's depth in the document tree so that any structural changes due to a changed variable are reflected in the element's children.
-	// Eg. the 'data-for' view will remove children if any of its data variable array size is reduced.
-	std::sort(dirty_views.begin(), dirty_views.end(), [](auto&& left, auto&& right) { return left->GetDepth() < right->GetDepth(); });
-
-	for (DataView* view : dirty_views) {
-		assert(view);
-		if (!view)
-			continue;
-		if (view->IsValid())
-			view->Update(*this);
-		else {
-			views_to_remove.insert(view);
-		}
-	}
-
-	if (!views_to_remove.empty()) {
-		for (auto it = views.begin(); it != views.end(); ) {
-			if (views_to_remove.contains(it->get()))
-				it = views.erase(it);
-			else
-				++it;
-		}
-		for (auto it = name_view_map.begin(); it != name_view_map.end(); ) {
-			if (views_to_remove.contains(it->second))
-				it = name_view_map.erase(it);
-			else
-				++it;
-		}
-		views_to_remove.clear();
-	}
-}
 }

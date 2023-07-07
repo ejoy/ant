@@ -29,11 +29,7 @@ function m.load(datamodel, view, element, view_type, view_modifier, view_value)
         data = {}
         view.modifiers[view_type][view_modifier] = data
     end
-    local s = {
-        view.variables,
-        "return "..view_value,
-    }
-    data.script = table.concat(s, "\n")
+    data.script = view.variables.."\nreturn "..view_value
     refresh(datamodel, data, element, view_type, view_modifier)
 end
 
