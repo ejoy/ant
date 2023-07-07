@@ -17,7 +17,6 @@
 #include <core/StyleSheetSpecification.h>
 #include <core/Text.h>
 #include <core/Transform.h>
-#include <databinding/DataModel.h>
 #include <algorithm>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>

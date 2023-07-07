@@ -585,9 +585,9 @@ lua_plugin* get_lua_plugin() {
 }
 
 static int
-lDocumentCreateDataModel(lua_State* L) {
+lDocumentEnableDataModel(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	doc->CreateDataModel();
+	doc->EnableDataModel();
 	return 0;
 }
 
@@ -620,7 +620,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentCreateElement", lDocumentCreateElement },
 		{ "DocumentCreateTextNode", lDocumentCreateTextNode },
 		{ "DocumentDefineCustomElement", lDocumentDefineCustomElement },
-		{ "DocumentCreateDataModel", lDocumentCreateDataModel },
+		{ "DocumentEnableDataModel", lDocumentEnableDataModel },
 		{ "DocumentDirtyDataModel", lDocumentDirtyDataModel },
 		{ "ElementAddEventListener", lElementAddEventListener },
 		{ "ElementRemoveEventListener", lElementRemoveEventListener },

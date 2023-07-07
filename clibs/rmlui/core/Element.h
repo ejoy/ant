@@ -16,7 +16,6 @@
 
 namespace Rml {
 
-class DataModel;
 class Document;
 class Element;
 class ElementAnimation;

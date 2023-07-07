@@ -10,7 +10,7 @@ local datamodels = {}
 local m = {}
 
 function m.create(document, data_table)
-    rmlui.DocumentCreateDataModel(document)
+    rmlui.DocumentEnableDataModel(document)
     local model = {}
     datamodels[document] = {
         model = model,

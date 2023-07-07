@@ -46,19 +46,6 @@ lm:lua_source "rmlui_core" {
     }
 }
 
-lm:lua_source "rmlui_databinding" {
-    includes = {
-        ".",
-        Ant3rd .. "glm",
-        Ant3rd .. "yoga",
-        "../luabind",
-    },
-    defines = "GLM_FORCE_QUAT_DATA_XYZW",
-    sources = {
-        "databinding/*.cpp",
-    }
-}
-
 lm:lua_source "rmlui_binding" {
     includes = {
         ".",
@@ -82,7 +69,6 @@ lm:source_set "rmlui" {
         "stylecache",
         "luabind",
         "rmlui_core",
-        "rmlui_databinding",
         "rmlui_binding",
     },
     windows = {

@@ -5,7 +5,6 @@
 #include <vector>
 
 namespace Rml {
-	class DataModel;
 	class Element;
 
     class Node {

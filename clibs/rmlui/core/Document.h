@@ -12,7 +12,6 @@ namespace Rml {
 class Text;
 class RichText;
 class StyleSheet;
-class DataModel;
 class Factory;
 struct HtmlElement;
 
@@ -33,9 +32,8 @@ public:
 	void Flush();
 	void Update(float delta);
 	void UpdateLayout();
-	DataModel* CreateDataModel();
+	void EnableDataModel();
 	void DirtyDataModel();
-	void RemoveDataModel();
 	void UpdateDataModel();
 	bool HasDataModel() const;
 	Element* GetBody();
@@ -52,11 +50,12 @@ private:
 	std::string source_url;
 	StyleSheet style_sheet;
 	std::unordered_set<std::string> custom_element;
-	std::unique_ptr<DataModel> data_model;
 	std::deque<std::unique_ptr<Node>> removednodes;
 	Element body;
 	Size dimensions;
 	bool dirty_dimensions = false;
+	bool dirty_datamodel = false;
+	bool enable_datamodel = false;
 };
 
 }

@@ -6,7 +6,6 @@
 #include <core/StyleSheet.h>
 #include <core/Text.h>
 #include <core/StyleSheetFactory.h>
-#include <databinding/DataModel.h>
 #include <core/HtmlParser.h>
 #include <fstream>
 
@@ -109,42 +108,31 @@ void Document::LoadExternalStyle(const std::string& source_path) {
 }
 
 void Document::UpdateDataModel() {
-	if (data_model) {
+	if (enable_datamodel) {
 		for (int i = 1; i < 10; ++i) {
 			body.UpdateDataModel();
-			if (!data_model->IsDirty()) {
+			if (!dirty_datamodel) {
 				break;
 			}
-			data_model->CleanDirty();
+			dirty_datamodel = false;
 			GetPlugin()->OnDataModelRefresh(this);
-			if (!data_model->IsDirty()) {
+			if (!dirty_datamodel) {
 				break;
 			}
 		}
 	}
 }
 
-DataModel* Document::CreateDataModel() {
-	if (data_model) {
-		Log::Message(Log::Level::Error, "Data model already exists.");
-		return nullptr;
-	}
-	data_model = std::make_unique<DataModel>();
-	return data_model.get();
+void Document::EnableDataModel() {
+	enable_datamodel = true;
 }
 
 void Document::DirtyDataModel() {
-	if (data_model) {
-		data_model->MarkDirty();
-	}
-}
-
-void Document::RemoveDataModel() {
-	data_model.reset();
+	dirty_datamodel = true;
 }
 
 bool Document::HasDataModel() const {
-	return !!data_model;
+	return enable_datamodel;
 }
 
 void Document::SetDimensions(const Size& _dimensions) {

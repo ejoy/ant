@@ -6,7 +6,6 @@
 #include <core/Property.h>
 #include <core/StringUtilities.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include "../databinding/DataModel.h"
 #include<iostream>
 
 
