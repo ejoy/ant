@@ -581,9 +581,6 @@ void Text::UpdateDataModel() {
 		return;
 	}
 	dirty.erase(Dirty::DataModel);
-	if (!parent->GetOwnerDocument()->HasDataModel()) {
-		return;
-	}
 	GetPlugin()->OnDataModelLoad(parent->GetOwnerDocument(), this, "data-text", text);
 }
 

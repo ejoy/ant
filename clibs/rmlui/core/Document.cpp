@@ -131,10 +131,6 @@ void Document::DirtyDataModel() {
 	dirty_datamodel = true;
 }
 
-bool Document::HasDataModel() const {
-	return enable_datamodel;
-}
-
 void Document::SetDimensions(const Size& _dimensions) {
 	if (dimensions != _dimensions) {
 		dirty_dimensions = true;

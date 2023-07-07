@@ -711,9 +711,6 @@ void Element::UpdateDataModel() {
 	if (!IsVisible()) {
 		return;
 	}
-	if (!GetOwnerDocument()->HasDataModel()) {
-		return;
-	}
 	if (!dirty.contains(Dirty::DataModel)) {
 		for (auto& child : childnodes) {
 			child->UpdateDataModel();
