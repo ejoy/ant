@@ -725,24 +725,19 @@ void Element::UpdateDataModel() {
 	if (it != attributes.end()) {
 		SetVisible(false);
 		UpdateLayout();
-		DataModelLoad(it->first, it->second);
+		GetPlugin()->OnDataModelLoad(GetOwnerDocument(), this, it->first, it->second);
 	}
 	else {
 		for (auto const& [name, value] : attributes) {
 			constexpr size_t data_str_length = sizeof("data-") - 1;
 			if (name.size() > data_str_length && name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {
-				DataModelLoad(name, value);
+				GetPlugin()->OnDataModelLoad(GetOwnerDocument(), this, name, value);
 			}
 		}
 		for (auto& child : childnodes) {
 			child->UpdateDataModel();
 		}
 	}
-}
-
-
-void Element::DataModelLoad(const std::string& name, const std::string& value) {
-	GetPlugin()->OnDataModelLoad(GetOwnerDocument(), this, name, value);
 }
 
 void Element::RefreshProperties() {

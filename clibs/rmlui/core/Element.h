@@ -144,7 +144,6 @@ public:
 
 	void SetParentNode(Element* parent) override;
 	void UpdateDataModel() override;
-	void DataModelLoad(const std::string& name, const std::string& value);
 	Node* Clone(bool deep = true) const override;
 	void CalculateLayout() override;
 	void Render() override;
