@@ -73,15 +73,16 @@ function m.load(document, element, name, value)
         }
         datamodel.views[element] = view
     end
-    local type, modifier = name:match "data%-(%a+)%-(%a+)"
-    if type == "event" then
-        data_event.load(datamodel, view, element, modifier, value)
-    elseif type == "style" or type == "attr" then
-        data_modifier.load(datamodel, view, element, type, modifier, value)
+    if name == "data-if" then
+        data_modifier.load(datamodel, view, element, "if", "", value)
     else
-        type = name:match "data%-(%a+)"
-        if type == "if" then
-            data_modifier.load(datamodel, view, element, type, "", value)
+        local type, modifier = name:match "^data%-(%a+)%-(.+)$"
+        if type == "event" then
+            data_event.load(datamodel, view, element, modifier, value)
+        elseif type == "style" or type == "attr" then
+            data_modifier.load(datamodel, view, element, type, modifier, value)
+        else
+            error("unknown data-model attribute:"..name)
         end
     end
 end
