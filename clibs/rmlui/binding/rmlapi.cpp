@@ -580,15 +580,22 @@ lRenderSetTexture(lua_State* L) {
 
 }
 
-int lDataModelCreate(lua_State* L);
-int lDataModelRelease(lua_State* L);
-int lDataModelDelete(lua_State* L);
-int lDataModelGet(lua_State* L);
-int lDataModelSet(lua_State* L);
-int lDataModelDirty(lua_State* L);
-
 lua_plugin* get_lua_plugin() {
     return &g_wrapper->m_plugin;
+}
+
+static int
+lDocumentCreateDataModel(lua_State* L) {
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	doc->CreateDataModel();
+	return 0;
+}
+
+static int
+lDocumentDirtyDataModel(lua_State* L) {
+	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
+	doc->DirtyDataModel();
+	return 0;
 }
 
 extern "C"
@@ -600,12 +607,6 @@ luaopen_rmlui(lua_State* L) {
 	luaL_checkversion(L);
 	luabind::init(L);
 	luaL_Reg l[] = {
-		{ "DataModelCreate", lDataModelCreate },
-		{ "DataModelRelease", lDataModelRelease },
-		{ "DataModelRelease", lDataModelDelete },
-		{ "DataModelGet", lDataModelGet },
-		{ "DataModelSet", lDataModelSet },
-		{ "DataModelDirty", lDataModelDirty },
 		{ "DocumentCreate", lDocumentCreate },
 		{ "DocumentLoad", lDocumentLoad },
 		{ "DocumentDestroy", lDocumentDestroy },
@@ -619,6 +620,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentCreateElement", lDocumentCreateElement },
 		{ "DocumentCreateTextNode", lDocumentCreateTextNode },
 		{ "DocumentDefineCustomElement", lDocumentDefineCustomElement },
+		{ "DocumentCreateDataModel", lDocumentCreateDataModel },
+		{ "DocumentDirtyDataModel", lDocumentDirtyDataModel },
 		{ "ElementAddEventListener", lElementAddEventListener },
 		{ "ElementRemoveEventListener", lElementRemoveEventListener },
 		{ "ElementDispatchEvent", lElementDispatchEvent },

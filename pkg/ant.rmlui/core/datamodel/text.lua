@@ -25,7 +25,7 @@ function m.load(datamodel, data, node, value)
         n = n + 1
         local key = ('{%d}'):format(n)
         local script = data.variables.."\nreturn "..str:sub(3, -3)
-        local compiled, err = load(script, script, "t", datamodel.data_table)
+        local compiled, err = load(script, script, "t", datamodel.model)
         if not compiled then
             console.warn(err)
             return str

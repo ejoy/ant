@@ -134,6 +134,12 @@ DataModel* Document::CreateDataModel() {
 	return data_model.get();
 }
 
+void Document::DirtyDataModel() {
+	if (data_model) {
+		data_model->MarkDirty();
+	}
+}
+
 void Document::RemoveDataModel() {
 	data_model.reset();
 }

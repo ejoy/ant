@@ -2,7 +2,6 @@
 
 #include <binding/luabind.h>
 #include <core/Interface.h>
-#include <databinding/DataVariant.h>
 #include "luaref.h"
 
 namespace Rml {
@@ -56,5 +55,3 @@ public:
 };
 
 lua_plugin* get_lua_plugin();
-void lua_pushvariant(lua_State *L, const Rml::DataVariant &v);
-void lua_getvariant(lua_State *L, int index, Rml::DataVariant* variant);

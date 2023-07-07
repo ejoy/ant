@@ -10,27 +10,25 @@ local datamodels = {}
 local m = {}
 
 function m.create(document, data_table)
-    local model = rmlui.DataModelCreate(document, data_table)
+    rmlui.DocumentCreateDataModel(document)
+    local model = {}
     datamodels[document] = {
         model = model,
-        data_table = data_table,
         variables = {},
         views = {},
         texts = {},
     }
     local mt = {
-        __index = rmlui.DataModelGet,
-        __call  = rmlui.DataModelDirty,
+        __index = data_table,
     }
+    function mt:__call()
+        rmlui.DocumentDirtyDataModel(document)
+    end
     function mt:__newindex(k, v)
         data_table[k] = v
-        if type(v) == "function" then
-            return
-        end
-        rmlui.DataModelSet(self,k,v)
+        rmlui.DocumentDirtyDataModel(document)
     end
-    debug.setmetatable(model, mt)
-    return model
+    return setmetatable(model, mt)
 end
 
 local function collectVariables(datamodel, element, t)
@@ -151,7 +149,6 @@ end
 function event.OnDocumentDestroy(document)
     local md = datamodels[document]
     if md then
-        rmlui.DataModelRelease(md.model)
         datamodels[document] = nil
     end
 end

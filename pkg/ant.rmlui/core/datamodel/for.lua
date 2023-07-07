@@ -4,7 +4,7 @@ local console = require "core.sandbox.console"
 local m = {}
 
 local function eval(datamodel, script)
-    local compiled, err = load(script, script, "t", datamodel.data_table)
+    local compiled, err = load(script, script, "t", datamodel.model)
     if not compiled then
         console.warn(err)
         return

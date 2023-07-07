@@ -43,7 +43,7 @@ local function updateUpValue(f, t)
 end
 
 local function refresh(datamodel, data)
-    local compiled, err = load(data.script, data.script, "t", datamodel.data_table)
+    local compiled, err = load(data.script, data.script, "t", datamodel.model)
     if not compiled then
         console.warn(err)
         return

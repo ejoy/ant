@@ -34,6 +34,7 @@ public:
 	void Update(float delta);
 	void UpdateLayout();
 	DataModel* CreateDataModel();
+	void DirtyDataModel();
 	void RemoveDataModel();
 	void UpdateDataModel();
 	DataModel* GetDataModel() const;
