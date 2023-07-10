@@ -20,7 +20,14 @@ local ENABLE_BLOOM<const>   = setting:get "graphic/postprocess/bloom/enable"
 local ENABLE_FXAA<const>    = setting:get "graphic/postprocess/fxaa/enable"
 local ENABLE_TAA<const>     = setting:get "graphic/postprocess/taa/enable"
 local ENABLE_TM_LUT<const>  = setting:get "graphic/postprocess/tonemapping/use_lut"
+local LUT_DIM<const>        = setting:get "graphic/postprocess/tonemapping/lut_dim"
 local tm_viewid<const>      = viewidmgr.get "tonemapping"
+
+if ENABLE_TM_LUT then
+    assert(LUT_DIM, "bad setting, need define lut dim")
+end
+
+local tmbaker   = require "postprocess.colorgrading.color_grading"
 
 function tm_sys:init()
     local drawer_material = ENABLE_TM_LUT and "/pkg/ant.resources/materials/postprocess/tonemapping_lut.material" or "/pkg/ant.resources/materials/postprocess/tonemapping.material"
@@ -38,18 +45,16 @@ function tm_sys:init()
             tonemapping_drawer=true,
             on_ready = function (e)
                 if ENABLE_TM_LUT then
-                    local cfg = {
-                        w = 32, h = 32, d = 32, 
-                    }
-                    local cg = util.bake_color_grading(cfg)
-                    local flags = sampler{
+                    local r = tmbaker.bake(LUT_DIM)
+                    --TODO: format should be R10G10B10A2
+                    local flags<const> = sampler{
                         U = "CLAMP",
                         V = "CLAMP",
                         W = "CLAMP",
                         MIN="LINEAR",
                         MAG="LINEAR",
                     }
-                    local handle = bgfx.create_texture3d(cfg.w, cfg.h, cfg.d, false, "R10G10B10A2", flags, cg)
+                    local handle = bgfx.create_texture3d(LUT_DIM, LUT_DIM, LUT_DIM, false, "RGBA32F", flags, r)
                     imaterial.set_property(e, "s_colorgrading_lut", handle)
                 end
             end,

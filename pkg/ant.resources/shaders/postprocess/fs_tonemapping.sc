@@ -6,12 +6,43 @@ $input v_texcoord0
 SAMPLER2D(s_avg_luminance,  1);
 SAMPLER2D(s_bloom_color,    2);
 
+#ifdef ENABLE_TONEMAP_LUT
+SAMPLER2D(s_colorgrading_lut, 3);
+#endif //ENABLE_TONEMAP_LUT
+
 #ifdef COMPUTE_LUMINANCE_TO_ALPHA
 float toluma(vec3 rbg)
 {
     return dot(vec3(0.2126729, 0.7151522, 0.0721750), rbg);
 }
 #endif //COMPUTE_LUMINANCE_TO_ALPHA
+
+#ifdef ENABLE_TONEMAP_LUT
+vec3 linear2LogC(vec3 c)
+{
+    // Alexa LogC EI 1000
+    const float a = 5.555556;
+    const float b = 0.047996;
+    const float c = 0.244161 / log2(10.0);
+    const float d = 0.386036;
+    return c * log2(a * x + b) + d;
+}
+#endif //ENABLE_TONEMAP_LUT
+
+
+vec3 do_tonemap(vec3 color, float avg_luminance)
+{
+#ifdef ENABLE_TONEMAP_LUT
+    vec3 logc = linear2LogC(color);
+    const int3 size = textureSize(s_colorgrading_lut, 0);
+    float texelsize = 1.0 / size.x;
+    logc = vec3_splat(0.5 * texelsize) + logc * (1.0 - 0.5*texelsize);
+
+    return texture3DLod(s_colorgrading_lut, logc, 0.0).rgb;
+#else //!ENABLE_TONEMAP_LUT
+    return tonemapping(color.rgb, avg_luminance, 0);
+#endif //ENABLE_TONEMAP_LUT
+}
 
 void main()
 {
@@ -26,7 +57,8 @@ void main()
     color.rgb += bloomcolor;
 #endif //BLOOM_ENABLE
 
-    const vec3 clr = tonemapping(color.rgb, avg_luminance, 0);
+    const vec3 clr = do_tonemap(color.rgb, avg_luminance);
+
 #ifdef COMPUTE_LUMINANCE_TO_ALPHA
     // fxaa need color in sRGB space, luma in linear space, use sqrt for inverse gamma operation and assume gamma is 2.0
     gl_FragColor = vec4(clr, sqrt(toluma(clr)));

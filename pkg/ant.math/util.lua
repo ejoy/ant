@@ -385,24 +385,37 @@ function util.from_mat3(
     c11, c12, c13,
     c21, c22, c23,
     c31, c32, c33)
-    return math3d.matrix(
+    return {
         c11, c12, c13, 0.0,
         c21, c22, c23, 0.0,
         c31, c32, c33, 0.0,
-        0.0, 0.0, 0.0, 0.0)
+        0.0, 0.0, 0.0, 0.0}
 end
 
 function util.from_cmat3(...)
-    return math3d.constant(util.from_mat3(...))
+    return math3d.constant("mat", util.from_mat3(...))
 end
 
 
-function util.clamp(v, minv, maxv)
+function util.clamp_vec(v, minv, maxv)
 	return math3d.max(minv, math3d.min(v, maxv))
 end
 
+function util.saturate_vec(v)
+	return util.clamp_vec(v, constant.ZERO, constant.ONE_PT)
+end
+
+function util.clamp(v, minv, maxv)
+    return math.min(maxv, math.max(minv, v))
+end
+
+function util.smoothstep(e0, e1, v)
+    local t = util.clamp((v - e0) / (e1 - e0), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+end
+
 function util.saturate(v)
-	return util.clamp(v, constant.ZERO, constant.ONE_PT)
+	return util.clamp(v, 0.0, 1.0)
 end
 
 return util
