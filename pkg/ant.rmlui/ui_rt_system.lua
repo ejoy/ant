@@ -256,6 +256,7 @@ function iUiRt.close_ui_rt(rt_name)
         local select_tag = obj_name .. " eid:in"
         local g = ecs.group(gid)
         g:enable(obj_name)
+        ecs.group_flush()
         for e in w:select(select_tag) do
             w:remove(e.eid)
         end
@@ -278,6 +279,7 @@ function ui_rt_sys:update_filter()
         local obj_name = rt_name .. "_obj"
         local g = ecs.group(gid)
         g:enable(obj_name)
+        ecs.group_flush()
         local select_tag = "filter_result " .. obj_name .. " visible_state:in render_object:update filter_material:in render_object?in scene?update eid:in bounding?in focus_obj?in"
         for e in w:select(select_tag) do
             if e.visible_state[queue_name] then
