@@ -392,7 +392,7 @@ function m:handle_event()
             local e <close> = w:entity(target.eid, "efk?in light?in")
             hierarchy:set_visible(target, value, true)
             if e.efk then
-                iefk.set_visible(e, value)
+                iefk.set_visible(target.eid, value)
             elseif e.light then
                 world:pub{"component_changed", "light", target.eid, "visible", value}
             else
