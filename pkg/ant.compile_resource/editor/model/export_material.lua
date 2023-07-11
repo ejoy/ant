@@ -299,7 +299,7 @@ return function (output, glbdata, exports, tolocalpath)
                 u_pbr_factor         = {
                     pbr_mr.metallicFactor or 1.0,
                     pbr_mr.roughnessFactor or 1.0,
-                    mat.alphaCutoff or 0.5,
+                    mat.alphaCutoff or 1.0,
                     1.0, --occlusion strength
                 },
             },
