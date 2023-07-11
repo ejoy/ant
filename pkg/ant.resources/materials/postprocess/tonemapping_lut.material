@@ -20,5 +20,5 @@ properties:
     texture: /pkg/ant.resources/textures/black.texture
   s_colorgrading_lut:
     stage: 3
-      texture: /pkg/ant.resources/textures/black.texture
+    texture: /pkg/ant.resources/textures/black.texture
 state: /pkg/ant.resources/materials/postprocess/postprocess.state

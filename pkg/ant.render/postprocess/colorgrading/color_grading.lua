@@ -129,14 +129,14 @@ local function bake_lut(dim, luminacnce_scaling)
         return math3d.serialize(v)
     end
 
-    local rrr = bake(2, 0, 0)
-    
     local results = {}
     for b=0, lastdim do
         for g=0, lastdim do
+            local cp = math3d.checkpoint()
             for r=0, lastdim do
                 results[#results+1] = bake(r, g, b)
             end
+            math3d.recover(cp)
         end
     end
 

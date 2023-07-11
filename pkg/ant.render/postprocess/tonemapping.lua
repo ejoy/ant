@@ -23,11 +23,7 @@ local ENABLE_TM_LUT<const>  = setting:get "graphic/postprocess/tonemapping/use_l
 local LUT_DIM<const>        = setting:get "graphic/postprocess/tonemapping/lut_dim"
 local tm_viewid<const>      = viewidmgr.get "tonemapping"
 
-if ENABLE_TM_LUT then
-    assert(LUT_DIM, "bad setting, need define lut dim")
-end
-
-local tmbaker   = require "postprocess.colorgrading.color_grading"
+local colorgrading   = require "postprocess.colorgrading.color_grading"
 
 function tm_sys:init()
     local drawer_material = ENABLE_TM_LUT and "/pkg/ant.resources/materials/postprocess/tonemapping_lut.material" or "/pkg/ant.resources/materials/postprocess/tonemapping.material"
@@ -45,7 +41,7 @@ function tm_sys:init()
             tonemapping_drawer=true,
             on_ready = function (e)
                 if ENABLE_TM_LUT then
-                    local r = tmbaker.bake(LUT_DIM)
+                    local r = colorgrading.bake(assert(LUT_DIM))
                     --TODO: format should be R10G10B10A2
                     local flags<const> = sampler{
                         U = "CLAMP",

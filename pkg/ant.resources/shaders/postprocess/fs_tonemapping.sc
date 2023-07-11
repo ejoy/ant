@@ -7,7 +7,7 @@ SAMPLER2D(s_avg_luminance,  1);
 SAMPLER2D(s_bloom_color,    2);
 
 #ifdef ENABLE_TONEMAP_LUT
-SAMPLER2D(s_colorgrading_lut, 3);
+SAMPLER3D(s_colorgrading_lut, 3);
 #endif //ENABLE_TONEMAP_LUT
 
 #ifdef COMPUTE_LUMINANCE_TO_ALPHA
@@ -18,7 +18,7 @@ float toluma(vec3 rbg)
 #endif //COMPUTE_LUMINANCE_TO_ALPHA
 
 #ifdef ENABLE_TONEMAP_LUT
-vec3 linear2LogC(vec3 c)
+vec3 linear2LogC(vec3 x)
 {
     // Alexa LogC EI 1000
     const float a = 5.555556;
