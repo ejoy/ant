@@ -14,7 +14,7 @@ graphic:
   # skinning:
   #   use_cs: true
   ao:
-    enable      : true
+    enable      : false
     bent_normal : false
     quality     : low
     radius      : 3.0            # Ambient Occlusion radius in meters, between 0 and ~10.
@@ -45,7 +45,7 @@ graphic:
     fxaa:
       enable: true
     tonemapping:
-      use_lut: true
+      use_lut: false
       lut_dim: 32
   shadow:
     color: {0, 0, 0, 1}
