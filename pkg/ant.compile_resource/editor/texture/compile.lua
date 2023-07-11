@@ -1,23 +1,9 @@
 local convert_image = require "editor.texture.util"
 local config        = require "editor.config"
 
-local function which_format(os, param)
-	local compress = param.compress
-	if compress then
-		if os == "ios" or os == "macos" then
-			return "ASTC4x4"
-		end
-		return compress[os]
-	end
-
-	return param.format
-end
-
 return function (content, output, localpath)
-    local setting = config.get "texture".setting
 	if content.path then
 		content.local_texpath = localpath(assert(content.path))
-		content.format = which_format(setting.os, content)
 	else
 		assert(content.value, "memory texture should define the texture memory")
 	

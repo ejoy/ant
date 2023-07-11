@@ -3,7 +3,6 @@ local sampler 		= require "editor.texture.sampler"
 local lfs 			= require "filesystem.local"
 local image 		= require "image"
 local config        = require "editor.config"
-
 local math3d		= require "math3d"
 local ltask			= require "ltask"
 
@@ -27,11 +26,25 @@ local function add_option(commands, name, value)
 	end
 end
 
+local function which_format(param)
+	local compress = param.compress
+	if compress then
+		local os = config.get "texture".setting.os
+		if os == "ios" or os == "macos" then
+			return "ASTC4x4"
+		end
+		return compress[os]
+	end
+
+	return param.format
+end
+
 local function gen_commands(commands, param, input, output)
 	add_option(commands, "-f", input:string())
 	add_option(commands, "-o", output:string())
-	if param.format then
-		add_option(commands, "-t", param.format)
+	local fmt = which_format(param)
+	if fmt then
+		add_option(commands, "-t", fmt)
 	end
 	add_option(commands, "-q", "fastest")
 
