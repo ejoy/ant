@@ -9,7 +9,7 @@
 
 namespace Rml {
 
-static void GetRectArray(float ratiow,float ratioh, Rect& rect, std::vector<Rect> &rect_array){
+static void GetRectArray(float ratiow,float ratioh, Rect& rect, std::vector<Rect> &rect_array, float ox = 0, float oy = 0){
 		float x = rect.origin.x;
 		float y = rect.origin.y;
 		float w = rect.size.w;
@@ -20,15 +20,15 @@ static void GetRectArray(float ratiow,float ratioh, Rect& rect, std::vector<Rect
 		float h1 = ratioh * h;
 		float h2 = (1 - ratioh) * h;
 		float h3 = (1 - 2 * ratioh) * h;
-		rect_array[0] = Rect{x, y, w1, h1};
-		rect_array[1] = Rect{w1, y, w3, h1};
-		rect_array[2] = Rect{w2, y, w1, h1};
-		rect_array[3] = Rect{x, h1, w1, h3};
-		rect_array[4] = Rect{w1, h1, w3, h3};
-		rect_array[5] = Rect{w2, h1, w1, h3};
-		rect_array[6] = Rect{x, h2, w1, h1};
-		rect_array[7] = Rect{w1, h2, w3, h1};
-		rect_array[8] = Rect{w2, h2, w1, h1};
+		rect_array[0] = Rect{float(x + ox), float(y + oy), w1, h1};
+		rect_array[1] = Rect{float(w1 + ox), float(y + oy), w3, h1};
+		rect_array[2] = Rect{float(w2 + ox), float(y + oy), w1, h1};
+		rect_array[3] = Rect{float(x + ox), float(h1 + oy), w1, h3};
+		rect_array[4] = Rect{float(w1 + ox), float(h1 + oy), w3, h3};
+		rect_array[5] = Rect{float(w2 + ox), float(h1 + oy), w1, h3};
+		rect_array[6] = Rect{float(x + ox), float(h2 + oy), w1, h1};
+		rect_array[7] = Rect{float(w1 + ox), float(h2 + oy), w3, h1};
+		rect_array[8] = Rect{float(w2 + ox), float(h2 + oy), w1, h1};
 }
 
 bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge) {
@@ -153,6 +153,7 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 			geometry.AddRectFilled(surface_array[idx], color);
 			geometry.UpdateUV(4, surface_array[idx], uv_array[idx]);
 		}		
+		geometry.UpdateVertices();
 	}
 	else{
 		if (paddingEdge.size() == 0 
@@ -160,10 +161,12 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		) {
 			geometry.AddRectFilled(surface, color);
 			geometry.UpdateUV(4, surface, uv);
+			geometry.UpdateVertices();
 		}
 		else {
 			geometry.AddPolygon(paddingEdge, color);
 			geometry.UpdateUV(paddingEdge.size(), surface, uv);
+			geometry.UpdateVertices();
 		}
 	}
 	return true;
