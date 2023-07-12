@@ -87,7 +87,9 @@ function property_init:removeChild()
     return function (child)
         local handle = self._handle
         child._owner = nil
-        rmlui.ElementRemoveChild(handle, child._handle)
+        if child._handle then
+            rmlui.ElementRemoveChild(handle, child._handle)
+        end
     end
 end
 

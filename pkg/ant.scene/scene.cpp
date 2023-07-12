@@ -124,7 +124,8 @@ scene_changed(lua_State *L) {
 			need_rebuild_mutable_set = true;
 			e.enable_tag<ecs::scene_mutable>();
 		}
-		changed.insert(e.get<ecs::eid>());
+		auto eid = e.get<ecs::eid>();
+		changed.insert(eid);
 	}
 
 	ecs_api::clear_type<ecs::scene_needchange>(w->ecs);
@@ -138,12 +139,16 @@ scene_changed(lua_State *L) {
 	for (auto& e : ecs_api::select<ecs::scene_mutable, ecs::scene, ecs::eid>(w->ecs)) {
 		auto& s = e.get<ecs::scene>();
 		ecs::eid id = e.get<ecs::eid>();
-		if (is_changed(changed, id) || (s.parent != 0 && is_changed(changed, s.parent))) {
+		auto selfchanged = is_changed(changed, id);
+		if (selfchanged || (s.parent != 0 && is_changed(changed, s.parent))) {
 			e.enable_tag<ecs::scene_changed>();
 			if (!worldmat_update(worldmats, math3d, s, id, w)) {
 				return luaL_error(L, "entity(%d)'s parent(%d) cannot be found.", id, s.parent);
 			}
 			s.movement = w->frame;
+			if (!selfchanged){
+				changed.insert(id);
+			}
 		} else if (w->frame - s.movement > MUTABLE_TICK &&
 			(s.parent == 0 || is_constant(w, s.parent))) {
 			e.disable_tag<ecs::scene_mutable>();
