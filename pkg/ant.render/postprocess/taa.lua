@@ -124,7 +124,6 @@ function taasys:init_world()
                 MIN="POINT",
                 MAG="POINT",
                 RT="RT_ON",
-                COLOR_SPACE="sRGB",
                 }
             },
         }
@@ -141,7 +140,6 @@ function taasys:init_world()
                     MIN="LINEAR",
                     MAG="LINEAR",
                     RT="RT_ON",
-                    COLOR_SPACE="sRGB",
                     }
                 },
         }
