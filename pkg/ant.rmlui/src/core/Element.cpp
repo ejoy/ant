@@ -708,7 +708,7 @@ std::string Element::GetOuterHTML() const {
 }
 
 void Element::UpdateDataModel() {
-	if (!IsVisible()) {
+	if (dirty.contains(Dirty::DataFor)) {
 		return;
 	}
 	if (!dirty.contains(Dirty::DataModel)) {
@@ -721,8 +721,9 @@ void Element::UpdateDataModel() {
 	auto it = attributes.find("data-for");
 	if (it != attributes.end()) {
 		SetVisible(false);
-		UpdateLayout();
+		dirty.insert(Dirty::DataFor);
 		GetPlugin()->OnDataModelLoad(GetOwnerDocument(), this, it->first, it->second);
+		attributes.erase(it);
 	}
 	else {
 		for (auto const& [name, value] : attributes) {

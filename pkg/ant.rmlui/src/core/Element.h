@@ -236,6 +236,7 @@ protected:
 		Image,
 		Definition,
 		DataModel,
+		DataFor,
 	};
 	EnumSet<Dirty> dirty;
 };

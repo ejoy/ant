@@ -574,9 +574,6 @@ void Text::DirtyDataModel() {
 }
 
 void Text::UpdateDataModel() {
-	if (!IsVisible()) {
-		return;
-	}
 	if (!dirty.contains(Dirty::DataModel)) {
 		return;
 	}

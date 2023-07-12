@@ -67,7 +67,6 @@ function m.load(datamodel, view, element, value)
             end
         end
     end
-    rmlui.ElementRemoveAttribute(element, "data-for")
     data.script = view.variables.."\nreturn "..var_t
     --refresh(datamodel, data, element)
 end
