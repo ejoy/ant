@@ -1,4 +1,4 @@
-local rmlui = require "rmlui"
+require "core.init.event"
 local console = require "core.sandbox.console"
 local filemanager = require "core.filemanager"
 local constructor = require "core.DOM.constructor"

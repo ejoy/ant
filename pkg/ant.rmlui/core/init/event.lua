@@ -65,7 +65,11 @@ function event.OnCreateElement(document, element)
 end
 
 function event.OnDestroyNode(_, element)
-    for _, listener in pairs(events[element]) do
+    local listeners = events[element]
+    if not listeners then
+        return
+    end
+    for _, listener in ipairs(listeners) do
         rmlui.ElementRemoveEventListener(element, listener)
     end
 end
