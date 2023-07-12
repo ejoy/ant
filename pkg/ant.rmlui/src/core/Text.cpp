@@ -586,6 +586,11 @@ Node* Text::Clone(bool deep) const {
 	return GetParentNode()->GetOwnerDocument()->CreateTextNode(text);
 }
 
+void Text::NotifyCreated() {
+	auto document = GetParentNode()->GetOwnerDocument();
+	GetPlugin()->OnCreateText(document, this);
+}
+
 float Text::GetZIndex() const {
 	return 0;
 }

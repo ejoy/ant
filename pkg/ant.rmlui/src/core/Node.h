@@ -27,6 +27,7 @@ namespace Rml {
 
 		void ResetParentNode();
 
+		virtual void NotifyCreated() = 0;
 		virtual void SetParentNode(Element* parent) = 0;
 		virtual void UpdateDataModel() = 0;
 		virtual void DirtyDataModel() = 0;

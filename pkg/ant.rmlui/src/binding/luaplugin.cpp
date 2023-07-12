@@ -70,6 +70,14 @@ void lua_plugin::OnCreateElement(Rml::Document* document, Rml::Element* element,
 	});
 }
 
+void lua_plugin::OnCreateText(Rml::Document* document, Rml::Text* text) {
+	luabind::invoke([&](lua_State* L) {
+		lua_pushlightuserdata(L, (void*)document);
+		lua_pushlightuserdata(L, (void*)text);
+		call(L, LuaEvent::OnCreateText, 2);
+	});
+}
+
 void lua_plugin::OnDataModelLoad(Rml::Document* document, Rml::Node* node, const std::string& name, const std::string& value) {
 	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
@@ -238,6 +246,7 @@ void lua_plugin::register_event(lua_State* L) {
 	ref_function(reference, L, "OnLoadInlineScript");
 	ref_function(reference, L, "OnLoadExternalScript");
 	ref_function(reference, L, "OnCreateElement");
+	ref_function(reference, L, "OnCreateText");
 	ref_function(reference, L, "OnDataModelLoad");
 	ref_function(reference, L, "OnDataModelRefresh");
 	ref_function(reference, L, "OnDestroyNode");

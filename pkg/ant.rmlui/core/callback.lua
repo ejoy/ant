@@ -37,15 +37,17 @@ function m.OnLoadExternalScript(document, source_path)
 end
 function m.OnCreateElement(document, element, tagName)
 	local globals = environment[document]
-	if not globals then
-		return
-	end
-	local window = globals.window
-	local ctor = window.customElements.get(tagName)
-	if ctor then
-		ctor(constructor.Element(document, false, element))
+	if globals then
+		local window = globals.window
+		local ctor = window.customElements.get(tagName)
+		if ctor then
+			ctor(constructor.Element(document, false, element))
+		end
 	end
 	event("OnCreateElement", document, element)
+end
+function m.OnCreateText(document, node)
+	event("OnCreateText", document, node)
 end
 function m.OnDestroyNode(document, node)
 	event("OnDestroyNode", document, node)

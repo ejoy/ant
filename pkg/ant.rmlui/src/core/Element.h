@@ -56,7 +56,7 @@ public:
 
 	void InstanceOuter(const HtmlElement& html);
 	void InstanceInner(const HtmlElement& html);
-	void NotifyCreateElement();
+	void NotifyCreated() override;
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);

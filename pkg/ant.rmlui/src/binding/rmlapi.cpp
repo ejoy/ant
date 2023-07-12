@@ -159,7 +159,7 @@ lDocumentCreateElement(lua_State* L) {
 	if (!e) {
 		return 0;
 	}
-	e->NotifyCreateElement();
+	e->NotifyCreated();
 	lua_pushlightuserdata(L, e);
 	return 1;
 }
@@ -171,6 +171,7 @@ lDocumentCreateTextNode(lua_State* L) {
 	if (!e) {
 		return 0;
 	}
+	e->NotifyCreated();
 	lua_pushlightuserdata(L, e);
 	return 1;
 }
@@ -542,6 +543,7 @@ lNodeClone(lua_State* L) {
 	if (!r) {
 		return 0;
 	}
+	r->NotifyCreated();
 	return lua_pushRmlNode(L, r);
 }
 

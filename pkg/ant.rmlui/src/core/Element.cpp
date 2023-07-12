@@ -357,21 +357,23 @@ void Element::InstanceInner(const HtmlElement& html) {
 				if (e) {
 					e->InstanceOuter(arg);
 					AppendChild(e);
-					e->NotifyCreateElement();
+					e->NotifyCreated();
 				}
 			}
 			else if constexpr (std::is_same_v<T, HtmlString>) {
-				if(this->tag == "richtext") {
+				if (this->tag == "richtext") {
 					RichText* e = owner_document->CreateRichTextNode(arg);
-					if(e){
+					if (e) {
 						AppendChild(e);
+						e->NotifyCreated();
 					}
 				}
-				else{
+				else {
 					Text* e = owner_document->CreateTextNode(arg);
-					if(e){
+					if (e) {
 						AppendChild(e);
-					}					
+						e->NotifyCreated();
+					}
 				}
 			}
 			else {
@@ -395,15 +397,16 @@ Node* Element::Clone(bool deep) const {
 		}
 		if (deep) {
 			for (auto const& child : childnodes) {
-				e->AppendChild(child->Clone(true));
+				auto r = child->Clone(true);
+				e->AppendChild(r);
+				r->NotifyCreated();
 			}
 		}
-		e->NotifyCreateElement();
 	}
 	return e;
 }
 
-void Element::NotifyCreateElement() {
+void Element::NotifyCreated() {
 	GetPlugin()->OnCreateElement(owner_document, this, GetTagName());
 }
 
