@@ -125,6 +125,7 @@ void Document::UpdateDataModel() {
 
 void Document::EnableDataModel() {
 	enable_datamodel = true;
+	dirty_datamodel = true;
 }
 
 void Document::DirtyDataModel() {
