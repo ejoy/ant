@@ -1,14 +1,14 @@
 local lm = require "luamake"
 
-dofile "../common.lua"
+local ROOT <const> = "../../"
 
-lm:import "../font/make.lua"
-lm:import "../luabind/build.lua"
+lm:import(ROOT.."clibs/font/make.lua")
+lm:import(ROOT.."clibs/luabind/build.lua")
 
 --lm.warnings = "error"
 
 lm:source_set "yoga" {
-    rootdir = Ant3rd .. "yoga",
+    rootdir = ROOT .. "3rd/yoga",
     includes = ".",
     defines = lm.mode == "debug" and "DEBUG",
     sources = "yoga/**/*.cpp",
@@ -18,10 +18,8 @@ lm:source_set "yoga" {
 }
 
 lm:source_set "stylecache" {
-    rootdir = Ant3rd .. "stylecache",
-    includes = {
-        ".",
-    },
+    rootdir = ROOT .. "3rd/stylecache",
+    includes = ".",
     sources = {
         "*.c",
         "!test*.c",
@@ -30,36 +28,36 @@ lm:source_set "stylecache" {
 
 lm:lua_source "rmlui_core" {
     includes = {
-        ".",
-        Ant3rd .. "glm",
-        Ant3rd .. "yoga",
-        Ant3rd .. "stylecache",
-        Ant3rd .. "bee.lua",
-        "../luabind",
+        "src",
+        ROOT .. "3rd/glm",
+        ROOT .. "3rd/yoga",
+        ROOT .. "3rd/stylecache",
+        ROOT .. "3rd/bee.lua",
+        ROOT .. "clibs/luabind",
     },
     defines = {
         "GLM_FORCE_QUAT_DATA_XYZW",
         lm.mode == "debug" and "DEBUG",
     },
     sources = {
-        "core/*.cpp",
+        "src/core/*.cpp",
     }
 }
 
 lm:lua_source "rmlui_binding" {
     includes = {
-        ".",
-        Ant3rd .. "bgfx/include",
-        Ant3rd .. "bx/include",
-        Ant3rd .. "bgfx/3rdparty",
-        Ant3rd .. "glm",
-        Ant3rd .. "yoga",
-        "../luabind",
-        "../../pkg/ant.bundle/src/",
+        "src",
+        ROOT .. "3rd/bgfx/include",
+        ROOT .. "3rd/bx/include",
+        ROOT .. "3rd/bgfx/3rdparty",
+        ROOT .. "3rd/glm",
+        ROOT .. "3rd/yoga",
+        ROOT .. "clibs/luabind",
+        ROOT .. "pkg/ant.bundle/src/",
     },
     defines = "GLM_FORCE_QUAT_DATA_XYZW",
     sources = {
-        "binding/*.cpp",
+        "src/binding/*.cpp",
     }
 }
 
