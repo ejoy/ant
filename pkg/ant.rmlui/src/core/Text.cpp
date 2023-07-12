@@ -565,6 +565,7 @@ FontFaceHandle Text::GetFontFaceHandle() {
 }
 
 void Text::SetParentNode(Element* _parent) {
+	assert(_parent);
 	parent = _parent;
 	DirtyDataModel();
 }

@@ -14,6 +14,10 @@ Node::Node(Layout::UseText use, void* context)
 Node::~Node()
 {}
 
+void Node::ResetParentNode() {
+	parent = nullptr;
+}
+
 Layout& Node::GetLayout() {
 	return layout;
 }

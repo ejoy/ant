@@ -25,6 +25,8 @@ namespace Rml {
 
 		const Rect& GetBounds() const;
 
+		void ResetParentNode();
+
 		virtual void SetParentNode(Element* parent) = 0;
 		virtual void UpdateDataModel() = 0;
 		virtual void DirtyDataModel() = 0;

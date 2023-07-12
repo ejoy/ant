@@ -435,7 +435,7 @@ std::unique_ptr<Node> Element::DetachChild(Node* node) {
 			}
 		}
 	}
-	node->SetParentNode(nullptr);
+	node->ResetParentNode();
 	GetLayout().RemoveChild(node->GetLayout());
 	DirtyStackingContext();
 	DirtyStructure();
@@ -499,7 +499,7 @@ void Element::RemoveAllChildren() {
 		child->RemoveAllChildren();
 	}
 	for (auto&& child : childnodes) {
-		child->SetParentNode(nullptr);
+		child->ResetParentNode();
 		GetOwnerDocument()->RecycleNode(std::move(child));
 	}
 	children.clear();
@@ -755,6 +755,7 @@ void Element::RefreshProperties() {
 }
 
 void Element::SetParentNode(Element* _parent) {
+	assert(_parent);
 	parent = _parent;
 
 	RefreshProperties();
