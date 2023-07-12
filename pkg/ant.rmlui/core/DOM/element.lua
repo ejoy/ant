@@ -188,10 +188,10 @@ function property_getter:clientHeight()
 end
 
 function property_getter:id()
-    return rmlui.ElementGetAttribute(self._handle, "id") or ""
+    return rmlui.ElementGetId(self._handle)
 end
 function property_setter:id(v)
-    rmlui.ElementSetAttribute(self._handle, "id", v)
+    rmlui.ElementSetId(self._handle, v)
 end
 
 function property_getter:tagName()
@@ -199,10 +199,10 @@ function property_getter:tagName()
 end
 
 function property_getter:className()
-    return rmlui.ElementGetAttribute(self._handle, "class") or ""
+    return rmlui.ElementGetClassName(self._handle)
 end
 function property_setter:className(v)
-    rmlui.ElementSetAttribute(self._handle, "class", v)
+    rmlui.ElementSetClassName(self._handle, v)
 end
 
 function property_getter:innerHTML()

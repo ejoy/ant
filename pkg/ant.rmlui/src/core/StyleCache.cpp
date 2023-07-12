@@ -78,8 +78,12 @@ namespace Rml::Style {
         return {child.idx};
     }
 
-    void Cache::Assgin(Value s, Combination v) {
-        style_assign(c, {s.idx}, {v.idx});
+    void Cache::Assgin(Value to, Combination from) {
+        style_assign(c, {to.idx}, {from.idx});
+    }
+
+    void Cache::Clone(Value to, Value from) {
+        style_assign(c, {to.idx}, {from.idx});
     }
 
     void Cache::Release(ValueOrCombination s) {
@@ -156,6 +160,17 @@ namespace Rml::Style {
     bool Cache::Has(ValueOrCombination s, PropertyId id) {
         void* data = style_find(c, {s.idx}, (uint8_t)id);
         return !!data;
+    }
+
+    void Cache::Foreach(ValueOrCombination s, PropertyIdSet& set) {
+        for (int i = 0;; ++i) {
+            PropertyId id;
+            void* data = style_index(c, {s.idx}, i, (uint8_t*)&id);
+            if (!data) {
+                break;
+            }
+            set.insert(id);
+        }
     }
 
     void Cache::Foreach(ValueOrCombination s, PropertyUnit unit, PropertyIdSet& set) {

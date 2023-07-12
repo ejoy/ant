@@ -310,6 +310,20 @@ lElementSetOuterHTML(lua_State *L) {
 }
 
 static int
+lElementGetId(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	lua_pushstdstring(L, e->GetId());
+	return 1;
+}
+
+static int
+lElementGetClassName(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	lua_pushstdstring(L, e->GetClassName());
+	return 1;
+}
+
+static int
 lElementGetAttribute(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	const std::string* attr = e->GetAttribute(lua_checkstdstring(L, 2));
@@ -418,6 +432,20 @@ static int
 lElementRemoveAttribute(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	e->RemoveAttribute(lua_checkstdstring(L, 2));
+	return 0;
+}
+
+static int
+lElementSetId(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->SetId(lua_checkstdstring(L, 2));
+	return 0;
+}
+
+static int
+lElementSetClassName(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	e->SetClassName(lua_checkstdstring(L, 2));
 	return 0;
 }
 
@@ -625,6 +653,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementAddEventListener", lElementAddEventListener },
 		{ "ElementRemoveEventListener", lElementRemoveEventListener },
 		{ "ElementDispatchEvent", lElementDispatchEvent },
+		{ "ElementGetId", lElementGetId },
+		{ "ElementGetClassName", lElementGetClassName },
 		{ "ElementGetAttribute", lElementGetAttribute },
 		{ "ElementGetBounds", lElementGetBounds },
 		{ "ElementGetTagName", lElementGetTagName },
@@ -632,6 +662,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementGetOwnerDocument", lElementGetOwnerDocument },
 		{ "ElementGetProperty", lElementGetProperty },
 		{ "ElementRemoveAttribute", lElementRemoveAttribute },
+		{ "ElementSetId", lElementSetId },
+		{ "ElementSetClassName", lElementSetClassName },
 		{ "ElementSetAttribute", lElementSetAttribute },
 		{ "ElementSetProperty", lElementSetProperty },
 		{ "ElementSetVisible", lElementSetVisible },

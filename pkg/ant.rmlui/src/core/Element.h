@@ -45,9 +45,7 @@ public:
 
 	void SetAttribute(const std::string& name, const std::string& value);
 	const std::string* GetAttribute(const std::string& name) const;
-	bool HasAttribute(const std::string& name) const;
 	void RemoveAttribute(const std::string& name);
-	const ElementAttributes& GetAttributes() const { return attributes; }
 
 	bool Project(Point& point) const noexcept;
 	const std::string& GetTagName() const;
@@ -103,9 +101,9 @@ public:
 	void SetPseudoClass(PseudoClass pseudo_class, bool activate);
 	bool IsPseudoClassSet(PseudoClassSet pseudo_class) const;
 	PseudoClassSet GetActivePseudoClasses() const;
-	void SetClass(const std::string& class_name, bool activate);
 	bool IsClassSet(const std::string& class_name) const;
 	void SetClassName(const std::string& class_names);
+	std::string GetClassName() const;
 	void DirtyPropertiesWithUnitRecursive(PropertyUnit unit);
 
 	void UpdateDefinition();
@@ -115,8 +113,6 @@ public:
 	void DirtyProperties(const PropertyIdSet& properties);
 	void DirtyProperties(PropertyUnit unit);
 
-	bool SetProperty(const PropertyVector& vec);
-	bool DelProperty(const PropertyIdSet& set);
 	void SetAnimationProperty(PropertyId id, const Property& property);
 	void DelAnimationProperty(PropertyId id);
 

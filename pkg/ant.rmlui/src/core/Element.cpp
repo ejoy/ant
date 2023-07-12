@@ -257,10 +257,6 @@ const std::string* Element::GetAttribute(const std::string& name) const {
 	return &it->second;
 }
 
-bool Element::HasAttribute(const std::string& name) const {
-	return attributes.find(name) != attributes.end();
-}
-
 void Element::RemoveAttribute(const std::string& name) {
 	auto it = attributes.find(name);
 	if (it != attributes.end()) {
@@ -281,7 +277,10 @@ const std::string& Element::GetId() const {
 }
 
 void Element::SetId(const std::string& _id) {
-	SetAttribute("id", _id);
+	if (id != _id) {
+		id = _id;
+		DirtyDefinition();
+	}
 }
 
 Document* Element::GetOwnerDocument() const {
@@ -338,7 +337,21 @@ void Element::InstanceOuter(const HtmlElement& html) {
 	tag = html.tag;
 	attributes.clear();
 	for (auto const& [name, value] : html.attributes) {
-		attributes[name] = value;
+		if (name == "id") {
+			SetId(value);
+		}
+		else if (name == "class") {
+			SetClassName(value);
+		}
+		else if (name == "style") {
+			PropertyVector properties;
+			StyleSheetParser parser;
+			parser.ParseProperties(properties, value);
+			SetInlineProperty(properties);
+		}
+		else {
+			attributes[name] = value;
+		}
 	}
 	OnAttributeChange(attributes);
 	InstanceInner(html);
@@ -381,6 +394,12 @@ void Element::InstanceInner(const HtmlElement& html) {
 Node* Element::Clone(bool deep) const {
 	Element* e = owner_document->CreateElement(tag);
 	if (e) {
+		e->id = id;
+		e->classes = classes;
+		auto& c = Style::Instance();
+		c.Clone(e->inline_properties, inline_properties);
+		c.Foreach(e->inline_properties, e->dirty_properties);
+		e->DirtyDefinition();
 		for (auto const& [name, value] : attributes) {
 			e->attributes[name] = value;
 		}
@@ -543,26 +562,6 @@ void Element::GetElementsByClassName(ElementList& elements, const std::string& c
 }
 
 void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
-	auto it = changed_attributes.find("id");
-	if (it != changed_attributes.end()) {
-		id = it->second;
-		Update();
-	}
-
-	it = changed_attributes.find("class");
-	if (it != changed_attributes.end()) {
-		SetClassName(it->second);
-		Update();
-	}
-
-	it = changed_attributes.find("style");
-	if (it != changed_attributes.end()) {
-		PropertyVector properties;
-		StyleSheetParser parser;
-		parser.ParseProperties(properties, it->second);
-		SetProperty(properties);
-	}
-	
 	for (const auto& pair: changed_attributes) {
 		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n') {
 			EventListener* listener = GetPlugin()->OnCreateEventListener(this, pair.first.substr(2), pair.second, false);
@@ -1325,7 +1324,9 @@ void Element::SetScrollLeft(float v) {
 	Size offset { v, 0 };
 	UpdateScrollOffset(offset);
 	Property value(offset.w, PropertyUnit::PX);
-	SetProperty({{PropertyId::ScrollLeft, std::move(value)}});
+	StartTransition([&](){
+		SetInlineProperty({{PropertyId::ScrollLeft, std::move(value)}});
+	});
 }
 
 void Element::SetScrollTop(float v) {
@@ -1335,7 +1336,9 @@ void Element::SetScrollTop(float v) {
 	Size offset { 0, v };
 	UpdateScrollOffset(offset);
 	Property value(offset.h, PropertyUnit::PX);
-	SetProperty({{PropertyId::ScrollTop, std::move(value)}});
+	StartTransition([&](){
+		SetInlineProperty({{PropertyId::ScrollTop, std::move(value)}});
+	});
 }
 
 void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
@@ -1347,10 +1350,13 @@ void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
 	UpdateScrollOffset(offset);
 
 	Property left(offset.w, PropertyUnit::PX);
-	SetProperty({{PropertyId::ScrollLeft, std::move(left)}});
-
 	Property top(offset.h, PropertyUnit::PX);
-	SetProperty({{PropertyId::ScrollTop, std::move(top)}});
+	StartTransition([&](){
+		SetInlineProperty({
+			{PropertyId::ScrollLeft, std::move(left)},
+			{PropertyId::ScrollTop, std::move(top)},
+		});
+	});
 }
 
 void Element::UpdateScrollOffset(Size& scrollOffset) const {
@@ -1379,21 +1385,6 @@ PseudoClassSet Element::GetActivePseudoClasses() const {
 	return pseudo_classes;
 }
 
-void Element::SetClass(const std::string& class_name, bool activate) {
-	std::vector<std::string>::iterator class_location = std::find(classes.begin(), classes.end(), class_name);
-	if (activate) {
-		if (class_location == classes.end()) {
-			classes.push_back(class_name);
-			DirtyDefinition();
-		}
-	}
-	else {
-		if (class_location != classes.end()) {
-			classes.erase(class_location);
-			DirtyDefinition();
-		}
-	}
-}
 
 bool Element::IsClassSet(const std::string& class_name) const {
 	return std::find(classes.begin(), classes.end(), class_name) != classes.end();
@@ -1403,6 +1394,17 @@ void Element::SetClassName(const std::string& class_names) {
 	classes.clear();
 	StringUtilities::ExpandString(classes, class_names, ' ');
 	DirtyDefinition();
+}
+
+std::string Element::GetClassName() const {
+	std::string res;
+	for (auto& c : classes) {
+		if (!res.empty()) {
+			res += " ";
+		}
+		res += c;
+	}
+	return res;
 }
 
 void Element::DirtyPropertiesWithUnitRecursive(PropertyUnit unit) {
@@ -1423,13 +1425,16 @@ std::optional<Property> Element::GetLocalProperty(PropertyId id) const {
 }
 
 bool Element::SetProperty(const std::string& name, std::optional<std::string> value) {
+	bool changed;
 	if (value) {
 		PropertyVector properties;
 		if (!StyleSheetSpecification::ParsePropertyDeclaration(properties, name, *value)) {
 			Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s: %s;'.", name.c_str(), value->c_str());
 			return false;
 		}
-		return SetProperty(properties);
+		StartTransition([&](){
+			changed = SetInlineProperty(properties);
+		});
 	}
 	else {
 		PropertyIdSet properties;
@@ -1437,8 +1442,11 @@ bool Element::SetProperty(const std::string& name, std::optional<std::string> va
 			Log::Message(Log::Level::Warning, "Syntax error parsing inline property declaration '%s;'.", name.c_str());
 			return false;
 		}
-		return DelProperty(properties);
+		StartTransition([&](){
+			changed = DelInlineProperty(properties);
+		});
 	}
+	return changed;
 }
 
 std::optional<std::string> Element::GetProperty(const std::string& name) const {
@@ -1510,22 +1518,6 @@ bool Element::DelInlineProperty(const PropertyIdSet& set) {
 		return true;
 	}
 	return false;
-}
-
-bool Element::SetProperty(const PropertyVector& vec) {
-	bool change;
-	StartTransition([&](){
-		change = SetInlineProperty(vec);
-	});
-	return change;
-}
-
-bool Element::DelProperty(const PropertyIdSet& set) {
-	bool change;
-	StartTransition([&](){
-		change = DelInlineProperty(set);
-	});
-	return change;
 }
 
 void Element::SetAnimationProperty(PropertyId id, const Property& property) {

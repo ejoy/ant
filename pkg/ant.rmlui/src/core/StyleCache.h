@@ -30,13 +30,15 @@ namespace Rml::Style {
         Combination               Inherit(Combination child, Combination parent);
         Combination               Inherit(Combination child);
         void                      Release(ValueOrCombination s);
-        void                      Assgin(Value s, Combination v);
+        void                      Assgin(Value to, Combination from);
+        void                      Clone(Value to, Value from);
         bool                      SetProperty(Value s, PropertyId id, const Property& value);
         bool                      DelProperty(Value s, PropertyId id);
         PropertyIdSet             SetProperty(Value s, const PropertyVector& vec);
         PropertyIdSet             DelProperty(Value s, const PropertyIdSet& set);
         std::optional<Property>   Find(ValueOrCombination s, PropertyId id);
         bool                      Has(ValueOrCombination s, PropertyId id);
+        void                      Foreach(ValueOrCombination s, PropertyIdSet& set);
         void                      Foreach(ValueOrCombination s, PropertyUnit unit, PropertyIdSet& set);
         PropertyIdSet             Diff(ValueOrCombination a, ValueOrCombination b);
         void                      Flush();
