@@ -1119,6 +1119,18 @@ Element* Element::ChildFromPoint(Point point) {
 	return nullptr;
 }
 
+template <typename V, typename T>
+static T clamp(V v, T min, T max) {
+	assert(min <= max);
+	if (v < (V)min) {
+		return min;
+	}
+	else if (v > (V)max) {
+		return max;
+	}
+	return (T)v;
+}
+
 static glm::u16vec4 UnionScissor(const glm::u16vec4& a, glm::u16vec4& b) {
 	auto x = std::max(a.x, b.x);
 	auto y = std::max(a.y, b.y);
@@ -1190,10 +1202,10 @@ void Element::UpdateClip() {
 		&& corners[2].y == corners[3].y
 	) {
 		clip.type = Clip::Type::Scissor;
-		clip.scissor.x = (glm::u16)std::floor(corners[0].x);
-		clip.scissor.y = (glm::u16)std::floor(corners[0].y);
-		clip.scissor.z = (glm::u16)std::ceil(corners[2].x - clip.scissor.x);
-		clip.scissor.w = (glm::u16)std::ceil(corners[2].y - clip.scissor.y);
+		clip.scissor.x = clamp(std::floor(corners[0].x)                , (glm::u16)0, std::numeric_limits<glm::u16>::max());
+		clip.scissor.y = clamp(std::floor(corners[0].y)                , (glm::u16)0, std::numeric_limits<glm::u16>::max());
+		clip.scissor.z = clamp(std::ceil(corners[2].x - clip.scissor.x), (glm::u16)0, std::numeric_limits<glm::u16>::max());
+		clip.scissor.w = clamp(std::ceil(corners[2].y - clip.scissor.y), (glm::u16)0, std::numeric_limits<glm::u16>::max());
 	}
 	else {
 		clip.type = Clip::Type::Shader;
@@ -1339,25 +1351,11 @@ void Element::SetScrollInsets(const EdgeInsets<float>& insets) {
 	SetProperty({{PropertyId::ScrollTop, std::move(top)}});
 }
 
-template <typename T>
-static void clamp(T& v, T min, T max) {
-	assert(min <= max);
-	if (v < min) {
-		v = min;
-	}
-	else if (v > max) {
-		v = max;
-	}
-}
-
-static void clamp(Size& s, Rect r) {
-	clamp(s.w, r.left(), r.right());
-	clamp(s.h, r.top(), r.bottom());
-}
-
 void Element::UpdateScrollOffset(Size& scrollOffset) const {
 	auto const& bounds = GetBounds();
-	clamp(scrollOffset, content_rect + scroll_insets - EdgeInsets<float> {0, 0, bounds.size.w, bounds.size.h});
+	Rect r = content_rect + scroll_insets - EdgeInsets<float> {0, 0, bounds.size.w, bounds.size.h};
+	scrollOffset.w = clamp(scrollOffset.w, r.left(), r.right());
+	scrollOffset.h = clamp(scrollOffset.h, r.top(), r.bottom());
 }
 
 void Element::SetPseudoClass(PseudoClass pseudo_class, bool activate) {
