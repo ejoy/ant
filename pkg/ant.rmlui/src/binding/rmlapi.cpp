@@ -159,7 +159,7 @@ lDocumentCreateElement(lua_State* L) {
 	if (!e) {
 		return 0;
 	}
-	e->NotifyCustomElement();
+	e->NotifyCreateElement();
 	lua_pushlightuserdata(L, e);
 	return 1;
 }
@@ -173,13 +173,6 @@ lDocumentCreateTextNode(lua_State* L) {
 	}
 	lua_pushlightuserdata(L, e);
 	return 1;
-}
-
-static int
-lDocumentDefineCustomElement(lua_State* L) {
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	doc->DefineCustomElement(lua_checkstdstring(L, 2));
-	return 0;
 }
 
 static int
@@ -331,6 +324,19 @@ lElementGetAttribute(lua_State* L) {
 		return 0;
 	}
 	lua_pushstdstring(L, *attr);
+	return 1;
+}
+
+static int
+lElementGetAttributes(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	const auto& attrs = e->GetAttributes();
+	lua_createtable(L, 0, attrs.size());
+	for (const auto& [k, v]: attrs) {
+		lua_pushstdstring(L, k);
+		lua_pushstdstring(L, v);
+		lua_rawset(L, -3);
+	}
 	return 1;
 }
 
@@ -647,7 +653,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentGetBody", lDocumentGetBody },
 		{ "DocumentCreateElement", lDocumentCreateElement },
 		{ "DocumentCreateTextNode", lDocumentCreateTextNode },
-		{ "DocumentDefineCustomElement", lDocumentDefineCustomElement },
 		{ "DocumentEnableDataModel", lDocumentEnableDataModel },
 		{ "DocumentDirtyDataModel", lDocumentDirtyDataModel },
 		{ "ElementAddEventListener", lElementAddEventListener },
@@ -656,6 +661,7 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementGetId", lElementGetId },
 		{ "ElementGetClassName", lElementGetClassName },
 		{ "ElementGetAttribute", lElementGetAttribute },
+		{ "ElementGetAttributes", lElementGetAttributes },
 		{ "ElementGetBounds", lElementGetBounds },
 		{ "ElementGetTagName", lElementGetTagName },
 		{ "ElementGetChildren", lElementGetChildren },

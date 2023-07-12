@@ -27,16 +27,6 @@ border_color_or_compare(char c){
 
 class lua_plugin;
 
-class LuaEventListener final : public Rml::EventListener {
-public:
-	LuaEventListener(lua_plugin* p, Rml::Element* element, const std::string& type, const std::string& code, bool use_capture);
-	~LuaEventListener();
-private:
-	void ProcessEvent(Rml::Event& event) override;
-	lua_plugin *plugin;
-	int id;
-};
-
 static int ref_function(luaref reference, lua_State* L, const char* funcname) {
 	if (lua_getfield(L, -1, funcname) != LUA_TFUNCTION) {
 		luaL_error(L, "Missing %s", funcname);
@@ -51,10 +41,6 @@ lua_plugin::lua_plugin(lua_State* L) {
 
 lua_plugin::~lua_plugin() {
 	luaref_close(reference);
-}
-
-Rml::EventListener* lua_plugin::OnCreateEventListener(Rml::Element* element, const std::string& type, const std::string& code, bool use_capture) {
-	return new LuaEventListener(this, element, type, code, use_capture);
 }
 
 void lua_plugin::OnLoadInlineScript(Rml::Document* document, const std::string& content, const std::string& source_path, int source_line) {
@@ -255,9 +241,6 @@ void lua_plugin::register_event(lua_State* L) {
 	ref_function(reference, L, "OnDataModelLoad");
 	ref_function(reference, L, "OnDataModelRefresh");
 	ref_function(reference, L, "OnDestroyNode");
-	ref_function(reference, L, "OnEvent");
-	ref_function(reference, L, "OnEventAttach");
-	ref_function(reference, L, "OnEventDetach");
 	ref_function(reference, L, "OnRealPath");
 	ref_function(reference, L, "OnLoadTexture");
 	ref_function(reference, L, "OnParseText");
@@ -292,41 +275,3 @@ void lua_plugin::pushevent(lua_State* L, const Rml::Event& event) {
 	lua_setfield(L, -2, "current");
 }
 
-LuaEventListener::LuaEventListener(lua_plugin* p, Rml::Element* element, const std::string& type, const std::string& code, bool use_capture)
-	: Rml::EventListener(type, use_capture)
-	, plugin(p)
-	, id(0)
-	{
-	luabind::invoke([&](lua_State* L) {
-		Rml::Document* doc = element->GetOwnerDocument();
-		lua_pushlightuserdata(L, (void*)doc);
-		lua_pushlightuserdata(L, (void*)element);
-		lua_pushlstring(L, code.c_str(), code.length());
-		plugin->call(L, LuaEvent::OnEventAttach, 3, 1);
-        if (lua_type(L, -1) == LUA_TNUMBER) {
-            id = (int)luaL_checkinteger(L, -1);
-        }
-	});
-	
-}
-
-LuaEventListener::~LuaEventListener() {
-	if (!id) {
-		return;
-	}
-	luabind::invoke([&](lua_State* L) {
-		lua_pushinteger(L, id);
-		plugin->call(L, LuaEvent::OnEventDetach, 1);
-	});
-}
-
-void LuaEventListener::ProcessEvent(Rml::Event& event) {
-	if (!id) {
-		return;
-	}
-	luabind::invoke([&](lua_State* L) {
-		lua_pushinteger(L, id);
-		plugin->pushevent(L, event);
-		plugin->call(L, LuaEvent::OnEvent, 2);
-	});
-}

@@ -45,6 +45,7 @@ public:
 
 	void SetAttribute(const std::string& name, const std::string& value);
 	const std::string* GetAttribute(const std::string& name) const;
+	const ElementAttributes& GetAttributes() const;
 	void RemoveAttribute(const std::string& name);
 
 	bool Project(Point& point) const noexcept;
@@ -55,7 +56,7 @@ public:
 
 	void InstanceOuter(const HtmlElement& html);
 	void InstanceInner(const HtmlElement& html);
-	void NotifyCustomElement();
+	void NotifyCreateElement();
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);
@@ -155,7 +156,6 @@ public:
 	void DirtyImage();
 
 protected:
-	void OnAttributeChange(const ElementAttributes& changed_attributes);
 	void UpdateStackingContext();
 	void DirtyStackingContext();
 	void DirtyStructure();

@@ -199,16 +199,6 @@ RichText* Document::CreateRichTextNode(const std::string& str) {
 	return new RichText(this, str);
 }
 
-void Document::NotifyCustomElement(Element* e){
-	if (custom_element.find(e->GetTagName()) != custom_element.end()) {
-		GetPlugin()->OnCreateElement(this, e, e->GetTagName());
-	}
-}
-
-void Document::DefineCustomElement(const std::string& name) {
-	custom_element.emplace(name);
-}
-
 void Document::RecycleNode(std::unique_ptr<Node>&& node) {
 	GetPlugin()->OnDestroyNode(this, node.get());
 	removednodes.emplace_back(std::forward<std::unique_ptr<Node>>(node));

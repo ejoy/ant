@@ -84,7 +84,6 @@ local function createWindow(document, source)
             error "Invalid constructor."
         end
         ctors[name] = ctor
-        rmlui.DocumentDefineCustomElement(document, name)
     end
     function customElements.get(name)
         return ctors[name]

@@ -19,9 +19,6 @@ enum class LuaEvent : uint8_t {
 	OnDataModelLoad,
 	OnDataModelRefresh,
 	OnDestroyNode,
-	OnEvent,
-	OnEventAttach,
-	OnEventDetach,
 	OnRealPath,
 	OnLoadTexture,
 	OnParseText,
@@ -31,7 +28,6 @@ class lua_plugin final : public Rml::Plugin {
 public:
 	lua_plugin(lua_State* L);
 	~lua_plugin();
-	Rml::EventListener* OnCreateEventListener(Rml::Element* element, const std::string& type, const std::string& code, bool use_capture) override;
 	void OnLoadInlineScript(Rml::Document* document, const std::string& content, const std::string& source_path, int source_line) override;
 	void OnLoadExternalScript(Rml::Document* document, const std::string& source_path) override;
 	void OnCreateElement(Rml::Document* document, Rml::Element* element, const std::string& tag) override;

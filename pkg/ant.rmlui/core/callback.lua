@@ -1,3 +1,4 @@
+local rmlui = require "rmlui"
 local console = require "core.sandbox.console"
 local filemanager = require "core.filemanager"
 local constructor = require "core.DOM.constructor"
@@ -6,8 +7,6 @@ local event = require "core.event"
 local parsetext = require "core.parsetext"
 local datamodel = require "core.datamodel.api"
 local m = {}
-
-local events = {}
 
 local function invoke(f, ...)
 	local ok, err = xpcall(f, function(msg)
@@ -36,17 +35,17 @@ function m.OnLoadExternalScript(document, source_path)
 	end
 	invoke(f)
 end
-function m.OnCreateElement(document, element, name)
+function m.OnCreateElement(document, element, tagName)
 	local globals = environment[document]
 	if not globals then
 		return
 	end
 	local window = globals.window
-	local ctor = window.customElements.get(name)
-	if not ctor then
-		return
+	local ctor = window.customElements.get(tagName)
+	if ctor then
+		ctor(constructor.Element(document, false, element))
 	end
-	ctor(constructor.Element(document, false, element))
+	event("OnCreateElement", document, element)
 end
 function m.OnDestroyNode(document, node)
 	event("OnDestroyNode", document, node)
@@ -58,55 +57,6 @@ end
 
 function m.OnDataModelRefresh(document)
 	datamodel.refresh(document)
-end
-
-local maxEventId = 0
-local function genEventId()
-	maxEventId = maxEventId + 1
-	return maxEventId
-end
-function m.OnEventAttach(document, element, source)
-	if source == "" then
-		return
-	end
-	local globals = environment[document]
-	local code = ("local event;local this=...;return function()%s;end"):format(source)
-	local payload, err = load(code, source, "t", globals)
-	if not payload then
-		console.warn(err)
-		return
-	end
-	local ok, f = invoke(payload, constructor.Element(document, false, element))
-	if not ok then
-		return
-	end
-	local upvalue = {}
-	local i = 1
-	while true do
-		local name = debug.getupvalue(f, i)
-		if not name then
-			break
-		end
-		upvalue[name] = i
-		i = i + 1
-	end
-	local eventid = genEventId()
-	events[eventid] = {f, upvalue.event}
-	return eventid
-end
-function m.OnEvent(eventid, e)
-	local delegate = events[eventid]
-	if not delegate then
-		return
-	end
-	local f = delegate[1]
-	if delegate[2] then
-		debug.setupvalue(f, delegate[2], constructor.Event(e))
-	end
-	invoke(f)
-end
-function m.OnEventDetach(eventid)
-	events[eventid] = nil
 end
 
 function m.OnRealPath(path)

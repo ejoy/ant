@@ -240,13 +240,7 @@ bool Element::Project(Point& point) const noexcept {
 }
 
 void Element::SetAttribute(const std::string& name, const std::string& value) {
-	auto it = attributes.find(name);
-	if (it == attributes.end() || it->second != value) {
-		attributes[name] = value;
-		ElementAttributes changed_attributes;
-		changed_attributes.emplace(name, value);
-		OnAttributeChange(changed_attributes);
-	}
+	attributes[name] = value;
 }
 
 const std::string* Element::GetAttribute(const std::string& name) const {
@@ -257,15 +251,12 @@ const std::string* Element::GetAttribute(const std::string& name) const {
 	return &it->second;
 }
 
-void Element::RemoveAttribute(const std::string& name) {
-	auto it = attributes.find(name);
-	if (it != attributes.end()) {
-		attributes.erase(it);
+const ElementAttributes& Element::GetAttributes() const {
+	return attributes;
+}
 
-		ElementAttributes changed_attributes;
-		changed_attributes.emplace(name, std::string());
-		OnAttributeChange(changed_attributes);
-	}
+void Element::RemoveAttribute(const std::string& name) {
+	attributes.erase(name);
 }
 
 const std::string& Element::GetTagName() const {
@@ -353,7 +344,6 @@ void Element::InstanceOuter(const HtmlElement& html) {
 			attributes[name] = value;
 		}
 	}
-	OnAttributeChange(attributes);
 	InstanceInner(html);
 }
 
@@ -366,12 +356,12 @@ void Element::InstanceInner(const HtmlElement& html) {
 				Element* e = owner_document->CreateElement(arg.tag);
 				if (e) {
 					e->InstanceOuter(arg);
-					e->NotifyCustomElement();
 					AppendChild(e);
+					e->NotifyCreateElement();
 				}
 			}
 			else if constexpr (std::is_same_v<T, HtmlString>) {
-				if(this->tag == "richtext"){
+				if(this->tag == "richtext") {
 					RichText* e = owner_document->CreateRichTextNode(arg);
 					if(e){
 						AppendChild(e);
@@ -403,19 +393,18 @@ Node* Element::Clone(bool deep) const {
 		for (auto const& [name, value] : attributes) {
 			e->attributes[name] = value;
 		}
-		e->OnAttributeChange(attributes);
 		if (deep) {
 			for (auto const& child : childnodes) {
 				e->AppendChild(child->Clone(true));
 			}
 		}
-		e->NotifyCustomElement();
+		e->NotifyCreateElement();
 	}
 	return e;
 }
 
-void Element::NotifyCustomElement() {
-	owner_document->NotifyCustomElement(this);
+void Element::NotifyCreateElement() {
+	GetPlugin()->OnCreateElement(owner_document, this, GetTagName());
 }
 
 void Element::AppendChild(Node* node, uint32_t index) {
@@ -558,17 +547,6 @@ void Element::GetElementsByClassName(ElementList& elements, const std::string& c
 	}
 	for (auto& child : children) {
 		child->GetElementsByClassName(elements, class_name);
-	}
-}
-
-void Element::OnAttributeChange(const ElementAttributes& changed_attributes) {
-	for (const auto& pair: changed_attributes) {
-		if (pair.first.size() > 2 && pair.first[0] == 'o' && pair.first[1] == 'n') {
-			EventListener* listener = GetPlugin()->OnCreateEventListener(this, pair.first.substr(2), pair.second, false);
-			if (listener) {
-				AddEventListener(listener);
-			}
-		}
 	}
 }
 
