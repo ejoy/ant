@@ -100,6 +100,17 @@ read_timestamp(int index) {
 	return (uint32_t)(g_frame - t);
 }
 
+static int
+ltexture_timestamp(lua_State *L) {
+	int idx = luaL_checkinteger(L, 1);
+	if (idx < 0 || idx >= g_texture_id) {
+		return luaL_error(L, "Invalid texture id %d", idx);
+	}
+	int t = read_timestamp(idx);
+	lua_pushinteger(L, t);
+	return 1;
+}
+
 static inline int
 is_invalid(int id, uint16_t* filter, size_t filter_n) {
 	for (size_t i = 0; i < filter_n; ++i) {
@@ -198,6 +209,7 @@ luaopen_textureman_server(lua_State *L) {
 		{ "event_push", levent_push },
 		{ "texture_create", ltexture_create },
 		{ "texture_set", ltexture_set },
+		{ "texture_timestamp", ltexture_timestamp },
 		{ "frame_tick", lframe_tick },
 		{ "frame_new", lframe_new },
 		{ "frame_old", lframe_old },
