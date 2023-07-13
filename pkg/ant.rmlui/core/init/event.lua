@@ -50,7 +50,7 @@ function event.OnCreateElement(document, element)
         if name:sub(1,2) == "on" then
             local f, upvalue = OnEventAttach(document, element, value)
             if f then
-                listeners[#listeners+1] = rmlui.ElementAddEventListener(element, name:sub(2,-1), function (e)
+                listeners[#listeners+1] = rmlui.ElementAddEventListener(element, name:sub(3,-1), function (e)
                     if upvalue then
                         debug.setupvalue(f, upvalue, constructor.Event(e))
                     end
