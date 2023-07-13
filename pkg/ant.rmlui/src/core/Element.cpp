@@ -296,6 +296,7 @@ void Element::SetInnerHTML(const std::string& html) {
 	try {
 		HtmlParser parser;
 		HtmlElement dom = parser.Parse(html, true);
+		RemoveAllChildren();
 		InstanceInner(dom);
 	}
 	catch (HtmlParserException& e) {
@@ -314,6 +315,7 @@ void Element::SetOuterHTML(const std::string& html) {
 	try {
 		HtmlParser parser;
 		HtmlElement dom = parser.Parse(html, false);
+		RemoveAllChildren();
 		InstanceOuter(dom);
 		InstanceInner(dom);
 	}
@@ -348,7 +350,6 @@ void Element::InstanceOuter(const HtmlElement& html) {
 }
 
 void Element::InstanceInner(const HtmlElement& html) {
-	RemoveAllChildren();
 	for (auto const& node : html.children) {
 		std::visit([this](auto&& arg) {
 			using T = std::decay_t<decltype(arg)>;
