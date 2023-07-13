@@ -70,10 +70,8 @@ local function create_render_program(vs, fs)
 end
 
 local function read_file(filename)
-    local f = fs.open(filename, "rb")
-    local c = f:read "a"
-    f:close()
-    return c
+    local f<close> = fs.open(filename, "rb")
+    return f:read "a"
 end
 
 local function load_shader(shaderfile)
@@ -141,6 +139,22 @@ load_program(material.mesh.shader,          shader_path "vs_mesh.bin", shader_pa
 load_program(material.fullscreen.shader,    shader_path "vs_quad.bin", shader_path "fs_quad.bin")
 
 load_program(material.depth.shader,         shader_path "vs_mesh.bin")
+
+local function create_tex2d(filename, flags)
+    local f = read_file(filename)
+    local h = bgfx.create_texture(f, flags)
+    bgfx.set_name(h, filename:string())
+    return h
+end
+
+local texhandle = create_tex2d(fs.path "/pkg/ant.test.native_bgfx/textures/2x2.dds", sampler{
+    MIN="LINEAR",
+    MAG="LINEAR",
+    U="CLAMP",
+    V="CLAMP",
+    COLOR_SPACE="sRGB",
+})
+
 
 local viewid = 2
 
@@ -228,21 +242,12 @@ local function find_uniform(shader, name)
 end
 
 local function draw_simple_mode(viewmat, projmat)
-    bgfx.touch(viewid)
-    bgfx.set_view_clear(viewid, "CD", 0xf0f0f0ff, 1.0, 0.0)
+    --bgfx.touch(viewid)
+    bgfx.set_view_clear(viewid, "CD", 0x808080ff, 1.0, 0.0)
     bgfx.set_view_transform(viewid, viewmat, projmat)
     bgfx.set_view_rect(viewid, 0, 0, fb_size.w, fb_size.h)
+
     bgfx.set_state(material.mesh.simple_state)
-
-    local uniforms = material.mesh.shader.uniforms
-    if uniforms and #uniforms > 0 then
-        local mvphandle = find_uniform(material.mesh.shader, "u_modelViewProj")
-        if mvphandle then
-            local mvp = math3d.mul(projmat, viewmat)
-            bgfx.set_uniform(mvphandle, math3d.value_ptr(mvp))
-        end
-    end
-
     bgfx.set_vertex_buffer(0, mesh.vb.handle, mesh.vb.start, mesh.vb.num)
     bgfx.set_index_buffer(mesh.ib.handle, mesh.ib.start, mesh.ib.num)
     
@@ -250,12 +255,19 @@ local function draw_simple_mode(viewmat, projmat)
 end
 
 function is:update()
+    bgfx.touch(viewid)
+
     local viewmat = math3d.value_ptr(math3d.lookat(math3d.vector(0, 0, -10), math3d.vector(0, 0, 0), math3d.vector(0, 1, 0)))
     local projmat = math3d.value_ptr(math3d.projmat{aspect=fb_size.w/fb_size.h, fov=90, n=0.01, f=100})
 
     local colorhandle = find_uniform(material.mesh.shader, "u_color")
     if colorhandle then
         bgfx.set_uniform(colorhandle, math3d.value_ptr(math3d.vector(0.5, 0.5, 0.5, 1.0)))
+    end
+
+    local tex = find_uniform(material.mesh.shader, "s_tex")
+    if tex then
+        bgfx.set_texture(0, tex, texhandle)
     end
     draw_simple_mode(viewmat, projmat)
 
