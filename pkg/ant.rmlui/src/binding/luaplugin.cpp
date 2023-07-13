@@ -3,7 +3,6 @@
 #include <core/Document.h>
 #include <core/Stream.h>
 #include <core/Event.h>
-#include <core/EventListener.h>
 #include <binding/luaplugin.h>
 #include <binding/luabind.h>
 #include "lua2struct.h"

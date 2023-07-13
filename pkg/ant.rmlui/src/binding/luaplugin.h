@@ -7,7 +7,6 @@
 namespace Rml {
 class Node;
 class Element;
-class EventListener;
 class Document;
 class Event;
 }

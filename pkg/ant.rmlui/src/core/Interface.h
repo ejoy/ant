@@ -12,7 +12,6 @@ namespace Rml {
 class Node;
 class Text;
 class Element;
-class EventListener;
 class Document;
 
 using FontFaceHandle = uint64_t;
