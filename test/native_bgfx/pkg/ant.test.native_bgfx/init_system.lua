@@ -219,18 +219,28 @@ local function test_fb(viewmat, projmat)
     bgfx.submit(viewid, material.fullscreen.shader.prog, 0)
 end
 
+local function find_uniform(shader, name)
+    for _, u in ipairs(shader.uniforms) do
+        if u.name == name then
+            return u.handle
+        end
+    end
+end
 
 local function draw_simple_mode(viewmat, projmat)
     bgfx.touch(viewid)
-    bgfx.set_view_clear(viewid, "CD", 0x000000ff, 1.0, 0.0)
+    bgfx.set_view_clear(viewid, "CD", 0xf0f0f0ff, 1.0, 0.0)
     bgfx.set_view_transform(viewid, viewmat, projmat)
     bgfx.set_view_rect(viewid, 0, 0, fb_size.w, fb_size.h)
     bgfx.set_state(material.mesh.simple_state)
 
     local uniforms = material.mesh.shader.uniforms
     if uniforms and #uniforms > 0 then
-        local mvp = math3d.mul(projmat, viewmat)
-        bgfx.set_uniform(material.mesh.shader.uniforms[1].handle, math3d.value_ptr(mvp))
+        local mvphandle = find_uniform(material.mesh.shader, "u_modelViewProj")
+        if mvphandle then
+            local mvp = math3d.mul(projmat, viewmat)
+            bgfx.set_uniform(mvphandle, math3d.value_ptr(mvp))
+        end
     end
 
     bgfx.set_vertex_buffer(0, mesh.vb.handle, mesh.vb.start, mesh.vb.num)
@@ -243,6 +253,10 @@ function is:update()
     local viewmat = math3d.value_ptr(math3d.lookat(math3d.vector(0, 0, -10), math3d.vector(0, 0, 0), math3d.vector(0, 1, 0)))
     local projmat = math3d.value_ptr(math3d.projmat{aspect=fb_size.w/fb_size.h, fov=90, n=0.01, f=100})
 
+    local colorhandle = find_uniform(material.mesh.shader, "u_color")
+    if colorhandle then
+        bgfx.set_uniform(colorhandle, math3d.value_ptr(math3d.vector(0.5, 0.5, 0.5, 1.0)))
+    end
     draw_simple_mode(viewmat, projmat)
 
 
