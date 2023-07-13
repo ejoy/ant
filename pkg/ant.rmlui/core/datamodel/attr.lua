@@ -12,9 +12,17 @@ local function eval(datamodel, data)
     return compiled()
 end
 
-local function refresh(datamodel, data, element, view_modifier)
+local function refresh(datamodel, data, element, name)
     local res = eval(datamodel, data)
-    rmlui.ElementSetAttribute(element, view_modifier, res)
+    if name == "id" then
+        rmlui.ElementSetId(element, res)
+    elseif name == "class" then
+        rmlui.ElementSetClassName(element, res)
+    elseif name == "style" then
+        error "use data-style-**"
+    else
+        rmlui.ElementSetAttribute(element, name, res)
+    end
 end
 
 function m.create(datamodel, view, element, view_modifier, view_value)
