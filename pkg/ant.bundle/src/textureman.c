@@ -54,11 +54,17 @@ ltexture_create(lua_State *L) {
 	return 1;
 }
 
-static int
-ltexture_get(lua_State *L) {
+static inline int
+checktextureid(lua_State *L, int index) {
 	int id = luaL_checkinteger(L, 1);
 	if (id <= 0 || id > g_texture_id)
 		return luaL_error(L, "Invalid texture handle %d", id);
+	return id;
+}
+
+static int
+ltexture_get(lua_State *L) {
+	int id = checktextureid(L, 1);
 	uint16_t h = g_texture[id - 1];
 	g_texture_timestamp[id - 1] = g_frame;
 	int luahandle = (BGFX_HANDLE_TEXTURE << 16) | h;
@@ -79,9 +85,7 @@ texture_get(int id) {
 
 static int
 ltexture_set(lua_State *L) {
-	int id = luaL_checkinteger(L, 1);
-	if (id <= 0 || id > g_texture_id)
-		return luaL_error(L, "Invalid texture handle %d", id);
+	int id = checktextureid(L, 1);
 	uint16_t handle = BGFX_LUAHANDLE_ID(TEXTURE, luaL_checkinteger(L, 2));
 	g_texture[id - 1] = handle;
 	return 0;
@@ -102,12 +106,23 @@ read_timestamp(int index) {
 
 static int
 ltexture_timestamp(lua_State *L) {
-	int idx = luaL_checkinteger(L, 1);
-	if (idx <= 0 || idx > g_texture_id) {
-		return luaL_error(L, "Invalid texture id %d", idx);
+	if (lua_istable(L, 1)) {
+		lua_settop(L, 1);
+		int n = lua_rawlen(L, 1);
+		int i;
+		for (i=1;i<=n;i++) {
+			lua_geti(L, 1, i);
+			int id = checktextureid(L, -1);
+			lua_pop(L, 1);
+			int t = read_timestamp(id - 1);
+			lua_pushinteger(L, t);
+			lua_seti(L, 1, i);
+		}
+	} else {
+		int id = checktextureid(L, 1);
+		int t = read_timestamp(id - 1);
+		lua_pushinteger(L, t);
 	}
-	int t = read_timestamp(idx);
-	lua_pushinteger(L, t);
 	return 1;
 }
 
