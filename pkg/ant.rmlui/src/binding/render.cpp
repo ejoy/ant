@@ -3,13 +3,13 @@
 #include <binding/utf8.h>
 #include <binding/context.h>
 #include <core/Core.h>
+#include <core/Color.h>
 #include <core/Interface.h>
-#include <core/File.h>
+#include <util/File.h>
 #include <memory.h>
 #include <cassert>
 #include <stdint.h>
 #include "../bgfx/bgfx_interface.h"
-#include "../core/Color.h"
 
 extern "C" {
     #include <textureman.h>
