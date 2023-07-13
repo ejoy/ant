@@ -18,8 +18,8 @@ local function refresh(data, node)
     rmlui.TextSetText(node, res)
 end
 
-
-function m.load(datamodel, node, value)
+function m.create(datamodel, node)
+    local value = rmlui.TextGetText(node)
     local n = 0
     local code = {}
     local variables
@@ -40,7 +40,6 @@ function m.load(datamodel, node, value)
         return key
     end)
     if n == 0 then
-        datamodel.texts[node] = nil
         return
     end
     local data = {

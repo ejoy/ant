@@ -12,23 +12,26 @@ local datamodels = {}
 local m = {}
 
 function m.create(document, data_table)
-    rmlui.DocumentEnableDataModel(document)
     local model = {}
-    datamodels[document] = {
+    local datamodel = {
         model = model,
         variables = {},
         views = {},
         texts = {},
+        data_for = {},
+        create_queue = {},
+        dirty = true,
     }
+    datamodels[document] = datamodel
     local mt = {
         __index = data_table,
     }
     function mt:__call()
-        rmlui.DocumentDirtyDataModel(document)
+        datamodel.dirty = true
     end
     function mt:__newindex(k, v)
         data_table[k] = v
-        rmlui.DocumentDirtyDataModel(document)
+        datamodel.dirty = true
     end
     return setmetatable(model, mt)
 end
@@ -74,48 +77,6 @@ local function getDepth(element)
     end
 end
 
-function m.load(document, element, name, value)
-    local datamodel = datamodels[document]
-    if not datamodel then
-        return
-    end
-    if name == "data-text" then
-        data_text.load(datamodel, element, value)
-        return
-    end
-    local view = datamodel.views[element]
-    if not view then
-        view = {
-            ["for"] = {
-                num_elements = 0,
-            },
-            ["if"] = nil,
-            events = {},
-            styles = {},
-            attributes = {},
-            variables = compileVariables(datamodel, element),
-            depth = getDepth(element),
-        }
-        datamodel.views[element] = view
-    end
-    if name == "data-if" then
-        data_if.load(datamodel, view, element, value)
-    elseif name == "data-for" then
-        data_for.load(datamodel, view, element, value)
-    else
-        local type, modifier = name:match "^data%-(%a+)%-(.+)$"
-        if type == "event" then
-            data_event.load(datamodel, view, element, modifier, value)
-        elseif type == "style" then
-            data_style.load(datamodel, view, element, modifier, value)
-        elseif type == "attr" then
-            data_attr.load(datamodel, view, element, modifier, value)
-        else
-            error("unknown data-model attribute:"..name)
-        end
-    end
-end
-
 local function sortpairs(t, sortfunc)
     local sort = {}
     for k, v in pairs(t) do
@@ -137,12 +98,115 @@ local function sortfunc(a, b)
     return a[2].depth < b[2].depth
 end
 
-function m.refresh(document)
+local function InDataFor(datamodel, node)
+    while true do
+        if datamodel.data_for[node] then
+            return true
+        end
+        node = rmlui.NodeGetParent(node)
+        if node == nil then
+            return false
+        end
+    end
+end
+
+local NodeTypeElement <const> = 1
+local NodeTypeText    <const> = 2
+
+function event.OnCreateElement(document, element)
     local datamodel = datamodels[document]
     if not datamodel then
         return
     end
-    for element, view in sortpairs(datamodel.views, sortfunc) do
+    local create_queue = datamodel.create_queue
+    create_queue[element] = NodeTypeElement
+    create_queue[#create_queue+1] = element
+end
+
+function event.OnCreateText(document, node)
+    local datamodel = datamodels[document]
+    if not datamodel then
+        return
+    end
+    local create_queue = datamodel.create_queue
+    create_queue[node] = NodeTypeText
+    create_queue[#create_queue+1] = node
+end
+
+local function OnCreateElement(datamodel, element)
+    local attributes = rmlui.ElementGetAttributes(element)
+    if attributes["data-for"] then
+        rmlui.ElementSetVisible(element, false)
+        rmlui.ElementRemoveAttribute(element, "data-for")
+        local view = datamodel.data_for[element]
+        if not view then
+            view = {
+                num_elements = 0,
+                variables = compileVariables(datamodel, element),
+                depth = getDepth(element),
+            }
+            datamodel.data_for[element] = view
+        end
+        data_for.create(datamodel, view, element, attributes["data-for"])
+    else
+        for name, value in pairs(attributes) do
+            if name:match "^data-" then
+                local view = datamodel.views[element]
+                if not view then
+                    view = {
+                        ["if"] = nil,
+                        events = {},
+                        styles = {},
+                        attributes = {},
+                        variables = compileVariables(datamodel, element),
+                        depth = getDepth(element),
+                    }
+                    datamodel.views[element] = view
+                end
+                if name == "data-if" then
+                    data_if.create(datamodel, view, element, value)
+                else
+                    local type, modifier = name:match "^data%-(%a+)%-(.+)$"
+                    if type == "event" then
+                        data_event.create(datamodel, view, element, modifier, value)
+                    elseif type == "style" then
+                        data_style.create(datamodel, view, element, modifier, value)
+                    elseif type == "attr" then
+                        data_attr.create(datamodel, view, element, modifier, value)
+                    else
+                        error("unknown data-model attribute:"..name)
+                    end
+                end
+            end
+        end
+    end
+end
+
+local function OnCreateText(datamodel, node)
+    data_text.create(datamodel, node)
+end
+
+local function OnUpdate(datamodel)
+    local create_queue = datamodel.create_queue
+    if #create_queue > 0 then
+        datamodel.create_queue = {}
+        for _, node in ipairs(create_queue) do
+            local type = create_queue[node]
+            if type == NodeTypeElement then
+                if not InDataFor(datamodel, node) then
+                    OnCreateElement(datamodel, node)
+                end
+            elseif type == NodeTypeText then
+                if not InDataFor(datamodel, node) then
+                    OnCreateText(datamodel, node)
+                end
+            end
+        end
+    end
+end
+
+local function OnRefresh(datamodel)
+    for element, view in sortpairs(datamodel.data_for, sortfunc) do
         data_for.refresh(datamodel, element, view)
     end
     for element, view in sortpairs(datamodel.views, sortfunc) do
@@ -154,11 +218,31 @@ function m.refresh(document)
     data_text.refresh(datamodel)
 end
 
+function m.update(document)
+    local datamodel = datamodels[document]
+    if not datamodel then
+        return
+    end
+    for _ = 1, 10 do
+        OnUpdate(datamodel)
+        if not datamodel.dirty then
+            break
+        end
+        datamodel.dirty = false
+        OnRefresh(datamodel)
+        if not datamodel.dirty then
+            break
+        end
+    end
+end
+
 function event.OnDestroyNode(document, node)
     local datamodel = datamodels[document]
     if not datamodel then
         return
     end
+    datamodel.create_queue[node] = nil
+    datamodel.data_for[node] = nil
     datamodel.variables[node] = nil
     datamodel.texts[node] = nil
     local view = datamodel.views[node]

@@ -567,28 +567,10 @@ FontFaceHandle Text::GetFontFaceHandle() {
 void Text::SetParentNode(Element* _parent) {
 	assert(_parent);
 	parent = _parent;
-	DirtyDataModel();
-}
-
-void Text::DirtyDataModel() {
-	dirty.insert(Dirty::DataModel);
-}
-
-void Text::UpdateDataModel() {
-	if (!dirty.contains(Dirty::DataModel)) {
-		return;
-	}
-	dirty.erase(Dirty::DataModel);
-	GetPlugin()->OnDataModelLoad(parent->GetOwnerDocument(), this, "data-text", text);
 }
 
 Node* Text::Clone(bool deep) const {
 	return GetParentNode()->GetOwnerDocument()->CreateTextNode(text);
-}
-
-void Text::NotifyCreated() {
-	auto document = GetParentNode()->GetOwnerDocument();
-	GetPlugin()->OnCreateText(document, this);
 }
 
 float Text::GetZIndex() const {

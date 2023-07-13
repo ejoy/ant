@@ -315,6 +315,7 @@ void Element::SetOuterHTML(const std::string& html) {
 		HtmlParser parser;
 		HtmlElement dom = parser.Parse(html, false);
 		InstanceOuter(dom);
+		InstanceInner(dom);
 	}
 	catch (HtmlParserException& e) {
 		Log::Message(Log::Level::Error, "%s Line: %d Column: %d", e.what(), e.GetLine(), e.GetColumn());
@@ -344,7 +345,6 @@ void Element::InstanceOuter(const HtmlElement& html) {
 			attributes[name] = value;
 		}
 	}
-	InstanceInner(html);
 }
 
 void Element::InstanceInner(const HtmlElement& html) {
@@ -356,8 +356,9 @@ void Element::InstanceInner(const HtmlElement& html) {
 				Element* e = owner_document->CreateElement(arg.tag);
 				if (e) {
 					e->InstanceOuter(arg);
-					AppendChild(e);
 					e->NotifyCreated();
+					e->InstanceInner(arg);
+					AppendChild(e);
 				}
 			}
 			else if constexpr (std::is_same_v<T, HtmlString>) {
@@ -365,14 +366,12 @@ void Element::InstanceInner(const HtmlElement& html) {
 					RichText* e = owner_document->CreateRichTextNode(arg);
 					if (e) {
 						AppendChild(e);
-						e->NotifyCreated();
 					}
 				}
 				else {
 					Text* e = owner_document->CreateTextNode(arg);
 					if (e) {
 						AppendChild(e);
-						e->NotifyCreated();
 					}
 				}
 			}
@@ -395,11 +394,11 @@ Node* Element::Clone(bool deep) const {
 		for (auto const& [name, value] : attributes) {
 			e->attributes[name] = value;
 		}
+		e->NotifyCreated();
 		if (deep) {
 			for (auto const& child : childnodes) {
 				auto r = child->Clone(true);
 				e->AppendChild(r);
-				r->NotifyCreated();
 			}
 		}
 	}
@@ -687,37 +686,6 @@ std::string Element::GetOuterHTML() const {
 	return html;
 }
 
-void Element::UpdateDataModel() {
-	if (dirty.contains(Dirty::DataFor)) {
-		return;
-	}
-	if (!dirty.contains(Dirty::DataModel)) {
-		for (auto& child : childnodes) {
-			child->UpdateDataModel();
-		}
-		return;
-	}
-	dirty.erase(Dirty::DataModel);
-	auto it = attributes.find("data-for");
-	if (it != attributes.end()) {
-		SetVisible(false);
-		dirty.insert(Dirty::DataFor);
-		GetPlugin()->OnDataModelLoad(GetOwnerDocument(), this, it->first, it->second);
-		attributes.erase(it);
-	}
-	else {
-		for (auto const& [name, value] : attributes) {
-			constexpr size_t data_str_length = sizeof("data-") - 1;
-			if (name.size() > data_str_length && name[0] == 'd' && name[1] == 'a' && name[2] == 't' && name[3] == 'a' && name[4] == '-') {
-				GetPlugin()->OnDataModelLoad(GetOwnerDocument(), this, name, value);
-			}
-		}
-		for (auto& child : childnodes) {
-			child->UpdateDataModel();
-		}
-	}
-}
-
 void Element::RefreshProperties() {
 	auto& c = Style::Instance();
 	c.Release(global_properties);
@@ -742,7 +710,6 @@ void Element::SetParentNode(Element* _parent) {
 	DirtyTransform();
 	DirtyClip();
 	DirtyPerspective();
-	DirtyDataModel();
 }
 
 void Element::UpdateStackingContext() {
@@ -768,13 +735,6 @@ void Element::DirtyStackingContext() {
 
 void Element::DirtyStructure() {
 	dirty.insert(Dirty::Structure);
-}
-
-void Element::DirtyDataModel() {
-	dirty.insert(Dirty::DataModel);
-	for (auto& child : childnodes) {
-		child->DirtyDataModel();
-	}
 }
 
 void Element::UpdateStructure() {

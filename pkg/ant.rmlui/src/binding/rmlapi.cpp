@@ -171,7 +171,6 @@ lDocumentCreateTextNode(lua_State* L) {
 	if (!e) {
 		return 0;
 	}
-	e->NotifyCreated();
 	lua_pushlightuserdata(L, e);
 	return 1;
 }
@@ -543,7 +542,6 @@ lNodeClone(lua_State* L) {
 	if (!r) {
 		return 0;
 	}
-	r->NotifyCreated();
 	return lua_pushRmlNode(L, r);
 }
 
@@ -620,20 +618,6 @@ lua_plugin* get_lua_plugin() {
     return &g_wrapper->m_plugin;
 }
 
-static int
-lDocumentEnableDataModel(lua_State* L) {
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	doc->EnableDataModel();
-	return 0;
-}
-
-static int
-lDocumentDirtyDataModel(lua_State* L) {
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	doc->DirtyDataModel();
-	return 0;
-}
-
 extern "C"
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -655,8 +639,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentGetBody", lDocumentGetBody },
 		{ "DocumentCreateElement", lDocumentCreateElement },
 		{ "DocumentCreateTextNode", lDocumentCreateTextNode },
-		{ "DocumentEnableDataModel", lDocumentEnableDataModel },
-		{ "DocumentDirtyDataModel", lDocumentDirtyDataModel },
 		{ "ElementAddEventListener", lElementAddEventListener },
 		{ "ElementRemoveEventListener", lElementRemoveEventListener },
 		{ "ElementDispatchEvent", lElementDispatchEvent },

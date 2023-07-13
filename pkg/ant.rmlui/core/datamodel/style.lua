@@ -17,7 +17,7 @@ local function refresh(datamodel, data, element, view_modifier)
     rmlui.ElementSetProperty(element, view_modifier, res)
 end
 
-function m.load(datamodel, view, element, view_modifier, view_value)
+function m.create(datamodel, view, element, view_modifier, view_value)
     local data = view.styles[view_modifier]
     if not data then
         data = {}

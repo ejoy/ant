@@ -80,6 +80,8 @@ void Document::Instance(const HtmlElement& html) {
 	}
 	style_sheet.Sort();
 	body.InstanceOuter(bodyHtml);
+	body.NotifyCreated();
+	body.InstanceInner(bodyHtml);
 	body.DirtyDefinition();
 }
 
@@ -108,28 +110,7 @@ void Document::LoadExternalStyle(const std::string& source_path) {
 }
 
 void Document::UpdateDataModel() {
-	if (enable_datamodel) {
-		for (int i = 1; i < 10; ++i) {
-			body.UpdateDataModel();
-			if (!dirty_datamodel) {
-				break;
-			}
-			dirty_datamodel = false;
-			GetPlugin()->OnDataModelRefresh(this);
-			if (!dirty_datamodel) {
-				break;
-			}
-		}
-	}
-}
-
-void Document::EnableDataModel() {
-	enable_datamodel = true;
-	dirty_datamodel = true;
-}
-
-void Document::DirtyDataModel() {
-	dirty_datamodel = true;
+	GetPlugin()->OnUpdateDataModel(this);
 }
 
 void Document::SetDimensions(const Size& _dimensions) {
@@ -192,11 +173,15 @@ Element* Document::CreateElement(const std::string& tag){
 }
 
 Text* Document::CreateTextNode(const std::string& str) {
-	return new Text(this, str);
+	auto e = new Text(this, str);
+	GetPlugin()->OnCreateText(this, e);
+	return e;
 }
 
 RichText* Document::CreateRichTextNode(const std::string& str) {
-	return new RichText(this, str);
+	auto e = new RichText(this, str);
+	GetPlugin()->OnCreateText(this, e);
+	return e;
 }
 
 void Document::RecycleNode(std::unique_ptr<Node>&& node) {

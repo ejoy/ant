@@ -53,12 +53,8 @@ function m.OnDestroyNode(document, node)
 	event("OnDestroyNode", document, node)
 end
 
-function m.OnDataModelLoad(document, element, name, value)
-	datamodel.load(document, element, name, value)
-end
-
-function m.OnDataModelRefresh(document)
-	datamodel.refresh(document)
+function m.OnUpdateDataModel(document)
+	datamodel.update(document)
 end
 
 function m.OnRealPath(path)

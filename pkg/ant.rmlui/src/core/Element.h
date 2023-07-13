@@ -56,7 +56,7 @@ public:
 
 	void InstanceOuter(const HtmlElement& html);
 	void InstanceInner(const HtmlElement& html);
-	void NotifyCreated() override;
+	void NotifyCreated();
 
 	void AddEventListener(EventListener* listener);
 	void RemoveEventListener(EventListener* listener);
@@ -140,7 +140,6 @@ public:
 	const EdgeInsets<float>& GetBorder() const;
 
 	void SetParentNode(Element* parent) override;
-	void UpdateDataModel() override;
 	Node* Clone(bool deep = true) const override;
 	void CalculateLayout() override;
 	void Render() override;
@@ -159,7 +158,6 @@ protected:
 	void UpdateStackingContext();
 	void DirtyStackingContext();
 	void DirtyStructure();
-	void DirtyDataModel() override;
 	void UpdateStructure();
 	void DirtyPerspective();
 	void UpdateTransform();
@@ -231,8 +229,6 @@ protected:
 		Background,
 		Image,
 		Definition,
-		DataModel,
-		DataFor,
 	};
 	EnumSet<Dirty> dirty;
 };

@@ -17,7 +17,7 @@ local function refresh(datamodel, data, element)
     rmlui.ElementSetVisible(element, res)
 end
 
-function m.load(datamodel, view, element, view_value)
+function m.create(datamodel, view, element, view_value)
     local data = view["if"]
     if not data then
         data = {}

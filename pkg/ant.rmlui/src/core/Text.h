@@ -19,7 +19,6 @@ public:
 	virtual Size Measure(float minWidth, float maxWidth, float minHeight, float maxHeight);
 	float GetBaseline();
 	void ChangedProperties(const PropertyIdSet& properties);
-	void NotifyCreated() override;
 protected:
 	virtual float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float line_height);
 	std::optional<Property> GetComputedProperty(PropertyId id);
@@ -35,8 +34,6 @@ protected:
 	}
 
 	void SetParentNode(Element* parent) override;
-	void UpdateDataModel() override;
-	void DirtyDataModel() override;
 	Node* Clone(bool deep = true) const override;
 	void CalculateLayout() override;
 	void Render() override;
@@ -72,7 +69,6 @@ protected:
 		Effects,
 		Decoration,
 		Geometry,
-		DataModel,
 	};
 	EnumSet<Dirty> dirty;
 	bool decoration_under = false;

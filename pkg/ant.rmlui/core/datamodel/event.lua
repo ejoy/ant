@@ -56,7 +56,7 @@ local function refresh(datamodel, data)
     })
 end
 
-function m.load(datamodel, view, element, event_type, event_value)
+function m.create(datamodel, view, element, event_type, event_value)
     local data = view.events[event_type]
     if not data then
         data = {}

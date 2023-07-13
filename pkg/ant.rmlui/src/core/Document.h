@@ -32,8 +32,6 @@ public:
 	void Flush();
 	void Update(float delta);
 	void UpdateLayout();
-	void EnableDataModel();
-	void DirtyDataModel();
 	void UpdateDataModel();
 	Element* GetBody();
 	const Element* GetBody() const;
@@ -50,7 +48,6 @@ private:
 	Element body;
 	Size dimensions;
 	bool dirty_dimensions = false;
-	bool dirty_datamodel = false;
 	bool enable_datamodel = false;
 };
 
