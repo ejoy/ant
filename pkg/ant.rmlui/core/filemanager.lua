@@ -124,7 +124,7 @@ function m.loadFile(source_path, env)
     end
     local str = f:read 'a'
     f:close()
-    return load(str, "@" .. path, "bt", env)
+    return load(str, "@" .. realpath, "bt", env)
 end
 
 return m
