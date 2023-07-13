@@ -137,10 +137,10 @@ local function shader_path(name)
     return fs.path(("/pkg/ant.test.native_bgfx/shaders/bin/%s/%s/%s"):format(OS, renderer:lower(), name))
 end
 
-load_program(material.mesh.shader,          shader_path "vs_mesh_raw.bin", shader_path "fs_mesh_raw.bin")
+load_program(material.mesh.shader,          shader_path "vs_mesh.bin", shader_path "fs_mesh.bin")
 load_program(material.fullscreen.shader,    shader_path "vs_quad.bin", shader_path "fs_quad.bin")
 
-load_program(material.depth.shader,         shader_path "vs_mesh_raw.bin")
+load_program(material.depth.shader,         shader_path "vs_mesh.bin")
 
 local viewid = 2
 
@@ -240,8 +240,8 @@ local function draw_simple_mode(viewmat, projmat)
 end
 
 function is:update()
-    local viewmat = math3d.lookat(math3d.vector(0, 0, -10), math3d.vector(0, 0, 0), math3d.vector(0, 1, 0))
-    local projmat = math3d.projmat{aspect=fb_size.w/fb_size.h, fov=90, n=0.01, f=100}
+    local viewmat = math3d.value_ptr(math3d.lookat(math3d.vector(0, 0, -10), math3d.vector(0, 0, 0), math3d.vector(0, 1, 0)))
+    local projmat = math3d.value_ptr(math3d.projmat{aspect=fb_size.w/fb_size.h, fov=90, n=0.01, f=100})
 
     draw_simple_mode(viewmat, projmat)
 
