@@ -65,39 +65,6 @@ end
 
 m.compileVariables = compileVariables
 
-local function getDepth(element)
-    local n = 1
-    while true do
-        local parent = rmlui.NodeGetParent(element)
-        if not parent then
-            return n
-        end
-        element = parent
-        n = n + 1
-    end
-end
-
-local function sortpairs(t, sortfunc)
-    local sort = {}
-    for k, v in pairs(t) do
-        sort[#sort+1] = {k, v}
-    end
-    table.sort(sort, sortfunc)
-    local n = 1
-    return function ()
-        local kv = sort[n]
-        if kv == nil then
-            return
-        end
-        n = n + 1
-        return kv[1], kv[2]
-    end
-end
-
-local function sortfunc(a, b)
-    return a[2].depth < b[2].depth
-end
-
 local function InDataFor(datamodel, node)
     while true do
         if datamodel.data_for[node] then
@@ -143,9 +110,9 @@ local function OnCreateElement(datamodel, element)
             view = {
                 num_elements = 0,
                 variables = compileVariables(datamodel, element),
-                depth = getDepth(element),
             }
             datamodel.data_for[element] = view
+            table.insert(datamodel.data_for, element)
         end
         data_for.create(datamodel, view, element, attributes["data-for"])
     else
@@ -159,7 +126,6 @@ local function OnCreateElement(datamodel, element)
                         styles = {},
                         attributes = {},
                         variables = compileVariables(datamodel, element),
-                        depth = getDepth(element),
                     }
                     datamodel.views[element] = view
                 end
@@ -206,10 +172,10 @@ local function OnUpdate(datamodel)
 end
 
 local function OnRefresh(datamodel)
-    for element, view in sortpairs(datamodel.data_for, sortfunc) do
-        data_for.refresh(datamodel, element, view)
+    for _, element in ipairs(datamodel.data_for) do
+        data_for.refresh(datamodel, element, datamodel.data_for[element])
     end
-    for element, view in sortpairs(datamodel.views, sortfunc) do
+    for element, view in pairs(datamodel.views) do
         data_if.refresh(datamodel, element, view)
         data_event.refresh(datamodel, view)
         data_style.refresh(datamodel, element, view)
