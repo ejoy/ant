@@ -3,18 +3,13 @@ local console = require "core.sandbox.console"
 
 local m = {}
 
-local function eval(datamodel, data)
+local function refresh(datamodel, data, element)
     local compiled, err = load(data.script, data.script, "t", datamodel.model)
     if not compiled then
         console.warn(err)
         return
     end
-    return compiled()
-end
-
-local function refresh(datamodel, data, element)
-    local res = eval(datamodel, data)
-    rmlui.ElementSetVisible(element, res)
+    rmlui.ElementSetVisible(element, compiled())
 end
 
 function m.create(datamodel, view, element, view_value)

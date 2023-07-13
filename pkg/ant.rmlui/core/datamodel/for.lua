@@ -3,15 +3,6 @@ local console = require "core.sandbox.console"
 
 local m = {}
 
-local function eval(datamodel, script)
-    local compiled, err = load(script, script, "t", datamodel.model)
-    if not compiled then
-        console.warn(err)
-        return
-    end
-    return compiled()
-end
-
 local function setVariable(datamodel, element, name, value)
     local vars = datamodel.variables[element]
     if not vars then
@@ -48,8 +39,13 @@ function m.create(datamodel, view, element, value)
 end
 
 function m.refresh(datamodel, element, view)
+    local compiled, err = load(view.script, view.script, "t", datamodel.model)
+    if not compiled then
+        console.warn(err)
+        return
+    end
+    local t = compiled()
     local parent = rmlui.NodeGetParent(element)
-    local t = eval(datamodel, view.script)
     local dirty = false
     for i = view.num_elements+1, #t do
         local sibling = rmlui.NodeClone(element)

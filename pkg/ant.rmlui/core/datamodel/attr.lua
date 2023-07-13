@@ -3,23 +3,21 @@ local console = require "core.sandbox.console"
 
 local m = {}
 
-local function eval(datamodel, data)
+local function refresh(datamodel, data, element, name)
     local compiled, err = load(data.script, data.script, "t", datamodel.model)
     if not compiled then
         console.warn(err)
         return
     end
-    return compiled()
-end
-
-local function refresh(datamodel, data, element, name)
-    local res = eval(datamodel, data)
+    local res = compiled()
     if name == "id" then
         rmlui.ElementSetId(element, res)
     elseif name == "class" then
         rmlui.ElementSetClassName(element, res)
     elseif name == "style" then
-        error "use data-style-**"
+        for k, v in pairs(res) do
+            rmlui.ElementSetProperty(element, k, v)
+        end
     else
         rmlui.ElementSetAttribute(element, name, res)
     end

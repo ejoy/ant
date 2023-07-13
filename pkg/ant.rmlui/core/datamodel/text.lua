@@ -3,18 +3,14 @@ local console = require "core.sandbox.console"
 
 local m = {}
 
-local function eval(data)
-    return data.script:gsub('{%d+}', function(key)
+local function refresh(data, node)
+    local res = data.script:gsub('{%d+}', function(key)
         local code = data.code[key]
         if not code then
             return key
         end
         return code()
     end)
-end
-
-local function refresh(data, node)
-    local res = eval(data)
     rmlui.TextSetText(node, res)
 end
 
