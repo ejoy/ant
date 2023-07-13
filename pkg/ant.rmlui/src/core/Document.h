@@ -1,7 +1,7 @@
 #pragma once
 
 #include <core/Element.h>
-#include <core/StyleSheet.h>
+#include <css/StyleSheet.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <memory>

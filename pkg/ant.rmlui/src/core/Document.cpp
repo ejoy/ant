@@ -1,12 +1,12 @@
 #include <core/Document.h>
 #include <core/Core.h>
 #include <core/Interface.h>
-#include <core/Log.h>
-#include <core/Stream.h>
-#include <core/StyleSheet.h>
+#include <util/Log.h>
+#include <util/Stream.h>
+#include <css/StyleSheet.h>
 #include <core/Text.h>
-#include <core/StyleSheetFactory.h>
-#include <core/HtmlParser.h>
+#include <css/StyleSheetFactory.h>
+#include <util/HtmlParser.h>
 #include <fstream>
 
 namespace Rml {

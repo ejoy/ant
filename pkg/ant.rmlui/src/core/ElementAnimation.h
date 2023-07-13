@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/Property.h>
+#include <css/Property.h>
 #include <core/Tween.h>
 #include <core/ID.h>
 #include <core/AnimationKey.h>

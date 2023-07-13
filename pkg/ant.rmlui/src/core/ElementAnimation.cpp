@@ -1,7 +1,7 @@
 #include <core/ElementAnimation.h>
 #include <core/Element.h>
 #include <core/Transform.h>
-#include <core/Log.h>
+#include <util/Log.h>
 #include <algorithm>
 
 namespace Rml {

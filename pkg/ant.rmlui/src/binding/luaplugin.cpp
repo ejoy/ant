@@ -1,7 +1,7 @@
 #include <core/Core.h>
 #include <core/Interface.h>
 #include <core/Document.h>
-#include <core/Stream.h>
+#include <util/Stream.h>
 #include <core/Event.h>
 #include <binding/luaplugin.h>
 #include <binding/luabind.h>

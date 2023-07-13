@@ -1,10 +1,10 @@
 #include <core/Core.h>
 #include <core/Interface.h>
-#include <core/StyleSheetSpecification.h>
+#include <css/StyleSheetSpecification.h>
 #include <core/Texture.h>
-#include <core/Log.h>
-#include <core/StyleSheetFactory.h>
-#include <core/StyleSheetParser.h>
+#include <util/Log.h>
+#include <css/StyleSheetFactory.h>
+#include <css/StyleSheetParser.h>
 
 namespace Rml {
 

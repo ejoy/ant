@@ -2,9 +2,9 @@
 #include <core/Core.h>
 #include <core/Document.h>
 #include <core/Interface.h>
-#include <core/Log.h>
-#include <core/Property.h>
-#include <core/StringUtilities.h>
+#include <util/Log.h>
+#include <css/Property.h>
+#include <util/StringUtilities.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include<iostream>
 

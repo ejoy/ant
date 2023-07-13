@@ -1,11 +1,11 @@
 #pragma once
 
 #include <core/Node.h>
-#include <core/ObserverPtr.h>
+#include <util/ObserverPtr.h>
 #include <core/Geometry.h>
 #include <core/Interface.h>
-#include <core/PropertyIdSet.h>
-#include <core/Property.h>
+#include <css/PropertyIdSet.h>
+#include <css/Property.h>
 #include <optional>
 
 namespace Rml {

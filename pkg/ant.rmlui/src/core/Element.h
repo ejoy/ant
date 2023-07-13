@@ -2,15 +2,15 @@
 
 #include <core/Layout.h>
 #include <core/ComputedValues.h>
-#include <core/ObserverPtr.h>
-#include <core/Property.h>
+#include <util/ObserverPtr.h>
+#include <css/Property.h>
 #include <core/Types.h>
 #include <core/Tween.h>
 #include <core/Geometry.h>
 #include <core/Node.h>
-#include <core/PropertyIdSet.h>
-#include <core/PropertyVector.h>
-#include <core/StyleCache.h>
+#include <css/PropertyIdSet.h>
+#include <css/PropertyVector.h>
+#include <css/StyleCache.h>
 #include <optional>
 #include "luavalue.h"
 

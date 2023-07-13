@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/Property.h>
+#include <css/Property.h>
 
 namespace Rml {
 
