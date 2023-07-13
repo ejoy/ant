@@ -103,7 +103,7 @@ read_timestamp(int index) {
 static int
 ltexture_timestamp(lua_State *L) {
 	int idx = luaL_checkinteger(L, 1);
-	if (idx < 0 || idx >= g_texture_id) {
+	if (idx <= 0 || idx > g_texture_id) {
 		return luaL_error(L, "Invalid texture id %d", idx);
 	}
 	int t = read_timestamp(idx);
