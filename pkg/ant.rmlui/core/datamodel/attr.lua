@@ -3,6 +3,29 @@ local console = require "core.sandbox.console"
 
 local m = {}
 
+local function insertClassName(classes, name)
+    if not classes[name] then
+        return
+    end
+    classes[name] = true
+    classes[#classes+1] = name
+end
+
+local function computeClassName(classes, data)
+    for k, v in pairs(data) do
+        if type(k) == "string" and v == true then
+            insertClassName(classes, k)
+        elseif type(k) == "number" then
+            if type(v) == "string" then
+                insertClassName(classes, v)
+            elseif type(v) == "table" then
+                computeClassName(classes, v)
+            end
+        end
+    end
+    return classes
+end
+
 local function refresh(datamodel, data, element, name)
     local compiled, err = load(data.script, data.script, "t", datamodel.model)
     if not compiled then
@@ -13,7 +36,12 @@ local function refresh(datamodel, data, element, name)
     if name == "id" then
         rmlui.ElementSetId(element, res)
     elseif name == "class" then
-        rmlui.ElementSetClassName(element, res)
+        if type(res) == "table" then
+            local classes = computeClassName({}, data)
+            rmlui.ElementSetClassName(element, table.concat(classes, " "))
+        else
+            rmlui.ElementSetClassName(element, res)
+        end
     elseif name == "style" then
         for k, v in pairs(res) do
             rmlui.ElementSetProperty(element, k, v)
