@@ -46,7 +46,7 @@ static glm::vec3 PerspectiveOrigin(Element* e) {
 }
 
 Element::Element(Document* owner, const std::string& tag)
-	: Node(Layout::UseElement {})
+	: LayoutNode(Layout::UseElement {})
 	, tag(tag)
 	, owner_document(owner)
 {
@@ -56,7 +56,7 @@ Element::Element(Document* owner, const std::string& tag)
 }
 
 Element::~Element() {
-	assert(parent == nullptr);
+	assert(GetParentNode() == nullptr);
 	assert(childnodes.empty());
 
 	auto& c = Style::Instance();
@@ -147,12 +147,16 @@ std::string Element::GetAddress(bool include_pseudo_classes, bool include_parent
 		if (pseudo_classes & PseudoClass::Hover) { address += ":hover"; }
 	}
 
-	if (include_parents && parent) {
+	if (!include_parents) {
+		return address;
+	}
+	if (auto parent = GetParentNode()) {
 		address += " < ";
 		return address + parent->GetAddress(include_pseudo_classes, true);
 	}
-	else
+	else {
 		return address;
+	}
 }
 
 bool Element::IgnorePointerEvents() const {
@@ -192,7 +196,7 @@ bool Element::UpdataFontSize() {
 	float new_size = font_size;
 	if (auto p = GetLocalProperty(PropertyId::FontSize))
 		new_size = ComputeFontsize(*p, this);
-	else if (parent) {
+	else if (auto parent = GetParentNode()) {
 		new_size = parent->GetFontSize();
 	}
 	if (new_size != font_size) {
@@ -418,11 +422,21 @@ void Element::AppendChild(Node* node, uint32_t index) {
 	if (index > childnodes.size()) {
 		index = (uint32_t)childnodes.size();
 	}
-	GetLayout().InsertChild(node->GetLayout(), index);
 	childnodes.emplace_back(node);
-	if (node->GetType() == Layout::Type::Element) {
+	switch (node->GetType()) {
+	case Node::Type::Element: {
 		auto e = static_cast<Element*>(node);
+		LayoutNode::InsertChild(e, index);
 		children.emplace_back(e);
+		break;
+	}
+	case Node::Type::Text: {
+		auto e = static_cast<Text*>(node);
+		LayoutNode::InsertChild(e, index);
+		break;
+	}
+	default:
+		break;
 	}
 	node->SetParentNode(this);
 	DirtyStackingContext();
@@ -437,7 +451,8 @@ std::unique_ptr<Node> Element::DetachChild(Node* node) {
 	auto detached_child = std::move(childnodes[index]);
 	childnodes.erase(childnodes.begin() + index);
 	
-	if (node->GetType() == Layout::Type::Element) {
+	switch (node->GetType()) {
+	case Node::Type::Element: {
 		auto e = static_cast<Element*>(node);
 		for (auto it = children.begin(); it != children.end(); ++it) {
 			if (*it == e) {
@@ -445,9 +460,18 @@ std::unique_ptr<Node> Element::DetachChild(Node* node) {
 				break;
 			}
 		}
+		LayoutNode::RemoveChild(e);
+		break;
+	}
+	case Node::Type::Text: {
+		auto e = static_cast<Text*>(node);
+		LayoutNode::RemoveChild(e);
+		break;
+	}
+	default:
+		break;
 	}
 	node->ResetParentNode();
-	GetLayout().RemoveChild(node->GetLayout());
 	DirtyStackingContext();
 	DirtyStructure();
 	return detached_child;
@@ -456,7 +480,7 @@ std::unique_ptr<Node> Element::DetachChild(Node* node) {
 void Element::RemoveChild(Node* node) {
 	auto detached_child = DetachChild(node);
 	if (detached_child) {
-		if (node->GetType() == Layout::Type::Element) {
+		if (node->GetType() == Node::Type::Element) {
 			auto e = static_cast<Element*>(node);
 			e->RemoveAllChildren();
 		}
@@ -479,12 +503,21 @@ void Element::InsertBefore(Node* node, Node* adjacent) {
 		AppendChild(node);
 		return;
 	}
-
-	GetLayout().InsertChild(node->GetLayout(), (uint32_t)index);
 	childnodes.emplace(childnodes.begin() + index, node);
-	if (node->GetType() == Layout::Type::Element) {
+	switch (node->GetType()) {
+	case Node::Type::Element: {
 		auto e = static_cast<Element*>(node);
+		LayoutNode::InsertChild(e, (uint32_t)index);
 		children.emplace_back(e);
+		break;
+	}
+	case Node::Type::Text: {
+		auto e = static_cast<Text*>(node);
+		LayoutNode::InsertChild(e, (uint32_t)index);
+		break;
+	}
+	default:
+		break;
 	}
 	node->SetParentNode(this);
 	DirtyStackingContext();
@@ -492,17 +525,17 @@ void Element::InsertBefore(Node* node, Node* adjacent) {
 }
 
 Node* Element::GetPreviousSibling() {
-	if (!parent) {
-		return nullptr;
+	if (auto parent = GetParentNode()) {
+		size_t index = parent->GetChildNodeIndex(this);
+		if (index == size_t(-1)) {
+			return nullptr;
+		}
+		if (index == 0) {
+			return nullptr;
+		}
+		return parent->childnodes[index-1].get();
 	}
-	size_t index = parent->GetChildNodeIndex(this);
-	if (index == size_t(-1)) {
-		return nullptr;
-	}
-	if (index == 0) {
-		return nullptr;
-	}
-	return parent->childnodes[index-1].get();
+	return nullptr;
 }
 
 void Element::RemoveAllChildren() {
@@ -560,7 +593,7 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::BorderBottomRightRadius) ||
 		changed_properties.contains(PropertyId::BorderBottomLeftRadius)
 		);
-	if (parent) {
+	if (auto parent = GetParentNode()) {
 		if (changed_properties.contains(PropertyId::Display)) {
 			parent->DirtyStructure();
 		}
@@ -650,7 +683,7 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 	}
 
 	for (auto& child : childnodes) {
-		if (child->GetType() == Layout::Type::Text) {
+		if (child->GetType() == Node::Type::Text) {
 			auto text = static_cast<Text*>(child.get());
 			text->ChangedProperties(changed_properties);
 		}
@@ -690,7 +723,7 @@ std::string Element::GetOuterHTML() const {
 void Element::RefreshProperties() {
 	auto& c = Style::Instance();
 	c.Release(global_properties);
-	if (parent) {
+	if (auto parent = GetParentNode()) {
 		DirtyDefinition();
 		DirtyInheritableProperties();
 		global_properties = c.Inherit(local_properties, parent->global_properties);
@@ -704,8 +737,7 @@ void Element::RefreshProperties() {
 }
 
 void Element::SetParentNode(Element* _parent) {
-	assert(_parent);
-	parent = _parent;
+	Node::SetParentNode(_parent);
 
 	RefreshProperties();
 	DirtyTransform();
@@ -912,7 +944,7 @@ void Element::UpdateTransform() {
 	dirty.erase(Dirty::Transform);
 	glm::mat4x4 new_transform(1);
 	Point origin2d = GetBounds().origin;
-	if (parent) {
+	if (auto parent = GetParentNode()) {
 		origin2d = origin2d - parent->GetScrollOffset();
 	}
 	glm::vec3 origin(origin2d.x, origin2d.y, 0);
@@ -926,7 +958,7 @@ void Element::UpdateTransform() {
 		new_transform = glm::translate(transform_origin) * computedTransform.GetMatrix(*this) * glm::translate(-transform_origin);
 	}
 	new_transform = glm::translate(new_transform, origin);
-	if (parent) {
+	if (auto parent = GetParentNode()) {
 		if (parent->perspective) {
 			new_transform = *parent->perspective * new_transform;
 		}
@@ -1026,8 +1058,7 @@ void Element::CalculateLayout() {
 	dirty.insert(Dirty::Image);
 	Rect content {};
 	for (auto& child : childnodes) {
-		child->UpdateLayout();
-		if (child->IsVisible()) {
+		if (child->UpdateLayout()) {
 			content.Union(child->GetContentRect());
 		}
 	}
@@ -1115,7 +1146,7 @@ void Element::UpdateClip() {
 
 	if (GetLayout().GetOverflow() == Layout::Overflow::Visible) {
 		clip.type = Clip::Type::None;
-		if (parent) {
+		if (auto parent = GetParentNode()) {
 			parent->UnionClip(clip);
 		}
 		return;
@@ -1123,7 +1154,7 @@ void Element::UpdateClip() {
 	Size size = GetBounds().size;
 	if (size.IsEmpty()) {
 		clip.type = Clip::Type::None;
-		if (parent) {
+		if (auto parent = GetParentNode()) {
 			parent->UnionClip(clip);
 		}
 		return;
@@ -1158,7 +1189,7 @@ void Element::UpdateClip() {
 		clip.shader[1].x = corners[3].x; clip.shader[1].y = corners[3].y;
 	}
 
-	if (parent) {
+	if (auto parent = GetParentNode()) {
 		parent->UnionClip(clip);
 	}
 }
@@ -1543,7 +1574,7 @@ const EdgeInsets<float>& Element::GetBorder() const {
 }
 
 bool Element::IsRemoved() const {
-	return parent == nullptr && GetOwnerDocument()->GetBody() != this;
+	return GetParentNode() == nullptr && GetOwnerDocument()->GetBody() != this;
 }
 
 }

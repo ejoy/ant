@@ -3,12 +3,8 @@
 
 namespace Rml {
 
-Node::Node(Layout::UseElement use)
-	: layout(use)
-{}
-
-Node::Node(Layout::UseText use, void* context)
-	: layout(use, context)
+Node::Node(Type type)
+	: type(type)
 {}
 
 Node::~Node()
@@ -18,35 +14,30 @@ void Node::ResetParentNode() {
 	parent = nullptr;
 }
 
-Layout& Node::GetLayout() {
-	return layout;
-}
-
-const Layout& Node::GetLayout() const {
-	return layout;
-}
-
-bool Node::IsVisible() const {
-	return visible;
-}
-
-void Node::SetVisible(bool visible) {
-	layout.SetVisible(visible);
-}
-
 Element* Node::GetParentNode() const {
 	return parent;
 }
 
-void Node::DirtyLayout() {
-	layout.MarkDirty();
+Node::Type Node::GetType() const {
+	return type;
 }
 
-Layout::Type Node::GetType() const {
-	return layout.GetType();
+void Node::SetParentNode(Element* _parent) {
+	assert(_parent);
+	parent = _parent;
 }
 
-void Node::UpdateLayout() {
+LayoutNode::LayoutNode(Layout::UseElement use)
+	: Node(Node::Type::Element)
+	, layout(use)
+{}
+
+LayoutNode::LayoutNode(Layout::UseText use, void* context)
+	: Node(Node::Type::Text)
+	, layout(use, context)
+{}
+
+bool LayoutNode::UpdateLayout() {
 	if (layout.HasNewLayout()) {
 		visible = layout.IsVisible();
 		if (visible) {
@@ -54,10 +45,35 @@ void Node::UpdateLayout() {
 			CalculateLayout();
 		}
 	}
+	return visible;
 }
 
-const Rect& Node::GetBounds() const {
+Layout& LayoutNode::GetLayout() {
+	return layout;
+}
+
+const Layout& LayoutNode::GetLayout() const {
+	return layout;
+}
+
+bool LayoutNode::IsVisible() const {
+	return visible;
+}
+
+void LayoutNode::SetVisible(bool visible) {
+	layout.SetVisible(visible);
+}
+
+const Rect& LayoutNode::GetBounds() const {
 	return bounds;
+}
+
+void LayoutNode::InsertChild(const LayoutNode* child, uint32_t index) {
+	layout.InsertChild(child->layout, index);
+}
+
+void LayoutNode::RemoveChild(const LayoutNode* child) {
+	layout.RemoveChild(child->layout);
 }
 
 }

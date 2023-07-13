@@ -28,7 +28,7 @@ struct HtmlElement;
 using ElementList = std::vector<Element*>;
 using ElementAttributes = std::unordered_map<std::string, std::string>;
 
-class Element : public Node, public EnableObserverPtr<Element> {
+class Element : public LayoutNode, public EnableObserverPtr<Element> {
 public:
 	Element(Document* owner, const std::string& tag);
 	virtual ~Element();

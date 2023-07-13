@@ -129,10 +129,10 @@ static bool BuildToken(std::string& token, const char*& token_begin, const char*
 }
 
 Text::Text(Document* owner, const std::string& text_)
-	: Node(Layout::UseText {}, this)
+	: LayoutNode(Layout::UseText {}, this)
 	, text(text_)
 {
-	DirtyLayout();
+	GetLayout().MarkDirty();
 }
 
 Text::~Text()
@@ -141,7 +141,7 @@ Text::~Text()
 void Text::SetText(const std::string& _text) {
 	if (text != _text) {
 		text = _text;
-		DirtyLayout();		
+		GetLayout().MarkDirty();
 	}
 }
 
@@ -150,8 +150,7 @@ const std::string& Text::GetText() const {
 }
 
 std::optional<Property> Text::GetComputedProperty(PropertyId id) {
-	assert(parent);
-	return parent->GetComputedProperty(id);
+	return GetParentNode()->GetComputedProperty(id);
 }
 
 void Text::Render() {
@@ -163,7 +162,7 @@ void Text::Render() {
 	UpdateGeometry(font_face_handle);
 	UpdateDecoration(font_face_handle);
 
-	parent->SetRenderStatus();
+	GetParentNode()->SetRenderStatus();
 	if (decoration_under) {
 		decoration.Render();
 	}
@@ -297,7 +296,7 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::FontStyle) ||
 		changed_properties.contains(PropertyId::FontSize))
 	{
-		DirtyLayout();
+		GetLayout().MarkDirty();
 		dirty.insert(Dirty::Decoration);
 		dirty.insert(Dirty::Effects);
 		dirty.insert(Dirty::Font);
@@ -314,7 +313,7 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 	}
 
 	if (changed_properties.contains(PropertyId::LineHeight)) {
-		DirtyLayout();
+		GetLayout().MarkDirty();
 		dirty.insert(Dirty::Decoration);
 		layout_changed = true;
 	}
@@ -336,7 +335,7 @@ void Text::ChangedProperties(const PropertyIdSet& changed_properties) {
 		if (decoration) {
 			dirty.insert(Dirty::Decoration);
 			Color color = GetTextDecorationColor();
-			color.ApplyOpacity(parent->GetOpacity());
+			color.ApplyOpacity(GetParentNode()->GetOpacity());
 			for (auto& vtx : decoration.GetVertices()) {
 				vtx.col = color;
 			}
@@ -357,11 +356,11 @@ void Text::UpdateTextEffects() {
 	auto stroke = GetTextStroke();
 	TextEffects text_effects;
 	if (shadow) {
-		shadow->color.ApplyOpacity(parent->GetOpacity());
+		shadow->color.ApplyOpacity(GetParentNode()->GetOpacity());
 		text_effects.emplace_back(*shadow);
 	}
 	if (stroke) {
-		stroke->color.ApplyOpacity(parent->GetOpacity());
+		stroke->color.ApplyOpacity(GetParentNode()->GetOpacity());
 		text_effects.emplace_back(*stroke);
 	}
 	auto material = GetRenderInterface()->CreateFontMaterial(text_effects);
@@ -374,9 +373,9 @@ void Text::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	}
 	dirty.erase(Dirty::Geometry);
 	Color color = GetTextColor();
-	color.ApplyOpacity(parent->GetOpacity());
+	color.ApplyOpacity(GetParentNode()->GetOpacity());
 	GetRenderInterface()->GenerateString(font_face_handle, lines, color, geometry);
-	if (parent->IsGray()) {
+	if (GetParentNode()->IsGray()) {
 		geometry.SetGray();
 	}
 }
@@ -392,7 +391,7 @@ void Text::UpdateDecoration(const FontFaceHandle font_face_handle) {
 		return;
 	}
 	Color color = GetTextDecorationColor();
-	color.ApplyOpacity(parent->GetOpacity());
+	color.ApplyOpacity(GetParentNode()->GetOpacity());
 	float underline_thickness = 0;
 	float underline_position = 0;
 	if (!GetRenderInterface()->GetUnderline(font_face_handle, underline_position, underline_thickness)) {
@@ -487,7 +486,7 @@ float Text::GetLineHeight() {
 	if (property->Has<PropertyKeyword>()) {
 		return float(ascent - descent + lineGap);
 	}
-	float percent = property->Get<float>(parent);
+	float percent = property->Get<float>(GetParentNode());
 	return (ascent - descent) * percent;
 }
 
@@ -498,7 +497,7 @@ float Text::GetBaseline() {
 	if (property->Has<PropertyKeyword>()) {
 		return ascent + lineGap / 2.f;
 	}
-	float percent = property->Get<float>(parent);
+	float percent = property->Get<float>(GetParentNode());
 	return ascent + (ascent - descent) * (percent-1.f) / 2.f;
 }
 
@@ -556,17 +555,12 @@ FontFaceHandle Text::GetFontFaceHandle() {
 	std::string family = StringUtilities::ToLower(GetProperty<std::string>(PropertyId::FontFamily));
 	Style::FontStyle style   = GetProperty<Style::FontStyle>(PropertyId::FontStyle);
 	Style::FontWeight weight = GetProperty<Style::FontWeight>(PropertyId::FontWeight);
-	int size = (int)parent->GetFontSize();
+	int size = (int)GetParentNode()->GetFontSize();
 	font_handle = GetRenderInterface()->GetFontFaceHandle(family, style, weight, size);
 	if (font_handle == 0) {
 		Log::Message(Log::Level::Error, "Load font %s failed.", family.c_str());
 	}
 	return font_handle;
-}
-
-void Text::SetParentNode(Element* _parent) {
-	assert(_parent);
-	parent = _parent;
 }
 
 Node* Text::Clone(bool deep) const {
@@ -607,9 +601,7 @@ const Rect& Text::GetContentRect() const {
 
 RichText::RichText(Document* owner, const std::string& text_)
 	: Text(owner, text_)
-{
-	DirtyLayout();
-}
+{ }
 
 RichText::~RichText()
 { }
@@ -693,7 +685,7 @@ void RichText::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	cur_image_idx = 0;
 	float line_height = GetLineHeight();
 	GetRenderInterface()->GenerateRichString(font_face_handle, lines, codepoints, geometry, imagegeometries, images, cur_image_idx, line_height);
-	if (parent->IsGray()) {
+	if (GetParentNode()->IsGray()) {
 		geometry.SetGray();
 	}
 }
@@ -714,7 +706,7 @@ void RichText::Render() {
 	UpdateImageMaterials();
 	UpdateDecoration(font_face_handle);
 	UpdateGeometry(font_face_handle);
-	parent->SetRenderStatus();
+	GetParentNode()->SetRenderStatus();
 	if (decoration_under) {
 		decoration.Render();
 	}

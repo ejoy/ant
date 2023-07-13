@@ -10,7 +10,7 @@
 
 namespace Rml {
 
-class Text : public Node, public EnableObserverPtr<Text> {
+class Text : public LayoutNode, public EnableObserverPtr<Text> {
 public:
 	Text(Document* owner, const std::string& text);
 	virtual ~Text();
@@ -26,14 +26,13 @@ protected:
 	template <typename T>
 	auto GetProperty(PropertyId id) {
 		if constexpr(std::is_same_v<T, float>) {
-			return GetComputedProperty(id)->Get<T>(parent);
+			return GetComputedProperty(id)->Get<T>(GetParentNode());
 		}
 		else {
 			return GetComputedProperty(id)->Get<T>();
 		}
 	}
 
-	void SetParentNode(Element* parent) override;
 	Node* Clone(bool deep = true) const override;
 	void CalculateLayout() override;
 	void Render() override;
