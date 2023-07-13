@@ -631,13 +631,13 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("length");
 	RegisterShorthand(ShorthandId::BorderWidth, "border-width", "border-top-width, border-right-width, border-bottom-width, border-left-width", ShorthandType::Box);
 
-	RegisterProperty(PropertyId::BorderTopColor, "border-top-color", "black")
+	RegisterProperty(PropertyId::BorderTopColor, "border-top-color", "transparent")
 		.AddParser("color");
-	RegisterProperty(PropertyId::BorderRightColor, "border-right-color", "black")
+	RegisterProperty(PropertyId::BorderRightColor, "border-right-color", "transparent")
 		.AddParser("color");
-	RegisterProperty(PropertyId::BorderBottomColor, "border-bottom-color", "black")
+	RegisterProperty(PropertyId::BorderBottomColor, "border-bottom-color", "transparent")
 		.AddParser("color");
-	RegisterProperty(PropertyId::BorderLeftColor, "border-left-color", "black")
+	RegisterProperty(PropertyId::BorderLeftColor, "border-left-color", "transparent")
 		.AddParser("color");
 	RegisterShorthand(ShorthandId::BorderColor, "border-color", "border-top-color, border-right-color, border-bottom-color, border-left-color", ShorthandType::Box);
 

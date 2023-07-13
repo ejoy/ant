@@ -8,7 +8,7 @@
 namespace Rml {
 
 static std::unordered_map<std::string, Color> html_colours = {
-	{ "transparent", Color::FromSRGB(255,255,255,0) },
+	{ "transparent", Color::FromSRGB(0,0,0,0) },
 	{ "aliceblue", Color::FromSRGB(240,248,255,255) },
 	{ "antiquewhite", Color::FromSRGB(250,235,215,255) },
 	{ "aqua", Color::FromSRGB(0,255,255,255) },

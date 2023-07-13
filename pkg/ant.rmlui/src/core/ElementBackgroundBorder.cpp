@@ -31,7 +31,6 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	
 	const auto& bounds = element->GetBounds();
 	const auto& border = element->GetBorder();
-
 	float outlineWidth = element->GetComputedProperty(PropertyId::OutlineWidth)->Get<PropertyFloat>().Compute(element);
 	if (outlineWidth > 0.f) {
 		Color outlineColor = element->GetComputedProperty(PropertyId::OutlineColor)->Get<Color>();
