@@ -105,11 +105,11 @@ function gesture.tap(ev)
     end
 end
 
-function gesture.long_press(ev)
+function gesture.longpress(ev)
     local x, y = round(ev.x), round(ev.y)
     local _, e = fromPoint(x, y)
     if e then
-        dispatchEvent(e, "long_press", {
+        dispatchEvent(e, "longpress", {
             x = x,
             y = y,
         })

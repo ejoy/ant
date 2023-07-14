@@ -33,14 +33,15 @@ return function (ev)
     local downX
     local downY
     local inLongPress
+    local inScrolling
     local alwaysInTapRegion
     local longPressTimer = {}
     local touchSlopSquare <const> = 11 * 11
     local longPressTimeout <const> = 400
 
-    local function dispatch_long_press()
+    local function dispatch_longpress()
         inLongPress = true
-        ev.gesture("long_press", {
+        ev.gesture("longpress", {
             x = downX,
             y = downY,
         })
@@ -52,9 +53,10 @@ return function (ev)
         downX = x
         downY = y
         inLongPress = false
+        inScrolling = false
         alwaysInTapRegion = true
         stop_timer(longPressTimer)
-        longPressTimer = start_timer(longPressTimeout, dispatch_long_press)
+        longPressTimer = start_timer(longPressTimeout, dispatch_longpress)
     end
     local function mouse_move(x, y)
         if inLongPress then
@@ -70,13 +72,22 @@ return function (ev)
         if alwaysInTapRegion then
             local distance = (deltaX * deltaX) + (deltaY * deltaY)
             if distance > touchSlopSquare then
+                if not inScrolling then
+                    inScrolling = true
+                    ev.gesture("pan", {
+                        state = "began",
+                        x = x,
+                        y = y,
+                        dx = 0,
+                        dy = 0,
+                    })
+                end
                 ev.gesture("pan", {
+                    state = "changed",
                     x = x,
                     y = y,
                     dx = scrollX,
                     dy = scrollY,
-                    vx = deltaX,
-                    vy = deltaY,
                 })
                 lastX = x
                 lastY = y
@@ -84,13 +95,22 @@ return function (ev)
                 stop_timer(longPressTimer)
             end
         elseif math.abs(scrollX) >= 1 or math.abs(scrollY) >= 1 then
+            if not inScrolling then
+                inScrolling = true
+                ev.gesture("pan", {
+                    state = "began",
+                    x = x,
+                    y = y,
+                    dx = 0,
+                    dy = 0,
+                })
+            end
             ev.gesture("pan", {
+                state = "changed",
                 x = x,
                 y = y,
                 dx = scrollX,
                 dy = scrollY,
-                vx = deltaX,
-                vy = deltaY,
             })
             lastX = x
             lastY = y
@@ -105,6 +125,17 @@ return function (ev)
             ev.gesture("tap", {
                 x = x,
                 y = y,
+            })
+        elseif inScrolling then
+            inScrolling = false
+            local scrollX = x - lastX
+            local scrollY = y - lastY
+            ev.gesture("pan", {
+                state = "ended",
+                x = x,
+                y = y,
+                dx = scrollX,
+                dy = scrollY,
             })
         end
         stop_timer(longPressTimer)
