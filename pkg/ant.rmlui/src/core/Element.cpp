@@ -102,8 +102,8 @@ void Element::Render() {
 	UpdateStackingContext();
 
 	size_t i = 0;
-	for (; i < stacking_context.size() && stacking_context[i]->GetZIndex() < 0; ++i) {
-		stacking_context[i]->Render();
+	for (; i < render_children.size() && render_children[i]->GetZIndex() < 0; ++i) {
+		render_children[i]->Render();
 	}
 	SetRenderStatus();
 	if (geometry_background && *geometry_background) {
@@ -112,8 +112,8 @@ void Element::Render() {
 	if (geometry_image && *geometry_image) {
 		geometry_image->Render();
 	}
-	for (; i < stacking_context.size(); ++i) {
-		stacking_context[i]->Render();
+	for (; i < render_children.size(); ++i) {
+		render_children[i]->Render();
 	}
 }
 
@@ -726,12 +726,19 @@ void Element::UpdateStackingContext() {
 		return;
 	}
 	dirty.erase(Dirty::StackingContext);
-	stacking_context.clear();
-	stacking_context.reserve(childnodes.size());
+	render_children.clear();
+	render_children.reserve(childnodes.size());
 	for (auto& child : childnodes) {
-		stacking_context.push_back(child.get());
+		switch (child->GetType()) {
+		case Node::Type::Element:
+		case Node::Type::Text: {
+			auto node = static_cast<LayoutNode*>(child.get());
+			render_children.push_back(node);
+			break;
+		}
+		}
 	}
-	std::stable_sort(stacking_context.begin(), stacking_context.end(),
+	std::stable_sort(render_children.begin(), render_children.end(),
 		[](auto&& lhs, auto&& rhs) {
 			return lhs->GetZIndex() < rhs->GetZIndex();
 		}
@@ -1060,7 +1067,7 @@ Element* Element::ElementFromPoint(Point point) {
 
 Element* Element::ChildFromPoint(Point point) {
 	UpdateStackingContext();
-	for (auto iter = stacking_context.rbegin(); iter != stacking_context.rend() && (*iter)->GetZIndex() >= 0; ++iter) {
+	for (auto iter = render_children.rbegin(); iter != render_children.rend() && (*iter)->GetZIndex() >= 0; ++iter) {
 		Element* res = (*iter)->ElementFromPoint(point);
 		if (res) {
 			return res;

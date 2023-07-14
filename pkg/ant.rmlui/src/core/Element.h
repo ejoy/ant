@@ -176,9 +176,9 @@ protected:
 	std::string id;
 	Document* owner_document;
 	ElementAttributes attributes;
-	std::vector<Element*> children;
 	std::vector<std::unique_ptr<Node>> childnodes;
-	std::vector<Node*> stacking_context;
+	std::vector<Element*> children;
+	std::vector<LayoutNode*> render_children;
 	std::unique_ptr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
 	mutable std::unique_ptr<glm::mat4x4> inv_transform;
