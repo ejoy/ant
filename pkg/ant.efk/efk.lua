@@ -22,6 +22,7 @@ local efk_sys = ecs.system "efk_system"
 local iefk = ecs.interface "iefk"
 
 local function init_fx_files()
+    local tasks = {}
     local FxFiles = {}
     for _, name in ipairs{
         "sprite_unlit",
@@ -38,9 +39,14 @@ local function init_fx_files()
         "model_adv_lit",
         "model_adv_distortion",
     } do
-        local filename = ("/pkg/ant.efk/materials/%s.material"):format(name)
-        local r = assetmgr.load_fx(filename)
-        FxFiles[name] = r.fx
+        tasks[#tasks+1] = {function ()
+            local filename = ("/pkg/ant.efk/materials/%s.material"):format(name)
+            local r = assetmgr.load_fx(filename)
+            FxFiles[name] = r.fx
+        end}
+    end
+
+    for _, t in ltask.parallel(tasks) do
     end
     return FxFiles
 end
