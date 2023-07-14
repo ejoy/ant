@@ -44,7 +44,6 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
 }
 
 @interface LuaGestureHandler : NSObject {
-    CGPoint pan_began;
     CGPoint pan_last;
 }
 @end
@@ -77,33 +76,24 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
     ant::window::input_message(g_cb, msg);
 }
 -(void)handlePan:(UIPanGestureRecognizer *)gesture {
-    switch (gesture.state) {
-        break;
-    case UIGestureRecognizerStateBegan: {
-        auto pt = getLocationInView(gesture);
-        pan_last = pan_began = pt;
-        break;
+    int state = getState(gesture.state);
+    if (state < 0) {
+        return;
     }
-    case UIGestureRecognizerStateChanged: {
-        auto pt = getLocationInView(gesture);
-        struct ant::window::msg_gesture_pan msg;
-        msg.x = pt.x;
-        msg.y = pt.y;
+    auto pt = getLocationInView(gesture);
+    msg.state = getState(gesture.state);
+    msg.x = pt.x;
+    msg.y = pt.y;
+    if (state == 0) {
+        msg.dx = 0;
+        msg.dy = 0;
+    }
+    else {
         msg.dx = pt.x - pan_last.x;
         msg.dy = pt.y - pan_last.y;
-        msg.vx = pt.x - pan_began.x;
-        msg.vy = pt.y - pan_began.y;
-        ant::window::input_message(g_cb, msg);
-        pan_last = pt;
-        break;
     }
-    case UIGestureRecognizerStatePossible:
-    case UIGestureRecognizerStateEnded:
-    case UIGestureRecognizerStateCancelled:
-    case UIGestureRecognizerStateFailed:
-    default:
-        break;
-    }
+    ant::window::input_message(g_cb, msg);
+    pan_last = pt;
 }
 @end
 

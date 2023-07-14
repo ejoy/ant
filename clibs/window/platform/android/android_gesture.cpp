@@ -76,15 +76,14 @@ void android_gesture::onLongPress(android_app* app, float x, float y) {
     queue_push(msg);
 
 }
-void android_gesture::onPan(android_app* app, float x, float y, float dx, float dy, float vx, float vy) {
+void android_gesture::onPan(android_app* app, int state, float x, float y, float dx, float dy) {
     struct ant::window::msg msg;
     msg.type = ant::window::msg_type::gesture_pan;
+    msg.pinch.state = state;
     msg.pan.x = x;
     msg.pan.y = y;
     msg.pan.dx = dx;
     msg.pan.dy = dy;
-    msg.pan.vx = vx;
-    msg.pan.vy = vy;
     queue_push(msg);
 }
 void android_gesture::onPinch(android_app* app, int state, float x, float y, float velocity) {

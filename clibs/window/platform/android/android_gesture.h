@@ -12,7 +12,7 @@ public:
     void destroy(android_app* app);
     void onTap(android_app* app, float x, float y);
     void onLongPress(android_app* app, float x, float y);
-    void onPan(android_app* app, float x, float y, float dx, float dy, float vx, float vy);
+    void onPan(android_app* app, int state, float x, float y, float dx, float dy);
     void onPinch(android_app* app, int state, float x, float y, float velocity);
 private:
     void queue_push(struct ant::window::msg const& msg);

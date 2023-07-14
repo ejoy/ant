@@ -146,7 +146,13 @@ void input_message(struct ant_window_callback* cb, struct msg_gesture_pan const&
 	lua_settop(L, 1);
 	lua_pushstring(L, "gesture");
 	lua_pushstring(L, "pan");
-	lua_createtable(L, 0, 6);
+	lua_createtable(L, 0, 5);
+	switch (gesture.state) {
+	case 0: lua_pushstring(L, "began"); break;
+	case 1: lua_pushstring(L, "changed"); break;
+	default: case 2: lua_pushstring(L, "ended"); break;
+	}
+	lua_setfield(L, -2, "state");
 	lua_pushnumber(L, static_cast<lua_Number>(gesture.x));
 	lua_setfield(L, -2, "x");
 	lua_pushnumber(L, static_cast<lua_Number>(gesture.y));
@@ -155,10 +161,6 @@ void input_message(struct ant_window_callback* cb, struct msg_gesture_pan const&
 	lua_setfield(L, -2, "dx");
 	lua_pushnumber(L, static_cast<lua_Number>(gesture.dy));
 	lua_setfield(L, -2, "dy");
-	lua_pushnumber(L, static_cast<lua_Number>(gesture.vx));
-	lua_setfield(L, -2, "vx");
-	lua_pushnumber(L, static_cast<lua_Number>(gesture.vy));
-	lua_setfield(L, -2, "vy");
 	push_message(L);
 }
 

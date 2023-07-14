@@ -35,10 +35,10 @@ Java_com_example_vaststars_GestureHandler_nativeOnLongPress(JNIEnv *env, jobject
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_vaststars_GestureHandler_nativeOnPan(JNIEnv *env, jobject, jlong handle, jfloat x, jfloat y, jfloat dx, jfloat dy, jfloat vx, jfloat vy) {
+Java_com_example_vaststars_GestureHandler_nativeOnPan(JNIEnv *env, jobject, jlong handle, jint state, jfloat x, jfloat y, jfloat dx, jfloat dy) {
     GameActivity* activity = (GameActivity*)handle;
     android_app* app = (android_app*)activity->instance;
-    gesture.onPan(app, x, y, dx, dy, vx, vy);
+    gesture.onPan(app, state, x, y, dx, dy);
 }
 
 extern "C" JNIEXPORT void JNICALL

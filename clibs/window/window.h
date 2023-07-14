@@ -92,12 +92,11 @@ namespace ant::window {
 		float y;
 	};
 	struct msg_gesture_pan {
+		int state;
 		float x;
 		float y;
 		float dx;
 		float dy;
-		float vx;
-		float vy;
 	};
 
 	enum class msg_type {
