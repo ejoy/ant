@@ -28,6 +28,9 @@ graphic:
       threshold: 2.3
     fxaa:
       enable: true
+    tonemapping:
+      use_lut: true
+      lut_dim: 32
   shadow:
     enable: false
     size: 1024
