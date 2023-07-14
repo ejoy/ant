@@ -147,16 +147,39 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM l
 	return DefWindowProcW(hWnd, message, wParam, lParam);
 }
 
-int window_init(struct ant_window_callback* cb) {
-	int w = 1334;
-	int h = 750;
-	RECT rect;
-	rect.left = 0;
-	rect.right = w;
-	rect.top = 0;
-	rect.bottom = h;
-	AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, 0);
+#include <vector>
 
+static BOOL CALLBACK EnumFunc(HMONITOR monitor, HDC, LPRECT, LPARAM dwData) {
+	std::vector<MONITORINFO>& monitors = *reinterpret_cast<std::vector<MONITORINFO>*>(dwData);
+	MONITORINFO info = {};
+	info.cbSize = sizeof(MONITORINFO);
+	if (!::GetMonitorInfoW(monitor, &info))
+		return TRUE;
+	if ((info.dwFlags & MONITORINFOF_PRIMARY) && !monitors.empty())
+		monitors.insert(monitors.begin(), 1, info);
+	else
+		monitors.push_back(info);
+	return TRUE;
+}
+
+static RECT createWindowRect() {
+	std::vector<MONITORINFO> monitors;
+	::EnumDisplayMonitors(nullptr, nullptr, EnumFunc, reinterpret_cast<LPARAM>(&monitors));
+	auto& monitor = monitors[0];
+	LONG work_w = monitor.rcWork.right - monitor.rcWork.left;
+	LONG work_h = monitor.rcWork.bottom - monitor.rcWork.top;
+	LONG window_w = (LONG)(work_w * 0.7f);
+	LONG window_h = (LONG)(window_w / 16.f * 9.f);
+	RECT rect;
+	rect.left = monitor.rcWork.left + (work_w - window_w) / 2;
+	rect.right = rect.left + window_w;
+	rect.top = monitor.rcWork.top + (work_h - window_h) / 2;
+	rect.bottom = rect.top + window_h;
+	AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, 0);
+	return rect;
+}
+
+int window_init(struct ant_window_callback* cb) {
 	WNDCLASSEXW wndclass;
 	memset(&wndclass, 0, sizeof(wndclass));
 	wndclass.cbSize = sizeof(wndclass);
@@ -168,8 +191,10 @@ int window_init(struct ant_window_callback* cb) {
 	wndclass.lpszClassName = CLASSNAME;
 	RegisterClassExW(&wndclass);
 
+	RECT rect = createWindowRect();
 	HWND wnd = CreateWindowExW(0, CLASSNAME, NULL,
-		WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0,
+		WS_OVERLAPPEDWINDOW,
+		rect.left, rect.top,
 		rect.right-rect.left,
 		rect.bottom-rect.top,
 		0, 0,
