@@ -48,7 +48,6 @@ private:
 	Element body;
 	Size dimensions;
 	bool dirty_dimensions = false;
-	bool enable_datamodel = false;
 };
 
 }
