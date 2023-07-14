@@ -96,7 +96,7 @@ local function bake_lut(dim, luminacnce_scaling)
         colorGradingIn        = selectColorGradingTransformIn(),
         colorGradingOut       = selectColorGradingTransformOut(),
         colorGradingLuminance = selectColorGradingLuminance(),
-        oetf                  = cs.OETF_sRGB,
+        oetf                  = cs.OETF_linear,
     }
 
     local tm = luminacnce_scaling and scale_luminance or tonemapper

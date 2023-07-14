@@ -102,6 +102,8 @@ function cs.OETF_sRGB(x)
     return math3d.vector(T(xx), T(yy), T(zz))
 end
 
+function cs.OETF_linear(x) return x end
+
 function cs.xyY_to_XYZ(xyY)
     local x, y, Y = math3d.index(xyY, 1, 2, 3)
     local a = Y / math.max(y, 1e-5);
