@@ -187,6 +187,12 @@ lm:exe "lua" {
         "bgfx-lib",
         "ant_links",
         "copy_mainlua"
+    },
+    msvc = {
+        sources = "windows/lua.rc",
+    },
+    mingw = {
+        sources = "windows/lua.rc",
     }
 }
 
