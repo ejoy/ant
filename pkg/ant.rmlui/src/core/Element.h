@@ -33,7 +33,6 @@ public:
 	Element(Document* owner, const std::string& tag);
 	virtual ~Element();
 
-	const StyleSheet& GetStyleSheet() const;
 	std::string GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
 	bool IgnorePointerEvents() const;
 
@@ -84,8 +83,6 @@ public:
 	size_t GetNumChildNodes() const;
 
 	Element* GetElementById(const std::string& id);
-	void GetElementsByTagName(ElementList& elements, const std::string& tag);
-	void GetElementsByClassName(ElementList& elements, const std::string& class_name);
 
 	void Update();
 	void UpdateRender();

@@ -117,10 +117,6 @@ void Element::Render() {
 	}
 }
 
-const StyleSheet& Element::GetStyleSheet() const {
-	return GetOwnerDocument()->GetStyleSheet();
-}
-
 std::string Element::GetAddress(bool include_pseudo_classes, bool include_parents) const {
 	std::string address(tag);
 
@@ -566,26 +562,6 @@ Element* Element::GetElementById(const std::string& id) {
 	return nullptr;
 }
 
-void Element::GetElementsByTagName(ElementList& elements, const std::string& tag) {
-	if (GetTagName() == tag) {
-		elements.push_back(this);
-	}
-	for (auto& child : children) {
-		child->GetElementsByTagName(elements, tag);
-	}
-}
-
-void Element::GetElementsByClassName(ElementList& elements, const std::string& class_name) {
-	if (GetTagName() == tag) {
-		if (IsClassSet(class_name)) {
-			elements.push_back(this);
-		}
-	}
-	for (auto& child : children) {
-		child->GetElementsByClassName(elements, class_name);
-	}
-}
-
 void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 	const bool border_radius_changed = (
 		changed_properties.contains(PropertyId::BorderTopLeftRadius) ||
@@ -862,7 +838,7 @@ void Element::HandleAnimationProperty() {
 		return;
 	}
 
-	const StyleSheet& stylesheet = GetStyleSheet();
+	const StyleSheet& stylesheet = GetOwnerDocument()->GetStyleSheet();
 
 	for (const auto& animation : animation_list) {
 		if (const Keyframes* keyframes_ptr = stylesheet.GetKeyframes(animation.name)) {
@@ -1458,7 +1434,7 @@ void Element::UpdateDefinition() {
 		return;
 	}
 	dirty.erase(Dirty::Definition);
-	auto new_definition = GetStyleSheet().GetElementDefinition(this);
+	auto new_definition = GetOwnerDocument()->GetStyleSheet().GetElementDefinition(this);
 	auto& c = Style::Instance();
 	PropertyIdSet changed_properties = c.Diff(definition_properties, new_definition);
 	for (PropertyId id : changed_properties) {
