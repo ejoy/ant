@@ -117,8 +117,6 @@ return function (ev)
         end
     end
     local function mouse_up(x, y)
-        lastX = nil
-        lastY = nil
         if inLongPress then
             inLongPress = false
         elseif alwaysInTapRegion then
@@ -138,6 +136,8 @@ return function (ev)
                 dy = scrollY,
             })
         end
+        lastX = nil
+        lastY = nil
         stop_timer(longPressTimer)
     end
     function ev.mousewheel(x, y, delta)
