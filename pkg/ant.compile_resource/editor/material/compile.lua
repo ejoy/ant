@@ -165,11 +165,7 @@ local function get_macros(setting, mat)
 end
 
 local function compile_debug_shader(platform, renderer)
-    if platform == "windows" and renderer:match "direct3d" then
-        return true
-    elseif platform == "windows" and renderer:match "vulkan" then
-        return true
-    end
+    return platform == "windows" and (renderer:match "direct3d" or renderer:match "vulkan")
 end
 
 local function readfile(filename)
