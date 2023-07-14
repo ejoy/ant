@@ -45,7 +45,7 @@ graphic:
     fxaa:
       enable: true
     tonemapping:
-      use_lut: false
+      use_lut: true
       lut_dim: 32
   shadow:
     color: {0, 0, 0, 1}
