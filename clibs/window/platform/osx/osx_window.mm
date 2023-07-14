@@ -271,7 +271,13 @@ static bool dispatch_event(struct ant_window_callback* cb, NSEvent* event) {
         ant::window::input_message(cb, msg);
         break;
     }
-    case NSEventTypeLeftMouseDragged: {
+    case NSEventTypeMouseMoved: {
+        [g_wd getMouseX:&g_mx getMouseY:&g_my];
+        break;
+    }
+    case NSEventTypeLeftMouseDragged:
+    case NSEventTypeRightMouseDragged:
+    case NSEventTypeOtherMouseDragged: {
         [g_wd getMouseX:&g_mx getMouseY:&g_my];
         struct ant::window::msg_mouse msg;
         msg.state = ant::window::MOUSE_MOVE;
