@@ -56,7 +56,7 @@ ltexture_create(lua_State *L) {
 
 static inline int
 checktextureid(lua_State *L, int index) {
-	int id = luaL_checkinteger(L, 1);
+	int id = luaL_checkinteger(L, index);
 	if (id <= 0 || id > g_texture_id)
 		return luaL_error(L, "Invalid texture handle %d", id);
 	return id;
