@@ -122,12 +122,11 @@ function gesture.pan(ev)
     local _, e = fromPoint(x, y)
     if e then
         dispatchEvent(e, "pan", {
+            state = ev.state,
             x = x,
             y = y,
             dx = round(ev.dx),
             dy = round(ev.dy),
-            vx = round(ev.vx),
-            vy = round(ev.vy),
         })
         return true
     end
