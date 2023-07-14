@@ -3860,6 +3860,8 @@ lCreate(lua_State* L) {
 	io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
+	io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleViewports;
+	io.ConfigFlags |= ImGuiConfigFlags_DpiEnableScaleFonts;
 	io.ConfigViewportsNoTaskBarIcon = true;
 
 	ImGuiStyle& style = ImGui::GetStyle();

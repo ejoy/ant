@@ -33,7 +33,6 @@ public:
 	Element(Document* owner, const std::string& tag);
 	virtual ~Element();
 
-	const StyleSheet& GetStyleSheet() const;
 	std::string GetAddress(bool include_pseudo_classes = false, bool include_parents = true) const;
 	bool IgnorePointerEvents() const;
 
@@ -84,8 +83,6 @@ public:
 	size_t GetNumChildNodes() const;
 
 	Element* GetElementById(const std::string& id);
-	void GetElementsByTagName(ElementList& elements, const std::string& tag);
-	void GetElementsByClassName(ElementList& elements, const std::string& class_name);
 
 	void Update();
 	void UpdateRender();
@@ -179,9 +176,9 @@ protected:
 	std::string id;
 	Document* owner_document;
 	ElementAttributes attributes;
-	std::vector<Element*> children;
 	std::vector<std::unique_ptr<Node>> childnodes;
-	std::vector<Node*> stacking_context;
+	std::vector<Element*> children;
+	std::vector<LayoutNode*> render_children;
 	std::unique_ptr<glm::mat4x4> perspective;
 	mutable bool have_inv_transform = true;
 	mutable std::unique_ptr<glm::mat4x4> inv_transform;

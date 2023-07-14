@@ -208,9 +208,17 @@ function event.OnDestroyNode(document, node)
         return
     end
     datamodel.create_queue[node] = nil
-    datamodel.data_for[node] = nil
     datamodel.variables[node] = nil
     datamodel.texts[node] = nil
+    if datamodel.data_for[node] then
+        datamodel.data_for[node] = nil
+        for i, v in ipairs(datamodel.data_for) do
+            if v == node then
+                table.remove(datamodel.data_for, i)
+                break
+            end
+        end
+    end
     local view = datamodel.views[node]
     if view then
         data_event.destroyNode(view, node)

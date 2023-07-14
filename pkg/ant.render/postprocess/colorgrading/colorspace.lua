@@ -121,11 +121,10 @@ function cs.LogC_to_linear(v)
     local b <const> = 0.047996
     local ic<const> = 1.0 / 0.244161
     local d <const> = 0.386036
-    local x, y, z = math3d.index(v, 1, 2, 3)
-    local function l(vv)
-        return ((10.0 ^ (((vv - d) * ic))) - b) * ia
-    end
-    return math3d.vector(l(x), l(y), l(z))
+
+    --((10.0 ^ (((v - d) * ic))) - b) * ia
+    local p = math3d.mul(math3d.sub(v, d), ic)
+    return math3d.mul(math3d.sub(math3d.pow(p, 10), b), ia)
 end
 
 -- Encodes a linear value in LogC using the Alexa LogC EI 1000 curve
@@ -134,12 +133,9 @@ function cs.linear_to_LogC(v)
     local b<const> = 0.047996
     local c<const> = 0.244161
     local d<const> = 0.386036
-    local function l(vv)
-        return c * math.log(a * vv + b, 10) + d
-    end
 
-    local x, y, z = math3d.index(v, 1, 2, 3)
-    return math3d.vector(l(x), l(y), l(z))
+    --c * log10(a * x + b) + d;
+    math3d.muladd(c, math3d.log(math3d.muladd(a, v, b)), d)
 end
 
 return cs

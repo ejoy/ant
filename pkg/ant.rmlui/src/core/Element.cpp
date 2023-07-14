@@ -102,8 +102,8 @@ void Element::Render() {
 	UpdateStackingContext();
 
 	size_t i = 0;
-	for (; i < stacking_context.size() && stacking_context[i]->GetZIndex() < 0; ++i) {
-		stacking_context[i]->Render();
+	for (; i < render_children.size() && render_children[i]->GetZIndex() < 0; ++i) {
+		render_children[i]->Render();
 	}
 	SetRenderStatus();
 	if (geometry_background && *geometry_background) {
@@ -112,13 +112,9 @@ void Element::Render() {
 	if (geometry_image && *geometry_image) {
 		geometry_image->Render();
 	}
-	for (; i < stacking_context.size(); ++i) {
-		stacking_context[i]->Render();
+	for (; i < render_children.size(); ++i) {
+		render_children[i]->Render();
 	}
-}
-
-const StyleSheet& Element::GetStyleSheet() const {
-	return GetOwnerDocument()->GetStyleSheet();
 }
 
 std::string Element::GetAddress(bool include_pseudo_classes, bool include_parents) const {
@@ -566,26 +562,6 @@ Element* Element::GetElementById(const std::string& id) {
 	return nullptr;
 }
 
-void Element::GetElementsByTagName(ElementList& elements, const std::string& tag) {
-	if (GetTagName() == tag) {
-		elements.push_back(this);
-	}
-	for (auto& child : children) {
-		child->GetElementsByTagName(elements, tag);
-	}
-}
-
-void Element::GetElementsByClassName(ElementList& elements, const std::string& class_name) {
-	if (GetTagName() == tag) {
-		if (IsClassSet(class_name)) {
-			elements.push_back(this);
-		}
-	}
-	for (auto& child : children) {
-		child->GetElementsByClassName(elements, class_name);
-	}
-}
-
 void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 	const bool border_radius_changed = (
 		changed_properties.contains(PropertyId::BorderTopLeftRadius) ||
@@ -750,12 +726,19 @@ void Element::UpdateStackingContext() {
 		return;
 	}
 	dirty.erase(Dirty::StackingContext);
-	stacking_context.clear();
-	stacking_context.reserve(childnodes.size());
+	render_children.clear();
+	render_children.reserve(childnodes.size());
 	for (auto& child : childnodes) {
-		stacking_context.push_back(child.get());
+		switch (child->GetType()) {
+		case Node::Type::Element:
+		case Node::Type::Text: {
+			auto node = static_cast<LayoutNode*>(child.get());
+			render_children.push_back(node);
+			break;
+		}
+		}
 	}
-	std::stable_sort(stacking_context.begin(), stacking_context.end(),
+	std::stable_sort(render_children.begin(), render_children.end(),
 		[](auto&& lhs, auto&& rhs) {
 			return lhs->GetZIndex() < rhs->GetZIndex();
 		}
@@ -862,7 +845,7 @@ void Element::HandleAnimationProperty() {
 		return;
 	}
 
-	const StyleSheet& stylesheet = GetStyleSheet();
+	const StyleSheet& stylesheet = GetOwnerDocument()->GetStyleSheet();
 
 	for (const auto& animation : animation_list) {
 		if (const Keyframes* keyframes_ptr = stylesheet.GetKeyframes(animation.name)) {
@@ -1084,7 +1067,7 @@ Element* Element::ElementFromPoint(Point point) {
 
 Element* Element::ChildFromPoint(Point point) {
 	UpdateStackingContext();
-	for (auto iter = stacking_context.rbegin(); iter != stacking_context.rend() && (*iter)->GetZIndex() >= 0; ++iter) {
+	for (auto iter = render_children.rbegin(); iter != render_children.rend() && (*iter)->GetZIndex() >= 0; ++iter) {
 		Element* res = (*iter)->ElementFromPoint(point);
 		if (res) {
 			return res;
@@ -1458,7 +1441,7 @@ void Element::UpdateDefinition() {
 		return;
 	}
 	dirty.erase(Dirty::Definition);
-	auto new_definition = GetStyleSheet().GetElementDefinition(this);
+	auto new_definition = GetOwnerDocument()->GetStyleSheet().GetElementDefinition(this);
 	auto& c = Style::Instance();
 	PropertyIdSet changed_properties = c.Diff(definition_properties, new_definition);
 	for (PropertyId id : changed_properties) {

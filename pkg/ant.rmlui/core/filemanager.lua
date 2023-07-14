@@ -111,7 +111,8 @@ end
 
 function m.loadString(content, source_path, source_line, env)
     local path = fullpath(source_path)
-	local source = "--@"..path..":"..source_line.."\n "..content
+    local realpath = bundle.get(path)
+	local source = "--@"..realpath..":"..source_line.."\n "..content
     return load(source, source, "t", env)
 end
 
