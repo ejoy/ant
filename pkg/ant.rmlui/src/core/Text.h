@@ -1,7 +1,6 @@
 #pragma once
 
 #include <core/Node.h>
-#include <util/ObserverPtr.h>
 #include <core/Geometry.h>
 #include <core/Interface.h>
 #include <css/PropertyIdSet.h>
@@ -10,7 +9,7 @@
 
 namespace Rml {
 
-class Text : public LayoutNode, public EnableObserverPtr<Text> {
+class Text : public LayoutNode {
 public:
 	Text(Document* owner, const std::string& text);
 	virtual ~Text();

@@ -12,19 +12,19 @@ namespace Rml {
 		enum class Type : uint8_t {
 			Element = 0,
 			Text,
+			Comment,
 		};
 		Node(Type type);
 		virtual ~Node();
 		Type GetType() const;
 
-		virtual void CalculateLayout() = 0;
-		virtual bool UpdateLayout() = 0;
-		virtual const Rect& GetContentRect() const = 0;
-
 		Element* GetParentNode() const;
 		void ResetParentNode();
 		virtual void SetParentNode(Element* parent);
-	
+
+		virtual void CalculateLayout() = 0;
+		virtual bool UpdateLayout() = 0;
+		virtual const Rect& GetContentRect() const = 0;
 		virtual Node* Clone(bool deep = true) const = 0;
 		virtual void Render() = 0;
 		virtual float GetZIndex() const = 0;
