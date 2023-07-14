@@ -148,16 +148,6 @@ lm:lua_source "ant_runtime" {
     },
     defines = "ANT_RUNTIME",
     sources = "common/modules.c",
-    msvc = {
-        sources = {
-            "windows/lua.rc",
-        }
-    },
-    mingw = {
-        sources = {
-            "windows/lua.rc",
-        }
-    }
 }
 
 lm:lua_source "ant_editor" {
@@ -172,16 +162,6 @@ lm:lua_source "ant_editor" {
     sources = {
         "common/modules.c",
     },
-    msvc = {
-        sources = {
-            "windows/lua.rc",
-        }
-    },
-    mingw = {
-        sources = {
-            "windows/lua.rc",
-        }
-    }
 }
 
 if lm.os == "android" then
@@ -217,6 +197,12 @@ lm:exe "ant" {
         "bgfx-lib",
         "ant_links",
         "copy_mainlua"
+    },
+    msvc = {
+        sources = "windows/lua.rc",
+    },
+    mingw = {
+        sources = "windows/lua.rc",
     }
 }
 
