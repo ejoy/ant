@@ -81,6 +81,7 @@ static CGPoint getLocationOfTouch(UIGestureRecognizer* gesture) {
         return;
     }
     auto pt = getLocationInView(gesture);
+    struct ant::window::msg_gesture_pan msg;
     msg.state = getState(gesture.state);
     msg.x = pt.x;
     msg.y = pt.y;
