@@ -132,13 +132,7 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 		break;
 	}
 	Rml::MaterialHandle material;
- 	if (isRT) {
-		material = GetRenderInterface()->CreateRenderTextureMaterial(texture.handle, repeat);
-	} 
-	else {
-		material = GetRenderInterface()->CreateTextureMaterial(texture.handle, repeat);
-	} 
-	
+	material = GetRenderInterface()->CreateTextureMaterial(texture.handle, repeat);
 	geometry.SetMaterial(material);
 
 	auto lattice = element->GetComputedProperty(PropertyId::BackgroundLattice);

@@ -29,10 +29,11 @@ system "ui_rt_system"
     .require_system "ant.render|render_system"
     .implement "ui_rt_system.lua"
     .method "update_filter"
+    .method "data_changed"
+    
 interface "iuirt"
     .implement "ui_rt_system.lua"
     .method "get_group_id"
-    .method "create_new_rt"
-    .method "close_ui_rt"
+    .method "set_rt_prefab"
 
 

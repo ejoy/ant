@@ -211,6 +211,7 @@ end
 
 local FrameLoaded = 0
 local MaxFrameLoaded <const> = 64
+local rt_table = {}
 
 ltask.fork(function ()
     while true do
@@ -272,7 +273,7 @@ local update; do
             for i = 1, #results do
                 local id = results[i]
                 local c = textureById[id]
-                if c then
+                if c and (not rt_table[id]) then
                     asyncDestroyTexture(c.name)
                     print("Destroy Texture: " .. c.name)
                 end
@@ -282,6 +283,34 @@ local update; do
         FrameLoaded = 0
         textureman.frame_tick()
     end
+end
+
+function S.texture_timestamp(rtid_table)
+    local id_table = {}
+    for idx = 1, #rtid_table do
+        id_table[#id_table+1] = rtid_table[idx]
+    end
+    local timestamp_table = textureman.texture_timestamp(id_table)
+    local result_table = {}
+    for idx = 1, #rtid_table do
+        result_table[rtid_table[idx]] = timestamp_table[idx]
+    end
+    return result_table -- rt_id:timestamp
+end
+
+function S.texture_register_id()
+    local rt_id = textureman.texture_create(DefaultTexture["TEX2D"])
+    rt_table[rt_id] = true
+    return rt_id
+end
+
+function S.texture_set_handle(rt_id, rt_handle)
+    textureman.texture_set(rt_id, rt_handle)
+end
+
+function S.texture_destroy_handle(rt_id)
+    textureman.texture_set(rt_id, DefaultTexture["TEX2D"])
+    return true 
 end
 
 return {
