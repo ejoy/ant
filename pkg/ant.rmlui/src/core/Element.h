@@ -1,17 +1,16 @@
 #pragma once
 
-#include <core/Layout.h>
 #include <core/ComputedValues.h>
-#include <util/ObserverPtr.h>
-#include <css/Property.h>
-#include <core/Types.h>
-#include <core/Tween.h>
 #include <core/Geometry.h>
 #include <core/Node.h>
+#include <core/Types.h>
+#include <css/Property.h>
 #include <css/PropertyIdSet.h>
 #include <css/PropertyVector.h>
 #include <css/StyleCache.h>
+#include <util/ObserverPtr.h>
 #include <optional>
+#include <unordered_map>
 #include "luavalue.h"
 
 namespace Rml {
@@ -25,7 +24,6 @@ class Geometry;
 class StyleSheet;
 struct HtmlElement;
 
-using ElementList = std::vector<Element*>;
 using ElementAttributes = std::unordered_map<std::string, std::string>;
 
 class Element : public LayoutNode, public EnableObserverPtr<Element> {

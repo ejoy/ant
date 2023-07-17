@@ -26,16 +26,6 @@ struct RmlWrapper {
 
 static RmlWrapper* g_wrapper = nullptr;
 
-static void
-lua_pushobject(lua_State* L, void* handle) {
-	if (handle) {
-		lua_pushlightuserdata(L, handle);
-	}
-	else {
-		lua_pushnil(L);
-	}
-}
-
 template <typename T>
 T* lua_checkobject(lua_State* L, int idx) {
 	luaL_checktype(L, idx, LUA_TLIGHTUSERDATA);
@@ -178,7 +168,13 @@ lDocumentCreateTextNode(lua_State* L) {
 static int
 lDocumentGetElementById(lua_State* L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	lua_pushobject(L, doc->GetBody()->GetElementById(lua_checkstdstring(L, 2)));
+	Rml::Element* e = doc->GetBody()->GetElementById(lua_checkstdstring(L, 2));
+	if (e) {
+		lua_pushlightuserdata(L, e);
+	}
+	else {
+		lua_pushnil(L);
+	}
 	return 1;
 }
 
