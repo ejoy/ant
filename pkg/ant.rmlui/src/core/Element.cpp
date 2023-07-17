@@ -562,6 +562,24 @@ Element* Element::GetElementById(const std::string& id) {
 	return nullptr;
 }
 
+void Element::GetElementsByTagName(const std::string& tag, std::function<void(Element*)> func) {
+	if (GetTagName() == tag) {
+		func(this);
+	}
+	for (auto& child : children) {
+		child->GetElementsByTagName(tag, func);
+	}
+}
+
+void Element::GetElementsByClassName(const std::string& class_name, std::function<void(Element*)> func) {
+	if (IsClassSet(class_name)) {
+		func(this);
+	}
+	for (auto& child : children) {
+		child->GetElementsByClassName(class_name, func);
+	}
+}
+
 void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 	const bool border_radius_changed = (
 		changed_properties.contains(PropertyId::BorderTopLeftRadius) ||

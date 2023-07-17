@@ -124,6 +124,30 @@ function property_init:getElementById()
     end
 end
 
+function property_init:getElementsByTagName()
+    return function (tag_name)
+        local document = self._document
+        local handle = self._handle
+        local list = rmlui.ElementGetElementsByTagName(handle, tag_name)
+        for i, e in ipairs(list) do
+            list[i] = constructorElement(document, false, e)
+        end
+        return list
+    end
+end
+
+function property_init:getElementsByClassName()
+    return function (class_name)
+        local document = self._document
+        local handle = self._handle
+        local list = rmlui.ElementGetElementsByClassName(handle, class_name)
+        for i, e in ipairs(list) do
+            list[i] = constructorElement(document, false, e)
+        end
+        return list
+    end
+end
+
 function property_init:scrollInsets()
     return function (l, t, r, b)
         local handle = self._handle

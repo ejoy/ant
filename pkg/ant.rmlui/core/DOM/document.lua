@@ -4,8 +4,18 @@ local constructor = require "core.DOM.constructor"
 
 local function constructorDocument(handle)
     local doc = {_handle = handle}
+    local body = constructor.Element(handle, false, rmlui.DocumentGetBody(handle))
+    function doc.getBody()
+        return body
+    end
     function doc.getElementById(id)
-        return constructor.Element(handle, false, rmlui.DocumentGetElementById(handle, id))
+        return body.getElementById(id)
+    end
+    function doc.getElementsByTagName(tag_name)
+        return body.getElementsByTagName(tag_name)
+    end
+    function doc.getElementsByClassName(class_name)
+        return body.getElementsByClassName(class_name)
     end
     function doc.createElement(tag)
         return constructor.Element(handle, true, rmlui.DocumentCreateElement(handle, tag))
@@ -15,9 +25,6 @@ local function constructorDocument(handle)
     end
     function doc.elementFromPoint(x, y)
         return constructor.Element(handle, false, rmlui.DocumentElementFromPoint(handle, x, y))
-    end
-    function doc.getBody()
-        return constructor.Element(handle, false, rmlui.DocumentGetBody(handle))
     end
     return doc
 end

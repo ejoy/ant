@@ -81,6 +81,8 @@ public:
 	size_t GetNumChildNodes() const;
 
 	Element* GetElementById(const std::string& id);
+	void GetElementsByTagName(const std::string& tag, std::function<void(Element*)> func);
+	void GetElementsByClassName(const std::string& class_name, std::function<void(Element*)> func);
 
 	void Update();
 	void UpdateRender();

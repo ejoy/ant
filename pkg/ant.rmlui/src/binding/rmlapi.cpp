@@ -166,19 +166,6 @@ lDocumentCreateTextNode(lua_State* L) {
 }
 
 static int
-lDocumentGetElementById(lua_State* L) {
-	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
-	Rml::Element* e = doc->GetBody()->GetElementById(lua_checkstdstring(L, 2));
-	if (e) {
-		lua_pushlightuserdata(L, e);
-	}
-	else {
-		lua_pushnil(L);
-	}
-	return 1;
-}
-
-static int
 lDocumentGetSourceURL(lua_State *L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	const std::string &url = doc->GetSourceURL();
@@ -521,6 +508,30 @@ lElementGetElementById(lua_State* L) {
 }
 
 static int
+lElementGetElementsByTagName(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	lua_newtable(L);
+	lua_Integer i = 0;
+	e->GetElementsByTagName(lua_checkstdstring(L, 2), [&](Rml::Element* child) {
+		lua_pushlightuserdata(L, child);
+		lua_seti(L, -2, ++i);
+	});
+	return 1;
+}
+
+static int
+lElementGetElementsByClassName(lua_State* L) {
+	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
+	lua_newtable(L);
+	lua_Integer i = 0;
+	e->GetElementsByClassName(lua_checkstdstring(L, 2), [&](Rml::Element* child) {
+		lua_pushlightuserdata(L, child);
+		lua_seti(L, -2, ++i);
+	});
+	return 1;
+}
+
+static int
 lNodeGetParent(lua_State* L) {
 	Rml::Node* e = lua_checkobject<Rml::Node>(L, 1);
 	Rml::Element* parent = e->GetParentNode();
@@ -630,7 +641,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentFlush", lDocumentFlush },
 		{ "DocumentSetDimensions", lDocumentSetDimensions},
 		{ "DocumentElementFromPoint", lDocumentElementFromPoint },
-		{ "DocumentGetElementById", lDocumentGetElementById },
 		{ "DocumentGetSourceURL", lDocumentGetSourceURL },
 		{ "DocumentGetBody", lDocumentGetBody },
 		{ "DocumentCreateElement", lDocumentCreateElement },
@@ -669,6 +679,8 @@ luaopen_rmlui(lua_State* L) {
 		{ "ElementRemoveChild", lElementRemoveChild },
 		{ "ElementRemoveAllChildren", lElementRemoveAllChildren},
 		{ "ElementGetElementById", lElementGetElementById },
+		{ "ElementGetElementsByTagName", lElementGetElementsByTagName },
+		{ "ElementGetElementsByClassName", lElementGetElementsByClassName },
 		{ "ElementDelete", lElementDelete },
 		{ "ElementProject", lElementProject },
 		{ "ElementDirtyImage", lElementDirtyImage },
