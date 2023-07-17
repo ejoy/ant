@@ -195,7 +195,7 @@ end
 local gen_texture_id = id_generator()
 local gen_item_id = id_generator()
 
-local function create_texture_item_entity(canvas_eid, materialpath, render_layer)
+local function create_texture_item_entity(canvas_eid, show, materialpath, render_layer)
     return ecs.create_entity{
         policy = {
             "ant.render|simplerender",
@@ -221,7 +221,7 @@ local function create_texture_item_entity(canvas_eid, materialpath, render_layer
                 parent = canvas_eid,
             },
             render_layer = render_layer or "ui",
-            visible_state= "main_view|selectable",
+            visible_state= show and "main_view|selectable" or "",
             name        = "canvas_texture" .. gen_texture_id(),
             canvas_drawer = {
                 type = "texture",
@@ -231,7 +231,7 @@ local function create_texture_item_entity(canvas_eid, materialpath, render_layer
     }
 end
 
-function icanvas.build(e, render_layer, ...)
+function icanvas.build(e, show, render_layer, ...)
     w:extend(e, "canvas:in eid:in")
     local materials = e.canvas.materials
     local keys = {}
@@ -240,7 +240,7 @@ function icanvas.build(e, render_layer, ...)
         local key = ("%s|%s"):format(mp, render_layer)
         keys[#keys+1] = key
         if nil == materials[key] then
-            materials[key] = create_texture_item_entity(e.eid, mp, render_layer)
+            materials[key] = create_texture_item_entity(e.eid, show, mp, render_layer)
         end
     end
 
