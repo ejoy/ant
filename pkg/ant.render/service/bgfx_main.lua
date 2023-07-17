@@ -88,6 +88,8 @@ local function profile_print()
             if view then
                 local name = view.name
                 profile_printtext[n+i] = "  "..name .. (" "):rep(MaxName-#name) .. (" | gpu %.02fms cpu %.02fms "):format(view.gpu, view.cpu)
+            else
+                break
             end
         end
     end
