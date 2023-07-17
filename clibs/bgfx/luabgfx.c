@@ -1071,14 +1071,17 @@ lgetStats(lua_State *L) {
 			lua_pushvalue(L, -1);
 			lua_setfield(L, 2, "view");
 		}
-		int i;
-		int n = lua_rawlen(L, -1);
-		if (n > stat->numViews) {
-			for (i=n+1;i<=n;i++) {
-				lua_pushnil(L);
-				lua_seti(L, -2, i);
+		else {
+			int n = lua_rawlen(L, -1);
+			if (n > stat->numViews) {
+				int i;
+				for (i=stat->numViews+1;i<=n;i++) {
+					lua_pushnil(L);
+					lua_seti(L, -2, i);
+				}
 			}
 		}
+		int i;
 		double cpums = 1000.0 / stat->cpuTimerFreq;
 		double gpums = 1000.0 / stat->gpuTimerFreq;
 		for (i=0;i<stat->numViews;++i) {
