@@ -88,6 +88,14 @@ function hw.set_debug(t)
 	bgfx.set_debug(f)
 end
 
+function hw.set_profie(enable)
+	if enable then
+		bgfx.set_debug "TP"
+	else
+		bgfx.set_debug ""
+	end
+end
+
 function hw.screen_size()
 	return init_args.width, init_args.height
 end

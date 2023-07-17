@@ -82,7 +82,7 @@ local function render(nwh, context, width, height, initialized)
 		context	= context,
 		framebuffer = framebuffer,
 	}
-	bgfx.set_debug "T"
+	rhwi.set_profie(true)
 	bgfx.encoder_create "world"
 	bgfx.encoder_init()
 	import_package "ant.asset".init()

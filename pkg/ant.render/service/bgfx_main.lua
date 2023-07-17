@@ -69,18 +69,30 @@ local function profile_print()
             return a[2] > b[2]
         end)
 
+        profile_printtext[1] = "--- encoder"
         for i = 1, #r do
             local who, time = r[i][1], r[i][2]
             local m = time / MaxFrame * 1000
             local name = ("%s(%d)"):format(profile_label[who], who)
-            profile_printtext[i] = name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(m)
+            profile_printtext[i+1] = "  "..name .. (" "):rep(MaxName-#name) .. (" | %.02fms   "):format(m)
             profile[who] = 0
         end
+        local stats = bgfx.get_stats "v"
+        table.sort(stats.view, function (a, b)
+            return a.gpu > b.gpu
+        end)
+        local n = #r + 2
+        profile_printtext[n] = "--- view"
+        for i = 1, 5 do
+            local view = stats.view[i]
+            if view then
+                local name = view.name
+                profile_printtext[n+i] = "  "..name .. (" "):rep(MaxName-#name) .. (" | gpu %.02fms cpu %.02fms "):format(view.gpu, view.cpu)
+            end
+        end
     end
-
-    S.dbg_text_print(0, 3+MaxText, 0x02, "--- encoder")
     for i = 1, #profile_printtext do
-        S.dbg_text_print(2, 3+MaxText+i, 0x02, profile_printtext[i])
+        S.dbg_text_print(0, 2+MaxText+i, 0x02, profile_printtext[i])
     end
 end
 
