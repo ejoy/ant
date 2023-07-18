@@ -2,6 +2,7 @@ local resource = {}
 
 local FILELIST = {}	-- filename -> { filename =, meta = , object = , proxy =, source = }
 local LOADER
+local RELOADER
 local UNLOADER
 
 -- util functions
@@ -43,10 +44,11 @@ local function data_mt(robj)
 end
 
 -- function loader(data) -> table
-function resource.register(loader, unloader)
+function resource.register(loader, reloader, unloader)
 	assert(LOADER == nil)
 	assert(type(loader) == "function")
 	LOADER = loader
+	RELOADER = reloader
 	UNLOADER = unloader
 end
 
@@ -134,15 +136,13 @@ function resource.unload(filename)
 	robj.object = nil
 end
 
-function resource.reload(filename, data)
+function resource.reload(filename)
 	local robj = get_file_object(filename)
-	if robj.object then
-		resource.unload(filename)
+	if robj and robj.object then
+		robj.object = RELOADER(filename, robj.source, robj.object)
+		robj.proxy._data = robj.object
+		setmetatable(robj.proxy, data_mt(robj))
 	end
-	if robj.source then
-		robj.source = data
-	end
-	load_resource(robj, filename, data)
 end
 
 function resource.proxy(filename)

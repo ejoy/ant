@@ -157,6 +157,8 @@ local function asyncCreateTexture(name)
         ltask.fork(function ()
             local c = textureByName[name]
             c.input = loadTexture(name)
+            c.texinfo = c.input.info
+            c.sampler = c.input.sampler
             asyncCreateTexture(name)
         end)
     end
@@ -196,17 +198,24 @@ function S.texture_create(name)
         c = {
             name = name,
             input = res,
-            output = {
-                id = id,
-                texinfo = res.info,
-                sampler = res.sampler,
-            },
+            id = id,
+            texinfo = res.info,
+            sampler = res.sampler,
         }
         textureByName[name] = c
         textureById[id] = c
         asyncCreateTexture(name)
     end
-    return c.output
+    return {
+        id = c.id,
+        texinfo = c.texinfo,
+        sampler = c.sampler,
+    }
+end
+
+function S.texture_reload(name)
+    textureByName[name] = nil
+    return S.texture_create(name)
 end
 
 local FrameLoaded = 0
@@ -223,8 +232,8 @@ ltask.fork(function ()
                 local c = textureByName[name]
                 bgfx.destroy(c.handle)
                 c.handle = nil
-                local textype = which_texture_type(c.output.texinfo)
-                textureman.texture_set(c.output.id, DefaultTexture[textype])
+                local textype = which_texture_type(c.texinfo)
+                textureman.texture_set(c.id, DefaultTexture[textype])
             end
         end
         while true do
@@ -240,7 +249,7 @@ ltask.fork(function ()
             local handle = createTexture(c.input)
             c.handle = handle
             c.input = nil
-            textureman.texture_set(c.output.id, handle)
+            textureman.texture_set(c.id, handle)
             FrameLoaded = FrameLoaded + 1
             ltask.sleep(0)
         end

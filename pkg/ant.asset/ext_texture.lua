@@ -1,6 +1,12 @@
 local mgr = require "texture_mgr"
 
 return {
-    loader = mgr.create,
-    unloader = mgr.destroy,
+    loader = function (name)
+        return mgr.create(name)
+    end,
+    reloader = function (name)
+        return mgr.reload(name)
+    end,
+    unloader = function ()
+    end,
 }

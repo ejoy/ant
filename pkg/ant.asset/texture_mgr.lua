@@ -21,10 +21,6 @@ local function invalid(id)
 	return tid == DefaultTexture.TEX2D or tid == DefaultTexture.TEXCUBE
 end
 
-local function destroy(res)
-	--TODO
-end
-
 local function default_textureid(t)
 	t = t or "TEX2D"
 	return assert(DefaultTexture[t], ("Invalid default texture type:%s"):format(t))
@@ -34,7 +30,7 @@ return {
 	init = init,
 	invalid = invalid,
 	create = async.texture_create,
-	destroy = destroy,
+	reload = async.texture_reload,
 	default_textureid = default_textureid,
 	textures = textures,
 }

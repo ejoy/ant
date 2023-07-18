@@ -19,12 +19,20 @@ local function initialize()
 		respath.pop()
 		return res
 	end
+	local function reloader(filename, data, res)
+		local ext = filename:match "[^.]*$"
+		local world = data
+		respath.push(filename)
+		res = require_ext(ext).reloader(filename, world, res)
+		respath.pop()
+		return res
+	end
 	local function unloader(filename, data, res)
 		local ext = filename:match "[^.]*$"
 		local world = data
 		require_ext(ext).unloader(res, world)
 	end
-	resource.register(loader, unloader)
+	resource.register(loader, reloader, unloader)
 end
 
 function assetmgr.resource(path, world)

@@ -15,6 +15,10 @@ function m.texture_create(filename)
 	return ltask.call(ServiceResource, "texture_create", filename)
 end
 
+function m.texture_reload(filename)
+	return ltask.call(ServiceResource, "texture_reload", filename)
+end
+
 function m.texture_default()
 	return ltask.call(ServiceResource, "texture_default")
 end

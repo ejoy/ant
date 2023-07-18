@@ -1,6 +1,12 @@
-local texloader = require "ext_texture"
+local mgr = require "texture_mgr"
 
 return {
-    loader = texloader.loader,
-    unloader = texloader.unloader,
+    loader = function (name)
+        return mgr.create(name)
+    end,
+    reloader = function (name)
+        return mgr.reload(name)
+    end,
+    unloader = function ()
+    end,
 }
