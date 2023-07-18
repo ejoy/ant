@@ -3,6 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
   setting:
     lighting: off
+    WITHOUT_DEFAULT_UV: 1
 properties:
   u_color: {0, 0, 0, 1}
 state:

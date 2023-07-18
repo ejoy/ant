@@ -1125,7 +1125,7 @@ function MaterialView:show()
     for _, _, filename in filewatch_event:unpack() do
         local texture = image_to_texture[filename]
         if texture then
-            -- assetmgr.reload(fs.path(texture))
+            assetmgr.reload(fs.path(texture))
         end
         break
     end
