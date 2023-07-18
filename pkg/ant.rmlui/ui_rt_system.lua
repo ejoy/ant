@@ -144,6 +144,9 @@ end
 local function update_fb(width, height, queuename)
     local select_tag = queuename .. " render_target:in camera_ref:in"
     local qe = w:first(select_tag)
+    if not qe then
+        return
+    end
     local rt = qe.render_target
     local vr = rt.view_rect
     vr.w, vr.h = width, height
