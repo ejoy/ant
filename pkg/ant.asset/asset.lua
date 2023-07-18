@@ -41,6 +41,12 @@ function assetmgr.resource(path, world)
 	return resource.proxy(fullpath)
 end
 
+function assetmgr.reload(path)
+	local fullpath = respath.absolute_path(path)
+	resource.reload(fullpath)
+	return resource.proxy(fullpath)
+end
+
 function assetmgr.init()
 	async.init()
 	texture_mgr.init()
@@ -49,7 +55,6 @@ end
 
 assetmgr.edit = resource.edit
 assetmgr.unload = resource.unload
-assetmgr.reload = resource.reload
 assetmgr.textures = texture_mgr.textures
 assetmgr.invalid_texture = texture_mgr.invalid
 assetmgr.load_fx = async.shader_create
