@@ -745,11 +745,19 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 		.AddParser("keyword", "top, center, bottom")
 		.AddParser("length_percent");
 	RegisterShorthand(ShorthandId::BackgroundPosition, "background-position", "background-position-x, background-position-y", ShorthandType::FallThrough);
-	
+
+	RegisterProperty(PropertyId::BackgroundLattice, "background-lattice", "auto")
+		.AddParser("keyword", "auto, cover, contain");	
+	RegisterProperty(PropertyId::BackgroundLatticeX, "background-lattice-x", "0%")
+		.AddParser("keyword", "left, center, right")
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::BackgroundLatticeY, "background-lattice-y", "0%")
+		.AddParser("keyword", "top, center, bottom")
+		.AddParser("length_percent");
+	RegisterShorthand(ShorthandId::BackgroundLattice, "background-lattice", "background-lattice-x, background-lattice-y", ShorthandType::FallThrough);
+
 	RegisterProperty(PropertyId::BackgroundRepeat, "background-repeat", "repeat")
 		.AddParser("keyword", "repeat, repeat-x, repeat-y, no-repeat");
-	RegisterProperty(PropertyId::BackgroundLattice, "background-lattice")
-		.AddParser("length_percent");
 	RegisterShorthand(ShorthandId::Background, "background", "background-image, background-position-x, background-position-y, background-size-x, background-size-y", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::TextShadowH, "text-shadow-h", "0px")

@@ -20,6 +20,7 @@ enum class ShorthandId : uint8_t {
 	TransformOrigin,
 
 	BackgroundSize,
+	BackgroundLattice,
 	BackgroundPosition,
 	Background, 
 	TextShadow,
@@ -113,6 +114,8 @@ enum class PropertyId : uint8_t {
 	BackgroundColor,
 	BackgroundImage,
 	BackgroundLattice,
+	BackgroundLatticeX,
+	BackgroundLatticeY,
 	BackgroundOrigin,
 	BackgroundSize,
 	BackgroundSizeX,

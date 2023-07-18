@@ -134,35 +134,42 @@ bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geomet
 	Rml::MaterialHandle material;
 	material = GetRenderInterface()->CreateTextureMaterial(texture.handle, repeat);
 	geometry.SetMaterial(material);
+	auto lattice_x = element->GetComputedProperty(PropertyId::BackgroundLatticeX)->Get<PropertyFloat>().value / 100.0f;
+	auto lattice_y = element->GetComputedProperty(PropertyId::BackgroundLatticeY)->Get<PropertyFloat>().value / 100.0f;
+	bool has_lattice = lattice_x > 0;
 
-	auto lattice = element->GetComputedProperty(PropertyId::BackgroundLattice);
-	if(lattice && lattice->Has<PropertyFloat>()){
-		std::vector<Rect> surface_array(9);
-		std::vector<Rect> uv_array(9);
-		float ratiow = lattice->Get<PropertyFloat>().value / 100.0f;
-		float ratioh = ratiow * surface.size.w / surface.size.h;
-		GetRectArray(ratiow, ratioh, surface, surface_array);
-		GetRectArray(0.49f, 0.49f, uv, uv_array);
-		for(int idx = 0; idx < 9; ++idx){
-			geometry.AddRectFilled(surface_array[idx], color);
-			geometry.UpdateUV(4, surface_array[idx], uv_array[idx]);
-		}		
-		geometry.UpdateVertices();
+	if (paddingEdge.size() == 0 
+		|| (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{})
+	) 
+	{
+		if(has_lattice){return false;}
+		geometry.AddRectFilled(surface, color);
+		geometry.UpdateUV(4, surface, uv);
 	}
-	else{
-		if (paddingEdge.size() == 0 
-			|| (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{})
-		) {
-			geometry.AddRectFilled(surface, color);
-			geometry.UpdateUV(4, surface, uv);
-			geometry.UpdateVertices();
+	else {
+		if(has_lattice){
+			if(lattice_y <= 0){
+				lattice_y = lattice_x;
+			}
+			std::vector<Rect> surface_array(9);
+			std::vector<Rect> uv_array(9);
+			float ratiow = lattice_x;
+			float ratioh = lattice_y * surface.size.w / surface.size.h;
+			GetRectArray(ratiow, ratioh, surface, surface_array);
+			float ratiou = (texture.dimensions.w - 2.f) / texture.dimensions.w * 0.5f;
+			float ratiov = (texture.dimensions.h - 2.f) / texture.dimensions.h * 0.5f;
+			GetRectArray(ratiou, ratiov, uv, uv_array);
+			for(int idx = 0; idx < 9; ++idx){
+				geometry.AddRectFilled(surface_array[idx], color);
+				geometry.UpdateUV(4, surface_array[idx], uv_array[idx]);
+			}		
 		}
-		else {
+		else{
 			geometry.AddPolygon(paddingEdge, color);
 			geometry.UpdateUV(paddingEdge.size(), surface, uv);
-			geometry.UpdateVertices();
-		}
+		}	
 	}
+	geometry.UpdateVertices();
 	return true;
 }
 
