@@ -2,8 +2,6 @@
 
 #include <core/Element.h>
 #include <css/StyleSheet.h>
-#include <unordered_map>
-#include <unordered_set>
 #include <memory>
 #include <deque>
 

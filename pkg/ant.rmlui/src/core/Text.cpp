@@ -6,7 +6,7 @@
 #include <css/Property.h>
 #include <util/StringUtilities.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include<iostream>
+#include <iostream>
 
 
 namespace Rml {
@@ -354,16 +354,16 @@ void Text::UpdateTextEffects() {
 
 	auto shadow = GetTextShadow();
 	auto stroke = GetTextStroke();
-	TextEffects text_effects;
+	TextEffect text_effect;
 	if (shadow) {
 		shadow->color.ApplyOpacity(GetParentNode()->GetOpacity());
-		text_effects.emplace_back(*shadow);
+		text_effect.shadow = shadow;
 	}
 	if (stroke) {
 		stroke->color.ApplyOpacity(GetParentNode()->GetOpacity());
-		text_effects.emplace_back(*stroke);
+		text_effect.stroke = stroke;
 	}
-	auto material = GetRenderInterface()->CreateFontMaterial(text_effects);
+	auto material = GetRenderInterface()->CreateFontMaterial(text_effect);
 	geometry.SetMaterial(material);
 }
 

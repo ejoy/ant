@@ -1,4 +1,4 @@
-#include <core/ElementBackgroundImage.h>
+#include <core/ElementBackground.h>
 #include <core/Texture.h>
 #include <core/Element.h>
 #include <core/Geometry.h>
@@ -31,7 +31,7 @@ static void GetRectArray(float ratiow,float ratioh, Rect& rect, std::vector<Rect
 		rect_array[8] = Rect{float(w2 + ox), float(h2 + oy), w1, h1};
 }
 
-bool ElementBackgroundImage::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path const& paddingEdge) {
+bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geometry, Box const& edge) {
 	auto image = element->GetComputedProperty(PropertyId::BackgroundImage);
 	if (!image->Has<std::string>()) {
 		// "none"

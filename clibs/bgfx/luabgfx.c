@@ -1068,21 +1068,28 @@ lgetStats(lua_State *L) {
 		if (lua_getfield(L, 2, "view") != LUA_TTABLE) {
 			lua_pop(L, 1);
 			lua_createtable(L, stat->numViews, 0);
+			lua_pushvalue(L, -1);
+			lua_setfield(L, 2, "view");
 		}
-		int i;
-		int n = lua_rawlen(L, -1);
-		if (n > stat->numViews) {
-			for (i=n+1;i<=n;i++) {
-				lua_pushnil(L);
-				lua_seti(L, -2, i);
+		else {
+			int n = lua_rawlen(L, -1);
+			if (n > stat->numViews) {
+				int i;
+				for (i=stat->numViews+1;i<=n;i++) {
+					lua_pushnil(L);
+					lua_seti(L, -2, i);
+				}
 			}
 		}
+		int i;
 		double cpums = 1000.0 / stat->cpuTimerFreq;
 		double gpums = 1000.0 / stat->gpuTimerFreq;
 		for (i=0;i<stat->numViews;++i) {
 			if (lua_geti(L, -1, i+1) != LUA_TTABLE) {
 				lua_pop(L, 1);
 				lua_createtable(L, 0, 4);
+				lua_pushvalue(L, -1);
+				lua_seti(L, -3, i+1);
 			}
 			lua_pushstring(L, stat->viewStats[i].name);
 			lua_setfield(L, -2, "name");
@@ -1094,7 +1101,7 @@ lgetStats(lua_State *L) {
 			lua_setfield(L, -2, "gpu");
 			lua_pop(L, 1);
 		}
-		lua_setfield(L, 2, "view");
+		lua_pop(L, 1);
 		break;
 	}
 	default:

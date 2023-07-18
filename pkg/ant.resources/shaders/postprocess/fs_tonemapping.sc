@@ -18,14 +18,15 @@ float toluma(vec3 rbg)
 #endif //COMPUTE_LUMINANCE_TO_ALPHA
 
 #ifdef ENABLE_TONEMAP_LUT
+vec3 log10(vec3 v){ return log2(v) / log2(10.0);}
 vec3 linear2LogC(vec3 x)
 {
     // Alexa LogC EI 1000
     const float a = 5.555556;
     const float b = 0.047996;
-    const float c = 0.244161 / log2(10.0);
+    const float c = 0.244161;
     const float d = 0.386036;
-    return c * log2(a * x + b) + d;
+    return c * log10(a * x + b) + d;
 }
 #endif //ENABLE_TONEMAP_LUT
 

@@ -1,8 +1,7 @@
 #pragma once
 
 #include <core/Color.h>
-#include <variant>
-#include <vector>
+#include <optional>
 
 namespace Rml {
 	struct TextShadow {
@@ -14,6 +13,8 @@ namespace Rml {
 		float width = 0.0f;
 		Color color = Color::FromSRGB(255, 255, 255, 0);
 	};
-	using TextEffect = std::variant<TextShadow, TextStroke>;
-	using TextEffects = std::vector<TextEffect>;
+	struct TextEffect {
+		std::optional<TextShadow> shadow;
+		std::optional<TextStroke> stroke;
+	};
 }

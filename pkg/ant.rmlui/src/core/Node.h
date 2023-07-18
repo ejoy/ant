@@ -1,8 +1,6 @@
 #pragma once
 
 #include <core/Layout.h>
-#include <memory>
-#include <vector>
 
 namespace Rml {
 	class Element;
