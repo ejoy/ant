@@ -269,10 +269,6 @@ function m.show()
                 dirtyflag[path] = true
                 local p = fs.path(path:gsub('\\', '/'))
                 world:pub {"FileWatch", type, access.virtualpath(global_data.repo, p)}
-                -- local filename = p:filename()
-                -- local tex_path = string.match(tostring(p:parent_path()), ".*/") ..'textures'.. '/'..string.sub(tostring(filename), 1, -5) .. '.texture'
-                -- local pkg_path = access.virtualpath(global_data.repo, fs.path(tex_path))
-                -- local tr = assetmgr.resource(pkg_path)
             end
         end
     end
