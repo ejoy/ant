@@ -48,6 +48,7 @@ local function recompile_materials(input, output)
         end)
     end
     parallel_task.wait(tasks)
+    
     return true, depfiles
 end
 
@@ -74,6 +75,7 @@ return function (input, output, tolocalpath, changed)
     export_animation(input, output, exports)
     export_prefab(math3d, input, output, glbdata, exports, tolocalpath)
     parallel_task.wait(tasks)
+    
     math3d_pool.free(math3d)
     return true, depfiles
 end

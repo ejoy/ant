@@ -6,6 +6,7 @@
 #include "common/default_inputs_structure.sh"
 #include "common/utils.sh"
 #include "common/uvmotion.sh"
+
 input_attributes init_input_attributes(vec3 gnormal, vec3 normal, vec4 posWS, vec4 basecolor, vec4 fragcoord, vec4 metallic, vec4 roughness)
 {
     input_attributes input_attribs  = (input_attributes)0;
@@ -26,8 +27,11 @@ input_attributes init_input_attributes(vec3 gnormal, vec3 normal, vec4 posWS, ve
 
 void build_fs_input_attribs(in FSInput fs_input, inout input_attributes input_attribs)
 {
+#ifndef WITHOUT_DEFAULT_UV
     vec2 uv = uv_motion(fs_input.uv0);
     input_attribs.uv = uv;
+#endif //WITHOUT_DEFAULT_UV
+
     #ifdef WITH_COLOR_ATTRIB
         input_attribs.basecolor = get_basecolor(uv, fs_input.color);
     #else //!WITH_COLOR_ATTRIB

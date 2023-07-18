@@ -2,7 +2,8 @@ fx:
   fs: /pkg/ant.objcontroller/pickup/assets/fs_picking.sc
   vs: /pkg/ant.objcontroller/pickup/assets/vs_picking.sc
   setting:
-    DRAW_INDIRECT: 1  
+    DRAW_INDIRECT: 1
+    WITHOUT_DEFAULT_UV: 1
     lighting: off
 properties:
   u_id: {0, 0, 0, 0}

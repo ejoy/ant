@@ -33,7 +33,7 @@ SAMPLER2DARRAY(s_mark_alpha,       3);
 #endif
 
 #ifdef HAS_TERRAIN_BASECOLOR_ARRAY_TEXTURE
-SAMPLER2DARRAY(s_basecolor,       0);
+SAMPLER2DARRAY(s_basecolor_array,       0);
 #endif
 
 #ifdef HAS_TERRAIN_HEIGHT_ARRAY_TEXTURE
@@ -41,9 +41,8 @@ SAMPLER2DARRAY(s_height,       1);
 #endif
 
 #ifdef HAS_TERRAIN_NORMAL_ARRAY_TEXTURE
-SAMPLER2DARRAY(s_normal,       2);
+SAMPLER2DARRAY(s_normal_array,       2);
 #endif
-
 
 uniform mediump vec4 u_basecolor_factor;
 uniform mediump vec4 u_emissive_factor;

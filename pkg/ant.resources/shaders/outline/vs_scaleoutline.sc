@@ -1,4 +1,4 @@
-#include "common/inputs.sh"
+#include "common/default_inputs_define.sh"
 
 $input 	a_position INPUT_NORMAL INPUT_TANGENT INPUT_INDICES INPUT_WEIGHT
 

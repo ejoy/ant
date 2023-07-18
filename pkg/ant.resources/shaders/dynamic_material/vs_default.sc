@@ -5,14 +5,14 @@ $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0 OUTPU
 
 #include "common/default_inputs_structure.sh"
 
-$$CUSTOM_VS_FUNC$$
+ $$CUSTOM_VS_FUNC$$ 
 
 void main()
 {
-    VSInput vs_input = (VSInput)0;
-    VSOutput vs_output = (VSOutput)0;
-    #include "common/default_vs_inputs_getter.sh"
+	VSInput vs_input = (VSInput)0;
+	#include "common/default_vs_inputs_getter.sh"
 
+    VSOutput vs_output = (VSOutput)0;
     CUSTOM_VS_FUNC(vs_input, vs_output);
 
     #include "common/default_vs_outputs_getter.sh"

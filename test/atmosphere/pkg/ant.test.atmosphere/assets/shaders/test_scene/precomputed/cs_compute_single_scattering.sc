@@ -1,6 +1,6 @@
 #include <bgfx_shader.sh>
 
-#incldue "../atmosphere.sh"
+#include "../atmosphere.sh"
 
 SAMPLER2D(s_transmittance_texture, 0);
 

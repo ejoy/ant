@@ -1,6 +1,5 @@
 fx:
-  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
-  fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
+  shader_type: PBR
 properties:
   s_basecolor:
     stage: 0

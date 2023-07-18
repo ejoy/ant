@@ -1,4 +1,4 @@
-#include "common/inputs.sh"
+#include "common/default_inputs_define.sh"
 
 $input 	a_position a_texcoord0 INPUT_NORMAL INPUT_TANGENT INPUT_LIGHTMAP_TEXCOORD INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT INPUT_INSTANCE1 INPUT_INSTANCE2 INPUT_INSTANCE3
 $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_LIGHTMAP_TEXCOORD OUTPUT_COLOR0 OUTPUT_EMISSIVE
@@ -6,18 +6,14 @@ $output v_texcoord0 OUTPUT_WORLDPOS OUTPUT_NORMAL OUTPUT_TANGENT OUTPUT_LIGHTMAP
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
 #include "common/common.sh"
+#include "common/default_inputs_structure.sh"
+
 void main()
 {
-#ifdef DRAW_INDIRECT
-	mediump mat4 wm = get_indirect_world_matrix(i_data0, i_data1, i_data2, u_draw_indirect_type);
-#else
-	mediump mat4 wm = get_world_matrix();
-#endif //DRAW_INDIRECT
-
-	highp vec4 posWS = transformWS(wm, mediump vec4(a_position, 1.0));
-	vec4 clipPos = mul(u_viewProj, posWS);
-	clipPos += u_jitter * clipPos.w; // Apply Jittering
-	gl_Position = clipPos;
+	VSInput vs_input = (VSInput)0;
+	#include "common/default_vs_inputs_getter.sh"
+	mat4 wm = get_world_matrix(vs_input);
+	vec4 posWS = transform_pos(wm, a_position, gl_Position);
 
 	v_texcoord0	= a_texcoord0;
 #ifdef USING_LIGHTMAP

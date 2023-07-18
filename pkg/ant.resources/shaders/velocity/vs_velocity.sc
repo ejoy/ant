@@ -1,4 +1,4 @@
-#include "common/inputs.sh"
+#include "common/default_inputs_define.sh"
 
 $input 	a_position INPUT_INDICES INPUT_WEIGHT
 $output v_prev_pos v_cur_pos
@@ -6,8 +6,10 @@ $output v_prev_pos v_cur_pos
 #include <bgfx_shader.sh>
 #include "common/transform.sh"
 #include "common/common.sh"
+#include "common/default_inputs_structure.sh"
 
 #ifdef GPU_SKINNING
+	//TODO: put view projection matrix into 'u_prev_model' struct in CPU, and remove u_prev_vp
 	uniform mat4 u_prev_model[BGFX_CONFIG_MAX_BONES];
 	uniform mat4 u_prev_vp;
 	mat4 calc_prev_bone_transform(ivec4 indices, vec4 weights)
@@ -35,20 +37,22 @@ $output v_prev_pos v_cur_pos
 
 void main()
 {
-    mediump mat4 wm = get_world_matrix();
-	highp vec4 posWS = transformWS(wm, mediump vec4(a_position, 1.0));
-	vec4 clipPos = mul(u_viewProj, posWS);
-	v_cur_pos  = clipPos;
-	gl_Position = clipPos;
+	VSInput vs_input = (VSInput)0;
+	#include "common/default_vs_inputs_getter.sh"
+
+    mediump mat4 wm = get_world_matrix(vs_input);
+	highp vec4 posWS = mul(wm, vec4(a_position, 1.0));
+	v_cur_pos = mul(u_viewProj, posWS);
+	gl_Position = v_cur_pos;
 	#ifdef TAA_FIRST_FRAME
 		v_prev_pos = v_cur_pos;
-	#else
+	#else	//!TAA_FIRST_FRAME
 		#ifdef GPU_SKINNING
 			mediump mat4 prev_wm = calc_prev_bone_transform(a_indices, a_weight);
-			highp vec4 prev_posWS = transformWS(prev_wm, mediump vec4(a_position, 1.0));
+			highp vec4 prev_posWS = mul(prev_wm, vec4(a_position, 1.0));
 			v_prev_pos = mul(u_prev_vp, prev_posWS);
 		#else
 			v_prev_pos = mul(u_prev_mvp, vec4(a_position, 1.0));
 		#endif
-	#endif
+	#endif	//TAA_FIRST_FRAME
 }

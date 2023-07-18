@@ -4,5 +4,6 @@ fx:
     setting:
         ENABLE_CLIP_RECT: 1
         ENABLE_IMAGE_GRAY: 1
+        lighting: off
 
 state: /pkg/ant.resources/materials/states/default.state

@@ -1,5 +1,5 @@
 fx:
-  fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
+  shader_type: PBR
   setting:
     UI_RT: 1
     ALPHAMODE_OPAQUE: 1
@@ -7,7 +7,6 @@ fx:
     shadow_cast: on
     shadow_receive: on
     subsurface: off
-  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
 properties:
   u_basecolor_factor: {0.8986663818359375, 0.9804151058197021, 1, 1}
   u_emissive_factor: {0, 0, 0, 0}

@@ -80,10 +80,6 @@ local primitive_names = {
 local material_cache = {}
 
 local function generate_material(mi, mode, cfg)
-    if mi.material.fx.shader_type then
-        mi.material.fx.vs = nil
-        mi.material.fx.fs = nil
-    end
     local sname = primitive_names[mode+1]
     if not sname then
         error(("not support primitate state, mode:%d"):format(mode))

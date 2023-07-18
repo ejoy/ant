@@ -1,6 +1,5 @@
 fx:
-  vs: /pkg/ant.resouces/shaders/pbr/vs_pbr.sc
-  fs: /pkg/ant.resouces/shaders/pbr/fs_pbr.sc
+  shader_type: PBR
 state: /pkg/ant.resources/materials/states/default.state
 properties:
   s_basecolor:

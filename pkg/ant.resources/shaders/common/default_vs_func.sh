@@ -5,16 +5,8 @@
 
 void CUSTOM_VS_FUNC(in VSInput vs_input, inout VSOutput vs_output)
 {
-#ifdef DRAW_INDIRECT
-	mediump mat4 wm = get_indirect_world_matrix(vs_input.idata0, vs_input.idata1, vs_input.idata2, u_draw_indirect_type);
-#else
-	mediump mat4 wm = get_world_matrix_default(vs_input);
-#endif //DRAW_INDIRECT
-
-	highp vec4 posWS = transformWS(wm, mediump vec4(vs_input.pos, 1.0));
-	vec4 clipPos = mul(u_viewProj, posWS);
-	clipPos += u_jitter * clipPos.w; // Apply Jittering
-	vs_output.clip_pos = clipPos;
+	mat4 wm = get_world_matrix(vs_input);
+	vec4 posWS = transform_pos(wm, vs_input.pos, vs_output.clip_pos);
 
 	vs_output.uv0	= vs_input.uv0;
 #ifdef USING_LIGHTMAP

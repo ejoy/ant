@@ -12,7 +12,6 @@ local ENABLE_SHADOW<const>      = setting:get "graphic/shadow/enable"
 
 local function DEF_FUNC() end
 
-local SHADER_BASE_LOCAL<const> = "/pkg/ant.resources/shaders"
 local SHADER_BASE<const>            = lfs.absolute(fs.path "/pkg/ant.resources/shaders":localpath())
 local function shader_includes(include_path)
     local INCLUDE_BASE = lfs.absolute(include_path)
@@ -112,23 +111,12 @@ local function default_macros(setting)
     return m
 end
 
-local function is_pbr_material(mat)
-    local is_dynamic_material = mat.fx.shader_type
-    if is_dynamic_material then
-        return mat.fx.shader_type == "PBR"
-    else
-        if mat.fx.vs and mat.fx.fs then
-            return mat.fx.vs:match "/pkg/ant.resources/shaders/pbr/vs_pbr.sc" and mat.fx.fs:match "/pkg/ant.resources/shaders/pbr/fs_pbr.sc"
-        end
-    end
-end
-
 local PBR_TEXTURE_MACROS<const> = {
-    s_basecolor = "HAS_BASECOLOR_TEXTURE=1",
-    s_normal    = "HAS_NORMAL_TEXTURE=1",
-    s_metallic_roughness="HAS_METALLIC_ROUGHNESS_TEXTURE=1",
-    s_emissive="HAS_EMISSIVE_TEXTURE=1",
-    s_occlusion="HAS_OCCLUSION_TEXTURE=1",
+    s_basecolor             = "HAS_BASECOLOR_TEXTURE=1",
+    s_normal                = "HAS_NORMAL_TEXTURE=1",
+    s_metallic_roughness    ="HAS_METALLIC_ROUGHNESS_TEXTURE=1",
+    s_emissive              ="HAS_EMISSIVE_TEXTURE=1",
+    s_occlusion             ="HAS_OCCLUSION_TEXTURE=1",
 }
 
 local function get_macros(setting, mat)
@@ -152,11 +140,14 @@ local function get_macros(setting, mat)
         end
     end
 
-    if is_pbr_material(mat) then
+    local st = assert(mat.fx.shader_type)
+    if st == "PBR" then
         local properties = mat.properties
-        for texname, m in pairs(PBR_TEXTURE_MACROS) do
-            if properties[texname] then
-                macros[#macros+1] = m
+        if properties then
+            for texname, m in pairs(PBR_TEXTURE_MACROS) do
+                if properties[texname] then
+                    macros[#macros+1] = m
+                end
             end
         end
     end
@@ -169,7 +160,7 @@ local function compile_debug_shader(platform, renderer)
 end
 
 local function readfile(filename)
-	local f <close> = assert(lfs.open(filename, "r"))
+	local f <close> = assert(lfs.open(filename, "rb"))
 	return f:read "a"
 end
 
@@ -195,40 +186,104 @@ local function mergeCfgSetting(fx, localpath)
 end
 
 local DEF_VARYING_FILE<const> = SHADER_BASE / "common/varying_def.sh"
-local DEF_VARYING_FILE_DYNAMIC<const> = SHADER_BASE / "common/varying.def.sc"
-local DEF_VS_FILE<const> = SHADER_BASE / "dynamic_material/vs_default.sc"
-local DEF_FS_FILE<const> = SHADER_BASE / "dynamic_material/fs_default.sc"
-local DEF_VS_FILE_LOCAL<const> = SHADER_BASE_LOCAL .. "/dynamic_material/vs_default.sc"
-local DEF_FS_FILE_LOCAL<const> = SHADER_BASE_LOCAL .. "/dynamic_material/fs_default.sc"
 
-local function replace_custom_func(inputpath, mat, stage)
-    local defaultpath
-    if stage == "vs" then
-        defaultpath = DEF_VS_FILE
-    elseif stage == "fs" then
-        defaultpath = DEF_FS_FILE
-    end
-    local file_read<close> = assert(lfs.open(defaultpath, "r"))
-    local file_read_compile = file_read:read "a"
-    if stage == "vs" then
-        if not mat.fx.vs_code then 
-            mat.fx.vs_code = '\n#include "common/default_vs_func.sh"\n' 
-        else
-            mat.fx.vs_code = mat.fx.vs_code
-        end
-        file_read_compile = file_read_compile:gsub("%s*$$CUSTOM_VS_FUNC$$%s*", mat.fx.vs_code)
-    elseif stage == "fs" then
-        if not mat.fx.fs_code then 
-            mat.fx.fs_code = '\n#include "common/default_fs_func.sh"\n' 
-        else
-            mat.fx.fs_code = mat.fx.fs_code
-        end
-        file_read_compile = file_read_compile:gsub("%s*$$CUSTOM_FS_FUNC$$%s*", mat.fx.fs_code)
-    end
-    local file_write<close> = assert(lfs.open(inputpath, "wb"))
-    file_write:write(file_read_compile)
+local function generate_code(content, replacement_key, replacement_content)
+    return content:gsub(replacement_key, replacement_content)
 end
 
+
+
+local DEF_SHADER_INFO<const> = {
+    vs = {
+        CUSTOM_KEY = "%$%$CUSTOM_VS_FUNC%$%$",
+        content = readfile(SHADER_BASE / "dynamic_material/vs_default.sc"),
+    },
+    fs = {
+        CUSTOM_KEY = "%$%$CUSTOM_FS_FUNC%$%$",
+        content = readfile(SHADER_BASE / "dynamic_material/fs_default.sc"),
+    }
+}
+
+DEF_SHADER_INFO.vs.default = generate_code(DEF_SHADER_INFO.vs.content, DEF_SHADER_INFO.vs.CUSTOM_KEY, [[#include "common/default_vs_func.sh"]])
+DEF_SHADER_INFO.fs.default = generate_code(DEF_SHADER_INFO.fs.content, DEF_SHADER_INFO.fs.CUSTOM_KEY, [[#include "common/default_fs_func.sh"]])
+
+local function generate_shader(shader, code)
+    if code then
+        return generate_code(shader.content, shader.CUSTOM_KEY, code)
+    end
+    return shader.default
+end
+
+local function create_PBR_shader(inputpath, fx, stage)
+    local si = assert(DEF_SHADER_INFO[stage])
+    local nc = generate_shader(si, fx[stage .. "_code"])
+
+    local fw<close> = assert(lfs.open(inputpath, "wb"))
+    fw:write(nc)
+end
+
+--[[
+    shader_type:
+    COMPUTE:    only for compute shader, fx.cs must define
+    PBR:        use /pkg/ant.resources/shaders/dynamic_material/vs_default.sc|fs_default.sc shaders, and use [vs|fs]_code to modify the final shader(can be 'nil'), that generated shader will save as ./[vs|fs].sc
+    CUSTOM:     use user defined vs/fs file
+]]
+
+local function check_update_shader_type(fx)
+    if fx.cs then
+        if fx.shader_type then
+            assert(fx.shader_type == "COMPUTE", "compute shader 'shader_type' should only be 'COMPUTE'")
+        else
+            fx.shader_type = "COMPUTE"
+        end
+    else
+        if fx.shader_type == nil then
+            if fx.vs or fx.fs then
+                fx.shader_type = "CUSTOM"
+            else
+                fx.shader_type = "PBR"
+            end
+        else
+            assert(fx.shader_type == "PBR" or fx.shader_type == "CUSTOM", "render shader 'shader_type' should only be 'PBR' or 'CUSTOM'")
+        end
+    end
+end
+
+local function check_update_fx(fx)
+    check_update_shader_type(fx)
+    local st = assert(fx.shader_type, "Invalid fx, could not find valid 'shader_type' or 'shader_type' not defined")
+    if st == "PBR" then
+        local function generate_shader_filename(stage)
+            local codename = stage .. "_code"
+            if fx[codename] or nil == fx[stage] then
+                fx[stage] = stage..".sc"
+            end
+        end
+
+        generate_shader_filename "vs"
+        generate_shader_filename "fs"
+    end
+end
+
+local function find_varying_path(fx, stage, localpath)
+    if fx.varying_path then
+        return localpath(fx.varying_path)
+    end
+
+    local st = fx.shader_type
+    if st == "PBR" then
+        return DEF_VARYING_FILE
+    end
+
+    if st == "CUSTOM" then
+        local filepath = fs.path(fx[stage])
+        if not fs.exists(filepath:parent_path() / "varying.def.sc") then
+            return DEF_VARYING_FILE
+        end
+    end
+end
+
+local idx = 0
 local function compile(tasks, deps, mat, input, output, localpath)
     local setting = config.get "material".setting
     local include_path = input:parent_path()
@@ -236,50 +291,53 @@ local function compile(tasks, deps, mat, input, output, localpath)
     lfs.create_directories(output)
     local fx = mat.fx
     mergeCfgSetting(fx, localpath)
+    check_update_fx(fx)
+
+    setmetatable(fx, {__newindex=function ()
+        error "DONOT MODIFY"
+    end})
+
     writefile(output / "main.cfg", mat)
-    if fx.shader_type then
-        assert((not fx["vs"]) and (not fx["fs"]), "dynamic material must not exist vs/fs")
-        fx["vs"] = DEF_VS_FILE_LOCAL
-        if fx.shader_type == "CUSTOM" or fx.shader_type == "PBR" then
-            fx["fs"] = DEF_FS_FILE_LOCAL
-        end
+
+    local function compile_shader(stage)
+        parallel_task.add(tasks, function ()
+            local inputpath = fx[stage]
+            local varying_path = find_varying_path(fx, stage, localpath)
+            if fx.shader_type == "PBR" then
+                inputpath = output / inputpath
+                create_PBR_shader(inputpath, fx, stage)
+            else
+                inputpath = localpath(inputpath)
+            end
+        
+            if not lfs.exists(inputpath) then
+                error(("shader path not exists: %s"):format(inputpath:string()))
+            end
+        
+            local ok, res = toolset.compile {
+                platform = setting.os,
+                renderer = setting.renderer,
+                input = inputpath,
+                output = output / (stage..".bin"),
+                includes = shader_includes(include_path),
+                stage = stage,
+                varying_path = varying_path,
+                macros = get_macros(setting, mat),
+                debug = compile_debug_shader(setting.os, setting.renderer),
+            }
+            if not ok then
+                error("compile failed: " .. output:string() .. "\n" .. res)
+            end
+            depends.append(deps, res)
+        end)
     end
-    for _, stage in ipairs {"vs","fs","cs"} do
-        local inputpath = output / (stage..".sc")
-        if fx[stage] then
-            parallel_task.add(tasks, function ()
-                local is_dynamic_material = fx.shader_type
-                local varying_path
-                if not is_dynamic_material then
-                    inputpath = localpath(fx[stage])
-                    varying_path = fx.varying_path
-                    if varying_path then
-                        varying_path = localpath(varying_path)
-                    else
-                        if not lfs.exists(inputpath:parent_path() / "varying.def.sc") then
-                            varying_path = DEF_VARYING_FILE
-                        end
-                    end
-                else
-                    replace_custom_func(inputpath, mat, stage)
-                    varying_path = DEF_VARYING_FILE_DYNAMIC
-                end
-                local ok, res = toolset.compile {
-                    platform = setting.os,
-                    renderer = setting.renderer,
-                    input = inputpath,
-                    output = output / (stage..".bin"),
-                    includes = shader_includes(include_path),
-                    stage = stage,
-                    varying_path = varying_path,
-                    macros = get_macros(setting, mat),
-                    debug = compile_debug_shader(setting.os, setting.renderer),
-                }
-                if not ok then
-                    error("compile failed: " .. output:string() .. "\n" .. res)
-                end
-                depends.append(deps, res)
-            end)            
+
+    if fx.shader_type == "COMPUTE" then
+        compile_shader "cs"
+    else
+        compile_shader "vs"
+        if fx.fs then
+            compile_shader "fs"
         end
     end
 end

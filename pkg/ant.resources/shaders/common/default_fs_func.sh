@@ -13,11 +13,12 @@
 #include "pbr/pbr.sh"
 #include "postprocess/tonemapping.sh"
 #include "common/default_inputs_structure.sh"
+#include "pbr/input_attributes.sh"
+
 void CUSTOM_FS_FUNC(in FSInput fs_input, inout FSOutput fs_output)
 {
-#include "pbr/input_attributes.sh"
-input_attributes input_attribs = (input_attributes)0;
-build_fs_input_attribs(fs_input, input_attribs);
+    input_attributes input_attribs = (input_attributes)0;
+    build_fs_input_attribs(fs_input, input_attribs);
 
 #ifdef MATERIAL_UNLIT
     fs_output.color = mul_inverse_tonemap(input_attribs.basecolor + input_attribs.emissive);

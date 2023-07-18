@@ -118,18 +118,26 @@ mat4 get_world_matrix_default(VSInput vs_input)
 #endif
 }
 
- #if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
-#define get_world_matrix()	calc_bone_transform(a_indices, a_weight)
-#else
-#define get_world_matrix()	u_model[0]
-#endif 
-
-vec4 transformWS(mat4 wm, vec4 pos)
+mat4 get_world_matrix(VSInput vs_input)
 {
-	vec4 posWS = mul(wm, pos);
-#if CURVE_WORLD
-	posWS.xyz = curve_world_offset(posWS.xyz);
-#endif //ENABLE_CURVE_WORLD
+#ifdef DRAW_INDIRECT
+	return get_indirect_world_matrix(vs_input.idata0, vs_input.idata1, vs_input.idata2, u_draw_indirect_type);
+#else//!DRAW_INDIRECT
+#	if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)
+	return calc_bone_transform(vs_input.index, vs_input.weight);
+#	else	//NO SKINNING and NOT LIGHTMAP
+	return u_model[0];
+#	endif	//!SKINNING and LIGHTMAP
+#endif //DRAW_INDIRECT
+}
+
+vec4 transform_pos(mat4 wm, vec3 posLS, out vec4 posCS)
+{
+	vec4 posWS = mul(wm, vec4(posLS, 1.0));
+	posCS = mul(u_viewProj, posWS);
+#ifdef ENABLE_TAA
+	posCS += u_jitter * posCS.w; // Apply Jittering
+#endif //ENABLE_TAA
 	return posWS;
 }
 
@@ -199,4 +207,7 @@ mat3 cotangent_frame(vec3 N, vec3 p, vec2 uv)
 	return mat3(T * invmax, B * invmax, N);
 }
 #endif //BGFX_SHADER_TYPE_FRAGMENT
+
+
+
 #endif //__SHADER_TRANSFORMS_SH__

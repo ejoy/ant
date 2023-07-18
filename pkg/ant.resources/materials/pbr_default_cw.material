@@ -1,6 +1,5 @@
 fx:
-  fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
-  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
+  shader_type: PBR
 properties:
   u_pbr_factor: {1, 1, 0, 1}  #metallic, roughness, alpha_cutoff, occlusion strength
   u_emissive_factor: {0, 0, 0, 0}

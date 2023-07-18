@@ -1,4 +1,4 @@
-#include "common/inputs.sh"
+#include "common/default_inputs_define.sh"
 
 $input a_position INPUT_INDICES INPUT_WEIGHT INPUT_INSTANCE1 INPUT_INSTANCE2 INPUT_INSTANCE3
 
@@ -10,24 +10,13 @@ $input a_position INPUT_INDICES INPUT_WEIGHT INPUT_INSTANCE1 INPUT_INSTANCE2 INP
 #include <bgfx_shader.sh>
 #include "common/curve_world.sh"
 #include "common/transform.sh"
-
-#if CURVE_WORLD
-uniform mat4 u_viewcamera_viewmat;
-uniform mat4 u_viewcamera_inv_viewmat;
-#endif //CURVE_WORLD
+#include "common/default_inputs_structure.sh"
 
 void main()
 {
-#ifdef DRAW_INDIRECT
-	mediump mat4 wm = get_indirect_world_matrix(i_data0, i_data1, i_data2, u_draw_indirect_type);
-#else
-	mediump mat4 wm = get_world_matrix();
-#endif //DRAW_INDIRECT
-    highp vec3 posWS = transformWS(wm, mediump vec4(a_position, 1.0)).xyz;
+	VSInput vs_input = (VSInput)0;
+	#include "common/default_vs_inputs_getter.sh"
 
-#if CURVE_WORLD
-	posWS = curve_world_offset(posWS, u_viewcamera_viewmat, u_viewcamera_inv_viewmat);
-#endif //CURVE_WORLD
-
-	gl_Position   = mul(u_viewProj, vec4(posWS, 1.0));
+	mat4 wm = get_world_matrix(vs_input);
+    transform_pos(wm, a_position, gl_Position);
 }

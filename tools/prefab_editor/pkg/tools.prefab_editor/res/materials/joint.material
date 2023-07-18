@@ -1,11 +1,10 @@
 fx:
-  fs: /pkg/ant.resources/shaders/pbr/fs_pbr.sc
+  shader_type: PBR
   setting:
     lighting: on
     shadow_receive: off
     shadow_cast: off
     PACK_TANGENT_TO_QUAT: 0
-  vs: /pkg/ant.resources/shaders/pbr/vs_pbr.sc
 properties:
   u_basecolor_factor: {1, 1, 1, 1}
   u_emissive_factor: {0, 0, 0, 0}
