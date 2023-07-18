@@ -591,14 +591,6 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 	}
 
 	if (border_radius_changed ||
-		changed_properties.contains(PropertyId::BackgroundColor) ||
-		changed_properties.contains(PropertyId::BackgroundImage) ||
-		changed_properties.contains(PropertyId::Opacity))
-	{
-		dirty.insert(Dirty::Background);
-	}
-
-	if (border_radius_changed ||
 		changed_properties.contains(PropertyId::BorderTopWidth) ||
 		changed_properties.contains(PropertyId::BorderRightWidth) ||
 		changed_properties.contains(PropertyId::BorderBottomWidth) ||
@@ -607,18 +599,9 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::BorderRightColor) ||
 		changed_properties.contains(PropertyId::BorderBottomColor) ||
 		changed_properties.contains(PropertyId::BorderLeftColor) ||
-		changed_properties.contains(PropertyId::Opacity))
-	{
-		dirty.insert(Dirty::Background);
-	}
-
-	if (changed_properties.contains(PropertyId::OutlineWidth) ||
-		changed_properties.contains(PropertyId::OutlineColor))
-	{
-		dirty.insert(Dirty::Background);
-	}
-
-	if (border_radius_changed ||
+		changed_properties.contains(PropertyId::OutlineWidth) ||
+		changed_properties.contains(PropertyId::OutlineColor) ||
+		changed_properties.contains(PropertyId::BackgroundColor) ||
 		changed_properties.contains(PropertyId::BackgroundImage) ||
 		changed_properties.contains(PropertyId::BackgroundOrigin) ||
 		changed_properties.contains(PropertyId::BackgroundSize) ||
@@ -627,7 +610,8 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::BackgroundPositionX) ||
 		changed_properties.contains(PropertyId::BackgroundPositionY) ||
 		changed_properties.contains(PropertyId::BackgroundRepeat) ||
-		changed_properties.contains(PropertyId::Opacity))
+		changed_properties.contains(PropertyId::Opacity) ||
+		changed_properties.contains(PropertyId::Filter))
 	{
 		dirty.insert(Dirty::Background);
 	}
@@ -1172,7 +1156,6 @@ void Element::UpdateClip() {
 void Element::SetRenderStatus() {
 	auto render = GetRenderInterface();
 	render->SetTransform(transform);
-	render->SetGray(IsGray());
 	switch (clip.type) {
 	case Clip::Type::None:    render->SetClipRect();             break;
 	case Clip::Type::Scissor: render->SetClipRect(clip.scissor); break;

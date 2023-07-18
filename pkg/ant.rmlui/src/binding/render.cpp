@@ -143,36 +143,36 @@ private:
     Rml::Color color;
 };
 
-class Material {
+class Material : public Rml::Material {
 public:
-    virtual ~Material() {};
     virtual void     Submit(bgfx_encoder_t* encoder) = 0;
     virtual uint16_t Program(const RenderState& state, const shader& s) = 0;
 };
-
-static uint16_t _FindTextureProgram(const RenderState &state, const shader& s){
-    if (state.needShaderClipRect){
-        return state.needGray ? s.image_cr_gray : s.image_cr;
-    }
-
-    return state.needGray ? s.image_gray : s.image;
-}
 
 class TextureMaterial: public Material {
 public:
     TextureMaterial(shader const& s, bgfx_texture_handle_t tex, Rml::SamplerFlag flags)
         : tex_uniform(s.find_uniform("s_tex"), tex.idx)
         , flags(getTextureFlags(flags))
+        , gray(false)
     { }
     void Submit(bgfx_encoder_t* encoder) override {
         tex_uniform.Submit(encoder, flags);
     }
     uint16_t Program(const RenderState& state, const shader& s) override {
-        return _FindTextureProgram(state, s);
+        if (state.needShaderClipRect){
+            return gray ? s.image_cr_gray : s.image_cr;
+        }
+        return gray ? s.image_gray : s.image;
+    }
+    bool SetGray() override {
+        gray = true;
+        return true;
     }
 private:
     TextureUniform tex_uniform;
     uint32_t flags;
+    bool gray;
 };
 
 class AsyncTextureMaterial: public Material {
@@ -180,16 +180,25 @@ public:
     AsyncTextureMaterial(shader const& s, Rml::TextureId texid, Rml::SamplerFlag flags)
         : tex_uniform(s.find_uniform("s_tex"), texid)
         , flags(getTextureFlags(flags))
+        , gray(false)
     { }
     void Submit(bgfx_encoder_t* encoder) override {
         tex_uniform.Submit(encoder, flags);
     }
     uint16_t Program(const RenderState& state, const shader& s) override {
-        return _FindTextureProgram(state, s);
+        if (state.needShaderClipRect){
+            return gray ? s.image_cr_gray : s.image_cr;
+        }
+        return gray ? s.image_gray : s.image;
+    }
+    bool SetGray() override {
+        gray = true;
+        return true;
     }
 private:
     AsyncTextureUniform tex_uniform;
     uint32_t flags;
+    bool gray;
 };
 
 class TextMaterial: public Material {
@@ -210,6 +219,9 @@ public:
             ? s.font_cr
             : s.font
             ;
+    }
+    bool SetGray() override {
+        return false;
     }
 protected:
     TextureUniform tex_uniform;
@@ -234,6 +246,9 @@ public:
             : s.font_outline
             ;
     }
+    bool SetGray() override {
+        return false;
+    }
 protected:
     ColorUniform color_uniform;
 };
@@ -256,6 +271,9 @@ public:
             ? s.font_shadow_cr
             : s.font_shadow
             ;
+    }
+    bool SetGray() override {
+        return false;
     }
 protected:
     ColorUniform color_uniform;
@@ -296,7 +314,7 @@ Renderer::~Renderer() {
     BGFX(destroy_texture)({default_tex});
 }
 
-void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::MaterialHandle mat) {
+void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::Material* mat) {
     BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
     bgfx_transient_vertex_buffer_t tvb;
     BGFX(alloc_transient_vertex_buffer)(&tvb, (uint32_t)num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
@@ -407,24 +425,20 @@ void Renderer::SetClipRect(glm::vec4 r[2]) {
     setShaderScissorRect(mEncoder, r);
 }
 
-void Renderer::SetGray(bool enable) {
-    state.needGray = enable;
-}
-
-Rml::MaterialHandle Renderer::CreateTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flags) {
+Rml::Material* Renderer::CreateTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flags) {
     auto material = std::make_unique<AsyncTextureMaterial>(mcontext->shader, texture, flags);
-    return reinterpret_cast<Rml::MaterialHandle>(material.release());
+    return reinterpret_cast<Rml::Material*>(material.release());
 }
 
-Rml::MaterialHandle Renderer::CreateRenderTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flags) {
+Rml::Material* Renderer::CreateRenderTextureMaterial(Rml::TextureId texture, Rml::SamplerFlag flags) {
     auto material = std::make_unique<TextureMaterial>(mcontext->shader, bgfx_texture_handle_t{texture}, flags);
-    return reinterpret_cast<Rml::MaterialHandle>(material.release());
+    return reinterpret_cast<Rml::Material*>(material.release());
 } 
 
-Rml::MaterialHandle Renderer::CreateFontMaterial(const Rml::TextEffect& effect) {
+Rml::Material* Renderer::CreateFontMaterial(const Rml::TextEffect& effect) {
     if (effect.shadow && effect.stroke) {
         assert(false && "not support more than one font effect in single text");
-        return reinterpret_cast<Rml::MaterialHandle>(default_font_mat.get());
+        return reinterpret_cast<Rml::Material*>(default_font_mat.get());
     }
     if (effect.shadow) {
         font_manager* F = mcontext->font_mgr;
@@ -437,7 +451,7 @@ Rml::MaterialHandle Renderer::CreateFontMaterial(const Rml::TextEffect& effect) 
             effect.shadow->color,
             Rml::Point(effect.shadow->offset_h, effect.shadow->offset_v)
         );
-        return reinterpret_cast<Rml::MaterialHandle>(material.release());
+        return reinterpret_cast<Rml::Material*>(material.release());
     }
     else if (effect.stroke) {
         font_manager* F = mcontext->font_mgr;
@@ -450,18 +464,18 @@ Rml::MaterialHandle Renderer::CreateFontMaterial(const Rml::TextEffect& effect) 
             effect.stroke->color,
             effect.stroke->width
         );
-        return reinterpret_cast<Rml::MaterialHandle>(material.release());
+        return reinterpret_cast<Rml::Material*>(material.release());
     }
     else {
-        return reinterpret_cast<Rml::MaterialHandle>(default_font_mat.get());
+        return reinterpret_cast<Rml::Material*>(default_font_mat.get());
     }
 }
 
-Rml::MaterialHandle Renderer::CreateDefaultMaterial() {
-     return reinterpret_cast<Rml::MaterialHandle>(default_tex_mat.get());
+Rml::Material* Renderer::CreateDefaultMaterial() {
+     return reinterpret_cast<Rml::Material*>(default_tex_mat.get());
 }
 
-void Renderer::DestroyMaterial(Rml::MaterialHandle mat) {
+void Renderer::DestroyMaterial(Rml::Material* mat) {
     Material* material = reinterpret_cast<Material*>(mat);
     if (default_font_mat.get() != material && default_tex_mat.get() != material) {
         delete material;

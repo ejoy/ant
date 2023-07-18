@@ -133,8 +133,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 		}
 		break;
 	}
-	Rml::MaterialHandle material;
-	material = GetRenderInterface()->CreateTextureMaterial(texture.handle, repeat);
+	Material* material = GetRenderInterface()->CreateTextureMaterial(texture.handle, repeat);
 	geometry.SetMaterial(material);
 	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1)->Get<PropertyFloat>().value / 100.0f;
 	bool has_lattice = lattice_x1 > 0;
@@ -171,7 +170,13 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 			geometry.UpdateUV(edge.padding.size(), surface, uv);
 		}	
 	}
+<<<<<<< HEAD
 	geometry.UpdateVertices();
+=======
+	if (element->IsGray()) {
+		geometry.SetGray();
+	}
+>>>>>>> 8b8b73d75 (rework filter:gray)
 	return true;
 }
 

@@ -185,6 +185,10 @@ void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geome
 	edge.padding.append(bottomRightInner);
 	edge.padding.append(bottomLeftInner);
 	geometry.AddPolygon(edge.padding, background_color);
+
+	if (element->IsGray()) {
+		geometry.SetGray();
+	}
 }
 
 }

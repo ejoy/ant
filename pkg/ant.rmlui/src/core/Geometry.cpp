@@ -42,7 +42,7 @@ void Geometry::Release() {
 	SetMaterial(GetRenderInterface()->CreateDefaultMaterial());
 }
 
-void Geometry::SetMaterial(MaterialHandle mat) {
+void Geometry::SetMaterial(Material* mat) {
 	GetRenderInterface()->DestroyMaterial(material);
 	material = mat;
 }
@@ -307,8 +307,11 @@ void Geometry::Path::DrawArc(const Point& center, float radius_a, float radius_b
 }
 
 void Geometry::SetGray() {
-	for (auto& vtx : vertices) {
-		vtx.col.SetGray();
+	assert(material);
+	if (!material->SetGray()) {
+		for (auto& vtx : vertices) {
+			vtx.col.SetGray();
+		}
 	}
 }
 

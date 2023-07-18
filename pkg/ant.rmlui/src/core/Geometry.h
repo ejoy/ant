@@ -8,7 +8,11 @@
 
 namespace Rml {
 
-using MaterialHandle = uintptr_t;
+class Material {
+public:
+    virtual ~Material() {};
+    virtual bool     SetGray() = 0;
+};
 
 enum class SamplerFlag : uint8_t {
 	Repeat,
@@ -34,7 +38,7 @@ public:
 	Geometry& operator=(const Geometry&) = delete;
 	std::vector<Vertex>& GetVertices();
 	std::vector<Index>& GetIndices();
-	void SetMaterial(MaterialHandle material);
+	void SetMaterial(Material* material);
 	void Render();
 	void Release();
 	explicit operator bool() const;
@@ -64,7 +68,7 @@ public:
 protected:
 	std::vector<Vertex> vertices;
 	std::vector<Index> indices;
-	MaterialHandle material;
+	Material* material;
 };
 
 }
