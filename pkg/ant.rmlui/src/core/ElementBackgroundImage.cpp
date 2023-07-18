@@ -138,7 +138,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	auto lattice_y = element->GetComputedProperty(PropertyId::BackgroundLatticeY)->Get<PropertyFloat>().value / 100.0f;
 	bool has_lattice = lattice_x > 0;
 
-	if (paddingEdge.size() == 0 
+	if (edge.padding.size() == 0 
 		|| (origin == Style::BoxType::ContentBox && padding != EdgeInsets<float>{})
 	) 
 	{
@@ -165,8 +165,8 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 			}		
 		}
 		else{
-			geometry.AddPolygon(paddingEdge, color);
-			geometry.UpdateUV(paddingEdge.size(), surface, uv);
+			geometry.AddPolygon(edge.padding, color);
+			geometry.UpdateUV(edge.padding.size(), surface, uv);
 		}	
 	}
 	geometry.UpdateVertices();
