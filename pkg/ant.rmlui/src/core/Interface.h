@@ -66,7 +66,7 @@ public:
 	virtual void SetGray(bool enable) = 0;
 	virtual MaterialHandle CreateTextureMaterial(TextureId texture, SamplerFlag flag) = 0;
 	virtual MaterialHandle CreateRenderTextureMaterial(TextureId texture, SamplerFlag flag) = 0;
-	virtual MaterialHandle CreateFontMaterial(const TextEffects& effects) = 0;
+	virtual MaterialHandle CreateFontMaterial(const TextEffect& effect) = 0;
 	virtual MaterialHandle CreateDefaultMaterial() = 0;
 	virtual void DestroyMaterial(MaterialHandle mat) = 0;
 

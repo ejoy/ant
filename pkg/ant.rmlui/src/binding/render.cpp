@@ -421,45 +421,40 @@ Rml::MaterialHandle Renderer::CreateRenderTextureMaterial(Rml::TextureId texture
     return reinterpret_cast<Rml::MaterialHandle>(material.release());
 } 
 
-struct TextEffectVisitor {
-    const RmlContext* context;
-    Rml::MaterialHandle operator() (Rml::TextStroke const& t) {
-        font_manager* F = context->font_mgr;
-        int8_t edgevalueOffset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
-        auto material = std::make_unique<TextStrokeMaterial>(
-            context->shader,
-            F,
-            context->font_tex.texid,
-            edgevalueOffset,
-            t.color,
-            t.width
-        );
-        return reinterpret_cast<Rml::MaterialHandle>(material.release());
-    }
-    Rml::MaterialHandle operator() (Rml::TextShadow const& t) {
-        font_manager* F = context->font_mgr;
-        int8_t edgevalueOffset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
-        auto material = std::make_unique<TextShadowMaterial>(
-            context->shader,
-            F,
-            context->font_tex.texid,
-            edgevalueOffset,
-            t.color,
-            Rml::Point(t.offset_h, t.offset_v)
-        );
-        return reinterpret_cast<Rml::MaterialHandle>(material.release());
-    }
-};
-
-Rml::MaterialHandle Renderer::CreateFontMaterial(const Rml::TextEffects& effects) {
-    if (effects.empty()) {
-        return reinterpret_cast<Rml::MaterialHandle>(default_font_mat.get());
-    }
-    if (effects.size() != 1){
+Rml::MaterialHandle Renderer::CreateFontMaterial(const Rml::TextEffect& effect) {
+    if (effect.shadow && effect.stroke) {
         assert(false && "not support more than one font effect in single text");
         return reinterpret_cast<Rml::MaterialHandle>(default_font_mat.get());
     }
-    return std::visit(TextEffectVisitor{mcontext}, effects[0]);
+    if (effect.shadow) {
+        font_manager* F = mcontext->font_mgr;
+        int8_t edgevalueOffset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
+        auto material = std::make_unique<TextShadowMaterial>(
+            mcontext->shader,
+            F,
+            mcontext->font_tex.texid,
+            edgevalueOffset,
+            effect.shadow->color,
+            Rml::Point(effect.shadow->offset_h, effect.shadow->offset_v)
+        );
+        return reinterpret_cast<Rml::MaterialHandle>(material.release());
+    }
+    else if (effect.stroke) {
+        font_manager* F = mcontext->font_mgr;
+        int8_t edgevalueOffset = int8_t(F->font_manager_sdf_mask(F) * 0.85f);
+        auto material = std::make_unique<TextStrokeMaterial>(
+            mcontext->shader,
+            F,
+            mcontext->font_tex.texid,
+            edgevalueOffset,
+            effect.stroke->color,
+            effect.stroke->width
+        );
+        return reinterpret_cast<Rml::MaterialHandle>(material.release());
+    }
+    else {
+        return reinterpret_cast<Rml::MaterialHandle>(default_font_mat.get());
+    }
 }
 
 Rml::MaterialHandle Renderer::CreateDefaultMaterial() {
