@@ -170,13 +170,10 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 			geometry.UpdateUV(edge.padding.size(), surface, uv);
 		}	
 	}
-<<<<<<< HEAD
 	geometry.UpdateVertices();
-=======
 	if (element->IsGray()) {
 		geometry.SetGray();
 	}
->>>>>>> 8b8b73d75 (rework filter:gray)
 	return true;
 }
 
