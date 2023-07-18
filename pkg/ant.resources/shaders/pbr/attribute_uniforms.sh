@@ -36,6 +36,10 @@ SAMPLER2DARRAY(s_mark_alpha,       3);
 SAMPLER2DARRAY(s_basecolor_array,       0);
 #endif
 
+#ifdef HAS_CRACK_HEIGHT_TEXTURE
+SAMPLER2D(s_height,       3);
+#endif
+
 #ifdef HAS_TERRAIN_HEIGHT_ARRAY_TEXTURE
 SAMPLER2DARRAY(s_height,       1);
 #endif
