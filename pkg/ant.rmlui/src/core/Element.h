@@ -4,6 +4,7 @@
 #include <core/Geometry.h>
 #include <core/Node.h>
 #include <core/Types.h>
+#include <core/ElementBackground.h>
 #include <css/Property.h>
 #include <css/PropertyIdSet.h>
 #include <css/PropertyVector.h>
@@ -149,7 +150,7 @@ public:
 	void SetOuterHTML(const std::string& html) override;
 	const Rect& GetContentRect() const override;
 	void ChangedProperties(const PropertyIdSet& changed_properties);
-	void DirtyImage();
+	void DirtyBackground();
 
 protected:
 	void UpdateStackingContext();
@@ -187,8 +188,7 @@ protected:
 	std::vector<std::string> classes;
 	PseudoClassSet pseudo_classes = 0;
 	std::vector<std::unique_ptr<EventListener>> listeners;
-	std::unique_ptr<Geometry> geometry_background;
-	std::unique_ptr<Geometry> geometry_image;
+	ElementBackground geometry;
 	float font_size = 16.f;
 	Style::Value animation_properties = Style::Instance().Create();
 	Style::Value inline_properties = Style::Instance().Create();
@@ -201,7 +201,6 @@ protected:
 	EdgeInsets<float> padding{};
 	EdgeInsets<float> border{};
 	EdgeInsets<float> scroll_insets{};
-	Geometry::Path padding_edge;
 	struct Clip {
 		enum class Type : uint8_t {
 			None,
@@ -224,7 +223,6 @@ protected:
 		Animation,
 		Transition,
 		Background,
-		Image,
 		Definition,
 	};
 	EnumSet<Dirty> dirty;

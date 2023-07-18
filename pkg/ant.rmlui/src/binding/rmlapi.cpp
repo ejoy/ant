@@ -485,7 +485,7 @@ lElementProject(lua_State* L) {
 static int
 lElementDirtyImage(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	e->DirtyImage();
+	e->DirtyBackground();
 	return 0;
 }
 

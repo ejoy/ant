@@ -2,8 +2,7 @@
 #include <core/Core.h>
 #include <core/Document.h>
 #include <core/ElementAnimation.h>
-#include <core/ElementBackgroundBorder.h>
-#include <core/ElementBackgroundImage.h>
+#include <core/ElementBackground.h>
 #include <core/Event.h>
 #include <core/EventDispatcher.h>
 #include <core/EventListener.h>
@@ -106,12 +105,7 @@ void Element::Render() {
 		render_children[i]->Render();
 	}
 	SetRenderStatus();
-	if (geometry_background && *geometry_background) {
-		geometry_background->Render();
-	}
-	if (geometry_image && *geometry_image) {
-		geometry_image->Render();
-	}
+	geometry.Render();
 	for (; i < render_children.size(); ++i) {
 		render_children[i]->Render();
 	}
@@ -635,7 +629,7 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::BackgroundRepeat) ||
 		changed_properties.contains(PropertyId::Opacity))
 	{
-		dirty.insert(Dirty::Image);
+		dirty.insert(Dirty::Background);
 	}
 
 	if (changed_properties.contains(PropertyId::Perspective) ||
@@ -1017,27 +1011,8 @@ void Element::UpdatePerspective() {
 
 void Element::UpdateGeometry() {
 	if (dirty.contains(Dirty::Background)) {
-		if (!geometry_background) {
-			geometry_background.reset(new Geometry);
-		}
-		else {
-			geometry_background->Release();
-		}
-		ElementBackgroundBorder::GenerateGeometry(this, *geometry_background, padding_edge);
 		dirty.erase(Dirty::Background);
-		dirty.insert(Dirty::Image);
-	}
-	if (dirty.contains(Dirty::Image)) {
-		if (!geometry_image) {
-			geometry_image.reset(new Geometry);
-		}
-		else {
-			geometry_image->Release();
-		}
-		if (!ElementBackgroundImage::GenerateGeometry(this, *geometry_image, padding_edge)) {
-			geometry_image.reset();
-		}
-		dirty.erase(Dirty::Image);
+		geometry.Update(this);
 	}
 }
 
@@ -1056,7 +1031,6 @@ void Element::CalculateLayout() {
 	DirtyTransform();
 	DirtyClip();
 	dirty.insert(Dirty::Background);
-	dirty.insert(Dirty::Image);
 	Rect content {};
 	for (auto& child : childnodes) {
 		if (child->UpdateLayout()) {
@@ -1214,8 +1188,8 @@ void Element::DirtyClip() {
 	dirty.insert(Dirty::Clip);
 }
 
-void Element::DirtyImage() {
-	dirty.insert(Dirty::Image);
+void Element::DirtyBackground() {
+	dirty.insert(Dirty::Background);
 }
 
 void Element::AddEventListener(EventListener* listener) {

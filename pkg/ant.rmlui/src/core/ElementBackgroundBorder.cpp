@@ -1,4 +1,4 @@
-#include <core/ElementBackgroundBorder.h>
+#include <core/ElementBackground.h>
 #include <core/Layout.h>
 #include <core/ComputedValues.h>
 #include <core/Element.h>
@@ -7,7 +7,7 @@ namespace Rml {
 
 static const auto PI = acosf(-1);
 
-void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geometry, Geometry::Path& paddingEdge) {
+void ElementBackground::GenerateBorderGeometry(Element* element, Geometry& geometry, Box& edge) {
 	EdgeInsets<Color> border_color {
 		element->GetComputedProperty(PropertyId::BorderLeftColor)->Get<Color>(),
 		element->GetComputedProperty(PropertyId::BorderTopColor)->Get<Color>(),
@@ -179,12 +179,12 @@ void ElementBackgroundBorder::GenerateGeometry(Element* element, Geometry& geome
 	}
 	geometry.AddArc(bottomLeftOuter, bottomLeftInner, border_color.bottom);
 
-	paddingEdge.clear();
-	paddingEdge.append(topLeftInner);
-	paddingEdge.append(topRightInner);
-	paddingEdge.append(bottomRightInner);
-	paddingEdge.append(bottomLeftInner);
-	geometry.AddPolygon(paddingEdge, background_color);
+	edge.padding.clear();
+	edge.padding.append(topLeftInner);
+	edge.padding.append(topRightInner);
+	edge.padding.append(bottomRightInner);
+	edge.padding.append(bottomLeftInner);
+	geometry.AddPolygon(edge.padding, background_color);
 }
 
 }
