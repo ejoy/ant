@@ -293,9 +293,9 @@ local function compile(tasks, deps, mat, input, output, localpath)
     mergeCfgSetting(fx, localpath)
     check_update_fx(fx)
 
-    setmetatable(fx, {__newindex=function ()
-        error "DONOT MODIFY"
-    end})
+    -- setmetatable(fx, {__newindex=function ()
+    --     error "DONOT MODIFY"
+    -- end})
 
     writefile(output / "main.cfg", mat)
 
