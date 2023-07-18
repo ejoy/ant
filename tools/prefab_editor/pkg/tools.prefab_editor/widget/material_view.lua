@@ -172,7 +172,7 @@ local function create_property_ui(n, p, mv)
     local tt = which_property_type(p)
     if tt == "texture" then
         -- should add ui to extent texutre
-        return uiproperty.EditText({label = n}, {
+        return uiproperty.ResourcePath({label = n, extension=".texture"}, {
             getter = function ()
                 local t = material_template(mv.eid)
                 return t.properties[n].texture
@@ -220,7 +220,7 @@ local function create_property_ui(n, p, mv)
             })
         })
     elseif tt == "v4" or tt == "m4" then
-        return uiproperty.Float({label=n}, {
+        return uiproperty.Float({label=n, dim=4, min=0.0, max=1.0, speed=0.01}, {
             getter = function()
                 local t = material_template(mv.eid)
                 return t.properties[n]
@@ -464,7 +464,7 @@ local function build_properties_ui(mv)
 
         properties[#properties+1] = uiproperty.Group({label="basecolor"},
             add_textre_ui("s_basecolor", "basecolor", 
-                uiproperty.Float({label="Factor", dim=4, min=0.0, max=1.0, speed=0.02}, {
+                uiproperty.Float({label="Factor", dim=4, min=0.0, max=1.0, speed=0.01}, {
                     getter = function ()
                         return get_factor "basecolor"
                     end,
@@ -481,7 +481,7 @@ local function build_properties_ui(mv)
         properties[#properties+1] = uiproperty.Group({label="metallic_roughness"}, 
             add_textre_ui("s_metallic_roughness", "metallic_roughness",
                 uiproperty.Group({label="Factor", dim=4}, {
-                    uiproperty.Float({label="metallic", min=0.0, max=1.0, speed=0.02}, {
+                    uiproperty.Float({label="metallic", min=0.0, max=1.0, speed=0.01}, {
                         getter = function ()
                             local pbrfactor = t.u_pbr_factor
                             return pbrfactor and pbrfactor[2] or 0.0
@@ -493,7 +493,7 @@ local function build_properties_ui(mv)
                             imaterial.set_property(e, "u_pbr_factor", math3d.vector(pbrfactor))
                         end
                     }),
-                    uiproperty.Float({label="roughness", min=0.0, max=1.0, speed=0.02}, {
+                    uiproperty.Float({label="roughness", min=0.0, max=1.0, speed=0.01}, {
                         getter = function ()
                             local pbrfactor = t.u_pbr_factor
                             return pbrfactor and pbrfactor[1] or 0.0
@@ -538,7 +538,7 @@ local function build_properties_ui(mv)
                     fx_setting("ALPHAMODE_MASK", value and 1 or nil)
                 end
             }),
-            uiproperty.Float({label="cutoff value", min=0.0, max=1.0, speed=0.02}, {
+            uiproperty.Float({label="cutoff value", min=0.0, max=1.0, speed=0.01}, {
                 getter = function ()
                     local pbrfactor = t.u_pbr_factor
                     return pbrfactor and pbrfactor[3] or 0.0
@@ -553,7 +553,7 @@ local function build_properties_ui(mv)
         })
         
 
-        properties[#properties+1] = uiproperty.Float({label="occlusion strength", min=0.0, max=1.0, speed=0.02},{
+        properties[#properties+1] = uiproperty.Float({label="occlusion strength", min=0.0, max=1.0, speed=0.01},{
             getter = function ()
                 local pbrfactor = t.u_pbr_factor
                 return pbrfactor and pbrfactor[4] or 0.0
@@ -946,31 +946,6 @@ local function to_virtualpath(localpath)
     end
 end
 
-local function build_file_ui(mv)
-    return uiproperty.SameLineContainer({},{
-        uiproperty.Button({label="!", id="fetch_material"}, {
-            click = function ()
-                local f = rb.selected_file()
-                local prefab = hierarchy:get_template(mv.eid)
-                prefab.template.data.material = f:string()
-
-                mv.save.disable = is_readonly_resource(f:string())
-            end
-        }),
-        uiproperty.EditText({label="File", id="path"},{
-            getter = function()
-                local prefab = hierarchy:get_template(mv.eid)
-                return prefab.template.data.material
-            end,
-            setter = function (value)
-                local prefab = hierarchy:get_template(mv.eid)
-                prefab.template.data.material = value
-                mv.need_reload = true
-            end,
-        }),
-    })
-end
-
 local function refine_material_data(eid, newmaterial_path)
     local prefab = hierarchy:get_template(eid)
     local oldmaterial_path = fs.path(prefab.template.data.material)
@@ -993,15 +968,23 @@ function MaterialView:_init()
         return
     end
     self.inited = true
-    
-    self.mat_file = build_file_ui(self)
-
+    self.mat_file = uiproperty.ResourcePath({label="MaterialFile", extension=".material"}, {
+        getter = function()
+            local prefab = hierarchy:get_template(self.eid)
+            return prefab.template.data.material
+        end,
+        setter = function (value)
+            local prefab = hierarchy:get_template(self.eid)
+            prefab.template.data.material = value
+            self.need_reload = true
+        end,
+    })
     self.fx         = build_fx_ui(self)
     self.state      = build_state_ui(self)
-    self.save       = uiproperty.Button({label="Save"}, {
+    self.save       = uiproperty.Button({label="Save", sameline = true}, {
         click = function ()
-            local p = self.mat_file:find_property "path"
-            local filepath = fs.path(p:value())
+            -- local p = self.mat_file:find_property "path"
+            local filepath = fs.path(self.mat_file:value())
             check_relative_path(filepath, prefab_mgr:get_current_filename())
             save_material(self.eid, filepath)
             reload(self.eid, filepath)
@@ -1023,12 +1006,12 @@ function MaterialView:_init()
         self.mat_file,
         self.fx,
         self.state,
-        uiproperty.SameLineContainer({}, {
-            self.save, self.saveas,
-        })
+        self.save, self.saveas,
     })
 end
-
+local texture_flag = {}
+local image_to_texture = {}
+local datalist   = require "datalist"
 function MaterialView:set_eid(eid)
     if self.eid == eid then
         return
@@ -1075,6 +1058,19 @@ function MaterialView:set_eid(eid)
     self:enable_properties_ui()
     
     self:update()
+
+    for _, v in pairs(t.properties) do
+        if v.texture and not texture_flag[v.texture] then
+            local f<close> = fs.open(fs.path(v.texture))
+            if f then
+                local data = datalist.parse(f:read "a")
+                if data and not image_to_texture[data.path] then
+                    image_to_texture[data.path] = v.texture
+                    texture_flag[v.texture] = true
+                end
+            end
+        end
+    end
 end
 
 function MaterialView:update()
@@ -1119,13 +1115,20 @@ function MaterialView:enable_properties_ui()
 
     end
 end
+local filewatch_event = world:sub {"FileWatch"}
 
 function MaterialView:show()
     if not self.eid then
         return
     end
-    -- self.material:update()
-    check_disable_file_fetch_ui(self.mat_file)
+    -- check_disable_file_fetch_ui(self.mat_file)
+    for _, _, filename in filewatch_event:unpack() do
+        local texture = image_to_texture[filename]
+        if texture then
+            -- assetmgr.reload(fs.path(texture))
+        end
+        break
+    end
     self.material:show()
 end
 

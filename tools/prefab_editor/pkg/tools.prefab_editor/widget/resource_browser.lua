@@ -233,10 +233,27 @@ local function get_filter_path(parent, key)
     end
     return filter[current_filter_idx].path, filter[current_filter_idx].pos
 end
+local access    = global_data.repo_access
+local item_height
+local function pre_init_item_height()
+    if item_height then
+        return
+    end
+    local _, pos_y = imgui.cursor.GetCursorPos()
+    item_height = -pos_y
+end
+local function post_init_item_height()
+    if item_height and item_height > 0 then
+        return
+    end
+    local _, pos_y = imgui.cursor.GetCursorPos()
+    item_height = pos_y + item_height
+end
 function m.show()
     if not gd.project_root then
         return
     end
+    local dirtyflag = {}
     local type, path = gd.filewatch:select()
     while type do
         if (not string.find(path, "\\.build\\"))
@@ -246,6 +263,18 @@ function m.show()
             m.dirty = true
         end
         type, path = gd.filewatch:select()
+        if path then
+            local postfix = string.sub(path, -4)
+            if (postfix == '.png' or postfix == '.dds') and not dirtyflag[path] then
+                dirtyflag[path] = true
+                local p = fs.path(path:gsub('\\', '/'))
+                world:pub {"FileWatch", type, access.virtualpath(global_data.repo, p)}
+                -- local filename = p:filename()
+                -- local tex_path = string.match(tostring(p:parent_path()), ".*/") ..'textures'.. '/'..string.sub(tostring(filename), 1, -5) .. '.texture'
+                -- local pkg_path = access.virtualpath(global_data.repo, fs.path(tex_path))
+                -- local tr = assetmgr.resource(pkg_path)
+            end
+        end
     end
 
     local viewport = imgui.GetMainViewport()
@@ -342,7 +371,7 @@ function m.show()
                                 local _, sy = imgui.windows.GetWindowSize()
                                 selected_file = file_path or selected_file
                                 local current_pos = imgui.windows.GetScrollY()
-                                local target_pos = file_pos * 22
+                                local target_pos = file_pos * (item_height or 22)
                                 if target_pos > current_pos + sy or target_pos < sy or target_pos < (current_pos - sy) then
                                     local newpos = target_pos - sy
                                     if newpos < 0 then
@@ -356,7 +385,7 @@ function m.show()
                 else
                     if current_filter_key then
                         current_filter_key = nil
-                        selected_file = nil
+                        -- selected_file = nil
                     end
                 end
                 rename_file(selected_file)
@@ -372,9 +401,11 @@ function m.show()
                 end
                 local function post_selectable()
                     imgui.windows.PopStyleColor(2)
+
                 end
                 for _, path in pairs(folder.dirs) do
                     pre_selectable(icons.ICON_FOLD, selected_file ~= path[1])
+                    pre_init_item_height()
                     if imgui.widget.Selectable(tostring(path[1]:filename()), selected_file == path[1], 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path[1]
                         current_filter_key = 1
@@ -382,13 +413,15 @@ function m.show()
                             selected_folder = path
                         end
                     end
+                    post_init_item_height()
+                    post_selectable()
                     if selected_file == path[1] then
                         ShowContextMenu()
                     end
-                    post_selectable()
                 end
                 for _, path in pairs(folder.files) do
                     pre_selectable(icons.ICON_FILE, selected_file ~= path)
+                    pre_init_item_height()
                     if imgui.widget.Selectable(tostring(path:filename()), selected_file == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path
                         current_filter_key = 1
@@ -425,11 +458,11 @@ function m.show()
                             end
                         end
                     end
+                    post_init_item_height()
+                    post_selectable()
                     if selected_file == path then
                         ShowContextMenu()
                     end
-                    post_selectable()
-                    
                     if path:equal_extension(".material")
                         or path:equal_extension(".texture")
                         or path:equal_extension(".png")
@@ -440,6 +473,7 @@ function m.show()
                         or path:equal_extension(".lua") then
                         if imgui.widget.BeginDragDropSource() then
                             imgui.widget.SetDragDropPayload("DragFile", tostring(path))
+                            imgui.widget.Text(tostring(path:filename()))
                             imgui.widget.EndDragDropSource()
                         end
                     end
