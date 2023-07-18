@@ -125,6 +125,7 @@ enum class PropertyId : uint8_t {
 	BackgroundPositionX,
 	BackgroundPositionY,
 	BackgroundRepeat,
+	BackgroundFilter,
 
 	Filter,
 

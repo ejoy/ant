@@ -610,6 +610,7 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::BackgroundPositionX) ||
 		changed_properties.contains(PropertyId::BackgroundPositionY) ||
 		changed_properties.contains(PropertyId::BackgroundRepeat) ||
+		changed_properties.contains(PropertyId::BackgroundFilter) ||
 		changed_properties.contains(PropertyId::Opacity) ||
 		changed_properties.contains(PropertyId::Filter))
 	{

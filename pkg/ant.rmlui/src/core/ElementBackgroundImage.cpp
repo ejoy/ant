@@ -48,7 +48,6 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 	const auto& padding = element->GetPadding();
 
 	Style::BoxType origin = element->GetComputedProperty(PropertyId::BackgroundOrigin)->Get<Style::BoxType>();
-
 	Rect surface = Rect{ {0, 0}, bounds.size };
 	if (surface.size.IsEmpty()) {
 		return false;
@@ -79,7 +78,19 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 		element->GetComputedProperty(PropertyId::BackgroundPositionY)->Get<PropertyFloat>().ComputeH(element)
 	};
 
-	Color color = Color::FromSRGB(255, 255, 255, 255);
+
+	Color color = Color::FromSRGB(255,255,255,255);
+	bool setGray = false;
+	if (element->IsGray()) {
+		setGray = true;
+	}
+	else {
+		auto property = element->GetComputedProperty(PropertyId::BackgroundFilter);
+		if (!property->Has<PropertyKeyword>()) {
+			setGray = true;
+			color = property->Get<Color>();
+		}
+	}
 	color.ApplyOpacity(element->GetOpacity());
 	if (!color.IsVisible())
 		return false;
@@ -171,7 +182,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 		}	
 	}
 	geometry.UpdateVertices();
-	if (element->IsGray()) {
+	if (setGray) {
 		geometry.SetGray();
 	}
 	return true;

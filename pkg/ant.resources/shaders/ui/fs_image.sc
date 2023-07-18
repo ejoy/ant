@@ -11,10 +11,10 @@ void main()
     check_clip_rotated_rect(gl_FragCoord.xy);
     #endif //ENABLE_CLIP_RECT
 
-    vec4 color = texture2D(s_tex, v_texcoord0) * v_color0;
+    vec4 texcolor = texture2D(s_tex, v_texcoord0);
     #ifdef ENABLE_IMAGE_GRAY
-    gl_FragColor = vec4(vec3_splat(dot(vec3(0.2126, 0.7152, 0.0722), color.rgb)), color.a);
+    gl_FragColor = vec4(vec3_splat(dot(vec3(0.2126, 0.7152, 0.0722), texcolor.rgb)) * v_color0.rgb, v_color0.a * texcolor.a);
     #else //!ENABLE_IMAGE_GRAY
-    gl_FragColor = color;
+    gl_FragColor = texcolor * v_color0;
     #endif //ENABLE_IMAGE_GRAY
 }
