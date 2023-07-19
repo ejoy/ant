@@ -1,4 +1,4 @@
-require "core.init.event"
+require "core.event.dom"
 local console = require "core.sandbox.console"
 local filemanager = require "core.filemanager"
 local constructor = require "core.DOM.constructor"
@@ -6,6 +6,7 @@ local environment = require "core.environment"
 local event = require "core.event"
 local parsetext = require "core.parsetext"
 local datamodel = require "core.datamodel.api"
+local eventListener = require "core.event.listener"
 local m = {}
 
 local function invoke(f, ...)
@@ -55,6 +56,10 @@ end
 
 function m.OnUpdateDataModel(document)
 	datamodel.update(document)
+end
+
+function m.OnDispatchEvent(document, element, type, eventData)
+	eventListener.dispatch(document, element, type, eventData)
 end
 
 function m.OnRealPath(path)

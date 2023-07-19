@@ -100,7 +100,7 @@ function event.OnCreateText(document, node)
     create_queue[#create_queue+1] = node
 end
 
-local function OnCreateElement(datamodel, element)
+local function OnCreateElement(datamodel, document, element)
     local attributes = rmlui.ElementGetAttributes(element)
     if attributes["data-for"] then
         rmlui.ElementSetVisible(element, false)
@@ -134,7 +134,7 @@ local function OnCreateElement(datamodel, element)
                 else
                     local type, modifier = name:match "^data%-(%a+)%-(.+)$"
                     if type == "event" then
-                        data_event.create(datamodel, view, element, modifier, value)
+                        data_event.create(datamodel, view, document, element, modifier, value)
                     elseif type == "style" then
                         data_style.create(datamodel, view, element, modifier, value)
                     elseif type == "attr" then
@@ -152,7 +152,7 @@ local function OnCreateText(datamodel, node)
     data_text.create(datamodel, node)
 end
 
-local function OnUpdate(datamodel)
+local function OnUpdate(datamodel, document)
     local create_queue = datamodel.create_queue
     if #create_queue > 0 then
         datamodel.create_queue = {}
@@ -160,7 +160,7 @@ local function OnUpdate(datamodel)
             local type = create_queue[node]
             if type == NodeTypeElement then
                 if not InDataFor(datamodel, node) then
-                    OnCreateElement(datamodel, node)
+                    OnCreateElement(datamodel, document, node)
                 end
             elseif type == NodeTypeText then
                 if not InDataFor(datamodel, node) then
@@ -190,7 +190,7 @@ function m.update(document)
         return
     end
     for _ = 1, 10 do
-        OnUpdate(datamodel)
+        OnUpdate(datamodel, document)
         if not datamodel.dirty then
             break
         end
@@ -219,11 +219,7 @@ function event.OnDestroyNode(document, node)
             end
         end
     end
-    local view = datamodel.views[node]
-    if view then
-        data_event.destroyNode(view, node)
-        datamodel.views[node] = nil
-    end
+    datamodel.views[node] = nil
 end
 
 function event.OnDocumentCreate(document)

@@ -1,6 +1,7 @@
 local rmlui = require "rmlui"
 local event = require "core.event"
 local constructor = require "core.DOM.constructor"
+local eventListener = require "core.event.listener"
 
 local constructorElement
 
@@ -35,16 +36,14 @@ local property_getter = {}
 local property_setter = {}
 
 function property_init:addEventListener()
-    return function (type, listener)
-        local handle = self._handle
-        return rmlui.ElementAddEventListener(handle, type, listener)
+    return function (type, func)
+        return eventListener.add(self._document, self._handle, type, func)
     end
 end
 
 function property_init:removeEventListener()
     return function (id)
-        local handle = self._handle
-        rmlui.ElementRemoveEventListener(handle, id)
+        eventListener.remove(self._document, self._handle, id)
     end
 end
 
@@ -77,9 +76,8 @@ function property_init:childNodes()
 end
 
 function property_init:dispatchEvent()
-    return function (eventname, event)
-        local handle = self._handle
-        rmlui.ElementDispatchEvent(handle, eventname, event)
+    return function (eventname, eventData)
+        eventListener.dispatch(self._document, self._handle, eventname, eventData)
     end
 end
 

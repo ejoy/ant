@@ -3,7 +3,6 @@
 #include <core/Core.h>
 #include <core/Document.h>
 #include <core/Element.h>
-#include <core/EventListener.h>
 #include <core/Text.h>
 #include <core/Texture.h>
 #include <binding/luaplugin.h>
@@ -53,20 +52,6 @@ lua_pushRmlNode(lua_State* L, const Rml::Node* node) {
 
 	
 namespace {
-
-struct EventListener final : public Rml::EventListener {
-	EventListener(lua_State* L, const std::string& type)
-		: Rml::EventListener(type)
-		, ref(get_lua_plugin()->ref(L))
-	{}
-	void ProcessEvent(Rml::Event& event) override {
-		luabind::invoke([&](lua_State* L) {
-			get_lua_plugin()->pushevent(L, event);
-			get_lua_plugin()->callref(L, ref.handle(), 1, 0);
-		});
-	}
-	luaref_box ref;
-};
 
 static int
 lDocumentCreate(lua_State* L) {
@@ -170,40 +155,6 @@ lDocumentGetSourceURL(lua_State *L) {
 	Rml::Document* doc = lua_checkobject<Rml::Document>(L, 1);
 	const std::string &url = doc->GetSourceURL();
 	lua_pushstdstring(L, url);
-	return 1;
-}
-
-static int
-lElementAddEventListener(lua_State* L) {
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	luaL_checktype(L, 3, LUA_TFUNCTION);
-	lua_pushvalue(L, 3);
-	auto listener = new EventListener(L, lua_checkstdstring(L, 2));
-	e->AddEventListener(listener);
-	lua_pushlightuserdata(L, listener);
-	return 1;
-}
-
-static int
-lElementRemoveEventListener(lua_State* L) {
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	if (lua_type(L, 2) == LUA_TSTRING) {
-		e->RemoveEventListener(lua_checkstdstring(L, 2));
-	}
-	else {
-		e->RemoveEventListener(lua_checkobject<Rml::EventListener>(L, 2));
-	}
-	return 0;
-}
-
-static int
-lElementDispatchEvent(lua_State* L) {
-	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
-	luaL_checktype(L, 3, LUA_TTABLE);
-	lua_pushvalue(L, 3);
-	auto ref = get_lua_plugin()->ref(L);
-	bool propagating = e->DispatchEvent(lua_checkstdstring(L, 2), ref.handle());
-	lua_pushboolean(L, propagating);
 	return 1;
 }
 
@@ -645,9 +596,6 @@ luaopen_rmlui(lua_State* L) {
 		{ "DocumentGetBody", lDocumentGetBody },
 		{ "DocumentCreateElement", lDocumentCreateElement },
 		{ "DocumentCreateTextNode", lDocumentCreateTextNode },
-		{ "ElementAddEventListener", lElementAddEventListener },
-		{ "ElementRemoveEventListener", lElementRemoveEventListener },
-		{ "ElementDispatchEvent", lElementDispatchEvent },
 		{ "ElementGetId", lElementGetId },
 		{ "ElementGetClassName", lElementGetClassName },
 		{ "ElementGetAttribute", lElementGetAttribute },

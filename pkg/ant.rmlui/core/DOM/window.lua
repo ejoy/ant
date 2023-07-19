@@ -4,8 +4,9 @@ local timer = require "core.timer"
 local task = require "core.task"
 local contextManager = require "core.contextManager"
 local windowManager = require "core.windowManager"
-local constructor = require "core.DOM.constructor"
 local datamodel = require "core.datamodel.api"
+local environment = require "core.environment"
+local eventListener = require "core.event.listener"
 
 local function createWindow(document, source)
     --TODO: pool
@@ -55,14 +56,21 @@ local function createWindow(document, source)
     function window.clearInterval(t)
         t:remove()
     end
-    function window.addEventListener(type, listener)
-        rmlui.ElementAddEventListener(rmlui.DocumentGetBody(document), type, function(e) listener(constructor.Event(e)) end)
+    function window.addEventListener(type, func)
+        eventListener.add(document, rmlui.DocumentGetBody(document), type, func)
     end
     function window.postMessage(data)
-        rmlui.ElementDispatchEvent(rmlui.DocumentGetBody(document), "message", {
-            source = source,
+        local eventData = {
             data = data,
-        })
+        }
+        if source == nil then
+            eventData.source = environment[document].window
+        elseif source == "extern" then
+            eventData.source = environment[document].window.extern
+        else
+            eventData.source = createWindow(source, document)
+        end
+        eventListener.dispatch(document, rmlui.DocumentGetBody(document), "message", eventData)
     end
     if source == nil then
         window.extern = {

@@ -84,6 +84,16 @@ void lua_plugin::OnUpdateDataModel(Rml::Document* document) {
 	});
 }
 
+void lua_plugin::OnDispatchEvent(Rml::Document* document, Rml::Element* element, const std::string& type, const luavalue::table& eventData) {
+	luabind::invoke([&](lua_State* L) {
+		lua_pushlightuserdata(L, (void*)document);
+		lua_pushlightuserdata(L, (void*)element);
+		lua_pushlstring(L, type.data(), type.size());
+		luavalue::get(L, eventData);
+		call(L, LuaEvent::OnDispatchEvent, 4);
+	});
+}
+
 void lua_plugin::OnDestroyNode(Rml::Document* document, Rml::Node* node) {
 	luabind::invoke([&](lua_State* L) {
 		lua_pushlightuserdata(L, (void*)document);
@@ -237,6 +247,7 @@ void lua_plugin::register_event(lua_State* L) {
 	ref_function(reference, L, "OnCreateElement");
 	ref_function(reference, L, "OnCreateText");
 	ref_function(reference, L, "OnUpdateDataModel");
+	ref_function(reference, L, "OnDispatchEvent");
 	ref_function(reference, L, "OnDestroyNode");
 	ref_function(reference, L, "OnRealPath");
 	ref_function(reference, L, "OnLoadTexture");

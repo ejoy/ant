@@ -17,7 +17,6 @@ Document::Document(const Size& _dimensions)
 { }
 
 Document::~Document() {
-	body.RemoveAllEvents();
 	body.RemoveAllChildren();
 }
 

@@ -4,8 +4,6 @@
 #include <core/ElementAnimation.h>
 #include <core/ElementBackground.h>
 #include <core/Event.h>
-#include <core/EventDispatcher.h>
-#include <core/EventListener.h>
 #include <util/HtmlParser.h>
 #include <core/Interface.h>
 #include <util/Log.h>
@@ -1176,53 +1174,12 @@ void Element::DirtyBackground() {
 	dirty.insert(Dirty::Background);
 }
 
-void Element::AddEventListener(EventListener* listener) {
-	listeners.emplace_back(listener);
-}
-
-void Element::RemoveEventListener(EventListener* listener) {
-	auto it = std::find_if(listeners.begin(), listeners.end(), [&](auto const& a){
-		return a.get() == listener;
-	});
-	if (it != listeners.end()) {
-		listeners.erase(it);
-	}
-}
-
-void Element::RemoveEventListener(const std::string& type) {
-	listeners.erase(std::remove_if(listeners.begin(), listeners.end(), [&](auto const& a){
-		return a->type == type;
-	}), listeners.end());
-}
-
-void Element::RemoveAllEvents() {
-	listeners.clear();
-	for (auto& child : children) {
-		child->RemoveAllEvents();
-	}
-}
-
-bool Element::DispatchEvent(const std::string& type, int parameters_ref) {
-	Event event(this, type, parameters_ref);
-	return Rml::DispatchEvent(event);
-}
-
-bool Element::DispatchEvent(const std::string& type, const luavalue::table& parameters) {
-	lua_State* L = luabind::thread();
-	luavalue::get(L, parameters);
-	auto ref = get_lua_plugin()->ref(L);
-	return DispatchEvent(type, ref.handle());
-}
-
 bool Element::DispatchAnimationEvent(const std::string& type, const ElementAnimation& animation) {
-	return DispatchEvent(type, {
+	GetPlugin()->OnDispatchEvent(GetOwnerDocument(), this, type, {
 		{ "animationName", animation.GetName() },
 		{ "elapsedTime", animation.GetTime() },
 	});
-}
-
-const std::vector<std::unique_ptr<EventListener>>& Element::GetEventListeners() const {
-	return listeners;
+	return true;
 }
 
 Size Element::GetScrollOffset() const {

@@ -3,6 +3,7 @@ local console = require "core.sandbox.console"
 local constructor = require "core.DOM.constructor"
 local environment = require "core.environment"
 local event = require "core.event"
+local eventListener = require "core.event.listener"
 
 local function invoke(f, ...)
     local ok, err = xpcall(f, function(msg)
@@ -50,9 +51,9 @@ function event.OnCreateElement(document, element)
         if name:sub(1,2) == "on" then
             local f, upvalue = OnEventAttach(document, element, value)
             if f then
-                listeners[#listeners+1] = rmlui.ElementAddEventListener(element, name:sub(3,-1), function (e)
+                listeners[#listeners+1] = eventListener.add(document, element, name:sub(3,-1), function (e)
                     if upvalue then
-                        debug.setupvalue(f, upvalue, constructor.Event(e))
+                        debug.setupvalue(f, upvalue, e)
                     end
                     invoke(f)
                 end)
@@ -64,12 +65,9 @@ function event.OnCreateElement(document, element)
     end
 end
 
-function event.OnDestroyNode(_, element)
+function event.OnDestroyNode(document, element)
     local listeners = events[element]
     if not listeners then
         return
-    end
-    for _, listener in ipairs(listeners) do
-        rmlui.ElementRemoveEventListener(element, listener)
     end
 end

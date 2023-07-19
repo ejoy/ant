@@ -4,10 +4,10 @@ local environment = require "core.environment"
 local createSandbox = require "core.sandbox.create"
 local filemanager = require "core.filemanager"
 local constructor = require "core.DOM.constructor"
+local eventListener = require "core.event.listener"
 
 local elementFromPoint = rmlui.DocumentElementFromPoint
 local getBody = rmlui.DocumentGetBody
-local dispatchEvent = rmlui.ElementDispatchEvent
 local getParent = rmlui.NodeGetParent
 local setPseudoClass = rmlui.ElementSetPseudoClass
 
@@ -51,7 +51,7 @@ end
 
 function m.onload(doc)
     --TODO
-    dispatchEvent(getBody(doc), "load", {})
+    eventListener.dispatch(doc, getBody(doc), "load", {})
 end
 
 function m.show(doc)
@@ -67,7 +67,7 @@ function m.flush(doc)
 end
 
 function m.close(doc)
-    dispatchEvent(getBody(doc), "unload", {})
+    eventListener.dispatch(doc, getBody(doc), "unload", {})
     notifyDocumentDestroy(doc)
     rmlui.DocumentDestroy(doc)
     for i, d in ipairs(documents) do
@@ -95,9 +95,9 @@ local gesture = {}
 
 function gesture.tap(ev)
     local x, y = round(ev.x), round(ev.y)
-    local _, e = fromPoint(x, y)
+    local doc, e = fromPoint(x, y)
     if e then
-        dispatchEvent(e, "click", {
+        eventListener.dispatch(doc, e, "click", {
             x = x,
             y = y,
         })
@@ -107,9 +107,9 @@ end
 
 function gesture.longpress(ev)
     local x, y = round(ev.x), round(ev.y)
-    local _, e = fromPoint(x, y)
+    local doc, e = fromPoint(x, y)
     if e then
-        dispatchEvent(e, "longpress", {
+        eventListener.dispatch(doc, e, "longpress", {
             x = x,
             y = y,
         })
@@ -119,9 +119,9 @@ end
 
 function gesture.pan(ev)
     local x, y = round(ev.x), round(ev.y)
-    local _, e = fromPoint(x, y)
+    local doc, e = fromPoint(x, y)
     if e then
-        dispatchEvent(e, "pan", {
+        eventListener.dispatch(doc, e, "pan", {
             state = ev.state,
             x = x,
             y = y,
@@ -134,9 +134,9 @@ end
 
 function gesture.pinch(ev)
     local x, y = round(ev.x), round(ev.y)
-    local _, e = fromPoint(x, y)
+    local doc, e = fromPoint(x, y)
     if e then
-        dispatchEvent(e, "pinch", {
+        eventListener.dispatch(doc, e, "pinch", {
             x = x,
             y = y,
             state = ev.state,
@@ -218,7 +218,7 @@ function m.set_dimensions(w, h, ratio)
     width, height = w, h
     for _, doc in ipairs(documents) do
         rmlui.DocumentSetDimensions(doc, width, height)
-        dispatchEvent(getBody(doc), "resize", {})
+        eventListener.dispatch(doc, getBody(doc), "resize", {})
     end
 end
 

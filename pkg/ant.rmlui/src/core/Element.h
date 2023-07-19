@@ -9,10 +9,8 @@
 #include <css/PropertyIdSet.h>
 #include <css/PropertyVector.h>
 #include <css/StyleCache.h>
-#include <util/ObserverPtr.h>
 #include <optional>
 #include <unordered_map>
-#include "luavalue.h"
 
 namespace Rml {
 
@@ -20,14 +18,13 @@ class Document;
 class Element;
 class ElementAnimation;
 class ElementTransition;
-class EventListener;
 class Geometry;
 class StyleSheet;
 struct HtmlElement;
 
 using ElementAttributes = std::unordered_map<std::string, std::string>;
 
-class Element : public LayoutNode, public EnableObserverPtr<Element> {
+class Element : public LayoutNode {
 public:
 	Element(Document* owner, const std::string& tag);
 	virtual ~Element();
@@ -56,14 +53,7 @@ public:
 	void InstanceInner(const HtmlElement& html);
 	void NotifyCreated();
 
-	void AddEventListener(EventListener* listener);
-	void RemoveEventListener(EventListener* listener);
-	void RemoveEventListener(const std::string& type);
-	bool DispatchEvent(const std::string& type, int parameters_ref);
-	bool DispatchEvent(const std::string& type, const luavalue::table& parameters);
 	bool DispatchAnimationEvent(const std::string& type, const ElementAnimation& animation);
-	void RemoveAllEvents();
-	const std::vector<std::unique_ptr<EventListener>>& GetEventListeners() const;
 
 	void   AppendChild(Node* node, uint32_t index = 0xffffffff);
 	void   RemoveChild(Node* node);
@@ -187,7 +177,6 @@ protected:
 	std::map<PropertyId, ElementTransition> transitions;
 	std::vector<std::string> classes;
 	PseudoClassSet pseudo_classes = 0;
-	std::vector<std::unique_ptr<EventListener>> listeners;
 	ElementBackground geometry;
 	float font_size = 16.f;
 	Style::Value animation_properties = Style::Instance().Create();

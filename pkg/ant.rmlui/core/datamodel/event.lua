@@ -1,6 +1,6 @@
-local rmlui = require "rmlui"
 local console = require "core.sandbox.console"
 local constructor = require "core.DOM.constructor"
+local eventListener = require "core.event.listener"
 
 local m = {}
 
@@ -56,7 +56,7 @@ local function refresh(datamodel, data)
     })
 end
 
-function m.create(datamodel, view, element, event_type, event_value)
+function m.create(datamodel, view, document, element, event_type, event_value)
     local data = view.events[event_type]
     if not data then
         data = {}
@@ -66,11 +66,11 @@ function m.create(datamodel, view, element, event_type, event_value)
         data.callback = function (e)
             local func = f
             if ev then
-                debug.setupvalue(func, ev, constructor.Event(e))
+                debug.setupvalue(func, ev, e)
             end
             invoke(func)
         end
-        data.listener = rmlui.ElementAddEventListener(element, event_type, data.callback)
+        data.listener = eventListener.add(document, element, event_type, data.callback)
     end
     local s = {
         "local ev",
@@ -86,12 +86,6 @@ end
 function m.refresh(datamodel, view)
     for _, data in pairs(view.events) do
         refresh(datamodel, data)
-    end
-end
-
-function m.destroyNode(view, element)
-    for _, data in pairs(view.events) do
-        rmlui.ElementRemoveEventListener(element, data.listener)
     end
 end
 
