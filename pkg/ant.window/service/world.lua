@@ -24,12 +24,6 @@ local quit
 local init_width, init_height
 local do_size
 
-local function calc_viewport(fbw, fbh)
-	return {
-		x=0, y=0, w=fbw, h=fbh
-	}
-end
-
 local function update_config(args, ww, hh)
 	local fb = args.framebuffer
 	fb.width, fb.height = ww, hh
@@ -39,7 +33,13 @@ local function update_config(args, ww, hh)
 		vp = {}
 		args.viewport = vp
 	end
-	vp.x, vp.y, vp.w, vp.h = 0, 0, ww, hh
+
+	vp.x, vp.y = 0, 0
+	if setting:get "graphic/postprocess/hv_flip/enable" then
+		vp.w, vp.h = hh, ww
+	else
+		vp.w, vp.h = ww, hh
+	end
 	if world then
 		world:pub{"world_viewport_changed", vp}
 	end

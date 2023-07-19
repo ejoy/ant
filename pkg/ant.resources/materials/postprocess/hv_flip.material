@@ -1,0 +1,8 @@
+fx:
+  vs: /pkg/ant.resources/shaders/fullscreen/vs_quad.sc
+  fs: /pkg/ant.resources/shaders/fullscreen/fs_fullscreen.sc
+properties:
+  s_tex:
+    stage: 0
+    texture: /pkg/ant.resources/textures/black.texture
+state: /pkg/ant.resources/materials/states/quad.state

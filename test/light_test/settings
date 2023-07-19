@@ -47,6 +47,8 @@ graphic:
     tonemapping:
       use_lut: true
       lut_dim: 32
+    hv_flip:
+      enable: false
   shadow:
     color: {0, 0, 0, 1}
     depth_multiplier: 100
