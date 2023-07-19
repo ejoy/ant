@@ -39,7 +39,7 @@ local handle_mt = {
 local function create(efk_handle, mat, speed)
     local h = setmetatable({
         alive       = true,
-        handle      = ltask.call(EFK_SERVER, "play", efk_handle, math3d.value_ptr(mat), speed),
+        handle      = ltask.call(EFK_SERVER, "play", efk_handle, math3d.serialize(mat), speed),
     }, {__index = handle_mt})
     return h
 end
