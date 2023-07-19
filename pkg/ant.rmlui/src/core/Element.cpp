@@ -1202,23 +1202,23 @@ void Element::RemoveAllEvents() {
 	}
 }
 
-bool Element::DispatchEvent(const std::string& type, int parameters_ref, bool interruptible, bool bubbles) {
-	Event event(this, type, parameters_ref, interruptible);
-	return Rml::DispatchEvent(event, bubbles);
+bool Element::DispatchEvent(const std::string& type, int parameters_ref) {
+	Event event(this, type, parameters_ref);
+	return Rml::DispatchEvent(event);
 }
 
-bool Element::DispatchEvent(const std::string& type, const luavalue::table& parameters, bool interruptible, bool bubbles) {
+bool Element::DispatchEvent(const std::string& type, const luavalue::table& parameters) {
 	lua_State* L = luabind::thread();
 	luavalue::get(L, parameters);
 	auto ref = get_lua_plugin()->ref(L);
-	return DispatchEvent(type, ref.handle(), interruptible, bubbles);
+	return DispatchEvent(type, ref.handle());
 }
 
 bool Element::DispatchAnimationEvent(const std::string& type, const ElementAnimation& animation) {
 	return DispatchEvent(type, {
 		{ "animationName", animation.GetName() },
 		{ "elapsedTime", animation.GetTime() },
-	}, true, true);
+	});
 }
 
 const std::vector<std::unique_ptr<EventListener>>& Element::GetEventListeners() const {

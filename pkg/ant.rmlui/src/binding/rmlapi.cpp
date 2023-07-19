@@ -55,8 +55,8 @@ lua_pushRmlNode(lua_State* L, const Rml::Node* node) {
 namespace {
 
 struct EventListener final : public Rml::EventListener {
-	EventListener(lua_State* L, const std::string& type, bool use_capture)
-		: Rml::EventListener(type, use_capture)
+	EventListener(lua_State* L, const std::string& type)
+		: Rml::EventListener(type)
 		, ref(get_lua_plugin()->ref(L))
 	{}
 	void ProcessEvent(Rml::Event& event) override {
@@ -178,7 +178,7 @@ lElementAddEventListener(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	luaL_checktype(L, 3, LUA_TFUNCTION);
 	lua_pushvalue(L, 3);
-	auto listener = new EventListener(L, lua_checkstdstring(L, 2), lua_toboolean(L, 4));
+	auto listener = new EventListener(L, lua_checkstdstring(L, 2));
 	e->AddEventListener(listener);
 	lua_pushlightuserdata(L, listener);
 	return 1;
@@ -202,7 +202,7 @@ lElementDispatchEvent(lua_State* L) {
 	luaL_checktype(L, 3, LUA_TTABLE);
 	lua_pushvalue(L, 3);
 	auto ref = get_lua_plugin()->ref(L);
-	bool propagating = e->DispatchEvent(lua_checkstdstring(L, 2), ref.handle(), true, true);
+	bool propagating = e->DispatchEvent(lua_checkstdstring(L, 2), ref.handle());
 	lua_pushboolean(L, propagating);
 	return 1;
 }

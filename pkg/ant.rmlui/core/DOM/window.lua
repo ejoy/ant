@@ -55,8 +55,8 @@ local function createWindow(document, source)
     function window.clearInterval(t)
         t:remove()
     end
-    function window.addEventListener(type, listener, useCapture)
-        rmlui.ElementAddEventListener(rmlui.DocumentGetBody(document), type, function(e) listener(constructor.Event(e)) end, useCapture)
+    function window.addEventListener(type, listener)
+        rmlui.ElementAddEventListener(rmlui.DocumentGetBody(document), type, function(e) listener(constructor.Event(e)) end)
     end
     function window.postMessage(data)
         rmlui.ElementDispatchEvent(rmlui.DocumentGetBody(document), "message", {

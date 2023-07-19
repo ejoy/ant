@@ -7,24 +7,23 @@
 namespace Rml {
 
 struct CollectedListener {
-	CollectedListener(Element* _element, EventListener* _listener, int depth, bool in_capture_phase)
+	CollectedListener(Element* _element, EventListener* _listener, int sort)
 		: element(_element->GetObserverPtr())
 		, listener(_listener->GetObserverPtr())
-		, sort(depth * (in_capture_phase ? -1 : 1))
+		, sort(sort)
 	{}
 
 	ObserverPtr<Element> element;
 	ObserverPtr<EventListener> listener;
 	int sort = 0;
 
-	EventPhase GetPhase() const { return sort < 0 ? EventPhase::Capture : (sort == 0 ? EventPhase::Target : EventPhase::Bubble); }
 	bool operator<(const CollectedListener& other) const {
 		return sort < other.sort;
 	}
 };
 
 
-bool DispatchEvent(Event& event, bool bubbles) {
+bool DispatchEvent(Event& event) {
 	std::vector<CollectedListener> listeners;
 	
 	int depth = 0;
@@ -33,12 +32,7 @@ bool DispatchEvent(Event& event, bool bubbles) {
 	while (walk_element) {
 		for (auto const& listener : walk_element->GetEventListeners()) {
 			if (listener->type == type) {
-				if (listener->use_capture) {
-					listeners.emplace_back(walk_element, listener.get(), depth, true);
-				}
-				else if (bubbles || (depth == 0)) {
-					listeners.emplace_back(walk_element, listener.get(), depth, false);
-				}
+				listeners.emplace_back(walk_element, listener.get(), depth);
 			}
 		}
 		walk_element = walk_element->GetParentNode();
@@ -51,21 +45,16 @@ bool DispatchEvent(Event& event, bool bubbles) {
 	std::stable_sort(listeners.begin(), listeners.end());
 
 	for (const auto& listener_desc : listeners) {
-		if (!event.IsPropagating())
-			break;
 		Element* element = listener_desc.element.get();
 		if (element) {
 			EventListener* listener = listener_desc.listener.get();
 			if (listener) {
 				event.SetCurrentElement(element);
-				event.SetPhase(listener_desc.GetPhase());
 				listener->ProcessEvent(event);
 			}
 		}
-		if (!event.IsImmediatePropagating())
-			break;
 	}
-	return event.IsPropagating();
+	return true;
 }
 
 }
