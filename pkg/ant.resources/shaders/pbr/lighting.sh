@@ -121,7 +121,7 @@ vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
     const float dl_visibility = directional_light_visibility(input_attribs);
     if (dl_visibility > 0.0)
     {
-        color += shading_color(input_attribs, mi, 0);
+        color += shading_color(input_attribs, mi, 0) * dl_visibility;
     }
 #endif //USING_LIGHTMAP
 
@@ -139,7 +139,7 @@ vec3 calc_direct_light(in input_attributes input_attribs, in material_info mi)
             color += shading_color(input_attribs, mi, ilight);
         }
     }
-    return color * dl_visibility;
+    return color;
 }
 
 vec4 compute_lighting(input_attributes input_attribs){
