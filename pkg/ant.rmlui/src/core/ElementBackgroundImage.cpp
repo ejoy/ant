@@ -9,7 +9,7 @@
 
 namespace Rml {
 
-static void GetRectArray(float wl, float wr, float ht, float hb, Rect& rect, std::vector<Rect> &rect_array){
+static void GetRectArray(float wl, float ht, float wr, float hb, Rect& rect, std::vector<Rect> &rect_array){
 		float x = rect.origin.x;
 		float y = rect.origin.y;
 		float w = rect.size.w;
