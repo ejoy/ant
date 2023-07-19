@@ -43,27 +43,28 @@ void main()
 	mediump vec3 normal = a_normal;
 #	endif//PACK_TANGENT_TO_QUAT
 
+    VSInput vs_input = (VSInput)0;
+    #include "common/default_vs_inputs_getter.sh"
+    mediump mat4 wm = get_world_matrix(vs_input);
+
+    float aspect = u_viewRect.w / u_viewRect.z;
+
 #ifdef VIEW_SPACE
-    mediump mat4 wm = get_world_matrix();
     mat4 modelView = mul(u_view, wm);
     vec4 pos = mul(modelView, vec4(a_position, 1.0));
     // normal should be transformed corredctly by transpose of inverse modelview matrix when anti-uniform scaled
-    normal	= normalize(mul(modelView, mediump vec4(normal, 0.0)).xyz);
-    float w = u_viewRect.z;
-    float h = u_viewRect.w;
-    normal.x *= h / w;
-    pos = pos + vec4(normal, 0) * u_outline_width;
+    vec3 normalVS	= normalize(mul(modelView, mediump vec4(normal, 0.0)).xyz);
+    normalVS.x *= aspect;
+    pos.xyz = pos.xyz + normalVS * u_outline_width;
     gl_Position = mul(u_proj, pos); 
-#else // SCREEN_SPACE    
-    mediump mat4 wm = get_world_matrix();
-    mat4 modelView = mul(u_view, wm);
-    mat4 modelViewPorj = mul(u_proj, modelView);
-    vec4 pos = mul(modelViewPorj, vec4(a_position, 1.0));
-    vec3 view_normal = mul(modelView, vec4(normal, 0.0)).xyz;
-    vec3 ndc_normal = mul(pos.w, normalize(mul(u_proj, vec4(view_normal, 0.0)).xyz));
-    float aspect = u_viewRect.w / u_viewRect.z;
-    ndc_normal.x *= aspect;
-    pos.xy += 0.01 * u_outline_width * ndc_normal.xy;
-    gl_Position = pos; 
+#else // SCREEN_SPACE
+    mat4 modelViewPorj = mul(u_viewProj, wm);
+    vec4 posCS = mul(modelViewPorj, vec4(a_position, 1.0));
+    vec3 normalCS = normalize(mul(modelViewPorj, vec4(normal, 0.0)).xyz);
+
+    normalCS.x *= aspect;
+
+    posCS.xy += 0.01 * u_outline_width * normalCS.xy * posCS.w;
+    gl_Position = posCS;
 #endif //VIEW_SPACE
 }
