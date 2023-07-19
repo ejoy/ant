@@ -10,6 +10,9 @@ local efk       = require "efk"
 
 local FI        = require "fileinterface"
 
+local setting   = import_package "ant.settings".setting
+local DISABLE_EFK<const> = setting:get "efk/disable"
+
 local bgfxmainS = ltask.queryservice "ant.render|bgfx_main"
 
 import_package "ant.service".init_bgfx()
@@ -154,7 +157,7 @@ function S.quit()
     ltask.quit()
 end
 
-ltask.fork(
+local loop = DISABLE_EFK and function () end or
 function ()
     bgfx.encoder_create "efx"
     while not quit do
@@ -166,6 +169,10 @@ function ()
     end
     bgfx.encoder_destroy()
     ltask.wakeup(quit)
-end)
+end
+
+ltask.fork(
+    loop
+)
 
 return S
