@@ -480,16 +480,27 @@ function m:open(filename)
     world:pub {"WindowTitle", filename}
 end
 
-local function pre_remove_entity(eid)
+local function remove_entity_self(eid)
     local e <close> = w:entity(eid, "light?in")
     if e.light then
         light_gizmo.on_remove_light(eid)
+    end
+    local en = hierarchy:get_node(eid)
+    if en.prefab then
+        -- TODO: for camera, remove this for
+        for i = #en.children, 1, -1 do
+            hierarchy:del(en.children[i])
+        end
+        for _, id in ipairs(en.prefab.tag["*"]) do
+            w:remove(id)
+        end
     end
     local teml = hierarchy:get_template(eid)
     if teml and teml.children then
         hierarchy:clear_adapter(eid)
     end
     hierarchy:del(eid)
+    w:remove(eid)
 end
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
@@ -518,9 +529,8 @@ function m:create_ground()
 end
 
 function m:reset_prefab(noscene)
-    for _, e in ipairs(self.entities) do
-        pre_remove_entity(e)
-        w:remove(e)
+    for _, eid in ipairs(self.entities) do
+        remove_entity_self(eid)
     end
     imodifier.set_target(imodifier.highlight, nil)
     light_gizmo.clear()
@@ -552,7 +562,6 @@ function m:reset_prefab(noscene)
         local new_entity, temp = create_simple_entity("Scene", parent)
         self:add_entity(new_entity, parent, temp)
         self.scene = new_entity
-        self.entities[#self.entities + 1] = new_entity
     end
     if not self.main_camera then
         self.main_camera = irq.camera "main_queue"
@@ -633,20 +642,8 @@ function m:add_prefab(filename)
     end
     local prefab
     local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
-    -- local group_id = get_group_id()
-    -- local v_root = ecs.create_entity {
-    --     policy = "ant.scene|hitch_object",
-    --     data = {
-    --         scene = { parent = parent },
-    --         hitch = { group = group_id },
-    --     }
-    -- }
-    -- local group = ecs.group(group_id)
-    -- prefab = group:create_instance(prefab_filename)
-    -- group:enable "scene_update"
     local v_root, temp = create_simple_entity(gen_prefab_name(), parent)
     self.entities[#self.entities+1] = v_root
-    hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false, patch = true}, parent)
     prefab = ecs.create_instance(prefab_filename, v_root)
     prefab.on_ready = function(inst)
         local children = inst.tag["*"]
@@ -664,6 +661,8 @@ function m:add_prefab(filename)
     function prefab:on_message(msg) end
     function prefab:on_update() end
     world:create_object(prefab)
+    local node = hierarchy:add(v_root, {template = temp, filename = prefab_filename, editor = false, patch = true}, parent)
+    node.prefab = prefab
 end
 
 function m:save(path)
@@ -777,11 +776,12 @@ function m:do_remove_entity(eid)
         return
     end
     local en = hierarchy:get_node(eid)
-    for _, child in ipairs(en.children) do
-        self:do_remove_entity(child.eid)
+    if not en.prefab then
+        for i = #en.children, 1, -1 do
+            self:do_remove_entity(en.children[i])
+        end
     end
-    pre_remove_entity(eid)
-    w:remove(eid)
+    remove_entity_self(eid)
     local index
     for idx, entity in ipairs(self.entities) do
         if entity == eid then
@@ -849,7 +849,7 @@ function m:get_world_aabb(eid)
     end
     -- TODO: if eid is scene root or meshskin, merge skinning node
     if e.name == "Scene" or e.meshskin then
-        for key, _ in pairs(hierarchy.all) do
+        for key, _ in pairs(hierarchy.all_node) do
             local ea <close> = w:entity(key, "bounding?in skinning?in")
             local bounding = ea.bounding
             if ea.skinning and bounding and bounding.scene_aabb and bounding.scene_aabb ~= mc.NULL then

@@ -2,14 +2,14 @@ local utils = require "common.utils"
 
 local hierarchy = {
     root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}},
-    all = {},
+    all_node = {},
     select_adapter = {},
     select_adaptee = {}
 }
 
 function hierarchy:set_root(eid)
     self.root.eid = eid
-    self.all[eid] = self.root
+    self.all_node[eid] = self.root
 end
 
 local function find(t, eid)
@@ -21,10 +21,10 @@ local function find(t, eid)
     return nil
 end
 function hierarchy:add(ineid, tp, inpeid)
-    if self.all[ineid] then return end
+    if self.all_node[ineid] then return end
     local node = { eid = ineid, parent = inpeid, template = utils.deep_copy(tp), children = {}, locked = {false}, visible = {true} }
     if inpeid then
-        local parent = self.all[inpeid]
+        local parent = self.all_node[inpeid]
         if parent then
             table.insert(parent.children, node)
         else
@@ -34,18 +34,18 @@ function hierarchy:add(ineid, tp, inpeid)
     else
         table.insert(self.root.children, node)
     end
-    self.all[ineid] = node
+    self.all_node[ineid] = node
     return node
 end
 
 function hierarchy:del(eid)
     if not eid then return end
-    local eid_node = self.all[eid]
-    if not eid_node then return end
+    local node = self.all_node[eid]
+    if not node then return end
 
     local pt
-    if eid_node.parent and self.all[eid_node.parent]then
-        pt = self.all[eid_node.parent].children
+    if node.parent and self.all_node[node.parent]then
+        pt = self.all_node[node.parent].children
     else
         pt = self.root.children
     end
@@ -55,13 +55,13 @@ function hierarchy:del(eid)
             table.remove(pt, idx)
         end
     end
-    self.all[eid] = nil
-    return eid_node
+    self.all_node[eid] = nil
+    return node
 end
 
 function hierarchy:clear()
     self.root = {eid = -1, parent = -1, template = {}, children = {}, locked = {false}, visible = {true}}
-    self.all = {}
+    self.all_node = {}
     self.select_adapter = {}
     self.select_adaptee = {}
     self.collider_list = nil
@@ -69,17 +69,17 @@ function hierarchy:clear()
 end
 
 function hierarchy:set_parent(eid, peid)
-    local eid_node = self.all[eid]
-    local peid_node = peid and self.all[peid] or self.root
+    local eid_node = self.all_node[eid]
+    local peid_node = peid and self.all_node[peid] or self.root
     if (not eid_node) or (not peid_node) or (eid_node.parent == peid) then return end
     local removed_node = self:del(eid)
     removed_node.parent = peid
     table.insert(peid_node.children, removed_node)
-    self.all[eid] = removed_node
+    self.all_node[eid] = removed_node
 end
 
 function hierarchy:get_parent(eid)
-    return self.all[eid].parent
+    return self.all_node[eid].parent
 end
 
 local function find_policy(t, policy)
@@ -95,7 +95,7 @@ function hierarchy:update_prefab_template()
     local raw_tpl = {}
     local patch_tpl = {}
     local function construct_entity(eid, rpt, ppt)
-        local node = self.all[eid]
+        local node = self.all_node[eid]
         if node.template.temporary then
             return
         end
@@ -127,11 +127,11 @@ function hierarchy:update_prefab_template()
             table.insert(cur_tp, {mount = #rpt + pidx, name = node.template.name, editor = node.template.editor, prefab = prefab_filename})
         end
         for _, child in ipairs(node.children) do
-            local nd = self.all[child.eid]
+            local nd = self.all_node[child.eid]
             local tt = nd.template.template
             if nd.parent ~= self.root.eid and tt then
                 if nd.template.patch then
-                    if self.all[nd.parent].template.patch or (tt.mount and tt.mount ~= 1) then
+                    if self.all_node[nd.parent].template.patch or (tt.mount and tt.mount ~= 1) then
                         tt.mount = #ppt
                     end
                 else
@@ -146,24 +146,24 @@ function hierarchy:update_prefab_template()
 end
 
 function hierarchy:get_locked_uidata(eid)
-    return self.all[eid].locked
+    return self.all_node[eid].locked
 end
 
 function hierarchy:get_visible_uidata(eid)
-    return self.all[eid].visible
+    return self.all_node[eid].visible
 end
 
 function hierarchy:is_locked(eid)
-    if not self.all[eid] then return false end
-    return self.all[eid].locked[1]
+    if not self.all_node[eid] then return false end
+    return self.all_node[eid].locked[1]
 end
 
 function hierarchy:is_visible(eid)
-    return self.all[eid].visible[1]
+    return self.all_node[eid].visible[1]
 end
 
 function hierarchy:set_lock(eid, b)
-    self.all[eid].locked[1] = b
+    self.all_node[eid].locked[1] = b
 end
 
 local function set_visible_all(nd, b)
@@ -182,11 +182,11 @@ function hierarchy:set_visible(nd, b, recursion)
 end
 
 function hierarchy:get_template(e)
-    return self.all[e] and self.all[e].template or nil
+    return self.all_node[e] and self.all_node[e].template or nil
 end
 
 function hierarchy:clear_adapter(e)
-    local ac = self.all[e].template.children
+    local ac = self.all_node[e].template.children
     if ac then
         for _, child in ipairs(ac) do
             self.select_adapter[child] = nil
@@ -214,17 +214,17 @@ function hierarchy:get_select_adaptee(e)
 end
 
 function hierarchy:update_display_name(e, name)
-    if not self.all[e] then return end
-    self.all[e].display_name = (name or "")
+    if not self.all_node[e] then return end
+    self.all_node[e].display_name = (name or "")
 end
 
 function hierarchy:get_node(e)
-    return self.all[e]
+    return self.all_node[e]
 end
 
 function hierarchy:update_slot_list(world)
     local slot_list = {["None"] = -1}
-    for _, value in pairs(self.all) do
+    for _, value in pairs(self.all_node) do
         local e <close> = world.w:entity(value.eid, "slot?in")
         if e.slot then
             local tagname = value.template.template.data.name--value.template.template.data.tag--
@@ -238,7 +238,7 @@ end
 
 function hierarchy:update_collider_list(world)
     local collider_list = {["None"] = -1}
-    for _, value in pairs(self.all) do
+    for _, value in pairs(self.all_node) do
         local e <close> = world.w:entity(value.eid, "collider?in")
         if e.collider then
             collider_list[world[value.eid].name] = value.eid
@@ -248,8 +248,8 @@ function hierarchy:update_collider_list(world)
 end
 
 local function find_table(eid)
-    local p = hierarchy.all[eid].parent
-    local t = hierarchy.all[p].children
+    local p = hierarchy.all_node[eid].parent
+    local t = hierarchy.all_node[p].children
     for i, n in ipairs(t) do
         if n.eid == eid then
             return i, t
@@ -261,25 +261,25 @@ end
 function hierarchy:move_top(eid)
     local i, t = find_table(eid)
     if i < 2 then return end
-    table.remove(t, i) 
-    table.insert(t, 1, self.all[eid])
+    table.remove(t, i)
+    table.insert(t, 1, self.all_node[eid])
 end
 function hierarchy:move_up(eid)
     local i, t = find_table(eid)
     if i < 2 then return end
-    table.remove(t, i) 
-    table.insert(t, i - 1 , self.all[eid])
+    table.remove(t, i)
+    table.insert(t, i - 1 , self.all_node[eid])
 end
 function hierarchy:move_down(eid)
     local i, t = find_table(eid)
     if i == #t then return end
-    table.remove(t, i) 
-    table.insert(t, i + 1 , self.all[eid])
+    table.remove(t, i)
+    table.insert(t, i + 1 , self.all_node[eid])
 end
 function hierarchy:move_bottom(eid)
     local i, t = find_table(eid)
     if i == #t then return end
     table.remove(t, i)
-    table.insert(t, self.all[eid])
+    table.insert(t, self.all_node[eid])
 end
 return hierarchy
