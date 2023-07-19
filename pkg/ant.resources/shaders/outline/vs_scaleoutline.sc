@@ -47,20 +47,22 @@ void main()
     #include "common/default_vs_inputs_getter.sh"
     mediump mat4 wm = get_world_matrix(vs_input);
 
-    float aspect = u_viewRect.w / u_viewRect.z;
-
 #ifdef VIEW_SPACE
     mat4 modelView = mul(u_view, wm);
     vec4 pos = mul(modelView, vec4(a_position, 1.0));
+
+    float aspect = u_proj[1][1]/u_proj[0][0];
     // normal should be transformed corredctly by transpose of inverse modelview matrix when anti-uniform scaled
     vec3 normalVS	= normalize(mul(modelView, mediump vec4(normal, 0.0)).xyz);
     normalVS.x *= aspect;
     pos.xyz = pos.xyz + normalVS * u_outline_width;
     gl_Position = mul(u_proj, pos); 
 #else // SCREEN_SPACE
-    mat4 modelViewPorj = mul(u_viewProj, wm);
-    vec4 posCS = mul(modelViewPorj, vec4(a_position, 1.0));
-    vec3 normalCS = normalize(mul(modelViewPorj, vec4(normal, 0.0)).xyz);
+    
+    float aspect = u_viewRect.w / u_viewRect.z;
+    mat4 mvp = mul(u_viewProj, wm);
+    vec4 posCS = mul(mvp, vec4(a_position, 1.0));
+    vec3 normalCS = normalize(mul(mvp, vec4(normal, 0.0)).xyz);
 
     normalCS.x *= aspect;
 
