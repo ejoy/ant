@@ -117,7 +117,6 @@ local PBR_TEXTURE_MACROS<const> = {
     s_metallic_roughness    ="HAS_METALLIC_ROUGHNESS_TEXTURE=1",
     s_emissive              ="HAS_EMISSIVE_TEXTURE=1",
     s_occlusion             ="HAS_OCCLUSION_TEXTURE=1",
-    u_basecolor_factor      ="WITH_COLOR_ATTRIB=1"
 }
 
 local function get_macros(setting, mat)
