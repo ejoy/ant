@@ -17,14 +17,14 @@ namespace ecs_api {
     struct component_meta {};
 
     template <typename T>
-    struct is_tag {
-        static constexpr bool value = component_meta<T>::tag;
-    };
-    template <typename T>
-    constexpr bool is_tag_v = component_meta<T>::tag;
+    constexpr int component_id = component_meta<T>::id;
 
     template <typename T>
-    constexpr int component_id = component_meta<T>::id;
+    struct is_tag {
+        static constexpr bool value = std::is_integral_v<decltype(component_id<T>)> && std::is_empty_v<T>;
+    };
+    template <typename T>
+    constexpr bool is_tag_v = is_tag<T>::value;
 
     namespace impl {
         template <typename Component, typename...Components>

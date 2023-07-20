@@ -135,6 +135,7 @@ do
     write "#pragma once"
     write ""
     write "#include \"ecs/select.h\""
+    write "#include \"ecs/component_name.h\""
     write "#include \"ecs/user.h\""
     write "#include <stdint.h>"
     write "#include <array>"
@@ -174,59 +175,49 @@ do
             write ""
         end
     end
+    
+    write ""
+    write "namespace decl {"
+    write "struct component {"
+    write "    std::string_view name;"
+    write "    size_t           size;"
+    write "};"
+    write "template <typename T>"
+    write "constexpr auto c() {"
+    write "    return component {"
+    write "        ecs_api::component_name_v<T>,"
+    write "        std::is_empty_v<T> ? 0 : sizeof(T),"
+    write "    };"
+    write "}"
+    write(("static constexpr std::array<component, %d> components = {"):format(#components))
+    for _, c in ipairs(components) do
+        write(("    c<%s>(),"):format(c[1]))
+    end
+    write "};"
+    write ""
+    write "}"
     write "}"
     write ""
     write "namespace ecs = ant_ecs;"
     write ""
 
-    write "namespace ecs_api {"
+    write "template <> struct ecs_api::component_meta<ecs::eid> {"
+    write "\tstatic constexpr unsigned id = 0xFFFFFFFF;"
+    write "};"
+    write "template <> struct ecs_api::component_meta<ecs::REMOVED> {"
+    write "\tstatic constexpr unsigned id = 0;"
+    write "};"
     write ""
     write "#define ECS_COMPONENT(NAME, ID) \\"
-    write "template <> struct component_meta<ecs::NAME> { \\"
+    write "template <> struct ecs_api::component_meta<ecs::NAME> { \\"
     write "\tstatic constexpr unsigned id = ID; \\"
-    write "\tstatic constexpr bool tag = false; \\"
     write "};"
     write ""
-    write "#define ECS_TAG(NAME, ID) \\"
-    write "template <> struct component_meta<ecs::NAME> { \\"
-    write "\tstatic constexpr unsigned int id = ID; \\"
-    write "\tstatic constexpr bool tag = true; \\"
-    write "};"
-    write ""
-    write "template <> struct component_meta<ecs::eid> {"
-    write "\tstatic constexpr unsigned id = 0xFFFFFFFF;"
-    write "\tstatic constexpr bool tag = false;"
-    write "};"
-    write("ECS_TAG(REMOVED, 0)")
     for i, c in ipairs(components) do
-        if c[2] == "tag" then
-            write(("ECS_TAG(%s,%d)"):format(c[1], i))
-        else
-            write(("ECS_COMPONENT(%s,%d)"):format(c[1], i))
-        end
+        write(("ECS_COMPONENT(%s,%d)"):format(c[1], i))
     end
     write ""
     write "#undef ECS_COMPONENT"
-    write "#undef ECS_TAG"
-    write ""
-    write "}"
-    write ""
-    write "namespace ant {"
-    write "struct component_decl {"
-    write "    std::string_view name;"
-    write "    size_t           size = 0;"
-    write "};"
-    write(("static constexpr std::array<component_decl, %d> component_decls = {"):format(#components))
-    for _, c in ipairs(components) do
-        if c[2] == "tag" then
-            write(("    component_decl {\"%s\"},"):format(c[1]))
-        else
-            write(("    component_decl {\"%s\", sizeof(ecs::%s)},"):format(c[1], c[1]))
-        end
-    end
-    write "};"
-    write "}"
-    write ""
     write ""
 
     writefile(component_h .. "/component.hpp")

@@ -3,7 +3,7 @@
 
 extern "C" int
 luaopen_ecs_components(lua_State *L) {
-    const auto& components = ant::component_decls;
+    const auto& components = ecs::decl::components;
     lua_createtable(L, components.size(), components.size());
     for (size_t i = 0; i < components.size(); ++i) {
         lua_pushlstring(L, components[i].name.data(), components[i].name.size());
