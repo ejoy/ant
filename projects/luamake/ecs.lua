@@ -1,16 +1,16 @@
 local argn = select("#", ...)
-if argn < 3 then
+if argn < 2 then
     print [[
-at least 3 argument:
-ecs.lua component.lua component.h package1, package2, ...
+at least 2 argument:
+ecs.lua component.h package1, package2, ...
 package1 and package2 are path to find *.ecs file
     ]]
     return
 end
-local component_lua, component_h = select(1, ...), select(2, ...)
+local component_h = select(1, ...)
 local packages = {}
-for i=3, select('#', ...) do
-    packages[i-2] = select(i, ...)
+for i = 2, select('#', ...) do
+    packages[i-1] = select(i, ...)
 end
 
 local fs = require "bee.filesystem"
@@ -83,7 +83,6 @@ local function loadComponents()
         else
             local t = info.type[1]
             if t == "lua" then
-                components[#components+1] = {name, "lua"}
             elseif t == "c" then
                 components[#components+1] = {name, "c", info.field}
             elseif t == "raw" then
@@ -114,15 +113,6 @@ local function write(line)
     out[#out+1] = line
 end
 
-write "return {"
-for _, info in ipairs(components) do
-    local name = info[1]
-    write(("\t%q,"):format(name))
-end
-write "}"
-write ""
-writefile(component_lua)
-
 local TYPENAMES <const> = {
     int = "int32_t",
     int64 = "int64_t",
@@ -134,7 +124,7 @@ local TYPENAMES <const> = {
 }
 
 local function typenames(v)
-    local ud = v:match "^userdata|(.*)$"
+    local _, ud = v:match "^([^|]+)|(.*)$"
     if ud then
         return ud
     end
@@ -145,8 +135,11 @@ do
     write "#pragma once"
     write ""
     write "#include \"ecs/select.h\""
+    write "#include \"ecs/component_name.h\""
     write "#include \"ecs/user.h\""
     write "#include <stdint.h>"
+    write "#include <array>"
+    write "#include <string_view>"
     write ""
     write "namespace ant_ecs {"
     write ""
@@ -159,7 +152,7 @@ do
             local fields = info[3]
             write(("struct %s {"):format(name))
             for _, field in ipairs(fields) do
-                local name, typename = field:match "^([%w_]+):([%w|_]+)$"
+                local name, typename = field:match "^([%w_]+):(.+)$"
                 write(("\t%s %s;"):format(typenames(typename), name))
             end
             write("};")
@@ -182,42 +175,49 @@ do
             write ""
         end
     end
+    
+    write ""
+    write "namespace decl {"
+    write "struct component {"
+    write "    std::string_view name;"
+    write "    size_t           size;"
+    write "};"
+    write "template <typename T>"
+    write "constexpr auto c() {"
+    write "    return component {"
+    write "        ecs_api::component_name_v<T>,"
+    write "        std::is_empty_v<T> ? 0 : sizeof(T),"
+    write "    };"
+    write "}"
+    write(("static constexpr std::array<component, %d> components = {"):format(#components))
+    for _, c in ipairs(components) do
+        write(("    c<%s>(),"):format(c[1]))
+    end
+    write "};"
+    write ""
+    write "}"
     write "}"
     write ""
     write "namespace ecs = ant_ecs;"
     write ""
 
-    write "namespace ecs_api {"
+    write "template <> struct ecs_api::component_meta<ecs::eid> {"
+    write "\tstatic constexpr unsigned id = 0xFFFFFFFF;"
+    write "};"
+    write "template <> struct ecs_api::component_meta<ecs::REMOVED> {"
+    write "\tstatic constexpr unsigned id = 0;"
+    write "};"
     write ""
     write "#define ECS_COMPONENT(NAME, ID) \\"
-    write "template <> struct component_meta<ecs::NAME> { \\"
+    write "template <> struct ecs_api::component_meta<ecs::NAME> { \\"
     write "\tstatic constexpr unsigned id = ID; \\"
-    write "\tstatic constexpr bool tag = false; \\"
     write "};"
     write ""
-    write "#define ECS_TAG(NAME, ID) \\"
-    write "template <> struct component_meta<ecs::NAME> { \\"
-    write "\tstatic constexpr unsigned int id = ID; \\"
-    write "\tstatic constexpr bool tag = true; \\"
-    write "};"
-    write ""
-    write "template <> struct component_meta<ecs::eid> {"
-    write "\tstatic constexpr unsigned id = 0xFFFFFFFF;"
-    write "\tstatic constexpr bool tag = false;"
-    write "};"
-    write("ECS_TAG(REMOVED, 0)")
     for i, c in ipairs(components) do
-        if c[2] == "tag" then
-            write(("ECS_TAG(%s,%d)"):format(c[1], i))
-        else
-            write(("ECS_COMPONENT(%s,%d)"):format(c[1], i))
-        end
+        write(("ECS_COMPONENT(%s,%d)"):format(c[1], i))
     end
     write ""
     write "#undef ECS_COMPONENT"
-    write "#undef ECS_TAG"
-    write ""
-    write "}"
     write ""
 
     writefile(component_h .. "/component.hpp")

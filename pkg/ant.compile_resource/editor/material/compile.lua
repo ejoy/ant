@@ -283,7 +283,8 @@ local function find_varying_path(fx, stage, localpath)
     end
 end
 
-local idx = 0
+local CHECK_MT<const> = {__newindex=function () error "DONOT MODIFY" end}
+
 local function compile(tasks, deps, mat, input, output, localpath)
     local setting = config.get "material".setting
     local include_path = input:parent_path()
@@ -293,9 +294,8 @@ local function compile(tasks, deps, mat, input, output, localpath)
     mergeCfgSetting(fx, localpath)
     check_update_fx(fx)
 
-    -- setmetatable(fx, {__newindex=function ()
-    --     error "DONOT MODIFY"
-    -- end})
+    setmetatable(fx, CHECK_MT)
+    setmetatable(fx.setting, CHECK_MT)
 
     writefile(output / "main.cfg", mat)
 

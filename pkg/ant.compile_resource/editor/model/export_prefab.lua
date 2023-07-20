@@ -55,10 +55,18 @@ end
 
 local DEFAULT_STATE = "main_view|selectable|cast_shadow"
 
+local is_builtinpath;do
+    local builtin<const> = getmetatable(serialize.path "")
+    is_builtinpath = function (v)
+        assert(type(v) == "table")
+        return getmetatable(v) == builtin
+    end
+end
+
 local function duplicate_table(m)
     local t = {}
     for k, v in pairs(m) do
-        if type(v) == "table" and getmetatable(v) == nil then
+        if type(v) == "table" and (not is_builtinpath(v)) then
             t[k] = duplicate_table(v)
         else
             t[k] = v

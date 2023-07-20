@@ -140,26 +140,39 @@ local function cstruct(...)
 end
 
 local function create_context(w)
-	local bgfx 		= require "bgfx"
-	local math3d 	= require "math3d"
-	local component = require "component"
+	local bgfx       = require "bgfx"
+	local math3d     = require "math3d"
+	local components = require "ecs.components"
 	local ecs = w.w
 	local component_decl = w._component_decl
-	for i, name in ipairs(component) do
+	local function register_component(i, decl)
+		local id, size = ecs:register(decl)
+		assert(id == i)
+		assert(size == components[decl.name] or 0)
+	end
+	for i, name in ipairs(components) do
 		local decl = component_decl[name]
 		if decl then
-			ecs:register(decl)
 			component_decl[name] = nil
+			register_component(i, decl)
 		else
-			ecs:register { name = "_unused_"..i }
-			component[i] = "REMOVED"
+			local csize = components[name]
+			if csize then
+				register_component(i, {
+					name = name,
+					type = "raw",
+					size = csize
+				})
+			else
+				register_component(i, { name = name })
+			end
 		end
 	end
 	for _, decl in pairs(component_decl) do
 		ecs:register(decl)
 	end
 	w._component_decl = nil
-	local ecs_context = ecs:context(component)
+	local ecs_context = ecs:context()
 	w._ecs_world,
 	w._ecs_ref = cstruct(
 		ecs_context,

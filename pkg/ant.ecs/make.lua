@@ -2,7 +2,7 @@ local lm = require "luamake"
 
 local ROOT <const> = "../../"
 
-lm:lua_source "scene" {
+lm:lua_source "ecs" {
     includes = {
         ROOT .. "clibs/ecs",
         ROOT .. "3rd/math3d",
@@ -10,11 +10,7 @@ lm:lua_source "scene" {
         ROOT .. "3rd/glm",
     },
     sources = {
-        "scene.cpp"
+        "src/*.cpp"
     },
-    defines = {
-        "GLM_FORCE_QUAT_DATA_XYZW",
-    },
-    deps = "foundation",
     objdeps = "compile_ecs",
 }

@@ -57,7 +57,7 @@ policy "bounding"
 
 component "scene"
     .type "c"
-    .field "parent:int64"
+    .field "parent:int64|eid"
     .field "s:userdata|math_t"
     .field "r:userdata|math_t"
     .field "t:userdata|math_t"
