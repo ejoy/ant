@@ -904,7 +904,8 @@ function m.show()
             end
             
             local icon = current_anim.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
-            if imgui.widget.ImageButton("##play ", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
+            local imagesize = icon.texinfo.width * icons.scale
+            if imgui.widget.ImageButton("##play ", assetmgr.textures[icon.id], imagesize, imagesize) then
                 if current_anim.is_playing then
                     anim_pause(true)
                 else

@@ -283,15 +283,12 @@ function m.show()
             local dir_name = tostring(v[1]:filename())
             local base_flags = imgui.flags.TreeNode { "OpenOnArrow", "SpanFullWidth" } | ((selected_folder == v) and imgui.flags.TreeNode{"Selected"} or 0)
             local skip = false
-            if not v.parent then
-                imgui.widget.Image(assetmgr.textures[icons.ICON_ROOM_INSTANCE.id], icons.ICON_ROOM_INSTANCE.texinfo.width, icons.ICON_ROOM_INSTANCE.texinfo.height)
-                imgui.cursor.SameLine()
-            end
+            local fonticon = (not v.parent) and (faicons.ICON_FA_FILE_ZIPPER .. " ") or ""
             if (#v[2].dirs == 0) then
-                imgui.widget.TreeNode(dir_name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
+                imgui.widget.TreeNode(fonticon .. dir_name, base_flags | imgui.flags.TreeNode { "Leaf", "NoTreePushOnOpen" })
             else
                 local adjust_flags = base_flags | (string.find(selected_folder[1]._value, "/" .. dir_name) and imgui.flags.TreeNode {"DefaultOpen"} or 0)
-                if imgui.widget.TreeNode(dir_name, adjust_flags) then
+                if imgui.widget.TreeNode(fonticon .. dir_name, adjust_flags) then
                     if imgui.util.IsItemClicked() then
                         selected_folder = v
                     end
@@ -392,7 +389,8 @@ function m.show()
                     else
                         imgui.windows.PushStyleColor(imgui.enum.StyleCol.HeaderHovered, 0.26, 0.59, 0.98, 0.31)
                     end
-                    imgui.widget.Image(assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height)
+                    local imagesize = icon.texinfo.width * icons.scale
+                    imgui.widget.Image(assetmgr.textures[icon.id], imagesize, imagesize)
                     imgui.cursor.SameLine()
                 end
                 local function post_selectable()
@@ -416,19 +414,20 @@ function m.show()
                     end
                 end
                 for _, path in pairs(folder.files) do
-                    pre_selectable(icons.ICON_FILE, selected_file ~= path)
+                    pre_selectable(icons.get_file_icon(tostring(path)), selected_file ~= path)
                     pre_init_item_height()
                     if imgui.widget.Selectable(tostring(path:filename()), selected_file == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path
                         current_filter_key = 1
                         if imgui.util.IsMouseDoubleClicked(0) then
                             local prefab_file
+                            local strpath = tostring(path)
                             if path:equal_extension(".prefab") then
-                                prefab_file = tostring(path)
+                                prefab_file = strpath
                             elseif path:equal_extension(".glb") then
-                                prefab_file = tostring(path) .. "|mesh.prefab"
+                                prefab_file = strpath .. "|mesh.prefab"
                             elseif path:equal_extension(".fbx") then
-                                world:pub {"OpenFile", "FBX", tostring(path)}
+                                world:pub {"OpenFile", "FBX", strpath}
                             elseif path:equal_extension ".material" then
                                 local me = ecs.require "widget.material_editor"
                                 me.open(path)

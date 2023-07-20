@@ -318,12 +318,15 @@ function m.showLog(name, current_log)
         local color
         local item = current_log[i]
         if item.level == LEVEL_INFO then
-            imgui.widget.Image(assetmgr.textures[icons.ICON_INFO.id], icons.ICON_INFO.texinfo.width, icons.ICON_INFO.texinfo.height)
+            local imagesize = icons.ICON_INFO.texinfo.width * icons.scale
+            imgui.widget.Image(assetmgr.textures[icons.ICON_INFO.id], imagesize, imagesize)
         elseif item.level == LEVEL_WARN then
-            imgui.widget.Image(assetmgr.textures[icons.ICON_WARN.id], icons.ICON_WARN.texinfo.width, icons.ICON_WARN.texinfo.height)
+            local imagesize = icons.ICON_WARN.texinfo.width * icons.scale
+            imgui.widget.Image(assetmgr.textures[icons.ICON_WARN.id], imagesize, imagesize)
             color = level_color.warn
         elseif item.level == LEVEL_ERROR then
-            imgui.widget.Image(assetmgr.textures[icons.ICON_ERROR.id], icons.ICON_ERROR.texinfo.width, icons.ICON_ERROR.texinfo.height)
+            local imagesize = icons.ICON_ERROR.texinfo.width * icons.scale
+            imgui.widget.Image(assetmgr.textures[icons.ICON_ERROR.id], imagesize, imagesize)
             color = level_color.error
         end
         imgui.cursor.SameLine()

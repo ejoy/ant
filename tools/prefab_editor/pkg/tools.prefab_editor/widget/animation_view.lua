@@ -801,7 +801,8 @@ function m.show()
         imgui.cursor.PopItemWidth()
         imgui.cursor.SameLine()
         local icon = anim_state.is_playing and icons.ICON_PAUSE or icons.ICON_PLAY
-        if imgui.widget.ImageButton("##play", assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height) then
+        local imagesize = icon.texinfo.width * icons.scale
+        if imgui.widget.ImageButton("##play", assetmgr.textures[icon.id], imagesize, imagesize) then
             if anim_state.is_playing then
                 iani.pause(anim_eid, true)
             else

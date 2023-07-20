@@ -116,6 +116,7 @@ function m:init()
 				0xf05a, 0xf05a, -- ICON_FA_CIRCLE_INFO 			"\xef\x81\x9a"	U+f05a
 				0xf35d, 0xf35d, -- ICON_FA_UP_RIGHT_FROM_SQUARE "\xef\x8d\x9d"	U+f35d
 				0xf071, 0xf071, -- ICON_FA_TRIANGLE_EXCLAMATION "\xef\x81\xb1"	U+f071
+				0xf1c6, 0xf1c6, -- ICON_FA_FILE_ZIPPER 			"\xef\x87\x86"	U+f1c6
 			}},
         }
     elseif platform.os == "macos" then

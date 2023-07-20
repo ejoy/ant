@@ -45,5 +45,6 @@ local icons = {
     ["ICON_FA_CIRCLE_INFO"]          = "\xef\x81\x9a",
     ["ICON_FA_UP_RIGHT_FROM_SQUARE"] = "\xef\x8d\x9d",
     ["ICON_FA_TRIANGLE_EXCLAMATION"] = "\xef\x81\xb1",
+    ["ICON_FA_FILE_ZIPPER"]          = "\xef\x87\x86"
 }
 return icons

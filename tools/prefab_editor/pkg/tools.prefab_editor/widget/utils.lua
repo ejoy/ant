@@ -44,7 +44,7 @@ function m.imguiToolbar(icon, tooltip, active)
         bg_col = {0.2, 0.2, 0.2, 1}
     end
 	imgui.windows.PushStyleVar(imgui.enum.StyleVar.FramePadding, 2, 2);
-    local r = imgui.widget.ImageButton(tooltip, assetmgr.textures[icon.id], icon.texinfo.width, icon.texinfo.height, {frame_padding = 2, bg_col = bg_col, tint_col = {1.0, 1.0, 1.0, 1.0}})
+    local r = imgui.widget.ImageButton(tooltip, assetmgr.textures[icon.id], icon.texinfo.width * 1.5, icon.texinfo.height * 1.5, {frame_padding = 2, bg_col = bg_col, tint_col = {1.0, 1.0, 1.0, 1.0}})
     imgui.windows.PopStyleVar(1);
     if tooltip then
         imgui_tooltip(tooltip)
