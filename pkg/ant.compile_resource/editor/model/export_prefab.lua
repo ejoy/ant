@@ -93,7 +93,10 @@ local function generate_material(mi, mode, cfg)
 
     local skn = cfg.hasskin and "_skin" or ""
     local clr = cfg.withcolorattrib and "_clr" or ""
-    local unpack_tf = (not cfg.pack_tangent_frame) and "_unpack_tf" or ""
+
+    local unpack_tf = (not cfg.pack_tangent_frame) 
+    local with_normal_attrib = cfg.with_normal_attrib
+    local with_tangent_attrib = cfg.with_tangent_attrib
     local key = gen_key(filename:string(), sname, skn, clr, unpack_tf)
 
     local m = material_cache[key]
@@ -130,8 +133,9 @@ local function generate_material(mi, mode, cfg)
             if nil == nm.fx.setting then
                 nm.fx.setting = {}
             end
-            nm.fx.setting["PACK_TANGENT_TO_QUAT"] = unpack_tf == "" and 1 or 0
-            
+            nm.fx.setting["PACK_TANGENT_TO_QUAT"] = unpack_tf and 0 or 1
+            nm.fx.setting["WITH_NORMAL_ATTRIB"] = with_normal_attrib and 1 or 0
+            nm.fx.setting["WITH_TANGENT_ATTRIB"] = with_tangent_attrib and 1 or 0
             m = {
                 filename = filename:parent_path() / (basename .. ".material"),
                 material = nm
@@ -286,6 +290,9 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
             hasskin = hasskin,
             withcolorattrib = has_color_attrib(em.declname),
             pack_tangent_frame = em.pack_tangent_frame,
+            with_normal_attrib = em.with_normal_attrib,
+            with_tangent_attrib = em.with_tangent_attrib
+            
         }
 
         local materialfile = seri_material(input, output, exports, prim.mode or 4, prim.material, cfg)

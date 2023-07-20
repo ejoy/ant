@@ -61,33 +61,32 @@
 
 #   define OUTPUT_NORMAL
 #   define OUTPUT_TANGENT
-#   define OUTPUT_BITANGENT
 
 #   define OUTPUT_WORLDPOS
 
 #else //!MATERIAL_UNLIT
-#   ifdef CALC_TBN
+
+#   ifdef WITH_NORMAL_ATTRIB
 #   define INPUT_NORMAL     a_normal
+#   else
+#   define INPUT_NORMAL
+#   endif
+
+#   ifdef WITH_TANGENT_ATTRIB
+#   define INPUT_TANGENT      a_tangent
+#   else
 #   define INPUT_TANGENT
+#   endif
+
+#if defined(WITH_TANGENT_ATTRIB) || defined(WITH_CUSTOM_TANGENT_ATTRIB)
+#   define OUTPUT_TANGENT     v_tangent
+#   else
+#   define OUTPUT_TANGENT
+#endif
 
 #   define OUTPUT_NORMAL    v_normal
-#   define OUTPUT_TANGENT
-#   define OUTPUT_BITANGENT
-#   else    //!CALC_TBN
-#       define INPUT_TANGENT    a_tangent
+#   define OUTPUT_WORLDPOS  v_posWS
 
-#       if PACK_TANGENT_TO_QUAT
-#       define INPUT_NORMAL
-#       else //!PACK_TANGENT_TO_QUAT
-#       define INPUT_NORMAL a_normal
-#       endif //PACK_TANGENT_TO_QUAT
-
-#       define OUTPUT_NORMAL    v_normal
-#       define OUTPUT_TANGENT   v_tangent
-#       define OUTPUT_BITANGENT v_bitangent
-#   endif   //CALC_TBN
-
-#   define OUTPUT_WORLDPOS v_posWS
 #endif //MATERIAL_UNLIT
 
 #ifdef USER_ATTR

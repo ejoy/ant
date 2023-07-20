@@ -5,9 +5,9 @@
 #ifndef MATERIAL_UNLIT
     fs_input.normal = v_normal;
     fs_input.pos    = v_posWS;
-    #ifndef CALC_TBN
+    #ifdef WITH_TANGENT_ATTRIB
         fs_input.tangent = v_tangent;
-    #endif   //CALC_TBN
+    #endif
 #endif //MATERIAL_UNLIT
 
 #ifdef WITH_COLOR_ATTRIB

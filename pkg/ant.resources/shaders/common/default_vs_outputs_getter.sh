@@ -14,7 +14,9 @@
 #ifndef MATERIAL_UNLIT
     v_posWS = vs_output.world_pos;
     v_normal = vs_output.normal;
-    v_tangent = vs_output.tangent;
+    #if defined(WITH_TANGENT_ATTRIB) || defined(WITH_CUSTOM_TANGENT_ATTRIB)
+        v_tangent = vs_output.tangent;
+    #endif
 #endif //!MATERIAL_UNLIT  
 
 #ifdef OUTPUT_USER_ATTR_0

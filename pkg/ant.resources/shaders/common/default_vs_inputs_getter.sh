@@ -6,14 +6,13 @@ vs_input.pos = a_position;
 #endif //WITH_COLOR_ATTRIB
 
 #ifndef MATERIAL_UNLIT
-    #ifdef CALC_TBN
+    #ifdef WITH_NORMAL_ATTRIB
         vs_input.normal = a_normal;
-    #else    //!CALC_TBN
+    #endif
+
+    #ifdef WITH_TANGENT_ATTRIB
         vs_input.tangent = a_tangent;
-        #ifndef PACK_TANGENT_TO_QUAT
-            vs_input.normal = a_normal;
-        #endif //PACK_TANGENT_TO_QUAT
-    #endif   //CALC_TBN
+    #endif
 #endif //MATERIAL_UNLIT
 
 #if defined(GPU_SKINNING) && !defined(USING_LIGHTMAP)

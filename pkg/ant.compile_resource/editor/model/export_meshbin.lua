@@ -325,6 +325,8 @@ local function need_calc_tangent(layouts1, layouts2)
 	return find_layout(layouts1, "TANGENT") == nil and find_layout(layouts1, "NORMAL") and find_layout(layouts2, "TEXCOORD_0")
 end
 
+
+
 local function generate_layouts(gltfscene, attributes)
 	local accessors, bufferViews = gltfscene.accessors, gltfscene.bufferViews
 	local layouts1 = {}
@@ -416,6 +418,8 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 	local vb = get_vb(layouts1, vertices1)
 	-- normal and tangent info only valid in layouts1
 	meshexport.pack_tangent_frame = packer.is_pack2tangentframe(layouts1)
+	meshexport.with_normal_attrib  = vb.declname:match("|n%d+")
+	meshexport.with_tangent_attrib = vb.declname:match("|T%d+")
 	local vb2
 	if #layouts2 ~= 0 then
 		local vertices2 = fetch_vertices(layouts2, gltfbin, numv, ib_table == nil)
