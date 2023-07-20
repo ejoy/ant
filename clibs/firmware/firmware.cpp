@@ -22,7 +22,7 @@ std::map<std::string_view, bin> firmware = {
 
 static std::string_view luaL_checkstrview(lua_State* L, int idx) {
 	size_t sz = 0;
-	const char* str = luaL_checklstring(L, 1, &sz);
+	const char* str = luaL_checklstring(L, idx, &sz);
 	return std::string_view(str, sz);
 }
 

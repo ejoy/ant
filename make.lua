@@ -78,13 +78,11 @@ lm:import "runtime/make.lua"
 lm:runlua "compile_ecs" {
     script = "projects/luamake/ecs.lua",
     args =  {
-        "@pkg/ant.ecs/component.lua",
         "@clibs/ecs/ecs/",
         "@pkg",
     },
     inputs = "pkg/**/*.ecs",
     output = {
-        "pkg/ant.ecs/component.lua",
         "clibs/ecs/ecs/component.hpp",
     }
 }

@@ -15,7 +15,7 @@ extern "C"{
 #include <algorithm>
 
 
-using tags = std::vector<cid_t>;
+using tags = std::vector<int>;
 using cull_infos = std::unordered_map<uint64_t, tags>;
 
 struct cull_array {
