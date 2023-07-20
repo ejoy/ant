@@ -10,4 +10,5 @@ fx:
 state:
   ALPHA_REF: 0
   CULL: CCW
-  WRITE_MASK: RZ
+  MSAA: true
+  WRITE_MASK: Z
