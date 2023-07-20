@@ -315,7 +315,17 @@ return function (output, glbdata, exports, tolocalpath)
             setting["ALPHAMODE_MASK"] = 1
         end
 
-        if mat.doubleSided then
+        --Blender will always export glb with 'doubleSided' as true
+        local function is_Blender_exporter()
+            local asset = glbscene.asset
+            if asset then
+                local g = asset.generator
+                if g then
+                    return g:match 'Khronos glTF Blender I/O'
+                end
+            end
+        end
+        if mat.doubleSided and (not is_Blender_exporter()) then
             --default is CCW
             material.state.CULL = "NONE"
         end
