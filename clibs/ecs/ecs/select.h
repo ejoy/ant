@@ -1,7 +1,5 @@
 #pragma once
 
-struct lua_State;
-
 #include "luaecs.h"
 #include <type_traits>
 #include <tuple>
