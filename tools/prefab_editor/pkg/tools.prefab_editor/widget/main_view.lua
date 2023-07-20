@@ -10,10 +10,6 @@ local uiconfig  = require "widget.config"
 local imgui = require "imgui"
 local irq   = ecs.import.interface "ant.render|irenderqueue"
 local igui  = ecs.import.interface "tools.prefab_editor|igui"
-local event_mouse   = world:sub {"mouse"}
-
-local mouse_pos_x
-local mouse_pos_y
 local drag_file
 
 local m = {}
@@ -27,14 +23,12 @@ local function in_view(x, y)
 end
 
 function m.show()
-    for _, _, _, x, y in event_mouse:unpack() do
-        mouse_pos_x = x
-        mouse_pos_y = y
-    end
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
-        --local x, y = imgui.util.GetMousePos()
-        if mouse_pos_x and in_view(igui.cvt2scenept(mouse_pos_x, mouse_pos_y)) then
+        local x, y = imgui.util.GetMousePos()
+        local mvp = imgui.GetMainViewport()
+        x, y = x - mvp.MainPos[1], y - mvp.MainPos[2]
+        if in_view(igui.cvt2scenept(x, y)) then
             if not drag_file then
                 local dropdata = imgui.widget.GetDragDropPayload()
                 if dropdata and (string.sub(dropdata, -7) == ".prefab"

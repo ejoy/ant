@@ -203,7 +203,7 @@ function m.on_remove_light(eid)
     m.billboard[eid] = nil
     -- m.current_light = nil
     -- m.show(false)
-    m.bind(nil)
+    m.bind()
 end
 
 local inited = false

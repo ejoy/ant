@@ -43,7 +43,6 @@ local lfs               = require "filesystem.local"
 local bgfx              = require "bgfx"
 
 local m = ecs.system 'gui_system'
-local imodifier = ecs.import.interface "ant.modifier|imodifier"
 local function on_new_project(path)
     new_project.set_path(path)
     new_project.gen_mount()
@@ -254,7 +253,7 @@ local function on_target(old, new)
     if old then
         local oe <close> = w:entity(old, "light?in")
         if oe and oe.light then
-            light_gizmo.bind(nil)
+            light_gizmo.bind()
         end
     end
     if new then
@@ -341,7 +340,6 @@ local function update_visible(node, visible)
     end
     return rv
 end
-local reset_editor = world:sub {"ResetEditor"}
 
 function m:handle_event()
     for _, e in event_update_aabb:unpack() do
@@ -429,7 +427,7 @@ function m:handle_event()
     for _ in event_open_proj:unpack() do
         on_open_proj()
     end
-    
+
     for _, tn, filename in event_open_file:unpack() do
         if tn == "FBX" then
             prefab_mgr:open_fbx(filename)
@@ -477,9 +475,6 @@ function m:handle_event()
     end
     for _, enable in event_showground:unpack() do
         prefab_mgr:show_ground(enable)
-    end
-    for _, what in reset_editor:unpack() do
-        imodifier.stop(imodifier.highlight)
     end
     for _, at, target in create_animation_event:unpack() do
         keyframe_view.create_target_animation(at, target)
