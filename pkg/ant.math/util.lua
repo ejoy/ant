@@ -343,6 +343,29 @@ local function quat_inverse_sign(q)
 	return math3d.quaternion(-qx, -qy, -qz, -qw)
 end
 
+function util.unpack_tangent_frame(q)
+	local x, y, z, w = math3d.index(q, 1, 2, 3, 4)
+	local zwx = math3d.vector(z, w, x, 0.0)
+	local wzy = math3d.vector(w, z, y, 0.0)
+	local yxw = math3d.vector(y, x, w, 0.0)
+	local function quat_to_normal()
+		return	math3d.add(
+					math3d.vector(0.0, 0.0, 1.0 ),
+				math3d.muladd(	math3d.mul(math3d.vector(2.0,-2.0,-2.0 ), x), zwx,
+								math3d.mul(math3d.mul(math3d.vector(2.0, 2.0,-2.0 ), y), wzy)))
+	end
+
+	local function quat_to_tangent()
+		return
+			math3d.add(math3d.vector( 1.0, 0.0, 0.0 ),
+				math3d.muladd(math3d.mul(math3d.vector(-2.0, 2.0,-2.0 ), y), yxw,
+				math3d.mul(math3d.mul(math3d.vector(-2.0, 2.0, 2.0 ), z), zwx))
+			)
+	end
+
+	return quat_to_normal(), quat_to_tangent()
+end
+
 --normal: normalize
 --tangent: [tx, ty, tz, tw], it must have 4 elements, and tw element must be 1.0 or -1.0, where -1.0 indicate reflection is existd
 --storage_size: default is 2
