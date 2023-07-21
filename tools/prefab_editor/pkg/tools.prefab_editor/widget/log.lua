@@ -134,7 +134,7 @@ end
 
 local err_receiver
 local function reset_log()
-    for i, v in ipairs(log_tags) do
+    for _, v in ipairs(log_tags) do
         log_items[v] = {
             [LEVEL_INFO] = {height = 0, vtor_index = {}},
             [LEVEL_WARN] = {height = 0, vtor_index = {}},
@@ -374,7 +374,7 @@ end
 function m.close_log()
     --logfile_handle:close()
 end
-return function()
-    reset_log()
-    return m
-end
+
+reset_log()
+
+return m
