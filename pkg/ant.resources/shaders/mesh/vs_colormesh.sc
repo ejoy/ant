@@ -1,6 +1,6 @@
 #include "common/default_inputs_define.sh"
 
-$input a_position INPUT_COLOR0 INPUT_INDICES INPUT_WEIGHT
+$input a_position INPUT_COLOR0 INPUT_TANGENT INPUT_INDICES INPUT_WEIGHT
 $output OUTPUT_COLOR0
 
 #include <bgfx_shader.sh>
