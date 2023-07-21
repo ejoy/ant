@@ -142,8 +142,7 @@ function mt:prefab_instance(prefab, args)
     return instance
 end
 
-function mt:add_entity(curr_prefab, template)
-    local edit_prefab = assetmgr.edit(curr_prefab)
+function mt:add_entity(edit_prefab, template)
     edit_prefab.__class[#edit_prefab.__class+1] = template
     if template.prefab then
         edit_prefab[#edit_prefab+1] = {

@@ -6,7 +6,7 @@ local renderpkg = import_package "ant.render"
 local function create_shaders()
     local ltask = require "ltask"
     local ServiceResource = ltask.uniqueservice "ant.compile_resource|resource"
-    local function load_fx(filename)
+    local function load_shader(filename)
         return ltask.call(ServiceResource, "shader_create", filename)
     end
     local function push_uniforms(a, b)
@@ -38,7 +38,7 @@ local function create_shaders()
     local tasks = {}
     for k, v in pairs(shaders) do
         tasks[#tasks+1] = {function ()
-            local shader = load_fx(v)
+            local shader = load_shader(v)
             push_uniforms(uniforms, shader.fx.uniforms)
             progs[k] = shader.fx.prog & 0xFFFF
         end}

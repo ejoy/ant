@@ -112,6 +112,13 @@ local function generate_properties(fx, properties)
 	return new_properties
 end
 
+local function absolute_path(path, base)
+	if path:sub(1,1) == "/" then
+		return path
+	end
+	return base:match "^(.-)[^/|]*$" .. (path:match "^%./(.+)$" or path)
+end
+
 local function loader(filename)
     local material = async.shader_create(filename)
 
@@ -126,10 +133,10 @@ local function loader(filename)
         for _, v in pairs(material.properties) do
             if v.texture then
                 v.type = 't'
-                v.value = assetmgr.resource(v.texture).id
+                v.value = assetmgr.resource(absolute_path(v.texture, filename)).id
 			elseif v.image then
                 v.type = 'i'
-                v.value = assetmgr.resource(v.image).id
+                v.value = assetmgr.resource(absolute_path(v.image, filename)).id
 			elseif v.buffer then
 				v.type = 'b'
             end

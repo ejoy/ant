@@ -1,60 +1,53 @@
-local resource		= require "resource"
-local texture_mgr	= require "texture_mgr"
-local async			= require "async"
-local respath		= require "respath"
+local texture_mgr = require "texture_mgr"
+local async       = require "async"
 
 local assetmgr = {}
+
+local FILELIST = {}
 
 local function require_ext(ext)
 	return require("ext_" .. ext)
 end
 
-local function initialize()
-	local function loader(filename)
-		local ext = filename:match "[^.]*$"
-		local res
-		respath.push(filename)
-		res = require_ext(ext).loader(filename)
-		respath.pop()
-		return res
-	end
-	local function reloader(filename, res)
-		local ext = filename:match "[^.]*$"
-		respath.push(filename)
-		res = require_ext(ext).reloader(filename, res)
-		respath.pop()
-		return res
-	end
-	local function unloader(filename, res)
-		local ext = filename:match "[^.]*$"
-		require_ext(ext).unloader(res)
-	end
-	resource.register(loader, reloader, unloader)
-end
-
-function assetmgr.resource(path)
-	local fullpath = respath.absolute_path(path)
-	resource.load(fullpath, true)
-	return resource.proxy(fullpath)
-end
-
-function assetmgr.reload(path)
-	local fullpath = respath.absolute_path(path)
-	resource.reload(fullpath)
-	return resource.proxy(fullpath)
-end
-
 function assetmgr.init()
 	async.init()
 	texture_mgr.init()
-	initialize()
 end
 
-assetmgr.edit = resource.edit
-assetmgr.unload = resource.unload
+function assetmgr.load(fullpath)
+	local robj = FILELIST[fullpath]
+	if not robj then
+		local ext = fullpath:match "[^.]*$"
+		robj = require_ext(ext).loader(fullpath)
+		FILELIST[fullpath] = robj
+	end
+	return robj
+end
+
+function assetmgr.unload(fullpath)
+	local robj = FILELIST[fullpath]
+	if robj == nil then
+		return
+	end
+	local ext = fullpath:match "[^.]*$"
+	require_ext(ext).unloader(robj)
+	FILELIST[fullpath] = nil
+end
+
+function assetmgr.reload(fullpath)
+	local robj = FILELIST[fullpath]
+	if robj then
+		local ext = fullpath:match "[^.]*$"
+		robj = require_ext(ext).reloader(fullpath, robj)
+		FILELIST[fullpath] = robj
+	end
+	return robj
+end
+
+assetmgr.resource = assetmgr.load
 assetmgr.textures = texture_mgr.textures
 assetmgr.invalid_texture = texture_mgr.invalid
-assetmgr.load_fx = async.shader_create
+assetmgr.load_shader = async.shader_create
 assetmgr.compile = async.compile
 
 return assetmgr
