@@ -275,7 +275,7 @@ end
 
 function iefk.preload(textures)
     for _, texture in ipairs(textures) do
-        ltask.call(EFK_SERVER, "preload_texture", texture, assetmgr.resource(texture).id)
+        ltask.call(EFK_SERVER, "preload_texture", texture, assetmgr.load_texture(texture))
     end
 end
 

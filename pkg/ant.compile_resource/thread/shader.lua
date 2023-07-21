@@ -98,11 +98,11 @@ function S.shader_create(name)
             if v.texture then
                 v.type = 't'
                 local texturename = absolute_path(v.texture, name)
-                v.value = S.texture_create(texturename).id
+                v.value = S.texture_create_fast(texturename)
             elseif v.image then
                 v.type = 'i'
                 local texturename = absolute_path(v.image, name)
-                v.value = S.texture_create(texturename).id
+                v.value = S.texture_create_fast(texturename)
             elseif v.buffer then
                 v.type = 'b'
             end

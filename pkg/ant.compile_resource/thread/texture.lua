@@ -209,6 +209,11 @@ function S.texture_create(name)
     }
 end
 
+function S.texture_create_fast(name)
+    --TODO
+    return S.texture_create(name).id
+end
+
 function S.texture_reload(name)
     textureByName[name] = nil
     return S.texture_create(name)
