@@ -47,7 +47,7 @@ end
 assetmgr.resource = assetmgr.load
 assetmgr.textures = texture_mgr.textures
 assetmgr.invalid_texture = texture_mgr.invalid
-assetmgr.load_fx = async.shader_create
+assetmgr.load_shader = async.shader_create
 assetmgr.compile = async.compile
 
 return assetmgr

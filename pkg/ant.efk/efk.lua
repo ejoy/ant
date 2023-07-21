@@ -41,7 +41,7 @@ local function init_fx_files()
     } do
         tasks[#tasks+1] = {function ()
             local filename = ("/pkg/ant.efk/materials/%s.material"):format(name)
-            local r = assetmgr.load_fx(filename)
+            local r = assetmgr.load_shader(filename)
             FxFiles[name] = r.fx
         end}
     end
