@@ -5,13 +5,10 @@ local w         = world.w
 local math3d    = require "math3d"
 local imgui     = require "imgui"
 local rhwi      = import_package "ant.hwi"
-local asset_mgr = import_package "ant.asset"
 local mathpkg   = import_package "ant.math"
 local faicons   = require "common.fa_icons"
 local mc        = mathpkg.constant
-local ipl       = ecs.import.interface "ant.render|ipolyline"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
-local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 local iwd       = ecs.import.interface "ant.render|iwidget_drawer"
 local iefk      = ecs.import.interface "ant.efk|iefk"
 local resource_browser  = ecs.require "widget.resource_browser"
@@ -26,8 +23,8 @@ local gizmo             = ecs.require "gizmo.gizmo"
 local camera_mgr        = ecs.require "camera.camera_manager"
 
 local widget_utils      = require "widget.utils"
-local log_widget        = require "widget.log"(asset_mgr)
-local console_widget    = require "widget.console"(asset_mgr)
+local log_widget        = require "widget.log"
+local console_widget    = require "widget.console"
 local hierarchy         = require "hierarchy_edit"
 local editor_setting    = require "editor_setting"
 

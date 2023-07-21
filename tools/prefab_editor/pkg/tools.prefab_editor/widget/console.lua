@@ -1,9 +1,8 @@
 local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
-local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
 local cthread   = require "bee.thread"
-local log_widget
+local log_widget = require "widget.log"
 local m = {}
 local log_item_height = 22
 local console_sender
@@ -108,7 +107,4 @@ function m.show()
     imgui.windows.End()
 end
 
-return function(asset_mgr)
-    log_widget = require "widget.log"(asset_mgr)
-    return m
-end
+return m
