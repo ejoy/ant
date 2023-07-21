@@ -42,6 +42,8 @@
 #   define OUTPUT_COLOR0
 #endif //WITH_COLOR_ATTRIB
 
+
+
 #if defined(USING_LIGHTMAP)
 #   define INPUT_LIGHTMAP_TEXCOORD      a_texcoord1
 #   define OUTPUT_LIGHTMAP_TEXCOORD     v_texcoord1

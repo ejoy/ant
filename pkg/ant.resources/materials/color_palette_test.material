@@ -2,6 +2,7 @@ fx:
   fs: /pkg/ant.resources/shaders/mesh/fs_colormesh.sc
   vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
   setting:
+    WITHOUT_DEFAULT_UV: 1
     lighting: off
 properties:
   u_color:
