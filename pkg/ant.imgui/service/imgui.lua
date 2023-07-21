@@ -1,4 +1,4 @@
-local packagename, w, h = ...
+local initargs = ...
 
 local ltask     = require "ltask"
 local bgfx      = require "bgfx"
@@ -150,17 +150,16 @@ for n, f in pairs(message) do
 end
 
 local pm = require "packagemanager"
-local callback = pm.import(packagename)
+local callback = pm.import(initargs.packagename)
 for _, name in ipairs {"init","update","exit","size","mousewheel","mouse","keyboard"} do
 	cb[name] = callback[name] or (function () end)
 end
 
-local config = pm.loadcfg(packagename)
 ltask.fork(function ()
 	import_package "ant.service".init_bgfx()
-    init_width, init_height = w, h
+    init_width, init_height = initargs.w, initargs.h
 
-    local nwh = imgui.Create(dispatch, w, h)
+    local nwh = imgui.Create(dispatch, initargs.w, initargs.h)
     rhwi.init {
         nwh = nwh,
 		framebuffer = {
@@ -186,7 +185,7 @@ ltask.fork(function ()
         imgui_image.fx.uniforms[1].handle
     )
 
-	cb.init(init_width, init_height, config)
+	cb.init(init_width, init_height, initargs)
     initialized = true
     while imgui.NewFrame() do
         updateIO()
