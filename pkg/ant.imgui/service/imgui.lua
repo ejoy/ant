@@ -149,8 +149,7 @@ for n, f in pairs(message) do
 	end
 end
 
-local pm = require "packagemanager"
-local callback = pm.import(initargs.packagename)
+local callback = import_package(initargs.packagename)
 for _, name in ipairs {"init","update","exit","size","mousewheel","mouse","keyboard"} do
 	cb[name] = callback[name] or (function () end)
 end
