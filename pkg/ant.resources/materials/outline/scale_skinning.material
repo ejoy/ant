@@ -4,6 +4,8 @@ fx:
   setting:
     GPU_SKINNING: 1
     WITHOUT_DEFAULT_UV: 1
+    WITH_NORMAL_ATTRIB: 1
+    WITH_TANGENT_ATTRIB: 1
 properties:
   u_outlinecolor: {0.8, 0.8, 0, 1}
   u_outlinescale: {0.05, 0, 0, 0}
