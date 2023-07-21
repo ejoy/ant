@@ -347,8 +347,6 @@ end
 
 local shadow_material
 local gpu_skinning_material
-local shadow_sm_material
-local shadow_heap_material
 local shadow_indirect_material
 function sm:init()
 	local fbidx = ishadow.fb_index()
@@ -356,8 +354,6 @@ function sm:init()
 	create_clear_shadowmap_queue(fbidx)
 	shadow_material = imaterial.load_res "/pkg/ant.resources/materials/depth.material"
 	gpu_skinning_material = imaterial.load_res "/pkg/ant.resources/materials/depth_skin.material"
-	shadow_sm_material = imaterial.load_res "/pkg/ant.resources/materials/depth_sm.material"
-	shadow_heap_material = imaterial.load_res "/pkg/ant.resources/materials/depth_heap.material"
 	shadow_indirect_material = imaterial.load_res "/pkg/ant.resources/materials/depth_indirect.material"
 	for ii=1, ishadow.split_num() do
 		local vr = {x=(ii-1)*s, y=0, w=s, h=s}

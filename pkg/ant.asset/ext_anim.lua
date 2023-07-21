@@ -177,6 +177,13 @@ local function build_animation(ske, raw_animation, joint_anims, sample_ratio)
     return raw_animation:build()
 end
 
+local function absolute_path(path, base)
+	if path:sub(1,1) == "/" then
+		return path
+	end
+	return base:match "^(.-)[^/|]*$" .. (path:match "^%./(.+)$" or path)
+end
+
 return {
     loader = function (filename)
         local path = fs.path(filename)
@@ -188,7 +195,7 @@ return {
                 break
             end
         end
-        local ske = assetmgr.resource(ske_anim.skeleton)
+        local ske = assetmgr.resource(absolute_path(ske_anim.skeleton, filename))
         local raw_animation = animodule.new_raw_animation()
         raw_animation:setup(ske._handle, ske_anim.duration)
         return {
