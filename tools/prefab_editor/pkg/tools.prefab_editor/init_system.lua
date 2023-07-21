@@ -4,7 +4,7 @@ local w = world.w
 
 local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant
-
+local assetmgr 		= import_package "ant.asset"
 local irq           = ecs.import.interface "ant.render|irenderqueue"
 local icamera       = ecs.import.interface "ant.camera|icamera"
 local iRmlUi        = ecs.import.interface "ant.rmlui|irmlui"
@@ -15,6 +15,7 @@ local imgui         = require "imgui"
 local lfs           = require "filesystem.local"
 local fs            = require "filesystem"
 local gd            = require "common.global_data"
+local icons         = require "common.icons"
 local platform      = require "bee.platform"
 local font          = imgui.font
 local Font          = imgui.font.SystemFont
@@ -117,6 +118,10 @@ function m:init()
 				0xf35d, 0xf35d, -- ICON_FA_UP_RIGHT_FROM_SQUARE "\xef\x8d\x9d"	U+f35d
 				0xf071, 0xf071, -- ICON_FA_TRIANGLE_EXCLAMATION "\xef\x81\xb1"	U+f071
 				0xf1c6, 0xf1c6, -- ICON_FA_FILE_ZIPPER 			"\xef\x87\x86"	U+f1c6
+				0xf245, 0xf245, -- ICON_FA_ARROW_POINTER 				"\xef\x89\x85" U+f245
+				0xf047, 0xf047, -- ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT	"\xef\x81\x87" U+f047
+				0xf021, 0xf021, -- ICON_FA_ARROWS_ROTATE 				"\xef\x80\xa1" U+f021
+				0xe4ba, 0xe4ba, -- ICON_FA_ARROWS_LEFT_RIGHT_TO_LINE	"\xee\x92\xba" U+e4ba
 			}},
         }
     elseif platform.os == "macos" then
@@ -125,6 +130,8 @@ function m:init()
         font.Create { { Font "Heiti SC" , 18, glyphRanges { 0x0020, 0xFFFF }} }
     end
 	gd.audio = fmod.init()
+
+	icons:init(assetmgr)
 end
 
 local function init_camera()

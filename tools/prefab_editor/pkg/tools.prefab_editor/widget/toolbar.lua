@@ -2,7 +2,6 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
-local assetmgr  = import_package "ant.asset"
 local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
 local uiutils   = require "widget.utils"
@@ -33,7 +32,7 @@ local localSpace = {}
 local defaultLight = { true }
 local showground = { true }
 local camera_speed = {0.1, speed=0.05, min=0.01, max=10}
-local icons = require "common.icons"(assetmgr)
+local icons = require "common.icons"
 
 function m.show()
     local viewport = imgui.GetMainViewport()

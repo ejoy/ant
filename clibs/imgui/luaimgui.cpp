@@ -121,6 +121,10 @@ static int lGetMainViewport(lua_State* L) {
 	lua_seti(L, -2, 2);
 	lua_setfield(L, -2, "MainSize");
 
+	// main dpi scale
+	lua_pushnumber(L, viewport->DpiScale);
+	lua_setfield(L, -2, "DpiScale");
+
 	return 1;
 }
 

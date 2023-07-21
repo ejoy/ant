@@ -1,5 +1,3 @@
-local ecs = ...
-
 local icon_path = {
     ICON_FILE           = "res/icon/File.png",
     ICON_FOLD           = "res/icon/Folder.png",
@@ -47,38 +45,39 @@ local icon_path = {
     ICON_PARTICLES3D    = "res/icon/Particles3D.png",
 }
 
-local icons = {}
-return function(assetmgr)
-    for k, v in pairs(icon_path) do
-        icons[k] = assetmgr.resource("/pkg/tools.prefab_editor/" .. v, { compile = true })
-    end
-    icons.scale = 1.5
-    local fs   = require "filesystem"
-    icons.get_file_icon = function(path_str)
+local icons = {
+    init = function(self, assetmgr)
+        for k, v in pairs(icon_path) do
+            self[k] = assetmgr.resource("/pkg/tools.prefab_editor/" .. v, { compile = true })
+        end
+    end,
+    get_file_icon = function(self, path_str)
+        local fs   = require "filesystem"
         local ext = tostring(fs.path(path_str):extension())
         if ext == ".lua" then
-            return icons.ICON_SCRIPT
+            return self.ICON_SCRIPT
         elseif ext == ".shader" then
-            return icons.ICON_SHADER
+            return self.ICON_SHADER
         elseif ext == ".glb" or ext == ".fbx" then
-            return icons.ICON_MESHLIBRARY
+            return self.ICON_MESHLIBRARY
         elseif ext == ".meshbin" then
-            return icons.ICON_MESH
+            return self.ICON_MESH
         elseif ext == ".material" then
-            return icons.ICON_MATERIAL
+            return self.ICON_MATERIAL
         elseif ext == ".prefab" then
-            return icons.ICON_PREFAB
+            return self.ICON_PREFAB
         elseif ext == ".ozz" then
             local filename = tostring(fs.path(path_str):filename())
             if filename == "skeleton.ozz" then
-                return icons.ICON_SKELETON3D
+                return self.ICON_SKELETON3D
             end
-            return icons.ICON_ANIMATION
+            return self.ICON_ANIMATION
         elseif ext == ".png" or ext == ".ktx" or ext == ".jpg" then
-            return icons.ICON_IMAGE
+            return self.ICON_IMAGE
         elseif ext == ".efk" then
         end
-        return icons.ICON_FILE
+        return self.ICON_FILE
     end
-    return icons
-end
+}
+
+return icons

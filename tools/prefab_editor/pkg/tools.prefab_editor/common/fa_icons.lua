@@ -45,6 +45,10 @@ local icons = {
     ["ICON_FA_CIRCLE_INFO"]          = "\xef\x81\x9a",
     ["ICON_FA_UP_RIGHT_FROM_SQUARE"] = "\xef\x8d\x9d",
     ["ICON_FA_TRIANGLE_EXCLAMATION"] = "\xef\x81\xb1",
-    ["ICON_FA_FILE_ZIPPER"]          = "\xef\x87\x86"
+    ["ICON_FA_FILE_ZIPPER"]          = "\xef\x87\x86",
+    ["ICON_FA_ARROW_POINTER"]               = "\xef\x89\x85",
+    ["ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT"]   = "\xef\x81\x87",
+    ["ICON_FA_ARROWS_ROTATE"]               = "\xef\x80\xa1",
+    ["ICON_FA_ARROWS_LEFT_RIGHT_TO_LINE"]   = "\xee\x92\xba",
 }
 return icons

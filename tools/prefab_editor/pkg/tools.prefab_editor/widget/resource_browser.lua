@@ -1,6 +1,5 @@
 local ecs = ...
 local world = ecs.world
-local w = world.w
 local assetmgr  = import_package "ant.asset"
 
 local imgui     = require "imgui"
@@ -9,7 +8,7 @@ local fs        = require "filesystem"
 local uiconfig  = require "widget.config"
 local utils     = require "common.utils"
 local gd        = require "common.global_data"
-local icons     = require "common.icons"(assetmgr)
+local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
 local editor_setting=require "editor_setting"
 local global_data = require "common.global_data"
@@ -414,7 +413,7 @@ function m.show()
                     end
                 end
                 for _, path in pairs(folder.files) do
-                    pre_selectable(icons.get_file_icon(tostring(path)), selected_file ~= path)
+                    pre_selectable(icons:get_file_icon(tostring(path)), selected_file ~= path)
                     pre_init_item_height()
                     if imgui.widget.Selectable(tostring(path:filename()), selected_file == path, 0, 0, imgui.flags.Selectable {"AllowDoubleClick"}) then
                         selected_file = path

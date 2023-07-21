@@ -2,7 +2,6 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 local assetmgr      = import_package "ant.asset"
-local cr            = import_package "ant.compile_resource"
 local serialize     = import_package "ant.serialize"
 local mathpkg       = import_package "ant.math"
 local mc            = mathpkg.constant

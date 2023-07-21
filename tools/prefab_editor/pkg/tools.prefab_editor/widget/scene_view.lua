@@ -3,12 +3,11 @@ local world = ecs.world
 local w = world.w
 
 local assetmgr  = import_package "ant.asset"
-local icons = require "common.icons"(assetmgr)
+local icons = require "common.icons"
 local gizmo = ecs.require "gizmo.gizmo"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
-local uiutils   = require "widget.utils"
 local hierarchy = require "hierarchy_edit"
 local faicons   = require "common.fa_icons"
 

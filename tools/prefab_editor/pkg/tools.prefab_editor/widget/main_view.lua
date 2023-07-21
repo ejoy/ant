@@ -6,7 +6,7 @@ local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
 
 local uiconfig  = require "widget.config"
-
+local icons     = require "common.icons"
 local imgui = require "imgui"
 local irq   = ecs.import.interface "ant.render|irenderqueue"
 local igui  = ecs.import.interface "tools.prefab_editor|igui"
@@ -23,11 +23,14 @@ local function in_view(x, y)
 end
 
 function m.show()
+    local imgui_vp = imgui.GetMainViewport()
+    if not icons.scale then
+        icons.scale = imgui_vp.DpiScale
+    end
     --drag file to view
     if imgui.util.IsMouseDragging(0) then
         local x, y = imgui.util.GetMousePos()
-        local mvp = imgui.GetMainViewport()
-        x, y = x - mvp.MainPos[1], y - mvp.MainPos[2]
+        x, y = x - imgui_vp.MainPos[1], y - imgui_vp.MainPos[2]
         if in_view(igui.cvt2scenept(x, y)) then
             if not drag_file then
                 local dropdata = imgui.widget.GetDragDropPayload()
@@ -46,9 +49,7 @@ function m.show()
         end
     end
 
-    local imgui_vp = imgui.GetMainViewport()
     local wp, ws = imgui_vp.WorkPos, imgui_vp.WorkSize
-
     local posx, posy = wp[1], wp[2]+uiconfig.ToolBarHeight
     local sizew, sizeh = ws[1], ws[2]-uiconfig.ToolBarHeight
     imgui.windows.SetNextWindowPos(posx, posy)

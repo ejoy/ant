@@ -1,6 +1,7 @@
 local assetmgr 	= import_package "ant.asset"
 local imgui     = require "imgui"
 local faicons   = require "common.fa_icons"
+local icons   = require "common.icons"
 local m = {}
 
 local function ONCE(t, s)
@@ -44,7 +45,8 @@ function m.imguiToolbar(icon, tooltip, active)
         bg_col = {0.2, 0.2, 0.2, 1}
     end
 	imgui.windows.PushStyleVar(imgui.enum.StyleVar.FramePadding, 2, 2);
-    local r = imgui.widget.ImageButton(tooltip, assetmgr.textures[icon.id], icon.texinfo.width * 1.5, icon.texinfo.height * 1.5, {frame_padding = 2, bg_col = bg_col, tint_col = {1.0, 1.0, 1.0, 1.0}})
+    local iconsize = icon.texinfo.width * (icons.scale or 1.5)
+    local r = imgui.widget.ImageButton(tooltip, assetmgr.textures[icon.id], iconsize, iconsize, {frame_padding = 2, bg_col = bg_col, tint_col = {1.0, 1.0, 1.0, 1.0}})
     imgui.windows.PopStyleVar(1);
     if tooltip then
         imgui_tooltip(tooltip)
