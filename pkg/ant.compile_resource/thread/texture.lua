@@ -179,7 +179,7 @@ local function asyncDestroyTexture(c)
     c.handle = nil
 end
 
-local S = {}
+local S = require "thread.main"
 
 function S.texture_default()
     return DefaultTexture
@@ -312,6 +312,5 @@ function S.texture_destroy_handle(rt_id)
 end
 
 return {
-    S = S,
     update = update
 }

@@ -2,20 +2,13 @@ local ltask   = require "ltask"
 local bgfx    = require "bgfx"
 local cr      = require "thread.compile"
 local texture = require "thread.texture"
-local shader  = require "thread.shader"
+require "thread.shader"
 import_package "ant.service".init_bgfx()
 
 bgfx.init()
 cr.init()
 
-local S = {}
-
-for k, v in pairs(texture.S) do
-    S[k] = v
-end
-for k, v in pairs(shader.S) do
-    S[k] = v
-end
+local S = require "thread.main"
 
 function S.compile(path)
     return cr.compile(path):string()

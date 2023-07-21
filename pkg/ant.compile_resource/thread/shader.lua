@@ -1,7 +1,6 @@
 local cr = require "thread.compile"
 local serialize = import_package "ant.serialize"
 local lfs = require "filesystem.local"
-local fs  = require "filesystem"
 local bgfx = require "bgfx"
 
 local function readall(filename)
@@ -75,10 +74,17 @@ local function createComputeProgram(filename, fxcfg)
     end
 end
 
-local S = {}
+local S = require "thread.main"
 
 local function is_compute_material(fxcfg)
     return fxcfg.shader_type == "COMPUTE"
+end
+
+local function absolute_path(path, base)
+    if path:sub(1,1) == "/" then
+        return path
+    end
+    return base:match "^(.-)[^/|]*$" .. (path:match "^%./(.+)$" or path)
 end
 
 function S.shader_create(name)
@@ -87,9 +93,20 @@ function S.shader_create(name)
     material.fx = is_compute_material(fxcfg) and 
                     createComputeProgram(name, fxcfg) or
                     createRenderProgram(name, fxcfg)
+    if material.properties then
+        for _, v in pairs(material.properties) do
+            if v.texture then
+                v.type = 't'
+                local texturename = absolute_path(v.texture, name)
+                v.value = S.texture_create(texturename).id
+            elseif v.image then
+                v.type = 'i'
+                local texturename = absolute_path(v.image, name)
+                v.value = S.texture_create(texturename).id
+            elseif v.buffer then
+                v.type = 'b'
+            end
+        end
+    end
     return material
 end
-
-return {
-    S = S
-}

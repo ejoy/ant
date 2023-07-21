@@ -112,13 +112,6 @@ local function generate_properties(fx, properties)
 	return new_properties
 end
 
-local function absolute_path(path, base)
-	if path:sub(1,1) == "/" then
-		return path
-	end
-	return base:match "^(.-)[^/|]*$" .. (path:match "^%./(.+)$" or path)
-end
-
 local function loader(filename)
     local material = async.shader_create(filename)
 
@@ -129,20 +122,6 @@ local function loader(filename)
     if material.stencil then
         material.stencil = bgfx.make_stencil(load(material.stencil))
     end
-    if material.properties then
-        for _, v in pairs(material.properties) do
-            if v.texture then
-                v.type = 't'
-                v.value = assetmgr.resource(absolute_path(v.texture, filename)).id
-			elseif v.image then
-                v.type = 'i'
-                v.value = assetmgr.resource(absolute_path(v.image, filename)).id
-			elseif v.buffer then
-				v.type = 'b'
-            end
-        end
-    end
-
     material.properties = generate_properties(material.fx, material.properties)
     material.object = matobj.rmat.material(material.state, material.stencil, material.properties, material.fx.prog)
     return material
