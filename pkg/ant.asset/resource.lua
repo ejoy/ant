@@ -76,22 +76,21 @@ local function get_file_object(filename)
 	return robj
 end
 
-local function load_resource(robj, filename, data)
+local function load_resource(robj, filename)
 	if not LOADER then
 		format_error("Unknown loader")
 	end
-	robj.object = LOADER(filename, data)
+	robj.object = LOADER(filename)
 	robj.proxy._data = robj.object
 	setmetatable(robj.proxy, data_mt(robj))
 end
 
-function resource.load(filename, data, lazyload)
+function resource.load(filename, lazyload)
 	local robj = get_file_object(filename)
 	if lazyload then
-		robj.source = data
 		-- auto loader
 		robj.meta.__index = function (self, key)
-			load_resource(robj, robj.filename, robj.source)
+			load_resource(robj, robj.filename)
 			local data = self._data
 			if not data then
 				format_error("%s is invalid", self)
@@ -100,17 +99,16 @@ function resource.load(filename, data, lazyload)
 			end
 		end
 		robj.meta.__pairs = function (self)
-			load_resource(robj, robj.filename, robj.source)
+			load_resource(robj, robj.filename)
 			return pairs(self._data)
 		end
 		robj.meta.__len = function (self)
-			load_resource(robj, robj.filename, robj.source)
+			load_resource(robj, robj.filename)
 			return #self._data
 		end
 		-- lazy load
 		return
 	else
-		robj.source = nil
 		robj.meta.__index = not_in_memory
 		robj.meta.__pairs = not_in_memory
 		robj.meta.__len = not_in_memory
@@ -131,7 +129,7 @@ function resource.unload(filename)
 	setmetatable(robj.proxy, robj.meta)
 
 	if UNLOADER then
-		UNLOADER(robj.filename, robj.source, robj.object)
+		UNLOADER(robj.filename, robj.object)
 	end
 	robj.object = nil
 end
@@ -139,7 +137,7 @@ end
 function resource.reload(filename)
 	local robj = get_file_object(filename)
 	if robj and robj.object then
-		robj.object = RELOADER(filename, robj.source, robj.object)
+		robj.object = RELOADER(filename, robj.object)
 		robj.proxy._data = robj.object
 		setmetatable(robj.proxy, data_mt(robj))
 	end

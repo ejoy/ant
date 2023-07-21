@@ -10,34 +10,31 @@ local function require_ext(ext)
 end
 
 local function initialize()
-	local function loader(filename, data)
+	local function loader(filename)
 		local ext = filename:match "[^.]*$"
-		local world = data
 		local res
 		respath.push(filename)
-		res = require_ext(ext).loader(filename, world)
+		res = require_ext(ext).loader(filename)
 		respath.pop()
 		return res
 	end
-	local function reloader(filename, data, res)
+	local function reloader(filename, res)
 		local ext = filename:match "[^.]*$"
-		local world = data
 		respath.push(filename)
-		res = require_ext(ext).reloader(filename, world, res)
+		res = require_ext(ext).reloader(filename, res)
 		respath.pop()
 		return res
 	end
-	local function unloader(filename, data, res)
+	local function unloader(filename, res)
 		local ext = filename:match "[^.]*$"
-		local world = data
-		require_ext(ext).unloader(res, world)
+		require_ext(ext).unloader(res)
 	end
 	resource.register(loader, reloader, unloader)
 end
 
-function assetmgr.resource(path, world)
+function assetmgr.resource(path)
 	local fullpath = respath.absolute_path(path)
-	resource.load(fullpath, world, true)
+	resource.load(fullpath, true)
 	return resource.proxy(fullpath)
 end
 

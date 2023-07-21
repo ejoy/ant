@@ -131,7 +131,7 @@ local mt = {}
 mt.__index = mt
 
 function mt:prefab_template(filename)
-	local prefab = assetmgr.resource(filename, self.world)
+	local prefab = assetmgr.resource(filename)
     mgr[prefab] = {}
     return prefab
 end
@@ -147,7 +147,7 @@ function mt:add_entity(curr_prefab, template)
     edit_prefab.__class[#edit_prefab.__class+1] = template
     if template.prefab then
         edit_prefab[#edit_prefab+1] = {
-            prefab = assetmgr.resource(template.prefab, self.world)
+            prefab = assetmgr.resource(template.prefab)
         }
     else
         edit_prefab[#edit_prefab+1] = world:create_entity_template(template)
