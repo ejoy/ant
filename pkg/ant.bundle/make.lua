@@ -10,6 +10,7 @@ lm:lua_source "textureman" {
 	},
     sources = {
         "src/textureman.c",
+        "src/programan.c",
     }
 }
 

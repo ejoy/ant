@@ -27,6 +27,8 @@ int luaopen_window(lua_State* L);
 int luaopen_terrain(lua_State *L);
 int luaopen_textureman_client(lua_State *L);
 int luaopen_textureman_server(lua_State *L);
+int luaopen_programan_client(lua_State *L);
+int luaopen_programan_server(lua_State *L);
 int luaopen_fmod(lua_State* L);
 int luaopen_font(lua_State *L);
 int luaopen_font_manager(lua_State *L);
@@ -96,6 +98,8 @@ void ant_loadmodules(lua_State* L) {
         { "terrain", luaopen_terrain },
         { "textureman.client", luaopen_textureman_client },
         { "textureman.server", luaopen_textureman_server },
+        { "programan.client", luaopen_programan_client },
+        { "programan.server", luaopen_programan_server },
         { "efk", luaopen_efk},
         { "effekseer.callback", luaopen_effekseer_callback},
         { "fileinterface", luaopen_fileinterface },
