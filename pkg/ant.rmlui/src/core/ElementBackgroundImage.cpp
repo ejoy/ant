@@ -67,7 +67,6 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 		return false;
 	}
 
-	SamplerFlag repeat = element->GetComputedProperty(PropertyId::BackgroundRepeat)->Get<SamplerFlag>();
 	Style::BackgroundSize backgroundSize = element->GetComputedProperty(PropertyId::BackgroundSize)->Get<Style::BackgroundSize>();
 	Size texSize {
 		element->GetComputedProperty(PropertyId::BackgroundSizeX)->Get<PropertyFloat>().ComputeW(element),
@@ -144,7 +143,7 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 		}
 		break;
 	}
-	Material* material = GetRenderInterface()->CreateTextureMaterial(texture.handle, repeat);
+	Material* material = GetRenderInterface()->CreateTextureMaterial(texture.handle, SamplerFlag::Clamp);
 	geometry.SetMaterial(material);
 	auto lattice_x1 = element->GetComputedProperty(PropertyId::BackgroundLatticeX1)->Get<PropertyFloat>().value / 100.0f;
 	bool has_lattice = lattice_x1 > 0;

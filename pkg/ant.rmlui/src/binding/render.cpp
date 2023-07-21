@@ -77,6 +77,8 @@ static uint32_t getTextureFlags(Rml::SamplerFlag flags) {
         return BGFX_SAMPLER_U_BORDER;
     case Rml::SamplerFlag::NoRepeat:
         return BGFX_SAMPLER_U_BORDER | BGFX_SAMPLER_V_BORDER;
+    case Rml::SamplerFlag::Clamp:
+        return BGFX_SAMPLER_U_CLAMP | BGFX_SAMPLER_V_CLAMP;
     }
 }
 

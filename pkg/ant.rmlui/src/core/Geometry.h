@@ -20,6 +20,7 @@ enum class SamplerFlag : uint8_t {
 	RepeatY,
 	NoRepeat,
 	Unset,
+	Clamp
 };
 
 struct Vertex {
