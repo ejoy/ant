@@ -24,6 +24,7 @@ input_attributes input_attribs = (input_attributes)0;
 #   else //!CALC_TBN
     v_tangent = normalize(v_tangent);
     vec3 bitangent = cross(v_normal, v_tangent);
+    //about hlsl matrix: https://learn.microsoft.com/zh-cn/windows/win32/direct3dhlsl/dx-graphics-hlsl-per-component-math?redirectedfrom=MSDN#the-matrix-type
     mat3 tbn = mat3(v_tangent, bitangent, v_normal);
 #   endif //CALC_TBN
     input_attribs.N = normal_from_tangent_frame(tbn, uv);
