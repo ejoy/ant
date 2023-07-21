@@ -1,5 +1,5 @@
-local texture_mgr	= require "texture_mgr"
-local async			= require "async"
+local texture_mgr = require "texture_mgr"
+local async       = require "async"
 
 local assetmgr = {}
 
@@ -42,10 +42,6 @@ function assetmgr.reload(fullpath)
 		FILELIST[fullpath] = robj
 	end
 	return robj
-end
-
-function assetmgr.edit(obj)
-	return obj
 end
 
 assetmgr.resource = assetmgr.load
