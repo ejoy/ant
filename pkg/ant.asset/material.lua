@@ -15,6 +15,7 @@ function imaterial.set_property(e, who, what, mattype)
 end
 
 imaterial.load_res = assetmgr.resource
+imaterial.unload_res = assetmgr.unload
 
 function imaterial.system_attribs()
 	return matobj.sa

@@ -3,6 +3,7 @@ fx:
   vs: /pkg/ant.resources/shaders/mesh/vs_colormesh.sc
   setting:
     NO_CURVE_WORLD: 1
+    WITHOUT_DEFAULT_UV: 1
 properties:
   u_color: {1, 1, 1, 1}
 state: /pkg/ant.resources/materials/states/default.state
