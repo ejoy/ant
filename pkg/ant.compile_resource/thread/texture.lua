@@ -140,12 +140,17 @@ local createQueue = {}
 local destroyQueue = {}
 local token = {}
 
+local function which_texture_type(info)
+    if info.cubemap then
+        return "TEXCUBE"
+    end
+
+    return info.depth > 1 and "TEX3D" or "TEX2D"
+end
+
 local function asyncCreateTexture(name)
     if createQueue[name] then
         return
-    end
-    if destroyQueue[name] then
-        destroyQueue[name] = nil
     end
     if textureByName[name].input then
         createQueue[name] = true
@@ -164,29 +169,20 @@ local function asyncCreateTexture(name)
     end
 end
 
-local function asyncDestroyTexture(name)
-    if createQueue[name] then
+local function asyncDestroyTexture(c)
+    if createQueue[c.name] then
         return
     end
-    destroyQueue[name] = true
-    destroyQueue[#destroyQueue+1] = name
-    if #destroyQueue == 1 then
-        ltask.wakeup(token)
-    end
+    local textype = which_texture_type(c.texinfo)
+    destroyQueue[#destroyQueue+1] = c.handle
+    textureman.texture_set(c.id, DefaultTexture[textype])
+    c.handle = nil
 end
 
 local S = {}
 
 function S.texture_default()
     return DefaultTexture
-end
-
-local function which_texture_type(info)
-    if info.cubemap then
-        return "TEXCUBE"
-    end
-
-    return info.depth > 1 and "TEX3D" or "TEX2D"
 end
 
 function S.texture_create(name)
@@ -225,17 +221,6 @@ local rt_table = {}
 ltask.fork(function ()
     while true do
         ltask.wait(token)
-        for i = 1, #destroyQueue do
-            local name = destroyQueue[i]
-            if destroyQueue[name] then
-                destroyQueue[name] = nil
-                local c = textureByName[name]
-                bgfx.destroy(c.handle)
-                c.handle = nil
-                local textype = which_texture_type(c.texinfo)
-                textureman.texture_set(c.id, DefaultTexture[textype])
-            end
-        end
         while true do
             local name = table.remove(createQueue, 1)
             if not name then
@@ -264,6 +249,10 @@ local update; do
     local UpdateOldInterval <const> = 30 * 60 -- 60s
     local InvalidTexture <const> = ("HH"):pack(DefaultTexture.TEX2D & 0xffff, DefaultTexture.TEXCUBE & 0xffff)
     function update()
+        for i = 1, #destroyQueue do
+            bgfx.destroy(destroyQueue[i])
+            destroyQueue[i] = nil
+        end
         if FrameCur % UpdateNewInterval == 0 then
             if #createQueue == 0 then
                 textureman.frame_new(FrameCur - FrameNew + 1, InvalidTexture, results)
@@ -283,7 +272,7 @@ local update; do
                 local id = results[i]
                 local c = textureById[id]
                 if c and (not rt_table[id]) then
-                    asyncDestroyTexture(c.name)
+                    asyncDestroyTexture(c)
                     print("Destroy Texture: " .. c.name)
                 end
             end
