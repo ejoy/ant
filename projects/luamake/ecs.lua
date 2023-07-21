@@ -183,7 +183,7 @@ do
     write "    size_t           size;"
     write "};"
     write "template <typename T>"
-    write "constexpr auto c() {"
+    write "constexpr auto create() {"
     write "    return component {"
     write "        ecs_api::component_name_v<T>,"
     write "        std::is_empty_v<T> ? 0 : sizeof(T),"
@@ -191,7 +191,7 @@ do
     write "}"
     write(("static constexpr std::array<component, %d> components = {"):format(#components))
     for _, c in ipairs(components) do
-        write(("    c<%s>(),"):format(c[1]))
+        write(("    create<%s>(),"):format(c[1]))
     end
     write "};"
     write ""
