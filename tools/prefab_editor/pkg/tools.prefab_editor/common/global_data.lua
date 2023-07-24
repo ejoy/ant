@@ -30,6 +30,14 @@ local function skip_package(pkgpath)
     return true
 end
 
+local function has_pkg(path)
+    for item in lfs.pairs(path) do
+        if string.sub(tostring(item), -4) == '/pkg' then
+            return true
+        end
+    end
+    return false
+end
 local function get_package(entry_path, readmount)
     local repo = {_root = entry_path}
     if readmount then
@@ -37,6 +45,9 @@ local function get_package(entry_path, readmount)
     end
     local packages = {}
     for _, value in ipairs(repo._mountpoint) do
+        if not has_pkg(value) then
+            goto continue
+        end
         local pkgpath = value / "pkg"
         if value:string() == "./" then
             for item in lfs.pairs(pkgpath) do
@@ -51,6 +62,7 @@ local function get_package(entry_path, readmount)
                 packages[#packages + 1] = {name = pkgname, path = item}
             end
         end
+        ::continue::
     end
     m.repo = repo
     vfs.mount(entry_path:string())
