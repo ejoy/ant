@@ -15,7 +15,7 @@ namespace ecs_api {
     constexpr int EntityID = 0xFFFFFFFF;
 
     template <typename T>
-    constexpr int component_id = InvalidID;
+    constexpr inline int component_id = InvalidID;
 
     template <typename T>
     constexpr bool is_tag = (component_id<T> != InvalidID) && std::is_empty_v<T>;

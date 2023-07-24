@@ -201,11 +201,11 @@ do
     write "namespace ecs = ant_ecs;"
     write ""
     
-    write "template <> constexpr int ecs_api::component_id<ecs::eid> = 0xFFFFFFFF;"
-    write "template <> constexpr int ecs_api::component_id<ecs::REMOVED> = 0;"
+    write "template <> constexpr inline int ecs_api::component_id<ecs::eid> = 0xFFFFFFFF;"
+    write "template <> constexpr inline int ecs_api::component_id<ecs::REMOVED> = 0;"
     write ""
     write "#define ECS_COMPONENT(NAME, ID) \\"
-    write "template <> constexpr int ecs_api::component_id<ecs::NAME> = ID;"
+    write "template <> constexpr inline int ecs_api::component_id<ecs::NAME> = ID;"
     write ""
     for i, c in ipairs(components) do
         write(("ECS_COMPONENT(%s,%d)"):format(c[1], i))
