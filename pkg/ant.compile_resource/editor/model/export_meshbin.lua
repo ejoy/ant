@@ -418,12 +418,22 @@ local function fetch_vb_buffers(math3d, gltfscene, gltfbin, prim, ib_table, mesh
 	local vb = get_vb(layouts1, vertices1)
 	-- normal and tangent info only valid in layouts1
 	meshexport.pack_tangent_frame = packer.is_pack2tangentframe(layouts1)
-	meshexport.with_normal_attrib  = vb.declname:match("|n%d+")
-	meshexport.with_tangent_attrib = vb.declname:match("|T%d+")
+
+	local function with_attrib(declname, n)
+		for d in declname:gmatch "%w+" do
+			if d:sub(1, 1) == n then
+				return true
+			end
+		end
+	end
+	meshexport.with_normal_attrib  = with_attrib(vb.declname, 'n')
+	meshexport.with_tangent_attrib = with_attrib(vb.declname, 'T')
+
 	local vb2
 	if #layouts2 ~= 0 then
 		local vertices2 = fetch_vertices(layouts2, gltfbin, numv, ib_table == nil)
 		vb2 = get_vb(layouts2, vertices2)
+		meshexport.with_color_attrib = with_attrib(vb2.declname, "c")
 	end
 	return vb, vb2
 end

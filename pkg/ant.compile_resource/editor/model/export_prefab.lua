@@ -98,6 +98,9 @@ do
         if cfg.with_normal_attrib then
             t[#t+1] = "normal"
         end
+        if cfg.with_tangent_attrib then
+            t[#t+1] = "tangent"
+        end
         if cfg.hasskin then
             t[#t+1] = "skin"
         end
@@ -120,46 +123,50 @@ do
     end
 
     local function build_material(mi, name, cfg)
-        if material_info_need_change(name, mi) then
-            local nm = duplicate_table(mi.material)
-
-            assert(mi.filename:extension():string() == ".material")
-            mi.filename = mi.filename:parent_path() / (name .. ".material")
-
-            local function fx_setting()
-                if nil == nm.fx.setting then
-                    nm.fx.setting = {}
-                end
-            return nm.fx.setting
-            end
-
-            local function add_setting(n, v)
-                local ss = fx_setting()
-                ss[n] = v
-            end
-
-            if cfg.modename ~= "" then
-                mi.state.PT = cfg.modename
-            end
-
-            if cfg.with_color_attrib then
-                add_setting("WITH_COLOR_ATTRIB", 1)
-            end
-
-            if cfg.with_normal_attrib then
-                add_setting("WITH_NORMAL_ATTRIB", 1)
-            end
-
-            if cfg.hasskin then
-                add_setting("GPU_SKINNING", 1)
-            end
-
-            if not cfg.pack_tangent_frame then
-                add_setting("PACK_TANGENT_TO_QUAT", 0)
-            end
+        if not material_info_need_change(name, mi) then
+            return mi
         end
-        return mi
 
+        local nm = duplicate_table(mi.material)
+        assert(mi.filename:extension():string() == ".material")
+
+        local nmi = {
+            filename = mi.filename:parent_path() / (name .. ".material"),
+            material = nm,
+        }
+
+        local function add_setting(n, v)
+            if nil == nm.fx.setting then
+                nm.fx.setting = {}
+            end
+
+            nm.fx.setting[n] = v
+        end
+
+        if cfg.modename ~= "" then
+            mi.state.PT = cfg.modename
+        end
+
+        if cfg.with_color_attrib then
+            add_setting("WITH_COLOR_ATTRIB", 1)
+        end
+
+        if cfg.with_normal_attrib then
+            add_setting("WITH_NORMAL_ATTRIB", 1)
+        end
+
+        if cfg.with_tangent_attrib then
+            add_setting("WITH_TANGENT_ATTRIB", 1)
+        end
+
+        if cfg.hasskin then
+            add_setting("GPU_SKINNING", 1)
+        end
+
+        if not cfg.pack_tangent_frame then
+            add_setting("PACK_TANGENT_TO_QUAT", 0)
+        end
+        return nmi
     end
     function check_update_material_info(mi, cfg)
         local name = build_name(mi, cfg)
@@ -272,7 +279,7 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
         local mode = prim.mode or 4
         local cfg = {
             hasskin                 = hasskin,
-            withcolorattrib         = has_color_attrib(em.declname),
+            with_color_attrib       = em.with_color_attrib,
             pack_tangent_frame      = em.pack_tangent_frame,
             with_normal_attrib      = em.with_normal_attrib,
             with_tangent_attrib     = em.with_tangent_attrib,

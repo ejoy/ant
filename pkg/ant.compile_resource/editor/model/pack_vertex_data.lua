@@ -184,5 +184,8 @@ return {
 	end,
 	is_pack2tangentframe = function (layouts)
 		return find_layout_idx(layouts, "NORMAL") and find_layout_idx(layouts, "TANGENT")
-	end
+	end,
+	find_attrib = function (layouts, attribname)
+		return find_layout_idx(layouts, attribname)
+	end,
 }
