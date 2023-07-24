@@ -161,6 +161,9 @@ function render_sys:render_preprocess()
 	end
 
 	w:clear "render_args"
+	if irender.stop_draw() then
+		return
+	end
 	for qe in w:select "visible queue_name:in render_target:in render_args:new" do
 		local rt = qe.render_target
 		local viewid = rt.viewid

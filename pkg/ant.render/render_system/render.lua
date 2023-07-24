@@ -26,7 +26,13 @@ function irender.layer_names()
 	return LAYER_NAMES
 end
 
-
+local STOP_DRAW = false
+function irender.stop_draw(stop)
+	if nil == stop then
+		return STOP_DRAW
+	end
+	STOP_DRAW = stop
+end
 
 function irender.create_material_from_template(template_material_obj, state, cache)
 	local mo = cache[template_material_obj]
