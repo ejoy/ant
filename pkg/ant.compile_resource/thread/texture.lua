@@ -136,6 +136,7 @@ local DefaultTexture = {
 
 local textureByName = {}
 local textureById = {}
+local loadQueue = {}
 local createQueue = {}
 local destroyQueue = {}
 local token = {}
@@ -148,34 +149,42 @@ local function which_texture_type(info)
     return info.depth > 1 and "TEX3D" or "TEX2D"
 end
 
-local function asyncCreateTexture(name)
+local function asyncCreateTexture(name, textureData)
     if createQueue[name] then
         return
     end
-    if textureByName[name].input then
-        createQueue[name] = true
-        createQueue[#createQueue+1] = name
-        if #createQueue == 1 then
-            ltask.wakeup(token)
-        end
-    else
-        ltask.fork(function ()
-            local c = textureByName[name]
-            c.input = loadTexture(name)
-            c.texinfo = c.input.info
-            c.sampler = c.input.sampler
-            asyncCreateTexture(name)
-        end)
+    createQueue[name] = textureData
+    createQueue[#createQueue+1] = name
+    if #createQueue == 1 then
+        ltask.wakeup(token)
     end
+end
+
+local function asyncLoadTexture(c)
+    local Token = loadQueue[c.id]
+    if Token then
+        return Token
+    end
+    Token = {}
+    loadQueue[c.id] = Token
+    ltask.fork(function ()
+        local textureData = loadTexture(c.name)
+        assert(c.type == which_texture_type(textureData.info))
+        c.texinfo = textureData.info
+        c.sampler = textureData.sampler
+        asyncCreateTexture(c.name, textureData)
+        loadQueue[c.id] = nil
+        ltask.wakeup(Token)
+    end)
+    return Token
 end
 
 local function asyncDestroyTexture(c)
     if createQueue[c.name] then
         return
     end
-    local textype = which_texture_type(c.texinfo)
     destroyQueue[#destroyQueue+1] = c.handle
-    textureman.texture_set(c.id, DefaultTexture[textype])
+    textureman.texture_set(c.id, DefaultTexture[c.type])
     c.handle = nil
 end
 
@@ -185,23 +194,28 @@ function S.texture_default()
     return DefaultTexture
 end
 
-function S.texture_create(name)
+function S.texture_create(name, type)
     local c = textureByName[name]
-    if not c then
-        local res = loadTexture(name)
-        local textype = which_texture_type(res.info)
-        local id = textureman.texture_create(assert(DefaultTexture[textype]))
+    if c then
+        if c.texinfo then
+            return {
+                id = c.id,
+                texinfo = c.texinfo,
+                sampler = c.sampler,
+            }
+        end
+    else
+        type = type or "TEX2D"
+        local id = textureman.texture_create(assert(DefaultTexture[type]))
         c = {
             name = name,
-            input = res,
             id = id,
-            texinfo = res.info,
-            sampler = res.sampler,
+            type = type,
         }
         textureByName[name] = c
         textureById[id] = c
-        asyncCreateTexture(name)
     end
+    ltask.wait(asyncLoadTexture(c))
     return {
         id = c.id,
         texinfo = c.texinfo,
@@ -209,14 +223,26 @@ function S.texture_create(name)
     }
 end
 
-function S.texture_create_fast(name)
-    --TODO
-    return S.texture_create(name).id
+function S.texture_create_fast(name, type)
+    local c = textureByName[name]
+    if not c then
+        type = type or "TEX2D"
+        local id = textureman.texture_create(assert(DefaultTexture[type]))
+        c = {
+            name = name,
+            id = id,
+            type = type,
+        }
+        textureByName[name] = c
+        textureById[id] = c
+        asyncLoadTexture(c)
+    end
+    return c.id
 end
 
-function S.texture_reload(name)
+function S.texture_reload(name, type)
     textureByName[name] = nil
-    return S.texture_create(name)
+    return S.texture_create(name, type)
 end
 
 local FrameLoaded = 0
@@ -234,11 +260,11 @@ ltask.fork(function ()
             while FrameLoaded > MaxFrameLoaded do
                 ltask.sleep(10)
             end
+            local textureData = createQueue[name]
             createQueue[name] = nil
             local c = textureByName[name]
-            local handle = createTexture(c.input)
+            local handle = createTexture(textureData)
             c.handle = handle
-            c.input = nil
             textureman.texture_set(c.id, handle)
             FrameLoaded = FrameLoaded + 1
             ltask.sleep(0)
@@ -265,7 +291,7 @@ local update; do
                     local id = results[i]
                     local c = textureById[id]
                     if c then
-                        asyncCreateTexture(c.name)
+                        asyncLoadTexture(c)
                     end
                 end
                 FrameNew = FrameCur - 1
