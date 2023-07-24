@@ -75,7 +75,7 @@ local function duplicate_table(m)
     return t
 end
 
-local primitive_names = {
+local PRIMITIVE_MODES<const> = {
     "POINTS",
     "LINES",
     false, --LINELOOP, not support
@@ -85,75 +85,91 @@ local primitive_names = {
     false, --TRIANGLE_FAN not support
 }
 
-local material_cache = {}
+local check_update_material_info, clean_material_cache;
+do
+    local CACHE
+    function clean_material_cache() CACHE = {} end
 
-local function generate_material(mi, mode, cfg)
-    local sname = primitive_names[mode+1]
-    if not sname then
-        error(("not support primitate state, mode:%d"):format(mode))
-    end
-
-    local filename = mi.filename
-    local function gen_key(fn, sn, skn, clr, unpack_tf)
-        fn = fn:sub(1, 4) == "/pkg" and fn or utility.full_path(fn):string()
-        return ("%s%s%s%s%s"):format(fn, sn, skn, clr, unpack_tf)
-    end
-
-    local skn = cfg.hasskin and "_skin" or ""
-    local clr = cfg.withcolorattrib and "_clr" or ""
-
-    local unpack_tf = (not cfg.pack_tangent_frame) 
-    local with_normal_attrib = cfg.with_normal_attrib
-    local with_tangent_attrib = cfg.with_tangent_attrib
-    local key = gen_key(filename:string(), sname, skn, clr, unpack_tf)
-
-    local m = material_cache[key]
-    if m == nil then
-        if sname == "" and skn == "" and clr == "" and unpack_tf == "" then
-            m = mi
-        else
-            local basename = filename:stem():string()
-
-            local nm = duplicate_table(mi.material)
-            local s = nm.state
-            if sname == "" then
-                s.PT = nil
-            else
-                s.PT = sname
-                basename = basename .. "_" .. sname
-            end
-
-            local function mark_name(bn, suffix, settingname)
-                if suffix ~= "" then
-                    if nil == nm.fx.setting then
-                        nm.fx.setting = {}
-                    end
-                    nm.fx.setting[settingname] = 1
-                    return bn .. suffix
-                end
-
-                return bn
-            end
-
-            basename = mark_name(basename, skn, "GPU_SKINNING")
-            basename = mark_name(basename, clr, "WITH_COLOR_ATTRIB")
-
-            if nil == nm.fx.setting then
-                nm.fx.setting = {}
-            end
-            nm.fx.setting["PACK_TANGENT_TO_QUAT"] = unpack_tf and 0 or 1
-            nm.fx.setting["WITH_NORMAL_ATTRIB"] = with_normal_attrib and 1 or 0
-            nm.fx.setting["WITH_TANGENT_ATTRIB"] = with_tangent_attrib and 1 or 0
-            m = {
-                filename = filename:parent_path() / (basename .. ".material"),
-                material = nm
-            }
+    local function build_cfg_name(basename, cfg)
+        local t = {basename}
+        if cfg.with_color_attrib then
+            t[#t+1] = "clr"
         end
-
-        material_cache[key] = m
+        if cfg.with_normal_attrib then
+            t[#t+1] = "normal"
+        end
+        if cfg.hasskin then
+            t[#t+1] = "skin"
+        end
+        if not cfg.pack_tangent_frame then
+            t[#t+1] = "unpack_tf"
+        end
+        if cfg.modename ~= "" then
+            t[#t+1] = cfg.modename
+        end
+        return table.concat(t, "_")
     end
 
-    return m
+    local function material_info_need_change(name, mi)
+        return name:match(mi.filename:stem():string())
+    end
+
+    local function build_name(mi, cfg)
+        local basename = mi.filename:stem():string()
+        return build_cfg_name(basename, cfg)
+    end
+
+    local function build_material(mi, name, cfg)
+        if material_info_need_change(name, mi) then
+            local nm = duplicate_table(mi.material)
+
+            assert(mi.filename:extension():string() == ".material")
+            mi.filename = mi.filename:parent_path() / (name .. ".material")
+
+            local function fx_setting()
+                if nil == nm.fx.setting then
+                    nm.fx.setting = {}
+                end
+            return nm.fx.setting
+            end
+
+            local function add_setting(n, v)
+                local ss = fx_setting()
+                ss[n] = v
+            end
+
+            if cfg.modename ~= "" then
+                mi.state.PT = cfg.modename
+            end
+
+            if cfg.with_color_attrib then
+                add_setting("WITH_COLOR_ATTRIB", 1)
+            end
+
+            if cfg.with_normal_attrib then
+                add_setting("WITH_NORMAL_ATTRIB", 1)
+            end
+
+            if cfg.hasskin then
+                add_setting("GPU_SKINNING", 1)
+            end
+
+            if not cfg.pack_tangent_frame then
+                add_setting("PACK_TANGENT_TO_QUAT", 0)
+            end
+        end
+        return mi
+
+    end
+    function check_update_material_info(mi, cfg)
+        local name = build_name(mi, cfg)
+        local c = CACHE[name]
+        if c == nil then
+            c = build_material(mi, name, cfg)
+            CACHE[name] = c
+        end
+        return c
+    end
 end
 
 local function read_file(fn)
@@ -169,48 +185,8 @@ local function read_material_file(filename)
     return mi
 end
 
-local default_material_path<const> = lfs.path "/pkg/ant.resources/materials/pbr_default.material"
-local default_material_info
-
-local material_files = {}
-
-local function save_material(input, output, exports, mi)
-    local f = utility.full_path(mi.filename:string())
-    if not material_files[f:string()] then
-        material_files[f:string()] = true
-        material_compile(exports.tasks, exports.depfiles, mi.material, input, output / mi.filename, function (path)
-            return fs.path(path):localpath()
-        end)
-    end
-end
-
-local function find_node_animation(gltfscene, nodeidx, scenetree, animationfiles)
-    if next(animationfiles) == nil then
-        return
-    end
-
-    for _, ani in ipairs(gltfscene.animations) do
-        for _, channel in ipairs(ani.channels) do
-            local idx = nodeidx
-            local targetidx = channel.target.node
-            local found
-            while idx do
-                if idx == targetidx then
-                    found = true
-                    break
-                end
-                idx = scenetree[idx]
-            end
-            if found then
-                local anifile = animationfiles[ani.name]
-                if anifile == nil then
-                    error(("node:%d, has animation, but not found in exports.animations: %s"):format(nodeidx, ani.name))
-                end
-                return anifile
-            end
-        end
-    end
-end
+local DEFAULT_MATERIAL_PATH<const> = lfs.path "/pkg/ant.resources/materials/pbr_default.material"
+local DEFAULT_MATERIAL_INFO
 
 local function has_skin(gltfscene, exports, nodeidx)
     local node = gltfscene.nodes[nodeidx+1]
@@ -221,35 +197,34 @@ local function has_skin(gltfscene, exports, nodeidx)
     end
 end
 
-local function seri_material(input, output, exports, mode, materialidx, cfg)
-    local em = exports.material
-    if em == nil or #em <= 0 then
-        return
-    end
-
+local function load_material_info(exports, materialidx, cfg)
+    local mi
     if materialidx then
-        local mi = assert(exports.material[materialidx+1])
-        local materialinfo = generate_material(mi, mode, cfg)
-        if materialinfo then
-            save_material(input, output, exports, materialinfo)
-            return materialinfo.filename
-        end
+        mi = assert(exports.material[materialidx+1])
     end
 
-    if default_material_info == nil then
-        default_material_info = {
-            material = read_material_file(default_material_path),
-            filename = default_material_path,
+    if DEFAULT_MATERIAL_INFO == nil then
+        DEFAULT_MATERIAL_INFO = {
+            material = read_material_file(DEFAULT_MATERIAL_PATH),
+            filename = DEFAULT_MATERIAL_PATH,
         }
     end
 
-    local materialinfo = generate_material(default_material_info, mode, cfg)
-    if materialinfo and materialinfo.filename ~= default_material_path then
-        save_material(output, exports, materialinfo)
-        return materialinfo.filename
-    end
+    return check_update_material_info(mi or DEFAULT_MATERIAL_INFO, cfg)
+end
 
-    return default_material_path
+local function seri_material(input, output, exports, materialidx, cfg)
+    local em = exports.material
+    if em  and #em > 0 then
+        local mi = load_material_info(exports, materialidx, cfg)
+        if mi and mi.filename ~= DEFAULT_MATERIAL_PATH then
+            material_compile(exports.tasks, exports.depfiles, mi.material, input, output / mi.filename, function (path)
+                return fs.path(path):localpath()
+            end)
+            return mi.filename
+        end
+    end
+    return DEFAULT_MATERIAL_PATH
 end
 
 local function read_local_file(materialfile)
@@ -294,21 +269,17 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
     for primidx, prim in ipairs(mesh.primitives) do
         local em = exports.mesh[meshidx+1][primidx]
         local hasskin = has_skin(gltfscene, exports, nodeidx)
+        local mode = prim.mode or 4
         local cfg = {
-            hasskin = hasskin,
-            withcolorattrib = has_color_attrib(em.declname),
-            pack_tangent_frame = em.pack_tangent_frame,
-            with_normal_attrib = em.with_normal_attrib,
-            with_tangent_attrib = em.with_tangent_attrib
-            
+            hasskin                 = hasskin,
+            withcolorattrib         = has_color_attrib(em.declname),
+            pack_tangent_frame      = em.pack_tangent_frame,
+            with_normal_attrib      = em.with_normal_attrib,
+            with_tangent_attrib     = em.with_tangent_attrib,
+            modename                = assert(PRIMITIVE_MODES[mode+1], "Invalid primitive mode"),
         }
 
-        local materialfile = seri_material(input, output, exports, prim.mode or 4, prim.material, cfg)
-
-        if materialfile == nil then
-            materialfile = fs.path "/pkg/ant.resources/materials/pbr_default.material"
-            --error(("not found %s material %d"):format(meshname, prim.material or -1))
-        end
+        local materialfile = seri_material(input, output, exports, prim.material, cfg)
         local meshfile = em.meshbinfile
         if meshfile == nil then
             error(("not found meshfile in export data:%d, %d"):format(meshidx+1, primidx))
@@ -425,9 +396,13 @@ local function find_mesh_nodes(gltfscene, scenenodes, meshnodes)
     end
 end
 
-return function (math3d, input, output, glbdata, exports, localpath)
+local function cleanup()
     prefab = {}
-    material_files = {}
+    clean_material_cache()
+end
+
+return function (math3d, input, output, glbdata, exports, localpath)
+    cleanup()
     local gltfscene = glbdata.info
     local sceneidx = gltfscene.scene or 0
     local scene = gltfscene.scenes[sceneidx+1]

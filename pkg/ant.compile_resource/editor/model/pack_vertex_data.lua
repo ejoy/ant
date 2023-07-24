@@ -81,9 +81,7 @@ return {
 			local tangent = load_attrib_math3dvec(math3d, tangent_attrib_idx, v, layouts[tangent_attrib_idx].layout)
 			
 			local q = math3d.ext_util.pack_tangent_frame(normal, tangent)
-			local qx, qy, qz, qw = math3d.index(q, 1, 2, 3, 4)
-
-			v[tangent_attrib_idx] = ('f'):rep(4):pack(qx, qy, qz, qw)
+			v[tangent_attrib_idx] = math3d.serialize(q)
 		end
 
 		local function compress_tangent_frame(v)
