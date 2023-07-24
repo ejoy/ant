@@ -78,8 +78,8 @@ if __ANT_RUNTIME__ then
 	local document = app_path()
 	if document then
 		local fs = require "bee.filesystem"
-		local logfile = document .. "/log/" .. (os.date '%Y%m%d_%H%M%S') .. ".log"
-		fs.create_directories(document .. "/log")
+		local logfile = document .. "/game.log"
+		fs.create_directories(document)
 		function LOG(data)
 			ltask.send(ServiceIO, "SEND", "LOG", data)
 			local f <close> = io.open(logfile, "a+")
