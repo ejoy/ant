@@ -89,7 +89,7 @@ void input_message(struct ant_window_callback* cb, struct msg_touch const& touch
 	lua_pushstring(L, "touch");
 	lua_pushinteger(L, (lua_Integer)touch.id);
 	lua_pushinteger(L, (lua_Integer)touch.type);
-	lua_pushnumber(L, static_cast<lua_Number>(touch.y));
+	lua_pushnumber(L, static_cast<lua_Number>(touch.x));
 	lua_pushnumber(L, static_cast<lua_Number>(touch.y));
 	push_message(L);
 }
