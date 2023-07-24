@@ -7,7 +7,6 @@ local lfs       = require "filesystem.local"
 local fs        = require "filesystem"
 local uiconfig  = require "widget.config"
 local utils     = require "common.utils"
-local gd        = require "common.global_data"
 local icons     = require "common.icons"
 local faicons   = require "common.fa_icons"
 local editor_setting=require "editor_setting"
@@ -80,12 +79,12 @@ local engine_package_resources = {
 }
 
 function m.update_resource_tree(hiden_engine_res)
-    if not m.dirty or not gd.project_root then return end
+    if not m.dirty or not global_data.project_root then return end
     resource_tree = {files = {}, dirs = {}}
     local packages
     if hiden_engine_res then
         packages = {}
-        for _, p in ipairs(gd.packages) do
+        for _, p in ipairs(global_data.packages) do
             local isengine
             for _, ep in ipairs(engine_package_resources) do
                 if p.name == ep then
@@ -99,7 +98,7 @@ function m.update_resource_tree(hiden_engine_res)
             end
         end
     else
-        packages = gd.packages
+        packages = global_data.packages
     end
     for _, item in ipairs(packages) do
         local path = fs.path("/pkg") / fs.path(item.name)
@@ -249,11 +248,11 @@ local function post_init_item_height()
     item_height = pos_y + item_height
 end
 function m.show()
-    if not gd.project_root then
+    if not global_data.project_root then
         return
     end
     local dirtyflag = {}
-    local type, path = gd.filewatch:select()
+    local type, path = global_data.filewatch:select()
     while type do
         if (not string.find(path, "\\.build\\"))
             and (not string.find(path, "\\.log\\"))
@@ -261,7 +260,7 @@ function m.show()
             and (not string.find(path, "log.txt")) then
             m.dirty = true
         end
-        type, path = gd.filewatch:select()
+        type, path = global_data.filewatch:select()
         if path then
             local postfix = string.sub(path, -4)
             if (postfix == '.png' or postfix == '.dds') and not dirtyflag[path] then

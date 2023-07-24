@@ -130,9 +130,9 @@ function m.run()
     if not fd then
         spawnFileServer()
         fd = connectFileServer()
-        print("connect editor file server")
+        print("connect editor fileserver")
     else
-        print("connect external file server")
+        print("connect external fileserver")
     end
     
     handleNetworkEvent(fd)

@@ -24,7 +24,7 @@ local LEVEL_INFO = 0x0000001
 local LEVEL_WARN = 0x0000002
 local LEVEL_ERROR = 0x0000004
 local filter_flag = LEVEL_INFO | LEVEL_WARN | LEVEL_ERROR
-local log_item_height = 22
+local log_item_height
 local current_tag = "All"
 local show_info = {true}
 local show_warn = {true}
@@ -174,7 +174,7 @@ end
 local function checkLog()
     local error, info = err_receiver:pop()
     if error then
-        local count = 1
+        local count = 0
         for _ in string.gmatch(info, '\n') do
             count = count + 1
         end
@@ -213,7 +213,7 @@ local function checkLog()
                 msg_str = msg_str .. msg[i]
             end
         end
-        local count = 1
+        local count = 0
         for _ in string.gmatch(msg_str, '\n') do
             count = count + 1
         end
@@ -359,11 +359,13 @@ function m.show()
     if not err_receiver then
         err_receiver = cthread.channel "errlog"
     end
-    checkLog()
     local viewport = imgui.GetMainViewport()
+    if not log_item_height then
+        log_item_height = 22 * viewport.DpiScale
+    end
+    checkLog()
     imgui.windows.SetNextWindowPos(viewport.WorkPos[1], viewport.WorkPos[2] + viewport.WorkSize[2] - uiconfig.BottomWidgetHeight, 'F')
     imgui.windows.SetNextWindowSize(viewport.WorkSize[1], uiconfig.BottomWidgetHeight, 'F')
-    
     if imgui.windows.Begin("Log", imgui.flags.Window { "NoCollapse", "NoScrollbar", "NoClosed" }) then
         showHeaderWidget(log_items[current_tag])
         m.showLog("LogList", log_items[current_tag][filter_flag])
