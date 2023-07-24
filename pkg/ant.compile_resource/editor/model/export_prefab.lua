@@ -91,26 +91,29 @@ do
     function clean_material_cache() CACHE = {} end
 
     local function build_cfg_name(basename, cfg)
-        local t = {basename}
+        local t = {}
         if cfg.with_color_attrib then
-            t[#t+1] = "clr"
+            t[#t+1] = "c"
         end
         if cfg.with_normal_attrib then
-            t[#t+1] = "normal"
+            t[#t+1] = "n"
         end
-        if cfg.with_tangent_attrib then
-            t[#t+1] = "tangent"
+        if not cfg.with_tangent_attrib then
+            t[#t+1] = "uT"
         end
         if cfg.hasskin then
-            t[#t+1] = "skin"
+            t[#t+1] = "s"
         end
         if not cfg.pack_tangent_frame then
-            t[#t+1] = "unpack_tf"
+            t[#t+1] = "up"
         end
         if cfg.modename ~= "" then
             t[#t+1] = cfg.modename
         end
-        return table.concat(t, "_")
+        if #t == 0 then
+            return basename
+        end
+        return ("%s_%s"):format(basename, table.concat(t))
     end
 
     local function material_info_need_change(name, mi)
@@ -278,11 +281,11 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
         local hasskin = has_skin(gltfscene, exports, nodeidx)
         local mode = prim.mode or 4
         local cfg = {
-            hasskin                 = hasskin,
-            with_color_attrib       = em.with_color_attrib,
-            pack_tangent_frame      = em.pack_tangent_frame,
-            with_normal_attrib      = em.with_normal_attrib,
-            with_tangent_attrib     = em.with_tangent_attrib,
+            hasskin                 = hasskin,                  --NOT define by default
+            with_color_attrib       = em.with_color_attrib,     --NOT define by default
+            pack_tangent_frame      = em.pack_tangent_frame,    --define by default, as 1
+            with_normal_attrib      = em.with_normal_attrib,    --NOT define by default
+            with_tangent_attrib     = em.with_tangent_attrib,   --define by default
             modename                = assert(PRIMITIVE_MODES[mode+1], "Invalid primitive mode"),
         }
 
