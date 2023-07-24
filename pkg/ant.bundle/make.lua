@@ -2,21 +2,26 @@ local lm = require "luamake"
 
 local ROOT <const> = "../../"
 
+local includes = {
+    ROOT .. "clibs/bgfx",
+    ROOT .. "3rd/bgfx/include",
+    ROOT .. "3rd/bx/include",
+}
+
 lm:lua_source "textureman" {
-	includes = {
-		ROOT .. "clibs/bgfx",
-		ROOT .. "3rd/bgfx/include",
-		ROOT .. "3rd/bx/include",
-	},
-    sources = {
-        "src/textureman.c",
-        "src/programan.c",
-    }
+	includes = includes,
+    sources = "src/textureman.c",
+}
+
+lm:lua_source "programan"{
+    includes = includes,
+    sources = "src/programan.c",
 }
 
 lm:lua_source "bundle" {
-    deps = "textureman",
-    sources = {
-        "src/bundle.c",
-    }
+    deps = {
+        "textureman",
+        "programan",
+    },
+    sources = "src/bundle.c",
 }
