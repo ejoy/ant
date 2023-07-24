@@ -71,10 +71,10 @@ local function start_fileserver(path)
     cthread.newchannel "console_channel"
     local produce = cthread.channel "fileserver_channel"
     produce:push(arg, path)
-    local lthread = require "editor.thread"
-    return lthread.create [[
+
+    return cthread.thread [[
         package.path = "engine/?.lua"
-        require "bootstrap"
+        package.cpath = ""
         local fileserver = dofile "/pkg/tools.prefab_editor/fileserver_adapter.lua"()
         fileserver.run()
     ]]

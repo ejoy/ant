@@ -1,7 +1,7 @@
 local subprocess = require "bee.subprocess"
 local socket = require "bee.socket"
 local protocol = require "protocol"
-local lfs = require "filesystem.local"
+local lfs = require "bee.filesystem"
 local cthread = require "bee.thread"
 local sender
 
