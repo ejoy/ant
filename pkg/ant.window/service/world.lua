@@ -5,8 +5,6 @@ local inputmgr  = import_package "ant.inputmgr"
 local ecs       = import_package "ant.ecs"
 local rhwi      = import_package "ant.hwi"
 local audio     = import_package "ant.audio"
-local setting	= import_package "ant.settings".setting
-local mu		= import_package "ant.math".util
 local platform  = require "bee.platform"
 local bgfx      = require "bgfx"
 
@@ -26,66 +24,18 @@ local world
 local encoderBegin = false
 local quit
 
-local init_width, init_height
-local do_size
-
-local function update_config(args, ww, hh)
-	local fb = args.framebuffer
-	fb.width, fb.height = ww, hh
-
-	local vp = args.viewport
-	if vp == nil then
-		vp = {}
-		args.viewport = vp
-	end
-
-	vp.x, vp.y = 0, 0
-	if setting:get "graphic/postprocess/hv_flip/enable" then
-		vp.w, vp.h = hh, ww
-	else
-		vp.w, vp.h = ww, hh
-	end
-	if world then
-		world:pub{"world_viewport_changed", vp}
-	end
-end
-
-local function check_size()
-	local fb = world.args.framebuffer
-	if init_width ~= fb.width or init_height ~= fb.height then
-		update_config(world.args, init_width, init_height)
-		do_size(init_width, init_height)
-		rhwi.reset(nil, init_width, init_height)
-	end
-end
-
-local function calc_fb_size(w, h, ratio)
-	return mu.cvt_size(w, ratio), mu.cvt_size(h, ratio)
-end
-
-local function resize(ww, hh)
-	init_width, init_height = calc_fb_size(ww, hh, world.args.framebuffer.ratio)
-end
-
 local function render(nwh, context, width, height, initialized)
-	local scene_ratio = setting:get "graphic/framebuffer/scene_ratio" or 1.0
-	local ratio = setting:get "graphic/framebuffer/ratio" or 1.0
-	log.info(("framebuffer ratio:%2f, scene:%2f"):format(ratio, scene_ratio))
-
-	init_width, init_height = calc_fb_size(width, height, ratio)
-
-	log.info("framebuffer size:", init_width, init_height)
-
-	local framebuffer = {
-		width	= init_width,
-		height	= init_height,
-		ratio 	= ratio,
-		scene_ratio = scene_ratio,
+	config.framebuffer = {
+		width = width,
+		height = height,
+	}
+	config.viewport = {
+		x=0, y=0, w=width, h=height
 	}
 	rhwi.init {
-		nwh		= nwh,
-		context	= context,
-		framebuffer = framebuffer,
+		nwh			= nwh,
+		context		= context,
+		framebuffer = config.framebuffer,
 	}
 	rhwi.set_profie(true)
 	bgfx.encoder_create "world"
@@ -93,11 +43,8 @@ local function render(nwh, context, width, height, initialized)
 	import_package "ant.asset".init()
 	bgfx.encoder_begin()
 	encoderBegin = true
-	config.framebuffer = framebuffer
-	update_config(config, init_width, init_height)
 	world = ecs.new_world(config)
-	log.info("main viewport:", world.args.viewport.x, world.args.viewport.y, world.args.viewport.w, world.args.viewport.h)
-	world:pub{"world_viewport_changed", world.args.viewport}
+
 	local ev 		= inputmgr.create(world, "win32")
 
 	S.keyboard		= ev.keyboard
@@ -105,9 +52,9 @@ local function render(nwh, context, width, height, initialized)
 	S.mousewheel	= ev.mousewheel
 	S.touch			= ev.touch
 	S.gesture		= ev.gesture
-	S.size			= resize
-	do_size			= ev.size
+	S.size			= ev.size
 
+	ev.size(width, height)
 	audio.init()
 	world:pipeline_init()
 
@@ -115,7 +62,6 @@ local function render(nwh, context, width, height, initialized)
 	initialized = nil
 
 	while true do
-		check_size()
 		world:pipeline_update()
 		bgfx.encoder_end()
 		encoderBegin = false
