@@ -11,7 +11,7 @@ local function get_write_time(path)
 end
 
 function m.add(t, v)
-    local abspath = lfs.absolute(v):string()
+    local abspath = lfs.absolute(v):lexically_normal():string()
     if not t[abspath] then
         t[#t+1] = abspath
         t[abspath] = get_write_time(abspath)
