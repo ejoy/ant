@@ -26,8 +26,6 @@ local effect_viewid<const> = viewidmgr.get "effect_view"
 bgfx.init()
 assetmgr.init()
 
-local quit
-
 local FxFiles = {};
 
 local function preopen(filename)
@@ -151,8 +149,9 @@ function S.set_visible(handle, v)
 end
 
 function S.quit()
-    quit = {}
-    ltask.wait(quit)
+    if not DISABLE_EFK then
+        bgfx.encoder_destroy()
+    end
     shutdown()
     ltask.quit()
 end
@@ -160,15 +159,13 @@ end
 local loop = DISABLE_EFK and function () end or
 function ()
     bgfx.encoder_create "efx"
-    while not quit do
+    while true do
         if efk_ctx then
             local viewmat, projmat, deltatime = ltask.call(bgfxmainS, "fetch_world_camera")
             efk_ctx:render(viewmat, projmat, deltatime)
         end
         bgfx.encoder_frame()
     end
-    bgfx.encoder_destroy()
-    ltask.wakeup(quit)
 end
 
 ltask.fork(
