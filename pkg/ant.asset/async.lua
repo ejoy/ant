@@ -7,8 +7,12 @@ function m.init()
     ServiceResource = ltask.uniqueservice "ant.compile_resource|resource"
 end
 
-function m.shader_create(filename)
-    return ltask.call(ServiceResource, "shader_create", filename)
+function m.material_create(filename)
+    return ltask.call(ServiceResource, "material_create", filename)
+end
+
+function m.material_destroy(filename)
+    return ltask.call(ServiceResource, "material_destroy", filename)
 end
 
 function m.texture_create(filename)

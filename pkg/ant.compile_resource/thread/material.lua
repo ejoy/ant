@@ -87,7 +87,7 @@ local function absolute_path(path, base)
     return base:match "^(.-)[^/|]*$" .. (path:match "^%./(.+)$" or path)
 end
 
-function S.shader_create(name)
+function S.material_create(name)
     local material = serialize.parse(name, readall(name .. "|main.cfg"))
     local fxcfg = assert(material.fx, "Invalid material")
     material.fx = is_compute_material(fxcfg) and 
@@ -109,4 +109,15 @@ function S.shader_create(name)
         end
     end
     return material
+end
+
+function S.material_destroy(material)
+    local fx = material.fx
+    bgfx.destroy(fx.prog)
+    if is_compute_material(fx) then
+        bgfx.destroy(fx.cs)
+    else
+        bgfx.destroy(fx.vs)
+        bgfx.destroy(fx.fs)
+    end
 end

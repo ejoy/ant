@@ -173,12 +173,12 @@ ltask.fork(function ()
 	assetmgr.init()
     bgfx.encoder_begin()
 
-    local imgui_font = assetmgr.load_shader "/pkg/ant.imgui/materials/font.material"
+    local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"
     imgui.SetFontProgram(
         imgui_font.fx.prog,
         imgui_font.fx.uniforms[1].handle
     )
-    local imgui_image = assetmgr.load_shader "/pkg/ant.imgui/materials/image.material"
+    local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"
     imgui.SetImageProgram(
         imgui_image.fx.prog,
         imgui_image.fx.uniforms[1].handle

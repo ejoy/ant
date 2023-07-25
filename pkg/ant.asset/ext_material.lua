@@ -1,5 +1,4 @@
 local serialize = import_package "ant.serialize"
-local assetmgr  = require "asset"
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
 local sd        = import_package "ant.settings".setting
@@ -113,7 +112,7 @@ local function generate_properties(fx, properties)
 end
 
 local function loader(filename)
-    local material = async.shader_create(filename)
+    local material = async.material_create(filename)
 
     if material.state then
 		material.state = bgfx.make_state(load(material.state))
