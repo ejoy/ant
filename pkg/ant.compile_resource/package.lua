@@ -5,6 +5,5 @@ return {
         "ant.json",
         "ant.serialize",
         "ant.settings",
-        "ant.subprocess",
     }
 }

@@ -1,4 +1,4 @@
-local SHADERC    = import_package "ant.subprocess".tool_exe_path "shaderc"
+local SHADERC    = require "editor.tool_exe_path"("shaderc")
 local subprocess = require "editor.subprocess"
 local sha1       = require "editor.hash".sha1
 local lfs        = require "filesystem.local"

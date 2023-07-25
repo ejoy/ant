@@ -1,5 +1,5 @@
 local fs = require "filesystem.local"
-local GLTF2OZZ = import_package "ant.subprocess".tool_exe_path "gltf2ozz"
+local GLTF2OZZ = require "editor.tool_exe_path"("gltf2ozz")
 local subprocess = require "editor.subprocess"
 
 return function (input, output, exports)

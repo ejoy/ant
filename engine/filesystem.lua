@@ -306,17 +306,6 @@ end
 function fs.open(filepath, ...)
     return vfs_open(filepath:string(), ...)
 end
-function fs.lines(filepath, ...)
-    return vfs_lines(filepath:string(), ...)
-end
-
-function fs.loadfile(filepath, ...)
-    return loadfile(filepath:string(), ...)
-end
-
-function fs.dofile(filepath)
-    return dofile(filepath:string())
-end
 
 local close_sync = setmetatable({}, {__close=function ()
     vfs.switch_async()

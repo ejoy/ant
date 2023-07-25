@@ -9,7 +9,7 @@ local ltask			= require "ltask"
 local stringify 	= import_package "ant.serialize".stringify
 
 local pngparam 		= require "editor.texture.png_param"
-local TEXTUREC 		= import_package "ant.subprocess".tool_exe_path "texturec"
+local TEXTUREC 		= require "editor.tool_exe_path"("texturec")
 local shpkg			= import_package "ant.sh"
 local SH, texutil	= shpkg.sh, shpkg.texture
 
