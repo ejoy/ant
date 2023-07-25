@@ -77,8 +77,6 @@ light_info get_light(uint ilight, vec3 posWS)
     return l;
 }
 
-#include "pbr/surface_shading.sh"
-
 #if BGFX_SHADER_TYPE_FRAGMENT
 float directional_light_visibility(in input_attributes input_attribs)
 {

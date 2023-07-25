@@ -35,7 +35,8 @@ float D_GGX(float roughness, float NdotH, vec3 h, vec3 N) {
     float a = NdotH * roughness;
     float k = roughness / (oneMinusNoHSquared + a * a);
     float d = k * k * (1.0 / PI);
-    return saturateMediump(d);
+    //return saturateMediump(d);
+    return saturate(d);
 }
 
 float V_SmithGGXCorrelated(float roughness, float NdotV, float NdotL) {
@@ -48,17 +49,20 @@ float V_SmithGGXCorrelated(float roughness, float NdotV, float NdotL) {
     // a2=0 => v = 1 / 4*NdotL*NdotV   => min=1/4, max=+inf
     // a2=1 => v = 1 / 2*(NdotL+NdotV) => min=1/4, max=+inf
     // clamp to the maximum value representable in mediump
-    return saturateMediump(v);
+    //return saturateMediump(v);
+    return saturate(v);
 }
 
 float V_SmithGGXCorrelated_Fast(float roughness, float NdotV, float NdotL) {
     // Hammon 2017, "PBR Diffuse Lighting for GGX+Smith Microsurfaces"
     float v = 0.5 / mix(2.0 * NdotL * NdotV, NdotL + NdotV, roughness);
-    return saturateMediump(v);
+    //return saturateMediump(v);
+    return saturate(v);
 }
 
 float V_Neubelt(float NdotV, float NdotL) {
     // Neubelt and Pettineo 2013, "Crafting a Next-gen Material Pipeline for The Order: 1886"
+    //return saturate(1.0 / (4.0 * (NdotL + NdotV - NdotL * NdotV)));
     return saturateMediump(1.0 / (4.0 * (NdotL + NdotV - NdotL * NdotV)));
 }
 
