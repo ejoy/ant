@@ -1,10 +1,8 @@
 local ecs = ...
-local world = ecs.world
-local w = world.w
 
 local math3d = require "math3d"
 local mc = import_package "ant.math".constant
-local serialize = import_package "ant.serialize"
+local serialization = require "bee.serialization"
 
 local m = ecs.component "scene"
 
@@ -63,11 +61,11 @@ function m.remove(v)
 end
 
 function m.marshal(scene)
-	return serialize.pack(init_scene(scene))
+	return serialization.packstring(init_scene(scene))
 end
 
 function m.demarshal(s)
-	local scene = serialize.unpack(s)
+	local scene = serialization.unpack(s)
 	math3d.unmark(scene.s)
 	math3d.unmark(scene.r)
 	math3d.unmark(scene.t)
@@ -75,7 +73,7 @@ function m.demarshal(s)
 end
 
 function m.unmarshal(s)
-	local scene = serialize.unpack(s)
+	local scene = serialization.unpack(s)
     math3d.mark(scene.s)
     math3d.mark(scene.r)
     math3d.mark(scene.t)
@@ -108,17 +106,17 @@ function b.remove(v)
 end
 
 function b.marshal(v)
-	return serialize.pack(init_bounding(v))
+	return serialization.packstring(init_bounding(v))
 end
 
 function b.demarshal(s)
-	local bounding = serialize.unpack(s)
+	local bounding = serialization.unpack(s)
 	math3d.unmark(bounding.aabb)
 	math3d.unmark(bounding.scene_aabb)
 end
 
 function b.unmarshal(v)
-	local bounding = serialize.unpack(v)
+	local bounding = serialization.unpack(v)
 	math3d.mark(bounding.aabb)
 	math3d.mark(bounding.scene_aabb)
 	return bounding

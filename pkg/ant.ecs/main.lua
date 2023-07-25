@@ -3,6 +3,7 @@ local policy = require "policy"
 local ecs = require "world"
 local assetmgr = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
+local serialization = require "bee.serialization"
 local fs = require "filesystem"
 local world = {}
 
@@ -473,9 +474,9 @@ local function update_decl(world)
                 name = name,
                 type = "lua",
                 init = class.init,
-                marshal = class.marshal or serialize.pack,
+                marshal = class.marshal or serialization.packstring,
                 demarshal = class.demarshal or nil,
-                unmarshal = class.unmarshal or serialize.unpack,
+                unmarshal = class.unmarshal or serialization.unpack,
             }
         elseif type == "c" then
             local t = {

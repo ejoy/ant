@@ -1,8 +1,7 @@
 local math3d    = require "math3d"
-local lfs       = require "filesystem.local"
 local async     = require "async"
-local serialize = import_package "ant.serialize"
 local mathpkg   = import_package "ant.math"
+local serialization = require "bee.serialization"
 local mc        = mathpkg.constant
 
 local animodule = require "hierarchy".animation
@@ -19,7 +18,7 @@ local r2l_mat<const> = mc.R2L_MAT
 return {
     loader = function (filename)
         local c = read_file(async.compile(filename))
-        local data = serialize.unpack(c)
+        local data = serialization.unpack(c)
         local ibm = data.inverse_bind_matrices
 
         local ibp = animodule.new_bind_pose(ibm.num, ibm.value)

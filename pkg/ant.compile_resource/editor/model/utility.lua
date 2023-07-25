@@ -1,6 +1,7 @@
 local serialize = import_package "ant.serialize"
 local lfs       = require "filesystem.local"
 local datalist  = require "datalist"
+local serialization = require "bee.serialization"
 local currentRoot
 local currentPatch
 
@@ -66,7 +67,7 @@ end
 function m.save_bin_file(path, data)
     path = normalizePath(path)
     data = applyPatch(path, data)
-    writeFile(path, serialize.pack(data))
+    writeFile(path, serialization.packstring(data))
 end
 
 function m.save_txt_file(path, data, conv)
