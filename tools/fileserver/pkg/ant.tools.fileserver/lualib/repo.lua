@@ -282,7 +282,7 @@ local function read_ref(self, hash)
 	local filename = refname(self, hash)
 	local items = {}
 	local needupdate
-	for line in lfs.lines(filename) do
+	for line in io.lines(filename:string()) do
 		local name, ts = line:match "^[df] (.-) ?(%d*)$"
 		if name == nil then
 			if _DEBUG then print("INVALID", hash) end
