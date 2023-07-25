@@ -233,7 +233,7 @@ function iUiRt.get_group_id(rt_name)
     end
 end
 
-function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_color)
+function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_color, on_message)
     local rt = rt_table[rt_name]
     local queuename = rt_name .. "_queue"
     if not rt then
@@ -291,6 +291,7 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
             end
         end
     end
+    focus_instance.on_message = on_message
     world:create_object(focus_instance)
     g:enable "view_visible"
     rt.prefab = focus_instance 
