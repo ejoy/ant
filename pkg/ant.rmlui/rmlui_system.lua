@@ -97,10 +97,6 @@ function rmlui_sys:ui_update()
     end
 end
 
-function rmlui_sys:exit()
-    ltask.send(ServiceRmlUi, "shutdown")
-end
-
 local maxID = 0
 
 local function import_font(path)

@@ -10,6 +10,11 @@ local mu		= import_package "ant.math".util
 local platform  = require "bee.platform"
 local bgfx      = require "bgfx"
 
+local ServiceRmlUi
+ltask.fork(function ()
+    ServiceRmlUi = ltask.uniqueservice "ant.rmlui|rmlui"
+end)
+
 local S = ltask.dispatch {}
 
 local config = {
@@ -186,6 +191,10 @@ function S.exit()
 	ms_quit = true
 	quit = {}
 	ltask.wait(quit)
+	if ServiceRmlUi then
+		ltask.send(ServiceRmlUi, "shutdown")
+		ServiceRmlUi = nil
+	end
 	if world then
 		world:pipeline_exit()
         world = nil

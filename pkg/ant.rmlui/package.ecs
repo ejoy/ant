@@ -11,8 +11,6 @@ system "rmlui_system"
     .method "init"
     .method "entity_init"
     .method "ui_update"
-    .method "exit"
-
 
 interface "irmlui"
     .implement "rmlui_system.lua"
