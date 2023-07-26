@@ -8,10 +8,6 @@
         <script type="text/x-lua" >
             local start = window.createModel {
                 move_camera = false,
-                joystick_left = 250,
-                joystick_top = 1050,
-                joystick_width = 200,
-                joystick_height = 200,
                 dx = 0,
                 dy = 0,
             }
@@ -22,6 +18,10 @@
 
             function init()
                 start.joystick = document.getElementById "joystick"
+                start.joystick_left = start.joystick.clientLeft
+                start.joystick_top = start.joystick.clientTop
+                start.joystick_width = start.joystick.clientWidth
+                start.joystick_height = start.joystick.clientHeight
                 local e = assert(document.getElementById "toucharea")
                 e.addEventListener("pan", function(ev)
                     if ev.state == 'began' then
@@ -59,6 +59,6 @@
     </head>
     <body style="pointer-events: none;" onload="init()">
         <div id="toucharea" style="position: absolute; top: 50vmin; width: 50vmin; height: 50vmin; background-color: #ffffff10;"/>
-        <div id ="joystick" style="position: absolute; pointer-events: none; border-radius: 50%; left: 250px; top: 1050px; width: 200px; height: 200px; background-color: #60ff6050;"/>
+        <div id ="joystick" style="position: absolute; pointer-events: none; border-radius: 50%; left: 16vmin; top: 68vmin; width: 15vmin; height: 15vmin; background-color: #60ff6050;"/>
     </body>
 </rml>
