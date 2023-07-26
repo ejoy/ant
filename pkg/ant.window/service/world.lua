@@ -81,6 +81,7 @@ local function render(nwh, context, width, height, initialized)
 	while true do
 		if will_reboot then
 			reboot(will_reboot)
+			will_reboot = nil
 		end
 		world:pipeline_update()
 		bgfx.encoder_end()
