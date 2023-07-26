@@ -136,14 +136,14 @@ static void push_touch_message(ant::window::TOUCH_TYPE type, UIView* view, NSSet
     [self.m_view stop];
 }
 - (void)applicationWillResignActive:(UIApplication *)application {
-    //[self.m_view stop];
+    [self.m_view stop];
 }
 - (void)applicationDidEnterBackground:(UIApplication *)application {
 }
 - (void)applicationWillEnterForeground:(UIApplication *)application {
 }
 - (void)applicationDidBecomeActive:(UIApplication *)application {
-    //[self.m_view start];
+    [self.m_view start];
 }
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
     return UIInterfaceOrientationMaskLandscape;
