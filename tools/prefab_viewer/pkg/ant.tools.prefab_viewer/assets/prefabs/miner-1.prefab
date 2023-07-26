@@ -1,0 +1,98 @@
+---
+data:
+  name: Scene
+  scene: {}
+policy:
+  ant.general|name
+  ant.scene|scene_object
+---
+data:
+  meshskin: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Armature.skinbin
+  name: meshskin
+  scene: {}
+  skeleton: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|animations/skeleton.ozz
+  skinning: true
+mount: 1
+policy:
+  ant.animation|meshskin
+  ant.general|name
+  ant.scene|scene_object
+---
+data:
+  material: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002.material
+  mesh: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Cylinder_P1.meshbin
+  name: Cylinder
+  scene:
+    t: {-1.3385653495788574, 2, 0}
+  tag:
+    u_emissive_factor
+  visible_state: main_view|selectable|cast_shadow
+mount: 1
+policy:
+  ant.general|name
+  ant.render|render
+  ant.general|tag
+---
+data:
+  material: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002_s.material
+  mesh: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Cylinder.001_P1.meshbin
+  name: Cylinder.001
+  skinning: true
+  tag:
+    u_emissive_factor
+  visible_state: main_view|selectable|cast_shadow
+policy:
+  ant.general|name
+  ant.render|skinrender
+  ant.general|tag
+---
+data:
+  material: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002_s.material
+  mesh: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|meshes/BezierCurve.001_P1.meshbin
+  name: BezierCurve.001
+  skinning: true
+  tag:
+    u_emissive_factor
+  visible_state: main_view|selectable|cast_shadow
+policy:
+  ant.general|name
+  ant.render|skinrender
+  ant.general|tag
+---
+data:
+  material: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002_s.material
+  mesh: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Cylinder.005_P1.meshbin
+  name: Cylinder.004
+  skinning: true
+  tag:
+    u_emissive_factor
+  visible_state: main_view|selectable|cast_shadow
+policy:
+  ant.general|name
+  ant.render|skinrender
+  ant.general|tag
+---
+data:
+  material: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|materials/Material.002_s.material
+  mesh: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|meshes/Plane_P1.meshbin
+  name: Plane.004
+  skinning: true
+  tag:
+    u_emissive_factor
+  visible_state: main_view|selectable|cast_shadow
+policy:
+  ant.general|name
+  ant.render|skinrender
+  ant.general|tag
+---
+data:
+  anim_ctrl: {}
+  animation:
+    ArmatureAction: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|animations/ArmatureAction.ozz
+    work: /pkg/ant.tools.prefab_viewer/assets/prefabs/animation/miner_Bone.anim
+  animation_birth: ArmatureAction
+  name: animation
+  skeleton: /pkg/ant.tools.prefab_viewer/assets/glb/miner-1.glb|animations/skeleton.ozz
+policy:
+  ant.animation|animation
+  ant.general|name

@@ -1,0 +1,23 @@
+---
+data:
+  camera:
+    frustum:
+      aspect: 2
+      f: 1200
+      fov: 35
+      n: 1
+  name: camera1
+  scene:
+    r:{1,0.0,0.0}# {0.7071067690849304,0.0,0.0,0.7071067690849304}
+    t: {-50, 350, -200}
+    updir: {0, 0, 1, 0}
+  exposure:
+    type          : manual
+    aperture      : 16.0
+    shutter_speed : 0.008
+    ISO           : 100
+tag:
+  camera
+policy:
+  ant.general|name
+  ant.camera|camera

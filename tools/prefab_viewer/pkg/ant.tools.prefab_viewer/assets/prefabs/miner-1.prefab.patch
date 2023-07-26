@@ -1,0 +1,32 @@
+---
+data:
+  name: effect
+  scene:
+    r: {0, 0, 0, 1}
+    s: {4, 4, 4}
+    t: {0, 0, 0}
+  slot:
+    follow_flag: 1
+    joint_name: None
+  tag:
+    effect
+policy:
+  ant.general|name
+  ant.general|tag
+  ant.animation|slot
+---
+data:
+  name: shelf5
+  scene:
+    r: {0, 0, 0, 1}
+    s: {1, 1, 1}
+    t: {17.968830108642578, 15.485337257385254, 0}
+  slot:
+    follow_flag: 1
+    joint_name: None
+  tag:
+    hitch1
+policy:
+  ant.general|name
+  ant.general|tag
+  ant.animation|slot

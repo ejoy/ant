@@ -1,0 +1,12 @@
+work:
+  ---
+  event_list:
+    ---
+    asset_path: /pkg/ant.tools.prefab_viewer/assets/efk/miner_dust.efk
+    event_type: Effect
+    life_time: 2
+    link_info:
+      slot_eid: 125
+      slot_name: effect
+    name: Effect2
+  time: 0.44
