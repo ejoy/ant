@@ -52,36 +52,22 @@ local function parse(id, s)
 	return s
 end
 
-local function runtask()
-	if #tasks > 0 then
-		for i = 1, #tasks do
-			tasks[i]()
-		end
-		tasks = {}
-	end
-end
-
 local LOG
 
 if __ANT_RUNTIME__ then
 	local ServiceIO = ltask.queryservice "io"
 	local directory = require "directory"
-	local document = directory.log_path()
-	if document then
-		local fs = require "bee.filesystem"
-		local logfile = document .. "/game.log"
-		fs.create_directories(document)
-		function LOG(data)
-			ltask.send(ServiceIO, "SEND", "LOG", data)
-			local f <close> = io.open(logfile, "a+")
-			if f then
-				f:write(data)
-				f:write("\n")
-			end
-		end
-	else
-		function LOG(data)
-			ltask.send(ServiceIO, "SEND", "LOG", data)
+	local fs = require "bee.filesystem"
+	local logpath = directory.log_path()
+	local logfile = logpath .. "/game.log"
+	fs.create_directories(logpath)
+	fs.remove(logfile)
+	function LOG(data)
+		ltask.send(ServiceIO, "SEND", "LOG", data)
+		local f <close> = io.open(logfile, "a+")
+		if f then
+			f:write(data)
+			f:write("\n")
 		end
 	end
 else
