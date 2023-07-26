@@ -302,7 +302,7 @@ Renderer::Renderer(const RmlContext* context)
     , default_font_mat(std::make_unique<TextMaterial>(
         context->shader,
         context->font_mgr,
-        context->font_tex.texid
+        context->font_mgr->font_manager_texture(context->font_mgr)
     ))
     , clip_uniform(std::make_unique<Uniform>(
         context->shader.find_uniform("u_clip_rect")
@@ -448,7 +448,7 @@ Rml::Material* Renderer::CreateFontMaterial(const Rml::TextEffect& effect) {
         auto material = std::make_unique<TextShadowMaterial>(
             mcontext->shader,
             F,
-            mcontext->font_tex.texid,
+            F->font_manager_texture(F),
             edgevalueOffset,
             effect.shadow->color,
             Rml::Point(effect.shadow->offset_h, effect.shadow->offset_v)
@@ -461,7 +461,7 @@ Rml::Material* Renderer::CreateFontMaterial(const Rml::TextEffect& effect) {
         auto material = std::make_unique<TextStrokeMaterial>(
             mcontext->shader,
             F,
-            mcontext->font_tex.texid,
+            F->font_manager_texture(F),
             edgevalueOffset,
             effect.stroke->color,
             effect.stroke->width
@@ -505,29 +505,11 @@ Rml::FontFaceHandle Renderer::GetFontFaceHandle(const std::string& family, Rml::
     return face.handle;
 }
 
-static bool UpdateTexture(bgfx_texture_handle_t th, uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t *buffer) {
-    if (!BGFX_HANDLE_IS_VALID(th))
-        return false;
-    const uint32_t bytes = (uint32_t)w * h;
-    auto mem = BGFX(make_ref)(buffer, bytes);
-    BGFX(update_texture_2d)(th, 0, 0, x, y, w, h, mem, w);
-    return true;
-}
-
 static struct font_glyph GetGlyph(const RmlContext* mcontext, const FontFace& face, int codepoint, struct font_glyph* og_ = nullptr) {
     struct font_glyph g, og;
     font_manager* F = mcontext->font_mgr;
-    if (0 == F->font_manager_glyph(F, face.fontid, codepoint, face.pixelsize, &g, &og)) {
-        const uint32_t bufsize = og.w * og.h;
-        uint8_t *buffer = new uint8_t[bufsize];
-        memset(buffer, 0, bufsize);
-        if (NULL == F->font_manager_update(F, face.fontid, codepoint, &og, buffer)) {
-            UpdateTexture({(uint16_t)mcontext->font_tex.texid}, og.u, og.v, og.w, og.h, buffer);
-        }
-        else {
-            delete[] buffer;
-        }
-    }
+    //TODO: rasie err
+    F->font_manager_glyph(F, face.fontid, codepoint, face.pixelsize, &g, &og);
     if (og_)
         *og_ = og;
     return g;
@@ -594,7 +576,7 @@ void Renderer::GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, 
 
         FontFace face;
         face.handle = handle;
-        const Rml::Point fonttexel(1.f / mcontext->font_tex.width, 1.f / mcontext->font_tex.height);
+        const Rml::Point fonttexel(1.f / FONT_MANAGER_TEXSIZE, 1.f / FONT_MANAGER_TEXSIZE);
 
         int x = int(line.position.x + 0.5f), y = int(line.position.y + 0.5f);
         for (auto codepoint : utf8::view(line.text)) {
@@ -635,7 +617,7 @@ void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lin
 
         FontFace face;
         face.handle = handle;
-        const Rml::Point fonttexel(1.f / mcontext->font_tex.width, 1.f / mcontext->font_tex.height);
+        const Rml::Point fonttexel(1.f / FONT_MANAGER_TEXSIZE, 1.f / FONT_MANAGER_TEXSIZE);
 
         float x = line.position.x + 0.5f, y = line.position.y + 0.5f;
         

@@ -68,57 +68,30 @@ const char *utf8_decode (const char *s, utfint *val, int strict) {
   return s + 1;  /* +1 to include first byte */
 }
 
-static void
-release_char_memory(void *d, void *u){
-	free(d);
-}
-
-static void
-prepare_char(struct font_manager* F, uint16_t texid, int fontid, int codepoint, int *advance_x, int *advance_y) {
-	struct font_glyph g;
-	int ret = font_manager_touch(F, fontid, codepoint, &g);
-	*advance_x = g.advance_x;
-	*advance_y = g.advance_y;
-
-	if (ret < 0) {	// failed
-		// todo: report overflow
-		return;
-	}
-
-	if (ret == 0){
-		uint8_t *mem = malloc(g.w * g.h);
-		const char * err = font_manager_update(F, fontid, codepoint, &g, mem);
-		if (err){
-			return ;
-		}
-		bgfx_texture_handle_t th = { texid };
-		const bgfx_memory_t* m = BGFX(make_ref_release)(mem, g.w * g.h, release_char_memory, NULL);
-		BGFX(update_texture_2d)(th, 0, 0, g.u, g.v, g.w, g.h, m, g.w);
-	}
-}
-
 static int
 lprepare_text(lua_State *L) {
     struct font_manager *F = (struct font_manager *)lua_touserdata(L, lua_upvalueindex(1));
-	uint16_t texid = luaL_checkinteger(L, 1);
 	size_t sz;
-	const char * str = luaL_checklstring(L, 2, &sz);
+	const char * str = luaL_checklstring(L, 1, &sz);
 	const char * end_ptr = str + sz;
 
-    const int size = luaL_checkinteger(L, 3);
-	int fontid = luaL_optinteger(L, 4, 0);
+    const int size = luaL_checkinteger(L, 2);
+	int fontid = luaL_optinteger(L, 3, 0);
 
 	int advance_x=0, advance_y=0;
     int numchar=0;
+	struct font_glyph g, og;
 	while (str < end_ptr) {
 		utfint codepoint;
 		str = utf8_decode(str, &codepoint, 1);
 		if (str) {
-			int x,y;
-			prepare_char(F, texid, fontid, codepoint, &x, &y);
-			advance_x += x;
-			if (y > advance_y) {
-				advance_y = y;
+			const char* err = font_manager_glyph(F, fontid, codepoint, size, &g, &og);
+			if (err) {
+				return luaL_error(L, "font_manager_glyph failed: %s", err);
+			}
+			advance_x += g.advance_x;
+			if (g.advance_y > advance_y) {
+				advance_y = g.advance_y;
 			}
 			++numchar;
 		} else {
@@ -126,13 +99,8 @@ lprepare_text(lua_State *L) {
 		}
 	}
 
-    struct font_glyph t_g = {0};
-    t_g.advance_x = advance_x;
-    t_g.advance_y = advance_y;
-    font_manager_scale(F, &t_g, size);
-
-    lua_pushinteger(L, t_g.advance_x);
-    lua_pushinteger(L, t_g.advance_y);
+    lua_pushinteger(L, advance_x);
+    lua_pushinteger(L, advance_y);
     lua_pushinteger(L, numchar);
 	return 3;
 }
@@ -279,6 +247,14 @@ lsubmit(lua_State *L){
 }
 
 static int
+ltexture(lua_State *L) {
+	struct font_manager *F = getF(L);
+	uint16_t texture = font_manager_texture(F);
+	lua_pushinteger(L, texture);
+	return 1;
+}
+
+static int
 limport(lua_State *L) {
 	struct font_manager *F = getF(L);
 	const char* fontpath = luaL_checkstring(L, 1);
@@ -302,6 +278,7 @@ static int
 initfont(lua_State *L) {
 	luaL_checktype(L, 2, LUA_TLIGHTUSERDATA);
 	luaL_Reg l[] = {
+		{ "texture",			ltexture },
 		{ "import",				limport },
 		{ "name",				lname },
 		{ "fontheight",			lfontheight },

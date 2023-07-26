@@ -14,15 +14,9 @@ local fs = require "filesystem"
 local ui_viewid<const> = viewidmgr.get "uiruntime"
 
 function rmlui_sys:init()
-    local ft_handle, ft_w, ft_h = font.texture()
-
     ltask.call(ServiceRmlUi, "initialize", {
         service_world = ltask.self(),
         viewid = ui_viewid,
-        font_tex = {
-            texid = ft_handle,
-            width = ft_w, height = ft_h,
-        },
     })
 
     local vp = world.args.viewport
