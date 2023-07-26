@@ -36,6 +36,41 @@ local output = lfs.path "./tools/material_compile/output"
 
 if srcpath:equal_extension "material" then
     cr.compile_file(srcpath:localpath())
+elseif srcpath:equal_extension "lua" then
+    local files, err = dofile(srcpath:localpath():string())
+    if files == nil then
+        error(("load %s failed: %s"):format(srcpath:string(), err))
+    end
+    local function readfile(ff) local f<close> = fs.open(ff); return f:read "a" end
+    local RES_EXT = {
+        [".prefab"]     = function (filename)
+            local r = serialize.parse(filename, readfile(fs.path(filename)))
+            for _, e in ipairs(r) do
+                local d = e.data
+                if d.mesh then
+                    cr.compile_file(fs.path(d.mesh):localpath())
+                end
+
+                if d.material then
+                    cr.compile_file(fs.path(d.material):localpath())
+                end
+            end
+        end,
+        [".material"]   = function (filename)
+            cr.compile_file(fs.path(filename):localpath())
+        end,
+        [".glb"]        = function (filename)
+            cr.compile_file(fs.path(filename):localpath())
+        end,
+    }
+    
+    for _, f in ipairs(files) do
+        local ext = fs.path(f):extension():string():lower()
+        local op = RES_EXT[ext]
+        if op then
+            op(f)
+        end
+    end
 else
     local stage = srcpath:filename():string():match "([vfc]s)_%w+"
 
