@@ -731,6 +731,8 @@ void Element::UpdateStackingContext() {
 			render_children.push_back(node);
 			break;
 		}
+		case Node::Type::Comment:
+			break;
 		}
 	}
 	std::stable_sort(render_children.begin(), render_children.end(),
