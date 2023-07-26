@@ -4,14 +4,16 @@ local function start(initargs)
     if not __ANT_RUNTIME__ then
         exclusive[#exclusive+1] = "subprocess"
     end
+	local directory = require "directory"
+	local log_path = directory.log_path()
     task {
         support_package = true,
         service_path = "${package}/service/?.lua",
         bootstrap = { "ant.window|boot", initargs },
         logger = { "logger" },
         exclusive = exclusive,
-        debuglog = "debug.log",
-        crashlog = "crash.log",
+        debuglog = (log_path / "debug.log"):string(),
+        crashlog = (log_path / "crash.log"):string(),
     }
 end
 

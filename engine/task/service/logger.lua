@@ -64,18 +64,9 @@ end
 local LOG
 
 if __ANT_RUNTIME__ then
-    local platform = require "bee.platform"
-    local ServiceIO = ltask.queryservice "io"
-	local function app_path(name)
-		if platform.os == "ios" then
-			local ios = require "ios"
-			return ios.directory(ios.NSDocumentDirectory)
-		elseif platform.os == 'android' then
-			local android = require "android"
-			return android.directory(android.ExternalDataPath)
-		end
-	end
-	local document = app_path()
+	local ServiceIO = ltask.queryservice "io"
+	local directory = require "directory"
+	local document = directory.log_path()
 	if document then
 		local fs = require "bee.filesystem"
 		local logfile = document .. "/game.log"
