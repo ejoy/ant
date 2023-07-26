@@ -10,7 +10,8 @@ local function start(initargs)
         bootstrap = { "ant.window|boot", initargs },
         logger = { "logger" },
         exclusive = exclusive,
-        debuglog = "log.txt",
+        debuglog = "debug.log",
+        crashlog = "crash.log",
     }
 end
 
