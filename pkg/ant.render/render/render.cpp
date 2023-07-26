@@ -166,24 +166,32 @@ submit_draw(struct ecs_world*w, bgfx_view_id_t viewid, const ecs::render_object 
 static inline void
 draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ecs::render_object *obj, const matrix_array *mats, obj_transforms &trans){
 	auto mi = get_material(w->R, obj, ra->material_index);
-	if (mi && mesh_submit(w, obj, ra->viewid, ra->material_index)) {
-		apply_material_instance(L, mi, w);
-		const auto prog = material_prog(L, mi);
-		transform t;
-		if (mats){
-			t = update_hitch_transform(w, obj, *mats, trans);
-			for (int i=0; i<mats->size()-1; ++i) {
-				w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-				submit_draw(w, ra->viewid, obj, prog, BGFX_DISCARD_TRANSFORM);
-				t.tid += t.stride;
-			}
-		} else {
-			t = update_transform(w, obj, trans);
-		}
-
-		w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
-		submit_draw(w, ra->viewid, obj, prog, BGFX_DISCARD_ALL);
+	if (nullptr == mi)
+		return;
+	const auto prog = material_prog(L, mi);
+	if (!BGFX_HANDLE_IS_VALID(prog)){
+		return ;
 	}
+
+	if (!mesh_submit(w, obj, ra->viewid, ra->material_index))
+		return ;
+	
+	apply_material_instance(L, mi, w);
+	
+	transform t;
+	if (mats){
+		t = update_hitch_transform(w, obj, *mats, trans);
+		for (int i=0; i<mats->size()-1; ++i) {
+			w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
+			submit_draw(w, ra->viewid, obj, prog, BGFX_DISCARD_TRANSFORM);
+			t.tid += t.stride;
+		}
+	} else {
+		t = update_transform(w, obj, trans);
+	}
+
+	w->bgfx->encoder_set_transform_cached(w->holder->encoder, t.tid, t.stride);
+	submit_draw(w, ra->viewid, obj, prog, BGFX_DISCARD_ALL);
 }
 
 struct submit_cache{
