@@ -39,7 +39,7 @@ local BgfxOS <const> = {
     macos = "osx",
 }
 
-local renderer<const> = "vulkan"
+local renderer<const> = "metal"
 
 cr.set_setting("material", stringify {
     os = BgfxOS[platform.os] or platform.os,

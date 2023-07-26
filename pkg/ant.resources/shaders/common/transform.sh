@@ -1,6 +1,7 @@
 #ifndef __SHADER_TRANSFORMS_SH__
 #define __SHADER_TRANSFORMS_SH__
 
+#include <bgfx_shader.sh>
 #include <shaderlib.sh>
 #include "common/constants.sh"
 #include "common/camera.sh"
