@@ -53,6 +53,7 @@ private:
     bgfx_encoder_t*       mEncoder;
     RenderState           state;
     bgfx_texture_handle_t default_tex;
+    bgfx_vertex_layout_t  layout;
     std::unique_ptr<TextureMaterial> default_tex_mat;
     std::unique_ptr<TextMaterial> default_font_mat;
     std::unique_ptr<Uniform>      clip_uniform;

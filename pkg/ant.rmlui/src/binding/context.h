@@ -47,6 +47,5 @@ struct RmlContext {
     struct font_manager*  font_mgr;
     struct shader         shader;
     uint16_t              viewid;
-    bgfx_vertex_layout_t* layout;
     RmlContext(lua_State *L, int idx);
 };

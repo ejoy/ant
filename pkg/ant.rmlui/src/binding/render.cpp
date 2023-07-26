@@ -308,6 +308,11 @@ Renderer::Renderer(const RmlContext* context)
         context->shader.find_uniform("u_clip_rect")
     ))
 {
+    BGFX(vertex_layout_begin)(&layout, BGFX_RENDERER_TYPE_NOOP);
+    BGFX(vertex_layout_add)(&layout, BGFX_ATTRIB_POSITION, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+    BGFX(vertex_layout_add)(&layout, BGFX_ATTRIB_COLOR0, 4, BGFX_ATTRIB_TYPE_UINT8, true, true);
+    BGFX(vertex_layout_add)(&layout, BGFX_ATTRIB_TEXCOORD0, 2, BGFX_ATTRIB_TYPE_FLOAT, false, false);
+    BGFX(vertex_layout_end)(&layout);
     BGFX(set_view_mode)(context->viewid, BGFX_VIEW_MODE_SEQUENTIAL);
     Rml::SetRenderInterface(this);
 }
@@ -319,7 +324,7 @@ Renderer::~Renderer() {
 void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::Index* indices, size_t num_indices, Rml::Material* mat) {
     BGFX(encoder_set_state)(mEncoder, RENDER_STATE, 0);
     bgfx_transient_vertex_buffer_t tvb;
-    BGFX(alloc_transient_vertex_buffer)(&tvb, (uint32_t)num_vertices, (bgfx_vertex_layout_t*)mcontext->layout);
+    BGFX(alloc_transient_vertex_buffer)(&tvb, (uint32_t)num_vertices, (bgfx_vertex_layout_t*)&layout);
 
     memcpy(tvb.data, vertices, num_vertices * sizeof(Rml::Vertex));
     BGFX(encoder_set_transient_vertex_buffer)(mEncoder, 0, &tvb, 0, (uint32_t)num_vertices);
