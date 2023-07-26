@@ -3,6 +3,7 @@ local sha1    = require "editor.hash".sha1
 local config  = require "editor.config"
 local depends = require "editor.depends"
 local vfs     = require "vfs"
+local ltask   = require "ltask"
 
 local function get_filename(pathname)
     pathname = pathname:lower()
@@ -29,8 +30,14 @@ local function absolute_path(base, path)
 	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
 end
 
+local compiling = {}
+
 function compile_file(input)
     local inputstr = input:string()
+    if compiling[inputstr] then
+        return lfs.path(ltask.multi_wait(compiling[inputstr]))
+    end
+    compiling[inputstr] = {}
     local ext = inputstr:match "[^/]%.([%w*?_%-]*)$"
     local cfg = config.get(ext)
     local output = cfg.binpath / get_filename(inputstr)
@@ -46,6 +53,8 @@ function compile_file(input)
         depends.insert_front(deps, input)
         depends.writefile(output / ".dep", deps)
     end
+    ltask.multi_wakeup(compiling[inputstr], output:string())
+    compiling[inputstr] = nil
     return output
 end
 
