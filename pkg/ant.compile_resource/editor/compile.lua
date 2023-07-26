@@ -2,6 +2,7 @@ local lfs     = require "filesystem.local"
 local sha1    = require "editor.hash".sha1
 local config  = require "editor.config"
 local depends = require "editor.depends"
+local vfs   = require "vfs"
 local ltask   = require "ltask"
 
 local function get_filename(pathname)
@@ -13,7 +14,10 @@ end
 local compile_file
 
 local function absolute_path(base, path)
-	assert(path:sub(1,1) ~= "/")
+	if path:sub(1,1) == "/" then
+        assert(not path:find("|", 1, true))
+        return lfs.path(vfs.realpath(path))
+	end
 	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
 end
 
