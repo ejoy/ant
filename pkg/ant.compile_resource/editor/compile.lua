@@ -44,8 +44,8 @@ function compile_file(input)
         depends.insert_front(deps, input)
         depends.writefile(output / ".dep", deps)
     end
-    compiling[inputstr] = nil
     ltask.multi_wakeup(compiling[inputstr], output:string())
+    compiling[inputstr] = nil
     return output
 end
 
