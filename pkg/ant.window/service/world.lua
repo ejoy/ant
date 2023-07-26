@@ -15,16 +15,33 @@ end)
 
 local S = ltask.dispatch {}
 
-local config = {
-	ecs = initargs,
-	DEBUG = platform.DEBUG or platform.os ~= "ios"
-}
 
 local world
 local encoderBegin = false
 local quit
+local will_reboot
+
+local function reboot(initargs)
+	local config = world.args
+	config.REBOOT = true
+	config.ecs = initargs
+	world:pipeline_exit()
+	world = ecs.new_world(config)
+	local ev 		= inputmgr.create(world, "win32")
+	S.keyboard		= ev.keyboard
+	S.mouse 		= ev.mouse
+	S.mousewheel	= ev.mousewheel
+	S.touch			= ev.touch
+	S.gesture		= ev.gesture
+	S.size			= ev.size
+	world:pipeline_init()
+end
 
 local function render(nwh, context, width, height, initialized)
+	local config = {
+		ecs = initargs,
+		DEBUG = platform.DEBUG or platform.os ~= "ios"
+	}
 	config.framebuffer = {
 		width = width,
 		height = height,
@@ -62,6 +79,9 @@ local function render(nwh, context, width, height, initialized)
 	initialized = nil
 
 	while true do
+		if will_reboot then
+			reboot(will_reboot)
+		end
 		world:pipeline_update()
 		bgfx.encoder_end()
 		encoderBegin = false
@@ -152,6 +172,10 @@ function S.exit()
 	rhwi.shutdown()
     print "exit"
     ltask.multi_wakeup "quit"
+end
+
+function S.reboot(initargs)
+	will_reboot = initargs
 end
 
 function S.wait()

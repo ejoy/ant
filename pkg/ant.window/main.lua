@@ -14,6 +14,13 @@ local function start(initargs)
     }
 end
 
+local function reboot(initargs)
+    local ltask = require "ltask"
+    local ServiceWorld = ltask.queryservice "ant.window|world"
+    ltask.send(ServiceWorld, "reboot", initargs)
+end
+
 return {
     start = start,
+    reboot = reboot,
 }

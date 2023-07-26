@@ -6,7 +6,6 @@ local mc 		= import_package "ant.math".constant
 
 local math3d = require "math3d"
 local rp3d = require "rp3d"
-local mathadapter = import_package "ant.math.adapter"
 
 rp3d.init()
 
