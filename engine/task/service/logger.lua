@@ -58,10 +58,9 @@ if __ANT_RUNTIME__ then
 	local ServiceIO = ltask.queryservice "io"
 	local directory = require "directory"
 	local fs = require "bee.filesystem"
-	local logpath = directory.log_path()
+	local logpath = directory.log_path():string()
 	local logfile = logpath .. "/game.log"
 	fs.create_directories(logpath)
-	fs.remove(logfile)
 	function LOG(data)
 		ltask.send(ServiceIO, "SEND", "LOG", data)
 		local f <close> = io.open(logfile, "a+")
