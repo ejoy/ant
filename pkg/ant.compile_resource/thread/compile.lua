@@ -30,11 +30,20 @@ if __ANT_RUNTIME__ then
     set_setting = vfs.resource_setting
 else
     local editor = require "editor.compile"
+    local compiled = {}
+    local function compile_file(input)
+        if compiled[input] then
+            return compiled[input]
+        end
+        local output = editor.compile_file(lfs.path(input))
+        compiled[input] = output
+        return output
+    end
     function compile(pathstring)
         local pos = pathstring:find("|", 1, true)
         if pos then
             local resource = vfs.realpath(pathstring:sub(1,pos-1))
-            return editor.compile_file(lfs.path(resource)) / pathstring:sub(pos+1):gsub("|", "/")
+            return compile_file(resource) / pathstring:sub(pos+1):gsub("|", "/")
         else
             return lfs.path(vfs.realpath(pathstring))
         end

@@ -2,7 +2,6 @@ local lfs     = require "filesystem.local"
 local sha1    = require "editor.hash".sha1
 local config  = require "editor.config"
 local depends = require "editor.depends"
-local vfs     = require "vfs"
 local ltask   = require "ltask"
 
 local function get_filename(pathname)
@@ -13,34 +12,17 @@ end
 
 local compile_file
 
-local function compile(pathstring)
-    local pos = pathstring:find("|", 1, true)
-    if pos then
-        local resource = vfs.realpath(pathstring:sub(1,pos-1))
-        return compile_file(lfs.path(resource)) / pathstring:sub(pos+1):gsub("|", "/")
-    else
-        return lfs.path(vfs.realpath(pathstring))
-    end
-end
-
 local function absolute_path(base, path)
-	if path:sub(1,1) == "/" then
-		return compile(path)
-	end
+	assert(path:sub(1,1) ~= "/")
 	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
 end
 
-local compiled = {}
 local compiling = {}
 
 function compile_file(input)
     local inputstr = input:string()
-    if compiled[inputstr] then
-        return compiled[inputstr]
-    end
     if compiling[inputstr] then
-        ltask.multi_wait(compiling[inputstr])
-        return compiled[inputstr]
+        return lfs.path(ltask.multi_wait(compiling[inputstr]))
     end
     compiling[inputstr] = {}
     local ext = inputstr:match "[^/]%.([%w*?_%-]*)$"
@@ -58,9 +40,8 @@ function compile_file(input)
         depends.insert_front(deps, input)
         depends.writefile(output / ".dep", deps)
     end
-    compiled[inputstr] = output
     compiling[inputstr] = nil
-    ltask.multi_wakeup(compiling[inputstr])
+    ltask.multi_wakeup(compiling[inputstr], output:string())
     return output
 end
 
