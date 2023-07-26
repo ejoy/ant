@@ -80,7 +80,7 @@ return function (w, package)
             file = fullname
         end
         return pm.findenv(package, pkg)
-            .require_ecs(w._ecs[pkg], file)
+            .require_ecs(w, w._ecs[pkg], file)
     end
     ecs.import = {}
     for _, objname in ipairs(OBJECT) do
