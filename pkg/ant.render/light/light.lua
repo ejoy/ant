@@ -14,7 +14,7 @@ local enable_cluster_shading = setting:data().graphic.lighting.cluster_shading ~
 
 local DEFAULT_LIGHT<const> = {
 	directional = {
-		intensity = 120000,
+		intensity = 130000,
 		unit = "lux",
 	},
 	point = {
