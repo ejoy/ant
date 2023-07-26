@@ -52,45 +52,21 @@ local function parse(id, s)
 	return s
 end
 
-local function runtask()
-	if #tasks > 0 then
-		for i = 1, #tasks do
-			tasks[i]()
-		end
-		tasks = {}
-	end
-end
-
 local LOG
 
 if __ANT_RUNTIME__ then
-    local platform = require "bee.platform"
-    local ServiceIO = ltask.queryservice "io"
-	local function app_path(name)
-		if platform.os == "ios" then
-			local ios = require "ios"
-			return ios.directory(ios.NSDocumentDirectory)
-		elseif platform.os == 'android' then
-			local android = require "android"
-			return android.directory(android.ExternalDataPath)
-		end
-	end
-	local document = app_path()
-	if document then
-		local fs = require "bee.filesystem"
-		local logfile = document .. "/game.log"
-		fs.create_directories(document)
-		function LOG(data)
-			ltask.send(ServiceIO, "SEND", "LOG", data)
-			local f <close> = io.open(logfile, "a+")
-			if f then
-				f:write(data)
-				f:write("\n")
-			end
-		end
-	else
-		function LOG(data)
-			ltask.send(ServiceIO, "SEND", "LOG", data)
+	local ServiceIO = ltask.queryservice "io"
+	local directory = require "directory"
+	local fs = require "bee.filesystem"
+	local logpath = directory.log_path():string()
+	local logfile = logpath .. "/game.log"
+	fs.create_directories(logpath)
+	function LOG(data)
+		ltask.send(ServiceIO, "SEND", "LOG", data)
+		local f <close> = io.open(logfile, "a+")
+		if f then
+			f:write(data)
+			f:write("\n")
 		end
 	end
 else

@@ -79,7 +79,6 @@ lm:lua_source "ant_common" {
         }
     }
 }
-checkAddModule("layout", "../pkg/ant.font/make.lua")
 lm:lua_source "ant_openlibs" {
     sources = "common/ant_openlibs.c",
 }

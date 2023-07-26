@@ -1,7 +1,6 @@
 local rmlui = require "rmlui"
 local bgfx = require "bgfx"
 import_package "ant.service".init_bgfx()
-local renderpkg = import_package "ant.render"
 
 local function create_shaders()
     local ltask = require "ltask"
@@ -53,9 +52,6 @@ end
 local shaders = create_shaders()
 
 return function(t)
-    local declmgr = renderpkg.declmgr
-    local layouhandle = declmgr.get "p2|c40niu|t20".handle
-    t.layout  = layouhandle
     t.shader = shaders
     t.callback = require "core.callback"
     t.font_mgr = bgfx.fontmanager()

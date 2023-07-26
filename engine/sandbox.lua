@@ -3,8 +3,6 @@ local fs = require "filesystem"
 local function sandbox_env(loadenv, config, root, pkgname)
     local env = setmetatable({}, {__index=_G})
     local _LOADED = {}
-    local _ECS_LOADED = {}
-    local _ECS_LOADING = {}
 
     local function searchpath(name, path)
         name = string.gsub(name, '%.', '/')
@@ -64,14 +62,24 @@ local function sandbox_env(loadenv, config, root, pkgname)
         return r
     end
 
+    local _ECS_LOADED = setmetatable({}, {__mode="k", __index=function(self, k)
+        local t = {}
+        self[k] = t
+        return t
+    end})
+    local _ECS_LOADING = setmetatable({}, {__mode="k", __index=function(self, k)
+        local t = {}
+        self[k] = t
+        return t
+    end})
     local ecs_searchers = { searcher_lua }
-    function env.require_ecs(ecs, name)
+    function env.require_ecs(w, ecs, name)
         assert(type(name) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
-        local p = _ECS_LOADED[name]
+        local p = _ECS_LOADED[w][name]
         if p ~= nil then
             return p
         end
-        if _ECS_LOADING[name] then
+        if _ECS_LOADING[w][name] then
             error(("Recursive load module '%s'"):format(name))
         end
         local initfunc = require_load(name, ecs_searchers)
@@ -80,27 +88,27 @@ local function sandbox_env(loadenv, config, root, pkgname)
         if r == nil then
             r = true
         end
-        _ECS_LOADED[name] = r
+        _ECS_LOADED[w][name] = r
         return r
     end
-    function env.include_ecs(ecs, name)
+    function env.include_ecs(w, ecs, name)
         assert(type(name) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
-        local p = _ECS_LOADED[name]
+        local p = _ECS_LOADED[w][name]
         if p ~= nil then
             return
         end
-        if _ECS_LOADING[name] then
+        if _ECS_LOADING[w][name] then
             return
         end
-        _ECS_LOADING[name] = true
+        _ECS_LOADING[w][name] = true
         local initfunc = require_load(name, ecs_searchers)
         debug.setupvalue(initfunc, 1, env)
         local r = initfunc(ecs)
         if r == nil then
             r = true
         end
-        _ECS_LOADED[name] = r
-        _ECS_LOADING[name] = nil
+        _ECS_LOADED[w][name] = r
+        _ECS_LOADING[w][name] = nil
     end
 
     function env.package_env(name)

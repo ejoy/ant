@@ -94,7 +94,7 @@ local function create_importor(w)
 					local pkg = v.packname
 					local file = impl:gsub("^(.*)%.lua$", "%1")
 					pm.findenv(package, pkg)
-						.include_ecs(w._ecs[pkg], file)
+						.include_ecs(w, w._ecs[pkg], file)
 				end
 			end
 			return res

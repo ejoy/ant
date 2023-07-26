@@ -6,9 +6,8 @@ local mc 		= import_package "ant.math".constant
 
 local math3d = require "math3d"
 local rp3d = require "rp3d"
-local mathadapter = import_package "ant.math.adapter"
 
-mathadapter.bind("collision", function() rp3d.init() end)
+rp3d.init()
 
 local rp3d_world = rp3d.create_world {
 	worldName = "world",

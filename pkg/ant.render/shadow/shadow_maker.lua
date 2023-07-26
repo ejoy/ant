@@ -380,9 +380,9 @@ local function set_csm_visible(enable)
 end
 
 function sm:entity_init()
-	for e in w:select "INIT make_shadow directional_light light:in" do
-		local csm_dl = w:first("csm_directional_light light:in")
-		if csm_dl == nil then
+	for e in w:select "INIT make_shadow directional_light light:in csm_directional_light?update" do
+		--local csm_dl = w:first("csm_directional_light light:in")
+		if e.csm_dl == nil then
 			e.csm_directional_light = true
 			w:extend(e, "csm_directional_light?out")
 			set_csm_visible(true)

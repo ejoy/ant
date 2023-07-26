@@ -1,6 +1,9 @@
 #include "font_manager.h"
 #include "truetype.h"
 
+#include "../bgfx/bgfx_interface.h"
+#include "luabgfx.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
@@ -292,20 +295,31 @@ font_manager_scale(struct font_manager *F, struct font_glyph *glyph, int size) {
 	uscale(&glyph->h, size);
 }
 
-int
-font_manager_glyph(struct font_manager *F, int fontid, int codepoint, int size, struct font_glyph *g, struct font_glyph *og){
-    int updated = font_manager_touch(F, fontid, codepoint, g);
+static void
+release_char_memory(void *d, void *u){
+	free(d);
+}
 
-	if (og){
-		*og = *g;
-		if (is_space_codepoint(codepoint)){
-			updated = 1;	// not need update
-			og->w = og->h = 0;
-		}
+const char *
+font_manager_glyph(struct font_manager *F, int fontid, int codepoint, int size, struct font_glyph *g, struct font_glyph *og) {
+	int updated = font_manager_touch(F, fontid, codepoint, g);
+	*og = *g;
+	if (is_space_codepoint(codepoint)){
+		updated = 1;	// not need update
+		og->w = og->h = 0;
 	}
-
-    font_manager_scale(F, g, size);
-    return updated;
+	font_manager_scale(F, g, size);
+	if (updated == 0) {
+		uint8_t *mem = malloc(og->w * og->h);
+		const char * err = font_manager_update(F, fontid, codepoint, og, mem);
+		if (err) {
+			return err;
+		}
+		bgfx_texture_handle_t th = { F->texture };
+		const bgfx_memory_t* m = BGFX(make_ref_release)(mem, og->w * og->h, release_char_memory, NULL);
+		BGFX(update_texture_2d)(th, 0, 0, og->u, og->v, og->w, og->h, m, og->w);
+	}
+	return NULL;
 }
 
 static const char *
@@ -392,6 +406,11 @@ font_manager_addfont_with_family_unsafe(struct font_manager *F, const char* fami
 	return ttf_with_family(F, family);
 }
 
+uint16_t
+font_manager_texture(struct font_manager *F) {
+	return F->texture;
+}
+
 int
 font_manager_addfont_with_family(struct font_manager *F, const char* family) {
 	lock(F);
@@ -435,6 +454,8 @@ font_manager_init(struct font_manager *F) {
 	for (i=0;i<FONT_MANAGER_HASHSLOTS;i++) {
 		F->hash[i] = -1;	// empty slot
 	}
+	bgfx_texture_handle_t th = BGFX(create_texture_2d)(FONT_MANAGER_TEXSIZE, FONT_MANAGER_TEXSIZE, false, 1, BGFX_TEXTURE_FORMAT_A8, BGFX_TEXTURE_NONE | BGFX_SAMPLER_NONE, NULL);
+	F->texture = th.idx;
 }
 
 void
@@ -443,6 +464,7 @@ font_manager_init_lua(struct font_manager *F, void *L) {
 	F->ttf = truetype_cstruct(L);
 	F->L = L;
 	#define SETAPI(n) F->n = n
+	SETAPI(font_manager_texture);
 	SETAPI(font_manager_import);
 	SETAPI(font_manager_addfont_with_family);
 	SETAPI(font_manager_fontheight);
@@ -465,6 +487,8 @@ font_manager_release_lua(struct font_manager *F) {
 	void *L = F->L;
 	F->ttf = NULL;
 	F->L = NULL;
+	bgfx_texture_handle_t th = { F->texture };
+	BGFX(destroy_texture)(th);
 	unlock(F);
 	return L;
 }

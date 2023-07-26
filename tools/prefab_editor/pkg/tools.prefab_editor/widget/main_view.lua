@@ -2,6 +2,7 @@ local ecs   = ...
 local world = ecs.world
 local w     = world.w
 
+world.args.disable_resize = true
 local mathpkg   = import_package "ant.math"
 local mu        = mathpkg.util
 
