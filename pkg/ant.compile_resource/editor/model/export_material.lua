@@ -143,34 +143,14 @@ local function read_datalist(statefile)
     return s
 end
 
-local function save_texture(saved_files, output, exports, texture_desc)
-    if not saved_files[output:string()] then
-        saved_files[output:string()] = true
-        parallel_task.add(exports.tasks, function ()
-            local ok, err = texture_compile(texture_desc, output, function (path)
-                path = path[1]
-                if path:sub(1,1) == "/" then
-                    return fs.path(path):localpath()
-                end
-                return fs.absolute(output:parent_path() / (path:match "^%./(.+)$" or path))
-            end)
-            if not ok then
-                error("compile failed: " .. output:string() .. "\n" .. err)
-            end
-        end)
-    end
-end
-
 return function (output, glbdata, exports, tolocalpath)
     local glbscene, glbbin = glbdata.info, glbdata.bin
     local materials = glbscene.materials
-
-    local saved_files = {}
-
     if not materials then
         return
     end
 
+    local EXPORTED_FILES = {}
     local images = glbscene.images
     local bufferviews = glbscene.bufferViews
     local buffers = glbscene.buffers
@@ -192,7 +172,7 @@ return function (output, glbdata, exports, tolocalpath)
         end
 
         local outfile = output / "images" / name
-        if not saved_files[outfile:string()] then
+        if not EXPORTED_FILES[outfile:string()] then
             local bv = bufferviews[img.bufferView+1]
             local buf = buffers[bv.buffer+1]
             local begidx = (bv.byteOffset or 0)+1
@@ -201,9 +181,27 @@ return function (output, glbdata, exports, tolocalpath)
             local c = glbbin:sub(begidx, endidx)
             utility.save_file("./images/"..name, c)
 
-            saved_files[outfile:string()] = true
+            EXPORTED_FILES[outfile:string()] = true
         end
         return name
+    end
+
+    local function export_texture(outputfile, texture_desc)
+        if not EXPORTED_FILES[outputfile:string()] then
+            EXPORTED_FILES[outputfile:string()] = true
+            parallel_task.add(exports.tasks, function ()
+                local ok, err = texture_compile(texture_desc, outputfile, function (path)
+                    path = path[1]
+                    if path:sub(1,1) == "/" then
+                        return fs.path(path):localpath()
+                    end
+                    return fs.absolute(outputfile:parent_path() / (path:match "^%./(.+)$" or path))
+                end)
+                if not ok then
+                    error("compile failed: " .. outputfile:string() .. "\n" .. err)
+                end
+            end)
+        end
     end
 
     local function to_sampler(sampleidx)
@@ -237,7 +235,7 @@ return function (output, glbdata, exports, tolocalpath)
         end
     end
 
-    local function fetch_texture_info(texidx, normalmap, colorspace)
+    local function build_texture_file(texidx, normalmap, colorspace)
         local tex = textures[texidx+1]
         local imgname = export_image(tex.source)
         local texture_desc = {
@@ -255,7 +253,7 @@ return function (output, glbdata, exports, tolocalpath)
         local texname = imgname_noext .. ".texture"
         local texfilename = "./images/" .. texname
         local outtexfile = output / texfilename
-        save_texture(saved_files, outtexfile, exports, texture_desc)
+        export_texture(outtexfile, texture_desc)
 
         --we need output texture path which is relate to *.material file, so we need ..
         return serialize.path("./../images/" .. texname)
@@ -263,7 +261,7 @@ return function (output, glbdata, exports, tolocalpath)
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
         if tex_desc then
-            local filename = fetch_texture_info(tex_desc.index, normalmap, colorspace)
+            local filename = build_texture_file(tex_desc.index, normalmap, colorspace)
             return {
                 texture = filename,
                 stage = default_pbr_param[name].stage,
