@@ -79,7 +79,6 @@ lm:lua_source "ant_common" {
         }
     }
 }
-
 lm:lua_source "ant_openlibs" {
     sources = "common/ant_openlibs.c",
 }
