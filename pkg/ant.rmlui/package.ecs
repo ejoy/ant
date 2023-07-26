@@ -4,15 +4,12 @@ import "@ant.timer"
 
 system "rmlui_system"
     .implement "rmlui_system.lua"
-    .require_system "ant.render|font_system"
     .require_system "ant.rmlui|ui_rt_system"
     .require_interface "ant.render|irenderqueue"
     .require_interface "ant.timer|itimer"
     .method "init"
     .method "entity_init"
     .method "ui_update"
-    .method "exit"
-
 
 interface "irmlui"
     .implement "rmlui_system.lua"

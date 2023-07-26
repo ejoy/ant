@@ -3560,6 +3560,7 @@ static struct enum_pair eMouseButton[] = {
 	ENUM(ImGuiMouseButton, Left),
 	ENUM(ImGuiMouseButton, Right),
 	ENUM(ImGuiMouseButton, Middle),
+	{ NULL, 0 },
 };
 
 static struct enum_pair eKey[] = {

@@ -1,6 +1,0 @@
-import "@ant.scene"
-
-system "viewport_detect_system"
-    .implement "viewport_detect_system.lua"
-    .method "data_changed"
-    .method "post_init"

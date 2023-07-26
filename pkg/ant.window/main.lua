@@ -10,10 +10,18 @@ local function start(initargs)
         bootstrap = { "ant.window|boot", initargs },
         logger = { "logger" },
         exclusive = exclusive,
-        debuglog = "log.txt",
+        debuglog = "debug.log",
+        crashlog = "crash.log",
     }
+end
+
+local function reboot(initargs)
+    local ltask = require "ltask"
+    local ServiceWorld = ltask.queryservice "ant.window|world"
+    ltask.send(ServiceWorld, "reboot", initargs)
 end
 
 return {
     start = start,
+    reboot = reboot,
 }

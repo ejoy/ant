@@ -50,8 +50,6 @@ int luaopen_system_render(lua_State *L);
 int luaopen_motion_sampler(lua_State *L);
 int luaopen_motion_tween(lua_State *L);
 int luaopen_image(lua_State* L);
-int luaopen_layout(lua_State* L);
-//int luaopen_layout_init(lua_State* L);
 #if BX_PLATFORM_IOS
 int luaopen_ios(lua_State* L);
 #endif
@@ -103,8 +101,6 @@ void ant_loadmodules(lua_State* L) {
         { "efk", luaopen_efk},
         { "effekseer.callback", luaopen_effekseer_callback},
         { "fileinterface", luaopen_fileinterface },
-        { "layout", luaopen_layout},
-        //{ "layout.init", luaopen_layout_init },
         { "fmod", luaopen_fmod},
         { "ltask", luaopen_ltask},
         { "ltask.bootstrap", luaopen_ltask_bootstrap},

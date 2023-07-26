@@ -1,8 +1,7 @@
 local ltask         = require "ltask"
 local exclusive     = require "ltask.exclusive"
 local bgfx          = require "bgfx"
-local fontmanager   = require "font.fontmanager"
-local math3d        = require "math3d"
+local fontmanager
 
 local initialized = false
 
@@ -354,6 +353,7 @@ function S.init(args)
     else
         init_args(args)
         bgfx.init(args)
+        fontmanager = require "font.fontmanager"
         initialized = true
         ltask.fork(mainloop)
         ltask.wakeup(init_token)
