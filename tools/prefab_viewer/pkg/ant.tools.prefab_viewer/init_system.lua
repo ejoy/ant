@@ -93,7 +93,7 @@ local move_speed = 2.5
 local zoom_speed = 1.0
 local rotate_speed = 0.002
 
-local joystick_dir = {0, 0}-- = math3d.ref()
+local joystick_dir = {0, 0, math3d.ref()}
 local joystick_active = false
 local function on_joystick()
 	if not joystick_active then
@@ -104,10 +104,13 @@ local function on_joystick()
 	local pos = iom.get_position(ce)
 	local mat = math3d.matrix{s = iom.get_scale(ce), r = iom.get_rotation(ce), t = pos}
 	local xdir = math3d.normalize(math3d.index(mat, 1))
-	local zdir = math3d.normalize(math3d.index(mat, 3))
+	-- local zdir = math3d.normalize(math3d.index(mat, 3))
+	local zdir = math3d.cross(xdir, math3d.vector(0, 1, 0))
 	local dir = math3d.normalize(math3d.add(math3d.mul(xdir, joystick_dir[1]), math3d.mul(zdir, joystick_dir[2])))
-	-- local dir = math3d.transform(joystick_angle, math3d.vector(0, 0, 1), 0)
-	iom.set_position(ce, math3d.add(pos, math3d.mul(dir, 0.5)))
+	
+	-- local dir = math3d.transform(math3d.mul(joystick_dir[3], iom.get_rotation(ce)), math3d.vector(0, 0, 1), 0)
+	-- dir = math3d.transform(math3d.inverse(math3d.matrix{r = iom.get_rotation(ce)}), dir, 0)
+	iom.set_position(ce, math3d.add(pos, math3d.mul(dir, 0.8)))
 end
 
 local function on_key(key, press)
@@ -192,21 +195,29 @@ function S:data_changed()
     for _, what, e in gesture_pinch:unpack() do
 		on_wheel(e.velocity)
 	end
-
-    for _, _, e in gesture_pan:unpack() do
-        on_right_mouse(-e.dx, -e.dy)
-    end
-	--joystick
-	for _, e in joystick_mb:unpack() do
-		joystick_active = e.moving
-		if e.moving then
-			local angle = math.atan(-e.dy, e.dx)
-			joystick_dir[1] = math.cos(angle)
-			joystick_dir[2] = math.sin(angle)
+	if not rotate_mode then
+		for _, e in joystick_mb:unpack() do
+			joystick_active = e.moving
+			if e.moving then
+				local angle = math.atan(-e.dy, e.dx)
+				joystick_dir[1] = math.cos(angle)
+				joystick_dir[2] = math.sin(angle)
+				joystick_dir[3].q = math3d.quaternion{0, math.atan(e.dx, -e.dy), 0}
+			end
 		end
-    end
-	on_joystick()
-
+		on_joystick()
+	end
+	for _, _, e in gesture_pan:unpack() do
+		if not joystick_active then
+			if e.state == "began" then
+				rotate_mode = true
+			elseif e.state == "ended" then
+				rotate_mode = false
+			elseif e.state == "changed" then
+				on_right_mouse(-e.dx, -e.dy)
+			end
+		end
+	end
     for _, btn, state, x, y in mouse_mb:unpack() do
 		if state == "DOWN" then
 			last_mousex, last_mousey = x, y
@@ -228,7 +239,7 @@ function S:data_changed()
 			end
 		end
 		if state == "UP" then
-			rotate_mode = false
+			-- rotate_mode = false
 			move_mode = false
 		end
 	end
