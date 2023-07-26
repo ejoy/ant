@@ -30,12 +30,17 @@ local function absolute_path(base, path)
 	return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
 end
 
+local compiled = {}
 local compiling = {}
 
 function compile_file(input)
     local inputstr = input:string()
+    if compiled[inputstr] then
+        return compiled[inputstr]
+    end
     if compiling[inputstr] then
-        return lfs.path(ltask.multi_wait(compiling[inputstr]))
+        ltask.multi_wait(compiling[inputstr])
+        return compiled[inputstr]
     end
     compiling[inputstr] = {}
     local ext = inputstr:match "[^/]%.([%w*?_%-]*)$"
@@ -53,8 +58,9 @@ function compile_file(input)
         depends.insert_front(deps, input)
         depends.writefile(output / ".dep", deps)
     end
-    ltask.multi_wakeup(compiling[inputstr], output:string())
+    compiled[inputstr] = output
     compiling[inputstr] = nil
+    ltask.multi_wakeup(compiling[inputstr])
     return output
 end
 
