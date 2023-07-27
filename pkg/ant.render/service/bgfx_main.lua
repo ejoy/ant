@@ -147,7 +147,7 @@ local pause_token
 local continue_token
 
 function S.event_suspend(what)
-    if what == "did_suspend" then
+    if what == "will_suspend" then
         S.pause()
     elseif what == "did_resume" then
         S.continue()
