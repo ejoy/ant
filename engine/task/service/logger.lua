@@ -61,6 +61,7 @@ if __ANT_RUNTIME__ then
 	local logpath = directory.log_path():string()
 	local logfile = logpath .. "/game.log"
 	fs.create_directories(logpath)
+	fs.remove(logfile)
 	function LOG(data)
 		ltask.send(ServiceIO, "SEND", "LOG", data)
 		local f <close> = io.open(logfile, "a+")
