@@ -1,4 +1,5 @@
 #include "../../window.h"
+
 extern "C" {
 #include <lua-seri.h>
 }
@@ -6,6 +7,25 @@ extern "C" {
 #import <UIKit/UIKit.h>
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
+#include <Foundation/Foundation.h>
+
+static int writelog(const char* msg) {
+    NSArray* array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    if ([array count] <= 0) {
+        return 1;
+    }
+    char path[256];
+    const char* dir = [[array objectAtIndex:0] fileSystemRepresentation];
+    snprintf(path, 256, "%s/game.log", dir);
+    FILE* f = fopen(path, "a+");
+    if (!f) {
+        return 1;
+    }
+    fputs(msg, f);
+    fclose(f);
+    return 0;
+}
+
 
 @interface View : UIView
     @property (nonatomic, retain) CADisplayLink* m_displayLink;
@@ -132,6 +152,7 @@ static void push_touch_message(ant::window::TOUCH_TYPE type, UIView* view, NSSet
     return YES;
 }
 - (void) applicationWillTerminate:(UIApplication *)application {
+    writelog("\n***applicationWillTerminate***\n");
     window_message_exit(g_cb);
     g_cb->update(g_cb);
     [self.m_view stop];
