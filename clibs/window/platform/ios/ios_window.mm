@@ -133,6 +133,7 @@ static void push_touch_message(ant::window::TOUCH_TYPE type, UIView* view, NSSet
 }
 - (void) applicationWillTerminate:(UIApplication *)application {
     window_message_exit(g_cb);
+    g_cb->update(g_cb);
     [self.m_view stop];
 }
 - (void)applicationWillResignActive:(UIApplication *)application {
