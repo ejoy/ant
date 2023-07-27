@@ -68,17 +68,12 @@ function DaynightView:_init()
     self.base = {
         time       = uiproperty.Float({label = "Time",   dim = 1}),
         color      = uiproperty.Color({label = "Color",  dim = 3}),
-        intensity  = uiproperty.Float({label = "Intensity",   dim = 1}),
-        direction  = uiproperty.DirectionalArrow({label  = "direction", dim = 3}),
+        direction  = uiproperty.DirectionalArrow({label  = "Direction", dim = 3}),
         add_color  = uiproperty.Button({label = "Add Color"}),
         del_color  = uiproperty.Button({label = "Del Color"}),
         add_direction  = uiproperty.Button({label = "Add Direction"}),
         del_direction  = uiproperty.Button({label = "Del Direction"})
     }
-
-    self.direct_base = uiproperty.Group({label = "Direct1"},  self.base.time, self.base.color, self.base.intensity)
-    self.ambient_base = uiproperty.Group({label = "Ambient1"},  self.base.time, self.base.color)
-    self.rotator_base = uiproperty.Group({label = "Rotator1"},  self.base.time, self.base.direction)
     
     self.direct  = uiproperty.Group({label = "Direct"},  self.base.add_color,  self.base.del_color)
     self.ambient = uiproperty.Group({label = "Ambient"}, self.base.add_color,  self.base.del_color)
@@ -90,74 +85,87 @@ function DaynightView:_init()
 
 end
 
-local label_map = {
-    ["direct"] = "Direct", ["ambient"] = "Ambient", ["rotator"] = "Rotator"
+local pn_label = {
+    direct  = {label_upper = "Direct",  label_add = "Add Color",   label_del = "Del Color",   default_property = {time = 1, value = {1, 1, 1, 1}}},
+    ambient = {label_upper = "Ambient", label_add = "Add Color",   label_del = "Del Color",   default_property = {time = 1, value = {1, 1, 1}}},
+    rotator = {label_upper = "Rotator", label_add = "Add Rotator", label_del = "Del Rotator", default_property = {time = 1, value = {0, 0, 1}}},
 }
 
 -- pn: direct ambient rotator
--- t : time color intensity direction
-local function get_getter(t, i, pn, e)
+-- t : time value
+local function get_getter(pn, i, t, e)
     return function()
         local dn = e.daynight
-        return dn[pn][t][i]
+        if t:match("color") then
+            return {dn[pn][i]["value"][1], dn[pn][i]["value"][2], dn[pn][i]["value"][3]}
+        elseif t:match("intensity") then
+            return dn[pn][i]["value"][4]
+        elseif t:match("direction") then
+            return dn[pn][i]["value"]
+        elseif t:match("time") then
+            return dn[pn][i]["time"]
+        end
     end
 end
 
-local function get_setter(t, i, pn, e)
+local function get_setter(pn, i, t, e)
     return function (value)
         local dn = e.daynight
-        dn[pn][t][i] = value
+
+        if t:match("color") then
+            dn[pn][i]["value"][1], dn[pn][i]["value"][2], dn[pn][i]["value"][3] = value[1], value[2], value[3]
+        elseif t:match("intensity") then
+            dn[pn][i]["value"][4] = value
+        elseif t:match("direction") then
+            dn[pn][i]["value"] = value
+        elseif t:match("time") then
+            dn[pn][i]["time"] = value
+        end
     end
+end
+
+function DaynightView:add_subsubproperty(subproperty, i, pn, e)
+    local label_name = pn_label[pn].label_upper
+    subproperty[#subproperty+1] = uiproperty.Group({label = label_name .. i},  self.base.time)
+    local subsubproperty = {
+        uiproperty.Float(
+            {label = "Time" .. i,   dim = 1, min = 0.00, max = 1.00, speed = 0.02},
+            {getter = get_getter(pn, i, "time", e), setter = get_setter(pn, i, "time", e)}
+        ),
+    }
+    if pn:match("direct") then
+        subsubproperty[#subsubproperty+1] = uiproperty.Color(
+            {label = "Color" .. i,   dim = 3},
+            {getter = get_getter(pn, i, "color", e), setter = get_setter(pn, i, "color", e)}
+        )
+        subsubproperty[#subsubproperty+1] = uiproperty.Float(
+            {label = "Intensity" .. i,   dim = 1, min = 0.00, max = 5.00, speed = 0.04},
+            {getter = get_getter(pn, i, "intensity", e), setter = get_setter(pn, i, "intensity", e)}
+        )                       
+    elseif pn:match("ambient") then
+        subsubproperty[#subsubproperty+1] = uiproperty.Color(
+            {label = "Color" .. i,   dim = 3},
+            {getter = get_getter(pn, i, "color", e), setter = get_setter(pn, i, "color", e)}
+        )
+    else 
+        subsubproperty[#subsubproperty+1] = uiproperty.DirectionalArrow(
+            {label = "direction" .. i,   dim = 3},
+            {getter = get_getter(pn, i, "direction", e), setter = get_setter(pn, i, "direction", e)}
+        )        
+    end
+    subproperty[#subproperty]:set_subproperty(subsubproperty)
 end
 
 function DaynightView:get_add_click(pn, e)
     return function()
-        local default_property
-        if pn:match "direct" then
-            default_property = {time = 1.0, color = {1.0, 1.0, 1.0}, intensity = 1.0}
-        elseif pn:match "ambient"then
-            default_property = {time = 1.0, color = {1.0, 1.0, 1.0}}
-        elseif pn:match "rotator" then
-            default_property = {time = 1.0, direction = {0, 0, 1}}   
-        end
+        local default_property = pn_label[pn].default_property
         local update_result = idn.add_property_cycle(e, pn, default_property)
         if not update_result then return end
         local dn = e.daynight
         local p = dn[pn]
         local subproperty = self[pn].subproperty
-        local time, value = p.time, p.value
-        local i = #time
-        local label_name = label_map[pn]
-        subproperty[#subproperty+1] = uiproperty.Group({label = label_name .. i},  self.base.time, self.base.color)
-        local subsubproperty = {
-            uiproperty.Float(
-                {label = "Time" .. i,   dim = 1, min = 0.00, max = 1.00, speed = 0.02},
-                {getter = get_getter("time", i, pn, e), setter = get_setter("time", i, pn, e)}
-            ),
-        }
-        if pn:match("direct") then
-            subsubproperty[#subsubproperty+1] = uiproperty.Color(
-                {label = "Color" .. i,   dim = 3},
-                {getter = get_getter("color", i, pn, e), setter = get_setter("color", i, pn, e)}
-            )
-            subsubproperty[#subsubproperty+1] = uiproperty.Float(
-                {label = "Intensity" .. i,   dim = 1, min = 0.00, max = 5.00, speed = 0.04},
-                {getter = get_getter("intensity", i, pn, e), setter = get_setter("intensity", i, pn, e)}
-            )                       
-        elseif pn:match("ambient") then
-            subsubproperty[#subsubproperty+1] = uiproperty.Color(
-                {label = "Color" .. i,   dim = 3},
-                {getter = get_getter("color", i, pn, e), setter = get_setter("color", i, pn, e)}
-            )
-        else   
-            subsubproperty[#subsubproperty+1] = uiproperty.DirectionalArrow(
-                {label = "direction" .. i,   dim = 3},
-                {getter = get_getter("direction", i, pn, e), setter = get_setter("direction", i, pn, e)}
-            )    
-        end
-        subproperty[#subproperty]:set_subproperty(subsubproperty) 
-        self[pn]:set_subproperty(subproperty)
-        self["daynight"]:set_subproperty(self["daynight"].subproperty)     
+        local i = #p
+        DaynightView:add_subsubproperty(subproperty, i, pn, e)
     end
 end
 
@@ -170,63 +178,13 @@ function DaynightView:get_del_click(pn, e)
     end
 end
 
-
 function DaynightView:get_subproperty(e, pn, p)
-    local subproperty = {}
-    local label_name = label_map[pn]
-    if pn:match("direct") or pn:match("ambient") then
-        subproperty = {
-            [1] = uiproperty.Button(
-                {label = "Add Color"},
-                {click = DaynightView:get_add_click(pn, e)}
-            ), 
-            [2] = uiproperty.Button(
-                {label = "Del Color"},
-                {click = DaynightView:get_del_click(pn, e)}
-            ), 
-        }
-    elseif pn:match("rotator") then
-        subproperty = {
-            [1] = uiproperty.Button(
-                {label = "Add Rotator"},
-                {click = DaynightView:get_add_click(pn, e)}
-            ), 
-            [2] = uiproperty.Button(
-                {label = "Del Rotator"},
-                {click = DaynightView:get_del_click(pn, e)}
-            ), 
-        }
-    end
-    for i = 1, #p.time do
-        local time, value = p.time, p.value
-        subproperty[#subproperty+1] = uiproperty.Group({label = label_name .. i},  self.base.time, self.base.color)
-        local subsubproperty = {
-            uiproperty.Float(
-                {label = "Time" .. i,   dim = 1, min = 0.00, max = 1.00, speed = 0.02},
-                {getter = get_getter("time", i, pn, e), setter = get_setter("time", i, pn, e)}
-            ),
-        }
-        if pn:match("direct") then
-            subsubproperty[#subsubproperty+1] = uiproperty.Color(
-                {label = "Color" .. i,   dim = 3},
-                {getter = get_getter("color", i, pn, e), setter = get_setter("color", i, pn, e)}
-            )
-            subsubproperty[#subsubproperty+1] = uiproperty.Float(
-                {label = "Intensity" .. i,   dim = 1, min = 0.00, max = 5.00, speed = 0.04},
-                {getter = get_getter("intensity", i, pn, e), setter = get_setter("intensity", i, pn, e)}
-            )                       
-        elseif pn:match("ambient") then
-            subsubproperty[#subsubproperty+1] = uiproperty.Color(
-                {label = "Color" .. i,   dim = 3},
-                {getter = get_getter("color", i, pn, e), setter = get_setter("color", i, pn, e)}
-            )
-        else 
-            subsubproperty[#subsubproperty+1] = uiproperty.DirectionalArrow(
-                {label = "direction" .. i,   dim = 3},
-                {getter = get_getter("direction", i, pn, e), setter = get_setter("direction", i, pn, e)}
-            )        
-        end
-        subproperty[#subproperty]:set_subproperty(subsubproperty)  
+    local subproperty = {
+        [1] = uiproperty.Button({label = pn_label[pn].label_add},{click = DaynightView:get_add_click(pn, e)}),
+        [2] = uiproperty.Button({label = pn_label[pn].label_del},{click = DaynightView:get_del_click(pn, e)}),
+    }
+    for i = 1, #p do
+        DaynightView:add_subsubproperty(subproperty, i, pn, e)
     end
     return subproperty
 end

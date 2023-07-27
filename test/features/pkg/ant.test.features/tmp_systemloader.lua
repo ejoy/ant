@@ -138,7 +138,7 @@ function init_loader_sys:init()
         local root<close> = w:entity(e.tag['*'][1])
         iom.set_position(root, math3d.vector(3, 1, 0))
     end) 
-    --ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
+    ecs.create_instance "/pkg/ant.test.features/assets/entities/daynight.prefab"
 
 end
 
@@ -508,7 +508,7 @@ function init_loader_sys:data_changed()
     if dne then
         local tenSecondMS<const> = 10000
         local cycle = (itimer.current() % tenSecondMS) / tenSecondMS
-        idn.update_day_cycle(dne, cycle)
+        idn.update_cycle(dne, cycle)
     end
 
     local mse = w:first "motion_sampler:update"

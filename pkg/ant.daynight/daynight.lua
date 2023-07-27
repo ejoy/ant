@@ -14,12 +14,12 @@ local dn_sys = ecs.system "daynight_system"
 local default_intensity = ilight.default_intensity "directional"
 local cached_data_table = {}
 
-local function binary_search(time_table, t)
-    local from, to = 1, #time_table
+local function binary_search(list, t)
+    local from, to = 1, #list
     assert(to > 0)
     while from <= to do
         local mid = math.floor((from + to) / 2)
-        local t2 = time_table[mid]
+        local t2 = list[mid].time
         if t == t2 then
             return mid, mid
         elseif t < t2 then
@@ -34,30 +34,21 @@ local function binary_search(time_table, t)
         to = from
         from = v
     end
-    return math.max(from, 1), math.min(to, #time_table)
+    return math.max(from, 1), math.min(to, #list)
 end
 
-local function lerp(l, r, t, time_table, lerp_table, lerp_function, tn)
-    local deno = (time_table[r] - time_table[l])
+local function lerp(list, tick, lerp_function)
+    local l, r = binary_search(list, tick)
+    local deno = (list[r].time - list[l].time)
     if deno < 10 ^ (-6) then
-        if tn:match("direction") then
-            return math3d.torotation(math3d.vector(lerp_table[l]))
-        elseif tn:match("intensity") then
-            return lerp_table[l]
-        else
-            return math3d.vector(lerp_table[l]) end
-    end
-    local lerp_t = (t - time_table[l]) / (time_table[r] - time_table[l])
-    if tn:match("direction") then
-        local lq = math3d.torotation(math3d.vector(lerp_table[l]))
-        local rq = math3d.torotation(math3d.vector(lerp_table[r]))
-        return lerp_function(lq, rq, lerp_t)
-    else if tn:match("intensity") then
-        return lerp_function(lerp_table[l], lerp_table[r], lerp_t)
-    end
-        return lerp_function(math3d.vector(lerp_table[l]), math3d.vector(lerp_table[r]), lerp_t)
+        return list[l].value
+    else
+        local lerp_t = (tick - list[l].time) / deno
+        return lerp_function(list[l].value, list[r].value, lerp_t)
     end
 end
+
+
 
 local function reserve_data()
     local dl = w:first "directional_light light:in scene:in"
@@ -89,28 +80,29 @@ function dn_sys:entity_remove()
     end
 end
 
-local idn = ecs.interface "idaynight"
-function idn.update_cycle(e, cycle)
-    local direct, ambient, rotator, intensity
-    for propertry_name, property_table in pairs(e.daynight) do
-        local time = property_table.time
-        local lidx, ridx = binary_search(time, cycle)
-        if propertry_name:match("direct") then
-            local color, inten = property_table.color, property_table.intensity
-            direct = lerp(lidx, ridx, cycle, time, color, math3d.lerp, "color")
-            intensity = lerp(lidx, ridx, cycle, time, inten, mu.lerp, "intensity")
-        elseif propertry_name:match("ambient") then
-            local color = property_table.color
-            ambient = lerp(lidx, ridx, cycle, time, color, math3d.lerp, "color")
-        elseif propertry_name:match("rotator") then
-            local direction = property_table.direction
-            rotator = lerp(lidx, ridx, cycle, time, direction, math3d.lerp, "direction")
+local function get_list(pn, pt)
+    local list = {}
+    for i = 1, #pt do
+        if pn:match("rotator") then
+            list[#list+1] = {time = pt[i].time, value = math3d.torotation(math3d.vector(pt[i].value))}
+        else
+            list[#list+1] = {time = pt[i].time, value = math3d.vector(pt[i].value)}
         end
     end
+    return list
+end
 
+local idn = ecs.interface "idaynight"
+function idn.update_cycle(e, cycle)
+    local lerp_table = {}
+    for pn, pt in pairs(e.daynight) do
+        local list = get_list(pn, pt)
+        lerp_table[pn] = lerp(list, cycle, math3d.lerp)
+    end
+    local direct, ambient, rotator = lerp_table["direct"], lerp_table["ambient"], lerp_table["rotator"]
     local dl = w:first "directional_light light:in scene:in"
     if dl then
-        local r, g, b = math3d.index(direct, 1, 2, 3)
+        local r, g, b, intensity = math3d.index(direct, 1, 2, 3, 4)
         ilight.set_color_rgb(dl, r, g, b)
         ilight.set_intensity(dl, intensity * default_intensity)
 
@@ -121,34 +113,23 @@ function idn.update_cycle(e, cycle)
     sa:update("u_indirect_modulate_color", ambient)
 end
 
-function idn.add_property_cycle(e, property_name, property)
+function idn.add_property_cycle(e, pn, p)
     local dn = e.daynight
-    local current_property = dn[property_name]
-    local time = current_property.time
-    if #time >= 6 then return end -- property_number <= 5
-    time[#time+1] = property.time
-    if property_name:match "rotator" then
-        local direction = current_property.direction
-        direction[#direction+1] = property.direction
-    else
-        local color = current_property.color
-        color[#color+1] = property.color
-        if property_name:match "direct" then
-            local intensity = current_property.intensity
-            intensity[#intensity+1] = property.intensity
-        end 
-    end 
+    local current_property = dn[pn]
+    local current_number = #current_property
+    if current_number >= 6 then return end -- property_number <= 5
+
+    current_property[#current_property+1] = p
     return true
 end
 
-function idn.delete_property_cycle(e, property_name)
+function idn.delete_property_cycle(e, pn)
     local dn = e.daynight
-    local current_property = dn[property_name]
-    local time = current_property.time
-    local current_num = #time
-    if current_num <=2 then return end -- property_number >=2
-    for _ ,t in pairs(current_property) do
-        table.remove(t, current_num)
-    end
+    local current_property = dn[pn]
+    local current_number = #current_property
+
+    if current_number <= 2 then return end -- property_number >= 2
+
+    table.remove(current_property, current_number)
     return true
 end
