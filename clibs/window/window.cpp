@@ -164,6 +164,19 @@ void input_message(struct ant_window_callback* cb, struct msg_gesture_pan const&
 	push_message(L);
 }
 
+void input_message(struct ant_window_callback* cb, struct msg_suspend const& suspend) {
+	lua_State* L = cb->messageL;
+	lua_settop(L, 1);
+	lua_pushstring(L, "suspend");
+	switch (suspend.what) {
+	case suspend::will_suspend: lua_pushstring(L, "will_suspend"); break;
+	case suspend::did_suspend: lua_pushstring(L, "did_suspend"); break;
+	case suspend::will_resume: lua_pushstring(L, "will_resume"); break;
+	case suspend::did_resume: lua_pushstring(L, "did_resume"); break;
+	}
+	push_message(L);
+}
+
 void input_message(struct ant_window_callback* cb, struct msg const& m) {
 	switch (m.type) {
 	case msg_type::keyboard:
@@ -187,8 +200,8 @@ void input_message(struct ant_window_callback* cb, struct msg const& m) {
 	case msg_type::gesture_longpress:
 		input_message(cb, m.longpress);
 		break;
-	case msg_type::gesture_pan:
-		input_message(cb, m.pan);
+	case msg_type::suspend:
+		input_message(cb, m.suspend);
 		break;
 	default:
 		break;

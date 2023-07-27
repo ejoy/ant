@@ -98,6 +98,16 @@ namespace ant::window {
 		float dx;
 		float dy;
 	};
+	enum class suspend {
+		will_suspend,
+		did_suspend,
+		will_resume,
+		did_resume,
+	};
+	struct msg_suspend {
+		suspend what;
+	};
+
 
 	enum class msg_type {
 		keyboard,
@@ -108,6 +118,7 @@ namespace ant::window {
 		gesture_pinch,
 		gesture_longpress,
 		gesture_pan,
+		suspend,
 	};
 	struct msg {
 		msg_type type;
@@ -120,6 +131,7 @@ namespace ant::window {
 			struct msg_gesture_pinch pinch;
 			struct msg_gesture_longpress longpress;
 			struct msg_gesture_pan pan;
+			struct msg_suspend suspend;
 		};
 	};
 
@@ -131,5 +143,6 @@ namespace ant::window {
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_pinch const& gesture);
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_longpress const& gesture);
 	void input_message(struct ant_window_callback* cb, struct msg_gesture_pan const& gesture);
+	void input_message(struct ant_window_callback* cb, struct msg_suspend const& suspend);
 	void input_message(struct ant_window_callback* cb, struct msg const& m);
 }

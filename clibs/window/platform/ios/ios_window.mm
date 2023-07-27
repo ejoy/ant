@@ -136,14 +136,30 @@ static void push_touch_message(ant::window::TOUCH_TYPE type, UIView* view, NSSet
     [self.m_view stop];
 }
 - (void)applicationWillResignActive:(UIApplication *)application {
+    struct ant::window::msg_suspend msg;
+    msg.what = ant::window::suspend::will_suspend;
+    ant::window::input_message(g_cb, msg);
+    g_cb->update(g_cb);
     [self.m_view stop];
 }
 - (void)applicationDidEnterBackground:(UIApplication *)application {
+    struct ant::window::msg_suspend msg;
+    msg.what = ant::window::suspend::did_suspend;
+    ant::window::input_message(g_cb, msg);
+    g_cb->update(g_cb);
 }
 - (void)applicationWillEnterForeground:(UIApplication *)application {
+    struct ant::window::msg_suspend msg;
+    msg.what = ant::window::suspend::will_resume;
+    ant::window::input_message(g_cb, msg);
+    g_cb->update(g_cb);
 }
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     [self.m_view start];
+    struct ant::window::msg_suspend msg;
+    msg.what = ant::window::suspend::did_resume;
+    ant::window::input_message(g_cb, msg);
+    g_cb->update(g_cb);
 }
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
     return UIInterfaceOrientationMaskLandscape;
