@@ -31,6 +31,7 @@ local LAST_main_camera
 local localSpace = {}
 local defaultLight = { true }
 local showground = { true }
+local showterrain = { false }
 local camera_speed = {0.1, speed=0.05, min=0.01, max=10}
 local icons = require "common.icons"
 
@@ -73,6 +74,10 @@ function m.show()
         imgui.cursor.SameLine()
         if imgui.widget.Checkbox("ShowGround", showground) then
             world:pub { "ShowGround", showground[1] }
+        end
+        imgui.cursor.SameLine()
+        if imgui.widget.Checkbox("ShowTerrain", showterrain) then
+            world:pub { "ShowTerrain", showterrain[1] }
         end
         imgui.cursor.SameLine()
         imgui.cursor.PushItemWidth(64)

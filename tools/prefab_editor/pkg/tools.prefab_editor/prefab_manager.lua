@@ -155,6 +155,19 @@ function m:show_ground(enable)
     end
 end
 
+function m:show_terrain(enable)
+    if not enable then
+        -- w:remove(self.plane)
+        -- self.plane = nil
+    else
+        if not self.terrain then
+            local iterrain  = ecs.import.interface "mod.terrain|iterrain"
+            iterrain.gen_terrain_field(128, 128, 64, 10)
+            self.terrain = true
+        end
+        -- self:create_ground()
+    end
+end
 function m:clone(eid)
     local srctpl = hierarchy:get_template(eid)
     if srctpl.filename then
@@ -630,10 +643,10 @@ function m:add_effect(filename)
     self:add_entity(ecs.create_entity(tpl), parent, template)
 end
 
-function m:add_prefab(filename)
-    local prefab_filename = filename
-    if string.sub(filename, -4) == ".glb" then
-        prefab_filename = filename .. "|mesh.prefab"
+function m:add_prefab(path)
+    local prefab_filename = path
+    if string.sub(path, -4) == ".glb" then
+        prefab_filename = path .. "|mesh.prefab"
     end
     
     if not self.root then
@@ -641,7 +654,8 @@ function m:add_prefab(filename)
     end
     local prefab
     local parent = gizmo.target_eid or (self.scene and self.scene or self.root)
-    local v_root, temp = create_simple_entity(gen_prefab_name(), parent)
+    local v_root, temp = create_simple_entity(tostring(fs.path(path):filename()), parent)
+    -- local v_root, temp = create_simple_entity(gen_prefab_name(), parent)
     self.entities[#self.entities+1] = v_root
     prefab = ecs.create_instance(prefab_filename, v_root)
     prefab.on_ready = function(inst)
@@ -669,17 +683,18 @@ function m:save(path)
     local patchfilename
     if not path then
         if not self.prefab_filename or (string.find(self.prefab_filename, "__temp__")) then
-            filename = widget_utils.get_saveas_path("Prefab", "prefab")
-            if not filename then return end
+            path = widget_utils.get_saveas_path("Prefab", "prefab")
         end
     end
-    if path then
-        filename = string.gsub(path, "\\", "/")
-        local pos = string.find(filename, "%.prefab")
-        if #filename > pos + 6 then
-            filename = string.sub(filename, 1, pos + 6)
-        end
-    end
+    -- if path then
+    --     filename = string.gsub(path, "\\", "/")
+    --     local pos = string.find(filename, "%.prefab")
+    --     if #filename > pos + 6 then
+    --         filename = string.sub(filename, 1, pos + 6)
+    --     end
+    -- end
+    assert(path or self.prefab_filename)
+    filename = path
     local prefab_filename = self.prefab_filename or ""
     filename = filename or prefab_filename
     patchfilename = filename .. ".patch"

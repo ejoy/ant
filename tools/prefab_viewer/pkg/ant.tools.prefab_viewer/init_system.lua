@@ -26,9 +26,8 @@ function S.init_world()
         end
     end
     iefk.preload(files)
-
-    local light = ecs.create_instance("/pkg/ant.tools.prefab_viewer/assets/prefabs/light.prefab")
-    world:create_object(light)
+	--
+    world:create_object(ecs.create_instance("/pkg/ant.tools.prefab_viewer/assets/prefabs/light.prefab"))
 	-- ground plane
 	-- ecs.create_entity {
 	-- 	policy = {
@@ -50,21 +49,23 @@ function S.init_world()
 
 	-- terrain
 	iterrain.gen_terrain_field(128, 128, 64, 10)
+	
 	-- test prefab
-    local miner = ecs.create_instance("/pkg/ant.tools.prefab_viewer/assets/prefabs/miner-1.prefab")
-    function miner:on_init() end
-    miner.on_ready = function(instance)
-        for _, eid in ipairs(instance.tag["*"]) do
-            local e <close> = w:entity(eid, "tag?in anim_ctrl?in")
-            if e.anim_ctrl then
-                iani.load_events(eid, "/pkg/ant.tools.prefab_viewer/assets/prefabs/miner-1.event")
-            end
-        end
-        iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
-    end
-    function miner:on_message(msg) end
-    function miner:on_update() end
-    world:create_object(miner)
+	world:create_object(ecs.create_instance("/pkg/ant.tools.prefab_viewer/assets/prefabs/preview.prefab"))
+    -- local miner = ecs.create_instance("/pkg/ant.tools.prefab_viewer/assets/prefabs/miner-1.prefab")
+    -- function miner:on_init() end
+    -- miner.on_ready = function(instance)
+    --     for _, eid in ipairs(instance.tag["*"]) do
+    --         local e <close> = w:entity(eid, "tag?in anim_ctrl?in")
+    --         if e.anim_ctrl then
+    --             iani.load_events(eid, "/pkg/ant.tools.prefab_viewer/assets/prefabs/miner-1.event")
+    --         end
+    --     end
+    --     iani.play(instance, {name = "work", loop = true, speed = 1.0, manual = false})
+    -- end
+    -- function miner:on_message(msg) end
+    -- function miner:on_update() end
+    -- world:create_object(miner)
 
     -- camera
     local mq = w:first "main_queue camera_ref:in"
