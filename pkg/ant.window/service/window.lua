@@ -37,6 +37,7 @@ end
 local function create_loop_window()
     local scheduling = exclusive.scheduling()
     local window = require "window"
+    local SCHEDULE_SUCCESS <const> = 3
     local CALL = false
     local function update()
         ltask.wakeup "update"
