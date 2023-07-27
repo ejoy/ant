@@ -5,11 +5,13 @@ local bgfx = require "bgfx"
 
 local ic = ecs.interface "icompute"
 
+local progman = require "programan.client"
+
 function ic.dispatch(viewid, ds)
 	ds.material()
 
 	local s = ds.size
-	bgfx.dispatch(viewid, ds.fx.prog, s[1], s[2], s[3])
+	bgfx.dispatch(viewid, progman.program_get(ds.fx.prog), s[1], s[2], s[3])
 end
 
 function ic.create_compute_entity(name, materialfile, size)

@@ -4,6 +4,7 @@
 extern "C"{
 	#include "math3d.h"
 	#include "textureman.h"
+	#include "programan.h"
 }
 
 #include <cstdint>
@@ -136,7 +137,7 @@ struct material_state {
 struct material {
 	struct material_state	state;
 	attrib_id				attrib;
-	bgfx_program_handle_t 	prog;
+	int 					prog;
 	attrib_map				attrib_lut;
 };
 
@@ -815,14 +816,14 @@ linstance_set_attrib(lua_State *L) {
 static int
 lmaterial_release(lua_State *L){
 	const auto mo = MO(L, 1);
-	if (!BGFX_HANDLE_IS_VALID(mo->prog)){
+	if (0 == mo->prog){
 		auto arena = arena_from_reg(L);
 		if (mo->attrib != INVALID_ATTRIB){
 			clear_unused_attribs(L, arena, mo->attrib);
 			mo->attrib = INVALID_ATTRIB;
 		}
 		
-		mo->prog = BGFX_INVALID_HANDLE;
+		mo->prog = 0;
 		mo->attrib_lut.~attrib_map();
 	}
 
@@ -990,7 +991,7 @@ apply_material_instance(lua_State *L, struct material_instance *mi, struct ecs_w
 extern "C" bgfx_program_handle_t
 material_prog(lua_State *L, struct material_instance *mi){
 	(void)L;
-	return mi->m->prog;
+	return program_get(mi->m->prog);
 }
 
 // 1: material_instance
@@ -1103,8 +1104,8 @@ lmaterial_new(lua_State *L) {
 	mat->state = state;
 
 	mat->attrib = INVALID_ATTRIB;
-	mat->prog.idx = luaL_checkinteger(L, 4) & 0xffff;
-	if (!BGFX_HANDLE_IS_VALID(mat->prog)){
+	mat->prog = luaL_checkinteger(L, 4);
+	if (0 == mat->prog){
 		luaL_error(L, "Invalid prog index");
 	}
 	if (luaL_newmetatable(L, "ANT_MATERIAL")) {

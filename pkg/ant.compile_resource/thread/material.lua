@@ -3,6 +3,11 @@ local serialize = import_package "ant.serialize"
 local lfs = require "filesystem.local"
 local bgfx = require "bgfx"
 
+local PM = require "programan.server"
+PM.program_init{
+    max = bgfx.get_caps().limits.maxPrograms - bgfx.get_stats "n".numPrograms
+}
+
 local function readall(filename)
     local f <close> = assert(lfs.open(cr.compile(filename), "rb"))
     return f:read "a"
@@ -42,6 +47,12 @@ local function fetch_uniforms(h, ...)
     return uniforms
 end
 
+local function from_handle(handle)
+    local pid = PM.program_new()
+    PM.program_set(pid, handle)
+    return pid
+end
+
 local function createRenderProgram(filename, fxcfg)
     local vh = loadShader(filename, fxcfg, "vs")
     local fh = loadShader(filename, fxcfg, "fs")
@@ -51,7 +62,7 @@ local function createRenderProgram(filename, fxcfg)
             setting = fxcfg.setting or {},
             vs = vh,
             fs = fh,
-            prog = prog,
+            prog = from_handle(prog),
             uniforms = fetch_uniforms(vh, fh),
         }
     else
@@ -66,7 +77,7 @@ local function createComputeProgram(filename, fxcfg)
         return {
             setting = fxcfg.setting or {},
             cs = ch,
-            prog = prog,
+            prog = from_handle(prog),
             uniforms = fetch_uniforms(ch),
         }
     else
@@ -113,7 +124,9 @@ end
 
 function S.material_destroy(material)
     local fx = material.fx
-    bgfx.destroy(fx.prog)
+    local h = PM.program_get(fx.prog)
+    assert(h ~= 0xffff)
+    bgfx.destroy(h)
     if is_compute_material(fx) then
         bgfx.destroy(fx.cs)
     else

@@ -6,7 +6,7 @@ extern "C"{
 	#include "math3d.h"
 	#include "math3dfunc.h"
 	#include "material.h"
-
+	#include "programan.h"
 	#include "render_material.h"
 }
 

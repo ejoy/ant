@@ -47,22 +47,22 @@ lprogram_init(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	int threshold_removed = 0;
 	int threshold_reserved = 0;
-	if (lua_getfield(L, -1, "max") != LUA_TNUMBER) {
+	if (lua_getfield(L, 1, "max") != LUA_TNUMBER) {
 		return luaL_error(L, "Need program .max");
 	}
 	int pmax = lua_tointeger(L, -1);
 	if (pmax < 1)
 		return luaL_error(L, ".max %d is too small", pmax);
 	lua_pop(L, 1);
-	if (lua_getfield(L, -1, "threshold") != LUA_TNUMBER) {
+	if (lua_getfield(L, 1, "threshold") != LUA_TNUMBER) {
 		threshold_removed = pmax * 2 / 3;
 	} else {
 		threshold_removed = lua_tointeger(L, -1);
 	}
 	if (threshold_removed <= 0)
 		return luaL_error(L, ".threshold %d is too small", threshold_removed);
-	lua_pop(L, -1);
-	if (lua_getfield(L, -1, "reserved") != LUA_TNUMBER) {
+	lua_pop(L, 1);
+	if (lua_getfield(L, 1, "reserved") != LUA_TNUMBER) {
 		threshold_reserved = pmax / 2;
 	} else {
 		threshold_reserved = lua_tointeger(L, -1);
@@ -71,7 +71,7 @@ lprogram_init(lua_State *L) {
 		return luaL_error(L, ".reserved %d is too small", threshold_reserved);
 	if (threshold_reserved > threshold_removed)
 		return luaL_error(L, ".reserved %d > .threshold %d", threshold_reserved, threshold_removed);
-	lua_pop(L, -1);
+	lua_pop(L, 1);
 	g_man.max = pmax;
 	g_man.n = 0;
 	g_man.threshold_removed = threshold_removed;
