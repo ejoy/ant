@@ -213,6 +213,7 @@ local event_window_title    = world:sub {"WindowTitle"}
 local event_create          = world:sub {"Create"}
 local event_light           = world:sub {"UpdateDefaultLight"}
 local event_showground      = world:sub {"ShowGround"}
+local event_showterrain     = world:sub {"ShowTerrain"}
 local event_gizmo           = world:sub {"Gizmo"}
 local create_animation_event = world:sub {"CreateAnimation"}
 local light_gizmo           = ecs.require "gizmo.light"
@@ -472,6 +473,9 @@ function m:handle_event()
     end
     for _, enable in event_showground:unpack() do
         prefab_mgr:show_ground(enable)
+    end
+    for _, enable in event_showterrain:unpack() do
+        prefab_mgr:show_terrain(enable)
     end
     for _, at, target in create_animation_event:unpack() do
         keyframe_view.create_target_animation(at, target)

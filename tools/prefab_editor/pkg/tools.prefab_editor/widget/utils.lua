@@ -115,11 +115,15 @@ function m.get_saveas_path(filetype, extension)
     local ok, path = filedialog.save(dialog_info)
     if ok then
         local ext = "."..extension
-        path = string.gsub(path, "\\", "/") .. ext
-        local pos = string.find(path, "%"..ext)
-        if #path > pos + #ext - 1 then
-            path = string.sub(path, 1, pos + #ext - 1)
+        local len = #ext
+        path = string.gsub(path, "\\", "/")
+        if string.sub(path,-len) ~= ext then
+            path = path .. ext
         end
+        -- local pos = string.find(path, "%"..ext.."$")
+        -- if #path > pos + #ext - 1 then
+        --     path = string.sub(path, 1, pos + #ext - 1)
+        -- end
         return path
     end
 end

@@ -95,6 +95,11 @@ function PropertyBase:show()
     end
 end
 
+local DirectionalArrow = class("DirectionalArrow", PropertyBase)
+function DirectionalArrow:widget()
+    return imgui.zmo.DirectionalArrow(self:get_label(), self.uidata)
+end
+
 local Int = class("Int", PropertyBase)
 function Int:widget()
     return imgui.widget.DragInt(self:get_label(), self.uidata)
@@ -514,5 +519,6 @@ return {
     ResourcePath    = ResourcePath,
     TextureResource = TextureResource,
     Group           = Group,
-    SameLineContainer=SameLineContainer,
+    SameLineContainer = SameLineContainer,
+    DirectionalArrow = DirectionalArrow
 }

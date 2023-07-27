@@ -20,6 +20,7 @@ local CALL = {
     "maxfps",
     "fontmanager",
     "enable_system_profile",
+    "event_suspend",
 
     "fetch_world_camera",
     "update_world_camera",
@@ -145,6 +146,14 @@ end
 local pause_token
 local continue_token
 
+function S.event_suspend(what)
+    if what == "did_suspend" then
+        S.pause()
+    elseif what == "did_resume" then
+        S.continue()
+    end
+end
+
 function S.pause()
     if pause_token then
         error "Can't pause twice."
@@ -152,6 +161,13 @@ function S.pause()
     pause_token = {}
     ltask.wait(pause_token)
     pause_token = nil
+end
+
+function S.continue()
+    if not continue_token then
+        return
+    end
+    ltask.wakeup(continue_token)
 end
 
 local WORLD_CAMERA_STATE = {
@@ -195,13 +211,6 @@ end
 
 function S.update_world_camera(...)
     WORLD_CAMERA_STATE:update(...)
-end
-
-function S.continue()
-    if not continue_token then
-        error "Not pause."
-    end
-    ltask.wakeup(continue_token)
 end
 
 function S.frame()

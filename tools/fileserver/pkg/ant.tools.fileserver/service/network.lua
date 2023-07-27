@@ -164,7 +164,10 @@ local S = {}
 
 function S.bind(protocol, ...)
     local fd = assert(socket(protocol))
-    assert(fd:bind(...))
+    local ok, err = fd:bind(...)
+    if not ok then
+        return ok, err
+    end
     assert(fd:listen())
     status[fd] = {
         fd = fd,

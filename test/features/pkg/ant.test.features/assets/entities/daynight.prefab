@@ -1,20 +1,26 @@
 ---
+data:
+  daynight:
+    ambient:
+      color:
+        {1, 1, 1}
+        {1, 1, 1}
+      time: {0, 1}
+    direct:
+      color:
+        {1, 1, 1}
+        {1, 1, 1}
+        {1, 1, 1}
+      intensity: {1, 1.5199999809265137, 0}
+      time: {0, 0.5, 1}
+    rotator:
+      direction:
+        {-0.9604334831237793, -0.2668074071407318, 0.08063766360282898}
+        {-0.019379975274205208, -0.2621628940105438, 0.9648739695549011}
+        {0.8904285430908203, -0.31617483496665955, 0.3273690342903137}
+      time: {0, 0.5, 1}
+  name: daynight_test
+  prefab: /pkg/vaststars.resources/daynight.prefab
 policy:
   ant.daynight|daynight
   ant.general|name
-data:
-  daynight:
-    day:
-      resources:
-        direct      : /pkg/ant.resources.binary/textures/daynight/day_direct.pngx
-        indirect    : /pkg/ant.resources.binary/textures/daynight/day_indirect.pngx
-        intensity   : /pkg/ant.resources.binary/textures/daynight/day_intensity.pngx
-      start_rotator:  {0.0, 1.0, 0.0}
-      rotate_axis: {0.3, 0.3, 0.0}
-    night:
-      start_rotator:  {0.0, 1.0, 0.0}
-      resources:
-        direct      : /pkg/ant.resources.binary/textures/daynight/night_direct.pngx
-        indirect    : /pkg/ant.resources.binary/textures/daynight/night_indirect.pngx
-        intensity   : /pkg/ant.resources.binary/textures/daynight/night_intensity.pngx
-  name: daynight_test

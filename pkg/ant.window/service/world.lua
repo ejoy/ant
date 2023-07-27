@@ -114,6 +114,10 @@ function S.recreate(nwh, _, width, height)
 	S.size(width, height)
 end
 
+function S.suspend(what)
+	bgfx.event_suspend(what)
+end
+
 local ms_queue
 local ms_quit
 local ms_token = {}

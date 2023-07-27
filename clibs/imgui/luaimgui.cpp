@@ -20,6 +20,8 @@ extern "C" {
 #include "imgui_window.h"
 #include "widgets/ImSequencer.h"
 #include "widgets/ImSimpleSequencer.h"
+#include "zmo/imGuIZMOquat.h"
+
 namespace imgui::table { void init(lua_State* L); }
 
 static void*
@@ -3218,6 +3220,44 @@ cSetClipboardText(lua_State* L) {
 	return 0;
 }
 
+static int
+zDirectionalArrow(lua_State *L) {
+	const char * label = luaL_checkstring(L, INDEX_ID);
+	luaL_checktype(L, INDEX_ARGS, LUA_TTABLE);
+	lua_len(L, INDEX_ARGS);
+	int n = (int)lua_tointeger(L, -1);
+	lua_pop(L, 1);
+	if (n != 3)
+		return luaL_error(L, "Need 3 numbers");
+	vec3 dir;
+	int i;
+	for (i = 0; i < n; i++) {
+		if (lua_geti(L, INDEX_ARGS, i + 1) != LUA_TNUMBER) {
+			luaL_error(L, "Need float [%d]", i + 1);
+		}
+		if(i == 2) {
+			dir[i] = -(float)lua_tonumber(L, -1);
+		}
+		else{
+			dir[i] = (float)lua_tonumber(L, -1);
+		}
+		lua_pop(L, 1);
+	}
+	bool change = ImGui::gizmo3D(label, dir, 100, imguiGizmo::modeDirection);
+	if (change) {
+		for (i = 0; i < n; i++) {
+		if(i == 2) {
+			lua_pushnumber(L, -dir[i]);
+		}
+		else{
+			lua_pushnumber(L, dir[i]);
+		}			
+			lua_seti(L, INDEX_ARGS, i + 1);
+		}
+	}
+	return 1;
+}
+
 #ifdef _MSC_VER
 #pragma endregion IMP_UTIL
 #endif
@@ -4064,6 +4104,13 @@ luaopen_imgui(lua_State *L) {
 	};
 	luaL_newlib(L, widgets);
 	lua_setfield(L, -2, "widget");
+
+	luaL_Reg zmo[] = {
+		{ "DirectionalArrow", zDirectionalArrow },
+		{ NULL, NULL },
+	};
+	luaL_newlib(L, zmo);
+	lua_setfield(L, -2, "zmo");
 
 	luaL_Reg cursor[] = {
 		{ "Separator", cSeparator },

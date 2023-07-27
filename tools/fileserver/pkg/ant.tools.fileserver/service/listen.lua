@@ -7,10 +7,18 @@ local function post_spawn(name, ...)
 end
 
 ltask.uniqueservice("arguments", ...)
+
+local fd, err
+while true do
+    fd, err = socket.bind("tcp", "0.0.0.0", 2018)
+    if fd then
+        break
+    end
+    print(err)
+    ltask.sleep(10)
+end
 post_spawn "ios.event"
 post_spawn "android.event"
-
-local fd = socket.bind("tcp", "0.0.0.0", 2018)
 while true do
     local newfd = socket.listen(fd)
     post_spawn("agent", newfd)

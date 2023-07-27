@@ -14,6 +14,7 @@ local collider_panel    = ecs.require "widget.collider_view"()
 local effect_panel      = ecs.require "widget.effect_view"()
 local skybox_panel      = ecs.require "widget.skybox_view"()
 local camera_panel      = ecs.require "widget.camera_view"()
+local daynight_panel    = ecs.require "widget.daynight_view"()
 
 local m = {}
 local current_panel
@@ -50,6 +51,7 @@ local function update_eid()
     skybox_panel:set_eid(current_eid)
     material_panel:set_eid(current_eid)
     base_panel:set_eid(current_eid)
+    daynight_panel:set_eid(current_eid)
 end
 
 function m.show()
@@ -66,6 +68,7 @@ function m.show()
         effect_panel:show()
         skybox_panel:show()
         material_panel:show()
+        daynight_panel:show()
     end
     imgui.windows.End()
 end

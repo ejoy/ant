@@ -1,0 +1,11 @@
+---
+data:
+  name: miner-1.prefab
+  scene: {}
+policy:
+  ant.general|name
+  ant.scene|scene_object
+---
+editor: false
+mount: 2
+prefab: /pkg/ant.tools.prefab_viewer/assets/prefabs/miner-1.prefab

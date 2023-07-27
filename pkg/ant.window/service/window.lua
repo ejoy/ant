@@ -37,22 +37,33 @@ end
 local function create_loop_window()
     local scheduling = exclusive.scheduling()
     local window = require "window"
+    local SCHEDULE_SUCCESS <const> = 3
+    local CALL = false
     local function update()
-        local SCHEDULE_SUCCESS <const> = 3
         ltask.wakeup "update"
         repeat
             scheduling()
         until ltask.schedule_message() ~= SCHEDULE_SUCCESS
+        while CALL do
+            exclusive.sleep(1)
+            repeat
+                scheduling()
+            until ltask.schedule_message() ~= SCHEDULE_SUCCESS
+        end
     end
     window.init(message, update)
     ltask.fork(function ()
         local ServiceWorld = ltask.queryservice "ant.window|world"
         while true do
             if #message > 0 then
-                ltask.send(ServiceWorld, "msg", message)
+                local mq = {}
                 for i = 1, #message do
+                    mq[i] = message[i]
                     message[i] = nil
                 end
+                CALL = true
+                ltask.call(ServiceWorld, "msg", mq)
+                CALL = false
             end
             ltask.wait "update"
         end

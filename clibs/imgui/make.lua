@@ -2,7 +2,6 @@ local lm = require "luamake"
 
 dofile "../common.lua"
 lm:import "../luabind/build.lua"
-
 local defines = {
     "IMGUI_DISABLE_OBSOLETE_FUNCTIONS",
     "IMGUI_DISABLE_OBSOLETE_KEYIO",
@@ -68,6 +67,21 @@ lm:source_set "imgui" {
         "widgets/*.cpp",
     },
     defines = defines,
+}
+
+lm:source_set "imgui" {
+    includes = {
+        ".",
+        Ant3rd .. "glm",
+        Ant3rd .. "imgui",
+    },
+    sources = {
+        "zmo/*.cpp",
+    },
+    defines = {
+        "GLM_FORCE_QUAT_DATA_XYZW",
+        defines,
+    },
 }
 
 lm:lua_source "imgui" {

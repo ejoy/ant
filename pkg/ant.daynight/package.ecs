@@ -1,15 +1,14 @@
 system "daynight_system"
     .implement "daynight.lua"
-    .method "init"
     .method "entity_init"
     .method "entity_remove"
 
 
 interface "idaynight"
     .implement "daynight.lua"
-    .method "update_day_cycle"
-    .method "update_night_cycle"
-    .method "set_rotation"
+    .method "update_cycle"
+    .method "add_property_cycle"
+    .method "delete_property_cycle"
 
 component "daynight".type "lua"
 

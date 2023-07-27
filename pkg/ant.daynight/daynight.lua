@@ -5,222 +5,150 @@ local w     = world.w
 local mathpkg   = import_package "ant.math"
 local mc, mu    = mathpkg.constant, mathpkg.util
 local math3d    = require "math3d"
-local image     = require "image"
-local fs        = require "filesystem"
 
-local itimer    = ecs.import.interface "ant.timer|itimer"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local ilight    = ecs.import.interface "ant.render|ilight"
 local iom       = ecs.import.interface "ant.objcontroller|iobj_motion"
 
---just keep them to debug code
--- local DAY_NIGHT_COLORS<const> = {
---     -- day time
---     math3d.ref(math3d.vector(0, 0, 10, 1)),
---     math3d.ref(math3d.vector(10, 0, 0, 1)),
---     -- mc.BLACK,
---     -- math3d.ref(math3d.mul(5.0, mc.YELLOW)),
---     -- math3d.ref(math3d.mul(5.0, mc.BLUE)),
---     -- math3d.ref(math3d.mul(5.0, mc.RED)),
-
---     -- --night time
---     -- math3d.ref(math3d.mul(0.25, mc.BLUE)),
---     -- math3d.ref(math3d.mul(0.45, mc.BLUE)),
---     -- math3d.ref(math3d.mul(0.15, mc.BLUE)),
---     -- math3d.ref(math3d.mul(0.15, mc.BLUE)),
--- }
-
--- local DIRECTIONAL_LIGHT_COLORS<const> = {
---     math3d.ref(math3d.vector(1.0, 1.0, 1.0, 0.3)),
---     math3d.ref(math3d.vector(0.7, 0.7, 0.7, 1.0)),
--- }
-
 local dn_sys = ecs.system "daynight_system"
+local default_intensity = ilight.default_intensity "directional"
+local cached_data_table = {}
 
-local function read_image_content(p)
-    local f<close> = fs.open(fs.path(p), "rb")
-    local c = f:read "a"
-    return image.parse(c, true)
-end
-
-local function init_colors_from_resources(cyclevalues)
-    local direct_info, direct_c         = read_image_content(cyclevalues.resources.direct)
-    local indirect_info, indirect_c     = read_image_content(cyclevalues.resources.indirect)
-    local intensity_info, intensity_c   = read_image_content(cyclevalues.resources.intensity)
-
-    assert(direct_info.depth == 1 and (not direct_info.cubemap))
-    assert(indirect_info.depth == 1 and (not indirect_info.cubemap))
-
-    local direct_step<const>    = direct_info.bitsPerPixel // 8
-    local indirect_step<const>  = indirect_info.bitsPerPixel // 8
-    local intensity_step<const> = intensity_info.bitsPerPixel // 8
-
-    local function to_float(v, ...)
-        if v then
-            return v / 255.0, to_float(...)
+local function binary_search(time_table, t)
+    local from, to = 1, #time_table
+    assert(to > 0)
+    while from <= to do
+        local mid = math.floor((from + to) / 2)
+        local t2 = time_table[mid]
+        if t == t2 then
+            return mid, mid
+        elseif t < t2 then
+            to = mid - 1
+        else
+            from = mid + 1
         end
     end
 
-    local directcolors, direct_intensities, indirectcolors = {}, {}, {}
-    --we just need a row
-    local direct_offset, indirect_offset, intensity_offset = 1, 1, 1
-    for iw=1, direct_info.width do
-        local r, g, b = to_float(('BBB'):unpack(direct_c, direct_offset))
-        directcolors[iw] = math3d.ref(math3d.vector(r, g, b, 0.0))
-        direct_offset = direct_offset + direct_step
+    if from > to then
+        local v = to
+        to = from
+        from = v
     end
+    return math.max(from, 1), math.min(to, #time_table)
+end
 
-    for iw=1, intensity_info.width do
-        direct_intensities[iw] = to_float(('B'):unpack(intensity_c, intensity_offset))
-        intensity_offset = intensity_offset + intensity_step
+local function lerp(l, r, t, time_table, lerp_table, lerp_function, tn)
+    local deno = (time_table[r] - time_table[l])
+    if deno < 10 ^ (-6) then
+        if tn:match("direction") then
+            return math3d.torotation(math3d.vector(lerp_table[l]))
+        elseif tn:match("intensity") then
+            return lerp_table[l]
+        else
+            return math3d.vector(lerp_table[l]) end
     end
-
-    for iw=1, indirect_info.width do
-        local r, g, b = to_float(('BBB'):unpack(indirect_c, indirect_offset))
-        indirectcolors[iw] = math3d.ref(math3d.vector(r, g, b, 0.0))
-        indirect_offset = indirect_offset + indirect_step
+    local lerp_t = (t - time_table[l]) / (time_table[r] - time_table[l])
+    if tn:match("direction") then
+        local lq = math3d.torotation(math3d.vector(lerp_table[l]))
+        local rq = math3d.torotation(math3d.vector(lerp_table[r]))
+        return lerp_function(lq, rq, lerp_t)
+    else if tn:match("intensity") then
+        return lerp_function(lerp_table[l], lerp_table[r], lerp_t)
     end
-
-    cyclevalues.DIRECT_COLORS, cyclevalues.DIRECT_INTENSITIES, cyclevalues.INDIRECT_COLORS = directcolors, direct_intensities, indirectcolors
-end
-
-function dn_sys:init()
-
-end
-
-local function interpolate_in_array(t, arrays, lerp)
-    local v = (#arrays-1) * t
-    local x, y = math.modf(v)
-
-    return lerp(arrays[x+1], arrays[x+2], y)
-end
-
-local function math3d_interpolate_in_array(t, arrays)
-    return interpolate_in_array(t, arrays, math3d.lerp)
-end
-
-local function float_interpolate_in_array(t, arrays)
-    return interpolate_in_array(t, arrays, mu.lerp)
-end
-
-local function clean_rotation_data(r)
-    if r.rotate_normal then
-        math3d.unmark(r.rotate_normal)
-        r.rotate_normal = nil
-    end
-
-    if r.direction then
-        math3d.unmark(r.direction)
-        r.direction = nil
+        return lerp_function(math3d.vector(lerp_table[l]), math3d.vector(lerp_table[r]), lerp_t)
     end
 end
 
-local function update_rotation_data(r)
-    clean_rotation_data(r)
-
-    local q = r.start_rotator and math3d.quaternion(r.start_rotator) or nil
-    local n = r.rotate_axis and math3d.vector(r.rotate_axis) or nil
-
-    r.direction = math3d.mark(q and math3d.transform(q, mc.NXAXIS, 0) or mc.NXAXIS)
-    if not n then
-        n = q and math3d.transform(q, mc.ZAXIS, 0) or mc.ZAXIS
+local function reserve_data()
+    local dl = w:first "directional_light light:in scene:in"
+    if dl then
+        cached_data_table.directional_color = math3d.mark(math3d.vector(dl.light.color))
+        cached_data_table.directional_intensity = dl.light.intensity
     end
-    n = math3d.normalize(n)
-    r.rotate_normal = math3d.mark(n)
+end
+
+local function restore_data()
+    local dl = w:first "directional_light light:in scene:in"
+    if dl then
+        local dl_color = cached_data_table.directional_color
+        ilight.set_color_rgb(dl, math3d.index(dl_color, 1, 2, 3))
+        ilight.set_intensity(dl, cached_data_table.directional_intensity)
+        math3d.unmark(dl_color)
+    end 
 end
 
 function dn_sys:entity_init()
     for dne in w:select "INIT daynight:in" do
-        local dn = dne.daynight
-
-        if not dn.cycle then
-            dn.cycle = 0
-        end
-
-        local function init_cycle_value(r)
-            update_rotation_data(r)
-            if not r.rotate_range then
-                r.rotate_range = math.pi
-            end
-            if not r.intensity then
-                r.intensity = ilight.default_intensity "directional"
-            end
-
-            init_colors_from_resources(r)
-        end
-
-        init_cycle_value(dn.day)
-        init_cycle_value(dn.night)
-
-        if not dn.intensity then
-            dn.intensity = ilight.default_intensity "directional"
-        end
-    end
+        reserve_data()
+    end 
 end
 
 function dn_sys:entity_remove()
     for dne in w:select "REMOVED daynight:in" do
-        local dn = dne.daynight
-
-        clean_rotation_data(dn.day)
-        clean_rotation_data(dn.night)
+        restore_data()
     end
 end
-
-local function update_cycle(cycle, cyclevalue)
-    --interpolate indirect light color
-    local modulate_color = math3d_interpolate_in_array(cycle, cyclevalue.INDIRECT_COLORS)
-    local sa = imaterial.system_attribs()
-    sa:update("u_indirect_modulate_color", modulate_color)
-
-    --move directional light in cycle
-    local dl = w:first "directional_light light:in scene:in"
-    if dl then
-        local c<const> = math3d_interpolate_in_array(cycle, cyclevalue.DIRECT_COLORS)
-        local r, g, b = math3d.index(c, 1, 2, 3)
-        ilight.set_color_rgb(dl, r, g, b)
-
-        local intensity<const> = float_interpolate_in_array(cycle, cyclevalue.DIRECT_INTENSITIES)
-        ilight.set_intensity(dl, intensity * cyclevalue.intensity)
-
-        if not cyclevalue.disable_rotator then
-            local q = math3d.quaternion{axis=cyclevalue.rotate_normal, r=cyclevalue.rotate_range*cycle}
-            iom.set_direction(dl, math3d.transform(q, cyclevalue.direction, 0))
-        end
-        w:submit(dl)
-        --print("cycle:", tc, "intensity:", l, "direction:", math3d.tostring(math3d.transform(q, dnl.direction, 0)), "modulate color:", math3d.tostring(modulate_color))
-    end
-end
-
 
 local idn = ecs.interface "idaynight"
-function idn.update_day_cycle(e, cycle)
-    update_cycle(cycle, e.daynight.day)
+function idn.update_cycle(e, cycle)
+    local direct, ambient, rotator, intensity
+    for propertry_name, property_table in pairs(e.daynight) do
+        local time = property_table.time
+        local lidx, ridx = binary_search(time, cycle)
+        if propertry_name:match("direct") then
+            local color, inten = property_table.color, property_table.intensity
+            direct = lerp(lidx, ridx, cycle, time, color, math3d.lerp, "color")
+            intensity = lerp(lidx, ridx, cycle, time, inten, mu.lerp, "intensity")
+        elseif propertry_name:match("ambient") then
+            local color = property_table.color
+            ambient = lerp(lidx, ridx, cycle, time, color, math3d.lerp, "color")
+        elseif propertry_name:match("rotator") then
+            local direction = property_table.direction
+            rotator = lerp(lidx, ridx, cycle, time, direction, math3d.lerp, "direction")
+        end
+    end
+
+    local dl = w:first "directional_light light:in scene:in"
+    if dl then
+        local r, g, b = math3d.index(direct, 1, 2, 3)
+        ilight.set_color_rgb(dl, r, g, b)
+        ilight.set_intensity(dl, intensity * default_intensity)
+
+        iom.set_direction(dl, math3d.todirection(rotator))
+        w:submit(dl)        
+    end
+    local sa = imaterial.system_attribs()
+    sa:update("u_indirect_modulate_color", ambient)
 end
 
-function idn.update_night_cycle(e, cycle)
-    update_cycle(cycle, e.daynight.night)
+function idn.add_property_cycle(e, property_name, property)
+    local dn = e.daynight
+    local current_property = dn[property_name]
+    local time = current_property.time
+    if #time >= 6 then return end -- property_number <= 5
+    time[#time+1] = property.time
+    if property_name:match "rotator" then
+        local direction = current_property.direction
+        direction[#direction+1] = property.direction
+    else
+        local color = current_property.color
+        color[#color+1] = property.color
+        if property_name:match "direct" then
+            local intensity = current_property.intensity
+            intensity[#intensity+1] = property.intensity
+        end 
+    end 
+    return true
 end
 
-function idn.set_rotation(e, type, start_rotator, rotate_axis)
-    w:extend(e, "daynight:in")
-    local r = assert(e.daynight[type], "Invalid type")
-    r.start_rotator = start_rotator
-    r.rotate_axis = rotate_axis
-    update_rotation_data(r)
+function idn.delete_property_cycle(e, property_name)
+    local dn = e.daynight
+    local current_property = dn[property_name]
+    local time = current_property.time
+    local current_num = #time
+    if current_num <=2 then return end -- property_number >=2
+    for _ ,t in pairs(current_property) do
+        table.remove(t, current_num)
+    end
+    return true
 end
-
---[[test code:
-local sys = ecs.system "test_system"
-function sys:data_changed()
-    local idn = ecs.import.interface "ant.daynight|idaynight"
-    local itimer = ecs.import.interface "ant.timer|itimer"
-    local dne = w:first "daynight:in"
-    local tenSecondMS<const> = 10000
-    local cycle = (itimer.current() % tenSecondMS) / tenSecondMS
-    idn.update_day_cycle(dne, cycle)
-
-    --
-    idn.update_night_cycle(dne, cycle)
-end
-]]
