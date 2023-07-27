@@ -5,6 +5,7 @@ interface "irender_layer"
     .method "layeridx"
     .method "layername"
     .method "set_layer"
+    .method "is_opacity_layer"
 
 system "render_layer_system"
     .implement "render_layer.lua"

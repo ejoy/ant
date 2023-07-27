@@ -6,7 +6,7 @@ local setting       = import_package "ant.settings".setting
 local renderutil    = require "util"
 local queuemgr      = require "queue_mgr"
 local s             = ecs.system "pre_depth_system"
-local math3d    = require "math3d"
+local math3d        = require "math3d"
 local R             = ecs.clibs "render.render_material"
 
 if setting:get "graphic/disable_pre_z" then
@@ -17,6 +17,7 @@ end
 local irender   = ecs.import.interface "ant.render|irender"
 local irq       = ecs.import.interface "ant.render|irenderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
+local irl       = ecs.import.interface "ant.render|irender_layer"
 
 local pre_depth_material
 local pre_depth_skinning_material
@@ -68,7 +69,7 @@ end
 
 function s:update_filter()
     for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in skinning?in indirect?in" do
-        if e.visible_state["pre_depth_queue"] and (e.render_layer == "opacity" or e.render_layer == "foreground") then
+        if e.visible_state["pre_depth_queue"] and irl.is_opacity_layer(e.render_layer) then
             local mo = assert(which_material(e.skinning, e.indirect))
             local ro = e.render_object
             local fm = e.filter_material

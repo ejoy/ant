@@ -202,7 +202,7 @@ function render_sys:update_filter()
 		--because render entity will change it's visible state after it created
 		--but not create this new material instance in entity_init stage
 		for e in w:select "filter_result visible_state:in render_layer:in render_object:update filter_material:in" do
-			if e.visible_state["main_queue"] and e.render_layer == "opacity" then
+			if e.visible_state["main_queue"] and irl.is_opacity_layer(e.render_layer) then
 				local ro = e.render_object
 				local fm = e.filter_material
 

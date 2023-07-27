@@ -8,6 +8,21 @@ local layer_names = {
     "foreground", "opacity", "background", "translucent", "decal", "ui"
 }
 
+
+local function build_opacity_layers()
+    local layers = {}
+    for _, ln in ipairs(layer_names) do
+        if ln == "translucent" then
+            break
+        end
+        layers[ln] = true
+    end
+
+    return layers
+end
+
+local opacity_layers = build_opacity_layers()
+
 local function find_layeridx(name)
     for idx, ln in ipairs(layer_names) do
         if ln == name then
@@ -64,6 +79,10 @@ function irl.set_layer(e, layername)
     w:submit(e)
 end
 
+function irl.is_opacity_layer(layername)
+    return opacity_layers[layername]
+end
+
 local rl_sys = ecs.system "render_layer_system"
 function rl_sys:start_frame()
     for _ in rl_mb:unpack() do
@@ -71,5 +90,8 @@ function rl_sys:start_frame()
             local idx = irl.layeridx(e.render_layer)
             e.render_object.render_layer = idx
         end
+
+        build_opacity_layers()
+        break
     end
 end
