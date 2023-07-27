@@ -9,7 +9,6 @@
 
 int main(int argc, char * argv[]) {
     @autoreleasepool {
-        ios_error_handler();
         runtime_main(argc, argv, ios_error_display);
         return 0;
     }

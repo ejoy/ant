@@ -49,19 +49,35 @@ void ios_error_display(const char* em) {
     UIApplicationMain(0, argv, nil, NSStringFromClass([ErrorApp class]));
 }
 
+static int writelog(const char* msg) {
+    NSArray* array = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    if ([array count] <= 0) {
+        return 1;
+    }
+    char path[256];
+    const char* dir = [[array objectAtIndex:0] fileSystemRepresentation];
+    snprintf(path, 256, "%s/exception.log", dir);
+    FILE* f = fopen(path, "w");
+    if (!f) {
+        return 1;
+    }
+    fputs(msg, f);
+    fclose(f);
+    return 0;
+}
+
 static void signal_handler(int sn) {
     signal(sn, SIG_DFL);
-    //NSMutableString* info = [[NSMutableString alloc] init];
-    //[info appendString:@"Stack:\n"];
-    //void* callstack[128];
-    //int i, frames = backtrace(callstack, 128);
-    //char** strs = backtrace_symbols(callstack, frames);
-    //for (i = 0; i <frames; ++i) {
-    //    [info appendFormat:@"%s\n", strs[i]];
-    //}
-    //free(strs);
-    //ios_error_display([info UTF8String]);
-    ios_error_display("error");
+    NSMutableString* info = [[NSMutableString alloc] init];
+    [info appendString:@"Stack:\n"];
+    void* callstack[128];
+    int i, frames = backtrace(callstack, 128);
+    char** strs = backtrace_symbols(callstack, frames);
+    for (i = 0; i <frames; ++i) {
+        [info appendFormat:@"%s\n", strs[i]];
+    }
+    free(strs);
+    writelog([info UTF8String]);
 }
 
 static void exception_handle(NSException* exception) {
@@ -70,7 +86,7 @@ static void exception_handle(NSException* exception) {
     NSString* reason = [exception reason];
     NSString* name = [exception name];
     NSString* info = [NSString stringWithFormat:@"Exception reason：%@\nException name：%@\nException stack：%@", name, reason, stackArray];
-    ios_error_display([info UTF8String]);
+    writelog([info UTF8String]);
 }
 
 void ios_error_handler(void) {
