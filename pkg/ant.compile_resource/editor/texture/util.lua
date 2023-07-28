@@ -7,7 +7,6 @@ local ltask			= require "ltask"
 
 local stringify 	= import_package "ant.serialize".stringify
 
-local pngparam 		= require "editor.texture.png_param"
 local TEXTUREC 		= require "editor.tool_exe_path"("texturec")
 local shpkg			= import_package "ant.sh"
 local SH, texutil	= shpkg.sh, shpkg.texture
@@ -141,7 +140,6 @@ return function (output, setting, param)
     lfs.remove_all(output)
     lfs.create_directories(output)
 	local config = {
-        sampler = pngparam.sampler(param),
         flag	= sampler(param.sampler),
     }
     if param.colorspace == "sRGB" then
