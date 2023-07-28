@@ -10,7 +10,7 @@ data:
       size: 128
   material: /pkg/ant.resources/materials/sky/skybox.material
   name: skybox_test
-  render_layer: background
+  render_layer: translucent
   scene: {}
   simplemesh: false
   skybox:
