@@ -77,39 +77,43 @@ local function stringify(t)
     return table.concat(s, "&")
 end
 
-local texture_extensions <const> = {
-    noop        = platform.os == "windows" and "dds" or "ktx",
-	direct3d11 	= "dds",
-	direct3d12 	= "dds",
-	metal 		= "ktx",
-	vulkan 		= "ktx",
-	opengl 		= "ktx",
-}
-
-local BgfxOS <const> = {
-    macos = "osx",
+local TextureExtensions <const> = {
+    noop       = platform.os == "windows" and "dds" or "ktx",
+	direct3d11 = "dds",
+	direct3d12 = "dds",
+	metal      = "ktx",
+	vulkan     = "ktx",
+	opengl     = "ktx",
 }
 
 local function init()
     local caps = bgfx.get_caps()
     local renderer = caps.rendererType:lower()
-    local texture = assert(texture_extensions[renderer])
-    init_setting()
+    local texture = assert(TextureExtensions[renderer])
     local hd = caps.homogeneousDepth and true or nil
     local obl = caps.originBottomLeft and true or nil
 
+    init_setting()
     set_setting("glb", stringify {
-        hd = hd,
-        obl = obl,
-    })
-    set_setting("material", stringify {
-        os = BgfxOS[platform.os] or platform.os,
+        os = platform.os,
         renderer = renderer,
         hd = hd,
         obl = obl,
     })
-    set_setting("texture", stringify {os=platform.os, ext=texture})
-    set_setting("png", stringify {os=platform.os, ext=texture})
+    set_setting("material", stringify {
+        os = platform.os,
+        renderer = renderer,
+        hd = hd,
+        obl = obl,
+    })
+    set_setting("texture", stringify {
+        os = platform.os,
+        ext = texture,
+    })
+    set_setting("png", stringify {
+        os = platform.os,
+        ext = texture,
+    })
 end
 
 return {

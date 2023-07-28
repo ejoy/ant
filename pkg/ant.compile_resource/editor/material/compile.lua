@@ -285,8 +285,11 @@ end
 
 local CHECK_MT<const> = {__newindex=function () error "DONOT MODIFY" end}
 
-local function compile(tasks, deps, mat, input, output, localpath)
-    local setting = config.get "material".setting
+local BgfxOS <const> = {
+    macos = "osx",
+}
+
+local function compile(tasks, deps, mat, input, output, setting, localpath)
     local include_path = input:parent_path()
     lfs.remove_all(output)
     lfs.create_directories(output)
@@ -315,7 +318,7 @@ local function compile(tasks, deps, mat, input, output, localpath)
             end
         
             local ok, res = toolset.compile {
-                platform = setting.os,
+                platform = BgfxOS[setting.os] or setting.os,
                 renderer = setting.renderer,
                 input = inputpath,
                 output = output / (stage..".bin"),

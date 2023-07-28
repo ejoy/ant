@@ -51,7 +51,7 @@ function compile_file(input)
     local output = cfg.binpath / get_filename(inputstr)
     local changed = depends.dirty(output / ".dep")
     if changed then
-        local ok, deps = cfg.compiler(input, output, function (path)
+        local ok, deps = cfg.compiler(input, output, cfg.setting, function (path)
             return absolute_path(input, path)
         end, changed)
         if not ok then

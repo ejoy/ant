@@ -12,10 +12,10 @@ local function readdatalist(filepath)
 	end)
 end
 
-return function (input, output, localpath, changed)
+return function (input, output, setting, localpath, changed)
 	local config = readdatalist(input)
     local path = localpath(config.path)
-    local ok, res = glb(path, output, localpath, changed)
+    local ok, res = glb(path, output, setting, localpath, changed)
     if not ok then
         return ok, res
     end
