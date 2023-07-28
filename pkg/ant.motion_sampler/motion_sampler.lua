@@ -49,7 +49,12 @@ function mss:component_init()
     end
 end
 
+local STOP_SYSTEM
+
 function mss:do_motion_sample()
+    if STOP_SYSTEM then
+        return 
+    end
     local g = ecs.group(motion_sampler_group)
     g:enable "motion_sampler_tag"
     ecs.group_flush()
@@ -60,7 +65,7 @@ function mss:do_motion_sample()
 
         local needupdate = true
         if ms.duration >= 0 then
-            needupdate = ms.deltatime <= ms.duration
+            needupdate = ms.deltatime <= ms.duration and (not ms.stop)
             if needupdate then
                 ms.deltatime = ms.deltatime + dt
                 ms.ratio = ltween.interp(math.min(1.0, ms.deltatime / ms.duration), ms.tween_in, ms.tween_out)
@@ -131,6 +136,17 @@ function ims.set_ratio(e, ratio)
         error "set motion_sampler ratio need duration is less than 0"
     end
     e.motion_sampler.ratio = ratio
+    e.scene_needchange = true
+    w:submit(e)
+end
+
+function ims.stop_system(stop)
+    STOP_SYSTEM = stop
+end
+
+function ims.set_stop(e, stop)
+    w:extend(e, "motion_sampler:update scene_needchange:update")
+    e.motion_sampler.stop = stop
     e.scene_needchange = true
     w:submit(e)
 end
