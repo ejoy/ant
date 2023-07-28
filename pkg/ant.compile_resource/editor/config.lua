@@ -15,7 +15,6 @@ local config = {
     model    = {setting={},arguments=""},
     texture  = {setting={},arguments=""},
     material = {setting={},arguments=""},
-    png      = {setting={},arguments=""},
 }
 
 local ResourceCompiler <const> = {
@@ -23,7 +22,6 @@ local ResourceCompiler <const> = {
     glb     = "editor.model.glb",
     texture = "editor.texture.convert",
     material = "editor.material.convert",
-    png     = "editor.texture.png",
 }
 
 local function parse(arguments)

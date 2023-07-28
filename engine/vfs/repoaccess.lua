@@ -47,7 +47,7 @@ end
 local function is_resource(path)
 	path = path:string()
 	local ext = path:match "[^/]%.([%w*?_%-]*)$"
-	if ext ~= "material" and ext ~= "glb"  and ext ~= "texture" and ext ~= "png" then
+	if ext ~= "material" and ext ~= "glb"  and ext ~= "texture" then
 		return false
 	end
 	if path:sub(1,8) == "/.build/" then

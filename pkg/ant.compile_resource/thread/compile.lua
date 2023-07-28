@@ -110,10 +110,6 @@ local function init()
         os = platform.os,
         ext = texture,
     })
-    set_setting("png", stringify {
-        os = platform.os,
-        ext = texture,
-    })
 end
 
 return {
