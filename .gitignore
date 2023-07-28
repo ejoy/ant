@@ -11,7 +11,7 @@
 .repo
 .build
 .log
-
+*.log
 build
 
 /bin
