@@ -21,11 +21,19 @@ lm:runlua {
     output = "FirmwareVfs.h",
 }
 
+lm:runlua {
+    script = "embed.lua",
+    args = { "$in", "$out" },
+    input = "../../engine/firmware/init_thread.lua",
+    output = "FirmwareInitThread.h",
+}
+
 lm:phony {
     input = {
         "FirmwareBootstrap.h",
         "FirmwareIo.h",
         "FirmwareVfs.h",
+        "FirmwareInitThread.h"
     },
     output = "firmware.cpp",
 }

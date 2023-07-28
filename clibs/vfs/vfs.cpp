@@ -35,8 +35,6 @@ function vfs.realpath(path)
         f:close()
         return assert(load(str, "@" .. path))()
     end
-    rawvfs = dofile "engine/firmware/vfs.lua"
-    repo = rawvfs.new(repopath)
     vfs.realpath = realpath
     return realpath(path)
 end
@@ -97,7 +95,12 @@ function vfs.searcher_Lua(name)
     return func, filename
 end
 if initfunc then
-    assert(vfs.loadfile(initfunc))(vfs, initargs)
+    if supportFirmware then
+        local fw = require "firmware"
+        assert(fw.loadfile(initfunc))(vfs, initargs)
+    else
+        assert(vfs.loadfile(initfunc))(vfs, initargs)
+    end
 end
 package.searchers[2] = vfs.searcher_Lua
 package.searchpath = vfs.searchpath
@@ -109,7 +112,13 @@ return vfs
 static const std::string_view updateinitfunc = R"(
 local vfs, initfunc, initargs = ...
 if initfunc then
-    assert(vfs.loadfile(initfunc))(vfs, initargs)
+    local supportFirmware = package.preload.firmware ~= nil
+    if supportFirmware then
+        local fw = require "firmware"
+        assert(fw.loadfile(initfunc))(vfs, initargs)
+    else
+        assert(vfs.loadfile(initfunc))(vfs, initargs)
+    end
 end
 )";
 

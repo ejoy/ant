@@ -6,6 +6,7 @@
 #include "FirmwareBootstrap.h"
 #include "FirmwareIo.h"
 #include "FirmwareVfs.h"
+#include "FirmwareInitThread.h"
 
 struct bin {
 	const char* data;
@@ -18,6 +19,7 @@ std::map<std::string_view, bin> firmware = {
 	{ "bootstrap.lua", INIT_BIN(FirmwareBootstrap) },
 	{ "io.lua", INIT_BIN(FirmwareIo) },
 	{ "vfs.lua", INIT_BIN(FirmwareVfs) },
+	{ "init_thread.lua", INIT_BIN(FirmwareInitThread) },
 };
 
 static std::string_view luaL_checkstrview(lua_State* L, int idx) {
