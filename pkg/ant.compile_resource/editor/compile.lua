@@ -13,16 +13,6 @@ end
 
 local compile_file
 
-local function compile(pathstring)
-    local pos = pathstring:find("|", 1, true)
-    if pos then
-        local resource = vfs.realpath(pathstring:sub(1,pos-1))
-        return compile_file(lfs.path(resource)) / pathstring:sub(pos+1):gsub("|", "/")
-    else
-        return lfs.path(vfs.realpath(pathstring))
-    end
-end
-
 local function absolute_path(base, path)
     if path:sub(1,1) == "/" then
         --assert(not path:find("|", 1, true))

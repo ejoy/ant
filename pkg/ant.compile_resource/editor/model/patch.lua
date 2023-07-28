@@ -7,11 +7,18 @@ local currentPatch
 
 local m = {}
 
+local function absolute_path(path, base)
+    if path:sub(1,1) == "/" then
+        return path
+    end
+    return base:match "^(.-)[^/]*$" .. (path:match "^%./(.+)$" or path)
+end
+
 local function load_patch(depfiles, path)
     depends.add(depfiles, path)
     for _, patch in ipairs(assert(datalist.parse(fastio.readall_s(path)))) do
         if patch.include then
-            load_patch(depfiles, patch.include)
+            load_patch(depfiles, absolute_path(patch.include, path))
         else
             local file = assert(patch.file)
             patch.file = nil
