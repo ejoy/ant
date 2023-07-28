@@ -3,7 +3,8 @@ local world 	= ecs.world
 local w 		= world.w
 
 local setting	= import_package "ant.settings".setting
-local USE_CS_SKINNING<const> = setting:get "graphic/skinning/use_cs"
+local USE_CS_SKINNING<const>	= setting:get "graphic/skinning/use_cs"
+local ENABLE_TAA<const>			= setting:get "graphic/postprocess/taa"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local skinning_sys = ecs.system "skinning_system"
 
@@ -37,58 +38,80 @@ end
 function skinning_sys:entity_init()
 	for e in w:select "INIT meshskin:in" do
 		e.meshskin.sm_matrix_ref = mc.NULL
-		e.meshskin.prev_sm_matrix_ref = mc.NULL
+		if ENABLE_TAA then
+			e.meshskin.prev_sm_matrix_ref = mc.NULL
+		end
 	end
 end
 
 function skinning_sys:entity_remove()
 	for e in w:select "REMOVED meshskin:in" do
 		math3d.unmark(e.meshskin.sm_matrix_ref)
-		math3d.unmark(e.meshskin.prev_sm_matrix_ref)
+		if ENABLE_TAA then
+			math3d.unmark(e.meshskin.prev_sm_matrix_ref)
+		end
 	end
 end
 
+local build_skinning_matrices = ENABLE_TAA and
+	function (e, pr, skin)
+		local m = math3d.mul(e.scene.worldmat, r2l_mat)
+		local sm, prev_sm
+		if e.meshskin.sm_matrix_ref == mc.NULL then
+			sm = e.meshskin.skinning_matrices
+			prev_sm = e.meshskin.prev_skinning_matrices
+			animodule.build_skinning_matrices(prev_sm, pr, skin.inverse_bind_pose, skin.joint_remap, m)
+		else
+			sm = e.meshskin.prev_skinning_matrices
+			prev_sm = e.meshskin.skinning_matrices
+		end
+		animodule.build_skinning_matrices(sm, pr, skin.inverse_bind_pose, skin.joint_remap, m)
+		e.meshskin.sm_matrix_ref = sm2m3darray(sm, e.meshskin.sm_matrix_ref)
+		e.meshskin.prev_sm_matrix_ref = sm2m3darray(prev_sm, e.meshskin.prev_sm_matrix_ref)
+	end or
+	function (e, pr, skin)
+		local m = math3d.mul(e.scene.worldmat, r2l_mat)
+		local sm = e.meshskin.skinning_matrices
+		animodule.build_skinning_matrices(sm, pr, skin.inverse_bind_pose, skin.joint_remap, m)
+		e.meshskin.sm_matrix_ref = sm2m3darray(sm, e.meshskin.sm_matrix_ref)
+	end
 
+local function update_aabb(e, meshskin, worldmat)
+	assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
+
+	w:extend(e, "render_object:update bounding:update")
+	e.render_object.worldmat = meshskin.sm_matrix_ref
+	if mc.NULL ~= e.bounding.aabb then
+		math3d.unmark(e.bounding.scene_aabb)
+		e.bounding.scene_aabb = math3d.mark(math3d.aabb_transform(worldmat, e.bounding.aabb))
+	end
+end
+
+local update_skin_entity_uniforms = ENABLE_TAA and function (e, meshskin, worldmat)
+	update_aabb(e, meshskin, worldmat)
+	w:extend(e, "visible_state:in")
+	if e.visible_state["velocity_queue"] then
+		imaterial.set_property(e, "u_prev_model", meshskin.prev_sm_matrix_ref, "velocity_queue")
+	end
+end or update_aabb
 
 function skinning_sys:skin_mesh()
 	for e in w:select "meshskin:in scene:update" do
 		local skin = e.meshskin.skin
 		local pr = e.meshskin.pose.pose_result
 		if pr then
-			local m = math3d.mul(e.scene.worldmat, r2l_mat)
-			local sm, prev_sm
-			if e.meshskin.sm_matrix_ref == mc.NULL then
-				sm = e.meshskin.skinning_matrices
-				prev_sm = e.meshskin.prev_skinning_matrices
-				animodule.build_skinning_matrices(prev_sm, pr, skin.inverse_bind_pose, skin.joint_remap, m)
-			else
-				sm = e.meshskin.prev_skinning_matrices
-				prev_sm = e.meshskin.skinning_matrices		
-			end
-			animodule.build_skinning_matrices(sm, pr, skin.inverse_bind_pose, skin.joint_remap, m)
-			e.meshskin.sm_matrix_ref = sm2m3darray(sm, e.meshskin.sm_matrix_ref)
-			e.meshskin.prev_sm_matrix_ref = sm2m3darray(prev_sm, e.meshskin.prev_sm_matrix_ref)	
+			build_skinning_matrices(e, pr, skin)
 		end
 	end
 
 	local meshskin
 	local worldmat
-	
 	for e in w:select "skinning scene?in meshskin?in" do
 		if e.meshskin then
 			meshskin = e.meshskin
 			worldmat = e.scene.worldmat
 		else
-			assert(meshskin, "Invalid skinning render object, meshskin should create before this object")
-			w:extend(e, "render_object:update bounding:update visible_state:in")
-			e.render_object.worldmat = meshskin.sm_matrix_ref
-			if e.visible_state["velocity_queue"] then
-				imaterial.set_property(e, "u_prev_model", meshskin.prev_sm_matrix_ref, "velocity_queue")
-			end
-			if mc.NULL ~= e.bounding.aabb then
-				math3d.unmark(e.bounding.scene_aabb)
-				e.bounding.scene_aabb = math3d.mark(math3d.aabb_transform(worldmat, e.bounding.aabb))
-			end
+			update_skin_entity_uniforms(e, meshskin, worldmat)
 		end
 	end
 end
