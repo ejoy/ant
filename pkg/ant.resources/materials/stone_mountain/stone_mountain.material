@@ -6,13 +6,7 @@ fx:
     shadow_receive: on
     subsurface: off
 properties:
-    b_indirect_vb:
-      stage: 0
-      access: w
-      buffer: b_indirect
-    b_visibility_vb:
-      stage: 1
-      access: r
-      buffer: b_visibility_vb
-    u_instance_params:  {0, 0, 0, 0}
-    u_indirect_params:  {0, 0, 0, 0}
+  indirect_buffer:
+    stage: 0
+    access: w
+    buffer: indirect_buffer

@@ -1,13 +1,31 @@
 #include "bgfx_compute.sh"
 
-BUFFER_WR(b_indirect_vb, uvec4, 0);
-BUFFER_RO(b_visibility_vb, vec4, 1);
+BUFFER_WR(indirect_buffer, uvec4, 0);
 
-uniform vec4 u_instance_params;
+uniform vec4 u_instance_params1;
+uniform vec4 u_instance_params2;
+uniform vec4 u_instance_params3;
+uniform vec4 u_instance_params4;
 uniform vec4 u_indirect_params;
+uniform vec4 u_mesh_offset;
+
+vec3 get_instance_data(float idx)
+{
+	if(idx < u_mesh_offset.x){
+		return vec3(u_instance_params1.x, u_instance_params1.y, u_instance_params1.z);
+	}
+	else if(idx < u_mesh_offset.y){
+		return vec3(u_instance_params2.x, u_instance_params2.y, u_instance_params2.z);
+	}
+	else if(idx < u_mesh_offset.z){
+		return vec3(u_instance_params3.x, u_instance_params3.y, u_instance_params3.z);
+	}
+	else {
+		return vec3(u_instance_params4.x, u_instance_params4.y, u_instance_params4.z);
+	}
+}
 
 NUM_THREADS(64, 1, 1)
-
 void main()
 {
 	int tId = int(gl_GlobalInvocationID.x);
@@ -16,25 +34,18 @@ void main()
 	int indirect_idx = u_indirect_params.y;
 	if(tId < maxToDraw)
 	{
-
-		vec4 visibility = b_visibility_vb[tId];
-		for(int i = 0; i < 3; ++i){
-			int is_visible = 0;
-			if(visibility[i] == 1.0){
-				is_visible = 1;
-			}
-			drawIndexedIndirect(
-							// Target location params:
-				b_indirect_vb,			// target buffer
-				tId * 3 + i,						// index in buffer
-							// Draw call params:
-				u_instance_params.w,	// number of indices for this draw call
-				is_visible, 					// number of instances for this draw call. You can disable this draw call by setting to zero
-				u_instance_params.z,	// offset in the index buffer
-				u_instance_params.x,	// offset in the vertex buffer. Note that you can use this to "reindex" submeshses - all indicies in this draw will be decremented by this amount
-				tId * 3 + i						// offset in the instance buffer. If you are drawing more than 1 instance per call see gpudrivenrendering for how to handle
-			);					
-		}
+		vec3 instance_data = get_instance_data(tId);
+		drawIndexedIndirect(
+						// Target location params:
+			indirect_buffer,			// target buffer
+			tId,						// index in buffer
+						// Draw call params:
+			instance_data.z,	// number of indices for this draw call
+			1u, 					// number of instances for this draw call. You can disable this draw call by setting to zero
+			instance_data.y,	// offset in the index buffer
+			instance_data.x,	// offset in the vertex buffer. Note that you can use this to "reindex" submeshses - all indicies in this draw will be decremented by this amount
+			tId						// offset in the instance buffer. If you are drawing more than 1 instance per call see gpudrivenrendering for how to handle
+		);
 	}
 	
 }
