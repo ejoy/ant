@@ -31,10 +31,9 @@ function vg_sys:init()
 end
 
 function render_sys:component_init()
-	for e in w:select "INIT render_object:update filter_material:update render_object_update?out" do
+	for e in w:select "INIT render_object:update filter_material:update" do
 		e.render_object.rm_idx 	= R.alloc()
 		e.filter_material 		= e.filter_material or {}
-		e.render_object_update 	= true
 	end
 end
 
@@ -213,7 +212,6 @@ function render_sys:update_filter()
 			end
 		end
 	end
-	w:clear "render_object_update"
 end
 
 function render_sys:end_filter()
