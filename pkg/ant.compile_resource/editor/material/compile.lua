@@ -5,7 +5,6 @@ local fxsetting     = require "editor.material.setting"
 local setting       = import_package "ant.settings".setting
 local serialize     = import_package "ant.serialize"
 local depends       = require "editor.depends"
-local config        = require "editor.config"
 local parallel_task = require "editor.parallel_task"
 
 local ENABLE_SHADOW<const>      = setting:get "graphic/shadow/enable"

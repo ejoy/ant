@@ -66,7 +66,6 @@ end
 
 function m.save_bin_file(path, data)
     path = normalizePath(path)
-    data = applyPatch(path, data)
     writeFile(path, serialization.packstring(data))
 end
 
@@ -74,6 +73,10 @@ function m.save_txt_file(path, data, conv)
     path = normalizePath(path)
     data = applyPatch(path, data)
     writeFile(path, serialize.stringify(data, conv))
+end
+
+function m.apply_patch(path, data)
+    return applyPatch(normalizePath(path), data)
 end
 
 function m.full_path(path)

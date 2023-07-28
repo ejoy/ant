@@ -2,7 +2,6 @@ local subprocess 	= require "editor.subprocess"
 local sampler 		= require "editor.texture.sampler"
 local lfs 			= require "filesystem.local"
 local image 		= require "image"
-local config        = require "editor.config"
 local math3d		= require "math3d"
 local ltask			= require "ltask"
 

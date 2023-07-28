@@ -11,7 +11,6 @@ local lfs               = require "filesystem.local"
 local fs                = require "filesystem"
 local datalist          = require "datalist"
 local material_compile  = require "editor.material.compile"
-local config            = require "editor.config"
 
 local function build_scene_tree(gltfscene)
     local scenetree = {}
