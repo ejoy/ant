@@ -5,6 +5,7 @@ local export_material   = require "editor.model.export_material"
 local math3d_pool       = require "editor.model.math3d_pool"
 local glbloader         = require "editor.model.glTF.glb"
 local utility           = require "editor.model.utility"
+local patch             = require "editor.model.patch"
 local depends           = require "editor.depends"
 local parallel_task     = require "editor.parallel_task"
 local lfs               = require "filesystem.local"
@@ -59,8 +60,8 @@ return function (input, output, setting, tolocalpath, changed)
     lfs.remove_all(output)
     lfs.create_directories(output)
     local depfiles = {}
-    depends.add(depfiles, input .. ".patch")
-    utility.init(input, output)
+    utility.init(output)
+    patch.init(input, depfiles)
     local glbdata = glbloader.decode(input)
     local exports = {}
     assert(glbdata.version == 2)
