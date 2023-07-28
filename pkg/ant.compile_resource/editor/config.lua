@@ -12,13 +12,11 @@ end
 
 local config = {
     glb      = {setting={},arguments=""},
-    model    = {setting={},arguments=""},
     texture  = {setting={},arguments=""},
     material = {setting={},arguments=""},
 }
 
 local ResourceCompiler <const> = {
-    model   = "editor.model.convert",
     glb     = "editor.model.glb",
     texture = "editor.texture.convert",
     material = "editor.material.convert",
