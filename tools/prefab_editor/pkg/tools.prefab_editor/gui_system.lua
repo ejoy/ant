@@ -64,13 +64,13 @@ local function choose_project_dir()
     end
 end
 
-local function start_fileserver(path)
+local function start_fileserver(luaexe, path)
     local cthread = require "bee.thread"
     cthread.newchannel "log_channel"
     cthread.newchannel "fileserver_channel"
     cthread.newchannel "console_channel"
     local produce = cthread.channel "fileserver_channel"
-    produce:push(arg, path)
+    produce:push(luaexe, path)
 
     return cthread.thread [[
         package.path = "engine/?.lua"
@@ -84,9 +84,8 @@ local function do_open_proj(path)
     local lpath = lfs.path(path)
     if lfs.exists(lpath / ".mount") then
         local topname = global_data:update_root(lpath)
-
-        --file server
-        start_fileserver(path)
+        local bfs = require "bee.filesystem"
+        start_fileserver(tostring(bfs.exe_path()), path)
         log_widget.init_log_receiver()
         console_widget.init_console_sender()
         world:pub { "UpdateDefaultLight", true }
