@@ -143,7 +143,7 @@ local function read_datalist(statefile)
     return s
 end
 
-return function (output, glbdata, exports, tolocalpath)
+return function (output, glbdata, exports, setting, tolocalpath)
     local glbscene, glbbin = glbdata.info, glbdata.bin
     local materials = glbscene.materials
     if not materials then
@@ -186,11 +186,24 @@ return function (output, glbdata, exports, tolocalpath)
         return name
     end
 
+    local TextureExtensions <const> = {
+        noop       = setting.os == "windows" and "dds" or "ktx",
+        direct3d11 = "dds",
+        direct3d12 = "dds",
+        metal      = "ktx",
+        vulkan     = "ktx",
+        opengl     = "ktx",
+    }
+    local TextureSetting <const> = {
+        os = setting.os,
+        ext = TextureExtensions[setting.renderer],
+    }
+
     local function export_texture(outputfile, texture_desc)
         if not EXPORTED_FILES[outputfile:string()] then
             EXPORTED_FILES[outputfile:string()] = true
             parallel_task.add(exports.tasks, function ()
-                local ok, err = texture_compile(texture_desc, outputfile, function (path)
+                local ok, err = texture_compile(texture_desc, outputfile, TextureSetting, function (path)
                     path = path[1]
                     if path:sub(1,1) == "/" then
                         return fs.path(path):localpath()

@@ -48,28 +48,24 @@ function event.RUNTIME_CONSOLE(...)
     sender:push({"CONSOLE", ...})
 end
 
-local function update_event()
-    if #srv.event > 0 then
-        for i, v in ipairs(srv.event) do
-            srv.event[i] = nil
-            local f = event[v[1]]
-            if f then
-                f(table.unpack(v, 2))
-            end
-        end
-    end
-end
+-- local function update_event()
+--     if #srv.event > 0 then
+--         for i, v in ipairs(srv.event) do
+--             srv.event[i] = nil
+--             local f = event[v[1]]
+--             if f then
+--                 f(table.unpack(v, 2))
+--             end
+--         end
+--     end
+-- end
 
-local arg
+local luaexe
 local repopath
-local function luaexe()
-    return "./bin/msvc/release/lua.exe"
-end
-
 local function spawnFileServer()
     assert(subprocess.spawn {
-        luaexe(),
-        "tools/fileserver/main.lua",
+        luaexe,
+        (string.sub(luaexe, -7) == "lua.exe") and "tools/fileserver/main.lua" or "3rd/ant/tools/fileserver/main.lua",
         repopath,
         console = "disable",
     })
@@ -136,28 +132,10 @@ function m.run()
     end
     
     handleNetworkEvent(fd)
-
-    --srv.init_server {
-    --    lua = luaexe(),
-    --}
-    --srv.set_repopath(repopath)
-    --srv.listen("0.0.0.0", 2018)
-    --srv.init_proxy()
-    --local console_receiver = cthread.channel_consume "console_channel"
-    --while true do
-    --    srv.update_network()
-    --    srv.update_server()
-    --    srv.update_proxy()
-    --    update_event()
-    --    local has, command = console_receiver:pop()
-    --    if has and repo_instance then
-    --        srv.console(repo_instance, command)
-    --    end
-    --end
 end
 
 return function()
-    arg, repopath = (cthread.channel "fileserver_channel"):bpop()
+    luaexe, repopath = (cthread.channel "fileserver_channel"):bpop()
     sender = cthread.channel "log_channel"
     return m
 end

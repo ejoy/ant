@@ -1,5 +1,4 @@
 s /pkg/tools.prefab_editor/res/ui/*.lua
 s /pkg/tools.prefab_editor/res/ui/*.rml
 s /pkg/tools.prefab_editor/res/ui/*.rcss
-s /pkg/tools.prefab_editor/res/ui/*.png
 s /pkg/tools.prefab_editor/res/ui/*.texture

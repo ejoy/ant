@@ -15,11 +15,11 @@ local function readdatalist(filepath)
 	end)
 end
 
-return function(input, output, localpath)
+return function(input, output, setting, localpath)
     local mat = readdatalist(input)
     local depfiles = {}
     local tasks = parallel_task.new()
-    compile(tasks, depfiles, mat, input, output, localpath)
+    compile(tasks, depfiles, mat, input, output, setting, localpath)
     parallel_task.wait(tasks)
     depends.add(depfiles, localpath "/settings")
     return true, depfiles

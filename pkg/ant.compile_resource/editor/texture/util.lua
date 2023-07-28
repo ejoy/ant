@@ -2,19 +2,16 @@ local subprocess 	= require "editor.subprocess"
 local sampler 		= require "editor.texture.sampler"
 local lfs 			= require "filesystem.local"
 local image 		= require "image"
-local config        = require "editor.config"
 local math3d		= require "math3d"
 local ltask			= require "ltask"
 
 local stringify 	= import_package "ant.serialize".stringify
 
-local pngparam 		= require "editor.texture.png_param"
 local TEXTUREC 		= require "editor.tool_exe_path"("texturec")
 local shpkg			= import_package "ant.sh"
 local SH, texutil	= shpkg.sh, shpkg.texture
 
-local setting   = import_package "ant.settings".setting
-local irradianceSH_bandnum<const> = setting:get "graphic/ibl/irradiance_bandnum"
+local irradianceSH_bandnum<const> = import_package "ant.settings".setting:get "graphic/ibl/irradiance_bandnum"
 
 local function add_option(commands, name, value)
 	if name then
@@ -26,10 +23,10 @@ local function add_option(commands, name, value)
 	end
 end
 
-local function which_format(param)
+local function which_format(setting, param)
 	local compress = param.compress
 	if compress then
-		local os = config.get "texture".setting.os
+		local os = setting.os
 		if os == "ios" or os == "macos" then
 			return "ASTC4x4"
 		end
@@ -39,10 +36,10 @@ local function which_format(param)
 	return param.format
 end
 
-local function gen_commands(commands, param, input, output)
+local function gen_commands(commands, setting, param, input, output)
 	add_option(commands, "-f", input:string())
 	add_option(commands, "-o", output:string())
-	local fmt = which_format(param)
+	local fmt = which_format(setting, param)
 	if fmt then
 		add_option(commands, "-t", fmt)
 	end
@@ -139,12 +136,10 @@ local function build_irradiance_sh(cm)
 	return serialize_results(Eml)
 end
 
-return function (output, param)
+return function (output, setting, param)
     lfs.remove_all(output)
     lfs.create_directories(output)
-    local setting = config.get "texture".setting
 	local config = {
-        sampler = pngparam.sampler(param),
         flag	= sampler(param.sampler),
     }
     if param.colorspace == "sRGB" then
@@ -164,7 +159,7 @@ return function (output, param)
 		local commands = {
 			TEXTUREC
 		}
-		gen_commands(commands, param, imgpath, binfile)
+		gen_commands(commands, setting, param, imgpath, binfile)
 		print("texture compile:")
 		local success, msg = subprocess.spawn_process(commands)
 		if success then

@@ -1,7 +1,6 @@
 local convert_image = require "editor.texture.util"
-local config        = require "editor.config"
 
-return function (content, output, localpath)
+return function (content, output, setting, localpath)
 	if content.path then
 		content.local_texpath = localpath(assert(content.path))
 	else
@@ -19,7 +18,7 @@ return function (content, output, localpath)
 		end
 	end
 
-	local ok, err = convert_image(output, content)
+	local ok, err = convert_image(output, setting, content)
 	if not ok then
 		return ok, err
 	end

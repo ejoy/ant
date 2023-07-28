@@ -223,12 +223,12 @@ local function load_material_info(exports, materialidx, cfg)
     return check_update_material_info(mi or DEFAULT_MATERIAL_INFO, cfg)
 end
 
-local function seri_material(input, output, exports, materialidx, cfg)
+local function seri_material(input, output, exports, materialidx, cfg, setting)
     local em = exports.material
     if em  and #em > 0 then
         local mi = load_material_info(exports, materialidx, cfg)
         if mi and mi.filename ~= DEFAULT_MATERIAL_PATH then
-            material_compile(exports.tasks, exports.depfiles, mi.material, input, output / mi.filename, function (path)
+            material_compile(exports.tasks, exports.depfiles, mi.material, input, output / mi.filename, setting, function (path)
                 return fs.path(path):localpath()
             end)
             return mi.filename
@@ -269,7 +269,7 @@ local function has_color_attrib(declname)
     end
 end
 
-local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, exports)
+local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, exports, setting)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
     local meshidx = node.mesh
@@ -289,7 +289,7 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
             modename                = assert(PRIMITIVE_MODES[mode+1], "Invalid primitive mode"),
         }
 
-        local materialfile = seri_material(input, output, exports, prim.material, cfg)
+        local materialfile = seri_material(input, output, exports, prim.material, cfg, setting)
         local meshfile = em.meshbinfile
         if meshfile == nil then
             error(("not found meshfile in export data:%d, %d"):format(meshidx+1, primidx))
@@ -411,7 +411,7 @@ local function cleanup()
     clean_material_cache()
 end
 
-return function (math3d, input, output, glbdata, exports, localpath)
+return function (math3d, input, output, glbdata, exports, setting, localpath)
     cleanup()
     local gltfscene = glbdata.info
     local sceneidx = gltfscene.scene or 0
@@ -450,7 +450,7 @@ return function (math3d, input, output, glbdata, exports, localpath)
         local node = gltfscene.nodes[nodeidx+1]
         local e
         if node.mesh then
-            e = create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, exports)
+            e = create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, exports, setting)
         else
             e = create_node_entity(math3d, gltfscene, nodeidx, parent, exports)
         end

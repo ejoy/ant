@@ -5,13 +5,13 @@ local export_material   = require "editor.model.export_material"
 local math3d_pool       = require "editor.model.math3d_pool"
 local glbloader         = require "editor.model.glTF.glb"
 local utility           = require "editor.model.utility"
+local patch             = require "editor.model.patch"
 local depends           = require "editor.depends"
 local parallel_task     = require "editor.parallel_task"
 local lfs               = require "filesystem.local"
 local fs                = require "filesystem"
 local datalist          = require "datalist"
 local material_compile  = require "editor.material.compile"
-local config            = require "editor.config"
 
 local function build_scene_tree(gltfscene)
     local scenetree = {}
@@ -52,17 +52,16 @@ local function recompile_materials(input, output)
     return true, depfiles
 end
 
-return function (input, output, tolocalpath, changed)
+return function (input, output, setting, tolocalpath, changed)
     if changed ~= true and changed:match "%.s[ch]$" then
         return recompile_materials(input, output)
-    end 
-    local setting = config.get "glb".setting
+    end
     local math3d = math3d_pool.alloc(setting)
     lfs.remove_all(output)
     lfs.create_directories(output)
     local depfiles = {}
-    depends.add(depfiles, input .. ".patch")
-    utility.init(input, output)
+    utility.init(output)
+    patch.init(input, depfiles)
     local glbdata = glbloader.decode(input)
     local exports = {}
     assert(glbdata.version == 2)
@@ -71,9 +70,9 @@ return function (input, output, tolocalpath, changed)
     local tasks = parallel_task.new()
     exports.tasks = tasks
     export_meshbin(math3d, glbdata, exports)
-    export_material(output, glbdata, exports, tolocalpath)
+    export_material(output, glbdata, exports, setting, tolocalpath)
     export_animation(input, output, exports)
-    export_prefab(math3d, input, output, glbdata, exports, tolocalpath)
+    export_prefab(math3d, input, output, glbdata, exports, setting, tolocalpath)
     parallel_task.wait(tasks)
     
     math3d_pool.free(math3d)
