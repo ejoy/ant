@@ -13,7 +13,9 @@ end
 
 local vfs = require "vfs"
 local lfs = require "filesystem.local"
-local LogDir = lfs.path(vfs.repopath()) / ".log"
+local LogDir = vfs.repopath
+    and lfs.path(vfs.repopath()) / ".log"
+    or lfs.current_path() / ".log"
 lfs.create_directories(LogDir)
 
 local world = ecs.world

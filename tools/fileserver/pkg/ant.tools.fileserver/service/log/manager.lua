@@ -20,9 +20,12 @@ local function getlogindex(filename)
     end
 end
 
-local function readfile(filename)
-    local f <close> = assert(io.open(filename:string(), "rb"))
-    return f:read "a"
+local function read_timestamp(filename)
+    local f <close> = io.open(filename:string(), "rb")
+    if f then
+        return f:read "a"
+    end
+    return os_date('%Y_%m_%d_%H_%M_%S_{ms}')
 end
 
 local function writefile(filename, data)
@@ -32,7 +35,7 @@ end
 
 local function movelog(LOGDIR, idx)
     local TIMESTAMP = LOGDIR / (".timestamp-%d"):format(idx)
-    local timestamp = readfile(TIMESTAMP)
+    local timestamp = read_timestamp(TIMESTAMP)
     fs.create_directories(LOGDIR / 'backup')
     fs.rename(LOGDIR / ("runtime-%d.log"):format(idx), LOGDIR / 'backup' / (timestamp .. ".log"))
     fs.remove(TIMESTAMP)

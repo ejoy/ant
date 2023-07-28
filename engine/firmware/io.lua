@@ -1,10 +1,27 @@
-local loadfile, config, host, fddata = ...
+local path = os.getenv "LUA_DEBUG_PATH"
+if path then
+	local function dbg_dofile(filename, ...)
+		local f = assert(io.open(filename))
+		local str = f:read "a"
+		f:close()
+		return assert(load(str, "=(debugger.lua)"))(...)
+	end
+	dbg_dofile(path .. "/script/debugger.lua", path)
+		: attach {}
+		: event("setThreadName", "IO thread")
+		: event "wait"
+end
 
 -- C libs only
 local thread = require "bee.thread"
 local socket = require "bee.socket"
 local platform = require "bee.platform"
 local protocol = require "protocol"
+local fw = require "firmware"
+
+local io_req = thread.channel "IOreq"
+local config, fddata = io_req:bpop()
+
 local QUIT = false
 local OFFLINE = false
 
@@ -20,10 +37,7 @@ local channelfd = fddata and socket.fd(fddata) or nil
 
 thread.setname "ant - IO thread"
 
-local status = {}
 local repo
-
-local io_req
 
 local connection = {
 	request = {},
@@ -75,29 +89,28 @@ local function init_channels()
 end
 
 local function init_repo()
-	local vfs = assert(loadfile(config.vfspath))()
+	local vfs = assert(fw.loadfile "vfs.lua")()
 	repo = vfs.new(config.repopath)
-	status.repo = repo
 end
 
 local function connect_server(address, port)
 	print("Connecting", address, port)
 	local fd, err = socket "tcp"
 	if not fd then
-		_print("[ERROR] socket: "..err)
+		_print("[ERROR]: "..err)
 		return
 	end
 	local ok
 	ok, err = fd:connect(address, port)
 	if ok == nil then
 		fd:close()
-		_print("[ERROR] connect: "..err)
+		_print("[ERROR]: "..err)
 		return
 	end
 	if ok == false then
 		local rd,wt = socket.select(nil, {fd})
 		if not rd then
-			_print("[ERROR] select: "..wt)	-- select error
+			_print("[ERROR]: "..wt)	-- select error
 			fd:close()
 			return
 		end
@@ -105,7 +118,7 @@ local function connect_server(address, port)
 	local ok, err = fd:status()
 	if not ok then
 		fd:close()
-		_print("[ERROR] status: "..err)
+		_print("[ERROR]: "..err)
 		return
 	end
 	print("Connected")
@@ -266,8 +279,6 @@ local function request_send(...)
 	end
 	connection_send(...)
 end
-
-status.request = request_start
 
 local function request_complete(args, ok, err)
 	local list = connection.request[args]
@@ -730,7 +741,8 @@ local function ltask_ready()
 end
 
 local function ltask_init()
-	assert(loadfile "/engine/task/service/service.lua")(true)
+	local vfs = require "vfs"
+	assert(vfs.loadfile "/engine/task/service/service.lua")(true)
 	ltask = require "ltask"
 	ltask.dispatch(S)
 	local waitfunc, fd = exclusive.eventinit()
@@ -767,9 +779,6 @@ local function work_online()
 	request_send("SHAKEHANDS")
 	request_send("ROOT")
 	while not QUIT do
-		if host.update(status) then
-			break
-		end
 		local ok, err = event_select()
 		if ok == nil then
 			_print("[ERROR] Connection Error: "..err)
@@ -778,16 +787,7 @@ local function work_online()
 	end
 end
 
-if not host then
-	init_channels()
-	host = {}
-	function host.update(_)
-	end
-	function host.exit(_)
-		print("Working offline")
-		work_offline()
-	end
-end
+init_channels()
 
 local function init_event()
 	local result = {}
@@ -861,7 +861,6 @@ local function main()
 	if config.address then
 		connection.fd = wait_server()
 		if connection.fd then
-			status.fd = connection.fd
 			init_event()
 			work_online()
 			event_delr(connection.fd)
@@ -879,7 +878,8 @@ local function main()
 	if QUIT then
 		return
 	end
-	host.exit(status)
+	print("Working offline")
+	work_offline()
 end
 
 main()

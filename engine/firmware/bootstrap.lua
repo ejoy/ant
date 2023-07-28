@@ -48,7 +48,6 @@ end
 
 local config = {
 	repopath = "./",
-	vfspath = "vfs.lua",
 	socket = nil,
 	nettype = nil,
 	address = nil,
@@ -81,46 +80,50 @@ elseif type == "remote" then
 elseif type == "offline" then
 end
 
-local fw = require "firmware"
-local host = {}
-local bootloader
-local first = true
-local quit
-function host.update(apis)
-	if first then
-		first = false
-		apis.request("FETCH", "/engine", {
-			resolve = function ()
-				quit = true
-			end,
-			reject = function (_, errmsg)
-				error(errmsg)
-			end,
-		})
-	end
-	if quit then
-		return true
-	end
+local _dofile = dofile
+function dofile(path)
+    local f = assert(io.open(path))
+    local str = f:read "a"
+    f:close()
+    return assert(load(str, "@" .. path))()
 end
-function host.exit(apis)
-	if apis.fd then
-		if config.nettype == "listen" then
-			config.socket = apis.fd:detach()
-		else
-			apis.fd:close()
-		end
-	end
-	bootloader = assert(apis.repo:realpath '/engine/firmware/bootloader.lua')
+local i = 1
+while true do
+    if arg[i] == '-e' then
+        i = i + 1
+        assert(arg[i], "'-e' needs argument")
+        load(arg[i], "=(expr)")()
+    elseif arg[i] == nil then
+        break
+    end
+    i = i + 1
 end
-assert(fw.loadfile "io.lua")(fw.loadfile, config, host)
+dofile = _dofile
 
-local function loadfile(path, name)
-	local f = io.open(path)
-	if not f then
-		return nil, ('%s:No such file or directory.'):format(name)
-	end
-	local str = f:read 'a'
-	f:close()
-	return load(str, "@/" .. name)
+local boot = require "ltask.bootstrap"
+local vfs = require "vfs"
+local thread = require "bee.thread"
+local socket = require "bee.socket"
+
+thread.newchannel "IOreq"
+
+local s, c = socket.pair()
+local io_req = thread.channel "IOreq"
+io_req:push(config, s:detach())
+
+vfs.iothread = boot.preinit [[
+-- IO thread
+local fw = require "firmware"
+assert(fw.loadfile "io.lua")()
+]]
+
+vfs.initfunc("init_thread.lua", c:detach())
+
+local function dofile(path)
+    local f, err = vfs.loadfile(path)
+    if not f then
+        error(err)
+    end
+    return f()
 end
-assert(loadfile(bootloader, '/engine/firmware/bootloader.lua'))(config)
+dofile "/main.lua"
