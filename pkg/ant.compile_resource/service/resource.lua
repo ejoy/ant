@@ -1,12 +1,14 @@
 local ltask   = require "ltask"
-local bgfx    = require "bgfx"
-local cr      = require "thread.compile"
-local texture = require "thread.texture"
-require "thread.material"
 import_package "ant.service".init_bgfx()
 
+local bgfx = require "bgfx"
 bgfx.init()
+
+local cr = require "thread.compile"
 cr.init()
+
+local texture = require "thread.texture"
+require "thread.material"
 
 local S = require "thread.main"
 
