@@ -201,6 +201,7 @@ namespace ecs_api {
     struct find_t {};
     struct create_t {};
     struct first_t {};
+    struct index_t {};
 
     template <typename Context, typename MainKey, typename ...SubKey>
     struct basic_entity {
@@ -244,6 +245,25 @@ namespace ecs_api {
         basic_entity(first_t, ecs_context* ctx) noexcept
             : ctx(context::create(ctx)) {
             next();
+        }
+        template <typename ...Args>
+            requires (
+                sizeof...(SubKey) == 0
+            )
+        basic_entity(index_t, ecs_context* c, int idx) noexcept
+            : ctx(context::create(c))
+            , index(idx) {
+            if constexpr (is_tag<MainKey>) {
+                ctx.template next<MainKey>(index, token);
+            }
+            else {
+                auto v = ctx.template fetch<MainKey>(index, token);
+                if (!v) {
+                    index = kInvalidIndex;
+                    return;
+                }
+                assgin<0>(v);
+            }
         }
         bool fetch_sibiling(int id) noexcept {
             if constexpr (sizeof...(SubKey) == 0) {
@@ -491,6 +511,11 @@ namespace ecs_api {
         requires (component_id<Component> == EntityID)
     auto find_entity(ecs_context* ctx, Component eid) noexcept {
         return entity<Component>(find_t {}, ctx, eid);
+    }
+
+    template <typename Component>
+    auto index_entity(ecs_context* ctx, int index) noexcept {
+        return entity<Component>(index_t {}, ctx, index);
     }
 
     template <typename Component>
