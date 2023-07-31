@@ -1,6 +1,7 @@
 local boot = require "ltask.bootstrap"
 local ltask = require "ltask"
 local vfs = require "vfs"
+local fs = require "filesystem"
 
 local SERVICE_ROOT <const> = 1
 local MESSSAGE_SYSTEM <const> = 0
@@ -50,6 +51,11 @@ local function toclose(f)
 	return setmetatable({}, {__close=f})
 end
 
+local function readall(filename)
+	local f <close> = assert(fs.open(fs.path(filename), "rb"))
+	return f:read "a"
+end
+
 local function init(c)
 	config = c
 	if config.service_path then
@@ -59,6 +65,8 @@ local function init(c)
 	end
 	config.lua_cpath = config.lua_cpath or package.cpath
 
+
+	local servicelua = readall "/engine/task/service/service.lua"
 
 	local initstr = ""
 
@@ -82,9 +90,7 @@ dbg_dofile(path .. "/script/debugger.lua", path)
 ]]
 	end
 
-config.init_service = initstr .. [[
-dofile "/engine/task/service/service.lua"
-]]
+config.init_service = initstr .. servicelua
 
 	config.preload = [[
 package.path = "/engine/?.lua"
