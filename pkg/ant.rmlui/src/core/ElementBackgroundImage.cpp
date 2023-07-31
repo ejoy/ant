@@ -161,15 +161,14 @@ bool ElementBackground::GenerateImageGeometry(Element* element, Geometry& geomet
 			auto lattice_y1 = element->GetComputedProperty(PropertyId::BackgroundLatticeY1)->Get<PropertyFloat>().value / 100.0f;
 			auto lattice_x2 = element->GetComputedProperty(PropertyId::BackgroundLatticeX2)->Get<PropertyFloat>().value / 100.0f;
 			auto lattice_y2 = element->GetComputedProperty(PropertyId::BackgroundLatticeY2)->Get<PropertyFloat>().value / 100.0f;
-			if(lattice_y1 <= 0){lattice_y1 = lattice_x1;}
-			if(lattice_x2 <= 0){lattice_x2 = lattice_x1;}
-			if(lattice_y2 <= 0){lattice_y2 = lattice_y1;}
+			auto lattice_u = element->GetComputedProperty(PropertyId::BackgroundLatticeU)->Get<PropertyFloat>().value / 100.0f;
+			auto lattice_v = element->GetComputedProperty(PropertyId::BackgroundLatticeV)->Get<PropertyFloat>().value / 100.0f;			
 			std::vector<Rect> surface_array(9);
 			std::vector<Rect> uv_array(9);
 			GetRectArray(lattice_x1, lattice_y1, lattice_x2, lattice_y2, surface, surface_array);
-			float uw = (texture.dimensions.w - 2.f) / texture.dimensions.w * 0.5f;
-			float vh = (texture.dimensions.h - 2.f) / texture.dimensions.h * 0.5f;
-			GetRectArray(uw, uw, vh, vh, uv, uv_array);
+			float ur = 1.f - lattice_u - 2.f / texture.dimensions.w;
+			float vb = 1.f - lattice_v - 2.f / texture.dimensions.h;
+			GetRectArray(lattice_u, lattice_v, ur, vb, uv, uv_array);
 			for(int idx = 0; idx < 9; ++idx){
 				geometry.AddRectFilled(surface_array[idx], color);
 				geometry.UpdateUV(4, surface_array[idx], uv_array[idx]);

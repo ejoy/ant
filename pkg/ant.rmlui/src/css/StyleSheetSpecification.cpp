@@ -760,7 +760,13 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 	RegisterProperty(PropertyId::BackgroundLatticeY2, "background-lattice-y2", "0%")
 		.AddParser("keyword", "top, center, bottom")
 		.AddParser("length_percent");
-	RegisterShorthand(ShorthandId::BackgroundLattice, "background-lattice", "background-lattice-x1, background-lattice-y1, background-lattice-x2, background-lattice-y2", ShorthandType::FallThrough);
+	RegisterProperty(PropertyId::BackgroundLatticeU, "background-lattice-u", "0%")
+		.AddParser("keyword", "top, center, bottom")
+		.AddParser("length_percent");
+	RegisterProperty(PropertyId::BackgroundLatticeV, "background-lattice-v", "0%")
+		.AddParser("keyword", "top, center, bottom")
+		.AddParser("length_percent");
+	RegisterShorthand(ShorthandId::BackgroundLattice, "background-lattice", "background-lattice-x1, background-lattice-y1, background-lattice-x2, background-lattice-y2, background-lattice-u, background-lattice-v", ShorthandType::FallThrough);
 
 	RegisterProperty(PropertyId::BackgroundRepeat, "background-repeat", "repeat")
 		.AddParser("keyword", "repeat, repeat-x, repeat-y, no-repeat");

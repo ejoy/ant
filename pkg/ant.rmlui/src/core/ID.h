@@ -118,6 +118,8 @@ enum class PropertyId : uint8_t {
 	BackgroundLatticeY1,
 	BackgroundLatticeX2,
 	BackgroundLatticeY2,
+	BackgroundLatticeU,
+	BackgroundLatticeV,	
 	BackgroundOrigin,
 	BackgroundSize,
 	BackgroundSizeX,
