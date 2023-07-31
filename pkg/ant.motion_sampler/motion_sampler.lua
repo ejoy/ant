@@ -9,7 +9,6 @@ local lms   = ecs.clibs "motion.sampler"
 local ltween = require "motion.tween"
 
 local itimer= ecs.import.interface "ant.timer|itimer"
-local iom   = ecs.import.interface "ant.objcontroller|iobj_motion"
 
 local motion_sampler_group<const> = 101010
 
@@ -31,22 +30,32 @@ local function print_keyframes(keyframes)
     end
 end
 
-function mss:component_init()
-    for e in w:select "INIT motion_sampler:in" do
-        local ms = e.motion_sampler
-
-        w:extend(e, "name?in")
-        ms.motion_tracks = lms.create_tracks(ms.keyframes)
-
-        ms.ratio = 0
-        if ms.duration then
-            if ms.duration >= 0 then
-                ms.deltatime = 0
-            end
-        else
-            ms.duration = -1
-        end
+local msc = ecs.component "motion_sampler"
+function msc.init(v)
+    local m = {}
+    m.motion_tracks = lms.create_tracks(v.keyframes)
+    m.ratio = 0
+    m.current = 0
+    m.duration = v.duration or -1
+    m.is_tick = 0
+    m.stop = 0
+    if m.duration >= 0 then
+        m.tween_in = ltween.type(v.tween_in)
+        m.tween_out = ltween.type(v.tween_in)
+    else
+        m.tween_in = ltween.type "None"
+        m.tween_out = ltween.type "None"
     end
+    return m
+end
+
+function msc.remove(v)
+    lms.destroy_tracks(v.motion_tracks)
+    v.motion_tracks = lms.null()
+end
+
+function mss:component_init()
+
 end
 
 local STOP_SYSTEM
@@ -55,40 +64,7 @@ function mss:do_motion_sample()
     if STOP_SYSTEM then
         return 
     end
-    local g = ecs.group(motion_sampler_group)
-    g:enable "motion_sampler_tag"
-    ecs.group_flush()
-
-    local dt = itimer.delta()
-    for e in w:select "motion_sampler_tag motion_sampler:update scene_needchange?update" do
-        local ms = e.motion_sampler
-
-        local needupdate = true
-        if ms.duration >= 0 then
-            needupdate = ms.deltatime <= ms.duration and (not ms.stop)
-            if needupdate then
-                ms.deltatime = ms.deltatime + (ms.istick and 1 or dt)
-                ms.ratio = ltween.interp(math.min(1.0, ms.deltatime / ms.duration), ms.tween_in, ms.tween_out)
-            end
-        end
-
-        if needupdate then
-            w:extend(e, "scene:update")
-            local s, r, t = ms.motion_tracks:sample(ms.ratio)
-            if s then
-                iom.set_scale(e, s)
-            end
-
-            if r then
-                iom.set_rotation(e, r)
-            end
-
-            if t then
-                iom.set_position(e, t)
-            end
-            e.scene_needchange = true
-        end
-    end
+    lms.sample(motion_sampler_group, itimer.delta())
 end
 
 local ims = ecs.interface "imotion_sampler"
@@ -97,15 +73,18 @@ function ims.sampler_group()
     return ecs.group(motion_sampler_group)
 end
 
+
 function ims.set_duration(e, duration, start, istick)
-    w:extend(e, "motion_sampler:in")
+    w:extend(e, "motion_sampler:update")
     e.motion_sampler.duration = duration
-    e.motion_sampler.deltatime = start or 0
-    e.motion_sampler.istick = istick
+    if duration >= 0 then
+        e.motion_sampler.current = start or 0
+        e.motion_sampler.is_tick = istick
+    end
 end
 
 function ims.set_tween(e, tween_in, tween_out)
-    w:extend(e, "motion_sampler:in")
+    w:extend(e, "motion_sampler:update")
     local ms = e.motion_sampler
     ms.tween_in = tween_in
     ms.tween_out = tween_out
@@ -127,7 +106,7 @@ function ims.set_keyframes(e, ...)
     end
 
     if c > 0 then
-        ms.motion_tracks:build(keyframes)
+        lms:build_tracks(ms.motion_tracks, keyframes)
     end
 end
 

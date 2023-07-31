@@ -233,7 +233,7 @@ local function drawindirect_test()
         data = {
             mesh = "/pkg/ant.test.features/mountain1.glb|meshes/Cylinder.002_P1.meshbin",
             scene = {s = {0.125, 0.125, 0.125}, t = {5, 0, 5}},
-            material = "/pkg/ant.test.features/mountain1.glb|materials/Material_clr.material",
+            material = "/pkg/ant.test.features/mountain1.glb|materials/Material_c.material",
             --material = "/pkg/ant.test.features/assets/pbr_test.material",
             visible_state = "main_view",
             name = "test",
@@ -353,12 +353,11 @@ local function motion_sampler_test()
 
     g:enable "view_visible"
 
---[[     local p = g:create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", eid)
+    local p = g:create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", eid)
     p.on_ready = function (e)
         
     end
-
-    world:create_object(p) ]]
+    world:create_object(p)
 end
 
 local canvas_eid
