@@ -61,7 +61,8 @@ function vfs.send(...)
 end
 
 function vfs.switch()
-	send("SWITCH")
+	local servicelua = "/engine/task/service/service.lua"
+	send("SWITCH", servicelua, vfs.realpath(servicelua))
 end
 
 if __ANT_RUNTIME__ then

@@ -694,10 +694,6 @@ local function dispatch(ok, id, cmd, ...)
 		print("[ERROR] Unsupported command : ", cmd)
 	else
 		f(id, ...)
-		--local ok, err = xpcall(f, debug.traceback, ...)
-		--if not ok then
-		--	print(err)
-		--end
 	end
 	return true
 end
@@ -737,9 +733,31 @@ local function ltask_ready()
 	return coroutine.yield() == nil
 end
 
-local function ltask_init()
-	local vfs = require "vfs"
-	assert(vfs.loadfile "/engine/task/service/service.lua")(true)
+local function ltask_loadfile(path, realpath)
+	local f, err, ec = io.open(realpath, 'rb')
+	if not f then
+		local function errmsg(err, filename, real_filename)
+			local first, last = err:find(real_filename, 1, true)
+			if not first then
+				return err
+			end
+			return err:sub(1, first-1) .. filename .. err:sub(last+1)
+		end
+		err = errmsg(err, path, realpath)
+		return nil, err, ec
+	end
+	local str = f:read 'a'
+	f:close()
+	local supportFirmware = package.preload.firmware ~= nil
+	if supportFirmware then
+		return load(str, '@' .. path)
+	else
+		return load(str, '@' .. realpath)
+	end
+end
+
+local function ltask_init(path, realpath)
+	assert(ltask_loadfile(path, realpath))(true)
 	ltask = require "ltask"
 	ltask.dispatch(S)
 	local waitfunc, fd = exclusive.eventinit()
@@ -757,11 +775,11 @@ local function ltask_init()
 	end)
 end
 
-function CMD.SWITCH()
+function CMD.SWITCH(_, path, realpath)
 	while not ltask_ready() do
 		exclusive.sleep(1)
 	end
-	ltask_init()
+	ltask_init(path, realpath)
 end
 
 local function work_offline()
@@ -784,7 +802,19 @@ local function work_online()
 	end
 end
 
-init_channels()
+local function init_channelfd()
+	if rdfunc[channelfd] then
+		return
+	end
+	event_addr(channelfd, function (fd)
+		if nil == fd:recv() then
+			event_delr(fd)
+			return
+		end
+		while dispatch(io_req:pop()) do
+		end
+	end)
+end
 
 local function init_event()
 	local result = {}
@@ -811,6 +841,7 @@ local function init_event()
 						dispatch_net(table.unpack(req))
 					end
 					reqs = nil
+					init_channelfd()
 				end
 			else
 				dispatch_net(table.unpack(result))
@@ -846,25 +877,17 @@ local function init_event()
 end
 
 local function main()
+	init_channels()
 	init_repo()
-	event_addr(channelfd, function (fd)
-		if nil == fd:recv() then
-			event_delr(fd)
-			return
-		end
-		while dispatch(io_req:pop()) do
-		end
-	end)
-	if config.address then
-		connection.fd = wait_server()
-		if connection.fd then
-			init_event()
-			work_online()
-			event_delr(connection.fd)
-			event_delw(connection.fd)
-			-- socket error or closed
-		end
+	connection.fd = wait_server()
+	if connection.fd then
+		init_event()
+		work_online()
+		event_delr(connection.fd)
+		event_delw(connection.fd)
+		-- socket error or closed
 	end
+	init_channelfd()
 	local uncomplete_req = {}
 	for hash in pairs(connection.request) do
 		table.insert(uncomplete_req, hash)
