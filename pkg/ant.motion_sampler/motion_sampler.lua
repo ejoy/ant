@@ -67,7 +67,7 @@ function mss:do_motion_sample()
         if ms.duration >= 0 then
             needupdate = ms.deltatime <= ms.duration and (not ms.stop)
             if needupdate then
-                ms.deltatime = ms.deltatime + dt
+                ms.deltatime = ms.deltatime + (ms.istick and 1 or dt)
                 ms.ratio = ltween.interp(math.min(1.0, ms.deltatime / ms.duration), ms.tween_in, ms.tween_out)
             end
         end
@@ -97,10 +97,11 @@ function ims.sampler_group()
     return ecs.group(motion_sampler_group)
 end
 
-function ims.set_duration(e, duration)
+function ims.set_duration(e, duration, start, istick)
     w:extend(e, "motion_sampler:in")
     e.motion_sampler.duration = duration
-    e.motion_sampler.deltatime = duration >= 0 and 0 or nil
+    e.motion_sampler.deltatime = start or 0
+    e.motion_sampler.istick = istick
 end
 
 function ims.set_tween(e, tween_in, tween_out)
