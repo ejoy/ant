@@ -1,19 +1,20 @@
+#include "tween.h"
+
 #include "lua.hpp"
 
 #include <cmath>
 #include <cstring>
 
-enum tween_type { None, Back, Bounce, Circular, Cubic, Elastic, Exponential, Linear, Quadratic, Quartic, Quintic, Sine };
 const float kPI = 3.141592f;
-inline float square(float t) {
+static inline float square(float t) {
     return t * t;
 }
 
-float back(float t) {
+static inline float back(float t) {
     return t * t * (2.70158f * t - 1.70158f);
 }
 
-float bounce(float t) {
+static inline float bounce(float t) {
     if (t > 1.f - 1.f / 2.75f)
         return 1.f - 7.5625f * square(1.f - t);
     else if (t > 1.f - 2.f / 2.75f)
@@ -23,47 +24,47 @@ float bounce(float t) {
     return 1.0f - (7.5625f * square(1.f - t - 2.625f / 2.75f) + 0.984375f);
 }
 
-float circular(float t) {
+static inline float circular(float t) {
     return 1.f - sqrtf(1.f - t * t);
 }
 
-float cubic(float t) {
+static inline float cubic(float t) {
     return t * t * t;
 }
 
-float elastic(float t) {
+static inline float elastic(float t) {
     if (t == 0) return t;
     if (t == 1) return t;
     return -expf(7.24f * (t - 1.f)) * sinf((t - 1.1f) * 2.f * kPI / 0.4f);
 }
 
-float exponential(float t) {
+static inline float exponential(float t) {
     if (t == 0) return t;
     if (t == 1) return t;
     return expf(7.24f * (t - 1.f));
 }
 
-float linear(float t) {
+static inline float linear(float t) {
     return t;
 }
 
-float quadratic(float t) {
+static inline float quadratic(float t) {
     return t * t;
 }
 
-float quartic(float t) {
+static inline float quartic(float t) {
     return t * t * t * t;
 }
 
-float quintic(float t) {
+static inline float quintic(float t) {
     return t * t * t * t * t;
 }
 
-float sine(float t) {
+static inline float sine(float t) {
     return 1.f - cosf(t * kPI * 0.5f);
 }
 
-float do_tween(tween_type type, float t) {
+static inline float do_tween(tween_type type, float t) {
     switch (type) {
     case Back: return back(t);
     case Bounce: return bounce(t);
@@ -82,15 +83,15 @@ float do_tween(tween_type type, float t) {
     return t;
 }
 
-float tween_in(tween_type type_in, float t) {
+static inline float tween_in(tween_type type_in, float t) {
     return do_tween(type_in, t);
 }
 
-float tween_out(tween_type type_out, float t) {
+static inline float tween_out(tween_type type_out, float t) {
     return 1.0f - do_tween(type_out, 1.0f - t);
 }
 
-float tween_in_out(tween_type type_in, tween_type type_out, float t) {
+static inline float tween_in_out(tween_type type_in, tween_type type_out, float t) {
     if (t < 0.5f)
         return do_tween(type_in, 2.0f * t) * 0.5f;
     else

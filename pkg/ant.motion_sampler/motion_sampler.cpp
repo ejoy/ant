@@ -2,6 +2,9 @@
 #include "ecs/select.h"
 #include "ecs/component.hpp"
 
+#include "tween.h"
+#include "mathid.h"
+
 #include "ozz/animation/runtime/track_sampling_job.h"
 #include "ozz/animation/offline/raw_track.h"
 #include "ozz/animation/offline/track_builder.h"
@@ -23,23 +26,6 @@ struct motion_keyframe {
 	ozz::animation::offline::RawQuaternionTrack::Keyframe	r;
 	ozz::animation::offline::RawFloat3Track::Keyframe		t;
 };
-
-static inline motion_tracks*
-MT(lua_State *L, int index = 1){
-	return (motion_tracks*)luaL_checkudata(L, index, "TRACKS_MT");
-}
-
-static int
-ltracks_delete(lua_State *L){
-	auto mt = MT(L);
-
-	mt->s = nullptr;
-	mt->r = nullptr;
-	mt->t = nullptr;
-
-	mt->~motion_tracks();
-	return 0;
-}
 
 static inline motion_keyframe
 extract_keyframe(lua_State *L, int index, ecs_world* w){
@@ -82,61 +68,6 @@ extract_keyframe(lua_State *L, int index, ecs_world* w){
 	return kf;
 }
 
-static inline void *
-MATH_TO_HANDLE(math_t id) {
-	return (void *)id.idx;
-}
-
-static inline void
-lua_pushmath(lua_State *L, math_t id) {
-	lua_pushlightuserdata(L, MATH_TO_HANDLE(id));
-}
-
-static int
-ltracks_sample(lua_State *L){
-	auto mt = MT(L);
-	auto w = getworld(L);
-	const float ratio = (float)luaL_checknumber(L, 2);
-	const auto M = w->math3d->M;
-
-	auto sample_track = [L](auto track, float ratio, const char* errmsg, auto tomathid){
-		using TrackType = std::remove_pointer_t<decltype(track)>;
-
-		if (track){
-			typename TrackType::ValueType result;
-			ozz::animation::internal::TrackSamplingJob<TrackType> job;
-			job.track = track;
-			job.result = &result;
-			job.ratio = ratio;
-			if (!job.Run()){
-				luaL_error(L, errmsg);
-			}
-
-			lua_pushmath(L, tomathid(result));
-		} else {
-			lua_pushnil(L);
-		}
-	};
-
-	ozz::animation::Float3Track track;
-
-	sample_track(mt->s.get(), ratio, "Sampling scale track failed", [M](const ozz::math::Float3 &result){
-		float v[] = {result.x, result.y, result.z, 0.f};
-		return math_vec4(M, v);
-	});
-
-	sample_track(mt->r.get(), ratio, "Sampling rotation track failed", [M](const ozz::math::Quaternion &result){
-		return math_quat(M, &result.x);
-	});
-
-	sample_track(mt->t.get(), ratio, "Sampling translation track failed", [M](const ozz::math::Float3 &result){
-		float v[] = {result.x, result.y, result.z, 1.f};
-		return math_vec4(M, v);
-	});
-
-	return 3;
-}
-
 static inline void
 build_tracks(lua_State *L, ecs_world *w, int index, motion_tracks *mt){
 	luaL_checktype(L, index, LUA_TTABLE);
@@ -165,46 +96,112 @@ build_tracks(lua_State *L, ecs_world *w, int index, motion_tracks *mt){
 }
 
 static int
-ltracks_build(lua_State *L){
-	auto mt = MT(L);
+lcreate_tracks(lua_State *L){
+	auto mt = new motion_tracks;
 	auto w = getworld(L);
-	build_tracks(L, w, 2, mt);
-	return 0;
-}
-
-static inline void
-check_ecs_world_in_upvalue1(lua_State *L){
-	luaL_checkstring(L, lua_upvalueindex(1));
+	build_tracks(L, w, 1, mt);
+	lua_pushlightuserdata(L, mt);
+	return 1;
 }
 
 static int
-lcreate_tracks(lua_State *L){
-	auto mt = (motion_tracks*)lua_newuserdatauv(L, sizeof(motion_tracks), 0);
-	new (mt) motion_tracks();
-
+lbuild_tracks(lua_State *L){
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	auto mt = (struct motion_tracks*)lua_touserdata(L, 1);
 	auto w = getworld(L);
-	if (!lua_isnoneornil(L, 1)){
-		build_tracks(L, w, 1, mt);
-	}
+	build_tracks(L, w, 2, mt);
+	return 0;
 
-	if (luaL_newmetatable(L, "TRACKS_MT")){
+}
 
-		luaL_Reg l[] = {
-			{ "sample",		ltracks_sample},
-			{ "build",		ltracks_build},
-			{ "__gc",		ltracks_delete},
-			{ nullptr, 		nullptr},
-		};
-		check_ecs_world_in_upvalue1(L);
-		lua_pushvalue(L, lua_upvalueindex(1));
-		luaL_setfuncs(L, l, 1);
-
-		lua_pushvalue(L, -1);
-		lua_setfield(L, -2, "__index");
-	}
-
-	lua_setmetatable(L, -2);
+static int
+lnull_tracks(lua_State *L){
+	lua_pushlightuserdata(L, nullptr);
 	return 1;
+}
+
+static int
+ldestory_tracks(lua_State *L){
+	luaL_checktype(L, 1, LUA_TLIGHTUSERDATA);
+	auto mt = (struct motion_tracks*)lua_touserdata(L, 1);
+	delete mt;
+	return 0;
+}
+
+static int lsample(lua_State *L){
+	auto w = getworld(L);
+
+	const int gid = luaL_checkinteger(L, 1);
+	const float delta = luaL_checknumber(L, 2);
+
+	int gids[] = {gid};ecs_api::group_enable<ecs::motion_sampler_tag>(w->ecs, gids);
+	
+	for (auto& e : ecs_api::select<ecs::motion_sampler_tag, ecs::motion_sampler, ecs::scene>(w->ecs)) {
+		auto &ms = e.get<ecs::motion_sampler>();
+        bool needupdate = true;
+        if (ms.duration >= 0){
+            needupdate = ms.current <= ms.duration && (!ms.stop);
+            if (needupdate){
+                ms.current = ms.current + (ms.is_tick ? 1.f : delta);
+                ms.ratio = tween(std::min(1.f, ms.current / ms.duration), (tween_type)ms.tween_in, (tween_type)ms.tween_out);
+			}
+		}
+
+        if (needupdate){
+			auto mt = (struct motion_tracks*)ms.motion_tracks;
+			if (mt == nullptr){
+				return luaL_error(L, "Invalid motion_sampler, need motion_tracks");
+			}
+
+			auto &scene = e.get<ecs::scene>();
+
+			auto M = w->math3d->M;
+
+			if (mt->s.get()){
+				ozz::animation::Float3TrackSamplingJob job;
+				ozz::math::Float3 s;
+				job.track = mt->s.get();
+				job.result = &s;
+				job.ratio = ms.ratio;
+				if (!job.Run()){
+					luaL_error(L, "Sampling scale failed");
+				}
+
+				math_unmark(M, scene.s);
+				scene.s = math_mark(M, math_import(M, &s.x, MATH_TYPE_VEC4, 1));
+			}
+
+			if (mt->r.get()){
+				ozz::animation::QuaternionTrackSamplingJob job;
+				ozz::math::Quaternion r;
+				job.track = mt->r.get();
+				job.result = &r;
+				job.ratio = ms.ratio;
+				if (!job.Run()){
+					luaL_error(L, "Sampling rotation failed");
+				}
+
+				math_unmark(M, scene.r);
+				scene.r = math_mark(M, math_import(M, &r.x, MATH_TYPE_QUAT, 1));
+			}
+
+			if (mt->t.get()){
+				ozz::animation::Float3TrackSamplingJob job;
+				ozz::math::Float3 t;
+				job.track = mt->t.get();
+				job.result = &t;
+				job.ratio = ms.ratio;
+				if (!job.Run()){
+					luaL_error(L, "Sampling translation failed");
+				}
+
+				math_unmark(M, scene.t);
+				scene.t = math_mark(M, math_import(M, &t.x, MATH_TYPE_VEC4, 1));
+			}
+            e.enable_tag<ecs::scene_needchange>();
+		}
+	}
+	return 0;
 }
 
 extern "C" int
@@ -212,6 +209,10 @@ luaopen_motion_sampler(lua_State *L) {
     luaL_checkversion(L);
 	luaL_Reg l[] = {
 		{ "create_tracks",	lcreate_tracks},
+		{ "build_tracks",	lbuild_tracks},
+		{ "destroy_tracks",	ldestory_tracks},
+		{ "null",			lnull_tracks},
+		{ "sample",			lsample},
 		{ nullptr,			nullptr },
 	};
 	luaL_newlibtable(L,l);

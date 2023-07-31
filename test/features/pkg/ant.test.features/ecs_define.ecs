@@ -24,6 +24,7 @@ system "init_loader_system"
     -- .require_system "ant.test.features|pbr_test_system"
     -- .require_system "ant.test.features|animation_test_system"
     .require_system "ant.test.features|shadow_test_system"
+    .require_system "ant.test.features|motion_sampler_test_system"
     --.require_system "ant.test.features|decal_test_system"
     --.require_system "ant.test.features|water_test_system"
     .require_system "ant.test.features|hitch_node_test_system"
@@ -125,6 +126,10 @@ system "hitch_node_test_system"
     .method "init"
     .method "data_changed"
 
+system "motion_sampler_test_system"
+    .implement "motion_sampler_test.lua"
+    .method "init"
+    .method "data_changed"
 
 
 -- system "dynamic_texture_test_system"

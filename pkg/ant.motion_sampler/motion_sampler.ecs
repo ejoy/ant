@@ -1,7 +1,18 @@
 component "motion_sampler_tag"
 
-component "motion_sampler".type "lua"
-
+component "motion_sampler"
+    .type "c"
+    .field "motion_tracks:userdata"
+    .field "ratio:float"
+    .field "duration:float"
+    .field "current:float"
+    .field "tween_in:byte"
+    .field "tween_out:byte"
+    .field "stop:byte"
+    .field "is_tick:byte"
+    .implement "motion_sampler.lua"
+    .method "init"
+    .method "remove"
 
 policy "motion_sampler"
     .require_system "ant.motion_sampler|motion_sampler_system"

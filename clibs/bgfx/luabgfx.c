@@ -21,7 +21,7 @@
 #include <android/log.h>
 #endif
 
-#if BGFX_API_VERSION != 120
+#if BGFX_API_VERSION != 121
 #   error BGFX_API_VERSION mismatch
 #endif
 
