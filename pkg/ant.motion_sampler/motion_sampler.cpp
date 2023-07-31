@@ -138,6 +138,10 @@ static int lsample(lua_State *L){
 	
 	for (auto& e : ecs_api::select<ecs::motion_sampler_tag, ecs::motion_sampler, ecs::scene>(w->ecs)) {
 		auto &ms = e.get<ecs::motion_sampler>();
+		auto mt = (struct motion_tracks*)ms.motion_tracks;
+		if (nullptr == mt)
+			continue;
+
         bool needupdate = true;
         if (ms.duration >= 0){
             needupdate = ms.current <= ms.duration && (!ms.stop);
@@ -148,11 +152,6 @@ static int lsample(lua_State *L){
 		}
 
         if (needupdate){
-			auto mt = (struct motion_tracks*)ms.motion_tracks;
-			if (mt == nullptr){
-				return luaL_error(L, "Invalid motion_sampler, need motion_tracks");
-			}
-
 			auto &scene = e.get<ecs::scene>();
 
 			auto M = w->math3d->M;

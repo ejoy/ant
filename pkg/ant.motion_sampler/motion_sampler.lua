@@ -33,7 +33,7 @@ end
 local msc = ecs.component "motion_sampler"
 function msc.init(v)
     local m = {}
-    m.motion_tracks = lms.create_tracks(v.keyframes)
+    m.motion_tracks = v.keyframes and lms.create_tracks(v.keyframes) or lms.null()
     m.ratio = 0
     m.current = 0
     m.duration = v.duration or -1
@@ -79,7 +79,7 @@ function ims.set_duration(e, duration, start, istick)
     e.motion_sampler.duration = duration
     if duration >= 0 then
         e.motion_sampler.current = start or 0
-        e.motion_sampler.is_tick = istick
+        e.motion_sampler.is_tick = istick and 1 or 0
     end
 end
 
@@ -106,7 +106,12 @@ function ims.set_keyframes(e, ...)
     end
 
     if c > 0 then
-        lms:build_tracks(ms.motion_tracks, keyframes)
+        if ms.motion_tracks == lms.null() then
+            ms.motion_tracks = lms.create_tracks(keyframes)
+        else
+            lms.build_tracks(ms.motion_tracks, keyframes)
+        end
+        
     end
 end
 
