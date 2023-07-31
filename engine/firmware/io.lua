@@ -166,9 +166,6 @@ local function listen_server(address, port)
 end
 
 local function wait_server()
-	if config.socket then
-		return socket.fd(config.socket)
-	end
 	if config.nettype == nil then
 		return
 	end
