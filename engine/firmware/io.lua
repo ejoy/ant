@@ -88,9 +88,23 @@ local function init_channels()
 	end
 end
 
-local function init_repo()
-	local vfs = assert(fw.loadfile "vfs.lua")()
-	repo = vfs.new(config.repopath)
+local function init_repo(hash)
+	if hash then
+		if repo then
+			repo:updatehistory(hash)
+			repo:changeroot(hash)
+		else
+			local vfs = assert(fw.loadfile "vfs.lua")()
+			repo = vfs.new(config.repopath, hash)
+		end
+	else
+		if repo then
+			--do nothing
+		else
+			local vfs = assert(fw.loadfile "vfs.lua")()
+			repo = vfs.new(config.repopath)
+		end
+	end
 end
 
 local function connect_server(address, port)
@@ -322,8 +336,7 @@ function response.ROOT(hash)
 		return
 	end
 	print("[response] ROOT", hash)
-	repo:updatehistory(hash)
-	repo:changeroot(hash)
+	init_repo(hash)
 end
 
 -- REMARK: Main thread may reading the file while writing, if file server update file.
@@ -878,7 +891,6 @@ end
 
 local function main()
 	init_channels()
-	init_repo()
 	connection.fd = wait_server()
 	if connection.fd then
 		init_event()
@@ -887,6 +899,7 @@ local function main()
 		event_delw(connection.fd)
 		-- socket error or closed
 	end
+	init_repo()
 	init_channelfd()
 	local uncomplete_req = {}
 	for hash in pairs(connection.request) do

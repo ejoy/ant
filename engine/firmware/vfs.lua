@@ -40,16 +40,18 @@ local function root_hash(self)
 	end
 end
 
-function vfs.new(repopath)
+function vfs.new(repopath, hash)
 	local repo = {
 		path = repopath:gsub("[/\\]?$","/") .. ".repo/",
 		cache = {},--setmetatable( {} , { __mode = "kv" } ),
 		root = nil,
 	}
 	setmetatable(repo, vfs)
-	local hash = root_hash(repo)
 	if hash then
+		repo:updatehistory(hash)
 		repo:changeroot(hash)
+	else
+		repo:changeroot(root_hash(repo))
 	end
 	return repo
 end
