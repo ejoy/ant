@@ -1,14 +1,11 @@
 local boot = require "ltask.bootstrap"
 local ltask = require "ltask"
-local fs = require "filesystem"
 local vfs = require "vfs"
 
 local SERVICE_ROOT <const> = 1
 local MESSSAGE_SYSTEM <const> = 0
 
 local config
-
-local init_root_service
 
 local function new_service(label, id)
 	local sid = boot.new_service(label, config.init_service, id)
@@ -17,7 +14,7 @@ local function new_service(label, id)
 end
 
 local function root_thread()
-	boot.new_service("root", init_root_service, SERVICE_ROOT)
+	boot.new_service("root", config.init_service, SERVICE_ROOT)
 	boot.init_root(SERVICE_ROOT)
 	-- send init message to root service
 	local init_msg, sz = ltask.pack("init", {
@@ -53,11 +50,6 @@ local function toclose(f)
 	return setmetatable({}, {__close=f})
 end
 
-local function readall(filename)
-	local f <close> = assert(fs.open(fs.path(filename), "rb"))
-	return f:read "a"
-end
-
 local function init(c)
 	config = c
 	if config.service_path then
@@ -67,21 +59,13 @@ local function init(c)
 	end
 	config.lua_cpath = config.lua_cpath or package.cpath
 
-	local servicelua = readall "/engine/task/service/service.lua"
 
 	local initstr = ""
-	if __ANT_RUNTIME__ then
-	else
-		initstr = ([[
-package.cpath = %q
-require "vfs"
-]]):format(package.cpath)
-	end
 
 	local dbg = debug.getregistry()["lua-debug"]
 	if dbg then
 		dbg:event("setThreadName", "Bootstrap")
-		initstr = initstr .. [[
+		initstr = [[
 local ltask = require "ltask"
 local name = ("Service:%d <%s>"):format(ltask.self(), ltask.label() or "unk")
 local function dbg_dofile(filename, ...)
@@ -98,54 +82,12 @@ dbg_dofile(path .. "/script/debugger.lua", path)
 ]]
 	end
 
-	initstr = initstr .. [[
-package.path = "/engine/?.lua"
+config.init_service = initstr .. [[
+dofile "/engine/task/service/service.lua"
 ]]
-
-	init_root_service = initstr .. [[
-local RootLua <const>  = "/engine/task/service/root.lua"
-local f, err = loadfile(RootLua)
-function loadfile(filename)
-	assert(filename == RootLua)
-	return f, err
-end
-]]
-
-if config.support_package then
-	initstr = initstr .. [[
-local rawsearchpath = package.searchpath
-package.searchpath = function(name, path, sep, dirsep)
-	local package, file = name:match "^([^|]*)|(.*)$"
-	if package and file then
-		path = path:gsub("%$%{([^}]*)%}", {
-			package = "/pkg/"..package,
-		})
-		name = file
-	else
-		path = path:gsub("%$%{([^}]*)%}[^;]*;", "")
-	end
-	return rawsearchpath(name, path, sep, dirsep)
-end
-
-local rawloadfile = loadfile
-function loadfile(filename, mode, env)
-	if env == nil then
-		local package, file = filename:match "^/pkg/([^/]+)/(.+)$"
-		if package and file then
-			local pm = require "packagemanager"
-			return rawloadfile(filename, mode or "bt", pm.loadenv(package))
-		end
-		return rawloadfile(filename, mode)
-	end
-	return rawloadfile(filename, mode, env)
-end
-]]
-end
-
-	init_root_service = init_root_service .. servicelua
-	config.init_service = initstr .. servicelua
 
 	config.preload = [[
+package.path = "/engine/?.lua"
 local ltask = require "ltask"
 local vfs = require "vfs"
 local thread = require "bee.thread"
@@ -195,7 +137,36 @@ function vfs.send(...)
 	return send(...)
 end
 ]]
+	if config.support_package then
+		config.preload = config.preload .. [[
+local rawsearchpath = package.searchpath
+package.searchpath = function(name, path, sep, dirsep)
+	local package, file = name:match "^([^|]*)|(.*)$"
+	if package and file then
+		path = path:gsub("%$%{([^}]*)%}", {
+			package = "/pkg/"..package,
+		})
+		name = file
+	else
+		path = path:gsub("%$%{([^}]*)%}[^;]*;", "")
+	end
+	return rawsearchpath(name, path, sep, dirsep)
+end
 
+local rawloadfile = loadfile
+function loadfile(filename, mode, env)
+	if env == nil then
+		local package, file = filename:match "^/pkg/([^/]+)/(.+)$"
+		if package and file then
+			local pm = require "packagemanager"
+			return rawloadfile(filename, mode or "bt", pm.loadenv(package))
+		end
+		return rawloadfile(filename, mode)
+	end
+	return rawloadfile(filename, mode, env)
+end
+]]
+	end
 end
 
 return function (c)
