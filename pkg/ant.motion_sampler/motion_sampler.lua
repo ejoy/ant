@@ -40,8 +40,8 @@ function msc.init(v)
     m.is_tick = 0
     m.stop = 0
     if m.duration >= 0 then
-        m.tween_in = ltween.type(v.tween_in)
-        m.tween_out = ltween.type(v.tween_in)
+        m.tween_in = ltween.type(v.tween_in or "Linear")
+        m.tween_out = ltween.type(v.tween_in or "Linear")
     else
         m.tween_in = ltween.type "None"
         m.tween_out = ltween.type "None"

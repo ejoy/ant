@@ -329,37 +329,6 @@ local function drawindirect_test()
     }    ]] 
 end
 
-local function motion_sampler_test()
-    local g = ims.sampler_group()
-    local eid = g:create_entity {
-        policy = {
-            "ant.scene|scene_object",
-            "ant.motion_sampler|motion_sampler",
-            "ant.general|name",
-        },
-        data = {
-            scene = {},
-            name = "motion_sampler",
-            motion_sampler = {
-                keyframes = {
-                    {r = math3d.quaternion{0.0, 0.0, 0.0}, t = math3d.vector(0.0, 0.0, 0.0), step = 0.0},
-                    {                                      t = math3d.vector(1.0, 0.0, 2.0), step = 0.5},
-                    {r = math3d.quaternion{0.0, 1.2, 0.0}, t = math3d.vector(0.0, 0.0, 2.0), step = 1.0}
-                }
-            }
-        }
-    }
-    sampler_eid = eid
-
-    g:enable "view_visible"
-
-    local p = g:create_instance("/pkg/ant.resources.binary/meshes/Duck.glb|mesh.prefab", eid)
-    p.on_ready = function (e)
-        
-    end
-    world:create_object(p)
-end
-
 local canvas_eid
 local function canvas_test()
     canvas_eid = ecs.create_entity {
@@ -382,8 +351,6 @@ end
 
 local heap_num = 1
 
-
-
 function init_loader_sys:init_world()
 
     for msg in after_init_mb:each() do
@@ -402,7 +369,6 @@ function init_loader_sys:init_world()
     render_layer_test()
     canvas_test()
 
-    motion_sampler_test()
     drawindirect_test()
 end
 
@@ -473,11 +439,6 @@ function init_loader_sys:ui_update()
             }
         )
         elseif key == "P" and press == 0 then
---[[             local e = assert(w:entity(sampler_eid))
-            ims.set_keyframes(e, 
-                {t = math3d.vector(0.0, 0.0, 0.0), 0.0},
-                {t = math3d.vector(0.0, 0.0, 2.0), 1.0}
-            ) ]]
             local sm = w:entity(sm_id, "bounding:in")
             local center, extent = math3d.aabb_center_extents(sm.bounding.aabb)
             local t1, t2 = math3d.tovalue(center), math3d.tovalue(extent)
@@ -508,12 +469,6 @@ function init_loader_sys:data_changed()
         local tenSecondMS<const> = 10000
         local cycle = (itimer.current() % tenSecondMS) / tenSecondMS
         idn.update_cycle(dne, cycle)
-    end
-
-    local mse = w:first "motion_sampler:update"
-    if mse then
-        local tenSecondMS<const> = 10000
-        ims.set_ratio(mse, (itimer.current() % tenSecondMS) / tenSecondMS)
     end
 end
 
