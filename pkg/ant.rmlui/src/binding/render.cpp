@@ -13,6 +13,7 @@
 
 extern "C" {
     #include <textureman.h>
+    #include <programan.h>
     #include "../font/font_manager.h"
 }
 
@@ -147,8 +148,8 @@ private:
 
 class Material : public Rml::Material {
 public:
-    virtual void     Submit(bgfx_encoder_t* encoder) = 0;
-    virtual uint16_t Program(const RenderState& state, const shader& s) = 0;
+    virtual void    Submit(bgfx_encoder_t* encoder) = 0;
+    virtual int     Program(const RenderState& state, const shader& s) = 0;
 };
 
 class TextureMaterial: public Material {
@@ -161,7 +162,7 @@ public:
     void Submit(bgfx_encoder_t* encoder) override {
         tex_uniform.Submit(encoder, flags);
     }
-    uint16_t Program(const RenderState& state, const shader& s) override {
+    int Program(const RenderState& state, const shader& s) override {
         if (state.needShaderClipRect){
             return gray ? s.image_cr_gray : s.image_cr;
         }
@@ -187,7 +188,7 @@ public:
     void Submit(bgfx_encoder_t* encoder) override {
         tex_uniform.Submit(encoder, flags);
     }
-    uint16_t Program(const RenderState& state, const shader& s) override {
+    int Program(const RenderState& state, const shader& s) override {
         if (state.needShaderClipRect){
             return gray ? s.image_cr_gray : s.image_cr;
         }
@@ -216,7 +217,7 @@ public:
         const float distMultiplier = 1.f;
         mask_uniform.Submit(encoder, mask_0, distMultiplier, mask_2);
     }
-    uint16_t Program(const RenderState& state, const shader& s) override {
+    int Program(const RenderState& state, const shader& s) override {
         return state.needShaderClipRect
             ? s.font_cr
             : s.font
@@ -242,7 +243,7 @@ public:
         TextMaterial::Submit(encoder);
         color_uniform.Submit(encoder);
     }
-    uint16_t Program(const RenderState& state, const shader& s) override {
+    int Program(const RenderState& state, const shader& s) override {
         return state.needShaderClipRect
             ? s.font_outline_cr
             : s.font_outline
@@ -268,7 +269,7 @@ public:
         color_uniform.Submit(encoder);
         offset_uniform.Submit(encoder, offset.x / FONT_MANAGER_TEXSIZE, offset.y / FONT_MANAGER_TEXSIZE);
     }
-    uint16_t Program(const RenderState& state, const shader& s) override {
+    int Program(const RenderState& state, const shader& s) override {
         return state.needShaderClipRect
             ? s.font_shadow_cr
             : s.font_shadow
@@ -341,7 +342,7 @@ void Renderer::RenderGeometry(Rml::Vertex* vertices, size_t num_vertices, Rml::I
     Material* material = reinterpret_cast<Material*>(mat);
     material->Submit(mEncoder);
 
-    auto prog = material->Program(state, mcontext->shader);
+    auto prog = program_get(material->Program(state, mcontext->shader));
     const uint8_t discard_flags = ~BGFX_DISCARD_TRANSFORM;
     BGFX(encoder_submit)(mEncoder, mcontext->viewid, { prog }, 0, discard_flags);
 }
