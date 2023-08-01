@@ -460,9 +460,7 @@ local function find_skin_root_idx(skin, nodetree)
 	return root
 end
 
-local joint_trees = {}
-
-local function redirect_skin_joints(gltfscene, skin, joint_index, scenetree)
+local function redirect_skin_joints(gltfscene, skin, joint_index, scenetree, joint_trees)
 	local skeleton_nodeidx = find_skin_root_idx(skin, scenetree)
 
 	if skeleton_nodeidx then
@@ -502,9 +500,11 @@ local function export_skinbin(status, gltfscene, bindata)
 	if skins == nil then
 		return
 	end
+
+	local joint_trees = {}
 	local joint_index = 0
 	for skinidx, skin in ipairs(gltfscene.skins) do
-		joint_index = redirect_skin_joints(gltfscene, skin, joint_index, status.scenetree)
+		joint_index = redirect_skin_joints(gltfscene, skin, joint_index, status.scenetree, joint_trees)
 		local skinname = get_obj_name(skin, skinidx, "skin")
 		local resname = "./meshes/"..skinname .. ".skinbin"
 		utility.save_bin_file(status, resname, fetch_skininfo(gltfscene, skin, bindata))
@@ -689,7 +689,6 @@ end ]]
 
 return function (status)
 	local glbdata = status.glbdata
-	joint_trees = {}
 	export_meshbin(status, glbdata.info, glbdata.bin)
 	export_skinbin(status, glbdata.info, glbdata.bin)
 end
