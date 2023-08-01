@@ -3,7 +3,6 @@ local fs        = require "bee.filesystem"
 local datalist  = require "datalist"
 local fastio    = require "fastio"
 local depends   = require "editor.depends"
-local currentPatch
 
 local m = {}
 
@@ -14,18 +13,18 @@ local function absolute_path(path, base)
     return base:match "^(.-)[^/]*$" .. (path:match "^%./(.+)$" or path)
 end
 
-local function load_patch(depfiles, path)
+local function load_patch(patchLst, depfiles, path)
     depends.add(depfiles, path)
     for _, patch in ipairs(assert(datalist.parse(fastio.readall_s(path)))) do
         if patch.include then
-            load_patch(depfiles, absolute_path(patch.include, path))
+            load_patch(patchLst, depfiles, absolute_path(patch.include, path))
         else
             local file = assert(patch.file)
             patch.file = nil
-            if currentPatch[file] then
-                table.insert(currentPatch[file], patch)
+            if patchLst[file] then
+                table.insert(patchLst[file], patch)
             else
-                currentPatch[file] = {patch}
+                patchLst[file] = {patch}
             end
         end
     end
@@ -33,16 +32,17 @@ end
 
 function m.init(input, depfiles)
     local path = input..".patch"
-    currentPatch = {}
     if not fs.exists(path) then
         depends.add(depfiles, path)
-        return
+        return {}
     end
-    load_patch(depfiles, path)
+    local patchLst = {}
+    load_patch(patchLst, depfiles, path)
+    return patchLst
 end
 
-function m.apply(path, data)
-    local patch = currentPatch[path]
+function m.apply(patchLst, path, data)
+    local patch = patchLst[path]
     if not patch then
         return data
     end

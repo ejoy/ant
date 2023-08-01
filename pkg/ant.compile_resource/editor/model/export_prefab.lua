@@ -198,19 +198,19 @@ end
 local DEFAULT_MATERIAL_PATH<const> = lfs.path "/pkg/ant.resources/materials/pbr_default.material"
 local DEFAULT_MATERIAL_INFO
 
-local function has_skin(gltfscene, exports, nodeidx)
+local function has_skin(gltfscene, status, nodeidx)
     local node = gltfscene.nodes[nodeidx+1]
-    if node.skin and next(exports.animations) and exports.skeleton then
+    if node.skin and next(status.animations) and status.skeleton then
         if node.skin then
             return true
         end
     end
 end
 
-local function load_material_info(exports, materialidx, cfg)
+local function load_material_info(status, materialidx, cfg)
     local mi
     if materialidx then
-        mi = assert(exports.material[materialidx+1])
+        mi = assert(status.material[materialidx+1])
     end
 
     if DEFAULT_MATERIAL_INFO == nil then
@@ -223,12 +223,12 @@ local function load_material_info(exports, materialidx, cfg)
     return check_update_material_info(mi or DEFAULT_MATERIAL_INFO, cfg)
 end
 
-local function seri_material(input, output, exports, materialidx, cfg, setting)
-    local em = exports.material
+local function seri_material(input, output, status, materialidx, cfg, setting)
+    local em = status.material
     if em  and #em > 0 then
-        local mi = load_material_info(exports, materialidx, cfg)
+        local mi = load_material_info(status, materialidx, cfg)
         if mi and mi.filename ~= DEFAULT_MATERIAL_PATH then
-            material_compile(exports.tasks, exports.depfiles, mi.material, input, output / mi.filename, setting, function (path)
+            material_compile(status.tasks, status.depfiles, mi.material, input, output / mi.filename, setting, function (path)
                 return fs.path(path):localpath()
             end)
             return mi.filename
@@ -242,22 +242,22 @@ local function read_local_file(materialfile)
     return f:read "a"
 end
 
-local function check_create_skin_material(materialfile)
+local function check_create_skin_material(status, materialfile)
     local n = materialfile:stem():string() .. "_skin"
     local newpath = materialfile:parent_path() / (n .. materialfile:extension())
-    local fullnewpath = utility.full_path(newpath:string())
+    local fullnewpath = utility.full_path(status, newpath:string())
     if lfs.exists(fullnewpath) then
         return newpath
     end
 
-    local lmf = lfs.path(utility.full_path(materialfile:string()))
+    local lmf = lfs.path(utility.full_path(status, materialfile:string()))
     local m = datalist.parse(read_local_file(lmf))
     if nil == m.fx.setting then
         m.fx.setting = {}
     end
 
     m.fx.setting.GPU_SKINNING = 1
-    utility.save_txt_file(newpath:string(), m)
+    utility.save_txt_file(status, newpath:string(), m)
     return newpath
 end
 
@@ -269,7 +269,7 @@ local function has_color_attrib(declname)
     end
 end
 
-local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, exports, setting)
+local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, status, setting)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
     local meshidx = node.mesh
@@ -277,8 +277,8 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
 
     local entity
     for primidx, prim in ipairs(mesh.primitives) do
-        local em = exports.mesh[meshidx+1][primidx]
-        local hasskin = has_skin(gltfscene, exports, nodeidx)
+        local em = status.mesh[meshidx+1][primidx]
+        local hasskin = has_skin(gltfscene, status, nodeidx)
         local mode = prim.mode or 4
         local cfg = {
             hasskin                 = hasskin,                  --NOT define by default
@@ -289,7 +289,7 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
             modename                = assert(PRIMITIVE_MODES[mode+1], "Invalid primitive mode"),
         }
 
-        local materialfile = seri_material(input, output, exports, prim.material, cfg, setting)
+        local materialfile = seri_material(input, output, status, prim.material, cfg, setting)
         local meshfile = em.meshbinfile
         if meshfile == nil then
             error(("not found meshfile in export data:%d, %d"):format(meshidx+1, primidx))
@@ -325,7 +325,7 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
     return entity
 end
 
-local function create_node_entity(math3d, gltfscene, nodeidx, parent, exports)
+local function create_node_entity(math3d, gltfscene, nodeidx, parent, status)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
     local nname = node.name and fix_invalid_name(node.name) or ("node" .. nodeidx)
@@ -337,7 +337,7 @@ local function create_node_entity(math3d, gltfscene, nodeidx, parent, exports)
         name = nname,
         scene = {s=srt.s,r=srt.r,t=srt.t}
     }
-    --add_animation(gltfscene, exports, nodeidx, policy, data)
+    --add_animation(gltfscene, status, nodeidx, policy, data)
     return create_entity {
         policy = policy,
         data = data,
@@ -345,8 +345,8 @@ local function create_node_entity(math3d, gltfscene, nodeidx, parent, exports)
     }
 end
 
-local function create_skin_entity(exports, parent, withanim)
-    if not exports.skeleton or #exports.skin < 1 then
+local function create_skin_entity(status, parent, withanim)
+    if not status.skeleton or #status.skin < 1 then
         return
     end
     local policy = {
@@ -359,8 +359,8 @@ local function create_skin_entity(exports, parent, withanim)
         skinning = true,
         scene = {},
     }
-    data.skeleton = serialize.path(exports.skeleton)
-    data.meshskin = serialize.path(exports.skin[1])
+    data.skeleton = serialize.path(status.skeleton)
+    data.meshskin = serialize.path(status.skin[1])
     return create_entity {
         policy = policy,
         data = data,
@@ -368,7 +368,7 @@ local function create_skin_entity(exports, parent, withanim)
     }
 end
 
-local function create_animation_entity(exports)
+local function create_animation_entity(status)
     local policy = {
         "ant.general|name",
         "ant.animation|animation",
@@ -376,10 +376,10 @@ local function create_animation_entity(exports)
     local data = {
         name = "animation",
     }
-    data.skeleton = serialize.path(exports.skeleton)
+    data.skeleton = serialize.path(status.skeleton)
     data.animation = {}
     local anilst = {}
-    for name, file in pairs(exports.animations) do
+    for name, file in pairs(status.animations) do
         local n = fix_invalid_name(name)
         anilst[#anilst+1] = n
         data.animation[n] = serialize.path(file)
@@ -411,7 +411,13 @@ local function cleanup()
     clean_material_cache()
 end
 
-return function (math3d, input, output, glbdata, exports, setting, localpath)
+return function (status)
+    local input = status.input
+    local output = status.output
+    local glbdata = status.glbdata
+    local setting = status.setting
+    local math3d = status.math3d
+
     cleanup()
     local gltfscene = glbdata.info
     local sceneidx = gltfscene.scene or 0
@@ -431,10 +437,10 @@ return function (math3d, input, output, glbdata, exports, setting, localpath)
     local meshnodes = {}
     find_mesh_nodes(gltfscene, scene.nodes, meshnodes)
 
-    create_skin_entity(exports, rootid, true)
+    create_skin_entity(status, rootid, true)
 
     local C = {}
-    local scenetree = exports.scenetree
+    local scenetree = status.scenetree
     local function check_create_node_entity(nodeidx)
         local p_nodeidx = scenetree[nodeidx]
         local parent
@@ -450,9 +456,9 @@ return function (math3d, input, output, glbdata, exports, setting, localpath)
         local node = gltfscene.nodes[nodeidx+1]
         local e
         if node.mesh then
-            e = create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, exports, setting)
+            e = create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, status, setting)
         else
-            e = create_node_entity(math3d, gltfscene, nodeidx, parent, exports)
+            e = create_node_entity(math3d, gltfscene, nodeidx, parent, status)
         end
 
         C[nodeidx] = e
@@ -462,12 +468,12 @@ return function (math3d, input, output, glbdata, exports, setting, localpath)
     for _, nodeidx in ipairs(meshnodes) do
         check_create_node_entity(nodeidx)
     end
-    if next(exports.animations) then
-        create_animation_entity(exports)
+    if next(status.animations) then
+        create_animation_entity(status)
         -- export animations
         local anilst = {}
         local animation = {}
-        for name, file in pairs(exports.animations) do
+        for name, file in pairs(status.animations) do
             local n = fix_invalid_name(name)
             anilst[#anilst+1] = n
             animation[n] = serialize.path(file)
@@ -481,14 +487,14 @@ return function (math3d, input, output, glbdata, exports, setting, localpath)
                 },
                 data = {
                     name = "animation",
-                    skeleton = serialize.path(exports.skeleton),
+                    skeleton = serialize.path(status.skeleton),
                     animation = animation,
                     animation_birth = anilst[1],
                     anim_ctrl = {},
                 },
             }
         }
-        utility.save_txt_file("./animation.prefab", anim_prefab)
+        utility.save_txt_file(status, "./animation.prefab", anim_prefab)
     end
-    utility.save_txt_file("./mesh.prefab", prefab)
+    utility.save_txt_file(status, "./mesh.prefab", prefab)
 end

@@ -2,7 +2,9 @@ local fs = require "filesystem.local"
 local GLTF2OZZ = require "editor.tool_exe_path"("gltf2ozz")
 local subprocess = require "editor.subprocess"
 
-return function (input, output, exports)
+return function (status)
+    local input = status.input
+    local output = status.output
     local folder = output / "animations"
     fs.create_directories(folder)
     -- we can specify config file to determine what skeleton file name and animaiton name
@@ -33,15 +35,15 @@ return function (input, output, exports)
     if not fs.exists(skefile) then
         print("NO SKELETON export!")
     else
-        exports.skeleton = "./animations/skeleton.ozz"
+        status.skeleton = "./animations/skeleton.ozz"
     end
 
-    exports.animations = {}
+    status.animations = {}
     for path in fs.pairs(folder) do
         if path:equal_extension ".ozz" then
             local filename = path:filename():string()
             if filename ~= "skeleton.ozz" then
-                exports.animations[path:stem():string()] = "./animations/"..filename
+                status.animations[path:stem():string()] = "./animations/"..filename
             end
         end
     end

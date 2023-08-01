@@ -125,7 +125,11 @@ local function read_state_file(statefile)
     return s
 end
 
-return function (output, glbdata, exports, setting, tolocalpath)
+return function (status)
+    local output = status.output
+    local glbdata = status.glbdata
+    local setting = status.setting
+    local tolocalpath = status.tolocalpath
     local glbscene, glbbin = glbdata.info, glbdata.bin
     local materials = glbscene.materials
     if not materials then
@@ -160,7 +164,7 @@ return function (output, glbdata, exports, setting, tolocalpath)
             local endidx = begidx + bv.byteLength
             assert((endidx - 1) <= buf.byteLength)
             local c = glbbin:sub(begidx, endidx)
-            utility.save_file(imagename, c)
+            utility.save_file(status, imagename, c)
         end
 
         local outfile = output / "images" / name
@@ -201,7 +205,7 @@ return function (output, glbdata, exports, setting, tolocalpath)
                 error(("try to compile texture file:%s, but texture.path:%s is not exist"):format(outputfile:string(), imgpath:string()))
             end
 
-            parallel_task.add(exports.tasks, function ()
+            parallel_task.add(status.tasks, function ()
                 local ok, err = texture_compile(texture_desc, outputfile, TextureSetting, cvt_img_path)
                 if not ok then
                     error("compile failed: " .. outputfile:string() .. "\n" .. err)
@@ -283,7 +287,7 @@ return function (output, glbdata, exports, setting, tolocalpath)
     end
 
 
-    exports.material = {}
+    status.material = {}
     for matidx, mat in ipairs(materials) do
         local name = mat.name or tostring(matidx)
         local pbr_mr = mat.pbrMetallicRoughness
@@ -340,7 +344,7 @@ return function (output, glbdata, exports, setting, tolocalpath)
             return newname
         end
         local materialname = refine_name(name)
-        exports.material[matidx] = {
+        status.material[matidx] = {
             filename = fs.path "./materials/" .. materialname .. ".material",
             material = material,
         }

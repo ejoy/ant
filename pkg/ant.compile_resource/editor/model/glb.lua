@@ -56,25 +56,26 @@ return function (input, output, setting, tolocalpath, changed)
     if changed ~= true and changed:match "%.s[ch]$" then
         return recompile_materials(input, output)
     end
-    local math3d = math3d_pool.alloc(setting)
     lfs.remove_all(output)
     lfs.create_directories(output)
-    local depfiles = {}
-    utility.init(output)
-    patch.init(input, depfiles)
-    local glbdata = glbloader.decode(input)
-    local exports = {}
-    assert(glbdata.version == 2)
-    exports.scenetree = build_scene_tree(glbdata.info)
-    exports.depfiles = depfiles
-    local tasks = parallel_task.new()
-    exports.tasks = tasks
-    export_meshbin(math3d, glbdata, exports)
-    export_material(output, glbdata, exports, setting, tolocalpath)
-    export_animation(input, output, exports)
-    export_prefab(math3d, input, output, glbdata, exports, setting, tolocalpath)
-    parallel_task.wait(tasks)
-    
-    math3d_pool.free(math3d)
-    return true, depfiles
+    local status = {
+        input = input,
+        output = output,
+        setting = setting,
+        tolocalpath = tolocalpath,
+        tasks = parallel_task.new(),
+        depfiles = {},
+    }
+    status.math3d = math3d_pool.alloc(status.setting)
+    status.patch = patch.init(input, status.depfiles)
+    status.glbdata = glbloader.decode(input)
+    assert(status.glbdata.version == 2)
+    status.scenetree = build_scene_tree(status.glbdata.info)
+    export_meshbin(status)
+    export_material(status)
+    export_animation(status)
+    export_prefab(status)
+    parallel_task.wait(status.tasks)
+    math3d_pool.free(status.math3d)
+    return true, status.depfiles
 end

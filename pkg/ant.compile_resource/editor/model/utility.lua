@@ -2,15 +2,14 @@ local serialize     = import_package "ant.serialize"
 local fs            = require "bee.filesystem"
 local serialization = require "bee.serialization"
 local patch         = require "editor.model.patch"
-local currentRoot
 
 local function normalizePath(path)
     assert(path:sub(1,2) == "./")
     return path:sub(3)
 end
 
-local function writeFile(path, data)
-    path = currentRoot / path
+local function writeFile(status, path, data)
+    path = status.output / path
     fs.create_directories(path:parent_path())
     local f <close> = assert(io.open(path:string(), "wb"))
     f:write(data)
@@ -18,32 +17,28 @@ end
 
 local m = {}
 
-function m.init(output)
-    currentRoot = output
-end
-
-function m.save_file(path, data)
+function m.save_file(status, path, data)
     path = normalizePath(path)
-    writeFile(path, data)
+    writeFile(status, path, data)
 end
 
-function m.save_bin_file(path, data)
+function m.save_bin_file(status, path, data)
     path = normalizePath(path)
-    writeFile(path, serialization.packstring(data))
+    writeFile(status, path, serialization.packstring(data))
 end
 
-function m.save_txt_file(path, data, conv)
+function m.save_txt_file(status, path, data, conv)
     path = normalizePath(path)
-    data = patch.apply(path, data)
-    writeFile(path, serialize.stringify(data, conv))
+    data = patch.apply(status.patch, path, data)
+    writeFile(status, path, serialize.stringify(data, conv))
 end
 
-function m.apply_patch(path, data)
-    return patch.apply(normalizePath(path), data)
+function m.apply_patch(status, path, data)
+    return patch.apply(status.patch, normalizePath(path), data)
 end
 
-function m.full_path(path)
-    return currentRoot / normalizePath(path)
+function m.full_path(status, path)
+    return status.output / normalizePath(path)
 end
 
 function m.rename(src, dst)

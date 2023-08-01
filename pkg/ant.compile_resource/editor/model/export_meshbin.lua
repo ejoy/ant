@@ -496,19 +496,19 @@ local function redirect_skin_joints(gltfscene, skin, joint_index, scenetree)
 	return joint_index
 end
 
-local function export_skinbin(gltfscene, bindata, exports)
-	exports.skin = {}
+local function export_skinbin(status, gltfscene, bindata)
+	status.skin = {}
 	local skins = gltfscene.skins
 	if skins == nil then
 		return
 	end
 	local joint_index = 0
 	for skinidx, skin in ipairs(gltfscene.skins) do
-		joint_index = redirect_skin_joints(gltfscene, skin, joint_index, exports.scenetree)
+		joint_index = redirect_skin_joints(gltfscene, skin, joint_index, status.scenetree)
 		local skinname = get_obj_name(skin, skinidx, "skin")
 		local resname = "./meshes/"..skinname .. ".skinbin"
-		utility.save_bin_file(resname, fetch_skininfo(gltfscene, skin, bindata))
-		exports.skin[skinidx] = resname
+		utility.save_bin_file(status, resname, fetch_skininfo(gltfscene, skin, bindata))
+		status.skin[skinidx] = resname
 	end
 
 	local nodejoints = {}
@@ -518,7 +518,7 @@ local function export_skinbin(gltfscene, bindata, exports)
 			nodejoints[nodeidx] = jointidx
 		end
 	end
-	exports.node_joints = nodejoints
+	status.node_joints = nodejoints
 end
 
 -- local function check_front_face(vb, ib)
@@ -583,11 +583,11 @@ end
 
 -- end
 
-local function save_meshbin_files(resname, meshgroup)
+local function save_meshbin_files(status, resname, meshgroup)
 	local cfgname = ("./meshes/%s.meshbin"):format(resname)
 
 	local function write_bin_file(fn, bin)
-		utility.save_file("./meshes/" .. fn, bin)
+		utility.save_file(status, "./meshes/" .. fn, bin)
 		return fn
 	end
 
@@ -602,13 +602,14 @@ local function save_meshbin_files(resname, meshgroup)
 		ib.memory[1] = write_bin_file(resname .. ".ibbin", ib.memory[1])
 	end
 
-	utility.save_txt_file(cfgname, meshgroup)
+	utility.save_txt_file(status, cfgname, meshgroup)
 	return cfgname
 end
 
 
- local function export_meshbin(math3d, gltfscene, bindata, exports)
-	exports.mesh = {}
+ local function export_meshbin(status, gltfscene, bindata)
+	local math3d = status.math3d
+	status.mesh = {}
 	local meshes = gltfscene.meshes
 	if meshes == nil then
 		return
@@ -616,7 +617,7 @@ end
 	for meshidx, mesh in ipairs(meshes) do
 		local meshname = get_obj_name(mesh, meshidx, "mesh")
 		--local meshaabb = math3d.aabb()
-		exports.mesh[meshidx] = {}
+		status.mesh[meshidx] = {}
 		for primidx, prim in ipairs(mesh.primitives) do
 			local ib_table = {}
 			local group = {}
@@ -640,12 +641,12 @@ end
 
 			local stemname = ("%s_P%d"):format(meshname, primidx)
 
-			meshexport.meshbinfile = save_meshbin_files(stemname, group)
+			meshexport.meshbinfile = save_meshbin_files(status, stemname, group)
 			meshexport.declname = {
 				group.vb.declname,
 				group.vb2 and group.vb2.declname or nil,
 			}
-			exports.mesh[meshidx][primidx] = meshexport
+			status.mesh[meshidx][primidx] = meshexport
 		end
 	end
 
@@ -681,14 +682,14 @@ end
 			end
 
 			local stemname = ("%s_P%d"):format(meshname, primidx)
-			exports.mesh[meshidx][primidx] = save_meshbin_files(stemname, group)
+			exports.mesh[meshidx][primidx] = save_meshbin_files(status, stemname, group)
 		end
 	end
 end ]]
 
-return function (math3d, glbdata, exports)
+return function (status)
+	local glbdata = status.glbdata
 	joint_trees = {}
-	export_meshbin(math3d, glbdata.info, glbdata.bin, exports)
-	export_skinbin(glbdata.info, glbdata.bin, exports)
-	return exports
+	export_meshbin(status, glbdata.info, glbdata.bin)
+	export_skinbin(status, glbdata.info, glbdata.bin)
 end
