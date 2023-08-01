@@ -20,25 +20,24 @@ local function absolute_path(base, path)
         local pos = path:find("|", 1, true)
         if pos then
             local resource = vfs.realpath(path:sub(1,pos-1))
-            return compile_file(lfs.path(resource)) / path:sub(pos+1):gsub("|", "/")
+            return compile_file(resource) / path:sub(pos+1):gsub("|", "/")
         else
             return lfs.path(vfs.realpath(path))
         end
     end
-    return lfs.absolute(base:parent_path() / (path:match "^%./(.+)$" or path))
+    return lfs.absolute(lfs.path(base):parent_path() / (path:match "^%./(.+)$" or path))
 end
 
 local compiling = {}
 
 function compile_file(input)
-    local inputstr = input:string()
-    if compiling[inputstr] then
-        return lfs.path(ltask.multi_wait(compiling[inputstr]))
+    if compiling[input] then
+        return lfs.path(ltask.multi_wait(compiling[input]))
     end
-    compiling[inputstr] = {}
-    local ext = inputstr:match "[^/]%.([%w*?_%-]*)$"
+    compiling[input] = {}
+    local ext = input:match "[^/]%.([%w*?_%-]*)$"
     local cfg = config.get(ext)
-    local output = cfg.binpath / get_filename(inputstr)
+    local output = cfg.binpath / get_filename(input)
     local changed = depends.dirty(output / ".dep")
     if changed then
         local ok, deps = cfg.compiler(input, output, cfg.setting, function (path)
@@ -51,8 +50,8 @@ function compile_file(input)
         depends.insert_front(deps, input)
         depends.writefile(output / ".dep", deps)
     end
-    ltask.multi_wakeup(compiling[inputstr], output:string())
-    compiling[inputstr] = nil
+    ltask.multi_wakeup(compiling[input], output:string())
+    compiling[input] = nil
     return output
 end
 

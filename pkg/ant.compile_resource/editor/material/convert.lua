@@ -1,11 +1,10 @@
 local compile = require "editor.material.compile"
 local depends = require "editor.depends"
-local lfs = require "filesystem.local"
 local datalist = require "datalist"
 local parallel_task = require "editor.parallel_task"
 
 local function readfile(filename)
-	local f <close> = assert(lfs.open(filename, "r"))
+	local f <close> = assert(io.open(filename, "r"))
 	return f:read "a"
 end
 

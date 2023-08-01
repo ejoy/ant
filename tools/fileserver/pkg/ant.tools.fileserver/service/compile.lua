@@ -7,6 +7,7 @@ local REPOPATH = arg[1]
 
 local access = require "vfs.repoaccess"
 require "editor.create_repo" (REPOPATH, access)
+local vfs = require "vfs"
 local fs = require "filesystem"
 local cr = import_package "ant.compile_resource".fileserver()
 cr.init_setting()
@@ -14,7 +15,7 @@ cr.init_setting()
 local S = {}
 
 function S.COMPILE(path)
-    return cr.compile_file(fs.path(path):localpath()):string()
+    return cr.compile_file(vfs.realpath(path)):string()
 end
 
 function S.SETTING(ext, setting)

@@ -1,10 +1,9 @@
 local compile = require "editor.texture.compile"
-local datalist 		= require "datalist"
-local lfs 			= require "filesystem.local"
-local depends 		= require "editor.depends"
+local datalist = require "datalist"
+local depends = require "editor.depends"
 
 local function readdatalist(filepath)
-	local f = assert(lfs.open(filepath, "r"))
+	local f = assert(io.open(filepath, "r"))
 	local data = f:read "a"
 	f:close()
 	return datalist.parse(data,function(args)

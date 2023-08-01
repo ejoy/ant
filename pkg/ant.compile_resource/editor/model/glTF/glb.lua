@@ -28,7 +28,7 @@ local function encode_chunk(f, datatype, data, length)
 end
 
 local function decode(filename)
-    local f = assert(lfs.open(filename, "rb"))
+    local f = assert(io.open(filename, "rb"))
     local header = f:read(12)
     local magic, version, _ = ("<c4I4I4"):unpack(header)
     assert(magic == "glTF")

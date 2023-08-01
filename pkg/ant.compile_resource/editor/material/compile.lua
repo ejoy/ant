@@ -289,7 +289,7 @@ local BgfxOS <const> = {
 }
 
 local function compile(tasks, deps, mat, input, output, setting, localpath)
-    local include_path = input:parent_path()
+    local include_path = lfs.path(input):parent_path()
     lfs.remove_all(output)
     lfs.create_directories(output)
     local fx = mat.fx

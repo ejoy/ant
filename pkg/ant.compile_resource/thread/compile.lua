@@ -35,7 +35,7 @@ else
         if compiled[input] then
             return compiled[input]
         end
-        local output = editor.compile_file(lfs.path(input))
+        local output = editor.compile_file(input)
         compiled[input] = output
         return output
     end
