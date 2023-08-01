@@ -166,11 +166,8 @@ return function (output, glbdata, exports, setting, tolocalpath)
         local outfile = output / "images" / name
 
         if not EXPORTED_FILES[outfile:string()] then
-            print("serialize image file:", outfile:string())
             serialize_image_file("./images/"..name)
             EXPORTED_FILES[outfile:string()] = true
-        else
-            print("already serialize image file:", outfile:string())
         end
         return name
     end
@@ -191,7 +188,6 @@ return function (output, glbdata, exports, setting, tolocalpath)
     local function export_texture(outputfile, texture_desc)
         if not EXPORTED_FILES[outputfile:string()] then
             EXPORTED_FILES[outputfile:string()] = true
-            print("add 'texture' file for compiling: ", outputfile:string())
             local function cvt_img_path(path)
                 path = path[1]
                 if path:sub(1,1) == "/" then
@@ -202,7 +198,7 @@ return function (output, glbdata, exports, setting, tolocalpath)
 
             local imgpath = cvt_img_path(texture_desc.path)
             if not fs.exists(imgpath) then
-                error((""):format("try to compile texture file:%s, but texture.path:%s is not exist", outputfile:string(), imgpath:string()))
+                error(("try to compile texture file:%s, but texture.path:%s is not exist"):format(outputfile:string(), imgpath:string()))
             end
 
             parallel_task.add(exports.tasks, function ()
