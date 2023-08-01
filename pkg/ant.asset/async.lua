@@ -15,6 +15,10 @@ function m.material_destroy(filename)
     return ltask.call(ServiceResource, "material_destroy", filename)
 end
 
+function m.material_check()
+	return ltask.call(ServiceResource, "material_check")
+end
+
 function m.texture_create(filename)
 	return ltask.call(ServiceResource, "texture_create", filename)
 end

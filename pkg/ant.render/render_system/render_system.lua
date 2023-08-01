@@ -2,6 +2,8 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
+local assetmgr  = import_package "ant.asset"
+
 local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
 local viewidmgr = require "viewid_mgr"
@@ -28,6 +30,10 @@ local vg_sys = ecs.system "viewgroup_system"
 function vg_sys:init()
     ecs.group(def_group_id):enable "view_visible"
 	ecs.group_flush()
+end
+
+function render_sys:start_frame()
+	assetmgr.material_check()
 end
 
 function render_sys:component_init()

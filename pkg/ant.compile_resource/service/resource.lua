@@ -8,7 +8,7 @@ local cr = require "thread.compile"
 cr.init()
 
 local texture = require "thread.texture"
-local material = require "thread.material"
+require "thread.material"
 
 local S = require "thread.main"
 
@@ -22,7 +22,6 @@ ltask.fork(function ()
     bgfx.encoder_create "resource"
     while not quit do
         texture.update()
-        material.update()
         bgfx.encoder_frame()
     end
     bgfx.encoder_destroy()

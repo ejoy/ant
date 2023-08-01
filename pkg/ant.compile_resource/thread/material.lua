@@ -188,7 +188,7 @@ end
 local REMOVED_PROGIDS = {}
 local REQUEST_PROGIDS = {}
 
-local function update()
+function S.material_check()
     local removed = PM.program_remove(REMOVED_PROGIDS)
     if removed then
         for _, removeid in ipairs(removed) do
@@ -210,7 +210,3 @@ local function update()
         end
     end
 end
-
-return {
-    update = update,
-}
