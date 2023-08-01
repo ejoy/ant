@@ -1,7 +1,7 @@
 local ecs   = ...
 local world = ecs.world
 local w     = world.w
-
+local assetmgr  = import_package "ant.asset"
 local setting = import_package "ant.settings".setting
 local ENABLE_SHADOW<const> = setting:data().graphic.shadow.enable
 
@@ -62,20 +62,26 @@ end
 local function blur_dispatch()
     local source_tex = blur_textures.source_texture_handle
 
-    for e in w:select "vblur_builder dispatch:in" do
+    for e in w:select "vblur_builder material:in dispatch:in" do
         local dis = e.dispatch
-        local material = dis.material
-        material.s_image_input = icompute.create_image_property(source_tex, 0, 0, "r")
-        material.s_image_output = icompute.create_image_property(blur_textures.vblur_texture_handle, 1, 0, "w")
+        --local material = dis.material
+        local mo = assetmgr.resource(e.material).object
+        mo:set_attrib("s_image_input", icompute.create_image_property(source_tex, 0, 0, "r"))
+        mo:set_attrib("s_image_output", icompute.create_image_property(blur_textures.vblur_texture_handle, 1, 0, "w"))
+        --material.s_image_input = icompute.create_image_property(source_tex, 0, 0, "r")
+        --material.s_image_output = icompute.create_image_property(blur_textures.vblur_texture_handle, 1, 0, "w")
         icompute.dispatch(vblur_viewid, dis)
         w:remove(e)
     end
 
-    for e in w:select "hblur_builder dispatch:in" do
+    for e in w:select "hblur_builder material:in dispatch:in" do
         local dis = e.dispatch
-        local material = dis.material
+--[[         local material = dis.material
         material.s_image_input = icompute.create_image_property(blur_textures.vblur_texture_handle, 0, 0, "r")
-        material.s_image_output = icompute.create_image_property(blur_textures.hblur_texture_handle, 1, 0, "w")
+        material.s_image_output = icompute.create_image_property(blur_textures.hblur_texture_handle, 1, 0, "w") ]]
+        local mo = assetmgr.resource(e.material).object
+        mo:set_attrib("s_image_input", icompute.create_image_property(blur_textures.vblur_texture_handle, 0, 0, "r"))
+        mo:set_attrib("s_image_output", icompute.create_image_property(blur_textures.hblur_texture_handle, 1, 0, "w"))
         icompute.dispatch(vblur_viewid, dis)
         w:remove(e)
     end
