@@ -200,7 +200,7 @@ lprogram_request(lua_State *L) {
 	int i;
 	uint32_t frame = g_man.frame++;
 	int idx = 0;
-	for (i=0;g_man.id;i++) {
+	for (i=0;i<g_man.id;i++) {
 		if (g_man.timestamp[i] == frame && g_man.map[i] == INVALID_HANDLE) {
 			lua_pushinteger(L, i+1);
 			lua_seti(L, 1, ++idx);
