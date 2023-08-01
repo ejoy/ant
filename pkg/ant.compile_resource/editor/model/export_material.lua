@@ -112,27 +112,9 @@ local UV_map = {
     REPEAT          = "WRAP",
 }
 
-
-local function get_default_code(stage)
-    if stage == 'vs' then return '\n#include "common/default_vs_func.sh"\n' 
-    elseif stage == 'fs' then return '\n#include "common/default_fs_func.sh"\n' 
-    end
-end
-
-local function get_default_fx()
-    return {
-        shader_type = "PBR",
-        --fs = "/pkg/ant.resources/shaders/dynamic_material/fs_default.sc",
-        --vs = "/pkg/ant.resources/shaders/dynamic_material/vs_default.sc",
-        vs_code     = get_default_code('vs'),
-        fs_code     = get_default_code('fs'),
-    }
-end
-
-local states = {}
-
-local function read_datalist(statefile)
-    local s = states[statefile]
+local STATE_FILES = {}
+local function read_state_file(statefile)
+    local s = STATE_FILES[statefile]
     if s == nil then
         local f = fs.open(statefile)
         local c = f:read "a"
@@ -171,17 +153,24 @@ return function (output, glbdata, exports, setting, tolocalpath)
             name = name .. ext
         end
 
-        local outfile = output / "images" / name
-        if not EXPORTED_FILES[outfile:string()] then
+        local function serialize_image_file(imagename)
             local bv = bufferviews[img.bufferView+1]
             local buf = buffers[bv.buffer+1]
             local begidx = (bv.byteOffset or 0)+1
             local endidx = begidx + bv.byteLength
             assert((endidx - 1) <= buf.byteLength)
             local c = glbbin:sub(begidx, endidx)
-            utility.save_file("./images/"..name, c)
+            utility.save_file(imagename, c)
+        end
 
+        local outfile = output / "images" / name
+
+        if not EXPORTED_FILES[outfile:string()] then
+            print("serialize image file:", outfile:string())
+            serialize_image_file("./images/"..name)
             EXPORTED_FILES[outfile:string()] = true
+        else
+            print("already serialize image file:", outfile:string())
         end
         return name
     end
@@ -202,18 +191,28 @@ return function (output, glbdata, exports, setting, tolocalpath)
     local function export_texture(outputfile, texture_desc)
         if not EXPORTED_FILES[outputfile:string()] then
             EXPORTED_FILES[outputfile:string()] = true
+            print("add 'texture' file for compiling: ", outputfile:string())
+            local function cvt_img_path(path)
+                path = path[1]
+                if path:sub(1,1) == "/" then
+                    return fs.path(path):localpath()
+                end
+                return fs.absolute(outputfile:parent_path() / (path:match "^%./(.+)$" or path))
+            end
+
+            local imgpath = cvt_img_path(texture_desc.path)
+            if not fs.exists(imgpath) then
+                error((""):format("try to compile texture file:%s, but texture.path:%s is not exist", outputfile:string(), imgpath:string()))
+            end
+
             parallel_task.add(exports.tasks, function ()
-                local ok, err = texture_compile(texture_desc, outputfile, TextureSetting, function (path)
-                    path = path[1]
-                    if path:sub(1,1) == "/" then
-                        return fs.path(path):localpath()
-                    end
-                    return fs.absolute(outputfile:parent_path() / (path:match "^%./(.+)$" or path))
-                end)
+                local ok, err = texture_compile(texture_desc, outputfile, TextureSetting, cvt_img_path)
                 if not ok then
                     error("compile failed: " .. outputfile:string() .. "\n" .. err)
                 end
             end)
+        else
+            print("'texture' file already compiled: ", outputfile:string())
         end
     end
 
@@ -252,21 +251,19 @@ return function (output, glbdata, exports, setting, tolocalpath)
         local tex = textures[texidx+1]
         local imgname = export_image(tex.source)
         local texture_desc = {
-            path = serialize.path("./"..imgname),
-            sampler = to_sampler(tex.sampler),
-            normalmap = normalmap,
-            colorspace = colorspace,
-            type = "texture",
+            path        = serialize.path("./"..imgname),
+            sampler     = to_sampler(tex.sampler),
+            normalmap   = normalmap,
+            colorspace  = colorspace,
+            type        = "texture",
         }
 
         --TODO: check texture if need compress
         local need_compress<const> = true
         add_texture_format(texture_desc, need_compress)
-        local imgname_noext = fs.path(imgname):stem():string()
-        local texname = imgname_noext .. ".texture"
-        local texfilename = "./images/" .. texname
-        local outtexfile = output / texfilename
-        export_texture(outtexfile, texture_desc)
+
+        local texname       = fs.path(imgname):replace_extension("texture"):string()
+        export_texture(output / "./images/" .. texname, texture_desc)
 
         --we need output texture path which is relate to *.material file, so we need ..
         return serialize.path("./../images/" .. texname)
@@ -286,7 +283,7 @@ return function (output, glbdata, exports, setting, tolocalpath)
         local name = isopaque and 
             "/pkg/ant.resources/materials/states/default.state" or
             "/pkg/ant.resources/materials/states/translucent.state"
-        return read_datalist(tolocalpath(name))
+        return read_state_file(tolocalpath(name))
     end
 
 
@@ -297,7 +294,7 @@ return function (output, glbdata, exports, setting, tolocalpath)
 
         local isopaque = mat.alphaMode == nil or mat.alphaMode == "OPAQUE"
         local material = {
-            fx          = get_default_fx(),
+            fx          = {shader_type = "PBR"},
             state       = get_state(isopaque),
             properties  = {
                 s_basecolor          = handle_texture(pbr_mr.baseColorTexture, "basecolor", false, "sRGB"),
