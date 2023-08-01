@@ -142,7 +142,8 @@ function ani_sys:component_init()
 		e.anim_ctrl.keyframe_events = {}
 		local events = e.anim_ctrl.keyframe_events
 		for key, value in pairs(e.animation) do
-			events[key] = load_events(tostring(value))
+			--TODO: auto load event
+			events[key] = {}--load_events(tostring(value))
 		end
 		local anim_name = e.animation_birth
 		e.anim_ctrl.animation = e.animation[anim_name]
