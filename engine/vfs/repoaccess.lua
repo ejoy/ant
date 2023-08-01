@@ -23,7 +23,7 @@ function access.readmount(repo)
 			:gsub("^%s*","")
 			:gsub("%s*$","")
 			:gsub("%${([^}]*)}", {
-			engine = "./",
+			engine = lfs.current_path():string(),
 			project = repo._root:string():gsub("(.-)[/\\]?$", "%1"),
 		})
 		if text:match "^%s*$" then

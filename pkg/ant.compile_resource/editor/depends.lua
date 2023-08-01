@@ -19,7 +19,7 @@ function m.add(t, v)
 end
 
 function m.insert_front(t, v)
-    local abspath = lfs.absolute(v):string()
+    local abspath = v
     if not t[abspath] then
         table.insert(t, 1, abspath)
         t[abspath] = get_write_time(abspath)

@@ -31,6 +31,7 @@ end
 local compiling = {}
 
 function compile_file(input)
+    assert(input:sub(1,1) ~= ".")
     if compiling[input] then
         return lfs.path(ltask.multi_wait(compiling[input]))
     end
