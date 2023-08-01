@@ -77,7 +77,7 @@ local function writefile(filename, data)
 end
 
 local function readall(filename)
-	local f<close> = lfs.open(filename, "rb")
+	local f<close> = assert(lfs.open(filename, "rb"))
 	return f:read "a"
 end
 
