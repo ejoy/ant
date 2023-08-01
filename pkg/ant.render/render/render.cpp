@@ -166,16 +166,14 @@ submit_draw(struct ecs_world*w, bgfx_view_id_t viewid, const ecs::render_object 
 static inline void
 draw_obj(lua_State *L, struct ecs_world *w, const ecs::render_args* ra, const ecs::render_object *obj, const matrix_array *mats, obj_transforms &trans){
 	auto mi = get_material(w->R, obj, ra->material_index);
+	
 	if (nullptr == mi)
-		return;
-	const auto prog = material_prog(L, mi);
-	if (!BGFX_HANDLE_IS_VALID(prog)){
-		return ;
-	}
-
-	if (!mesh_submit(w, obj, ra->viewid, ra->material_index))
 		return ;
 	
+	const auto prog = material_prog(L, mi);
+	if (!BGFX_HANDLE_IS_VALID(prog) || !mesh_submit(w, obj, ra->viewid, ra->material_index))
+		return ;
+
 	apply_material_instance(L, mi, w);
 	
 	transform t;
