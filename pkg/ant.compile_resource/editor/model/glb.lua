@@ -36,14 +36,14 @@ local function readdatalist(filepath)
 	end)
 end
 
-local function recompile_materials(input, output)
+local function recompile_materials(input, output, setting)
     assert(lfs.exists(output))
     local depfiles = {}
     depends.add(depfiles, input .. ".patch")
     local tasks = parallel_task.new()
     for material_path in lfs.pairs(output / "materials") do
         local mat = readdatalist(material_path / "main.cfg")
-        material_compile(tasks, depfiles, mat, input, material_path, function (path)
+        material_compile(tasks, depfiles, mat, input, material_path, setting, function (path)
             return fs.path(path):localpath()
         end)
     end
@@ -54,7 +54,7 @@ end
 
 return function (input, output, setting, tolocalpath, changed)
     if changed ~= true and changed:match "%.s[ch]$" then
-        return recompile_materials(input, output)
+        return recompile_materials(input, output, setting)
     end
     lfs.remove_all(output)
     lfs.create_directories(output)
