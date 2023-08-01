@@ -109,6 +109,7 @@ local function build_fxcfg(filename, fx)
     end
     return {
         shader_type = fx.shader_type,
+        setting = fx.setting,
         vs = stage_filename "vs",
         fs = stage_filename "fs",
         cs = stage_filename "cs",
