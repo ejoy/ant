@@ -23,7 +23,7 @@ if __ANT_RUNTIME__ then
 
     function compile(pathstring)
         pathstring = normalize(pathstring)
-        return lfs.path(vfs.realpath(pathstring))
+        return lfs.path(assert(vfs.realpath(pathstring)))
     end
     init_setting = function ()
     end
@@ -42,10 +42,10 @@ else
     function compile(pathstring)
         local pos = pathstring:find("|", 1, true)
         if pos then
-            local resource = vfs.realpath(pathstring:sub(1,pos-1))
+            local resource = assert(vfs.realpath(pathstring:sub(1,pos-1)))
             return compile_file(resource) / pathstring:sub(pos+1):gsub("|", "/")
         else
-            return lfs.path(vfs.realpath(pathstring))
+            return lfs.path(assert(vfs.realpath(pathstring)))
         end
     end
     init_setting = editor.init_setting
