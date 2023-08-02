@@ -29,7 +29,7 @@ static struct program_manager g_man;
 
 static inline int
 checkid(lua_State *L, int index) {
-	int id = luaL_checkinteger(L, index);
+	int id = (int)luaL_checkinteger(L, index);
 	if (id <= 0 || id > g_man.id)
 		return luaL_error(L, "Invalid program id %d", id);
 	return id;
@@ -50,14 +50,14 @@ lprogram_init(lua_State *L) {
 	if (lua_getfield(L, 1, "max") != LUA_TNUMBER) {
 		return luaL_error(L, "Need program .max");
 	}
-	int pmax = lua_tointeger(L, -1);
+	int pmax = (int)lua_tointeger(L, -1);
 	if (pmax < 1)
 		return luaL_error(L, ".max %d is too small", pmax);
 	lua_pop(L, 1);
 	if (lua_getfield(L, 1, "threshold") != LUA_TNUMBER) {
 		threshold_removed = pmax * 2 / 3;
 	} else {
-		threshold_removed = lua_tointeger(L, -1);
+		threshold_removed = (int)lua_tointeger(L, -1);
 	}
 	if (threshold_removed <= 0)
 		return luaL_error(L, ".threshold %d is too small", threshold_removed);
@@ -65,7 +65,7 @@ lprogram_init(lua_State *L) {
 	if (lua_getfield(L, 1, "reserved") != LUA_TNUMBER) {
 		threshold_reserved = pmax / 2;
 	} else {
-		threshold_reserved = lua_tointeger(L, -1);
+		threshold_reserved = (int)lua_tointeger(L, -1);
 	}
 	if (threshold_reserved < 0)
 		return luaL_error(L, ".reserved %d is too small", threshold_reserved);
@@ -136,7 +136,7 @@ remove_old(struct program_manager *M) {
 static int
 lprogram_set(lua_State *L) {
 	int id = checkid(L, 1);
-	uint16_t handle = luaL_checkinteger(L, 2);
+	uint16_t handle = (uint16_t)luaL_checkinteger(L, 2);
 	--id;
 	if (handle == INVALID_HANDLE)
 		return luaL_error(L, "Use reset to set invalid handle");
@@ -174,7 +174,7 @@ lprogram_remove(lua_State *L) {
 	} else {
 		luaL_checktype(L, 1, LUA_TTABLE);
 	}
-	int n = lua_rawlen(L, 1);
+	int n = (int)lua_rawlen(L, 1);
 	int i;
 	for (i=0;i<g_man.removed_n;i++) {
 		lua_pushinteger(L, g_man.removed[i]);
