@@ -5,7 +5,7 @@ local bgfx = require "bgfx"
 
 local PM = require "programan.server"
 PM.program_init{
-    max = 50--bgfx.get_caps().limits.maxPrograms - bgfx.get_stats "n".numPrograms
+    max = 80--bgfx.get_caps().limits.maxPrograms - bgfx.get_stats "n".numPrograms
 }
 
 local function readall(filename)
@@ -170,10 +170,17 @@ end
 local function material_destroy(material)
     local fx = material.fx
 
+    -- why? PM only keep 16 bit data(it's bgfx handle data), but program type in high 16 bit with int32 data, we need to recover the type for handle when destroy
+    local function make_prog_handle(h)
+        assert(h ~= 0xffff)
+        --handle type, see: luabgfx.h:7, with enum BGFX_HANDLE
+        local PROG_TYPE<const> = 1
+        return (PROG_TYPE<<16)|h
+    end
+
     --DO NOT clean fx.prog to nil
     local h = PM.program_reset(fx.prog)
-    assert(h ~= 0xffff)
-    bgfx.destroy(h)
+    bgfx.destroy(make_prog_handle(h))
 
     local function destroy_stage(stage)
         if fx[stage] then
@@ -204,7 +211,7 @@ function S.material_check()
         for _, removeid in ipairs(removed) do
             if nil == MATERIAL_MARKED[removeid] then
                 local mi = assert(MATERIALS[removeid])
-                log.info(("Remove prog:%d, %d, from file:%s"):format(removeid, PM.program_get(removeid), mi.filename))
+                log.info(("Remove prog:%d, from file:%s"):format(removeid, mi.filename))
                 -- we just destroy bgfx program handle and shader handles, but not remove 'material' from cpu side
                 material_destroy(mi.material)
             end

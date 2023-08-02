@@ -116,7 +116,7 @@ remove_old(struct program_manager *M) {
 		if (M->map[i] != INVALID_HANDLE) {
 			struct timehandle *h = &array[n++];
 			h->life = current - M->timestamp[i];
-			M->id = i;
+			h->id = i;
 		}
 	}
 	qsort(array, n, sizeof(struct timehandle), compar_timehandle);
@@ -129,6 +129,7 @@ remove_old(struct program_manager *M) {
 		uint16_t h = M->map[id];
 		M->map[id] = INVALID_HANDLE;
 		M->removed[M->removed_n++] = h;
+		--M->n;
 	}
 }
 

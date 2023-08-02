@@ -1,6 +1,9 @@
-local ecs = ...
+local ecs   = ...
 local world = ecs.world
-local w = world.w
+local w     = world.w
+
+local assetmgr = import_package "ant.asset"
+
 local bgfx = require "bgfx"
 
 local ic = ecs.interface "icompute"
@@ -11,7 +14,9 @@ function ic.dispatch(viewid, ds)
 	ds.material()
 
 	local s = ds.size
-	bgfx.dispatch(viewid, progman.program_get(ds.fx.prog), s[1], s[2], s[3])
+    if assetmgr.material_isvalid(ds.fx.prog) then
+        bgfx.dispatch(viewid, progman.program_get(ds.fx.prog), s[1], s[2], s[3])
+    end
 end
 
 function ic.create_compute_entity(name, materialfile, size, onready)
