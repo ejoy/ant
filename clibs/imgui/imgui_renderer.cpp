@@ -64,7 +64,7 @@ void rendererDrawData(ImGuiViewport* viewport) {
 	BGFX(set_view_rect)(ud->viewid, uint16_t(fb_x), uint16_t(fb_y), uint16_t(fb_w), uint16_t(fb_h));
 
 	for (size_t ii = 0, num = drawData->CmdListsCount; ii < num; ++ii) {
-		const ImDrawList* drawList = drawData->CmdLists[ii];
+		const ImDrawList* drawList = drawData->CmdLists[(int)ii];
 		uint32_t numVertices = (uint32_t)drawList->VtxBuffer.size();
 		uint32_t numIndices = (uint32_t)drawList->IdxBuffer.size();
 
