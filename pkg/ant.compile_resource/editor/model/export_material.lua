@@ -189,30 +189,32 @@ return function (status)
         ext = TextureExtensions[setting.renderer],
     }
 
-    local function export_texture(outputfile, texture_desc)
-        if not EXPORTED_FILES[outputfile:string()] then
-            EXPORTED_FILES[outputfile:string()] = true
+    local function export_texture(filename, texture_desc)
+        if not EXPORTED_FILES[filename] then
+            EXPORTED_FILES[filename] = true
+            texture_desc = utility.apply_patch(status, filename, texture_desc)
+
             local function cvt_img_path(path)
                 path = path[1]
                 if path:sub(1,1) == "/" then
                     return fs.path(path):localpath()
                 end
-                return fs.absolute(outputfile:parent_path() / (path:match "^%./(.+)$" or path))
+                return fs.absolute((output / filename):parent_path() / (path:match "^%./(.+)$" or path))
             end
 
             local imgpath = cvt_img_path(texture_desc.path)
             if not fs.exists(imgpath) then
-                error(("try to compile texture file:%s, but texture.path:%s is not exist"):format(outputfile:string(), imgpath:string()))
+                error(("try to compile texture file:%s, but texture.path:%s is not exist"):format(filename:string(), imgpath:string()))
             end
 
             parallel_task.add(status.tasks, function ()
-                local ok, err = texture_compile(texture_desc, outputfile, TextureSetting, cvt_img_path)
+                local ok, err = texture_compile(texture_desc, output / filename, TextureSetting, cvt_img_path)
                 if not ok then
-                    error("compile failed: " .. outputfile:string() .. "\n" .. err)
+                    error("compile failed: " .. filename:string() .. "\n" .. err)
                 end
             end)
         else
-            print("'texture' file already compiled: ", outputfile:string())
+            print("'texture' file already compiled: ", filename:string())
         end
     end
 
@@ -263,7 +265,7 @@ return function (status)
         add_texture_format(texture_desc, need_compress)
 
         local texname       = fs.path(imgname):replace_extension("texture"):string()
-        export_texture(output / "./images/" .. texname, texture_desc)
+        export_texture("./images/" .. texname, texture_desc)
 
         --we need output texture path which is relate to *.material file, so we need ..
         return serialize.path("./../images/" .. texname)

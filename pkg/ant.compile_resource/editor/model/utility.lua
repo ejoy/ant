@@ -29,12 +29,12 @@ end
 
 function m.save_txt_file(status, path, data, conv)
     path = normalizePath(path)
-    data = patch.apply(status.patch, path, data)
+    data = patch.apply(status, path, data)
     writeFile(status, path, serialize.stringify(data, conv))
 end
 
 function m.apply_patch(status, path, data)
-    return patch.apply(status.patch, normalizePath(path), data)
+    return patch.apply(status, normalizePath(path), data)
 end
 
 function m.full_path(status, path)

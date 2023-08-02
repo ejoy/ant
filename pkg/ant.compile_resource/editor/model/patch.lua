@@ -41,8 +41,8 @@ function m.init(input, depfiles)
     return patchLst
 end
 
-function m.apply(patchLst, path, data)
-    local patch = patchLst[path]
+function m.apply(status, path, data)
+    local patch = status.patch[path]
     if not patch then
         return data
     end
