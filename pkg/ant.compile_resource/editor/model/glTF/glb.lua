@@ -28,14 +28,13 @@ local function encode_chunk(f, datatype, data, length)
 end
 
 local function decode(filename)
-    local f = assert(io.open(filename, "rb"))
+    local f <close> = assert(io.open(filename, "rb"))
     local header = f:read(12)
     local magic, version, _ = ("<c4I4I4"):unpack(header)
     assert(magic == "glTF")
     local json = decode_chunk(f, "JSON")
 	local bin = decode_chunk(f, "BIN\0")
 	assert(f:read(1) == nil)
-	f:close()
     return {
         version = version,
         info 	= jsonDecode(json),
@@ -44,7 +43,7 @@ local function decode(filename)
 end
 
 local function encode(filename, data)
-	local f = assert(lfs.open(filename, "wb"))
+	local f <close> = assert(lfs.open(filename, "wb"))
 	local jsondata = jsonEncode(data.info)
 	local align_json, align_json_length = aligh_data(jsondata, 4, " ")
 	local align_bin, align_bin_length = aligh_data(data.bin, 4, "\0")
@@ -54,7 +53,6 @@ local function encode(filename, data)
 	f:write(("<c4I4I4"):pack("glTF", data.version, size))
 	encode_chunk(f, "JSON", align_json, align_json_length)
 	encode_chunk(f, "BIN\0", align_bin, align_bin_length)
-	f:close()
 end
 
 return {

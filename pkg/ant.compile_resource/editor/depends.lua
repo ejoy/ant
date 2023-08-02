@@ -36,16 +36,13 @@ function m.append(t, a)
 end
 
 local function writefile(filename, data)
-	local f = assert(lfs.open(filename, "wb"))
+	local f <close> = assert(lfs.open(filename, "wb"))
 	f:write(data)
-	f:close()
 end
 
 local function readfile(filename)
-	local f = assert(lfs.open(filename))
-	local data = f:read "a"
-	f:close()
-	return data
+	local f <close> = assert(lfs.open(filename))
+	return f:read "a"
 end
 
 local function readconfig(filename)

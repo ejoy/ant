@@ -116,9 +116,8 @@ local STATE_FILES = {}
 local function read_state_file(statefile)
     local s = STATE_FILES[statefile]
     if s == nil then
-        local f = fs.open(statefile)
+        local f <close> = fs.open(statefile)
         local c = f:read "a"
-        f:close()
         s = datalist.parse(c)
     end
 

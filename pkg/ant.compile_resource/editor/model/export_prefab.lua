@@ -183,7 +183,7 @@ do
 end
 
 local function read_file(fn)
-    local f<close> = fs.open(fn)
+    local f <close> = fs.open(fn)
     return f:read "a"
 end
 

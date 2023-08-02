@@ -119,7 +119,7 @@ local function load_dds_header(filepath)
     --     DWORD           dwCaps4;
     --     DWORD           dwReserved2;
     --   } DDS_HEADER;
-    local f = fs.open(filepath, "rb")
+    local f <close> = assert(fs.open(filepath, "rb"))
     read_dword = create_reader(f:read(DDS_HEADER_SIZE))
 
     local magic = read_dword()
@@ -150,7 +150,6 @@ local function load_dds_header(filepath)
         header.ddspf.dx10 = read_dx10_header()
     end
     
-    f:close()
     return header
 end
 
