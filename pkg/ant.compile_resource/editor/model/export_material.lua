@@ -204,17 +204,17 @@ return function (status)
 
             local imgpath = cvt_img_path(texture_desc.path)
             if not fs.exists(imgpath) then
-                error(("try to compile texture file:%s, but texture.path:%s is not exist"):format(filename:string(), imgpath:string()))
+                error(("try to compile texture file:%s, but texture.path:%s is not exist"):format(filename, imgpath:string()))
             end
 
             parallel_task.add(status.tasks, function ()
                 local ok, err = texture_compile(texture_desc, output / filename, TextureSetting, cvt_img_path)
                 if not ok then
-                    error("compile failed: " .. filename:string() .. "\n" .. err)
+                    error("compile failed: " .. filename .. "\n" .. err)
                 end
             end)
         else
-            print("'texture' file already compiled: ", filename:string())
+            print("'texture' file already compiled: ", filename)
         end
     end
 
