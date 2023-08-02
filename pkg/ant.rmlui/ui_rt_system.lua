@@ -243,11 +243,9 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
         create_rt_queue(1, 1, rt_name, fbidx)
         rt.rt_id = ltask.call(ServiceResource, "texture_register_id")
     elseif not rt.rt_handle then
-        local width, height = rt.w, rt.h
-        local fbidx = get_fbidx(width, height)
+        local fbidx = update_fb(rt.w, rt.h, queuename)
         local rt_handle = fbmgr.get_rb(fbidx, 1).handle
         rt.rt_handle = rt_handle
-        update_fb(rt.w, rt.h, queuename)
         ltask.call(ServiceResource, "texture_set_handle", rt.rt_id, rt.rt_handle)
     end
     
