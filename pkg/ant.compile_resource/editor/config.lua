@@ -5,9 +5,8 @@ local vfs = require "vfs"
 local shader = require "editor.material.shader"
 
 local function writefile(filename, data)
-    local f = assert(lfs.open(filename, "wb"))
+    local f <close> = assert(lfs.open(filename, "wb"))
     f:write(data)
-    f:close()
 end
 
 local config = {

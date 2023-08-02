@@ -72,12 +72,12 @@ local function gen_commands(commands, setting, param, input, output)
 end
 
 local function writefile(filename, data)
-	local f<close> = assert(lfs.open(filename, "wb"))
+	local f <close> = assert(lfs.open(filename, "wb"))
 	f:write(data)
 end
 
 local function readall(filename)
-	local f<close> = assert(lfs.open(filename, "rb"))
+	local f <close> = assert(lfs.open(filename, "rb"))
 	return f:read "a"
 end
 

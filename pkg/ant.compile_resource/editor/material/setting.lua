@@ -2,7 +2,7 @@ local fs = require "filesystem"
 local datalist = require "datalist"
 
 local function read_default_setting_from_file()
-    local f<close> = fs.open (fs.path "/pkg/ant.resources/settings/default.setting")
+    local f <close> = fs.open (fs.path "/pkg/ant.resources/settings/default.setting")
     return f:read "a"
 end
 

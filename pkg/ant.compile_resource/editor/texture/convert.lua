@@ -3,9 +3,8 @@ local datalist = require "datalist"
 local depends = require "editor.depends"
 
 local function readdatalist(filepath)
-	local f = assert(io.open(filepath, "r"))
+	local f <close> = assert(io.open(filepath, "r"))
 	local data = f:read "a"
-	f:close()
 	return datalist.parse(data,function(args)
 		return args[2]
 	end)

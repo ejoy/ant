@@ -164,7 +164,7 @@ local function readfile(filename)
 end
 
 local function writefile(filename, data)
-	local f<close> = assert(lfs.open(filename, "wb"))
+	local f <close> = assert(lfs.open(filename, "wb"))
 	f:write(serialize.stringify(data))
 end
 
@@ -217,7 +217,7 @@ local function create_PBR_shader(inputpath, fx, stage)
     local si = assert(DEF_SHADER_INFO[stage])
     local nc = generate_shader(si, fx[stage .. "_code"])
 
-    local fw<close> = assert(lfs.open(inputpath, "wb"))
+    local fw <close> = assert(lfs.open(inputpath, "wb"))
     fw:write(nc)
 end
 
