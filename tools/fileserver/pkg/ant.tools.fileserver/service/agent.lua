@@ -75,7 +75,7 @@ function message.GET(hash)
 	end
 	local sz = f:seek "end"
 	f:seek("set", 0)
-	if sz < 0x10000 then
+	if sz < 0x8000 then
 		response("BLOB", hash, f:read "a")
 	else
 		response("FILE", hash, tostring(sz))
