@@ -345,8 +345,10 @@ return function (status)
             return newname
         end
         local materialname = refine_name(name)
+        local filename = "./materials/" .. materialname .. ".material"
+        material = utility.apply_patch(status, filename, material)
         status.material[matidx] = {
-            filename = fs.path "./materials/" .. materialname .. ".material",
+            filename = fs.path(filename),
             material = material,
         }
     end
