@@ -37,8 +37,8 @@ local function which_format(setting, param)
 end
 
 local function gen_commands(commands, setting, param, input, output)
-	add_option(commands, "-f", input:string())
-	add_option(commands, "-o", output:string())
+	add_option(commands, "-f", input)
+	add_option(commands, "-o", output)
 	local fmt = which_format(setting, param)
 	if fmt then
 		add_option(commands, "-t", fmt)
@@ -159,7 +159,7 @@ return function (output, setting, param)
 		local commands = {
 			TEXTUREC
 		}
-		gen_commands(commands, setting, param, imgpath, binfile)
+		gen_commands(commands, setting, param, imgpath:string(), binfile:string())
 		print("texture compile:")
 		local success, msg = subprocess.spawn_process(commands)
 		if success then

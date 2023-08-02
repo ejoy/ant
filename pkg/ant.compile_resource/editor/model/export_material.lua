@@ -128,7 +128,7 @@ return function (status)
     local output = status.output
     local glbdata = status.glbdata
     local setting = status.setting
-    local tolocalpath = status.tolocalpath
+    local localpath = status.localpath
     local glbscene, glbbin = glbdata.info, glbdata.bin
     local materials = glbscene.materials
     if not materials then
@@ -284,7 +284,7 @@ return function (status)
         local name = isopaque and 
             "/pkg/ant.resources/materials/states/default.state" or
             "/pkg/ant.resources/materials/states/translucent.state"
-        return read_state_file(tolocalpath(name))
+        return read_state_file(localpath(name))
     end
 
 

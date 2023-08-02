@@ -51,7 +51,7 @@ local function recompile_materials(input, output, setting)
     return true, depfiles
 end
 
-return function (input, output, setting, tolocalpath, changed)
+return function (input, output, setting, localpath, changed)
     if changed ~= true and changed:match "%.s[ch]$" then
         return recompile_materials(input, output, setting)
     end
@@ -61,7 +61,7 @@ return function (input, output, setting, tolocalpath, changed)
         input = input,
         output = output,
         setting = setting,
-        tolocalpath = tolocalpath,
+        localpath = localpath,
         tasks = parallel_task.new(),
         depfiles = {},
     }
