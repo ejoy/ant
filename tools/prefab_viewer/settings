@@ -1,12 +1,3 @@
-_ios:
-  graphic:
-    api: metal
-_osx:
-  graphic:
-    api: metal
-_windows:
-  graphic:
-    api: d3d11
 debug:
   show_bounding: false
 graphic:
