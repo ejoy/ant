@@ -206,7 +206,6 @@ end
 -- local REQUEST_PROGIDS = {}
 
 function S.material_check()
-    if true then return end
     local removed = PM.program_remove()
     if removed then
         for _, removeid in ipairs(removed) do
@@ -222,15 +221,18 @@ function S.material_check()
     local requested = PM.program_request()
     if requested then
         for _, requestid in ipairs(requested) do
-            assert(not MATERIAL_MARKED[requestid])
-            local mi = assert(MATERIALS[requestid])
-
-            log.info(("Recreate prog:%d, from file:%s"):format(requestid, mi.filename))
-            local newfx = create_fx(mi.cfg)
-            PM.program_set(requestid, newfx.prog)
-            newfx.prog = requestid
-    
-            mi.material.fx = newfx
+            local mi = MATERIALS[requestid]
+            if mi then
+                assert(not MATERIAL_MARKED[requestid])
+                log.info(("Recreate prog:%d, from file:%s"):format(requestid, mi.filename))
+                local newfx = create_fx(mi.cfg)
+                PM.program_set(requestid, newfx.prog)
+                newfx.prog = requestid
+        
+                mi.material.fx = newfx
+            else
+                log.info(("Can not create prog:%d, it have been fully remove by 'S.material_destroy'"):format(requestid))
+            end
         end
     end
 end
