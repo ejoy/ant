@@ -206,6 +206,7 @@ end
 -- local REQUEST_PROGIDS = {}
 
 function S.material_check()
+    if true then return end
     local removed = PM.program_remove()
     if removed then
         for _, removeid in ipairs(removed) do
