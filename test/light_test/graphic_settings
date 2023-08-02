@@ -28,9 +28,6 @@ graphic:
     clear_depth: 1
     clear_stencil: 0
     clear: CDS
-  framebuffer:
-    ratio: 1.0
-    scene_ratio: 1.0
   postprocess:
     bloom:
       enable: true

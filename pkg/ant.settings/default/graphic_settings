@@ -12,15 +12,6 @@ graphic:
     intensity   : 3.0            # Strength of the Ambient Occlusion effect.
     bilateral_threshold : 0.5    # depth distance that constitute an edge for filtering
     min_horizon_angle : 0.0      # min angle in radian to consider
-  curve_world:
-    curve_rate: 0.11999999731779099
-    distance: 100
-    enable: false
-    flat_distance: 0
-    type: cylinder
-  framebuffer:
-    ratio: 1
-    scene_ratio: 1
   inv_z: true
   lighting:
     cluster_shading: 1
