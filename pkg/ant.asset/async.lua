@@ -1,6 +1,8 @@
 local ltask = require "ltask"
 local ServiceResource
 
+local PM = require "programan.client"
+
 local m = {}
 
 function m.init()
@@ -17,6 +19,19 @@ end
 
 function m.material_check()
 	return ltask.call(ServiceResource, "material_check")
+end
+
+function m.material_mark(pid)
+	return ltask.call(ServiceResource, "material_mark", pid)
+end
+
+function m.material_unmark(pid)
+	return ltask.call(ServiceResource, "material_unmark", pid)
+end
+
+function m.material_isvalid(pid)
+	local h = PM.program_get(pid)
+	return (0xffff&h) ~= 0xffff
 end
 
 function m.texture_create(filename)

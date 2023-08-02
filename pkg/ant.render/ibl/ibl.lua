@@ -76,7 +76,10 @@ local function create_irradiance_entity()
         size / thread_group_size, size / thread_group_size, 6
     }
     icompute.create_compute_entity(
-        "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_irradiance.material", dispatchsize)
+        "irradiance_builder", "/pkg/ant.resources/materials/ibl/build_irradiance.material", dispatchsize, function (e)
+            w:extend(e, "dispatch:in")
+            assetmgr.material_mark(e.dispatch.fx.prog)
+        end)
 end
 
 local function create_irradianceSH_entity()
@@ -115,6 +118,10 @@ local function create_prefilter_entities()
                 },
                 prefilter = prefilter,
                 compute     = true,
+                on_ready    = function (e)
+                    w:extend(e, "dispatch:in")
+                    assetmgr.material_mark(e.dispatch.fx.prog)
+                end,
                 prefilter_builder      = true,
             }
         }
@@ -183,7 +190,9 @@ function ibl_sys:render_preprocess()
         mo:set_attrib("s_irradiance",       icompute.create_image_property(IBL_INFO.irradiance.value, 1, 0, "w"))
         mo:set_attrib("u_build_ibl_param",  math3d.vector(sample_count, 0, IBL_INFO.source.facesize, 0.0))
 
+        assert(assetmgr.material_isvalid(dis.fx.prog))
         icompute.dispatch(ibl_viewid, dis)
+        assetmgr.material_unmark(dis.fx.prog)
         w:remove(e)
     end
 
@@ -215,7 +224,9 @@ function ibl_sys:render_preprocess()
         mo:set_attrib("s_prefilter",        icompute.create_image_property(IBL_INFO.prefilter.value, prefilter_stage, prefilter.mipidx, "w"))
         mo:set_attrib("u_build_ibl_param",  math3d.vector(sample_count, 0, IBL_INFO.source.facesize, prefilter.roughness))
 
+        assert(assetmgr.material_isvalid(dis.fx.prog))
         icompute.dispatch(ibl_viewid, dis)
+        assetmgr.material_unmark(dis.fx.prog)
         w:remove(e)
     end
 

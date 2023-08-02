@@ -5,7 +5,7 @@ local bgfx = require "bgfx"
 
 local PM = require "programan.server"
 PM.program_init{
-    max = bgfx.get_caps().limits.maxPrograms - bgfx.get_stats "n".numPrograms
+    max = 50--bgfx.get_caps().limits.maxPrograms - bgfx.get_stats "n".numPrograms
 }
 
 local function readall(filename)
@@ -101,6 +101,8 @@ end
 
 local MATERIALS = {}
 
+local MATERIAL_MARKED = {}
+
 local function build_fxcfg(filename, fx)
     local function stage_filename(stage)
         if fx[stage] then
@@ -157,6 +159,14 @@ function S.material_create(filename)
     return material
 end
 
+function S.material_mark(pid)
+    MATERIAL_MARKED[pid] = true
+end
+
+function S.material_unmark(pid)
+    MATERIAL_MARKED[pid] = nil
+end
+
 local function material_destroy(material)
     local fx = material.fx
 
@@ -192,16 +202,22 @@ function S.material_check()
     local removed = PM.program_remove(REMOVED_PROGIDS)
     if removed then
         for _, removeid in ipairs(removed) do
-            local mi = assert(MATERIALS[removeid])
-            -- we just destroy bgfx program handle and shader handles, but not remove 'material' from cpu side
-            material_destroy(mi.material)
+            if nil == MATERIAL_MARKED[removeid] then
+                local mi = assert(MATERIALS[removeid])
+                log.info(("Remove prog:%d, %d, from file:%s"):format(removeid, PM.program_get(removeid), mi.filename))
+                -- we just destroy bgfx program handle and shader handles, but not remove 'material' from cpu side
+                material_destroy(mi.material)
+            end
         end
     end
 
     local requested = PM.program_request(REQUEST_PROGIDS)
     if requested then
         for _, requestid in ipairs(requested) do
+            assert(not MATERIAL_MARKED[requestid])
             local mi = assert(MATERIALS[requestid])
+
+            log.info(("Recreate prog:%d, from file:%s"):format(requestid, mi.filename))
             local newfx = create_fx(mi.cfg)
             PM.program_set(requestid, newfx.prog)
             newfx.prog = requestid
