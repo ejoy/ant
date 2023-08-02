@@ -5,7 +5,7 @@ local bgfx = require "bgfx"
 
 local PM = require "programan.server"
 PM.program_init{
-    max = 80--bgfx.get_caps().limits.maxPrograms - bgfx.get_stats "n".numPrograms
+    max = bgfx.get_caps().limits.maxPrograms - bgfx.get_stats "n".numPrograms
 }
 
 local function readall(filename)
@@ -202,11 +202,11 @@ function S.material_destroy(material)
     material_destroy(material)
 end
 
-local REMOVED_PROGIDS = {}
-local REQUEST_PROGIDS = {}
+-- local REMOVED_PROGIDS = {}
+-- local REQUEST_PROGIDS = {}
 
 function S.material_check()
-    local removed = PM.program_remove(REMOVED_PROGIDS)
+    local removed = PM.program_remove()
     if removed then
         for _, removeid in ipairs(removed) do
             if nil == MATERIAL_MARKED[removeid] then
@@ -218,7 +218,7 @@ function S.material_check()
         end
     end
 
-    local requested = PM.program_request(REQUEST_PROGIDS)
+    local requested = PM.program_request()
     if requested then
         for _, requestid in ipairs(requested) do
             assert(not MATERIAL_MARKED[requestid])
