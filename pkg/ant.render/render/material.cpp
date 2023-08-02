@@ -858,8 +858,7 @@ check_get_texture_handle(lua_State *L, uint32_t handle){
 		return texture_get((int)handle);
 	}
 	
-	bgfx_texture_handle_t t = {(uint16_t)handle};
-	return t;
+	return bgfx_texture_handle_t{(uint16_t)handle};
 }
 
 static void
@@ -1104,7 +1103,7 @@ lmaterial_new(lua_State *L) {
 	mat->state = state;
 
 	mat->attrib = INVALID_ATTRIB;
-	mat->prog = luaL_checkinteger(L, 4);
+	mat->prog = (int)luaL_checkinteger(L, 4);
 	if (0 == mat->prog){
 		luaL_error(L, "Invalid prog index");
 	}
