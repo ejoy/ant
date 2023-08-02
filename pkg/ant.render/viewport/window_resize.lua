@@ -14,7 +14,7 @@ local RATIO<const> 			= setting:get "framebuffer/ratio" 		or 1.0
 
 world.args.framebuffer.ratio 		= RATIO
 world.args.framebuffer.scene_ratio 	= SCENE_RATIO
-log.info(("framebuffer ratio:%2f, scene:%2f"):format(RATIO, RATIO))
+log.info(("framebuffer ratio:%2f, scene:%2f"):format(RATIO, SCENE_RATIO))
 
 local function update_config(args, ww, hh)
 	local fb = args.framebuffer
