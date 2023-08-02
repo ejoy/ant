@@ -1,5 +1,6 @@
-local lfs      = require "filesystem.local"
-local datalist = require "datalist"
+local lfs       = require "filesystem.local"
+local fs        = require "filesystem"
+local datalist  = require "datalist"
 
 local m = {}
 
@@ -97,6 +98,17 @@ function m.read_if_not_dirty(path)
         deps[filename] = timestamp
     end
     return deps
+end
+
+function m.make_depend_graphic_settings(depfiles, localpath)
+    m.add(depfiles, localpath "/pkg/ant.settings/default/graphic_settings")
+    local gp = fs.path "/graphic_settings"
+    if fs.exists(gp) then
+        m.add(depfiles, localpath "/graphic_settings")
+    else
+        local pp = localpath "/"
+        m.add(depfiles, pp:string() .. "/graphic_settings")
+    end
 end
 
 return m

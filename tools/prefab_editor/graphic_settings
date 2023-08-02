@@ -1,4 +1,6 @@
 graphic:
+  ibl:
+    irradiance_bandnum: 3
   ao:
     enable      : true
     bent_normal : false
@@ -10,12 +12,16 @@ graphic:
     intensity   : 3.0            # Strength of the Ambient Occlusion effect.
     bilateral_threshold : 0.5    # depth distance that constitute an edge for filtering
     min_horizon_angle : 0.0      # min angle in radian to consider
+  inv_z: true
+  framebuffer:
+    scene_ratio: 1
+    ratio: 1
   curve_world:
     enable: false
     type: "cylinder"
     flat_distance: 0
-    curve_rate: 0.1
-    distance: 1200
+    curve_rate: 0.11999999731779099
+    distance: 100
   lighting:
     cluster_shading: 1
   render:
@@ -25,27 +31,27 @@ graphic:
     clear: CDS
   postprocess:
     bloom:
-      enable: true
-      inv_highlight: 0.1
-      threshold: 2.3
+      enable: false
+      inv_highlight: 0.2
+      threshold: 2
     fxaa:
       enable: true
     tonemapping:
       use_lut: true
       lut_dim: 32
+    taa:
+      enable: nil
   shadow:
+    color: {0, 0, 0, 1}
+    depth_multiplier: 100
     enable: true
-    size: 1024
-    type: inv_z
-    bias: 0.003
-    normal_offset: 0
-    color: {0.0, 0.0, 0.0, 1}
-    stabilize: true
-    # split_ratios:
-    #   {0.05, 0.25}
-    #   {0.23, 0.48}
-    #   {0.45, 0.85}
+    far_offset: 0
+    min_variance: 0.012
+    normal_offset: 1.0
+    size: 2048
     split_lamada: 0.8
-    split_num: 4
-debug:
-  show_bounding: true
+    split_num: 1
+    height: 10
+    split_ratios:
+      {0.00, 1.00}
+    type: inv_z

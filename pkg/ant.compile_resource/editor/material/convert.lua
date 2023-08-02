@@ -20,7 +20,6 @@ return function(input, output, setting, localpath)
     local tasks = parallel_task.new()
     compile(tasks, depfiles, mat, input, output, setting, localpath)
     parallel_task.wait(tasks)
-    depends.add(depfiles, localpath "/pkg/ant.settings/default/settings")
-    depends.add(depfiles, localpath "/settings")
+    depends.make_depend_graphic_settings(depfiles, localpath)
     return true, depfiles
 end
