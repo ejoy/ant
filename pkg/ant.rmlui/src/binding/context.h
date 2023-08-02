@@ -15,18 +15,18 @@ struct texture_desc {
 struct shader {
     std::map<std::string, uint16_t> uniforms;
 
-    uint16_t font;
-    uint16_t font_outline;
-    uint16_t font_shadow;
-    uint16_t image;
+    int font;
+    int font_outline;
+    int font_shadow;
+    int image;
 
     //with clip rect
-    uint16_t font_cr;
-    uint16_t font_outline_cr;
-    uint16_t font_shadow_cr;
-    uint16_t image_cr;
-    uint16_t image_gray;
-    uint16_t image_cr_gray;
+    int font_cr;
+    int font_outline_cr;
+    int font_shadow_cr;
+    int image_cr;
+    int image_gray;
+    int image_cr_gray;
 
     #ifdef _DEBUG
     uint16_t debug_draw;

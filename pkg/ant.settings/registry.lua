@@ -182,4 +182,12 @@ function m.use(self, path)
     return true
 end
 
+local function table_append(t, a)
+    table.move(a, 1, #a, #t+1, t)
+end
+
+function m.merge(self, other)
+    table_append(self._l, other._l)
+end
+
 return m

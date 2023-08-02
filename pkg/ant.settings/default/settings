@@ -1,4 +1,8 @@
+debug:
+  show_bounding: false
 graphic:
+  ibl:
+    irradiance_bandnum: 3
   ao:
     enable      : true
     bent_normal : false
@@ -11,41 +15,45 @@ graphic:
     bilateral_threshold : 0.5    # depth distance that constitute an edge for filtering
     min_horizon_angle : 0.0      # min angle in radian to consider
   curve_world:
+    curve_rate: 0.11999999731779099
+    distance: 100
     enable: false
-    type: "cylinder"
     flat_distance: 0
-    curve_rate: 0.1
-    distance: 1200
+    type: cylinder
+  framebuffer:
+    ratio: 1
+    scene_ratio: 1
+  inv_z: true
   lighting:
     cluster_shading: 1
-  render:
-    clear_color: 0x000000ff
-    clear_depth: 1
-    clear_stencil: 0
-    clear: CDS
   postprocess:
     bloom:
       enable: true
-      inv_highlight: 0.1
-      threshold: 2.3
+      inv_highlight: 0.2
+      threshold: 2.200000047683716
     fxaa:
       enable: true
     tonemapping:
       use_lut: true
       lut_dim: 32
+    taa:
+      enable: nil
+  render:
+    clear: CDS
+    clear_color: 255
+    clear_depth: 1
+    clear_stencil: 0
   shadow:
+    color: {0, 0, 0, 1}
+    depth_multiplier: 100
     enable: true
+    far_offset: 0
+    min_variance: 0.012
+    normal_offset: 1.0
     size: 1024
-    type: inv_z
-    bias: 0.003
-    normal_offset: 0
-    color: {0.0, 0.0, 0.0, 1}
-    stabilize: true
-    # split_ratios:
-    #   {0.05, 0.25}
-    #   {0.23, 0.48}
-    #   {0.45, 0.85}
     split_lamada: 0.8
-    split_num: 4
-debug:
-  show_bounding: true
+    split_num: 1
+    height: 5
+    split_ratios:
+      {0.00, 1.00}
+    type: inv_z

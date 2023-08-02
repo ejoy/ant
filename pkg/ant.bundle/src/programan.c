@@ -29,7 +29,7 @@ static struct program_manager g_man;
 
 static inline int
 checkid(lua_State *L, int index) {
-	int id = luaL_checkinteger(L, index);
+	int id = (int)luaL_checkinteger(L, index);
 	if (id <= 0 || id > g_man.id)
 		return luaL_error(L, "Invalid program id %d", id);
 	return id;
@@ -47,31 +47,31 @@ lprogram_init(lua_State *L) {
 	luaL_checktype(L, 1, LUA_TTABLE);
 	int threshold_removed = 0;
 	int threshold_reserved = 0;
-	if (lua_getfield(L, -1, "max") != LUA_TNUMBER) {
+	if (lua_getfield(L, 1, "max") != LUA_TNUMBER) {
 		return luaL_error(L, "Need program .max");
 	}
-	int pmax = lua_tointeger(L, -1);
+	int pmax = (int)lua_tointeger(L, -1);
 	if (pmax < 1)
 		return luaL_error(L, ".max %d is too small", pmax);
 	lua_pop(L, 1);
-	if (lua_getfield(L, -1, "threshold") != LUA_TNUMBER) {
+	if (lua_getfield(L, 1, "threshold") != LUA_TNUMBER) {
 		threshold_removed = pmax * 2 / 3;
 	} else {
-		threshold_removed = lua_tointeger(L, -1);
+		threshold_removed = (int)lua_tointeger(L, -1);
 	}
 	if (threshold_removed <= 0)
 		return luaL_error(L, ".threshold %d is too small", threshold_removed);
-	lua_pop(L, -1);
-	if (lua_getfield(L, -1, "reserved") != LUA_TNUMBER) {
+	lua_pop(L, 1);
+	if (lua_getfield(L, 1, "reserved") != LUA_TNUMBER) {
 		threshold_reserved = pmax / 2;
 	} else {
-		threshold_reserved = lua_tointeger(L, -1);
+		threshold_reserved = (int)lua_tointeger(L, -1);
 	}
 	if (threshold_reserved < 0)
 		return luaL_error(L, ".reserved %d is too small", threshold_reserved);
 	if (threshold_reserved > threshold_removed)
 		return luaL_error(L, ".reserved %d > .threshold %d", threshold_reserved, threshold_removed);
-	lua_pop(L, -1);
+	lua_pop(L, 1);
 	g_man.max = pmax;
 	g_man.n = 0;
 	g_man.threshold_removed = threshold_removed;
@@ -116,7 +116,7 @@ remove_old(struct program_manager *M) {
 		if (M->map[i] != INVALID_HANDLE) {
 			struct timehandle *h = &array[n++];
 			h->life = current - M->timestamp[i];
-			M->id = i;
+			h->id = i;
 		}
 	}
 	qsort(array, n, sizeof(struct timehandle), compar_timehandle);
@@ -129,13 +129,14 @@ remove_old(struct program_manager *M) {
 		uint16_t h = M->map[id];
 		M->map[id] = INVALID_HANDLE;
 		M->removed[M->removed_n++] = h;
+		--M->n;
 	}
 }
 
 static int
 lprogram_set(lua_State *L) {
 	int id = checkid(L, 1);
-	uint16_t handle = luaL_checkinteger(L, 2);
+	uint16_t handle = (uint16_t)luaL_checkinteger(L, 2);
 	--id;
 	if (handle == INVALID_HANDLE)
 		return luaL_error(L, "Use reset to set invalid handle");
@@ -173,7 +174,7 @@ lprogram_remove(lua_State *L) {
 	} else {
 		luaL_checktype(L, 1, LUA_TTABLE);
 	}
-	int n = lua_rawlen(L, 1);
+	int n = (int)lua_rawlen(L, 1);
 	int i;
 	for (i=0;i<g_man.removed_n;i++) {
 		lua_pushinteger(L, g_man.removed[i]);
@@ -200,7 +201,7 @@ lprogram_request(lua_State *L) {
 	int i;
 	uint32_t frame = g_man.frame++;
 	int idx = 0;
-	for (i=0;g_man.id;i++) {
+	for (i=0;i<g_man.id;i++) {
 		if (g_man.timestamp[i] == frame && g_man.map[i] == INVALID_HANDLE) {
 			lua_pushinteger(L, i+1);
 			lua_seti(L, 1, ++idx);

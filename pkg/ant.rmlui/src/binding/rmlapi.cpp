@@ -265,7 +265,7 @@ static int
 lElementGetAttributes(lua_State* L) {
 	Rml::Element* e = lua_checkobject<Rml::Element>(L, 1);
 	const auto& attrs = e->GetAttributes();
-	lua_createtable(L, 0, attrs.size());
+	lua_createtable(L, 0, (int)attrs.size());
 	for (const auto& [k, v]: attrs) {
 		lua_pushstdstring(L, k);
 		lua_pushstdstring(L, v);

@@ -39,7 +39,7 @@ local function create_shaders()
         tasks[#tasks+1] = {function ()
             local shader = load_material(v)
             push_uniforms(uniforms, shader.fx.uniforms)
-            progs[k] = shader.fx.prog & 0xFFFF
+            progs[k] = shader.fx.prog
         end}
     end
     for _ in ltask.parallel(tasks) do

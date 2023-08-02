@@ -143,14 +143,18 @@ local main_viewid = viewidmgr.get "main_view"
 local cr_camera_mb      = world:sub{"main_queue", "camera_changed"}
 
 function cfs:init()
+    local function mark_prog(e)
+        w:extend(e, "dispatch:in")
+        assetmgr.material_mark(e.dispatch.fx.prog)
+    end
     icompute.create_compute_entity(
         "cluster_build_aabb", 
         "/pkg/ant.resources/materials/cluster_build.material",
-        cluster_size)
+        cluster_size, mark_prog)
     icompute.create_compute_entity(
         "cluster_cull_light",
         "/pkg/ant.resources/materials/cluster_light_cull.material",
-        {1, 1, cluster_cull_light_size})
+        {1, 1, cluster_cull_light_size}, mark_prog)
 end
 
 local function update_render_info()
@@ -187,6 +191,17 @@ local function build_cluster_aabb_struct(viewid, ceid)
     icompute.dispatch(viewid, e.dispatch)
 end
 
+local function create_buffer_property(bufferdesc, which_stage)
+    local stage = which_stage .. "_stage"
+    local access = which_stage .. "_access"
+    return {
+        type    = "b",
+        value  = bufferdesc.handle,
+        stage   = bufferdesc[stage],
+        access  = bufferdesc[access],
+    }
+end
+
 function cfs:init_world()
     local mq = w:first("main_queue camera_ref:in")
     local ceid = mq.camera_ref
@@ -198,19 +213,19 @@ function cfs:init_world()
     --build
     local be = w:first "cluster_build_aabb material:in"
     local bmo = assetmgr.resource(be.material).object
-    bmo:set_attrib("b_cluster_AABBs",   icompute.create_buffer_property(cluster_buffers.AABB, "build"))
-    bmo:set_attrib("b_light_info",      icompute.create_buffer_property(cluster_buffers.light_info, "build"))
+    bmo:set_attrib("b_cluster_AABBs",   create_buffer_property(cluster_buffers.AABB,       "build"))
+    bmo:set_attrib("b_light_info",      create_buffer_property(cluster_buffers.light_info, "build"))
 
     build_cluster_aabb_struct(main_viewid, ceid)
 
     --cull
     local ce = w:first "cluster_cull_light material:in"
     local cmo = assetmgr.resource(ce.material).object
-    cmo:set_attrib("b_cluster_AABBs",      icompute.create_buffer_property(cluster_buffers.AABB, "cull"))
-    cmo:set_attrib("b_global_index_count", icompute.create_buffer_property(cluster_buffers.global_index_count, "cull"))
-    cmo:set_attrib("b_light_grids",        icompute.create_buffer_property(cluster_buffers.light_grids, "cull"))
-    cmo:set_attrib("b_light_index_lists",  icompute.create_buffer_property(cluster_buffers.light_index_lists, "cull"))
-    cmo:set_attrib("b_light_info",         icompute.create_buffer_property(cluster_buffers.light_info, "cull"))
+    cmo:set_attrib("b_cluster_AABBs",      create_buffer_property(cluster_buffers.AABB,    "cull"))
+    cmo:set_attrib("b_global_index_count", create_buffer_property(cluster_buffers.global_index_count, "cull"))
+    cmo:set_attrib("b_light_grids",        create_buffer_property(cluster_buffers.light_grids, "cull"))
+    cmo:set_attrib("b_light_index_lists",  create_buffer_property(cluster_buffers.light_index_lists, "cull"))
+    cmo:set_attrib("b_light_info",         create_buffer_property(cluster_buffers.light_info, "cull"))
 end
 
 local function cull_lights(viewid)

@@ -1,18 +1,25 @@
-local ecs = ...
+local ecs   = ...
 local world = ecs.world
-local w = world.w
+local w     = world.w
+
+local assetmgr = import_package "ant.asset"
+
 local bgfx = require "bgfx"
 
 local ic = ecs.interface "icompute"
+
+local progman = require "programan.client"
 
 function ic.dispatch(viewid, ds)
 	ds.material()
 
 	local s = ds.size
-	bgfx.dispatch(viewid, ds.fx.prog, s[1], s[2], s[3])
+    if assetmgr.material_isvalid(ds.fx.prog) then
+        bgfx.dispatch(viewid, progman.program_get(ds.fx.prog), s[1], s[2], s[3])
+    end
 end
 
-function ic.create_compute_entity(name, materialfile, size)
+function ic.create_compute_entity(name, materialfile, size, onready)
     ecs.create_entity {
         policy = {
             "ant.render|compute_policy",
@@ -25,19 +32,9 @@ function ic.create_compute_entity(name, materialfile, size)
                 size    = size,
             },
             compute     = true,
+            on_ready    = onready,
             [name]      = true,
         }
-    }
-end
-
-function ic.create_buffer_property(bufferdesc, which_stage)
-    local stage = which_stage .. "_stage"
-    local access = which_stage .. "_access"
-    return {
-        type    = "b",
-        value  = bufferdesc.handle,
-        stage   = bufferdesc[stage],
-        access  = bufferdesc[access],
     }
 end
 

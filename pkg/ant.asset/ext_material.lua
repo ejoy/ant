@@ -129,6 +129,22 @@ end
 local function unloader(m)
 	m.object:release()
 	m.object = nil
+
+	local function destroy_handle(fx, n)
+		local h = fx[n]
+		if h then
+			bgfx.destroy(h)
+			fx[n] = nil
+		end
+	end
+	
+	-- local fx = m.fx
+	-- assert(fx.prog)
+	-- destroy_handle(fx, "prog")
+
+	-- destroy_handle(fx, "vs")
+	-- destroy_handle(fx, "fs")
+	-- destroy_handle(fx, "cs")
 end
 
 return {
