@@ -65,7 +65,7 @@ return function (input, output, setting, localpath, changed)
         tasks = parallel_task.new(),
         depfiles = {},
     }
-    depends.make_depend_graphic_settings(status.depfiles, tolocalpath)
+    depends.make_depend_graphic_settings(status.depfiles, localpath)
 
     status.math3d = math3d_pool.alloc(status.setting)
     status.patch = patch.init(input, status.depfiles)
