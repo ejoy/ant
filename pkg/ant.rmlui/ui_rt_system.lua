@@ -187,11 +187,14 @@ function S.render_target_create(width, height, rt_name)
     return rt.rt_id
 end
 
-function S.render_target_adjust(width, height, name)
-    local queuename = name .. "_queue"
+function S.render_target_adjust(width, height, rt_name)
+    local queuename = rt_name .. "_queue"
     local fbidx = update_fb(width, height, queuename)
-    local id = fbmgr.get_rb(fbidx, 1).handle
-    return rt_table[name].rt_id
+    local rt_handle = fbmgr.get_rb(fbidx, 1).handle
+    local rt = rt_table[rt_name]
+    rt.rt_handle = rt_handle
+    ltask.call(ServiceResource, "texture_set_handle", rt.rt_id, rt.rt_handle)
+    return rt.rt_id
 end
 
 local function calc_camera_t(queuename, aabb, scene, distance)

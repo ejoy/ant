@@ -67,7 +67,7 @@ function m.loadTexture(doc, e, path, width, height, isRT)
                 }
                 pendQueue[path] = nil
             end) 
-        elseif rt_table[path] and rt_table[path].w ~= width or rt_table[path].h ~= height then
+        elseif rt_table[path] and (rt_table[path].w ~= width or rt_table[path].h ~= height) then
             ltask.fork(function ()
                 local id = ltask.call(ServiceWorld, "render_target_adjust", width, height, path)
                 readyQueue[#readyQueue+1] = {
