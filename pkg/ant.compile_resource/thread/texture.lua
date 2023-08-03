@@ -11,11 +11,11 @@ local mem_formats <const> = {
 }
 
 local function readall(filename)
-    return bgfx.memory_buffer(fastio.readall(filename:string()))
+    return bgfx.memory_buffer(fastio.readall(filename))
 end
 
 local function readall_s(filename)
-    return fastio.readall_s(filename:string())
+    return fastio.readall_s(filename)
 end
 
 local function createTexture(c)

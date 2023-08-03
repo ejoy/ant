@@ -11,7 +11,6 @@ function m.add(t, f)
 end
 
 function m.wait(t)
-    assert(#t > 0)
     for _ in ltask.parallel(t) do
     end
 end

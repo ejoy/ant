@@ -188,9 +188,9 @@ local function read_file(fn)
 end
 
 local function read_material_file(filename)
-    local mi = serialize.parse(filename, read_file(filename))
+    local mi = serialize.parse(filename:string(), read_file(filename))
     if type(mi.state) == "string" then
-        mi.state = serialize.parse(filename, read_file(fs.path(mi.state)))
+        mi.state = serialize.parse(filename:string(), read_file(fs.path(mi.state)))
     end
     return mi
 end

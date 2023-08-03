@@ -29,6 +29,4 @@ function m.free(obj)
     pool[#pool+1] = obj
 end
 
-m.free(math3d)
-
 return m

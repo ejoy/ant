@@ -19,6 +19,7 @@ return function(input, output, setting, localpath)
     local depfiles = {}
     local tasks = parallel_task.new()
     compile(tasks, depfiles, mat, input, output, setting, localpath)
+    assert(#tasks > 0)
     parallel_task.wait(tasks)
     depends.make_depend_graphic_settings(depfiles, localpath)
     return true, depfiles

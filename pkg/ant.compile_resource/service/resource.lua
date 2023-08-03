@@ -13,7 +13,7 @@ require "thread.material"
 local S = require "thread.main"
 
 function S.compile(path)
-    return cr.compile(path):string()
+    return cr.compile(path)
 end
 
 local quit

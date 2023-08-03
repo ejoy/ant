@@ -9,7 +9,7 @@ PM.program_init{
 }
 
 local function readall(filename)
-    local f <close> = assert(lfs.open(cr.compile(filename), "rb"))
+    local f <close> = assert(io.open(cr.compile(filename), "rb"))
     return f:read "a"
 end
 
