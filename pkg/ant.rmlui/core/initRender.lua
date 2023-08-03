@@ -1,6 +1,6 @@
 local rmlui = require "rmlui"
 local bgfx = require "bgfx"
-import_package "ant.service".init_bgfx()
+import_package "ant.hwi".init_bgfx()
 
 local function create_shaders()
     local ltask = require "ltask"

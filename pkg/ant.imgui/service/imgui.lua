@@ -155,7 +155,7 @@ for _, name in ipairs {"init","update","exit","size","mousewheel","mouse","keybo
 end
 
 ltask.fork(function ()
-	import_package "ant.service".init_bgfx()
+	import_package "ant.hwi".init_bgfx()
     init_width, init_height = initargs.w, initargs.h
 
     local nwh = imgui.Create(dispatch, initargs.w, initargs.h)

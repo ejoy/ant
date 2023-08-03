@@ -13,9 +13,9 @@ local FI        = require "fileinterface"
 local setting   = import_package "ant.settings".setting
 local DISABLE_EFK<const> = setting:get "efk/disable"
 
-local bgfxmainS = ltask.queryservice "ant.render|bgfx_main"
+local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
 
-import_package "ant.service".init_bgfx()
+import_package "ant.hwi".init_bgfx()
 local renderpkg = import_package "ant.render"
 
 local viewidmgr = renderpkg.viewidmgr

@@ -1,6 +1,6 @@
 local function start(initargs)
     local task = dofile "/engine/task/bootstrap.lua"
-    local exclusive = { {"ant.imgui|imgui", initargs}, "timer", "ant.render|bgfx_main" }
+    local exclusive = { {"ant.imgui|imgui", initargs}, "timer", "ant.hwi|bgfx_main" }
     if not __ANT_RUNTIME__ then
         exclusive[#exclusive+1] = "subprocess"
     end

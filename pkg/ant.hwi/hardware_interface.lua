@@ -151,4 +151,19 @@ function hw.renderer()
 	return init_args.renderer
 end
 
+function hw.init_bgfx()
+    local ltask = require "ltask"
+    local ServiceBgfxMain = ltask.queryservice "ant.hwi|bgfx_main"
+    for _, name in ipairs(ltask.call(ServiceBgfxMain, "CALL")) do
+        bgfx[name] = function (...)
+            return ltask.call(ServiceBgfxMain, name, ...)
+        end
+    end
+    for _, name in ipairs(ltask.call(ServiceBgfxMain, "SEND")) do
+        bgfx[name] = function (...)
+            ltask.send(ServiceBgfxMain, name, ...)
+        end
+    end
+end
+
 return hw

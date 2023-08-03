@@ -1,5 +1,5 @@
 local ltask   = require "ltask"
-import_package "ant.service".init_bgfx()
+import_package "ant.hwi".init_bgfx()
 
 local bgfx = require "bgfx"
 bgfx.init()

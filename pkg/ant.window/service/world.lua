@@ -101,7 +101,7 @@ local function render(nwh, context, width, height, initialized)
 end
 
 function S.init(nwh, context, width, height)
-	import_package "ant.service".init_bgfx()
+	import_package "ant.hwi".init_bgfx()
 	local initialized = {}
 	ltask.fork(render, nwh, context, width, height, initialized)
 	ltask.wait(initialized)

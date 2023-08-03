@@ -12,7 +12,7 @@ local viewidmgr = renderpkg.viewidmgr
 local fbmgr     = renderpkg.fbmgr
 local assetmgr  = import_package "ant.asset"
 
-local bgfxmainS = ltask.queryservice "ant.render|bgfx_main"
+local bgfxmainS = ltask.queryservice "ant.hwi|bgfx_main"
 
 local itimer    = ecs.import.interface "ant.timer|itimer"
 
