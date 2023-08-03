@@ -60,7 +60,7 @@ local function get_type(path)
 	if lfs.is_directory(path) then
 		return "dir"
 	elseif is_resource(path) then
-		return "file"
+		return "dir"
 	elseif lfs.is_regular_file(path) then
 		return "file"
 	end
