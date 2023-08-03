@@ -39,7 +39,12 @@ local BgfxOS <const> = {
     macos = "osx",
 }
 
-local renderer<const> = "metal"
+local RENDERERS<const> = {
+    macos   = "metal",
+    windows = "direct3d11",
+}
+
+local renderer<const> = assert(RENDERERS[platform.os], ("not support os for compile shader:%s"):format(platform.os))
 
 cr.set_setting("material", stringify {
     os = BgfxOS[platform.os] or platform.os,
@@ -54,14 +59,13 @@ cr.set_setting("glb", stringify {
 local texture = assert(texture_extensions[renderer])
 
 cr.set_setting("texture", stringify {os=platform.os, ext=texture})
-cr.set_setting("png", stringify {os=platform.os, ext=texture})
 
 local output = lfs.path "./tools/material_compile/output"
 
 local ltask = require "ltask"
 
 if srcpath:equal_extension "material" then
-    cr.compile_file(srcpath:localpath())
+    cr.compile_file(srcpath:localpath():string())
 elseif srcpath:equal_extension "lua" then
     local files, err = dofile(srcpath:localpath():string())
     if files == nil then
