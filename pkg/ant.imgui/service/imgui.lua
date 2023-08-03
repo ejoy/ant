@@ -1,18 +1,18 @@
 local initargs = ...
 
-local ltask     = require "ltask"
-local bgfx      = require "bgfx"
+local ltask		= require "ltask"
+local bgfx		= require "bgfx"
+local PM		= require "programan.client"
+local imgui		= require "imgui"
+local renderpkg	= import_package "ant.render"
+local viewidmgr	= renderpkg.viewidmgr
+local assetmgr	= import_package "ant.asset"
+local rhwi		= import_package "ant.hwi"
+local exclusive	= require "ltask.exclusive"
 
-local imgui       = require "imgui"
-local renderpkg   = import_package "ant.render"
-local viewidmgr   = renderpkg.viewidmgr
-local assetmgr    = import_package "ant.asset"
-local rhwi        = import_package "ant.hwi"
-local exclusive   = require "ltask.exclusive"
-
-local cb          = {}
-local message     = {}
-local initialized = false
+local cb          	= {}
+local message     	= {}
+local initialized 	= false
 local init_width
 local init_height
 local debug_traceback = debug.traceback
@@ -174,13 +174,15 @@ ltask.fork(function ()
     bgfx.encoder_begin()
 
     local imgui_font = assetmgr.load_material "/pkg/ant.imgui/materials/font.material"
+	assetmgr.material_mark(imgui_font.fx.prog)
     imgui.SetFontProgram(
-        imgui_font.fx.prog,
+        PM.program_get(imgui_font.fx.prog),
         imgui_font.fx.uniforms[1].handle
     )
     local imgui_image = assetmgr.load_material "/pkg/ant.imgui/materials/image.material"
+	assetmgr.material_mark(imgui_image.fx.prog)
     imgui.SetImageProgram(
-        imgui_image.fx.prog,
+        PM.program_get(imgui_image.fx.prog),
         imgui_image.fx.uniforms[1].handle
     )
 
