@@ -417,6 +417,9 @@ local ListNeedResource <const> = 4
 
 function CMD.LIST(id, path)
 	print("[request] LIST", path)
+	if path:sub(1,1) == "/" then
+		path = path:sub(2,-1)
+	end
 	local dir, r, hash = repo:list(path)
 	if dir then
 		response_id(id, dir)
