@@ -46,7 +46,7 @@ function compile_file(input)
         end, changed)
         if not ok then
             local err = deps
-            error("compile failed: " .. input:string() .. "\n" .. err)
+            error("compile failed: " .. input .. "\n" .. err)
         end
         depends.insert_front(deps, input)
         depends.writefile(output / ".dep", deps)
