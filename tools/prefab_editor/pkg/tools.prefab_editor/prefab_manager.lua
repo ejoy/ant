@@ -217,7 +217,7 @@ function m:create(what, config)
             elseif config.type == "plane" then
                 offsety = 0.001
             end
-            local parent_eid = config.parent or gizmo.target_eid
+            local parent_eid = config.parent or gizmo.target_eid or (self.scene and self.scene or self.root)
             local template = {
                 policy = {
                     "ant.render|render",
@@ -399,7 +399,7 @@ function m:on_prefab_ready(prefab)
             light_gizmo.show(false)
         end
     end
-
+    self.scene = self.entities[1]
     local function add_to_hierarchy(eid)
         local node = node_map[eid]
         if node.parent and not hierarchy:get_node(node.parent) then
@@ -550,7 +550,7 @@ function m:reset_prefab(noscene)
     light_gizmo.clear()
     hierarchy:clear()
     anim_view.clear()
-    self.root = create_simple_entity("scene root")
+    self.root = create_simple_entity("root")
     self.entities = {}
     world:pub {"WindowTitle", ""}
     world:pub {"ResetEditor", ""}
@@ -628,7 +628,7 @@ function m:add_effect(filename)
             "ant.general|tag"
 		},
 		data = {
-            name = "root",
+            name = fs.path(filename):stem():string(),
             tag = {"effect"},
             scene = {parent = parent},
             efk = {
