@@ -1,5 +1,5 @@
 debug:
   show_bounding: false
 framebuffer:
-  ratio: 0.5
+  ratio: 1
   scene_ratio: 1
