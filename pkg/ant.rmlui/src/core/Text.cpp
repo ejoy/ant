@@ -6,8 +6,8 @@
 #include <css/Property.h>
 #include <util/StringUtilities.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <binding/utf8.h>
 #include <iostream>
-
 
 namespace Rml {
 
@@ -154,70 +154,20 @@ float Text::GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, f
 	return GetRenderInterface()->GetStringWidth(font_face_handle, token);
 }
 
-bool Text::GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, std::string& ttext, float line_height) {
+bool Text::GenerateLine(std::string& line, float& line_width, size_t line_begin, float maximum_line_width, std::string& ttext) {
 	FontFaceHandle font_face_handle = GetFontFaceHandle();
-	// Initialise the output variables.
 	line.clear();
-	line_length = 0;
 	line_width = 0;
-	// Bail if we don't have a valid font face.
-	if (font_face_handle == 0)
-		return true;
-	// Determine how we are processing white-space while formatting the text.
-	Style::WordBreak word_break = GetProperty<Style::WordBreak>(PropertyId::WordBreak);
-	// Starting at the line_begin character, we generate sections of the text (we'll call them tokens) depending on the
-	// white-space parsing parameters. Each section is then appended to the line if it can fit. If not, or if an
-	// endline is found (and we're processing them), then the line is ended. kthxbai!
-	const char* token_begin = ttext.c_str() + line_begin;
-	const char* string_end = ttext.c_str() + ttext.size();
-	while (token_begin != string_end) {
-		std::string token;
-		const char* next_token_begin = token_begin;
-		// Generate the next token and determine its pixel-length.
-		bool break_line = BuildToken(token, next_token_begin, string_end);
-		float token_width = GetRenderInterface()->GetStringWidth(font_face_handle, token);
-		float max_token_width = maximum_line_width - line_width;
-		if (token_width > max_token_width) {
-			if (word_break == Style::WordBreak::BreakAll || (word_break == Style::WordBreak::BreakWord && line.empty())) {
-				// Try to break up the word
-				max_token_width = maximum_line_width - line_width;
-				const int token_max_size = int(next_token_begin - token_begin);
-				bool force_loop_break_after_next = false;
-				// @performance: Can be made much faster. Use string width heuristics and logarithmic search.
-				for (int i = token_max_size - 1; i > 0; --i) {
-					token.clear();
-					next_token_begin = token_begin;
-					const char* partial_string_end = StringUtilities::SeekBackwardUTF8(token_begin + i, token_begin);
-					break_line = BuildToken(token, next_token_begin, partial_string_end);
-					token_width = GetTokenWidth(font_face_handle, token, line_height);
-					if (force_loop_break_after_next || token_width <= max_token_width) {
-						break;
-					}
-					else if (next_token_begin == token_begin) {
-						// This means the first character of the token doesn't fit. Let it overflow into the next line if we can.
-						if (!line.empty())
-							return false;
-						// Not even the first character of the line fits. Go back to consume the first character even though it will overflow.
-						i += 2;
-						force_loop_break_after_next = true;
-					}
-				}
-				break_line = true;
-			}
-			else if (!line.empty()) {
-				// Let the token overflow into the next line.
-				return false;
-			}
-		}
-		// The token can fit on the end of the line, so add it onto the end and increment our width and length counters.
-		line += token;
-		line_length += (int)(next_token_begin - token_begin);
-		line_width += token_width;
-		// Break out of the loop if an endline was forced.
-		if (break_line)
+	auto view = utf8::view(ttext, line_begin);
+	for (auto it = view.begin(); it != view.end(); ++it) {
+		auto codepoint = *it;
+		float font_width = GetRenderInterface()->GetFontWidth(font_face_handle, codepoint);
+		line += it.value();
+		line_width += font_width;
+		float max_font_width = maximum_line_width - line_width;
+		if (font_width > max_font_width) {
 			return false;
-		// Set the beginning of the next token.
-		token_begin = next_token_begin;
+		}
 	}
 	return true;
 }
@@ -379,7 +329,7 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 	if (GetFontFaceHandle() == 0) {
 		return Size(0, 0);
 	}
-	int line_begin = 0;
+	size_t line_begin = 0;
 	bool finish = false;
 	float line_height = GetLineHeight();
 	float width = minWidth;
@@ -387,18 +337,21 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 	float baseline = GetBaseline();
 
 	Style::TextAlign text_align = GetProperty<Style::TextAlign>(PropertyId::TextAlign);
+	Style::WordBreak word_break = GetProperty<Style::WordBreak>(PropertyId::WordBreak);
 
 	std::string line;
 	std::vector<Rml::layout> line_layouts;
 	codepoints.clear();
 	while (!finish && height < maxHeight) {
 		float line_width;
-		int line_length;
-		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, text, line_height);
+		finish = GenerateLine(line, line_width, line_begin, maxWidth, text);
 		lines.push_back(Line { line_layouts, line, Point(line_width, height + baseline), 0 });
 		width = std::max(width, line_width);
 		height += line_height;
-		line_begin += line_length;
+		line_begin += line.size();
+		if (word_break == Style::WordBreak::Normal) {
+			break;
+		}
 	}
 	for (auto& line : lines) {
 		float start_width = 0.0f;
@@ -555,7 +508,7 @@ Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float ma
 	if (GetFontFaceHandle() == 0) {
 		return Size(0, 0);
 	}
-	int line_begin = 0;
+	size_t line_begin = 0;
 	bool finish = false;
 	float line_height = GetLineHeight();
 	float width = minWidth;
@@ -563,6 +516,8 @@ Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float ma
 	float baseline = GetBaseline();
 	
 	Style::TextAlign text_align = GetProperty<Style::TextAlign>(PropertyId::TextAlign);
+	Style::WordBreak word_break = GetProperty<Style::WordBreak>(PropertyId::WordBreak);
+
 	groups.clear();
 	groupmap.clear();
 	codepoints.clear();
@@ -586,16 +541,18 @@ Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float ma
 	cur_image_idx = 0;
 	while (!finish && height < maxHeight) {
 		float line_width;
-		int line_length;
-		finish = GenerateLine(line, line_length, line_width, line_begin, maxWidth, ctext, line_height);
+		finish = GenerateLine(line, line_width, line_begin, maxWidth, ctext);
 		//richtext
 		line_layouts.clear();
-		line_width=GetRenderInterface()->PrepareText(GetFontFaceHandle(),line,codepoints,groupmap,groups,images,line_layouts,line_begin,line_length);
+		line_width=GetRenderInterface()->PrepareText(GetFontFaceHandle(),line,codepoints,groupmap,groups,images,line_layouts,(int)line_begin,(int)line.size());
 
 		lines.push_back(Line { line_layouts,line, Point(line_width, height + baseline), 0 });
 		width = std::max(width, line_width);
 		height += line_height;
-		line_begin += line_length;
+		line_begin += line.size();
+		if (word_break == Style::WordBreak::Normal) {
+			break;
+		}
 	}
 	for (auto& line : lines) {
 		float start_width = 0.0f;

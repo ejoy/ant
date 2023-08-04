@@ -73,6 +73,7 @@ public:
 	virtual FontFaceHandle GetFontFaceHandle(const std::string& family, Style::FontStyle style, Style::FontWeight weight, uint32_t size) = 0;
 	virtual void GetFontHeight(Rml::FontFaceHandle handle, int& ascent, int& descent, int& lineGap) = 0;
 	virtual bool GetUnderline(FontFaceHandle handle, float& position, float &thickness) = 0;
+	virtual float GetFontWidth(Rml::FontFaceHandle handle, uint32_t codepoint) = 0;
 	virtual float GetStringWidth(FontFaceHandle handle, const std::string& string) = 0;
 	virtual float GetRichStringWidth(FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx,float line_height) = 0;
 	virtual void GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry) =0;

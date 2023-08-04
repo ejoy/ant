@@ -177,6 +177,12 @@ namespace utf8 {
                 iter = next;
                 return *this;
             }
+            T value() const {
+                return T(iter, next);
+            }
+            size_t size() const {
+                return next - iter;
+            }
             uint32_t operator*() {
                 seek();
                 return codepoint;
@@ -223,18 +229,29 @@ namespace utf8 {
 
         view(const T& s, uint32_t replacement = 0xfffd)
             : s {s}
+            , first(std::cbegin(s))
+            , last(std::cend(s))
+            , replacement {replacement}
+        {}
+
+        view(const T& s, size_t offset, uint32_t replacement = 0xfffd)
+            : s {s}
+            , first(std::cbegin(s) + offset)
+            , last(std::cend(s))
             , replacement {replacement}
         {}
 
         const_iterator begin() const {
-            return const_iterator {std::cbegin(s), std::cend(s), replacement};
+            return const_iterator {first, last, replacement};
         }
 
         const_iterator end() const {
-            return const_iterator {std::cend(s), std::cend(s), replacement};
+            return const_iterator {last, last, replacement};
         }
 
         const T& s;
+        typename T::const_iterator first;
+        typename T::const_iterator last;
         uint32_t replacement;
     };
 }

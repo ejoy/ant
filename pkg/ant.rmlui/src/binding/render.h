@@ -35,6 +35,7 @@ public:
 	Rml::FontFaceHandle GetFontFaceHandle(const std::string& family, Rml::Style::FontStyle style, Rml::Style::FontWeight weight, uint32_t size) override;
     void GetFontHeight(Rml::FontFaceHandle handle, int& ascent, int& descent, int& lineGap) override;
 	bool GetUnderline(Rml::FontFaceHandle handle, float& position, float& thickness) override;
+    float GetFontWidth(Rml::FontFaceHandle handle, uint32_t codepoint) override;
 	float GetStringWidth(Rml::FontFaceHandle handle, const std::string& string) override;
     float GetRichStringWidth(Rml::FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx,float line_height) override;
 	void GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry) override;

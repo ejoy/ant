@@ -535,7 +535,14 @@ bool Renderer::GetUnderline(Rml::FontFaceHandle handle, float& position, float &
     return 0 == F->font_manager_underline(F, face.fontid, face.pixelsize, &position, &thickness);
 }
 
-float Renderer::GetStringWidth(Rml::FontFaceHandle handle, const std::string& string){
+float Renderer::GetFontWidth(Rml::FontFaceHandle handle, uint32_t codepoint) {
+    FontFace face;
+    face.handle = handle;
+    auto glyph = GetGlyph(mcontext, face, codepoint);
+    return (float)glyph.advance_x;
+}
+
+float Renderer::GetStringWidth(Rml::FontFaceHandle handle, const std::string& string) {
     FontFace face;
     face.handle = handle;
     float width = 0;
