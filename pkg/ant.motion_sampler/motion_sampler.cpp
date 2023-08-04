@@ -134,7 +134,7 @@ static int lsample(lua_State *L){
 	const int gid = (int)luaL_checkinteger(L, 1);
 	const float delta = (float)luaL_checknumber(L, 2);
 
-	int gids[] = {gid};ecs_api::group_enable<ecs::motion_sampler_tag>(w->ecs, gids);
+	//int gids[] = {gid};ecs_api::group_enable<ecs::motion_sampler_tag>(w->ecs, gids);
 	
 	for (auto& e : ecs_api::select<ecs::motion_sampler_tag, ecs::motion_sampler, ecs::scene>(w->ecs)) {
 		auto &ms = e.get<ecs::motion_sampler>();

@@ -64,6 +64,9 @@ function mss:do_motion_sample()
     if STOP_SYSTEM then
         return 
     end
+    local g = ecs.group(motion_sampler_group)
+    g:enable "motion_sampler_tag"
+    ecs.group_flush()
     lms.sample(motion_sampler_group, itimer.delta())
 end
 
