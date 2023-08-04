@@ -77,7 +77,7 @@ public:
 
 	void Update();
 	void UpdateRender();
-	void SetRenderStatus();
+	bool SetRenderStatus();
 
 	Size GetScrollOffset() const;
 	float GetScrollLeft() const;
@@ -193,6 +193,7 @@ protected:
 	struct Clip {
 		enum class Type : uint8_t {
 			None,
+			Any,
 			Scissor,
 			Shader,
 		} type = Type::None;

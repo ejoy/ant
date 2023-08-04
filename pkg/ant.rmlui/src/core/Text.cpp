@@ -162,13 +162,14 @@ void Text::Render() {
 	UpdateGeometry(font_face_handle);
 	UpdateDecoration(font_face_handle);
 
-	GetParentNode()->SetRenderStatus();
-	if (decoration_under) {
-		decoration.Render();
-	}
-	geometry.Render();
-	if (!decoration_under) {
-		decoration.Render();
+	if (GetParentNode()->SetRenderStatus()) {
+		if (decoration_under) {
+			decoration.Render();
+		}
+		geometry.Render();
+		if (!decoration_under) {
+			decoration.Render();
+		}
 	}
 }
 float Text::GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float){
@@ -706,16 +707,17 @@ void RichText::Render() {
 	UpdateImageMaterials();
 	UpdateDecoration(font_face_handle);
 	UpdateGeometry(font_face_handle);
-	GetParentNode()->SetRenderStatus();
-	if (decoration_under) {
-		decoration.Render();
-	}
-	geometry.Render();
-	for(size_t i = 0; i < images.size(); ++i){
-		imagegeometries[i]->Render();
-	}
-		if (!decoration_under) {
-		decoration.Render();
+	if (GetParentNode()->SetRenderStatus()) {
+		if (decoration_under) {
+			decoration.Render();
+		}
+		geometry.Render();
+		for(size_t i = 0; i < images.size(); ++i){
+			imagegeometries[i]->Render();
+		}
+			if (!decoration_under) {
+			decoration.Render();
+		}
 	}
 }
 

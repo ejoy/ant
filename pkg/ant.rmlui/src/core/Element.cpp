@@ -19,6 +19,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/transform.hpp>
 #include <binding/luaplugin.h>
+#include <bee/nonstd/unreachable.h>
 
 namespace Rml {
 
@@ -102,10 +103,11 @@ void Element::Render() {
 	for (; i < render_children.size() && render_children[i]->GetZIndex() < 0; ++i) {
 		render_children[i]->Render();
 	}
-	SetRenderStatus();
-	geometry.Render();
-	for (; i < render_children.size(); ++i) {
-		render_children[i]->Render();
+	if (SetRenderStatus()) {
+		geometry.Render();
+		for (; i < render_children.size(); ++i) {
+			render_children[i]->Render();
+		}
 	}
 }
 
@@ -628,7 +630,7 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::TransformOriginZ))
 	{
 		DirtyTransform();
-		if (clip.type != Clip::Type::None) {
+		if (clip.type != Clip::Type::None && clip.type != Clip::Type::Any) {
 			DirtyClip();
 		}
 	}
@@ -1077,15 +1079,22 @@ void Element::UnionClip(Clip& c) {
 	switch (clip.type) {
 	case Clip::Type::None:
 		return;
+	case Clip::Type::Any:
+		c.type = Clip::Type::Any;
+		return;
 	case Clip::Type::Shader:
 		c = clip;
 		return;
 	case Clip::Type::Scissor:
 		break;
+	default:
+		std::unreachable();
 	}
 	switch (c.type) {
 	case Clip::Type::None:
 		c = clip;
+		return;
+	case Clip::Type::Any:
 		return;
 	case Clip::Type::Shader:
 		c = clip;
@@ -1093,6 +1102,8 @@ void Element::UnionClip(Clip& c) {
 	case Clip::Type::Scissor:
 		c.scissor = UnionScissor(c.scissor, clip.scissor);
 		return;
+	default:
+		std::unreachable();
 	}
 }
 
@@ -1113,10 +1124,7 @@ void Element::UpdateClip() {
 	}
 	Size size = GetBounds().size;
 	if (size.IsEmpty()) {
-		clip.type = Clip::Type::None;
-		if (auto parent = GetParentNode()) {
-			parent->UnionClip(clip);
-		}
+		clip.type = Clip::Type::Any;
 		return;
 	}
 	Rect scissorRect{ {}, size };
@@ -1154,13 +1162,30 @@ void Element::UpdateClip() {
 	}
 }
 
-void Element::SetRenderStatus() {
-	auto render = GetRenderInterface();
-	render->SetTransform(transform);
+bool Element::SetRenderStatus() {
 	switch (clip.type) {
-	case Clip::Type::None:    render->SetClipRect();             break;
-	case Clip::Type::Scissor: render->SetClipRect(clip.scissor); break;
-	case Clip::Type::Shader:  render->SetClipRect(clip.shader);  break;
+	case Clip::Type::None: {
+		auto render = GetRenderInterface();
+		render->SetTransform(transform);
+		render->SetClipRect();
+		return true;
+	}
+	case Clip::Type::Any:
+		return false;
+	case Clip::Type::Scissor: {
+		auto render = GetRenderInterface();
+		render->SetTransform(transform);
+		render->SetClipRect(clip.scissor);
+		return true;
+	}
+	case Clip::Type::Shader: {
+		auto render = GetRenderInterface();
+		render->SetTransform(transform);
+		render->SetClipRect(clip.shader);
+		return true;
+	}
+	default:
+		std::unreachable();
 	}
 }
 
