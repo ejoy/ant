@@ -48,8 +48,7 @@ protected:
 	void UpdateTextEffects();
 	virtual void UpdateGeometry(const FontFaceHandle font_face_handle);
 	void UpdateDecoration(const FontFaceHandle font_face_handle);
-	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, 
-		float maximum_line_width, bool trim_whitespace_prefix,std::vector<Rml::layout>& line_layouts, std::string& ttext, float line_height);
+	bool GenerateLine(std::string& line, int& line_length, float& line_width, int line_begin, float maximum_line_width, std::string& ttext, float line_height);
 	float GetLineHeight();
 	std::optional<TextShadow> GetTextShadow();
 	std::optional<TextStroke> GetTextStroke();

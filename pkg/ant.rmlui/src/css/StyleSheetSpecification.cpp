@@ -67,7 +67,6 @@ static constexpr inline PropertyIdSet GetInheritableProperties() {
 	set.insert(PropertyId::FontStyle);
 	set.insert(PropertyId::FontWeight);
 	set.insert(PropertyId::TextAlign);
-	set.insert(PropertyId::WhiteSpace);
 	set.insert(PropertyId::WordBreak);
 	set.insert(PropertyId::TextDecorationLine);
 	set.insert(PropertyId::TextDecorationColor);
@@ -683,8 +682,6 @@ void StyleSheetSpecificationInstance::RegisterProperties() {
 
 	RegisterProperty(PropertyId::TextAlign, "text-align", "left")
 		.AddParser("keyword", "left, right, center, justify");
-	RegisterProperty(PropertyId::WhiteSpace, "white-space", "normal")
-		.AddParser("keyword", "normal, pre, nowrap, pre-wrap, pre-line");
 	RegisterProperty(PropertyId::WordBreak, "word-break", "normal")
 		.AddParser("keyword", "normal, break-all, break-word");
 
