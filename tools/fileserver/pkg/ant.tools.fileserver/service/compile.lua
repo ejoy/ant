@@ -15,7 +15,7 @@ cr.init_setting()
 local S = {}
 
 function S.COMPILE(path)
-    return cr.compile_file(vfs.realpath(path)):string()
+    return cr.compile_file(vfs.realpath(path))
 end
 
 function S.SETTING(ext, setting)

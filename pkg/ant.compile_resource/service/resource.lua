@@ -12,9 +12,8 @@ require "thread.material"
 
 local S = require "thread.main"
 
-function S.compile(path)
-    return cr.compile(path)
-end
+S.compile = cr.compile
+S.compile_file = cr.compile_file
 
 local quit
 

@@ -54,4 +54,8 @@ function m.compile(path)
 	return ltask.call(ServiceResource, "compile", path)
 end
 
+function m.compile_file(path)
+	return ltask.call(ServiceResource, "compile_file", path)
+end
+
 return m

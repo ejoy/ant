@@ -4,6 +4,7 @@ local platform  = require "bee.platform"
 local vfs       = require "vfs"
 
 local compile
+local compile_file
 local init_setting
 local set_setting
 
@@ -20,7 +21,6 @@ if __ANT_RUNTIME__ then
         end)
         return table.concat(stack, "/")
     end
-
     function compile(pathstring)
         pathstring = normalize(pathstring)
         local realpath = vfs.realpath(pathstring)
@@ -34,11 +34,11 @@ if __ANT_RUNTIME__ then
 else
     local editor = require "editor.compile"
     local compiled = {}
-    local function compile_file(input)
+    function compile_file(input)
         if compiled[input] then
             return compiled[input]
         end
-        local output = editor.compile_file(input)
+        local output = editor.compile_file(input):string()
         compiled[input] = output
         return output
     end
@@ -46,9 +46,9 @@ else
         local pos = pathstring:find("|", 1, true)
         if pos then
             local resource = assert(vfs.realpath(pathstring:sub(1,pos-1)))
-            local realpath = compile_file(resource) / pathstring:sub(pos+1):gsub("|", "/")
+            local realpath = compile_file(resource).."/"..pathstring:sub(pos+1):gsub("|", "/")
             if lfs.exists(realpath) then
-                return realpath:string()
+                return realpath
             end
         else
             local realpath = vfs.realpath(pathstring)
@@ -122,6 +122,7 @@ local function init()
 end
 
 return {
-    init         = init,
-    compile      = compile,
+    init = init,
+    compile = compile,
+    compile_file = compile_file,
 }

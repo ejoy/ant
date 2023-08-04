@@ -1,6 +1,5 @@
 local cr = require "thread.compile"
 local serialize = import_package "ant.serialize"
-local lfs = require "filesystem.local"
 local bgfx = require "bgfx"
 
 local PM = require "programan.server"
