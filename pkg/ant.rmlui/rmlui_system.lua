@@ -47,6 +47,7 @@ function rmlui_sys:entity_init()
     for q in w:select "INIT rmlui_obj render_target:in" do
         local rt = q.render_target
         local vr = rt.view_rect
+        irq.set_view_rect("rmlui_obj", vr)
         ltask.send(ServiceRmlUi, "update_context_size", vr.w, vr.h, world.args.framebuffer.ratio)
     end
 
