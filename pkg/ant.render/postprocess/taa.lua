@@ -40,7 +40,6 @@ function taasys:init()
             simplemesh      = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/taa.material",
             visible_state   = "taa_queue",
-            view_visible    = true,
             taa_drawer     = true,
             scene           = {},
         }
@@ -63,7 +62,6 @@ function taasys:init()
             simplemesh      = fullquad,
             material        = "/pkg/ant.resources/materials/postprocess/taa_first_frame.material",
             visible_state   = "taa_queue",
-            view_visible    = true,
             taa_first_frame_drawer     = true,
             scene           = {},
         }
@@ -78,7 +76,6 @@ function taasys:init()
             simplemesh      = irender.full_quad(),
             material        = "/pkg/ant.resources/materials/postprocess/taa_copy.material",
             visible_state   = "taa_copy_queue",
-            view_visible    = true,
             taa_copy_drawer     = true,
             scene           = {},
         }
@@ -94,7 +91,6 @@ function taasys:init()
                 simplemesh      = irender.full_quad(),
                 material        = "/pkg/ant.resources/materials/postprocess/taa_copy.material",
                 visible_state   = "taa_present_queue",
-                view_visible    = true,
                 taa_present_drawer     = true,
                 scene           = {},
                 

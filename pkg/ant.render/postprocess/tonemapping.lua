@@ -37,7 +37,6 @@ function tm_sys:init()
             simplemesh      = irender.full_quad(),
             material        = drawer_material,
             visible_state   = "tonemapping_queue",
-            view_visible    = true,
             tonemapping_drawer=true,
             on_ready = function (e)
                 if ENABLE_TM_LUT then
