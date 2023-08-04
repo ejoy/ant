@@ -278,7 +278,7 @@ local function create_road_group(gid, update_list, render_layer)
         --end
     end
     g:enable "view_visible"
-    ecs.group_flush()
+    ecs.group_flush "view_visible"
 end
 
 local function update_road_group(gid, update_list)

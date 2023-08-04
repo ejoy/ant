@@ -29,7 +29,7 @@ local def_group_id<const> = 0
 local vg_sys = ecs.system "viewgroup_system"
 function vg_sys:init()
     ecs.group(def_group_id):enable "view_visible"
-	ecs.group_flush()
+	ecs.group_flush "view_visible"
 end
 
 function render_sys:start_frame()

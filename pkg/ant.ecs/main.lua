@@ -382,7 +382,6 @@ function world:_create_group(id)
         if t[id] then
             return
         end
-        group.dirty = true
         t.dirty = true
         t[id] = true
         table.insert(t.args, id)
@@ -392,7 +391,6 @@ function world:_create_group(id)
         if t[id] == nil then
             return
         end
-        group.dirty = true
         t.dirty = true
         t[id] = nil
         for i = 1, #t.args do
@@ -406,27 +404,19 @@ function world:_create_group(id)
     return setmetatable({}, mt)
 end
 
-function world:_group_flush()
+function world:_group_flush(tag)
     local w = self
     local group = w._group
-    if not group.dirty then
+    local t = group.tags[tag]
+    if not t.dirty then
         return
     end
-    group.dirty = nil
-    local removed = {}
-    for tag, t in pairs(group.tags) do
-        if t.dirty then
-            t.dirty = nil
-            if #t.args == 0 then
-                w.w:group_enable(tag)
-                removed[tag] = true
-            else
-                w.w:group_enable(tag, table.unpack(t.args))
-            end
-        end
-    end
-    for tag in pairs(removed) do
+    t.dirty = nil
+    if #t.args == 0 then
+        w.w:group_enable(tag)
         group.tags[tag] = nil
+    else
+        w.w:group_enable(tag, table.unpack(t.args))
     end
 end
 

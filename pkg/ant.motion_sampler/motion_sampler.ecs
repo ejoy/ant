@@ -31,7 +31,7 @@ interface "imotion_sampler"
 
 system "motion_sampler_system"
     .implement "motion_sampler.lua"
-    .method "component_init"
+    .method "init"
     .method "do_motion_sample"
 
 pipeline "motion_sample"

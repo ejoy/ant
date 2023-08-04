@@ -37,9 +37,13 @@ local function gen_group_id(rt_name)
         local queuename = rt_name.."_queue"
         local gid = ui_rt_group_id + 1
         ui_rt_group_id = gid
-        w:register{ name = rt_name.."_obj"}
-        w:register{ name = queuename}
+        local objname = rt_name.."_obj"
+        w:register{ name = objname }
+        w:register{ name = queuename }
         rt_table[rt_name].gid = gid
+        local g = ecs.group(gid)
+        g:enable(objname)
+        ecs.group_flush(objname)
     end
 end
 
@@ -295,6 +299,7 @@ function iUiRt.set_rt_prefab(rt_name, focus_path, focus_srt, distance, clear_col
     focus_instance.on_message = on_message
     world:create_object(focus_instance)
     g:enable "view_visible"
+    ecs.group_flush "view_visible"
     rt.prefab = focus_instance 
     rt.prefab_path = focus_path
     return rt.prefab
@@ -370,9 +375,6 @@ function ui_rt_sys:update_filter()
         local distance = rt_table[rt_name].distance
         local queuename = rt_name .. "_queue"
         local obj_name = rt_name .. "_obj"
-        local g = ecs.group(gid)
-        g:enable(obj_name)
-        ecs.group_flush()
         local select_tag = "filter_result " .. obj_name .. " visible_state:in render_object:update filter_material:in render_object?in scene?update eid:in bounding?in focus_obj?in"
         for e in w:select(select_tag) do
             if e.visible_state[queuename] then

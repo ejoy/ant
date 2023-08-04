@@ -406,6 +406,7 @@ function init_loader_sys:ui_update()
                 ecs.group(1):disable "view_visible"
             end
             enable = enable == 1 and 0 or 1
+            ecs.group_flush "view_visible"
 
         elseif key == "LEFT" and press == 0 then
             local d = w:first("directional_light scene:in eid:in")

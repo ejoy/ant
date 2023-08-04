@@ -54,19 +54,18 @@ function msc.remove(v)
     v.motion_tracks = lms.null()
 end
 
-function mss:component_init()
-
+function mss:init()
+    local g = ecs.group(motion_sampler_group)
+    g:enable "motion_sampler_tag"
+    ecs.group_flush "motion_sampler_tag"
 end
 
 local STOP_SYSTEM
 
 function mss:do_motion_sample()
     if STOP_SYSTEM then
-        return 
+        return
     end
-    local g = ecs.group(motion_sampler_group)
-    g:enable "motion_sampler_tag"
-    ecs.group_flush()
     lms.sample(motion_sampler_group, itimer.delta())
 end
 

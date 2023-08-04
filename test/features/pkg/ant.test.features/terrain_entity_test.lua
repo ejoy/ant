@@ -66,6 +66,7 @@ local function update_group(ce)
             g:enable "view_visible"
         end
     end
+    ecs.group_flush "view_visible"
 end
 
 function tet_sys:data_changed()

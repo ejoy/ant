@@ -100,8 +100,8 @@ return function (w, package)
     function ecs.group(id)
         return w:_create_group(id)
     end
-    function ecs.group_flush()
-        return w:_group_flush()
+    function ecs.group_flush(tag)
+        return w:_group_flush(tag)
     end
     function ecs.clibs(name)
         return w:clibs(name)
