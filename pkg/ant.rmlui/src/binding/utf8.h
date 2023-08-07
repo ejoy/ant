@@ -254,4 +254,53 @@ namespace utf8 {
         typename T::const_iterator last;
         uint32_t replacement;
     };
+
+    inline std::string toutf8 (uint32_t codepoint) {
+        if (codepoint < 0x80) {
+            return {
+                (char)(uint8_t)codepoint
+            };
+        }
+        else if (codepoint < 0x800) {
+            return {
+                (char)(uint8_t)(0xC0 | (codepoint << 21 >> 27)),
+                (char)(uint8_t)(0x80 | (codepoint << 26 >> 26))
+            };
+        }
+        else if (codepoint < 0x10000) {
+            return {
+                (char)(uint8_t)(0xE0 | (codepoint << 16 >> 28)),
+                (char)(uint8_t)(0x80 | (codepoint << 20 >> 26)),
+                (char)(uint8_t)(0x80 | (codepoint << 26 >> 26))
+            };
+        }
+        else if (codepoint < 0x200000) {
+            return {
+                (char)(uint8_t)(0xF0 | (codepoint << 11 >> 29)),
+                (char)(uint8_t)(0x80 | (codepoint << 14 >> 26)),
+                (char)(uint8_t)(0x80 | (codepoint << 20 >> 26)),
+                (char)(uint8_t)(0x80 | (codepoint << 26 >> 26))
+            };
+        }
+        else if (codepoint < 0x4000000) {
+            return {
+                (char)(uint8_t)(0xF8 | (codepoint << 6 >> 30)),
+                (char)(uint8_t)(0x80 | (codepoint << 8 >> 26)),
+                (char)(uint8_t)(0x80 | (codepoint << 14 >> 26)),
+                (char)(uint8_t)(0x80 | (codepoint << 20 >> 26)) ,
+                (char)(uint8_t)(0x80 | (codepoint << 26 >> 26))
+            };
+        }
+        else {
+            return {
+                (char)(uint8_t)(0xFC | (codepoint << 1 >> 31)),
+                (char)(uint8_t)(0x80 | (codepoint << 2 >> 26)),
+                (char)(uint8_t)(0x80 | (codepoint << 8 >> 26)),
+                (char)(uint8_t)(0x80 | (codepoint << 14 >> 26)),
+                (char)(uint8_t)(0x80 | (codepoint << 20 >> 26)),
+                (char)(uint8_t)(0x80 | (codepoint << 26 >> 26))
+            };
+        }
+    }
+
 }

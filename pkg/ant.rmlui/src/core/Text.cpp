@@ -154,22 +154,52 @@ float Text::GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, f
 	return GetRenderInterface()->GetStringWidth(font_face_handle, token);
 }
 
-bool Text::GenerateLine(std::string& line, float& line_width, size_t line_begin, float maximum_line_width, std::string& ttext) {
-	FontFaceHandle font_face_handle = GetFontFaceHandle();
-	line.clear();
-	line_width = 0;
-	auto view = utf8::view(ttext, line_begin);
-	for (auto it = view.begin(); it != view.end(); ++it) {
-		auto codepoint = *it;
-		float font_width = GetRenderInterface()->GetFontWidth(font_face_handle, codepoint);
-		line += it.value();
-		line_width += font_width;
-		float max_font_width = maximum_line_width - line_width;
-		if (font_width > max_font_width) {
+//static uint32_t kEllipsisCodepoint = 0x22EF;
+static uint32_t kEllipsisCodepoint = 0x2026;
+static std::string kEllipsisString = utf8::toutf8(kEllipsisCodepoint);
+
+bool Text::GenerateLine(std::string& line, float& line_width, size_t line_begin, float maxWidth, std::string& ttext, bool lastLine) {
+	if (lastLine) {
+		if (GenerateLine(line, line_width, line_begin, maxWidth, ttext, false)) {
+			return true;
+		}
+		line.clear();
+		line_width = 0;
+		FontFaceHandle font_face_handle = GetFontFaceHandle();
+		float kEllipsisWidth = GetRenderInterface()->GetFontWidth(font_face_handle, kEllipsisCodepoint);
+		if (kEllipsisWidth > maxWidth) {
 			return false;
 		}
+		auto view = utf8::view(ttext, line_begin);
+		for (auto it = view.begin(); it != view.end(); ++it) {
+			auto codepoint = *it;
+			float font_width = GetRenderInterface()->GetFontWidth(font_face_handle, codepoint);
+			if (line_width + font_width + kEllipsisWidth > maxWidth) {
+				line += kEllipsisString;
+				line_width += kEllipsisWidth;
+				return false;
+			}
+			line += it.value();
+			line_width += font_width;
+		}
+		return true;
 	}
-	return true;
+	else {
+		line.clear();
+		line_width = 0;
+		FontFaceHandle font_face_handle = GetFontFaceHandle();
+		auto view = utf8::view(ttext, line_begin);
+		for (auto it = view.begin(); it != view.end(); ++it) {
+			auto codepoint = *it;
+			float font_width = GetRenderInterface()->GetFontWidth(font_face_handle, codepoint);
+			if (line_width + font_width > maxWidth) {
+				return false;
+			}
+			line += it.value();
+			line_width += font_width;
+		}
+		return true;
+	}
 }
 
 void Text::CalculateLayout() {
@@ -330,10 +360,9 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 		return Size(0, 0);
 	}
 	size_t line_begin = 0;
-	bool finish = false;
 	float line_height = GetLineHeight();
 	float width = minWidth;
-	float height = 0.0f;
+	float height = 0.f;
 	float baseline = GetBaseline();
 
 	Style::TextAlign text_align = GetProperty<Style::TextAlign>(PropertyId::TextAlign);
@@ -342,15 +371,28 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 	std::string line;
 	std::vector<Rml::layout> line_layouts;
 	codepoints.clear();
-	while (!finish && height < maxHeight) {
-		float line_width;
-		finish = GenerateLine(line, line_width, line_begin, maxWidth, text);
-		lines.push_back(Line { line_layouts, line, Point(line_width, height + baseline), 0 });
-		width = std::max(width, line_width);
-		height += line_height;
-		line_begin += line.size();
-		if (word_break == Style::WordBreak::Normal) {
-			break;
+	if (word_break == Style::WordBreak::Normal) {
+		if (line_height < maxHeight) {
+			float line_width;
+			GenerateLine(line, line_width, line_begin, maxWidth, text, true);
+			lines.push_back(Line { line_layouts, line, Point(line_width, baseline), 0 });
+			width = std::max(width, line_width);
+			line_begin += line.size();
+			height += line_height;
+		}
+	}
+	else {
+		bool finish = false;
+		for (; height <= maxHeight; height += line_height) {
+			float line_width;
+			finish = GenerateLine(line, line_width, line_begin, maxWidth, text, height + line_height > maxHeight);
+			lines.push_back(Line { line_layouts, line, Point(line_width, height + baseline), 0 });
+			width = std::max(width, line_width);
+			height += line_height;
+			line_begin += line.size();
+			if (finish) {
+				break;
+			}
 		}
 	}
 	for (auto& line : lines) {
@@ -541,7 +583,7 @@ Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float ma
 	cur_image_idx = 0;
 	while (!finish && height < maxHeight) {
 		float line_width;
-		finish = GenerateLine(line, line_width, line_begin, maxWidth, ctext);
+		finish = GenerateLine(line, line_width, line_begin, maxWidth, ctext, false);
 		//richtext
 		line_layouts.clear();
 		line_width=GetRenderInterface()->PrepareText(GetFontFaceHandle(),line,codepoints,groupmap,groups,images,line_layouts,(int)line_begin,(int)line.size());
