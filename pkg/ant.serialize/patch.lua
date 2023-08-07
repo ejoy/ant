@@ -177,6 +177,17 @@ local function equal(a, b)
     return equal_(a, b) and equal_(b, a)
 end
 
+local function deepcopy(t)
+    if type(t) ~= "table" then
+        return t
+    end
+    local r = {}
+    for k, v in pairs(t) do
+        r[k] = deepcopy(v)
+    end
+    return r
+end
+
 local op = {}
 
 function op:add(data)
@@ -196,7 +207,7 @@ function op:copy(data)
     if not ok then
         return false
     end
-    return replace(data, self.path, res)
+    return replace(data, self.path, deepcopy(res))
 end
 
 function op:move(data)
