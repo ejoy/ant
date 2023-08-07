@@ -185,6 +185,9 @@ local function deepcopy(t)
     for k, v in pairs(t) do
         r[k] = deepcopy(v)
     end
+    if not isArray(t) then
+        markObject(r)
+    end
     return r
 end
 
