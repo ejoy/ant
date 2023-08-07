@@ -19,7 +19,6 @@ public:
 	float GetBaseline();
 	void ChangedProperties(const PropertyIdSet& properties);
 protected:
-	virtual float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float line_height);
 	std::optional<Property> GetComputedProperty(PropertyId id);
 
 	template <typename T>
@@ -78,7 +77,6 @@ public:
 protected:
 	void Render() override;
 	void UpdateGeometry(const FontFaceHandle font_face_handle)override;
-	float GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float line_height) override;
 private:
 	void UpdateImageMaterials();
 	std::vector<Rml::group> groups;

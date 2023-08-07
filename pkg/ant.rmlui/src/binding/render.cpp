@@ -542,34 +542,6 @@ float Renderer::GetFontWidth(Rml::FontFaceHandle handle, uint32_t codepoint) {
     return (float)glyph.advance_x;
 }
 
-float Renderer::GetStringWidth(Rml::FontFaceHandle handle, const std::string& string) {
-    FontFace face;
-    face.handle = handle;
-    float width = 0;
-    for (auto c : utf8::view(string)) {
-        auto glyph = GetGlyph(mcontext, face, c);
-        width += (float)glyph.advance_x;
-    }
-    return width;
-}
-
-float Renderer::GetRichStringWidth(Rml::FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx, float line_height){
-    FontFace face;
-    face.handle = handle;
-    float width = 0;
-    for (auto c : utf8::view(string)) {
-        if(c == '`'){
-            width += line_height;
-            cur_image_idx++;
-        }
-        else{
-            auto glyph = GetGlyph(mcontext, face, c);
-            width += (float)glyph.advance_x;
-        }
-    }
-    return width;
-}
-
 // why 32768, which want to use vs_uifont.sc shader to render font
 // and vs_uifont.sc also use in runtime font render.
 // the runtime font renderer store vertex position in int16

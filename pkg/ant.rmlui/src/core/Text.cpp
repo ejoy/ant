@@ -150,9 +150,6 @@ void Text::Render() {
 		}
 	}
 }
-float Text::GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float){
-	return GetRenderInterface()->GetStringWidth(font_face_handle, token);
-}
 
 //static uint32_t kEllipsisCodepoint = 0x22EF;
 static uint32_t kEllipsisCodepoint = 0x2026;
@@ -534,10 +531,6 @@ RichText::RichText(Document* owner, const std::string& text_)
 
 RichText::~RichText()
 { }
-
-float RichText::GetTokenWidth(FontFaceHandle font_face_handle, std::string& token, float line_height){
-	return GetRenderInterface()->GetRichStringWidth(font_face_handle, token, images, cur_image_idx, line_height);
-}
 
 Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float maxHeight) {
 	lines.clear();

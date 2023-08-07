@@ -36,8 +36,6 @@ public:
     void GetFontHeight(Rml::FontFaceHandle handle, int& ascent, int& descent, int& lineGap) override;
 	bool GetUnderline(Rml::FontFaceHandle handle, float& position, float& thickness) override;
     float GetFontWidth(Rml::FontFaceHandle handle, uint32_t codepoint) override;
-	float GetStringWidth(Rml::FontFaceHandle handle, const std::string& string) override;
-    float GetRichStringWidth(Rml::FontFaceHandle handle, const std::string& string, std::vector<Rml::image>& images, int& cur_image_idx,float line_height) override;
 	void GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, const Rml::Color& color, Rml::Geometry& geometry) override;
     void GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<std::vector<Rml::layout>> layouts, std::vector<uint32_t>& codepoints, Rml::Geometry& textgeometry, std::vector<std::unique_ptr<Rml::Geometry>> & imagegeometries, std::vector<Rml::image>& images, int& cur_image_idx, float line_height) override;
     float PrepareText(Rml::FontFaceHandle handle,const std::string& string,std::vector<uint32_t>& codepoints,std::vector<int>& groupmap,std::vector<Rml::group>& groups,std::vector<Rml::image>& images,std::vector<Rml::layout>& line_layouts,int start,int num) override;
