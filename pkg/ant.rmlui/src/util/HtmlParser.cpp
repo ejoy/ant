@@ -76,6 +76,23 @@ static bool IsCharNameValid(char c) {
 	return false;
 }
 
+static std::string& SkipSpace(std::string& s) {
+	for (ptrdiff_t i = s.size()-1; i >= 0; --i) {
+		switch (s[i]) {
+		case ' ':
+		case '\t':
+		case '\n':
+		case '\r':
+			break;
+		default:
+			s.erase(s.begin() + i + 1, s.end());
+			return s;
+		}
+	}
+	s.erase();
+	return s;
+}
+
 HtmlElement HtmlParser::Parse(std::string_view stream, bool inner) {
 	HtmlElement root;
     std::stack<HtmlElement*> stack;
@@ -260,7 +277,7 @@ HtmlElement HtmlParser::Parse(std::string_view stream, bool inner) {
 			switch (c) {
 			case '<': {
 				HtmlElement& current = *stack.top();
-				current.children.emplace_back(HtmlString{accum});
+				current.children.emplace_back(HtmlString{ SkipSpace(accum) });
 				accum.erase();
 				state = st_open;
 				break;
@@ -308,7 +325,7 @@ HtmlElement HtmlParser::Parse(std::string_view stream, bool inner) {
 			break;
 		case st_text: {
 			HtmlElement& current = *stack.top();
-			current.children.emplace_back(HtmlString{ accum });
+			current.children.emplace_back(HtmlString{ SkipSpace(accum) });
 			accum.erase();
 			state = st_open;
 			break;
