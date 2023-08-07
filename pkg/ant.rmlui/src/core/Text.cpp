@@ -376,7 +376,7 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 	}
 	else {
 		bool finish = false;
-		for (; height <= maxHeight; height += line_height) {
+		while (height <= maxHeight) {
 			float line_width;
 			finish = GenerateLine(line, line_width, line_begin, maxWidth, text, height + line_height > maxHeight);
 			lines.push_back(Line { line, Point(line_width, height + baseline), 0 });
