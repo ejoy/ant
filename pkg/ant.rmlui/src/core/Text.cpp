@@ -165,15 +165,14 @@ bool Text::GenerateLine(std::string& line, float& line_width, size_t line_begin,
 		}
 		line.clear();
 		line_width = 0;
-		FontFaceHandle font_face_handle = GetFontFaceHandle();
-		float kEllipsisWidth = GetRenderInterface()->GetFontWidth(font_face_handle, kEllipsisCodepoint);
+		float kEllipsisWidth = GetRenderInterface()->GetFontWidth(font_handle, kEllipsisCodepoint);
 		if (kEllipsisWidth > maxWidth) {
 			return false;
 		}
 		auto view = utf8::view(ttext, line_begin);
 		for (auto it = view.begin(); it != view.end(); ++it) {
 			auto codepoint = *it;
-			float font_width = GetRenderInterface()->GetFontWidth(font_face_handle, codepoint);
+			float font_width = GetRenderInterface()->GetFontWidth(font_handle, codepoint);
 			if (line_width + font_width + kEllipsisWidth > maxWidth) {
 				line += kEllipsisString;
 				line_width += kEllipsisWidth;
@@ -187,11 +186,10 @@ bool Text::GenerateLine(std::string& line, float& line_width, size_t line_begin,
 	else {
 		line.clear();
 		line_width = 0;
-		FontFaceHandle font_face_handle = GetFontFaceHandle();
 		auto view = utf8::view(ttext, line_begin);
 		for (auto it = view.begin(); it != view.end(); ++it) {
 			auto codepoint = *it;
-			float font_width = GetRenderInterface()->GetFontWidth(font_face_handle, codepoint);
+			float font_width = GetRenderInterface()->GetFontWidth(font_handle, codepoint);
 			if (line_width + font_width > maxWidth) {
 				return false;
 			}
@@ -369,13 +367,11 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 	Style::WordBreak word_break = GetProperty<Style::WordBreak>(PropertyId::WordBreak);
 
 	std::string line;
-	std::vector<Rml::layout> line_layouts;
-	codepoints.clear();
 	if (word_break == Style::WordBreak::Normal) {
 		if (line_height < maxHeight) {
 			float line_width;
 			GenerateLine(line, line_width, line_begin, maxWidth, text, true);
-			lines.push_back(Line { line_layouts, line, Point(line_width, baseline), 0 });
+			lines.push_back(Line { line, Point(line_width, baseline), 0 });
 			width = std::max(width, line_width);
 			line_begin += line.size();
 			height += line_height;
@@ -386,7 +382,7 @@ Size Text::Measure(float minWidth, float maxWidth, float minHeight, float maxHei
 		for (; height <= maxHeight; height += line_height) {
 			float line_width;
 			finish = GenerateLine(line, line_width, line_begin, maxWidth, text, height + line_height > maxHeight);
-			lines.push_back(Line { line_layouts, line, Point(line_width, height + baseline), 0 });
+			lines.push_back(Line { line, Point(line_width, height + baseline), 0 });
 			width = std::max(width, line_width);
 			height += line_height;
 			line_begin += line.size();
@@ -588,7 +584,8 @@ Size RichText::Measure(float minWidth, float maxWidth, float minHeight, float ma
 		line_layouts.clear();
 		line_width=GetRenderInterface()->PrepareText(GetFontFaceHandle(),line,codepoints,groupmap,groups,images,line_layouts,(int)line_begin,(int)line.size());
 
-		lines.push_back(Line { line_layouts,line, Point(line_width, height + baseline), 0 });
+		lines.push_back(Line { line, Point(line_width, height + baseline), 0 });
+		layouts.push_back(line_layouts);
 		width = std::max(width, line_width);
 		height += line_height;
 		line_begin += line.size();
@@ -620,7 +617,7 @@ void RichText::UpdateGeometry(const FontFaceHandle font_face_handle) {
 	dirty.erase(Dirty::Geometry);
 	cur_image_idx = 0;
 	float line_height = GetLineHeight();
-	GetRenderInterface()->GenerateRichString(font_face_handle, lines, codepoints, geometry, imagegeometries, images, cur_image_idx, line_height);
+	GetRenderInterface()->GenerateRichString(font_face_handle, lines, layouts, codepoints, geometry, imagegeometries, images, cur_image_idx, line_height);
 	if (GetParentNode()->IsGray()) {
 		geometry.SetGray();
 	}

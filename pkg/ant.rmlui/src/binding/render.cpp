@@ -618,7 +618,7 @@ void Renderer::GenerateString(Rml::FontFaceHandle handle, Rml::LineList& lines, 
     }
 }
 
-void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<uint32_t>& codepoints, Rml::Geometry& textgeometry, std::vector<std::unique_ptr<Rml::Geometry>> & imagegeometries, std::vector<Rml::image>& images, int& cur_image_idx, float line_height){
+void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lines, std::vector<std::vector<Rml::layout>> layouts, std::vector<uint32_t>& codepoints, Rml::Geometry& textgeometry, std::vector<std::unique_ptr<Rml::Geometry>> & imagegeometries, std::vector<Rml::image>& images, int& cur_image_idx, float line_height){
     auto& vertices = textgeometry.GetVertices();
     auto& indices = textgeometry.GetIndices();
     vertices.clear();
@@ -635,7 +635,7 @@ void Renderer::GenerateRichString(Rml::FontFaceHandle handle, Rml::LineList& lin
         float x = line.position.x + 0.5f, y = line.position.y + 0.5f;
         
         Rml::Color color;
-        for (auto& layout:line.layouts){
+        for (auto& layout:layouts[i]){
             for(int ii=0;ii<layout.num;++ii){
                 uint32_t codepoint=codepoints[layout.start+ii];
                 if(codepoint == 0x8000000u){

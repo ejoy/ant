@@ -43,7 +43,6 @@ protected:
 	void SetOuterHTML(const std::string& html) override;
 	const Rect& GetContentRect() const override;
 	std::string text;
-	std::vector<uint32_t> codepoints;
 	LineList lines;
 	void UpdateTextEffects();
 	virtual void UpdateGeometry(const FontFaceHandle font_face_handle);
@@ -89,6 +88,8 @@ private:
 	std::vector<std::unique_ptr<Geometry>> imagegeometries;
 	std::string ctext;
 	int cur_image_idx = 0;
+	std::vector<std::vector<Rml::layout>> layouts;
+	std::vector<uint32_t> codepoints;
 };
 
 }
