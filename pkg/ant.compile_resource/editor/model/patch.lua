@@ -41,12 +41,12 @@ function m.init(input, depfiles)
     return patchLst
 end
 
-function m.apply(status, path, data)
+function m.apply(status, path, data, retval)
     local patch = status.patch[path]
     if not patch then
         return data
     end
-    local ok, res = serialize.patch.apply(data, patch)
+    local ok, res = serialize.patch.apply(data, patch, retval)
     assert(ok == true, res)
     return res
 end

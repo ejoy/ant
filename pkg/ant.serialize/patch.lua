@@ -232,15 +232,20 @@ function op:test(data)
     return false
 end
 
-function m.apply(data, patchs, n)
+function op:copyfile(data, retval)
+    retval[self.value] = deepcopy(data)
+    return true, data
+end
+
+function m.apply(data, patchs, retval)
     local ok
-    for i = n or 1, #patchs do
+    for i = 1, #patchs do
         local patch = patchs[i]
         local method = op[patch.op]
         if not method then
             return false
         end
-        ok, data = method(patch, data)
+        ok, data = method(patch, data, retval)
         if not ok then
             return false
         end

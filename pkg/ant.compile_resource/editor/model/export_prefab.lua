@@ -55,18 +55,10 @@ end
 
 local DEFAULT_STATE = "main_view|selectable|cast_shadow"
 
-local is_builtinpath;do
-    local builtin<const> = getmetatable(serialize.path "")
-    is_builtinpath = function (v)
-        assert(type(v) == "table")
-        return getmetatable(v) == builtin
-    end
-end
-
 local function duplicate_table(m)
     local t = {}
     for k, v in pairs(m) do
-        if type(v) == "table" and (not is_builtinpath(v)) then
+        if type(v) == "table" then
             t[k] = duplicate_table(v)
         else
             t[k] = v
@@ -237,38 +229,6 @@ local function seri_material(input, output, status, materialidx, cfg, setting)
     return DEFAULT_MATERIAL_PATH
 end
 
-local function read_local_file(materialfile)
-    local f <close> = lfs.open(materialfile)
-    return f:read "a"
-end
-
-local function check_create_skin_material(status, materialfile)
-    local n = materialfile:stem():string() .. "_skin"
-    local newpath = materialfile:parent_path() / (n .. materialfile:extension())
-    local fullnewpath = utility.full_path(status, newpath:string())
-    if lfs.exists(fullnewpath) then
-        return newpath
-    end
-
-    local lmf = lfs.path(utility.full_path(status, materialfile:string()))
-    local m = datalist.parse(read_local_file(lmf))
-    if nil == m.fx.setting then
-        m.fx.setting = {}
-    end
-
-    m.fx.setting.GPU_SKINNING = 1
-    utility.save_txt_file(status, newpath:string(), m)
-    return newpath
-end
-
-local function has_color_attrib(declname)
-    for _, d in ipairs(declname) do
-        if d:sub(1, 1) == 'c' then
-            return true
-        end
-    end
-end
-
 local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx, parent, status, setting)
     local node = gltfscene.nodes[nodeidx+1]
     local srt = get_transform(math3d, node)
@@ -296,9 +256,9 @@ local function create_mesh_node_entity(math3d, input, output, gltfscene, nodeidx
         end
 
         local data = {
-            mesh        = serialize.path(meshfile),
+            mesh        = meshfile,
 ---@diagnostic disable-next-line: need-check-nil
-            material    = serialize.path(materialfile:string()),
+            material    = materialfile:string(),
             name        = node.name or "",
             visible_state= DEFAULT_STATE,
         }
@@ -359,8 +319,8 @@ local function create_skin_entity(status, parent, withanim)
         skinning = true,
         scene = {},
     }
-    data.skeleton = serialize.path(status.skeleton)
-    data.meshskin = serialize.path(status.skin[1])
+    data.skeleton = status.skeleton
+    data.meshskin = status.skin[1]
     return create_entity {
         policy = policy,
         data = data,
@@ -376,13 +336,13 @@ local function create_animation_entity(status)
     local data = {
         name = "animation",
     }
-    data.skeleton = serialize.path(status.skeleton)
+    data.skeleton = status.skeleton
     data.animation = {}
     local anilst = {}
     for name, file in pairs(status.animations) do
         local n = fix_invalid_name(name)
         anilst[#anilst+1] = n
-        data.animation[n] = serialize.path(file)
+        data.animation[n] = file
     end
     table.sort(anilst)
     data.animation_birth = anilst[1] or ""
@@ -409,6 +369,37 @@ end
 local function cleanup()
     prefab = {}
     clean_material_cache()
+end
+
+local function serialize_path(path)
+    if path:sub(1,1) ~= "/" then
+        return serialize.path(path)
+    end
+    return path
+end
+
+local function serialize_prefab(data)
+    for _, v in ipairs(data) do
+        local e = v.data
+        if e.animation then
+            for name, file in pairs(e.animation) do
+                e.animation[name] = serialize_path(file)
+            end
+        end
+        if e.mesh then
+            e.mesh = serialize_path(e.mesh)
+        end
+        if e.material then
+            e.material = serialize_path(e.material)
+        end
+        if e.skeleton then
+            e.skeleton = serialize_path(e.skeleton)
+        end
+        if e.meshskin then
+            e.meshskin = serialize_path(e.meshskin)
+        end
+    end
+    return data
 end
 
 return function (status)
@@ -476,7 +467,7 @@ return function (status)
         for name, file in pairs(status.animations) do
             local n = fix_invalid_name(name)
             anilst[#anilst+1] = n
-            animation[n] = serialize.path(file)
+            animation[n] = file
         end
         table.sort(anilst)
         local anim_prefab = {
@@ -487,14 +478,14 @@ return function (status)
                 },
                 data = {
                     name = "animation",
-                    skeleton = serialize.path(status.skeleton),
+                    skeleton = status.skeleton,
                     animation = animation,
                     animation_birth = anilst[1],
                     anim_ctrl = {},
                 },
             }
         }
-        utility.save_txt_file(status, "./animation.prefab", anim_prefab)
+        utility.save_txt_file(status, "animation.prefab", anim_prefab, serialize_prefab)
     end
-    utility.save_txt_file(status, "./mesh.prefab", prefab)
+    utility.save_txt_file(status, "mesh.prefab", prefab, serialize_prefab)
 end

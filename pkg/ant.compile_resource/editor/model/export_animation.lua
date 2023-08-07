@@ -35,7 +35,7 @@ return function (status)
     if not fs.exists(skefile) then
         print("NO SKELETON export!")
     else
-        status.skeleton = "./animations/skeleton.ozz"
+        status.skeleton = "animations/skeleton.ozz"
     end
 
     status.animations = {}
@@ -43,7 +43,7 @@ return function (status)
         if path:equal_extension ".ozz" then
             local filename = path:filename():string()
             if filename ~= "skeleton.ozz" then
-                status.animations[path:stem():string()] = "./animations/"..filename
+                status.animations[path:stem():string()] = "animations/"..filename
             end
         end
     end

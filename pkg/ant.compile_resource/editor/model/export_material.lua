@@ -169,7 +169,7 @@ return function (status)
         local outfile = output / "images" / name
 
         if not EXPORTED_FILES[outfile:string()] then
-            serialize_image_file("./images/"..name)
+            serialize_image_file("images/"..name)
             EXPORTED_FILES[outfile:string()] = true
         end
         return name
@@ -191,27 +191,25 @@ return function (status)
     local function export_texture(filename, texture_desc)
         if not EXPORTED_FILES[filename] then
             EXPORTED_FILES[filename] = true
-            texture_desc = utility.apply_patch(status, filename, texture_desc)
-
-            local function cvt_img_path(path)
-                path = path[1]
-                if path:sub(1,1) == "/" then
-                    return fs.path(path):localpath()
+            utility.apply_patch(status, filename, texture_desc, function (name, desc)
+                local function cvt_img_path(path)
+                    if path:sub(1,1) == "/" then
+                        return fs.path(path):localpath()
+                    end
+                    return fs.absolute((output / filename):parent_path() / (path:match "^%./(.+)$" or path))
                 end
-                return fs.absolute((output / filename):parent_path() / (path:match "^%./(.+)$" or path))
-            end
-
-            local imgpath = cvt_img_path(texture_desc.path)
-            if not fs.exists(imgpath) then
-                error(("try to compile texture file:%s, but texture.path:%s is not exist"):format(filename, imgpath:string()))
-            end
-
-            parallel_task.add(status.tasks, function ()
-                local ok, err = texture_compile(texture_desc, output / filename, TextureSetting, cvt_img_path)
-                if not ok then
-                    error("compile failed: " .. filename .. "\n" .. err)
+                local imgpath = cvt_img_path(desc.path)
+                if not fs.exists(imgpath) then
+                    error(("try to compile texture file:%s, but texture.path:%s is not exist"):format(name, imgpath:string()))
                 end
+                parallel_task.add(status.tasks, function ()
+                    local ok, err = texture_compile(desc, output / name, TextureSetting, cvt_img_path)
+                    if not ok then
+                        error("compile failed: " .. name .. "\n" .. err)
+                    end
+                end)
             end)
+
         else
             print("'texture' file already compiled: ", filename)
         end
@@ -252,7 +250,7 @@ return function (status)
         local tex = textures[texidx+1]
         local imgname = export_image(tex.source)
         local texture_desc = {
-            path        = serialize.path("./"..imgname),
+            path        = imgname,
             sampler     = to_sampler(tex.sampler),
             normalmap   = normalmap,
             colorspace  = colorspace,
@@ -264,10 +262,10 @@ return function (status)
         add_texture_format(texture_desc, need_compress)
 
         local texname       = fs.path(imgname):replace_extension("texture"):string()
-        export_texture("./images/" .. texname, texture_desc)
+        export_texture("images/" .. texname, texture_desc)
 
         --we need output texture path which is relate to *.material file, so we need ..
-        return serialize.path("./../images/" .. texname)
+        return "../images/" .. texname
     end
 
     local function handle_texture(tex_desc, name, normalmap, colorspace)
@@ -345,11 +343,12 @@ return function (status)
             return newname
         end
         local materialname = refine_name(name)
-        local filename = "./materials/" .. materialname .. ".material"
-        material = utility.apply_patch(status, filename, material)
-        status.material[matidx] = {
-            filename = fs.path(filename),
-            material = material,
-        }
+        local filename = "materials/" .. materialname .. ".material"
+        utility.apply_patch(status, filename, material, function (name, desc)
+            status.material[matidx] = {
+                filename = fs.path(name),
+                material = desc,
+            }
+        end)
     end
 end

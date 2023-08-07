@@ -506,7 +506,7 @@ local function export_skinbin(status, gltfscene, bindata)
 	for skinidx, skin in ipairs(gltfscene.skins) do
 		joint_index = redirect_skin_joints(gltfscene, skin, joint_index, status.scenetree, joint_trees)
 		local skinname = get_obj_name(skin, skinidx, "skin")
-		local resname = "./meshes/"..skinname .. ".skinbin"
+		local resname = "meshes/"..skinname .. ".skinbin"
 		utility.save_bin_file(status, resname, fetch_skininfo(gltfscene, skin, bindata))
 		status.skin[skinidx] = resname
 	end
@@ -584,10 +584,10 @@ end
 -- end
 
 local function save_meshbin_files(status, resname, meshgroup)
-	local cfgname = ("./meshes/%s.meshbin"):format(resname)
+	local cfgname = ("meshes/%s.meshbin"):format(resname)
 
 	local function write_bin_file(fn, bin)
-		utility.save_file(status, "./meshes/" .. fn, bin)
+		utility.save_file(status, "meshes/" .. fn, bin)
 		return fn
 	end
 
@@ -602,7 +602,7 @@ local function save_meshbin_files(status, resname, meshgroup)
 		ib.memory[1] = write_bin_file(resname .. ".ibbin", ib.memory[1])
 	end
 
-	utility.save_txt_file(status, cfgname, meshgroup)
+	utility.save_txt_file(status, cfgname, meshgroup, function (v) return v end)
 	return cfgname
 end
 
