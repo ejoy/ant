@@ -72,8 +72,7 @@ system "tonemapping_system"
     .method "data_changed"
     .method "tonemapping"
 
-component "bloom_downsampler"
-component "bloom_upsampler"
+component "bloom_queue"
 
 system "bloom_system"
     .implement "postprocess/bloom.lua"
@@ -81,6 +80,7 @@ system "bloom_system"
     .method "init_world"
     .method "data_changed"
     .method "bloom"
+    .method "entity_remove"
 
 component "fxaa_queue"
 component "fxaa_drawer"
