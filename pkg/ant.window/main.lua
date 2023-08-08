@@ -14,6 +14,7 @@ local function start(initargs)
         exclusive = exclusive,
         debuglog = (log_path / "debug.log"):string(),
         crashlog = (log_path / "crash.log"):string(),
+        worker = 4,
     }
 end
 
