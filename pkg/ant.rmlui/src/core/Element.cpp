@@ -630,7 +630,7 @@ void Element::ChangedProperties(const PropertyIdSet& changed_properties) {
 		changed_properties.contains(PropertyId::TransformOriginZ))
 	{
 		DirtyTransform();
-		if (clip.type != Clip::Type::None && clip.type != Clip::Type::Any) {
+		if (clip.type != ElementClip::Type::None && clip.type != ElementClip::Type::Any) {
 			DirtyClip();
 		}
 	}
@@ -1028,18 +1028,62 @@ void Element::CalculateLayout() {
 	content_rect.Union(content);
 }
 
+static float checkSign(glm::vec2 a, glm::vec2 b, glm::vec2 p) {
+	glm::vec2 ab = b - a;
+	glm::vec2 ap = p - a;
+	return ab.x * ap.y - ab.y * ap.x;
+}
+
+static bool InClip(ElementClip& clip, Point point) {
+	switch (clip.type) {
+	case ElementClip::Type::None:
+		return true;
+	case ElementClip::Type::Any:
+		return false;
+	case ElementClip::Type::Shader: {
+		glm::vec2 lt { clip.shader[0].x, clip.shader[0].y };
+		glm::vec2 rt { clip.shader[0].z, clip.shader[0].w };
+		glm::vec2 lb { clip.shader[1].x, clip.shader[1].y };
+		glm::vec2 rb { clip.shader[1].z, clip.shader[1].w };
+		glm::vec2 p  { point.x, point.y };
+		float sign1 = checkSign(lt, rt, p);
+		float sign2 = checkSign(rt, rb, p);
+		float sign3 = checkSign(rb, lb, p);
+		float sign4 = checkSign(lb, lt, p);
+		if (sign1 < 0 && sign2 < 0 && sign3 < 0 && sign4 < 0) {
+			return true;
+		}
+		if (sign1 > 0 && sign2 > 0 && sign3 > 0 && sign4 > 0) {
+			return true;
+		}
+		if (sign1 == 0 || sign2 == 0 || sign3 == 0 || sign4 == 0) {
+			return true;
+		}
+		return false;
+	}
+	case ElementClip::Type::Scissor:
+		return Rect { (float)clip.scissor.x, (float)clip.scissor.y, (float)clip.scissor.z, (float)clip.scissor.w }.Contains(point);
+		break;
+	default:
+		std::unreachable();
+	}
+}
+
 Element* Element::ElementFromPoint(Point point) {
 	if (!IsVisible()) {
 		return nullptr;
 	}
-	bool childVisible = clip.type != Clip::Type::Scissor || Rect{ (float)clip.scissor.x, (float)clip.scissor.y, (float)clip.scissor.z, (float)clip.scissor.w }.Contains(point);
-	if (childVisible) {
+	if (InClip(clip, point)) {
 		if (auto res = ChildFromPoint(point)) {
 			return res;
 		}
 	}
-	if (!IgnorePointerEvents() && Project(point) && Rect { {}, GetBounds().size }.Contains(point)) {
-		return this;
+	if (!IgnorePointerEvents()) {
+		if (Project(point)) {
+			if (Rect { {}, GetBounds().size }.Contains(point)) {
+				return this;
+			}
+		}
 	}
 	return nullptr;
 }
@@ -1075,31 +1119,31 @@ static glm::u16vec4 UnionScissor(const glm::u16vec4& a, glm::u16vec4& b) {
 	return {x, y, mx - x, my - y};
 }
 
-void Element::UnionClip(Clip& c) {
+void Element::UnionClip(ElementClip& c) {
 	switch (clip.type) {
-	case Clip::Type::None:
+	case ElementClip::Type::None:
 		return;
-	case Clip::Type::Any:
-		c.type = Clip::Type::Any;
+	case ElementClip::Type::Any:
+		c.type = ElementClip::Type::Any;
 		return;
-	case Clip::Type::Shader:
+	case ElementClip::Type::Shader:
 		c = clip;
 		return;
-	case Clip::Type::Scissor:
+	case ElementClip::Type::Scissor:
 		break;
 	default:
 		std::unreachable();
 	}
 	switch (c.type) {
-	case Clip::Type::None:
+	case ElementClip::Type::None:
 		c = clip;
 		return;
-	case Clip::Type::Any:
+	case ElementClip::Type::Any:
 		return;
-	case Clip::Type::Shader:
+	case ElementClip::Type::Shader:
 		c = clip;
 		return;
-	case Clip::Type::Scissor:
+	case ElementClip::Type::Scissor:
 		c.scissor = UnionScissor(c.scissor, clip.scissor);
 		return;
 	default:
@@ -1116,7 +1160,7 @@ void Element::UpdateClip() {
 	}
 
 	if (GetLayout().GetOverflow() == Layout::Overflow::Visible) {
-		clip.type = Clip::Type::None;
+		clip.type = ElementClip::Type::None;
 		if (auto parent = GetParentNode()) {
 			parent->UnionClip(clip);
 		}
@@ -1124,7 +1168,7 @@ void Element::UpdateClip() {
 	}
 	Size size = GetBounds().size;
 	if (size.IsEmpty()) {
-		clip.type = Clip::Type::Any;
+		clip.type = ElementClip::Type::Any;
 		return;
 	}
 	Rect scissorRect{ {}, size };
@@ -1143,14 +1187,14 @@ void Element::UpdateClip() {
 		&& corners[2].x == corners[1].x
 		&& corners[2].y == corners[3].y
 	) {
-		clip.type = Clip::Type::Scissor;
+		clip.type = ElementClip::Type::Scissor;
 		clip.scissor.x = clamp(std::floor(corners[0].x)                , (glm::u16)0, std::numeric_limits<glm::u16>::max());
 		clip.scissor.y = clamp(std::floor(corners[0].y)                , (glm::u16)0, std::numeric_limits<glm::u16>::max());
 		clip.scissor.z = clamp(std::ceil(corners[2].x - clip.scissor.x), (glm::u16)0, std::numeric_limits<glm::u16>::max());
 		clip.scissor.w = clamp(std::ceil(corners[2].y - clip.scissor.y), (glm::u16)0, std::numeric_limits<glm::u16>::max());
 	}
 	else {
-		clip.type = Clip::Type::Shader;
+		clip.type = ElementClip::Type::Shader;
 		clip.shader[0].x = corners[0].x; clip.shader[0].y = corners[0].y;
 		clip.shader[0].z = corners[1].x; clip.shader[0].w = corners[1].y;
 		clip.shader[1].z = corners[2].x; clip.shader[1].w = corners[2].y;
@@ -1164,21 +1208,21 @@ void Element::UpdateClip() {
 
 bool Element::SetRenderStatus() {
 	switch (clip.type) {
-	case Clip::Type::None: {
+	case ElementClip::Type::None: {
 		auto render = GetRenderInterface();
 		render->SetTransform(transform);
 		render->SetClipRect();
 		return true;
 	}
-	case Clip::Type::Any:
+	case ElementClip::Type::Any:
 		return false;
-	case Clip::Type::Scissor: {
+	case ElementClip::Type::Scissor: {
 		auto render = GetRenderInterface();
 		render->SetTransform(transform);
 		render->SetClipRect(clip.scissor);
 		return true;
 	}
-	case Clip::Type::Shader: {
+	case ElementClip::Type::Shader: {
 		auto render = GetRenderInterface();
 		render->SetTransform(transform);
 		render->SetClipRect(clip.shader);

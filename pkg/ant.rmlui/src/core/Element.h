@@ -24,6 +24,19 @@ struct HtmlElement;
 
 using ElementAttributes = std::unordered_map<std::string, std::string>;
 
+struct ElementClip {
+	enum class Type : uint8_t {
+		None,
+		Any,
+		Scissor,
+		Shader,
+	} type = Type::None;
+	union {
+		glm::u16vec4 scissor;
+		glm::vec4 shader[2];
+	};
+};
+
 class Element : public LayoutNode {
 public:
 	Element(Document* owner, const std::string& tag);
@@ -190,19 +203,8 @@ protected:
 	EdgeInsets<float> padding{};
 	EdgeInsets<float> border{};
 	EdgeInsets<float> scroll_insets{};
-	struct Clip {
-		enum class Type : uint8_t {
-			None,
-			Any,
-			Scissor,
-			Shader,
-		} type = Type::None;
-		union {
-			glm::u16vec4 scissor;
-			glm::vec4 shader[2];
-		};
-	} clip;
-	void UnionClip(Clip& clip);
+	ElementClip clip;
+	void UnionClip(ElementClip& clip);
 
 	enum class Dirty {
 		Transform,
