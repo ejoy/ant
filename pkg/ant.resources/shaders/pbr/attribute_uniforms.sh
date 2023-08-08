@@ -86,15 +86,20 @@ mediump vec3 remap_normal(mediump vec2 normalTSXY)
     return mediump vec3(normalXY, z);
 }
 
-mediump vec3 fetch_bc5_normal(sampler2D normaltex, mediump vec2 texcoord)
+mediump vec3 fetch_normal(sampler2D normaltex, mediump vec2 texcoord)
 {
-    return remap_normal(texture2DBc5(normaltex, texcoord));
+    #if BGFX_SHADER_LANGUAGE_METAL
+        return remap_normal(texture2DAstc(normaltex, texcoord));
+    #else
+        return remap_normal(texture2DBc5(normaltex, texcoord));
+    #endif
 }
+
 
 #ifdef HAS_NORMAL_TEXTURE
 mediump vec3 normal_from_tangent_frame(mat3 tbn, mediump vec2 texcoord)
 {
-	mediump vec3 normalTS = fetch_bc5_normal(s_normal, texcoord);
+	mediump vec3 normalTS = fetch_normal(s_normal, texcoord);
     // same as: mul(transpose(tbn), normalTS)
     return normalize(mul(normalTS, tbn));
 }
