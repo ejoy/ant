@@ -80,7 +80,6 @@ system "bloom_system"
     .method "init_world"
     .method "data_changed"
     .method "bloom"
-    .method "entity_remove"
 
 component "fxaa_queue"
 component "fxaa_drawer"

@@ -15,7 +15,7 @@ local bloom_setting = setting:data().graphic.postprocess.bloom
 local ENABLE_BLOOM<const> = bloom_setting.enable
 
 if not ENABLE_BLOOM then
-    renderutil.default_system(bloom_sys, "init", "init_world", "data_changed", "bloom", "entity_remove")
+    renderutil.default_system(bloom_sys, "init", "init_world", "data_changed", "bloom")
     return
 end
 
@@ -181,21 +181,6 @@ function bloom_sys:data_changed()
     end
 end
 
-function bloom_sys:entity_remove()
---[[     local fbidx
-    for e in w:select "REMOVED bloom_queue render_target:in" do
-        if fbidx then
-            fbmgr.destroy(fbidx)
-            fbidx = e.render_target.fb_idx
-        end
-    end
-
-    if fbidx then
-        fbidx = nil
-        local mq = w:first("main_queue render_target:in")
-        create_chain_sample_queue(mq.render_target.view_rect)
-    end ]]
-end
 
 local scenecolor_property = {
     stage   = 0,
@@ -206,21 +191,24 @@ local scenecolor_property = {
 }
 
 local function do_bloom_sample(viewid, drawertag, ppi_handle, next_mip)
-    local rbhandle = fbmgr.get_rb(fbmgr.get_byviewid(viewid)[1].rbidx).handle
-    for i=1, BLOOM_MIPCOUNT do
-        local drawer = w:first(drawertag .. i .. " filter_material:in")
-        local fm = drawer.filter_material
-        local material = fm.main_queue
-        local mip = next_mip()
-        BLOOM_PARAM[1] = mip
-        scenecolor_property.value = ppi_handle
-        scenecolor_property.mip = mip
-        material.s_scene_color = scenecolor_property
-        material.u_bloom_param = BLOOM_PARAM
-        ppi_handle = rbhandle 
+    local fb = fbmgr.get_byviewid(viewid)
+    if fb then
+        local rbhandle = fbmgr.get_rb(fb[1].rbidx).handle
+        for i=1, BLOOM_MIPCOUNT do
+            local drawer = w:first(drawertag .. i .. " filter_material:in")
+            local fm = drawer.filter_material
+            local material = fm.main_queue
+            local mip = next_mip()
+            BLOOM_PARAM[1] = mip
+            scenecolor_property.value = ppi_handle
+            scenecolor_property.mip = mip
+            material.s_scene_color = scenecolor_property
+            material.u_bloom_param = BLOOM_PARAM
+            ppi_handle = rbhandle 
+        end
+    
+        return ppi_handle       
     end
-
-    return ppi_handle
 end
 
 function bloom_sys:bloom()
