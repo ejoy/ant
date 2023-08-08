@@ -28,7 +28,7 @@ local function which_format(setting, param)
 	if compress then
 		local os = setting.os
 		if os == "ios" or os == "macos" then
-			return "ASTC4x4"
+			return "ASTC8x8"
 		end
 		return compress[os]
 	end
