@@ -184,7 +184,7 @@ end
 function bloom_sys:entity_remove()
     local fbidx
     for e in w:select "REMOVED bloom_queue render_target:in" do
-        if fbidx == nil then
+        if fbidx then
             fbmgr.destroy(fbidx)
             fbidx = e.render_target.fb_idx
         end
