@@ -182,7 +182,7 @@ function bloom_sys:data_changed()
 end
 
 function bloom_sys:entity_remove()
-    local fbidx
+--[[     local fbidx
     for e in w:select "REMOVED bloom_queue render_target:in" do
         if fbidx then
             fbmgr.destroy(fbidx)
@@ -194,7 +194,7 @@ function bloom_sys:entity_remove()
         fbidx = nil
         local mq = w:first("main_queue render_target:in")
         create_chain_sample_queue(mq.render_target.view_rect)
-    end
+    end ]]
 end
 
 local scenecolor_property = {
