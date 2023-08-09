@@ -31,6 +31,26 @@ vec3 box4x4Reinhard(vec3 s0, vec3 s1, vec3 s2, vec3 s3) {
 void main() {
     float lod = u_bloom_level;
     vec2 uv = v_texcoord0.xy;
+/*     vec4 d = vec4(u_viewTexel.xy, -u_viewTexel.xy) * 0.5;
+
+    vec3 c = texture2DLod(s_scene_color, uv, lod).rgb;
+
+    vec3 lt = texture2DLod(s_scene_color, uv + d.zw, lod).rgb;
+    vec3 rt = texture2DLod(s_scene_color, uv + d.xw, lod).rgb;
+    vec3 rb = texture2DLod(s_scene_color, uv + d.xy, lod).rgb;
+    vec3 lb = texture2DLod(s_scene_color, uv + d.zy, lod).rgb;
+
+    vec3 lt2 = texture2DLodOffset(s_scene_color, uv, lod, ivec2(-1, -1)).rgb;
+    vec3 rt2 = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 1, -1)).rgb;
+    vec3 rb2 = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 1,  1)).rgb;
+    vec3 lb2 = texture2DLodOffset(s_scene_color, uv, lod, ivec2(-1,  1)).rgb;
+
+    vec3 l = texture2DLodOffset(s_scene_color, uv, lod, ivec2(-1,  0)).rgb;
+    vec3 t = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 0, -1)).rgb;
+    vec3 r = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 1,  0)).rgb;
+    vec3 b = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 0,  1)).rgb;  */
+
+#ifdef BLOOM_UPSAMPLE_QUALITY_HIGH
     vec3 c = texture2DLod(s_scene_color, uv, lod).rgb;
 
     vec3 lt = texture2DLodOffset(s_scene_color, uv, lod, ivec2(-1, -1)).rgb;
@@ -46,7 +66,7 @@ void main() {
     vec3 l = texture2DLodOffset(s_scene_color, uv, lod, ivec2(-2,  0)).rgb;
     vec3 t = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 0, -2)).rgb;
     vec3 r = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 2,  0)).rgb;
-    vec3 b = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 0,  2)).rgb;
+    vec3 b = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 0,  2)).rgb;  
 
     // five h4x4 boxes
     vec3 c0, c1;
@@ -84,5 +104,24 @@ void main() {
     }
 
     // weighted average of the five boxes
-    gl_FragColor = vec4(c0 * 0.5 + c1 * 0.125, 1.0);
+    gl_FragColor = vec4(c0 * 0.5 + c1 * 0.125, 1.0);  
+#else
+    vec3 lt = texture2DLodOffset(s_scene_color, uv, lod, ivec2(-1, -1)).rgb;
+    vec3 rt = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 1, -1)).rgb;
+    vec3 rb = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 1,  1)).rgb;
+    vec3 lb = texture2DLodOffset(s_scene_color, uv, lod, ivec2(-1,  1)).rgb;
+    vec3 c;
+    if (u_bloom_level <= 0.5) {
+        if (u_bloom_threshold > 0.0) {
+            threshold(lt);
+            threshold(rt);
+            threshold(rb);
+            threshold(lb);
+        }
+        c  = box4x4Reinhard(lt, rt, rb, lb);
+    } else {
+        c  = box4x4(lt, rt, rb, lb);
+    }
+    gl_FragColor = vec4(c , 1.0); 
+#endif
 }
