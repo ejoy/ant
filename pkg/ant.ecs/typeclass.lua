@@ -93,7 +93,7 @@ local function create_importor(w)
 				else
 					local pkg = v.packname
 					local file = impl:gsub("^(.*)%.lua$", "%1")
-					pm.findenv(package, pkg)
+					pm.loadenv(pkg)
 						.include_ecs(w, w._ecs[pkg], file)
 				end
 			end
@@ -186,10 +186,10 @@ end
 local function init(w, config)
 	w._initializing = true
 	w._class = {}
-	w._decl = interface.new(function(current, packname, filename)
+	w._decl = interface.new(function(_, packname, filename)
 		local file = "/pkg/"..packname.."/"..filename
 		log.debug(("Import decl %q"):format(file))
-		return assert(pm.findenv(current, packname).loadfile(file))
+		return assert(pm.loadenv(packname).loadfile(file))
 	end)
 	w._importor = create_importor(w)
 	function w:_import(objname, package, name)

@@ -1,6 +1,6 @@
 local fs = require "filesystem"
 
-local function sandbox_env(loadenv, config, root, pkgname)
+local function sandbox_env(loadenv, config, root)
     local env = setmetatable({}, {__index=_G})
     local _LOADED = {}
 
@@ -111,13 +111,9 @@ local function sandbox_env(loadenv, config, root, pkgname)
         _ECS_LOADING[w][name] = nil
     end
 
-    function env.package_env(name)
-        return loadenv(name)
-    end
-
     env._ENTRY_FILE = config.entry
     function env.import_package(name)
-        local e = env.package_env(name)
+        local e = loadenv(name)
         local f = e._ENTRY
         if f then
             return f

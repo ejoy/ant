@@ -11,7 +11,7 @@ local function loadenv(name)
         error(("\n\tno package '%s'"):format(name))
     end
     if not info.env then
-        info.env = sandbox.env(loadenv, info.config, "/pkg/"..name, name)
+        info.env = sandbox.env(loadenv, info.config, "/pkg/"..name)
     end
     return info.env
 end
@@ -57,12 +57,7 @@ initialize()
 ---@diagnostic disable-next-line: lowercase-global
 import_package = import
 
-local function findenv(from, to)
-    return loadenv(from or to).package_env(to)
-end
-
 return {
     import = import,
-    findenv = findenv,
     loadenv = loadenv,
 }

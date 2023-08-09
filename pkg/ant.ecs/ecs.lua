@@ -78,7 +78,7 @@ return function (w, package)
             pkg = package
             file = fullname
         end
-        return pm.findenv(package, pkg)
+        return pm.loadenv(pkg)
             .require_ecs(w, w._ecs[pkg], file)
     end
     ecs.import = {}
