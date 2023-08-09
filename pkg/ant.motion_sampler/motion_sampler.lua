@@ -51,7 +51,6 @@ end
 
 function msc.remove(v)
     lms.destroy_tracks(v.motion_tracks)
-    v.motion_tracks = lms.null()
 end
 
 function mss:init()
