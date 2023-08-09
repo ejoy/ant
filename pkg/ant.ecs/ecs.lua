@@ -1,5 +1,4 @@
 local pm = require "packagemanager"
-pm.detect()
 
 local function sourceinfo()
 	local info = debug.getinfo(3, "Sl")
