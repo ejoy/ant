@@ -26,7 +26,7 @@ local function dofile(path)
 	return assert(loadfile(path))()
 end
 
-dofile "engine/common/log.lua"
+dofile "engine/log.lua"
 
 local access = dofile "engine/vfs/repoaccess.lua"
 dofile "engine/editor/create_repo.lua" (repopath, access)

@@ -10,7 +10,7 @@ if not __ANT_RUNTIME__ then
     end)
 end
 
-require "common.log"
+require "log"
 require "packagemanager"
 
 --if __ANT_RUNTIME__ then
