@@ -7,23 +7,6 @@ local serialization = require "bee.serialization"
 local fs = require "filesystem"
 local world = {}
 
-local function sortpairs(t)
-    local sort = {}
-    for k in pairs(t) do
-        sort[#sort+1] = k
-    end
-    table.sort(sort)
-    local n = 1
-    return function ()
-        local k = sort[n]
-        if k == nil then
-            return
-        end
-        n = n + 1
-        return k, t[k]
-    end
-end
-
 local function create_entity_by_data(w, group, data)
     local queue = w._create_queue
     local eid = w.w:new {

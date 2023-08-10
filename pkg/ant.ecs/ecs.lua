@@ -27,7 +27,7 @@ return function (w, package)
         local class_set = {}
         ecs[what] = function(name)
             local fullname = name
-            if what ~= "action" and what ~= "component" then
+            if what ~= "component" then
                 fullname = package .. "|" .. name
             end
             local r = class_set[fullname]
