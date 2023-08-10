@@ -136,9 +136,6 @@ function irq.set_camera(queuename, camera_ref)
 end
 
 local bc_mb = world:sub{"bind_camera"}
-function ecs.method.bind_camera(camera_ref, queuename)
-	world:pub{"bind_camera", queuename, camera_ref}
-end
 
 function irq.set_visible(queuename, b)
 	local e = w:first(queuename .." visible?out")

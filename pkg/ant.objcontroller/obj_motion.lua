@@ -267,7 +267,3 @@ function iobj_motion.screen_to_ndc(pt2d, vp_size)
     local ndc = mu.pt2D_to_NDC(pt2d, vp_size)
     return {ndc[1], ndc[2], pt2d[3]}
 end
-
-for n, f in pairs(iobj_motion) do
-    ecs.method[n] = f
-end

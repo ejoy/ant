@@ -146,7 +146,6 @@ local function create_entity_template(w, v)
 
     return setmetatable({
         _world = w,
-        action = v.action,
         mount = v.mount,
         template = w.w:template(data),
         tag = v.tag,
@@ -220,21 +219,6 @@ function create_template(w, filename)
         templates[filename] = create_template_(w, t)
     end
     return templates[filename]
-end
-
-local function run_action(w, entities, template)
-    for i, entity in ipairs(template) do
-        if entity.prefab then
-            run_action(w, entities[i], entity.prefab)
-        elseif entity.action then
-            for name, target in sortpairs(entity.action) do
-                if target:match "@(%d*)" then
-                    target = entities[tonumber(target:sub(2))]
-                end
-                w:call(entities[i], name, target)
-            end
-        end
-    end
 end
 
 local function add_tag(dict, tag, eid)
@@ -344,7 +328,6 @@ function world:_create_instance(group, parent, filename)
     for _, m in ipairs(noparent) do
         m.parent = parent
     end
-    run_action(w, prefab, template)
     return {
         group = group,
         tag = create_tags(prefab, template)
@@ -417,36 +400,6 @@ function world:_group_flush(tag)
         group.tags[tag] = nil
     else
         w.w:group_enable(tag, table.unpack(t.args))
-    end
-end
-
-function world:call(e, name, ...)
-    local f = self._methods[name]
-    if not f then
-        error(("Method `%s` is not defined."):format(name))
-    end
-    return f(e, ...)
-end
-
-function world:multicall(set, name, ...)
-    local f = self._methods[name]
-    if not f then
-        error(("Method `%s` is not defined."):format(name))
-    end
-    local res = {}
-    for i = 1, #set do
-        res[i] = f(set[i], ...)
-    end
-    return res
-end
-
-function world:multicast(set, name, ...)
-    local f = self._methods[name]
-    if not f then
-        error(("Method `%s` is not defined."):format(name))
-    end
-    for i = 1, #set do
-        f(set[i], ...)
     end
 end
 

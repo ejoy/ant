@@ -202,17 +202,6 @@ local function init(w, config)
 		end
 		return res
 	end
-	w._set_methods = setmetatable({}, {
-		__index = w._methods,
-		__newindex = function(_, name, f)
-			if w._methods[name] then
-				local info = debug.getinfo(w._methods[name], "Sl")
-				assert(info.source:sub(1,1) == "@")
-				error(string.format("Method `%s` has already defined at %s(%d).", name, info.source:sub(2), info.linedefined))
-			end
-			w._methods[name] = f
-		end,
-	})
 	setmetatable(w._ecs, {__index = function (_, package)
 		return create_ecs(w, package)
 	end})

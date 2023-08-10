@@ -301,7 +301,6 @@ function m.new_world(config)
 		_memory = {},
 		_memory_stat = setmetatable({start={}, finish={}}, {__close = finish_memory_stat}),
 		_ecs = {},
-		_methods = {},
 		_group = {
 			tags = {}
 		},
