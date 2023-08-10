@@ -1,6 +1,8 @@
-require "log" --TODO: remove it
+--TODO: remove they
+require "log"
+require "filesystem"
 
-local fs = require "filesystem"
+local vfs = require "vfs"
 
 local registered = {}
 
@@ -12,7 +14,7 @@ local function sandbox_env(packagename)
         name = string.gsub(name, '%.', '/')
         for c in string.gmatch(path, '[^;]+') do
             local filename = string.gsub(c, '%?', name)
-            if fs.exists(fs.path(filename)) then
+            if vfs.type(filename) ~= nil then
                 return filename
             end
         end
@@ -85,7 +87,7 @@ end
 local function loadenv(name)
     local env = registered[name]
     if not env then
-        if not fs.is_directory(fs.path("/pkg/"..name)) then
+        if vfs.type("/pkg/"..name) ~= 'dir' then
             error(('`/pkg/%s` is not a directory.'):format(name))
         end
         env = sandbox_env(name)
