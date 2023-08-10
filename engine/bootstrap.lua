@@ -1,5 +1,4 @@
 if not __ANT_RUNTIME__ then
-    require "editor.init_cpath"
     require "editor.init_vfs"
     require "vfs"
     package.path = package.path:gsub("[^;]+", function (s)

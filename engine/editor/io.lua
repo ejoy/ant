@@ -1,7 +1,7 @@
-local cpath, repopath, fddata = ...
+local repopath, fddata = ...
 
 package.path = "engine/?.lua"
-package.cpath = cpath
+package.cpath = ""
 
 local vfs = require "vfs"
 local thread = require "bee.thread"

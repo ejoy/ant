@@ -63,7 +63,7 @@ local function init(c)
 	else
 		config.service_path = "/engine/task/service/?.lua"
 	end
-	config.lua_cpath = config.lua_cpath or package.cpath
+	config.lua_cpath = config.lua_cpath or ""
 
 
 	local servicelua = readall "/engine/task/service/service.lua"
