@@ -2,7 +2,7 @@ local imgui     = require "imgui"
 local assetmgr  = import_package "ant.asset"
 local uiconfig  = require "widget.config"
 local fs        = require "filesystem"
-local lfs       = require "filesystem.local"
+local lfs       = require "bee.filesystem"
 local global_data = require "common.global_data"
 local access    = global_data.repo_access
 
@@ -256,7 +256,7 @@ function TextureResource:_init(config, modifier)
 end
 local serialize = import_package "ant.serialize"
 local function read_file(fn)
-    local f<close> = lfs.open(fn)
+    local f <close> = assert(io.open(fn:string()))
     return f:read "a"
 end
 function TextureResource:do_update()

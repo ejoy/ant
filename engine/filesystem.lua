@@ -1,4 +1,4 @@
-local lfs = require "filesystem.local"
+local lfs = require "bee.filesystem"
 local vfs = require "vfs"
 local nio = io
 

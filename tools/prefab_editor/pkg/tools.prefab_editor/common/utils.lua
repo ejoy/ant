@@ -24,7 +24,6 @@ function utils.time2str(time)
 end
 
 local fs = require "filesystem"
-local lfs = require "filesystem.local"
 
 function utils.write_file(filename, data)
     local f
@@ -32,9 +31,9 @@ function utils.write_file(filename, data)
         local filepath = fs.path(filename)
         local name = filepath:filename()
         local path = filepath:remove_filename()
-        f = assert(lfs.open(path:localpath() / name:string(), "wb"))
+        f = assert(io.open((path:localpath() / name:string()):string(), "wb"))
     else
-        f = assert(lfs.open(fs.path(filename), "wb"))
+        f = assert(io.open(filename, "wb"))
     end
     f:write(data)
     f:close()
@@ -43,7 +42,7 @@ end
 local datalist  = require "datalist"
 function utils.readtable(filename)
     local path = fs.path(filename):localpath()
-    local f = assert(lfs.open(path))
+    local f = assert(io.open(path:string()))
 	local data = f:read "a"
 	f:close()
     return datalist.parse(data)

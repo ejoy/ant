@@ -4,9 +4,6 @@ local sha1 = require "sha1"
 local image = require "image"
 local bgfx = require "bgfx"
 
-local fs = require "filesystem"
-local lfs = require "filesystem.local"
-
 local function get_property_texture_file(p)
     if p then
         local texfile = p.texture
@@ -52,7 +49,7 @@ local function split_metallic_roughness(filename, outputdir)
         local cc = image.encode_image(ti, bgfx.memory_buffer(table.concat(data, "")), {type="dds", format="R8", srgb=false})
         local n = sha1(cc) .. name
         local fn = outputdir / n
-        local f<close> = lfs.open(fn, "wb")
+        local f <close> = assert(io.open(fn:string(), "wb"))
         f:write(cc)
         return fn
     end

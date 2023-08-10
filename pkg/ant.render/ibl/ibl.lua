@@ -4,8 +4,6 @@ local w         = world.w
 
 local bgfx      = require "bgfx"
 local math3d    = require "math3d"
-local fs        = require "filesystem"
-local lfs       = require "filesystem.local"
 local datalist  = require "datalist"
 
 local assetmgr  = import_package "ant.asset"
@@ -199,7 +197,7 @@ function ibl_sys:render_preprocess()
     for e in w:select "irradianceSH_builder" do
         local function load_Eml()
             local cfgpath = assetmgr.compile(source_tex.tex_name .. "|main.cfg")
-            local ff<close> = lfs.open(lfs.path(cfgpath))
+            local ff <close> = assert(io.open(cfgpath))
             local c = datalist.parse(ff:read "a")
 
             if nil == c.irradiance_SH then

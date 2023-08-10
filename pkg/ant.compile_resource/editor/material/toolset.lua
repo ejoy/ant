@@ -1,6 +1,6 @@
 local shader = require "editor.material.shader"
 local subprocess = require "editor.subprocess"
-local lfs = require "filesystem.local"
+local lfs = require "bee.filesystem"
 local toolset = {}
 
 local stage_types = {

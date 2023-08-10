@@ -10,7 +10,7 @@ local access = require "vfs.repoaccess"
 require "editor.create_repo" ("./tools/material_compile", access)
 
 local fs = require "filesystem"
-local lfs = require "filesystem.local"
+local lfs = require "bee.filesystem"
 
 local arg = select(1, ...)
 local srcfile = arg[1]
@@ -137,7 +137,7 @@ else
     
     local tmpfile = lfs.path "./tools/material_compile/tmp.material"
 
-    local f = lfs.open(tmpfile, "wb")
+    local f = assert(io.open(tmpfile:string(), "wb"))
     f:write(serialize.stringify(mc))
     f:close()
 

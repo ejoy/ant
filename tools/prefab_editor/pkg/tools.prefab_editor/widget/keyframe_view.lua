@@ -1063,14 +1063,13 @@ function m.save(path)
     end
 end
 
-local lfs = require "filesystem.local"
+local lfs = require "bee.filesystem"
 local datalist  = require "datalist"
-local cr        = import_package "ant.compile_resource"
 local serialize = import_package "ant.serialize"
 function m.load(path)
     m.clear(true)
     local path = lfs.path(path)
-    local f = assert(lfs.open(path))
+    local f = assert(io.open(path:string()))
     local data = f:read "a"
     f:close()
     local animlist = datalist.parse(data)
@@ -1121,7 +1120,7 @@ function m.load(path)
     file_path = path:string()
 end
 local function read_file(fn)
-    local f<close> = lfs.open(fn)
+    local f <close> = assert(io.open(fn:string()))
     return f:read "a"
 end
 function m.create_target_animation(at, target)

@@ -20,14 +20,14 @@ local hierarchy = require "hierarchy_edit"
 local uiproperty= require "widget.uiproperty"
 local global_data=require "common.global_data"
 local fs        = require "filesystem"
-local lfs       = require "filesystem.local"
+local lfs       = require "bee.filesystem"
 local access    = global_data.repo_access
 local rb        = ecs.require "widget.resource_browser"
 
 local MaterialView = {}
 local file_cache = {}
 local function read_file(fn)
-    local f<close> = lfs.open(fn)
+    local f <close> = assert(io.open(fn:string()))
     return f:read "a"
 end
 local function read_datalist_file(p)
@@ -894,7 +894,7 @@ local function save_material(eid, path)
     if not lfs.exists(lpp) then
         lfs.create_directories(lpp)
     end
-    local f<close> = lfs.open(lpp / path:filename():string(), "w")
+    local f<close> = assert(io.open((lpp / path:filename()):string(), "w"))
     f:write(serialize.stringify(nt))
 end
 

@@ -1,4 +1,4 @@
-local lfs       = require "filesystem.local"
+local lfs       = require "bee.filesystem"
 local bgfx      = require "bgfx"
 local platform  = require "bee.platform"
 local vfs       = require "vfs"

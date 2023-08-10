@@ -5,7 +5,6 @@ local rmat = require "render.material"
 local cr = import_package "ant.compile_resource"
 
 local fs = require "filesystem"
-local lfs = require "filesystem.local"
 local math3d = require "math3d"
 local bgfx = require "bgfx"
 
@@ -75,7 +74,7 @@ local function material_init()
     local mfn = "/pkg/ant.native_material/simplequad.material"
     local mf = cr.compile_file(fs.path(mfn .. "|main.cfg"))
     local c; do
-        local f<close> = lfs.open(mf, "r")
+        local f<close> = assert(io.open(mf:string(), "r"))
         c = f:read "a"
     end
 

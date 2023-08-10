@@ -1,4 +1,4 @@
-local lfs       = require "filesystem.local"
+local lfs       = require "bee.filesystem"
 local fs        = require "filesystem"
 local datalist  = require "datalist"
 
@@ -37,12 +37,12 @@ function m.append(t, a)
 end
 
 local function writefile(filename, data)
-	local f <close> = assert(lfs.open(filename, "wb"))
+	local f <close> = assert(io.open(filename:string(), "wb"))
 	f:write(data)
 end
 
 local function readfile(filename)
-	local f <close> = assert(lfs.open(filename))
+	local f <close> = assert(io.open(filename:string()))
 	return f:read "a"
 end
 

@@ -7,7 +7,7 @@ local glbloader         = require "editor.model.glTF.glb"
 local patch             = require "editor.model.patch"
 local depends           = require "editor.depends"
 local parallel_task     = require "editor.parallel_task"
-local lfs               = require "filesystem.local"
+local lfs               = require "bee.filesystem"
 local fs                = require "filesystem"
 local datalist          = require "datalist"
 local material_compile  = require "editor.material.compile"
@@ -25,7 +25,7 @@ local function build_scene_tree(gltfscene)
 end
 
 local function readfile(filename)
-	local f <close> = assert(lfs.open(filename, "r"))
+	local f <close> = assert(io.open(filename:string(), "r"))
 	return f:read "a"
 end
 

@@ -2,10 +2,10 @@ local serialize     = import_package "ant.serialize"
 local cr            = import_package "ant.compile_resource"
 local crypt         = require "crypt"
 local fs            = require "filesystem"
-local lfs           = require "filesystem.local"
+local lfs           = require "bee.filesystem"
 
 local function write_file(path, c)
-    local f<close> = lfs.open(path, "w")
+    local f <close> = assert(io.open(path:string(), "w"))
     f:write(c)
 end
 

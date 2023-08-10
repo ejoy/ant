@@ -11,7 +11,7 @@ local rhwi              = import_package "ant.hwi"
 local editor_setting    = require "editor_setting"
 
 local imgui             = require "imgui"
-local lfs               = require "filesystem.local"
+local lfs               = require "bee.filesystem"
 local global_data       = require "common.global_data"
 local access            = global_data.repo_access
 local fs                = require "filesystem"
@@ -100,7 +100,7 @@ function m.show()
             imgui.cursor.Separator()
             if imgui.widget.MenuItem(faicons.ICON_FA_FLOPPY_DISK.. " SaveUILayout") then
                 local setting = imgui.util.SaveIniSettings()
-                local wf = assert(lfs.open(lfs.path(tostring(global_data.editor_root) .. "/" .. "imgui.layout"), "wb"))
+                local wf = assert(io.open(tostring(global_data.editor_root) .. "/" .. "imgui.layout", "wb"))
                 wf:write(setting)
                 wf:close()
             end

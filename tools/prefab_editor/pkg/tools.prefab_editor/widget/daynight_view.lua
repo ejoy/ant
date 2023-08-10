@@ -1,20 +1,14 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local event_gizmo   = world:sub {"Gizmo"}
-local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local idn           = ecs.import.interface "ant.daynight|idaynight"
-local mathpkg       = import_package "ant.math"
-local mc            = mathpkg.constant
-local math3d        = require "math3d"
 local uiproperty    = require "widget.uiproperty"
 local fs        = require "filesystem"
-local lfs       = require "filesystem.local"
+local lfs       = require "bee.filesystem"
 local hierarchy     = require "hierarchy_edit"
 local prefab_mgr  = ecs.require "prefab_manager"
 local serialize = import_package "ant.serialize"
 local DaynightView = {}
-local dn_idx_table = {}
 local function check_relative_path(path, basepath)
     if path:is_relative() then
         if not fs.exists(basepath / path) then
@@ -43,7 +37,7 @@ local function save_prefab(eid, path)
     if not lfs.exists(lpp) then
         lfs.create_directories(lpp)
     end
-    local f<close> = lfs.open(lpp / path:filename():string(), "w")
+    local f<close> = assert(io.open((lpp / path:filename()):string(), "w"))
     f:write(serialize.stringify(t))
 end
 

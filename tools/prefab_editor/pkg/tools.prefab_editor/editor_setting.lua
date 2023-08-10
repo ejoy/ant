@@ -1,7 +1,6 @@
 local serialize = import_package "ant.serialize"
 
 local fs        = require "filesystem"
-local lfs       = require "filesystem.local"
 local datalist  = require "datalist"
 
 local settingpath<const> = fs.path "/pkg/tools.prefab_editor/editor.settings"
@@ -23,7 +22,7 @@ local function save()
     else
         lpath = settingpath:localpath()
     end
-    local f<close> = lfs.open(lpath, "w")
+    local f <close> = assert(io.open(lpath:string(), "w"))
     local c = serialize.stringify(editor_setting)
     f:write(c)
 end

@@ -1,6 +1,6 @@
 local subprocess 	= require "editor.subprocess"
 local sampler 		= require "editor.texture.sampler"
-local lfs 			= require "filesystem.local"
+local lfs 			= require "bee.filesystem"
 local image 		= require "image"
 local math3d		= require "math3d"
 local ltask			= require "ltask"
@@ -72,12 +72,12 @@ local function gen_commands(commands, setting, param, input, output)
 end
 
 local function writefile(filename, data)
-	local f <close> = assert(lfs.open(filename, "wb"))
+	local f <close> = assert(io.open(filename:string(), "wb"))
 	f:write(data)
 end
 
 local function readall(filename)
-	local f <close> = assert(lfs.open(filename, "rb"))
+	local f <close> = assert(io.open(filename:string(), "rb"))
 	return f:read "a"
 end
 

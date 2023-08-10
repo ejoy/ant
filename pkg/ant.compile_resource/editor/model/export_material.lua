@@ -1,5 +1,4 @@
-local serialize = import_package "ant.serialize"
-local fs = require "filesystem.local"
+local fs = require "bee.filesystem"
 local utility = require "editor.model.utility"
 local datalist = require "datalist"
 local texture_compile = require "editor.texture.compile"

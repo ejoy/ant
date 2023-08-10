@@ -6,7 +6,7 @@ local _DEBUG = _G._DEBUG
 local REPO_MT = {}
 REPO_MT.__index = REPO_MT
 
-local lfs = require "filesystem.local"
+local lfs = require "bee.filesystem"
 local access = require "vfs.repoaccess"
 local crypt = require "crypt"
 
@@ -22,7 +22,7 @@ local sha1_encoder = crypt.sha1_encoder()
 
 local function sha1_from_file(filename)
 	sha1_encoder:init()
-	local ff = assert(lfs.open(filename, "rb"))
+	local ff = assert(io.open(filename:string(), "rb"))
 	while true do
 		local content = ff:read(1024)
 		if content then
@@ -164,7 +164,7 @@ local function repo_write_cache(self, cache)
 				if not writedir and content.filelist then
 					local filepath = self._repo / hash:sub(1,2) / hash
 					if not lfs.is_regular_file(filepath) then
-						local f = assert(lfs.open(filepath, "wb"))
+						local f = assert(io.open(filepath:string(), "wb"))
 						f:write(content.filelist)
 						f:close()
 					end
@@ -177,7 +177,7 @@ local function repo_write_cache(self, cache)
 		until content == nil
 		if #ref > 0 then
 			local filepath = refname(self, hash)
-			local f = lfs.open(filepath, "rb")
+			local f = io.open(filepath:string(), "rb")
 			if f then
 				-- merge ref file
 				for line in f:lines() do
@@ -191,7 +191,7 @@ local function repo_write_cache(self, cache)
 			end
 			table.sort(ref)
 
-			f = assert(lfs.open(filepath, "wb"))
+			f = assert(io.open(filepath:string(), "wb"))
 			f:write(table.concat(ref, "\n"))
 			f:close()
 		end
@@ -199,7 +199,7 @@ local function repo_write_cache(self, cache)
 end
 
 local function repo_write_root(self, roothash)
-	local root = assert(lfs.open(self._repo / "root", "wb"))
+	local root = assert(io.open((self._repo / "root"):string(), "wb"))
 	root:write(roothash)
 	root:close()
 	if _DEBUG then print("ROOT", roothash) end
@@ -271,7 +271,7 @@ local function update_ref(filename, content)
 		lfs.remove(filename)
 	else
 		if _DEBUG then print("UPDATE", filename) end
-		local f = lfs.open(filename, "wb")
+		local f = assert(io.open(filename:string(), "wb"))
 		f:write(table.concat(content, "\n"))
 		f:close()
 	end
@@ -327,7 +327,7 @@ function REPO_MT:index()
 end
 
 function REPO_MT:root()
-	local f = lfs.open(self._repo / "root", "rb")
+	local f = io.open((self._repo / "root"):string(), "rb")
 	if not f then
 		return self:index()
 	end
@@ -339,7 +339,7 @@ end
 -- return hash file's real path or nil (invalid hash, need rebuild)
 function REPO_MT:hash(hash)
 	local filename = self._repo / hash:sub(1,2) / hash
-	local f = lfs.open(filename, "rb")
+	local f = io.open(filename:string(), "rb")
 	if f then
 		f:close()
 		-- it's a dir object
@@ -347,7 +347,7 @@ function REPO_MT:hash(hash)
 	end
 	local rfilename = filename:replace_extension(".ref")
 
-	f = lfs.open(rfilename, "rb")
+	f = io.open(rfilename:string(), "rb")
 	if not f then
 		return
 	end
@@ -363,7 +363,7 @@ end
 
 function REPO_MT:dir(hash)
 	local filename = self._repo / hash:sub(1,2) / hash
-	local f = lfs.open(filename, "rb")
+	local f = io.open(filename:string(), "rb")
 	if not f then
 		return
 	end

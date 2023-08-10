@@ -4,7 +4,6 @@ local w 	= world.w
 
 local assetmgr  = import_package "ant.asset"
 local serialize = import_package "ant.serialize"
-local lfs = require "filesystem.local"
 
 local modifier_sys = ecs.system "modifier_system"
 local imodifier = ecs.interface "imodifier"

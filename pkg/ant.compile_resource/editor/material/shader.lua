@@ -1,7 +1,7 @@
 local SHADERC    = require "editor.tool_exe_path"("shaderc")
 local subprocess = require "editor.subprocess"
 local sha1       = require "editor.hash".sha1
-local lfs        = require "filesystem.local"
+local lfs        = require "bee.filesystem"
 local vfs        = require "vfs"
 local ltask      = require "ltask"
 local depends    = require "editor.depends"
@@ -22,7 +22,7 @@ local function get_filename(cmdstring, input)
 end
 
 local function writefile(filename, data)
-    local f <close> = assert(lfs.open(filename, "wb"))
+    local f <close> = assert(io.open(filename:string(), "wb"))
     f:write(data)
 end
 
@@ -80,7 +80,7 @@ local function run(commands, input, output)
     end
     local deps = {}
     depends.add(deps, input:string())
-    local f = lfs.open(path / "bin.d")
+    local f = io.open((path / "bin.d"):string())
     if f then
         f:read "l"
         for line in f:lines() do

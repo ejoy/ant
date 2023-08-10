@@ -1,11 +1,11 @@
-local lfs = require "filesystem.local"
+local lfs = require "bee.filesystem"
 local sha1 = require "editor.hash".sha1
 local serialize = import_package "ant.serialize"
 local vfs = require "vfs"
 local shader = require "editor.material.shader"
 
 local function writefile(filename, data)
-    local f <close> = assert(lfs.open(filename, "wb"))
+    local f <close> = assert(io.open(filename:string(), "wb"))
     f:write(data)
 end
 

@@ -1,8 +1,7 @@
 local fs = require "filesystem"
-local lfs = require "filesystem.local"
 
 local function read_file(filename)
-    local f = assert(lfs.open(filename:localpath(), "rb"))
+    local f = assert(io.open(filename:localpath():string(), "rb"))
     local c = f:read "a"
     f:close()
     return c

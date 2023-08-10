@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 
-local lfs   = require "filesystem.local"
+local lfs   = require "bee.filesystem"
 local fs    = require "filesystem"
 
 local blm_editor = ecs.system "editor_bake_lightmap_system"

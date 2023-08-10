@@ -1,5 +1,5 @@
 local util = {}; util.__index = util
-local fs = require "filesystem.local"
+local fs = require "bee.filesystem"
 
 local DDPF_ALPHAPIXELS    = 0x00000001 --Texture contains alpha data; dwRGBAlphaBitMask contains valid data.
 local DDPF_ALPHA          = 0x00000002 --Used in some older DDS files for alpha channel only uncompressed data (dwRGBBitCount contains the alpha channel bitcount; dwABitMask contains valid data)	

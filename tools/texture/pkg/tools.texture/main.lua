@@ -1,5 +1,5 @@
 
-local lfs = require "filesystem.local"
+local lfs = require "bee.filesystem"
 local fs = require "filesystem"
 local image = require "image"
 
@@ -48,13 +48,13 @@ do
     end
 end
 
-local function read_file(f)
-    local ff<close> = lfs.open(f:localpath(), "rb")
-    return ff:read "a"
+local function read_file(p)
+    local f <close> = assert(io.open(p:localpath():string(), "rb"))
+    return f:read "a"
 end
 
 local function write_file(p, c)
-    local f<close> = lfs.open(p, "wb")
+    local f <close> = assert(io.open(p:string(), "wb"))
     f:write(c)
 end
 

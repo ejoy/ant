@@ -1,6 +1,6 @@
 local m = {}
 local fs                = require "filesystem"
-local lfs               = require "filesystem.local"
+local lfs               = require "bee.filesystem"
 local vfs               = require "vfs"
 local access            = dofile "/engine/vfs/repoaccess.lua"
 m.repo_access = access

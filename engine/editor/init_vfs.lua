@@ -5,7 +5,7 @@ end
 
 local socket = require "bee.socket"
 local boot = require "ltask.bootstrap"
-local lfs = require "filesystem.local"
+local lfs = require "bee.filesystem"
 local vfs = require "vfs"
 
 local repopath = _VFS_ROOT_

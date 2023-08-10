@@ -1,10 +1,8 @@
 local imgui     = require "imgui"
 local uiconfig  = require "widget.config"
-local uiutils   = require "widget.utils"
 local utils     = require "common.utils"
 local cthread   = require "bee.thread"
 local fs        = require "filesystem"
-local lfs       = require "filesystem.local"
 local icons     = require "common.icons"
 
 local m = {
@@ -47,8 +45,8 @@ local function log_to_file(msg)
     if not logfile then
         logfile = fs.path "":localpath() / "log.txt"--('%s.log'):format(os_date('%Y_%m_%d_%H_%M_%S_{ms}'))
     end
-    --local fp = assert(lfs.open(logfile, 'a'))
-    local fp = assert(lfs.open(logfile, 'w+'))
+    --local fp = assert(io.open(logfile:string(), 'a'))
+    local fp = assert(io.open(logfile:string(), 'w+'))
     fp:write(msg)
     fp:write('\n')
     fp:close()

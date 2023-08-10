@@ -1,4 +1,3 @@
-local lfs = require "filesystem.local"
 local async = require "async"
 local loaders = {}
 

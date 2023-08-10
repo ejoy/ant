@@ -1,4 +1,3 @@
-local lfs           = require "filesystem.local"
 local imgui         = require "imgui"
 local global_data   = require "common.global_data"
 local datalist      = require "datalist"
@@ -9,7 +8,7 @@ local ps = {
 }
 
 local function read_file(p)
-    local f <close> = lfs.open(p)
+    local f <close> = assert(io.open(p:string()))
     return f:read "a"
 end
 
@@ -253,7 +252,7 @@ local function setting_ui(sc)
 
     if Button "Save" then
         local p = global_data.project_root / "settings"
-        local f<close> = lfs.open(p, "w")
+        local f <close> = assert(io.open(p:string(), "w"))
         f:write(serialize.stringify(sc))
     end
 end

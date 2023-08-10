@@ -1,5 +1,4 @@
 local fs = require "filesystem"
-local lfs = require "filesystem.local"
 local datalist  = require "datalist"
 local animodule = require "hierarchy".animation
 local assetmgr 	= import_package "ant.asset"
@@ -32,7 +31,7 @@ local Dir = {
 }
 
 local function read_file(filename)
-    local f = assert(lfs.open(filename:localpath(), "rb"))
+    local f = assert(io.open(filename:localpath():string(), "rb"))
     local c = f:read "a"
     f:close()
     return c

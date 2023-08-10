@@ -1,4 +1,4 @@
-local lfs     = require "filesystem.local"
+local lfs     = require "bee.filesystem"
 local sha1    = require "editor.hash".sha1
 local config  = require "editor.config"
 local depends = require "editor.depends"

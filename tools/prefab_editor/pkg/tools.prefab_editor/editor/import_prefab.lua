@@ -1,4 +1,4 @@
-local lfs  = require "filesystem.local"
+local lfs  = require "bee.filesystem"
 local fs   = require "filesystem"
 local sp   = require "bee.subprocess"
 local task = require "task"

@@ -1,5 +1,5 @@
 local utils = require "common.utils"
-local lfs   = require "filesystem.local"
+local lfs   = require "bee.filesystem"
 local fs  = require "bee.filesystem"
 local m = {
 }

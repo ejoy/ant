@@ -17,7 +17,7 @@ local gizmo         = ecs.require "gizmo.gizmo"
 local editor_setting = require "editor_setting"
 local math3d 		= require "math3d"
 local fs            = require "filesystem"
-local lfs           = require "filesystem.local"
+local lfs           = require "bee.filesystem"
 local hierarchy     = require "hierarchy_edit"
 local widget_utils  = require "widget.utils"
 local gd            = require "common.global_data"
@@ -427,7 +427,7 @@ function m:on_prefab_ready(prefab)
 end
 
 local function read_file(fn)
-    local f<close> = lfs.open(fn)
+    local f<close> = assert(io.open(fn:string()))
     return f:read "a"
 end
 

@@ -119,8 +119,7 @@ local function write_to_file(filename, buffers, fmt, bw, bh, width, height)
     local ti = default_tex_info(wsize, hsize, fmt)
     local c = image.encode_image(ti, pm, {type="dds", srgb=false})
 
-    local fslocal = require "filesystem.local"
-    local f = fslocal.open(fslocal.path(filename), "wb")
+    local f = assert(io.open(filename, "wb"))
     f:write(c)
     f:close()
 end

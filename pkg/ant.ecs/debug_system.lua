@@ -12,7 +12,7 @@ if not dbg then
 end
 
 local vfs = require "vfs"
-local lfs = require "filesystem.local"
+local lfs = require "bee.filesystem"
 local LogDir = vfs.repopath
     and lfs.path(vfs.repopath()) / ".log"
     or lfs.current_path() / ".log"
@@ -63,7 +63,7 @@ local function writefile(filename, t)
         out[#out+1] = table.concat(v, ",")
         out[#out+1] = k
     end
-    local f <close> = assert(lfs.open(LogDir / filename, "wb"))
+    local f <close> = assert(io.open((LogDir / filename):string(), "wb"))
     f:write(table.concat(out, "\n"))
 end
 

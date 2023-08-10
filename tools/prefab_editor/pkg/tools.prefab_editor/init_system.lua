@@ -12,7 +12,6 @@ local iani          = ecs.import.interface "ant.animation|ianimation"
 local iom           = ecs.import.interface "ant.objcontroller|iobj_motion"
 local editor_setting= require "editor_setting"
 local imgui         = require "imgui"
-local lfs           = require "filesystem.local"
 local fs            = require "filesystem"
 local gd            = require "common.global_data"
 local icons         = require "common.icons"
@@ -29,7 +28,7 @@ end
 local m = ecs.system 'init_system'
 
 local function LoadImguiLayout(filename)
-    local rf = lfs.open(filename, "rb")
+    local rf = io.open(filename:string(), "rb")
     if rf then
         local setting = rf:read "a"
         rf:close()

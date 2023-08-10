@@ -4,7 +4,7 @@ local w = world.w
 
 local serialize = import_package "ant.serialize"
 local fs = require "filesystem"
-local lfs = require "filesystem.local"
+local lfs = require "bee.filesystem"
 local math3d = require "math3d"
 
 local mathpkg = import_package "ant.math"
@@ -40,7 +40,7 @@ end
 local bake_finish_mb = world:sub{"bake_finish"}
 
 local function writeFile(path, data)
-    local f = lfs.open(path:localpath(), "w")
+    local f = assert(io.open(path:localpath():string(), "w"))
     f:write(data)
     f:close()
 end

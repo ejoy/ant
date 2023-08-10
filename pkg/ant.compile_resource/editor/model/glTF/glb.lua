@@ -1,4 +1,3 @@
-local lfs = require "filesystem.local"
 local JSON = import_package "ant.json"
 local jsonDecode = JSON.decode
 local jsonEncode = JSON.encode
@@ -43,7 +42,7 @@ local function decode(filename)
 end
 
 local function encode(filename, data)
-	local f <close> = assert(lfs.open(filename, "wb"))
+	local f <close> = assert(io.open(filename:string(), "wb"))
 	local jsondata = jsonEncode(data.info)
 	local align_json, align_json_length = aligh_data(jsondata, 4, " ")
 	local align_bin, align_bin_length = aligh_data(data.bin, 4, "\0")

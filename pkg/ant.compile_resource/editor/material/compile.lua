@@ -1,4 +1,4 @@
-local lfs           = require "filesystem.local"
+local lfs           = require "bee.filesystem"
 local fs            = require "filesystem"
 local toolset       = require "editor.material.toolset"
 local fxsetting     = require "editor.material.setting"
@@ -159,12 +159,12 @@ local function compile_debug_shader(platform, renderer)
 end
 
 local function readfile(filename)
-	local f <close> = assert(lfs.open(filename, "rb"))
+	local f <close> = assert(io.open(filename:string(), "rb"))
 	return f:read "a"
 end
 
 local function writefile(filename, data)
-	local f <close> = assert(lfs.open(filename, "wb"))
+	local f <close> = assert(io.open(filename:string(), "wb"))
 	f:write(serialize.stringify(data))
 end
 
@@ -217,7 +217,7 @@ local function create_PBR_shader(inputpath, fx, stage)
     local si = assert(DEF_SHADER_INFO[stage])
     local nc = generate_shader(si, fx[stage .. "_code"])
 
-    local fw <close> = assert(lfs.open(inputpath, "wb"))
+    local fw <close> = assert(io.open(inputpath:string(), "wb"))
     fw:write(nc)
 end
 

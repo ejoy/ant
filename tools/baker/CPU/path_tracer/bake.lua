@@ -2,12 +2,11 @@
 local serialize = import_package "ant.serialize"
 local cr        = import_package "ant.compile_resource"
 local bake      = require "bake"
-local crypt     = require "crypt"
 local datalist  = require "datalist"
 local image     = require "image"
 local math3d    = require "math3d"
 local fs        = require "filesystem"
-local lfs       = require "filesystem.local"
+local lfs       = require "bee.filesystem"
 local bgfx      = require "bgfx"
 
 local log = print
@@ -52,7 +51,7 @@ end
 
 local function writefile(filename, c, mode)
     mode = mode or "w"
-    local f<close> = lfs.open(filename, mode)
+    local f <close> = assert(io.open(filename:string(), mode))
     f:write(c)
 end
 

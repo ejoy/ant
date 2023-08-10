@@ -36,7 +36,7 @@ local prefab_mgr        = ecs.require "prefab_manager"
 prefab_mgr.set_anim_view(anim_view)
 
 local fs                = require "filesystem"
-local lfs               = require "filesystem.local"
+local lfs               = require "bee.filesystem"
 local bgfx              = require "bgfx"
 
 local m = ecs.system 'gui_system'

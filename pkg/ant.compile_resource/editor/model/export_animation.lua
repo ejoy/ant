@@ -1,4 +1,4 @@
-local fs = require "filesystem.local"
+local fs = require "bee.filesystem"
 local GLTF2OZZ = require "editor.tool_exe_path"("gltf2ozz")
 local subprocess = require "editor.subprocess"
 

@@ -39,7 +39,7 @@ if respath:equal_extension "glb" then
     respath = fs.path(respath:string() .. "|mesh.prefab")
 end
 
-local lfs = require "filesystem.local"
+local lfs = require "bee.filesystem"
 local outputdir = respath:parent_path():localpath() / "output"
 if lfs.exists(outputdir) then
     lfs.remove_all(outputdir)
