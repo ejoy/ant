@@ -78,9 +78,62 @@ return function (w, package)
             pkg = package
             file = fullname
         end
-        return pm.loadenv(pkg)
-            .require_ecs(w, w._ecs[pkg], file)
+        return w._ecs[pkg].require_ecs(file)
     end
+    local _ECS_LOADED = {}
+    local _ECS_LOADING = {}
+    local function require_load(env, name)
+        local msg = ''
+		local searcher_lua = env.package.searchers[2]
+		local f, extra = searcher_lua(name)
+		if type(f) == 'function' then
+			return f, extra, 1
+		elseif type(f) == 'string' then
+			msg = "\n\t" .. f
+		end
+        error(("module '%s' not found:%s"):format(name, msg))
+    end
+	function ecs.require_ecs(file)
+        assert(type(file) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(file)))
+        local p = _ECS_LOADED[file]
+        if p ~= nil then
+            return p
+        end
+        if _ECS_LOADING[file] then
+            error(("Recursive load module '%s'"):format(file))
+        end
+        _ECS_LOADING[file] = true
+		local env = pm.loadenv(package)
+        local initfunc = require_load(env, file)
+        debug.setupvalue(initfunc, 1, env)
+        local r = initfunc(w._ecs[package])
+        if r == nil then
+            r = true
+        end
+        _ECS_LOADED[file] = r
+        _ECS_LOADING[file] = nil
+        return r
+	end
+	function ecs.include_ecs(file)
+        assert(type(file) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
+        local p = _ECS_LOADED[file]
+        if p ~= nil then
+            return
+        end
+        if _ECS_LOADING[file] then
+            return
+        end
+        _ECS_LOADING[file] = true
+		local env = pm.loadenv(package)
+        local initfunc = require_load(env, file)
+        debug.setupvalue(initfunc, 1, env)
+        local r = initfunc(w._ecs[package])
+        if r == nil then
+            r = true
+        end
+        _ECS_LOADED[file] = r
+        _ECS_LOADING[file] = nil
+	end
     ecs.import = {}
     for _, objname in ipairs(OBJECT) do
         ecs.import[objname] = function (name)

@@ -4,7 +4,7 @@ local fs = require "filesystem"
 
 local registered = {}
 
-local function sandbox_env(loadenv, root)
+local function sandbox_env(packagename)
     local env = setmetatable({}, {__index=_G})
     local _LOADED = {}
 
@@ -66,60 +66,11 @@ local function sandbox_env(loadenv, root)
         return r
     end
 
-    local _ECS_LOADED = setmetatable({}, {__mode="k", __index=function(self, k)
-        local t = {}
-        self[k] = t
-        return t
-    end})
-    local _ECS_LOADING = setmetatable({}, {__mode="k", __index=function(self, k)
-        local t = {}
-        self[k] = t
-        return t
-    end})
-    local ecs_searchers = { searcher_lua }
-    function env.require_ecs(w, ecs, name)
-        assert(type(name) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
-        local p = _ECS_LOADED[w][name]
-        if p ~= nil then
-            return p
-        end
-        if _ECS_LOADING[w][name] then
-            error(("Recursive load module '%s'"):format(name))
-        end
-        local initfunc = require_load(name, ecs_searchers)
-        debug.setupvalue(initfunc, 1, env)
-        local r = initfunc(ecs)
-        if r == nil then
-            r = true
-        end
-        _ECS_LOADED[w][name] = r
-        return r
-    end
-    function env.include_ecs(w, ecs, name)
-        assert(type(name) == "string", ("bad argument #1 to 'require' (string expected, got %s)"):format(type(name)))
-        local p = _ECS_LOADED[w][name]
-        if p ~= nil then
-            return
-        end
-        if _ECS_LOADING[w][name] then
-            return
-        end
-        _ECS_LOADING[w][name] = true
-        local initfunc = require_load(name, ecs_searchers)
-        debug.setupvalue(initfunc, 1, env)
-        local r = initfunc(ecs)
-        if r == nil then
-            r = true
-        end
-        _ECS_LOADED[w][name] = r
-        _ECS_LOADING[w][name] = nil
-    end
-
     env.package = {
         config = table.concat({"/",";","?","!","-"}, "\n"),
         loaded = _LOADED,
         preload = package.preload,
-        path = root .. '/?.lua',
+        path = "/pkg/"..packagename..'/?.lua',
         cpath = package.cpath,
         searchpath = searchpath,
         searchers = {}
@@ -134,11 +85,10 @@ end
 local function loadenv(name)
     local env = registered[name]
     if not env then
-        local path = fs.path("/pkg/"..name)
-        if not fs.is_directory(path) then
-            error(('`%s` is not a directory.'):format(path:string()))
+        if not fs.is_directory(fs.path("/pkg/"..name)) then
+            error(('`/pkg/%s` is not a directory.'):format(name))
         end
-        env = sandbox_env(loadenv, "/pkg/"..name)
+        env = sandbox_env(name)
         registered[name] = env
     end
     return env
