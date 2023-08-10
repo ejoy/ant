@@ -181,7 +181,7 @@ local function add_stencil_entity()
         stencil_mesh = ientity.create_mesh{"p3", stencil_tri_vertices}
     end
 
-    return world:deprecated_create_entity {
+    return ecs.create_entity {
 		policy = {
 			"ant.render|render",
 			"ant.general|name",
