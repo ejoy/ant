@@ -109,11 +109,13 @@ function S.ROOT()
 		rebuild = true
 	end
 	if rebuild then
+		print(REPOPATH, "rebuild")
 		if fs.is_regular_file(fs.path(REPOPATH) / ".repo" / "root") then
 			repo:index()
 		else
 			repo:rebuild()
 		end
+		print(REPOPATH, "rebuild finish")
 	end
 	return repo:root()
 end
