@@ -1,4 +1,4 @@
 return {
     name = "tools.texture",
-    entry = "init"
+    entry = "main"
 }

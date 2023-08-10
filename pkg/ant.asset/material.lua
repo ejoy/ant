@@ -2,7 +2,7 @@ local ecs	= ...
 local world = ecs.world
 local w		= world.w
 
-local assetmgr		= require "asset"
+local assetmgr		= require "main"
 local matobj		= require "matobj"
 local bgfx			= require "bgfx"
 local imaterial = ecs.interface "imaterial"

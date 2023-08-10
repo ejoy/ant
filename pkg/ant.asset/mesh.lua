@@ -2,7 +2,7 @@ local ecs 	= ...
 local world	= ecs.world
 local w		= world.w
 
-local assetmgr 		= require "asset"
+local assetmgr 		= require "main"
 local ext_meshbin 	= require "ext_meshbin"
 
 local imesh = ecs.interface "imesh"

@@ -4,7 +4,7 @@ local fs = require "filesystem"
 
 local registered = {}
 
-local function sandbox_env(loadenv, entry, root)
+local function sandbox_env(loadenv, root)
     local env = setmetatable({}, {__index=_G})
     local _LOADED = {}
 
@@ -115,7 +115,9 @@ local function sandbox_env(loadenv, entry, root)
         _ECS_LOADING[w][name] = nil
     end
 
-    env._ENTRY_FILE = entry
+    if fs.exists(fs.path(root.."/main.lua")) then
+        env._ENTRY_FILE = "main"
+    end
     function env.import_package(name)
         local e = loadenv(name)
         local f = e._ENTRY
@@ -153,14 +155,8 @@ local function loadenv(name)
         if not fs.is_directory(path) then
             error(('`%s` is not a directory.'):format(path:string()))
         end
-        local cfgpath = path / "package.lua"
-        if not fs.exists(cfgpath) then
-            error(('`%s` does not exist.'):format(cfgpath:string()))
-        end
-        local config = dofile(cfgpath:string())
         info = {
-            config = config,
-            env = sandbox_env(loadenv, config.entry, "/pkg/"..name)
+            env = sandbox_env(loadenv, "/pkg/"..name)
         }
         registered[name] = info
     end
