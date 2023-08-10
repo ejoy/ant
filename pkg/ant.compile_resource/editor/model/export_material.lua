@@ -1,4 +1,4 @@
-local fs = require "bee.filesystem"
+local lfs = require "bee.filesystem"
 local utility = require "editor.model.utility"
 local datalist = require "datalist"
 local texture_compile = require "editor.texture.compile"
@@ -115,7 +115,7 @@ local STATE_FILES = {}
 local function read_state_file(statefile)
     local s = STATE_FILES[statefile]
     if s == nil then
-        local f <close> = fs.open(statefile)
+        local f <close> = assert(io.open(statefile:string()))
         local c = f:read "a"
         s = datalist.parse(c)
     end
@@ -151,7 +151,7 @@ return function (status)
         end
 
         local name = img.name or tostring(imgidx)
-        if fs.path(name):extension():string() ~= ext then
+        if lfs.path(name):extension():string() ~= ext then
             name = name .. ext
         end
 
@@ -193,12 +193,12 @@ return function (status)
             utility.apply_patch(status, filename, texture_desc, function (name, desc)
                 local function cvt_img_path(path)
                     if path:sub(1,1) == "/" then
-                        return fs.path(path):localpath()
+                        return lfs.path(path):localpath()
                     end
-                    return fs.absolute((output / filename):parent_path() / (path:match "^%./(.+)$" or path))
+                    return lfs.absolute((output / filename):parent_path() / (path:match "^%./(.+)$" or path))
                 end
                 local imgpath = cvt_img_path(desc.path)
-                if not fs.exists(imgpath) then
+                if not lfs.exists(imgpath) then
                     error(("try to compile texture file:%s, but texture.path:%s is not exist"):format(name, imgpath:string()))
                 end
                 parallel_task.add(status.tasks, function ()
@@ -260,7 +260,7 @@ return function (status)
         local need_compress<const> = true
         add_texture_format(texture_desc, need_compress)
 
-        local texname       = fs.path(imgname):replace_extension("texture"):string()
+        local texname       = lfs.path(imgname):replace_extension("texture"):string()
         export_texture("images/" .. texname, texture_desc)
 
         --we need output texture path which is relate to *.material file, so we need ..
@@ -345,7 +345,7 @@ return function (status)
         local filename = "materials/" .. materialname .. ".material"
         utility.apply_patch(status, filename, material, function (name, desc)
             status.material[matidx] = {
-                filename = fs.path(name),
+                filename = lfs.path(name),
                 material = desc,
             }
         end)

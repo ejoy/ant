@@ -1,5 +1,4 @@
 local util = {}; util.__index = util
-local fs = require "bee.filesystem"
 
 local DDPF_ALPHAPIXELS    = 0x00000001 --Texture contains alpha data; dwRGBAlphaBitMask contains valid data.
 local DDPF_ALPHA          = 0x00000002 --Used in some older DDS files for alpha channel only uncompressed data (dwRGBBitCount contains the alpha channel bitcount; dwABitMask contains valid data)	
@@ -119,7 +118,7 @@ local function load_dds_header(filepath)
     --     DWORD           dwCaps4;
     --     DWORD           dwReserved2;
     --   } DDS_HEADER;
-    local f <close> = assert(fs.open(filepath, "rb"))
+    local f <close> = assert(io.open(filepath:string(), "rb"))
     read_dword = create_reader(f:read(DDS_HEADER_SIZE))
 
     local magic = read_dword()

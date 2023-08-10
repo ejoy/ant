@@ -1,7 +1,6 @@
 local boot = require "ltask.bootstrap"
 local ltask = require "ltask"
 local vfs = require "vfs"
-local fs = require "filesystem"
 
 local SERVICE_ROOT <const> = 1
 local MESSSAGE_SYSTEM <const> = 0
@@ -42,7 +41,6 @@ local function exclusive_thread(label, id)
 end
 
 local function io_thread(label, id)
-	local vfs = require "vfs"
 	local sid = boot.new_service_preinit(label, id, vfs.iothread)
 	boot.new_thread(sid)
 end
@@ -52,7 +50,7 @@ local function toclose(f)
 end
 
 local function readall(filename)
-	local f <close> = assert(fs.open(fs.path(filename), "rb"))
+	local f <close> = assert(io.open(vfs.realpath(filename), "rb"))
 	return f:read "a"
 end
 
