@@ -1,4 +1,4 @@
-local function create(w, package, policies)
+local function create(w, policies)
     local res = {
         component = {},
         component_opt = {},
@@ -11,7 +11,7 @@ local function create(w, package, policies)
             return
         end
         policyset[name] = true
-        local class = w:_import("policy", package, name)
+        local class = w:_import("policy", name)
         if not class then
             error(("policy `%s` is not defined."):format(name))
         end

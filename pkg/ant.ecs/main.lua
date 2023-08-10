@@ -52,8 +52,8 @@ local function create_entity_by_template(w, group, template)
     return eid, initargs
 end
 
-function world:_create_entity(package, group, v)
-    local res = policy.create(self, package, v.policy)
+function world:_create_entity(group, v)
+    local res = policy.create(self, v.policy)
     local data = v.data
     for c, def in pairs(res.component_opt) do
         if data[c] == nil then
@@ -130,7 +130,7 @@ function template_mt:__gc()
 end
 
 local function create_entity_template(w, v)
-    local res = policy.create(w, nil, v.policy)
+    local res = policy.create(w, v.policy)
     local data = v.data
     for c, def in pairs(res.component_opt) do
         if data[c] == nil then
@@ -362,7 +362,7 @@ function world:_create_group(id)
     local api = {}
     mt.__index = api
     function api:create_entity(v)
-        return w:_create_entity(package, id, v)
+        return w:_create_entity(id, v)
     end
     function api:create_instance(v, parent)
         return w:_create_instance(id, parent, v)

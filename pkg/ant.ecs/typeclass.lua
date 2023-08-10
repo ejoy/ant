@@ -60,7 +60,7 @@ local function create_importor(w)
     for _, objname in ipairs(OBJECT) do
 		local class = {}
 		w._class[objname] = class
-		import[objname] = function (package, name)
+		import[objname] = function (name)
 			local v = class[name]
             if v then
                 return v
@@ -79,7 +79,7 @@ local function create_importor(w)
 				local what, k = tuple[1], tuple[2]
 				local attrib = check_map[what]
 				if attrib then
-					import[attrib](package, k)
+					import[attrib](k)
 				end
 			end
 			if objname == "policy" then
@@ -192,12 +192,12 @@ local function init(w, config)
 		return assert(pm.loadenv(packname).loadfile(file))
 	end)
 	w._importor = create_importor(w)
-	function w:_import(objname, package, name)
+	function w:_import(objname, name)
 		local res = w._class[objname][name]
 		if res then
 			return res
 		end
-		res = w._importor[objname](package, name)
+		res = w._importor[objname](name)
 		if res then
 			solve_object(res, w, objname, name)
 		end
@@ -228,7 +228,7 @@ local function init(w, config)
 	for _, objname in ipairs(OBJECT) do
 		if config.ecs[objname] then
 			for _, k in ipairs(config.ecs[objname]) do
-				import[objname](nil, k)
+				import[objname](k)
 			end
 		end
 	end

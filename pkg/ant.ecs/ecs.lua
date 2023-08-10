@@ -45,7 +45,7 @@ return function (w, package)
                 decl.source = {}
                 decl.defined = sourceinfo()
                 local callback = keys(decl.method)
-                local object = import[what](package, fullname)
+                local object = import[what](fullname)
                 setmetatable(r, {
                     __pairs = function ()
                         return pairs(object)
@@ -84,11 +84,11 @@ return function (w, package)
     ecs.import = {}
     for _, objname in ipairs(OBJECT) do
         ecs.import[objname] = function (name)
-            return w:_import(objname, package, name)
+            return w:_import(objname, name)
         end
     end
     function ecs.create_entity(v)
-        return w:_create_entity(package, nil, v)
+        return w:_create_entity(nil, v)
     end
     function ecs.release_cache(v)
         return w:_release_cache(v)
