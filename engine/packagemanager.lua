@@ -115,23 +115,6 @@ local function sandbox_env(loadenv, root)
         _ECS_LOADING[w][name] = nil
     end
 
-    if fs.exists(fs.path(root.."/main.lua")) then
-        env._ENTRY_FILE = "main"
-    end
-    function env.import_package(name)
-        local e = loadenv(name)
-        local f = e._ENTRY
-        if f then
-            return f
-        end
-        if e._ENTRY_FILE then
-            f = e.require(e._ENTRY_FILE)
-            e._ENTRY = f
-            e._ENTRY_FILE = nil
-            return f
-        end
-    end
-
     env.package = {
         config = table.concat({"/",";","?","!","-"}, "\n"),
         loaded = _LOADED,
@@ -149,22 +132,20 @@ local function sandbox_env(loadenv, root)
 end
 
 local function loadenv(name)
-    local info = registered[name]
-    if not info then
+    local env = registered[name]
+    if not env then
         local path = fs.path("/pkg/"..name)
         if not fs.is_directory(path) then
             error(('`%s` is not a directory.'):format(path:string()))
         end
-        info = {
-            env = sandbox_env(loadenv, "/pkg/"..name)
-        }
-        registered[name] = info
+        env = sandbox_env(loadenv, "/pkg/"..name)
+        registered[name] = env
     end
-    return info.env
+    return env
 end
 
 local function import(name)
-    return loadenv(name).import_package(name)
+    return loadenv(name).require "main"
 end
 
 ---@diagnostic disable-next-line: lowercase-global
