@@ -118,12 +118,4 @@ assert(fw.loadfile "io.lua")()
 ]]
 
 vfs.initfunc("init_thread.lua", c:detach())
-
-local function dofile(path)
-    local f, err = vfs.loadfile(path)
-    if not f then
-        error(err)
-    end
-    return f()
-end
 dofile "/main.lua"

@@ -51,7 +51,10 @@ function vfs.new(repopath, hash)
 		repo:updatehistory(hash)
 		repo:changeroot(hash)
 	else
-		repo:changeroot(root_hash(repo))
+		hash = root_hash(repo)
+		if hash then
+			repo:changeroot(hash)
+		end
 	end
 	return repo
 end
