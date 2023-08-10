@@ -85,12 +85,12 @@ end
 function vp_detect_sys:post_init()
 	update_render_target()
 end
-
+local vp_changed_mb = world:sub{"world_viewport_changed"}
 function vp_detect_sys:data_changed()
 	local new_fbw, new_fbh
-	for _, w, h in view_resize_mb:unpack() do
-		if w ~= 0 and h ~= 0 then
-			new_fbw, new_fbh = w, h
+	for _, vp in vp_changed_mb:unpack() do
+		if vp.w ~= 0 and vp.h ~= 0 then
+			new_fbw, new_fbh = vp.w, vp.h
 		end
 	end
 

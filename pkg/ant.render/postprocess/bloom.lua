@@ -69,11 +69,13 @@ function bloom_sys:init()
     
 end
 
-local function downscale_bloom_vr(vr)
-    return {
+local function downscale_bloom_vr(chain_vr)
+    local vr = chain_vr[#chain_vr]
+    chain_vr[#chain_vr+1] = {
         x=0, y=0,
         w=math.max(1, vr.w//2), h=math.max(1, vr.h//2)
     }
+    return chain_vr[#chain_vr]
 end
 
 local function upscale_bloom_vr(vr)
@@ -133,7 +135,7 @@ local function create_chain_sample_queue(mqvr)
         log.warn(("main queue buffer, w:%d, h:%d, in not valid for bloom, need chain: %d"):format(mqvr.w, mqvr.h, BLOOM_MIPCOUNT))
         return
     end
-    local chain_vr = mqvr
+    local chain_vr = {[1] = mqvr}
 
     local rbidx = create_bloom_rb(mqvr)
     local fbpyramids = create_fb_pyramids(rbidx)
@@ -141,16 +143,16 @@ local function create_chain_sample_queue(mqvr)
     --downsample
     local ds_viewid = bloom_ds_viewid
     for i=1, BLOOM_MIPCOUNT do
-        chain_vr = downscale_bloom_vr(chain_vr)
-        util.create_queue(ds_viewid, chain_vr, fbpyramids[i+1], "bloom_downsample"..i, "bloom_queue") -- 2 3 4 5 
+        local vr = downscale_bloom_vr(chain_vr)
+        util.create_queue(ds_viewid, vr, fbpyramids[i+1], "bloom_downsample"..i, "bloom_queue") -- 2 3 4 5 
         ds_viewid = ds_viewid+1
     end
 
     --upsample
     local us_viewid = bloom_us_viewid
     for i=1, BLOOM_MIPCOUNT do
-        chain_vr = upscale_bloom_vr(chain_vr)
-        util.create_queue(us_viewid, chain_vr, fbpyramids[BLOOM_MIPCOUNT-i+1], "bloom_upsample"..i, "bloom_queue") -- 4 3 2 1
+        local vr = chain_vr[BLOOM_MIPCOUNT-i+1]
+        util.create_queue(us_viewid, vr, fbpyramids[BLOOM_MIPCOUNT-i+1], "bloom_upsample"..i, "bloom_queue") -- 4 3 2 1
         us_viewid = us_viewid+1
     end
 
@@ -165,19 +167,23 @@ function bloom_sys:init_world()
     create_chain_sample_queue(mqvr)
 end
 
-local mqvr_mb = world:sub{"view_rect_changed", "main_queue"}
+local vp_changed_mb = world:sub{"world_viewport_changed"}
 
 function bloom_sys:data_changed()
-    for _, _, vr in mqvr_mb:unpack() do
+    local need_recreate
+    for _, vp in vp_changed_mb:unpack() do
         local q = w:first("bloom_upsample"..BLOOM_MIPCOUNT .. " render_target:in")
         if q then
             local bloom_vr = q.render_target.view_rect
-            if vr.w ~= bloom_vr.w or vr.h ~= bloom_vr.h then
-                remove_all_bloom_queue()
+            if vp.w ~= bloom_vr.w or vp.h ~= bloom_vr.h then
+                remove_all_bloom_queue() -- enter twice in same frame
+                need_recreate = vp
             end
-        else
-            create_chain_sample_queue(vr)
         end
+    end
+    if need_recreate then
+        create_chain_sample_queue(need_recreate)
+        need_recreate = nil
     end
 end
 
