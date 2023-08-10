@@ -1,3 +1,0 @@
-return {
-    name = "mod.terrain",
-}
