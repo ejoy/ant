@@ -284,7 +284,6 @@ local function init(w, config)
         end
     end
 	create_context(w)
-	require "system".solve(w)
 end
 
 return {

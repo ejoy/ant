@@ -715,6 +715,7 @@ function m.new_world(config)
 
 	-- load systems and components from modules
 	typeclass.init(w, config)
+	system.solve(w)
 
 	if w._clibs then
 		for _, name in ipairs(w._clibs) do
