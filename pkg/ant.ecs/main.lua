@@ -164,7 +164,6 @@ local function create_template_(w, t)
         if v.prefab then
             prefab[#prefab+1] = {
                 prefab = create_template(w, v.prefab),
-                args = v.args,
                 mount = v.mount
             }
         else
