@@ -20,10 +20,10 @@ local font          = imgui.font
 local Font          = imgui.font.SystemFont
 local math3d        = require "math3d"
 local fmod 			= require "fmod"
-local bind_billboard_camera_mb = world:sub{"bind_billboard_camera"}
-function ecs.method.bind_billboard_camera(e, camera_ref)
-    world:pub{"bind_billboard_camera", e, camera_ref}
-end
+-- local bind_billboard_camera_mb = world:sub{"bind_billboard_camera"}
+-- function ecs.method.bind_billboard_camera(e, camera_ref)
+--     world:pub{"bind_billboard_camera", e, camera_ref}
+-- end
 
 local m = ecs.system 'init_system'
 
@@ -160,10 +160,10 @@ function m:post_init()
 end
 
 function m:data_changed()
-    for _, e, camera_ref in bind_billboard_camera_mb:unpack() do
-        w:extend(e, "render_object?in")
-        e.render_object.camera_ref = camera_ref or w:first("main_queue camera_ref:in").camera_ref
-    end
+    -- for _, e, camera_ref in bind_billboard_camera_mb:unpack() do
+    --     w:extend(e, "render_object?in")
+    --     e.render_object.camera_ref = camera_ref or w:first("main_queue camera_ref:in").camera_ref
+    -- end
 	gd.audio:update()
 end
 
