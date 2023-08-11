@@ -252,7 +252,6 @@ function world:create_object(inner_proxy)
     local on_message = inner_proxy.on_message
     local proxy_entity = {
         prefab = inner_proxy,
-        animation_init = true
     }
     if on_init then
         function proxy_entity.on_init()

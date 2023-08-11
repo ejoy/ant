@@ -230,11 +230,10 @@ local function init_prefab_anim(entity)
 	end
 end
 
-function ani_sys:animation_ready()
-	for entity in w:select "prefab:in animation_init:in" do
+function ani_sys:entity_init()
+	for entity in w:select "INIT prefab:in" do
 		init_prefab_anim(entity)
 	end
-	w:clear "animation_init"
 end
 
 function ani_sys:entity_ready()
