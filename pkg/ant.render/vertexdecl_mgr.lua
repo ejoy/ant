@@ -2,34 +2,31 @@ local mgr = {}
 
 local declmapper = {}
 
-local name_mapper = {
-	p = "POSITION",	n = "NORMAL", T = "TANGENT",	b = "BITANGENT",
-	i = "INDICES",	w = "WEIGHT",
-	c = "COLOR", t = "TEXCOORD",
+local NAME_MAPPER<const> = {
+	p = "POSITION", 	POSITION = "p",
+	n = "NORMAL",		NORMAL = "n",
+	T = "TANGENT",		TANGENT = "T",
+	b = "BITANGENT",	BITANGENT = "b",
+	c = "COLOR",		COLOR = "c",
+	t = "TEXCOORD",		TEXCOORD = "t",
+	
+	i = "INDICES",		INDICES = "i",	JOINTS = "i",
+	w = "WEIGHT",		WEIGHT = "w",	WEIGHTS = "w",
 }
 
-local name_remapper = {
-	JOINTS = "i",
-	WEIGHTS = "w",
-}
-for k, v in pairs(name_mapper) do
-	name_remapper[v] = k
-end
-
-mgr.name_mapper = name_mapper
-mgr.name_remapper = name_remapper
+mgr.NAME_MAPPER = NAME_MAPPER
 
 function mgr.parse_attri_name(fullname)
 	local name, channel = fullname:match("(%w+)_?(%d+)")
 	if name then
-		return name_remapper[name], channel
+		return NAME_MAPPER[name], channel
 	end
-	return name_remapper[fullname], 0
+	return NAME_MAPPER[fullname], 0
 end
 
 local function get_attrib(e)
 	local a = e:sub(1, 1)
-	local attrib = assert(name_mapper[a])
+	local attrib = assert(NAME_MAPPER[a])
 	if attrib == "COLOR" or attrib == "TEXCOORD" then
 		local channel = e:sub(3, 3)
 		return attrib .. channel
@@ -38,19 +35,19 @@ local function get_attrib(e)
 	return attrib
 end
 
-local shortname_mapper = {
+local SHORTNAME_MAPPER<const> = {
 	u = "UINT8", U = "UINT10", i = "INT16",
 	h = "HALF",	f = "FLOAT",
 }
 
-local component_size_mapper = {
+local COMPSIZE_MAPPER<const> = {
 	f=4, i=2, u=1,	-- not valid for U, for 10 bit elemenet
 }
 
 function mgr.elem_size(corrected_elem)
 	assert(#corrected_elem == 6)
 	local count = tonumber(corrected_elem:sub(2, 2))
-	local comp_size = assert(component_size_mapper[corrected_elem:sub(6, 6)])
+	local comp_size = assert(COMPSIZE_MAPPER[corrected_elem:sub(6, 6)])
 	return count * comp_size
 end
 
@@ -60,10 +57,6 @@ function mgr.layout_stride(corrected_layout)
 		stride = stride + mgr.elem_size(e)
 	end
 	return stride
-end
-
-local function get_type(v)
-	return assert(shortname_mapper[v])
 end
 
 local decls = {}
@@ -76,7 +69,7 @@ local function decl_name(elemname)
 		local num 		= tonumber(elemname:sub(2, 2))
 		local normalize = elemname:sub(4, 4) == "n"
 		local asint		= elemname:sub(5, 5) == "i"
-		local type 		= get_type(elemname:sub(6, 6))
+		local type 		= assert(SHORTNAME_MAPPER[elemname:sub(6, 6)])
 		decl = {attrib, num, type, normalize, asint}
 		decls[elemname] = decl
 	end
