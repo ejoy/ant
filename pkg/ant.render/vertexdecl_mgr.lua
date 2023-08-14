@@ -1,7 +1,5 @@
 local mgr = {}
 
-local declmapper = {}
-
 local NAME_MAPPER<const> = {
 	p = "POSITION", 	POSITION = "p",
 	n = "NORMAL",		NORMAL = "n",
@@ -130,21 +128,21 @@ function mgr.vertex_desc_str(correct_layout)
 	return s
 end
 
+local LAYOUTS = {}
+
 function mgr.get(layout)
-	local decl = declmapper[layout]
-	if decl then
-		return decl
+	local l = LAYOUTS[layout]
+	if l == nil then
+		local newlayout = mgr.correct_layout(layout)
+
+		l = LAYOUTS[newlayout]
+		if l == nil then
+			l = create_decl(newlayout)
+			LAYOUTS[layout]		= l
+			LAYOUTS[newlayout]	= l
+		end
 	end
-
-	local newlayout = mgr.correct_layout(layout)
-
-	decl = declmapper[newlayout]
-	if decl == nil then
-		decl = create_decl(newlayout)
-		declmapper[layout] = decl
-	end
-
-	return decl
+	return l
 end
 
 return mgr
