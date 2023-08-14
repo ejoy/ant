@@ -31,25 +31,6 @@ vec3 box4x4Reinhard(vec3 s0, vec3 s1, vec3 s2, vec3 s3) {
 void main() {
     float lod = u_bloom_level;
     vec2 uv = v_texcoord0.xy;
-/*     vec4 d = vec4(u_viewTexel.xy, -u_viewTexel.xy) * 0.5;
-
-    vec3 c = texture2DLod(s_scene_color, uv, lod).rgb;
-
-    vec3 lt = texture2DLod(s_scene_color, uv + d.zw, lod).rgb;
-    vec3 rt = texture2DLod(s_scene_color, uv + d.xw, lod).rgb;
-    vec3 rb = texture2DLod(s_scene_color, uv + d.xy, lod).rgb;
-    vec3 lb = texture2DLod(s_scene_color, uv + d.zy, lod).rgb;
-
-    vec3 lt2 = texture2DLodOffset(s_scene_color, uv, lod, ivec2(-1, -1)).rgb;
-    vec3 rt2 = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 1, -1)).rgb;
-    vec3 rb2 = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 1,  1)).rgb;
-    vec3 lb2 = texture2DLodOffset(s_scene_color, uv, lod, ivec2(-1,  1)).rgb;
-
-    vec3 l = texture2DLodOffset(s_scene_color, uv, lod, ivec2(-1,  0)).rgb;
-    vec3 t = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 0, -1)).rgb;
-    vec3 r = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 1,  0)).rgb;
-    vec3 b = texture2DLodOffset(s_scene_color, uv, lod, ivec2( 0,  1)).rgb;  */
-
 #ifdef BLOOM_UPSAMPLE_QUALITY_HIGH
     vec3 c = texture2DLod(s_scene_color, uv, lod).rgb;
 
