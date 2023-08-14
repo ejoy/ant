@@ -22,7 +22,8 @@ end
 
 local assetmgr	= import_package "ant.asset"
 
-local queuemgr	= require "queue_mgr"
+local queuemgr	= ecs.require "queue_mgr"
+
 local viewidmgr = require "viewid_mgr"
 --local mu		= mathpkg.util
 local mc 		= import_package "ant.math".constant

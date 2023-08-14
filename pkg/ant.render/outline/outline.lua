@@ -6,9 +6,8 @@ local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 local imaterial = ecs.require "ant.asset|material"
 local viewidmgr = require "viewid_mgr"
-local queuemgr      = require "queue_mgr"
-local R             = ecs.clibs "render.render_material"
-local irq       = ecs.require "ant.render|render_system.renderqueue"
+local queuemgr  = ecs.require "queue_mgr"
+local R         = ecs.clibs "render.render_material"
 
 local outline_material
 local outline_skinning_material

@@ -11,7 +11,8 @@ local renderpkg = import_package "ant.render"
 local fbmgr 	= renderpkg.fbmgr
 local sampler	= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
-local queuemgr	= renderpkg.queuemgr
+
+local queuemgr  = ecs.require "ant.render|queue_mgr"
 
 local irender   = ecs.require "ant.render|render_system.render"
 local imaterial = ecs.require "ant.asset|material"

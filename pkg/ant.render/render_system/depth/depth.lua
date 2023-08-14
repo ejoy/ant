@@ -4,7 +4,9 @@ local w     = world.w
 local idrawindirect = ecs.require "ant.render|draw_indirect_system"
 local setting       = import_package "ant.settings".setting
 local renderutil    = require "util"
-local queuemgr      = require "queue_mgr"
+
+local queuemgr      = ecs.require "queue_mgr"
+
 local s             = ecs.system "pre_depth_system"
 local math3d        = require "math3d"
 local R             = ecs.clibs "render.render_material"

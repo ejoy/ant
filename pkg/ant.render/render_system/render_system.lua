@@ -7,7 +7,8 @@ local assetmgr  = import_package "ant.asset"
 local bgfx 		= require "bgfx"
 local math3d 	= require "math3d"
 local viewidmgr = require "viewid_mgr"
-local queuemgr	= require "queue_mgr"
+
+local queuemgr	= ecs.require "queue_mgr"
 
 local irender	= ecs.require "ant.render|render_system.render"
 local imaterial = ecs.require "ant.asset|material"

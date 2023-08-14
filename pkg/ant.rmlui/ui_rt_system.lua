@@ -14,13 +14,14 @@ local icamera	= ecs.require "ant.camera|camera"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
 local ui_rt_group_id = 110000
 local bgfx 			= require "bgfx"
-local fb_cache, rb_cache = {}, {}
-local rt_table = {}
+
 local R             = ecs.clibs "render.render_material"
-local queuemgr      = renderpkg.queuemgr
+local queuemgr      = ecs.require "ant.render|queue_mgr"
 local ServiceResource = ltask.queryservice "ant.compile_resource|resource"
 
 local iUiRt = {}
+local fb_cache, rb_cache = {}, {}
+local rt_table = {}
 
 local S = ltask.dispatch()
 

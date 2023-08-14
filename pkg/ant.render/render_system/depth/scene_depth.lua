@@ -10,7 +10,7 @@ local ENABLE_TAA<const> = setting:get "graphic/postprocess/taa/enable"
 local ivs           = ecs.require "ant.render|visible_state"
 local sd_sys        = ecs.system "scene_depth_system"
 local R             = ecs.clibs "render.render_material"
-local queuemgr      = require "queue_mgr"
+local queuemgr      = ecs.require "queue_mgr"
 
 if (not ENABLE_FXAA) and (not ENABLE_TAA) then
     local function DEF_FUNC() end

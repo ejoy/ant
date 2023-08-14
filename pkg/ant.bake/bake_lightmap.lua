@@ -11,7 +11,7 @@ local bake      = require "bake"
 local ltask     = require "ltask"
 local R         = ecs.clibs "render.render_material"
 
-local queuemgr  = import_package "ant.render".queuemgr
+local queuemgr  = ecs.require "ant.render|queue_mgr"
 
 local ibaker    = ecs.require "ant.bake|baker"
 

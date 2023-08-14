@@ -3,7 +3,7 @@ local world	= ecs.world
 local w		= world.w
 
 local math3d				= require "math3d"
-local queuemgr				= require "queue_mgr"
+local queuemgr				= ecs.require "queue_mgr"
 local setting				= import_package "ant.settings".setting
 local disable_cull<const>	= setting:data().graphic.disable_cull
 
