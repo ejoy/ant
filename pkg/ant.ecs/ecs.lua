@@ -17,8 +17,6 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-local OBJECT = {"system","policy","component"}
-
 return function (w, package)
     local ecs = { world = w }
     local declaration = w._decl
@@ -133,12 +131,6 @@ return function (w, package)
         _ECS_LOADED[file] = r
         _ECS_LOADING[file] = nil
 	end
-    ecs.import = {}
-    for _, objname in ipairs(OBJECT) do
-        ecs.import[objname] = function (name)
-            return w:_import(objname, name)
-        end
-    end
     function ecs.create_entity(v)
         return w:_create_entity(nil, v)
     end

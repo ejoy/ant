@@ -3,12 +3,6 @@ local pm = require "packagemanager"
 local serialization = require "bee.serialization"
 local create_ecs = require "ecs"
 
-local function splitname(fullname)
-    return fullname:match "^([^|]*)|(.*)$"
-end
-
-local OBJECT = {"system","policy","component"}
-
 local function solve_object(o, w, what, fullname)
 	local decl = w._decl[what][fullname]
 	if decl and decl.method then
@@ -20,14 +14,6 @@ local function solve_object(o, w, what, fullname)
 	end
 end
 
-local function solve_policy(fullname, v)
-	local _, policy_name = splitname(fullname)
-	local name = policy_name:match "^([%a_][%w_]*)$"
-	if not name then
-		error(("invalid policy name: `%s`."):format(policy_name))
-	end
-end
-
 local check_map = {
 	require_system = "system",
 	require_policy = "policy",
@@ -36,65 +22,103 @@ local check_map = {
 	component_opt = "component",
 }
 
-local copy = {}
-function copy.policy(v)
-	return {
-		policy = v.require_policy,
-		component = v.component,
-		component_opt = v.component_opt,
-	}
-end
-function copy.component(v)
-	return {}
-end
-function copy.system() return {} end
-
 local function create_importor(w)
-	local declaration = w._decl
 	local import = {}
-    for _, objname in ipairs(OBJECT) do
-		local class = {}
-		w._class[objname] = class
-		import[objname] = function (name)
-			local v = class[name]
-            if v then
-                return v
-			end
-			if not w._initializing and objname == "system" then
-                error(("system `%s` can only be imported during initialization."):format(name))
-			end
-            local v = declaration[objname][name]
-			if not v then
-                error(("invalid %s name: `%s`."):format(objname, name))
-            end
-			log.debug("Import  ", objname, name)
-			local res = copy[objname](v)
-			class[name] = res
-			for _, tuple in ipairs(v.value) do
-				local what, k = tuple[1], tuple[2]
-				local attrib = check_map[what]
-				if attrib then
-					import[attrib](k)
-				end
-			end
-			if objname == "policy" then
-				solve_policy(name, res)
-			end
-			if v.implement and v.implement[1] then
-				local impl = v.implement[1]
-				if impl:sub(1,1) == ":" then
-					v.c = true
-					w._class.system[name] = w:clibs(impl:sub(2))
-				else
-					local pkg = v.packname
-					local file = impl
-									:gsub("^(.*)%.lua$", "%1")
-									:gsub("/", ".")
-					w._ecs[pkg].include_ecs(file)
-				end
-			end
-			return res
+	local system_class = {}
+	local system_decl = w._decl.system
+	local component_class = {}
+	local component_decl = w._decl.component
+	local policy_class = {}
+	local policy_decl = w._decl.policy
+	w._class.system = system_class
+	w._class.component = component_class
+	w._class.policy = policy_class
+	import.system = function (name)
+		local v = system_class[name]
+		if v then
+			return v
 		end
+		if not w._initializing then
+			error(("system `%s` can only be imported during initialization."):format(name))
+		end
+		v = system_decl[name]
+		if not v then
+			error(("invalid system name: `%s`."):format(name))
+		end
+		log.debug("Import  system", name)
+		local res = {}
+		system_class[name] = res
+		for _, tuple in ipairs(v.value) do
+			local what, k = tuple[1], tuple[2]
+			local attrib = check_map[what]
+			if attrib then
+				import[attrib](k)
+			end
+		end
+		if v.implement and v.implement[1] then
+			local impl = v.implement[1]
+			if impl:sub(1,1) == ":" then
+				v.c = true
+				w._class.system[name] = w:clibs(impl:sub(2))
+			else
+				local pkg = v.packname
+				local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
+				w._ecs[pkg].include_ecs(file)
+			end
+		end
+		return res
+	end
+	import.component = function (name)
+		local v = component_class[name]
+		if v then
+			return v
+		end
+		v = component_decl[name]
+		if not v then
+			error(("invalid component name: `%s`."):format(name))
+		end
+		log.debug("Import  component", name)
+		local res = {}
+		component_class[name] = res
+		for _, tuple in ipairs(v.value) do
+			local what, k = tuple[1], tuple[2]
+			local attrib = check_map[what]
+			if attrib then
+				import[attrib](k)
+			end
+		end
+		if v.implement and v.implement[1] then
+			local impl = v.implement[1]
+			local pkg = v.packname
+			local file = impl:gsub("^(.*)%.lua$", "%1"):gsub("/", ".")
+			w._ecs[pkg].include_ecs(file)
+		end
+		return res
+	end
+	import.policy = function (name)
+		local v = policy_class[name]
+		if v then
+			return v
+		end
+		v = policy_decl[name]
+		if not v then
+			error(("invalid policy name: `%s`."):format(name))
+		end
+		log.debug("Import  policy", name)
+		local res = {
+			policy = v.require_policy,
+			component = v.component,
+			component_opt = v.component_opt,
+		}
+		policy_class[name] = res
+		for _, tuple in ipairs(v.value) do
+			local what, k = tuple[1], tuple[2]
+			local attrib = check_map[what]
+			if attrib then
+				import[attrib](k)
+			end
+		end
+		return res
 	end
 	return import
 end
@@ -179,13 +203,36 @@ local function create_context(w)
 	)
 end
 
-local function update_decl(world)
-    world._component_decl = {}
+local function slove_system(w)
+	for fullname, o in pairs(w._class.system) do
+		local decl = w._decl.system[fullname]
+		if decl and decl.method then
+			for _, name in ipairs(decl.method) do
+				if not o[name] then
+					error(("`%s`'s `%s` method is not defined."):format(fullname, name))
+				end
+			end
+		end
+	end
+end
+
+local function slove_component(w)
+	for fullname, o in pairs(w._class.component) do
+		local decl = w._decl.component[fullname]
+		if decl and decl.method then
+			for _, name in ipairs(decl.method) do
+				if not o[name] then
+					error(("`%s`'s `%s` method is not defined."):format(fullname, name))
+				end
+			end
+		end
+	end
+    w._component_decl = {}
     local function register_component(decl)
-        world._component_decl[decl.name] = decl
+        w._component_decl[decl.name] = decl
     end
-    local component_class = world._class.component
-    for name, info in pairs(world._decl.component) do
+    local component_class = w._class.component
+    for name, info in pairs(w._decl.component) do
         local type = info.type[1]
         local class = component_class[name] or {}
         if type == "lua" then
@@ -241,45 +288,37 @@ local function init(w, config)
 		log.debug(("Import decl %q"):format(file))
 		return assert(pm.loadenv(packname).loadfile(file))
 	end)
-	w._importor = create_importor(w)
-	function w:_import(objname, name)
-		local res = w._class[objname][name]
-		if res then
-			return res
-		end
-		res = w._importor[objname](name)
-		if res then
-			solve_object(res, w, objname, name)
-		end
-		return res
-	end
+	local import = create_importor(w)
+	w._importor = import
 	setmetatable(w._ecs, {__index = function (_, package)
 		return create_ecs(w, package)
 	end})
-
 	config.ecs = config.ecs or {}
 	if config.ecs.import then
 		for _, k in ipairs(config.ecs.import) do
 			import_decl(w, k)
 		end
 	end
-	local import = w._importor
-	for _, objname in ipairs(OBJECT) do
-		if config.ecs[objname] then
-			for _, k in ipairs(config.ecs[objname]) do
-				import[objname](k)
-			end
+	if config.ecs.system then
+		for _, k in ipairs(config.ecs.system) do
+			import.system(k)
 		end
 	end
-	update_decl(w)
-	w._initializing = false
+	if config.ecs.policy then
+		for _, k in ipairs(config.ecs.policy) do
+			import.policy(k)
+		end
+	end
+	if config.ecs.component then
+		for _, k in ipairs(config.ecs.component) do
+			import.component(k)
+		end
+	end
 
-    for _, objname in ipairs(OBJECT) do
-		for fullname, o in pairs(w._class[objname]) do
-			solve_object(o, w, objname, fullname)
-        end
-    end
+	slove_system(w)
+	slove_component(w)
 	create_context(w)
+	w._initializing = false
 end
 
 return {

@@ -10,9 +10,12 @@ local function create(w, policies)
             return
         end
         policyset[name] = true
-        local class = w:_import("policy", name)
+        local class = w._class.policy[name]
         if not class then
-            error(("policy `%s` is not defined."):format(name))
+            class = w._importor.policy(name)
+            if not class then
+                error(("policy `%s` is not defined."):format(name))
+            end
         end
         for _, v in ipairs(class.policy) do
             import_policy(v)
