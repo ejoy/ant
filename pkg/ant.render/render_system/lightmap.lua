@@ -5,52 +5,6 @@ local w = world.w
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local assetmgr = import_package "ant.asset"
 
-local lm_mount = ecs.action "lightmap_mount"
-
-local function apply_lightmap(prefab, lm_prefab, sidx, eidx)
-    for i=sidx, eidx do
-        if type(prefab[i]) == "table" then
-            apply_lightmap(prefab[i], assert(lm_prefab[i].prefab), 1, #prefab[i])
-        else
-            local eid = prefab[i]
-            local e = world[eid]
-            local lm  = lm_prefab[i].lightmap
-            if lm then
-                e.lightmap = lm
-            end
-        end
-    end
-end
-
-local function build_lightmap_cache(lmr_e)
-    local lmr = lmr_e.lightmap_result
-
-    local function build_(prefab, cache)
-        for _, e in ipairs(prefab) do
-            if e.prefab then
-                build_(e.prefab, cache)
-            else
-                local lm = e.lightmap
-                if lm then
-                    cache[lm.id] = lm
-                end
-            end
-        end
-    end
-
-    local c = {}
-    build_(lmr, c)
-    lmr_e.lightmap_cache = c
-end
-function lm_mount.init(prefab, idx, value)
-    local lmr_prefab = prefab[idx]
-    assert(#lmr_prefab == 1)
-    local lmr_e = world[lmr_prefab[1]]
-    assert(#prefab == idx)
-    apply_lightmap(prefab, lmr_e.lightmap_result, 1, idx-1)
-    build_lightmap_cache(lmr_e)
-end
-
 local lm_sys = ecs.system "lightmap_system"
 
 local default_lm

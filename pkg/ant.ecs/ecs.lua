@@ -20,14 +20,14 @@ end
 local OBJECT = {"system","policy","interface","component"}
 
 return function (w, package)
-    local ecs = { world = w, method = w._set_methods }
+    local ecs = { world = w }
     local declaration = w._decl
     local import = w._importor
     local function register(what)
         local class_set = {}
         ecs[what] = function(name)
             local fullname = name
-            if what ~= "action" and what ~= "component" then
+            if what ~= "component" then
                 fullname = package .. "|" .. name
             end
             local r = class_set[fullname]

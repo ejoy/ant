@@ -129,21 +129,22 @@ function BaseView:on_get_name()
 end
 
 function BaseView:on_set_tag(value)
-    local template = hierarchy:get_template(self.eid)
-    local tags = {}
-    value:gsub('[^|]*', function (w) tags[#tags+1] = w end)
-    template.template.data.tag = tags
-    world:pub {"EntityEvent", "tag", self.eid, tags}
+    -- local template = hierarchy:get_template(self.eid)
+    -- local tags = {}
+    -- value:gsub('[^|]*', function (w) tags[#tags+1] = w end)
+    -- template.template.data.tag = tags
+    -- world:pub {"EntityEvent", "tag", self.eid, tags}
 end
 
 function BaseView:on_get_tag()
-    local template = hierarchy:get_template(self.eid)
-    if not template or not template.template then return "" end
-    local tags = template.template.data.tag
-    if type(tags) == "table" then
-        return table.concat(tags, "|")
-    end
-    return tags or ""
+    -- local template = hierarchy:get_template(self.eid)
+    -- if not template or not template.template then return "" end
+    -- local tags = template.template.data.tag
+    -- if type(tags) == "table" then
+    --     return table.concat(tags, "|")
+    -- end
+    -- return tags or ""
+    return ""
 end
 
 function BaseView:on_set_position(value)

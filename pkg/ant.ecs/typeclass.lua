@@ -1,5 +1,6 @@
 local interface = require "interface"
 local pm = require "packagemanager"
+local serialization = require "bee.serialization"
 local create_ecs = require "ecs"
 
 local function splitname(fullname)
@@ -182,6 +183,60 @@ local function create_context(w)
 	)
 end
 
+local function update_decl(world)
+    world._component_decl = {}
+    local function register_component(decl)
+        world._component_decl[decl.name] = decl
+    end
+    local component_class = world._class.component
+    for name, info in pairs(world._decl.component) do
+        local type = info.type[1]
+        local class = component_class[name] or {}
+        if type == "lua" then
+            register_component {
+                name = name,
+                type = "lua",
+                init = class.init,
+                marshal = class.marshal or serialization.packstring,
+                demarshal = class.demarshal or nil,
+                unmarshal = class.unmarshal or serialization.unpack,
+            }
+        elseif type == "c" then
+            local t = {
+                name = name,
+                init = class.init,
+                marshal = class.marshal,
+                demarshal = class.demarshal,
+                unmarshal = class.unmarshal,
+            }
+            for i, v in ipairs(info.field) do
+                t[i] = v:match "^(.*)|.*$" or v
+            end
+            register_component(t)
+        elseif type == "raw" then
+            local t = {
+                name = name,
+                type = "raw",
+                size = assert(math.tointeger(info.size[1])),
+                init = class.init,
+                marshal = class.marshal,
+                demarshal = class.demarshal,
+                unmarshal = class.unmarshal,
+            }
+            register_component(t)
+        elseif type == nil then
+            register_component {
+                name = name
+            }
+        else
+            register_component {
+                name = name,
+                type = type,
+            }
+        end
+    end
+end
+
 local function init(w, config)
 	w._initializing = true
 	w._class = {}
@@ -202,17 +257,6 @@ local function init(w, config)
 		end
 		return res
 	end
-	w._set_methods = setmetatable({}, {
-		__index = w._methods,
-		__newindex = function(_, name, f)
-			if w._methods[name] then
-				local info = debug.getinfo(w._methods[name], "Sl")
-				assert(info.source:sub(1,1) == "@")
-				error(string.format("Method `%s` has already defined at %s(%d).", name, info.source:sub(2), info.linedefined))
-			end
-			w._methods[name] = f
-		end,
-	})
 	setmetatable(w._ecs, {__index = function (_, package)
 		return create_ecs(w, package)
 	end})
@@ -231,9 +275,7 @@ local function init(w, config)
 			end
 		end
 	end
-	if config.update_decl then
-		config.update_decl(w)
-	end
+	update_decl(w)
 	w._initializing = false
 
     for _, objname in ipairs(OBJECT) do
@@ -242,7 +284,6 @@ local function init(w, config)
         end
     end
 	create_context(w)
-	require "system".solve(w)
 end
 
 return {
