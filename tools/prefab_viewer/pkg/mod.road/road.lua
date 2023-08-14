@@ -1,10 +1,8 @@
 local ecs   = ...
 local world = ecs.world
 local w     = world.w
-local iroad  = ecs.interface "iroad"
+
 local imaterial = ecs.require "ant.asset|material"
-local fs        = require "filesystem"
-local datalist  = require "datalist"
 local init_system = ecs.system "init_system"
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
@@ -22,6 +20,9 @@ local viewidmgr = renderpkg.viewidmgr
 local icompute = ecs.require "ant.render|compute.compute"
 local main_viewid = viewidmgr.get "csm_fb"
 local idrawindirect = ecs.require "ant.render|draw_indirect_system"
+
+local iroad  = {}
+
 local TERRAIN_TYPES<const> = {
     road1 = "1",
     road2 = "2",
@@ -398,3 +399,5 @@ function iroad.update_roadnet_group(gid, update_list, render_layer)
     end
 
 end
+
+return iroad

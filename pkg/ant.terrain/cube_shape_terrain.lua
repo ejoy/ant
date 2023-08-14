@@ -496,10 +496,3 @@ function shape_ts:entity_init()
         end
     end
 end
-
-
---shape terrain interface
-local ishape_terrain = ecs.interface "ishape_terrain"
-function ishape_terrain.shape_types()
-    return shape_types
-end

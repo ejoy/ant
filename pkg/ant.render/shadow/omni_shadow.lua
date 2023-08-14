@@ -156,7 +156,7 @@ local fovy<const> = 125.26438968 + 3.0 + fovy_adjust
 
 local aspect<const> = math.tan(math.rad(fovx*0.5) )/math.tan(math.rad(fovy*0.5))
 
-local ios = ecs.interface "iomni_shadow"
+local ios = {}
 
 function ios.setting()
     return TetrahedronFaces

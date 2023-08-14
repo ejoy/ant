@@ -1,17 +1,10 @@
 import "@mod.road"
 system "plane_terrain_system"
     .implement "plane_terrain.lua"
-    .require_interface "mod.terrain|iterrain"
     .method "init"
 
 component "plane_terrain".type "lua"
 component "section_index".type "lua"
-
-interface "iplane_terrain"
-    .implement "plane_terrain.lua"
-    .method "init_plane_terrain"
-    .method "set_wh"
-    .method "get_wh"
 
 component "shape_terrain".type "lua"
 
@@ -22,10 +15,5 @@ policy "shape_terrain"
 component "st".type "lua"
 
 system "terrain_system"
-    .require_interface "mod.road|iroad"
     .implement "terrain_system.lua"
     .method "init"
-
-interface "iterrain"
-    .implement "terrain_system.lua"
-    .method "gen_terrain_field"

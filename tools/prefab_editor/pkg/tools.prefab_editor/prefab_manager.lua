@@ -161,7 +161,7 @@ function m:show_terrain(enable)
         -- self.plane = nil
     else
         if not self.terrain then
-            local iterrain  = ecs.import.interface "mod.terrain|iterrain"
+            local iterrain  = ecs.require "mod.terrain|terrain_system"
             iterrain.gen_terrain_field(128, 128, 64, 10)
             self.terrain = true
         end

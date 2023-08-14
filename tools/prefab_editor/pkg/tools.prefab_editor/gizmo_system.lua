@@ -13,7 +13,6 @@ local ilight 	= ecs.require "ant.render|light.light"
 local irq		= ecs.require "ant.render|render_system.renderqueue"
 local imaterial = ecs.require "ant.asset|material"
 local imodifier = ecs.require "ant.modifier|modifier"
-local igui		= ecs.import.interface "tools.prefab_editor|igui"
 local prefab_mgr = ecs.require "prefab_manager"
 
 local cmd_queue = ecs.require "gizmo.command_queue"
@@ -34,6 +33,10 @@ local move_axis
 local rotate_axis
 local uniform_scale = false
 local local_space = false
+
+local function cvt2scenept(x, y)
+    return x - world.args.viewport.x, y - world.args.viewport.y
+end
 
 function gizmo:update()
 	self:set_position()
@@ -1052,7 +1055,7 @@ local last_mouse_pos_y = 0
 local function on_mouse_move()
 	if gizmo_seleted or gizmo.mode == gizmo_const.SELECT then return end
 	for _, what, x, y in mouse_move:unpack() do
-		x, y = igui.cvt2scenept(x, y)
+		x, y = cvt2scenept(x, y)
 		if last_mouse_pos_x ~= x or last_mouse_pos_y ~= y then
 			last_mouse_pos_x = x
 			last_mouse_pos_y = y
@@ -1102,7 +1105,7 @@ function gizmo_sys:handle_event()
 	end
 
 	for _, what, x, y in mouse_down:unpack() do
-		x, y = igui.cvt2scenept(x, y)
+		x, y = cvt2scenept(x, y)
 		if what == "LEFT" then
 			gizmo_seleted = gizmo:select_gizmo(x, y)
 			gizmo:click_axis_or_plane(move_axis)
@@ -1112,7 +1115,7 @@ function gizmo_sys:handle_event()
 	end
 
 	for _, what, x, y in mouse_up:unpack() do
-		x, y = igui.cvt2scenept(x, y)
+		x, y = cvt2scenept(x, y)
 		if what == "LEFT" then
 			gizmo:reset_move_axis_color()
 			if gizmo.mode == gizmo_const.ROTATE then
@@ -1159,7 +1162,7 @@ function gizmo_sys:handle_event()
 	on_mouse_move()
 	
 	for _, what, x, y in mouse_drag:unpack() do
-		x, y = igui.cvt2scenept(x, y)
+		x, y = cvt2scenept(x, y)
 		if what == "LEFT" then
 			if light_gizmo_mode ~= 0 then
 				move_light_gizmo(x, y)

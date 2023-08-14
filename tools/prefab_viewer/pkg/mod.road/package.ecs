@@ -11,11 +11,6 @@ system "init_system"
     .method "entity_remove"
     .method "data_changed"
 
-interface "iroad"
-    .implement "road.lua"
-    .method "update_roadnet_group"
-    .method "set_args"
-
 policy "road"
     .require_system "mod.road|init_system"
     .component "road"

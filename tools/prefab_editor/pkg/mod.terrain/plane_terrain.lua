@@ -1,10 +1,8 @@
 local ecs   = ...
 local world = ecs.world
 local ww     = world.w
-local iplane_terrain  = ecs.interface "iplane_terrain"
-local imaterial = ecs.require "ant.asset|material"
-local fs        = require "filesystem"
-local datalist  = require "datalist"
+
+local iplane_terrain  = {}
 local p_ts = ecs.system "plane_terrain_system"
 local renderpkg = import_package "ant.render"
 local declmgr   = renderpkg.declmgr
@@ -266,3 +264,5 @@ end
 
 function p_ts:init()
 end
+
+return iplane_terrain

@@ -1,10 +1,9 @@
 local ecs	= ...
 local world = ecs.world
 local w		= world.w
-local iterrain = ecs.interface "iterrain"
+local iterrain = {}
 local terrain_sys = ecs.system "terrain_system"
-local iplane_terrain  = ecs.import.interface "mod.terrain|iplane_terrain"
-local iroad  = ecs.import.interface "mod.road|iroad"
+local iplane_terrain  = ecs.require "mod.terrain|plane_terrain"
 local terrain_width, terrain_height
 local shape_terrain = {}
 
@@ -55,5 +54,4 @@ function terrain_sys:init()
     }
 end
 
-
-
+return iterrain
