@@ -65,7 +65,6 @@ system "init_loader_system"
     .require_interface "ant.render|iwidget_drawer"
     .require_interface "ant.render|ilight"
     .require_interface "ant.test.features|ivertex_attrib_visualizer"
-    .require_interface "ant.timer|itimer"
 
     .method "init"
     .method "init_world"

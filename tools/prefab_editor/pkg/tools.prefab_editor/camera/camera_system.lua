@@ -7,7 +7,7 @@ local irq		= ecs.import.interface "ant.render|irenderqueue"
 local math3d	= require "math3d"
 local mathpkg	= import_package "ant.math"
 local mc		= mathpkg.constant
-local timer		= ecs.import.interface "ant.timer|itimer"
+local timer		= ecs.require "ant.timer|timer_system"
 local camera_sys = ecs.system "camera_system"
 local global_data = require "common.global_data"
 function camera_sys:init_world()

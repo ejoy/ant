@@ -7,7 +7,7 @@ local iom 			= ecs.import.interface "ant.objcontroller|iobj_motion"
 local animodule 	= require "hierarchy".animation
 
 local ani_sys 		= ecs.system "animation_system"
-local timer 		= ecs.import.interface "ant.timer|itimer"
+local timer 		= ecs.require "ant.timer|timer_system"
 local iefk          = ecs.import.interface "ant.efk|iefk"
 local audio 		= import_package "ant.audio"
 local fs        = require "filesystem"

@@ -11,16 +11,6 @@ local previous
 local current = 0
 local delta
 
-local it = ecs.interface "itimer"
-
-function it.current()
-	return current
-end
-
-function it.delta()
-	return delta
-end
-
 local time_sys = ecs.system "time_system"
 function time_sys:init()
 	current = gettime()
@@ -32,3 +22,15 @@ function time_sys:timer()
 	current = gettime()
 	delta = current - previous
 end
+
+local m = {}
+
+function m.current()
+	return current
+end
+
+function m.delta()
+	return delta
+end
+
+return m

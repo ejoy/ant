@@ -113,7 +113,7 @@ function ms:entity_remove()
 end
 
 local counter = 0
-local itimer = ecs.import.interface "ant.timer|itimer"
+local itimer = ecs.require "ant.timer|timer_system"
 function ms:end_frame()
 	if DEBUG_MATERIAL_ATTRIBUTES then
 		counter = counter + itimer.delta()

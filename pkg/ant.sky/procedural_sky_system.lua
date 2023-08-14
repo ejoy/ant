@@ -258,7 +258,7 @@ local function update_hour(skycomp, deltatime, unit)
 	skycomp.which_hour = (skycomp.which_hour + deltatime) % unit
 end
 
-local timer = ecs.import.interface "ant.timer|itimer"
+local timer = ecs.require "ant.timer|timer_system"
 
 local function update_sun()
 	local delta = timer.delta()
