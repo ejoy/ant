@@ -19,9 +19,11 @@ end
 
 local mathpkg   = import_package "ant.math"
 local mu, mc    = mathpkg.util, mathpkg.constant
+
+local sampler   = import_package "ant.compile_resource".sampler
+
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
-local sampler   = require "sampler"
 
 local math3d    = require "math3d"
 

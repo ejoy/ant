@@ -14,7 +14,7 @@ local util      = ecs.require "postprocess.util"
 local mu        = import_package "ant.math".util
 
 local fbmgr     = require "framebuffer_mgr"
-local sampler   = require "sampler"
+local sampler   = import_package "ant.compile_resource".sampler
 local bgfx      = require "bgfx"
 local setting   = import_package "ant.settings".setting
 

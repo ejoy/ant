@@ -10,7 +10,7 @@ local math3d	= require "math3d"
 local bgfx		= require "bgfx"
 
 local fbmgr		= require "framebuffer_mgr"
-local sampler	= require "sampler"
+local sampler   = import_package "ant.compile_resource".sampler
 
 local shadowcfg = setmetatable({}, {__index= setting:data().graphic.shadow})
 

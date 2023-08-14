@@ -12,7 +12,7 @@ local bgfx 			= require "bgfx"
 local viewidmgr 	= require "viewid_mgr"
 local fbmgr			= require "framebuffer_mgr"
 local layoutmgr		= require "vertexlayout_mgr"
-local sampler		= require "sampler"
+local sampler		= import_package "ant.compile_resource".sampler
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
 
