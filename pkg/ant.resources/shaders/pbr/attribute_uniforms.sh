@@ -2,6 +2,7 @@
 #define __INPUT_UNIFORMS_SH__
 
 #include "pbr/attribute_define.sh"
+#include "common/utils.sh"
 
 // material properites
 #ifdef HAS_BASECOLOR_TEXTURE

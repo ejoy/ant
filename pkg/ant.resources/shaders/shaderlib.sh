@@ -394,11 +394,6 @@ vec2 texture2DBc5(sampler2D _sampler, vec2 _uv)
 #endif
 }
 
-vec2 texture2DAstc(sampler2D _sampler, vec2 _uv)
-{
-	return texture2D(_sampler, _uv).ga;
-}
-
 mat3 cofactor(mat4 _m)
 {
 	// Reference:

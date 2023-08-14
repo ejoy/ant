@@ -113,4 +113,9 @@ gather_result3 texture_gather3(sampler2DArray tex, vec3 uv)
     return r;
 }
 
+vec2 texture2DAstc(sampler2D _sampler, vec2 _uv)
+{
+	return texture2D(_sampler, _uv).ga;
+}
+
 #endif //__SHADER_UTILS_SH__
