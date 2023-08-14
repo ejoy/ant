@@ -20,14 +20,8 @@ component "pickup_queue"
 component "pickup"
     .type "lua"
 
-interface "ipickup"
-    .implement "pickup/pickup_system.lua"
-    .require_system "ant.objcontroller|pickup_system"
-    .method "pick"
-    
 policy "pickup"
     .require_system "ant.objcontroller|pickup_system"
-    .require_interface "ant.objcontroller|ipickup"
     --.require_system "ant.objcontroller|pickup_debug_system"
     .component "pickup"
 

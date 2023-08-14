@@ -12,7 +12,7 @@ local sampler   = renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
 local icompute  = ecs.require "ant.render|compute.compute"
-local iexposure = ecs.import.interface "ant.camera|iexposure"
+local iexposure = ecs.require "ant.camera|exposure"
 local imaterial = ecs.require "ant.asset|material"
 
 local setting   = import_package "ant.settings".setting
@@ -240,7 +240,7 @@ function ibl_sys:render_preprocess()
     end
 end
 
-local iibl = ecs.interface "iibl"
+local iibl = {}
 
 function iibl.get_ibl()
     return IBL_INFO
@@ -321,3 +321,5 @@ function iibl.filter_all(ibl)
 
     update_ibl_texture_info()
 end
+
+return iibl

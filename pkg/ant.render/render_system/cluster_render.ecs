@@ -18,8 +18,3 @@ policy "cluster_render"
 
 component "cluster_build_aabb"
 component "cluster_cull_light"
-
-interface "icluster_render"
-    .implement "render_system/cluster_render.lua"
-    .method "build_cluster_aabbs"
-    .method "cull_lights"

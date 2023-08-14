@@ -1,7 +1,7 @@
 local ecs = ...
 local world = ecs.world
 local w = world.w
-local idn           = ecs.import.interface "ant.daynight|idaynight"
+local idn           = ecs.require "ant.daynight|daynight"
 local uiproperty    = require "widget.uiproperty"
 local fs        = require "filesystem"
 local lfs       = require "bee.filesystem"

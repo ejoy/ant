@@ -90,7 +90,8 @@ local function get_list(pn, pt)
     return list
 end
 
-local idn = ecs.interface "idaynight"
+local idn = {}
+
 function idn.update_cycle(e, cycle)
     local lerp_table = {}
     for pn, pt in pairs(e.daynight) do
@@ -131,3 +132,5 @@ function idn.delete_property_cycle(e, pn)
     table.remove(current_property, current_number)
     return true
 end
+
+return idn

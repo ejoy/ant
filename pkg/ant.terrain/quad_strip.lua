@@ -10,7 +10,7 @@ local layoutfmt<const> = declmgr.correct_layout "p3|c40niu|t20"
 local layout    = declmgr.get(layoutfmt)
 local stride<const> = layout.stride
 
-local iql       = ecs.import.interface "ant.render|ipolyline"
+local iql       = ecs.require "ant.render|polyline.polyline"
 local imaterial = ecs.require "ant.asset|material"
 
 local function add_quad(p0, p1, normal, ww, offset, clr, vertices)

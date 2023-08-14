@@ -8,7 +8,7 @@ local imaterial = ecs.require "ant.asset|material"
 local irender   = ecs.require "ant.render|render_system.render"
 local declmgr   = require "vertexdecl_mgr"
 
-local ipl       = ecs.interface "ipolyline"
+local ipl       = {}
 
 --[[
     vertex input desc:{
@@ -285,3 +285,5 @@ function ipl.add_linelist(pointlist, line_width, color, material, srt, render_la
     local polymesh = ipl.create_linelist_mesh(pointlist, line_width, color)
     return add_polylines(polymesh, line_width, color, material or "/pkg/ant.resources/materials/polylinelist.material", srt or {}, render_layer)
 end
+
+return ipl

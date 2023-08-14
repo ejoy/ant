@@ -6,7 +6,7 @@ local mathpkg = import_package "ant.math"
 local mu      = mathpkg.util
 
 local dpd_sys = ecs.system "default_pickup_detect_system"
-local ipu = ecs.import.interface "ant.objcontroller|ipickup"
+local ipu = ecs.require "ant.objcontroller|pickup.pickup_system"
 local topick_mb
 local gesture_mb
 

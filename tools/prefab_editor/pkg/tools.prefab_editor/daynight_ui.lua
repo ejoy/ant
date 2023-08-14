@@ -3,7 +3,7 @@ local world         = ecs.world
 local w             = world.w
 
 local dnui_sys   = ecs.system 'daynight_ui_system'
-local idn           = ecs.import.interface "ant.daynight|idaynight"
+local idn           = ecs.require "ant.daynight|daynight"
 local itimer        = ecs.require "ant.timer|timer_system"
 
 function dnui_sys:data_changed()

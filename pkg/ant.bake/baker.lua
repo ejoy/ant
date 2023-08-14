@@ -2,7 +2,7 @@ local ecs = ...
 local world = ecs.world
 local w         = world.w
 
-local ibaker    = ecs.interface "ibaker"
+local ibaker    = {}
 
 local bake      = require "bake"
 local bgfx      = require "bgfx"
@@ -20,7 +20,7 @@ local mc    = mathpkg.constant
 local ientity   = ecs.require "ant.render|components.entity"
 local irender   = ecs.require "ant.render|render_system.render"
 local icamera   = ecs.require "ant.camera|camera"
-local ics       = ecs.import.interface "ant.render|icluster_render"
+local ics       = ecs.require "ant.render|render_system.cluster_render"
 
 
 local bake_fbw, bake_fbh, fb_hemi_unit_size = bake.framebuffer_size()
@@ -597,3 +597,5 @@ function ibaker.bake_entity(worldmat, bakeobj_mesh, lightmap, scene_objects)
         batcher:write2lightmap(bake_ctx)
     end
 end
+
+return ibaker

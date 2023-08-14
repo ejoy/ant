@@ -47,7 +47,6 @@ system "init_system"
     .require_policy "tools.prefab_editor|second_view"
     .require_policy "ant.motion_sampler|motion_sampler"
     .require_policy "ant.daynight|daynight"
-    .require_interface "ant.daynight|idaynight"
     .require_interface "mod.terrain|iterrain"
     .require_interface "mod.road|iroad"
     

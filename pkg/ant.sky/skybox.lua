@@ -10,10 +10,7 @@ local assetmgr	= import_package "ant.asset"
 local geopkg 	= import_package "ant.geometry"
 local geo 		= geopkg.geometry
 
-local renderpkg = import_package "ant.render"
-local fbmgr     = renderpkg.fbmgr
-
-local iibl      = ecs.import.interface "ant.render|iibl"
+local iibl      = ecs.require "ant.render|ibl.ibl"
 local imesh		= ecs.require "ant.asset|mesh"
 local imaterial	= ecs.require "ant.asset|material"
 

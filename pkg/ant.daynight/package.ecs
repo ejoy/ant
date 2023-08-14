@@ -3,16 +3,8 @@ system "daynight_system"
     .method "entity_init"
     .method "entity_remove"
 
-
-interface "idaynight"
-    .implement "daynight.lua"
-    .method "update_cycle"
-    .method "add_property_cycle"
-    .method "delete_property_cycle"
-
 component "daynight".type "lua"
 
 policy "daynight"
     .require_system "ant.daynight|daynight_system"
-    .require_interface "ant.daynight|idaynight"
     .component "daynight"

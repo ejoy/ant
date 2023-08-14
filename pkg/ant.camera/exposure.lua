@@ -10,7 +10,7 @@ local w     = world.w
     filament/src/Exposure.cpp
 ]]
 
-local ie = ecs.interface "iexposure"
+local ie = {}
 
 -- local FStops<const> = {
 --     "f/1.8", "f/2.0", "f/2.2", "f/2.5", "f/2.8", "f/3.2", "f/3.5", "f/4.0",
@@ -222,3 +222,5 @@ for _, n in ipairs{"type", "aperture", "shutter_speed", "ISO"} do
         world:pub{"exposure_changed", ce}
     end
 end
+
+return ie

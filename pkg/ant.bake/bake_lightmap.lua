@@ -13,7 +13,7 @@ local R         = ecs.clibs "render.render_material"
 
 local queuemgr  = import_package "ant.render".queuemgr
 
-local ibaker    = ecs.import.interface "ant.bake|ibaker"
+local ibaker    = ecs.require "ant.bake|baker"
 
 local bake_lm_sys = ecs.system "bake_lightmap_system"
 local bake_fx<const> = {
@@ -191,7 +191,7 @@ function bake_lm_sys:end_frame()
 end
 
 ------------------------------------------------------------------------
-local ilm = ecs.interface "ilightmap"
+local ilm = {}
 
 function ilm.find_sample(lightmap, renderobj, triangleidx)
     local hemisize = lightmap.hemisize
@@ -212,3 +212,5 @@ function ilm.bake_entity(bakeobj, lightmap)
     local scene_renderobjs = find_scene_render_objects "main_queue"
     return ibaker.bake_entity(bakeobj, lightmap, scene_renderobjs)
 end
+
+return ilm

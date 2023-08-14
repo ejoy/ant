@@ -371,7 +371,8 @@ function pickup_sys:update_filter()
 	end
 end
 
-local ipu = ecs.interface "ipickup"
+local ipu = {}
 function ipu.pick(x, y, cb)
 	open_pickup(x, y, cb)
 end
+return ipu

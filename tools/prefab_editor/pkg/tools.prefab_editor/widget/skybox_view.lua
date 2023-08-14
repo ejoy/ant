@@ -7,7 +7,7 @@ local hierarchy     = require "hierarchy_edit"
 local size_str = {"16","32","64","128","256","512","1024"}
 local prefilter_size_str = {"256","512","1024"}
 
-local iibl = ecs.import.interface "ant.render|iibl"
+local iibl = ecs.require "ant.render|ibl.ibl"
 
 local function template_data(eid, comp)
     local template = hierarchy:get_template(eid)

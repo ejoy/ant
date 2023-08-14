@@ -178,7 +178,7 @@ function ientity.create_grid_entity_simple(name, w, h, unit, scene)
 end
 
 function ientity.create_grid_entity(name, width, height, unit, linewidth, srt, material, render_layer)
-	local ipl = ecs.import.interface "ant.render|ipolyline"
+	local ipl = ecs.require "ant.render|polyline.polyline"
 	
 	local hw = width * 0.5
 	local hw_len = hw * unit

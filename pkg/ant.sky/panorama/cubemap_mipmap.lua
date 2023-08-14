@@ -2,23 +2,17 @@ local ecs = ...
 local world = ecs.world
 local w = world.w
 
-local bgfx = require "bgfx"
-local math3d = require "math3d"
-
 local renderpkg = import_package "ant.render"
 local sampler = renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 
 local icompute = ecs.require "ant.render|compute.compute"
-local iexposure = ecs.import.interface "ant.camera|iexposure"
 
 local thread_group_size<const> = 8
 
-local imaterial = ecs.require "ant.asset|material"
-
 local cubemap_mipmap_sys = ecs.system "cubemap_mipmap_system"
 
-local icubemap_mipmap = ecs.interface "icubemap_mipmap"
+local icubemap_mipmap = {}
 
 local p2c_viewid = viewidmgr.get "panorama2cubmap"
 
@@ -114,3 +108,5 @@ function icubemap_mipmap.gen_cubemap_mipmap(facesize, cm_rbhandle)
     build_cubemap_textures(facesize, cm_rbhandle)
     create_cubemap_entities()
 end
+
+return icubemap_mipmap

@@ -66,7 +66,7 @@ function widget_drawer_sys:end_frame()
 	end
 end
 
-local iwd = ecs.interface "iwidget_drawer"
+local iwd = {}
 
 local DEFAULT_COLOR <const> = 0xffffff00
 
@@ -163,8 +163,6 @@ end
 
 local physic_bounding_sys = ecs.system "physic_bounding_system"
 
-local iwd = ecs.import.interface "ant.render|iwidget_drawer"
-
 function physic_bounding_sys:widget()
 	-- for _, eid in world:each "collider" do
 	-- 	local e = world[eid]
@@ -212,3 +210,5 @@ function rmb_sys:follow_transform_updated()
 		append_buffers("fffd", desc.vb, "w", desc.ib)
 	end
 end
+
+return iwd

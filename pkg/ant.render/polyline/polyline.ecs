@@ -1,12 +1,4 @@
 component "polyline_mark"
 component "polyline".type "lua"
 policy "polyline"
-    .require_interface "ant.render|ipolyline"
     .component "polyline"
-
-interface "ipolyline"
-    .implement "polyline/polyline.lua"
-    .method "create_linestrip_mesh"
-    .method "add_strip_lines"
-    .method "create_linelist_mesh"
-    .method "add_linelist"
