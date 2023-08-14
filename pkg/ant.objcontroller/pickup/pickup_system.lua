@@ -13,7 +13,7 @@ local sampler	= renderpkg.sampler
 local viewidmgr = renderpkg.viewidmgr
 local queuemgr	= renderpkg.queuemgr
 
-local irender   = ecs.import.interface "ant.render|irender"
+local irender   = ecs.require "ant.render|render_system.render"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local INV_Z<const> = true

@@ -8,7 +8,7 @@ local world = ecs.world
 -- local ipp       = ecs.import.interface "ant.render|postprocess"
 -- local iom       = ecs.require "ant.objcontroller|obj_motion"
 -- local imaterial = ecs.import.interface "ant.asset|imaterial"
--- local icamera   = ecs.import.interface "ant.camera|icamera"
+-- local icamera   = ecs.require "ant.camera|camera"
 
 -- local mathpkg   = import_package "ant.math"
 -- local mc        = mathpkg.constant

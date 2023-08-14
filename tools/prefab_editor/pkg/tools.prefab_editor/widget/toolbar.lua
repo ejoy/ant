@@ -9,7 +9,7 @@ local gizmo     = ecs.require "gizmo.gizmo"
 
 local editor_setting = require "editor_setting"
 
-local irq       = ecs.import.interface "ant.render|irenderqueue"
+local irq       = ecs.require "ant.render|render_system.renderqueue"
 
 local m = {}
 

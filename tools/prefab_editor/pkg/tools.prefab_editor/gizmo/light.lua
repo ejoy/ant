@@ -3,7 +3,7 @@ local world = ecs.world
 local w = world.w
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local computil  = ecs.import.interface "ant.render|ientity"
+local computil  = ecs.require "ant.render|components.entity"
 local ilight    = ecs.import.interface "ant.render|ilight"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"

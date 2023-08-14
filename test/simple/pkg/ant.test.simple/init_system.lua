@@ -3,8 +3,8 @@ local world = ecs.world
 local w = world.w
 
 local m = ecs.system 'init_system'
-local irq = ecs.import.interface "ant.render|irenderqueue"
-local ientity = ecs.import.interface "ant.render|ientity"
+local irq = ecs.require "ant.render|render_system.renderqueue"
+local ientity = ecs.require "ant.render|components.entity"
 local imesh = ecs.import.interface "ant.asset|imesh"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local math3d = require "math3d"

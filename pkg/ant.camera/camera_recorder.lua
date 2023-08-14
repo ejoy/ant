@@ -7,7 +7,7 @@ local mu = mathpkg.util
 
 local math3d = require "math3d"
 local timer = ecs.require "ant.timer|timer_system"
-local icamera = ecs.import.interface "ant.camera|icamera"
+local icamera = ecs.require "ant.camera|camera"
 local iom = ecs.require "ant.objcontroller|obj_motion"
 
 local cr = ecs.interface "icamera_recorder"

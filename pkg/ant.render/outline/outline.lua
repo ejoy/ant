@@ -8,7 +8,7 @@ local imaterial = ecs.import.interface "ant.asset|imaterial"
 local viewidmgr = require "viewid_mgr"
 local queuemgr      = require "queue_mgr"
 local R             = ecs.clibs "render.render_material"
-local irq       = ecs.import.interface "ant.render|irenderqueue"
+local irq       = ecs.require "ant.render|render_system.renderqueue"
 
 local outline_material
 local outline_skinning_material

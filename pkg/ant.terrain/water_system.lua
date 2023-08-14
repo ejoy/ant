@@ -8,8 +8,8 @@ local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local irender   = ecs.import.interface "ant.render|irender"
-local irq       = ecs.import.interface "ant.render|irenderqueue"
+local irender   = ecs.require "ant.render|render_system.render"
+local irq       = ecs.require "ant.render|render_system.renderqueue"
 
 local bgfx      = require "bgfx"
 

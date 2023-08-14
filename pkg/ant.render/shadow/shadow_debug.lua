@@ -9,16 +9,16 @@ local INV_Z<const> = true
 
 local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
-local irender   = ecs.import.interface "ant.render|irender"
+local irender   = ecs.require "ant.render|render_system.render"
 local imesh		= ecs.import.interface "ant.asset|imesh"
 
 local math3d    = require "math3d"
 
-local ientity   = ecs.import.interface "ant.render|ientity"
+local ientity   = ecs.require "ant.render|components.entity"
 local ilight	= ecs.import.interface "ant.render|ilight"
 local ishadow	= ecs.import.interface "ant.render|ishadow"
-local irq		= ecs.import.interface "ant.render|irenderqueue"
-local icamera	= ecs.import.interface "ant.camera|icamera"
+local irq		= ecs.require "ant.render|render_system.renderqueue"
+local icamera	= ecs.require "ant.camera|camera"
 local iom		= ecs.require "ant.objcontroller|obj_motion"
 
 local shadowdbg_sys = ecs.system "shadow_debug_system"

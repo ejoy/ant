@@ -5,12 +5,12 @@ local w = world.w
 local mathpkg	= import_package "ant.math"
 local mc, mu	= mathpkg.constant, mathpkg.util
 
-local icamera	= ecs.import.interface "ant.camera|icamera"
+local icamera	= ecs.require "ant.camera|camera"
 local iom 		= ecs.require "ant.objcontroller|obj_motion"
 local ivs 		= ecs.import.interface "ant.scene|ivisible_state"
-local ientity 	= ecs.import.interface "ant.render|ientity"
+local ientity 	= ecs.require "ant.render|components.entity"
 local ilight 	= ecs.import.interface "ant.render|ilight"
-local irq		= ecs.import.interface "ant.render|irenderqueue"
+local irq		= ecs.require "ant.render|render_system.renderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local imodifier = ecs.import.interface "ant.modifier|imodifier"
 local igui		= ecs.import.interface "tools.prefab_editor|igui"

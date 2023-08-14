@@ -14,7 +14,6 @@ local R         = ecs.clibs "render.render_material"
 local queuemgr  = import_package "ant.render".queuemgr
 
 local ibaker    = ecs.import.interface "ant.bake|ibaker"
-local irender   = ecs.import.interface "ant.render|irender"
 
 local bake_lm_sys = ecs.system "bake_lightmap_system"
 local bake_fx<const> = {

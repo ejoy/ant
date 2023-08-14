@@ -3,10 +3,10 @@ local world = ecs.world
 local w = world.w
 local math3d    = require "math3d"
 
-local icamera   = ecs.import.interface "ant.camera|icamera"
-local irender   = ecs.import.interface "ant.render|irender"
+local icamera   = ecs.require "ant.camera|camera"
+local irender   = ecs.require "ant.render|render_system.render"
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local irq       = ecs.import.interface "ant.render|irenderqueue"
+local irq       = ecs.require "ant.render|render_system.renderqueue"
 
 local renderpkg = import_package "ant.render"
 local viewidmgr = renderpkg.viewidmgr

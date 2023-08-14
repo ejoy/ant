@@ -20,8 +20,8 @@ local sampler   = require "sampler"
 local util      = ecs.require "postprocess.util"
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local irender   = ecs.import.interface "ant.render|irender"
-local irq       = ecs.import.interface "ant.render|irenderqueue"
+local irender   = ecs.require "ant.render|render_system.render"
+local irq       = ecs.require "ant.render|render_system.renderqueue"
 
 function fxaasys:init()
     ecs.create_entity{

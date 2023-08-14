@@ -9,7 +9,7 @@ local mu        = mathpkg.util
 local uiconfig  = require "widget.config"
 local icons     = require "common.icons"
 local imgui = require "imgui"
-local irq   = ecs.import.interface "ant.render|irenderqueue"
+local irq   = ecs.require "ant.render|render_system.renderqueue"
 local igui  = ecs.import.interface "tools.prefab_editor|igui"
 local drag_file
 

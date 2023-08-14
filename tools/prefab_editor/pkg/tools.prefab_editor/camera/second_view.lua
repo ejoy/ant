@@ -14,8 +14,8 @@ local INV_Z<const> = true
 
 local math3d    = require "math3d"
 
-local irq       = ecs.import.interface "ant.render|irenderqueue"
-local icamera   = ecs.import.interface "ant.camera|icamera"
+local irq       = ecs.require "ant.render|render_system.renderqueue"
+local icamera   = ecs.require "ant.camera|camera"
 local imesh     = ecs.import.interface "ant.asset|imesh"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 

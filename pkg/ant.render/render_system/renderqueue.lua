@@ -4,8 +4,8 @@ local w = world.w
 
 local bgfx = require "bgfx"
 local fbmgr = require "framebuffer_mgr"
-local icamera = ecs.import.interface "ant.camera|icamera"
-local irq = ecs.interface "irenderqueue"
+local icamera = ecs.require "ant.camera|camera"
+local irq = {}
 
 local function get_rt(queuename)
 	local qe = w:first(queuename .." render_target:in")
@@ -165,6 +165,7 @@ function irq.update_rendertarget(queuename, rt, need_touch)
 end
 
 local rt_sys = ecs.system "render_target_system"
+
 function rt_sys:entity_init()
 	for msg in bc_mb:each() do
 		local qn, c = msg[2], msg[3]
@@ -203,3 +204,5 @@ function rt_sys:entity_remove()
 		fbmgr.unbind(v.render_target.viewid)
 	end
 end
+
+return irq

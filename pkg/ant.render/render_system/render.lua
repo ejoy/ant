@@ -16,7 +16,7 @@ local sampler		= require "sampler"
 
 local LAYER_NAMES<const> = {"foreground", "opacity", "background", "translucent", "decal_stage", "ui_stage"}
 
-local irender		= ecs.interface "irender"
+local irender		= {}
 
 function irender.use_pre_depth()
 	return ENABLE_PRE_DEPTH
@@ -310,3 +310,5 @@ local fullquad<const> = {
 function irender.full_quad()
 	return fullquad
 end
+
+return irender

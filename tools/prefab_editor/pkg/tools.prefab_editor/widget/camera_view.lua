@@ -11,8 +11,8 @@ local imgui         = require "imgui"
 local serialize     = import_package "ant.serialize"
 
 local iom           = ecs.require "ant.objcontroller|obj_motion"
-local icamera       = ecs.import.interface "ant.camera|icamera"
-local irq           = ecs.import.interface "ant.render|irenderqueue"
+local icamera       = ecs.require "ant.camera|camera"
+local irq           = ecs.require "ant.render|render_system.renderqueue"
 
 local CameraView = {}
 

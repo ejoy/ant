@@ -13,9 +13,9 @@ local samplerutil=renderpkg.sampler
 local mathpkg   = import_package "ant.math"
 local mc        = mathpkg.constant
 
-local icamera   = ecs.import.interface "ant.camera|icamera"
-local ientity   = ecs.import.interface "ant.render|ientity"
-local irender   = ecs.import.interface "ant.render|irender"
+local icamera   = ecs.require "ant.camera|camera"
+local ientity   = ecs.require "ant.render|components.entity"
+local irender   = ecs.require "ant.render|render_system.render"
 
 local is = ecs.system "init_system"
 

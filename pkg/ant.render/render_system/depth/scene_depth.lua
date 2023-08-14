@@ -24,7 +24,7 @@ local viewidmgr = require "viewid_mgr"
 local fbmgr     = require "framebuffer_mgr"
 local sampler   = require "sampler"
 
-local irq       = ecs.import.interface "ant.render|irenderqueue"
+local irq       = ecs.require "ant.render|render_system.renderqueue"
 
 function sd_sys:post_init()
     local vr = world.args.viewport

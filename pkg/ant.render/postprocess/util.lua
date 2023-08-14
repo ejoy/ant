@@ -1,6 +1,6 @@
 local ecs = ...
 
-local irender = ecs.import.interface "ant.render|irender"
+local irender = ecs.require "ant.render|render_system.render"
 
 local math3d = require "math3d"
 

@@ -1,7 +1,6 @@
 local ecs	= ...
 local world = ecs.world
 local w		= world.w
-local ientity 	= ecs.interface "ientity"
 local declmgr   = require "vertexdecl_mgr"
 local math3d    = require "math3d"
 local hwi		= import_package "ant.hwi"
@@ -14,7 +13,7 @@ local mc		= mathpkg.constant
 
 local ivs		= ecs.import.interface "ant.scene|ivisible_state"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
-local irender	= ecs.import.interface "ant.render|irender"
+local irender	= ecs.require "ant.render|render_system.render"
 local imesh 	= ecs.import.interface "ant.asset|imesh"
 local bgfx 		= require "bgfx"
 
@@ -55,6 +54,8 @@ local function create_mesh(vbdata, ibdata, aabb)
 	end
 	return imesh.init_mesh(mesh)
 end
+
+local ientity 	= {}
 
 ientity.create_mesh = create_mesh
 
@@ -788,3 +789,5 @@ function ientity.create_quad_lines_entity(name, scene, material, quadnum, width,
         }
     }
 end
+
+return ientity

@@ -93,7 +93,9 @@ local function create_importor(w)
 					w._class.system[name] = w:clibs(impl:sub(2))
 				else
 					local pkg = v.packname
-					local file = impl:gsub("^(.*)%.lua$", "%1")
+					local file = impl
+									:gsub("^(.*)%.lua$", "%1")
+									:gsub("/", ".")
 					w._ecs[pkg].include_ecs(file)
 				end
 			end

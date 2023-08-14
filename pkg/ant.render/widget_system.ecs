@@ -14,7 +14,6 @@ system "widget_drawer_system"
     .implement "widget_system.lua"
     .require_policy "ant.render|simplerender"
     .require_policy "ant.render|bounding_draw"
-    .require_interface "ant.render|ientity"
     .method "end_frame"
     .method "init"
 

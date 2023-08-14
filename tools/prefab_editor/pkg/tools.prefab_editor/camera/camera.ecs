@@ -1,6 +1,5 @@
 system "camera_system"
     .implement "camera/camera_system.lua"
-    .require_interface "ant.camera|icamera"
     .method "init_world"
     .method "entity_ready"
     .method "handle_input"

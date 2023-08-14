@@ -9,7 +9,7 @@ local sampler = renderpkg.sampler
 
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local imesh		= ecs.import.interface "ant.asset|imesh"
-local ientity 	= ecs.import.interface "ant.render|ientity"
+local ientity 	= ecs.require "ant.render|components.entity"
 local dtt_sys = ecs.system "dynamic_texture_test_system"
 local declmgr= import_package "ant.render".declmgr
 local test_eid

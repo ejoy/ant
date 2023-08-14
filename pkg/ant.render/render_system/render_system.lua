@@ -9,7 +9,7 @@ local math3d 	= require "math3d"
 local viewidmgr = require "viewid_mgr"
 local queuemgr	= require "queue_mgr"
 
-local irender	= ecs.import.interface "ant.render|irender"
+local irender	= ecs.require "ant.render|render_system.render"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local itimer	= ecs.require "ant.timer|timer_system"
 local irl		= ecs.import.interface "ant.render|irender_layer"

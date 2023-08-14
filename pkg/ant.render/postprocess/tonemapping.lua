@@ -5,8 +5,8 @@ local w     = world.w
 local viewidmgr = require "viewid_mgr"
 
 local tm_sys    = ecs.system "tonemapping_system"
-local irender   = ecs.import.interface "ant.render|irender"
-local irq       = ecs.import.interface "ant.render|irenderqueue"
+local irender   = ecs.require "ant.render|render_system.render"
+local irq       = ecs.require "ant.render|render_system.renderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local util      = ecs.require "postprocess.util"

@@ -4,14 +4,14 @@ local w         = world.w
 
 local math3d    = require "math3d"
 local mathpkg   = import_package "ant.math"
-local mu, mc    = mathpkg.util, mathpkg.constant
+local mc    = mathpkg.constant
 
 local defcomp 	= import_package "ant.general".default
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 
 local INV_Z<const> = true
 
-local ic = ecs.interface "icamera"
+local ic = {}
 
 local function def_frustum(f)
     if not f then
@@ -206,3 +206,5 @@ function cameraview_sys:update_camera()
         end
     end
 end
+
+return ic

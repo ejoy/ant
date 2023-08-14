@@ -15,12 +15,11 @@ local fbmgr     = renderpkg.fbmgr
 local viewidmgr = renderpkg.viewidmgr
 
 local mathpkg   = import_package "ant.math"
-local mu, mc    = mathpkg.uitl, mathpkg.constant
+local mc    = mathpkg.constant
 
-local ientity   = ecs.import.interface "ant.render|ientity"
-local irender   = ecs.import.interface "ant.render|irender"
-local imaterial = ecs.import.interface "ant.asset|imaterial"
-local icamera   = ecs.import.interface "ant.camera|icamera"
+local ientity   = ecs.require "ant.render|components.entity"
+local irender   = ecs.require "ant.render|render_system.render"
+local icamera   = ecs.require "ant.camera|camera"
 local ics       = ecs.import.interface "ant.render|icluster_render"
 
 

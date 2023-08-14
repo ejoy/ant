@@ -3,8 +3,8 @@ local world = ecs.world
 local w = world.w
 
 local default	= import_package "ant.general".default
-local icamera	= ecs.import.interface "ant.camera|icamera"
-local irender	= ecs.import.interface "ant.render|irender"
+local icamera	= ecs.require "ant.camera|camera"
+local irender	= ecs.require "ant.render|render_system.render"
 
 local mathpkg	= import_package "ant.math"
 local mu		= mathpkg.util

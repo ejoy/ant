@@ -14,8 +14,8 @@ if setting:get "graphic/disable_pre_z" then
     return 
 end
 
-local irender   = ecs.import.interface "ant.render|irender"
-local irq       = ecs.import.interface "ant.render|irenderqueue"
+local irender   = ecs.require "ant.render|render_system.render"
+local irq       = ecs.require "ant.render|render_system.renderqueue"
 local imaterial = ecs.import.interface "ant.asset|imaterial"
 local irl       = ecs.import.interface "ant.render|irender_layer"
 

@@ -30,10 +30,10 @@ local mu            = mathpkg.util
 local math3d        = require "math3d"
 
 local iom       = ecs.require "ant.objcontroller|obj_motion"
-local icamera   = ecs.import.interface "ant.camera|icamera"
+local icamera   = ecs.require "ant.camera|camera"
 local ivs       = ecs.import.interface "ant.scene|ivisible_state"
 local ilight    = ecs.import.interface "ant.render|ilight"
-local ientity   = ecs.import.interface "ant.render|ientity"
+local ientity   = ecs.require "ant.render|components.entity"
 
 local function get_render_buffers(width, height)
     return fbmgr.create_rb{
