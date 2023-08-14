@@ -7,7 +7,7 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-local OBJECT = {"system","policy","interface","component"}
+local OBJECT = {"system","policy","component"}
 
 local function solve_object(o, w, what, fullname)
 	local decl = w._decl[what][fullname]
@@ -34,7 +34,6 @@ end
 
 local check_map = {
 	require_system = "system",
-	require_interface = "interface",
 	require_policy = "policy",
 	require_transform = "transform",
 	component = "component",
@@ -53,7 +52,6 @@ function copy.component(v)
 	return {}
 end
 function copy.system() return {} end
-function copy.interface() return {} end
 
 local function create_importor(w)
 	local declaration = w._decl

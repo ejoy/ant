@@ -17,7 +17,7 @@ local function splitname(fullname)
     return fullname:match "^([^|]*)|(.*)$"
 end
 
-local OBJECT = {"system","policy","interface","component"}
+local OBJECT = {"system","policy","component"}
 
 return function (w, package)
     local ecs = { world = w }
@@ -70,7 +70,6 @@ return function (w, package)
         end
     end
     register "system"
-    register "interface"
     register "component"
     function ecs.require(fullname)
         local pkg, file = splitname(fullname)

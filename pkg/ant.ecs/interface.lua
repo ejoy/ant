@@ -50,14 +50,6 @@ local attribute = {
 	system = {
 		"implement",
 		"require_system",
-		"require_interface",
-		"require_policy",
-		"method",
-	},
-	interface = {
-		"implement",
-		"require_system",
-		"require_interface",
 		"require_policy",
 		"method",
 	},
@@ -67,7 +59,6 @@ local attribute = {
 	},
 	policy = {
 		"require_system",
-		"require_interface",
 		"require_policy",
 		"component",
 		"component_opt",
@@ -90,7 +81,6 @@ local no_packspace = {
 
 local check_map = {
 	require_system = "system",
-	require_interface = "interface",
 	require_policy = "policy",
 	component = "component",
 	component_opt = "component",
