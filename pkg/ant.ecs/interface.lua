@@ -15,10 +15,6 @@ policy "policy_name"
 	.require_system "system_name"
 	.require_transform "transform_name"
 
-transform "transform_name"
-	.input "aaa"
-	.output "bbb"
-
 -----------------------
 
 	Usage:
@@ -47,15 +43,15 @@ interface.__index = interface
 local parser = {}
 
 local attribute = {
+	pipeline = {
+		"pipeline",
+		"stage",
+	},
 	system = {
 		"implement",
 		"require_system",
 		"require_policy",
 		"method",
-	},
-	pipeline = {
-		"pipeline",
-		"stage",
 	},
 	policy = {
 		"require_system",

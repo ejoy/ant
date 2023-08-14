@@ -3,17 +3,6 @@ local pm = require "packagemanager"
 local serialization = require "bee.serialization"
 local create_ecs = require "ecs"
 
-local function solve_object(o, w, what, fullname)
-	local decl = w._decl[what][fullname]
-	if decl and decl.method then
-		for _, name in ipairs(decl.method) do
-			if not o[name] then
-				error(("`%s`'s `%s` method is not defined."):format(fullname, name))
-			end
-		end
-	end
-end
-
 local check_map = {
 	require_system = "system",
 	require_policy = "policy",
@@ -33,7 +22,7 @@ local function create_importor(w)
 	w._class.system = system_class
 	w._class.component = component_class
 	w._class.policy = policy_class
-	import.system = function (name)
+	function import.system(name)
 		local v = system_class[name]
 		if v then
 			return v
@@ -68,7 +57,7 @@ local function create_importor(w)
 		end
 		return res
 	end
-	import.component = function (name)
+	function import.component(name)
 		local v = component_class[name]
 		if v then
 			return v
@@ -95,7 +84,7 @@ local function create_importor(w)
 		end
 		return res
 	end
-	import.policy = function (name)
+	function import.policy(name)
 		local v = policy_class[name]
 		if v then
 			return v
